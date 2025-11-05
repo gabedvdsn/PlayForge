@@ -1,0 +1,9 @@
+<ui:UXML xmlns:ui="UnityEngine.UIElements" xmlns:uie="UnityEditor.UIElements" editor-extension-mode="False">
+    <ui:Template name="fesgas_indicator" src="project://database/Assets/FESGAS/Editor/Gasify/Windows/Editor/Drawers/fesgas_indicator.uxml?fileID=9197481963319205126&amp;guid=794b215ae1a2bac41ba5f1eb02f51ed4&amp;type=3#fesgas_indicator" />
+    <ui:VisualElement name="QuickRefDrawer" style="flex-grow: 1; max-height: 30px; min-height: 30px; min-width: 32px; flex-direction: row; align-items: center; justify-content: flex-start; align-self: flex-start; margin-right: 8px; margin-left: 0; display: flex;">
+        <ui:Instance template="fesgas_indicator" name="fesgas_indicator" />
+        <ui:TextField picking-mode="Ignore" label="QuickRef Field" name="Value" value="Search/Create..." style="flex-shrink: 1; flex-grow: 1; margin-right: 0; justify-content: space-between; -unity-font-style: bold; margin-left: 8px;" />
+        <ui:Button text="+" parse-escape-sequences="true" display-tooltip-when-elided="true" name="QuickCreate" focusable="false" style="-unity-font-style: normal; font-size: 14px; -unity-text-align: middle-center; padding-top: 2px; padding-bottom: 3px; margin-right: 2px; padding-right: 3px; padding-left: 4px; margin-bottom: 4px; margin-top: 4px;" />
+        <ui:Button text="▣" parse-escape-sequences="true" display-tooltip-when-elided="true" name="Template" focusable="false" style="-unity-font-style: normal; font-size: 14px; -unity-text-align: middle-center; padding-top: 0; padding-bottom: 3px; margin-right: 2px; padding-right: 3px; padding-left: 4px; margin-bottom: 4px; margin-top: 4px; margin-left: 2px;" />
+    </ui:VisualElement>
+</ui:UXML>

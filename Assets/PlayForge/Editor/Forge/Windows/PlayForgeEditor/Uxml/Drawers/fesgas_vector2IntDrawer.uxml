@@ -1,0 +1,14 @@
+<ui:UXML xmlns:ui="UnityEngine.UIElements" xmlns:uie="UnityEditor.UIElements" editor-extension-mode="False">
+    <ui:Template name="fesgas_indicator" src="project://database/Assets/FESGAS/Editor/Gasify/Windows/Editor/Drawers/fesgas_indicator.uxml?fileID=9197481963319205126&amp;guid=794b215ae1a2bac41ba5f1eb02f51ed4&amp;type=3#fesgas_indicator" />
+    <ui:VisualElement name="Vector2IntDrawer" style="flex-grow: 1; max-height: 30px; min-height: 30px; min-width: 32px; flex-direction: row; align-items: center; justify-content: flex-start; align-self: flex-start; border-left-color: rgb(0, 0, 0); border-right-color: rgb(0, 0, 0); border-top-color: rgb(0, 0, 0); border-bottom-color: rgb(0, 0, 0); border-top-width: 0; margin-right: 8px; margin-left: 0;">
+        <ui:Instance template="fesgas_indicator" name="fesgas_indicator" />
+        <ui:VisualElement name="Value" style="flex-grow: 1; flex-direction: row; margin-left: 8px;">
+            <ui:Label tabindex="-1" text="Label" parse-escape-sequences="true" display-tooltip-when-elided="true" style="flex-shrink: 1; min-width: 150px; align-self: auto; justify-content: flex-start; -unity-text-align: middle-left;" />
+            <ui:VisualElement style="flex-grow: 1; flex-direction: row; justify-content: flex-end; align-items: stretch;">
+                <ui:IntegerField label="X" value="42" name="X" style="flex-shrink: 1; align-items: flex-start;" />
+                <ui:IntegerField label="Y" value="42" name="Y" style="flex-shrink: 1; align-items: flex-start;" />
+            </ui:VisualElement>
+        </ui:VisualElement>
+        <ui:Button text="▣" parse-escape-sequences="true" display-tooltip-when-elided="true" name="TemplateButton" focusable="false" style="-unity-font-style: normal; font-size: 14px; -unity-text-align: middle-center; padding-top: 0; padding-bottom: 3px; margin-right: 2px; padding-right: 3px; padding-left: 4px; margin-bottom: 4px; margin-top: 4px;" />
+    </ui:VisualElement>
+</ui:UXML>

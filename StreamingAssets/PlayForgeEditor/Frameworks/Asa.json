@@ -1,0 +1,266 @@
+{
+  "Version": "1.0.0",
+  "MetaName": "Asa",
+  "MetaAuthor": "DAVIDSON",
+  "Abilities": [],
+  "Attributes": [],
+  "Tags": [
+    {
+      "Id": 1474761852,
+      "Name": "TestTag (SavedClone)",
+      "Description": null,
+      "Icon": null,
+      "editorTags": {
+        "E_GASIFY_TAGS": {
+          "E_EDITABLE": false,
+          "E_IS_CREATED": true,
+          "E_IS_SAVED_COPY": true,
+          "E_COPY_ID": 1440541463,
+          "E_IS_TEMPLATE": false,
+          "E_HAS_UNSAVED_WORK": false,
+          "E_STATUS": false,
+          "E_EDITOR_CATEGORY": [],
+          "E_REFERENCES": "System.Collections.Generic.Dictionary`2[System.Int32,System.Collections.Generic.HashSet`1[System.String]]",
+          "E_REFERENCED_BY": "System.Collections.Generic.Dictionary`2[System.Int32,System.Collections.Generic.HashSet`1[System.String]]"
+        },
+        "E_STYLING_TAGS": {}
+      }
+    },
+    {
+      "Id": 1165714816,
+      "Name": "TestTag",
+      "Description": "This is a test tag!",
+      "Icon": null,
+      "editorTags": {
+        "E_GASIFY_TAGS": {
+          "E_EDITABLE": true,
+          "E_IS_CREATED": true,
+          "E_IS_SAVED_COPY": false,
+          "E_HAS_UNSAVED_WORK": false,
+          "E_EDITOR_CATEGORY": [],
+          "E_IS_TEMPLATE": false,
+          "E_STATUS": false,
+          "E_REFERENCES": "System.Collections.Generic.Dictionary`2[System.Int32,System.Collections.Generic.HashSet`1[System.String]]",
+          "E_REFERENCED_BY": "System.Collections.Generic.Dictionary`2[System.Int32,System.Collections.Generic.HashSet`1[System.String]]",
+          "E_COPY_ID": 162148141
+        },
+        "E_STYLING_TAGS": {}
+      }
+    },
+    {
+      "Id": 162148141,
+      "Name": "TestTag (SavedClone)",
+      "Description": null,
+      "Icon": null,
+      "editorTags": {
+        "E_GASIFY_TAGS": {
+          "E_EDITABLE": false,
+          "E_IS_CREATED": true,
+          "E_IS_SAVED_COPY": true,
+          "E_COPY_ID": 1165714816,
+          "E_IS_TEMPLATE": false,
+          "E_HAS_UNSAVED_WORK": false,
+          "E_STATUS": false,
+          "E_EDITOR_CATEGORY": [],
+          "E_REFERENCES": "System.Collections.Generic.Dictionary`2[System.Int32,System.Collections.Generic.HashSet`1[System.String]]",
+          "E_REFERENCED_BY": "System.Collections.Generic.Dictionary`2[System.Int32,System.Collections.Generic.HashSet`1[System.String]]"
+        },
+        "E_STYLING_TAGS": {}
+      }
+    }
+  ],
+  "Effects": [
+    {
+      "Definition": null,
+      "DurationSpecification": null,
+      "ImpactSpecification": null,
+      "SourceRequirements": null,
+      "Tags": null,
+      "TargetRequirements": null,
+      "Workers": null,
+      "Id": 533052562,
+      "Name": "Putnam",
+      "Description": null,
+      "Icon": null,
+      "editorTags": {
+        "E_GASIFY_TAGS": {
+          "E_EDITABLE": true,
+          "E_IS_BUILT": false,
+          "E_IS_CREATED": true,
+          "E_IS_SAVED_COPY": false,
+          "E_IS_DRAFT": false,
+          "E_HAS_UNSAVED_WORK": false,
+          "E_EDITOR_CATEGORY": [],
+          "E_IS_TEMPLATE": false,
+          "E_REFERENCES": "System.Collections.Generic.Dictionary`2[System.Int32,System.Collections.Generic.HashSet`1[System.String]]",
+          "E_REFERENCED_BY": "System.Collections.Generic.Dictionary`2[System.Int32,System.Collections.Generic.HashSet`1[System.String]]",
+          "E_REQUIRES_REBUILD": false,
+          "E_ERRORS": 0,
+          "E_COPY_ID": 974438308,
+          "E_STATUS": false
+        },
+        "E_STYLING_TAGS": {}
+      }
+    },
+    {
+      "Definition": null,
+      "DurationSpecification": null,
+      "ImpactSpecification": null,
+      "SourceRequirements": null,
+      "Tags": null,
+      "TargetRequirements": null,
+      "Workers": null,
+      "Id": 974438308,
+      "Name": "Asaaa (SavedClone)",
+      "Description": null,
+      "Icon": null,
+      "editorTags": {
+        "E_GASIFY_TAGS": {
+          "E_EDITABLE": false,
+          "E_IS_BUILT": false,
+          "E_IS_CREATED": true,
+          "E_IS_SAVED_COPY": true,
+          "E_COPY_ID": 533052562,
+          "E_IS_DRAFT": false,
+          "E_IS_TEMPLATE": false,
+          "E_HAS_UNSAVED_WORK": false,
+          "E_EDITOR_CATEGORY": [],
+          "E_REFERENCES": "System.Collections.Generic.Dictionary`2[System.Int32,System.Collections.Generic.HashSet`1[System.String]]",
+          "E_REFERENCED_BY": "System.Collections.Generic.Dictionary`2[System.Int32,System.Collections.Generic.HashSet`1[System.String]]",
+          "E_REQUIRES_REBUILD": false,
+          "E_ERRORS": 0
+        },
+        "E_STYLING_TAGS": {}
+      }
+    },
+    {
+      "Definition": null,
+      "DurationSpecification": null,
+      "ImpactSpecification": null,
+      "SourceRequirements": null,
+      "Tags": null,
+      "TargetRequirements": null,
+      "Workers": null,
+      "Id": 158609016,
+      "Name": "TEst2",
+      "Description": "Little did you know I put this description in from the JSON file!",
+      "Icon": null,
+      "editorTags": {
+        "E_GASIFY_TAGS": {
+          "E_EDITABLE": true,
+          "E_IS_BUILT": false,
+          "E_IS_CREATED": true,
+          "E_IS_SAVED_COPY": false,
+          "E_IS_DRAFT": false,
+          "E_HAS_UNSAVED_WORK": false,
+          "E_EDITOR_CATEGORY": [],
+          "E_IS_TEMPLATE": false,
+          "E_REFERENCES": "System.Collections.Generic.Dictionary`2[System.Int32,System.Collections.Generic.HashSet`1[System.String]]",
+          "E_REFERENCED_BY": "System.Collections.Generic.Dictionary`2[System.Int32,System.Collections.Generic.HashSet`1[System.String]]",
+          "E_REQUIRES_REBUILD": false,
+          "E_ERRORS": 0,
+          "E_COPY_ID": 1101564773,
+          "E_STATUS": false
+        },
+        "E_STYLING_TAGS": {}
+      }
+    },
+    {
+      "Definition": null,
+      "DurationSpecification": null,
+      "ImpactSpecification": null,
+      "SourceRequirements": null,
+      "Tags": null,
+      "TargetRequirements": null,
+      "Workers": null,
+      "Id": 1101564773,
+      "Name": "TEst2 (SavedClone)",
+      "Description": null,
+      "Icon": null,
+      "editorTags": {
+        "E_GASIFY_TAGS": {
+          "E_EDITABLE": false,
+          "E_IS_BUILT": false,
+          "E_IS_CREATED": true,
+          "E_IS_SAVED_COPY": true,
+          "E_COPY_ID": 158609016,
+          "E_IS_DRAFT": false,
+          "E_IS_TEMPLATE": false,
+          "E_HAS_UNSAVED_WORK": false,
+          "E_EDITOR_CATEGORY": [],
+          "E_REFERENCES": "System.Collections.Generic.Dictionary`2[System.Int32,System.Collections.Generic.HashSet`1[System.String]]",
+          "E_REFERENCED_BY": "System.Collections.Generic.Dictionary`2[System.Int32,System.Collections.Generic.HashSet`1[System.String]]",
+          "E_REQUIRES_REBUILD": false,
+          "E_ERRORS": 0
+        },
+        "E_STYLING_TAGS": {}
+      }
+    },
+    {
+      "Definition": null,
+      "DurationSpecification": null,
+      "ImpactSpecification": null,
+      "SourceRequirements": null,
+      "Tags": null,
+      "TargetRequirements": null,
+      "Workers": null,
+      "Id": 533055562,
+      "Name": "Klamouth",
+      "Description": "This is the KLAMOUTH!",
+      "Icon": null,
+      "editorTags": {
+        "E_GASIFY_TAGS": {
+          "E_EDITABLE": true,
+          "E_IS_BUILT": false,
+          "E_IS_CREATED": true,
+          "E_IS_SAVED_COPY": false,
+          "E_IS_DRAFT": false,
+          "E_HAS_UNSAVED_WORK": false,
+          "E_EDITOR_CATEGORY": [],
+          "E_IS_TEMPLATE": false,
+          "E_REFERENCES": "System.Collections.Generic.Dictionary`2[System.Int32,System.Collections.Generic.HashSet`1[System.String]]",
+          "E_REFERENCED_BY": "System.Collections.Generic.Dictionary`2[System.Int32,System.Collections.Generic.HashSet`1[System.String]]",
+          "E_REQUIRES_REBUILD": false,
+          "E_ERRORS": 0,
+          "E_COPY_ID": 974438308,
+          "E_STATUS": false
+        },
+        "E_STYLING_TAGS": {}
+      }
+    },
+    {
+      "Definition": null,
+      "DurationSpecification": null,
+      "ImpactSpecification": null,
+      "SourceRequirements": null,
+      "Tags": null,
+      "TargetRequirements": null,
+      "Workers": null,
+      "Id": 532052562,
+      "Name": "HelloWorld",
+      "Description": null,
+      "Icon": null,
+      "editorTags": {
+        "E_GASIFY_TAGS": {
+          "E_EDITABLE": true,
+          "E_IS_BUILT": false,
+          "E_IS_CREATED": true,
+          "E_IS_SAVED_COPY": false,
+          "E_IS_DRAFT": false,
+          "E_HAS_UNSAVED_WORK": false,
+          "E_EDITOR_CATEGORY": [],
+          "E_IS_TEMPLATE": false,
+          "E_REFERENCES": "System.Collections.Generic.Dictionary`2[System.Int32,System.Collections.Generic.HashSet`1[System.String]]",
+          "E_REFERENCED_BY": "System.Collections.Generic.Dictionary`2[System.Int32,System.Collections.Generic.HashSet`1[System.String]]",
+          "E_REQUIRES_REBUILD": false,
+          "E_ERRORS": 0,
+          "E_COPY_ID": 974438308,
+          "E_STATUS": false
+        },
+        "E_STYLING_TAGS": {}
+      }
+    }
+  ],
+  "Entities": [],
+  "AttributeSets": []
+}

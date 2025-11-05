@@ -1,0 +1,21 @@
+<ui:UXML xmlns:ui="UnityEngine.UIElements" xmlns:uie="UnityEditor.UIElements" editor-extension-mode="False">
+    <ui:VisualElement name="NameHolder" style="flex-grow: initial; align-items: center; padding-top: 12px; padding-bottom: 6px; flex-shrink: initial;">
+        <ui:Label tabindex="-1" text="Framework Index" parse-escape-sequences="true" display-tooltip-when-elided="true" name="Header" style="padding-bottom: 4px; padding-top: 4px; margin-bottom: 0; -unity-text-align: middle-center; scale: 2.4 1.5; -unity-font-style: bold; color: rgb(88, 109, 231);" />
+        <ui:Label tabindex="-1" text="My Test Framework" parse-escape-sequences="false" display-tooltip-when-elided="true" name="NameLabel" style="-unity-font-style: bold-and-italic; padding-top: 3px;" />
+    </ui:VisualElement>
+    <ui:IMGUIContainer name="IMGUIContainer" style="width: 100%; height: 4px; background-color: rgb(121, 121, 121); margin-top: 4px; margin-bottom: 4px;" />
+    <ui:VisualElement style="flex-grow: 0; align-items: center; padding-top: 5px; padding-bottom: 5px;">
+        <ui:Label tabindex="-1" text="This is a Framework Index file. It stores the framework data created with the Gasify Editor. The index is used for *Ref drawers, and as an intermediate between the user, framework, and backend." parse-escape-sequences="false" display-tooltip-when-elided="true" name="NameLabel" style="flex-shrink: 0; width: 100%; padding-left: 15px; white-space: normal; padding-right: 15px; margin-bottom: 5px; padding-top: 5px; font-size: 14px;" />
+        <ui:Label tabindex="-1" text="To set which framework to load at runtime, set the Framework Index field on the Bootstrapper." parse-escape-sequences="false" display-tooltip-when-elided="true" name="NameLabel" style="flex-shrink: 0; width: 100%; padding-left: 15px; white-space: normal; padding-right: 15px; -unity-font-style: bold; font-size: 14px; margin-bottom: 5px; margin-top: 6px; color: rgb(220, 220, 220);" />
+        <ui:Label tabindex="-1" text="Thank you for using FESGAS!" parse-escape-sequences="false" display-tooltip-when-elided="true" name="NameLabel" style="flex-shrink: 0; width: 100%; padding-left: 15px; white-space: normal; padding-right: 15px; -unity-font-style: normal; font-size: 14px; margin-top: 5px; margin-bottom: 5px;" />
+    </ui:VisualElement>
+    <ui:IMGUIContainer name="IMGUIContainer" style="width: 100%; height: 4px; background-color: rgb(121, 121, 121); margin-top: 4px; margin-bottom: 4px;" />
+    <ui:VisualElement style="flex-grow: 1; flex-direction: row; -unity-text-align: upper-left; justify-content: center;">
+        <ui:VisualElement name="EditHold" style="flex-grow: 0; align-items: center; padding-top: 5px; padding-bottom: 5px; flex-direction: column; margin-right: 3px;">
+            <ui:Button text="Edit This Framework" parse-escape-sequences="true" display-tooltip-when-elided="true" name="EditButton" style="flex-shrink: 1; margin-top: 2px; padding-top: 6px; padding-bottom: 6px; width: 160px;" />
+        </ui:VisualElement>
+        <ui:VisualElement name="SIEHold" style="flex-grow: 0; align-items: center; padding-top: 5px; padding-bottom: 5px; flex-direction: column; margin-left: 3px;">
+            <ui:Button text="Show In Explorer" parse-escape-sequences="true" display-tooltip-when-elided="true" name="SIEButton" style="flex-shrink: 1; margin-top: 2px; padding-top: 6px; padding-bottom: 6px; width: 160px;" />
+        </ui:VisualElement>
+    </ui:VisualElement>
+</ui:UXML>

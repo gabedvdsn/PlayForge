@@ -1,0 +1,43 @@
+<ui:UXML xmlns:ui="UnityEngine.UIElements" xmlns:uie="UnityEditor.UIElements" editor-extension-mode="True">
+    <ui:Label tabindex="-1" text="FESGAS Bootstrapper" parse-escape-sequences="true" display-tooltip-when-elided="true" style="overflow: visible; display: flex; visibility: visible; position: relative; left: auto; align-self: center; justify-content: center; align-items: center; margin-top: 14px; margin-bottom: 10px; -unity-font-style: bold-and-italic; color: rgb(223, 169, 250); font-size: 18px; -unity-text-align: upper-center; -unity-font: url(&quot;project://database/Assets/TextMesh%20Pro/Fonts/LiberationSans.ttf?fileID=12800000&amp;guid=e3265ab4bf004d28a9537516768c1c75&amp;type=3#LiberationSans&quot;); background-color: rgba(0, 0, 0, 0); background-image: none; -unity-background-scale-mode: stretch-to-fill;" />
+    <ui:Label tabindex="-1" text="The Bootstrapper is responsible for loading critical FESGAS systems. Assign the target GAS Framework to bootstrap at runtime initialization." parse-escape-sequences="true" display-tooltip-when-elided="true" style="overflow: visible; display: flex; visibility: visible; position: relative; left: auto; align-self: flex-start; justify-content: flex-start; align-items: auto; margin-top: 8px; margin-bottom: 2px; -unity-font-style: normal; color: rgb(217, 217, 217); font-size: 12px; -unity-text-align: upper-left; -unity-font: url(&quot;project://database/Assets/TextMesh%20Pro/Fonts/LiberationSans.ttf?fileID=12800000&amp;guid=e3265ab4bf004d28a9537516768c1c75&amp;type=3#LiberationSans&quot;); background-color: rgba(0, 0, 0, 0); text-overflow: clip; white-space: normal;" />
+    <ui:Label tabindex="-1" text="For more information, please see the FESGAS documentation and sample resources." parse-escape-sequences="true" display-tooltip-when-elided="true" style="overflow: visible; display: flex; visibility: visible; position: relative; left: auto; align-self: flex-start; justify-content: flex-start; align-items: auto; margin-top: 2px; margin-bottom: 8px; -unity-font-style: normal; color: rgb(217, 217, 217); font-size: 12px; -unity-text-align: upper-left; -unity-font: url(&quot;project://database/Assets/TextMesh%20Pro/Fonts/LiberationSans.ttf?fileID=12800000&amp;guid=e3265ab4bf004d28a9537516768c1c75&amp;type=3#LiberationSans&quot;); background-color: rgba(0, 0, 0, 0); text-overflow: clip; white-space: normal;" />
+    <ui:IMGUIContainer name="IMGUIContainer" style="width: 100%; height: 4px; background-color: rgb(121, 121, 121); margin-top: 4px; margin-bottom: 4px;" />
+    <uie:ObjectField label="Framework Index" binding-path="Framework" tooltip="Select the Framework Index to bootstrap." type="FESGameplayAbilitySystem.FrameworkIndex, Assembly-CSharp" name="FrameworkField" style="margin-top: 8px; -unity-font-style: bold; -unity-text-align: middle-left;" />
+    <ui:VisualElement name="FrameworkData" style="flex-grow: 1; padding-left: 0; display: flex; margin-top: 12px;">
+        <ui:VisualElement name="Abilities" style="flex-grow: 1; flex-direction: row; justify-content: flex-start; margin-left: 18px;">
+            <ui:Label tabindex="-1" text="Abilities:" parse-escape-sequences="true" display-tooltip-when-elided="true" enable-rich-text="false" />
+            <ui:IntegerField value="42" is-delayed="false" name="Count" readonly="true" picking-mode="Ignore" style="margin-left: 44px; position: absolute; right: auto; left: 90px; width: 20px;" />
+        </ui:VisualElement>
+        <ui:VisualElement name="Attributes" style="flex-grow: 1; flex-direction: row; justify-content: flex-start; margin-left: 18px; margin-top: 6px;">
+            <ui:Label tabindex="-1" text="Attributes:" parse-escape-sequences="true" display-tooltip-when-elided="true" />
+            <ui:IntegerField value="42" is-delayed="false" name="Count" readonly="true" picking-mode="Ignore" style="margin-left: 44px; position: absolute; left: 90px; width: 20px;" />
+        </ui:VisualElement>
+        <ui:VisualElement name="AttributeSets" style="flex-grow: 1; flex-direction: row; justify-content: flex-start; margin-left: 18px; margin-top: 6px;">
+            <ui:Label tabindex="-1" text="Attribute Sets:" parse-escape-sequences="true" display-tooltip-when-elided="true" />
+            <ui:IntegerField value="42" is-delayed="false" name="Count" readonly="true" picking-mode="Ignore" style="margin-left: 44px; position: absolute; left: 90px; width: 20px;" />
+        </ui:VisualElement>
+        <ui:VisualElement name="Effects" style="flex-grow: 1; flex-direction: row; justify-content: flex-start; margin-left: 18px; margin-top: 6px;">
+            <ui:Label tabindex="-1" text="Effects:" parse-escape-sequences="true" display-tooltip-when-elided="true" />
+            <ui:IntegerField value="42" is-delayed="false" name="Count" readonly="true" picking-mode="Ignore" style="margin-left: 44px; position: absolute; left: 90px; width: 20px;" />
+        </ui:VisualElement>
+        <ui:VisualElement name="Entities" style="flex-grow: 1; flex-direction: row; justify-content: flex-start; margin-left: 18px; margin-top: 6px;">
+            <ui:Label tabindex="-1" text="Entities" parse-escape-sequences="true" display-tooltip-when-elided="true" name="Label" />
+            <ui:IntegerField value="42" is-delayed="false" name="Count" readonly="true" picking-mode="Ignore" style="margin-left: 44px; position: absolute; left: 90px; width: 20px;" />
+        </ui:VisualElement>
+        <ui:VisualElement name="Tags" style="flex-grow: 1; flex-direction: row; justify-content: flex-start; margin-left: 18px; margin-top: 6px; margin-bottom: 8px;">
+            <ui:Label tabindex="-1" text="Tags" parse-escape-sequences="true" display-tooltip-when-elided="true" />
+            <ui:IntegerField value="42" is-delayed="false" name="Count" readonly="true" picking-mode="Ignore" style="margin-left: 44px; align-self: auto; position: absolute; left: 90px; width: 20px; justify-content: center; align-items: center;" />
+        </ui:VisualElement>
+    </ui:VisualElement>
+    <ui:IMGUIContainer name="IMGUIContainer" style="width: 100%; height: 4px; background-color: rgb(121, 121, 121); margin-top: 10px; margin-bottom: 14px;" />
+    <ui:VisualElement name="ShowAdvancedContainer" style="flex-grow: 1; flex-direction: row; justify-content: flex-start; margin-right: 15px; margin-bottom: 12px;">
+        <ui:Label tabindex="-1" text="Show Advanced Assignments" parse-escape-sequences="true" display-tooltip-when-elided="true" />
+        <ui:Toggle name="ShowAdvancedToggle" style="margin-left: 14px; align-items: flex-start; -unity-font-style: bold;" />
+    </ui:VisualElement>
+    <ui:VisualElement name="ProcessAndGameRoot" style="flex-grow: 1; display: none; visibility: visible;">
+        <ui:Label tabindex="-1" text="Default assignments should be left as is, unless a custom ProcessControl or GameRoot is developed. FESGAS requires both systems to function normally." parse-escape-sequences="true" display-tooltip-when-elided="true" style="margin-left: 24px; flex-wrap: nowrap; white-space: normal;" />
+        <uie:ObjectField label="Process Control" allow-scene-objects="false" binding-path="ProcessControlPrefab" type="FESGameplayAbilitySystem.ProcessControl, Assembly-CSharp" style="margin-top: 10px; margin-bottom: 10px; color: rgba(217, 217, 217, 0.97); margin-left: 24px; -unity-font-style: bold;" />
+        <uie:ObjectField label="Game Root" binding-path="GameRootPrefab" type="FESGameplayAbilitySystem.GameRoot, Assembly-CSharp" style="margin-left: 24px; -unity-font-style: bold;" />
+    </ui:VisualElement>
+</ui:UXML>

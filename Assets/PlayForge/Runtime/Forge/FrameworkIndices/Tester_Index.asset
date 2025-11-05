@@ -1,0 +1,61 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ab158a5ca94c39046801f2e1fa08dd3d, type: 3}
+  m_Name: Tester_Index
+  m_EditorClassIdentifier: 
+  FrameworkKey: Tester
+  IsUpToDate: 1
+  Attributes:
+  - Id: 2138746947
+    Name: Attribute1
+    Type: 4
+  - Id: 2024563611
+    Name: Attribute2
+    Type: 4
+  AttributeSets: []
+  Tags:
+  - Id: 170983768
+    Name: Tag1
+    Type: 5
+  - Id: 1737900036
+    Name: Tag2
+    Type: 5
+  Entities:
+  - Id: 554637595
+    Name: Entity1
+    Type: 1
+  - Id: 1349282610
+    Name: Entity2
+    Type: 1
+  Abilities:
+  - Id: 623124478
+    Name: Ability1
+    Type: 2
+  - Id: 254322399
+    Name: Ability2
+    Type: 2
+  - Id: 1113860543
+    Name: Ability3
+    Type: 2
+  Effects:
+  - Id: 1929827262
+    Name: Effect1
+    Type: 3
+  - Id: 679242742
+    Name: Effect2
+    Type: 3
+  - Id: 743933613
+    Name: Effect3
+    Type: 3
+  - Id: 1936351276
+    Name: TemplateEffect1
+    Type: 3

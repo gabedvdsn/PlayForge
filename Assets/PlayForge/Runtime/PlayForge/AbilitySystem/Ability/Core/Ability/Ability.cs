@@ -1,0 +1,57 @@
+﻿using System;
+using System.Collections;
+using System.Collections.Generic;
+using System.Threading;
+using Cysharp.Threading.Tasks;
+using UnityEngine;
+using UnityEngine.Serialization;
+
+namespace FarEmerald.PlayForge
+{
+    public class Ability : IHasReadableDefinition
+    {
+        [Header("Ability")]
+        
+        public AbilityDefinition Definition;
+        public AbilityTags Tags;
+        public AbilityProxySpecification Proxy;
+        
+        [Header("Leveling")]
+
+        [Min(0)] public int StartingLevel = 1;
+        [Min(0)] public int MaxLevel = 4;
+        public bool IgnoreWhenLevelZero = true;
+
+        [Header("Using")]
+        
+        [ForgeCategory(Forge.Categories.Cost)]
+        public GameplayEffect Cost;
+        
+        [ForgeCategory(Forge.Categories.Cooldown)]
+        public GameplayEffect Cooldown;
+
+        public AbilitySpec Generate(ISource owner, int level = 1)
+        {
+            return new AbilitySpec(owner, this, level);
+        }
+
+        public string GetName()
+        {
+            return Definition.Name;
+        }
+        
+        public string GetDescription()
+        {
+            return Definition.Description;
+        }
+        public Sprite GetPrimaryIcon()
+        {
+            return Definition.NormalIcon;
+        }
+
+        public override string ToString()
+        {
+            return Tags.AssetTag.GetName();
+        }
+    }
+}

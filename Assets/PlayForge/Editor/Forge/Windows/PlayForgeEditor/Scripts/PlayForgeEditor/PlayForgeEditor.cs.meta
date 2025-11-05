@@ -1,0 +1,33 @@
+fileFormatVersion: 2
+guid: 1f52f9c4e0296ac4cb1d378d317fda29
+MonoImporter:
+  externalObjects: {}
+  serializedVersion: 2
+  defaultReferences:
+  - m_ViewDataDictionary: {instanceID: 0}
+  - ConsoleEntryRow: {fileID: 9197481963319205126, guid: d0675c1424724bd49898b09d3d21ca94, type: 3}
+  - m_InspectorUXML: {fileID: 9197481963319205126, guid: 27061051ecb445347b24451690e24a34, type: 3}
+  - EnumerableDrawerTree: {fileID: 9197481963319205126, guid: 914e63078544e0c4f9a43d995fce30ae, type: 3}
+  - DictDrawerTree: {instanceID: 0}
+  - ColorDrawerTree: {fileID: 9197481963319205126, guid: 0d2ca5a2a9aac0f4ea9cdd56c3da983a, type: 3}
+  - GradientDrawerTree: {fileID: 9197481963319205126, guid: f9ed9dba32529c24c989287006b0c71b, type: 3}
+  - IntDrawerTree: {fileID: 9197481963319205126, guid: 4adfd8aefe945c043abb7c8a7e41ad79, type: 3}
+  - FloatDrawerTree: {fileID: 9197481963319205126, guid: 777ab902f784e3b4b9a12ee7f217507f, type: 3}
+  - StringDrawerTree: {fileID: 9197481963319205126, guid: 70fa09f50c98c17419e8c6ca57b42589, type: 3}
+  - BoolDrawerTree: {fileID: 9197481963319205126, guid: 5c37c83be77d5dc449c3e0be207156ca, type: 3}
+  - QuickRefDrawerTree: {fileID: 9197481963319205126, guid: ca2fd7be095a46b4cbcee5a539061193, type: 3}
+  - RefDrawerTree: {fileID: 9197481963319205126, guid: 273703dba5d60ce44b4c80d432d9452a, type: 3}
+  - ObjectDrawerTree: {fileID: 9197481963319205126, guid: bca5b241da99a5040acc779b5786a0e2, type: 3}
+  - CompositeDrawerTree: {fileID: 9197481963319205126, guid: 34fec18079133cf488ac9de94cb733ff, type: 3}
+  - EnumDrawerTree: {fileID: 9197481963319205126, guid: 70beb0173ee0f1b4ab9c445123cad5db, type: 3}
+  - Vector2DrawerTree: {fileID: 9197481963319205126, guid: 175e37e19d38bfa4bb7f141df69db045, type: 3}
+  - Vector3DrawerTree: {fileID: 9197481963319205126, guid: d923fad574f194f45a7e3e8bbb449466, type: 3}
+  - Vector2IntDrawerTree: {fileID: 9197481963319205126, guid: 8496c43341264e34e8d9cea690f73b5c, type: 3}
+  - Vector3IntDrawerTree: {fileID: 9197481963319205126, guid: 8754048ebed52fd4cbe170bcd89fbd99, type: 3}
+  - projectViewRow: {fileID: 9197481963319205126, guid: ba2b6701c89c346498c0b0c38c363988, type: 3}
+  - ImportDescrItem: {fileID: 9197481963319205126, guid: c34e27a0833780c47ab334d13e673314, type: 3}
+  executionOrder: 0
+  icon: {instanceID: 0}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
