@@ -43,7 +43,7 @@ namespace FarEmerald.PlayForge.Extended
         public static void SetActiveFramework(string key)
         {
             LoadMasterSettings().Set(ForgeTags.Settings.ACTIVE_FRAMEWORK, key);
-            Debug.Log($"[ FESGAS ] Active framework set to {key}");
+            Debug.Log($"[ PlayForge ] Active framework set to {key}");
         }
         
         public static IEnumerable<string> IterateFrameworkKeys()

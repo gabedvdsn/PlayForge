@@ -3,16 +3,15 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using Cysharp.Threading.Tasks;
-using UnityEditorInternal;
 using UnityEngine;
 
 namespace FarEmerald.PlayForge
 {
     public class AbilitySystemComponent : MonoBehaviour
     {
-        protected EAbilityActivationPolicy activationPolicy;
+        private EAbilityActivationPolicy activationPolicy;
         public EAbilityActivationPolicy DefaultActivationPolicy => activationPolicy;
-        protected bool allowDuplicateAbilities;
+        private bool allowDuplicateAbilities;
 
         private GASComponent Root;
 
@@ -145,7 +144,7 @@ namespace FarEmerald.PlayForge
             container = default;
             return false;
         }
-
+        
         public bool GiveAbility(Ability ability, int level, out int abilityIndex)
         {
             abilityIndex = -1;
@@ -287,9 +286,7 @@ namespace FarEmerald.PlayForge
         
         public void Inject(Ability ability, Tag injection)
         {
-            if (!TryGetAbilityContainer(ability, out var container)) return;
-            if (!container.IsClaiming) return;
-            
+            if (!TryGetAbilityContainer(ability, out var container) || !container.IsClaiming) return;
             container.Inject(injection);
         }
         
@@ -297,6 +294,7 @@ namespace FarEmerald.PlayForge
         {
             foreach (int index in ActiveCache[policy])
             {
+                // Cleanup -- make sure non-active, claiming abilities are released (this should never occur anyway)
                 if (!AbilityCache[index].IsClaiming) ReleaseClaim(AbilityCache[index], null);
                 AbilityCache[index].Inject(injection);
             }
@@ -320,8 +318,8 @@ namespace FarEmerald.PlayForge
         {
             if (!TryGetCacheIndexOf(container.Spec.Base, out var index)) return false;
             
-            TimeUtility.StartTimer(container.Spec.Base.Tags.AssetTag);
-            Callbacks.AbilityActivated(AbilityCallbackStatus.Generate(data, null, null, Tags.NULL, false));
+            TimeUtility.Start(container.Spec.Base.Tags.AssetTag);
+            Callbacks.AbilityActivated(AbilityCallbackStatus.GenerateForAbilityEvent(data));
             
             ActiveCache[AbilityCache[index].Spec.Base.Definition.ActivationPolicy.Translate(this)].Add(index);
             
@@ -332,12 +330,15 @@ namespace FarEmerald.PlayForge
         {
             if (!TryGetCacheIndexOf(container.Spec.Base, out var index)) return;
 
-            Callbacks.AbilityEnded(AbilityCallbackStatus.Generate(data, null, null, Tags.NULL, false));
-            TimeUtility.End(container.Spec.Base.Tags.AssetTag, out _);
-            
             var policy = AbilityCache[index].Spec.Base.Definition.ActivationPolicy.Translate(this);
             ActiveCache[policy].Remove(index);
 
+            TimeUtility.End(container.Spec.Base.Tags.AssetTag, out _);
+            
+            if (data is null) return;
+            
+            Callbacks.AbilityEnded(AbilityCallbackStatus.GenerateForAbilityEvent(data));
+            
             if (policy == EAbilityActivationPolicy.SingleActiveQueue && activationQueue.Count > 0) TryActivateAbility(activationQueue.Dequeue());
         }
 
@@ -467,9 +468,8 @@ namespace FarEmerald.PlayForge
             {
                 if (!IsClaiming) return;
 
-                Proxy.Inject(injection, activeData);
-
                 if (injection == Tags.INJECT_INTERRUPT) cts?.Cancel();
+                Proxy.Inject(injection, activeData);
             }
 
             public void CleanAndRelease()
@@ -551,116 +551,6 @@ namespace FarEmerald.PlayForge
             {
                 activeContainers.Add(container);
             }
-        }
-    }
-    
-    public class AbilitySystemCallbacks
-    {
-        /*
-         * On ability activate (any/specific)
-         * On ability end (any/specific)
-         * On ability (any/all) injection (any/specific)
-         * On ability (any/all) task activate (any/specific)
-         * On ability (any/all) task deactivate (any/specific)
-         *
-         * Ability status packet
-         * - Ability
-         * - Task
-         * - Stage
-         * - Injection
-         */
-        
-        public delegate void AbilitySystemCallbackDelegate(AbilityCallbackStatus status);
-
-        #region On Ability Activate
-        private AbilitySystemCallbackDelegate _onAbilityActivate;
-        public event AbilitySystemCallbackDelegate OnAbilityActivate
-        {
-            add
-            {
-                if (Array.IndexOf(_onAbilityActivate.GetInvocationList(), value) == -1) _onAbilityActivate += value;
-            }
-            remove => _onAbilityActivate -= value;
-        }
-        public void AbilityActivated(AbilityCallbackStatus status) => _onAbilityActivate?.Invoke(status);
-        #endregion
-        
-        #region On Ability End
-        private AbilitySystemCallbackDelegate _onAbilityEnd;
-        public event AbilitySystemCallbackDelegate OnAbilityEnd
-        {
-            add
-            {
-                if (Array.IndexOf(_onAbilityEnd.GetInvocationList(), value) == -1) _onAbilityEnd += value;
-            }
-            remove => _onAbilityEnd -= value;
-        }
-        public void AbilityEnded(AbilityCallbackStatus status) => _onAbilityEnd?.Invoke(status);
-        #endregion
-        
-        #region On Ability Injection
-        private AbilitySystemCallbackDelegate _onAbilityInjection;
-        public event AbilitySystemCallbackDelegate OnAbilityInjection
-        {
-            add
-            {
-                if (Array.IndexOf(_onAbilityInjection.GetInvocationList(), value) == -1) _onAbilityInjection += value;
-            }
-            remove => _onAbilityInjection -= value;
-        }
-        public void AbilityInjected(AbilityCallbackStatus status) => _onAbilityInjection?.Invoke(status);
-        #endregion
-        
-        #region On Task Activate
-        private AbilitySystemCallbackDelegate _onAbilityTaskActivate;
-        public event AbilitySystemCallbackDelegate OnAbilityTaskActivate
-        {
-            add
-            {
-                if (Array.IndexOf(_onAbilityTaskActivate.GetInvocationList(), value) == -1) _onAbilityTaskActivate += value;
-            }
-            remove => _onAbilityTaskActivate -= value;
-        }
-        public void AbilityTaskActivated(AbilityCallbackStatus status) => _onAbilityTaskActivate?.Invoke(status);
-        #endregion
-        
-        #region On Task End
-        private AbilitySystemCallbackDelegate _onAbilityTaskEnd;
-        public event AbilitySystemCallbackDelegate OnAbilityTaskEnd
-        {
-            add
-            {
-                if (Array.IndexOf(_onAbilityTaskEnd.GetInvocationList(), value) == -1) _onAbilityTaskEnd += value;
-            }
-            remove => _onAbilityTaskEnd -= value;
-        }
-        public void AbilityTaskEnded(AbilityCallbackStatus status) => _onAbilityTaskEnd?.Invoke(status);
-        #endregion
-    }
-
-    public struct AbilityCallbackStatus
-    {
-        public AbilityDataPacket Data;
-        public AbstractProxyTask[] Tasks;
-        public AbilityProxyStage Stage;
-        public Tag Injection;
-        public bool InjectionSuccessful;
-
-        public AbilitySpec Ability => Data.Spec as AbilitySpec;
-        public float TimeElapsed => TimeUtility.Get(Ability.Base.Tags.AssetTag, out float time) ? time : -1f;
-
-        private AbilityCallbackStatus(AbilityDataPacket data, AbstractProxyTask[] tasks, AbilityProxyStage stage, Tag injection, bool injectionSuccessful)
-        {
-            Data = data;
-            Tasks = tasks;
-            Stage = stage;
-            Injection = injection;
-            InjectionSuccessful = injectionSuccessful;
-        }
-
-        public static AbilityCallbackStatus Generate(AbilityDataPacket data, AbstractProxyTask[] tasks, AbilityProxyStage stage, Tag injection, bool injectionSuccessful)
-        {
-            return new AbilityCallbackStatus(data, tasks, stage, injection, injectionSuccessful);
         }
     }
 

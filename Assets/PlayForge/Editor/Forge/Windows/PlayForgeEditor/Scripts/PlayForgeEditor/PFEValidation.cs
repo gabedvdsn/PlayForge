@@ -13,9 +13,9 @@ namespace FarEmerald.PlayForge.Extended.Editor
     {
         struct ValidationPacket
         {
-            public Func<DataContainer, EditorFieldData, ConsoleEntry> ConsolePointer;
+            public Func<DataContainer, FieldData, ConsoleEntry> ConsolePointer;
 
-            public ValidationPacket(Func<DataContainer, EditorFieldData, ConsoleEntry> consolePointer)
+            public ValidationPacket(Func<DataContainer, FieldData, ConsoleEntry> consolePointer)
             {
                 ConsolePointer = consolePointer;
             }
@@ -34,12 +34,11 @@ namespace FarEmerald.PlayForge.Extended.Editor
             }
         }
         
-        void ValidateFieldFromCreator(EditorFieldData efd, bool refresh = true)
+        void ValidateFieldFromCreator(FieldData efd, bool refresh = true)
         {
             ForceResolveConsoleSource(EConsoleContext.Creator, efd);
             
-            var validations = efd.Validate();
-            
+            var validations = efd.GetValidation();
             
             ConsoleEntry severe = null;
             foreach (var packet in validations)
@@ -65,6 +64,17 @@ namespace FarEmerald.PlayForge.Extended.Editor
                 DoPerformCompleteValidation,
                 onFinish: () => SetNavigationPermit(EForgeContextExpanded.All, true),
                 runout: true, runoutTitle: "Validation Complete");
+        }
+        
+        private List<ValidationPacket> QuickValidationOk(FieldData fd)
+        {
+            return new List<ValidationPacket>() { new (Console.Creator.Validation.Ok ) };
+        }
+
+        private List<ValidationPacket> QuickValidationWarnOnNullOrEmpty(FieldData fd)
+        {
+            if (fd.Value is null) return new List<ValidationPacket>() { new(Console.Creator.Validation.WarnNullOrEmpty) };
+            return string.IsNullOrEmpty(fd.ValueTo<string>()) ? new List<ValidationPacket>() { new(Console.Creator.Validation.WarnNullOrEmpty) } : QuickValidationOk(fd);
         }
         
         private const int updateCheckInFrames = 32;

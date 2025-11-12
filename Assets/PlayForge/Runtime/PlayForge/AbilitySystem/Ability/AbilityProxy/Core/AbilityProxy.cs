@@ -38,6 +38,7 @@ namespace FarEmerald.PlayForge
                 foreach (int stageIndex in stageSources.Keys)
                 {
                     stageSources[stageIndex]?.Cancel();
+                    stageSources[stageIndex]?.Dispose();
                 }
 
                 stageSources.Clear();
@@ -110,12 +111,32 @@ namespace FarEmerald.PlayForge
 
         private async UniTask ActivateStage(AbilityProxyStage stage, int stageIndex, AbilityDataPacket data, CancellationToken token)
         {
+            var asc = data.Spec.GetOwner().AsGAS().AbilitySystem;
+            if (asc is null)
+            {
+                if (stageIndex == StageIndex) nextStageSignal?.TrySetResult();
+                else maintainedStages -= 1;
+                return;
+            }
+            
             var stageCts = CancellationTokenSource.CreateLinkedTokenSource(token);
             stageSources[stageIndex] = stageCts;
             var stageToken = stageCts.Token;
-
-            var tasks = stage.Tasks.Select(task => task.Activate(data, stageToken)).ToArray();
             
+            await UniTask.SwitchToMainThread(stageToken);
+            asc.Callbacks.AbilityStageActivated(AbilityCallbackStatus.GenerateForStageEvent(data, stage, true));
+            
+            var tasks = new UniTask[stage.Tasks.Length];
+            for (int i = 0; i < stage.Tasks.Length; i++)
+            {
+                tasks[i] = stage.Tasks[i].Activate(data, stageToken);
+                await UniTask.SwitchToMainThread(stageToken);
+                asc.Callbacks.AbilityTaskActivated(AbilityCallbackStatus.GenerateForTask(data, stage.Tasks[i], stage, true));
+            }
+
+            var canceled = false;
+            Exception err = null;
+
             try
             {
                 if (tasks.Length > 0)
@@ -123,11 +144,19 @@ namespace FarEmerald.PlayForge
                     switch (stage.TaskPolicy)
                     {
                         case EAnyAllPolicy.Any:
-                            await UniTask.WhenAny(tasks);
+                            var watched = tasks
+                                .Select((t, i) => WatchTask(t, asc.Callbacks, i, stage, data, false))
+                                .ToArray();
+
+                            await UniTask.WhenAny(watched);
                             stageCts.Cancel();
+                            
                             break;
                         case EAnyAllPolicy.All:
-                            await UniTask.WhenAll(tasks);
+                            var _watched = tasks
+                                .Select((t, i) => WatchTask(t, asc.Callbacks, i, stage, data, true))
+                                .ToArray();
+                            await UniTask.WhenAll(_watched);
                             break;
                         default:
                             throw new ArgumentOutOfRangeException();
@@ -136,7 +165,11 @@ namespace FarEmerald.PlayForge
             }
             catch (OperationCanceledException)
             {
-                //
+                canceled = true;
+            }
+            catch (Exception ex)
+            {
+                err = ex;
             }
             finally
             {
@@ -146,6 +179,9 @@ namespace FarEmerald.PlayForge
                 // If this stage is not maintained (hence stageIndex == StageIndex), then set next stage signal
                 if (stageIndex == StageIndex) nextStageSignal?.TrySetResult();
                 else maintainedStages -= 1;
+                
+                await UniTask.SwitchToMainThread(stageToken);
+                asc.Callbacks.AbilityStageEnded(AbilityCallbackStatus.GenerateForStageEvent(data, stage, !canceled && err is null));
             }
         }
         
@@ -177,19 +213,57 @@ namespace FarEmerald.PlayForge
                 else foreach (int stageIndex in stageSources.Keys) stageSources[stageIndex]?.Cancel();
             }
 
-            HandleInjectionCallback(
-                _success,
-                Specification.Stages[StageIndex].Tasks,
-                Specification.Stages[StageIndex]
-            );
-            
-            return;
-
-            void HandleInjectionCallback(bool success, AbstractProxyTask[] tasks, AbilityProxyStage stage)
+            if (implicitData.Spec.GetOwner().FindAbilitySystem(out var asc))
             {
-                if (implicitData.Spec.GetOwner().FindAbilitySystem(out var asc))
+                var stageSafe = (StageIndex >= 0 && StageIndex < Specification.Stages.Length)
+                    ? Specification.Stages[StageIndex]
+                    : new AbilityProxyStage { Tasks = Array.Empty<AbstractProxyTask>() };
+                
+                asc.Callbacks.AbilityInjected(
+                    AbilityCallbackStatus.GenerateForInjection(
+                        implicitData,
+                        stageSafe,
+                        injection, _success
+                    )
+                );
+            }
+        }
+
+        private UniTask WatchTask(
+            UniTask inner,
+            AbilitySystemCallbacks callbacks,
+            int taskIndex,
+            AbilityProxyStage stage,
+            AbilityDataPacket data,
+            bool notifyOnCancel
+        )
+        {
+            return WatchTaskCore();
+
+            async UniTask WatchTaskCore()
+            {
+                bool canceled = false;
+                Exception err = null;
+
+                try
                 {
-                    asc.Callbacks.AbilityInjected(AbilityCallbackStatus.Generate(implicitData, tasks, stage, injection, success));
+                    await inner;
+                }
+                catch (OperationCanceledException)
+                {
+                    canceled = true;
+                }
+                catch (Exception ex)
+                {
+                    err = ex;
+                }
+                finally
+                {
+                    if (!canceled || notifyOnCancel)
+                    {
+                        await UniTask.SwitchToMainThread();
+                        callbacks.AbilityTaskEnded(AbilityCallbackStatus.GenerateForTask(data, stage.Tasks[taskIndex], stage, err is null && !canceled));
+                    }
                 }
             }
         }

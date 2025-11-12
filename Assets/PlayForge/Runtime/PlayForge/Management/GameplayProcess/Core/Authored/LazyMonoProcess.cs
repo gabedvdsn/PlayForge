@@ -23,12 +23,17 @@ namespace FarEmerald.PlayForge
             await UniTask.WaitWhile(() => processActive, cancellationToken: token);
         }
 
-        public override UniTask CallBehaviour(Tag cmd, AbstractCompositeBehaviour cb, CancellationToken token)
+        public override UniTask CallBehaviour(Tag cmd, AbstractProxyTaskBehaviour cb, CancellationToken token)
         {
             return UniTask.CompletedTask;
         }
-        
-        public override UniTask RunCompositeBehaviour(Tag command, AbstractCompositeBehaviour cb, ICompositeBehaviourCaller caller, CancellationToken token)
+
+
+        public override void RunCompositeBehaviour(Tag command, AbstractProxyTaskBehaviour cb, IProxyTaskBehaviourCaller caller)
+        {
+            
+        }
+        public override UniTask RunCompositeBehaviourAsync(Tag command, AbstractProxyTaskBehaviour cb, IProxyTaskBehaviourCaller caller, CancellationToken token)
         {
             return UniTask.CompletedTask;
         }

@@ -1,4 +1,5 @@
 ﻿using System;
+using FarEmerald.PlayForge.Extended;
 using UnityEngine;
 
 namespace FarEmerald.PlayForge
@@ -48,7 +49,7 @@ namespace FarEmerald.PlayForge
         
         public string GetName()
         {
-            return $"{key}";
+            return $"{Name}-{key:2}";
         }
         public string GetDescription()
         {

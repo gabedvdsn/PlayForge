@@ -20,10 +20,10 @@ namespace FarEmerald.PlayForge.Extended
         private const string SettingsKey = "settings";
 
         static string ProjectRoot => Path.Combine(Directory.GetParent(Application.dataPath)!.FullName, "ProjectSettings");
-        static string FesgasRoot => EnsureDir(Path.Combine(ProjectRoot, RootFolderName));
+        static string PlayForgeRoot => EnsureDir(Path.Combine(ProjectRoot, RootFolderName));
 
-        public static string MasterSettingsRoot => EnsureDir(Path.Combine(FesgasRoot, MasterSettingsFolderName));
-        public static string FrameworksRoot => EnsureDir(Path.Combine(FesgasRoot, FrameworksFolderName));
+        public static string MasterSettingsRoot => EnsureDir(Path.Combine(PlayForgeRoot, MasterSettingsFolderName));
+        public static string FrameworksRoot => EnsureDir(Path.Combine(PlayForgeRoot, FrameworksFolderName));
 
         public static string MasterSettingsPath => Path.Combine(MasterSettingsRoot, MasterSettingsFileName);
 

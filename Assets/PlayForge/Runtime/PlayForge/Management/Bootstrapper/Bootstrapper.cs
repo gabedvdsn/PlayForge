@@ -18,7 +18,7 @@ namespace FarEmerald.PlayForge
         
         private void Awake()
         {
-            if (Framework is null) throw new NullReferenceException("[ FESGAS ] Bootstrapping failed: Framework cannot be null.");
+            if (Framework is null) throw new NullReferenceException("[ PlayForge ] Bootstrapping failed: Framework cannot be null.");
             
             Bootstrap();
         }
@@ -30,10 +30,6 @@ namespace FarEmerald.PlayForge
             
             DontDestroyOnLoad(gameObject);
             
-            // Bootstrap RuntimeStore
-            var fp = ForgeStores.LoadFramework(Framework.FrameworkKey, false) ?? FrameworkProject.EmptyDefault();
-            RuntimeStore.SetFramework(fp);
-            
             // Bootstrap ProcessControl
             if (ProcessControl.Instance is null)
             {
@@ -41,13 +37,14 @@ namespace FarEmerald.PlayForge
                 if (ProcessControlPrefab) control = Instantiate(ProcessControlPrefab, Vector3.zero, Quaternion.identity);
                 else
                 {
-                    var obj = new GameObject("ProcessControl");
+                    var obj = new GameObject();
                     control = obj.AddComponent<ProcessControl>();
                 }
-                
+
+                control.name = "ProcessControl";
                 control.Bootstrap();
             }
-
+            
             // Bootstrap GameRoot
             if (GameRoot.Instance is null)
             {
@@ -59,16 +56,18 @@ namespace FarEmerald.PlayForge
                 root.Bootstrap();
             }
             
+            Initialize();
+            
             ProcessControl.Instance.DeferredInit();
             GameRoot.Instance.DeferredInit();
-
-            Initialize();
         }
 
         private void Initialize()
         {
             // Any further bootstrap initialization here   
-            // Bootstrap load framework
+            
+            var fp = ForgeStores.LoadFramework(Framework.FrameworkKey, false) ?? FrameworkProject.EmptyDefault();
+            RuntimeStore.SetFramework(fp);
         }
         
         public bool HandlerValidateAgainst(IGameplayProcessHandler handler)

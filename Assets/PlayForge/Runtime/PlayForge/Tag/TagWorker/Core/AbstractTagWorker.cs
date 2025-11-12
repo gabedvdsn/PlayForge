@@ -17,7 +17,7 @@ namespace FarEmerald.PlayForge
         [Tooltip("Ticks between calls to Tick.")]
         public int TickPause;
         
-        public abstract void Initialize(GASComponent component);
+        public abstract void Activate(GASComponent component);
         public abstract void Tick(GASComponent component);
         public abstract void Resolve(GASComponent component);
 
@@ -79,7 +79,7 @@ namespace FarEmerald.PlayForge
 
         public void Initialize()
         {
-            Base.Initialize(System);
+            Base.Activate(System);
         }
         
         public void Tick()

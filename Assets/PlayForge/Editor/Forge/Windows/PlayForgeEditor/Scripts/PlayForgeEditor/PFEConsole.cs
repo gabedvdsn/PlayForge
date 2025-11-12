@@ -901,7 +901,40 @@ namespace FarEmerald.PlayForge.Extended.Editor
                         return ce;
                     }
                     
-                    public static ConsoleEntry NullValue(DataContainer dc, EditorFieldData efd)
+                    public static ConsoleEntry Ok(DataContainer dc, FieldData source)
+                    {
+                        var ce = BaseConsole(EConsoleContext.Creator, EValidationCode.Ok, source);
+
+                        ce.focus = focus;
+                        ce.message = $"{source.Fi.Name} is valid.";
+                        ce.description = $"";
+
+                        return ce;
+                    }
+                    
+                    public static ConsoleEntry WarnNullOrEmpty(DataContainer dc, FieldData source)
+                    {
+                        var ce = BaseConsole(EConsoleContext.Creator, EValidationCode.Warn, source);
+
+                        ce.focus = focus;
+                        ce.message = $"Field {Quotify(source.Fi.Name)} is null or empty.";
+                        ce.description = $"It is recommended to assign a value to {dc.Kind}.{source.Fi.Name}.";
+
+                        return ce;
+                    }
+                    
+                    public static ConsoleEntry MissingValidation(DataContainer dc, FieldData source)
+                    {
+                        var ce = BaseConsole(EConsoleContext.Creator, EValidationCode.Error, source);
+
+                        ce.focus = focus;
+                        ce.message = $"Validation Missing";
+                        ce.description = $"Could not produce a validation for {dc.Kind}.{source.Fi.Name}";
+
+                        return ce;
+                    }
+                    
+                    public static ConsoleEntry NullValue(DataContainer dc, FieldData efd)
                     {
                         var ce = BaseConsole(EConsoleContext.Creator, EValidationCode.Error, efd);
 
@@ -912,13 +945,24 @@ namespace FarEmerald.PlayForge.Extended.Editor
                         return ce;
                     }
                     
-                    public static ConsoleEntry NameExists(DataContainer dc, EditorFieldData efd)
+                    public static ConsoleEntry NameExists(DataContainer dc, FieldData efd)
                     {
                         var ce = BaseConsole(EConsoleContext.Creator, EValidationCode.Error, efd);
 
                         ce.focus = focus;
                         ce.message = $"Field {Quotify(efd.Fi.Name)} is invalid — Name already exists.";
                         ce.description = $"A(n) {DataTypeText(dc.Kind)} with name {Quotify(efd.ValueTo<string>())} already exists.";
+
+                        return ce;
+                    }
+
+                    public static ConsoleEntry ValueMissingWarn(DataContainer dc, FieldData efd)
+                    {
+                        var ce = BaseConsole(EConsoleContext.Creator, EValidationCode.Warn, efd);
+
+                        ce.focus = focus;
+                        ce.message = $"Field {Quotify(efd.Fi.Name)} is missing.";
+                        ce.description = $"Field {dc.Kind}.{efd.Fi.Name} is missing, but allowable.";
 
                         return ce;
                     }

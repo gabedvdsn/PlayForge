@@ -9,7 +9,7 @@ using UnityEngine.Serialization;
 
 namespace FarEmerald.PlayForge
 {
-    public class GASComponent : LazyMonoProcess, ISource, ITagHandler, ICompositeBehaviourCaller
+    public class GASComponent : LazyMonoProcess, ISource, ITagHandler, IProxyTaskBehaviourCaller
     {
         public EntityIdentity Data;
         
@@ -429,20 +429,16 @@ namespace FarEmerald.PlayForge
         {
             float longestDuration = float.MinValue;
             float longestRemaining = float.MinValue;
-            foreach (AbstractGameplayEffectShelfContainer container in EffectShelf)
+            foreach (var container in from container in EffectShelf from specTag in container.Spec.Base.Tags.GrantedTags.Where(specTag => specTag == lookForTag) select container)
             {
-                foreach (Tag specTag in container.Spec.Base.Tags.GrantedTags)
+                if (container.Spec.Base.DurationSpecification.DurationPolicy == EEffectDurationPolicy.Infinite)
                 {
-                    if (specTag != lookForTag) continue;
-                    if (container.Spec.Base.DurationSpecification.DurationPolicy == EEffectDurationPolicy.Infinite)
-                    {
-                        return new GameplayEffectDuration(float.MaxValue, float.MaxValue, true);
-                    }
-
-                    if (!(container.TotalDuration > longestDuration)) continue;
-                    longestDuration = container.TotalDuration;
-                    longestRemaining = container.DurationRemaining;
+                    return new GameplayEffectDuration(float.MaxValue, float.MaxValue, true);
                 }
+
+                if (!(container.TotalDuration > longestDuration)) continue;
+                longestDuration = container.TotalDuration;
+                longestRemaining = container.DurationRemaining;
             }
 
             return new GameplayEffectDuration(longestDuration, longestRemaining, longestDuration >= 0f);
@@ -478,9 +474,9 @@ namespace FarEmerald.PlayForge
             return $"{Identity}";
         }
 
-        public override async UniTask CallBehaviour(Tag cmd, AbstractCompositeBehaviour cb, CancellationToken token)
+        public override async UniTask CallBehaviour(Tag cmd, AbstractProxyTaskBehaviour cb, CancellationToken token)
         {
-            if (cmd == DisjointCompositeBehaviour.Command)
+            if (cmd == DisjointProxyTaskBehaviour.Command)
             {
                 if (!regData.TryGet(Tags.TARGETED_INTENT, out DataValue<AbstractGameplayMonoProcess> data))
                 {
@@ -494,7 +490,12 @@ namespace FarEmerald.PlayForge
             await base.CallBehaviour(cmd, cb, token);
         }
 
-        public override UniTask RunCompositeBehaviour(Tag command, AbstractCompositeBehaviour cb, ICompositeBehaviourCaller caller, CancellationToken token)
+        public override void RunCompositeBehaviour(Tag command, AbstractProxyTaskBehaviour cb, IProxyTaskBehaviourCaller caller)
+        {
+            
+        }
+
+        public override UniTask RunCompositeBehaviourAsync(Tag command, AbstractProxyTaskBehaviour cb, IProxyTaskBehaviourCaller caller, CancellationToken token)
         {
             return UniTask.CompletedTask;
         }

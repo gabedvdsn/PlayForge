@@ -3,12 +3,12 @@
     public struct CompositeBehaviourPacket
     {
         public Tag Command;
-        public AbstractCompositeBehaviour Behaviour;
+        public AbstractProxyTaskBehaviour Behaviour;
         
-        public ICompositeBehaviourCaller Caller;
-        public ICompositeBehaviourUser User;
+        public IProxyTaskBehaviourCaller Caller;
+        public IProxyTaskBehaviourUser User;
 
-        public static CompositeBehaviourPacket Generate(Tag command, AbstractCompositeBehaviour behaviour, ICompositeBehaviourCaller caller, ICompositeBehaviourUser user)
+        public static CompositeBehaviourPacket Generate(Tag command, AbstractProxyTaskBehaviour behaviour, IProxyTaskBehaviourCaller caller, IProxyTaskBehaviourUser user)
         {
             return new CompositeBehaviourPacket()
             {
@@ -23,12 +23,34 @@
 
     public enum EActionStatus
     {
+        /// <summary>
+        /// CB performed successfully
+        /// </summary>
         Success = 0,
+        
+        /// <summary>
+        /// CB status is still pending
+        /// </summary>
         Pending = 1,
+        
+        /// <summary>
+        /// CB failed during validation process
+        /// </summary>
         Failure = 2,
-        Error = 4,
-        Warning = 3,
-        NoData = 5,
+        
+        /// <summary>
+        /// An error occurred while executing the CB
+        /// </summary>
+        Error = 3,
+        
+        /// <summary>
+        /// No status available 
+        /// </summary>
+        NoData = 4,
+        
+        /// <summary>
+        /// No CB operation occurred
+        /// </summary>
         NoOp = -1
     }
 }

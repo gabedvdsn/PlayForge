@@ -6,6 +6,7 @@ using System.Runtime.InteropServices.WindowsRuntime;
 using System.Runtime.Serialization;
 using System.Threading;
 using Codice.Client.Common.Connection;
+using Codice.CM.Common;
 using Cysharp.Threading.Tasks;
 using NUnit.Framework;
 using Unity.VisualScripting;
@@ -20,9 +21,7 @@ namespace FarEmerald.PlayForge.Extended.Editor
     public partial class PlayForgeEditor
     {
         #region Creator
-
-        private static EditorRegistry Registry;
-
+        
         public VisualTreeAsset EnumerableDrawerTree;
         public VisualTreeAsset DictDrawerTree;
         
@@ -50,19 +49,12 @@ namespace FarEmerald.PlayForge.Extended.Editor
         private VisualElement creator_home;
 
         // Editor
-        private ListView creator_sourceList;
         private ListView creator_buriedList;
 
-        private List<EditorFieldData> creator_fieldData = new();
-        private List<EditorFieldData> creator_buriedData = new();
-
-        private Dictionary<EditorFieldData, HashSet<int>> creator_alerts;
-        private (ConsoleEntry ce, EditorFieldData efd) creator_lastTraced = (null, null);
+        private (ConsoleEntry ce, FieldData efd) creator_lastTraced = (null, null);
         
         private object creator_buriedObject;
-
-        private EditorFieldData creator_lastEdited;
-        private Dictionary<EValidationCode, List<(IConsoleMessenger source, string focus, string msg, string descr)>> creator_lastEditedAlerts;
+        
         
         // Actions
         private ToolbarButton c_save;
@@ -72,93 +64,14 @@ namespace FarEmerald.PlayForge.Extended.Editor
         private ToolbarButton c_help;
         private ToolbarButton c_options;
 
-
-        delegate List<ValidationPacket> FieldValidationDelegate(object o, EditorFieldData efd);
-        private class EditorFieldData : IConsoleMessenger
-        {
-            public ForgeDataNode Source;
-            
-            public object Target;
-            public FieldInfo Fi;
-            public object Value;
-            
-            public VisualElement Root;
-            public Func<VisualElement> GetValueElement;
-            
-            // A method that takes in the DC and field data and returns a list of validation packets
-            public FieldValidationDelegate Validation = (_, _) => new List<ValidationPacket>();
-            public List<ValidationPacket> Validate()
-            {
-                var results = new List<ValidationPacket>();
-                foreach (var @delegate in Validation.GetInvocationList())
-                {
-                    var handler = (FieldValidationDelegate)@delegate;
-                    var list = handler(Value, this);
-                    if (list is not null) results.AddRange(list);
-                }
-
-                return results;
-            }
-            
-            public EditorFieldData(ForgeDataNode source, object target, FieldInfo fi)
-            {
-                Source = source;
-                
-                Target = target;
-                Fi = fi;
-                Value = null;
-                
-                Root = null;
-                GetValueElement = () => default;
-            }
-
-            public VisualElement GetIndicator() => Root.Q("Indicator");
-
-            public T GetFiAttribute<T>() where T : System.Attribute
-            {
-                return Fi.GetCustomAttribute<T>();
-            }
-
-            public EDataType GetDataType()
-            {
-                var dt = GetFiAttribute<ForgeDataType>();
-                return dt?.Kind ?? EDataType.None;
-            }
-
-            public T ValueTo<T>() => Value is T tV ? tV : default;
-            
-            public void Trace(ConsoleEntry ce, PlayForgeEditor editor, bool inOut)
-            {
-                editor.TraceCreatorFieldSource(ce, this, inOut);
-            }
-            
-            public void Link(ConsoleEntry ce, PlayForgeEditor editor)
-            {
-                editor.LinkCreatorFieldSource(ce, this);
-            }
-
-            public bool CanResolve(ConsoleEntry ce, PlayForgeEditor editor)
-            {
-                return ce.code switch
-                {
-                    EValidationCode.Ok => true,
-                    EValidationCode.Warn => true,
-                    EValidationCode.Error => false,
-                    EValidationCode.None => true,
-                    _ => throw new ArgumentOutOfRangeException()
-                };
-            }
-        }
+        private Dictionary<EDataType, Dictionary<string, FieldData>> creator_fields = new();
+        private Dictionary<int, BuriedFieldData> creator_buriedFields = new();
         
-        private void BindCreator()
+        void BindCreator()
         {
-            creatorRoot = contentRoot.Q("CreatorPage");
-
+            creatorRoot = focusRoot.Q("CreatorPage");
+            creator_home = creatorRoot.Q("CreatorHome");
             creator_editor = creatorRoot.Q("Editor");
-            creator_sourceList = creator_editor.Q("Source").Q<ListView>("SourceList");
-            creator_buriedList = creator_editor.Q("Buried").Q<ListView>("BuriedList");
-
-            creator_home = contentRoot.Q("CreatorHome");
             
             var actions = creator_editor.Q("Actions");
             c_save = actions.Q<ToolbarButton>("Save");
@@ -167,76 +80,16 @@ namespace FarEmerald.PlayForge.Extended.Editor
             c_templateQuick = actions.Q<ToolbarButton>("TemplateQuick");
             c_help = actions.Q<ToolbarButton>("Help");
             c_options = actions.Q<ToolbarButton>("Options");
+            
+            BindAbilityCreator();
         }
 
         void BuildCreator()
         {
-            Registry = EditorRegistry.DefaultRegistry(
-                IntDrawerTree, FloatDrawerTree, StringDrawerTree, BoolDrawerTree,
-                EnumDrawerTree,
-                ObjectDrawerTree,
-                ColorDrawerTree, GradientDrawerTree,
-                Vector2DrawerTree, Vector2IntDrawerTree,
-                Vector3DrawerTree, Vector3IntDrawerTree,
-                EnumerableDrawerTree, DictDrawerTree,
-                QuickRefDrawerTree, RefDrawerTree, CompositeDrawerTree
-            );
-
-            creator_alerts = new Dictionary<EditorFieldData, HashSet<int>>();
-
-            BuildFieldList(creator_sourceList, creator_fieldData);
-            BuildFieldList(creator_buriedList, creator_buriedData);
-
-            c_save.clicked += () => TrySaveOrCreate(ReservedFocus);
-            c_template.clicked += () => OpenNodeImportMenu("", ReservedFocus.Kind, ReservedFocus);
-            c_help.clicked += () => Debug.Log("Creator Help Clicked");
-            c_options.clicked += () => Debug.Log("Creator Options Clicked");
-            
-            return;
-
-            void BuildFieldList(ListView lv, List<EditorFieldData> source)
-            {
-                lv.itemsSource = source;
-                
-                lv.makeItem = () => new VisualElement()
-                {
-                    style =
-                    {
-                        flexGrow = 1
-                    }
-                };
-
-                lv.bindItem = (row, idx) =>
-                {
-                    var efd = lv.itemsSource[idx] as EditorFieldData;
-
-                    row.Add(efd.Root);
-                    
-                    var template = row.Q<Button>("Template");
-                    var push = row.Q<Button>("Push");
-
-                    if (template is not null)
-                    {
-                        template.clicked += () =>
-                        {
-                            OpenFieldImportMenu($"{ReservedFocus.Kind}", efd.Fi, ReservedFocus);
-                        };
-                    }
-
-                    if (push is not null)
-                    {
-                        push.clicked += () =>
-                        {
-                            PushBuried(efd);
-                        };
-                    }
-                };
-
-                lv.makeNoneElement = () => new VisualElement();
-            }
+            BuildAbilityCreator();   
         }
-        
-        private void RefreshCreator()
+
+        void RefreshCreator()
         {
             if (!ReservedFocus.IsFocused)
             {
@@ -252,6 +105,332 @@ namespace FarEmerald.PlayForge.Extended.Editor
             }
         }
 
+        class FieldData : IConsoleMessenger
+        {
+            public FieldInfo Fi;
+            public VisualElement Root;
+            public VisualElement Indicator;
+            public Func<VisualElement> ValueField;
+            private Func<FieldData, List<ValidationPacket>> Validation;
+            public object Value;
+
+            public FieldData(FieldInfo fi, VisualElement indicator, Func<FieldData, List<ValidationPacket>> validation, object value)
+            {
+                Fi = fi;
+                Indicator = indicator;
+                Validation = validation;
+                Value = value;
+            }
+
+            public static FieldData Initial(FieldInfo fi, VisualElement root, VisualElement indicator, Func<VisualElement> valueField, Func<FieldData, List<ValidationPacket>> validation)
+            {
+                return new FieldData(fi, indicator, validation, null);
+            }
+
+            public List<ValidationPacket> GetValidation() => Validation?.Invoke(this) ?? new List<ValidationPacket>() { new(Console.Creator.Validation.MissingValidation ) };
+
+            public T ValueTo<T>()
+            {
+                return Value is T tV ? tV : default;
+            }
+
+            public VisualElement GetValueField() => ValueField?.Invoke();
+            public INotifyValueChanged<T> GetValueField<T>()
+            {
+                return ValueField?.Invoke() as INotifyValueChanged<T>;
+            }
+
+            public void Trace(ConsoleEntry ce, PlayForgeEditor editor, bool inOut)
+            {
+                
+            }
+            public void Link(ConsoleEntry ce, PlayForgeEditor editor)
+            {
+                
+            }
+            public bool CanResolve(ConsoleEntry ce, PlayForgeEditor editor)
+            {
+                return ce.code <= 0;
+            }
+        }
+        
+        class BuriedFieldData : FieldData
+        {
+            public readonly int Key;
+            public readonly Type MyType;
+            
+            public BuriedFieldData(int key, Type myType, FieldInfo fi, VisualElement indicator, Func<FieldData, List<ValidationPacket>> validation, object value) : base(fi, indicator, validation, value)
+            {
+                Key = key;
+                MyType = myType;
+            }
+        }
+
+        void ValidateFieldOnEdit(FieldData fd, bool refresh = true)
+        {
+            ForceResolveConsoleSource(EConsoleContext.Creator, fd);
+
+            var v = fd.GetValidation();
+            ConsoleEntry severe = null;
+            
+            foreach (var vp in v)
+            {
+                
+                var ce = vp.ConsolePointer.Invoke(ReservedFocus, fd);
+                if (severe is null || (int)ce.code > (int)severe.code) severe = ce;
+
+                ce.link = _ => fd.Link(ce, this);
+                ce.trace = flag => fd.Trace(ce, this, flag);
+
+                LogConsoleEntry(ce, refresh: false);
+            }
+            
+            UpdateFieldIndicator(fd, severe?.code ?? EValidationCode.Ok, severe?.message);
+            
+            if (refresh) RefreshConsole();
+        }
+        
+        private List<Unbinder> creator_activeUnbinders = new();
+        
+        #region Ability
+        
+        void BindAbilityCreator()
+        {
+            var r = creator_editor.Q("Ability");
+            
+            // Definition
+            var definition = r.Q("Definition");
+            
+            // NAME FIELD
+            var nameField = definition.Q("Name");
+            var nameFi = typeof(AbilityData).GetField(nameof(AbilityData.Name));
+            var nameIndicator = nameField.Q("Indicator");
+            var nameInput = nameField.Q<TextField>();
+            Func<FieldData, List<ValidationPacket>> nameValidation = fd =>
+            {
+                string value = fd.ValueTo<string>();
+                if (string.IsNullOrEmpty(value)) return new List<ValidationPacket>() { new(Console.Creator.Validation.NullValue) };
+                if (Project.DataWithNameExists(value, ReservedFocus.Kind, ReservedFocus.Node.Id)) return new List<ValidationPacket>() { new(Console.Creator.Validation.NameExists) };
+                return new List<ValidationPacket>();
+            };
+            var nameData = FieldData.Initial(nameFi, nameField, nameIndicator, () => nameInput, nameValidation);
+            var nameBinder = BindCreatorField<string>(EDataType.Ability, nameData, refAssign: () =>
+            {
+                string value = nameData.ValueTo<string>();
+                header_title.text = string.IsNullOrEmpty(value) ? $"Unnamed {DataTypeText(ReservedFocus.Kind)}" : value;
+            });
+            
+            // DESCRIPTION FIELD
+            var descrField = definition.Q("Description");
+            var descrFi = typeof(AbilityData).GetField(nameof(AbilityData.Description));
+            var descrIndicator = descrField.Q("Indicator");
+            var descrInput = descrField.Q<TextField>();
+            var descrData = FieldData.Initial(descrFi, descrField, descrIndicator, () => descrInput, QuickValidationWarnOnNullOrEmpty);
+            var descrBinder = BindCreatorField<string>(EDataType.Ability, descrData);
+            
+            // ICON FIELD
+            var iconField = definition.Q("Icon");
+            var iconFi = typeof(AbilityData).GetField(nameof(AbilityData.Icon));
+            var iconIndicator = iconField.Q("Indicator");
+            var iconInput = iconField.Q<TextField>();
+            var iconData = FieldData.Initial(iconFi, iconField, iconIndicator, () => iconInput, QuickValidationWarnOnNullOrEmpty);
+            var iconBinder = BindCreatorField<Sprite>(EDataType.Ability, iconData, refAssign: () =>
+            {
+                Sprite value = iconData.ValueTo<Sprite>();
+                header_icon.style.backgroundImage = value.texture;
+            });
+            
+            creator_activeUnbinders.Add(nameBinder);
+            creator_activeUnbinders.Add(descrBinder);
+            creator_activeUnbinders.Add(iconBinder);
+
+            var runtime = r.Q("Runtime");
+            
+            // COST FIELD
+            var costField = runtime.Q("Cost");
+            var costFi = typeof(AbilityData).GetField(nameof(AbilityData.Cost));
+            var costIndicator = costField.Q("Indicator");
+            var costInput = costField.Q<TextField>();
+            var costData = FieldData.Initial(costFi, costField, costIndicator, () => costInput, QuickValidationWarnOnNullOrEmpty);
+            var costBinder = BindCreatorField<GameplayEffect>(EDataType.Ability, costData, refAssign: () =>
+            {
+                // TODO update visualizer if open
+            });
+            // Setup search dropdown
+            
+            // COOLDOWN FIELD
+            var cooldownField = runtime.Q("Cost");
+            var cooldownFi = typeof(AbilityData).GetField(nameof(AbilityData.Cooldown));
+            var cooldownIndicator = cooldownField.Q("Indicator");
+            var cooldownInput = cooldownField.Q<TextField>();
+            var cooldownData = FieldData.Initial(cooldownFi, cooldownField, cooldownIndicator, () => cooldownInput, QuickValidationWarnOnNullOrEmpty);
+            var cooldownBinder = BindCreatorField<GameplayEffect>(EDataType.Ability, cooldownData, refAssign: () =>
+            {
+                // TODO update visualizer if open
+            });
+            // Setup search dropdown
+            
+            // TARGETING TASK FIELD
+            var targetingField = runtime.Q("Targeting");
+            var targetingFi = typeof(AbilityData).GetField(nameof(AbilityData.Proxy.TargetingProxy));
+            var targetingIndicator = targetingField.Q("Indicator");
+            var targetingInput = targetingField.Q<TextField>();
+            var targetingData = FieldData.Initial(targetingFi, targetingField, targetingIndicator, () => targetingInput, QuickValidationWarnOnNullOrEmpty);
+            var targetingBinder = BindCreatorField<string>(EDataType.Ability, targetingData, refAssign: () =>
+            {
+                // TODO update visualizer if open
+            });
+            // Setup search dropdown
+            
+            // USE IMPLICIT TARGETING FIELD
+            var implicitTargetingField = runtime.Q("UseImplicitTargeting");
+            var implicitTargetingFi = typeof(AbilityData).GetField(nameof(AbilityData.Proxy.UseImplicitTargeting));
+            var implicitTargetingIndicator = implicitTargetingField.Q("Indicator");
+            var implicitTargetingInput = implicitTargetingField.Q<TextField>();
+            var implicitTargetingData = FieldData.Initial(implicitTargetingFi, implicitTargetingField, implicitTargetingIndicator, () => implicitTargetingInput, QuickValidationWarnOnNullOrEmpty);
+            var implicitTargetingBinder = BindCreatorField<bool>(EDataType.Ability, implicitTargetingData, refAssign: () =>
+            {
+                // TODO update visualizer if open
+            });
+            // Setup search dropdown
+            
+            // PROXY TASKS FIELD
+            var proxyTasksField = runtime.Q("ProxyTasks");
+            var proxyTasksFi = typeof(AbilityData).GetField(nameof(AbilityData.Proxy.Stages));
+            var proxyTasksIndicator = proxyTasksField.Q("Indicator");
+            var proxyTasksData = FieldData.Initial(proxyTasksFi, proxyTasksField, proxyTasksIndicator, () => null, QuickValidationWarnOnNullOrEmpty);
+            var proxyTasksNumStages = proxyTasksField.Q<Label>("NumStagesChip");
+            var proxyTasksNumTasks = proxyTasksField.Q<Label>("NumTasksChip");
+            var proxyTasksGoButton = proxyTasksField.Q<Button>("AddEB");
+            var proxyTasksBinder = BindCreatorField<string>(EDataType.Ability, proxyTasksData, refAssign: () =>
+            {
+                // TODO update chips
+            });
+            proxyTasksGoButton.clicked += () =>
+            {
+                // TODO load buried list
+            };
+            
+            creator_activeUnbinders.Add(costBinder);
+            creator_activeUnbinders.Add(cooldownBinder);
+            creator_activeUnbinders.Add(proxyTasksBinder);
+        }
+        
+        void BuildAbilityCreator()
+        {
+            
+        }
+
+        void RefreshAbilityCreator()
+        {
+            
+        }
+        
+        #endregion
+        
+        // Bind a control that implements INotifyValueChanged<T> to a field (two-way)
+        private Unbinder BindCreatorField<T>(
+            EDataType kind,
+            FieldData fd,
+            Action<FieldInfo> onFocusIn = null,
+            Action refAssign = null,
+            Func<T, T> sanitizeIncoming = null, // optional: massage UI -> data
+            Func<object, T> toUi = null, // optional: data -> UI conversion
+            Func<T, object> toData = null) // optional: UI -> data conversion
+        {
+            creator_fields.TryAdd(kind, new Dictionary<string, FieldData>());
+            creator_fields[kind][fd.Fi.Name] = fd;
+            
+            var control = fd.GetValueField<T>();
+            if (control is null) throw new Exception(nameof(fd.Root));
+
+            var dataHost = ReservedFocus.Node;
+            if (dataHost is null) throw new ArgumentNullException(nameof(dataHost));
+            
+            // Initial push data -> UI
+            var vData = fd.Fi.GetValue(dataHost);
+            var vUI = toUi != null ? toUi(vData) : (T)ConvertTo(typeof(T), vData);
+            control.SetValueWithoutNotify(vUI);
+
+            EventCallback<FocusInEvent> inEvent = evt =>
+            {
+                onFocusIn?.Invoke(fd.Fi);
+            };
+            fd.Root.RegisterCallback(inEvent);
+            
+            EventCallback<FocusOutEvent> outEvent = evt =>
+            {
+                var newUI = sanitizeIncoming != null ? sanitizeIncoming(control.value) : control.value;
+                var newDataObj = toData != null ? toData(newUI) : ConvertTo(fd.Fi.FieldType, newUI);
+
+                // Set on the data object
+                fd.Fi.SetValue(dataHost, newDataObj);
+                control.SetValueWithoutNotify(newUI);
+
+                refAssign?.Invoke();
+
+                ValidateFieldOnEdit(fd);
+            };
+            fd.Root.RegisterCallback(outEvent);
+
+            // Return an unbinder so callers can cleanly detach
+            return new Unbinder(fd.Root, inEvent, outEvent);
+        }
+        
+        static object ConvertTo(Type target, object value)
+        {
+            if (value == null) return target.IsValueType ? Activator.CreateInstance(target) : null;
+            if (target.IsInstanceOfType(value)) return value;
+
+            // Handle Enum <-> string/int
+            if (target.IsEnum)
+            {
+                if (value is string s) return Enum.Parse(target, s, ignoreCase: true);
+                if (IsNumber(value))   return Enum.ToObject(target, value);
+            }
+
+            // UI Toolkit gives numeric types as their exact T; Convert.ChangeType handles most cases
+            return System.Convert.ChangeType(value, target);
+        }
+        
+        static bool IsNumber(object v) =>
+            v is sbyte or byte or short or ushort or int or uint or long or ulong;
+
+        sealed class Unbinder : IDisposable
+        {
+            readonly VisualElement _c;
+            private readonly EventCallback<FocusInEvent> inEvent;
+            private readonly EventCallback<FocusOutEvent> outEvent;
+            public Unbinder(VisualElement c, EventCallback<FocusInEvent> inEvent, EventCallback<FocusOutEvent> outEvent)
+            {
+                _c = c;
+                this.inEvent = inEvent;
+                this.outEvent = outEvent;
+            }
+            public void Dispose()
+            {
+                if (_c is null) return;
+                
+                _c.UnregisterCallback(inEvent);
+                _c.UnregisterCallback(outEvent);
+            }
+        }
+        
+        void SetupPresetDropdown(DropdownField df, string target, Dictionary<string, string> styling)
+        {
+            df.choices.Clear();
+            df.choices.Add("No Preset");
+            df.index = 0;
+
+            var templates = projectData[ReservedFocus.Kind].Where(n => n.TagStatus(ForgeTags.IS_TEMPLATE) && !n.TagStatus(ForgeTags.IS_SAVED_COPY));
+            
+            foreach (var t in templates)
+            {
+                df.choices.Add(t.Name);
+                if (styling.ContainsKey(target) && t.Name == styling[target]) df.index = df.choices.Count - 1;
+            }
+        }
+        
         void RefreshCreatorEditor()
         {
             RefreshSourcePane();
@@ -260,7 +439,7 @@ namespace FarEmerald.PlayForge.Extended.Editor
             ForceResolveConsole(EConsoleContext.Creator);
             RefreshHeader();
             
-            PostNodeValidateStep();
+            PostNodeValidateStep(ReservedFocus.Kind);
         }
 
         void RefreshCreatorHome()
@@ -268,25 +447,23 @@ namespace FarEmerald.PlayForge.Extended.Editor
             
         }
 
-        // For existing data
-        private void LoadIntoCreator(ForgeDataNode node, EDataType kind)
+        void LoadIntoCreator(ForgeDataNode node, EDataType kind)
         {
             SetFocus(ReservedFocus, node, kind, EForgeContext.Creator);
             LoadIntoCreator(ReservedFocus);
         }
-        
-        // For existing data
-        private void LoadIntoCreator(DataContainer focus)
+
+        void LoadIntoCreator(DataContainer focus)
         {
             SetFocus(ReservedFocus, focus, EForgeContext.Creator);
             if (!Focus.IsFocused) SetFocus(Focus, ReservedFocus, EForgeContext.Creator);
-            
+
             SetHeaderReservation(true);
-            
+
             DoContextAction(EForgeContextExpanded.Creator, focus, true);
             RefreshCreator();
         }
-
+        
         // For fresh data
         private void LoadIntoCreator(EDataType kind)
         {
@@ -298,186 +475,42 @@ namespace FarEmerald.PlayForge.Extended.Editor
         {
             return dc.Node.TagStatus(ForgeTags.IS_CREATED) && Project.HasNewChanges(dc.Node, dc.Kind);
         }
-
-        void PushBuried(EditorFieldData efd)
-        {
-            
-        }
         
         void RefreshSourcePane()
         {
-            ClearSourceFields();
+            // TODO refresh field values and validations
 
             c_save.text = ReservedFocus.Node.TagStatus(ForgeTags.IS_CREATED) ? "Save" : "Create";
-            
-            creator_fieldData = BuildFields(ReservedFocus.Node.GetType(), ReservedFocus.Node);
-            
-            creator_sourceList.itemsSource = creator_fieldData;
-            creator_sourceList.Rebuild();
-        }
-        
-        void ClearSourceFields()
-        {
-            creator_sourceList.Clear();
-            creator_fieldData.Clear();
         }
 
         void RefreshBuriedPane()
         {
-            ClearBuriedFields();
-            
-            
-        }
-
-        void ClearBuriedFields()
-        {
-            foreach (var d in creator_buriedData) creator_buriedList.Remove(d.Root);
-            creator_buriedData.Clear();
+            // TODO refresh buried field values and validations
         }
         
-        void PostNodeValidateStep()
+        void PostNodeValidateStep(EDataType target)
         {
-            foreach (var field in creator_fieldData)
+            foreach (var fd in creator_fields[target])
             {
-                ValidateFieldFromCreator(field, false);
+                ValidateFieldFromCreator(fd.Value, false);
             }
 
-            foreach (var field in creator_buriedData)
+            /*foreach (var field in creator_buriedData)
             {
                 ValidateFieldFromCreator(field, false);
-            }
+            }*/
             
             RefreshConsole();
         }
         
-        void UpdateFieldIndicator(EditorFieldData efd, EValidationCode severe, string msg = null)
+        void UpdateFieldIndicator(FieldData efd, EValidationCode severe, string msg = null)
         {
             var res = DefaultIndicatorState(severe);
-            var ind = efd.GetIndicator();
             
-            if (ind is null) return;
-            
-            ind.style.backgroundColor = res.color;
-            ind.tooltip = msg ?? res.msg;
+            efd.Indicator.style.backgroundColor = res.color;
+            efd.Indicator.tooltip = msg ?? res.msg;
         }
         
-        List<EditorFieldData> BuildFields(
-            Type target, object o, 
-            Action<EditorFieldData, object> onChange = null, 
-            Action<EditorFieldData> onFocusIn = null, 
-            Action<EditorFieldData> onFocusOut = null
-            )
-        {
-            var fields = GetEditableFields(target);
-            var fieldData = new List<EditorFieldData>();
-
-            foreach (var f in fields)
-            {
-                if (f.Name is "Id" or "editorTags" or "alerts") continue;
-
-                var efd = new EditorFieldData(ReservedFocus.Node, o, f);
-
-                if (f.Name == "Name")
-                {
-                    Action<EditorFieldData> _out = _ =>
-                    {
-                        string val = efd.ValueTo<string>();
-                        header_title.text = string.IsNullOrEmpty(val) ? $"Unnamed {DataTypeText(ReservedFocus.Kind)}" : val;
-                    };
-                    
-                    efd.Validation += (_, _) =>
-                    {
-                        string val = efd.ValueTo<string>();
-                        if (string.IsNullOrEmpty(val)) return new List<ValidationPacket>() { new (Console.Creator.Validation.NullValue) };
-                        if (Project.DataWithNameExists(val, ReservedFocus.Kind, ReservedFocus.Node.Id)) return new List<ValidationPacket>() { new (Console.Creator.Validation.NameExists) };
-                        return new List<ValidationPacket>();
-                    };
-                    
-                    FindAndDraw(efd, _onFocusOut: _out);
-                    fieldData.Insert(0, efd);
-                }
-                else if (f.Name == "Description")
-                {
-                    FindAndDraw(efd);
-                    fieldData.Insert(1, efd);
-                }
-                else if (f.Name == "Icon")
-                {
-                    Action<EditorFieldData, object> _change = (_, _) =>
-                    {
-                        var icon = efd.ValueTo<Sprite>();
-                        if (icon is null)
-                        {
-                            var _icon = GetDataIcon(ReservedFocus.Kind);
-                            efd.Fi.SetValue(o, _icon);
-                            header_icon.style.backgroundImage = _icon;
-                        }
-                        else header_icon.style.backgroundImage = new StyleBackground(icon);
-                    };
-                
-                    FindAndDraw(efd, _onChange: _change);
-                    fieldData.Insert(2, efd);
-                }
-                else
-                {
-                    FindAndDraw(efd);
-                    fieldData.Add(efd);
-                }
-            }
-
-            return fieldData;
-
-            void FindAndDraw(
-                EditorFieldData efd,
-                Action<EditorFieldData, object> _onChange = null,
-                Action<EditorFieldData> _onFocusIn = null,
-                Action<EditorFieldData> _onFocusOut = null
-            )
-            {
-                var drawer = Registry.Find(efd.Fi.FieldType);
-                drawer.Draw(
-                    efd,
-                    CreateOnChangeEvent(_onChange), CreateFocusInEvent(_onFocusIn), CreateFocusOutEvent(_onFocusOut),
-                    editor: this
-                );
-                drawer.AttachValidations(efd);
-            }
-
-            Action<EditorFieldData, object> CreateOnChangeEvent(Action<EditorFieldData, object> added)
-            {
-                return (efd, value) =>
-                {
-                    onChange?.Invoke(efd, value);
-                    added?.Invoke(efd, value);
-                };
-            }
-
-            Action<EditorFieldData> CreateFocusInEvent(Action<EditorFieldData> added)
-            {
-                return efd =>
-                {
-                    onFocusIn?.Invoke(efd);
-                    added?.Invoke(efd);
-                };
-            }
-            
-            Action<EditorFieldData> CreateFocusOutEvent(Action<EditorFieldData> added)
-            {
-                return efd =>
-                {
-                    onFocusOut?.Invoke(efd);
-                    added?.Invoke(efd);
-
-                    efd.Fi.SetValue(efd.Target, efd.Value);
-                    // undoStack.SetMemberWithUndo(efd.Target, efd.Fi, efd.Fi.GetValue(efd.Target), $"Change {o.GetType().Name}.{efd.Fi.Name}");
-
-                    creator_lastEdited = efd;
-                    
-                    ValidateFieldFromCreator(efd);
-                };
-            }
-        }
-
         private static List<FieldInfo> GetEditableFields(Type type) {
             // 1) Resolve source type (if mirrored), build its declaration order map
             var mirror = type.GetCustomAttribute<MirrorFromAttribute>();
@@ -612,7 +645,7 @@ namespace FarEmerald.PlayForge.Extended.Editor
                 .ToList();
         }
 
-        private bool TryQuickCreateItem(EditorFieldData efd, string _name, EDataType kind, out int _id)
+        private bool TryQuickCreateItem(FieldData efd, string _name, EDataType kind, out int _id)
         {
             _id = -1;
             if (kind == EDataType.None) return false;
@@ -716,7 +749,8 @@ namespace FarEmerald.PlayForge.Extended.Editor
             }
 
             (int errors, int warnings) alertCounts = (0, 0);
-            foreach (var alerts in creator_fieldData.Select(GetAlertCounts))
+            var allAlerts = creator_fields[dc.Kind]
+            foreach (var alerts in )
             {
                 alertCounts.errors += alerts.errors;
                 alertCounts.warnings += alerts.warnings;
@@ -750,14 +784,14 @@ namespace FarEmerald.PlayForge.Extended.Editor
             RefreshProjectView(true);
         }
 
-        (int errors, int warnings) GetAlertCounts(EditorFieldData efd)
+        (int errors, int warnings) GetAlertCounts(EConsoleContext ctx, IConsoleMessenger efd)
         {
             int errors = 0, warnings = 0;
             var sourceHash = efd.GetHashCode();
             
-            if (!console_entries[EConsoleContext.Creator].ContainsKey(sourceHash)) return (0, 0);
+            if (!console_entries[ctx].ContainsKey(sourceHash)) return (0, 0);
                     
-            foreach (var ce in console_entries[EConsoleContext.Creator][sourceHash])
+            foreach (var ce in console_entries[ctx][sourceHash])
             {
                 if (ce is null) continue;
                 if (ce.code == EValidationCode.Error) errors += 1;
@@ -767,7 +801,7 @@ namespace FarEmerald.PlayForge.Extended.Editor
             return (errors, warnings);
         }
         
-        private void TraceCreatorFieldSource(ConsoleEntry ce, EditorFieldData efd, bool inOut)
+        private void TraceCreatorFieldSource(ConsoleEntry ce, FieldData efd, bool inOut)
         {
             if (!inOut)
             {
@@ -801,11 +835,11 @@ namespace FarEmerald.PlayForge.Extended.Editor
             efd.Root.RegisterCallback(handler);
         }
 
-        private void LinkCreatorFieldSource(ConsoleEntry ce, EditorFieldData efd)
+        private void LinkCreatorFieldSource(ConsoleEntry ce, FieldData efd)
         {
             TraceCreatorFieldSource(ce, efd, true);
 
-            var valueElem = efd.GetValueElement?.Invoke();
+            var valueElem = efd.GetValueField();
             if (valueElem is null) return;
 
             valueElem.Focus();

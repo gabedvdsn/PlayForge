@@ -9,7 +9,7 @@ namespace FarEmerald.PlayForge
     /// <summary>
     /// GameRoot
     /// </summary>
-    public class GameRoot : GASComponent, IEffectOrigin, IManagerial
+    public partial class GameRoot : GASComponent, IEffectOrigin, IManagerial
     {
         [Header("Game Root")]
         
@@ -32,8 +32,6 @@ namespace FarEmerald.PlayForge
 
             Initialize(new GameRootEntity());
         }
-
-        #region Control
         
         public void DeferredInit()
         {
@@ -47,6 +45,13 @@ namespace FarEmerald.PlayForge
             
             RunProcessTasks(CreateProcessTasks);
         }
+
+        public void LoadFramework(FrameworkProject fp)
+        {
+            
+        }
+
+        #region Control
         
         public void RunProcessTask(AbstractCreateProcessProxyTask task)
         {

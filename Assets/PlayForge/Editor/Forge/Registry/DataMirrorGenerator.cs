@@ -34,12 +34,12 @@ namespace FarEmerald.PlayForge.Extended.Editor
                 try { GenerateForTarget(target); }
                 catch (Exception ex)
                 {
-                    Debug.LogError($"[FESGAS Mirror] Failed for {target.FullName}: {ex}");
+                    Debug.LogError($"[ PlayForge ] Failed for {target.FullName}: {ex}");
                 }
             }
 
             AssetDatabase.Refresh();
-            Debug.Log("[FESGAS Mirror] Regenerated data mirrors.");
+            Debug.Log("[ PlayForge ] Regenerated data mirrors.");
         }
 
         static void GenerateForTarget(Type target)

@@ -37,7 +37,7 @@ namespace FarEmerald.PlayForge
         static void Prepare()
         {
             // Value types
-            attributes = fp?.Attributes?.ToDictionary(d => d.Id) ?? new();
+            attributes = fp?.Attributes?.ToDictionary(d => d.Id) ?? new Dictionary<int, AttributeData>();
             tags = fp?.Tags?.ToDictionary(d => d.Id) ?? new();
             
             // Single generation

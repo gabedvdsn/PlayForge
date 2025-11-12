@@ -9,14 +9,14 @@ namespace FarEmerald.PlayForge.Extended.Editor
         private static void ShowWindow()
         {
             var window = GetWindow<PlayForgePromptWindow>();
-            window.titleContent = new GUIContent("FESGAS Gasify");
+            window.titleContent = new GUIContent("PlayForge");
             window.Show();
         }
 
         void OnGUI()
         {
             EditorGUILayout.Space();
-            EditorGUILayout.LabelField("This is your prompt about FESGAS!");
+            EditorGUILayout.LabelField("This is your prompt about PlayForge!");
             EditorGUILayout.Space();
 
             using (new EditorGUILayout.HorizontalScope("box"))

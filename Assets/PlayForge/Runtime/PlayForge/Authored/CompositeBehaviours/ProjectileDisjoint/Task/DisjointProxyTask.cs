@@ -11,8 +11,7 @@ namespace FarEmerald.PlayForge
             var owner = data.Spec.GetOwner().AsGAS();
             if (owner is null) return;
             
-            await owner.CallBehaviour(DisjointCompositeBehaviour.Command, new DisjointCompositeBehaviour(), token);
-
+            await owner.CallBehaviour(DisjointProxyTaskBehaviour.Command, new DisjointProxyTaskBehaviour(), token);
         }
     }
 }

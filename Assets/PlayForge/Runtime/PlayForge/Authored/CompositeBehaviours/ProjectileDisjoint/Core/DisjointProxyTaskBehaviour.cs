@@ -5,13 +5,12 @@ using Cysharp.Threading.Tasks;
 
 namespace FarEmerald.PlayForge
 {
-    public class DisjointCompositeBehaviour : AbstractCompositeBehaviour
+    public class DisjointProxyTaskBehaviour : AbstractProxyTaskBehaviour
     {
         public static Tag IS_DISJOINTABLE => Tag.Generate("CB_IS_DISJOINTABLE");
         public static Tag Command => Tag.Generate("CB_DISJOINT");
         
-        
-        public override UniTask Run(CancellationToken token)
+        public override UniTask RunAsync(CancellationToken token)
         {
             return UniTask.CompletedTask;
         }
@@ -21,9 +20,9 @@ namespace FarEmerald.PlayForge
             return EActionStatus.NoOp;
         }
         
-        public override AbstractCompositeBehaviour CreateInstance()
+        public override AbstractProxyTaskBehaviour CreateInstance()
         {
-            return new DisjointCompositeBehaviour();
+            return new DisjointProxyTaskBehaviour();
         }
         
     }

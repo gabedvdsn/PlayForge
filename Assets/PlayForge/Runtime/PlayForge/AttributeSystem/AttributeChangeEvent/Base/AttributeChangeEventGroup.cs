@@ -6,7 +6,6 @@ using UnityEngine.Serialization;
 
 namespace FarEmerald.PlayForge
 {
-    [CreateAssetMenu(menuName = "FESGAS/Attribute/Change Event/Group", fileName = "ACE_Group")]
     public class AttributeChangeEventGroup : AbstractAttributeChangeEvent
     {
         public List<AbstractAttributeChangeEvent> ChangeEvents;

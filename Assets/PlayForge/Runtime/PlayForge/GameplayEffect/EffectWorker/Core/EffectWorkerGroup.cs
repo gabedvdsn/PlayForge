@@ -3,7 +3,6 @@ using UnityEngine;
 
 namespace FarEmerald.PlayForge
 {
-    [CreateAssetMenu(fileName = "EW_Group", menuName = "FESGAS/Effect/Worker/Group", order = 0)]
     public class EffectWorkerGroup : AbstractEffectWorker
     {
         public List<AbstractEffectWorker> EffectWorkers;

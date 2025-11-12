@@ -264,6 +264,38 @@ namespace FarEmerald.PlayForge.Extended
             return $"({Name}-{Id.ToString("x8")[..3]}...)";
         }
     }
+
+    public static class ForgeFields
+    {
+        public const string NameField = "Name";
+        public const string DescriptionField = "Description";
+        public const string IconField = "Icon";
+        
+        public const string AssetTagField = "AssetTag";
+
+        public static class Ability
+        {
+            public const string CooldownField = "Cooldown";
+            public const string CostField = "Cost";
+            public const string DefinitionField = "Definition";
+            public const string ActivationPolicyField = "ActivationPolicy";
+            public const string ActivateImmediatelyField = "ActivateImmediately";
+            public const string IgnoreWhenLevelZeroField = "IgnoreWhenLevelZero";
+            public const string MaxLevelField = "MaxLevel";
+            public const string StartingLevelField = "StartingLevel";
+            public const string TargetingProxyField = "TargetingProxy";
+            public const string UseImplicitTargetingField = "UseImplicitTargeting";
+            public const string AbilityProxyStagesField = "AbilityProxyStages";
+
+            public const string ContextTagsField = "ContextTags";
+            public const string PassivelyGrantedTagsField = "PassivelyGrantedTags";
+            public const string ActivelyGrantedTagsField = "ActivelyGrantedTags";
+
+            public const string SourceRequirementsField = "SourceRequirements";
+            public const string TargetRequirementsField = "TargetRequirements";
+            
+        }
+    }
     
     [Serializable]
     [MirrorFrom(typeof(Attribute))]

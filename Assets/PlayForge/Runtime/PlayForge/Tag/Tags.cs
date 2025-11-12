@@ -10,7 +10,7 @@ namespace FarEmerald.PlayForge
         private static HashSet<int> used;
 
         private const int _NULL = -1;
-        public static Tag NULL => Tag.Generate(_NULL, "NULL");
+        public static Tag NULL => Tag.Generate("NULL");
 
         public static void Initialize()
         {

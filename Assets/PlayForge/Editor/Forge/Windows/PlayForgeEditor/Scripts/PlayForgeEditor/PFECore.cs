@@ -64,7 +64,7 @@ namespace FarEmerald.PlayForge.Extended.Editor
             AutoLoad();
             
             RefreshConsole();
-            RefreshProjectView();
+            RefreshProjectView(true);
             RefreshHome();
             
             Initialize();
@@ -119,7 +119,7 @@ namespace FarEmerald.PlayForge.Extended.Editor
             RefreshNavBar();
             
             RefreshHome();
-            RefreshCreator();
+            _RefreshCreator();
             RefreshAnalytics();
             RefreshDevelop();
             RefreshValidate();

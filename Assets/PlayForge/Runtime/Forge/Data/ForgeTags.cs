@@ -83,12 +83,12 @@ namespace FarEmerald.PlayForge.Extended
         /// The key tag for all styling related tags
         /// </summary>
         public static Tag STYLING_TAGS => Tag.Generate("E_STYLING_TAGS");
-        
+
         /// <summary>
-        /// Indicates that the editor field for some data field should have big styling
-        /// E.g. a multi-line text field, as opposed to a single line text field for string input
+        /// Indicates Preset assignments for node, sections, and fields
+        /// Key: Preset
         /// </summary>
-        public static Tag STYLE_BIG => Tag.Generate("E_STYLE_BIG");
+        public static Tag FIELD_PRESET_ASSIGNMENT => Tag.Generate("E_FIELD_PRESET_ASSIGNMENT");
         
         #endregion
         
@@ -167,6 +167,34 @@ namespace FarEmerald.PlayForge.Extended
             catch
             {
                 return fallback;
+            }
+        }
+        
+        public static bool TagStatusStyling(this ForgeDataNode node, Tag target, out bool result, bool fallback = false)
+        {
+            return node.TagStatusStyling<bool>(target, out result, fallback: fallback);
+        }
+
+        public static bool TagStatusStyling<T>(this ForgeDataNode node, Tag target, out T result, T fallback = default)
+        {
+            try
+            {
+                var editor = GetEditorTags(node);
+                var _src = editor[STYLING_TAGS] as Dictionary<Tag, object>;
+
+                if (_src is null || !_src.ContainsKey(target))
+                {
+                    result = fallback;
+                    return false;
+                }
+
+                result = (T)_src[target];
+                return true;
+            }
+            catch
+            {
+                result = fallback;
+                return false;
             }
         }
 

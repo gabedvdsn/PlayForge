@@ -264,7 +264,7 @@ namespace FarEmerald.PlayForge.Extended.Editor
 
                         headerAddBtn.clicked += () =>
                         {
-                            LoadIntoCreator(data.Kind);
+                            _LoadIntoCreator(data.Kind);
                         };
 
                         chevron.clicked += () => OnClickCollapseTypeHeader(data.Kind, chevron);
@@ -316,7 +316,7 @@ namespace FarEmerald.PlayForge.Extended.Editor
                             pv_selectedRow = row;
                             pv_selectedRow.style.backgroundColor = ColorSelected;
                             
-                            LoadIntoCreator(data.Node, data.Kind);
+                            _LoadIntoCreator(data.Node, data.Kind);
                         };
 
                         row.RegisterCallback<PointerEnterEvent>(evt =>

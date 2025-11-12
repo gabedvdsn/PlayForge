@@ -48,11 +48,11 @@ namespace FarEmerald.PlayForge
         /// <param name="caller"></param>
         /// <param name="token"></param>
         /// <returns></returns>
-        public override UniTask RunCompositeBehaviour(Tag command, AbstractCompositeBehaviour cb, ICompositeBehaviourCaller caller, CancellationToken token)
+        public override UniTask RunCompositeBehaviourAsync(Tag command, AbstractProxyTaskBehaviour cb, IProxyTaskBehaviourCaller caller, CancellationToken token)
         {
-            if (command == DisjointCompositeBehaviour.Command)
+            if (command == DisjointProxyTaskBehaviour.Command)
             {
-                if (regData.TryGet(DisjointCompositeBehaviour.IS_DISJOINTABLE, EProxyDataValueTarget.Primary, out bool result))
+                if (regData.TryGet(DisjointProxyTaskBehaviour.IS_DISJOINTABLE, EProxyDataValueTarget.Primary, out bool result))
                 {
                     if (!result)
                     {
@@ -62,7 +62,7 @@ namespace FarEmerald.PlayForge
                 }
                 else
                 {
-                    cb.SetStatus(this, EActionStatus.Error);
+                    cb.SetStatus(this, EActionStatus.Failure);
                     return UniTask.CompletedTask;
                 }
 

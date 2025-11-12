@@ -7,13 +7,13 @@ using UnityEngine;
 
 namespace FarEmerald.PlayForge
 {
-    public abstract class AbstractMonoProcess : MonoBehaviour, ICompositeBehaviourCaller
+    public abstract class AbstractMonoProcess : MonoBehaviour, IProxyTaskBehaviourCaller
     {
         [Header("Mono Gameplay Process")] 
         
         public EProcessLifecycle ProcessLifecycle;
         public EProcessStepTiming ProcessTiming;
-        public EProcessStepPriorityMethod PriorityMethod = EProcessStepPriorityMethod.Manual;
+        public EProcessStepPriorityMethod PriorityMethod = EProcessStepPriorityMethod.First;
         public int ProcessStepPriority;
         
         [Space(5)]
@@ -39,7 +39,6 @@ namespace FarEmerald.PlayForge
         /// <param name="relay">Process Relay</param>
         public virtual void WhenInitialize(ProcessRelay relay)
         {
-            Debug.Log($"\t\t{this.ToString()} initialized");
             _initialized = true;
             Relay = relay;
             
@@ -125,19 +124,21 @@ namespace FarEmerald.PlayForge
         {
             return name;
         }
-        public abstract UniTask RunCompositeBehaviour(Tag command, AbstractCompositeBehaviour cb, ICompositeBehaviourCaller caller, CancellationToken token);
 
-        public abstract UniTask CallBehaviour(Tag cmd, AbstractCompositeBehaviour cb, CancellationToken token);
+        public abstract void RunCompositeBehaviour(Tag command, AbstractProxyTaskBehaviour cb, IProxyTaskBehaviourCaller caller);
+        public abstract UniTask RunCompositeBehaviourAsync(Tag command, AbstractProxyTaskBehaviour cb, IProxyTaskBehaviourCaller caller, CancellationToken token);
+
+        public abstract UniTask CallBehaviour(Tag cmd, AbstractProxyTaskBehaviour cb, CancellationToken token);
         
-        public async UniTask CallBehaviour(Tag cmd, AbstractCompositeBehaviour cb, ICompositeBehaviourUser user, CancellationToken token)
+        public async UniTask CallBehaviour(Tag cmd, AbstractProxyTaskBehaviour cb, IProxyTaskBehaviourUser user, CancellationToken token)
         {
-            var run = cb.Run(token);
-            await user.RunCompositeBehaviour(cmd, cb, this, token);
+            var run = cb.RunAsync(token);
+            await user.RunCompositeBehaviourAsync(cmd, cb, this, token);
             await run;
             cb.End();
         }
         
-        public async UniTask CallBehaviour(Tag cmd, AbstractCompositeBehaviour cb, ICompositeBehaviourUser[] users, CancellationToken token)
+        public async UniTask CallBehaviour(Tag cmd, AbstractProxyTaskBehaviour cb, IProxyTaskBehaviourUser[] users, CancellationToken token)
         {
             var tasks = users.Select(user => CallBehaviour(cmd, cb.CreateInstance(), user, token)).ToArray();
             await UniTask.WhenAll(tasks);

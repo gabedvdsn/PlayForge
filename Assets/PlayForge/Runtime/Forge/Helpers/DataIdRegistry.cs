@@ -55,6 +55,20 @@ namespace FarEmerald.PlayForge.Extended
                     return candidate;
             }
         }
+
+        public static int Generate(int basis)
+        {
+            const int N = int.MaxValue;
+            int o = ((basis % N) + N) % N;
+
+            while (true)
+            {
+                int raw = RandomNumberGenerator.GetInt32(0, N) + 1;
+                int shifted = 1 + (int)(((long)(raw - 1) + o) % N);
+                
+                if (Reserved.Add(shifted)) return shifted;
+            }
+        }
         
     }
 }

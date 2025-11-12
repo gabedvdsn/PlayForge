@@ -61,6 +61,8 @@ namespace FarEmerald.PlayForge.Extended.Editor
         
         // Content
         private VisualElement contentRoot;
+        private VisualElement windowRoot;
+        private VisualElement focusRoot;
         
         enum EForgeContext
         {
@@ -123,7 +125,7 @@ namespace FarEmerald.PlayForge.Extended.Editor
                         () =>
                         {
                             SetHeaderReservation(ReservedFocus.IsFocused);
-                            RefreshCreator();
+                            _RefreshCreator();
                         },
                         () =>
                         {
@@ -192,6 +194,8 @@ namespace FarEmerald.PlayForge.Extended.Editor
         private void BindContent()
         {
             contentRoot = rootVisualElement.Q("ContentView").Q("Content");
+            windowRoot = contentRoot.Q("Window");
+            focusRoot = windowRoot.Q("Focus");
             
             BindHome();
             BindCreator();
@@ -357,7 +361,7 @@ namespace FarEmerald.PlayForge.Extended.Editor
             header_editButton.clicked += () =>
             {
                 if (!Focus.IsFocused) return;
-                LoadIntoCreator(Focus);
+                _LoadIntoCreator(Focus);
             };
 
             header_analyzeButton.clicked += () =>

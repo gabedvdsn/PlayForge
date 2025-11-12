@@ -124,10 +124,10 @@ namespace FarEmerald.PlayForge
 
         public void LogWeights()
         {
-            Debug.Log($"[ LOG-WEIGHTS ]");
+            Debug.Log($"[ TAG WEIGHTS ]");
             foreach (Tag tag in TagWeights.Keys)
             {
-                Debug.Log($"\t{tag} => {TagWeights[tag]}");
+                Debug.Log($"\t{tag.Name} => {TagWeights[tag]}");
             }
         }
     }

@@ -13,12 +13,7 @@ namespace FarEmerald.PlayForge.Extended.Editor
     {
         public VisualTreeAsset m_InspectorUXML;
         private VisualElement root;
-
-        public override void OnInspectorGUI()
-        {
-            base.OnInspectorGUI();
-        }
-
+        
         public override VisualElement CreateInspectorGUI()
         {
             // Create a new VisualElement to be the root of our Inspector UI.

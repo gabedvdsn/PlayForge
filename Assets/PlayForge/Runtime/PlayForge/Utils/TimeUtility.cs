@@ -8,14 +8,14 @@ namespace FarEmerald.PlayForge
 
         private static Dictionary<Tag, float> timers = new();
         
-        public static Tag StartTimer()
+        public static Tag Start()
         {
-            var tag = Tags.Get("AnonymousTimer");
-            StartTimer(tag);
+            var tag = Tag.Generate("AnonymousTimer");
+            Start(tag);
             return tag;
         }
         
-        public static void StartTimer(Tag id, bool scaled = true)
+        public static void Start(Tag id, bool scaled = true)
         {
             timers[id] = scaled ? Time.time : Time.unscaledTime;
         }

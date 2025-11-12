@@ -9,6 +9,15 @@ namespace FarEmerald.PlayForge
 {
     public class RefDrawers
     {
+        [UnityEditor.CustomPropertyDrawer(typeof(FrameworkRef))]
+        public class FrameworkRefDrawer : AbstractRefDrawer
+        {
+            protected override IReadOnlyList<DataEntry> GetEntries(FrameworkIndex idx)
+            {
+                return new[] { new DataEntry(){ Name = idx.FrameworkKey, Id = 0 } };
+            }
+        }
+        
         [UnityEditor.CustomPropertyDrawer(typeof(AttributeRef))]
         public class AttributeRefDrawer : AbstractRefDrawer
         {
