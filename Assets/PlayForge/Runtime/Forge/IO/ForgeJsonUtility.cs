@@ -145,8 +145,6 @@ namespace FarEmerald.PlayForge.Extended
 
             File.WriteAllText(path, root.ToString(Formatting.Indented));
             ForgePaths.RefreshAssets();
-
-            Debug.Log($"Framework {proj.MetaName} saved to JSON");
         }
 
         public static FrameworkProject LoadFramework(string frameworkKeyOrMetaName, bool loadFromProjectSettings = true)

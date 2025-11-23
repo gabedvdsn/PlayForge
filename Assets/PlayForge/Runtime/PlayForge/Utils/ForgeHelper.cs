@@ -123,13 +123,13 @@ namespace FarEmerald.PlayForge
         
         #region Validation Utils
 
-        public static bool ValidateAffiliationPolicy(EAffiliationPolicy policy, Tag a, Tag b)
+        public static bool ValidateAffiliationPolicy(EAffiliationPolicy policy, List<Tag> a, List<Tag> b)
         {
             return policy switch
             {
-                EAffiliationPolicy.IsEnemy => !a.Equals(b),
-                EAffiliationPolicy.IsAlly => a.Equals(b),
-                EAffiliationPolicy.IsAny => true,
+                EAffiliationPolicy.Unaffiliated => !a.Any(b.Contains),
+                EAffiliationPolicy.Affiliated => a.Any(b.Contains),
+                EAffiliationPolicy.Any => true,
                 _ => throw new ArgumentOutOfRangeException(nameof(policy), policy, null)
             };
         }

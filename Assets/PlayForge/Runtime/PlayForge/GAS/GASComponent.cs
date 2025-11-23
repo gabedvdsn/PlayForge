@@ -13,8 +13,6 @@ namespace FarEmerald.PlayForge
     {
         public EntityIdentity Data;
         
-        public GASIdentityData Identity;
-        
         // Subsystems
         [HideInInspector] public AttributeSystemComponent AttributeSystem;
         [HideInInspector] public AbilitySystemComponent AbilitySystem;
@@ -50,8 +48,7 @@ namespace FarEmerald.PlayForge
             
             TagCache = new TagCache(this);
             
-            Identity = Data.Identity;
-            Identity.Initialize(this);
+            Data.Identity.Initialize(this);
             
             AttributeSystem.Initialize(this);
             AbilitySystem.Initialize(this);
@@ -63,9 +60,9 @@ namespace FarEmerald.PlayForge
             base.WhenInitialize(relay);
 
             // Attempt to find affiliation
-            if (regData.TryGet(Tags.PAYLOAD_AFFILIATION, EProxyDataValueTarget.Primary, out Tag affiliation))
+            if (regData.TryGet(Tags.PAYLOAD_AFFILIATION, EProxyDataValueTarget.Primary, out List<Tag> affiliation))
             {
-                Identity.Affiliation = affiliation;
+                Data.Identity.Affiliation = affiliation;
             }
         }
 
@@ -385,7 +382,7 @@ namespace FarEmerald.PlayForge
         /// <returns></returns>
         private bool ValidateEffectApplicationRequirements(GameplayEffectSpec spec)
         {
-            return ForgeHelper.ValidateAffiliationPolicy(spec.Base.ImpactSpecification.AffiliationPolicy, Identity.Affiliation, spec.Origin.GetAffiliation())
+            return ForgeHelper.ValidateAffiliationPolicy(spec.Base.ImpactSpecification.AffiliationPolicy, Data.Identity.Affiliation, spec.Origin.GetAffiliation())
                 && spec.Base.ValidateApplicationRequirements(spec);
         }
         
@@ -471,7 +468,7 @@ namespace FarEmerald.PlayForge
 
         public override string ToString()
         {
-            return $"{Identity}";
+            return $"{Data.Identity}";
         }
 
         public override async UniTask CallBehaviour(Tag cmd, AbstractProxyTaskBehaviour cb, CancellationToken token)
@@ -503,18 +500,18 @@ namespace FarEmerald.PlayForge
         #region Derivation Source
         public Tag[] GetContextTags() => new[] { Tags.CONTEXT_GAS, Tags.CONTEXT_SOURCE };
         public TagCache GetTagCache() => TagCache;
-        public Tag GetAssetTag() => Identity.NameTag;
-        public int GetLevel() => Identity.Level;
-        public int GetMaxLevel() => Identity.MaxLevel;
-        public void SetLevel(int level) => Identity.Level = level;
-        public string GetName() => Identity.DistinctName;
+        public Tag GetAssetTag() => Data.Identity.NameTag;
+        public int GetLevel() => Data.Identity.Level;
+        public int GetMaxLevel() => Data.Identity.MaxLevel;
+        public void SetLevel(int level) => Data.Identity.Level = level;
+        public string GetName() => Data.Identity.DistinctName;
         public void CommunicateTargetedIntent(AbstractGameplayMonoProcess entity)
         {
             regData.AddPayload(Tags.TARGETED_INTENT, entity);
         }
-        public Tag GetAffiliation()
+        public List<Tag> GetAffiliation()
         {
-            return Identity.Affiliation;
+            return Data.Identity.Affiliation;
         }
         public Tag[] GetAppliedTags()
         {

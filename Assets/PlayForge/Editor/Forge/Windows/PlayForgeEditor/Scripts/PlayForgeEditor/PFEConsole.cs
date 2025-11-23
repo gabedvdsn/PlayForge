@@ -15,21 +15,34 @@ namespace FarEmerald.PlayForge.Extended.Editor
     {
         public VisualTreeAsset ConsoleEntryRow;
 
-        /// <summary>
-        /// For sys and informational alerts
-        /// </summary>
-        class ResolvableConsoleSource : IConsoleMessenger
+        abstract class LinkingConsoleSource : IConsoleMessenger
         {
-            public void Trace(ConsoleEntry ce, PlayForgeEditor editor, bool inOut)
+
+            public abstract void Trace(ConsoleEntry ce, PlayForgeEditor editor, bool inOut);
+            public abstract bool HasTrace(ConsoleEntry ce, PlayForgeEditor editor);
+            public virtual void Link(ConsoleEntry ce, PlayForgeEditor editor)
             {
                 editor.DoContextAction(FromConsoleContextToExpanded(ce.context), ce, true);
             }
-            public void Link(ConsoleEntry ce, PlayForgeEditor editor)
+            public virtual bool HasLink(ConsoleEntry ce, PlayForgeEditor editor) => true;
+            public abstract bool CanResolve(ConsoleEntry ce, PlayForgeEditor editor);
+        }
+        
+        /// <summary>
+        /// For sys and informational alerts
+        /// </summary>
+        class ResolvableConsoleSource : LinkingConsoleSource
+        {
+            public override void Trace(ConsoleEntry ce, PlayForgeEditor editor, bool inOut)
             {
                 
             }
+            public override bool HasTrace(ConsoleEntry ce, PlayForgeEditor editor)
+            {
+                return false;
+            }
 
-            public bool CanResolve(ConsoleEntry ce, PlayForgeEditor editor)
+            public override bool CanResolve(ConsoleEntry ce, PlayForgeEditor editor)
             {
                 return true;
             }
@@ -42,9 +55,17 @@ namespace FarEmerald.PlayForge.Extended.Editor
             {
                 
             }
+            public bool HasTrace(ConsoleEntry ce, PlayForgeEditor editor)
+            {
+                return false;
+            }
             public void Link(ConsoleEntry ce, PlayForgeEditor editor)
             {
                 
+            }
+            public bool HasLink(ConsoleEntry ce, PlayForgeEditor editor)
+            {
+                return false;
             }
             public bool CanResolve(ConsoleEntry ce, PlayForgeEditor editor)
             {
@@ -52,17 +73,17 @@ namespace FarEmerald.PlayForge.Extended.Editor
             }
         }
 
-        class ErrorServiceConsoleSource : IConsoleMessenger
+        class ErrorServiceConsoleSource : LinkingConsoleSource
         {
-            public void Trace(ConsoleEntry ce, PlayForgeEditor editor, bool inOut)
+            public override void Trace(ConsoleEntry ce, PlayForgeEditor editor, bool inOut)
             {
                 
             }
-            public void Link(ConsoleEntry ce, PlayForgeEditor editor)
+            public override bool HasTrace(ConsoleEntry ce, PlayForgeEditor editor)
             {
-                editor.DoContextAction(FromConsoleContextToExpanded(ce.context), ce, true);
+                return false;
             }
-            public bool CanResolve(ConsoleEntry ce, PlayForgeEditor editor)
+            public override bool CanResolve(ConsoleEntry ce, PlayForgeEditor editor)
             {
                 return true;
             }
@@ -72,24 +93,36 @@ namespace FarEmerald.PlayForge.Extended.Editor
         /// For alerts sourced from data items while not in Creator mode
         /// E.g. in creator or analytics mode
         /// </summary>
-        class UnfocusedCreatorSource : IConsoleMessenger
+        class UnfocusedDataSource : LinkingConsoleSource
         {
             private int id;
-            public UnfocusedCreatorSource(int id)
+            public UnfocusedDataSource(int id)
             {
                 this.id = id;
             }
             
-            public void Trace(ConsoleEntry ce, PlayForgeEditor editor, bool inOut)
+            public override void Trace(ConsoleEntry ce, PlayForgeEditor editor, bool inOut)
             {
-                editor.DoContextAction(FromConsoleContextToExpanded(ce.context), ce, true);
+                
             }
-            public void Link(ConsoleEntry ce, PlayForgeEditor editor)
+            public override bool HasTrace(ConsoleEntry ce, PlayForgeEditor editor)
             {
-                throw new NotImplementedException();
+                return true;
+            }
+            public override void Link(ConsoleEntry ce, PlayForgeEditor editor)
+            {
+                DataContainer dc = ce.userData as DataContainer;
+                if (dc is null) return;
+                
+                editor.LoadIntoCreator(dc);
             }
 
-            public bool CanResolve(ConsoleEntry ce, PlayForgeEditor editor)
+            public override bool HasLink(ConsoleEntry ce, PlayForgeEditor editor)
+            {
+                return ce.userData is DataContainer;
+            }
+
+            public override bool CanResolve(ConsoleEntry ce, PlayForgeEditor editor)
             {
                 return ActiveContext == EForgeContext.Creator;
             }
@@ -105,6 +138,8 @@ namespace FarEmerald.PlayForge.Extended.Editor
             /// <param name="inOut"></param>
             void Trace(ConsoleEntry ce, PlayForgeEditor editor, bool inOut);
 
+            bool HasTrace(ConsoleEntry ce, PlayForgeEditor editor);
+
             /// <summary>
             /// Traces and applies focus, typically
             /// </summary>
@@ -112,6 +147,8 @@ namespace FarEmerald.PlayForge.Extended.Editor
             /// <param name="editor"></param>
             void Link(ConsoleEntry ce, PlayForgeEditor editor);
 
+            bool HasLink(ConsoleEntry ce, PlayForgeEditor editor);
+            
             bool CanResolve(ConsoleEntry ce, PlayForgeEditor editor);
         }
         
@@ -122,6 +159,8 @@ namespace FarEmerald.PlayForge.Extended.Editor
             public readonly EConsoleContext context;
             public readonly EValidationCode code;
             public readonly EConsolePriority priority;
+
+            public object userData;
             
             public DateTime time;
             public string focus;
@@ -290,9 +329,9 @@ namespace FarEmerald.PlayForge.Extended.Editor
         private EConsoleContext console_context;
         private Dictionary<EConsoleContext, Button> console_activeContexts;
 
-        private static ResolvableConsoleSource console_resolvable;
-        private static ProgressConsoleSource console_progressSource;
-        private static ErrorServiceConsoleSource console_errorSource;
+        private static ResolvableConsoleSource console_resolvable = new();
+        private static ProgressConsoleSource console_progressSource = new();
+        private static ErrorServiceConsoleSource console_errorSource = new();
         
         void SetupConsole()
         {
@@ -402,7 +441,7 @@ namespace FarEmerald.PlayForge.Extended.Editor
                 
                 root.RegisterCallback<PointerEnterEvent>(_ =>
                 {
-                    if (ce.link is not null)
+                    if (ce.source.HasLink(ce, this))
                     {
                         link.style.display = DisplayStyle.Flex;
                         link.style.backgroundImage = icon_LINK;
@@ -425,7 +464,7 @@ namespace FarEmerald.PlayForge.Extended.Editor
                 if (console_hasSelection && ce.id == console_selected.id)
                 {
                     root.style.backgroundColor = ColorSelected;
-                    if (ce.link is not null) link.style.display = DisplayStyle.Flex;
+                    if (ce.source.HasLink(ce, this)) link.style.display = DisplayStyle.Flex;
                 }
                 else link.style.display = DisplayStyle.None;
                 
@@ -834,8 +873,8 @@ namespace FarEmerald.PlayForge.Extended.Editor
             color.a = alpha;
             return color;
         }
-        
-        static class Console
+
+        private static class Console
         {
             public static string ForgeName => AboutPlayForge.PlayForgeTitle;
             public static string ForgeVersion => AboutPlayForge.PlayForgeVersion;
@@ -849,7 +888,7 @@ namespace FarEmerald.PlayForge.Extended.Editor
 
                 ce.link = _ => ce.source.Link(ce, Instance);
                 ce.trace = flag => ce.source.Trace(ce, Instance, flag);
-
+                
                 return ce;
             }
 

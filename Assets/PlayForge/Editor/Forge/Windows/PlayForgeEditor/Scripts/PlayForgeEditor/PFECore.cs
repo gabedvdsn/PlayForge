@@ -119,7 +119,7 @@ namespace FarEmerald.PlayForge.Extended.Editor
             RefreshNavBar();
             
             RefreshHome();
-            _RefreshCreator();
+            RefreshCreator();
             RefreshAnalytics();
             RefreshDevelop();
             RefreshValidate();

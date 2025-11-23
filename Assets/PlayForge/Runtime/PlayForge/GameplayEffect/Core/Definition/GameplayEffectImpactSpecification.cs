@@ -15,7 +15,7 @@ namespace FarEmerald.PlayForge
         public EAffiliationPolicy AffiliationPolicy;
         
         [ForgeCategory(Forge.Categories.ImpactType)]
-        public Tag ImpactType;
+        public List<Tag> ImpactTypes;
         public bool ReverseImpactOnRemoval;
         public EEffectReApplicationPolicy ReApplicationPolicy;
         
@@ -24,6 +24,33 @@ namespace FarEmerald.PlayForge
         public EMagnitudeOperation MagnitudeCalculationOperation;
         
         public ContainedEffectPacket[] Packets;
+
+        public GameplayEffectImpactSpecification()
+        {
+        }
+
+        public GameplayEffectImpactSpecification(GameplayEffectImpactSpecification o)
+        {
+            AttributeTarget = o.AttributeTarget;
+            TargetImpact = o.TargetImpact;
+            ImpactOperation = o.ImpactOperation;
+            AffiliationPolicy = o.AffiliationPolicy;
+            ImpactTypes = o.ImpactTypes;
+            ReverseImpactOnRemoval = o.ReverseImpactOnRemoval;
+            ReApplicationPolicy = o.ReApplicationPolicy;
+            Magnitude = o.Magnitude;
+            MagnitudeCalculation = o.MagnitudeCalculation;
+            
+            Packets = new ContainedEffectPacket[o.Packets.Length];
+            for (int i = 0; i < o.Packets.Length; i++)
+            {
+                Packets[i] = new ContainedEffectPacket()
+                {
+                    Policy = o.Packets[i].Policy,
+                    ContainedEffect = new GameplayEffect(o.Packets[i].ContainedEffect)
+                };
+            }
+        }
 
         public void ApplyImpactSpecifications(GameplayEffectSpec spec)
         {
@@ -95,8 +122,8 @@ namespace FarEmerald.PlayForge
 
     public enum EAffiliationPolicy
     {
-        IsEnemy,
-        IsAlly,
-        IsAny
+        Unaffiliated,
+        Affiliated,
+        Any
     }
 }

@@ -140,8 +140,8 @@ namespace FarEmerald.PlayForge
             // Relay impact to source
             var impactData = AbilityImpactData.Generate(Root, attribute, sourcedModifiedValue, change.Value.ToAttributeValue());
             
-            Callbacks.AttributeImpacted(impactData);
             if (sourcedModifiedValue.BaseDerivation.GetSource().FindAbilitySystem(out var attr)) attr.ProvideFrameImpactDealt(impactData);
+            Callbacks.AttributeImpacted(impactData);
         }
 
         public void RefreshAttributes(Attribute contact)

@@ -313,7 +313,7 @@ namespace FarEmerald.PlayForge
             ForgeTags.OnSave(node);
             
             int copyId = node.TagStatus(ForgeTags.COPY_ID, -1);
-            if (!TryGet(copyId, kind, out var copy)) AddCloneToProject(node, kind);  // Create saved copy
+            if (!TryGet(copyId, kind, out var copy)) AddCloneToProject(node, kind, out _);  // Create saved copy
             else UpdateSavedCopy(node, copy);
         }
 
@@ -391,6 +391,7 @@ namespace FarEmerald.PlayForge
 
         private void AddToProject(EDataType kind, ForgeDataNode node)
         {
+            Debug.Log($"Adding to project {kind} {node.Name}");
             switch (kind)
             {
                 case EDataType.Ability:
@@ -467,9 +468,8 @@ namespace FarEmerald.PlayForge
             }
         }
 
-        private void AddCloneToProject(ForgeDataNode node, EDataType kind)
+        public void AddCloneToProject(ForgeDataNode node, EDataType kind, out int _id)
         {
-            int _id;
             switch (kind)
             {
                 case EDataType.Ability:
@@ -491,13 +491,14 @@ namespace FarEmerald.PlayForge
                     AddToProject(kind, ForgeDataNode.Clone(node as AttributeSetData, out _id));
                     break;
                 case EDataType.None:
+                    _id = -1;
                     break;
                 default:
                     throw new ArgumentOutOfRangeException();
             }
         }
 
-        public ForgeDataNode BuildTemplateClone(EDataType kind, ForgeDataNode source, out int _id)
+        public ForgeDataNode BuildClone(EDataType kind, ForgeDataNode source, out int _id)
         {
             _id = -1;
             return kind switch

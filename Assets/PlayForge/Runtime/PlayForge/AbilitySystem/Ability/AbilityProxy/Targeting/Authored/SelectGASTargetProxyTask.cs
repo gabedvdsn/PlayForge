@@ -13,13 +13,15 @@ namespace FarEmerald.PlayForge
             // if (CursorManager.Instance.LastSelectTargetObject) data.Add(ESourceTarget.Target, CursorManager.Instance.LastSelectTargetObject);
             while (true)
             {
+                // Important to have some break response -- replace in your input manager and inject an interrupt
                 if (Input.GetKeyDown(KeyCode.Escape)) break;
                 if (Input.GetMouseButtonDown(0))
                 {
                     Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
                     if (Physics.Raycast(ray, out RaycastHit hitInfo, Mathf.Infinity))
                     {
-                        Debug.Log("Hit: " + hitInfo.collider.name);
+                        data.AddPayload(Tags.PAYLOAD_TARGET, hitInfo.collider.gameObject);
+                        
                         // Access hitInfo.point, hitInfo.normal, hitInfo.collider, etc.
                         return;
                     }
@@ -27,7 +29,6 @@ namespace FarEmerald.PlayForge
                 
                 await UniTask.NextFrame(token);
             }
-            UnityEngine.Debug.Log($"Out of targeting");
         }
         
         protected override bool ConnectInputHandler(AbilityDataPacket data)

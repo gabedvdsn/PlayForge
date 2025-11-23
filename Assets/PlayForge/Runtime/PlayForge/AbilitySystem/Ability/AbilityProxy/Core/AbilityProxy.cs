@@ -80,7 +80,7 @@ namespace FarEmerald.PlayForge
         private async UniTask ActivateNextStage(AbilityDataPacket data, CancellationToken token)
         {
             StageIndex += 1;
-            if (StageIndex < Specification.Stages.Length)
+            if (StageIndex < Specification.Stages.Count)
             {
                 try
                 {
@@ -126,8 +126,8 @@ namespace FarEmerald.PlayForge
             await UniTask.SwitchToMainThread(stageToken);
             asc.Callbacks.AbilityStageActivated(AbilityCallbackStatus.GenerateForStageEvent(data, stage, true));
             
-            var tasks = new UniTask[stage.Tasks.Length];
-            for (int i = 0; i < stage.Tasks.Length; i++)
+            var tasks = new UniTask[stage.Tasks.Count];
+            for (int i = 0; i < stage.Tasks.Count; i++)
             {
                 tasks[i] = stage.Tasks[i].Activate(data, stageToken);
                 await UniTask.SwitchToMainThread(stageToken);
@@ -215,9 +215,9 @@ namespace FarEmerald.PlayForge
 
             if (implicitData.Spec.GetOwner().FindAbilitySystem(out var asc))
             {
-                var stageSafe = (StageIndex >= 0 && StageIndex < Specification.Stages.Length)
+                var stageSafe = (StageIndex >= 0 && StageIndex < Specification.Stages.Count)
                     ? Specification.Stages[StageIndex]
-                    : new AbilityProxyStage { Tasks = Array.Empty<AbstractProxyTask>() };
+                    : new AbilityProxyStage { Tasks = new List<AbstractProxyTask>() };
                 
                 asc.Callbacks.AbilityInjected(
                     AbilityCallbackStatus.GenerateForInjection(

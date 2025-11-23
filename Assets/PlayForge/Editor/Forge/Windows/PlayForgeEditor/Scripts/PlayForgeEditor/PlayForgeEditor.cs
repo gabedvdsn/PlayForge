@@ -125,7 +125,7 @@ namespace FarEmerald.PlayForge.Extended.Editor
                         () =>
                         {
                             SetHeaderReservation(ReservedFocus.IsFocused);
-                            _RefreshCreator();
+                            // RefreshCreator();
                         },
                         () =>
                         {
@@ -328,6 +328,7 @@ namespace FarEmerald.PlayForge.Extended.Editor
         private Button header_clearButton;
         private Button header_editButton;
         private Button header_analyzeButton;
+        private Button header_visualizeButton;
         
         void BindHeader()
         {
@@ -340,6 +341,7 @@ namespace FarEmerald.PlayForge.Extended.Editor
             header_contextChipPlate = header.Q("Bottom").Q("ContextChipPlate");
 
             header_clearButton = header.Q("Bottom").Q<Button>("ClearSelectionButton");
+            header_visualizeButton = header.Q("Bottom").Q<Button>("VisualizeButton");
             header_editButton = header.Q("Bottom").Q<Button>("EditButton");
             header_analyzeButton = header.Q("Bottom").Q<Button>("AnalyzeButton");
         }
@@ -361,7 +363,7 @@ namespace FarEmerald.PlayForge.Extended.Editor
             header_editButton.clicked += () =>
             {
                 if (!Focus.IsFocused) return;
-                _LoadIntoCreator(Focus);
+                LoadIntoCreator(Focus);
             };
 
             header_analyzeButton.clicked += () =>
@@ -369,6 +371,12 @@ namespace FarEmerald.PlayForge.Extended.Editor
                 if (!Focus.IsFocused) return;
                 SetFocus(ReservedFocus, Focus, EForgeContext.Creator);
                 DoContextAction(EForgeContextExpanded.Analytics);
+            };
+            
+            header_visualizeButton.clicked += () =>
+            {
+                if (!Focus.IsFocused) return;
+                // TODO open or update visualizer
             };
         }
 
@@ -378,18 +386,21 @@ namespace FarEmerald.PlayForge.Extended.Editor
 
             if (!Focus.IsFocused && !ReservedFocus.IsFocused)
             {
+                header_visualizeButton.style.display = DisplayStyle.None;
                 header_clearButton.style.display = DisplayStyle.None;
                 header_analyzeButton.style.display = DisplayStyle.None;
                 header_editButton.style.display = DisplayStyle.None;
                 return;
             }
 
+            header_visualizeButton.style.display = DisplayStyle.Flex;
             header_clearButton.style.display = DisplayStyle.Flex;
             header_analyzeButton.style.display = DisplayStyle.Flex;
             header_editButton.style.display = DisplayStyle.Flex;
 
             if (!headerReserved) return;
             if (!ReservedFocus.IsFocused) return;
+            if (ReservedFocus.Node.Id != pv_selectedId) return;
                 
             switch (ActiveContext)
             {
@@ -397,6 +408,7 @@ namespace FarEmerald.PlayForge.Extended.Editor
                     header_editButton.style.display = DisplayStyle.None;
                     break;
                 case EForgeContext.Analytics:
+                    
                     header_analyzeButton.style.display = DisplayStyle.None;
                     break;
             }

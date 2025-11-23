@@ -19,7 +19,7 @@ namespace FarEmerald.PlayForge
         {
             
         }
-        public Tag GetAffiliation()
+        public List<Tag> GetAffiliation()
         {
             return original.GetAffiliation();
         }

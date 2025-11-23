@@ -1,19 +1,13 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
-using System.Runtime.InteropServices.WindowsRuntime;
 using System.Runtime.Serialization;
-using System.Threading;
-using Codice.Client.Common.Connection;
-using Codice.CM.Common;
-using Cysharp.Threading.Tasks;
-using NUnit.Framework;
 using Unity.VisualScripting;
-using UnityEditor;
 using UnityEditor.UIElements;
 using UnityEngine;
-using UnityEngine.Serialization;
+using UnityEngine.Assertions;
 using UnityEngine.UIElements;
 
 namespace FarEmerald.PlayForge.Extended.Editor
@@ -21,28 +15,6 @@ namespace FarEmerald.PlayForge.Extended.Editor
     public partial class PlayForgeEditor
     {
         #region Creator
-        
-        public VisualTreeAsset EnumerableDrawerTree;
-        public VisualTreeAsset DictDrawerTree;
-        
-        public VisualTreeAsset ColorDrawerTree;
-        public VisualTreeAsset GradientDrawerTree;
-        
-        public VisualTreeAsset IntDrawerTree;
-        public VisualTreeAsset FloatDrawerTree;
-        public VisualTreeAsset StringDrawerTree;
-        public VisualTreeAsset BoolDrawerTree;
-
-        public VisualTreeAsset QuickRefDrawerTree;
-        public VisualTreeAsset RefDrawerTree;
-        public VisualTreeAsset ObjectDrawerTree;
-        public VisualTreeAsset CompositeDrawerTree;
-
-        public VisualTreeAsset EnumDrawerTree;
-        public VisualTreeAsset Vector2DrawerTree;
-        public VisualTreeAsset Vector3DrawerTree;
-        public VisualTreeAsset Vector2IntDrawerTree;
-        public VisualTreeAsset Vector3IntDrawerTree;
         
         private VisualElement creatorRoot;
         private VisualElement creator_editor;
@@ -52,9 +24,10 @@ namespace FarEmerald.PlayForge.Extended.Editor
         private ListView creator_buriedList;
 
         private (ConsoleEntry ce, FieldData efd) creator_lastTraced = (null, null);
-        
-        private object creator_buriedObject;
-        
+
+        private EBuriedAction creator_buriedAction;
+        private FieldData creator_buriedFd;
+        private Button creator_buriedGoBtn;
         
         // Actions
         private ToolbarButton c_save;
@@ -66,6 +39,41 @@ namespace FarEmerald.PlayForge.Extended.Editor
 
         private Dictionary<EDataType, Dictionary<string, FieldData>> creator_fields = new();
         private Dictionary<int, BuriedFieldData> creator_buriedFields = new();
+
+        private VisualElement creatorAbility;
+        private VisualElement creatorEntity;
+        private VisualElement creatorEffect;
+        private VisualElement creatorAttributeSet;
+
+        private VisualElement creator_utility;
+        private VisualElement creator_utBuried;
+        private VisualElement creator_utHeader;
+        private VisualElement creator_utBreadcrumbs;
+        
+        private VisualElement creator_utCost;
+        private VisualElement creator_utCooldown;
+
+        public VisualTreeAsset CurveAsset;
+        private VisualElement creator_utCurveBuilder;
+        private VisualElement creator_utCurveHeader;
+        private CurveField creator_utCurveField;
+        private VisualElement creator_utCurveIndicator;
+        private VisualElement creator_utCurveResetButton;
+        private ListView creator_utCurveList;
+
+        private VisualElement creator_utQuickCreate;
+        private ToolbarButton creator_utQcAttributeTab;
+        private ToolbarButton creator_utQcTagTab;
+        
+        private Label creator_utQcTitle;
+        private ListView creator_utQcList;
+        
+        private TextField creator_utQcNameField;
+        private TextField creator_utQcDescriptionField;
+        private ObjectField creator_utQcIconField;
+        
+        private Button creator_utQcResetButton;
+        private Button creator_utQcCreateButton;
         
         void BindCreator()
         {
@@ -81,12 +89,44 @@ namespace FarEmerald.PlayForge.Extended.Editor
             c_help = actions.Q<ToolbarButton>("Help");
             c_options = actions.Q<ToolbarButton>("Options");
             
-            BindAbilityCreator();
+            creatorAbility = creator_editor.Q("Ability");
+            creatorEntity = creator_editor.Q("Entity");
+            creatorEffect = creator_editor.Q("Effect");
+            creatorAttributeSet = creator_editor.Q("AttributeSet");
+
+            creator_utility = windowRoot.Q("Utility");
+            creator_utBuried = creator_utility.Q("BuriedPane");
+            creator_utHeader = creator_utBuried.Q("Header");
+            creator_utBreadcrumbs = creator_utHeader.Q("Breadcrumbs");
+
+            creator_utCost = creator_utBuried.Q("BuriedCostCreator");
+            creator_utCooldown = creator_utBuried.Q("BuriedCooldownCreator");
+            
+            creator_utCurveBuilder = creator_utBuried.Q("CurveBuilder");
+            creator_utCurveHeader = creator_utCurveBuilder.Q("Header");
+            creator_utCurveField = creator_utCurveBuilder.Q<CurveField>();
+            creator_utCurveIndicator = creator_utCurveBuilder.Q("Indicator");
+            creator_utCurveResetButton = creator_utCurveBuilder.Q<Button>("Reset");
+            creator_utCurveList = creator_utCurveBuilder.Q<ListView>("CurveValueList");
+
+            creator_utQuickCreate = creator_utility.Q("QuickCreate");
+            creator_utQcAttributeTab = creator_utQuickCreate.Q("Header").Q("UtilityBar").Q<ToolbarButton>("AttributeQC");
+            creator_utQcTagTab = creator_utQuickCreate.Q("UtilityBar").Q<ToolbarButton>("TagQC");
+
+            creator_utQcTitle = creator_utQuickCreate.Q("Header").Q<Label>("Title");
+            creator_utQcList = creator_utQuickCreate.Q("QuickList").Q<ListView>();
+
+            creator_utQcNameField = creator_utQuickCreate.Q("Builder").Q("Name").Q<TextField>();
+            creator_utQcDescriptionField = creator_utQuickCreate.Q("Builder").Q("Description").Q<TextField>();
+            creator_utQcIconField = creator_utQuickCreate.Q("Builder").Q("Icon").Q<ObjectField>();
+
+            creator_utQcResetButton = creator_utQuickCreate.Q("Builder").Q<Button>("Reset");
+            creator_utQcCreateButton = creator_utQuickCreate.Q("Builder").Q<Button>("Create");
         }
 
         void BuildCreator()
         {
-            BuildAbilityCreator();   
+            
         }
 
         void RefreshCreator()
@@ -110,21 +150,23 @@ namespace FarEmerald.PlayForge.Extended.Editor
             public FieldInfo Fi;
             public VisualElement Root;
             public VisualElement Indicator;
-            public Func<VisualElement> ValueField;
+            public VisualElement ValueField;
             private Func<FieldData, List<ValidationPacket>> Validation;
             public object Value;
 
-            public FieldData(FieldInfo fi, VisualElement indicator, Func<FieldData, List<ValidationPacket>> validation, object value)
+            public FieldData(FieldInfo fi, VisualElement root, VisualElement indicator, VisualElement valueField, Func<FieldData, List<ValidationPacket>> validation, object value)
             {
                 Fi = fi;
+                Root = root;
                 Indicator = indicator;
+                ValueField = valueField;
                 Validation = validation;
                 Value = value;
             }
 
-            public static FieldData Initial(FieldInfo fi, VisualElement root, VisualElement indicator, Func<VisualElement> valueField, Func<FieldData, List<ValidationPacket>> validation)
+            public static FieldData Initial(FieldInfo fi, VisualElement root, VisualElement indicator, VisualElement valueField, Func<FieldData, List<ValidationPacket>> validation)
             {
-                return new FieldData(fi, indicator, validation, null);
+                return new FieldData(fi, root, indicator, valueField, validation, null);
             }
 
             public List<ValidationPacket> GetValidation() => Validation?.Invoke(this) ?? new List<ValidationPacket>() { new(Console.Creator.Validation.MissingValidation ) };
@@ -134,19 +176,36 @@ namespace FarEmerald.PlayForge.Extended.Editor
                 return Value is T tV ? tV : default;
             }
 
-            public VisualElement GetValueField() => ValueField?.Invoke();
+            public VisualElement GetValueField() => ValueField;
             public INotifyValueChanged<T> GetValueField<T>()
             {
-                return ValueField?.Invoke() as INotifyValueChanged<T>;
+                return ValueField as INotifyValueChanged<T>;
             }
 
             public void Trace(ConsoleEntry ce, PlayForgeEditor editor, bool inOut)
             {
+                UnbinderPointer unbinder = new UnbinderPointer(Root, null, null);
+                var action = new EventCallback<PointerLeaveEvent>(_ =>
+                {
+                    Root.style.backgroundColor = default;
+                    unbinder.Dispose();
+                });
+                unbinder.outEvent = action;
                 
+                Root.style.backgroundColor = GetConsoleAlertColor(ce.code, ce.priority, .5f);
+                Root.RegisterCallback(action);
+            }
+            public bool HasTrace(ConsoleEntry ce, PlayForgeEditor editor)
+            {
+                return true;
             }
             public void Link(ConsoleEntry ce, PlayForgeEditor editor)
             {
-                
+                editor.DoContextAction(FromConsoleContextToExpanded(ce.context), this, true);
+            }
+            public bool HasLink(ConsoleEntry ce, PlayForgeEditor editor)
+            {
+                return true;
             }
             public bool CanResolve(ConsoleEntry ce, PlayForgeEditor editor)
             {
@@ -159,7 +218,7 @@ namespace FarEmerald.PlayForge.Extended.Editor
             public readonly int Key;
             public readonly Type MyType;
             
-            public BuriedFieldData(int key, Type myType, FieldInfo fi, VisualElement indicator, Func<FieldData, List<ValidationPacket>> validation, object value) : base(fi, indicator, validation, value)
+            public BuriedFieldData(int key, Type myType, FieldInfo fi, VisualElement root, VisualElement indicator, VisualElement valueField, Func<FieldData, List<ValidationPacket>> validation, object value) : base(fi, root, indicator, valueField, validation, value)
             {
                 Key = key;
                 MyType = myType;
@@ -213,28 +272,47 @@ namespace FarEmerald.PlayForge.Extended.Editor
                 if (Project.DataWithNameExists(value, ReservedFocus.Kind, ReservedFocus.Node.Id)) return new List<ValidationPacket>() { new(Console.Creator.Validation.NameExists) };
                 return new List<ValidationPacket>();
             };
-            var nameData = FieldData.Initial(nameFi, nameField, nameIndicator, () => nameInput, nameValidation);
-            var nameBinder = BindCreatorField<string>(EDataType.Ability, nameData, refAssign: () =>
-            {
-                string value = nameData.ValueTo<string>();
-                header_title.text = string.IsNullOrEmpty(value) ? $"Unnamed {DataTypeText(ReservedFocus.Kind)}" : value;
-            });
+            var nameData = FieldData.Initial(nameFi, nameField, nameIndicator, nameInput, nameValidation);
+            var nameBinder = BindCreatorField<string>(EDataType.Ability, nameData,
+                assignValue: value =>
+                {
+                    nameFi.SetValue(ReservedFocus.Node, value);
+                },
+                refAssign: () =>
+                {
+                    string value = nameData.ValueTo<string>();
+                    header_title.text = string.IsNullOrEmpty(value) ? $"Unnamed {DataTypeText(ReservedFocus.Kind)}" : value;
+                });
             
             // DESCRIPTION FIELD
             var descrField = definition.Q("Description");
             var descrFi = typeof(AbilityData).GetField(nameof(AbilityData.Description));
             var descrIndicator = descrField.Q("Indicator");
             var descrInput = descrField.Q<TextField>();
-            var descrData = FieldData.Initial(descrFi, descrField, descrIndicator, () => descrInput, QuickValidationWarnOnNullOrEmpty);
-            var descrBinder = BindCreatorField<string>(EDataType.Ability, descrData);
+            var descrData = FieldData.Initial(descrFi, descrField, descrIndicator, descrInput, QuickValidationWarnOnNullOrEmpty);
+            var descrBinder = BindCreatorField<string>(EDataType.Ability, descrData,
+                assignValue: value =>
+                {
+                    descrFi.SetValue(ReservedFocus.Node, value);
+                },
+                refAssign: () =>
+                {
+                    // TODO update chips
+                });
             
             // ICON FIELD
             var iconField = definition.Q("Icon");
             var iconFi = typeof(AbilityData).GetField(nameof(AbilityData.Icon));
             var iconIndicator = iconField.Q("Indicator");
-            var iconInput = iconField.Q<TextField>();
-            var iconData = FieldData.Initial(iconFi, iconField, iconIndicator, () => iconInput, QuickValidationWarnOnNullOrEmpty);
-            var iconBinder = BindCreatorField<Sprite>(EDataType.Ability, iconData, refAssign: () =>
+            var iconInput = iconField.Q<ObjectField>();
+            // iconInput.objectType = typeof(Sprite);
+            var iconData = FieldData.Initial(iconFi, iconField, iconIndicator, iconInput, QuickValidationWarnOnNullOrEmpty);
+            var iconBinder = BindCreatorField<Sprite>(EDataType.Ability, iconData,
+                assignValue: value =>
+                {
+                    iconFi.SetValue(ReservedFocus.Node, value);
+                },
+                refAssign: () =>
             {
                 Sprite value = iconData.ValueTo<Sprite>();
                 header_icon.style.backgroundImage = value.texture;
@@ -251,9 +329,12 @@ namespace FarEmerald.PlayForge.Extended.Editor
             var costFi = typeof(AbilityData).GetField(nameof(AbilityData.Cost));
             var costIndicator = costField.Q("Indicator");
             var costInput = costField.Q<TextField>();
-            var costData = FieldData.Initial(costFi, costField, costIndicator, () => costInput, QuickValidationWarnOnNullOrEmpty);
-            var costBinder = BindCreatorField<GameplayEffect>(EDataType.Ability, costData, refAssign: () =>
+            var costData = FieldData.Initial(costFi, costField, costIndicator, costInput, QuickValidationWarnOnNullOrEmpty);
+            var costBinder = BindShortEffectCreatorField<GameplayEffect>(EDataType.Ability, costData, () =>
             {
+                var value = costData.ValueTo<GameplayEffect>();
+                costInput.value = value?.Definition.Name ?? "Unassigned";
+                
                 // TODO update visualizer if open
             });
             // Setup search dropdown
@@ -263,49 +344,58 @@ namespace FarEmerald.PlayForge.Extended.Editor
             var cooldownFi = typeof(AbilityData).GetField(nameof(AbilityData.Cooldown));
             var cooldownIndicator = cooldownField.Q("Indicator");
             var cooldownInput = cooldownField.Q<TextField>();
-            var cooldownData = FieldData.Initial(cooldownFi, cooldownField, cooldownIndicator, () => cooldownInput, QuickValidationWarnOnNullOrEmpty);
-            var cooldownBinder = BindCreatorField<GameplayEffect>(EDataType.Ability, cooldownData, refAssign: () =>
+            var cooldownData = FieldData.Initial(cooldownFi, cooldownField, cooldownIndicator, cooldownInput, QuickValidationWarnOnNullOrEmpty);
+            var cooldownBinder = BindShortEffectCreatorField<GameplayEffect>(EDataType.Ability, cooldownData, () =>
             {
+                var value = cooldownData.ValueTo<GameplayEffect>();
+                cooldownInput.value = value?.Definition.Name ?? "Unassigned";
+                
                 // TODO update visualizer if open
             });
             // Setup search dropdown
             
             // TARGETING TASK FIELD
             var targetingField = runtime.Q("Targeting");
-            var targetingFi = typeof(AbilityData).GetField(nameof(AbilityData.Proxy.TargetingProxy));
+            var targetingFi = typeof(AbilityProxySpecification).GetField(nameof(AbilityData.Proxy.TargetingProxy));
             var targetingIndicator = targetingField.Q("Indicator");
             var targetingInput = targetingField.Q<TextField>();
-            var targetingData = FieldData.Initial(targetingFi, targetingField, targetingIndicator, () => targetingInput, QuickValidationWarnOnNullOrEmpty);
+            var targetingData = FieldData.Initial(targetingFi, targetingField, targetingIndicator, targetingInput, QuickValidationWarnOnNullOrEmpty);
+            /*var targetingBinder = 
+            
             var targetingBinder = BindCreatorField<string>(EDataType.Ability, targetingData, refAssign: () =>
             {
                 // TODO update visualizer if open
-            });
+            });*/
             // Setup search dropdown
             
             // USE IMPLICIT TARGETING FIELD
             var implicitTargetingField = runtime.Q("UseImplicitTargeting");
             var implicitTargetingFi = typeof(AbilityData).GetField(nameof(AbilityData.Proxy.UseImplicitTargeting));
             var implicitTargetingIndicator = implicitTargetingField.Q("Indicator");
-            var implicitTargetingInput = implicitTargetingField.Q<TextField>();
-            var implicitTargetingData = FieldData.Initial(implicitTargetingFi, implicitTargetingField, implicitTargetingIndicator, () => implicitTargetingInput, QuickValidationWarnOnNullOrEmpty);
-            var implicitTargetingBinder = BindCreatorField<bool>(EDataType.Ability, implicitTargetingData, refAssign: () =>
-            {
-                // TODO update visualizer if open
-            });
+            var implicitTargetingInput = implicitTargetingField.Q<Toggle>();
+            var implicitTargetingData = FieldData.Initial(implicitTargetingFi, implicitTargetingField, implicitTargetingIndicator, implicitTargetingInput, QuickValidationWarnOnNullOrEmpty);
+            var implicitTargetingBinder = BindCreatorField<bool>(EDataType.Ability, implicitTargetingData,
+                assignValue: value =>
+                {
+                    implicitTargetingFi.SetValue(ReservedFocus.Node, value);
+                },
+                refAssign: () =>
+                {
+                    // TODO update chips
+                });
             // Setup search dropdown
             
             // PROXY TASKS FIELD
             var proxyTasksField = runtime.Q("ProxyTasks");
             var proxyTasksFi = typeof(AbilityData).GetField(nameof(AbilityData.Proxy.Stages));
             var proxyTasksIndicator = proxyTasksField.Q("Indicator");
-            var proxyTasksData = FieldData.Initial(proxyTasksFi, proxyTasksField, proxyTasksIndicator, () => null, QuickValidationWarnOnNullOrEmpty);
+            var proxyTasksData = FieldData.Initial(proxyTasksFi, proxyTasksField, proxyTasksIndicator, null, QuickValidationWarnOnNullOrEmpty);
             var proxyTasksNumStages = proxyTasksField.Q<Label>("NumStagesChip");
             var proxyTasksNumTasks = proxyTasksField.Q<Label>("NumTasksChip");
             var proxyTasksGoButton = proxyTasksField.Q<Button>("AddEB");
-            var proxyTasksBinder = BindCreatorField<string>(EDataType.Ability, proxyTasksData, refAssign: () =>
-            {
-                // TODO update chips
-            });
+            BindBuryListButton<AbilityProxyStage>(proxyTasksData, proxyTasksGoButton);
+            //var proxyTasksBinder = BindListCreatorField(EDataType.Ability, proxyTasksData, proxyTasksField, null);
+            
             proxyTasksGoButton.clicked += () =>
             {
                 // TODO load buried list
@@ -313,12 +403,7 @@ namespace FarEmerald.PlayForge.Extended.Editor
             
             creator_activeUnbinders.Add(costBinder);
             creator_activeUnbinders.Add(cooldownBinder);
-            creator_activeUnbinders.Add(proxyTasksBinder);
-        }
-        
-        void BuildAbilityCreator()
-        {
-            
+            //creator_activeUnbinders.Add(proxyTasksBinder);
         }
 
         void RefreshAbilityCreator()
@@ -328,27 +413,140 @@ namespace FarEmerald.PlayForge.Extended.Editor
         
         #endregion
         
+        #region Entity
+        
+        void BindEntityCreator()
+        {
+            
+        }
+
+        void RefreshEntityCreator()
+        {
+            
+        }
+        
+        #endregion
+        
+        #endregion
+        
+        #region Effect
+        
+        void BindEffectCreator()
+        {
+            
+        }
+
+        void RefreshEffectCreator()
+        {
+            
+        }
+        
+        #endregion
+        
+        #region Attribute Set
+        
+        void BindAttributeSetCreator()
+        {
+            
+        }
+
+        void RefreshAttributeSetCreator()
+        {
+            
+        }
+        
+        #endregion
+
+        enum EBuriedAction
+        {
+            List,
+            Dictionary,
+            Cost,
+            Cooldown,
+            Modifier
+        }
+
+        bool ManageSetBuried(EBuriedAction ba, FieldData fd, Button goButton)
+        {
+            if (creator_buriedFd == fd)
+            {
+                goButton.style.backgroundColor = default;
+
+                creator_buriedFd = null;
+                creator_buriedGoBtn = null;
+                
+                return false;
+            }
+            
+            if (creator_buriedFd is not null) creator_buriedGoBtn.style.backgroundColor = default;
+            
+            creator_buriedGoBtn = goButton;
+            creator_buriedFd = fd;
+                
+            creator_buriedGoBtn.style.backgroundColor = ColorSelected;
+
+            return true;
+        }
+
+        void PushBuriedList<T>(FieldData fd, List<T> source, Button goBtn)
+        {
+            if (!ManageSetBuried(EBuriedAction.List, fd, goBtn)) return;
+            
+            
+        }
+
+        void PushBuriedDictionary<K, V>(FieldData fd, Dictionary<K, V> source, Button goBtn)
+        {
+            
+        }
+
+        void PushBuriedCostCreator(FieldData fd, EDataType kind, Button goBtn)
+        {
+            
+        }
+
+        void PushBuriedShortProxyTask(FieldData fd, EDataType kind, Button goBtn)
+        {
+            
+        }
+
+        private void BindBuryListButton<T>(FieldData fd, Button btn)
+        {
+            var source = fd.Fi.GetValue(ReservedFocus.Node) as List<T>;
+            btn.clicked += () => PushBuriedList(fd, source, btn);
+        }
+        
+        private void BindBuryDictionaryButton<K, V>(FieldData fd, Button btn)
+        {
+            var source = fd.Fi.GetValue(ReservedFocus.Node) as Dictionary<K, V>;
+            btn.clicked += () => PushBuriedDictionary(fd, source, btn);
+        }
+
+        private void BindBuryProxyTaskButton<T>(FieldData fd, Button btn) where T : AbstractProxyTask
+        {
+            
+        }
+        
         // Bind a control that implements INotifyValueChanged<T> to a field (two-way)
         private Unbinder BindCreatorField<T>(
             EDataType kind,
             FieldData fd,
+            Action<object> assignValue,
             Action<FieldInfo> onFocusIn = null,
             Action refAssign = null,
             Func<T, T> sanitizeIncoming = null, // optional: massage UI -> data
             Func<object, T> toUi = null, // optional: data -> UI conversion
             Func<T, object> toData = null) // optional: UI -> data conversion
         {
+            Debug.Log($"\t\t{fd.Fi.Name}");
             creator_fields.TryAdd(kind, new Dictionary<string, FieldData>());
             creator_fields[kind][fd.Fi.Name] = fd;
             
             var control = fd.GetValueField<T>();
-            if (control is null) throw new Exception(nameof(fd.Root));
-
-            var dataHost = ReservedFocus.Node;
-            if (dataHost is null) throw new ArgumentNullException(nameof(dataHost));
+            if (control is null) return new Unbinder(fd.Root, null, null);
             
             // Initial push data -> UI
-            var vData = fd.Fi.GetValue(dataHost);
+            var vData = fd.Fi.GetValue(ReservedFocus.Node);
             var vUI = toUi != null ? toUi(vData) : (T)ConvertTo(typeof(T), vData);
             control.SetValueWithoutNotify(vUI);
 
@@ -364,7 +562,8 @@ namespace FarEmerald.PlayForge.Extended.Editor
                 var newDataObj = toData != null ? toData(newUI) : ConvertTo(fd.Fi.FieldType, newUI);
 
                 // Set on the data object
-                fd.Fi.SetValue(dataHost, newDataObj);
+                assignValue?.Invoke(newDataObj);
+                // fd.Fi.SetValue(ReservedFocus.Node, newDataObj);
                 control.SetValueWithoutNotify(newUI);
 
                 refAssign?.Invoke();
@@ -373,8 +572,184 @@ namespace FarEmerald.PlayForge.Extended.Editor
             };
             fd.Root.RegisterCallback(outEvent);
 
+            refAssign?.Invoke();
+            
             // Return an unbinder so callers can cleanly detach
             return new Unbinder(fd.Root, inEvent, outEvent);
+        }
+
+        /// <summary>
+        /// List
+        /// </summary>
+        /// <param name="kind"></param>
+        /// <param name="fd"></param>
+        /// <param name="root"></param>
+        /// <param name="row"></param>
+        /// <param name="bindRow"></param>
+        /// <param name="refAssign"></param>
+        /// <param name="refRemove"></param>
+        /// <param name="prepareData"></param>
+        /// <typeparam name="T"></typeparam>
+        /// <returns></returns>
+        private Unbinder BindListCreatorField<T>(
+            EDataType kind,
+            FieldData fd,
+            ListView root,
+            VisualTreeAsset row,
+            Action<VisualElement> bindRow,
+            Action<T> refAssign = null,
+            Action<int, T> refRemove = null,
+            Action<T> prepareData = null) where T : class, new()
+        {
+            var source = fd.Fi.GetValue(ReservedFocus.Node) as List<T>;
+            if (source is null) return new Unbinder(fd.Root, null, null);
+
+            root.itemsSource = source;
+
+            Action<BaseListView> onAdd = view =>
+            {
+                var data = new T();
+                prepareData?.Invoke(data);
+                refAssign?.Invoke(data);
+                
+                source.Add(data);
+                
+                var newRow = row.CloneTree();
+                newRow.userData = data;
+                bindRow?.Invoke(newRow);
+
+                view.Add(newRow);
+            };
+            root.onAdd += onAdd;
+
+            Action<BaseListView> onRemove = view =>
+            {
+                int idx = -1;
+                T data = null;
+                if (root.selectedIndex >= 0 && root.selectedIndex < source.Count)
+                {
+                    idx = root.selectedIndex;
+                    data = root.selectedItem as T;
+                    source.RemoveAt(idx);
+                    root.RefreshItems();
+                }
+                else if (source.Count > 0)
+                {
+                    idx = source.Count - 1;
+                    data = source[idx];
+                    source.RemoveAt(idx);
+                    root.Rebuild();
+                }
+
+                refRemove?.Invoke(idx, data);
+            };
+            root.onRemove += onRemove;
+
+            return new Unbinder(root, null, null);
+        }
+        
+        /// <summary>
+        /// List
+        /// </summary>
+        /// <param name="kind"></param>
+        /// <param name="fd"></param>
+        /// <param name="root"></param>
+        /// <param name="refAssign"></param>
+        /// <param name="sanitizeIncoming"></param>
+        /// <param name="toUi"></param>
+        /// <param name="toData"></param>
+        /// <typeparam name="K"></typeparam>
+        /// <typeparam name="V"></typeparam>
+        /// <returns></returns>
+        private Unbinder BindDictionaryCreatorField<K, V>(
+            EDataType kind,
+            FieldData fd,
+            ListView root,
+            Action refAssign = null,
+            Func<(K, V), (K, V)> sanitizeIncoming = null,
+            Func<object, (K, V)> toUi = null,
+            Func<(K, V), object> toData = null)
+        {
+            var source = fd.Fi.GetValue(ReservedFocus.Node) as Dictionary<K, V>;
+            if (source is null) return new Unbinder(fd.Root, null, null);
+
+            root.itemsSource = source.Select(kvp => (kvp.Key, kvp.Value)).ToList();
+            
+            return new Unbinder(root, null, null);
+        }
+
+        /// <summary>
+        /// Custom
+        /// </summary>
+        /// <param name="kind"></param>
+        /// <param name="fd"></param>
+        /// <param name="refAssign"></param>
+        /// <typeparam name="T"></typeparam>
+        /// <returns></returns>
+        private Unbinder BindProxyTaskCreatorField<T>(
+            EDataType kind,
+            FieldData fd,
+            Action refAssign = null)
+        {
+            return new Unbinder(fd.Root, null, null);
+        }
+        
+        /// <summary>
+        /// Short Effect
+        /// </summary>
+        /// <param name="kind"></param>
+        /// <param name="fd"></param>
+        /// <param name="refAssign"></param>
+        /// <param name="sanitizeIncoming"></param>
+        /// <param name="toUi"></param>
+        /// <param name="toData"></param>
+        /// <typeparam name="T"></typeparam>
+        /// <returns></returns>
+        private Unbinder BindShortEffectCreatorField<T>(
+            EDataType kind,
+            FieldData fd,
+            Action refAssign = null,
+            Func<T, T> sanitizeIncoming = null,
+            Func<object, T> toUi = null,
+            Func<T, object> toData = null)
+        {
+            return new Unbinder(fd.Root, null, null);
+        }
+        
+        private Unbinder BindShortEntityCreatorField<T>(
+            EDataType kind,
+            FieldData fd,
+            Action refAssign = null,
+            Func<T, T> sanitizeIncoming = null,
+            Func<object, T> toUi = null,
+            Func<T, object> toData = null)
+        {
+            return new Unbinder(fd.Root, null, null);
+        }
+        
+        private Unbinder BindShortAbilityCreatorField<T>(
+            EDataType kind,
+            FieldData fd,
+            List<T> source,
+            Action refAssign = null,
+            Func<T, T> sanitizeIncoming = null,
+            Func<object, T> toUi = null,
+            Func<T, object> toData = null)
+        {
+            return new Unbinder(fd.Root, null, null);
+        }
+        
+        private Unbinder BindShortAttributeSetCreatorField<T>(
+            EDataType kind,
+            FieldData fd,
+            List<T> source,
+            Action<FieldInfo> onFocusIn = null,
+            Action refAssign = null,
+            Func<T, T> sanitizeIncoming = null,
+            Func<object, T> toUi = null,
+            Func<T, object> toData = null)
+        {
+            return new Unbinder(fd.Root, null, null);
         }
         
         static object ConvertTo(Type target, object value)
@@ -396,23 +771,45 @@ namespace FarEmerald.PlayForge.Extended.Editor
         static bool IsNumber(object v) =>
             v is sbyte or byte or short or ushort or int or uint or long or ulong;
 
-        sealed class Unbinder : IDisposable
+        sealed class Unbinder
         {
-            readonly VisualElement _c;
+            readonly VisualElement source;
             private readonly EventCallback<FocusInEvent> inEvent;
             private readonly EventCallback<FocusOutEvent> outEvent;
-            public Unbinder(VisualElement c, EventCallback<FocusInEvent> inEvent, EventCallback<FocusOutEvent> outEvent)
+            public Unbinder(VisualElement source, EventCallback<FocusInEvent> inEvent, EventCallback<FocusOutEvent> outEvent)
             {
-                _c = c;
+                this.source = source;
                 this.inEvent = inEvent;
                 this.outEvent = outEvent;
             }
             public void Dispose()
             {
-                if (_c is null) return;
+                if (source is null) return;
                 
-                _c.UnregisterCallback(inEvent);
-                _c.UnregisterCallback(outEvent);
+                if (inEvent is not null) source.UnregisterCallback(inEvent);
+                if (outEvent is not null) source.UnregisterCallback(outEvent);
+            }
+        }
+
+        sealed class UnbinderPointer
+        {
+            private readonly VisualElement source;
+            public EventCallback<PointerEnterEvent> inEvent;
+            public EventCallback<PointerLeaveEvent> outEvent;
+
+            public UnbinderPointer(VisualElement source, EventCallback<PointerEnterEvent> inEvent, EventCallback<PointerLeaveEvent> outEvent)
+            {
+                this.source = source;
+                this.inEvent = inEvent;
+                this.outEvent = outEvent;
+            }
+
+            public void Dispose()
+            {
+                if (source is null) return;
+                
+                if (inEvent is not null) source.UnregisterCallback(inEvent);
+                if (outEvent is not null) source.UnregisterCallback(outEvent);
             }
         }
         
@@ -447,28 +844,71 @@ namespace FarEmerald.PlayForge.Extended.Editor
             
         }
 
+        // For editing existing data
         void LoadIntoCreator(ForgeDataNode node, EDataType kind)
         {
             SetFocus(ReservedFocus, node, kind, EForgeContext.Creator);
             LoadIntoCreator(ReservedFocus);
         }
 
+        // For editing existing data
         void LoadIntoCreator(DataContainer focus)
         {
             SetFocus(ReservedFocus, focus, EForgeContext.Creator);
             if (!Focus.IsFocused) SetFocus(Focus, ReservedFocus, EForgeContext.Creator);
 
             SetHeaderReservation(true);
-
             DoContextAction(EForgeContextExpanded.Creator, focus, true);
+            
+            SetCreatorFields();
             RefreshCreator();
         }
         
-        // For fresh data
+        // For creating new data
         private void LoadIntoCreator(EDataType kind)
         {
             var node = Project.BuildNode(DataIdRegistry.Generate(), "", kind);
             LoadIntoCreator(new DataContainer(node, kind));
+        }
+
+        void SetCreatorFields()
+        {
+            creatorAbility.style.display = DisplayStyle.None;
+            creatorEntity.style.display = DisplayStyle.None;
+            creatorEffect.style.display = DisplayStyle.None;
+            creatorAttributeSet.style.display = DisplayStyle.None;
+
+            foreach (var unbinder in creator_activeUnbinders) unbinder.Dispose();
+            creator_activeUnbinders.Clear();
+            if (creator_fields.ContainsKey(ReservedFocus.Kind)) creator_fields[ReservedFocus.Kind].Clear();
+            
+            switch (ReservedFocus.Kind)
+            {
+                case EDataType.Ability:
+                    creatorAbility.style.display = DisplayStyle.Flex;
+                    BindAbilityCreator();
+                    break;
+                case EDataType.Effect:
+                    creatorEffect.style.display = DisplayStyle.Flex;
+                    BindEffectCreator();
+                    break;
+                case EDataType.Entity:
+                    creatorEntity.style.display = DisplayStyle.Flex;
+                    BindEntityCreator();
+                    break;
+                case EDataType.Attribute:
+                    break;
+                case EDataType.Tag:
+                    break;
+                case EDataType.AttributeSet:
+                    creatorAttributeSet.style.display = DisplayStyle.Flex;
+                    BindAttributeSetCreator();
+                    break;
+                case EDataType.None:
+                    break;
+                default:
+                    throw new ArgumentOutOfRangeException();
+            }
         }
 
         private bool DataHasChanges(DataContainer dc)
@@ -672,7 +1112,6 @@ namespace FarEmerald.PlayForge.Extended.Editor
         
         private bool TryCreateItem(DataContainer dc, bool log = true)
         {
-            
             if (dc.Kind == EDataType.None)
             {
                 LogConsoleEntry(Console.Creator.Create.UnresolvedDataType(dc.Kind));
@@ -680,7 +1119,7 @@ namespace FarEmerald.PlayForge.Extended.Editor
             }
             
             (int errors, int warnings) alertCounts = (0, 0);
-            foreach (var alerts in creator_fieldData.Select(GetAlertCounts))
+            foreach (var alerts in creator_fields[dc.Kind].Select(kvp => kvp.Value).Select(fd => GetAlertCounts(EConsoleContext.Creator, fd)))
             {
                 alertCounts.errors += alerts.errors;
                 alertCounts.warnings += alerts.warnings;
@@ -711,7 +1150,7 @@ namespace FarEmerald.PlayForge.Extended.Editor
             }
             
             (int errors, int warnings) alertCounts = (0, 0);
-            foreach (var alerts in creator_fieldData.Select(GetAlertCounts))
+            foreach (var alerts in creator_fields[dc.Kind].Select(kvp => kvp.Value).Select(fd => GetAlertCounts(EConsoleContext.Creator, fd)))
             {
                 alertCounts.errors += alerts.errors;
                 alertCounts.warnings += alerts.warnings;
@@ -726,7 +1165,7 @@ namespace FarEmerald.PlayForge.Extended.Editor
             if (!dc.Node.TagStatus(ForgeTags.IS_CREATED)) Project.CreateTemplate(dc.Node, dc.Kind);
             else
             {
-                var copy = Project.BuildTemplateClone(dc.Kind, dc.Node, out _);
+                var copy = Project.BuildClone(dc.Kind, dc.Node, out _);
                 Project.CreateTemplate(copy, dc.Kind);
             }
             
@@ -736,8 +1175,8 @@ namespace FarEmerald.PlayForge.Extended.Editor
                     ? Console.Creator.CreateTemplate.HasWarnings(ReservedFocus) 
                     : Console.Creator.CreateTemplate.Success(ReservedFocus));
             }
-            
-            return TrySaveItem(dc, false);
+
+            return true;
         }
         
         private bool TrySaveItem(DataContainer dc, bool log = true)
@@ -749,8 +1188,8 @@ namespace FarEmerald.PlayForge.Extended.Editor
             }
 
             (int errors, int warnings) alertCounts = (0, 0);
-            var allAlerts = creator_fields[dc.Kind]
-            foreach (var alerts in )
+            var allAlerts = creator_fields[dc.Kind].Select(kvp => kvp.Value).Select(fd => GetAlertCounts(EConsoleContext.Creator, fd));
+            foreach (var alerts in allAlerts)
             {
                 alertCounts.errors += alerts.errors;
                 alertCounts.warnings += alerts.warnings;
@@ -767,6 +1206,11 @@ namespace FarEmerald.PlayForge.Extended.Editor
             SaveFramework(log);
             RefreshHeader();
 
+            return true;
+        }
+
+        bool DeleteItem(DataContainer dc)
+        {
             return true;
         }
 
@@ -844,7 +1288,5 @@ namespace FarEmerald.PlayForge.Extended.Editor
 
             valueElem.Focus();
         }
-
-        #endregion
     }
 }

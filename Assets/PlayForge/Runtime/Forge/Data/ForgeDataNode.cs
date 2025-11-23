@@ -35,7 +35,7 @@ namespace FarEmerald.PlayForge.Extended
             };
             return t;
         }
-
+        
         public static T Clone<T>(T src, out int _id, string nameSuffix = " (SavedClone)", bool setCloneRef = true) where T : ForgeDataNode, new()
         {
             _id = -1;

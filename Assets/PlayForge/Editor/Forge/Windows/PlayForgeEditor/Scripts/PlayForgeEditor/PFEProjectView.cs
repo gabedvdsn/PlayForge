@@ -24,6 +24,7 @@ namespace FarEmerald.PlayForge.Extended.Editor
         private ListView pv_listView;
         private List<PVRow> pv_viewRows = new();
         private VisualElement pv_selectedRow;
+        private int pv_selectedId;
 
         // Main filter buttons
         public Button pv_dataButton;
@@ -115,13 +116,13 @@ namespace FarEmerald.PlayForge.Extended.Editor
                 RefreshProjectViewSearchResults();
             });
             
-            pv_searchField.RegisterCallback<FocusInEvent>(evt =>
+            pv_searchField.RegisterCallback<FocusInEvent>(_ =>
             {
                 pv_searchField.SetValueWithoutNotify("");
                 RefreshProjectViewSearchResults();
             });
             
-            pv_searchField.RegisterCallback<FocusOutEvent>(evt =>
+            pv_searchField.RegisterCallback<FocusOutEvent>(_ =>
             {
                 hasQuery = pv_searchField.value.Length > 0;
                 if (!hasQuery)
@@ -175,12 +176,30 @@ namespace FarEmerald.PlayForge.Extended.Editor
                     foreach (var dt in Enum.GetValues(typeof(EDataType)).Cast<EDataType>())
                     {
                         if (dt == EDataType.None) continue;
-                        menu.AddItem(new GUIContent(DataTypeText(dt)), pv_shownTypes[dt], data =>
+                        menu.AddItem(new GUIContent(DataTypeText(dt)), pv_shownTypes[dt], _ =>
                         {
                             pv_shownTypes[dt] = !pv_shownTypes[dt];
                             RefreshProjectView();
                         }, dt);
                     }
+                    
+                    menu.AddSeparator("");
+                    menu.AddItem(new GUIContent("All"), false, () =>
+                    {
+                        foreach (var dt in Enum.GetValues(typeof(EDataType)).Cast<EDataType>())
+                        {
+                            pv_shownTypes[dt] = true;
+                        }
+                        RefreshProjectView();
+                    });
+                    menu.AddItem(new GUIContent("None"), false, () =>
+                    {
+                        foreach (var dt in Enum.GetValues(typeof(EDataType)).Cast<EDataType>())
+                        {
+                            pv_shownTypes[dt] = false;
+                        }
+                        RefreshProjectView();
+                    });
                     
                     menu.ShowAsContext();
                 }
@@ -251,8 +270,9 @@ namespace FarEmerald.PlayForge.Extended.Editor
 
                     var chevron = row.Q<Button>("Chevron");
                     var _name = row.Q<Label>("Name");
-                    var alert = row.Q("AlertBody");
+                    var alert = row.Q("WarnImg");
                     var rowBtns = row.Q("Data");
+                    var options = row.Q<Button>("Options");
                     var headerAddBtn = row.Q<Button>("HeaderAdd");
 
                     if (data.Type == EPVRowType.KindHeader)
@@ -264,7 +284,7 @@ namespace FarEmerald.PlayForge.Extended.Editor
 
                         headerAddBtn.clicked += () =>
                         {
-                            _LoadIntoCreator(data.Kind);
+                            LoadIntoCreator(data.Kind);
                         };
 
                         chevron.clicked += () => OnClickCollapseTypeHeader(data.Kind, chevron);
@@ -289,7 +309,66 @@ namespace FarEmerald.PlayForge.Extended.Editor
                         rowBtns.style.display = DisplayStyle.None;
                         headerAddBtn.style.display = DisplayStyle.None;
                         chevron.style.display = DisplayStyle.None;
-                        alert.style.display = DisplayStyle.None;
+
+                        options.clicked += () =>
+                        {
+                            var optMenu = new GenericMenu();
+                            optMenu.AddItem(new GUIContent("Edit"), false, () =>
+                            {
+                                if (pv_selectedRow is not null) pv_selectedRow.style.backgroundColor = default;
+                                pv_selectedRow = row;
+                                pv_selectedRow.style.backgroundColor = ColorSelected;
+                            
+                                LoadIntoCreator(data.Node, data.Kind);
+                            });
+                            optMenu.AddItem(new GUIContent("Analyze"), false, () =>
+                            {
+                                if (pv_selectedRow is not null) pv_selectedRow.style.backgroundColor = default;
+                                pv_selectedRow = row;
+                                pv_selectedRow.style.backgroundColor = ColorSelected;
+                            
+                                LoadIntoAnalytics(data);
+                            });
+                            optMenu.AddItem(new GUIContent("Visualize"), false, () =>
+                            {
+                                if (pv_selectedRow is not null) pv_selectedRow.style.backgroundColor = default;
+                                pv_selectedRow = row;
+                                pv_selectedRow.style.backgroundColor = ColorSelected;
+                            
+                                // TODO open or update visualizer
+                            });
+
+                            optMenu.AddSeparator("");
+                            
+                            if (!data.Node.TagStatus(ForgeTags.IS_TEMPLATE))
+                            {
+                                optMenu.AddItem(new GUIContent("Create Preset"), false, () =>
+                                {
+                                    TryCreateTemplateItem(data);
+                                });
+                            }
+                            
+                            optMenu.AddItem(new GUIContent("Duplicate"), false, () =>
+                            {
+                                Project.AddCloneToProject(data.Node, data.Kind, out int cloneId);
+                                SaveFramework();
+                                RefreshProjectView(true);
+                                Debug.Log(cloneId);
+                            });
+                            
+                            optMenu.AddItem(new GUIContent("Delete"), false, () =>
+                            {
+                                DeleteItem(data);
+                            });
+                            
+                            optMenu.ShowAsContext();
+                        };
+
+                        if (data.Node.Id == pv_selectedId)
+                        {
+                            pv_selectedRow = row;
+                            pv_selectedRow.style.backgroundColor = ColorSelected;
+                        }
 
                         row.RegisterCallback<MouseDownEvent>(_ =>
                         {
@@ -297,11 +376,16 @@ namespace FarEmerald.PlayForge.Extended.Editor
                             {
                                 SetFocus(Focus, NoneFocus, EForgeContext.Home);
                                 row.style.backgroundColor = default;
+
+                                pv_selectedId = -1;
+                                pv_selectedRow = null;
                             }
                             else
                             {
                                 SetFocus(Focus, data, EForgeContext.Home);
                                 if (pv_selectedRow is not null) pv_selectedRow.style.backgroundColor = default;
+
+                                pv_selectedId = data.Node.Id;
                                 pv_selectedRow = row;
                                 pv_selectedRow.style.backgroundColor = ColorSelected;
                             }
@@ -316,17 +400,17 @@ namespace FarEmerald.PlayForge.Extended.Editor
                             pv_selectedRow = row;
                             pv_selectedRow.style.backgroundColor = ColorSelected;
                             
-                            _LoadIntoCreator(data.Node, data.Kind);
+                            LoadIntoCreator(data.Node, data.Kind);
                         };
 
-                        row.RegisterCallback<PointerEnterEvent>(evt =>
+                        row.RegisterCallback<PointerEnterEvent>(_ =>
                         {
                             if (!data.Node.TagStatus(ForgeTags.VALID_FOR_GAMEPLAY)) alert.style.display = DisplayStyle.Flex;
                             rowBtns.style.display = DisplayStyle.Flex;
                             if (pv_selectedRow != row) row.style.backgroundColor = Color.black * .5f;
                         });
 
-                        row.RegisterCallback<PointerLeaveEvent>(evt =>
+                        row.RegisterCallback<PointerLeaveEvent>(_ =>
                         {
                             alert.style.display = DisplayStyle.None;
                             rowBtns.style.display = DisplayStyle.None;

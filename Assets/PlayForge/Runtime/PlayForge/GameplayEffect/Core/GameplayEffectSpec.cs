@@ -132,7 +132,7 @@ namespace FarEmerald.PlayForge
         }
         public Tag GetImpactType()
         {
-            return Base.ImpactSpecification.ImpactType;
+            return Base.ImpactSpecification.ImpactTypes;
         }
         public Tag AttributeRetention()
         {

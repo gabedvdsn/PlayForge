@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using UnityEngine;
 
 namespace FarEmerald.PlayForge
@@ -9,7 +10,7 @@ namespace FarEmerald.PlayForge
         public int MaxLevel = 100;
 
         public Tag NameTag;
-        public Tag Affiliation;
+        public List<Tag> Affiliation;
 
         public float RelativeLevel => (Level - 1f) / (MaxLevel - 1);
 

@@ -10,27 +10,18 @@ namespace FarEmerald.PlayForge
 {
     public class Ability : IHasReadableDefinition
     {
-        [Header("Ability")]
-        
         public AbilityDefinition Definition;
         public AbilityTags Tags;
         public AbilityProxySpecification Proxy;
         
-        [Header("Leveling")]
-
         [Min(0)] public int StartingLevel = 1;
         [Min(0)] public int MaxLevel = 4;
         public bool IgnoreWhenLevelZero = true;
-
-        [Header("Using")]
         
-        [ForgeCategory(Forge.Categories.Cost)]
         public GameplayEffect Cost;
-        
-        [ForgeCategory(Forge.Categories.Cooldown)]
         public GameplayEffect Cooldown;
 
-        public AbilitySpec Generate(ISource owner, int level = 1)
+        public AbilitySpec Generate(ISource owner, int level)
         {
             return new AbilitySpec(owner, this, level);
         }

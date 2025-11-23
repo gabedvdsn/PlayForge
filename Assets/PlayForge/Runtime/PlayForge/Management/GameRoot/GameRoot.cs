@@ -45,13 +45,8 @@ namespace FarEmerald.PlayForge
             
             RunProcessTasks(CreateProcessTasks);
         }
-
-        public void LoadFramework(FrameworkProject fp)
-        {
-            
-        }
-
-        #region Control
+        
+        #region Process Tasks
         
         public void RunProcessTask(AbstractCreateProcessProxyTask task)
         {
@@ -91,9 +86,10 @@ namespace FarEmerald.PlayForge
         {
             return this;
         }
+        
         public float GetRelativeLevel()
         {
-            return Identity.RelativeLevel;
+            return Data.Identity.RelativeLevel;
         }
     }
 }

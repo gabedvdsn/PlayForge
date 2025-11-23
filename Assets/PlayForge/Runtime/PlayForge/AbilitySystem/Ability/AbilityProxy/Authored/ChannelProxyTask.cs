@@ -19,11 +19,7 @@ namespace FarEmerald.PlayForge
             SliderManager.Instance.ToggleSlider(false);
         }
         public override bool IsCriticalSection => false;
-
-        private void OnValidate()
-        {
-            ReadOnlyDescription = "Holds a channeling state for the assigned duration, and updates the Slider value while doing so";
-        }
+        
         public override async UniTask Activate(AbilityDataPacket data, CancellationToken token)
         {
             float elapsedDuration = 0f;

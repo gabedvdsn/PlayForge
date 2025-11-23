@@ -12,7 +12,7 @@ namespace FarEmerald.PlayForge
         
         public static implicit operator Ability(AbilityRef aref)
         {
-            return RuntimeStore.ResolveAbility(aref);
+            return GameRoot.ResolveAbility(aref);
         }
     }
 }

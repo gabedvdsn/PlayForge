@@ -20,6 +20,22 @@ namespace FarEmerald.PlayForge
         public TagRequirements SourceRequirements;
         public TagRequirements TargetRequirements;
 
+        public GameplayEffect()
+        {
+        }
+
+        public GameplayEffect(GameplayEffect o)
+        {
+            Definition = o.Definition;
+            Tags = o.Tags;
+
+            ImpactSpecification = new GameplayEffectImpactSpecification(o.ImpactSpecification);
+            DurationSpecification = new GameplayEffectDurationSpecification(o.DurationSpecification);
+
+            Workers = new List<AbstractEffectWorker>(o.Workers);
+            
+        }
+
         public GameplayEffectSpec Generate(IEffectOrigin origin, GASComponent target)
         {
             GameplayEffectSpec spec = new GameplayEffectSpec(this, origin, target);
@@ -88,7 +104,7 @@ namespace FarEmerald.PlayForge
         public Sprite GetPrimaryIcon();
     }
 
-    public class GameplayEffectTags
+    public struct GameplayEffectTags
     {
         [ForgeLinkTag("Name")]
         [ForgeCategory(Forge.Categories.Identifier)]
@@ -121,7 +137,7 @@ namespace FarEmerald.PlayForge
         public void SetLevel(int level);
         public float GetRelativeLevel();
         public string GetName();
-        public Tag GetAffiliation();
+        public List<Tag> GetAffiliation();
 
         public static SourceEffectOrigin GenerateSourceDerivation(ISource source)
         {
@@ -166,7 +182,7 @@ namespace FarEmerald.PlayForge
         {
             return Owner.GetName();
         }
-        public Tag GetAffiliation()
+        public List<Tag> GetAffiliation()
         {
             return Owner.GetAffiliation();
         }

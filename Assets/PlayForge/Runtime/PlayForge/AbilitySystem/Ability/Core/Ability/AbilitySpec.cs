@@ -68,7 +68,7 @@ namespace FarEmerald.PlayForge
         public void SetLevel(int level) => Level = level;
         public float GetRelativeLevel() => RelativeLevel;
         public string GetName() => Base.GetName();
-        public Tag GetAffiliation()
+        public List<Tag> GetAffiliation()
         {
             return Owner.GetAffiliation();
         }

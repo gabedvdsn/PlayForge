@@ -36,9 +36,17 @@ namespace FarEmerald.PlayForge.Extended.Editor
             {
                 
             }
+            public bool HasTrace(ConsoleEntry ce, PlayForgeEditor editor)
+            {
+                throw new NotImplementedException();
+            }
             public void Link(ConsoleEntry ce, PlayForgeEditor editor)
             {
                 
+            }
+            public bool HasLink(ConsoleEntry ce, PlayForgeEditor editor)
+            {
+                throw new NotImplementedException();
             }
             public bool CanResolve(ConsoleEntry ce, PlayForgeEditor editor)
             {

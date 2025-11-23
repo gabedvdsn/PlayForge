@@ -22,7 +22,7 @@ namespace FarEmerald.PlayForge
         
         [Header("Proxy Stages")]
         
-        public AbilityProxyStage[] Stages;
+        public List<AbilityProxyStage> Stages;
 
         public AbilityProxy GenerateProxy()
         {
@@ -34,7 +34,7 @@ namespace FarEmerald.PlayForge
     public class AbilityProxyStage
     {
         public EAnyAllPolicy TaskPolicy;
-        public AbstractProxyTask[] Tasks;
+        public List<AbstractProxyTask> Tasks;
         
         [Space(5)]
         

@@ -1,9 +1,11 @@
-﻿namespace FarEmerald.PlayForge
+﻿using System.Collections.Generic;
+
+namespace FarEmerald.PlayForge
 {
-    public interface  ITarget
+    public interface ITarget
     {
         public void CommunicateTargetedIntent(AbstractGameplayMonoProcess entity);
-        public Tag GetAffiliation();
+        public List<Tag> GetAffiliation();
         public Tag[] GetAppliedTags();
         public bool ApplyGameplayEffect(GameplayEffectSpec spec);
         public GameplayEffectSpec GenerateEffectSpec(IEffectOrigin origin, GameplayEffect GameplayEffect);
