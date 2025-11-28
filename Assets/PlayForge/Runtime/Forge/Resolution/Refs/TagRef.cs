@@ -15,7 +15,7 @@ namespace FarEmerald.PlayForge
         
         public static implicit operator Tag(TagRef aref)
         {
-            return RuntimeStore.ResolveTag(aref);
+            return GameRoot.ResolveTag(aref);
         }
     }
 }

@@ -6,30 +6,34 @@ using UnityEngine.Serialization;
 
 namespace FarEmerald.PlayForge
 {
-    public class AttributeChangeEventGroup : AbstractAttributeChangeEvent
+    public class AttributeWorkerGroup : AbstractAttributeWorker
     {
-        public List<AbstractAttributeChangeEvent> ChangeEvents;
+        public List<AbstractAttributeWorker> ChangeEvents;
         
-        public override void AttributeChangeEvent(GASComponent system, Dictionary<Attribute, CachedAttributeValue> attributeCache,
+        public override void Activate(GASComponent system, Dictionary<Attribute, CachedAttributeValue> attributeCache,
             ChangeValue change)
         {
-            foreach (AbstractAttributeChangeEvent fEvent in ChangeEvents)
+            foreach (AbstractAttributeWorker fEvent in ChangeEvents)
             {
                 if (!fEvent.ValidateWorkFor(system, attributeCache, change)) continue;
-                fEvent.AttributeChangeEvent(system, attributeCache, change);
+                fEvent.Activate(system, attributeCache, change);
             }
+        }
+
+        public override bool PreValidateWorkFor(ChangeValue change)
+        {
+            foreach (var changeEvent in ChangeEvents)
+            {
+                if (changeEvent.PreValidateWorkFor(change)) return true;
+            }
+
+            return false;
         }
 
         public override bool ValidateWorkFor(GASComponent system, Dictionary<Attribute, CachedAttributeValue> attributeCache,
             ChangeValue change)
         {
-            foreach (var changeEvent in ChangeEvents)
-            {
-                // If any of the events are valid return true
-                if (changeEvent.ValidateWorkFor(system, attributeCache, change)) return true;
-            }
-
-            return false;
+            return true;
         }
 
         public override bool RegisterWithHandler(AttributeChangeMomentHandler preChange, AttributeChangeMomentHandler postChange)

@@ -13,6 +13,8 @@ namespace FarEmerald.PlayForge.Extended
         {
             Source = source;
 
+            if (Source is null) return;
+            
             Reserved.Clear();
 
             foreach (var d in Source.Abilities) Reserve(d.Id);

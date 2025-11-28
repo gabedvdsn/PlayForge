@@ -28,7 +28,20 @@ namespace FarEmerald.PlayForge
             var appliedTags = system.GetAppliedTags();
             foreach (TagWorkerRequirementPacket packet in Requirements.TagPackets)
             {
+                var weight = system.GetWeight(packet.Tag);
                 switch (packet.Policy)
+                {
+                    case ERequireAvoidPolicy.Require:
+                        if (weight < packet.RequiredWeight) return false;
+                        break;
+                    case ERequireAvoidPolicy.Avoid:
+                        if (weight >= packet.RequiredWeight) return false;
+                        break;
+                    default:
+                        throw new ArgumentOutOfRangeException();
+                }
+                
+                /*switch (packet.Policy)
                 {
                     case ERequireAvoidPolicy.Require:
                         if (!appliedTags.Contains(packet.Tag)) return false;
@@ -40,25 +53,10 @@ namespace FarEmerald.PlayForge
                         throw new ArgumentOutOfRangeException();
                 }
                 
-                if (system.GetWeight(packet.Tag) < packet.RequiredWeight) return false;
+                if (system.GetWeight(packet.Tag) < packet.RequiredWeight) return false;*/
             }
 
             return true;
-        }
-
-        public void OnValidate()
-        {
-            for (int i = 0; i < Requirements.TagPackets.Count; i++)
-            {
-                if (Requirements.TagPackets[i].RequiredWeight < 1)
-                {
-                    Requirements.TagPackets[i] = new TagWorkerRequirementPacket(
-                        Requirements.TagPackets[i].Tag,
-                        Requirements.TagPackets[i].Policy,
-                        1
-                    );
-                }
-            }
         }
     }
     

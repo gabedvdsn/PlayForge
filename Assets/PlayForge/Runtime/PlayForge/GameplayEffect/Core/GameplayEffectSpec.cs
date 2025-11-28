@@ -130,7 +130,7 @@ namespace FarEmerald.PlayForge
         {
             return Target;
         }
-        public Tag GetImpactType()
+        public List<Tag> GetImpactTypes()
         {
             return Base.ImpactSpecification.ImpactTypes;
         }
@@ -152,7 +152,7 @@ namespace FarEmerald.PlayForge
             impactValue = default;
             return false;
         }
-        public Tag[] GetContextTags()
+        public List<Tag> GetContextTags()
         {
             return Origin.GetContextTags();
         }

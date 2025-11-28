@@ -712,7 +712,7 @@ namespace FarEmerald.PlayForge.Extended.Editor
         
         private void OpenImportWindow(string _title, EDataType kind, DataContainer ignore, Func<string> subTitle, Action<DataContainer> onPick, Func<ForgeDataNode, List<ImportPopupDescrPacket>> makeDescr)
         {
-            var nodes = Project.GetCompleteNodes()[kind];
+            var nodes = Project.GetCompleteNodes(ForgeTags.IsValidForEditing)[kind];
             var candidates = nodes.Where(n => n.Id != ignore.Node.Id).ToList();
 
             ImportPopupWindow.Open(_title, candidates, kind, subTitle, onPick, makeDescr);

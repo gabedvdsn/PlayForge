@@ -93,9 +93,9 @@ namespace FarEmerald.PlayForge
         {
             return Spec.Target;
         }
-        public Tag GetImpactType()
+        public List<Tag> GetImpactTypes()
         {
-            return Spec.GetImpactType();
+            return Spec.GetImpactTypes();
         }
         public Tag AttributeRetention()
         {
@@ -116,7 +116,7 @@ namespace FarEmerald.PlayForge
             impactValue = LastTrackedImpact;
             return true;
         }
-        public Tag[] GetContextTags()
+        public List<Tag> GetContextTags()
         {
             return Spec.Origin.GetContextTags();
         }

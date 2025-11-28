@@ -13,6 +13,8 @@ namespace FarEmerald.PlayForge
         public AbilityDefinition Definition;
         public AbilityTags Tags;
         public AbilityProxySpecification Proxy;
+        public List<IAbilityValidationRule> ActivationRules;
+        public Dictionary<Tag, object> LocalData;
         
         [Min(0)] public int StartingLevel = 1;
         [Min(0)] public int MaxLevel = 4;

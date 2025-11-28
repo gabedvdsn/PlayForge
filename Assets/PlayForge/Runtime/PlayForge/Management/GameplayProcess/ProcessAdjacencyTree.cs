@@ -30,22 +30,10 @@ namespace FarEmerald.PlayForge
             else Next = new ProcessAdjacencyRef(next);
         }
 
-        public List<int> Accumulate()
+        public List<int> Accumulate(ProcessAdjacencyRef start)
         {
             var pids = new List<int>();
-            var curr = this;
-            while (curr is not null)
-            {
-                pids.Add(curr.PID);
-                curr = curr.Next;
-            }
-            return pids;
-        }
-
-        public List<int> AccumulateSkip()
-        {
-            var pids = new List<int>();
-            var curr = Next;
+            var curr = start;
             while (curr is not null)
             {
                 pids.Add(curr.PID);
@@ -76,15 +64,15 @@ namespace FarEmerald.PlayForge
         
         public List<int> GetPIDs(bool skipSelf = true)
         {
-            var pids = skipSelf ? Local.AccumulateSkip() : Local.Accumulate();
+            var pids = skipSelf ? Local.Accumulate(Local.Next) : Local.Accumulate(Local);
             var child = Child;
             while (child is not null)
             {
-                pids.AddRange(child.Local.Accumulate());
+                pids.AddRange(child.Local.Accumulate(Local));
                 var sib = child.Sibling;
                 while (sib is not null)
                 {
-                    pids.AddRange(sib.Local.Accumulate());
+                    pids.AddRange(sib.Local.Accumulate(Local));
                     sib = sib.Sibling;
                 }
                 child = child.Child;

@@ -118,7 +118,7 @@ namespace FarEmerald.PlayForge
             HandleTagWorkers();
         }
         
-        public int GetWeight(Tag tag) => TagWeights.TryGetValue(tag, out int weight) ? weight : 0;
+        public int GetWeight(Tag tag) => TagWeights.GetValueOrDefault(tag, -1);
 
         public bool HasTag(Tag tag) => TagWeights.ContainsKey(tag);
 

@@ -4,11 +4,13 @@ using UnityEngine;
 
 namespace FarEmerald.PlayForge
 {
-    public abstract class AbstractAttributeChangeEvent
+    public abstract class AbstractAttributeWorker
     {
-        public abstract void AttributeChangeEvent(GASComponent system, Dictionary<Attribute, CachedAttributeValue> attributeCache,
+        public abstract void Activate(GASComponent system, Dictionary<Attribute, CachedAttributeValue> attributeCache,
             ChangeValue change);
 
+        public abstract bool PreValidateWorkFor(ChangeValue change);
+        
         public abstract bool ValidateWorkFor(GASComponent system, Dictionary<Attribute, CachedAttributeValue> attributeCache,
             ChangeValue change);
 

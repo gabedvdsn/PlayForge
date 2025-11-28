@@ -274,23 +274,23 @@ namespace FarEmerald.PlayForge.Extended
             var editor = GetEditorTags(node);
             var gasify = editor[GASIFY_TAGS] as Dictionary<Tag, object>;
             
-            _ValidateTag(EDITABLE, true);
-            _ValidateTag(IS_CREATED, true);
-            _ValidateTag(IS_SAVED_COPY, true);
-            _ValidateTag(HAS_UNSAVED_WORK, false);
-            _ValidateTag(EDITOR_CATEGORIES, new List<Tag>());
-            _ValidateTag(IS_TEMPLATE, false);
+            EnsureTagExists(EDITABLE, true);
+            EnsureTagExists(IS_CREATED, true);
+            EnsureTagExists(IS_SAVED_COPY, true);
+            EnsureTagExists(HAS_UNSAVED_WORK, false);
+            EnsureTagExists(EDITOR_CATEGORIES, new List<Tag>());
+            EnsureTagExists(IS_TEMPLATE, false);
             
-            _ValidateTag(VALID_FOR_GAMEPLAY, false);
+            EnsureTagExists(VALID_FOR_GAMEPLAY, false);
             
-            _ValidateTag(REFERENCES, new Dictionary<int, HashSet<string>>());
-            _ValidateTag(REFERENCED_BY, new Dictionary<int, HashSet<string>>());
+            EnsureTagExists(REFERENCES, new Dictionary<int, HashSet<string>>());
+            EnsureTagExists(REFERENCED_BY, new Dictionary<int, HashSet<string>>());
             
             ComputeCompositeTagValues(node, gasify);
 
-            void _ValidateTag<T>(Tag tag, T fallback)
+            void EnsureTagExists<T>(Tag tag, T fallback)
             {
-                if (!gasify.ContainsKey(tag)) gasify[tag] = fallback;
+                gasify?.TryAdd(tag, fallback);
             }
         }
 

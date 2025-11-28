@@ -14,7 +14,7 @@ namespace FarEmerald.PlayForge
         public Attribute ImpactedAttribute;
         
         [ForgeCategory(Forge.Categories.ImpactType)]
-        public Tag ImpactType;
+        public List<Tag> ImpactType;
         public EEffectImpactTargetExpanded ImpactTarget;
         [Tooltip("Validate that exclusively the modify target is modified, as opposed to itself AND the alternative (e.g. target is Current when Current AND Base are modified would NOT pass validation.")]
         public bool ImpactTargetExclusive;
@@ -35,32 +35,32 @@ namespace FarEmerald.PlayForge
         [ForgeCategory(Forge.Categories.ImpactType)]
         public Tag WorkImpactType;
         public ESignPolicy WorkSignPolicy;
-        
-        public override void InterpretImpact(AbilityImpactData impactData)
-        {
-            PerformImpactResponse(impactData);
-        }
 
         public override bool ValidateWorkFor(AbilityImpactData impactData)
         {
-            if (!AnyContextTag)
-            {
-                var cTags = impactData.SourcedModifier.Derivation.GetContextTags();
-                if (ImpactAbilityContextTags.Any(cTag => !cTags.Contains(cTag))) return false;
-            }
-            if (!AllowSelfImpact && impactData.SourcedModifier.Derivation.GetSource() == impactData.Target) return false;  // If self-inflicted impact is not allowed
-            return impactData.Attribute.Equals(ImpactedAttribute)
-                   && ForgeHelper.ValidateImpactTypes(impactData.SourcedModifier.Derivation.GetImpactType(), ImpactType)
+            return ForgeHelper.ValidateContextTags(AnyContextTag, ImpactAbilityContextTags,
+                    impactData.SourcedModifier.Derivation.GetContextTags())
+                   && ForgeHelper.ValidateSelfModification(AllowSelfImpact,
+                       impactData.SourcedModifier.Derivation.GetSource(), impactData.Target.AsGAS())
+                   && ForgeHelper.ValidateImpactTypes(impactData.SourcedModifier.Derivation.GetImpactTypes(), ImpactType)
                    && ForgeHelper.ValidateImpactTargets(ImpactTarget, impactData.RealImpact, ImpactTargetExclusive)
                    && ForgeHelper.ValidateSignPolicy(ImpactSign, ImpactTarget, impactData.RealImpact);
 
         }
 
-        protected abstract void PerformImpactResponse(AbilityImpactData impactData);
-
-        public override Attribute GetTargetedAttribute()
+        public override bool PreValidateWorkFor(AbilityImpactData impactData)
         {
-            return ImpactedAttribute;
+            return impactData.Attribute.Equals(ImpactedAttribute);
+        }
+
+        public override void SubscribeToCache(ImpactWorkerCache cache)
+        {
+            cache.AddWorker(ImpactedAttribute, this);
+        }
+
+        public override void UnsubscribeFromCache(ImpactWorkerCache cache)
+        {
+            cache.RemoveWorker(ImpactedAttribute, this);
         }
     }
     

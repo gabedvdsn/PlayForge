@@ -10,7 +10,7 @@ namespace FarEmerald.PlayForge
     /// <summary>
     /// Multiplies the SMAVs under the primary attribute by the current value
     /// </summary>
-    public class MathAttributeChangeEvent : AbstractRelativeAttributeChangeEvent
+    public class MathAttributeWorker : AbstractRelativeAttributeWorker
     {
         [Header("Math Event")]
         
@@ -18,7 +18,7 @@ namespace FarEmerald.PlayForge
         public EEffectImpactTarget OperationTarget;
         public EMathApplicationPolicy OperationPolicy;
         
-        public override void AttributeChangeEvent(GASComponent system, Dictionary<Attribute, CachedAttributeValue> attributeCache,
+        public override void Activate(GASComponent system, Dictionary<Attribute, CachedAttributeValue> attributeCache,
             ChangeValue change)
         {
             var result = ForgeHelper.AttributeMathEvent(change.Value.ToAttributeValue(), GetRelative(attributeCache, change), Operation, OperationTarget, OperationPolicy);

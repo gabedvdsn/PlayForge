@@ -83,7 +83,7 @@ namespace FarEmerald.PlayForge.Extended.Editor
         {
             if (Project is null) return;
 
-            var data = Project.GetCompleteNodes();
+            var data = Project.GetCompleteNodes(ForgeTags.IsValidForEditing);
             var items = data.Values.SelectMany(i => i).ToArray();
             
             int total = Project.DataCount;

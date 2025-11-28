@@ -6,25 +6,25 @@ namespace FarEmerald.PlayForge
 {
     public class AttributeChangeMomentHandler
     {
-        public Dictionary<Attribute, List<AbstractAttributeChangeEvent>> ChangeEvents = new();
+        public Dictionary<Attribute, List<AbstractAttributeWorker>> ChangeEvents = new();
 
-        public bool AddEvent(Attribute attribute, AbstractAttributeChangeEvent changeEvent)
+        public bool AddEvent(Attribute attribute, AbstractAttributeWorker worker)
         {
             if (ChangeEvents.ContainsKey(attribute))
             {
-                if (ChangeEvents[attribute].Contains(changeEvent)) return false;
-                ChangeEvents[attribute].Add(changeEvent);
+                if (ChangeEvents[attribute].Contains(worker)) return false;
+                ChangeEvents[attribute].Add(worker);
             }
-            else ChangeEvents[attribute] = new List<AbstractAttributeChangeEvent>() { changeEvent };
+            else ChangeEvents[attribute] = new List<AbstractAttributeWorker>() { worker };
                 
             return true;
         }
             
-        public bool RemoveEvent(Attribute attribute, AbstractAttributeChangeEvent changeEvent)
+        public bool RemoveEvent(Attribute attribute, AbstractAttributeWorker worker)
         {
             if (!ChangeEvents.ContainsKey(attribute)) return false;
                 
-            ChangeEvents[attribute].Remove(changeEvent);
+            ChangeEvents[attribute].Remove(worker);
             if (ChangeEvents[attribute].Count == 0)
             {
                 ChangeEvents.Remove(attribute);
@@ -39,8 +39,9 @@ namespace FarEmerald.PlayForge
             if (!ChangeEvents.ContainsKey(attribute)) return;
             foreach (var fEvent in ChangeEvents[attribute])
             {
+                if (!fEvent.PreValidateWorkFor(change)) continue;
                 if (!fEvent.ValidateWorkFor(system, attributeCache, change)) continue;
-                fEvent.AttributeChangeEvent(system, attributeCache, change);
+                fEvent.Activate(system, attributeCache, change);
             }
         }
     }

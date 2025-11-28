@@ -106,6 +106,8 @@ namespace FarEmerald.PlayForge.Extended.Editor
             nb_settingsButton.clicked += () => OnClickNavBarButton(nb_settingsButton, EForgeContext.Settings, (_, _) => DoContextAction(EForgeContextExpanded.Settings));
             nb_optionsButton.clicked += () => OpenNavBarOptionsMenu(nb_optionsButton.worldBound.center);
 
+            nb_activeButton = nb_homeButton;
+            
             return;
 
             void OnClickNavBarButton(Button src, EForgeContext action, Action<EForgeContext, object> func, object payload = null, bool useFancy = true)

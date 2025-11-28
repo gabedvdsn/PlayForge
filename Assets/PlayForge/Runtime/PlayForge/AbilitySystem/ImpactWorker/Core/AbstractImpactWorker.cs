@@ -7,20 +7,15 @@ namespace FarEmerald.PlayForge
     {
         [Header("Impact Worker")]
         
-        public bool AcceptUnworkableImpact = false;
+        public readonly bool AcceptUnworkableImpact = false;
         
-        public abstract void InterpretImpact(AbilityImpactData impactData);
+        public abstract void Activate(AbilityImpactData impactData);
 
+        public abstract bool PreValidateWorkFor(AbilityImpactData impactData);
         public abstract bool ValidateWorkFor(AbilityImpactData impactData);
-        public abstract Attribute GetTargetedAttribute();
-        public virtual void SubscribeToCache(ImpactWorkerCache cache)
-        {
-            cache.AddWorker(GetTargetedAttribute(), this);
-        }
 
-        public virtual void UnsubscribeFromCache(ImpactWorkerCache cache)
-        {
-            cache.RemoveWorker(GetTargetedAttribute(), this);
-        }
+        public abstract void SubscribeToCache(ImpactWorkerCache cache);
+
+        public abstract void UnsubscribeFromCache(ImpactWorkerCache cache);
     }
 }

@@ -131,7 +131,7 @@ namespace FarEmerald.PlayForge
     public interface IEffectOrigin
     {
         public ISource GetOwner();
-        public Tag[] GetContextTags();
+        public List<Tag> GetContextTags();
         public Tag GetAssetTag();
         public int GetLevel();
         public void SetLevel(int level);
@@ -158,7 +158,7 @@ namespace FarEmerald.PlayForge
         {
             return Owner;
         }
-        public Tag[] GetContextTags()
+        public List<Tag> GetContextTags()
         {
             return Owner.GetContextTags();
         }

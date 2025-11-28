@@ -4,7 +4,7 @@ using System.Linq;
 
 namespace FarEmerald.PlayForge
 {
-    public class AbilitySpec : IEffectOrigin, ITagReadable
+    public class AbilitySpec : IEffectOrigin, ITagReadable, IValidationReady
     {
         public ISource Owner;
         public Ability Base;
@@ -17,7 +17,6 @@ namespace FarEmerald.PlayForge
             Base = ability;
             Level = level;
         }
-        
 
         public void ApplyUsageEffects()
         {
@@ -56,7 +55,7 @@ namespace FarEmerald.PlayForge
         }
 
         public ISource GetOwner() => Owner;
-        public Tag[] GetContextTags()
+        public List<Tag> GetContextTags()
         {
             return Base.Tags.ContextTags;
         }

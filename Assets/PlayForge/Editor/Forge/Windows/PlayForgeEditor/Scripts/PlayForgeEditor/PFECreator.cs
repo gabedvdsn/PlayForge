@@ -251,6 +251,8 @@ namespace FarEmerald.PlayForge.Extended.Editor
         
         private List<Unbinder> creator_activeUnbinders = new();
         
+        #endregion
+        
         #region Ability
         
         void BindAbilityCreator()
@@ -424,8 +426,6 @@ namespace FarEmerald.PlayForge.Extended.Editor
         {
             
         }
-        
-        #endregion
         
         #endregion
         

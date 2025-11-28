@@ -14,7 +14,7 @@ namespace FarEmerald.PlayForge
         
         public static implicit operator Attribute(AttributeRef aref)
         {
-            return RuntimeStore.ResolveAttribute(aref);
+            return GameRoot.ResolveAttribute(aref);
         }
     }
 }

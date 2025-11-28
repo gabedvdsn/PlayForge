@@ -9,7 +9,7 @@ using UnityEngine.Serialization;
 
 namespace FarEmerald.PlayForge
 {
-    public class GASComponent : LazyMonoProcess, ISource, ITagHandler, IProxyTaskBehaviourCaller
+    public class GASComponent : LazyMonoProcess, ISource, ITagHandler, IProxyTaskBehaviourCaller, IValidationReady
     {
         public EntityIdentity Data;
         
@@ -498,7 +498,7 @@ namespace FarEmerald.PlayForge
         }
 
         #region Derivation Source
-        public Tag[] GetContextTags() => new[] { Tags.CONTEXT_GAS, Tags.CONTEXT_SOURCE };
+        public List<Tag> GetContextTags() => new(){ Tags.CONTEXT_GAS, Tags.CONTEXT_SOURCE };
         public TagCache GetTagCache() => TagCache;
         public Tag GetAssetTag() => Data.Identity.NameTag;
         public int GetLevel() => Data.Identity.Level;

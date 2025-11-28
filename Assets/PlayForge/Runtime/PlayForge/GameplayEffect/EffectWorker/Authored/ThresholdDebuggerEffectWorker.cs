@@ -6,7 +6,7 @@ namespace FarEmerald.PlayForge
     {
         protected override void OnThresholdMet(IAttributeImpactDerivation derivation)
         {
-            Debug.Log($"Threshold is met because of {derivation}");       
+            Debug.Log($"Threshold is met: {derivation}");       
         }
     }
 }

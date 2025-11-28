@@ -6,7 +6,7 @@ using UnityEngine.Serialization;
 
 namespace FarEmerald.PlayForge
 {
-    public abstract class AbstractFocusedAttributeChangeEvent : AbstractAttributeChangeEvent
+    public abstract class AbstractFocusedAttributeWorker : AbstractAttributeWorker
     {
         [Header("Change Event")]
         
@@ -30,7 +30,7 @@ namespace FarEmerald.PlayForge
         
         [Tooltip("The impact type of the change to screen for")]
         [ForgeCategory(Forge.Categories.ImpactType)]
-        public Tag ImpactType;
+        public List<Tag> ImpactType;
         
         [Header("Change Tag Validation")]
         
@@ -39,18 +39,28 @@ namespace FarEmerald.PlayForge
         [Tooltip("The modification source context tag(s) (all of them) must exist in this list")]
         public List<Tag> ValidContextTags;
 
-        public override bool ValidateWorkFor(GASComponent system, Dictionary<Attribute, CachedAttributeValue> attributeCache,
+        public override bool PreValidateWorkFor(ChangeValue change)
+        {
+            return change.Value.BaseDerivation.GetAttribute().Equals(TargetAttribute);
+        }
+
+        public override bool ValidateWorkFor(GASComponent system,
+            Dictionary<Attribute, CachedAttributeValue> attributeCache,
             ChangeValue change)
         {
             if (!change.Value.BaseDerivation.GetAttribute().Equals(TargetAttribute))
             {
                 return false;
             }
-            if (!AnyContextTag && ValidContextTags.Count > 0 && !ValidContextTags.ContainsAll(change.Value.BaseDerivation.GetContextTags())) 
+            
+            if (!ForgeHelper.ValidateContextTags(AnyContextTag, ValidContextTags,
+                    change.Value.BaseDerivation.GetContextTags()))
             {
                 return false;
             }
-            if (!AllowSelfModification && change.Value.BaseDerivation.GetSource().AsGAS() == system) 
+
+            if (!ForgeHelper.ValidateSelfModification(AllowSelfModification, change.Value.BaseDerivation.GetSource(),
+                    system))
             {
                 return false;
             }
@@ -62,7 +72,7 @@ namespace FarEmerald.PlayForge
             {
                 return false;
             }
-            if (!ForgeHelper.ValidateImpactTypes(change.Value.BaseDerivation.GetImpactType(), ImpactType)) 
+            if (!ForgeHelper.ValidateImpactTypes(change.Value.BaseDerivation.GetImpactTypes(), ImpactType)) 
             {
                 return false;
             }

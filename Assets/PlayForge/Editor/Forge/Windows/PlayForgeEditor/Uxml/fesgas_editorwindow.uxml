@@ -89,9 +89,9 @@
                         </ui:VisualElement>
                     </ui:VisualElement>
                 </ui:VisualElement>
-                <ui:VisualElement name="Window" style="flex-grow: 1; flex-shrink: 0; flex-direction: row;">
+                <ui:VisualElement name="Window" style="flex-grow: 1; flex-shrink: 1; flex-direction: row;">
                     <ui:VisualElement name="Focus" style="flex-grow: 1; flex-shrink: 0;">
-                        <ui:VisualElement name="Main" style="flex-grow: 1; min-height: 450px; max-height: 650px;">
+                        <ui:VisualElement name="Main" style="flex-grow: 1; min-height: 250px; flex-shrink: 0; max-height: 450px;">
                             <ui:VisualElement name="HomePage" style="flex-grow: 1; display: none; flex-shrink: 0; background-color: rgb(107, 107, 107);" />
                             <ui:VisualElement name="CreatorPage" style="flex-grow: 1; border-left-color: rgb(0, 0, 0); border-right-color: rgb(0, 0, 0); border-top-color: rgb(0, 0, 0); border-bottom-color: rgb(0, 0, 0); border-bottom-width: 0; visibility: visible; display: flex; align-items: stretch; flex-direction: row;">
                                 <ui:VisualElement name="CreatorHome" style="flex-grow: 1; background-color: rgb(107, 107, 107); display: none;">
@@ -194,7 +194,7 @@
                                                         <ui:Label text="Define workers provided to the Entity or Item granted this Ability." style="-unity-text-align: middle-left; font-size: 11px; padding-top: 2px; padding-bottom: 0;" />
                                                     </ui:VisualElement>
                                                     <ui:VisualElement style="align-self: flex-end; flex-grow: 0; flex-direction: row; align-items: center; margin-top: 2px; margin-bottom: 2px;">
-                                                        <ui:Button text="?" tooltip="Add external behaviour" focusable="false" triple-click-selects-line="false" double-click-selects-word="false" name="Help" style="max-height: 21px; min-height: 21px; -unity-text-align: middle-center; padding-right: 5px; padding-left: 4px;" />
+                                                        <ui:Button text="?" focusable="false" triple-click-selects-line="false" double-click-selects-word="false" name="Help" style="max-height: 21px; min-height: 21px; -unity-text-align: middle-center; padding-right: 5px; padding-left: 4px;" />
                                                         <ui:Instance template="fesgas_presetBar" style="align-self: auto;" />
                                                     </ui:VisualElement>
                                                 </ui:VisualElement>
@@ -203,7 +203,7 @@
                                                     <ui:Label text="Attribute Workers" style="flex-grow: 0; -unity-text-align: middle-left; -unity-font-style: bold; margin-left: 4px; padding-left: 0;" />
                                                     <ui:VisualElement style="align-self: center; flex-grow: 1; flex-direction: row; align-items: center; margin-top: 2px; margin-bottom: 2px; flex-shrink: 0; justify-content: flex-end;">
                                                         <ui:Label tabindex="-1" text="0 Attribute Workers" parse-escape-sequences="true" display-tooltip-when-elided="true" name="ListCountChip" style="-unity-font-style: normal; -unity-text-align: middle-center; padding-left: 4px; font-size: 9px; border-left-color: rgb(57, 57, 61); border-right-color: rgb(57, 57, 61); border-top-color: rgb(57, 57, 61); border-bottom-color: rgb(57, 57, 61); border-top-width: 1px; border-right-width: 1px; border-bottom-width: 1px; border-left-width: 1px; border-top-left-radius: 5px; border-top-right-radius: 5px; border-bottom-right-radius: 5px; border-bottom-left-radius: 5px; padding-right: 4px; background-color: rgb(102, 102, 102); max-height: 21px; min-height: 21px; align-self: center; margin-left: 4px;" />
-                                                        <ui:Button text="Go →" tooltip="Add external behaviour" focusable="false" triple-click-selects-line="false" double-click-selects-word="false" name="Go" style="max-height: 21px; min-height: 21px; -unity-text-align: middle-center; padding-right: 8px; padding-left: 8px;" />
+                                                        <ui:Button text="Go →" focusable="false" triple-click-selects-line="false" double-click-selects-word="false" name="Go" style="max-height: 21px; min-height: 21px; -unity-text-align: middle-center; padding-right: 8px; padding-left: 8px;" />
                                                         <ui:Instance template="fesgas_presetBar" style="align-self: auto;" />
                                                     </ui:VisualElement>
                                                 </ui:VisualElement>
@@ -1164,7 +1164,7 @@
                                 </ui:VisualElement>
                             </ui:VisualElement>
                         </ui:VisualElement>
-                        <ui:VisualElement name="Store" style="flex-grow: 1; flex-shrink: 1; align-self: auto; border-left-color: rgb(0, 0, 0); border-right-color: rgb(0, 0, 0); border-top-color: rgb(0, 0, 0); border-bottom-color: rgb(0, 0, 0); border-bottom-width: 2px; flex-direction: row; border-top-width: 2px; display: flex; min-height: 220px;">
+                        <ui:VisualElement name="Store" style="flex-grow: 1; flex-shrink: 0; align-self: auto; border-left-color: rgb(0, 0, 0); border-right-color: rgb(0, 0, 0); border-top-color: rgb(0, 0, 0); border-bottom-color: rgb(0, 0, 0); border-bottom-width: 2px; flex-direction: row; border-top-width: 2px; display: flex; min-height: 220px;">
                             <ui:VisualElement name="BodyWithHeader" style="flex-grow: 1; background-color: rgb(77, 77, 77); display: none;">
                                 <ui:VisualElement name="Header" style="flex-grow: 0; flex-direction: row; align-items: stretch; padding-left: 8px; padding-top: 4px;">
                                     <ui:Label tabindex="-1" text="Header" parse-escape-sequences="true" display-tooltip-when-elided="true" style="-unity-text-align: middle-left; margin-top: 0; margin-bottom: 0; padding-top: 2px; padding-bottom: 2px; padding-left: 2px;" />

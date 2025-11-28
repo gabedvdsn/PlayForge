@@ -109,7 +109,7 @@ namespace FarEmerald.PlayForge.Extended.Editor
 
         private void Refresh()
         {
-            if (Project is not null) projectData = Project.GetCompleteNodes();
+            if (Project is not null) projectData = Project.GetCompleteNodes(ForgeTags.IsValidForEditing);
             
             RefreshProjectView();
             
@@ -158,14 +158,12 @@ namespace FarEmerald.PlayForge.Extended.Editor
         private void LoadFramework(FrameworkProject fp)
         {
             DataIdRegistry.Reset();
-
             Project = fp;
-
             DataIdRegistry.RebuildFrom(Project);
-
+            
             LocalSettings = ForgeStores.LoadLocalSettings(Project.MetaName);
 
-            foreach (var kvp in Project.GetCompleteNodes())
+            foreach (var kvp in Project.GetCompleteNodes(ForgeTags.IsValidForEditing))
             {
                 foreach (var node in kvp.Value) ForgeTags.ValidateEditorTags(node);
             }
@@ -177,14 +175,14 @@ namespace FarEmerald.PlayForge.Extended.Editor
 
         void LoadProjectData()
         {
-            projectData = Project.GetCompleteNodes();
+            projectData = Project.GetCompleteNodes(ForgeTags.IsValidForEditing);
             var keys = projectData.Keys;
             foreach (var k in keys)
             {
                 projectData[k].Sort((a, b) => string.Compare(a.Name, b.Name, StringComparison.OrdinalIgnoreCase));
             }
         }
-
+        
         private void AutoLoad()
         {
             try
@@ -196,13 +194,21 @@ namespace FarEmerald.PlayForge.Extended.Editor
                 {
                     if (!ForgeStores.IterateFrameworkKeys().Contains(active)) SetMasterSetting(ForgeTags.Settings.LAST_OPENED_FRAMEWORK, "");
                 }
+            }
+            catch (Exception ex)
+            {
+                LogConsoleEntry(Console.Framework.FailedToLoadMasterSettings());
+                _ = ForgeStores.LoadMasterSettings();
+                AutoLoad();
+                return;
+            }
 
+            try
+            {
                 string sessionId = MasterSetting(ForgeTags.Settings.SESSION_ID, "");
-
                 if (string.IsNullOrEmpty(sessionId))
                 {
                     SetMasterSetting(ForgeTags.Settings.SESSION_ID, ForgeStores.SessionId);
-                    return;
                 }
 
                 if (sessionId == ForgeStores.SessionId)
@@ -216,15 +222,14 @@ namespace FarEmerald.PlayForge.Extended.Editor
             }
             catch (Exception ex)
             {
+                Project ??= new FrameworkProject();
                 LogConsoleEntry(Console.Framework.FailedToLoad());
             }
         }
 
         private void QuickLoad(string key)
         {
-            var proj = ForgeStores.LoadFramework(key);
-            if (proj is null) return;
-
+            var proj = ForgeStores.LoadFramework(key) ?? new FrameworkProject();
             LoadFramework(proj);
         }
 

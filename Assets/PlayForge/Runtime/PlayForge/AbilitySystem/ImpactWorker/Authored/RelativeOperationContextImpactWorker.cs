@@ -15,8 +15,8 @@ namespace FarEmerald.PlayForge
         [Header("Danger! [ KEEP FALSE ]")]
         [Tooltip("Only set TRUE if you know what you are doing. Keeping this FALSE will ensure cycles are broken without recursing.\nFor Example:\nA) Player receives health via magic\nB) Worker provides Player health via magic\nC) Cycle repeats infinitely")]
         public bool WorkerImpactWorkable = false;
-        
-        protected override void PerformImpactResponse(AbilityImpactData impactData)
+
+        public override void Activate(AbilityImpactData impactData)
         {
             // Extract the relative attribute (e.g. lifesteal attribute)
             if (!impactData.SourcedModifier.Derivation.GetSource().FindAttributeSystem(out var attr) || !attr.TryGetAttributeValue(RelativeAttribute, out AttributeValue relValue)) return;
@@ -46,7 +46,7 @@ namespace FarEmerald.PlayForge
             );
             attr.ModifyAttribute(WorkAttribute, sourcedModifier);
         }
-
+        
         public override bool ValidateWorkFor(AbilityImpactData impactData)
         {
             if (!base.ValidateWorkFor(impactData)) return false;

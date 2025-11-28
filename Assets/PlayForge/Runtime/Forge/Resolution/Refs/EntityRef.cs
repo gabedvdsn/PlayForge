@@ -12,7 +12,7 @@ namespace FarEmerald.PlayForge
         
         public static implicit operator EntityIdentity(EntityRef aref)
         {
-            return RuntimeStore.ResolveEntity(aref);
+            return GameRoot.ResolveEntity(aref);
         }
     }
 }

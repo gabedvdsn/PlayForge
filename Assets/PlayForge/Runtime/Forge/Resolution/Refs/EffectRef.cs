@@ -12,7 +12,7 @@ namespace FarEmerald.PlayForge
         
         public static implicit operator GameplayEffect(EffectRef aref)
         {
-            return RuntimeStore.ResolveEffect(aref);
+            return GameRoot.ResolveEffect(aref);
         }
     }
 }

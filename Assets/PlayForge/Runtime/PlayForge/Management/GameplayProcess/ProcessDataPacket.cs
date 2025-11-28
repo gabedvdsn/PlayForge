@@ -18,7 +18,7 @@ namespace FarEmerald.PlayForge
     ///         E.g. procuring the target transform via Data.TryGetPayload[Transform](Target, GameRoot.TransformParameter, Primary, out Transform value)
     ///         This procures the Transform value under the Target classification stored under the key GameRoot.TransformParameter
     /// </summary>
-    public class ProcessDataPacket
+    public class ProcessDataPacket : IValidationReady
     {
         protected Dictionary<Tag, List<object>> Payload = new();
 

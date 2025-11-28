@@ -9,7 +9,7 @@ namespace FarEmerald.PlayForge
     public class AttributeSystemComponent : MonoBehaviour
     {
         protected AttributeSet attributeSet;
-        protected List<AbstractAttributeChangeEvent> attributeChangeEvents = new();
+        protected List<AbstractAttributeWorker> attributeChangeEvents = new();
 
         private AttributeChangeMomentHandler PreChangeHandler;
         private AttributeChangeMomentHandler PostChangeHandler;
@@ -60,21 +60,21 @@ namespace FarEmerald.PlayForge
         {
             PreChangeHandler = new AttributeChangeMomentHandler();
             PostChangeHandler = new AttributeChangeMomentHandler();
-            foreach (AbstractAttributeChangeEvent changeEvent in attributeChangeEvents) changeEvent.RegisterWithHandler(PreChangeHandler, PostChangeHandler);
+            foreach (AbstractAttributeWorker changeEvent in attributeChangeEvents) changeEvent.RegisterWithHandler(PreChangeHandler, PostChangeHandler);
         }
         
         #endregion
         
         #region Management
         
-        public bool ProvideChangeEvent(AbstractAttributeChangeEvent changeEvent)
+        public bool ProvideChangeEvent(AbstractAttributeWorker worker)
         {
-            return changeEvent.RegisterWithHandler(PreChangeHandler, PostChangeHandler);
+            return worker.RegisterWithHandler(PreChangeHandler, PostChangeHandler);
         }
 
-        public bool RescindChangeEvent(AbstractAttributeChangeEvent changeEvent)
+        public bool RescindChangeEvent(AbstractAttributeWorker worker)
         {
-            return changeEvent.DeRegisterFromHandler(PreChangeHandler, PostChangeHandler);
+            return worker.DeRegisterFromHandler(PreChangeHandler, PostChangeHandler);
         }
 
         public void ProvideAttribute(Attribute attribute, DefaultAttributeValue defaultValue)

@@ -15,7 +15,7 @@ namespace FarEmerald.PlayForge.Extended
     [InitializeOnLoad]
     public static class ForgeStores
     {
-        public static string ActiveFrameworkKey => LoadMasterSettings().Status<string>(ForgeTags.Settings.ACTIVE_FRAMEWORK, "None");
+        public static string ActiveFrameworkKey => LoadMasterSettings().Status(ForgeTags.Settings.ACTIVE_FRAMEWORK, "");
         private const string SessionKey = "PlayForge/SessionId";
         
 #if UNITY_EDITOR

@@ -12,14 +12,14 @@ namespace FarEmerald.PlayForge
         
         [ForgeCategory(Forge.Categories.Identifier)]
         public Tag AssetTag;
-        public Tag[] ContextTags;
+        public List<Tag> ContextTags;
         
         [Header("Tags")]
         
         [Tooltip("Tags that are granted as long as this ability is learned")]
-        public Tag[] PassivelyGrantedTags;
+        public List<Tag> PassivelyGrantedTags;
         [Tooltip("Tags that are granted while this ability is active")]
-        public Tag[] ActiveGrantedTags;
+        public List<Tag> ActiveGrantedTags;
 
         [Header("Requirements")]
         

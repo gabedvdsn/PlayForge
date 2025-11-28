@@ -97,7 +97,7 @@ namespace FarEmerald.PlayForge
             }
         }
 
-        public Dictionary<EDataType, List<ForgeDataNode>> GetCompleteNodes()
+        public Dictionary<EDataType, List<ForgeDataNode>> GetCompleteNodes(params Func<ForgeDataNode, bool>[] validations)
         {
             var items = new Dictionary<EDataType, List<ForgeDataNode>>();
             
@@ -113,7 +113,7 @@ namespace FarEmerald.PlayForge
             void AddItems<T>(EDataType type, List<T> nodes) where T : ForgeDataNode
             {
                 items[type] = new List<ForgeDataNode>();
-                foreach (var node in nodes.Where(ForgeTags.IsValidForEditing))
+                foreach (var node in nodes.Where(node => validations.All(v => v == null || v(node))))
                 {
                     items[type].Add(node);
                 }

@@ -14,9 +14,9 @@ namespace FarEmerald.PlayForge
 
         [Header("Process Control")]
         
-        public EProcessControlState StartState = EProcessControlState.Ready;
-        public new bool DontDestroyOnLoad = true;
-        public bool CollectOnAwake = true;
+        [SerializeField] private EProcessControlState StartState = EProcessControlState.Ready;
+        [SerializeField] private new bool DontDestroyOnLoad = true;
+        [SerializeField] private bool CollectOnAwake = true;
         
         [Space]
         
@@ -34,7 +34,14 @@ namespace FarEmerald.PlayForge
         private int cacheCounter = 0;
         private int NextCacheIndex => cacheCounter++; 
 
+        /// <summary>
+        /// Number of created processes.
+        /// </summary>
         public int Created => cacheCounter;
+        
+        /// <summary>
+        /// Number of active processes.
+        /// </summary>
         public int Active => active.Count;
 
         #region Events
@@ -492,7 +499,7 @@ namespace FarEmerald.PlayForge
             if (stepping[timing][priority].Count == 0) stepping[timing].Remove(priority);
         }
 
-        public void SetWaitingStepIndex(ProcessControlBlock pcb)
+        private void SetWaitingStepIndex(ProcessControlBlock pcb)
         {
             switch (pcb.Process.StepTiming)
             {
@@ -584,7 +591,7 @@ namespace FarEmerald.PlayForge
         /// <param name="mono"></param>
         /// <param name="state"></param>
         /// <returns></returns>
-        public void RegulateMonoProcess(AbstractMonoProcess mono, EProcessState state)
+        private void RegulateMonoProcess(AbstractMonoProcess mono, EProcessState state)
         {
             
             return;
@@ -774,8 +781,8 @@ namespace FarEmerald.PlayForge
                 _ => throw new ArgumentOutOfRangeException(nameof(State), State, null)
             };
         }
-        
-        public EProcessState GetDefaultStateWhenControlChanged(ProcessControlBlock pcb)
+
+        private EProcessState GetDefaultStateWhenControlChanged(ProcessControlBlock pcb)
         {
             var lifecycle = pcb.Process.Lifecycle;
             var from = pcb.State;
@@ -933,8 +940,8 @@ namespace FarEmerald.PlayForge
                 _ => throw new ArgumentOutOfRangeException(nameof(State), State, null)
             };
         }
-        
-        public bool ValidatePCBStateTransfer(ProcessControlBlock pcb, EProcessState to)
+
+        private bool ValidatePCBStateTransfer(ProcessControlBlock pcb, EProcessState to)
         {
             var lifecycle = pcb.Process.Lifecycle;
             var from = pcb.State;

@@ -13,12 +13,12 @@ namespace FarEmerald.PlayForge
         public IEffectOrigin GetEffectDerivation();
         public ISource GetSource();
         public ITarget GetTarget();
-        public Tag GetImpactType();
+        public List<Tag> GetImpactTypes();
         public Tag AttributeRetention();
         public void TrackImpact(AbilityImpactData impactData);
         public bool TryGetTrackedImpact(out AttributeValue impactValue);
         public bool TryGetLastTrackedImpact(out AttributeValue impactValue);
-        public Tag[] GetContextTags();
+        public List<Tag> GetContextTags();
         public void RunEffectApplicationWorkers();
         public void RunEffectTickWorkers();
         public void RunEffectRemovalWorkers();
@@ -67,9 +67,9 @@ namespace FarEmerald.PlayForge
         {
             return Source;
         }
-        public Tag GetImpactType()
+        public List<Tag> GetImpactTypes()
         {
-            return ImpactType;
+            return new List<Tag>(){ ImpactType };
         }
 
         public Tag AttributeRetention()
@@ -92,7 +92,7 @@ namespace FarEmerald.PlayForge
             impactValue = default;
             return false;
         }
-        public Tag[] GetContextTags()
+        public List<Tag> GetContextTags()
         {
             return Source.GetContextTags();
         }

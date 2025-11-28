@@ -26,6 +26,16 @@ namespace FarEmerald.PlayForge
         public EMagnitudeOperation TickCalculationOperation;
         public ETickCalculationRounding Rounding;
 
+        public GameplayEffectDurationSpecification(GameplayEffectDurationSpecification o)
+        {
+            DurationPolicy = o.DurationPolicy;
+            StackableType = o.StackableType;
+            TickOnApplication = o.TickOnApplication;
+
+            Duration = o.Duration;
+            DurationCalculation = o.DurationCalculation;
+        }
+
         public void ApplyDurationSpecifications(AbstractGameplayEffectShelfContainer container)
         {
             if (DurationPolicy == EEffectDurationPolicy.Instant) return;

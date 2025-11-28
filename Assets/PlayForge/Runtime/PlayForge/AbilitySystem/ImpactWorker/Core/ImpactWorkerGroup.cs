@@ -8,23 +8,24 @@ namespace FarEmerald.PlayForge
     {
         public List<AbstractImpactWorker> Workers;
         
-        public override void InterpretImpact(AbilityImpactData impactData)
+        public override void Activate(AbilityImpactData impactData)
         {
-            foreach (AbstractImpactWorker worker in Workers)
+            foreach (var worker in Workers.Where(worker => worker.PreValidateWorkFor(impactData)).Where(worker => worker.ValidateWorkFor(impactData)))
             {
-                if (!worker.ValidateWorkFor(impactData)) continue;
-                worker.InterpretImpact(impactData);
+                worker.Activate(impactData);
             }
         }
-        
+
+        public override bool PreValidateWorkFor(AbilityImpactData impactData)
+        {
+            return Workers.Count > 0;
+        }
+
         public override bool ValidateWorkFor(AbilityImpactData impactData)
         {
-            return Workers.Any(worker => worker.ValidateWorkFor(impactData));
+            return true;
         }
-        public override Attribute GetTargetedAttribute()
-        {
-            return default;
-        }
+
         public override void SubscribeToCache(ImpactWorkerCache cache)
         {
             foreach (var worker in Workers) worker.SubscribeToCache(cache);

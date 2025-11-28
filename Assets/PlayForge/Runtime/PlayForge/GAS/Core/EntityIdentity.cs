@@ -15,7 +15,7 @@ namespace FarEmerald.PlayForge
         public List<AbstractImpactWorker> ImpactWorkers = new();
         
         public AttributeSet AttributeSet = new();
-        public List<AbstractAttributeChangeEvent> AttributeChangeEvents = new();
+        public List<AbstractAttributeWorker> AttributeChangeEvents = new();
         
         public List<AbstractTagWorker> TagWorkers = new();
     }

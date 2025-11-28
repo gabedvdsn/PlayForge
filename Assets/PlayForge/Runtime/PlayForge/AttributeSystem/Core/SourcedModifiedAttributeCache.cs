@@ -33,23 +33,17 @@ namespace FarEmerald.PlayForge
             active.Clear();
         }
 
-        private bool ValidateAttribute(Attribute attribute)
+        private bool TryRegisterAttribute(Attribute attribute)
         {
             if (!cache.ContainsKey(attribute)) return false;
             if (!active.Contains(attribute)) active.Add(attribute);
 
             return true;
         }
-
-        private bool ValidateImpactType(Tag impactType, Tag validateAgainst)
-        {
-            if (impactType == Tags.GEN_NOT_APPLICABLE) return false;
-            return impactType == validateAgainst;
-        }
         
         public void Register(Attribute attribute, SourcedModifiedAttributeValue sourcedModifiedValue)
         {
-            if (!ValidateAttribute(attribute)) return;
+            if (!TryRegisterAttribute(attribute)) return;
             
             cache[attribute].Add(sourcedModifiedValue);
         }
@@ -75,7 +69,7 @@ namespace FarEmerald.PlayForge
         
         public void Multiply(Attribute attribute, AttributeValue operand, bool allowSelfModify, List<Tag> contextTags, bool anyContextTag)
         {
-            if (!ValidateAttribute(attribute)) return;
+            if (!TryRegisterAttribute(attribute)) return;
             
             for (int i = 0; i < cache[attribute].Count; i++)
             {
@@ -87,7 +81,7 @@ namespace FarEmerald.PlayForge
         
         public void Multiply(Attribute attribute, ESignPolicy signPolicy, AttributeValue operand, bool allowSelfModify, List<Tag> contextTags, bool anyContextTag)
         {
-            if (!ValidateAttribute(attribute)) return;
+            if (!TryRegisterAttribute(attribute)) return;
             
             for (int i = 0; i < cache[attribute].Count; i++)
             {
@@ -98,13 +92,13 @@ namespace FarEmerald.PlayForge
             }
         }
 
-        public void MultiplyAmplify(Attribute attribute, Tag impactType, ESignPolicy signPolicy, AttributeValue operand, bool allowSelfModify, List<Tag> contextTags, bool anyContextTag)
+        public void MultiplyAmplify(Attribute attribute, List<Tag> impactType, ESignPolicy signPolicy, AttributeValue operand, bool allowSelfModify, List<Tag> contextTags, bool anyContextTag)
         {
-            if (!ValidateAttribute(attribute)) return;
+            if (!TryRegisterAttribute(attribute)) return;
             
             for (int i = 0; i < cache[attribute].Count; i++)
             {
-                if (!ValidateImpactType(impactType, cache[attribute][i].Derivation.GetImpactType())) continue;
+                if (!ForgeHelper.ValidateImpactTypes(impactType, cache[attribute][i].Derivation.GetImpactTypes())) continue;
                 if (cache[attribute][i].SignPolicy != signPolicy) continue;
                 if (cache[attribute][i].BaseDerivation.GetSource() == cache[attribute][i].BaseDerivation.GetTarget() && !allowSelfModify) continue;
                 if (!anyContextTag && !cache[attribute][i].BaseDerivation.GetContextTags().ContainsAll(contextTags)) continue;
@@ -112,13 +106,13 @@ namespace FarEmerald.PlayForge
             }
         }
 
-        public void MultiplyAttenuate(Attribute attribute, Tag impactType, ESignPolicy signPolicy, AttributeValue operand, bool allowSelfModify, List<Tag> contextTags, bool anyContextTag)
+        public void MultiplyAttenuate(Attribute attribute, List<Tag> impactType, ESignPolicy signPolicy, AttributeValue operand, bool allowSelfModify, List<Tag> contextTags, bool anyContextTag)
         {
-            if (!ValidateAttribute(attribute)) return;
+            if (!TryRegisterAttribute(attribute)) return;
             
             for (int i = 0; i < cache[attribute].Count; i++)
             {
-                if (!ValidateImpactType(impactType, cache[attribute][i].Derivation.GetImpactType())) continue;
+                if (!ForgeHelper.ValidateImpactTypes(impactType, cache[attribute][i].Derivation.GetImpactTypes())) continue;
                 if (cache[attribute][i].SignPolicy != signPolicy) continue;
                 if (cache[attribute][i].BaseDerivation.GetSource() == cache[attribute][i].BaseDerivation.GetTarget() && !allowSelfModify) continue;
                 if (!anyContextTag && !cache[attribute][i].BaseDerivation.GetContextTags().ContainsAll(contextTags)) continue;
@@ -128,7 +122,7 @@ namespace FarEmerald.PlayForge
         
         public void Add(Attribute attribute, AttributeValue operand, bool allowSelfModify, List<Tag> contextTags, bool anyContextTag, bool spread = false)
         {
-            if (!ValidateAttribute(attribute)) return;
+            if (!TryRegisterAttribute(attribute)) return;
 
             AttributeValue addValue = spread ? operand : operand / cache[attribute].Count;
             for (int i = 0; i < cache[attribute].Count; i++)
@@ -141,7 +135,7 @@ namespace FarEmerald.PlayForge
 
         public void Add(Attribute attribute, ESignPolicy signPolicy, AttributeValue operand, bool allowSelfModify, List<Tag> contextTags, bool anyContextTag, bool spread = false)
         {
-            if (!ValidateAttribute(attribute)) return;
+            if (!TryRegisterAttribute(attribute)) return;
             
             AttributeValue addValue = spread ? operand : operand / cache[attribute].Count;
             for (int i = 0; i < cache[attribute].Count; i++)
@@ -155,7 +149,7 @@ namespace FarEmerald.PlayForge
         
         public void Override(Attribute attribute, AttributeValue operand, bool allowSelfModify, List<Tag> contextTags, bool anyContextTag)
         {
-            if (!ValidateAttribute(attribute)) return;
+            if (!TryRegisterAttribute(attribute)) return;
             
             for (int i = 0; i < cache[attribute].Count; i++)
             {
@@ -167,7 +161,7 @@ namespace FarEmerald.PlayForge
         
         public void Override(Attribute attribute, ESignPolicy signPolicy, AttributeValue operand, bool allowSelfModify, List<Tag> contextTags, bool anyContextTag)
         {
-            if (!ValidateAttribute(attribute)) return;
+            if (!TryRegisterAttribute(attribute)) return;
             
             for (int i = 0; i < cache[attribute].Count; i++)
             {

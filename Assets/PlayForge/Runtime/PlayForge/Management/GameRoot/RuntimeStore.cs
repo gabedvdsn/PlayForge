@@ -39,7 +39,13 @@ namespace FarEmerald.PlayForge
         
         public static Tag ResolveTag(TagRef aref)
         {
-            return Tag.Generate(tags[aref.Id].Name);
+            return Tag.Generate(aref.Id, aref.Name);
+        }
+
+        public static Tag ResolveTag(string tagName)
+        {
+            // TODO FIXXXXMEEEEEE
+            return Tag.Generate(0, tagName);
         }
 
         public static Ability ResolveAbility(AbilityRef aref)
@@ -103,7 +109,7 @@ namespace FarEmerald.PlayForge
                     AllowDuplicateAbilities = false,
                     ImpactWorkers = new List<AbstractImpactWorker>(),
                     AttributeSet = new AttributeSet(){ Attributes = new List<AttributeSetElement>(), SubSets = new List<AttributeSet>(), CollisionResolutionPolicy = EValueCollisionPolicy.UseAverage },
-                    AttributeChangeEvents = new List<AbstractAttributeChangeEvent>(),
+                    AttributeChangeEvents = new List<AbstractAttributeWorker>(),
                     TagWorkers = new List<AbstractTagWorker>()
                 };
             

@@ -46,7 +46,7 @@ namespace FarEmerald.PlayForge
             {
                 if (!impactData.SourcedModifier.Workable && !worker.AcceptUnworkableImpact) continue;
                 if (!worker.ValidateWorkFor(impactData)) continue;
-                worker.InterpretImpact(impactData);
+                worker.Activate(impactData);
             }
         }
     }

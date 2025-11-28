@@ -7,9 +7,9 @@ namespace FarEmerald.PlayForge
     /// <summary>
     /// Scales an attribute's current value based on modifications to its base value
     /// </summary>
-    public class ScaleAttributeChangeEvent : AbstractFocusedAttributeChangeEvent
+    public class ScaleAttributeWorker : AbstractFocusedAttributeWorker
     {
-        public override void AttributeChangeEvent(GASComponent system, Dictionary<Attribute, CachedAttributeValue> attributeCache,
+        public override void Activate(GASComponent system, Dictionary<Attribute, CachedAttributeValue> attributeCache,
             ChangeValue change)
         {
             float proportion = change.Value.BaseValue / attributeCache[TargetAttribute].Value.BaseValue;

@@ -9,7 +9,7 @@ namespace FarEmerald.PlayForge.Extended
 		// Mirrored from: FarEmerald.PlayForge.EntityIdentity
 		public FarEmerald.PlayForge.EAbilityActivationPolicy ActivationPolicy;
 		public System.Boolean AllowDuplicateAbilities;
-		public System.Collections.Generic.List<FarEmerald.PlayForge.AbstractAttributeChangeEvent> AttributeChangeEvents;
+		public System.Collections.Generic.List<FarEmerald.PlayForge.AbstractAttributeWorker> AttributeChangeEvents;
 		public FarEmerald.PlayForge.AttributeSet AttributeSet;
 		public FarEmerald.PlayForge.GASIdentityData Identity;
 		public System.Collections.Generic.List<FarEmerald.PlayForge.AbstractImpactWorker> ImpactWorkers;

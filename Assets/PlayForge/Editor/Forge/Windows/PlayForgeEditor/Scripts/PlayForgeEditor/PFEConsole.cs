@@ -1255,6 +1255,66 @@ namespace FarEmerald.PlayForge.Extended.Editor
                         }
                     }
                 }
+
+                public static class Help
+                {
+                    private const string focus = "Help";
+                    
+                    public static ConsoleEntry AboutTagWorkers()
+                    {
+                        var ce = BaseConsole(EConsoleContext.Creator, EValidationCode.Ok, console_resolvable);
+
+                        ce.focus = focus;
+                        ce.message = $"About Tag Workers.";
+                        ce.description = $"Tag Workers activate with respect to granted Tags and run on application, tick, and removal.\n\nTag Workers instantiate runtime instances to track running values.\n\nAs opposed to other workers, Tag Worker activations depend on a set of requirements.";
+
+                        return ce;
+                    }
+                    
+                    public static ConsoleEntry AboutEffectWorkers()
+                    {
+                        var ce = BaseConsole(EConsoleContext.Creator, EValidationCode.Ok, console_resolvable);
+
+                        ce.focus = focus;
+                        ce.message = $"About Effect Workers.";
+                        ce.description = $"Effect Workers co-depend on Gameplay Effects and run on application, tick, removal, and effect impact.\n\nEffect workers instantiate runtime instances to track running values.";
+
+                        return ce;
+                    }
+                    
+                    public static ConsoleEntry AboutAttributeWorkers()
+                    {
+                        var ce = BaseConsole(EConsoleContext.Creator, EValidationCode.Ok, console_resolvable);
+
+                        ce.focus = focus;
+                        ce.message = $"About Attribute Workers.";
+                        ce.description = $"Attribute Workers activate with respect to certain attributes. Activations must be validated before occurring.\n\nActivations can occur before, after, or before and after attribute modifications take place.";
+
+                        return ce;
+                    }
+                    
+                    public static ConsoleEntry AboutAnalysisWorkers()
+                    {
+                        var ce = BaseConsole(EConsoleContext.Creator, EValidationCode.Ok, console_resolvable);
+
+                        ce.focus = focus;
+                        ce.message = $"About Analysis Workers.";
+                        ce.description = $"Analysis Workers activate with respect to some event, such as end-of-frame, worker activation, or ability/attribute system callback.\n\nTypically reserved for outer-scope \"check-ins\", such as death or milestones.";
+
+                        return ce;
+                    }
+                    
+                    public static ConsoleEntry AboutImpactWorkers()
+                    {
+                        var ce = BaseConsole(EConsoleContext.Creator, EValidationCode.Ok, console_resolvable);
+
+                        ce.focus = focus;
+                        ce.message = $"About Impact Workers.";
+                        ce.description = $"Impact Workers activate in response to impact transactions occurring between effects and GAS components. Before activating, the impact transaction must be validated with respect to the worker.";
+
+                        return ce;
+                    }
+                }
             }
             
             #endregion
@@ -1279,6 +1339,16 @@ namespace FarEmerald.PlayForge.Extended.Editor
 
                     ce.message = $"Failed to auto-load framework";
                     ce.description = "An exception occurred while auto-loading the framework. To change which framework is loaded, click on the framework title in the upper left.";
+
+                    return ce;
+                }
+                
+                public static ConsoleEntry FailedToLoadMasterSettings()
+                {
+                    var ce = BaseSysConsole();
+
+                    ce.message = $"Failed to load master settings";
+                    ce.description = "An exception occurred while loading master settings. Master settings will be regenerated.";
 
                     return ce;
                 }

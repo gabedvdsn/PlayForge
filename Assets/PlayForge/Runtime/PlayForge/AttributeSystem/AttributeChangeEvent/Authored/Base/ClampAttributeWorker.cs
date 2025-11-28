@@ -7,9 +7,9 @@ namespace FarEmerald.PlayForge
     /// <summary>
     /// Clamps an attributes current value with respect to its overflow policy (e.g. 0 to BaseValue)
     /// </summary>
-    public class ClampAttributeChangeEvent : AbstractFocusedAttributeChangeEvent
+    public class ClampAttributeWorker : AbstractFocusedAttributeWorker
     {
-        public override void AttributeChangeEvent(GASComponent system, Dictionary<Attribute, CachedAttributeValue> attributeCache,
+        public override void Activate(GASComponent system, Dictionary<Attribute, CachedAttributeValue> attributeCache,
             ChangeValue change)
         {
             AttributeValue clampValue = attributeCache[TargetAttribute].Value;

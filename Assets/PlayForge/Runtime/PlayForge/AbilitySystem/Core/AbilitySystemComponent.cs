@@ -23,7 +23,7 @@ namespace FarEmerald.PlayForge
             { EAbilityActivationPolicy.SingleActiveQueue, new() }
         };
 
-        private ImpactWorkerCache ImpactWorkerCache;
+        protected ImpactWorkerCache ImpactWorkerCache;
 
         public AbilitySystemCallbacks Callbacks = new();
 
@@ -430,7 +430,6 @@ namespace FarEmerald.PlayForge
                     
                     if (activeData.TryGetFirstTarget(out var target) && !Spec.ValidateActivationRequirements(target))
                     {
-                        // Do invalid target feedback here
                         targetingCancelled = true;
                     }
                     
@@ -453,7 +452,6 @@ namespace FarEmerald.PlayForge
                 catch (OperationCanceledException)
                 {
                     // Ability in execution is interrupted (cancelled)
-                    Debug.Log($"Cancelled!");
                 }
                 finally
                 {

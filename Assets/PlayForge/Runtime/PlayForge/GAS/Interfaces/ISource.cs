@@ -5,7 +5,7 @@ namespace FarEmerald.PlayForge
 {
     public interface ISource : ITarget, IGameplayProcessHandler
     {
-        public Tag[] GetContextTags();
+        public List<Tag> GetContextTags();
         public TagCache GetTagCache();
         public Tag GetAssetTag();
         public int GetLevel();

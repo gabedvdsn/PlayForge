@@ -123,6 +123,17 @@ namespace FarEmerald.PlayForge
         
         #region Validation Utils
 
+        public static bool ValidateSelfModification(bool allow, ISource a, ISource b)
+        {
+            if (allow) return true;
+            return a != b;
+        }
+
+        public static bool ValidateContextTags(bool anyContext, List<Tag> validContexts, List<Tag> outsideContexts)
+        {
+            return anyContext || validContexts.ContainsAll(outsideContexts);
+        }
+
         public static bool ValidateAffiliationPolicy(EAffiliationPolicy policy, List<Tag> a, List<Tag> b)
         {
             return policy switch
@@ -134,10 +145,16 @@ namespace FarEmerald.PlayForge
             };
         }
         
-        public static bool ValidateImpactTypes(Tag impactType, Tag validation)
+        public static bool ValidateImpactTypes(List<Tag> impactType, List<Tag> validation, EAnyAllPolicy policy = EAnyAllPolicy.Any)
         {
-            if (impactType == Tags.GEN_NOT_APPLICABLE && validation != Tags.GEN_ANY) return false;
-            return impactType == validation;
+            if (impactType.Contains(Tags.GEN_NOT_APPLICABLE) && !validation.Contains(Tags.GEN_ANY)) return false;
+
+            return policy switch
+            {
+                EAnyAllPolicy.Any => impactType.Any(validation.Contains),
+                EAnyAllPolicy.All => impactType.All(validation.Contains),
+                _ => throw new ArgumentOutOfRangeException(nameof(policy), policy, null)
+            };
         }
 
         public static bool ValidateImpactTargets(EEffectImpactTargetExpanded impactTarget, AttributeValue attributeValue, bool exclusive)

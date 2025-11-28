@@ -536,11 +536,11 @@ namespace FarEmerald.PlayForge.Extended.Editor
 
         private List<PVRow> GetProjectViewItemsList()
         {
-            if (Project.DataCount == 0)
+            if (pv_shownTypes.All(kvp => !kvp.Value) && Project.DataCount == 0)
             {
                 return new List<PVRow>
                 {
-                    new(null, EDataType.None, EPVRowType.Placeholder, Tags.NULL, 0, "This Framework does not contain any data yet...")
+                    new(null, EDataType.None, EPVRowType.Placeholder, Tags.NULL, 0, "Nothing to show...")
                 };
             }
 
