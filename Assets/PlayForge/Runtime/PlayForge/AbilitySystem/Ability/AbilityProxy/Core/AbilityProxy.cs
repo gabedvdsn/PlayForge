@@ -8,14 +8,14 @@ namespace FarEmerald.PlayForge
 {
     public class AbilityProxy
     {
-        private int StageIndex;
-        private readonly AbilityProxySpecification Specification;
+        public int StageIndex;
+        public readonly AbilityProxySpecification Specification;
 
-        private Dictionary<int, CancellationTokenSource> stageSources;
-        private UniTaskCompletionSource nextStageSignal;
-        private int maintainedStages;
+        public Dictionary<int, CancellationTokenSource> stageSources;
+        public UniTaskCompletionSource nextStageSignal;
+        public int maintainedStages;
 
-        private bool appliedUsage;
+        public bool appliedUsage;
         
         public AbilityProxy(AbilityProxySpecification specification)
         {
@@ -185,48 +185,23 @@ namespace FarEmerald.PlayForge
             }
         }
         
-        public void Inject(Tag injection, AbilityDataPacket implicitData)
+        public void Inject(IAbilityInjection injection, AbilityDataPacket implicitData)
         {
-            bool _success = true;
-            if (injection == Tags.INJECT_INTERRUPT)
-            {
-                // Do nothing -- handled externally via the high-level cts token
-            }
-            else if (injection == Tags.INJECT_BREAK_STAGE)
-            {
-                if (StageIndex < 0 || stageSources[StageIndex] is null) _success = false;
-                else stageSources[StageIndex].Cancel();
-            }
-            else if (injection == Tags.INJECT_MAINTAIN_STAGE)
-            {
-                maintainedStages += 1;
-                nextStageSignal?.TrySetResult();
-            }
-            else if (injection == Tags.INJECT_STOP_MAINTAIN)
-            {
-                if (StageIndex < 0 || stageSources.Count == 0) _success = false;
-                else stageSources[stageSources.Keys.ToArray()[0]]?.Cancel();
-            }
-            else if (injection == Tags.INJECT_STOP_MAINTAIN_ALL)
-            {
-                if (StageIndex < 0 || stageSources.Count == 0) _success = false;
-                else foreach (int stageIndex in stageSources.Keys) stageSources[stageIndex]?.Cancel();
-            }
+            var _success = injection.OnProxyInject(this);
 
-            if (implicitData.Spec.GetOwner().FindAbilitySystem(out var asc))
-            {
-                var stageSafe = (StageIndex >= 0 && StageIndex < Specification.Stages.Count)
-                    ? Specification.Stages[StageIndex]
-                    : new AbilityProxyStage { Tasks = new List<AbstractProxyTask>() };
+            if (!implicitData.Spec.GetOwner().FindAbilitySystem(out var asc)) return;
+            
+            var stageSafe = (StageIndex >= 0 && StageIndex < Specification.Stages.Count)
+                ? Specification.Stages[StageIndex]
+                : new AbilityProxyStage { Tasks = new List<AbstractProxyTask>() };
                 
-                asc.Callbacks.AbilityInjected(
-                    AbilityCallbackStatus.GenerateForInjection(
-                        implicitData,
-                        stageSafe,
-                        injection, _success
-                    )
-                );
-            }
+            asc.Callbacks.AbilityInjected(
+                AbilityCallbackStatus.GenerateForInjection(
+                    implicitData,
+                    stageSafe,
+                    injection, _success
+                )
+            );
         }
 
         private UniTask WatchTask(

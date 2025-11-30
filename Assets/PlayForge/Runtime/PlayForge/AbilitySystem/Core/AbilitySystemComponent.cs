@@ -1,8 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Threading;
-using Cysharp.Threading.Tasks;
 using UnityEngine;
 
 namespace FarEmerald.PlayForge
@@ -77,7 +75,7 @@ namespace FarEmerald.PlayForge
                 if (!value)
                 {
                     activationQueue.Clear();
-                    InjectAll(Tags.INJECT_INTERRUPT);
+                    InjectAll(new InterruptInjection());
                 }
 
                 _enabled = value;
@@ -167,7 +165,7 @@ namespace FarEmerald.PlayForge
         {
             if (!TryGetCacheIndexOf(ability, out int index)) return false;
             
-            if (AbilityCache[index].IsClaiming) Inject(index, Tags.INJECT_INTERRUPT);
+            if (AbilityCache[index].IsClaiming) Inject(index, new InterruptInjection());
             
             HandleTags(ability.Tags.PassivelyGrantedTags, false);
 
@@ -214,28 +212,29 @@ namespace FarEmerald.PlayForge
 
         #region Ability Handling
 
-        public bool CanActivateAbility(int index)
+        public bool CanActivateAbility(int index, AbilityDataPacket data)
         {
             return Enabled 
                    && !Locked
                    && AbilityCache.TryGetValue(index, out AbilitySpecContainer container)
-                   && container.Spec.ValidateActivationRequirements()
+                   && container.Spec.ValidateActivationRequirements(data)
                    && (!container.Spec.Base.IgnoreWhenLevelZero || container.Spec.Level > 0);
         }
 
         public bool TryActivateAbility(AbilityActivationRequest req)
         {
-            if (!CanActivateAbility(req.Index)) return false;
-            return ProcessActivationRequest(req);
+            if (!AbilityCache.TryGetValue(req.Index, out var container)) return false;
+            var data = AbilityDataPacket.GenerateFrom(container.Spec, container.Spec.Base.Proxy.UseImplicitTargeting);
+            return CanActivateAbility(req.Index, data) && ProcessActivationRequest(req, data);
         }
         
-        private bool ProcessActivationRequest(AbilityActivationRequest req)
+        private bool ProcessActivationRequest(AbilityActivationRequest req, AbilityDataPacket data)
         {
             return req.Policy switch
             {
-                EAbilityActivationPolicy.NoRestrictions => NoRestrictionsTargetingValidation(req.Index) && ActivateAbility(AbilityCache[req.Index]),
-                EAbilityActivationPolicy.SingleActive => ! IsExecutingCritical(EAbilityActivationPolicy.SingleActive) && ActivateAbility(AbilityCache[req.Index]),
-                EAbilityActivationPolicy.SingleActiveQueue => !IsExecutingCritical(EAbilityActivationPolicy.SingleActiveQueue) ? ActivateAbility(AbilityCache[req.Index]) : QueueAbilityActivation(req.Index),
+                EAbilityActivationPolicy.NoRestrictions => NoRestrictionsTargetingValidation(req.Index) && ActivateAbility(AbilityCache[req.Index], data),
+                EAbilityActivationPolicy.SingleActive => ! IsExecutingCritical(EAbilityActivationPolicy.SingleActive) && ActivateAbility(AbilityCache[req.Index], data),
+                EAbilityActivationPolicy.SingleActiveQueue => !IsExecutingCritical(EAbilityActivationPolicy.SingleActiveQueue) ? ActivateAbility(AbilityCache[req.Index], data) : QueueAbilityActivation(req.Index),
                 _ => throw new ArgumentOutOfRangeException()
             };
         }
@@ -251,10 +250,9 @@ namespace FarEmerald.PlayForge
             return !IsCritical(abilityIndex);
         }
 
-        private bool ActivateAbility(AbilitySpecContainer container)
+        private bool ActivateAbility(AbilitySpecContainer container, AbilityDataPacket data)
         {
             container.Spec.ApplyUsageEffects();
-            var data = AbilityDataPacket.GenerateFrom(container.Spec, container.Spec.Base.Proxy.UseImplicitTargeting);
             return container.ActivateAbility(data);
         }
 
@@ -271,26 +269,26 @@ namespace FarEmerald.PlayForge
 
             foreach (var policy in ActiveCache.Keys)
             {
-                foreach (int index in ActiveCache[policy]) AbilityCache[index].Inject(Tags.INJECT_INTERRUPT);
+                foreach (int index in ActiveCache[policy]) AbilityCache[index].Inject(new InterruptInjection());
                 ActiveCache[policy].Clear();
             }
 
             AbilityCache.Clear();
         }
 
-        public void Inject(int index, Tag injection)
+        public void Inject(int index, IAbilityInjection injection)
         {
             if (!AbilityCache.TryGetValue(index, out var container) || !container.IsClaiming) return;
             container.Inject(injection);
         }
         
-        public void Inject(Ability ability, Tag injection)
+        public void Inject(Ability ability, IAbilityInjection injection)
         {
             if (!TryGetAbilityContainer(ability, out var container) || !container.IsClaiming) return;
             container.Inject(injection);
         }
         
-        public void Inject(EAbilityActivationPolicy policy, Tag injection)
+        public void Inject(EAbilityActivationPolicy policy, IAbilityInjection injection)
         {
             foreach (int index in ActiveCache[policy])
             {
@@ -300,7 +298,7 @@ namespace FarEmerald.PlayForge
             }
         }
 
-        public void InjectAll(Tag injection)
+        public void InjectAll(IAbilityInjection injection)
         {
             foreach (var policy in ActiveCache.Keys)
             {
@@ -314,7 +312,7 @@ namespace FarEmerald.PlayForge
         /// <param name="container">The claiming container</param>
         /// <param name="data"></param>
         /// <returns>Whether or not the ASC was successfully claimed</returns>
-        private bool ClaimActive(AbilitySpecContainer container, AbilityDataPacket data)
+        public bool ClaimActive(AbilitySpecContainer container, AbilityDataPacket data)
         {
             if (!TryGetCacheIndexOf(container.Spec.Base, out var index)) return false;
             
@@ -326,7 +324,7 @@ namespace FarEmerald.PlayForge
             return true;
         }
 
-        private void ReleaseClaim(AbilitySpecContainer container, AbilityDataPacket data)
+        public void ReleaseClaim(AbilitySpecContainer container, AbilityDataPacket data)
         {
             if (!TryGetCacheIndexOf(container.Spec.Base, out var index)) return;
 
@@ -364,157 +362,7 @@ namespace FarEmerald.PlayForge
         }
 
         #endregion
-
-        private class AbilitySpecContainer
-        {
-            public AbilitySpec Spec;
-
-            public bool IsActive { get; private set; }
-            public bool IsTargeting { get; private set; }
-            public bool IsClaiming => IsTargeting || IsActive;
-
-            private AbilityDataPacket activeData;
-            
-            private AbilityProxy Proxy;
-            private CancellationTokenSource cts;
-            private CancellationTokenSource targetingCts;
-
-            public AbilitySpecContainer(AbilitySpec spec)
-            {
-                Spec = spec;
-                IsActive = false;
-
-                Proxy = Spec.Base.Proxy.GenerateProxy();
-                ResetTokens();
-            }
-
-            public bool ActivateAbility(AbilityDataPacket implicitData)
-            {
-                if (IsClaiming) return false; // Prevent reactivation mid-use
-                if (!Spec.Owner.AsData().AbilitySystem.ClaimActive(this, implicitData)) return false;
-
-                activeData = implicitData;
-                activeData.AddPayload(Tags.PAYLOAD_DERIVATION, Spec);
-
-                Reset();
-
-                AwaitAbility().Forget();
-
-                return true;
-            }
-
-            private void Reset()
-            {
-                IsActive = false;
-                IsTargeting = false;
-
-                ResetTokens();
-            }
-
-            private async UniTaskVoid AwaitAbility()
-            {
-                bool targetingCancelled = false;
-                try
-                {
-                    IsTargeting = true;
-                    await Proxy.ActivateTargetingTask(targetingCts.Token, activeData);
-                }
-                catch (OperationCanceledException)
-                {
-                    // Targeting is cancelled
-                    targetingCancelled = true;
-                }
-                finally
-                {
-                    IsTargeting = false;
-                    
-                    if (activeData.TryGetFirstTarget(out var target) && !Spec.ValidateActivationRequirements(target))
-                    {
-                        targetingCancelled = true;
-                    }
-                    
-                    if (targetingCancelled)
-                    {
-                        CleanAndRelease();
-                    }
-                }
-
-                if (targetingCancelled) return;
-
-                try
-                {
-                    IsActive = true;
-
-                    Spec.Owner.GetTagCache().AddTags(Spec.Base.Tags.ActiveGrantedTags);
-
-                    await Proxy.Activate(cts.Token, activeData);
-                }
-                catch (OperationCanceledException)
-                {
-                    // Ability in execution is interrupted (cancelled)
-                }
-                finally
-                {
-                    IsActive = false;
-                    Spec.Owner.GetTagCache().RemoveTags(Spec.Base.Tags.ActiveGrantedTags);
-                    
-                    CleanAndRelease();
-                }
-            }
-
-            public void Inject(Tag injection)
-            {
-                if (!IsClaiming) return;
-
-                if (injection == Tags.INJECT_INTERRUPT) cts?.Cancel();
-                Proxy.Inject(injection, activeData);
-            }
-
-            public void CleanAndRelease()
-            {
-                Proxy.Clean();
-
-                CleanTargetingToken();
-                CleanActivationToken();
-
-                Spec.Owner.AsData().AbilitySystem.ReleaseClaim(this, activeData);
-
-                activeData = null;
-            }
-
-            private void CleanTargetingToken()
-            {
-                if (targetingCts is null) return;
-
-                if (!targetingCts.IsCancellationRequested) targetingCts?.Cancel();
-                targetingCts?.Dispose();
-                targetingCts = null;
-            }
-
-            private void CleanActivationToken()
-            {
-                if (cts is null) return;
-
-                if (!cts.IsCancellationRequested) cts?.Cancel();
-                cts?.Dispose();
-                cts = null;
-            }
-
-            private void ResetTokens()
-            {
-                CleanTargetingToken();
-                CleanActivationToken();
-
-                cts = new CancellationTokenSource();
-                targetingCts = new CancellationTokenSource();
-            }
-
-            public override string ToString()
-            {
-                return $"{Spec}";
-            }
-        }
-
+        
         private abstract class AbstractAbilityCacheLayer
         {
             public bool locked;

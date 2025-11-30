@@ -21,9 +21,9 @@ namespace FarEmerald.PlayForge
             );
         }
 
-        public static AbilityDataPacket GenerateNull()
+        public static AbilityDataPacket GenerateRoot()
         {
-            return new AbilityDataPacket(IEffectOrigin.GenerateSourceDerivation(null));
+            return new AbilityDataPacket(IEffectOrigin.GenerateSourceDerivation(GameRoot.Instance));
         }
 
         public static AbilityDataPacket GenerateFrom(IEffectOrigin spec, bool useImplicitTargeting)

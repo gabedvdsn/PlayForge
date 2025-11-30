@@ -13,7 +13,8 @@ namespace FarEmerald.PlayForge
         public AbilityDefinition Definition;
         public AbilityTags Tags;
         public AbilityProxySpecification Proxy;
-        public List<IAbilityValidationRule> ActivationRules;
+        public List<IAbilityValidationRule> SourceActivationRules;
+        public List<IAbilityValidationRule> TargetActivationRules;
         public Dictionary<Tag, object> LocalData;
         
         [Min(0)] public int StartingLevel = 1;
@@ -22,6 +23,24 @@ namespace FarEmerald.PlayForge
         
         public GameplayEffect Cost;
         public GameplayEffect Cooldown;
+
+        public Ability()
+        {
+            SourceActivationRules = new List<IAbilityValidationRule>()
+            {
+                new SourceIsAliveValidation(),
+                new CostValidation(),
+                new CooldownValidation()
+            };
+
+            TargetActivationRules = new List<IAbilityValidationRule>()
+            {
+                new TargetIsAliveValidation(),
+                new RangeValidation()
+            };
+
+            LocalData = new();
+        }
 
         public AbilitySpec Generate(ISource owner, int level)
         {

@@ -8,7 +8,6 @@ namespace FarEmerald.PlayForge
         public GameplayEffectSpec Spec;
         public bool Ongoing;
         public bool Valid;
-
         
         protected float totalDuration;
         protected float periodDuration;
@@ -60,13 +59,13 @@ namespace FarEmerald.PlayForge
         public abstract void Extend(float duration);
         public abstract void Stack();
 
-        public void OnRemove()
+        public virtual void OnRemove()
         {
             Valid = false;
             if (Spec.Base.ImpactSpecification.ReverseImpactOnRemoval)
             {
                 AttributeValue negatedImpact = TrackedImpact.Negate();
-                Spec.Target.AttributeSystem.ModifyAttribute(
+                Spec.Target.Att.ModifyAttribute(
                     Spec.Base.ImpactSpecification.AttributeTarget, 
                     new SourcedModifiedAttributeValue(Spec, this, negatedImpact.CurrentValue, negatedImpact.BaseValue, false));
             }

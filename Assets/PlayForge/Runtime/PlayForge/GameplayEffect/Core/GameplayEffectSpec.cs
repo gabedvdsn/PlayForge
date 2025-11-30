@@ -9,7 +9,7 @@ namespace FarEmerald.PlayForge
 
         public IEffectOrigin Origin;
         public ISource Source;
-        public GASComponent Target;
+        public ITarget Target;
 
         public Dictionary<IMagnitudeModifier, AttributeValue?> SourceCapturedAttributes;
 

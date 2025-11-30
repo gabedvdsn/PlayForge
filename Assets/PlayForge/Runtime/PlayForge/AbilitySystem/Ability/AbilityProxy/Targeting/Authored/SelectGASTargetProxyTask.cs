@@ -13,7 +13,7 @@ namespace FarEmerald.PlayForge
             // if (CursorManager.Instance.LastSelectTargetObject) data.Add(ESourceTarget.Target, CursorManager.Instance.LastSelectTargetObject);
             while (true)
             {
-                // Important to have some break response -- replace in your input manager and inject an interrupt
+                // Important to have some break response -- OR inject interrupt into ASC via inut handler
                 if (Input.GetKeyDown(KeyCode.Escape)) break;
                 if (Input.GetMouseButtonDown(0))
                 {

@@ -15,7 +15,7 @@ namespace FarEmerald.PlayForge
             
             if (data.Spec.GetOwner().AsData().AbilitySystem && data.Spec is AbilitySpec spec)
             {
-                spec.Owner.AsData().AbilitySystem.Inject(spec.Base, Tags.INJECT_INTERRUPT);
+                spec.Owner.AsData().AbilitySystem.Inject(spec.Base, new InterruptInjection());
             }
         }
         

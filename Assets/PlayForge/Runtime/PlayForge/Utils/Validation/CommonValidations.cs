@@ -31,7 +31,7 @@ namespace FarEmerald.PlayForge
         }
     }
 
-    public class IsAliveValidation : IAbilityValidationRule
+    public class SourceIsAliveValidation : IAbilityValidationRule
     {
         public bool Validate(AbilityDataPacket data, out string error)
         {
@@ -39,6 +39,20 @@ namespace FarEmerald.PlayForge
             if (data.Spec is not AbilitySpec ability) return false;
 
             if (!ability.Owner.FindAttributeSystem(out var attrSys) ||
+                !attrSys.TryGetAttributeValue(Attribute.Generate("Health", ""), out AttributeValue attrVal))
+                return false;
+            return attrVal.CurrentValue > 0;
+        }
+    }
+    
+    public class TargetIsAliveValidation : IAbilityValidationRule
+    {
+        public bool Validate(AbilityDataPacket data, out string error)
+        {
+            error = "";
+            if (data.Spec is not AbilitySpec ability) return false;
+
+            if (!data.TryGetTarget(EProxyDataValueTarget.Primary, out var targetObj) || !targetObj.FindAttributeSystem(out var attrSys) ||
                 !attrSys.TryGetAttributeValue(Attribute.Generate("Health", ""), out AttributeValue attrVal))
                 return false;
             return attrVal.CurrentValue > 0;

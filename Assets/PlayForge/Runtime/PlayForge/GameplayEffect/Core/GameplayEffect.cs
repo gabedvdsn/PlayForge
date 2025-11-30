@@ -48,7 +48,7 @@ namespace FarEmerald.PlayForge
 
         public bool ValidateApplicationRequirements(GameplayEffectSpec spec)
         {
-            var targetTags = spec.Target.TagCache.GetAppliedTags();
+            var targetTags = spec.Target.GetAppliedTags();
             var sourceTags = spec.Source.GetAppliedTags();
             return TargetRequirements.CheckApplicationRequirements(targetTags)
                    && !TargetRequirements.CheckRemovalRequirements(targetTags)
@@ -57,12 +57,12 @@ namespace FarEmerald.PlayForge
         }
         public bool ValidateRemovalRequirements(GameplayEffectSpec spec)
         {
-            return TargetRequirements.CheckRemovalRequirements(spec.Target.TagCache.GetAppliedTags())
+            return TargetRequirements.CheckRemovalRequirements(spec.Target.GetAppliedTags())
                    && SourceRequirements.CheckRemovalRequirements(spec.Source.GetAppliedTags());
         }
         public bool ValidateOngoingRequirements(GameplayEffectSpec spec)
         {
-            return TargetRequirements.CheckOngoingRequirements(spec.Target.TagCache.GetAppliedTags())
+            return TargetRequirements.CheckOngoingRequirements(spec.Target.GetAppliedTags())
                    && SourceRequirements.CheckOngoingRequirements(spec.Source.GetAppliedTags());
         }
         public void ApplyDurationSpecifications(AbstractGameplayEffectShelfContainer container)

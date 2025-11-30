@@ -28,16 +28,18 @@ namespace FarEmerald.PlayForge
                 Owner.ApplyGameplayEffect(Owner.GenerateEffectSpec(this, Base.Cost));
         }
             
-        public bool ValidateActivationRequirements()
+        public bool ValidateActivationRequirements(AbilityDataPacket data)
         {
+            return Base.SourceActivationRules.All(rule => rule.Validate(data, out _));
             return !(GetCooldown().DurationRemaining > 0f)
                    && CanCoverCost()
                    && Base.Tags.ValidateSourceRequirements(Owner);
         }
 
-        public bool ValidateActivationRequirements(ITarget target)
+        public bool ValidateActivationRequirements(ITarget target, AbilityDataPacket data)
         {
-            return ValidateActivationRequirements()
+            return ValidateActivationRequirements(data)
+                   && Base.TargetActivationRules.All(rule => rule.Validate(data, out _))
                    && Base.Tags.ValidateTargetRequirements(target);
         }
 
