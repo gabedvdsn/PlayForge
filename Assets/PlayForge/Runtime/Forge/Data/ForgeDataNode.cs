@@ -12,12 +12,8 @@ namespace FarEmerald.PlayForge.Extended
     {
         public int Id;
         
-        [ForgeOrder(0)] 
         public string Name;
-        [ForgeOrder(1)] 
         public string Description;
-        [ForgeOrder(2)] 
-        [ForgeValidation(EValidationCode.Warn)]
         public Sprite Icon;
 
         public Dictionary<Tag, object> editorTags = new();

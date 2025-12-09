@@ -17,9 +17,9 @@ namespace FarEmerald.PlayForge
         [Tooltip("Ticks between calls to Tick.")]
         public int TickPause;
         
-        public abstract void Activate(GASComponent component);
-        public abstract void Tick(GASComponent component);
-        public abstract void Resolve(GASComponent component);
+        public abstract void Activate(IGameplayAbilitySystem component);
+        public abstract void Tick(IGameplayAbilitySystem component);
+        public abstract void Resolve(IGameplayAbilitySystem component);
 
         public abstract AbstractTagWorkerInstance Generate(ITagHandler system);
         
@@ -63,11 +63,11 @@ namespace FarEmerald.PlayForge
     public abstract class AbstractTagWorkerInstance
     {
         public AbstractTagWorker Base;
-        private GASComponent System;
+        private IGameplayAbilitySystem System;
 
         public int TicksRemaining;
 
-        protected AbstractTagWorkerInstance(AbstractTagWorker workerBase, GASComponent system)
+        protected AbstractTagWorkerInstance(AbstractTagWorker workerBase, IGameplayAbilitySystem system)
         {
             Base = workerBase;
             System = system;

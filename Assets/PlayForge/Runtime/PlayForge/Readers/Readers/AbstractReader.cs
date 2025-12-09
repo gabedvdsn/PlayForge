@@ -7,13 +7,13 @@ namespace FarEmerald.PlayForge
         [Header("Reader")]
         
         public EReaderPolicy Policy;
-        protected GASComponent Source;
+        protected IGameplayAbilitySystem Source;
 
-        public void Assign(GASComponent gas)
+        public void Assign(IGameplayAbilitySystem gas)
         {
             Source = gas;
 
-            if (!Source || Policy != EReaderPolicy.OnChange) return;
+            if (Source is null || Policy != EReaderPolicy.OnChange) return;
             
             SubscribeIfOnChangePolicy();
         }

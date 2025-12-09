@@ -60,11 +60,21 @@ namespace FarEmerald.PlayForge
             
             ProcessControl.Instance.DeferredInit();
             GameRoot.Instance.DeferredInit();
+            
+            TestStuff();
         }
 
+        void TestStuff()
+        {
+            
+        }
+        
         private void Initialize()
         {
             // Any further bootstrap initialization here   
+
+            // TODO REMOVE
+            return;
             
             var fp = ForgeStores.LoadFramework(Framework.FrameworkKey, false) ?? FrameworkProject.EmptyDefault();
             RuntimeStore.SetFramework(fp);

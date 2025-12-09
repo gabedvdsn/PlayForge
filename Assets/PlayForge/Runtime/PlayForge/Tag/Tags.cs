@@ -214,34 +214,6 @@ namespace FarEmerald.PlayForge
         
         #endregion
         
-        #region Ability Tags
-
-        #region Injections
-        
-        // Cancel the ability runtime entirely
-        private const int _INJECT_INTERRUPT = -300_000_000;
-        public static Tag INJECT_INTERRUPT => Get(_AFFILIATION_ROOT);
-        
-        // Cancel the active proxy stage runtime and moves to the next
-        private const int _INJECT_BREAK_STAGE = -300_000_001;
-        public static Tag INJECT_BREAK_STAGE => Get(_AFFILIATION_ROOT);
-        
-        // Same as BREAK_STAGE BUT the active proxy stage runtime CONTINUES until a STOP_MAINTAIN/_ALL injection, or the runtime reaches its natural conclusion
-        private const int _INJECT_MAINTAIN_STAGE = -300_000_002;
-        public static Tag INJECT_MAINTAIN_STAGE => Get(_AFFILIATION_ROOT);
-        
-        // Cancels the least recent maintained proxy stage runtime
-        private const int _INJECT_STOP_MAINTAIN = -300_000_003;
-        public static Tag INJECT_STOP_MAINTAIN => Get(_AFFILIATION_ROOT);
-        
-        // Cancels all maintained proxy stage runtimes
-        private const int _INJECT_STOP_MAINTAIN_ALL = -300_000_004;
-        public static Tag INJECT_STOP_MAINTAIN_ALL => Get(_AFFILIATION_ROOT);
-        
-        #endregion
-        
-        #endregion
-        
         #region Effect Tags
         
         #region Attribute Impact Retention

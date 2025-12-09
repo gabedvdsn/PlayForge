@@ -3,7 +3,7 @@ using Cysharp.Threading.Tasks;
 
 namespace FarEmerald.PlayForge
 {
-    public class DisjointProxyTask : AbstractProxyTask
+    public class DisjointAbilityTask : AbstractAbilityTask
     {
         public override bool IsCriticalSection => false;
         public override async UniTask Activate(AbilityDataPacket data, CancellationToken token)

@@ -3,24 +3,25 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using Cysharp.Threading.Tasks;
+using UnityEngine.Assertions;
 
 namespace FarEmerald.PlayForge
 {
     public class AbilityProxy
     {
         public int StageIndex;
-        public readonly AbilityProxySpecification Specification;
+        public readonly AbilityBehaviour Behaviour;
 
         public Dictionary<int, CancellationTokenSource> stageSources;
         public UniTaskCompletionSource nextStageSignal;
         public int maintainedStages;
 
-        public bool appliedUsage;
+        public bool usageEffectsApplied;
         
-        public AbilityProxy(AbilityProxySpecification specification)
+        public AbilityProxy(AbilityBehaviour behaviour)
         {
             StageIndex = -1;
-            Specification = specification;
+            Behaviour = behaviour;
         }
 
         private void Reset()
@@ -28,7 +29,7 @@ namespace FarEmerald.PlayForge
             StageIndex = -1;
             stageSources = new Dictionary<int, CancellationTokenSource>();
             maintainedStages = 0;
-            appliedUsage = false;
+            usageEffectsApplied = false;
         }
 
         public void Clean()
@@ -50,10 +51,10 @@ namespace FarEmerald.PlayForge
             try
             {
                 // If there is a targeting task assigned...
-                if (Specification.TargetingProxy is not null)
+                if (Behaviour.targeting is not null)
                 {
-                    Specification.TargetingProxy.Prepare(implicitData);
-                    await Specification.TargetingProxy.Activate(implicitData, token);
+                    Behaviour.targeting.Prepare(implicitData);
+                    await Behaviour.targeting.Activate(implicitData, token);
                 }
             }
             catch (OperationCanceledException)
@@ -62,7 +63,7 @@ namespace FarEmerald.PlayForge
             }
             finally
             {
-                Specification.TargetingProxy?.Clean(implicitData);
+                Behaviour.targeting?.Clean(implicitData);
             }
         }
 
@@ -74,21 +75,21 @@ namespace FarEmerald.PlayForge
 
             await UniTask.WaitUntil(() => maintainedStages <= 0, cancellationToken: token);
             
-            if (!appliedUsage && implicitData.Spec is AbilitySpec spec) spec.ApplyUsageEffects();
+            if (!usageEffectsApplied && implicitData.Spec is AbilitySpec spec) spec.ApplyUsageEffects();
         }
         
         private async UniTask ActivateNextStage(AbilityDataPacket data, CancellationToken token)
         {
             StageIndex += 1;
-            if (StageIndex < Specification.Stages.Count)
+            if (StageIndex < Behaviour.Stages.Count)
             {
                 try
                 {
                     nextStageSignal = new UniTaskCompletionSource();
 
-                    foreach (var task in Specification.Stages[StageIndex].Tasks) task.Prepare(data);
+                    foreach (var task in Behaviour.Stages[StageIndex].Tasks) task.Prepare(data);
 
-                    ActivateStage(Specification.Stages[StageIndex], StageIndex, data, token).Forget();
+                    ActivateStage(Behaviour.Stages[StageIndex], StageIndex, data, token).Forget();
                     await nextStageSignal.Task.AttachExternalCancellation(token);
                 }
                 catch (OperationCanceledException)
@@ -97,11 +98,11 @@ namespace FarEmerald.PlayForge
                 }
                 finally
                 {
-                    foreach (var task in Specification.Stages[StageIndex].Tasks) task.Clean(data);
-                    if (Specification.Stages[StageIndex].ApplyUsageEffects && !appliedUsage && data.Spec is AbilitySpec spec)
+                    foreach (var task in Behaviour.Stages[StageIndex].Tasks) task.Clean(data);
+                    if (Behaviour.Stages[StageIndex].ApplyUsageEffects && !usageEffectsApplied && data.Spec is AbilitySpec spec)
                     {
                         spec.ApplyUsageEffects();
-                        appliedUsage = true;
+                        usageEffectsApplied = true;
                     }
                     
                     await ActivateNextStage(data, token);
@@ -109,9 +110,9 @@ namespace FarEmerald.PlayForge
             }
         }
 
-        private async UniTask ActivateStage(AbilityProxyStage stage, int stageIndex, AbilityDataPacket data, CancellationToken token)
+        private async UniTask ActivateStage(AbilityTaskBehaviourStage stage, int stageIndex, AbilityDataPacket data, CancellationToken token)
         {
-            var asc = data.Spec.GetOwner().AsGAS().AbilitySystem;
+            var asc = data.Spec.GetOwner().AsGAS().GetAbilitySystem();
             if (asc is null)
             {
                 if (stageIndex == StageIndex) nextStageSignal?.TrySetResult();
@@ -141,26 +142,9 @@ namespace FarEmerald.PlayForge
             {
                 if (tasks.Length > 0)
                 {
-                    switch (stage.TaskPolicy)
-                    {
-                        case EAnyAllPolicy.Any:
-                            var watched = tasks
-                                .Select((t, i) => WatchTask(t, asc.Callbacks, i, stage, data, false))
-                                .ToArray();
-
-                            await UniTask.WhenAny(watched);
-                            stageCts.Cancel();
-                            
-                            break;
-                        case EAnyAllPolicy.All:
-                            var _watched = tasks
-                                .Select((t, i) => WatchTask(t, asc.Callbacks, i, stage, data, true))
-                                .ToArray();
-                            await UniTask.WhenAll(_watched);
-                            break;
-                        default:
-                            throw new ArgumentOutOfRangeException();
-                    }
+                    await stage.StagePolicy.AwaitStageActivation(this, 
+                        stage, tasks, data, 
+                        asc.Callbacks, stageCts);
                 }
             }
             catch (OperationCanceledException)
@@ -191,9 +175,9 @@ namespace FarEmerald.PlayForge
 
             if (!implicitData.Spec.GetOwner().FindAbilitySystem(out var asc)) return;
             
-            var stageSafe = (StageIndex >= 0 && StageIndex < Specification.Stages.Count)
-                ? Specification.Stages[StageIndex]
-                : new AbilityProxyStage { Tasks = new List<AbstractProxyTask>() };
+            var stageSafe = (StageIndex >= 0 && StageIndex < Behaviour.Stages.Count)
+                ? Behaviour.Stages[StageIndex]
+                : new AbilityTaskBehaviourStage { Tasks = new List<AbstractAbilityTask>() };
                 
             asc.Callbacks.AbilityInjected(
                 AbilityCallbackStatus.GenerateForInjection(
@@ -204,11 +188,18 @@ namespace FarEmerald.PlayForge
             );
         }
 
-        private UniTask WatchTask(
+        public UniTask[] GetWatchedTasks(UniTask[] tasks, AbilityTaskBehaviourStage stage, AbilityDataPacket data, AbilitySystemCallbacks callbacks, bool notifyOnCancel)
+        {
+            return tasks
+                .Select((t, i) => WatchTask(t, callbacks, i, stage, data, notifyOnCancel))
+                .ToArray();
+        }
+        
+        public UniTask WatchTask(
             UniTask inner,
             AbilitySystemCallbacks callbacks,
             int taskIndex,
-            AbilityProxyStage stage,
+            AbilityTaskBehaviourStage stage,
             AbilityDataPacket data,
             bool notifyOnCancel
         )
@@ -242,5 +233,6 @@ namespace FarEmerald.PlayForge
                 }
             }
         }
+        
     }
 }

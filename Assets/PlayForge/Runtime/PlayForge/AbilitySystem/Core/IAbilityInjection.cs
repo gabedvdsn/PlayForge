@@ -6,8 +6,8 @@ namespace FarEmerald.PlayForge
     {
         public bool OnContainerInject(AbilitySpecContainer container);
         public bool OnProxyInject(AbilityProxy proxy);
-        public bool OnStageInject(AbilityProxyStage stage);
-        public bool OnTaskInject(AbstractProxyTask task);
+        public bool OnStageInject(AbilityTaskBehaviourStage stage);
+        public bool OnTaskInject(AbstractAbilityTask task);
     }
 
     public abstract class LimitedAbilityInjection : IAbilityInjection
@@ -19,12 +19,12 @@ namespace FarEmerald.PlayForge
 
         public abstract bool OnProxyInject(AbilityProxy proxy);
 
-        public virtual bool OnStageInject(AbilityProxyStage stage)
+        public virtual bool OnStageInject(AbilityTaskBehaviourStage stage)
         {
             return true;
         }
 
-        public virtual bool OnTaskInject(AbstractProxyTask task)
+        public virtual bool OnTaskInject(AbstractAbilityTask task)
         {
             return true;
         }

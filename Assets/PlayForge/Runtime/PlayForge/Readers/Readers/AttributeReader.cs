@@ -18,17 +18,17 @@ namespace FarEmerald.PlayForge
 
         public override void WhenUpdate(ProcessRelay relay)
         {
-            if (!Source) return;
-            if (!Source.AttributeSystem.TryGetAttributeValue(attribute, out AttributeValue attributeValue)) return;
+            if (Source is null) return;
+            if (!Source.GetAttributeSystem().TryGetAttributeValue(attribute, out AttributeValue attributeValue)) return;
 
             Set(attributeValue);
         }
 
         protected override void SubscribeIfOnChangePolicy()
         {
-            Source.AttributeSystem.Callbacks.OnAttributeChanged += data =>
+            Source.GetAttributeSystem().Callbacks.OnAttributeChanged += data =>
             {
-                if (data.Attribute.Equals(attribute)) Set(Source.AttributeSystem.TryGetAttributeValue(attribute, out AttributeValue value) ? value : default);
+                if (data.Attribute.Equals(attribute)) Set(Source.GetAttributeSystem().TryGetAttributeValue(attribute, out AttributeValue value) ? value : default);
             };
         }
 
@@ -48,7 +48,7 @@ namespace FarEmerald.PlayForge
     public interface ISystemReader
     {
         
-        public void Assign(GASComponent gas);
+        public void Assign(IGameplayAbilitySystem gas);
     }
 
     public interface IAttributeReader

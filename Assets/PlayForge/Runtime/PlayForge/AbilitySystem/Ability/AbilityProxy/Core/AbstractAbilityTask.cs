@@ -7,7 +7,7 @@ using Cysharp.Threading.Tasks;
 
 namespace FarEmerald.PlayForge
 {
-    public abstract class AbstractProxyTask
+    public abstract class AbstractAbilityTask
     {
         /// <summary>
         /// Determines whether another ability proxy can be active at the same time as the proxy containing this task.

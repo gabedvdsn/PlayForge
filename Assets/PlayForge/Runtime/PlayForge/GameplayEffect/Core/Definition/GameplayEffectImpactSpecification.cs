@@ -14,6 +14,7 @@ namespace FarEmerald.PlayForge
         
         public EAffiliationPolicy AffiliationPolicy;
         
+        
         [ForgeCategory(Forge.Categories.ImpactType)]
         public List<Tag> ImpactTypes;
         public bool ReverseImpactOnRemoval;

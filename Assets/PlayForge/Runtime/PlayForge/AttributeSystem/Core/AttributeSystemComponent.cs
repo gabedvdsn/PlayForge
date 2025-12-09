@@ -6,7 +6,7 @@ using UnityEngine;
 
 namespace FarEmerald.PlayForge
 {
-    public class AttributeSystemComponent : MonoBehaviour
+    public class AttributeSystemComponent
     {
         protected AttributeSet attributeSet;
         protected List<AbstractAttributeWorker> attributeChangeEvents = new();
@@ -18,16 +18,19 @@ namespace FarEmerald.PlayForge
         private AttributeModificationRule Rule;
         public AttributeSystemCallbacks Callbacks;
         
-        private GASComponent Root;
-        
+        public readonly IGameplayAbilitySystem Root;
+
+        public AttributeSystemComponent(IGameplayAbilitySystem root)
+        {
+            Root = root;
+        }
+
         #region Initialization
         
-        public virtual void Initialize(GASComponent system)
+        public virtual void Initialize(AttributeSet attributeSet, List<AbstractAttributeWorker> attributeChangeEvents)
         {
-            Root = system;
-
-            attributeSet = Root.Data.AttributeSet;
-            attributeChangeEvents = Root.Data.AttributeChangeEvents;
+            this.attributeSet = attributeSet;
+            this.attributeChangeEvents = attributeChangeEvents;
 
             InitializeCaches();
             InitializePriorityChangeEvents();

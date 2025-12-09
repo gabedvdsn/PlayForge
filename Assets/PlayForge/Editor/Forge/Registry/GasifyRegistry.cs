@@ -23,8 +23,7 @@ namespace FarEmerald.PlayForge.Extended
         // Utilities shared by drawers
         public static string GetDrawerLabel(FieldInfo fi)
         {
-            var lbl = fi.GetCustomAttribute<ForgeLabelAttribute>()?.Label ?? ObjectNames.NicifyVariableName(fi.Name);
-            return lbl;
+            return "";
         }
 
         public static VisualElement BuildRowBase(FieldInfo fi)

@@ -7,11 +7,11 @@ using UnityEngine;
 
 namespace FarEmerald.PlayForge
 {
-    public class CreateMonoProcessProxyTask : AbstractCreateProcessProxyTask
+    public class CreateMonoProcessAbilityTask : AbstractCreateProcessAbilityTask
     {
         protected List<AbstractMonoProcess> MonoProcesses;
         
-        public CreateMonoProcessProxyTask(List<AbstractMonoProcess> monoProcesses)
+        public CreateMonoProcessAbilityTask(List<AbstractMonoProcess> monoProcesses)
         {
             MonoProcesses = monoProcesses;
         }

@@ -53,9 +53,9 @@ namespace FarEmerald.PlayForge
             {
                 transform.position = pos;
             }
-            else if (regData.TryGet<GASComponent>(Tags.PAYLOAD_POSITION, EProxyDataValueTarget.Primary, out var gasPos))
+            else if (regData.TryGet<IGameplayAbilitySystem>(Tags.PAYLOAD_POSITION, EProxyDataValueTarget.Primary, out var gasPos))
             {
-                transform.position = gasPos.transform.position;
+                transform.position = gasPos.AsTransform().position;
             }
             else if (regData.TryGet<Transform>(Tags.PAYLOAD_POSITION, EProxyDataValueTarget.Primary, out var tPos))
             {
@@ -67,7 +67,7 @@ namespace FarEmerald.PlayForge
             {
                 transform.rotation = rot;
             }
-            else if (regData.TryGet<GASComponent>(Tags.PAYLOAD_ROTATION, EProxyDataValueTarget.Primary, out var gasRot))
+            else if (regData.TryGet<GameplayAbilitySystem>(Tags.PAYLOAD_ROTATION, EProxyDataValueTarget.Primary, out var gasRot))
             {
                 transform.rotation = gasRot.transform.rotation;
             }

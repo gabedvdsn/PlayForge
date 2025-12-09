@@ -4,6 +4,9 @@ using UnityEngine;
 
 namespace FarEmerald.PlayForge
 {
+    /// <summary>
+    /// Modifications applied to disjoint targets are
+    /// </summary>
     public class DisjointTarget : ITarget
     {
         private ITarget original;
@@ -23,13 +26,21 @@ namespace FarEmerald.PlayForge
         {
             return original.GetAffiliation();
         }
-        public Tag[] GetAppliedTags()
+        public List<Tag> GetAppliedTags()
         {
-            return Array.Empty<Tag>();
+            return new List<Tag>();
+        }
+        public int GetWeight(Tag _tag)
+        {
+            return 0;
         }
         public bool ApplyGameplayEffect(GameplayEffectSpec spec)
         {
             return false;
+        }
+        public void RemoveGameplayEffect(GameplayEffect effect)
+        {
+            
         }
         public GameplayEffectSpec GenerateEffectSpec(IEffectOrigin origin, GameplayEffect GameplayEffect)
         {
@@ -43,11 +54,19 @@ namespace FarEmerald.PlayForge
         {
             return original.FindAbilitySystem(out abilSystem);
         }
+        public bool TryGetAttributeValue(Attribute attribute, out AttributeValue value)
+        {
+            value = default;
+            return false;
+        }
+        public bool TryModifyAttribute(Attribute attribute, SourcedModifiedAttributeValue sourcedModifiedValue, bool runEvents = true)
+        {
+            return false;
+        }
         public AbstractTransformPacket AsTransform()
         {
             return packet;
         }
-        
         public static DisjointTarget Generate(ITarget _target)
         {
             return new DisjointTarget(

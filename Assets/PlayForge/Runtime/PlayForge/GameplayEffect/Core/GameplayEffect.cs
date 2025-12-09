@@ -36,7 +36,7 @@ namespace FarEmerald.PlayForge
             
         }
 
-        public GameplayEffectSpec Generate(IEffectOrigin origin, GASComponent target)
+        public GameplayEffectSpec Generate(IEffectOrigin origin, IGameplayAbilitySystem target)
         {
             GameplayEffectSpec spec = new GameplayEffectSpec(this, origin, target);
             ImpactSpecification.ApplyImpactSpecifications(spec);
@@ -90,11 +90,11 @@ namespace FarEmerald.PlayForge
     }
 
     public class GameplayEffectDefinition
-    {
-        [ForgeLinkField("Name")] public string Name;
-        [ForgeLinkField("Description")] public string Description;
+    { 
+        public string Name;
+        public string Description;
         [ForgeCategory(Forge.Categories.Visibility)] public Tag Visibility;
-        [ForgeLinkField("Icon")] public Sprite Icon;
+        public Sprite Icon;
     }
 
     public interface IHasReadableDefinition
@@ -106,7 +106,6 @@ namespace FarEmerald.PlayForge
 
     public struct GameplayEffectTags
     {
-        [ForgeLinkTag("Name")]
         [ForgeCategory(Forge.Categories.Identifier)]
         public Tag AssetTag;
         

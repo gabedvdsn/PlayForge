@@ -4,11 +4,11 @@ using UnityEngine;
 
 namespace FarEmerald.PlayForge
 {
-    public class GetTestTargetProxyTask : AbstractTargetingProxyTask
+    public class GetTestTargetTask : AbstractTargetingAbilityTask
     {
         public override UniTask Activate(AbilityDataPacket data, CancellationToken token)
         {
-            var comps = Object.FindObjectsByType<GASComponent>(FindObjectsInactive.Exclude, FindObjectsSortMode.None);
+            var comps = Object.FindObjectsByType<GameplayAbilitySystem>(FindObjectsInactive.Exclude, FindObjectsSortMode.None);
             if (!data.TryGet(Tags.PAYLOAD_TARGET, EProxyDataValueTarget.Primary, out ISource source))
             {
                 return UniTask.CompletedTask;

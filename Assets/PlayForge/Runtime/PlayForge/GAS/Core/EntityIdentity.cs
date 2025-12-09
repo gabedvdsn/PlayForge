@@ -5,7 +5,7 @@ namespace FarEmerald.PlayForge
 {
     public class EntityIdentity
     {
-        public GASIdentityData Identity;
+        public GASIdentityData Identity = new();
         
         public EAbilityActivationPolicy ActivationPolicy = EAbilityActivationPolicy.SingleActiveQueue;
         public int MaxAbilities = 99;

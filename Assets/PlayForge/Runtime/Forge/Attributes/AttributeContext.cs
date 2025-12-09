@@ -3,24 +3,35 @@
 namespace FarEmerald
 {
     [AttributeUsage(AttributeTargets.Field, Inherited = false, AllowMultiple = true)]
-    public sealed class ForgeCategory : System.Attribute
+    public sealed class ForgeFilterCategory : System.Attribute
     {
-        public string Context { get; }
+        public string[] Categories { get; }
 
-        public ForgeCategory(string context)
+        public ForgeFilterCategory(params string[] categories)
         {
-            Context = context;
+            Categories = categories;
         }
     }
     
     [AttributeUsage(AttributeTargets.Field, Inherited = false, AllowMultiple = true)]
     public sealed class ForgeFilterName : System.Attribute
     {
-        public string Name { get; }
+        public string[] Names { get; }
 
-        public ForgeFilterName(string name)
+        public ForgeFilterName(params string[] names)
         {
-            Name = name;
+            Names = names;
+        }
+    }
+    
+    [AttributeUsage(AttributeTargets.Field, Inherited = false, AllowMultiple = true)]
+    public sealed class ForgeFilterTag : System.Attribute
+    {
+        public string[] Tags { get; }
+
+        public ForgeFilterTag(params string[] tags)
+        {
+            Tags = tags;
         }
     }
 }

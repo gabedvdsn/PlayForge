@@ -33,7 +33,7 @@ namespace FarEmerald.PlayForge
             return true;
         }
             
-        public void RunEvents(Attribute attribute, GASComponent system, Dictionary<Attribute, CachedAttributeValue> attributeCache,
+        public void RunEvents(Attribute attribute, IGameplayAbilitySystem system, Dictionary<Attribute, CachedAttributeValue> attributeCache,
             ChangeValue change)
         {
             if (!ChangeEvents.ContainsKey(attribute)) return;

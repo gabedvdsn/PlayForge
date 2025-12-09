@@ -65,7 +65,7 @@ namespace FarEmerald.PlayForge
             if (Spec.Base.ImpactSpecification.ReverseImpactOnRemoval)
             {
                 AttributeValue negatedImpact = TrackedImpact.Negate();
-                Spec.Target.Att.ModifyAttribute(
+                Spec.Target.TryModifyAttribute(
                     Spec.Base.ImpactSpecification.AttributeTarget, 
                     new SourcedModifiedAttributeValue(Spec, this, negatedImpact.CurrentValue, negatedImpact.BaseValue, false));
             }

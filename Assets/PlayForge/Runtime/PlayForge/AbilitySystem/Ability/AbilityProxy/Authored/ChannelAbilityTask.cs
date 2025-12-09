@@ -4,7 +4,7 @@ using UnityEngine;
 
 namespace FarEmerald.PlayForge
 {
-    public class ChannelProxyTask : AbstractProxyTask
+    public class ChannelAbilityTask : AbstractAbilityTask
     {
         public float ChannelDuration;
         public PlayerLoopTiming Timing = PlayerLoopTiming.Update;

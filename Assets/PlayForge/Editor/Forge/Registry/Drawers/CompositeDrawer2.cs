@@ -185,8 +185,7 @@ namespace FarEmerald.PlayForge.Extended.Editor
             return type
                 .BaseTypesFirst()
                 .SelectMany(t => t.GetFields(BindingFlags.Public | BindingFlags.Instance | BindingFlags.DeclaredOnly))
-                .Where(f => !f.IsDefined(typeof(ForgeHiddenAttribute), true))
-                .Select(f => (f, order: f.GetCustomAttribute<ForgeOrderAttribute>()?.Order ?? int.MaxValue, token: f.MetadataToken))
+                .Select(f => (f, order: int.MaxValue, token: f.MetadataToken))
                 .OrderBy(x => x.order).ThenBy(x => x.token)
                 .Select(x => x.f)
                 .ToArray();

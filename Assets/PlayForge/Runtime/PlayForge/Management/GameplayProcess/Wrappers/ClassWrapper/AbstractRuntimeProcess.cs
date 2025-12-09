@@ -8,11 +8,13 @@ namespace FarEmerald.PlayForge
     {
         protected bool processActive;
 
-        public string name;
-        public EProcessStepPriorityMethod priorityMethod;
-        public int stepPriority;
-        public EProcessStepTiming stepTiming;
-        public EProcessLifecycle lifecycle;
+        public readonly string name;
+        public readonly EProcessStepPriorityMethod priorityMethod;
+        public readonly int stepPriority;
+        public readonly EProcessStepTiming stepTiming;
+        public readonly EProcessLifecycle lifecycle;
+
+        protected ProcessDataPacket regData;
 
         protected AbstractRuntimeProcess()
         {
@@ -31,6 +33,8 @@ namespace FarEmerald.PlayForge
             this.stepTiming = stepTiming;
             this.lifecycle = lifecycle;
         }
+
+        public void SendProcessData(ProcessDataPacket processData) => regData = processData;
 
         public abstract void WhenInitialize(ProcessRelay relay);
 

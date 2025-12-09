@@ -2,18 +2,18 @@
 {
     public abstract class AnalysisWorker
     {
-        public abstract void Activate(GASComponent gas);
+        public abstract void Activate(IGameplayAbilitySystem gas);
     }
     
     public class DeathEventWorker : AnalysisWorker
     {
-        public override void Activate(GASComponent gas)
+        public override void Activate(IGameplayAbilitySystem gas)
         {
-            if (gas.AttributeSystem.TryGetAttributeValue(Attribute.Generate("Tester", ""), out AttributeValue value))
+            if (gas.GetAttributeSystem().TryGetAttributeValue(Attribute.Generate("Tester", ""), out AttributeValue value))
             {
                 if (value.CurrentValue <= 0)
                 {
-                    gas.gameObject.SetActive(false);
+                    gas.ToGASObject()?.gameObject.SetActive(false);
                 }
             }
         }

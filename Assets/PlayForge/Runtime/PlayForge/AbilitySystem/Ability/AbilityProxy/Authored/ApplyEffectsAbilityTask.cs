@@ -5,7 +5,7 @@ using UnityEngine;
 
 namespace FarEmerald.PlayForge
 {
-    public class ApplyEffectsProxyTask : AbstractProxyTask
+    public class ApplyEffectsAbilityTask : AbstractAbilityTask
     {
         public List<GameplayEffect> Effects;
         public int BetweenApplicationDelayMilliseconds;

@@ -70,9 +70,13 @@ namespace FarEmerald.PlayForge
             if (!ability.Base.LocalData.TryGetValue(tag, out var rangeObj)) return true;
             if (rangeObj is not float range) return false;
 
-            if (!data.TryGetTarget(EProxyDataValueTarget.Primary, out var targetObj) || !targetObj.FindAbilitySystem(out var target)) return false;
-            if (!data.Spec.GetOwner().FindAbilitySystem(out var source)) return false;
-
+            if (!data.TryGetTarget(EProxyDataValueTarget.Primary, out var targetObj)) return false;
+            var target = targetObj.AsGAS()?.ToGASObject();
+            if (target is null) return false;
+            
+            var source = data.Spec.GetOwner().AsGAS()?.ToGASObject();
+            if (source is null) return false;
+            
             return Vector3.Distance(source.transform.position, target.transform.position) <= range;
         }
     }

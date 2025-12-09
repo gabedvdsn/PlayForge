@@ -6,12 +6,12 @@ namespace FarEmerald.PlayForge
 {
     public class AvoidRequireTagGroup
     {
-        public Tag[] AvoidTags;
-        public Tag[] RequireTags;
+        public List<Tag> AvoidTags;
+        public List<Tag> RequireTags;
         
-        public bool Validate(Tag[] appliedTags)
+        public bool Validate(List<Tag> appliedTags)
         {
-            if (AvoidTags.Length == 0 && RequireTags.Length == 0) return true;
+            if (AvoidTags.Count == 0 && RequireTags.Count == 0) return true;
             return !AvoidTags.Any(appliedTags.Contains) && RequireTags.All(appliedTags.Contains);
         }
     }

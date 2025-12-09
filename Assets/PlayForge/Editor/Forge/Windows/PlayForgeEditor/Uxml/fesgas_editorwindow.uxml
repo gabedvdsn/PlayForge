@@ -91,7 +91,7 @@
                 </ui:VisualElement>
                 <ui:VisualElement name="Window" style="flex-grow: 1; flex-shrink: 1; flex-direction: row;">
                     <ui:VisualElement name="Focus" style="flex-grow: 1; flex-shrink: 0;">
-                        <ui:VisualElement name="Main" style="flex-grow: 1; min-height: 250px; flex-shrink: 0; max-height: 450px;">
+                        <ui:VisualElement name="Main" style="flex-grow: 1; min-height: 250px; flex-shrink: 0; max-height: 1117px;">
                             <ui:VisualElement name="HomePage" style="flex-grow: 1; display: none; flex-shrink: 0; background-color: rgb(107, 107, 107);" />
                             <ui:VisualElement name="CreatorPage" style="flex-grow: 1; border-left-color: rgb(0, 0, 0); border-right-color: rgb(0, 0, 0); border-top-color: rgb(0, 0, 0); border-bottom-color: rgb(0, 0, 0); border-bottom-width: 0; visibility: visible; display: flex; align-items: stretch; flex-direction: row;">
                                 <ui:VisualElement name="CreatorHome" style="flex-grow: 1; background-color: rgb(107, 107, 107); display: none;">
@@ -1164,7 +1164,7 @@
                                 </ui:VisualElement>
                             </ui:VisualElement>
                         </ui:VisualElement>
-                        <ui:VisualElement name="Store" style="flex-grow: 1; flex-shrink: 0; align-self: auto; border-left-color: rgb(0, 0, 0); border-right-color: rgb(0, 0, 0); border-top-color: rgb(0, 0, 0); border-bottom-color: rgb(0, 0, 0); border-bottom-width: 2px; flex-direction: row; border-top-width: 2px; display: flex; min-height: 220px;">
+                        <ui:VisualElement name="Store" style="flex-grow: 0; flex-shrink: 1; align-self: auto; border-left-color: rgb(0, 0, 0); border-right-color: rgb(0, 0, 0); border-top-color: rgb(0, 0, 0); border-bottom-color: rgb(0, 0, 0); border-bottom-width: 2px; flex-direction: row; border-top-width: 2px; display: flex; min-height: 220px;">
                             <ui:VisualElement name="BodyWithHeader" style="flex-grow: 1; background-color: rgb(77, 77, 77); display: none;">
                                 <ui:VisualElement name="Header" style="flex-grow: 0; flex-direction: row; align-items: stretch; padding-left: 8px; padding-top: 4px;">
                                     <ui:Label tabindex="-1" text="Header" parse-escape-sequences="true" display-tooltip-when-elided="true" style="-unity-text-align: middle-left; margin-top: 0; margin-bottom: 0; padding-top: 2px; padding-bottom: 2px; padding-left: 2px;" />

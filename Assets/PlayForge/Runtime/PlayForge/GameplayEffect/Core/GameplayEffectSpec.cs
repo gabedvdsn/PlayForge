@@ -13,7 +13,7 @@ namespace FarEmerald.PlayForge
 
         public Dictionary<IMagnitudeModifier, AttributeValue?> SourceCapturedAttributes;
 
-        public GameplayEffectSpec(GameplayEffect GameplayEffect, IEffectOrigin origin, GASComponent target)
+        public GameplayEffectSpec(GameplayEffect GameplayEffect, IEffectOrigin origin, IGameplayAbilitySystem target)
         {
             Base = GameplayEffect;
             Origin = origin;

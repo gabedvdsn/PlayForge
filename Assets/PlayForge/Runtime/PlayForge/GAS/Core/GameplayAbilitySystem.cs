@@ -9,13 +9,13 @@ using UnityEngine.Serialization;
 
 namespace FarEmerald.PlayForge
 {
-    public class GASComponent : LazyMonoProcess, ISource, ITagHandler, IProxyTaskBehaviourCaller, IValidationReady
+    public class GameplayAbilitySystem : LazyMonoProcess, IGameplayAbilitySystem
     {
         public EntityIdentity Data;
         
         // Subsystems
-        [HideInInspector] public AttributeSystemComponent AttributeSystem;
-        [HideInInspector] public AbilitySystemComponent AbilitySystem;
+        private AttributeSystemComponent AttributeSystem;
+        private AbilitySystemComponent AbilitySystem;
         
         // Core
         private List<AbstractGameplayEffectShelfContainer> EffectShelf;
@@ -23,7 +23,7 @@ namespace FarEmerald.PlayForge
         private bool needsCleaning;
         
         // Tags
-        public TagCache TagCache;
+        protected TagCache TagCache;
         
         // Process
         protected Dictionary<int, ProcessRelay> Relays;
@@ -33,8 +33,8 @@ namespace FarEmerald.PlayForge
         
         protected virtual void Awake()
         {
-            AttributeSystem = GetComponent<AttributeSystemComponent>();
-            AbilitySystem = GetComponent<AbilitySystemComponent>();
+            AttributeSystem = new AttributeSystemComponent(this);
+            AbilitySystem = new AbilitySystemComponent(this);
             
             EffectShelf = new List<AbstractGameplayEffectShelfContainer>();
             FinishedEffects = new List<AbstractGameplayEffectShelfContainer>();
@@ -50,8 +50,8 @@ namespace FarEmerald.PlayForge
             
             Data.Identity.Initialize(this);
             
-            AttributeSystem.Initialize(this);
-            AbilitySystem.Initialize(this);
+            AttributeSystem.Initialize(Data.AttributeSet, Data.AttributeChangeEvents);
+            AbilitySystem.Initialize(Data.ActivationPolicy, Data.AllowDuplicateAbilities, Data.ImpactWorkers, Data.StartingAbilities);
         }
         
         #region Process Parameters
@@ -84,7 +84,7 @@ namespace FarEmerald.PlayForge
         // Handling
         public bool HandlerValidateAgainst(IGameplayProcessHandler handler)
         {
-            return (GASComponent)handler == this;
+            return (GameplayAbilitySystem)handler == this;
         }
 
         public bool HandlerProcessIsSubscribed(ProcessRelay relay)
@@ -116,6 +116,15 @@ namespace FarEmerald.PlayForge
             abilSystem = AbilitySystem;
             return AbilitySystem is not null;
         }
+        public bool TryGetAttributeValue(Attribute attribute, out AttributeValue value)
+        {
+            return AttributeSystem.TryGetAttributeValue(attribute, out value);
+        }
+        public bool TryModifyAttribute(Attribute attribute, SourcedModifiedAttributeValue sourcedModifiedValue, bool runEvents = true)
+        {
+            AttributeSystem.ModifyAttribute(attribute, sourcedModifiedValue, runEvents);
+            return true;
+        }
         public AbstractTransformPacket AsTransform()
         {
             return new DefaultTransformPacket(transform);
@@ -134,7 +143,7 @@ namespace FarEmerald.PlayForge
         {
             if (spec is null) return false;
             
-            if (!ValidateEffectApplicationRequirements(spec)) return false;
+            if (!ForgeHelper.ValidateEffectApplicationRequirements(spec, Data.Identity.Affiliation)) return false;
             
             switch (spec.Base.DurationSpecification.DurationPolicy)
             {
@@ -203,7 +212,7 @@ namespace FarEmerald.PlayForge
                 case EEffectReApplicationPolicy.Refresh:
                 case EEffectReApplicationPolicy.Extend:
                 case EEffectReApplicationPolicy.Append:
-                    container = NonStackingGameplayEffectShelfContainer.Generate(spec, ValidateEffectOngoingRequirements(spec));
+                    container = NonStackingGameplayEffectShelfContainer.Generate(spec, ForgeHelper.ValidateEffectOngoingRequirements(spec));
                     break;
                 case EEffectReApplicationPolicy.Stack:
                 case EEffectReApplicationPolicy.StackRefresh:
@@ -229,8 +238,8 @@ namespace FarEmerald.PlayForge
         {
             return spec.Base.DurationSpecification.StackableType switch
             {
-                EStackableType.Incremental => IncrementalStackableGameplayShelfContainer.Generate(spec, ValidateEffectOngoingRequirements(spec)),
-                EStackableType.Partitioned => PartitionedStackableGameplayShelfContainer.Generate(spec, ValidateEffectOngoingRequirements(spec)),
+                EStackableType.Incremental => IncrementalStackableGameplayShelfContainer.Generate(spec, ForgeHelper.ValidateEffectOngoingRequirements(spec)),
+                EStackableType.Partitioned => PartitionedStackableGameplayShelfContainer.Generate(spec, ForgeHelper.ValidateEffectOngoingRequirements(spec)),
                 _ => throw new ArgumentOutOfRangeException()
             };
         }
@@ -308,14 +317,14 @@ namespace FarEmerald.PlayForge
             // Validate removal and ongoing requirements
             foreach (AbstractGameplayEffectShelfContainer container in EffectShelf)
             {
-                if (ValidateEffectRemovalRequirements(container.Spec))
+                if (ForgeHelper.ValidateEffectRemovalRequirements(container.Spec))
                 {
                     FinishedEffects.Add(container);
                     needsCleaning = true;
                 }
                 else
                 {
-                    container.Ongoing = ValidateEffectOngoingRequirements(container.Spec);
+                    container.Ongoing = ForgeHelper.ValidateEffectOngoingRequirements(container.Spec);
                 }
             }
         }
@@ -371,41 +380,6 @@ namespace FarEmerald.PlayForge
             HandleGameplayEffects();
         }
 
-        #endregion
-
-        #region Effect Requirement Validation
-        
-        /// <summary>
-        /// Should the spec be applied?
-        /// </summary>
-        /// <param name="spec"></param>
-        /// <returns></returns>
-        private bool ValidateEffectApplicationRequirements(GameplayEffectSpec spec)
-        {
-            return ForgeHelper.ValidateAffiliationPolicy(spec.Base.ImpactSpecification.AffiliationPolicy, Data.Identity.Affiliation, spec.Origin.GetAffiliation())
-                && spec.Base.ValidateApplicationRequirements(spec);
-        }
-        
-        /// <summary>
-        /// Should the spec be ongoing?
-        /// </summary>
-        /// <param name="spec"></param>
-        /// <returns></returns>
-        private bool ValidateEffectOngoingRequirements(GameplayEffectSpec spec)
-        {
-            return spec.Base.ValidateOngoingRequirements(spec);
-        }
-        
-        /// <summary>
-        /// Should the spec be removed?
-        /// </summary>
-        /// <param name="spec"></param>
-        /// <returns></returns>
-        private bool ValidateEffectRemovalRequirements(GameplayEffectSpec spec)
-        {
-            return spec.Base.ValidateRemovalRequirements(spec);
-        }
-        
         #endregion
         
         #region Effect Helpers
@@ -513,15 +487,26 @@ namespace FarEmerald.PlayForge
         {
             return Data.Identity.Affiliation;
         }
-        public Tag[] GetAppliedTags()
+        public List<Tag> GetAppliedTags()
         {
             return TagCache.GetAppliedTags();
         }
-
         public int GetWeight(Tag _tag)
         {
             return TagCache.GetWeight(_tag);
         }
         #endregion
+        public AttributeSystemComponent GetAttributeSystem()
+        {
+            return AttributeSystem;
+        }
+        public AbilitySystemComponent GetAbilitySystem()
+        {
+            return AbilitySystem;
+        }
+        public GameplayAbilitySystem ToGASObject()
+        {
+            return this;
+        }
     }
 }

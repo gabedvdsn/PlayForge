@@ -4,7 +4,7 @@ namespace FarEmerald.PlayForge
 {
     public interface ITagHandler
     {
-        public Tag[] GetAppliedTags();
+        public List<Tag> GetAppliedTags();
         public int GetWeight(Tag _tag);
     }
 }

@@ -9,14 +9,14 @@ namespace FarEmerald.PlayForge
     /// <summary>
     /// GameRoot
     /// </summary>
-    public partial class GameRoot : GASComponent, IEffectOrigin, IManagerial
+    public partial class GameRoot : GameplayAbilitySystem, IEffectOrigin, IManagerial
     {
         [Header("Game Root")]
         
         public static GameRoot Instance;
         
         // Useful for backend systems like observers, audio, etc...
-        public List<AbstractCreateProcessProxyTask> CreateProcessTasks;
+        public List<AbstractCreateProcessAbilityTask> CreateProcessTasks = new();
         private AbilityDataPacket NativeDataPacket;
 
         public void Bootstrap()
@@ -48,24 +48,24 @@ namespace FarEmerald.PlayForge
         
         #region Process Tasks
         
-        public void RunProcessTask(AbstractCreateProcessProxyTask task)
+        public void RunProcessTask(AbstractCreateProcessAbilityTask task)
         {
             RunProcessTask(task, NativeDataPacket);
         }
         
-        public void RunProcessTask(AbstractCreateProcessProxyTask task, AbilityDataPacket _data)
+        public void RunProcessTask(AbstractCreateProcessAbilityTask task, AbilityDataPacket _data)
         {
             CancellationTokenSource cts = new CancellationTokenSource();
             
             ActivateProcess(_data, task, cts.Token).Forget();
         }
         
-        public void RunProcessTasks(List<AbstractCreateProcessProxyTask> tasks)
+        public void RunProcessTasks(List<AbstractCreateProcessAbilityTask> tasks)
         {
             RunProcessTasks(tasks, NativeDataPacket);
         }
 
-        public void RunProcessTasks(List<AbstractCreateProcessProxyTask> tasks, AbilityDataPacket _data)
+        public void RunProcessTasks(List<AbstractCreateProcessAbilityTask> tasks, AbilityDataPacket _data)
         {
             foreach (var task in tasks)
             {
@@ -73,7 +73,7 @@ namespace FarEmerald.PlayForge
             }
         }
 
-        private async UniTask ActivateProcess(AbilityDataPacket _data, AbstractCreateProcessProxyTask task, CancellationToken token)
+        private async UniTask ActivateProcess(AbilityDataPacket _data, AbstractCreateProcessAbilityTask task, CancellationToken token)
         {
             task.Prepare(_data);
             await task.Activate(_data, token);

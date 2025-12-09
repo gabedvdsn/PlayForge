@@ -19,7 +19,7 @@ namespace FarEmerald.PlayForge
             var defaultAttrs = GetFieldAttributes<ForgeFilterName>(property).ToArray();
             if (defaultAttrs.Length == 0) return source;
 
-            return source.Where(e => defaultAttrs.Any(a => e.Name.StartsWith(a.Name, StringComparison.InvariantCultureIgnoreCase)));
+            return source.Where(e => defaultAttrs.Any(a => a.Names.Any(_name => e.Name.StartsWith(_name, StringComparison.InvariantCultureIgnoreCase))));
         }
 
         public override void OnGUI(Rect position, SerializedProperty property, GUIContent label)

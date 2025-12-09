@@ -15,7 +15,7 @@ namespace FarEmerald.PlayForge
         private Dictionary<Tag, int> TagWeights;
         private Dictionary<AbstractTagWorker, List<AbstractTagWorkerInstance>> ActiveWorkers;
 
-        public Tag[] GetAppliedTags() => TagWeights.Keys.ToArray();
+        public List<Tag> GetAppliedTags() => TagWeights.Keys.ToList();
 
         public TagCache(ITagHandler system)
         {

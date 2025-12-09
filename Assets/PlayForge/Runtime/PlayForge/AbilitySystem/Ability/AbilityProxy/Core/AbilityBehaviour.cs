@@ -12,17 +12,17 @@ namespace FarEmerald.PlayForge
     /// If an ability has no targeting proxy (TargetingProxy is null)
     /// </summary>
     [Serializable]
-    public class AbilityProxySpecification
+    public class AbilityBehaviour
     {
         [Header("Targeting Instructions")]
         
-        public AbstractTargetingProxyTask TargetingProxy;
+        public AbstractTargetingAbilityTask targeting;
         [Tooltip("Implicitly provides the casting system as a target.")]
         public bool UseImplicitTargeting = true;
         
         [Header("Proxy Stages")]
         
-        public List<AbilityProxyStage> Stages;
+        public List<AbilityTaskBehaviourStage> Stages;
 
         public AbilityProxy GenerateProxy()
         {
@@ -31,10 +31,10 @@ namespace FarEmerald.PlayForge
     }
 
     [Serializable]
-    public class AbilityProxyStage
+    public class AbilityTaskBehaviourStage
     {
-        public EAnyAllPolicy TaskPolicy;
-        public List<AbstractProxyTask> Tasks;
+        public IProxyStagePolicy StagePolicy;
+        public List<AbstractAbilityTask> Tasks;
         
         [Space(5)]
         

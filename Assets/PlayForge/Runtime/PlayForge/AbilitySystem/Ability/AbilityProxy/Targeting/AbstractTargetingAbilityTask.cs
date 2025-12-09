@@ -4,7 +4,7 @@ using UnityEngine;
 
 namespace FarEmerald.PlayForge
 {
-    public abstract class AbstractTargetingProxyTask : AbstractProxyTask
+    public abstract class AbstractTargetingAbilityTask : AbstractAbilityTask
     {
         public override void Prepare(AbilityDataPacket data)
         {
@@ -12,8 +12,9 @@ namespace FarEmerald.PlayForge
             if (ConnectInputHandler(data)) return;
             
             WhenTargetingInvalid();
-            
-            if (data.Spec.GetOwner().AsData().AbilitySystem && data.Spec is AbilitySpec spec)
+
+            var abilitySystem = data.Spec.GetOwner().AsGAS().GetAbilitySystem();
+            if (data.Spec.GetOwner().AsData().AbilitySystem is not null && data.Spec is AbilitySpec spec)
             {
                 spec.Owner.AsData().AbilitySystem.Inject(spec.Base, new InterruptInjection());
             }

@@ -8,12 +8,12 @@ namespace FarEmerald.PlayForge
 {
     public class AttributeSet
     {
-        public List<AttributeSetElement> Attributes;
+        public List<AttributeSetElement> Attributes = new();
         
         [Space]
         
-        public List<AttributeSet> SubSets;
-        public EValueCollisionPolicy CollisionResolutionPolicy;
+        public List<AttributeSet> SubSets = new();
+        public EValueCollisionPolicy CollisionResolutionPolicy = EValueCollisionPolicy.UseMaximum;
         
         public void Initialize(AttributeSystemComponent system)
         {

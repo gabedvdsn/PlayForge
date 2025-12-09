@@ -5,13 +5,13 @@ using UnityEngine;
 
 namespace FarEmerald.PlayForge
 {
-    public class AbilitySystemComponent : MonoBehaviour
+    public class AbilitySystemComponent
     {
         private EAbilityActivationPolicy activationPolicy;
         public EAbilityActivationPolicy DefaultActivationPolicy => activationPolicy;
         private bool allowDuplicateAbilities;
 
-        private GASComponent Root;
+        public readonly IGameplayAbilitySystem Root;
 
         private Dictionary<int, AbilitySpecContainer> AbilityCache = new();
         private Dictionary<EAbilityActivationPolicy, HashSet<int>> ActiveCache = new()
@@ -24,6 +24,11 @@ namespace FarEmerald.PlayForge
         protected ImpactWorkerCache ImpactWorkerCache;
 
         public AbilitySystemCallbacks Callbacks = new();
+
+        public AbilitySystemComponent(IGameplayAbilitySystem root)
+        {
+            Root = root;
+        }
 
         public bool IsExecuting() => ActiveCache.Keys.Any(IsExecuting);
         public bool IsExecuting(EAbilityActivationPolicy policy) => ActiveCache[policy].Count > 0;
@@ -90,19 +95,18 @@ namespace FarEmerald.PlayForge
             set => _locked = value;
         }
 
-        public void Initialize(GASComponent system)
+        public void Initialize(EAbilityActivationPolicy activationPolicy, bool allowDuplicateAbilities, List<AbstractImpactWorker> impactWorkers,
+            List<Ability> startingAbilities)
         {
-            Root = system;
+            this.activationPolicy = activationPolicy;
+            this.allowDuplicateAbilities = allowDuplicateAbilities;
 
-            activationPolicy = Root.Data.ActivationPolicy;
-            allowDuplicateAbilities = Root.Data.AllowDuplicateAbilities;
-
-            ImpactWorkerCache = new ImpactWorkerCache(Root.Data.ImpactWorkers);
+            ImpactWorkerCache = new ImpactWorkerCache(impactWorkers);
             
             AbilityCache = new Dictionary<int, AbilitySpecContainer>();
             ActiveCache = new Dictionary<EAbilityActivationPolicy, HashSet<int>>();
             
-            foreach (Ability ability in Root.Data.StartingAbilities)
+            foreach (Ability ability in startingAbilities)
             {
                 GiveAbility(ability, ability.StartingLevel, out _);
             }
@@ -204,8 +208,8 @@ namespace FarEmerald.PlayForge
 
         private void HandleTags(IEnumerable<Tag> tags, bool flag)
         {
-            if (flag) Root.TagCache.AddTags(tags);
-            else Root.TagCache.RemoveTags(tags);
+            if (flag) Root.GetTagCache().AddTags(tags);
+            else Root.GetTagCache().RemoveTags(tags);
         }
 
         #endregion

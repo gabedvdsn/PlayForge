@@ -12,7 +12,7 @@ namespace FarEmerald.PlayForge.Extended
 		public FarEmerald.PlayForge.AbilityDefinition Definition;
 		public System.Boolean IgnoreWhenLevelZero;
 		public System.Int32 MaxLevel;
-		public FarEmerald.PlayForge.AbilityProxySpecification Proxy;
+		public FarEmerald.PlayForge.AbilityBehaviour Proxy;
 		public System.Int32 StartingLevel;
 		public FarEmerald.PlayForge.AbilityTags Tags;
 	}

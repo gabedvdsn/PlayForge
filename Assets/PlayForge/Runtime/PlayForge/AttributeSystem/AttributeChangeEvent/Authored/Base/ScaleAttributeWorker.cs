@@ -9,7 +9,7 @@ namespace FarEmerald.PlayForge
     /// </summary>
     public class ScaleAttributeWorker : AbstractFocusedAttributeWorker
     {
-        public override void Activate(GASComponent system, Dictionary<Attribute, CachedAttributeValue> attributeCache,
+        public override void Activate(IGameplayAbilitySystem system, Dictionary<Attribute, CachedAttributeValue> attributeCache,
             ChangeValue change)
         {
             float proportion = change.Value.BaseValue / attributeCache[TargetAttribute].Value.BaseValue;
@@ -17,10 +17,11 @@ namespace FarEmerald.PlayForge
             
             IAttributeImpactDerivation scaleDerivation = IAttributeImpactDerivation.GenerateSourceDerivation(change.Value, Tags.RETENTION_IGNORE, Tags.GEN_NOT_APPLICABLE);
             SourcedModifiedAttributeValue scaleAmount = new SourcedModifiedAttributeValue(scaleDerivation, delta, 0f, false);
-            if (system.FindAttributeSystem(out var attr)) attr.ModifyAttribute(TargetAttribute, scaleAmount, runEvents: false);
+            
+            system.TryModifyAttribute(TargetAttribute, scaleAmount, runEvents: false);
         }
 
-        public override bool ValidateWorkFor(GASComponent system, Dictionary<Attribute, CachedAttributeValue> attributeCache, ChangeValue change)
+        public override bool ValidateWorkFor(IGameplayAbilitySystem system, Dictionary<Attribute, CachedAttributeValue> attributeCache, ChangeValue change)
         {
             return change.Value.BaseValue != 0 && base.ValidateWorkFor(system, attributeCache, change);
         }

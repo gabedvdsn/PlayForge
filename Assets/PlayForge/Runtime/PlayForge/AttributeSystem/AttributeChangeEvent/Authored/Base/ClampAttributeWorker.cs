@@ -9,7 +9,7 @@ namespace FarEmerald.PlayForge
     /// </summary>
     public class ClampAttributeWorker : AbstractFocusedAttributeWorker
     {
-        public override void Activate(GASComponent system, Dictionary<Attribute, CachedAttributeValue> attributeCache,
+        public override void Activate(IGameplayAbilitySystem system, Dictionary<Attribute, CachedAttributeValue> attributeCache,
             ChangeValue change)
         {
             AttributeValue clampValue = attributeCache[TargetAttribute].Value;

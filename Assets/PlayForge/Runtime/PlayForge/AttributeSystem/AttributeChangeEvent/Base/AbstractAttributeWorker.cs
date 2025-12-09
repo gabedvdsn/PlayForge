@@ -6,12 +6,12 @@ namespace FarEmerald.PlayForge
 {
     public abstract class AbstractAttributeWorker
     {
-        public abstract void Activate(GASComponent system, Dictionary<Attribute, CachedAttributeValue> attributeCache,
+        public abstract void Activate(IGameplayAbilitySystem system, Dictionary<Attribute, CachedAttributeValue> attributeCache,
             ChangeValue change);
 
         public abstract bool PreValidateWorkFor(ChangeValue change);
         
-        public abstract bool ValidateWorkFor(GASComponent system, Dictionary<Attribute, CachedAttributeValue> attributeCache,
+        public abstract bool ValidateWorkFor(IGameplayAbilitySystem system, Dictionary<Attribute, CachedAttributeValue> attributeCache,
             ChangeValue change);
 
         public abstract bool RegisterWithHandler(AttributeChangeMomentHandler preChange, AttributeChangeMomentHandler postChange);

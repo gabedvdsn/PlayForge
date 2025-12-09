@@ -4,7 +4,7 @@ using UnityEngine;
 
 namespace FarEmerald.PlayForge
 {
-    public class DelayProxyTask : AbstractProxyTask
+    public class DelayTask : AbstractAbilityTask
     {
         public int DelayMilliseconds;
         

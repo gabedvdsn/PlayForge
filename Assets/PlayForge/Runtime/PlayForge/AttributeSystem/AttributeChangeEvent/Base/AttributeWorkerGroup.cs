@@ -10,7 +10,7 @@ namespace FarEmerald.PlayForge
     {
         public List<AbstractAttributeWorker> ChangeEvents;
         
-        public override void Activate(GASComponent system, Dictionary<Attribute, CachedAttributeValue> attributeCache,
+        public override void Activate(IGameplayAbilitySystem system, Dictionary<Attribute, CachedAttributeValue> attributeCache,
             ChangeValue change)
         {
             foreach (AbstractAttributeWorker fEvent in ChangeEvents)
@@ -30,7 +30,7 @@ namespace FarEmerald.PlayForge
             return false;
         }
 
-        public override bool ValidateWorkFor(GASComponent system, Dictionary<Attribute, CachedAttributeValue> attributeCache,
+        public override bool ValidateWorkFor(IGameplayAbilitySystem system, Dictionary<Attribute, CachedAttributeValue> attributeCache,
             ChangeValue change)
         {
             return true;

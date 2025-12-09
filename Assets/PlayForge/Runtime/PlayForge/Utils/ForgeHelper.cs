@@ -11,6 +11,20 @@ namespace FarEmerald.PlayForge
 {
     public static class ForgeHelper
     {
+        #region GAS Utils
+
+        public static bool ValidateEffectApplicationRequirements(GameplayEffectSpec spec, List<Tag> affiliation)
+        {
+            return ValidateAffiliationPolicy(spec.Base.ImpactSpecification.AffiliationPolicy, affiliation, spec.Origin.GetAffiliation())
+                   && spec.Base.ValidateApplicationRequirements(spec);
+        }
+
+        public static bool ValidateEffectOngoingRequirements(GameplayEffectSpec spec) => spec.Base.ValidateOngoingRequirements(spec);
+
+        public static bool ValidateEffectRemovalRequirements(GameplayEffectSpec spec) => spec.Base.ValidateRemovalRequirements(spec);
+        
+        #endregion
+        
         #region Sign Related Utils
         
         public static ESignPolicy SignPolicy(params float[] magnitudes)
@@ -430,7 +444,7 @@ namespace FarEmerald.PlayForge
         {
             if (policy == EAbilityActivationPolicyExtended.UseLocal)
             {
-                if (asc) return asc.DefaultActivationPolicy;
+                if (asc is not null) return asc.DefaultActivationPolicy;
                 return EAbilityActivationPolicy.SingleActiveQueue;
             }
 

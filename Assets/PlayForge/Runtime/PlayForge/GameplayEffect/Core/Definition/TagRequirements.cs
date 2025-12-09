@@ -16,31 +16,31 @@ namespace FarEmerald.PlayForge
         
         public TagRequirements[] NestedRequirements;
 
-        public bool CheckApplicationRequirements(Tag[] tags)
+        public bool CheckApplicationRequirements(List<Tag> tags)
         {
             return !ApplicationRequirements.AvoidTags.Any(tags.Contains) 
                    && ApplicationRequirements.RequireTags.All(tags.Contains) 
                    && NestedRequirements.All(req => req.CheckApplicationRequirements(tags));
         }
 
-        public bool CheckOngoingRequirements(Tag[] tags)
+        public bool CheckOngoingRequirements(List<Tag> tags)
         {
-            if (OngoingRequirements.AvoidTags.Length == 0)
+            if (OngoingRequirements.AvoidTags.Count == 0)
             {
-                return (OngoingRequirements.RequireTags.Length == 0
+                return (OngoingRequirements.RequireTags.Count == 0
                         || OngoingRequirements.RequireTags.All(tags.Contains))
                        && NestedRequirements.All(req => req.CheckOngoingRequirements(tags));
             }
 
             return !OngoingRequirements.AvoidTags.Any(tags.Contains) 
-                   && (OngoingRequirements.RequireTags.Length == 0 || OngoingRequirements.RequireTags.All(tags.Contains))
+                   && (OngoingRequirements.RequireTags.Count == 0 || OngoingRequirements.RequireTags.All(tags.Contains))
                    && NestedRequirements.All(req => req.CheckOngoingRequirements(tags));;
         }
         
-        public bool CheckRemovalRequirements(Tag[] tags)
+        public bool CheckRemovalRequirements(List<Tag> tags)
         {
             return RemovalRequirements.AvoidTags.Any(tags.Contains)
-                   || RemovalRequirements.RequireTags.Length != 0 && RemovalRequirements.RequireTags.All(tags.Contains)
+                   || RemovalRequirements.RequireTags.Count != 0 && RemovalRequirements.RequireTags.All(tags.Contains)
                    || NestedRequirements.Any(req => req.CheckRemovalRequirements(tags));
         }
     }

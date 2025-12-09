@@ -2079,7 +2079,7 @@ PrefabInstance:
     - target: {fileID: 2656067775474001684, guid: 426e77f0506f1fa45860d062bf9680c0, type: 3}
       propertyPath: Framework
       value: 
-      objectReference: {fileID: 11400000, guid: 7c388b92c5269d841941f0fa69140076, type: 2}
+      objectReference: {fileID: 11400000, guid: 63d917c467476a64d84043ddd83b1d4e, type: 2}
     - target: {fileID: 5740495390226745286, guid: 426e77f0506f1fa45860d062bf9680c0, type: 3}
       propertyPath: m_LocalPosition.x
       value: 0

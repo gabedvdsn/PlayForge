@@ -2,24 +2,15 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
-using Codice.CM.SEIDInfo;
-using JetBrains.Annotations;
 using UnityEditor;
-using UnityEditor.Experimental.GraphView;
-using UnityEditor.UIElements;
 using UnityEngine;
-using UnityEngine.Assertions.Must;
-using UnityEngine.Serialization;
 using UnityEngine.UIElements;
-using Object = UnityEngine.Object;
 using Random = UnityEngine.Random;
 
 namespace FarEmerald.PlayForge.Extended.Editor
 {
     public partial class PlayForgeEditor : EditorWindow
     {
-        #region Content
-
         private new FocusContainer Focus = new FocusContainer(null, EDataType.None);
         private FocusContainer ReservedFocus = new FocusContainer(null, EDataType.None);
         private FocusContainer StoredFocus = new FocusContainer(null, EDataType.None);
@@ -784,6 +775,5 @@ namespace FarEmerald.PlayForge.Extended.Editor
         
         #endregion
         
-        #endregion
     }
 }

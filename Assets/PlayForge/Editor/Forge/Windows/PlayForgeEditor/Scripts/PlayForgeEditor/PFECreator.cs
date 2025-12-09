@@ -358,7 +358,7 @@ namespace FarEmerald.PlayForge.Extended.Editor
             
             // TARGETING TASK FIELD
             var targetingField = runtime.Q("Targeting");
-            var targetingFi = typeof(AbilityProxySpecification).GetField(nameof(AbilityData.Proxy.TargetingProxy));
+            var targetingFi = typeof(AbilityBehaviour).GetField(nameof(AbilityData.Proxy.targeting));
             var targetingIndicator = targetingField.Q("Indicator");
             var targetingInput = targetingField.Q<TextField>();
             var targetingData = FieldData.Initial(targetingFi, targetingField, targetingIndicator, targetingInput, QuickValidationWarnOnNullOrEmpty);
@@ -395,7 +395,7 @@ namespace FarEmerald.PlayForge.Extended.Editor
             var proxyTasksNumStages = proxyTasksField.Q<Label>("NumStagesChip");
             var proxyTasksNumTasks = proxyTasksField.Q<Label>("NumTasksChip");
             var proxyTasksGoButton = proxyTasksField.Q<Button>("AddEB");
-            BindBuryListButton<AbilityProxyStage>(proxyTasksData, proxyTasksGoButton);
+            BindBuryListButton<AbilityTaskBehaviourStage>(proxyTasksData, proxyTasksGoButton);
             //var proxyTasksBinder = BindListCreatorField(EDataType.Ability, proxyTasksData, proxyTasksField, null);
             
             proxyTasksGoButton.clicked += () =>
@@ -522,7 +522,7 @@ namespace FarEmerald.PlayForge.Extended.Editor
             btn.clicked += () => PushBuriedDictionary(fd, source, btn);
         }
 
-        private void BindBuryProxyTaskButton<T>(FieldData fd, Button btn) where T : AbstractProxyTask
+        private void BindBuryProxyTaskButton<T>(FieldData fd, Button btn) where T : AbstractAbilityTask
         {
             
         }
@@ -978,26 +978,12 @@ namespace FarEmerald.PlayForge.Extended.Editor
             // Check GasifyHidden on target or (if missing) on source
             bool IsHidden(FieldInfo tf)
             {
-                if (tf.IsDefined(typeof(ForgeHiddenAttribute), true)) return true;
-                if (sourceType == null) return false;
-                var sf = sourceType.GetField(tf.Name, BindingFlags.Public | BindingFlags.Instance);
-                return sf != null && sf.IsDefined(typeof(ForgeHiddenAttribute), true);
+                return false;
             }
 
             // Read GasifyOrder from target or (if missing) from source
             int? GetOrder(FieldInfo tf)
             {
-                if (tf.Name == "Name") return -2;
-                if (tf.Name == "Description") return -1;
-                
-                var a = tf.GetCustomAttribute<ForgeOrderAttribute>(true);
-                if (a != null) return a.Order;
-                if (sourceType != null)
-                {
-                    var sf = sourceType.GetField(tf.Name, BindingFlags.Public | BindingFlags.Instance);
-                    var a2 = sf?.GetCustomAttribute<ForgeOrderAttribute>(true);
-                    if (a2 != null) return a2.Order;
-                }
                 return null;
             }
 

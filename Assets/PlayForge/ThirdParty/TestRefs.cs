@@ -8,7 +8,7 @@ namespace FarEmerald.PlayForge
     {
         public AttributeRef Attribute;
         
-        //[GasifyContext(EditorTagService.Contexts.Identifier)]
+        [ForgeFilterCategory("Ability", "Magical", "Ranged", "Rare")]
         [ForgeFilterName("Raw")]
         public TagRef Tag;
 

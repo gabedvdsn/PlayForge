@@ -44,7 +44,7 @@ namespace FarEmerald.PlayForge
             return change.Value.BaseDerivation.GetAttribute().Equals(TargetAttribute);
         }
 
-        public override bool ValidateWorkFor(GASComponent system,
+        public override bool ValidateWorkFor(IGameplayAbilitySystem system,
             Dictionary<Attribute, CachedAttributeValue> attributeCache,
             ChangeValue change)
         {

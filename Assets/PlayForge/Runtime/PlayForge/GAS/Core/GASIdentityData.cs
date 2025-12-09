@@ -14,9 +14,9 @@ namespace FarEmerald.PlayForge
 
         public float RelativeLevel => (Level - 1f) / (MaxLevel - 1);
 
-        private GASComponent System;
+        private IGameplayAbilitySystem System;
 
-        public void Initialize(GASComponent system) => System = system;
+        public void Initialize(IGameplayAbilitySystem system) => System = system;
 
         public string DistinctName => NameTag.GetName();
         
