@@ -1837,24 +1837,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 83e69246ef21ad746bcb8c027a046c9e, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  Attribute:
-    Id: 2024563611
-    Name: 
-  Tag:
-    Id: 0
-    Name: 
-  Entity:
-    Id: 0
-    Name: 
-  Ability:
-    Id: 623124478
-    Name: 
-  AttributeSet:
-    Id: 0
-    Name: 
-  Effect:
-    Id: 1936351276
-    Name: 
 --- !u!1 &1959495255
 GameObject:
   m_ObjectHideFlags: 0

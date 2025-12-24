@@ -8,6 +8,7 @@ namespace FarEmerald.PlayForge
 {
     public class AttributeWorkerGroup : AbstractAttributeWorker
     {
+        [SerializeReference]
         public List<AbstractAttributeWorker> ChangeEvents;
         
         public override void Activate(IGameplayAbilitySystem system, Dictionary<Attribute, CachedAttributeValue> attributeCache,

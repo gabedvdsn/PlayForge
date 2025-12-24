@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using FarEmerald.PlayForge.Extended;
 
 namespace FarEmerald.PlayForge
 {
@@ -27,16 +28,6 @@ namespace FarEmerald.PlayForge
             public const string Cooldown = "GC_Cooldown";
 
             public const string Visibility = "GC_VISIBILITY";
-
-            public static List<Tag> GetContexts()
-            {
-                return new List<Tag>()
-                {
-                    Tag.Generate(Identifier),
-                    Tag.Generate(Cost),
-                    Tag.Generate(Cooldown)
-                };
-            }
         }
         
         #endregion

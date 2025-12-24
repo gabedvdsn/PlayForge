@@ -33,8 +33,8 @@ namespace FarEmerald.PlayForge
         public float InitializeTime => initializeTime;
         private float initializeTime;
         
-        public float UpdateTime => updateTime;
-        private float updateTime;
+        public float TotalUpdateTime => totalUpdateTime;
+        private float totalUpdateTime;
 
         public bool IsInitialized => isInitialized;
         private bool isInitialized;
@@ -85,7 +85,7 @@ namespace FarEmerald.PlayForge
             Process.Relay = new ProcessRelay(this);
             
             State = EProcessState.Created;
-            updateTime = 0;
+            totalUpdateTime = 0;
         }
 
         public static ProcessControlBlock Generate(int cacheIndex, AbstractProcessWrapper process, IGameplayProcessHandler handler)
@@ -194,9 +194,37 @@ namespace FarEmerald.PlayForge
 
         public void Step(EProcessStepTiming timing)
         {
-            Process.WhenUpdate(timing, Process.Relay);
+            switch (timing)
+            {
+
+                case EProcessStepTiming.None:
+                    break;
+                case EProcessStepTiming.Update:
+                    Process.WhenUpdate(Process.Relay);
+                    break;
+                case EProcessStepTiming.LateUpdate:
+                    Process.WhenLateUpdate(Process.Relay);
+                    break;
+                case EProcessStepTiming.FixedUpdate:
+                    Process.WhenFixedUpdate(Process.Relay);
+                    break;
+                case EProcessStepTiming.UpdateAndLate:
+                    Process.WhenUpdate(Process.Relay);
+                    Process.WhenLateUpdate(Process.Relay);
+                    break;
+                case EProcessStepTiming.UpdateAndFixed:
+                    Process.WhenUpdate(Process.Relay);
+                    Process.WhenFixedUpdate(Process.Relay);
+                    break;
+                case EProcessStepTiming.LateAndFixed:
+                    Process.WhenLateUpdate(Process.Relay);
+                    Process.WhenFixedUpdate(Process.Relay);
+                    break;
+                default:
+                    throw new ArgumentOutOfRangeException(nameof(timing), timing, null);
+            }
             
-            updateTime += Time.deltaTime;
+            totalUpdateTime += Time.deltaTime;
         }
         
         private async UniTask RunProcess()
@@ -205,7 +233,7 @@ namespace FarEmerald.PlayForge
             
             hasRun = true;
             
-            if (!midRun) updateTime = 0f;
+            if (!midRun) totalUpdateTime = 0f;
             midRun = false;
 
             bool set = true;
@@ -244,13 +272,13 @@ namespace FarEmerald.PlayForge
         }
 
         public int CacheIndex => pcb.CacheIndex;
-        public AbstractProcessWrapper Process => pcb.Process;
+        public AbstractProcessWrapper Wrapper => pcb.Process;
         public IGameplayProcessHandler Handler => pcb.Handler;
         public EProcessState State => pcb.State;
         public EProcessState QueuedState => pcb.queuedState;
         public float UnscaledLifetime => pcb.UnscaledLifetime;
         public float Lifetime => pcb.Lifetime;
-        public float UpdateTime => pcb.UpdateTime;
+        public float UpdateTime => pcb.TotalUpdateTime;
 
         public bool TryGetProcess<T>(out T process)
         {

@@ -42,7 +42,7 @@ namespace FarEmerald.PlayForge
             activeMono.WhenInitialize(relay);
         }
 
-        public override void WhenUpdate(EProcessStepTiming timing, ProcessRelay relay)
+        public override void WhenUpdate(ProcessRelay relay)
         {
             activeMono.WhenUpdate(relay);
         }

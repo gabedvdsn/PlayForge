@@ -7,27 +7,21 @@ using UnityEngine;
 
 namespace FarEmerald.PlayForge
 {
-    public readonly struct Attribute : IEquatable<Attribute>, IHasReadableDefinition
+    [CreateAssetMenu(menuName = "PlayForge/Attribute", fileName = "Attribute_")]
+    public class Attribute : BaseForgeObject, IHasReadableDefinition, IValidationReady
     {
-        private readonly string Name;
-        private readonly string Description;
+        public string Name;
+        public string Description;
         
-        private Attribute(string name, string description) 
-        {
-            Name = name;
-            Description = description;
-        }
-        
-        public static Attribute Generate(string name, string description)
-        {
-            return new Attribute(name, description);
-        }
-
         #region Internal
         
         public string GetName()
         {
             return Name;
+        }
+        public override HashSet<Tag> GetAllTags()
+        {
+            return new HashSet<Tag>();
         }
 
         public string GetDescription()
@@ -41,13 +35,13 @@ namespace FarEmerald.PlayForge
 
         public bool Equals(Attribute other)
         {
-            return other.Name == Name;
+            return other == this;
         }
         
         public override bool Equals(object obj) => obj is Attribute other && Equals(other);
 
-        public override int GetHashCode() => HashCode.Combine(Name, Description);
-        
+        public override int GetHashCode() => base.GetHashCode();
+
         #endregion
     }
 }

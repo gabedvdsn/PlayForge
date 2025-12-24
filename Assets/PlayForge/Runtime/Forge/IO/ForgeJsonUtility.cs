@@ -12,10 +12,22 @@ using UnityEngine;
 namespace FarEmerald.PlayForge.Extended
 {
     /// <summary>
-    /// JSON helpers for settings (Dictionary<Tag, object>) and framework data.
+    /// JSON helpers for settings (Dictionary<ForgeTag, object>) and framework data.
     /// </summary>
     public static class ForgeJsonUtility
     {
+        public static bool TryGet(this List<DataWrapper> list, Tag key, out DataWrapper data)
+        {
+            data = list.FirstOrDefault(item => item.Key == key);
+            return data != default;
+        }
+        
+        public static bool TryGet(this List<DataWrapper> list, Tag key, EDataWrapperType type, out DataWrapper data)
+        {
+            data = list.FirstOrDefault(item => item.Key == key && item.Type == type);
+            return data != default;
+        }
+        
         [Serializable]
         public sealed class SettingsWrapper
         {

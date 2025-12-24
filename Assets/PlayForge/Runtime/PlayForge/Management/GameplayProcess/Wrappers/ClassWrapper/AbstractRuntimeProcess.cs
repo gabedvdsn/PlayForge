@@ -1,10 +1,11 @@
-﻿using System.Threading;
+﻿using System.Linq;
+using System.Threading;
 using Cysharp.Threading.Tasks;
 using UnityEngine;
 
 namespace FarEmerald.PlayForge
 {
-    public abstract class AbstractRuntimeProcess
+    public abstract class AbstractRuntimeProcess : IProxyTaskBehaviourCaller
     {
         protected bool processActive;
 
@@ -38,12 +39,17 @@ namespace FarEmerald.PlayForge
 
         public abstract void WhenInitialize(ProcessRelay relay);
 
-        /// <summary>
-        /// Called via Step in ProcessControl as determined by the process's StepUpdateTiming
-        /// </summary>
-        /// <param name="timing">Step timing</param>
-        /// <param name="relay">Process Relay</param>
-        public abstract void WhenUpdate(EProcessStepTiming timing, ProcessRelay relay);
+        public virtual void WhenUpdate(ProcessRelay relay)
+        {
+        }
+
+        public virtual void WhenFixedUpdate(ProcessRelay relay)
+        {
+        }
+
+        public virtual void WhenLateUpdate(ProcessRelay relay)
+        {
+        }
         
         /// <summary>
         /// Called via ProcessControl when the process is set to Waiting
@@ -95,5 +101,20 @@ namespace FarEmerald.PlayForge
         public virtual EProcessLifecycle Lifecycle => lifecycle;
         
         public virtual int StepPriority => stepPriority;
+        public abstract void RunCompositeBehaviour(Tag command, AbstractProxyTaskBehaviour cb, IProxyTaskBehaviourCaller caller);
+        public abstract UniTask RunCompositeBehaviourAsync(Tag command, AbstractProxyTaskBehaviour cb, IProxyTaskBehaviourCaller caller, CancellationToken token);
+        public abstract UniTask CallBehaviour(Tag cmd, AbstractProxyTaskBehaviour cb, CancellationToken token);
+        public async UniTask CallBehaviour(Tag cmd, AbstractProxyTaskBehaviour cb, IProxyTaskBehaviourUser user, CancellationToken token)
+        {
+            var run = cb.RunAsync(token);
+            await user.RunCompositeBehaviourAsync(cmd, cb, this, token);
+            await run;
+            cb.End();
+        }
+        public async UniTask CallBehaviour(Tag cmd, AbstractProxyTaskBehaviour cb, IProxyTaskBehaviourUser[] users, CancellationToken token)
+        {
+            var tasks = users.Select(user => CallBehaviour(cmd, cb.CreateInstance(), user, token)).ToArray();
+            await UniTask.WhenAll(tasks);
+        }
     }
 }

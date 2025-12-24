@@ -4,6 +4,7 @@ using UnityEngine;
 
 namespace FarEmerald.PlayForge
 {
+    [Serializable]
     public abstract class AbstractAttributeWorker
     {
         public abstract void Activate(IGameplayAbilitySystem system, Dictionary<Attribute, CachedAttributeValue> attributeCache,

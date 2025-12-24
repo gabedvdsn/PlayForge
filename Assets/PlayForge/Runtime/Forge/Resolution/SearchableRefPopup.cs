@@ -12,33 +12,33 @@ namespace FarEmerald.PlayForge
     internal class SearchableRefPopup : PopupWindowContent
     {
         readonly string _title;
-        readonly List<DataEntry> _items;   // already filtered by the caller (validation)
-        readonly int _currentId;
-        readonly Action<int> _onChoose;
+        readonly List<string> _items;   // already filtered by the caller (validation)
+        readonly string _currValue;
+        readonly Action<string> _onChoose;
 
         string _query = "";
         Vector2 _scroll;
         int _hoverIndex = -1;  // index within filtered list
-        List<DataEntry> _filtered;
+        List<string> _filtered;
 
-        const int NoneId = 0;
+        const string NoneValue = "";
 
-        public static void Show(Rect activatorRect, string title, IEnumerable<DataEntry> items, int currentId, Action<int> onChoose)
+        public static void Show(Rect activatorRect, string title, IEnumerable<string> items, string currValue, Action<string> onChoose)
         {
-            var list = items?.ToList() ?? new List<DataEntry>();
-            var popup = new SearchableRefPopup(title, list, currentId, onChoose);
+            var list = items?.ToList() ?? new List<string>();
+            var popup = new SearchableRefPopup(title, list, currValue, onChoose);
             PopupWindow.Show(activatorRect, popup);
         }
 
-        SearchableRefPopup(string title, List<DataEntry> items, int currentId, Action<int> onChoose)
+        SearchableRefPopup(string title, List<string> items, string currentValue, Action<string> onChoose)
         {
             _title = $" {title}";
             _items = items;
-            _currentId = currentId;
+            _currValue = currentValue;
             _onChoose = onChoose;
             RebuildFilter();
             // set hover to current item if present
-            _hoverIndex = _filtered.FindIndex(e => e.Id == currentId);
+            _hoverIndex = _filtered.FindIndex(e => string.Equals(e, currentValue));
         }
 
         public override Vector2 GetWindowSize() => new Vector2(360, 360);
@@ -62,7 +62,7 @@ namespace FarEmerald.PlayForge
 
             // None row
             var noneRect = new Rect(rect.x, searchRect.yMax + 4, rect.width, EditorGUIUtility.singleLineHeight + 2);
-            DrawRow(noneRect, new GUIContent("<None>"), _currentId == NoneId, -1, () => Choose(NoneId));
+            DrawRow(noneRect, new GUIContent("<None>"), _currValue == NoneValue, -1, () => Choose(NoneValue));
 
             // List
             var listTop = noneRect.yMax + 2;
@@ -78,9 +78,9 @@ namespace FarEmerald.PlayForge
             for (int i = 0; i < totalRows; i++)
             {
                 var r = new Rect(0, i * rowHeight, listRect.width - 16, rowHeight);
-                bool isCurrent = _filtered[i].Id == _currentId;
+                bool isCurrent = _filtered[i] == _currValue;
                 bool isHover = i == _hoverIndex;
-                DrawRow(r, new GUIContent(DisplayName(_filtered[i])), isCurrent, i, () => Choose(_filtered[i].Id), isHover);
+                DrawRow(r, new GUIContent(_filtered[i]), isCurrent, i, () => Choose(_filtered[i]), isHover);
             }
             GUI.EndScrollView();
         }
@@ -106,33 +106,25 @@ namespace FarEmerald.PlayForge
             if (r.Contains(Event.current.mousePosition))
                 _hoverIndex = index;
         }
-
-        static string DisplayName(DataEntry e)
-        {
-            if (e == null) return "<null>";
-            return string.IsNullOrEmpty(e.Name) ? $"<{e.Id}>" : e.Name;
-        }
-
+        
         void RebuildFilter()
         {
             var q = (_query ?? "").Trim().ToLowerInvariant();
-            IEnumerable<DataEntry> seq = _items;
+            IEnumerable<string> seq = _items;
             if (q.Length > 0)
             {
                 seq = seq.Where(e =>
-                    (e?.Name ?? "").ToLowerInvariant().Contains(q) ||
-                    e.Id.ToString().Contains(q));
+                    (e ?? "").ToLowerInvariant().Contains(q));
+                // TODO add category filtering here
             }
             // sort by name, then id
-            _filtered = seq.OrderBy(e => e?.Name ?? "", StringComparer.OrdinalIgnoreCase)
-                           .ThenBy(e => e?.Id ?? 0)
-                           .ToList();
+            _filtered = seq.OrderBy(e => e ?? "", StringComparer.OrdinalIgnoreCase).ToList();
             if (_filtered.Count == 0) _hoverIndex = -1;
         }
 
-        void Choose(int id)
+        void Choose(string value)
         {
-            _onChoose?.Invoke(id);
+            _onChoose?.Invoke(value);
         }
 
         void HandleKeyboard()
@@ -154,8 +146,8 @@ namespace FarEmerald.PlayForge
                     break;
                 case KeyCode.Return:
                 case KeyCode.KeypadEnter:
-                    if (_hoverIndex >= 0 && _hoverIndex < _filtered.Count) Choose(_filtered[_hoverIndex].Id);
-                    else Choose(NoneId);
+                    if (_hoverIndex >= 0 && _hoverIndex < _filtered.Count) Choose(_filtered[_hoverIndex]);
+                    else Choose(NoneValue);
                     editorWindow?.Close();
                     e.Use();
                     break;

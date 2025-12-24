@@ -6,12 +6,15 @@ using UnityEngine.Serialization;
 
 namespace FarEmerald.PlayForge
 {
-    public class AttributeSet
+    [CreateAssetMenu(menuName = "PlayForge/Attribute Set", fileName = "AttributeSet_")]
+    public class AttributeSet : BaseForgeObject
     {
+        [SerializeField]
         public List<AttributeSetElement> Attributes = new();
         
         [Space]
         
+        [SerializeReference]
         public List<AttributeSet> SubSets = new();
         public EValueCollisionPolicy CollisionResolutionPolicy = EValueCollisionPolicy.UseMaximum;
         
@@ -38,6 +41,10 @@ namespace FarEmerald.PlayForge
             }
 
             return attributes;
+        }
+        public override HashSet<Tag> GetAllTags()
+        {
+            return new HashSet<Tag>();
         }
     }
     

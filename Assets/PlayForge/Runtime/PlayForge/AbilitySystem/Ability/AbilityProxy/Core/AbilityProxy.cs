@@ -51,10 +51,10 @@ namespace FarEmerald.PlayForge
             try
             {
                 // If there is a targeting task assigned...
-                if (Behaviour.targeting is not null)
+                if (Behaviour.Targeting is not null)
                 {
-                    Behaviour.targeting.Prepare(implicitData);
-                    await Behaviour.targeting.Activate(implicitData, token);
+                    Behaviour.Targeting.Prepare(implicitData);
+                    await Behaviour.Targeting.Activate(implicitData, token);
                 }
             }
             catch (OperationCanceledException)
@@ -63,7 +63,7 @@ namespace FarEmerald.PlayForge
             }
             finally
             {
-                Behaviour.targeting?.Clean(implicitData);
+                Behaviour.Targeting?.Clean(implicitData);
             }
         }
 

@@ -1,0 +1,164 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d5a42dbe2415465689d11a1e8ae1fdbc, type: 3}
+  m_Name: Ability_TEST
+  m_EditorClassIdentifier: 
+  Definition:
+    Name: Test Ability
+    Description: This is a description for this Abilit and I promise it has a lot
+      of cintersting and useful information in here! hgwoever i sdio asdaopd iasdoiuansdo
+      ansdoaisdna sdasoid adas isi ns insis isaa
+    ActivationPolicy: 0
+    ActivateImmediately: 0
+    UnlearnedIcon: {fileID: 0}
+    NormalIcon: {fileID: 0}
+    QueuedIcon: {fileID: 0}
+    OnCooldownIcon: {fileID: 0}
+  Tags:
+    AssetTag:
+      Name: Melee
+    ContextTags: []
+    PassiveGrantedTags: []
+    ActiveGrantedTags:
+    - Name: Poison
+    TestTag:
+      Name: Melee
+    SourceRequirements:
+      AvoidTags:
+      - Name: Burning
+      RequireTags:
+      - Name: Poison
+      - Name: Flying
+      - Name: Apparent
+      - Name: Melee
+      - Name: Melee
+    TargetRequirements:
+      AvoidTags:
+      - Name: Glamping
+      RequireTags: []
+  Proxy:
+    Targeting:
+      rid: 6446561461186854989
+    UseImplicitTargeting: 1
+    Stages:
+    - StagePolicy:
+        rid: -2
+      Tasks:
+      - rid: 6446561441006748319
+      - rid: 6446561461186854999
+      - rid: 6446561461186855000
+      - rid: 6446561461186855003
+      ApplyUsageEffects: 0
+    - StagePolicy:
+        rid: -2
+      Tasks: []
+      ApplyUsageEffects: 0
+  SourceActivationRules:
+  - rid: 6446561441006747940
+  - rid: 6446561461186855515
+  - rid: 6446561464323670381
+  TargetActivationRules:
+  - rid: 6446561464323670380
+  LocalData:
+  - Key:
+      Name: Glamping
+    Type: 7
+    stringValue: 
+    intValue: 0
+    floatValue: 0
+    objectValue: {fileID: 0}
+    tagValue:
+      Name: 
+    attributeValue: {fileID: 0}
+    effectValue: {fileID: 11400000, guid: 814ed360c11a8554aa87b70f14fd4dd3, type: 2}
+    abilityValue: {fileID: 11400000}
+    entityValue: {fileID: 0}
+  - Key:
+      Name: Self-Cast
+    Type: 3
+    stringValue: Hello world
+    intValue: 0
+    floatValue: 60
+    objectValue: {fileID: 0}
+    tagValue:
+      Name: 
+    attributeValue: {fileID: 0}
+    effectValue: {fileID: 0}
+    abilityValue: {fileID: 11400000}
+    entityValue: {fileID: 0}
+  - Key:
+      Name: Electronics
+    Type: 8
+    stringValue: Hello world
+    intValue: 0
+    floatValue: 0
+    objectValue: {fileID: 0}
+    tagValue:
+      Name: Glamping
+    attributeValue: {fileID: 0}
+    effectValue: {fileID: 11400000, guid: 814ed360c11a8554aa87b70f14fd4dd3, type: 2}
+    abilityValue: {fileID: 0}
+    entityValue: {fileID: 0}
+  StartingLevel: 0
+  MaxLevel: 4
+  IgnoreWhenLevelZero: 1
+  Cost: {fileID: 11400000, guid: 06b4dcfad77cc814b8318eee577e73bf, type: 2}
+  Cooldown: {fileID: 11400000, guid: 814ed360c11a8554aa87b70f14fd4dd3, type: 2}
+  AttributeWorkers: []
+  TagWorkers: []
+  ImpactWorkers: []
+  AnalysisWorkers: []
+  references:
+    version: 2
+    RefIds:
+    - rid: -2
+      type: {class: , ns: , asm: }
+    - rid: 6446561441006747940
+      type: {class: CooldownValidation, ns: FarEmerald.PlayForge, asm: Assembly-CSharp}
+      data: 
+    - rid: 6446561441006748319
+      type: {class: ApplyRemoveEffectsAbilityTask, ns: FarEmerald.PlayForge, asm: Assembly-CSharp}
+      data:
+        Effects:
+        - {fileID: 11400000, guid: 814ed360c11a8554aa87b70f14fd4dd3, type: 2}
+    - rid: 6446561461186854989
+      type: {class: GetTestTargetTask, ns: FarEmerald.PlayForge, asm: Assembly-CSharp}
+      data: 
+    - rid: 6446561461186854999
+      type: {class: ChannelAbilityTask, ns: FarEmerald.PlayForge, asm: Assembly-CSharp}
+      data:
+        ChannelDuration: 0
+        Timing: 8
+    - rid: 6446561461186855000
+      type: {class: ApplyRemoveEffectsAbilityTask, ns: FarEmerald.PlayForge, asm: Assembly-CSharp}
+      data:
+        Effects:
+        - {fileID: 11400000, guid: 814ed360c11a8554aa87b70f14fd4dd3, type: 2}
+        - {fileID: 11400000, guid: a4db83a028f59954fbcef24a317efd69, type: 2}
+    - rid: 6446561461186855003
+      type: {class: DisjointAbilityTask, ns: FarEmerald.PlayForge, asm: Assembly-CSharp}
+      data: 
+    - rid: 6446561461186855515
+      type: {class: CostValidation, ns: FarEmerald.PlayForge, asm: Assembly-CSharp}
+      data: 
+    - rid: 6446561464323670380
+      type: {class: TargetAttributeValidation, ns: FarEmerald.PlayForge, asm: Assembly-CSharp}
+      data:
+        Attribute: {fileID: 11400000, guid: 125a0d134c497f34c91ef890931b1ec2, type: 2}
+        Comparison: 0
+        Threshold: 0
+    - rid: 6446561464323670381
+      type: {class: SourceAttributeValidation, ns: FarEmerald.PlayForge, asm: Assembly-CSharp}
+      data:
+        Attribute: {fileID: 11400000, guid: 125a0d134c497f34c91ef890931b1ec2, type: 2}
+        Comparison: 0
+        Value: 0

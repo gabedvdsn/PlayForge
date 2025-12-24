@@ -1,0 +1,83 @@
+<ui:UXML xmlns:ui="UnityEngine.UIElements" xmlns:uie="UnityEditor.UIElements" editor-extension-mode="True">
+    <ui:VisualElement name="Header" style="flex-direction: row; min-height: 72px; margin-top: 4px; margin-bottom: 8px; padding: 4px; background-color: rgba(30, 30, 30, 0.4); border-radius: 4px; border-width: 1px; border-color: rgb(35, 35, 35);">
+        <ui:VisualElement name="HeaderIcon" style="width: 56px; height: 56px; min-width: 56px; min-height: 56px; flex-shrink: 0; background-image: url(&quot;project://database/Assets/PlayForge/Editor/Icons/Creator/effect.png?fileID=2800000&amp;guid=3cff30482e62a77469883c74796d0c61&amp;type=3#effect&quot;); -unity-background-scale-mode: scale-to-fit; border-radius: 3px; border-width: 1px; border-color: rgb(35, 35, 35); margin-right: 8px; align-self: center;" />
+        <ui:VisualElement style="flex-grow: 1; justify-content: center;">
+            <ui:VisualElement style="flex-direction: row; align-items: center;">
+                <ui:Label text="Effect Name" name="Name" style="flex-grow: 1; font-size: 16px; -unity-font-style: bold; padding-left: 4px; padding-right: 8px; -unity-text-align: middle-left; color: rgb(220, 220, 220);" />
+                <ui:VisualElement style="flex-direction: row; flex-shrink: 0;">
+                    <ui:Button text="□" name="Visualize" tooltip="Visualize" focusable="false" style="width: 24px; height: 24px; min-width: 24px; min-height: 24px; max-width: 24px; max-height: 24px; margin-left: 2px; margin-right: 2px; border-radius: 3px; -unity-font-style: bold; font-size: 12px; background-color: rgb(80, 80, 80);" />
+                    <ui:Button text="□" name="Refresh" tooltip="Refresh" focusable="false" style="width: 24px; height: 24px; min-width: 24px; min-height: 24px; max-width: 24px; max-height: 24px; margin-left: 2px; margin-right: 2px; border-radius: 3px; -unity-font-style: bold; font-size: 12px; background-color: rgb(80, 80, 80);" />
+                    <ui:Button text="⌕" name="Lookup" tooltip="Lookup" focusable="false" style="width: 24px; height: 24px; min-width: 24px; min-height: 24px; max-width: 24px; max-height: 24px; margin-left: 2px; margin-right: 2px; border-radius: 3px; -unity-font-style: bold; font-size: 12px; background-color: rgb(80, 80, 80);" />
+                </ui:VisualElement>
+            </ui:VisualElement>
+            <ui:Label text="About this Effect..." name="Description" style="font-size: 11px; padding-left: 4px; padding-top: 2px; -unity-text-align: middle-left; color: rgb(160, 160, 160); white-space: normal; text-overflow: ellipsis; overflow: hidden; max-height: 32px;" />
+        </ui:VisualElement>
+    </ui:VisualElement>
+    <ui:VisualElement name="DefinitionSection" style="margin-bottom: 4px;">
+        <ui:VisualElement style="flex-direction: row; align-items: center; margin-top: 8px; margin-bottom: 4px; padding-left: 2px; padding-right: 2px;">
+            <ui:Label text="Definition" style="font-size: 14px; -unity-font-style: bold; -unity-text-align: middle-left; color: rgb(200, 200, 200); padding-right: 8px; flex-shrink: 0;" />
+            <ui:VisualElement style="flex-grow: 1; height: 1px; background-color: rgb(100, 100, 100); margin-left: 4px; margin-right: 8px; align-self: center; border-radius: 1px;" />
+            <ui:Button text="?" name="DefinitionHelp" tooltip="Help" style="width: 20px; height: 20px; min-width: 20px; min-height: 20px; max-width: 20px; max-height: 20px; border-radius: 10px; margin-left: 4px; -unity-font-style: bold; font-size: 11px; padding: 0; border-width: 0; background-color: rgb(131, 91, 154);" />
+        </ui:VisualElement>
+        <ui:VisualElement name="Definition" style="padding-left: 8px; padding-right: 4px; padding-top: 4px; padding-bottom: 8px; margin-left: 2px; border-left-width: 2px; border-left-color: rgba(100, 100, 100, 0.3);">
+            <ui:TextField label="Name" name="Name" style="margin-bottom: 2px; margin-top: 1px;" />
+            <ui:TextField label="Description" name="Description" multiline="true" style="margin-bottom: 2px; margin-top: 1px; min-height: 40px;" />
+            <ui:VisualElement style="flex-direction: row;">
+                <uie:PropertyField name="Visibility" label="Visibility" style="flex-grow: 1; margin-right: 8px; margin-bottom: 2px; margin-top: 1px;" />
+                <uie:PropertyField name="Icon" label="Icon" style="flex-grow: 1; margin-bottom: 2px; margin-top: 1px;" />
+            </ui:VisualElement>
+        </ui:VisualElement>
+    </ui:VisualElement>
+    <ui:VisualElement name="TagsSection" style="margin-bottom: 4px;">
+        <ui:VisualElement style="flex-direction: row; align-items: center; margin-top: 8px; margin-bottom: 4px; padding-left: 2px; padding-right: 2px;">
+            <ui:Label text="Tags" style="font-size: 14px; -unity-font-style: bold; -unity-text-align: middle-left; color: rgb(200, 200, 200); padding-right: 8px; flex-shrink: 0;" />
+            <ui:VisualElement style="flex-grow: 1; height: 1px; background-color: rgb(100, 100, 100); margin-left: 4px; margin-right: 8px; align-self: center; border-radius: 1px;" />
+            <ui:Button text="?" name="TagsHelp" tooltip="Help" style="width: 20px; height: 20px; min-width: 20px; min-height: 20px; max-width: 20px; max-height: 20px; border-radius: 10px; margin-left: 4px; -unity-font-style: bold; font-size: 11px; padding: 0; border-width: 0; background-color: rgb(131, 91, 154);" />
+        </ui:VisualElement>
+        <ui:VisualElement name="Tags" style="padding-left: 8px; padding-right: 4px; padding-top: 4px; padding-bottom: 8px; margin-left: 2px; border-left-width: 2px; border-left-color: rgba(100, 100, 100, 0.3);">
+            <uie:PropertyField name="AssetTag" label="Asset Tag" style="margin-bottom: 2px; margin-top: 1px;" />
+            <uie:PropertyField name="ContextTags" label="Context Tags" style="margin-bottom: 2px; margin-top: 1px;" />
+            <uie:PropertyField name="GrantedTags" label="Granted Tags" style="margin-bottom: 2px; margin-top: 1px;" />
+        </ui:VisualElement>
+    </ui:VisualElement>
+    <ui:VisualElement name="ImpactSection" style="margin-bottom: 4px;">
+        <ui:VisualElement style="flex-direction: row; align-items: center; margin-top: 8px; margin-bottom: 4px; padding-left: 2px; padding-right: 2px;">
+            <ui:Label text="Impact &amp; Duration" style="font-size: 14px; -unity-font-style: bold; -unity-text-align: middle-left; color: rgb(200, 200, 200); padding-right: 8px; flex-shrink: 0;" />
+            <ui:VisualElement style="flex-grow: 1; height: 1px; background-color: rgb(100, 100, 100); margin-left: 4px; margin-right: 8px; align-self: center; border-radius: 1px;" />
+            <ui:Button text="?" name="ImpactHelp" tooltip="Help" style="width: 20px; height: 20px; min-width: 20px; min-height: 20px; max-width: 20px; max-height: 20px; border-radius: 10px; margin-left: 4px; -unity-font-style: bold; font-size: 11px; padding: 0; border-width: 0; background-color: rgb(131, 91, 154);" />
+        </ui:VisualElement>
+        <ui:VisualElement name="Impact" style="padding-left: 8px; padding-right: 4px; padding-top: 4px; padding-bottom: 8px; margin-left: 2px; border-left-width: 2px; border-left-color: rgba(150, 100, 100, 0.4);">
+            <uie:PropertyField name="ImpactSpecification" label="Impact Specification" style="margin-bottom: 8px; margin-top: 1px;" />
+            <uie:PropertyField name="DurationSpecification" label="Duration Specification" style="margin-bottom: 2px; margin-top: 1px;" />
+        </ui:VisualElement>
+    </ui:VisualElement>
+    <ui:VisualElement name="WorkersSection" style="margin-bottom: 4px;">
+        <ui:VisualElement style="flex-direction: row; align-items: center; margin-top: 8px; margin-bottom: 4px; padding-left: 2px; padding-right: 2px;">
+            <ui:Label text="Workers" style="font-size: 14px; -unity-font-style: bold; -unity-text-align: middle-left; color: rgb(200, 200, 200); padding-right: 8px; flex-shrink: 0;" />
+            <ui:VisualElement style="flex-grow: 1; height: 1px; background-color: rgb(100, 100, 100); margin-left: 4px; margin-right: 8px; align-self: center; border-radius: 1px;" />
+            <ui:Button text="?" name="WorkersHelp" tooltip="Help" style="width: 20px; height: 20px; min-width: 20px; min-height: 20px; max-width: 20px; max-height: 20px; border-radius: 10px; margin-left: 4px; -unity-font-style: bold; font-size: 11px; padding: 0; border-width: 0; background-color: rgb(131, 91, 154);" />
+        </ui:VisualElement>
+        <ui:VisualElement name="Workers" style="padding-left: 8px; padding-right: 4px; padding-top: 4px; padding-bottom: 8px; margin-left: 2px; border-left-width: 2px; border-left-color: rgba(180, 140, 80, 0.4);">
+            <uie:PropertyField name="Workers" style="margin-bottom: 2px; margin-top: 1px;" />
+        </ui:VisualElement>
+    </ui:VisualElement>
+    <ui:VisualElement name="RequirementsSection" style="margin-bottom: 4px;">
+        <ui:VisualElement style="flex-direction: row; align-items: center; margin-top: 8px; margin-bottom: 4px; padding-left: 2px; padding-right: 2px;">
+            <ui:Label text="Requirements" style="font-size: 14px; -unity-font-style: bold; -unity-text-align: middle-left; color: rgb(200, 200, 200); padding-right: 8px; flex-shrink: 0;" />
+            <ui:VisualElement style="flex-grow: 1; height: 1px; background-color: rgb(100, 100, 100); margin-left: 4px; margin-right: 8px; align-self: center; border-radius: 1px;" />
+            <ui:Button text="?" name="RequirementsHelp" tooltip="Help" style="width: 20px; height: 20px; min-width: 20px; min-height: 20px; max-width: 20px; max-height: 20px; border-radius: 10px; margin-left: 4px; -unity-font-style: bold; font-size: 11px; padding: 0; border-width: 0; background-color: rgb(131, 91, 154);" />
+        </ui:VisualElement>
+        <ui:VisualElement name="Requirements" style="padding-left: 8px; padding-right: 4px; padding-top: 4px; padding-bottom: 8px; margin-left: 2px; border-left-width: 2px; border-left-color: rgba(100, 100, 100, 0.3);">
+            <ui:Foldout text="Source Requirements" value="false" style="margin-top: 4px; margin-bottom: 4px;">
+                <ui:VisualElement style="margin-bottom: 8px; padding: 6px; background-color: rgba(60, 60, 60, 0.3); border-radius: 3px;">
+                    <uie:PropertyField name="SourceRequirements" style="margin-bottom: 2px; margin-top: 1px;" />
+                </ui:VisualElement>
+            </ui:Foldout>
+            <ui:Foldout text="Target Requirements" value="false" style="margin-top: 4px; margin-bottom: 4px;">
+                <ui:VisualElement style="margin-bottom: 8px; padding: 6px; background-color: rgba(60, 60, 60, 0.3); border-radius: 3px;">
+                    <uie:PropertyField name="TargetRequirements" style="margin-bottom: 2px; margin-top: 1px;" />
+                </ui:VisualElement>
+            </ui:Foldout>
+        </ui:VisualElement>
+    </ui:VisualElement>
+</ui:UXML>

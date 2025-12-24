@@ -135,34 +135,7 @@ namespace FarEmerald.PlayForge.Extended
 
         public static ForgeJsonUtility.SettingsWrapper CreateDefaultLocalSettings()
         {
-            var data = new Dictionary<Tag, object>()
-            {
-                { ForgeTags.Settings.DATE_CREATED, DateTime.UtcNow.ToString(CultureInfo.InvariantCulture) },
-                { ForgeTags.Settings.FW_HAS_UNSAVED_WORK, false },
-                { ForgeTags.Settings.ROOT_TEMPLATE_ASSIGNMENTS, new Dictionary<EDataType, int>() },
-                { ForgeTags.Settings.QUICK_TEMPLATE_ASSIGNMENTS, new Dictionary<EDataType, List<int>>() }
-            };
-            
-            // Add settings
-            data[ForgeTags.Settings.ROOT_TEMPLATE_ASSIGNMENTS] = new Dictionary<EDataType, int>()
-            {
-                { EDataType.Ability, -1 },
-                { EDataType.Attribute, -1 },
-                { EDataType.AttributeSet, -1 },
-                { EDataType.Effect, -1 },
-                { EDataType.Entity, -1 },
-                { EDataType.Tag, -1 },
-            };
-            
-            data[ForgeTags.Settings.QUICK_TEMPLATE_ASSIGNMENTS] = new Dictionary<EDataType, List<int>>()
-            {
-                { EDataType.Ability, new List<int>() },
-                { EDataType.Attribute, new List<int>() },
-                { EDataType.AttributeSet, new List<int>() },
-                { EDataType.Effect, new List<int>() },
-                { EDataType.Entity, new List<int>() },
-                { EDataType.Tag, new List<int>() }
-            };
+            var data = new Dictionary<Tag, object>();
 
             return new ForgeJsonUtility.SettingsWrapper(data);
         }

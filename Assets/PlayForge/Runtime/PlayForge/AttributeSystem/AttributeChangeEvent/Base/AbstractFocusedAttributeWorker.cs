@@ -16,12 +16,13 @@ namespace FarEmerald.PlayForge
         
         [Tooltip("The attribute to screen for")]
         public Attribute TargetAttribute;
+        [Tooltip("Include attribute changes where the source and target are the same")]
+        public bool AllowSelfModification;
         [Tooltip("The change in attribute type to screen for")]
         public EEffectImpactTargetExpanded TargetModification;
         [Tooltip("Exclude changes that do not exactly meet the target modification type\nE.g. Current when CurrentAndBase")]
         public bool ExclusivelyTargetModification;
-        [Tooltip("Include attribute changes where the source and target are the same")]
-        public bool AllowSelfModification;
+        
         
         [Space(5)]
         

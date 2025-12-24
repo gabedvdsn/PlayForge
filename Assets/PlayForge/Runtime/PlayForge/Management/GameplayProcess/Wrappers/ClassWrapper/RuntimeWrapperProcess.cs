@@ -25,10 +25,22 @@ namespace FarEmerald.PlayForge
             Process.SendProcessData(Data);
             Process.WhenInitialize(relay);
         }
-        public override void WhenUpdate(EProcessStepTiming timing, ProcessRelay relay)
+        
+        public override void WhenUpdate(ProcessRelay relay)
         {
-            Process.WhenUpdate(timing, relay);
+            Process.WhenUpdate(relay);
         }
+
+        public override void WhenFixedUpdate(ProcessRelay relay)
+        {
+            Process.WhenFixedUpdate(relay);
+        }
+        
+        public override void WhenLateUpdate(ProcessRelay relay)
+        {
+            Process.WhenLateUpdate(relay);
+        }
+
         public override void WhenWait(ProcessRelay relay)
         {
             Process.WhenWait(relay);

@@ -1,6 +1,0 @@
-<ui:UXML xmlns:ui="UnityEngine.UIElements" xmlns:uie="UnityEditor.UIElements" editor-extension-mode="False">
-    <ui:VisualElement name="PresetBar" style="flex-grow: 1; flex-direction: row; max-height: 21px; min-height: 21px; align-items: stretch; align-self: center;">
-        <ui:Button text="No Preset" focusable="false" picking-mode="Ignore" style="margin-right: 0; margin-left: 0; border-top-right-radius: -1px; border-bottom-right-radius: -1px; border-right-width: 0; margin-bottom: 0; margin-top: 0; min-height: 21px; max-height: 21px; background-color: rgb(53, 53, 53); border-left-color: rgb(0, 0, 0); border-right-color: rgb(0, 0, 0); border-top-color: rgb(0, 0, 0); border-bottom-color: rgb(0, 0, 0);" />
-        <ui:Button focusable="false" name="Btn" text="▣" style="margin-right: 0; margin-left: 0; padding-right: 2px; padding-left: 2px; padding-top: 0; padding-bottom: 3px; border-top-left-radius: -1px; border-bottom-left-radius: -1px; margin-top: 0; margin-bottom: 0; max-height: 21px; min-height: 21px; border-left-color: rgb(0, 0, 0); border-right-color: rgb(0, 0, 0); border-top-color: rgb(0, 0, 0); border-bottom-color: rgb(0, 0, 0); max-width: 21px; min-width: 21px; border-top-right-radius: 1px; border-bottom-right-radius: 1px;" />
-    </ui:VisualElement>
-</ui:UXML>

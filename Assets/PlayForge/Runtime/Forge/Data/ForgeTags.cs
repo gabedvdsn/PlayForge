@@ -9,7 +9,7 @@ namespace FarEmerald.PlayForge.Extended
         #region Gasify Tags
 
         /// <summary>
-        /// The key tag for Gasify (editor) related tags
+        /// The key ForgeTag for Gasify (editor) related tags
         /// </summary>
         public static Tag GASIFY_TAGS => Tag.Generate("E_GASIFY_TAGS");
         
@@ -80,7 +80,7 @@ namespace FarEmerald.PlayForge.Extended
         #region Styling Tags
 
         /// <summary>
-        /// The key tag for all styling related tags
+        /// The key ForgeTag for all styling related tags
         /// </summary>
         public static Tag STYLING_TAGS => Tag.Generate("E_STYLING_TAGS");
 
@@ -288,9 +288,9 @@ namespace FarEmerald.PlayForge.Extended
             
             ComputeCompositeTagValues(node, gasify);
 
-            void EnsureTagExists<T>(Tag tag, T fallback)
+            void EnsureTagExists<T>(Tag ForgeTag, T fallback)
             {
-                gasify?.TryAdd(tag, fallback);
+                gasify?.TryAdd(ForgeTag, fallback);
             }
         }
 
@@ -488,33 +488,6 @@ namespace FarEmerald.PlayForge.Extended
             public static Tag SESSION_ID => Tag.Generate("ESM_SESSION_ID");
 
             public static Tag PROMPT_WHEN_INITIALIZE_EDITOR => Tag.Generate("ESM_PROMPT_WHEN_INITIALIZE_EDITOR");
-
-            #endregion
-            
-            #region Local
-
-            public static Tag FW_HAS_UNSAVED_WORK => Tag.Generate("ESL_FW_HAS_UNSAVED_WORK");
-
-            /// <summary>
-            /// Indicates root level template assignments to new data. When an item is drafted, the template is loaded
-            /// </summary>
-            public static Tag ROOT_TEMPLATE_ASSIGNMENTS => Tag.Generate("ESL_ROOT_TEMPLATE_ASSIGNMENTS");
-
-            public static Tag QUICK_TEMPLATE_ASSIGNMENTS => Tag.Generate("ESL_QUICK_TEMPLATE_ASSIGNMENTS");
-
-            /// <summary>
-            /// Indicates the date a framework was created
-            /// </summary>
-            public static Tag DATE_CREATED => Tag.Generate("ESL_DATE_CREATED");
-
-            public static Tag CATEGORIES => Tag.Generate("ESL_CATEGORIES");
-
-            /// <summary>
-            /// Dictionary<Tag, DataType>
-            /// </summary>
-            public static Tag CATEGORY_ASSIGNMENTS => Tag.Generate("ESL_CATEGORY_ASSIGNMENTS");
-
-            public static Tag MAX_CONSOLE_ENTRIES => Tag.Generate("ESL_MAX_CONSOLE_ENTRIES");
 
             #endregion
         }

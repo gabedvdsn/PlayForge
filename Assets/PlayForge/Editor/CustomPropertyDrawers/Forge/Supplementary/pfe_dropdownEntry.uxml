@@ -1,0 +1,15 @@
+<ui:UXML xmlns:ui="UnityEngine.UIElements" xmlns:uie="UnityEditor.UIElements" editor-extension-mode="True">
+    <ui:VisualElement style="flex-grow: 1; display: none;">
+        <ui:Button text="Button" name="Entry" style="max-height: 20px; min-height: 20px;" />
+    </ui:VisualElement>
+    <ui:VisualElement style="flex-grow: 0;">
+        <ui:VisualElement style="flex-grow: 0; flex-direction: row;">
+            <ui:VisualElement style="flex-grow: 0;">
+                <ui:Label text="Stage 0" style="-unity-font-style: bold;" />
+                <ui:Toggle label="Apply Usage Effects" style="font-size: 12px;" />
+            </ui:VisualElement>
+            <ui:Button text="Button" style="max-height: 22px; min-height: 22px;" />
+        </ui:VisualElement>
+        <uie:PropertyField />
+    </ui:VisualElement>
+</ui:UXML>

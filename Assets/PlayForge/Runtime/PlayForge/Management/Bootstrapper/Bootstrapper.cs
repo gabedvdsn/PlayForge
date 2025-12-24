@@ -72,12 +72,6 @@ namespace FarEmerald.PlayForge
         private void Initialize()
         {
             // Any further bootstrap initialization here   
-
-            // TODO REMOVE
-            return;
-            
-            var fp = ForgeStores.LoadFramework(Framework.FrameworkKey, false) ?? FrameworkProject.EmptyDefault();
-            RuntimeStore.SetFramework(fp);
         }
         
         public bool HandlerValidateAgainst(IGameplayProcessHandler handler)

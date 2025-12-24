@@ -109,7 +109,7 @@ namespace FarEmerald.PlayForge.Extended
             var def = objectType.GetGenericTypeDefinition();
             if (def != typeof(Dictionary<,>)) return false;
             var args = objectType.GetGenericArguments();
-            return args[0] == typeof(Tag); // Dictionary<Tag, *>
+            return args[0] == typeof(PlayForge.Tag); // Dictionary<Tag, *>
         }
 
         public override void WriteJson(JsonWriter writer, object value, JsonSerializer serializer)
@@ -121,10 +121,10 @@ namespace FarEmerald.PlayForge.Extended
             writer.WriteStartObject();
 
             var enumerator = (System.Collections.IEnumerable)value;
-            var nameProp = typeof(Tag).GetProperty(nameof(Tag.Name));
+            var nameProp = typeof(PlayForge.Tag).GetProperty(nameof(PlayForge.Tag.Name));
             foreach (var kv in enumerator)
             {
-                var key = (Tag)kv.GetType().GetProperty("Key")!.GetValue(kv, null);
+                var key = (PlayForge.Tag)kv.GetType().GetProperty("Key")!.GetValue(kv, null);
                 var keyName = key.Name; // nameProp!.GetValue(key, null) as string;
                 writer.WritePropertyName(keyName);
 

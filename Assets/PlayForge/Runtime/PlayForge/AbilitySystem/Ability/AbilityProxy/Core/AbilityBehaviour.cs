@@ -14,13 +14,11 @@ namespace FarEmerald.PlayForge
     [Serializable]
     public class AbilityBehaviour
     {
-        [Header("Targeting Instructions")]
+        [SerializeReference]
+        public AbstractTargetingAbilityTask Targeting;
         
-        public AbstractTargetingAbilityTask targeting;
         [Tooltip("Implicitly provides the casting system as a target.")]
         public bool UseImplicitTargeting = true;
-        
-        [Header("Proxy Stages")]
         
         public List<AbilityTaskBehaviourStage> Stages;
 
@@ -33,8 +31,11 @@ namespace FarEmerald.PlayForge
     [Serializable]
     public class AbilityTaskBehaviourStage
     {
-        public IProxyStagePolicy StagePolicy;
-        public List<AbstractAbilityTask> Tasks;
+        [SerializeReference]
+        public IProxyStagePolicy StagePolicy = new AllProxyStagePolicy();
+        
+        [SerializeReference]
+        public List<AbstractAbilityTask> Tasks = new();
         
         [Space(5)]
         
@@ -47,4 +48,6 @@ namespace FarEmerald.PlayForge
         Any,
         All
     }
+    
+    
 }

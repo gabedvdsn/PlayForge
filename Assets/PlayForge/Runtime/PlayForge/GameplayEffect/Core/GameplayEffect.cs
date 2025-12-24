@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
@@ -6,8 +6,8 @@ using UnityEngine;
 
 namespace FarEmerald.PlayForge
 {
-    [Serializable]
-    public class GameplayEffect : IHasReadableDefinition
+    [CreateAssetMenu(menuName = "PlayForge/Gameplay Effect", fileName = "Effect_")]
+    public class GameplayEffect : BaseForgeObject, IHasReadableDefinition
     {
         public GameplayEffectDefinition Definition;
         public GameplayEffectTags Tags;
@@ -19,22 +19,6 @@ namespace FarEmerald.PlayForge
         
         public TagRequirements SourceRequirements;
         public TagRequirements TargetRequirements;
-
-        public GameplayEffect()
-        {
-        }
-
-        public GameplayEffect(GameplayEffect o)
-        {
-            Definition = o.Definition;
-            Tags = o.Tags;
-
-            ImpactSpecification = new GameplayEffectImpactSpecification(o.ImpactSpecification);
-            DurationSpecification = new GameplayEffectDurationSpecification(o.DurationSpecification);
-
-            Workers = new List<AbstractEffectWorker>(o.Workers);
-            
-        }
 
         public GameplayEffectSpec Generate(IEffectOrigin origin, IGameplayAbilitySystem target)
         {
@@ -79,6 +63,10 @@ namespace FarEmerald.PlayForge
         {
             return Definition.Name;
         }
+        public override HashSet<Tag> GetAllTags()
+        {
+            return new HashSet<Tag>();
+        }
         public string GetDescription()
         {
             return Definition.Description;
@@ -89,6 +77,7 @@ namespace FarEmerald.PlayForge
         }
     }
 
+    [Serializable]
     public class GameplayEffectDefinition
     { 
         public string Name;
@@ -104,6 +93,7 @@ namespace FarEmerald.PlayForge
         public Sprite GetPrimaryIcon();
     }
 
+    [Serializable]
     public struct GameplayEffectTags
     {
         [ForgeCategory(Forge.Categories.Identifier)]

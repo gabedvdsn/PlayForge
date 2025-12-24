@@ -1,8 +1,10 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using UnityEngine;
 
 namespace FarEmerald.PlayForge
 {
+    [Serializable]
     public abstract class AbstractImpactWorker
     {
         [Header("Impact Worker")]

@@ -4,7 +4,7 @@ using UnityEngine;
 
 namespace FarEmerald.PlayForge
 {
-    public abstract class AbstractTargetingAbilityTask : AbstractAbilityTask
+    public abstract class AbstractTargetingAbilityTask : AbstractAbilityRelatedTask
     {
         public override void Prepare(AbilityDataPacket data)
         {

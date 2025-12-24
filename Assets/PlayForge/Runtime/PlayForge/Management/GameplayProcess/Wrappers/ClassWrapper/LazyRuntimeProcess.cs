@@ -5,7 +5,7 @@ namespace FarEmerald.PlayForge
 {
     public class LazyRuntimeProcess : AbstractRuntimeProcess
     {
-        public LazyRuntimeProcess()
+        protected LazyRuntimeProcess()
         {
         }
 
@@ -17,7 +17,7 @@ namespace FarEmerald.PlayForge
         {
             
         }
-        public override void WhenUpdate(EProcessStepTiming timing, ProcessRelay relay)
+        public override void WhenUpdate(ProcessRelay relay)
         {
             
         }
@@ -26,10 +26,23 @@ namespace FarEmerald.PlayForge
             processActive = true;
             await UniTask.WaitWhile(() => processActive, cancellationToken: token);
         }
+        
         public override bool IsInitialized()
         {
             return true;
         }
         
+        public override UniTask CallBehaviour(Tag cmd, AbstractProxyTaskBehaviour cb, CancellationToken token)
+        {
+            return UniTask.CompletedTask;
+        }
+        
+        public override void RunCompositeBehaviour(Tag command, AbstractProxyTaskBehaviour cb, IProxyTaskBehaviourCaller caller)
+        {
+        }
+        public override UniTask RunCompositeBehaviourAsync(Tag command, AbstractProxyTaskBehaviour cb, IProxyTaskBehaviourCaller caller, CancellationToken token)
+        {
+            return UniTask.CompletedTask;
+        }
     }
 }

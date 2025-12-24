@@ -10,7 +10,7 @@ namespace FarEmerald.PlayForge
         
         [Space]
         
-        public AttributeRef CaptureAttribute;
+        public Attribute CaptureAttribute;
         public ESourceTarget CaptureFrom;
         public ECaptureAttributeWhen CaptureWhen;
         

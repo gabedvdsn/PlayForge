@@ -4,6 +4,7 @@ using UnityEngine;
 
 namespace FarEmerald.PlayForge
 {
+    [Serializable]
     public abstract class AbstractTagWorker
     {
         [Header("Tag Worker")] 

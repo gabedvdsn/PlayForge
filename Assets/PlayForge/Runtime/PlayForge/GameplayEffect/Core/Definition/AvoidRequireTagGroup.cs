@@ -4,6 +4,7 @@ using System.Linq;
 
 namespace FarEmerald.PlayForge
 {
+    [Serializable]
     public class AvoidRequireTagGroup
     {
         public List<Tag> AvoidTags;

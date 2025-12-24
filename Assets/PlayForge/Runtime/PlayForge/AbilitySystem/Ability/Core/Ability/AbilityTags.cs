@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.Serialization;
 using Object = UnityEngine.Object;
 
 namespace FarEmerald.PlayForge
@@ -8,18 +9,16 @@ namespace FarEmerald.PlayForge
     [Serializable]
     public class AbilityTags
     {
-        [Header("Base")] 
-        
         [ForgeCategory(Forge.Categories.Identifier)]
         public Tag AssetTag;
         public List<Tag> ContextTags;
         
-        [Header("Tags")]
-        
         [Tooltip("Tags that are granted as long as this ability is learned")]
-        public List<Tag> PassivelyGrantedTags;
+        public List<Tag> PassiveGrantedTags;
         [Tooltip("Tags that are granted while this ability is active")]
         public List<Tag> ActiveGrantedTags;
+
+        public Tag TestTag;
 
         [Header("Requirements")]
         

@@ -46,7 +46,7 @@ namespace FarEmerald.PlayForge
         
         private Queue<AbilityActivationRequest> activationQueue = new();
 
-        public AbilityActivationRequest CreateActivationRequest(int index, EAbilityActivationPolicyExtended policy = EAbilityActivationPolicyExtended.UseLocal)
+        public AbilityActivationRequest CreateActivationRequest(int index, EAbilityActivationPolicyExtended policy = EAbilityActivationPolicyExtended.UseLocalPolicy)
         {
             return new AbilityActivationRequest(policy.Translate(this), index);
         }
@@ -160,7 +160,7 @@ namespace FarEmerald.PlayForge
             AbilitySpecContainer container = new AbilitySpecContainer(ability.Generate(Root, level));
             AbilityCache[abilityIndex] = container;
 
-            HandleTags(ability.Tags.PassivelyGrantedTags, true);
+            HandleTags(ability.Tags.PassiveGrantedTags, true);
 
             return true;
         }
@@ -171,7 +171,7 @@ namespace FarEmerald.PlayForge
             
             if (AbilityCache[index].IsClaiming) Inject(index, new InterruptInjection());
             
-            HandleTags(ability.Tags.PassivelyGrantedTags, false);
+            HandleTags(ability.Tags.PassiveGrantedTags, false);
 
             return AbilityCache.Remove(index);
         }
@@ -413,7 +413,7 @@ namespace FarEmerald.PlayForge
 
     public enum EAbilityActivationPolicyExtended
     {
-        UseLocal,
+        UseLocalPolicy,
         NoRestrictions,
         SingleActive,
         SingleActiveQueue

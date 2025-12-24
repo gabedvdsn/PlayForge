@@ -1,0 +1,386 @@
+/* ═══════════════════════════════════════════════════════════════════════════
+   PlayForge Ability Inspector Stylesheet
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+/* ─────────────────────────────────────────────────────────────────────────────
+   Variables (Unity 2021.2+)
+   ───────────────────────────────────────────────────────────────────────────── */
+:root {
+    --color-accent: rgb(86, 156, 214);
+    --color-accent-dark: rgb(60, 110, 150);
+    --color-success: rgb(92, 132, 93);
+    --color-warning: rgb(200, 160, 80);
+    --color-danger: rgb(132, 73, 73);
+    --color-help: rgb(131, 91, 154);
+    --color-neutral: rgb(80, 80, 80);
+    --color-bg-dark: rgba(30, 30, 30, 0.4);
+    --color-bg-medium: rgba(45, 45, 45, 0.5);
+    --color-bg-light: rgba(60, 60, 60, 0.3);
+    --color-border: rgb(35, 35, 35);
+    --color-line: rgb(100, 100, 100);
+    --radius-small: 3px;
+    --radius-medium: 4px;
+    --radius-large: 6px;
+    --spacing-xs: 2px;
+    --spacing-sm: 4px;
+    --spacing-md: 8px;
+    --spacing-lg: 12px;
+}
+
+/* ─────────────────────────────────────────────────────────────────────────────
+   Header
+   ───────────────────────────────────────────────────────────────────────────── */
+.header {
+    flex-direction: row;
+    min-height: 64px;
+    max-height: 64px;
+    margin-top: 4px;
+    margin-bottom: 8px;
+    padding: 4px;
+    background-color: var(--color-bg-dark);
+    border-radius: var(--radius-medium);
+    border-width: 1px;
+    border-color: var(--color-border);
+}
+
+.header-icon {
+    width: 56px;
+    height: 56px;
+    min-width: 56px;
+    min-height: 56px;
+    flex-shrink: 0;
+    background-image: url("project://database/Assets/PlayForge/Editor/Icons/Creator/ability.png");
+    -unity-background-scale-mode: scale-to-fit;
+    border-radius: var(--radius-small);
+    border-width: 1px;
+    border-color: var(--color-border);
+    margin-right: 8px;
+}
+
+.header-content {
+    flex-grow: 1;
+    justify-content: center;
+}
+
+.header-title-row {
+    flex-direction: row;
+    align-items: center;
+}
+
+.header-title {
+    flex-grow: 1;
+    font-size: 16px;
+    -unity-font-style: bold;
+    padding-left: 4px;
+    padding-right: 8px;
+    -unity-text-align: middle-left;
+    color: rgb(220, 220, 220);
+}
+
+.header-description {
+    font-size: 11px;
+    padding-left: 4px;
+    padding-top: 2px;
+    -unity-text-align: middle-left;
+    color: rgb(160, 160, 160);
+    white-space: normal;
+    text-overflow: ellipsis;
+    overflow: hidden;
+    max-height: 32px;
+}
+
+.header-buttons {
+    flex-direction: row;
+    flex-shrink: 0;
+}
+
+.header-btn {
+    width: 24px;
+    height: 24px;
+    min-width: 24px;
+    min-height: 24px;
+    max-width: 24px;
+    max-height: 24px;
+    margin-left: 2px;
+    margin-right: 2px;
+    border-radius: var(--radius-small);
+    -unity-font-style: bold;
+    font-size: 12px;
+}
+
+.header-btn-neutral {
+    background-color: var(--color-neutral);
+}
+
+.header-btn-neutral:hover {
+    background-color: rgb(100, 100, 100);
+}
+
+/* ─────────────────────────────────────────────────────────────────────────────
+   Sections
+   ───────────────────────────────────────────────────────────────────────────── */
+.section {
+    margin-bottom: 4px;
+}
+
+.section-header {
+    flex-direction: row;
+    align-items: center;
+    margin-top: 8px;
+    margin-bottom: 4px;
+    padding-left: 2px;
+    padding-right: 2px;
+}
+
+.section-title {
+    font-size: 14px;
+    -unity-font-style: bold;
+    -unity-text-align: middle-left;
+    color: rgb(200, 200, 200);
+    padding-right: 8px;
+    flex-shrink: 0;
+}
+
+.section-line {
+    flex-grow: 1;
+    height: 1px;
+    background-color: var(--color-line);
+    margin-left: 4px;
+    margin-right: 8px;
+    align-self: center;
+    border-radius: 1px;
+}
+
+.section-btn {
+    width: 20px;
+    height: 20px;
+    min-width: 20px;
+    min-height: 20px;
+    max-width: 20px;
+    max-height: 20px;
+    border-radius: 10px;
+    margin-left: 4px;
+    -unity-font-style: bold;
+    font-size: 11px;
+    padding: 0;
+    border-width: 0;
+}
+
+.section-btn-import {
+    background-color: var(--color-success);
+}
+
+.section-btn-reset {
+    background-color: var(--color-danger);
+}
+
+.section-btn-help {
+    background-color: var(--color-help);
+}
+
+.section-btn:hover {
+    scale: 1.1;
+}
+
+.section-content {
+    padding-left: 8px;
+    padding-right: 4px;
+    padding-top: 4px;
+    padding-bottom: 8px;
+    margin-left: 2px;
+    border-left-width: 2px;
+    border-left-color: rgba(100, 100, 100, 0.3);
+}
+
+/* ─────────────────────────────────────────────────────────────────────────────
+   Fields
+   ───────────────────────────────────────────────────────────────────────────── */
+.field {
+    margin-bottom: 2px;
+    margin-top: 1px;
+}
+
+.field > Label {
+    min-width: 140px;
+}
+
+.field-multiline {
+    min-height: 40px;
+}
+
+.field-multiline > TextField {
+    white-space: normal;
+}
+
+/* Field Groups */
+.field-group {
+    margin-top: 8px;
+    margin-bottom: 4px;
+}
+
+.field-group-label {
+    font-size: 11px;
+    -unity-font-style: bold;
+    color: rgb(150, 150, 150);
+    margin-bottom: 4px;
+    padding-left: 2px;
+}
+
+.field-group-content {
+    padding-left: 8px;
+    border-left-width: 2px;
+    border-left-color: rgba(86, 156, 214, 0.3);
+}
+
+/* Icons Grid */
+.icons-grid {
+    flex-direction: row;
+    flex-wrap: wrap;
+}
+
+.icon-field {
+    width: 48%;
+    margin-right: 2%;
+    margin-bottom: 2px;
+}
+
+/* Level Fields */
+.level-row {
+    flex-direction: row;
+}
+
+.level-field {
+    flex-grow: 1;
+    margin-right: 8px;
+}
+
+.level-field:last-child {
+    margin-right: 0;
+}
+
+/* Usage Fields */
+.usage-fields {
+    margin-top: 8px;
+    padding-top: 8px;
+    border-top-width: 1px;
+    border-top-color: rgba(100, 100, 100, 0.3);
+}
+
+/* ─────────────────────────────────────────────────────────────────────────────
+   Foldouts / Subsections
+   ───────────────────────────────────────────────────────────────────────────── */
+.subsection-foldout {
+    margin-top: 8px;
+    margin-bottom: 4px;
+}
+
+.subsection-foldout > Toggle {
+    -unity-font-style: bold;
+    font-size: 11px;
+    background-color: var(--color-bg-light);
+    border-radius: var(--radius-small);
+    padding: 4px;
+    margin-bottom: 4px;
+}
+
+.subsection-foldout > #unity-content {
+    padding-left: 12px;
+    margin-left: 8px;
+    border-left-width: 2px;
+    border-left-color: rgba(100, 100, 100, 0.3);
+}
+
+/* Requirements */
+.requirements-group {
+    margin-bottom: 8px;
+    padding: 6px;
+    background-color: var(--color-bg-light);
+    border-radius: var(--radius-small);
+}
+
+.requirements-label {
+    font-size: 11px;
+    -unity-font-style: bold;
+    color: rgb(180, 180, 180);
+    margin-bottom: 4px;
+}
+
+/* ─────────────────────────────────────────────────────────────────────────────
+   Stages (Runtime Behaviour)
+   ───────────────────────────────────────────────────────────────────────────── */
+.stages-field {
+    margin-top: 8px;
+}
+
+/* ─────────────────────────────────────────────────────────────────────────────
+   Local Data
+   ───────────────────────────────────────────────────────────────────────────── */
+.local-data-field {
+    margin-top: 4px;
+}
+
+/* ─────────────────────────────────────────────────────────────────────────────
+   Tooltips & Hover States
+   ───────────────────────────────────────────────────────────────────────────── */
+.field:hover {
+    background-color: rgba(86, 156, 214, 0.05);
+}
+
+/* ─────────────────────────────────────────────────────────────────────────────
+   Validation Rule Items
+   ───────────────────────────────────────────────────────────────────────────── */
+.validation-rule-fields {
+    margin-left: 8px;
+    margin-top: 4px;
+    margin-bottom: 4px;
+    padding-left: 8px;
+    border-left-width: 2px;
+    border-left-color: rgba(100, 100, 100, 0.4);
+}
+
+/* ─────────────────────────────────────────────────────────────────────────────
+   Stage Items
+   ───────────────────────────────────────────────────────────────────────────── */
+.stage-container {
+    background-color: rgba(40, 40, 40, 0.4);
+    border-radius: var(--radius-medium);
+    padding: 8px;
+    margin-bottom: 8px;
+    border-width: 1px;
+    border-color: rgba(60, 60, 60, 0.5);
+}
+
+.stage-header {
+    flex-direction: row;
+    margin-bottom: 6px;
+}
+
+.stage-title {
+    font-size: 13px;
+    -unity-font-style: bold;
+    color: rgb(200, 200, 200);
+}
+
+.stage-policy {
+    margin-left: auto;
+    min-width: 120px;
+}
+
+.stage-tasks {
+    margin-top: 8px;
+    padding-left: 8px;
+    border-left-width: 2px;
+    border-left-color: rgba(80, 130, 180, 0.5);
+}
+
+/* ─────────────────────────────────────────────────────────────────────────────
+   Dark Theme Adjustments
+   ───────────────────────────────────────────────────────────────────────────── */
+.unity-base-field__label {
+    min-width: 130px;
+}
+
+/* Property field alignment */
+PropertyField > .unity-base-field > .unity-base-field__label {
+    min-width: 130px;
+}

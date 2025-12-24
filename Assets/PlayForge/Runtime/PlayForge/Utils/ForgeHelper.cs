@@ -442,7 +442,7 @@ namespace FarEmerald.PlayForge
 
         public static EAbilityActivationPolicy Translate(this EAbilityActivationPolicyExtended policy, AbilitySystemComponent asc = null)
         {
-            if (policy == EAbilityActivationPolicyExtended.UseLocal)
+            if (policy == EAbilityActivationPolicyExtended.UseLocalPolicy)
             {
                 if (asc is not null) return asc.DefaultActivationPolicy;
                 return EAbilityActivationPolicy.SingleActiveQueue;

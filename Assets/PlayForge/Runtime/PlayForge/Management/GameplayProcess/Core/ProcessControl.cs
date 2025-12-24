@@ -85,10 +85,10 @@ namespace FarEmerald.PlayForge
         private void Step(EProcessStepTiming timing)
         {
             if (State is EProcessControlState.Waiting or EProcessControlState.TerminatedImmediately) return;
-            
-            foreach (var priority in stepping[timing])
+
+            foreach (int cacheIndex in stepping[timing].SelectMany(priority => priority.Value))
             {
-                foreach (int cacheIndex in priority.Value) active[cacheIndex].Step(timing);
+                active[cacheIndex].Step(timing);
             }
         }
         
@@ -432,6 +432,11 @@ namespace FarEmerald.PlayForge
                     SetStepping(pcb, priority, EProcessStepTiming.LateUpdate);
                     SetStepping(pcb, priority, EProcessStepTiming.FixedUpdate);
                     break;
+                case EProcessStepTiming.UpdateFixedAndLate:
+                    SetStepping(pcb, priority, EProcessStepTiming.Update);
+                    SetStepping(pcb, priority, EProcessStepTiming.LateUpdate);
+                    SetStepping(pcb, priority, EProcessStepTiming.FixedUpdate);
+                    break;
                 default:
                     throw new ArgumentOutOfRangeException();
             }
@@ -471,6 +476,11 @@ namespace FarEmerald.PlayForge
                     RemoveStepping(pcb, priority, EProcessStepTiming.FixedUpdate);
                     break;
                 case EProcessStepTiming.LateAndFixed:
+                    RemoveStepping(pcb, priority, EProcessStepTiming.LateUpdate);
+                    RemoveStepping(pcb, priority, EProcessStepTiming.FixedUpdate);
+                    break;
+                case EProcessStepTiming.UpdateFixedAndLate:
+                    RemoveStepping(pcb, priority, EProcessStepTiming.Update);
                     RemoveStepping(pcb, priority, EProcessStepTiming.LateUpdate);
                     RemoveStepping(pcb, priority, EProcessStepTiming.FixedUpdate);
                     break;

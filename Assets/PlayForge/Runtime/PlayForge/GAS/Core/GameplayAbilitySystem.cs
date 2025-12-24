@@ -129,11 +129,11 @@ namespace FarEmerald.PlayForge
         {
             return new DefaultTransformPacket(transform);
         }
-        
+    
         #endregion
         
         #region Effect Handling
-        
+
         public GameplayEffectSpec GenerateEffectSpec(IEffectOrigin origin, GameplayEffect effect)
         {
             return effect.Generate(origin, this);
@@ -230,7 +230,7 @@ namespace FarEmerald.PlayForge
                 
             if (spec.Base.DurationSpecification.TickOnApplication)
             {
-                ApplyInstantGameplayEffect(container);
+                ApplyDurationGameplayEffectAsInstant(container);
             }
         }
 
@@ -268,7 +268,7 @@ namespace FarEmerald.PlayForge
         /// Instantly applies the effects of a durational/infinite gameplay effect
         /// </summary>
         /// <param name="container"></param>
-        private void ApplyInstantGameplayEffect(AbstractGameplayEffectShelfContainer container)
+        private void ApplyDurationGameplayEffectAsInstant(AbstractGameplayEffectShelfContainer container)
         {
             if (!AttributeSystem.TryGetAttributeValue(container.Spec.Base.ImpactSpecification.AttributeTarget, out AttributeValue attributeValue)) return;
             
@@ -286,7 +286,7 @@ namespace FarEmerald.PlayForge
         
         private bool TryHandleExistingDurationalGameplayEffect(GameplayEffectSpec spec)
         {
-            if (!TryGetEffectContainer(spec.Base, out AbstractGameplayEffectShelfContainer container)) return false;
+            if (!TryGetEffectContainer(spec.Base, out var container)) return false;
             
             switch (spec.Base.ImpactSpecification.ReApplicationPolicy)
             {
@@ -345,7 +345,7 @@ namespace FarEmerald.PlayForge
                 {
                     for (int _ = 0; _ < executeTicks; _++)
                     {
-                        ApplyInstantGameplayEffect(container);
+                        ApplyDurationGameplayEffectAsInstant(container);
                     }
                 }
 
@@ -386,7 +386,7 @@ namespace FarEmerald.PlayForge
 
         public bool TryGetEffectContainer(GameplayEffect effect, out AbstractGameplayEffectShelfContainer container)
         {
-            foreach (AbstractGameplayEffectShelfContainer _container in EffectShelf.Where(_container => _container.Spec.Base == effect))
+            foreach (var _container in EffectShelf.Where(_container => _container.Spec.Base == effect))
             {
                 container = _container;
                 return true;
@@ -449,21 +449,15 @@ namespace FarEmerald.PlayForge
         {
             if (cmd == DisjointProxyTaskBehaviour.Command)
             {
-                if (!regData.TryGet(Tags.TARGETED_INTENT, out DataValue<AbstractGameplayMonoProcess> data))
+                if (!regData.TryGet(Tags.TARGETED_INTENT, out DataValue<IProxyTaskBehaviourUser> data))
                 {
                     return;
                 }
 
-                var arrData = data.ToArray();
-                await CallBehaviour(cmd, cb, arrData, token);
+                await CallBehaviour(cmd, cb, data.ToArray(), token);
             }
 
             await base.CallBehaviour(cmd, cb, token);
-        }
-
-        public override void RunCompositeBehaviour(Tag command, AbstractProxyTaskBehaviour cb, IProxyTaskBehaviourCaller caller)
-        {
-            
         }
 
         public override UniTask RunCompositeBehaviourAsync(Tag command, AbstractProxyTaskBehaviour cb, IProxyTaskBehaviourCaller caller, CancellationToken token)
@@ -477,7 +471,7 @@ namespace FarEmerald.PlayForge
         public Tag GetAssetTag() => Data.Identity.NameTag;
         public int GetLevel() => Data.Identity.Level;
         public int GetMaxLevel() => Data.Identity.MaxLevel;
-        public void SetLevel(int level) => Data.Identity.Level = level;
+        public void SetLevel(int level) => Data.Identity.Level = Mathf.Clamp(level, 0, Data.Identity.MaxLevel);
         public string GetName() => Data.Identity.DistinctName;
         public void CommunicateTargetedIntent(AbstractGameplayMonoProcess entity)
         {

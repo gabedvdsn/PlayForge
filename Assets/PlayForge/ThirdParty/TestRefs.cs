@@ -6,7 +6,7 @@ namespace FarEmerald.PlayForge
 {
     public class TestRefs : MonoBehaviour
     {
-        public AttributeRef Attribute;
+        /*public AttributeRef Attribute;
         
         [ForgeFilterCategory("Ability", "Magical", "Ranged", "Rare")]
         [ForgeFilterName("Raw")]
@@ -15,6 +15,6 @@ namespace FarEmerald.PlayForge
         public EntityRef Entity;
         public AbilityRef Ability;
         public AttributeSetRef AttributeSet;
-        public EffectRef Effect;
+        public EffectRef Effect;*/
     }
 }

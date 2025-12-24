@@ -22,6 +22,7 @@ namespace FarEmerald.PlayForge
         [Space] 
         
         public int Ticks;
+        public float TickInterval;
         public AbstractMagnitudeModifier TickCalculation;
         public EMagnitudeOperation TickCalculationOperation;
         public ETickCalculationRounding Rounding;

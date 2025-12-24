@@ -104,11 +104,11 @@ namespace FarEmerald.PlayForge
                 foreach (var kvp in ProcessControl.Instance.FetchActiveProcesses())
                 {
                     var relay = kvp.Value.Relay;
-                    if (relay.Process is null) continue;
+                    if (relay.Wrapper is null) continue;
 
                     EditorGUILayout.BeginVertical("box");
-                    EditorGUILayout.LabelField($"{relay.Process.ProcessName}", EditorStyles.boldLabel);
-                    EditorGUILayout.LabelField($"ID: {relay.CacheIndex} | {relay.State} -> {relay.QueuedState} | {relay.UpdateTime:F2} / {relay.Lifetime:F2} ({relay.Process.StepTiming})");
+                    EditorGUILayout.LabelField($"{relay.Wrapper.ProcessName}", EditorStyles.boldLabel);
+                    EditorGUILayout.LabelField($"ID: {relay.CacheIndex} | {relay.State} -> {relay.QueuedState} | {relay.UpdateTime:F2} / {relay.Lifetime:F2} ({relay.Wrapper.StepTiming})");
                     
                     EditorGUILayout.EndVertical();
                 }
@@ -126,12 +126,12 @@ namespace FarEmerald.PlayForge
                 foreach (var kvp in ProcessControl.Instance.FetchActiveProcesses())
                 {
                     var relay = kvp.Value.Relay;
-                    if (relay.Process is null) continue;
+                    if (relay.Wrapper is null) continue;
 
                     EditorGUILayout.BeginVertical("box");
 
-                    EditorGUILayout.LabelField($"{relay.Process.ProcessName}", EditorStyles.boldLabel);
-                    EditorGUILayout.LabelField($"ID: {relay.CacheIndex} | {relay.Process.Lifecycle} | {relay.Process.StepTiming}");
+                    EditorGUILayout.LabelField($"{relay.Wrapper.ProcessName}", EditorStyles.boldLabel);
+                    EditorGUILayout.LabelField($"ID: {relay.CacheIndex} | {relay.Wrapper.Lifecycle} | {relay.Wrapper.StepTiming}");
                     
                     EditorGUILayout.BeginHorizontal("box");
                     EditorGUILayout.LabelField($"State: {relay.State}");
@@ -158,12 +158,12 @@ namespace FarEmerald.PlayForge
                 foreach (var kvp in ProcessControl.Instance.FetchActiveProcesses())
                 {
                     var relay = kvp.Value.Relay;
-                    if (relay.Process is null) continue;
+                    if (relay.Wrapper is null) continue;
 
                     EditorGUILayout.BeginVertical("box");
                     
-                    EditorGUILayout.LabelField($"{relay.Process.ProcessName}\t", EditorStyles.boldLabel);
-                    EditorGUILayout.LabelField($"ID: {relay.CacheIndex} | {relay.Process.Lifecycle} | {relay.Process.StepTiming}");
+                    EditorGUILayout.LabelField($"{relay.Wrapper.ProcessName}\t", EditorStyles.boldLabel);
+                    EditorGUILayout.LabelField($"ID: {relay.CacheIndex} | {relay.Wrapper.Lifecycle} | {relay.Wrapper.StepTiming}");
                     
                     EditorGUILayout.BeginHorizontal("box");
                     EditorGUILayout.LabelField($"State: {relay.State}");
@@ -182,7 +182,7 @@ namespace FarEmerald.PlayForge
                         ProcessControl.Instance.Wait(relay.CacheIndex);
                     }
                     EditorGUI.EndDisabledGroup();
-                    EditorGUI.BeginDisabledGroup(ProcessControl.Instance.State != EProcessControlState.Ready && ProcessControl.Instance.State != EProcessControlState.Closed || relay.State is EProcessState.Running or EProcessState.Terminated || relay.Process.Lifecycle == EProcessLifecycle.SelfTerminating);
+                    EditorGUI.BeginDisabledGroup(ProcessControl.Instance.State != EProcessControlState.Ready && ProcessControl.Instance.State != EProcessControlState.Closed || relay.State is EProcessState.Running or EProcessState.Terminated || relay.Wrapper.Lifecycle == EProcessLifecycle.SelfTerminating);
                     if (GUILayout.Button("Run"))
                     {
                         ProcessControl.Instance.Run(relay.CacheIndex);
