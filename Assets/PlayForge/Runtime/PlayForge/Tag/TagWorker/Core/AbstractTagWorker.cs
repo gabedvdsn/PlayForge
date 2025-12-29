@@ -1,11 +1,12 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
 
 namespace FarEmerald.PlayForge
 {
     [Serializable]
-    public abstract class AbstractTagWorker
+    public abstract class AbstractTagWorker : Taggable
     {
         [Header("Tag Worker")] 
         
@@ -59,6 +60,8 @@ namespace FarEmerald.PlayForge
 
             return true;
         }
+
+        public abstract HashSet<Tag> GetAllTags();
     }
     
     public abstract class AbstractTagWorkerInstance

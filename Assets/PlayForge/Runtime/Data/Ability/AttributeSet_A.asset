@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   Attributes:
   - Attribute: {fileID: 11400000, guid: 125a0d134c497f34c91ef890931b1ec2, type: 2}
-    Magnitude: 38.46
+    Magnitude: 500
     Target: 0
     Overflow:
       Policy: 0

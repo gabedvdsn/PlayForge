@@ -35,7 +35,7 @@ namespace FarEmerald.PlayForge
         {
             return "";
         }
-        public Sprite GetPrimaryIcon()
+        public Texture2D GetPrimaryIcon()
         {
             return null;
         }

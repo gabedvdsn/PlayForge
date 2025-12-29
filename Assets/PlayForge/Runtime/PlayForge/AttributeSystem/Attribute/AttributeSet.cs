@@ -10,12 +10,12 @@ namespace FarEmerald.PlayForge
     public class AttributeSet : BaseForgeObject
     {
         [SerializeField]
-        public List<AttributeSetElement> Attributes = new();
+        public List<AttributeSetElement> Attributes;
         
         [Space]
         
         [SerializeReference]
-        public List<AttributeSet> SubSets = new();
+        public List<AttributeSet> SubSets;
         public EValueCollisionPolicy CollisionResolutionPolicy = EValueCollisionPolicy.UseMaximum;
         
         public void Initialize(AttributeSystemComponent system)
@@ -34,6 +34,7 @@ namespace FarEmerald.PlayForge
 
             foreach (var subSet in SubSets)
             {
+                if (subSet is null || subSet == this) continue;
                 foreach (var unique in subSet.GetUnique())
                 {
                     attributes.Add(unique);
@@ -44,7 +45,13 @@ namespace FarEmerald.PlayForge
         }
         public override HashSet<Tag> GetAllTags()
         {
-            return new HashSet<Tag>();
+            var set = new HashSet<Tag>();
+            foreach (var elem in Attributes)
+            {
+                foreach (var tag in elem.Modifier.GetAllTags()) set.Add(tag);
+            }
+
+            return set;
         }
     }
     
@@ -64,7 +71,7 @@ namespace FarEmerald.PlayForge
     [Serializable]
     public struct AttributeSetElement
     {
-        [Header("Attribute Declaration")]
+        // [Header("Attribute Declaration")]
         
         public Attribute Attribute;
         public float Magnitude;
@@ -111,9 +118,27 @@ namespace FarEmerald.PlayForge
     
     public enum EAttributeElementCollisionPolicy
     {
+        UseCollisionSetting,
         UseThis,
         UseExisting,
         Combine
+    }
+    
+    [Serializable]
+    public struct AttributeOverflowData
+    {
+        public EAttributeOverflowPolicy Policy;
+        public AttributeValue Floor;
+        public AttributeValue Ceil;
+    }
+
+    public enum EAttributeOverflowPolicy
+    {
+        ZeroToBase,
+        FloorToBase,
+        ZeroToCeil,
+        FloorToCeil,
+        Unlimited
     }
 
     public class AttributeSetMeta

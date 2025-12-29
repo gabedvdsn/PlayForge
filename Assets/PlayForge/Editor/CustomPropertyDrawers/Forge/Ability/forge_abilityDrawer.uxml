@@ -72,7 +72,7 @@
         <ui:Button text="?" name="Help" focusable="false" style="width: 20px; height: 20px; max-height: 20px; min-height: 20px; min-width: 20px; max-width: 20px; -unity-font-style: bold; border-top-left-radius: 25px; border-top-right-radius: 25px; border-bottom-right-radius: 25px; border-bottom-left-radius: 25px; margin-right: 4px; margin-left: 4px; padding-top: 4px; padding-right: 4px; padding-bottom: 4px; padding-left: 4px; background-color: rgb(131, 91, 154);" />
     </ui:VisualElement>
     <ui:VisualElement name="Leveling" style="flex-grow: 0;">
-        <uie:PropertyField name="StartingLevel" tooltip="This ability&apos;s targeting process" />
+        <uie:PropertyField name="Level" tooltip="This ability&apos;s targeting process" />
         <uie:PropertyField name="MaxLevel" tooltip="This ability&apos;s targeting process" />
         <uie:PropertyField name="IgnoreWhenLevelZero" tooltip="This ability&apos;s targeting process" />
         <uie:PropertyField name="Cost" tooltip="This ability&apos;s targeting process" />

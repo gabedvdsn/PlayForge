@@ -2,180 +2,452 @@
 using UnityEditor.UIElements;
 using UnityEngine;
 using UnityEngine.UIElements;
+using static FarEmerald.PlayForge.Extended.Editor.ForgeDrawerStyles;
 
 namespace FarEmerald.PlayForge.Extended.Editor
 {
     [CustomEditor(typeof(EntityIdentity))]
-    public class EntityIdentityEditor : UnityEditor.Editor
+    public class EntityIdentityEditor : BasePlayForgeEditor
     {
-        [SerializeField] private VisualTreeAsset m_InspectorUXML;
+        [SerializeField] private Texture2D m_EntityIcon;
         
-        private VisualElement root;
         private EntityIdentity entity;
+        
+        private HeaderResult headerResult;
+        private Label assetTagValueLabel;
 
         public override VisualElement CreateInspectorGUI()
         {
             if (serializedObject.isEditingMultipleObjects) return null;
             
-            root = new VisualElement();
             entity = serializedObject.targetObject as EntityIdentity;
-
             if (entity == null) return null;
 
-            if (m_InspectorUXML != null)
-            {
-                m_InspectorUXML.CloneTree(root);
-            }
+            root = CreateRoot();
             
-            BindHeader();
-            BindIdentity();
-            BindAbilities();
-            BindAttributes();
-            BindWorkers();
-            BindLocalData();
+            BuildHeader();
+            
+            var scrollView = CreateScrollView();
+            root.Add(scrollView);
+            
+            // Build all sections in logical order
+            BuildDefinitionSection(scrollView);
+            BuildTagsSection(scrollView);
+            BuildLevelSection(scrollView);
+            BuildAbilitiesSection(scrollView);
+            BuildAttributesSection(scrollView);
+            BuildWorkersSection(scrollView);
+            BuildLocalDataSection(scrollView);
+            
+            scrollView.Add(CreateBottomPadding());
             
             root.Bind(serializedObject);
             
             return root;
         }
 
-        private void BindHeader()
+        // ═══════════════════════════════════════════════════════════════════════════
+        // Header
+        // ═══════════════════════════════════════════════════════════════════════════
+        
+        private void BuildHeader()
         {
-            var header = root.Q("Header");
-            if (header == null) return;
-            
-            var nameLabel = header.Q<Label>("Name");
-            var descLabel = header.Q<Label>("Description");
-            
-            if (nameLabel != null)
+            // Get primary texture if available
+            var headerIcon = m_EntityIcon;
+            if (entity.Textures != null && entity.Textures.Count > 0 && entity.Textures[0].Texture != null)
             {
-                nameLabel.text = !string.IsNullOrEmpty(entity.GetName()) 
-                    ? entity.GetName() 
-                    : "Unnamed Entity";
+                headerIcon = entity.Textures[0].Texture;
             }
             
-            if (descLabel != null)
+            headerResult = CreateMainHeader(new HeaderConfig
             {
-                descLabel.text = !string.IsNullOrEmpty(entity.GetDescription()) 
-                    ? entity.GetDescription() 
-                    : "No description provided.";
-            }
+                Icon = headerIcon,
+                DefaultTitle = GetEntityName(),
+                DefaultDescription = GetEntityDescription(),
+                ShowRefresh = true,
+                ShowLookup = true,
+                ShowImport = true, 
+                ShowVisualize = true,
+                OnRefresh = Refresh,
+                OnLookup = Lookup
+            });
             
-            var refreshBtn = header.Q<Button>("Refresh");
-            refreshBtn?.RegisterCallback<ClickEvent>(_ => RefreshInspector());
-            
-            var lookupBtn = header.Q<Button>("Lookup");
-            lookupBtn?.RegisterCallback<ClickEvent>(_ => FindReferences());
+            root.Add(headerResult.Header);
         }
 
-        private void BindIdentity()
-        {
-            var section = root.Q("Identity");
-            if (section == null) return;
-            
-            BindPropertyField(section, "IdentityData", "Identity");
-        }
+        // ═══════════════════════════════════════════════════════════════════════════
+        // Definition Section
+        // ═══════════════════════════════════════════════════════════════════════════
         
-        private void BindAbilities()
+        private void BuildDefinitionSection(VisualElement parent)
         {
-            var section = root.Q("Abilities");
-            if (section == null) return;
-            
-            var activationPolicy = section.Q<EnumField>("ActivationPolicy");
-            if (activationPolicy != null)
+            var section = CreateCollapsibleSection(new SectionConfig
             {
-                activationPolicy.value = entity.ActivationPolicy;
-                activationPolicy.RegisterValueChangedCallback(evt =>
-                {
-                    entity.ActivationPolicy = (EAbilityActivationPolicy)evt.newValue;
-                    MarkDirty();
-                });
-            }
+                Name = "Definition",
+                Title = "Definition",
+                AccentColor = Colors.AccentCyan,
+                HelpUrl = "https://docs.playforge.dev/entities/definition"
+            });
+            parent.Add(section.Section);
             
-            var maxAbilities = section.Q<IntegerField>("MaxAbilities");
-            if (maxAbilities != null)
+            var content = section.Content;
+            
+            // Name field with live header update
+            var nameField = CreateTextField(entity.Name, "Name");
+            nameField.value = entity.Name;
+            nameField.RegisterCallback<FocusOutEvent>(evt =>
             {
-                maxAbilities.value = entity.MaxAbilities;
-                maxAbilities.RegisterValueChangedCallback(evt =>
-                {
-                    entity.MaxAbilities = evt.newValue;
-                    MarkDirty();
-                });
-            }
+                entity.Name = nameField.value;
+                MarkDirty(entity);
+                UpdateHeaderLabels();
+                UpdateAssetTagDisplay();
+            });
+            content.Add(nameField);
             
-            var allowDuplicates = section.Q<Toggle>("AllowDuplicates");
-            if (allowDuplicates != null)
+            // Description field with live header update
+            var descriptionField = CreateTextField(entity.Description, "Description", multiline: true, minHeight: 24);
+            descriptionField.value = entity.Description;
+            descriptionField.RegisterCallback<FocusOutEvent>(evt =>
             {
-                allowDuplicates.value = entity.AllowDuplicateAbilities;
-                allowDuplicates.RegisterValueChangedCallback(evt =>
-                {
-                    entity.AllowDuplicateAbilities = evt.newValue;
-                    MarkDirty();
-                });
-            }
+                entity.Description = descriptionField.value;
+                MarkDirty(entity);
+                UpdateHeaderLabels();
+            });
+            content.Add(descriptionField);
             
-            BindPropertyField(section, "StartingAbilities", "StartingAbilities");
-        }
-        
-        private void BindAttributes()
-        {
-            var section = root.Q("Attributes");
-            if (section == null) return;
+            // Textures list
+            var texturesField = CreatePropertyField(
+                serializedObject.FindProperty("Textures"), 
+                "Textures", 
+                "Textures"
+            );
+            texturesField.style.marginTop = 8;
             
-            BindPropertyField(section, "AttributeSet", "AttributeSet");
-            BindPropertyField(section, "AttributeChangeEvents", "AttributeChangeEvents");
-        }
-        
-        private void BindWorkers()
-        {
-            var section = root.Q("Workers");
-            if (section == null) return;
-            
-            BindPropertyField(section, "ImpactWorkers", "ImpactWorkers");
-            BindPropertyField(section, "TagWorkers", "TagWorkers");
-            BindPropertyField(section, "AnalysisWorkers", "AnalysisWorkers");
-        }
-        
-        private void BindLocalData()
-        {
-            var section = root.Q("LocalData");
-            if (section == null) return;
-            
-            BindPropertyField(section, "LocalData", "LocalData");
+            // Register callback to update header icon when textures change
+            texturesField.RegisterCallback<SerializedPropertyChangeEvent>(evt =>
+            {
+                UpdateHeaderIcon();
+            });
+            content.Add(texturesField);
         }
 
-        private void BindPropertyField(VisualElement container, string fieldName, string propertyPath)
+        // ═══════════════════════════════════════════════════════════════════════════
+        // Tags Section
+        // ═══════════════════════════════════════════════════════════════════════════
+        
+        private void BuildTagsSection(VisualElement parent)
         {
-            var field = container.Q<PropertyField>(fieldName);
-            var prop = serializedObject.FindProperty(propertyPath);
-            if (field != null && prop != null)
+            var section = CreateCollapsibleSection(new SectionConfig
             {
-                field.BindProperty(prop);
+                Name = "Tags",
+                Title = "Tags",
+                AccentColor = Colors.AccentYellow,
+                HelpUrl = "https://docs.playforge.dev/entities/tags"
+            });
+            parent.Add(section.Section);
+            
+            var content = section.Content;
+            
+            // Asset Tag (single tag identifier for this entity)
+            content.Add(CreatePropertyField(
+                serializedObject.FindProperty("AssetTag"), 
+                "AssetTag", 
+                "Asset Tag"
+            ));
+            
+            // Granted Tags (tags given to owner)
+            var grantedField = CreatePropertyField(
+                serializedObject.FindProperty("GrantedTags"), 
+                "GrantedTags", 
+                "Granted Tags"
+            );
+            grantedField.style.marginTop = 6;
+            content.Add(grantedField);
+            
+            // Affiliation Tags
+            var affiliationField = CreatePropertyField(
+                serializedObject.FindProperty("Affiliation"), 
+                "Affiliation", 
+                "Affiliation"
+            );
+            affiliationField.style.marginTop = 6;
+            content.Add(affiliationField);
+        }
+
+        // ═══════════════════════════════════════════════════════════════════════════
+        // Level Section
+        // ═══════════════════════════════════════════════════════════════════════════
+        
+        private void BuildLevelSection(VisualElement parent)
+        {
+            var section = CreateCollapsibleSection(new SectionConfig
+            {
+                Name = "Level",
+                Title = "Level",
+                AccentColor = Colors.AccentGreen,
+                HelpUrl = "https://docs.playforge.dev/entities/level"
+            });
+            parent.Add(section.Section);
+            
+            var content = section.Content;
+            
+            // Level row: Level + Cap toggle
+            var levelRow = CreateRow(4);
+            content.Add(levelRow);
+            
+            var levelField = CreateIntegerField("Level", "Level", entity.Level);
+            levelField.style.flexGrow = 1;
+            levelField.style.marginRight = 8;
+            levelField.RegisterValueChangedCallback(evt =>
+            {
+                entity.Level = evt.newValue;
+                MarkDirty(entity);
+            });
+            levelRow.Add(levelField);
+            
+            var capToggle = CreateToggle("CapAtMaxLevel", "Cap At Max");
+            capToggle.value = entity.CapAtMaxLevel;
+            capToggle.style.minWidth = 100;
+            capToggle.RegisterValueChangedCallback(evt =>
+            {
+                entity.CapAtMaxLevel = evt.newValue;
+                MarkDirty(entity);
+            });
+            levelRow.Add(capToggle);
+            
+            // Max Level
+            var maxLevelField = CreateIntegerField("MaxLevel", "Max Level", entity.MaxLevel);
+            maxLevelField.style.marginTop = 4;
+            maxLevelField.RegisterValueChangedCallback(evt =>
+            {
+                entity.MaxLevel = evt.newValue;
+                MarkDirty(entity);
+            });
+            content.Add(maxLevelField);
+            
+            // Relative Level display (read-only)
+            var relativeLevelLabel = new Label($"Relative Level: {entity.RelativeLevel:P0}");
+            relativeLevelLabel.style.fontSize = 10;
+            relativeLevelLabel.style.color = Colors.HintText;
+            relativeLevelLabel.style.marginTop = 4;
+            relativeLevelLabel.style.paddingLeft = 4;
+            content.Add(relativeLevelLabel);
+        }
+
+        // ═══════════════════════════════════════════════════════════════════════════
+        // Abilities Section
+        // ═══════════════════════════════════════════════════════════════════════════
+        
+        private void BuildAbilitiesSection(VisualElement parent)
+        {
+            var section = CreateCollapsibleSection(new SectionConfig
+            {
+                Name = "Abilities",
+                Title = "Abilities",
+                AccentColor = Colors.AccentPurple,
+                HelpUrl = "https://docs.playforge.dev/entities/abilities"
+            });
+            parent.Add(section.Section);
+            
+            var content = section.Content;
+            
+            // Activation Policy
+            var policyField = CreateEnumField("ActivationPolicy", "Activation Policy", entity.ActivationPolicy);
+            policyField.RegisterValueChangedCallback(evt =>
+            {
+                entity.ActivationPolicy = (EAbilityActivationPolicy)evt.newValue;
+                MarkDirty(entity);
+            });
+            content.Add(policyField);
+            
+            // Max Abilities + Allow Duplicates row
+            var row = CreateRow(4);
+            content.Add(row);
+            
+            var maxAbilitiesField = CreateIntegerField("MaxAbilities", "Max Abilities", entity.MaxAbilities);
+            maxAbilitiesField.style.flexGrow = 1;
+            maxAbilitiesField.style.marginRight = 8;
+            maxAbilitiesField.RegisterValueChangedCallback(evt =>
+            {
+                entity.MaxAbilities = evt.newValue;
+                MarkDirty(entity);
+            });
+            row.Add(maxAbilitiesField);
+            
+            var allowDupsToggle = CreateToggle("AllowDuplicates", "Allow Duplicates");
+            allowDupsToggle.value = entity.AllowDuplicateAbilities;
+            allowDupsToggle.style.minWidth = 120;
+            allowDupsToggle.RegisterValueChangedCallback(evt =>
+            {
+                entity.AllowDuplicateAbilities = evt.newValue;
+                MarkDirty(entity);
+            });
+            row.Add(allowDupsToggle);
+            
+            // Starting Abilities
+            var startingField = CreatePropertyField(
+                serializedObject.FindProperty("StartingAbilities"), 
+                "StartingAbilities", 
+                "Starting Abilities"
+            );
+            startingField.style.marginTop = 8;
+            content.Add(startingField);
+        }
+
+        // ═══════════════════════════════════════════════════════════════════════════
+        // Attributes Section
+        // ═══════════════════════════════════════════════════════════════════════════
+        
+        private void BuildAttributesSection(VisualElement parent)
+        {
+            var section = CreateCollapsibleSection(new SectionConfig
+            {
+                Name = "Attributes",
+                Title = "Attributes",
+                AccentColor = Colors.AccentBlue,
+                HelpUrl = "https://docs.playforge.dev/entities/attributes"
+            });
+            parent.Add(section.Section);
+            
+            var content = section.Content;
+            
+            content.Add(CreatePropertyField(
+                serializedObject.FindProperty("AttributeSet"), 
+                "AttributeSet", 
+                "Attribute Set"
+            ));
+            
+            var eventsField = CreatePropertyField(
+                serializedObject.FindProperty("AttributeChangeEvents"), 
+                "AttributeChangeEvents", 
+                "Attribute Change Events"
+            );
+            eventsField.style.marginTop = 8;
+            content.Add(eventsField);
+        }
+
+        // ═══════════════════════════════════════════════════════════════════════════
+        // Workers Section
+        // ═══════════════════════════════════════════════════════════════════════════
+        
+        private void BuildWorkersSection(VisualElement parent)
+        {
+            var section = CreateCollapsibleSection(new SectionConfig
+            {
+                Name = "Workers",
+                Title = "Workers",
+                AccentColor = Colors.AccentOrange,
+                HelpUrl = "https://docs.playforge.dev/entities/workers"
+            });
+            parent.Add(section.Section);
+            
+            var content = section.Content;
+            
+            var impactField = CreatePropertyField(
+                serializedObject.FindProperty("ImpactWorkers"), 
+                "ImpactWorkers", 
+                "Impact Workers"
+            );
+            impactField.style.marginBottom = 6;
+            content.Add(impactField);
+            
+            var tagField = CreatePropertyField(
+                serializedObject.FindProperty("TagWorkers"), 
+                "TagWorkers", 
+                "Tag Workers"
+            );
+            tagField.style.marginBottom = 6;
+            content.Add(tagField);
+            
+            content.Add(CreatePropertyField(
+                serializedObject.FindProperty("AnalysisWorkers"), 
+                "AnalysisWorkers", 
+                "Analysis Workers"
+            ));
+        }
+
+        // ═══════════════════════════════════════════════════════════════════════════
+        // Local Data Section
+        // ═══════════════════════════════════════════════════════════════════════════
+        
+        private void BuildLocalDataSection(VisualElement parent)
+        {
+            var section = CreateCollapsibleSection(new SectionConfig
+            {
+                Name = "LocalData",
+                Title = "Local Data",
+                AccentColor = Colors.AccentGray,
+                HelpUrl = "https://docs.playforge.dev/entities/localdata"
+            });
+            parent.Add(section.Section);
+            
+            section.Content.Add(CreatePropertyField(
+                serializedObject.FindProperty("LocalData"), 
+                "LocalData", 
+                ""
+            ));
+        }
+
+        // ═══════════════════════════════════════════════════════════════════════════
+        // Helper Methods
+        // ═══════════════════════════════════════════════════════════════════════════
+        
+        private string GetEntityName()
+        {
+            return !string.IsNullOrEmpty(entity.Name) ? entity.Name : "Unnamed Entity";
+        }
+        
+        private string GetEntityDescription()
+        {
+            return !string.IsNullOrEmpty(entity.Description) ? entity.Description : "No description provided.";
+        }
+        
+        private void UpdateHeaderLabels()
+        {
+            if (headerResult?.NameLabel != null)
+                headerResult.NameLabel.text = GetEntityName();
+            if (headerResult?.DescriptionLabel != null)
+                headerResult.DescriptionLabel.text = GetEntityDescription();
+        }
+        
+        private void UpdateHeaderIcon()
+        {
+            if (headerResult?.IconElement == null) return;
+            
+            var newIcon = m_EntityIcon;
+            if (entity.Textures != null && entity.Textures.Count > 0 && entity.Textures[0].Texture != null)
+            {
+                newIcon = entity.Textures[0].Texture;
+            }
+            
+            if (newIcon != null)
+            {
+                headerResult.IconElement.style.backgroundImage = new StyleBackground(newIcon);
             }
         }
         
-        private void MarkDirty()
+        private void UpdateAssetTagDisplay()
         {
-            EditorUtility.SetDirty(entity);
+            if (assetTagValueLabel == null) return;
+            assetTagValueLabel.text = GenerateAssetTag(entity.Name, "Entity");
+        }
+
+        // ═══════════════════════════════════════════════════════════════════════════
+        // Abstract Implementations
+        // ═══════════════════════════════════════════════════════════════════════════
+        
+        protected override void SetupCollapsibleSections() { }
+
+        protected override void Lookup()
+        {
+            PingAsset(entity);
         }
         
-        private void FindReferences()
-        {
-            var path = AssetDatabase.GetAssetPath(entity);
-            EditorGUIUtility.PingObject(entity);
-        }
-        
-        private void RefreshInspector()
+        protected override void Refresh()
         {
             serializedObject.Update();
-            
-            var nameLabel = root.Q("Header")?.Q<Label>("Name");
-            var descLabel = root.Q("Header")?.Q<Label>("Description");
-            
-            if (nameLabel != null)
-                nameLabel.text = !string.IsNullOrEmpty(entity.GetName()) ? entity.GetName() : "Unnamed Entity";
-            if (descLabel != null)
-                descLabel.text = !string.IsNullOrEmpty(entity.GetDescription()) ? entity.GetDescription() : "No description provided.";
+            UpdateHeaderLabels();
+            UpdateHeaderIcon();
         }
     }
 }

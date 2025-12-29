@@ -1,178 +1,326 @@
-﻿using UnityEditor;
+﻿using System.ComponentModel;
+using System.Security.Permissions;
+using System.Text.RegularExpressions;
+using UnityEditor;
 using UnityEditor.UIElements;
 using UnityEngine;
 using UnityEngine.UIElements;
+using static FarEmerald.PlayForge.Extended.Editor.ForgeDrawerStyles;
 
 namespace FarEmerald.PlayForge.Extended.Editor
 {
     [CustomEditor(typeof(GameplayEffect))]
     public class GameplayEffectEditor : BasePlayForgeEditor
     {
-        [SerializeField] private VisualTreeAsset m_InspectorUXML;
+        [SerializeField] private Texture2D m_EffectIcon;
         
         private GameplayEffect effect;
+        private HeaderResult headerResult;
+        private Label assetTagValueLabel;
 
         public override VisualElement CreateInspectorGUI()
         {
             if (serializedObject.isEditingMultipleObjects) return null;
             
-            root = new VisualElement();
             effect = serializedObject.targetObject as GameplayEffect;
-
             if (effect == null) return null;
 
-            if (m_InspectorUXML != null)
-            {
-                m_InspectorUXML.CloneTree(root);
-            }
+            // Build UI programmatically
+            root = CreateRoot();
             
-            BindHeader();
-            BindDefinition();
-            BindTags();
-            BindImpact();
-            BindWorkers();
-            BindRequirements();
+            // Main Header
+            BuildHeader();
             
+            // Sections
+            BuildDefinitionSection(root);
+            BuildTagsSection(root);
+            BuildImpactSection(root);
+            BuildDurationSection(root);
+            BuildWorkersSection(root);
+            BuildRequirementsSection(root);
+            
+            // Bottom padding
+            root.Add(CreateBottomPadding());
+            
+            // Bind all properties
             root.Bind(serializedObject);
             
             return root;
         }
 
-        private void BindHeader()
+        // ═══════════════════════════════════════════════════════════════════════════
+        // Header
+        // ═══════════════════════════════════════════════════════════════════════════
+        
+        private void BuildHeader()
         {
-            var header = root.Q("Header");
-            if (header == null) return;
-            
-            var nameLabel = header.Q<Label>("Name");
-            var descLabel = header.Q<Label>("Description");
-            
-            if (nameLabel != null)
+            headerResult = CreateMainHeader(new HeaderConfig
             {
-                nameLabel.text = !string.IsNullOrEmpty(effect.GetName()) 
-                    ? effect.GetName() 
-                    : "Unnamed Effect";
-            }
+                Icon = m_EffectIcon,
+                DefaultTitle = GetEffectName(),
+                DefaultDescription = GetEffectDescription(),
+                ShowRefresh = true,
+                ShowLookup = true,
+                ShowVisualize = true,
+                OnRefresh = Refresh,
+                OnLookup = Lookup,
+                OnVisualize = Visualize
+            });
             
-            if (descLabel != null)
-            {
-                descLabel.text = !string.IsNullOrEmpty(effect.GetDescription()) 
-                    ? effect.GetDescription() 
-                    : "No description provided.";
-            }
-            
-            var refreshBtn = header.Q<Button>("Refresh");
-            refreshBtn?.RegisterCallback<ClickEvent>(_ => Refresh());
-            
-            var lookupBtn = header.Q<Button>("Lookup");
-            lookupBtn?.RegisterCallback<ClickEvent>(_ => Lookup());
+            root.Add(headerResult.Header);
         }
 
-        private void BindDefinition()
+        // ═══════════════════════════════════════════════════════════════════════════
+        // Definition Section
+        // ═══════════════════════════════════════════════════════════════════════════
+        
+        private void BuildDefinitionSection(VisualElement parent)
         {
-            var section = root.Q("Definition");
-            if (section == null) return;
+            var section = CreateCollapsibleSection(new SectionConfig
+            {
+                Name = "Definition",
+                Title = "Definition",
+                AccentColor = Colors.AccentGray,
+                HelpUrl = "https://docs.playforge.dev/effects/definition"
+            });
+            parent.Add(section.Section);
             
+            var content = section.Content;
             var definition = serializedObject.FindProperty("Definition");
-            if (definition == null) return;
             
-            var nameLabel = root.Q("Header")?.Q<Label>("Name");
-            var descLabel = root.Q("Header")?.Q<Label>("Description");
-            
-            // Name field with live header update
-            var nameField = section.Q<TextField>("Name");
-            if (nameField != null)
+            // Name field
+            var nameField = CreateTextField("Name", "Name");
+            nameField.value = effect.Definition.Name;
+            nameField.RegisterValueChangedCallback(_ => UpdateAssetTagDisplay());
+            nameField.RegisterCallback<FocusOutEvent>(_ =>
             {
-                nameField.value = effect.Definition.Name;
-                nameField.RegisterCallback<FocusOutEvent>(_ =>
-                {
-                    effect.Definition.Name = nameField.value;
-                    if (nameLabel != null) 
-                        nameLabel.text = !string.IsNullOrEmpty(nameField.value) ? nameField.value : "Unnamed Effect";
-                    MarkDirty();
-                });
-            }
-
-            // Description field with live header update
-            var descField = section.Q<TextField>("Description");
-            if (descField != null)
-            {
-                descField.value = effect.Definition.Description;
-                descField.RegisterCallback<FocusOutEvent>(_ =>
-                {
-                    effect.Definition.Description = descField.value;
-                    if (descLabel != null) 
-                        descLabel.text = !string.IsNullOrEmpty(descField.value) ? descField.value : "No description provided.";
-                    MarkDirty();
-                });
-            }
+                effect.Definition.Name = nameField.value;
+                UpdateHeaderLabels();
+                UpdateAssetTagDisplay();
+                MarkDirty(effect);
+            });
+            content.Add(nameField);
             
-            BindPropertyField(section, "Visibility", definition, "Visibility");
-            BindPropertyField(section, "Icon", definition, "Icon");
+            // Description field
+            var descField = CreateTextField("Description", "Description", multiline: true, minHeight: 40);
+            descField.value = effect.Definition.Description;
+            descField.RegisterCallback<FocusOutEvent>(_ =>
+            {
+                effect.Definition.Description = descField.value;
+                UpdateHeaderLabels();
+                MarkDirty(effect);
+            });
+            content.Add(descField);
+            
+            // Visibility + Icon row
+            var row = CreateRow(4);
+            content.Add(row);
+            
+            var iconField = CreatePropertyField(definition.FindPropertyRelative("Icon"), "Icon", "Icon");
+            iconField.style.flexGrow = 1;
+            row.Add(iconField);
+            
+            var visibilityField = CreatePropertyField(definition.FindPropertyRelative("Visibility"), "Visibility", "Visibility");
+            visibilityField.style.flexGrow = 1;
+            visibilityField.style.marginRight = 8;
+            row.Add(visibilityField);
         }
+
+        // ═══════════════════════════════════════════════════════════════════════════
+        // Tags Section
+        // ═══════════════════════════════════════════════════════════════════════════
         
-        private void BindTags()
+        private void BuildTagsSection(VisualElement parent)
         {
-            var section = root.Q("Tags");
-            if (section == null) return;
+            var section = CreateCollapsibleSection(new SectionConfig
+            {
+                Name = "Tags",
+                Title = "Tags",
+                AccentColor = Colors.AccentGreen,
+                HelpUrl = "https://docs.playforge.dev/effects/tags"
+            });
+            parent.Add(section.Section);
             
+            var content = section.Content;
             var tags = serializedObject.FindProperty("Tags");
-            if (tags == null) return;
             
-            BindPropertyField(section, "AssetTag", tags, "AssetTag");
-            BindPropertyField(section, "ContextTags", tags, "ContextTags");
-            BindPropertyField(section, "GrantedTags", tags, "GrantedTags");
-        }
-        
-        private void BindImpact()
-        {
-            var section = root.Q("Impact");
-            if (section == null) return;
+            // Asset Tag Display (read-only)
+            var (assetTagContainer, valueLabel) = CreateAssetTagDisplay();
+            assetTagValueLabel = valueLabel;
+            UpdateAssetTagDisplay();
+            content.Add(assetTagContainer);
             
-            BindPropertyField(section, "ImpactSpecification", "ImpactSpecification");
-            BindPropertyField(section, "DurationSpecification", "DurationSpecification");
-        }
-        
-        private void BindWorkers()
-        {
-            var section = root.Q("Workers");
-            if (section == null) return;
+            // Context Tags
+            content.Add(CreatePropertyField(tags.FindPropertyRelative("ContextTags"), "ContextTags", "Context Tags"));
             
-            BindPropertyField(section, "Workers", "Workers");
-        }
-        
-        private void BindRequirements()
-        {
-            var section = root.Q("Requirements");
-            if (section == null) return;
-            
-            BindPropertyField(section, "SourceRequirements", "SourceRequirements");
-            BindPropertyField(section, "TargetRequirements", "TargetRequirements");
-        }
-        
-        private void MarkDirty()
-        {
-            EditorUtility.SetDirty(effect);
+            // Granted Tags
+            content.Add(CreatePropertyField(tags.FindPropertyRelative("GrantedTags"), "GrantedTags", "Granted Tags"));
         }
 
-        protected override void SetupCollapsibleSections()
+        // ═══════════════════════════════════════════════════════════════════════════
+        // Impact Section
+        // ═══════════════════════════════════════════════════════════════════════════
+        
+        private void BuildImpactSection(VisualElement parent)
         {
+            var section = CreateCollapsibleSection(new SectionConfig
+            {
+                Name = "Impact",
+                Title = "Impact Specification",
+                AccentColor = Colors.AccentRed,
+                HelpUrl = "https://docs.playforge.dev/effects/impact"
+            });
+            parent.Add(section.Section);
             
+            var content = section.Content;
+            
+            var impactField = CreatePropertyField(serializedObject.FindProperty("ImpactSpecification"), "ImpactSpecification", "Impact Specification");
+            impactField.style.marginBottom = 8;
+            content.Add(impactField);
+            
+            //content.Add(CreatePropertyField(serializedObject.FindProperty("DurationSpecification"), "DurationSpecification", "Duration Specification"));
         }
+
+        private void BuildDurationSection(VisualElement parent)
+        {
+            var section = CreateCollapsibleSection(new SectionConfig
+            {
+                Name = "Duration",
+                Title = "Duration Specification",
+                AccentColor = Colors.AccentBlue,
+                HelpUrl = "https://docs.playforge.dev/effects/duration"
+            });
+            parent.Add(section.Section);
+
+            var content = section.Content;
+            
+            var durationField = CreatePropertyField(serializedObject.FindProperty("DurationSpecification"), "DurationSpecification", "Duration Specification");
+            //durationField.style.marginBottom = 8;
+            content.Add(durationField);
+        }
+
+        // ═══════════════════════════════════════════════════════════════════════════
+        // Workers Section
+        // ═══════════════════════════════════════════════════════════════════════════
+        
+        private void BuildWorkersSection(VisualElement parent)
+        {
+            var section = CreateCollapsibleSection(new SectionConfig
+            {
+                Name = "Workers",
+                Title = "Workers",
+                AccentColor = Colors.AccentOrange,
+                HelpUrl = "https://docs.playforge.dev/effects/workers"
+            });
+            parent.Add(section.Section);
+            
+            section.Content.Add(CreatePropertyField(serializedObject.FindProperty("Workers"), "Workers", ""));
+        }
+
+        // ═══════════════════════════════════════════════════════════════════════════
+        // Requirements Section
+        // ═══════════════════════════════════════════════════════════════════════════
+        
+        private void BuildRequirementsSection(VisualElement parent)
+        {
+            var section = CreateCollapsibleSection(new SectionConfig
+            {
+                Name = "Requirements",
+                Title = "Requirements",
+                AccentColor = Colors.AccentCyan,
+                HelpUrl = "https://docs.playforge.dev/effects/requirements"
+            });
+            parent.Add(section.Section);
+            
+            var content = section.Content;
+
+            var sourceHeader = CreateHeader("", "Source (Caster)", Colors.AccentBlue);
+            content.Add(sourceHeader);
+            
+            // Direct PropertyField binding - no foldout wrappers to avoid duplication
+            var sourceField = CreatePropertyField(serializedObject.FindProperty("SourceRequirements"), "SourceRequirements", "Source Requirements");
+            sourceField.style.marginBottom = 8;
+            content.Add(sourceField);
+            
+            content.Add(CreateDivider());
+            
+            var targetHeader = CreateHeader("Target", "Target", Colors.AccentPurple);
+            content.Add(targetHeader);
+            
+            content.Add(CreatePropertyField(serializedObject.FindProperty("TargetRequirements"), "TargetRequirements", "Target Requirements"));
+        }
+
+        // ═══════════════════════════════════════════════════════════════════════════
+        // Helper Methods
+        // ═══════════════════════════════════════════════════════════════════════════
+        
+        private string GetEffectName()
+        {
+            return !string.IsNullOrEmpty(effect.GetName()) ? effect.GetName() : "Unnamed Effect";
+        }
+        
+        private string GetEffectDescription()
+        {
+            return !string.IsNullOrEmpty(effect.GetDescription()) ? effect.GetDescription() : "No description provided.";
+        }
+        
+        private void UpdateHeaderLabels()
+        {
+            if (headerResult?.NameLabel != null)
+                headerResult.NameLabel.text = GetEffectName();
+            if (headerResult?.DescriptionLabel != null)
+                headerResult.DescriptionLabel.text = GetEffectDescription();
+        }
+        
+        private string GenerateAssetTag(string effectName)
+        {
+            if (string.IsNullOrEmpty(effectName))
+                return "Effect";
+            
+            string cleaned = Regex.Replace(effectName, @"[^a-zA-Z0-9\s]", "");
+            string[] words = cleaned.Split(new[] { ' ' }, System.StringSplitOptions.RemoveEmptyEntries);
+            
+            for (int i = 0; i < words.Length; i++)
+            {
+                if (words[i].Length > 0)
+                {
+                    words[i] = char.ToUpper(words[i][0]) + 
+                              (words[i].Length > 1 ? words[i].Substring(1) : "");
+                }
+            }
+            
+            string result = string.Join("", words);
+            
+            if (result.Length > 0 && char.IsDigit(result[0]))
+            {
+                result = "Effect" + result;
+            }
+            
+            return string.IsNullOrEmpty(result) ? "Effect" : result;
+        }
+
+        private void UpdateAssetTagDisplay()
+        {
+            if (assetTagValueLabel == null) return;
+            assetTagValueLabel.text = GenerateAssetTag(effect.Definition?.Name);
+        }
+
+        // ═══════════════════════════════════════════════════════════════════════════
+        // Abstract Implementations
+        // ═══════════════════════════════════════════════════════════════════════════
+        
+        protected override void SetupCollapsibleSections() { }
+
         protected override void Lookup()
         {
-            EditorGUIUtility.PingObject(effect);
+            PingAsset(effect);
         }
+        
         protected override void Refresh()
         {
             serializedObject.Update();
-            
-            var nameLabel = root.Q("Header")?.Q<Label>("Name");
-            var descLabel = root.Q("Header")?.Q<Label>("Description");
-            
-            if (nameLabel != null)
-                nameLabel.text = !string.IsNullOrEmpty(effect.GetName()) ? effect.GetName() : "Unnamed Effect";
-            if (descLabel != null)
-                descLabel.text = !string.IsNullOrEmpty(effect.GetDescription()) ? effect.GetDescription() : "No description provided.";
+            UpdateHeaderLabels();
+            UpdateAssetTagDisplay();
         }
     }
 }

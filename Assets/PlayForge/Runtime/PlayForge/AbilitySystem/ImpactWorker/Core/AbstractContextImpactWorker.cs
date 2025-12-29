@@ -12,7 +12,8 @@ namespace FarEmerald.PlayForge
         
         [Tooltip("The attribute must be the target attribute in the impact")]
         public Attribute ImpactedAttribute;
-        
+
+        public bool AnyImpactType = true;
         [ForgeCategory(Forge.Categories.ImpactType)]
         public List<Tag> ImpactType;
         public EEffectImpactTargetExpanded ImpactTarget;
@@ -42,7 +43,7 @@ namespace FarEmerald.PlayForge
                     impactData.SourcedModifier.Derivation.GetContextTags())
                    && ForgeHelper.ValidateSelfModification(AllowSelfImpact,
                        impactData.SourcedModifier.Derivation.GetSource(), impactData.Target.AsGAS())
-                   && ForgeHelper.ValidateImpactTypes(impactData.SourcedModifier.Derivation.GetImpactTypes(), ImpactType)
+                   && ForgeHelper.ValidateImpactTypes(AnyImpactType, impactData.SourcedModifier.Derivation.GetImpactTypes(), ImpactType)
                    && ForgeHelper.ValidateImpactTargets(ImpactTarget, impactData.RealImpact, ImpactTargetExclusive)
                    && ForgeHelper.ValidateSignPolicy(ImpactSign, ImpactTarget, impactData.RealImpact);
 

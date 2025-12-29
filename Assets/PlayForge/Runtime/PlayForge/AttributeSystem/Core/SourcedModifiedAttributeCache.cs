@@ -98,7 +98,7 @@ namespace FarEmerald.PlayForge
             
             for (int i = 0; i < cache[attribute].Count; i++)
             {
-                if (!ForgeHelper.ValidateImpactTypes(impactType, cache[attribute][i].Derivation.GetImpactTypes())) continue;
+                if (!ForgeHelper.ValidateImpactTypes(false, impactType, cache[attribute][i].Derivation.GetImpactTypes())) continue;
                 if (cache[attribute][i].SignPolicy != signPolicy) continue;
                 if (cache[attribute][i].BaseDerivation.GetSource() == cache[attribute][i].BaseDerivation.GetTarget() && !allowSelfModify) continue;
                 if (!anyContextTag && !cache[attribute][i].BaseDerivation.GetContextTags().ContainsAll(contextTags)) continue;
@@ -112,7 +112,7 @@ namespace FarEmerald.PlayForge
             
             for (int i = 0; i < cache[attribute].Count; i++)
             {
-                if (!ForgeHelper.ValidateImpactTypes(impactType, cache[attribute][i].Derivation.GetImpactTypes())) continue;
+                if (!ForgeHelper.ValidateImpactTypes(false, impactType, cache[attribute][i].Derivation.GetImpactTypes())) continue;
                 if (cache[attribute][i].SignPolicy != signPolicy) continue;
                 if (cache[attribute][i].BaseDerivation.GetSource() == cache[attribute][i].BaseDerivation.GetTarget() && !allowSelfModify) continue;
                 if (!anyContextTag && !cache[attribute][i].BaseDerivation.GetContextTags().ContainsAll(contextTags)) continue;

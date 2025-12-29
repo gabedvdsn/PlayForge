@@ -5,6 +5,7 @@ MonoImporter:
   serializedVersion: 2
   defaultReferences:
   - m_InspectorUXML: {fileID: 9197481963319205126, guid: 65db8fdcd3e3e724a8ce9cebb1e815ad, type: 3}
+  - m_StyleSheet: {fileID: 7433441132597879392, guid: c808b6522c54d4842a24ad940a762043, type: 3}
   executionOrder: 0
   icon: {instanceID: 0}
   userData: 

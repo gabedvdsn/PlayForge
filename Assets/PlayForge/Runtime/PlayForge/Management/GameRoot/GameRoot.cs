@@ -89,7 +89,7 @@ namespace FarEmerald.PlayForge
         
         public float GetRelativeLevel()
         {
-            return Data.Identity.RelativeLevel;
+            return Data.RelativeLevel;
         }
     }
 }

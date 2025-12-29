@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Serialization;
 
@@ -12,10 +13,8 @@ namespace FarEmerald.PlayForge
         
         public EAbilityActivationPolicyExtended ActivationPolicy = EAbilityActivationPolicyExtended.SingleActive; 
         public bool ActivateImmediately;
+
         
-        public Sprite UnlearnedIcon;
-        public Sprite NormalIcon;
-        public Sprite QueuedIcon;
-        public Sprite OnCooldownIcon;
+        public List<TextureItem> Textures;
     }
 }

@@ -10,7 +10,7 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: f6a646b5a2dc74d4baa65e4dd098f5ad, type: 3}
-  m_Name: Attribute_B
+  m_Name: Attribute_A
   m_EditorClassIdentifier: 
   Name: Health
   Description: Describes how healthy an entity .

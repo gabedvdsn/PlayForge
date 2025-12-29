@@ -278,7 +278,7 @@ namespace FarEmerald.PlayForge.Extended
             public const string ActivateImmediatelyField = "ActivateImmediately";
             public const string IgnoreWhenLevelZeroField = "IgnoreWhenLevelZero";
             public const string MaxLevelField = "MaxLevel";
-            public const string StartingLevelField = "StartingLevel";
+            public const string StartingLevelField = "Level";
             public const string TargetingProxyField = "TargetingProxy";
             public const string UseImplicitTargetingField = "UseImplicitTargeting";
             public const string AbilityProxyStagesField = "AbilityProxyStages";

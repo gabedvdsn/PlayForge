@@ -13,35 +13,84 @@ MonoBehaviour:
   m_Name: Effect_A
   m_EditorClassIdentifier: 
   Definition:
-    Name: A
+    Name: Hello
     Description: 
     Visibility:
-      Name: 
-    Icon: {fileID: 0}
+      Name: Self-Cast
+    Icon: {fileID: 10901, guid: 0000000000000000f000000000000000, type: 0}
   Tags:
     AssetTag:
       Name: 
     ContextTags: []
     GrantedTags: []
   ImpactSpecification:
-    AttributeTarget: {fileID: 0}
+    AttributeTarget: {fileID: 11400000, guid: 125a0d134c497f34c91ef890931b1ec2, type: 2}
     TargetImpact: 0
     ImpactOperation: 0
     AffiliationPolicy: 0
-    ImpactTypes: []
+    ImpactTypes:
+    - Name: 
     ReverseImpactOnRemoval: 0
     ReApplicationPolicy: 0
     Magnitude: 0
     MagnitudeCalculationOperation: 0
     Packets: []
   DurationSpecification:
-    DurationPolicy: 0
+    DurationPolicy: 2
     StackableType: 0
     TickOnApplication: 0
-    Duration: 0
+    Duration: 5
     DurationCalculationOperation: 0
     DeltaTimeSource:
-      Name: Melee
-    Ticks: 0
-    TickCalculationOperation: 0
+      Name: Poison
+    Ticks: 21
+    TickInterval: 0
+    TickCalculationOperation: 2
     Rounding: 0
+  Workers:
+  - rid: -2
+  SourceRequirements:
+    ApplicationRequirements:
+      AvoidTags:
+      - Tag:
+          Name: 
+        Operator: 0
+        Magnitude: 0
+      RequireTags:
+      - Tag:
+          Name: 
+        Operator: 3
+        Magnitude: 0
+    OngoingRequirements:
+      AvoidTags:
+      - Tag:
+          Name: 
+        Operator: 0
+        Magnitude: 0
+      RequireTags:
+      - Tag:
+          Name: Melee
+        Operator: 0
+        Magnitude: 5
+    RemovalRequirements:
+      AvoidTags: []
+      RequireTags:
+      - Tag:
+          Name: Self-Cast
+        Operator: 0
+        Magnitude: 0
+  TargetRequirements:
+    ApplicationRequirements:
+      AvoidTags: []
+      RequireTags: []
+    OngoingRequirements:
+      AvoidTags: []
+      RequireTags: []
+    RemovalRequirements:
+      AvoidTags: []
+      RequireTags: []
+  references:
+    version: 2
+    RefIds:
+    - rid: -2
+      type: {class: , ns: , asm: }

@@ -2,6 +2,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
+using FarEmerald.PlayForge.Extended;
 using UnityEngine;
 
 namespace FarEmerald.PlayForge
@@ -15,10 +16,14 @@ namespace FarEmerald.PlayForge
         public GameplayEffectImpactSpecification ImpactSpecification;
         public GameplayEffectDurationSpecification DurationSpecification;
         
+        [SerializeReference]
         public List<AbstractEffectWorker> Workers;
         
         public TagRequirements SourceRequirements;
         public TagRequirements TargetRequirements;
+
+        [SerializeReference]
+        public List<DataWrapper> LocalData;
 
         public GameplayEffectSpec Generate(IEffectOrigin origin, IGameplayAbilitySystem target)
         {
@@ -65,15 +70,19 @@ namespace FarEmerald.PlayForge
         }
         public override HashSet<Tag> GetAllTags()
         {
-            return new HashSet<Tag>();
+            var set = new HashSet<Tag>();
+
+            set.Add(Definition.Visibility);
+            
         }
         public string GetDescription()
         {
             return Definition.Description;
         }
-        public Sprite GetPrimaryIcon()
+        public Texture2D GetPrimaryIcon()
         {
-            return Definition.Icon;
+            if (LocalData.TryGet(Tag.Generate("PrimaryIcon"), EDataWrapperType.Object, out var data)) return data.objectValue as Texture2D;
+            return Definition.Textures.Count > 0 ? Definition.Textures[0].Texture : null;
         }
     }
 
@@ -83,14 +92,14 @@ namespace FarEmerald.PlayForge
         public string Name;
         public string Description;
         [ForgeCategory(Forge.Categories.Visibility)] public Tag Visibility;
-        public Sprite Icon;
+        public List<TextureItem> Textures;
     }
 
     public interface IHasReadableDefinition
     {
         public string GetName();
         public string GetDescription();
-        public Sprite GetPrimaryIcon();
+        public Texture2D GetPrimaryIcon();
     }
 
     [Serializable]

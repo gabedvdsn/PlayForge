@@ -6,11 +6,10 @@ using UnityEngine.UIElements;
 
 namespace FarEmerald.PlayForge.Extended.Editor
 {
-    [CustomPropertyDrawer(typeof(AbstractAttributeWorker))]
-    public class AttributeWorkerDrawer : AbstractTypeRefDrawer<AbstractAttributeWorker>
+    public class AbstractGenericDrawer<T> : AbstractTypeRefDrawer<T> where T : class
     {
-        private VisualElement _childFieldsContainer;
-        private SerializedProperty _currentProperty;
+        protected VisualElement _childFieldsContainer;
+        protected SerializedProperty _currentProperty;
         
         public override VisualElement CreatePropertyGUI(SerializedProperty prop)
         {
@@ -54,8 +53,8 @@ namespace FarEmerald.PlayForge.Extended.Editor
             
             return baseGui;
         }
-
-        private void OnPropertyChanged(SerializedProperty prop)
+        
+        protected void OnPropertyChanged(SerializedProperty prop)
         {
             // Refresh child fields when the managed reference type changes
             PopulateChildFields(prop);
@@ -65,7 +64,7 @@ namespace FarEmerald.PlayForge.Extended.Editor
         /// Populates the child fields container with PropertyFields for each
         /// serialized field of the concrete validation rule implementation.
         /// </summary>
-        private void PopulateChildFields(SerializedProperty property)
+        protected void PopulateChildFields(SerializedProperty property)
         {
             _childFieldsContainer.Clear();
             
@@ -157,7 +156,62 @@ namespace FarEmerald.PlayForge.Extended.Editor
                 PopulateChildFields(prop);
             });
         }
-
+    }
+    
+    [CustomPropertyDrawer(typeof(AbstractAttributeWorker))]
+    public class AttributeWorkerDrawer : AbstractGenericDrawer<AbstractAttributeWorker>
+    {
+        protected override bool AcceptOpen(SerializedProperty prop)
+        {
+            return false;
+        }
+        protected override bool AcceptClear()
+        {
+            return false;
+        }
+        protected override bool AcceptAdd()
+        {
+            return false;
+        }
+    }
+    
+    [CustomPropertyDrawer(typeof(AbstractImpactWorker))]
+    public class ImpactWorkerDrawer : AbstractGenericDrawer<AbstractImpactWorker>
+    {
+        protected override bool AcceptOpen(SerializedProperty prop)
+        {
+            return false;
+        }
+        protected override bool AcceptClear()
+        {
+            return false;
+        }
+        protected override bool AcceptAdd()
+        {
+            return false;
+        }
+    }
+    
+    [CustomPropertyDrawer(typeof(AbstractTagWorker))]
+    public class TagWorkerDrawer : AbstractGenericDrawer<AbstractTagWorker>
+    {
+        protected override bool AcceptOpen(SerializedProperty prop)
+        {
+            return false;
+        }
+        protected override bool AcceptClear()
+        {
+            return false;
+        }
+        protected override bool AcceptAdd()
+        {
+            return false;
+        }
+    }
+    
+    [CustomPropertyDrawer(typeof(AbstractAnalysisWorker))]
+    public class AnalysisWorkerDrawer : AbstractGenericDrawer<AbstractAnalysisWorker>
+    {
         protected override bool AcceptOpen(SerializedProperty prop)
         {
             return false;

@@ -3,100 +3,56 @@ using UnityEditor;
 using UnityEditor.UIElements;
 using UnityEngine;
 using UnityEngine.UIElements;
+using static FarEmerald.PlayForge.Extended.Editor.ForgeDrawerStyles;
 
 namespace FarEmerald.PlayForge.Extended.Editor
 {
+    /// <summary>
+    /// Base class for all PlayForge custom editors.
+    /// Supports both UXML-based and fully programmatic UI creation.
+    /// </summary>
     public abstract class BasePlayForgeEditor : UnityEditor.Editor
     {
         protected VisualElement root;
+
+        // ═══════════════════════════════════════════════════════════════════════════
+        // Abstract Methods - Must be implemented by derived classes
+        // ═══════════════════════════════════════════════════════════════════════════
         
-        protected virtual void SetupHeader()
-        {
-            var header = root.Q("Header");
-
-            var visualize = header.Q<Button>("Visualize");
-            //visualize.style.backgroundImage = EditorGUIUtility.IconContent("d_forward@2x").image as Texture2D;
-            
-            var refresh = header.Q<Button>("Refresh");
-            //refresh.style.backgroundImage = EditorGUIUtility.IconContent("d_Refresh@2x").image as Texture2D;
-            
-            var lookup = header.Q<Button>("Lookup");
-            //lookup.style.backgroundImage = EditorGUIUtility.IconContent("d_Search Icon").image as Texture2D;
-        }
-
-        protected virtual void ConfigureScrollView()
-        {
-            var scrollView = root.Q<ScrollView>("ContentScrollView");
-            if (scrollView != null)
-            {
-                scrollView.style.maxHeight = 1000;
-                scrollView.style.minHeight = 200;
-                scrollView.horizontalScrollerVisibility = ScrollerVisibility.Hidden;
-                scrollView.verticalScrollerVisibility = ScrollerVisibility.Auto;
-            }
-        }
-
+        /// <summary>
+        /// Setup collapsible sections. Override if using UXML-based sections.
+        /// For programmatic editors, this can be empty as sections handle their own collapse.
+        /// </summary>
         protected abstract void SetupCollapsibleSections();
         
-        protected void SetupCollapsibleSection(string sectionName)
-        {
-            var header = root.Q($"{sectionName}Header");
-            var content = root.Q(sectionName);
-            var arrow = root.Q<Label>($"{sectionName}Arrow");
-            
-            if (header == null || content == null) return;
-            
-            // Start expanded
-            bool isExpanded = true;
-            
-            // Add hover effect
-            header.RegisterCallback<MouseEnterEvent>(_ =>
-            {
-                header.style.backgroundColor = new Color(0.35f, 0.35f, 0.35f, 0.6f);
-            });
-            
-            header.RegisterCallback<MouseLeaveEvent>(_ =>
-            {
-                header.style.backgroundColor = new Color(0.2f, 0.2f, 0.2f, 0.5f);
-            });
-            
-            // Toggle on click
-            header.RegisterCallback<ClickEvent>(evt =>
-            {
-                // Don't toggle if clicking the help button
-                if (evt.target is Button) return;
-                
-                isExpanded = !isExpanded;
-                content.style.display = isExpanded ? DisplayStyle.Flex : DisplayStyle.None;
-                
-                if (arrow != null)
-                {
-                    arrow.text = isExpanded ? "▼" : "►";
-                }
-                
-                evt.StopPropagation();
-            });
-        }
+        /// <summary>
+        /// Called when the Lookup button is clicked.
+        /// </summary>
+        protected abstract void Lookup();
+        
+        /// <summary>
+        /// Called when the Refresh button is clicked.
+        /// </summary>
+        protected abstract void Refresh();
 
-        protected virtual void UpdateAssetTagDisplay(Label assetTagLabel, string _name, string fallback)
-        {
-            if (assetTagLabel == null) return;
-            
-            string generatedTag = GenerateAssetTag(_name, fallback);
-            assetTagLabel.text = generatedTag;
-            
-            // Also update the actual asset tag in the ability
-            // You may want to create a Tag object here or store as string
-            // For now, we'll just update the display
-        }
+        // ═══════════════════════════════════════════════════════════════════════════
+        // Virtual Methods - Can be overridden
+        // ═══════════════════════════════════════════════════════════════════════════
+        
+        protected virtual void Visualize() { }
+        protected virtual void Import() { }
 
-        protected string GenerateAssetTag(string _name, string fallback)
+        // ═══════════════════════════════════════════════════════════════════════════
+        // Asset Tag Generation
+        // ═══════════════════════════════════════════════════════════════════════════
+        
+        protected string GenerateAssetTag(string assetName, string fallback)
         {
-            if (string.IsNullOrEmpty(_name))
-                return "Ability";
+            if (string.IsNullOrEmpty(assetName))
+                return fallback;
             
             // Remove special characters (keep only alphanumeric and spaces)
-            string cleaned = Regex.Replace(_name, @"[^a-zA-Z0-9\s]", "");
+            string cleaned = Regex.Replace(assetName, @"[^a-zA-Z0-9\s]", "");
             
             // Split by spaces and capitalize each word (PascalCase)
             string[] words = cleaned.Split(new[] { ' ' }, System.StringSplitOptions.RemoveEmptyEntries);
@@ -118,37 +74,191 @@ namespace FarEmerald.PlayForge.Extended.Editor
                 result = $"{fallback}_" + result;
             }
             
-            return string.IsNullOrEmpty(result) ? $"{fallback}_" : result;
+            return string.IsNullOrEmpty(result) ? fallback : result;
+        }
+
+        // ═══════════════════════════════════════════════════════════════════════════
+        // Utility Methods
+        // ═══════════════════════════════════════════════════════════════════════════
+        
+        protected void MarkDirty(Object obj)
+        {
+            EditorUtility.SetDirty(obj);
         }
         
-        protected void BindPropertyField(VisualElement container, string fieldName, string propertyPath)
+        protected void PingAsset(Object obj)
+        {
+            EditorGUIUtility.PingObject(obj);
+        }
+        
+        protected string GetAssetGuid(Object obj)
+        {
+            var path = AssetDatabase.GetAssetPath(obj);
+            return AssetDatabase.AssetPathToGUID(path);
+        }
+        
+        // ═══════════════════════════════════════════════════════════════════════════
+        // Legacy UXML Support (for gradual migration)
+        // ═══════════════════════════════════════════════════════════════════════════
+        
+        /// <summary>
+        /// Sets up a collapsible section from UXML elements.
+        /// Use this when migrating from UXML to programmatic.
+        /// </summary>
+        protected void SetupCollapsibleSection(string sectionName, bool startExpanded = true)
+        {
+            var header = root.Q($"{sectionName}Header");
+            var content = root.Q(sectionName);
+            var arrow = root.Q<Label>($"{sectionName}Arrow");
+            
+            if (header == null || content == null) return;
+            
+            bool isExpanded = startExpanded;
+            
+            // Set initial state
+            content.style.display = isExpanded ? DisplayStyle.Flex : DisplayStyle.None;
+            if (arrow != null)
+            {
+                arrow.text = isExpanded ? Icons.ChevronDown : Icons.ChevronRight;
+            }
+            
+            // Add hover effect
+            header.RegisterCallback<MouseEnterEvent>(_ =>
+            {
+                header.style.backgroundColor = Colors.SectionHeaderHover;
+            });
+            
+            header.RegisterCallback<MouseLeaveEvent>(_ =>
+            {
+                header.style.backgroundColor = Colors.SectionHeaderBackground;
+            });
+            
+            // Toggle on click
+            header.RegisterCallback<ClickEvent>(evt =>
+            {
+                if (evt.target is Button) return;
+                
+                isExpanded = !isExpanded;
+                content.style.display = isExpanded ? DisplayStyle.Flex : DisplayStyle.None;
+                
+                if (arrow != null)
+                {
+                    arrow.text = isExpanded ? Icons.ChevronDown : Icons.ChevronRight;
+                }
+                
+                evt.StopPropagation();
+            });
+        }
+        
+        /// <summary>
+        /// Binds a PropertyField from UXML to a SerializedProperty.
+        /// </summary>
+        protected PropertyField BindPropertyField(VisualElement container, string fieldName, string propertyPath, string fieldLabel = "")
         {
             var field = container.Q<PropertyField>(fieldName);
+            if (field != null && !string.IsNullOrEmpty(fieldLabel))
+            {
+                field.label = fieldLabel;
+            }
+            
             var prop = serializedObject.FindProperty(propertyPath);
             if (field != null && prop != null)
             {
                 field.BindProperty(prop);
             }
+            return field;
         }
         
-        protected void BindPropertyField(VisualElement container, string fieldName, SerializedProperty parent, string relativePath)
+        /// <summary>
+        /// Binds a PropertyField from UXML to a relative SerializedProperty.
+        /// </summary>
+        protected PropertyField BindPropertyField(VisualElement container, string fieldName, SerializedProperty parent, string relativePath, string fieldLabel = "")
         {
             var field = container.Q<PropertyField>(fieldName);
+            if (field != null && !string.IsNullOrEmpty(fieldLabel))
+            {
+                field.label = fieldLabel;
+            }
+            
             var prop = parent.FindPropertyRelative(relativePath);
             if (field != null && prop != null)
             {
                 field.BindProperty(prop);
             }
+            return field;
         }
-
-        protected abstract void Lookup();
-
-        protected virtual void Visualize()
-        {
-            
-        }
-
-        protected abstract void Refresh();
         
+        /// <summary>
+        /// Sets up a help button from UXML.
+        /// </summary>
+        protected void SetupHelpButton(string buttonName, string url)
+        {
+            var btn = root.Q<Button>(buttonName);
+            if (btn != null)
+            {
+                btn.clicked += () => Application.OpenURL(url);
+            }
+        }
+        
+        /// <summary>
+        /// Configures an existing ScrollView from UXML.
+        /// </summary>
+        protected void ConfigureScrollView()
+        {
+            var scrollView = root.Q<ScrollView>("ContentScrollView");
+            if (scrollView != null)
+            {
+                scrollView.style.maxHeight = 800;
+                scrollView.style.minHeight = 200;
+                scrollView.horizontalScrollerVisibility = ScrollerVisibility.Hidden;
+                scrollView.verticalScrollerVisibility = ScrollerVisibility.Auto;
+            }
+        }
+        
+        /// <summary>
+        /// Sets up header buttons from UXML.
+        /// </summary>
+        protected void SetupHeader()
+        {
+            var header = root.Q("Header");
+            if (header == null) return;
+
+            var refreshBtn = header.Q<Button>("Refresh");
+            if (refreshBtn != null)
+            {
+                refreshBtn.clicked += Refresh;
+                ApplyButtonHoverStyle(refreshBtn);
+            }
+            
+            var lookupBtn = header.Q<Button>("Lookup");
+            if (lookupBtn != null)
+            {
+                lookupBtn.clicked += Lookup;
+                ApplyButtonHoverStyle(lookupBtn);
+            }
+            
+            var visualizeBtn = header.Q<Button>("Visualize");
+            if (visualizeBtn != null)
+            {
+                visualizeBtn.clicked += Visualize;
+                ApplyButtonHoverStyle(visualizeBtn);
+            }
+            
+            var importBtn = header.Q<Button>("Import");
+            if (importBtn != null)
+            {
+                importBtn.clicked += Import;
+                ApplyButtonHoverStyle(importBtn);
+            }
+        }
+        
+        /// <summary>
+        /// Applies hover effect to a button.
+        /// </summary>
+        protected void ApplyButtonHoverStyle(Button btn)
+        {
+            btn.RegisterCallback<MouseEnterEvent>(_ => btn.style.backgroundColor = Colors.ButtonHover);
+            btn.RegisterCallback<MouseLeaveEvent>(_ => btn.style.backgroundColor = Colors.ButtonBackground);
+        }
     }
 }

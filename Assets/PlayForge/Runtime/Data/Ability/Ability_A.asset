@@ -10,13 +10,12 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: d5a42dbe2415465689d11a1e8ae1fdbc, type: 3}
-  m_Name: Ability_TEST
+  m_Name: Ability_A
   m_EditorClassIdentifier: 
   Definition:
     Name: Test Ability
-    Description: This is a description for this Abilit and I promise it has a lot
-      of cintersting and useful information in here! hgwoever i sdio asdaopd iasdoiuansdo
-      ansdoaisdna sdasoid adas isi ns insis isaa
+    Description: Testing stuff out and oasdoasdioasdio aio asoia sio asio sdaio sdai
+      sdaioa io asio adioa dsoi asdio sda sda
     ActivationPolicy: 0
     ActivateImmediately: 0
     UnlearnedIcon: {fileID: 0}
@@ -34,16 +33,17 @@ MonoBehaviour:
       Name: Melee
     SourceRequirements:
       AvoidTags:
-      - Name: Burning
-      RequireTags:
-      - Name: Poison
-      - Name: Flying
-      - Name: Apparent
-      - Name: Melee
-      - Name: Melee
+      - Tag:
+          Name: 
+        Operator: 0
+        Magnitude: 0
+      RequireTags: []
     TargetRequirements:
       AvoidTags:
-      - Name: Glamping
+      - Tag:
+          Name: 
+        Operator: 0
+        Magnitude: 0
       RequireTags: []
   Proxy:
     Targeting:
@@ -52,15 +52,15 @@ MonoBehaviour:
     Stages:
     - StagePolicy:
         rid: -2
+      Tasks: []
+      ApplyUsageEffects: 0
+    - StagePolicy:
+        rid: -2
       Tasks:
       - rid: 6446561441006748319
       - rid: 6446561461186854999
       - rid: 6446561461186855000
       - rid: 6446561461186855003
-      ApplyUsageEffects: 0
-    - StagePolicy:
-        rid: -2
-      Tasks: []
       ApplyUsageEffects: 0
   SourceActivationRules:
   - rid: 6446561441006747940
@@ -108,20 +108,69 @@ MonoBehaviour:
     effectValue: {fileID: 11400000, guid: 814ed360c11a8554aa87b70f14fd4dd3, type: 2}
     abilityValue: {fileID: 0}
     entityValue: {fileID: 0}
+  - Key:
+      Name: Electronics
+    Type: 0
+    stringValue: Hello world
+    intValue: 0
+    floatValue: 0
+    objectValue: {fileID: 10905, guid: 0000000000000000f000000000000000, type: 0}
+    tagValue:
+      Name: Glamping
+    attributeValue: {fileID: 0}
+    effectValue: {fileID: 11400000, guid: 814ed360c11a8554aa87b70f14fd4dd3, type: 2}
+    abilityValue: {fileID: 0}
+    entityValue: {fileID: 0}
   StartingLevel: 0
   MaxLevel: 4
   IgnoreWhenLevelZero: 1
   Cost: {fileID: 11400000, guid: 06b4dcfad77cc814b8318eee577e73bf, type: 2}
   Cooldown: {fileID: 11400000, guid: 814ed360c11a8554aa87b70f14fd4dd3, type: 2}
-  AttributeWorkers: []
+  AttributeWorkers:
+  - rid: 4542983600349905715
   TagWorkers: []
-  ImpactWorkers: []
-  AnalysisWorkers: []
+  ImpactWorkers:
+  - rid: 4542983647173017670
+  AnalysisWorkers:
+  - rid: -2
   references:
     version: 2
     RefIds:
     - rid: -2
       type: {class: , ns: , asm: }
+    - rid: 4542983600349905715
+      type: {class: ClampAttributeWorker, ns: FarEmerald.PlayForge, asm: Assembly-CSharp}
+      data:
+        Timing: 1
+        TargetAttribute: {fileID: 11400000, guid: 125a0d134c497f34c91ef890931b1ec2, type: 2}
+        AllowSelfModification: 1
+        TargetModification: 0
+        ExclusivelyTargetModification: 0
+        SignPolicy: 4
+        AnyImpactType: 1
+        ImpactType: []
+        AnyContextTag: 1
+        ValidContextTags: []
+    - rid: 4542983647173017670
+      type: {class: RelativeOperationContextImpactWorker, ns: FarEmerald.PlayForge, asm: Assembly-CSharp}
+      data:
+        ImpactedAttribute: {fileID: 11400000, guid: 125a0d134c497f34c91ef890931b1ec2, type: 2}
+        AnyImpactType: 1
+        ImpactType: []
+        ImpactTarget: 0
+        ImpactTargetExclusive: 0
+        ImpactSign: 0
+        AllowSelfImpact: 1
+        AnyContextTag: 1
+        ImpactAbilityContextTags: []
+        WorkAttribute: {fileID: 11400000, guid: 125a0d134c497f34c91ef890931b1ec2, type: 2}
+        WorkImpactType:
+          Name: Poison
+        WorkSignPolicy: 1
+        RelativeAttribute: {fileID: 11400000, guid: 125a0d134c497f34c91ef890931b1ec2, type: 2}
+        Operation: 1
+        WithRespectTo: 1
+        WorkerImpactWorkable: 0
     - rid: 6446561441006747940
       type: {class: CooldownValidation, ns: FarEmerald.PlayForge, asm: Assembly-CSharp}
       data: 

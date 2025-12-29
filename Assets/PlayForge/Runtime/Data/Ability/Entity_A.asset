@@ -12,14 +12,53 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: dac855327e524f0f9473752d46a88179, type: 3}
   m_Name: Entity_A
   m_EditorClassIdentifier: 
+  Name: TEst
+  Description: Geasd
+  Textures:
+  - Tag:
+      Name: Melee
+    Texture: {fileID: 0}
+  Affiliation: []
+  AssetTag:
+    Name: 
+  GrantedTags: []
+  Level: 1
+  CapAtMaxLevel: 1
+  MaxLevel: 99
   ActivationPolicy: 2
   MaxAbilities: 99
   StartingAbilities: []
   AllowDuplicateAbilities: 0
   ImpactWorkers: []
-  AttributeSet: {fileID: 0}
+  AttributeSet: {fileID: 11400000, guid: b72e524819a37134695073b751354236, type: 2}
   AttributeChangeEvents: []
-  LocalData: []
+  LocalData:
+  - Key:
+      Name: 
+    Type: 5
+    stringValue: 
+    intValue: 0
+    floatValue: 0
+    objectValue: {fileID: 0}
+    tagValue:
+      Name: 
+    attributeValue: {fileID: 11400000, guid: 125a0d134c497f34c91ef890931b1ec2, type: 2}
+    effectValue: {fileID: 0}
+    abilityValue: {fileID: 0}
+    entityValue: {fileID: 0}
+  - Key:
+      Name: 
+    Type: 8
+    stringValue: 
+    intValue: 0
+    floatValue: 0
+    objectValue: {fileID: 0}
+    tagValue:
+      Name: 
+    attributeValue: {fileID: 0}
+    effectValue: {fileID: 0}
+    abilityValue: {fileID: 0}
+    entityValue: {fileID: 0}
   references:
     version: 2
     RefIds: []

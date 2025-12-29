@@ -1,11 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
-using UnityEngine;
 
 namespace FarEmerald.PlayForge
 {
     [Serializable]
-    public abstract class AbstractAttributeWorker
+    public abstract class AbstractAttributeWorker : Taggable
     {
         public abstract void Activate(IGameplayAbilitySystem system, Dictionary<Attribute, CachedAttributeValue> attributeCache,
             ChangeValue change);
@@ -18,6 +17,8 @@ namespace FarEmerald.PlayForge
         public abstract bool RegisterWithHandler(AttributeChangeMomentHandler preChange, AttributeChangeMomentHandler postChange);
 
         public abstract bool DeRegisterFromHandler(AttributeChangeMomentHandler preChange, AttributeChangeMomentHandler postChange);
+
+        public abstract HashSet<Tag> GetAllTags();
         
         public enum EChangeEventTiming
         {

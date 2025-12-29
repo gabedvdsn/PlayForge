@@ -1,209 +1,149 @@
 <ui:UXML xmlns:ui="UnityEngine.UIElements" xmlns:uie="UnityEditor.UIElements" editor-extension-mode="True">
-    <!-- Root container -->
     <ui:VisualElement name="Root" style="flex-grow: 1; flex-shrink: 1;">
-
-        <!-- ═══════════════════════════════════════════════════════════════════ -->
-        <!-- STICKY HEADER -->
-        <!-- ═══════════════════════════════════════════════════════════════════ -->
         <ui:VisualElement name="Header" style="flex-direction: row; min-height: 64px; max-height: 64px; margin-top: 4px; margin-bottom: 4px; margin-left: 2px; margin-right: 2px; padding: 4px; background-color: rgba(40, 40, 40, 0.95); border-radius: 4px; border-width: 1px; border-color: rgb(35, 35, 35); flex-shrink: 0;">
             <ui:VisualElement name="HeaderIcon" style="width: 56px; height: 56px; min-width: 56px; min-height: 56px; flex-shrink: 0; background-image: url(&quot;project://database/Assets/PlayForge/Editor/Icons/Creator/ability.png?fileID=2800000&amp;guid=e6506c856fc12b24c821fc3a9d00c603&amp;type=3#ability&quot;); -unity-background-scale-mode: scale-to-fit; border-radius: 3px; border-width: 1px; border-color: rgb(35, 35, 35); margin-right: 8px;" />
             <ui:VisualElement style="flex-grow: 1; justify-content: center;">
-                <ui:VisualElement style="flex-direction: row; align-items: center;">
-                    <ui:Label text="Ability Name" name="Name" style="flex-grow: 1; font-size: 16px; -unity-font-style: bold; padding-left: 4px; padding-right: 8px; -unity-text-align: middle-left; color: rgb(220, 220, 220);" />
+                <ui:VisualElement style="align-items: center; flex-direction: row;">
+                    <ui:Label text="Ability Name" name="Name" style="font-size: 16px; -unity-font-style: bold; padding-left: 4px; padding-right: 8px; -unity-text-align: middle-left; color: rgb(220, 220, 220); flex-grow: 1;" />
                     <ui:VisualElement style="flex-direction: row; flex-shrink: 0;">
-                        <ui:Button text="⟳" name="Refresh" tooltip="Refresh" style="width: 24px; height: 24px; min-width: 24px; min-height: 24px; max-width: 24px; max-height: 24px; margin-left: 2px; margin-right: 2px; border-radius: 3px; -unity-font-style: bold; font-size: 12px; background-color: rgb(80, 80, 80);" />
+                        <ui:Button text="⟳" name="Refresh" tooltip="Refresh" style="width: 24px; height: 24px; min-width: 24px; min-height: 24px; max-width: 24px; max-height: 24px; margin-left: 2px; margin-right: 2px; border-radius: 3px; background-color: rgb(80, 80, 80);" />
                         <ui:Button text="⌕" name="Lookup" tooltip="Find References" style="width: 24px; height: 24px; min-width: 24px; min-height: 24px; max-width: 24px; max-height: 24px; margin-left: 2px; margin-right: 2px; border-radius: 3px; -unity-font-style: bold; font-size: 12px; background-color: rgb(80, 80, 80);" />
                     </ui:VisualElement>
                 </ui:VisualElement>
-                <ui:Label text="About this ability..." name="Description" style="font-size: 11px; padding-left: 4px; padding-top: 2px; -unity-text-align: middle-left; color: rgb(160, 160, 160); white-space: normal; text-overflow: ellipsis; overflow: hidden; max-height: 32px;" />
+                <ui:Label text="About this ability..." name="Description" style="font-size: 11px; padding-left: 4px; padding-top: 2px; -unity-text-align: lower-left; color: rgb(160, 160, 160); text-overflow: ellipsis; overflow: hidden; max-height: 32px; white-space: normal;" />
             </ui:VisualElement>
         </ui:VisualElement>
-
-        <!-- ═══════════════════════════════════════════════════════════════════ -->
-        <!-- SCROLLABLE CONTENT -->
-        <!-- ═══════════════════════════════════════════════════════════════════ -->
         <ui:ScrollView name="ContentScrollView" style="flex-grow: 1; flex-shrink: 1;">
-
-            <!-- ═══════════════════════════════════════════════════════════════════ -->
-            <!-- DEFINITION SECTION -->
-            <!-- ═══════════════════════════════════════════════════════════════════ -->
             <ui:VisualElement name="DefinitionSection" class="forge-section" style="margin-bottom: 4px;">
-                <!-- Section Header (Clickable Foldout) -->
                 <ui:VisualElement name="DefinitionHeader" class="forge-section-header" style="flex-direction: row; align-items: center; margin-top: 8px; margin-bottom: 4px; padding: 4px 2px; cursor: link; background-color: rgba(50, 50, 50, 0.5); border-radius: 3px;">
                     <ui:Label name="DefinitionArrow" text="▼" class="forge-section-arrow" style="width: 16px; font-size: 10px; -unity-text-align: middle-center; color: rgb(150, 150, 150); margin-right: 2px;" />
                     <ui:Label text="Definition" class="forge-section-title" style="font-size: 14px; -unity-font-style: bold; -unity-text-align: middle-left; color: rgb(200, 200, 200); padding-right: 8px; flex-shrink: 0;" />
                     <ui:VisualElement style="flex-grow: 1; height: 1px; background-color: rgb(100, 100, 100); margin-left: 4px; margin-right: 8px; align-self: center; border-radius: 1px;" />
                     <ui:Button text="?" name="DefinitionHelp" tooltip="Help" style="width: 20px; height: 20px; min-width: 20px; min-height: 20px; max-width: 20px; max-height: 20px; border-radius: 10px; margin-left: 4px; -unity-font-style: bold; font-size: 11px; padding: 0; border-width: 0; background-color: rgb(131, 91, 154);" />
                 </ui:VisualElement>
-                <!-- Section Content -->
-                <ui:VisualElement name="Definition" class="forge-section-content" style="padding-left: 8px; padding-right: 4px; padding-top: 4px; padding-bottom: 8px; margin-left: 2px; border-left-width: 2px; border-left-color: rgba(100, 100, 100, 0.3);">
-                    <ui:TextField label="Name" name="Name" style="margin-bottom: 2px; margin-top: 1px;" />
-                    <ui:TextField label="Description" name="Description" multiline="true" style="margin-bottom: 2px; margin-top: 1px; min-height: 40px;" />
-                    <ui:EnumField label="Activation Policy" name="ActivationPolicy" type="FarEmerald.PlayForge.EAbilityActivationPolicyExtended, Assembly-CSharp" style="margin-bottom: 2px; margin-top: 1px;" />
-                    <ui:Toggle label="Activate Immediately" name="ActivateImmediately" style="margin-bottom: 2px; margin-top: 1px;" />
-                    <ui:VisualElement style="margin-top: 8px; margin-bottom: 4px;">
-                        <ui:Label text="Icons" style="font-size: 11px; -unity-font-style: bold; color: rgb(150, 150, 150); margin-bottom: 4px; padding-left: 2px;" />
-                        <ui:VisualElement style="padding-left: 8px; border-left-width: 2px; border-left-color: rgba(86, 156, 214, 0.3); flex-direction: row; flex-wrap: wrap;">
-                            <uie:PropertyField name="UnlearnedIcon" label="Unlearned" style="width: 48%; margin-right: 2%; margin-bottom: 2px;" />
-                            <uie:PropertyField name="NormalIcon" label="Normal" style="width: 48%; margin-right: 2%; margin-bottom: 2px;" />
-                            <uie:PropertyField name="QueuedIcon" label="Queued" style="width: 48%; margin-right: 2%; margin-bottom: 2px;" />
-                            <uie:PropertyField name="OnCooldownIcon" label="Cooldown" style="width: 48%; margin-right: 2%; margin-bottom: 2px;" />
+                <ui:VisualElement name="Definition" class="forge-section-content" style="padding-left: 8px; padding-right: 4px; padding-top: 4px; padding-bottom: 8px; margin-left: 2px; border-left-width: 2px; border-left-color: rgba(100, 100, 100, 0.4);">
+                    <ui:TextField label="Name" name="Name" style="margin-bottom: 4px; margin-top: 2px;" />
+                    <ui:TextField label="Description" name="Description" multiline="true" style="margin-bottom: 4px; margin-top: 2px; min-height: 48px;" />
+                    <ui:EnumField label="Activation Policy" name="ActivationPolicy" type="FarEmerald.PlayForge.EAbilityActivationPolicyExtended, Assembly-CSharp" style="margin-bottom: 4px; margin-top: 2px;" />
+                    <ui:Toggle label="Activate Immediately" name="ActivateImmediately" style="margin-bottom: 4px; margin-top: 2px;" />
+                    <ui:VisualElement name="IconsSubsection" style="margin-top: 8px; padding: 6px 8px; background-color: rgba(40, 40, 40, 0.4); border-radius: 3px; border-left-width: 2px; border-left-color: rgba(86, 156, 214, 0.5);">
+                        <ui:Label text="Icons" style="font-size: 10px; -unity-font-style: bold; color: rgb(130, 130, 130); margin-bottom: 6px; letter-spacing: 1px;" />
+                        <ui:VisualElement style="flex-direction: row; flex-wrap: wrap;">
+                            <uie:PropertyField name="UnlearnedIcon" label="Unlearned" style="width: 48%; margin-right: 2%; margin-bottom: 4px;" />
+                            <uie:PropertyField name="NormalIcon" label="Normal" style="width: 48%; margin-bottom: 4px;" />
+                            <uie:PropertyField name="QueuedIcon" label="Queued" style="width: 48%; margin-right: 2%; margin-bottom: 4px;" />
+                            <uie:PropertyField name="OnCooldownIcon" label="Cooldown" style="width: 48%; margin-bottom: 4px;" />
                         </ui:VisualElement>
                     </ui:VisualElement>
                 </ui:VisualElement>
             </ui:VisualElement>
-
-            <!-- ═══════════════════════════════════════════════════════════════════ -->
-            <!-- TAGS SECTION -->
-            <!-- ═══════════════════════════════════════════════════════════════════ -->
             <ui:VisualElement name="TagsSection" class="forge-section" style="margin-bottom: 4px;">
-                <!-- Section Header -->
                 <ui:VisualElement name="TagsHeader" class="forge-section-header" style="flex-direction: row; align-items: center; margin-top: 8px; margin-bottom: 4px; padding: 4px 2px; cursor: link; background-color: rgba(50, 50, 50, 0.5); border-radius: 3px;">
                     <ui:Label name="TagsArrow" text="▼" class="forge-section-arrow" style="width: 16px; font-size: 10px; -unity-text-align: middle-center; color: rgb(150, 150, 150); margin-right: 2px;" />
                     <ui:Label text="Tags" class="forge-section-title" style="font-size: 14px; -unity-font-style: bold; -unity-text-align: middle-left; color: rgb(200, 200, 200); padding-right: 8px; flex-shrink: 0;" />
                     <ui:VisualElement style="flex-grow: 1; height: 1px; background-color: rgb(100, 100, 100); margin-left: 4px; margin-right: 8px; align-self: center; border-radius: 1px;" />
                     <ui:Button text="?" name="TagsHelp" tooltip="Help" style="width: 20px; height: 20px; min-width: 20px; min-height: 20px; max-width: 20px; max-height: 20px; border-radius: 10px; margin-left: 4px; -unity-font-style: bold; font-size: 11px; padding: 0; border-width: 0; background-color: rgb(131, 91, 154);" />
                 </ui:VisualElement>
-                <!-- Section Content -->
-                <ui:VisualElement name="Tags" class="forge-section-content" style="padding-left: 8px; padding-right: 4px; padding-top: 4px; padding-bottom: 8px; margin-left: 2px; border-left-width: 2px; border-left-color: rgba(100, 100, 100, 0.3);">
-                    <!-- Asset Tag (Read-only, auto-generated) -->
-                    <ui:VisualElement style="flex-direction: row; align-items: center; margin-bottom: 4px; margin-top: 1px;">
-                        <ui:Label text="Asset Tag" style="min-width: 120px; -unity-text-align: middle-left;" />
-                        <ui:VisualElement name="AssetTagDisplay" style="flex-grow: 1; flex-direction: row; align-items: center; background-color: rgba(40, 40, 40, 0.6); border-radius: 3px; padding: 2px 6px; border-width: 1px; border-color: rgba(80, 80, 80, 0.5);">
-                            <ui:Label name="AssetTagValue" text="AbilityName" style="flex-grow: 1; color: rgb(180, 180, 180); -unity-font-style: italic;" />
-                            <ui:Label text="(auto)" style="font-size: 9px; color: rgb(120, 120, 120); margin-left: 4px;" />
+                <ui:VisualElement name="Tags" class="forge-section-content" style="padding-left: 8px; padding-right: 4px; padding-top: 4px; padding-bottom: 8px; margin-left: 2px; border-left-width: 2px; border-left-color: rgba(100, 160, 100, 0.4);">
+                    <ui:VisualElement style="flex-direction: row; align-items: center; margin-bottom: 6px; margin-top: 2px;">
+                        <ui:Label text="Asset Tag" style="min-width: 120px; -unity-text-align: middle-left; color: rgb(180, 180, 180);" />
+                        <ui:VisualElement name="AssetTagDisplay" style="flex-grow: 1; flex-direction: row; align-items: center; background-color: rgba(40, 40, 40, 0.6); border-radius: 3px; padding: 4px 8px; border-width: 1px; border-color: rgba(80, 80, 80, 0.5);">
+                            <ui:Label name="AssetTagValue" text="AbilityName" style="flex-grow: 1; color: rgb(140, 180, 140); -unity-font-style: bold-and-italic; font-size: 12px;" />
+                            <ui:Label text="(auto)" style="font-size: 9px; color: rgb(100, 100, 100); margin-left: 8px;" />
                         </ui:VisualElement>
                     </ui:VisualElement>
-                    <uie:PropertyField name="ContextTags" label="Context Tags" style="margin-bottom: 2px; margin-top: 1px;" />
-                    <ui:Foldout text="Granted Tags" value="false" style="margin-top: 8px; margin-bottom: 4px;">
-                        <uie:PropertyField name="PassiveTags" label="Passive (Always Active)" style="margin-bottom: 2px; margin-top: 1px;" />
-                        <uie:PropertyField name="ActiveTags" label="Active (During Execution)" style="margin-bottom: 2px; margin-top: 1px;" />
-                    </ui:Foldout>
-                    <ui:Foldout text="Requirements" value="false" style="margin-top: 8px; margin-bottom: 4px;">
-                        <ui:VisualElement name="SourceRequirements" style="margin-bottom: 8px; padding: 6px; background-color: rgba(60, 60, 60, 0.3); border-radius: 3px;">
-                            <ui:Label text="Source (Caster)" style="font-size: 11px; -unity-font-style: bold; color: rgb(180, 180, 180); margin-bottom: 4px;" />
-                            <uie:PropertyField name="Require" label="Required Tags" style="margin-bottom: 2px; margin-top: 1px;" />
-                            <uie:PropertyField name="Avoid" label="Blocked Tags" style="margin-bottom: 2px; margin-top: 1px;" />
+                    <uie:PropertyField name="ContextTags" label="Context Tags" style="margin-bottom: 4px; margin-top: 2px;" />
+                    <ui:VisualElement name="GrantedTagsSubsection" style="margin-top: 8px; padding: 6px 8px; background-color: rgba(40, 40, 40, 0.4); border-radius: 3px; border-left-width: 2px; border-left-color: rgba(100, 160, 100, 0.5);">
+                        <ui:Label text="Granted Tags" style="font-size: 10px; -unity-font-style: bold; color: rgb(130, 130, 130); margin-bottom: 6px; letter-spacing: 1px;" />
+                        <uie:PropertyField name="PassiveTags" label="Passive (Always)" style="margin-bottom: 4px;" />
+                        <uie:PropertyField name="ActiveTags" label="Active (During Execution)" style="margin-bottom: 2px;" />
+                    </ui:VisualElement>
+                    <ui:VisualElement name="TagRequirementsSubsection" style="margin-top: 8px; padding: 6px 8px; background-color: rgba(40, 40, 40, 0.4); border-radius: 3px; border-left-width: 2px; border-left-color: rgba(180, 140, 100, 0.5);">
+                        <ui:Label text="Tag Requirements" style="font-size: 10px; -unity-font-style: bold; color: rgb(130, 130, 130); margin-bottom: 6px; letter-spacing: 1px;" />
+                        <ui:VisualElement name="SourceRequirements" style="margin-bottom: 6px; padding: 6px; background-color: rgba(50, 50, 50, 0.4); border-radius: 3px;">
+                            <ui:Label text="Source (Caster)" style="font-size: 10px; -unity-font-style: bold; color: rgb(160, 160, 160); margin-bottom: 4px;" />
+                            <uie:PropertyField name="Require" label="Required" style="margin-bottom: 2px;" />
+                            <uie:PropertyField name="Avoid" label="Blocked" style="margin-bottom: 2px;" />
                         </ui:VisualElement>
-                        <ui:VisualElement name="TargetRequirements" style="margin-bottom: 8px; padding: 6px; background-color: rgba(60, 60, 60, 0.3); border-radius: 3px;">
-                            <ui:Label text="Target" style="font-size: 11px; -unity-font-style: bold; color: rgb(180, 180, 180); margin-bottom: 4px;" />
-                            <uie:PropertyField name="Require" label="Required Tags" style="margin-bottom: 2px; margin-top: 1px;" />
-                            <uie:PropertyField name="Avoid" label="Blocked Tags" style="margin-bottom: 2px; margin-top: 1px;" />
+                        <ui:VisualElement name="TargetRequirements" style="padding: 6px; background-color: rgba(50, 50, 50, 0.4); border-radius: 3px;">
+                            <ui:Label text="Target" style="font-size: 10px; -unity-font-style: bold; color: rgb(160, 160, 160); margin-bottom: 4px;" />
+                            <uie:PropertyField name="Require" label="Required" style="margin-bottom: 2px;" />
+                            <uie:PropertyField name="Avoid" label="Blocked" style="margin-bottom: 2px;" />
                         </ui:VisualElement>
-                    </ui:Foldout>
+                    </ui:VisualElement>
                 </ui:VisualElement>
             </ui:VisualElement>
-
-            <!-- ═══════════════════════════════════════════════════════════════════ -->
-            <!-- RUNTIME BEHAVIOUR SECTION -->
-            <!-- ═══════════════════════════════════════════════════════════════════ -->
             <ui:VisualElement name="RuntimeSection" class="forge-section" style="margin-bottom: 4px;">
-                <!-- Section Header -->
                 <ui:VisualElement name="RuntimeHeader" class="forge-section-header" style="flex-direction: row; align-items: center; margin-top: 8px; margin-bottom: 4px; padding: 4px 2px; cursor: link; background-color: rgba(50, 50, 50, 0.5); border-radius: 3px;">
                     <ui:Label name="RuntimeArrow" text="▼" class="forge-section-arrow" style="width: 16px; font-size: 10px; -unity-text-align: middle-center; color: rgb(150, 150, 150); margin-right: 2px;" />
                     <ui:Label text="Runtime Behaviour" class="forge-section-title" style="font-size: 14px; -unity-font-style: bold; -unity-text-align: middle-left; color: rgb(200, 200, 200); padding-right: 8px; flex-shrink: 0;" />
                     <ui:VisualElement style="flex-grow: 1; height: 1px; background-color: rgb(100, 100, 100); margin-left: 4px; margin-right: 8px; align-self: center; border-radius: 1px;" />
                     <ui:Button text="?" name="RuntimeHelp" tooltip="Help" style="width: 20px; height: 20px; min-width: 20px; min-height: 20px; max-width: 20px; max-height: 20px; border-radius: 10px; margin-left: 4px; -unity-font-style: bold; font-size: 11px; padding: 0; border-width: 0; background-color: rgb(131, 91, 154);" />
                 </ui:VisualElement>
-                <!-- Section Content -->
-                <ui:VisualElement name="Runtime" class="forge-section-content" style="padding-left: 8px; padding-right: 4px; padding-top: 4px; padding-bottom: 8px; margin-left: 2px; border-left-width: 2px; border-left-color: rgba(100, 100, 100, 0.3);">
-                    <uie:PropertyField name="TargetingTask" label="Targeting" style="margin-bottom: 2px; margin-top: 1px;" />
-                    <ui:Toggle name="UseImplicitTargeting" label="Use Implicit Targeting" tooltip="Implicitly provides the casting system as a target" style="margin-bottom: 2px; margin-top: 1px;" />
+                <ui:VisualElement name="Runtime" class="forge-section-content" style="padding-left: 8px; padding-right: 4px; padding-top: 4px; padding-bottom: 8px; margin-left: 2px; border-left-width: 2px; border-left-color: rgba(86, 156, 214, 0.4);">
+                    <uie:PropertyField name="TargetingTask" label="Targeting" style="margin-bottom: 4px; margin-top: 2px;" />
+                    <ui:Toggle name="UseImplicitTargeting" label="Use Implicit Targeting" tooltip="Implicitly provides the casting system as a target" style="margin-bottom: 4px; margin-top: 2px;" />
                     <uie:PropertyField name="Stages" label="Execution Stages" style="margin-bottom: 2px; margin-top: 8px;" />
                 </ui:VisualElement>
             </ui:VisualElement>
-
-            <!-- ═══════════════════════════════════════════════════════════════════ -->
-            <!-- LEVELING & USAGE SECTION -->
-            <!-- ═══════════════════════════════════════════════════════════════════ -->
             <ui:VisualElement name="LevelingSection" class="forge-section" style="margin-bottom: 4px;">
-                <!-- Section Header -->
                 <ui:VisualElement name="LevelingHeader" class="forge-section-header" style="flex-direction: row; align-items: center; margin-top: 8px; margin-bottom: 4px; padding: 4px 2px; cursor: link; background-color: rgba(50, 50, 50, 0.5); border-radius: 3px;">
                     <ui:Label name="LevelingArrow" text="▼" class="forge-section-arrow" style="width: 16px; font-size: 10px; -unity-text-align: middle-center; color: rgb(150, 150, 150); margin-right: 2px;" />
                     <ui:Label text="Leveling &amp; Usage" class="forge-section-title" style="font-size: 14px; -unity-font-style: bold; -unity-text-align: middle-left; color: rgb(200, 200, 200); padding-right: 8px; flex-shrink: 0;" />
                     <ui:VisualElement style="flex-grow: 1; height: 1px; background-color: rgb(100, 100, 100); margin-left: 4px; margin-right: 8px; align-self: center; border-radius: 1px;" />
                     <ui:Button text="?" name="LevelingHelp" tooltip="Help" style="width: 20px; height: 20px; min-width: 20px; min-height: 20px; max-width: 20px; max-height: 20px; border-radius: 10px; margin-left: 4px; -unity-font-style: bold; font-size: 11px; padding: 0; border-width: 0; background-color: rgb(131, 91, 154);" />
                 </ui:VisualElement>
-                <!-- Section Content -->
-                <ui:VisualElement name="Leveling" class="forge-section-content" style="padding-left: 8px; padding-right: 4px; padding-top: 4px; padding-bottom: 8px; margin-left: 2px; border-left-width: 2px; border-left-color: rgba(100, 100, 100, 0.3);">
-                    <ui:VisualElement style="flex-direction: row;">
-                        <uie:PropertyField name="StartingLevel" label="Starting Level" style="flex-grow: 1; margin-right: 8px; margin-bottom: 2px; margin-top: 1px;" />
-                        <uie:PropertyField name="MaxLevel" label="Max Level" style="flex-grow: 1; margin-bottom: 2px; margin-top: 1px;" />
+                <ui:VisualElement name="Leveling" class="forge-section-content" style="padding-left: 8px; padding-right: 4px; padding-top: 4px; padding-bottom: 8px; margin-left: 2px; border-left-width: 2px; border-left-color: rgba(140, 100, 180, 0.4);">
+                    <ui:VisualElement style="flex-direction: row; margin-bottom: 4px;">
+                        <uie:PropertyField name="Level" label="Starting Level" style="flex-grow: 1; margin-right: 8px;" />
+                        <uie:PropertyField name="MaxLevel" label="Max Level" style="flex-grow: 1;" />
                     </ui:VisualElement>
-                    <ui:Toggle name="IgnoreWhenLevelZero" label="Ignore When Level Zero" style="margin-bottom: 2px; margin-top: 1px;" />
-                    <ui:VisualElement style="margin-top: 8px; padding-top: 8px; border-top-width: 1px; border-top-color: rgba(100, 100, 100, 0.3);">
-                        <uie:PropertyField name="Cost" label="Cost Effect" style="margin-bottom: 2px; margin-top: 1px;" />
-                        <uie:PropertyField name="Cooldown" label="Cooldown Effect" style="margin-bottom: 2px; margin-top: 1px;" />
+                    <ui:Toggle name="IgnoreWhenLevelZero" label="Ignore When Level Zero" style="margin-bottom: 4px; margin-top: 2px;" />
+                    <ui:VisualElement name="CostCooldownSubsection" style="margin-top: 8px; padding: 6px 8px; background-color: rgba(40, 40, 40, 0.4); border-radius: 3px; border-left-width: 2px; border-left-color: rgba(180, 140, 80, 0.5);">
+                        <ui:Label text="Usage Effects" style="font-size: 10px; -unity-font-style: bold; color: rgb(130, 130, 130); margin-bottom: 6px; letter-spacing: 1px;" />
+                        <uie:PropertyField name="Cost" label="Cost Effect" style="margin-bottom: 4px;" />
+                        <uie:PropertyField name="Cooldown" label="Cooldown Effect" style="margin-bottom: 2px;" />
                     </ui:VisualElement>
                 </ui:VisualElement>
             </ui:VisualElement>
-
-            <!-- ═══════════════════════════════════════════════════════════════════ -->
-            <!-- VALIDATION SECTION -->
-            <!-- ═══════════════════════════════════════════════════════════════════ -->
             <ui:VisualElement name="ValidationSection" class="forge-section" style="margin-bottom: 4px;">
-                <!-- Section Header -->
                 <ui:VisualElement name="ValidationHeader" class="forge-section-header" style="flex-direction: row; align-items: center; margin-top: 8px; margin-bottom: 4px; padding: 4px 2px; cursor: link; background-color: rgba(50, 50, 50, 0.5); border-radius: 3px;">
                     <ui:Label name="ValidationArrow" text="▼" class="forge-section-arrow" style="width: 16px; font-size: 10px; -unity-text-align: middle-center; color: rgb(150, 150, 150); margin-right: 2px;" />
                     <ui:Label text="Validation Rules" class="forge-section-title" style="font-size: 14px; -unity-font-style: bold; -unity-text-align: middle-left; color: rgb(200, 200, 200); padding-right: 8px; flex-shrink: 0;" />
                     <ui:VisualElement style="flex-grow: 1; height: 1px; background-color: rgb(100, 100, 100); margin-left: 4px; margin-right: 8px; align-self: center; border-radius: 1px;" />
                     <ui:Button text="?" name="ValidationHelp" tooltip="Help" style="width: 20px; height: 20px; min-width: 20px; min-height: 20px; max-width: 20px; max-height: 20px; border-radius: 10px; margin-left: 4px; -unity-font-style: bold; font-size: 11px; padding: 0; border-width: 0; background-color: rgb(131, 91, 154);" />
                 </ui:VisualElement>
-                <!-- Section Content -->
-                <ui:VisualElement name="Validation" class="forge-section-content" style="padding-left: 8px; padding-right: 4px; padding-top: 4px; padding-bottom: 8px; margin-left: 2px; border-left-width: 2px; border-left-color: rgba(100, 100, 100, 0.3);">
-                    <uie:PropertyField name="SourceActivationRules" label="Source Rules" tooltip="Rules that validate the ability source (caster)" style="margin-bottom: 2px; margin-top: 1px;" />
-                    <uie:PropertyField name="TargetActivationRules" label="Target Rules" tooltip="Rules that validate the ability target" style="margin-bottom: 2px; margin-top: 1px;" />
+                <ui:VisualElement name="Validation" class="forge-section-content" style="padding-left: 8px; padding-right: 4px; padding-top: 4px; padding-bottom: 8px; margin-left: 2px; border-left-width: 2px; border-left-color: rgba(100, 160, 160, 0.4);">
+                    <uie:PropertyField name="SourceActivationRules" label="Source Rules" tooltip="Rules that validate the ability source (caster)" style="margin-bottom: 4px; margin-top: 2px;" />
+                    <uie:PropertyField name="TargetActivationRules" label="Target Rules" tooltip="Rules that validate the ability target" style="margin-bottom: 2px; margin-top: 2px;" />
                 </ui:VisualElement>
             </ui:VisualElement>
-
-            <!-- ═══════════════════════════════════════════════════════════════════ -->
-            <!-- WORKERS SECTION -->
-            <!-- ═══════════════════════════════════════════════════════════════════ -->
             <ui:VisualElement name="WorkersSection" class="forge-section" style="margin-bottom: 4px;">
-                <!-- Section Header -->
                 <ui:VisualElement name="WorkersHeader" class="forge-section-header" style="flex-direction: row; align-items: center; margin-top: 8px; margin-bottom: 4px; padding: 4px 2px; cursor: link; background-color: rgba(50, 50, 50, 0.5); border-radius: 3px;">
                     <ui:Label name="WorkersArrow" text="▼" class="forge-section-arrow" style="width: 16px; font-size: 10px; -unity-text-align: middle-center; color: rgb(150, 150, 150); margin-right: 2px;" />
                     <ui:Label text="Workers" class="forge-section-title" style="font-size: 14px; -unity-font-style: bold; -unity-text-align: middle-left; color: rgb(200, 200, 200); padding-right: 8px; flex-shrink: 0;" />
                     <ui:VisualElement style="flex-grow: 1; height: 1px; background-color: rgb(100, 100, 100); margin-left: 4px; margin-right: 8px; align-self: center; border-radius: 1px;" />
                     <ui:Button text="?" name="WorkersHelp" tooltip="Help" style="width: 20px; height: 20px; min-width: 20px; min-height: 20px; max-width: 20px; max-height: 20px; border-radius: 10px; margin-left: 4px; -unity-font-style: bold; font-size: 11px; padding: 0; border-width: 0; background-color: rgb(131, 91, 154);" />
                 </ui:VisualElement>
-                <!-- Section Content -->
                 <ui:VisualElement name="Workers" class="forge-section-content" style="padding-left: 8px; padding-right: 4px; padding-top: 4px; padding-bottom: 8px; margin-left: 2px; border-left-width: 2px; border-left-color: rgba(180, 140, 80, 0.4);">
-                    <ui:Foldout text="Attribute Workers" value="false" style="margin-top: 4px; margin-bottom: 4px;">
-                        <uie:PropertyField name="Attribute" label="" style="margin-bottom: 2px; margin-top: 1px;" />
-                    </ui:Foldout>
-                    <ui:Foldout text="Tag Workers" value="false" style="margin-top: 4px; margin-bottom: 4px;">
-                        <uie:PropertyField name="Tag" label="" style="margin-bottom: 2px; margin-top: 1px;" />
-                    </ui:Foldout>
-                    <ui:Foldout text="Impact Workers" value="false" style="margin-top: 4px; margin-bottom: 4px;">
-                        <uie:PropertyField name="Impact" label="" style="margin-bottom: 2px; margin-top: 1px;" />
-                    </ui:Foldout>
-                    <ui:Foldout text="Analysis Workers" value="false" style="margin-top: 4px; margin-bottom: 4px;">
-                        <uie:PropertyField name="Analysis" label="" style="margin-bottom: 2px; margin-top: 1px;" />
-                    </ui:Foldout>
+                    <uie:PropertyField name="AttributeWorkers" label="Attribute Workers" style="margin-bottom: 6px; margin-top: 2px;" />
+                    <uie:PropertyField name="TagWorkers" label="Tag Workers" style="margin-bottom: 6px; margin-top: 2px;" />
+                    <uie:PropertyField name="ImpactWorkers" label="Impact Workers" style="margin-bottom: 6px; margin-top: 2px;" />
+                    <uie:PropertyField name="AnalysisWorkers" label="Analysis Workers" style="margin-bottom: 2px; margin-top: 2px;" />
                 </ui:VisualElement>
             </ui:VisualElement>
-
-            <!-- ═══════════════════════════════════════════════════════════════════ -->
-            <!-- LOCAL DATA SECTION -->
-            <!-- ═══════════════════════════════════════════════════════════════════ -->
             <ui:VisualElement name="LocalDataSection" class="forge-section" style="margin-bottom: 4px;">
-                <!-- Section Header -->
                 <ui:VisualElement name="LocalDataHeader" class="forge-section-header" style="flex-direction: row; align-items: center; margin-top: 8px; margin-bottom: 4px; padding: 4px 2px; cursor: link; background-color: rgba(50, 50, 50, 0.5); border-radius: 3px;">
                     <ui:Label name="LocalDataArrow" text="▼" class="forge-section-arrow" style="width: 16px; font-size: 10px; -unity-text-align: middle-center; color: rgb(150, 150, 150); margin-right: 2px;" />
                     <ui:Label text="Local Data" class="forge-section-title" style="font-size: 14px; -unity-font-style: bold; -unity-text-align: middle-left; color: rgb(200, 200, 200); padding-right: 8px; flex-shrink: 0;" />
                     <ui:VisualElement style="flex-grow: 1; height: 1px; background-color: rgb(100, 100, 100); margin-left: 4px; margin-right: 8px; align-self: center; border-radius: 1px;" />
                     <ui:Button text="?" name="LocalDataHelp" tooltip="Help" style="width: 20px; height: 20px; min-width: 20px; min-height: 20px; max-width: 20px; max-height: 20px; border-radius: 10px; margin-left: 4px; -unity-font-style: bold; font-size: 11px; padding: 0; border-width: 0; background-color: rgb(131, 91, 154);" />
                 </ui:VisualElement>
-                <!-- Section Content -->
-                <ui:VisualElement name="LocalData" class="forge-section-content" style="padding-left: 8px; padding-right: 4px; padding-top: 4px; padding-bottom: 8px; margin-left: 2px; border-left-width: 2px; border-left-color: rgba(100, 100, 100, 0.3);">
-                    <uie:PropertyField name="LocalData" label="" style="margin-bottom: 2px; margin-top: 4px;" />
+                <ui:VisualElement name="LocalData" class="forge-section-content" style="padding-left: 8px; padding-right: 4px; padding-top: 4px; padding-bottom: 8px; margin-left: 2px; border-left-width: 2px; border-left-color: rgba(100, 100, 100, 0.4);">
+                    <uie:PropertyField name="LocalData" style="margin-bottom: 2px; margin-top: 4px;" />
                 </ui:VisualElement>
             </ui:VisualElement>
-
-            <!-- Bottom padding -->
             <ui:VisualElement style="height: 20px; flex-shrink: 0;" />
-
         </ui:ScrollView>
     </ui:VisualElement>
 </ui:UXML>

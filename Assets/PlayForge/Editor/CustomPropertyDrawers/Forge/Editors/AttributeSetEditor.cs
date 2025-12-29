@@ -4,144 +4,222 @@ using UnityEditor;
 using UnityEditor.UIElements;
 using UnityEngine;
 using UnityEngine.UIElements;
+using static FarEmerald.PlayForge.Extended.Editor.ForgeDrawerStyles;
 
 namespace FarEmerald.PlayForge.Extended.Editor
 {
     [CustomEditor(typeof(AttributeSet))]
-    public class AttributeSetEditor : UnityEditor.Editor
+    public class AttributeSetEditor : BasePlayForgeEditor
     {
-        [SerializeField] private VisualTreeAsset m_InspectorUXML;
+        [SerializeField] private Texture2D m_AttributeSetIcon;
         
-        private VisualElement root;
         private AttributeSet attributeSet;
+        private HeaderResult headerResult;
+        
+        // Count labels for dynamic updates
+        private Label attributeCountLabel;
+        private Label subsetCountLabel;
+        private Label uniqueAttributesLabel;
 
         public override VisualElement CreateInspectorGUI()
         {
             if (serializedObject.isEditingMultipleObjects) return null;
             
-            root = new VisualElement();
             attributeSet = serializedObject.targetObject as AttributeSet;
-
             if (attributeSet == null) return null;
 
-            if (m_InspectorUXML != null)
-            {
-                m_InspectorUXML.CloneTree(root);
-            }
+            // Build UI programmatically
+            root = CreateRoot();
             
-            BindHeader();
-            BindAttributes();
-            BindSubsets();
-            BindSettings();
-            BindSummary();
+            // Main Header
+            BuildHeader();
             
+            // Sections
+            BuildAttributesSection(root);
+            BuildSubsetsSection(root);
+            BuildSettingsSection(root);
+            BuildSummarySection(root);
+            
+            // Bottom padding
+            root.Add(CreateBottomPadding());
+            
+            // Bind all properties
             root.Bind(serializedObject);
             
             return root;
         }
 
-        private void BindHeader()
+        // ═══════════════════════════════════════════════════════════════════════════
+        // Header
+        // ═══════════════════════════════════════════════════════════════════════════
+        
+        private void BuildHeader()
         {
-            var header = root.Q("Header");
-            if (header == null) return;
-            
-            var nameLabel = header.Q<Label>("Name");
-            var descLabel = header.Q<Label>("Description");
-            
-            if (nameLabel != null)
+            headerResult = CreateMainHeader(new HeaderConfig
             {
-                nameLabel.text = attributeSet.name;
-            }
+                Icon = m_AttributeSetIcon,
+                DefaultTitle = attributeSet.name,
+                DefaultDescription = GetHeaderDescription(),
+                ShowRefresh = true,
+                ShowLookup = true,
+                ShowVisualize = true,
+                OnRefresh = Refresh,
+                OnLookup = Lookup,
+                OnVisualize = Visualize
+            });
             
-            UpdateHeaderDescription(descLabel);
-            
-            var refreshBtn = header.Q<Button>("Refresh");
-            refreshBtn?.RegisterCallback<ClickEvent>(_ => RefreshInspector());
-            
-            var lookupBtn = header.Q<Button>("Lookup");
-            lookupBtn?.RegisterCallback<ClickEvent>(_ => FindReferences());
+            root.Add(headerResult.Header);
         }
-
-        private void UpdateHeaderDescription(Label descLabel)
+        
+        private string GetHeaderDescription()
         {
-            if (descLabel == null) return;
-            
             int attrCount = attributeSet.Attributes?.Count ?? 0;
             int subsetCount = attributeSet.SubSets?.Count ?? 0;
             var uniqueCount = attributeSet.GetUnique().Count;
-            
-            descLabel.text = $"Contains {attrCount} attributes, {subsetCount} subsets ({uniqueCount} unique total)";
+            return $"Contains {attrCount} attributes, {subsetCount} subsets ({uniqueCount} unique total)";
         }
 
-        private void BindAttributes()
-        {
-            var section = root.Q("Attributes");
-            if (section == null) return;
-            
-            BindPropertyField(section, "Attributes", "Attributes");
-            
-            // Update count label
-            var countLabel = root.Q<Label>("AttributeCount");
-            if (countLabel != null)
-            {
-                countLabel.text = (attributeSet.Attributes?.Count ?? 0).ToString();
-            }
-        }
+        // ═══════════════════════════════════════════════════════════════════════════
+        // Attributes Section
+        // ═══════════════════════════════════════════════════════════════════════════
         
-        private void BindSubsets()
+        private void BuildAttributesSection(VisualElement parent)
         {
-            var section = root.Q("Subsets");
-            if (section == null) return;
-            
-            BindPropertyField(section, "SubSets", "SubSets");
-            
-            // Update count label
-            var countLabel = root.Q<Label>("SubsetCount");
-            if (countLabel != null)
+            var section = CreateCollapsibleSection(new SectionConfig
             {
-                countLabel.text = (attributeSet.SubSets?.Count ?? 0).ToString();
-            }
+                Name = "Attributes",
+                Title = "Attributes",
+                AccentColor = Colors.AccentGreen,
+                HelpUrl = "https://docs.playforge.dev/attributesets/attributes"
+            });
+            parent.Add(section.Section);
+            
+            // Add count badge to header
+            attributeCountLabel = CreateBadge((attributeSet.Attributes?.Count ?? 0).ToString());
+            attributeCountLabel.name = "AttributeCount";
+            // Insert before divider (index 2 = after arrow and title)
+            section.Header.Insert(2, attributeCountLabel);
+            
+            var content = section.Content;
+            
+            // Attributes list
+            var attrProp = serializedObject.FindProperty("Attributes");
+            var attrField = CreatePropertyField(attrProp, "Attributes", "");
+            attrField.RegisterCallback<SerializedPropertyChangeEvent>(_ => RefreshCounts());
+            content.Add(attrField);
         }
+
+        // ═══════════════════════════════════════════════════════════════════════════
+        // Subsets Section
+        // ═══════════════════════════════════════════════════════════════════════════
         
-        private void BindSettings()
+        private void BuildSubsetsSection(VisualElement parent)
         {
-            var section = root.Q("Settings");
-            if (section == null) return;
-            
-            var collisionPolicy = section.Q<EnumField>("CollisionPolicy");
-            if (collisionPolicy != null)
+            var section = CreateCollapsibleSection(new SectionConfig
             {
-                collisionPolicy.value = attributeSet.CollisionResolutionPolicy;
-                collisionPolicy.RegisterValueChangedCallback(evt =>
-                {
-                    attributeSet.CollisionResolutionPolicy = (EValueCollisionPolicy)evt.newValue;
-                    MarkDirty();
-                });
-            }
+                Name = "Subsets",
+                Title = "Sub-Sets",
+                AccentColor = Colors.AccentBlue,
+                HelpUrl = "https://docs.playforge.dev/attributesets/subsets"
+            });
+            parent.Add(section.Section);
+            
+            // Add count badge to header
+            subsetCountLabel = CreateBadge((attributeSet.SubSets?.Count ?? 0).ToString());
+            subsetCountLabel.name = "SubsetCount";
+            section.Header.Insert(2, subsetCountLabel);
+            
+            var content = section.Content;
+            
+            // Hint
+            content.Add(CreateHintLabel("Include other Attribute Sets to inherit their attributes."));
+            
+            // Subsets list
+            var subsetProp = serializedObject.FindProperty("SubSets");
+            var subsetField = CreatePropertyField(subsetProp, "SubSets", "");
+            subsetField.RegisterCallback<SerializedPropertyChangeEvent>(_ => RefreshCounts());
+            content.Add(subsetField);
         }
+
+        // ═══════════════════════════════════════════════════════════════════════════
+        // Settings Section
+        // ═══════════════════════════════════════════════════════════════════════════
         
-        private void BindSummary()
+        private void BuildSettingsSection(VisualElement parent)
         {
-            var section = root.Q("Summary");
-            if (section == null) return;
-            
-            UpdateSummary();
-            
-            var listBtn = section.Q<Button>("ListAttributes");
-            if (listBtn != null)
+            var section = CreateCollapsibleSection(new SectionConfig
             {
-                listBtn.clicked += ListAllUniqueAttributes;
-            }
+                Name = "Settings",
+                Title = "Collision Settings",
+                AccentColor = Colors.AccentOrange,
+                HelpUrl = "https://docs.playforge.dev/attributesets/settings"
+            });
+            parent.Add(section.Section);
+            
+            var content = section.Content;
+            
+            // Hint
+            content.Add(CreateHintLabel("When the same attribute appears in multiple sets:"));
+            
+            // Collision Policy enum
+            var policyField = CreateEnumField("CollisionPolicy", "Resolution Policy", attributeSet.CollisionResolutionPolicy);
+            policyField.RegisterValueChangedCallback(evt =>
+            {
+                attributeSet.CollisionResolutionPolicy = (EValueCollisionPolicy)evt.newValue;
+                MarkDirty(attributeSet);
+            });
+            content.Add(policyField);
         }
+
+        // ═══════════════════════════════════════════════════════════════════════════
+        // Summary Section
+        // ═══════════════════════════════════════════════════════════════════════════
         
-        private void UpdateSummary()
+        private void BuildSummarySection(VisualElement parent)
         {
-            var uniqueLabel = root.Q<Label>("UniqueAttributesLabel");
-            if (uniqueLabel != null)
+            var section = CreateCollapsibleSection(new SectionConfig
             {
-                var unique = attributeSet.GetUnique();
-                uniqueLabel.text = $"Total unique attributes: {unique.Count}";
-            }
+                Name = "Summary",
+                Title = "Summary",
+                AccentColor = Colors.AccentGray,
+                IncludeButtons = new[] { false, false, false }
+            });
+            parent.Add(section.Section);
+            
+            var content = section.Content;
+            
+            // Unique count label
+            uniqueAttributesLabel = new Label($"Total unique attributes: {attributeSet.GetUnique().Count}");
+            uniqueAttributesLabel.name = "UniqueAttributesLabel";
+            uniqueAttributesLabel.style.fontSize = 11;
+            uniqueAttributesLabel.style.color = Colors.HintText;
+            content.Add(uniqueAttributesLabel);
+            
+            // List button
+            var listBtn = new Button(ListAllUniqueAttributes) { text = "List All Unique Attributes" };
+            listBtn.style.alignSelf = Align.FlexStart;
+            listBtn.style.marginTop = 8;
+            ApplyButtonHoverStyle(listBtn);
+            content.Add(listBtn);
+        }
+
+        // ═══════════════════════════════════════════════════════════════════════════
+        // Helper Methods
+        // ═══════════════════════════════════════════════════════════════════════════
+        
+        private void RefreshCounts()
+        {
+            if (attributeCountLabel != null)
+                attributeCountLabel.text = (attributeSet.Attributes?.Count ?? 0).ToString();
+            
+            if (subsetCountLabel != null)
+                subsetCountLabel.text = (attributeSet.SubSets?.Count ?? 0).ToString();
+            
+            if (uniqueAttributesLabel != null)
+                uniqueAttributesLabel.text = $"Total unique attributes: {attributeSet.GetUnique().Count}";
+            
+            if (headerResult?.DescriptionLabel != null)
+                headerResult.DescriptionLabel.text = GetHeaderDescription();
         }
         
         private void ListAllUniqueAttributes()
@@ -169,50 +247,18 @@ namespace FarEmerald.PlayForge.Extended.Editor
             EditorUtility.DisplayDialog("Unique Attributes", sb.ToString(), "OK");
         }
 
-        private void BindPropertyField(VisualElement container, string fieldName, string propertyPath)
+        // ═══════════════════════════════════════════════════════════════════════════
+        // Abstract Implementations
+        // ═══════════════════════════════════════════════════════════════════════════
+        
+        protected override void SetupCollapsibleSections() { }
+
+        protected override void Lookup()
         {
-            var field = container.Q<PropertyField>(fieldName);
-            var prop = serializedObject.FindProperty(propertyPath);
-            if (field != null && prop != null)
-            {
-                field.BindProperty(prop);
-                
-                // Track changes to update counts
-                field.RegisterCallback<SerializedPropertyChangeEvent>(_ => RefreshCounts());
-            }
+            PingAsset(attributeSet);
         }
         
-        private void RefreshCounts()
-        {
-            var attrCountLabel = root.Q<Label>("AttributeCount");
-            if (attrCountLabel != null)
-            {
-                attrCountLabel.text = (attributeSet.Attributes?.Count ?? 0).ToString();
-            }
-            
-            var subsetCountLabel = root.Q<Label>("SubsetCount");
-            if (subsetCountLabel != null)
-            {
-                subsetCountLabel.text = (attributeSet.SubSets?.Count ?? 0).ToString();
-            }
-            
-            UpdateSummary();
-            
-            var descLabel = root.Q("Header")?.Q<Label>("Description");
-            UpdateHeaderDescription(descLabel);
-        }
-        
-        private void MarkDirty()
-        {
-            EditorUtility.SetDirty(attributeSet);
-        }
-        
-        private void FindReferences()
-        {
-            EditorGUIUtility.PingObject(attributeSet);
-        }
-        
-        private void RefreshInspector()
+        protected override void Refresh()
         {
             serializedObject.Update();
             RefreshCounts();

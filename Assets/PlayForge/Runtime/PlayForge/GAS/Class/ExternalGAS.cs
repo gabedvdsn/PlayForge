@@ -41,12 +41,12 @@ namespace FarEmerald.PlayForge
         }
         public List<Tag> GetAffiliation()
         {
-            return Data.Identity.Affiliation;
+            return Data.Affiliation;
         }
         public bool ApplyGameplayEffect(GameplayEffectSpec spec)
         {
             if (spec is null) return false;
-            if (!ForgeHelper.ValidateEffectApplicationRequirements(spec, Data.Identity.Affiliation)) return false;
+            if (!ForgeHelper.ValidateEffectApplicationRequirements(spec, Data.Affiliation)) return false;
 
             switch (spec.Base.DurationSpecification.DurationPolicy)
             {
@@ -276,11 +276,11 @@ namespace FarEmerald.PlayForge
         public bool HandlerVoidProcess(int processIndex) => Relays.Remove(processIndex);
         public List<Tag> GetContextTags() => new(){ Tags.CONTEXT_GAS, Tags.CONTEXT_SOURCE };
         public TagCache GetTagCache() => TagCache;
-        public Tag GetAssetTag() => Data.Identity.NameTag;
-        public int GetLevel() => Data.Identity.Level;
-        public int GetMaxLevel() => Data.Identity.MaxLevel;
-        public void SetLevel(int level) => Data.Identity.Level = Mathf.Clamp(level, 0, Data.Identity.MaxLevel);
-        public string GetName() => Data.Identity.DistinctName;
+        public Tag GetAssetTag() => Data.AssetTag;
+        public int GetLevel() => Data.Level;
+        public int GetMaxLevel() => Data.MaxLevel;
+        public void SetLevel(int level) => Data.Level = Mathf.Clamp(level, 0, Data.MaxLevel);
+        public string GetName() => Data.Name;
         public GameplayEffectDuration GetLongestDurationFor(Tag lookForTag)
         {
             float longestDuration = float.MinValue;

@@ -207,21 +207,4 @@ namespace FarEmerald.PlayForge
             return s;
         }
     }
-
-    [Serializable]
-    public struct AttributeOverflowData
-    {
-        public EAttributeOverflowPolicy Policy;
-        public AttributeValue Floor;
-        public AttributeValue Ceil;
-    }
-
-    public enum EAttributeOverflowPolicy
-    {
-        ZeroToBase,
-        FloorToBase,
-        ZeroToCeil,
-        FloorToCeil,
-        Unlimited
-    }
 }

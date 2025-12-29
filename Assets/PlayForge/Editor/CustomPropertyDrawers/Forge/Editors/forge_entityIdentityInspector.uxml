@@ -1,80 +1,115 @@
 <ui:UXML xmlns:ui="UnityEngine.UIElements" xmlns:uie="UnityEditor.UIElements" editor-extension-mode="True">
-    <ui:VisualElement name="Header" style="flex-direction: row; min-height: 72px; margin-top: 4px; margin-bottom: 8px; padding: 4px; background-color: rgba(30, 30, 30, 0.4); border-radius: 4px; border-width: 1px; border-color: rgb(35, 35, 35);">
-        <ui:VisualElement name="HeaderIcon" style="width: 56px; height: 56px; min-width: 56px; min-height: 56px; flex-shrink: 0; background-image: url(&quot;project://database/Assets/PlayForge/Editor/Icons/Creator/person.png?fileID=2800000&amp;guid=ecf6c00abf00de44ab22a8debefd0b2a&amp;type=3#person&quot;); -unity-background-scale-mode: scale-to-fit; border-radius: 3px; border-width: 1px; border-color: rgb(35, 35, 35); margin-right: 8px; align-self: center;" />
-        <ui:VisualElement style="flex-grow: 1; justify-content: center;">
-            <ui:VisualElement style="flex-direction: row; align-items: center;">
-                <ui:Label text="Entity Name" name="Name" style="flex-grow: 1; font-size: 16px; -unity-font-style: bold; padding-left: 4px; padding-right: 8px; -unity-text-align: middle-left; color: rgb(220, 220, 220);" />
-                <ui:VisualElement style="flex-direction: row; flex-shrink: 0;">
-                    <ui:Button text="□" name="Visualize" tooltip="Visualize" focusable="false" style="width: 24px; height: 24px; min-width: 24px; min-height: 24px; max-width: 24px; max-height: 24px; margin-left: 2px; margin-right: 2px; border-radius: 3px; -unity-font-style: bold; font-size: 12px; background-color: rgb(80, 80, 80);" />
-                    <ui:Button text="□" name="Refresh" tooltip="Refresh" focusable="false" style="width: 24px; height: 24px; min-width: 24px; min-height: 24px; max-width: 24px; max-height: 24px; margin-left: 2px; margin-right: 2px; border-radius: 3px; -unity-font-style: bold; font-size: 12px; background-color: rgb(80, 80, 80);" />
-                    <ui:Button text="⌕" name="Lookup" tooltip="Lookup" focusable="false" style="width: 24px; height: 24px; min-width: 24px; min-height: 24px; max-width: 24px; max-height: 24px; margin-left: 2px; margin-right: 2px; border-radius: 3px; -unity-font-style: bold; font-size: 12px; background-color: rgb(80, 80, 80);" />
+    <ui:VisualElement name="Root" style="flex-grow: 1; flex-shrink: 1;">
+        
+        <!-- ═══════════════════════════════════════════════════════════════════ -->
+        <!-- STICKY HEADER -->
+        <!-- ═══════════════════════════════════════════════════════════════════ -->
+        <ui:VisualElement name="Header" style="flex-direction: row; min-height: 64px; max-height: 64px; margin-top: 4px; margin-bottom: 4px; margin-left: 2px; margin-right: 2px; padding: 4px; background-color: rgba(40, 40, 40, 0.95); border-radius: 4px; border-width: 1px; border-color: rgb(35, 35, 35); flex-shrink: 0; border-bottom-width: 2px; border-bottom-color: rgba(20, 20, 20, 0.8);">
+            <ui:VisualElement name="HeaderIcon" style="width: 56px; height: 56px; min-width: 56px; min-height: 56px; flex-shrink: 0; background-image: url(&quot;project://database/Assets/PlayForge/Editor/Icons/Creator/entity.png&quot;); -unity-background-scale-mode: scale-to-fit; border-radius: 3px; border-width: 1px; border-color: rgb(35, 35, 35); margin-right: 8px;" />
+            <ui:VisualElement style="flex-grow: 1; justify-content: center;">
+                <ui:VisualElement style="flex-direction: row; align-items: center;">
+                    <ui:Label text="Entity Name" name="Name" style="flex-grow: 1; font-size: 16px; -unity-font-style: bold; padding-left: 4px; padding-right: 8px; -unity-text-align: middle-left; color: rgb(220, 220, 220);" />
+                    <ui:VisualElement style="flex-direction: row; flex-shrink: 0;">
+                        <ui:Button text="⟳" name="Refresh" tooltip="Refresh" style="width: 24px; height: 24px; min-width: 24px; min-height: 24px; max-width: 24px; max-height: 24px; margin-left: 2px; margin-right: 2px; border-radius: 3px; -unity-font-style: bold; font-size: 12px; background-color: rgb(80, 80, 80);" />
+                        <ui:Button text="⌕" name="Lookup" tooltip="Find References" style="width: 24px; height: 24px; min-width: 24px; min-height: 24px; max-width: 24px; max-height: 24px; margin-left: 2px; margin-right: 2px; border-radius: 3px; -unity-font-style: bold; font-size: 12px; background-color: rgb(80, 80, 80);" />
+                    </ui:VisualElement>
+                </ui:VisualElement>
+                <ui:Label text="Entity description..." name="Description" style="font-size: 11px; padding-left: 4px; padding-top: 2px; -unity-text-align: middle-left; color: rgb(160, 160, 160); white-space: normal; text-overflow: ellipsis; overflow: hidden; max-height: 32px;" />
+            </ui:VisualElement>
+        </ui:VisualElement>
+
+        <!-- ═══════════════════════════════════════════════════════════════════ -->
+        <!-- SCROLLABLE CONTENT -->
+        <!-- ═══════════════════════════════════════════════════════════════════ -->
+        <ui:ScrollView name="ContentScrollView" style="flex-grow: 1; flex-shrink: 1;">
+
+            <!-- ═══════════════════════════════════════════════════════════════════ -->
+            <!-- IDENTITY SECTION -->
+            <!-- ═══════════════════════════════════════════════════════════════════ -->
+            <ui:VisualElement name="IdentitySection" class="forge-section" style="margin-bottom: 4px;">
+                <ui:VisualElement name="IdentityHeader" class="forge-section-header" style="flex-direction: row; align-items: center; margin-top: 8px; margin-bottom: 4px; padding: 4px 2px; cursor: link; background-color: rgba(50, 50, 50, 0.5); border-radius: 3px;">
+                    <ui:Label name="IdentityArrow" text="▼" class="forge-section-arrow" style="width: 16px; font-size: 10px; -unity-text-align: middle-center; color: rgb(150, 150, 150); margin-right: 2px;" />
+                    <ui:Label text="Identity" class="forge-section-title" style="font-size: 14px; -unity-font-style: bold; -unity-text-align: middle-left; color: rgb(200, 200, 200); padding-right: 8px; flex-shrink: 0;" />
+                    <ui:VisualElement style="flex-grow: 1; height: 1px; background-color: rgb(100, 100, 100); margin-left: 4px; margin-right: 8px; align-self: center; border-radius: 1px;" />
+                    <ui:Button text="?" name="IdentityHelp" tooltip="Help" style="width: 20px; height: 20px; min-width: 20px; min-height: 20px; max-width: 20px; max-height: 20px; border-radius: 10px; margin-left: 4px; -unity-font-style: bold; font-size: 11px; padding: 0; border-width: 0; background-color: rgb(131, 91, 154);" />
+                </ui:VisualElement>
+                <ui:VisualElement name="Identity" class="forge-section-content" style="padding-left: 8px; padding-right: 4px; padding-top: 4px; padding-bottom: 8px; margin-left: 2px; border-left-width: 2px; border-left-color: rgba(100, 100, 100, 0.3);">
+                    <uie:PropertyField name="IdentityData" label="Identity Data" style="margin-bottom: 2px; margin-top: 1px;" />
                 </ui:VisualElement>
             </ui:VisualElement>
-            <ui:Label text="About this Entity..." name="Description" style="font-size: 11px; padding-left: 4px; padding-top: 2px; -unity-text-align: middle-left; color: rgb(160, 160, 160); white-space: normal; text-overflow: ellipsis; overflow: hidden; max-height: 32px;" />
-        </ui:VisualElement>
-    </ui:VisualElement>
-    <ui:VisualElement name="IdentitySection" style="margin-bottom: 4px;">
-        <ui:VisualElement style="flex-direction: row; align-items: center; margin-top: 8px; margin-bottom: 4px; padding-left: 2px; padding-right: 2px;">
-            <ui:Label text="Identity" style="font-size: 14px; -unity-font-style: bold; -unity-text-align: middle-left; color: rgb(200, 200, 200); padding-right: 8px; flex-shrink: 0;" />
-            <ui:VisualElement style="flex-grow: 1; height: 1px; background-color: rgb(100, 100, 100); margin-left: 4px; margin-right: 8px; align-self: center; border-radius: 1px;" />
-            <ui:Button text="?" name="IdentityHelp" tooltip="Help" style="width: 20px; height: 20px; min-width: 20px; min-height: 20px; max-width: 20px; max-height: 20px; border-radius: 10px; margin-left: 4px; -unity-font-style: bold; font-size: 11px; padding: 0; border-width: 0; background-color: rgb(131, 91, 154);" />
-        </ui:VisualElement>
-        <ui:VisualElement name="Identity" style="padding-left: 8px; padding-right: 4px; padding-top: 4px; padding-bottom: 8px; margin-left: 2px; border-left-width: 2px; border-left-color: rgba(100, 100, 100, 0.3);">
-            <uie:PropertyField name="IdentityData" label="Identity Data" style="margin-bottom: 2px; margin-top: 1px;" />
-        </ui:VisualElement>
-    </ui:VisualElement>
-    <ui:VisualElement name="AbilitiesSection" style="margin-bottom: 4px;">
-        <ui:VisualElement style="flex-direction: row; align-items: center; margin-top: 8px; margin-bottom: 4px; padding-left: 2px; padding-right: 2px;">
-            <ui:Label text="Abilities" style="font-size: 14px; -unity-font-style: bold; -unity-text-align: middle-left; color: rgb(200, 200, 200); padding-right: 8px; flex-shrink: 0;" />
-            <ui:VisualElement style="flex-grow: 1; height: 1px; background-color: rgb(100, 100, 100); margin-left: 4px; margin-right: 8px; align-self: center; border-radius: 1px;" />
-            <ui:Button text="?" name="AbilitiesHelp" tooltip="Help" style="width: 20px; height: 20px; min-width: 20px; min-height: 20px; max-width: 20px; max-height: 20px; border-radius: 10px; margin-left: 4px; -unity-font-style: bold; font-size: 11px; padding: 0; border-width: 0; background-color: rgb(131, 91, 154);" />
-        </ui:VisualElement>
-        <ui:VisualElement name="Abilities" style="padding-left: 8px; padding-right: 4px; padding-top: 4px; padding-bottom: 8px; margin-left: 2px; border-left-width: 2px; border-left-color: rgba(100, 100, 100, 0.3);">
-            <ui:EnumField label="Activation Policy" name="ActivationPolicy" type="FarEmerald.PlayForge.EAbilityActivationPolicy, Assembly-CSharp" style="margin-bottom: 2px; margin-top: 1px;" />
-            <ui:VisualElement style="flex-direction: row;">
-                <uie:IntegerField label="Max Abilities" name="MaxAbilities" style="flex-grow: 1; margin-right: 8px; margin-bottom: 2px; margin-top: 1px;" />
-                <ui:Toggle name="AllowDuplicates" label="Allow Duplicates" style="margin-bottom: 2px; margin-top: 1px; min-width: 120px;" />
+
+            <!-- ═══════════════════════════════════════════════════════════════════ -->
+            <!-- ABILITIES SECTION -->
+            <!-- ═══════════════════════════════════════════════════════════════════ -->
+            <ui:VisualElement name="AbilitiesSection" class="forge-section" style="margin-bottom: 4px;">
+                <ui:VisualElement name="AbilitiesHeader" class="forge-section-header" style="flex-direction: row; align-items: center; margin-top: 8px; margin-bottom: 4px; padding: 4px 2px; cursor: link; background-color: rgba(50, 50, 50, 0.5); border-radius: 3px;">
+                    <ui:Label name="AbilitiesArrow" text="▼" class="forge-section-arrow" style="width: 16px; font-size: 10px; -unity-text-align: middle-center; color: rgb(150, 150, 150); margin-right: 2px;" />
+                    <ui:Label text="Abilities" class="forge-section-title" style="font-size: 14px; -unity-font-style: bold; -unity-text-align: middle-left; color: rgb(200, 200, 200); padding-right: 8px; flex-shrink: 0;" />
+                    <ui:VisualElement style="flex-grow: 1; height: 1px; background-color: rgb(100, 100, 100); margin-left: 4px; margin-right: 8px; align-self: center; border-radius: 1px;" />
+                    <ui:Button text="?" name="AbilitiesHelp" tooltip="Help" style="width: 20px; height: 20px; min-width: 20px; min-height: 20px; max-width: 20px; max-height: 20px; border-radius: 10px; margin-left: 4px; -unity-font-style: bold; font-size: 11px; padding: 0; border-width: 0; background-color: rgb(131, 91, 154);" />
+                </ui:VisualElement>
+                <ui:VisualElement name="Abilities" class="forge-section-content" style="padding-left: 8px; padding-right: 4px; padding-top: 4px; padding-bottom: 8px; margin-left: 2px; border-left-width: 2px; border-left-color: rgba(140, 100, 180, 0.4);">
+                    <ui:EnumField label="Activation Policy" name="ActivationPolicy" type="FarEmerald.PlayForge.EAbilityActivationPolicy, Assembly-CSharp" style="margin-bottom: 2px; margin-top: 1px;" />
+                    <ui:VisualElement style="flex-direction: row;">
+                        <uie:IntegerField label="Max Abilities" name="MaxAbilities" style="flex-grow: 1; margin-right: 8px; margin-bottom: 2px; margin-top: 1px;" />
+                        <ui:Toggle name="AllowDuplicates" label="Allow Duplicates" style="margin-bottom: 2px; margin-top: 1px; min-width: 120px;" />
+                    </ui:VisualElement>
+                    <uie:PropertyField name="StartingAbilities" label="Starting Abilities" style="margin-bottom: 2px; margin-top: 8px;" />
+                </ui:VisualElement>
             </ui:VisualElement>
-            <uie:PropertyField name="StartingAbilities" label="Starting Abilities" style="margin-bottom: 2px; margin-top: 8px;" />
-        </ui:VisualElement>
-    </ui:VisualElement>
-    <ui:VisualElement name="AttributesSection" style="margin-bottom: 4px;">
-        <ui:VisualElement style="flex-direction: row; align-items: center; margin-top: 8px; margin-bottom: 4px; padding-left: 2px; padding-right: 2px;">
-            <ui:Label text="Attributes" style="font-size: 14px; -unity-font-style: bold; -unity-text-align: middle-left; color: rgb(200, 200, 200); padding-right: 8px; flex-shrink: 0;" />
-            <ui:VisualElement style="flex-grow: 1; height: 1px; background-color: rgb(100, 100, 100); margin-left: 4px; margin-right: 8px; align-self: center; border-radius: 1px;" />
-            <ui:Button text="?" name="AttributesHelp" tooltip="Help" style="width: 20px; height: 20px; min-width: 20px; min-height: 20px; max-width: 20px; max-height: 20px; border-radius: 10px; margin-left: 4px; -unity-font-style: bold; font-size: 11px; padding: 0; border-width: 0; background-color: rgb(131, 91, 154);" />
-        </ui:VisualElement>
-        <ui:VisualElement name="Attributes" style="padding-left: 8px; padding-right: 4px; padding-top: 4px; padding-bottom: 8px; margin-left: 2px; border-left-width: 2px; border-left-color: rgba(86, 156, 214, 0.4);">
-            <uie:PropertyField name="AttributeSet" label="Attribute Set" style="margin-bottom: 2px; margin-top: 1px;" />
-            <uie:PropertyField name="AttributeChangeEvents" label="Attribute Change Events" style="margin-bottom: 2px; margin-top: 8px;" />
-        </ui:VisualElement>
-    </ui:VisualElement>
-    <ui:VisualElement name="WorkersSection" style="margin-bottom: 4px;">
-        <ui:VisualElement style="flex-direction: row; align-items: center; margin-top: 8px; margin-bottom: 4px; padding-left: 2px; padding-right: 2px;">
-            <ui:Label text="Workers" style="font-size: 14px; -unity-font-style: bold; -unity-text-align: middle-left; color: rgb(200, 200, 200); padding-right: 8px; flex-shrink: 0;" />
-            <ui:VisualElement style="flex-grow: 1; height: 1px; background-color: rgb(100, 100, 100); margin-left: 4px; margin-right: 8px; align-self: center; border-radius: 1px;" />
-            <ui:Button text="?" name="WorkersHelp" tooltip="Help" style="width: 20px; height: 20px; min-width: 20px; min-height: 20px; max-width: 20px; max-height: 20px; border-radius: 10px; margin-left: 4px; -unity-font-style: bold; font-size: 11px; padding: 0; border-width: 0; background-color: rgb(131, 91, 154);" />
-        </ui:VisualElement>
-        <ui:VisualElement name="Workers" style="padding-left: 8px; padding-right: 4px; padding-top: 4px; padding-bottom: 8px; margin-left: 2px; border-left-width: 2px; border-left-color: rgba(180, 140, 80, 0.4);">
-            <ui:Foldout text="Impact Workers" value="false" style="margin-top: 4px; margin-bottom: 4px;">
-                <uie:PropertyField name="ImpactWorkers" style="margin-bottom: 2px; margin-top: 1px;" />
-            </ui:Foldout>
-            <ui:Foldout text="Tag Workers" value="false" style="margin-top: 4px; margin-bottom: 4px;">
-                <uie:PropertyField name="TagWorkers" style="margin-bottom: 2px; margin-top: 1px;" />
-            </ui:Foldout>
-            <ui:Foldout text="Analysis Workers" value="false" style="margin-top: 4px; margin-bottom: 4px;">
-                <uie:PropertyField name="AnalysisWorkers" style="margin-bottom: 2px; margin-top: 1px;" />
-            </ui:Foldout>
-        </ui:VisualElement>
-    </ui:VisualElement>
-    <ui:VisualElement name="LocalDataSection" style="margin-bottom: 4px;">
-        <ui:VisualElement style="flex-direction: row; align-items: center; margin-top: 8px; margin-bottom: 4px; padding-left: 2px; padding-right: 2px;">
-            <ui:Label text="Local Data" style="font-size: 14px; -unity-font-style: bold; -unity-text-align: middle-left; color: rgb(200, 200, 200); padding-right: 8px; flex-shrink: 0;" />
-            <ui:VisualElement style="flex-grow: 1; height: 1px; background-color: rgb(100, 100, 100); margin-left: 4px; margin-right: 8px; align-self: center; border-radius: 1px;" />
-            <ui:Button text="?" name="LocalDataHelp" tooltip="Help" style="width: 20px; height: 20px; min-width: 20px; min-height: 20px; max-width: 20px; max-height: 20px; border-radius: 10px; margin-left: 4px; -unity-font-style: bold; font-size: 11px; padding: 0; border-width: 0; background-color: rgb(131, 91, 154);" />
-        </ui:VisualElement>
-        <ui:VisualElement name="LocalData" style="padding-left: 8px; padding-right: 4px; padding-top: 4px; padding-bottom: 8px; margin-left: 2px; border-left-width: 2px; border-left-color: rgba(100, 100, 100, 0.3);">
-            <uie:PropertyField name="LocalData" style="margin-bottom: 2px; margin-top: 4px;" />
-        </ui:VisualElement>
+
+            <!-- ═══════════════════════════════════════════════════════════════════ -->
+            <!-- ATTRIBUTES SECTION -->
+            <!-- ═══════════════════════════════════════════════════════════════════ -->
+            <ui:VisualElement name="AttributesSection" class="forge-section" style="margin-bottom: 4px;">
+                <ui:VisualElement name="AttributesHeader" class="forge-section-header" style="flex-direction: row; align-items: center; margin-top: 8px; margin-bottom: 4px; padding: 4px 2px; cursor: link; background-color: rgba(50, 50, 50, 0.5); border-radius: 3px;">
+                    <ui:Label name="AttributesArrow" text="▼" class="forge-section-arrow" style="width: 16px; font-size: 10px; -unity-text-align: middle-center; color: rgb(150, 150, 150); margin-right: 2px;" />
+                    <ui:Label text="Attributes" class="forge-section-title" style="font-size: 14px; -unity-font-style: bold; -unity-text-align: middle-left; color: rgb(200, 200, 200); padding-right: 8px; flex-shrink: 0;" />
+                    <ui:VisualElement style="flex-grow: 1; height: 1px; background-color: rgb(100, 100, 100); margin-left: 4px; margin-right: 8px; align-self: center; border-radius: 1px;" />
+                    <ui:Button text="?" name="AttributesHelp" tooltip="Help" style="width: 20px; height: 20px; min-width: 20px; min-height: 20px; max-width: 20px; max-height: 20px; border-radius: 10px; margin-left: 4px; -unity-font-style: bold; font-size: 11px; padding: 0; border-width: 0; background-color: rgb(131, 91, 154);" />
+                </ui:VisualElement>
+                <ui:VisualElement name="Attributes" class="forge-section-content" style="padding-left: 8px; padding-right: 4px; padding-top: 4px; padding-bottom: 8px; margin-left: 2px; border-left-width: 2px; border-left-color: rgba(86, 156, 214, 0.4);">
+                    <uie:PropertyField name="AttributeSet" label="Attribute Set" style="margin-bottom: 2px; margin-top: 1px;" />
+                    <uie:PropertyField name="AttributeChangeEvents" label="Attribute Change Events" style="margin-bottom: 2px; margin-top: 8px;" />
+                </ui:VisualElement>
+            </ui:VisualElement>
+
+            <!-- ═══════════════════════════════════════════════════════════════════ -->
+            <!-- WORKERS SECTION -->
+            <!-- ═══════════════════════════════════════════════════════════════════ -->
+            <ui:VisualElement name="WorkersSection" class="forge-section" style="margin-bottom: 4px;">
+                <ui:VisualElement name="WorkersHeader" class="forge-section-header" style="flex-direction: row; align-items: center; margin-top: 8px; margin-bottom: 4px; padding: 4px 2px; cursor: link; background-color: rgba(50, 50, 50, 0.5); border-radius: 3px;">
+                    <ui:Label name="WorkersArrow" text="▼" class="forge-section-arrow" style="width: 16px; font-size: 10px; -unity-text-align: middle-center; color: rgb(150, 150, 150); margin-right: 2px;" />
+                    <ui:Label text="Workers" class="forge-section-title" style="font-size: 14px; -unity-font-style: bold; -unity-text-align: middle-left; color: rgb(200, 200, 200); padding-right: 8px; flex-shrink: 0;" />
+                    <ui:VisualElement style="flex-grow: 1; height: 1px; background-color: rgb(100, 100, 100); margin-left: 4px; margin-right: 8px; align-self: center; border-radius: 1px;" />
+                    <ui:Button text="?" name="WorkersHelp" tooltip="Help" style="width: 20px; height: 20px; min-width: 20px; min-height: 20px; max-width: 20px; max-height: 20px; border-radius: 10px; margin-left: 4px; -unity-font-style: bold; font-size: 11px; padding: 0; border-width: 0; background-color: rgb(131, 91, 154);" />
+                </ui:VisualElement>
+                <ui:VisualElement name="Workers" class="forge-section-content" style="padding-left: 8px; padding-right: 4px; padding-top: 4px; padding-bottom: 8px; margin-left: 2px; border-left-width: 2px; border-left-color: rgba(180, 140, 80, 0.4);">
+                    <!-- Direct PropertyFields - no wrapping Foldouts to avoid duplication -->
+                    <uie:PropertyField name="ImpactWorkers" label="Impact Workers" style="margin-bottom: 6px; margin-top: 2px;" />
+                    <uie:PropertyField name="TagWorkers" label="Tag Workers" style="margin-bottom: 6px; margin-top: 2px;" />
+                    <uie:PropertyField name="AnalysisWorkers" label="Analysis Workers" style="margin-bottom: 2px; margin-top: 2px;" />
+                </ui:VisualElement>
+            </ui:VisualElement>
+
+            <!-- ═══════════════════════════════════════════════════════════════════ -->
+            <!-- LOCAL DATA SECTION -->
+            <!-- ═══════════════════════════════════════════════════════════════════ -->
+            <ui:VisualElement name="LocalDataSection" class="forge-section" style="margin-bottom: 4px;">
+                <ui:VisualElement name="LocalDataHeader" class="forge-section-header" style="flex-direction: row; align-items: center; margin-top: 8px; margin-bottom: 4px; padding: 4px 2px; cursor: link; background-color: rgba(50, 50, 50, 0.5); border-radius: 3px;">
+                    <ui:Label name="LocalDataArrow" text="▼" class="forge-section-arrow" style="width: 16px; font-size: 10px; -unity-text-align: middle-center; color: rgb(150, 150, 150); margin-right: 2px;" />
+                    <ui:Label text="Local Data" class="forge-section-title" style="font-size: 14px; -unity-font-style: bold; -unity-text-align: middle-left; color: rgb(200, 200, 200); padding-right: 8px; flex-shrink: 0;" />
+                    <ui:VisualElement style="flex-grow: 1; height: 1px; background-color: rgb(100, 100, 100); margin-left: 4px; margin-right: 8px; align-self: center; border-radius: 1px;" />
+                    <ui:Button text="?" name="LocalDataHelp" tooltip="Help" style="width: 20px; height: 20px; min-width: 20px; min-height: 20px; max-width: 20px; max-height: 20px; border-radius: 10px; margin-left: 4px; -unity-font-style: bold; font-size: 11px; padding: 0; border-width: 0; background-color: rgb(131, 91, 154);" />
+                </ui:VisualElement>
+                <ui:VisualElement name="LocalData" class="forge-section-content" style="padding-left: 8px; padding-right: 4px; padding-top: 4px; padding-bottom: 8px; margin-left: 2px; border-left-width: 2px; border-left-color: rgba(100, 100, 100, 0.3);">
+                    <uie:PropertyField name="LocalData" label="" style="margin-bottom: 2px; margin-top: 4px;" />
+                </ui:VisualElement>
+            </ui:VisualElement>
+            
+            <!-- Bottom padding -->
+            <ui:VisualElement style="height: 20px; flex-shrink: 0;" />
+            
+        </ui:ScrollView>
     </ui:VisualElement>
 </ui:UXML>

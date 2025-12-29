@@ -48,8 +48,6 @@ namespace FarEmerald.PlayForge
             
             TagCache = new TagCache(this);
             
-            Data.Identity.Initialize(this);
-            
             AttributeSystem.Initialize(Data.AttributeSet, Data.AttributeChangeEvents);
             AbilitySystem.Initialize(Data.ActivationPolicy, Data.AllowDuplicateAbilities, Data.ImpactWorkers, Data.StartingAbilities);
         }
@@ -62,7 +60,7 @@ namespace FarEmerald.PlayForge
             // Attempt to find affiliation
             if (regData.TryGet(Tags.PAYLOAD_AFFILIATION, EProxyDataValueTarget.Primary, out List<Tag> affiliation))
             {
-                Data.Identity.Affiliation = affiliation;
+                Data.Affiliation = affiliation;
             }
         }
 
@@ -143,7 +141,7 @@ namespace FarEmerald.PlayForge
         {
             if (spec is null) return false;
             
-            if (!ForgeHelper.ValidateEffectApplicationRequirements(spec, Data.Identity.Affiliation)) return false;
+            if (!ForgeHelper.ValidateEffectApplicationRequirements(spec, Data.Affiliation)) return false;
             
             switch (spec.Base.DurationSpecification.DurationPolicy)
             {
@@ -442,7 +440,7 @@ namespace FarEmerald.PlayForge
 
         public override string ToString()
         {
-            return $"{Data.Identity}";
+            return $"{Data.Name}";
         }
 
         public override async UniTask CallBehaviour(Tag cmd, AbstractProxyTaskBehaviour cb, CancellationToken token)
@@ -468,18 +466,18 @@ namespace FarEmerald.PlayForge
         #region Derivation Source
         public List<Tag> GetContextTags() => new(){ Tags.CONTEXT_GAS, Tags.CONTEXT_SOURCE };
         public TagCache GetTagCache() => TagCache;
-        public Tag GetAssetTag() => Data.Identity.NameTag;
-        public int GetLevel() => Data.Identity.Level;
-        public int GetMaxLevel() => Data.Identity.MaxLevel;
-        public void SetLevel(int level) => Data.Identity.Level = Mathf.Clamp(level, 0, Data.Identity.MaxLevel);
-        public string GetName() => Data.Identity.DistinctName;
+        public Tag GetAssetTag() => Data.AssetTag;
+        public int GetLevel() => Data.Level;
+        public int GetMaxLevel() => Data.MaxLevel;
+        public void SetLevel(int level) => Data.Level = Mathf.Clamp(level, 0, Data.MaxLevel);
+        public string GetName() => Data.Name;
         public void CommunicateTargetedIntent(AbstractGameplayMonoProcess entity)
         {
             regData.AddPayload(Tags.TARGETED_INTENT, entity);
         }
         public List<Tag> GetAffiliation()
         {
-            return Data.Identity.Affiliation;
+            return Data.Affiliation;
         }
         public List<Tag> GetAppliedTags()
         {

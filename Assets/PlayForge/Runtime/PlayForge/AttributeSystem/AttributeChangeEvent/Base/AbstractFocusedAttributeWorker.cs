@@ -28,7 +28,9 @@ namespace FarEmerald.PlayForge
         
         [Tooltip("The sign of the change to screen for")]
         public ESignPolicyExtended SignPolicy;
-        
+
+        [Tooltip("Allow changes deriving from any impact type")]
+        public bool AnyImpactType = true;
         [Tooltip("The impact type of the change to screen for")]
         [ForgeCategory(Forge.Categories.ImpactType)]
         public List<Tag> ImpactType;
@@ -73,7 +75,7 @@ namespace FarEmerald.PlayForge
             {
                 return false;
             }
-            if (!ForgeHelper.ValidateImpactTypes(change.Value.BaseDerivation.GetImpactTypes(), ImpactType)) 
+            if (!ForgeHelper.ValidateImpactTypes(AnyImpactType, change.Value.BaseDerivation.GetImpactTypes(), ImpactType)) 
             {
                 return false;
             }

@@ -159,7 +159,7 @@ namespace FarEmerald.PlayForge
             };
         }
         
-        public static bool ValidateImpactTypes(List<Tag> impactType, List<Tag> validation, EAnyAllPolicy policy = EAnyAllPolicy.Any)
+        public static bool ValidateImpactTypes(bool anyType, List<Tag> impactType, List<Tag> validation, EAnyAllPolicy policy = EAnyAllPolicy.Any)
         {
             if (impactType.Contains(Tags.GEN_NOT_APPLICABLE) && !validation.Contains(Tags.GEN_ANY)) return false;
 

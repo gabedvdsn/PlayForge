@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using FarEmerald.PlayForge.Extended;
 using UnityEngine;
 using Object = UnityEngine.Object;
 
@@ -70,10 +71,10 @@ namespace FarEmerald.PlayForge
                 tags.Add(tag);
             }
             
-            foreach (var tag in Tags.SourceRequirements.AvoidTags) tags.Add(tag);
-            foreach (var tag in Tags.SourceRequirements.RequireTags) tags.Add(tag);
-            foreach (var tag in Tags.TargetRequirements.AvoidTags) tags.Add(tag);
-            foreach (var tag in Tags.TargetRequirements.RequireTags) tags.Add(tag);
+            foreach (var tag in Tags.SourceRequirements.AvoidTags) tags.Add(tag.Tag);
+            foreach (var tag in Tags.SourceRequirements.RequireTags) tags.Add(tag.Tag);
+            foreach (var tag in Tags.TargetRequirements.AvoidTags) tags.Add(tag.Tag);
+            foreach (var tag in Tags.TargetRequirements.RequireTags) tags.Add(tag.Tag);
 
             return tags;
         }
@@ -86,9 +87,10 @@ namespace FarEmerald.PlayForge
         {
             return Definition.Description;
         }
-        public Sprite GetPrimaryIcon()
+        public Texture2D GetPrimaryIcon()
         {
-            return Definition.NormalIcon;
+            if (LocalData.TryGet(Tag.Generate("PrimaryIcon"), EDataWrapperType.Object, out var data)) return data.objectValue as Texture2D;
+            return Definition.Textures.Count > 0 ? Definition.Textures[0].Texture : null;
         }
 
         public bool TryGetLocalData(Tag key, out DataWrapper data)

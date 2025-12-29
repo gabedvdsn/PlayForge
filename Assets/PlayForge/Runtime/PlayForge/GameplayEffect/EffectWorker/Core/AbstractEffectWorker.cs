@@ -1,7 +1,9 @@
-﻿using UnityEngine;
+﻿using System;
+using UnityEngine;
 
 namespace FarEmerald.PlayForge
 {
+    [Serializable]
     public abstract class AbstractEffectWorker
     {
         public abstract void OnEffectApplication(IAttributeImpactDerivation derivation);

@@ -14,18 +14,18 @@ namespace FarEmerald.PlayForge.Extended.Editor
             var container = new VisualElement();
             
             // Main container with themed styling
-            var mainBox = CreateMainContainer(Colors.AccentRed);
-            container.Add(mainBox);
+            //var mainBox = CreateMainContainer(Colors.AccentRed);
+            //container.Add(mainBox);
             
             // Header
-            var header = CreateHeader(Icons.Impact, "Impact Specification", Colors.AccentRed);
-            mainBox.Add(header);
+            //var header = CreateHeader(Icons.Impact, "Impact Specification", Colors.AccentRed);
+            //mainBox.Add(header);
             
             // ═══════════════════════════════════════════════════════════════════
             // Target Section
             // ═══════════════════════════════════════════════════════════════════
             var targetSection = CreateSection("Target", Colors.SectionOrange);
-            mainBox.Add(targetSection);
+            container.Add(targetSection);
             
             var attrTargetField = new PropertyField(property.FindPropertyRelative("AttributeTarget"), "Attribute");
             attrTargetField.style.marginBottom = 2;
@@ -53,7 +53,7 @@ namespace FarEmerald.PlayForge.Extended.Editor
             // Magnitude Section
             // ═══════════════════════════════════════════════════════════════════
             var magnitudeSection = CreateSection("Magnitude", Colors.SectionBlue);
-            mainBox.Add(magnitudeSection);
+            container.Add(magnitudeSection);
             
             var magnitudeField = new PropertyField(property.FindPropertyRelative("Magnitude"), "Base Magnitude");
             magnitudeField.style.marginBottom = 2;
@@ -70,7 +70,7 @@ namespace FarEmerald.PlayForge.Extended.Editor
             // Behavior Section
             // ═══════════════════════════════════════════════════════════════════
             var behaviorSection = CreateSection("Behavior", Colors.SectionPurple);
-            mainBox.Add(behaviorSection);
+            container.Add(behaviorSection);
             
             var impactTypesField = new PropertyField(property.FindPropertyRelative("ImpactTypes"), "Impact Types");
             impactTypesField.style.marginBottom = 4;
@@ -94,7 +94,7 @@ namespace FarEmerald.PlayForge.Extended.Editor
             // Contained Effects Section
             // ═══════════════════════════════════════════════════════════════════
             var packetsSection = CreateSection("Contained Effects", Colors.SectionGreen);
-            mainBox.Add(packetsSection);
+            container.Add(packetsSection);
             
             var packetsHint = CreateHintLabel("Effects triggered on Apply, Tick, or Remove");
             packetsSection.Add(packetsHint);
@@ -151,9 +151,9 @@ namespace FarEmerald.PlayForge.Extended.Editor
                 var policy = (EApplyTickRemove)policyProp.enumValueIndex;
                 colorIndicator.style.backgroundColor = policy switch
                 {
-                    EApplyTickRemove.OnApply => Colors.PolicyApply,
-                    EApplyTickRemove.OnTick => Colors.PolicyTick,
-                    EApplyTickRemove.OnRemove => Colors.PolicyRemove,
+                    EApplyTickRemove.OnApply => Colors.PolicyGreen,
+                    EApplyTickRemove.OnTick => Colors.PolicyYellow,
+                    EApplyTickRemove.OnRemove => Colors.PolicyRed,
                     _ => Colors.AccentGray
                 };
             }

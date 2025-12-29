@@ -14,18 +14,18 @@ namespace FarEmerald.PlayForge.Extended.Editor
             var container = new VisualElement();
             
             // Main container with themed styling
-            var mainBox = CreateMainContainer(Colors.AccentBlue);
-            container.Add(mainBox);
+            //var mainBox = CreateMainContainer(Colors.AccentBlue);
+            //container.Add(mainBox);
             
             // Header
-            var header = CreateHeader(Icons.Duration, "Duration Specification", Colors.AccentBlue);
-            mainBox.Add(header);
+            //var header = CreateHeader(Icons.Duration, "Duration Specification", Colors.AccentBlue);
+            //mainBox.Add(header);
             
             // ═══════════════════════════════════════════════════════════════════
             // Policy Section
             // ═══════════════════════════════════════════════════════════════════
             var policySection = CreateSection("Policy", Colors.SectionBlue);
-            mainBox.Add(policySection);
+            container.Add(policySection);
             
             var durationPolicyProp = property.FindPropertyRelative("DurationPolicy");
             var durationPolicyField = new PropertyField(durationPolicyProp, "Duration Policy");
@@ -40,7 +40,7 @@ namespace FarEmerald.PlayForge.Extended.Editor
             // Duration Section (conditional)
             // ═══════════════════════════════════════════════════════════════════
             var durationSection = CreateSection("Duration", Colors.SectionGreen);
-            mainBox.Add(durationSection);
+            container.Add(durationSection);
             
             // Duration row (value + calculation)
             var durationRow = new VisualElement();
@@ -69,7 +69,7 @@ namespace FarEmerald.PlayForge.Extended.Editor
             // Ticks Section (conditional)
             // ═══════════════════════════════════════════════════════════════════
             var ticksSection = CreateSection("Ticks", Colors.SectionOrange);
-            mainBox.Add(ticksSection);
+            container.Add(ticksSection);
             
             var ticksRow = new VisualElement();
             ticksRow.style.flexDirection = FlexDirection.Row;
@@ -108,6 +108,8 @@ namespace FarEmerald.PlayForge.Extended.Editor
             void UpdateVisibility()
             {
                 var policy = (EEffectDurationPolicy)durationPolicyProp.enumValueIndex;
+
+                stackableField.style.display = policy == EEffectDurationPolicy.Instant ? DisplayStyle.None : DisplayStyle.Flex;
                 
                 bool showDuration = policy == EEffectDurationPolicy.Durational;
                 bool showTicks = policy != EEffectDurationPolicy.Instant;
