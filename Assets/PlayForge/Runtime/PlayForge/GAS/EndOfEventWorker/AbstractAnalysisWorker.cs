@@ -4,10 +4,9 @@ using System.Collections.Generic;
 namespace FarEmerald.PlayForge
 {
     [Serializable]
-    public abstract class AbstractAnalysisWorker : Taggable
+    public abstract class AbstractAnalysisWorker
     {
         public abstract void Activate(IGameplayAbilitySystem gas);
-        public abstract HashSet<Tag> GetAllTags();
     }
     
     public abstract class AttributeWatcherWorker : AbstractAnalysisWorker

@@ -68,13 +68,6 @@ namespace FarEmerald.PlayForge
         {
             return Definition.Name;
         }
-        public override HashSet<Tag> GetAllTags()
-        {
-            var set = new HashSet<Tag>();
-
-            set.Add(Definition.Visibility);
-            
-        }
         public string GetDescription()
         {
             return Definition.Description;
@@ -91,7 +84,7 @@ namespace FarEmerald.PlayForge
     { 
         public string Name;
         public string Description;
-        [ForgeCategory(Forge.Categories.Visibility)] public Tag Visibility;
+        [ForgeTagContext(ForgeContext.Visibility)] public Tag Visibility;
         public List<TextureItem> Textures;
     }
 
@@ -105,12 +98,11 @@ namespace FarEmerald.PlayForge
     [Serializable]
     public struct GameplayEffectTags
     {
-        [ForgeCategory(Forge.Categories.Identifier)]
+        [ForgeTagContext(ForgeContext.AssetIdentifier)]
         public Tag AssetTag;
         
-        [ForgeCategory(Forge.Categories.Context)]
-        public List<Tag> ContextTags;
-        public List<Tag> GrantedTags;
+        [ForgeTagContext(ForgeContext.ContextIdentifier)] public List<Tag> ContextTags;
+        [ForgeTagContext(ForgeContext.Granted)]public List<Tag> GrantedTags;
     }
     
     public enum EEffectReApplicationPolicy

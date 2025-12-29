@@ -19,11 +19,6 @@ namespace FarEmerald.PlayForge
         {
             return Name;
         }
-        public override HashSet<Tag> GetAllTags()
-        {
-            return new HashSet<Tag>();
-        }
-
         public string GetDescription()
         {
             return Description;

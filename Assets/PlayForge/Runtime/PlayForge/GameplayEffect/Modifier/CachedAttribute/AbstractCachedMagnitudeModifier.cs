@@ -7,7 +7,6 @@ namespace FarEmerald.PlayForge
     public abstract class AbstractCachedMagnitudeModifier : AbstractMagnitudeModifier
     {
         public abstract void Regulate(Attribute attribute, AttributeModificationRule rules);
-        public abstract HashSet<Tag> GetAllTags();
     }
 
     public class AttributeModificationRule

@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 
 namespace FarEmerald.PlayForge
@@ -34,7 +35,7 @@ namespace FarEmerald.PlayForge
         public override void Regulate(Attribute attribute, AttributeModificationRule rules)
         {
             foreach (var member in Calculations) member.Calculation.Regulate(attribute, rules); 
-        }
+        }   
     }
 
     public struct CachedMagnitudeModifierGroupMember

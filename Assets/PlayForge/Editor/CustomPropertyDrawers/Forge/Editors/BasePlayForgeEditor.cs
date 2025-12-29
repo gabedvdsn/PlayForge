@@ -45,11 +45,14 @@ namespace FarEmerald.PlayForge.Extended.Editor
         // ═══════════════════════════════════════════════════════════════════════════
         // Asset Tag Generation
         // ═══════════════════════════════════════════════════════════════════════════
+
+        protected const string UnnamedAssetTag = "Unnamed";
+        protected const string UnknownAssetName = "Error";
         
-        protected string GenerateAssetTag(string assetName, string fallback)
+        protected (string result, bool isUnknown) GenerateAssetTag(string assetName, string fallback)
         {
             if (string.IsNullOrEmpty(assetName))
-                return fallback;
+                return ($"{UnnamedAssetTag} {fallback}!", true);
             
             // Remove special characters (keep only alphanumeric and spaces)
             string cleaned = Regex.Replace(assetName, @"[^a-zA-Z0-9\s]", "");
@@ -73,8 +76,9 @@ namespace FarEmerald.PlayForge.Extended.Editor
             {
                 result = $"{fallback}_" + result;
             }
+
+            return string.IsNullOrEmpty(result) ? ($"{UnnamedAssetTag} {fallback}!", true) : (result, false);
             
-            return string.IsNullOrEmpty(result) ? fallback : result;
         }
 
         // ═══════════════════════════════════════════════════════════════════════════

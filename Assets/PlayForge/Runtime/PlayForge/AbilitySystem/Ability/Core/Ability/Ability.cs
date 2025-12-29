@@ -48,36 +48,6 @@ namespace FarEmerald.PlayForge
         {
             return new AbilitySpec(owner, this, level);
         }
-        
-        public override HashSet<Tag> GetAllTags()
-        {
-            var tags = new HashSet<Tag>()
-            {
-                Tags.AssetTag
-            };
-            
-            foreach (var tag in Tags.ContextTags)
-            {
-                tags.Add(tag);
-            }
-            
-            foreach (var tag in Tags.ActiveGrantedTags)
-            {
-                tags.Add(tag);
-            }
-            
-            foreach (var tag in Tags.PassiveGrantedTags)
-            {
-                tags.Add(tag);
-            }
-            
-            foreach (var tag in Tags.SourceRequirements.AvoidTags) tags.Add(tag.Tag);
-            foreach (var tag in Tags.SourceRequirements.RequireTags) tags.Add(tag.Tag);
-            foreach (var tag in Tags.TargetRequirements.AvoidTags) tags.Add(tag.Tag);
-            foreach (var tag in Tags.TargetRequirements.RequireTags) tags.Add(tag.Tag);
-
-            return tags;
-        }
 
         public string GetName()
         {

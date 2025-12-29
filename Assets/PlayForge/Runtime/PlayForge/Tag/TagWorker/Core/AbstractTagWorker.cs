@@ -6,7 +6,7 @@ using UnityEngine;
 namespace FarEmerald.PlayForge
 {
     [Serializable]
-    public abstract class AbstractTagWorker : Taggable
+    public abstract class AbstractTagWorker
     {
         [Header("Tag Worker")] 
         
@@ -60,8 +60,6 @@ namespace FarEmerald.PlayForge
 
             return true;
         }
-
-        public abstract HashSet<Tag> GetAllTags();
     }
     
     public abstract class AbstractTagWorkerInstance

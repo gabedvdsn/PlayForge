@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using FarEmerald.PlayForge.Extended;
 using UnityEditor;
 using UnityEngine;
 
@@ -24,6 +25,7 @@ namespace FarEmerald.PlayForge
     [Serializable]
     public class AvoidRequireContainer
     {
+        [ForgeTagContext(ForgeContext.Required, ForgeContext.Granted, ForgeContext.AssetIdentifier)]
         public Tag Tag;
         public EComparisonOperator Operator = EComparisonOperator.GreaterThan;
         public int Magnitude = 0;

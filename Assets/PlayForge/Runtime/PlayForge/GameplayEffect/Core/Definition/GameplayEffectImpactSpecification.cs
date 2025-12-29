@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
+using FarEmerald.PlayForge.Extended;
 using UnityEngine;
 using UnityEngine.Serialization;
 
@@ -16,9 +17,7 @@ namespace FarEmerald.PlayForge
         
         public EAffiliationPolicy AffiliationPolicy;
         
-        
-        [ForgeCategory(Forge.Categories.ImpactType)]
-        public List<Tag> ImpactTypes;
+        [ForgeTagContext(ForgeContext.Impact)] public List<Tag> ImpactTypes;
         public bool ReverseImpactOnRemoval;
         public EEffectReApplicationPolicy ReApplicationPolicy;
         

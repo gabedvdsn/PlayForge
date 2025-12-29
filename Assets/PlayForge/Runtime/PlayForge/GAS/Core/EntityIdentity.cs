@@ -14,6 +14,7 @@ namespace FarEmerald.PlayForge
         
         public List<Tag> Affiliation;
         
+        [ForgeTagContext(ForgeContext.AssetIdentifier)]
         public Tag AssetTag;
         public List<Tag> GrantedTags;
 
@@ -42,48 +43,6 @@ namespace FarEmerald.PlayForge
         public string GetName()
         {
             return Name;
-        }
-        public override HashSet<Tag> GetAllTags()
-        {
-            var set = new HashSet<Tag>();
-            foreach (var t in Affiliation) set.Add(t);
-            set.Add(AssetTag);
-            foreach (var t in GrantedTags) set.Add(t);
-            foreach (var ability in StartingAbilities)
-            {
-                foreach (var t in ability.GetAllTags()) set.Add(t);
-            }
-
-            foreach (var iw in ImpactWorkers)
-            {
-                foreach (var t in iw.GetAllTags()) set.Add(t);
-            }
-
-            foreach (var t in AttributeSet.GetAllTags()) set.Add(t);
-
-            foreach (var ace in AttributeChangeEvents)
-            {
-                foreach (var t in ace.GetAllTags()) set.Add(t);
-            }
-
-            foreach (var tw in TagWorkers)
-            {
-                foreach (var t in tw.GetAllTags()) set.Add(t);
-            }
-
-            foreach (var aw in AnalysisWorkers)
-            {
-                foreach (var t in aw.GetAllTags()) set.Add(t);
-            }
-
-            foreach (var dw in LocalData)
-            {
-                set.Add(dw.Key);
-                if (dw.tagValue != default) set.Add(dw.tagValue);
-            }
-
-            return set;
-
         }
         public string GetDescription()
         {

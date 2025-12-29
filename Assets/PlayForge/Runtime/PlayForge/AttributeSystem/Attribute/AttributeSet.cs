@@ -43,16 +43,6 @@ namespace FarEmerald.PlayForge
 
             return attributes;
         }
-        public override HashSet<Tag> GetAllTags()
-        {
-            var set = new HashSet<Tag>();
-            foreach (var elem in Attributes)
-            {
-                foreach (var tag in elem.Modifier.GetAllTags()) set.Add(tag);
-            }
-
-            return set;
-        }
     }
     
     public enum ELimitedEffectImpactTarget
