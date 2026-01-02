@@ -9,7 +9,7 @@ namespace FarEmerald.PlayForge
         public ISource Owner;
         public Ability Base;
         public int Level;
-        public float RelativeLevel => (Level - 1) / (float)(Base.MaxLevel - 1);
+        public float RelativeLevel => Base.MaxLevel > 1 ? (Level - 1) / (float)(Base.MaxLevel - 1) : 1f;
         
         public AbilitySpec(ISource owner, Ability ability, int level)
         {
@@ -31,9 +31,9 @@ namespace FarEmerald.PlayForge
         public bool ValidateActivationRequirements(AbilityDataPacket data)
         {
             return Base.SourceActivationRules.All(rule => rule.Validate(data, out _));
-            return !(GetCooldown().DurationRemaining > 0f)
+            /*return !(GetCooldown().DurationRemaining > 0f)
                    && CanCoverCost()
-                   && Base.Tags.ValidateSourceRequirements(Owner);
+                   && Base.Tags.ValidateSourceRequirements(Owner);*/
         }
 
         public bool ValidateActivationRequirements(ITarget target, AbilityDataPacket data)

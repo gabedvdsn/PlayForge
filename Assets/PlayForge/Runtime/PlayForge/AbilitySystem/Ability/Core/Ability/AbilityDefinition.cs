@@ -13,7 +13,6 @@ namespace FarEmerald.PlayForge
         
         public EAbilityActivationPolicyExtended ActivationPolicy = EAbilityActivationPolicyExtended.SingleActive; 
         public bool ActivateImmediately;
-
         
         public List<TextureItem> Textures;
     }

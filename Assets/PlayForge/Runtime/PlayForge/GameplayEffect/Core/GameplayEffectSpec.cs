@@ -11,7 +11,7 @@ namespace FarEmerald.PlayForge
         public ISource Source;
         public ITarget Target;
 
-        public Dictionary<IMagnitudeModifier, AttributeValue?> SourceCapturedAttributes;
+        public Dictionary<IScaler, AttributeValue?> SourceCapturedAttributes;
 
         public GameplayEffectSpec(GameplayEffect GameplayEffect, IEffectOrigin origin, IGameplayAbilitySystem target)
         {
@@ -21,12 +21,12 @@ namespace FarEmerald.PlayForge
             Source = Origin.GetOwner();
             Target = target;
             
-            SourceCapturedAttributes = new Dictionary<IMagnitudeModifier, AttributeValue?>();
+            SourceCapturedAttributes = new Dictionary<IScaler, AttributeValue?>();
         }
         
         public SourcedModifiedAttributeValue SourcedImpact(AttributeValue attributeValue)
         {
-            AttributeValue impactValue = AttributeImpact(attributeValue);
+            var impactValue = AttributeImpact(attributeValue);
             return new SourcedModifiedAttributeValue(
                 this,
                 impactValue.CurrentValue,
@@ -36,7 +36,7 @@ namespace FarEmerald.PlayForge
 
         public SourcedModifiedAttributeValue SourcedImpact(IAttributeImpactDerivation baseDerivation, AttributeValue attributeValue)
         {
-            AttributeValue impactValue = AttributeImpact(attributeValue);
+            var impactValue = AttributeImpact(attributeValue);
             return new SourcedModifiedAttributeValue(
                 this,
                 baseDerivation,
@@ -172,7 +172,7 @@ namespace FarEmerald.PlayForge
         {
             foreach (AbstractEffectWorker worker in Base.Workers) worker.OnEffectImpact(impactData);
         }
-        public Dictionary<IMagnitudeModifier, AttributeValue?> GetSourcedCapturedAttributes()
+        public Dictionary<IScaler, AttributeValue?> GetSourcedCapturedAttributes()
         {
             return SourceCapturedAttributes;
         }

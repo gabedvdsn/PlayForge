@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Buffers;
+using FarEmerald.PlayForge.Extended;
 using UnityEngine;
 using UnityEngine.Serialization;
 
@@ -61,9 +62,10 @@ namespace FarEmerald.PlayForge
 
                 EComparisonOperator.GreaterThan => attrVal.CurrentValue > Value,
                 EComparisonOperator.LessThan => attrVal.CurrentValue < Value,
-                EComparisonOperator.GreaterOrEqualTo => attrVal.CurrentValue >= Value,
-                EComparisonOperator.LessOrEqualTo => attrVal.CurrentValue <= Value,
+                EComparisonOperator.GreaterOrEqual => attrVal.CurrentValue >= Value,
+                EComparisonOperator.LessOrEqual => attrVal.CurrentValue <= Value,
                 EComparisonOperator.Equal => Mathf.Approximately(attrVal.CurrentValue, Value),
+                EComparisonOperator.NotEqual => !Mathf.Approximately(attrVal.CurrentValue, Value),
                 _ => throw new ArgumentOutOfRangeException()
             };
         }
@@ -92,9 +94,10 @@ namespace FarEmerald.PlayForge
 
                 EComparisonOperator.GreaterThan => attrVal.CurrentValue > Threshold,
                 EComparisonOperator.LessThan => attrVal.CurrentValue < Threshold,
-                EComparisonOperator.GreaterOrEqualTo => attrVal.CurrentValue >= Threshold,
-                EComparisonOperator.LessOrEqualTo => attrVal.CurrentValue <= Threshold,
+                EComparisonOperator.GreaterOrEqual => attrVal.CurrentValue >= Threshold,
+                EComparisonOperator.LessOrEqual => attrVal.CurrentValue <= Threshold,
                 EComparisonOperator.Equal => Mathf.Approximately(attrVal.CurrentValue, Threshold),
+                EComparisonOperator.NotEqual => !Mathf.Approximately(attrVal.CurrentValue, Threshold),
                 _ => throw new ArgumentOutOfRangeException()
             };
         }
@@ -106,6 +109,7 @@ namespace FarEmerald.PlayForge
 
     public abstract class AbstractTagValidationRule : IAbilityValidationRule
     {
+        [ForgeTagContext(ForgeContext.Required, ForgeContext.Granted, ForgeContext.AssetIdentifier)]
         public Tag Tag;
 
         public virtual DataWrapper GetValue(AbilityDataPacket data)

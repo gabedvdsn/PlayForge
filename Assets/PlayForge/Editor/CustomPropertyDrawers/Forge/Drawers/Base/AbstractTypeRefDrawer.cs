@@ -5,14 +5,22 @@ using UnityEngine.UIElements;
 
 namespace FarEmerald.PlayForge.Extended.Editor
 {
-    public abstract class AbstractTypeRefDrawer<T> : AbstractRefDrawer<Type>, IDrawerToClass<T>
+    /// <summary>
+    /// Type picker drawer base class for selecting concrete types that implement/inherit from T.
+    /// Creates instances of the selected type when assigned.
+    /// </summary>
+    public abstract class AbstractTypeRefDrawer<T> : AbstractRefDrawer<Type>
         where T : class
     {
         protected Type target;
 
+        /// <summary>
+        /// Generates an instance of the currently selected type.
+        /// </summary>
         public virtual T Generate()
         {
-            if (target is not null) return Activator.CreateInstance(target) as T;
+            if (target != null) 
+                return Activator.CreateInstance(target) as T;
             return null;
         }
 
@@ -25,18 +33,22 @@ namespace FarEmerald.PlayForge.Extended.Editor
         {
             target = value;
 
-            if (value is not null)
+            if (value != null)
             {
                 var instance = Activator.CreateInstance(value) as T;
                 prop.managedReferenceValue = instance;
             }
-            else prop.managedReferenceValue = null;
+            else
+            {
+                prop.managedReferenceValue = null;
+            }
         }
 
         protected override bool CompareTo(Type value, Type other)
         {
             return value == other;
         }
+        
         protected override string GetStringValue(SerializedProperty prop, Type value)
         {
             return ObjectNames.NicifyVariableName(value?.Name) ?? "<None>";
@@ -44,9 +56,10 @@ namespace FarEmerald.PlayForge.Extended.Editor
 
         protected override Type GetCurrentValue(SerializedProperty prop)
         {
-            if (target is not null) return target;
+            if (target != null) 
+                return target;
 
-            if (prop.managedReferenceValue is not null)
+            if (prop.managedReferenceValue != null)
             {
                 target = prop.managedReferenceValue.GetType();
                 return target;
@@ -67,32 +80,30 @@ namespace FarEmerald.PlayForge.Extended.Editor
                 }
             }
 
-            if (target is null)
+            if (target == null)
             {
                 target = GetDefault();
-                if (target != null) SetValue(prop, target);
+                if (target != null) 
+                    SetValue(prop, target);
             }
 
             return null;
         }
+        
         protected override Label GetLabel(SerializedProperty prop, Type value)
         {
             if (prop.isArray) return null;
-            return new Label(prop.name);
+            return new Label(prop.displayName);
         }
 
         protected override bool AcceptOpen(SerializedProperty prop)
         {
-            return GetCurrentValue(prop) is not null;
+            return GetCurrentValue(prop) != null;
         }
-        protected override bool AcceptClear()
-        {
-            return base.AcceptClear();
-        }
+        
         protected override bool AcceptAdd()
         {
             return false;
         }
-
     }
 }

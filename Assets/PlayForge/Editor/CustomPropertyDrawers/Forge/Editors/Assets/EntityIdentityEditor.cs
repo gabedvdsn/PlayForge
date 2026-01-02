@@ -12,9 +12,59 @@ namespace FarEmerald.PlayForge.Extended.Editor
         [SerializeField] private Texture2D m_EntityIcon;
         
         private EntityIdentity entity;
-        
-        private HeaderResult headerResult;
         private Label assetTagValueLabel;
+
+        // ═══════════════════════════════════════════════════════════════════════════
+        // Header Configuration (IMGUI Header)
+        // ═══════════════════════════════════════════════════════════════════════════
+        
+        protected override string GetDisplayName()
+        {
+            return !string.IsNullOrEmpty(entity?.Name) ? entity.Name : "Unnamed Entity";
+        }
+        
+        protected override string GetDisplayDescription()
+        {
+            if (entity == null) return "";
+            var desc = entity.Description;
+            return !string.IsNullOrEmpty(desc) ? Truncate(desc, 80) : "No description provided.";
+        }
+        
+        protected override Texture2D GetHeaderIcon()
+        {
+            // First try to get from textures list
+            if (entity?.Textures != null && entity.Textures.Count > 0)
+            {
+                var tex = entity.Textures[0].Texture;
+                if (tex != null) return tex;
+            }
+            return m_EntityIcon;
+        }
+        
+        protected override string GetAssetTypeLabel() => "ENTITY";
+        
+        protected override Color GetAssetTypeColor() => new Color(0.3f, 0.8f, 0.6f); // Teal/cyan
+        
+        protected override string GetDocumentationUrl() => "https://docs.playforge.dev/entities";
+        
+        protected override bool ShowVisualizeButton => true;
+        protected override bool ShowImportButton => true;
+        
+        protected override void OnVisualize()
+        {
+            // TODO: Open entity visualizer
+            Debug.Log($"Visualize entity: {entity.name}");
+        }
+        
+        protected override void OnImport()
+        {
+            // Open asset picker for entities
+            EditorGUIUtility.ShowObjectPicker<EntityIdentity>(null, false, "", GUIUtility.GetControlID(FocusType.Passive));
+        }
+
+        // ═══════════════════════════════════════════════════════════════════════════
+        // Inspector GUI
+        // ═══════════════════════════════════════════════════════════════════════════
 
         public override VisualElement CreateInspectorGUI()
         {
@@ -25,8 +75,7 @@ namespace FarEmerald.PlayForge.Extended.Editor
 
             root = CreateRoot();
             
-            BuildHeader();
-            
+            // ScrollView for sections (header is in OnHeaderGUI)
             var scrollView = CreateScrollView();
             root.Add(scrollView);
             
@@ -47,35 +96,6 @@ namespace FarEmerald.PlayForge.Extended.Editor
         }
 
         // ═══════════════════════════════════════════════════════════════════════════
-        // Header
-        // ═══════════════════════════════════════════════════════════════════════════
-        
-        private void BuildHeader()
-        {
-            // Get primary texture if available
-            var headerIcon = m_EntityIcon;
-            if (entity.Textures != null && entity.Textures.Count > 0 && entity.Textures[0].Texture != null)
-            {
-                headerIcon = entity.Textures[0].Texture;
-            }
-            
-            headerResult = CreateMainHeader(new HeaderConfig
-            {
-                Icon = headerIcon,
-                DefaultTitle = GetEntityName(),
-                DefaultDescription = GetEntityDescription(),
-                ShowRefresh = true,
-                ShowLookup = true,
-                ShowImport = true, 
-                ShowVisualize = true,
-                OnRefresh = Refresh,
-                OnLookup = Lookup
-            });
-            
-            root.Add(headerResult.Header);
-        }
-
-        // ═══════════════════════════════════════════════════════════════════════════
         // Definition Section
         // ═══════════════════════════════════════════════════════════════════════════
         
@@ -93,25 +113,25 @@ namespace FarEmerald.PlayForge.Extended.Editor
             var content = section.Content;
             
             // Name field with live header update
-            var nameField = CreateTextField(entity.Name, "Name");
+            var nameField = CreateTextField("Name", "Name");
             nameField.value = entity.Name;
-            nameField.RegisterCallback<FocusOutEvent>(evt =>
+            nameField.RegisterCallback<FocusOutEvent>(_ =>
             {
                 entity.Name = nameField.value;
                 MarkDirty(entity);
-                UpdateHeaderLabels();
                 UpdateAssetTagDisplay();
+                Repaint(); // Refresh IMGUI header
             });
             content.Add(nameField);
             
             // Description field with live header update
-            var descriptionField = CreateTextField(entity.Description, "Description", multiline: true, minHeight: 24);
+            var descriptionField = CreateTextField("Description", "Description", multiline: true, minHeight: 24);
             descriptionField.value = entity.Description;
-            descriptionField.RegisterCallback<FocusOutEvent>(evt =>
+            descriptionField.RegisterCallback<FocusOutEvent>(_ =>
             {
                 entity.Description = descriptionField.value;
                 MarkDirty(entity);
-                UpdateHeaderLabels();
+                Repaint(); // Refresh IMGUI header
             });
             content.Add(descriptionField);
             
@@ -122,12 +142,7 @@ namespace FarEmerald.PlayForge.Extended.Editor
                 "Textures"
             );
             texturesField.style.marginTop = 8;
-            
-            // Register callback to update header icon when textures change
-            texturesField.RegisterCallback<SerializedPropertyChangeEvent>(evt =>
-            {
-                UpdateHeaderIcon();
-            });
+            texturesField.RegisterCallback<SerializedPropertyChangeEvent>(_ => Repaint());
             content.Add(texturesField);
         }
 
@@ -148,12 +163,11 @@ namespace FarEmerald.PlayForge.Extended.Editor
             
             var content = section.Content;
             
-            // Asset Tag (single tag identifier for this entity)
-            content.Add(CreatePropertyField(
-                serializedObject.FindProperty("AssetTag"), 
-                "AssetTag", 
-                "Asset Tag"
-            ));
+            // Asset Tag Display (read-only, derived from Name)
+            var (assetTagContainer, valueLabel) = CreateAssetTagDisplay();
+            assetTagValueLabel = valueLabel;
+            UpdateAssetTagDisplay();
+            content.Add(assetTagContainer);
             
             // Granted Tags (tags given to owner)
             var grantedField = CreatePropertyField(
@@ -392,63 +406,31 @@ namespace FarEmerald.PlayForge.Extended.Editor
         // Helper Methods
         // ═══════════════════════════════════════════════════════════════════════════
         
-        private string GetEntityName()
-        {
-            return !string.IsNullOrEmpty(entity.Name) ? entity.Name : "Unnamed Entity";
-        }
-        
-        private string GetEntityDescription()
-        {
-            return !string.IsNullOrEmpty(entity.Description) ? entity.Description : "No description provided.";
-        }
-        
-        private void UpdateHeaderLabels()
-        {
-            if (headerResult?.NameLabel != null)
-                headerResult.NameLabel.text = GetEntityName();
-            if (headerResult?.DescriptionLabel != null)
-                headerResult.DescriptionLabel.text = GetEntityDescription();
-        }
-        
-        private void UpdateHeaderIcon()
-        {
-            if (headerResult?.IconElement == null) return;
-            
-            var newIcon = m_EntityIcon;
-            if (entity.Textures != null && entity.Textures.Count > 0 && entity.Textures[0].Texture != null)
-            {
-                newIcon = entity.Textures[0].Texture;
-            }
-            
-            if (newIcon != null)
-            {
-                headerResult.IconElement.style.backgroundImage = new StyleBackground(newIcon);
-            }
-        }
-        
         private void UpdateAssetTagDisplay()
         {
             if (assetTagValueLabel == null) return;
+            
             var result = GenerateAssetTag(entity.Name, "Entity");
             assetTagValueLabel.text = result.result;
+            
+            // Sync the actual AssetTag.Name field
+            if (!result.isUnknown)
+            {
+                var assetTag = entity.AssetTag;
+                assetTag.Name = result.result;
+                entity.AssetTag = assetTag;
+            }
         }
 
         // ═══════════════════════════════════════════════════════════════════════════
         // Abstract Implementations
         // ═══════════════════════════════════════════════════════════════════════════
-        
-        protected override void SetupCollapsibleSections() { }
 
-        protected override void Lookup()
-        {
-            PingAsset(entity);
-        }
-        
         protected override void Refresh()
         {
             serializedObject.Update();
-            UpdateHeaderLabels();
-            UpdateHeaderIcon();
+            UpdateAssetTagDisplay();
+            Repaint();
         }
     }
 }

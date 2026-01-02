@@ -13,7 +13,7 @@ namespace FarEmerald.PlayForge
     {
         public Attribute AttributeTarget;
         public EEffectImpactTarget TargetImpact;
-        public ECalculationOperation ImpactOperation;
+        [SerializeReference] public ECalculationOperation ImpactOperation;
         
         public EAffiliationPolicy AffiliationPolicy;
         
@@ -22,8 +22,8 @@ namespace FarEmerald.PlayForge
         public EEffectReApplicationPolicy ReApplicationPolicy;
         
         public float Magnitude;
-        public AbstractMagnitudeModifier MagnitudeCalculation;
-        public EMagnitudeOperation MagnitudeCalculationOperation;
+        [SerializeReference] public AbstractScaler MagnitudeScaler;
+        public EMagnitudeOperation RealMagnitude;
         
         public ContainedEffectPacket[] Packets;
 
@@ -41,7 +41,7 @@ namespace FarEmerald.PlayForge
             ReverseImpactOnRemoval = o.ReverseImpactOnRemoval;
             ReApplicationPolicy = o.ReApplicationPolicy;
             Magnitude = o.Magnitude;
-            MagnitudeCalculation = o.MagnitudeCalculation;
+            MagnitudeScaler = o.MagnitudeScaler;
             
             Packets = new ContainedEffectPacket[o.Packets.Length];
             for (int i = 0; i < o.Packets.Length; i++)
@@ -56,19 +56,19 @@ namespace FarEmerald.PlayForge
 
         public void ApplyImpactSpecifications(GameplayEffectSpec spec)
         {
-            MagnitudeCalculation.Initialize(spec);
+            MagnitudeScaler?.Initialize(spec);
         }
 
         public float GetMagnitude(GameplayEffectSpec spec)
         {
-            float calculatedMagnitude = MagnitudeCalculation.Evaluate(spec);
+            float calculatedMagnitude = MagnitudeScaler?.Evaluate(spec) ?? 0f;
             
-            return MagnitudeCalculationOperation switch
+            return RealMagnitude switch
             {
-                EMagnitudeOperation.Add => Magnitude + calculatedMagnitude,
-                EMagnitudeOperation.Multiply => Magnitude * calculatedMagnitude,
+                EMagnitudeOperation.AddScaler => Magnitude + calculatedMagnitude,
+                EMagnitudeOperation.MultiplyWithScaler => Magnitude * calculatedMagnitude,
                 EMagnitudeOperation.UseMagnitude => Magnitude,
-                EMagnitudeOperation.UseCalculation => calculatedMagnitude,
+                EMagnitudeOperation.UseScaler => calculatedMagnitude,
                 _ => throw new ArgumentOutOfRangeException()
             };
         }
@@ -100,10 +100,10 @@ namespace FarEmerald.PlayForge
 
     public enum EMagnitudeOperation
     {
-        Multiply,
-        Add,
+        MultiplyWithScaler,
+        AddScaler,
         UseMagnitude,
-        UseCalculation
+        UseScaler
     }
 
     public enum EEffectImpactTargetLimited

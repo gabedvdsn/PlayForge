@@ -1,0 +1,82 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d5a42dbe2415465689d11a1e8ae1fdbc, type: 3}
+  m_Name: ABILITY_TestA
+  m_EditorClassIdentifier: 
+  Definition:
+    Name: TestA
+    Description: 
+    ActivationPolicy: 2
+    ActivateImmediately: 0
+    Textures: []
+  Tags:
+    AssetTag:
+      Name: TestA
+    ContextTags: []
+    PassiveGrantedTags: []
+    ActiveGrantedTags: []
+    SourceRequirements:
+      AvoidTags: []
+      RequireTags: []
+    TargetRequirements:
+      AvoidTags: []
+      RequireTags: []
+  Proxy:
+    Targeting:
+      rid: -2
+    UseImplicitTargeting: 1
+    Stages: []
+  SourceActivationRules:
+  - rid: 6446561620272873731
+  - rid: 6446561620272873732
+  - rid: 6446561620272873733
+  - rid: 6446561620272873734
+  - rid: 6446561620272873735
+  TargetActivationRules: []
+  LocalData: []
+  StartingLevel: 0
+  MaxLevel: 8
+  IgnoreWhenLevelZero: 1
+  Cost: {fileID: 11400000, guid: bb52374c2b765934cb2ccf6497a41ab9, type: 2}
+  Cooldown: {fileID: 11400000, guid: b768dd55e4f38394496020c051a93095, type: 2}
+  AttributeWorkers: []
+  TagWorkers: []
+  ImpactWorkers: []
+  AnalysisWorkers: []
+  references:
+    version: 2
+    RefIds:
+    - rid: -2
+      type: {class: , ns: , asm: }
+    - rid: 6446561620272873731
+      type: {class: CooldownValidation, ns: FarEmerald.PlayForge, asm: Assembly-CSharp}
+      data: 
+    - rid: 6446561620272873732
+      type: {class: CostValidation, ns: FarEmerald.PlayForge, asm: Assembly-CSharp}
+      data: 
+    - rid: 6446561620272873733
+      type: {class: RangeValidation, ns: FarEmerald.PlayForge, asm: Assembly-CSharp}
+      data:
+        Tag:
+          Name: 
+    - rid: 6446561620272873734
+      type: {class: SourceAttributeValidation, ns: FarEmerald.PlayForge, asm: Assembly-CSharp}
+      data:
+        Attribute: {fileID: 0}
+        Comparison: 0
+        Value: 0
+    - rid: 6446561620272873735
+      type: {class: TargetAttributeValidation, ns: FarEmerald.PlayForge, asm: Assembly-CSharp}
+      data:
+        Attribute: {fileID: 0}
+        Comparison: 0
+        Threshold: 0

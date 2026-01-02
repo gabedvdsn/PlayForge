@@ -40,6 +40,8 @@ namespace FarEmerald.PlayForge
             FinishedEffects = new List<AbstractGameplayEffectShelfContainer>();
 
             Relays = new Dictionary<int, ProcessRelay>();
+            
+            Initialize(Data);
         }
 
         public void Initialize(EntityIdentity data)
@@ -48,8 +50,9 @@ namespace FarEmerald.PlayForge
             
             TagCache = new TagCache(this);
             
+            AbilitySystem.PreInitialize(Data.ActivationPolicy, Data.AllowDuplicateAbilities, Data.ImpactWorkers);
             AttributeSystem.Initialize(Data.AttributeSet, Data.AttributeChangeEvents);
-            AbilitySystem.Initialize(Data.ActivationPolicy, Data.AllowDuplicateAbilities, Data.ImpactWorkers, Data.StartingAbilities);
+            AbilitySystem.Initialize(Data.StartingAbilities);
         }
         
         #region Process Parameters
@@ -139,9 +142,15 @@ namespace FarEmerald.PlayForge
 
         public bool ApplyGameplayEffect(GameplayEffectSpec spec)
         {
-            if (spec is null) return false;
+            Debug.Log($"Applying effect {spec.Base.Definition.Name} ({spec.Base.DurationSpecification.DurationPolicy}) to {Data.Name} ({name})");
             
-            if (!ForgeHelper.ValidateEffectApplicationRequirements(spec, Data.Affiliation)) return false;
+            if (spec is null) return false;
+
+            if (!ForgeHelper.ValidateEffectApplicationRequirements(spec, Data.Affiliation))
+            {
+                Debug.Log($"\tFailed validation");
+                return false;
+            }
             
             switch (spec.Base.DurationSpecification.DurationPolicy)
             {
@@ -253,7 +262,9 @@ namespace FarEmerald.PlayForge
             TagCache.AddTags(spec.Base.Tags.GrantedTags);
             spec.RunEffectApplicationWorkers();
             
-            SourcedModifiedAttributeValue sourcedModifiedValue = spec.SourcedImpact(attributeValue);
+            var sourcedModifiedValue = spec.SourcedImpact(attributeValue);
+            Debug.Log($"\tImpact: {sourcedModifiedValue.CurrentValue}/{sourcedModifiedValue.BaseValue}");
+            
             AttributeSystem.ModifyAttribute(spec.Base.ImpactSpecification.AttributeTarget, sourcedModifiedValue);
             
             spec.RunEffectRemovalWorkers();

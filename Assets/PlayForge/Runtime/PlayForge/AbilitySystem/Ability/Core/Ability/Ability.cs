@@ -8,7 +8,7 @@ using Object = UnityEngine.Object;
 namespace FarEmerald.PlayForge
 {
     [CreateAssetMenu(menuName = "PlayForge/Ability", fileName = "Ability_")]
-    public class Ability : BaseForgeObject, IHasReadableDefinition
+    public class Ability : BaseForgeLinkProvider, IHasReadableDefinition
     {
         public AbilityDefinition Definition;
         public AbilityTags Tags;
@@ -27,7 +27,6 @@ namespace FarEmerald.PlayForge
         [SerializeReference] 
         public List<IAbilityValidationRule> TargetActivationRules = new();
         
-        //[SerializeReference]
         [SerializeField]
         public List<DataWrapper> LocalData = new();
         
@@ -35,8 +34,8 @@ namespace FarEmerald.PlayForge
         [Min(0)] public int MaxLevel = 4;
         public bool IgnoreWhenLevelZero = true;
         
-        public GameplayEffect Cost;
-        public GameplayEffect Cooldown;
+        [ForgeEffectTemplate("Cost", "Cost")] public GameplayEffect Cost;
+        [ForgeEffectTemplate("Cooldown", "Cooldown")]public GameplayEffect Cooldown;
 
         
         [SerializeReference] public List<AbstractAttributeWorker> AttributeWorkers;
@@ -49,20 +48,43 @@ namespace FarEmerald.PlayForge
             return new AbilitySpec(owner, this, level);
         }
 
+        // ═══════════════════════════════════════════════════════════════════════════
+        // IHasReadableDefinition Implementation
+        // ═══════════════════════════════════════════════════════════════════════════
+        
         public string GetName()
         {
             return Definition.Name;
         }
+        
         public string GetDescription()
         {
             return Definition.Description;
         }
+        
         public Texture2D GetPrimaryIcon()
         {
-            if (LocalData.TryGet(Tag.Generate("PrimaryIcon"), EDataWrapperType.Object, out var data)) return data.objectValue as Texture2D;
+            if (LocalData.TryGet(Tag.Generate("PrimaryIcon"), EDataWrapperType.Object, out var data)) 
+                return data.objectValue as Texture2D;
             return Definition.Textures.Count > 0 ? Definition.Textures[0].Texture : null;
         }
 
+        // ═══════════════════════════════════════════════════════════════════════════
+        // ILevelProvider Implementation
+        // ═══════════════════════════════════════════════════════════════════════════
+        
+        public override int GetMaxLevel() => MaxLevel;
+        
+        public override int GetStartingLevel() => StartingLevel;
+        
+        public override string GetProviderName() => GetName();
+        
+        public override Tag GetProviderTag() => Tags.AssetTag;
+
+        // ═══════════════════════════════════════════════════════════════════════════
+        // Utility Methods
+        // ═══════════════════════════════════════════════════════════════════════════
+        
         public bool TryGetLocalData(Tag key, out DataWrapper data)
         {
             data = LocalData.FirstOrDefault(ld => ld.Key == key);

@@ -23,7 +23,7 @@ namespace FarEmerald.PlayForge
         public void RunEffectTickWorkers();
         public void RunEffectRemovalWorkers();
         public void RunEffectImpactWorkers(AbilityImpactData impactData);
-        public Dictionary<IMagnitudeModifier, AttributeValue?> GetSourcedCapturedAttributes();
+        public Dictionary<IScaler, AttributeValue?> GetSourcedCapturedAttributes();
         
         public static SourceAttributeDerivation GenerateSourceDerivation(ISource source, Attribute attribute, Tag retainImpact, Tag impactType)
         {
@@ -112,7 +112,7 @@ namespace FarEmerald.PlayForge
         {
             // Nothing to do here!
         }
-        public Dictionary<IMagnitudeModifier, AttributeValue?> GetSourcedCapturedAttributes()
+        public Dictionary<IScaler, AttributeValue?> GetSourcedCapturedAttributes()
         {
             return new();
         }

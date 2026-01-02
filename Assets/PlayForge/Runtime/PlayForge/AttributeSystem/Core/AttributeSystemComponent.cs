@@ -32,6 +32,12 @@ namespace FarEmerald.PlayForge
             this.attributeSet = attributeSet;
             this.attributeChangeEvents = attributeChangeEvents;
 
+            Debug.Log($"Logging attribute events {Root.ToGASObject().name}");
+            foreach (var ace in this.attributeChangeEvents)
+            {
+                Debug.Log($"\t{ace.GetType().Name}");
+            }
+
             InitializeCaches();
             InitializePriorityChangeEvents();
             InitializeAttributeSets();
@@ -40,6 +46,9 @@ namespace FarEmerald.PlayForge
         private void InitializeCaches()
         {
             AttributeCache = new Dictionary<Attribute, CachedAttributeValue>();
+
+            Rule = new AttributeModificationRule();
+            Callbacks = new AttributeSystemCallbacks();
         }
 
         private void InitializeAttributeSets()
@@ -89,7 +98,7 @@ namespace FarEmerald.PlayForge
             //AttributeCache[attribute] = new CachedAttributeValue(defaultValue.Overflow, defaultValue.Modifier);
             //AttributeCache[attribute].Add(IAttributeImpactDerivation.GenerateSourceDerivation(Root, attribute), defaultValue.ToAttributeValue());
 
-            defaultValue.Modifier.Regulate(attribute, Rule);
+            defaultValue.Modifier?.Regulate(attribute, Rule);
             
             // Good practice to introduce attribute to library wherever/whenever registration occurs
             AttributeLibrary.Add(attribute);

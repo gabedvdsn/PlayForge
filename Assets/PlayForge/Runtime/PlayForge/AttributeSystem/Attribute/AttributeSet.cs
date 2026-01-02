@@ -1,16 +1,24 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using FarEmerald.PlayForge.Extended;
 using UnityEngine;
 using UnityEngine.Serialization;
 
 namespace FarEmerald.PlayForge
 {
     [CreateAssetMenu(menuName = "PlayForge/Attribute Set", fileName = "AttributeSet_")]
-    public class AttributeSet : BaseForgeObject
+    public class AttributeSet : BaseForgeObject, IHasReadableDefinition
     {
+        public string Name;
+        public string Description;
+        public List<TextureItem> Textures = new();
+        
+        [ForgeTagContext(ForgeContext.AssetIdentifier)]
+        public Tag AssetTag;
+        
         [SerializeField]
-        public List<AttributeSetElement> Attributes;
+        public List<AttributeSetElement> Attributes = new();
         
         [Space]
         
@@ -43,19 +51,24 @@ namespace FarEmerald.PlayForge
 
             return attributes;
         }
+        public string GetName()
+        {
+            return Name;
+        }
+        public string GetDescription()
+        {
+            return Description;
+        }
+        public Texture2D GetPrimaryIcon()
+        {
+            return Textures.Count > 0 ? Textures[0].Texture : null;
+        }
     }
     
     public enum ELimitedEffectImpactTarget
     {
         CurrentAndBase,
         Base
-    }
-
-    public enum EValueCollisionPolicy
-    {
-        UseMaximum,
-        UseMinimum,
-        UseAverage
     }
     
     [Serializable]
@@ -65,7 +78,7 @@ namespace FarEmerald.PlayForge
         
         public Attribute Attribute;
         public float Magnitude;
-        public AbstractCachedMagnitudeModifier Modifier;
+        [SerializeReference] public AbstractCachedScaler Modifier;
         
         public ELimitedEffectImpactTarget Target;
         public AttributeOverflowData Overflow;
@@ -89,9 +102,9 @@ namespace FarEmerald.PlayForge
     {
         public ModifiedAttributeValue DefaultValue;
         public AttributeOverflowData Overflow;
-        public AbstractCachedMagnitudeModifier Modifier;
+        public AbstractCachedScaler Modifier;
 
-        public DefaultAttributeValue(ModifiedAttributeValue defaultValue, AttributeOverflowData overflow, AbstractCachedMagnitudeModifier modifier)
+        public DefaultAttributeValue(ModifiedAttributeValue defaultValue, AttributeOverflowData overflow, AbstractCachedScaler modifier)
         {
             DefaultValue = defaultValue;
             Overflow = overflow;
@@ -164,7 +177,11 @@ namespace FarEmerald.PlayForge
         {
             foreach (Attribute attribute in matrix.Keys)
             {
-                if (matrix[attribute].TryGetValue(EAttributeElementCollisionPolicy.UseThis, out var defaults))
+                if (matrix[attribute].TryGetValue(EAttributeElementCollisionPolicy.UseCollisionSetting, out var defaults))
+                {
+                    InitializeAggregatePolicy(system, attribute, defaults, attributeSet.CollisionResolutionPolicy);
+                }
+                else if (matrix[attribute].TryGetValue(EAttributeElementCollisionPolicy.UseThis, out defaults))
                 {
                     InitializeAggregatePolicy(system, attribute, defaults, attributeSet.CollisionResolutionPolicy);
                 }
@@ -210,6 +227,9 @@ namespace FarEmerald.PlayForge
                     system.ProvideAttribute(attribute, new DefaultAttributeValue(new ModifiedAttributeValue(_current, _base), defaults[0].Overflow, defaults[0].Modifier));
                     break;
                 }
+                // TODO
+                case EValueCollisionPolicy.UseFirst:
+                case EValueCollisionPolicy.UseLast:
                 default:
                     throw new ArgumentOutOfRangeException(nameof(resolution), resolution, null);
             }

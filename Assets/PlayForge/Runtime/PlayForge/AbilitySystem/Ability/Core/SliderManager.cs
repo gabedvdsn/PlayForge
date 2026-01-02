@@ -24,7 +24,7 @@ namespace FarEmerald.PlayForge
         public void ToggleSlider(bool flag)
         {
             if (!flag) Slider.value = 0f;
-            StartCoroutine(DoFade(flag ? 1f : 0f, .75f));
+            StartCoroutine(DoFade(flag ? 1f : 0f, .25f));
         }
 
         private IEnumerator DoFade(float targetAlpha, float duration)

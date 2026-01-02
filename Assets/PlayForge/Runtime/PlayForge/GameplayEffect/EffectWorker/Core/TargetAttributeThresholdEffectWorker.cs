@@ -44,16 +44,18 @@ namespace FarEmerald.PlayForge
                 case EComparisonOperator.LessThan:
                     if (!MeetsThreshold(value, (v, threshold) => v < threshold)) return;
                     break;
-                case EComparisonOperator.GreaterOrEqualTo:
+                case EComparisonOperator.GreaterOrEqual:
                     if (!MeetsThreshold(value, (v, threshold) => v >= threshold)) return;
                     break;
-                case EComparisonOperator.LessOrEqualTo:
+                case EComparisonOperator.LessOrEqual:
                     if (!MeetsThreshold(value, (v, threshold) => v <= threshold)) return;
                     break;
                 case EComparisonOperator.Equal:
                     if (!MeetsThreshold(value, Mathf.Approximately)) return;
                     break;
-                
+                case EComparisonOperator.NotEqual:
+                    if (MeetsThreshold(value, Mathf.Approximately)) return;
+                    break;
                 default:
                     throw new ArgumentOutOfRangeException();
             }
@@ -77,10 +79,11 @@ namespace FarEmerald.PlayForge
 
     public enum EComparisonOperator
     {
-        GreaterThan,
         LessThan,
-        GreaterOrEqualTo,
-        LessOrEqualTo,
-        Equal
+        LessOrEqual,
+        Equal,
+        NotEqual,
+        GreaterOrEqual,
+        GreaterThan
     }
 }

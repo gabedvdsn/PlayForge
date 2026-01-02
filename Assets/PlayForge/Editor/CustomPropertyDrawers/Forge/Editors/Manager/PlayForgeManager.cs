@@ -104,8 +104,52 @@ namespace FarEmerald.PlayForge.Extended.Editor
                 GameplayEffect e => !string.IsNullOrEmpty(e.GetName()) ? e.GetName() : e.name,
                 Attribute attr => !string.IsNullOrEmpty(attr.Name) ? attr.Name : attr.name,
                 EntityIdentity ent => !string.IsNullOrEmpty(ent.GetName()) ? ent.GetName() : ent.name,
+                AttributeSet attrSet => !string.IsNullOrEmpty(attrSet.GetName()) ? attrSet.GetName() : attrSet.Name,
                 _ => asset.name
             };
+        }
+        
+        /// <summary>
+        /// Opens the PlayForge Manager and navigates to a specific asset.
+        /// Called from asset editor headers via the "Open" button.
+        /// </summary>
+        public static void OpenToAsset(UnityEngine.Object asset)
+        {
+            if (asset == null) return;
+            
+            var window = GetWindow<PlayForgeManager>();
+            window.titleContent = new GUIContent(WINDOW_TITLE, EditorGUIUtility.IconContent("d_ScriptableObject Icon").image);
+            window.minSize = new Vector2(700, 450);
+            window.Show();
+            window.Focus();
+            
+            // Navigate to View tab
+            window.currentTab = 1; // View tab
+            window.ShowTab(1);
+            
+            // Set type filter to match asset type
+            var assetType = asset.GetType();
+            var typeInfo = AssetTypes.FirstOrDefault(t => t.Type == assetType);
+            if (typeInfo != null)
+            {
+                window.selectedTypeFilter = assetType;
+                window.showTagsView = false;
+            }
+            
+            // Set search filter to asset name to highlight it
+            if (asset is ScriptableObject so)
+            {
+                var displayName = GetAssetDisplayName(so);
+                window.searchFilter = displayName;
+            }
+            
+            // Refresh the view
+            window.RefreshAssetCache();
+            // window.BuildViewTabContent();
+            
+            // Select the asset in Unity's selection
+            Selection.activeObject = asset;
+            EditorGUIUtility.PingObject(asset);
         }
         
         private void OnEnable()

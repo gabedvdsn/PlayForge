@@ -95,14 +95,16 @@ namespace FarEmerald.PlayForge
             set => _locked = value;
         }
 
-        public void Initialize(EAbilityActivationPolicy activationPolicy, bool allowDuplicateAbilities, List<AbstractImpactWorker> impactWorkers,
-            List<Ability> startingAbilities)
+        public void PreInitialize(EAbilityActivationPolicy activationPolicy, bool allowDuplicateAbilities, List<AbstractImpactWorker> impactWorkers)
         {
             this.activationPolicy = activationPolicy;
             this.allowDuplicateAbilities = allowDuplicateAbilities;
 
             ImpactWorkerCache = new ImpactWorkerCache(impactWorkers);
-            
+        }
+        
+        public void Initialize(List<Ability> startingAbilities)
+        {
             AbilityCache = new Dictionary<int, AbilitySpecContainer>();
             ActiveCache = new Dictionary<EAbilityActivationPolicy, HashSet<int>>();
             
@@ -348,12 +350,12 @@ namespace FarEmerald.PlayForge
 
         #region Impact Workers
 
-        public void ProvideFrameImpactDealt(AbilityImpactData impactData)
+        public void ProvideFrameImpactDealt(AbilityImpactData impactData, bool runWorkers = true)
         {
             impactData.SourcedModifier.BaseDerivation.TrackImpact(impactData);
             impactData.SourcedModifier.BaseDerivation.RunEffectImpactWorkers(impactData);
             
-            ImpactWorkerCache.RunImpactData(impactData);
+            if (runWorkers) ImpactWorkerCache.RunImpactData(impactData);
         }
 
         #endregion

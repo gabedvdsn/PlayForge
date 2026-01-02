@@ -106,7 +106,7 @@ namespace FarEmerald.PlayForge.Extended.Editor
             }
         }
 
-        public new class UxmlFactory : UxmlFactory<TypePickerField<TBase>, UxmlTraits> { }
+        //public new class UxmlFactory : UxmlFactory<TypePickerField<TBase>, UxmlTraits> { }
 
         public TypePickerField(string label, TypeRef initial, Action<TypeRef> onChanged)
         {

@@ -150,19 +150,22 @@ namespace FarEmerald.PlayForge
 
         public static bool ValidateAffiliationPolicy(EAffiliationPolicy policy, List<Tag> a, List<Tag> b)
         {
-            return policy switch
+            bool result = policy switch
             {
                 EAffiliationPolicy.Unaffiliated => !a.Any(b.Contains),
                 EAffiliationPolicy.Affiliated => a.Any(b.Contains),
                 EAffiliationPolicy.Any => true,
                 _ => throw new ArgumentOutOfRangeException(nameof(policy), policy, null)
             };
+            return result;
         }
         
         public static bool ValidateImpactTypes(bool anyType, List<Tag> impactType, List<Tag> validation, EAnyAllPolicy policy = EAnyAllPolicy.Any)
         {
             if (impactType.Contains(Tags.GEN_NOT_APPLICABLE) && !validation.Contains(Tags.GEN_ANY)) return false;
 
+            if (anyType) return true;
+            
             return policy switch
             {
                 EAnyAllPolicy.Any => impactType.Any(validation.Contains),

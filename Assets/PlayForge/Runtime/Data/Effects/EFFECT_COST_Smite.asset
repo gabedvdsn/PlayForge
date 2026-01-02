@@ -1,0 +1,83 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 2d34fc1f98f8a0b4c9b37da3e706e0e1, type: 3}
+  m_Name: EFFECT_COST_Smite
+  m_EditorClassIdentifier: 
+  Definition:
+    Name: COST_Smite
+    Description: 
+    Visibility:
+      Name: 
+    Textures: []
+  Tags:
+    AssetTag:
+      Name: COSTSmite
+    ContextTags: []
+    GrantedTags: []
+  ImpactSpecification:
+    AttributeTarget: {fileID: 0}
+    TargetImpact: 0
+    ImpactOperation: 0
+    AffiliationPolicy: 0
+    ImpactTypes: []
+    ReverseImpactOnRemoval: 0
+    ReApplicationPolicy: 0
+    Magnitude: 0
+    MagnitudeScaler:
+      rid: -2
+    RealMagnitude: 0
+    Packets: []
+  DurationSpecification:
+    DurationPolicy: 0
+    StackableType: 0
+    TickOnApplication: 0
+    Duration: 0
+    DurationScaler:
+      rid: -2
+    RealDuration: 0
+    DeltaTimeSource:
+      Name: 
+    Ticks: 0
+    TickInterval: 0
+    TickScaler:
+      rid: -2
+    RealTicks: 0
+    Rounding: 0
+  Workers: []
+  SourceRequirements:
+    ApplicationRequirements:
+      AvoidTags: []
+      RequireTags: []
+    OngoingRequirements:
+      AvoidTags: []
+      RequireTags: []
+    RemovalRequirements:
+      AvoidTags: []
+      RequireTags: []
+  TargetRequirements:
+    ApplicationRequirements:
+      AvoidTags: []
+      RequireTags: []
+    OngoingRequirements:
+      AvoidTags: []
+      RequireTags: []
+    RemovalRequirements:
+      AvoidTags: []
+      RequireTags: []
+  LocalData: []
+  LinkMode: 1
+  _linkedSource: {fileID: 11400000, guid: bd6f1ef0ba06e60469e27beef326459c, type: 2}
+  references:
+    version: 2
+    RefIds:
+    - rid: -2
+      type: {class: , ns: , asm: }

@@ -16,8 +16,60 @@ namespace FarEmerald.PlayForge.Extended.Editor
         private Ability ability;
         
         // UI References for updates
-        private HeaderResult headerResult;
         private Label assetTagValueLabel;
+
+        // ═══════════════════════════════════════════════════════════════════════════
+        // Header Configuration (IMGUI Header)
+        // ═══════════════════════════════════════════════════════════════════════════
+        
+        protected override string GetDisplayName()
+        {
+            return !string.IsNullOrEmpty(ability?.Definition.Name) ? ability.Definition.Name : "Unnamed Ability";
+        }
+        
+        protected override string GetDisplayDescription()
+        {
+            if (ability == null) return "";
+            var desc = ability.Definition.Description;
+            return !string.IsNullOrEmpty(desc) ? Truncate(desc, 80) : "No description provided.";
+        }
+        
+        protected override Texture2D GetHeaderIcon()
+        {
+            // First try to get from textures list
+            if (ability?.Definition.Textures != null && ability.Definition.Textures.Count > 0)
+            {
+                var tex = ability.Definition.Textures[0].Texture;
+                if (tex != null) return tex;
+            }
+            return m_AbilityIcon;
+        }
+        
+        protected override string GetAssetTypeLabel() => "ABILITY";
+        
+        protected override Color GetAssetTypeColor() => new Color(0.4f, 0.7f, 1f); // Light blue
+        
+        protected override string GetDocumentationUrl() => "https://docs.playforge.dev/abilities";
+        
+        protected override bool ShowVisualizeButton => true;
+        protected override bool ShowImportButton => true;
+        
+        protected override void OnVisualize()
+        {
+            // TODO: Open ability visualizer
+            Debug.Log($"Visualize ability: {ability.name}");
+        }
+        
+        protected override void OnImport()
+        {
+            // Open asset picker for abilities
+            var currentPath = AssetDatabase.GetAssetPath(ability);
+            EditorGUIUtility.ShowObjectPicker<Ability>(null, false, "", GUIUtility.GetControlID(FocusType.Passive));
+        }
+
+        // ═══════════════════════════════════════════════════════════════════════════
+        // Inspector GUI
+        // ═══════════════════════════════════════════════════════════════════════════
 
         public override VisualElement CreateInspectorGUI()
         {
@@ -29,14 +81,11 @@ namespace FarEmerald.PlayForge.Extended.Editor
             // Build UI programmatically
             root = CreateRoot();
             
-            // Main Header
-            BuildHeader();
-            
-            // ScrollView with sections
+            // ScrollView for all sections (header is in OnHeaderGUI)
             var scrollView = CreateScrollView();
             root.Add(scrollView);
             
-            // Build all sections
+            // Build all sections inside ScrollView
             BuildDefinitionSection(scrollView);
             BuildTagsSection(scrollView);
             BuildRuntimeSection(scrollView);
@@ -52,26 +101,6 @@ namespace FarEmerald.PlayForge.Extended.Editor
             root.Bind(serializedObject);
             
             return root;
-        }
-
-        // ═══════════════════════════════════════════════════════════════════════════
-        // Header
-        // ═══════════════════════════════════════════════════════════════════════════
-        
-        private void BuildHeader()
-        {
-            headerResult = CreateMainHeader(new HeaderConfig
-            {
-                Icon = m_AbilityIcon,
-                DefaultTitle = GetAbilityName(),
-                DefaultDescription = GetAbilityDescription(),
-                ShowRefresh = true,
-                ShowLookup = true,
-                OnRefresh = Refresh,
-                OnLookup = Lookup
-            });
-            
-            root.Add(headerResult.Header);
         }
 
         // ═══════════════════════════════════════════════════════════════════════════
@@ -94,13 +123,12 @@ namespace FarEmerald.PlayForge.Extended.Editor
             // Name field
             var nameField = CreateTextField("Name", "Name");
             nameField.value = ability.Definition.Name;
-            //nameField.RegisterValueChangedCallback(evt => UpdateAssetTagDisplay());
             nameField.RegisterCallback<FocusOutEvent>(_ =>
             {
                 ability.Definition.Name = nameField.value;
-                UpdateHeaderLabels();
                 UpdateAssetTagDisplay();
                 MarkDirty();
+                Repaint(); // Refresh IMGUI header
             });
             content.Add(nameField);
             
@@ -110,8 +138,8 @@ namespace FarEmerald.PlayForge.Extended.Editor
             descField.RegisterCallback<FocusOutEvent>(_ =>
             {
                 ability.Definition.Description = descField.value;
-                UpdateHeaderLabels();
                 MarkDirty();
+                Repaint(); // Refresh IMGUI header
             });
             content.Add(descField);
             
@@ -144,6 +172,7 @@ namespace FarEmerald.PlayForge.Extended.Editor
             var defProp = serializedObject.FindProperty("Definition");
             var iconsProp = CreatePropertyField(defProp.FindPropertyRelative("Textures"), "Textures", "");
             iconsProp.style.flexGrow = 1;
+            iconsProp.RegisterCallback<SerializedPropertyChangeEvent>(_ => Repaint());
             iconsSubsection.Add(iconsProp);
         }
 
@@ -185,22 +214,14 @@ namespace FarEmerald.PlayForge.Extended.Editor
             content.Add(reqSubsection);
             
             // Source Requirements
-            var sourceReqContainer = new VisualElement { name = "SourceRequirements" };
-            sourceReqContainer.Add(CreateHintLabel("Source Requirements"));
-            var sourceReqs = tagsProp.FindPropertyRelative("SourceRequirements");
-            sourceReqContainer.Add(CreatePropertyField(sourceReqs.FindPropertyRelative("RequireTags"), "Require", "Require"));
-            sourceReqContainer.Add(CreatePropertyField(sourceReqs.FindPropertyRelative("AvoidTags"), "Avoid", "Avoid"));
-            reqSubsection.Add(sourceReqContainer);
+            reqSubsection.Add(CreatePropertyField(tagsProp.FindPropertyRelative("SourceRequirements"), "SourceRequirements", "Source Requirements"));
+            reqSubsection.Add(CreatePropertyField(tagsProp.FindPropertyRelative("TargetRequirements"), "TargetRequirements", "Target Requirements"));
             
-            reqSubsection.Add(CreateDivider(4));
-            
-            // Target Requirements
-            var targetReqContainer = new VisualElement { name = "TargetRequirements" };
-            targetReqContainer.Add(CreateHintLabel("Target Requirements"));
-            var targetReqs = tagsProp.FindPropertyRelative("TargetRequirements");
-            targetReqContainer.Add(CreatePropertyField(targetReqs.FindPropertyRelative("RequireTags"), "Require", "Require"));
-            targetReqContainer.Add(CreatePropertyField(targetReqs.FindPropertyRelative("AvoidTags"), "Avoid", "Avoid"));
-            reqSubsection.Add(targetReqContainer);
+            // Block/Cancel Tags
+            var blockSubsection = CreateSubsection("BlockCancelSubsection", "Block & Cancel", Colors.AccentRed);
+            content.Add(blockSubsection);
+            blockSubsection.Add(CreatePropertyField(tagsProp.FindPropertyRelative("BlockAbilitiesWithTags"), "BlockAbilitiesWithTags", "Block Abilities With Tags"));
+            blockSubsection.Add(CreatePropertyField(tagsProp.FindPropertyRelative("CancelAbilitiesWithTags"), "CancelAbilitiesWithTags", "Cancel Abilities With Tags"));
         }
 
         // ═══════════════════════════════════════════════════════════════════════════
@@ -212,7 +233,7 @@ namespace FarEmerald.PlayForge.Extended.Editor
             var section = CreateCollapsibleSection(new SectionConfig
             {
                 Name = "Runtime",
-                Title = "Runtime",
+                Title = "Runtime Behaviour",
                 AccentColor = Colors.AccentBlue,
                 HelpUrl = "https://docs.playforge.dev/abilities/runtime"
             });
@@ -221,8 +242,9 @@ namespace FarEmerald.PlayForge.Extended.Editor
             var content = section.Content;
             var proxyProp = serializedObject.FindProperty("Proxy");
             
-            // Targeting
-            content.Add(CreatePropertyField(proxyProp.FindPropertyRelative("Targeting"), "TargetingTask", "Targeting Task"));
+            // Target Mode
+            var targetMode = CreatePropertyField(proxyProp.FindPropertyRelative("TargetMode"), "TargetMode", "Target Mode");
+            content.Add(targetMode);
             
             // Use Implicit Targeting
             var useImplicit = CreateToggle("UseImplicitTargeting", "Use Implicit Targeting");
@@ -254,7 +276,7 @@ namespace FarEmerald.PlayForge.Extended.Editor
             var levelRow = CreateRow(4);
             content.Add(levelRow);
             
-            var startingLevel = CreatePropertyField(serializedObject.FindProperty("Level"), "Level", "Starting Level");
+            var startingLevel = CreatePropertyField(serializedObject.FindProperty("StartingLevel"), "Level", "Starting Level");
             startingLevel.style.flexGrow = 1;
             startingLevel.style.marginRight = 8;
             levelRow.Add(startingLevel);
@@ -269,11 +291,13 @@ namespace FarEmerald.PlayForge.Extended.Editor
             content.Add(ignoreZero);
             
             // Cost & Cooldown Subsection
-            var costSubsection = CreateSubsection("CostCooldownSubsection", "Usage Effects", Colors.AccentOrange);
+            var costSubsection = CreateSubsection("CostCooldownSubsection", "", Colors.AccentOrange);
             content.Add(costSubsection);
             
-            costSubsection.Add(CreatePropertyField(serializedObject.FindProperty("Cost"), "Cost", "Cost Effect"));
-            costSubsection.Add(CreatePropertyField(serializedObject.FindProperty("Cooldown"), "Cooldown", "Cooldown Effect"));
+            costSubsection.Add(CreateHintLabel("Ability Cost"));
+            costSubsection.Add(CreatePropertyField(serializedObject.FindProperty("Cost"), "", ""));
+            costSubsection.Add(CreateHintLabel("Ability Cooldown"));
+            costSubsection.Add(CreatePropertyField(serializedObject.FindProperty("Cooldown"), "", ""));
         }
 
         // ═══════════════════════════════════════════════════════════════════════════
@@ -351,37 +375,23 @@ namespace FarEmerald.PlayForge.Extended.Editor
         // ═══════════════════════════════════════════════════════════════════════════
         // Helper Methods
         // ═══════════════════════════════════════════════════════════════════════════
-        
-        private string GetAbilityName()
-        {
-            return !string.IsNullOrEmpty(ability.Definition.Name) ? ability.Definition.Name : "Unnamed Ability";
-        }
-        
-        private string GetAbilityDescription()
-        {
-            return !string.IsNullOrEmpty(ability.Definition.Description) ? ability.Definition.Description : "No description provided.";
-        }
-        
-        private void UpdateHeaderLabels()
-        {
-            if (headerResult?.NameLabel != null)
-                headerResult.NameLabel.text = GetAbilityName();
-            if (headerResult?.DescriptionLabel != null)
-                headerResult.DescriptionLabel.text = GetAbilityDescription();
-        }
-        
-        
 
         private void UpdateAssetTagDisplay()
         {
             if (assetTagValueLabel == null) return;
+            
             var result = GenerateAssetTag(ability.Definition.Name, "Ability");
-            if (result.isUnknown)
-            {
-                assetTagValueLabel.text = result.result;
-            }
-
             assetTagValueLabel.text = result.result;
+            
+            // Sync the actual AssetTag.Name field
+            if (!result.isUnknown)
+            {
+                var tags = ability.Tags;
+                var assetTag = tags.AssetTag;
+                assetTag.Name = result.result;
+                tags.AssetTag = assetTag;
+                ability.Tags = tags;
+            }
         }
         
         private void MarkDirty()
@@ -392,22 +402,12 @@ namespace FarEmerald.PlayForge.Extended.Editor
         // ═══════════════════════════════════════════════════════════════════════════
         // Abstract Implementations
         // ═══════════════════════════════════════════════════════════════════════════
-        
-        protected override void SetupCollapsibleSections()
-        {
-            // Not needed - sections are built programmatically with built-in collapse behavior
-        }
-
-        protected override void Lookup()
-        {
-            EditorGUIUtility.PingObject(ability);
-        }
 
         protected override void Refresh()
         {
             serializedObject.Update();
-            UpdateHeaderLabels();
             UpdateAssetTagDisplay();
+            Repaint();
         }
     }
 }

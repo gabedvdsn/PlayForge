@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Text.RegularExpressions;
 using UnityEditor;
 using UnityEngine;
 using UnityEngine.UIElements;
@@ -206,247 +207,50 @@ namespace FarEmerald.PlayForge.Extended.Editor
             statsContainer.style.flexWrap = Wrap.Wrap;
             parent.Add(statsContainer);
             
-            // Asset Distribution Bar Chart
-            var assetDistChart = CreateBarChartPanel("Asset Distribution", GetAssetDistributionData());
-            statsContainer.Add(assetDistChart);
+            // Total Assets Card
+            var totalCard = CreateStatCard("Total Assets", cachedAssets.Count.ToString(), Colors.AccentBlue);
+            statsContainer.Add(totalCard);
             
-            // Tag Usage Chart
-            var tagUsageChart = CreateBarChartPanel("Top Tags", GetTopTagsData());
-            statsContainer.Add(tagUsageChart);
-            
-            // Quick Stats Cards
-            var quickStats = CreateQuickStatsPanel();
-            statsContainer.Add(quickStats);
-            
-            // Complexity Metrics
-            var complexityChart = CreateBarChartPanel("Complexity", GetComplexityData());
-            statsContainer.Add(complexityChart);
-        }
-        
-        private List<(string label, int value, Color color)> GetAssetDistributionData()
-        {
-            var data = new List<(string, int, Color)>();
+            // Asset counts by type
             foreach (var typeInfo in AssetTypes)
             {
                 var count = CountAssetsOfType(typeInfo.Type);
-                data.Add((typeInfo.DisplayName, count, typeInfo.Color));
-            }
-            return data;
-        }
-        
-        private List<(string label, int value, Color color)> GetTopTagsData()
-        {
-            var tagRecords = TagRegistry.GetAllTagRecords()
-                .OrderByDescending(r => r.TotalUsageCount)
-                .Take(5)
-                .ToList();
-            
-            var data = new List<(string, int, Color)>();
-            var colors = new[] { Colors.AccentCyan, Colors.AccentBlue, Colors.AccentPurple, Colors.AccentGreen, Colors.AccentOrange };
-            
-            for (int i = 0; i < tagRecords.Count; i++)
-            {
-                var record = tagRecords[i];
-                var tagName = record.Tag.ToString();
-                if (tagName.Length > 12) tagName = tagName.Substring(0, 10) + "..";
-                data.Add((tagName, record.TotalUsageCount, colors[i % colors.Length]));
+                var card = CreateStatCard(typeInfo.DisplayName, count.ToString(), typeInfo.Color);
+                card.tooltip = $"{count} {typeInfo.DisplayName}(s) in project";
+                statsContainer.Add(card);
             }
             
-            if (data.Count == 0)
-                data.Add(("No tags", 0, Colors.HintText));
+            // Tag count
+            var tagCount = TagRegistry.GetAllTags().Count();
+            var tagCard = CreateStatCard("Unique Tags", tagCount.ToString(), Colors.AccentCyan);
+            tagCard.tooltip = $"{tagCount} unique tag(s) used across assets";
+            statsContainer.Add(tagCard);
             
-            return data;
+            // Context count  
+            var contextCount = TagRegistry.GetAllContextKeys().Count();
+            var contextCard = CreateStatCard("Tag Contexts", contextCount.ToString(), Colors.AccentPurple);
+            contextCard.tooltip = $"{contextCount} tag context(s) detected";
+            statsContainer.Add(contextCard);
         }
         
-        private List<(string label, int value, Color color)> GetComplexityData()
-        {
-            var data = new List<(string, int, Color)>();
-            
-            // Average stages per ability
-            var abilities = cachedAssets.OfType<Ability>().ToList();
-            int avgStages = abilities.Count > 0 
-                ? (int)abilities.Average(a => a.Proxy?.Stages?.Count ?? 0) 
-                : 0;
-            data.Add(("Avg Stages", avgStages, Colors.AccentOrange));
-            
-            // Average workers per effect
-            var effects = cachedAssets.OfType<GameplayEffect>().ToList();
-            int avgWorkers = effects.Count > 0 
-                ? (int)effects.Average(e => e.Workers?.Count ?? 0) 
-                : 0;
-            data.Add(("Avg Workers", avgWorkers, Colors.AccentRed));
-            
-            // Average attributes per set
-            var sets = cachedAssets.OfType<AttributeSet>().ToList();
-            int avgAttrs = sets.Count > 0 
-                ? (int)sets.Average(s => s.Attributes?.Count ?? 0) 
-                : 0;
-            data.Add(("Avg Attrs/Set", avgAttrs, Colors.AccentGreen));
-            
-            // Abilities with costs
-            int withCosts = abilities.Count(a => a.Cost != null);
-            data.Add(("With Cost", withCosts, Colors.AccentBlue));
-            
-            // Abilities with cooldowns
-            int withCooldowns = abilities.Count(a => a.Cooldown != null);
-            data.Add(("With CD", withCooldowns, Colors.AccentPurple));
-            
-            return data;
-        }
-        
-        private VisualElement CreateBarChartPanel(string title, List<(string label, int value, Color color)> data)
-        {
-            var panel = new VisualElement();
-            panel.style.width = 280;
-            panel.style.minHeight = 160;
-            panel.style.marginRight = 12;
-            panel.style.marginBottom = 12;
-            panel.style.paddingLeft = 12;
-            panel.style.paddingRight = 12;
-            panel.style.paddingTop = 10;
-            panel.style.paddingBottom = 12;
-            panel.style.backgroundColor = new Color(0.18f, 0.18f, 0.18f, 0.8f);
-            panel.style.borderTopLeftRadius = 6;
-            panel.style.borderTopRightRadius = 6;
-            panel.style.borderBottomLeftRadius = 6;
-            panel.style.borderBottomRightRadius = 6;
-            
-            var titleLabel = new Label(title);
-            titleLabel.style.fontSize = 11;
-            titleLabel.style.unityFontStyleAndWeight = FontStyle.Bold;
-            titleLabel.style.color = Colors.HeaderText;
-            titleLabel.style.marginBottom = 10;
-            panel.Add(titleLabel);
-            
-            int maxValue = data.Count > 0 ? data.Max(d => d.value) : 1;
-            if (maxValue == 0) maxValue = 1;
-            
-            foreach (var (label, value, color) in data)
-            {
-                var row = new VisualElement();
-                row.style.flexDirection = FlexDirection.Row;
-                row.style.alignItems = Align.Center;
-                row.style.marginBottom = 6;
-                panel.Add(row);
-                
-                var labelText = new Label(label);
-                labelText.style.width = 80;
-                labelText.style.fontSize = 10;
-                labelText.style.color = Colors.LabelText;
-                labelText.style.overflow = Overflow.Hidden;
-                labelText.style.textOverflow = TextOverflow.Ellipsis;
-                row.Add(labelText);
-                
-                var barContainer = new VisualElement();
-                barContainer.style.flexGrow = 1;
-                barContainer.style.height = 16;
-                barContainer.style.backgroundColor = new Color(0.15f, 0.15f, 0.15f, 1f);
-                barContainer.style.borderTopLeftRadius = 3;
-                barContainer.style.borderTopRightRadius = 3;
-                barContainer.style.borderBottomLeftRadius = 3;
-                barContainer.style.borderBottomRightRadius = 3;
-                barContainer.style.overflow = Overflow.Hidden;
-                row.Add(barContainer);
-                
-                float percentage = (float)value / maxValue;
-                var bar = new VisualElement();
-                bar.style.width = Length.Percent(percentage * 100);
-                bar.style.height = Length.Percent(100);
-                bar.style.backgroundColor = color;
-                bar.style.borderTopLeftRadius = 3;
-                bar.style.borderBottomLeftRadius = 3;
-                barContainer.Add(bar);
-                
-                var valueText = new Label(value.ToString());
-                valueText.style.width = 35;
-                valueText.style.fontSize = 10;
-                valueText.style.color = Colors.HintText;
-                valueText.style.unityTextAlign = TextAnchor.MiddleRight;
-                valueText.style.marginLeft = 6;
-                row.Add(valueText);
-            }
-            
-            return panel;
-        }
-        
-        private VisualElement CreateQuickStatsPanel()
-        {
-            var panel = new VisualElement();
-            panel.style.width = 280;
-            panel.style.minHeight = 160;
-            panel.style.marginRight = 12;
-            panel.style.marginBottom = 12;
-            panel.style.paddingLeft = 12;
-            panel.style.paddingRight = 12;
-            panel.style.paddingTop = 10;
-            panel.style.paddingBottom = 12;
-            panel.style.backgroundColor = new Color(0.18f, 0.18f, 0.18f, 0.8f);
-            panel.style.borderTopLeftRadius = 6;
-            panel.style.borderTopRightRadius = 6;
-            panel.style.borderBottomLeftRadius = 6;
-            panel.style.borderBottomRightRadius = 6;
-            
-            var titleLabel = new Label("Quick Stats");
-            titleLabel.style.fontSize = 11;
-            titleLabel.style.unityFontStyleAndWeight = FontStyle.Bold;
-            titleLabel.style.color = Colors.HeaderText;
-            titleLabel.style.marginBottom = 10;
-            panel.Add(titleLabel);
-            
-            var statsGrid = new VisualElement();
-            statsGrid.style.flexDirection = FlexDirection.Row;
-            statsGrid.style.flexWrap = Wrap.Wrap;
-            panel.Add(statsGrid);
-            
-            // Total Assets
-            AddQuickStatCard(statsGrid, "Total", cachedAssets.Count.ToString(), Colors.HeaderText);
-            
-            // Unique Tags
-            AddQuickStatCard(statsGrid, "Tags", TagRegistry.GetAllTags().Count().ToString(), Colors.AccentCyan);
-            
-            // Contexts
-            AddQuickStatCard(statsGrid, "Contexts", TagRegistry.GetAllContextKeys().Count().ToString(), Colors.AccentPurple);
-            
-            // Effects with Duration
-            var effectsWithDuration = cachedAssets.OfType<GameplayEffect>()
-                .Count(e => e.DurationSpecification != null);
-            AddQuickStatCard(statsGrid, "Timed FX", effectsWithDuration.ToString(), Colors.AccentRed);
-            
-            // Multi-level Abilities
-            var multiLevel = cachedAssets.OfType<Ability>()
-                .Count(a => a.MaxLevel > 1);
-            AddQuickStatCard(statsGrid, "Multi-Lvl", multiLevel.ToString(), Colors.AccentOrange);
-            
-            // Entities with starting abilities
-            var entitiesWithAbilities = cachedAssets.OfType<EntityIdentity>()
-                .Count(e => e.StartingAbilities?.Count > 0);
-            AddQuickStatCard(statsGrid, "Equipped", entitiesWithAbilities.ToString(), Colors.AccentGreen);
-            
-            return panel;
-        }
-        
-        private void AddQuickStatCard(VisualElement parent, string label, string value, Color color)
+        private VisualElement CreateStatCard(string label, string value, Color color)
         {
             var card = new VisualElement();
-            card.style.width = 75;
-            card.style.height = 50;
+            card.style.width = 90;
+            card.style.height = 60;
             card.style.marginRight = 8;
             card.style.marginBottom = 8;
-            card.style.paddingLeft = 6;
-            card.style.paddingRight = 6;
-            card.style.paddingTop = 6;
-            card.style.paddingBottom = 6;
-            card.style.backgroundColor = new Color(color.r, color.g, color.b, 0.15f);
-            card.style.borderTopLeftRadius = 4;
-            card.style.borderTopRightRadius = 4;
-            card.style.borderBottomLeftRadius = 4;
-            card.style.borderBottomRightRadius = 4;
-            card.style.borderLeftWidth = 2;
-            card.style.borderLeftColor = color;
-            parent.Add(card);
+            card.style.paddingTop = 8;
+            card.style.backgroundColor = new Color(0.18f, 0.18f, 0.18f, 1f);
+            card.style.borderTopLeftRadius = 6;
+            card.style.borderTopRightRadius = 6;
+            card.style.borderBottomLeftRadius = 6;
+            card.style.borderBottomRightRadius = 6;
+            card.style.borderTopWidth = 2;
+            card.style.borderTopColor = color;
             
             var valueLabel = new Label(value);
-            valueLabel.style.fontSize = 16;
+            valueLabel.style.fontSize = 18;
             valueLabel.style.unityFontStyleAndWeight = FontStyle.Bold;
             valueLabel.style.color = color;
             valueLabel.style.unityTextAlign = TextAnchor.MiddleCenter;
@@ -457,6 +261,8 @@ namespace FarEmerald.PlayForge.Extended.Editor
             labelText.style.color = Colors.HintText;
             labelText.style.unityTextAlign = TextAnchor.MiddleCenter;
             card.Add(labelText);
+            
+            return card;
         }
     }
     
@@ -473,6 +279,12 @@ namespace FarEmerald.PlayForge.Extended.Editor
         private string fileSuffix = "";
         private Action onCreated;
         private Label previewLabel;
+        private Label templateLabel;
+        
+        // Characters not allowed in asset file names
+        private static readonly char[] InvalidFileNameChars = Path.GetInvalidFileNameChars()
+            .Concat(new[] { ' ', '\t', '\n', '\r' })
+            .ToArray();
         
         public void Initialize(PlayForgeManager.AssetTypeInfo info, string path, Action callback)
         {
@@ -485,7 +297,7 @@ namespace FarEmerald.PlayForge.Extended.Editor
             fileSuffix = EditorPrefs.GetString(PlayForgeManager.PREFS_PREFIX + "Postfix_" + info.Type.Name, "");
             
             titleContent = new GUIContent($"Create {typeInfo.DisplayName}");
-            minSize = maxSize = new Vector2(350, 160);
+            minSize = maxSize = new Vector2(380, 180);
         }
         
         private void CreateGUI()
@@ -510,7 +322,7 @@ namespace FarEmerald.PlayForge.Extended.Editor
             root.Add(nameRow);
             
             var nameLabel = new Label("Name");
-            nameLabel.style.width = 50;
+            nameLabel.style.width = 60;
             nameRow.Add(nameLabel);
             
             var nameField = new TextField();
@@ -527,14 +339,21 @@ namespace FarEmerald.PlayForge.Extended.Editor
             previewLabel.style.fontSize = 10;
             previewLabel.style.color = Colors.HintText;
             previewLabel.style.marginBottom = 4;
-            previewLabel.style.marginLeft = 50;
+            previewLabel.style.marginLeft = 60;
             root.Add(previewLabel);
             
             var pathLabel = new Label($"Path: {assetPath}/");
             pathLabel.style.fontSize = 10;
             pathLabel.style.color = Colors.HintText;
-            pathLabel.style.marginBottom = 16;
+            pathLabel.style.marginBottom = 8;
             root.Add(pathLabel);
+            
+            // Template info
+            templateLabel = new Label();
+            templateLabel.style.fontSize = 10;
+            templateLabel.style.marginBottom = 12;
+            root.Add(templateLabel);
+            UpdateTemplateLabel();
             
             var btnRow = new VisualElement();
             btnRow.style.flexDirection = FlexDirection.Row;
@@ -553,6 +372,31 @@ namespace FarEmerald.PlayForge.Extended.Editor
             UpdateFilePreview();
         }
         
+        private void UpdateTemplateLabel()
+        {
+            if (templateLabel == null) return;
+            
+            var defaultTemplate = GetDefaultTemplate();
+            if (defaultTemplate != null)
+            {
+                var templateAsset = defaultTemplate.GetAsset();
+                var templateName = templateAsset != null ? PlayForgeManager.GetAssetDisplayName(templateAsset) : "(Missing)";
+                templateLabel.text = $"Template: {templateName}";
+                templateLabel.style.color = Colors.AccentCyan;
+            }
+            else
+            {
+                templateLabel.text = "Template: None (creating blank asset)";
+                templateLabel.style.color = Colors.HintText;
+            }
+        }
+        
+        private AssetTemplate GetDefaultTemplate()
+        {
+            var templates = TemplateRegistry.GetTemplates(typeInfo.Type);
+            return templates?.FirstOrDefault(t => t.IsDefault && t.IsValid());
+        }
+        
         private void UpdateFilePreview()
         {
             if (previewLabel == null) return;
@@ -563,14 +407,33 @@ namespace FarEmerald.PlayForge.Extended.Editor
             }
             else
             {
-                var fileName = GetFileName(assetName);
+                var fileName = GetSanitizedFileName(assetName);
                 previewLabel.text = $"File: {fileName}.asset";
             }
         }
         
-        private string GetFileName(string name)
+        /// <summary>
+        /// Sanitizes the input name for use as a file name.
+        /// Removes whitespace and invalid characters, applies prefix/suffix.
+        /// </summary>
+        private string GetSanitizedFileName(string name)
         {
-            return $"{filePrefix}{name}{fileSuffix}";
+            if (string.IsNullOrEmpty(name)) return "";
+            
+            // Remove all whitespace
+            var sanitized = Regex.Replace(name, @"\s+", "");
+            
+            // Remove invalid file name characters
+            foreach (var c in InvalidFileNameChars)
+            {
+                sanitized = sanitized.Replace(c.ToString(), "");
+            }
+            
+            // Remove any remaining problematic characters
+            sanitized = Regex.Replace(sanitized, @"[<>:""/\\|?*]", "");
+            
+            // Apply prefix and suffix
+            return $"{filePrefix}{sanitized}{fileSuffix}";
         }
         
         private void CreateAsset()
@@ -581,21 +444,39 @@ namespace FarEmerald.PlayForge.Extended.Editor
                 return;
             }
             
+            var sanitizedFileName = GetSanitizedFileName(assetName);
+            if (string.IsNullOrEmpty(sanitizedFileName))
+            {
+                EditorUtility.DisplayDialog("Error", "The name contains only invalid characters. Please enter a valid name.", "OK");
+                return;
+            }
+            
             if (!AssetDatabase.IsValidFolder(assetPath))
             {
                 Directory.CreateDirectory(assetPath);
                 AssetDatabase.Refresh();
             }
             
+            // Create the asset instance
             var asset = ScriptableObject.CreateInstance(typeInfo.Type);
             
-            // Set the internal name field on the asset (uses display name, not file name)
+            // Apply default template if available
+            var defaultTemplate = GetDefaultTemplate();
+            if (defaultTemplate != null)
+            {
+                var templateAsset = defaultTemplate.GetAsset();
+                if (templateAsset != null)
+                {
+                    // Copy serialized data from template to new asset
+                    EditorUtility.CopySerialized(templateAsset, asset);
+                }
+            }
+            
+            // Set the display name on the asset (after template copy so it's not overwritten)
             SetAssetName(asset, assetName);
             
-            // File name includes prefix/suffix
-            var fileName = GetFileName(assetName);
-            var fullPath = $"{assetPath}/{fileName}.asset";
-            
+            // Generate unique file path
+            var fullPath = $"{assetPath}/{sanitizedFileName}.asset";
             fullPath = AssetDatabase.GenerateUniqueAssetPath(fullPath);
             
             AssetDatabase.CreateAsset(asset, fullPath);
@@ -604,6 +485,14 @@ namespace FarEmerald.PlayForge.Extended.Editor
             Selection.activeObject = asset;
             EditorGUIUtility.PingObject(asset);
             
+            // Show notification if enabled
+            if (EditorPrefs.GetBool(PlayForgeManager.PREFS_PREFIX + "ShowNotifications", true))
+            {
+                string templateNotification = "";
+                if (defaultTemplate is not null) templateNotification = $"(Template: {defaultTemplate.DisplayName})";
+                Debug.Log($"[PlayForge] Created {typeInfo.DisplayName}: {assetName} {templateNotification} at {fullPath}");
+            }
+            
             onCreated?.Invoke();
             Close();
         }
@@ -611,6 +500,7 @@ namespace FarEmerald.PlayForge.Extended.Editor
         /// <summary>
         /// Sets the internal name field on the asset based on its type.
         /// Handles Definition.Name pattern (Ability, Effect) and direct Name fields.
+        /// The display name is set as-is (with spaces), not sanitized.
         /// </summary>
         private void SetAssetName(ScriptableObject asset, string name)
         {
@@ -637,11 +527,19 @@ namespace FarEmerald.PlayForge.Extended.Editor
                 }
             }
             
-            // Try direct Name field (used by some asset types)
+            // Try direct Name field (used by some asset types like Attribute)
             var directNameField = assetType.GetField("Name", flags);
             if (directNameField != null && directNameField.FieldType == typeof(string))
             {
                 directNameField.SetValue(asset, name);
+                return;
+            }
+            
+            // Try _name field (backing field pattern)
+            var backingField = assetType.GetField("_name", flags);
+            if (backingField != null && backingField.FieldType == typeof(string))
+            {
+                backingField.SetValue(asset, name);
                 return;
             }
             

@@ -12,8 +12,10 @@ namespace FarEmerald.PlayForge
         public override void Activate(IGameplayAbilitySystem system, Dictionary<Attribute, CachedAttributeValue> attributeCache,
             ChangeValue change)
         {
-            AttributeValue clampValue = attributeCache[TargetAttribute].Value;
-            AttributeValue baseAligned = clampValue.BaseAligned();
+            var clampValue = attributeCache[TargetAttribute].Value;
+            var baseAligned = clampValue.BaseAligned();
+
+            Debug.Log($"Running clamp");
 
             // Clamp bounds logic is derived from the overflow policy associated with the target attribute
             switch (attributeCache[TargetAttribute].Overflow.Policy)

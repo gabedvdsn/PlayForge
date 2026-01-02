@@ -860,6 +860,8 @@ namespace FarEmerald.PlayForge.Extended.Editor
             autoLevelToggle.RegisterValueChangedCallback(evt => 
                 EditorPrefs.SetBool(PREFS_PREFIX + "Ability_AutoLevel", evt.newValue));
             container.Add(autoLevelToggle);
+
+            BuildEffectTemplatesSection(container);
         }
         
         private void BuildEffectSettings(VisualElement container)

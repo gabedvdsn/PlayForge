@@ -1,4 +1,5 @@
 ﻿using System;
+using FarEmerald.PlayForge.Extended;
 using UnityEngine;
 using UnityEngine.Serialization;
 
@@ -15,16 +16,16 @@ namespace FarEmerald.PlayForge
         [Space] 
         
         public float Duration;
-        public AbstractMagnitudeModifier DurationCalculation;
-        public EMagnitudeOperation DurationCalculationOperation;
-        public Tag DeltaTimeSource = Tags.DELTA_TIME_DEFAULT;
+        [SerializeReference] public AbstractScaler DurationScaler;
+        public EMagnitudeOperation RealDuration;
+        [ForgeTagContext(ForgeContext.DeltaTimeSource)] public Tag DeltaTimeSource = Tags.DELTA_TIME_DEFAULT;
 
         [Space] 
         
         public int Ticks;
         public float TickInterval;
-        public AbstractMagnitudeModifier TickCalculation;
-        public EMagnitudeOperation TickCalculationOperation;
+        [SerializeReference] public AbstractScaler TickScaler;
+        public EMagnitudeOperation RealTicks;
         public ETickCalculationRounding Rounding;
 
         public GameplayEffectDurationSpecification(GameplayEffectDurationSpecification o)
@@ -34,7 +35,7 @@ namespace FarEmerald.PlayForge
             TickOnApplication = o.TickOnApplication;
 
             Duration = o.Duration;
-            DurationCalculation = o.DurationCalculation;
+            DurationScaler = o.DurationScaler;
         }
 
         public void ApplyDurationSpecifications(AbstractGameplayEffectShelfContainer container)
@@ -46,7 +47,7 @@ namespace FarEmerald.PlayForge
             container.SetDurationRemaining(container.TotalDuration);
             
             // Apply period
-            int numTicks = GetTicks(container.Spec);
+            int numTicks = GetDurationalTicks(container.Spec);
 
             if (numTicks > 0)
             {
@@ -62,27 +63,37 @@ namespace FarEmerald.PlayForge
 
         public float GetTotalDuration(GameplayEffectSpec spec)
         {
-            DurationCalculation.Initialize(spec);
-            return DurationCalculationOperation switch
+            if (DurationScaler is null)
             {
-                EMagnitudeOperation.Multiply => Duration * DurationCalculation.Evaluate(spec),
-                EMagnitudeOperation.Add => Duration + DurationCalculation.Evaluate(spec),
+                return spec.Base.DurationSpecification.Duration;
+            }
+            
+            DurationScaler.Initialize(spec);
+            return RealDuration switch
+            {
+                EMagnitudeOperation.MultiplyWithScaler => Duration * DurationScaler.Evaluate(spec),
+                EMagnitudeOperation.AddScaler => Duration + DurationScaler.Evaluate(spec),
                 EMagnitudeOperation.UseMagnitude => Duration,
-                EMagnitudeOperation.UseCalculation => DurationCalculation.Evaluate(spec),
+                EMagnitudeOperation.UseScaler => DurationScaler.Evaluate(spec),
                 _ => throw new ArgumentOutOfRangeException()
             };
         }
 
-        public int GetTicks(GameplayEffectSpec spec)
+        public int GetDurationalTicks(GameplayEffectSpec spec)
         {
-            TickCalculation.Initialize(spec);
-            
-            float floatTicks = TickCalculationOperation switch
+            if (TickScaler is null)
             {
-                EMagnitudeOperation.Multiply => Ticks * TickCalculation.Evaluate(spec),
-                EMagnitudeOperation.Add => Ticks + TickCalculation.Evaluate(spec),
+                return Ticks;
+            }
+            
+            TickScaler.Initialize(spec);
+            
+            float floatTicks = RealTicks switch
+            {
+                EMagnitudeOperation.MultiplyWithScaler => Ticks * TickScaler.Evaluate(spec),
+                EMagnitudeOperation.AddScaler => Ticks + TickScaler.Evaluate(spec),
                 EMagnitudeOperation.UseMagnitude => Ticks,
-                EMagnitudeOperation.UseCalculation => TickCalculation.Evaluate(spec),
+                EMagnitudeOperation.UseScaler => TickScaler.Evaluate(spec),
                 _ => throw new ArgumentOutOfRangeException()
             };
             int numTicks = Rounding switch

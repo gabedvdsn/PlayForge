@@ -165,10 +165,6 @@ namespace FarEmerald.PlayForge.Extended.Editor
         {
             return false;
         }
-        protected override bool AcceptClear()
-        {
-            return false;
-        }
         protected override bool AcceptAdd()
         {
             return false;
@@ -179,10 +175,6 @@ namespace FarEmerald.PlayForge.Extended.Editor
     public class ImpactWorkerDrawer : AbstractGenericDrawer<AbstractImpactWorker>
     {
         protected override bool AcceptOpen(SerializedProperty prop)
-        {
-            return false;
-        }
-        protected override bool AcceptClear()
         {
             return false;
         }
@@ -199,10 +191,6 @@ namespace FarEmerald.PlayForge.Extended.Editor
         {
             return false;
         }
-        protected override bool AcceptClear()
-        {
-            return false;
-        }
         protected override bool AcceptAdd()
         {
             return false;
@@ -213,10 +201,6 @@ namespace FarEmerald.PlayForge.Extended.Editor
     public class AnalysisWorkerDrawer : AbstractGenericDrawer<AbstractAnalysisWorker>
     {
         protected override bool AcceptOpen(SerializedProperty prop)
-        {
-            return false;
-        }
-        protected override bool AcceptClear()
         {
             return false;
         }

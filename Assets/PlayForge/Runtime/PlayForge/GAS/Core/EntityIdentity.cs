@@ -6,23 +6,24 @@ using UnityEngine.Serialization;
 namespace FarEmerald.PlayForge
 {
     [CreateAssetMenu(menuName = "PlayForge/Entity", fileName = "Entity_")]
-    public class EntityIdentity : BaseForgeObject, IHasReadableDefinition
+    public class EntityIdentity : BaseForgeLinkProvider, IHasReadableDefinition
     {
         public string Name;
         public string Description;
         public List<TextureItem> Textures;
         
+        [ForgeTagContext(ForgeContext.Affiliation)]
         public List<Tag> Affiliation;
         
         [ForgeTagContext(ForgeContext.AssetIdentifier)]
         public Tag AssetTag;
-        public List<Tag> GrantedTags;
+        [ForgeTagContext(ForgeContext.Granted)] public List<Tag> GrantedTags;
 
-        [FormerlySerializedAs("StartingLevel")] public int Level = 1;
+        public int Level = 1;
         public bool CapAtMaxLevel = true;
         public int MaxLevel = 99;
 
-        public float RelativeLevel => CapAtMaxLevel ? 1f : (Level - 1f) / (MaxLevel - 1f);
+        public float RelativeLevel => CapAtMaxLevel ? 1f : (MaxLevel > 1 ? (Level - 1f) / (MaxLevel - 1f) : 1f);
         
         public EAbilityActivationPolicy ActivationPolicy = EAbilityActivationPolicy.SingleActiveQueue;
         public int MaxAbilities = 99;
@@ -53,14 +54,21 @@ namespace FarEmerald.PlayForge
             if (LocalData.TryGet(Tag.Generate("PrimaryIcon"), EDataWrapperType.Object, out var data)) return data.objectValue as Texture2D;
             return Textures.Count > 0 ? Textures[0].Texture : null;
         }
-    }
-
-    public class GameRootEntity : EntityIdentity
-    {
-        public GameRootEntity()
+        public override int GetMaxLevel()
         {
-            MaxAbilities = int.MaxValue;
-            ActivationPolicy = EAbilityActivationPolicy.NoRestrictions;
+            return MaxLevel;
+        }
+        public override int GetStartingLevel()
+        {
+            return Level;
+        }
+        public override string GetProviderName()
+        {
+            return GetName();
+        }
+        public override Tag GetProviderTag()
+        {
+            return AssetTag;
         }
     }
 }

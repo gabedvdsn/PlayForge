@@ -77,8 +77,10 @@ namespace FarEmerald.PlayForge
 
         public static bool WithinLimits(AttributeValue value, AttributeValue floor, AttributeValue ceil)
         {
-            return floor.CurrentValue <= value.CurrentValue && value.CurrentValue <= ceil.CurrentValue
-                                                            && floor.BaseValue <= value.BaseValue && value.BaseValue <= ceil.BaseValue;
+            return floor.CurrentValue <= value.CurrentValue 
+                   && value.CurrentValue <= ceil.CurrentValue 
+                   && floor.BaseValue <= value.BaseValue
+                   && value.BaseValue <= ceil.BaseValue;
         }
         
         public override string ToString()
@@ -92,9 +94,9 @@ namespace FarEmerald.PlayForge
         public Dictionary<IAttributeImpactDerivation, AttributeValue> DerivedValues = new();
         public AttributeValue Value;
         public AttributeOverflowData Overflow;
-        public AbstractCachedMagnitudeModifier Modifier;
+        public AbstractCachedScaler Modifier;
 
-        public CachedAttributeValue(AttributeOverflowData overflow, AbstractCachedMagnitudeModifier modifier)
+        public CachedAttributeValue(AttributeOverflowData overflow, AbstractCachedScaler modifier)
         {
             Overflow = overflow;
             Modifier = modifier;
@@ -166,6 +168,7 @@ namespace FarEmerald.PlayForge
         
         public void Clamp(AttributeValue ceil)
         {
+            Debug.Log($"Clamping!");
             if (0 <= Value.CurrentValue && Value.CurrentValue <= ceil.CurrentValue && 0 <= Value.BaseValue &&
                 Value.BaseValue <= ceil.BaseValue) return;
             

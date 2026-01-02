@@ -4,8 +4,5 @@ using UnityEngine;
 
 namespace FarEmerald.PlayForge
 {
-    public partial class GameRoot
-    {
-        
-    }
+    
 }

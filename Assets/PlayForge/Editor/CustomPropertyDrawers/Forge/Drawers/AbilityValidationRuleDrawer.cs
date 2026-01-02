@@ -174,10 +174,6 @@ namespace FarEmerald.PlayForge.Extended.Editor
         {
             return false;
         }
-        protected override bool AcceptClear()
-        {
-            return false;
-        }
         protected override bool AcceptAdd()
         {
             return false;

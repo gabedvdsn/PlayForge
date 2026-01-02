@@ -1,4 +1,5 @@
-﻿using UnityEditor;
+﻿using System.Collections.Generic;
+using UnityEditor;
 using UnityEditor.UIElements;
 using UnityEngine;
 using UnityEngine.UIElements;
@@ -10,10 +11,6 @@ namespace FarEmerald.PlayForge.Extended.Editor
     // AttributeValue Drawer
     // ═══════════════════════════════════════════════════════════════════════════
     
-    /// <summary>
-    /// Custom PropertyDrawer for AttributeValue.
-    /// Displays CurrentValue and BaseValue inline.
-    /// </summary>
     [CustomPropertyDrawer(typeof(AttributeValue))]
     public class AttributeValueDrawer : PropertyDrawer
     {
@@ -23,68 +20,52 @@ namespace FarEmerald.PlayForge.Extended.Editor
             container.style.flexDirection = FlexDirection.Row;
             container.style.alignItems = Align.Center;
             
-            // Current Value
             var currentProp = property.FindPropertyRelative("CurrentValue");
-            var currentContainer = new VisualElement();
-            currentContainer.style.flexDirection = FlexDirection.Row;
-            currentContainer.style.alignItems = Align.Center;
-            currentContainer.style.flexGrow = 1;
-            container.Add(currentContainer);
+            var baseProp = property.FindPropertyRelative("BaseValue");
             
+            // Current
             var currentLabel = new Label("Cur");
-            currentLabel.style.width = 28;
+            currentLabel.style.width = 24;
             currentLabel.style.color = Colors.HintText;
-            currentLabel.style.fontSize = 10;
+            currentLabel.style.fontSize = 9;
             currentLabel.tooltip = "Current Value";
-            currentContainer.Add(currentLabel);
+            container.Add(currentLabel);
             
             var currentField = new FloatField();
             currentField.style.flexGrow = 1;
-            currentField.style.minWidth = 50;
+            currentField.style.minWidth = 40;
             currentField.bindingPath = currentProp.propertyPath;
-            currentContainer.Add(currentField);
+            container.Add(currentField);
             
             // Separator
-            var separator = new Label("/");
-            separator.style.marginLeft = 4;
-            separator.style.marginRight = 4;
-            separator.style.color = Colors.HintText;
-            separator.style.unityFontStyleAndWeight = FontStyle.Bold;
-            container.Add(separator);
+            var sep = new Label("/");
+            sep.style.marginLeft = 4;
+            sep.style.marginRight = 4;
+            sep.style.color = Colors.HintText;
+            container.Add(sep);
             
-            // Base Value
-            var baseProp = property.FindPropertyRelative("BaseValue");
-            var baseContainer = new VisualElement();
-            baseContainer.style.flexDirection = FlexDirection.Row;
-            baseContainer.style.alignItems = Align.Center;
-            baseContainer.style.flexGrow = 1;
-            container.Add(baseContainer);
-            
+            // Base
             var baseLabel = new Label("Base");
-            baseLabel.style.width = 32;
+            baseLabel.style.width = 28;
             baseLabel.style.color = Colors.HintText;
-            baseLabel.style.fontSize = 10;
+            baseLabel.style.fontSize = 9;
             baseLabel.tooltip = "Base Value";
-            baseContainer.Add(baseLabel);
+            container.Add(baseLabel);
             
             var baseField = new FloatField();
             baseField.style.flexGrow = 1;
-            baseField.style.minWidth = 50;
+            baseField.style.minWidth = 40;
             baseField.bindingPath = baseProp.propertyPath;
-            baseContainer.Add(baseField);
+            container.Add(baseField);
             
             return container;
         }
     }
     
     // ═══════════════════════════════════════════════════════════════════════════
-    // AttributeOverflowData Drawer
+    // AttributeOverflowData Drawer - Vertical layout for Floor/Ceil
     // ═══════════════════════════════════════════════════════════════════════════
     
-    /// <summary>
-    /// Custom PropertyDrawer for AttributeOverflowData.
-    /// Shows Policy enum and conditionally displays Floor/Ceil based on policy.
-    /// </summary>
     [CustomPropertyDrawer(typeof(AttributeOverflowData))]
     public class AttributeOverflowDataDrawer : PropertyDrawer
     {
@@ -92,59 +73,67 @@ namespace FarEmerald.PlayForge.Extended.Editor
         {
             var container = new VisualElement();
             
-            // Get properties
             var policyProp = property.FindPropertyRelative("Policy");
             var floorProp = property.FindPropertyRelative("Floor");
             var ceilProp = property.FindPropertyRelative("Ceil");
             
             // Policy row
-            var policyRow = CreateRow(4);
+            var policyRow = new VisualElement();
+            policyRow.style.flexDirection = FlexDirection.Row;
+            policyRow.style.alignItems = Align.Center;
+            policyRow.style.marginBottom = 2;
             container.Add(policyRow);
             
-            var policyField = new PropertyField(policyProp, "Policy");
+            var policyField = new PropertyField(policyProp, "");
             policyField.style.flexGrow = 1;
+            policyField.BindProperty(policyProp);
             policyRow.Add(policyField);
             
-            // Floor row (conditional)
-            var floorRow = CreateRow(4);
-            floorRow.name = "FloorRow";
+            // Floor row (shown for FloorToBase, FloorToCeil)
+            var floorRow = new VisualElement { name = "FloorRow" };
+            floorRow.style.flexDirection = FlexDirection.Row;
+            floorRow.style.alignItems = Align.Center;
+            floorRow.style.marginTop = 2;
             container.Add(floorRow);
             
             var floorLabel = new Label("Floor");
-            floorLabel.style.width = 50;
+            floorLabel.style.width = 36;
+            floorLabel.style.fontSize = 10;
             floorLabel.style.color = Colors.HintText;
-            floorLabel.style.unityTextAlign = TextAnchor.MiddleLeft;
             floorRow.Add(floorLabel);
             
             var floorField = new PropertyField(floorProp, "");
             floorField.style.flexGrow = 1;
+            floorField.BindProperty(floorProp);
             floorRow.Add(floorField);
             
-            // Ceil row (conditional)
-            var ceilRow = CreateRow(2);
-            ceilRow.name = "CeilRow";
+            // Ceil row (shown for ZeroToCeil, FloorToCeil)
+            var ceilRow = new VisualElement { name = "CeilRow" };
+            ceilRow.style.flexDirection = FlexDirection.Row;
+            ceilRow.style.alignItems = Align.Center;
+            ceilRow.style.marginTop = 2;
             container.Add(ceilRow);
             
             var ceilLabel = new Label("Ceil");
-            ceilLabel.style.width = 50;
+            ceilLabel.style.width = 36;
+            ceilLabel.style.fontSize = 10;
             ceilLabel.style.color = Colors.HintText;
-            ceilLabel.style.unityTextAlign = TextAnchor.MiddleLeft;
             ceilRow.Add(ceilLabel);
             
             var ceilField = new PropertyField(ceilProp, "");
             ceilField.style.flexGrow = 1;
+            ceilField.BindProperty(ceilProp);
             ceilRow.Add(ceilField);
             
-            // Update visibility based on policy
             void UpdateVisibility()
             {
                 var policy = (EAttributeOverflowPolicy)policyProp.enumValueIndex;
                 
-                // Floor is shown for: FloorToBase, FloorToCeil
+                // Floor shown for: FloorToBase, FloorToCeil
                 bool showFloor = policy == EAttributeOverflowPolicy.FloorToBase || 
                                  policy == EAttributeOverflowPolicy.FloorToCeil;
                 
-                // Ceil is shown for: ZeroToCeil, FloorToCeil
+                // Ceil shown for: ZeroToCeil, FloorToCeil
                 bool showCeil = policy == EAttributeOverflowPolicy.ZeroToCeil || 
                                 policy == EAttributeOverflowPolicy.FloorToCeil;
                 
@@ -160,175 +149,285 @@ namespace FarEmerald.PlayForge.Extended.Editor
     }
     
     // ═══════════════════════════════════════════════════════════════════════════
-    // AttributeSetElement Drawer
+    // AttributeSetElement Drawer - Show/Hide approach (no rebuild)
     // ═══════════════════════════════════════════════════════════════════════════
     
-    /// <summary>
-    /// Custom PropertyDrawer for AttributeSetElement.
-    /// Displays attribute configuration with themed sections.
-    /// </summary>
     [CustomPropertyDrawer(typeof(AttributeSetElement))]
     public class AttributeSetElementDrawer : PropertyDrawer
     {
+        // Collapse state persisted by property path
+        private static Dictionary<string, bool> _collapsedStates = new Dictionary<string, bool>();
+        
+        private static bool IsCollapsed(string path)
+        {
+            return _collapsedStates.TryGetValue(path, out bool c) && c;
+        }
+        
+        private static void SetCollapsed(string path, bool collapsed)
+        {
+            _collapsedStates[path] = collapsed;
+        }
+        
         public override VisualElement CreatePropertyGUI(SerializedProperty property)
         {
-            var container = CreateMainContainer(Colors.AccentGreen);
+            var root = new VisualElement { name = "AttributeSetElementRoot" };
+            
+            bool startCollapsed = IsCollapsed(property.propertyPath);
+            
+            // Get all properties upfront
+            var attributeProp = property.FindPropertyRelative("Attribute");
+            var magnitudeProp = property.FindPropertyRelative("Magnitude");
+            var modifierProp = property.FindPropertyRelative("Modifier");
+            var targetProp = property.FindPropertyRelative("Target");
+            var overflowProp = property.FindPropertyRelative("Overflow");
+            var collisionProp = property.FindPropertyRelative("CollisionPolicy");
+            
+            // Main container
+            var container = new VisualElement { name = "Container" };
+            container.style.backgroundColor = new Color(0.18f, 0.18f, 0.18f, 0.5f);
+            container.style.borderTopLeftRadius = 4;
+            container.style.borderTopRightRadius = 4;
+            container.style.borderBottomLeftRadius = 4;
+            container.style.borderBottomRightRadius = 4;
+            container.style.borderLeftWidth = 3;
+            container.style.borderLeftColor = Colors.AccentGray;
+            container.style.paddingTop = 4;
+            container.style.paddingBottom = 4;
+            container.style.paddingLeft = 6;
+            container.style.paddingRight = 6;
+            container.style.marginTop = 2;
+            container.style.marginBottom = 2;
+            root.Add(container);
             
             // ═══════════════════════════════════════════════════════════════════
-            // Header Row - Attribute reference
+            // Header Row (always visible)
             // ═══════════════════════════════════════════════════════════════════
             
-            var headerRow = CreateRow(6);
+            var headerRow = new VisualElement { name = "HeaderRow" };
+            headerRow.style.flexDirection = FlexDirection.Row;
             headerRow.style.alignItems = Align.Center;
             container.Add(headerRow);
             
-            // Color indicator based on collision policy
-            var policyIndicator = CreateColorIndicator(Colors.AccentGreen, 4, 24);
-            policyIndicator.name = "PolicyIndicator";
-            policyIndicator.style.alignSelf = Align.Center;
-            policyIndicator.style.marginRight = 8;
-            headerRow.Add(policyIndicator);
+            // Collapse button
+            var collapseBtn = new Button { name = "CollapseBtn" };
+            collapseBtn.text = startCollapsed ? "▶" : "▼";
+            collapseBtn.style.width = 18;
+            collapseBtn.style.height = 18;
+            collapseBtn.style.fontSize = 8;
+            collapseBtn.style.marginRight = 4;
+            collapseBtn.style.paddingLeft = 0;
+            collapseBtn.style.paddingRight = 0;
+            collapseBtn.style.paddingTop = 0;
+            collapseBtn.style.paddingBottom = 0;
+            collapseBtn.style.unityTextAlign = TextAnchor.MiddleCenter;
+            collapseBtn.style.backgroundColor = Colors.ButtonBackground;
+            collapseBtn.style.borderTopLeftRadius = 3;
+            collapseBtn.style.borderTopRightRadius = 3;
+            collapseBtn.style.borderBottomLeftRadius = 3;
+            collapseBtn.style.borderBottomRightRadius = 3;
+            headerRow.Add(collapseBtn);
             
-            /*// Attribute icon
-            var attrIcon = new Label(Icons.Attribute);
-            attrIcon.style.fontSize = 14;
-            attrIcon.style.marginRight = 4;
-            attrIcon.style.color = Colors.AccentGreen;
-            headerRow.Add(attrIcon);*/
-            
-            // Attribute field (main identifier)
-            var attributeProp = property.FindPropertyRelative("Attribute");
+            // Attribute field
             var attributeField = new PropertyField(attributeProp, "");
             attributeField.style.flexGrow = 1;
-            attributeField.style.minWidth = 140;
+            attributeField.style.minWidth = 100;
+            attributeField.BindProperty(attributeProp);
             headerRow.Add(attributeField);
             
             // ═══════════════════════════════════════════════════════════════════
-            // Values Section
+            // Summary badges (visible when collapsed)
             // ═══════════════════════════════════════════════════════════════════
             
-            var valuesSection = CreateSection("VALUES", Colors.AccentBlue);
-            container.Add(valuesSection);
+            var summaryContainer = new VisualElement { name = "SummaryContainer" };
+            summaryContainer.style.flexDirection = FlexDirection.Row;
+            summaryContainer.style.alignItems = Align.Center;
+            summaryContainer.style.marginLeft = 8;
+            summaryContainer.style.display = startCollapsed ? DisplayStyle.Flex : DisplayStyle.None;
+            headerRow.Add(summaryContainer);
+            
+            // Magnitude badge
+            var magBadge = CreateBadge("0", Colors.AccentBlue);
+            magBadge.name = "MagBadge";
+            magBadge.tooltip = "Magnitude";
+            summaryContainer.Add(magBadge);
+            
+            // Target badge
+            var targetBadge = CreateBadge("C+B", Colors.HintText);
+            targetBadge.name = "TargetBadge";
+            targetBadge.style.marginLeft = 4;
+            summaryContainer.Add(targetBadge);
+            
+            // Collision badge
+            var collisionBadge = CreateBadge("Def", Colors.HintText);
+            collisionBadge.name = "CollisionBadge";
+            collisionBadge.style.marginLeft = 4;
+            summaryContainer.Add(collisionBadge);
+            
+            // ═══════════════════════════════════════════════════════════════════
+            // Expanded Content (visible when expanded)
+            // ═══════════════════════════════════════════════════════════════════
+            
+            var expandedContent = new VisualElement { name = "ExpandedContent" };
+            expandedContent.style.marginTop = 6;
+            expandedContent.style.display = startCollapsed ? DisplayStyle.None : DisplayStyle.Flex;
+            container.Add(expandedContent);
             
             // Magnitude + Target row
-            var magnitudeRow = CreateRow(4);
-            valuesSection.Add(magnitudeRow);
+            var valuesRow = new VisualElement();
+            valuesRow.style.flexDirection = FlexDirection.Row;
+            valuesRow.style.alignItems = Align.Center;
+            valuesRow.style.marginBottom = 4;
+            expandedContent.Add(valuesRow);
             
-            var magnitudeLabel = new Label("Magnitude");
-            magnitudeLabel.style.width = 70;
-            magnitudeLabel.style.color = Colors.HeaderText;
-            magnitudeLabel.style.alignSelf = Align.Center;
-            magnitudeRow.Add(magnitudeLabel);
+            var magLabel = new Label("Magnitude");
+            magLabel.style.width = 65;
+            magLabel.style.fontSize = 10;
+            magLabel.style.color = Colors.HintText;
+            valuesRow.Add(magLabel);
             
-            var magnitudeProp = property.FindPropertyRelative("Magnitude");
-            var magnitudeField = new FloatField();
-            magnitudeField.style.width = 80;
-            magnitudeField.bindingPath = magnitudeProp.propertyPath;
-            magnitudeField.tooltip = "Base magnitude value for this attribute";
-            magnitudeRow.Add(magnitudeField);
+            var magField = new FloatField();
+            magField.style.width = 60;
+            magField.bindingPath = magnitudeProp.propertyPath;
+            valuesRow.Add(magField);
             
-            /*var targetLabel = new Label();
-            targetLabel.style.width = 50;
-            targetLabel.style.marginLeft = 16;
-            targetLabel.style.color = Colors.HeaderText;
-            magnitudeRow.Add(targetLabel);*/
+            var targetLabel = new Label("Target");
+            targetLabel.style.width = 40;
+            targetLabel.style.fontSize = 10;
+            targetLabel.style.color = Colors.HintText;
+            targetLabel.style.marginLeft = 12;
+            valuesRow.Add(targetLabel);
             
-            var targetProp = property.FindPropertyRelative("Target");
             var targetField = new PropertyField(targetProp, "");
             targetField.style.flexGrow = 1;
-            targetField.style.marginLeft = 8;
-            targetField.tooltip = "CurrentAndBase: Sets both current and base\nBase: Sets only base value (current starts at 0)";
-            magnitudeRow.Add(targetField);
+            targetField.BindProperty(targetProp);
+            valuesRow.Add(targetField);
             
-            // Modifier field
-            var modifierRow = CreateRow(2);
-            valuesSection.Add(modifierRow);
-            
-            var modifierProp = property.FindPropertyRelative("Modifier");
+            // Modifier row
             var modifierField = new PropertyField(modifierProp, "Modifier");
-            modifierField.style.flexGrow = 1;
-            modifierField.tooltip = "Optional: Dynamic modifier for magnitude calculation";
-            modifierRow.Add(modifierField);
+            modifierField.style.marginBottom = 4;
+            modifierField.BindProperty(modifierProp);
+            expandedContent.Add(modifierField);
+            
+            // Overflow row
+            var overflowRow = new VisualElement();
+            overflowRow.style.flexDirection = FlexDirection.Row;
+            overflowRow.style.alignItems = Align.FlexStart;
+            overflowRow.style.marginBottom = 4;
+            expandedContent.Add(overflowRow);
+            
+            var ovLabel = new Label("Bounds");
+            ovLabel.style.width = 65;
+            ovLabel.style.fontSize = 10;
+            ovLabel.style.color = Colors.HintText;
+            ovLabel.style.marginTop = 2;
+            overflowRow.Add(ovLabel);
+            
+            var ovField = new PropertyField(overflowProp, "");
+            ovField.style.flexGrow = 1;
+            ovField.BindProperty(overflowProp);
+            overflowRow.Add(ovField);
+            
+            // Collision row
+            var collisionRow = new VisualElement();
+            collisionRow.style.flexDirection = FlexDirection.Row;
+            collisionRow.style.alignItems = Align.Center;
+            expandedContent.Add(collisionRow);
+            
+            var collLabel = new Label("Collision");
+            collLabel.style.width = 65;
+            collLabel.style.fontSize = 10;
+            collLabel.style.color = Colors.HintText;
+            collisionRow.Add(collLabel);
+            
+            var collField = new PropertyField(collisionProp, "");
+            collField.style.flexGrow = 1;
+            collField.BindProperty(collisionProp);
+            collisionRow.Add(collField);
             
             // ═══════════════════════════════════════════════════════════════════
-            // Overflow Section
+            // Update Functions
             // ═══════════════════════════════════════════════════════════════════
             
-            var overflowSection = CreateSection("OVERFLOW BOUNDS", Colors.AccentOrange);
-            container.Add(overflowSection);
-            
-            var overflowProp = property.FindPropertyRelative("Overflow");
-            var overflowField = new PropertyField(overflowProp, "");
-            overflowField.style.marginBottom = 2;
-            overflowSection.Add(overflowField);
-            
-            // Policy explanation hint
-            var overflowHint = CreateHintLabel("Defines min/max bounds for attribute values");
-            overflowSection.Add(overflowHint);
-            
-            // ═══════════════════════════════════════════════════════════════════
-            // Collision Policy Section
-            // ═══════════════════════════════════════════════════════════════════
-            
-            var collisionSection = CreateSection("COLLISION POLICY", Colors.AccentPurple);
-            container.Add(collisionSection);
-            
-            var collisionRow = CreateRow(2);
-            collisionSection.Add(collisionRow);
-            
-            var collisionProp = property.FindPropertyRelative("CollisionPolicy");
-            var collisionField = new PropertyField(collisionProp, "Policy");
-            collisionField.style.flexGrow = 1;
-            collisionRow.Add(collisionField);
-            
-            // Policy description label (updates dynamically)
-            var policyDescLabel = CreateHintLabel("");
-            policyDescLabel.name = "PolicyDescription";
-            collisionSection.Add(policyDescLabel);
-            
-            // ═══════════════════════════════════════════════════════════════════
-            // Dynamic Updates
-            // ═══════════════════════════════════════════════════════════════════
-            
-            void UpdatePolicyIndicator()
+            void UpdateSummary()
             {
-                var policy = (EAttributeElementCollisionPolicy)collisionProp.enumValueIndex;
+                // Magnitude
+                float mag = magnitudeProp.floatValue;
+                magBadge.text = mag.ToString("F1");
                 
-                // Update indicator color
-                policyIndicator.style.backgroundColor = policy switch
+                // Target
+                var target = (ELimitedEffectImpactTarget)targetProp.enumValueIndex;
+                targetBadge.text = target == ELimitedEffectImpactTarget.CurrentAndBase ? "C+B" : "B";
+                targetBadge.tooltip = target.ToString();
+                
+                // Collision
+                var collision = (EAttributeElementCollisionPolicy)collisionProp.enumValueIndex;
+                var (collText, collColor) = collision switch
+                {
+                    EAttributeElementCollisionPolicy.UseThis => ("This", Colors.AccentGreen),
+                    EAttributeElementCollisionPolicy.UseExisting => ("Exist", Colors.AccentOrange),
+                    EAttributeElementCollisionPolicy.Combine => ("Add", Colors.AccentBlue),
+                    _ => ("Def", Colors.HintText)
+                };
+                collisionBadge.text = collText;
+                collisionBadge.style.color = collColor;
+                collisionBadge.style.backgroundColor = new Color(collColor.r, collColor.g, collColor.b, 0.15f);
+                collisionBadge.tooltip = $"Collision: {collision}";
+                
+                // Border color
+                container.style.borderLeftColor = collision switch
                 {
                     EAttributeElementCollisionPolicy.UseThis => Colors.AccentGreen,
                     EAttributeElementCollisionPolicy.UseExisting => Colors.AccentOrange,
                     EAttributeElementCollisionPolicy.Combine => Colors.AccentBlue,
                     _ => Colors.AccentGray
                 };
-                
-                // Update tooltip
-                policyIndicator.tooltip = policy switch
-                {
-                    EAttributeElementCollisionPolicy.UseCollisionSetting => "",
-                    EAttributeElementCollisionPolicy.UseThis => "This value takes priority",
-                    EAttributeElementCollisionPolicy.UseExisting => "Existing value takes priority",
-                    EAttributeElementCollisionPolicy.Combine => "Values will be combined",
-                    _ => ""
-                };
-                
-                // Update description text
-                policyDescLabel.text = policy switch
-                {
-                    EAttributeElementCollisionPolicy.UseCollisionSetting => $"Resolves collisions using the set collision policy",
-                    EAttributeElementCollisionPolicy.UseThis => "This definition overrides any existing values",
-                    EAttributeElementCollisionPolicy.UseExisting => "Keeps existing value if attribute already defined",
-                    EAttributeElementCollisionPolicy.Combine => "Adds this value to existing (if present)",
-                    _ => ""
-                };
             }
             
-            // Schedule initial update and register for changes
-            container.schedule.Execute(UpdatePolicyIndicator).StartingIn(50);
-            collisionField.RegisterValueChangeCallback(_ => UpdatePolicyIndicator());
+            void ToggleCollapse()
+            {
+                bool isCollapsed = IsCollapsed(property.propertyPath);
+                bool newState = !isCollapsed;
+                SetCollapsed(property.propertyPath, newState);
+                
+                collapseBtn.text = newState ? "▶" : "▼";
+                summaryContainer.style.display = newState ? DisplayStyle.Flex : DisplayStyle.None;
+                expandedContent.style.display = newState ? DisplayStyle.None : DisplayStyle.Flex;
+                
+                if (newState)
+                {
+                    UpdateSummary();
+                }
+            }
             
-            return container;
+            // Wire up collapse button
+            collapseBtn.clicked += ToggleCollapse;
+            
+            // Initial summary update
+            root.schedule.Execute(UpdateSummary).StartingIn(100);
+            
+            // Update summary when values change (for when it becomes visible)
+            magField.RegisterValueChangedCallback(_ => UpdateSummary());
+            targetField.RegisterValueChangeCallback(_ => UpdateSummary());
+            collField.RegisterValueChangeCallback(_ => UpdateSummary());
+            
+            return root;
+        }
+        
+        private Label CreateBadge(string text, Color color)
+        {
+            var badge = new Label(text);
+            badge.style.fontSize = 9;
+            badge.style.color = color;
+            badge.style.backgroundColor = new Color(color.r, color.g, color.b, 0.15f);
+            badge.style.paddingLeft = 4;
+            badge.style.paddingRight = 4;
+            badge.style.paddingTop = 1;
+            badge.style.paddingBottom = 1;
+            badge.style.borderTopLeftRadius = 3;
+            badge.style.borderTopRightRadius = 3;
+            badge.style.borderBottomLeftRadius = 3;
+            badge.style.borderBottomRightRadius = 3;
+            return badge;
         }
     }
 }

@@ -337,14 +337,7 @@ namespace FarEmerald.PlayForge
 
             await base.CallBehaviour(cmd, cb, token);
         }
-        public async UniTask CallBehaviour(Tag cmd, AbstractProxyTaskBehaviour cb, IProxyTaskBehaviourUser user, CancellationToken token)
-        {
-            throw new System.NotImplementedException();
-        }
-        public async UniTask CallBehaviour(Tag cmd, AbstractProxyTaskBehaviour cb, IProxyTaskBehaviourUser[] users, CancellationToken token)
-        {
-            throw new System.NotImplementedException();
-        }
+        
         public AttributeSystemComponent GetAttributeSystem()
         {
             throw new System.NotImplementedException();

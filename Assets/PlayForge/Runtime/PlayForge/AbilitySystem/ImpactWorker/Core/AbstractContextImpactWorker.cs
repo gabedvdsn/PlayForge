@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using FarEmerald.PlayForge.Extended;
 using UnityEngine;
 using UnityEngine.Serialization;
 
@@ -14,7 +15,7 @@ namespace FarEmerald.PlayForge
         public Attribute ImpactedAttribute;
 
         public bool AnyImpactType = true;
-        [ForgeCategory(Forge.Categories.ImpactType)]
+        [ForgeTagContext(ForgeContext.Impact)]
         public List<Tag> ImpactType;
         public EEffectImpactTargetExpanded ImpactTarget;
         [Tooltip("Validate that exclusively the modify target is modified, as opposed to itself AND the alternative (e.g. target is Current when Current AND Base are modified would NOT pass validation.")]
@@ -33,7 +34,7 @@ namespace FarEmerald.PlayForge
         [Tooltip("The attribute to apply work on")]
         public Attribute WorkAttribute;
         
-        [ForgeCategory(Forge.Categories.ImpactType)]
+        [ForgeTagContext(ForgeContext.Impact)]
         public Tag WorkImpactType;
         public ESignPolicy WorkSignPolicy;
 

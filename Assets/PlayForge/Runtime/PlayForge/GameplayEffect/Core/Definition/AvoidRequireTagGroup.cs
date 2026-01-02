@@ -45,10 +45,10 @@ namespace FarEmerald.PlayForge
                     case EComparisonOperator.LessThan:
                         if (count > Magnitude) return !sign;
                         break;
-                    case EComparisonOperator.GreaterOrEqualTo:
+                    case EComparisonOperator.GreaterOrEqual:
                         if (count >= Magnitude) return sign;
                         break;
-                    case EComparisonOperator.LessOrEqualTo:
+                    case EComparisonOperator.LessOrEqual:
                         if (count >= Magnitude) return !sign;
                         break;
                     case EComparisonOperator.Equal:

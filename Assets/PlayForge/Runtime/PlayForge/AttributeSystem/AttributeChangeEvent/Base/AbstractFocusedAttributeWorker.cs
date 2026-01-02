@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using FarEmerald.PlayForge.Extended;
 using UnityEngine;
 using UnityEngine.Serialization;
 
@@ -32,7 +33,7 @@ namespace FarEmerald.PlayForge
         [Tooltip("Allow changes deriving from any impact type")]
         public bool AnyImpactType = true;
         [Tooltip("The impact type of the change to screen for")]
-        [ForgeCategory(Forge.Categories.ImpactType)]
+        [ForgeTagContext(ForgeContext.Impact)]
         public List<Tag> ImpactType;
         
         [Header("Change Tag Validation")]
@@ -40,10 +41,11 @@ namespace FarEmerald.PlayForge
         [Tooltip("Allow changes deriving from any context")]
         public bool AnyContextTag = true;
         [Tooltip("The modification source context tag(s) (all of them) must exist in this list")]
-        public List<Tag> ValidContextTags;
+        [ForgeTagContext(ForgeContext.ContextIdentifier)] public List<Tag> ValidContextTags;
 
         public override bool PreValidateWorkFor(ChangeValue change)
         {
+            Debug.Log($"Prevalidate {change.Value.BaseDerivation.GetAttribute().Equals(TargetAttribute)}");
             return change.Value.BaseDerivation.GetAttribute().Equals(TargetAttribute);
         }
 
@@ -53,30 +55,36 @@ namespace FarEmerald.PlayForge
         {
             if (!change.Value.BaseDerivation.GetAttribute().Equals(TargetAttribute))
             {
+                Debug.Log($"Fail A");
                 return false;
             }
             
             if (!ForgeHelper.ValidateContextTags(AnyContextTag, ValidContextTags,
                     change.Value.BaseDerivation.GetContextTags()))
             {
+                Debug.Log($"Fail B");
                 return false;
             }
 
             if (!ForgeHelper.ValidateSelfModification(AllowSelfModification, change.Value.BaseDerivation.GetSource(),
                     system))
             {
+                Debug.Log($"Fail C");
                 return false;
             }
             if (!ForgeHelper.ValidateImpactTargets(TargetModification, change.Value.ToAttributeValue(), ExclusivelyTargetModification)) 
             {
+                Debug.Log($"Fail D");
                 return false;
             }
             if (!ForgeHelper.ValidateSignPolicy(SignPolicy, TargetModification, change.Value.ToAttributeValue())) 
             {
+                Debug.Log($"Fail E");
                 return false;
             }
             if (!ForgeHelper.ValidateImpactTypes(AnyImpactType, change.Value.BaseDerivation.GetImpactTypes(), ImpactType)) 
             {
+                Debug.Log($"Fail F");
                 return false;
             }
             return true;

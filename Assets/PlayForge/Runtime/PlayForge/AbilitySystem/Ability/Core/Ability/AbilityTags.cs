@@ -22,9 +22,7 @@ namespace FarEmerald.PlayForge
         [ForgeTagContext(ForgeContext.Granted)]
         [Tooltip("Tags that are granted while this ability is active")]
         public List<Tag> ActiveGrantedTags;
-
-        public Tag TestTag;
-
+        
         [Header("Requirements")]
         
         [Tooltip("Source requirements to use this ability")]

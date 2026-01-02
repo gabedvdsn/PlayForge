@@ -1,0 +1,75 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f540c3b03f1458d459ad17cf8a6b5c71, type: 3}
+  m_Name: ATTR_SET_RequiredAttributes
+  m_EditorClassIdentifier: 
+  Name: RequiredAttributes
+  Description: 
+  Textures:
+  - Tag:
+      Name: PrimaryTexture
+    Texture: {fileID: 2800000, guid: dffef66376be4fa480fb02b19edbe903, type: 3}
+  - Tag:
+      Name: SecondaryTexture
+    Texture: {fileID: 2800000, guid: ef9a3a2e2d101e9489f75920d7773c31, type: 3}
+  AssetTag:
+    Name: RequiredAttributes
+  Attributes:
+  - Attribute: {fileID: 11400000, guid: 5238e93ea6a409e4a84dd1dcf23dd45c, type: 2}
+    Magnitude: 100
+    Modifier:
+      rid: -2
+    Target: 0
+    Overflow:
+      Policy: 1
+      Floor:
+        CurrentValue: 0
+        BaseValue: 0
+      Ceil:
+        CurrentValue: 0
+        BaseValue: 0
+    CollisionPolicy: 0
+  - Attribute: {fileID: 11400000, guid: 3d035a62577527e4b9627eb5443a2aae, type: 2}
+    Magnitude: 0.25
+    Modifier:
+      rid: -2
+    Target: 0
+    Overflow:
+      Policy: 0
+      Floor:
+        CurrentValue: 0
+        BaseValue: 0
+      Ceil:
+        CurrentValue: 0
+        BaseValue: 0
+    CollisionPolicy: 0
+  - Attribute: {fileID: 11400000, guid: 7588ce54fd063844db9e11ffca0a1c01, type: 2}
+    Magnitude: 0.25
+    Modifier:
+      rid: -2
+    Target: 0
+    Overflow:
+      Policy: 0
+      Floor:
+        CurrentValue: 0
+        BaseValue: 0
+      Ceil:
+        CurrentValue: 0
+        BaseValue: 0
+    CollisionPolicy: 0
+  SubSets: []
+  CollisionResolutionPolicy: 0
+  references:
+    version: 2
+    RefIds:
+    - rid: -2
+      type: {class: , ns: , asm: }

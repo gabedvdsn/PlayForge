@@ -49,6 +49,8 @@ namespace FarEmerald.PlayForge.Extended.Editor
             public static readonly Color ItemBackground = new Color(0.2f, 0.2f, 0.2f, 0.4f);
             public static readonly Color ButtonBackground = new Color(0.314f, 0.314f, 0.314f, 1f);
             public static readonly Color ButtonHover = new Color(0.4f, 0.4f, 0.4f, 1f);
+            public static readonly Color GridBackground = new Color(.4f, .4f, .4f, .8f);
+            public static readonly Color GridAltBackground = new Color(.25f, .25f, .25f, .8f);
             
             // Text Colors
             public static readonly Color HeaderText = new Color(0.863f, 0.863f, 0.863f, 1f);
@@ -60,7 +62,7 @@ namespace FarEmerald.PlayForge.Extended.Editor
             
             // Border Colors
             public static readonly Color BorderDark = new Color(0.137f, 0.137f, 0.137f, 1f);
-            public static readonly Color BorderLight = new Color(0.15f, 0.15f, 0.15f, 1f);
+            public static readonly Color BorderLight = new Color(0.392f, 0.392f, 0.392f, 1f);
             public static readonly Color DividerColor = new Color(0.392f, 0.392f, 0.392f, 1f);
             
             // Policy/Status Colors
@@ -69,6 +71,7 @@ namespace FarEmerald.PlayForge.Extended.Editor
             public static readonly Color PolicyYellow = new Color(0.7f, 0.6f, 0.3f, 1f);
             public static readonly Color PolicyRed = new Color(0.7f, 0.4f, 0.4f, 1f);
             public static readonly Color PolicyBlue = new Color(0.4f, 0.4f, 0.7f, 1f);
+            public static readonly Color PolicyCyan = new Color(0.5f, 0.7f, 0.8f, 1f);
         }
         
         // ═══════════════════════════════════════════════════════════════════════════
@@ -120,26 +123,32 @@ namespace FarEmerald.PlayForge.Extended.Editor
         
         /// <summary>
         /// Creates a configured ScrollView for inspector content.
+        /// Fills all available space in the inspector body.
         /// </summary>
-        public static ScrollView CreateScrollView(int minHeight = 200, int maxHeight = 800)
+        public static ScrollView CreateScrollView(int minHeight = 100)
         {
             var scrollView = new ScrollView
             {
                 name = "ContentScrollView",
                 horizontalScrollerVisibility = ScrollerVisibility.Hidden,
-                verticalScrollerVisibility = ScrollerVisibility.Auto
+                verticalScrollerVisibility = ScrollerVisibility.Hidden
             };
             scrollView.style.flexGrow = 1;
             scrollView.style.flexShrink = 1;
             scrollView.style.minHeight = minHeight;
-            scrollView.style.maxHeight = maxHeight;
+            //scrollView.style.maxHeight = 
+            // No maxHeight - let it fill available space
+            
+            // Ensure content container also grows
+            scrollView.contentContainer.style.flexGrow = 1;
+            
             return scrollView;
         }
         
         /// <summary>
         /// Creates bottom padding element for scroll content.
         /// </summary>
-        public static VisualElement CreateBottomPadding(int height = 50)
+        public static VisualElement CreateBottomPadding(int height = 20)
         {
             return new VisualElement { style = { height = height, flexShrink = 0 } };
         }
@@ -634,7 +643,8 @@ namespace FarEmerald.PlayForge.Extended.Editor
         /// </summary>
         public static PropertyField CreatePropertyField(SerializedProperty property, string name = null, string label = null)
         {
-            var field = new PropertyField(property, label ?? property.displayName) { name = name ?? property.name };
+            //var field = new PropertyField(property, label ?? property.displayName) { name = name ?? property.name };
+            var field = new PropertyField(property, label ?? string.Empty) { name = name ?? property.name };
             field.style.marginBottom = 4;
             field.style.marginTop = 2;
             return field;

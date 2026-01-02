@@ -9,8 +9,6 @@ namespace FarEmerald.PlayForge
     {
         public static Bootstrapper Instance;
         
-        public FrameworkIndex Framework;
-        
         public ProcessControl ProcessControlPrefab;
         public GameRoot GameRootPrefab;
 
@@ -18,7 +16,7 @@ namespace FarEmerald.PlayForge
         
         private void Awake()
         {
-            if (Framework is null) throw new NullReferenceException("[ PlayForge ] Bootstrapping failed: Framework cannot be null.");
+            //if (Framework is null) throw new NullReferenceException("[ PlayForge ] Bootstrapping failed: Framework cannot be null.");
             
             Bootstrap();
         }

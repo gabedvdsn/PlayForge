@@ -1,4 +1,4 @@
-﻿namespace FarEmerald.PlayForge
+﻿namespace FarEmerald.PlayForge.Extended
 {
     /// <summary>
     /// Predefined context tags for ForgeTagContext attribute.
@@ -105,5 +105,7 @@
         
         /// <summary>Tags for duration-related logic</summary>
         public const string Duration = "Duration";
+
+        public const string DeltaTimeSource = "DeltaTimeSource";
     }
 }

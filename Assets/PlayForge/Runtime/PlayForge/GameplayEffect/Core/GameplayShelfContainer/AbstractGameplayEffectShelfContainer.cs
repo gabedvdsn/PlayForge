@@ -135,7 +135,7 @@ namespace FarEmerald.PlayForge
         {
             foreach (var worker in Workers) worker.OnEffectImpact(impactData);
         }
-        public Dictionary<IMagnitudeModifier, AttributeValue?> GetSourcedCapturedAttributes()
+        public Dictionary<IScaler, AttributeValue?> GetSourcedCapturedAttributes()
         {
             return new();
         }

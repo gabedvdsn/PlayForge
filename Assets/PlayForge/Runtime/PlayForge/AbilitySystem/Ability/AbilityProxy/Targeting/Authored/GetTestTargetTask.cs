@@ -18,7 +18,7 @@ namespace FarEmerald.PlayForge
             
             foreach (var comp in comps)
             {
-                if (comp != gas && comp != GameRoot.Instance)
+                if (comp != (GameplayAbilitySystem)gas && comp != GameRoot.Instance)
                 {
                     data.AddPayload(Tags.PAYLOAD_TARGET, comp);
                     break;

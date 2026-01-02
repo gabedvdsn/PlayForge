@@ -285,8 +285,12 @@ namespace FarEmerald.PlayForge
 
         public async UniTask TerminateAllImmediately()
         {
-            var _active = active.Keys;
-            await UniTask.WhenAll(_active.Select(index => active[index].ForceIntoState(EProcessState.Terminated)));
+            try
+            {
+                var _active = active.Keys;
+                await UniTask.WhenAll(_active.Select(index => active[index].ForceIntoState(EProcessState.Terminated)));
+            }
+            catch (InvalidOperationException) { }
         }
         
         #endregion
@@ -335,7 +339,7 @@ namespace FarEmerald.PlayForge
 
                 return;
                 
-                var parents = GetParentProcesses(process.transform.parent);
+                /*var parents = GetParentProcesses(process.transform.parent);
                 var children = GetChildProcesses(process.transform);
                 var local = GetLocalProcesses();
                 
@@ -343,7 +347,7 @@ namespace FarEmerald.PlayForge
                 foreach (var child in children) active[child.Relay.CacheIndex].SetParent(pcb);
                 foreach (var loc in local) active[loc.Relay.CacheIndex].SetLocal(pcb);
                 
-                return;
+                return;*/
                 
                 AbstractMonoProcess[] GetParentProcesses(Transform t)
                 {

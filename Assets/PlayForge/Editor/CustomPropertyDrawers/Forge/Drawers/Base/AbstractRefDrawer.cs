@@ -1,398 +1,450 @@
 ﻿using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
-using Cysharp.Threading.Tasks;
 using UnityEditor;
-using UnityEditor.UIElements;
 using UnityEngine;
-using UnityEngine.TextCore.Text;
 using UnityEngine.UIElements;
-using Random = UnityEngine.Random;
+using static FarEmerald.PlayForge.Extended.Editor.ForgeDrawerStyles;
 
 namespace FarEmerald.PlayForge.Extended.Editor
 {
+    /// <summary>
+    /// Minimalist reference picker drawer base class.
+    /// Provides a clean dropdown interface for selecting from a list of entries.
+    /// </summary>
     public abstract class AbstractRefDrawer<T> : PropertyDrawer
     {
+        // ═══════════════════════════════════════════════════════════════════════════
+        // Abstract Methods - Must be implemented by derived classes
+        // ═══════════════════════════════════════════════════════════════════════════
+        
         protected abstract T[] GetEntries();
         protected abstract bool CompareTo(T value, T other);
         protected abstract string GetStringValue(SerializedProperty prop, T value);
         protected abstract void SetValue(SerializedProperty prop, T value);
         protected abstract T GetCurrentValue(SerializedProperty prop);
         protected abstract Label GetLabel(SerializedProperty prop, T value);
-        protected virtual bool AcceptOpen(SerializedProperty prop) => true;
-        protected virtual bool AcceptClear() => true;
-        protected virtual bool AcceptAdd() => true;
+        
+        // ═══════════════════════════════════════════════════════════════════════════
+        // Virtual Methods - Override in derived classes as needed
+        // ═══════════════════════════════════════════════════════════════════════════
+        
+        /// <summary>Whether to show the "Open/Navigate" button. Override to control visibility.</summary>
+        protected virtual bool AcceptOpen(SerializedProperty prop) => false;
+        
+        /// <summary>Whether to show the "Add/Create" button. Override to control visibility.</summary>
+        protected virtual bool AcceptAdd() => false;
+        
+        /// <summary>Gets the default value when none is selected.</summary>
         protected virtual T GetDefault() => default;
-
-        protected Label CurateLabel(Label label, SerializedProperty prop, T value)
+        
+        /// <summary>Called when the open button is clicked. Override to implement navigation.</summary>
+        protected virtual void OnOpen(SerializedProperty prop, T value) { }
+        
+        /// <summary>Called when the add button is clicked. Override to implement creation.</summary>
+        protected virtual void OnAdd(SerializedProperty prop, string searchText) { }
+        
+        /// <summary>Apply any filtering/validation to entries. Override to customize.</summary>
+        protected virtual T[] ApplyValidation(SerializedProperty property, T currValue, T[] entries)
         {
-            if (IsInList(prop)) return null;
-            
-            label.text += "\t";
-            label.style.marginRight = 4;
-            label.style.marginLeft = 4;
-            label.style.minWidth = 90;
-            
-            return label;
+            return entries;
+        }
+        
+        // ═══════════════════════════════════════════════════════════════════════════
+        // Helpers
+        // ═══════════════════════════════════════════════════════════════════════════
+        
+        protected S[] GetAllInstances<S>() where S : ScriptableObject
+        {
+            string[] guids = AssetDatabase.FindAssets($"t:{typeof(S).Name}");
+            return guids.Select(AssetDatabase.GUIDToAssetPath)
+                .Select(AssetDatabase.LoadAssetAtPath<S>)
+                .Where(s => s != null)
+                .ToArray();
         }
         
         private bool IsInList(SerializedProperty property)
         {
-            // Check for array element pattern in path
             return property.propertyPath.Contains(".Array.data[");
         }
-
-        protected virtual T[] ApplyValidation(SerializedProperty property, T currValue, T[] entries)
-        {
-            return entries;
-            
-            /*var defaultAttrs = GetFieldAttributes<ForgeFilterName>(property).ToArray();
-            if (defaultAttrs.Length == 0) return entries;
-
-            return entries.Where(e => defaultAttrs.Any(a => a.Names.Any(_name => e.StartsWith(_name, StringComparison.InvariantCultureIgnoreCase)))).ToArray();*/
-        }
-
-        public override VisualElement CreatePropertyGUI(SerializedProperty prop)
-        {
-            return CreateGUI(prop);
-        }
-
-        protected S[] GetAllInstances<S>() where S : ScriptableObject
-        {
-            string[] guids = AssetDatabase.FindAssets($"t:{typeof(S).Name}");
-
-            return guids.Select(AssetDatabase.GUIDToAssetPath)
-                .Select(AssetDatabase.LoadAssetAtPath<S>)
-                .ToArray();
-        }
-
-        // Helper class to store drawer state
+        
+        // ═══════════════════════════════════════════════════════════════════════════
+        // State Management
+        // ═══════════════════════════════════════════════════════════════════════════
+        
         private class DrawerState
         {
-            public ListView list;
-            public List<T> results = new List<T>();
-            public bool isOpen;
+            public bool IsOpen;
+            public List<T> Results = new List<T>();
+            public T[] AllEntries;
+            public string SearchText = "";
         }
         
-        private VisualElement CreateGUI(SerializedProperty prop)
+        // ═══════════════════════════════════════════════════════════════════════════
+        // Main Entry Point
+        // ═══════════════════════════════════════════════════════════════════════════
+        
+        public override VisualElement CreatePropertyGUI(SerializedProperty prop)
         {
-            var root = new VisualElement();
-
+            var root = new VisualElement { name = "RefDrawerRoot" };
             var state = new DrawerState();
             root.userData = state;
             
-            var container = new VisualElement()
+            // Main row
+            var mainRow = new VisualElement();
+            mainRow.style.flexDirection = FlexDirection.Row;
+            mainRow.style.alignItems = Align.Center;
+            mainRow.style.minHeight = 20;
+            root.Add(mainRow);
+            
+            // Label (if not in list)
+            if (!IsInList(prop))
             {
-                style =
+                var label = GetLabel(prop, GetCurrentValue(prop));
+                if (label != null)
                 {
-                    flexGrow = 1, flexShrink = 1,
-                    flexDirection = FlexDirection.Row,
-                    alignItems = Align.Center, alignSelf = Align.Stretch,
-                    minHeight = 24, maxHeight = 24
+                    label.style.minWidth = 120;
+                    label.style.marginRight = 4;
+                    label.style.color = Colors.LabelText;
+                    mainRow.Add(label);
                 }
-            };
-
-            var label = CurateLabel(GetLabel(prop, GetCurrentValue(prop)), prop, GetCurrentValue(prop));
-            if (label is not null) container.Add(label);
-
-            var value = new Button()
-            {
-                name = "ValueButton",
-                text = GetStringValue(prop, GetCurrentValue(prop)),
-                focusable = false,
-                style =
-                {
-                    flexGrow = 1, flexShrink = 0,
-                    marginLeft = 0, marginRight = 0,
-                    fontSize = 12,
-                    unityTextAlign = TextAnchor.MiddleLeft,
-                    backgroundColor = new Color(.3f, .3f, .3f),
-                    minHeight = 22, maxHeight = 22
-                }
-            };
+            }
             
-            var clear = new Button()
-            {
-                text = "X",
-                focusable = false,
-                tooltip = "Clear",
-                style =
-                {
-                    marginLeft = 4, marginRight = 0,
-                    paddingTop = 4, paddingBottom = 6, paddingLeft = 4, paddingRight = 4
-                }
-            };
-
-            clear.clicked += () =>
-            {
-                OnSelectItem(prop, default, value, null, null);
-            };
+            // Value button (the main picker)
+            var valueBtn = CreateValueButton(prop);
+            mainRow.Add(valueBtn);
             
-            var open = new Button()
+            // Open button (optional)
+            if (AcceptOpen(prop))
             {
-                text = ">",
-                focusable = false,
-                tooltip = "Open in Manager",
-                style =
-                {
-                    marginLeft = 4, marginRight = 6,
-                    paddingTop = 4, paddingBottom = 6, paddingLeft = 4, paddingRight = 4
-                }
-            };
+                var openBtn = CreateIconButton("→", "Open", () => OnOpen(prop, GetCurrentValue(prop)));
+                mainRow.Add(openBtn);
+            }
             
-            container.Add(value);
-            if (AcceptClear()) container.Add(clear);
-            if (AcceptOpen(prop)) container.Add(open);
+            // Dropdown container (hidden by default)
+            var dropdown = CreateDropdown(prop, state, valueBtn);
+            root.Add(dropdown);
             
-            root.Add(container);
-
-            var dd = new VisualElement()
-            {
-                style =
-                {
-                    flexShrink = 0, flexDirection = FlexDirection.Row,
-                    maxHeight = 180,
-                    marginLeft = 4, marginRight = 4,
-                    display = DisplayStyle.None
-                }
-            };
-
-            var bar = new VisualElement()
-            {
-                style =
-                {
-                    flexGrow = 0, flexShrink = 1,
-                    minWidth = 3, maxWidth = 3,
-                    marginLeft = 3,
-                    backgroundColor = new Color(.3f, .3f, .3f)
-                }
-            };
-
-            dd.Add(bar);
-
-            var ddContainer = new VisualElement()
-            {
-                style =
-                {
-                    flexGrow = 1, flexShrink = 1,
-                    maxHeight = 180, marginRight = 4, marginLeft = 4
-                }
-            };
-
-            var searchContainer = new VisualElement()
-            {
-                style =
-                {
-                    flexGrow = 1, flexShrink = 1,
-                    flexDirection = FlexDirection.Row,
-                    alignItems = Align.Stretch, alignSelf = Align.Stretch,
-                    minHeight = 24, maxHeight = 24, marginBottom = 2
-                }
-            };
-
-            var search = new TextField()
-            {
-                value = "",
-                style =
-                {
-                    flexGrow = 1, flexShrink = 0, marginLeft = 0, maxHeight = 22, minHeight = 22,
-                    marginRight = 0, fontSize = 12, unityTextAlign = TextAnchor.MiddleLeft
-                }
-            };
+            // Wire up value button click
+            valueBtn.clicked += () => ToggleDropdown(prop, state, dropdown, valueBtn);
             
-            var add = new Button()
-            {
-                text = "+",
-                focusable = false,
-                tooltip = "Create New...",
-                style =
-                {
-                    //display = DisplayStyle.None,
-                    marginLeft = 4, marginRight = -2,
-                    paddingTop = 4, paddingBottom = 6, paddingLeft = 4, paddingRight = 4,
-                    minHeight = 22, maxHeight = 22
-                }
-            };
-            
-            searchContainer.Add(search);
-            if (AcceptAdd()) searchContainer.Add(add);
-            
-            ddContainer.Add(searchContainer);
-            
-            state.list = new ListView()
-            {
-                name = "List"
-            };
-
-            ddContainer.Add(state.list);
-
-            value.clicked += () => ShowDropdown(prop, value, search, dd, add, state);
-            
-            search.RegisterCallback<FocusInEvent>(_ =>
-            {
-                //ShowDropdown(prop, search, dd, add); 
-            });
-            
-            search.RegisterCallback<FocusOutEvent>(evt =>
-            {
-                if (evt.relatedTarget is not null && IsDropdownElement(evt.relatedTarget, state)) return;
-                HideDropdown(prop, dd);
-            });
-
-            dd.Add(ddContainer);
-            
-            root.Add(dd);
-
             return root;
         }
         
-        void RefreshDropdownResults(SerializedProperty prop, string query, T[] entries, Button addButton, DrawerState state)
+        // ═══════════════════════════════════════════════════════════════════════════
+        // UI Components
+        // ═══════════════════════════════════════════════════════════════════════════
+        
+        private Button CreateValueButton(SerializedProperty prop)
         {
-            state.results = entries.ToList();
+            var currentValue = GetCurrentValue(prop);
+            var displayText = GetStringValue(prop, currentValue);
             
-            if (query != string.Empty)
+            var btn = new Button { name = "ValueButton", text = displayText, focusable = false };
+            btn.style.flexGrow = 1;
+            btn.style.height = 20;
+            btn.style.marginLeft = 0;
+            btn.style.marginRight = 0;
+            btn.style.paddingLeft = 6;
+            btn.style.paddingRight = 6;
+            btn.style.fontSize = 11;
+            btn.style.unityTextAlign = TextAnchor.MiddleLeft;
+            btn.style.backgroundColor = Colors.ButtonBackground;
+            btn.style.borderTopLeftRadius = 3;
+            btn.style.borderTopRightRadius = 3;
+            btn.style.borderBottomLeftRadius = 3;
+            btn.style.borderBottomRightRadius = 3;
+            
+            btn.RegisterCallback<MouseEnterEvent>(_ => btn.style.backgroundColor = Colors.ButtonHover);
+            btn.RegisterCallback<MouseLeaveEvent>(_ => btn.style.backgroundColor = Colors.ButtonBackground);
+            
+            return btn;
+        }
+        
+        private Button CreateIconButton(string icon, string tooltip, Action onClick)
+        {
+            var btn = new Button { text = icon, tooltip = tooltip, focusable = false };
+            btn.style.width = 20;
+            btn.style.height = 20;
+            btn.style.marginLeft = 2;
+            btn.style.paddingLeft = 0;
+            btn.style.paddingRight = 0;
+            btn.style.paddingTop = 0;
+            btn.style.paddingBottom = 0;
+            btn.style.fontSize = 10;
+            btn.style.unityTextAlign = TextAnchor.MiddleCenter;
+            btn.style.backgroundColor = Colors.ButtonBackground;
+            btn.style.borderTopLeftRadius = 3;
+            btn.style.borderTopRightRadius = 3;
+            btn.style.borderBottomLeftRadius = 3;
+            btn.style.borderBottomRightRadius = 3;
+            
+            btn.RegisterCallback<MouseEnterEvent>(_ => btn.style.backgroundColor = Colors.ButtonHover);
+            btn.RegisterCallback<MouseLeaveEvent>(_ => btn.style.backgroundColor = Colors.ButtonBackground);
+            
+            btn.clicked += onClick;
+            return btn;
+        }
+        
+        private VisualElement CreateDropdown(SerializedProperty prop, DrawerState state, Button valueBtn)
+        {
+            var dropdown = new VisualElement { name = "Dropdown" };
+            dropdown.style.display = DisplayStyle.None;
+            dropdown.style.marginTop = 2;
+            dropdown.style.marginLeft = IsInList(prop) ? 0 : 120;
+            dropdown.style.backgroundColor = new Color(0.18f, 0.18f, 0.18f, 0.95f);
+            dropdown.style.borderTopLeftRadius = 4;
+            dropdown.style.borderTopRightRadius = 4;
+            dropdown.style.borderBottomLeftRadius = 4;
+            dropdown.style.borderBottomRightRadius = 4;
+            dropdown.style.borderLeftWidth = 2;
+            dropdown.style.borderLeftColor = Colors.AccentBlue;
+            dropdown.style.paddingTop = 4;
+            dropdown.style.paddingBottom = 4;
+            dropdown.style.paddingLeft = 4;
+            dropdown.style.paddingRight = 4;
+            
+            // Search row
+            var searchRow = new VisualElement();
+            searchRow.style.flexDirection = FlexDirection.Row;
+            searchRow.style.marginBottom = 4;
+            dropdown.Add(searchRow);
+            
+            var searchField = new TextField { value = "" };
+            searchField.style.flexGrow = 1;
+            searchField.style.height = 20;
+            searchField.style.fontSize = 11;
+            //searchField.textInput.style.paddingLeft = 4;
+            searchField.contentContainer.style.paddingLeft = 4;
+            
+            // Placeholder styling
+            if (string.IsNullOrEmpty(searchField.value))
             {
-                state.results = entries.Where(e => GetStringValue(prop, e).Contains(query)).ToList();
+                searchField.value = "";
+            }
+            
+            searchRow.Add(searchField);
+            
+            // Add button (optional)
+            if (AcceptAdd())
+            {
+                var addBtn = CreateIconButton("+", "Create New", () =>
+                {
+                    OnAdd(prop, state.SearchText);
+                    CloseDropdown(state, dropdown);
+                });
+                addBtn.style.marginLeft = 4;
+                addBtn.style.backgroundColor = new Color(0.3f, 0.45f, 0.3f);
+                searchRow.Add(addBtn);
+            }
+            
+            // Results list
+            var listView = new ListView();
+            listView.name = "ResultsList";
+            listView.style.maxHeight = 150;
+            listView.style.minHeight = 60;
+            listView.fixedItemHeight = 22;
+            listView.selectionType = SelectionType.Single;
+            
+            listView.makeItem = () =>
+            {
+                var item = new Button { focusable = false };
+                item.style.height = 20;
+                item.style.marginLeft = 0;
+                item.style.marginRight = 0;
+                item.style.marginTop = 1;
+                item.style.marginBottom = 1;
+                item.style.paddingLeft = 6;
+                item.style.fontSize = 11;
+                item.style.unityTextAlign = TextAnchor.MiddleLeft;
+                item.style.backgroundColor = StyleKeyword.Null;
+                item.style.borderTopLeftRadius = 2;
+                item.style.borderTopRightRadius = 2;
+                item.style.borderBottomLeftRadius = 2;
+                item.style.borderBottomRightRadius = 2;
+                
+                item.RegisterCallback<MouseEnterEvent>(_ => 
+                {
+                    if (item.enabledSelf)
+                        item.style.backgroundColor = new Color(0.3f, 0.3f, 0.3f);
+                });
+                item.RegisterCallback<MouseLeaveEvent>(_ => 
+                {
+                    if (item.enabledSelf)
+                        item.style.backgroundColor = StyleKeyword.Null;
+                });
+                
+                return item;
+            };
+            
+            listView.bindItem = (element, index) =>
+            {
+                var btn = element as Button;
+                if (index >= state.Results.Count) return;
+                
+                var item = state.Results[index];
+                var isCurrent = CompareTo(item, GetCurrentValue(prop));
+                
+                btn.text = GetStringValue(prop, item);
+                btn.enabledSelf = !isCurrent;
+                
+                if (isCurrent)
+                {
+                    btn.style.backgroundColor = new Color(0.25f, 0.35f, 0.25f, 0.5f);
+                    btn.style.color = Colors.AccentGreen;
+                }
+                else
+                {
+                    btn.style.backgroundColor = StyleKeyword.Null;
+                    btn.style.color = Colors.LabelText;
+                }
+                
+                // Remove old handler
+                if (btn.userData is Action oldAction)
+                    btn.clicked -= oldAction;
+                
+                // Add new handler
+                Action newAction = () =>
+                {
+                    SelectItem(prop, item, valueBtn, state, dropdown);
+                };
+                btn.userData = newAction;
+                btn.clicked += newAction;
+            };
+            
+            dropdown.Add(listView);
+            
+            // Search filtering
+            searchField.RegisterValueChangedCallback(evt =>
+            {
+                state.SearchText = evt.newValue;
+                FilterResults(prop, state, listView);
+            });
+            
+            // Close on focus out (delayed to allow click)
+            searchField.RegisterCallback<FocusOutEvent>(evt =>
+            {
+                dropdown.schedule.Execute(() =>
+                {
+                    if (!IsChildFocused(dropdown))
+                        CloseDropdown(state, dropdown);
+                }).ExecuteLater(100);
+            });
+            
+            return dropdown;
+        }
+        
+        // ═══════════════════════════════════════════════════════════════════════════
+        // Dropdown Logic
+        // ═══════════════════════════════════════════════════════════════════════════
+        
+        private void ToggleDropdown(SerializedProperty prop, DrawerState state, VisualElement dropdown, Button valueBtn)
+        {
+            if (state.IsOpen)
+            {
+                CloseDropdown(state, dropdown);
             }
             else
             {
-                state.results = entries.ToList();
-                
+                OpenDropdown(prop, state, dropdown);
             }
-
-            /*addButton.style.display = query != string.Empty && !entries.Contains(query) ? DisplayStyle.Flex : DisplayStyle.None;
-            */
-
-            state.list.itemsSource = state.results;
-            state.list.Rebuild();
-        }
-
-        private void ShowDropdown(SerializedProperty prop, Button btn, TextField inp, VisualElement dd, Button addButton, DrawerState state)
-        {
-            if (state.isOpen)
-            {
-                state.isOpen = false;
-                HideDropdown(prop, dd);
-                return;
-            }
-
-            state.isOpen = true;
-            
-            dd.style.display = DisplayStyle.Flex;
-            T value = GetCurrentValue(prop);
-
-            //inp.value = GetStringValue(value);
-            inp.Focus();
-            
-            var entries = GetEntries();
-            
-            var validated = ApplyValidation(prop, value, entries).ToArray();
-
-            state.results = validated.ToList();
-            state.list.itemsSource = state.results;
-            
-            inp.RegisterValueChangedCallback(evt =>
-            {
-                RefreshDropdownResults(prop, evt.newValue, validated, addButton, state);
-            });
-            
-            state.list.makeItem = () => new Button()
-            {
-                focusable = false,
-                enabledSelf = true,
-                style =
-                {
-                    flexGrow = 1,
-                    marginLeft = 0, marginRight = 44,
-                    unityTextAlign = TextAnchor.MiddleLeft,
-                    minHeight = 20, maxHeight = 20,
-                }
-            };
-            
-            state.list.bindItem = (entry, i) =>
-            {
-                var item = state.results[i];
-                var button = entry as Button;
-
-                button.style.backgroundColor = StyleKeyword.Null;
-                button.enabledSelf = true;
-
-                //Debug.Log($"Comparing item: '{GetStringValue(item)}' to '{inp.value}' => {CompareTo(item, GetCurrentValue(prop))}");
-                if (CompareTo(item, GetCurrentValue(prop)))
-                {
-                    button.style.backgroundColor = new StyleColor(new Color(.25f, .25f, .25f, 1f));
-                    button.enabledSelf = false;
-                }
-
-                var stringValue = GetStringValue(prop, item);
-                
-                button.text = stringValue;
-
-                if (button.userData is Action oldAction) button.clicked -= oldAction;
-                
-                var action = new Action(() => OnSelectItem(prop, item, btn, inp, dd));
-                button.userData = action;
-                button.clicked += action;
-            };
-            
-            state.list.Rebuild();
-
-            
         }
         
-        void OnSelectItem(SerializedProperty prop, T item, Button value, TextField inp, VisualElement dd)
+        private void OpenDropdown(SerializedProperty prop, DrawerState state, VisualElement dropdown)
+        {
+            state.IsOpen = true;
+            state.AllEntries = ApplyValidation(prop, GetCurrentValue(prop), GetEntries());
+            state.Results = state.AllEntries.ToList();
+            state.SearchText = "";
+            
+            dropdown.style.display = DisplayStyle.Flex;
+            
+            var listView = dropdown.Q<ListView>("ResultsList");
+            if (listView != null)
+            {
+                listView.itemsSource = state.Results;
+                listView.Rebuild();
+            }
+            
+            var searchField = dropdown.Q<TextField>();
+            searchField?.Focus();
+        }
+        
+        private void CloseDropdown(DrawerState state, VisualElement dropdown)
+        {
+            state.IsOpen = false;
+            dropdown.style.display = DisplayStyle.None;
+        }
+        
+        private void FilterResults(SerializedProperty prop, DrawerState state, ListView listView)
+        {
+            if (string.IsNullOrEmpty(state.SearchText))
+            {
+                state.Results = state.AllEntries.ToList();
+            }
+            else
+            {
+                var searchLower = state.SearchText.ToLowerInvariant();
+                state.Results = state.AllEntries
+                    .Where(e => GetStringValue(prop, e).ToLowerInvariant().Contains(searchLower))
+                    .ToList();
+            }
+            
+            listView.itemsSource = state.Results;
+            listView.Rebuild();
+        }
+        
+        private void SelectItem(SerializedProperty prop, T item, Button valueBtn, DrawerState state, VisualElement dropdown)
         {
             SetValue(prop, item);
-
-            value.text = GetStringValue(prop, item);
-            if (inp is not null) inp.value = GetStringValue(prop, item);
-                
+            valueBtn.text = GetStringValue(prop, item);
+            
             prop.serializedObject.ApplyModifiedProperties();
             EditorUtility.SetDirty(prop.serializedObject.targetObject);
-
-            HideDropdown(prop, dd);
+            
+            CloseDropdown(state, dropdown);
         }
         
-        private bool IsDropdownElement(IEventHandler handler, DrawerState state)
+        private bool IsChildFocused(VisualElement parent)
         {
-            var element = handler as VisualElement;
-            return element is not null && state.list.Contains(element);
+            var focused = parent.panel?.focusController?.focusedElement as VisualElement;
+            while (focused != null)
+            {
+                if (focused == parent) return true;
+                focused = focused.parent;
+            }
+            return false;
         }
         
-        private void HideDropdown(SerializedProperty prop, VisualElement dd)
-        {
-            if (dd is not null) dd.style.display = DisplayStyle.None;
-        }
+        // ═══════════════════════════════════════════════════════════════════════════
+        // Legacy Support
+        // ═══════════════════════════════════════════════════════════════════════════
         
         public override float GetPropertyHeight(SerializedProperty property, GUIContent label)
         {
-            var nameProp = property.FindPropertyRelative("Name");
-            bool showHelp = false;
-
-            string _name = nameProp.stringValue;
-            if (_name is null) showHelp = true;
-            
-            return EditorGUIUtility.singleLineHeight + (showHelp ? EditorGUIUtility.singleLineHeight + 2 : 0);
+            return EditorGUIUtility.singleLineHeight;
         }
         
-        static readonly Dictionary<(Type host, string path, Type attr), object[]> _attrCache = new();
+        // ═══════════════════════════════════════════════════════════════════════════
+        // Attribute Helpers
+        // ═══════════════════════════════════════════════════════════════════════════
+        
+        private static readonly Dictionary<(Type host, string path, Type attr), object[]> _attrCache = new();
 
-        /// <summary>Get attributes defined on the serialized field being drawn.</summary>
         protected IEnumerable<TAttr> GetFieldAttributes<TAttr>(SerializedProperty property) where TAttr : System.Attribute
         {
-            if (property is null) return Array.Empty<TAttr>();
+            if (property == null) return Array.Empty<TAttr>();
             
-            // 1) Try Unity's supplied fieldInfo first (works for most cases)
             if (fieldInfo != null)
                 return fieldInfo.GetCustomAttributes(typeof(TAttr), inherit: true).Cast<TAttr>();
 
-            // 2) Fallback: resolve FieldInfo by walking propertyPath
             var targets = property.serializedObject.targetObjects;
             if (targets == null || targets.Length == 0) return Enumerable.Empty<TAttr>();
+            
             var hostType = targets[0].GetType();
             var key = (hostType, property.propertyPath, typeof(TAttr));
+            
             if (_attrCache.TryGetValue(key, out var cached))
                 return cached.Cast<TAttr>();
 
@@ -405,14 +457,12 @@ namespace FarEmerald.PlayForge.Extended.Editor
             return arr;
         }
 
-        // Walks something like "myList.Array.data[2].field.subField"
-        static FieldInfo ResolveFieldInfo(Type host, string propertyPath)
+        private static FieldInfo ResolveFieldInfo(Type host, string propertyPath)
         {
             var flags = BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic;
             Type curType = host;
             FieldInfo lastField = null;
 
-            // split path
             var parts = propertyPath.Split('.');
             for (int i = 0; i < parts.Length; i++)
             {
@@ -420,9 +470,7 @@ namespace FarEmerald.PlayForge.Extended.Editor
 
                 if (p == "Array")
                 {
-                    // Next should be "data[<index>]"
-                    i++; // skip "data[x]"
-                    // move type to element type
+                    i++;
                     if (curType.IsArray)
                         curType = curType.GetElementType();
                     else if (curType.IsGenericType && typeof(System.Collections.IList).IsAssignableFrom(curType))
@@ -430,9 +478,8 @@ namespace FarEmerald.PlayForge.Extended.Editor
                     continue;
                 }
 
-                // normal field step
                 var fi = curType.GetField(p, flags);
-                if (fi == null) return lastField; // bail out with best guess
+                if (fi == null) return lastField;
                 lastField = fi;
                 curType = fi.FieldType;
             }

@@ -1,6 +1,7 @@
 #if UNITY_EDITOR
 using System;
 using System.Collections.Generic;
+using Cysharp.Threading.Tasks;
 using UnityEditor;
 using UnityEngine;
 
@@ -198,7 +199,7 @@ namespace FarEmerald.PlayForge
                     
                     if (GUILayout.Button("Force Terminate"))
                     {
-                        ProcessControl.Instance.TerminateImmediate(relay.CacheIndex);
+                        ProcessControl.Instance.TerminateImmediate(relay.CacheIndex).Forget();
                     }
                     
                     EditorGUILayout.EndVertical();

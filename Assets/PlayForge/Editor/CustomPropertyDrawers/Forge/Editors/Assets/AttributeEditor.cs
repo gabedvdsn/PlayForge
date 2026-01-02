@@ -12,7 +12,52 @@ namespace FarEmerald.PlayForge.Extended.Editor
         [SerializeField] private Texture2D m_AttributeIcon;
         
         private Attribute attribute;
-        private HeaderResult headerResult;
+
+        // ═══════════════════════════════════════════════════════════════════════════
+        // Header Configuration (IMGUI Header)
+        // ═══════════════════════════════════════════════════════════════════════════
+        
+        protected override string GetDisplayName()
+        {
+            return !string.IsNullOrEmpty(attribute?.Name) ? attribute.Name : "Unnamed Attribute";
+        }
+        
+        protected override string GetDisplayDescription()
+        {
+            if (attribute == null) return "";
+            var desc = attribute.Description;
+            return !string.IsNullOrEmpty(desc) ? Truncate(desc, 80) : "No description provided.";
+        }
+        
+        protected override Texture2D GetHeaderIcon()
+        {
+            return m_AttributeIcon;
+        }
+        
+        protected override string GetAssetTypeLabel() => "ATTRIBUTE";
+        
+        protected override Color GetAssetTypeColor() => new Color(0.4f, 0.6f, 1f); // Blue
+        
+        protected override string GetDocumentationUrl() => "https://docs.playforge.dev/attributes";
+        
+        protected override bool ShowVisualizeButton => true;
+        protected override bool ShowImportButton => true;
+        
+        protected override void OnVisualize()
+        {
+            // TODO: Open attribute visualizer (show usage across attribute sets)
+            Debug.Log($"Visualize attribute: {attribute.name}");
+        }
+        
+        protected override void OnImport()
+        {
+            // Open asset picker for attributes
+            EditorGUIUtility.ShowObjectPicker<Attribute>(null, false, "", GUIUtility.GetControlID(FocusType.Passive));
+        }
+
+        // ═══════════════════════════════════════════════════════════════════════════
+        // Inspector GUI
+        // ═══════════════════════════════════════════════════════════════════════════
 
         public override VisualElement CreateInspectorGUI()
         {
@@ -24,42 +69,21 @@ namespace FarEmerald.PlayForge.Extended.Editor
             // Build UI programmatically
             root = CreateRoot();
             
-            // Main Header
-            BuildHeader();
+            // ScrollView for sections (header is in OnHeaderGUI)
+            var scrollView = CreateScrollView();
+            root.Add(scrollView);
             
-            // Sections (no scroll view needed for simple inspector)
-            BuildDefinitionSection(root);
-            BuildUsageSection(root);
+            // Sections inside ScrollView
+            BuildDefinitionSection(scrollView);
+            BuildUsageSection(scrollView);
             
             // Bottom padding
-            root.Add(CreateBottomPadding());
+            scrollView.Add(CreateBottomPadding());
             
             // Bind all properties
             root.Bind(serializedObject);
             
             return root;
-        }
-
-        // ═══════════════════════════════════════════════════════════════════════════
-        // Header
-        // ═══════════════════════════════════════════════════════════════════════════
-        
-        private void BuildHeader()
-        {
-            headerResult = CreateMainHeader(new HeaderConfig
-            {
-                Icon = m_AttributeIcon,
-                DefaultTitle = GetAttributeName(),
-                DefaultDescription = GetAttributeDescription(),
-                ShowRefresh = true,
-                ShowLookup = true,
-                ShowVisualize = true,
-                OnRefresh = Refresh,
-                OnLookup = Lookup,
-                OnVisualize = Visualize
-            });
-            
-            root.Add(headerResult.Header);
         }
 
         // ═══════════════════════════════════════════════════════════════════════════
@@ -85,8 +109,8 @@ namespace FarEmerald.PlayForge.Extended.Editor
             nameField.RegisterCallback<FocusOutEvent>(_ =>
             {
                 attribute.Name = nameField.value;
-                UpdateHeaderLabels();
                 MarkDirty(attribute);
+                Repaint(); // Refresh IMGUI header
             });
             content.Add(nameField);
             
@@ -96,8 +120,8 @@ namespace FarEmerald.PlayForge.Extended.Editor
             descField.RegisterCallback<FocusOutEvent>(_ =>
             {
                 attribute.Description = descField.value;
-                UpdateHeaderLabels();
                 MarkDirty(attribute);
+                Repaint(); // Refresh IMGUI header
             });
             content.Add(descField);
         }
@@ -156,24 +180,6 @@ namespace FarEmerald.PlayForge.Extended.Editor
         // Helper Methods
         // ═══════════════════════════════════════════════════════════════════════════
         
-        private string GetAttributeName()
-        {
-            return !string.IsNullOrEmpty(attribute.Name) ? attribute.Name : "Unnamed Attribute";
-        }
-        
-        private string GetAttributeDescription()
-        {
-            return !string.IsNullOrEmpty(attribute.Description) ? attribute.Description : "No description provided.";
-        }
-        
-        private void UpdateHeaderLabels()
-        {
-            if (headerResult?.NameLabel != null)
-                headerResult.NameLabel.text = GetAttributeName();
-            if (headerResult?.DescriptionLabel != null)
-                headerResult.DescriptionLabel.text = GetAttributeDescription();
-        }
-        
         private void FindReferences()
         {
             var guid = GetAssetGuid(attribute);
@@ -191,18 +197,11 @@ namespace FarEmerald.PlayForge.Extended.Editor
         // ═══════════════════════════════════════════════════════════════════════════
         // Abstract Implementations
         // ═══════════════════════════════════════════════════════════════════════════
-        
-        protected override void SetupCollapsibleSections() { }
 
-        protected override void Lookup()
-        {
-            FindReferences();
-        }
-        
         protected override void Refresh()
         {
             serializedObject.Update();
-            UpdateHeaderLabels();
+            Repaint();
         }
     }
 }

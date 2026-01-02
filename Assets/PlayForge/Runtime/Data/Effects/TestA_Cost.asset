@@ -1,0 +1,176 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 2d34fc1f98f8a0b4c9b37da3e706e0e1, type: 3}
+  m_Name: TestA_Cost
+  m_EditorClassIdentifier: 
+  Definition:
+    Name: TestA_Cost
+    Description: 
+    Visibility:
+      Name: 
+    Textures: []
+  Tags:
+    AssetTag:
+      Name: TestACost
+    ContextTags: []
+    GrantedTags: []
+  ImpactSpecification:
+    AttributeTarget: {fileID: 0}
+    TargetImpact: 0
+    ImpactOperation: 0
+    AffiliationPolicy: 0
+    ImpactTypes: []
+    ReverseImpactOnRemoval: 0
+    ReApplicationPolicy: 0
+    Magnitude: 0
+    MagnitudeScaler:
+      rid: 6446561620272873740
+    RealMagnitude: 3
+    Packets: []
+  DurationSpecification:
+    DurationPolicy: 0
+    StackableType: 0
+    TickOnApplication: 0
+    Duration: 0
+    DurationScaler:
+      rid: -2
+    RealDuration: 0
+    DeltaTimeSource:
+      Name: 
+    Ticks: 0
+    TickInterval: 0
+    TickScaler:
+      rid: -2
+    RealTicks: 0
+    Rounding: 0
+  Workers: []
+  SourceRequirements:
+    ApplicationRequirements:
+      AvoidTags: []
+      RequireTags: []
+    OngoingRequirements:
+      AvoidTags: []
+      RequireTags: []
+    RemovalRequirements:
+      AvoidTags: []
+      RequireTags: []
+  TargetRequirements:
+    ApplicationRequirements:
+      AvoidTags: []
+      RequireTags: []
+    OngoingRequirements:
+      AvoidTags: []
+      RequireTags: []
+    RemovalRequirements:
+      AvoidTags: []
+      RequireTags: []
+  LocalData: []
+  LinkMode: 1
+  _linkedSource: {fileID: 11400000, guid: daf49ef4f50dfaf4d90f266b3c172b34, type: 2}
+  references:
+    version: 2
+    RefIds:
+    - rid: -2
+      type: {class: , ns: , asm: }
+    - rid: 6446561620272873740
+      type: {class: SimpleScaler, ns: FarEmerald.PlayForge, asm: Assembly-CSharp}
+      data:
+        Configuration: 0
+        MaxLevel: 20
+        LevelValues:
+        - 5
+        - 10
+        - 15
+        - 20
+        - 25
+        - 30
+        - 35
+        - 40
+        Interpolation: 0
+        Scaling:
+          serializedVersion: 2
+          m_Curve:
+          - serializedVersion: 3
+            time: 0
+            value: 5
+            inSlope: Infinity
+            outSlope: Infinity
+            tangentMode: 103
+            weightedMode: 0
+            inWeight: 0
+            outWeight: 0
+          - serializedVersion: 3
+            time: 0.14285715
+            value: 10
+            inSlope: Infinity
+            outSlope: Infinity
+            tangentMode: 103
+            weightedMode: 0
+            inWeight: 0
+            outWeight: 0
+          - serializedVersion: 3
+            time: 0.2857143
+            value: 15
+            inSlope: Infinity
+            outSlope: Infinity
+            tangentMode: 103
+            weightedMode: 0
+            inWeight: 0
+            outWeight: 0
+          - serializedVersion: 3
+            time: 0.42857143
+            value: 20
+            inSlope: Infinity
+            outSlope: Infinity
+            tangentMode: 103
+            weightedMode: 0
+            inWeight: 0
+            outWeight: 0
+          - serializedVersion: 3
+            time: 0.5714286
+            value: 25
+            inSlope: Infinity
+            outSlope: Infinity
+            tangentMode: 103
+            weightedMode: 0
+            inWeight: 0
+            outWeight: 0
+          - serializedVersion: 3
+            time: 0.71428573
+            value: 30
+            inSlope: Infinity
+            outSlope: Infinity
+            tangentMode: 103
+            weightedMode: 0
+            inWeight: 0
+            outWeight: 0
+          - serializedVersion: 3
+            time: 0.85714287
+            value: 35
+            inSlope: Infinity
+            outSlope: Infinity
+            tangentMode: 103
+            weightedMode: 0
+            inWeight: 0
+            outWeight: 0
+          - serializedVersion: 3
+            time: 1
+            value: 40
+            inSlope: Infinity
+            outSlope: Infinity
+            tangentMode: 103
+            weightedMode: 0
+            inWeight: 0
+            outWeight: 0
+          m_PreInfinity: 2
+          m_PostInfinity: 2
+          m_RotationOrder: 4

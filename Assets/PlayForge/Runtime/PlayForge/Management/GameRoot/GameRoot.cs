@@ -29,8 +29,6 @@ namespace FarEmerald.PlayForge
             Instance = this;
             
             base.Awake();
-
-            Initialize(new GameRootEntity());
         }
         
         public void DeferredInit()

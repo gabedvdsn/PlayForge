@@ -54,11 +54,11 @@ namespace FarEmerald.PlayForge.Extended.Editor
             
             durationSection.Add(durationRow);
             
-            var durationCalcOpField = new PropertyField(property.FindPropertyRelative("DurationCalculationOperation"), "Calculation Mode");
+            var durationCalcOpField = new PropertyField(property.FindPropertyRelative("RealDuration"), "Real Duration");
             durationCalcOpField.style.marginBottom = 2;
             durationSection.Add(durationCalcOpField);
             
-            var durationCalcField = new PropertyField(property.FindPropertyRelative("DurationCalculation"), "Duration Modifier");
+            var durationCalcField = new PropertyField(property.FindPropertyRelative("DurationScaler"), "Duration Scaler");
             durationCalcField.style.marginBottom = 4;
             durationSection.Add(durationCalcField);
             
@@ -91,11 +91,11 @@ namespace FarEmerald.PlayForge.Extended.Editor
             
             ticksSection.Add(ticksRow);
             
-            var tickCalcOpField = new PropertyField(property.FindPropertyRelative("TickCalculationOperation"), "Calculation Mode");
+            var tickCalcOpField = new PropertyField(property.FindPropertyRelative("RealTicks"), "Real Ticks");
             tickCalcOpField.style.marginBottom = 2;
             ticksSection.Add(tickCalcOpField);
             
-            var tickCalcField = new PropertyField(property.FindPropertyRelative("TickCalculation"), "Tick Modifier");
+            var tickCalcField = new PropertyField(property.FindPropertyRelative("TickScaler"), "Tick Scaler");
             ticksSection.Add(tickCalcField);
             
             var tickOnAppField = new PropertyField(property.FindPropertyRelative("TickOnApplication"), "Tick On Application");

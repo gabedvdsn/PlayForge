@@ -25,7 +25,7 @@ namespace FarEmerald.PlayForge
         
         public bool CheckRemovalRequirements(List<Tag> tags)
         {
-            return RemovalRequirements.Validate(tags);
+            return !RemovalRequirements.Validate(tags);
         }
     }
 }

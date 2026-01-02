@@ -59,11 +59,11 @@ namespace FarEmerald.PlayForge.Extended.Editor
             magnitudeField.style.marginBottom = 2;
             magnitudeSection.Add(magnitudeField);
             
-            var magCalcOpField = new PropertyField(property.FindPropertyRelative("MagnitudeCalculationOperation"), "Calculation Mode");
+            var magCalcOpField = new PropertyField(property.FindPropertyRelative("RealMagnitude"), "Real Magnitude");
             magCalcOpField.style.marginBottom = 2;
             magnitudeSection.Add(magCalcOpField);
             
-            var magCalcField = new PropertyField(property.FindPropertyRelative("MagnitudeCalculation"), "Magnitude Modifier");
+            var magCalcField = new PropertyField(property.FindPropertyRelative("MagnitudeScaler"), "Magnitude Scaler");
             magnitudeSection.Add(magCalcField);
             
             // ═══════════════════════════════════════════════════════════════════

@@ -2,533 +2,387 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
-using Unity.VisualScripting;
 using UnityEditor;
 using UnityEngine;
 using UnityEngine.UIElements;
+using static FarEmerald.PlayForge.Extended.Editor.ForgeDrawerStyles;
 
 namespace FarEmerald.PlayForge.Extended.Editor
 {
+    /// <summary>
+    /// Minimalist Tag picker drawer with context filtering and creation support.
+    /// Note: Cannot derive from AbstractRefDrawer because Tag is a struct with special
+    /// TagRegistry integration and context-based filtering via attributes.
+    /// </summary>
     [CustomPropertyDrawer(typeof(Tag))]
     public class TagDrawer : PropertyDrawer
     {
-        // ═══════════════════════════════════════════════════════════════════════════
-        // State Management
-        // ═══════════════════════════════════════════════════════════════════════════
-        
         private class DrawerState
         {
-            public ListView list;
-            public List<Tag> results = new List<Tag>();
-            public bool isOpen;
-            public ForgeTagContext contextAttribute;
-            public string[] contextStrings;
-            public bool allowCreate = true;
-            public bool includeUniversal = true;
-            public bool isReadOnly = false;
-            
-            // Flag to prevent dropdown close during add operation
-            public bool isAddingTag = false;
-            public double addClickTime = 0;
+            public bool IsOpen;
+            public List<Tag> Results = new List<Tag>();
+            public string[] ContextStrings = Array.Empty<string>();
+            public bool AllowCreate = true;
+            public bool IncludeUniversal = true;
+            public bool IsReadOnly;
         }
-        
-        // ═══════════════════════════════════════════════════════════════════════════
-        // PropertyDrawer Implementation
-        // ═══════════════════════════════════════════════════════════════════════════
         
         public override VisualElement CreatePropertyGUI(SerializedProperty prop)
         {
-            var root = new VisualElement();
+            var root = new VisualElement { name = "TagDrawerRoot" };
             var state = new DrawerState();
             root.userData = state;
             
             // Get attributes
-            state.contextAttribute = GetFieldAttribute<ForgeTagContext>(prop);
-            state.contextStrings = state.contextAttribute?.Context ?? Array.Empty<string>();
-            state.allowCreate = state.contextAttribute?.AllowCreate ?? true;
-            state.includeUniversal = state.contextAttribute?.IncludeUniversal ?? true;
-            if (GetFieldAttribute<ForgeTagNoCreate>(prop) != null) state.allowCreate = false;
-            if (GetFieldAttribute<ForgeTagExcludeUniversal>(prop) != null) state.includeUniversal = false;
-            state.isReadOnly = GetFieldAttribute<ForgeTagReadOnly>(prop) != null;
+            var contextAttr = GetFieldAttribute<ForgeTagContext>(prop);
+            state.ContextStrings = contextAttr?.Context ?? Array.Empty<string>();
+            state.AllowCreate = contextAttr?.AllowCreate ?? true;
+            state.IncludeUniversal = contextAttr?.IncludeUniversal ?? true;
+            if (GetFieldAttribute<ForgeTagNoCreate>(prop) != null) state.AllowCreate = false;
+            if (GetFieldAttribute<ForgeTagExcludeUniversal>(prop) != null) state.IncludeUniversal = false;
+            state.IsReadOnly = GetFieldAttribute<ForgeTagReadOnly>(prop) != null;
             
-            var tooltipAttr = GetFieldAttribute<ForgeTagTooltip>(prop);
+            // Main row
+            var mainRow = new VisualElement();
+            mainRow.style.flexDirection = FlexDirection.Row;
+            mainRow.style.alignItems = Align.Center;
+            mainRow.style.minHeight = 20;
+            root.Add(mainRow);
             
-            // Main container
-            var container = new VisualElement
+            // Label (if not in list)
+            if (!IsInList(prop))
             {
-                style =
-                {
-                    flexGrow = 1,
-                    flexShrink = 1,
-                    flexDirection = FlexDirection.Row,
-                    alignItems = Align.Center,
-                    alignSelf = Align.Stretch,
-                    minHeight = 24,
-                    maxHeight = 24
-                }
-            };
-            
-            // Label (if not in a list)
-            var label = CreateLabel(prop);
-            if (label != null)
-            {
-                if (tooltipAttr != null)
-                    label.tooltip = tooltipAttr.Tooltip;
-                container.Add(label);
+                var label = new Label(ObjectNames.NicifyVariableName(prop.name));
+                label.style.minWidth = 120;
+                label.style.marginRight = 4;
+                label.style.color = Colors.LabelText;
+                
+                var tooltipAttr = GetFieldAttribute<ForgeTagTooltip>(prop);
+                if (tooltipAttr != null) label.tooltip = tooltipAttr.Tooltip;
+                
+                mainRow.Add(label);
             }
             
             // Value button
-            var valueBtn = new Button
-            {
-                name = "ValueButton",
-                text = GetDisplayString(prop),
-                focusable = false,
-                style =
-                {
-                    flexGrow = 1,
-                    flexShrink = 0,
-                    marginLeft = 0,
-                    marginRight = 0,
-                    fontSize = 12,
-                    unityTextAlign = TextAnchor.MiddleLeft,
-                    backgroundColor = new Color(0.3f, 0.3f, 0.3f),
-                    minHeight = 22,
-                    maxHeight = 22
-                }
-            };
+            var valueBtn = CreateValueButton(prop, state);
+            mainRow.Add(valueBtn);
             
-            if (state.isReadOnly)
+            // Read-only state
+            if (state.IsReadOnly)
             {
                 valueBtn.SetEnabled(false);
                 valueBtn.style.opacity = 0.6f;
+                return root;
             }
             
-            container.Add(valueBtn);
+            // Dropdown
+            var dropdown = CreateDropdown(prop, state, valueBtn);
+            root.Add(dropdown);
             
-            // Clear button
-            if (!state.isReadOnly)
-            {
-                var clearBtn = new Button
-                {
-                    text = "X",
-                    focusable = false,
-                    tooltip = "Clear",
-                    style =
-                    {
-                        marginLeft = 4,
-                        marginRight = 0,
-                        paddingTop = 4,
-                        paddingBottom = 6,
-                        paddingLeft = 4,
-                        paddingRight = 4
-                    }
-                };
-                clearBtn.clicked += () => OnSelectItem(prop, default, valueBtn, null, null, state);
-                container.Add(clearBtn);
-            }
-            
-            root.Add(container);
-            
-            // Dropdown container
-            if (!state.isReadOnly)
-            {
-                var dropdown = CreateDropdown(prop, valueBtn, state);
-                root.Add(dropdown);
-                
-                valueBtn.clicked += () => ToggleDropdown(prop, valueBtn, dropdown, state);
-            }
+            valueBtn.clicked += () => ToggleDropdown(prop, state, dropdown, valueBtn);
             
             return root;
         }
         
-        // ═══════════════════════════════════════════════════════════════════════════
-        // UI Creation
-        // ═══════════════════════════════════════════════════════════════════════════
-        
-        private Label CreateLabel(SerializedProperty prop)
+        private Button CreateValueButton(SerializedProperty prop, DrawerState state)
         {
-            if (IsInList(prop)) return null;
+            var tag = GetCurrentTag(prop);
+            var displayText = tag.Equals(default(Tag)) ? "<None>" : tag.ToString();
+            var contextColor = GetContextColor(state.ContextStrings);
             
-            var label = new Label(ObjectNames.NicifyVariableName(prop.name));
-            label.style.marginRight = 4;
-            label.style.marginLeft = 4;
-            label.style.minWidth = 90;
+            var btn = new Button { name = "ValueButton", text = displayText, focusable = false };
+            btn.style.flexGrow = 1;
+            btn.style.height = 20;
+            btn.style.marginLeft = 0;
+            btn.style.marginRight = 0;
+            btn.style.paddingLeft = 6;
+            btn.style.paddingRight = 6;
+            btn.style.fontSize = 11;
+            btn.style.unityTextAlign = TextAnchor.MiddleLeft;
+            btn.style.backgroundColor = Colors.ButtonBackground;
+            btn.style.borderTopLeftRadius = 3;
+            btn.style.borderTopRightRadius = 3;
+            btn.style.borderBottomLeftRadius = 3;
+            btn.style.borderBottomRightRadius = 3;
+            btn.style.borderLeftWidth = 2;
+            btn.style.borderLeftColor = contextColor;
             
-            return label;
+            btn.RegisterCallback<MouseEnterEvent>(_ => btn.style.backgroundColor = Colors.ButtonHover);
+            btn.RegisterCallback<MouseLeaveEvent>(_ => btn.style.backgroundColor = Colors.ButtonBackground);
+            
+            return btn;
         }
         
-        private VisualElement CreateDropdown(SerializedProperty prop, Button valueBtn, DrawerState state)
+        private VisualElement CreateDropdown(SerializedProperty prop, DrawerState state, Button valueBtn)
         {
-            var dropdown = new VisualElement
-            {
-                style =
-                {
-                    flexShrink = 0,
-                    flexDirection = FlexDirection.Row,
-                    maxHeight = 200,
-                    marginLeft = 4,
-                    marginRight = 4,
-                    display = DisplayStyle.None
-                }
-            };
-            
-            // Side bar indicator with context color
-            var bar = new VisualElement
-            {
-                style =
-                {
-                    flexGrow = 0,
-                    flexShrink = 1,
-                    minWidth = 3,
-                    maxWidth = 3,
-                    marginLeft = 3,
-                    backgroundColor = GetContextColor(state.contextStrings)
-                }
-            };
-            dropdown.Add(bar);
-            
-            // Content container
-            var content = new VisualElement
-            {
-                style =
-                {
-                    flexGrow = 1,
-                    flexShrink = 1,
-                    maxHeight = 200,
-                    marginRight = 4,
-                    marginLeft = 4
-                }
-            };
+            var dropdown = new VisualElement { name = "Dropdown" };
+            dropdown.style.display = DisplayStyle.None;
+            dropdown.style.marginTop = 2;
+            dropdown.style.marginLeft = IsInList(prop) ? 0 : 120;
+            dropdown.style.backgroundColor = new Color(0.18f, 0.18f, 0.18f, 0.95f);
+            dropdown.style.borderTopLeftRadius = 4;
+            dropdown.style.borderTopRightRadius = 4;
+            dropdown.style.borderBottomLeftRadius = 4;
+            dropdown.style.borderBottomRightRadius = 4;
+            dropdown.style.borderLeftWidth = 2;
+            dropdown.style.borderLeftColor = GetContextColor(state.ContextStrings);
+            dropdown.style.paddingTop = 4;
+            dropdown.style.paddingBottom = 4;
+            dropdown.style.paddingLeft = 4;
+            dropdown.style.paddingRight = 4;
             
             // Search row
-            var searchRow = new VisualElement
-            {
-                style =
-                {
-                    flexGrow = 1,
-                    flexShrink = 1,
-                    flexDirection = FlexDirection.Row,
-                    alignItems = Align.Stretch,
-                    alignSelf = Align.Stretch,
-                    minHeight = 24,
-                    maxHeight = 24,
-                    marginBottom = 2
-                }
-            };
+            var searchRow = new VisualElement();
+            searchRow.style.flexDirection = FlexDirection.Row;
+            searchRow.style.marginBottom = 4;
+            dropdown.Add(searchRow);
             
-            var searchField = new TextField
-            {
-                value = "",
-                style =
-                {
-                    flexGrow = 1,
-                    flexShrink = 0,
-                    marginLeft = 0,
-                    maxHeight = 22,
-                    minHeight = 22,
-                    marginRight = 0,
-                    fontSize = 12,
-                    unityTextAlign = TextAnchor.MiddleLeft
-                }
-            };
+            var searchField = new TextField { value = "" };
+            searchField.style.flexGrow = 1;
+            searchField.style.height = 20;
+            searchField.style.fontSize = 11;
             searchRow.Add(searchField);
             
-            // Add button (create new tag)
-            if (state.allowCreate)
+            // Create button
+            if (state.AllowCreate)
             {
-                var addBtn = new Button
+                var createBtn = CreateIconButton("+", "Create new tag", () =>
                 {
-                    text = "+",
-                    focusable = false,
-                    tooltip = "Create New Tag",
-                    style =
-                    {
-                        marginLeft = 4,
-                        marginRight = -2,
-                        paddingTop = 4,
-                        paddingBottom = 6,
-                        paddingLeft = 4,
-                        paddingRight = 4,
-                        minHeight = 22,
-                        maxHeight = 22
-                    }
-                };
+                    CreateNewTag(prop, searchField.value, valueBtn, state, dropdown);
+                });
+                createBtn.style.marginLeft = 4;
+                createBtn.style.backgroundColor = new Color(0.3f, 0.45f, 0.3f);
+                searchRow.Add(createBtn);
+            }
+            
+            // Context hint (compact)
+            if (state.ContextStrings.Length > 0)
+            {
+                var contextHint = new Label(string.Join(" · ", state.ContextStrings));
+                contextHint.style.fontSize = 9;
+                contextHint.style.color = Colors.HintText;
+                contextHint.style.marginBottom = 4;
+                dropdown.Add(contextHint);
+            }
+            
+            // Results list
+            var listView = new ListView();
+            listView.name = "ResultsList";
+            listView.style.maxHeight = 140;
+            listView.style.minHeight = 50;
+            listView.fixedItemHeight = 20;
+            listView.selectionType = SelectionType.Single;
+            
+            listView.makeItem = () =>
+            {
+                var item = new Button { focusable = false };
+                item.style.height = 18;
+                item.style.marginLeft = 0;
+                item.style.marginRight = 0;
+                item.style.marginTop = 1;
+                item.style.marginBottom = 1;
+                item.style.paddingLeft = 6;
+                item.style.fontSize = 10;
+                item.style.unityTextAlign = TextAnchor.MiddleLeft;
+                item.style.backgroundColor = StyleKeyword.Null;
+                item.style.borderTopLeftRadius = 2;
+                item.style.borderTopRightRadius = 2;
+                item.style.borderBottomLeftRadius = 2;
+                item.style.borderBottomRightRadius = 2;
                 
-                // Use MouseDownEvent to set the flag BEFORE focus changes
-                addBtn.RegisterCallback<MouseDownEvent>(evt =>
+                item.RegisterCallback<MouseEnterEvent>(_ => 
                 {
-                    evt.StopPropagation();
-                    state.isAddingTag = true;
-                    state.addClickTime = EditorApplication.timeSinceStartup;
-                }, TrickleDown.TrickleDown);
-                
-                // Use MouseUpEvent to actually create the tag
-                addBtn.RegisterCallback<MouseUpEvent>(evt =>
+                    if (item.enabledSelf)
+                        item.style.backgroundColor = new Color(0.3f, 0.3f, 0.3f);
+                });
+                item.RegisterCallback<MouseLeaveEvent>(_ => 
                 {
-                    evt.StopPropagation();
-                    CreateNewTag(prop, searchField.value, valueBtn, dropdown, searchField, state);
-                    state.isAddingTag = false;
+                    if (item.enabledSelf)
+                        item.style.backgroundColor = StyleKeyword.Null;
                 });
                 
-                searchRow.Add(addBtn);
-            }
-            
-            content.Add(searchRow);
-            
-            // Context hint
-            if (state.contextStrings.Length > 0)
-            {
-                var contextHint = new Label($"Context: {GetContextDisplayString(state.contextStrings)}");
-                contextHint.style.fontSize = 9;
-                contextHint.style.color = new Color(0.6f, 0.6f, 0.6f);
-                contextHint.style.marginBottom = 2;
-                content.Add(contextHint);
-            }
-            
-            // List view
-            state.list = new ListView
-            {
-                name = "TagList",
-                fixedItemHeight = 22,
-                style =
-                {
-                    flexGrow = 1,
-                    maxHeight = 150
-                }
+                return item;
             };
-            content.Add(state.list);
             
-            dropdown.Add(content);
-            
-            // Search filter
-            searchField.RegisterValueChangedCallback(evt =>
+            listView.bindItem = (element, index) =>
             {
-                RefreshList(prop, evt.newValue, state);
-            });
+                var btn = element as Button;
+                if (index >= state.Results.Count) return;
+                
+                var tag = state.Results[index];
+                var currentTag = GetCurrentTag(prop);
+                var isCurrent = tag.Equals(currentTag);
+                
+                btn.text = tag.ToString();
+                btn.enabledSelf = !isCurrent;
+                btn.tooltip = GetTagTooltip(tag);
+                
+                if (isCurrent)
+                {
+                    btn.style.backgroundColor = new Color(0.25f, 0.35f, 0.25f, 0.5f);
+                    btn.style.color = Colors.AccentGreen;
+                }
+                else
+                {
+                    btn.style.backgroundColor = StyleKeyword.Null;
+                    btn.style.color = Colors.LabelText;
+                }
+                
+                if (btn.userData is Action oldAction)
+                    btn.clicked -= oldAction;
+                
+                Action newAction = () => SelectTag(prop, tag, valueBtn, state, dropdown);
+                btn.userData = newAction;
+                btn.clicked += newAction;
+            };
             
-            // Focus handling - check if we're in the middle of adding a tag
+            dropdown.Add(listView);
+            
+            // Search filtering
+            searchField.RegisterValueChangedCallback(evt => FilterResults(state, evt.newValue, listView));
+            
+            // Focus management
             searchField.RegisterCallback<FocusOutEvent>(evt =>
             {
-                // Don't close if we're adding a tag
-                if (state.isAddingTag)
-                    return;
-                
-                // Check if recently clicked add button (within 200ms)
-                if (EditorApplication.timeSinceStartup - state.addClickTime < 0.2)
-                    return;
-                
-                if (evt.relatedTarget is VisualElement related && IsChildOf(related, dropdown))
-                    return;
-                
-                EditorApplication.delayCall += () =>
+                dropdown.schedule.Execute(() =>
                 {
-                    // Double-check the flag again in delayed call
-                    if (state.isAddingTag) return;
-                    if (!state.isOpen) return;
-                    HideDropdown(dropdown, state);
-                };
+                    if (!IsChildFocused(dropdown))
+                        CloseDropdown(state, dropdown);
+                }).ExecuteLater(100);
             });
             
             return dropdown;
+        }
+        
+        private Button CreateIconButton(string icon, string tooltip, Action onClick)
+        {
+            var btn = new Button { text = icon, tooltip = tooltip, focusable = false };
+            btn.style.width = 20;
+            btn.style.height = 20;
+            btn.style.paddingLeft = 0;
+            btn.style.paddingRight = 0;
+            btn.style.paddingTop = 0;
+            btn.style.paddingBottom = 0;
+            btn.style.fontSize = 12;
+            btn.style.unityTextAlign = TextAnchor.MiddleCenter;
+            btn.style.backgroundColor = Colors.ButtonBackground;
+            btn.style.borderTopLeftRadius = 3;
+            btn.style.borderTopRightRadius = 3;
+            btn.style.borderBottomLeftRadius = 3;
+            btn.style.borderBottomRightRadius = 3;
+            
+            btn.RegisterCallback<MouseEnterEvent>(_ => btn.style.backgroundColor = Colors.ButtonHover);
+            btn.RegisterCallback<MouseLeaveEvent>(_ => btn.style.backgroundColor = Colors.ButtonBackground);
+            
+            btn.clicked += onClick;
+            return btn;
         }
         
         // ═══════════════════════════════════════════════════════════════════════════
         // Dropdown Logic
         // ═══════════════════════════════════════════════════════════════════════════
         
-        private void ToggleDropdown(SerializedProperty prop, Button valueBtn, VisualElement dropdown, DrawerState state)
+        private void ToggleDropdown(SerializedProperty prop, DrawerState state, VisualElement dropdown, Button valueBtn)
         {
-            if (state.isOpen)
-            {
-                HideDropdown(dropdown, state);
-            }
+            if (state.IsOpen)
+                CloseDropdown(state, dropdown);
             else
-            {
-                ShowDropdown(prop, valueBtn, dropdown, state);
-            }
+                OpenDropdown(prop, state, dropdown);
         }
         
-        private void ShowDropdown(SerializedProperty prop, Button valueBtn, VisualElement dropdown, DrawerState state)
+        private void OpenDropdown(SerializedProperty prop, DrawerState state, VisualElement dropdown)
         {
-            state.isOpen = true;
-            state.isAddingTag = false;
+            state.IsOpen = true;
             dropdown.style.display = DisplayStyle.Flex;
             
-            // Get available tags from registry with context filtering
-            var availableTags = TagRegistry.GetTagsForContext(state.contextStrings, state.includeUniversal).ToList();
+            // Load tags from registry
+            state.Results = TagRegistry.GetTagsForContext(state.ContextStrings, state.IncludeUniversal)
+                .OrderBy(t => t.ToString())
+                .ToList();
             
-            // Sort by name
-            availableTags = availableTags.OrderBy(t => t.ToString()).ToList();
-            
-            state.results = availableTags;
-            
-            // Setup list view
-            state.list.itemsSource = state.results;
-            
-            state.list.makeItem = () => new Button
+            var listView = dropdown.Q<ListView>("ResultsList");
+            if (listView != null)
             {
-                focusable = false,
-                style =
-                {
-                    flexGrow = 1,
-                    marginLeft = 0,
-                    marginRight = 4,
-                    unityTextAlign = TextAnchor.MiddleLeft,
-                    minHeight = 20,
-                    maxHeight = 20
-                }
-            };
+                listView.itemsSource = state.Results;
+                listView.Rebuild();
+            }
             
-            state.list.bindItem = (element, index) =>
-            {
-                var tag = state.results[index];
-                var button = element as Button;
-                
-                var currentTag = GetCurrentTag(prop);
-                bool isSelected = tag.Equals(currentTag);
-                
-                button.style.backgroundColor = isSelected 
-                    ? new StyleColor(new Color(0.25f, 0.25f, 0.25f, 1f)) 
-                    : StyleKeyword.Null;
-                button.enabledSelf = !isSelected;
-                button.text = tag.ToString();
-                button.tooltip = GetTagTooltip(tag);
-                
-                // Remove old click handler
-                if (button.userData is Action oldAction)
-                    button.clicked -= oldAction;
-                
-                // Add new click handler
-                Action clickAction = () => OnSelectItem(prop, tag, valueBtn, dropdown, null, state);
-                button.userData = clickAction;
-                button.clicked += clickAction;
-            };
-            
-            state.list.Rebuild();
-            
-            // Focus search field
-            var searchField = dropdown.Q<TextField>();
-            searchField?.Focus();
+            dropdown.Q<TextField>()?.Focus();
         }
         
-        private void HideDropdown(VisualElement dropdown, DrawerState state)
+        private void CloseDropdown(DrawerState state, VisualElement dropdown)
         {
-            state.isOpen = false;
-            state.isAddingTag = false;
+            state.IsOpen = false;
             dropdown.style.display = DisplayStyle.None;
         }
         
-        private void RefreshList(SerializedProperty prop, string filter, DrawerState state)
+        private void FilterResults(DrawerState state, string filter, ListView listView)
         {
-            var allTags = TagRegistry.GetTagsForContext(state.contextStrings, state.includeUniversal).ToList();
+            var allTags = TagRegistry.GetTagsForContext(state.ContextStrings, state.IncludeUniversal);
             
-            if (!string.IsNullOrEmpty(filter))
+            if (string.IsNullOrEmpty(filter))
             {
-                state.results = allTags
-                    .Where(t => t.ToString().IndexOf(filter, StringComparison.OrdinalIgnoreCase) >= 0)
-                    .OrderBy(t => t.ToString())
-                    .ToList();
+                state.Results = allTags.OrderBy(t => t.ToString()).ToList();
             }
             else
             {
-                state.results = allTags.OrderBy(t => t.ToString()).ToList();
+                var filterLower = filter.ToLowerInvariant();
+                state.Results = allTags
+                    .Where(t => t.ToString().ToLowerInvariant().Contains(filterLower))
+                    .OrderBy(t => t.ToString())
+                    .ToList();
             }
             
-            state.list.itemsSource = state.results;
-            state.list.Rebuild();
+            listView.itemsSource = state.Results;
+            listView.Rebuild();
         }
         
-        private void OnSelectItem(SerializedProperty prop, Tag tag, Button valueBtn, VisualElement dropdown, TextField searchField, DrawerState state)
+        private void SelectTag(SerializedProperty prop, Tag tag, Button valueBtn, DrawerState state, VisualElement dropdown)
         {
-            // Get old tag before changing
             var oldTag = GetCurrentTag(prop);
             var asset = prop.serializedObject.targetObject as ScriptableObject;
             
-            // Unregister old tag if it exists
+            // Unregister old
             if (!oldTag.Equals(default(Tag)) && asset != null)
-            {
-                TagRegistry.UnregisterTagUsage(oldTag, state.contextStrings, asset);
-            }
+                TagRegistry.UnregisterTagUsage(oldTag, state.ContextStrings, asset);
             
-            // Set new tag
+            // Set new
             SetTag(prop, tag);
-            valueBtn.text = GetDisplayString(prop);
-            
-            if (searchField != null)
-                searchField.value = tag.ToString();
+            valueBtn.text = tag.Equals(default(Tag)) ? "<None>" : tag.ToString();
             
             prop.serializedObject.ApplyModifiedProperties();
             EditorUtility.SetDirty(prop.serializedObject.targetObject);
             
-            // Register new tag usage in TagRegistry
+            // Register new
             if (!tag.Equals(default(Tag)) && asset != null)
-            {
-                TagRegistry.RegisterTagUsage(tag, state.contextStrings, asset);
-            }
+                TagRegistry.RegisterTagUsage(tag, state.ContextStrings, asset);
             
-            if (dropdown != null)
-                HideDropdown(dropdown, state);
+            CloseDropdown(state, dropdown);
         }
         
-        private void CreateNewTag(SerializedProperty prop, string tagName, Button valueBtn, VisualElement dropdown, TextField searchField, DrawerState state)
+        private void CreateNewTag(SerializedProperty prop, string tagName, Button valueBtn, DrawerState state, VisualElement dropdown)
         {
             if (string.IsNullOrWhiteSpace(tagName))
             {
                 EditorUtility.DisplayDialog("Create Tag", "Please enter a tag name.", "OK");
-                state.isAddingTag = false;
                 return;
             }
             
             tagName = tagName.Trim();
-            
-            // Get old tag before changing
-            var oldTag = GetCurrentTag(prop);
-            var asset = prop.serializedObject.targetObject as ScriptableObject;
-            
-            // Unregister old tag if it exists
-            if (!oldTag.Equals(default(Tag)) && asset != null)
-            {
-                TagRegistry.UnregisterTagUsage(oldTag, state.contextStrings, asset);
-            }
-            
             var newTag = Tag.Generate(tagName);
             
-            // Set the tag value
-            SetTag(prop, newTag);
-            valueBtn.text = GetDisplayString(prop);
-            
-            prop.serializedObject.ApplyModifiedProperties();
-            EditorUtility.SetDirty(prop.serializedObject.targetObject);
-            
-            // Register usage in TagRegistry
-            if (asset != null)
-            {
-                TagRegistry.RegisterTagUsage(newTag, state.contextStrings, asset);
-            }
-            
-            // Clear the search field
-            if (searchField != null)
-                searchField.value = "";
-            
-            // Refresh the list to show the new tag
-            RefreshList(prop, "", state);
-            
-            // Reset adding flag and close dropdown
-            state.isAddingTag = false;
-            HideDropdown(dropdown, state);
+            SelectTag(prop, newTag, valueBtn, state, dropdown);
         }
         
         // ═══════════════════════════════════════════════════════════════════════════
-        // Tag Property Access
+        // Tag Access
         // ═══════════════════════════════════════════════════════════════════════════
         
         private Tag GetCurrentTag(SerializedProperty prop)
         {
             var nameProp = prop.FindPropertyRelative("Name");
             if (nameProp != null && !string.IsNullOrEmpty(nameProp.stringValue))
-            {
                 return Tag.Generate(nameProp.stringValue);
-            }
             return default;
         }
         
@@ -536,32 +390,22 @@ namespace FarEmerald.PlayForge.Extended.Editor
         {
             var nameProp = prop.FindPropertyRelative("Name");
             if (nameProp != null)
-            {
                 nameProp.stringValue = tag.Equals(default(Tag)) ? "" : tag.ToString();
-            }
-        }
-        
-        private string GetDisplayString(SerializedProperty prop)
-        {
-            var tag = GetCurrentTag(prop);
-            return tag.Equals(default(Tag)) ? "<None>" : tag.ToString();
         }
         
         // ═══════════════════════════════════════════════════════════════════════════
         // Helpers
         // ═══════════════════════════════════════════════════════════════════════════
         
-        private bool IsInList(SerializedProperty property)
-        {
-            return property.propertyPath.Contains(".Array.data[");
-        }
+        private bool IsInList(SerializedProperty property) => property.propertyPath.Contains(".Array.data[");
         
-        private bool IsChildOf(VisualElement element, VisualElement parent)
+        private bool IsChildFocused(VisualElement parent)
         {
-            while (element != null)
+            var focused = parent.panel?.focusController?.focusedElement as VisualElement;
+            while (focused != null)
             {
-                if (element == parent) return true;
-                element = element.parent;
+                if (focused == parent) return true;
+                focused = focused.parent;
             }
             return false;
         }
@@ -569,44 +413,25 @@ namespace FarEmerald.PlayForge.Extended.Editor
         private Color GetContextColor(string[] contextStrings)
         {
             if (contextStrings == null || contextStrings.Length == 0)
-                return new Color(0.3f, 0.3f, 0.3f);
+                return Colors.HintText;
             
             var first = contextStrings[0];
+            if (first.Contains("Ability")) return Colors.AccentOrange;
+            if (first.Contains("Effect")) return Colors.AccentRed;
+            if (first.Contains("Entity")) return Colors.AccentPurple;
+            if (first.Contains("Attribute")) return Colors.AccentBlue;
+            if (first.Contains("Granted")) return Colors.AccentGreen;
+            if (first.Contains("Required")) return Colors.AccentYellow;
+            if (first.Contains("Blocked")) return Colors.AccentRed;
             
-            if (first.Contains("Ability")) return new Color(1f, 0.6f, 0.2f);
-            if (first.Contains("Effect")) return new Color(1f, 0.3f, 0.3f);
-            if (first.Contains("Entity")) return new Color(0.7f, 0.4f, 1f);
-            if (first.Contains("Attribute")) return new Color(0.3f, 0.6f, 1f);
-            if (first.Contains("Visibility")) return new Color(0.3f, 0.8f, 0.8f);
-            if (first.Contains("Granted")) return new Color(0.4f, 0.9f, 0.4f);
-            if (first.Contains("Required")) return new Color(1f, 0.8f, 0.2f);
-            if (first.Contains("Blocked")) return new Color(1f, 0.4f, 0.4f);
-            
-            return new Color(0.5f, 0.5f, 0.5f);
-        }
-        
-        private string GetContextDisplayString(string[] contextStrings)
-        {
-            if (contextStrings == null || contextStrings.Length == 0)
-                return "Any";
-            
-            return string.Join(", ", contextStrings);
+            return Colors.AccentGray;
         }
         
         private string GetTagTooltip(Tag tag)
         {
             var usage = TagRegistry.GetTagUsage(tag);
             if (usage == null) return tag.ToString();
-            
-            var contexts = usage.UsageByContext.Values.Take(3)
-                .Select(c => $"{c.Context.FriendlyName} ({c.Assets.Count})")
-                .ToList();
-            
-            var tooltip = $"{tag}\nUsed {usage.TotalUsageCount} time(s)";
-            if (contexts.Count > 0)
-                tooltip += $"\nContexts: {string.Join(", ", contexts)}";
-            
-            return tooltip;
+            return $"{tag} • Used {usage.TotalUsageCount}×";
         }
         
         private T GetFieldAttribute<T>(SerializedProperty property) where T : System.Attribute
@@ -617,9 +442,7 @@ namespace FarEmerald.PlayForge.Extended.Editor
             var targets = property.serializedObject.targetObjects;
             if (targets == null || targets.Length == 0) return null;
             
-            var hostType = targets[0].GetType();
-            var fi = ResolveFieldInfo(hostType, property.propertyPath);
-            
+            var fi = ResolveFieldInfo(targets[0].GetType(), property.propertyPath);
             return fi?.GetCustomAttribute<T>();
         }
         
@@ -629,25 +452,19 @@ namespace FarEmerald.PlayForge.Extended.Editor
             Type curType = host;
             FieldInfo lastField = null;
             
-            var parts = propertyPath.Split('.');
-            for (int i = 0; i < parts.Length; i++)
+            foreach (var p in propertyPath.Split('.'))
             {
-                var p = parts[i];
-                
-                if (p == "Array")
-                {
-                    i++;
-                    if (curType.IsArray)
-                        curType = curType.GetElementType();
-                    else if (curType.IsGenericType && typeof(System.Collections.IList).IsAssignableFrom(curType))
-                        curType = curType.GetGenericArguments()[0];
-                    continue;
-                }
+                if (p == "Array") continue;
+                if (p.StartsWith("data[")) continue;
                 
                 var fi = curType.GetField(p, flags);
                 if (fi == null) return lastField;
                 lastField = fi;
                 curType = fi.FieldType;
+                
+                if (curType.IsArray) curType = curType.GetElementType();
+                else if (curType.IsGenericType && typeof(System.Collections.IList).IsAssignableFrom(curType))
+                    curType = curType.GetGenericArguments()[0];
             }
             
             return lastField;

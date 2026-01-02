@@ -36,11 +36,16 @@ namespace FarEmerald.PlayForge
         public void RunEvents(Attribute attribute, IGameplayAbilitySystem system, Dictionary<Attribute, CachedAttributeValue> attributeCache,
             ChangeValue change)
         {
+            Debug.Log($"Running events for {attribute.GetName()} ({ChangeEvents.ContainsKey(attribute)})");
             if (!ChangeEvents.ContainsKey(attribute)) return;
             foreach (var fEvent in ChangeEvents[attribute])
             {
                 if (!fEvent.PreValidateWorkFor(change)) continue;
-                if (!fEvent.ValidateWorkFor(system, attributeCache, change)) continue;
+                if (!fEvent.ValidateWorkFor(system, attributeCache, change))
+                {
+                    Debug.Log($"Failed validate work for {fEvent.GetType().Name}");
+                    continue;
+                }
                 fEvent.Activate(system, attributeCache, change);
             }
         }

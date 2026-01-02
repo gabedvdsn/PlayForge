@@ -10,22 +10,10 @@ namespace FarEmerald.PlayForge.Extended.Editor
         {
             return value is null ? base.GetStringValue(prop, value) : value.Name.Replace("ProxyStagePolicy", "");
         }
-
-        protected override bool AcceptClear()
-        {
-            return false;
-        }
-
         protected override bool AcceptOpen(SerializedProperty prop)
         {
             return false;
         }
-
-        protected override bool AcceptAdd()
-        {
-            return false;
-        }
-
         protected override Type GetDefault()
         {
             var types = TypePickerCache.GetConcreteTypesAssignableTo<IProxyStagePolicy>();

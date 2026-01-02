@@ -63,7 +63,11 @@ namespace FarEmerald.PlayForge
             {
                 activeMono.Instantiator.CleanProcess(activeMono);
             }
-            else Object.Destroy(activeMono.gameObject);
+            else
+            {
+                try { Object.Destroy(activeMono.gameObject); }
+                catch { }
+            }
         }
         /// <summary>
         /// Terminates the behaviour of the process, without Destroying the process object
