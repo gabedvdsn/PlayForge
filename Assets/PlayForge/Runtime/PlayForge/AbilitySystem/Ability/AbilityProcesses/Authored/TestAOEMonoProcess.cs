@@ -16,9 +16,9 @@ namespace FarEmerald.PlayForge
 
         private void OnTriggerEnter(Collider other)
         {
-            if (!other.TryGetComponent(out GameplayAbilitySystem gas)) return;
+            /*if (!other.TryGetComponent(out GameplayAbilitySystem gas)) return;
             
-            ApplyEffects(gas);
+            ApplyEffects(gas);*/
         }
     }
 }

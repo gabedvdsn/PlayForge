@@ -1,9 +1,10 @@
-﻿using UnityEngine;
+﻿using System.Collections.Generic;
+using UnityEngine;
 
 namespace FarEmerald.PlayForge
 {
-    public class BaseForgeObject : ScriptableObject
+    public abstract class BaseForgeObject : ScriptableObject, ITagSource
     {
-        
+        public abstract IEnumerable<Tag> GetGrantedTags();
     }
 }

@@ -8,7 +8,14 @@ namespace FarEmerald.PlayForge.Extended.Editor
     [CustomPropertyDrawer(typeof(Attribute))]
     public class AttributeDrawer : AbstractRefDrawer<Attribute>
     {
-
+        protected override bool AcceptOpen(SerializedProperty prop)
+        {
+            return true;
+        }
+        protected override bool AcceptClear()
+        {
+            return true;
+        }
         protected override Attribute[] GetEntries()
         {
             return GetAllInstances<Attribute>();

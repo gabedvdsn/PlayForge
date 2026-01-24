@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Data;
 using System.Linq;
+using System.Security.Cryptography;
 using System.Threading;
 using Cysharp.Threading.Tasks;
 using Unity.VisualScripting;
@@ -9,7 +11,7 @@ using UnityEngine.Serialization;
 
 namespace FarEmerald.PlayForge
 {
-    public class GameplayAbilitySystem : LazyMonoProcess, IGameplayAbilitySystem
+    public partial class GameplayAbilitySystem : LazyMonoProcess, IGameplayAbilitySystem
     {
         public EntityIdentity Data;
         
@@ -18,8 +20,8 @@ namespace FarEmerald.PlayForge
         private AbilitySystemComponent AbilitySystem;
         
         // Core
-        private List<AbstractGameplayEffectShelfContainer> EffectShelf;
-        private List<AbstractGameplayEffectShelfContainer> FinishedEffects;
+        private List<AbstractEffectContainer> EffectShelf;
+        private List<AbstractEffectContainer> FinishedEffects;
         private bool needsCleaning;
         
         // Tags
@@ -28,31 +30,42 @@ namespace FarEmerald.PlayForge
         // Process
         protected Dictionary<int, ProcessRelay> Relays;
         
-        // Store (Coffer)
-        // BuriedComponentCoffer, can be replaced with data packet?
-        
         protected virtual void Awake()
         {
             AttributeSystem = new AttributeSystemComponent(this);
             AbilitySystem = new AbilitySystemComponent(this);
             
-            EffectShelf = new List<AbstractGameplayEffectShelfContainer>();
-            FinishedEffects = new List<AbstractGameplayEffectShelfContainer>();
+            EffectShelf = new List<AbstractEffectContainer>();
+            FinishedEffects = new List<AbstractEffectContainer>();
 
             Relays = new Dictionary<int, ProcessRelay>();
             
             Initialize(Data);
         }
 
-        public void Initialize(EntityIdentity data)
+        private void Initialize(EntityIdentity data)
         {
             Data = data;
             
             TagCache = new TagCache(this);
             
-            AbilitySystem.PreInitialize(Data.ActivationPolicy, Data.AllowDuplicateAbilities, Data.ImpactWorkers);
-            AttributeSystem.Initialize(Data.AttributeSet, Data.AttributeChangeEvents);
+            AbilitySystem.Setup(Data.ActivationPolicy, Data.AllowDuplicateAbilities);
+            AttributeSystem.Setup(Data.AttributeSet);
+            
+            InitializeEndOfFrameSystem();
+            SetupDeferredContexts();
+            CollectInitialWorkers();
+            
             AbilitySystem.Initialize(Data.StartingAbilities);
+            AttributeSystem.Initialize();
+            
+            CompileGrantedTags();
+        }
+
+        private void CollectInitialWorkers()
+        {
+            Data.WorkerGroup?.ProvideWorkersTo(this);
+            Data.AttributeSet?.WorkerGroup?.ProvideWorkersTo(this);
         }
         
         #region Process Parameters
@@ -61,7 +74,7 @@ namespace FarEmerald.PlayForge
             base.WhenInitialize(relay);
 
             // Attempt to find affiliation
-            if (regData.TryGet(Tags.PAYLOAD_AFFILIATION, EProxyDataValueTarget.Primary, out List<Tag> affiliation))
+            if (regData.TryGet(Tags.AFFILIATION, EProxyDataValueTarget.Primary, out List<Tag> affiliation))
             {
                 Data.Affiliation = affiliation;
             }
@@ -75,13 +88,31 @@ namespace FarEmerald.PlayForge
             if (needsCleaning) ClearFinishedEffects();
             
             TagCache.TickTagWorkers();
+
+            if (Input.GetKeyDown(KeyCode.K))
+            {
+                foreach (var attr in AttributeSystem.GetAttributeCache())
+                {
+                    Debug.Log($"[Attr] {attr.Key.GetName()} ({attr.Value.Value})");
+                    foreach (var derivation in attr.Value.DerivedValues)
+                    {
+                        Debug.Log($"\t\t{derivation.Key.GetEffectDerivation().GetName()} ({derivation.Key.AttributeRetention()}) -> {derivation.Value}");
+                    }
+                }
+            }
         }
+
+        public override void WhenLateUpdate(ProcessRelay relay)
+        {
+            EndOfFrame();
+        }
+
         public override async UniTask RunProcess(ProcessRelay relay, CancellationToken token)
         {
             processActive = true;
             await UniTask.WaitWhile(() => processActive, cancellationToken: token);
         }
-        
+
         // Handling
         public bool HandlerValidateAgainst(IGameplayProcessHandler handler)
         {
@@ -139,16 +170,13 @@ namespace FarEmerald.PlayForge
         {
             return effect.Generate(origin, this);
         }
-
+        
         public bool ApplyGameplayEffect(GameplayEffectSpec spec)
-        {
-            Debug.Log($"Applying effect {spec.Base.Definition.Name} ({spec.Base.DurationSpecification.DurationPolicy}) to {Data.Name} ({name})");
-            
+        {            
             if (spec is null) return false;
 
             if (!ForgeHelper.ValidateEffectApplicationRequirements(spec, Data.Affiliation))
             {
-                Debug.Log($"\tFailed validation");
                 return false;
             }
             
@@ -174,34 +202,48 @@ namespace FarEmerald.PlayForge
             
             return true;
         }
-
+        
         /// <summary>
          /// Applies a gameplay effect to the container with respect to a derivation (effect) that is already applied
          /// </summary>
          /// <param name="origin"></param>
          /// <param name="GameplayEffect"></param>
          /// <returns></returns>
-        public bool ApplyGameplayEffect(IEffectOrigin origin, GameplayEffect GameplayEffect)
+        private bool ApplyGameplayEffect(IEffectOrigin origin, GameplayEffect GameplayEffect)
         {
             GameplayEffectSpec spec = GenerateEffectSpec(origin, GameplayEffect);
             return ApplyGameplayEffect(spec);
         }
-
+        
         public void RemoveGameplayEffect(GameplayEffect effect)
         {
             RemoveGameplayEffect(effect.Tags.AssetTag);
         }
-
+        
         public void RemoveGameplayEffect(Tag identifier)
         {
             var toRemove = EffectShelf.Where(container => container.Spec.Base.Tags.AssetTag == identifier);
-            foreach (AbstractGameplayEffectShelfContainer container in toRemove)
+            foreach (AbstractEffectContainer container in toRemove)
             {
                 FinishedEffects.Add(container);
                 needsCleaning = true;
             }
         }
+        
+        private void ApplyEffectTags(GameplayEffectSpec spec)
+        {
+            TagCache.AddTags(spec.Base.Tags.GrantedTags);
+            TagCache.AddTag(spec.Base.Tags.AssetTag);
+            TagCache.AddTag(spec.Origin.GetAssetTag());
+        }
 
+        private void RemoveEffectTags(GameplayEffectSpec spec)
+        {
+            TagCache.RemoveTags(spec.Base.Tags.GrantedTags);
+            TagCache.RemoveTag(spec.Base.Tags.AssetTag);
+            TagCache.RemoveTag(spec.Origin.GetAssetTag());
+        }
+        
         /// <summary>
         /// Applies a durational/infinite gameplay effect to the component
         /// </summary>
@@ -211,44 +253,27 @@ namespace FarEmerald.PlayForge
         {
             if (!AttributeSystem.DefinesAttribute(spec.Base.ImpactSpecification.AttributeTarget)) return;
 
-            if (TryHandleExistingDurationalGameplayEffect(spec)) return;
+            bool ongoing = ForgeHelper.ValidateEffectOngoingRequirements(spec);
+            if (TryHandleExistingDurationalGameplayEffect(spec, ongoing)) return;
 
-            AbstractGameplayEffectShelfContainer container;
-            switch (spec.Base.ImpactSpecification.ReApplicationPolicy)
-            {
-                case EEffectReApplicationPolicy.Refresh:
-                case EEffectReApplicationPolicy.Extend:
-                case EEffectReApplicationPolicy.Append:
-                    container = NonStackingGameplayEffectShelfContainer.Generate(spec, ForgeHelper.ValidateEffectOngoingRequirements(spec));
-                    break;
-                case EEffectReApplicationPolicy.Stack:
-                case EEffectReApplicationPolicy.StackRefresh:
-                case EEffectReApplicationPolicy.StackExtend:
-                    container = GetStackingContainer(spec);
-                    break;
-                default:
-                    throw new ArgumentOutOfRangeException();
-            }
-            
+            var container = spec.Base.DurationSpecification.GenerateContainer(spec, ongoing);
             EffectShelf.Add(container);
-            TagCache.AddTags(container.Spec.Base.Tags.GrantedTags);
+
+            var effectContext = new EffectWorkerContext(this, container, _frameSummary, _actionQueue);
+            container.RunWorkerApplication(effectContext);
             
-            container.RunEffectApplicationWorkers();
-                
-            if (spec.Base.DurationSpecification.TickOnApplication)
+            if (ongoing && spec.Base.DurationSpecification.TickOnApplication)
             {
-                ApplyDurationGameplayEffectAsInstant(container);
+                ApplyTickOnApplication(container);
             }
         }
 
-        AbstractGameplayEffectShelfContainer GetStackingContainer(GameplayEffectSpec spec)
+        private void ApplyTickOnApplication(AbstractEffectContainer container)
         {
-            return spec.Base.DurationSpecification.StackableType switch
+            for (int _ = 0; _ < container.Spec.Base.DurationSpecification.GetExecuteTicks(container.Spec, container.InstantExecuteTicks); _++)
             {
-                EStackableType.Incremental => IncrementalStackableGameplayShelfContainer.Generate(spec, ForgeHelper.ValidateEffectOngoingRequirements(spec)),
-                EStackableType.Partitioned => PartitionedStackableGameplayShelfContainer.Generate(spec, ForgeHelper.ValidateEffectOngoingRequirements(spec)),
-                _ => throw new ArgumentOutOfRangeException()
-            };
+                ApplyDurationGameplayEffectAsInstant(container);
+            }
         }
         
         /// <summary>
@@ -260,14 +285,12 @@ namespace FarEmerald.PlayForge
             if (!AttributeSystem.TryGetAttributeValue(spec.Base.ImpactSpecification.AttributeTarget, out AttributeValue attributeValue)) return;
 
             TagCache.AddTags(spec.Base.Tags.GrantedTags);
-            spec.RunEffectApplicationWorkers();
+            spec.RunWorkerApplication(new EffectWorkerContext(this, spec, _frameSummary, _actionQueue));
             
             var sourcedModifiedValue = spec.SourcedImpact(attributeValue);
-            Debug.Log($"\tImpact: {sourcedModifiedValue.CurrentValue}/{sourcedModifiedValue.BaseValue}");
+            var impactData = AttributeSystem.ModifyAttribute(spec.Base.ImpactSpecification.AttributeTarget, sourcedModifiedValue);
             
-            AttributeSystem.ModifyAttribute(spec.Base.ImpactSpecification.AttributeTarget, sourcedModifiedValue);
-            
-            spec.RunEffectRemovalWorkers();
+            spec.RunWorkerRemoval(new EffectWorkerContext(this, spec, _frameSummary, _actionQueue, 1, impactData));
             TagCache.RemoveTags(spec.Base.Tags.GrantedTags);
             
             HandleGameplayEffects();
@@ -277,15 +300,15 @@ namespace FarEmerald.PlayForge
         /// Instantly applies the effects of a durational/infinite gameplay effect
         /// </summary>
         /// <param name="container"></param>
-        private void ApplyDurationGameplayEffectAsInstant(AbstractGameplayEffectShelfContainer container)
+        private void ApplyDurationGameplayEffectAsInstant(AbstractEffectContainer container)
         {
             if (!AttributeSystem.TryGetAttributeValue(container.Spec.Base.ImpactSpecification.AttributeTarget, out AttributeValue attributeValue)) return;
-            
-            SourcedModifiedAttributeValue sourcedModifiedValue = container.Spec.SourcedImpact(container, attributeValue);
+
+            var sourcedModifiedValue = container.Spec.SourcedImpact(container, attributeValue);
             
             AttributeSystem.ModifyAttribute(container.Spec.Base.ImpactSpecification.AttributeTarget, sourcedModifiedValue);
             
-            container.RunEffectApplicationWorkers();
+            container.RunWorkerApplication(new EffectWorkerContext(this, container, _frameSummary, _actionQueue));
             
             foreach (var containedEffect in container.Spec.Base.ImpactSpecification.GetContainedEffects(EApplyTickRemove.OnTick))
             {
@@ -293,38 +316,74 @@ namespace FarEmerald.PlayForge
             }
         }
         
-        private bool TryHandleExistingDurationalGameplayEffect(GameplayEffectSpec spec)
+        private bool TryHandleExistingDurationalGameplayEffect(GameplayEffectSpec spec, bool ongoing)
         {
-            if (!TryGetEffectContainer(spec.Base, out var container)) return false;
+            if (!TryGetEffectContainers(spec.Base, out var _containers)) return false;
             
-            switch (spec.Base.ImpactSpecification.ReApplicationPolicy)
+            bool flag = true;
+            switch (spec.Base.DurationSpecification.ReApplicationPolicy)
             {
-                case EEffectReApplicationPolicy.Refresh:
-                    container.Refresh();
-                    return true;
-                case EEffectReApplicationPolicy.Extend:
-                    container.Extend(spec.Base.DurationSpecification.GetTotalDuration(spec));
-                    return true;
-                case EEffectReApplicationPolicy.Append:
-                    return false;
-                case EEffectReApplicationPolicy.Stack:
-                    container.Stack();
-                    return true;
-                case EEffectReApplicationPolicy.StackRefresh:
-                    container.Refresh();
-                    return true;
-                case EEffectReApplicationPolicy.StackExtend:
-                    container.Extend(spec.Base.DurationSpecification.GetTotalDuration(spec));
-                    return true;
+                case EEffectReApplicationPolicy.DoNothing:
+                    break;
+                case EEffectReApplicationPolicy.ReplaceOldContainer:
+                {
+                    var newContainer = spec.Base.DurationSpecification.GenerateContainer(spec, ongoing);
+                    foreach (var oldContainer in _containers) oldContainer.ReplaceValuesWith(newContainer);
+                    break;
+                }
+                case EEffectReApplicationPolicy.AppendNewContainer:
+                    flag = false;
+                    break;
+                case EEffectReApplicationPolicy.StackExistingContainers:
+                {
+                    var containers = _containers.Select(c => c as AbstractStackingEffectContainer).ToArray();
+                    var container = spec.Base.DurationSpecification.FindStackingContainer(spec, ongoing, containers);
+                    if (container is null)
+                    {
+                        flag = false;
+                        break;
+                    }
+                    
+                    int stacks = spec.Base.DurationSpecification.GetStackAmount(container);
+                    container.Stack(stacks);
+
+                    break;
+                }
                 default:
                     throw new ArgumentOutOfRangeException();
             }
+            
+            switch (spec.Base.DurationSpecification.ReApplicationInteraction)
+            {
+                case EEffectInteractionPolicy.DoNothing:
+                    break;
+                case EEffectInteractionPolicy.RefreshContainerDuration:
+                    foreach (var c in _containers)
+                    {
+                        c.Refresh();
+                        if (c.Spec.Base.DurationSpecification.TickOnApplication) ApplyTickOnApplication(c);
+                    }
+                    break;
+                case EEffectInteractionPolicy.ExtendContainerDuration:
+                    foreach (var c in _containers)
+                    {
+                        c.Extend(spec.Base.DurationSpecification.GetTotalDuration(spec));
+                        if (c.Spec.Base.DurationSpecification.TickOnApplication) ApplyTickOnApplication(c);
+                    }
+                    break;
+                default:
+                    throw new ArgumentOutOfRangeException();
+            }
+
+            if (flag) CompileGrantedTags();
+            
+            return flag;
         }
 
         private void HandleGameplayEffects()
         {
             // Validate removal and ongoing requirements
-            foreach (AbstractGameplayEffectShelfContainer container in EffectShelf)
+            foreach (var container in EffectShelf)
             {
                 if (ForgeHelper.ValidateEffectRemovalRequirements(container.Spec))
                 {
@@ -336,25 +395,45 @@ namespace FarEmerald.PlayForge
                     container.Ongoing = ForgeHelper.ValidateEffectOngoingRequirements(container.Spec);
                 }
             }
+            
+            CompileGrantedTags();
         }
 
         private void TickEffectShelf()
         {
-            foreach (AbstractGameplayEffectShelfContainer container in EffectShelf)
+            foreach (var container in EffectShelf)
             {
-                EEffectDurationPolicy durationPolicy = container.Spec.Base.DurationSpecification.DurationPolicy;
-                
+                var durationPolicy = container.Spec.Base.DurationSpecification.DurationPolicy;
                 if (durationPolicy == EEffectDurationPolicy.Instant) continue;
+
+                //if (!container.Spec.Base.DurationSpecification.EnablePeriodicTicks) continue;
                 
-                float deltaTime = Time.deltaTime;
-                
-                container.RunEffectTickWorkers();
-                container.TickPeriodic(deltaTime, out int executeTicks);
-                if (executeTicks > 0 && container.Ongoing)
+                float deltaTime = container.Spec.Base.DurationSpecification.GetDeltaTime(container.Spec);
+
+                if (container.Spec.Base.DurationSpecification.EnablePeriodicTicks)
                 {
-                    for (int _ = 0; _ < executeTicks; _++)
+                    container.TickPeriodic(deltaTime, out int executeTicks);
+                    
+                    //Debug.Log($"\t\tA) Found execute ticks {executeTicks}");
+
+                    if (executeTicks > 0)
                     {
-                        ApplyDurationGameplayEffectAsInstant(container);
+                        executeTicks = container.Spec.Base.DurationSpecification.GetExecuteTicks(
+                            container.Spec, executeTicks
+                        );
+                    }
+                    
+                    //Debug.Log($"\t\tB) Found execute ticks {executeTicks}");
+
+                    var effectContext = new EffectWorkerContext(
+                        this, container, 
+                        _frameSummary, _actionQueue, 
+                        executeTicks);
+                    container.RunWorkerTick(effectContext);
+                
+                    if (executeTicks > 0 && container.Ongoing)
+                    {
+                        for (int _ = 0; _ < executeTicks; _++) ApplyDurationGameplayEffectAsInstant(container);
                     }
                 }
 
@@ -372,15 +451,19 @@ namespace FarEmerald.PlayForge
         private void ClearFinishedEffects()
         {
             //EffectShelf.RemoveAll(container => container.DurationRemaining <= 0 && container.Spec.Base.DurationSpecification.DurationPolicy != EEffectDurationPolicy.Infinite);
-            foreach (AbstractGameplayEffectShelfContainer container in FinishedEffects)
+            foreach (var container in FinishedEffects)
             {
                 container.OnRemove();
                 EffectShelf.Remove(container);
                 
-                container.RunEffectRemovalWorkers();
-                TagCache.RemoveTags(container.Spec.Base.Tags.GrantedTags);
+                var effectContext = new EffectWorkerContext(
+                    this, container, 
+                    _frameSummary, _actionQueue);
+                container.RunWorkerRemoval(effectContext);
                 
-                if (container.AttributeRetention() != Tags.RETENTION_IGNORE) AttributeSystem.RemoveAttributeDerivation(container);
+                //RemoveEffectTags(container.Spec);
+                
+                if (container.AttributeRetention() != Tags.IGNORE) AttributeSystem.RemoveAttributeDerivation(container);
             }
             
             FinishedEffects.Clear();
@@ -393,9 +476,10 @@ namespace FarEmerald.PlayForge
         
         #region Effect Helpers
 
-        public bool TryGetEffectContainer(GameplayEffect effect, out AbstractGameplayEffectShelfContainer container)
+        public bool TryGetEffectContainer(GameplayEffect effect, out AbstractEffectContainer container)
         {
-            foreach (var _container in EffectShelf.Where(_container => _container.Spec.Base == effect))
+            //if (effect.)
+            foreach (var _container in EffectShelf.Where(_container => _container.Spec.Base.Tags.AssetTag == effect.Tags.AssetTag))
             {
                 container = _container;
                 return true;
@@ -405,17 +489,22 @@ namespace FarEmerald.PlayForge
             return false;
         }
 
+        public bool TryGetEffectContainers(GameplayEffect effect, out AbstractEffectContainer[] containers)
+        {
+            containers = EffectShelf.Where(c => c.Spec.Base.Tags.AssetTag == effect.Tags.AssetTag).ToArray();
+            return containers.Any();
+        }
+
         public GameplayEffectDuration GetLongestDurationFor(Tag lookForTag)
         {
             float longestDuration = float.MinValue;
             float longestRemaining = float.MinValue;
-            foreach (var container in from container in EffectShelf from specTag in container.Spec.Base.Tags.GrantedTags.Where(specTag => specTag == lookForTag) select container)
+            foreach (var container in EffectShelf)
             {
+                if (container.GetGrantedTags().All(specTag => specTag != lookForTag)) continue;
                 if (container.Spec.Base.DurationSpecification.DurationPolicy == EEffectDurationPolicy.Infinite)
-                {
                     return new GameplayEffectDuration(float.MaxValue, float.MaxValue, true);
-                }
-
+                
                 if (!(container.TotalDuration > longestDuration)) continue;
                 longestDuration = container.TotalDuration;
                 longestRemaining = container.DurationRemaining;
@@ -428,9 +517,9 @@ namespace FarEmerald.PlayForge
         {
             float longestDuration = float.MinValue;
             float longestRemaining = float.MinValue;
-            foreach (AbstractGameplayEffectShelfContainer container in EffectShelf)
+            foreach (var container in EffectShelf)
             {
-                foreach (Tag specTag in container.Spec.Base.Tags.GrantedTags)
+                foreach (var specTag in container.Spec.Base.Tags.GrantedTags)
                 {
                     if (!lookForTags.Contains(specTag)) continue;
                     if (container.Spec.Base.DurationSpecification.DurationPolicy == EEffectDurationPolicy.Infinite)
@@ -451,7 +540,7 @@ namespace FarEmerald.PlayForge
 
         public override string ToString()
         {
-            return $"{Data.Name}";
+            return $"{Data.GetName()}";
         }
 
         public override async UniTask CallBehaviour(Tag cmd, AbstractProxyTaskBehaviour cb, CancellationToken token)
@@ -468,14 +557,13 @@ namespace FarEmerald.PlayForge
 
             await base.CallBehaviour(cmd, cb, token);
         }
-
         public override UniTask RunCompositeBehaviourAsync(Tag command, AbstractProxyTaskBehaviour cb, IProxyTaskBehaviourCaller caller, CancellationToken token)
         {
             return UniTask.CompletedTask;
         }
 
         #region Derivation Source
-        public List<Tag> GetContextTags() => new(){ Tags.CONTEXT_GAS, Tags.CONTEXT_SOURCE };
+        public List<Tag> GetContextTags() => new(){ Tags.GAS, Tags.SOURCE };
         public TagCache GetTagCache() => TagCache;
         public Tag GetAssetTag() => Data.AssetTag;
         public int GetLevel() => Data.Level;
@@ -498,6 +586,31 @@ namespace FarEmerald.PlayForge
         {
             return TagCache.GetWeight(_tag);
         }
+        public void CompileGrantedTags()
+        {
+            TagCache.ResetWeights();
+
+            if (Data.AttributeSet)
+            {
+                foreach (var t in Data.AttributeSet.GetGrantedTags()) TagCache.AddTag(t);
+            }
+
+            foreach (var effect in EffectShelf)
+            {
+                foreach (var t in effect.GetGrantedTags())
+                {
+                    //Debug.Log($"\t\tEffect tag ({effect.Spec.Base.GetName()}): {t}");
+                    TagCache.AddTag(t);
+                }
+            }
+
+            foreach (var ability in AbilitySystem.GetAbilityContainers())
+            {
+                foreach (var t in ability.GetGrantedTags()) TagCache.AddTag(t);
+            }
+
+            foreach (var t in Data.GetGrantedTags()) TagCache.AddTag(t);
+        }
         #endregion
         public AttributeSystemComponent GetAttributeSystem()
         {
@@ -511,5 +624,59 @@ namespace FarEmerald.PlayForge
         {
             return this;
         }
+    }
+
+    public class RootActionRequest
+    {
+        public readonly Action Action;
+        public RootActionRequest(Action action)
+        {
+            Action = action;
+        }
+    }
+
+    public class RootActionQueue
+    {
+        private class Node
+        {
+            public Node Next;
+            public Node Prev;
+            public RootActionRequest Data;
+        }
+
+        private Node Root;
+        private Node End;
+        
+        public int Count { get; private set; }
+        
+        public void Enqueue(RootActionRequest request)
+        {
+            if (Root is null)
+            {
+                Root = new Node() { Next = null, Prev = null, Data = request };
+                End = Root;
+                
+                Count = 1;
+                return;
+            }
+            
+            var node = new Node() { Next = End, Prev = null, Data = request };
+            End = node;
+            node.Next.Prev = node;
+            
+            Count += 1;
+        }
+
+        public RootActionRequest Dequeue()
+        {
+            if (Root is null) return null;
+            
+            var request = Root;
+            Root = request.Prev;
+            Count -= 1;
+
+            return request.Data;
+        }
+        
     }
 }

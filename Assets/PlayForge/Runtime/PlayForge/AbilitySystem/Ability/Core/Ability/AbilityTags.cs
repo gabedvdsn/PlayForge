@@ -22,22 +22,20 @@ namespace FarEmerald.PlayForge
         [ForgeTagContext(ForgeContext.Granted)]
         [Tooltip("Tags that are granted while this ability is active")]
         public List<Tag> ActiveGrantedTags;
-        
-        [Header("Requirements")]
-        
-        [Tooltip("Source requirements to use this ability")]
-        public AvoidRequireTagGroup SourceRequirements;
-        [Tooltip("Target requirements to use this ability (n/a for non-targeted abilities, e.g. ground cast)")]
-        public AvoidRequireTagGroup TargetRequirements;
+
+        [Header("Requirements")] 
+        [Tooltip("Tags requirements to activate this ability.")]
+        public AbilityTagRequirements TagRequirements;
 
         public bool ValidateSourceRequirements(ITarget source)
         {
-            return SourceRequirements.Validate(source.GetAppliedTags());
+            return TagRequirements.SourceRequirements.Validate(source.GetAppliedTags());
         }
 
         public bool ValidateTargetRequirements(ITarget target)
         {
-            return TargetRequirements.Validate(target.GetAppliedTags());
+            return TagRequirements.TargetRequirements.Validate(target.GetAppliedTags());
         }
     }
+
 }

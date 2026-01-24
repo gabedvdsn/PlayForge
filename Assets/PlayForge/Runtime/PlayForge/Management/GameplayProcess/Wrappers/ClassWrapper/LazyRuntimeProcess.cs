@@ -27,11 +27,6 @@ namespace FarEmerald.PlayForge
             await UniTask.WaitWhile(() => processActive, cancellationToken: token);
         }
         
-        public override bool IsInitialized()
-        {
-            return true;
-        }
-        
         public override UniTask CallBehaviour(Tag cmd, AbstractProxyTaskBehaviour cb, CancellationToken token)
         {
             return UniTask.CompletedTask;

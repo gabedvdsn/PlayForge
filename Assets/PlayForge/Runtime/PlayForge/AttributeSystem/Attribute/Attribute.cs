@@ -19,6 +19,10 @@ namespace FarEmerald.PlayForge
         {
             return Name;
         }
+        public override IEnumerable<Tag> GetGrantedTags()
+        {
+            yield break;
+        }
         public string GetDescription()
         {
             return Description;

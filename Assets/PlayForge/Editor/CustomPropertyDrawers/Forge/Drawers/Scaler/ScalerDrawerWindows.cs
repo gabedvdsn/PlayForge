@@ -29,6 +29,7 @@ namespace FarEmerald.PlayForge.Extended.Editor
             public AbstractScaler Scaler;
             public string ScalerTypeName;
             public string ValuePreview;
+            public bool IsTemplate;
         }
         
         public static List<ScalerImportRecord> GetImportCache()
@@ -53,7 +54,35 @@ namespace FarEmerald.PlayForge.Extended.Editor
                 { typeof(Attribute), ("📈", "Attribute") },
                 { typeof(AttributeSet), ("📊", "AttrSet") },
                 { typeof(EntityIdentity), ("👤", "Entity") },
+                { typeof(ScalerTemplate), ("📋", "Template") },
             };
+            
+            // First, add ScalerTemplate assets (they appear first and are highlighted)
+            foreach (var guid in AssetDatabase.FindAssets($"t:{nameof(ScalerTemplate)}"))
+            {
+                var path = AssetDatabase.GUIDToAssetPath(guid);
+                var template = AssetDatabase.LoadAssetAtPath<ScalerTemplate>(path);
+                if (template?.Scaler == null) continue;
+                
+                var scaler = template.Scaler;
+                var scalerTypeName = scaler.GetType().Name;
+                if (scalerTypeName.EndsWith("Scaler"))
+                    scalerTypeName = scalerTypeName.Substring(0, scalerTypeName.Length - 6);
+                
+                records.Add(new ScalerImportRecord
+                {
+                    Asset = template,
+                    AssetName = template.DisplayName,
+                    AssetTypeName = "Template",
+                    AssetTypeIcon = "📋",
+                    FieldPath = "Scaler",
+                    Context = !string.IsNullOrEmpty(template.Category) ? template.Category : "Template",
+                    Scaler = scaler,
+                    ScalerTypeName = scalerTypeName,
+                    ValuePreview = GetValuePreview(scaler),
+                    IsTemplate = true
+                });
+            }
             
             var assetTypes = new[] { "Ability", "GameplayEffect", "Attribute", "AttributeSet", "EntityIdentity" };
             
@@ -102,7 +131,8 @@ namespace FarEmerald.PlayForge.Extended.Editor
                                     Context = DeriveContext(iter.propertyPath),
                                     Scaler = scaler,
                                     ScalerTypeName = scalerTypeName,
-                                    ValuePreview = GetValuePreview(scaler)
+                                    ValuePreview = GetValuePreview(scaler),
+                                    IsTemplate = false
                                 });
                             }
                         }
@@ -215,7 +245,57 @@ namespace FarEmerald.PlayForge.Extended.Editor
             
             // Results
             scrollPos = EditorGUILayout.BeginScrollView(scrollPos);
-            var groups = filteredList.GroupBy(r => r.ScalerTypeName).OrderBy(g => g.Key);
+            
+            // Show templates section first if any exist
+            var templates = filteredList.Where(r => r.IsTemplate).ToList();
+            if (templates.Any())
+            {
+                GUI.backgroundColor = new Color(0.3f, 0.5f, 0.7f, 0.3f);
+                EditorGUILayout.BeginHorizontal(EditorStyles.helpBox);
+                GUI.backgroundColor = Color.white;
+                EditorGUILayout.LabelField("📋 Templates", EditorStyles.boldLabel);
+                EditorGUILayout.LabelField($"({templates.Count})", EditorStyles.miniLabel, GUILayout.Width(40));
+                EditorGUILayout.EndHorizontal();
+                
+                foreach (var record in templates)
+                {
+                    EditorGUILayout.BeginHorizontal();
+                    GUILayout.Space(16);
+                    
+                    // Green left border indicator for templates
+                    var rect = GUILayoutUtility.GetRect(3, 18, GUILayout.Width(3));
+                    EditorGUI.DrawRect(rect, Colors.AccentGreen);
+                    
+                    EditorGUILayout.LabelField(record.AssetTypeIcon, GUILayout.Width(20));
+                    
+                    if (GUILayout.Button(record.AssetName, EditorStyles.linkLabel, GUILayout.Width(140)))
+                    {
+                        Selection.activeObject = record.Asset;
+                        EditorGUIUtility.PingObject(record.Asset);
+                    }
+                    
+                    GUI.backgroundColor = new Color(0.3f, 0.7f, 0.4f, 0.4f);
+                    GUILayout.Label(record.Context, EditorStyles.miniButton, GUILayout.Width(70));
+                    GUI.backgroundColor = Color.white;
+                    
+                    EditorGUILayout.LabelField(record.ValuePreview, EditorStyles.miniLabel, GUILayout.Width(70));
+                    
+                    GUI.backgroundColor = Colors.AccentGreen;
+                    if (GUILayout.Button("Import", GUILayout.Width(50)))
+                    {
+                        onImport?.Invoke(record.Scaler);
+                        Close();
+                    }
+                    GUI.backgroundColor = Color.white;
+                    
+                    EditorGUILayout.EndHorizontal();
+                }
+                EditorGUILayout.Space(8);
+            }
+            
+            // Group non-template scalers by type
+            var nonTemplates = filteredList.Where(r => !r.IsTemplate).ToList();
+            var groups = nonTemplates.GroupBy(r => r.ScalerTypeName).OrderBy(g => g.Key);
             
             foreach (var group in groups)
             {

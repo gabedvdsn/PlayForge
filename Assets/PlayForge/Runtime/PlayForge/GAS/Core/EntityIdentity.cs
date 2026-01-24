@@ -25,18 +25,19 @@ namespace FarEmerald.PlayForge
 
         public float RelativeLevel => CapAtMaxLevel ? 1f : (MaxLevel > 1 ? (Level - 1f) / (MaxLevel - 1f) : 1f);
         
-        public EAbilityActivationPolicy ActivationPolicy = EAbilityActivationPolicy.SingleActiveQueue;
+        public EAbilityActivationPolicy ActivationPolicy = EAbilityActivationPolicy.QueueActivationIfBusy;
+        
         public int MaxAbilities = 99;
         public List<Ability> StartingAbilities = new();
         public bool AllowDuplicateAbilities;
-        
-        [SerializeReference] public List<AbstractImpactWorker> ImpactWorkers = new();
+
+        public int MaxItems = 99;
+        public List<Item> StartingItems = new();
+        public bool AllowDuplicateItems;
         
         [SerializeReference] public AttributeSet AttributeSet;
-        [SerializeReference] public List<AbstractAttributeWorker> AttributeChangeEvents = new();
-        
-        public List<AbstractTagWorker> TagWorkers = new();
-        public List<AbstractAnalysisWorker> AnalysisWorkers = new();
+
+        public StandardWorkerGroup WorkerGroup;
         
         [SerializeField]
         public List<DataWrapper> LocalData = new();
@@ -51,7 +52,10 @@ namespace FarEmerald.PlayForge
         }
         public Texture2D GetPrimaryIcon()
         {
-            if (LocalData.TryGet(Tag.Generate("PrimaryIcon"), EDataWrapperType.Object, out var data)) return data.objectValue as Texture2D;
+            foreach (var ti in Textures)
+            {
+                if (ti.Tag == PlayForge.Tags.PRIMARY) return ti.Texture;
+            }
             return Textures.Count > 0 ? Textures[0].Texture : null;
         }
         public override int GetMaxLevel()
@@ -69,6 +73,12 @@ namespace FarEmerald.PlayForge
         public override Tag GetProviderTag()
         {
             return AssetTag;
+        }
+
+        public override IEnumerable<Tag> GetGrantedTags()
+        {
+            yield return AssetTag;
+            foreach (var tag in GrantedTags) yield return tag;
         }
     }
 }

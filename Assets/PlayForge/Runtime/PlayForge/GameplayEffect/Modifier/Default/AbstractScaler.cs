@@ -17,11 +17,93 @@ namespace FarEmerald.PlayForge
     [Serializable]
     public abstract class AbstractScaler : IScaler
     {
+        [Tooltip("Optional name for this scaler (helps identify when importing or viewing)")]
+        public string Name;
+        
+        [Header("Template Link")]
+        [Tooltip("Optional: Link to a shared ScalerTemplate. When linked, this scaler can sync its values from the template.")]
+        public ScalerTemplate SourceTemplate;
+        
+        [Tooltip("When enabled, this scaler's values will be kept in sync with the linked template.\n" +
+                 "Disable to make local modifications while keeping the template reference.")]
+        public bool SyncWithTemplate;
+        
+        [Header("Configuration")]
         [Tooltip("How this scaler determines its level range.\n\n" +
                  "LockToSource: Uses the owning Ability/Entity's level range automatically.\n" +
                  "Unlocked: Uses its own MaxLevel setting.\n" +
                  "Partitioned: Uses min(MaxLevel, source's current level).")]
         public ELevelConfig Configuration = ELevelConfig.LockToLevelProvider;
+        
+        // ═══════════════════════════════════════════════════════════════════════════
+        // Name Properties
+        // ═══════════════════════════════════════════════════════════════════════════
+        
+        /// <summary>
+        /// Returns true if this scaler has a custom name set.
+        /// </summary>
+        public bool HasName => !string.IsNullOrEmpty(Name);
+        
+        /// <summary>
+        /// Gets the display name - returns Name if set, empty string otherwise.
+        /// </summary>
+        public string GetDisplayName() => HasName ? Name : "";
+        
+        // ═══════════════════════════════════════════════════════════════════════════
+        // Template Properties
+        // ═══════════════════════════════════════════════════════════════════════════
+        
+        /// <summary>
+        /// Returns true if this scaler is linked to a template.
+        /// </summary>
+        public bool IsLinkedToTemplate => SourceTemplate != null;
+        
+        /// <summary>
+        /// Returns true if this scaler should sync from its template.
+        /// </summary>
+        public bool ShouldSyncFromTemplate => IsLinkedToTemplate && SyncWithTemplate;
+        
+        // ═══════════════════════════════════════════════════════════════════════════
+        // Template Methods
+        // ═══════════════════════════════════════════════════════════════════════════
+        
+        /// <summary>
+        /// Syncs values from the linked template if SyncWithTemplate is enabled.
+        /// Call this in OnValidate or when needed.
+        /// </summary>
+        public void TrySyncFromTemplate()
+        {
+            if (ShouldSyncFromTemplate)
+            {
+                SourceTemplate.CopyTo(this);
+            }
+        }
+        
+        /// <summary>
+        /// Links this scaler to a template and optionally syncs immediately.
+        /// </summary>
+        public void LinkToTemplate(ScalerTemplate template, bool syncImmediately = true)
+        {
+            SourceTemplate = template;
+            SyncWithTemplate = true;
+            if (syncImmediately && template != null)
+            {
+                template.CopyTo(this);
+            }
+        }
+        
+        /// <summary>
+        /// Unlinks from the current template, keeping current values.
+        /// </summary>
+        public void UnlinkFromTemplate()
+        {
+            SourceTemplate = null;
+            SyncWithTemplate = false;
+        }
+        
+        // ═══════════════════════════════════════════════════════════════════════════
+        // Scaler Fields
+        // ═══════════════════════════════════════════════════════════════════════════
         
         [Tooltip("Maximum level for Unlocked/Partitioned modes.\n" +
                  "Ignored when using LockToSource (uses source's max level instead).")]
@@ -36,6 +118,8 @@ namespace FarEmerald.PlayForge
         
         [Tooltip("Generated curve from level values (auto-updated)")]
         public AnimationCurve Scaling = AnimationCurve.Linear(0f, 1f, 1f, 1f);
+
+        [SerializeReference] public List<AbstractScalerBehaviour> Behaviours = new();
         
         // ═══════════════════════════════════════════════════════════════════════════
         // Abstract Methods
@@ -43,6 +127,11 @@ namespace FarEmerald.PlayForge
         
         public abstract void Initialize(IAttributeImpactDerivation spec);
         public abstract float Evaluate(IAttributeImpactDerivation spec);
+
+        public virtual void Initialize(AbstractStackingEffectContainer container) => Initialize(container.Spec);
+        public virtual float Evaluate(AbstractStackingEffectContainer container) => Evaluate(container.Spec);
+
+        public virtual bool UseScalingOptions() => true;
         
         // ═══════════════════════════════════════════════════════════════════════════
         // Level Value Management
@@ -325,7 +414,21 @@ namespace FarEmerald.PlayForge
         protected float EvaluateFromSpec(IAttributeImpactDerivation spec)
         {
             float relativeLevel = spec.GetEffectDerivation().GetRelativeLevel();
-            return EvaluateAtRelativeLevel(relativeLevel);
+            return ApplyBehaviourEvaluation(spec, EvaluateAtRelativeLevel(relativeLevel));
+
+        }
+
+        protected float ApplyBehaviourEvaluation(IAttributeImpactDerivation spec, float magnitude)
+        {
+            float m = magnitude;
+            
+            foreach (var behaviour in Behaviours)
+            {
+                behaviour.Initialize(spec);
+                m = behaviour.Evaluate(m, spec);
+            }
+
+            return m;
         }
     }
     

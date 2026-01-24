@@ -1,0 +1,167 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 2d34fc1f98f8a0b4c9b37da3e706e0e1, type: 3}
+  m_Name: EFFECT_COST_TEMPLATE
+  m_EditorClassIdentifier: 
+  Definition:
+    Name: COST_TEMPLATE
+    Description: 
+    Visibility:
+      Name: Not Visible
+    Textures: []
+    ImpactRetentionGroup:
+      Name: Ignore
+  Tags:
+    AssetTag:
+      Name: COSTTEMPLATE
+    ContextTags: []
+    GrantedTags: []
+  ImpactSpecification:
+    AttributeTarget: {fileID: 11400000, guid: d8daec39e245e4c4d971e9da2d84aa0d, type: 2}
+    TargetImpact: 0
+    ImpactOperation: 0
+    AffiliationPolicy: 3
+    AffiliationComparison: 0
+    Affiliations: []
+    ImpactTypes:
+    - Name: System
+    ReverseImpactOnRemoval: 0
+    Magnitude: 0
+    MagnitudeScaler:
+      rid: 1671424176672997605
+    RealMagnitude: 1
+    Packets: []
+  DurationSpecification:
+    DurationPolicy: 0
+    Duration: 0
+    DurationScaler:
+      rid: -2
+    RealDuration: 1
+    RealDeltaTime: 1
+    DeltaTimeScaler:
+      rid: -2
+    EnablePeriodicTicks: 1
+    TickOnApplication: 0
+    Ticks: 0
+    TickInterval: 0
+    TickScaler:
+      rid: -2
+    RealTicks: 1
+    Rounding: 1
+    AdditionalExecuteTicks: 0
+    ExecuteTicksScaler:
+      rid: -2
+    RealExecuteTicks: 2
+    ExecuteTicksRounding: 1
+    ReApplicationPolicy: 0
+    ReApplicationInteraction: 0
+    StackPolicy: 0
+    AdditionalStackAmount: 1
+    StackAmountScaler:
+      rid: -2
+    RealStackAmount: 2
+    StackAmountRounding: 1
+  Workers: []
+  SourceRequirements:
+    ApplicationRequirements:
+      Name: Source Ability Activation
+      SourceTemplate: {fileID: 0}
+      SyncWithTemplate: 0
+      AvoidTags:
+      - Tag:
+          Name: Stunned
+        Operator: 5
+        Magnitude: 0
+      - Tag:
+          Name: Silenced
+        Operator: 5
+        Magnitude: 0
+      - Tag:
+          Name: Rooted
+        Operator: 5
+        Magnitude: 0
+      RequireTags: []
+    OngoingRequirements:
+      Name: 
+      SourceTemplate: {fileID: 0}
+      SyncWithTemplate: 0
+      AvoidTags: []
+      RequireTags: []
+    RemovalRequirements:
+      Name: 
+      SourceTemplate: {fileID: 0}
+      SyncWithTemplate: 0
+      AvoidTags: []
+      RequireTags: []
+  TargetRequirements:
+    ApplicationRequirements:
+      Name: 
+      SourceTemplate: {fileID: 0}
+      SyncWithTemplate: 0
+      AvoidTags: []
+      RequireTags: []
+    OngoingRequirements:
+      Name: 
+      SourceTemplate: {fileID: 0}
+      SyncWithTemplate: 0
+      AvoidTags: []
+      RequireTags: []
+    RemovalRequirements:
+      Name: 
+      SourceTemplate: {fileID: 0}
+      SyncWithTemplate: 0
+      AvoidTags: []
+      RequireTags: []
+  LocalData: []
+  LinkMode: 0
+  _linkedSource: {fileID: 0}
+  references:
+    version: 2
+    RefIds:
+    - rid: -2
+      type: {class: , ns: , asm: }
+    - rid: 1671424176672997605
+      type: {class: SimpleScaler, ns: FarEmerald.PlayForge, asm: Assembly-CSharp}
+      data:
+        Name: 
+        SourceTemplate: {fileID: 0}
+        SyncWithTemplate: 0
+        Configuration: 0
+        MaxLevel: 20
+        LevelValues:
+        - 1
+        Interpolation: 1
+        Scaling:
+          serializedVersion: 2
+          m_Curve:
+          - serializedVersion: 3
+            time: 0
+            value: 1
+            inSlope: 0
+            outSlope: 0
+            tangentMode: 0
+            weightedMode: 0
+            inWeight: 0
+            outWeight: 0
+          - serializedVersion: 3
+            time: 1
+            value: 1
+            inSlope: 0
+            outSlope: 0
+            tangentMode: 0
+            weightedMode: 0
+            inWeight: 0
+            outWeight: 0
+          m_PreInfinity: 2
+          m_PostInfinity: 2
+          m_RotationOrder: 4
+        Behaviours: []

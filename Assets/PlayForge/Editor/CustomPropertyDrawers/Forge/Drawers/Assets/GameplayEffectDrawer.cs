@@ -38,7 +38,7 @@ namespace FarEmerald.PlayForge.Extended.Editor
         
         protected override string GetStringValue(SerializedProperty prop, GameplayEffect value)
         {
-            string l = value?.GetName() ?? "<None>";
+            string l = value != null ? value.GetName() ?? "<None>" : "<None>";
             return string.IsNullOrEmpty(l) ? "<Unnamed>" : l;
         }
         
@@ -135,6 +135,8 @@ namespace FarEmerald.PlayForge.Extended.Editor
                 actionsContainer.Add(createBtn);
             }
             
+            BuildGoButton(prop, actionsContainer);
+            
             // Add link info section
             var linkSection = new VisualElement { name = "LinkSection" };
             root.Add(linkSection);
@@ -160,14 +162,43 @@ namespace FarEmerald.PlayForge.Extended.Editor
                     {
                         HandleEffectAssignment(prop, newEffect, parentProvider, parentAsset);
                     }
-                    root.schedule.Execute(() => BuildLinkInfo(linkSection, prop, parentProvider));
+                    root.schedule.Execute(() =>
+                    {
+                        BuildGoButton(prop, actionsContainer);
+                        BuildLinkInfo(linkSection, prop, parentProvider);
+                    });
                 }
             });
             
             // Refresh periodically
-            root.schedule.Execute(() => BuildLinkInfo(linkSection, prop, parentProvider)).Every(500);
+            root.schedule.Execute(() =>
+            {
+                BuildLinkInfo(linkSection, prop, parentProvider);
+                BuildGoButton(prop, actionsContainer);
+                
+            }).Every(500);
             
             return root;
+        }
+
+        void BuildGoButton(SerializedProperty prop, VisualElement container)
+        {
+            var btn = container.Q("GoBtn");
+            if (btn is not null) container.Remove(btn);
+            
+            var effect = GetCurrentValue(prop);
+            if (effect is not null)
+            {
+                var goBtn = CreateActionButton(Icons.Arrow, $"Go to \"{effect.GetName()}\"", Colors.AccentBlue);
+                goBtn.name = "GoBtn";
+                goBtn.style.unityFontStyleAndWeight = FontStyle.Bold;
+                goBtn.clicked += () =>
+                {
+                    Selection.activeObject = effect;
+                    EditorGUIUtility.PingObject(effect);
+                };
+                container.Add(goBtn);
+            }
         }
         
         // ═══════════════════════════════════════════════════════════════════════════
@@ -455,7 +486,7 @@ namespace FarEmerald.PlayForge.Extended.Editor
                         Selection.activeObject = linkedProvider;
                         EditorGUIUtility.PingObject(linkedProvider);
                     });
-                    navBtn.text = "→";
+                    navBtn.text = Icons.Arrow;
                     navBtn.tooltip = "Go to linked provider";
                     navBtn.style.width = 18;
                     navBtn.style.height = 14;

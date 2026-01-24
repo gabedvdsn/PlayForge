@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using UnityEngine;
 
 namespace FarEmerald.PlayForge
 {
@@ -21,39 +22,26 @@ namespace FarEmerald.PlayForge
         public void ApplyUsageEffects()
         {
             // Apply cost and cooldown effects
-            if (Base.Cooldown is not null && Base.Cooldown.Tags.GrantedTags.Count > 0) 
+            if (Base.Cooldown is not null) 
                 Owner.ApplyGameplayEffect(Owner.GenerateEffectSpec(this, Base.Cooldown));
 
             if (Base.Cost is not null) 
                 Owner.ApplyGameplayEffect(Owner.GenerateEffectSpec(this, Base.Cost));
         }
             
-        public bool ValidateActivationRequirements(AbilityDataPacket data)
+        public bool ValidateSourceActivationRequirements(AbilityDataPacket data)
         {
-            return Base.SourceActivationRules.All(rule => rule.Validate(data, out _));
+            return Base.SourceActivationRules.All(rule => rule.Validate(data, data.Spec.GetOwner, out _));
             /*return !(GetCooldown().DurationRemaining > 0f)
                    && CanCoverCost()
                    && Base.Tags.ValidateSourceRequirements(Owner);*/
         }
 
-        public bool ValidateActivationRequirements(ITarget target, AbilityDataPacket data)
+        public bool ValidateAllActivationRequirements(ITarget target, AbilityDataPacket data)
         {
-            return ValidateActivationRequirements(data)
-                   && Base.TargetActivationRules.All(rule => rule.Validate(data, out _))
-                   && Base.Tags.ValidateTargetRequirements(target);
-        }
-
-        public GameplayEffectDuration GetCooldown()
-        {
-            if (Base.Cooldown is null || !(Base.Cooldown.Tags.GrantedTags.Count > 0)) return default;
-            return Owner.GetLongestDurationFor(Base.Cooldown.Tags.GrantedTags);
-        }
-
-        public bool CanCoverCost()
-        {
-            if (Base.Cost is null) return true;
-            if (!Owner.FindAttributeSystem(out var attr) || !attr.TryGetAttributeValue(Base.Cost.ImpactSpecification.AttributeTarget, out AttributeValue attributeValue)) return false;
-            return attributeValue.CurrentValue >= Base.Cost.ImpactSpecification.GetMagnitude(Owner.GenerateEffectSpec(this, Base.Cost));
+            return ValidateSourceActivationRequirements(data)
+                   && Base.TargetActivationRules.All(rule => rule.Validate(data, () => target, out _))
+                   && Base.Tags.ValidateTargetRequirements(target) ;
         }
 
         public ISource GetOwner() => Owner;
@@ -72,6 +60,10 @@ namespace FarEmerald.PlayForge
         public List<Tag> GetAffiliation()
         {
             return Owner.GetAffiliation();
+        }
+        public bool IsActive()
+        {
+            return Owner.FindAbilitySystem(out var ab) && ab.TryGetAbilityContainer(Base, out var container) && container.IsActive;
         }
 
         public override string ToString()

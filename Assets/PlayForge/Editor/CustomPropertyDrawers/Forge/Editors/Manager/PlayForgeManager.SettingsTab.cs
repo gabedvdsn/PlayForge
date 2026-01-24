@@ -291,6 +291,141 @@ namespace FarEmerald.PlayForge.Extended.Editor
             addRow.Add(addTagBtn);
         }
         
+        /// <summary>
+        /// Builds a type-specific template tags editor that stores tags per asset type.
+        /// Uses EditorPrefs with key pattern: PlayForge_Tags_{typeName}
+        /// </summary>
+        private void BuildTypeSpecificTemplateTags(VisualElement container, string typeName)
+        {
+            var prefsKey = PREFS_PREFIX + "Tags_" + typeName;
+            var tagsJson = EditorPrefs.GetString(prefsKey, "[]");
+            var tags = new List<(string name, Color color)>();
+            
+            // Parse existing tags
+            try
+            {
+                // Simple JSON array format: [{"n":"name","c":"#RRGGBB"},...]
+                if (!string.IsNullOrEmpty(tagsJson) && tagsJson != "[]")
+                {
+                    var cleanJson = tagsJson.Trim('[', ']');
+                    if (!string.IsNullOrEmpty(cleanJson))
+                    {
+                        var entries = cleanJson.Split(new[] { "},{" }, StringSplitOptions.RemoveEmptyEntries);
+                        foreach (var entry in entries)
+                        {
+                            var clean = entry.Trim('{', '}');
+                            var nameMatch = System.Text.RegularExpressions.Regex.Match(clean, @"""n"":""([^""]+)""");
+                            var colorMatch = System.Text.RegularExpressions.Regex.Match(clean, @"""c"":""([^""]+)""");
+                            if (nameMatch.Success)
+                            {
+                                var tagName = nameMatch.Groups[1].Value;
+                                var color = Colors.AccentBlue;
+                                if (colorMatch.Success && ColorUtility.TryParseHtmlString(colorMatch.Groups[1].Value, out var parsed))
+                                    color = parsed;
+                                tags.Add((tagName, color));
+                            }
+                        }
+                    }
+                }
+            }
+            catch { }
+            
+            void SaveTags()
+            {
+                var parts = tags.Select(t => $"{{\"n\":\"{t.name}\",\"c\":\"#{ColorUtility.ToHtmlStringRGB(t.color)}\"}}");
+                var json = "[" + string.Join(",", parts) + "]";
+                EditorPrefs.SetString(prefsKey, json);
+            }
+            
+            var tagsList = new VisualElement();
+            tagsList.style.marginBottom = 4;
+            container.Add(tagsList);
+            
+            void RebuildList()
+            {
+                tagsList.Clear();
+                for (int i = 0; i < tags.Count; i++)
+                {
+                    int idx = i;
+                    var (tagName, tagColor) = tags[i];
+                    
+                    var row = new VisualElement { style = { flexDirection = FlexDirection.Row, alignItems = Align.Center, marginBottom = 2 } };
+                    
+                    var colorIndicator = new VisualElement();
+                    colorIndicator.style.width = 12;
+                    colorIndicator.style.height = 12;
+                    colorIndicator.style.backgroundColor = tagColor;
+                    colorIndicator.style.borderTopLeftRadius = 2;
+                    colorIndicator.style.borderTopRightRadius = 2;
+                    colorIndicator.style.borderBottomLeftRadius = 2;
+                    colorIndicator.style.borderBottomRightRadius = 2;
+                    colorIndicator.style.marginRight = 6;
+                    row.Add(colorIndicator);
+                    
+                    var nameLabel = new Label(tagName);
+                    nameLabel.style.fontSize = 10;
+                    nameLabel.style.color = Colors.LabelText;
+                    nameLabel.style.flexGrow = 1;
+                    row.Add(nameLabel);
+                    
+                    var deleteBtn = CreateButton("×", () =>
+                    {
+                        tags.RemoveAt(idx);
+                        SaveTags();
+                        RebuildList();
+                    });
+                    deleteBtn.style.width = 18;
+                    deleteBtn.style.height = 18;
+                    deleteBtn.style.fontSize = 10;
+                    deleteBtn.style.paddingLeft = 0;
+                    deleteBtn.style.paddingRight = 0;
+                    deleteBtn.style.backgroundColor = Colors.ButtonBackground;
+                    row.Add(deleteBtn);
+                    
+                    tagsList.Add(row);
+                }
+                
+                if (tags.Count == 0)
+                {
+                    var emptyLabel = new Label("No type-specific tags defined.");
+                    emptyLabel.style.fontSize = 10;
+                    emptyLabel.style.color = Colors.HintText;
+                    emptyLabel.style.unityFontStyleAndWeight = FontStyle.Italic;
+                    tagsList.Add(emptyLabel);
+                }
+            }
+            
+            RebuildList();
+            
+            // Add row
+            var addRow = new VisualElement { style = { flexDirection = FlexDirection.Row, alignItems = Align.Center, marginTop = 4 } };
+            container.Add(addRow);
+            
+            var newTagField = new TextField { style = { width = 100 } };
+            addRow.Add(newTagField);
+            
+            var newColorField = new ColorField { style = { width = 50, marginLeft = 4 } };
+            newColorField.value = Colors.AccentBlue;
+            addRow.Add(newColorField);
+            
+            var addBtn = CreateButton("+ Add", () =>
+            {
+                var name = newTagField.value?.Trim();
+                if (string.IsNullOrEmpty(name)) return;
+                if (tags.Any(t => t.name.Equals(name, StringComparison.OrdinalIgnoreCase)))
+                {
+                    EditorUtility.DisplayDialog("Duplicate", $"Tag '{name}' already exists.", "OK");
+                    return;
+                }
+                tags.Add((name, newColorField.value));
+                SaveTags();
+                newTagField.value = "";
+                RebuildList();
+            });
+            addBtn.style.marginLeft = 4;
+            addRow.Add(addBtn);
+        }
+        
         private VisualElement CreateTemplateTagRow(TemplateTag tag, Action onChanged)
         {
             var row = new VisualElement();
@@ -440,9 +575,17 @@ namespace FarEmerald.PlayForge.Extended.Editor
             
             ShowAssetTypeTab(currentAssetTypeTab);
             
-            // Template Tags Section
-            var tagsSection = CreateSettingsSection("Template Tags", "Manage tags for categorizing templates", Colors.AccentCyan);
+            // Universal Template Tags Section
+            var tagsSection = CreateSettingsSection("Universal Template Tags", "Tags available for all asset type templates", Colors.AccentCyan);
             scrollView.Add(tagsSection);
+            
+            var universalHint = new Label("These tags can be used to categorize templates across all asset types. Type-specific tags can be added in each asset type's settings above.");
+            universalHint.style.fontSize = 10;
+            universalHint.style.color = Colors.HintText;
+            universalHint.style.whiteSpace = WhiteSpace.Normal;
+            universalHint.style.marginTop = 4;
+            universalHint.style.marginBottom = 8;
+            tagsSection.Add(universalHint);
             
             BuildTemplateTagsEditor(tagsSection);
             
@@ -833,6 +976,9 @@ namespace FarEmerald.PlayForge.Extended.Editor
                 case "GameplayEffect":
                     BuildEffectSettings(settingsContainer);
                     break;
+                case "Item":
+                    BuildItemSettings(settingsContainer);
+                    break;
                 case "Attribute":
                     BuildAttributeSettings(settingsContainer);
                     break;
@@ -841,6 +987,12 @@ namespace FarEmerald.PlayForge.Extended.Editor
                     break;
                 case "EntityIdentity":
                     BuildEntitySettings(settingsContainer);
+                    break;
+                case "ScalerTemplate":
+                    BuildScalerTemplateSettings(settingsContainer);
+                    break;
+                case "RequirementTemplate":
+                    BuildRequirementTemplateSettings(settingsContainer);
                     break;
                 default:
                     var noSettings = new Label("No additional settings available.");
@@ -855,49 +1007,330 @@ namespace FarEmerald.PlayForge.Extended.Editor
         // Type-specific settings (infrastructure - can be expanded)
         private void BuildAbilitySettings(VisualElement container)
         {
+            // Level Settings
+            var levelHeader = new Label("Level");
+            levelHeader.style.fontSize = 10;
+            levelHeader.style.unityFontStyleAndWeight = FontStyle.Bold;
+            levelHeader.style.color = Colors.AccentBlue;
+            levelHeader.style.marginTop = 4;
+            levelHeader.style.marginBottom = 4;
+            container.Add(levelHeader);
+            
             var autoLevelToggle = new Toggle("Auto-set starting level to 1");
             autoLevelToggle.value = EditorPrefs.GetBool(PREFS_PREFIX + "Ability_AutoLevel", true);
             autoLevelToggle.RegisterValueChangedCallback(evt => 
                 EditorPrefs.SetBool(PREFS_PREFIX + "Ability_AutoLevel", evt.newValue));
             container.Add(autoLevelToggle);
-
-            BuildEffectTemplatesSection(container);
+            
+            // Cooldown Settings
+            var cooldownHeader = new Label("Cooldown");
+            cooldownHeader.style.fontSize = 10;
+            cooldownHeader.style.unityFontStyleAndWeight = FontStyle.Bold;
+            cooldownHeader.style.color = Colors.AccentBlue;
+            cooldownHeader.style.marginTop = 12;
+            cooldownHeader.style.marginBottom = 4;
+            container.Add(cooldownHeader);
+            
+            var autoCooldownRow = new VisualElement { style = { flexDirection = FlexDirection.Row, alignItems = Align.Center } };
+            var autoCooldownToggle = new Toggle("Set default cooldown:");
+            autoCooldownToggle.value = EditorPrefs.GetBool(PREFS_PREFIX + "Ability_AutoCooldown", false);
+            autoCooldownToggle.style.width = 160;
+            autoCooldownToggle.RegisterValueChangedCallback(evt => 
+                EditorPrefs.SetBool(PREFS_PREFIX + "Ability_AutoCooldown", evt.newValue));
+            autoCooldownRow.Add(autoCooldownToggle);
+            
+            var cooldownField = new FloatField();
+            cooldownField.value = EditorPrefs.GetFloat(PREFS_PREFIX + "Ability_DefaultCooldown", 1f);
+            cooldownField.style.width = 60;
+            cooldownField.RegisterValueChangedCallback(evt =>
+                EditorPrefs.SetFloat(PREFS_PREFIX + "Ability_DefaultCooldown", evt.newValue));
+            autoCooldownRow.Add(cooldownField);
+            
+            var cooldownSuffix = new Label("seconds");
+            cooldownSuffix.style.fontSize = 10;
+            cooldownSuffix.style.color = Colors.HintText;
+            cooldownSuffix.style.marginLeft = 4;
+            autoCooldownRow.Add(cooldownSuffix);
+            container.Add(autoCooldownRow);
+            
+            // Tags Section
+            var tagsHeader = new Label("Default Tags");
+            tagsHeader.style.fontSize = 10;
+            tagsHeader.style.unityFontStyleAndWeight = FontStyle.Bold;
+            tagsHeader.style.color = Colors.AccentBlue;
+            tagsHeader.style.marginTop = 12;
+            tagsHeader.style.marginBottom = 4;
+            container.Add(tagsHeader);
+            
+            BuildTypeSpecificTemplateTags(container, "Ability");
         }
         
         private void BuildEffectSettings(VisualElement container)
         {
-            var placeholder = new Label("Effect-specific settings coming soon.");
-            placeholder.style.fontSize = 10;
-            placeholder.style.color = Colors.HintText;
-            placeholder.style.unityFontStyleAndWeight = FontStyle.Italic;
-            container.Add(placeholder);
+            // Duration Policy
+            var durationHeader = new Label("Duration");
+            durationHeader.style.fontSize = 10;
+            durationHeader.style.unityFontStyleAndWeight = FontStyle.Bold;
+            durationHeader.style.color = Colors.AccentRed;
+            durationHeader.style.marginTop = 4;
+            durationHeader.style.marginBottom = 4;
+            container.Add(durationHeader);
+            
+            var durationRow = new VisualElement { style = { flexDirection = FlexDirection.Row, alignItems = Align.Center } };
+            var durationLabel = new Label("Default duration policy:");
+            durationLabel.style.fontSize = 10;
+            durationLabel.style.width = 140;
+            durationRow.Add(durationLabel);
+            
+            var durationOptions = new List<string> { "(None)", "Instant", "Durational", "Infinite" };
+            var durationPopup = new PopupField<string>(durationOptions, 0);
+            durationPopup.style.width = 120;
+            var savedDuration = EditorPrefs.GetInt(PREFS_PREFIX + "Effect_DurationPolicy", -1);
+            if (savedDuration >= 0 && savedDuration < durationOptions.Count - 1)
+                durationPopup.index = savedDuration + 1;
+            durationPopup.RegisterValueChangedCallback(evt =>
+                EditorPrefs.SetInt(PREFS_PREFIX + "Effect_DurationPolicy", durationPopup.index == 0 ? -1 : durationPopup.index - 1));
+            durationRow.Add(durationPopup);
+            container.Add(durationRow);
+            
+            // Stacking Policy
+            var stackingHeader = new Label("Stacking");
+            stackingHeader.style.fontSize = 10;
+            stackingHeader.style.unityFontStyleAndWeight = FontStyle.Bold;
+            stackingHeader.style.color = Colors.AccentRed;
+            stackingHeader.style.marginTop = 12;
+            stackingHeader.style.marginBottom = 4;
+            container.Add(stackingHeader);
+            
+            var stackingRow = new VisualElement { style = { flexDirection = FlexDirection.Row, alignItems = Align.Center } };
+            var stackingLabel = new Label("Default stacking policy:");
+            stackingLabel.style.fontSize = 10;
+            stackingLabel.style.width = 140;
+            stackingRow.Add(stackingLabel);
+            
+            var stackingOptions = new List<string> { "(None)", "StacksShareOneDuration", "StacksHaveIndependentDurations", "DurationTakenFromOneStack" };
+            var stackingPopup = new PopupField<string>(stackingOptions, 0);
+            stackingPopup.style.width = 120;
+            var savedStacking = EditorPrefs.GetInt(PREFS_PREFIX + "Effect_StackingPolicy", -1);
+            if (savedStacking >= 0 && savedStacking < stackingOptions.Count - 1)
+                stackingPopup.index = savedStacking + 1;
+            stackingPopup.RegisterValueChangedCallback(evt =>
+                EditorPrefs.SetInt(PREFS_PREFIX + "Effect_StackingPolicy", stackingPopup.index == 0 ? -1 : stackingPopup.index - 1));
+            stackingRow.Add(stackingPopup);
+            container.Add(stackingRow);
+            
+            // Tags Section
+            var tagsHeader = new Label("Default Tags");
+            tagsHeader.style.fontSize = 10;
+            tagsHeader.style.unityFontStyleAndWeight = FontStyle.Bold;
+            tagsHeader.style.color = Colors.AccentRed;
+            tagsHeader.style.marginTop = 12;
+            tagsHeader.style.marginBottom = 4;
+            container.Add(tagsHeader);
+            
+            BuildTypeSpecificTemplateTags(container, "Effect");
         }
         
         private void BuildAttributeSettings(VisualElement container)
         {
-            var placeholder = new Label("Attribute-specific settings coming soon.");
-            placeholder.style.fontSize = 10;
-            placeholder.style.color = Colors.HintText;
-            placeholder.style.unityFontStyleAndWeight = FontStyle.Italic;
-            container.Add(placeholder);
+            // Base Value
+            var valueHeader = new Label("Base Value");
+            valueHeader.style.fontSize = 10;
+            valueHeader.style.unityFontStyleAndWeight = FontStyle.Bold;
+            valueHeader.style.color = Colors.AccentBlue;
+            valueHeader.style.marginTop = 4;
+            valueHeader.style.marginBottom = 4;
+            container.Add(valueHeader);
+            
+            var autoBaseRow = new VisualElement { style = { flexDirection = FlexDirection.Row, alignItems = Align.Center } };
+            var autoBaseToggle = new Toggle("Set default base value:");
+            autoBaseToggle.value = EditorPrefs.GetBool(PREFS_PREFIX + "Attribute_AutoBaseValue", false);
+            autoBaseToggle.style.width = 160;
+            autoBaseToggle.RegisterValueChangedCallback(evt => 
+                EditorPrefs.SetBool(PREFS_PREFIX + "Attribute_AutoBaseValue", evt.newValue));
+            autoBaseRow.Add(autoBaseToggle);
+            
+            var baseValueField = new FloatField();
+            baseValueField.value = EditorPrefs.GetFloat(PREFS_PREFIX + "Attribute_DefaultBaseValue", 0f);
+            baseValueField.style.width = 80;
+            baseValueField.RegisterValueChangedCallback(evt =>
+                EditorPrefs.SetFloat(PREFS_PREFIX + "Attribute_DefaultBaseValue", evt.newValue));
+            autoBaseRow.Add(baseValueField);
+            container.Add(autoBaseRow);
+            
+            // Tags Section
+            var tagsHeader = new Label("Default Tags");
+            tagsHeader.style.fontSize = 10;
+            tagsHeader.style.unityFontStyleAndWeight = FontStyle.Bold;
+            tagsHeader.style.color = Colors.AccentBlue;
+            tagsHeader.style.marginTop = 12;
+            tagsHeader.style.marginBottom = 4;
+            container.Add(tagsHeader);
+            
+            BuildTypeSpecificTemplateTags(container, "Attribute");
         }
         
         private void BuildAttributeSetSettings(VisualElement container)
         {
-            var placeholder = new Label("AttributeSet-specific settings coming soon.");
-            placeholder.style.fontSize = 10;
-            placeholder.style.color = Colors.HintText;
-            placeholder.style.unityFontStyleAndWeight = FontStyle.Italic;
-            container.Add(placeholder);
+            var hint = new Label("AttributeSet templates can pre-populate default attributes.");
+            hint.style.fontSize = 10;
+            hint.style.color = Colors.HintText;
+            hint.style.whiteSpace = WhiteSpace.Normal;
+            hint.style.marginBottom = 8;
+            container.Add(hint);
+            
+            // Tags Section
+            var tagsHeader = new Label("Default Tags");
+            tagsHeader.style.fontSize = 10;
+            tagsHeader.style.unityFontStyleAndWeight = FontStyle.Bold;
+            tagsHeader.style.color = Colors.AccentGreen;
+            tagsHeader.style.marginTop = 4;
+            tagsHeader.style.marginBottom = 4;
+            container.Add(tagsHeader);
+            
+            BuildTypeSpecificTemplateTags(container, "AttributeSet");
         }
         
         private void BuildEntitySettings(VisualElement container)
         {
-            var placeholder = new Label("Entity-specific settings coming soon.");
-            placeholder.style.fontSize = 10;
-            placeholder.style.color = Colors.HintText;
-            placeholder.style.unityFontStyleAndWeight = FontStyle.Italic;
-            container.Add(placeholder);
+            // Level Settings
+            var levelHeader = new Label("Level");
+            levelHeader.style.fontSize = 10;
+            levelHeader.style.unityFontStyleAndWeight = FontStyle.Bold;
+            levelHeader.style.color = Colors.AccentPurple;
+            levelHeader.style.marginTop = 4;
+            levelHeader.style.marginBottom = 4;
+            container.Add(levelHeader);
+            
+            var autoLevelToggle = new Toggle("Auto-set starting level to 1");
+            autoLevelToggle.value = EditorPrefs.GetBool(PREFS_PREFIX + "Entity_AutoLevel", true);
+            autoLevelToggle.RegisterValueChangedCallback(evt => 
+                EditorPrefs.SetBool(PREFS_PREFIX + "Entity_AutoLevel", evt.newValue));
+            container.Add(autoLevelToggle);
+            
+            // Tags Section
+            var tagsHeader = new Label("Default Tags");
+            tagsHeader.style.fontSize = 10;
+            tagsHeader.style.unityFontStyleAndWeight = FontStyle.Bold;
+            tagsHeader.style.color = Colors.AccentPurple;
+            tagsHeader.style.marginTop = 12;
+            tagsHeader.style.marginBottom = 4;
+            container.Add(tagsHeader);
+            
+            BuildTypeSpecificTemplateTags(container, "Entity");
+        }
+        
+        private void BuildItemSettings(VisualElement container)
+        {
+            // Stack Settings
+            var stackHeader = new Label("Stacking");
+            stackHeader.style.fontSize = 10;
+            stackHeader.style.unityFontStyleAndWeight = FontStyle.Bold;
+            stackHeader.style.color = new Color(1f, 0.8f, 0.3f);
+            stackHeader.style.marginTop = 4;
+            stackHeader.style.marginBottom = 4;
+            container.Add(stackHeader);
+            
+            var autoStackRow = new VisualElement { style = { flexDirection = FlexDirection.Row, alignItems = Align.Center } };
+            var autoStackToggle = new Toggle("Set default max stack:");
+            autoStackToggle.value = EditorPrefs.GetBool(PREFS_PREFIX + "Item_AutoMaxStack", false);
+            autoStackToggle.style.width = 160;
+            autoStackToggle.RegisterValueChangedCallback(evt => 
+                EditorPrefs.SetBool(PREFS_PREFIX + "Item_AutoMaxStack", evt.newValue));
+            autoStackRow.Add(autoStackToggle);
+            
+            var stackField = new IntegerField();
+            stackField.value = EditorPrefs.GetInt(PREFS_PREFIX + "Item_DefaultMaxStack", 1);
+            stackField.style.width = 60;
+            stackField.RegisterValueChangedCallback(evt =>
+                EditorPrefs.SetInt(PREFS_PREFIX + "Item_DefaultMaxStack", evt.newValue));
+            autoStackRow.Add(stackField);
+            container.Add(autoStackRow);
+            
+            // Tags Section
+            var tagsHeader = new Label("Default Tags");
+            tagsHeader.style.fontSize = 10;
+            tagsHeader.style.unityFontStyleAndWeight = FontStyle.Bold;
+            tagsHeader.style.color = new Color(1f, 0.8f, 0.3f);
+            tagsHeader.style.marginTop = 12;
+            tagsHeader.style.marginBottom = 4;
+            container.Add(tagsHeader);
+            
+            BuildTypeSpecificTemplateTags(container, "Item");
+        }
+        
+        private void BuildScalerTemplateSettings(VisualElement container)
+        {
+            // Default Category
+            var categoryHeader = new Label("Organization");
+            categoryHeader.style.fontSize = 10;
+            categoryHeader.style.unityFontStyleAndWeight = FontStyle.Bold;
+            categoryHeader.style.color = Colors.AccentCyan;
+            categoryHeader.style.marginTop = 4;
+            categoryHeader.style.marginBottom = 4;
+            container.Add(categoryHeader);
+            
+            var categoryRow = new VisualElement { style = { flexDirection = FlexDirection.Row, alignItems = Align.Center } };
+            var categoryLabel = new Label("Default category:");
+            categoryLabel.style.fontSize = 10;
+            categoryLabel.style.width = 100;
+            categoryRow.Add(categoryLabel);
+            
+            var categoryField = new TextField();
+            categoryField.value = EditorPrefs.GetString(PREFS_PREFIX + "ScalerTemplate_DefaultCategory", "General");
+            categoryField.style.width = 150;
+            categoryField.RegisterValueChangedCallback(evt =>
+                EditorPrefs.SetString(PREFS_PREFIX + "ScalerTemplate_DefaultCategory", evt.newValue));
+            categoryRow.Add(categoryField);
+            container.Add(categoryRow);
+            
+            // Tags Section
+            var tagsHeader = new Label("Template Tags");
+            tagsHeader.style.fontSize = 10;
+            tagsHeader.style.unityFontStyleAndWeight = FontStyle.Bold;
+            tagsHeader.style.color = Colors.AccentCyan;
+            tagsHeader.style.marginTop = 12;
+            tagsHeader.style.marginBottom = 4;
+            container.Add(tagsHeader);
+            
+            BuildTypeSpecificTemplateTags(container, "ScalerTemplate");
+        }
+        
+        private void BuildRequirementTemplateSettings(VisualElement container)
+        {
+            // Default Category
+            var categoryHeader = new Label("Organization");
+            categoryHeader.style.fontSize = 10;
+            categoryHeader.style.unityFontStyleAndWeight = FontStyle.Bold;
+            categoryHeader.style.color = new Color(0.95f, 0.6f, 0.2f);
+            categoryHeader.style.marginTop = 4;
+            categoryHeader.style.marginBottom = 4;
+            container.Add(categoryHeader);
+            
+            var categoryRow = new VisualElement { style = { flexDirection = FlexDirection.Row, alignItems = Align.Center } };
+            var categoryLabel = new Label("Default category:");
+            categoryLabel.style.fontSize = 10;
+            categoryLabel.style.width = 100;
+            categoryRow.Add(categoryLabel);
+            
+            var categoryField = new TextField();
+            categoryField.value = EditorPrefs.GetString(PREFS_PREFIX + "RequirementTemplate_DefaultCategory", "General");
+            categoryField.style.width = 150;
+            categoryField.RegisterValueChangedCallback(evt =>
+                EditorPrefs.SetString(PREFS_PREFIX + "RequirementTemplate_DefaultCategory", evt.newValue));
+            categoryRow.Add(categoryField);
+            container.Add(categoryRow);
+            
+            // Tags Section
+            var tagsHeader = new Label("Template Tags");
+            tagsHeader.style.fontSize = 10;
+            tagsHeader.style.unityFontStyleAndWeight = FontStyle.Bold;
+            tagsHeader.style.color = new Color(0.95f, 0.6f, 0.2f);
+            tagsHeader.style.marginTop = 12;
+            tagsHeader.style.marginBottom = 4;
+            container.Add(tagsHeader);
+            
+            BuildTypeSpecificTemplateTags(container, "RequirementTemplate");
         }
         
         // ═══════════════════════════════════════════════════════════════════════════

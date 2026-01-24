@@ -1,4 +1,5 @@
 ﻿using System.Linq;
+using Unity.VisualScripting.Dependencies.NCalc;
 
 namespace FarEmerald.PlayForge
 {
@@ -28,6 +29,10 @@ namespace FarEmerald.PlayForge
         {
             return true;
         }
+        public virtual string InjectionName()
+        {
+            return "Limited Injection";
+        }
     }
 
     public class InterruptInjection : LimitedAbilityInjection
@@ -43,9 +48,14 @@ namespace FarEmerald.PlayForge
             // Do nothing -- handled externally via the high-level cts token
             return true;
         }
+        
+        public override string InjectionName()
+        {
+            return "Interrupt";
+        }
     }
 
-    public class BreakStageInjection : LimitedAbilityInjection
+    public class SkipCurrentStageInjection : LimitedAbilityInjection
     {
         public override bool OnProxyInject(AbilityProxy proxy)
         {
@@ -53,9 +63,14 @@ namespace FarEmerald.PlayForge
             proxy.stageSources[proxy.StageIndex].Cancel();
             return true;
         }
+        
+        public override string InjectionName()
+        {
+            return "Skip Current Stage";
+        }
     }
 
-    public class MaintainStageInjection : LimitedAbilityInjection
+    public class SkipAndMaintainCurrentStageInjection : LimitedAbilityInjection
     {
         public override bool OnProxyInject(AbilityProxy proxy)
         {
@@ -63,15 +78,25 @@ namespace FarEmerald.PlayForge
             proxy.nextStageSignal?.TrySetResult();
             return true;
         }
+        
+        public override string InjectionName()
+        {
+            return "Skip and Maintain Current Stage";
+        }
     }
 
-    public class StopMaintainInjection : LimitedAbilityInjection
+    public class StopMaintainLastInjection : LimitedAbilityInjection
     {
         public override bool OnProxyInject(AbilityProxy proxy)
         {
             if (proxy.StageIndex < 0 || proxy.stageSources.Count == 0) return false;
             proxy.stageSources[proxy.stageSources.Keys.ToArray()[0]]?.Cancel();
             return true;
+        }
+        
+        public override string InjectionName()
+        {
+            return "Stop Maintaining Last";
         }
     }
 
@@ -82,6 +107,11 @@ namespace FarEmerald.PlayForge
             if (proxy.StageIndex < 0 || proxy.stageSources.Count == 0) return false;
             foreach (var stageIndex in proxy.stageSources.Keys) proxy.stageSources[stageIndex]?.Cancel();
             return true;
+        }
+        
+        public override string InjectionName()
+        {
+            return "Stop Maintaining All";
         }
     }
 }

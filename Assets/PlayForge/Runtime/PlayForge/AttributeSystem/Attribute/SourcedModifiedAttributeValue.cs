@@ -1,4 +1,5 @@
 ﻿using UnityEditor;
+using UnityEngine.Serialization;
 
 namespace FarEmerald.PlayForge
 {
@@ -10,21 +11,21 @@ namespace FarEmerald.PlayForge
         public float CurrentValue;
         public float BaseValue;
 
-        public bool Workable;
+        public bool ImpactIsWorkable;
 
         public ESignPolicy SignPolicy => ForgeHelper.SignPolicy(CurrentValue, BaseValue);
 
-        public SourcedModifiedAttributeValue(SourcedModifiedAttributeValue derivation, float currentValue, float baseValue, bool workable = true)
+        public SourcedModifiedAttributeValue(SourcedModifiedAttributeValue derivation, float currentValue, float baseValue, bool impactIsWorkable = true)
         {
             Derivation = derivation.Derivation;
             BaseDerivation = derivation.BaseDerivation;
             CurrentValue = currentValue;
             BaseValue = baseValue;
 
-            Workable = workable;
+            ImpactIsWorkable = impactIsWorkable;
         }
         
-        public SourcedModifiedAttributeValue(IAttributeImpactDerivation derivation, float currentValue, float baseValue, bool workable = true)
+        public SourcedModifiedAttributeValue(IAttributeImpactDerivation derivation, float currentValue, float baseValue, bool impactIsWorkable = true)
         {
             Derivation = derivation;
             BaseDerivation = derivation;
@@ -32,11 +33,11 @@ namespace FarEmerald.PlayForge
             CurrentValue = currentValue;
             BaseValue = baseValue;
 
-            Workable = workable;
+            ImpactIsWorkable = impactIsWorkable;
         }
 
         public SourcedModifiedAttributeValue(IAttributeImpactDerivation derivation, IAttributeImpactDerivation baseDerivation, float currentValue, float baseValue,
-            bool workable = true)
+            bool impactIsWorkable = true)
         {
             Derivation = derivation;
             BaseDerivation = baseDerivation;
@@ -44,7 +45,7 @@ namespace FarEmerald.PlayForge
             CurrentValue = currentValue;
             BaseValue = baseValue;
 
-            Workable = workable;
+            ImpactIsWorkable = impactIsWorkable;
         }
 
         #region Helpers

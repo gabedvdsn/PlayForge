@@ -1,91 +1,58 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Threading;
 using Cysharp.Threading.Tasks;
-using UnityEditor;
 using UnityEngine;
 
 namespace FarEmerald.PlayForge
 {
+    /// <summary>
+    /// Represents a managed process instance with state tracking and lifecycle management.
+    /// </summary>
     public class ProcessControlBlock
     {
-        public const int LocalAdjacency = 0;
-        public const int ChildAdjacency = 0;
-        public const int ParentAdjacency = 0;
-        
         public readonly AbstractProcessWrapper Process;
         public readonly IGameplayProcessHandler Handler;
+        public readonly int CacheIndex;
 
         public ProcessRelay Relay => Process?.Relay;
-
-        public readonly int CacheIndex;
-        private Dictionary<EProcessStepTiming, int> StepIndices;
-        public int StepIndex(EProcessStepTiming timing) => StepIndices.ContainsKey(timing) ? StepIndices[timing] : -1;
         
         public EProcessState State { get; private set; }
-        public EProcessState queuedState { get; private set; }
+        public EProcessState QueuedState { get; private set; }
 
-        public float UnscaledLifetime => Time.unscaledTime - unscaledInitializeTime;
-        public float Lifetime => Time.time - initializeTime;
-        public float UnscaledInitializeTime => unscaledInitializeTime;
-        private float unscaledInitializeTime;
-        
-        public float InitializeTime => initializeTime;
-        private float initializeTime;
-        
-        public float TotalUpdateTime => totalUpdateTime;
-        private float totalUpdateTime;
+        // Timing
+        public float UnscaledLifetime => Time.unscaledTime - _unscaledInitializeTime;
+        public float Lifetime => Time.time - _initializeTime;
+        public float UnscaledInitializeTime => _unscaledInitializeTime;
+        public float InitializeTime => _initializeTime;
+        public float TotalUpdateTime => _totalUpdateTime;
 
-        public bool IsInitialized => isInitialized;
-        private bool isInitialized;
+        private float _unscaledInitializeTime;
+        private float _initializeTime;
+        private float _totalUpdateTime;
 
-        public bool HasRun => hasRun;
-        private bool hasRun;
-        public bool MidRun => midRun;
-        private bool midRun;
-        
-        #region Mono Hierarchy Aspects
-
+        // Status flags
+        public bool IsInitialized => _isInitialized;
+        public bool HasRun => _hasRun;
+        public bool MidRun => _midRun;
         public bool isMono;
-        private ProcessControlBlock Local;
-        private ProcessControlBlock Parent;
-        private ProcessControlBlock Child;
-        private bool controlled;
 
-        public void SetLocal(ProcessControlBlock other)
-        {
-            if (Local is null) Local = other;
-            else Local.SetLocal(other);
-        }
+        private bool _isInitialized;
+        private bool _hasRun;
+        private bool _midRun;
         
-        public void SetParent(ProcessControlBlock other)
-        {
-            if (Parent is null) Parent = other;
-            else Parent.SetParent(other);
-        }
-        
-        public void SetChild(ProcessControlBlock other)
-        {
-            if (Child is null) Child = other;
-            else Child.SetChild(other);
-        }
+        private CancellationTokenSource _cts;
 
-        #endregion
-        
-        private CancellationTokenSource cts;
-        
-        protected ProcessControlBlock(int cacheIndex, AbstractProcessWrapper process, IGameplayProcessHandler handler)
+        #region Construction
+
+        private ProcessControlBlock(int cacheIndex, AbstractProcessWrapper process, IGameplayProcessHandler handler)
         {
             CacheIndex = cacheIndex;
-            StepIndices = new Dictionary<EProcessStepTiming, int>();
-            
             Process = process;
             Handler = handler;
-
-            Process.Relay = new ProcessRelay(this);
             
+            Process.Relay = new ProcessRelay(this);
             State = EProcessState.Created;
-            totalUpdateTime = 0;
+            _totalUpdateTime = 0;
         }
 
         public static ProcessControlBlock Generate(int cacheIndex, AbstractProcessWrapper process, IGameplayProcessHandler handler)
@@ -93,19 +60,30 @@ namespace FarEmerald.PlayForge
             return new ProcessControlBlock(cacheIndex, process, handler);
         }
 
-        public async UniTask ForceIntoState(EProcessState state)
+        #endregion
+
+        #region State Management
+
+        public void ForceIntoState(EProcessState state)
         {
-            if (State == EProcessState.Running && state != EProcessState.Running) Interrupt();
+            if (state == State) return;
+
+            if (ProcessControl.Instance.OutputLogs && ProcessControl.Instance.DetailedLogs) Debug.Log($"\t[ {Process.ProcessName} ] Force {state}");
             
-            await UniTask.CompletedTask;
+            if (State == EProcessState.Running && state != EProcessState.Running)
+            {
+                Interrupt();
+            }
             
-            queuedState = state;
+            QueuedState = state;
             SetQueuedState();
         }
         
         public void QueueNextState(EProcessState state)
         {
             if (state == State) return;
+            
+            if (ProcessControl.Instance.OutputLogs && ProcessControl.Instance.DetailedLogs) Debug.Log($"\t[ {Process.ProcessName} ] Queue {state}");
             
             switch (state)
             {
@@ -114,58 +92,23 @@ namespace FarEmerald.PlayForge
                 case EProcessState.Running:
                 case EProcessState.Waiting:
                 case EProcessState.Terminated:
-                    queuedState = state;
-                    if (State != EProcessState.Running) SetQueuedState();
+                    QueuedState = state;
+                    if (State != EProcessState.Running)
+                    {
+                        SetQueuedState();
+                    }
                     break;
                 default:
                     throw new ArgumentOutOfRangeException(nameof(state), state, null);
             }
         }
 
-        public void Initialize()
+        private void SetQueuedState()
         {
-            if (isInitialized) return;
-
-            unscaledInitializeTime = Time.unscaledTime;
-            initializeTime = Time.time;
-
-            isInitialized = true;
-            Process.WhenInitialize(Process.Relay);
-        }
-        
-        public bool Run()
-        {
-            if (State != EProcessState.Running) return false;
-
-            RunProcess().Forget();
-            queuedState = ProcessControl.Instance.GetDefaultTransitionState(this);
+            if (ProcessControl.Instance.OutputLogs && ProcessControl.Instance.DetailedLogs) Debug.Log($"\t\t[{Process.ProcessName}] Setting queued state: {State} -> {QueuedState}");
             
-            return true;
-        }
-
-        public bool Wait()
-        {
-            if (State != EProcessState.Waiting) return false;
-
-            Process.WhenWait(Process.Relay);
+            State = QueuedState;
             
-            return true;
-        }
-        
-        public bool Terminate()
-        {
-            if (State != EProcessState.Terminated) return false;
-            
-            Process.WhenTerminate(Process.Relay);
-            ProcessControl.Instance.Unregister(this);
-            
-            return true;
-        }
-
-        public void SetQueuedState()
-        {
-            if (queuedState == State) return;
-            State = queuedState;
             switch (State)
             {
                 case EProcessState.Created:
@@ -184,19 +127,63 @@ namespace FarEmerald.PlayForge
             }
         }
 
-        // Cannot be called in isolation, must be followed by a ProcessControl.Terminate(cacheIndex) call
+        #endregion
+
+        #region Lifecycle Methods
+
+        public void Initialize()
+        {
+            if (_isInitialized) return;
+
+            _unscaledInitializeTime = Time.unscaledTime;
+            _initializeTime = Time.time;
+            _isInitialized = true;
+            
+            Process.WhenInitialize(Process.Relay);
+        }
+        
+        public bool TryRun()
+        {
+            if (State != EProcessState.Running) return false;
+
+            RunProcessAsync().Forget();
+            QueuedState = ProcessControl.Instance.GetDefaultTransitionState(this);
+            
+            return true;
+        }
+
+        public bool TryWait()
+        {
+            if (State != EProcessState.Waiting) return false;
+
+            Process.WhenWait(Process.Relay);
+            return true;
+        }
+        
+        public bool TryTerminate()
+        {
+            if (State != EProcessState.Terminated) return false;
+            
+            Process.WhenTerminate(Process.Relay);
+            ProcessControl.Instance.Unregister(this);
+            
+            return true;
+        }
+
         public void Interrupt()
         {
             if (State != EProcessState.Running) return;
-            
-            cts?.Cancel();
+            _cts?.Cancel();
         }
+
+        #endregion
+
+        #region Update/Step
 
         public void Step(EProcessStepTiming timing)
         {
             switch (timing)
             {
-
                 case EProcessStepTiming.None:
                     break;
                 case EProcessStepTiming.Update:
@@ -224,75 +211,112 @@ namespace FarEmerald.PlayForge
                     throw new ArgumentOutOfRangeException(nameof(timing), timing, null);
             }
             
-            totalUpdateTime += Time.deltaTime;
+            _totalUpdateTime += Time.deltaTime;
         }
-        
-        private async UniTask RunProcess()
-        {
-            cts = new CancellationTokenSource();
-            
-            hasRun = true;
-            
-            if (!midRun) totalUpdateTime = 0f;
-            midRun = false;
 
-            bool set = true;
+        #endregion
+
+        #region Private Helpers
+        
+        private async UniTask RunProcessAsync()
+        {
+            _cts = new CancellationTokenSource();
+            _hasRun = true;
+            
+            if (!_midRun)
+            {
+                _totalUpdateTime = 0f;
+            }
+            _midRun = false;
+
+            bool shouldTransition = true;
             try
             {
-                await Process.RunProcess(Process.Relay, cts.Token);
+                await Process.RunProcess(Process.Relay, _cts.Token);
             }
             catch (OperationCanceledException)
             {
-                midRun = true;
-                set = false;
+                _midRun = true;
+                shouldTransition = false;
             }
 
-            if (!cts.IsCancellationRequested) cts.Cancel();
-            cts.Dispose();
-            cts = null;
+            if (_cts != null && !_cts.IsCancellationRequested)
+            {
+                _cts.Cancel();
+            }
+            
+            _cts?.Dispose();
+            _cts = null;
 
-            if (set) SetQueuedState();
+            if (shouldTransition)
+            {
+                SetQueuedState();
+            }
         }
-        
-        public void SetStepIndex(EProcessStepTiming timing, int stepIndex)
-        {
-            StepIndices[timing] = stepIndex;
-        }
+
+        #endregion
     }
 
+    /// <summary>
+    /// Provides external access to ProcessControlBlock data without exposing internal state management.
+    /// </summary>
     public class ProcessRelay
     {
-        private ProcessControlBlock pcb;
+        private readonly ProcessControlBlock _pcb;
         
-        public bool Valid => pcb is not null;
+        public bool Valid => _pcb != null;
 
         public ProcessRelay(ProcessControlBlock pcb)
         {
-            this.pcb = pcb;
+            _pcb = pcb;
         }
 
-        public int CacheIndex => pcb.CacheIndex;
-        public AbstractProcessWrapper Wrapper => pcb.Process;
-        public IGameplayProcessHandler Handler => pcb.Handler;
-        public EProcessState State => pcb.State;
-        public EProcessState QueuedState => pcb.queuedState;
-        public float UnscaledLifetime => pcb.UnscaledLifetime;
-        public float Lifetime => pcb.Lifetime;
-        public float UpdateTime => pcb.TotalUpdateTime;
+        public int CacheIndex => _pcb.CacheIndex;
+        public AbstractProcessWrapper Wrapper => _pcb.Process;
+        public IGameplayProcessHandler Handler => _pcb.Handler;
+        public EProcessState State => _pcb.State;
+        public EProcessState QueuedState => _pcb.QueuedState;
+        public float UnscaledLifetime => _pcb.UnscaledLifetime;
+        public float Lifetime => _pcb.Lifetime;
+        public float UpdateTime => _pcb.TotalUpdateTime;
 
         public bool TryGetProcess<T>(out T process)
         {
-            return pcb.Process.TryGetProcess(out process);
+            return _pcb.Process.TryGetProcess(out process);
         }
         
-        public int RemainingRuntime(int runtime, int multiplier = 1000) => runtime - (int)UpdateTime * multiplier;
+        /// <summary>
+        /// Calculates remaining runtime based on elapsed update time.
+        /// </summary>
+        /// <param name="runtime">Total runtime in milliseconds</param>
+        /// <param name="multiplier">Conversion multiplier (default 1000 for ms)</param>
+        public int RemainingRuntime(int runtime, int multiplier = 1000) 
+            => runtime - (int)UpdateTime * multiplier;
+
+        /// <summary>
+        /// Pauses this process and optionally its children.
+        /// </summary>
+        public bool Pause(bool cascade = true) 
+            => ProcessControl.Instance.Pause(CacheIndex, cascade);
+
+        /// <summary>
+        /// Resumes this process and optionally its children.
+        /// </summary>
+        public bool Unpause(bool cascade = true) 
+            => ProcessControl.Instance.Unpause(CacheIndex, cascade);
+
+        /// <summary>
+        /// Terminates this process and optionally its children.
+        /// </summary>
+        public bool Terminate(bool cascade = true) 
+            => ProcessControl.Instance.Terminate(CacheIndex, cascade);
     }
     
     public enum EProcessState
     {
-        Created,  // Created but initialized
-        Running,  // Actively running
-        Waiting,  // Ready but cannot run
-        Terminated  // Must be terminated
+        Created,    // Created but not initialized
+        Running,    // Actively running
+        Waiting,    // Paused/waiting
+        Terminated  // Terminated and cleaned up
     }
 }

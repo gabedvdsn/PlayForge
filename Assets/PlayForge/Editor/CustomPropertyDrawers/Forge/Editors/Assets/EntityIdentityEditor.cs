@@ -32,7 +32,6 @@ namespace FarEmerald.PlayForge.Extended.Editor
         
         protected override Texture2D GetHeaderIcon()
         {
-            // First try to get from textures list
             if (entity?.Textures != null && entity.Textures.Count > 0)
             {
                 var tex = entity.Textures[0].Texture;
@@ -43,7 +42,7 @@ namespace FarEmerald.PlayForge.Extended.Editor
         
         protected override string GetAssetTypeLabel() => "ENTITY";
         
-        protected override Color GetAssetTypeColor() => new Color(0.3f, 0.8f, 0.6f); // Teal/cyan
+        protected override Color GetAssetTypeColor() => new Color(0.3f, 0.8f, 0.6f);
         
         protected override string GetDocumentationUrl() => "https://docs.playforge.dev/entities";
         
@@ -52,13 +51,11 @@ namespace FarEmerald.PlayForge.Extended.Editor
         
         protected override void OnVisualize()
         {
-            // TODO: Open entity visualizer
             Debug.Log($"Visualize entity: {entity.name}");
         }
         
         protected override void OnImport()
         {
-            // Open asset picker for entities
             EditorGUIUtility.ShowObjectPicker<EntityIdentity>(null, false, "", GUIUtility.GetControlID(FocusType.Passive));
         }
 
@@ -75,15 +72,14 @@ namespace FarEmerald.PlayForge.Extended.Editor
 
             root = CreateRoot();
             
-            // ScrollView for sections (header is in OnHeaderGUI)
             var scrollView = CreateScrollView();
             root.Add(scrollView);
             
-            // Build all sections in logical order
             BuildDefinitionSection(scrollView);
             BuildTagsSection(scrollView);
             BuildLevelSection(scrollView);
             BuildAbilitiesSection(scrollView);
+            BuildItemsSection(scrollView);
             BuildAttributesSection(scrollView);
             BuildWorkersSection(scrollView);
             BuildLocalDataSection(scrollView);
@@ -112,7 +108,6 @@ namespace FarEmerald.PlayForge.Extended.Editor
             
             var content = section.Content;
             
-            // Name field with live header update
             var nameField = CreateTextField("Name", "Name");
             nameField.value = entity.Name;
             nameField.RegisterCallback<FocusOutEvent>(_ =>
@@ -120,22 +115,20 @@ namespace FarEmerald.PlayForge.Extended.Editor
                 entity.Name = nameField.value;
                 MarkDirty(entity);
                 UpdateAssetTagDisplay();
-                Repaint(); // Refresh IMGUI header
+                Repaint();
             });
             content.Add(nameField);
             
-            // Description field with live header update
             var descriptionField = CreateTextField("Description", "Description", multiline: true, minHeight: 24);
             descriptionField.value = entity.Description;
             descriptionField.RegisterCallback<FocusOutEvent>(_ =>
             {
                 entity.Description = descriptionField.value;
                 MarkDirty(entity);
-                Repaint(); // Refresh IMGUI header
+                Repaint();
             });
             content.Add(descriptionField);
             
-            // Textures list
             var texturesField = CreatePropertyField(
                 serializedObject.FindProperty("Textures"), 
                 "Textures", 
@@ -163,13 +156,11 @@ namespace FarEmerald.PlayForge.Extended.Editor
             
             var content = section.Content;
             
-            // Asset Tag Display (read-only, derived from Name)
             var (assetTagContainer, valueLabel) = CreateAssetTagDisplay();
             assetTagValueLabel = valueLabel;
             UpdateAssetTagDisplay();
             content.Add(assetTagContainer);
             
-            // Granted Tags (tags given to owner)
             var grantedField = CreatePropertyField(
                 serializedObject.FindProperty("GrantedTags"), 
                 "GrantedTags", 
@@ -178,7 +169,6 @@ namespace FarEmerald.PlayForge.Extended.Editor
             grantedField.style.marginTop = 6;
             content.Add(grantedField);
             
-            // Affiliation Tags
             var affiliationField = CreatePropertyField(
                 serializedObject.FindProperty("Affiliation"), 
                 "Affiliation", 
@@ -205,19 +195,25 @@ namespace FarEmerald.PlayForge.Extended.Editor
             
             var content = section.Content;
             
-            // Level row: Level + Cap toggle
-            var levelRow = CreateRow(4);
-            content.Add(levelRow);
-            
-            var levelField = CreateIntegerField("Level", "Level", entity.Level);
-            levelField.style.flexGrow = 1;
-            levelField.style.marginRight = 8;
+            var levelField = CreateIntegerField("Level", "Starting Level", entity.Level);
             levelField.RegisterValueChangedCallback(evt =>
             {
                 entity.Level = evt.newValue;
                 MarkDirty(entity);
             });
-            levelRow.Add(levelField);
+            content.Add(levelField);
+            
+            var row = CreateRow(4);
+            content.Add(row);
+            
+            var maxLevelField = CreateIntegerField("MaxLevel", "Max Level", entity.MaxLevel);
+            maxLevelField.style.flexGrow = 1;
+            maxLevelField.RegisterValueChangedCallback(evt =>
+            {
+                entity.MaxLevel = evt.newValue;
+                MarkDirty(entity);
+            });
+            row.Add(maxLevelField);
             
             var capToggle = CreateToggle("CapAtMaxLevel", "Cap At Max");
             capToggle.value = entity.CapAtMaxLevel;
@@ -227,19 +223,8 @@ namespace FarEmerald.PlayForge.Extended.Editor
                 entity.CapAtMaxLevel = evt.newValue;
                 MarkDirty(entity);
             });
-            levelRow.Add(capToggle);
+            row.Add(capToggle);
             
-            // Max Level
-            var maxLevelField = CreateIntegerField("MaxLevel", "Max Level", entity.MaxLevel);
-            maxLevelField.style.marginTop = 4;
-            maxLevelField.RegisterValueChangedCallback(evt =>
-            {
-                entity.MaxLevel = evt.newValue;
-                MarkDirty(entity);
-            });
-            content.Add(maxLevelField);
-            
-            // Relative Level display (read-only)
             var relativeLevelLabel = new Label($"Relative Level: {entity.RelativeLevel:P0}");
             relativeLevelLabel.style.fontSize = 10;
             relativeLevelLabel.style.color = Colors.HintText;
@@ -265,7 +250,6 @@ namespace FarEmerald.PlayForge.Extended.Editor
             
             var content = section.Content;
             
-            // Activation Policy
             var policyField = CreateEnumField("ActivationPolicy", "Activation Policy", entity.ActivationPolicy);
             policyField.RegisterValueChangedCallback(evt =>
             {
@@ -274,7 +258,6 @@ namespace FarEmerald.PlayForge.Extended.Editor
             });
             content.Add(policyField);
             
-            // Max Abilities + Allow Duplicates row
             var row = CreateRow(4);
             content.Add(row);
             
@@ -298,11 +281,59 @@ namespace FarEmerald.PlayForge.Extended.Editor
             });
             row.Add(allowDupsToggle);
             
-            // Starting Abilities
             var startingField = CreatePropertyField(
                 serializedObject.FindProperty("StartingAbilities"), 
                 "StartingAbilities", 
                 "Starting Abilities"
+            );
+            startingField.style.marginTop = 8;
+            content.Add(startingField);
+        }
+
+        // ═══════════════════════════════════════════════════════════════════════════
+        // Items Section
+        // ═══════════════════════════════════════════════════════════════════════════
+        
+        private void BuildItemsSection(VisualElement parent)
+        {
+            var section = CreateCollapsibleSection(new SectionConfig
+            {
+                Name = "Items",
+                Title = "Items",
+                AccentColor = new Color(1f, 0.8f, 0.3f), // Golden yellow
+                HelpUrl = "https://docs.playforge.dev/entities/items"
+            });
+            parent.Add(section.Section);
+            
+            var content = section.Content;
+            
+            var row = CreateRow(4);
+            content.Add(row);
+            
+            var maxItemsField = CreateIntegerField("MaxItems", "Max Items", entity.MaxItems);
+            maxItemsField.style.flexGrow = 1;
+            maxItemsField.style.marginRight = 8;
+            maxItemsField.RegisterValueChangedCallback(evt =>
+            {
+                entity.MaxItems = evt.newValue;
+                MarkDirty(entity);
+            });
+            row.Add(maxItemsField);
+            
+            var allowDupsToggle = CreateToggle("AllowDuplicateItems", "Allow Duplicates");
+            allowDupsToggle.value = entity.AllowDuplicateItems;
+            allowDupsToggle.style.minWidth = 120;
+            allowDupsToggle.RegisterValueChangedCallback(evt =>
+            {
+                entity.AllowDuplicateItems = evt.newValue;
+                MarkDirty(entity);
+            });
+            row.Add(allowDupsToggle);
+            
+            var startingField = CreatePropertyField(
+                serializedObject.FindProperty("StartingItems"), 
+                "StartingItems", 
+                "Starting Items"
             );
             startingField.style.marginTop = 8;
             content.Add(startingField);
@@ -330,14 +361,6 @@ namespace FarEmerald.PlayForge.Extended.Editor
                 "AttributeSet", 
                 "Attribute Set"
             ));
-            
-            var eventsField = CreatePropertyField(
-                serializedObject.FindProperty("AttributeChangeEvents"), 
-                "AttributeChangeEvents", 
-                "Attribute Change Events"
-            );
-            eventsField.style.marginTop = 8;
-            content.Add(eventsField);
         }
 
         // ═══════════════════════════════════════════════════════════════════════════
@@ -357,27 +380,15 @@ namespace FarEmerald.PlayForge.Extended.Editor
             
             var content = section.Content;
             
-            var impactField = CreatePropertyField(
-                serializedObject.FindProperty("ImpactWorkers"), 
-                "ImpactWorkers", 
-                "Impact Workers"
-            );
-            impactField.style.marginBottom = 6;
-            content.Add(impactField);
+            var hint = CreateHintLabel("Workers are subscribed when entity is initialized.");
+            content.Add(hint);
             
-            var tagField = CreatePropertyField(
-                serializedObject.FindProperty("TagWorkers"), 
-                "TagWorkers", 
-                "Tag Workers"
+            var workerGroupField = CreatePropertyField(
+                serializedObject.FindProperty("WorkerGroup"), 
+                "WorkerGroup", 
+                ""
             );
-            tagField.style.marginBottom = 6;
-            content.Add(tagField);
-            
-            content.Add(CreatePropertyField(
-                serializedObject.FindProperty("AnalysisWorkers"), 
-                "AnalysisWorkers", 
-                "Analysis Workers"
-            ));
+            content.Add(workerGroupField);
         }
 
         // ═══════════════════════════════════════════════════════════════════════════
@@ -413,7 +424,6 @@ namespace FarEmerald.PlayForge.Extended.Editor
             var result = GenerateAssetTag(entity.Name, "Entity");
             assetTagValueLabel.text = result.result;
             
-            // Sync the actual AssetTag.Name field
             if (!result.isUnknown)
             {
                 var assetTag = entity.AssetTag;

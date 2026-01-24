@@ -37,17 +37,23 @@ namespace FarEmerald.PlayForge.Extended.Editor
             { typeof(AttributeSet), "Assets/Data/AttributeSets" },
             { typeof(GameplayEffect), "Assets/Data/Effects" },
             { typeof(EntityIdentity), "Assets/Data/Entities" },
-            { typeof(Ability), "Assets/Data/Abilities" }
+            { typeof(Ability), "Assets/Data/Abilities" },
+            { typeof(Item), "Assets/Data/Items" },
+            { typeof(ScalerTemplate), "Assets/Data/Templates/Scalers" },
+            { typeof(RequirementTemplate), "Assets/Data/Templates/Requirements" },
         };
         
         // Asset type metadata for UI
         public static readonly List<AssetTypeInfo> AssetTypes = new List<AssetTypeInfo>
         {
-            new AssetTypeInfo(typeof(Ability), "Ability", "⚡", Colors.AccentOrange, "Ability definition", true),
-            new AssetTypeInfo(typeof(GameplayEffect), "Effect", "✦", Colors.AccentRed, "Gameplay effect definition", true),
-            new AssetTypeInfo(typeof(Attribute), "Attribute", "📈", Colors.AccentBlue, "Base stat definition", true),
-            new AssetTypeInfo(typeof(AttributeSet), "Attribute Set", "📊", Colors.AccentGreen, "Collection of attributes", true),
-            new AssetTypeInfo(typeof(EntityIdentity), "Entity", "👤", Colors.AccentPurple, "Entity configuration", true),
+            new AssetTypeInfo(typeof(Ability), "Ability", "⚡", Colors.AccentOrange, "Ability definition", true, true),
+            new AssetTypeInfo(typeof(GameplayEffect), "Effect", "✦", Colors.AccentRed, "Gameplay effect definition", true, true),
+            new AssetTypeInfo(typeof(Item), "Item", "🎁", new Color(1f, 0.8f, 0.3f), "Item with effects & abilities", true, true),
+            new AssetTypeInfo(typeof(Attribute), "Attribute", "📈", Colors.AccentBlue, "Base stat definition", true, false),
+            new AssetTypeInfo(typeof(AttributeSet), "Attribute Set", "📊", Colors.AccentGreen, "Collection of attributes", true, true),
+            new AssetTypeInfo(typeof(EntityIdentity), "Entity", "👤", Colors.AccentPurple, "Entity configuration", true, true),
+            new AssetTypeInfo(typeof(ScalerTemplate), "Scaler", "📋", Colors.AccentCyan, "Reusable scaler configuration", true, false),
+            new AssetTypeInfo(typeof(RequirementTemplate), "Requirement", "📋", new Color(0.95f, 0.6f, 0.2f), "Reusable tag requirement configuration", true, false),
         };
         
         // ═══════════════════════════════════════════════════════════════════════════
@@ -105,6 +111,7 @@ namespace FarEmerald.PlayForge.Extended.Editor
                 Attribute attr => !string.IsNullOrEmpty(attr.Name) ? attr.Name : attr.name,
                 EntityIdentity ent => !string.IsNullOrEmpty(ent.GetName()) ? ent.GetName() : ent.name,
                 AttributeSet attrSet => !string.IsNullOrEmpty(attrSet.GetName()) ? attrSet.GetName() : attrSet.Name,
+                Item item => !string.IsNullOrEmpty(item.GetName()) ? item.GetName() : item.name,
                 _ => asset.name
             };
         }
@@ -145,7 +152,6 @@ namespace FarEmerald.PlayForge.Extended.Editor
             
             // Refresh the view
             window.RefreshAssetCache();
-            // window.BuildViewTabContent();
             
             // Select the asset in Unity's selection
             Selection.activeObject = asset;
@@ -218,7 +224,7 @@ namespace FarEmerald.PlayForge.Extended.Editor
             statsContainer.style.alignItems = Align.Center;
             header.Add(statsContainer);
             
-            foreach (var typeInfo in AssetTypes.Take(4))
+            foreach (var typeInfo in AssetTypes.Take(5))
             {
                 var count = CountAssetsOfType(typeInfo.Type);
                 var stat = CreateCompactStat(typeInfo.Icon, count.ToString(), typeInfo.Color);
@@ -356,8 +362,9 @@ namespace FarEmerald.PlayForge.Extended.Editor
             public Color Color { get; }
             public string Description { get; }
             public bool CanCreate { get; }
+            public bool CanVisualize { get; }
             
-            public AssetTypeInfo(Type type, string displayName, string icon, Color color, string description, bool canCreate = true)
+            public AssetTypeInfo(Type type, string displayName, string icon, Color color, string description, bool canCreate = true, bool canVisualize = true)
             {
                 Type = type;
                 DisplayName = displayName;
@@ -365,6 +372,7 @@ namespace FarEmerald.PlayForge.Extended.Editor
                 Color = color;
                 Description = description;
                 CanCreate = canCreate;
+                CanVisualize = canVisualize;
             }
         }
     }

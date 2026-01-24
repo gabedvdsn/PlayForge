@@ -1,5 +1,6 @@
 ﻿using System;
 using UnityEngine;
+using UnityEngine.Serialization;
 
 namespace FarEmerald.PlayForge
 {
@@ -19,18 +20,12 @@ namespace FarEmerald.PlayForge
         public ECaptureAttributeWhen CaptureWhen = ECaptureAttributeWhen.OnApplication;
         
         [Tooltip("Use base or current attribute value")]
-        public EEffectImpactTargetLimited ScalingPolicy = EEffectImpactTargetLimited.Current;
-        
-        [Tooltip("Minimum expected attribute value (maps to 0 on curve)")]
-        public float AttributeMin = 0f;
-        
-        [Tooltip("Maximum expected attribute value (maps to 1 on curve)")]
-        public float AttributeMax = 100f;
+        public EEffectImpactTargetLimited CaptureWhat = EEffectImpactTargetLimited.Current;
         
         public override void Initialize(IAttributeImpactDerivation spec)
         {
             if (CaptureWhen != ECaptureAttributeWhen.OnCreation) return;
-            if (CaptureAttribute == null) return;
+            if (CaptureAttribute is null) return;
                 
             switch (CaptureFrom)
             {
@@ -56,12 +51,8 @@ namespace FarEmerald.PlayForge
         public override float Evaluate(IAttributeImpactDerivation spec)
         {
             float attributeValue = GetAttributeValue(spec);
-            
-            // Normalize attribute value to 0-1 range for curve evaluation
-            float normalizedValue = Mathf.InverseLerp(AttributeMin, AttributeMax, attributeValue);
-            normalizedValue = Mathf.Clamp01(normalizedValue);
-            
-            return EvaluateAtRelativeLevel(normalizedValue);
+
+            return ApplyBehaviourEvaluation(spec, attributeValue);
         }
         
         private float GetAttributeValue(IAttributeImpactDerivation spec)
@@ -71,7 +62,7 @@ namespace FarEmerald.PlayForge
             {
                 if (spec.GetSourcedCapturedAttributes().TryGetValue(this, out var capturedValue))
                 {
-                    return ScalingPolicy switch
+                    return CaptureWhat switch
                     {
                         EEffectImpactTargetLimited.Current => capturedValue?.CurrentValue ?? 0f,
                         EEffectImpactTargetLimited.Base => capturedValue?.BaseValue ?? 0f,
@@ -92,12 +83,17 @@ namespace FarEmerald.PlayForge
                 return 0f;
             }
             
-            return ScalingPolicy switch
+            return CaptureWhat switch
             {
                 EEffectImpactTargetLimited.Current => attrValue.CurrentValue,
                 EEffectImpactTargetLimited.Base => attrValue.BaseValue,
                 _ => throw new ArgumentOutOfRangeException()
             };
+        }
+
+        public override bool UseScalingOptions()
+        {
+            return false;
         }
     }
     

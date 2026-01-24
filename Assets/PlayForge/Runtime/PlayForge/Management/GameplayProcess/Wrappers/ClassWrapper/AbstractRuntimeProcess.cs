@@ -7,8 +7,6 @@ namespace FarEmerald.PlayForge
 {
     public abstract class AbstractRuntimeProcess : IProxyTaskBehaviourCaller
     {
-        protected bool processActive;
-
         public readonly string name;
         public readonly EProcessStepPriorityMethod priorityMethod;
         public readonly int stepPriority;
@@ -16,7 +14,12 @@ namespace FarEmerald.PlayForge
         public readonly EProcessLifecycle lifecycle;
 
         protected ProcessDataPacket regData;
-
+        protected bool processActive;
+        
+        private bool _initialized;
+        public bool IsInitialized => _initialized;
+        public ProcessRelay Relay;
+        
         protected AbstractRuntimeProcess()
         {
             name = $"Anon-{GetType()}";
@@ -37,7 +40,11 @@ namespace FarEmerald.PlayForge
 
         public void SendProcessData(ProcessDataPacket processData) => regData = processData;
 
-        public abstract void WhenInitialize(ProcessRelay relay);
+        public virtual void WhenInitialize(ProcessRelay relay)
+        {
+            _initialized = true;
+            Relay = relay;
+        }
 
         public virtual void WhenUpdate(ProcessRelay relay)
         {
@@ -93,7 +100,6 @@ namespace FarEmerald.PlayForge
             process = default;
             return false;
         }
-        public abstract bool IsInitialized();
 
         public string ProcessName => string.IsNullOrEmpty(name) ? "AnonymousClassProcess" : name;
         public virtual EProcessStepPriorityMethod PriorityMethod => priorityMethod;

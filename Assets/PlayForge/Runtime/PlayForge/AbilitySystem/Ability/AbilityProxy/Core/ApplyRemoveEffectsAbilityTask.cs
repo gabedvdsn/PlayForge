@@ -11,7 +11,7 @@ namespace FarEmerald.PlayForge
 
         public override void Prepare(AbilityDataPacket data)
         {
-            if (!data.TryGetFirst(Tags.PAYLOAD_TARGET, out ITarget target))
+            if (!data.TryGetFirst(Tags.TARGET_REAL, out ITarget target))
             {
                 return;
             }
@@ -28,7 +28,7 @@ namespace FarEmerald.PlayForge
         
         public override void Clean(AbilityDataPacket data)
         {
-            if (!data.TryGet(Tags.PAYLOAD_TARGET, EProxyDataValueTarget.Primary, out ITarget target))
+            if (!data.TryGet(Tags.TARGET_REAL, EProxyDataValueTarget.Primary, out ITarget target))
             {
                 return;
             }

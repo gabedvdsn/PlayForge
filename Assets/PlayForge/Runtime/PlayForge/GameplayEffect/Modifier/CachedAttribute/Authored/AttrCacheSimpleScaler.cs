@@ -22,5 +22,9 @@ namespace FarEmerald.PlayForge
         {
             // No attribute dependencies - this scaler only uses level, not attributes
         }
+        public override void Evaluate(CachedAttributeValue value)
+        {
+            throw new System.NotImplementedException();
+        }
     }
 }

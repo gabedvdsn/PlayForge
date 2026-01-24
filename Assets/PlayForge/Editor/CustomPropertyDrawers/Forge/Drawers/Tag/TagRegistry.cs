@@ -66,11 +66,17 @@ namespace FarEmerald.PlayForge.Extended.Editor
             public string FieldPath { get; }
             public string FriendlyFieldName { get; }
             
-            public FieldUsageInfo(ScriptableObject asset, string fieldPath)
+            /// <summary>
+            /// Indicates this is a system-defined default tag, not from an asset.
+            /// </summary>
+            public bool IsSystemDefault { get; }
+            
+            public FieldUsageInfo(ScriptableObject asset, string fieldPath, bool isSystemDefault = false)
             {
                 Asset = asset;
                 FieldPath = fieldPath ?? "";
                 FriendlyFieldName = GenerateFriendlyFieldName(fieldPath);
+                IsSystemDefault = isSystemDefault;
             }
             
             private static string GenerateFriendlyFieldName(string fieldPath)
@@ -113,12 +119,18 @@ namespace FarEmerald.PlayForge.Extended.Editor
             public Tag Tag { get; }
             public Dictionary<string, ContextUsage> UsageByContext { get; } = new Dictionary<string, ContextUsage>();
             
+            /// <summary>
+            /// If true, this tag was registered via [ForgeContextDefault] attribute.
+            /// </summary>
+            public bool IsSystemDefault { get; private set; }
+            
             public int TotalUsageCount => UsageByContext.Values.Sum(u => u.Usages.Count);
             
             // Convenience property for backward compatibility
             public int TotalAssetCount => UsageByContext.Values
                 .SelectMany(u => u.Usages)
                 .Select(u => u.Asset)
+                .Where(a => a != null)
                 .Distinct()
                 .Count();
             
@@ -127,21 +139,24 @@ namespace FarEmerald.PlayForge.Extended.Editor
                 Tag = tag;
             }
             
-            public void AddUsage(TagContext context, ScriptableObject asset, string fieldPath)
+            public void AddUsage(TagContext context, ScriptableObject asset, string fieldPath, bool isSystemDefault = false)
             {
+                if (isSystemDefault)
+                    IsSystemDefault = true;
+                
                 if (!UsageByContext.TryGetValue(context.ContextKey, out var usage))
                 {
                     usage = new ContextUsage(context);
                     UsageByContext[context.ContextKey] = usage;
                 }
                 
-                usage.AddUsage(asset, fieldPath);
+                usage.AddUsage(asset, fieldPath, isSystemDefault);
             }
             
             // Legacy overload for backward compatibility
             public void AddUsage(TagContext context, ScriptableObject asset)
             {
-                AddUsage(context, asset, "");
+                AddUsage(context, asset, "", false);
             }
             
             public bool RemoveUsage(TagContext context, ScriptableObject asset)
@@ -189,23 +204,37 @@ namespace FarEmerald.PlayForge.Extended.Editor
             public List<FieldUsageInfo> Usages { get; } = new List<FieldUsageInfo>();
             
             // Convenience property for backward compatibility - unique assets
-            public List<ScriptableObject> Assets => Usages.Select(u => u.Asset).Distinct().ToList();
+            public List<ScriptableObject> Assets => Usages
+                .Where(u => u.Asset != null)
+                .Select(u => u.Asset)
+                .Distinct()
+                .ToList();
             
             public ContextUsage(TagContext context)
             {
                 Context = context;
             }
             
-            public void AddUsage(ScriptableObject asset, string fieldPath)
+            public void AddUsage(ScriptableObject asset, string fieldPath, bool isSystemDefault = false)
             {
-                var info = new FieldUsageInfo(asset, fieldPath);
-                if (!Usages.Any(u => u.Asset == asset && u.FieldPath == fieldPath))
-                    Usages.Add(info);
+                var info = new FieldUsageInfo(asset, fieldPath, isSystemDefault);
+                
+                // For system defaults (asset is null), check by fieldPath only
+                if (isSystemDefault)
+                {
+                    if (!Usages.Any(u => u.IsSystemDefault && u.FieldPath == fieldPath))
+                        Usages.Add(info);
+                }
+                else
+                {
+                    if (!Usages.Any(u => u.Asset == asset && u.FieldPath == fieldPath))
+                        Usages.Add(info);
+                }
             }
             
             public bool RemoveAsset(ScriptableObject asset)
             {
-                return Usages.RemoveAll(u => u.Asset == asset) > 0;
+                return Usages.RemoveAll(u => u.Asset == asset && !u.IsSystemDefault) > 0;
             }
             
             /// <summary>
@@ -214,6 +243,7 @@ namespace FarEmerald.PlayForge.Extended.Editor
             public Dictionary<ScriptableObject, List<FieldUsageInfo>> GetUsagesByAsset()
             {
                 return Usages
+                    .Where(u => u.Asset != null)
                     .GroupBy(u => u.Asset)
                     .ToDictionary(g => g.Key, g => g.ToList());
             }
@@ -225,6 +255,14 @@ namespace FarEmerald.PlayForge.Extended.Editor
             {
                 return Usages.Select(u => u.FieldPath).Distinct().Where(p => !string.IsNullOrEmpty(p));
             }
+            
+            /// <summary>
+            /// Gets system default usages (from ForgeContextDefault attributes).
+            /// </summary>
+            public IEnumerable<FieldUsageInfo> GetSystemDefaults()
+            {
+                return Usages.Where(u => u.IsSystemDefault);
+            }
         }
         
         // ═══════════════════════════════════════════════════════════════════════════
@@ -234,9 +272,16 @@ namespace FarEmerald.PlayForge.Extended.Editor
         private static Dictionary<Tag, TagUsageRecord> _tagCache = new Dictionary<Tag, TagUsageRecord>();
         private static Dictionary<string, HashSet<Tag>> _contextToTags = new Dictionary<string, HashSet<Tag>>();
         private static HashSet<Tag> _allTags = new HashSet<Tag>();
+        private static HashSet<Type> _additionalContextDefaultSources = new HashSet<Type>();
         private static bool _isDirty = true;
         private static bool _isScanning = false;
         private static DateTime _lastScanTime = DateTime.MinValue;
+        
+        // Types containing static Tag properties to scan for ForgeContextDefault
+        private static readonly Type[] ContextDefaultSourceTypes = new Type[]
+        {
+            typeof(Tags)
+        };
         
         // Asset types to scan
         private static readonly Type[] ScanTypes = new Type[]
@@ -373,6 +418,48 @@ namespace FarEmerald.PlayForge.Extended.Editor
         }
         
         /// <summary>
+        /// Gets all tags that were registered as system defaults via ForgeContextDefault.
+        /// </summary>
+        public static IEnumerable<Tag> GetSystemDefaultTags()
+        {
+            EnsureCacheValid();
+            return _tagCache.Values
+                .Where(r => r.IsSystemDefault)
+                .Select(r => r.Tag);
+        }
+        
+        /// <summary>
+        /// Gets system default tags for a specific context.
+        /// </summary>
+        public static IEnumerable<Tag> GetSystemDefaultTagsForContext(string[] contextStrings)
+        {
+            EnsureCacheValid();
+            
+            if (contextStrings == null || contextStrings.Length == 0)
+                return GetSystemDefaultTags();
+            
+            var result = new HashSet<Tag>();
+            
+            foreach (var record in _tagCache.Values.Where(r => r.IsSystemDefault))
+            {
+                foreach (var contextUsage in record.UsageByContext.Values)
+                {
+                    // Check if any of the requested contexts match
+                    if (contextStrings.Any(ctx => contextUsage.Context.ContextStrings.Contains(ctx)))
+                    {
+                        if (contextUsage.GetSystemDefaults().Any())
+                        {
+                            result.Add(record.Tag);
+                            break;
+                        }
+                    }
+                }
+            }
+            
+            return result;
+        }
+        
+        /// <summary>
         /// Registers a new tag usage. Called when a tag is assigned in a property drawer.
         /// </summary>
         public static void RegisterTagUsage(Tag tag, string[] contextStrings, ScriptableObject asset, string fieldPath = "")
@@ -414,8 +501,8 @@ namespace FarEmerald.PlayForge.Extended.Editor
             var context = new TagContext(contextStrings);
             record.RemoveUsage(context, asset);
             
-            // If tag has no more usages, remove it entirely
-            if (record.TotalUsageCount == 0)
+            // If tag has no more usages, remove it entirely (unless it's a system default)
+            if (record.TotalUsageCount == 0 && !record.IsSystemDefault)
             {
                 RemoveTagFromCache(tag);
             }
@@ -440,8 +527,8 @@ namespace FarEmerald.PlayForge.Extended.Editor
             
             record.RemoveAssetFromAllContexts(asset);
             
-            // If tag has no more usages, remove it entirely
-            if (record.TotalUsageCount == 0)
+            // If tag has no more usages, remove it entirely (unless it's a system default)
+            if (record.TotalUsageCount == 0 && !record.IsSystemDefault)
             {
                 RemoveTagFromCache(tag);
             }
@@ -534,6 +621,10 @@ namespace FarEmerald.PlayForge.Extended.Editor
                 _contextToTags.Clear();
                 _allTags.Clear();
                 
+                // Scan ForgeContextDefault attributes first (system defaults)
+                int defaultCount = ScanContextDefaults();
+                
+                // Then scan assets
                 foreach (var assetType in ScanTypes)
                 {
                     ScanAssetsOfType(assetType);
@@ -542,7 +633,7 @@ namespace FarEmerald.PlayForge.Extended.Editor
                 _isDirty = false;
                 _lastScanTime = DateTime.Now;
                 
-                Debug.Log($"[TagRegistry] Scanned {_allTags.Count} unique tags across {_contextToTags.Count} contexts.");
+                Debug.Log($"[TagRegistry] Scanned {_allTags.Count} unique tags across {_contextToTags.Count} contexts. ({defaultCount} system defaults)");
             }
             finally
             {
@@ -569,6 +660,135 @@ namespace FarEmerald.PlayForge.Extended.Editor
             if (_isDirty || _lastScanTime == DateTime.MinValue)
                 RefreshCache();
         }
+
+        /// <summary>
+        /// Scans static Tag properties in registered types for ForgeContextDefault attributes.
+        /// These define default tags that should always appear for specific contexts.
+        /// </summary>
+        /// <returns>Number of system default tags registered.</returns>
+        private static int ScanContextDefaults()
+        {
+            int count = 0;
+            
+            // Scan built-in sources
+            foreach (var sourceType in ContextDefaultSourceTypes)
+            {
+                count += ScanTypeForContextDefaults(sourceType);
+            }
+            
+            // Scan any additional registered sources
+            foreach (var sourceType in _additionalContextDefaultSources)
+            {
+                count += ScanTypeForContextDefaults(sourceType);
+            }
+            
+            return count;
+        }
+        
+        /// <summary>
+        /// Scans a single type for static Tag properties with ForgeContextDefault attributes.
+        /// </summary>
+        private static int ScanTypeForContextDefaults(Type type)
+        {
+            int count = 0;
+            var bindingFlags = BindingFlags.Static | BindingFlags.Public | BindingFlags.NonPublic;
+            
+            // Scan properties (e.g., public static Tag SYSTEM => Tag.Generate(...))
+            foreach (var property in type.GetProperties(bindingFlags))
+            {
+                if (property.PropertyType != typeof(Tag))
+                    continue;
+                
+                var contextAttr = property.GetCustomAttribute<ForgeContextDefault>();
+                if (contextAttr == null || contextAttr.Context == null || contextAttr.Context.Length == 0)
+                    continue;
+                
+                try
+                {
+                    var tag = (Tag)property.GetValue(null);
+                    if (!IsTagSetForScanning(tag))
+                        continue;
+                    
+                    // Register this tag for each context specified in the attribute
+                    RegisterSystemDefaultTag(tag, contextAttr.Context, $"{type.Name}.{property.Name}");
+                    count++;
+                }
+                catch (Exception ex)
+                {
+                    Debug.LogWarning($"[TagRegistry] Failed to get value of {type.Name}.{property.Name}: {ex.Message}");
+                }
+            }
+            
+            // Also scan fields in case someone uses fields instead of properties
+            foreach (var field in type.GetFields(bindingFlags))
+            {
+                if (field.FieldType != typeof(Tag))
+                    continue;
+                
+                var contextAttr = field.GetCustomAttribute<ForgeContextDefault>();
+                if (contextAttr == null || contextAttr.Context == null || contextAttr.Context.Length == 0)
+                    continue;
+                
+                try
+                {
+                    var tag = (Tag)field.GetValue(null);
+                    if (!IsTagSetForScanning(tag))
+                        continue;
+                    
+                    RegisterSystemDefaultTag(tag, contextAttr.Context, $"{type.Name}.{field.Name}");
+                    count++;
+                }
+                catch (Exception ex)
+                {
+                    Debug.LogWarning($"[TagRegistry] Failed to get value of {type.Name}.{field.Name}: {ex.Message}");
+                }
+            }
+            
+            return count;
+        }
+        
+        /// <summary>
+        /// Registers a system default tag for all specified contexts.
+        /// </summary>
+        private static void RegisterSystemDefaultTag(Tag tag, string[] contexts, string sourcePath)
+        {
+            // Register the tag for each context individually
+            foreach (var contextStr in contexts)
+            {
+                var context = new TagContext(new[] { contextStr });
+                RegisterTagInCacheAsSystemDefault(tag, context, sourcePath);
+            }
+            
+            // Also register with the combined context if there are multiple
+            if (contexts.Length > 1)
+            {
+                var combinedContext = new TagContext(contexts);
+                RegisterTagInCacheAsSystemDefault(tag, combinedContext, sourcePath);
+            }
+        }
+        
+        /// <summary>
+        /// Registers a tag in the cache as a system default.
+        /// </summary>
+        private static void RegisterTagInCacheAsSystemDefault(Tag tag, TagContext context, string sourcePath)
+        {
+            if (!_tagCache.TryGetValue(tag, out var record))
+            {
+                record = new TagUsageRecord(tag);
+                _tagCache[tag] = record;
+                _allTags.Add(tag);
+            }
+            
+            // Register with null asset (system default) and the source path
+            record.AddUsage(context, null, sourcePath, isSystemDefault: true);
+            
+            if (!_contextToTags.TryGetValue(context.ContextKey, out var contextSet))
+            {
+                contextSet = new HashSet<Tag>();
+                _contextToTags[context.ContextKey] = contextSet;
+            }
+            contextSet.Add(tag);
+        }
         
         private static void ScanAssetsOfType(Type assetType)
         {
@@ -594,79 +814,57 @@ namespace FarEmerald.PlayForge.Extended.Editor
             
             foreach (var field in fields)
             {
-                var fieldType = field.FieldType;
                 var fieldPath = string.IsNullOrEmpty(parentFieldPath) 
                     ? field.Name 
                     : $"{parentFieldPath}.{field.Name}";
                 
-                // Get context from ForgeTagContext attribute
-                var contextAttr = field.GetCustomAttribute<ForgeTagContext>();
-                var context = contextAttr != null 
-                    ? new TagContext(contextAttr.Context)
-                    : DeriveContextFromField(field, rootType);
+                var fieldType = field.FieldType;
                 
-                // Check for Tag field
+                // Check for single Tag field
                 if (fieldType == typeof(Tag))
                 {
                     var tag = (Tag)field.GetValue(obj);
-                    
-                    // Special handling for AssetIdentifier tags (like AssetTag)
-                    // If the name is empty but it's an AssetIdentifier context, derive name from asset
-                    if (contextAttr != null && 
-                        contextAttr.Context != null && 
-                        contextAttr.Context.Contains(ForgeContext.AssetIdentifier) &&
-                        string.IsNullOrEmpty(tag.Name))
+                    if (IsTagSetForScanning(tag))
                     {
-                        // Derive tag name from the asset's display name
-                        var derivedName = GetAssetDisplayName(rootAsset);
-                        if (!string.IsNullOrEmpty(derivedName))
-                        {
-                            tag = Tag.Generate(derivedName);
-                            RegisterTagInCache(tag, context, rootAsset, fieldPath);
-                        }
-                    }
-                    // Normal tag scanning
-                    else if (IsTagSetForScanning(tag))
-                    {
+                        var context = GetContextFromField(field, rootType);
                         RegisterTagInCache(tag, context, rootAsset, fieldPath);
                     }
                 }
                 // Check for List<Tag>
-                else if (fieldType == typeof(List<Tag>))
+                else if (fieldType.IsGenericType && 
+                         fieldType.GetGenericTypeDefinition() == typeof(List<>) &&
+                         fieldType.GetGenericArguments()[0] == typeof(Tag))
                 {
-                    var list = field.GetValue(obj) as List<Tag>;
-                    if (list != null)
+                    var tagList = field.GetValue(obj) as IList<Tag>;
+                    if (tagList != null)
                     {
-                        foreach (var tag in list)
+                        var context = GetContextFromField(field, rootType);
+                        for (int i = 0; i < tagList.Count; i++)
                         {
+                            var tag = tagList[i];
                             if (IsTagSetForScanning(tag))
-                                RegisterTagInCache(tag, context, rootAsset, fieldPath);
-                        }
-                    }
-                }
-                // Check for HashSet<Tag>
-                else if (fieldType == typeof(HashSet<Tag>))
-                {
-                    var set = field.GetValue(obj) as HashSet<Tag>;
-                    if (set != null)
-                    {
-                        foreach (var tag in set)
-                        {
-                            if (IsTagSetForScanning(tag))
-                                RegisterTagInCache(tag, context, rootAsset, fieldPath);
+                            {
+                                var itemPath = $"{fieldPath}[{i}]";
+                                RegisterTagInCache(tag, context, rootAsset, itemPath);
+                            }
                         }
                     }
                 }
                 // Check for Tag[]
-                else if (fieldType == typeof(Tag[]))
+                else if (fieldType.IsArray && fieldType.GetElementType() == typeof(Tag))
                 {
-                    var arr = field.GetValue(obj) as Tag[];
-                    if (arr != null)
+                    var tagArray = field.GetValue(obj) as Tag[];
+                    if (tagArray != null)
                     {
-                        foreach (var tag in arr)
+                        var context = GetContextFromField(field, rootType);
+                        for (int i = 0; i < tagArray.Length; i++)
                         {
+                            var tag = tagArray[i];
                             if (IsTagSetForScanning(tag))
-                                RegisterTagInCache(tag, context, rootAsset, fieldPath);
+                            {
+                                var itemPath = $"{fieldPath}[{i}]";
+                                RegisterTagInCache(tag, context, rootAsset, itemPath);
+                            }
                         }
                     }
                 }
@@ -675,12 +873,30 @@ namespace FarEmerald.PlayForge.Extended.Editor
                 {
                     var value = field.GetValue(obj);
                     
-                    if (value is System.Collections.IList list)
+                    if (fieldType.IsGenericType && fieldType.GetGenericTypeDefinition() == typeof(List<>))
                     {
-                        foreach (var item in list)
+                        var list = value as System.Collections.IList;
+                        if (list != null)
                         {
-                            if (item != null)
-                                ScanObject(item, rootAsset, rootType, fieldPath);
+                            for (int i = 0; i < list.Count; i++)
+                            {
+                                var item = list[i];
+                                if (item != null)
+                                    ScanObject(item, rootAsset, rootType, $"{fieldPath}[{i}]");
+                            }
+                        }
+                    }
+                    else if (fieldType.IsArray)
+                    {
+                        var array = value as Array;
+                        if (array != null)
+                        {
+                            for (int i = 0; i < array.Length; i++)
+                            {
+                                var item = array.GetValue(i);
+                                if (item != null)
+                                    ScanObject(item, rootAsset, rootType, $"{fieldPath}[{i}]");
+                            }
                         }
                     }
                     else if (value != null)
@@ -689,6 +905,19 @@ namespace FarEmerald.PlayForge.Extended.Editor
                     }
                 }
             }
+        }
+        
+        private static TagContext GetContextFromField(FieldInfo field, Type rootType)
+        {
+            // First check for explicit ForgeTagContext attribute
+            var contextAttr = field.GetCustomAttribute<ForgeTagContext>();
+            if (contextAttr != null && contextAttr.Context.Length > 0)
+            {
+                return new TagContext(contextAttr.Context);
+            }
+            
+            // Otherwise derive context from field name and root type
+            return DeriveContextFromField(field, rootType);
         }
         
         private static TagContext DeriveContextFromField(FieldInfo field, Type rootType)
@@ -835,6 +1064,31 @@ namespace FarEmerald.PlayForge.Extended.Editor
             }
             
             return null;
+        }
+        
+        // ═══════════════════════════════════════════════════════════════════════════
+        // Registration API for Additional Context Default Sources
+        // ═══════════════════════════════════════════════════════════════════════════
+        
+        /// <summary>
+        /// Registers an additional type to be scanned for ForgeContextDefault attributes.
+        /// Call this during editor initialization if you have custom tag definition classes.
+        /// </summary>
+        public static void RegisterContextDefaultSource(Type type)
+        {
+            if (type != null && !_additionalContextDefaultSources.Contains(type))
+            {
+                _additionalContextDefaultSources.Add(type);
+                MarkDirty();
+            }
+        }
+        
+        /// <summary>
+        /// Gets all types that will be scanned for ForgeContextDefault attributes.
+        /// </summary>
+        public static IEnumerable<Type> GetContextDefaultSourceTypes()
+        {
+            return ContextDefaultSourceTypes.Concat(_additionalContextDefaultSources);
         }
     }
     

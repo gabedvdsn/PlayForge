@@ -10,144 +10,11 @@ namespace FarEmerald.PlayForge.Extended.Editor
     // ═══════════════════════════════════════════════════════════════════════════
     // AttributeValue Drawer
     // ═══════════════════════════════════════════════════════════════════════════
-    
-    [CustomPropertyDrawer(typeof(AttributeValue))]
-    public class AttributeValueDrawer : PropertyDrawer
-    {
-        public override VisualElement CreatePropertyGUI(SerializedProperty property)
-        {
-            var container = new VisualElement();
-            container.style.flexDirection = FlexDirection.Row;
-            container.style.alignItems = Align.Center;
-            
-            var currentProp = property.FindPropertyRelative("CurrentValue");
-            var baseProp = property.FindPropertyRelative("BaseValue");
-            
-            // Current
-            var currentLabel = new Label("Cur");
-            currentLabel.style.width = 24;
-            currentLabel.style.color = Colors.HintText;
-            currentLabel.style.fontSize = 9;
-            currentLabel.tooltip = "Current Value";
-            container.Add(currentLabel);
-            
-            var currentField = new FloatField();
-            currentField.style.flexGrow = 1;
-            currentField.style.minWidth = 40;
-            currentField.bindingPath = currentProp.propertyPath;
-            container.Add(currentField);
-            
-            // Separator
-            var sep = new Label("/");
-            sep.style.marginLeft = 4;
-            sep.style.marginRight = 4;
-            sep.style.color = Colors.HintText;
-            container.Add(sep);
-            
-            // Base
-            var baseLabel = new Label("Base");
-            baseLabel.style.width = 28;
-            baseLabel.style.color = Colors.HintText;
-            baseLabel.style.fontSize = 9;
-            baseLabel.tooltip = "Base Value";
-            container.Add(baseLabel);
-            
-            var baseField = new FloatField();
-            baseField.style.flexGrow = 1;
-            baseField.style.minWidth = 40;
-            baseField.bindingPath = baseProp.propertyPath;
-            container.Add(baseField);
-            
-            return container;
-        }
-    }
-    
+
     // ═══════════════════════════════════════════════════════════════════════════
     // AttributeOverflowData Drawer - Vertical layout for Floor/Ceil
     // ═══════════════════════════════════════════════════════════════════════════
-    
-    [CustomPropertyDrawer(typeof(AttributeOverflowData))]
-    public class AttributeOverflowDataDrawer : PropertyDrawer
-    {
-        public override VisualElement CreatePropertyGUI(SerializedProperty property)
-        {
-            var container = new VisualElement();
-            
-            var policyProp = property.FindPropertyRelative("Policy");
-            var floorProp = property.FindPropertyRelative("Floor");
-            var ceilProp = property.FindPropertyRelative("Ceil");
-            
-            // Policy row
-            var policyRow = new VisualElement();
-            policyRow.style.flexDirection = FlexDirection.Row;
-            policyRow.style.alignItems = Align.Center;
-            policyRow.style.marginBottom = 2;
-            container.Add(policyRow);
-            
-            var policyField = new PropertyField(policyProp, "");
-            policyField.style.flexGrow = 1;
-            policyField.BindProperty(policyProp);
-            policyRow.Add(policyField);
-            
-            // Floor row (shown for FloorToBase, FloorToCeil)
-            var floorRow = new VisualElement { name = "FloorRow" };
-            floorRow.style.flexDirection = FlexDirection.Row;
-            floorRow.style.alignItems = Align.Center;
-            floorRow.style.marginTop = 2;
-            container.Add(floorRow);
-            
-            var floorLabel = new Label("Floor");
-            floorLabel.style.width = 36;
-            floorLabel.style.fontSize = 10;
-            floorLabel.style.color = Colors.HintText;
-            floorRow.Add(floorLabel);
-            
-            var floorField = new PropertyField(floorProp, "");
-            floorField.style.flexGrow = 1;
-            floorField.BindProperty(floorProp);
-            floorRow.Add(floorField);
-            
-            // Ceil row (shown for ZeroToCeil, FloorToCeil)
-            var ceilRow = new VisualElement { name = "CeilRow" };
-            ceilRow.style.flexDirection = FlexDirection.Row;
-            ceilRow.style.alignItems = Align.Center;
-            ceilRow.style.marginTop = 2;
-            container.Add(ceilRow);
-            
-            var ceilLabel = new Label("Ceil");
-            ceilLabel.style.width = 36;
-            ceilLabel.style.fontSize = 10;
-            ceilLabel.style.color = Colors.HintText;
-            ceilRow.Add(ceilLabel);
-            
-            var ceilField = new PropertyField(ceilProp, "");
-            ceilField.style.flexGrow = 1;
-            ceilField.BindProperty(ceilProp);
-            ceilRow.Add(ceilField);
-            
-            void UpdateVisibility()
-            {
-                var policy = (EAttributeOverflowPolicy)policyProp.enumValueIndex;
-                
-                // Floor shown for: FloorToBase, FloorToCeil
-                bool showFloor = policy == EAttributeOverflowPolicy.FloorToBase || 
-                                 policy == EAttributeOverflowPolicy.FloorToCeil;
-                
-                // Ceil shown for: ZeroToCeil, FloorToCeil
-                bool showCeil = policy == EAttributeOverflowPolicy.ZeroToCeil || 
-                                policy == EAttributeOverflowPolicy.FloorToCeil;
-                
-                floorRow.style.display = showFloor ? DisplayStyle.Flex : DisplayStyle.None;
-                ceilRow.style.display = showCeil ? DisplayStyle.Flex : DisplayStyle.None;
-            }
-            
-            container.schedule.Execute(UpdateVisibility).StartingIn(50);
-            policyField.RegisterValueChangeCallback(_ => UpdateVisibility());
-            
-            return container;
-        }
-    }
-    
+
     // ═══════════════════════════════════════════════════════════════════════════
     // AttributeSetElement Drawer - Show/Hide approach (no rebuild)
     // ═══════════════════════════════════════════════════════════════════════════
@@ -177,10 +44,12 @@ namespace FarEmerald.PlayForge.Extended.Editor
             // Get all properties upfront
             var attributeProp = property.FindPropertyRelative("Attribute");
             var magnitudeProp = property.FindPropertyRelative("Magnitude");
-            var modifierProp = property.FindPropertyRelative("Modifier");
+            var modifierProp = property.FindPropertyRelative("Scaling");
             var targetProp = property.FindPropertyRelative("Target");
             var overflowProp = property.FindPropertyRelative("Overflow");
             var collisionProp = property.FindPropertyRelative("CollisionPolicy");
+            var constraintsProp = property.FindPropertyRelative("Constraints");
+            var retentionProp = property.FindPropertyRelative("RetentionGroup");
             
             // Main container
             var container = new VisualElement { name = "Container" };
@@ -210,7 +79,7 @@ namespace FarEmerald.PlayForge.Extended.Editor
             
             // Collapse button
             var collapseBtn = new Button { name = "CollapseBtn" };
-            collapseBtn.text = startCollapsed ? "▶" : "▼";
+            collapseBtn.text = startCollapsed ? Icons.ChevronRight : Icons.ChevronDown;
             collapseBtn.style.width = 18;
             collapseBtn.style.height = 18;
             collapseBtn.style.fontSize = 8;
@@ -248,7 +117,6 @@ namespace FarEmerald.PlayForge.Extended.Editor
             // Magnitude badge
             var magBadge = CreateBadge("0", Colors.AccentBlue);
             magBadge.name = "MagBadge";
-            magBadge.tooltip = "Magnitude";
             summaryContainer.Add(magBadge);
             
             // Target badge
@@ -258,10 +126,22 @@ namespace FarEmerald.PlayForge.Extended.Editor
             summaryContainer.Add(targetBadge);
             
             // Collision badge
-            var collisionBadge = CreateBadge("Def", Colors.HintText);
-            collisionBadge.name = "CollisionBadge";
-            collisionBadge.style.marginLeft = 4;
-            summaryContainer.Add(collisionBadge);
+            var retentionBadge = CreateBadge("Def", Colors.HintText);
+            retentionBadge.name = "RetentionBadge";
+            retentionBadge.style.marginLeft = 4;
+            summaryContainer.Add(retentionBadge);
+            
+            // Target badge
+            var clampScaleBadge = CreateBadge("C+B", Colors.HintText);
+            clampScaleBadge.name = "ClampScaleBadge";
+            clampScaleBadge.style.marginLeft = 4;
+            summaryContainer.Add(clampScaleBadge);
+            
+            // Target badge
+            var roundingBadge = CreateBadge("C+B", Colors.HintText);
+            roundingBadge.name = "RoundingBadge";
+            roundingBadge.style.marginLeft = 4;
+            summaryContainer.Add(roundingBadge);
             
             // ═══════════════════════════════════════════════════════════════════
             // Expanded Content (visible when expanded)
@@ -271,6 +151,26 @@ namespace FarEmerald.PlayForge.Extended.Editor
             expandedContent.style.marginTop = 6;
             expandedContent.style.display = startCollapsed ? DisplayStyle.None : DisplayStyle.Flex;
             container.Add(expandedContent);
+            
+            // Retention group row
+            var retentionRow = new VisualElement();
+            retentionRow.style.flexDirection = FlexDirection.Row;
+            retentionRow.style.alignItems = Align.FlexStart;
+            retentionRow.style.marginBottom = 4;
+            expandedContent.Add(retentionRow);
+            
+            var retentionLabel = new Label("Retention Group");
+            retentionLabel.style.width = 100;
+            retentionLabel.style.alignSelf = Align.Center;
+            retentionLabel.style.fontSize = 10;
+            retentionLabel.style.color = Colors.HintText;
+            retentionLabel.style.marginTop = 2;
+            retentionRow.Add(retentionLabel);
+
+            var retentionField = new PropertyField(retentionProp, "");
+            retentionField.style.flexGrow = 1;
+            retentionField.BindProperty(retentionProp);
+            retentionRow.Add(retentionField);        
             
             // Magnitude + Target row
             var valuesRow = new VisualElement();
@@ -303,7 +203,7 @@ namespace FarEmerald.PlayForge.Extended.Editor
             valuesRow.Add(targetField);
             
             // Modifier row
-            var modifierField = new PropertyField(modifierProp, "Modifier");
+            var modifierField = new PropertyField(modifierProp, "Scaling");
             modifierField.style.marginBottom = 4;
             modifierField.BindProperty(modifierProp);
             expandedContent.Add(modifierField);
@@ -344,6 +244,23 @@ namespace FarEmerald.PlayForge.Extended.Editor
             collField.BindProperty(collisionProp);
             collisionRow.Add(collField);
             
+            // Collision row
+            var constraintsRow = new VisualElement();
+            constraintsRow.style.flexDirection = FlexDirection.Row;
+            constraintsRow.style.alignItems = Align.Center;
+            expandedContent.Add(constraintsRow);
+            
+            var constraintLabel = new Label("Constraints");
+            constraintLabel.style.width = 65;
+            constraintLabel.style.fontSize = 10;
+            constraintLabel.style.color = Colors.HintText;
+            constraintsRow.Add(constraintLabel);
+            
+            var constraintField = new PropertyField(constraintsProp, "");
+            constraintField.style.flexGrow = 1;
+            constraintField.BindProperty(constraintsProp);
+            constraintsRow.Add(constraintField);
+            
             // ═══════════════════════════════════════════════════════════════════
             // Update Functions
             // ═══════════════════════════════════════════════════════════════════
@@ -352,29 +269,47 @@ namespace FarEmerald.PlayForge.Extended.Editor
             {
                 // Magnitude
                 float mag = magnitudeProp.floatValue;
-                magBadge.text = mag.ToString("F1");
+                magBadge.text = mag.ToString("F2");
+                magBadge.tooltip = $"Magnitude: {mag:F2}";
                 
                 // Target
                 var target = (ELimitedEffectImpactTarget)targetProp.enumValueIndex;
                 targetBadge.text = target == ELimitedEffectImpactTarget.CurrentAndBase ? "C+B" : "B";
-                targetBadge.tooltip = target.ToString();
+                targetBadge.tooltip = $"Targets: {target.ToString()}";
                 
-                // Collision
-                var collision = (EAttributeElementCollisionPolicy)collisionProp.enumValueIndex;
-                var (collText, collColor) = collision switch
+                string retentionGroup = retentionProp.FindPropertyRelative("Name").stringValue;
+                retentionBadge.text = retentionGroup;
+                retentionBadge.style.color = Colors.AccentGreen;
+                retentionBadge.style.backgroundColor = new Color(Colors.AccentBlue.r, Colors.AccentBlue.g, Colors.AccentBlue.b, 0.15f);
+                retentionBadge.tooltip = $"Retention Group: {retentionGroup}";
+
+                string clampScale = "";
+                if (constraintsProp.FindPropertyRelative("AutoClamp").boolValue)
                 {
-                    EAttributeElementCollisionPolicy.UseThis => ("This", Colors.AccentGreen),
-                    EAttributeElementCollisionPolicy.UseExisting => ("Exist", Colors.AccentOrange),
-                    EAttributeElementCollisionPolicy.Combine => ("Add", Colors.AccentBlue),
-                    _ => ("Def", Colors.HintText)
-                };
-                collisionBadge.text = collText;
-                collisionBadge.style.color = collColor;
-                collisionBadge.style.backgroundColor = new Color(collColor.r, collColor.g, collColor.b, 0.15f);
-                collisionBadge.tooltip = $"Collision: {collision}";
+                    clampScale += "C";
+                    if (constraintsProp.FindPropertyRelative("AutoScaleWithBase").boolValue) clampScale += "/S";
+                }
+                else if (constraintsProp.FindPropertyRelative("AutoScaleWithBase").boolValue) clampScale += "S";
+                clampScaleBadge.text = clampScale;
+                clampScaleBadge.style.color = Colors.AccentOrange;
+                clampScaleBadge.style.backgroundColor = new Color(Colors.AccentOrange.r, Colors.AccentOrange.g, Colors.AccentOrange.b, 0.15f);
+                clampScaleBadge.tooltip = $"Clamp/Scale: {(clampScale.Contains("C") ? "True" : "False")}/{(clampScale.Contains("S") ? "True" : "False")}";
+                
+                var roundingTarget = (EAttributeRoundingPolicy)constraintsProp.FindPropertyRelative("RoundingMode").enumValueIndex;
+                if (roundingTarget == EAttributeRoundingPolicy.None) roundingBadge.style.display = DisplayStyle.None;
+                else
+                {
+                    roundingBadge.style.display = DisplayStyle.Flex;
+                    string roundingText = $"{roundingTarget.ToString()}" +
+                                          (roundingTarget == EAttributeRoundingPolicy.SnapTo ? $"/{constraintsProp.FindPropertyRelative("SnapInterval").floatValue:g2}" : string.Empty);
+                    roundingBadge.text = roundingText;
+                    roundingBadge.style.color = Colors.AccentPurple;
+                    roundingBadge.style.backgroundColor = new Color(Colors.AccentPurple.r, Colors.AccentPurple.g, Colors.AccentPurple.b, 0.15f);
+                    roundingBadge.tooltip = $"Rounding: {roundingText}";
+                }
                 
                 // Border color
-                container.style.borderLeftColor = collision switch
+                container.style.borderLeftColor = (EAttributeElementCollisionPolicy)collisionProp.enumValueIndex switch
                 {
                     EAttributeElementCollisionPolicy.UseThis => Colors.AccentGreen,
                     EAttributeElementCollisionPolicy.UseExisting => Colors.AccentOrange,
@@ -389,7 +324,7 @@ namespace FarEmerald.PlayForge.Extended.Editor
                 bool newState = !isCollapsed;
                 SetCollapsed(property.propertyPath, newState);
                 
-                collapseBtn.text = newState ? "▶" : "▼";
+                collapseBtn.text = newState ? Icons.ChevronRight : Icons.ChevronDown;
                 summaryContainer.style.display = newState ? DisplayStyle.Flex : DisplayStyle.None;
                 expandedContent.style.display = newState ? DisplayStyle.None : DisplayStyle.Flex;
                 

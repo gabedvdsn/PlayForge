@@ -26,7 +26,8 @@ namespace FarEmerald.PlayForge
         
         public SourcedModifiedAttributeValue SourcedImpact(AttributeValue attributeValue)
         {
-            var impactValue = AttributeImpact(attributeValue);
+            float magnitude = Base.ImpactSpecification.GetMagnitude(this);
+            var impactValue = AttributeImpact(magnitude, attributeValue);
             return new SourcedModifiedAttributeValue(
                 this,
                 impactValue.CurrentValue,
@@ -34,20 +35,22 @@ namespace FarEmerald.PlayForge
             );
         }
 
-        public SourcedModifiedAttributeValue SourcedImpact(IAttributeImpactDerivation baseDerivation, AttributeValue attributeValue)
+        public SourcedModifiedAttributeValue SourcedImpact(AbstractEffectContainer container, AttributeValue attributeValue)
         {
-            var impactValue = AttributeImpact(attributeValue);
+            float magnitude = container is AbstractStackingEffectContainer _container 
+                ? Base.ImpactSpecification.GetMagnitude(_container) 
+                : Base.ImpactSpecification.GetMagnitude(this);
+            var impactValue = AttributeImpact(magnitude, attributeValue);
             return new SourcedModifiedAttributeValue(
                 this,
-                baseDerivation,
+                container,
                 impactValue.CurrentValue,
                 impactValue.BaseValue
             );
         }
         
-        private AttributeValue AttributeImpact(AttributeValue attributeValue)
+        private AttributeValue AttributeImpact(float magnitude, AttributeValue attributeValue)
         {
-            float magnitude = Base.ImpactSpecification.GetMagnitude(this);
             float currValue = attributeValue.CurrentValue;
             float baseValue = attributeValue.BaseValue;
             
@@ -136,45 +139,47 @@ namespace FarEmerald.PlayForge
         }
         public Tag AttributeRetention()
         {
-            return Tags.RETENTION_IGNORE;
+            return Base.Definition.ImpactRetentionGroup;
         }
-        public void TrackImpact(AbilityImpactData impactData)
+        public void TrackImpact(ImpactData impactData)
         {
             // Specs do not track their own impact (tracked in effect containers)
         }
-        public bool TryGetTrackedImpact(out AttributeValue impactValue)
+        public TrackedImpact GetTrackedImpact()
         {
-            impactValue = default;
-            return false;
+            return new TrackedImpact();
         }
-        public bool TryGetLastTrackedImpact(out AttributeValue impactValue)
+        public AttributeValue GetLastTrackedImpact()
         {
-            impactValue = default;
-            return false;
+            return default;
         }
         public List<Tag> GetContextTags()
         {
             return Origin.GetContextTags();
         }
-        public void RunEffectApplicationWorkers()
+        public void RunWorkerApplication(EffectWorkerContext ctx)
         {
-            foreach (AbstractEffectWorker worker in Base.Workers) worker.OnEffectApplication(this);
+            foreach (AbstractEffectWorker worker in Base.Workers) ctx.ActionQueue.EnqueueRange(worker.OnEffectApplication(ctx));
         }
-        public void RunEffectTickWorkers()
+        public void RunWorkerTick(EffectWorkerContext ctx)
         {
             // Specs never run this method (because non-durational specs, i.e. without containers, are never ticked)
         }
-        public void RunEffectRemovalWorkers()
+        public void RunWorkerRemoval(EffectWorkerContext ctx)
         {
-            foreach (AbstractEffectWorker worker in Base.Workers) worker.OnEffectRemoval(this);
+            foreach (AbstractEffectWorker worker in Base.Workers) ctx.ActionQueue.EnqueueRange(worker.OnEffectRemoval(ctx));
         }
-        public void RunEffectImpactWorkers(AbilityImpactData impactData)
+        public void RunWorkerImpact(EffectWorkerContext ctx)
         {
-            foreach (AbstractEffectWorker worker in Base.Workers) worker.OnEffectImpact(impactData);
+            foreach (AbstractEffectWorker worker in Base.Workers) ctx.ActionQueue.EnqueueRange(worker.OnEffectImpact(ctx));
         }
         public Dictionary<IScaler, AttributeValue?> GetSourcedCapturedAttributes()
         {
             return SourceCapturedAttributes;
+        }
+        public IAttributeImpactDerivation GetImpactDerivation()
+        {
+            return null;
         }
     }
 }

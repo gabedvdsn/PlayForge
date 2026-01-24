@@ -13,7 +13,6 @@ namespace FarEmerald.PlayForge.Extended.Editor
     {
         // ═══════════════════════════════════════════════════════════════════════════
         // VIEW TAB STATE
-        // Note: showTagsView is declared in PlayForgeManager.cs
         // ═══════════════════════════════════════════════════════════════════════════
         
         private string currentSortColumn = "Name";
@@ -21,63 +20,96 @@ namespace FarEmerald.PlayForge.Extended.Editor
         private List<Button> typeFilterButtons = new List<Button>();
         private List<Button> secondaryFilterButtons = new List<Button>();
         private HashSet<string> expandedTags = new HashSet<string>();
+        private HashSet<string> expandedRequirements = new HashSet<string>();
         
-        // Secondary view mode for modifiers
-        private bool showModifiersView = false;
+        // Secondary view modes
+        private bool showScalersView = false;
+        private bool showRequirementsView = false;
+        
+        // Requirements filter
+        private string selectedRequirementFilter = null; // null = All, "Source", "Target", "Required", "Avoid"
+        
+        // Scalers filter
+        private string selectedScalerTypeFilter = null; // null = All, or specific scaler type name
+        private string selectedScalerContextFilter = null; // null = All, "Duration", "Magnitude", etc.
+        private Type selectedScalerAssetTypeFilter = null; // null = All, or specific asset type
+        
+        // All assets view filter
+        private string selectedAllViewFilter = null; // null = None, "HasScalers", "HasRequirements", "HasTags", "Leveled"
         
         // Cached scaler discovery
         private static List<ScalerRecord> _cachedScalerRecords = null;
         private static DateTime _lastScalerCacheTime = DateTime.MinValue;
         private const float SCALER_CACHE_LIFETIME_SECONDS = 60f;
         
+        // Cached requirements discovery
+        private static List<RequirementRecord> _cachedRequirementRecords = null;
+        private static DateTime _lastRequirementCacheTime = DateTime.MinValue;
+        private const float REQUIREMENT_CACHE_LIFETIME_SECONDS = 60f;
+        
         // Styling constants
-        private static readonly Color ColumnBorderColor = new Color(0.35f, 0.35f, 0.35f, 1f);
-        private static readonly Color RowBorderColor = new Color(0.3f, 0.3f, 0.3f, 0.5f);
-        private const int ROW_HEIGHT = 28;
-        private const int HEADER_HEIGHT = 32;
-        private const int CELL_PADDING_H = 8;
-        private const int ACTIONS_COLUMN_WIDTH = 80;
+        private static readonly Color TableBorderColor = new Color(0.28f, 0.28f, 0.28f, 1f);
+        private static readonly Color HeaderBgColor = new Color(0.18f, 0.18f, 0.2f, 1f);
+        private static readonly Color RowAltColor = new Color(0.24f, 0.24f, 0.26f, 0.4f);
+        private static readonly Color RowHoverColor = new Color(0.3f, 0.32f, 0.35f, 0.7f);
+        private static readonly Color RequirementColor = new Color(0.95f, 0.6f, 0.2f); // Orange/amber
+        private const int ROW_HEIGHT = 32;
+        private const int HEADER_HEIGHT = 36;
+        private const int CELL_PADDING_H = 10;
+        private const int ACTIONS_COLUMN_WIDTH = 120;
         
         private static readonly Dictionary<Type, List<ColumnDef>> ColumnDefinitions = new Dictionary<Type, List<ColumnDef>>
         {
             { typeof(Ability), new List<ColumnDef> {
-                new ColumnDef("Name", 180, a => GetAbilityName((Ability)a)),
-                new ColumnDef("Policy", 100, a => ((Ability)a).Definition.ActivationPolicy.ToString()),
-                new ColumnDef("Start Lvl", 70, a => ((Ability)a).StartingLevel.ToString()),
-                new ColumnDef("Max Lvl", 70, a => ((Ability)a).MaxLevel.ToString()),
-                new ColumnDef("Cost", 90, a => GetAbilityCostSummary((Ability)a), true),
-                new ColumnDef("Cooldown", 90, a => GetAbilityCooldownSummary((Ability)a), true),
-                new ColumnDef("Stages", 60, a => ((Ability)a).Proxy?.Stages?.Count.ToString() ?? "0"),
+                new ColumnDef("Name", 160, a => GetAbilityName((Ability)a)),
+                new ColumnDef("Policy", 110, a => ((Ability)a).Definition.ActivationPolicy.ToString()),
+                new ColumnDef("Start Lvl", 65, a => ((Ability)a).StartingLevel.ToString()),
+                new ColumnDef("Max Lvl", 65, a => ((Ability)a).MaxLevel.ToString()),
+                new ColumnDef("Cost", 85, a => GetAbilityCostSummary((Ability)a), true),
+                new ColumnDef("Cooldown", 85, a => GetAbilityCooldownSummary((Ability)a), true),
+                new ColumnDef("Stages", 55, a => ((Ability)a).Behaviour?.Stages?.Count.ToString() ?? "0"),
+                new ColumnDef("Src Reqs", 60, a => GetAbilitySourceReqCount((Ability)a)),
+                new ColumnDef("Tgt Reqs", 60, a => GetAbilityTargetReqCount((Ability)a)),
             }},
             { typeof(GameplayEffect), new List<ColumnDef> {
-                new ColumnDef("Name", 180, a => GetEffectName((GameplayEffect)a)),
-                new ColumnDef("Duration", 120, a => GetEffectDuration((GameplayEffect)a)),
-                new ColumnDef("Impact", 120, a => GetEffectImpact((GameplayEffect)a)),
-                new ColumnDef("Workers", 70, a => ((GameplayEffect)a).Workers?.Count.ToString() ?? "0"),
-                new ColumnDef("Visibility", 100, a => ((GameplayEffect)a).Definition?.Visibility.ToString() ?? "-"),
+                new ColumnDef("Name", 160, a => GetEffectName((GameplayEffect)a)),
+                new ColumnDef("Duration", 110, a => GetEffectDuration((GameplayEffect)a)),
+                new ColumnDef("Impact", 110, a => GetEffectImpact((GameplayEffect)a)),
+                new ColumnDef("Workers", 60, a => ((GameplayEffect)a).Workers?.Count.ToString() ?? "0"),
+                new ColumnDef("Visibility", 90, a => ((GameplayEffect)a).Definition?.Visibility.ToString() ?? "-"),
+                new ColumnDef("Src Reqs", 60, a => GetEffectSourceReqCount((GameplayEffect)a)),
+                new ColumnDef("Tgt Reqs", 60, a => GetEffectTargetReqCount((GameplayEffect)a)),
+            }},
+            { typeof(Item), new List<ColumnDef> {
+                new ColumnDef("Name", 160, a => GetItemName((Item)a)),
+                new ColumnDef("Start Lvl", 65, a => ((Item)a).StartingLevel.ToString()),
+                new ColumnDef("Max Lvl", 65, a => ((Item)a).MaxLevel.ToString()),
+                new ColumnDef("Effects", 60, a => ((Item)a).GrantedEffects?.Count.ToString() ?? "0"),
+                new ColumnDef("Active", 60, a => ((Item)a).ActiveAbility != null ? "✓" : "-"),
+                new ColumnDef("Visibility", 90, a => !string.IsNullOrEmpty(((Item)a).Definition.Visibility.Name) ? ((Item)a).Definition.Visibility.Name : "-"),
             }},
             { typeof(Attribute), new List<ColumnDef> {
-                new ColumnDef("Name", 200, a => GetAttributeName((Attribute)a)),
-                new ColumnDef("Description", 350, a => GetAttributeDescription((Attribute)a)),
+                new ColumnDef("Name", 180, a => GetAttributeName((Attribute)a)),
+                new ColumnDef("Description", 400, a => GetAttributeDescription((Attribute)a)),
             }},
             { typeof(AttributeSet), new List<ColumnDef> {
-                new ColumnDef("Name", 180, a => a.name),
-                new ColumnDef("Attributes", 90, a => ((AttributeSet)a).Attributes?.Count.ToString() ?? "0"),
-                new ColumnDef("Subsets", 90, a => ((AttributeSet)a).SubSets?.Count.ToString() ?? "0"),
-                new ColumnDef("Unique", 90, a => ((AttributeSet)a).GetUnique()?.Count.ToString() ?? "0"),
-                new ColumnDef("Collision", 130, a => ((AttributeSet)a).CollisionResolutionPolicy.ToString()),
+                new ColumnDef("Name", 160, a => GetAttributeSetName((AttributeSet)a)),
+                new ColumnDef("Attributes", 80, a => ((AttributeSet)a).Attributes?.Count.ToString() ?? "0"),
+                new ColumnDef("Subsets", 70, a => ((AttributeSet)a).SubSets?.Count.ToString() ?? "0"),
+                new ColumnDef("Unique", 70, a => ((AttributeSet)a).GetUnique()?.Count.ToString() ?? "0"),
+                new ColumnDef("Collision", 120, a => ((AttributeSet)a).CollisionResolutionPolicy.ToString()),
             }},
             { typeof(EntityIdentity), new List<ColumnDef> {
-                new ColumnDef("Name", 180, a => GetEntityName((EntityIdentity)a)),
-                new ColumnDef("Policy", 110, a => ((EntityIdentity)a).ActivationPolicy.ToString()),
+                new ColumnDef("Name", 160, a => GetEntityName((EntityIdentity)a)),
+                new ColumnDef("Policy", 100, a => ((EntityIdentity)a).ActivationPolicy.ToString()),
                 new ColumnDef("Max Abilities", 90, a => ((EntityIdentity)a).MaxAbilities.ToString()),
-                new ColumnDef("Starting", 80, a => ((EntityIdentity)a).StartingAbilities?.Count.ToString() ?? "0"),
-                new ColumnDef("Duplicates", 80, a => ((EntityIdentity)a).AllowDuplicateAbilities ? "Yes" : "No"),
+                new ColumnDef("Starting", 70, a => ((EntityIdentity)a).StartingAbilities?.Count.ToString() ?? "0"),
+                new ColumnDef("Duplicates", 75, a => ((EntityIdentity)a).AllowDuplicateAbilities ? "Yes" : "No"),
             }},
         };
         
         // ═══════════════════════════════════════════════════════════════════════════
-        // Scaler Record for generic discovery
+        // Record Classes
         // ═══════════════════════════════════════════════════════════════════════════
         
         private class ScalerRecord
@@ -87,6 +119,19 @@ namespace FarEmerald.PlayForge.Extended.Editor
             public AbstractScaler Scaler;
             public string ScalerTypeName;
             public string Context;
+            public string AssetType; // "Ability", "Effect", "Item"
+        }
+        
+        private class RequirementRecord
+        {
+            public ScriptableObject Asset;
+            public string TagName;
+            public Tag Tag;
+            public string TargetType;   // "Source" or "Target"
+            public string ReqType;      // "Required" or "Avoid"
+            public string AssetType;    // "Ability" or "Effect"
+            public string Context;      // "Activation" for abilities, "Application", "Ongoing", "Removal" for effects
+            public string GroupName;    // Name from the AvoidRequireTagGroup or AbilityTagRequirements
         }
         
         // ═══════════════════════════════════════════════════════════════════════════
@@ -116,7 +161,7 @@ namespace FarEmerald.PlayForge.Extended.Editor
                 typeFilterButtons.Add(btn);
             }
             
-            // ROW 2: Tags & Modifiers
+            // ROW 2: Tags, Modifiers & Requirements
             var secondaryBar = new VisualElement();
             secondaryBar.style.flexDirection = FlexDirection.Row;
             secondaryBar.style.flexWrap = Wrap.Wrap;
@@ -126,37 +171,54 @@ namespace FarEmerald.PlayForge.Extended.Editor
             
             secondaryFilterButtons.Clear();
             
+            // Tags button
             var tagCount = TagRegistry.GetAllTags().Count();
             var tagsBtn = CreateSecondaryFilterButton("🏷 Tags", Colors.AccentCyan, showTagsView, tagCount);
             tagsBtn.clicked += () =>
             {
                 showTagsView = !showTagsView;
-                if (showTagsView) showModifiersView = false;
+                if (showTagsView) { showScalersView = false; showRequirementsView = false; }
                 ShowTab(1);
             };
             secondaryBar.Add(tagsBtn);
             secondaryFilterButtons.Add(tagsBtn);
             
-            var modifierCount = GetScalerCache().Count;
-            var modifiersBtn = CreateSecondaryFilterButton("◆ Modifiers", Colors.AccentPurple, showModifiersView, modifierCount);
-            modifiersBtn.clicked += () =>
+            // Scalers button (renamed from Modifiers)
+            var scalerCount = GetScalerCache().Count;
+            var scalersBtn = CreateSecondaryFilterButton("◆ Scalers", Colors.AccentPurple, showScalersView, scalerCount);
+            scalersBtn.clicked += () =>
             {
-                showModifiersView = !showModifiersView;
-                if (showModifiersView) showTagsView = false;
+                showScalersView = !showScalersView;
+                if (showScalersView) { showTagsView = false; showRequirementsView = false; }
                 ShowTab(1);
             };
-            secondaryBar.Add(modifiersBtn);
-            secondaryFilterButtons.Add(modifiersBtn);
+            secondaryBar.Add(scalersBtn);
+            secondaryFilterButtons.Add(scalersBtn);
+            
+            // Requirements button
+            var reqRecords = GetRequirementsCache();
+            var uniqueReqTags = reqRecords.Select(r => r.TagName).Distinct().Count();
+            var requirementsBtn = CreateSecondaryFilterButton("⚡ Requirements", RequirementColor, showRequirementsView, uniqueReqTags);
+            requirementsBtn.clicked += () =>
+            {
+                showRequirementsView = !showRequirementsView;
+                if (showRequirementsView) { showTagsView = false; showScalersView = false; }
+                ShowTab(1);
+            };
+            secondaryBar.Add(requirementsBtn);
+            secondaryFilterButtons.Add(requirementsBtn);
             
             var spacer = new VisualElement();
             spacer.style.flexGrow = 1;
             secondaryBar.Add(spacer);
             
-            if (showTagsView || showModifiersView)
+            if (showTagsView || showScalersView || showRequirementsView)
             {
-                var infoLabel = new Label(showTagsView ? "Browsing Tags" : "Browsing Modifiers");
+                string browsingText = showTagsView ? "Browsing Tags" : (showScalersView ? "Browsing Scalers" : "Browsing Requirements");
+                Color browsingColor = showTagsView ? Colors.AccentCyan : (showScalersView ? Colors.AccentPurple : RequirementColor);
+                var infoLabel = new Label(browsingText);
                 infoLabel.style.fontSize = 10;
-                infoLabel.style.color = showTagsView ? Colors.AccentCyan : Colors.AccentPurple;
+                infoLabel.style.color = browsingColor;
                 infoLabel.style.paddingRight = 8;
                 infoLabel.style.unityFontStyleAndWeight = FontStyle.Italic;
                 secondaryBar.Add(infoLabel);
@@ -164,8 +226,15 @@ namespace FarEmerald.PlayForge.Extended.Editor
             
             UpdateTypeFilterButtons();
             
+            // Context filter bars
             if (showTagsView)
                 BuildTagContextFilterBar();
+            if (showRequirementsView)
+                BuildRequirementsFilterBar();
+            if (showScalersView)
+                BuildScalersFilterBar();
+            if (!showTagsView && !showScalersView && !showRequirementsView && selectedTypeFilter == null)
+                BuildAllViewFilterBar();
             
             // Search Bar
             var searchBar = new VisualElement();
@@ -174,8 +243,8 @@ namespace FarEmerald.PlayForge.Extended.Editor
             searchBar.style.marginBottom = 8;
             contentContainer.Add(searchBar);
             
-            var searchIcon = new Label("Search");
-            searchIcon.style.marginRight = 4;
+            var searchIcon = new Label("🔍");
+            searchIcon.style.marginRight = 6;
             searchIcon.style.color = Colors.HintText;
             searchBar.Add(searchIcon);
             
@@ -267,7 +336,8 @@ namespace FarEmerald.PlayForge.Extended.Editor
             btn.clicked += () =>
             {
                 showTagsView = false;
-                showModifiersView = false;
+                showScalersView = false;
+                showRequirementsView = false;
                 selectedTypeFilter = type;
                 if (type != null)
                     EditorPrefs.SetString(PREFS_PREFIX + "LastTypeFilter", type.Name);
@@ -358,7 +428,7 @@ namespace FarEmerald.PlayForge.Extended.Editor
         
         private void UpdateTypeButtonStyle(Button btn, Type type, Color? accentColor)
         {
-            bool isSelected = (type == selectedTypeFilter && !showTagsView && !showModifiersView);
+            bool isSelected = (type == selectedTypeFilter && !showTagsView && !showScalersView && !showRequirementsView);
             
             if (isSelected)
             {
@@ -385,9 +455,15 @@ namespace FarEmerald.PlayForge.Extended.Editor
             
             listContainer.Clear();
             
-            if (showModifiersView)
+            if (showRequirementsView)
             {
-                BuildModifiersListView(listContainer);
+                BuildRequirementsListView(listContainer);
+                return;
+            }
+            
+            if (showScalersView)
+            {
+                BuildScalersListView(listContainer);
                 return;
             }
             
@@ -403,6 +479,41 @@ namespace FarEmerald.PlayForge.Extended.Editor
         // ═══════════════════════════════════════════════════════════════════════════
         // Standard List View
         // ═══════════════════════════════════════════════════════════════════════════
+        
+        private void BuildAllViewFilterBar()
+        {
+            var filterBar = new VisualElement();
+            filterBar.style.flexDirection = FlexDirection.Row;
+            filterBar.style.flexWrap = Wrap.Wrap;
+            filterBar.style.marginBottom = 8;
+            filterBar.style.paddingLeft = 8;
+            filterBar.style.paddingTop = 4;
+            filterBar.style.paddingBottom = 4;
+            filterBar.style.backgroundColor = new Color(0.15f, 0.15f, 0.15f, 0.5f);
+            filterBar.style.borderTopLeftRadius = 4;
+            filterBar.style.borderTopRightRadius = 4;
+            filterBar.style.borderBottomLeftRadius = 4;
+            filterBar.style.borderBottomRightRadius = 4;
+            contentContainer.Add(filterBar);
+
+            var label = CreateLabel("Filter:", 50, 10, Colors.HintText);
+            label.style.alignSelf = Align.Center;
+            filterBar.Add(label);
+            
+            filterBar.Add(CreateAllViewFilterButton("All", null));
+            filterBar.Add(CreateAllViewFilterButton("Has Scalers", "HasScalers"));
+            filterBar.Add(CreateAllViewFilterButton("Has Requirements", "HasRequirements"));
+            filterBar.Add(CreateAllViewFilterButton("Leveled", "Leveled"));
+        }
+        
+        private Button CreateAllViewFilterButton(string text, string filterValue)
+        {
+            bool isSelected = selectedAllViewFilter == filterValue;
+            var btn = new Button { text = text };
+            StyleSmallFilterButton(btn, isSelected, Colors.AccentGray);
+            btn.clicked += () => { selectedAllViewFilter = filterValue; ShowTab(1); };
+            return btn;
+        }
         
         private void BuildStandardListView(VisualElement container)
         {
@@ -425,6 +536,21 @@ namespace FarEmerald.PlayForge.Extended.Editor
             var assets = selectedTypeFilter == null
                 ? cachedAssets.ToList()
                 : cachedAssets.Where(a => a.GetType() == selectedTypeFilter).ToList();
+            
+            // Apply All view filter
+            if (selectedTypeFilter == null && !string.IsNullOrEmpty(selectedAllViewFilter))
+            {
+                var scalerAssets = new HashSet<ScriptableObject>(GetScalerCache().Select(r => r.Asset));
+                var reqAssets = new HashSet<ScriptableObject>(GetRequirementsCache().Select(r => r.Asset));
+                
+                assets = selectedAllViewFilter switch
+                {
+                    "HasScalers" => assets.Where(a => scalerAssets.Contains(a)).ToList(),
+                    "HasRequirements" => assets.Where(a => reqAssets.Contains(a)).ToList(),
+                    "Leveled" => assets.Where(a => a is Ability || a is Item || a is EntityIdentity).ToList(),
+                    _ => assets
+                };
+            }
             
             if (!string.IsNullOrEmpty(searchFilter))
             {
@@ -471,6 +597,14 @@ namespace FarEmerald.PlayForge.Extended.Editor
                 if (asset == null) continue;
                 try
                 {
+                    var assetType = asset switch
+                    {
+                        Ability => "Ability",
+                        GameplayEffect => "Effect",
+                        Item => "Item",
+                        _ => asset.GetType().Name
+                    };
+                    
                     var so = new SerializedObject(asset);
                     var iter = so.GetIterator();
                     while (iter.NextVisible(true))
@@ -479,7 +613,15 @@ namespace FarEmerald.PlayForge.Extended.Editor
                         {
                             var typeName = scaler.GetType().Name;
                             if (typeName.EndsWith("Scaler")) typeName = typeName.Substring(0, typeName.Length - 6);
-                            records.Add(new ScalerRecord { Asset = asset, FieldPath = iter.propertyPath, Scaler = scaler, ScalerTypeName = typeName, Context = DeriveScalerContext(iter.propertyPath) });
+                            records.Add(new ScalerRecord 
+                            { 
+                                Asset = asset, 
+                                FieldPath = iter.propertyPath, 
+                                Scaler = scaler, 
+                                ScalerTypeName = typeName, 
+                                Context = DeriveScalerContext(iter.propertyPath),
+                                AssetType = assetType
+                            });
                         }
                     }
                     so.Dispose();
@@ -504,21 +646,514 @@ namespace FarEmerald.PlayForge.Extended.Editor
         }
         
         // ═══════════════════════════════════════════════════════════════════════════
-        // Modifiers List View
+        // Requirements Discovery (Cached)
         // ═══════════════════════════════════════════════════════════════════════════
         
-        private void BuildModifiersListView(VisualElement container)
+        private List<RequirementRecord> GetRequirementsCache()
         {
-            var records = GetScalerCache().AsEnumerable();
+            if (_cachedRequirementRecords == null || (DateTime.Now - _lastRequirementCacheTime).TotalSeconds > REQUIREMENT_CACHE_LIFETIME_SECONDS)
+            {
+                _cachedRequirementRecords = DiscoverAllRequirements();
+                _lastRequirementCacheTime = DateTime.Now;
+            }
+            return _cachedRequirementRecords;
+        }
+        
+        private List<RequirementRecord> DiscoverAllRequirements()
+        {
+            var records = new List<RequirementRecord>();
+            
+            foreach (var asset in cachedAssets)
+            {
+                if (asset == null) continue;
+                
+                try
+                {
+                    if (asset is Ability ability)
+                    {
+                        var tags = ability.Tags;
+                        if (tags?.TagRequirements != null)
+                        {
+                            var reqName = tags.TagRequirements.HasName ? tags.TagRequirements.Name : null;
+                            CollectTagGroupTags(records, asset, "Ability", tags.TagRequirements.SourceRequirements, "Source", "Activation", reqName);
+                            CollectTagGroupTags(records, asset, "Ability", tags.TagRequirements.TargetRequirements, "Target", "Activation", reqName);
+                        }
+                    }
+                    else if (asset is GameplayEffect effect)
+                    {
+                        CollectRequirementTags(records, asset, "Effect", effect.SourceRequirements, "Source");
+                        CollectRequirementTags(records, asset, "Effect", effect.TargetRequirements, "Target");
+                    }
+                }
+                catch { }
+            }
+            
+            return records;
+        }
+        
+        private void CollectRequirementTags(List<RequirementRecord> records, ScriptableObject asset, string assetType, EffectTagRequirements reqs, string targetType)
+        {
+            if (reqs == null) return;
+            
+            if (reqs.ApplicationRequirements != null)
+            {
+                var groupName = reqs.ApplicationRequirements.HasName ? reqs.ApplicationRequirements.Name : null;
+                CollectTagGroupTags(records, asset, assetType, reqs.ApplicationRequirements, targetType, "Application", groupName);
+            }
+            
+            if (reqs.OngoingRequirements != null)
+            {
+                var groupName = reqs.OngoingRequirements.HasName ? reqs.OngoingRequirements.Name : null;
+                CollectTagGroupTags(records, asset, assetType, reqs.OngoingRequirements, targetType, "Ongoing", groupName);
+            }
+            
+            if (reqs.RemovalRequirements != null)
+            {
+                var groupName = reqs.RemovalRequirements.HasName ? reqs.RemovalRequirements.Name : null;
+                CollectTagGroupTags(records, asset, assetType, reqs.RemovalRequirements, targetType, "Removal", groupName);
+            }
+        }
+
+        private void CollectTagGroupTags(List<RequirementRecord> records, ScriptableObject asset, string assetType, AvoidRequireTagGroup group, string targetType, string context, string parentName)
+        {
+            if (group == null) return;
+            
+            var groupName = group.HasName ? group.Name : parentName;
+            
+            if (group.RequireTags != null)
+            {
+                records.AddRange(group.RequireTags.Where(t => t?.Tag != null).Select(tag => new RequirementRecord
+                {
+                    Asset = asset,
+                    TagName = tag.Tag.Name,
+                    Tag = tag.Tag,
+                    TargetType = targetType,
+                    ReqType = "Required",
+                    AssetType = assetType,
+                    Context = context,
+                    GroupName = groupName
+                }));
+            }
+            
+            if (group.AvoidTags != null)
+            {
+                records.AddRange(group.AvoidTags.Where(t => t?.Tag != null).Select(tag => new RequirementRecord
+                {
+                    Asset = asset,
+                    TagName = tag.Tag.Name,
+                    Tag = tag.Tag,
+                    TargetType = targetType,
+                    ReqType = "Avoid",
+                    AssetType = assetType,
+                    Context = context,
+                    GroupName = groupName
+                }));
+            }
+        }
+        
+        // ═══════════════════════════════════════════════════════════════════════════
+        // Requirements Filter Bar
+        // ═══════════════════════════════════════════════════════════════════════════
+        
+        private void BuildRequirementsFilterBar()
+        {
+            var filterBar = new VisualElement();
+            filterBar.style.flexDirection = FlexDirection.Row;
+            filterBar.style.flexWrap = Wrap.Wrap;
+            filterBar.style.marginBottom = 8;
+            filterBar.style.paddingLeft = 8;
+            filterBar.style.paddingTop = 4;
+            filterBar.style.paddingBottom = 4;
+            filterBar.style.backgroundColor = new Color(0.15f, 0.15f, 0.15f, 0.5f);
+            filterBar.style.borderTopLeftRadius = 4;
+            filterBar.style.borderTopRightRadius = 4;
+            filterBar.style.borderBottomLeftRadius = 4;
+            filterBar.style.borderBottomRightRadius = 4;
+            contentContainer.Add(filterBar);
+
+            var label = CreateLabel("Filter:", 50, 10, Colors.HintText);
+            label.style.alignSelf = Align.Center;
+            filterBar.Add(label);
+            
+            filterBar.Add(CreateRequirementFilterButton("All", null));
+            
+            // Separator
+            filterBar.Add(CreateFilterSeparator());
+            
+            // Target type filters
+            filterBar.Add(CreateRequirementFilterButton("Source", "Source"));
+            filterBar.Add(CreateRequirementFilterButton("Target", "Target"));
+            
+            // Separator
+            filterBar.Add(CreateFilterSeparator());
+            
+            // Requirement type filters
+            filterBar.Add(CreateRequirementFilterButton("✓ Required", "Required"));
+            filterBar.Add(CreateRequirementFilterButton("✗ Avoid", "Avoid"));
+            
+            // Separator
+            filterBar.Add(CreateFilterSeparator());
+            
+            // Context filters
+            var contexts = GetRequirementsCache().Select(r => r.Context).Distinct().OrderBy(c => c).ToList();
+            foreach (var ctx in contexts)
+            {
+                filterBar.Add(CreateRequirementFilterButton(ctx, $"ctx:{ctx}"));
+            }
+        }
+        
+        private VisualElement CreateFilterSeparator()
+        {
+            var sep = new VisualElement();
+            sep.style.width = 1;
+            sep.style.height = 16;
+            sep.style.backgroundColor = Colors.BorderDark;
+            sep.style.marginLeft = 4;
+            sep.style.marginRight = 4;
+            sep.style.alignSelf = Align.Center;
+            return sep;
+        }
+        
+        private Button CreateRequirementFilterButton(string text, string filterValue)
+        {
+            bool isSelected = selectedRequirementFilter == filterValue;
+            var btn = new Button { text = text };
+            btn.style.fontSize = 9;
+            btn.style.paddingLeft = 6;
+            btn.style.paddingRight = 6;
+            btn.style.paddingTop = 2;
+            btn.style.paddingBottom = 2;
+            btn.style.marginRight = 4;
+            btn.style.borderTopLeftRadius = 3;
+            btn.style.borderTopRightRadius = 3;
+            btn.style.borderBottomLeftRadius = 3;
+            btn.style.borderBottomRightRadius = 3;
+            btn.style.backgroundColor = isSelected ? RequirementColor : Colors.ButtonBackground;
+            btn.style.color = isSelected ? Colors.HeaderText : Colors.LabelText;
+            btn.clicked += () => { selectedRequirementFilter = filterValue; ShowTab(1); };
+            return btn;
+        }
+        
+        // ═══════════════════════════════════════════════════════════════════════════
+        // Requirements List View
+        // ═══════════════════════════════════════════════════════════════════════════
+        
+        private void BuildRequirementsListView(VisualElement container)
+        {
+            var records = GetRequirementsCache().AsEnumerable();
+            
+            // Apply filters
+            if (!string.IsNullOrEmpty(selectedRequirementFilter))
+            {
+                if (selectedRequirementFilter == "Source" || selectedRequirementFilter == "Target")
+                    records = records.Where(r => r.TargetType == selectedRequirementFilter);
+                else if (selectedRequirementFilter == "Required" || selectedRequirementFilter == "Avoid")
+                    records = records.Where(r => r.ReqType == selectedRequirementFilter);
+                else if (selectedRequirementFilter.StartsWith("ctx:"))
+                {
+                    var ctx = selectedRequirementFilter.Substring(4);
+                    records = records.Where(r => r.Context == ctx);
+                }
+            }
+            
+            // Apply search
             if (!string.IsNullOrEmpty(searchFilter))
             {
                 var filter = searchFilter.ToLower();
-                records = records.Where(r => r.Asset.name.ToLower().Contains(filter) || r.ScalerTypeName.ToLower().Contains(filter) || r.Context.ToLower().Contains(filter));
+                records = records.Where(r => 
+                    r.TagName.ToLower().Contains(filter) || 
+                    r.Asset.name.ToLower().Contains(filter) ||
+                    GetAssetDisplayName(r.Asset).ToLower().Contains(filter) ||
+                    (!string.IsNullOrEmpty(r.GroupName) && r.GroupName.ToLower().Contains(filter)));
+            }
+            
+            var recordList = records.ToList();
+            
+            // Group by tag name
+            var grouped = recordList
+                .GroupBy(r => r.TagName)
+                .OrderByDescending(g => g.Count())
+                .ToList();
+            
+            var resultsLabel = rootVisualElement.Q<Label>("ResultsCount");
+            if (resultsLabel != null) 
+                resultsLabel.text = $"{grouped.Count} tags ({recordList.Count} total requirements)";
+            
+            foreach (var group in grouped)
+            {
+                container.Add(CreateRequirementTagRow(group.Key, group.ToList()));
+            }
+            
+            if (!grouped.Any())
+                container.Add(CreateEmptyLabel("No requirements found"));
+        }
+        
+        private VisualElement CreateRequirementTagRow(string tagName, List<RequirementRecord> records)
+        {
+            var tagKey = $"req_{tagName}";
+            bool isExpanded = expandedRequirements.Contains(tagKey);
+            
+            var tagContainer = new VisualElement();
+            tagContainer.style.marginBottom = 2;
+            
+            // Stats
+            int requiredCount = records.Count(r => r.ReqType == "Required");
+            int avoidCount = records.Count(r => r.ReqType == "Avoid");
+            int sourceCount = records.Count(r => r.TargetType == "Source");
+            int targetCount = records.Count(r => r.TargetType == "Target");
+            int namedCount = records.Count(r => !string.IsNullOrEmpty(r.GroupName));
+            
+            // Main row
+            var row = new VisualElement();
+            row.style.flexDirection = FlexDirection.Row;
+            row.style.alignItems = Align.Center;
+            row.style.paddingLeft = 8;
+            row.style.paddingRight = 8;
+            row.style.paddingTop = 6;
+            row.style.paddingBottom = 6;
+            row.style.backgroundColor = Colors.ItemBackground;
+            row.style.borderTopLeftRadius = 4;
+            row.style.borderTopRightRadius = 4;
+            row.style.borderBottomLeftRadius = isExpanded ? 0 : 4;
+            row.style.borderBottomRightRadius = isExpanded ? 0 : 4;
+            row.style.borderLeftWidth = 3;
+            row.style.borderLeftColor = RequirementColor;
+            tagContainer.Add(row);
+            
+            row.Add(CreateLabel(isExpanded ? "▼" : "▶", 16, 9, Colors.HintText));
+            row.Add(CreateLabel(tagName, 180, 11, Colors.LabelText, false, FontStyle.Bold));
+            row.Add(CreateLabel($"{records.Count} uses", 70, 10, Colors.HintText));
+            
+            // Badges
+            var badgeContainer = new VisualElement();
+            badgeContainer.style.flexDirection = FlexDirection.Row;
+            badgeContainer.style.flexGrow = 1;
+            badgeContainer.style.flexWrap = Wrap.Wrap;
+            
+            if (requiredCount > 0)
+                badgeContainer.Add(CreateBadge($"✓ Required ({requiredCount})", 0, Colors.AccentGreen));
+            if (avoidCount > 0)
+                badgeContainer.Add(CreateBadge($"✗ Avoid ({avoidCount})", 0, Colors.AccentRed));
+            if (sourceCount > 0)
+                badgeContainer.Add(CreateBadge($"Source ({sourceCount})", 0, Colors.AccentBlue));
+            if (targetCount > 0)
+                badgeContainer.Add(CreateBadge($"Target ({targetCount})", 0, Colors.AccentPurple));
+            if (namedCount > 0)
+                badgeContainer.Add(CreateBadge($"Named ({namedCount})", 0, Colors.AccentCyan));
+            
+            row.Add(badgeContainer);
+            
+            row.RegisterCallback<MouseEnterEvent>(_ => row.style.backgroundColor = Colors.ButtonHover);
+            row.RegisterCallback<MouseLeaveEvent>(_ => row.style.backgroundColor = Colors.ItemBackground);
+            row.RegisterCallback<ClickEvent>(evt =>
+            {
+                if (evt.target is Button) return;
+                if (expandedRequirements.Contains(tagKey)) 
+                    expandedRequirements.Remove(tagKey); 
+                else 
+                    expandedRequirements.Add(tagKey);
+                RefreshViewList();
+            });
+            
+            if (isExpanded)
+                tagContainer.Add(CreateRequirementExpandedContent(records));
+            
+            return tagContainer;
+        }
+        
+        private VisualElement CreateRequirementExpandedContent(List<RequirementRecord> records)
+        {
+            var content = new VisualElement();
+            content.style.backgroundColor = new Color(0.16f, 0.16f, 0.16f, 1f);
+            content.style.paddingLeft = 24;
+            content.style.paddingRight = 12;
+            content.style.paddingTop = 8;
+            content.style.paddingBottom = 8;
+            content.style.borderBottomLeftRadius = 4;
+            content.style.borderBottomRightRadius = 4;
+            content.style.borderLeftWidth = 3;
+            content.style.borderLeftColor = new Color(RequirementColor.r, RequirementColor.g, RequirementColor.b, 0.5f);
+            
+            // Group by requirement type combination
+            var groups = records
+                .GroupBy(r => $"{r.ReqType} ({r.TargetType}) - {r.Context}")
+                .OrderBy(g => g.Key);
+            
+            foreach (var group in groups)
+            {
+                content.Add(CreateSectionLabel(group.Key, content.childCount > 0 ? 8 : 0));
+                
+                foreach (var record in group.Take(8))
+                {
+                    var typeInfo = AssetTypes.FirstOrDefault(t => t.Type == record.Asset.GetType());
+                    
+                    var assetRow = new VisualElement();
+                    assetRow.style.flexDirection = FlexDirection.Row;
+                    assetRow.style.alignItems = Align.Center;
+                    assetRow.style.paddingTop = 2;
+                    assetRow.style.paddingBottom = 2;
+                    assetRow.style.marginBottom = 1;
+                    
+                    assetRow.RegisterCallback<MouseEnterEvent>(_ => assetRow.style.backgroundColor = new Color(0.22f, 0.22f, 0.22f, 0.5f));
+                    assetRow.RegisterCallback<MouseLeaveEvent>(_ => assetRow.style.backgroundColor = Color.clear);
+                    assetRow.RegisterCallback<ClickEvent>(_ => { Selection.activeObject = record.Asset; EditorGUIUtility.PingObject(record.Asset); });
+                    
+                    assetRow.Add(CreateLabel(typeInfo?.Icon ?? "?", 20, 10, typeInfo?.Color ?? Colors.HintText));
+                    
+                    // Show group name if available
+                    if (!string.IsNullOrEmpty(record.GroupName))
+                    {
+                        assetRow.Add(CreateLabel($"\"{record.GroupName}\"", 120, 10, Colors.AccentCyan));
+                        assetRow.Add(CreateLabel("—", 16, 10, Colors.HintText));
+                    }
+                    
+                    assetRow.Add(CreateLabel(GetAssetDisplayName(record.Asset), 0, 10, Colors.LabelText, true));
+                    assetRow.Add(CreateBadge(record.AssetType, 50, typeInfo?.Color ?? Colors.HintText));
+                    
+                    content.Add(assetRow);
+                }
+                
+                if (group.Count() > 8)
+                    content.Add(CreateLabel($"... and {group.Count() - 8} more", 0, 9, Colors.HintText));
+            }
+            
+            return content;
+        }
+        
+        // ═══════════════════════════════════════════════════════════════════════════
+        // Scalers List View (renamed from Modifiers)
+        // ═══════════════════════════════════════════════════════════════════════════
+        
+        private void BuildScalersFilterBar()
+        {
+            var filterBar = new VisualElement();
+            filterBar.style.flexDirection = FlexDirection.Row;
+            filterBar.style.flexWrap = Wrap.Wrap;
+            filterBar.style.marginBottom = 8;
+            filterBar.style.paddingLeft = 8;
+            filterBar.style.paddingTop = 4;
+            filterBar.style.paddingBottom = 4;
+            filterBar.style.backgroundColor = new Color(0.15f, 0.15f, 0.15f, 0.5f);
+            filterBar.style.borderTopLeftRadius = 4;
+            filterBar.style.borderTopRightRadius = 4;
+            filterBar.style.borderBottomLeftRadius = 4;
+            filterBar.style.borderBottomRightRadius = 4;
+            contentContainer.Add(filterBar);
+
+            var label = CreateLabel("Type:", 40, 10, Colors.HintText);
+            label.style.alignSelf = Align.Center;
+            filterBar.Add(label);
+            
+            filterBar.Add(CreateScalerTypeFilterButton("All", null));
+            
+            // Get unique scaler types
+            var types = GetScalerCache().Select(r => r.ScalerTypeName).Distinct().OrderBy(t => t).ToList();
+            foreach (var type in types)
+            {
+                filterBar.Add(CreateScalerTypeFilterButton(type, type));
+            }
+            
+            filterBar.Add(CreateFilterSeparator());
+            
+            var ctxLabel = CreateLabel("Context:", 50, 10, Colors.HintText);
+            ctxLabel.style.alignSelf = Align.Center;
+            filterBar.Add(ctxLabel);
+            
+            filterBar.Add(CreateScalerContextFilterButton("All", null));
+            
+            // Get unique contexts
+            var contexts = GetScalerCache().Select(r => r.Context).Distinct().OrderBy(c => c).ToList();
+            foreach (var ctx in contexts)
+            {
+                filterBar.Add(CreateScalerContextFilterButton(ctx, ctx));
+            }
+            
+            filterBar.Add(CreateFilterSeparator());
+            
+            var assetLabel = CreateLabel("Asset:", 40, 10, Colors.HintText);
+            assetLabel.style.alignSelf = Align.Center;
+            filterBar.Add(assetLabel);
+            
+            filterBar.Add(CreateScalerAssetTypeFilterButton("All", null));
+            filterBar.Add(CreateScalerAssetTypeFilterButton("⚡ Ability", typeof(Ability)));
+            filterBar.Add(CreateScalerAssetTypeFilterButton("✦ Effect", typeof(GameplayEffect)));
+            filterBar.Add(CreateScalerAssetTypeFilterButton("📦 Item", typeof(Item)));
+        }
+        
+        private Button CreateScalerTypeFilterButton(string text, string filterValue)
+        {
+            bool isSelected = selectedScalerTypeFilter == filterValue;
+            var btn = new Button { text = text };
+            StyleSmallFilterButton(btn, isSelected, Colors.AccentPurple);
+            btn.clicked += () => { selectedScalerTypeFilter = filterValue; ShowTab(1); };
+            return btn;
+        }
+        
+        private Button CreateScalerContextFilterButton(string text, string filterValue)
+        {
+            bool isSelected = selectedScalerContextFilter == filterValue;
+            var btn = new Button { text = text };
+            StyleSmallFilterButton(btn, isSelected, Colors.AccentBlue);
+            btn.clicked += () => { selectedScalerContextFilter = filterValue; ShowTab(1); };
+            return btn;
+        }
+        
+        private Button CreateScalerAssetTypeFilterButton(string text, Type filterValue)
+        {
+            bool isSelected = selectedScalerAssetTypeFilter == filterValue;
+            var btn = new Button { text = text };
+            StyleSmallFilterButton(btn, isSelected, Colors.AccentCyan);
+            btn.clicked += () => { selectedScalerAssetTypeFilter = filterValue; ShowTab(1); };
+            return btn;
+        }
+        
+        private void StyleSmallFilterButton(Button btn, bool isSelected, Color accentColor)
+        {
+            btn.style.fontSize = 9;
+            btn.style.paddingLeft = 6;
+            btn.style.paddingRight = 6;
+            btn.style.paddingTop = 2;
+            btn.style.paddingBottom = 2;
+            btn.style.marginRight = 4;
+            btn.style.borderTopLeftRadius = 3;
+            btn.style.borderTopRightRadius = 3;
+            btn.style.borderBottomLeftRadius = 3;
+            btn.style.borderBottomRightRadius = 3;
+            btn.style.backgroundColor = isSelected ? accentColor : Colors.ButtonBackground;
+            btn.style.color = isSelected ? Colors.HeaderText : Colors.LabelText;
+        }
+        
+        private void BuildScalersListView(VisualElement container)
+        {
+            var records = GetScalerCache().AsEnumerable();
+            
+            // Apply type filter
+            if (!string.IsNullOrEmpty(selectedScalerTypeFilter))
+                records = records.Where(r => r.ScalerTypeName == selectedScalerTypeFilter);
+            
+            // Apply context filter
+            if (!string.IsNullOrEmpty(selectedScalerContextFilter))
+                records = records.Where(r => r.Context == selectedScalerContextFilter);
+            
+            // Apply asset type filter
+            if (selectedScalerAssetTypeFilter != null)
+                records = records.Where(r => r.Asset.GetType() == selectedScalerAssetTypeFilter);
+            
+            // Apply search filter
+            if (!string.IsNullOrEmpty(searchFilter))
+            {
+                var filter = searchFilter.ToLower();
+                records = records.Where(r => 
+                    r.Asset.name.ToLower().Contains(filter) || 
+                    r.ScalerTypeName.ToLower().Contains(filter) || 
+                    r.Context.ToLower().Contains(filter) ||
+                    GetAssetDisplayName(r.Asset).ToLower().Contains(filter) ||
+                    (!string.IsNullOrEmpty(r.Scaler.Name) && r.Scaler.Name.ToLower().Contains(filter)));
             }
             var recordList = records.ToList();
             
             var resultsLabel = rootVisualElement.Q<Label>("ResultsCount");
-            if (resultsLabel != null) resultsLabel.text = $"{recordList.Count} modifiers";
+            if (resultsLabel != null) resultsLabel.text = $"{recordList.Count} scalers";
             
             foreach (var group in recordList.GroupBy(r => r.ScalerTypeName).OrderBy(g => g.Key))
             {
@@ -526,17 +1161,17 @@ namespace FarEmerald.PlayForge.Extended.Editor
                 container.Add(groupHeader);
                 
                 foreach (var record in group.Take(10))
-                    container.Add(CreateModifierRow(record));
+                    container.Add(CreateScalerRow(record));
                 
                 if (group.Count() > 10)
                     container.Add(CreateMoreLabel(group.Count() - 10));
             }
             
             if (!recordList.Any())
-                container.Add(CreateEmptyLabel("No modifiers found"));
+                container.Add(CreateEmptyLabel("No scalers found"));
         }
         
-        private VisualElement CreateModifierRow(ScalerRecord record)
+        private VisualElement CreateScalerRow(ScalerRecord record)
         {
             var row = new VisualElement();
             row.style.flexDirection = FlexDirection.Row;
@@ -553,10 +1188,18 @@ namespace FarEmerald.PlayForge.Extended.Editor
             
             var typeInfo = AssetTypes.FirstOrDefault(t => t.Type == record.Asset.GetType());
             row.Add(CreateLabel(typeInfo?.Icon ?? "?", 20, 10, typeInfo?.Color ?? Colors.HintText));
-            row.Add(CreateLabel(GetAssetDisplayName(record.Asset), 150, 11, Colors.LabelText, true));
+            
+            // Show scaler name if available
+            if (!string.IsNullOrEmpty(record.Scaler.Name))
+            {
+                row.Add(CreateLabel($"\"{record.Scaler.Name}\"", 100, 10, Colors.AccentCyan));
+                row.Add(CreateLabel("—", 16, 10, Colors.HintText));
+            }
+            
+            row.Add(CreateLabel(GetAssetDisplayName(record.Asset), 120, 11, Colors.LabelText, true));
             
             if (typeInfo != null)
-                row.Add(CreateBadge(typeInfo.DisplayName, 70, typeInfo.Color));
+                row.Add(CreateBadge(typeInfo.DisplayName, 60, typeInfo.Color));
             
             row.Add(CreateBadge(record.Context, 70, Colors.AccentBlue));
             
@@ -598,14 +1241,6 @@ namespace FarEmerald.PlayForge.Extended.Editor
             return row;
         }
         
-        private static string GetLevelModeTooltip(ELevelConfig config) => config switch
-        {
-            ELevelConfig.LockToLevelProvider => "Uses the owning Ability/Entity's level range automatically.",
-            ELevelConfig.Unlocked => "Uses its own MaxLevel setting, independent of the source.",
-            ELevelConfig.Partitioned => "Uses min(MaxLevel, source's current level).",
-            _ => "Level configuration"
-        };
-        
         // ═══════════════════════════════════════════════════════════════════════════
         // Tags List View with Expansion
         // ═══════════════════════════════════════════════════════════════════════════
@@ -625,14 +1260,16 @@ namespace FarEmerald.PlayForge.Extended.Editor
             contextBar.style.borderBottomLeftRadius = 4;
             contextBar.style.borderBottomRightRadius = 4;
             contentContainer.Add(contextBar);
-            
-            contextBar.Add(CreateLabel("Context:", 60, 10, Colors.HintText));
+
+            var label = CreateLabel("Context:", 60, 10, Colors.HintText);
+            label.style.alignSelf = Align.Center;
+            contextBar.Add(label);
             
             var allBtn = CreateContextButton("All", selectedTagContextFilter == null);
             allBtn.clicked += () => { selectedTagContextFilter = null; ShowTab(1); };
             contextBar.Add(allBtn);
             
-            foreach (var ctx in TagRegistry.GetAllContextKeys().Take(8))
+            foreach (var ctx in TagRegistry.GetAllContextKeys())
             {
                 var context = ctx;
                 var btn = CreateContextButton(ctx, selectedTagContextFilter == ctx);
@@ -719,21 +1356,15 @@ namespace FarEmerald.PlayForge.Extended.Editor
             if (record.UsageByContext.Count > 4)
                 contextContainer.Add(CreateLabel($"+{record.UsageByContext.Count - 4}", 30, 9, Colors.HintText));
             row.Add(contextContainer);
-            
-            /*var selectBtn = new Button { text = "Select" };
-            selectBtn.style.fontSize = 9;
-            selectBtn.style.paddingLeft = 8;
-            selectBtn.style.paddingRight = 8;
-            selectBtn.style.paddingTop = 2;
-            selectBtn.style.paddingBottom = 2;
-            selectBtn.style.marginLeft = 8;
-            selectBtn.style.borderTopLeftRadius = 3;
-            selectBtn.style.borderTopRightRadius = 3;
-            selectBtn.style.borderBottomLeftRadius = 3;
-            selectBtn.style.borderBottomRightRadius = 3;
-            selectBtn.style.backgroundColor = Colors.ButtonBackground;
-            selectBtn.clicked += () => { Selection.activeObject = record.Tag; EditorGUIUtility.PingObject(record.Tag); };
-            row.Add(selectBtn);*/
+
+            Label sysBadge = null;
+            if (record.IsSystemDefault)
+            {
+                row.Add(CreateSpacer());
+                sysBadge = CreateBadge("System Tag", 72, Colors.PolicyPurple);
+                sysBadge.tooltip = $"Default system tag ({record.Tag.Name})";
+                row.Add(sysBadge);
+            }
             
             row.RegisterCallback<MouseEnterEvent>(_ => row.style.backgroundColor = Colors.ButtonHover);
             row.RegisterCallback<MouseLeaveEvent>(_ => row.style.backgroundColor = Colors.ItemBackground);
@@ -772,7 +1403,6 @@ namespace FarEmerald.PlayForge.Extended.Editor
                 ctxRow.style.alignItems = Align.Center;
                 ctxRow.style.marginBottom = 2;
                 
-                // Use the friendly name from the context
                 ctxRow.Add(CreateLabel(ctx.Value.Context.FriendlyName, 120, 10, Colors.LabelText));
                 
                 int usageCount = ctx.Value.Usages.Count;
@@ -801,13 +1431,18 @@ namespace FarEmerald.PlayForge.Extended.Editor
                 content.Add(ctxRow);
             }
             
-            // Assets using this tag - collect from all contexts
+            // Assets using this tag
             content.Add(CreateSectionLabel("Assets Using This Tag", 12));
             var assetsUsingTag = record.UsageByContext.Values
                 .SelectMany(ctx => ctx.Assets)
                 .Distinct()
                 .Take(8)
                 .ToList();
+
+            if (assetsUsingTag.Count == 0)
+            {
+                content.Add(CreateLabel("No assets found", 140, 10, Colors.HintText));
+            }
             
             foreach (var asset in assetsUsingTag)
             {
@@ -828,7 +1463,6 @@ namespace FarEmerald.PlayForge.Extended.Editor
                 content.Add(assetRow);
             }
             
-            // Total unique assets using this tag
             var totalCount = record.UsageByContext.Values.SelectMany(ctx => ctx.Assets).Distinct().Count();
             if (totalCount > 8)
                 content.Add(CreateLabel($"... and {totalCount - 8} more assets", 0, 9, Colors.HintText));
@@ -837,7 +1471,7 @@ namespace FarEmerald.PlayForge.Extended.Editor
         }
         
         // ═══════════════════════════════════════════════════════════════════════════
-        // Column List View (Fixed Styling)
+        // Column List View (Improved Styling)
         // ═══════════════════════════════════════════════════════════════════════════
         
         private void BuildColumnListView(VisualElement container, List<ScriptableObject> assets, List<ColumnDef> columns)
@@ -847,24 +1481,24 @@ namespace FarEmerald.PlayForge.Extended.Editor
             tableContainer.style.borderBottomWidth = 1;
             tableContainer.style.borderLeftWidth = 1;
             tableContainer.style.borderRightWidth = 1;
-            tableContainer.style.borderTopColor = ColumnBorderColor;
-            tableContainer.style.borderBottomColor = ColumnBorderColor;
-            tableContainer.style.borderLeftColor = ColumnBorderColor;
-            tableContainer.style.borderRightColor = ColumnBorderColor;
-            tableContainer.style.borderTopLeftRadius = 4;
-            tableContainer.style.borderTopRightRadius = 4;
-            tableContainer.style.borderBottomLeftRadius = 4;
-            tableContainer.style.borderBottomRightRadius = 4;
+            tableContainer.style.borderTopColor = TableBorderColor;
+            tableContainer.style.borderBottomColor = TableBorderColor;
+            tableContainer.style.borderLeftColor = TableBorderColor;
+            tableContainer.style.borderRightColor = TableBorderColor;
+            tableContainer.style.borderTopLeftRadius = 6;
+            tableContainer.style.borderTopRightRadius = 6;
+            tableContainer.style.borderBottomLeftRadius = 6;
+            tableContainer.style.borderBottomRightRadius = 6;
             tableContainer.style.overflow = Overflow.Hidden;
             container.Add(tableContainer);
             
             // Header
             var headerRow = new VisualElement();
             headerRow.style.flexDirection = FlexDirection.Row;
-            headerRow.style.backgroundColor = Colors.SectionHeaderBackground;
+            headerRow.style.backgroundColor = HeaderBgColor;
             headerRow.style.minHeight = HEADER_HEIGHT;
-            headerRow.style.borderBottomWidth = 1;
-            headerRow.style.borderBottomColor = ColumnBorderColor;
+            headerRow.style.borderBottomWidth = 2;
+            headerRow.style.borderBottomColor = TableBorderColor;
             tableContainer.Add(headerRow);
             
             foreach (var col in columns)
@@ -901,7 +1535,7 @@ namespace FarEmerald.PlayForge.Extended.Editor
             cell.style.paddingRight = CELL_PADDING_H;
             cell.style.justifyContent = Justify.Center;
             cell.style.borderRightWidth = 1;
-            cell.style.borderRightColor = ColumnBorderColor;
+            cell.style.borderRightColor = new Color(TableBorderColor.r, TableBorderColor.g, TableBorderColor.b, 0.5f);
             
             var label = new Label(name + (name == currentSortColumn ? (sortAscending ? " ▲" : " ▼") : ""));
             label.style.fontSize = 11;
@@ -917,7 +1551,7 @@ namespace FarEmerald.PlayForge.Extended.Editor
                     else { currentSortColumn = name; sortAscending = true; }
                     RefreshViewList();
                 });
-                cell.RegisterCallback<MouseEnterEvent>(_ => cell.style.backgroundColor = new Color(0.3f, 0.3f, 0.3f, 0.3f));
+                cell.RegisterCallback<MouseEnterEvent>(_ => cell.style.backgroundColor = new Color(0.3f, 0.3f, 0.3f, 0.4f));
                 cell.RegisterCallback<MouseLeaveEvent>(_ => cell.style.backgroundColor = Color.clear);
             }
             return cell;
@@ -925,21 +1559,36 @@ namespace FarEmerald.PlayForge.Extended.Editor
         
         private VisualElement CreateDataRow(ScriptableObject asset, List<ColumnDef> columns, bool alternate)
         {
+            var typeInfo = AssetTypes.FirstOrDefault(t => t.Type == asset.GetType());
+            bool doubleClickVisualize = EditorPrefs.GetBool(PREFS_PREFIX + "DoubleClickVisualize", true);
+            
             var row = new VisualElement();
             row.style.flexDirection = FlexDirection.Row;
             row.style.minHeight = ROW_HEIGHT;
-            row.style.backgroundColor = alternate ? new Color(0.2f, 0.2f, 0.2f, 0.3f) : Color.clear;
+            row.style.backgroundColor = alternate ? RowAltColor : Color.clear;
             row.style.borderBottomWidth = 1;
-            row.style.borderBottomColor = RowBorderColor;
+            row.style.borderBottomColor = new Color(TableBorderColor.r, TableBorderColor.g, TableBorderColor.b, 0.3f);
             
-            row.RegisterCallback<MouseEnterEvent>(_ => row.style.backgroundColor = new Color(0.28f, 0.28f, 0.28f, 0.6f));
-            row.RegisterCallback<MouseLeaveEvent>(_ => row.style.backgroundColor = alternate ? new Color(0.2f, 0.2f, 0.2f, 0.3f) : Color.clear);
-            row.RegisterCallback<ClickEvent>(evt => { if (evt.clickCount == 2) { Selection.activeObject = asset; EditorGUIUtility.PingObject(asset); } });
+            row.RegisterCallback<MouseEnterEvent>(_ => row.style.backgroundColor = RowHoverColor);
+            row.RegisterCallback<MouseLeaveEvent>(_ => row.style.backgroundColor = alternate ? RowAltColor : Color.clear);
+            row.RegisterCallback<ClickEvent>(evt => 
+            { 
+                if (evt.clickCount == 2) 
+                { 
+                    if (doubleClickVisualize && typeInfo != null && typeInfo.CanVisualize)
+                        OpenVisualizer(asset);
+                    else
+                    {
+                        Selection.activeObject = asset; 
+                        EditorGUIUtility.PingObject(asset); 
+                    }
+                } 
+            });
             
             foreach (var col in columns)
                 row.Add(CreateDataCell(col.GetValue(asset) ?? "-", col.Width, col.IsAssetReference));
             
-            row.Add(CreateActionsCell(asset));
+            row.Add(CreateActionsCell(asset, typeInfo));
             return row;
         }
         
@@ -952,7 +1601,7 @@ namespace FarEmerald.PlayForge.Extended.Editor
             cell.style.paddingRight = CELL_PADDING_H;
             cell.style.justifyContent = Justify.Center;
             cell.style.borderRightWidth = 1;
-            cell.style.borderRightColor = new Color(ColumnBorderColor.r, ColumnBorderColor.g, ColumnBorderColor.b, 0.5f);
+            cell.style.borderRightColor = new Color(TableBorderColor.r, TableBorderColor.g, TableBorderColor.b, 0.2f);
             
             var label = new Label(value);
             label.style.fontSize = 11;
@@ -964,7 +1613,7 @@ namespace FarEmerald.PlayForge.Extended.Editor
             return cell;
         }
         
-        private VisualElement CreateActionsCell(ScriptableObject asset)
+        private VisualElement CreateActionsCell(ScriptableObject asset, AssetTypeInfo typeInfo)
         {
             var cell = new VisualElement();
             cell.style.width = ACTIONS_COLUMN_WIDTH;
@@ -981,7 +1630,7 @@ namespace FarEmerald.PlayForge.Extended.Editor
             selectBtn.style.paddingRight = 6;
             selectBtn.style.paddingTop = 2;
             selectBtn.style.paddingBottom = 2;
-            selectBtn.style.marginRight = 4;
+            selectBtn.style.marginRight = 2;
             selectBtn.style.borderTopLeftRadius = 3;
             selectBtn.style.borderTopRightRadius = 3;
             selectBtn.style.borderBottomLeftRadius = 3;
@@ -989,6 +1638,24 @@ namespace FarEmerald.PlayForge.Extended.Editor
             selectBtn.style.backgroundColor = Colors.ButtonBackground;
             selectBtn.clicked += () => { Selection.activeObject = asset; EditorGUIUtility.PingObject(asset); };
             cell.Add(selectBtn);
+            
+            // Visualize button for supported types
+            if (typeInfo != null && typeInfo.CanVisualize)
+            {
+                var vizBtn = new Button { text = "👁", tooltip = "Open Visualizer" };
+                vizBtn.style.fontSize = 10;
+                vizBtn.style.width = 22;
+                vizBtn.style.paddingLeft = 0;
+                vizBtn.style.paddingRight = 0;
+                vizBtn.style.marginRight = 2;
+                vizBtn.style.borderTopLeftRadius = 3;
+                vizBtn.style.borderTopRightRadius = 3;
+                vizBtn.style.borderBottomLeftRadius = 3;
+                vizBtn.style.borderBottomRightRadius = 3;
+                vizBtn.style.backgroundColor = new Color(typeInfo.Color.r * 0.4f, typeInfo.Color.g * 0.4f, typeInfo.Color.b * 0.4f, 0.6f);
+                vizBtn.clicked += () => OpenVisualizer(asset);
+                cell.Add(vizBtn);
+            }
             
             var menuBtn = new Button { text = "⋮", tooltip = "More options" };
             menuBtn.style.fontSize = 12;
@@ -1005,6 +1672,8 @@ namespace FarEmerald.PlayForge.Extended.Editor
                 var menu = new GenericMenu();
                 menu.AddItem(new GUIContent("Open in Inspector"), false, () => Selection.activeObject = asset);
                 menu.AddItem(new GUIContent("Ping in Project"), false, () => EditorGUIUtility.PingObject(asset));
+                if (typeInfo != null && typeInfo.CanVisualize)
+                    menu.AddItem(new GUIContent("Open Visualizer"), false, () => OpenVisualizer(asset));
                 menu.AddSeparator("");
                 menu.AddItem(new GUIContent("Duplicate"), false, () =>
                 {
@@ -1035,17 +1704,19 @@ namespace FarEmerald.PlayForge.Extended.Editor
         
         private void BuildGroupedListView(VisualElement container, List<ScriptableObject> assets)
         {
+            bool showFileNames = EditorPrefs.GetBool(PREFS_PREFIX + "ShowFileNames", true);
+            
             foreach (var group in assets.GroupBy(a => a.GetType()).OrderBy(g => g.Key.Name))
             {
                 var typeInfo = AssetTypes.FirstOrDefault(t => t.Type == group.Key);
                 var header = CreateGroupHeader(typeInfo?.Icon ?? "?", typeInfo?.DisplayName ?? group.Key.Name, group.Count(), typeInfo?.Color ?? Colors.AccentGray);
-                header.RegisterCallback<ClickEvent>(_ => { showTagsView = false; showModifiersView = false; selectedTypeFilter = group.Key; ShowTab(1); });
+                header.RegisterCallback<ClickEvent>(_ => { showTagsView = false; showScalersView = false; showRequirementsView = false; selectedTypeFilter = group.Key; ShowTab(1); });
                 header.RegisterCallback<MouseEnterEvent>(_ => header.style.backgroundColor = new Color(0.25f, 0.25f, 0.25f, 0.9f));
                 header.RegisterCallback<MouseLeaveEvent>(_ => header.style.backgroundColor = new Color(0.18f, 0.18f, 0.18f, 0.8f));
                 container.Add(header);
                 
                 foreach (var asset in group.Take(5))
-                    container.Add(CreateCompactAssetRow(asset, typeInfo));
+                    container.Add(CreateCompactAssetRow(asset, typeInfo, showFileNames));
                 
                 if (group.Count() > 5)
                     container.Add(CreateMoreLabel(group.Count() - 5));
@@ -1055,8 +1726,10 @@ namespace FarEmerald.PlayForge.Extended.Editor
                 container.Add(CreateEmptyLabel("No assets found"));
         }
         
-        private VisualElement CreateCompactAssetRow(ScriptableObject asset, AssetTypeInfo typeInfo)
+        private VisualElement CreateCompactAssetRow(ScriptableObject asset, AssetTypeInfo typeInfo, bool showFileNames)
         {
+            bool doubleClickVisualize = EditorPrefs.GetBool(PREFS_PREFIX + "DoubleClickVisualize", true);
+            
             var row = new VisualElement();
             row.style.flexDirection = FlexDirection.Row;
             row.style.alignItems = Align.Center;
@@ -1068,12 +1741,21 @@ namespace FarEmerald.PlayForge.Extended.Editor
             
             row.RegisterCallback<MouseEnterEvent>(_ => row.style.backgroundColor = new Color(0.25f, 0.25f, 0.25f, 0.4f));
             row.RegisterCallback<MouseLeaveEvent>(_ => row.style.backgroundColor = Color.clear);
-            row.RegisterCallback<ClickEvent>(_ => { Selection.activeObject = asset; EditorGUIUtility.PingObject(asset); });
+            row.RegisterCallback<ClickEvent>(evt => 
+            { 
+                if (evt.clickCount == 2 && doubleClickVisualize && typeInfo != null && typeInfo.CanVisualize)
+                    OpenVisualizer(asset);
+                else
+                {
+                    Selection.activeObject = asset; 
+                    EditorGUIUtility.PingObject(asset); 
+                }
+            });
             
             row.Add(CreateLabel(GetAssetDisplayName(asset), 0, 11, Colors.LabelText, true));
             
             var displayName = GetAssetDisplayName(asset);
-            if (EditorPrefs.GetBool(PREFS_PREFIX + "ShowFileNames", true) && displayName != asset.name)
+            if (showFileNames && displayName != asset.name)
                 row.Add(CreateLabel($"({asset.name})", 0, 9, Colors.HintText));
             
             return row;
@@ -1122,7 +1804,7 @@ namespace FarEmerald.PlayForge.Extended.Editor
             return label;
         }
         
-        private VisualElement CreateBadge(string text, int width, Color color)
+        private Label CreateBadge(string text, int width, Color color)
         {
             var badge = new Label(text);
             if (width > 0) badge.style.width = width;

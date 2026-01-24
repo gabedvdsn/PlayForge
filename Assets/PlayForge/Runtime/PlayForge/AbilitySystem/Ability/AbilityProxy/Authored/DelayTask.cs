@@ -10,7 +10,9 @@ namespace FarEmerald.PlayForge
         
         public override async UniTask Activate(AbilityDataPacket data, CancellationToken token)
         {
+            Debug.Log($"Start delay");
             await UniTask.Delay(DelayMilliseconds, cancellationToken: token);
+            Debug.Log($"End delay");
         }
         public override bool IsCriticalSection => false;
     }

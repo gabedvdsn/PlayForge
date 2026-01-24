@@ -15,6 +15,7 @@ namespace FarEmerald.PlayForge
         /// When the contact attribute changes, related attributes need recalculation.
         /// </summary>
         public abstract void Regulate(Attribute attribute, AttributeModificationRule rules);
+        public abstract void Evaluate(CachedAttributeValue value);
     }
 
     /// <summary>

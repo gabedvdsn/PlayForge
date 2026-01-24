@@ -1,212 +1,158 @@
-﻿using System;
-using UnityEditor;
+﻿using UnityEditor;
 using UnityEditor.UIElements;
-using UnityEngine;
 using UnityEngine.UIElements;
 
 namespace FarEmerald.PlayForge.Extended.Editor
 {
-    public class AbstractGenericDrawer<T> : AbstractTypeRefDrawer<T> where T : class
+
+    public abstract class AbstractWorkerDrawer<T> : AbstractGenericDrawer<T> where T : class
     {
-        protected VisualElement _childFieldsContainer;
-        protected SerializedProperty _currentProperty;
-        
-        public override VisualElement CreatePropertyGUI(SerializedProperty prop)
+        protected override bool AcceptOpen(SerializedProperty prop) => false;
+        protected override bool AcceptAdd() => false;
+        protected override void PopulateSummary(VisualElement container, SerializedProperty property)
         {
-            _currentProperty = prop;
             
-            // Get the base GUI (type selector + dropdown)
-            var baseGui = base.CreatePropertyGUI(prop);
+        }
+    }
+    
+    // ═══════════════════════════════════════════════════════════════════════════════
+    // ATTRIBUTE WORKER DRAWERS
+    // ═══════════════════════════════════════════════════════════════════════════════
+    
+    [CustomPropertyDrawer(typeof(AbstractAttributeWorker), true)]
+    public class AttributeWorkerDrawer : AbstractWorkerDrawer<AbstractAttributeWorker>
+    {
+    }
+    
+    [CustomPropertyDrawer(typeof(AbstractFocusedAttributeWorker), true)]
+    public class FocusedAttributeWorkerDrawer : AbstractWorkerDrawer<AbstractFocusedAttributeWorker>
+    {
+        protected override bool AcceptOpen(SerializedProperty prop) => false;
+        protected override bool AcceptAdd() => false;
+    }
+    
+    [CustomPropertyDrawer(typeof(AbstractRelativeAttributeWorker), true)]
+    public class RelativeAttributeWorkerDrawer : AbstractGenericDrawer<AbstractRelativeAttributeWorker>
+    {
+        protected override bool AcceptOpen(SerializedProperty prop) => false;
+        protected override bool AcceptAdd() => false;
+    }
+    
+    // ═══════════════════════════════════════════════════════════════════════════════
+    // IMPACT WORKER DRAWERS
+    // ═══════════════════════════════════════════════════════════════════════════════
+    
+    [CustomPropertyDrawer(typeof(AbstractImpactWorker), true)]
+    public class ImpactWorkerDrawer : AbstractGenericDrawer<AbstractImpactWorker>
+    {
+        protected override bool AcceptOpen(SerializedProperty prop) => false;
+        protected override bool AcceptAdd() => false;
+    }
+    
+    [CustomPropertyDrawer(typeof(AbstractContextImpactWorker), true)]
+    public class ContextImpactWorkerDrawer : AbstractGenericDrawer<AbstractContextImpactWorker>
+    {
+        protected override bool AcceptOpen(SerializedProperty prop) => false;
+        protected override bool AcceptAdd() => false;
+    }
+    
+    // ═══════════════════════════════════════════════════════════════════════════════
+    // EFFECT WORKER DRAWER
+    // ═══════════════════════════════════════════════════════════════════════════════
+    
+    [CustomPropertyDrawer(typeof(AbstractEffectWorker), true)]
+    public class EffectWorkerDrawer : AbstractGenericDrawer<AbstractEffectWorker>
+    {
+        protected override bool AcceptOpen(SerializedProperty prop) => false;
+        protected override bool AcceptAdd() => false;
+    }
+    
+    // ═══════════════════════════════════════════════════════════════════════════════
+    // TAG WORKER DRAWER
+    // ═══════════════════════════════════════════════════════════════════════════════
+    
+    [CustomPropertyDrawer(typeof(AbstractTagWorker), true)]
+    public class TagWorkerDrawer : AbstractGenericDrawer<AbstractTagWorker>
+    {
+        protected override bool AcceptOpen(SerializedProperty prop) => false;
+        protected override bool AcceptAdd() => false;
+    }
+    
+    // ═══════════════════════════════════════════════════════════════════════════════
+    // ANALYSIS WORKER DRAWER
+    // ═══════════════════════════════════════════════════════════════════════════════
+    
+    [CustomPropertyDrawer(typeof(AbstractAnalysisWorker), true)]
+    public class AnalysisWorkerDrawer : AbstractGenericDrawer<AbstractAnalysisWorker>
+    {
+        protected override bool AcceptOpen(SerializedProperty prop) => false;
+        protected override bool AcceptAdd() => false;
+    }
+    
+    // ═══════════════════════════════════════════════════════════════════════════════
+    // TAG WORKER REQUIREMENTS DRAWER
+    // ═══════════════════════════════════════════════════════════════════════════════
+    
+    [CustomPropertyDrawer(typeof(TagWorkerRequirements))]
+    public class TagWorkerRequirementsDrawer : PropertyDrawer
+    {
+        public override VisualElement CreatePropertyGUI(SerializedProperty property)
+        {
+            var container = new VisualElement();
             
-            // Create container for child fields
-            _childFieldsContainer = new VisualElement
+            var packetsProperty = property.FindPropertyRelative("TagPackets");
+            if (packetsProperty != null)
             {
-                name = "validation-rule-fields",
+                var listView = new PropertyField(packetsProperty, "Tag Requirements");
+                container.Add(listView);
+            }
+            
+            return container;
+        }
+    }
+    
+    [CustomPropertyDrawer(typeof(TagWorkerRequirementPacket))]
+    public class TagWorkerRequirementPacketDrawer : PropertyDrawer
+    {
+        public override VisualElement CreatePropertyGUI(SerializedProperty property)
+        {
+            var container = new VisualElement
+            {
                 style =
                 {
-                    marginLeft = 8,
-                    marginTop = 4,
-                    marginBottom = 4,
-                    paddingLeft = 8,
-                    borderLeftWidth = 2,
-                    borderLeftColor = new Color(0.4f, 0.4f, 0.4f, 0.6f)
+                    flexDirection = FlexDirection.Row,
+                    alignItems = Align.Center,
+                    marginBottom = 2
                 }
             };
             
-            // Insert child fields container after the first child (the type selector row)
-            // and before the dropdown (second child)
-            if (baseGui.childCount >= 1)
+            // Tag field
+            var tagProp = property.FindPropertyRelative("Tag");
+            var tagField = new PropertyField(tagProp, "")
             {
-                // Insert at index 1 (after the type selector row, before dropdown)
-                baseGui.Insert(1, _childFieldsContainer);
-            }
-            else
+                style = { flexGrow = 1, minWidth = 100 }
+            };
+            container.Add(tagField);
+            
+            // Policy dropdown
+            var policyProp = property.FindPropertyRelative("Policy");
+            var policyField = new EnumField((ERequireAvoidPolicy)policyProp.enumValueIndex)
             {
-                baseGui.Add(_childFieldsContainer);
-            }
+                style = { width = 70, marginLeft = 4 }
+            };
+            policyField.BindProperty(policyProp);
+            container.Add(policyField);
             
-            // Initial population of child fields
-            PopulateChildFields(prop);
-            
-            // Track property changes to refresh child fields when type changes
-            baseGui.TrackPropertyValue(prop, OnPropertyChanged);
-            
-            return baseGui;
-        }
-        
-        protected void OnPropertyChanged(SerializedProperty prop)
-        {
-            // Refresh child fields when the managed reference type changes
-            PopulateChildFields(prop);
-        }
-
-        /// <summary>
-        /// Populates the child fields container with PropertyFields for each
-        /// serialized field of the concrete validation rule implementation.
-        /// </summary>
-        protected void PopulateChildFields(SerializedProperty property)
-        {
-            _childFieldsContainer.Clear();
-            
-            // Check if there's a managed reference value
-            if (property.propertyType != SerializedPropertyType.ManagedReference ||
-                property.managedReferenceValue == null)
+            // Weight field
+            var weightProp = property.FindPropertyRelative("RequiredWeight");
+            var weightField = new IntegerField
             {
-                return;
-            }
-
-            // Get the type name for potential display
-            var typeName = property.managedReferenceValue.GetType().Name;
+                style = { width = 40, marginLeft = 4 }
+            };
+            weightField.BindProperty(weightProp);
+            container.Add(weightField);
             
-            // Iterate through all visible children of the SerializeReference property
-            var iterator = property.Copy();
-            var endProperty = property.GetEndProperty();
-            
-            bool hasFields = false;
-            
-            // Enter the first child
-            if (iterator.NextVisible(true))
-            {
-                do
-                {
-                    // Stop if we've gone past this property's scope
-                    if (SerializedProperty.EqualContents(iterator, endProperty))
-                        break;
-                    
-                    hasFields = true;
-                    
-                    // Create a PropertyField for each child property
-                    // This ensures custom drawers (like Tag, Attribute) are properly invoked
-                    var childProp = iterator.Copy();
-                    var field = new PropertyField(childProp)
-                    {
-                        style =
-                        {
-                            marginBottom = 2
-                        }
-                    };
-                    
-                    // Use nicified label
-                    field.label = ObjectNames.NicifyVariableName(childProp.name);
-                    
-                    _childFieldsContainer.Add(field);
-                    
-                } while (iterator.NextVisible(false));
-            }
-            
-            // If no fields, optionally show a message (or just leave empty)
-            if (!hasFields)
-            {
-                // No configurable fields - container stays empty
-                // This keeps the UI clean for simple validations like CooldownValidation
-            }
-            
-            // Bind to ensure property changes are tracked
-            _childFieldsContainer.Bind(property.serializedObject);
-        }
-
-        protected override string GetStringValue(SerializedProperty prop, Type value)
-        {
-            if (value is null) 
-                return base.GetStringValue(prop, value);
-
-            //if (prop.managedReferenceValue is IAbilityValidationRule rule) return rule.GetName();
-
-            // Clean up the display name
-            var name = value.Name;
-            
-            name = name.Replace("ValidationRule", "");
-            name = name.Replace("Validation", "");
-            
-            return ObjectNames.NicifyVariableName(name);
-        }
-        
-        /// <summary>
-        /// Override SetValue to refresh child fields when type changes via dropdown selection
-        /// </summary>
-        protected override void SetValue(SerializedProperty prop, Type value)
-        {
-            base.SetValue(prop, value);
-            
-            // Schedule a refresh of child fields after the value is set
-            // This handles the case where user selects a new type from dropdown
-            _childFieldsContainer?.schedule.Execute(() =>
-            {
-                prop.serializedObject.Update();
-                PopulateChildFields(prop);
-            });
-        }
-    }
-    
-    [CustomPropertyDrawer(typeof(AbstractAttributeWorker))]
-    public class AttributeWorkerDrawer : AbstractGenericDrawer<AbstractAttributeWorker>
-    {
-        protected override bool AcceptOpen(SerializedProperty prop)
-        {
-            return false;
-        }
-        protected override bool AcceptAdd()
-        {
-            return false;
-        }
-    }
-    
-    [CustomPropertyDrawer(typeof(AbstractImpactWorker))]
-    public class ImpactWorkerDrawer : AbstractGenericDrawer<AbstractImpactWorker>
-    {
-        protected override bool AcceptOpen(SerializedProperty prop)
-        {
-            return false;
-        }
-        protected override bool AcceptAdd()
-        {
-            return false;
-        }
-    }
-    
-    [CustomPropertyDrawer(typeof(AbstractTagWorker))]
-    public class TagWorkerDrawer : AbstractGenericDrawer<AbstractTagWorker>
-    {
-        protected override bool AcceptOpen(SerializedProperty prop)
-        {
-            return false;
-        }
-        protected override bool AcceptAdd()
-        {
-            return false;
-        }
-    }
-    
-    [CustomPropertyDrawer(typeof(AbstractAnalysisWorker))]
-    public class AnalysisWorkerDrawer : AbstractGenericDrawer<AbstractAnalysisWorker>
-    {
-        protected override bool AcceptOpen(SerializedProperty prop)
-        {
-            return false;
-        }
-        protected override bool AcceptAdd()
-        {
-            return false;
+            return container;
         }
     }
 }

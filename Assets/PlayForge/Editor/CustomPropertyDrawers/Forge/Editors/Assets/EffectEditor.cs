@@ -177,11 +177,17 @@ namespace FarEmerald.PlayForge.Extended.Editor
             });
             content.Add(descField);
             
+            var retentionField = CreatePropertyField(definition.FindPropertyRelative("ImpactRetentionGroup"), "ImpactRetentionGroup", "Impact Retention Group");
+            content.Add(retentionField);
+            
             var visibilityField = CreatePropertyField(definition.FindPropertyRelative("Visibility"), "Visibility", "Visibility");
             content.Add(visibilityField);
             
             var texturesField = CreatePropertyField(definition.FindPropertyRelative("Textures"), "Textures", "Textures");
             texturesField.RegisterCallback<SerializedPropertyChangeEvent>(_ => Repaint());
+            
+            
+            
             content.Add(texturesField);
         }
 
@@ -195,7 +201,7 @@ namespace FarEmerald.PlayForge.Extended.Editor
             {
                 Name = "LevelSource",
                 Title = "Level Source",
-                AccentColor = Colors.AccentPurple,
+                AccentColor = Colors.AccentGray,
                 HelpUrl = "https://docs.playforge.dev/effects/level-source"
             });
             parent.Add(section.Section);
@@ -209,7 +215,7 @@ namespace FarEmerald.PlayForge.Extended.Editor
             levelSourceContent.Clear();
             
             var infoLabel = CreateHintLabel(
-                "Link this effect to an Ability or Entity to derive max level for modifier scaling.");
+                "Link this effect to an Ability, Entity, or Item to derive max level for modifier scaling.");
             infoLabel.style.marginBottom = 8;
             levelSourceContent.Add(infoLabel);
             
@@ -221,6 +227,7 @@ namespace FarEmerald.PlayForge.Extended.Editor
                 serializedObject.Update();
                 MarkDirty(effect);
                 RebuildLevelSourceContent();
+                Repaint();
             });
             levelSourceContent.Add(linkModeField);
             
@@ -285,6 +292,7 @@ namespace FarEmerald.PlayForge.Extended.Editor
                 serializedObject.Update();
                 MarkDirty(effect);
                 RebuildLevelSourceContent();
+                Repaint();
             });
             
             selectorRow.Add(objectField);
@@ -295,6 +303,7 @@ namespace FarEmerald.PlayForge.Extended.Editor
                 serializedObject.Update();
                 MarkDirty(effect);
                 RebuildLevelSourceContent();
+                Repaint();
             });
             clearBtn.text = "×";
             clearBtn.tooltip = "Clear linked provider";
@@ -329,6 +338,14 @@ namespace FarEmerald.PlayForge.Extended.Editor
             selectEntityBtn.style.marginLeft = 4;
             ApplyButtonHoverStyle(selectEntityBtn);
             quickSelectRow.Add(selectEntityBtn);
+            
+            var selectItemBtn = new Button(() => ShowProviderPicker<Item>());
+            selectItemBtn.text = "Select Item...";
+            selectItemBtn.style.fontSize = 10;
+            selectItemBtn.style.height = 18;
+            selectItemBtn.style.marginLeft = 4;
+            ApplyButtonHoverStyle(selectItemBtn);
+            quickSelectRow.Add(selectItemBtn);
             
             levelSourceContent.Add(quickSelectRow);
         }
@@ -383,15 +400,20 @@ namespace FarEmerald.PlayForge.Extended.Editor
                 var infoGrid = new VisualElement();
                 infoGrid.style.marginLeft = 4;
                 
-                var typeName = providerAsset is Ability ? "Ability" : 
-                               providerAsset is EntityIdentity ? "Entity" : "Provider";
+                var typeName = providerAsset switch
+                {
+                    Ability => "Ability",
+                    EntityIdentity => "Entity",
+                    Item => "Item",
+                    _ => "Provider"
+                };
                 var typeColor = providerAsset is Ability ? Colors.AccentBlue : 
                                 providerAsset is EntityIdentity ? Colors.AccentOrange : Colors.AccentPurple;
                 
                 infoGrid.Add(CreateInfoRow("Type:", typeName, typeColor));
                 infoGrid.Add(CreateInfoRow("Name:", provider.GetProviderName(), Colors.LabelText));
-                infoGrid.Add(CreateInfoRow("Max Level:", provider.GetMaxLevel().ToString(), Colors.AccentGreen));
                 infoGrid.Add(CreateInfoRow("Start Level:", provider.GetStartingLevel().ToString(), Colors.LabelText));
+                infoGrid.Add(CreateInfoRow("Max Level:", provider.GetMaxLevel().ToString(), Colors.AccentGreen));
                 
                 statusBox.Add(infoGrid);
                 
@@ -422,6 +444,7 @@ namespace FarEmerald.PlayForge.Extended.Editor
                         serializedObject.Update();
                         MarkDirty(effect);
                         RebuildLevelSourceContent();
+                        Repaint();
                     }
                 });
                 unlinkBtn.text = "Unlink";

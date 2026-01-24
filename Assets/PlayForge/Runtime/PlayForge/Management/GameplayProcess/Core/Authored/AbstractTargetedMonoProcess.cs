@@ -19,7 +19,7 @@ namespace FarEmerald.PlayForge
         {
             base.WhenInitialize(relay);
             
-            if (!regData.TryGet(Tags.PAYLOAD_TARGET, EProxyDataValueTarget.Primary, out target)) Debug.Log($"Whelp!");
+            if (!regData.TryGet(Tags.TARGET_REAL, EProxyDataValueTarget.Primary, out target)) Debug.Log($"Whelp!");
             targetTransform = target.AsTransform();
 
             var to = Quaternion.LookRotation(targetTransform.position - transform.position);

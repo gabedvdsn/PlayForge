@@ -69,6 +69,10 @@ namespace FarEmerald.PlayForge
                 member.Calculation?.Regulate(attribute, rules);
             }
         }
+        public override void Evaluate(CachedAttributeValue value)
+        {
+            
+        }
     }
 
     [Serializable]

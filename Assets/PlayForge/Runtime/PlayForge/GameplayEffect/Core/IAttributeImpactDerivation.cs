@@ -15,40 +15,81 @@ namespace FarEmerald.PlayForge
         public ITarget GetTarget();
         public List<Tag> GetImpactTypes();
         public Tag AttributeRetention();
-        public void TrackImpact(AbilityImpactData impactData);
-        public bool TryGetTrackedImpact(out AttributeValue impactValue);
-        public bool TryGetLastTrackedImpact(out AttributeValue impactValue);
+        public void TrackImpact(ImpactData impactData);
+        public TrackedImpact GetTrackedImpact();
+        public AttributeValue GetLastTrackedImpact();
         public List<Tag> GetContextTags();
-        public void RunEffectApplicationWorkers();
-        public void RunEffectTickWorkers();
-        public void RunEffectRemovalWorkers();
-        public void RunEffectImpactWorkers(AbilityImpactData impactData);
+        public void RunWorkerApplication(EffectWorkerContext ctx);
+        public void RunWorkerTick(EffectWorkerContext ctx);
+        public void RunWorkerRemoval(EffectWorkerContext ctx);
+        public void RunWorkerImpact(EffectWorkerContext ctx);
         public Dictionary<IScaler, AttributeValue?> GetSourcedCapturedAttributes();
+        public IAttributeImpactDerivation GetImpactDerivation();
         
-        public static SourceAttributeDerivation GenerateSourceDerivation(ISource source, Attribute attribute, Tag retainImpact, Tag impactType)
+        public static SourceAttributeImpact GenerateSourceDerivation(ISource source, Attribute attribute, Tag retention, Tag impactType)
         {
-            return new SourceAttributeDerivation(source, attribute, impactType, retainImpact);
+            return new SourceAttributeImpact(source, attribute, impactType, retention);
         }
 
-        public static SourceAttributeDerivation GenerateSourceDerivation(SourcedModifiedAttributeValue sourceModifier, Tag retainImpact, Tag impactType)
+        public static SourceAttributeImpact GenerateSourceDerivation(SourcedModifiedAttributeValue sourceModifier, Tag retention, Tag impactType)
         {
-            return GenerateSourceDerivation(sourceModifier.Derivation.GetSource(), sourceModifier.Derivation.GetAttribute(), retainImpact, impactType);
+            return GenerateSourceDerivation(sourceModifier.Derivation.GetSource(), sourceModifier.Derivation.GetAttribute(), retention, impactType);
         }
     }
 
-    public class SourceAttributeDerivation : IAttributeImpactDerivation
+    public class TrackedImpact
+    {
+        private class Node
+        {
+            public AttributeValue Impact;
+            public Node Next;
+
+            public Node(AttributeValue impact)
+            {
+                Impact = impact;
+            }
+        }
+        
+        public AttributeValue Total { get; private set; }
+        public AttributeValue Last => end?.Impact ?? default;
+        public int Count { get; private set; }
+        
+        private Node root;
+        private Node end;
+
+        public void Add(AttributeValue value)
+        {
+            if (root is null)
+            {
+                root = new Node(value);
+                end = root;
+                
+                Total = value;
+                Count = 1;
+                return;
+            }
+            
+            end.Next = new Node(value);
+            end = end.Next;
+            
+            Total += value;
+            Count += 1;
+        }
+    }
+
+    public class SourceAttributeImpact : IAttributeImpactDerivation
     {
         private ISource Source;
         public Attribute Attribute;
         private Tag ImpactType;
-        private Tag RetainImpact;
+        private Tag Retention;
 
-        public SourceAttributeDerivation(ISource source, Attribute attribute, Tag impactType, Tag retainImpact)
+        public SourceAttributeImpact(ISource source, Attribute attribute, Tag impactType, Tag retention)
         {
             Source = source;
             Attribute = attribute;
             ImpactType = impactType;
-            RetainImpact = retainImpact;
+            Retention = retention;
         }
 
         public Attribute GetAttribute()
@@ -74,47 +115,49 @@ namespace FarEmerald.PlayForge
 
         public Tag AttributeRetention()
         {
-            return RetainImpact;
+            return Retention;
         }
         
-        public void TrackImpact(AbilityImpactData impactData)
+        public void TrackImpact(ImpactData impactData)
         {
             // Source derivations do not track their impact
         }
         
-        public bool TryGetTrackedImpact(out AttributeValue impactValue)
+        public TrackedImpact GetTrackedImpact()
         {
-            impactValue = default;
-            return false;
+            return new TrackedImpact();
         }
-        public bool TryGetLastTrackedImpact(out AttributeValue impactValue)
+        public AttributeValue GetLastTrackedImpact()
         {
-            impactValue = default;
-            return false;
+            return default;
         }
         public List<Tag> GetContextTags()
         {
             return Source.GetContextTags();
         }
-        public void RunEffectApplicationWorkers()
+        public void RunWorkerApplication(EffectWorkerContext ctx)
         {
-            // Nothing to do here!
+            
         }
-        public void RunEffectTickWorkers()
+        public void RunWorkerTick(EffectWorkerContext ctx)
         {
-            // Nothing to do here!
+            
         }
-        public void RunEffectRemovalWorkers()
+        public void RunWorkerRemoval(EffectWorkerContext ctx)
         {
-            // Nothing to do here!
+            
         }
-        public void RunEffectImpactWorkers(AbilityImpactData impactData)
+        public void RunWorkerImpact(EffectWorkerContext ctx)
         {
-            // Nothing to do here!
+            
         }
         public Dictionary<IScaler, AttributeValue?> GetSourcedCapturedAttributes()
         {
             return new();
+        }
+        public IAttributeImpactDerivation GetImpactDerivation()
+        {
+            return null;
         }
     }
 }

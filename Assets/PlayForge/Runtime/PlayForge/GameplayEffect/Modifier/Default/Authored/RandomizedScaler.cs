@@ -49,7 +49,12 @@ namespace FarEmerald.PlayForge
                     return baseValue;
             }
         }
-        
+
+        /*public override bool UseScalingOptions()
+        {
+            return false;
+        }*/
+
         /// <summary>
         /// Gets the minimum possible value at current level (for UI display).
         /// </summary>

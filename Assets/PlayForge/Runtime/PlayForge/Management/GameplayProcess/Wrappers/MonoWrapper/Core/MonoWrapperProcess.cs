@@ -1,5 +1,6 @@
 ﻿using System.Threading;
 using Cysharp.Threading.Tasks;
+using UnityEditor.PackageManager;
 using UnityEngine;
 
 namespace FarEmerald.PlayForge
@@ -22,17 +23,12 @@ namespace FarEmerald.PlayForge
         /// </summary>
         public override void InitializeWrapper()
         {
-            if (StoredMono)
-            {
-                if (StoredMono.Instantiator is not null)
-                {
-                    activeMono = StoredMono.Instantiator.Create(StoredMono, Data);
-                    if (activeMono.gameObject.scene.isLoaded) return;
-                }
-
-                activeMono = StoredMono.gameObject.scene.isLoaded ? StoredMono : Object.Instantiate(StoredMono);
-            }
-
+            if (!StoredMono) return;
+            
+            if (StoredMono.Instantiator is not null) activeMono = StoredMono.Instantiator.Create(StoredMono, Data, StoredMono.gameObject.scene.IsValid());
+            if (activeMono && activeMono.gameObject.scene.IsValid()) return;
+            
+            activeMono = StoredMono.gameObject.scene.IsValid() ? StoredMono : Object.Instantiate(StoredMono);
             activeMono.name = activeMono.name.Replace("(Clone)", "");
         }
         
@@ -46,7 +42,16 @@ namespace FarEmerald.PlayForge
         {
             activeMono.WhenUpdate(relay);
         }
-        
+
+        public override void WhenFixedUpdate(ProcessRelay relay)
+        {
+            activeMono.WhenFixedUpdate(relay);
+        }
+        public override void WhenLateUpdate(ProcessRelay relay)
+        {
+            activeMono.WhenLateUpdate(relay);
+        }
+
         public override void WhenWait(ProcessRelay relay)
         {
             activeMono.WhenWait(relay);
@@ -76,7 +81,6 @@ namespace FarEmerald.PlayForge
         public override void WhenTerminateSafe(ProcessRelay relay)
         {
             activeMono.WhenTerminate(relay);
-            ProcessControl.Instance.RemoveMonoProcess(activeMono);
         }
 
         public override async UniTask RunProcess(ProcessRelay relay, CancellationToken token)
@@ -100,7 +104,7 @@ namespace FarEmerald.PlayForge
             return activeMono && activeMono.IsInitialized;
         }
 
-        public override string ProcessName => activeMono ? activeMono.name : "[ ]";
+        public override string ProcessName => activeMono ? activeMono.name : $"[<Is Destroyed>] - {(StoredMono ? StoredMono.name : "<Unknown>")}";
         public override EProcessStepPriorityMethod PriorityMethod => activeMono.PriorityMethod;
 
         public override int StepPriority => activeMono.ProcessStepPriority;

@@ -6,5 +6,11 @@ namespace FarEmerald.PlayForge
     {
         public List<Tag> GetAppliedTags();
         public int GetWeight(Tag _tag);
+        public void CompileGrantedTags();
+    }
+
+    public interface ITagSource
+    {
+        public IEnumerable<Tag> GetGrantedTags();
     }
 }

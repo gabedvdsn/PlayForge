@@ -55,5 +55,9 @@ namespace FarEmerald.PlayForge
                 rules.RegisterRelation(CaptureAttribute, attribute);
             }
         }
+        public override void Evaluate(CachedAttributeValue value)
+        {
+            
+        }
     }
 }

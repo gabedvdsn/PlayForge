@@ -20,8 +20,10 @@ namespace FarEmerald.PlayForge
         
         protected virtual float GetProjectileSpeed()
         {
-            if (!AttributeLibrary.TryGetByName("projectile_speed", out var projSpeed)) return 10f;
-            return Source.AttributeSystem.TryGetAttributeValue(projSpeed, out AttributeValue val) ? val.CurrentValue : 10f;
+            var speed = GetAttributeValue(Tags.PROJECTILE_SPEED);
+            if (speed.DerivedValues is null) ReportStatus(Tags.FAILED_WHILE_ACTIVE);
+
+            return speed.Value.CurrentValue;
         }
     }
 }

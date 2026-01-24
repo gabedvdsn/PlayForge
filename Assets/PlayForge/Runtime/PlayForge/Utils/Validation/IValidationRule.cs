@@ -4,7 +4,7 @@ namespace FarEmerald.PlayForge
 {
     public interface IValidationRule<T> where T : IValidationReady
     {
-        bool Validate(T data, out string error);
+        bool Validate(T data, Func<ITarget> getSource, out string error);
     }
 
     [Serializable]
@@ -12,7 +12,7 @@ namespace FarEmerald.PlayForge
     {
         public Attribute Attribute;
 
-        public abstract bool Validate(AbilityDataPacket data, out string error);
+        public abstract bool Validate(AbilityDataPacket data, Func<ITarget> getSource, out string error);
         public abstract string GetName();
     }
     

@@ -13,9 +13,9 @@ namespace FarEmerald.PlayForge
     {
         #region GAS Utils
 
-        public static bool ValidateEffectApplicationRequirements(GameplayEffectSpec spec, List<Tag> affiliation)
+        public static bool ValidateEffectApplicationRequirements(GameplayEffectSpec spec, List<Tag> targetAffiliation)
         {
-            return ValidateAffiliationPolicy(spec.Base.ImpactSpecification.AffiliationPolicy, affiliation, spec.Origin.GetAffiliation())
+            return ValidateAffiliationPolicy(spec, targetAffiliation)
                    && spec.Base.ValidateApplicationRequirements(spec);
         }
 
@@ -148,21 +148,34 @@ namespace FarEmerald.PlayForge
             return anyContext || validContexts.ContainsAll(outsideContexts);
         }
 
-        public static bool ValidateAffiliationPolicy(EAffiliationPolicy policy, List<Tag> a, List<Tag> b)
+        public static bool ValidateAffiliationPolicy(
+            GameplayEffectSpec spec, List<Tag> targetAffiliation)
         {
-            bool result = policy switch
+            if (spec.Base.ImpactSpecification.AffiliationComparison == EAnyAllPolicy.Any)
             {
-                EAffiliationPolicy.Unaffiliated => !a.Any(b.Contains),
-                EAffiliationPolicy.Affiliated => a.Any(b.Contains),
-                EAffiliationPolicy.Any => true,
-                _ => throw new ArgumentOutOfRangeException(nameof(policy), policy, null)
+                return spec.Base.ImpactSpecification.AffiliationPolicy switch
+                {
+                    EAffiliationPolicy.UseAffiliationList => spec.Base.ImpactSpecification.Affiliations.Any(targetAffiliation.Contains),
+                    EAffiliationPolicy.Unaffiliated => !spec.Origin.GetAffiliation().Any(targetAffiliation.Contains),
+                    EAffiliationPolicy.Affiliated => spec.Origin.GetAffiliation().Any(targetAffiliation.Contains),
+                    EAffiliationPolicy.AlwaysAllow => true,
+                    _ => throw new ArgumentOutOfRangeException()
+                };
+            }
+            
+            return spec.Base.ImpactSpecification.AffiliationPolicy switch
+            {
+                EAffiliationPolicy.UseAffiliationList => spec.Base.ImpactSpecification.Affiliations.All(targetAffiliation.Contains),
+                EAffiliationPolicy.Unaffiliated => !spec.Origin.GetAffiliation().All(targetAffiliation.Contains),
+                EAffiliationPolicy.Affiliated => spec.Origin.GetAffiliation().All(targetAffiliation.Contains),
+                EAffiliationPolicy.AlwaysAllow => true,
+                _ => throw new ArgumentOutOfRangeException()
             };
-            return result;
         }
         
         public static bool ValidateImpactTypes(bool anyType, List<Tag> impactType, List<Tag> validation, EAnyAllPolicy policy = EAnyAllPolicy.Any)
         {
-            if (impactType.Contains(Tags.GEN_NOT_APPLICABLE) && !validation.Contains(Tags.GEN_ANY)) return false;
+            if (impactType.Contains(Tags.NONE)) return false;
 
             if (anyType) return true;
             
@@ -448,15 +461,45 @@ namespace FarEmerald.PlayForge
             if (policy == EAbilityActivationPolicyExtended.UseLocalPolicy)
             {
                 if (asc is not null) return asc.DefaultActivationPolicy;
-                return EAbilityActivationPolicy.SingleActiveQueue;
+                return EAbilityActivationPolicy.QueueActivationIfBusy;
             }
 
             return policy switch
             {
-                EAbilityActivationPolicyExtended.NoRestrictions => EAbilityActivationPolicy.NoRestrictions,
-                EAbilityActivationPolicyExtended.SingleActive => EAbilityActivationPolicy.SingleActive,
-                EAbilityActivationPolicyExtended.SingleActiveQueue => EAbilityActivationPolicy.SingleActiveQueue,
+                EAbilityActivationPolicyExtended.AlwaysActivate => EAbilityActivationPolicy.AlwaysActivate,
+                EAbilityActivationPolicyExtended.ActivateIfIdle => EAbilityActivationPolicy.ActivateIfIdle,
+                EAbilityActivationPolicyExtended.QueueActivationIfBusy => EAbilityActivationPolicy.QueueActivationIfBusy,
                 _ => throw new ArgumentOutOfRangeException(nameof(policy), policy, null)
+            };
+        }
+        
+        #endregion
+        
+        #region Computations
+
+        public static int MagnitudeAndScalerOperation(int value, float scaleValue, EMagnitudeOperation operation, ERoundingOperation rounding)
+        {
+            float v = MagnitudeAndScalerOperation(value, scaleValue, operation);
+
+            return rounding switch
+            {
+
+                ERoundingOperation.Floor => Mathf.FloorToInt(v),
+                ERoundingOperation.Ceil => Mathf.CeilToInt(v),
+                _ => throw new ArgumentOutOfRangeException(nameof(rounding), rounding, null)
+            };
+        }
+
+        public static float MagnitudeAndScalerOperation(float value, float scaleValue, EMagnitudeOperation operation)
+        {
+            return operation switch
+            {
+
+                EMagnitudeOperation.MultiplyWithScaler => value * scaleValue,
+                EMagnitudeOperation.AddScaler => value + scaleValue,
+                EMagnitudeOperation.UseMagnitude => value,
+                EMagnitudeOperation.UseScaler => scaleValue,
+                _ => throw new ArgumentOutOfRangeException(nameof(operation), operation, null)
             };
         }
         

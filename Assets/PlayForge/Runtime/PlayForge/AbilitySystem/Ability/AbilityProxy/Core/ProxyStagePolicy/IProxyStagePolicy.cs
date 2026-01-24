@@ -1,5 +1,6 @@
 ﻿using System.Threading;
 using Cysharp.Threading.Tasks;
+using UnityEngine;
 
 namespace FarEmerald.PlayForge
 {
@@ -26,8 +27,10 @@ namespace FarEmerald.PlayForge
         public async UniTask AwaitStageActivation(AbilityProxy proxy, AbilityTaskBehaviourStage stage, UniTask[] tasks, AbilityDataPacket data, AbilitySystemCallbacks callbacks,
             CancellationTokenSource stageCts)
         {
+            Debug.Log($"AllPolicy: Awaiting {tasks.Length} tasks");
             var watched = proxy.GetWatchedTasks(tasks, stage, data, callbacks, true);
             await UniTask.WhenAll(watched);
+            Debug.Log($"AllPolicy: All tasks completed");
         }
     }
 }

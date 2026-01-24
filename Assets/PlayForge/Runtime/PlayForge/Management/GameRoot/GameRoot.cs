@@ -9,7 +9,7 @@ namespace FarEmerald.PlayForge
     /// <summary>
     /// GameRoot
     /// </summary>
-    public partial class GameRoot : GameplayAbilitySystem, IEffectOrigin, IManagerial
+    public class GameRoot : GameplayAbilitySystem, IEffectOrigin, IManagerial
     {
         [Header("Game Root")]
         
@@ -39,7 +39,7 @@ namespace FarEmerald.PlayForge
                 false
             );
             
-            NativeDataPacket.AddPayload(Tags.PAYLOAD_TRANSFORM, transform);
+            NativeDataPacket.AddPayload(Tags.PARENT_TRANSFORM, transform);
             
             RunProcessTasks(CreateProcessTasks);
         }
@@ -88,6 +88,10 @@ namespace FarEmerald.PlayForge
         public float GetRelativeLevel()
         {
             return Data.RelativeLevel;
+        }
+        public bool IsActive()
+        {
+            return true;
         }
     }
 }

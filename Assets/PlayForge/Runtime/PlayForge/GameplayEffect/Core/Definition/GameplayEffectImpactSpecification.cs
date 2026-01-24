@@ -13,17 +13,19 @@ namespace FarEmerald.PlayForge
     {
         public Attribute AttributeTarget;
         public EEffectImpactTarget TargetImpact;
-        [SerializeReference] public ECalculationOperation ImpactOperation;
+        public ECalculationOperation ImpactOperation = ECalculationOperation.Add;
         
-        public EAffiliationPolicy AffiliationPolicy;
+        public EAffiliationPolicy AffiliationPolicy = EAffiliationPolicy.UseAffiliationList;
+        public EAnyAllPolicy AffiliationComparison = EAnyAllPolicy.Any;
+        [ForgeTagContext(ForgeContext.Affiliation)] public List<Tag> Affiliations = new List<Tag>();
         
-        [ForgeTagContext(ForgeContext.Impact)] public List<Tag> ImpactTypes;
+        [ForgeTagContext(ForgeContext.Impact)] 
+        public List<Tag> ImpactTypes;
         public bool ReverseImpactOnRemoval;
-        public EEffectReApplicationPolicy ReApplicationPolicy;
         
         public float Magnitude;
         [SerializeReference] public AbstractScaler MagnitudeScaler;
-        public EMagnitudeOperation RealMagnitude;
+        public EMagnitudeOperation RealMagnitude = EMagnitudeOperation.AddScaler;
         
         public ContainedEffectPacket[] Packets;
 
@@ -39,7 +41,6 @@ namespace FarEmerald.PlayForge
             AffiliationPolicy = o.AffiliationPolicy;
             ImpactTypes = o.ImpactTypes;
             ReverseImpactOnRemoval = o.ReverseImpactOnRemoval;
-            ReApplicationPolicy = o.ReApplicationPolicy;
             Magnitude = o.Magnitude;
             MagnitudeScaler = o.MagnitudeScaler;
             
@@ -72,22 +73,24 @@ namespace FarEmerald.PlayForge
                 _ => throw new ArgumentOutOfRangeException()
             };
         }
+        
+        public float GetMagnitude(AbstractStackingEffectContainer container)
+        {
+            float calculatedMagnitude = MagnitudeScaler?.Evaluate(container) ?? 0f;
+            
+            return RealMagnitude switch
+            {
+                EMagnitudeOperation.AddScaler => Magnitude + calculatedMagnitude,
+                EMagnitudeOperation.MultiplyWithScaler => Magnitude * calculatedMagnitude,
+                EMagnitudeOperation.UseMagnitude => Magnitude,
+                EMagnitudeOperation.UseScaler => calculatedMagnitude,
+                _ => throw new ArgumentOutOfRangeException()
+            };
+        }
 
         public IEnumerable<GameplayEffect> GetContainedEffects(EApplyTickRemove policy)
         {
             return Packets.Where(packet => packet.Policy == policy).Select(p => p.ContainedEffect);
-        }
-
-        public Dictionary<Tag, string[]> ReadableBreakdown()
-        {
-            var b = new Dictionary<Tag, string[]>();
-
-            b[Tags.Category.CAT_IMPACT_TYPE] = ImpactTypes.Select(it => it.Name).ToArray();
-            b[Tags.Category.CAT_IMPACT_ATTRIBUTE] = new[] { AttributeTarget.Name };
-            b[Tags.Category.CAT_IMPACT_MAGNITUDE] = new[] { Magnitude.ToString(CultureInfo.InvariantCulture) };
-
-            return b;
-
         }
     }
     
@@ -136,8 +139,9 @@ namespace FarEmerald.PlayForge
 
     public enum EAffiliationPolicy
     {
+        UseAffiliationList,
         Unaffiliated,
         Affiliated,
-        Any
+        AlwaysAllow
     }
 }

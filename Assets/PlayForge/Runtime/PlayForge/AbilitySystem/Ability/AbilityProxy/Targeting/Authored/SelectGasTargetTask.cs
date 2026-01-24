@@ -4,8 +4,9 @@ using UnityEngine;
 
 namespace FarEmerald.PlayForge
 {
-    public class SelectGasTargetTask : AbstractTargetingAbilityTask
+    public class SelectGasTargetTask : AbstractGasTargetingAbilityTask
     {
+        public override string Description => "Use raycast to find GAS target";
         public override async UniTask Activate(AbilityDataPacket data, CancellationToken token)
         {
             // wait for response from some cursor manager that receives mouse input and finds the selected gameobject that has a GASComponent
@@ -14,16 +15,22 @@ namespace FarEmerald.PlayForge
             while (true)
             {
                 // Important to have some break response -- OR inject interrupt into ASC via inut handler
-                if (Input.GetKeyDown(KeyCode.Escape)) break;
+                if (Input.GetKeyDown(KeyCode.Escape)) BreakAbilityRuntime();
                 if (Input.GetMouseButtonDown(0))
                 {
-                    Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
-                    if (Physics.Raycast(ray, out RaycastHit hitInfo, Mathf.Infinity))
+                    var ray = Camera.main.ScreenPointToRay(Input.mousePosition);
+                    if (Physics.Raycast(ray, out var hitInfo, Mathf.Infinity))
                     {
-                        data.AddPayload(Tags.PAYLOAD_TARGET, hitInfo.collider.gameObject);
+                        if (!TargetIsValid(hitInfo.collider.gameObject, out var target))
+                        {
+                            WhenTargetingInvalid();
+                            continue;
+                        }
+                        
+                        data.AddPayload(Tags.TARGET_REAL, target);
                         
                         // Access hitInfo.point, hitInfo.normal, hitInfo.collider, etc.
-                        return;
+                        break;
                     }
                 }
                 

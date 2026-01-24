@@ -60,11 +60,11 @@ namespace FarEmerald.PlayForge.Extended
     [AttributeUsage(AttributeTargets.Field, AllowMultiple = false, Inherited = true)]
     public class ForgeTagDefault : System.Attribute
     {
-        public string DefaultTagName { get; }
+        public Tag DefaultTag { get; }
 
-        public ForgeTagDefault(string defaultTagName)
+        public ForgeTagDefault(Tag defaultTag)
         {
-            DefaultTagName = defaultTagName;
+            DefaultTag = defaultTag;
         }
     }
 
@@ -142,4 +142,20 @@ namespace FarEmerald.PlayForge.Extended
             Tooltip = tooltip;
         }
     }
+    
+    #region System Tags
+    
+    [AttributeUsage(AttributeTargets.Property, AllowMultiple = false, Inherited = true)]
+    public class ForgeContextDefault : System.Attribute
+    {
+        public string[] Context { get; }
+
+        public ForgeContextDefault(params string[] context)
+        {
+            Context = context;
+        }
+    }
+    
+    #endregion
+    
 }

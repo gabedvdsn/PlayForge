@@ -1,0 +1,60 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: dac855327e524f0f9473752d46a88179, type: 3}
+  m_Name: ENTITY_TestCharacter
+  m_EditorClassIdentifier: 
+  Name: Test Character
+  Description: 
+  Textures: []
+  Affiliation: []
+  AssetTag:
+    Name: TestCharacter
+  GrantedTags:
+  - Name: Good
+  - Name: Evil
+  - Name: Enraged
+  - Name: Enraged
+  - Name: Enraged
+  - Name: Good
+  Level: 1
+  CapAtMaxLevel: 1
+  MaxLevel: 50
+  ActivationPolicy: 1
+  MaxAbilities: 99
+  StartingAbilities:
+  - {fileID: 11400000, guid: 4033c7003d3957a4e86358a3bc3b2423, type: 2}
+  - {fileID: 11400000, guid: 24938570717e271419995de84593e4c8, type: 2}
+  - {fileID: 11400000, guid: b69782bbfb96ba944a314235763ddfd3, type: 2}
+  - {fileID: 11400000, guid: a6dc00eec7d7e3546a1ee3101244a725, type: 2}
+  AllowDuplicateAbilities: 0
+  MaxItems: 99
+  StartingItems: []
+  AllowDuplicateItems: 0
+  AttributeSet: {fileID: 11400000, guid: 7056a3227d041bd479699d0009f78482, type: 2}
+  WorkerGroup:
+    Name: Workers
+    AttributeWorkers: []
+    ImpactWorkers: []
+    TagWorkers: []
+    AnalysisWorkers:
+    - rid: 1671424176672997876
+  LocalData: []
+  references:
+    version: 2
+    RefIds:
+    - rid: 1671424176672997876
+      type: {class: ThresholdAnalysisWorker, ns: FarEmerald.PlayForge, asm: Assembly-CSharp}
+      data:
+        Target: {fileID: 11400000, guid: 5238e93ea6a409e4a84dd1dcf23dd45c, type: 2}
+        Threshold: 50
+        Comparison: 1
+        TriggerOnce: 1

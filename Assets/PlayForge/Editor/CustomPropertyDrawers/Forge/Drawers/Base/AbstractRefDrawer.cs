@@ -2,10 +2,12 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
+using log4net.Appender;
 using UnityEditor;
 using UnityEngine;
 using UnityEngine.UIElements;
 using static FarEmerald.PlayForge.Extended.Editor.ForgeDrawerStyles;
+using Object = UnityEngine.Object;
 
 namespace FarEmerald.PlayForge.Extended.Editor
 {
@@ -35,12 +37,19 @@ namespace FarEmerald.PlayForge.Extended.Editor
         
         /// <summary>Whether to show the "Add/Create" button. Override to control visibility.</summary>
         protected virtual bool AcceptAdd() => false;
+
+        protected virtual bool AcceptClear() => false;
         
         /// <summary>Gets the default value when none is selected.</summary>
         protected virtual T GetDefault() => default;
-        
+
         /// <summary>Called when the open button is clicked. Override to implement navigation.</summary>
-        protected virtual void OnOpen(SerializedProperty prop, T value) { }
+        protected virtual void OnOpen(SerializedProperty prop, T value)
+        {
+            if (prop.objectReferenceValue is null) return;
+            if (value is not Object record) return;
+            Selection.activeObject = record; EditorGUIUtility.PingObject(record);
+        }
         
         /// <summary>Called when the add button is clicked. Override to implement creation.</summary>
         protected virtual void OnAdd(SerializedProperty prop, string searchText) { }
@@ -55,7 +64,7 @@ namespace FarEmerald.PlayForge.Extended.Editor
         // Helpers
         // ═══════════════════════════════════════════════════════════════════════════
         
-        protected S[] GetAllInstances<S>() where S : ScriptableObject
+        protected S[] GetAllInstances<S>() where S : BaseForgeObject
         {
             string[] guids = AssetDatabase.FindAssets($"t:{typeof(S).Name}");
             return guids.Select(AssetDatabase.GUIDToAssetPath)
@@ -115,16 +124,32 @@ namespace FarEmerald.PlayForge.Extended.Editor
             var valueBtn = CreateValueButton(prop);
             mainRow.Add(valueBtn);
             
-            // Open button (optional)
-            if (AcceptOpen(prop))
-            {
-                var openBtn = CreateIconButton("→", "Open", () => OnOpen(prop, GetCurrentValue(prop)));
-                mainRow.Add(openBtn);
-            }
-            
             // Dropdown container (hidden by default)
             var dropdown = CreateDropdown(prop, state, valueBtn);
             root.Add(dropdown);
+            
+            if (AcceptClear())
+            {
+                var clearBtn = CreateIconButton(Icons.Clear, "Clear", () =>
+                {
+                    prop.objectReferenceValue = null;
+
+                    prop.serializedObject.ApplyModifiedProperties();
+                    EditorUtility.SetDirty(prop.serializedObject.targetObject);
+                    SelectItem(prop, default, valueBtn, state, dropdown);
+                }, Colors.AccentRed);
+                clearBtn.style.marginLeft = 4;
+                //clearBtn.style.bac
+                mainRow.Add(clearBtn);
+            }
+            
+            // Open button (optional)
+            if (AcceptOpen(prop))
+            {
+                var openBtn = CreateIconButton(Icons.Arrow, "Open", () => OnOpen(prop, GetCurrentValue(prop)), Colors.AccentBlue);
+                //openBtn.style.marginLeft = 4;
+                mainRow.Add(openBtn);
+            }
             
             // Wire up value button click
             valueBtn.clicked += () => ToggleDropdown(prop, state, dropdown, valueBtn);
@@ -162,7 +187,7 @@ namespace FarEmerald.PlayForge.Extended.Editor
             return btn;
         }
         
-        private Button CreateIconButton(string icon, string tooltip, Action onClick)
+        private Button CreateIconButton(string icon, string tooltip, Action onClick, Color color)
         {
             var btn = new Button { text = icon, tooltip = tooltip, focusable = false };
             btn.style.width = 20;
@@ -174,14 +199,14 @@ namespace FarEmerald.PlayForge.Extended.Editor
             btn.style.paddingBottom = 0;
             btn.style.fontSize = 10;
             btn.style.unityTextAlign = TextAnchor.MiddleCenter;
-            btn.style.backgroundColor = Colors.ButtonBackground;
+            btn.style.backgroundColor = color;
             btn.style.borderTopLeftRadius = 3;
             btn.style.borderTopRightRadius = 3;
             btn.style.borderBottomLeftRadius = 3;
             btn.style.borderBottomRightRadius = 3;
             
             btn.RegisterCallback<MouseEnterEvent>(_ => btn.style.backgroundColor = Colors.ButtonHover);
-            btn.RegisterCallback<MouseLeaveEvent>(_ => btn.style.backgroundColor = Colors.ButtonBackground);
+            btn.RegisterCallback<MouseLeaveEvent>(_ => btn.style.backgroundColor = color);
             
             btn.clicked += onClick;
             return btn;
@@ -233,9 +258,9 @@ namespace FarEmerald.PlayForge.Extended.Editor
                 {
                     OnAdd(prop, state.SearchText);
                     CloseDropdown(state, dropdown);
-                });
+                }, Colors.AccentGreen);
                 addBtn.style.marginLeft = 4;
-                addBtn.style.backgroundColor = new Color(0.3f, 0.45f, 0.3f);
+                //addBtn.style.backgroundColor = new Color(0.3f, 0.45f, 0.3f);
                 searchRow.Add(addBtn);
             }
             
@@ -327,9 +352,8 @@ namespace FarEmerald.PlayForge.Extended.Editor
             {
                 dropdown.schedule.Execute(() =>
                 {
-                    if (!IsChildFocused(dropdown))
-                        CloseDropdown(state, dropdown);
-                }).ExecuteLater(100);
+                    if (!IsChildFocused(dropdown)) CloseDropdown(state, dropdown);
+                }).ExecuteLater(200);
             });
             
             return dropdown;
@@ -402,6 +426,8 @@ namespace FarEmerald.PlayForge.Extended.Editor
             
             prop.serializedObject.ApplyModifiedProperties();
             EditorUtility.SetDirty(prop.serializedObject.targetObject);
+
+            if (dropdown is null) return;
             
             CloseDropdown(state, dropdown);
         }

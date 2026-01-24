@@ -1,4 +1,6 @@
-﻿using System.Threading;
+﻿using System;
+using System.Linq;
+using System.Threading;
 using Cysharp.Threading.Tasks;
 using UnityEngine;
 
@@ -6,6 +8,16 @@ namespace FarEmerald.PlayForge
 {
     public abstract class AbstractTargetingAbilityTask : AbstractAbilityRelatedTask
     {
+        [Tooltip("If target validation fails, break out of Ability runtime")]
+        public bool BreakRuntimeOnInvalid = true;
+        
+        public virtual string Description => null;
+        
+        /// <summary>
+        /// Prepare targeting measures.
+        /// When overriding, put calls to base at the end of the method.
+        /// </summary>
+        /// <param name="data"></param>
         public override void Prepare(AbilityDataPacket data)
         {
             // Hook into input handler here
@@ -14,9 +26,9 @@ namespace FarEmerald.PlayForge
             WhenTargetingInvalid();
 
             var abilitySystem = data.Spec.GetOwner().AsGAS().GetAbilitySystem();
-            if (data.Spec.GetOwner().AsData().AbilitySystem is not null && data.Spec is AbilitySpec spec)
+            if (abilitySystem is not null && data.Spec is AbilitySpec spec)
             {
-                spec.Owner.AsData().AbilitySystem.Inject(spec.Base, new InterruptInjection());
+                abilitySystem.Inject(spec.Base, new InterruptInjection());
             }
         }
         
@@ -26,16 +38,45 @@ namespace FarEmerald.PlayForge
             DisconnectInputHandler(data);
         }
 
-        public virtual void WhenTargetingInvalid()
+        protected virtual void WhenTargetingInvalid()
         {
             // Play some audio cue
+
+            if (BreakRuntimeOnInvalid) BreakAbilityRuntime();
         }
 
-        public virtual void CommunicateToTarget(AbilityDataPacket data)
+        protected virtual void BreakAbilityRuntime()
         {
-            if (!data.TryGetFirstTarget(out var target)) return;
-            
-            // target.CommunicateTargetedIntent();
+            throw new OperationCanceledException();
+        }
+
+        protected virtual bool TargetIsValid(ITarget target)
+        {
+            return target is not null && TargetIsValid(target.AsGAS().ToGASObject()?.transform, out _);
+        }
+
+        protected virtual bool TargetIsValid(GameObject go, out ITarget target)
+        {
+            var targets = go.GetComponents<ITarget>();
+            if (targets.Length > 0 && targets.All(TargetIsValid))
+            {
+                target = targets.First();
+                return TargetIsValid(target);
+            }
+
+            target = null;
+            return false;
+        }
+
+        protected virtual bool TargetIsValid(Transform transform, out Vector3 target)
+        {
+            return TargetIsValid(transform.position, out target);
+        }
+
+        protected virtual bool TargetIsValid(Vector3 position, out Vector3 target)
+        {
+            target = position;
+            return true;
         }
 
         public override bool IsCriticalSection => true;

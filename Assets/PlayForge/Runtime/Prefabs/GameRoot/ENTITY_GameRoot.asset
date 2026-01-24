@@ -16,7 +16,7 @@ MonoBehaviour:
   Description: 
   Textures: []
   Affiliation:
-  - Name: GameRoot
+  - Name: Game Root
   AssetTag:
     Name: GameRoot
   GrantedTags: []
@@ -24,12 +24,18 @@ MonoBehaviour:
   CapAtMaxLevel: 1
   MaxLevel: 99
   ActivationPolicy: 0
-  MaxAbilities: 99
+  MaxAbilities: 9999
   StartingAbilities: []
   AllowDuplicateAbilities: 1
-  ImpactWorkers: []
-  AttributeSet: {fileID: 0}
-  AttributeChangeEvents: []
+  MaxItems: 99
+  StartingItems: []
+  AllowDuplicateItems: 0
+  AttributeSet: {fileID: 11400000, guid: ea591b955edd54d4fb185ea66c4d530e, type: 2}
+  WorkerGroup:
+    AttributeWorkers: []
+    ImpactWorkers: []
+    TagWorkers: []
+    AnalysisWorkers: []
   LocalData: []
   references:
     version: 2

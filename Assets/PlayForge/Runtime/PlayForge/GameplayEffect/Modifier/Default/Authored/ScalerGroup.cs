@@ -25,7 +25,12 @@ namespace FarEmerald.PlayForge
                 member.Calculation?.Initialize(spec);
             }
         }
-        
+
+        public override bool UseScalingOptions()
+        {
+            return false;
+        }
+
         public override float Evaluate(IAttributeImpactDerivation spec)
         {
             if (Calculations == null || Calculations.Length == 0)
@@ -52,7 +57,7 @@ namespace FarEmerald.PlayForge
                 .Sum(member => member.Calculation.Evaluate(spec));
             
             // Apply multipliers
-            foreach (var member in Calculations.Where(m => m.RelativeOperation == ECalculationOperation.Multiply && m.Calculation != null))
+            foreach (var member in Calculations.Where(m => m is { RelativeOperation: ECalculationOperation.Multiply, Calculation: not null }))
             {
                 value *= member.Calculation.Evaluate(spec);
             }

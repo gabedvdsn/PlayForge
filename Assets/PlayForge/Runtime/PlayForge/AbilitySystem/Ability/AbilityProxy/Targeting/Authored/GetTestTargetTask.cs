@@ -9,7 +9,7 @@ namespace FarEmerald.PlayForge
         public override UniTask Activate(AbilityDataPacket data, CancellationToken token)
         {
             var comps = Object.FindObjectsByType<GameplayAbilitySystem>(FindObjectsInactive.Exclude, FindObjectsSortMode.None);
-            if (!data.TryGet(Tags.PAYLOAD_TARGET, EProxyDataValueTarget.Primary, out ISource source))
+            if (!data.TryGet(Tags.TARGET_REAL, EProxyDataValueTarget.Primary, out ISource source))
             {
                 return UniTask.CompletedTask;
             }
@@ -20,7 +20,7 @@ namespace FarEmerald.PlayForge
             {
                 if (comp != (GameplayAbilitySystem)gas && comp != GameRoot.Instance)
                 {
-                    data.AddPayload(Tags.PAYLOAD_TARGET, comp);
+                    data.AddPayload(Tags.TARGET_REAL, comp);
                     break;
                 }
             }

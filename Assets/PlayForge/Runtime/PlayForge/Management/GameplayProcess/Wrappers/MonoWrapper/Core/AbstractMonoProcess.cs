@@ -43,35 +43,35 @@ namespace FarEmerald.PlayForge
             Relay = relay;
             
             // Transform
-            if (regData.TryGet<Transform>(Tags.PAYLOAD_TRANSFORM, EProxyDataValueTarget.Primary, out var pt))
+            if (regData.TryGet<Transform>(Tags.PARENT_TRANSFORM, EProxyDataValueTarget.Primary, out var pt))
             {
                 transform.SetParent(pt);
             }
             
             // Position
-            if (regData.TryGet<Vector3>(Tags.PAYLOAD_POSITION, EProxyDataValueTarget.Primary, out var pos))
+            if (regData.TryGet<Vector3>(Tags.POSITION, EProxyDataValueTarget.Primary, out var pos))
             {
                 transform.position = pos;
             }
-            else if (regData.TryGet<IGameplayAbilitySystem>(Tags.PAYLOAD_POSITION, EProxyDataValueTarget.Primary, out var gasPos))
+            else if (regData.TryGet<IGameplayAbilitySystem>(Tags.POSITION, EProxyDataValueTarget.Primary, out var gasPos))
             {
                 transform.position = gasPos.AsTransform().position;
             }
-            else if (regData.TryGet<Transform>(Tags.PAYLOAD_POSITION, EProxyDataValueTarget.Primary, out var tPos))
+            else if (regData.TryGet<Transform>(Tags.POSITION, EProxyDataValueTarget.Primary, out var tPos))
             {
                 transform.position = tPos.position;
             }
             
             // Rotation
-            if (regData.TryGet<Quaternion>(Tags.PAYLOAD_ROTATION, EProxyDataValueTarget.Primary, out var rot))
+            if (regData.TryGet<Quaternion>(Tags.ROTATION, EProxyDataValueTarget.Primary, out var rot))
             {
                 transform.rotation = rot;
             }
-            else if (regData.TryGet<GameplayAbilitySystem>(Tags.PAYLOAD_ROTATION, EProxyDataValueTarget.Primary, out var gasRot))
+            else if (regData.TryGet<IGameplayAbilitySystem>(Tags.ROTATION, EProxyDataValueTarget.Primary, out var gasRot))
             {
-                transform.rotation = gasRot.transform.rotation;
+                transform.rotation = gasRot.AsTransform().rotation;
             }
-            else if (regData.TryGet<Transform>(Tags.PAYLOAD_ROTATION, EProxyDataValueTarget.Primary, out var tRot))
+            else if (regData.TryGet<Transform>(Tags.ROTATION, EProxyDataValueTarget.Primary, out var tRot))
             {
                 transform.rotation = tRot.rotation;
             }
@@ -84,6 +84,10 @@ namespace FarEmerald.PlayForge
         /// <param name="relay">Process Relay</param>
         public abstract void WhenUpdate(ProcessRelay relay);
 
+        public virtual void WhenLateUpdate(ProcessRelay relay) { }
+        
+        public virtual void WhenFixedUpdate(ProcessRelay relay) { }
+        
         /// <summary>
         /// Called via ProcessControl when the process is set to Waiting
         /// </summary>

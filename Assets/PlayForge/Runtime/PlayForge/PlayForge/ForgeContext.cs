@@ -87,6 +87,15 @@
         /// <summary>Tags used in cooldown definitions</summary>
         public const string Cooldown = "Cooldown";
         
+        /// <summary>Tags for impact/damage calculations</summary>
+        public const string Impact = "Impact";
+        
+        /// <summary>Tags for duration-related logic</summary>
+        public const string Duration = "Duration";
+
+        /// <summary>Tags for effect impact retention groups</summary>
+        public const string RetentionGroup = "Impact Retention";
+        
         // ═══════════════════════════════════════════════════════════════════════════
         // Special Contexts
         // ═══════════════════════════════════════════════════════════════════════════
@@ -99,13 +108,5 @@
         
         /// <summary>Tags for debugging/development</summary>
         public const string Debug = "Debug";
-        
-        /// <summary>Tags for impact/damage calculations</summary>
-        public const string Impact = "Impact";
-        
-        /// <summary>Tags for duration-related logic</summary>
-        public const string Duration = "Duration";
-
-        public const string DeltaTimeSource = "DeltaTimeSource";
     }
 }

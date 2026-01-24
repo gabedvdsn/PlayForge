@@ -13,7 +13,7 @@ namespace FarEmerald.PlayForge.Extended.Editor
         // Base class field names to exclude from reflection-based display
         private static readonly HashSet<string> BaseScalerFields = new HashSet<string>
         {
-            "Configuration", "MaxLevel", "LevelValues", "Interpolation", "Scaling"
+            "Configuration", "MaxLevel", "LevelValues", "Interpolation", "Scaling", "Behaviours"
         };
         
         /// <summary>
@@ -195,83 +195,33 @@ namespace FarEmerald.PlayForge.Extended.Editor
         
         private void AddRandomizedScalerProperties(VisualElement content, SerializedProperty property, VisualElement root)
         {
-            var modeProp = property.FindPropertyRelative("VarianceMode");
-            var mode = modeProp != null ? (EVarianceMode)modeProp.enumValueIndex : EVarianceMode.Percentage;
+            var varianceProp = property.FindPropertyRelative("Variance");
             
-            // Mode row
-            var modeRow = CreateRow(4);
-            modeRow.Add(new Label("Variance Mode") { style = { width = 100, color = Colors.LabelText } });
+            var row = CreateRow(4);
+            row.Add(new Label("Variance %") { style = { width = 80, color = Colors.LabelText }, tooltip = "Random ± percentage applied to final value" });
             
-            var modeField = new EnumField(mode);
-            modeField.style.flexGrow = 1;
-            modeField.tooltip = "Percentage: ±% of base\nFlat: ±fixed amount\nMultiplier: random range";
-            modeField.RegisterValueChangedCallback(evt =>
+            var field = new FloatField { value = varianceProp?.floatValue ?? 0.1f };
+            field.style.width = 60;
+            field.tooltip = "0.1 = ±10%";
+            field.RegisterValueChangedCallback(evt =>
             {
-                if (modeProp != null) modeProp.enumValueIndex = Convert.ToInt32(evt.newValue);
+                if (varianceProp != null) varianceProp.floatValue = Mathf.Clamp01(evt.newValue);
                 property.serializedObject.ApplyModifiedProperties();
-                ScheduleRebuild(root, property);
             });
-            modeRow.Add(modeField);
-            content.Add(modeRow);
+            row.Add(field);
             
-            // Mode-specific fields
-            if (mode == EVarianceMode.Multiplier)
+            var slider = new Slider(0f, 1f) { value = varianceProp?.floatValue ?? 0.1f };
+            slider.style.flexGrow = 1;
+            slider.style.marginLeft = 8;
+            slider.RegisterValueChangedCallback(evt =>
             {
-                var row = CreateRow(4);
-                var minMult = property.FindPropertyRelative("MinMultiplier");
-                var maxMult = property.FindPropertyRelative("MaxMultiplier");
-                
-                row.Add(new Label("Range ×") { style = { width = 55, color = Colors.LabelText } });
-                
-                var minField = new FloatField { value = minMult?.floatValue ?? 0.9f };
-                minField.style.width = 50;
-                minField.RegisterValueChangedCallback(evt =>
-                {
-                    if (minMult != null) minMult.floatValue = evt.newValue;
-                    property.serializedObject.ApplyModifiedProperties();
-                });
-                row.Add(minField);
-                
-                row.Add(new Label("→") { style = { marginLeft = 4, marginRight = 4, color = Colors.HintText } });
-                
-                var maxField = new FloatField { value = maxMult?.floatValue ?? 1.1f };
-                maxField.style.width = 50;
-                maxField.RegisterValueChangedCallback(evt =>
-                {
-                    if (maxMult != null) maxMult.floatValue = evt.newValue;
-                    property.serializedObject.ApplyModifiedProperties();
-                });
-                row.Add(maxField);
-                
-                content.Add(row);
-            }
-            else
-            {
-                var row = CreateRow(4);
-                var varProp = property.FindPropertyRelative("Variance");
-                
-                string labelText = mode == EVarianceMode.Percentage ? "Variance" : "Variance ±";
-                row.Add(new Label(labelText) { style = { width = 80, color = Colors.LabelText } });
-                
-                var varField = new Slider(0f, 1f) { value = varProp?.floatValue ?? 0.1f };
-                varField.style.flexGrow = 1;
-                varField.tooltip = mode == EVarianceMode.Percentage ? "0.1 = ±10%" : "Flat amount to add/subtract";
-                
-                var varValueLabel = new Label($"{(varProp?.floatValue ?? 0.1f) * 100f:F0}%");
-                varValueLabel.style.width = 40;
-                varValueLabel.style.unityTextAlign = TextAnchor.MiddleRight;
-                
-                varField.RegisterValueChangedCallback(evt =>
-                {
-                    if (varProp != null) varProp.floatValue = evt.newValue;
-                    varValueLabel.text = $"{evt.newValue * 100f:F0}%";
-                    property.serializedObject.ApplyModifiedProperties();
-                });
-                row.Add(varField);
-                row.Add(varValueLabel);
-                
-                content.Add(row);
-            }
+                field.SetValueWithoutNotify(evt.newValue);
+                if (varianceProp != null) varianceProp.floatValue = evt.newValue;
+                property.serializedObject.ApplyModifiedProperties();
+            });
+            row.Add(slider);
+            
+            content.Add(row);
         }
         
         // ═══════════════════════════════════════════════════════════════════════════════
@@ -280,7 +230,7 @@ namespace FarEmerald.PlayForge.Extended.Editor
         
         private void AddAttributeBackedScalerProperties(VisualElement content, SerializedProperty property, bool isCached)
         {
-            // Attribute reference
+            // Target attribute
             var attrProp = property.FindPropertyRelative("CaptureAttribute");
             if (attrProp != null)
             {
@@ -290,66 +240,44 @@ namespace FarEmerald.PlayForge.Extended.Editor
                 content.Add(attrField);
             }
             
-            // Non-cached version has additional capture settings
-            if (!isCached)
+            // Get from source/target
+            var sourceProp = property.FindPropertyRelative("CaptureFrom");
+            if (sourceProp != null)
             {
-                var fromProp = property.FindPropertyRelative("CaptureFrom");
-                if (fromProp != null)
-                {
-                    var fromField = new PropertyField(fromProp, "Capture From");
-                    fromField.BindProperty(fromProp);
-                    fromField.style.marginBottom = 2;
-                    content.Add(fromField);
-                }
-                
-                var whenProp = property.FindPropertyRelative("CaptureWhen");
-                if (whenProp != null)
-                {
-                    var whenField = new PropertyField(whenProp, "Capture When");
-                    whenField.BindProperty(whenProp);
-                    whenField.style.marginBottom = 2;
-                    content.Add(whenField);
-                }
+                var sourceField = new PropertyField(attrProp, "\tCapture From");
+                sourceField.BindProperty(sourceProp);
+                sourceField.style.marginBottom = 2;
+                content.Add(sourceField);
             }
             
-            // Scaling policy
-            var policyProp = property.FindPropertyRelative("ScalingPolicy");
-            if (policyProp != null)
+            // Which value
+            var whichProp = property.FindPropertyRelative("CaptureWhen");
+            if (whichProp != null)
             {
-                var policyField = new PropertyField(policyProp, "Use Value");
-                policyField.BindProperty(policyProp);
-                policyField.style.marginBottom = 2;
-                content.Add(policyField);
+                var whichField = new PropertyField(whichProp, "\tCapture When");
+                whichField.BindProperty(whichProp);
+                whichField.style.marginBottom = 2;
+                content.Add(whichField);
             }
             
-            // Attribute range
-            var rangeRow = CreateRow(4);
-            var minAttr = property.FindPropertyRelative("AttributeMin");
-            var maxAttr = property.FindPropertyRelative("AttributeMax");
-            
-            rangeRow.Add(new Label("Attr Range") { style = { width = 80, color = Colors.LabelText }, tooltip = "Maps attribute value to 0-1 for curve" });
-            
-            var minField = new FloatField { value = minAttr?.floatValue ?? 0f };
-            minField.style.width = 50;
-            minField.RegisterValueChangedCallback(e =>
+            // Operation
+            var opProp = property.FindPropertyRelative("CaptureWhat");
+            if (opProp != null)
             {
-                if (minAttr != null) minAttr.floatValue = e.newValue;
-                property.serializedObject.ApplyModifiedProperties();
-            });
-            rangeRow.Add(minField);
+                var opField = new PropertyField(opProp, "\tCapture Target");
+                opField.BindProperty(opProp);
+                opField.style.marginBottom = 2;
+                content.Add(opField);
+            }
             
-            rangeRow.Add(new Label("→") { style = { marginLeft = 4, marginRight = 4, color = Colors.HintText } });
-            
-            var maxField = new FloatField { value = maxAttr?.floatValue ?? 100f };
-            maxField.style.width = 50;
-            maxField.RegisterValueChangedCallback(e =>
+            if (isCached)
             {
-                if (maxAttr != null) maxAttr.floatValue = e.newValue;
-                property.serializedObject.ApplyModifiedProperties();
-            });
-            rangeRow.Add(maxField);
-            
-            content.Add(rangeRow);
+                var hintLabel = new Label("(Scaler uses cached attribute values)");
+                hintLabel.style.fontSize = 9;
+                hintLabel.style.color = Colors.AccentGreen;
+                hintLabel.style.unityFontStyleAndWeight = FontStyle.Italic;
+                content.Add(hintLabel);
+            }
         }
         
         // ═══════════════════════════════════════════════════════════════════════════════

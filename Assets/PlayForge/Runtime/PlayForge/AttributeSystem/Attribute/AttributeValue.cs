@@ -93,31 +93,26 @@ namespace FarEmerald.PlayForge
     {
         public Dictionary<IAttributeImpactDerivation, AttributeValue> DerivedValues = new();
         public AttributeValue Value;
-        public AttributeOverflowData Overflow;
-        public AbstractCachedScaler Modifier;
+        public AttributeBlueprint Blueprint;
 
-        public CachedAttributeValue(AttributeOverflowData overflow, AbstractCachedScaler modifier)
+        public static CachedAttributeValue GenerateNull()
         {
-            Overflow = overflow;
-            Modifier = modifier;
+            var cav = new CachedAttributeValue(null, null, default);
+            cav.DerivedValues = null;
+
+            return cav;
         }
-
-        public CachedAttributeValue(Attribute attribute, ISource source, DefaultAttributeValue defaultValue)
+        
+        public CachedAttributeValue(Attribute attribute, ISource source, AttributeBlueprint blueprint)
         {
-            Overflow = defaultValue.Overflow;
-            Modifier = defaultValue.Modifier;
+            Blueprint = blueprint;
             
-            Add(IAttributeImpactDerivation.GenerateSourceDerivation(source, attribute, Tags.RETENTION_DECLARED, Tags.GEN_NOT_APPLICABLE), defaultValue.ToAttributeValue());
+            Add(IAttributeImpactDerivation.GenerateSourceDerivation(source, attribute, blueprint.RetentionGroup, Tags.IGNORE), blueprint.ToAttributeValue());
         }
-
-        public void Refresh()
-        {
-            
-        }
-
+        
         public void Add(IAttributeImpactDerivation derivation, AttributeValue attributeValue)
         {
-            if (derivation.AttributeRetention() != Tags.RETENTION_IGNORE)
+            if (derivation.AttributeRetention() != Tags.IGNORE)
             {
                 if (DerivedValues.ContainsKey(derivation)) DerivedValues[derivation] += attributeValue;
                 else DerivedValues[derivation] = attributeValue;
@@ -128,7 +123,7 @@ namespace FarEmerald.PlayForge
 
         public void Add(IAttributeImpactDerivation derivation, ModifiedAttributeValue modifiedAttributeValue)
         {
-            if (derivation.AttributeRetention() != Tags.RETENTION_IGNORE)
+            if (derivation.AttributeRetention() != Tags.IGNORE)
             {
                 if (DerivedValues.ContainsKey(derivation)) DerivedValues[derivation] = DerivedValues[derivation].ApplyModified(modifiedAttributeValue);
                 else DerivedValues[derivation] = modifiedAttributeValue.ToAttributeValue();
@@ -155,20 +150,94 @@ namespace FarEmerald.PlayForge
             // if (attributeValue.CurrentValue == 0f && attributeValue.BaseValue == 0f) Remove(derivation);
         }
 
-        public void Clean()
+        /// <summary>
+        /// </summary>
+        public void ApplyBounds()
         {
-            List<IAttributeImpactDerivation> toRemove = new List<IAttributeImpactDerivation>();
-            foreach (IAttributeImpactDerivation derivation in DerivedValues.Keys)
+            var newValue = Value;
+            
+            if (Blueprint.Constraints.AutoClamp)
             {
-                if (DerivedValues[derivation].CurrentValue == 0f && DerivedValues[derivation].BaseValue == 0f) toRemove.Add(derivation);
+                switch (Blueprint.Overflow.Policy)
+                {
+                    case EAttributeOverflowPolicy.ZeroToBase:
+                        newValue = new AttributeValue(
+                            Mathf.Clamp(Value.CurrentValue, 0, Value.BaseValue),
+                            Value.BaseValue);
+                        break;
+                    case EAttributeOverflowPolicy.FloorToBase:
+                        newValue = new AttributeValue(
+                            Mathf.Clamp(Value.CurrentValue, Blueprint.Overflow.Floor.CurrentValue, Value.BaseValue),
+                            Value.BaseValue);
+                        break;
+                    case EAttributeOverflowPolicy.ZeroToCeil:
+                        newValue = new AttributeValue(
+                            Mathf.Clamp(Value.CurrentValue, 0, Blueprint.Overflow.Ceil.CurrentValue),
+                            Mathf.Clamp(Value.BaseValue, 0, Blueprint.Overflow.Ceil.BaseValue)
+                        );
+                        break;
+                    case EAttributeOverflowPolicy.FloorToCeil:
+                        newValue = new AttributeValue(
+                            Mathf.Clamp(Value.CurrentValue, Blueprint.Overflow.Floor.CurrentValue, Blueprint.Overflow.Ceil.CurrentValue),
+                            Mathf.Clamp(Value.BaseValue, Blueprint.Overflow.Floor.BaseValue, Blueprint.Overflow.Ceil.BaseValue)
+                        );
+                        break;
+                    case EAttributeOverflowPolicy.Unlimited:
+                        break;
+                    default:
+                        throw new ArgumentOutOfRangeException();
+                }
             }
+            
+            Value = newValue;
+        }
 
-            foreach (IAttributeImpactDerivation derivation in toRemove) Remove(derivation);
+        public void EnforceScaling(WorkerContext ctx)
+        {
+            if (!Blueprint.Constraints.AutoScaleWithBase || Value.BaseValue == 0) return;
+
+            float oldBase = Value.BaseValue - ctx.Change.Value.BaseValue;
+            if (Mathf.Approximately(oldBase, 0f)) return;
+            float proportion = ctx.Change.Value.BaseValue / oldBase;  // change / oldBase
+            
+            float delta = proportion * Value.CurrentValue;
+            
+            var derivation = IAttributeImpactDerivation.GenerateSourceDerivation(
+                ctx.Change.Value, Tags.IGNORE, Tags.IGNORE);
+            var scaleAmount = new SourcedModifiedAttributeValue(derivation, delta, 0f, false);
+            
+            ctx.ActionQueue.Enqueue(new ModifyAttributeAction(
+                ctx.System, ctx.Change.Value.BaseDerivation.GetAttribute(), scaleAmount, false)
+            );
+        }
+
+        public void ApplyRounding()
+        { 
+            var newValue = Blueprint.Constraints.RoundingMode switch
+            {
+                EAttributeRoundingPolicy.None => Value,
+                EAttributeRoundingPolicy.ToFloor => new AttributeValue(
+                    Mathf.Floor(Value.CurrentValue),
+                    Mathf.Floor(Value.BaseValue)),
+                EAttributeRoundingPolicy.ToCeil => new AttributeValue(
+                    Mathf.Ceil(Value.CurrentValue),
+                    Mathf.Ceil(Value.BaseValue)),
+                EAttributeRoundingPolicy.Round => new AttributeValue(
+                    Mathf.Round(Value.CurrentValue),
+                    Mathf.Round(Value.BaseValue)),
+                EAttributeRoundingPolicy.SnapTo => Mathf.Approximately(Blueprint.Constraints.SnapInterval, 0f)
+                ? Value
+                : new AttributeValue(
+                    Mathf.Round(Value.CurrentValue / Blueprint.Constraints.SnapInterval) * Blueprint.Constraints.SnapInterval,
+                    Mathf.Round(Value.BaseValue / Blueprint.Constraints.SnapInterval) * Blueprint.Constraints.SnapInterval),
+                _ => throw new ArgumentOutOfRangeException()
+            };
+
+            Value = newValue;
         }
         
         public void Clamp(AttributeValue ceil)
         {
-            Debug.Log($"Clamping!");
             if (0 <= Value.CurrentValue && Value.CurrentValue <= ceil.CurrentValue && 0 <= Value.BaseValue &&
                 Value.BaseValue <= ceil.BaseValue) return;
             

@@ -31,6 +31,9 @@ namespace FarEmerald.PlayForge
     [Serializable]
     public class AbilityTaskBehaviourStage
     {
+        /// <summary>
+        /// Describes when the Stage should be considered complete
+        /// </summary>
         [SerializeReference]
         public IProxyStagePolicy StagePolicy = new AllProxyStagePolicy();
         
@@ -39,7 +42,7 @@ namespace FarEmerald.PlayForge
         
         [Space(5)]
         
-        [Tooltip("After this stage, should the ability usage effects be applied?")]
+        [Tooltip("At the beginning of this stage, should the ability usage effects be applied?")]
         public bool ApplyUsageEffects;
     }
 

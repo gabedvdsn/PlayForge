@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using Cysharp.Threading.Tasks;
+using UnityEngine;
 using UnityEngine.Assertions;
 
 namespace FarEmerald.PlayForge
@@ -135,16 +136,23 @@ namespace FarEmerald.PlayForge
                 asc.Callbacks.AbilityTaskActivated(AbilityCallbackStatus.GenerateForTask(data, stage.Tasks[i], stage, true));
             }
 
-            var canceled = false;
+            bool canceled = false;
             Exception err = null;
 
             try
             {
                 if (tasks.Length > 0)
                 {
-                    await stage.StagePolicy.AwaitStageActivation(this, 
-                        stage, tasks, data, 
-                        asc.Callbacks, stageCts);
+                    // Add null check for StagePolicy
+                    if (stage.StagePolicy == null)
+                    {
+                        Debug.LogError($"Stage {stageIndex}: StagePolicy is null! Falling back to WhenAll.");
+                        await UniTask.WhenAll(tasks);
+                    }
+                    else
+                    {
+                        await stage.StagePolicy.AwaitStageActivation(this, stage, tasks, data, asc.Callbacks, stageCts);
+                    }
                 }
             }
             catch (OperationCanceledException)
@@ -154,18 +162,22 @@ namespace FarEmerald.PlayForge
             catch (Exception ex)
             {
                 err = ex;
+                Debug.LogError($"Stage {stageIndex} error: {ex}");  // Log errors!
             }
             finally
             {
-                stageCts.Dispose();
                 stageSources.Remove(stageIndex);
-            
-                // If this stage is not maintained (hence stageIndex == StageIndex), then set next stage signal
+                
+                // Signal completion BEFORE disposing
                 if (stageIndex == StageIndex) nextStageSignal?.TrySetResult();
                 else maintainedStages -= 1;
                 
-                await UniTask.SwitchToMainThread(stageToken);
+                // Switch thread using parent token, not the one we're about to dispose
+                await UniTask.SwitchToMainThread(token);
                 asc.Callbacks.AbilityStageEnded(AbilityCallbackStatus.GenerateForStageEvent(data, stage, !canceled && err is null));
+                
+                // Dispose LAST
+                stageCts.Dispose();
             }
         }
         

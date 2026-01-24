@@ -4,11 +4,11 @@ namespace FarEmerald.PlayForge
 {
     public struct AbilityCallbackStatus
     {
-        public AbilityDataPacket Data;
-        public List<AbstractAbilityTask> Tasks;
-        public AbilityTaskBehaviourStage Stage;
-        public IAbilityInjection Injection;
-        public bool Success;
+        public readonly AbilityDataPacket Data;
+        public readonly List<AbstractAbilityTask> Tasks;
+        public readonly AbilityTaskBehaviourStage Stage;
+        public readonly IAbilityInjection Injection;
+        public readonly bool Success;
 
         public AbilitySpec Ability => Data.Spec as AbilitySpec;
         public float TimeElapsed => TimeUtility.Get(Ability.Base.Tags.AssetTag, out float time) ? time : -1f;

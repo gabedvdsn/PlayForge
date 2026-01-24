@@ -45,9 +45,25 @@ namespace FarEmerald.PlayForge.Extended.Editor
             targetRow.Add(impactOpField);
             
             targetSection.Add(targetRow);
+
+            var affSection = CreateSubsection("Affiliation", "Affiliation", Colors.SectionRed);
             
-            var affiliationField = new PropertyField(property.FindPropertyRelative("AffiliationPolicy"), "Affiliation");
-            targetSection.Add(affiliationField);
+            var affiliationField = new PropertyField(property.FindPropertyRelative("AffiliationPolicy"), "Policy");
+            affSection.Add(affiliationField);
+            
+            var affiliationComparisonField = new PropertyField(property.FindPropertyRelative("AffiliationComparison"), "Comparison");
+            affSection.Add(affiliationComparisonField);
+            
+            var affiliationListField = new PropertyField(property.FindPropertyRelative("Affiliations"), "Affiliations");
+            affSection.Add(affiliationListField);
+            
+            affiliationField.RegisterValueChangeCallback(evt =>
+            {
+                EAffiliationPolicy policy = (EAffiliationPolicy)evt.changedProperty.enumValueIndex;
+                affiliationListField.style.display = policy == EAffiliationPolicy.UseAffiliationList ? DisplayStyle.Flex : DisplayStyle.None;
+            });
+            
+            targetSection.Add(affSection);
             
             // ═══════════════════════════════════════════════════════════════════
             // Magnitude Section

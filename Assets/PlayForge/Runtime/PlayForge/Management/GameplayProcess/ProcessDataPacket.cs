@@ -39,14 +39,14 @@ namespace FarEmerald.PlayForge
         public static ProcessDataPacket RootDefault()
         {
             var data = new ProcessDataPacket();
-            data.AddPayload(Tags.PAYLOAD_TRANSFORM, GameRoot.Instance.transform);
+            data.AddPayload(Tags.PARENT_TRANSFORM, GameRoot.Instance.transform);
             return data;
         }
 
         public static ProcessDataPacket RootDefault(IGameplayProcessHandler handler)
         {
             var data = new ProcessDataPacket(handler);
-            data.AddPayload(Tags.PAYLOAD_TRANSFORM, GameRoot.Instance.transform);
+            data.AddPayload(Tags.PARENT_TRANSFORM, GameRoot.Instance.transform);
             return data;
         }
         
@@ -59,7 +59,7 @@ namespace FarEmerald.PlayForge
             var data = new ProcessDataPacket();
             
             if (obj.GetComponentInParent<GameRoot>()) return data;
-            data.AddPayload(Tags.PAYLOAD_TRANSFORM, GameRoot.Instance.transform);
+            data.AddPayload(Tags.PARENT_TRANSFORM, GameRoot.Instance.transform);
             return data;
         }
 
@@ -68,7 +68,7 @@ namespace FarEmerald.PlayForge
             var data = new ProcessDataPacket(handler);
             
             if (obj.GetComponentInParent<GameRoot>()) return data;
-            data.AddPayload(Tags.PAYLOAD_TRANSFORM, GameRoot.Instance.transform);
+            data.AddPayload(Tags.PARENT_TRANSFORM, GameRoot.Instance.transform);
             return data;
         }
 
@@ -76,9 +76,9 @@ namespace FarEmerald.PlayForge
         {
             var data = new ProcessDataPacket();
             
-            data.AddPayload(Tags.PAYLOAD_POSITION, obj.transform.position);
-            data.AddPayload(Tags.PAYLOAD_ROTATION, obj.transform.rotation);
-            data.AddPayload(Tags.PAYLOAD_TRANSFORM, obj.transform.parent);
+            data.AddPayload(Tags.POSITION, obj.transform.position);
+            data.AddPayload(Tags.ROTATION, obj.transform.rotation);
+            data.AddPayload(Tags.PARENT_TRANSFORM, obj.transform.parent);
 
             return data;
         }
@@ -87,9 +87,9 @@ namespace FarEmerald.PlayForge
         {
             var data = new ProcessDataPacket(handler);
             
-            data.AddPayload(Tags.PAYLOAD_POSITION, obj.transform.position);
-            data.AddPayload(Tags.PAYLOAD_ROTATION, obj.transform.rotation);
-            data.AddPayload(Tags.PAYLOAD_TRANSFORM, obj.transform.parent);
+            data.AddPayload(Tags.POSITION, obj.transform.position);
+            data.AddPayload(Tags.ROTATION, obj.transform.rotation);
+            data.AddPayload(Tags.PARENT_TRANSFORM, obj.transform.parent);
 
             return data;
         }

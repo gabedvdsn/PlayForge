@@ -16,7 +16,7 @@ namespace FarEmerald.PlayForge
             Handler = spec.GetOwner();
             
             AddPayload(
-                Tags.PAYLOAD_SOURCE,
+                Tags.SOURCE,
                 spec.GetOwner()
             );
         }
@@ -32,7 +32,7 @@ namespace FarEmerald.PlayForge
             
             if (useImplicitTargeting)
             {
-                data.AddPayload(Tags.PAYLOAD_TARGET, spec.GetOwner());
+                data.AddPayload(Tags.TARGET_REAL, spec.GetOwner());
             }
             
             return data;
@@ -40,8 +40,8 @@ namespace FarEmerald.PlayForge
         
         #region Common
 
-        public bool TryGetTarget(EProxyDataValueTarget policy, out ITarget target) => TryGet(Tags.PAYLOAD_TARGET, policy, out target);
-        public bool TryGetFirstTarget(out ITarget target) => TryGetFirst(Tags.PAYLOAD_TARGET, out target);
+        public bool TryGetTarget(EProxyDataValueTarget policy, out ITarget target) => TryGet(Tags.TARGET_REAL, policy, out target);
+        public bool TryGetFirstTarget(out ITarget target) => TryGetFirst(Tags.TARGET_REAL, out target);
 
         #endregion
     }

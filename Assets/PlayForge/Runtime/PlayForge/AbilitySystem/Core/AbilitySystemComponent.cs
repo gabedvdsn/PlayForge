@@ -5,6 +5,10 @@ using UnityEngine;
 
 namespace FarEmerald.PlayForge
 {
+    /// <summary>
+    /// Manages abilities for an entity.
+    /// Integrates with the worker system for impact processing.
+    /// </summary>
     public class AbilitySystemComponent
     {
         private EAbilityActivationPolicy activationPolicy;
@@ -13,40 +17,45 @@ namespace FarEmerald.PlayForge
 
         public readonly IGameplayAbilitySystem Root;
 
-        private Dictionary<int, AbilitySpecContainer> AbilityCache = new();
-        private Dictionary<EAbilityActivationPolicy, HashSet<int>> ActiveCache = new()
-        {
-            { EAbilityActivationPolicy.NoRestrictions, new() },
-            { EAbilityActivationPolicy.SingleActive, new() },
-            { EAbilityActivationPolicy.SingleActiveQueue, new() }
-        };
+        private Dictionary<int, AbilitySpecContainer> AbilityCache;
+        private Dictionary<EAbilityActivationPolicy, HashSet<int>> ActiveCache;
 
         protected ImpactWorkerCache ImpactWorkerCache;
 
         public AbilitySystemCallbacks Callbacks = new();
+        
+        // Deferred execution context
+        private ActionQueue _actionQueue;
+        private FrameSummary _frameSummary;
 
         public AbilitySystemComponent(IGameplayAbilitySystem root)
         {
             Root = root;
         }
 
-        public bool IsExecuting() => ActiveCache.Keys.Any(IsExecuting);
-        public bool IsExecuting(EAbilityActivationPolicy policy) => ActiveCache[policy].Count > 0;
+        public bool IsExecuting => ActiveCache.Keys.Any(IsExecutingPolicy);
         
-        public bool IsExecutingCritical()
+        public bool IsExecutingPolicy(EAbilityActivationPolicy policy) 
+            => ActiveCache.ContainsKey(policy) && ActiveCache[policy].Count > 0;
+        
+        public bool IsExecutingCritical => IsExecuting && ActiveCache.Keys.Any(IsExecutingPolicyCritical);
+        
+        public bool IsExecutingPolicyCritical(EAbilityActivationPolicy policy)
         {
-            return IsExecuting() && ActiveCache.Keys.Any(IsExecutingCritical);
-        }
-        public bool IsExecutingCritical(EAbilityActivationPolicy policy)
-        {
-            return IsExecuting(policy) && ActiveCache[policy].Any(IsCritical);
+            return IsExecutingPolicy(policy) && ActiveCache[policy].Any(IsCritical);
         }
 
-        public bool IsCritical(int index) => AbilityCache[index].Spec.Base.Proxy.Stages.Any(stage => stage.Tasks.Any(task => task.IsCriticalSection));
+        public bool IsCritical(int index) 
+            => AbilityCache[index].Spec.Base.Behaviour.Stages.Any(
+                stage => stage.Tasks.Any(task => task.IsCriticalSection));
+
+        public int AbilityCount => AbilityCache.Count;
         
         private Queue<AbilityActivationRequest> activationQueue = new();
 
-        public AbilityActivationRequest CreateActivationRequest(int index, EAbilityActivationPolicyExtended policy = EAbilityActivationPolicyExtended.UseLocalPolicy)
+        public AbilityActivationRequest CreateActivationRequest(
+            int index, 
+            EAbilityActivationPolicyExtended policy = EAbilityActivationPolicyExtended.UseLocalPolicy)
         {
             return new AbilityActivationRequest(policy.Translate(this), index);
         }
@@ -95,32 +104,55 @@ namespace FarEmerald.PlayForge
             set => _locked = value;
         }
 
-        public void PreInitialize(EAbilityActivationPolicy activationPolicy, bool allowDuplicateAbilities, List<AbstractImpactWorker> impactWorkers)
+        #region Initialization
+        
+        public void Setup(
+            EAbilityActivationPolicy activationPolicy, 
+            bool allowDuplicateAbilities)
         {
             this.activationPolicy = activationPolicy;
             this.allowDuplicateAbilities = allowDuplicateAbilities;
 
-            ImpactWorkerCache = new ImpactWorkerCache(impactWorkers);
+            ImpactWorkerCache = new ImpactWorkerCache();
+        }
+        
+        /// <summary>
+        /// Set the deferred execution context.
+        /// Must be called after PreInitialize.
+        /// </summary>
+        public void SetDeferredContext(ActionQueue actionQueue, FrameSummary frameSummary)
+        {
+            _actionQueue = actionQueue;
+            _frameSummary = frameSummary;
+            ImpactWorkerCache?.SetDeferredContext(actionQueue, frameSummary);
         }
         
         public void Initialize(List<Ability> startingAbilities)
         {
-            AbilityCache = new Dictionary<int, AbilitySpecContainer>();
-            ActiveCache = new Dictionary<EAbilityActivationPolicy, HashSet<int>>();
+            Enabled = true;
+            Locked = false;
             
-            foreach (Ability ability in startingAbilities)
+            AbilityCache = new Dictionary<int, AbilitySpecContainer>();
+            ActiveCache = new()
             {
-                GiveAbility(ability, ability.StartingLevel, out _);
+                { EAbilityActivationPolicy.AlwaysActivate, new() },
+                { EAbilityActivationPolicy.ActivateIfIdle, new() },
+                { EAbilityActivationPolicy.QueueActivationIfBusy, new() }
+            };
+            
+            foreach (var ability in startingAbilities ?? new List<Ability>())
+            {
+                var result = GiveAbility(ability, ability.StartingLevel, out _);
+                // Debug.Log($"[{Root.GetName()}] Ability {ability.GetName()} given ({result}) at level {ability.StartingLevel}");
             }
 
             foreach (var idx in AbilityCache)
             {
                 InitializeNewAbility(idx.Key, idx.Value.Spec);
             }
-
-            Enabled = true;
-            Locked = false;
         }
+        
+        #endregion
         
         public void SetAbilitiesLevel(int level)
         {
@@ -137,7 +169,14 @@ namespace FarEmerald.PlayForge
             return AbilityCache.Values.Any(c => c.Spec.Base == ability);
         }
 
-        private bool TryGetAbilityContainer(Ability ability, out AbilitySpecContainer container)
+        public List<AbilitySpecContainer> GetAbilityContainers() => AbilityCache.Values.ToList();
+        
+        public bool TryGetAbilityContainer(int index, out AbilitySpecContainer container)
+        {
+            return AbilityCache.TryGetValue(index, out container);
+        }
+        
+        public bool TryGetAbilityContainer(Ability ability, out AbilitySpecContainer container)
         {
             foreach (var _container in AbilityCache.Values.Where(_container => _container.Spec.Base == ability))
             {
@@ -159,10 +198,13 @@ namespace FarEmerald.PlayForge
             abilityIndex = GetFirstAvailableCacheIndex();
             if (abilityIndex < 0) return false;
 
-            AbilitySpecContainer container = new AbilitySpecContainer(ability.Generate(Root, level));
+            var container = new AbilitySpecContainer(ability.Generate(Root, level));
             AbilityCache[abilityIndex] = container;
-
-            HandleTags(ability.Tags.PassiveGrantedTags, true);
+            
+            ability.WorkerGroup?.ProvideWorkersTo(Root);
+            
+            Root.GetTagCache().AddTag(ability.Tags.AssetTag);
+            Root.CompileGrantedTags();
 
             return true;
         }
@@ -171,9 +213,10 @@ namespace FarEmerald.PlayForge
         {
             if (!TryGetCacheIndexOf(ability, out int index)) return false;
             
-            if (AbilityCache[index].IsClaiming) Inject(index, new InterruptInjection());
+            if (AbilityCache[index].IsClaiming) 
+                Inject(index, new InterruptInjection());
             
-            HandleTags(ability.Tags.PassiveGrantedTags, false);
+            Root.CompileGrantedTags();
 
             return AbilityCache.Remove(index);
         }
@@ -208,74 +251,79 @@ namespace FarEmerald.PlayForge
             TryActivateAbility(req);
         }
 
-        private void HandleTags(IEnumerable<Tag> tags, bool flag)
-        {
-            if (flag) Root.GetTagCache().AddTags(tags);
-            else Root.GetTagCache().RemoveTags(tags);
-        }
-
         #endregion
 
         #region Ability Handling
 
-        public bool CanActivateAbility(int index, AbilityDataPacket data)
+        public bool CanActivateAbility(int index)
         {
             return Enabled 
                    && !Locked
-                   && AbilityCache.TryGetValue(index, out AbilitySpecContainer container)
-                   && container.Spec.ValidateActivationRequirements(data)
+                   && AbilityCache.TryGetValue(index, out var container)
+                   && (!container.Spec.Base.IgnoreWhenLevelZero || container.Spec.Level > 0); 
+        }
+        
+        private bool CanActivateAbility(AbilitySpecContainer container, AbilityDataPacket data)
+        {
+            return Enabled 
+                   && !Locked
+                   && container.Spec.ValidateSourceActivationRequirements(data)
                    && (!container.Spec.Base.IgnoreWhenLevelZero || container.Spec.Level > 0);
         }
-
+        
         public bool TryActivateAbility(AbilityActivationRequest req)
         {
             if (!AbilityCache.TryGetValue(req.Index, out var container)) return false;
-            var data = AbilityDataPacket.GenerateFrom(container.Spec, container.Spec.Base.Proxy.UseImplicitTargeting);
-            return CanActivateAbility(req.Index, data) && ProcessActivationRequest(req, data);
+            var data = AbilityDataPacket.GenerateFrom(container.Spec, container.Spec.Base.Behaviour.UseImplicitTargeting);
+            return CanActivateAbility(container, data) && ProcessActivationRequest(req, data);
         }
         
         private bool ProcessActivationRequest(AbilityActivationRequest req, AbilityDataPacket data)
         {
             return req.Policy switch
             {
-                EAbilityActivationPolicy.NoRestrictions => NoRestrictionsTargetingValidation(req.Index) && ActivateAbility(AbilityCache[req.Index], data),
-                EAbilityActivationPolicy.SingleActive => ! IsExecutingCritical(EAbilityActivationPolicy.SingleActive) && ActivateAbility(AbilityCache[req.Index], data),
-                EAbilityActivationPolicy.SingleActiveQueue => !IsExecutingCritical(EAbilityActivationPolicy.SingleActiveQueue) ? ActivateAbility(AbilityCache[req.Index], data) : QueueAbilityActivation(req.Index),
+                EAbilityActivationPolicy.AlwaysActivate => 
+                    AlwaysActivateTargetingValidation(req.Index) && 
+                    ActivateAbility(AbilityCache[req.Index], data),
+                    
+                EAbilityActivationPolicy.ActivateIfIdle => 
+                    !IsExecutingPolicyCritical(EAbilityActivationPolicy.ActivateIfIdle) && 
+                    ActivateAbility(AbilityCache[req.Index], data),
+                    
+                EAbilityActivationPolicy.QueueActivationIfBusy => 
+                    !IsExecutingPolicyCritical(EAbilityActivationPolicy.QueueActivationIfBusy) 
+                        ? ActivateAbility(AbilityCache[req.Index], data) 
+                        : QueueAbilityActivation(req.Index),
+                        
                 _ => throw new ArgumentOutOfRangeException()
             };
         }
         
-        /// <summary>
-        /// Ensures that the same targeting proxy task is not active at the same time when using NoRestrictions policy.
-        /// </summary>
-        /// <param name="abilityIndex">Index of the activated ability</param>
-        /// <returns></returns>
-        private bool NoRestrictionsTargetingValidation(int abilityIndex)
+        private bool AlwaysActivateTargetingValidation(int abilityIndex)
         {
-            if (!IsExecutingCritical(EAbilityActivationPolicy.NoRestrictions)) return true;
+            if (!IsExecutingPolicyCritical(EAbilityActivationPolicy.AlwaysActivate)) return true;
             return !IsCritical(abilityIndex);
         }
 
         private bool ActivateAbility(AbilitySpecContainer container, AbilityDataPacket data)
         {
-            container.Spec.ApplyUsageEffects();
             return container.ActivateAbility(data);
         }
 
         private bool QueueAbilityActivation(int abilityIndex)
         {
             activationQueue.Enqueue(new AbilityActivationRequest(AbilityCache[abilityIndex].Spec, abilityIndex));
-
             return true;
         }
 
         private void ClearAbilityCache()
         {
-            if (AbilityCache is null) return;
+            if (AbilityCache == null) return;
 
             foreach (var policy in ActiveCache.Keys)
             {
-                foreach (int index in ActiveCache[policy]) AbilityCache[index].Inject(new InterruptInjection());
+                foreach (int index in ActiveCache[policy]) 
+                    AbilityCache[index].Inject(new InterruptInjection());
                 ActiveCache[policy].Clear();
             }
 
@@ -298,8 +346,8 @@ namespace FarEmerald.PlayForge
         {
             foreach (int index in ActiveCache[policy])
             {
-                // Cleanup -- make sure non-active, claiming abilities are released (this should never occur anyway)
-                if (!AbilityCache[index].IsClaiming) ReleaseClaim(AbilityCache[index], null);
+                if (!AbilityCache[index].IsClaiming) 
+                    ReleaseClaim(AbilityCache[index], null);
                 AbilityCache[index].Inject(injection);
             }
         }
@@ -312,15 +360,9 @@ namespace FarEmerald.PlayForge
             }
         }
 
-        /// <summary>
-        /// The ability container claims runtime over the ASC
-        /// </summary>
-        /// <param name="container">The claiming container</param>
-        /// <param name="data"></param>
-        /// <returns>Whether or not the ASC was successfully claimed</returns>
         public bool ClaimActive(AbilitySpecContainer container, AbilityDataPacket data)
         {
-            if (!TryGetCacheIndexOf(container.Spec.Base, out var index)) return false;
+            if (!TryGetCacheIndexOf(container.Spec.Base, out int index)) return false;
             
             TimeUtility.Start(container.Spec.Base.Tags.AssetTag);
             Callbacks.AbilityActivated(AbilityCallbackStatus.GenerateForAbilityEvent(data));
@@ -332,92 +374,105 @@ namespace FarEmerald.PlayForge
 
         public void ReleaseClaim(AbilitySpecContainer container, AbilityDataPacket data)
         {
-            if (!TryGetCacheIndexOf(container.Spec.Base, out var index)) return;
+            if (!TryGetCacheIndexOf(container.Spec.Base, out int index)) return;
 
             var policy = AbilityCache[index].Spec.Base.Definition.ActivationPolicy.Translate(this);
             ActiveCache[policy].Remove(index);
 
             TimeUtility.End(container.Spec.Base.Tags.AssetTag, out _);
             
-            if (data is null) return;
+            if (data == null) return;
             
             Callbacks.AbilityEnded(AbilityCallbackStatus.GenerateForAbilityEvent(data));
             
-            if (policy == EAbilityActivationPolicy.SingleActiveQueue && activationQueue.Count > 0) TryActivateAbility(activationQueue.Dequeue());
+            if (policy == EAbilityActivationPolicy.QueueActivationIfBusy && activationQueue.Count > 0) 
+                TryActivateAbility(activationQueue.Dequeue());
         }
 
         #endregion
 
         #region Impact Workers
 
-        public void ProvideFrameImpactDealt(AbilityImpactData impactData, bool runWorkers = true)
+        /// <summary>
+        /// Process impact data through workers and callbacks.
+        /// Inline workers execute immediately, deferred workers queue actions.
+        /// </summary>
+        public void ProvideFrameImpactDealt(ImpactData impactData, bool runWorkers = true)
         {
+            // Track impact on derivation
             impactData.SourcedModifier.BaseDerivation.TrackImpact(impactData);
-            impactData.SourcedModifier.BaseDerivation.RunEffectImpactWorkers(impactData);
             
-            if (runWorkers) ImpactWorkerCache.RunImpactData(impactData);
+            // Run effect-specific workers
+            var effectContext = new EffectWorkerContext(
+                Root, impactData.SourcedModifier.BaseDerivation, 
+                Root.GetFrameSummary(), Root.GetActionQueue(), 
+                1, impactData);
+            impactData.SourcedModifier.BaseDerivation.RunWorkerImpact(effectContext);
+            
+            // Run global impact workers
+            if (runWorkers)
+            {
+                ImpactWorkerCache.RunImpactData(impactData);
+            }
         }
-
-        #endregion
-
-        #region Native
-
-        private void OnDestroy()
-        {
-            ClearAbilityCache();
-        }
-
-        #endregion
         
-        private abstract class AbstractAbilityCacheLayer
+        /// <summary>
+        /// Register an impact worker.
+        /// </summary>
+        public void ProvideWorker(AbstractImpactWorker worker)
         {
-            public bool locked;
-
-            public abstract AbilitySpecContainer[] GetActiveContainer();
-            public abstract void SetActiveContainer(AbilitySpecContainer container);
+            ImpactWorkerCache?.ProvideWorker(worker);
+        }
+        
+        /// <summary>
+        /// Unregister an impact worker.
+        /// </summary>
+        public void RemoveWorker(AbstractImpactWorker worker)
+        {
+            ImpactWorkerCache?.RemoveWorker(worker);
         }
 
-        private class SingleActiveAbilityCacheLayer : AbstractAbilityCacheLayer
-        {
-            private AbilitySpecContainer activeContainer;
-
-            public override AbilitySpecContainer[] GetActiveContainer()
-            {
-                return new[] { activeContainer };
-            }
-            public override void SetActiveContainer(AbilitySpecContainer container)
-            {
-                activeContainer = container;
-            }
-        }
-
-        private class ManyActiveAbilityCacheLayer : AbstractAbilityCacheLayer
-        {
-            private List<AbilitySpecContainer> activeContainers = new();
-            
-            public override AbilitySpecContainer[] GetActiveContainer()
-            {
-                return activeContainers.ToArray();
-            }
-            public override void SetActiveContainer(AbilitySpecContainer container)
-            {
-                activeContainers.Add(container);
-            }
-        }
+        #endregion
     }
 
     public enum EAbilityActivationPolicy
     {
-        NoRestrictions,  // Always able to activate any available ability
-        SingleActive,  // Only able to activate one ability at a time
-        SingleActiveQueue  // Only able to activate one ability at a time, but subsequent activations are queued (queue is cleared in the same moment that targeting tasks are cancelled)
+        /// <summary>
+        /// Do not restrict activation attempts to this ability
+        /// </summary>
+        AlwaysActivate,
+        
+        /// <summary>
+        /// Activate this ability only if ability system is idle
+        /// </summary>
+        ActivateIfIdle, 
+        
+        /// <summary>
+        /// If ability system is busy, queue activation attempt
+        /// </summary>
+        QueueActivationIfBusy
     }
 
     public enum EAbilityActivationPolicyExtended
     {
+        /// <summary>
+        /// Use whatever the local source policy is
+        /// </summary>
         UseLocalPolicy,
-        NoRestrictions,
-        SingleActive,
-        SingleActiveQueue
+        
+        /// <summary>
+        /// Do not restrict activation attempts to this ability
+        /// </summary>
+        AlwaysActivate,
+        
+        /// <summary>
+        /// Activate this ability only if ability system is idle
+        /// </summary>
+        ActivateIfIdle,
+        
+        /// <summary>
+        /// If ability system is busy, queue activation attempt
+        /// </summary>
+        QueueActivationIfBusy
     }
 }

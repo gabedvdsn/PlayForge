@@ -70,7 +70,7 @@ namespace FarEmerald.PlayForge
         }
         public override bool IsInitialized()
         {
-            return Process.IsInitialized();
+            return Process.IsInitialized;
         }
         public override string ProcessName => Process.ProcessName;
         public override EProcessStepPriorityMethod PriorityMethod => Process.PriorityMethod;

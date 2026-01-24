@@ -6,8 +6,11 @@ using UnityEngine;
 namespace FarEmerald.PlayForge.Extended.Editor
 {
     [CustomPropertyDrawer(typeof(AbstractTargetingAbilityTask))]
-    public class TargetingTaskDrawer : AbstractTypeRefDrawer<AbstractTargetingAbilityTask>
+    public class TargetingTaskDrawer : AbstractGenericDrawer<AbstractTargetingAbilityTask>
     {
-        
+        protected override bool AcceptOpen(SerializedProperty prop)
+        {
+            return false;
+        }
     }
 }

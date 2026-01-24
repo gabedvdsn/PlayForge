@@ -25,11 +25,15 @@ namespace FarEmerald.PlayForge
         [SerializeReference]
         public List<AttributeSet> SubSets;
         public EValueCollisionPolicy CollisionResolutionPolicy = EValueCollisionPolicy.UseMaximum;
+
+        public StandardWorkerGroup WorkerGroup;
         
         public void Initialize(AttributeSystemComponent system)
         {
             AttributeSetMeta meta = new AttributeSetMeta(this);
             meta.InitializeAttributeSystem(system, this);
+
+            WorkerGroup.ProvideWorkersTo(system.Root);
         }
 
         public HashSet<Attribute> GetUnique()
@@ -40,12 +44,15 @@ namespace FarEmerald.PlayForge
                 attributes.Add(attr.Attribute);
             }
 
-            foreach (var subSet in SubSets)
+            if (SubSets is not null)
             {
-                if (subSet is null || subSet == this) continue;
-                foreach (var unique in subSet.GetUnique())
+                foreach (var subSet in SubSets)
                 {
-                    attributes.Add(unique);
+                    if (subSet is null || subSet == this) continue;
+                    foreach (var unique in subSet.GetUnique())
+                    {
+                        attributes.Add(unique);
+                    }
                 }
             }
 
@@ -55,14 +62,27 @@ namespace FarEmerald.PlayForge
         {
             return Name;
         }
+        public override IEnumerable<Tag> GetGrantedTags()
+        {
+            yield return AssetTag;
+            foreach (var subset in SubSets)
+            {
+                foreach (var t in subset.GetGrantedTags()) yield return t;
+            }
+        }
         public string GetDescription()
         {
             return Description;
         }
         public Texture2D GetPrimaryIcon()
         {
+            foreach (var ti in Textures)
+            {
+                if (ti.Tag == PlayForge.Tags.PRIMARY) return ti.Texture;
+            }
             return Textures.Count > 0 ? Textures[0].Texture : null;
         }
+        
     }
     
     public enum ELimitedEffectImpactTarget
@@ -72,48 +92,55 @@ namespace FarEmerald.PlayForge
     }
     
     [Serializable]
-    public struct AttributeSetElement
+    public class AttributeSetElement
     {
         // [Header("Attribute Declaration")]
         
         public Attribute Attribute;
         public float Magnitude;
-        [SerializeReference] public AbstractCachedScaler Modifier;
+        [SerializeReference] public AbstractCachedScaler Scaling;
         
         public ELimitedEffectImpactTarget Target;
         public AttributeOverflowData Overflow;
-        
-        [Header("Multiple Set Collision")]
+
+        [ForgeTagContext(ForgeContext.RetentionGroup)]
+        public Tag RetentionGroup = Tags.DEFAULT;
         
         public EAttributeElementCollisionPolicy CollisionPolicy;
 
-        public DefaultAttributeValue ToDefaultAttribute()
+        public AttributeConstraints Constraints = new();
+
+        public AttributeBlueprint ToAttributeBlueprint()
         {
             return Target switch
             {
-                ELimitedEffectImpactTarget.CurrentAndBase => new DefaultAttributeValue(new ModifiedAttributeValue(Magnitude, Magnitude), Overflow, Modifier),
-                ELimitedEffectImpactTarget.Base => new DefaultAttributeValue(new ModifiedAttributeValue(0, Magnitude), Overflow, Modifier),
+                ELimitedEffectImpactTarget.CurrentAndBase => new AttributeBlueprint(new ModifiedAttributeValue(Magnitude, Magnitude), Overflow, Constraints, Scaling, RetentionGroup),
+                ELimitedEffectImpactTarget.Base => new AttributeBlueprint(new ModifiedAttributeValue(0, Magnitude), Overflow, Constraints, Scaling, RetentionGroup),
                 _ => throw new ArgumentOutOfRangeException()
             };
         }
     }
 
-    public struct DefaultAttributeValue
+    public struct AttributeBlueprint
     {
         public ModifiedAttributeValue DefaultValue;
         public AttributeOverflowData Overflow;
+        public AttributeConstraints Constraints;
         public AbstractCachedScaler Modifier;
+        public Tag RetentionGroup;
 
-        public DefaultAttributeValue(ModifiedAttributeValue defaultValue, AttributeOverflowData overflow, AbstractCachedScaler modifier)
+        public AttributeBlueprint(ModifiedAttributeValue defaultValue, AttributeOverflowData overflow, AttributeConstraints constraints, AbstractCachedScaler modifier, Tag retentionGroup)
         {
             DefaultValue = defaultValue;
             Overflow = overflow;
+            Constraints = constraints;
             Modifier = modifier;
+            RetentionGroup = retentionGroup;
         }
 
-        public DefaultAttributeValue Combine(DefaultAttributeValue other)
+        public AttributeBlueprint Combine(AttributeBlueprint other)
         {
-            return new DefaultAttributeValue(DefaultValue.Combine(other.DefaultValue), Overflow, Modifier);
+            return new AttributeBlueprint(DefaultValue.Combine(other.DefaultValue), Overflow, Constraints, Modifier, RetentionGroup);
         }
 
         public AttributeValue ToAttributeValue() => DefaultValue.ToAttributeValue();
@@ -134,6 +161,20 @@ namespace FarEmerald.PlayForge
         public AttributeValue Floor;
         public AttributeValue Ceil;
     }
+    
+    [Serializable]
+    public class AttributeConstraints
+    {
+        [Tooltip("Auto clamp attribute values that fall outside of bounds")]
+        public bool AutoClamp = true;  // Use Overflow data for clamping
+    
+        [Tooltip("Auto scale current value to changes in base value")]
+        public bool AutoScaleWithBase;
+    
+        [Tooltip("Round attribute values after changes are applied. Will artificially increase/decrease attribute impact.")]
+        public EAttributeRoundingPolicy RoundingMode;
+        public float SnapInterval;  // For Snap mode
+    }
 
     public enum EAttributeOverflowPolicy
     {
@@ -144,30 +185,41 @@ namespace FarEmerald.PlayForge
         Unlimited
     }
 
+    public enum EAttributeRoundingPolicy
+    {
+        None,
+        ToFloor,
+        ToCeil,
+        Round,
+        SnapTo
+    }
+
     public class AttributeSetMeta
     {
-        private Dictionary<Attribute, Dictionary<EAttributeElementCollisionPolicy, List<DefaultAttributeValue>>> matrix; 
+        private Dictionary<Attribute, Dictionary<EAttributeElementCollisionPolicy, List<AttributeBlueprint>>> matrix; 
 
         public AttributeSetMeta(AttributeSet attributeSet)
         {
-            matrix = new Dictionary<Attribute, Dictionary<EAttributeElementCollisionPolicy, List<DefaultAttributeValue>>>();
+            matrix = new Dictionary<Attribute, Dictionary<EAttributeElementCollisionPolicy, List<AttributeBlueprint>>>();
             HandleAttributeSet(attributeSet);
         }
 
         private void HandleAttributeSet(AttributeSet attributeSet)
         {
+            if (!attributeSet) return;
+            
             foreach (AttributeSetElement element in attributeSet.Attributes)
             {
                 if (!matrix.TryGetValue(element.Attribute, out var table))
                 {
-                    table = matrix[element.Attribute] = new Dictionary<EAttributeElementCollisionPolicy, List<DefaultAttributeValue>>();
+                    table = matrix[element.Attribute] = new();
                 }
 
                 if (!table.ContainsKey(element.CollisionPolicy))
                 {
-                    matrix[element.Attribute][element.CollisionPolicy] = new List<DefaultAttributeValue> { element.ToDefaultAttribute() };
+                    matrix[element.Attribute][element.CollisionPolicy] = new List<AttributeBlueprint>() { element.ToAttributeBlueprint() };
                 }
-                else matrix[element.Attribute][element.CollisionPolicy].Add(element.ToDefaultAttribute());
+                else matrix[element.Attribute][element.CollisionPolicy].Add(element.ToAttributeBlueprint());
             }
             
             foreach (AttributeSet subSet in attributeSet.SubSets) HandleAttributeSet(subSet);
@@ -187,10 +239,10 @@ namespace FarEmerald.PlayForge
                 }
                 else if (matrix[attribute].TryGetValue(EAttributeElementCollisionPolicy.Combine, out defaults))
                 {
-                    DefaultAttributeValue defaultValue = new DefaultAttributeValue();
-                    foreach (DefaultAttributeValue metaMav in defaults) defaultValue = defaultValue.Combine(metaMav);
+                    var blueprint = new AttributeBlueprint();
+                    foreach (var bp in defaults) blueprint = blueprint.Combine(bp);
 
-                    system.ProvideAttribute(attribute, defaultValue);
+                    system.ProvideAttribute(attribute, blueprint);
                 }
                 else if (matrix[attribute].TryGetValue(EAttributeElementCollisionPolicy.UseExisting, out defaults))
                 {
@@ -199,7 +251,7 @@ namespace FarEmerald.PlayForge
             }
         }
 
-        private void InitializeAggregatePolicy(AttributeSystemComponent system, Attribute attribute, List<DefaultAttributeValue> defaults, EValueCollisionPolicy resolution)
+        private void InitializeAggregatePolicy(AttributeSystemComponent system, Attribute attribute, List<AttributeBlueprint> defaults, EValueCollisionPolicy resolution)
         {
             switch (resolution)
             {
@@ -208,28 +260,37 @@ namespace FarEmerald.PlayForge
                     float _current = defaults.Average(mav => mav.DefaultValue.DeltaCurrentValue);
                     float _base = defaults.Average(mav => mav.DefaultValue.DeltaBaseValue);
 
-                    system.ProvideAttribute(attribute, new DefaultAttributeValue(new ModifiedAttributeValue(_current, _base), defaults[0].Overflow, defaults[0].Modifier));
+                    system.ProvideAttribute(attribute,
+                        new AttributeBlueprint(
+                            new ModifiedAttributeValue(_current, _base),
+                            defaults[0].Overflow, defaults[0].Constraints, defaults[0].Modifier, defaults[0].RetentionGroup)
+                    );
                     break;
                 }
                 case EValueCollisionPolicy.UseMaximum:
                 {
-                    float _current = defaults.Max(mav => mav.DefaultValue.DeltaCurrentValue);
-                    float _base = defaults.Max(mav => mav.DefaultValue.DeltaBaseValue);
-
-                    system.ProvideAttribute(attribute, new DefaultAttributeValue(new ModifiedAttributeValue(_current, _base), defaults[0].Overflow, defaults[0].Modifier));
+                    int idx = defaults.IndexMax(mav => mav.DefaultValue.DeltaBaseValue);
+                    system.ProvideAttribute(attribute, defaults[idx]);
                     break;
                 }
                 case EValueCollisionPolicy.UseMinimum:
                 {
-                    float _current = defaults.Min(mav => mav.DefaultValue.DeltaCurrentValue);
-                    float _base = defaults.Min(mav => mav.DefaultValue.DeltaBaseValue);
-
-                    system.ProvideAttribute(attribute, new DefaultAttributeValue(new ModifiedAttributeValue(_current, _base), defaults[0].Overflow, defaults[0].Modifier));
+                    int idx = defaults.IndexMin(mav => mav.DefaultValue.DeltaBaseValue);
+                    system.ProvideAttribute(attribute, defaults[idx]);
                     break;
                 }
-                // TODO
                 case EValueCollisionPolicy.UseFirst:
+                {
+                    var bp = defaults.First();
+                    system.ProvideAttribute(attribute, bp);
+                    break;
+                }
                 case EValueCollisionPolicy.UseLast:
+                {
+                    var bp = defaults.Last();
+                    system.ProvideAttribute(attribute, bp);
+                    break;
+                }
                 default:
                     throw new ArgumentOutOfRangeException(nameof(resolution), resolution, null);
             }

@@ -7,6 +7,8 @@ namespace FarEmerald.PlayForge
     {
         public List<Tag> GetContextTags();
         public TagCache GetTagCache();
+        public ActionQueue GetActionQueue();
+        public FrameSummary GetFrameSummary();
         public Tag GetAssetTag();
         public int GetLevel();
         public int GetMaxLevel();

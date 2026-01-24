@@ -17,5 +17,6 @@ namespace FarEmerald.PlayForge
         {
             return EvaluateFromSpec(spec);
         }
+
     }
 }

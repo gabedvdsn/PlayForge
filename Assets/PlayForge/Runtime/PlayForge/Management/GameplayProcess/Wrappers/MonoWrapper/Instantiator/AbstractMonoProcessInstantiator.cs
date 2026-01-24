@@ -4,7 +4,7 @@ namespace FarEmerald.PlayForge
 {
     public abstract class AbstractMonoProcessInstantiator
     {
-        public AbstractMonoProcess Create(AbstractMonoProcess process, ProcessDataPacket data)
+        public AbstractMonoProcess Create(AbstractMonoProcess process, ProcessDataPacket data, bool isInstantiated)
         {
             return process.gameObject.scene.name is not null 
                 ? PrepareExisting(process, data) 
@@ -33,5 +33,10 @@ namespace FarEmerald.PlayForge
         /// </summary>
         /// <param name="process">The MonoBehaviour process being cleaned</param>
         public abstract void CleanProcess(AbstractMonoProcess process);
+
+        protected bool ProcessIsSceneActive(AbstractMonoProcess process)
+        {
+            return process.gameObject.scene.IsValid();
+        }
     }
 }

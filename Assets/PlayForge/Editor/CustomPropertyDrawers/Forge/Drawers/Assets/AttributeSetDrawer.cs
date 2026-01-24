@@ -16,7 +16,8 @@ namespace FarEmerald.PlayForge.Extended.Editor
         }
         protected override string GetStringValue(SerializedProperty prop, AttributeSet value)
         {
-            return prop.serializedObject.targetObject.name;
+            string l = value != null ? value.GetName() ?? "<None>" : "<None>";
+            return string.IsNullOrEmpty(l) ? "<Unnamed>" : l;
         }
         protected override void SetValue(SerializedProperty prop, AttributeSet value)
         {
@@ -30,6 +31,10 @@ namespace FarEmerald.PlayForge.Extended.Editor
         {
             if (prop.isArray) return null;
             return new Label(prop.name);
+        }
+        protected override bool AcceptClear()
+        {
+            return true;
         }
     }
 }

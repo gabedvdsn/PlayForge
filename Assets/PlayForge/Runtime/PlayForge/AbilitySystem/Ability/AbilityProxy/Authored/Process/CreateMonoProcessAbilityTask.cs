@@ -9,8 +9,14 @@ namespace FarEmerald.PlayForge
 {
     public class CreateMonoProcessAbilityTask : AbstractCreateProcessAbilityTask
     {
-        protected List<AbstractMonoProcess> MonoProcesses;
-        
+        [SerializeReference] public List<AbstractMonoProcess> MonoProcesses = new();
+
+        public CreateMonoProcessAbilityTask()
+        {
+        }
+
+        public override string Description => "Register & instantiate mono processes";
+
         public CreateMonoProcessAbilityTask(List<AbstractMonoProcess> monoProcesses)
         {
             MonoProcesses = monoProcesses;

@@ -23,7 +23,7 @@ public class PlayForgeTesting : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-        if (Target.TryGetAttributeValue(SliderAttribute, out AttributeValue value))
+        /*if (Target.TryGetAttributeValue(SliderAttribute, out AttributeValue value))
         {
             HealthSlider.value = Mathf.Lerp(HealthSlider.value, value.Ratio, Time.deltaTime * 5f);
             AttributeText.text = $"{value.CurrentValue} / {value.BaseValue}";
@@ -47,6 +47,6 @@ public class PlayForgeTesting : MonoBehaviour
         if (Input.GetKeyDown(KeyCode.R) && Effects.Count > 3)
         {
             Target.ApplyGameplayEffect(Effects[3].Generate(IEffectOrigin.GenerateSourceDerivation(GameRoot.Instance), GameRoot.Instance));
-        }
+        }*/
     }
 }

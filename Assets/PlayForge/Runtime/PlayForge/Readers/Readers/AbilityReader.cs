@@ -11,10 +11,10 @@ namespace FarEmerald.PlayForge
         
         public override void WhenUpdate(ProcessRelay relay)
         {
-            if (target == Tags.NULL) return;
+            if (target == Tags.NONE) return;
 
             var cooldown = Source.GetLongestDurationFor(target);
-            if (!cooldown.Valid) return;
+            if (!cooldown.FoundDuration) return;
             
             // ...
         }

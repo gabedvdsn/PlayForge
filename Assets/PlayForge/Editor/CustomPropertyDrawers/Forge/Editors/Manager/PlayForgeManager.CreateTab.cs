@@ -475,6 +475,9 @@ namespace FarEmerald.PlayForge.Extended.Editor
             // Set the display name on the asset (after template copy so it's not overwritten)
             SetAssetName(asset, assetName);
             
+            // Apply type-specific settings from preferences
+            ApplyTypeSpecificSettings(asset);
+            
             // Generate unique file path
             var fullPath = $"{assetPath}/{sanitizedFileName}.asset";
             fullPath = AssetDatabase.GenerateUniqueAssetPath(fullPath);
@@ -513,9 +516,12 @@ namespace FarEmerald.PlayForge.Extended.Editor
             
             // Try Definition.Name pattern (used by Ability, GameplayEffect, etc.)
             var defField = assetType.GetField("Definition", flags);
+            Debug.Log(defField);
+            
             if (defField != null)
             {
                 var def = defField.GetValue(asset);
+                Debug.Log(def);
                 if (def != null)
                 {
                     var nameField = def.GetType().GetField("Name", flags);
@@ -549,6 +555,239 @@ namespace FarEmerald.PlayForge.Extended.Editor
             {
                 displayNameField.SetValue(asset, name);
             }
+        }
+        
+        /// <summary>
+        /// Applies type-specific settings from EditorPrefs to a newly created asset.
+        /// </summary>
+        private void ApplyTypeSpecificSettings(ScriptableObject asset)
+        {
+            if (asset == null) return;
+            
+            var so = new SerializedObject(asset);
+            bool modified = false;
+            
+            switch (asset)
+            {
+                case Ability ability:
+                    modified = ApplyAbilitySettings(so);
+                    break;
+                case GameplayEffect effect:
+                    modified = ApplyEffectSettings(so);
+                    break;
+                case Item item:
+                    modified = ApplyItemSettings(so);
+                    break;
+                case EntityIdentity entity:
+                    modified = ApplyEntitySettings(so);
+                    break;
+                case AttributeSet attrSet:
+                    modified = ApplyAttributeSetSettings(so);
+                    break;
+                case Attribute attr:
+                    modified = ApplyAttributeSettings(so);
+                    break;
+                case ScalerTemplate scalerTemplate:
+                    modified = ApplyScalerTemplateSettings(so);
+                    break;
+                case RequirementTemplate reqTemplate:
+                    modified = ApplyRequirementTemplateSettings(so);
+                    break;
+            }
+            
+            if (modified)
+            {
+                so.ApplyModifiedPropertiesWithoutUndo();
+            }
+        }
+        
+        private bool ApplyAbilitySettings(SerializedObject so)
+        {
+            bool modified = false;
+            
+            // Auto-set starting level
+            if (EditorPrefs.GetBool(PlayForgeManager.PREFS_PREFIX + "Ability_AutoLevel", true))
+            {
+                var levelProp = so.FindProperty("Level");
+                if (levelProp != null)
+                {
+                    var currentProp = levelProp.FindPropertyRelative("Current");
+                    if (currentProp != null)
+                    {
+                        currentProp.intValue = 1;
+                        modified = true;
+                    }
+                }
+            }
+            
+            // Auto-initialize cooldown
+            if (EditorPrefs.GetBool(PlayForgeManager.PREFS_PREFIX + "Ability_AutoCooldown", false))
+            {
+                var cooldownProp = so.FindProperty("Cooldown");
+                if (cooldownProp != null)
+                {
+                    var durationProp = cooldownProp.FindPropertyRelative("Duration");
+                    if (durationProp != null)
+                    {
+                        durationProp.floatValue = EditorPrefs.GetFloat(PlayForgeManager.PREFS_PREFIX + "Ability_DefaultCooldown", 1f);
+                        modified = true;
+                    }
+                }
+            }
+            
+            // Auto-initialize cost
+            if (EditorPrefs.GetBool(PlayForgeManager.PREFS_PREFIX + "Ability_AutoCost", false))
+            {
+                // Cost initialization would go here based on your cost structure
+                modified = true;
+            }
+            
+            return modified;
+        }
+        
+        private bool ApplyEffectSettings(SerializedObject so)
+        {
+            bool modified = false;
+            
+            // Default duration policy
+            var durationPolicy = EditorPrefs.GetInt(PlayForgeManager.PREFS_PREFIX + "Effect_DurationPolicy", -1);
+            if (durationPolicy >= 0)
+            {
+                var policyProp = so.FindProperty("Definition.DurationPolicy");
+                if (policyProp != null)
+                {
+                    policyProp.enumValueIndex = durationPolicy;
+                    modified = true;
+                }
+            }
+            
+            // Default stacking policy
+            var stackingPolicy = EditorPrefs.GetInt(PlayForgeManager.PREFS_PREFIX + "Effect_StackingPolicy", -1);
+            if (stackingPolicy >= 0)
+            {
+                var stackProp = so.FindProperty("Stacking.StackingType");
+                if (stackProp != null)
+                {
+                    stackProp.enumValueIndex = stackingPolicy;
+                    modified = true;
+                }
+            }
+            
+            return modified;
+        }
+        
+        private bool ApplyItemSettings(SerializedObject so)
+        {
+            bool modified = false;
+            
+            // Default max stack
+            if (EditorPrefs.GetBool(PlayForgeManager.PREFS_PREFIX + "Item_AutoMaxStack", false))
+            {
+                var maxStackProp = so.FindProperty("ItemDefinition.MaxStack");
+                if (maxStackProp != null)
+                {
+                    maxStackProp.intValue = EditorPrefs.GetInt(PlayForgeManager.PREFS_PREFIX + "Item_DefaultMaxStack", 1);
+                    modified = true;
+                }
+            }
+            
+            // Default item type
+            var itemType = EditorPrefs.GetInt(PlayForgeManager.PREFS_PREFIX + "Item_DefaultType", -1);
+            if (itemType >= 0)
+            {
+                var typeProp = so.FindProperty("ItemDefinition.ItemType");
+                if (typeProp != null)
+                {
+                    typeProp.enumValueIndex = itemType;
+                    modified = true;
+                }
+            }
+            
+            return modified;
+        }
+        
+        private bool ApplyEntitySettings(SerializedObject so)
+        {
+            bool modified = false;
+            
+            // Auto-set starting level
+            if (EditorPrefs.GetBool(PlayForgeManager.PREFS_PREFIX + "Entity_AutoLevel", true))
+            {
+                var levelProp = so.FindProperty("Level");
+                if (levelProp != null)
+                {
+                    var currentProp = levelProp.FindPropertyRelative("Current");
+                    if (currentProp != null)
+                    {
+                        currentProp.intValue = 1;
+                        modified = true;
+                    }
+                }
+            }
+            
+            return modified;
+        }
+        
+        private bool ApplyAttributeSetSettings(SerializedObject so)
+        {
+            // No default settings for AttributeSet currently
+            return false;
+        }
+        
+        private bool ApplyAttributeSettings(SerializedObject so)
+        {
+            bool modified = false;
+            
+            // Default base value
+            if (EditorPrefs.GetBool(PlayForgeManager.PREFS_PREFIX + "Attribute_AutoBaseValue", false))
+            {
+                var baseValueProp = so.FindProperty("BaseValue");
+                if (baseValueProp != null)
+                {
+                    baseValueProp.floatValue = EditorPrefs.GetFloat(PlayForgeManager.PREFS_PREFIX + "Attribute_DefaultBaseValue", 0f);
+                    modified = true;
+                }
+            }
+            
+            return modified;
+        }
+        
+        private bool ApplyScalerTemplateSettings(SerializedObject so)
+        {
+            bool modified = false;
+            
+            // Default category
+            var defaultCategory = EditorPrefs.GetString(PlayForgeManager.PREFS_PREFIX + "ScalerTemplate_DefaultCategory", "");
+            if (!string.IsNullOrEmpty(defaultCategory))
+            {
+                var categoryProp = so.FindProperty("Category");
+                if (categoryProp != null)
+                {
+                    categoryProp.stringValue = defaultCategory;
+                    modified = true;
+                }
+            }
+            
+            return modified;
+        }
+        
+        private bool ApplyRequirementTemplateSettings(SerializedObject so)
+        {
+            bool modified = false;
+            
+            // Default category
+            var defaultCategory = EditorPrefs.GetString(PlayForgeManager.PREFS_PREFIX + "RequirementTemplate_DefaultCategory", "");
+            if (!string.IsNullOrEmpty(defaultCategory))
+            {
+                var categoryProp = so.FindProperty("Category");
+                if (categoryProp != null)
+                {
+                    categoryProp.stringValue = defaultCategory;
+                    modified = true;
+                }
+            }
+            
+            return modified;
         }
     }
 }

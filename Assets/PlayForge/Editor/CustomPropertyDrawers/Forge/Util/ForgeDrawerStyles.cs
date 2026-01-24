@@ -43,14 +43,15 @@ namespace FarEmerald.PlayForge.Extended.Editor
             public static readonly Color MainBackground = new Color(0.35f, 0.35f, 0.35f, 0.0f);
             public static readonly Color HeaderBackground = new Color(0.157f, 0.157f, 0.157f, 0.95f);
             public static readonly Color SectionBackground = new Color(0.15f, 0.15f, 0.15f, 0.5f);
-            public static readonly Color SectionHeaderBackground = new Color(0.196f, 0.196f, 0.196f, 0.5f);
+            //public static readonly Color SectionHeaderBackground = new Color(0.196f, 0.196f, 0.196f, 0.8f); TODO
+            public static readonly Color SectionHeaderBackground = new Color(0.1f, 0.1f, 0.1f, 0.5f);
             public static readonly Color SectionHeaderHover = new Color(0.35f, 0.35f, 0.35f, 0.6f);
             public static readonly Color SubsectionBackground = new Color(0.157f, 0.157f, 0.157f, 0.4f);
             public static readonly Color ItemBackground = new Color(0.2f, 0.2f, 0.2f, 0.4f);
             public static readonly Color ButtonBackground = new Color(0.314f, 0.314f, 0.314f, 1f);
             public static readonly Color ButtonHover = new Color(0.4f, 0.4f, 0.4f, 1f);
             public static readonly Color GridBackground = new Color(.4f, .4f, .4f, .8f);
-            public static readonly Color GridAltBackground = new Color(.25f, .25f, .25f, .8f);
+            public static readonly Color GridAltBackground = new Color(.1f, .1f, .1f, .9f);
             
             // Text Colors
             public static readonly Color HeaderText = new Color(0.863f, 0.863f, 0.863f, 1f);
@@ -101,7 +102,7 @@ namespace FarEmerald.PlayForge.Extended.Editor
             public const string Help = "?";
             public const string Clear = "X";
             public const string ChevronDown = "▼";
-            public const string ChevronRight = "►";
+            public const string ChevronRight = "▶";
             public const string ArrowDown = "\u2193";
         }
         
@@ -151,6 +152,26 @@ namespace FarEmerald.PlayForge.Extended.Editor
         public static VisualElement CreateBottomPadding(int height = 20)
         {
             return new VisualElement { style = { height = height, flexShrink = 0 } };
+        }
+
+        public static void StyleSpecialContainer(VisualElement container, Color color, int borderWidth = 3, int borderRadius = 4)
+        {
+            container.style.borderLeftWidth = borderWidth;
+            container.style.borderLeftColor = color;
+            
+            container.style.borderTopWidth = borderWidth;
+            container.style.borderTopColor = color;
+            
+            container.style.borderRightWidth = borderWidth;
+            container.style.borderRightColor = color;
+            
+            container.style.borderBottomWidth = borderWidth;
+            container.style.borderBottomColor = color;
+            
+            container.style.borderTopLeftRadius = borderRadius;
+            container.style.borderBottomLeftRadius = borderRadius;
+            container.style.borderTopRightRadius = borderRadius;
+            container.style.borderBottomRightRadius = borderRadius;
         }
         
         // ═══════════════════════════════════════════════════════════════════════════
@@ -251,7 +272,7 @@ namespace FarEmerald.PlayForge.Extended.Editor
             if (config.Icon != null)
             {
                 headerIcon.style.backgroundImage = config.Icon;
-                headerIcon.style.unityBackgroundScaleMode = ScaleMode.ScaleToFit;
+                //headerIcon.style.unityBackgroundScaleMode = ScaleMode.ScaleToFit;
             }
             if (config.IconTint != Color.clear)
             {
@@ -371,6 +392,7 @@ namespace FarEmerald.PlayForge.Extended.Editor
             public string Name;
             public string Title;
             public Color AccentColor = Colors.AccentGray;
+            public int BorderWidth = 5;
             public bool StartExpanded = true;
             public string HelpUrl;
             public bool[] IncludeButtons;
@@ -417,6 +439,7 @@ namespace FarEmerald.PlayForge.Extended.Editor
             header.style.borderTopRightRadius = 3;
             header.style.borderBottomLeftRadius = 3;
             header.style.borderBottomRightRadius = 3;
+            header.style.height = 32;
             header.AddToClassList("forge-section-header");
             result.Header = header;
             section.Add(header);
@@ -462,17 +485,38 @@ namespace FarEmerald.PlayForge.Extended.Editor
             {
                 result.ImportButton = CreateCircularButton($"{config.Name}Import", Icons.ArrowDown, Colors.PolicyGreen, 
                     () => Application.OpenURL(config.HelpUrl));
+                result.ImportButton.style.display = DisplayStyle.None;
                 header.Add(result.ImportButton);
+                header.RegisterCallback<PointerEnterEvent>(evt =>{
+                    result.ImportButton.style.display = DisplayStyle.Flex;     
+                });
+                header.RegisterCallback<PointerLeaveEvent>(evt => {
+                    result.ImportButton.style.display = DisplayStyle.None;
+                        });
                 
                 result.ClearButton = CreateCircularButton($"{config.Name}Clear", Icons.Clear, Colors.PolicyRed, 
                     () => Application.OpenURL(config.HelpUrl));
+                result.ClearButton.style.display = DisplayStyle.None;
                 header.Add(result.ClearButton);
+                header.RegisterCallback<PointerEnterEvent>(evt =>{
+                    result.ClearButton.style.display = DisplayStyle.Flex;     
+                });
+                header.RegisterCallback<PointerLeaveEvent>(evt => {
+                    result.ClearButton.style.display = DisplayStyle.None;
+                        });
                 
                 if (!string.IsNullOrEmpty(config.HelpUrl))
                 {
                     result.HelpButton = CreateCircularButton($"{config.Name}Help", Icons.Help, Colors.PolicyPurple, 
                         () => Application.OpenURL(config.HelpUrl));
+                    result.HelpButton.style.display = DisplayStyle.None;
                     header.Add(result.HelpButton);
+                    header.RegisterCallback<PointerEnterEvent>(evt =>{
+                        result.HelpButton.style.display = DisplayStyle.Flex;    
+                    });
+                    header.RegisterCallback<PointerLeaveEvent>(evt => {
+                        result.HelpButton.style.display = DisplayStyle.None;
+                        });
                 }
             }
             else
@@ -481,21 +525,42 @@ namespace FarEmerald.PlayForge.Extended.Editor
                 {
                     result.ImportButton = CreateCircularButton($"{config.Name}Import", Icons.ArrowDown, Colors.PolicyGreen, 
                         () => Application.OpenURL(config.HelpUrl));
+                    result.ImportButton.style.display = DisplayStyle.None;
                     header.Add(result.ImportButton);
+                    header.RegisterCallback<PointerEnterEvent>(evt =>{
+                            result.ImportButton.style.display = DisplayStyle.Flex;
+                        });
+                    header.RegisterCallback<PointerLeaveEvent>(evt => {
+                            result.ImportButton.style.display = DisplayStyle.None;
+                            });
                 }
 
                 if (config.IncludeButtons[1])
                 {
                     result.ClearButton = CreateCircularButton($"{config.Name}Clear", Icons.Clear, Colors.PolicyRed, 
                         () => Application.OpenURL(config.HelpUrl));
+                    result.ClearButton.style.display = DisplayStyle.None;
                     header.Add(result.ClearButton);
+                    header.RegisterCallback<PointerEnterEvent>(evt =>{
+                            result.ClearButton.style.display = DisplayStyle.Flex;
+                        });
+                    header.RegisterCallback<PointerLeaveEvent>(evt => {
+                            result.ClearButton.style.display = DisplayStyle.None;
+                            });
                 }
                 
                 if (config.IncludeButtons[2] && !string.IsNullOrEmpty(config.HelpUrl))
                 {
                     result.HelpButton = CreateCircularButton($"{config.Name}Help", Icons.Help, Colors.PolicyPurple, 
                         () => Application.OpenURL(config.HelpUrl));
+                    result.HelpButton.style.display = DisplayStyle.None;
                     header.Add(result.HelpButton);
+                    header.RegisterCallback<PointerEnterEvent>(evt =>{
+                        result.HelpButton.style.display = DisplayStyle.Flex;    
+                    });
+                    header.RegisterCallback<PointerLeaveEvent>(evt => {
+                        result.HelpButton.style.display = DisplayStyle.None;
+                        });
                 }
             }
             
@@ -512,8 +577,13 @@ namespace FarEmerald.PlayForge.Extended.Editor
             content.style.paddingTop = 4;
             content.style.paddingBottom = 8;
             content.style.marginLeft = 2;
-            content.style.borderLeftWidth = 2;
-            content.style.borderLeftColor = config.AccentColor;
+            content.style.borderLeftWidth = config.BorderWidth;
+            content.style.borderBottomWidth = config.BorderWidth;
+            //content.style.borderLeftColor = config.AccentColor;  TODO
+            content.style.borderLeftColor = Colors.SectionHeaderBackground;
+            content.style.borderBottomColor = Colors.SectionHeaderBackground;
+            //content.style.borderTopLeftRadius = 4;
+            content.style.borderBottomLeftRadius = 3;
             content.style.display = config.StartExpanded ? DisplayStyle.Flex : DisplayStyle.None;
             content.AddToClassList("forge-section-content");
             result.Content = content;
@@ -565,7 +635,8 @@ namespace FarEmerald.PlayForge.Extended.Editor
             subsection.style.borderBottomLeftRadius = 3;
             subsection.style.borderBottomRightRadius = 3;
             subsection.style.borderLeftWidth = 2;
-            subsection.style.borderLeftColor = accentColor;
+            //subsection.style.borderLeftColor = accentColor;  TODO
+            subsection.style.borderLeftColor = Colors.SectionHeaderBackground;
 
             var titleLabel = new Label(title);
             titleLabel.style.fontSize = 10;
@@ -801,10 +872,10 @@ namespace FarEmerald.PlayForge.Extended.Editor
             btn.style.paddingRight = 0;
             btn.style.paddingTop = 0;
             btn.style.paddingBottom = 0;
-            btn.style.borderLeftWidth = 0;
-            btn.style.borderRightWidth = 0;
-            btn.style.borderTopWidth = 0;
-            btn.style.borderBottomWidth = 0;
+            btn.style.borderLeftWidth = 2;
+            btn.style.borderRightWidth = 2;
+            btn.style.borderTopWidth = 2;
+            btn.style.borderBottomWidth = 2;
             btn.style.backgroundColor = backgroundColor;
             
             if (onClick != null) btn.clicked += onClick;
@@ -821,7 +892,16 @@ namespace FarEmerald.PlayForge.Extended.Editor
             hint.style.fontSize = 10;
             hint.style.color = Colors.HintText;
             hint.style.marginBottom = 4;
+            hint.style.unityTextAlign = TextAnchor.MiddleLeft;
             return hint;
+        }
+
+        public static Label CreateFieldLabel(string text, int fontSize = 12)
+        {
+            var label = new Label(text);
+            label.style.fontSize = fontSize;
+            label.style.unityTextAlign = TextAnchor.MiddleLeft;
+            return label;
         }
         
         /// <summary>
@@ -904,8 +984,9 @@ namespace FarEmerald.PlayForge.Extended.Editor
             section.style.borderTopRightRadius = 3;
             section.style.borderBottomLeftRadius = 3;
             section.style.borderBottomRightRadius = 3;
-            section.style.borderLeftWidth = 2;
-            section.style.borderLeftColor = accentColor;
+            section.style.borderLeftWidth = 4;
+            //section.style.borderLeftColor = accentColor;
+            section.style.borderLeftColor = Colors.SectionHeaderBackground;
             
             var sectionHeader = new Label(title);
             sectionHeader.style.fontSize = 10;

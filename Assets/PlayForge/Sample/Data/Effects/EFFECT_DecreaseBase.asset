@@ -1,0 +1,118 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 2d34fc1f98f8a0b4c9b37da3e706e0e1, type: 3}
+  m_Name: EFFECT_DecreaseBase
+  m_EditorClassIdentifier: 
+  Definition:
+    Name: DecreaseBase
+    Description: 
+    Visibility:
+      Name: 
+    Textures: []
+    ImpactRetentionGroup:
+      Name: Bonus
+  Tags:
+    AssetTag:
+      Name: DecreaseBase
+    ContextTags: []
+    GrantedTags: []
+  ImpactSpecification:
+    AttributeTarget: {fileID: 11400000, guid: 5238e93ea6a409e4a84dd1dcf23dd45c, type: 2}
+    TargetImpact: 1
+    ImpactOperation: 0
+    AffiliationPolicy: 3
+    AffiliationComparison: 0
+    Affiliations: []
+    ImpactTypes: []
+    ReverseImpactOnRemoval: 0
+    Magnitude: -15
+    MagnitudeScaler:
+      rid: -2
+    RealMagnitude: 1
+    Packets: []
+  DurationSpecification:
+    DurationPolicy: 0
+    Duration: 0
+    DurationScaler:
+      rid: -2
+    RealDuration: 1
+    RealDeltaTime: 1
+    DeltaTimeScaler:
+      rid: -2
+    EnablePeriodicTicks: 1
+    TickOnApplication: 0
+    Ticks: 0
+    TickInterval: 0
+    TickScaler:
+      rid: -2
+    RealTicks: 1
+    Rounding: 1
+    AdditionalExecuteTicks: 0
+    ExecuteTicksScaler:
+      rid: -2
+    RealExecuteTicks: 2
+    ExecuteTicksRounding: 1
+    ReApplicationPolicy: 0
+    ReApplicationInteraction: 0
+    StackPolicy: 0
+    StackAmount: 1
+    StackAmountScaler:
+      rid: -2
+    RealStackAmount: 2
+    StackAmountRounding: 1
+  Workers: []
+  SourceRequirements:
+    ApplicationRequirements:
+      Name: 
+      SourceTemplate: {fileID: 0}
+      SyncWithTemplate: 0
+      AvoidTags: []
+      RequireTags: []
+    OngoingRequirements:
+      Name: 
+      SourceTemplate: {fileID: 0}
+      SyncWithTemplate: 0
+      AvoidTags: []
+      RequireTags: []
+    RemovalRequirements:
+      Name: 
+      SourceTemplate: {fileID: 0}
+      SyncWithTemplate: 0
+      AvoidTags: []
+      RequireTags: []
+  TargetRequirements:
+    ApplicationRequirements:
+      Name: 
+      SourceTemplate: {fileID: 0}
+      SyncWithTemplate: 0
+      AvoidTags: []
+      RequireTags: []
+    OngoingRequirements:
+      Name: 
+      SourceTemplate: {fileID: 0}
+      SyncWithTemplate: 0
+      AvoidTags: []
+      RequireTags: []
+    RemovalRequirements:
+      Name: 
+      SourceTemplate: {fileID: 0}
+      SyncWithTemplate: 0
+      AvoidTags: []
+      RequireTags: []
+  LocalData: []
+  LinkMode: 1
+  _linkedSource: {fileID: 11400000, guid: a6dc00eec7d7e3546a1ee3101244a725, type: 2}
+  references:
+    version: 2
+    RefIds:
+    - rid: -2
+      type: {class: , ns: , asm: }

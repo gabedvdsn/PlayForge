@@ -1,10 +1,12 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Threading;
 using Cysharp.Threading.Tasks;
+using UnityEngine;
 
 namespace FarEmerald.PlayForge
 {
-    public class AbilitySpecContainer
+    public class AbilitySpecContainer : ITagSource
     {
         public AbilitySpec Spec;
 
@@ -23,7 +25,7 @@ namespace FarEmerald.PlayForge
             Spec = spec;
             IsActive = false;
 
-            Proxy = Spec.Base.Proxy.GenerateProxy();
+            Proxy = Spec.Base.Behaviour.GenerateProxy();
             ResetTokens();
         }
 
@@ -31,9 +33,9 @@ namespace FarEmerald.PlayForge
         {
             if (IsClaiming) return false; // Prevent reactivation mid-use
             if (!Spec.Owner.AsData().AbilitySystem.ClaimActive(this, implicitData)) return false;
-
+            
             activeData = implicitData;
-            activeData.AddPayload(Tags.PAYLOAD_DERIVATION, Spec);
+            activeData.AddPayload(Tags.DERIVATION, Spec);
 
             Reset();
 
@@ -67,7 +69,7 @@ namespace FarEmerald.PlayForge
             {
                 IsTargeting = false;
                 
-                if (activeData.TryGetFirstTarget(out var target) && !Spec.ValidateActivationRequirements(target, activeData))
+                if (activeData.TryGetFirstTarget(out var target) && !Spec.ValidateAllActivationRequirements(target, activeData))
                 {
                     targetingCancelled = true;
                 }
@@ -77,14 +79,14 @@ namespace FarEmerald.PlayForge
                     CleanAndRelease();
                 }
             }
-
+            
             if (targetingCancelled) return;
-
+            
             try
             {
                 IsActive = true;
 
-                Spec.Owner.GetTagCache().AddTags(Spec.Base.Tags.ActiveGrantedTags);
+                Spec.Owner.CompileGrantedTags();
 
                 await Proxy.Activate(cts.Token, activeData);
             }
@@ -96,7 +98,8 @@ namespace FarEmerald.PlayForge
             finally
             {
                 IsActive = false;
-                Spec.Owner.GetTagCache().RemoveTags(Spec.Base.Tags.ActiveGrantedTags);
+                
+                Spec.Owner.CompileGrantedTags();
                 
                 CleanAndRelease();
             }
@@ -152,6 +155,12 @@ namespace FarEmerald.PlayForge
         public override string ToString()
         {
             return $"{Spec}";
+        }
+        public IEnumerable<Tag> GetGrantedTags()
+        {
+            foreach (var t in Spec.Base.Tags.PassiveGrantedTags) yield return t;
+            if (!IsActive) yield break;
+            foreach (var t in Spec.Base.Tags.ActiveGrantedTags) yield return t;
         }
     }
 }

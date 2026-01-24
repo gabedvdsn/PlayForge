@@ -10,8 +10,8 @@ namespace FarEmerald.PlayForge
     [CreateAssetMenu(menuName = "PlayForge/Gameplay Effect", fileName = "Effect_")]
     public class GameplayEffect : BaseForgeObject, IHasReadableDefinition
     {
-        public GameplayEffectDefinition Definition;
-        public GameplayEffectTags Tags;
+        public GameplayEffectDefinition Definition = new();
+        public GameplayEffectTags Tags = new();
         
         public GameplayEffectImpactSpecification ImpactSpecification;
         public GameplayEffectDurationSpecification DurationSpecification;
@@ -19,8 +19,8 @@ namespace FarEmerald.PlayForge
         [SerializeReference]
         public List<AbstractEffectWorker> Workers;
         
-        public TagRequirements SourceRequirements;
-        public TagRequirements TargetRequirements;
+        public EffectTagRequirements SourceRequirements;
+        public EffectTagRequirements TargetRequirements;
 
         [SerializeReference]
         public List<DataWrapper> LocalData;
@@ -145,8 +145,10 @@ namespace FarEmerald.PlayForge
                    && SourceRequirements.CheckOngoingRequirements(spec.Source.GetAppliedTags());
         }
         
-        public void ApplyDurationSpecifications(AbstractGameplayEffectShelfContainer container)
+        public void ApplyDurationSpecifications(AbstractEffectContainer container)
         {
+            if (DurationSpecification.DurationPolicy == EEffectDurationPolicy.Instant) return;
+            
             DurationSpecification.ApplyDurationSpecifications(container);
         }
         
@@ -165,7 +167,11 @@ namespace FarEmerald.PlayForge
         {
             return Definition.Name;
         }
-        
+        public override IEnumerable<Tag> GetGrantedTags()
+        {
+            return Tags.GrantedTags;
+        }
+
         public string GetDescription()
         {
             return Definition.Description;
@@ -173,8 +179,10 @@ namespace FarEmerald.PlayForge
         
         public Texture2D GetPrimaryIcon()
         {
-            if (LocalData.TryGet(Tag.Generate("PrimaryIcon"), EDataWrapperType.Object, out var data)) 
-                return data.objectValue as Texture2D;
+            foreach (var ti in Definition.Textures)
+            {
+                if (ti.Tag == PlayForge.Tags.PRIMARY) return ti.Texture;
+            }
             return Definition.Textures.Count > 0 ? Definition.Textures[0].Texture : null;
         }
     }
@@ -186,6 +194,7 @@ namespace FarEmerald.PlayForge
         public string Description;
         [ForgeTagContext(ForgeContext.Visibility)] public Tag Visibility;
         public List<TextureItem> Textures;
+        [ForgeTagContext(ForgeContext.RetentionGroup)] public Tag ImpactRetentionGroup = Tags.IGNORE;
     }
 
     public interface IHasReadableDefinition
@@ -202,17 +211,22 @@ namespace FarEmerald.PlayForge
         public Tag AssetTag;
         
         [ForgeTagContext(ForgeContext.ContextIdentifier)] public List<Tag> ContextTags;
-        [ForgeTagContext(ForgeContext.Granted)]public List<Tag> GrantedTags;
+        [ForgeTagContext(ForgeContext.Granted)] public List<Tag> GrantedTags;
     }
     
     public enum EEffectReApplicationPolicy
     {
-        Append,  // Create another instance of the effect independent of the existing one(s)
-        Refresh,  // Refresh the duration of the effect
-        Extend,  // Extend the duration of the effect
-        Stack,  // Inject a duration-independent stack of the effect into the existing one 
-        StackRefresh,  // Stack and refresh the duration of each stack
-        StackExtend  // Stacks and extend the duration of each stack
+        DoNothing,  // Completely ignore new effect
+        ReplaceOldContainer,
+        AppendNewContainer,  // Create another instance of the effect independent of the existing one(s)
+        StackExistingContainers  // Inject a duration-independent stack of the effect into the existing one 
+    }
+
+    public enum EEffectInteractionPolicy
+    {
+        DoNothing,
+        RefreshContainerDuration,  // Refresh the duration of the effect
+        ExtendContainerDuration,  // Extend the duration of the effect
     }
 
     /// <summary>
@@ -228,6 +242,7 @@ namespace FarEmerald.PlayForge
         public float GetRelativeLevel();
         public string GetName();
         public List<Tag> GetAffiliation();
+        public bool IsActive();
 
         public static SourceEffectOrigin GenerateSourceDerivation(ISource source)
         {
@@ -276,6 +291,10 @@ namespace FarEmerald.PlayForge
         public List<Tag> GetAffiliation()
         {
             return Owner.GetAffiliation();
+        }
+        public bool IsActive()
+        {
+            return true;
         }
     }
 

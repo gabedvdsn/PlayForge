@@ -16,7 +16,6 @@ namespace FarEmerald.PlayForge.Extended.Editor
         private AttributeSet attributeSet;
         private Label assetTagValueLabel;
         
-        // Count labels for dynamic updates
         private Label attributeCountLabel;
         private Label subsetCountLabel;
         private Label uniqueAttributesLabel;
@@ -45,7 +44,6 @@ namespace FarEmerald.PlayForge.Extended.Editor
         
         protected override Texture2D GetHeaderIcon()
         {
-            // First try to get from textures list
             if (attributeSet?.Textures != null && attributeSet.Textures.Count > 0)
             {
                 var tex = attributeSet.Textures[0].Texture;
@@ -56,7 +54,7 @@ namespace FarEmerald.PlayForge.Extended.Editor
         
         protected override string GetAssetTypeLabel() => "ATTRIBUTE SET";
         
-        protected override Color GetAssetTypeColor() => new Color(0.9f, 0.7f, 0.3f); // Gold/orange
+        protected override Color GetAssetTypeColor() => new Color(0.9f, 0.7f, 0.3f);
         
         protected override string GetDocumentationUrl() => "https://docs.playforge.dev/attributesets";
         
@@ -65,13 +63,11 @@ namespace FarEmerald.PlayForge.Extended.Editor
         
         protected override void OnVisualize()
         {
-            // TODO: Open attribute set visualizer
             Debug.Log($"Visualize attribute set: {attributeSet.name}");
         }
         
         protected override void OnImport()
         {
-            // Open asset picker for attribute sets
             EditorGUIUtility.ShowObjectPicker<AttributeSet>(null, false, "", GUIUtility.GetControlID(FocusType.Passive));
         }
 
@@ -86,24 +82,20 @@ namespace FarEmerald.PlayForge.Extended.Editor
             attributeSet = serializedObject.targetObject as AttributeSet;
             if (attributeSet == null) return null;
 
-            // Build UI programmatically
             root = CreateRoot();
             
-            // ScrollView for sections (header is in OnHeaderGUI)
             var scrollView = CreateScrollView();
             root.Add(scrollView);
             
-            // Sections
             BuildDefinitionSection(scrollView);
             BuildAttributesSection(scrollView);
             BuildSubsetsSection(scrollView);
             BuildSettingsSection(scrollView);
+            BuildWorkersSection(scrollView);
             BuildSummarySection(scrollView);
             
-            // Bottom padding
             scrollView.Add(CreateBottomPadding());
             
-            // Bind all properties
             root.Bind(serializedObject);
             
             return root;
@@ -126,7 +118,6 @@ namespace FarEmerald.PlayForge.Extended.Editor
             
             var content = section.Content;
             
-            // Name field with live header update
             var nameField = CreateTextField("Name", "Name");
             nameField.value = attributeSet.Name;
             nameField.RegisterCallback<FocusOutEvent>(_ =>
@@ -134,28 +125,25 @@ namespace FarEmerald.PlayForge.Extended.Editor
                 attributeSet.Name = nameField.value;
                 MarkDirty(attributeSet);
                 UpdateAssetTagDisplay();
-                Repaint(); // Refresh IMGUI header
+                Repaint();
             });
             content.Add(nameField);
             
-            // Description field
             var descField = CreateTextField("Description", "Description", multiline: true, minHeight: 24);
             descField.value = attributeSet.Description;
             descField.RegisterCallback<FocusOutEvent>(_ =>
             {
                 attributeSet.Description = descField.value;
                 MarkDirty(attributeSet);
-                Repaint(); // Refresh IMGUI header
+                Repaint();
             });
             content.Add(descField);
             
-            // Asset Tag Display (read-only)
             var (assetTagContainer, valueLabel) = CreateAssetTagDisplay();
             assetTagValueLabel = valueLabel;
             UpdateAssetTagDisplay();
             content.Add(assetTagContainer);
             
-            // Textures
             var texturesField = CreatePropertyField(
                 serializedObject.FindProperty("Textures"),
                 "Textures",
@@ -181,14 +169,12 @@ namespace FarEmerald.PlayForge.Extended.Editor
             });
             parent.Add(section.Section);
             
-            // Add count badge to header
             attributeCountLabel = CreateBadge((attributeSet.Attributes?.Count ?? 0).ToString());
             attributeCountLabel.name = "AttributeCount";
             section.Header.Insert(2, attributeCountLabel);
             
             var content = section.Content;
             
-            // Attributes list
             var attrProp = serializedObject.FindProperty("Attributes");
             var attrField = CreatePropertyField(attrProp, "Attributes", "");
             attrField.RegisterCallback<SerializedPropertyChangeEvent>(_ => RefreshCounts());
@@ -210,17 +196,14 @@ namespace FarEmerald.PlayForge.Extended.Editor
             });
             parent.Add(section.Section);
             
-            // Add count badge to header
             subsetCountLabel = CreateBadge((attributeSet.SubSets?.Count ?? 0).ToString());
             subsetCountLabel.name = "SubsetCount";
             section.Header.Insert(2, subsetCountLabel);
             
             var content = section.Content;
             
-            // Hint
             content.Add(CreateHintLabel("Include other Attribute Sets to inherit their attributes."));
             
-            // Subsets list
             var subsetProp = serializedObject.FindProperty("SubSets");
             var subsetField = CreatePropertyField(subsetProp, "SubSets", "");
             subsetField.RegisterCallback<SerializedPropertyChangeEvent>(_ => RefreshCounts());
@@ -244,10 +227,8 @@ namespace FarEmerald.PlayForge.Extended.Editor
             
             var content = section.Content;
             
-            // Hint
             content.Add(CreateHintLabel("When the same attribute appears in multiple sets:"));
             
-            // Collision Policy enum
             var policyField = CreateEnumField("CollisionPolicy", "Resolution Policy", attributeSet.CollisionResolutionPolicy);
             policyField.RegisterValueChangedCallback(evt =>
             {
@@ -255,6 +236,34 @@ namespace FarEmerald.PlayForge.Extended.Editor
                 MarkDirty(attributeSet);
             });
             content.Add(policyField);
+        }
+
+        // ═══════════════════════════════════════════════════════════════════════════
+        // Workers Section
+        // ═══════════════════════════════════════════════════════════════════════════
+        
+        private void BuildWorkersSection(VisualElement parent)
+        {
+            var section = CreateCollapsibleSection(new SectionConfig
+            {
+                Name = "Workers",
+                Title = "Workers",
+                AccentColor = Colors.AccentCyan,
+                HelpUrl = "https://docs.playforge.dev/attributesets/workers"
+            });
+            parent.Add(section.Section);
+            
+            var content = section.Content;
+            
+            var hint = CreateHintLabel("Workers are subscribed when attribute set is initialized.");
+            content.Add(hint);
+            
+            var workerGroupField = CreatePropertyField(
+                serializedObject.FindProperty("WorkerGroup"), 
+                "WorkerGroup", 
+                ""
+            );
+            content.Add(workerGroupField);
         }
 
         // ═══════════════════════════════════════════════════════════════════════════
@@ -274,14 +283,12 @@ namespace FarEmerald.PlayForge.Extended.Editor
             
             var content = section.Content;
             
-            // Unique count label
             uniqueAttributesLabel = new Label($"Total unique attributes: {attributeSet.GetUnique().Count}");
             uniqueAttributesLabel.name = "UniqueAttributesLabel";
             uniqueAttributesLabel.style.fontSize = 11;
             uniqueAttributesLabel.style.color = Colors.HintText;
             content.Add(uniqueAttributesLabel);
             
-            // List button
             var listBtn = new Button(ListAllUniqueAttributes) { text = "List All Unique Attributes" };
             listBtn.style.alignSelf = Align.FlexStart;
             listBtn.style.marginTop = 8;
@@ -300,7 +307,6 @@ namespace FarEmerald.PlayForge.Extended.Editor
             var result = GenerateAssetTag(attributeSet.Name, "AttributeSet");
             assetTagValueLabel.text = result.result;
             
-            // Sync the actual AssetTag.Name field
             if (!result.isUnknown)
             {
                 var assetTag = attributeSet.AssetTag;
@@ -320,7 +326,7 @@ namespace FarEmerald.PlayForge.Extended.Editor
             if (uniqueAttributesLabel != null)
                 uniqueAttributesLabel.text = $"Total unique attributes: {attributeSet.GetUnique().Count}";
             
-            Repaint(); // Refresh IMGUI header with new description
+            Repaint();
         }
         
         private void ListAllUniqueAttributes()

@@ -9,6 +9,8 @@ namespace FarEmerald.PlayForge
 {
     public abstract class AbstractAbilityRelatedTask
     {
+        protected AbstractAbilityRelatedTask() { }
+
         /// <summary>
         /// Determines whether another ability proxy can be active at the same time as the proxy containing this task.
         /// For example, a proxy with some animation events has a critical section, and another proxy with a critical section must not interrupt the conclusion of the animation (and the injections relevant to the animation).

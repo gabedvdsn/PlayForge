@@ -23,9 +23,27 @@ namespace FarEmerald.PlayForge.Extended.Editor
         // Collapse state per property path (persists across rebuilds)
         private static Dictionary<string, bool> _collapsedStates = new Dictionary<string, bool>();
         
+        // Quick fill expanded state
+        private static Dictionary<string, bool> _quickFillExpanded = new Dictionary<string, bool>();
+        private static Dictionary<string, EQuickFillMode> _quickFillMode = new Dictionary<string, EQuickFillMode>();
+        
+        private enum EQuickFillMode { Linear, Additive, Steps }
+        
+        // Quick fill parameters (per property)
+        private static Dictionary<string, QuickFillParams> _quickFillParams = new Dictionary<string, QuickFillParams>();
+        
+        private class QuickFillParams
+        {
+            public float StartValue = 1f;
+            public float EndValue = 10f;
+            public float BaseValue = 1f;
+            public float Increment = 1f;
+            public int StepCount = 5;
+        }
+        
         private static bool IsCollapsed(string propertyPath)
         {
-            return _collapsedStates.TryGetValue(propertyPath, out bool collapsed) && collapsed;
+            return !_collapsedStates.TryGetValue(propertyPath, out bool collapsed) || collapsed;
         }
         
         private static void SetCollapsed(string propertyPath, bool collapsed)
@@ -166,6 +184,7 @@ namespace FarEmerald.PlayForge.Extended.Editor
             container.style.paddingLeft = 6;
             container.style.paddingRight = 6;
             container.style.marginTop = 2;
+            StyleSpecialContainer(container, Colors.AccentPurple);
             root.Add(container);
             
             bool isCollapsed = IsCollapsed(property.propertyPath);
@@ -198,7 +217,7 @@ namespace FarEmerald.PlayForge.Extended.Editor
             header.style.marginBottom = isCollapsed ? 0 : 4;
             
             // Collapse toggle button
-            var collapseBtn = new Button { text = isCollapsed ? "▶" : "▼", tooltip = isCollapsed ? "Expand" : "Collapse" };
+            var collapseBtn = new Button { text = isCollapsed ? Icons.ChevronRight : Icons.ChevronDown, tooltip = isCollapsed ? "Expand" : "Collapse" };
             collapseBtn.style.width = 18;
             collapseBtn.style.height = 18;
             collapseBtn.style.marginRight = 4;
@@ -339,31 +358,37 @@ namespace FarEmerald.PlayForge.Extended.Editor
             
             // Type-specific properties (defined in partial class)
             AddTypeSpecificProperties(content, property, type, root);
-            
-            // Level Mode
-            content.Add(CreateLevelModeRow(property, root, scaler));
-            
-            // Max Level (conditional - show for non-locked modes, or show linked info for locked mode)
-            if (currentConfig == ELevelConfig.LockToLevelProvider)
+
+            if (scaler.UseScalingOptions())
             {
-                content.Add(CreateLinkedLevelInfoRow(property));
+                // Level Mode
+                content.Add(CreateLevelModeRow(property, root, scaler));
+            
+                // Max Level (conditional - show for non-locked modes, or show linked info for locked mode)
+                if (currentConfig == ELevelConfig.LockToLevelProvider)
+                {
+                    content.Add(CreateLinkedLevelInfoRow(property));
+                }
+                else
+                {
+                    content.Add(CreateMaxLevelRow(property, root, scaler));
+                }
+            
+                // Interpolation
+                content.Add(CreateInterpolationRow(property, root, scaler));
+            
+                // Quick Fill (revamped)
+                content.Add(CreateQuickFillSection(property, root));
+            
+                // Level Values Grid
+                content.Add(CreateLevelValuesGrid(property, scaler, root));
+            
+                // Curve Preview
+                content.Add(CreateCurvePreview(property, scaler));
             }
-            else
-            {
-                content.Add(CreateMaxLevelRow(property, root, scaler));
-            }
             
-            // Interpolation
-            content.Add(CreateInterpolationRow(property, root, scaler));
-            
-            // Quick Fill
-            content.Add(CreateQuickFillSection(property, root));
-            
-            // Level Values Grid
-            content.Add(CreateLevelValuesGrid(property, scaler, root));
-            
-            // Curve Preview
-            content.Add(CreateCurvePreview(property, scaler));
+            // Behaviours Section
+            content.Add(CreateBehavioursSection(property, root));
             
             return content;
         }
@@ -464,7 +489,7 @@ namespace FarEmerald.PlayForge.Extended.Editor
             }
             
             // Max level
-            var levelLabel = new Label($"Lv{maxLevel}");
+            var levelLabel = new Label($"Lv{maxLevel.ToString()}");
             levelLabel.style.fontSize = 10;
             levelLabel.style.color = isLinked ? Colors.AccentGreen : Colors.HintText;
             levelLabel.style.marginRight = 8;
@@ -472,23 +497,72 @@ namespace FarEmerald.PlayForge.Extended.Editor
             summary.Add(levelLabel);
             
             // Value range
-            string rangeText;
-            if (Mathf.Approximately(minVal, maxVal))
+            string rangeText = "";
+            if (lvp != null && lvp.arraySize > 0)
             {
-                rangeText = $"{minVal:G4}";
-            }
-            else
-            {
-                rangeText = $"{minVal:G4} → {maxVal:G4}";
+                int frontRange = Mathf.Min(2, lvp.arraySize);
+                int endRange = Mathf.Min(2, lvp.arraySize - 2);
+                int midRange = lvp.arraySize - frontRange - endRange;
+
+                for (int i = 0; i < frontRange; i++)
+                {
+                    rangeText += $"{lvp.GetArrayElementAtIndex(i).floatValue:G4} → ";
+                }
+
+                if (midRange > 0)
+                {
+                    rangeText += "... → ";
+                }
+
+                for (int i = frontRange + midRange; i < lvp.arraySize; i++)
+                {
+                    rangeText += $"{lvp.GetArrayElementAtIndex(i).floatValue:G4} ";
+                    if (i < lvp.arraySize - 1) rangeText += "→ ";
+                }
             }
             
-            var rangeLabel = new Label(rangeText);
+            var rangeLabel = new Label(rangeText.TrimEnd());
             rangeLabel.style.fontSize = 10;
-            rangeLabel.style.color = Colors.AccentBlue;
-            rangeLabel.tooltip = $"Value range: {minVal:F2} to {maxVal:F2}";
+            rangeLabel.style.color = Colors.HintText;
+            rangeLabel.style.overflow = Overflow.Hidden;
+            rangeLabel.style.textOverflow = TextOverflow.Ellipsis;
+            rangeLabel.style.flexGrow = 1;
+            rangeLabel.tooltip = $"Values from level 1 to {maxLevel}";
             summary.Add(rangeLabel);
             
+            // Behaviours count badge
+            var behavioursProp = property.FindPropertyRelative("Behaviours");
+            if (behavioursProp != null && behavioursProp.arraySize > 0)
+            {
+                var behaviourBadge = new Label($"+{behavioursProp.arraySize}");
+                behaviourBadge.style.fontSize = 9;
+                behaviourBadge.style.color = Colors.AccentOrange;
+                behaviourBadge.style.backgroundColor = new Color(0.5f, 0.4f, 0.3f, 0.3f);
+                behaviourBadge.style.paddingLeft = 4;
+                behaviourBadge.style.paddingRight = 4;
+                behaviourBadge.style.paddingTop = 1;
+                behaviourBadge.style.paddingBottom = 1;
+                behaviourBadge.style.borderTopLeftRadius = 3;
+                behaviourBadge.style.borderTopRightRadius = 3;
+                behaviourBadge.style.borderBottomLeftRadius = 3;
+                behaviourBadge.style.borderBottomRightRadius = 3;
+                behaviourBadge.style.marginLeft = 4;
+                behaviourBadge.tooltip = $"{behavioursProp.arraySize} behaviour(s) applied";
+                summary.Add(behaviourBadge);
+            }
+            
             return summary;
+        }
+        
+        private static string GetLevelModeTooltip(ELevelConfig config)
+        {
+            return config switch
+            {
+                ELevelConfig.LockToLevelProvider => "Lock to Level Provider: Uses the linked provider's level range",
+                ELevelConfig.Unlocked => "Unlocked: Uses its own max level setting",
+                ELevelConfig.Partitioned => "Partitioned: Uses minimum of max level and provider's current level",
+                _ => ""
+            };
         }
         
         // ═══════════════════════════════════════════════════════════════════════════
@@ -503,50 +577,34 @@ namespace FarEmerald.PlayForge.Extended.Editor
             var label = new Label("Level Mode");
             label.style.width = 80;
             label.style.color = Colors.LabelText;
-            label.tooltip = "How this scaler determines the level to use";
             row.Add(label);
             
-            var currentConfig = configProp != null ? (ELevelConfig)configProp.enumValueIndex : scaler.Configuration;
+            var currentConfig = configProp != null ? (ELevelConfig)configProp.enumValueIndex : ELevelConfig.Unlocked;
             var field = new EnumField(currentConfig);
             field.style.flexGrow = 1;
             field.tooltip = GetLevelModeTooltip(currentConfig);
             
             field.RegisterValueChangedCallback(evt =>
             {
-                var newConfig = (ELevelConfig)evt.newValue;
                 if (configProp != null)
                     configProp.enumValueIndex = Convert.ToInt32(evt.newValue);
                 
-                // LockToSource: use linked provider's max level if available
+                var newConfig = (ELevelConfig)evt.newValue;
+                field.tooltip = GetLevelModeTooltip(newConfig);
+                
+                // If switching to LockToLevelProvider, resize to linked max
                 if (newConfig == ELevelConfig.LockToLevelProvider)
                 {
                     int linkedMax = GetLinkedMaxLevel(property, 1);
-                    var maxLvl = property.FindPropertyRelative("MaxLevel");
-                    if (maxLvl != null)
-                    {
-                        maxLvl.intValue = linkedMax;
-                        ResizeLevelValues(property, scaler, linkedMax);
-                    }
+                    ResizeLevelValues(property, scaler, linkedMax);
                 }
                 
-                field.tooltip = GetLevelModeTooltip(newConfig);
                 property.serializedObject.ApplyModifiedProperties();
                 ScheduleRebuild(root, property);
             });
             
             row.Add(field);
             return row;
-        }
-        
-        private static string GetLevelModeTooltip(ELevelConfig config)
-        {
-            return config switch
-            {
-                ELevelConfig.LockToLevelProvider => "Uses linked provider's level range",
-                ELevelConfig.Unlocked => "Independent level progression",
-                ELevelConfig.Partitioned => "Clamped to source level",
-                _ => "Level configuration"
-            };
         }
         
         // ═══════════════════════════════════════════════════════════════════════════
@@ -788,7 +846,7 @@ namespace FarEmerald.PlayForge.Extended.Editor
         }
         
         // ═══════════════════════════════════════════════════════════════════════════
-        // Quick Fill Section
+        // Quick Fill Section (Revamped)
         // ═══════════════════════════════════════════════════════════════════════════
         
         private VisualElement CreateQuickFillSection(SerializedProperty property, VisualElement root)
@@ -797,10 +855,26 @@ namespace FarEmerald.PlayForge.Extended.Editor
             section.style.marginTop = 4;
             section.style.marginBottom = 4;
             
+            var propPath = property.propertyPath;
+            bool isExpanded = _quickFillExpanded.TryGetValue(propPath, out bool exp) && exp;
+            
+            // Ensure params exist
+            if (!_quickFillParams.ContainsKey(propPath))
+            {
+                var lvp = property.FindPropertyRelative("LevelValues");
+                _quickFillParams[propPath] = new QuickFillParams
+                {
+                    StartValue = lvp != null && lvp.arraySize > 0 ? lvp.GetArrayElementAtIndex(0).floatValue : 1f,
+                    EndValue = lvp != null && lvp.arraySize > 0 ? lvp.GetArrayElementAtIndex(lvp.arraySize - 1).floatValue : 10f
+                };
+            }
+            var qfParams = _quickFillParams[propPath];
+            
+            // Header row
             var header = new VisualElement();
             header.style.flexDirection = FlexDirection.Row;
             header.style.alignItems = Align.Center;
-            header.style.marginBottom = 2;
+            header.style.marginBottom = 4;
             
             var headerLabel = new Label("Quick Fill");
             headerLabel.style.fontSize = 10;
@@ -818,10 +892,10 @@ namespace FarEmerald.PlayForge.Extended.Editor
             ApplyButtonStyle(editCurveBtn);
             header.Add(editCurveBtn);
             
-            // Quick Fill Wizard button
+            // Advanced wizard button
             var wizardBtn = new Button(() => QuickFillWizard.Show(property, () => ScheduleRebuild(root, property)));
-            wizardBtn.text = "🧙 Wizard";
-            wizardBtn.tooltip = "Open quick fill wizard with preview";
+            wizardBtn.text = "🧙 Advanced";
+            wizardBtn.tooltip = "Open advanced wizard with more options";
             wizardBtn.style.height = 18;
             wizardBtn.style.fontSize = 9;
             wizardBtn.style.marginLeft = 4;
@@ -832,77 +906,176 @@ namespace FarEmerald.PlayForge.Extended.Editor
             
             section.Add(header);
             
-            // Quick buttons row
-            var btnsRow = new VisualElement();
-            btnsRow.style.flexDirection = FlexDirection.Row;
-            btnsRow.style.flexWrap = Wrap.Wrap;
+            // Mode selector tabs
+            var modeRow = new VisualElement();
+            modeRow.style.flexDirection = FlexDirection.Row;
+            modeRow.style.marginBottom = 4;
+            
+            var currentMode = _quickFillMode.TryGetValue(propPath, out var mode) ? mode : EQuickFillMode.Linear;
+            
+            var linearTab = CreateModeTab("Linear", EQuickFillMode.Linear, currentMode, propPath, root, property);
+            var additiveTab = CreateModeTab("Additive", EQuickFillMode.Additive, currentMode, propPath, root, property);
+            var stepsTab = CreateModeTab("Steps", EQuickFillMode.Steps, currentMode, propPath, root, property);
+            
+            modeRow.Add(linearTab);
+            modeRow.Add(additiveTab);
+            modeRow.Add(stepsTab);
+            section.Add(modeRow);
+            
+            // Parameters based on mode
+            var paramsRow = new VisualElement();
+            paramsRow.style.flexDirection = FlexDirection.Row;
+            paramsRow.style.alignItems = Align.Center;
+            paramsRow.style.flexWrap = Wrap.Wrap;
             
             var scaler = property.managedReferenceValue as AbstractScaler;
             
-            var constBtn = new Button(() =>
+            switch (currentMode)
             {
-                FillConstant(property, 1f);
-                ScheduleRebuild(root, property);
-            }) { text = "Const 1", tooltip = "Fill all levels with 1" };
-            ApplyQuickFillButtonStyle(constBtn);
-            btnsRow.Add(constBtn);
+                case EQuickFillMode.Linear:
+                    paramsRow.Add(CreateParamField("From:", qfParams.StartValue, v => qfParams.StartValue = v, 50));
+                    paramsRow.Add(CreateParamField("To:", qfParams.EndValue, v => qfParams.EndValue = v, 50));
+                    break;
+                    
+                case EQuickFillMode.Additive:
+                    paramsRow.Add(CreateParamField("Base:", qfParams.BaseValue, v => qfParams.BaseValue = v, 50));
+                    paramsRow.Add(CreateParamField("+/Lvl:", qfParams.Increment, v => qfParams.Increment = v, 50));
+                    break;
+                    
+                case EQuickFillMode.Steps:
+                    paramsRow.Add(CreateParamField("From:", qfParams.StartValue, v => qfParams.StartValue = v, 50));
+                    paramsRow.Add(CreateParamField("To:", qfParams.EndValue, v => qfParams.EndValue = v, 50));
+                    paramsRow.Add(CreateIntParamField("Steps:", qfParams.StepCount, v => qfParams.StepCount = v, 40));
+                    break;
+            }
             
-            var linearBtn = new Button(() =>
-            {
-                var lvp = property.FindPropertyRelative("LevelValues");
-                if (lvp != null)
-                {
-                    for (int i = 0; i < lvp.arraySize; i++)
-                    {
-                        float t = lvp.arraySize > 1 ? (float)i / (lvp.arraySize - 1) : 0f;
-                        lvp.GetArrayElementAtIndex(i).floatValue = Mathf.Lerp(1f, 10f, t);
-                    }
-                    if (scaler != null) RegenerateCurve(property, scaler);
-                    property.serializedObject.ApplyModifiedProperties();
-                    ScheduleRebuild(root, property);
-                }
-            }) { text = "Linear 1→10", tooltip = "Linear from 1 to 10" };
-            ApplyQuickFillButtonStyle(linearBtn);
-            btnsRow.Add(linearBtn);
+            // Apply button
+            var applyBtn = new Button(() => ApplyQuickFill(property, root, currentMode, qfParams, scaler));
+            applyBtn.text = "Apply";
+            applyBtn.style.height = 18;
+            applyBtn.style.fontSize = 9;
+            applyBtn.style.paddingLeft = 8;
+            applyBtn.style.paddingRight = 8;
+            applyBtn.style.marginLeft = 8;
+            applyBtn.style.backgroundColor = Colors.AccentGreen;
+            applyBtn.style.color = Color.white;
+            ApplyButtonStyle(applyBtn);
+            paramsRow.Add(applyBtn);
             
-            var expBtn = new Button(() =>
-            {
-                var lvp = property.FindPropertyRelative("LevelValues");
-                if (lvp != null)
-                {
-                    for (int i = 0; i < lvp.arraySize; i++)
-                    {
-                        float t = lvp.arraySize > 1 ? (float)i / (lvp.arraySize - 1) : 0f;
-                        lvp.GetArrayElementAtIndex(i).floatValue = Mathf.Lerp(1f, 10f, t * t);
-                    }
-                    if (scaler != null) RegenerateCurve(property, scaler);
-                    property.serializedObject.ApplyModifiedProperties();
-                    ScheduleRebuild(root, property);
-                }
-            }) { text = "Exp 1→10", tooltip = "Exponential curve from 1 to 10" };
-            ApplyQuickFillButtonStyle(expBtn);
-            btnsRow.Add(expBtn);
+            section.Add(paramsRow);
             
-            var logBtn = new Button(() =>
-            {
-                var lvp = property.FindPropertyRelative("LevelValues");
-                if (lvp != null)
-                {
-                    for (int i = 0; i < lvp.arraySize; i++)
-                    {
-                        float t = lvp.arraySize > 1 ? (float)i / (lvp.arraySize - 1) : 0f;
-                        lvp.GetArrayElementAtIndex(i).floatValue = Mathf.Lerp(1f, 10f, Mathf.Sqrt(t));
-                    }
-                    if (scaler != null) RegenerateCurve(property, scaler);
-                    property.serializedObject.ApplyModifiedProperties();
-                    ScheduleRebuild(root, property);
-                }
-            }) { text = "Log 1→10", tooltip = "Logarithmic curve (fast start) from 1 to 10" };
-            ApplyQuickFillButtonStyle(logBtn);
-            btnsRow.Add(logBtn);
-            
-            section.Add(btnsRow);
             return section;
+        }
+        
+        private VisualElement CreateModeTab(string label, EQuickFillMode mode, EQuickFillMode current, 
+            string propPath, VisualElement root, SerializedProperty property)
+        {
+            bool isActive = mode == current;
+            
+            var tab = new Button(() =>
+            {
+                _quickFillMode[propPath] = mode;
+                ScheduleRebuild(root, property);
+            });
+            tab.text = label;
+            tab.style.height = 18;
+            tab.style.fontSize = 9;
+            tab.style.paddingLeft = 8;
+            tab.style.paddingRight = 8;
+            tab.style.marginRight = 2;
+            tab.style.borderTopLeftRadius = 3;
+            tab.style.borderTopRightRadius = 3;
+            tab.style.borderBottomLeftRadius = 0;
+            tab.style.borderBottomRightRadius = 0;
+            
+            if (isActive)
+            {
+                tab.style.backgroundColor = Colors.AccentPurple;
+                tab.style.color = Color.white;
+            }
+            else
+            {
+                tab.style.backgroundColor = Colors.ButtonBackground;
+                tab.RegisterCallback<MouseEnterEvent>(_ => tab.style.backgroundColor = Colors.ButtonHover);
+                tab.RegisterCallback<MouseLeaveEvent>(_ => tab.style.backgroundColor = Colors.ButtonBackground);
+            }
+            
+            return tab;
+        }
+        
+        private VisualElement CreateParamField(string label, float value, Action<float> onChange, int fieldWidth)
+        {
+            var container = new VisualElement();
+            container.style.flexDirection = FlexDirection.Row;
+            container.style.alignItems = Align.Center;
+            container.style.marginRight = 8;
+            
+            var labelEl = new Label(label);
+            labelEl.style.fontSize = 9;
+            labelEl.style.color = Colors.HintText;
+            labelEl.style.marginRight = 2;
+            container.Add(labelEl);
+            
+            var field = new FloatField { value = value };
+            field.style.width = fieldWidth;
+            field.style.fontSize = 10;
+            field.RegisterValueChangedCallback(evt => onChange(evt.newValue));
+            container.Add(field);
+            
+            return container;
+        }
+        
+        private VisualElement CreateIntParamField(string label, int value, Action<int> onChange, int fieldWidth)
+        {
+            var container = new VisualElement();
+            container.style.flexDirection = FlexDirection.Row;
+            container.style.alignItems = Align.Center;
+            container.style.marginRight = 8;
+            
+            var labelEl = new Label(label);
+            labelEl.style.fontSize = 9;
+            labelEl.style.color = Colors.HintText;
+            labelEl.style.marginRight = 2;
+            container.Add(labelEl);
+            
+            var field = new IntegerField { value = value };
+            field.style.width = fieldWidth;
+            field.style.fontSize = 10;
+            field.RegisterValueChangedCallback(evt => onChange(Mathf.Max(1, evt.newValue)));
+            container.Add(field);
+            
+            return container;
+        }
+        
+        private void ApplyQuickFill(SerializedProperty property, VisualElement root, EQuickFillMode mode, 
+            QuickFillParams qfParams, AbstractScaler scaler)
+        {
+            var lvp = property.FindPropertyRelative("LevelValues");
+            if (lvp == null) return;
+            
+            for (int i = 0; i < lvp.arraySize; i++)
+            {
+                float t = lvp.arraySize > 1 ? (float)i / (lvp.arraySize - 1) : 0f;
+                float value = mode switch
+                {
+                    EQuickFillMode.Linear => Mathf.Lerp(qfParams.StartValue, qfParams.EndValue, t),
+                    EQuickFillMode.Additive => qfParams.BaseValue + (qfParams.Increment * i),
+                    EQuickFillMode.Steps => CalculateStepValue(t, qfParams.StartValue, qfParams.EndValue, qfParams.StepCount),
+                    _ => 1f
+                };
+                lvp.GetArrayElementAtIndex(i).floatValue = value;
+            }
+            
+            if (scaler != null) RegenerateCurve(property, scaler);
+            property.serializedObject.ApplyModifiedProperties();
+            ScheduleRebuild(root, property);
+        }
+        
+        private float CalculateStepValue(float t, float start, float end, int stepCount)
+        {
+            int step = Mathf.FloorToInt(t * stepCount);
+            float stepT = stepCount > 0 ? (float)step / stepCount : 0f;
+            return Mathf.Lerp(start, end, stepT);
         }
         
         // ═══════════════════════════════════════════════════════════════════════════
@@ -977,6 +1150,8 @@ namespace FarEmerald.PlayForge.Extended.Editor
                     lvp.GetArrayElementAtIndex(index).floatValue = evt.newValue;
                     RegenerateCurve(property, scaler);
                     property.serializedObject.ApplyModifiedProperties();
+                    // Rebuild to update curve preview
+                    ScheduleRebuild(root, property);
                 });
                 
                 cellContent.Add(valueField);
@@ -1047,6 +1222,54 @@ namespace FarEmerald.PlayForge.Extended.Editor
             xAxis.Add(new Label("Lv1") { style = { fontSize = 9, color = Colors.HintText } });
             xAxis.Add(new Label($"Lv{count}") { style = { fontSize = 9, color = Colors.HintText } });
             section.Add(xAxis);
+            
+            return section;
+        }
+        
+        // ═══════════════════════════════════════════════════════════════════════════
+        // Behaviours Section
+        // ═══════════════════════════════════════════════════════════════════════════
+        
+        private VisualElement CreateBehavioursSection(SerializedProperty property, VisualElement root)
+        {
+            var section = new VisualElement { name = "BehavioursSection" };
+            section.style.marginTop = 8;
+            section.style.paddingTop = 8;
+            section.style.borderTopWidth = 1;
+            section.style.borderTopColor = new Color(0.3f, 0.3f, 0.3f, 0.5f);
+            
+            var behavioursProp = property.FindPropertyRelative("Behaviours");
+            if (behavioursProp == null) return section;
+            
+            // Header row
+            var headerRow = new VisualElement();
+            headerRow.style.flexDirection = FlexDirection.Row;
+            headerRow.style.alignItems = Align.Center;
+            headerRow.style.marginBottom = 4;
+            
+            var headerLabel = new Label("Behaviours");
+            headerLabel.style.fontSize = 10;
+            headerLabel.style.color = Colors.HintText;
+            headerLabel.style.flexGrow = 1;
+            headerRow.Add(headerLabel);
+            
+            if (behavioursProp.arraySize > 0)
+            {
+                var countLabel = new Label($"({behavioursProp.arraySize})");
+                countLabel.style.fontSize = 9;
+                countLabel.style.color = Colors.AccentOrange;
+                headerRow.Add(countLabel);
+            }
+            
+            section.Add(headerRow);
+            
+            // Behaviours list using PropertyField
+            var listField = new PropertyField(behavioursProp, "");
+            listField.style.marginLeft = 0;
+            section.Add(listField);
+            
+            // Bind to ensure PropertyField updates
+            section.Bind(property.serializedObject);
             
             return section;
         }
@@ -1163,8 +1386,8 @@ namespace FarEmerald.PlayForge.Extended.Editor
             
             for (int i = 0; i < curve.length; i++)
             {
-                AnimationUtility.SetKeyLeftTangentMode(curve, i, tm);
-                AnimationUtility.SetKeyRightTangentMode(curve, i, tm);
+                UnityEditor.AnimationUtility.SetKeyLeftTangentMode(curve, i, tm);
+                UnityEditor.AnimationUtility.SetKeyRightTangentMode(curve, i, tm);
             }
             
             if (sp != null)

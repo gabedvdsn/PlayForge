@@ -53,6 +53,13 @@ namespace FarEmerald.PlayForge.Extended.Editor
             return divider;
         }
         
+        internal VisualElement CreateSpacer()
+        {
+            var spacer = new VisualElement();
+            spacer.style.flexGrow = 1;
+            return spacer;
+        }
+        
         internal void ApplyButtonStyle(Button btn)
         {
             btn.style.backgroundColor = Colors.ButtonBackground;
@@ -147,6 +154,22 @@ namespace FarEmerald.PlayForge.Extended.Editor
             return effectName;
         }
         
+        private static string GetAbilitySourceReqCount(Ability a)
+        {
+            var reqs = a.Tags.TagRequirements.SourceRequirements;
+            if (reqs == null) return "0";
+            int count = (reqs.RequireTags?.Count ?? 0) + (reqs.AvoidTags?.Count ?? 0);
+            return count.ToString();
+        }
+        
+        private static string GetAbilityTargetReqCount(Ability a)
+        {
+            var reqs = a.Tags.TagRequirements.TargetRequirements;
+            if (reqs == null) return "0";
+            int count = (reqs.RequireTags?.Count ?? 0) + (reqs.AvoidTags?.Count ?? 0);
+            return count.ToString();
+        }
+        
         private static string GetEffectName(GameplayEffect e) => 
             !string.IsNullOrEmpty(e.GetName()) ? e.GetName() : e.name;
         
@@ -170,6 +193,42 @@ namespace FarEmerald.PlayForge.Extended.Editor
             return str;
         }
         
+        private static string GetEffectSourceReqCount(GameplayEffect e)
+        {
+            var reqs = e.SourceRequirements;
+            if (reqs == null) return "0";
+            int count = GetTagRequirementsCount(reqs);
+            return count.ToString();
+        }
+
+        private static int GetTagRequirementsCount(EffectTagRequirements requirements)
+        {
+            var (appReq, appAvoid) = GetTagGroupCounts(requirements.ApplicationRequirements);
+            var (ongoingReq, ongoingAvoid) = GetTagGroupCounts(requirements.OngoingRequirements);
+            var (removalReq, removalAvoid) = GetTagGroupCounts(requirements.RemovalRequirements);
+            
+            int totalReq = appReq + ongoingReq + removalReq;
+            int totalAvoid = appAvoid + ongoingAvoid + removalAvoid;
+
+            return totalReq + totalAvoid;
+            
+            static (int required, int avoided) GetTagGroupCounts(AvoidRequireTagGroup tags)
+            {
+                int reqCount = tags.RequireTags.Count;
+                int avoidCount = tags.AvoidTags.Count;
+            
+                return (reqCount, avoidCount);
+            }
+        }
+        
+        private static string GetEffectTargetReqCount(GameplayEffect e)
+        {
+            var reqs = e.TargetRequirements;
+            if (reqs == null) return "0";
+            int count = GetTagRequirementsCount(reqs);
+            return count.ToString();
+        }
+        
         private static string GetAttributeName(Attribute a) => 
             !string.IsNullOrEmpty(a.Name) ? a.Name : a.name;
         
@@ -182,6 +241,12 @@ namespace FarEmerald.PlayForge.Extended.Editor
         
         private static string GetEntityName(EntityIdentity e) => 
             !string.IsNullOrEmpty(e.GetName()) ? e.GetName() : e.name;
+
+        private static string GetAttributeSetName(AttributeSet a) =>
+            !string.IsNullOrEmpty(a.GetName()) ? a.GetName() : a.name;
+        
+        private static string GetItemName(Item i) =>
+            !string.IsNullOrEmpty(i.GetName()) ? i.GetName() : i.name;
         
         // ═══════════════════════════════════════════════════════════════════════════
         // Analysis
