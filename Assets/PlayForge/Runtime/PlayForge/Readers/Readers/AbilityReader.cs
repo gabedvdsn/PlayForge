@@ -3,7 +3,7 @@ using UnityEngine;
 
 namespace FarEmerald.PlayForge
 {
-    public class AbilityReader : AbstractReader, ITagReader
+    public class AbilityReader : AbstractReader
     {
         [Header("Ability Reader")] 
         

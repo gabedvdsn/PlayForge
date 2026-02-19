@@ -45,11 +45,12 @@ namespace FarEmerald.PlayForge.Extended.Editor
             var attributeProp = property.FindPropertyRelative("Attribute");
             var magnitudeProp = property.FindPropertyRelative("Magnitude");
             var modifierProp = property.FindPropertyRelative("Scaling");
+            var realMagProp = property.FindPropertyRelative("RealMagnitude");
             var targetProp = property.FindPropertyRelative("Target");
             var overflowProp = property.FindPropertyRelative("Overflow");
             var collisionProp = property.FindPropertyRelative("CollisionPolicy");
             var constraintsProp = property.FindPropertyRelative("Constraints");
-            var retentionProp = property.FindPropertyRelative("RetentionGroup");
+            var retGroupProp = property.FindPropertyRelative("RetentionGroup");
             
             // Main container
             var container = new VisualElement { name = "Container" };
@@ -153,24 +154,31 @@ namespace FarEmerald.PlayForge.Extended.Editor
             container.Add(expandedContent);
             
             // Retention group row
+            var retGroupRow = new VisualElement();
+            retGroupRow.style.flexDirection = FlexDirection.Row;
+            retGroupRow.style.alignItems = Align.FlexStart;
+            retGroupRow.style.marginBottom = 4;
+            expandedContent.Add(retGroupRow);
+            
+            var retGroupLabel = new Label("Retention Group");
+            retGroupLabel.style.width = 100;
+            retGroupLabel.style.alignSelf = Align.Center;
+            retGroupLabel.style.fontSize = 10;
+            retGroupLabel.style.color = Colors.HintText;
+            retGroupLabel.style.marginTop = 2;
+            retGroupRow.Add(retGroupLabel);
+
+            var retGroupField = new PropertyField(retGroupProp, "");
+            retGroupField.style.flexGrow = 1;
+            retGroupField.BindProperty(retGroupProp);
+            retGroupRow.Add(retGroupField);
+            
+            // Retention row
             var retentionRow = new VisualElement();
             retentionRow.style.flexDirection = FlexDirection.Row;
             retentionRow.style.alignItems = Align.FlexStart;
             retentionRow.style.marginBottom = 4;
             expandedContent.Add(retentionRow);
-            
-            var retentionLabel = new Label("Retention Group");
-            retentionLabel.style.width = 100;
-            retentionLabel.style.alignSelf = Align.Center;
-            retentionLabel.style.fontSize = 10;
-            retentionLabel.style.color = Colors.HintText;
-            retentionLabel.style.marginTop = 2;
-            retentionRow.Add(retentionLabel);
-
-            var retentionField = new PropertyField(retentionProp, "");
-            retentionField.style.flexGrow = 1;
-            retentionField.BindProperty(retentionProp);
-            retentionRow.Add(retentionField);        
             
             // Magnitude + Target row
             var valuesRow = new VisualElement();
@@ -201,6 +209,26 @@ namespace FarEmerald.PlayForge.Extended.Editor
             targetField.style.flexGrow = 1;
             targetField.BindProperty(targetProp);
             valuesRow.Add(targetField);
+            
+            // Real magnitude row
+            var realMagRow = new VisualElement();
+            realMagRow.style.flexDirection = FlexDirection.Row;
+            realMagRow.style.alignItems = Align.FlexStart;
+            realMagRow.style.marginBottom = 4;
+            expandedContent.Add(realMagRow);
+            
+            var realMagLabel = new Label("Real Magnitude");
+            realMagLabel.style.width = 100;
+            realMagLabel.style.alignSelf = Align.Center;
+            realMagLabel.style.fontSize = 10;
+            realMagLabel.style.color = Colors.HintText;
+            realMagLabel.style.marginTop = 2;
+            realMagRow.Add(realMagLabel);
+
+            var realMagField = new PropertyField(realMagProp, "");
+            realMagField.style.flexGrow = 1;
+            realMagField.BindProperty(realMagProp);
+            realMagRow.Add(realMagField);  
             
             // Modifier row
             var modifierField = new PropertyField(modifierProp, "Scaling");
@@ -277,7 +305,7 @@ namespace FarEmerald.PlayForge.Extended.Editor
                 targetBadge.text = target == ELimitedEffectImpactTarget.CurrentAndBase ? "C+B" : "B";
                 targetBadge.tooltip = $"Targets: {target.ToString()}";
                 
-                string retentionGroup = retentionProp.FindPropertyRelative("Name").stringValue;
+                string retentionGroup = retGroupProp.FindPropertyRelative("Name").stringValue;
                 retentionBadge.text = retentionGroup;
                 retentionBadge.style.color = Colors.AccentGreen;
                 retentionBadge.style.backgroundColor = new Color(Colors.AccentBlue.r, Colors.AccentBlue.g, Colors.AccentBlue.b, 0.15f);

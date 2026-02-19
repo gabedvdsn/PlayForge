@@ -50,10 +50,10 @@ namespace FarEmerald.PlayForge
             }
         }
 
-        /*public override bool UseScalingOptions()
+        public override bool UseScalingOptions()
         {
             return false;
-        }*/
+        }
 
         /// <summary>
         /// Gets the minimum possible value at current level (for UI display).

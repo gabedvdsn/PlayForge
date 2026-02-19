@@ -1,4 +1,5 @@
 ﻿using System;
+using UnityEngine;
 
 namespace FarEmerald.PlayForge
 {
@@ -60,51 +61,70 @@ namespace FarEmerald.PlayForge
         public void AttributePostChange(Attribute attribute, ChangeValue change) => _onAttributePostChange?.Invoke(attribute, change);
         #endregion
         
-        #region On Attribute Changed (legacy - after full modification)
+        #region On Attribute Impacted (final impact data after all processing)
         private AttributeImpactDelegate _onAttributeChanged;
         public event AttributeImpactDelegate OnAttributeChanged
         {
             add => _onAttributeChanged = AddUnique(_onAttributeChanged, value);
             remove => _onAttributeChanged -= value;
         }
-        public void AttributeChanged(ImpactData data) => _onAttributeChanged?.Invoke(data);
+
+        public void AttributeChanged(ImpactData data)
+        {
+            _onAttributeChanged?.Invoke(data);
+            
+            switch (ForgeHelper.SignPolicy(data.RealImpact.CurrentValue, data.RealImpact.BaseValue))
+            {
+                case ESignPolicy.Positive:
+                    AttributeIncreased(data);
+                    break;
+                case ESignPolicy.Negative:
+                    AttributeReduced(data);
+                    break;
+                case ESignPolicy.ZeroBiased:
+                    break;
+                case ESignPolicy.ZeroNeutral:
+                    break;
+                default:
+                    throw new ArgumentOutOfRangeException();
+            }
+            
+            if (data.RealImpact.BaseValue != 0f) AttributeBaseChanged(data.Attribute, data.OldValue, data.OldValue + data.RealImpact);
+            if (data.RealImpact.CurrentValue != 0 && data.Target.TryGetAttributeValue(data.Attribute, out AttributeValue currValue))
+            {
+                if (Mathf.Approximately(currValue.Ratio, 1f)) AttributeCurrentFull(data.Attribute);
+                if (Mathf.Approximately(currValue.Ratio, 0f)) AttributeCurrentZero(data.Attribute);
+            }
+            
+            
+        }
         #endregion
         
-        #region On Attribute Impacted (final impact data after all processing)
-        private AttributeImpactDelegate _onAttributeImpacted;
-        public event AttributeImpactDelegate OnAttributeImpacted
+        #region On Attribute Reduced (any negative impact)
+        private AttributeImpactDelegate _onAttributeReduced;
+        public event AttributeImpactDelegate OnAttributeReduced
         {
-            add => _onAttributeImpacted = AddUnique(_onAttributeImpacted, value);
-            remove => _onAttributeImpacted -= value;
+            add => _onAttributeReduced = AddUnique(_onAttributeReduced, value);
+            remove => _onAttributeReduced -= value;
         }
-        public void AttributeImpacted(ImpactData data) => _onAttributeImpacted?.Invoke(data);
-        #endregion
-        
-        #region On Attribute Damaged (negative current impact)
-        private AttributeImpactDelegate _onAttributeDamaged;
-        public event AttributeImpactDelegate OnAttributeDamaged
-        {
-            add => _onAttributeDamaged = AddUnique(_onAttributeDamaged, value);
-            remove => _onAttributeDamaged -= value;
-        }
-        public void AttributeDamaged(ImpactData data)
+        public void AttributeReduced(ImpactData data)
         {
             if (data.RealImpact.CurrentValue < 0)
-                _onAttributeDamaged?.Invoke(data);
+                _onAttributeReduced?.Invoke(data);
         }
         #endregion
         
-        #region On Attribute Healed (positive current impact)
-        private AttributeImpactDelegate _onAttributeHealed;
-        public event AttributeImpactDelegate OnAttributeHealed
+        #region On Attribute Increased (any positive impact)
+        private AttributeImpactDelegate _onAttributeIncreased;
+        public event AttributeImpactDelegate OnAttributeIncreased
         {
-            add => _onAttributeHealed = AddUnique(_onAttributeHealed, value);
-            remove => _onAttributeHealed -= value;
+            add => _onAttributeIncreased = AddUnique(_onAttributeIncreased, value);
+            remove => _onAttributeIncreased -= value;
         }
-        public void AttributeHealed(ImpactData data)
+        public void AttributeIncreased(ImpactData data)
         {
             if (data.RealImpact.CurrentValue > 0)
-                _onAttributeHealed?.Invoke(data);
+                _onAttributeIncreased?.Invoke(data);
         }
         #endregion
         

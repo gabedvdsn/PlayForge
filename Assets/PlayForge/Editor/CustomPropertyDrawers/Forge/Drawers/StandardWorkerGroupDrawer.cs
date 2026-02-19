@@ -167,17 +167,17 @@ namespace FarEmerald.PlayForge.Extended.Editor
                 content.Add(nameRow);
                 
                 // Worker type sections
-                content.Add(CreateWorkerTypeSection(property, "AttributeWorkers", "Attribute", GetWorkerTypeColor("Attribute")));
+                content.Add(CreateWorkerTypeSection(property, "AttributeWorkers", "Attribute", "Perform work before or after attribute modifications.", GetWorkerTypeColor("Attribute")));
                 
-                var impactSection = CreateWorkerTypeSection(property, "ImpactWorkers", "Impact", GetWorkerTypeColor("Impact"));
+                var impactSection = CreateWorkerTypeSection(property, "ImpactWorkers", "Impact", "Inspect any outgoing impact dealt.", GetWorkerTypeColor("Impact"));
                 impactSection.style.marginTop = 6;
                 content.Add(impactSection);
                 
-                var tagSection = CreateWorkerTypeSection(property, "TagWorkers", "Tag", GetWorkerTypeColor("Tag"));
+                var tagSection = CreateWorkerTypeSection(property, "TagWorkers", "Tag", "Inspect & react to changes in applied tags.", GetWorkerTypeColor("Tag"));
                 tagSection.style.marginTop = 6;
                 content.Add(tagSection);
                 
-                var analysisSection = CreateWorkerTypeSection(property, "AnalysisWorkers", "Analysis", GetWorkerTypeColor("Analysis"));
+                var analysisSection = CreateWorkerTypeSection(property, "AnalysisWorkers", "Analysis", "Analyze all gathered data at the end of each frame.", GetWorkerTypeColor("Analysis"));
                 analysisSection.style.marginTop = 6;
                 content.Add(analysisSection);
                 
@@ -187,6 +187,8 @@ namespace FarEmerald.PlayForge.Extended.Editor
 
         private Color GetWorkerTypeColor(string workerType)
         {
+            return Colors.BorderDark;
+            
             return workerType switch
             {
                 "Attribute" => Colors.AccentOrange,
@@ -317,6 +319,7 @@ namespace FarEmerald.PlayForge.Extended.Editor
             SerializedProperty property, 
             string propertyName, 
             string displayName,
+            string hint,
             Color accentColor)
         {
             var arrayProp = property.FindPropertyRelative(propertyName);
@@ -345,6 +348,11 @@ namespace FarEmerald.PlayForge.Extended.Editor
                 //header.Add(new Label($"({count})") { style = { fontSize = 9, color = accentColor } });
             }
             section.Add(header);
+            
+            if (!string.IsNullOrEmpty(hint))
+            {
+                section.Add(CreateHintLabel(hint));
+            }
             
             // Property field for the list
             var field = new PropertyField(arrayProp, "");

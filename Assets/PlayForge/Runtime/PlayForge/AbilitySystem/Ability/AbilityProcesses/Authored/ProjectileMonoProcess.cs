@@ -21,7 +21,7 @@ namespace FarEmerald.PlayForge
         protected virtual float GetProjectileSpeed()
         {
             var speed = GetAttributeValue(Tags.PROJECTILE_SPEED);
-            if (speed.DerivedValues is null) ReportStatus(Tags.FAILED_WHILE_ACTIVE);
+            if (speed.RetainedValues is null) ReportStatus(Tags.FAILED_WHILE_ACTIVE);
 
             return speed.Value.CurrentValue;
         }

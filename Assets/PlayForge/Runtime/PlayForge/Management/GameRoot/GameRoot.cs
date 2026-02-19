@@ -93,5 +93,9 @@ namespace FarEmerald.PlayForge
         {
             return true;
         }
+        public bool RetainEffectImpact()
+        {
+            return true;
+        }
     }
 }

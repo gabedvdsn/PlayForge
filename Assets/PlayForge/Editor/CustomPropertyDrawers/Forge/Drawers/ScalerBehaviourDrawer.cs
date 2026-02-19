@@ -54,6 +54,11 @@ namespace FarEmerald.PlayForge.Extended.Editor
             return baseGui;
         }
 
+        protected override Type GetDefault(SerializedProperty prop)
+        {
+            return typeof(AttenuateScalerBehaviour);
+        }
+
         private void OnPropertyChanged(SerializedProperty prop)
         {
             PopulateChildFields(prop);
@@ -150,6 +155,19 @@ namespace FarEmerald.PlayForge.Extended.Editor
                 prop.serializedObject.Update();
                 PopulateChildFields(prop);
             });
+        }
+
+        protected override bool AcceptOpen(SerializedProperty prop)
+        {
+            return false;
+        }
+        protected override bool AcceptAdd()
+        {
+            return false;
+        }
+        protected override bool AcceptClear(SerializedProperty prop)
+        {
+            return false;
         }
     }
 }

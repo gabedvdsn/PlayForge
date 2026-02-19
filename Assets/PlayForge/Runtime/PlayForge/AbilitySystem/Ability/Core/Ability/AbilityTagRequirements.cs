@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Collections.Generic;
+using FarEmerald.PlayForge.Extended;
 using UnityEngine;
 
 namespace FarEmerald.PlayForge
@@ -8,68 +10,44 @@ namespace FarEmerald.PlayForge
     /// Specifies what tags the source (caster) and target must have or avoid.
     /// </summary>
     [Serializable]
-    public class AbilityTagRequirements
+    public class AbilityTagRequirements : AbstractTagRequirements
     {
-        [Tooltip("Optional name for this requirement group (helps identify when importing)")]
-        public string Name;
-        
-        [Tooltip("Source requirements to use this ability")]
+        [Tooltip("Source (caster) requirements to use this ability")]
+        [AvoidRequireTagGroupColor(0.5f, 0.7f, 0.5f, 0.6f)]
         public AvoidRequireTagGroup SourceRequirements;
         
         [Tooltip("Target requirements to use this ability (n/a for non-targeted abilities, e.g. ground cast)")]
+        [AvoidRequireTagGroupColor(0.392f, 0.392f, 0.392f, 1f)]
         public AvoidRequireTagGroup TargetRequirements;
+
+        // ═══════════════════════════════════════════════════════════════════════════
+        // AbstractTagRequirements Implementation
+        // ═══════════════════════════════════════════════════════════════════════════
+        
+        public override bool HasAnyRequirements =>
+            GroupHasRequirements(SourceRequirements) ||
+            GroupHasRequirements(TargetRequirements);
+        
+        public override int TotalRequirementCount =>
+            GetGroupCount(SourceRequirements) +
+            GetGroupCount(TargetRequirements);
+        
+        public override bool HasLinkedTemplates =>
+            GroupIsLinked(SourceRequirements) ||
+            GroupIsLinked(TargetRequirements);
         
         // ═══════════════════════════════════════════════════════════════════════════
-        // Properties
+        // Validation Methods
         // ═══════════════════════════════════════════════════════════════════════════
         
-        /// <summary>
-        /// Returns true if this requirement group has a custom name set.
-        /// </summary>
-        public bool HasName => !string.IsNullOrEmpty(Name);
-        
-        /// <summary>
-        /// Gets the display name - returns Name if set, empty string otherwise.
-        /// </summary>
-        public string GetDisplayName() => HasName ? Name : "";
-        
-        /// <summary>
-        /// Returns true if either sub-group has any requirements defined.
-        /// </summary>
-        public bool HasAnyRequirements
+        public bool CheckSourceRequirements(List<Tag> tags)
         {
-            get
-            {
-                bool hasSource = SourceRequirements?.HasAnyRequirements ?? false;
-                bool hasTarget = TargetRequirements?.HasAnyRequirements ?? false;
-                return hasSource || hasTarget;
-            }
+            return SourceRequirements?.Validate(tags) ?? true;
         }
         
-        /// <summary>
-        /// Gets the total count of all requirements (source + target, require + avoid).
-        /// </summary>
-        public int TotalRequirementCount
+        public bool CheckTargetRequirements(List<Tag> tags)
         {
-            get
-            {
-                int count = 0;
-                count += SourceRequirements?.TotalCount ?? 0;
-                count += TargetRequirements?.TotalCount ?? 0;
-                return count;
-            }
-        }
-        
-        /// <summary>
-        /// Returns true if either sub-group is linked to a template.
-        /// </summary>
-        public bool HasLinkedTemplates
-        {
-            get
-            {
-                return (SourceRequirements?.IsLinkedToTemplate ?? false) || 
-                       (TargetRequirements?.IsLinkedToTemplate ?? false);
-            }
+            return TargetRequirements?.Validate(tags) ?? true;
         }
     }
 }

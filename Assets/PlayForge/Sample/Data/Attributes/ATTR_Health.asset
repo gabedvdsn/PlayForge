@@ -13,4 +13,6 @@ MonoBehaviour:
   m_Name: ATTR_Health
   m_EditorClassIdentifier: 
   Name: Health
+  Abbreviation: 
   Description: Basic unit of health
+  Textures: []

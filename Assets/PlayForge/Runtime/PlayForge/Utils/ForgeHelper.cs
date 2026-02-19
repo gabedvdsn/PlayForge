@@ -135,7 +135,7 @@ namespace FarEmerald.PlayForge
 
         #endregion
         
-        #region Validation Utils
+        #region Tag-Related Pipeline Validation Utils
 
         public static bool ValidateSelfModification(bool allow, ISource a, ISource b)
         {
@@ -143,9 +143,17 @@ namespace FarEmerald.PlayForge
             return a != b;
         }
 
-        public static bool ValidateContextTags(bool anyContext, List<Tag> validContexts, List<Tag> outsideContexts)
+        public static bool ValidateContextTags(bool anyContext, List<Tag> validContexts, ImpactDerivationContext outsideContexts, EAnyAllPolicy compPolicy)
         {
-            return anyContext || validContexts.ContainsAll(outsideContexts);
+            if (anyContext) return true;
+            return compPolicy switch
+            {
+
+                EAnyAllPolicy.Any => outsideContexts.All().Any(validContexts.Contains),
+                EAnyAllPolicy.All => outsideContexts.All().All(validContexts.Contains),
+                _ => throw new ArgumentOutOfRangeException(nameof(compPolicy), compPolicy, null)
+            };
+
         }
 
         public static bool ValidateAffiliationPolicy(
@@ -175,9 +183,9 @@ namespace FarEmerald.PlayForge
         
         public static bool ValidateImpactTypes(bool anyType, List<Tag> impactType, List<Tag> validation, EAnyAllPolicy policy = EAnyAllPolicy.Any)
         {
-            if (impactType.Contains(Tags.NONE)) return false;
+            if (impactType.Contains(Tags.DisallowImpact)) return false;
 
-            if (anyType) return true;
+            if (anyType || impactType.Contains(Tags.AllowImpact)) return true;
             
             return policy switch
             {
@@ -262,6 +270,442 @@ namespace FarEmerald.PlayForge
         
         #endregion
         
+        #region Tag Avoid/Require Validation
+        
+        /// <summary>
+        /// Validates an Avoid/Require pattern:
+        /// - ALL "Required" tags must be present
+        /// - NONE of the "Avoid" tags must be present
+        /// </summary>
+        public static bool ValidateAvoidRequire(
+            IEnumerable<Tag> tags,
+            IEnumerable<Tag> required,
+            IEnumerable<Tag> avoid,
+            ETagMatchMode matchMode = ETagMatchMode.Exact)
+        {
+            var tagList = tags?.ToList() ?? new List<Tag>();
+            
+            // Check required tags
+            if (required != null)
+            {
+                foreach (var req in required)
+                {
+                    if (!HasTag(tagList, req, matchMode))
+                        return false;
+                }
+            }
+            
+            // Check avoid tags
+            if (avoid != null)
+            {
+                foreach (var avd in avoid)
+                {
+                    if (HasTag(tagList, avd, matchMode))
+                        return false;
+                }
+            }
+            
+            return true;
+        }
+        
+        /// <summary>
+        /// Validates an Avoid/Require pattern against a TagCache.
+        /// </summary>
+        public static bool ValidateAvoidRequire(
+            TagCache tagCache,
+            IEnumerable<Tag> required,
+            IEnumerable<Tag> avoid,
+            ETagMatchMode matchMode = ETagMatchMode.Exact)
+        {
+            if (tagCache == null) return false;
+            
+            // Check required tags
+            if (required != null)
+            {
+                foreach (var req in required)
+                {
+                    if (!tagCache.HasTag(req, matchMode))
+                        return false;
+                }
+            }
+            
+            // Check avoid tags
+            if (avoid != null)
+            {
+                foreach (var avd in avoid)
+                {
+                    if (tagCache.HasTag(avd, matchMode))
+                        return false;
+                }
+            }
+            
+            return true;
+        }
+        
+        /// <summary>
+        /// Validates using TagQuery lists for more complex requirements.
+        /// </summary>
+        public static bool ValidateAvoidRequireQueries(
+            TagCache tagCache,
+            IEnumerable<TagQuery> requiredQueries,
+            IEnumerable<TagQuery> avoidQueries)
+        {
+            // All required queries must pass
+            if (!ValidateAllQueries(requiredQueries, tagCache))
+                return false;
+            
+            // Avoid queries are inverted - they must all FAIL
+            if (avoidQueries != null)
+            {
+                foreach (var query in avoidQueries)
+                {
+                    if (query.Validate(tagCache))
+                        return false;  // If avoid query passes, validation fails
+                }
+            }
+            
+            return true;
+        }
+        
+        /// <summary>
+        /// Validates using TagQuery lists for more complex requirements (List version).
+        /// </summary>
+        public static bool ValidateAvoidRequireQueries(
+            List<Tag> appliedTags,
+            IEnumerable<TagQuery> requiredQueries,
+            IEnumerable<TagQuery> avoidQueries)
+        {
+            var tags = appliedTags ?? new List<Tag>();
+            
+            // All required queries must pass
+            if (!ValidateAllQueries(requiredQueries, tags))
+                return false;
+            
+            // Avoid queries are inverted - they must all FAIL
+            if (avoidQueries != null)
+            {
+                foreach (var query in avoidQueries)
+                {
+                    if (query.Validate(tags))
+                        return false;  // If avoid query passes, validation fails
+                }
+            }
+            
+            return true;
+        }
+        
+        /// <summary>
+        /// Validates using TagQuery lists (IEnumerable version).
+        /// </summary>
+        public static bool ValidateAvoidRequireQueries(
+            IEnumerable<Tag> appliedTags,
+            IEnumerable<TagQuery> requiredQueries,
+            IEnumerable<TagQuery> avoidQueries)
+        {
+            return ValidateAvoidRequireQueries(appliedTags?.ToList(), requiredQueries, avoidQueries);
+        }
+        
+        #endregion
+        
+        #region Tag Query Validation
+        
+        /// <summary>
+        /// Validates a single TagQuery against a tag collection.
+        /// </summary>
+        public static bool ValidateTagQuery(TagQuery query, IEnumerable<Tag> tags)
+        {
+            if (query == null) return true;
+            return query.Validate(tags?.ToList() ?? new List<Tag>());
+        }
+        
+        /// <summary>
+        /// Validates a single TagQuery against a TagCache.
+        /// </summary>
+        public static bool ValidateTagQuery(TagQuery query, TagCache tagCache)
+        {
+            if (query == null) return true;
+            return query.Validate(tagCache);
+        }
+        
+        /// <summary>
+        /// Validates ALL queries must pass.
+        /// </summary>
+        public static bool ValidateAllQueries(IEnumerable<TagQuery> queries, IEnumerable<Tag> tags)
+        {
+            if (queries == null) return true;
+            
+            var tagList = tags?.ToList() ?? new List<Tag>();
+            
+            foreach (var query in queries)
+            {
+                if (!query.Validate(tagList))
+                    return false;
+            }
+            return true;
+        }
+        
+        /// <summary>
+        /// Validates ALL queries must pass against a TagCache.
+        /// </summary>
+        public static bool ValidateAllQueries(IEnumerable<TagQuery> queries, TagCache tagCache)
+        {
+            if (queries == null) return true;
+            
+            foreach (var query in queries)
+            {
+                if (!query.Validate(tagCache))
+                    return false;
+            }
+            return true;
+        }
+        
+        /// <summary>
+        /// Validates ANY query must pass.
+        /// </summary>
+        public static bool ValidateAnyQuery(IEnumerable<TagQuery> queries, IEnumerable<Tag> tags)
+        {
+            if (queries == null) return true;
+            
+            var tagList = tags?.ToList() ?? new List<Tag>();
+            var queryList = queries.ToList();
+            
+            if (queryList.Count == 0) return true;
+            
+            foreach (var query in queryList)
+            {
+                if (query.Validate(tagList))
+                    return true;
+            }
+            return false;
+        }
+        
+        /// <summary>
+        /// Validates ANY query must pass against a TagCache.
+        /// </summary>
+        public static bool ValidateAnyQuery(IEnumerable<TagQuery> queries, TagCache tagCache)
+        {
+            if (queries == null) return true;
+            
+            var queryList = queries.ToList();
+            if (queryList.Count == 0) return true;
+            
+            foreach (var query in queryList)
+            {
+                if (query.Validate(tagCache))
+                    return true;
+            }
+            return false;
+        }
+        
+        #endregion
+        
+        #region Tag Hierarchy Utils
+        
+        /// <summary>
+        /// Checks if the tag collection contains the query tag.
+        /// Supports hierarchical matching.
+        /// </summary>
+        public static bool HasTag(IEnumerable<Tag> tags, Tag query, ETagMatchMode matchMode = ETagMatchMode.Exact)
+        {
+            if (tags == null) return false;
+            
+            foreach (var tag in tags)
+            {
+                if (MatchesTag(tag, query, matchMode))
+                    return true;
+            }
+            return false;
+        }
+        
+        /// <summary>
+        /// Checks if the tag matches the query according to the match mode.
+        /// </summary>
+        public static bool MatchesTag(Tag tag, Tag query, ETagMatchMode matchMode)
+        {
+            return matchMode switch
+            {
+                ETagMatchMode.Exact => tag.Equals(query),
+                ETagMatchMode.IncludeChildren => tag.MatchesOrIsChildOf(query),
+                ETagMatchMode.IncludeParents => tag.MatchesOrIsParentOf(query),
+                ETagMatchMode.SameRoot => tag.SharesAncestorWith(query),
+                _ => tag.Equals(query)
+            };
+        }
+        
+        /// <summary>
+        /// Checks if ANY of the query tags are present in the collection.
+        /// </summary>
+        public static bool HasAnyTag(IEnumerable<Tag> tags, IEnumerable<Tag> queries, ETagMatchMode matchMode = ETagMatchMode.Exact)
+        {
+            if (tags == null || queries == null) return false;
+            
+            var tagList = tags as IList<Tag> ?? tags.ToList();
+            
+            foreach (var query in queries)
+            {
+                if (HasTag(tagList, query, matchMode))
+                    return true;
+            }
+            return false;
+        }
+        
+        /// <summary>
+        /// Checks if ALL of the query tags are present in the collection.
+        /// </summary>
+        public static bool HasAllTags(IEnumerable<Tag> tags, IEnumerable<Tag> queries, ETagMatchMode matchMode = ETagMatchMode.Exact)
+        {
+            if (tags == null || queries == null) return false;
+            
+            var tagList = tags as IList<Tag> ?? tags.ToList();
+            
+            foreach (var query in queries)
+            {
+                if (!HasTag(tagList, query, matchMode))
+                    return false;
+            }
+            return true;
+        }
+        
+        /// <summary>
+        /// Checks if NONE of the query tags are present in the collection.
+        /// </summary>
+        public static bool HasNoneOfTags(IEnumerable<Tag> tags, IEnumerable<Tag> queries, ETagMatchMode matchMode = ETagMatchMode.Exact)
+        {
+            if (tags == null) return true;
+            if (queries == null) return true;
+            
+            var tagList = tags as IList<Tag> ?? tags.ToList();
+            
+            foreach (var query in queries)
+            {
+                if (HasTag(tagList, query, matchMode))
+                    return false;
+            }
+            return true;
+        }
+        
+        /// <summary>
+        /// Counts how many tags in the collection match the query.
+        /// </summary>
+        public static int CountMatchingTags(IEnumerable<Tag> tags, Tag query, ETagMatchMode matchMode = ETagMatchMode.Exact)
+        {
+            if (tags == null) return 0;
+            
+            int count = 0;
+            foreach (var tag in tags)
+            {
+                if (MatchesTag(tag, query, matchMode))
+                    count++;
+            }
+            return count;
+        }
+        
+        /// <summary>
+        /// Gets all tags in the collection that match the query.
+        /// </summary>
+        public static IEnumerable<Tag> GetMatchingTags(IEnumerable<Tag> tags, Tag query, ETagMatchMode matchMode = ETagMatchMode.Exact)
+        {
+            if (tags == null) yield break;
+            
+            foreach (var tag in tags)
+            {
+                if (MatchesTag(tag, query, matchMode))
+                    yield return tag;
+            }
+        }
+        
+        #endregion
+        
+        #region Tag Path Utils
+
+        /// <summary>
+        /// Checks if a tag path is valid (properly formatted).
+        /// </summary>
+        public static bool IsValidTagPath(string path)
+        {
+            return TagHierarchy.IsValidPath(path);
+        }
+        
+        /// <summary>
+        /// Creates a tag path from segments.
+        /// </summary>
+        public static string BuildTagPath(params string[] segments)
+        {
+            if (segments == null || segments.Length == 0) return "";
+            return string.Join(".", segments.Where(s => !string.IsNullOrEmpty(s)));
+        }
+        
+        /// <summary>
+        /// Gets all unique root categories from a tag collection.
+        /// </summary>
+        public static IEnumerable<Tag> GetUniqueRoots(IEnumerable<Tag> tags)
+        {
+            if (tags == null) yield break;
+            
+            var seen = new HashSet<string>();
+            foreach (var tag in tags)
+            {
+                var root = tag.GetRoot();
+                if (seen.Add(root.Name))
+                {
+                    yield return root;
+                }
+            }
+        }
+        
+        /// <summary>
+        /// Groups tags by their root category.
+        /// </summary>
+        public static Dictionary<Tag, List<Tag>> GroupByRoot(IEnumerable<Tag> tags)
+        {
+            var result = new Dictionary<Tag, List<Tag>>();
+            
+            if (tags == null) return result;
+            
+            foreach (var tag in tags)
+            {
+                var root = tag.GetRoot();
+                if (!result.TryGetValue(root, out var list))
+                {
+                    list = new List<Tag>();
+                    result[root] = list;
+                }
+                list.Add(tag);
+            }
+            
+            return result;
+        }
+        
+        /// <summary>
+        /// Gets the deepest common ancestor of two tags.
+        /// Returns null if they share no common ancestor.
+        /// </summary>
+        public static Tag? GetCommonAncestor(Tag a, Tag b)
+        {
+            if (string.IsNullOrEmpty(a.Name) || string.IsNullOrEmpty(b.Name))
+                return null;
+            
+            var partsA = a.GetSegments();
+            var partsB = b.GetSegments();
+            
+            int minLen = Math.Min(partsA.Length, partsB.Length);
+            int commonDepth = 0;
+            
+            for (int i = 0; i < minLen; i++)
+            {
+                if (partsA[i] == partsB[i])
+                    commonDepth = i + 1;
+                else
+                    break;
+            }
+            
+            if (commonDepth == 0) return null;
+            
+            return Tag.Generate(string.Join(".", partsA.Take(commonDepth)));
+        }
+        
+        #endregion
+        
         #region Attribute Utils
 
         /// <summary>
@@ -310,6 +754,7 @@ namespace FarEmerald.PlayForge
                     ECalculationOperation.Add => a + b,
                     ECalculationOperation.Multiply => a * b,
                     ECalculationOperation.Override => b,
+                    ECalculationOperation.FlatBonus => a + b,
                     _ => throw new ArgumentOutOfRangeException(nameof(operation), operation, null)
                 };
             }
@@ -483,7 +928,6 @@ namespace FarEmerald.PlayForge
 
             return rounding switch
             {
-
                 ERoundingOperation.Floor => Mathf.FloorToInt(v),
                 ERoundingOperation.Ceil => Mathf.CeilToInt(v),
                 _ => throw new ArgumentOutOfRangeException(nameof(rounding), rounding, null)
@@ -494,7 +938,6 @@ namespace FarEmerald.PlayForge
         {
             return operation switch
             {
-
                 EMagnitudeOperation.MultiplyWithScaler => value * scaleValue,
                 EMagnitudeOperation.AddScaler => value + scaleValue,
                 EMagnitudeOperation.UseMagnitude => value,

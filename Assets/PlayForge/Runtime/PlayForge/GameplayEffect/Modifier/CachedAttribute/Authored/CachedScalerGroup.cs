@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
 
@@ -56,8 +57,12 @@ namespace FarEmerald.PlayForge
             {
                 value *= member.Calculation.Evaluate(spec);
             }
+
+            float flatBonus = Calculations
+                .Where(m => m.RelativeOperation == ECalculationOperation.FlatBonus && m.Calculation != null)
+                .Sum(member => member.Calculation.Evaluate(spec));
             
-            return value;
+            return value + flatBonus;
         }
         
         public override void Regulate(Attribute attribute, AttributeModificationRule rules)
@@ -69,9 +74,9 @@ namespace FarEmerald.PlayForge
                 member.Calculation?.Regulate(attribute, rules);
             }
         }
-        public override void Evaluate(CachedAttributeValue value)
+        public override float Evaluate(IGameplayAbilitySystem gas, AttributeBlueprint blueprint, IReadOnlyDictionary<Attribute, CachedAttributeValue> cache)
         {
-            
+            return 0f;
         }
     }
 

@@ -5,7 +5,7 @@ using UnityEngine;
 
 namespace FarEmerald.PlayForge
 {
-    public class AbilitySpec : IEffectOrigin, ITagReadable, IValidationReady
+    public class AbilitySpec : IEffectOrigin, IValidationReady
     {
         public ISource Owner;
         public Ability Base;
@@ -65,26 +65,14 @@ namespace FarEmerald.PlayForge
         {
             return Owner.FindAbilitySystem(out var ab) && ab.TryGetAbilityContainer(Base, out var container) && container.IsActive;
         }
+        public bool RetainEffectImpact()
+        {
+            return false;
+        }
 
         public override string ToString()
         {
             return Base.ToString();
-        }
-        public ITagReadableReport Read()
-        {
-            return new AbilityReport(this, Owner.GetLongestDurationFor(Base.Tags.AssetTag));
-        }
-    }
-
-    public struct AbilityReport : ITagReadableReport
-    {
-        public AbilitySpec Spec;
-        public GameplayEffectDuration Cooldown;
-
-        public AbilityReport(AbilitySpec spec, GameplayEffectDuration cooldown)
-        {
-            Spec = spec;
-            Cooldown = cooldown;
         }
     }
 }

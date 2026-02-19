@@ -8,7 +8,7 @@ using UnityEngine.Serialization;
 namespace FarEmerald.PlayForge
 {
     [CreateAssetMenu(menuName = "PlayForge/Attribute Set", fileName = "AttributeSet_")]
-    public class AttributeSet : BaseForgeObject, IHasReadableDefinition
+    public class AttributeSet : BaseForgeObject
     {
         public string Name;
         public string Description;
@@ -33,7 +33,7 @@ namespace FarEmerald.PlayForge
             AttributeSetMeta meta = new AttributeSetMeta(this);
             meta.InitializeAttributeSystem(system, this);
 
-            WorkerGroup.ProvideWorkersTo(system.Root);
+            WorkerGroup.ProvideWorkersTo(system.Self);
         }
 
         public HashSet<Attribute> GetUnique()
@@ -58,7 +58,7 @@ namespace FarEmerald.PlayForge
 
             return attributes;
         }
-        public string GetName()
+        public override string GetName()
         {
             return Name;
         }
@@ -70,11 +70,11 @@ namespace FarEmerald.PlayForge
                 foreach (var t in subset.GetGrantedTags()) yield return t;
             }
         }
-        public string GetDescription()
+        public override string GetDescription()
         {
             return Description;
         }
-        public Texture2D GetPrimaryIcon()
+        public override Texture2D GetPrimaryIcon()
         {
             foreach (var ti in Textures)
             {
@@ -94,14 +94,15 @@ namespace FarEmerald.PlayForge
     [Serializable]
     public class AttributeSetElement
     {
-        // [Header("Attribute Declaration")]
-        
         public Attribute Attribute;
         public float Magnitude;
-        [SerializeReference] public AbstractCachedScaler Scaling;
         
         public ELimitedEffectImpactTarget Target;
         public AttributeOverflowData Overflow;
+        
+        [ScalerRootAssignment(typeof(AbstractCachedScaler))]
+        [SerializeReference] public AbstractCachedScaler Scaling;
+        public EMagnitudeOperation RealMagnitude;
 
         [ForgeTagContext(ForgeContext.RetentionGroup)]
         public Tag RetentionGroup = Tags.DEFAULT;
@@ -110,45 +111,17 @@ namespace FarEmerald.PlayForge
 
         public AttributeConstraints Constraints = new();
 
-        public AttributeBlueprint ToAttributeBlueprint()
+        public AttributeValue RootValue => Target switch
         {
-            return Target switch
-            {
-                ELimitedEffectImpactTarget.CurrentAndBase => new AttributeBlueprint(new ModifiedAttributeValue(Magnitude, Magnitude), Overflow, Constraints, Scaling, RetentionGroup),
-                ELimitedEffectImpactTarget.Base => new AttributeBlueprint(new ModifiedAttributeValue(0, Magnitude), Overflow, Constraints, Scaling, RetentionGroup),
-                _ => throw new ArgumentOutOfRangeException()
-            };
-        }
+            ELimitedEffectImpactTarget.CurrentAndBase => new AttributeValue(Magnitude, Magnitude),
+            ELimitedEffectImpactTarget.Base => new AttributeValue(0f, Magnitude),
+            _ => throw new ArgumentOutOfRangeException()
+        };
     }
 
-    public struct AttributeBlueprint
-    {
-        public ModifiedAttributeValue DefaultValue;
-        public AttributeOverflowData Overflow;
-        public AttributeConstraints Constraints;
-        public AbstractCachedScaler Modifier;
-        public Tag RetentionGroup;
-
-        public AttributeBlueprint(ModifiedAttributeValue defaultValue, AttributeOverflowData overflow, AttributeConstraints constraints, AbstractCachedScaler modifier, Tag retentionGroup)
-        {
-            DefaultValue = defaultValue;
-            Overflow = overflow;
-            Constraints = constraints;
-            Modifier = modifier;
-            RetentionGroup = retentionGroup;
-        }
-
-        public AttributeBlueprint Combine(AttributeBlueprint other)
-        {
-            return new AttributeBlueprint(DefaultValue.Combine(other.DefaultValue), Overflow, Constraints, Modifier, RetentionGroup);
-        }
-
-        public AttributeValue ToAttributeValue() => DefaultValue.ToAttributeValue();
-    }
-    
     public enum EAttributeElementCollisionPolicy
     {
-        UseCollisionSetting,
+        UseSetCollisionSetting,
         UseThis,
         UseExisting,
         Combine
@@ -217,9 +190,9 @@ namespace FarEmerald.PlayForge
 
                 if (!table.ContainsKey(element.CollisionPolicy))
                 {
-                    matrix[element.Attribute][element.CollisionPolicy] = new List<AttributeBlueprint>() { element.ToAttributeBlueprint() };
+                    matrix[element.Attribute][element.CollisionPolicy] = new List<AttributeBlueprint>() { new AttributeBlueprint(element) };
                 }
-                else matrix[element.Attribute][element.CollisionPolicy].Add(element.ToAttributeBlueprint());
+                else matrix[element.Attribute][element.CollisionPolicy].Add(new AttributeBlueprint(element));
             }
             
             foreach (AttributeSet subSet in attributeSet.SubSets) HandleAttributeSet(subSet);
@@ -229,7 +202,7 @@ namespace FarEmerald.PlayForge
         {
             foreach (Attribute attribute in matrix.Keys)
             {
-                if (matrix[attribute].TryGetValue(EAttributeElementCollisionPolicy.UseCollisionSetting, out var defaults))
+                if (matrix[attribute].TryGetValue(EAttributeElementCollisionPolicy.UseSetCollisionSetting, out var defaults))
                 {
                     InitializeAggregatePolicy(system, attribute, defaults, attributeSet.CollisionResolutionPolicy);
                 }
@@ -239,8 +212,16 @@ namespace FarEmerald.PlayForge
                 }
                 else if (matrix[attribute].TryGetValue(EAttributeElementCollisionPolicy.Combine, out defaults))
                 {
-                    var blueprint = new AttributeBlueprint();
-                    foreach (var bp in defaults) blueprint = blueprint.Combine(bp);
+                    AttributeBlueprint blueprint = null;
+                    if (defaults.Count > 0)
+                    {
+                        blueprint = defaults[0];
+                        foreach (var bp in defaults) blueprint.Combine(bp);
+                        for (int i = 1; i < defaults.Count; i++)
+                        {
+                            blueprint.Combine(defaults[i]);
+                        }
+                    }
 
                     system.ProvideAttribute(attribute, blueprint);
                 }
@@ -257,25 +238,23 @@ namespace FarEmerald.PlayForge
             {
                 case EValueCollisionPolicy.UseAverage:
                 {
-                    float _current = defaults.Average(mav => mav.DefaultValue.DeltaCurrentValue);
-                    float _base = defaults.Average(mav => mav.DefaultValue.DeltaBaseValue);
+                    float _current = defaults.Average(mav => mav.RootValue.CurrentValue);
+                    float _base = defaults.Average(mav => mav.RootValue.BaseValue);
 
                     system.ProvideAttribute(attribute,
-                        new AttributeBlueprint(
-                            new ModifiedAttributeValue(_current, _base),
-                            defaults[0].Overflow, defaults[0].Constraints, defaults[0].Modifier, defaults[0].RetentionGroup)
+                        new AttributeBlueprint(defaults[0].Base)
                     );
                     break;
                 }
                 case EValueCollisionPolicy.UseMaximum:
                 {
-                    int idx = defaults.IndexMax(mav => mav.DefaultValue.DeltaBaseValue);
+                    int idx = defaults.IndexMax(mav => mav.RootValue.BaseValue);
                     system.ProvideAttribute(attribute, defaults[idx]);
                     break;
                 }
                 case EValueCollisionPolicy.UseMinimum:
                 {
-                    int idx = defaults.IndexMin(mav => mav.DefaultValue.DeltaBaseValue);
+                    int idx = defaults.IndexMin(mav => mav.RootValue.BaseValue);
                     system.ProvideAttribute(attribute, defaults[idx]);
                     break;
                 }

@@ -108,6 +108,7 @@ namespace FarEmerald.PlayForge
         public void MarkDead()
         {
             if (_isDead) return;
+            
             _isDead = true;
     
             // Fire death callback immediately so listeners can react
@@ -115,13 +116,7 @@ namespace FarEmerald.PlayForge
     
             // Record in frame summary
             _frameSummary?.RecordDeath(this);
-        }
-
-        /// <summary>
-        /// Queue destruction for after the current frame completes.
-        /// </summary>
-        public void QueueDestruction()
-        {
+            
             _pendingDestruction = true;
         }
 

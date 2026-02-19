@@ -63,21 +63,6 @@ namespace FarEmerald.PlayForge
         #endregion
 
         #region State Management
-
-        public void ForceIntoState(EProcessState state)
-        {
-            if (state == State) return;
-
-            if (ProcessControl.Instance.OutputLogs && ProcessControl.Instance.DetailedLogs) Debug.Log($"\t[ {Process.ProcessName} ] Force {state}");
-            
-            if (State == EProcessState.Running && state != EProcessState.Running)
-            {
-                Interrupt();
-            }
-            
-            QueuedState = state;
-            SetQueuedState();
-        }
         
         public void QueueNextState(EProcessState state)
         {
@@ -127,6 +112,21 @@ namespace FarEmerald.PlayForge
             }
         }
 
+        public void ForceIntoState(EProcessState state)
+        {
+            if (state == State) return;
+
+            if (ProcessControl.Instance.OutputLogs && ProcessControl.Instance.DetailedLogs) Debug.Log($"\t[ {Process.ProcessName} ] Force {state}");
+            
+            if (State == EProcessState.Running && state != EProcessState.Running)
+            {
+                Interrupt();
+            }
+            
+            QueuedState = state;
+            SetQueuedState();
+        }
+        
         #endregion
 
         #region Lifecycle Methods
@@ -196,16 +196,8 @@ namespace FarEmerald.PlayForge
                     Process.WhenFixedUpdate(Process.Relay);
                     break;
                 case EProcessStepTiming.UpdateAndLate:
-                    Process.WhenUpdate(Process.Relay);
-                    Process.WhenLateUpdate(Process.Relay);
-                    break;
                 case EProcessStepTiming.UpdateAndFixed:
-                    Process.WhenUpdate(Process.Relay);
-                    Process.WhenFixedUpdate(Process.Relay);
-                    break;
                 case EProcessStepTiming.LateAndFixed:
-                    Process.WhenLateUpdate(Process.Relay);
-                    Process.WhenFixedUpdate(Process.Relay);
                     break;
                 default:
                     throw new ArgumentOutOfRangeException(nameof(timing), timing, null);
@@ -284,14 +276,23 @@ namespace FarEmerald.PlayForge
         {
             return _pcb.Process.TryGetProcess(out process);
         }
-        
+
         /// <summary>
         /// Calculates remaining runtime based on elapsed update time.
         /// </summary>
         /// <param name="runtime">Total runtime in milliseconds</param>
         /// <param name="multiplier">Conversion multiplier (default 1000 for ms)</param>
-        public int RemainingRuntime(int runtime, int multiplier = 1000) 
-            => runtime - (int)UpdateTime * multiplier;
+        /// <param name="unscaled"></param>
+        public int RemainingRuntime(int runtime, int multiplier = 1000, bool unscaled = true) 
+            => runtime - (unscaled ? (int)UnscaledLifetime : (int)Lifetime) * multiplier;
+        
+        /// <summary>
+        /// Calculates remaining runtime based on elapsed update time.
+        /// </summary>
+        /// <param name="runtime">Total runtime in milliseconds</param>
+        /// <param name="unscaled"></param>
+        public float RemainingRuntime(float runtime, bool unscaled = true) 
+            => runtime - (unscaled ? UnscaledLifetime : Lifetime);
 
         /// <summary>
         /// Pauses this process and optionally its children.
@@ -310,6 +311,12 @@ namespace FarEmerald.PlayForge
         /// </summary>
         public bool Terminate(bool cascade = true) 
             => ProcessControl.Instance.Terminate(CacheIndex, cascade);
+        
+        /// <summary>
+        /// Immediately terminates this process and optionally its children.
+        /// </summary>
+        public bool TerminateImmediate(bool cascade = true) 
+            => ProcessControl.Instance.TerminateImmediate(CacheIndex, cascade);
     }
     
     public enum EProcessState

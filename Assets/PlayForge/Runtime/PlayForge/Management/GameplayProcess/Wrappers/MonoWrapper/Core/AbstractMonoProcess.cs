@@ -11,14 +11,13 @@ namespace FarEmerald.PlayForge
     {
         [Header("Mono Gameplay Process")] 
         
-        public EProcessLifecycle ProcessLifecycle;
-        public EProcessStepTiming ProcessTiming;
-        public EProcessStepPriorityMethod PriorityMethod = EProcessStepPriorityMethod.First;
-        public int ProcessStepPriority;
+        [HideInInspector] public EProcessLifecycle ProcessLifecycle;
+        [HideInInspector] public EProcessStepTiming ProcessTiming;
+        [HideInInspector] public EProcessStepPriorityMethod PriorityMethod = EProcessStepPriorityMethod.First;
+        [HideInInspector] public int ProcessStepPriority;
         
-        [Space(5)]
-        
-        [Tooltip("Uses Object.Instantiate when null")]
+        [Tooltip("Uses Object.Instantiate and Object.Destroy when null")]
+        [HideInInspector] [SerializeReference] 
         public AbstractMonoProcessInstantiator Instantiator;
         
         protected ProcessDataPacket regData;
@@ -43,35 +42,35 @@ namespace FarEmerald.PlayForge
             Relay = relay;
             
             // Transform
-            if (regData.TryGet<Transform>(Tags.PARENT_TRANSFORM, EProxyDataValueTarget.Primary, out var pt))
+            if (regData.TryGetFirst<Transform>(Tags.PARENT_TRANSFORM, out var pt))
             {
                 transform.SetParent(pt);
             }
             
             // Position
-            if (regData.TryGet<Vector3>(Tags.POSITION, EProxyDataValueTarget.Primary, out var pos))
+            if (regData.TryGetFirst<Vector3>(Tags.POSITION, out var pos))
             {
                 transform.position = pos;
             }
-            else if (regData.TryGet<IGameplayAbilitySystem>(Tags.POSITION, EProxyDataValueTarget.Primary, out var gasPos))
+            else if (regData.TryGetFirst<IGameplayAbilitySystem>(Tags.POSITION, out var gasPos))
             {
                 transform.position = gasPos.AsTransform().position;
             }
-            else if (regData.TryGet<Transform>(Tags.POSITION, EProxyDataValueTarget.Primary, out var tPos))
+            else if (regData.TryGetFirst<Transform>(Tags.POSITION, out var tPos))
             {
                 transform.position = tPos.position;
             }
             
             // Rotation
-            if (regData.TryGet<Quaternion>(Tags.ROTATION, EProxyDataValueTarget.Primary, out var rot))
+            if (regData.TryGetFirst<Quaternion>(Tags.ROTATION, out var rot))
             {
                 transform.rotation = rot;
             }
-            else if (regData.TryGet<IGameplayAbilitySystem>(Tags.ROTATION, EProxyDataValueTarget.Primary, out var gasRot))
+            else if (regData.TryGetFirst<IGameplayAbilitySystem>(Tags.ROTATION, out var gasRot))
             {
                 transform.rotation = gasRot.AsTransform().rotation;
             }
-            else if (regData.TryGet<Transform>(Tags.ROTATION, EProxyDataValueTarget.Primary, out var tRot))
+            else if (regData.TryGetFirst<Transform>(Tags.ROTATION, out var tRot))
             {
                 transform.rotation = tRot.rotation;
             }
@@ -147,12 +146,5 @@ namespace FarEmerald.PlayForge
             var tasks = users.Select(user => CallBehaviour(cmd, cb.CreateInstance(), user, token)).ToArray();
             await UniTask.WhenAll(tasks);
         }
-    }
-
-    public enum EProcessStepPriorityMethod
-    {
-        Manual,
-        First,
-        Last
     }
 }

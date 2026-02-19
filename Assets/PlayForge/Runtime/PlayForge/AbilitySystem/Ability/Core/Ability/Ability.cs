@@ -9,7 +9,7 @@ using Object = UnityEngine.Object;
 namespace FarEmerald.PlayForge
 {
     [CreateAssetMenu(menuName = "PlayForge/Ability", fileName = "Ability_")]
-    public class Ability : BaseForgeLinkProvider, IHasReadableDefinition
+    public class Ability : BaseForgeLinkProvider
     {
         public AbilityDefinition Definition = new();
         public AbilityTags Tags = new();
@@ -20,34 +20,23 @@ namespace FarEmerald.PlayForge
         {
             new CooldownValidation(),
             new CostValidation(),
-            new AttributeValidation()
-            {
-                Attribute = null,
-                Comparison = EComparisonOperator.GreaterThan,
-                Value = 0f
-            },
+            new IsAliveValidation()
         };
 
         [SerializeReference] 
         public List<IAbilityValidationRule> TargetActivationRules = new()
         {
-            new AttributeValidation()
-            {
-                Attribute = null,
-                Comparison = EComparisonOperator.GreaterThan,
-                Value = 0f
-            }
+            new IsAliveValidation()
         };
         
-        [SerializeField]
-        public List<DataWrapper> LocalData = new();
-        
-        [Min(0)] public int StartingLevel = 0;
+        [Min(0)] public int StartingLevel = 1;
         [Min(0)] public int MaxLevel = 4;
         public bool IgnoreWhenLevelZero = true;
         
-        [ForgeEffectTemplate("Cost", "Cost")] public GameplayEffect Cost;
-        [ForgeEffectTemplate("Cooldown", "Cooldown")] public GameplayEffect Cooldown;
+        [ForgeEffectTemplate("Cost", "Cost")] 
+        public GameplayEffect Cost;
+        [ForgeEffectTemplate("Cooldown", "Cooldown")] 
+        public GameplayEffect Cooldown;
 
         public StandardWorkerGroup WorkerGroup;
 
@@ -70,7 +59,7 @@ namespace FarEmerald.PlayForge
         /// <summary>
         /// Gets the raw linked ScriptableObject (for serialization/editor purposes).
         /// </summary>
-        public BaseForgeLinkProvider LinkedProvider
+        public override BaseForgeLinkProvider LinkedProvider
         {
             get => _linkedSource;
             set => _linkedSource = value;
@@ -79,14 +68,14 @@ namespace FarEmerald.PlayForge
         /// <summary>
         /// Returns true if this ability is linked to a level provider.
         /// </summary>
-        public bool IsLinked => LinkMode == EAbilityLinkMode.LinkedToProvider && LinkedProvider != null;
+        public override bool IsLinked => LinkMode == EAbilityLinkMode.LinkedToProvider && LinkedProvider != null;
         
         /// <summary>
         /// Links this ability to a level provider.
         /// </summary>
         /// <param name="provider">The ScriptableObject that implements ILevelProvider</param>
         /// <returns>True if successfully linked</returns>
-        public bool LinkToProvider(BaseForgeLinkProvider provider)
+        public override bool LinkToProvider(BaseForgeLinkProvider provider)
         {
             if (provider == null)
             {
@@ -111,7 +100,7 @@ namespace FarEmerald.PlayForge
         /// <summary>
         /// Checks if this ability is linked to a specific provider.
         /// </summary>
-        public bool IsLinkedTo(ScriptableObject provider)
+        public override bool IsLinkedTo(ScriptableObject provider)
         {
             return IsLinked && LinkedProvider == provider;
         }
@@ -142,6 +131,26 @@ namespace FarEmerald.PlayForge
             return useOwnIfNotLinked ? StartingLevel : 0;
         }
 
+        public void LinkAllUsageEffects()
+        {
+            if (Cost) Cost.LinkToProvider(this);
+            if (Cooldown) Cooldown.LinkToProvider(this);
+        }
+        
+        public void LinkAllChildren()
+        {
+            LinkAllUsageEffects();
+        }
+        
+        /// <summary>
+        /// Unlinks all effects and abilities from this item.
+        /// </summary>
+        public void UnlinkAllChildren()
+        {
+            if (Cost && Cost.IsLinkedTo(this)) Cost.Unlink();
+            if (Cooldown && Cost.IsLinkedTo(this)) Cooldown.Unlink();
+        }
+        
         // ═══════════════════════════════════════════════════════════════════════════
         // Ability Generation
         // ═══════════════════════════════════════════════════════════════════════════
@@ -155,17 +164,17 @@ namespace FarEmerald.PlayForge
         // IHasReadableDefinition Implementation
         // ═══════════════════════════════════════════════════════════════════════════
         
-        public string GetName()
+        public override string GetName()
         {
             return Definition.Name;
         }
         
-        public string GetDescription()
+        public override string GetDescription()
         {
             return Definition.Description;
         }
         
-        public Texture2D GetPrimaryIcon()
+        public override Texture2D GetPrimaryIcon()
         {
             foreach (var ti in Definition.Textures)
             {
@@ -178,9 +187,9 @@ namespace FarEmerald.PlayForge
         // ILevelProvider Implementation
         // ═══════════════════════════════════════════════════════════════════════════
         
-        public override int GetMaxLevel() => IsLinked ? GetLinkedMaxLevel() : MaxLevel;
+        public override int GetMaxLevel() => MaxLevel;
         
-        public override int GetStartingLevel() => IsLinked ? GetLinkedStartingLevel() : StartingLevel;
+        public override int GetStartingLevel() => StartingLevel;
         
         public override string GetProviderName() => GetName();
         
@@ -194,12 +203,6 @@ namespace FarEmerald.PlayForge
         {
             yield return Tags.AssetTag;
             foreach (var t in Tags.PassiveGrantedTags) yield return t;
-        }
-
-        public bool TryGetLocalData(Tag key, out DataWrapper data)
-        {
-            data = LocalData.FirstOrDefault(ld => ld.Key == key);
-            return data != null;
         }
 
         public override string ToString()
@@ -226,10 +229,13 @@ namespace FarEmerald.PlayForge
 
     public enum EDataWrapperType
     {
+        MonoBehaviour,
+        ScriptableObject,
         Object,
         String,
         Int,
         Float,
+        Bool,
         Tag,
         Attribute,
         Effect,
@@ -244,9 +250,12 @@ namespace FarEmerald.PlayForge
         public EDataWrapperType Type;
 
         public string stringValue;
+        public bool boolValue;
         public int intValue;
         public float floatValue;
         public Object objectValue;
+        public MonoBehaviour monoBehaviourValue;
+        public ScriptableObject scriptableObjectValue;
         public Tag tagValue;
         public Attribute attributeValue;
         public GameplayEffect effectValue;

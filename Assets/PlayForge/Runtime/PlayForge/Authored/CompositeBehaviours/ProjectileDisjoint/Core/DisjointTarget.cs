@@ -29,9 +29,13 @@ namespace FarEmerald.PlayForge
         {
             return new List<Tag>();
         }
-        public int GetWeight(Tag _tag)
+        public int GetTagWeight(Tag _tag)
         {
             return 0;
+        }
+        public bool QueryTags(TagQuery query)
+        {
+            return false;
         }
         public void CompileGrantedTags()
         {
@@ -70,6 +74,11 @@ namespace FarEmerald.PlayForge
         {
             return packet;
         }
+        public void MarkDead()
+        {
+            // Does nothing
+        }
+        public bool IsDead => true;
         public static DisjointTarget Generate(ITarget _target)
         {
             return new DisjointTarget(

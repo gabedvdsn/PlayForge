@@ -6,10 +6,9 @@ using UnityEngine.UIElements;
 namespace FarEmerald.PlayForge.Extended.Editor
 {
     [CustomPropertyDrawer(typeof(EntityIdentity))]
-    public class EntityDrawer : AbstractRefDrawer<EntityIdentity>
+    public class EntityDrawer : AbstractForgeObjectDrawer<EntityIdentity>
     {
-
-        protected override EntityIdentity[] GetEntries()
+        /*protected override EntityIdentity[] GetEntries()
         {
             return GetAllInstances<EntityIdentity>();
         }
@@ -34,6 +33,6 @@ namespace FarEmerald.PlayForge.Extended.Editor
         {
             if (prop.isArray) return null;
             return new Label(prop.name);
-        }
+        }*/
     }
 }

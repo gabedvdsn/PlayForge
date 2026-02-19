@@ -46,6 +46,8 @@ namespace FarEmerald.PlayForge
         private void Initialize(EntityIdentity data)
         {
             Data = data;
+
+            if (Data is null) return;
             
             TagCache = new TagCache(this);
             
@@ -68,6 +70,8 @@ namespace FarEmerald.PlayForge
             Data.AttributeSet?.WorkerGroup?.ProvideWorkersTo(this);
         }
         
+        //private void 
+        
         #region Process Parameters
         public override void WhenInitialize(ProcessRelay relay)
         {
@@ -88,29 +92,11 @@ namespace FarEmerald.PlayForge
             if (needsCleaning) ClearFinishedEffects();
             
             TagCache.TickTagWorkers();
-
-            if (Input.GetKeyDown(KeyCode.K))
-            {
-                foreach (var attr in AttributeSystem.GetAttributeCache())
-                {
-                    Debug.Log($"[Attr] {attr.Key.GetName()} ({attr.Value.Value})");
-                    foreach (var derivation in attr.Value.DerivedValues)
-                    {
-                        Debug.Log($"\t\t{derivation.Key.GetEffectDerivation().GetName()} ({derivation.Key.AttributeRetention()}) -> {derivation.Value}");
-                    }
-                }
-            }
         }
 
         public override void WhenLateUpdate(ProcessRelay relay)
         {
             EndOfFrame();
-        }
-
-        public override async UniTask RunProcess(ProcessRelay relay, CancellationToken token)
-        {
-            processActive = true;
-            await UniTask.WaitWhile(() => processActive, cancellationToken: token);
         }
 
         // Handling
@@ -230,20 +216,6 @@ namespace FarEmerald.PlayForge
             }
         }
         
-        private void ApplyEffectTags(GameplayEffectSpec spec)
-        {
-            TagCache.AddTags(spec.Base.Tags.GrantedTags);
-            TagCache.AddTag(spec.Base.Tags.AssetTag);
-            TagCache.AddTag(spec.Origin.GetAssetTag());
-        }
-
-        private void RemoveEffectTags(GameplayEffectSpec spec)
-        {
-            TagCache.RemoveTags(spec.Base.Tags.GrantedTags);
-            TagCache.RemoveTag(spec.Base.Tags.AssetTag);
-            TagCache.RemoveTag(spec.Origin.GetAssetTag());
-        }
-        
         /// <summary>
         /// Applies a durational/infinite gameplay effect to the component
         /// </summary>
@@ -259,8 +231,8 @@ namespace FarEmerald.PlayForge
             var container = spec.Base.DurationSpecification.GenerateContainer(spec, ongoing);
             EffectShelf.Add(container);
 
-            var effectContext = new EffectWorkerContext(this, container, _frameSummary, _actionQueue);
-            container.RunWorkerApplication(effectContext);
+            var effectContext = new EffectWorkerContext(this, container.Spec, _frameSummary, _actionQueue);
+            container.Spec.RunWorkerApplication(effectContext);
             
             if (ongoing && spec.Base.DurationSpecification.TickOnApplication)
             {
@@ -289,6 +261,8 @@ namespace FarEmerald.PlayForge
             
             var sourcedModifiedValue = spec.SourcedImpact(attributeValue);
             var impactData = AttributeSystem.ModifyAttribute(spec.Base.ImpactSpecification.AttributeTarget, sourcedModifiedValue);
+
+            Debug.Log(impactData);
             
             spec.RunWorkerRemoval(new EffectWorkerContext(this, spec, _frameSummary, _actionQueue, 1, impactData));
             TagCache.RemoveTags(spec.Base.Tags.GrantedTags);
@@ -308,7 +282,7 @@ namespace FarEmerald.PlayForge
             
             AttributeSystem.ModifyAttribute(container.Spec.Base.ImpactSpecification.AttributeTarget, sourcedModifiedValue);
             
-            container.RunWorkerApplication(new EffectWorkerContext(this, container, _frameSummary, _actionQueue));
+            container.Spec.RunWorkerApplication(new EffectWorkerContext(this, container.Spec, _frameSummary, _actionQueue));
             
             foreach (var containedEffect in container.Spec.Base.ImpactSpecification.GetContainedEffects(EApplyTickRemove.OnTick))
             {
@@ -426,10 +400,10 @@ namespace FarEmerald.PlayForge
                     //Debug.Log($"\t\tB) Found execute ticks {executeTicks}");
 
                     var effectContext = new EffectWorkerContext(
-                        this, container, 
+                        this, container.Spec, 
                         _frameSummary, _actionQueue, 
                         executeTicks);
-                    container.RunWorkerTick(effectContext);
+                    container.Spec.RunWorkerTick(effectContext);
                 
                     if (executeTicks > 0 && container.Ongoing)
                     {
@@ -450,20 +424,20 @@ namespace FarEmerald.PlayForge
         
         private void ClearFinishedEffects()
         {
-            //EffectShelf.RemoveAll(container => container.DurationRemaining <= 0 && container.Spec.Base.DurationSpecification.DurationPolicy != EEffectDurationPolicy.Infinite);
             foreach (var container in FinishedEffects)
             {
                 container.OnRemove();
                 EffectShelf.Remove(container);
                 
                 var effectContext = new EffectWorkerContext(
-                    this, container, 
+                    this, container.Spec, 
                     _frameSummary, _actionQueue);
-                container.RunWorkerRemoval(effectContext);
+                container.Spec.RunWorkerRemoval(effectContext);
                 
-                //RemoveEffectTags(container.Spec);
-                
-                if (container.AttributeRetention() != Tags.IGNORE) AttributeSystem.RemoveAttributeDerivation(container);
+                // Retain only if not reverse and if impact includes base
+                var nullify = !container.Spec.Base.ImpactSpecification.ReverseImpactOnRemoval && container.Spec.TrackedImpact.Total.BaseValue != 0f;
+                var retainCurrent = container.Spec.TrackedImpact.Total.CurrentValue != 0f;
+                AttributeSystem.RemoveAttributeDerivation(container.Spec, nullify, retainCurrent);
             }
             
             FinishedEffects.Clear();
@@ -495,7 +469,7 @@ namespace FarEmerald.PlayForge
             return containers.Any();
         }
 
-        public GameplayEffectDuration GetLongestDurationFor(Tag lookForTag)
+        public EffectDurationRemaining GetLongestDurationFor(Tag lookForTag)
         {
             float longestDuration = float.MinValue;
             float longestRemaining = float.MinValue;
@@ -503,17 +477,17 @@ namespace FarEmerald.PlayForge
             {
                 if (container.GetGrantedTags().All(specTag => specTag != lookForTag)) continue;
                 if (container.Spec.Base.DurationSpecification.DurationPolicy == EEffectDurationPolicy.Infinite)
-                    return new GameplayEffectDuration(float.MaxValue, float.MaxValue, true);
+                    return new EffectDurationRemaining(float.MaxValue, float.MaxValue, true);
                 
                 if (!(container.TotalDuration > longestDuration)) continue;
                 longestDuration = container.TotalDuration;
                 longestRemaining = container.DurationRemaining;
             }
 
-            return new GameplayEffectDuration(longestDuration, longestRemaining, longestDuration >= 0f);
+            return new EffectDurationRemaining(longestDuration, longestRemaining, longestDuration >= 0f);
         }
         
-        public GameplayEffectDuration GetLongestDurationFor(List<Tag> lookForTags)
+        public EffectDurationRemaining GetLongestDurationFor(List<Tag> lookForTags)
         {
             float longestDuration = float.MinValue;
             float longestRemaining = float.MinValue;
@@ -524,7 +498,7 @@ namespace FarEmerald.PlayForge
                     if (!lookForTags.Contains(specTag)) continue;
                     if (container.Spec.Base.DurationSpecification.DurationPolicy == EEffectDurationPolicy.Infinite)
                     {
-                        return new GameplayEffectDuration(float.MaxValue, float.MaxValue, true);
+                        return new EffectDurationRemaining(float.MaxValue, float.MaxValue, true);
                     }
 
                     if (!(container.TotalDuration > longestDuration)) continue;
@@ -533,7 +507,7 @@ namespace FarEmerald.PlayForge
                 }
             }
 
-            return new GameplayEffectDuration(longestDuration, longestRemaining, longestDuration >= 0f);
+            return new EffectDurationRemaining(longestDuration, longestRemaining, longestDuration >= 0f);
         }
         
         #endregion
@@ -562,13 +536,13 @@ namespace FarEmerald.PlayForge
             return UniTask.CompletedTask;
         }
 
-        #region Derivation Source
-        public List<Tag> GetContextTags() => new(){ Tags.GAS, Tags.SOURCE };
+        #region IAttributeDerivation
+        public List<Tag> GetContextTags() => Data.ContextTags;
         public TagCache GetTagCache() => TagCache;
         public Tag GetAssetTag() => Data.AssetTag;
-        public int GetLevel() => Data.Level;
+        public int GetLevel() => Data.StartingLevel;
         public int GetMaxLevel() => Data.MaxLevel;
-        public void SetLevel(int level) => Data.Level = Mathf.Clamp(level, 0, Data.MaxLevel);
+        public void SetLevel(int level) => Data.StartingLevel = Mathf.Clamp(level, 0, Data.MaxLevel);
         public string GetName() => Data.Name;
         public void CommunicateTargetedIntent(AbstractGameplayMonoProcess entity)
         {
@@ -582,9 +556,13 @@ namespace FarEmerald.PlayForge
         {
             return TagCache.GetAppliedTags();
         }
-        public int GetWeight(Tag _tag)
+        public int GetTagWeight(Tag _tag)
         {
             return TagCache.GetWeight(_tag);
+        }
+        public bool QueryTags(TagQuery query)
+        {
+            return query.Validate(TagCache.GetAppliedTags());
         }
         public void CompileGrantedTags()
         {
@@ -597,21 +575,25 @@ namespace FarEmerald.PlayForge
 
             foreach (var effect in EffectShelf)
             {
+                TagCache.AddTag(effect.Spec.Base.Tags.AssetTag);
                 foreach (var t in effect.GetGrantedTags())
                 {
-                    //Debug.Log($"\t\tEffect tag ({effect.Spec.Base.GetName()}): {t}");
                     TagCache.AddTag(t);
                 }
             }
 
             foreach (var ability in AbilitySystem.GetAbilityContainers())
             {
+                TagCache.AddTag(ability.Spec.Base.Tags.AssetTag);
                 foreach (var t in ability.GetGrantedTags()) TagCache.AddTag(t);
             }
 
             foreach (var t in Data.GetGrantedTags()) TagCache.AddTag(t);
         }
         #endregion
+        
+        #region IGameplaySystem
+        
         public AttributeSystemComponent GetAttributeSystem()
         {
             return AttributeSystem;
@@ -620,63 +602,15 @@ namespace FarEmerald.PlayForge
         {
             return AbilitySystem;
         }
+        public List<ItemSpecContainer> GetItemShelf()
+        {
+            throw new NotImplementedException();
+        }
         public GameplayAbilitySystem ToGASObject()
         {
             return this;
         }
-    }
-
-    public class RootActionRequest
-    {
-        public readonly Action Action;
-        public RootActionRequest(Action action)
-        {
-            Action = action;
-        }
-    }
-
-    public class RootActionQueue
-    {
-        private class Node
-        {
-            public Node Next;
-            public Node Prev;
-            public RootActionRequest Data;
-        }
-
-        private Node Root;
-        private Node End;
         
-        public int Count { get; private set; }
-        
-        public void Enqueue(RootActionRequest request)
-        {
-            if (Root is null)
-            {
-                Root = new Node() { Next = null, Prev = null, Data = request };
-                End = Root;
-                
-                Count = 1;
-                return;
-            }
-            
-            var node = new Node() { Next = End, Prev = null, Data = request };
-            End = node;
-            node.Next.Prev = node;
-            
-            Count += 1;
-        }
-
-        public RootActionRequest Dequeue()
-        {
-            if (Root is null) return null;
-            
-            var request = Root;
-            Root = request.Prev;
-            Count -= 1;
-
-            return request.Data;
-        }
-        
+        #endregion
     }
 }

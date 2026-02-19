@@ -3,7 +3,7 @@ using UnityEngine;
 
 namespace FarEmerald.PlayForge
 {
-    public abstract class AbstractEffectContainer : IAttributeImpactDerivation, ITagSource
+    public abstract class AbstractEffectContainer : ITagSource
     {
         public GameplayEffectSpec Spec;
         public bool Ongoing;
@@ -21,18 +21,10 @@ namespace FarEmerald.PlayForge
         
         public abstract float TimeUntilPeriodTick { get; }
         
-        private TrackedImpact TrackedImpact;
-        private AttributeValue LastTrackedImpact;
-
-        private List<AbstractEffectWorker> Workers;
-
         protected AbstractEffectContainer(GameplayEffectSpec spec, bool ongoing)
         {
             Spec = spec;
             Ongoing = ongoing;
-            
-            Workers = spec.Base.Workers;
-            TrackedImpact = new TrackedImpact();
 
             ContainerIsActive = true;
             
@@ -70,10 +62,10 @@ namespace FarEmerald.PlayForge
             ContainerIsActive = false;
             if (Spec.Base.ImpactSpecification.ReverseImpactOnRemoval)
             {
-                AttributeValue negatedImpact = TrackedImpact.Total.Negate();
+                AttributeValue negatedImpact = Spec.TrackedImpact.Total.Negate();
                 Spec.Source.GetActionQueue().Enqueue(new ModifyAttributeAction(
                     Spec.Source, Spec.Base.ImpactSpecification.AttributeTarget,
-                    new SourcedModifiedAttributeValue(this, Spec,
+                    new SourcedModifiedAttributeValue(Spec,
                         negatedImpact.CurrentValue, negatedImpact.BaseValue,
                         false),
                     false
@@ -85,73 +77,6 @@ namespace FarEmerald.PlayForge
                 Spec.Source.ApplyGameplayEffect(Spec.Source.GenerateEffectSpec(Spec.Origin, containedEffect));
             }
         }
-
-        public Attribute GetAttribute()
-        {
-            return Spec.Base.ImpactSpecification.AttributeTarget;
-        }
-        public IEffectOrigin GetEffectDerivation()
-        {
-            return Spec.GetEffectDerivation();
-        }
-        public ISource GetSource()
-        {
-            return Spec.GetSource();
-        }
-        public ITarget GetTarget()
-        {
-            return Spec.Target;
-        }
-        public List<Tag> GetImpactTypes()
-        {
-            return Spec.GetImpactTypes();
-        }
-        public Tag AttributeRetention()
-        {
-            return Spec.Base.Definition.ImpactRetentionGroup;
-        }
-        public void TrackImpact(ImpactData impactData)
-        {
-            TrackedImpact.Add(impactData.RealImpact);
-            LastTrackedImpact = impactData.RealImpact;
-        }
-        public TrackedImpact GetTrackedImpact()
-        {
-            return TrackedImpact;
-        }
-        public AttributeValue GetLastTrackedImpact()
-        {
-            return TrackedImpact.Last;
-        }
-        public List<Tag> GetContextTags()
-        {
-            return Spec.Origin.GetContextTags();
-        }
-        public void RunWorkerApplication(EffectWorkerContext ctx)
-        {
-            foreach (var worker in Workers) ctx.ActionQueue.EnqueueRange(worker.OnEffectApplication(ctx));
-        }
-        public void RunWorkerTick(EffectWorkerContext ctx)
-        {
-            foreach (var worker in Workers) ctx.ActionQueue.EnqueueRange(worker.OnEffectTick(ctx));
-        }
-        public void RunWorkerRemoval(EffectWorkerContext ctx)
-        {
-            foreach (var worker in Workers) ctx.ActionQueue.EnqueueRange(worker.OnEffectRemoval(ctx));
-        }
-        public void RunWorkerImpact(EffectWorkerContext ctx)
-        {
-            foreach (var worker in Workers) ctx.ActionQueue.EnqueueRange(worker.OnEffectImpact(ctx));
-        }
-        public Dictionary<IScaler, AttributeValue?> GetSourcedCapturedAttributes()
-        {
-            return new();
-        }
-        public IAttributeImpactDerivation GetImpactDerivation()
-        {
-            return Spec;
-        }
-
         public override string ToString()
         {
             return Spec.Base.ToString();

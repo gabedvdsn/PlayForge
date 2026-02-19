@@ -1,8 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
+using UnityEngine;
 
 namespace FarEmerald.PlayForge
 {
+    
+    
     public class GameplayEffectSpec : IAttributeImpactDerivation
     {
         public GameplayEffect Base;
@@ -10,6 +13,8 @@ namespace FarEmerald.PlayForge
         public IEffectOrigin Origin;
         public ISource Source;
         public ITarget Target;
+        
+        public TrackedImpact TrackedImpact;
 
         public Dictionary<IScaler, AttributeValue?> SourceCapturedAttributes;
 
@@ -20,7 +25,8 @@ namespace FarEmerald.PlayForge
             
             Source = Origin.GetOwner();
             Target = target;
-            
+
+            TrackedImpact = new TrackedImpact();
             SourceCapturedAttributes = new Dictionary<IScaler, AttributeValue?>();
         }
         
@@ -43,7 +49,6 @@ namespace FarEmerald.PlayForge
             var impactValue = AttributeImpact(magnitude, attributeValue);
             return new SourcedModifiedAttributeValue(
                 this,
-                container,
                 impactValue.CurrentValue,
                 impactValue.BaseValue
             );
@@ -107,6 +112,23 @@ namespace FarEmerald.PlayForge
                             throw new ArgumentOutOfRangeException();
                     }
                     break;
+                case ECalculationOperation.FlatBonus:
+                    switch (Base.ImpactSpecification.TargetImpact)
+                    {
+                        case EEffectImpactTarget.Current:
+                            currValue += magnitude;
+                            break;
+                        case EEffectImpactTarget.Base:
+                            baseValue += magnitude;
+                            break;
+                        case EEffectImpactTarget.CurrentAndBase:
+                            currValue += magnitude;
+                            baseValue += magnitude;
+                            break;
+                        default:
+                            throw new ArgumentOutOfRangeException();
+                    }
+                    break;
                 default:
                     throw new ArgumentOutOfRangeException();
             }
@@ -116,7 +138,16 @@ namespace FarEmerald.PlayForge
                 baseValue - attributeValue.BaseValue
             );
         }
-
+        
+        public Tag GetCacheKey()
+        {
+            return Base.Tags.AssetTag;
+        }
+        public bool DerivationAlive()
+        {
+            Debug.Log($"Check if {Base.GetName()} is alive: {((Source.AsGAS()?.TryGetEffectContainer(Base, out var c) ?? false) && c.Spec == this)}");
+            return (Source.AsGAS()?.TryGetEffectContainer(Base, out var container) ?? false) && container.Spec == this;
+        }
         public Attribute GetAttribute()
         {
             return Base.ImpactSpecification.AttributeTarget;
@@ -137,25 +168,21 @@ namespace FarEmerald.PlayForge
         {
             return Base.ImpactSpecification.ImpactTypes;
         }
-        public Tag AttributeRetention()
+        public Tag GetRetentionGroup()
         {
-            return Base.Definition.ImpactRetentionGroup;
+            return Base.Definition.RetentionGroup;
         }
         public void TrackImpact(ImpactData impactData)
         {
-            // Specs do not track their own impact (tracked in effect containers)
+            TrackedImpact.Add(impactData.RealImpact);
         }
         public TrackedImpact GetTrackedImpact()
         {
-            return new TrackedImpact();
+            return TrackedImpact;
         }
-        public AttributeValue GetLastTrackedImpact()
+        public ImpactDerivationContext GetContextTags()
         {
-            return default;
-        }
-        public List<Tag> GetContextTags()
-        {
-            return Origin.GetContextTags();
+            return new ImpactDerivationContext(Origin.GetContextTags(), Base.Tags.ContextTags);
         }
         public void RunWorkerApplication(EffectWorkerContext ctx)
         {
@@ -163,7 +190,7 @@ namespace FarEmerald.PlayForge
         }
         public void RunWorkerTick(EffectWorkerContext ctx)
         {
-            // Specs never run this method (because non-durational specs, i.e. without containers, are never ticked)
+            foreach (var worker in Base.Workers) ctx.ActionQueue.EnqueueRange(worker.OnEffectTick(ctx));
         }
         public void RunWorkerRemoval(EffectWorkerContext ctx)
         {
@@ -177,9 +204,9 @@ namespace FarEmerald.PlayForge
         {
             return SourceCapturedAttributes;
         }
-        public IAttributeImpactDerivation GetImpactDerivation()
+        public bool RetainImpact()
         {
-            return null;
+            return Base.ImpactSpecification.TargetImpact != EEffectImpactTarget.Current || Base.DurationSpecification.DurationPolicy != EEffectDurationPolicy.Instant;
         }
     }
 }

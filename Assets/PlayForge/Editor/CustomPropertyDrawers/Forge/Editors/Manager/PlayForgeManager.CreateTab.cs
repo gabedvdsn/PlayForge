@@ -233,7 +233,7 @@ namespace FarEmerald.PlayForge.Extended.Editor
             statsContainer.Add(contextCard);
         }
         
-        private VisualElement CreateStatCard(string label, string value, Color color)
+        private VisualElement CreateHomeStatCard(string label, string value, Color color)
         {
             var card = new VisualElement();
             card.style.width = 90;
@@ -280,6 +280,8 @@ namespace FarEmerald.PlayForge.Extended.Editor
         private Action onCreated;
         private Label previewLabel;
         private Label templateLabel;
+        private TextField nameField;
+        private Button createButton;
         
         // Characters not allowed in asset file names
         private static readonly char[] InvalidFileNameChars = Path.GetInvalidFileNameChars()
@@ -325,7 +327,7 @@ namespace FarEmerald.PlayForge.Extended.Editor
             nameLabel.style.width = 60;
             nameRow.Add(nameLabel);
             
-            var nameField = new TextField();
+            nameField = new TextField();
             nameField.style.flexGrow = 1;
             nameField.RegisterValueChangedCallback(evt => 
             {
@@ -364,12 +366,26 @@ namespace FarEmerald.PlayForge.Extended.Editor
             cancelBtn.style.marginRight = 8;
             btnRow.Add(cancelBtn);
             
-            var createBtn = new Button(CreateAsset) { text = "Create", focusable = false };
-            createBtn.style.backgroundColor = typeInfo.Color;
-            btnRow.Add(createBtn);
+            createButton = new Button(CreateAsset) { text = "Create", focusable = false };
+            createButton.style.backgroundColor = typeInfo.Color;
+            btnRow.Add(createButton);
             
             nameField.Focus();
             UpdateFilePreview();
+        }
+
+        void OnGUI()
+        {
+            // Key detection
+            var e = Event.current;
+            if (e.type == EventType.KeyDown)
+            {
+                if (e.keyCode == KeyCode.Return || e.keyCode == KeyCode.KeypadEnter)
+                {
+                    e.Use();
+                    CreateAsset();
+                }
+            }
         }
         
         private void UpdateTemplateLabel()
@@ -476,7 +492,7 @@ namespace FarEmerald.PlayForge.Extended.Editor
             SetAssetName(asset, assetName);
             
             // Apply type-specific settings from preferences
-            ApplyTypeSpecificSettings(asset);
+            ApplyTypeSpecificSettings(asset, defaultTemplate?.GetAsset() as BaseForgeLinkProvider);
             
             // Generate unique file path
             var fullPath = $"{assetPath}/{sanitizedFileName}.asset";
@@ -516,12 +532,10 @@ namespace FarEmerald.PlayForge.Extended.Editor
             
             // Try Definition.Name pattern (used by Ability, GameplayEffect, etc.)
             var defField = assetType.GetField("Definition", flags);
-            Debug.Log(defField);
             
             if (defField != null)
             {
                 var def = defField.GetValue(asset);
-                Debug.Log(def);
                 if (def != null)
                 {
                     var nameField = def.GetType().GetField("Name", flags);
@@ -560,7 +574,7 @@ namespace FarEmerald.PlayForge.Extended.Editor
         /// <summary>
         /// Applies type-specific settings from EditorPrefs to a newly created asset.
         /// </summary>
-        private void ApplyTypeSpecificSettings(ScriptableObject asset)
+        private void ApplyTypeSpecificSettings(ScriptableObject asset, BaseForgeLinkProvider provider = null)
         {
             if (asset == null) return;
             
@@ -571,15 +585,19 @@ namespace FarEmerald.PlayForge.Extended.Editor
             {
                 case Ability ability:
                     modified = ApplyAbilitySettings(so);
+                    if (!ability.IsLinked && provider is not null) ability.LinkToProvider(provider);
                     break;
                 case GameplayEffect effect:
                     modified = ApplyEffectSettings(so);
+                    if (!effect.IsLinked && provider is not null) effect.LinkToProvider(provider);
                     break;
                 case Item item:
                     modified = ApplyItemSettings(so);
+                    if (!item.IsLinked && provider is not null) item.LinkToProvider(provider);
                     break;
                 case EntityIdentity entity:
                     modified = ApplyEntitySettings(so);
+                    if (!entity.IsLinked && provider is not null) entity.LinkToProvider(provider);
                     break;
                 case AttributeSet attrSet:
                     modified = ApplyAttributeSetSettings(so);
@@ -587,7 +605,7 @@ namespace FarEmerald.PlayForge.Extended.Editor
                 case Attribute attr:
                     modified = ApplyAttributeSettings(so);
                     break;
-                case ScalerTemplate scalerTemplate:
+                case ScalerPipeline scalerTemplate:
                     modified = ApplyScalerTemplateSettings(so);
                     break;
                 case RequirementTemplate reqTemplate:

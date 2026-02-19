@@ -50,13 +50,16 @@ namespace FarEmerald.PlayForge
                 ECalculationOperation.Add => relValue + impactData.RealImpact,
                 ECalculationOperation.Multiply => relValue * impactData.RealImpact,
                 ECalculationOperation.Override => relValue,
+                ECalculationOperation.FlatBonus => relValue + impactData.RealImpact,
                 _ => throw new ArgumentOutOfRangeException()
             };
             
             attributeValue = ForgeHelper.AlignToSign(attributeValue, WorkSignPolicy);
             
             var sourcedModifier = new SourcedModifiedAttributeValue(
-                IAttributeImpactDerivation.GenerateSourceDerivation(impactData.SourcedModifier, Tags.SYSTEM, WorkImpactType),
+                IAttributeImpactDerivation.GenerateSourceDerivation(
+                    impactData.SourcedModifier, 
+                    Tags.IgnoreRetention, WorkImpactType),
                 attributeValue.CurrentValue, 
                 attributeValue.BaseValue,
                 WorkerImpactWorkable
@@ -77,18 +80,21 @@ namespace FarEmerald.PlayForge
             if (!attr.TryGetAttributeValue(RelativeAttribute, out AttributeValue relValue))
                 return;
             
-            AttributeValue attributeValue = Operation switch
+            var attributeValue = Operation switch
             {
                 ECalculationOperation.Add => relValue + impactData.RealImpact,
                 ECalculationOperation.Multiply => relValue * impactData.RealImpact,
                 ECalculationOperation.Override => relValue,
+                ECalculationOperation.FlatBonus => relValue + impactData.RealImpact,
                 _ => throw new ArgumentOutOfRangeException()
             };
             
             attributeValue = ForgeHelper.AlignToSign(attributeValue, WorkSignPolicy);
             
             var sourcedModifier = new SourcedModifiedAttributeValue(
-                IAttributeImpactDerivation.GenerateSourceDerivation(impactData.SourcedModifier, Tags.SYSTEM, WorkImpactType),
+                IAttributeImpactDerivation.GenerateSourceDerivation(
+                    impactData.SourcedModifier, 
+                    Tags.IgnoreRetention, WorkImpactType),
                 attributeValue.CurrentValue, 
                 attributeValue.BaseValue,
                 WorkerImpactWorkable
@@ -115,7 +121,7 @@ namespace FarEmerald.PlayForge
             {
                 ESourceTarget.Target => impactData.Target.FindAttributeSystem(out var attr) && 
                                         attr.DefinesAttribute(RelativeAttribute),
-                ESourceTarget.Source => impactData.SourcedModifier.BaseDerivation.GetSource().FindAttributeSystem(out var attr) && 
+                ESourceTarget.Source => impactData.SourcedModifier.Derivation.GetSource().FindAttributeSystem(out var attr) && 
                                         attr.DefinesAttribute(RelativeAttribute),
                 _ => throw new ArgumentOutOfRangeException()
             };

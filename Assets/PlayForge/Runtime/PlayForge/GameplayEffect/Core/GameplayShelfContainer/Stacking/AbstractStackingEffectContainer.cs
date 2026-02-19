@@ -7,9 +7,11 @@ namespace FarEmerald.PlayForge
         public override int InstantExecuteTicks => Stacks;
 
         public int Stacks;
-        
+
         protected AbstractStackingEffectContainer(GameplayEffectSpec spec, bool ongoing) : base(spec, ongoing)
-        { }
+        {
+            
+        }
         
         public abstract void Stack(int amount);
 

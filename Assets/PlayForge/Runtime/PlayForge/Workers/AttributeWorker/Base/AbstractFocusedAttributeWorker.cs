@@ -47,7 +47,8 @@ namespace FarEmerald.PlayForge
         [Header("Context Validation")]
         [Tooltip("Accept changes from any context")]
         public bool AnyContextTag = true;
-        
+
+        public EAnyAllPolicy ContextMatchingPolicy;
         [Tooltip("The context tags to accept (if not any)")]
         [ForgeTagContext(ForgeContext.ContextIdentifier)]
         public List<Tag> ValidContextTags;
@@ -59,7 +60,7 @@ namespace FarEmerald.PlayForge
         public override bool PreValidateWorkFor(ChangeValue change)
         {
             // Fast check: is this the right attribute?
-            return change.Value.BaseDerivation.GetAttribute().Equals(TargetAttribute);
+            return change.Value.Derivation.GetAttribute().Equals(TargetAttribute);
         }
         
         public override bool ValidateWorkFor(WorkerContext ctx)
@@ -67,18 +68,14 @@ namespace FarEmerald.PlayForge
             var change = ctx.Change;
             var system = ctx.System;
             
-            // Attribute check
-            if (!change.Value.BaseDerivation.GetAttribute().Equals(TargetAttribute))
-                return false;
-            
             // Context tags check
             if (!ForgeHelper.ValidateContextTags(AnyContextTag, ValidContextTags,
-                change.Value.BaseDerivation.GetContextTags()))
+                change.Value.Derivation.GetContextTags(), ContextMatchingPolicy))
                 return false;
             
             // Self-modification check
             if (!ForgeHelper.ValidateSelfModification(AllowSelfModification,
-                change.Value.BaseDerivation.GetSource(), system))
+                change.Value.Derivation.GetSource(), system))
                 return false;
             
             // Impact target check (Current, Base, Both)
@@ -91,7 +88,7 @@ namespace FarEmerald.PlayForge
             
             // Impact type check
             if (!ForgeHelper.ValidateImpactTypes(AnyImpactType,
-                change.Value.BaseDerivation.GetImpactTypes(), ImpactTypes))
+                change.Value.Derivation.GetImpactTypes(), ImpactTypes))
                 return false;
             
             return true;

@@ -7,7 +7,13 @@ namespace FarEmerald.PlayForge
     public abstract class AbstractProcessWrapper
     {
         public ProcessRelay Relay;
-        
+        public ProcessDataPacket Data;
+
+        protected AbstractProcessWrapper(ProcessDataPacket data)
+        {
+            Data = data;
+        }
+
         /// <summary>
         /// Initializing the process wrapper, as opposed to the process itself
         /// </summary>

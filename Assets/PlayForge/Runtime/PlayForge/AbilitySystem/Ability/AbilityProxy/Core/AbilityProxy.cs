@@ -75,8 +75,11 @@ namespace FarEmerald.PlayForge
             await ActivateNextStage(implicitData, token);
 
             await UniTask.WaitUntil(() => maintainedStages <= 0, cancellationToken: token);
+
+            implicitData.InUse = false;
             
-            if (!usageEffectsApplied && implicitData.Spec is AbilitySpec spec) spec.ApplyUsageEffects();
+            // auto-fires usage costs at the end of execution
+            // if (!usageEffectsApplied && implicitData.Spec is AbilitySpec spec) spec.ApplyUsageEffects();
         }
         
         private async UniTask ActivateNextStage(AbilityDataPacket data, CancellationToken token)
@@ -93,9 +96,9 @@ namespace FarEmerald.PlayForge
                     ActivateStage(Behaviour.Stages[StageIndex], StageIndex, data, token).Forget();
                     await nextStageSignal.Task.AttachExternalCancellation(token);
                 }
-                catch (OperationCanceledException)
+                catch (Exception ex)
                 {
-                    //
+                    UnityEngine.Debug.Log($"Stage {StageIndex} Error: {ex}");
                 }
                 finally
                 {
@@ -143,7 +146,6 @@ namespace FarEmerald.PlayForge
             {
                 if (tasks.Length > 0)
                 {
-                    // Add null check for StagePolicy
                     if (stage.StagePolicy == null)
                     {
                         Debug.LogError($"Stage {stageIndex}: StagePolicy is null! Falling back to WhenAll.");
@@ -181,23 +183,24 @@ namespace FarEmerald.PlayForge
             }
         }
         
-        public void Inject(IAbilityInjection injection, AbilityDataPacket implicitData)
+        public void Inject(IAbilityInjection injection, AbilityDataPacket activeData)
         {
-            var _success = injection.OnProxyInject(this);
+            var _success = injection.OnProxyInject(this, activeData);
 
-            if (!implicitData.Spec.GetOwner().FindAbilitySystem(out var asc)) return;
+            var owner = activeData.Spec.GetOwner();
+            if (!owner.FindAbilitySystem(out var asc)) return;
             
             var stageSafe = (StageIndex >= 0 && StageIndex < Behaviour.Stages.Count)
                 ? Behaviour.Stages[StageIndex]
                 : new AbilityTaskBehaviourStage { Tasks = new List<AbstractAbilityTask>() };
-                
-            asc.Callbacks.AbilityInjected(
-                AbilityCallbackStatus.GenerateForInjection(
-                    implicitData,
-                    stageSafe,
-                    injection, _success
-                )
-            );
+
+            var status = AbilityCallbackStatus.GenerateForInjection(
+                activeData,
+                stageSafe,
+                injection, _success);
+            owner.GetFrameSummary().RecordAbilityInjection(status);
+            
+            asc.Callbacks.AbilityInjected(status);
         }
 
         public UniTask[] GetWatchedTasks(UniTask[] tasks, AbilityTaskBehaviourStage stage, AbilityDataPacket data, AbilitySystemCallbacks callbacks, bool notifyOnCancel)

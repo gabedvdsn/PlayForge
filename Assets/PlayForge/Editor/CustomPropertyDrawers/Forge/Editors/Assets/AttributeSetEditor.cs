@@ -23,7 +23,11 @@ namespace FarEmerald.PlayForge.Extended.Editor
         // ═══════════════════════════════════════════════════════════════════════════
         // Header Configuration (IMGUI Header)
         // ═══════════════════════════════════════════════════════════════════════════
-        
+
+        protected override BaseForgeLinkProvider GetAsset()
+        {
+            return null;
+        }
         protected override string GetDisplayName()
         {
             return !string.IsNullOrEmpty(attributeSet?.Name) ? attributeSet.Name : "Unnamed Attribute Set";
@@ -54,51 +58,40 @@ namespace FarEmerald.PlayForge.Extended.Editor
         
         protected override string GetAssetTypeLabel() => "ATTRIBUTE SET";
         
-        protected override Color GetAssetTypeColor() => new Color(0.9f, 0.7f, 0.3f);
+        protected override Color GetAssetTypeColor() => Colors.GetAssetColor(typeof(AttributeSet));
         
         protected override string GetDocumentationUrl() => "https://docs.playforge.dev/attributesets";
         
         protected override bool ShowVisualizeButton => true;
         protected override bool ShowImportButton => true;
-        
-        protected override void OnVisualize()
+        protected override void RebuildLevelSourceContent()
         {
-            Debug.Log($"Visualize attribute set: {attributeSet.name}");
+            
+        }
+        protected override void RebuildLevelingContent()
+        {
+            
         }
         
-        protected override void OnImport()
-        {
-            EditorGUIUtility.ShowObjectPicker<AttributeSet>(null, false, "", GUIUtility.GetControlID(FocusType.Passive));
-        }
-
         // ═══════════════════════════════════════════════════════════════════════════
         // Inspector GUI
         // ═══════════════════════════════════════════════════════════════════════════
 
-        public override VisualElement CreateInspectorGUI()
+        protected override bool AssignLocalAsset()
         {
-            if (serializedObject.isEditingMultipleObjects) return null;
-            
             attributeSet = serializedObject.targetObject as AttributeSet;
-            if (attributeSet == null) return null;
-
-            root = CreateRoot();
-            
-            var scrollView = CreateScrollView();
-            root.Add(scrollView);
-            
-            BuildDefinitionSection(scrollView);
-            BuildAttributesSection(scrollView);
-            BuildSubsetsSection(scrollView);
-            BuildSettingsSection(scrollView);
-            BuildWorkersSection(scrollView);
-            BuildSummarySection(scrollView);
-            
-            scrollView.Add(CreateBottomPadding());
-            
-            root.Bind(serializedObject);
-            
-            return root;
+            return attributeSet is not null;
+        }
+        
+        protected override void BuildInspectorContent(VisualElement parent)
+        {
+            BuildDefinitionSection(parent);
+            BuildAttributesSection(parent);
+            BuildSubsetsSection(parent);
+            BuildSettingsSection(parent);
+            BuildWorkersSection(parent);
+            BuildLocalDataSection(parent);
+            BuildSummarySection(parent);
         }
 
         // ═══════════════════════════════════════════════════════════════════════════
@@ -111,30 +104,71 @@ namespace FarEmerald.PlayForge.Extended.Editor
             {
                 Name = "Definition",
                 Title = "Definition",
-                AccentColor = Colors.AccentGray,
-                HelpUrl = "https://docs.playforge.dev/attributesets/definition"
+                AccentColor = GetAssetTypeColor(),
+                HelpUrl = "https://docs.playforge.dev/attributesets/definition",
+                
+                SerializedObject = serializedObject,
+                PropertyPaths = new []{nameof(AttributeSet.Name), nameof(AttributeSet.Description), nameof(AttributeSet.Textures)},
+                OnImportComplete = () =>
+                {
+                    serializedObject.Update();
+                    UpdateAssetTagDisplay();
+                    UpdateHeader();
+                    MarkDirty(attributeSet);
+                    Repaint();
+                },
+                OnClearComplete = () =>
+                {
+                    serializedObject.Update();
+                    UpdateHeader();
+                    UpdateAssetTagDisplay();
+                    MarkDirty(attributeSet);
+                    Repaint();
+                },
+                GetDefaultValue = path =>
+                {
+                    return path switch
+                    {
+                        nameof(AttributeSet.Name) => $"Unnamed Attribute Set",
+                        nameof(AttributeSet.Description) => string.Empty,
+                        nameof(AttributeSet.Textures) => null,
+                        _ => null
+                    };
+                }
             });
             parent.Add(section.Section);
             
             var content = section.Content;
+
+            var nameField = CreatePropertyField(serializedObject.FindProperty(nameof(AttributeSet.Name)), label: "Name");
+            nameField.RegisterValueChangeCallback(evt =>
+            {
+                //attributeSet.Name = nameField.value;
+                //MarkDirty(attributeSet);
+                UpdateAssetTagDisplay();
+                UpdateHeader();
+                Repaint();
+            });
             
-            var nameField = CreateTextField("Name", "Name");
+            /*var nameField = CreateTextField("Name", "Name");
             nameField.value = attributeSet.Name;
             nameField.RegisterCallback<FocusOutEvent>(_ =>
             {
                 attributeSet.Name = nameField.value;
                 MarkDirty(attributeSet);
                 UpdateAssetTagDisplay();
+                UpdateHeader();
                 Repaint();
-            });
+            });*/
             content.Add(nameField);
             
-            var descField = CreateTextField("Description", "Description", multiline: true, minHeight: 24);
+            var descField = CreateTextField("Description", "Description", multiline: true, minHeight: 18);
             descField.value = attributeSet.Description;
             descField.RegisterCallback<FocusOutEvent>(_ =>
             {
                 attributeSet.Description = descField.value;
                 MarkDirty(attributeSet);
+                UpdateHeader();
                 Repaint();
             });
             content.Add(descField);
@@ -145,12 +179,16 @@ namespace FarEmerald.PlayForge.Extended.Editor
             content.Add(assetTagContainer);
             
             var texturesField = CreatePropertyField(
-                serializedObject.FindProperty("Textures"),
+                serializedObject.FindProperty(nameof(AttributeSet.Textures)),
                 "Textures",
                 "Textures"
             );
             texturesField.style.marginTop = 8;
-            texturesField.RegisterCallback<SerializedPropertyChangeEvent>(_ => Repaint());
+            texturesField.RegisterCallback<SerializedPropertyChangeEvent>(_ =>
+            {
+                UpdateHeader();
+                Repaint();
+            });
             content.Add(texturesField);
         }
 
@@ -164,8 +202,35 @@ namespace FarEmerald.PlayForge.Extended.Editor
             {
                 Name = "Attributes",
                 Title = "Attributes",
-                AccentColor = Colors.AccentGreen,
-                HelpUrl = "https://docs.playforge.dev/attributesets/attributes"
+                AccentColor = GetAssetTypeColor(),
+                HelpUrl = "https://docs.playforge.dev/attributesets/attributes",
+                
+                SerializedObject = serializedObject,
+                PropertyPaths = new []{nameof(AttributeSet.Attributes)},
+                OnImportComplete = () =>
+                {
+                    serializedObject.Update();
+                    UpdateAssetTagDisplay();
+                    UpdateHeader();
+                    MarkDirty(attributeSet);
+                    Repaint();
+                },
+                OnClearComplete = () =>
+                {
+                    serializedObject.Update();
+                    UpdateHeader();
+                    UpdateAssetTagDisplay();
+                    MarkDirty(attributeSet);
+                    Repaint();
+                },
+                GetDefaultValue = path =>
+                {
+                    return path switch
+                    {
+                        nameof(AttributeSet.Attributes) => null,
+                        _ => null
+                    };
+                }
             });
             parent.Add(section.Section);
             
@@ -175,7 +240,7 @@ namespace FarEmerald.PlayForge.Extended.Editor
             
             var content = section.Content;
             
-            var attrProp = serializedObject.FindProperty("Attributes");
+            var attrProp = serializedObject.FindProperty(nameof(AttributeSet.Attributes));
             var attrField = CreatePropertyField(attrProp, "Attributes", "");
             attrField.RegisterCallback<SerializedPropertyChangeEvent>(_ => RefreshCounts());
             content.Add(attrField);
@@ -191,8 +256,35 @@ namespace FarEmerald.PlayForge.Extended.Editor
             {
                 Name = "Subsets",
                 Title = "Sub-Sets",
-                AccentColor = Colors.AccentBlue,
-                HelpUrl = "https://docs.playforge.dev/attributesets/subsets"
+                AccentColor = GetAssetTypeColor(),
+                HelpUrl = "https://docs.playforge.dev/attributesets/subsets",
+                
+                SerializedObject = serializedObject,
+                PropertyPaths = new []{nameof(AttributeSet.SubSets)},
+                OnImportComplete = () =>
+                {
+                    serializedObject.Update();
+                    UpdateAssetTagDisplay();
+                    UpdateHeader();
+                    MarkDirty(attributeSet);
+                    Repaint();
+                },
+                OnClearComplete = () =>
+                {
+                    serializedObject.Update();
+                    UpdateHeader();
+                    UpdateAssetTagDisplay();
+                    MarkDirty(attributeSet);
+                    Repaint();
+                },
+                GetDefaultValue = path =>
+                {
+                    return path switch
+                    {
+                        nameof(AttributeSet.SubSets) => null,
+                        _ => null
+                    };
+                }
             });
             parent.Add(section.Section);
             
@@ -204,7 +296,7 @@ namespace FarEmerald.PlayForge.Extended.Editor
             
             content.Add(CreateHintLabel("Include other Attribute Sets to inherit their attributes."));
             
-            var subsetProp = serializedObject.FindProperty("SubSets");
+            var subsetProp = serializedObject.FindProperty(nameof(AttributeSet.SubSets));
             var subsetField = CreatePropertyField(subsetProp, "SubSets", "");
             subsetField.RegisterCallback<SerializedPropertyChangeEvent>(_ => RefreshCounts());
             content.Add(subsetField);
@@ -220,21 +312,50 @@ namespace FarEmerald.PlayForge.Extended.Editor
             {
                 Name = "Settings",
                 Title = "Collision Settings",
-                AccentColor = Colors.AccentOrange,
-                HelpUrl = "https://docs.playforge.dev/attributesets/settings"
+                AccentColor = GetAssetTypeColor(),
+                HelpUrl = "https://docs.playforge.dev/attributesets/settings",
+                
+                SerializedObject = serializedObject,
+                PropertyPaths = new []{nameof(AttributeSet.CollisionResolutionPolicy)},
+                OnImportComplete = () =>
+                {
+                    serializedObject.Update();
+                    UpdateAssetTagDisplay();
+                    UpdateHeader();
+                    MarkDirty(attributeSet);
+                    Repaint();
+                },
+                OnClearComplete = () =>
+                {
+                    serializedObject.Update();
+                    UpdateHeader();
+                    UpdateAssetTagDisplay();
+                    MarkDirty(attributeSet);
+                    Repaint();
+                },
+                GetDefaultValue = path =>
+                {
+                    return path switch
+                    {
+                        nameof(AttributeSet.CollisionResolutionPolicy) => EValueCollisionPolicy.UseMaximum,
+                        _ => null
+                    };
+                }
             });
             parent.Add(section.Section);
             
             var content = section.Content;
             
             content.Add(CreateHintLabel("When the same attribute appears in multiple sets:"));
-            
-            var policyField = CreateEnumField("CollisionPolicy", "Resolution Policy", attributeSet.CollisionResolutionPolicy);
-            policyField.RegisterValueChangedCallback(evt =>
+
+            var policyField = CreatePropertyField(serializedObject.FindProperty(nameof(AttributeSet.CollisionResolutionPolicy)), label: "Resolution Policy");
+            policyField.RegisterValueChangeCallback(evt => MarkDirty(attributeSet));
+            //var policyField = CreateEnumField("CollisionPolicy", "Resolution Policy", attributeSet.CollisionResolutionPolicy);
+            /*policyField.RegisterValueChangedCallback(evt =>
             {
                 attributeSet.CollisionResolutionPolicy = (EValueCollisionPolicy)evt.newValue;
                 MarkDirty(attributeSet);
-            });
+            });*/
             content.Add(policyField);
         }
 
@@ -248,8 +369,35 @@ namespace FarEmerald.PlayForge.Extended.Editor
             {
                 Name = "Workers",
                 Title = "Workers",
-                AccentColor = Colors.AccentCyan,
-                HelpUrl = "https://docs.playforge.dev/attributesets/workers"
+                AccentColor = GetAssetTypeColor(),
+                HelpUrl = "https://docs.playforge.dev/attributesets/workers",
+                
+                SerializedObject = serializedObject,
+                PropertyPaths = new []{nameof(AttributeSet.WorkerGroup)},
+                OnImportComplete = () =>
+                {
+                    serializedObject.Update();
+                    UpdateAssetTagDisplay();
+                    UpdateHeader();
+                    MarkDirty(attributeSet);
+                    Repaint();
+                },
+                OnClearComplete = () =>
+                {
+                    serializedObject.Update();
+                    UpdateHeader();
+                    UpdateAssetTagDisplay();
+                    MarkDirty(attributeSet);
+                    Repaint();
+                },
+                GetDefaultValue = path =>
+                {
+                    return path switch
+                    {
+                        nameof(AttributeSet.WorkerGroup) => null,
+                        _ => null
+                    };
+                }
             });
             parent.Add(section.Section);
             
@@ -259,7 +407,7 @@ namespace FarEmerald.PlayForge.Extended.Editor
             content.Add(hint);
             
             var workerGroupField = CreatePropertyField(
-                serializedObject.FindProperty("WorkerGroup"), 
+                serializedObject.FindProperty(nameof(AttributeSet.WorkerGroup)), 
                 "WorkerGroup", 
                 ""
             );
@@ -276,7 +424,7 @@ namespace FarEmerald.PlayForge.Extended.Editor
             {
                 Name = "Summary",
                 Title = "Summary",
-                AccentColor = Colors.AccentGray,
+                AccentColor = GetAssetTypeColor(),
                 IncludeButtons = new[] { false, false, false }
             });
             parent.Add(section.Section);
@@ -294,6 +442,39 @@ namespace FarEmerald.PlayForge.Extended.Editor
             listBtn.style.marginTop = 8;
             ApplyButtonHoverStyle(listBtn);
             content.Add(listBtn);
+        }
+        
+        private void BuildLocalDataSection(VisualElement parent)
+        {
+            var section = CreateCollapsibleSection(new SectionConfig
+            {
+                Name = "LocalData",
+                Title = "Local Data",
+                AccentColor = GetAssetTypeColor(),
+                HelpUrl = "https://docs.playforge.dev/abilities/localdata",
+
+                SerializedObject = serializedObject,
+                PropertyPaths = new[] { nameof(AttributeSet.LocalData) },
+                OnImportComplete = () =>
+                {
+                    serializedObject.Update();
+                    UpdateAssetTagDisplay();
+                    UpdateHeader();
+                    MarkDirty(attributeSet);
+                    Repaint();
+                },
+                OnClearComplete = () =>
+                {
+                    serializedObject.Update();
+                    UpdateAssetTagDisplay();
+                    UpdateHeader();
+                    MarkDirty(attributeSet);
+                    Repaint();
+                }
+            });
+            parent.Add(section.Section);
+            
+            section.Content.Add(CreatePropertyField(serializedObject.FindProperty(nameof(AttributeSet.LocalData)), "LocalData", ""));
         }
 
         // ═══════════════════════════════════════════════════════════════════════════

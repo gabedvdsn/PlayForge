@@ -13,4 +13,6 @@ MonoBehaviour:
   m_Name: ATTR_Mana
   m_EditorClassIdentifier: 
   Name: Mana
+  Abbreviation: MN
   Description: Basic unit of energy
+  Textures: []

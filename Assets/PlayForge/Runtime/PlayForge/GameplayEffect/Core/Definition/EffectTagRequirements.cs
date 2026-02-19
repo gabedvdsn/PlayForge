@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using FarEmerald.PlayForge.Extended;
 using UnityEngine;
 
 namespace FarEmerald.PlayForge
@@ -9,16 +10,38 @@ namespace FarEmerald.PlayForge
     /// Each phase can have its own set of required and avoided tags.
     /// </summary>
     [Serializable]
-    public class EffectTagRequirements
+    public class EffectTagRequirements : AbstractTagRequirements
     {
         [Tooltip("Tags required/avoided to apply the effect")]
+        [AvoidRequireTagGroupColor(0.5f, 0.7f, 0.5f, 0.6f)]
         public AvoidRequireTagGroup ApplicationRequirements;
         
         [Tooltip("Tags required/avoided to keep the effect active")]
+        [AvoidRequireTagGroupColor(0.8f, 0.75f, 0.4f, 0.6f)]
         public AvoidRequireTagGroup OngoingRequirements;
         
         [Tooltip("Tags required/avoided to remove the effect")]
+        [AvoidRequireTagGroupColor(0.9f, 0.5f, 0.5f, 0.6f)]
         public AvoidRequireTagGroup RemovalRequirements;
+
+        // ═══════════════════════════════════════════════════════════════════════════
+        // AbstractTagRequirements Implementation
+        // ═══════════════════════════════════════════════════════════════════════════
+        
+        public override bool HasAnyRequirements =>
+            GroupHasRequirements(ApplicationRequirements) ||
+            GroupHasRequirements(OngoingRequirements) ||
+            GroupHasRequirements(RemovalRequirements);
+        
+        public override int TotalRequirementCount =>
+            GetGroupCount(ApplicationRequirements) +
+            GetGroupCount(OngoingRequirements) +
+            GetGroupCount(RemovalRequirements);
+        
+        public override bool HasLinkedTemplates =>
+            GroupIsLinked(ApplicationRequirements) ||
+            GroupIsLinked(OngoingRequirements) ||
+            GroupIsLinked(RemovalRequirements);
 
         // ═══════════════════════════════════════════════════════════════════════════
         // Validation Methods
@@ -37,51 +60,6 @@ namespace FarEmerald.PlayForge
         public bool CheckRemovalRequirements(List<Tag> tags)
         {
             return !(RemovalRequirements?.Validate(tags) ?? false);
-        }
-        
-        // ═══════════════════════════════════════════════════════════════════════════
-        // Properties
-        // ═══════════════════════════════════════════════════════════════════════════
-        
-        /// <summary>
-        /// Returns true if any phase has requirements defined.
-        /// </summary>
-        public bool HasAnyRequirements
-        {
-            get
-            {
-                return (ApplicationRequirements?.HasAnyRequirements ?? false) ||
-                       (OngoingRequirements?.HasAnyRequirements ?? false) ||
-                       (RemovalRequirements?.HasAnyRequirements ?? false);
-            }
-        }
-        
-        /// <summary>
-        /// Gets the total count of all requirements across all phases.
-        /// </summary>
-        public int TotalRequirementCount
-        {
-            get
-            {
-                int count = 0;
-                count += ApplicationRequirements?.TotalCount ?? 0;
-                count += OngoingRequirements?.TotalCount ?? 0;
-                count += RemovalRequirements?.TotalCount ?? 0;
-                return count;
-            }
-        }
-        
-        /// <summary>
-        /// Returns true if any phase is linked to a template.
-        /// </summary>
-        public bool HasLinkedTemplates
-        {
-            get
-            {
-                return (ApplicationRequirements?.IsLinkedToTemplate ?? false) ||
-                       (OngoingRequirements?.IsLinkedToTemplate ?? false) ||
-                       (RemovalRequirements?.IsLinkedToTemplate ?? false);
-            }
         }
     }
 }

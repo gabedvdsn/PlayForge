@@ -1,4 +1,5 @@
 ﻿using System;
+using Codice.CM.SEIDInfo;
 using UnityEditor;
 using UnityEditor.UIElements;
 using UnityEngine;
@@ -73,6 +74,34 @@ namespace FarEmerald.PlayForge.Extended.Editor
             public static readonly Color PolicyRed = new Color(0.7f, 0.4f, 0.4f, 1f);
             public static readonly Color PolicyBlue = new Color(0.4f, 0.4f, 0.7f, 1f);
             public static readonly Color PolicyCyan = new Color(0.5f, 0.7f, 0.8f, 1f);
+            
+            public static readonly Color AssetItem = new Color(.9f, 0.8f, 0.3f);
+            public static readonly Color AssetEntity = new Color(0.6f, 0.55f, 0.85f);
+            public static readonly Color AssetAbility = new Color(0.9f, 0.6f, 0.4f);
+            public static readonly Color AssetEffect = new Color(1f, 0.5f, 0.5f);
+            public static readonly Color AssetAttribute = new Color(0.4f, 0.6f, 1f);
+            public static readonly Color AssetAttributeSet = new Color(0.25f, 0.4f, 1f);
+            
+            public static readonly Color AssetScaler = new Color(0.6f, 0.45f, 0.9f, .6f);
+            public static readonly Color AssetRequirements = new Color(0.45f, 0.7f, 0.45f, .6f);
+            
+            public static readonly Color DrawerSelectedRow = new Color(0.2f, 0.35f, 0.2f) ;
+            public static readonly Color DrawerRow = new Color(.32f, .32f, .32f, .75f);
+            public static readonly Color DrawerHoveredRow = new Color(.52f, .52f, .52f, .6f);
+
+            public static Color GetAssetColor(Type t)
+            {
+                if (t == typeof(Item)) return AssetItem;
+                if (t == typeof(EntityIdentity)) return AssetEntity;
+                if (t == typeof(Ability)) return AssetAbility;
+                if (t == typeof(GameplayEffect)) return AssetEffect;
+                if (t == typeof(Attribute)) return AssetAttribute;
+                if (t == typeof(AttributeSet)) return AssetAttributeSet;
+                if (t == typeof(AbstractScaler)) return AssetScaler;
+                if (t == typeof(EffectTagRequirements) || t == typeof(AbilityTagRequirements)) return AssetRequirements;
+                
+                return AccentGray;
+            }
         }
         
         // ═══════════════════════════════════════════════════════════════════════════
@@ -110,16 +139,34 @@ namespace FarEmerald.PlayForge.Extended.Editor
         // SECTION 3: Root & ScrollView
         // ═══════════════════════════════════════════════════════════════════════════
         
+        internal const int InspectorMarginPadding = 15;
+        internal const int InspectorMarginInset = 8;
+        internal const int InspectorMarginInsetFix = 1;
+        internal const int InspectorMarginRightBuffer = 5;
+        
+        internal const int DefaultConfigureDelayMsMin = 199;
+        internal const int DefaultConfigureDelayMsMax = 2503;
+        
+        internal const int DefaultForceConfigureDelayMsMin = 297;
+        internal const int DefaultForceConfigureDelayMsMax = 7499;
+        
         /// <summary>
         /// Creates the root container for an inspector.
         /// </summary>
         public static VisualElement CreateRoot()
         {
-            return new VisualElement
+            var root = new VisualElement
             {
                 name = "Root",
                 style = { flexGrow = 1, flexShrink = 1 }
             };
+    
+            root.style.marginLeft = -InspectorMarginPadding + InspectorMarginInset;
+            root.style.marginRight = -InspectorMarginPadding + InspectorMarginInset + InspectorMarginRightBuffer;
+            root.style.paddingLeft = 0;
+            root.style.paddingRight = 0;
+
+            return root;
         }
         
         /// <summary>
@@ -137,6 +184,7 @@ namespace FarEmerald.PlayForge.Extended.Editor
             scrollView.style.flexGrow = 1;
             scrollView.style.flexShrink = 1;
             scrollView.style.minHeight = minHeight;
+            scrollView.style.marginRight = 4;
             //scrollView.style.maxHeight = 
             // No maxHeight - let it fill available space
             
@@ -389,13 +437,89 @@ namespace FarEmerald.PlayForge.Extended.Editor
         /// </summary>
         public class SectionConfig
         {
+            // ─────────────────────────────────────────────────────────────────────
+            // Core Configuration
+            // ─────────────────────────────────────────────────────────────────────
+            
+            /// <summary>Section identifier used for element naming</summary>
             public string Name;
+            
+            /// <summary>Display title shown in the header</summary>
             public string Title;
+            
+            /// <summary>Accent color for the section divider and styling</summary>
             public Color AccentColor = Colors.AccentGray;
+            
+            /// <summary>Left border width for the content area</summary>
             public int BorderWidth = 5;
+            
+            /// <summary>Whether the section starts expanded</summary>
             public bool StartExpanded = true;
+            
+            /// <summary>URL for the help button (if empty, no help button shown)</summary>
             public string HelpUrl;
+            
+            /// <summary>
+            /// Legacy button visibility control. 
+            /// [0] = Import, [1] = Clear, [2] = Help
+            /// If null, all buttons are shown by default when applicable.
+            /// </summary>
             public bool[] IncludeButtons;
+            
+            // ─────────────────────────────────────────────────────────────────────
+            // Import/Clear Functionality (NEW)
+            // ─────────────────────────────────────────────────────────────────────
+            
+            /// <summary>
+            /// The SerializedObject containing the properties for this section.
+            /// Required for Import and Clear functionality.
+            /// </summary>
+            public SerializedObject SerializedObject;
+            
+            /// <summary>
+            /// Property paths belonging to this section (e.g., "DurationSpecification", "ImpactSpecification").
+            /// Used by Import to copy values and Clear to reset values.
+            /// </summary>
+            public string[] PropertyPaths;
+            
+            /// <summary>
+            /// Optional callback invoked after import completes.
+            /// Use to refresh UI, update derived values, etc.
+            /// </summary>
+            public Action OnImportComplete;
+            
+            /// <summary>
+            /// Optional callback invoked after clear completes.
+            /// Use to refresh UI, update derived values, etc.
+            /// </summary>
+            public Action OnClearComplete;
+            
+            /// <summary>
+            /// Optional function to provide custom default values for Clear.
+            /// Takes property path, returns default value (or null to use type default).
+            /// </summary>
+            public Func<string, object> GetDefaultValue;
+            
+            /// <summary>
+            /// If true, Import button will be hidden even if PropertyPaths are set.
+            /// </summary>
+            public bool HideImportButton;
+            
+            /// <summary>
+            /// If true, Clear button will be hidden even if PropertyPaths are set.
+            /// </summary>
+            public bool HideClearButton;
+            
+            // ─────────────────────────────────────────────────────────────────────
+            // Helper Methods
+            // ─────────────────────────────────────────────────────────────────────
+            
+            public Color GetAccentColor(float alpha) => AccentColor.Fade(alpha);
+            
+            /// <summary>
+            /// Returns true if this section has the required configuration for import/clear.
+            /// </summary>
+            public bool HasImportClearSupport => SerializedObject != null && PropertyPaths != null && PropertyPaths.Length > 0;
         }
         
         /// <summary>
@@ -411,9 +535,20 @@ namespace FarEmerald.PlayForge.Extended.Editor
             public Button ImportButton;
             public Button ClearButton;
         }
+
+        public static Color Fade(this Color color, float alpha)
+        {
+            return new Color(color.r, color.g, color.b, Mathf.Clamp01(alpha));
+        }
+        
+        public static Color Amplify(this Color color, float m)
+        {
+            return new Color(color.r * m, color.g * m, color.b * m, color.a);
+        }
         
         /// <summary>
         /// Creates a complete collapsible section with header and content.
+        /// Supports import/clear functionality when SerializedObject and PropertyPaths are provided.
         /// </summary>
         public static SectionResult CreateCollapsibleSection(SectionConfig config)
         {
@@ -470,8 +605,8 @@ namespace FarEmerald.PlayForge.Extended.Editor
             // Divider line
             var divider = new VisualElement();
             divider.style.flexGrow = 1;
-            divider.style.height = 1;
-            divider.style.backgroundColor = Colors.DividerColor;
+            divider.style.height = 2;
+            divider.style.backgroundColor = config.GetAccentColor(.28f);
             divider.style.marginLeft = 4;
             divider.style.marginRight = 8;
             divider.style.alignSelf = Align.Center;
@@ -481,94 +616,77 @@ namespace FarEmerald.PlayForge.Extended.Editor
             divider.style.borderBottomRightRadius = 1;
             header.Add(divider);
 
-            if (config.IncludeButtons is null)
+            // Determine button visibility
+            bool showImport = config.IncludeButtons?[0] ?? true;
+            bool showClear = config.IncludeButtons?[1] ?? true;
+            bool showHelp = (config.IncludeButtons?[2] ?? true) && !string.IsNullOrEmpty(config.HelpUrl);
+            
+            // Override with explicit hide flags
+            if (config.HideImportButton) showImport = false;
+            if (config.HideClearButton) showClear = false;
+            
+            // Create Import Button
+            if (showImport)
             {
-                result.ImportButton = CreateCircularButton($"{config.Name}Import", Icons.ArrowDown, Colors.PolicyGreen, 
-                    () => Application.OpenURL(config.HelpUrl));
+                Action importAction = config.HasImportClearSupport
+                    ? () => SectionImportWindow.Show(
+                        config.SerializedObject,
+                        config.Title,
+                        config.PropertyPaths,
+                        config.OnImportComplete)
+                    : (Action)(() => Debug.LogWarning($"Import not configured for section '{config.Name}'. Set SerializedObject and PropertyPaths."));
+                
+                result.ImportButton = CreateCircularButton(
+                    $"{config.Name}Import",
+                    Icons.ArrowDown,
+                    Colors.PolicyGreen,
+                    importAction);
+                result.ImportButton.tooltip = config.HasImportClearSupport 
+                    ? $"Import {config.Title} from another asset" 
+                    : "Import not configured";
                 result.ImportButton.style.display = DisplayStyle.None;
                 header.Add(result.ImportButton);
-                header.RegisterCallback<PointerEnterEvent>(evt =>{
-                    result.ImportButton.style.display = DisplayStyle.Flex;     
-                });
-                header.RegisterCallback<PointerLeaveEvent>(evt => {
-                    result.ImportButton.style.display = DisplayStyle.None;
-                        });
+            }
+
+            // Create Clear Button
+            if (showClear)
+            {
+                Action clearAction = config.HasImportClearSupport
+                    ? () => SectionClearUtility.ClearWithConfirmation(
+                        config.SerializedObject,
+                        config.Title,
+                        config.PropertyPaths,
+                        config.OnClearComplete,
+                        config.GetDefaultValue)
+                    : () => Debug.LogWarning($"Clear not configured for section '{config.Name}'. Set SerializedObject and PropertyPaths.");
                 
-                result.ClearButton = CreateCircularButton($"{config.Name}Clear", Icons.Clear, Colors.PolicyRed, 
-                    () => Application.OpenURL(config.HelpUrl));
+                result.ClearButton = CreateCircularButton(
+                    $"{config.Name}Clear",
+                    Icons.Clear,
+                    Colors.PolicyRed,
+                    clearAction);
+                result.ClearButton.tooltip = config.HasImportClearSupport 
+                    ? $"Reset {config.Title} to default values" 
+                    : "Clear not configured";
                 result.ClearButton.style.display = DisplayStyle.None;
                 header.Add(result.ClearButton);
-                header.RegisterCallback<PointerEnterEvent>(evt =>{
-                    result.ClearButton.style.display = DisplayStyle.Flex;     
-                });
-                header.RegisterCallback<PointerLeaveEvent>(evt => {
-                    result.ClearButton.style.display = DisplayStyle.None;
-                        });
-                
-                if (!string.IsNullOrEmpty(config.HelpUrl))
-                {
-                    result.HelpButton = CreateCircularButton($"{config.Name}Help", Icons.Help, Colors.PolicyPurple, 
-                        () => Application.OpenURL(config.HelpUrl));
-                    result.HelpButton.style.display = DisplayStyle.None;
-                    header.Add(result.HelpButton);
-                    header.RegisterCallback<PointerEnterEvent>(evt =>{
-                        result.HelpButton.style.display = DisplayStyle.Flex;    
-                    });
-                    header.RegisterCallback<PointerLeaveEvent>(evt => {
-                        result.HelpButton.style.display = DisplayStyle.None;
-                        });
-                }
             }
-            else
-            {
-                if (config.IncludeButtons[0])
-                {
-                    result.ImportButton = CreateCircularButton($"{config.Name}Import", Icons.ArrowDown, Colors.PolicyGreen, 
-                        () => Application.OpenURL(config.HelpUrl));
-                    result.ImportButton.style.display = DisplayStyle.None;
-                    header.Add(result.ImportButton);
-                    header.RegisterCallback<PointerEnterEvent>(evt =>{
-                            result.ImportButton.style.display = DisplayStyle.Flex;
-                        });
-                    header.RegisterCallback<PointerLeaveEvent>(evt => {
-                            result.ImportButton.style.display = DisplayStyle.None;
-                            });
-                }
 
-                if (config.IncludeButtons[1])
-                {
-                    result.ClearButton = CreateCircularButton($"{config.Name}Clear", Icons.Clear, Colors.PolicyRed, 
-                        () => Application.OpenURL(config.HelpUrl));
-                    result.ClearButton.style.display = DisplayStyle.None;
-                    header.Add(result.ClearButton);
-                    header.RegisterCallback<PointerEnterEvent>(evt =>{
-                            result.ClearButton.style.display = DisplayStyle.Flex;
-                        });
-                    header.RegisterCallback<PointerLeaveEvent>(evt => {
-                            result.ClearButton.style.display = DisplayStyle.None;
-                            });
-                }
-                
-                if (config.IncludeButtons[2] && !string.IsNullOrEmpty(config.HelpUrl))
-                {
-                    result.HelpButton = CreateCircularButton($"{config.Name}Help", Icons.Help, Colors.PolicyPurple, 
-                        () => Application.OpenURL(config.HelpUrl));
-                    result.HelpButton.style.display = DisplayStyle.None;
-                    header.Add(result.HelpButton);
-                    header.RegisterCallback<PointerEnterEvent>(evt =>{
-                        result.HelpButton.style.display = DisplayStyle.Flex;    
-                    });
-                    header.RegisterCallback<PointerLeaveEvent>(evt => {
-                        result.HelpButton.style.display = DisplayStyle.None;
-                        });
-                }
-            }
-            
-            // Help button (optional)
-            if (!string.IsNullOrEmpty(config.HelpUrl))
+            // Create Help Button
+            if (showHelp)
             {
-                
+                result.HelpButton = CreateCircularButton(
+                    $"{config.Name}Help",
+                    Icons.Help,
+                    Colors.PolicyPurple,
+                    () => Application.OpenURL(config.HelpUrl));
+                result.HelpButton.tooltip = "Open documentation";
+                result.HelpButton.style.display = DisplayStyle.None;
+                header.Add(result.HelpButton);
             }
+
+            // Setup hover show/hide for buttons
+            SetupButtonHoverBehavior(header, result);
 
             // Content container
             var content = new VisualElement { name = config.Name };
@@ -579,10 +697,8 @@ namespace FarEmerald.PlayForge.Extended.Editor
             content.style.marginLeft = 2;
             content.style.borderLeftWidth = config.BorderWidth;
             content.style.borderBottomWidth = config.BorderWidth;
-            //content.style.borderLeftColor = config.AccentColor;  TODO
             content.style.borderLeftColor = Colors.SectionHeaderBackground;
             content.style.borderBottomColor = Colors.SectionHeaderBackground;
-            //content.style.borderTopLeftRadius = 4;
             content.style.borderBottomLeftRadius = 3;
             content.style.display = config.StartExpanded ? DisplayStyle.Flex : DisplayStyle.None;
             content.AddToClassList("forge-section-content");
@@ -593,6 +709,23 @@ namespace FarEmerald.PlayForge.Extended.Editor
             SetupCollapseBehavior(header, content, arrow);
 
             return result;
+        }
+        
+        private static void SetupButtonHoverBehavior(VisualElement header, SectionResult result)
+        {
+            header.RegisterCallback<PointerEnterEvent>(_ =>
+            {
+                if (result.ImportButton != null) result.ImportButton.style.display = DisplayStyle.Flex;
+                if (result.ClearButton != null) result.ClearButton.style.display = DisplayStyle.Flex;
+                if (result.HelpButton != null) result.HelpButton.style.display = DisplayStyle.Flex;
+            });
+            
+            header.RegisterCallback<PointerLeaveEvent>(_ =>
+            {
+                if (result.ImportButton != null) result.ImportButton.style.display = DisplayStyle.None;
+                if (result.ClearButton != null) result.ClearButton.style.display = DisplayStyle.None;
+                if (result.HelpButton != null) result.HelpButton.style.display = DisplayStyle.None;
+            });
         }
         
         private static void SetupCollapseBehavior(VisualElement header, VisualElement content, Label arrow)
@@ -805,6 +938,7 @@ namespace FarEmerald.PlayForge.Extended.Editor
             container.style.marginTop = 2;
 
             var label = new Label("Asset Tag");
+            label.name = "Label";
             label.style.minWidth = 120;
             label.style.unityTextAlign = TextAnchor.MiddleLeft;
             label.style.color = Colors.LabelText;

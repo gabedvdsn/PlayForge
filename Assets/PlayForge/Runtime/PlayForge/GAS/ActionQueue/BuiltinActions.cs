@@ -39,6 +39,7 @@ namespace FarEmerald.PlayForge
         
         public void Execute(IGameplayAbilitySystem system)
         {
+            Debug.Log($"Executing {_value.ToAttributeValue()}");
             _target.TryModifyAttribute(_attribute, _value, _runEvents);
         }
     }
@@ -223,25 +224,16 @@ namespace FarEmerald.PlayForge
         public string Description => "Entity.Death";
     
         private readonly IGameplayAbilitySystem _system;
-        private readonly bool _destroyOnDeath;
     
-        public DeathAction(IGameplayAbilitySystem system, bool destroyOnDeath = true)
+        public DeathAction(IGameplayAbilitySystem system)
         {
             _system = system;
-            _destroyOnDeath = destroyOnDeath;
         }
     
         public void Execute(IGameplayAbilitySystem system)
         {
-            
             // Mark as dead (fires callbacks, records in summary)
-            _system.ToGASObject()?.MarkDead();
-        
-            // Optionally queue destruction
-            if (_destroyOnDeath)
-            {
-                _system.ToGASObject()?.QueueDestruction();
-            }
+            _system.MarkDead();
         }
     }
 }

@@ -39,7 +39,7 @@ namespace FarEmerald.PlayForge
             
             foreach (var packet in Requirements.TagPackets)
             {
-                int weight = handler.GetWeight(packet.Tag);
+                int weight = handler.GetTagWeight(packet.Tag);
                 
                 switch (packet.Policy)
                 {

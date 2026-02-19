@@ -14,15 +14,18 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   Definition:
     Name: COST_TEMPLATE
-    Description: 
+    Description: ASda
     Visibility:
       Name: Not Visible
+      Parent: 
     Textures: []
-    ImpactRetentionGroup:
+    RetentionGroup:
       Name: Ignore
+      Parent: 
   Tags:
     AssetTag:
       Name: COSTTEMPLATE
+      Parent: 
     ContextTags: []
     GrantedTags: []
   ImpactSpecification:
@@ -34,14 +37,15 @@ MonoBehaviour:
     Affiliations: []
     ImpactTypes:
     - Name: System
+      Parent: 
     ReverseImpactOnRemoval: 0
-    Magnitude: 0
+    Magnitude: 1
     MagnitudeScaler:
       rid: 1671424176672997605
     RealMagnitude: 1
     Packets: []
   DurationSpecification:
-    DurationPolicy: 0
+    DurationPolicy: 1
     Duration: 0
     DurationScaler:
       rid: -2
@@ -65,7 +69,7 @@ MonoBehaviour:
     ReApplicationPolicy: 0
     ReApplicationInteraction: 0
     StackPolicy: 0
-    AdditionalStackAmount: 1
+    StackAmount: 1
     StackAmountScaler:
       rid: -2
     RealStackAmount: 2
@@ -79,14 +83,17 @@ MonoBehaviour:
       AvoidTags:
       - Tag:
           Name: Stunned
+          Parent: 
         Operator: 5
         Magnitude: 0
       - Tag:
           Name: Silenced
+          Parent: 
         Operator: 5
         Magnitude: 0
       - Tag:
           Name: Rooted
+          Parent: 
         Operator: 5
         Magnitude: 0
       RequireTags: []
@@ -148,16 +155,7 @@ MonoBehaviour:
             value: 1
             inSlope: 0
             outSlope: 0
-            tangentMode: 0
-            weightedMode: 0
-            inWeight: 0
-            outWeight: 0
-          - serializedVersion: 3
-            time: 1
-            value: 1
-            inSlope: 0
-            outSlope: 0
-            tangentMode: 0
+            tangentMode: 69
             weightedMode: 0
             inWeight: 0
             outWeight: 0

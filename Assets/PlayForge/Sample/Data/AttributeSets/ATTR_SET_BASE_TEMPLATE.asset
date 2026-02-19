@@ -17,11 +17,10 @@ MonoBehaviour:
   Textures: []
   AssetTag:
     Name: BASETEMPLATE
+    Parent: 
   Attributes:
   - Attribute: {fileID: 11400000, guid: 5238e93ea6a409e4a84dd1dcf23dd45c, type: 2}
     Magnitude: 100
-    Scaling:
-      rid: -2
     Target: 0
     Overflow:
       Policy: 0
@@ -31,18 +30,20 @@ MonoBehaviour:
       Ceil:
         CurrentValue: 0
         BaseValue: 0
+    Scaling:
+      rid: 6412379570354782280
+    RealMagnitude: 1
     RetentionGroup:
       Name: Default
+      Parent: 
     CollisionPolicy: 0
     Constraints:
       AutoClamp: 1
       AutoScaleWithBase: 1
-      RoundingMode: 4
-      SnapInterval: 0
+      RoundingMode: 0
+      SnapInterval: 0.25
   - Attribute: {fileID: 11400000, guid: d8daec39e245e4c4d971e9da2d84aa0d, type: 2}
     Magnitude: 100
-    Scaling:
-      rid: -2
     Target: 0
     Overflow:
       Policy: 0
@@ -52,18 +53,20 @@ MonoBehaviour:
       Ceil:
         CurrentValue: 0
         BaseValue: 0
+    Scaling:
+      rid: -2
+    RealMagnitude: 0
     RetentionGroup:
       Name: Default
+      Parent: 
     CollisionPolicy: 0
     Constraints:
       AutoClamp: 1
       AutoScaleWithBase: 1
-      RoundingMode: 4
+      RoundingMode: 0
       SnapInterval: 0
   - Attribute: {fileID: 11400000, guid: 3d035a62577527e4b9627eb5443a2aae, type: 2}
     Magnitude: 0.25
-    Scaling:
-      rid: -2
     Target: 0
     Overflow:
       Policy: 3
@@ -73,8 +76,12 @@ MonoBehaviour:
       Ceil:
         CurrentValue: 1
         BaseValue: 1
+    Scaling:
+      rid: -2
+    RealMagnitude: 0
     RetentionGroup:
       Name: Default
+      Parent: 
     CollisionPolicy: 0
     Constraints:
       AutoClamp: 1
@@ -83,8 +90,6 @@ MonoBehaviour:
       SnapInterval: 0
   - Attribute: {fileID: 11400000, guid: 7588ce54fd063844db9e11ffca0a1c01, type: 2}
     Magnitude: 0.25
-    Scaling:
-      rid: -2
     Target: 0
     Overflow:
       Policy: 3
@@ -94,13 +99,86 @@ MonoBehaviour:
       Ceil:
         CurrentValue: 1
         BaseValue: 1
+    Scaling:
+      rid: -2
+    RealMagnitude: 0
     RetentionGroup:
       Name: Default
+      Parent: 
     CollisionPolicy: 0
     Constraints:
       AutoClamp: 1
-      AutoScaleWithBase: 1
-      RoundingMode: 4
+      AutoScaleWithBase: 0
+      RoundingMode: 0
+      SnapInterval: 0
+  - Attribute: {fileID: 11400000, guid: fd76062a9b9ee2b47be1f8a4fb4fd7a1, type: 2}
+    Magnitude: 12
+    Target: 0
+    Overflow:
+      Policy: 4
+      Floor:
+        CurrentValue: -1
+        BaseValue: -1
+      Ceil:
+        CurrentValue: 99999
+        BaseValue: 99999
+    Scaling:
+      rid: -2
+    RealMagnitude: 2
+    RetentionGroup:
+      Name: Default
+      Parent: 
+    CollisionPolicy: 0
+    Constraints:
+      AutoClamp: 0
+      AutoScaleWithBase: 0
+      RoundingMode: 0
+      SnapInterval: 0
+  - Attribute: {fileID: 11400000, guid: 453e1503675d19d40bd170bb481c64c4, type: 2}
+    Magnitude: 12
+    Target: 0
+    Overflow:
+      Policy: 4
+      Floor:
+        CurrentValue: -1
+        BaseValue: -1
+      Ceil:
+        CurrentValue: 99999
+        BaseValue: 99999
+    Scaling:
+      rid: -2
+    RealMagnitude: 2
+    RetentionGroup:
+      Name: Default
+      Parent: 
+    CollisionPolicy: 0
+    Constraints:
+      AutoClamp: 0
+      AutoScaleWithBase: 0
+      RoundingMode: 0
+      SnapInterval: 0
+  - Attribute: {fileID: 11400000, guid: 5ca0e75a1898b9e4e9866b437301ab35, type: 2}
+    Magnitude: 12
+    Target: 0
+    Overflow:
+      Policy: 4
+      Floor:
+        CurrentValue: -1
+        BaseValue: -1
+      Ceil:
+        CurrentValue: 99999
+        BaseValue: 99999
+    Scaling:
+      rid: -2
+    RealMagnitude: 2
+    RetentionGroup:
+      Name: Default
+      Parent: 
+    CollisionPolicy: 0
+    Constraints:
+      AutoClamp: 0
+      AutoScaleWithBase: 0
+      RoundingMode: 0
       SnapInterval: 0
   SubSets: []
   CollisionResolutionPolicy: 0
@@ -110,8 +188,45 @@ MonoBehaviour:
     ImpactWorkers: []
     TagWorkers: []
     AnalysisWorkers: []
+  LocalData: []
   references:
     version: 2
     RefIds:
     - rid: -2
       type: {class: , ns: , asm: }
+    - rid: 6412379570354782280
+      type: {class: CachedSimpleScaler, ns: FarEmerald.PlayForge, asm: Assembly-CSharp}
+      data:
+        Name: 
+        sourcePipeline: {fileID: 0}
+        SyncWithTemplate: 0
+        Configuration: 0
+        MaxLevel: 20
+        LevelValues:
+        - 1
+        Interpolation: 1
+        Scaling:
+          serializedVersion: 2
+          m_Curve:
+          - serializedVersion: 3
+            time: 0
+            value: 1
+            inSlope: 0
+            outSlope: 0
+            tangentMode: 0
+            weightedMode: 0
+            inWeight: 0
+            outWeight: 0
+          - serializedVersion: 3
+            time: 1
+            value: 1
+            inSlope: 0
+            outSlope: 0
+            tangentMode: 0
+            weightedMode: 0
+            inWeight: 0
+            outWeight: 0
+          m_PreInfinity: 2
+          m_PostInfinity: 2
+          m_RotationOrder: 4
+        Behaviours: []

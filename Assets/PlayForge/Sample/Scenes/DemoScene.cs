@@ -72,7 +72,7 @@ public class DemoScene : MonoBehaviour
         if (Abilities[index] is null) return;
 
         var asc = Source.GetAbilitySystem();
-        asc.TryActivateAbility(new AbilitySystemComponent.AbilityActivationRequest(Abilities[index].Spec, index, asc));
+        asc.TryActivateAbility(asc.CreateActivationRequest(index));
     }
 
     private void Update()

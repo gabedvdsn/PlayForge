@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.Serialization;
 
 namespace FarEmerald.PlayForge
 {
@@ -20,9 +21,10 @@ namespace FarEmerald.PlayForge
         [Tooltip("Optional name for this scaler (helps identify when importing or viewing)")]
         public string Name;
         
+        [FormerlySerializedAs("SourceTemplate")]
         [Header("Template Link")]
         [Tooltip("Optional: Link to a shared ScalerTemplate. When linked, this scaler can sync its values from the template.")]
-        public ScalerTemplate SourceTemplate;
+        public ScalerPipeline sourcePipeline;
         
         [Tooltip("When enabled, this scaler's values will be kept in sync with the linked template.\n" +
                  "Disable to make local modifications while keeping the template reference.")]
@@ -56,7 +58,7 @@ namespace FarEmerald.PlayForge
         /// <summary>
         /// Returns true if this scaler is linked to a template.
         /// </summary>
-        public bool IsLinkedToTemplate => SourceTemplate != null;
+        public bool IsLinkedToTemplate => sourcePipeline != null;
         
         /// <summary>
         /// Returns true if this scaler should sync from its template.
@@ -75,20 +77,20 @@ namespace FarEmerald.PlayForge
         {
             if (ShouldSyncFromTemplate)
             {
-                SourceTemplate.CopyTo(this);
+                sourcePipeline.CopyTo(this);
             }
         }
         
         /// <summary>
         /// Links this scaler to a template and optionally syncs immediately.
         /// </summary>
-        public void LinkToTemplate(ScalerTemplate template, bool syncImmediately = true)
+        public void LinkToTemplate(ScalerPipeline pipeline, bool syncImmediately = true)
         {
-            SourceTemplate = template;
+            sourcePipeline = pipeline;
             SyncWithTemplate = true;
-            if (syncImmediately && template != null)
+            if (syncImmediately && pipeline != null)
             {
-                template.CopyTo(this);
+                pipeline.CopyTo(this);
             }
         }
         
@@ -97,7 +99,7 @@ namespace FarEmerald.PlayForge
         /// </summary>
         public void UnlinkFromTemplate()
         {
-            SourceTemplate = null;
+            sourcePipeline = null;
             SyncWithTemplate = false;
         }
         
@@ -395,7 +397,7 @@ namespace FarEmerald.PlayForge
             {
                 ELevelConfig.LockToLevelProvider => spec.GetSource().GetMaxLevel(),
                 ELevelConfig.Unlocked => MaxLevel,
-                ELevelConfig.Partitioned => Mathf.Min(MaxLevel, spec.GetSource().GetLevel()),
+                ELevelConfig.Clamped => Mathf.Min(MaxLevel, spec.GetSource().GetLevel()),
                 _ => MaxLevel
             };
         }
@@ -440,7 +442,8 @@ namespace FarEmerald.PlayForge
     {
         Add,
         Multiply,
-        Override
+        Override,
+        FlatBonus
     }
 
     public enum ELevelConfig
@@ -457,7 +460,7 @@ namespace FarEmerald.PlayForge
         [Tooltip("Uses min(MaxLevel, provider's current level).\n" +
                  "Useful for effects that scale up to the provider's current level,\n" +
                  "but cap at a maximum even if provider exceeds it.")]
-        Partitioned
+        Clamped
     }
     
     public enum EScalerInterpolation

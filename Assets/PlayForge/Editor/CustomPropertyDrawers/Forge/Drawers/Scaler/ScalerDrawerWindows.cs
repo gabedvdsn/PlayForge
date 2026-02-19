@@ -54,14 +54,14 @@ namespace FarEmerald.PlayForge.Extended.Editor
                 { typeof(Attribute), ("📈", "Attribute") },
                 { typeof(AttributeSet), ("📊", "AttrSet") },
                 { typeof(EntityIdentity), ("👤", "Entity") },
-                { typeof(ScalerTemplate), ("📋", "Template") },
+                { typeof(ScalerPipeline), ("📋", "Template") },
             };
             
             // First, add ScalerTemplate assets (they appear first and are highlighted)
-            foreach (var guid in AssetDatabase.FindAssets($"t:{nameof(ScalerTemplate)}"))
+            foreach (var guid in AssetDatabase.FindAssets($"t:{nameof(ScalerPipeline)}"))
             {
                 var path = AssetDatabase.GUIDToAssetPath(guid);
-                var template = AssetDatabase.LoadAssetAtPath<ScalerTemplate>(path);
+                var template = AssetDatabase.LoadAssetAtPath<ScalerPipeline>(path);
                 if (template?.Scaler == null) continue;
                 
                 var scaler = template.Scaler;

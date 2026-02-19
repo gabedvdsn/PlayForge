@@ -7,6 +7,7 @@ namespace FarEmerald.PlayForge
 {
     /// <summary>
     /// Manages tag state and tag workers for an entity.
+    /// Supports hierarchical tag matching with O(1) exact lookups and O(n) hierarchical lookups.
     /// Tag worker activation/resolution is deferred to end-of-frame.
     /// </summary>
     public class TagCache
@@ -49,25 +50,164 @@ namespace FarEmerald.PlayForge
             _frameSummary = frameSummary;
         }
         
-        // ═══════════════════════════════════════════════════════════════
+        // ═══════════════════════════════════════════════════════════════════════════
         // TAG MANAGEMENT
-        // ═══════════════════════════════════════════════════════════════
+        // ═══════════════════════════════════════════════════════════════════════════
         
+        /// <summary>
+        /// Returns all currently applied tags.
+        /// </summary>
         public List<Tag> GetAppliedTags() => _tagWeights.Keys.ToList();
         
+        /// <summary>
+        /// Gets the weight (stack count) of a specific tag. Returns -1 if tag not present.
+        /// This is an EXACT match only.
+        /// </summary>
         public int GetWeight(Tag tag) => _tagWeights.GetValueOrDefault(tag, -1);
         
-        public bool HasTag(Tag tag) => _tagWeights.ContainsKey(tag) && _tagWeights[tag] > 0;
+        /// <summary>
+        /// Returns true if the tag is present with weight > 0.
+        /// This is an EXACT match only.
+        /// </summary>
+        public bool HasTagExact(Tag tag) => _tagWeights.ContainsKey(tag) && _tagWeights[tag] > 0;
         
+        /// <summary>
+        /// Returns true if the tag is present with weight > 0.
+        /// Supports hierarchical matching via matchMode parameter.
+        /// </summary>
+        public bool HasTag(Tag tag, ETagMatchMode matchMode)
+        {
+            if (matchMode == ETagMatchMode.Exact)
+            {
+                return HasTagExact(tag);
+            }
+            
+            // Hierarchical check - must iterate through all tags
+            foreach (var kvp in _tagWeights)
+            {
+                if (kvp.Value <= 0) continue;
+                
+                switch (matchMode)
+                {
+                    case ETagMatchMode.IncludeChildren:
+                        if (kvp.Key.MatchesOrIsChildOf(tag)) return true;
+                        break;
+                        
+                    case ETagMatchMode.IncludeParents:
+                        if (kvp.Key.MatchesOrIsParentOf(tag)) return true;
+                        break;
+                        
+                    case ETagMatchMode.SameRoot:
+                        if (kvp.Key.SharesAncestorWith(tag)) return true;
+                        break;
+                }
+            }
+            
+            return false;
+        }
+        
+        /// <summary>
+        /// Returns true if ANY of the specified tags are present.
+        /// </summary>
+        public bool HasAnyTag(IEnumerable<Tag> tags, ETagMatchMode matchMode = ETagMatchMode.Exact)
+        {
+            foreach (var tag in tags)
+            {
+                if (HasTag(tag, matchMode)) return true;
+            }
+            return false;
+        }
+        
+        /// <summary>
+        /// Returns true if ALL of the specified tags are present.
+        /// </summary>
+        public bool HasAllTags(IEnumerable<Tag> tags, ETagMatchMode matchMode = ETagMatchMode.Exact)
+        {
+            foreach (var tag in tags)
+            {
+                if (!HasTag(tag, matchMode)) return false;
+            }
+            return true;
+        }
+        
+        /// <summary>
+        /// Returns true if NONE of the specified tags are present.
+        /// </summary>
+        public bool HasNoneOfTags(IEnumerable<Tag> tags, ETagMatchMode matchMode = ETagMatchMode.Exact)
+        {
+            foreach (var tag in tags)
+            {
+                if (HasTag(tag, matchMode)) return false;
+            }
+            return true;
+        }
+        
+        /// <summary>
+        /// Gets the total weight of tags matching the query (hierarchical).
+        /// </summary>
+        public int GetMatchingWeight(Tag tag, ETagMatchMode matchMode = ETagMatchMode.Exact)
+        {
+            if (matchMode == ETagMatchMode.Exact)
+            {
+                return GetWeight(tag);
+            }
+            
+            int total = 0;
+            foreach (var kvp in _tagWeights)
+            {
+                if (kvp.Value <= 0) continue;
+                
+                bool matches = matchMode switch
+                {
+                    ETagMatchMode.IncludeChildren => kvp.Key.MatchesOrIsChildOf(tag),
+                    ETagMatchMode.IncludeParents => kvp.Key.MatchesOrIsParentOf(tag),
+                    ETagMatchMode.SameRoot => kvp.Key.SharesAncestorWith(tag),
+                    _ => kvp.Key.Equals(tag)
+                };
+                
+                if (matches) total += kvp.Value;
+            }
+            
+            return total;
+        }
+        
+        /// <summary>
+        /// Gets all tags that match the query according to match mode.
+        /// </summary>
+        public IEnumerable<Tag> GetMatchingTags(Tag query, ETagMatchMode matchMode = ETagMatchMode.Exact)
+        {
+            foreach (var kvp in _tagWeights)
+            {
+                if (kvp.Value <= 0) continue;
+                
+                bool matches = matchMode switch
+                {
+                    ETagMatchMode.Exact => kvp.Key.Equals(query),
+                    ETagMatchMode.IncludeChildren => kvp.Key.MatchesOrIsChildOf(query),
+                    ETagMatchMode.IncludeParents => kvp.Key.MatchesOrIsParentOf(query),
+                    ETagMatchMode.SameRoot => kvp.Key.SharesAncestorWith(query),
+                    _ => false
+                };
+                
+                if (matches) yield return kvp.Key;
+            }
+        }
+        
+        /// <summary>
+        /// Tries to get the weight of a tag.
+        /// </summary>
         public bool TryGetWeight(Tag tag, out int weight)
         {
             weight = GetWeight(tag);
             return weight >= 0;
         }
         
+        /// <summary>
+        /// Adds a tag with weight 1, or increments existing weight.
+        /// </summary>
         public void AddTag(Tag tag, bool noDuplicates = false)
         {
-            if (tag == null) return;
+            if (string.IsNullOrEmpty(tag.Name)) return;
             
             if (_tagWeights.ContainsKey(tag))
             {
@@ -79,6 +219,9 @@ namespace FarEmerald.PlayForge
             }
         }
         
+        /// <summary>
+        /// Adds multiple tags.
+        /// </summary>
         public void AddTags(IEnumerable<Tag> tags, bool noDuplicates = false)
         {
             if (tags == null) return;
@@ -86,15 +229,21 @@ namespace FarEmerald.PlayForge
                 AddTag(tag, noDuplicates);
         }
         
+        /// <summary>
+        /// Removes one instance of a tag (decrements weight).
+        /// </summary>
         public void RemoveTag(Tag tag)
         {
-            if (tag == null || !_tagWeights.ContainsKey(tag)) return;
+            if (string.IsNullOrEmpty(tag.Name) || !_tagWeights.ContainsKey(tag)) return;
             
             _tagWeights[tag]--;
             if (_tagWeights[tag] <= 0)
                 _tagWeights.Remove(tag);
         }
         
+        /// <summary>
+        /// Removes multiple tags.
+        /// </summary>
         public void RemoveTags(IEnumerable<Tag> tags)
         {
             if (tags == null) return;
@@ -102,9 +251,30 @@ namespace FarEmerald.PlayForge
                 RemoveTag(tag);
         }
         
-        // ═══════════════════════════════════════════════════════════════
+        /// <summary>
+        /// Completely removes a tag regardless of weight.
+        /// </summary>
+        public void RemoveTagCompletely(Tag tag)
+        {
+            _tagWeights.Remove(tag);
+        }
+        
+        /// <summary>
+        /// Removes all tags matching the query.
+        /// </summary>
+        public int RemoveMatchingTags(Tag query, ETagMatchMode matchMode = ETagMatchMode.Exact)
+        {
+            var toRemove = GetMatchingTags(query, matchMode).ToList();
+            foreach (var tag in toRemove)
+            {
+                _tagWeights.Remove(tag);
+            }
+            return toRemove.Count;
+        }
+        
+        // ═══════════════════════════════════════════════════════════════════════════
         // TAG WORKER MANAGEMENT
-        // ═══════════════════════════════════════════════════════════════
+        // ═══════════════════════════════════════════════════════════════════════════
         
         public void ProvideWorker(AbstractTagWorker worker)
         {
@@ -132,9 +302,9 @@ namespace FarEmerald.PlayForge
         public int ActiveWorkerCount => _activeWorkers.Count;
         public int RegisteredWorkerCount => _tagWorkers.Count;
         
-        // ═══════════════════════════════════════════════════════════════
+        // ═══════════════════════════════════════════════════════════════════════════
         // END-OF-FRAME PROCESSING
-        // ═══════════════════════════════════════════════════════════════
+        // ═══════════════════════════════════════════════════════════════════════════
         
         /// <summary>
         /// Evaluate tag worker states and queue activate/resolve actions.
@@ -217,9 +387,9 @@ namespace FarEmerald.PlayForge
             _tickCounters.Remove(worker);
         }
         
-        // ═══════════════════════════════════════════════════════════════
+        // ═══════════════════════════════════════════════════════════════════════════
         // RESET
-        // ═══════════════════════════════════════════════════════════════
+        // ═══════════════════════════════════════════════════════════════════════════
         
         /// <summary>
         /// Reset all tag state and resolve all active workers.
@@ -242,9 +412,9 @@ namespace FarEmerald.PlayForge
             _tagWeights.Clear();
         }
         
-        // ═══════════════════════════════════════════════════════════════
+        // ═══════════════════════════════════════════════════════════════════════════
         // DEBUG
-        // ═══════════════════════════════════════════════════════════════
+        // ═══════════════════════════════════════════════════════════════════════════
         
         public void LogWeights()
         {
@@ -262,6 +432,35 @@ namespace FarEmerald.PlayForge
             {
                 Debug.Log($"\t{worker.GetType().Name}");
             }
+        }
+        
+        /// <summary>
+        /// Returns a formatted string of all tags grouped by hierarchy.
+        /// </summary>
+        public string GetHierarchyDebugString()
+        {
+            var roots = new Dictionary<string, List<string>>();
+            
+            foreach (var tag in _tagWeights.Keys)
+            {
+                var root = tag.GetRoot().Name;
+                if (!roots.ContainsKey(root))
+                    roots[root] = new List<string>();
+                roots[root].Add($"{tag.Name} ({_tagWeights[tag]})");
+            }
+            
+            var sb = new System.Text.StringBuilder();
+            sb.AppendLine("[ TAG HIERARCHY ]");
+            foreach (var kvp in roots.OrderBy(k => k.Key))
+            {
+                sb.AppendLine($"  {kvp.Key}:");
+                foreach (var tag in kvp.Value.OrderBy(t => t))
+                {
+                    sb.AppendLine($"    - {tag}");
+                }
+            }
+            
+            return sb.ToString();
         }
     }
 }

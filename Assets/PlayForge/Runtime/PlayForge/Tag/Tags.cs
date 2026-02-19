@@ -17,6 +17,12 @@ namespace FarEmerald.PlayForge
         
         public static Tag NONE => Tag.Generate("None");
         
+        [ForgeContextDefault(ForgeContext.Impact)]
+        public static Tag ALLOW => Tag.Generate("Always Allow");
+
+        [ForgeContextDefault(ForgeContext.Impact)]
+        public static Tag DISALLOW => Tag.Generate("Never Allow");
+        
         [ForgeContextDefault(ForgeContext.Debug, ForgeContext.Texture)]
         public static Tag DEBUG => Tag.Generate("Debug");
         

@@ -15,7 +15,7 @@ namespace FarEmerald.PlayForge
         public EAbilityActivationPolicy DefaultActivationPolicy => activationPolicy;
         private bool allowDuplicateAbilities;
 
-        public readonly IGameplayAbilitySystem Root;
+        public readonly IGameplayAbilitySystem Self;
 
         private Dictionary<int, AbilitySpecContainer> AbilityCache;
         private Dictionary<EAbilityActivationPolicy, HashSet<int>> ActiveCache;
@@ -28,9 +28,9 @@ namespace FarEmerald.PlayForge
         private ActionQueue _actionQueue;
         private FrameSummary _frameSummary;
 
-        public AbilitySystemComponent(IGameplayAbilitySystem root)
+        public AbilitySystemComponent(IGameplayAbilitySystem self)
         {
-            Root = root;
+            Self = self;
         }
 
         public bool IsExecuting => ActiveCache.Keys.Any(IsExecutingPolicy);
@@ -53,27 +53,17 @@ namespace FarEmerald.PlayForge
         
         private Queue<AbilityActivationRequest> activationQueue = new();
 
-        public AbilityActivationRequest CreateActivationRequest(
-            int index, 
-            EAbilityActivationPolicyExtended policy = EAbilityActivationPolicyExtended.UseLocalPolicy)
+        public AbilityActivationRequest CreateActivationRequest(int index)
         {
-            return new AbilityActivationRequest(policy.Translate(this), index);
+            return new AbilityActivationRequest(index);
         }
         
         public struct AbilityActivationRequest
         {
-            public EAbilityActivationPolicy Policy;
             public int Index;
 
-            public AbilityActivationRequest(EAbilityActivationPolicy policy, int index)
+            public AbilityActivationRequest(int index)
             {
-                Policy = policy;
-                Index = index;
-            }
-
-            public AbilityActivationRequest(AbilitySpec ability, int index, AbilitySystemComponent asc = null)
-            {
-                Policy = ability.Base.Definition.ActivationPolicy.Translate(asc);
                 Index = index;
             }
         }
@@ -153,14 +143,6 @@ namespace FarEmerald.PlayForge
         }
         
         #endregion
-        
-        public void SetAbilitiesLevel(int level)
-        {
-            foreach (var container in AbilityCache.Values)
-            {
-                container.Spec.SetLevel(Mathf.Min(level, container.Spec.Base.MaxLevel));
-            }
-        }
 
         #region Ability Managing
         
@@ -198,13 +180,12 @@ namespace FarEmerald.PlayForge
             abilityIndex = GetFirstAvailableCacheIndex();
             if (abilityIndex < 0) return false;
 
-            var container = new AbilitySpecContainer(ability.Generate(Root, level));
+            var container = new AbilitySpecContainer(ability.Generate(Self, level));
             AbilityCache[abilityIndex] = container;
             
-            ability.WorkerGroup?.ProvideWorkersTo(Root);
+            ability.WorkerGroup?.ProvideWorkersTo(Self);
             
-            Root.GetTagCache().AddTag(ability.Tags.AssetTag);
-            Root.CompileGrantedTags();
+            Self.CompileGrantedTags();
 
             return true;
         }
@@ -216,7 +197,7 @@ namespace FarEmerald.PlayForge
             if (AbilityCache[index].IsClaiming) 
                 Inject(index, new InterruptInjection());
             
-            Root.CompileGrantedTags();
+            Self.CompileGrantedTags();
 
             return AbilityCache.Remove(index);
         }
@@ -247,8 +228,20 @@ namespace FarEmerald.PlayForge
         {
             if (!ability.Base.Definition.ActivateImmediately) return;
             
-            var req = new AbilityActivationRequest(ability, abilityIndex, this);
-            TryActivateAbility(req);
+            TryActivateAbility(CreateActivationRequest(abilityIndex));
+        }
+        
+        public bool SetAbilityLevel(int index, int level)
+        {
+            if (!AbilityCache.TryGetValue(index, out var container)) return false;
+            container.Spec.SetLevel(Mathf.Min(level, container.Spec.Base.MaxLevel));
+            return true;
+        }
+
+        public int GetAbilityLevel(int index)
+        {
+            if (!AbilityCache.TryGetValue(index, out var container)) return -1;
+            return container.Spec.GetLevel();
         }
 
         #endregion
@@ -280,7 +273,8 @@ namespace FarEmerald.PlayForge
         
         private bool ProcessActivationRequest(AbilityActivationRequest req, AbilityDataPacket data)
         {
-            return req.Policy switch
+            var policy = AbilityCache[req.Index].Spec.Base.Definition.ActivationPolicy.Translate(this);
+            return policy switch
             {
                 EAbilityActivationPolicy.AlwaysActivate => 
                     AlwaysActivateTargetingValidation(req.Index) && 
@@ -293,7 +287,7 @@ namespace FarEmerald.PlayForge
                 EAbilityActivationPolicy.QueueActivationIfBusy => 
                     !IsExecutingPolicyCritical(EAbilityActivationPolicy.QueueActivationIfBusy) 
                         ? ActivateAbility(AbilityCache[req.Index], data) 
-                        : QueueAbilityActivation(req.Index),
+                        : QueueAbilityActivation(req),
                         
                 _ => throw new ArgumentOutOfRangeException()
             };
@@ -310,9 +304,9 @@ namespace FarEmerald.PlayForge
             return container.ActivateAbility(data);
         }
 
-        private bool QueueAbilityActivation(int abilityIndex)
+        private bool QueueAbilityActivation(AbilityActivationRequest req)
         {
-            activationQueue.Enqueue(new AbilityActivationRequest(AbilityCache[abilityIndex].Spec, abilityIndex));
+            activationQueue.Enqueue(req);
             return true;
         }
 
@@ -400,14 +394,14 @@ namespace FarEmerald.PlayForge
         public void ProvideFrameImpactDealt(ImpactData impactData, bool runWorkers = true)
         {
             // Track impact on derivation
-            impactData.SourcedModifier.BaseDerivation.TrackImpact(impactData);
+            impactData.SourcedModifier.Derivation.TrackImpact(impactData);
             
             // Run effect-specific workers
             var effectContext = new EffectWorkerContext(
-                Root, impactData.SourcedModifier.BaseDerivation, 
-                Root.GetFrameSummary(), Root.GetActionQueue(), 
+                Self, impactData.SourcedModifier.Derivation, 
+                Self.GetFrameSummary(), Self.GetActionQueue(), 
                 1, impactData);
-            impactData.SourcedModifier.BaseDerivation.RunWorkerImpact(effectContext);
+            impactData.SourcedModifier.Derivation.RunWorkerImpact(effectContext);
             
             // Run global impact workers
             if (runWorkers)

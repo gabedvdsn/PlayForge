@@ -19,16 +19,15 @@ MonoBehaviour:
   AssetTag:
     Name: BASETEMPLATE
   GrantedTags: []
-  Level: 1
+  StartingLevel: 1
   CapAtMaxLevel: 1
-  MaxLevel: 50
+  MaxLevel: 25
   ActivationPolicy: 2
   MaxAbilities: 99
   StartingAbilities: []
   AllowDuplicateAbilities: 0
   MaxItems: 99
-  StartingItems:
-  - {fileID: 0}
+  StartingItems: []
   AllowDuplicateItems: 1
   AttributeSet: {fileID: 11400000, guid: 7056a3227d041bd479699d0009f78482, type: 2}
   WorkerGroup:
@@ -38,6 +37,8 @@ MonoBehaviour:
     TagWorkers: []
     AnalysisWorkers: []
   LocalData: []
+  LinkMode: 0
+  _linkedSource: {fileID: 0}
   references:
     version: 2
     RefIds: []

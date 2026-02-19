@@ -27,10 +27,20 @@ namespace FarEmerald.PlayForge.Extended.Editor
         protected abstract void SetValue(SerializedProperty prop, T value);
         protected abstract T GetCurrentValue(SerializedProperty prop);
         protected abstract Label GetLabel(SerializedProperty prop, T value);
+
+        protected VisualElement Root;
+
+        protected void Repaint()
+        {
+            Root.MarkDirtyRepaint();
+        }
         
         // ═══════════════════════════════════════════════════════════════════════════
         // Virtual Methods - Override in derived classes as needed
         // ═══════════════════════════════════════════════════════════════════════════
+        
+        protected Button _openButton;
+        protected Button _clearButton;
         
         /// <summary>Whether to show the "Open/Navigate" button. Override to control visibility.</summary>
         protected virtual bool AcceptOpen(SerializedProperty prop) => false;
@@ -38,21 +48,48 @@ namespace FarEmerald.PlayForge.Extended.Editor
         /// <summary>Whether to show the "Add/Create" button. Override to control visibility.</summary>
         protected virtual bool AcceptAdd() => false;
 
-        protected virtual bool AcceptClear() => false;
-        
+        protected virtual bool AcceptClear(SerializedProperty prop) => GetCurrentValue(prop) != null;
+
         /// <summary>Gets the default value when none is selected.</summary>
-        protected virtual T GetDefault() => default;
+        /// <param name="prop"></param>
+        protected virtual T GetDefault(SerializedProperty prop) => default;
 
         /// <summary>Called when the open button is clicked. Override to implement navigation.</summary>
         protected virtual void OnOpen(SerializedProperty prop, T value)
         {
             if (prop.objectReferenceValue is null) return;
-            if (value is not Object record) return;
-            Selection.activeObject = record; EditorGUIUtility.PingObject(record);
+            var record = value as Object;
+            if (record is null) return;
+            Selection.activeObject = record; 
+            EditorGUIUtility.PingObject(record);
         }
-        
+
         /// <summary>Called when the add button is clicked. Override to implement creation.</summary>
-        protected virtual void OnAdd(SerializedProperty prop, string searchText) { }
+        protected virtual void OnAdd(SerializedProperty prop, string searchText)
+        {
+            UpdateButtonVisibility(prop);
+        }
+
+        protected virtual void OnClear(SerializedProperty prop, Button valueBtn, DrawerState state, VisualElement dropdown)
+        {
+            try
+            {
+                ClearReferenceValue(prop);
+            }
+            catch (Exception ex)
+            {
+                Debug.Log(ex);
+            }
+            
+            SelectItem(prop, default, valueBtn, state, dropdown);
+            UpdateButtonVisibility(prop);
+            
+            prop.serializedObject.ApplyModifiedProperties();
+            EditorUtility.SetDirty(prop.serializedObject.targetObject);
+            Repaint();
+        }
+
+        protected abstract void ClearReferenceValue(SerializedProperty prop);
         
         /// <summary>Apply any filtering/validation to entries. Override to customize.</summary>
         protected virtual T[] ApplyValidation(SerializedProperty property, T currValue, T[] entries)
@@ -82,7 +119,7 @@ namespace FarEmerald.PlayForge.Extended.Editor
         // State Management
         // ═══════════════════════════════════════════════════════════════════════════
         
-        private class DrawerState
+        protected class DrawerState
         {
             public bool IsOpen;
             public List<T> Results = new List<T>();
@@ -96,16 +133,16 @@ namespace FarEmerald.PlayForge.Extended.Editor
         
         public override VisualElement CreatePropertyGUI(SerializedProperty prop)
         {
-            var root = new VisualElement { name = "RefDrawerRoot" };
+            Root = new VisualElement { name = "RefDrawerRoot" };
             var state = new DrawerState();
-            root.userData = state;
+            Root.userData = state;
             
             // Main row
             var mainRow = new VisualElement();
             mainRow.style.flexDirection = FlexDirection.Row;
             mainRow.style.alignItems = Align.Center;
             mainRow.style.minHeight = 20;
-            root.Add(mainRow);
+            Root.Add(mainRow);
             
             // Label (if not in list)
             if (!IsInList(prop))
@@ -126,35 +163,49 @@ namespace FarEmerald.PlayForge.Extended.Editor
             
             // Dropdown container (hidden by default)
             var dropdown = CreateDropdown(prop, state, valueBtn);
-            root.Add(dropdown);
+            Root.Add(dropdown);
             
-            if (AcceptClear())
+            if (AcceptClear(prop))
             {
-                var clearBtn = CreateIconButton(Icons.Clear, "Clear", () =>
-                {
-                    prop.objectReferenceValue = null;
-
-                    prop.serializedObject.ApplyModifiedProperties();
-                    EditorUtility.SetDirty(prop.serializedObject.targetObject);
-                    SelectItem(prop, default, valueBtn, state, dropdown);
-                }, Colors.AccentRed);
-                clearBtn.style.marginLeft = 4;
-                //clearBtn.style.bac
-                mainRow.Add(clearBtn);
+                mainRow.Add(CreateClearButton(prop, valueBtn, state, dropdown));
             }
             
             // Open button (optional)
             if (AcceptOpen(prop))
             {
-                var openBtn = CreateIconButton(Icons.Arrow, "Open", () => OnOpen(prop, GetCurrentValue(prop)), Colors.AccentBlue);
-                //openBtn.style.marginLeft = 4;
-                mainRow.Add(openBtn);
+                mainRow.Add(CreateOpenButton(prop, valueBtn, state, dropdown));
             }
             
             // Wire up value button click
             valueBtn.clicked += () => ToggleDropdown(prop, state, dropdown, valueBtn);
             
-            return root;
+            return Root;
+        }
+
+        protected virtual Button CreateOpenButton(SerializedProperty prop, Button valueBtn, DrawerState state, VisualElement dropdown)
+        {
+            _openButton = CreateIconButton(Icons.Arrow, "Open", () => OnOpen(prop, GetCurrentValue(prop)), Colors.AccentBlue);
+            return _openButton;
+        }
+        
+        protected virtual Button CreateClearButton(SerializedProperty prop, Button valueBtn, DrawerState state, VisualElement dropdown)
+        {
+            _clearButton = CreateIconButton(Icons.Clear, "Clear", () =>
+            {
+                OnClear(prop, valueBtn, state, dropdown);
+            }, Colors.AccentRed);
+            _clearButton.style.marginLeft = 4;
+            return _clearButton;
+        }
+        
+        protected void UpdateButtonVisibility(SerializedProperty prop)
+        {
+            bool hasValue = GetCurrentValue(prop) != null;
+            
+            if (_openButton != null)
+                _openButton.style.display = hasValue ? DisplayStyle.Flex : DisplayStyle.None;
+            if (_clearButton != null)
+                _clearButton.style.display = hasValue ? DisplayStyle.Flex : DisplayStyle.None;
         }
         
         // ═══════════════════════════════════════════════════════════════════════════
@@ -223,8 +274,6 @@ namespace FarEmerald.PlayForge.Extended.Editor
             dropdown.style.borderTopRightRadius = 4;
             dropdown.style.borderBottomLeftRadius = 4;
             dropdown.style.borderBottomRightRadius = 4;
-            dropdown.style.borderLeftWidth = 2;
-            dropdown.style.borderLeftColor = Colors.AccentBlue;
             dropdown.style.paddingTop = 4;
             dropdown.style.paddingBottom = 4;
             dropdown.style.paddingLeft = 4;
@@ -240,27 +289,17 @@ namespace FarEmerald.PlayForge.Extended.Editor
             searchField.style.flexGrow = 1;
             searchField.style.height = 20;
             searchField.style.fontSize = 11;
-            //searchField.textInput.style.paddingLeft = 4;
-            searchField.contentContainer.style.paddingLeft = 4;
-            
-            // Placeholder styling
-            if (string.IsNullOrEmpty(searchField.value))
-            {
-                searchField.value = "";
-            }
-            
             searchRow.Add(searchField);
             
             // Add button (optional)
             if (AcceptAdd())
             {
-                var addBtn = CreateIconButton("+", "Create New", () =>
+                var addBtn = CreateIconButton("+", "Create new", () =>
                 {
-                    OnAdd(prop, state.SearchText);
+                    OnAdd(prop, searchField.value);
                     CloseDropdown(state, dropdown);
                 }, Colors.AccentGreen);
                 addBtn.style.marginLeft = 4;
-                //addBtn.style.backgroundColor = new Color(0.3f, 0.45f, 0.3f);
                 searchRow.Add(addBtn);
             }
             
@@ -268,10 +307,11 @@ namespace FarEmerald.PlayForge.Extended.Editor
             var listView = new ListView();
             listView.name = "ResultsList";
             listView.style.maxHeight = 150;
-            listView.style.minHeight = 60;
+            listView.style.minHeight = 50;
             listView.fixedItemHeight = 22;
-            listView.selectionType = SelectionType.Single;
+            listView.selectionType = SelectionType.None;
             
+            // makeItem - register handlers ONCE here
             listView.makeItem = () =>
             {
                 var item = new Button { focusable = false };
@@ -289,74 +329,117 @@ namespace FarEmerald.PlayForge.Extended.Editor
                 item.style.borderBottomLeftRadius = 2;
                 item.style.borderBottomRightRadius = 2;
                 
-                item.RegisterCallback<MouseEnterEvent>(_ => 
+                // Disable default click
+                item.clickable = null;
+                
+                // Handlers read from userData which is set in bindItem
+                item.RegisterCallback<PointerEnterEvent>(evt =>
                 {
-                    if (item.enabledSelf)
-                        item.style.backgroundColor = new Color(0.3f, 0.3f, 0.3f);
+                    if (item.userData is ItemData data)
+                        item.style.backgroundColor = data.HoverColor;
                 });
-                item.RegisterCallback<MouseLeaveEvent>(_ => 
+                
+                item.RegisterCallback<PointerLeaveEvent>(evt =>
                 {
-                    if (item.enabledSelf)
-                        item.style.backgroundColor = StyleKeyword.Null;
+                    if (item.userData is ItemData data)
+                        item.style.backgroundColor = data.NormalColor;
+                });
+                
+                item.RegisterCallback<PointerUpEvent>(evt =>
+                {
+                    if (evt.button == 0 && item.userData is ItemData data)
+                    {
+                        data.OnSelect();
+                        evt.StopPropagation();
+                    }
+                });
+                
+                item.RegisterCallback<PointerDownEvent>(evt =>
+                {
+                    if (evt.button == 0) evt.StopPropagation();
                 });
                 
                 return item;
             };
             
+            // bindItem - update userData with current item data
             listView.bindItem = (element, index) =>
             {
                 var btn = element as Button;
-                if (index >= state.Results.Count) return;
+                if (btn == null || index >= state.Results.Count) return;
                 
                 var item = state.Results[index];
-                var isCurrent = CompareTo(item, GetCurrentValue(prop));
-                
                 btn.text = GetStringValue(prop, item);
-                btn.enabledSelf = !isCurrent;
                 
-                if (isCurrent)
-                {
-                    btn.style.backgroundColor = new Color(0.25f, 0.35f, 0.25f, 0.5f);
-                    btn.style.color = Colors.AccentGreen;
-                }
-                else
-                {
-                    btn.style.backgroundColor = StyleKeyword.Null;
-                    btn.style.color = Colors.LabelText;
-                }
+                var currentValue = GetCurrentValue(prop);
+                bool isSelected = CompareTo(item, currentValue);
                 
-                // Remove old handler
-                if (btn.userData is Action oldAction)
-                    btn.clicked -= oldAction;
+                var normalColor = isSelected 
+                    ? Colors.DrawerSelectedRow
+                    : Colors.DrawerRow;
+                var hoverColor = isSelected
+                    ? Colors.DrawerSelectedRow
+                    : Colors.DrawerHoveredRow;
                 
-                // Add new handler
-                Action newAction = () =>
+                btn.style.backgroundColor = normalColor;
+                btn.style.color = isSelected ? Colors.AccentGreen : Colors.LabelText;
+                
+                // Store data for event handlers
+                var capturedItem = item;
+                btn.userData = new ItemData
                 {
-                    SelectItem(prop, item, valueBtn, state, dropdown);
+                    NormalColor = normalColor,
+                    HoverColor = hoverColor,
+                    OnSelect = () => SelectItem(prop, capturedItem, valueBtn, state, dropdown)
                 };
-                btn.userData = newAction;
-                btn.clicked += newAction;
             };
             
             dropdown.Add(listView);
             
-            // Search filtering
+            // Search filtering - NO FocusOutEvent
             searchField.RegisterValueChangedCallback(evt =>
             {
                 state.SearchText = evt.newValue;
                 FilterResults(prop, state, listView);
             });
             
-            // Close on focus out (delayed to allow click)
-            searchField.RegisterCallback<FocusOutEvent>(evt =>
+            // ESC to close
+            searchField.RegisterCallback<KeyDownEvent>(evt =>
             {
-                dropdown.schedule.Execute(() =>
+                if (evt.keyCode == KeyCode.Escape)
                 {
-                    if (!IsChildFocused(dropdown)) CloseDropdown(state, dropdown);
-                }).ExecuteLater(200);
+                    CloseDropdown(state, dropdown);
+                    evt.StopPropagation();
+                }
+            });
+            
+            // Close when clicking outside
+            Root.RegisterCallback<AttachToPanelEvent>(attachEvt =>
+            {
+                var panelRoot = Root.panel?.visualTree;
+                if (panelRoot == null) return;
+                
+                panelRoot.RegisterCallback<PointerDownEvent>(pointerEvt =>
+                {
+                    if (!state.IsOpen) return;
+                    
+                    var clickPos = pointerEvt.position;
+                    if (dropdown.worldBound.Contains(clickPos)) return;
+                    if (valueBtn.worldBound.Contains(clickPos)) return;
+                    
+                    CloseDropdown(state, dropdown);
+                }, TrickleDown.TrickleDown);
             });
             
             return dropdown;
+        }
+
+        // Add this helper class inside AbstractRefDrawer:
+        private class ItemData
+        {
+            public Color NormalColor;
+            public Color HoverColor;
+            public Action OnSelect;
         }
         
         // ═══════════════════════════════════════════════════════════════════════════

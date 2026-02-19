@@ -16,6 +16,8 @@ namespace FarEmerald.PlayForge
             if (!ability.Owner.FindAttributeSystem(out var attrSys) ||
                 !attrSys.TryGetAttributeValue(ability.Base.Cost.ImpactSpecification.AttributeTarget,
                     out AttributeValue attrVal)) return false;
+
+            var spec = ability.Owner.GenerateEffectSpec(ability, ability.Base.Cost);
             return attrVal.CurrentValue >=
                    ability.Base.Cost.ImpactSpecification.GetMagnitude(
                        ability.Owner.GenerateEffectSpec(ability, ability.Base.Cost));
@@ -33,12 +35,26 @@ namespace FarEmerald.PlayForge
             error = "";
             if (data.Spec is not AbilitySpec ability) return false;
             if (ability.Base.Cooldown is null) return true;
-            return !ability.Owner.GetTagCache().TryGetWeight(ability.Base.Tags.AssetTag, out _);
-            return !ability.Owner.GetLongestDurationFor(ability.Base.Tags.AssetTag).FoundDuration;
+            return !ability.Owner.GetTagCache().TryGetWeight(ability.Base.Cooldown.Tags.AssetTag, out _);
         }
         public string GetName()
         {
             return "Cooldown Validation";
+        }
+    }
+
+    [Serializable]
+    public class IsAliveValidation : IAbilityValidationRule
+    {
+
+        public bool Validate(AbilityDataPacket data, Func<ITarget> getSource, out string error)
+        {
+            error = "";
+            return !getSource?.Invoke().IsDead ?? false;
+        }
+        public string GetName()
+        {
+            return "Is Alive Validation";
         }
     }
 
@@ -105,7 +121,7 @@ namespace FarEmerald.PlayForge
         public abstract string GetName();
     }
     
-    public class RangeValidation : AbstractTagValidationRule
+    public class CheckRangeValidation : AbstractTagValidationRule
     {
         public override bool Validate(AbilityDataPacket data, Func<ITarget> getSource, out string error)
         {

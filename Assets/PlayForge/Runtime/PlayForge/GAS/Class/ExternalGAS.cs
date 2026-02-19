@@ -31,9 +31,13 @@ namespace FarEmerald.PlayForge
         {
             return TagCache.GetAppliedTags();
         }
-        public int GetWeight(Tag _tag)
+        public int GetTagWeight(Tag _tag)
         {
             return TagCache.GetWeight(_tag);
+        }
+        public bool QueryTags(TagQuery query)
+        {
+            return query.Validate(TagCache.GetAppliedTags());
         }
         public void CompileGrantedTags()
         {
@@ -122,8 +126,8 @@ namespace FarEmerald.PlayForge
             var container = spec.Base.DurationSpecification.GenerateContainer(spec, ongoing);
             EffectShelf.Add(container);
 
-            var effectContext = new EffectWorkerContext(this, container, _frameSummary, _actionQueue);
-            container.RunWorkerApplication(effectContext);
+            var effectContext = new EffectWorkerContext(this, container.Spec, _frameSummary, _actionQueue);
+            container.Spec.RunWorkerApplication(effectContext);
             
             if (ongoing && spec.Base.DurationSpecification.TickOnApplication)
             {
@@ -146,8 +150,8 @@ namespace FarEmerald.PlayForge
             
             AttributeSystem.ModifyAttribute(container.Spec.Base.ImpactSpecification.AttributeTarget, sourcedModifiedValue);
             
-            var effectContext = new EffectWorkerContext(this, container, _frameSummary, _actionQueue);
-            container.RunWorkerApplication(effectContext);
+            var effectContext = new EffectWorkerContext(this, container.Spec, _frameSummary, _actionQueue);
+            container.Spec.RunWorkerApplication(effectContext);
             
             foreach (var containedEffect in container.Spec.Base.ImpactSpecification.GetContainedEffects(EApplyTickRemove.OnTick))
             {
@@ -270,11 +274,11 @@ namespace FarEmerald.PlayForge
         public List<Tag> GetContextTags() => new(){ Tags.GAS, Tags.SOURCE };
         public TagCache GetTagCache() => TagCache;
         public Tag GetAssetTag() => Data.AssetTag;
-        public int GetLevel() => Data.Level;
+        public int GetLevel() => Data.StartingLevel;
         public int GetMaxLevel() => Data.MaxLevel;
-        public void SetLevel(int level) => Data.Level = Mathf.Clamp(level, 0, Data.MaxLevel);
+        public void SetLevel(int level) => Data.StartingLevel = Mathf.Clamp(level, 0, Data.MaxLevel);
         public string GetName() => Data.Name;
-        public GameplayEffectDuration GetLongestDurationFor(Tag lookForTag)
+        public EffectDurationRemaining GetLongestDurationFor(Tag lookForTag)
         {
             float longestDuration = float.MinValue;
             float longestRemaining = float.MinValue;
@@ -282,7 +286,7 @@ namespace FarEmerald.PlayForge
             {
                 if (container.Spec.Base.DurationSpecification.DurationPolicy == EEffectDurationPolicy.Infinite)
                 {
-                    return new GameplayEffectDuration(float.MaxValue, float.MaxValue, true);
+                    return new EffectDurationRemaining(float.MaxValue, float.MaxValue, true);
                 }
 
                 if (!(container.TotalDuration > longestDuration)) continue;
@@ -290,10 +294,10 @@ namespace FarEmerald.PlayForge
                 longestRemaining = container.DurationRemaining;
             }
 
-            return new GameplayEffectDuration(longestDuration, longestRemaining, longestDuration >= 0f);
+            return new EffectDurationRemaining(longestDuration, longestRemaining, longestDuration >= 0f);
         }
         
-        public GameplayEffectDuration GetLongestDurationFor(List<Tag> lookForTags)
+        public EffectDurationRemaining GetLongestDurationFor(List<Tag> lookForTags)
         {
             float longestDuration = float.MinValue;
             float longestRemaining = float.MinValue;
@@ -304,7 +308,7 @@ namespace FarEmerald.PlayForge
                     if (!lookForTags.Contains(specTag)) continue;
                     if (container.Spec.Base.DurationSpecification.DurationPolicy == EEffectDurationPolicy.Infinite)
                     {
-                        return new GameplayEffectDuration(float.MaxValue, float.MaxValue, true);
+                        return new EffectDurationRemaining(float.MaxValue, float.MaxValue, true);
                     }
 
                     if (!(container.TotalDuration > longestDuration)) continue;
@@ -313,7 +317,7 @@ namespace FarEmerald.PlayForge
                 }
             }
 
-            return new GameplayEffectDuration(longestDuration, longestRemaining, longestDuration >= 0f);
+            return new EffectDurationRemaining(longestDuration, longestRemaining, longestDuration >= 0f);
         }
         
         public override async UniTask CallBehaviour(Tag cmd, AbstractProxyTaskBehaviour cb, CancellationToken token)

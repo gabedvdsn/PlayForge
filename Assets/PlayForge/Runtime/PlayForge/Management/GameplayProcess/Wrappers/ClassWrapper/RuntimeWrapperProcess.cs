@@ -7,13 +7,10 @@ namespace FarEmerald.PlayForge
     public class RuntimeWrapperProcess : AbstractProcessWrapper
     {
         private AbstractRuntimeProcess Process;
-        private ProcessDataPacket Data;
         
-
-        public RuntimeWrapperProcess(AbstractRuntimeProcess process, ProcessDataPacket data)
+        public RuntimeWrapperProcess(AbstractRuntimeProcess process, ProcessDataPacket data) : base(data)
         {
             Process = process;
-            Data = data;
         }
 
         public override void InitializeWrapper()

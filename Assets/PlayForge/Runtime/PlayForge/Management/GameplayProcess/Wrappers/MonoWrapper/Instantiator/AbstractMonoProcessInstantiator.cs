@@ -6,7 +6,7 @@ namespace FarEmerald.PlayForge
     {
         public AbstractMonoProcess Create(AbstractMonoProcess process, ProcessDataPacket data, bool isInstantiated)
         {
-            return process.gameObject.scene.name is not null 
+            return ProcessIsSceneActive(process) 
                 ? PrepareExisting(process, data) 
                 : PrepareNew(process, data);
         }

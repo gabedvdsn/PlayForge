@@ -1,4 +1,5 @@
-﻿using UnityEditor;
+﻿using System.Linq;
+using UnityEditor;
 using UnityEditor.UIElements;
 using UnityEngine;
 using UnityEngine.UIElements;
@@ -14,16 +15,15 @@ namespace FarEmerald.PlayForge.Extended.Editor
         private GameplayEffect effect;
         private Label assetTagValueLabel;
         private VisualElement levelSourceContent;
-        
-        // For object picker handling - using polling approach for reliability
-        private int _pickerControlId;
-        private bool _waitingForPicker;
-        private Object _lastPickedObject;
 
         // ═══════════════════════════════════════════════════════════════════════════
         // Header Configuration (IMGUI Header)
         // ═══════════════════════════════════════════════════════════════════════════
-        
+
+        protected override BaseForgeLinkProvider GetAsset()
+        {
+            return effect;
+        }
         protected override string GetDisplayName()
         {
             return effect.GetName();
@@ -46,95 +46,33 @@ namespace FarEmerald.PlayForge.Extended.Editor
         
         protected override string GetAssetTypeLabel() => "EFFECT";
         
-        protected override Color GetAssetTypeColor() => new Color(1f, 0.5f, 0.5f);
+        protected override Color GetAssetTypeColor() => Colors.GetAssetColor(typeof(GameplayEffect));
         
         protected override string GetDocumentationUrl() => "https://docs.playforge.dev/effects";
         
         protected override bool ShowVisualizeButton => true;
         protected override bool ShowImportButton => true;
         
-        protected override void OnVisualize()
-        {
-            Debug.Log($"Visualize effect: {effect.name}");
-        }
-        
-        protected override void OnImport()
-        {
-            EditorGUIUtility.ShowObjectPicker<GameplayEffect>(null, false, "", GUIUtility.GetControlID(FocusType.Passive));
-        }
-
-        private void OnEnable()
-        {
-            EditorApplication.update += OnEditorUpdate;
-        }
-        
-        private void OnDisable()
-        {
-            EditorApplication.update -= OnEditorUpdate;
-            _waitingForPicker = false;
-        }
-        
-        /// <summary>
-        /// Polls for object picker completion since UIElements doesn't reliably receive IMGUI events.
-        /// </summary>
-        private void OnEditorUpdate()
-        {
-            if (!_waitingForPicker) return;
-            
-            // Check if our picker is still active
-            var currentControlId = EditorGUIUtility.GetObjectPickerControlID();
-            
-            if (currentControlId == 0)
-            {
-                // Picker closed - apply the last tracked selection
-                _waitingForPicker = false;
-                
-                if (_lastPickedObject is BaseForgeLinkProvider provider)
-                {
-                    effect.LinkedProvider = provider;
-                    serializedObject.Update();
-                    MarkDirty(effect);
-                    RebuildLevelSourceContent();
-                    Repaint();
-                }
-                _lastPickedObject = null;
-            }
-            else if (currentControlId == _pickerControlId)
-            {
-                // Picker still open - track current selection for when it closes
-                _lastPickedObject = EditorGUIUtility.GetObjectPickerObject();
-            }
-        }
-
         // ═══════════════════════════════════════════════════════════════════════════
         // Inspector GUI
         // ═══════════════════════════════════════════════════════════════════════════
 
-        public override VisualElement CreateInspectorGUI()
+        protected override bool AssignLocalAsset()
         {
-            if (serializedObject.isEditingMultipleObjects) return null;
-            
             effect = serializedObject.targetObject as GameplayEffect;
-            if (effect == null) return null;
-
-            root = CreateRoot();
-            
-            var scrollView = CreateScrollView();
-            root.Add(scrollView);
-            
-            BuildDefinitionSection(scrollView);
-            BuildLevelSourceSection(scrollView);
-            BuildTagsSection(scrollView);
-            BuildImpactSection(scrollView);
-            BuildDurationSection(scrollView);
-            BuildWorkersSection(scrollView);
-            BuildRequirementsSection(scrollView);
-            
-            scrollView.Add(CreateBottomPadding());
-            
-            root.Bind(serializedObject);
-            
-            return root;
+            return effect is not null;
+        }
+        
+        protected override void BuildInspectorContent(VisualElement parent)
+        {
+            BuildDefinitionSection(parent);
+            BuildLevelSourceSection(parent);
+            BuildTagsSection(parent);
+            BuildImpactSection(parent);
+            BuildDurationSection(parent);
+            BuildWorkersSection(parent);
+            BuildRequirementsSection(parent);
+            BuildLocalDataSection(parent);
         }
 
         // ═══════════════════════════════════════════════════════════════════════════
@@ -147,13 +85,15 @@ namespace FarEmerald.PlayForge.Extended.Editor
             {
                 Name = "Definition",
                 Title = "Definition",
-                AccentColor = Colors.AccentGray,
+                AccentColor = GetAssetTypeColor(),
                 HelpUrl = "https://docs.playforge.dev/effects/definition"
             });
             parent.Add(section.Section);
             
+            //if (IsCollapsed(effect, section.Name))
+            
             var content = section.Content;
-            var definition = serializedObject.FindProperty("Definition");
+            var definition = serializedObject.FindProperty(nameof(GameplayEffect.Definition));
             
             var nameField = CreateTextField("Name", "Name");
             nameField.value = effect.Definition.Name;
@@ -162,31 +102,37 @@ namespace FarEmerald.PlayForge.Extended.Editor
             {
                 effect.Definition.Name = nameField.value;
                 UpdateAssetTagDisplay();
+                UpdateHeader();
                 MarkDirty(effect);
                 Repaint();
             });
             content.Add(nameField);
             
-            var descField = CreateTextField("Description", "Description", multiline: true, minHeight: 40);
+            var descField = CreateTextField("Description", "Description", multiline: true, minHeight: 18);
             descField.value = effect.Definition.Description;
             descField.RegisterCallback<FocusOutEvent>(_ =>
             {
                 effect.Definition.Description = descField.value;
+                UpdateHeader();
                 MarkDirty(effect);
                 Repaint();
             });
             content.Add(descField);
             
-            var retentionField = CreatePropertyField(definition.FindPropertyRelative("ImpactRetentionGroup"), "ImpactRetentionGroup", "Impact Retention Group");
-            content.Add(retentionField);
+            var retGroupField = CreatePropertyField(definition.FindPropertyRelative(nameof(GameplayEffectDefinition.RetentionGroup)), "RetentionGroup", "Retention Group");
+            //retGroupField.Q<Label>().style.marginRight = 12;
+            content.Add(retGroupField);
             
-            var visibilityField = CreatePropertyField(definition.FindPropertyRelative("Visibility"), "Visibility", "Visibility");
+            var visibilityField = CreatePropertyField(definition.FindPropertyRelative(nameof(GameplayEffectDefinition.Visibility)), "Visibility", "Visibility");
             content.Add(visibilityField);
             
-            var texturesField = CreatePropertyField(definition.FindPropertyRelative("Textures"), "Textures", "Textures");
-            texturesField.RegisterCallback<SerializedPropertyChangeEvent>(_ => Repaint());
-            
-            
+            var texturesField = CreatePropertyField(definition.FindPropertyRelative(nameof(GameplayEffectDefinition.Textures)), "Textures", "Textures");
+            texturesField.RegisterCallback<SerializedPropertyChangeEvent>(_ =>
+            {
+                UpdateHeader();
+                MarkDirty(effect);
+                Repaint();
+            });
             
             content.Add(texturesField);
         }
@@ -201,7 +147,7 @@ namespace FarEmerald.PlayForge.Extended.Editor
             {
                 Name = "LevelSource",
                 Title = "Level Source",
-                AccentColor = Colors.AccentGray,
+                AccentColor = GetAssetTypeColor(),
                 HelpUrl = "https://docs.playforge.dev/effects/level-source"
             });
             parent.Add(section.Section);
@@ -210,12 +156,12 @@ namespace FarEmerald.PlayForge.Extended.Editor
             RebuildLevelSourceContent();
         }
         
-        private void RebuildLevelSourceContent()
+        protected override void RebuildLevelSourceContent()
         {
             levelSourceContent.Clear();
             
             var infoLabel = CreateHintLabel(
-                "Link this effect to an Ability, Entity, or Item to derive max level for modifier scaling.");
+                "Link this effect to another asset to derive its level range.");
             infoLabel.style.marginBottom = 8;
             levelSourceContent.Add(infoLabel);
             
@@ -233,7 +179,7 @@ namespace FarEmerald.PlayForge.Extended.Editor
             
             if (effect.LinkMode == EEffectLinkMode.LinkedToProvider)
             {
-                BuildProviderSelector();
+                BuildProviderSelector(levelSourceContent, effect);
                 BuildLinkStatusDisplay();
             }
             else
@@ -263,100 +209,96 @@ namespace FarEmerald.PlayForge.Extended.Editor
                 
                 levelSourceContent.Add(standaloneInfo);
             }
+            
+            // Re-bind after rebuilding
+            levelSourceContent.Bind(serializedObject);
+            
+            BuildChildLinkingContent(levelSourceContent, "Link contained effects (see Packets) to this effect for level scaling.", "Contained Effects");
         }
-        
-        private void BuildProviderSelector()
+        protected override void RebuildLevelingContent()
         {
-            var selectorRow = new VisualElement();
-            selectorRow.style.flexDirection = FlexDirection.Row;
-            selectorRow.style.alignItems = Align.Center;
-            selectorRow.style.marginBottom = 6;
             
-            var label = new Label("Level Provider");
-            label.style.width = 100;
-            label.style.color = Colors.LabelText;
-            selectorRow.Add(label);
-            
-            var objectField = new ObjectField
-            {
-                objectType = typeof(BaseForgeLinkProvider),
-                allowSceneObjects = false,
-                value = effect.LinkedProvider
-            };
-            objectField.style.flexGrow = 1;
-            
-            objectField.RegisterValueChangedCallback(evt =>
-            {
-                var newValue = evt.newValue as BaseForgeLinkProvider;
-                effect.LinkedProvider = newValue;
-                serializedObject.Update();
-                MarkDirty(effect);
-                RebuildLevelSourceContent();
-                Repaint();
-            });
-            
-            selectorRow.Add(objectField);
-            
-            var clearBtn = new Button(() =>
-            {
-                effect.LinkedProvider = null;
-                serializedObject.Update();
-                MarkDirty(effect);
-                RebuildLevelSourceContent();
-                Repaint();
-            });
-            clearBtn.text = "×";
-            clearBtn.tooltip = "Clear linked provider";
-            clearBtn.style.width = 22;
-            clearBtn.style.height = 18;
-            clearBtn.style.marginLeft = 4;
-            clearBtn.style.paddingLeft = 0;
-            clearBtn.style.paddingRight = 0;
-            clearBtn.style.fontSize = 14;
-            ApplyButtonHoverStyle(clearBtn);
-            selectorRow.Add(clearBtn);
-            
-            levelSourceContent.Add(selectorRow);
-            
-            // Quick select buttons
-            var quickSelectRow = new VisualElement();
-            quickSelectRow.style.flexDirection = FlexDirection.Row;
-            quickSelectRow.style.marginTop = 4;
-            quickSelectRow.style.marginLeft = 100;
-            
-            var selectAbilityBtn = new Button(() => ShowProviderPicker<Ability>());
-            selectAbilityBtn.text = "Select Ability...";
-            selectAbilityBtn.style.fontSize = 10;
-            selectAbilityBtn.style.height = 18;
-            ApplyButtonHoverStyle(selectAbilityBtn);
-            quickSelectRow.Add(selectAbilityBtn);
-            
-            var selectEntityBtn = new Button(() => ShowProviderPicker<EntityIdentity>());
-            selectEntityBtn.text = "Select Entity...";
-            selectEntityBtn.style.fontSize = 10;
-            selectEntityBtn.style.height = 18;
-            selectEntityBtn.style.marginLeft = 4;
-            ApplyButtonHoverStyle(selectEntityBtn);
-            quickSelectRow.Add(selectEntityBtn);
-            
-            var selectItemBtn = new Button(() => ShowProviderPicker<Item>());
-            selectItemBtn.text = "Select Item...";
-            selectItemBtn.style.fontSize = 10;
-            selectItemBtn.style.height = 18;
-            selectItemBtn.style.marginLeft = 4;
-            ApplyButtonHoverStyle(selectItemBtn);
-            quickSelectRow.Add(selectItemBtn);
-            
-            levelSourceContent.Add(quickSelectRow);
         }
-        
-        private void ShowProviderPicker<T>() where T : BaseForgeLinkProvider
+
+        private void BuildChildLinkingContent(VisualElement parent, string hint, string linkFocus)
         {
-            // Generate a unique control ID
-            _pickerControlId = GUIUtility.GetControlID(FocusType.Passive) + 10000 + Random.Range(1, 1000);
-            _waitingForPicker = true;
-            _lastPickedObject = effect.LinkedProvider; // Start with current value
-            EditorGUIUtility.ShowObjectPicker<T>(effect.LinkedProvider as T, false, "", _pickerControlId);
+            // Divider
+            var divider = new VisualElement { name = "linking-divider" };
+            divider.style.height = 1;
+            divider.style.backgroundColor = Colors.DividerColor;
+            divider.style.marginTop = 8;
+            divider.style.marginBottom = 8;
+            parent.Add(divider);
+            
+            // Children linking section
+            var childrenHeader = new Label("Child Assets") { name = "linking-children-header" };
+            childrenHeader.style.fontSize = 11;
+            childrenHeader.style.unityFontStyleAndWeight = FontStyle.Bold;
+            childrenHeader.style.color = Colors.SectionTitle;
+            childrenHeader.style.marginBottom = 4;
+            parent.Add(childrenHeader);
+            
+            var childrenHint = CreateHintLabel(hint);
+            childrenHint.name = "linking-children-hint";
+            parent.Add(childrenHint);
+            
+            // Link All / Unlink All buttons
+            var bulkButtonsRow = CreateRow(4);
+            bulkButtonsRow.name = "linking-bulk-buttons";
+            parent.Add(bulkButtonsRow);
+            
+            var linkAllBtn = new Button(() =>
+            {
+                if (EditorUtility.DisplayDialog(
+                        $"Confirm Link {linkFocus}",
+                        $"Are you sure you want to link all contained effects?" +
+                        $"\n\nThis will affect {effect.ImpactSpecification.Packets.Length} effects.",
+                        "Yes", "Cancel"))
+                {
+                    effect.LinkAllChildren();
+
+                    foreach (var packet in effect.ImpactSpecification.Packets)
+                    {
+                        MarkDirty(packet.ContainedEffect);
+                    }
+                
+                    MarkDirty(effect);
+                }
+            });
+            linkAllBtn.text = $"Link {linkFocus}";
+            linkAllBtn.tooltip = $"Link {linkFocus} to this ability";
+            linkAllBtn.style.flexGrow = 1;
+            linkAllBtn.style.marginRight = 4;
+            ApplyButtonHoverStyle(linkAllBtn);
+            bulkButtonsRow.Add(linkAllBtn);
+            
+            var unlinkAllBtn = new Button(() =>
+            {
+                if (EditorUtility.DisplayDialog(
+                        $"Confirm Unlink {linkFocus}",
+                        $"Are you sure you want to unlink all contained effects?" +
+                        $"\n\nThis will affect {effect.ImpactSpecification.Packets.Count(p => p.ContainedEffect.IsLinkedTo(this))} effects." +
+                        $"\n\nThis change only applies to assets linked to this effect.",
+                        "Yes", "Cancel"))
+                {
+                    effect.UnlinkAllChildren();
+
+                    foreach (var packet in effect.ImpactSpecification.Packets)
+                    {
+                        MarkDirty(packet.ContainedEffect);
+                    }
+                
+                    MarkDirty(effect);
+                    RebuildLevelSourceContent();
+                    Repaint();
+                }
+            });
+            unlinkAllBtn.text = $"Unlink {linkFocus}";
+            unlinkAllBtn.tooltip = $"Unlink {linkFocus} from this ability";
+            unlinkAllBtn.style.flexGrow = 1;
+            unlinkAllBtn.style.backgroundColor = new Color(0.4f, 0.3f, 0.3f);
+            ApplyButtonHoverStyle(unlinkAllBtn);
+            bulkButtonsRow.Add(unlinkAllBtn);
         }
         
         private void BuildLinkStatusDisplay()
@@ -399,16 +341,9 @@ namespace FarEmerald.PlayForge.Extended.Editor
                 
                 var infoGrid = new VisualElement();
                 infoGrid.style.marginLeft = 4;
-                
-                var typeName = providerAsset switch
-                {
-                    Ability => "Ability",
-                    EntityIdentity => "Entity",
-                    Item => "Item",
-                    _ => "Provider"
-                };
-                var typeColor = providerAsset is Ability ? Colors.AccentBlue : 
-                                providerAsset is EntityIdentity ? Colors.AccentOrange : Colors.AccentPurple;
+
+                var typeName = GetProviderTypeName(provider.GetType());
+                var typeColor = Colors.GetAssetColor(provider.GetType());
                 
                 infoGrid.Add(CreateInfoRow("Type:", typeName, typeColor));
                 infoGrid.Add(CreateInfoRow("Name:", provider.GetProviderName(), Colors.LabelText));
@@ -512,21 +447,21 @@ namespace FarEmerald.PlayForge.Extended.Editor
             {
                 Name = "Tags",
                 Title = "Tags",
-                AccentColor = Colors.AccentGreen,
+                AccentColor = GetAssetTypeColor(),
                 HelpUrl = "https://docs.playforge.dev/effects/tags"
             });
             parent.Add(section.Section);
             
             var content = section.Content;
-            var tags = serializedObject.FindProperty("Tags");
+            var tags = serializedObject.FindProperty(nameof(GameplayEffect.Tags));
             
             var (assetTagContainer, valueLabel) = CreateAssetTagDisplay();
             assetTagValueLabel = valueLabel;
             UpdateAssetTagDisplay();
             content.Add(assetTagContainer);
             
-            content.Add(CreatePropertyField(tags.FindPropertyRelative("ContextTags"), "ContextTags", "Context Tags"));
-            content.Add(CreatePropertyField(tags.FindPropertyRelative("GrantedTags"), "GrantedTags", "Granted Tags"));
+            content.Add(CreatePropertyField(tags.FindPropertyRelative(nameof(GameplayEffectTags.ContextTags)), "ContextTags", "Context Tags"));
+            content.Add(CreatePropertyField(tags.FindPropertyRelative(nameof(GameplayEffectTags.GrantedTags)), "GrantedTags", "Granted Tags"));
         }
 
         // ═══════════════════════════════════════════════════════════════════════════
@@ -539,12 +474,12 @@ namespace FarEmerald.PlayForge.Extended.Editor
             {
                 Name = "Impact",
                 Title = "Impact Specification",
-                AccentColor = Colors.AccentRed,
+                AccentColor = GetAssetTypeColor(),
                 HelpUrl = "https://docs.playforge.dev/effects/impact"
             });
             parent.Add(section.Section);
             
-            var impactField = CreatePropertyField(serializedObject.FindProperty("ImpactSpecification"), "ImpactSpecification", "Impact Specification");
+            var impactField = CreatePropertyField(serializedObject.FindProperty(nameof(GameplayEffect.ImpactSpecification)), "ImpactSpecification", "Impact Specification");
             impactField.style.marginBottom = 8;
             section.Content.Add(impactField);
         }
@@ -559,12 +494,12 @@ namespace FarEmerald.PlayForge.Extended.Editor
             {
                 Name = "Duration",
                 Title = "Duration Specification",
-                AccentColor = Colors.AccentBlue,
+                AccentColor = GetAssetTypeColor(),
                 HelpUrl = "https://docs.playforge.dev/effects/duration"
             });
             parent.Add(section.Section);
 
-            var durationField = CreatePropertyField(serializedObject.FindProperty("DurationSpecification"), "DurationSpecification", "Duration Specification");
+            var durationField = CreatePropertyField(serializedObject.FindProperty(nameof(GameplayEffect.DurationSpecification)), "DurationSpecification", "Duration Specification");
             section.Content.Add(durationField);
         }
 
@@ -578,12 +513,12 @@ namespace FarEmerald.PlayForge.Extended.Editor
             {
                 Name = "Workers",
                 Title = "Workers",
-                AccentColor = Colors.AccentOrange,
+                AccentColor = GetAssetTypeColor(),
                 HelpUrl = "https://docs.playforge.dev/effects/workers"
             });
             parent.Add(section.Section);
             
-            section.Content.Add(CreatePropertyField(serializedObject.FindProperty("Workers"), "Workers", ""));
+            section.Content.Add(CreatePropertyField(serializedObject.FindProperty(nameof(GameplayEffect.Workers)), "Workers", ""));
         }
 
         // ═══════════════════════════════════════════════════════════════════════════
@@ -596,26 +531,59 @@ namespace FarEmerald.PlayForge.Extended.Editor
             {
                 Name = "Requirements",
                 Title = "Requirements",
-                AccentColor = Colors.AccentCyan,
+                AccentColor = GetAssetTypeColor(),
                 HelpUrl = "https://docs.playforge.dev/effects/requirements"
             });
             parent.Add(section.Section);
             
             var content = section.Content;
 
-            var sourceHeader = CreateHeader("", "Source (Caster)", Colors.AccentBlue);
-            content.Add(sourceHeader);
+            /*var sourceHeader = CreateHeader("", "Source (Caster)", Colors.AccentBlue);
+            content.Add(sourceHeader);*/
             
-            var sourceField = CreatePropertyField(serializedObject.FindProperty("SourceRequirements"), "SourceRequirements", "Source Requirements");
+            var sourceField = CreatePropertyField(serializedObject.FindProperty(nameof(GameplayEffect.SourceRequirements)), "SourceRequirements", "Source (Caster) Requirements");
             sourceField.style.marginBottom = 8;
             content.Add(sourceField);
             
-            content.Add(CreateDivider());
+            //content.Add(CreateDivider());
             
-            var targetHeader = CreateHeader("Target", "Target", Colors.AccentPurple);
-            content.Add(targetHeader);
+            /*var targetHeader = CreateHeader("Target", "Target", Colors.AccentPurple);
+            content.Add(targetHeader);*/
             
-            content.Add(CreatePropertyField(serializedObject.FindProperty("TargetRequirements"), "TargetRequirements", "Target Requirements"));
+            content.Add(CreatePropertyField(serializedObject.FindProperty(nameof(GameplayEffect.TargetRequirements)), "TargetRequirements", "Target Requirements"));
+        }
+        
+        private void BuildLocalDataSection(VisualElement parent)
+        {
+            var section = CreateCollapsibleSection(new SectionConfig
+            {
+                Name = "LocalData",
+                Title = "Local Data",
+                AccentColor = GetAssetTypeColor(),
+                HelpUrl = "https://docs.playforge.dev/effects/localdata",
+
+                SerializedObject = serializedObject,
+                PropertyPaths = new[] { nameof(GameplayEffect.LocalData) },
+                OnImportComplete = () =>
+                {
+                    serializedObject.Update();
+                    UpdateAssetTagDisplay();
+                    UpdateHeader();
+                    MarkDirty(effect);
+                    Repaint();
+                },
+                OnClearComplete = () =>
+                {
+                    serializedObject.Update();
+                    UpdateAssetTagDisplay();
+                    UpdateHeader();
+                    MarkDirty(effect);
+                    Repaint();
+                }
+            });
+            parent.Add(section.Section);
+            
+            section.Content.Add(CreatePropertyField(serializedObject.FindProperty(nameof(GameplayEffect.LocalData)), "LocalData", ""));
         }
 
         // ═══════════════════════════════════════════════════════════════════════════
@@ -642,6 +610,7 @@ namespace FarEmerald.PlayForge.Extended.Editor
         protected override void Refresh()
         {
             serializedObject.Update();
+            UpdateAssetTagDisplay();
             UpdateAssetTagDisplay();
             RebuildLevelSourceContent();
             Repaint();

@@ -9,10 +9,6 @@ namespace FarEmerald.PlayForge.Extended.Editor
     {
         protected override bool AcceptOpen(SerializedProperty prop) => false;
         protected override bool AcceptAdd() => false;
-        protected override void PopulateSummary(VisualElement container, SerializedProperty property)
-        {
-            
-        }
     }
     
     // ═══════════════════════════════════════════════════════════════════════════════

@@ -90,10 +90,11 @@ namespace FarEmerald.PlayForge
 
                 await Proxy.Activate(cts.Token, activeData);
             }
-            catch (OperationCanceledException)
+            catch (Exception ex)
             {
                 // Ability in execution is interrupted (cancelled)
                 // ALWAYS as a result of an injection (break or
+                Debug.LogException(ex);
             }
             finally
             {
@@ -109,7 +110,7 @@ namespace FarEmerald.PlayForge
         {
             if (!IsClaiming) return;
 
-            injection.OnContainerInject(this);
+            injection.OnContainerInject(this, activeData);
             Proxy.Inject(injection, activeData);
         }
 

@@ -28,6 +28,8 @@ namespace FarEmerald.PlayForge
             
             DontDestroyOnLoad(gameObject);
             
+            TagHierarchy.Initialize();
+            
             // Bootstrap ProcessControl
             if (ProcessControl.Instance is null)
             {

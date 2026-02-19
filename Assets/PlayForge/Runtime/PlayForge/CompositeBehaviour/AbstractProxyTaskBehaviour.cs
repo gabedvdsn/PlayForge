@@ -22,6 +22,7 @@ namespace FarEmerald.PlayForge
         {
             status[user] = s;
         }
+        
         public abstract AbstractProxyTaskBehaviour CreateInstance();
     }
 }

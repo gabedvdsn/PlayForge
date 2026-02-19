@@ -39,7 +39,7 @@ namespace FarEmerald.PlayForge
         
         [Tooltip("Accept impacts from any context")]
         public bool AnyContextTag;
-        
+        public EAnyAllPolicy ContextMatchingPolicy;
         [Tooltip("The context tags the impact source must have (if not any)")]
         public List<Tag> ImpactAbilityContextTags;
         
@@ -49,7 +49,7 @@ namespace FarEmerald.PlayForge
         
         [Tooltip("The impact type for the work output")]
         [ForgeTagContext(ForgeContext.Impact)]
-        public Tag WorkImpactType;
+        public List<Tag> WorkImpactType;
         
         [Tooltip("The sign policy for the work output")]
         public ESignPolicy WorkSignPolicy;
@@ -66,7 +66,7 @@ namespace FarEmerald.PlayForge
         public override bool ValidateWorkFor(ImpactData impactData)
         {
             return ForgeHelper.ValidateContextTags(AnyContextTag, ImpactAbilityContextTags,
-                       impactData.SourcedModifier.Derivation.GetContextTags())
+                       impactData.SourcedModifier.Derivation.GetContextTags(), ContextMatchingPolicy)
                    && ForgeHelper.ValidateSelfModification(AllowSelfImpact,
                        impactData.SourcedModifier.Derivation.GetSource(), impactData.Target.AsGAS())
                    && ForgeHelper.ValidateImpactTypes(AnyImpactType, 

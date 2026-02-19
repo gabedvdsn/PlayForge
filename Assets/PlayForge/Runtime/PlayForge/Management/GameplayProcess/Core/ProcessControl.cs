@@ -140,7 +140,6 @@ namespace FarEmerald.PlayForge
         
         private void Update()
         {
-            
             StepProcesses(EProcessStepTiming.Update);
         }
 
@@ -211,7 +210,7 @@ namespace FarEmerald.PlayForge
             {
                 if (process.IsInitialized) continue;
                 
-                var data = ProcessDataPacket.LocalDefault(process, this);
+                var data = ProcessDataPacket.LocalDefault(process, GameRoot.Instance);
                 Register(process, data, out _);
             }
             
@@ -422,10 +421,9 @@ namespace FarEmerald.PlayForge
             return true;
         }
         
-        public void TerminateImmediate(int cacheIndex, bool cascade = true)
+        public bool TerminateImmediate(int cacheIndex, bool cascade = true)
         {
-            if (!_active.ContainsKey(cacheIndex))
-                return;
+            if (!_active.ContainsKey(cacheIndex)) return false;
 
             // Always terminate children when terminating parent
             if (cascade)
@@ -441,6 +439,8 @@ namespace FarEmerald.PlayForge
             }
             
             _active[cacheIndex].ForceIntoState(EProcessState.Terminated);
+
+            return true;
         }
         
         public void TerminateAll()

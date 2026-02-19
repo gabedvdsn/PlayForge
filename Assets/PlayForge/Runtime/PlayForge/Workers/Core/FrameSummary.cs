@@ -22,12 +22,12 @@ namespace FarEmerald.PlayForge
         /// <summary>
         /// Impacts indexed by source system for tracking damage dealt.
         /// </summary>
-        public Dictionary<IGameplayAbilitySystem, List<ImpactData>> ImpactsBySource { get; } = new();
+        public Dictionary<IGameplayAbilitySystem, List<ImpactData>> ImpactAgainstOthers { get; } = new();
         
         /// <summary>
         /// Impacts indexed by target for tracking damage received.
         /// </summary>
-        public Dictionary<ITarget, List<ImpactData>> ImpactsByTarget { get; } = new();
+        public Dictionary<ITarget, List<ImpactData>> ImpactAgainstSelf { get; } = new();
         
         /// <summary>
         /// Actions that were queued but invalidated before execution.
@@ -60,6 +60,11 @@ namespace FarEmerald.PlayForge
         /// </summary>
         public List<IGameplayAbilitySystem> Deaths { get; } = new();
         
+        /// <summary>
+        /// Ability injections this frame.
+        /// </summary>
+        public List<IGameplayAbilitySystem> AbilityInjections { get; } = new();
+        
         // ═══════════════════════════════════════════════════════════════
         // RECORDING METHODS
         // ═══════════════════════════════════════════════════════════════
@@ -77,21 +82,26 @@ namespace FarEmerald.PlayForge
             ImpactsByAttribute[impact.Attribute].Add(impact);
             
             // Index by source
-            var source = impact.SourcedModifier.BaseDerivation?.GetSource() as IGameplayAbilitySystem;
+            var source = impact.SourcedModifier.Derivation?.GetSource() as IGameplayAbilitySystem;
             if (source != null)
             {
-                if (!ImpactsBySource.ContainsKey(source))
-                    ImpactsBySource[source] = new List<ImpactData>();
-                ImpactsBySource[source].Add(impact);
+                if (!ImpactAgainstOthers.ContainsKey(source))
+                    ImpactAgainstOthers[source] = new List<ImpactData>();
+                ImpactAgainstOthers[source].Add(impact);
             }
             
             // Index by target
             if (impact.Target != null)
             {
-                if (!ImpactsByTarget.ContainsKey(impact.Target))
-                    ImpactsByTarget[impact.Target] = new List<ImpactData>();
-                ImpactsByTarget[impact.Target].Add(impact);
+                if (!ImpactAgainstSelf.ContainsKey(impact.Target))
+                    ImpactAgainstSelf[impact.Target] = new List<ImpactData>();
+                ImpactAgainstSelf[impact.Target].Add(impact);
             }
+        }
+
+        public void RecordAbilityInjection(AbilityCallbackStatus status)
+        {
+            
         }
         
         /// <summary>
@@ -146,7 +156,7 @@ namespace FarEmerald.PlayForge
         /// <summary>
         /// Get total negative impact (damage) to an attribute this frame.
         /// </summary>
-        public float GetTotalDamage(Attribute attribute)
+        public float GetTotalReduction(Attribute attribute)
         {
             if (!ImpactsByAttribute.TryGetValue(attribute, out var impacts))
                 return 0f;
@@ -159,7 +169,7 @@ namespace FarEmerald.PlayForge
         /// <summary>
         /// Get total positive impact (healing) to an attribute this frame.
         /// </summary>
-        public float GetTotalHealing(Attribute attribute)
+        public float GetTotalIncrease(Attribute attribute)
         {
             if (!ImpactsByAttribute.TryGetValue(attribute, out var impacts))
                 return 0f;
@@ -183,20 +193,61 @@ namespace FarEmerald.PlayForge
         /// <summary>
         /// Get all impacts from a specific source to a specific target.
         /// </summary>
-        public IEnumerable<ImpactData> GetImpactsBetween(IGameplayAbilitySystem source, ITarget target)
+        public IEnumerable<ImpactData> GetImpactsAgainstOtherFromSelf(IGameplayAbilitySystem self, ITarget other)
         {
-            if (!ImpactsBySource.TryGetValue(source, out var impacts))
+            if (!ImpactAgainstOthers.TryGetValue(self, out var impacts))
                 return Enumerable.Empty<ImpactData>();
             
-            return impacts.Where(i => i.Target != null && i.Target.Equals(target));
+            return impacts.Where(i => i.Target != null && i.Target.Equals(other));
+        }
+        
+        /// <summary>
+        /// Get all impacts from a specific source to a specific target.
+        /// </summary>
+        public IEnumerable<ImpactData> GetImpactsAgainstSelfFromOther(IGameplayAbilitySystem self, ITarget other)
+        {
+            if (!ImpactAgainstSelf.TryGetValue(other, out var impacts))
+                return Enumerable.Empty<ImpactData>();
+            
+            return impacts.Where(i => i.Target != null && i.Target.Equals(self));
         }
         
         /// <summary>
         /// Get total damage dealt by a source this frame.
         /// </summary>
-        public float GetTotalDamageDealt(IGameplayAbilitySystem source, Attribute attribute = null)
+        public float GetTotalReductionDealt(IGameplayAbilitySystem source, Attribute attribute = null)
         {
-            if (!ImpactsBySource.TryGetValue(source, out var impacts))
+            if (!ImpactAgainstOthers.TryGetValue(source, out var impacts))
+                return 0f;
+            
+            var filtered = impacts.Where(i => i.RealImpact.CurrentValue < 0);
+            if (attribute != null)
+                filtered = filtered.Where(i => i.Attribute.Equals(attribute));
+            
+            return filtered.Sum(i => -i.RealImpact.CurrentValue);
+        }
+        
+        /// <summary>
+        /// Get total damage dealt by a source against other this frame.
+        /// </summary>
+        public float GetTotalIncreaseDealtAgainstOthers(IGameplayAbilitySystem other, Attribute attribute = null)
+        {
+            if (!ImpactAgainstOthers.TryGetValue(other, out var impacts))
+                return 0f;
+            
+            var filtered = impacts.Where(i => i.RealImpact.CurrentValue < 0);
+            if (attribute != null)
+                filtered = filtered.Where(i => i.Attribute.Equals(attribute));
+            
+            return filtered.Sum(i => -i.RealImpact.CurrentValue);
+        }
+        
+        /// <summary>
+        /// Get total increase dealt by a source against self this frame.
+        /// </summary>
+        public float GetTotalIncreaseDealtAgainstSelf(IGameplayAbilitySystem self, Attribute attribute = null)
+        {
+            if (!ImpactAgainstSelf.TryGetValue(self, out var impacts))
                 return 0f;
             
             var filtered = impacts.Where(i => i.RealImpact.CurrentValue < 0);
@@ -209,9 +260,9 @@ namespace FarEmerald.PlayForge
         /// <summary>
         /// Get total damage received by a target this frame.
         /// </summary>
-        public float GetTotalDamageReceived(ITarget target, Attribute attribute = null)
+        public float GetTotalReductionReceived(ITarget target, Attribute attribute = null)
         {
-            if (!ImpactsByTarget.TryGetValue(target, out var impacts))
+            if (!ImpactAgainstSelf.TryGetValue(target, out var impacts))
                 return 0f;
             
             var filtered = impacts.Where(i => i.RealImpact.CurrentValue < 0);
@@ -224,9 +275,19 @@ namespace FarEmerald.PlayForge
         /// <summary>
         /// Check if an entity took any damage this frame.
         /// </summary>
-        public bool TookDamage(ITarget target, Attribute attribute = null)
+        public bool HasReductionFrom(ITarget target, Attribute attribute = null)
         {
-            if (!ImpactsByTarget.TryGetValue(target, out var impacts))
+            if (!ImpactAgainstSelf.TryGetValue(target, out var impacts))
+                return false;
+            
+            return impacts.Any(i => 
+                i.RealImpact.CurrentValue < 0 && 
+                (attribute == null || i.Attribute.Equals(attribute)));
+        }
+        
+        public bool HasIncreaseFrom(ITarget target, Attribute attribute = null)
+        {
+            if (!ImpactAgainstSelf.TryGetValue(target, out var impacts))
                 return false;
             
             return impacts.Any(i => 
@@ -237,14 +298,26 @@ namespace FarEmerald.PlayForge
         /// <summary>
         /// Get all unique sources that damaged a target this frame.
         /// </summary>
-        public IEnumerable<IGameplayAbilitySystem> GetDamageSources(ITarget target)
+        public IEnumerable<IGameplayAbilitySystem> GetReductionsAgainstSelf(ITarget target)
         {
-            if (!ImpactsByTarget.TryGetValue(target, out var impacts))
+            if (!ImpactAgainstSelf.TryGetValue(target, out var impacts))
                 return Enumerable.Empty<IGameplayAbilitySystem>();
             
             return impacts
                 .Where(i => i.RealImpact.CurrentValue < 0)
-                .Select(i => i.SourcedModifier.BaseDerivation?.GetSource() as IGameplayAbilitySystem)
+                .Select(i => i.SourcedModifier.Derivation?.GetSource() as IGameplayAbilitySystem)
+                .Where(s => s != null)
+                .Distinct();
+        }
+        
+        public IEnumerable<IGameplayAbilitySystem> GetIncreasesAgainstSelf(ITarget target)
+        {
+            if (!ImpactAgainstSelf.TryGetValue(target, out var impacts))
+                return Enumerable.Empty<IGameplayAbilitySystem>();
+            
+            return impacts
+                .Where(i => i.RealImpact.CurrentValue > 0)
+                .Select(i => i.SourcedModifier.Derivation?.GetSource().AsGAS())
                 .Where(s => s != null)
                 .Distinct();
         }
@@ -260,8 +333,8 @@ namespace FarEmerald.PlayForge
         {
             Impacts.Clear();
             ImpactsByAttribute.Clear();
-            ImpactsBySource.Clear();
-            ImpactsByTarget.Clear();
+            ImpactAgainstOthers.Clear();
+            ImpactAgainstSelf.Clear();
             InvalidatedActions.Clear();
             ActivatedTagWorkers.Clear();
             ResolvedTagWorkers.Clear();

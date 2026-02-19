@@ -2,8 +2,8 @@
 
 namespace FarEmerald.PlayForge.Extended.Editor
 {
-    [CustomPropertyDrawer(typeof(AbstractIntrinsicEffectBehaviour), true)]
-    public class EffectBehaviourDrawer : AbstractGenericDrawer<AbstractIntrinsicEffectBehaviour>
+    [CustomPropertyDrawer(typeof(AbstractEffectConfig<AbstractEffectContainer>), true)]
+    public class EffectBehaviourDrawer : AbstractGenericDrawer<AbstractEffectConfig<AbstractEffectContainer>>
     {
         protected override bool AcceptOpen(SerializedProperty prop)
         {

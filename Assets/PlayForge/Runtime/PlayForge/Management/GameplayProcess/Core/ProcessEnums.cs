@@ -25,4 +25,11 @@ namespace FarEmerald.PlayForge
         RunThenWait,
         RequiresControl
     }
+    
+    public enum EProcessStepPriorityMethod
+    {
+        Manual,
+        First,
+        Last
+    }
 }

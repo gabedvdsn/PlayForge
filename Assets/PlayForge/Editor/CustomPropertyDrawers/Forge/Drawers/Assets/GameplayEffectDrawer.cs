@@ -14,14 +14,14 @@ using static FarEmerald.PlayForge.Extended.Editor.ForgeDrawerStyles;
 namespace FarEmerald.PlayForge.Extended.Editor
 {
     [CustomPropertyDrawer(typeof(GameplayEffect))]
-    public class GameplayEffectDrawer : AbstractRefDrawer<GameplayEffect>
+    public class GameplayEffectDrawer : AbstractForgeObjectDrawer<GameplayEffect>
     {
         // Filter state - persisted per drawer instance
         private bool _showOnlyUnlinked = false;
         
         protected override GameplayEffect[] GetEntries()
         {
-            var all = GetAllInstances<GameplayEffect>();
+            var all = base.GetEntries();
             
             if (_showOnlyUnlinked)
             {
@@ -29,33 +29,6 @@ namespace FarEmerald.PlayForge.Extended.Editor
             }
             
             return all;
-        }
-        
-        protected override bool CompareTo(GameplayEffect value, GameplayEffect other)
-        {
-            return value == other;
-        }
-        
-        protected override string GetStringValue(SerializedProperty prop, GameplayEffect value)
-        {
-            string l = value != null ? value.GetName() ?? "<None>" : "<None>";
-            return string.IsNullOrEmpty(l) ? "<Unnamed>" : l;
-        }
-        
-        protected override void SetValue(SerializedProperty prop, GameplayEffect value)
-        {
-            prop.objectReferenceValue = value;
-        }
-        
-        protected override GameplayEffect GetCurrentValue(SerializedProperty prop)
-        {
-            return prop.objectReferenceValue as GameplayEffect;
-        }
-        
-        protected override Label GetLabel(SerializedProperty prop, GameplayEffect value)
-        {
-            if (prop.isArray) return null;
-            return new Label(prop.displayName);
         }
         
         public override VisualElement CreatePropertyGUI(SerializedProperty prop)

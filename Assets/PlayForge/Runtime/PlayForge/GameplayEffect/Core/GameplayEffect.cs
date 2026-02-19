@@ -4,26 +4,24 @@ using System.Collections.Generic;
 using System.Linq;
 using FarEmerald.PlayForge.Extended;
 using UnityEngine;
+using UnityEngine.Serialization;
 
 namespace FarEmerald.PlayForge
 {
     [CreateAssetMenu(menuName = "PlayForge/Gameplay Effect", fileName = "Effect_")]
-    public class GameplayEffect : BaseForgeObject, IHasReadableDefinition
+    public class GameplayEffect : BaseForgeLinkProvider
     {
         public GameplayEffectDefinition Definition = new();
         public GameplayEffectTags Tags = new();
         
-        public GameplayEffectImpactSpecification ImpactSpecification;
-        public GameplayEffectDurationSpecification DurationSpecification;
+        public GameplayEffectImpact ImpactSpecification;
+        public GameplayEffectDuration DurationSpecification;
         
         [SerializeReference]
         public List<AbstractEffectWorker> Workers;
         
         public EffectTagRequirements SourceRequirements;
         public EffectTagRequirements TargetRequirements;
-
-        [SerializeReference]
-        public List<DataWrapper> LocalData;
         
         // ═══════════════════════════════════════════════════════════════════════════
         // Level Provider Linking
@@ -44,7 +42,7 @@ namespace FarEmerald.PlayForge
         /// <summary>
         /// Gets the raw linked ScriptableObject (for serialization/editor purposes).
         /// </summary>
-        public BaseForgeLinkProvider LinkedProvider
+        public override BaseForgeLinkProvider LinkedProvider
         {
             get => _linkedSource;
             set => _linkedSource = value;
@@ -53,14 +51,14 @@ namespace FarEmerald.PlayForge
         /// <summary>
         /// Returns true if this effect is linked to a level provider.
         /// </summary>
-        public bool IsLinked => LinkMode == EEffectLinkMode.LinkedToProvider && LinkedProvider != null;
+        public override bool IsLinked => LinkMode == EEffectLinkMode.LinkedToProvider && LinkedProvider != null;
         
         /// <summary>
         /// Links this effect to a level provider.
         /// </summary>
         /// <param name="provider">The ScriptableObject that implements ILevelProvider</param>
         /// <returns>True if successfully linked</returns>
-        public bool LinkToProvider(BaseForgeLinkProvider provider)
+        public override bool LinkToProvider(BaseForgeLinkProvider provider)
         {
             if (provider == null)
             {
@@ -85,7 +83,7 @@ namespace FarEmerald.PlayForge
         /// <summary>
         /// Checks if this effect is linked to a specific provider.
         /// </summary>
-        public bool IsLinkedTo(ScriptableObject provider)
+        public override bool IsLinkedTo(ScriptableObject provider)
         {
             return IsLinked && LinkedProvider == provider;
         }
@@ -107,6 +105,42 @@ namespace FarEmerald.PlayForge
         {
             return LinkedProvider?.GetStartingLevel() ?? defaultStartLevel;
         }
+
+        public void LinkAllContainedEffects()
+        {
+            if (ImpactSpecification.Packets is not null)
+            {
+                foreach (var packet in ImpactSpecification.Packets)
+                {
+                    packet.ContainedEffect.LinkToProvider(LinkedProvider);
+                }
+            }
+        }
+        
+        public void LinkAllChildren()
+        {
+            LinkAllContainedEffects();
+        }
+        
+        /// <summary>
+        /// Unlinks all effects and abilities from this item.
+        /// </summary>
+        public void UnlinkAllChildren()
+        {
+            if (ImpactSpecification.Packets is not null)
+            {
+                foreach (var packet in ImpactSpecification.Packets)
+                {
+                    if (!packet.ContainedEffect.IsLinkedTo(LinkedProvider)) continue;
+                    packet.ContainedEffect.Unlink();
+                }
+            }
+        }
+
+        public override int GetMaxLevel() => GetLinkedMaxLevel();
+        public override int GetStartingLevel() => GetLinkedStartingLevel();
+        public override string GetProviderName() => GetName();
+        public override Tag GetProviderTag() => Tags.AssetTag;
 
         // ═══════════════════════════════════════════════════════════════════════════
         // Effect Generation
@@ -163,7 +197,7 @@ namespace FarEmerald.PlayForge
             return $"GE-{Definition.Name}";
         }
         
-        public string GetName()
+        public override string GetName()
         {
             return Definition.Name;
         }
@@ -172,12 +206,12 @@ namespace FarEmerald.PlayForge
             return Tags.GrantedTags;
         }
 
-        public string GetDescription()
+        public override string GetDescription()
         {
             return Definition.Description;
         }
         
-        public Texture2D GetPrimaryIcon()
+        public override Texture2D GetPrimaryIcon()
         {
             foreach (var ti in Definition.Textures)
             {
@@ -194,14 +228,7 @@ namespace FarEmerald.PlayForge
         public string Description;
         [ForgeTagContext(ForgeContext.Visibility)] public Tag Visibility;
         public List<TextureItem> Textures;
-        [ForgeTagContext(ForgeContext.RetentionGroup)] public Tag ImpactRetentionGroup = Tags.IGNORE;
-    }
-
-    public interface IHasReadableDefinition
-    {
-        public string GetName();
-        public string GetDescription();
-        public Texture2D GetPrimaryIcon();
+        [ForgeTagContext(ForgeContext.RetentionGroup)] public Tag RetentionGroup = Tags.IgnoreRetention;
     }
 
     [Serializable]
@@ -227,75 +254,6 @@ namespace FarEmerald.PlayForge
         DoNothing,
         RefreshContainerDuration,  // Refresh the duration of the effect
         ExtendContainerDuration,  // Extend the duration of the effect
-    }
-
-    /// <summary>
-    /// Sources of Gameplay Effects
-    /// </summary>
-    public interface IEffectOrigin
-    {
-        public ISource GetOwner();
-        public List<Tag> GetContextTags();
-        public Tag GetAssetTag();
-        public int GetLevel();
-        public void SetLevel(int level);
-        public float GetRelativeLevel();
-        public string GetName();
-        public List<Tag> GetAffiliation();
-        public bool IsActive();
-
-        public static SourceEffectOrigin GenerateSourceDerivation(ISource source)
-        {
-            return new SourceEffectOrigin(source);
-        }
-    }
-
-    public class SourceEffectOrigin : IEffectOrigin
-    {
-        private ISource Owner;
-
-        public SourceEffectOrigin(ISource owner)
-        {
-            Owner = owner;
-        }
-
-        public ISource GetOwner()
-        {
-            return Owner;
-        }
-        public List<Tag> GetContextTags()
-        {
-            return Owner.GetContextTags();
-        }
-        public Tag GetAssetTag()
-        {
-            return Owner.GetAssetTag();
-        }
-        public int GetLevel()
-        {
-            return Owner.GetLevel();
-        }
-        public void SetLevel(int level)
-        {
-            Owner.SetLevel(level);
-        }
-        public float GetRelativeLevel()
-        {
-            float maxLevel = Owner.GetMaxLevel();
-            return maxLevel > 1 ? (Owner.GetLevel() - 1) / (maxLevel - 1) : 1f;
-        }
-        public string GetName()
-        {
-            return Owner.GetName();
-        }
-        public List<Tag> GetAffiliation()
-        {
-            return Owner.GetAffiliation();
-        }
-        public bool IsActive()
-        {
-            return true;
-        }
     }
 
 }

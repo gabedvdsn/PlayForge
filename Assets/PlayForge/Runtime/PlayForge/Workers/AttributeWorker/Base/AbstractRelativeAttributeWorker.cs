@@ -29,9 +29,9 @@ namespace FarEmerald.PlayForge
             // Check that the relative attribute exists on the appropriate system
             bool hasRelative = From switch
             {
-                EFromSelfSource.FromSource => change.Value.BaseDerivation.GetSource()
+                EFromSelfSource.FromSource => change.Value.Derivation.GetSource()
                     .FindAttributeSystem(out var attrT) && attrT.DefinesAttribute(RelativeTo),
-                EFromSelfSource.FromSelf => change.Value.BaseDerivation.GetTarget()
+                EFromSelfSource.FromSelf => change.Value.Derivation.GetTarget()
                     .FindAttributeSystem(out var attrS) && attrS.DefinesAttribute(RelativeTo),
                 _ => false
             };
@@ -50,7 +50,7 @@ namespace FarEmerald.PlayForge
         {
             return From switch
             {
-                EFromSelfSource.FromSource => ctx.Change.Value.BaseDerivation.GetSource()
+                EFromSelfSource.FromSource => ctx.Change.Value.Derivation.GetSource()
                     .FindAttributeSystem(out var attr) && 
                     attr.TryGetAttributeValue(RelativeTo, out AttributeValue value)
                         ? value * RelativeMultiplier

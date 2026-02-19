@@ -6,28 +6,15 @@ using UnityEngine.UIElements;
 namespace FarEmerald.PlayForge.Extended.Editor
 {
     [CustomPropertyDrawer(typeof(Attribute))]
-    public class AttributeDrawer : AbstractRefDrawer<Attribute>
+    public class AttributeDrawer : AbstractForgeObjectDrawer<Attribute>
     {
-        protected override bool AcceptOpen(SerializedProperty prop)
-        {
-            return true;
-        }
-        protected override bool AcceptClear()
-        {
-            return true;
-        }
-        protected override Attribute[] GetEntries()
+        /*protected override Attribute[] GetEntries()
         {
             return GetAllInstances<Attribute>();
         }
         protected override bool CompareTo(Attribute value, Attribute other)
         {
             return value == other;
-        }
-        protected override string GetStringValue(SerializedProperty prop, Attribute value)
-        {
-            string l = value != null ? value.GetName() ?? "<None>" : "<None>";
-            return string.IsNullOrEmpty(l) ? "<Unnamed>" : l;
         }
         protected override void SetValue(SerializedProperty prop, Attribute value)
         {
@@ -41,6 +28,6 @@ namespace FarEmerald.PlayForge.Extended.Editor
         {
             if (prop.isArray) return null;
             return new Label(prop.name);
-        }
+        }*/
     }
 }

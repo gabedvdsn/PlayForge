@@ -39,21 +39,21 @@ namespace FarEmerald.PlayForge.Extended.Editor
             { typeof(EntityIdentity), "Assets/Data/Entities" },
             { typeof(Ability), "Assets/Data/Abilities" },
             { typeof(Item), "Assets/Data/Items" },
-            { typeof(ScalerTemplate), "Assets/Data/Templates/Scalers" },
+            { typeof(ScalerPipeline), "Assets/Data/Templates/Scalers" },
             { typeof(RequirementTemplate), "Assets/Data/Templates/Requirements" },
         };
         
         // Asset type metadata for UI
         public static readonly List<AssetTypeInfo> AssetTypes = new List<AssetTypeInfo>
         {
-            new AssetTypeInfo(typeof(Ability), "Ability", "⚡", Colors.AccentOrange, "Ability definition", true, true),
-            new AssetTypeInfo(typeof(GameplayEffect), "Effect", "✦", Colors.AccentRed, "Gameplay effect definition", true, true),
-            new AssetTypeInfo(typeof(Item), "Item", "🎁", new Color(1f, 0.8f, 0.3f), "Item with effects & abilities", true, true),
-            new AssetTypeInfo(typeof(Attribute), "Attribute", "📈", Colors.AccentBlue, "Base stat definition", true, false),
-            new AssetTypeInfo(typeof(AttributeSet), "Attribute Set", "📊", Colors.AccentGreen, "Collection of attributes", true, true),
-            new AssetTypeInfo(typeof(EntityIdentity), "Entity", "👤", Colors.AccentPurple, "Entity configuration", true, true),
-            new AssetTypeInfo(typeof(ScalerTemplate), "Scaler", "📋", Colors.AccentCyan, "Reusable scaler configuration", true, false),
-            new AssetTypeInfo(typeof(RequirementTemplate), "Requirement", "📋", new Color(0.95f, 0.6f, 0.2f), "Reusable tag requirement configuration", true, false),
+            new AssetTypeInfo(typeof(Ability), "Ability", "⚡", Colors.AssetAbility, "Ability definition", true, true),
+            new AssetTypeInfo(typeof(GameplayEffect), "Effect", "✦", Colors.AssetEffect, "Gameplay effect definition", true, true),
+            new AssetTypeInfo(typeof(Item), "Item", "🎁", Colors.AssetItem, "Item with effects & abilities", true, true),
+            new AssetTypeInfo(typeof(Attribute), "Attribute", "📈", Colors.AssetAttribute, "Base stat definition", true, false),
+            new AssetTypeInfo(typeof(AttributeSet), "Attribute Set", "📊", Colors.AssetAttributeSet, "Collection of attributes", true, true),
+            new AssetTypeInfo(typeof(EntityIdentity), "Entity", "👤", Colors.AssetEntity, "Entity configuration", true, true),
+            new AssetTypeInfo(typeof(ScalerPipeline), "Scaler", "📋", Colors.AssetScaler, "Reusable scaler configuration", true, false),
+            new AssetTypeInfo(typeof(RequirementTemplate), "Requirement", "📋", Colors.AssetRequirements, "Reusable tag requirement configuration", true, false),
         };
         
         // ═══════════════════════════════════════════════════════════════════════════
@@ -61,7 +61,7 @@ namespace FarEmerald.PlayForge.Extended.Editor
         // ═══════════════════════════════════════════════════════════════════════════
         
         private int currentTab = 0;
-        private readonly string[] tabNames = { "Create", "View", "Settings" };
+        private readonly string[] tabNames = { "Create", "View", "Analysis", "Settings" };
         
         // View tab state
         internal string searchFilter = "";
@@ -85,7 +85,7 @@ namespace FarEmerald.PlayForge.Extended.Editor
         // Window Management
         // ═══════════════════════════════════════════════════════════════════════════
         
-        [MenuItem("Tools/PlayForge/Manager")]
+        [MenuItem("Tools/PlayForge/The Forge")]
         public static void ShowWindow()
         {
             var window = GetWindow<PlayForgeManager>();
@@ -131,7 +131,6 @@ namespace FarEmerald.PlayForge.Extended.Editor
             window.Focus();
             
             // Navigate to View tab
-            window.currentTab = 1; // View tab
             window.ShowTab(1);
             
             // Set type filter to match asset type
@@ -334,7 +333,8 @@ namespace FarEmerald.PlayForge.Extended.Editor
             {
                 case 0: BuildCreateTab(); break;
                 case 1: BuildViewTab(); break;
-                case 2: BuildSettingsTab(); break;
+                case 2: BuildAnalysisTab(); break;
+                case 3: BuildSettingsTab(); break;
             }
         }
         

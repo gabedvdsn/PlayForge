@@ -9,71 +9,47 @@ namespace FarEmerald.PlayForge
     /// </summary>
     public interface IAttributeImpactDerivation
     {
+        public Tag GetCacheKey();
+        public bool DerivationAlive();
         public Attribute GetAttribute();
         public IEffectOrigin GetEffectDerivation();
         public ISource GetSource();
         public ITarget GetTarget();
         public List<Tag> GetImpactTypes();
-        public Tag AttributeRetention();
+        public Tag GetRetentionGroup();
         public void TrackImpact(ImpactData impactData);
         public TrackedImpact GetTrackedImpact();
-        public AttributeValue GetLastTrackedImpact();
-        public List<Tag> GetContextTags();
+        public ImpactDerivationContext GetContextTags();
         public void RunWorkerApplication(EffectWorkerContext ctx);
         public void RunWorkerTick(EffectWorkerContext ctx);
         public void RunWorkerRemoval(EffectWorkerContext ctx);
         public void RunWorkerImpact(EffectWorkerContext ctx);
         public Dictionary<IScaler, AttributeValue?> GetSourcedCapturedAttributes();
-        public IAttributeImpactDerivation GetImpactDerivation();
+        public bool RetainImpact();
         
-        public static SourceAttributeImpact GenerateSourceDerivation(ISource source, Attribute attribute, Tag retention, Tag impactType)
+        public static SourceAttributeImpact GenerateSourceDerivation(ISource source, Attribute attribute, Tag retentionGroup, List<Tag> impactType, IAttributeImpactDerivation rootDerivation = null, bool retainOverride = false)
         {
-            return new SourceAttributeImpact(source, attribute, impactType, retention);
+            return new SourceAttributeImpact(
+                source, attribute, 
+                impactType, retentionGroup,
+                rootDerivation, retainOverride);
         }
 
-        public static SourceAttributeImpact GenerateSourceDerivation(SourcedModifiedAttributeValue sourceModifier, Tag retention, Tag impactType)
+        public static SourceAttributeImpact GenerateSourceDerivation(SourcedModifiedAttributeValue sourceModifier, Tag retentionGroup, List<Tag> impactType, IAttributeImpactDerivation rootDerivation = null, bool retainOverride = false)
         {
-            return GenerateSourceDerivation(sourceModifier.Derivation.GetSource(), sourceModifier.Derivation.GetAttribute(), retention, impactType);
+            return GenerateSourceDerivation(
+                sourceModifier.Derivation.GetSource(), sourceModifier.Derivation.GetAttribute(), 
+                retentionGroup, impactType,
+                rootDerivation, retainOverride);
         }
-    }
 
-    public class TrackedImpact
-    {
-        private class Node
+        public static NullifiedImpactDerivation GenerateNullifiedDerivation(IAttributeImpactDerivation derivation)
         {
-            public AttributeValue Impact;
-            public Node Next;
-
-            public Node(AttributeValue impact)
-            {
-                Impact = impact;
-            }
-        }
-        
-        public AttributeValue Total { get; private set; }
-        public AttributeValue Last => end?.Impact ?? default;
-        public int Count { get; private set; }
-        
-        private Node root;
-        private Node end;
-
-        public void Add(AttributeValue value)
-        {
-            if (root is null)
-            {
-                root = new Node(value);
-                end = root;
-                
-                Total = value;
-                Count = 1;
-                return;
-            }
-            
-            end.Next = new Node(value);
-            end = end.Next;
-            
-            Total += value;
-            Count += 1;
+            return new NullifiedImpactDerivation(
+                derivation.GetCacheKey(), 
+                derivation.GetSource(), derivation.GetAttribute(), 
+                derivation.GetImpactTypes(), 
+                derivation.GetRetentionGroup(), derivation);
         }
     }
 
@@ -81,83 +57,105 @@ namespace FarEmerald.PlayForge
     {
         private ISource Source;
         public Attribute Attribute;
-        private Tag ImpactType;
-        private Tag Retention;
+        private List<Tag> ImpactType;
+        private Tag RetentionGroup;
+        
+        private IAttributeImpactDerivation RootDerivation;
+        private bool RetainFallback = false;
 
-        public SourceAttributeImpact(ISource source, Attribute attribute, Tag impactType, Tag retention)
+        private TrackedImpact TrackedImpact;
+
+        public SourceAttributeImpact(ISource source, Attribute attribute, List<Tag> impactType, Tag retentionGroup, IAttributeImpactDerivation rootDerivation, bool retainFallback)
         {
             Source = source;
             Attribute = attribute;
             ImpactType = impactType;
-            Retention = retention;
+            RetentionGroup = retentionGroup;
+            RootDerivation = rootDerivation;
+            RetainFallback = retainFallback;
+            TrackedImpact = new TrackedImpact();
         }
 
-        public Attribute GetAttribute()
+        public virtual Tag GetCacheKey()
         {
-            return Attribute;
+            return RootDerivation?.GetCacheKey() ?? Source.GetAssetTag();
         }
-        public IEffectOrigin GetEffectDerivation()
+        public virtual bool DerivationAlive()
         {
-            return IEffectOrigin.GenerateSourceDerivation(Source);
+            return true;
         }
-        public ISource GetSource()
-        {
-            return Source;
-        }
-        public ITarget GetTarget()
-        {
-            return Source;
-        }
-        public List<Tag> GetImpactTypes()
-        {
-            return new List<Tag>(){ ImpactType };
-        }
-
-        public Tag AttributeRetention()
-        {
-            return Retention;
-        }
+        public Attribute GetAttribute() => Attribute;
+        public IEffectOrigin GetEffectDerivation() => IEffectOrigin.GenerateSourceDerivation(Source);
+        public ISource GetSource() => Source;
+        public ITarget GetTarget() => Source;
+        public List<Tag> GetImpactTypes() => ImpactType;
+        public Tag GetRetentionGroup() => RetentionGroup;
+        public void TrackImpact(ImpactData impactData) => TrackedImpact.Add(impactData.RealImpact);
+        public TrackedImpact GetTrackedImpact() => TrackedImpact;
+        public ImpactDerivationContext GetContextTags() => RootDerivation?.GetContextTags() ?? new ImpactDerivationContext(Source.GetContextTags(), null);
         
-        public void TrackImpact(ImpactData impactData)
-        {
-            // Source derivations do not track their impact
-        }
+        public void RunWorkerApplication(EffectWorkerContext ctx) { }
+        public void RunWorkerTick(EffectWorkerContext ctx) { }
+        public void RunWorkerRemoval(EffectWorkerContext ctx) { }
+        public void RunWorkerImpact(EffectWorkerContext ctx) { }
         
-        public TrackedImpact GetTrackedImpact()
-        {
-            return new TrackedImpact();
-        }
-        public AttributeValue GetLastTrackedImpact()
-        {
-            return default;
-        }
-        public List<Tag> GetContextTags()
-        {
-            return Source.GetContextTags();
-        }
-        public void RunWorkerApplication(EffectWorkerContext ctx)
-        {
-            
-        }
-        public void RunWorkerTick(EffectWorkerContext ctx)
-        {
-            
-        }
-        public void RunWorkerRemoval(EffectWorkerContext ctx)
-        {
-            
-        }
-        public void RunWorkerImpact(EffectWorkerContext ctx)
-        {
-            
-        }
         public Dictionary<IScaler, AttributeValue?> GetSourcedCapturedAttributes()
         {
             return new();
         }
-        public IAttributeImpactDerivation GetImpactDerivation()
+        public bool RetainImpact()
         {
-            return null;
+            return RootDerivation?.RetainImpact() ?? RetainFallback;
+        }
+    }
+
+    public class NullifiedImpactDerivation : SourceAttributeImpact
+    {
+        public Tag RootKey;
+        public Tag CacheKey;
+        
+        public NullifiedImpactDerivation(Tag cacheKey, ISource source, Attribute attribute, List<Tag> impactType, Tag retentionGroup, IAttributeImpactDerivation rootDerivation) : base(source, attribute, impactType, retentionGroup, null, rootDerivation.RetainImpact())
+        {
+            RootKey = rootDerivation.GetEffectDerivation().GetAssetTag();
+            CacheKey = cacheKey;
+        }
+
+        public override Tag GetCacheKey()
+        {
+            return CacheKey;
+        }
+
+        public override bool DerivationAlive()
+        {
+            return false;
+        }
+    }
+
+    public struct ImpactDerivationContext
+    {
+        public List<Tag> OriginTags;
+        public List<Tag> DerivationTags;
+
+        public ImpactDerivationContext(List<Tag> originTags, List<Tag> derivationTags)
+        {
+            OriginTags = originTags;
+            DerivationTags = derivationTags;
+        }
+
+        /// <summary>
+        /// Enumerates origin and derivation context tags (in that order).
+        /// </summary>
+        /// <returns></returns>
+        public IEnumerable<Tag> All()
+        {
+            if (OriginTags is not null)
+            {
+                foreach (var t in OriginTags) yield return t;
+            }
+
+            if (DerivationTags is null) yield break;
+            
+            foreach (var t in DerivationTags) yield return t;
         }
     }
 }

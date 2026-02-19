@@ -116,11 +116,12 @@ namespace FarEmerald.PlayForge.Extended.Editor
             
             // Operation color bar
             var operation = (ECalculationOperation)opProp.enumValueIndex;
-            Color opColor = operation switch
+            var opColor = operation switch
             {
                 ECalculationOperation.Add => Colors.AccentGreen,
                 ECalculationOperation.Multiply => Colors.AccentBlue,
                 ECalculationOperation.Override => Colors.AccentOrange,
+                ECalculationOperation.FlatBonus => Colors.AccentPurple,
                 _ => Colors.AccentGray
             };
             
@@ -139,6 +140,7 @@ namespace FarEmerald.PlayForge.Extended.Editor
                 ECalculationOperation.Add => "+",
                 ECalculationOperation.Multiply => "×",
                 ECalculationOperation.Override => "=",
+                ECalculationOperation.FlatBonus => "+",
                 _ => "?"
             };
             
@@ -166,6 +168,7 @@ namespace FarEmerald.PlayForge.Extended.Editor
                     ECalculationOperation.Add => Colors.AccentGreen,
                     ECalculationOperation.Multiply => Colors.AccentBlue,
                     ECalculationOperation.Override => Colors.AccentOrange,
+                    ECalculationOperation.FlatBonus => Colors.AccentPurple,
                     _ => Colors.AccentGray
                 };
                 opLabel.text = newOp switch
@@ -173,6 +176,7 @@ namespace FarEmerald.PlayForge.Extended.Editor
                     ECalculationOperation.Add => "+",
                     ECalculationOperation.Multiply => "×",
                     ECalculationOperation.Override => "=",
+                    ECalculationOperation.FlatBonus => "+",
                     _ => "?"
                 };
                 opLabel.style.color = colorBar.style.backgroundColor;
@@ -244,6 +248,7 @@ namespace FarEmerald.PlayForge.Extended.Editor
                 ECalculationOperation.Add => "+",
                 ECalculationOperation.Multiply => "×",
                 ECalculationOperation.Override => "=",
+                ECalculationOperation.FlatBonus => "+",
                 _ => "?"
             };
             

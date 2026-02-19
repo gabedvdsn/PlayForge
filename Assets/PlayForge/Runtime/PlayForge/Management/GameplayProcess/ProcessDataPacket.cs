@@ -109,10 +109,27 @@ namespace FarEmerald.PlayForge
             }
             else Payload[key].Add(value);
         }
-
-        public T Get<T>(Tag key, EProxyDataValueTarget target, out T value, T fallback = default)
+        
+        public void InsertPayload<T>(Tag key, int index, T value)
         {
-            return !TryGet(key, target, out value) ? fallback : value;
+            if (!Payload.ContainsKey(key))
+            {
+                Payload[key] = new List<object>()
+                {
+                    value
+                };
+            }
+            else
+            {
+                int _index = Mathf.Clamp(index, 0, Payload[key].Count);
+                if (_index > 0) Payload[key].Insert(_index, value);
+                else Payload[key].Add(value);
+            }
+        }
+
+        public T Get<T>(Tag key, EProxyDataValueTarget target, T fallback = default)
+        {
+            return TryGet<T>(key, target, out var value) ? value : fallback;
         }
         
         public bool TryGet<T>(Tag key, EProxyDataValueTarget target, out T value)

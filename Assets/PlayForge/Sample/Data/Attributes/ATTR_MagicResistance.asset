@@ -13,4 +13,6 @@ MonoBehaviour:
   m_Name: ATTR_MagicResistance
   m_EditorClassIdentifier: 
   Name: MagicResistance
+  Abbreviation: 
   Description: Describes relative resistance to incoming magical damage
+  Textures: []

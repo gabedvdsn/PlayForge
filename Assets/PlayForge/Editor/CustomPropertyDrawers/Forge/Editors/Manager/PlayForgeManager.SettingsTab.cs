@@ -100,44 +100,52 @@ namespace FarEmerald.PlayForge.Extended.Editor
             settingsContentContainer.Add(scrollView);
             
             // View Settings
-            var viewSection = CreateSettingsSection("View Settings", "Customize the View tab behavior", Colors.AccentGreen);
+            var viewSection = CreateSettingsSection("View Settings", "Customize the View tab behavior", Colors.AccentPurple);
             scrollView.Add(viewSection);
             
-            var rememberFilterToggle = new Toggle("Remember last type filter");
+            var rememberFilterToggleRow = CreateSettingRow("Remember last type filter");
+            var rememberFilterToggle = new Toggle();
             rememberFilterToggle.value = EditorPrefs.GetBool(PREFS_PREFIX + "RememberTypeFilter", true);
             rememberFilterToggle.RegisterValueChangedCallback(evt => 
                 EditorPrefs.SetBool(PREFS_PREFIX + "RememberTypeFilter", evt.newValue));
             rememberFilterToggle.style.marginTop = 8;
-            viewSection.Add(rememberFilterToggle);
+            rememberFilterToggleRow.Add(rememberFilterToggle);
+            viewSection.Add(rememberFilterToggleRow);
             
-            var doubleClickToggle = new Toggle("Double-click opens Visualizer (vs Select)");
+            var doubleClickToggleRow = CreateSettingRow("Double-click opens Visualizer (vs Select)");
+            var doubleClickToggle = new Toggle();
             doubleClickToggle.value = EditorPrefs.GetBool(PREFS_PREFIX + "DoubleClickVisualize", true);
             doubleClickToggle.RegisterValueChangedCallback(evt => 
                 EditorPrefs.SetBool(PREFS_PREFIX + "DoubleClickVisualize", evt.newValue));
             doubleClickToggle.style.marginTop = 4;
-            viewSection.Add(doubleClickToggle);
+            doubleClickToggleRow.Add(doubleClickToggle);
+            viewSection.Add(doubleClickToggleRow);
             
-            var showFileNamesToggle = new Toggle("Show file names in grouped view");
+            var showFileNamesToggleRow = CreateSettingRow("Show file names in grouped view");
+            var showFileNamesToggle = new Toggle();
             showFileNamesToggle.value = EditorPrefs.GetBool(PREFS_PREFIX + "ShowFileNames", true);
             showFileNamesToggle.RegisterValueChangedCallback(evt => 
                 EditorPrefs.SetBool(PREFS_PREFIX + "ShowFileNames", evt.newValue));
             showFileNamesToggle.style.marginTop = 4;
-            viewSection.Add(showFileNamesToggle);
+            showFileNamesToggleRow.Add(showFileNamesToggle);
+            viewSection.Add(showFileNamesToggleRow);
             
             // Create Tab Settings
-            var createSection = CreateSettingsSection("Create Tab Settings", "Customize the Create tab", Colors.AccentOrange);
+            var createSection = CreateSettingsSection("Create Tab Settings", "Customize the Create tab", Colors.AccentBlue);
             scrollView.Add(createSection);
             
             var recentRowsRow = new VisualElement();
             recentRowsRow.style.flexDirection = FlexDirection.Row;
             recentRowsRow.style.alignItems = Align.Center;
             recentRowsRow.style.marginTop = 8;
+
+            recentRowsRow = CreateSettingRow("Recently created rows:");
             createSection.Add(recentRowsRow);
             
-            var recentRowsLabel = new Label("Recently created rows:");
-            recentRowsLabel.style.width = 160;
+            /*var recentRowsLabel = new Label("Recently created rows:");
+            recentRowsLabel.style.width = 400;
             recentRowsLabel.style.fontSize = 11;
-            recentRowsRow.Add(recentRowsLabel);
+            recentRowsRow.Add(recentRowsLabel);*/
             
             var recentRowsField = new IntegerField();
             recentRowsField.style.width = 60;
@@ -152,13 +160,33 @@ namespace FarEmerald.PlayForge.Extended.Editor
             
             var recentRowsHint = new Label("(0-50, 0 to hide)");
             recentRowsHint.style.fontSize = 10;
+            recentRowsHint.style.width = 240;
             recentRowsHint.style.color = Colors.HintText;
             recentRowsHint.style.marginLeft = 8;
+            recentRowsHint.style.alignSelf = Align.Center;
             recentRowsRow.Add(recentRowsHint);
             
             // Tag Registry Settings
-            var tagSection = CreateSettingsSection("Tag Registry", "Tag scanning and context management", Colors.AccentPurple);
+            var tagSection = CreateSettingsSection("Tags & Tag Registry", "Tag scanning and context management", Colors.AccentGreen);
             scrollView.Add(tagSection);
+            
+            var showFullTagPath = CreateSettingRow("Display full tag path");
+            var showFullTagPathToggle = new Toggle();
+            showFullTagPathToggle.value = EditorPrefs.GetBool(PREFS_PREFIX + "ShowFullTagPath", false);
+            showFullTagPathToggle.RegisterValueChangedCallback(evt => 
+                EditorPrefs.SetBool(PREFS_PREFIX + "ShowFullTagPath", evt.newValue));
+            showFullTagPathToggle.style.marginTop = 4;
+            showFullTagPath.Add(showFullTagPathToggle);
+            tagSection.Add(showFullTagPath);
+            
+            var groupTagsByRoot = CreateSettingRow("Group tags by root");
+            var groupTagsByRootToggle = new Toggle();
+            groupTagsByRootToggle.value = EditorPrefs.GetBool(PREFS_PREFIX + "GroupTagsByRoot", false);
+            groupTagsByRootToggle.RegisterValueChangedCallback(evt => 
+                EditorPrefs.SetBool(PREFS_PREFIX + "GroupTagsByRoot", evt.newValue));
+            groupTagsByRootToggle.style.marginTop = 4;
+            groupTagsByRoot.Add(groupTagsByRootToggle);
+            tagSection.Add(groupTagsByRoot);
             
             var refreshTagsBtn = CreateButton("Refresh Tag Registry", () =>
             {
@@ -166,39 +194,116 @@ namespace FarEmerald.PlayForge.Extended.Editor
                 ShowTab(currentTab);
             });
             refreshTagsBtn.style.alignSelf = Align.FlexStart;
+            refreshTagsBtn.style.width = 240;
             refreshTagsBtn.style.marginTop = 8;
             ApplyButtonStyle(refreshTagsBtn);
             tagSection.Add(refreshTagsBtn);
             
             var tagStatsLabel = new Label($"Unique Tags: {TagRegistry.GetAllTags().Count()}\nContexts: {TagRegistry.GetAllContextKeys().Count()}\nLast Scan: {(TagRegistry.IsCacheValid ? TagRegistry.LastScanTime.ToString("HH:mm:ss") : "Never")}");
             tagStatsLabel.style.fontSize = 10;
+            tagStatsLabel.style.width = 400;
             tagStatsLabel.style.color = Colors.HintText;
             tagStatsLabel.style.marginTop = 8;
             tagStatsLabel.style.whiteSpace = WhiteSpace.Normal;
             tagSection.Add(tagStatsLabel);
             
             // General Preferences
-            var generalSection = CreateSettingsSection("General", "Manager preferences", Colors.AccentBlue);
+            var generalSection = CreateSettingsSection("General", "Manager preferences", Colors.AccentOrange);
             scrollView.Add(generalSection);
             
-            var autoRefreshToggle = new Toggle("Auto-refresh on window focus");
+            var autoRefreshToggleRow = CreateSettingRow("Auto-refresh on window focus");
+            var autoRefreshToggle = new Toggle();
             autoRefreshToggle.value = EditorPrefs.GetBool(PREFS_PREFIX + "AutoRefresh", true);
+            autoRefreshToggle.style.width = 400;
             autoRefreshToggle.RegisterValueChangedCallback(evt => 
                 EditorPrefs.SetBool(PREFS_PREFIX + "AutoRefresh", evt.newValue));
             autoRefreshToggle.style.marginTop = 8;
-            generalSection.Add(autoRefreshToggle);
+            autoRefreshToggleRow.Add(autoRefreshToggle);
+            generalSection.Add(autoRefreshToggleRow);
             
-            var notifyToggle = new Toggle("Show creation notifications");
+            var notifyToggleRow = CreateSettingRow("Show creation notifications");
+            var notifyToggle = new Toggle();
             notifyToggle.value = EditorPrefs.GetBool(PREFS_PREFIX + "ShowNotifications", true);
+            notifyToggle.style.width = 400;
             notifyToggle.RegisterValueChangedCallback(evt => 
                 EditorPrefs.SetBool(PREFS_PREFIX + "ShowNotifications", evt.newValue));
             notifyToggle.style.marginTop = 4;
-            generalSection.Add(notifyToggle);
+            notifyToggleRow.Add(notifyToggle);
+            generalSection.Add(notifyToggleRow);
+            
+            // Editor Settings
+            var editorSection = CreateSettingsSection("Inspector", "Manager preferences", Colors.AccentCyan);
+            scrollView.Add(editorSection);
+            
+            var editorRefreshMsRow = CreateSettingRow("Inspector Refresh Delay Ms");
+            
+            var editorRefreshMsInt = new IntegerField();
+            var editorRefreshMs = new SliderInt(DefaultConfigureDelayMsMin, DefaultConfigureDelayMsMax);
+            
+            editorRefreshMsInt.value = EditorPrefs.GetInt(PREFS_PREFIX + "EditorRefreshDelayMs", DefaultConfigureDelayMsMin);
+            editorRefreshMsInt.style.width = 45;
+            editorRefreshMsInt.RegisterValueChangedCallback(evt =>
+            {
+                if (evt.newValue < DefaultConfigureDelayMsMin || evt.newValue > DefaultConfigureDelayMsMax)
+                {
+                    EditorPrefs.SetInt(PREFS_PREFIX + "EditorRefreshDelayMs", evt.newValue);
+                    editorRefreshMs.SetValueWithoutNotify(evt.newValue);
+                }
+                else editorRefreshMsInt.SetValueWithoutNotify(Mathf.Clamp(evt.newValue, DefaultConfigureDelayMsMin, DefaultConfigureDelayMsMax));
+                
+            });
+            editorRefreshMsInt.style.marginTop = 8;
+            editorRefreshMsRow.Add(editorRefreshMsInt);
+            
+            editorRefreshMs.value = EditorPrefs.GetInt(PREFS_PREFIX + "EditorRefreshDelayMs", 250);
+            editorRefreshMs.style.width = 140;
+            editorRefreshMs.RegisterValueChangedCallback(evt =>
+            {
+                editorRefreshMsInt.SetValueWithoutNotify(evt.newValue);
+                EditorPrefs.SetInt(PREFS_PREFIX + "EditorRefreshDelayMs", evt.newValue);
+            });
+            editorRefreshMs.style.marginTop = 8;
+            editorRefreshMsRow.Add(editorRefreshMs);
+            
+            editorSection.Add(editorRefreshMsRow);
+            
+            var editorForceRefreshMsRow = CreateSettingRow("Inspector Force Refresh Delay Ms");
+            
+            var editorForceRefreshMsInt = new IntegerField();
+            var editorForceRefreshMs = new SliderInt(DefaultForceConfigureDelayMsMin, DefaultForceConfigureDelayMsMax);
+            
+            editorForceRefreshMsInt.value = EditorPrefs.GetInt(PREFS_PREFIX + "EditorForceRefreshDelayMs", DefaultForceConfigureDelayMsMin);
+            editorForceRefreshMsInt.style.width = 45;
+            editorForceRefreshMsInt.RegisterValueChangedCallback(evt =>
+            {
+                if (evt.newValue >= DefaultForceConfigureDelayMsMin && evt.newValue <= DefaultForceConfigureDelayMsMax)
+                {
+                    EditorPrefs.SetInt(PREFS_PREFIX + "EditorForceRefreshDelayMs", evt.newValue);
+                    editorForceRefreshMs.SetValueWithoutNotify(evt.newValue);
+                }
+                else editorForceRefreshMsInt.SetValueWithoutNotify(Mathf.Clamp(evt.newValue, DefaultForceConfigureDelayMsMin, DefaultForceConfigureDelayMsMax));
+                
+            });
+            editorForceRefreshMsInt.style.marginTop = 8;
+            editorForceRefreshMsRow.Add(editorForceRefreshMsInt);
+            
+            editorForceRefreshMs.value = EditorPrefs.GetInt(PREFS_PREFIX + "EditorForceRefreshDelayMs", DefaultForceConfigureDelayMsMin);
+            editorForceRefreshMs.style.width = 140;
+            editorForceRefreshMs.RegisterValueChangedCallback(evt =>
+            {
+                EditorPrefs.SetInt(PREFS_PREFIX + "EditorForceRefreshDelayMs", evt.newValue);
+                editorForceRefreshMsInt.SetValueWithoutNotify(evt.newValue);
+            });
+            editorForceRefreshMs.style.marginTop = 8;
+            editorForceRefreshMsRow.Add(editorForceRefreshMs);
+            
+            editorSection.Add(editorForceRefreshMsRow);
             
             // Danger Zone
             var dangerSection = CreateSettingsSection("Danger Zone", "Destructive operations", Colors.AccentRed);
             scrollView.Add(dangerSection);
             
+            //var clearCacheBtnRow = CreateSettingRow("Clear All Caches");
             var clearCacheBtn = CreateButton("Clear All Caches", () =>
             {
                 if (EditorUtility.DisplayDialog("Clear Cache", "Clear asset and tag caches and reload?", "Yes", "Cancel"))
@@ -210,9 +315,12 @@ namespace FarEmerald.PlayForge.Extended.Editor
                 }
             });
             clearCacheBtn.style.alignSelf = Align.FlexStart;
+            clearCacheBtn.style.width = 240;
             clearCacheBtn.style.marginTop = 8;
+            //clearCacheBtnRow.Add(clearCacheBtn);
             dangerSection.Add(clearCacheBtn);
             
+            //var resetSettingsBtnRow = CreateSettingRow("Reset All Settings");
             var resetSettingsBtn = CreateButton("Reset All Settings", () =>
             {
                 if (EditorUtility.DisplayDialog("Reset Settings", "Reset all PlayForge Manager settings to defaults?", "Yes", "Cancel"))
@@ -222,8 +330,27 @@ namespace FarEmerald.PlayForge.Extended.Editor
                 }
             });
             resetSettingsBtn.style.alignSelf = Align.FlexStart;
+            resetSettingsBtn.style.width = 240;
             resetSettingsBtn.style.marginTop = 4;
+            //resetSettingsBtnRow.Add(resetSettingsBtn);
             dangerSection.Add(resetSettingsBtn);
+        }
+
+        private VisualElement CreateSettingRow(string text, int marginTop = 2)
+        {
+            var row = CreateRow(marginTop);
+            var label = new Label(text)
+            {
+                name = "Label",
+                style =
+                {
+                    width = 275,
+                    alignSelf = Align.Center,
+                    alignItems = Align.Center
+                }
+            };
+            row.Add(label);
+            return row;
         }
         
         private void BuildTemplateTagsEditor(VisualElement parent)
@@ -1004,7 +1131,6 @@ namespace FarEmerald.PlayForge.Extended.Editor
             }
         }
         
-        // Type-specific settings (infrastructure - can be expanded)
         private void BuildAbilitySettings(VisualElement container)
         {
             // Level Settings
@@ -1021,9 +1147,79 @@ namespace FarEmerald.PlayForge.Extended.Editor
             autoLevelToggle.RegisterValueChangedCallback(evt => 
                 EditorPrefs.SetBool(PREFS_PREFIX + "Ability_AutoLevel", evt.newValue));
             container.Add(autoLevelToggle);
+
+            BuildEffectTemplatesSection(container);
+            BuildTypeSpecificTemplateTags(container, "Ability");
+
+            return;
             
-            // Cooldown Settings
-            var cooldownHeader = new Label("Cooldown");
+            // ═══════════════════════════════════════════════════════════════════════════
+            // Default Cost Template
+            // ═══════════════════════════════════════════════════════════════════════════
+            var costHeader = new Label("Default Cost Template");
+            costHeader.style.fontSize = 10;
+            costHeader.style.unityFontStyleAndWeight = FontStyle.Bold;
+            costHeader.style.color = Colors.AccentBlue;
+            costHeader.style.marginTop = 12;
+            costHeader.style.marginBottom = 4;
+            container.Add(costHeader);
+            
+            var costHint = new Label("Assign a GameplayEffect to use as the default cost for new abilities.");
+            costHint.style.fontSize = 9;
+            costHint.style.color = Colors.HintText;
+            costHint.style.whiteSpace = WhiteSpace.Normal;
+            costHint.style.marginBottom = 4;
+            container.Add(costHint);
+            
+            var costRow = new VisualElement { style = { flexDirection = FlexDirection.Row, alignItems = Align.Center } };
+            
+            var costField = new ObjectField();
+            costField.objectType = typeof(GameplayEffect);
+            costField.style.flexGrow = 1;
+            costField.style.maxWidth = 250;
+            costField.label = "";
+            
+            // Load saved cost template
+            var savedCostGuid = EditorPrefs.GetString(EffectTemplateRegistry.PREFS_PREFIX + "Cost", "");
+            if (!string.IsNullOrEmpty(savedCostGuid))
+            {
+                var path = AssetDatabase.GUIDToAssetPath(savedCostGuid);
+                if (!string.IsNullOrEmpty(path))
+                    costField.value = AssetDatabase.LoadAssetAtPath<GameplayEffect>(path);
+            }
+            
+            costField.RegisterValueChangedCallback(evt =>
+            {
+                if (evt.newValue != null)
+                {
+                    var path = AssetDatabase.GetAssetPath(evt.newValue);
+                    var guid = AssetDatabase.AssetPathToGUID(path);
+                    EditorPrefs.SetString(EffectTemplateRegistry.PREFS_PREFIX + "Cost", guid);
+                }
+                else
+                {
+                    EditorPrefs.DeleteKey(EffectTemplateRegistry.PREFS_PREFIX + "Cost");
+                }
+            });
+            costRow.Add(costField);
+            
+            var clearCostBtn = CreateButton("×", () =>
+            {
+                costField.value = null;
+                EditorPrefs.DeleteKey(EffectTemplateRegistry.PREFS_PREFIX + "Cost");
+            });
+            clearCostBtn.style.width = 22;
+            clearCostBtn.style.height = 20;
+            clearCostBtn.style.marginLeft = 4;
+            clearCostBtn.tooltip = "Clear default cost";
+            costRow.Add(clearCostBtn);
+            
+            container.Add(costRow);
+            
+            // ═══════════════════════════════════════════════════════════════════════════
+            // Default Cooldown Template
+            // ═══════════════════════════════════════════════════════════════════════════
+            var cooldownHeader = new Label("Default Cooldown Template");
             cooldownHeader.style.fontSize = 10;
             cooldownHeader.style.unityFontStyleAndWeight = FontStyle.Bold;
             cooldownHeader.style.color = Colors.AccentBlue;
@@ -1031,27 +1227,57 @@ namespace FarEmerald.PlayForge.Extended.Editor
             cooldownHeader.style.marginBottom = 4;
             container.Add(cooldownHeader);
             
-            var autoCooldownRow = new VisualElement { style = { flexDirection = FlexDirection.Row, alignItems = Align.Center } };
-            var autoCooldownToggle = new Toggle("Set default cooldown:");
-            autoCooldownToggle.value = EditorPrefs.GetBool(PREFS_PREFIX + "Ability_AutoCooldown", false);
-            autoCooldownToggle.style.width = 160;
-            autoCooldownToggle.RegisterValueChangedCallback(evt => 
-                EditorPrefs.SetBool(PREFS_PREFIX + "Ability_AutoCooldown", evt.newValue));
-            autoCooldownRow.Add(autoCooldownToggle);
+            var cooldownHint = new Label("Assign a GameplayEffect to use as the default cooldown for new abilities.");
+            cooldownHint.style.fontSize = 9;
+            cooldownHint.style.color = Colors.HintText;
+            cooldownHint.style.whiteSpace = WhiteSpace.Normal;
+            cooldownHint.style.marginBottom = 4;
+            container.Add(cooldownHint);
             
-            var cooldownField = new FloatField();
-            cooldownField.value = EditorPrefs.GetFloat(PREFS_PREFIX + "Ability_DefaultCooldown", 1f);
-            cooldownField.style.width = 60;
+            var cooldownRow = new VisualElement { style = { flexDirection = FlexDirection.Row, alignItems = Align.Center } };
+            
+            var cooldownField = new ObjectField();
+            cooldownField.objectType = typeof(GameplayEffect);
+            cooldownField.style.flexGrow = 1;
+            cooldownField.style.maxWidth = 250;
+            cooldownField.label = "";
+            
+            // Load saved cooldown template
+            var savedCooldownGuid = EditorPrefs.GetString(EffectTemplateRegistry.PREFS_PREFIX + "Cooldown", "");
+            if (!string.IsNullOrEmpty(savedCooldownGuid))
+            {
+                var path = AssetDatabase.GUIDToAssetPath(savedCooldownGuid);
+                if (!string.IsNullOrEmpty(path))
+                    cooldownField.value = AssetDatabase.LoadAssetAtPath<GameplayEffect>(path);
+            }
+            
             cooldownField.RegisterValueChangedCallback(evt =>
-                EditorPrefs.SetFloat(PREFS_PREFIX + "Ability_DefaultCooldown", evt.newValue));
-            autoCooldownRow.Add(cooldownField);
+            {
+                if (evt.newValue != null)
+                {
+                    var path = AssetDatabase.GetAssetPath(evt.newValue);
+                    var guid = AssetDatabase.AssetPathToGUID(path);
+                    EditorPrefs.SetString(EffectTemplateRegistry.PREFS_PREFIX + "Cooldown", guid);
+                }
+                else
+                {
+                    EditorPrefs.DeleteKey(EffectTemplateRegistry.PREFS_PREFIX + "Cooldown");
+                }
+            });
+            cooldownRow.Add(cooldownField);
             
-            var cooldownSuffix = new Label("seconds");
-            cooldownSuffix.style.fontSize = 10;
-            cooldownSuffix.style.color = Colors.HintText;
-            cooldownSuffix.style.marginLeft = 4;
-            autoCooldownRow.Add(cooldownSuffix);
-            container.Add(autoCooldownRow);
+            var clearCooldownBtn = CreateButton("×", () =>
+            {
+                cooldownField.value = null;
+                EditorPrefs.DeleteKey(EffectTemplateRegistry.PREFS_PREFIX + "Cooldown");
+            });
+            clearCooldownBtn.style.width = 22;
+            clearCooldownBtn.style.height = 20;
+            clearCooldownBtn.style.marginLeft = 4;
+            clearCooldownBtn.tooltip = "Clear default cooldown";
+            cooldownRow.Add(clearCooldownBtn);
+            
+            container.Add(cooldownRow);
             
             // Tags Section
             var tagsHeader = new Label("Default Tags");
@@ -1063,6 +1289,23 @@ namespace FarEmerald.PlayForge.Extended.Editor
             container.Add(tagsHeader);
             
             BuildTypeSpecificTemplateTags(container, "Ability");
+        }
+        
+        // Add these static helper methods for accessing default templates from other classes
+        public static GameplayEffect GetDefaultCostTemplate()
+        {
+            var guid = EditorPrefs.GetString(PREFS_PREFIX + "Ability_DefaultCostGUID", "");
+            if (string.IsNullOrEmpty(guid)) return null;
+            var path = AssetDatabase.GUIDToAssetPath(guid);
+            return string.IsNullOrEmpty(path) ? null : AssetDatabase.LoadAssetAtPath<GameplayEffect>(path);
+        }
+
+        public static GameplayEffect GetDefaultCooldownTemplate()
+        {
+            var guid = EditorPrefs.GetString(PREFS_PREFIX + "Ability_DefaultCooldownGUID", "");
+            if (string.IsNullOrEmpty(guid)) return null;
+            var path = AssetDatabase.GUIDToAssetPath(guid);
+            return string.IsNullOrEmpty(path) ? null : AssetDatabase.LoadAssetAtPath<GameplayEffect>(path);
         }
         
         private void BuildEffectSettings(VisualElement container)
@@ -1145,7 +1388,7 @@ namespace FarEmerald.PlayForge.Extended.Editor
             var autoBaseRow = new VisualElement { style = { flexDirection = FlexDirection.Row, alignItems = Align.Center } };
             var autoBaseToggle = new Toggle("Set default base value:");
             autoBaseToggle.value = EditorPrefs.GetBool(PREFS_PREFIX + "Attribute_AutoBaseValue", false);
-            autoBaseToggle.style.width = 160;
+            autoBaseToggle.style.width = 400;
             autoBaseToggle.RegisterValueChangedCallback(evt => 
                 EditorPrefs.SetBool(PREFS_PREFIX + "Attribute_AutoBaseValue", evt.newValue));
             autoBaseRow.Add(autoBaseToggle);
@@ -1234,7 +1477,7 @@ namespace FarEmerald.PlayForge.Extended.Editor
             var autoStackRow = new VisualElement { style = { flexDirection = FlexDirection.Row, alignItems = Align.Center } };
             var autoStackToggle = new Toggle("Set default max stack:");
             autoStackToggle.value = EditorPrefs.GetBool(PREFS_PREFIX + "Item_AutoMaxStack", false);
-            autoStackToggle.style.width = 160;
+            autoStackToggle.style.width = 400;
             autoStackToggle.RegisterValueChangedCallback(evt => 
                 EditorPrefs.SetBool(PREFS_PREFIX + "Item_AutoMaxStack", evt.newValue));
             autoStackRow.Add(autoStackToggle);

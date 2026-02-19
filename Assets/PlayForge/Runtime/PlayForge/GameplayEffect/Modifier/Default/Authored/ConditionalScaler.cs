@@ -11,12 +11,10 @@ namespace FarEmerald.PlayForge
     public class ConditionalScaler : AbstractScaler
     {
         [Tooltip("The condition to evaluate")]
-        public EScalerCondition Condition = EScalerCondition.SourceHasTag;
-        
-        [Header("Condition Parameters")]
+        public EScalerCondition Condition = EScalerCondition.SourceTagCondition;
+
         [Tooltip("Tag to check for tag-based conditions")]
-        public Tag RequiredTag;
-        [FormerlySerializedAs("TagWeight")] public int RequiredWeight;
+        public TagQuery TagCondition;
         
         [Tooltip("Attribute to check for attribute-based conditions")]
         public Attribute CheckAttribute;
@@ -27,13 +25,12 @@ namespace FarEmerald.PlayForge
         [Tooltip("Comparison operator for threshold conditions")]
         public EComparisonOperator Comparison = EComparisonOperator.GreaterThan;
         
-        [Header("Result Scalers")]
         [Tooltip("Scaler to use when condition is TRUE")]
-        [SerializeReference]
+        [ScalerRootAssignment(null, typeof(AbstractCachedScaler))] [SerializeReference] 
         public AbstractScaler TrueScaler;
         
         [Tooltip("Scaler to use when condition is FALSE")]
-        [SerializeReference]
+        [ScalerRootAssignment(null, typeof(AbstractCachedScaler))] [SerializeReference] 
         public AbstractScaler FalseScaler;
         
         public override void Initialize(IAttributeImpactDerivation spec)
@@ -55,15 +52,18 @@ namespace FarEmerald.PlayForge
                 return FalseScaler?.Evaluate(spec) ?? 0f;
             }
         }
-        
+
+        public override bool UseScalingOptions()
+        {
+            return false;
+        }
+
         private bool EvaluateCondition(IAttributeImpactDerivation spec)
         {
             return Condition switch
             {
-                EScalerCondition.SourceHasTag => spec.GetSource().GetWeight(RequiredTag) > RequiredWeight,
-                EScalerCondition.TargetHasTag => spec.GetTarget().GetWeight(RequiredTag) > 1,
-                EScalerCondition.SourceMissingTag => spec.GetSource().GetWeight(RequiredTag) <= 1,
-                EScalerCondition.TargetMissingTag => spec.GetTarget().GetWeight(RequiredTag) <= 1,
+                EScalerCondition.SourceTagCondition => TagCondition.Validate(spec.GetSource().GetTagCache()),
+                EScalerCondition.TargetTagCondition => TagCondition.Validate(spec.GetTarget().GetAppliedTags()),
                 EScalerCondition.SourceAttributeThreshold => CheckAttributeThreshold(spec),
                 EScalerCondition.TargetAttributeThreshold => CheckAttributeThreshold(spec),
                 EScalerCondition.LevelAbove => spec.GetEffectDerivation().GetLevel() > ThresholdValue,
@@ -103,16 +103,10 @@ namespace FarEmerald.PlayForge
     public enum EScalerCondition
     {
         [Tooltip("Source entity has the specified tag")]
-        SourceHasTag,
+        SourceTagCondition,
         
         [Tooltip("Target entity has the specified tag")]
-        TargetHasTag,
-        
-        [Tooltip("Source entity does NOT have the specified tag")]
-        SourceMissingTag,
-        
-        [Tooltip("Target entity does NOT have the specified tag")]
-        TargetMissingTag,
+        TargetTagCondition,
         
         [Tooltip("Source's attribute value meets threshold")]
         SourceAttributeThreshold,

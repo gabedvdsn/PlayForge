@@ -6,7 +6,7 @@ using UnityEngine.UI;
 
 namespace FarEmerald.PlayForge
 {
-    public class AttributeReader : AbstractReader, IAttributeReader
+    public class AttributeReader : AbstractReader
     {
         [Header("Reader")]
         
@@ -43,37 +43,5 @@ namespace FarEmerald.PlayForge
         {
             attribute = attr;
         }
-    }
-
-    public interface ISystemReader
-    {
-        
-        public void Assign(IGameplayAbilitySystem gas);
-    }
-
-    public interface IAttributeReader
-    {
-        public void AssignAttribute(Attribute attr);
-    }
-
-    public interface ITagReader
-    {
-        public void Assign(Tag _target);
-    }
-
-    public interface ITagReadable
-    {
-        public ITagReadableReport Read();
-    }
-
-    public interface ITagReadableReport
-    {
-        
-    }
-
-    public enum EReaderPolicy
-    {
-        OnChange,  // Recommended
-        UseProcessTimIng
     }
 }

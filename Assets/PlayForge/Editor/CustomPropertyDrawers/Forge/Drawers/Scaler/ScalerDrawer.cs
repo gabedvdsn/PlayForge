@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reflection;
 using UnityEditor;
 using UnityEditor.UIElements;
 using UnityEngine;
@@ -63,6 +64,7 @@ namespace FarEmerald.PlayForge.Extended.Editor
             
             foreach (var assembly in AppDomain.CurrentDomain.GetAssemblies())
             {
+                
                 try
                 {
                     foreach (var type in assembly.GetTypes()
@@ -82,7 +84,9 @@ namespace FarEmerald.PlayForge.Extended.Editor
         
         private static string FormatTypeName(string n)
         {
-            if (n.EndsWith("Scaler")) n = n.Substring(0, n.Length - 6);
+            //if (n.EndsWith("Scaler")) n = n.Substring(0, n.Length - 6);
+            n = n.Replace("Scaler", "");
+            n = n.Replace("Cached", "");
             var sb = new System.Text.StringBuilder();
             foreach (char c in n) { if (char.IsUpper(c) && sb.Length > 0) sb.Append(' '); sb.Append(c); }
             return sb.ToString();
@@ -173,7 +177,7 @@ namespace FarEmerald.PlayForge.Extended.Editor
             
             var container = new VisualElement { name = "ScalerContainer" };
             container.style.borderLeftWidth = 3;
-            container.style.borderLeftColor = Colors.AccentPurple;
+            container.style.borderLeftColor = Colors.AssetScaler;
             container.style.borderTopLeftRadius = 4;
             container.style.borderBottomLeftRadius = 4;
             container.style.borderTopRightRadius = 4;
@@ -184,7 +188,7 @@ namespace FarEmerald.PlayForge.Extended.Editor
             container.style.paddingLeft = 6;
             container.style.paddingRight = 6;
             container.style.marginTop = 2;
-            StyleSpecialContainer(container, Colors.AccentPurple);
+            StyleSpecialContainer(container, Colors.AssetScaler);
             root.Add(container);
             
             bool isCollapsed = IsCollapsed(property.propertyPath);
@@ -208,6 +212,37 @@ namespace FarEmerald.PlayForge.Extended.Editor
         // ═══════════════════════════════════════════════════════════════════════════
         // Header
         // ═══════════════════════════════════════════════════════════════════════════
+
+        private Type[] GetScalerTypes(SerializedProperty property)
+        {
+            var sta = property.GetAttribute<ScalerRootAssignment>();
+            if (sta is null) return _scalerTypes;
+            
+            List<Type> types = new List<Type>();
+            types.Add(null);
+            
+            foreach (var type in _scalerTypes)
+            {
+                if (type is null) continue;
+                if (sta.RootType != null && !sta.RootType.IsAssignableFrom(type)) continue;
+                if (sta.AvoidType != null && sta.AvoidType.IsAssignableFrom(type)) continue;
+                types.Add(type);
+            }
+
+            return types.ToArray();
+        }
+
+        private List<string> GetScalerTypeNames(Type[] types)
+        {
+            var typeNames = new List<string>();
+            typeNames.Add("<None>");
+            foreach (var t in types)
+            {
+                if (t is null) continue;
+                typeNames.Add(FormatTypeName(t.Name));
+            }
+            return typeNames;
+        }
         
         private VisualElement CreateHeader(SerializedProperty property, VisualElement root, bool isCollapsed)
         {
@@ -235,7 +270,7 @@ namespace FarEmerald.PlayForge.Extended.Editor
             };
             header.Add(collapseBtn);
             
-            var label = new Label(property.displayName);
+            var label = new Label(GetHeaderLabel(property));
             label.style.flexGrow = 1;
             label.style.color = Colors.LabelText;
             label.style.unityFontStyleAndWeight = FontStyle.Bold;
@@ -253,34 +288,56 @@ namespace FarEmerald.PlayForge.Extended.Editor
             
             var dropdownContainer = CreateDropdownContainer();
             int currentIndex = 0;
+            var scalerTypes = GetScalerTypes(property);
             if (property.managedReferenceValue != null)
             {
-                currentIndex = Array.IndexOf(_scalerTypes, property.managedReferenceValue.GetType());
+                currentIndex = Array.IndexOf(scalerTypes, property.managedReferenceValue.GetType());
                 if (currentIndex < 0) currentIndex = 0;
             }
-            
-            var dropdown = new PopupField<string>(_scalerTypeNames.ToList(), currentIndex, s => s, s => s);
+
+            var scalerNames = GetScalerTypeNames(scalerTypes);
+            var dropdown = new PopupField<string>(scalerNames, currentIndex, s => s, s => s);
             dropdown.style.minWidth = 110;
             
-            int lastIndex = currentIndex;
+            // Capture property path and target for fresh lookup in callback
+            var propPath = property.propertyPath;
+            var targetObject = property.serializedObject.targetObject;
+            
             dropdown.RegisterValueChangedCallback(evt =>
             {
-                int newIndex = Array.IndexOf(_scalerTypeNames, evt.newValue);
-                if (newIndex == lastIndex) return;
-                lastIndex = newIndex;
+                int newIndex = scalerNames.IndexOf(evt.newValue);
+                
+                // Get fresh property reference to avoid stale reference issues
+                if (targetObject == null) return;
+                var so = new SerializedObject(targetObject);
+                var freshProp = so.FindProperty(propPath);
+                if (freshProp == null) return;
+                
+                // Check if actual type change occurred
+                int actualCurrentIndex = 0;
+                if (freshProp.managedReferenceValue != null)
+                {
+                    actualCurrentIndex = Array.IndexOf(scalerTypes, freshProp.managedReferenceValue.GetType());
+                    if (actualCurrentIndex < 0) actualCurrentIndex = 0;
+                }
+                
+                if (newIndex == actualCurrentIndex) return;
+                
+                // Record undo
+                Undo.RecordObject(targetObject, "Change Scaler Type");
                 
                 if (newIndex <= 0)
                 {
-                    property.managedReferenceValue = null;
+                    freshProp.managedReferenceValue = null;
                 }
                 else
                 {
-                    var newScaler = Activator.CreateInstance(_scalerTypes[newIndex]) as AbstractScaler;
-                    property.managedReferenceValue = newScaler;
-                    property.serializedObject.ApplyModifiedProperties();
+                    var newScaler = Activator.CreateInstance(scalerTypes[newIndex]) as AbstractScaler;
+                    freshProp.managedReferenceValue = newScaler;
                     
-                    var lvp = property.FindPropertyRelative("LevelValues");
-                    var maxLvl = property.FindPropertyRelative("MaxLevel");
+                    // Initialize LevelValues array after setting managed reference
+                    var lvp = freshProp.FindPropertyRelative("LevelValues");
+                    var maxLvl = freshProp.FindPropertyRelative("MaxLevel");
                     if (lvp != null && lvp.arraySize == 0)
                     {
                         int size = (maxLvl != null && maxLvl.intValue > 0) ? maxLvl.intValue : 10;
@@ -291,8 +348,9 @@ namespace FarEmerald.PlayForge.Extended.Editor
                     }
                 }
                 
-                property.serializedObject.ApplyModifiedProperties();
-                ScheduleRebuild(root, property);
+                // Single apply at the end
+                so.ApplyModifiedProperties();
+                ScheduleRebuild(root, freshProp);
             });
             
             dropdownContainer.Add(dropdown);
@@ -310,7 +368,11 @@ namespace FarEmerald.PlayForge.Extended.Editor
             content.style.paddingTop = 4;
             
             var scaler = property.managedReferenceValue as AbstractScaler;
-            if (scaler == null) return content;
+            if (scaler == null)
+            {
+                content.Add(CreateHintLabel($"No scaler assigned. {GetHeaderLabel(property)} will use magnitude value only."));
+                return content;
+            }
             
             var type = scaler.GetType();
             
@@ -418,7 +480,7 @@ namespace FarEmerald.PlayForge.Extended.Editor
             {
                 ELevelConfig.LockToLevelProvider => "Lock",
                 ELevelConfig.Unlocked => "Unlk",
-                ELevelConfig.Partitioned => "Part",
+                ELevelConfig.Clamped => "Part",
                 _ => "?"
             };
             
@@ -462,7 +524,7 @@ namespace FarEmerald.PlayForge.Extended.Editor
             // Level mode badge
             var modeBadge = new Label(modeText);
             modeBadge.style.fontSize = 9;
-            modeBadge.style.color = isLinked ? Colors.AccentGreen : Colors.AccentPurple;
+            modeBadge.style.color = isLinked ? Colors.AccentGreen : Colors.AssetScaler;
             modeBadge.style.backgroundColor = isLinked 
                 ? new Color(0.3f, 0.5f, 0.3f, 0.3f) 
                 : new Color(0.4f, 0.3f, 0.5f, 0.3f);
@@ -560,7 +622,7 @@ namespace FarEmerald.PlayForge.Extended.Editor
             {
                 ELevelConfig.LockToLevelProvider => "Lock to Level Provider: Uses the linked provider's level range",
                 ELevelConfig.Unlocked => "Unlocked: Uses its own max level setting",
-                ELevelConfig.Partitioned => "Partitioned: Uses minimum of max level and provider's current level",
+                ELevelConfig.Clamped => "Partitioned: Uses minimum of max level and provider's current level",
                 _ => ""
             };
         }
@@ -990,7 +1052,7 @@ namespace FarEmerald.PlayForge.Extended.Editor
             
             if (isActive)
             {
-                tab.style.backgroundColor = Colors.AccentPurple;
+                tab.style.backgroundColor = Colors.AssetScaler;
                 tab.style.color = Color.white;
             }
             else
@@ -1302,12 +1364,12 @@ namespace FarEmerald.PlayForge.Extended.Editor
             c.style.borderBottomWidth = 1;
             c.style.borderLeftWidth = 1;
             c.style.borderRightWidth = 1;
-            c.style.borderTopColor = Colors.AccentPurple;
-            c.style.borderBottomColor = Colors.AccentPurple;
-            c.style.borderLeftColor = Colors.AccentPurple;
-            c.style.borderRightColor = Colors.AccentPurple;
+            c.style.borderTopColor = Colors.AssetScaler;
+            c.style.borderBottomColor = Colors.AssetScaler;
+            c.style.borderLeftColor = Colors.AssetScaler;
+            c.style.borderRightColor = Colors.AssetScaler;
             c.style.backgroundColor = new Color(0.2f, 0.18f, 0.22f, 0.8f);
-            c.Add(new Label("◆") { style = { color = Colors.AccentPurple, fontSize = 10, marginRight = 4 } });
+            c.Add(new Label("◆") { style = { color = Colors.AssetScaler, fontSize = 10, marginRight = 4 } });
             return c;
         }
         

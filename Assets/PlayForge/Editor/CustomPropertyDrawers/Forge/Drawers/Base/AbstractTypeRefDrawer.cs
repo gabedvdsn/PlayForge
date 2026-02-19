@@ -1,109 +1,136 @@
 ﻿using System;
 using System.Linq;
 using UnityEditor;
+using UnityEngine;
 using UnityEngine.UIElements;
 
 namespace FarEmerald.PlayForge.Extended.Editor
 {
     /// <summary>
-    /// Type picker drawer base class for selecting concrete types that implement/inherit from T.
-    /// Creates instances of the selected type when assigned.
+    /// Base drawer for [SerializeReference] fields with abstract/interface types.
+    /// Provides a type picker dropdown that creates instances of selected concrete types.
+    /// 
+    /// Use this when you only need type selection without inline field editing.
+    /// For inline field editing with collapse/expand, use AbstractGenericDrawer.
     /// </summary>
-    public abstract class AbstractTypeRefDrawer<T> : AbstractRefDrawer<Type>
-        where T : class
+    public abstract class AbstractTypeRefDrawer<T> : AbstractRefDrawer<Type> where T : class
     {
-        protected Type target;
+        // ═══════════════════════════════════════════════════════════════════════════
+        // State
+        // ═══════════════════════════════════════════════════════════════════════════
+        
+        protected Type CurrentType;
 
-        /// <summary>
-        /// Generates an instance of the currently selected type.
-        /// </summary>
-        public virtual T Generate()
-        {
-            if (target != null) 
-                return Activator.CreateInstance(target) as T;
-            return null;
-        }
+        // ═══════════════════════════════════════════════════════════════════════════
+        // Virtual Configuration
+        // ═══════════════════════════════════════════════════════════════════════════
+        
+        /// <summary>Override to filter which types appear in the dropdown.</summary>
+        protected virtual bool FilterType(Type type) => true;
+        
+        /// <summary>Override to customize type name cleaning (e.g., removing suffixes).</summary>
+        protected virtual string CleanTypeName(string typeName) => typeName;
 
+        // ═══════════════════════════════════════════════════════════════════════════
+        // AbstractRefDrawer Implementation
+        // ═══════════════════════════════════════════════════════════════════════════
+        
         protected override Type[] GetEntries()
         {
-            return TypePickerCache.GetConcreteTypesAssignableTo<T>().ToArray();
+            return TypePickerCache.GetConcreteTypesAssignableTo<T>()
+                .Where(FilterType)
+                .OrderBy(t => t.Name)
+                .ToArray();
         }
 
         protected override void SetValue(SerializedProperty prop, Type value)
         {
-            target = value;
-
-            if (value != null)
-            {
-                var instance = Activator.CreateInstance(value) as T;
-                prop.managedReferenceValue = instance;
-            }
-            else
-            {
-                prop.managedReferenceValue = null;
-            }
-        }
-
-        protected override bool CompareTo(Type value, Type other)
-        {
-            return value == other;
-        }
-        
-        protected override string GetStringValue(SerializedProperty prop, Type value)
-        {
-            return ObjectNames.NicifyVariableName(value?.Name) ?? "<None>";
+            CurrentType = value;
+            prop.managedReferenceValue = value != null 
+                ? Activator.CreateInstance(value) as T 
+                : null;
+            
+            prop.serializedObject.ApplyModifiedProperties();
+            OnTypeChanged(prop, value);
+            Repaint();
         }
 
         protected override Type GetCurrentValue(SerializedProperty prop)
         {
-            if (target != null) 
-                return target;
+            // Return cached if valid
+            if (CurrentType != null) 
+                return CurrentType;
 
+            // Try from current instance
             if (prop.managedReferenceValue != null)
             {
-                target = prop.managedReferenceValue.GetType();
-                return target;
+                CurrentType = prop.managedReferenceValue.GetType();
+                return CurrentType;
             }
 
-            string fullTypeName = prop.managedReferenceFullTypename;
-            if (!string.IsNullOrEmpty(fullTypeName))
-            {
-                var parts = fullTypeName.Split(' ');
-                if (parts.Length == 2)
-                {
-                    var typeName = parts[1];
-                    target = AppDomain.CurrentDomain.GetAssemblies()
-                        .SelectMany(a => a.GetTypes())
-                        .FirstOrDefault(t => t.FullName == typeName);
+            // Try to parse from serialized type name
+            CurrentType = ParseTypeFromProperty(prop);
+            if (CurrentType != null)
+                return CurrentType;
 
-                    return target;
-                }
-            }
-
-            if (target == null)
+            // Apply default if configured
+            var defaultType = GetDefault(prop);
+            if (defaultType != null)
             {
-                target = GetDefault();
-                if (target != null) 
-                    SetValue(prop, target);
+                SetValue(prop, defaultType);
+                return defaultType;
             }
 
             return null;
         }
+
+        protected override bool CompareTo(Type value, Type other) => value == other;
+        
+        protected override string GetStringValue(SerializedProperty prop, Type value)
+        {
+            if (value == null) return "<None>";
+            return ObjectNames.NicifyVariableName(CleanTypeName(value.Name));
+        }
         
         protected override Label GetLabel(SerializedProperty prop, Type value)
         {
-            if (prop.isArray) return null;
-            return new Label(prop.displayName);
+            return IsInList(prop) ? null : new Label(prop.displayName);
         }
 
-        protected override bool AcceptOpen(SerializedProperty prop)
+        protected override bool AcceptOpen(SerializedProperty prop) => false;
+        protected override bool AcceptAdd() => false;
+        protected override bool AcceptClear(SerializedProperty prop) => GetCurrentValue(prop) != null;
+
+        protected override void ClearReferenceValue(SerializedProperty prop)
         {
-            return GetCurrentValue(prop) != null;
+            prop.managedReferenceValue = null;
+        }
+
+        // ═══════════════════════════════════════════════════════════════════════════
+        // Extension Points
+        // ═══════════════════════════════════════════════════════════════════════════
+        
+        /// <summary>Called after a new type is selected. Override for additional setup.</summary>
+        protected virtual void OnTypeChanged(SerializedProperty prop, Type newType) { }
+
+        // ═══════════════════════════════════════════════════════════════════════════
+        // Helpers
+        // ═══════════════════════════════════════════════════════════════════════════
+        
+        private Type ParseTypeFromProperty(SerializedProperty prop)
+        {
+            string fullTypeName = prop.managedReferenceFullTypename;
+            if (string.IsNullOrEmpty(fullTypeName)) return null;
+
+            var parts = fullTypeName.Split(' ');
+            if (parts.Length != 2) return null;
+
+            return AppDomain.CurrentDomain.GetAssemblies()
+                .SelectMany(a => a.GetTypes())
+                .FirstOrDefault(t => t.FullName == parts[1]);
         }
         
-        protected override bool AcceptAdd()
-        {
-            return false;
-        }
+        private static bool IsInList(SerializedProperty prop) => 
+            prop.propertyPath.Contains(".Array.data[");
     }
 }

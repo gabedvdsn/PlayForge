@@ -15,7 +15,7 @@ namespace FarEmerald.PlayForge
         /// When the contact attribute changes, related attributes need recalculation.
         /// </summary>
         public abstract void Regulate(Attribute attribute, AttributeModificationRule rules);
-        public abstract void Evaluate(CachedAttributeValue value);
+        public abstract float Evaluate(IGameplayAbilitySystem gas, AttributeBlueprint blueprint, IReadOnlyDictionary<Attribute, CachedAttributeValue> cache);
     }
 
     /// <summary>
@@ -38,7 +38,7 @@ namespace FarEmerald.PlayForge
         /// <summary>
         /// When 'attr' changes, get the list of attributes that need re-initialization.
         /// </summary>
-        public bool RelatedAttributes(Attribute attr, out List<Attribute> related)
+        public bool TryGetRelatedAttributes(Attribute attr, out List<Attribute> related)
         {
             return matrix.TryGetValue(attr, out related);
         }

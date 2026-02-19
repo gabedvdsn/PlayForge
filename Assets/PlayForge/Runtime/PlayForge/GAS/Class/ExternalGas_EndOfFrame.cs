@@ -112,7 +112,7 @@ namespace FarEmerald.PlayForge
         /// Mark this entity as dead. Does NOT destroy immediately.
         /// The frame will complete normally, then destruction occurs.
         /// </summary>
-        public void MarkDead()
+        public virtual void MarkDead()
         {
             if (_isDead) return;
             _isDead = true;
@@ -134,12 +134,11 @@ namespace FarEmerald.PlayForge
 
         /// <summary>
         /// Called after frame is fully complete. Override for custom cleanup.
+        /// By default, ProcessControl will already attempt to use custom cleanup logic via the associated Process
         /// </summary>
         protected virtual void HandleDestruction()
         {
-            if (ProcessControl.Instance.Terminate(Relay.CacheIndex)) return;
-            
-            // Nothing else to do
+            if (ProcessControl.Instance.TerminateImmediate(Relay.CacheIndex)) return;
         }
         
         // ═══════════════════════════════════════════════════════════════════════════

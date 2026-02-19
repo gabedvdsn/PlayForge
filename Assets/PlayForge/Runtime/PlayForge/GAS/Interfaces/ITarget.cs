@@ -3,7 +3,7 @@ using JetBrains.Annotations;
 
 namespace FarEmerald.PlayForge
 {
-    public interface ITarget : ITagHandler
+    public interface ITarget : ITagHandler, IValidationReady
     {
         public void CommunicateTargetedIntent(AbstractGameplayMonoProcess entity);
         public List<Tag> GetAffiliation();
@@ -17,5 +17,7 @@ namespace FarEmerald.PlayForge
         public SystemComponentData AsData() => new SystemComponentData(this);
         public IGameplayAbilitySystem AsGAS() => this is IGameplayAbilitySystem gas ? gas : null;
         public AbstractTransformPacket AsTransform();
+        public void MarkDead();
+        public bool IsDead { get; }
     }
 }

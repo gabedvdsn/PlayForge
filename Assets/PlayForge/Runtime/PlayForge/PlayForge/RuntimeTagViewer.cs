@@ -236,7 +236,7 @@ namespace FarEmerald.PlayForge.Extended.Editor
         
         private void DrawTagRow(GameplayAbilitySystem system, Tag tag)
         {
-            int weight = system.GetWeight(tag);
+            int weight = system.GetTagWeight(tag);
             
             EditorGUILayout.BeginHorizontal();
             

@@ -14,8 +14,8 @@ namespace FarEmerald.PlayForge
         public int GetMaxLevel();
         public void SetLevel(int level);
         public string GetName();
-        public GameplayEffectDuration GetLongestDurationFor(Tag lookForTag);
-        public GameplayEffectDuration GetLongestDurationFor(List<Tag> lookForTags);
+        public EffectDurationRemaining GetLongestDurationFor(Tag lookForTag);
+        public EffectDurationRemaining GetLongestDurationFor(List<Tag> lookForTags);
     }
 
     public struct SystemComponentData

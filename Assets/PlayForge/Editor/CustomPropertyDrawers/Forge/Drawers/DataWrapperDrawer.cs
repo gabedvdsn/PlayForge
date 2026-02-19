@@ -22,9 +22,12 @@ namespace FarEmerald.PlayForge.Extended.Editor
             var typeProp = property.FindPropertyRelative("Type");
             
             var stringProp = property.FindPropertyRelative("stringValue");
+            var boolProp = property.FindPropertyRelative("boolValue");
             var intProp = property.FindPropertyRelative("intValue");
             var floatProp = property.FindPropertyRelative("floatValue");
             var objectProp = property.FindPropertyRelative("objectValue");
+            var monoProp = property.FindPropertyRelative("monoBehaviourValue");
+            var soProp = property.FindPropertyRelative("scriptableObjectValue");
             
             var tagProp = property.FindPropertyRelative("tagValue");
             var attributeProp = property.FindPropertyRelative("attributeValue");
@@ -78,13 +81,13 @@ namespace FarEmerald.PlayForge.Extended.Editor
 
             // Initial draw
             UpdateValueField(valueContainer, (EDataWrapperType)typeProp.enumValueIndex,
-                stringProp, intProp, floatProp, objectProp, tagProp, attributeProp, effectProp, abilityProp, entityProp);
+                stringProp, boolProp, intProp, floatProp, objectProp, monoProp, soProp, tagProp, attributeProp, effectProp, abilityProp, entityProp);
 
             // Update value field when type changes
             typeField.RegisterValueChangedCallback(evt =>
             {
                 UpdateValueField(valueContainer, (EDataWrapperType)evt.newValue,
-                    stringProp, intProp, floatProp, objectProp, tagProp, attributeProp, effectProp, abilityProp, entityProp);
+                    stringProp, boolProp, intProp, floatProp, objectProp, monoProp, soProp, tagProp, attributeProp, effectProp, abilityProp, entityProp);
             });
 
             return root;
@@ -94,9 +97,12 @@ namespace FarEmerald.PlayForge.Extended.Editor
             VisualElement container,
             EDataWrapperType type,
             SerializedProperty stringProp,
+            SerializedProperty boolProp,
             SerializedProperty intProp,
             SerializedProperty floatProp,
             SerializedProperty objectProp,
+            SerializedProperty monoProp,
+            SerializedProperty soProp,
             SerializedProperty tagProp,
             SerializedProperty attributeProp,
             SerializedProperty effectProp,
@@ -106,9 +112,10 @@ namespace FarEmerald.PlayForge.Extended.Editor
         {
             container.Clear();
 
-            VisualElement valueField = type switch
+            var valueField = type switch
             {
                 EDataWrapperType.String => CreateStringField(stringProp),
+                EDataWrapperType.Bool => CreateBoolField(boolProp),
                 EDataWrapperType.Int => CreateIntField(intProp),
                 EDataWrapperType.Float => CreateFloatField(floatProp),
                 EDataWrapperType.Tag => CreatePropertyField(tagProp),
@@ -117,6 +124,8 @@ namespace FarEmerald.PlayForge.Extended.Editor
                 EDataWrapperType.Ability => CreatePropertyField(abilityProp),
                 EDataWrapperType.Entity => CreatePropertyField(entityProp),
                 EDataWrapperType.Object => CreateObjectField(objectProp, typeof(Object)),
+                EDataWrapperType.ScriptableObject => CreateObjectField(monoProp, typeof(ScriptableObject)),
+                EDataWrapperType.MonoBehaviour => CreateObjectField(soProp, typeof(MonoBehaviour)),
                 _ => new Label("Select a type")
             };
 
@@ -127,6 +136,13 @@ namespace FarEmerald.PlayForge.Extended.Editor
         private VisualElement CreateStringField(SerializedProperty prop)
         {
             var field = new TextField { bindingPath = prop.propertyPath };
+            field.BindProperty(prop);
+            return field;
+        }
+        
+        private VisualElement CreateBoolField(SerializedProperty prop)
+        {
+            var field = new Toggle { bindingPath = prop.propertyPath };
             field.BindProperty(prop);
             return field;
         }

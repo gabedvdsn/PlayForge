@@ -16,10 +16,16 @@ namespace FarEmerald.PlayForge.Extended.Editor
         // ═══════════════════════════════════════════════════════════════════════════
         // Header Configuration (IMGUI Header)
         // ═══════════════════════════════════════════════════════════════════════════
-        
+
+        protected override BaseForgeLinkProvider GetAsset()
+        {
+            return null;
+        }
         protected override string GetDisplayName()
         {
-            return !string.IsNullOrEmpty(attribute?.Name) ? attribute.Name : "Unnamed Attribute";
+            string _name = !string.IsNullOrEmpty(attribute.GetName()) ? attribute.Name : "Unnamed Attribute";
+            if (!string.IsNullOrEmpty(attribute.Abbreviation)) _name += $" ({attribute.Abbreviation})";
+            return _name;
         }
         
         protected override string GetDisplayDescription()
@@ -31,59 +37,48 @@ namespace FarEmerald.PlayForge.Extended.Editor
         
         protected override Texture2D GetHeaderIcon()
         {
+            if (attribute.Textures != null && attribute.Textures.Count > 0)
+            {
+                var tex = attribute.Textures[0].Texture;
+                if (tex != null) return tex;
+            }
             return m_AttributeIcon;
         }
         
         protected override string GetAssetTypeLabel() => "ATTRIBUTE";
         
-        protected override Color GetAssetTypeColor() => new Color(0.4f, 0.6f, 1f); // Blue
+        protected override Color GetAssetTypeColor() => Colors.GetAssetColor(typeof(Attribute));
         
         protected override string GetDocumentationUrl() => "https://docs.playforge.dev/attributes";
         
         protected override bool ShowVisualizeButton => true;
         protected override bool ShowImportButton => true;
-        
-        protected override void OnVisualize()
+        protected override void RebuildLevelSourceContent()
         {
-            // TODO: Open attribute visualizer (show usage across attribute sets)
-            Debug.Log($"Visualize attribute: {attribute.name}");
+            
         }
-        
-        protected override void OnImport()
+        protected override void RebuildLevelingContent()
         {
-            // Open asset picker for attributes
-            EditorGUIUtility.ShowObjectPicker<Attribute>(null, false, "", GUIUtility.GetControlID(FocusType.Passive));
+            
         }
 
         // ═══════════════════════════════════════════════════════════════════════════
         // Inspector GUI
         // ═══════════════════════════════════════════════════════════════════════════
 
-        public override VisualElement CreateInspectorGUI()
+        protected override bool AssignLocalAsset()
         {
-            if (serializedObject.isEditingMultipleObjects) return null;
-            
             attribute = serializedObject.targetObject as Attribute;
-            if (attribute == null) return null;
-
-            // Build UI programmatically
-            root = CreateRoot();
-            
-            // ScrollView for sections (header is in OnHeaderGUI)
-            var scrollView = CreateScrollView();
-            root.Add(scrollView);
-            
+            return attribute is not null;
+        }
+        
+        protected override void BuildInspectorContent(VisualElement parent)
+        {
             // Sections inside ScrollView
-            BuildDefinitionSection(scrollView);
-            BuildUsageSection(scrollView);
-            
-            // Bottom padding
-            scrollView.Add(CreateBottomPadding());
-            
-            // Bind all properties
-            root.Bind(serializedObject);
-            
-            return root;
+            BuildDefinitionSection(parent);
+            BuildLocalDataSection(parent);
+            BuildUsageSection(parent);
+
         }
 
         // ═══════════════════════════════════════════════════════════════════════════
@@ -96,8 +91,36 @@ namespace FarEmerald.PlayForge.Extended.Editor
             {
                 Name = "Definition",
                 Title = "Definition",
-                AccentColor = Colors.AccentBlue,
-                HelpUrl = "https://docs.playforge.dev/attributes/definition"
+                AccentColor = GetAssetTypeColor(),
+                HelpUrl = "https://docs.playforge.dev/attributes/definition",
+                
+                SerializedObject = serializedObject,
+                PropertyPaths = new []{nameof(Attribute.Name), nameof(Attribute.Abbreviation), nameof(Attribute.Description), nameof(Attribute.Textures)},
+                OnImportComplete = () =>
+                {
+                    serializedObject.Update();
+                    UpdateHeader();
+                    MarkDirty(attribute);
+                    Repaint();
+                },
+                OnClearComplete = () =>
+                {
+                    serializedObject.Update();
+                    UpdateHeader();
+                    MarkDirty(attribute);
+                    Repaint();
+                },
+                GetDefaultValue = path =>
+                {
+                    return path switch
+                    {
+                        nameof(Attribute.Name) => $"Unnamed Attribute",
+                        nameof(Attribute.Abbreviation) => string.Empty,
+                        nameof(Attribute.Description) => string.Empty,
+                        nameof(Attribute.Textures) => null,
+                        _ => null
+                    };
+                }
             });
             parent.Add(section.Section);
             
@@ -110,20 +133,75 @@ namespace FarEmerald.PlayForge.Extended.Editor
             {
                 attribute.Name = nameField.value;
                 MarkDirty(attribute);
+                UpdateHeader();
                 Repaint(); // Refresh IMGUI header
             });
             content.Add(nameField);
             
+            // Name field
+            var shortNameField = CreateTextField("Abbreviation", "Abbreviation");
+            shortNameField.value = attribute.Abbreviation;
+            shortNameField.RegisterCallback<FocusOutEvent>(_ =>
+            {
+                attribute.Abbreviation = shortNameField.value;
+                MarkDirty(attribute);
+                UpdateHeader();
+                Repaint(); // Refresh IMGUI header
+            });
+            content.Add(shortNameField);
+            
             // Description field
-            var descField = CreateTextField("Description", "Description", multiline: true, minHeight: 60);
+            var descField = CreateTextField("Description", "Description", multiline: true, minHeight: 18);
             descField.value = attribute.Description;
             descField.RegisterCallback<FocusOutEvent>(_ =>
             {
                 attribute.Description = descField.value;
                 MarkDirty(attribute);
+                UpdateHeader();
                 Repaint(); // Refresh IMGUI header
             });
             content.Add(descField);
+
+            var textures = serializedObject.FindProperty(nameof(Attribute.Textures));
+            var texturesField = CreatePropertyField(textures, "Textures", "Textures");
+            texturesField.RegisterCallback<SerializedPropertyChangeEvent>(_ =>
+            {
+                MarkDirty(attribute);
+                UpdateHeader();
+                Repaint(); // Refresh IMGUI header
+            });
+            content.Add(texturesField);
+        }
+        
+        private void BuildLocalDataSection(VisualElement parent)
+        {
+            var section = CreateCollapsibleSection(new SectionConfig
+            {
+                Name = "LocalData",
+                Title = "Local Data",
+                AccentColor = GetAssetTypeColor(),
+                HelpUrl = "https://docs.playforge.dev/effects/localdata",
+
+                SerializedObject = serializedObject,
+                PropertyPaths = new[] { nameof(Attribute.LocalData) },
+                OnImportComplete = () =>
+                {
+                    serializedObject.Update();
+                    UpdateHeader();
+                    MarkDirty(attribute);
+                    Repaint();
+                },
+                OnClearComplete = () =>
+                {
+                    serializedObject.Update();
+                    UpdateHeader();
+                    MarkDirty(attribute);
+                    Repaint();
+                }
+            });
+            parent.Add(section.Section);
+            
+            section.Content.Add(CreatePropertyField(serializedObject.FindProperty(nameof(Attribute.LocalData)), "LocalData", ""));
         }
 
         // ═══════════════════════════════════════════════════════════════════════════
@@ -136,7 +214,7 @@ namespace FarEmerald.PlayForge.Extended.Editor
             {
                 Name = "Usage",
                 Title = "Usage",
-                AccentColor = Colors.AccentGray,
+                AccentColor = GetAssetTypeColor(),
                 HelpUrl = "https://docs.playforge.dev/attributes/usage",
                 IncludeButtons = new[] { false, false, false }
             });

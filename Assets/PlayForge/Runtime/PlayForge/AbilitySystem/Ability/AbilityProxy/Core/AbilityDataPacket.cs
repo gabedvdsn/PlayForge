@@ -9,6 +9,7 @@ namespace FarEmerald.PlayForge
     public class AbilityDataPacket : ProcessDataPacket
     {
         public IEffectOrigin Spec;
+        public bool InUse = true;
 
         private AbilityDataPacket(IEffectOrigin spec)
         {

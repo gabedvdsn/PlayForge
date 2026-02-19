@@ -457,7 +457,15 @@ MonoBehaviour:
   ProcessTiming: 4
   PriorityMethod: 1
   ProcessStepPriority: 0
-  Data: {fileID: 11400000, guid: e80a65f3fa4c08249b6cabee7b213fde, type: 2}
+  Instantiator:
+    rid: 6412379548630122574
+  Data: {fileID: 11400000, guid: a4c7d477f80c70d4780c1209646da7c3, type: 2}
+  references:
+    version: 2
+    RefIds:
+    - rid: 6412379548630122574
+      type: {class: PooledMonoProcessInstantiator, ns: FarEmerald.PlayForge, asm: Assembly-CSharp}
+      data: 
 --- !u!1 &313751755
 GameObject:
   m_ObjectHideFlags: 0
@@ -2796,6 +2804,7 @@ GameObject:
   - component: {fileID: 2104323618}
   - component: {fileID: 2104323617}
   - component: {fileID: 2104323616}
+  - component: {fileID: 2104323620}
   m_Layer: 0
   m_Name: w
   m_TagString: Untagged
@@ -2848,7 +2857,7 @@ MeshRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 2100000, guid: e98213a8c8307bf4585fff7a346326ee, type: 2}
+  - {fileID: 2100000, guid: 15c4396905913b142a9196870b01188d, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
@@ -2893,6 +2902,29 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &2104323620
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2104323615}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c09053541b0a1354182645ca22a0029c, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  ProcessLifecycle: 0
+  ProcessTiming: 2
+  PriorityMethod: 1
+  ProcessStepPriority: 21
+  Instantiator:
+    rid: -2
+  references:
+    version: 2
+    RefIds:
+    - rid: -2
+      type: {class: , ns: , asm: }
 --- !u!1001 &4539500097892765464
 PrefabInstance:
   m_ObjectHideFlags: 0

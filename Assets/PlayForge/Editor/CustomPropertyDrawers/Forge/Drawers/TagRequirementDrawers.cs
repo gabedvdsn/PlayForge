@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reflection;
 using UnityEditor;
 using UnityEditor.UIElements;
 using UnityEngine;
@@ -10,58 +11,114 @@ using static FarEmerald.PlayForge.Extended.Editor.ForgeDrawerStyles;
 namespace FarEmerald.PlayForge.Extended.Editor
 {
     // ═══════════════════════════════════════════════════════════════════════════════
-    // EffectTagRequirements Drawer - Polished collapsible UI with import support
+    // Abstract Base Drawer for Tag Requirements
     // ═══════════════════════════════════════════════════════════════════════════════
     
-    [CustomPropertyDrawer(typeof(EffectTagRequirements))]
-    public class TagRequirementsDrawer : PropertyDrawer
+    public abstract class AbstractTagRequirementsDrawer<T> : PropertyDrawer where T : AbstractTagRequirements
     {
-        private static Dictionary<string, bool> _collapsedStates = new Dictionary<string, bool>();
-        private static HashSet<string> _rebuildingProperties = new HashSet<string>();
+        private static readonly Dictionary<string, bool> CollapsedStates = new();
+        private static readonly HashSet<string> RebuildingProperties = new();
         
-        private static bool IsCollapsed(string propertyPath) => !_collapsedStates.TryGetValue(propertyPath, out bool c) || c;
-        private static void SetCollapsed(string propertyPath, bool collapsed) => _collapsedStates[propertyPath] = collapsed;
+        // ═══════════════════════════════════════════════════════════════════════════
+        // Abstract Configuration - Override in concrete drawers
+        // ═══════════════════════════════════════════════════════════════════════════
+        
+        /// <summary>Main accent color for the container border</summary>
+        protected abstract Color AccentColor { get; }
+        
+        /// <summary>Text shown in the type indicator badge</summary>
+        protected abstract string TypeIndicatorText { get; }
+        
+        /// <summary>Returns the subsection configurations: (fieldName, displayName, shortName, tooltip, color)</summary>
+        protected abstract IEnumerable<(string fieldName, string displayName, string shortName, string tooltip, Color color)> GetSubsectionConfigs();
+        
+        /// <summary>Shows the import window and calls onImport when user selects a source</summary>
+        protected abstract void ShowImportWindow(SerializedProperty property, VisualElement root, Action<T> onImport);
+        
+        /// <summary>Copies data from source to property</summary>
+        protected abstract void CopyFromSource(SerializedProperty property, T source, VisualElement root);
+        
+        // ═══════════════════════════════════════════════════════════════════════════
+        // Collapse State Management
+        // ═══════════════════════════════════════════════════════════════════════════
+        
+        protected static bool IsCollapsed(string propertyPath) => 
+            !CollapsedStates.TryGetValue(propertyPath, out bool c) || c;
+        
+        protected static void SetCollapsed(string propertyPath, bool collapsed) => 
+            CollapsedStates[propertyPath] = collapsed;
+        
+        // ═══════════════════════════════════════════════════════════════════════════
+        // Entry Point
+        // ═══════════════════════════════════════════════════════════════════════════
         
         public override VisualElement CreatePropertyGUI(SerializedProperty property)
         {
             var root = new VisualElement { name = "TagRequirementsRoot" };
             root.style.marginBottom = 4;
-            BuildRequirementsUI(root, property);
+            BuildUI(root, property);
             return root;
         }
         
-        private void ScheduleRebuild(VisualElement root, SerializedProperty property)
+        protected void ScheduleRebuild(VisualElement root, SerializedProperty property)
         {
             var propPath = property.propertyPath;
             var targetObject = property.serializedObject.targetObject;
-            if (_rebuildingProperties.Contains(propPath)) return;
-            _rebuildingProperties.Add(propPath);
+            if (RebuildingProperties.Contains(propPath)) return;
+            RebuildingProperties.Add(propPath);
             root.schedule.Execute(() =>
             {
-                _rebuildingProperties.Remove(propPath);
+                RebuildingProperties.Remove(propPath);
                 if (targetObject == null) return;
                 var so = new SerializedObject(targetObject);
                 var freshProp = so.FindProperty(propPath);
-                if (freshProp != null) BuildRequirementsUI(root, freshProp);
+                if (freshProp != null) BuildUI(root, freshProp);
             });
         }
         
-        private void BuildRequirementsUI(VisualElement root, SerializedProperty property)
+        // ═══════════════════════════════════════════════════════════════════════════
+        // Main UI Builder
+        // ═══════════════════════════════════════════════════════════════════════════
+        
+        private void BuildUI(VisualElement root, SerializedProperty property)
         {
             root.Clear();
             if (property?.serializedObject?.targetObject == null) return;
             
             bool isCollapsed = IsCollapsed(property.propertyPath);
+            var nameProp = property.FindPropertyRelative("Name");
+            string customName = nameProp?.stringValue ?? "";
             
+            // Gather subsection data
+            var subsections = GetSubsectionConfigs()
+                .Select(cfg => (cfg, GetRequirementCounts(property.FindPropertyRelative(cfg.fieldName))))
+                .ToList();
+            
+            // Main container
+            var container = CreateMainContainer(isCollapsed);
+            root.Add(container);
+            
+            // Header
+            container.Add(CreateHeader(property, root, isCollapsed, customName, subsections));
+            
+            // Content
+            if (isCollapsed)
+                container.Add(CreateCollapsedSummary(subsections));
+            else
+                container.Add(CreateExpandedContent(property, root, customName, nameProp, subsections));
+        }
+        
+        private VisualElement CreateMainContainer(bool isCollapsed)
+        {
             var container = new VisualElement { name = "RequirementsContainer" };
             container.style.borderLeftWidth = 3;
-            container.style.borderLeftColor = Colors.AccentCyan;
+            container.style.borderLeftColor = AccentColor;
             container.style.borderTopWidth = 1;
-            container.style.borderTopColor = new Color(Colors.AccentCyan.r, Colors.AccentCyan.g, Colors.AccentCyan.b, 0.5f);
+            container.style.borderTopColor = new Color(AccentColor.r, AccentColor.g, AccentColor.b, 0.5f);
             container.style.borderRightWidth = 1;
-            container.style.borderRightColor = new Color(Colors.AccentCyan.r, Colors.AccentCyan.g, Colors.AccentCyan.b, 0.5f);
+            container.style.borderRightColor = new Color(AccentColor.r, AccentColor.g, AccentColor.b, 0.5f);
             container.style.borderBottomWidth = 1;
-            container.style.borderBottomColor = new Color(Colors.AccentCyan.r, Colors.AccentCyan.g, Colors.AccentCyan.b, 0.5f);
+            container.style.borderBottomColor = new Color(AccentColor.r, AccentColor.g, AccentColor.b, 0.5f);
             container.style.borderTopLeftRadius = 4;
             container.style.borderBottomLeftRadius = 4;
             container.style.borderTopRightRadius = 4;
@@ -72,262 +129,42 @@ namespace FarEmerald.PlayForge.Extended.Editor
             container.style.paddingLeft = 6;
             container.style.paddingRight = 6;
             container.style.marginTop = 2;
-            root.Add(container);
-            
-            container.Add(CreateHeader(property, root, isCollapsed));
-            
-            if (isCollapsed)
-                container.Add(CreateCollapsedSummary(property));
-            else
-                container.Add(CreateContent(property, root));
+            return container;
         }
         
-        private VisualElement CreateHeader(SerializedProperty property, VisualElement root, bool isCollapsed)
+        // ═══════════════════════════════════════════════════════════════════════════
+        // Header
+        // ═══════════════════════════════════════════════════════════════════════════
+        
+        private VisualElement CreateHeader(
+            SerializedProperty property, 
+            VisualElement root, 
+            bool isCollapsed, 
+            string customName,
+            List<((string fieldName, string displayName, string shortName, string tooltip, Color color) cfg, (int req, int avoid) counts)> subsections)
         {
             var header = new VisualElement { name = "RequirementsHeader" };
             header.style.flexDirection = FlexDirection.Row;
             header.style.alignItems = Align.Center;
             header.style.marginBottom = isCollapsed ? 0 : 4;
             
+            // Collapse button
             var collapseBtn = new Button { text = isCollapsed ? Icons.ChevronRight : Icons.ChevronDown };
             collapseBtn.tooltip = isCollapsed ? "Expand" : "Collapse";
-            collapseBtn.style.width = 18; collapseBtn.style.height = 18; collapseBtn.style.marginRight = 4;
-            collapseBtn.style.fontSize = 8; collapseBtn.style.paddingLeft = 0; collapseBtn.style.paddingRight = 0;
-            collapseBtn.style.paddingTop = 0; collapseBtn.style.paddingBottom = 0;
+            collapseBtn.style.width = 18;
+            collapseBtn.style.height = 18;
+            collapseBtn.style.marginRight = 4;
+            collapseBtn.style.fontSize = 8;
+            collapseBtn.style.paddingLeft = 0;
+            collapseBtn.style.paddingRight = 0;
+            collapseBtn.style.paddingTop = 0;
+            collapseBtn.style.paddingBottom = 0;
             collapseBtn.style.unityTextAlign = TextAnchor.MiddleCenter;
             ApplyButtonStyle(collapseBtn);
             collapseBtn.clicked += () => { SetCollapsed(property.propertyPath, !isCollapsed); ScheduleRebuild(root, property); };
             header.Add(collapseBtn);
             
-            var label = new Label(property.displayName);
-            label.style.flexGrow = 1; label.style.color = Colors.LabelText;
-            label.style.unityFontStyleAndWeight = FontStyle.Bold; label.style.fontSize = 11;
-            header.Add(label);
-            
-            var importBtn = new Button { text = "⬇", tooltip = "Import requirements from another asset" };
-            importBtn.style.width = 22; importBtn.style.height = 20; importBtn.style.marginRight = 4; importBtn.style.fontSize = 10;
-            ApplyButtonStyle(importBtn);
-            importBtn.clicked += () => EffectTagRequirementsImportWindow.Show(property, root, req => CopyRequirements(property, req, root));
-            header.Add(importBtn);
-            
-            header.Add(CreateTypeIndicator("Effect Requirements", Colors.AccentCyan));
-            return header;
-        }
-        
-        private VisualElement CreateTypeIndicator(string text, Color color)
-        {
-            var container = new VisualElement();
-            container.style.flexDirection = FlexDirection.Row; container.style.alignItems = Align.Center;
-            container.style.paddingLeft = 6; container.style.paddingRight = 8;
-            container.style.paddingTop = 2; container.style.paddingBottom = 2;
-            container.style.borderTopLeftRadius = 4; container.style.borderTopRightRadius = 4;
-            container.style.borderBottomLeftRadius = 4; container.style.borderBottomRightRadius = 4;
-            container.style.borderTopWidth = 1; container.style.borderBottomWidth = 1;
-            container.style.borderLeftWidth = 1; container.style.borderRightWidth = 1;
-            container.style.borderTopColor = color; container.style.borderBottomColor = color;
-            container.style.borderLeftColor = color; container.style.borderRightColor = color;
-            container.style.backgroundColor = new Color(0.18f, 0.20f, 0.22f, 0.8f);
-            
-            container.Add(new Label("◆") { style = { color = color, fontSize = 10, marginRight = 4 } });
-            container.Add(new Label(text) { style = { color = Colors.LabelText, fontSize = 11 } });
-            return container;
-        }
-        
-        private VisualElement CreateCollapsedSummary(SerializedProperty property)
-        {
-            var summary = new VisualElement { name = "CollapsedSummary" };
-            summary.style.flexDirection = FlexDirection.Row; summary.style.alignItems = Align.Center;
-            summary.style.marginTop = 4; summary.style.paddingTop = 4; summary.style.paddingBottom = 2;
-            summary.style.borderTopWidth = 1; summary.style.borderTopColor = new Color(0.3f, 0.3f, 0.3f, 0.5f);
-            
-            var (appReq, appAvoid) = GetRequirementCounts(property.FindPropertyRelative("ApplicationRequirements"));
-            var (ongReq, ongAvoid) = GetRequirementCounts(property.FindPropertyRelative("OngoingRequirements"));
-            var (remReq, remAvoid) = GetRequirementCounts(property.FindPropertyRelative("RemovalRequirements"));
-            
-            if (appReq + appAvoid > 0) summary.Add(CreateSectionBadge("Apply", appReq, appAvoid, Colors.AccentGreen));
-            if (ongReq + ongAvoid > 0) { var b = CreateSectionBadge("Ongoing", ongReq, ongAvoid, Colors.AccentYellow); b.style.marginLeft = 6; summary.Add(b); }
-            if (remReq + remAvoid > 0) { var b = CreateSectionBadge("Remove", remReq, remAvoid, Colors.AccentRed); b.style.marginLeft = 6; summary.Add(b); }
-            
-            if (appReq + appAvoid + ongReq + ongAvoid + remReq + remAvoid == 0)
-            {
-                var emptyLabel = new Label("No requirements defined");
-                emptyLabel.style.fontSize = 10; emptyLabel.style.color = Colors.HintText;
-                emptyLabel.style.unityFontStyleAndWeight = FontStyle.Italic;
-                summary.Add(emptyLabel);
-            }
-            return summary;
-        }
-        
-        private (int, int) GetRequirementCounts(SerializedProperty groupProp)
-        {
-            if (groupProp == null) return (0, 0);
-            return (groupProp.FindPropertyRelative("RequireTags")?.arraySize ?? 0, groupProp.FindPropertyRelative("AvoidTags")?.arraySize ?? 0);
-        }
-        
-        private VisualElement CreateSectionBadge(string label, int reqCount, int avoidCount, Color accentColor)
-        {
-            var container = new VisualElement();
-            container.style.flexDirection = FlexDirection.Row; container.style.alignItems = Align.Center;
-            container.style.paddingLeft = 4; container.style.paddingRight = 4;
-            container.style.paddingTop = 2; container.style.paddingBottom = 2;
-            container.style.borderTopLeftRadius = 4; container.style.borderTopRightRadius = 4;
-            container.style.borderBottomLeftRadius = 4; container.style.borderBottomRightRadius = 4;
-            container.style.backgroundColor = new Color(accentColor.r, accentColor.g, accentColor.b, 0.15f);
-            
-            container.Add(new Label(label) { style = { fontSize = 9, color = Colors.LabelText, marginRight = 4 } });
-            if (reqCount > 0) container.Add(new Label($"+{reqCount}") { style = { fontSize = 9, color = Colors.AccentGreen } });
-            if (avoidCount > 0) container.Add(new Label($"-{avoidCount}") { style = { fontSize = 9, color = Colors.AccentRed, marginLeft = reqCount > 0 ? 2 : 0 } });
-            return container;
-        }
-        
-        private VisualElement CreateContent(SerializedProperty property, VisualElement root)
-        {
-            var content = new VisualElement { name = "RequirementsContent" };
-            content.style.paddingTop = 4;
-            content.Add(CreateRequirementSection("Apply", "Required to apply effect", Colors.AccentGreen, property.FindPropertyRelative("ApplicationRequirements")));
-            content.Add(CreateRequirementSection("Ongoing", "Must remain true while active", Colors.AccentYellow, property.FindPropertyRelative("OngoingRequirements")));
-            content.Add(CreateRequirementSection("Remove", "Triggers removal when met", Colors.AccentRed, property.FindPropertyRelative("RemovalRequirements")));
-            return content;
-        }
-        
-        private VisualElement CreateRequirementSection(string title, string tooltip, Color accentColor, SerializedProperty prop)
-        {
-            var section = new VisualElement();
-            section.style.marginTop = 4; section.style.marginBottom = 2;
-            section.style.paddingLeft = 6; section.style.paddingTop = 4;
-            section.style.paddingBottom = 4; section.style.paddingRight = 4;
-            section.style.borderLeftWidth = 2; section.style.borderLeftColor = accentColor;
-            section.style.backgroundColor = Colors.SubsectionBackground;
-            section.style.borderTopLeftRadius = 2; section.style.borderTopRightRadius = 2;
-            section.style.borderBottomLeftRadius = 2; section.style.borderBottomRightRadius = 2;
-            
-            var headerRow = new VisualElement();
-            headerRow.style.flexDirection = FlexDirection.Row; headerRow.style.alignItems = Align.Center;
-            headerRow.style.marginBottom = 4;
-            headerRow.Add(new Label(title) { style = { fontSize = 10, unityFontStyleAndWeight = FontStyle.Bold, color = Colors.LabelText }, tooltip = tooltip });
-            headerRow.Add(new VisualElement { style = { flexGrow = 1 } });
-            
-            var (reqCount, avoidCount) = GetRequirementCounts(prop);
-            if (reqCount > 0) headerRow.Add(CreateCountBadge($"+{reqCount}", Colors.AccentGreen));
-            if (avoidCount > 0) { var b = CreateCountBadge($"-{avoidCount}", Colors.AccentRed); b.style.marginLeft = 4; headerRow.Add(b); }
-            if (reqCount == 0 && avoidCount == 0) headerRow.Add(new Label("—") { style = { fontSize = 9, color = Colors.HintText } });
-            section.Add(headerRow);
-            
-            var field = new PropertyField(prop, ""); field.style.marginTop = 2; section.Add(field);
-            section.Bind(prop.serializedObject);
-            return section;
-        }
-        
-        private Label CreateCountBadge(string text, Color color)
-        {
-            var badge = new Label(text);
-            badge.style.fontSize = 9; badge.style.color = color;
-            badge.style.backgroundColor = new Color(color.r, color.g, color.b, 0.12f);
-            badge.style.paddingLeft = 4; badge.style.paddingRight = 4;
-            badge.style.paddingTop = 1; badge.style.paddingBottom = 1;
-            badge.style.borderTopLeftRadius = 4; badge.style.borderTopRightRadius = 4;
-            badge.style.borderBottomLeftRadius = 4; badge.style.borderBottomRightRadius = 4;
-            return badge;
-        }
-        
-        private static void ApplyButtonStyle(Button btn)
-        {
-            btn.style.borderTopLeftRadius = 3; btn.style.borderTopRightRadius = 3;
-            btn.style.borderBottomLeftRadius = 3; btn.style.borderBottomRightRadius = 3;
-            btn.style.backgroundColor = Colors.ButtonBackground;
-            btn.RegisterCallback<MouseEnterEvent>(_ => btn.style.backgroundColor = Colors.ButtonHover);
-            btn.RegisterCallback<MouseLeaveEvent>(_ => btn.style.backgroundColor = Colors.ButtonBackground);
-        }
-        
-        private void CopyRequirements(SerializedProperty property, EffectTagRequirements source, VisualElement root)
-        {
-            AvoidRequireTagGroupHelper.CopyAvoidRequireGroup(property.FindPropertyRelative("ApplicationRequirements"), source.ApplicationRequirements);
-            AvoidRequireTagGroupHelper.CopyAvoidRequireGroup(property.FindPropertyRelative("OngoingRequirements"), source.OngoingRequirements);
-            AvoidRequireTagGroupHelper.CopyAvoidRequireGroup(property.FindPropertyRelative("RemovalRequirements"), source.RemovalRequirements);
-            property.serializedObject.ApplyModifiedProperties();
-            ScheduleRebuild(root, property);
-        }
-    }
-    
-    // ═══════════════════════════════════════════════════════════════════════════════
-    // AbilityTagRequirements Drawer - For Ability activation requirements
-    // ═══════════════════════════════════════════════════════════════════════════════
-    
-    [CustomPropertyDrawer(typeof(AbilityTagRequirements))]
-    public class AbilityTagRequirementsDrawer : PropertyDrawer
-    {
-        private static Dictionary<string, bool> _collapsedStates = new Dictionary<string, bool>();
-        private static HashSet<string> _rebuildingProperties = new HashSet<string>();
-        private static readonly Color AbilityReqColor = new Color(0.4f, 0.7f, 1f);
-        
-        private static bool IsCollapsed(string propertyPath) => !_collapsedStates.TryGetValue(propertyPath, out bool c) || c;
-        private static void SetCollapsed(string propertyPath, bool collapsed) => _collapsedStates[propertyPath] = collapsed;
-        
-        public override VisualElement CreatePropertyGUI(SerializedProperty property)
-        {
-            var root = new VisualElement { name = "AbilityTagRequirementsRoot" };
-            root.style.marginBottom = 4;
-            BuildUI(root, property);
-            return root;
-        }
-        
-        private void ScheduleRebuild(VisualElement root, SerializedProperty property)
-        {
-            var propPath = property.propertyPath;
-            var targetObject = property.serializedObject.targetObject;
-            if (_rebuildingProperties.Contains(propPath)) return;
-            _rebuildingProperties.Add(propPath);
-            root.schedule.Execute(() =>
-            {
-                _rebuildingProperties.Remove(propPath);
-                if (targetObject == null) return;
-                var so = new SerializedObject(targetObject);
-                var freshProp = so.FindProperty(propPath);
-                if (freshProp != null) BuildUI(root, freshProp);
-            });
-        }
-        
-        private void BuildUI(VisualElement root, SerializedProperty property)
-        {
-            root.Clear();
-            if (property?.serializedObject?.targetObject == null) return;
-            
-            bool isCollapsed = IsCollapsed(property.propertyPath);
-            var nameProp = property.FindPropertyRelative("Name");
-            var sourceProp = property.FindPropertyRelative("SourceRequirements");
-            var targetProp = property.FindPropertyRelative("TargetRequirements");
-            
-            string customName = nameProp?.stringValue ?? "";
-            var (srcReq, srcAvoid) = GetCounts(sourceProp);
-            var (tgtReq, tgtAvoid) = GetCounts(targetProp);
-            
-            var container = new VisualElement { name = "AbilityReqContainer" };
-            container.style.borderLeftWidth = 3; container.style.borderLeftColor = AbilityReqColor;
-            container.style.borderTopWidth = 1; container.style.borderTopColor = new Color(AbilityReqColor.r, AbilityReqColor.g, AbilityReqColor.b, 0.5f);
-            container.style.borderRightWidth = 1; container.style.borderRightColor = new Color(AbilityReqColor.r, AbilityReqColor.g, AbilityReqColor.b, 0.5f);
-            container.style.borderBottomWidth = 1; container.style.borderBottomColor = new Color(AbilityReqColor.r, AbilityReqColor.g, AbilityReqColor.b, 0.5f);
-            container.style.borderTopLeftRadius = 4; container.style.borderBottomLeftRadius = 4;
-            container.style.borderTopRightRadius = 4; container.style.borderBottomRightRadius = 4;
-            container.style.backgroundColor = Colors.SectionBackground;
-            container.style.paddingTop = 4; container.style.paddingBottom = isCollapsed ? 4 : 6;
-            container.style.paddingLeft = 6; container.style.paddingRight = 6; container.style.marginTop = 2;
-            root.Add(container);
-            
-            // Header
-            var header = new VisualElement();
-            header.style.flexDirection = FlexDirection.Row; header.style.alignItems = Align.Center;
-            header.style.marginBottom = isCollapsed ? 0 : 4;
-            container.Add(header);
-            
-            var collapseBtn = new Button { text = isCollapsed ? Icons.ChevronRight : Icons.ChevronDown };
-            collapseBtn.style.width = 18; collapseBtn.style.height = 18; collapseBtn.style.marginRight = 4;
-            collapseBtn.style.fontSize = 8; collapseBtn.style.paddingLeft = 0; collapseBtn.style.paddingRight = 0;
-            collapseBtn.style.paddingTop = 0; collapseBtn.style.paddingBottom = 0;
-            collapseBtn.style.unityTextAlign = TextAnchor.MiddleCenter;
-            ApplyButtonStyle(collapseBtn);
-            collapseBtn.clicked += () => { SetCollapsed(property.propertyPath, !isCollapsed); ScheduleRebuild(root, property); };
-            header.Add(collapseBtn);
-            
+            // Label
             if (!string.IsNullOrEmpty(customName))
             {
                 header.Add(new Label(customName) { style = { color = Colors.LabelText, unityFontStyleAndWeight = FontStyle.Bold, fontSize = 11, marginRight = 6 } });
@@ -340,139 +177,333 @@ namespace FarEmerald.PlayForge.Extended.Editor
             
             header.Add(new VisualElement { style = { flexGrow = 1 } });
             
-            if (isCollapsed && (srcReq + srcAvoid + tgtReq + tgtAvoid > 0))
+            // Collapsed summary badges in header
+            if (isCollapsed && false)  // todo fix if needed
             {
-                if (srcReq + srcAvoid > 0) header.Add(CreateSectionBadge("Src", srcReq, srcAvoid, Colors.AccentBlue));
-                if (tgtReq + tgtAvoid > 0) { var b = CreateSectionBadge("Tgt", tgtReq, tgtAvoid, Colors.AccentPurple); b.style.marginLeft = 4; header.Add(b); }
-            }
-            else if (isCollapsed)
-            {
-                header.Add(new Label("Empty") { style = { fontSize = 9, color = Colors.HintText, unityFontStyleAndWeight = FontStyle.Italic } });
+                bool hasAny = false;
+                foreach (var (cfg, counts) in subsections)
+                {
+                    if (counts.req + counts.avoid > 0)
+                    {
+                        var badge = CreateSectionBadge(cfg.shortName, counts.req, counts.avoid, cfg.color);
+                        if (hasAny) badge.style.marginLeft = 4;
+                        header.Add(badge);
+                        hasAny = true;
+                    }
+                }
+                if (!hasAny)
+                    header.Add(new Label("Empty") { style = { fontSize = 9, color = Colors.HintText, unityFontStyleAndWeight = FontStyle.Italic } });
             }
             
+            // Import button
             var importBtn = new Button { text = "⬇", tooltip = "Import requirements from another asset" };
-            importBtn.style.width = 22; importBtn.style.height = 20; importBtn.style.marginLeft = 8; importBtn.style.fontSize = 10;
+            importBtn.style.width = 22;
+            importBtn.style.height = 20;
+            importBtn.style.marginLeft = 8;
+            importBtn.style.fontSize = 10;
             ApplyButtonStyle(importBtn);
-            importBtn.clicked += () => AbilityTagRequirementsImportWindow.Show(property, root, req => CopyRequirements(property, req, root));
+            importBtn.clicked += () => ShowImportWindow(property, root, req => CopyFromSource(property, req, root));
             header.Add(importBtn);
             
-            var typeBox = CreateTypeIndicator(); typeBox.style.marginLeft = 4; header.Add(typeBox);
+            // Type indicator
+            header.Add(CreateTypeIndicator());
             
-            if (!isCollapsed)
-            {
-                // Name field
-                var nameRow = new VisualElement();
-                nameRow.style.flexDirection = FlexDirection.Row; nameRow.style.alignItems = Align.Center;
-                nameRow.style.marginBottom = 6; nameRow.style.marginTop = 4;
-                nameRow.Add(new Label("Name") { style = { width = 50, fontSize = 10, color = Colors.HintText } });
-                var nameField = new TextField { value = customName };
-                nameField.style.flexGrow = 1;
-                nameField.tooltip = "Optional name for this requirement group (helps identify when importing)";
-                nameField.RegisterValueChangedCallback(evt => { if (nameProp != null) { nameProp.stringValue = evt.newValue; property.serializedObject.ApplyModifiedProperties(); } });
-                nameRow.Add(nameField);
-                container.Add(nameRow);
-                
-                container.Add(CreateRequirementSubsection("Source", "Caster requirements", Colors.AccentBlue, sourceProp));
-                var targetSection = CreateRequirementSubsection("Target", "Target requirements", Colors.AccentPurple, targetProp);
-                targetSection.style.marginTop = 6;
-                container.Add(targetSection);
-                
-                container.Bind(property.serializedObject);
-            }
+            return header;
         }
         
         private VisualElement CreateTypeIndicator()
         {
             var container = new VisualElement();
-            container.style.flexDirection = FlexDirection.Row; container.style.alignItems = Align.Center;
-            container.style.paddingLeft = 6; container.style.paddingRight = 8;
-            container.style.paddingTop = 2; container.style.paddingBottom = 2;
-            container.style.borderTopLeftRadius = 4; container.style.borderTopRightRadius = 4;
-            container.style.borderBottomLeftRadius = 4; container.style.borderBottomRightRadius = 4;
-            container.style.borderTopWidth = 1; container.style.borderBottomWidth = 1;
-            container.style.borderLeftWidth = 1; container.style.borderRightWidth = 1;
-            container.style.borderTopColor = AbilityReqColor; container.style.borderBottomColor = AbilityReqColor;
-            container.style.borderLeftColor = AbilityReqColor; container.style.borderRightColor = AbilityReqColor;
+            container.style.flexDirection = FlexDirection.Row;
+            container.style.alignItems = Align.Center;
+            container.style.paddingLeft = 6;
+            container.style.paddingRight = 8;
+            container.style.paddingTop = 2;
+            container.style.paddingBottom = 2;
+            container.style.marginLeft = 4;
+            container.style.borderTopLeftRadius = 4;
+            container.style.borderTopRightRadius = 4;
+            container.style.borderBottomLeftRadius = 4;
+            container.style.borderBottomRightRadius = 4;
+            container.style.borderTopWidth = 1;
+            container.style.borderBottomWidth = 1;
+            container.style.borderLeftWidth = 1;
+            container.style.borderRightWidth = 1;
+            container.style.borderTopColor = AccentColor;
+            container.style.borderBottomColor = AccentColor;
+            container.style.borderLeftColor = AccentColor;
+            container.style.borderRightColor = AccentColor;
             container.style.backgroundColor = new Color(0.18f, 0.20f, 0.22f, 0.8f);
             
-            container.Add(new Label("⚡") { style = { color = AbilityReqColor, fontSize = 10, marginRight = 4 } });
-            container.Add(new Label("Activation") { style = { color = Colors.LabelText, fontSize = 11 } });
+            container.Add(new Label("◆") { style = { color = AccentColor, fontSize = 10, marginRight = 4 } });
+            container.Add(new Label(TypeIndicatorText) { style = { color = Colors.LabelText, fontSize = 11 } });
+            
             return container;
         }
         
-        private (int, int) GetCounts(SerializedProperty groupProp)
+        // ═══════════════════════════════════════════════════════════════════════════
+        // Collapsed Summary
+        // ═══════════════════════════════════════════════════════════════════════════
+        
+        private VisualElement CreateCollapsedSummary(
+            List<((string fieldName, string displayName, string shortName, string tooltip, Color color) cfg, (int req, int avoid) counts)> subsections)
         {
-            if (groupProp == null) return (0, 0);
-            return (groupProp.FindPropertyRelative("RequireTags")?.arraySize ?? 0, groupProp.FindPropertyRelative("AvoidTags")?.arraySize ?? 0);
+            var summary = new VisualElement { name = "CollapsedSummary" };
+            summary.style.flexDirection = FlexDirection.Row;
+            summary.style.alignItems = Align.Center;
+            summary.style.marginTop = 4;
+            summary.style.paddingTop = 4;
+            summary.style.paddingBottom = 2;
+            summary.style.borderTopWidth = 1;
+            summary.style.borderTopColor = new Color(0.3f, 0.3f, 0.3f, 0.5f);
+            
+            bool hasAny = false;
+            foreach (var (cfg, counts) in subsections)
+            {
+                if (counts.req + counts.avoid > 0)
+                {
+                    var badge = CreateSectionBadge(cfg.displayName, counts.req, counts.avoid, cfg.color);
+                    if (hasAny) badge.style.marginLeft = 6;
+                    summary.Add(badge);
+                    hasAny = true;
+                }
+            }
+            
+            if (!hasAny)
+            {
+                summary.Add(new Label("No requirements defined") { style = { fontSize = 10, color = Colors.HintText, unityFontStyleAndWeight = FontStyle.Italic } });
+            }
+            
+            return summary;
         }
         
-        private VisualElement CreateSectionBadge(string label, int reqCount, int avoidCount, Color accentColor)
+        // ═══════════════════════════════════════════════════════════════════════════
+        // Expanded Content
+        // ═══════════════════════════════════════════════════════════════════════════
+        
+        private VisualElement CreateExpandedContent(
+            SerializedProperty property, 
+            VisualElement root, 
+            string customName, 
+            SerializedProperty nameProp,
+            List<((string fieldName, string displayName, string shortName, string tooltip, Color color) cfg, (int req, int avoid) counts)> subsections)
+        {
+            var content = new VisualElement { name = "RequirementsContent" };
+            content.style.paddingTop = 4;
+            
+            // Name field
+            var nameRow = new VisualElement { style = { flexDirection = FlexDirection.Row, alignItems = Align.Center, marginBottom = 6 } };
+            nameRow.Add(new Label("Name") { style = { width = 50, fontSize = 10, color = Colors.HintText } });
+            var nameField = new TextField { value = customName, style = { flexGrow = 1 } };
+            nameField.tooltip = "Optional name for this requirement group (helps identify when importing)";
+            nameField.RegisterValueChangedCallback(evt =>
+            {
+                if (nameProp != null)
+                {
+                    nameProp.stringValue = evt.newValue;
+                    property.serializedObject.ApplyModifiedProperties();
+                }
+            });
+            nameRow.Add(nameField);
+            content.Add(nameRow);
+            
+            // Subsections
+            bool first = true;
+            foreach (var (cfg, counts) in subsections)
+            {
+                var prop = property.FindPropertyRelative(cfg.fieldName);
+                var section = CreateRequirementSubsection(cfg.displayName, cfg.tooltip, cfg.color, prop, counts);
+                if (!first) section.style.marginTop = 4;
+                content.Add(section);
+                first = false;
+            }
+            
+            content.Bind(property.serializedObject);
+            return content;
+        }
+        
+        private VisualElement CreateRequirementSubsection(string title, string tooltip, Color color, SerializedProperty prop, (int req, int avoid) counts)
+        {
+            var section = new VisualElement();
+            section.style.marginTop = 4;
+            section.style.marginBottom = 2;
+            section.style.paddingLeft = 6;
+            section.style.paddingTop = 4;
+            section.style.paddingBottom = 4;
+            section.style.paddingRight = 4;
+            section.style.borderLeftWidth = 2;
+            section.style.borderLeftColor = color;
+            section.style.backgroundColor = Colors.SubsectionBackground;
+            section.style.borderTopLeftRadius = 2;
+            section.style.borderTopRightRadius = 2;
+            section.style.borderBottomLeftRadius = 2;
+            section.style.borderBottomRightRadius = 2;
+            
+            var headerRow = new VisualElement { style = { flexDirection = FlexDirection.Row, alignItems = Align.Center, marginBottom = 4 } };
+            headerRow.Add(new Label(title) { tooltip = tooltip, style = { fontSize = 10, unityFontStyleAndWeight = FontStyle.Bold, color = Colors.LabelText } });
+            headerRow.Add(new VisualElement { style = { flexGrow = 1 } });
+            
+            if (counts.req > 0) headerRow.Add(CreateCountBadge($"+{counts.req}", Colors.AccentGreen));
+            if (counts.avoid > 0)
+            {
+                var avoidBadge = CreateCountBadge($"-{counts.avoid}", Colors.AccentRed);
+                avoidBadge.style.marginLeft = 4;
+                headerRow.Add(avoidBadge);
+            }
+            if (counts.req == 0 && counts.avoid == 0)
+                headerRow.Add(new Label("—") { style = { fontSize = 9, color = Colors.HintText } });
+            
+            section.Add(headerRow);
+            
+            var field = new PropertyField(prop, "");
+            field.style.marginTop = 2;
+            section.Add(field);
+            section.Bind(prop.serializedObject);
+            
+            return section;
+        }
+        
+        // ═══════════════════════════════════════════════════════════════════════════
+        // Helper Methods
+        // ═══════════════════════════════════════════════════════════════════════════
+        
+        protected (int req, int avoid) GetRequirementCounts(SerializedProperty groupProp)
+        {
+            if (groupProp == null) return (0, 0);
+            return (
+                groupProp.FindPropertyRelative("RequireTags")?.arraySize ?? 0,
+                groupProp.FindPropertyRelative("AvoidTags")?.arraySize ?? 0
+            );
+        }
+        
+        protected Label CreateBadge(string text, Color color)
+        {
+            var badge = new Label(text);
+            badge.style.fontSize = 9;
+            badge.style.color = color;
+            badge.style.backgroundColor = new Color(color.r, color.g, color.b, 0.15f);
+            badge.style.paddingLeft = 4;
+            badge.style.paddingRight = 4;
+            badge.style.paddingTop = 1;
+            badge.style.paddingBottom = 1;
+            badge.style.borderTopLeftRadius = 4;
+            badge.style.borderTopRightRadius = 4;
+            badge.style.borderBottomLeftRadius = 4;
+            badge.style.borderBottomRightRadius = 4;
+            return badge;
+        }
+        
+        protected Label CreateCountBadge(string text, Color color)
+        {
+            var badge = new Label(text);
+            badge.style.fontSize = 9;
+            badge.style.color = color;
+            badge.style.backgroundColor = new Color(color.r, color.g, color.b, 0.12f);
+            badge.style.paddingLeft = 4;
+            badge.style.paddingRight = 4;
+            badge.style.paddingTop = 1;
+            badge.style.paddingBottom = 1;
+            badge.style.borderTopLeftRadius = 4;
+            badge.style.borderTopRightRadius = 4;
+            badge.style.borderBottomLeftRadius = 4;
+            badge.style.borderBottomRightRadius = 4;
+            return badge;
+        }
+        
+        protected VisualElement CreateSectionBadge(string label, int reqCount, int avoidCount, Color accentColor)
         {
             var container = new VisualElement();
-            container.style.flexDirection = FlexDirection.Row; container.style.alignItems = Align.Center;
-            container.style.paddingLeft = 4; container.style.paddingRight = 4;
-            container.style.paddingTop = 2; container.style.paddingBottom = 2;
-            container.style.borderTopLeftRadius = 4; container.style.borderTopRightRadius = 4;
-            container.style.borderBottomLeftRadius = 4; container.style.borderBottomRightRadius = 4;
+            container.style.flexDirection = FlexDirection.Row;
+            container.style.alignItems = Align.Center;
+            container.style.paddingLeft = 4;
+            container.style.paddingRight = 4;
+            container.style.paddingTop = 2;
+            container.style.paddingBottom = 2;
+            container.style.borderTopLeftRadius = 4;
+            container.style.borderTopRightRadius = 4;
+            container.style.borderBottomLeftRadius = 4;
+            container.style.borderBottomRightRadius = 4;
             container.style.backgroundColor = new Color(accentColor.r, accentColor.g, accentColor.b, 0.15f);
             
             container.Add(new Label(label) { style = { fontSize = 9, color = accentColor, marginRight = 2 } });
             if (reqCount > 0) container.Add(new Label($"+{reqCount}") { style = { fontSize = 9, color = Colors.AccentGreen } });
             if (avoidCount > 0) container.Add(new Label($"-{avoidCount}") { style = { fontSize = 9, color = Colors.AccentRed, marginLeft = reqCount > 0 ? 2 : 0 } });
+            
             return container;
         }
         
-        private VisualElement CreateRequirementSubsection(string title, string tooltip, Color color, SerializedProperty prop)
+        protected static void ApplyButtonStyle(Button btn)
         {
-            var section = new VisualElement();
-            section.style.paddingLeft = 6; section.style.paddingTop = 4;
-            section.style.paddingBottom = 4; section.style.paddingRight = 4;
-            section.style.borderLeftWidth = 2; section.style.borderLeftColor = color;
-            section.style.backgroundColor = Colors.SubsectionBackground;
-            section.style.borderTopLeftRadius = 2; section.style.borderTopRightRadius = 2;
-            section.style.borderBottomLeftRadius = 2; section.style.borderBottomRightRadius = 2;
-            
-            var headerRow = new VisualElement();
-            headerRow.style.flexDirection = FlexDirection.Row; headerRow.style.alignItems = Align.Center;
-            headerRow.style.marginBottom = 2;
-            headerRow.Add(new Label(title) { style = { fontSize = 10, unityFontStyleAndWeight = FontStyle.Bold, color = color }, tooltip = tooltip });
-            headerRow.Add(new VisualElement { style = { flexGrow = 1 } });
-            
-            var (reqCount, avoidCount) = GetCounts(prop);
-            if (reqCount > 0) headerRow.Add(CreateBadge($"+{reqCount}", Colors.AccentGreen));
-            if (avoidCount > 0) { var b = CreateBadge($"-{avoidCount}", Colors.AccentRed); b.style.marginLeft = 4; headerRow.Add(b); }
-            section.Add(headerRow);
-            
-            var field = new PropertyField(prop, ""); field.style.marginTop = 2; field.BindProperty(prop);
-            section.Add(field);
-            return section;
-        }
-        
-        private Label CreateBadge(string text, Color color)
-        {
-            var badge = new Label(text);
-            badge.style.fontSize = 9; badge.style.color = color;
-            badge.style.backgroundColor = new Color(color.r, color.g, color.b, 0.15f);
-            badge.style.paddingLeft = 4; badge.style.paddingRight = 4;
-            badge.style.paddingTop = 1; badge.style.paddingBottom = 1;
-            badge.style.borderTopLeftRadius = 4; badge.style.borderTopRightRadius = 4;
-            badge.style.borderBottomLeftRadius = 4; badge.style.borderBottomRightRadius = 4;
-            return badge;
-        }
-        
-        private static void ApplyButtonStyle(Button btn)
-        {
-            btn.style.borderTopLeftRadius = 3; btn.style.borderTopRightRadius = 3;
-            btn.style.borderBottomLeftRadius = 3; btn.style.borderBottomRightRadius = 3;
+            btn.style.borderTopLeftRadius = 3;
+            btn.style.borderTopRightRadius = 3;
+            btn.style.borderBottomLeftRadius = 3;
+            btn.style.borderBottomRightRadius = 3;
             btn.style.backgroundColor = Colors.ButtonBackground;
             btn.RegisterCallback<MouseEnterEvent>(_ => btn.style.backgroundColor = Colors.ButtonHover);
             btn.RegisterCallback<MouseLeaveEvent>(_ => btn.style.backgroundColor = Colors.ButtonBackground);
         }
+    }
+    
+    // ═══════════════════════════════════════════════════════════════════════════════
+    // EffectTagRequirements Drawer
+    // ═══════════════════════════════════════════════════════════════════════════════
+    
+    [CustomPropertyDrawer(typeof(EffectTagRequirements))]
+    public class EffectTagRequirementsDrawer : AbstractTagRequirementsDrawer<EffectTagRequirements>
+    {
+        protected override Color AccentColor => Colors.AssetRequirements;
+        protected override string TypeIndicatorText => "Effect Requirements";
         
-        private void CopyRequirements(SerializedProperty property, AbilityTagRequirements source, VisualElement root)
+        protected override IEnumerable<(string fieldName, string displayName, string shortName, string tooltip, Color color)> GetSubsectionConfigs()
+        {
+            yield return ("ApplicationRequirements", "Apply", "Apply", "Required to apply effect", Colors.BorderLight);
+            yield return ("OngoingRequirements", "Ongoing", "Ongoing", "Must remain true while active", Colors.BorderLight);
+            yield return ("RemovalRequirements", "Remove", "Remove", "Triggers removal when met", Colors.BorderLight);
+        }
+        
+        protected override void ShowImportWindow(SerializedProperty property, VisualElement root, Action<EffectTagRequirements> onImport)
+        {
+            EffectTagRequirementsImportWindow.Show(property, root, onImport);
+        }
+        
+        protected override void CopyFromSource(SerializedProperty property, EffectTagRequirements source, VisualElement root)
+        {
+            AvoidRequireTagGroupHelper.CopyAvoidRequireGroup(property.FindPropertyRelative("ApplicationRequirements"), source.ApplicationRequirements);
+            AvoidRequireTagGroupHelper.CopyAvoidRequireGroup(property.FindPropertyRelative("OngoingRequirements"), source.OngoingRequirements);
+            AvoidRequireTagGroupHelper.CopyAvoidRequireGroup(property.FindPropertyRelative("RemovalRequirements"), source.RemovalRequirements);
+            property.serializedObject.ApplyModifiedProperties();
+            ScheduleRebuild(root, property);
+        }
+    }
+    
+    // ═══════════════════════════════════════════════════════════════════════════════
+    // AbilityTagRequirements Drawer
+    // ═══════════════════════════════════════════════════════════════════════════════
+    
+    [CustomPropertyDrawer(typeof(AbilityTagRequirements))]
+    public class AbilityTagRequirementsDrawer : AbstractTagRequirementsDrawer<AbilityTagRequirements>
+    {
+        private static readonly Color AbilityReqColor = new Color(0.4f, 0.7f, 1f);
+        
+        protected override Color AccentColor => AbilityReqColor;
+        protected override string TypeIndicatorText => "Ability Requirements";
+        
+        protected override IEnumerable<(string fieldName, string displayName, string shortName, string tooltip, Color color)> GetSubsectionConfigs()
+        {
+            yield return ("SourceRequirements", "Source", "Src", "Source requirements", Colors.BorderLight);
+            yield return ("TargetRequirements", "Target", "Tgt", "Target requirements", Colors.BorderLight);
+        }
+        
+        protected override void ShowImportWindow(SerializedProperty property, VisualElement root, Action<AbilityTagRequirements> onImport)
+        {
+            AbilityTagRequirementsImportWindow.Show(property, root, onImport);
+        }
+        
+        protected override void CopyFromSource(SerializedProperty property, AbilityTagRequirements source, VisualElement root)
         {
             var nameProp = property.FindPropertyRelative("Name");
-            if (nameProp != null && !string.IsNullOrEmpty(source.Name)) nameProp.stringValue = source.Name;
+            if (nameProp != null && !string.IsNullOrEmpty(source.Name))
+                nameProp.stringValue = source.Name;
             AvoidRequireTagGroupHelper.CopyAvoidRequireGroup(property.FindPropertyRelative("SourceRequirements"), source.SourceRequirements);
             AvoidRequireTagGroupHelper.CopyAvoidRequireGroup(property.FindPropertyRelative("TargetRequirements"), source.TargetRequirements);
             property.serializedObject.ApplyModifiedProperties();
@@ -491,13 +522,14 @@ namespace FarEmerald.PlayForge.Extended.Editor
             if (prop == null || source == null) return;
             
             var nameProp = prop.FindPropertyRelative("Name");
-            if (nameProp != null && !string.IsNullOrEmpty(source.Name)) nameProp.stringValue = source.Name;
+            if (nameProp != null && !string.IsNullOrEmpty(source.Name))
+                nameProp.stringValue = source.Name;
             
             CopyTagList(prop.FindPropertyRelative("RequireTags"), source.RequireTags);
             CopyTagList(prop.FindPropertyRelative("AvoidTags"), source.AvoidTags);
         }
         
-        private static void CopyTagList(SerializedProperty listProp, List<AvoidRequireContainer> source)
+        private static void CopyTagList(SerializedProperty listProp, List<TagQuery> source)
         {
             if (listProp == null || source == null) return;
             listProp.arraySize = source.Count;
@@ -543,7 +575,8 @@ namespace FarEmerald.PlayForge.Extended.Editor
         {
             var window = GetWindow<EffectTagRequirementsImportWindow>(true, "Import Effect Tag Requirements");
             window._onImport = onImport;
-            window.minSize = new Vector2(450, 400); window.maxSize = new Vector2(650, 550);
+            window.minSize = new Vector2(450, 400);
+            window.maxSize = new Vector2(650, 550);
             window.RefreshSources();
             window.ShowUtility();
         }
@@ -570,7 +603,9 @@ namespace FarEmerald.PlayForge.Extended.Editor
                           AvoidRequireTagGroupHelper.HasAnyTags(reqs.RemovalRequirements);
             if (!hasAny) return;
             
-            bool hasName = (reqs.ApplicationRequirements?.HasName ?? false) || (reqs.OngoingRequirements?.HasName ?? false) || (reqs.RemovalRequirements?.HasName ?? false);
+            bool hasName = (reqs.ApplicationRequirements?.HasName ?? false) || 
+                           (reqs.OngoingRequirements?.HasName ?? false) || 
+                           (reqs.RemovalRequirements?.HasName ?? false);
             string name = reqs.ApplicationRequirements?.Name ?? reqs.OngoingRequirements?.Name ?? reqs.RemovalRequirements?.Name ?? "";
             string label = !string.IsNullOrEmpty(name) ? $"{name} — {effect.name} ({ctx})" : $"{effect.name} ({ctx})";
             _sources.Add((effect, reqs, label, hasName));
@@ -579,7 +614,10 @@ namespace FarEmerald.PlayForge.Extended.Editor
         private void CreateGUI()
         {
             var root = rootVisualElement;
-            root.style.paddingLeft = 10; root.style.paddingRight = 10; root.style.paddingTop = 10; root.style.paddingBottom = 10;
+            root.style.paddingLeft = 10;
+            root.style.paddingRight = 10;
+            root.style.paddingTop = 10;
+            root.style.paddingBottom = 10;
             
             root.Add(new Label("Import Effect Tag Requirements") { style = { fontSize = 14, unityFontStyleAndWeight = FontStyle.Bold, color = Colors.AccentCyan, marginBottom = 8 } });
             
@@ -602,13 +640,25 @@ namespace FarEmerald.PlayForge.Extended.Editor
             root.schedule.Execute(() => { if (_sources.Count == 0) RefreshSources(); RebuildList(); UpdateFooter(); });
         }
         
-        private void UpdateFooter() { var f = rootVisualElement?.Q<Label>("Footer"); if (f != null) f.text = $"{_sources.Count} effects ({_sources.Count(s => s.hasName)} named)"; }
+        private void UpdateFooter()
+        {
+            var f = rootVisualElement?.Q<Label>("Footer");
+            if (f != null) f.text = $"{_sources.Count} effects ({_sources.Count(s => s.hasName)} named)";
+        }
         
         private void RebuildList()
         {
-            var sv = rootVisualElement?.Q<ScrollView>("ResultsList"); if (sv == null) return; sv.Clear();
-            var filtered = string.IsNullOrEmpty(_searchFilter) ? _sources : _sources.Where(s => s.label.ToLower().Contains(_searchFilter.ToLower())).ToList();
-            filtered = _showNamedFirst ? filtered.OrderByDescending(s => s.hasName).ThenBy(s => s.label).ToList() : filtered.OrderBy(s => s.label).ToList();
+            var sv = rootVisualElement?.Q<ScrollView>("ResultsList");
+            if (sv == null) return;
+            sv.Clear();
+            
+            var filtered = string.IsNullOrEmpty(_searchFilter) 
+                ? _sources 
+                : _sources.Where(s => s.label.ToLower().Contains(_searchFilter.ToLower())).ToList();
+            filtered = _showNamedFirst 
+                ? filtered.OrderByDescending(s => s.hasName).ThenBy(s => s.label).ToList() 
+                : filtered.OrderBy(s => s.label).ToList();
+            
             foreach (var (effect, reqs, label, hasName) in filtered)
             {
                 var item = new VisualElement { style = { flexDirection = FlexDirection.Row, alignItems = Align.Center, paddingLeft = 8, paddingRight = 8, paddingTop = 4, paddingBottom = 4, marginLeft = 4, marginRight = 4, marginBottom = 2, backgroundColor = Colors.ItemBackground, borderTopLeftRadius = 3, borderTopRightRadius = 3, borderBottomLeftRadius = 3, borderBottomRightRadius = 3 } };
@@ -619,7 +669,9 @@ namespace FarEmerald.PlayForge.Extended.Editor
                 item.Add(new Button(() => { _onImport?.Invoke(reqs); Close(); }) { text = "Import", style = { paddingLeft = 8, paddingRight = 8, height = 18, fontSize = 10 } });
                 sv.Add(item);
             }
-            if (filtered.Count == 0) sv.Add(new Label("No effects found") { style = { color = Colors.HintText, unityTextAlign = TextAnchor.MiddleCenter, paddingTop = 20 } });
+            
+            if (filtered.Count == 0)
+                sv.Add(new Label("No effects found") { style = { color = Colors.HintText, unityTextAlign = TextAnchor.MiddleCenter, paddingTop = 20 } });
         }
     }
     
@@ -629,12 +681,14 @@ namespace FarEmerald.PlayForge.Extended.Editor
         private List<(Ability ability, string label, bool hasName)> _sources = new();
         private string _searchFilter = "";
         private bool _showNamedFirst = true;
+        private static readonly Color AbilityReqColor = new Color(0.4f, 0.7f, 1f);
         
         public static void Show(SerializedProperty targetProp, VisualElement root, Action<AbilityTagRequirements> onImport)
         {
             var window = GetWindow<AbilityTagRequirementsImportWindow>(true, "Import Ability Requirements");
             window._onImport = onImport;
-            window.minSize = new Vector2(450, 400); window.maxSize = new Vector2(650, 550);
+            window.minSize = new Vector2(450, 400);
+            window.maxSize = new Vector2(650, 550);
             window.RefreshSources();
             window.ShowUtility();
         }
@@ -648,7 +702,8 @@ namespace FarEmerald.PlayForge.Extended.Editor
                 if (ability?.Tags?.TagRequirements != null)
                 {
                     var reqs = ability.Tags.TagRequirements;
-                    if (AvoidRequireTagGroupHelper.HasAnyTags(reqs.SourceRequirements) || AvoidRequireTagGroupHelper.HasAnyTags(reqs.TargetRequirements))
+                    if (AvoidRequireTagGroupHelper.HasAnyTags(reqs.SourceRequirements) || 
+                        AvoidRequireTagGroupHelper.HasAnyTags(reqs.TargetRequirements))
                     {
                         bool hasName = reqs.HasName;
                         _sources.Add((ability, hasName ? $"{reqs.Name} — {ability.name}" : ability.name, hasName));
@@ -660,9 +715,12 @@ namespace FarEmerald.PlayForge.Extended.Editor
         private void CreateGUI()
         {
             var root = rootVisualElement;
-            root.style.paddingLeft = 10; root.style.paddingRight = 10; root.style.paddingTop = 10; root.style.paddingBottom = 10;
+            root.style.paddingLeft = 10;
+            root.style.paddingRight = 10;
+            root.style.paddingTop = 10;
+            root.style.paddingBottom = 10;
             
-            root.Add(new Label("Import Ability Requirements") { style = { fontSize = 14, unityFontStyleAndWeight = FontStyle.Bold, color = new Color(0.4f, 0.7f, 1f), marginBottom = 8 } });
+            root.Add(new Label("Import Ability Requirements") { style = { fontSize = 14, unityFontStyleAndWeight = FontStyle.Bold, color = AbilityReqColor, marginBottom = 8 } });
             
             var optRow = new VisualElement { style = { flexDirection = FlexDirection.Row, marginBottom = 8 } };
             var toggle = new Toggle("Show named first") { value = _showNamedFirst };
@@ -683,25 +741,39 @@ namespace FarEmerald.PlayForge.Extended.Editor
             root.schedule.Execute(() => { if (_sources.Count == 0) RefreshSources(); RebuildList(); UpdateFooter(); });
         }
         
-        private void UpdateFooter() { var f = rootVisualElement?.Q<Label>("Footer"); if (f != null) f.text = $"{_sources.Count} abilities ({_sources.Count(s => s.hasName)} named)"; }
+        private void UpdateFooter()
+        {
+            var f = rootVisualElement?.Q<Label>("Footer");
+            if (f != null) f.text = $"{_sources.Count} abilities ({_sources.Count(s => s.hasName)} named)";
+        }
         
         private void RebuildList()
         {
-            var sv = rootVisualElement?.Q<ScrollView>("ResultsList"); if (sv == null) return; sv.Clear();
-            var filtered = string.IsNullOrEmpty(_searchFilter) ? _sources : _sources.Where(s => s.label.ToLower().Contains(_searchFilter.ToLower())).ToList();
-            filtered = _showNamedFirst ? filtered.OrderByDescending(s => s.hasName).ThenBy(s => s.label).ToList() : filtered.OrderBy(s => s.label).ToList();
+            var sv = rootVisualElement?.Q<ScrollView>("ResultsList");
+            if (sv == null) return;
+            sv.Clear();
+            
+            var filtered = string.IsNullOrEmpty(_searchFilter) 
+                ? _sources 
+                : _sources.Where(s => s.label.ToLower().Contains(_searchFilter.ToLower())).ToList();
+            filtered = _showNamedFirst 
+                ? filtered.OrderByDescending(s => s.hasName).ThenBy(s => s.label).ToList() 
+                : filtered.OrderBy(s => s.label).ToList();
+            
             foreach (var (ability, label, hasName) in filtered)
             {
                 var item = new VisualElement { style = { flexDirection = FlexDirection.Row, alignItems = Align.Center, paddingLeft = 8, paddingRight = 8, paddingTop = 4, paddingBottom = 4, marginLeft = 4, marginRight = 4, marginBottom = 2, backgroundColor = Colors.ItemBackground, borderTopLeftRadius = 3, borderTopRightRadius = 3, borderBottomLeftRadius = 3, borderBottomRightRadius = 3 } };
                 if (hasName) { item.style.borderLeftWidth = 2; item.style.borderLeftColor = Colors.AccentGreen; }
                 item.RegisterCallback<MouseEnterEvent>(_ => item.style.backgroundColor = Colors.ButtonHover);
                 item.RegisterCallback<MouseLeaveEvent>(_ => item.style.backgroundColor = Colors.ItemBackground);
-                item.Add(new Label("⚡") { style = { color = new Color(0.4f, 0.7f, 1f), fontSize = 12, marginRight = 6 } });
+                item.Add(new Label("⚡") { style = { color = AbilityReqColor, fontSize = 12, marginRight = 6 } });
                 item.Add(new Label(label) { style = { flexGrow = 1, color = hasName ? Colors.LabelText : Colors.HintText, fontSize = 11 } });
                 item.Add(new Button(() => { _onImport?.Invoke(ability.Tags.TagRequirements); Close(); }) { text = "Import", style = { paddingLeft = 8, paddingRight = 8, height = 18, fontSize = 10 } });
                 sv.Add(item);
             }
-            if (filtered.Count == 0) sv.Add(new Label("No abilities found") { style = { color = Colors.HintText, unityTextAlign = TextAnchor.MiddleCenter, paddingTop = 20 } });
+            
+            if (filtered.Count == 0)
+                sv.Add(new Label("No abilities found") { style = { color = Colors.HintText, unityTextAlign = TextAnchor.MiddleCenter, paddingTop = 20 } });
         }
     }
     
@@ -716,7 +788,8 @@ namespace FarEmerald.PlayForge.Extended.Editor
         {
             var window = GetWindow<AvoidRequireTagGroupImportWindow>(true, "Import Requirements");
             window._onImport = onImport;
-            window.minSize = new Vector2(450, 400); window.maxSize = new Vector2(650, 550);
+            window.minSize = new Vector2(450, 400);
+            window.maxSize = new Vector2(650, 550);
             window.RefreshSources();
             window.ShowUtility();
         }
@@ -725,7 +798,6 @@ namespace FarEmerald.PlayForge.Extended.Editor
         {
             _sources.Clear();
             
-            // Add RequirementTemplate assets first (they appear at top)
             foreach (var guid in AssetDatabase.FindAssets($"t:{nameof(RequirementTemplate)}"))
             {
                 var template = AssetDatabase.LoadAssetAtPath<RequirementTemplate>(AssetDatabase.GUIDToAssetPath(guid));
@@ -747,6 +819,7 @@ namespace FarEmerald.PlayForge.Extended.Editor
                     AddGroup(ability, reqs.TargetRequirements, $"{ability.name} → Target", "Ability");
                 }
             }
+            
             foreach (var guid in AssetDatabase.FindAssets($"t:{nameof(GameplayEffect)}"))
             {
                 var effect = AssetDatabase.LoadAssetAtPath<GameplayEffect>(AssetDatabase.GUIDToAssetPath(guid));
@@ -777,7 +850,10 @@ namespace FarEmerald.PlayForge.Extended.Editor
         private void CreateGUI()
         {
             var root = rootVisualElement;
-            root.style.paddingLeft = 10; root.style.paddingRight = 10; root.style.paddingTop = 10; root.style.paddingBottom = 10;
+            root.style.paddingLeft = 10;
+            root.style.paddingRight = 10;
+            root.style.paddingTop = 10;
+            root.style.paddingBottom = 10;
             
             root.Add(new Label("Import Requirements") { style = { fontSize = 14, unityFontStyleAndWeight = FontStyle.Bold, color = new Color(0.95f, 0.6f, 0.2f), marginBottom = 8 } });
             
@@ -800,24 +876,28 @@ namespace FarEmerald.PlayForge.Extended.Editor
             root.schedule.Execute(() => { if (_sources.Count == 0) RefreshSources(); RebuildList(); UpdateFooter(); });
         }
         
-        private void UpdateFooter() 
-        { 
-            var f = rootVisualElement?.Q<Label>("Footer"); 
-            if (f != null) 
+        private void UpdateFooter()
+        {
+            var f = rootVisualElement?.Q<Label>("Footer");
+            if (f != null)
             {
                 int templateCount = _sources.Count(s => s.isTemplate);
-                f.text = templateCount > 0 
-                    ? $"{_sources.Count} groups ({templateCount} templates, {_sources.Count(s => s.hasName)} named)" 
-                    : $"{_sources.Count} groups ({_sources.Count(s => s.hasName)} named)"; 
+                f.text = templateCount > 0
+                    ? $"{_sources.Count} groups ({templateCount} templates, {_sources.Count(s => s.hasName)} named)"
+                    : $"{_sources.Count} groups ({_sources.Count(s => s.hasName)} named)";
             }
         }
         
         private void RebuildList()
         {
-            var sv = rootVisualElement?.Q<ScrollView>("ResultsList"); if (sv == null) return; sv.Clear();
-            var filtered = string.IsNullOrEmpty(_searchFilter) ? _sources : _sources.Where(s => s.label.ToLower().Contains(_searchFilter.ToLower())).ToList();
+            var sv = rootVisualElement?.Q<ScrollView>("ResultsList");
+            if (sv == null) return;
+            sv.Clear();
             
-            // Sort: templates first, then by named, then by type/label
+            var filtered = string.IsNullOrEmpty(_searchFilter)
+                ? _sources
+                : _sources.Where(s => s.label.ToLower().Contains(_searchFilter.ToLower())).ToList();
+            
             filtered = filtered
                 .OrderByDescending(s => s.isTemplate)
                 .ThenByDescending(s => _showNamedFirst && s.hasName)
@@ -829,23 +909,23 @@ namespace FarEmerald.PlayForge.Extended.Editor
             {
                 var item = new VisualElement { style = { flexDirection = FlexDirection.Row, alignItems = Align.Center, paddingLeft = 8, paddingRight = 8, paddingTop = 4, paddingBottom = 4, marginLeft = 4, marginRight = 4, marginBottom = 2, backgroundColor = Colors.ItemBackground, borderTopLeftRadius = 3, borderTopRightRadius = 3, borderBottomLeftRadius = 3, borderBottomRightRadius = 3 } };
                 
-                // Templates get special highlighting
-                if (isTemplate) 
-                { 
-                    item.style.borderLeftWidth = 3; 
+                if (isTemplate)
+                {
+                    item.style.borderLeftWidth = 3;
                     item.style.borderLeftColor = Colors.AccentCyan;
                     item.style.backgroundColor = new Color(Colors.AccentCyan.r, Colors.AccentCyan.g, Colors.AccentCyan.b, 0.1f);
                 }
-                else if (hasName) 
-                { 
-                    item.style.borderLeftWidth = 2; 
-                    item.style.borderLeftColor = Colors.AccentGreen; 
+                else if (hasName)
+                {
+                    item.style.borderLeftWidth = 2;
+                    item.style.borderLeftColor = Colors.AccentGreen;
                 }
                 
                 item.RegisterCallback<MouseEnterEvent>(_ => item.style.backgroundColor = Colors.ButtonHover);
-                item.RegisterCallback<MouseLeaveEvent>(_ => item.style.backgroundColor = isTemplate ? new Color(Colors.AccentCyan.r, Colors.AccentCyan.g, Colors.AccentCyan.b, 0.1f) : Colors.ItemBackground);
+                item.RegisterCallback<MouseLeaveEvent>(_ => item.style.backgroundColor = isTemplate 
+                    ? new Color(Colors.AccentCyan.r, Colors.AccentCyan.g, Colors.AccentCyan.b, 0.1f) 
+                    : Colors.ItemBackground);
                 
-                // Icon
                 string icon = isTemplate ? "📋" : (type == "Ability" ? "⚡" : "✦");
                 Color iconColor = isTemplate ? Colors.AccentCyan : (type == "Ability" ? new Color(0.4f, 0.7f, 1f) : new Color(0.6f, 0.4f, 0.9f));
                 item.Add(new Label(icon) { style = { color = iconColor, fontSize = 12, marginRight = 6 } });
@@ -858,45 +938,31 @@ namespace FarEmerald.PlayForge.Extended.Editor
                 item.Add(new Button(() => { _onImport?.Invoke(group); Close(); }) { text = "Import", style = { paddingLeft = 8, paddingRight = 8, height = 18, fontSize = 10 } });
                 sv.Add(item);
             }
-            if (filtered.Count == 0) sv.Add(new Label("No groups found") { style = { color = Colors.HintText, unityTextAlign = TextAnchor.MiddleCenter, paddingTop = 20 } });
+            
+            if (filtered.Count == 0)
+                sv.Add(new Label("No groups found") { style = { color = Colors.HintText, unityTextAlign = TextAnchor.MiddleCenter, paddingTop = 20 } });
         }
     }
     
     // ═══════════════════════════════════════════════════════════════════════════════
     // AvoidRequireContainer and AvoidRequireTagGroup Drawers
     // ═══════════════════════════════════════════════════════════════════════════════
-    
-    [CustomPropertyDrawer(typeof(AvoidRequireContainer))]
-    public class AvoidRequireContainerDrawer : PropertyDrawer
-    {
-        public override VisualElement CreatePropertyGUI(SerializedProperty property)
-        {
-            var container = new VisualElement { style = { flexDirection = FlexDirection.Row, alignItems = Align.Center, marginBottom = 1, marginTop = 1 } };
-            
-            var tagField = new PropertyField(property.FindPropertyRelative("Tag"), "");
-            tagField.style.flexGrow = 1; tagField.style.minWidth = 160;
-            tagField.BindProperty(property.FindPropertyRelative("Tag"));
-            container.Add(tagField);
-            
-            var opField = new PropertyField(property.FindPropertyRelative("Operator"), "");
-            opField.style.minWidth = 102; opField.style.marginLeft = 4;
-            opField.BindProperty(property.FindPropertyRelative("Operator"));
-            container.Add(opField);
-            
-            var magField = new IntegerField { bindingPath = property.FindPropertyRelative("Magnitude").propertyPath };
-            magField.style.minWidth = 60; magField.style.marginLeft = 8;
-            container.Add(magField);
-            
-            return container;
-        }
-    }
-    
+
     [CustomPropertyDrawer(typeof(AvoidRequireTagGroup))]
     public class AvoidRequireTagGroupDrawer : PropertyDrawer
     {
-        private static Dictionary<string, bool> _collapsedStates = new Dictionary<string, bool>();
-        private static HashSet<string> _rebuildingProperties = new HashSet<string>();
-        private static readonly Color RequirementOrange = new Color(0.95f, 0.6f, 0.2f);
+        private static readonly Dictionary<string, bool> _collapsedStates = new();
+        private static readonly HashSet<string> _rebuildingProperties = new();
+
+        private Color RequirementOrange
+        {
+            get
+            {
+                AvoidRequireTagGroupColor attr = null;
+                //var attr = fieldInfo.GetCustomAttribute<AvoidRequireTagGroupColor>();
+                return attr?.Color ?? Colors.BorderLight.Fade(.75f);
+            }
+        }
         
         public override VisualElement CreatePropertyGUI(SerializedProperty property)
         {
@@ -937,15 +1003,24 @@ namespace FarEmerald.PlayForge.Extended.Editor
             int avoidCount = avoidProp?.arraySize ?? 0;
             
             var container = new VisualElement { name = "AvoidRequireContainer" };
-            container.style.borderLeftWidth = 3; container.style.borderLeftColor = RequirementOrange;
-            container.style.borderTopWidth = 1; container.style.borderTopColor = new Color(RequirementOrange.r, RequirementOrange.g, RequirementOrange.b, 0.5f);
-            container.style.borderRightWidth = 1; container.style.borderRightColor = new Color(RequirementOrange.r, RequirementOrange.g, RequirementOrange.b, 0.5f);
-            container.style.borderBottomWidth = 1; container.style.borderBottomColor = new Color(RequirementOrange.r, RequirementOrange.g, RequirementOrange.b, 0.5f);
-            container.style.borderTopLeftRadius = 4; container.style.borderBottomLeftRadius = 4;
-            container.style.borderTopRightRadius = 4; container.style.borderBottomRightRadius = 4;
+            container.style.borderLeftWidth = 3;
+            container.style.borderLeftColor = RequirementOrange;
+            container.style.borderTopWidth = 1;
+            container.style.borderTopColor = new Color(RequirementOrange.r, RequirementOrange.g, RequirementOrange.b, 0.5f);
+            container.style.borderRightWidth = 1;
+            container.style.borderRightColor = new Color(RequirementOrange.r, RequirementOrange.g, RequirementOrange.b, 0.5f);
+            container.style.borderBottomWidth = 1;
+            container.style.borderBottomColor = new Color(RequirementOrange.r, RequirementOrange.g, RequirementOrange.b, 0.5f);
+            container.style.borderTopLeftRadius = 4;
+            container.style.borderBottomLeftRadius = 4;
+            container.style.borderTopRightRadius = 4;
+            container.style.borderBottomRightRadius = 4;
             container.style.backgroundColor = Colors.SectionBackground;
-            container.style.paddingTop = 4; container.style.paddingBottom = isCollapsed ? 4 : 6;
-            container.style.paddingLeft = 6; container.style.paddingRight = 6; container.style.marginTop = 2;
+            container.style.paddingTop = 4;
+            container.style.paddingBottom = isCollapsed ? 4 : 6;
+            container.style.paddingLeft = 6;
+            container.style.paddingRight = 6;
+            container.style.marginTop = 2;
             root.Add(container);
             
             // Header
@@ -953,12 +1028,19 @@ namespace FarEmerald.PlayForge.Extended.Editor
             container.Add(header);
             
             var collapseBtn = new Button { text = isCollapsed ? Icons.ChevronRight : Icons.ChevronDown };
-            collapseBtn.style.width = 18; collapseBtn.style.height = 18; collapseBtn.style.marginRight = 4;
-            collapseBtn.style.fontSize = 8; collapseBtn.style.paddingLeft = 0; collapseBtn.style.paddingRight = 0;
-            collapseBtn.style.paddingTop = 0; collapseBtn.style.paddingBottom = 0;
+            collapseBtn.style.width = 18;
+            collapseBtn.style.height = 18;
+            collapseBtn.style.marginRight = 4;
+            collapseBtn.style.fontSize = 8;
+            collapseBtn.style.paddingLeft = 0;
+            collapseBtn.style.paddingRight = 0;
+            collapseBtn.style.paddingTop = 0;
+            collapseBtn.style.paddingBottom = 0;
             collapseBtn.style.unityTextAlign = TextAnchor.MiddleCenter;
-            collapseBtn.style.borderTopLeftRadius = 3; collapseBtn.style.borderTopRightRadius = 3;
-            collapseBtn.style.borderBottomLeftRadius = 3; collapseBtn.style.borderBottomRightRadius = 3;
+            collapseBtn.style.borderTopLeftRadius = 3;
+            collapseBtn.style.borderTopRightRadius = 3;
+            collapseBtn.style.borderBottomLeftRadius = 3;
+            collapseBtn.style.borderBottomRightRadius = 3;
             collapseBtn.style.backgroundColor = Colors.ButtonBackground;
             collapseBtn.RegisterCallback<MouseEnterEvent>(_ => collapseBtn.style.backgroundColor = Colors.ButtonHover);
             collapseBtn.RegisterCallback<MouseLeaveEvent>(_ => collapseBtn.style.backgroundColor = Colors.ButtonBackground);
@@ -979,16 +1061,27 @@ namespace FarEmerald.PlayForge.Extended.Editor
             
             if (reqCount > 0) header.Add(CreateBadge($"+{reqCount}", Colors.AccentGreen));
             if (avoidCount > 0) { var b = CreateBadge($"-{avoidCount}", Colors.AccentRed); b.style.marginLeft = 4; header.Add(b); }
-            if (reqCount == 0 && avoidCount == 0 && isCollapsed) header.Add(new Label("Empty") { style = { fontSize = 9, color = Colors.HintText, unityFontStyleAndWeight = FontStyle.Italic } });
+            if (reqCount == 0 && avoidCount == 0 && isCollapsed)
+                header.Add(new Label("Empty") { style = { fontSize = 9, color = Colors.HintText, unityFontStyleAndWeight = FontStyle.Italic } });
             
             var importBtn = new Button { text = "⬇" };
-            importBtn.style.width = 22; importBtn.style.height = 20; importBtn.style.marginLeft = 8; importBtn.style.fontSize = 10;
-            importBtn.style.borderTopLeftRadius = 3; importBtn.style.borderTopRightRadius = 3;
-            importBtn.style.borderBottomLeftRadius = 3; importBtn.style.borderBottomRightRadius = 3;
+            importBtn.style.width = 22;
+            importBtn.style.height = 20;
+            importBtn.style.marginLeft = 8;
+            importBtn.style.fontSize = 10;
+            importBtn.style.borderTopLeftRadius = 3;
+            importBtn.style.borderTopRightRadius = 3;
+            importBtn.style.borderBottomLeftRadius = 3;
+            importBtn.style.borderBottomRightRadius = 3;
             importBtn.style.backgroundColor = Colors.ButtonBackground;
             importBtn.RegisterCallback<MouseEnterEvent>(_ => importBtn.style.backgroundColor = Colors.ButtonHover);
             importBtn.RegisterCallback<MouseLeaveEvent>(_ => importBtn.style.backgroundColor = Colors.ButtonBackground);
-            importBtn.clicked += () => AvoidRequireTagGroupImportWindow.Show(property, root, g => { AvoidRequireTagGroupHelper.CopyAvoidRequireGroup(property, g); property.serializedObject.ApplyModifiedProperties(); ScheduleRebuild(root, property); });
+            importBtn.clicked += () => AvoidRequireTagGroupImportWindow.Show(property, root, g =>
+            {
+                AvoidRequireTagGroupHelper.CopyAvoidRequireGroup(property, g);
+                property.serializedObject.ApplyModifiedProperties();
+                ScheduleRebuild(root, property);
+            });
             header.Add(importBtn);
             
             if (!isCollapsed)
@@ -1000,7 +1093,14 @@ namespace FarEmerald.PlayForge.Extended.Editor
                 var nameRow = new VisualElement { style = { flexDirection = FlexDirection.Row, alignItems = Align.Center, marginBottom = 6 } };
                 nameRow.Add(new Label("Name") { style = { width = 50, fontSize = 10, color = Colors.HintText } });
                 var nameField = new TextField { value = customName, style = { flexGrow = 1 } };
-                nameField.RegisterValueChangedCallback(evt => { if (nameProp != null) { nameProp.stringValue = evt.newValue; property.serializedObject.ApplyModifiedProperties(); } });
+                nameField.RegisterValueChangedCallback(evt =>
+                {
+                    if (nameProp != null)
+                    {
+                        nameProp.stringValue = evt.newValue;
+                        property.serializedObject.ApplyModifiedProperties();
+                    }
+                });
                 nameRow.Add(nameField);
                 content.Add(nameRow);
                 
@@ -1016,11 +1116,16 @@ namespace FarEmerald.PlayForge.Extended.Editor
         private VisualElement CreateTagSection(string title, Color color, SerializedProperty listProp)
         {
             var section = new VisualElement();
-            section.style.paddingLeft = 4; section.style.paddingTop = 2; section.style.paddingBottom = 2;
-            section.style.borderLeftWidth = 2; section.style.borderLeftColor = color;
+            section.style.paddingLeft = 4;
+            section.style.paddingTop = 2;
+            section.style.paddingBottom = 2;
+            section.style.borderLeftWidth = 2;
+            section.style.borderLeftColor = color;
             section.style.backgroundColor = Colors.SubsectionBackground;
-            section.style.borderTopLeftRadius = 2; section.style.borderTopRightRadius = 2;
-            section.style.borderBottomLeftRadius = 2; section.style.borderBottomRightRadius = 2;
+            section.style.borderTopLeftRadius = 2;
+            section.style.borderTopRightRadius = 2;
+            section.style.borderBottomLeftRadius = 2;
+            section.style.borderBottomRightRadius = 2;
             
             var header = new VisualElement { style = { flexDirection = FlexDirection.Row, alignItems = Align.Center, marginBottom = 2 } };
             header.Add(new Label(title) { style = { fontSize = 10, unityFontStyleAndWeight = FontStyle.Bold, color = Colors.LabelText } });
@@ -1029,7 +1134,9 @@ namespace FarEmerald.PlayForge.Extended.Editor
             if (count > 0) header.Add(new Label($"({count})") { style = { fontSize = 9, color = color } });
             section.Add(header);
             
-            var field = new PropertyField(listProp, ""); field.style.marginTop = 2; field.BindProperty(listProp);
+            var field = new PropertyField(listProp, "");
+            field.style.marginTop = 2;
+            field.BindProperty(listProp);
             section.Add(field);
             return section;
         }
@@ -1037,12 +1144,17 @@ namespace FarEmerald.PlayForge.Extended.Editor
         private Label CreateBadge(string text, Color color)
         {
             var badge = new Label(text);
-            badge.style.fontSize = 9; badge.style.color = color;
+            badge.style.fontSize = 9;
+            badge.style.color = color;
             badge.style.backgroundColor = new Color(color.r, color.g, color.b, 0.15f);
-            badge.style.paddingLeft = 4; badge.style.paddingRight = 4;
-            badge.style.paddingTop = 1; badge.style.paddingBottom = 1;
-            badge.style.borderTopLeftRadius = 4; badge.style.borderTopRightRadius = 4;
-            badge.style.borderBottomLeftRadius = 4; badge.style.borderBottomRightRadius = 4;
+            badge.style.paddingLeft = 4;
+            badge.style.paddingRight = 4;
+            badge.style.paddingTop = 1;
+            badge.style.paddingBottom = 1;
+            badge.style.borderTopLeftRadius = 4;
+            badge.style.borderTopRightRadius = 4;
+            badge.style.borderBottomLeftRadius = 4;
+            badge.style.borderBottomRightRadius = 4;
             return badge;
         }
     }

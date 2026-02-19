@@ -5,7 +5,8 @@ namespace FarEmerald.PlayForge
     public interface ITagHandler
     {
         public List<Tag> GetAppliedTags();
-        public int GetWeight(Tag _tag);
+        public int GetTagWeight(Tag _tag);
+        public bool QueryTags(TagQuery query);
         public void CompileGrantedTags();
     }
 

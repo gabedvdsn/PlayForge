@@ -4,9 +4,9 @@ using UnityEngine.UIElements;
 namespace FarEmerald.PlayForge.Extended.Editor
 {
     [CustomPropertyDrawer(typeof(AttributeSet))]
-    public class AttributeSetDrawer : AbstractRefDrawer<AttributeSet>
+    public class AttributeSetDrawer : AbstractForgeObjectDrawer<AttributeSet>
     {
-        protected override AttributeSet[] GetEntries()
+        /*protected override AttributeSet[] GetEntries()
         {
             return GetAllInstances<AttributeSet>();
         }
@@ -32,9 +32,9 @@ namespace FarEmerald.PlayForge.Extended.Editor
             if (prop.isArray) return null;
             return new Label(prop.name);
         }
-        protected override bool AcceptClear()
+        protected override bool AcceptClear(SerializedProperty prop)
         {
             return true;
-        }
+        }*/
     }
 }

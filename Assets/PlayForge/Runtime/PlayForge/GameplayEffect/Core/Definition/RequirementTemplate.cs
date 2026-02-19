@@ -45,10 +45,10 @@ namespace FarEmerald.PlayForge
             // Deep copy RequireTags
             if (Requirements.RequireTags != null)
             {
-                target.RequireTags = new List<AvoidRequireContainer>();
+                target.RequireTags = new List<TagQuery>();
                 foreach (var req in Requirements.RequireTags)
                 {
-                    target.RequireTags.Add(new AvoidRequireContainer
+                    target.RequireTags.Add(new TagQuery
                     {
                         Tag = req.Tag,
                         Operator = req.Operator,
@@ -58,16 +58,16 @@ namespace FarEmerald.PlayForge
             }
             else
             {
-                target.RequireTags = new List<AvoidRequireContainer>();
+                target.RequireTags = new List<TagQuery>();
             }
             
             // Deep copy AvoidTags
             if (Requirements.AvoidTags != null)
             {
-                target.AvoidTags = new List<AvoidRequireContainer>();
+                target.AvoidTags = new List<TagQuery>();
                 foreach (var avoid in Requirements.AvoidTags)
                 {
-                    target.AvoidTags.Add(new AvoidRequireContainer
+                    target.AvoidTags.Add(new TagQuery
                     {
                         Tag = avoid.Tag,
                         Operator = avoid.Operator,
@@ -77,7 +77,7 @@ namespace FarEmerald.PlayForge
             }
             else
             {
-                target.AvoidTags = new List<AvoidRequireContainer>();
+                target.AvoidTags = new List<TagQuery>();
             }
         }
         
@@ -97,7 +97,7 @@ namespace FarEmerald.PlayForge
             return true;
         }
         
-        private bool ListsMatch(List<AvoidRequireContainer> a, List<AvoidRequireContainer> b)
+        private bool ListsMatch(List<TagQuery> a, List<TagQuery> b)
         {
             if (a == null && b == null) return true;
             if (a == null || b == null) return false;
@@ -130,13 +130,13 @@ namespace FarEmerald.PlayForge
             {
                 Requirements = new AvoidRequireTagGroup
                 {
-                    RequireTags = new List<AvoidRequireContainer>(),
-                    AvoidTags = new List<AvoidRequireContainer>()
+                    RequireTags = new List<TagQuery>(),
+                    AvoidTags = new List<TagQuery>()
                 };
             }
             
-            Requirements.RequireTags ??= new List<AvoidRequireContainer>();
-            Requirements.AvoidTags ??= new List<AvoidRequireContainer>();
+            Requirements.RequireTags ??= new List<TagQuery>();
+            Requirements.AvoidTags ??= new List<TagQuery>();
         }
 #endif
     }

@@ -30,11 +30,11 @@ namespace FarEmerald.PlayForge.Extended.Editor
         {
             return false;
         }
-        protected override Type GetDefault()
+        protected override Type GetDefault(SerializedProperty prop)
         {
             var types = TypePickerCache.GetConcreteTypesAssignableTo<IProxyStagePolicy>();
             if (types.Count > 0) return types[0];
-            return base.GetDefault();
+            return base.GetDefault(prop);
         }
 
     }

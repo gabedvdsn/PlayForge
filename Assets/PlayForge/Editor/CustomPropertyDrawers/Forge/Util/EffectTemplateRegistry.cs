@@ -9,7 +9,8 @@ namespace FarEmerald.PlayForge.Extended.Editor
     /// </summary>
     public static class EffectTemplateRegistry
     {
-        private const string PREFS_PREFIX = "PlayForge_EffectTemplate_";
+        internal const string PREFS_PREFIX = "PlayForge_EffectTemplate_";
+        // internal const string TEMPLATE_COOLDOWN
         
         /// <summary>
         /// Gets the template effect for a given key (e.g., "Cost", "Cooldown").

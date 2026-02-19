@@ -7,15 +7,19 @@ namespace FarEmerald.PlayForge
 {
     public class MonoWrapperProcess : AbstractProcessWrapper
     {
+        /// <summary>
+        /// The original Object process (prefab OR instance)
+        /// </summary>
         private AbstractMonoProcess StoredMono;
-        private ProcessDataPacket Data;
         
+        /// <summary>
+        /// The active Object process
+        /// </summary>
         private AbstractMonoProcess activeMono;
 
-        public MonoWrapperProcess(AbstractMonoProcess storedMono, ProcessDataPacket data)
+        public MonoWrapperProcess(AbstractMonoProcess storedMono, ProcessDataPacket data) : base(data)
         {
             StoredMono = storedMono;
-            Data = data;
         }
 
         /// <summary>
@@ -64,10 +68,8 @@ namespace FarEmerald.PlayForge
         public override void WhenTerminate(ProcessRelay relay)
         {
             WhenTerminateSafe(relay);
-            if (activeMono.Instantiator is not null)
-            {
-                activeMono.Instantiator.CleanProcess(activeMono);
-            }
+            
+            if (activeMono.Instantiator is not null) activeMono.Instantiator.CleanProcess(activeMono);
             else
             {
                 try { Object.Destroy(activeMono.gameObject); }
