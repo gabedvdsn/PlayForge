@@ -1,4 +1,5 @@
-﻿using UnityEditor;
+﻿using System.Collections.Generic;
+using UnityEditor;
 using UnityEngine.Serialization;
 
 namespace FarEmerald.PlayForge
@@ -31,6 +32,12 @@ namespace FarEmerald.PlayForge
             BaseValue = baseValue;
 
             ImpactIsWorkable = impactIsWorkable;
+        }
+
+        public static SourcedModifiedAttributeValue GenerateSimple(ISource source, IAttribute attribute, float currentValue, float baseValue)
+        {
+            var derivation = IAttributeImpactDerivation.GenerateSourceDerivation(source, attribute, Tags.IgnoreRetention, new List<Tag>() { Tags.DisallowImpact });
+            return new SourcedModifiedAttributeValue(derivation, currentValue, baseValue, false);
         }
         
         #region Helpers

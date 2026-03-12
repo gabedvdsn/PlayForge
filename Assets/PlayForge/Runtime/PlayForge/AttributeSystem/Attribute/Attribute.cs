@@ -9,7 +9,7 @@ using UnityEngine.Serialization;
 namespace FarEmerald.PlayForge
 {
     [CreateAssetMenu(menuName = "PlayForge/Attribute", fileName = "Attribute_")]
-    public class Attribute : BaseForgeObject, IValidationReady
+    public class Attribute : BaseForgeAsset, IAttribute
     {
         public string Name;
         public string Abbreviation;
@@ -26,25 +26,34 @@ namespace FarEmerald.PlayForge
         {
             yield break;
         }
+        public string GetAbbreviation()
+        {
+            return Abbreviation;
+        }
+        public List<TextureItem> GetTextures()
+        {
+            return Textures;
+        }
         public override string GetDescription()
         {
             return Description;
         }
         public override Texture2D GetPrimaryIcon()
         {
-            foreach (var ti in Textures)
-            {
-                if (ti.Tag == Tags.PRIMARY) return ti.Texture;
-            }
-            return Textures.Count > 0 ? Textures[0].Texture : null;
+            return ForgeHelper.GetTextureItem(Textures, PlayForge.Tags.PRIMARY);
         }
 
         public bool Equals(Attribute other)
         {
             return other == this;
         }
+
+        public bool Equals(IAttribute other)
+        {
+            return GetName() == other.GetName();
+        }
         
-        public override bool Equals(object obj) => obj is Attribute other && Equals(other);
+        public override bool Equals(object obj) => obj is IAttribute other && Equals(other);
 
         public override int GetHashCode() => base.GetHashCode();
 

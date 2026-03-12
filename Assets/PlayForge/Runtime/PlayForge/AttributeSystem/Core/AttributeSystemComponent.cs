@@ -9,7 +9,7 @@ namespace FarEmerald.PlayForge
     /// Component for managing attributes and their modifications.
     /// Refactored to support WorkerContext and deferred execution.
     /// </summary>
-    public class AttributeSystemComponent
+    public class AttributeSystemComponent : DeferredContextSystem
     {
         protected AttributeSet attributeSet;
         protected List<AbstractAttributeWorker> attributeChangeWorkers = new();
@@ -17,16 +17,12 @@ namespace FarEmerald.PlayForge
         private AttributeChangeMomentHandler PreChangeHandler = new();
         private AttributeChangeMomentHandler PostChangeHandler = new();
         
-        private Dictionary<Attribute, CachedAttributeValue> AttributeCache;
+        private Dictionary<IAttribute, CachedAttributeValue> AttributeCache;
         private AttributeModificationRule Rule;
         
         public AttributeSystemCallbacks Callbacks;
         
         public readonly IGameplayAbilitySystem Self;
-        
-        // References for deferred execution
-        private ActionQueue _actionQueue;
-        private FrameSummary _frameSummary;
         
         public AttributeSystemComponent(IGameplayAbilitySystem self)
         {
@@ -48,7 +44,7 @@ namespace FarEmerald.PlayForge
         
         private void SetupCaches()
         {
-            AttributeCache = new Dictionary<Attribute, CachedAttributeValue>();
+            AttributeCache = new Dictionary<IAttribute, CachedAttributeValue>();
             Rule = new AttributeModificationRule();
             Callbacks = new AttributeSystemCallbacks();
         }
@@ -87,7 +83,7 @@ namespace FarEmerald.PlayForge
             Self.GetTagCache()?.AddTag(set.AssetTag);
     
             // Phase 2: Initialize with values (now all attributes exist in cache)
-            var failedAttributes = new List<Attribute>();
+            var failedAttributes = new List<IAttribute>();
             foreach (var attr in set.Attributes.Select(elem => elem.Attribute))
             {
                 if (!AttributeCache[attr].Initialize(attr, Self, AttributeCache))
@@ -117,15 +113,6 @@ namespace FarEmerald.PlayForge
             }
         }
         
-        /// <summary>
-        /// Set the deferred execution context.
-        /// </summary>
-        public void SetDeferredContext(ActionQueue actionQueue, FrameSummary frameSummary)
-        {
-            _actionQueue = actionQueue;
-            _frameSummary = frameSummary;
-        }
-        
         // ═══════════════════════════════════════════════════════════════════════════
         // WORKER MANAGEMENT
         // ═══════════════════════════════════════════════════════════════════════════
@@ -144,18 +131,27 @@ namespace FarEmerald.PlayForge
         // ATTRIBUTE MANAGEMENT
         // ═══════════════════════════════════════════════════════════════════════════
         
-        public void ProvideAttribute(Attribute attribute, AttributeBlueprint blueprint)
+        public void ProvideAttribute(IAttribute attribute, AttributeBlueprint blueprint)
         {
             if (AttributeCache.ContainsKey(attribute)) return;
             
             AttributeCache[attribute] = new CachedAttributeValue(blueprint);
             blueprint.Base.Scaling?.Regulate(attribute, Rule);
             
-            AttributeLibrary.Add(attribute);
+            AttributeRegistry.Add(attribute);
             Callbacks.AttributeRegister(attribute);
         }
 
-        public void RemoveAttribute(Attribute attribute)
+        public void ProvideAttribute(IAttribute attribute, AttributeValue value)
+        {
+            if (AttributeCache.ContainsKey(attribute)) return;
+            
+            AttributeCache[attribute] = CachedAttributeValue.GenerateGeneric(attribute, Self, AttributeCache, Tags.IgnoreRetention, value);
+            AttributeRegistry.Add(attribute);
+            Callbacks.AttributeRegister(attribute);
+        }
+
+        public void RemoveAttribute(IAttribute attribute)
         {
             if (!AttributeCache.ContainsKey(attribute)) return;
 
@@ -163,13 +159,13 @@ namespace FarEmerald.PlayForge
             Callbacks.AttributeUnregister(attribute);
         }
         
-        public bool DefinesAttribute(Attribute attribute) 
+        public bool DefinesAttribute(IAttribute attribute) 
             => attribute == null || AttributeCache.ContainsKey(attribute);
         
-        public bool TryGetAttributeValue(Attribute attribute, out CachedAttributeValue attributeValue)
+        public bool TryGetAttributeValue(IAttribute attribute, out CachedAttributeValue attributeValue)
             => AttributeCache.TryGetValue(attribute, out attributeValue);
         
-        public bool TryGetAttributeValue(Attribute attribute, out AttributeValue attributeValue)
+        public bool TryGetAttributeValue(IAttribute attribute, out AttributeValue attributeValue)
         {
             if (AttributeCache.TryGetValue(attribute, out var cachedValue))
             {
@@ -185,7 +181,7 @@ namespace FarEmerald.PlayForge
         // ATTRIBUTE MODIFICATION (refactored for WorkerContext)
         // ═══════════════════════════════════════════════════════════════════════════
         
-        public ImpactData ModifyAttribute(Attribute attribute, SourcedModifiedAttributeValue sourcedModifiedValue, bool runEvents = true)
+        public ImpactData ModifyAttribute(IAttribute attribute, SourcedModifiedAttributeValue sourcedModifiedValue, bool runEvents = true)
         {
             if (!AttributeCache.ContainsKey(attribute)) return default;
             
@@ -261,8 +257,8 @@ namespace FarEmerald.PlayForge
         // ATTRIBUTE DERIVATION MANAGEMENT
         // ═══════════════════════════════════════════════════════════════════════════
         
-        private HashSet<Attribute> _refreshingAttributes = new();
-        private void RefreshRegulatedAttributes(Attribute contact)
+        private HashSet<IAttribute> _refreshingAttributes = new();
+        private void RefreshRegulatedAttributes(IAttribute contact)
         {
             if (!Rule.TryGetRelatedAttributes(contact, out var related)) return;
             
@@ -320,10 +316,10 @@ namespace FarEmerald.PlayForge
         // HELPERS
         // ═══════════════════════════════════════════════════════════════════════════
         
-        public IReadOnlyDictionary<Attribute, CachedAttributeValue> GetAttributeCache() 
+        public IReadOnlyDictionary<IAttribute, CachedAttributeValue> GetAttributeCache() 
             => AttributeCache;
         
-        public List<Attribute> GetDefinedAttributes() 
+        public List<IAttribute> GetDefinedAttributes() 
             => AttributeCache.Keys.ToList();
     }
 }

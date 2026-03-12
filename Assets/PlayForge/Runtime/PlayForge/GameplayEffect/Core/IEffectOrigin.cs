@@ -11,14 +11,19 @@ namespace FarEmerald.PlayForge
         public List<Tag> GetContextTags();
         public Tag GetAssetTag();
         public int GetLevel();
-        public void SetLevel(int level);
         public float GetRelativeLevel();
         public string GetName();
         public List<Tag> GetAffiliation();
         public bool IsActive();
+        
         public static SourceEffectOrigin GenerateSourceDerivation(ISource source)
         {
             return new SourceEffectOrigin(source);
+        }
+
+        public static LevelerEffectOrigin GenerateLevelerDerivation(ISource source, int level, int maxLevel)
+        {
+            return new LevelerEffectOrigin(source, level, maxLevel);
         }
     }
     
@@ -43,7 +48,7 @@ namespace FarEmerald.PlayForge
         {
             return Owner.GetAssetTag();
         }
-        public int GetLevel()
+        public virtual int GetLevel()
         {
             return Owner.GetLevel();
         }
@@ -51,10 +56,9 @@ namespace FarEmerald.PlayForge
         {
             Owner.SetLevel(level);
         }
-        public float GetRelativeLevel()
+        public virtual float GetRelativeLevel()
         {
-            float maxLevel = Owner.GetMaxLevel();
-            return maxLevel > 1 ? (Owner.GetLevel() - 1) / (maxLevel - 1) : 1f;
+            return ForgeHelper.RelativeOffsetValue(Owner.GetLevel(), Owner.GetMaxLevel());
         }
         public string GetName()
         {
@@ -72,5 +76,27 @@ namespace FarEmerald.PlayForge
         {
             return true;
         }
+    }
+
+    public class LevelerEffectOrigin : SourceEffectOrigin
+    {
+        public int Level;
+        public int MaxLevel;
+
+        public LevelerEffectOrigin(ISource owner, int level, int maxLevel) : base(owner)
+        {
+            Level = level;
+            MaxLevel = maxLevel;
+        }
+
+        public override int GetLevel()
+        {
+            return Level;
+        }
+        public override float GetRelativeLevel()
+        {
+            return ForgeHelper.RelativeOffsetValue(Level, MaxLevel);
+        }
+
     }
 }

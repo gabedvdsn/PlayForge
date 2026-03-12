@@ -14,8 +14,8 @@ namespace FarEmerald.PlayForge
         /// Registers attribute relationships for cache invalidation.
         /// When the contact attribute changes, related attributes need recalculation.
         /// </summary>
-        public abstract void Regulate(Attribute attribute, AttributeModificationRule rules);
-        public abstract float Evaluate(IGameplayAbilitySystem gas, AttributeBlueprint blueprint, IReadOnlyDictionary<Attribute, CachedAttributeValue> cache);
+        public abstract void Regulate(IAttribute attribute, AttributeModificationRule rules);
+        public abstract float Evaluate(IGameplayAbilitySystem gas, AttributeBlueprint blueprint, IReadOnlyDictionary<IAttribute, CachedAttributeValue> cache);
     }
 
     /// <summary>
@@ -24,12 +24,12 @@ namespace FarEmerald.PlayForge
     /// </summary>
     public class AttributeModificationRule
     {
-        private readonly Dictionary<Attribute, List<Attribute>> matrix = new();
+        private readonly Dictionary<IAttribute, List<IAttribute>> matrix = new();
 
         /// <summary>
         /// Register that when 'contact' changes, 'related' needs recalculation.
         /// </summary>
-        public void RegisterRelation(Attribute contact, Attribute related)
+        public void RegisterRelation(IAttribute contact, IAttribute related)
         {
             if (contact == null || related == null) return;
             matrix.SafeAdd(contact, related);
@@ -38,7 +38,7 @@ namespace FarEmerald.PlayForge
         /// <summary>
         /// When 'attr' changes, get the list of attributes that need re-initialization.
         /// </summary>
-        public bool TryGetRelatedAttributes(Attribute attr, out List<Attribute> related)
+        public bool TryGetRelatedAttributes(IAttribute attr, out List<IAttribute> related)
         {
             return matrix.TryGetValue(attr, out related);
         }
@@ -54,7 +54,7 @@ namespace FarEmerald.PlayForge
         /// <summary>
         /// Get all attributes that have dependencies.
         /// </summary>
-        public IEnumerable<Attribute> GetAllContactAttributes()
+        public IEnumerable<IAttribute> GetAllContactAttributes()
         {
             return matrix.Keys;
         }

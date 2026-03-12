@@ -19,6 +19,8 @@ namespace FarEmerald.PlayForge
         public List<AbstractCreateProcessAbilityTask> CreateProcessTasks = new();
         private AbilityDataPacket NativeDataPacket;
 
+        public static RuntimeAttribute LevelAttribute;
+
         public void Bootstrap()
         {
             if (Instance is not null && Instance != this)
@@ -27,6 +29,9 @@ namespace FarEmerald.PlayForge
             }
 
             Instance = this;
+            
+            LevelAttribute = new RuntimeAttribute(TagHierarchy.GenerateUniqueRandomTag(), GetAssetTag());
+            AttributeRegistry.Add(LevelAttribute);
             
             base.Awake();
         }
@@ -87,7 +92,7 @@ namespace FarEmerald.PlayForge
         
         public float GetRelativeLevel()
         {
-            return Data.RelativeLevel;
+            return LevelSystem.GetLeveler(LevelAttribute).Level.Ratio;
         }
         public bool IsActive()
         {

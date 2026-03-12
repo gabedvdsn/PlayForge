@@ -41,14 +41,14 @@ namespace FarEmerald.PlayForge.Extended.Editor
         private const float ButtonSpacing = 4f;
         private const float Padding = 8f;
 
-        private static Dictionary<BaseForgeObject, Dictionary<string, bool>> _collapsedStates = new();
+        private static Dictionary<BaseForgeAsset, Dictionary<string, bool>> _collapsedStates = new();
 
-        protected static bool IsCollapsed(BaseForgeObject obj, string section)
+        protected static bool IsCollapsed(BaseForgeAsset obj, string section)
         {
             return !(_collapsedStates.TryGetValue(obj, out var sections) && sections.TryGetValue(section, out bool collapsed)) || collapsed;
         }
 
-        protected static void SetCollapsed(BaseForgeObject obj, string section, bool collapsed)
+        protected static void SetCollapsed(BaseForgeAsset obj, string section, bool collapsed)
         {
             _collapsedStates.SafeAdd(obj, new Dictionary<string, bool>(), false);
             _collapsedStates[obj].SafeAdd(section, collapsed, true);
@@ -90,7 +90,7 @@ namespace FarEmerald.PlayForge.Extended.Editor
             }
         }
 
-        protected abstract BaseForgeLinkProvider GetAsset();
+        protected abstract BaseForgeLevelProvider GetAsset();
         
         // ═══════════════════════════════════════════════════════════════════════════
         // Abstract Methods - Header Data (Must be implemented)
@@ -156,6 +156,8 @@ namespace FarEmerald.PlayForge.Extended.Editor
         
         /// <summary>Whether to show the Import button</summary>
         protected virtual bool ShowImportButton => false;
+
+        protected virtual bool ShowTemplateButton => true;
         
         /// <summary>For programmatic editors, this can be empty</summary>
         protected virtual void SetupCollapsibleSections() { }
@@ -173,14 +175,13 @@ namespace FarEmerald.PlayForge.Extended.Editor
         protected void OpenImportPicker()
         {
             var assetType = target.GetType();
-            var templates = TemplateRegistry.GetTemplates(assetType).Where(t => t.IsValid()).ToList();
-            
-            var menu = new GenericMenu();
+            var templates = TemplateRegistry.GetTemplates(assetType).Where(t => t.IsValid() && t.IsNotTarget(target)).ToList();
             
             // Section: Templates (if any exist)
             if (templates.Count > 0)
             {
-                //menu.AddDisabledItem(new GUIContent("Templates"));
+                var menu = new GenericMenu();
+                menu.AddDisabledItem(new GUIContent("Templates"));
                 
                 foreach (var template in templates)
                 {
@@ -196,15 +197,50 @@ namespace FarEmerald.PlayForge.Extended.Editor
                 }
                 
                 menu.AddSeparator("");
+                
+                // Section: Browse for any asset
+                menu.AddItem(new GUIContent("Browse All Assets..."), false, () =>
+                {
+                    OpenAssetPicker(assetType);
+                });
+                
+                menu.ShowAsContext();
+            }
+            else Debug.LogError($"[ PlayForge ] No importable assets found.");
+        }
+
+        protected void ShowTemplatePicker()
+        {
+            var assetType = target.GetType();
+            var windowConfig = AssetBrowserConfig.Create("Choose Template")
+                .ForTypes(assetType)
+                .WithSubtitle("Set asset template.")
+                .Excluding(target)
+                .WithDisplayName(so =>
+                {
+                    var bfo = so as BaseForgeAsset;
+                    return bfo?.GetName() ?? assetType.Name;
+                })
+                .WithAction("Assign", so =>
+                {
+                    var bfo = target as BaseForgeAsset;
+                    var sfo = so as BaseForgeAsset;
+                    bfo.SetTemplate(sfo);
+                    Repaint();
+                    Debug.Log($"[ PlayForge ] Template \"{sfo.GetName()}\" assigned.");
+                }, closeOnClick: true)
+                .WithTypeBadges();
+            if (target is BaseForgeAsset _bfo && _bfo.HasTemplate)
+            {
+                string template = _bfo.Template.GetName();
+                windowConfig.WithFooterAction($"Unnasign Template \"{template}\"", () =>
+                {
+                    _bfo.SetTemplate(null);
+                    Repaint();
+                });
             }
             
-            // Section: Browse for any asset
-            menu.AddItem(new GUIContent("Browse All Assets..."), false, () =>
-            {
-                OpenAssetPicker(assetType);
-            });
-            
-            menu.ShowAsContext();
+            AssetBrowserWindow.Show(windowConfig);
         }
 
         private string GetTemplateDisplayName(AssetTemplate template, ScriptableObject asset)
@@ -626,6 +662,14 @@ namespace FarEmerald.PlayForge.Extended.Editor
             textContainer.name = "HeaderTextContainer";
             textContainer.style.flexGrow = 1;
             textContainer.style.justifyContent = Justify.Center;
+
+            var infoContainer = new VisualElement();
+            infoContainer.style.flexGrow = 1;
+            infoContainer.style.flexDirection = FlexDirection.Row;
+            infoContainer.style.alignItems = Align.Center;
+            infoContainer.style.marginTop = 2;
+            
+            textContainer.Add(infoContainer);
             
             // Asset type badge
             var typeBadge = new Label(GetAssetTypeLabel());
@@ -640,7 +684,27 @@ namespace FarEmerald.PlayForge.Extended.Editor
             typeBadge.style.paddingBottom = 2;
             typeBadge.style.alignSelf = Align.FlexStart;
             typeBadge.style.marginBottom = 2;
-            textContainer.Add(typeBadge);
+            infoContainer.Add(typeBadge);
+            
+            // Template badge
+            if (target is BaseForgeAsset obj && obj.HasTemplate)
+            {
+                var templateBadge = new Label($"T: {obj.Template.GetName()}");
+                templateBadge.tooltip = $"Template: {obj.Template.GetName()}";
+                templateBadge.style.fontSize = 9;
+                templateBadge.style.unityFontStyleAndWeight = FontStyle.Bold;
+                templateBadge.style.color = GetAssetTypeColor();
+                templateBadge.style.backgroundColor = GetAssetTypeColor().Fade(.6f).Amplify(.4f);
+
+                templateBadge.style.paddingLeft = 4;
+                templateBadge.style.paddingRight = 4;
+                templateBadge.style.paddingTop = 2;
+                templateBadge.style.paddingBottom = 2;
+                templateBadge.style.alignSelf = Align.FlexStart;
+                templateBadge.style.marginLeft = 4;
+                templateBadge.style.marginBottom = 2;
+                infoContainer.Add(templateBadge);
+            }
             
             // Name label (store reference for updates)
             _headerNameLabel = new Label(GetDisplayName());
@@ -695,27 +759,34 @@ namespace FarEmerald.PlayForge.Extended.Editor
             bottomButtonRow.style.flexDirection = FlexDirection.Row;
             
             // Refresh button
-            var refreshBtn = CreateHeaderButton("↻", "Refresh", new Color(0.5f, 0.5f, 0.5f), () => Refresh());
+            var refreshBtn = CreateHeaderButton("↻", "Refresh", Colors.AccentGray, () => Refresh());  //new Color(0.5f, 0.5f, 0.5f)
             bottomButtonRow.Add(refreshBtn);
             
             // Import button (if enabled)
             if (ShowImportButton)
             {
-                var importBtn = CreateHeaderButton("↓", "Import from another asset", new Color(0.4f, 0.6f, 0.4f), () => OpenImportPicker());
+                var importBtn = CreateHeaderButton("↓", "Import from another asset", Colors.AccentGreen, () => OpenImportPicker());  //new Color(0.4f, 0.6f, 0.4f)
                 importBtn.style.marginLeft = ButtonSpacing;
                 bottomButtonRow.Add(importBtn);
+            }
+
+            if (ShowTemplateButton)
+            {
+                var templateButton = CreateHeaderButton("T", "Set template asset", Colors.AccentRed, ShowTemplatePicker);
+                templateButton.style.marginLeft = ButtonSpacing;
+                bottomButtonRow.Add(templateButton);
             }
             
             // Visualize button (if enabled)
             if (ShowVisualizeButton)
             {
-                var vizBtn = CreateHeaderButton("◉", "Visualize", new Color(0.6f, 0.4f, 0.7f), () => OnVisualize());
+                var vizBtn = CreateHeaderButton("◉", "Visualize", Colors.AccentPurple, () => OnVisualize());  //new Color(0.6f, 0.4f, 0.7f)
                 vizBtn.style.marginLeft = ButtonSpacing;
                 bottomButtonRow.Add(vizBtn);
             }
             
             // Open in Manager button
-            var openBtn = CreateHeaderButton("⊞", "Open in Manager", new Color(0.3f, 0.5f, 0.7f), () => OnOpenInManager());
+            var openBtn = CreateHeaderButton("⊞", "Open in Manager", Colors.AccentBlue, () => OnOpenInManager());  //new Color(0.3f, 0.5f, 0.7f)
             openBtn.style.marginLeft = ButtonSpacing;
             bottomButtonRow.Add(openBtn);
             
@@ -1011,7 +1082,7 @@ namespace FarEmerald.PlayForge.Extended.Editor
             btn.RegisterCallback<MouseLeaveEvent>(_ => btn.style.backgroundColor = Colors.ButtonBackground);
         }
         
-        protected void BuildLinkToButton<T>(VisualElement parent, BaseForgeLinkProvider src) where T : BaseForgeLinkProvider
+        protected void BuildLinkToButton<T>(VisualElement parent, BaseForgeLevelProvider src) where T : BaseForgeLevelProvider
         {
             // Link to Entity button
             var linkAssetButton = new Button(() =>
@@ -1048,7 +1119,7 @@ namespace FarEmerald.PlayForge.Extended.Editor
             parent.Add(linkAssetButton);
         }
         
-        protected void ShowProviderPicker<T>(BaseForgeLinkProvider src) where T : BaseForgeLinkProvider
+        protected void ShowProviderPicker<T>(BaseForgeLevelProvider src) where T : BaseForgeLevelProvider
         {
             // Generate a unique control ID
             _pickerControlId = GUIUtility.GetControlID(FocusType.Passive) + 10000 + Random.Range(1, 1000);
@@ -1059,7 +1130,7 @@ namespace FarEmerald.PlayForge.Extended.Editor
 
         protected abstract void RebuildLevelSourceContent();
         
-        protected void BuildProviderSelector(VisualElement levelSourceContent, BaseForgeLinkProvider src)
+        protected void BuildProviderSelector(VisualElement levelSourceContent, BaseForgeLevelProvider src)
         {
             var selectorRow = new VisualElement();
             selectorRow.style.flexDirection = FlexDirection.Row;

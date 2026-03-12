@@ -5,7 +5,7 @@ namespace FarEmerald.PlayForge
 {
     public class AttributeBlueprint
     {
-        public readonly AttributeValue RootValue;
+        public AttributeValue RootValue;
         
         public readonly AttributeSetElement Base;
 
@@ -15,7 +15,7 @@ namespace FarEmerald.PlayForge
             RootValue = Base.RootValue;
         }
         
-        public AttributeValue GetDefaultValue(IGameplayAbilitySystem system, IReadOnlyDictionary<Attribute, CachedAttributeValue> cache)
+        public AttributeValue GetDefaultValue(IGameplayAbilitySystem system, IReadOnlyDictionary<IAttribute, CachedAttributeValue> cache)
         {
             if (Base.Scaling is null) return RootValue;
             if (Base.RealMagnitude == EMagnitudeOperation.UseMagnitude) return RootValue;

@@ -8,7 +8,7 @@ using UnityEngine.Serialization;
 namespace FarEmerald.PlayForge
 {
     [CreateAssetMenu(menuName = "PlayForge/Attribute Set", fileName = "AttributeSet_")]
-    public class AttributeSet : BaseForgeObject
+    public class AttributeSet : BaseForgeAsset
     {
         public string Name;
         public string Description;
@@ -36,9 +36,9 @@ namespace FarEmerald.PlayForge
             WorkerGroup.ProvideWorkersTo(system.Self);
         }
 
-        public HashSet<Attribute> GetUnique()
+        public HashSet<IAttribute> GetUnique()
         {
-            var attributes = new HashSet<Attribute>();
+            var attributes = new HashSet<IAttribute>();
             foreach (var attr in Attributes)
             {
                 attributes.Add(attr.Attribute);
@@ -76,11 +76,7 @@ namespace FarEmerald.PlayForge
         }
         public override Texture2D GetPrimaryIcon()
         {
-            foreach (var ti in Textures)
-            {
-                if (ti.Tag == PlayForge.Tags.PRIMARY) return ti.Texture;
-            }
-            return Textures.Count > 0 ? Textures[0].Texture : null;
+            return ForgeHelper.GetTextureItem(Textures, PlayForge.Tags.PRIMARY);
         }
         
     }
@@ -169,11 +165,11 @@ namespace FarEmerald.PlayForge
 
     public class AttributeSetMeta
     {
-        private Dictionary<Attribute, Dictionary<EAttributeElementCollisionPolicy, List<AttributeBlueprint>>> matrix; 
+        private Dictionary<IAttribute, Dictionary<EAttributeElementCollisionPolicy, List<AttributeBlueprint>>> matrix; 
 
         public AttributeSetMeta(AttributeSet attributeSet)
         {
-            matrix = new Dictionary<Attribute, Dictionary<EAttributeElementCollisionPolicy, List<AttributeBlueprint>>>();
+            matrix = new Dictionary<IAttribute, Dictionary<EAttributeElementCollisionPolicy, List<AttributeBlueprint>>>();
             HandleAttributeSet(attributeSet);
         }
 
@@ -200,7 +196,7 @@ namespace FarEmerald.PlayForge
 
         public void InitializeAttributeSystem(AttributeSystemComponent system, AttributeSet attributeSet)
         {
-            foreach (Attribute attribute in matrix.Keys)
+            foreach (IAttribute attribute in matrix.Keys)
             {
                 if (matrix[attribute].TryGetValue(EAttributeElementCollisionPolicy.UseSetCollisionSetting, out var defaults))
                 {
@@ -232,7 +228,7 @@ namespace FarEmerald.PlayForge
             }
         }
 
-        private void InitializeAggregatePolicy(AttributeSystemComponent system, Attribute attribute, List<AttributeBlueprint> defaults, EValueCollisionPolicy resolution)
+        private void InitializeAggregatePolicy(AttributeSystemComponent system, IAttribute attribute, List<AttributeBlueprint> defaults, EValueCollisionPolicy resolution)
         {
             switch (resolution)
             {

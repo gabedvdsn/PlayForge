@@ -17,7 +17,7 @@ namespace FarEmerald.PlayForge
         /// Read-only access to the attribute cache.
         /// For inline workers that need to modify cache, cast back to Dictionary.
         /// </summary>
-        public readonly IReadOnlyDictionary<Attribute, CachedAttributeValue> AttributeCache;
+        public readonly IReadOnlyDictionary<IAttribute, CachedAttributeValue> AttributeCache;
         
         /// <summary>
         /// The change value being processed.
@@ -37,7 +37,7 @@ namespace FarEmerald.PlayForge
         
         public WorkerContext(
             IGameplayAbilitySystem system,
-            Dictionary<Attribute, CachedAttributeValue> cache,
+            Dictionary<IAttribute, CachedAttributeValue> cache,
             ChangeValue change,
             FrameSummary frameSummary,
             ActionQueue actionQueue)
@@ -52,9 +52,9 @@ namespace FarEmerald.PlayForge
         /// <summary>
         /// Get the mutable attribute cache (for inline workers that modify cache directly).
         /// </summary>
-        public Dictionary<Attribute, CachedAttributeValue> GetMutableCache()
+        public Dictionary<IAttribute, CachedAttributeValue> GetMutableCache()
         {
-            return (Dictionary<Attribute, CachedAttributeValue>)AttributeCache;
+            return (Dictionary<IAttribute, CachedAttributeValue>)AttributeCache;
         }
     }
     

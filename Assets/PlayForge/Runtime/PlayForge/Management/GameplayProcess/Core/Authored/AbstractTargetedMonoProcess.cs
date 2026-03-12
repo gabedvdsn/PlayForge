@@ -10,7 +10,7 @@ namespace FarEmerald.PlayForge
     /// <summary>
     /// The base class for following/tracking projectiles. 
     /// </summary>
-    public abstract class AbstractTargetedMonoProcess : AbstractEffectingMonoProcess
+    public abstract class AbstractTargetedMonoProcess : AbstractEffectingMonoProcess, IHasIntentToTarget
     {
         protected ITarget target;
         protected AbstractTransformPacket targetTransform;
@@ -37,54 +37,12 @@ namespace FarEmerald.PlayForge
 
         protected abstract UniTask RunTargetedProcess(ProcessRelay relay, CancellationToken token);
 
-        /// <summary>
-        /// Implement composite behaviour responses here!
-        /// 
-        /// This user accepts:
-        ///     Disjoint
-        /// </summary>
-        /// <param name="command"></param>
-        /// <param name="cb"></param>
-        /// <param name="caller"></param>
-        /// <param name="token"></param>
-        /// <returns></returns>
-        public override UniTask RunCompositeBehaviourAsync(Tag command, AbstractProxyTaskBehaviour cb, IProxyTaskBehaviourCaller caller, CancellationToken token)
+        public void SetTarget(ITarget _target, AbstractTransformPacket _transform)
         {
-            if (command == DisjointProxyTaskBehaviour.Command)
-            {
-                if (regData.TryGet(DisjointProxyTaskBehaviour.IS_DISJOINTABLE, EProxyDataValueTarget.Primary, out bool result))
-                {
-                    if (!result)
-                    {
-                        cb.SetStatus(this, EActionStatus.Failure);
-                        return UniTask.CompletedTask;
-                    }
-                }
-                else
-                {
-                    cb.SetStatus(this, EActionStatus.Failure);
-                    return UniTask.CompletedTask;
-                }
+            target = _target;
+            targetTransform = _transform;
 
-                // We expect caller to be a targetable entity (e.g. GASComponent)
-                if (caller is not ITarget _target)
-                {
-                    cb.SetStatus(this, EActionStatus.Error);
-                    return UniTask.CompletedTask;
-                }
-
-                var disjoint = DisjointTarget.Generate(_target);
-                
-                target = disjoint;
-                targetTransform = disjoint.AsTransform();
-
-                target.CommunicateTargetedIntent(this);
-
-                cb.SetStatus(this, EActionStatus.Success);
-            }
-            else cb.SetStatus(this, EActionStatus.NoOp);
-            
-            return UniTask.CompletedTask;
+            target.CommunicateTargetedIntent(this);
         }
     }
 }

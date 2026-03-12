@@ -9,7 +9,7 @@ namespace FarEmerald.PlayForge
     /// Manages abilities for an entity.
     /// Integrates with the worker system for impact processing.
     /// </summary>
-    public class AbilitySystemComponent
+    public class AbilitySystemComponent : DeferredContextSystem
     {
         private EAbilityActivationPolicy activationPolicy;
         public EAbilityActivationPolicy DefaultActivationPolicy => activationPolicy;
@@ -24,10 +24,6 @@ namespace FarEmerald.PlayForge
 
         public AbilitySystemCallbacks Callbacks = new();
         
-        // Deferred execution context
-        private ActionQueue _actionQueue;
-        private FrameSummary _frameSummary;
-
         public AbilitySystemComponent(IGameplayAbilitySystem self)
         {
             Self = self;
@@ -69,7 +65,6 @@ namespace FarEmerald.PlayForge
         }
 
         private bool _enabled;
-
         public bool Enabled
         {
             get => _enabled;
@@ -98,10 +93,10 @@ namespace FarEmerald.PlayForge
         
         public void Setup(
             EAbilityActivationPolicy activationPolicy, 
-            bool allowDuplicateAbilities)
+            bool allowDuplicates)
         {
             this.activationPolicy = activationPolicy;
-            this.allowDuplicateAbilities = allowDuplicateAbilities;
+            this.allowDuplicateAbilities = allowDuplicates;
 
             ImpactWorkerCache = new ImpactWorkerCache();
         }
@@ -110,10 +105,9 @@ namespace FarEmerald.PlayForge
         /// Set the deferred execution context.
         /// Must be called after PreInitialize.
         /// </summary>
-        public void SetDeferredContext(ActionQueue actionQueue, FrameSummary frameSummary)
+        public override void SetDeferredContext(IGameplayAbilitySystem self, ActionQueue actionQueue, FrameSummary frameSummary)
         {
-            _actionQueue = actionQueue;
-            _frameSummary = frameSummary;
+            base.SetDeferredContext(self, actionQueue, frameSummary);
             ImpactWorkerCache?.SetDeferredContext(actionQueue, frameSummary);
         }
         
@@ -230,19 +224,6 @@ namespace FarEmerald.PlayForge
             
             TryActivateAbility(CreateActivationRequest(abilityIndex));
         }
-        
-        public bool SetAbilityLevel(int index, int level)
-        {
-            if (!AbilityCache.TryGetValue(index, out var container)) return false;
-            container.Spec.SetLevel(Mathf.Min(level, container.Spec.Base.MaxLevel));
-            return true;
-        }
-
-        public int GetAbilityLevel(int index)
-        {
-            if (!AbilityCache.TryGetValue(index, out var container)) return -1;
-            return container.Spec.GetLevel();
-        }
 
         #endregion
 
@@ -253,7 +234,7 @@ namespace FarEmerald.PlayForge
             return Enabled 
                    && !Locked
                    && AbilityCache.TryGetValue(index, out var container)
-                   && (!container.Spec.Base.IgnoreWhenLevelZero || container.Spec.Level > 0); 
+                   && (!container.Spec.Base.IgnoreWhenLevelZero || container.Spec.GetLevel() > 0); 
         }
         
         private bool CanActivateAbility(AbilitySpecContainer container, AbilityDataPacket data)
@@ -261,7 +242,7 @@ namespace FarEmerald.PlayForge
             return Enabled 
                    && !Locked
                    && container.Spec.ValidateSourceActivationRequirements(data)
-                   && (!container.Spec.Base.IgnoreWhenLevelZero || container.Spec.Level > 0);
+                   && (!container.Spec.Base.IgnoreWhenLevelZero || container.Spec.GetLevel() > 0);
         }
         
         public bool TryActivateAbility(AbilityActivationRequest req)

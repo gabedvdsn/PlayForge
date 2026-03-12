@@ -28,28 +28,46 @@ namespace FarEmerald.PlayForge
         {
             return new CachedAttributeValue(null);
         }
+
+        public static CachedAttributeValue GenerateGeneric(IAttribute attribute, IGameplayAbilitySystem source, IReadOnlyDictionary<IAttribute, CachedAttributeValue> cache, Tag retentionGroup,
+            AttributeValue value)
+        {
+            var cav = GenerateNull();
+            cav.Initialize(attribute, source, cache, retentionGroup, value);
+
+            return cav;
+        }
         
         public CachedAttributeValue(AttributeBlueprint blueprint)
         {
             Blueprint = blueprint;
         }
 
-        public bool Initialize(Attribute attribute, IGameplayAbilitySystem source, IReadOnlyDictionary<Attribute, CachedAttributeValue> cache)
+        public bool Initialize(IAttribute attribute, IGameplayAbilitySystem source, IReadOnlyDictionary<IAttribute, CachedAttributeValue> cache)
         {
-            if (Blueprint is null) return false;
+            return Blueprint is not null
+                   && Initialize(
+                       attribute, source, cache,
+                       Blueprint.Base.RetentionGroup,
+                       Blueprint.GetDefaultValue(source.AsGAS(), cache)
+                   );
+        }
 
+        public bool Initialize(IAttribute attribute, IGameplayAbilitySystem source, IReadOnlyDictionary<IAttribute, CachedAttributeValue> cache, Tag retentionGroup,
+            AttributeValue value)
+        {
             root = IAttributeImpactDerivation.GenerateSourceDerivation(
                 source, attribute, 
-                Blueprint.Base.RetentionGroup,
+                retentionGroup,
                 new List<Tag>() { Tags.DisallowImpact }
             );
             
-            Add(root, Blueprint.GetDefaultValue(source.AsGAS(), cache), true);
+            Add(root, value, true);
 
             return true;
         }
 
-        public AttributeValue RefreshDefaultValue(ISource source, IReadOnlyDictionary<Attribute, CachedAttributeValue> cache)
+        public AttributeValue RefreshDefaultValue(ISource source, IReadOnlyDictionary<IAttribute, CachedAttributeValue> cache)
         {
             var key = source.GetAssetTag();
             if (!derivations.TryGetValue(key, out var rcv)) return default;
@@ -110,6 +128,8 @@ namespace FarEmerald.PlayForge
         /// </summary>
         public void ApplyBounds()
         {
+            if (Blueprint is null) return;
+            
             var newValue = Value;
             
             if (Blueprint.Base.Constraints.AutoClamp)
@@ -150,6 +170,8 @@ namespace FarEmerald.PlayForge
 
         public void EnforceScaling(WorkerContext ctx)
         {
+            if (Blueprint is null) return;
+            
             if (!Blueprint.Base.Constraints.AutoScaleWithBase || ctx.Change.Value.BaseValue == 0) return;
             float oldBase = Value.BaseValue - ctx.Change.Value.BaseValue;
             if (Mathf.Approximately(oldBase, 0f)) return;
@@ -167,6 +189,8 @@ namespace FarEmerald.PlayForge
 
         public void ApplyRounding()
         { 
+            if (Blueprint is null) return;
+            
             var newValue = Blueprint.Base.Constraints.RoundingMode switch
             {
                 EAttributeRoundingPolicy.None => Value,
@@ -215,8 +239,6 @@ namespace FarEmerald.PlayForge
 
         public void Add(IAttributeImpactDerivation derivation, AttributeValue value)
         {
-            Debug.Log($"Adding {derivation.GetCacheKey()} ({derivation.GetSource().GetAssetTag()}");
-            
             if (Derivations.TryGetValue(derivation, out _)) Derivations[derivation] += value;
             else Derivations[derivation] = value;
             

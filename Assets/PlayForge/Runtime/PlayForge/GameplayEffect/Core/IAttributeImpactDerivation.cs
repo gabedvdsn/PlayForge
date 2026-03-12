@@ -11,7 +11,7 @@ namespace FarEmerald.PlayForge
     {
         public Tag GetCacheKey();
         public bool DerivationAlive();
-        public Attribute GetAttribute();
+        public IAttribute GetAttribute();
         public IEffectOrigin GetEffectDerivation();
         public ISource GetSource();
         public ITarget GetTarget();
@@ -26,8 +26,13 @@ namespace FarEmerald.PlayForge
         public void RunWorkerImpact(EffectWorkerContext ctx);
         public Dictionary<IScaler, AttributeValue?> GetSourcedCapturedAttributes();
         public bool RetainImpact();
+
+        public static LevelerImpactDerivation GenerateLevelerDerivation(ISource source, int level, int maxLevel)
+        {
+            return new LevelerImpactDerivation(source, level, maxLevel);
+        }
         
-        public static SourceAttributeImpact GenerateSourceDerivation(ISource source, Attribute attribute, Tag retentionGroup, List<Tag> impactType, IAttributeImpactDerivation rootDerivation = null, bool retainOverride = false)
+        public static SourceAttributeImpact GenerateSourceDerivation(ISource source, IAttribute attribute, Tag retentionGroup, List<Tag> impactType, IAttributeImpactDerivation rootDerivation = null, bool retainOverride = false)
         {
             return new SourceAttributeImpact(
                 source, attribute, 
@@ -56,7 +61,7 @@ namespace FarEmerald.PlayForge
     public class SourceAttributeImpact : IAttributeImpactDerivation
     {
         private ISource Source;
-        public Attribute Attribute;
+        public IAttribute Attribute;
         private List<Tag> ImpactType;
         private Tag RetentionGroup;
         
@@ -65,7 +70,7 @@ namespace FarEmerald.PlayForge
 
         private TrackedImpact TrackedImpact;
 
-        public SourceAttributeImpact(ISource source, Attribute attribute, List<Tag> impactType, Tag retentionGroup, IAttributeImpactDerivation rootDerivation, bool retainFallback)
+        public SourceAttributeImpact(ISource source, IAttribute attribute, List<Tag> impactType, Tag retentionGroup, IAttributeImpactDerivation rootDerivation, bool retainFallback)
         {
             Source = source;
             Attribute = attribute;
@@ -84,8 +89,8 @@ namespace FarEmerald.PlayForge
         {
             return true;
         }
-        public Attribute GetAttribute() => Attribute;
-        public IEffectOrigin GetEffectDerivation() => IEffectOrigin.GenerateSourceDerivation(Source);
+        public IAttribute GetAttribute() => Attribute;
+        public virtual IEffectOrigin GetEffectDerivation() => IEffectOrigin.GenerateSourceDerivation(Source);
         public ISource GetSource() => Source;
         public ITarget GetTarget() => Source;
         public List<Tag> GetImpactTypes() => ImpactType;
@@ -114,7 +119,7 @@ namespace FarEmerald.PlayForge
         public Tag RootKey;
         public Tag CacheKey;
         
-        public NullifiedImpactDerivation(Tag cacheKey, ISource source, Attribute attribute, List<Tag> impactType, Tag retentionGroup, IAttributeImpactDerivation rootDerivation) : base(source, attribute, impactType, retentionGroup, null, rootDerivation.RetainImpact())
+        public NullifiedImpactDerivation(Tag cacheKey, ISource source, IAttribute attribute, List<Tag> impactType, Tag retentionGroup, IAttributeImpactDerivation rootDerivation) : base(source, attribute, impactType, retentionGroup, null, rootDerivation.RetainImpact())
         {
             RootKey = rootDerivation.GetEffectDerivation().GetAssetTag();
             CacheKey = cacheKey;
@@ -128,6 +133,25 @@ namespace FarEmerald.PlayForge
         public override bool DerivationAlive()
         {
             return false;
+        }
+    }
+
+    public class LevelerImpactDerivation : SourceAttributeImpact
+    {
+        private LevelerEffectOrigin levelerOrigin;
+        
+        public LevelerImpactDerivation(ISource source, int level, int maxLevel) : base(source, null, new List<Tag>(){ Tags.DisallowImpact}, Tags.IgnoreRetention, null, false)
+        {
+            levelerOrigin = IEffectOrigin.GenerateLevelerDerivation(source, level, maxLevel);
+        }
+        
+        public override bool DerivationAlive()
+        {
+            return false;
+        }
+        public override IEffectOrigin GetEffectDerivation()
+        {
+            return levelerOrigin;
         }
     }
 

@@ -49,14 +49,14 @@ namespace FarEmerald.PlayForge
             return EvaluateAtRelativeLevel(Mathf.Clamp01(normalized));
         }
         
-        public override void Regulate(Attribute attribute, AttributeModificationRule rules)
+        public override void Regulate(IAttribute attribute, AttributeModificationRule rules)
         {
             if (CaptureAttribute != null && attribute != null)
             {
                 rules.RegisterRelation(CaptureAttribute, attribute);
             }
         }
-        public override float Evaluate(IGameplayAbilitySystem gas, AttributeBlueprint blueprint, IReadOnlyDictionary<Attribute, CachedAttributeValue> cache)
+        public override float Evaluate(IGameplayAbilitySystem gas, AttributeBlueprint blueprint, IReadOnlyDictionary<IAttribute, CachedAttributeValue> cache)
         {
             var value = cache[blueprint.Base.Attribute].Value;
             return 0f;

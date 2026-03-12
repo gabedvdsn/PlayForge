@@ -13,14 +13,14 @@ namespace FarEmerald.PlayForge
             error = "";
             if (data.Spec is not AbilitySpec ability) return false;
             if (ability.Base.Cost is null) return true;
-            if (!ability.Owner.FindAttributeSystem(out var attrSys) ||
+            if (!ability.Source.FindAttributeSystem(out var attrSys) ||
                 !attrSys.TryGetAttributeValue(ability.Base.Cost.ImpactSpecification.AttributeTarget,
                     out AttributeValue attrVal)) return false;
 
-            var spec = ability.Owner.GenerateEffectSpec(ability, ability.Base.Cost);
+            var spec = ability.Source.GenerateEffectSpec(ability, ability.Base.Cost);
             return attrVal.CurrentValue >=
                    ability.Base.Cost.ImpactSpecification.GetMagnitude(
-                       ability.Owner.GenerateEffectSpec(ability, ability.Base.Cost));
+                       ability.Source.GenerateEffectSpec(ability, ability.Base.Cost));
         }
         public string GetName()
         {
@@ -35,7 +35,7 @@ namespace FarEmerald.PlayForge
             error = "";
             if (data.Spec is not AbilitySpec ability) return false;
             if (ability.Base.Cooldown is null) return true;
-            return !ability.Owner.GetTagCache().TryGetWeight(ability.Base.Cooldown.Tags.AssetTag, out _);
+            return !ability.Source.GetTagCache().TryGetWeight(ability.Base.Cooldown.Tags.AssetTag, out _);
         }
         public string GetName()
         {

@@ -23,13 +23,11 @@ namespace FarEmerald.PlayForge
         /// <summary>
         /// Disburse all workers to the appropriate subsystems.
         /// </summary>
-        public void ProvideWorkersTo(IGameplayAbilitySystem system)
+        public void ProvideWorkersTo(ISource system)
         {
             if (system == null) return;
             
-            // Attribute workers → AttributeSystem
-            var attrSystem = system.GetAttributeSystem();
-            if (attrSystem != null)
+            if (!system.FindAttributeSystem(out var attrSystem) || attrSystem != null)
             {
                 foreach (var worker in AttributeWorkers)
                 {
@@ -37,7 +35,6 @@ namespace FarEmerald.PlayForge
                 }
             }
 
-            // Tag workers → TagCache
             var tags = system.GetTagCache();
             if (tags != null)
             {
@@ -47,9 +44,7 @@ namespace FarEmerald.PlayForge
                 }
             }
 
-            // Impact workers → AbilitySystem
-            var abilSystem = system.GetAbilitySystem();
-            if (abilSystem != null)
+            if (!system.FindAbilitySystem(out var abilSystem) || abilSystem != null)
             {
                 foreach (var worker in ImpactWorkers)
                 {
@@ -57,8 +52,7 @@ namespace FarEmerald.PlayForge
                 }
             }
 
-            // Analysis workers → GAS directly
-            var analysis = system.GetAnalysisCache();
+            var analysis = system.AsGAS()?.GetAnalysisCache();
             if (analysis != null)
             {
                 foreach (var worker in AnalysisWorkers)
@@ -71,12 +65,11 @@ namespace FarEmerald.PlayForge
         /// <summary>
         /// Remove all workers from the appropriate subsystems.
         /// </summary>
-        public void RemoveWorkersFrom(IGameplayAbilitySystem system)
+        public void RemoveWorkersFrom(ISource system)
         {
             if (system == null) return;
             
-            var attrSystem = system.GetAttributeSystem();
-            if (attrSystem != null)
+            if (!system.FindAttributeSystem(out var attrSystem) || attrSystem != null)
             {
                 foreach (var worker in AttributeWorkers)
                 {
@@ -93,8 +86,7 @@ namespace FarEmerald.PlayForge
                 }
             }
 
-            var abilSystem = system.GetAbilitySystem();
-            if (abilSystem != null)
+            if (!system.FindAbilitySystem(out var abilSystem) || abilSystem != null)
             {
                 foreach (var worker in ImpactWorkers)
                 {
@@ -102,7 +94,7 @@ namespace FarEmerald.PlayForge
                 }
             }
 
-            var analysis = system.GetAnalysisCache();
+            var analysis = system.AsGAS()?.GetAnalysisCache();
             if (analysis != null)
             {
                 foreach (var worker in AnalysisWorkers)

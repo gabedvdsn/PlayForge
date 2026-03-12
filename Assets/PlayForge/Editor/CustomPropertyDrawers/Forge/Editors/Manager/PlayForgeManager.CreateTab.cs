@@ -492,7 +492,7 @@ namespace FarEmerald.PlayForge.Extended.Editor
             SetAssetName(asset, assetName);
             
             // Apply type-specific settings from preferences
-            ApplyTypeSpecificSettings(asset, defaultTemplate?.GetAsset() as BaseForgeLinkProvider);
+            ApplyTypeSpecificSettings(asset, defaultTemplate?.GetAsset() as BaseForgeLevelProvider);
             
             // Generate unique file path
             var fullPath = $"{assetPath}/{sanitizedFileName}.asset";
@@ -574,7 +574,7 @@ namespace FarEmerald.PlayForge.Extended.Editor
         /// <summary>
         /// Applies type-specific settings from EditorPrefs to a newly created asset.
         /// </summary>
-        private void ApplyTypeSpecificSettings(ScriptableObject asset, BaseForgeLinkProvider provider = null)
+        private void ApplyTypeSpecificSettings(ScriptableObject asset, BaseForgeLevelProvider provider = null)
         {
             if (asset == null) return;
             

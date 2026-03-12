@@ -101,7 +101,7 @@ namespace FarEmerald.PlayForge.Extended.Editor
         // Helpers
         // ═══════════════════════════════════════════════════════════════════════════
         
-        protected S[] GetAllInstances<S>() where S : BaseForgeObject
+        protected S[] GetAllInstances<S>() where S : BaseForgeAsset
         {
             string[] guids = AssetDatabase.FindAssets($"t:{typeof(S).Name}");
             return guids.Select(AssetDatabase.GUIDToAssetPath)

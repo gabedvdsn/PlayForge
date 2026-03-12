@@ -30,7 +30,7 @@ namespace FarEmerald.PlayForge.Extended.Editor
         // Header Configuration (IMGUI Header)
         // ═══════════════════════════════════════════════════════════════════════════
 
-        protected override BaseForgeLinkProvider GetAsset()
+        protected override BaseForgeLevelProvider GetAsset()
         {
             return ability;
         }

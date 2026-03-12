@@ -4,8 +4,6 @@ using UnityEngine;
 
 namespace FarEmerald.PlayForge
 {
-    
-    
     public class GameplayEffectSpec : IAttributeImpactDerivation
     {
         public GameplayEffect Base;
@@ -18,7 +16,7 @@ namespace FarEmerald.PlayForge
 
         public Dictionary<IScaler, AttributeValue?> SourceCapturedAttributes;
 
-        public GameplayEffectSpec(GameplayEffect GameplayEffect, IEffectOrigin origin, IGameplayAbilitySystem target)
+        public GameplayEffectSpec(GameplayEffect GameplayEffect, IEffectOrigin origin, ITarget target)
         {
             Base = GameplayEffect;
             Origin = origin;
@@ -148,7 +146,7 @@ namespace FarEmerald.PlayForge
             Debug.Log($"Check if {Base.GetName()} is alive: {((Source.AsGAS()?.TryGetEffectContainer(Base, out var c) ?? false) && c.Spec == this)}");
             return (Source.AsGAS()?.TryGetEffectContainer(Base, out var container) ?? false) && container.Spec == this;
         }
-        public Attribute GetAttribute()
+        public IAttribute GetAttribute()
         {
             return Base.ImpactSpecification.AttributeTarget;
         }

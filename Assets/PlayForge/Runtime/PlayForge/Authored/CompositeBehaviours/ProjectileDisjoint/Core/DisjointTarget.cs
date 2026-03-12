@@ -45,13 +45,21 @@ namespace FarEmerald.PlayForge
         {
             return false;
         }
-        public void RemoveGameplayEffect(GameplayEffect effect)
+        public bool RemoveGameplayEffect(GameplayEffect effect)
         {
-            
+            return false;
         }
         public GameplayEffectSpec GenerateEffectSpec(IEffectOrigin origin, GameplayEffect GameplayEffect)
         {
             return original.GenerateEffectSpec(origin, GameplayEffect);
+        }
+        public bool FindLevelSystem(out SystemLevelsComponent lvlSystem)
+        {
+            return original.FindLevelSystem(out lvlSystem);
+        }
+        public bool FindItemSystem(out ItemSystemComponent itemSystem)
+        {
+            return original.FindItemSystem(out itemSystem);
         }
         public bool FindAttributeSystem(out AttributeSystemComponent attrSystem)
         {
@@ -61,12 +69,12 @@ namespace FarEmerald.PlayForge
         {
             return original.FindAbilitySystem(out abilSystem);
         }
-        public bool TryGetAttributeValue(Attribute attribute, out AttributeValue value)
+        public bool TryGetAttributeValue(IAttribute attribute, out AttributeValue value)
         {
             value = default;
             return false;
         }
-        public bool TryModifyAttribute(Attribute attribute, SourcedModifiedAttributeValue sourcedModifiedValue, bool runEvents = true)
+        public bool TryModifyAttribute(IAttribute attribute, SourcedModifiedAttributeValue sourcedModifiedValue, bool runEvents = true)
         {
             return false;
         }

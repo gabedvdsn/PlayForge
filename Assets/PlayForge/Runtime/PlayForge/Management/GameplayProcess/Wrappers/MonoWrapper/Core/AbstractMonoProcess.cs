@@ -7,7 +7,7 @@ using UnityEngine;
 
 namespace FarEmerald.PlayForge
 {
-    public abstract class AbstractMonoProcess : MonoBehaviour, IProxyTaskBehaviourCaller
+    public abstract class AbstractMonoProcess : MonoBehaviour, IProxyTaskBehaviourCaller, IGameplayProcess
     {
         [Header("Mono Gameplay Process")] 
         
@@ -22,6 +22,9 @@ namespace FarEmerald.PlayForge
         
         protected ProcessDataPacket regData;
         protected bool processActive;
+
+        public ProcessDataPacket Data => regData;
+        public ProcessRelay ProcessRelay => Relay;
 
         private bool _initialized;
         public bool IsInitialized => _initialized;
@@ -128,22 +131,18 @@ namespace FarEmerald.PlayForge
             return name;
         }
 
-        public abstract void RunCompositeBehaviour(Tag command, AbstractProxyTaskBehaviour cb, IProxyTaskBehaviourCaller caller);
-        public abstract UniTask RunCompositeBehaviourAsync(Tag command, AbstractProxyTaskBehaviour cb, IProxyTaskBehaviourCaller caller, CancellationToken token);
-
-        public abstract UniTask CallBehaviour(Tag cmd, AbstractProxyTaskBehaviour cb, CancellationToken token);
+        public virtual bool BehaviourIsApplicable(AbstractProxyTaskBehaviour behaviour) => true;
         
-        public async UniTask CallBehaviour(Tag cmd, AbstractProxyTaskBehaviour cb, IProxyTaskBehaviourUser user, CancellationToken token)
+        public async UniTask ApplyBehaviour(AbstractProxyTaskBehaviour cb, IProxyTaskBehaviourUser user, CancellationToken token)
         {
-            var run = cb.RunAsync(token);
-            await user.RunCompositeBehaviourAsync(cmd, cb, this, token);
-            await run;
+            await cb.RunAsync(this, user, token);
             cb.End();
         }
-        
-        public async UniTask CallBehaviour(Tag cmd, AbstractProxyTaskBehaviour cb, IProxyTaskBehaviourUser[] users, CancellationToken token)
+        public async UniTask ApplyBehaviour(AbstractProxyTaskBehaviour cb, IProxyTaskBehaviourUser[] users, CancellationToken token)
         {
-            var tasks = users.Select(user => CallBehaviour(cmd, cb.CreateInstance(), user, token)).ToArray();
+            var tasks = users
+                .Select(user => ApplyBehaviour(cb.CreateInstance(), user, token))
+                .ToArray();
             await UniTask.WhenAll(tasks);
         }
     }

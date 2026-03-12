@@ -15,16 +15,16 @@ namespace FarEmerald.PlayForge
         public int Priority { get; set; } = ActionPriority.Normal;
         public bool IsValid => _target != null;
         
-        public string Description => $"ModifyAttribute({_attribute?.Name ?? "null"}, {_value.CurrentValue:F2}/{_value.BaseValue:F2})";
+        public string Description => $"ModifyAttribute({_attribute?.GetName() ?? "null"}, {_value.CurrentValue:F2}/{_value.BaseValue:F2})";
         
         private readonly ITarget _target;
-        private readonly Attribute _attribute;
+        private readonly IAttribute _attribute;
         private readonly SourcedModifiedAttributeValue _value;
         private readonly bool _runEvents;
         
         public ModifyAttributeAction(
             ITarget target,
-            Attribute attribute,
+            IAttribute attribute,
             SourcedModifiedAttributeValue value,
             bool runEvents = true,
             int? priority = null)

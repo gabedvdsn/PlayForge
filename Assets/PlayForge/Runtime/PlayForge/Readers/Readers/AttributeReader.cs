@@ -14,7 +14,7 @@ namespace FarEmerald.PlayForge
         public TMP_Text BaseText;
         public Slider ValueSlider;
 
-        private Attribute attribute;
+        private IAttribute attribute;
 
         public override void WhenUpdate(ProcessRelay relay)
         {
@@ -36,10 +36,10 @@ namespace FarEmerald.PlayForge
         {
             CurrentText.text = $"{attributeValue.CurrentValue:0.0}";
             BaseText.text = $"{attributeValue.BaseValue:0.0}";
-            ValueSlider.value = attributeValue.Ratio;
+            ValueSlider.value = attributeValue.RatioMinZero;
         }
 
-        public void AssignAttribute(Attribute attr)
+        public void AssignAttribute(IAttribute attr)
         {
             attribute = attr;
         }

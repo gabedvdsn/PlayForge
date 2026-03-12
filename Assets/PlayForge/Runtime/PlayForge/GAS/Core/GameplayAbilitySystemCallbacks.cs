@@ -201,13 +201,13 @@ namespace FarEmerald.PlayForge
         /// Convenience event for damage-specific tracking.
         /// </summary>
         private ImpactDelegate _onDamageDealt;
-        public event ImpactDelegate OnDamageDealt
+        public event ImpactDelegate OnAttributeReduced
         {
             add => _onDamageDealt += value;
             remove => _onDamageDealt -= value;
         }
         
-        public void DamageDealt(ImpactData impact)
+        public void ReductionDealt(ImpactData impact)
         {
             if (impact.RealImpact.CurrentValue < 0)
                 _onDamageDealt?.Invoke(impact);
@@ -218,13 +218,13 @@ namespace FarEmerald.PlayForge
         /// Convenience event for healing-specific tracking.
         /// </summary>
         private ImpactDelegate _onHealingDone;
-        public event ImpactDelegate OnHealingDone
+        public event ImpactDelegate OnAttributeIncreased
         {
             add => _onHealingDone += value;
             remove => _onHealingDone -= value;
         }
         
-        public void HealingDone(ImpactData impact)
+        public void IncreaseDealt(ImpactData impact)
         {
             if (impact.RealImpact.CurrentValue > 0)
                 _onHealingDone?.Invoke(impact);

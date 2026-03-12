@@ -364,7 +364,11 @@ namespace FarEmerald.PlayForge.Editor
             {
                 _selectedGAS = null;
             }
-            
+
+            _entityList ??= new ScrollView
+            {
+                style = { flexGrow = 1 }
+            };
             _entityList.Clear();
             
             var countLabel = _leftPanel.Q<Label>("entity-count");
@@ -660,7 +664,7 @@ namespace FarEmerald.PlayForge.Editor
             headerRow.Add(new Label("Ratio") { style = { width = 60, color = new Color(0.6f, 0.6f, 0.6f), fontSize = 10, unityTextAlign = TextAnchor.MiddleRight } });
             section.Add(headerRow);
             
-            foreach (var kvp in cache.OrderBy(k => k.Key?.name ?? ""))
+            foreach (var kvp in cache.OrderBy(k => k.Key?.GetName() ?? ""))
             {
                 var row = CreateAttributeRow(kvp.Key, kvp.Value);
                 section.Add(row);
@@ -669,9 +673,9 @@ namespace FarEmerald.PlayForge.Editor
             return section;
         }
         
-        private VisualElement CreateAttributeRow(Attribute attribute, CachedAttributeValue cached)
+        private VisualElement CreateAttributeRow(IAttribute attribute, CachedAttributeValue cached)
         {
-            string attrKey = attribute != null ? attribute.name : "Unknown";
+            string attrKey = attribute != null ? attribute.GetName() : "Unknown";
             bool isExpanded = _expandedAttributes.Contains(attrKey);
             
             var container = new VisualElement();
@@ -1217,8 +1221,8 @@ namespace FarEmerald.PlayForge.Editor
             });
             
             // Level
-            int level = container.Spec?.Level ?? 0;
-            int maxLevel = container.Spec?.Base?.MaxLevel ?? 1;
+            int level = container.Spec?.GetLevel() ?? 0;
+            int maxLevel = container.Spec?.Base?.GetMaxLevel()  ?? 1;
             var levelBadge = CreateBadge($"Lv.{level}/{maxLevel}", AbilityColor);
             levelBadge.pickingMode = PickingMode.Ignore;
             row.Add(levelBadge);
@@ -1279,7 +1283,7 @@ namespace FarEmerald.PlayForge.Editor
             // Basic info
             panel.Add(CreateDetailRow("Name", ability.GetName(), Color.white));
             panel.Add(CreateDetailRow("Description", ability.GetDescription() ?? "N/A", new Color(0.7f, 0.7f, 0.7f)));
-            panel.Add(CreateDetailRow("Level", $"{container.Spec.Level} / {ability.MaxLevel}", AbilityColor));
+            panel.Add(CreateDetailRow("Level", $"{container.Spec.GetLevel()} / {ability.MaxLevel}", AbilityColor));
             panel.Add(CreateDetailRow("Asset Tag", ability.Tags?.AssetTag.GetName() ?? "None", new Color(0.6f, 0.6f, 0.6f)));
             
             // Definition info

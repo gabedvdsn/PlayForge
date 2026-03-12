@@ -74,6 +74,11 @@ namespace FarEmerald.PlayForge.Extended.Editor
             var path = AssetDatabase.GUIDToAssetPath(AssetGUID);
             return !string.IsNullOrEmpty(path);
         }
+
+        public bool IsNotTarget(UnityEngine.Object target)
+        {
+            return target is ScriptableObject so && so != GetAsset();
+        }
     }
     
     /// <summary>

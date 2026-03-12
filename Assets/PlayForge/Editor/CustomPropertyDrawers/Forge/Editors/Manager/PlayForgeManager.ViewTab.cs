@@ -111,7 +111,7 @@ namespace FarEmerald.PlayForge.Extended.Editor
                 new ColumnDef("Name", 160, a => GetEntityName((EntityIdentity)a)),
                 new ColumnDef("Level Provider", 110, a => ((EntityIdentity)a).LinkedProvider?.GetProviderName() ?? "-"),                
                 new ColumnDef("Policy", 100, a => ((EntityIdentity)a).ActivationPolicy.ToString()),
-                new ColumnDef("Max Abilities", 90, a => ((EntityIdentity)a).MaxAbilities.ToString()),
+                new ColumnDef("Max Abilities", 90, a => ((EntityIdentity)a).MaxAbilitiesOperation.Magnitude.ToString()),
                 new ColumnDef("Starting", 70, a => ((EntityIdentity)a).StartingAbilities?.Count.ToString() ?? "0"),
                 new ColumnDef("Duplicates", 75, a => ((EntityIdentity)a).AllowDuplicateAbilities ? "Yes" : "No"),
             }},

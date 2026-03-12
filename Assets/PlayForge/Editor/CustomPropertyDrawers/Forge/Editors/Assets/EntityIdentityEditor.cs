@@ -21,7 +21,7 @@ namespace FarEmerald.PlayForge.Extended.Editor
         // Header Configuration (IMGUI Header)
         // ═══════════════════════════════════════════════════════════════════════════
 
-        protected override BaseForgeLinkProvider GetAsset()
+        protected override BaseForgeLevelProvider GetAsset()
         {
             return entity;
         }
@@ -266,7 +266,7 @@ namespace FarEmerald.PlayForge.Extended.Editor
                     {
                         foreach (var item in entity.StartingItems)
                         {
-                            if (item is not null) MarkDirty(item);
+                            if (item is not null) MarkDirty(item.Item);
                         }
                     }
                     
@@ -296,7 +296,7 @@ namespace FarEmerald.PlayForge.Extended.Editor
                 if (EditorUtility.DisplayDialog(
                         $"Confirm Unlink {linkFocus}",
                         $"Are you sure you want to unlink starting items & abilities?" +
-                        $"\n\nThis will affect {(entity.StartingItems?.Where(e => e.IsLinkedTo(this)).Count() ?? 0) + entity.StartingAbilities?.Where(e => e.IsLinkedTo(this)).Count() ?? 0} assets." +
+                        $"\n\nThis will affect {(entity.StartingItems?.Where(e => e.Item.IsLinkedTo(this)).Count() ?? 0) + entity.StartingAbilities?.Where(e => e.IsLinkedTo(this)).Count() ?? 0} assets." +
                         $"\n\nThis change only applies to assets linked to this entity.",
                         "Yes", "Cancel"))
                 {
@@ -306,7 +306,7 @@ namespace FarEmerald.PlayForge.Extended.Editor
                     {
                         foreach (var item in entity.StartingItems)
                         {
-                            if (item is not null) MarkDirty(item);
+                            if (item is not null) MarkDirty(item.Item);
                         }
                     }
                     
@@ -812,13 +812,6 @@ namespace FarEmerald.PlayForge.Extended.Editor
                 MarkDirty(entity);
             });
             row.Add(capToggle);
-            
-            var relativeLevelLabel = new Label($"Relative Level: {entity.RelativeLevel:P0}");
-            relativeLevelLabel.style.fontSize = 10;
-            relativeLevelLabel.style.color = Colors.HintText;
-            relativeLevelLabel.style.marginTop = 4;
-            relativeLevelLabel.style.paddingLeft = 4;
-            levelingContent.Add(relativeLevelLabel);
         }
 
         // ═══════════════════════════════════════════════════════════════════════════
@@ -846,29 +839,6 @@ namespace FarEmerald.PlayForge.Extended.Editor
             });
             content.Add(policyField);
             
-            var row = CreateRow(4);
-            content.Add(row);
-            
-            var maxAbilitiesField = CreateIntegerField("MaxAbilities", "Max Abilities", entity.MaxAbilities);
-            maxAbilitiesField.style.flexGrow = 1;
-            maxAbilitiesField.style.marginRight = 8;
-            maxAbilitiesField.RegisterValueChangedCallback(evt =>
-            {
-                entity.MaxAbilities = evt.newValue;
-                MarkDirty(entity);
-            });
-            row.Add(maxAbilitiesField);
-            
-            var allowDupsToggle = CreateToggle("AllowDuplicates", "Allow Duplicates");
-            allowDupsToggle.value = entity.AllowDuplicateAbilities;
-            allowDupsToggle.style.minWidth = 120;
-            allowDupsToggle.RegisterValueChangedCallback(evt =>
-            {
-                entity.AllowDuplicateAbilities = evt.newValue;
-                MarkDirty(entity);
-            });
-            row.Add(allowDupsToggle);
-            
             var startingField = CreatePropertyField(
                 serializedObject.FindProperty(nameof(EntityIdentity.StartingAbilities)), 
                 "StartingAbilities", 
@@ -876,6 +846,32 @@ namespace FarEmerald.PlayForge.Extended.Editor
             );
             startingField.style.marginTop = 8;
             content.Add(startingField);
+            
+            content.Add(CreateDivider(3, 6, 4, 4));
+            
+            var maxAbilitiesField = new PropertyField(serializedObject.FindProperty(nameof(EntityIdentity.MaxAbilitiesOperation)), "");
+            maxAbilitiesField.style.marginBottom = 2;
+            content.Add(maxAbilitiesField);
+            
+            /*var maxAbilitiesField = CreateIntegerField("MaxAbilities", "Max Abilities", entity.MaxAbilities);
+            maxAbilitiesField.style.flexGrow = 1;
+            maxAbilitiesField.style.marginRight = 8;
+            maxAbilitiesField.RegisterValueChangedCallback(evt =>
+            {
+                entity.MaxAbilities = evt.newValue;
+                MarkDirty(entity);
+            });
+            row.Add(maxAbilitiesField);*/
+            
+            var allowDupsToggle = CreateToggle("AllowDuplicates", "Allow Duplicate Abilities");
+            allowDupsToggle.value = entity.AllowDuplicateAbilities;
+            allowDupsToggle.style.minWidth = 120;
+            allowDupsToggle.RegisterValueChangedCallback(evt =>
+            {
+                entity.AllowDuplicateAbilities = evt.newValue;
+                MarkDirty(entity);
+            });
+            content.Add(allowDupsToggle);
         }
 
         // ═══════════════════════════════════════════════════════════════════════════
@@ -895,29 +891,6 @@ namespace FarEmerald.PlayForge.Extended.Editor
             
             var content = section.Content;
             
-            var row = CreateRow(4);
-            content.Add(row);
-            
-            var maxItemsField = CreateIntegerField("MaxItems", "Max Items", entity.MaxItems);
-            maxItemsField.style.flexGrow = 1;
-            maxItemsField.style.marginRight = 8;
-            maxItemsField.RegisterValueChangedCallback(evt =>
-            {
-                entity.MaxItems = evt.newValue;
-                MarkDirty(entity);
-            });
-            row.Add(maxItemsField);
-            
-            var allowDupsToggle = CreateToggle("AllowDuplicateItems", "Allow Duplicates");
-            allowDupsToggle.value = entity.AllowDuplicateItems;
-            allowDupsToggle.style.minWidth = 120;
-            allowDupsToggle.RegisterValueChangedCallback(evt =>
-            {
-                entity.AllowDuplicateItems = evt.newValue;
-                MarkDirty(entity);
-            });
-            row.Add(allowDupsToggle);
-            
             var startingField = CreatePropertyField(
                 serializedObject.FindProperty(nameof(EntityIdentity.StartingItems)), 
                 "StartingItems", 
@@ -925,6 +898,36 @@ namespace FarEmerald.PlayForge.Extended.Editor
             );
             startingField.style.marginTop = 8;
             content.Add(startingField);
+            
+            content.Add(CreateDivider(3, 6, 4, 4));
+            
+            var maxItemsField = new PropertyField(serializedObject.FindProperty(nameof(EntityIdentity.MaxItemsOperation)), "");
+            maxItemsField.style.marginBottom = 2;
+            content.Add(maxItemsField);
+            
+            var maxEquippedItemsField = new PropertyField(serializedObject.FindProperty(nameof(EntityIdentity.MaxEquippedItemsOperation)), "");
+            maxEquippedItemsField.style.marginBottom = 2;
+            content.Add(maxEquippedItemsField);
+            
+            /*var maxItemsField = CreateIntegerField("MaxItems", "Max Items", entity.MaxItems);
+            maxItemsField.style.flexGrow = 1;
+            maxItemsField.style.marginRight = 8;
+            maxItemsField.RegisterValueChangedCallback(evt =>
+            {
+                entity.MaxItems = evt.newValue;
+                MarkDirty(entity);
+            });
+            row.Add(maxItemsField);*/
+            
+            var allowDupsToggle = CreateToggle("AllowDuplicateItems", "Allow Duplicate Items");
+            allowDupsToggle.value = entity.AllowDuplicateItems;
+            allowDupsToggle.style.minWidth = 120;
+            allowDupsToggle.RegisterValueChangedCallback(evt =>
+            {
+                entity.AllowDuplicateItems = evt.newValue;
+                MarkDirty(entity);
+            });
+            content.Add(allowDupsToggle);
         }
 
         // ═══════════════════════════════════════════════════════════════════════════

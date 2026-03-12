@@ -3,6 +3,7 @@ using System.Collections;
 using System.Linq;
 using JetBrains.Annotations;
 using UnityEngine;
+using UnityEngine.Serialization;
 
 namespace FarEmerald.PlayForge
 {
@@ -12,7 +13,8 @@ namespace FarEmerald.PlayForge
         public float CurrentValue;
         public float BaseValue;
 
-        public float Ratio => BaseValue > 0 ? CurrentValue / BaseValue : 0f;
+        public float RatioMinZero => BaseValue > 0 ? CurrentValue / BaseValue : 0f;
+        public float Ratio(float min) => Mathf.Lerp(min, BaseValue, CurrentValue);
         public bool ContainsImpact => CurrentValue != 0 || BaseValue != 0;
 
         public AttributeValue(float currentValue, float baseValue)
@@ -115,4 +117,36 @@ namespace FarEmerald.PlayForge
         }
     }
 
+    public struct AttributeValueClamped
+    {
+        public int CurrentValue;
+        
+        public int MinValue;
+        public int MaxValue;
+
+        public float Ratio => Mathf.Lerp(MinValue, MaxValue, CurrentValue);
+        public bool ContainsImpact => CurrentValue != 0;
+
+        public AttributeValueClamped(int value) : this()
+        {
+            CurrentValue = value;
+            MinValue = value;
+            MaxValue = value;
+        }
+
+        public AttributeValueClamped(int value, int maxValue) : this()
+        {
+            CurrentValue = value;
+            MinValue = value;
+            MaxValue = maxValue;
+        }
+
+        public AttributeValueClamped(int value, int minValue, int maxValue)
+        {
+            CurrentValue = value;
+            MinValue = minValue;
+            MaxValue = maxValue;
+        }
+    }
+    
 }

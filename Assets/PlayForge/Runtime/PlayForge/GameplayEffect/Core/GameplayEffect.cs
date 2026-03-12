@@ -9,7 +9,7 @@ using UnityEngine.Serialization;
 namespace FarEmerald.PlayForge
 {
     [CreateAssetMenu(menuName = "PlayForge/Gameplay Effect", fileName = "Effect_")]
-    public class GameplayEffect : BaseForgeLinkProvider
+    public class GameplayEffect : BaseForgeLevelProvider
     {
         public GameplayEffectDefinition Definition = new();
         public GameplayEffectTags Tags = new();
@@ -37,12 +37,12 @@ namespace FarEmerald.PlayForge
         [Tooltip("Link this effect to an Ability or Entity to derive max level from it")]
         [SerializeField]
         [LinkedSource]
-        private BaseForgeLinkProvider _linkedSource;
+        private BaseForgeLevelProvider _linkedSource;
         
         /// <summary>
         /// Gets the raw linked ScriptableObject (for serialization/editor purposes).
         /// </summary>
-        public override BaseForgeLinkProvider LinkedProvider
+        public override BaseForgeLevelProvider LinkedProvider
         {
             get => _linkedSource;
             set => _linkedSource = value;
@@ -58,7 +58,7 @@ namespace FarEmerald.PlayForge
         /// </summary>
         /// <param name="provider">The ScriptableObject that implements ILevelProvider</param>
         /// <returns>True if successfully linked</returns>
-        public override bool LinkToProvider(BaseForgeLinkProvider provider)
+        public override bool LinkToProvider(BaseForgeLevelProvider provider)
         {
             if (provider == null)
             {
@@ -146,7 +146,7 @@ namespace FarEmerald.PlayForge
         // Effect Generation
         // ═══════════════════════════════════════════════════════════════════════════
 
-        public GameplayEffectSpec Generate(IEffectOrigin origin, IGameplayAbilitySystem target)
+        public GameplayEffectSpec Generate(IEffectOrigin origin, ITarget target)
         {
             var spec = new GameplayEffectSpec(this, origin, target);
             ImpactSpecification.ApplyImpactSpecifications(spec);
@@ -213,11 +213,7 @@ namespace FarEmerald.PlayForge
         
         public override Texture2D GetPrimaryIcon()
         {
-            foreach (var ti in Definition.Textures)
-            {
-                if (ti.Tag == PlayForge.Tags.PRIMARY) return ti.Texture;
-            }
-            return Definition.Textures.Count > 0 ? Definition.Textures[0].Texture : null;
+            return ForgeHelper.GetTextureItem(Definition.Textures, PlayForge.Tags.PRIMARY);
         }
     }
 

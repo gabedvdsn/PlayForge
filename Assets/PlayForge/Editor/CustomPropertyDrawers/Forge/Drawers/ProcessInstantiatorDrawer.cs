@@ -18,7 +18,7 @@ namespace FarEmerald.PlayForge.Extended.Editor
         }
         protected override bool AcceptClear(SerializedProperty prop)
         {
-            return false;
+            return true;
         }
         protected override Type GetDefault(SerializedProperty prop)
         {

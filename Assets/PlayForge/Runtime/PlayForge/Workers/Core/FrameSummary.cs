@@ -17,7 +17,7 @@ namespace FarEmerald.PlayForge
         /// <summary>
         /// Impacts indexed by attribute for quick lookups.
         /// </summary>
-        public Dictionary<Attribute, List<ImpactData>> ImpactsByAttribute { get; } = new();
+        public Dictionary<IAttribute, List<ImpactData>> ImpactsByAttribute { get; } = new();
         
         /// <summary>
         /// Impacts indexed by source system for tracking damage dealt.
@@ -156,7 +156,7 @@ namespace FarEmerald.PlayForge
         /// <summary>
         /// Get total negative impact (damage) to an attribute this frame.
         /// </summary>
-        public float GetTotalReduction(Attribute attribute)
+        public float GetTotalReduction(IAttribute attribute)
         {
             if (!ImpactsByAttribute.TryGetValue(attribute, out var impacts))
                 return 0f;
@@ -169,7 +169,7 @@ namespace FarEmerald.PlayForge
         /// <summary>
         /// Get total positive impact (healing) to an attribute this frame.
         /// </summary>
-        public float GetTotalIncrease(Attribute attribute)
+        public float GetTotalIncrease(IAttribute attribute)
         {
             if (!ImpactsByAttribute.TryGetValue(attribute, out var impacts))
                 return 0f;
@@ -182,7 +182,7 @@ namespace FarEmerald.PlayForge
         /// <summary>
         /// Get net impact to an attribute this frame.
         /// </summary>
-        public float GetNetImpact(Attribute attribute)
+        public float GetNetImpact(IAttribute attribute)
         {
             if (!ImpactsByAttribute.TryGetValue(attribute, out var impacts))
                 return 0f;
@@ -215,7 +215,7 @@ namespace FarEmerald.PlayForge
         /// <summary>
         /// Get total damage dealt by a source this frame.
         /// </summary>
-        public float GetTotalReductionDealt(IGameplayAbilitySystem source, Attribute attribute = null)
+        public float GetTotalReductionDealt(IGameplayAbilitySystem source, IAttribute attribute = null)
         {
             if (!ImpactAgainstOthers.TryGetValue(source, out var impacts))
                 return 0f;
@@ -230,7 +230,7 @@ namespace FarEmerald.PlayForge
         /// <summary>
         /// Get total damage dealt by a source against other this frame.
         /// </summary>
-        public float GetTotalIncreaseDealtAgainstOthers(IGameplayAbilitySystem other, Attribute attribute = null)
+        public float GetTotalIncreaseDealtAgainstOthers(IGameplayAbilitySystem other, IAttribute attribute = null)
         {
             if (!ImpactAgainstOthers.TryGetValue(other, out var impacts))
                 return 0f;
@@ -245,7 +245,7 @@ namespace FarEmerald.PlayForge
         /// <summary>
         /// Get total increase dealt by a source against self this frame.
         /// </summary>
-        public float GetTotalIncreaseDealtAgainstSelf(IGameplayAbilitySystem self, Attribute attribute = null)
+        public float GetTotalIncreaseDealtAgainstSelf(IGameplayAbilitySystem self, IAttribute attribute = null)
         {
             if (!ImpactAgainstSelf.TryGetValue(self, out var impacts))
                 return 0f;
@@ -260,7 +260,7 @@ namespace FarEmerald.PlayForge
         /// <summary>
         /// Get total damage received by a target this frame.
         /// </summary>
-        public float GetTotalReductionReceived(ITarget target, Attribute attribute = null)
+        public float GetTotalReductionReceived(ITarget target, IAttribute attribute = null)
         {
             if (!ImpactAgainstSelf.TryGetValue(target, out var impacts))
                 return 0f;
@@ -275,7 +275,7 @@ namespace FarEmerald.PlayForge
         /// <summary>
         /// Check if an entity took any damage this frame.
         /// </summary>
-        public bool HasReductionFrom(ITarget target, Attribute attribute = null)
+        public bool HasReductionFrom(ITarget target, IAttribute attribute = null)
         {
             if (!ImpactAgainstSelf.TryGetValue(target, out var impacts))
                 return false;
@@ -285,7 +285,7 @@ namespace FarEmerald.PlayForge
                 (attribute == null || i.Attribute.Equals(attribute)));
         }
         
-        public bool HasIncreaseFrom(ITarget target, Attribute attribute = null)
+        public bool HasIncreaseFrom(ITarget target, IAttribute attribute = null)
         {
             if (!ImpactAgainstSelf.TryGetValue(target, out var impacts))
                 return false;

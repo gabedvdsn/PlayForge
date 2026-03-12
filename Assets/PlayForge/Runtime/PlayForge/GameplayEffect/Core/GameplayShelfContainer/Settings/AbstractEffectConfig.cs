@@ -133,7 +133,7 @@ namespace FarEmerald.PlayForge
         public static ValueModifier Override(float value) => new() { Operation = ECalculationOperation.Override, Value = value };*/
     }
     
-    public abstract class GameplaySpecConfig
+    public abstract class GameplayPipelineConfiguration
     {
         public string Name;
         public int Priority;
@@ -143,7 +143,7 @@ namespace FarEmerald.PlayForge
     }
     
     [Serializable]
-    public abstract class AbstractEffectConfig<T> : GameplaySpecConfig where T : AbstractEffectContainer
+    public abstract class AbstractEffectConfig<T> : GameplayPipelineConfiguration where T : AbstractEffectContainer
     {
         public EffectTagRequirements SourceRequirements;
         public EffectTagRequirements TargetRequirements;

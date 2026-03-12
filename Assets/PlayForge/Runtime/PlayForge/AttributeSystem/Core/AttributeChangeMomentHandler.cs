@@ -9,12 +9,12 @@ namespace FarEmerald.PlayForge
     /// </summary>
     public class AttributeChangeMomentHandler
     {
-        private Dictionary<Attribute, List<AbstractAttributeWorker>> _workers = new();
+        private Dictionary<IAttribute, List<AbstractAttributeWorker>> _workers = new();
         
         /// <summary>
         /// Add a worker for a specific attribute.
         /// </summary>
-        public bool AddWorker(Attribute attribute, AbstractAttributeWorker worker)
+        public bool AddWorker(IAttribute attribute, AbstractAttributeWorker worker)
         {
             Debug.Log(worker.GetType().Name);
             if (_workers.ContainsKey(attribute))
@@ -32,7 +32,7 @@ namespace FarEmerald.PlayForge
         /// <summary>
         /// Remove a worker for a specific attribute.
         /// </summary>
-        public bool RemoveWorker(Attribute attribute, AbstractAttributeWorker worker)
+        public bool RemoveWorker(IAttribute attribute, AbstractAttributeWorker worker)
         {
             if (!_workers.ContainsKey(attribute)) return false;
             
@@ -83,7 +83,7 @@ namespace FarEmerald.PlayForge
         /// <summary>
         /// Check if any workers are registered for an attribute.
         /// </summary>
-        public bool HasWorkers(Attribute attribute)
+        public bool HasWorkers(IAttribute attribute)
         {
             return _workers.ContainsKey(attribute) && _workers[attribute].Count > 0;
         }
@@ -91,7 +91,7 @@ namespace FarEmerald.PlayForge
         /// <summary>
         /// Get count of workers for an attribute.
         /// </summary>
-        public int GetWorkerCount(Attribute attribute)
+        public int GetWorkerCount(IAttribute attribute)
         {
             return _workers.TryGetValue(attribute, out var workers) ? workers.Count : 0;
         }
@@ -99,7 +99,7 @@ namespace FarEmerald.PlayForge
         /// <summary>
         /// Get all registered attributes.
         /// </summary>
-        public IEnumerable<Attribute> GetRegisteredAttributes()
+        public IEnumerable<IAttribute> GetRegisteredAttributes()
         {
             return _workers.Keys;
         }
@@ -113,14 +113,14 @@ namespace FarEmerald.PlayForge
         }
         
         // Legacy property for backwards compatibility
-        public Dictionary<Attribute, List<AbstractAttributeWorker>> ChangeEvents
+        public Dictionary<IAttribute, List<AbstractAttributeWorker>> ChangeEvents
         {
             get => _workers;
             set => _workers = value;
         }
         
         // Legacy method names for backwards compatibility
-        public bool AddEvent(Attribute attribute, AbstractAttributeWorker worker) => AddWorker(attribute, worker);
-        public bool RemoveEvent(Attribute attribute, AbstractAttributeWorker worker) => RemoveWorker(attribute, worker);
+        public bool AddEvent(IAttribute attribute, AbstractAttributeWorker worker) => AddWorker(attribute, worker);
+        public bool RemoveEvent(IAttribute attribute, AbstractAttributeWorker worker) => RemoveWorker(attribute, worker);
     }
 }

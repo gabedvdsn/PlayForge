@@ -218,7 +218,7 @@ namespace FarEmerald.PlayForge.Extended.Editor
         // ═══════════════════════════════════════════════════════════════════════════
         
         private void ImportFromTemplate(SerializedProperty prop, string templateKey, ILevelProvider parentProvider, 
-            BaseForgeLinkProvider parentAsset, Button valueBtn, Button templateBtn)
+            BaseForgeLevelProvider parentAsset, Button valueBtn, Button templateBtn)
         {
             var template = EffectTemplateRegistry.GetTemplate(templateKey);
             if (template == null)
@@ -321,7 +321,7 @@ namespace FarEmerald.PlayForge.Extended.Editor
         // Create Dialog
         // ═══════════════════════════════════════════════════════════════════════════
         
-        private void ShowCreateEffectDialog(SerializedProperty prop, BaseForgeLinkProvider parentAsset, 
+        private void ShowCreateEffectDialog(SerializedProperty prop, BaseForgeLevelProvider parentAsset, 
             ILevelProvider parentProvider, string templateKey)
         {
             var dialog = ScriptableObject.CreateInstance<CreateLinkedEffectDialog>();
@@ -340,16 +340,16 @@ namespace FarEmerald.PlayForge.Extended.Editor
             return targetObject as ILevelProvider;
         }
         
-        private BaseForgeLinkProvider GetParentProviderAsset(SerializedProperty prop)
+        private BaseForgeLevelProvider GetParentProviderAsset(SerializedProperty prop)
         {
-            return prop.serializedObject.targetObject as BaseForgeLinkProvider;
+            return prop.serializedObject.targetObject as BaseForgeLevelProvider;
         }
         
         // ═══════════════════════════════════════════════════════════════════════════
         // Effect Assignment & Linking
         // ═══════════════════════════════════════════════════════════════════════════
         
-        private void HandleEffectAssignment(SerializedProperty prop, GameplayEffect effect, ILevelProvider parentProvider, BaseForgeLinkProvider parentAsset)
+        private void HandleEffectAssignment(SerializedProperty prop, GameplayEffect effect, ILevelProvider parentProvider, BaseForgeLevelProvider parentAsset)
         {
             if (parentAsset == null) return;
             
@@ -532,7 +532,7 @@ namespace FarEmerald.PlayForge.Extended.Editor
     {
         private static readonly char[] InvalidFileNameChars = Path.GetInvalidFileNameChars();
         
-        private BaseForgeLinkProvider _linkTarget;
+        private BaseForgeLevelProvider _linkTarget;
         private ILevelProvider _provider;
         private Action<GameplayEffect> _onCreated;
         private string _templateKey;
@@ -542,7 +542,7 @@ namespace FarEmerald.PlayForge.Extended.Editor
         private bool _useTemplate = false;
         private GameplayEffect _template;
         
-        public void Initialize(BaseForgeLinkProvider linkTarget, ILevelProvider provider, Action<GameplayEffect> onCreated, string templateKey = null)
+        public void Initialize(BaseForgeLevelProvider linkTarget, ILevelProvider provider, Action<GameplayEffect> onCreated, string templateKey = null)
         {
             _linkTarget = linkTarget;
             _provider = provider;

@@ -19,13 +19,13 @@ namespace FarEmerald.PlayForge
             return EvaluateFromSpec(spec);
         }
 
-        public override void Regulate(Attribute attribute, AttributeModificationRule rules)
+        public override void Regulate(IAttribute attribute, AttributeModificationRule rules)
         {
             // No attribute dependencies - this scaler only uses level, not attributes
         }
-        public override float Evaluate(IGameplayAbilitySystem gas, AttributeBlueprint blueprint, IReadOnlyDictionary<Attribute, CachedAttributeValue> cache)
+        public override float Evaluate(IGameplayAbilitySystem gas, AttributeBlueprint blueprint, IReadOnlyDictionary<IAttribute, CachedAttributeValue> cache)
         {
-            throw new System.NotImplementedException();
+            return blueprint.Base.Magnitude;
         }
     }
 }

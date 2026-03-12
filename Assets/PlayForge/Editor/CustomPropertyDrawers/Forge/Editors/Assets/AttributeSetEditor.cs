@@ -24,7 +24,7 @@ namespace FarEmerald.PlayForge.Extended.Editor
         // Header Configuration (IMGUI Header)
         // ═══════════════════════════════════════════════════════════════════════════
 
-        protected override BaseForgeLinkProvider GetAsset()
+        protected override BaseForgeLevelProvider GetAsset()
         {
             return null;
         }
@@ -524,11 +524,11 @@ namespace FarEmerald.PlayForge.Extended.Editor
             sb.AppendLine($"Unique Attributes ({unique.Count}):");
             sb.AppendLine();
             
-            foreach (var attr in unique.OrderBy(a => a?.Name ?? ""))
+            foreach (var attr in unique.OrderBy(a => a?.GetName() ?? ""))
             {
                 if (attr != null)
                 {
-                    sb.AppendLine($"• {attr.Name}");
+                    sb.AppendLine($"• {attr.GetName()}");
                 }
             }
             

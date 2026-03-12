@@ -9,7 +9,7 @@ namespace FarEmerald.PlayForge
     /// </summary>
     public class ImpactWorkerCache
     {
-        private Dictionary<Attribute, List<AbstractImpactWorker>> _cache = new();
+        private Dictionary<IAttribute, List<AbstractImpactWorker>> _cache = new();
         
         // References for deferred execution
         private ActionQueue _actionQueue;
@@ -17,7 +17,7 @@ namespace FarEmerald.PlayForge
         
         public ImpactWorkerCache()
         {
-            _cache = new Dictionary<Attribute, List<AbstractImpactWorker>>();
+            _cache = new Dictionary<IAttribute, List<AbstractImpactWorker>>();
         }
         
         public ImpactWorkerCache(List<AbstractImpactWorker> workers) : this()
@@ -47,12 +47,12 @@ namespace FarEmerald.PlayForge
             worker.UnsubscribeFromCache(this);
         }
         
-        public void ProvideWorker(Attribute attribute, AbstractImpactWorker worker)
+        public void ProvideWorker(IAttribute attribute, AbstractImpactWorker worker)
         {
             _cache.SafeAdd(attribute, worker);
         }
         
-        public void RemoveWorker(Attribute attribute, AbstractImpactWorker worker)
+        public void RemoveWorker(IAttribute attribute, AbstractImpactWorker worker)
         {
             if (!_cache.ContainsKey(attribute)) return;
             _cache[attribute].Remove(worker);
@@ -102,7 +102,7 @@ namespace FarEmerald.PlayForge
         /// <summary>
         /// Check if any workers are registered for an attribute.
         /// </summary>
-        public bool HasWorkers(Attribute attribute)
+        public bool HasWorkers(IAttribute attribute)
         {
             return _cache.ContainsKey(attribute) && _cache[attribute].Count > 0;
         }
@@ -110,7 +110,7 @@ namespace FarEmerald.PlayForge
         /// <summary>
         /// Get count of workers for an attribute.
         /// </summary>
-        public int GetWorkerCount(Attribute attribute)
+        public int GetWorkerCount(IAttribute attribute)
         {
             return _cache.TryGetValue(attribute, out var workers) ? workers.Count : 0;
         }
@@ -124,6 +124,6 @@ namespace FarEmerald.PlayForge
         }
         
         // Legacy property access
-        public Dictionary<Attribute, List<AbstractImpactWorker>> Cache => _cache;
+        public Dictionary<IAttribute, List<AbstractImpactWorker>> Cache => _cache;
     }
 }

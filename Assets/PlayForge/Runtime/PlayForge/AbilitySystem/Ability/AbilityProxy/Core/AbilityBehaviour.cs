@@ -35,7 +35,7 @@ namespace FarEmerald.PlayForge
         /// Describes when the Stage should be considered complete
         /// </summary>
         [SerializeReference]
-        public IProxyStagePolicy StagePolicy = new AllProxyStagePolicy();
+        public IAbilityProxyStagePolicy StagePolicy = new AllProxyStagePolicy();
         
         [SerializeReference]
         public List<AbstractAbilityTask> Tasks = new();

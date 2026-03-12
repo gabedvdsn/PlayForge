@@ -3,8 +3,8 @@ using UnityEditor;
 
 namespace FarEmerald.PlayForge.Extended.Editor
 {
-    [CustomPropertyDrawer(typeof(IProxyStagePolicy))]
-    public class IProxyStagePolicyDrawer : AbstractTypeRefDrawer<IProxyStagePolicy>
+    [CustomPropertyDrawer(typeof(IAbilityProxyStagePolicy))]
+    public class IProxyStagePolicyDrawer : AbstractTypeRefDrawer<IAbilityProxyStagePolicy>
     {
         protected override string GetStringValue(SerializedProperty prop, Type value)
         {
@@ -26,15 +26,17 @@ namespace FarEmerald.PlayForge.Extended.Editor
             
             return sb.ToString();
         }
+        protected override bool AcceptClear(SerializedProperty prop)
+        {
+            return false;
+        }
         protected override bool AcceptOpen(SerializedProperty prop)
         {
             return false;
         }
         protected override Type GetDefault(SerializedProperty prop)
         {
-            var types = TypePickerCache.GetConcreteTypesAssignableTo<IProxyStagePolicy>();
-            if (types.Count > 0) return types[0];
-            return base.GetDefault(prop);
+            return typeof(WhenAllStagePolicy);
         }
 
     }

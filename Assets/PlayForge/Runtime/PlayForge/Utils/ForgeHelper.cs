@@ -22,6 +22,43 @@ namespace FarEmerald.PlayForge
         public static bool ValidateEffectOngoingRequirements(GameplayEffectSpec spec) => spec.Base.ValidateOngoingRequirements(spec);
 
         public static bool ValidateEffectRemovalRequirements(GameplayEffectSpec spec) => spec.Base.ValidateRemovalRequirements(spec);
+
+        public static Texture2D GetTextureItem(IEnumerable<TextureItem> textures, Tag tag)
+        {
+            if (textures is null || string.IsNullOrEmpty(tag.GetLeafName())) return null;
+            
+            var _textures = textures.ToArray();
+            foreach (var ti in _textures)
+            {
+                if (ti.Tag == tag) return ti.Texture;
+            }
+            return _textures.Length > 0 ? _textures[0].Texture : null;
+        }
+
+        public static RuntimeAttribute ConfigureLevelAttributeFor(BasicEffectOrigin spec)
+        {
+            return ConfigureLevelAttributeFor(spec.GetAssetTag());
+        }
+
+        public static RuntimeAttribute ConfigureLevelAttributeFor(Tag assetTag)
+        {
+            const string LevelAttributePrefix = "LVL_ATTRIBUTE_";
+            
+            string input = AttributeRegistry.RefactorByNamingConvention(assetTag.Name);
+            var result = TagHierarchy.GenerateDeterministicTag(input, LevelAttributePrefix);
+
+            return new RuntimeAttribute(result.Name, assetTag.Name, input);
+        }
+
+        public static float RelativeOffsetValue(float value, float max, float offset = 1f)
+        {
+            return max > offset ? (value - offset) / (max - offset) : offset;
+        }
+
+        public static float RelativeValue(float value, float minValue, float maxValue)
+        {
+            return Mathf.Lerp(minValue, maxValue, value);
+        }
         
         #endregion
         
@@ -895,6 +932,16 @@ namespace FarEmerald.PlayForge
         public static bool ContainsAll<T>(this IEnumerable<T> list, IEnumerable<T> match)
         {
             return match.All(list.Contains);
+        }
+
+        public static bool TrueForAny<T>(this IEnumerable<T> list, Predicate<T> condition)
+        {
+            foreach (var i in list)
+            {
+                if (condition?.Invoke(i) ?? false) return true;
+            }
+
+            return false;
         }
         
         #endregion

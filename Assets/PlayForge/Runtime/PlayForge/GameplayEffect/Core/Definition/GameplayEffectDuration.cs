@@ -278,7 +278,7 @@ namespace FarEmerald.PlayForge
         public AbstractStackingEffectContainer FindStackingContainer(GameplayEffectSpec spec, bool ongoing, AbstractStackingEffectContainer[] containers)
         {
             AbstractStackingEffectContainer container = containers.FirstOrDefault();
-            var inOrder = StackingConfigs.OrderBy(sb => sb.Order);
+            var inOrder = StackingConfigs.OrderBy(sb => sb.Priority);
             foreach (var sb in inOrder)
             {
                 container = sb.GetCorrectContainer(spec, ongoing, containers);

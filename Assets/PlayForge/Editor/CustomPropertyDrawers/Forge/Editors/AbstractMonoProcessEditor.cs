@@ -13,7 +13,7 @@ namespace FarEmerald.PlayForge.Extended.Editor
             var root = new VisualElement();
             
             // Process Settings Section
-            var processSection = CreateSection("Process Settings", new Color(0.55f, 0.78f, 0.91f));
+            var processSection = CreateSection("Process Settings", new Color(0.55f, 0.78f, 0.91f), false);
             root.Add(processSection);
             
             // Lifecycle
@@ -102,8 +102,8 @@ namespace FarEmerald.PlayForge.Extended.Editor
             });
             root.Add(defaultInspector);*/
 
-            Debug.Log(target);
-            Debug.Log(serializedObject.targetObject);
+            //Debug.Log(target);
+            //Debug.Log(serializedObject.targetObject);
             //DrawDefaultInspector();
             
             InspectorElement.FillDefaultInspector(root, serializedObject, this);
@@ -126,7 +126,7 @@ namespace FarEmerald.PlayForge.Extended.Editor
                 or "ProcessStepPriority" or "Instantiator";
         }
         
-        private VisualElement CreateSection(string title, Color accentColor)
+        private VisualElement CreateSection(string title, Color accentColor, bool withTitle = true)
         {
             var section = new VisualElement();
             section.style.marginBottom = 4;
@@ -141,13 +141,16 @@ namespace FarEmerald.PlayForge.Extended.Editor
             section.style.borderBottomRightRadius = 4;
             //section.style.borderLeftWidth = 3;
             section.style.borderLeftColor = accentColor;
-            
-            var header = new Label(title);
-            header.style.fontSize = 12;
-            header.style.unityFontStyleAndWeight = FontStyle.Bold;
-            header.style.color = accentColor;
-            header.style.marginBottom = 4;
-            section.Add(header);
+
+            if (withTitle)
+            {
+                var header = new Label(title);
+                header.style.fontSize = 12;
+                header.style.unityFontStyleAndWeight = FontStyle.Bold;
+                header.style.color = accentColor;
+                header.style.marginBottom = 4;
+                section.Add(header);
+            }
             
             return section;
         }
@@ -174,7 +177,7 @@ namespace FarEmerald.PlayForge.Extended.Editor
             {
                 0 => "Runs once, terminates when RunProcess completes.",
                 1 => "Runs once, then waits. Can be resumed externally.",
-                2 => "Starts waiting. Must be explicitly started via ProcessControl.",
+                2 => "Starts waiting. Must be manually ran & terminated.",
                 _ => ""
             };
         }

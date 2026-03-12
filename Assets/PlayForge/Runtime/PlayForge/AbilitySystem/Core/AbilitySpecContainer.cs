@@ -32,7 +32,7 @@ namespace FarEmerald.PlayForge
         public bool ActivateAbility(AbilityDataPacket implicitData)
         {
             if (IsClaiming) return false; // Prevent reactivation mid-use
-            if (!Spec.Owner.AsData().AbilitySystem.ClaimActive(this, implicitData)) return false;
+            if (!Spec.Source.AsData().AbilitySystem.ClaimActive(this, implicitData)) return false;
             
             activeData = implicitData;
             activeData.AddPayload(Tags.DERIVATION, Spec);
@@ -86,7 +86,7 @@ namespace FarEmerald.PlayForge
             {
                 IsActive = true;
 
-                Spec.Owner.CompileGrantedTags();
+                Spec.Source.CompileGrantedTags();
 
                 await Proxy.Activate(cts.Token, activeData);
             }
@@ -100,7 +100,7 @@ namespace FarEmerald.PlayForge
             {
                 IsActive = false;
                 
-                Spec.Owner.CompileGrantedTags();
+                Spec.Source.CompileGrantedTags();
                 
                 CleanAndRelease();
             }
@@ -121,7 +121,7 @@ namespace FarEmerald.PlayForge
             CleanTargetingToken();
             CleanActivationToken();
 
-            Spec.Owner.AsData().AbilitySystem.ReleaseClaim(this, activeData);
+            Spec.Source.AsData().AbilitySystem.ReleaseClaim(this, activeData);
 
             activeData = null;
         }

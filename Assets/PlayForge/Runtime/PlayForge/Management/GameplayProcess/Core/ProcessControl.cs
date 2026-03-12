@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using Cysharp.Threading.Tasks;
+using Unity.VisualScripting;
 using UnityEditor.VersionControl;
 using UnityEngine;
 
@@ -86,7 +87,7 @@ namespace FarEmerald.PlayForge
                 return true;
             }
 
-            public void RebuildIfDirty()
+            private void RebuildIfDirty()
             {
                 if (!_dirty) return;
                 
@@ -208,7 +209,10 @@ namespace FarEmerald.PlayForge
 
             foreach (var process in processes)
             {
-                if (process.IsInitialized) continue;
+                if (process.IsInitialized)
+                {
+                    continue;
+                }
                 
                 var data = ProcessDataPacket.LocalDefault(process, GameRoot.Instance);
                 Register(process, data, out _);
@@ -525,7 +529,7 @@ namespace FarEmerald.PlayForge
             {
                 string msg = DetailedLogs 
                     ? $"[Process Control] Registered Process \"{pcb.Process.ProcessName}\" ({pcb.Handler})"
-                    : $"[Process Control] Registered Process ({pcb.CacheIndex})";
+                    : $"[Process Control] Registered Process: {pcb.Process.ProcessName}";
                 Debug.Log(msg);
             }
             
@@ -903,24 +907,38 @@ namespace FarEmerald.PlayForge
         {
             return _hierarchy.GetSiblingProcessIds(cacheIndex);
         }
-
+        
         /// <summary>
-        /// Checks if a process exists and is active
+        /// Checks if a process exists
         /// </summary>
-        public bool IsActive(int cacheIndex) => _active.ContainsKey(cacheIndex);
+        public bool IsRegistered(int cacheIndex) => _active.ContainsKey(cacheIndex);
 
         /// <summary>
         /// Checks if a process is currently running (not waiting)
         /// </summary>
         public bool IsRunning(int cacheIndex)
         {
-            return _active.TryGetValue(cacheIndex, out var pcb) && pcb.State == EProcessState.Running;
+            return StateIs(cacheIndex, EProcessState.Running);
         }
 
         /// <summary>
         /// Checks if a process is currently waiting/paused
         /// </summary>
         public bool IsWaiting(int cacheIndex) => _waiting.Contains(cacheIndex);
+
+        public bool StateIs(int cacheIndex, EProcessState state) => _active.TryGetValue(cacheIndex, out var pcb) && pcb.State == state;
+        
+        public bool TryGetQueuedState(int cacheIndex, out EProcessState queuedState)
+        {
+            if (TryGetPCB(cacheIndex, out var pcb))
+            {
+                queuedState = pcb.QueuedState;
+                return true;
+            }
+
+            queuedState = EProcessState.Created;
+            return false;
+        }
 
         /// <summary>
         /// Gets the ProcessControlBlock for direct access (use cautiously)

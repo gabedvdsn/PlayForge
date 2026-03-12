@@ -126,8 +126,8 @@ namespace FarEmerald.PlayForge.Extended.Editor
             var name = value.Name;
             name = name.Replace("AbilityTask", "");
             name = name.Replace("Task", "");
-            
-            return name;
+
+            return ObjectNames.NicifyVariableName(name);
         }
         
         /// <summary>

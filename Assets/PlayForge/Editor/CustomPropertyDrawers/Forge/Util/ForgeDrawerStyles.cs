@@ -911,13 +911,23 @@ namespace FarEmerald.PlayForge.Extended.Editor
         /// <summary>
         /// Creates a divider line.
         /// </summary>
-        public static VisualElement CreateDivider(int marginVertical = 6)
+        public static VisualElement CreateDivider(int marginVertical, int marginSide)
+        {
+            return CreateDivider(marginVertical, marginVertical, marginSide, marginSide);
+        }
+        
+        /// <summary>
+        /// Creates a divider line.
+        /// </summary>
+        public static VisualElement CreateDivider(int marginTop = 3, int marginBot = 3, int marginLeft = 4, int marginRight = 4)
         {
             var divider = new VisualElement();
             divider.style.height = 1;
             divider.style.backgroundColor = new Color(0.3f, 0.3f, 0.3f, 0.5f);
-            divider.style.marginTop = marginVertical;
-            divider.style.marginBottom = marginVertical;
+            divider.style.marginTop = marginTop;
+            divider.style.marginBottom = marginBot;
+            divider.style.marginRight = marginLeft;
+            divider.style.marginLeft = marginRight;
             return divider;
         }
         

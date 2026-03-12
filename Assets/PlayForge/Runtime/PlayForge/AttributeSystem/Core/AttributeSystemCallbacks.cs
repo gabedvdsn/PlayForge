@@ -9,59 +9,59 @@ namespace FarEmerald.PlayForge
     /// </summary>
     public class AttributeSystemCallbacks
     {
-        public delegate void AttributeDelegate(Attribute attribute);
+        public delegate void AttributeDelegate(IAttribute attribute);
         public delegate void AttributeImpactDelegate(ImpactData data);
-        public delegate void AttributeChangeDelegate(Attribute attribute, ChangeValue change);
+        public delegate void AttributeChangeDelegate(IAttribute attribute, ChangeValue change);
         
         // ═══════════════════════════════════════════════════════════════
         // ATTRIBUTE REGISTRATION
         // ═══════════════════════════════════════════════════════════════
         
-        #region On Attribute Register
+        #region On IAttribute Register
         private AttributeDelegate _onAttributeRegister;
         public event AttributeDelegate OnAttributeRegister
         {
             add => _onAttributeRegister = AddUnique(_onAttributeRegister, value);
             remove => _onAttributeRegister -= value;
         }
-        public void AttributeRegister(Attribute attribute) => _onAttributeRegister?.Invoke(attribute);
+        public void AttributeRegister(IAttribute attribute) => _onAttributeRegister?.Invoke(attribute);
         #endregion
         
-        #region On Attribute Unregister
+        #region On IAttribute Unregister
         private AttributeDelegate _onAttributeUnregister;
         public event AttributeDelegate OnAttributeUnregister
         {
             add => _onAttributeUnregister = AddUnique(_onAttributeUnregister, value);
             remove => _onAttributeUnregister -= value;
         }
-        public void AttributeUnregister(Attribute attribute) => _onAttributeUnregister?.Invoke(attribute);
+        public void AttributeUnregister(IAttribute attribute) => _onAttributeUnregister?.Invoke(attribute);
         #endregion
         
         // ═══════════════════════════════════════════════════════════════
         // ATTRIBUTE MODIFICATION
         // ═══════════════════════════════════════════════════════════════
         
-        #region On Attribute Pre-Change (before workers)
+        #region On IAttribute Pre-Change (before workers)
         private AttributeChangeDelegate _onAttributePreChange;
         public event AttributeChangeDelegate OnAttributePreChange
         {
             add => _onAttributePreChange = AddUnique(_onAttributePreChange, value);
             remove => _onAttributePreChange -= value;
         }
-        public void AttributePreChange(Attribute attribute, ChangeValue change) => _onAttributePreChange?.Invoke(attribute, change);
+        public void AttributePreChange(IAttribute attribute, ChangeValue change) => _onAttributePreChange?.Invoke(attribute, change);
         #endregion
         
-        #region On Attribute Post-Change (after workers, before impact relay)
+        #region On IAttribute Post-Change (after workers, before impact relay)
         private AttributeChangeDelegate _onAttributePostChange;
         public event AttributeChangeDelegate OnAttributePostChange
         {
             add => _onAttributePostChange = AddUnique(_onAttributePostChange, value);
             remove => _onAttributePostChange -= value;
         }
-        public void AttributePostChange(Attribute attribute, ChangeValue change) => _onAttributePostChange?.Invoke(attribute, change);
+        public void AttributePostChange(IAttribute attribute, ChangeValue change) => _onAttributePostChange?.Invoke(attribute, change);
         #endregion
         
-        #region On Attribute Impacted (final impact data after all processing)
+        #region On IAttribute Impacted (final impact data after all processing)
         private AttributeImpactDelegate _onAttributeChanged;
         public event AttributeImpactDelegate OnAttributeChanged
         {
@@ -92,15 +92,15 @@ namespace FarEmerald.PlayForge
             if (data.RealImpact.BaseValue != 0f) AttributeBaseChanged(data.Attribute, data.OldValue, data.OldValue + data.RealImpact);
             if (data.RealImpact.CurrentValue != 0 && data.Target.TryGetAttributeValue(data.Attribute, out AttributeValue currValue))
             {
-                if (Mathf.Approximately(currValue.Ratio, 1f)) AttributeCurrentFull(data.Attribute);
-                if (Mathf.Approximately(currValue.Ratio, 0f)) AttributeCurrentZero(data.Attribute);
+                if (Mathf.Approximately(currValue.RatioMinZero, 1f)) AttributeCurrentFull(data.Attribute);
+                if (Mathf.Approximately(currValue.RatioMinZero, 0f)) AttributeCurrentZero(data.Attribute);
             }
             
             
         }
         #endregion
         
-        #region On Attribute Reduced (any negative impact)
+        #region On IAttribute Reduced (any negative impact)
         private AttributeImpactDelegate _onAttributeReduced;
         public event AttributeImpactDelegate OnAttributeReduced
         {
@@ -114,7 +114,7 @@ namespace FarEmerald.PlayForge
         }
         #endregion
         
-        #region On Attribute Increased (any positive impact)
+        #region On IAttribute Increased (any positive impact)
         private AttributeImpactDelegate _onAttributeIncreased;
         public event AttributeImpactDelegate OnAttributeIncreased
         {
@@ -132,41 +132,41 @@ namespace FarEmerald.PlayForge
         // ATTRIBUTE STATE CHANGES
         // ═══════════════════════════════════════════════════════════════
         
-        public delegate void AttributeStateDelegate(Attribute attribute);
-        public delegate void AttributeValueChangeDelegate(Attribute attribute, AttributeValue oldValue, AttributeValue newValue);
+        public delegate void AttributeStateDelegate(IAttribute attribute);
+        public delegate void AttributeValueChangeDelegate(IAttribute attribute, AttributeValue oldValue, AttributeValue newValue);
         
-        #region On Attribute Base Changed
+        #region On IAttribute Base Changed
         private AttributeValueChangeDelegate _onAttributeBaseChanged;
         public event AttributeValueChangeDelegate OnAttributeBaseChanged
         {
             add => _onAttributeBaseChanged = AddUnique(_onAttributeBaseChanged, value);
             remove => _onAttributeBaseChanged -= value;
         }
-        public void AttributeBaseChanged(Attribute attribute, AttributeValue oldValue, AttributeValue newValue)
+        public void AttributeBaseChanged(IAttribute attribute, AttributeValue oldValue, AttributeValue newValue)
         {
             if (System.Math.Abs(oldValue.BaseValue - newValue.BaseValue) > 0.001f)
                 _onAttributeBaseChanged?.Invoke(attribute, oldValue, newValue);
         }
         #endregion
         
-        #region On Attribute Current Zero
+        #region On IAttribute Current Zero
         private AttributeStateDelegate _onAttributeCurrentZero;
         public event AttributeStateDelegate OnAttributeCurrentZero
         {
             add => _onAttributeCurrentZero = AddUnique(_onAttributeCurrentZero, value);
             remove => _onAttributeCurrentZero -= value;
         }
-        public void AttributeCurrentZero(Attribute attribute) => _onAttributeCurrentZero?.Invoke(attribute);
+        public void AttributeCurrentZero(IAttribute attribute) => _onAttributeCurrentZero?.Invoke(attribute);
         #endregion
         
-        #region On Attribute Current Full
+        #region On IAttribute Current Full
         private AttributeStateDelegate _onAttributeCurrentFull;
         public event AttributeStateDelegate OnAttributeCurrentFull
         {
             add => _onAttributeCurrentFull = AddUnique(_onAttributeCurrentFull, value);
             remove => _onAttributeCurrentFull -= value;
         }
-        public void AttributeCurrentFull(Attribute attribute) => _onAttributeCurrentFull?.Invoke(attribute);
+        public void AttributeCurrentFull(IAttribute attribute) => _onAttributeCurrentFull?.Invoke(attribute);
         #endregion
         
         // ═══════════════════════════════════════════════════════════════

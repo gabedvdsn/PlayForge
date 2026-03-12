@@ -3,7 +3,7 @@ using UnityEngine.UIElements;
 
 namespace FarEmerald.PlayForge.Extended.Editor
 {
-    public abstract class AbstractForgeObjectDrawer<T> : AbstractRefDrawer<T> where T : BaseForgeObject
+    public abstract class AbstractForgeObjectDrawer<T> : AbstractRefDrawer<T> where T : BaseForgeAsset
     {
         protected override bool AcceptOpen(SerializedProperty prop)
         {

@@ -65,7 +65,7 @@ namespace FarEmerald.PlayForge
             return value + flatBonus;
         }
         
-        public override void Regulate(Attribute attribute, AttributeModificationRule rules)
+        public override void Regulate(IAttribute attribute, AttributeModificationRule rules)
         {
             if (Calculations == null) return;
             
@@ -74,7 +74,7 @@ namespace FarEmerald.PlayForge
                 member.Calculation?.Regulate(attribute, rules);
             }
         }
-        public override float Evaluate(IGameplayAbilitySystem gas, AttributeBlueprint blueprint, IReadOnlyDictionary<Attribute, CachedAttributeValue> cache)
+        public override float Evaluate(IGameplayAbilitySystem gas, AttributeBlueprint blueprint, IReadOnlyDictionary<IAttribute, CachedAttributeValue> cache)
         {
             return 0f;
         }
