@@ -77,6 +77,18 @@ namespace FarEmerald.PlayForge
             _metadata.IsCritical = isCritical;
             return this;
         }
+        
+        /// <summary>
+        /// Configures which injection types are allowed while the sequence is in a critical section.
+        /// Implies WithCriticalFlag(true). If not set, defaults to only InterruptSequenceInjection.
+        /// </summary>
+        public TaskSequenceBuilder WithCriticalAllowedInjections(params Type[] injectionTypes)
+        {
+            _metadata ??= new SequenceMetadata();
+            _metadata.IsCritical = true;
+            _metadata.CriticalAllowedInjections = new HashSet<Type>(injectionTypes);
+            return this;
+        }
 
         public TaskSequenceBuilder WithConditionCheckTiming(EProcessStepTiming timing = EProcessStepTiming.Update)
         {
@@ -428,6 +440,19 @@ namespace FarEmerald.PlayForge
         {
             _metadata ??= new SequenceStageMetadata();
             _metadata.IsCritical = isCritical;
+            return this;
+        }
+        
+        /// <summary>
+        /// Configures which injection types are allowed while this critical stage is active.
+        /// Implies WithCriticalFlag(true). If not set, defaults to only InterruptSequenceInjection.
+        /// Overrides sequence-level CriticalAllowedInjections for this stage.
+        /// </summary>
+        public StageBuilder WithCriticalAllowedInjections(params Type[] injectionTypes)
+        {
+            _metadata ??= new SequenceStageMetadata();
+            _metadata.IsCritical = true;
+            _metadata.CriticalAllowedInjections = new HashSet<Type>(injectionTypes);
             return this;
         }
         

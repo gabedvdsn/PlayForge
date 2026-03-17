@@ -146,8 +146,8 @@ namespace FarEmerald.PlayForge
         {
             if (State != EProcessState.Running) return false;
 
-            RunProcessAsync().Forget();
             QueuedState = ProcessControl.Instance.GetDefaultTransitionState(this);
+            RunProcessAsync().Forget();
             
             return true;
         }

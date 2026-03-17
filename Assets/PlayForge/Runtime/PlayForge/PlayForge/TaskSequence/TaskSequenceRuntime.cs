@@ -41,8 +41,11 @@ namespace FarEmerald.PlayForge
         /// <summary>Time elapsed since sequence started.</summary>
         public float ElapsedTime { get; private set; }
 
-        public bool IsCriticalSection => Definition.Metadata.IsCritical || _criticalFlagLocks > 0;
-        
+        /// <summary>
+        /// True if the sequence is currently inside a critical section.
+        /// When true, injections are restricted to only those allowed by the critical policy.
+        /// </summary>
+        public bool IsCriticalSection => (Definition.Metadata?.IsCritical ?? false) || _criticalFlagLocks > 0;
         
         // Cancellation management
         private CancellationTokenSource _sequenceCts;
@@ -55,7 +58,9 @@ namespace FarEmerald.PlayForge
         
         // Stage error storage (safer than TrySetException which can cause issues)
         private Exception _pendingStageError;
-        private int _criticalFlagLocks = 0;
+        
+        // Critical section tracking (incremented/decremented at stage push/pop level)
+        private int _criticalFlagLocks;
         
         // Tasks being cleaned (for error handling)
         private readonly List<ISequenceTask> _activeTasks = new();
@@ -71,6 +76,22 @@ namespace FarEmerald.PlayForge
         public TaskSequenceRuntime(TaskSequenceDefinition definition)
         {
             Definition = definition ?? throw new ArgumentNullException(nameof(definition));
+        }
+        
+        // ═══════════════════════════════════════════════════════════════════════════
+        // HELPERS
+        // ═══════════════════════════════════════════════════════════════════════════
+
+        public async UniTask ExecuteTaskUnit(ISequenceTask task, ProcessDataPacket data, CancellationToken token)
+        {
+            try
+            {
+                await task.Execute(data, token);
+            }
+            catch (OperationCanceledException)
+            {
+                throw; // Propagate cancellation
+            }
         }
         
         // ═══════════════════════════════════════════════════════════════════════════
@@ -238,7 +259,6 @@ namespace FarEmerald.PlayForge
                     _pendingStageError = null; // Reset error
                     
                     // Prepare all tasks in this stage
-                    _criticalFlagLocks = 0;
                     PrepareStage(stage);
                     
                     // Start stage execution (fire and forget, we wait on signal)
@@ -276,7 +296,7 @@ namespace FarEmerald.PlayForge
             _stageSources[stageIndex] = stageCts;
             var stageToken = stageCts.Token;
             
-            // Push stage onto active stack for condition checking
+            // Push stage onto active stack for condition checking + critical tracking
             PushActiveStage(stage);
             
             // Reset repeat state
@@ -346,7 +366,7 @@ namespace FarEmerald.PlayForge
                 var ctx = new SequenceEventContext(Data, this, stage);
                 stage.OnTerminate?.Invoke(ctx, !cancelled && error is null);
 
-                // Pop stage from active stack
+                // Pop stage from active stack (also decrements critical locks if applicable)
                 PopActiveStage(stage);
                 
                 _stageSources.Remove(stageIndex);
@@ -450,7 +470,6 @@ namespace FarEmerald.PlayForge
             
             // Create execution units using the policy token
             var units = stage.CreateExecutionUnits(this, stage, data, policyToken);
-            // var units = stage.CreateExecutionUnits(this, data, policyToken);
             
             if (units.Length == 0)
             {
@@ -464,7 +483,7 @@ namespace FarEmerald.PlayForge
         }
         
         // ═══════════════════════════════════════════════════════════════════════════
-        // ACTIVE STAGE STACK
+        // ACTIVE STAGE STACK (with critical section tracking)
         // ═══════════════════════════════════════════════════════════════════════════
         
         private void PushActiveStage(SequenceStage stage)
@@ -472,6 +491,11 @@ namespace FarEmerald.PlayForge
             lock (_activeStageStack)
             {
                 _activeStageStack.Push(stage);
+                
+                if (stage.Metadata?.IsCritical ?? false)
+                {
+                    _criticalFlagLocks++;
+                }
             }
         }
         
@@ -482,6 +506,11 @@ namespace FarEmerald.PlayForge
                 if (_activeStageStack.Count > 0 && _activeStageStack.Peek() == stage)
                 {
                     _activeStageStack.Pop();
+                    
+                    if (stage.Metadata?.IsCritical ?? false)
+                    {
+                        _criticalFlagLocks = Math.Max(0, _criticalFlagLocks - 1);
+                    }
                 }
             }
         }
@@ -495,6 +524,50 @@ namespace FarEmerald.PlayForge
         }
         
         // ═══════════════════════════════════════════════════════════════════════════
+        // CRITICAL SECTION ENFORCEMENT
+        // ═══════════════════════════════════════════════════════════════════════════
+        
+        /// <summary>
+        /// Checks whether a given injection is allowed during the current critical section.
+        /// If not in a critical section, all injections pass this check.
+        /// 
+        /// Resolution order:
+        ///   1. Not in critical section → allow
+        ///   2. Active critical stage has CriticalAllowedInjections → use that
+        ///   3. Sequence-level CriticalAllowedInjections → use that
+        ///   4. Default → only InterruptSequenceInjection is allowed
+        /// </summary>
+        private bool IsCriticalInjectionAllowed(ISequenceInjection injection)
+        {
+            if (!IsCriticalSection) return true;
+            
+            var injectionType = injection.GetType();
+            
+            // Check active critical stages (innermost first) for stage-level override
+            var activeStages = GetActiveStages();
+            foreach (var stage in activeStages)
+            {
+                if (!(stage.Metadata?.IsCritical ?? false)) continue;
+                
+                var stageAllowed = stage.Metadata.CriticalAllowedInjections;
+                if (stageAllowed != null)
+                {
+                    return stageAllowed.Contains(injectionType);
+                }
+            }
+            
+            // Fall back to sequence-level critical policy
+            var seqAllowed = Definition.Metadata?.CriticalAllowedInjections;
+            if (seqAllowed != null)
+            {
+                return seqAllowed.Contains(injectionType);
+            }
+            
+            // Default: only interrupt is allowed during critical sections
+            return injection is InterruptSequenceInjection;
+        }
+        
+        // ═══════════════════════════════════════════════════════════════════════════
         // PREPARE / CLEAN
         // ═══════════════════════════════════════════════════════════════════════════
         
@@ -504,8 +577,6 @@ namespace FarEmerald.PlayForge
             {
                 task.Prepare(Data);
                 RegisterActiveTask(task);
-
-                if (stage.Metadata.IsCritical) _criticalFlagLocks += 1;
             }
             
             foreach (var subStage in stage.SubStages)
@@ -526,7 +597,6 @@ namespace FarEmerald.PlayForge
                 {
                     Debug.LogError($"[TaskSequence] Exception in task Clean: {ex}");
                 }
-                if (stage.Metadata.IsCritical) _criticalFlagLocks -= 1;
                 UnregisterActiveTask(task);
             }
             
@@ -627,10 +697,10 @@ namespace FarEmerald.PlayForge
                         }
                         catch (Exception ex)
                         {
-                            Debug.LogError($"[TaskSequence] Exception in OnMaxDuration handler: {ex}");
+                            Debug.LogError($"[TaskSequence] Exception in OnTimeout handler: {ex}");
                         }
                         
-                        LogInjection(timeout.Injection, "Sequence MaxDuration");
+                        LogInjection(timeout.Injection, "Sequence Timeout");
                         timeout.Injection?.Apply(this);
                         break;
                     }
@@ -715,6 +785,9 @@ namespace FarEmerald.PlayForge
             // Check global conditions (these bypass stage-local permissions)
             foreach (var condition in Definition.Conditions)
             {
+                // Skip if critical section blocks this injection type
+                if (!IsCriticalInjectionAllowed(condition.Injection)) continue;
+                
                 if (condition.CheckAndApply(seqData, this))
                 {
                     LogInjection(condition.Injection, "Global Condition");
@@ -729,6 +802,9 @@ namespace FarEmerald.PlayForge
                 {
                     foreach (var condition in stage.Conditions)
                     {
+                        // Skip if critical section blocks this injection type
+                        if (!IsCriticalInjectionAllowed(condition.Injection)) continue;
+                        
                         // Use CheckAndApplyWithPermission to respect stage-local AllowedInjections
                         if (condition.CheckAndApplyWithPermission(seqData, this, stage))
                         {
@@ -747,6 +823,9 @@ namespace FarEmerald.PlayForge
             
             foreach (var condition in conditions)
             {
+                // Skip if critical section blocks this injection type
+                if (!IsCriticalInjectionAllowed(condition.Injection)) continue;
+                
                 if (condition.CheckAndApply(seqData, this))
                 {
                     LogInjection(condition.Injection, "External Condition");
@@ -759,15 +838,22 @@ namespace FarEmerald.PlayForge
         // ═══════════════════════════════════════════════════════════════════════════
         
         /// <summary>
-        /// Injects into the sequence. Checks global and stage-local permissions.
+        /// Injects into the sequence. Checks global permissions, stage-local permissions,
+        /// and critical section restrictions.
         /// </summary>
         public bool Inject(ISequenceInjection injection, bool overridePermission = false)
         {
             if (injection == null) return false;
             
-            if (!overridePermission && !Definition.IsInjectionAllowed(injection, CurrentStage))
+            if (!overridePermission)
             {
-                return false;
+                // Standard injection permission check
+                if (!Definition.IsInjectionAllowed(injection, CurrentStage))
+                    return false;
+                
+                // Critical section check
+                if (!IsCriticalInjectionAllowed(injection))
+                    return false;
             }
             
             LogInjection(injection, "Manual");
@@ -775,7 +861,8 @@ namespace FarEmerald.PlayForge
         }
         
         /// <summary>
-        /// Injects a stage-local injection. Only checks stage-local permissions.
+        /// Injects a stage-local injection. Only checks stage-local permissions
+        /// and critical section restrictions.
         /// </summary>
         public bool InjectStageLocal(ISequenceInjection injection, SequenceStage stage = null)
         {
@@ -783,6 +870,10 @@ namespace FarEmerald.PlayForge
             
             var targetStage = stage ?? CurrentStage;
             if (targetStage == null) return false;
+            
+            // Critical section check
+            if (!IsCriticalInjectionAllowed(injection))
+                return false;
             
             // Check stage-local permissions
             var allowed = targetStage.IsInjectionAllowedLocal(injection);
@@ -810,7 +901,8 @@ namespace FarEmerald.PlayForge
             if (shouldLog && injection != null)
             {
                 var stageName = stage?.Metadata?.Name ?? CurrentStage?.Metadata?.Name ?? "unknown";
-                Debug.Log($"[TaskSequence] Injection applied: {injection.GetType().Name} (Source: {source}, Stage: {stageName})");
+                var criticalTag = IsCriticalSection ? " [CRITICAL]" : "";
+                Debug.Log($"[TaskSequence] Injection applied: {injection.GetType().Name} (Source: {source}, Stage: {stageName}{criticalTag})");
             }
         }
         
@@ -895,6 +987,7 @@ namespace FarEmerald.PlayForge
             _maintainedStages = 0;
             _jumpToStageRequest = null;
             _pendingStageError = null;
+            _criticalFlagLocks = 0;
             _stageSources.Clear();
             _activeTasks.Clear();
             _activeStageStack.Clear();
@@ -909,6 +1002,7 @@ namespace FarEmerald.PlayForge
             }
             _stageSources.Clear();
             _activeStageStack.Clear();
+            _criticalFlagLocks = 0;
             
             try { _sequenceCts?.Dispose(); } catch { }
             _sequenceCts = null;

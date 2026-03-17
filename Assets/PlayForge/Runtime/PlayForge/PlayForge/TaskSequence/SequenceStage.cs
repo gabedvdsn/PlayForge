@@ -270,6 +270,7 @@ namespace FarEmerald.PlayForge
         public bool EnableInjectionLogging { get; set; } = false;
 
         public bool IsCritical { get; set; } = false;
+        public HashSet<Type> CriticalAllowedInjections { get; set; }
     }
 
     public class SequenceTimeout
@@ -502,6 +503,7 @@ namespace FarEmerald.PlayForge
         public bool EnableInjectionLogging { get; set; } = false;
         public bool Repeat { get; set; } = false;
         public bool IsCritical { get; set; } = false;
+        public HashSet<Type> CriticalAllowedInjections { get; set; }
         
         // ═══════════════════════════════════════════════════════════════════════════
         // EVENT CALLBACKS (all sync - called immediately when event occurs)
