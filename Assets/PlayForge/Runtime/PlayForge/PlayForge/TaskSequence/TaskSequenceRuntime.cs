@@ -82,7 +82,7 @@ namespace FarEmerald.PlayForge
         // HELPERS
         // ═══════════════════════════════════════════════════════════════════════════
 
-        public async UniTask ExecuteTaskUnit(ISequenceTask task, ProcessDataPacket data, CancellationToken token)
+        public async UniTask ExecuteTaskUnit(ISequenceTask task, SequenceDataPacket data, CancellationToken token)
         {
             try
             {
@@ -435,7 +435,7 @@ namespace FarEmerald.PlayForge
         /// <summary>
         /// Executes a stage (used for both top-level and sub-stages).
         /// </summary>
-        internal async UniTask ExecuteStageInternal(SequenceStage stage, ProcessDataPacket data, CancellationToken token)
+        internal async UniTask ExecuteStageInternal(SequenceStage stage, SequenceDataPacket data, CancellationToken token)
         {
             // Handle branch stages
             if (stage is BranchStage branchStage)

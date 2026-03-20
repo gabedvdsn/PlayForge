@@ -13,6 +13,9 @@ namespace FarEmerald.PlayForge
         // View Settings
         private EProcessDebuggerPolicy _viewPolicy = EProcessDebuggerPolicy.Simple;
         private EProcessStateFilter _stateFilter = EProcessStateFilter.All;
+        private EProcessSortMode _sortMode = EProcessSortMode.CacheIndex;
+        private EUsageSortMode _usageMode = EUsageSortMode.Frame;
+        private bool _showUsage = false;
         private string _searchFilter = "";
         private Vector2 _scrollPos;
         
@@ -20,6 +23,17 @@ namespace FarEmerald.PlayForge
         private List<ProcessControlBlock> _filteredProcesses = new();
         private double _lastRefreshTime;
         private const float RefreshInterval = 0.1f;
+        
+        // Usage tracking
+        private Dictionary<int, float> _previousUpdateTimes = new();
+        private Dictionary<int, float> _recentDeltas = new();
+        private float _totalCumulativeUpdateTime;
+        private float _totalRecentDelta;
+        
+        // Usage bar constants
+        private const float UsageBarWidth = 90f;
+        private const float UsageBarHeight = 12f;
+        private static readonly Color UsageBarBgColor = new Color(0.15f, 0.15f, 0.15f, 0.8f);
         
         // State colors
         private static readonly Color RunningColor = new Color(0.4f, 0.7f, 0.4f);
@@ -51,6 +65,7 @@ namespace FarEmerald.PlayForge
             DrawControlStateSection();
             EditorGUILayout.Space(4);
             DrawToolbar();
+            DrawOptionsBar();
             EditorGUILayout.Space(2);
             DrawProcessList();
         }
@@ -216,8 +231,31 @@ namespace FarEmerald.PlayForge
             // Refresh button
             if (GUILayout.Button("↻", EditorStyles.toolbarButton, GUILayout.Width(24)))
             {
+                _lastRefreshTime = 0;
                 RefreshProcessList();
             }
+            
+            EditorGUILayout.EndHorizontal();
+        }
+        
+        private void DrawOptionsBar()
+        {
+            EditorGUILayout.BeginHorizontal(EditorStyles.toolbar);
+            
+            // Sort mode
+            EditorGUILayout.LabelField("Sort:", GUILayout.Width(32));
+            _sortMode = (EProcessSortMode)EditorGUILayout.EnumPopup(_sortMode, EditorStyles.toolbarDropDown, GUILayout.Width(110));
+            
+            EditorGUILayout.Space(12);
+            
+            // Usage toggle
+            _showUsage = GUILayout.Toggle(_showUsage, new GUIContent("Usage", "Show update time usage per process"), EditorStyles.toolbarButton, GUILayout.Width(50));
+            if (_showUsage)
+            {
+                _usageMode = (EUsageSortMode)EditorGUILayout.EnumPopup(_usageMode, EditorStyles.toolbarDropDown, GUILayout.Width(90));
+            }
+            
+            GUILayout.FlexibleSpace();
             
             EditorGUILayout.EndHorizontal();
         }
@@ -276,16 +314,97 @@ namespace FarEmerald.PlayForge
             {
                 var all = ProcessControl.Instance.FetchActiveProcesses().Values;
                 
-                _filteredProcesses = all
+                var valid = all
                     .Where(pcb => pcb?.Relay?.Wrapper != null)
                     .Where(pcb => MatchesStateFilter(pcb))
-                    .Where(pcb => MatchesSearchFilter(pcb))
-                    .OrderBy(pcb => pcb.Relay.Wrapper.ProcessName)
-                    .ToList();
+                    .Where(pcb => MatchesSearchFilter(pcb));
+                
+                // Materialize before sorting (needed for usage computation)
+                var validList = valid.ToList();
+                
+                // Compute usage data (needed for usage sort modes and usage display)
+                bool needsUsage = _showUsage 
+                    || _sortMode is EProcessSortMode.RelativeUse or EProcessSortMode.RecentUse or EProcessSortMode.OverallUse;
+                if (needsUsage)
+                {
+                    _filteredProcesses = validList;
+                    ComputeUsageData();
+                }
+                
+                // Apply sort
+                _filteredProcesses = ApplySort(validList).ToList();
             }
             catch (InvalidOperationException)
             {
                 // Collection was modified during iteration
+            }
+        }
+        
+        private IEnumerable<ProcessControlBlock> ApplySort(IEnumerable<ProcessControlBlock> source)
+        {
+            return _sortMode switch
+            {
+                EProcessSortMode.CacheIndex => source.OrderBy(pcb => pcb.Relay.CacheIndex),
+                EProcessSortMode.Name => source.OrderBy(pcb => pcb.Relay.Wrapper.ProcessName, StringComparer.OrdinalIgnoreCase),
+                EProcessSortMode.Handler => source.OrderBy(pcb => GetHandlerName(pcb), StringComparer.OrdinalIgnoreCase)
+                                                   .ThenBy(pcb => pcb.Relay.Wrapper.ProcessName, StringComparer.OrdinalIgnoreCase),
+                EProcessSortMode.RelativeUse => source.OrderByDescending(pcb => pcb.Relay.UpdateTime),
+                EProcessSortMode.RecentUse => source.OrderByDescending(pcb => 
+                    _recentDeltas.TryGetValue(pcb.Relay.CacheIndex, out var d) ? d : 0f),
+                EProcessSortMode.OverallUse => source.OrderByDescending(pcb => pcb.Relay.UpdateTime),
+                _ => source.OrderBy(pcb => pcb.Relay.CacheIndex)
+            };
+        }
+        
+        private static string GetHandlerName(ProcessControlBlock pcb)
+        {
+            if (pcb.Handler == null) return "(none)";
+            
+            try
+            {
+                var name = pcb.Handler.GetName();
+                return string.IsNullOrEmpty(name) ? pcb.Handler.GetType().Name : name;
+            }
+            catch
+            {
+                return pcb.Handler.GetType().Name;
+            }
+        }
+        
+        private void ComputeUsageData()
+        {
+            var newDeltas = new Dictionary<int, float>();
+            float totalCumulative = 0f;
+            float totalDelta = 0f;
+            
+            foreach (var pcb in _filteredProcesses)
+            {
+                int id = pcb.Relay.CacheIndex;
+                float currentUpdateTime = pcb.Relay.UpdateTime;
+                
+                // Cumulative
+                totalCumulative += currentUpdateTime;
+                
+                // Delta since last refresh
+                float previousTime = _previousUpdateTimes.TryGetValue(id, out var prev) ? prev : currentUpdateTime;
+                float delta = Mathf.Max(0f, currentUpdateTime - previousTime);
+                newDeltas[id] = delta;
+                totalDelta += delta;
+                
+                // Store current for next frame
+                _previousUpdateTimes[id] = currentUpdateTime;
+            }
+            
+            _recentDeltas = newDeltas;
+            _totalCumulativeUpdateTime = totalCumulative;
+            _totalRecentDelta = totalDelta;
+            
+            // Clean out stale entries from _previousUpdateTimes
+            var activeIds = new HashSet<int>(_filteredProcesses.Select(pcb => pcb.Relay.CacheIndex));
+            var staleKeys = _previousUpdateTimes.Keys.Where(k => !activeIds.Contains(k)).ToList();
+            foreach (var key in staleKeys)
+            {
+                _previousUpdateTimes.Remove(key);
             }
         }
         
@@ -333,6 +452,8 @@ namespace FarEmerald.PlayForge
             EditorGUILayout.LabelField($"{relay.UpdateTime:F1}s", GUILayout.Width(50));
             EditorGUILayout.LabelField($"{relay.Lifetime:F1}s", GUILayout.Width(50));
             
+            if (_showUsage) DrawUsageInline(pcb);
+            
             EditorGUILayout.EndHorizontal();
         }
         
@@ -368,6 +489,13 @@ namespace FarEmerald.PlayForge
             EditorGUILayout.BeginHorizontal();
             EditorGUILayout.LabelField($"Update: {relay.UpdateTime:F2}s", GUILayout.Width(100));
             EditorGUILayout.LabelField($"Lifetime: {relay.Lifetime:F2}s", GUILayout.Width(110));
+            
+            if (_showUsage)
+            {
+                GUILayout.FlexibleSpace();
+                DrawUsageInline(pcb);
+            }
+            
             EditorGUILayout.EndHorizontal();
             
             EditorGUILayout.EndVertical();
@@ -420,6 +548,12 @@ namespace FarEmerald.PlayForge
             EditorGUILayout.LabelField($"Update Time: {relay.UpdateTime:F2}s", GUILayout.Width(140));
             EditorGUILayout.LabelField($"Lifetime: {relay.UnscaledLifetime:F2}s", GUILayout.Width(140));
             EditorGUILayout.EndHorizontal();
+            
+            // Usage row (full view gets its own dedicated row)
+            if (_showUsage)
+            {
+                DrawUsageRow(pcb);
+            }
             
             EditorGUILayout.Space(2);
             
@@ -475,6 +609,159 @@ namespace FarEmerald.PlayForge
         }
         
         // ═══════════════════════════════════════════════════════════════════════════
+        // Usage Visualization
+        // ═══════════════════════════════════════════════════════════════════════════
+        
+        /// <summary>
+        /// Compact inline usage: "Σ 12% ▸ 8%  [████░░░░░░]" — used in Minimum and Simple views.
+        /// </summary>
+        private void DrawUsageInline(ProcessControlBlock pcb)
+        {
+            GetUsagePercents(pcb, out float cumulativePct, out float recentPct, out float overallPct, out float targetPct);
+            
+            var usageLabelStyle = new GUIStyle(EditorStyles.miniLabel);
+            usageLabelStyle.alignment = TextAnchor.MiddleRight;
+            
+            EditorGUILayout.LabelField($"\u03A3{cumulativePct:F0}%", usageLabelStyle, GUILayout.Width(34));
+            EditorGUILayout.LabelField($"\u25B8{recentPct:F0}%", usageLabelStyle, GUILayout.Width(34));
+            EditorGUILayout.LabelField($"\u25CB{overallPct:F1}%", usageLabelStyle, GUILayout.Width(44));
+            
+            // Bar (uses recent % for the fill, since that's the more actionable metric)
+            DrawUsageBar(targetPct);
+        }
+        
+        /// <summary>
+        /// Full-width usage row with labels — used in Full view.
+        /// </summary>
+        private void DrawUsageRow(ProcessControlBlock pcb)
+        {
+            GetUsagePercents(pcb, out float cumulativePct, out float recentPct, out float overallPct, out float targetPct);
+            
+            EditorGUILayout.BeginHorizontal();
+            
+            var labelStyle = new GUIStyle(EditorStyles.miniLabel);
+            labelStyle.normal.textColor = new Color(0.7f, 0.7f, 0.7f);
+            
+            EditorGUILayout.LabelField("Usage:", labelStyle, GUILayout.Width(40));
+            EditorGUILayout.LabelField($"Relative: {cumulativePct:F1}%", labelStyle, GUILayout.Width(100));
+            EditorGUILayout.LabelField($"Frame: {recentPct:F1}%", labelStyle, GUILayout.Width(80));
+            EditorGUILayout.LabelField($"Overall: {overallPct:F2}%", labelStyle, GUILayout.Width(86));
+            
+            DrawUsageBar(targetPct);
+            
+            GUILayout.FlexibleSpace();
+            EditorGUILayout.EndHorizontal();
+        }
+        
+        private void GetUsagePercents(ProcessControlBlock pcb, out float cumulativePct, out float recentPct, out float overallPct, out float targetPct)
+        {
+            int id = pcb.CacheIndex;
+            float updateTime = pcb.TotalUpdateTime;
+            
+            // Cumulative: this process's total update time / sum of all processes' total update time
+            cumulativePct = _totalCumulativeUpdateTime > 0f
+                ? (updateTime / _totalCumulativeUpdateTime) * 100f
+                : 0f;
+            
+            // Recent: this process's delta since last refresh / total delta across all processes
+            float delta = _recentDeltas.TryGetValue(id, out var d) ? d : 0f;
+            recentPct = _totalRecentDelta > 0f
+                ? (delta / _totalRecentDelta) * 100f
+                : 0f;
+            
+            // Overall: this process's total update time / total wall-clock time since start
+            float totalElapsed = Time.realtimeSinceStartup;
+            overallPct = totalElapsed > 0f
+                ? (updateTime / totalElapsed) * 100f
+                : 0f;
+
+            targetPct = _usageMode switch
+            {
+                EUsageSortMode.Relative => cumulativePct,
+                EUsageSortMode.Frame => recentPct,
+                EUsageSortMode.Overall => overallPct,
+                _ => throw new ArgumentOutOfRangeException()
+            };
+        }
+        
+        /// <summary>
+        /// Draws a fixed-width horizontal bar that fills proportionally to the percentage.
+        /// Color interpolates from green (low) through yellow (mid) to red (high).
+        /// </summary>
+        private void DrawUsageBar(float percent)
+        {
+            var rect = GUILayoutUtility.GetRect(UsageBarWidth, UsageBarHeight, 
+                GUILayout.Width(UsageBarWidth), GUILayout.Height(UsageBarHeight));
+            
+            // Vertically center within the line
+            rect.y += (EditorGUIUtility.singleLineHeight - UsageBarHeight) / 2f;
+            
+            // Background
+            EditorGUI.DrawRect(rect, UsageBarBgColor);
+            
+            // Fill
+            float t = Mathf.Clamp01(percent / 100f);
+            if (t > 0.001f)
+            {
+                var fillRect = new Rect(rect.x, rect.y, rect.width * t, rect.height);
+                EditorGUI.DrawRect(fillRect, GetUsageColor(t));
+            }
+            
+            // Border
+            DrawRectBorder(rect, new Color(0.3f, 0.3f, 0.3f, 0.6f));
+        }
+        
+        /// <summary>
+        /// Green at 0%, yellow at ~35%, red at 100%.
+        /// </summary>
+        private static Color GetUsageColor(float t)
+        {
+            float min = .35f;
+            float max = .65f;
+
+            switch (t)
+            {
+                // Two-stop gradient: green -> yellow -> red
+                case < 0.35f:
+                {
+                    float localT = t / 0.25f;
+                    return Color.Lerp(
+                        new Color(0.3f, 0.75f, 0.3f),  // green
+                        new Color(0.85f, 0.75f, 0.2f),  // yellow
+                        localT);
+                }
+                case <= .75f:
+                {
+                    float localT = (t - 0.35f) / 0.75f;
+                    return Color.Lerp(
+                        new Color(0.85f, 0.75f, 0.2f),  // yellow
+                        new Color(1f, 0.4f, 0.1f),  // red
+                        localT);
+                }
+                case > .75f:
+                {
+                    float localT = (t - .75f) / 1f;
+                    return Color.Lerp(
+                        new Color(1f, 0.4f, 0.1f),  // yellow
+                        new Color(0.85f, 0.25f, 0.2f),  // red
+                        localT);
+                }
+                default:
+                {
+                    return Color.cyan;
+                }
+            }
+        }
+        
+        private static void DrawRectBorder(Rect rect, Color color)
+        {
+            EditorGUI.DrawRect(new Rect(rect.x, rect.y, rect.width, 1), color);                 // top
+            EditorGUI.DrawRect(new Rect(rect.x, rect.yMax - 1, rect.width, 1), color);          // bottom
+            EditorGUI.DrawRect(new Rect(rect.x, rect.y, 1, rect.height), color);                // left
+            EditorGUI.DrawRect(new Rect(rect.xMax - 1, rect.y, 1, rect.height), color);         // right
+        }
+        
+        // ═══════════════════════════════════════════════════════════════════════════
         // Helpers
         // ═══════════════════════════════════════════════════════════════════════════
         
@@ -519,6 +806,23 @@ namespace FarEmerald.PlayForge
         Running,
         Waiting,
         Terminated
+    }
+    
+    public enum EProcessSortMode
+    {
+        CacheIndex,
+        Name,
+        Handler,
+        RelativeUse,
+        RecentUse,
+        OverallUse
+    }
+
+    public enum EUsageSortMode
+    {
+        Relative,
+        Frame,
+        Overall
     }
 }
 #endif

@@ -486,6 +486,11 @@ namespace FarEmerald.PlayForge.Extended.Editor
                     // Copy serialized data from template to new asset
                     EditorUtility.CopySerialized(templateAsset, asset);
                 }
+
+                if (asset is BaseForgeAsset bfa && templateAsset is BaseForgeAsset tbfa)
+                {
+                    bfa.SetTemplate(tbfa);
+                }
             }
             
             // Set the display name on the asset (after template copy so it's not overwritten)

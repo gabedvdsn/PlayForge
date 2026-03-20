@@ -106,7 +106,7 @@ namespace FarEmerald.PlayForge
         {
             //if (Derivation is null && BaseDerivation is null) return $"[ SMAV-INSTANT ] {CurrentValue}/{BaseValue}";
             //if (Derivation is null) return $"[ SMAV-{BaseDerivation.GetEffectDerivation().GetName()} ] {CurrentValue}/{BaseValue}";
-            return $"[ SMAV-{Derivation.GetEffectDerivation().GetName()} ] {CurrentValue}/{BaseValue}";
+            return $"[ SMAV-{Derivation.GetEffectDerivation().GetReadableDefinition().GetName()} ] {CurrentValue}/{BaseValue}";
         }
     }
 

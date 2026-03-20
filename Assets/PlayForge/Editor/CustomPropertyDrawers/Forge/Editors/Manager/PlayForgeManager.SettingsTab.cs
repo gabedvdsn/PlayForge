@@ -1097,22 +1097,22 @@ namespace FarEmerald.PlayForge.Extended.Editor
             // Add type-specific settings here
             switch (typeInfo.Type.Name)
             {
-                case "Ability":
+                case nameof(Ability):
                     BuildAbilitySettings(settingsContainer);
                     break;
-                case "GameplayEffect":
+                case nameof(GameplayEffect):
                     BuildEffectSettings(settingsContainer);
                     break;
-                case "Item":
+                case nameof(Item):
                     BuildItemSettings(settingsContainer);
                     break;
-                case "Attribute":
+                case nameof(Attribute):
                     BuildAttributeSettings(settingsContainer);
                     break;
-                case "AttributeSet":
+                case nameof(AttributeSet):
                     BuildAttributeSetSettings(settingsContainer);
                     break;
-                case "EntityIdentity":
+                case nameof(EntityIdentity):
                     BuildEntitySettings(settingsContainer);
                     break;
                 case "ScalerTemplate":

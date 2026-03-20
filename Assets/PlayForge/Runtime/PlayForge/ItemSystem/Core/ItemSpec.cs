@@ -27,10 +27,6 @@ namespace FarEmerald.PlayForge
         public override int GetLevel() => GetLeveler().Level.CurrentValue;
         public override float GetRelativeLevel() => GetLeveler().Level.Ratio;
         
-        public override string GetName()
-        {
-            return Base.GetName();
-        }
         public override List<Tag> GetAffiliation()
         {
             return Source.GetAffiliation();
@@ -49,6 +45,10 @@ namespace FarEmerald.PlayForge
         public override ISource GetOwner()
         {
             return Source;
+        }
+        public override IHasReadableDefinition GetReadableDefinition()
+        {
+            return Base;
         }
         public override List<Tag> GetContextTags()
         {

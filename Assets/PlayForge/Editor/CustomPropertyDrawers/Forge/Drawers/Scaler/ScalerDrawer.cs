@@ -272,6 +272,7 @@ namespace FarEmerald.PlayForge.Extended.Editor
             
             var label = new Label(GetHeaderLabel(property));
             label.style.flexGrow = 1;
+            label.style.flexShrink = 1;
             label.style.color = Colors.LabelText;
             label.style.unityFontStyleAndWeight = FontStyle.Bold;
             label.style.fontSize = 11;
@@ -1364,6 +1365,7 @@ namespace FarEmerald.PlayForge.Extended.Editor
             c.style.borderBottomWidth = 1;
             c.style.borderLeftWidth = 1;
             c.style.borderRightWidth = 1;
+            c.style.minWidth = 120;
             c.style.borderTopColor = Colors.AssetScaler;
             c.style.borderBottomColor = Colors.AssetScaler;
             c.style.borderLeftColor = Colors.AssetScaler;

@@ -1,5 +1,6 @@
 using System.Threading;
 using Cysharp.Threading.Tasks;
+using UnityEngine;
 
 namespace FarEmerald.PlayForge
 {
@@ -138,7 +139,27 @@ namespace FarEmerald.PlayForge
                 processActive = false;
             }
         }
-        
+
+        public override void WhenWait(ProcessRelay relay)
+        {
+            Time.timeScale = 0f;
+        }
+
+        public override bool HandlePause(ProcessRelay relay)
+        {
+            return processActive;
+        }
+
+        public override bool HandleResume(ProcessRelay relay)
+        {
+            
+            
+            if (!processActive) return false;
+            
+            Time.timeScale = 1f;
+            return true;
+        }
+
         /// <summary>
         /// Returns the step timing based on whether conditions are present.
         /// </summary>

@@ -905,20 +905,6 @@ namespace FarEmerald.PlayForge.Extended.Editor
             maxItemsField.style.marginBottom = 2;
             content.Add(maxItemsField);
             
-            var maxEquippedItemsField = new PropertyField(serializedObject.FindProperty(nameof(EntityIdentity.MaxEquippedItemsOperation)), "");
-            maxEquippedItemsField.style.marginBottom = 2;
-            content.Add(maxEquippedItemsField);
-            
-            /*var maxItemsField = CreateIntegerField("MaxItems", "Max Items", entity.MaxItems);
-            maxItemsField.style.flexGrow = 1;
-            maxItemsField.style.marginRight = 8;
-            maxItemsField.RegisterValueChangedCallback(evt =>
-            {
-                entity.MaxItems = evt.newValue;
-                MarkDirty(entity);
-            });
-            row.Add(maxItemsField);*/
-            
             var allowDupsToggle = CreateToggle("AllowDuplicateItems", "Allow Duplicate Items");
             allowDupsToggle.value = entity.AllowDuplicateItems;
             allowDupsToggle.style.minWidth = 120;
@@ -928,6 +914,22 @@ namespace FarEmerald.PlayForge.Extended.Editor
                 MarkDirty(entity);
             });
             content.Add(allowDupsToggle);
+            
+            content.Add(CreateDivider());
+            
+            var maxEquippedItemsField = new PropertyField(serializedObject.FindProperty(nameof(EntityIdentity.MaxEquippedItemsOperation)), "");
+            maxEquippedItemsField.style.marginBottom = 2;
+            content.Add(maxEquippedItemsField);
+            
+            var allowEquippedDupsToggle = CreateToggle("AllowDuplicateEquippedItems", "Allow Duplicate Equipped Items");
+            allowEquippedDupsToggle.value = entity.AllowDuplicateItems;
+            allowEquippedDupsToggle.style.minWidth = 120;
+            allowEquippedDupsToggle.RegisterValueChangedCallback(evt =>
+            {
+                entity.AllowDuplicateEquippedItems = evt.newValue;
+                MarkDirty(entity);
+            });
+            content.Add(allowEquippedDupsToggle);
         }
 
         // ═══════════════════════════════════════════════════════════════════════════

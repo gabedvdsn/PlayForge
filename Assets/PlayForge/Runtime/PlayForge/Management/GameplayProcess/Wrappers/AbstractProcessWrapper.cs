@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Threading;
 using Cysharp.Threading.Tasks;
+using UnityEngine;
 
 namespace FarEmerald.PlayForge
 {
@@ -18,28 +19,21 @@ namespace FarEmerald.PlayForge
         /// Initializing the process wrapper, as opposed to the process itself
         /// </summary>
         public abstract void InitializeWrapper();
-        
+
         /// <summary>
         /// Initializing the process, as opposed to the process wrapper
         /// 
         /// </summary>
         /// <param name="relay"></param>
         public abstract void WhenInitialize(ProcessRelay relay);
-        
-        public virtual void WhenUpdate(ProcessRelay relay)
-        {
-            
-        }
-        public virtual void WhenFixedUpdate(ProcessRelay relay)
-        {
-            
-        }
-        public virtual void WhenLateUpdate(ProcessRelay relay)
-        {
-            
-        }
+
+        public abstract void WhenUpdate(ProcessRelay relay);
+        public abstract void WhenFixedUpdate(ProcessRelay relay);
+        public abstract void WhenLateUpdate(ProcessRelay relay);
         
         public abstract void WhenWait(ProcessRelay relay);
+        public abstract bool HandlePause(ProcessRelay relay);
+        public abstract bool HandleResume(ProcessRelay relay);
         public abstract void WhenTerminate(ProcessRelay relay);
         public abstract void WhenTerminateSafe(ProcessRelay relay);
         

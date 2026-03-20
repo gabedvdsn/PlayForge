@@ -21,6 +21,23 @@ namespace FarEmerald.PlayForge
             Bootstrap();
         }
         
+        #region Readable Definition
+        
+        public virtual string GetName()
+        {
+            return "Game Root";
+        }
+        public virtual string GetDescription()
+        {
+            return "Game Root is a fallback process handler.";
+        }
+        public virtual Texture2D GetPrimaryIcon()
+        {
+            return null;
+        }
+        
+        #endregion
+        
         public void Bootstrap()
         {
             if (Instance is not null && Instance != this) Destroy(gameObject);
@@ -88,9 +105,9 @@ namespace FarEmerald.PlayForge
         {
             Relays[relay.CacheIndex] = relay;
         }
-        public bool HandlerVoidProcess(int processIndex)
+        public bool HandlerVoidProcess(ProcessRelay relay)
         {
-            return Relays.Remove(processIndex);
+            return Relays.Remove(relay.CacheIndex);
         }
     }
 }

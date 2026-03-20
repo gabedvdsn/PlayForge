@@ -16,6 +16,7 @@ namespace FarEmerald.PlayForge
         public static GameRoot Instance;
         
         // Useful for backend systems like observers, audio, etc...
+        [SerializeReference]
         public List<AbstractCreateProcessAbilityTask> CreateProcessTasks = new();
         private AbilityDataPacket NativeDataPacket;
 
@@ -89,7 +90,11 @@ namespace FarEmerald.PlayForge
         {
             return this;
         }
-        
+        public IHasReadableDefinition GetReadableDefinition()
+        {
+            return this;
+        }
+
         public float GetRelativeLevel()
         {
             return LevelSystem.GetLeveler(LevelAttribute).Level.Ratio;

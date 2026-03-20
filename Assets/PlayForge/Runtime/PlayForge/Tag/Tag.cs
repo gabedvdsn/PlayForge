@@ -23,6 +23,8 @@ namespace FarEmerald.PlayForge
         [NonSerialized]
         internal string CachedParentPath;
 
+        public bool IsValid => !string.IsNullOrEmpty(Name);
+
         // ═══════════════════════════════════════════════════════════════════════════
         // Constructors & Factory Methods
         // ═══════════════════════════════════════════════════════════════════════════

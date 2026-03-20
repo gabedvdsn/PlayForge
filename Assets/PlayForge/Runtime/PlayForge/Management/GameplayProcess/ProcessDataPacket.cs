@@ -18,7 +18,7 @@ namespace FarEmerald.PlayForge
     ///         E.g. procuring the target transform via Data.TryGetPayload[Transform](Target, GameRoot.TransformParameter, Primary, out Transform value)
     ///         This procures the Transform value under the Target classification stored under the key GameRoot.TransformParameter
     /// </summary>
-    public class ProcessDataPacket : IValidationReady
+    public class ProcessDataPacket : IValidationReady, IGameplayProcessHandler
     {
         protected Dictionary<Tag, List<object>> _payload = new();
         public IReadOnlyDictionary<Tag, List<object>> Payload => _payload;
@@ -121,6 +121,19 @@ namespace FarEmerald.PlayForge
             else _payload[key].Add(value);
         }
         
+        public void AddPayload<T>(Tag key, IEnumerable<T> values)
+        {
+            if (!_payload.ContainsKey(key))
+            {
+                _payload[key] = new List<object>();
+            }
+            
+            foreach (var v in values)
+            {
+                _payload[key].Add(v);
+            }
+        }
+        
         public void InsertPayload<T>(Tag key, int index, T value)
         {
             if (!_payload.ContainsKey(key))
@@ -153,12 +166,12 @@ namespace FarEmerald.PlayForge
             }
         }
 
-        public T Get<T>(Tag key, EProxyDataValueTarget target, T fallback = default)
+        public T Get<T>(Tag key, EDataTarget target, T fallback = default)
         {
             return TryGet<T>(key, target, out var value) ? value : fallback;
         }
         
-        public bool TryGet<T>(Tag key, EProxyDataValueTarget target, out T value)
+        public bool TryGet<T>(Tag key, EDataTarget target, out T value)
         {
             value = default;
             
@@ -169,9 +182,9 @@ namespace FarEmerald.PlayForge
 
             object o = target switch
             {
-                EProxyDataValueTarget.Primary => _payload[key][0],
-                EProxyDataValueTarget.Any => _payload[key].RandomChoice(),
-                EProxyDataValueTarget.Last => _payload[key][^1],
+                EDataTarget.Primary => _payload[key][0],
+                EDataTarget.Any => _payload[key].RandomChoice(),
+                EDataTarget.Last => _payload[key][^1],
                 _ => throw new ArgumentOutOfRangeException(nameof(target), target, null)
             };
 
@@ -252,6 +265,143 @@ namespace FarEmerald.PlayForge
         }
 
         #endregion
+        
+        #region Convenience
+        
+        /// <summary>
+        /// Gets the primary (first) payload value with a default fallback.
+        /// </summary>
+        public T GetPrimary<T>(Tag key, T fallback = default)
+        {
+            return TryGet<T>(key, EDataTarget.Primary, out var value) ? value : fallback;
+        }
+        
+        /// <summary>
+        /// Gets the last payload value with a default fallback.
+        /// </summary>
+        public T GetLast<T>(Tag key, T fallback = default)
+        {
+            return TryGet<T>(key, EDataTarget.Last, out var value) ? value : fallback;
+        }
+        
+        /// <summary>
+        /// Sets or overwrites the primary (first) payload value.
+        /// </summary>
+        public void SetPrimary<T>(Tag key, T value)
+        {
+            SetPayload(key, 0, value);
+        }
+        
+        /// <summary>
+        /// Checks if a payload key exists and has a retrievable value.
+        /// </summary>
+        public bool Contains(Tag key)
+        {
+            return TryGet<object>(key, EDataTarget.Primary, out _);
+        }
+        
+        /// <summary>
+        /// Returns how many entries exist under a payload key.
+        /// </summary>
+        public int Count(Tag key)
+        {
+            return _payload.TryGetValue(key, out var list) ? list.Count : 0;
+        }
+        
+        /// <summary>
+        /// Gets or initializes a value (GetOrAdd pattern).
+        /// If the key does not exist, adds the default value and returns it.
+        /// </summary>
+        public T GetOrInit<T>(Tag key, T defaultValue)
+        {
+            if (TryGet<T>(key, EDataTarget.Primary, out var value))
+                return value;
+            
+            AddPayload(key, defaultValue);
+            return defaultValue;
+        }
+        
+        /// <summary>
+        /// Increments an integer payload value. Creates the key with the result if it doesn't exist.
+        /// </summary>
+        public int Increment(Tag key, int amount = 1)
+        {
+            int current = GetPrimary<int>(key, 0);
+            int newValue = current + amount;
+            SetPrimary(key, newValue);
+            return newValue;
+        }
+        
+        /// <summary>
+        /// Decrements an integer payload value. Creates the key with the result if it doesn't exist.
+        /// </summary>
+        public int Decrement(Tag key, int amount = 1)
+        {
+            return Increment(key, -amount);
+        }
+        
+        /// <summary>
+        /// Increments a float payload value. Creates the key with the result if it doesn't exist.
+        /// </summary>
+        public float IncrementFloat(Tag key, float amount)
+        {
+            float current = GetPrimary<float>(key, 0f);
+            float newValue = current + amount;
+            SetPrimary(key, newValue);
+            return newValue;
+        }
+        
+        /// <summary>
+        /// Decrements a float payload value. Creates the key with the result if it doesn't exist.
+        /// </summary>
+        public float DecrementFloat(Tag key, float amount)
+        {
+            return IncrementFloat(key, -amount);
+        }
+
+        public bool Toggle(Tag key)
+        {
+            bool current = GetPrimary<bool>(key);
+            SetPrimary(key, !current);
+            return !current;
+        }
+        
+        #endregion
+        
+        #region Process Handling
+
+        public readonly Dictionary<int, ProcessRelay> Relays = new();
+        
+        public bool HandlerValidateAgainst(IGameplayProcessHandler handler)
+        {
+            return (AbilityDataPacket)handler == this;
+        }
+        public bool HandlerProcessIsSubscribed(ProcessRelay relay)
+        {
+            return Relays.ContainsKey(relay.CacheIndex);
+        }
+        public void HandlerSubscribeProcess(ProcessRelay relay)
+        {
+            Relays.Add(relay.CacheIndex, relay);
+        }
+        public bool HandlerVoidProcess(ProcessRelay relay)
+        {
+            return Relays.Remove(relay.CacheIndex);
+        }
+        
+        #endregion
+        public virtual string GetName()
+        {
+            return $"Process-{Handler?.GetName() ?? ("--")}";
+        }
+        public virtual string GetDescription()
+        {
+            return $"Some process. {(Handler is null ? "No Handler." : $"Handler: {Handler.GetName()}")}";
+        }
+        public virtual Texture2D GetPrimaryIcon()
+        {
+            return null;
+        }
     }
     
     public struct DataValue<T> : IEnumerable<T>
@@ -264,14 +414,14 @@ namespace FarEmerald.PlayForge
             Data = data;
         }
 
-        public T Get(EProxyDataValueTarget target)
+        public T Get(EDataTarget target)
         {
             return target switch
             {
 
-                EProxyDataValueTarget.Primary => Primary,
-                EProxyDataValueTarget.Any => Any,
-                EProxyDataValueTarget.Last => Last,
+                EDataTarget.Primary => Primary,
+                EDataTarget.Any => Any,
+                EDataTarget.Last => Last,
                 _ => throw new ArgumentOutOfRangeException(nameof(target), target, null)
             };
         }
@@ -315,7 +465,7 @@ namespace FarEmerald.PlayForge
         }
     }
 
-    public enum EProxyDataValueTarget
+    public enum EDataTarget
     {
         Primary,
         Any,

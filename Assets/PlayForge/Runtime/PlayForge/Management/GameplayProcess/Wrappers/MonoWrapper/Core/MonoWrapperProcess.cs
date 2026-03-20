@@ -60,6 +60,14 @@ namespace FarEmerald.PlayForge
         {
             activeMono.WhenWait(relay);
         }
+        public override bool HandlePause(ProcessRelay relay)
+        {
+            return activeMono.HandleResume(relay);
+        }
+        public override bool HandleResume(ProcessRelay relay)
+        {
+            return activeMono.HandleResume(relay);
+        }
 
         /// <summary>
         /// Terminates the behaviour of the process, then Destroys the process object if it still exists.

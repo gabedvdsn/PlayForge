@@ -1,0 +1,43 @@
+<ui:UXML xmlns:ui="UnityEngine.UIElements" xmlns:uie="UnityEditor.UIElements" editor-extension-mode="True">
+    <Style src="project://database/Assets/demo_uss.uss?fileID=7433441132597879392&amp;guid=e10e1bbc1c6c1234ebbe8951c4f2a741&amp;type=3#demo_uss" />
+    <ui:VisualElement name="Root" style="flex-grow: 1; flex-direction: row;">
+        <ui:VisualElement name="Nav" style="flex-grow: 0; align-self: center; justify-content: center; margin-left: 25px; align-items: flex-start;">
+            <ui:Button text="Scenarios" name="ScenariosButton" focusable="false" style="margin-bottom: 12px; -unity-text-align: middle-left; background-color: rgba(188, 188, 188, 0); -unity-font-style: bold; font-size: 18px; min-width: 120px;" />
+            <ui:Button text="Sequences" name="SequencesButton" focusable="false" style="margin-bottom: 12px; -unity-text-align: middle-left; background-color: rgba(188, 188, 188, 0); -unity-font-style: bold; font-size: 18px; min-width: 120px;" />
+            <ui:Button text="Controls" name="ControlsButton" focusable="false" style="margin-bottom: 12px; -unity-text-align: middle-left; background-color: rgba(188, 188, 188, 0); -unity-font-style: bold; font-size: 18px; min-width: 120px;" />
+            <ui:Button text="About" name="AboutButton" focusable="false" style="margin-bottom: 12px; -unity-text-align: middle-left; background-color: rgba(188, 188, 188, 0); -unity-font-style: bold; font-size: 18px; min-width: 120px;" />
+            <ui:Button text="Quit" name="QuitButton" focusable="false" style="margin-bottom: 12px; -unity-text-align: middle-left; background-color: rgba(188, 188, 188, 0); -unity-font-style: bold; font-size: 18px; min-width: 120px;" />
+        </ui:VisualElement>
+        <ui:VisualElement name="Scenarios" style="flex-grow: 0; align-self: center; margin-left: 25px; display: flex;">
+            <ui:Button text="Fireball" name="Fireball" focusable="false" style="margin-bottom: 12px; -unity-text-align: middle-left; background-color: rgba(188, 188, 188, 0); -unity-font-style: bold; font-size: 18px; min-width: 120px;" />
+            <ui:Button text="Shapeshift" name="Shapeshift" focusable="false" style="margin-bottom: 12px; -unity-text-align: middle-left; background-color: rgba(188, 188, 188, 0); -unity-font-style: bold; font-size: 18px; min-width: 120px;" />
+            <ui:Button text="Empower Aura" name="EmpowerAura" focusable="false" style="margin-bottom: 12px; -unity-text-align: middle-left; background-color: rgba(188, 188, 188, 0); -unity-font-style: bold; font-size: 18px; min-width: 120px;" />
+            <ui:Button text="Grenade" name="Grenade" focusable="false" style="margin-bottom: 12px; -unity-text-align: middle-left; background-color: rgba(188, 188, 188, 0); -unity-font-style: bold; font-size: 18px; min-width: 120px;" />
+            <ui:Button text="Song of Healing" name="SongOfHealing" focusable="false" style="margin-bottom: 12px; -unity-text-align: middle-left; background-color: rgba(188, 188, 188, 0); -unity-font-style: bold; font-size: 18px; min-width: 120px;" />
+            <ui:Button text="Channeled Arrow" name="ChanneledArrow" focusable="false" style="margin-bottom: 12px; -unity-text-align: middle-left; background-color: rgba(188, 188, 188, 0); -unity-font-style: bold; font-size: 18px; min-width: 120px;" />
+            <ui:Button text="Teleport" name="Teleport" focusable="false" style="margin-bottom: 12px; -unity-text-align: middle-left; background-color: rgba(188, 188, 188, 0); -unity-font-style: bold; font-size: 18px; min-width: 120px;" />
+        </ui:VisualElement>
+        <ui:VisualElement name="Sequences" style="flex-grow: 0; align-self: stretch; margin-left: 25px; display: flex;">
+            <ui:ScrollView horizontal-scroller-visibility="Hidden" vertical-scroller-visibility="Hidden" style="flex-grow: 1; align-items: stretch; align-self: center; justify-content: flex-start; padding-top: 9%; padding-bottom: 9%;">
+                <ui:Label text="Gameplay Sequences" style="-unity-font-style: bold; padding-left: 14px; font-size: 15px; -unity-text-align: upper-left; flex-grow: 0; align-self: stretch;" />
+                <ui:Button text="Torrent Storm" name="TorrentStorm" focusable="false" style="margin-bottom: 12px; -unity-text-align: middle-left; background-color: rgba(188, 188, 188, 0); -unity-font-style: bold; font-size: 18px; min-width: 120px; flex-direction: row;" />
+                <ui:Button text="GTA Character Change" name="GTACharacterChange" focusable="false" style="margin-bottom: 12px; -unity-text-align: middle-left; background-color: rgba(188, 188, 188, 0); -unity-font-style: bold; font-size: 18px; min-width: 120px;" />
+                <ui:Button text="Smite!" name="Smite" focusable="false" style="margin-bottom: 12px; -unity-text-align: middle-left; background-color: rgba(188, 188, 188, 0); -unity-font-style: bold; font-size: 18px; min-width: 120px;" />
+                <ui:Button text="Moving Platforms" name="MovingPlatforms" focusable="false" style="margin-bottom: 12px; -unity-text-align: middle-left; background-color: rgba(188, 188, 188, 0); -unity-font-style: bold; font-size: 18px; min-width: 120px;" />
+                <ui:Button text="Day/Night Cycle" name="DayNightCycle" focusable="false" style="margin-bottom: 12px; -unity-text-align: middle-left; background-color: rgba(188, 188, 188, 0); -unity-font-style: bold; font-size: 18px; min-width: 120px;" />
+                <ui:Button text="You Stepped on a Trap!" name="TrapTriggering" focusable="false" style="margin-bottom: 12px; -unity-text-align: middle-left; background-color: rgba(188, 188, 188, 0); -unity-font-style: bold; font-size: 18px; min-width: 120px;" />
+                <ui:Button text="Aim Lab" name="AimLab" focusable="false" style="margin-bottom: 12px; -unity-text-align: middle-left; background-color: rgba(188, 188, 188, 0); -unity-font-style: bold; font-size: 18px; min-width: 120px;" />
+                <ui:Label text="UI Sequences" style="-unity-font-style: bold; padding-left: 14px; font-size: 15px; -unity-text-align: upper-left; flex-grow: 0; align-self: stretch;" />
+                <ui:Button text="Slow Reveal" name="SlowReveal" focusable="false" style="margin-bottom: 12px; -unity-text-align: middle-left; background-color: rgba(188, 188, 188, 0); -unity-font-style: bold; font-size: 18px; min-width: 120px;" />
+                <ui:Button text="Boring Speech" name="BoringSpeech" focusable="false" style="margin-bottom: 12px; -unity-text-align: middle-left; background-color: rgba(188, 188, 188, 0); -unity-font-style: bold; font-size: 18px; min-width: 120px;" />
+                <ui:Button text="Radial Menu" name="RadialMenu" focusable="false" style="margin-bottom: 12px; -unity-text-align: middle-left; background-color: rgba(188, 188, 188, 0); -unity-font-style: bold; font-size: 18px; min-width: 120px;" />
+                <ui:Button text="Notification" name="Notification" focusable="false" style="margin-bottom: 12px; -unity-text-align: middle-left; background-color: rgba(188, 188, 188, 0); -unity-font-style: bold; font-size: 18px; min-width: 120px;" />
+                <ui:Button text="Loading Screen" name="LoadingScreen" focusable="false" style="margin-bottom: 12px; -unity-text-align: middle-left; background-color: rgba(188, 188, 188, 0); -unity-font-style: bold; font-size: 18px; min-width: 120px;" />
+            </ui:ScrollView>
+        </ui:VisualElement>
+        <ui:VisualElement name="Game" style="flex-grow: 1; align-self: stretch; margin-left: 25px; display: flex;">
+            <ui:VisualElement name="Main" style="flex-grow: 1;" />
+            <ui:VisualElement name="GameControls" style="flex-grow: 1; max-height: 80px;" />
+        </ui:VisualElement>
+    </ui:VisualElement>
+</ui:UXML>

@@ -28,7 +28,7 @@ namespace FarEmerald.PlayForge
         
         public override void Clean(AbilityDataPacket data)
         {
-            if (!data.TryGet(Tags.TARGET_REAL, EProxyDataValueTarget.Primary, out ITarget target))
+            if (!data.TryGet(Tags.TARGET_REAL, EDataTarget.Primary, out ITarget target))
             {
                 return;
             }

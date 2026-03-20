@@ -8,11 +8,11 @@ namespace FarEmerald.PlayForge
     public interface IEffectOrigin
     {
         public ISource GetOwner();
+        public IHasReadableDefinition GetReadableDefinition();
         public List<Tag> GetContextTags();
         public Tag GetAssetTag();
         public int GetLevel();
         public float GetRelativeLevel();
-        public string GetName();
         public List<Tag> GetAffiliation();
         public bool IsActive();
         
@@ -40,6 +40,10 @@ namespace FarEmerald.PlayForge
         {
             return Owner;
         }
+        public IHasReadableDefinition GetReadableDefinition()
+        {
+            return Owner;
+        }
         public List<Tag> GetContextTags()
         {
             return Owner.GetContextTags();
@@ -59,10 +63,6 @@ namespace FarEmerald.PlayForge
         public virtual float GetRelativeLevel()
         {
             return ForgeHelper.RelativeOffsetValue(Owner.GetLevel(), Owner.GetMaxLevel());
-        }
-        public string GetName()
-        {
-            return Owner.GetName();
         }
         public List<Tag> GetAffiliation()
         {

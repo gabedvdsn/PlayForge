@@ -14,6 +14,7 @@ namespace FarEmerald.PlayForge
         private EAbilityActivationPolicy activationPolicy;
         public EAbilityActivationPolicy DefaultActivationPolicy => activationPolicy;
         private bool allowDuplicateAbilities;
+        private ScalerIntegerMagnitudeOperation maxAbilitiesOperation;
 
         public readonly IGameplayAbilitySystem Self;
 
@@ -93,11 +94,13 @@ namespace FarEmerald.PlayForge
         
         public void Setup(
             EAbilityActivationPolicy activationPolicy, 
-            bool allowDuplicates)
+            bool allowDuplicates,
+            ScalerIntegerMagnitudeOperation maxAbilitiesOperation)
         {
             this.activationPolicy = activationPolicy;
             this.allowDuplicateAbilities = allowDuplicates;
-
+            this.maxAbilitiesOperation = maxAbilitiesOperation;
+            
             ImpactWorkerCache = new ImpactWorkerCache();
         }
         
@@ -167,9 +170,8 @@ namespace FarEmerald.PlayForge
         public bool GiveAbility(Ability ability, int level, out int abilityIndex)
         {
             abilityIndex = -1;
-            
-            if (!Enabled) return false;
-            if (!allowDuplicateAbilities && HasAbility(ability)) return false;
+
+            if (!CanGiveAbility(ability)) return false;
             
             abilityIndex = GetFirstAvailableCacheIndex();
             if (abilityIndex < 0) return false;
@@ -194,6 +196,15 @@ namespace FarEmerald.PlayForge
             Self.CompileGrantedTags();
 
             return AbilityCache.Remove(index);
+        }
+
+        public bool CanGiveAbility(Ability ability)
+        {
+            if (!Enabled) return false;
+            if (!allowDuplicateAbilities && HasAbility(ability)) return false;
+            if (AbilityCount >= maxAbilitiesOperation.Evaluate(IAttributeImpactDerivation.GenerateLevelerDerivation(Self, Self.GetLevel(), Self.GetMaxLevel()))) return false;
+
+            return true;
         }
 
         private bool TryGetCacheIndexOf(Ability ability, out int cacheIndex)

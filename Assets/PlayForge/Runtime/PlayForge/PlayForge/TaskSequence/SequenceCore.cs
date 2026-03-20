@@ -17,17 +17,17 @@ namespace FarEmerald.PlayForge
         /// <summary>
         /// Called before Execute. Use for setup/initialization.
         /// </summary>
-        void Prepare(ProcessDataPacket data);
+        void Prepare(SequenceDataPacket data);
         
         /// <summary>
         /// The main async execution of the task.
         /// </summary>
-        UniTask Execute(ProcessDataPacket data, CancellationToken token);
+        UniTask Execute(SequenceDataPacket data, CancellationToken token);
         
         /// <summary>
         /// Called after Execute completes (success, cancel, or error). Use for cleanup.
         /// </summary>
-        void Clean(ProcessDataPacket data);
+        void Clean(SequenceDataPacket data);
     }
     
     /// <summary>
@@ -35,20 +35,19 @@ namespace FarEmerald.PlayForge
     /// </summary>
     public abstract class SequenceTaskBase : ISequenceTask
     {
-        public virtual void Prepare(ProcessDataPacket data) { }
-        public abstract UniTask Execute(ProcessDataPacket data, CancellationToken token);
-        public virtual void Clean(ProcessDataPacket data) { }
+        public virtual void Prepare(SequenceDataPacket data) { }
+        public abstract UniTask Execute(SequenceDataPacket data, CancellationToken token);
+        public virtual void Clean(SequenceDataPacket data) { }
     }
     
     /// <summary>
     /// Wraps a delegate as a sequence task.
-    /// Supports both ProcessDataPacket (base) and SequenceDataPacket (typed) delegates.
     /// </summary>
     public class DelegateSequenceTask : ISequenceTask
     {
-        private readonly Func<ProcessDataPacket, CancellationToken, UniTask> _execute;
-        private readonly Action<ProcessDataPacket> _prepare;
-        private readonly Action<ProcessDataPacket> _clean;
+        private readonly Func<SequenceDataPacket, CancellationToken, UniTask> _execute;
+        private readonly Action<SequenceDataPacket> _prepare;
+        private readonly Action<SequenceDataPacket> _clean;
         
         // ═══════════════════════════════════════════════════════════════════════════
         // CONSTRUCTORS - SequenceDataPacket (preferred)
@@ -83,20 +82,6 @@ namespace FarEmerald.PlayForge
             action(data);
         }
         
-        // ═══════════════════════════════════════════════════════════════════════════
-        // CONSTRUCTORS - Base ProcessDataPacket (backward compatibility)
-        // ═══════════════════════════════════════════════════════════════════════════
-        
-        public DelegateSequenceTask(
-            Func<ProcessDataPacket, CancellationToken, UniTask> execute,
-            Action<ProcessDataPacket> prepare = null,
-            Action<ProcessDataPacket> clean = null)
-        {
-            _execute = execute ?? throw new ArgumentNullException(nameof(execute));
-            _prepare = prepare;
-            _clean = clean;
-        }
-        
         /// <summary>
         /// Creates a task from a simple async delegate (no data packet).
         /// </summary>
@@ -105,9 +90,9 @@ namespace FarEmerald.PlayForge
             _execute = (_, token) => execute(token);
         }
         
-        public void Prepare(ProcessDataPacket data) => _prepare?.Invoke(data);
-        public UniTask Execute(ProcessDataPacket data, CancellationToken token) => _execute(data, token);
-        public void Clean(ProcessDataPacket data) => _clean?.Invoke(data);
+        public void Prepare(SequenceDataPacket data) => _prepare?.Invoke(data);
+        public UniTask Execute(SequenceDataPacket data, CancellationToken token) => _execute(data, token);
+        public void Clean(SequenceDataPacket data) => _clean?.Invoke(data);
     }
     
     /// <summary>
@@ -116,9 +101,9 @@ namespace FarEmerald.PlayForge
     /// </summary>
     public class MainThreadSequenceTask : ISequenceTask
     {
-        private readonly Action<ProcessDataPacket> _action;
-        private readonly Action<ProcessDataPacket> _prepare;
-        private readonly Action<ProcessDataPacket> _clean;
+        private readonly Action<SequenceDataPacket> _action;
+        private readonly Action<SequenceDataPacket> _prepare;
+        private readonly Action<SequenceDataPacket> _clean;
         
         // ═══════════════════════════════════════════════════════════════════════════
         // CONSTRUCTORS - SequenceDataPacket (preferred)
@@ -141,29 +126,15 @@ namespace FarEmerald.PlayForge
             _clean = clean != null ? d => clean(d as SequenceDataPacket ?? SequenceDataPacket.RootDefault()) : null;
         }
         
-        // ═══════════════════════════════════════════════════════════════════════════
-        // CONSTRUCTORS - Base ProcessDataPacket (backward compatibility)
-        // ═══════════════════════════════════════════════════════════════════════════
+        public void Prepare(SequenceDataPacket data) => _prepare?.Invoke(data);
         
-        public MainThreadSequenceTask(
-            Action<ProcessDataPacket> action,
-            Action<ProcessDataPacket> prepare,
-            Action<ProcessDataPacket> clean)
-        {
-            _action = action ?? throw new ArgumentNullException(nameof(action));
-            _prepare = prepare;
-            _clean = clean;
-        }
-        
-        public void Prepare(ProcessDataPacket data) => _prepare?.Invoke(data);
-        
-        public async UniTask Execute(ProcessDataPacket data, CancellationToken token)
+        public async UniTask Execute(SequenceDataPacket data, CancellationToken token)
         {
             await UniTask.SwitchToMainThread(token);
             _action(data);
         }
         
-        public void Clean(ProcessDataPacket data) => _clean?.Invoke(data);
+        public void Clean(SequenceDataPacket data) => _clean?.Invoke(data);
     }
     
     // ═══════════════════════════════════════════════════════════════════════════
@@ -479,6 +450,20 @@ namespace FarEmerald.PlayForge
         /// </summary>
         /// <returns>True if injection was successfully applied</returns>
         bool Apply(TaskSequenceRuntime runtime);
+    }
+
+    public class DelegateSequenceInjection : ISequenceInjection
+    {
+        public Func<TaskSequenceRuntime, bool> applyFunc;
+        public DelegateSequenceInjection(Func<TaskSequenceRuntime, bool> applyFunc)
+        {
+            this.applyFunc = applyFunc;
+        }
+
+        public bool Apply(TaskSequenceRuntime runtime)
+        {
+            return applyFunc?.Invoke(runtime) ?? false;
+        }
     }
     
     /// <summary>

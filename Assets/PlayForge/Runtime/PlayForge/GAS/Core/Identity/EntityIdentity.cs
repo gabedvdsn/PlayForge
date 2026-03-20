@@ -28,16 +28,17 @@ namespace FarEmerald.PlayForge
         public EAbilityActivationPolicy ActivationPolicy = EAbilityActivationPolicy.QueueActivationIfBusy;
         
         [ScalerOperationKeyword("Max Abilities")]
-        public ScalerMagnitudeOperation MaxAbilitiesOperation;
+        public ScalerIntegerMagnitudeOperation MaxAbilitiesOperation;
         public List<Ability> StartingAbilities = new();
         public bool AllowDuplicateAbilities;
 
         [ScalerOperationKeyword("Max Items")]
-        public ScalerMagnitudeOperation MaxItemsOperation;
+        public ScalerIntegerMagnitudeOperation MaxItemsOperation;
         [ScalerOperationKeyword("Max Equipped Items")]
-        public ScalerMagnitudeOperation MaxEquippedItemsOperation;
+        public ScalerIntegerMagnitudeOperation MaxEquippedItemsOperation;
         public List<StartingItemContainer> StartingItems = new();
         public bool AllowDuplicateItems;
+        public bool AllowDuplicateEquippedItems;
         
         [SerializeReference] public AttributeSet AttributeSet;
 

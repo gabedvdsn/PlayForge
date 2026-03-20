@@ -9,6 +9,10 @@ namespace FarEmerald.PlayForge.Extended.Editor
     {
         protected override bool AcceptOpen(SerializedProperty prop) => false;
         protected override bool AcceptAdd() => false;
+        protected override bool AcceptClear(SerializedProperty prop)
+        {
+            return false;
+        }
     }
     
     // ═══════════════════════════════════════════════════════════════════════════════
@@ -23,15 +27,11 @@ namespace FarEmerald.PlayForge.Extended.Editor
     [CustomPropertyDrawer(typeof(AbstractFocusedAttributeWorker), true)]
     public class FocusedAttributeWorkerDrawer : AbstractWorkerDrawer<AbstractFocusedAttributeWorker>
     {
-        protected override bool AcceptOpen(SerializedProperty prop) => false;
-        protected override bool AcceptAdd() => false;
     }
     
     [CustomPropertyDrawer(typeof(AbstractRelativeAttributeWorker), true)]
     public class RelativeAttributeWorkerDrawer : AbstractGenericDrawer<AbstractRelativeAttributeWorker>
     {
-        protected override bool AcceptOpen(SerializedProperty prop) => false;
-        protected override bool AcceptAdd() => false;
     }
     
     // ═══════════════════════════════════════════════════════════════════════════════
@@ -41,15 +41,11 @@ namespace FarEmerald.PlayForge.Extended.Editor
     [CustomPropertyDrawer(typeof(AbstractImpactWorker), true)]
     public class ImpactWorkerDrawer : AbstractGenericDrawer<AbstractImpactWorker>
     {
-        protected override bool AcceptOpen(SerializedProperty prop) => false;
-        protected override bool AcceptAdd() => false;
     }
     
     [CustomPropertyDrawer(typeof(AbstractContextImpactWorker), true)]
     public class ContextImpactWorkerDrawer : AbstractGenericDrawer<AbstractContextImpactWorker>
     {
-        protected override bool AcceptOpen(SerializedProperty prop) => false;
-        protected override bool AcceptAdd() => false;
     }
     
     // ═══════════════════════════════════════════════════════════════════════════════
@@ -59,8 +55,6 @@ namespace FarEmerald.PlayForge.Extended.Editor
     [CustomPropertyDrawer(typeof(AbstractEffectWorker), true)]
     public class EffectWorkerDrawer : AbstractGenericDrawer<AbstractEffectWorker>
     {
-        protected override bool AcceptOpen(SerializedProperty prop) => false;
-        protected override bool AcceptAdd() => false;
     }
     
     // ═══════════════════════════════════════════════════════════════════════════════
@@ -70,8 +64,6 @@ namespace FarEmerald.PlayForge.Extended.Editor
     [CustomPropertyDrawer(typeof(AbstractTagWorker), true)]
     public class TagWorkerDrawer : AbstractGenericDrawer<AbstractTagWorker>
     {
-        protected override bool AcceptOpen(SerializedProperty prop) => false;
-        protected override bool AcceptAdd() => false;
     }
     
     // ═══════════════════════════════════════════════════════════════════════════════
@@ -81,8 +73,6 @@ namespace FarEmerald.PlayForge.Extended.Editor
     [CustomPropertyDrawer(typeof(AbstractAnalysisWorker), true)]
     public class AnalysisWorkerDrawer : AbstractGenericDrawer<AbstractAnalysisWorker>
     {
-        protected override bool AcceptOpen(SerializedProperty prop) => false;
-        protected override bool AcceptAdd() => false;
     }
     
     // ═══════════════════════════════════════════════════════════════════════════════

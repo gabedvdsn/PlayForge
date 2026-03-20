@@ -4,7 +4,7 @@ using UnityEngine;
 
 namespace FarEmerald.PlayForge
 {
-    public interface IGameplayProcessHandler
+    public interface IGameplayProcessHandler : IHasReadableDefinition
     {
         public bool HandlerValidateAgainst(IGameplayProcessHandler handler);
 
@@ -12,6 +12,6 @@ namespace FarEmerald.PlayForge
 
         public void HandlerSubscribeProcess(ProcessRelay relay);
 
-        public bool HandlerVoidProcess(int processIndex);
+        public bool HandlerVoidProcess(ProcessRelay relay);
     }
 }

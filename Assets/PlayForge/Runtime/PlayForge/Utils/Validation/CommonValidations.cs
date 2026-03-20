@@ -131,7 +131,7 @@ namespace FarEmerald.PlayForge
             var value = GetValue(data);
             if (value is null) return false;
 
-            if (!data.TryGetTarget(EProxyDataValueTarget.Primary, out var targetObj)) return false;
+            if (!data.TryGetTarget(EDataTarget.Primary, out var targetObj)) return false;
             var target = targetObj.AsGAS()?.ToGASObject();
             if (target is null) return false;
             

@@ -24,7 +24,21 @@ namespace FarEmerald.PlayForge
         public float Lifetime => Time.time - _initializeTime;
         public float UnscaledInitializeTime => _unscaledInitializeTime;
         public float InitializeTime => _initializeTime;
+        //public float TotalUpdateTime => _totalUpdateTime;
         public float TotalUpdateTime => _totalUpdateTime;
+
+        public float UseSinceLastCheck
+        {
+            get
+            {
+                var _use = Time.time - _lastCheckEnd;
+                _lastCheckEnd = Time.time;
+                return _use;
+            }
+        }
+
+        protected float _lastCheckEnd = 0f;
+        protected float _lastStepEnd = 0f;
 
         private float _unscaledInitializeTime;
         private float _initializeTime;
@@ -120,7 +134,7 @@ namespace FarEmerald.PlayForge
             
             if (State == EProcessState.Running && state != EProcessState.Running)
             {
-                Interrupt();
+                if (state == EProcessState.Terminated || !Process.HandlePause(Relay)) Interrupt();
             }
             
             QueuedState = state;
@@ -138,6 +152,9 @@ namespace FarEmerald.PlayForge
             _unscaledInitializeTime = Time.unscaledTime;
             _initializeTime = Time.time;
             _isInitialized = true;
+
+            _lastCheckEnd = Time.time;
+            _lastStepEnd = _lastCheckEnd;
             
             Process.WhenInitialize(Process.Relay);
         }
@@ -147,6 +164,8 @@ namespace FarEmerald.PlayForge
             if (State != EProcessState.Running) return false;
 
             QueuedState = ProcessControl.Instance.GetDefaultTransitionState(this);
+            if (_hasRun && Process.HandleResume(Relay)) return true;
+
             RunProcessAsync().Forget();
             
             return true;
@@ -165,9 +184,7 @@ namespace FarEmerald.PlayForge
             if (State != EProcessState.Terminated) return false;
             
             Process.WhenTerminate(Process.Relay);
-            ProcessControl.Instance.Unregister(this);
-            
-            return true;
+            return ProcessControl.Instance.Unregister(this);
         }
 
         public void Interrupt()
@@ -202,8 +219,11 @@ namespace FarEmerald.PlayForge
                 default:
                     throw new ArgumentOutOfRangeException(nameof(timing), timing, null);
             }
+
+            _totalUpdateTime += Time.unscaledTime - (Time.time - _lastStepEnd) - Time.time;
+            _lastStepEnd = Time.time;
             
-            _totalUpdateTime += Time.deltaTime;
+            // _totalUpdateTime += Time.deltaTime;
         }
 
         #endregion
@@ -219,7 +239,6 @@ namespace FarEmerald.PlayForge
             {
                 _totalUpdateTime = 0f;
             }
-            _midRun = false;
 
             bool shouldTransition = true;
             try
@@ -228,7 +247,12 @@ namespace FarEmerald.PlayForge
             }
             catch (OperationCanceledException)
             {
+                //shouldTransition = true;
                 _midRun = true;
+            }
+            catch (Exception ex)
+            {
+                Debug.LogException(ex);
                 shouldTransition = false;
             }
 
@@ -249,76 +273,6 @@ namespace FarEmerald.PlayForge
         #endregion
     }
 
-    /// <summary>
-    /// Provides external access to ProcessControlBlock data without exposing internal state management.
-    /// </summary>
-    public class ProcessRelay
-    {
-        private readonly ProcessControlBlock _pcb;
-        
-        public bool Valid => _pcb != null;
-
-        public ProcessRelay(ProcessControlBlock pcb)
-        {
-            _pcb = pcb;
-        }
-
-        public int CacheIndex => _pcb.CacheIndex;
-        public AbstractProcessWrapper Wrapper => _pcb.Process;
-        public IGameplayProcessHandler Handler => _pcb.Handler;
-        public EProcessState State => _pcb.State;
-        public EProcessState QueuedState => _pcb.QueuedState;
-        public float UnscaledLifetime => _pcb.UnscaledLifetime;
-        public float Lifetime => _pcb.Lifetime;
-        public float UpdateTime => _pcb.TotalUpdateTime;
-
-        public bool TryGetProcess<T>(out T process)
-        {
-            return _pcb.Process.TryGetProcess(out process);
-        }
-
-        /// <summary>
-        /// Calculates remaining runtime based on elapsed update time.
-        /// </summary>
-        /// <param name="runtime">Total runtime in milliseconds</param>
-        /// <param name="multiplier">Conversion multiplier (default 1000 for ms)</param>
-        /// <param name="unscaled"></param>
-        public int RemainingRuntime(int runtime, int multiplier = 1000, bool unscaled = true) 
-            => runtime - (unscaled ? (int)UnscaledLifetime : (int)Lifetime) * multiplier;
-        
-        /// <summary>
-        /// Calculates remaining runtime based on elapsed update time.
-        /// </summary>
-        /// <param name="runtime">Total runtime in milliseconds</param>
-        /// <param name="unscaled"></param>
-        public float RemainingRuntime(float runtime, bool unscaled = true) 
-            => runtime - (unscaled ? UnscaledLifetime : Lifetime);
-
-        /// <summary>
-        /// Pauses this process and optionally its children.
-        /// </summary>
-        public bool Pause(bool cascade = true) 
-            => ProcessControl.Instance.Pause(CacheIndex, cascade);
-
-        /// <summary>
-        /// Resumes this process and optionally its children.
-        /// </summary>
-        public bool Unpause(bool cascade = true) 
-            => ProcessControl.Instance.Unpause(CacheIndex, cascade);
-
-        /// <summary>
-        /// Terminates this process and optionally its children.
-        /// </summary>
-        public bool Terminate(bool cascade = true) 
-            => ProcessControl.Instance.Terminate(CacheIndex, cascade);
-        
-        /// <summary>
-        /// Immediately terminates this process and optionally its children.
-        /// </summary>
-        public bool TerminateImmediate(bool cascade = true) 
-            => ProcessControl.Instance.TerminateImmediate(CacheIndex, cascade);
-    }
-    
     public enum EProcessState
     {
         Created,    // Created but not initialized

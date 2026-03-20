@@ -11,7 +11,7 @@ namespace FarEmerald.PlayForge.Examples
     /// Mark methods with [TaskSequenceMethod] to appear in dropdown.
     /// All examples use SequenceDataPacket for direct sequence/stage control.
     /// </summary>
-    public static class TaskSequenceExamples
+    public static partial class TaskSequenceExamples
     {
         // ═══════════════════════════════════════════════════════════════════════════
         // COMMON TAGS FOR EXAMPLES
@@ -1468,10 +1468,10 @@ namespace FarEmerald.PlayForge.Examples
                 .Task(async (d, t) =>
                 {
                     await UniTask.Delay(500, cancellationToken: t);
+                    attempts++;
                     if (Random.value < 0.7f)
                         throw new Exception("Random failure");
 
-                    attempts++;
                     Debug.Log($"[Success] Attempt: {attempts}/{maxAttempts}!");
                     d.SetPrimary(SCORE, true);
                     d.Interrupt();

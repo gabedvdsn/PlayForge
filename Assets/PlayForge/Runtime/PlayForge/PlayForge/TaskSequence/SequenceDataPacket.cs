@@ -60,6 +60,9 @@ namespace FarEmerald.PlayForge
         /// <summary>How many times the current stage has repeated.</summary>
         public int StageRepeatCount => CurrentStage?.RepeatCount ?? 0;
         
+        /// <summary>True if the sequence is currently inside a critical section.</summary>
+        public bool IsCriticalSection => Runtime?.IsCriticalSection ?? false;
+        
         // ═══════════════════════════════════════════════════════════════════════════
         // SEQUENCE CONTROL
         // ═══════════════════════════════════════════════════════════════════════════
@@ -209,76 +212,6 @@ namespace FarEmerald.PlayForge
         }
         
         // ═══════════════════════════════════════════════════════════════════════════
-        // CONVENIENCE - TYPED PAYLOAD ACCESS
-        // ═══════════════════════════════════════════════════════════════════════════
-        
-        /// <summary>
-        /// Gets primary payload value with default fallback.
-        /// </summary>
-        public T GetPrimary<T>(Tag key, T fallback = default)
-        {
-            return TryGet<T>(key, EProxyDataValueTarget.Primary, out var value) ? value : fallback;
-        }
-        
-        /// <summary>
-        /// Sets or overwrites the primary payload value.
-        /// </summary>
-        public void SetPrimary<T>(Tag key, T value)
-        {
-            SetPayload(key, 0, value);
-        }
-        
-        /// <summary>
-        /// Increments a numeric payload value.
-        /// </summary>
-        public int Increment(Tag key, int amount = 1)
-        {
-            int current = GetPrimary<int>(key, 0);
-            int newValue = current + amount;
-            SetPrimary(key, newValue);
-            return newValue;
-        }
-        
-        /// <summary>
-        /// Decrements a numeric payload value.
-        /// </summary>
-        public int Decrement(Tag key, int amount = 1)
-        {
-            return Increment(key, -amount);
-        }
-        
-        /// <summary>
-        /// Increments a float payload value.
-        /// </summary>
-        public float IncrementFloat(Tag key, float amount)
-        {
-            float current = GetPrimary<float>(key, 0f);
-            float newValue = current + amount;
-            SetPrimary(key, newValue);
-            return newValue;
-        }
-        
-        /// <summary>
-        /// Checks if a payload key exists and has a value.
-        /// </summary>
-        public bool Has(Tag key)
-        {
-            return TryGet<object>(key, EProxyDataValueTarget.Primary, out _);
-        }
-        
-        /// <summary>
-        /// Gets or initializes a value (like GetOrAdd pattern).
-        /// </summary>
-        public T GetOrInit<T>(Tag key, T defaultValue)
-        {
-            if (TryGet<T>(key, EProxyDataValueTarget.Primary, out var value))
-                return value;
-            
-            AddPayload(key, defaultValue);
-            return defaultValue;
-        }
-        
-        // ═══════════════════════════════════════════════════════════════════════════
         // CONSTRUCTION
         // ═══════════════════════════════════════════════════════════════════════════
         
@@ -287,7 +220,7 @@ namespace FarEmerald.PlayForge
         public SequenceDataPacket(ProcessDataPacket other) : base()
         {
             _payload = new Dictionary<Tag, List<object>>(other.Payload);
-            Handler = other.Handler;
+            Handler = other;
             Status = other.Status;
             InUse = other.InUse;
         }

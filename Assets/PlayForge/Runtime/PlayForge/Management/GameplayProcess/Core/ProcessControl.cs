@@ -116,6 +116,23 @@ namespace FarEmerald.PlayForge
         }
         
         #endregion
+        
+        #region Readable Definition
+        
+        public string GetName()
+        {
+            return "Process Control";
+        }
+        public string GetDescription()
+        {
+            return "Process Control manages active processes.";
+        }
+        public Texture2D GetPrimaryIcon()
+        {
+            return null;
+        }
+        
+        #endregion
 
         #region Unity Events
 
@@ -285,6 +302,33 @@ namespace FarEmerald.PlayForge
             
             return true;
         }
+        
+        public bool Register(AbstractMonoProcess process, AbilityDataPacket data, out ProcessRelay relay)
+        {
+            relay = default;
+            
+            if (process == null || process.IsInitialized) 
+                return false;
+            
+            if (!CanAcceptNewProcesses()) 
+                return false;
+            
+            var wrapper = new MonoWrapperProcess(process, data);
+            var pcb = ProcessControlBlock.Generate(NextCacheIndex, wrapper, data.Handler);
+            pcb.isMono = true;
+            
+            SetProcess(pcb);
+            
+            // Register in hierarchy
+            _hierarchy.Register(process, pcb.CacheIndex);
+            
+            relay = pcb.Relay;
+            data.Handler?.HandlerSubscribeProcess(relay);
+            
+            
+            
+            return true;
+        }
 
         public bool Register(AbstractRuntimeProcess process, out ProcessRelay relay)
         {
@@ -319,10 +363,12 @@ namespace FarEmerald.PlayForge
         
         public bool Unregister(ProcessControlBlock pcb)
         {
+            if (pcb is null) return false;
+            
             if (_waiting.Contains(pcb.CacheIndex)) _waiting.Remove(pcb.CacheIndex);
             else RemoveFromStepping(pcb);
 
-            pcb.Handler?.HandlerVoidProcess(pcb.CacheIndex);
+            pcb.Handler?.HandlerVoidProcess(pcb.Relay);
             
             // Remove from hierarchy
             _hierarchy.Unregister(pcb.CacheIndex);
@@ -437,6 +483,7 @@ namespace FarEmerald.PlayForge
                 {
                     if (_active.TryGetValue(childIndex, out var childPcb))
                     {
+                        Debug.Log($"Term chil");
                         childPcb.ForceIntoState(EProcessState.Terminated);
                     }
                 }
@@ -560,14 +607,14 @@ namespace FarEmerald.PlayForge
                     {
                         var targetState = GetDefaultStateWhenControlChanged(pcb);
                         //targetState = GetDefaultTransitionState(pcb);
-                        Debug.Log($"[{pcb.Process.ProcessName}] from {pcb.State} -> {targetState} --> {(DefaultTransitions.TryGetValue((State, pcb.Process.Lifecycle, pcb.State), out var _qState) ? _qState : $"{pcb.State}/")} ({State}) ({(pcb.State != targetState ? "Will Set" : "No Set")})");
+                        //Debug.Log($"[{pcb.Process.ProcessName}] from {pcb.State} -> {targetState} --> {(DefaultTransitions.TryGetValue((State, pcb.Process.Lifecycle, pcb.State), out var _qState) ? _qState : $"{pcb.State}/")} ({State}) ({(pcb.State != targetState ? "Will Set" : "No Set")})");
                         
                         if (State is EProcessControlState.Ready or EProcessControlState.Waiting or EProcessControlState.ClosedWaiting)
                             pcb.ForceIntoState(targetState);
                         else
                             pcb.QueueNextState(targetState);
 
-                        Debug.Log($"[{pcb.Process.ProcessName}] Queues Default State Next {pcb.State} -> {GetDefaultTransitionState(pcb)}");
+                        //Debug.Log($"[{pcb.Process.ProcessName}] Queues Default State Next {pcb.State} -> {GetDefaultTransitionState(pcb)}");
                         pcb.QueueNextState(GetDefaultTransitionState(pcb));
                     }
                 }
@@ -967,7 +1014,7 @@ namespace FarEmerald.PlayForge
             // No additional action needed
         }
         
-        public bool HandlerVoidProcess(int processIndex)
+        public bool HandlerVoidProcess(ProcessRelay relay)
         {
             return true;
         }

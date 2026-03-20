@@ -14,7 +14,7 @@ namespace FarEmerald.PlayForge
         {
             base.WhenInitialize(relay);
             
-            if (!regData.TryGet(Tags.DERIVATION, EProxyDataValueTarget.Primary, out Origin))
+            if (!regData.TryGet(Tags.DERIVATION, EDataTarget.Primary, out Origin))
             {
                 Origin = GameRoot.Instance;
             }

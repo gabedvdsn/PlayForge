@@ -140,9 +140,9 @@ namespace FarEmerald.PlayForge
             
             TagCache = new TagCache(this);
             
-            AbilitySystem.Setup(Data.ActivationPolicy, Data.AllowDuplicateAbilities);
+            AbilitySystem.Setup(Data.ActivationPolicy, Data.AllowDuplicateAbilities, Data.MaxAbilitiesOperation);
             AttributeSystem.Setup(Data.AttributeSet);
-            ItemSystem.Setup(Data.AllowDuplicateItems);
+            ItemSystem.Setup(Data.AllowDuplicateItems, Data.AllowDuplicateEquippedItems, Data.MaxItemsOperation, Data.MaxEquippedItemsOperation);
             
             InitializeEndOfFrameSystem();
             SetupDeferredContexts();
@@ -174,7 +174,7 @@ namespace FarEmerald.PlayForge
             base.WhenInitialize(relay);
 
             // Attempt to find affiliation from registration data
-            if (regData.TryGet(Tags.AFFILIATION, EProxyDataValueTarget.Primary, out List<Tag> affiliation))
+            if (regData.TryGet(Tags.AFFILIATION, EDataTarget.Primary, out List<Tag> affiliation))
             {
                 Data.Affiliation = affiliation;
             }
@@ -210,9 +210,9 @@ namespace FarEmerald.PlayForge
             Relays[relay.CacheIndex] = relay;
         }
 
-        public bool HandlerVoidProcess(int processIndex)
+        public bool HandlerVoidProcess(ProcessRelay relay)
         {
-            return Relays.Remove(processIndex);
+            return Relays.Remove(relay.CacheIndex);
         }
         
         // ═══════════════════════════════════════════════════════════════════════════
@@ -725,14 +725,15 @@ namespace FarEmerald.PlayForge
         
         public EAbilityActivationPolicy ActivationPolicy = EAbilityActivationPolicy.QueueActivationIfBusy;
         
-        public ScalerMagnitudeOperation MaxAbilitiesOperation;
+        public ScalerIntegerMagnitudeOperation MaxAbilitiesOperation;
         public List<Ability> StartingAbilities = new();
         public bool AllowDuplicateAbilities;
 
-        public ScalerMagnitudeOperation MaxItemsOperation;
-        public ScalerMagnitudeOperation MaxEquippedItemsOperation;
+        public ScalerIntegerMagnitudeOperation MaxItemsOperation;
+        public ScalerIntegerMagnitudeOperation MaxEquippedItemsOperation;
         public List<StartingItemContainer> StartingItems = new();
         public bool AllowDuplicateItems;
+        public bool AllowDuplicateEquippedItems;
         
         [SerializeReference] public AttributeSet AttributeSet;
 

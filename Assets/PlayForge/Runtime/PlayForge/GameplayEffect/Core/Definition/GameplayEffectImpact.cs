@@ -23,7 +23,7 @@ namespace FarEmerald.PlayForge
         public List<Tag> ImpactTypes;
         public bool ReverseImpactOnRemoval;
         
-        [ScalerOperationKeyword("Magnitude")]
+        [ScalerOperationKeyword("Magnitude Scaler")]
         public ScalerMagnitudeOperation MagnitudeOperation;
         
         public ContainedEffectPacket[] Packets;

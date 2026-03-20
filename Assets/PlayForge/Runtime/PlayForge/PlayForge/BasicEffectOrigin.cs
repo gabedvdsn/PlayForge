@@ -43,11 +43,11 @@ namespace FarEmerald.PlayForge
         }
         
         public abstract ISource GetOwner();
+        public abstract IHasReadableDefinition GetReadableDefinition();
         public abstract List<Tag> GetContextTags();
         public abstract Tag GetAssetTag();
         public abstract int GetLevel();
         public abstract float GetRelativeLevel();
-        public abstract string GetName();
         public abstract List<Tag> GetAffiliation();
         public abstract bool IsActive();
     }

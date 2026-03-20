@@ -30,6 +30,23 @@ namespace FarEmerald.PlayForge
         public bool IsInitialized => _initialized;
         public ProcessRelay Relay;
         
+        #region Readable Definition
+        
+        public virtual string GetName()
+        {
+            return Relay.Wrapper.ProcessName;
+        }
+        public virtual string GetDescription()
+        {
+            return $"[{Relay.Wrapper.ProcessName}] This is a MonoProcess.";
+        }
+        public virtual Texture2D GetPrimaryIcon()
+        {
+            return null;
+        }
+        
+        #endregion
+        
         public void SendProcessData(ProcessDataPacket processData)
         {
             regData = processData;
@@ -97,6 +114,11 @@ namespace FarEmerald.PlayForge
         public virtual void WhenWait(ProcessRelay relay)
         {
             processActive = false;
+        }
+        
+        public virtual bool HandleResume(ProcessRelay relay)
+        {
+            return false;
         }
 
         /// <summary>

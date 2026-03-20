@@ -222,7 +222,7 @@ namespace FarEmerald.PlayForge
         internal UniTask[] CreateExecutionUnits(
             TaskSequenceRuntime runtime,
             SequenceStage stage,
-            ProcessDataPacket data,
+            SequenceDataPacket data,
             CancellationToken stageToken)
         {
             var units = new List<UniTask>();
@@ -242,7 +242,7 @@ namespace FarEmerald.PlayForge
             return units.ToArray();
         }
         
-        private async UniTask ExecuteTaskUnit(ISequenceTask task, ProcessDataPacket data, CancellationToken token)
+        private async UniTask ExecuteTaskUnit(ISequenceTask task, SequenceDataPacket data, CancellationToken token)
         {
             try
             {

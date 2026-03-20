@@ -204,6 +204,14 @@ namespace FarEmerald.PlayForge
             return this;
         }
         
+        public TaskSequenceBuilder Task(ISequenceTask task)
+        {
+            var stage = new SequenceStage();
+            stage.Tasks.Add(task);
+            _stages.Add(stage);
+            return this;
+        }
+        
         /// <summary>
         /// Adds a synchronous task that executes on the main thread.
         /// Forces non-async by only accepting Action (not Func returning UniTask).

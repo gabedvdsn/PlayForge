@@ -20,7 +20,7 @@ namespace FarEmerald.PlayForge
         // Duration
         // ═══════════════════════════════════════════════════════════════════════════
 
-        [ScalerOperationKeyword("Duration")]
+        [ScalerOperationKeyword("Duration Scaler")]
         public ScalerMagnitudeOperation DurationOperation;
 
         public EMagnitudeOperation RealDeltaTime = EMagnitudeOperation.AddScaler;
@@ -36,17 +36,17 @@ namespace FarEmerald.PlayForge
         [Tooltip("Execute effect impact immediately on application (before any periodic ticks).")]
         public bool TickOnApplication;
 
-        [ScalerOperationKeyword("Ticks")]
+        [ScalerOperationKeyword("Ticks Scaler")]
         public ScalerIntegerMagnitudeOperation TicksOperation;
         
-        [ScalerOperationKeyword("Tick Interval")]
+        [ScalerOperationKeyword("Tick Interval Scaler")]
         public ScalerMagnitudeOperation TickIntervalOperation;
 
         // ═══════════════════════════════════════════════════════════════════════════
         // Execute Ticks
         // ═══════════════════════════════════════════════════════════════════════════
 
-        [ScalerOperationKeyword("Additional Execute Ticks")]
+        [ScalerOperationKeyword("Additional Execute Ticks Scaler")]
         public ScalerIntegerMagnitudeOperation AdditionalExecuteTicksOperation;
         
         // ═══════════════════════════════════════════════════════════════════════════
@@ -224,15 +224,15 @@ namespace FarEmerald.PlayForge
             return numTicks;
         }
 
-        public int GetExecuteTicks(GameplayEffectSpec spec, int ticks)
+        public int GetExecuteTicks(GameplayEffectSpec spec, int baseExecuteTicks)
         {
             if (AdditionalExecuteTicksOperation.Scaler is null)
             {
-                return ticks + AdditionalExecuteTicksOperation.Magnitude;
+                return baseExecuteTicks + AdditionalExecuteTicksOperation.Magnitude;
             }
             
             return ForgeHelper.MagnitudeAndScalerOperation(
-                ticks + AdditionalExecuteTicksOperation.Magnitude, 
+                baseExecuteTicks + AdditionalExecuteTicksOperation.Magnitude, 
                 AdditionalExecuteTicksOperation.Scaler.Evaluate(spec), 
                 AdditionalExecuteTicksOperation.RealMagnitude, 
                 AdditionalExecuteTicksOperation.Rounding);

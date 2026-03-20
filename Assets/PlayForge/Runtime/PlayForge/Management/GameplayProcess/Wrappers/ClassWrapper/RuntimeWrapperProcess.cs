@@ -12,7 +12,7 @@ namespace FarEmerald.PlayForge
         {
             Process = process;
         }
-
+        
         public override void InitializeWrapper()
         {
             
@@ -41,6 +41,14 @@ namespace FarEmerald.PlayForge
         public override void WhenWait(ProcessRelay relay)
         {
             Process.WhenWait(relay);
+        }
+        public override bool HandlePause(ProcessRelay relay)
+        {
+            return Process.HandlePause(relay);
+        }
+        public override bool HandleResume(ProcessRelay relay)
+        {
+            return Process.HandleResume(relay);
         }
         public override void WhenTerminate(ProcessRelay relay)
         {

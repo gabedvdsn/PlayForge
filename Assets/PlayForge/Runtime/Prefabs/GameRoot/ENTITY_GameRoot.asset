@@ -12,31 +12,54 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: dac855327e524f0f9473752d46a88179, type: 3}
   m_Name: ENTITY_GameRoot
   m_EditorClassIdentifier: 
-  Name: GameRoot
+  LocalData: []
+  Name: Game Root
   Description: 
   Textures: []
   Affiliation:
   - Name: Game Root
   AssetTag:
-    Name: GameRoot
+    Name: Entity.GameRoot
   GrantedTags: []
-  Level: 1
+  ContextTags: []
+  StartingLevel: 1
   CapAtMaxLevel: 1
   MaxLevel: 99
   ActivationPolicy: 0
-  MaxAbilities: 9999
+  MaxAbilitiesOperation:
+    Magnitude: 0
+    RealMagnitude: 1
+    Scaler:
+      rid: -2
+    Rounding: 0
   StartingAbilities: []
   AllowDuplicateAbilities: 1
-  MaxItems: 99
+  MaxItemsOperation:
+    Magnitude: 0
+    RealMagnitude: 1
+    Scaler:
+      rid: -2
+    Rounding: 0
+  MaxEquippedItemsOperation:
+    Magnitude: 0
+    RealMagnitude: 1
+    Scaler:
+      rid: -2
+    Rounding: 0
   StartingItems: []
   AllowDuplicateItems: 0
+  AllowDuplicateEquippedItems: 0
   AttributeSet: {fileID: 11400000, guid: ea591b955edd54d4fb185ea66c4d530e, type: 2}
   WorkerGroup:
+    Name: Workers
     AttributeWorkers: []
     ImpactWorkers: []
     TagWorkers: []
     AnalysisWorkers: []
-  LocalData: []
+  LinkMode: 0
+  _linkedSource: {fileID: 0}
   references:
     version: 2
-    RefIds: []
+    RefIds:
+    - rid: -2
+      type: {class: , ns: , asm: }

@@ -12,6 +12,9 @@ namespace FarEmerald.PlayForge
         private List<ItemSpecContainer> ItemShelf;
 
         private bool allowDuplicateItems;
+        private bool allowDuplicateEquippedItems;
+        private ScalerIntegerMagnitudeOperation maxItemsOperation;
+        private ScalerIntegerMagnitudeOperation maxEquippedItemsOperation;
         
         private bool _enabled;
         public bool Enabled
@@ -33,9 +36,12 @@ namespace FarEmerald.PlayForge
             Self = self;
         }
 
-        public void Setup(bool allowDuplicates)
+        public void Setup(bool allowDuplicates, bool allowDuplicateEquipped, ScalerIntegerMagnitudeOperation maxItemsOperation, ScalerIntegerMagnitudeOperation maxEquippedItemsOperation)
         {
             allowDuplicateItems = allowDuplicates;
+            allowDuplicateEquippedItems = allowDuplicateEquipped;
+            this.maxItemsOperation = maxItemsOperation;
+            this.maxEquippedItemsOperation = maxEquippedItemsOperation;
         }
 
         public void Initialize(List<StartingItemContainer> startingItems)
@@ -47,6 +53,24 @@ namespace FarEmerald.PlayForge
             }
         }
 
+        public bool CanGiveItem(Item item)
+        {
+            if (item is null) return false;
+            if (!allowDuplicateItems && HasItem(item)) return false;
+            if (ItemCount >= maxItemsOperation.Evaluate(IAttributeImpactDerivation.GenerateLevelerDerivation(Self, Self.GetLevel(), Self.GetMaxLevel()))) return false;
+
+            return true;
+        }
+
+        public bool CanEquipItem(Item item)
+        {
+            if (!allowDuplicateEquippedItems && IsItemEquipped(item)) return false;
+            if (EquippedItemCount >=
+                maxEquippedItemsOperation.Evaluate(IAttributeImpactDerivation.GenerateLevelerDerivation(Self, Self.GetLevel(), Self.GetMaxLevel()))) return false;
+
+            return true;
+        }
+        
         public bool GiveItem(Item item, out int itemIndex)
         {
             return GiveItem(item, item.StartingLevel, out itemIndex);
@@ -54,8 +78,7 @@ namespace FarEmerald.PlayForge
         public bool GiveItem(Item item, int level, out int itemIndex)
         {
             itemIndex = -1;
-            if (item is null) return false;
-            if (!allowDuplicateItems && HasItem(item)) return false;
+            if (!CanGiveItem(item)) return false;
 
             itemIndex = ItemShelf.Count;
             var container = new ItemSpecContainer(item.Generate(Self, level), itemIndex);
@@ -80,12 +103,14 @@ namespace FarEmerald.PlayForge
         public bool EquipItem(int itemIndex)
         {
             if (!TryGetItemContainer(itemIndex, out var container)) return false;
+            if (!CanEquipItem(container.Spec.Base)) return false;
             return container.Equip();
         }
         
         public bool EquipItem(Item item)
         {
             if (!TryGetItemContainer(item, out var container)) return false;
+            if (!CanEquipItem(container.Spec.Base)) return false;
             return container.Equip();
         }
         
@@ -112,6 +137,7 @@ namespace FarEmerald.PlayForge
         {
             if (!TryGetItemContainer(item, out var container))
                 return false;
+            if (!container.IsEquipped && !CanEquipItem(container.Spec.Base)) return false;
             
             return container.IsEquipped ? container.Unequip() : container.Equip();
         }
@@ -123,7 +149,7 @@ namespace FarEmerald.PlayForge
         {
             if (!TryGetItemContainer(itemIndex, out var container))
                 return false;
-            
+            if (!container.IsEquipped && !CanEquipItem(container.Spec.Base)) return false;
             return container.IsEquipped ? container.Unequip() : container.Equip();
         }
         

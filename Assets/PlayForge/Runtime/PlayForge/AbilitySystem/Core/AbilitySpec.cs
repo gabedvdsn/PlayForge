@@ -40,6 +40,10 @@ namespace FarEmerald.PlayForge
         }
 
         public override ISource GetOwner() => Source;
+        public override IHasReadableDefinition GetReadableDefinition()
+        {
+            return Base;
+        }
         public override List<Tag> GetContextTags()
         {
             return Base.Tags.ContextTags;
@@ -50,7 +54,6 @@ namespace FarEmerald.PlayForge
         }
         public override int GetLevel() => GetLeveler().Level.CurrentValue;
         public override float GetRelativeLevel() => GetLeveler().Level.Ratio;
-        public override string GetName() => Base.GetName();
         public override List<Tag> GetAffiliation()
         {
             return Source.GetAffiliation();
