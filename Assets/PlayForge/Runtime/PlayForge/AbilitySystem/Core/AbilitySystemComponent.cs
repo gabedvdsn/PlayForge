@@ -50,18 +50,20 @@ namespace FarEmerald.PlayForge
         
         private Queue<AbilityActivationRequest> activationQueue = new();
 
-        public AbilityActivationRequest CreateActivationRequest(int index)
+        public AbilityActivationRequest CreateActivationRequest(int index, EAbilityActivationPolicyExtended? policy = null)
         {
-            return new AbilityActivationRequest(index);
+            return new AbilityActivationRequest(index, policy);
         }
         
         public struct AbilityActivationRequest
         {
             public int Index;
-
-            public AbilityActivationRequest(int index)
+            public EAbilityActivationPolicyExtended? Policy;
+            
+            public AbilityActivationRequest(int index, EAbilityActivationPolicyExtended? policy = null)
             {
                 Index = index;
+                Policy = policy;
             }
         }
 
@@ -176,7 +178,7 @@ namespace FarEmerald.PlayForge
             abilityIndex = GetFirstAvailableCacheIndex();
             if (abilityIndex < 0) return false;
 
-            var container = new AbilitySpecContainer(ability.Generate(Self, level));
+            var container = new AbilitySpecContainer(ability.Generate(Self, level), abilityIndex);
             AbilityCache[abilityIndex] = container;
             
             ability.WorkerGroup?.ProvideWorkersTo(Self);
@@ -259,27 +261,29 @@ namespace FarEmerald.PlayForge
         public bool TryActivateAbility(AbilityActivationRequest req)
         {
             if (!AbilityCache.TryGetValue(req.Index, out var container)) return false;
-            var data = AbilityDataPacket.GenerateFrom(container.Spec, container.Spec.Base.Behaviour.UseImplicitTargeting);
-            return CanActivateAbility(container, data) && ProcessActivationRequest(req, data);
+            var data = AbilityDataPacket.GenerateFrom(container.Spec, req, container.Spec.Base.Behaviour.UseImplicitTargeting);
+            return CanActivateAbility(container, data) && ProcessActivationRequest(data);
         }
         
-        private bool ProcessActivationRequest(AbilityActivationRequest req, AbilityDataPacket data)
+        private bool ProcessActivationRequest(AbilityDataPacket data)
         {
-            var policy = AbilityCache[req.Index].Spec.Base.Definition.ActivationPolicy.Translate(this);
+            var policy = data.Request.Policy?.Translate(this) 
+                         ?? AbilityCache[data.Request.Index].Spec.Base.Definition.ActivationPolicy.Translate(this);
+            
             return policy switch
             {
                 EAbilityActivationPolicy.AlwaysActivate => 
-                    AlwaysActivateTargetingValidation(req.Index) && 
-                    ActivateAbility(AbilityCache[req.Index], data),
+                    AlwaysActivateTargetingValidation(data.Request.Index) && 
+                    ActivateAbility(AbilityCache[data.Request.Index], data),
                     
                 EAbilityActivationPolicy.ActivateIfIdle => 
                     !IsExecutingPolicyCritical(EAbilityActivationPolicy.ActivateIfIdle) && 
-                    ActivateAbility(AbilityCache[req.Index], data),
+                    ActivateAbility(AbilityCache[data.Request.Index], data),
                     
                 EAbilityActivationPolicy.QueueActivationIfBusy => 
                     !IsExecutingPolicyCritical(EAbilityActivationPolicy.QueueActivationIfBusy) 
-                        ? ActivateAbility(AbilityCache[req.Index], data) 
-                        : QueueAbilityActivation(req),
+                        ? ActivateAbility(AbilityCache[data.Request.Index], data) 
+                        : QueueAbilityActivation(data.Request),
                         
                 _ => throw new ArgumentOutOfRangeException()
             };
@@ -362,12 +366,13 @@ namespace FarEmerald.PlayForge
         {
             if (!TryGetCacheIndexOf(container.Spec.Base, out int index)) return;
 
-            var policy = AbilityCache[index].Spec.Base.Definition.ActivationPolicy.Translate(this);
+            var policy = data?.Request.Policy?.Translate(this) 
+                         ?? container.Spec.Base.Definition.ActivationPolicy.Translate(this);
             ActiveCache[policy].Remove(index);
 
             TimeUtility.End(container.Spec.Base.Tags.AssetTag, out _);
-            
-            if (data == null) return;
+
+            if (data is null) return;
             
             Callbacks.AbilityEnded(AbilityCallbackStatus.GenerateForAbilityEvent(data));
             

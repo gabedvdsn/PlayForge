@@ -219,7 +219,16 @@ namespace FarEmerald.PlayForge
 
         public SequenceDataPacket(ProcessDataPacket other) : base()
         {
-            _payload = new Dictionary<Tag, List<object>>(other.Payload);
+            _payload = new Dictionary<Tag, List<object>>();
+
+            if (other is null) return;
+            
+            foreach (var kvp in other.Payload)
+            {
+                _payload[kvp.Key] = new List<object>();
+                foreach (object data in kvp.Value) _payload[kvp.Key].Add(data);
+            }
+            
             Handler = other;
             Status = other.Status;
             InUse = other.InUse;

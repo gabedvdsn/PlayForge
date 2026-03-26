@@ -459,7 +459,7 @@ namespace FarEmerald.PlayForge.Editor
             });
             
             // Name
-            string displayName = gas.Data != null ? gas.Data.GetName() : gas.gameObject.name;
+            string displayName = gas.EntityData != null ? gas.EntityData.GetName() : gas.gameObject.name;
             item.Add(new Label(displayName)
             {
                 name = "entity-name",
@@ -473,7 +473,7 @@ namespace FarEmerald.PlayForge.Editor
             });
             
             // Level badge
-            if (gas.Data != null)
+            if (gas.EntityData != null)
             {
                 var badge = CreateBadge($"Lv.{gas.GetLevel()}", new Color(0.5f, 0.5f, 0.5f));
                 badge.pickingMode = PickingMode.Ignore;
@@ -580,7 +580,7 @@ namespace FarEmerald.PlayForge.Editor
             // Update header
             if (titleLabel != null)
             {
-                string name = _selectedGAS.Data != null ? _selectedGAS.Data.GetName() : _selectedGAS.gameObject.name;
+                string name = _selectedGAS.EntityData != null ? _selectedGAS.EntityData.GetName() : _selectedGAS.gameObject.name;
                 titleLabel.text = name;
                 titleLabel.style.unityFontStyleAndWeight = FontStyle.Bold;
                 titleLabel.style.color = HeaderColor;
@@ -606,13 +606,13 @@ namespace FarEmerald.PlayForge.Editor
         {
             var section = CreateSection("Entity Info", HeaderColor);
             
-            if (_selectedGAS.Data == null)
+            if (_selectedGAS.EntityData == null)
             {
                 section.Add(CreateInfoRow("Status", "No EntityIdentity assigned", Color.red));
                 return section;
             }
             
-            var data = _selectedGAS.Data;
+            var data = _selectedGAS.EntityData;
             
             section.Add(CreateInfoRow("Name", data.GetName(), Color.white));
             section.Add(CreateInfoRow("Level", $"{_selectedGAS.GetLevel()} / {data.MaxLevel}", Color.white));

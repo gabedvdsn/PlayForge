@@ -195,9 +195,9 @@ namespace FarEmerald.PlayForge.Extended.Editor
         private string GetSystemName(GameplayAbilitySystem system)
         {
             // Try to get name from Data
-            if (system.Data != null)
+            if (system.EntityData != null)
             {
-                var name = system.Data.GetName();
+                var name = system.EntityData.GetName();
                 if (!string.IsNullOrEmpty(name))
                     return name;
             }

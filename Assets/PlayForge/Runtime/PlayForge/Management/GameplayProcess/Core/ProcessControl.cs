@@ -40,7 +40,10 @@ namespace FarEmerald.PlayForge
         private ProcessHierarchy _hierarchy = new();
 
         private int _cacheCounter;
-        private int NextCacheIndex => _cacheCounter++; 
+        private int NextCacheIndex => _cacheCounter++;
+
+        private int _freeBlockStart = int.MaxValue;
+        private int _freeBlockEnd = int.MinValue;
 
         public int Created => _cacheCounter;
         public int Active => _active.Count;
@@ -220,9 +223,14 @@ namespace FarEmerald.PlayForge
                 }
             }
 
-            // Sort by hierarchy depth (parents first) to ensure proper registration order
-            Array.Sort(processes, (a, b) => 
-                GetTransformDepth(a.transform).CompareTo(GetTransformDepth(b.transform)));
+            // Sort by effective priority first, then by hierarchy depth (parents before children)
+            Array.Sort(processes, (a, b) =>
+            {
+                int priorityA = GetEffectivePriority(a);
+                int priorityB = GetEffectivePriority(b);
+                int cmp = priorityA.CompareTo(priorityB);
+                return cmp != 0 ? cmp : GetTransformDepth(a.transform).CompareTo(GetTransformDepth(b.transform));
+            });
 
             foreach (var process in processes)
             {
@@ -230,12 +238,23 @@ namespace FarEmerald.PlayForge
                 {
                     continue;
                 }
-                
+        
                 var data = ProcessDataPacket.LocalDefault(process, GameRoot.Instance);
                 Register(process, data, out _);
             }
-            
+    
             if (OutputLogs) Debug.Log($"[ProcessControl] {_hierarchy.GetDebugInfo()}");
+        }
+
+        private static int GetEffectivePriority(AbstractMonoProcess process)
+        {
+            return process.PriorityMethod switch
+            {
+                EProcessStepPriorityMethod.First => 0,
+                EProcessStepPriorityMethod.Last => int.MaxValue,
+                EProcessStepPriorityMethod.Manual => process.ProcessStepPriority,
+                _ => 0
+            };
         }
 
         private int GetTransformDepth(Transform t)
@@ -324,8 +343,6 @@ namespace FarEmerald.PlayForge
             
             relay = pcb.Relay;
             data.Handler?.HandlerSubscribeProcess(relay);
-            
-            
             
             return true;
         }
@@ -571,6 +588,8 @@ namespace FarEmerald.PlayForge
             
             _waiting.Add(pcb.CacheIndex);
             _active[pcb.CacheIndex] = pcb;
+            
+            
             
             if (OutputLogs)
             {
@@ -993,6 +1012,48 @@ namespace FarEmerald.PlayForge
         public bool TryGetPCB(int cacheIndex, out ProcessControlBlock pcb)
         {
             return _active.TryGetValue(cacheIndex, out pcb);
+        }
+        
+        #endregion
+        
+        #region Helper Processes
+        /// <summary>
+        /// Creates a sequence that watches another ProcessRelay. Invokes actions when that process' state changes and when it terminates.
+        /// </summary>
+        /// <param name="watch">The ProcessRelay to watch.</param>
+        /// <param name="onInit">Action on watcher init.</param>
+        /// <param name="onTerminate">Action on watched terminate.</param>
+        /// <param name="onStateChange">Func on watched state change: (oldState, newState, runtime) => success.</param>
+        /// <param name="data">Optional init data packet.</param>
+        /// <returns></returns>
+        public ProcessRelay WatchProcess(ProcessRelay watch, Action<SequenceDataPacket> onInit = null, Action<SequenceEventContext, bool> onTerminate = null, Func<EProcessState, EProcessState, TaskSequenceRuntime, bool> onStateChange = null, ProcessDataPacket data = null)
+        {
+            var lastState = EProcessState.Created;
+            
+            var watcher = TaskSequenceBuilder.Create($"Watcher ({watch.Wrapper.ProcessName})")
+                .WithDescription($"Watching process: {watch.Wrapper.ProcessName}." +
+                                 $"\nOnTerminate: {(onTerminate is null ? "None" : "Action<Context, Success>")}" +
+                                 $"\nOnStateChange: {(onStateChange is null ? "None" : "Func<NewState, SequenceRuntime, re: Success>")}")
+                .Task(d => onInit?.Invoke(d))
+                .Task(async (d, t) =>
+                {
+                    await UniTask.WaitUntil(() => !watch.ProcessActive, cancellationToken: t);
+                })
+                .InjectWhen(
+                    _ => watch.State != lastState, 
+                    new DelegateSequenceInjection(r =>
+                    {
+                        var result = onStateChange?.Invoke(lastState, watch.State, r) ?? false;
+                        lastState = watch.State;
+                        return result;
+                    }))
+                .OnTerminate((ctx, success) => onTerminate?.Invoke(ctx, success))
+                .BuildSequence();
+
+            var seqData = new SequenceDataPacket(data ?? watch.Wrapper.Data);
+            seqData.SetPrimary(Tags.PROCESS_RELAY, watch);
+            
+            return TaskSequenceProcess.Register(watcher, seqData);
         }
         
         #endregion

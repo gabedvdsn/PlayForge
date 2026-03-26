@@ -440,7 +440,7 @@ namespace FarEmerald.PlayForge
             DrawStateIndicator(pcb.State, 12);
             
             // Name
-            EditorGUILayout.LabelField(relay.Wrapper.ProcessName, EditorStyles.boldLabel, GUILayout.MinWidth(120));
+            EditorGUILayout.LabelField(relay.Wrapper.ProcessName, EditorStyles.boldLabel, GUILayout.MinWidth(200));
             
             GUILayout.FlexibleSpace();
             
@@ -466,7 +466,7 @@ namespace FarEmerald.PlayForge
             // Header row
             EditorGUILayout.BeginHorizontal();
             DrawStateIndicator(pcb.State, 14);
-            EditorGUILayout.LabelField(relay.Wrapper.ProcessName, EditorStyles.boldLabel);
+            EditorGUILayout.LabelField(relay.Wrapper.ProcessName, EditorStyles.boldLabel, GUILayout.MinWidth(300));
             GUILayout.FlexibleSpace();
             EditorGUILayout.LabelField($"ID: {relay.CacheIndex}", EditorStyles.miniLabel, GUILayout.Width(50));
             EditorGUILayout.EndHorizontal();
@@ -511,7 +511,7 @@ namespace FarEmerald.PlayForge
             // Header
             EditorGUILayout.BeginHorizontal();
             DrawStateIndicator(pcb.State, 16);
-            EditorGUILayout.LabelField(relay.Wrapper.ProcessName, EditorStyles.boldLabel);
+            EditorGUILayout.LabelField(relay.Wrapper.ProcessName, EditorStyles.boldLabel, GUILayout.MinWidth(300));
             GUILayout.FlexibleSpace();
             EditorGUILayout.LabelField($"ID: {relay.CacheIndex}", EditorStyles.miniLabel, GUILayout.Width(50));
             EditorGUILayout.EndHorizontal();

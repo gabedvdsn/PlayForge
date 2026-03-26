@@ -16,11 +16,11 @@ MonoBehaviour:
   _template: {fileID: 0}
   _templateOverrides: []
   _templateListSnapshots: []
-  Name: BASE_TEMPLATE
+  Name: Base Attribute Set
   Description: 
   Textures: []
   AssetTag:
-    Name: AttributeSet.BASETEMPLATE
+    Name: AttributeSet.BaseAttributeSet
   Attributes:
   - Attribute: {fileID: 11400000, guid: 5238e93ea6a409e4a84dd1dcf23dd45c, type: 2}
     Magnitude: 100
@@ -107,72 +107,6 @@ MonoBehaviour:
     CollisionPolicy: 0
     Constraints:
       AutoClamp: 1
-      AutoScaleWithBase: 0
-      RoundingMode: 0
-      SnapInterval: 0
-  - Attribute: {fileID: 11400000, guid: fd76062a9b9ee2b47be1f8a4fb4fd7a1, type: 2}
-    Magnitude: 12
-    Target: 0
-    Overflow:
-      Policy: 4
-      Floor:
-        CurrentValue: -1
-        BaseValue: -1
-      Ceil:
-        CurrentValue: 99999
-        BaseValue: 99999
-    Scaling:
-      rid: -2
-    RealMagnitude: 2
-    RetentionGroup:
-      Name: Default
-    CollisionPolicy: 0
-    Constraints:
-      AutoClamp: 0
-      AutoScaleWithBase: 0
-      RoundingMode: 0
-      SnapInterval: 0
-  - Attribute: {fileID: 11400000, guid: 453e1503675d19d40bd170bb481c64c4, type: 2}
-    Magnitude: 12
-    Target: 0
-    Overflow:
-      Policy: 4
-      Floor:
-        CurrentValue: -1
-        BaseValue: -1
-      Ceil:
-        CurrentValue: 99999
-        BaseValue: 99999
-    Scaling:
-      rid: -2
-    RealMagnitude: 2
-    RetentionGroup:
-      Name: Default
-    CollisionPolicy: 0
-    Constraints:
-      AutoClamp: 0
-      AutoScaleWithBase: 0
-      RoundingMode: 0
-      SnapInterval: 0
-  - Attribute: {fileID: 11400000, guid: 5ca0e75a1898b9e4e9866b437301ab35, type: 2}
-    Magnitude: 12
-    Target: 0
-    Overflow:
-      Policy: 4
-      Floor:
-        CurrentValue: -1
-        BaseValue: -1
-      Ceil:
-        CurrentValue: 99999
-        BaseValue: 99999
-    Scaling:
-      rid: -2
-    RealMagnitude: 2
-    RetentionGroup:
-      Name: Default
-    CollisionPolicy: 0
-    Constraints:
-      AutoClamp: 0
       AutoScaleWithBase: 0
       RoundingMode: 0
       SnapInterval: 0

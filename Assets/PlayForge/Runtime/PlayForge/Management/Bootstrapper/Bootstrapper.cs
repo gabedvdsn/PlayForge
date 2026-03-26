@@ -65,12 +65,13 @@ namespace FarEmerald.PlayForge
             // Bootstrap GameRoot
             if (GameRoot.Instance is null)
             {
-                ProcessControl.Instance.Register(GameRootPrefab, AbilityDataPacket.GenerateRoot(), out var packet);
+                ProcessControl.Instance.Register(GameRootPrefab, ProcessDataPacket.Default(), out var relay);
                 
-                var status = packet.TryGetProcess<GameRoot>(out var root);
-                if (!status) root = Instantiate(GameRootPrefab, Vector3.zero, Quaternion.identity);
+                // If failed to register the game root process, instantiate it manually
+                var status = relay.TryGetProcess<GameRoot>(out var gameRoot);
+                if (!status) gameRoot = Instantiate(GameRootPrefab, Vector3.zero, Quaternion.identity);
                 
-                root.Bootstrap();
+                gameRoot.Bootstrap();
             }
             
             Initialize();

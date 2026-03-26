@@ -6,10 +6,12 @@ namespace FarEmerald.PlayForge
     public class AbilityDataPacket : ProcessDataPacket
     {
         public readonly IEffectOrigin Spec;
+        public readonly AbilitySystemComponent.AbilityActivationRequest Request;
 
-        private AbilityDataPacket(IEffectOrigin spec)
+        private AbilityDataPacket(IEffectOrigin spec, AbilitySystemComponent.AbilityActivationRequest request)
         {
             Spec = spec;
+            Request = request;
             Handler = spec.GetOwner();
             
             AddPayload(
@@ -20,29 +22,24 @@ namespace FarEmerald.PlayForge
         
         #region Readable Definition
         
-        public string GetName()
+        public override string GetName()
         {
             return $"AbilityDataPacket.{Spec.GetReadableDefinition().GetName()}";
         }
-        public string GetDescription()
+        public override string GetDescription()
         {
             return $"Active data packet for an active ability runtime: {Spec.GetReadableDefinition().GetName()}: {Spec.GetReadableDefinition().GetDescription()}";
         }
-        public Texture2D GetPrimaryIcon()
+        public override Texture2D GetPrimaryIcon()
         {
             return Spec.GetReadableDefinition().GetPrimaryIcon();
         }
         
         #endregion
 
-        public static AbilityDataPacket GenerateRoot()
+        public static AbilityDataPacket GenerateFrom(IEffectOrigin spec, AbilitySystemComponent.AbilityActivationRequest req, bool useImplicitTargeting)
         {
-            return new AbilityDataPacket(IEffectOrigin.GenerateSourceDerivation(GameRoot.Instance));
-        }
-
-        public static AbilityDataPacket GenerateFrom(IEffectOrigin spec, bool useImplicitTargeting)
-        {
-            AbilityDataPacket data = new AbilityDataPacket(spec);
+            AbilityDataPacket data = new AbilityDataPacket(spec, req);
             
             if (useImplicitTargeting)
             {

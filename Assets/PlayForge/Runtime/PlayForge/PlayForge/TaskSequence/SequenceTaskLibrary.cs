@@ -2,6 +2,7 @@ using System;
 using System.Threading;
 using Cysharp.Threading.Tasks;
 using UnityEngine;
+using UnityEngine.UIElements;
 
 namespace FarEmerald.PlayForge
 {
@@ -452,6 +453,217 @@ namespace FarEmerald.PlayForge
                     rb.position = destination;
                 }
             }
+        }
+
+        // ═══════════════════════════════════════════════════════════════════════════
+        // UI TOOLKIT (VisualElement)
+        // ═══════════════════════════════════════════════════════════════════════════
+        
+        /// <summary>
+        /// Slides a VisualElement by animating its translate style property.
+        /// Start and end are pixel offsets from the element's layout position.
+        /// </summary>
+        public static async UniTask SlideElement(VisualElement element, Vector2 from, Vector2 to,
+            float duration, CancellationToken token, AnimationCurve curve = null)
+        {
+            element.style.translate = new Translate(from.x, from.y);
+            await RunLerp(duration, curve, p =>
+            {
+                float x = Mathf.LerpUnclamped(from.x, to.x, p);
+                float y = Mathf.LerpUnclamped(from.y, to.y, p);
+                element.style.translate = new Translate(x, y);
+            }, token);
+            element.style.translate = new Translate(to.x, to.y);
+        }
+        
+        /// <summary>
+        /// Slides a VisualElement from its current translate to the target offset.
+        /// </summary>
+        public static async UniTask SlideElementTo(VisualElement element, Vector2 to,
+            float duration, CancellationToken token, AnimationCurve curve = null)
+        {
+            var current = element.resolvedStyle.translate;
+            var from = new Vector2(current.x, current.y);
+            await SlideElement(element, from, to, duration, token, curve);
+        }
+        
+        /// <summary>
+        /// Fades a VisualElement's opacity.
+        /// </summary>
+        public static async UniTask FadeElement(VisualElement element, float fromAlpha, float toAlpha,
+            float duration, CancellationToken token, AnimationCurve curve = null)
+        {
+            element.style.opacity = fromAlpha;
+            await RunLerp(duration, curve, p =>
+            {
+                element.style.opacity = Mathf.LerpUnclamped(fromAlpha, toAlpha, p);
+            }, token);
+            element.style.opacity = toAlpha;
+        }
+        
+        /// <summary>
+        /// Fades a VisualElement from its current opacity to the target.
+        /// </summary>
+        public static async UniTask FadeElementTo(VisualElement element, float toAlpha,
+            float duration, CancellationToken token, AnimationCurve curve = null)
+        {
+            float from = element.resolvedStyle.opacity;
+            await FadeElement(element, from, toAlpha, duration, token, curve);
+        }
+        
+        /// <summary>
+        /// Animates a VisualElement's scale (uniform).
+        /// </summary>
+        public static async UniTask ScaleElement(VisualElement element, float from, float to,
+            float duration, CancellationToken token, AnimationCurve curve = null)
+        {
+            element.style.scale = new Scale(Vector3.one * from);
+            await RunLerp(duration, curve, p =>
+            {
+                float s = Mathf.LerpUnclamped(from, to, p);
+                element.style.scale = new Scale(Vector3.one * s);
+            }, token);
+            element.style.scale = new Scale(Vector3.one * to);
+        }
+        
+        /// <summary>
+        /// Punch scale on a VisualElement: scales up then returns to original.
+        /// </summary>
+        public static async UniTask PunchScaleElement(VisualElement element, float intensity,
+            float duration, CancellationToken token)
+        {
+            await ScaleElement(element, 1f, 1f + intensity, duration * 0.5f, token);
+            await ScaleElement(element, 1f + intensity, 1f, duration * 0.5f, token);
+        }
+        
+        /// <summary>
+        /// Animates a VisualElement's background color.
+        /// </summary>
+        public static async UniTask ColorElement(VisualElement element, Color from, Color to,
+            float duration, CancellationToken token, AnimationCurve curve = null)
+        {
+            element.style.backgroundColor = from;
+            await RunLerp(duration, curve, p =>
+            {
+                element.style.backgroundColor = Color.LerpUnclamped(from, to, p);
+            }, token);
+            element.style.backgroundColor = to;
+        }
+        
+        /// <summary>
+        /// Animates from the element's current background color to the target.
+        /// </summary>
+        public static async UniTask ColorElementTo(VisualElement element, Color to,
+            float duration, CancellationToken token, AnimationCurve curve = null)
+        {
+            var from = element.resolvedStyle.backgroundColor;
+            await ColorElement(element, from, to, duration, token, curve);
+        }
+        
+        /// <summary>
+        /// Typewriter effect: reveals text in a Label one character at a time.
+        /// Supports an optional per-character delay multiplier for punctuation pauses.
+        /// </summary>
+        /// <param name="label">The Label element to type into.</param>
+        /// <param name="text">Full text to reveal.</param>
+        /// <param name="charDelay">Seconds between each character.</param>
+        /// <param name="token">Cancellation token.</param>
+        /// <param name="punctuationMultiplier">Extra delay multiplier for '.', '!', '?', ','</param>
+        public static async UniTask TypeText(Label label, string text, float charDelay,
+            CancellationToken token, float punctuationMultiplier = 3f)
+        {
+            label.text = "";
+            
+            for (int i = 0; i < text.Length; i++)
+            {
+                token.ThrowIfCancellationRequested();
+                label.text = text.Substring(0, i + 1);
+                
+                char c = text[i];
+                float delay = charDelay;
+                if (c is '.' or '!' or '?' or ',') delay *= punctuationMultiplier;
+                
+                await UniTask.Delay(TimeSpan.FromSeconds(delay), cancellationToken: token);
+            }
+        }
+        
+        /// <summary>
+        /// Typewriter effect that can be skipped by a condition. Returns true if completed
+        /// normally, false if skipped (in which case the full text is set immediately).
+        /// </summary>
+        public static async UniTask<bool> TypeTextSkippable(Label label, string text, float charDelay,
+            Func<bool> skipCondition, CancellationToken token, float punctuationMultiplier = 3f)
+        {
+            label.text = "";
+    
+            // Wait one frame so any input from the previous interaction clears
+            await UniTask.Yield(PlayerLoopTiming.Update, token);
+    
+            bool skipped = false;
+    
+            for (int i = 0; i < text.Length; i++)
+            {
+                token.ThrowIfCancellationRequested();
+        
+                if (skipped)
+                {
+                    label.text = text;
+                    return false;
+                }
+        
+                label.text = text.Substring(0, i + 1);
+        
+                char c = text[i];
+                float delay = charDelay;
+                if (c is '.' or '!' or '?' or ',') delay *= punctuationMultiplier;
+        
+                // Poll skip condition every frame during the per-character delay,
+                // rather than only once per character tick
+                float elapsed = 0f;
+                while (elapsed < delay)
+                {
+                    await UniTask.Yield(PlayerLoopTiming.Update, token);
+                    elapsed += Time.deltaTime;
+            
+                    if (skipCondition())
+                    {
+                        label.text = text;
+                        skipped = true;
+                        return false;
+                    }
+                }
+            }
+    
+            return true;
+        }
+        
+        /// <summary>
+        /// Animates a VisualElement's width in pixels.
+        /// Useful for progress bars.
+        /// </summary>
+        public static async UniTask WidthTo(VisualElement element, float fromPx, float toPx,
+            float duration, CancellationToken token, AnimationCurve curve = null)
+        {
+            element.style.width = fromPx;
+            await RunLerp(duration, curve, p =>
+            {
+                element.style.width = Mathf.LerpUnclamped(fromPx, toPx, p);
+            }, token);
+            element.style.width = toPx;
+        }
+        
+        /// <summary>
+        /// Animates a VisualElement's height in pixels.
+        /// </summary>
+        public static async UniTask HeightTo(VisualElement element, float fromPx, float toPx,
+            float duration, CancellationToken token, AnimationCurve curve = null)
+        {
+            element.style.height = fromPx;
+            await RunLerp(duration, curve, p =>
+            {
+                element.style.height = Mathf.LerpUnclamped(fromPx, toPx, p);
+            }, token);
+            element.style.height = toPx;
         }
 
         // ═══════════════════════════════════════════════════════════════════════════

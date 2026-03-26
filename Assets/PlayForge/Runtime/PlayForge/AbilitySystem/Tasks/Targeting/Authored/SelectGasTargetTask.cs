@@ -1,5 +1,6 @@
 ﻿using System.Threading;
 using Cysharp.Threading.Tasks;
+using FarEmerald.PlayForge.Examples;
 using UnityEngine;
 
 namespace FarEmerald.PlayForge
@@ -9,10 +10,24 @@ namespace FarEmerald.PlayForge
         public override string Description => "Use raycast to find GAS target";
         public override async UniTask Activate(AbilityDataPacket data, CancellationToken token)
         {
+            Debug.Log($"Waiting to target GAS!");
+
+            var hit = await DemoManager.Input.AwaitWorldClick(Camera.main, token);
+            if (!TargetIsValid(hit.collider.gameObject, out var target))
+            {
+                Debug.Log($"Done targeting: invalid");
+                WhenTargetingInvalid();
+                return;
+            }
+
+            Debug.Log($"Done targeting: {target.AsGAS().GetName()}");
+
+            data.SetPrimary(Tags.TARGET_REAL, target);
+            
             // wait for response from some cursor manager that receives mouse input and finds the selected gameobject that has a GASComponent
             // await CursorManager.Instance.SetSelectTargetObjectMode();
             // if (CursorManager.Instance.LastSelectTargetObject) data.Add(ESourceTarget.Target, CursorManager.Instance.LastSelectTargetObject);
-            while (true)
+            /*while (true)
             {
                 // Important to have some break response -- OR inject interrupt into ASC via inut handler
                 if (Input.GetKeyDown(KeyCode.Escape)) BreakAbilityRuntime();
@@ -35,7 +50,7 @@ namespace FarEmerald.PlayForge
                 }
                 
                 await UniTask.NextFrame(token);
-            }
+            }*/
         }
         
         protected override bool ConnectInputHandler(AbilityDataPacket data)

@@ -994,5 +994,26 @@ namespace FarEmerald.PlayForge
         }
         
         #endregion
+        
+        #region Utility
+
+        public static Vector3 RandomPointWithinCircle(float radius, float minRadius = 0f)
+        {
+            var p = Random.insideUnitCircle * radius;
+            if (p.magnitude > minRadius) return p;
+
+            return p.normalized * minRadius;
+        }
+        
+        public static Vector3 RandomPointWithinSphere(float radius, float minRadius = 0f)
+        {
+            var p = Random.insideUnitSphere * radius;
+            if (p.normalized.magnitude > minRadius) return p;
+
+            return p.normalized * minRadius;
+        }
+        
+        
+        #endregion
     }
 }

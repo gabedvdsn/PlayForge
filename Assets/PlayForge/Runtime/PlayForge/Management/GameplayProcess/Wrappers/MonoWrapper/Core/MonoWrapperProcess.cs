@@ -114,7 +114,7 @@ namespace FarEmerald.PlayForge
             return activeMono && activeMono.IsInitialized;
         }
 
-        public override string ProcessName => activeMono ? activeMono.name : $"[<Is Destroyed>] - {(StoredMono ? StoredMono.name : "<Unknown>")}";
+        public override string ProcessName => getName?.Invoke(this) ?? (activeMono ? activeMono.name : $"[<Is Destroyed>] - {(StoredMono ? StoredMono.name : "<Unknown>")}");
         public override EProcessStepPriorityMethod PriorityMethod => activeMono.PriorityMethod;
 
         public override int StepPriority => activeMono.ProcessStepPriority;

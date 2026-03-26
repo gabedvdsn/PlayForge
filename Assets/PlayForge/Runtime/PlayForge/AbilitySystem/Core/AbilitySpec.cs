@@ -5,7 +5,7 @@ using UnityEngine;
 
 namespace FarEmerald.PlayForge
 {
-    public class AbilitySpec : BasicEffectOrigin, IEffectOrigin, IValidationReady
+    public class AbilitySpec : BasicEffectOrigin, IEffectOrigin
     {
         public Ability Base;
         

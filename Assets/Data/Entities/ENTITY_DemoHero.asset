@@ -10,38 +10,18 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: dac855327e524f0f9473752d46a88179, type: 3}
-  m_Name: ENTITY_HelloThere
+  m_Name: ENTITY_DemoHero
   m_EditorClassIdentifier: 
   LocalData: []
   _template: {fileID: 11400000, guid: 834e2d32492cd994789c68e2c19323d3, type: 2}
-  _templateOverrides:
-  - MaxAbilitiesOperation.Magnitude
-  _templateListSnapshots:
-  - PropertyPath: GrantedTags
-    ElementIdentifiers: []
-  - PropertyPath: StartingAbilities
-    ElementIdentifiers:
-    - ref:ea22264aea6456c47b8e437bde781de2:ABILITY_C
-    - ref:718e349f899532c48aabff69873b85ee:ABILITY_B
-  - PropertyPath: StartingItems
-    ElementIdentifiers: []
-  - PropertyPath: WorkerGroup.AttributeWorkers
-    ElementIdentifiers:
-    - managed:FarEmerald.PlayForge.AttributeWorkerGroup:771346530
-  - PropertyPath: WorkerGroup.ImpactWorkers
-    ElementIdentifiers: []
-  - PropertyPath: WorkerGroup.TagWorkers
-    ElementIdentifiers: []
-  - PropertyPath: WorkerGroup.AnalysisWorkers
-    ElementIdentifiers:
-    - managed:FarEmerald.PlayForge.ThresholdAnalysisWorker:{"Target":{"instanceID":0},"Threshold":0.0,"Comparison":1,"TriggerOnce":true}
-  Name: HelloThere
+  _templateOverrides: []
+  _templateListSnapshots: []
+  Name: Demo Hero
   Description: 
   Textures: []
-  Affiliation:
-  - Name: GameRoot
+  Affiliation: []
   AssetTag:
-    Name: Entity.HelloThere
+    Name: Entity.DemoHero
   GrantedTags: []
   ContextTags: []
   StartingLevel: 1
@@ -49,25 +29,31 @@ MonoBehaviour:
   MaxLevel: 25
   ActivationPolicy: 2
   MaxAbilitiesOperation:
-    Magnitude: 0
+    Magnitude: 99
     RealMagnitude: 1
     Scaler:
       rid: -2
     Rounding: 0
   StartingAbilities:
-  - {fileID: 11400000, guid: ea22264aea6456c47b8e437bde781de2, type: 2}
+  - {fileID: 11400000, guid: 1920f5e2b06d4094c974ba3d366050d7, type: 2}
+  - {fileID: 11400000, guid: d648d3ec866e705499bb6b60d025b2eb, type: 2}
+  - {fileID: 11400000, guid: a7b4646c74ca21c4cae987c303e5e49a, type: 2}
+  - {fileID: 11400000, guid: 74c3b6d82bc0b0640abe421d89758575, type: 2}
+  - {fileID: 11400000, guid: eff6c4a7808417745a1d84cb1737e436, type: 2}
+  - {fileID: 11400000, guid: 16d97f538db9e0749ad3e73654c92d50, type: 2}
+  - {fileID: 11400000, guid: b2544ade3661750489de3e00ee0efa68, type: 2}
   AllowDuplicateAbilities: 1
   MaxItemsOperation:
     Magnitude: 4
     RealMagnitude: 1
     Scaler:
-      rid: 1955962306424471888
+      rid: 1955962478581514809
     Rounding: 0
   MaxEquippedItemsOperation:
     Magnitude: 0
     RealMagnitude: 1
     Scaler:
-      rid: 1955962306424471889
+      rid: 1955962478581514810
     Rounding: 0
   StartingItems: []
   AllowDuplicateItems: 1
@@ -76,11 +62,11 @@ MonoBehaviour:
   WorkerGroup:
     Name: Workers
     AttributeWorkers:
-    - rid: 1955962306424471877
+    - rid: 1955962306424471818
     ImpactWorkers: []
     TagWorkers: []
     AnalysisWorkers:
-    - rid: 1955962306424471879
+    - rid: 1955962306424471834
   LinkMode: 1
   _linkedSource: {fileID: 11400000, guid: 834e2d32492cd994789c68e2c19323d3, type: 2}
   references:
@@ -88,12 +74,12 @@ MonoBehaviour:
     RefIds:
     - rid: -2
       type: {class: , ns: , asm: }
-    - rid: 1955962306424471877
+    - rid: 1955962306424471818
       type: {class: AttributeWorkerGroup, ns: FarEmerald.PlayForge, asm: Assembly-CSharp}
       data:
         ChangeEvents:
-        - rid: 1955962306424471878
-    - rid: 1955962306424471878
+        - rid: 1955962306424471823
+    - rid: 1955962306424471823
       type: {class: MathAttributeWorker, ns: FarEmerald.PlayForge, asm: Assembly-CSharp}
       data:
         TimingConfig: 1
@@ -113,14 +99,14 @@ MonoBehaviour:
         Operation: 1
         OperationTarget: 0
         OperationPolicy: 0
-    - rid: 1955962306424471879
+    - rid: 1955962306424471834
       type: {class: ThresholdAnalysisWorker, ns: FarEmerald.PlayForge, asm: Assembly-CSharp}
       data:
         Target: {fileID: 0}
         Threshold: 0
         Comparison: 1
         TriggerOnce: 1
-    - rid: 1955962306424471888
+    - rid: 1955962478581514809
       type: {class: SimpleScaler, ns: FarEmerald.PlayForge, asm: Assembly-CSharp}
       data:
         Name: 
@@ -156,7 +142,7 @@ MonoBehaviour:
           m_PostInfinity: 2
           m_RotationOrder: 4
         Behaviours: []
-    - rid: 1955962306424471889
+    - rid: 1955962478581514810
       type: {class: ScalerGroup, ns: FarEmerald.PlayForge, asm: Assembly-CSharp}
       data:
         Name: 

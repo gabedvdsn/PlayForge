@@ -30,11 +30,9 @@ namespace FarEmerald.PlayForge
             }
 
             Instance = this;
-            
+
             LevelAttribute = new RuntimeAttribute(TagHierarchy.GenerateUniqueRandomTag(), GetAssetTag());
             AttributeRegistry.Add(LevelAttribute);
-            
-            base.Awake();
         }
         
         public void DeferredInit()
@@ -42,6 +40,7 @@ namespace FarEmerald.PlayForge
             NativeDataPacket = AbilityDataPacket.GenerateFrom
             (
                 IEffectOrigin.GenerateSourceDerivation(this),
+                new AbilitySystemComponent.AbilityActivationRequest(-1),
                 false
             );
             

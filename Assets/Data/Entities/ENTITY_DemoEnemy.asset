@@ -10,18 +10,18 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: dac855327e524f0f9473752d46a88179, type: 3}
-  m_Name: ENTITY_CharacterBase
+  m_Name: ENTITY_DemoEnemy
   m_EditorClassIdentifier: 
   LocalData: []
-  _template: {fileID: 0}
+  _template: {fileID: 11400000, guid: 834e2d32492cd994789c68e2c19323d3, type: 2}
   _templateOverrides: []
   _templateListSnapshots: []
-  Name: Character Template
+  Name: Demo Enemy
   Description: 
   Textures: []
   Affiliation: []
   AssetTag:
-    Name: Entity.CharacterTemplate
+    Name: Entity.DemoEnemy
   GrantedTags: []
   ContextTags: []
   StartingLevel: 1
@@ -40,13 +40,13 @@ MonoBehaviour:
     Magnitude: 4
     RealMagnitude: 1
     Scaler:
-      rid: 1955962306424471764
+      rid: 1955962478581514807
     Rounding: 0
   MaxEquippedItemsOperation:
     Magnitude: 0
     RealMagnitude: 1
     Scaler:
-      rid: 1955962306424471765
+      rid: 1955962478581514808
     Rounding: 0
   StartingItems: []
   AllowDuplicateItems: 1
@@ -60,14 +60,46 @@ MonoBehaviour:
     TagWorkers: []
     AnalysisWorkers:
     - rid: 1955962306424471834
-  LinkMode: 0
-  _linkedSource: {fileID: 0}
+  LinkMode: 1
+  _linkedSource: {fileID: 11400000, guid: 834e2d32492cd994789c68e2c19323d3, type: 2}
   references:
     version: 2
     RefIds:
     - rid: -2
       type: {class: , ns: , asm: }
-    - rid: 1955962306424471764
+    - rid: 1955962306424471818
+      type: {class: AttributeWorkerGroup, ns: FarEmerald.PlayForge, asm: Assembly-CSharp}
+      data:
+        ChangeEvents:
+        - rid: 1955962306424471823
+    - rid: 1955962306424471823
+      type: {class: MathAttributeWorker, ns: FarEmerald.PlayForge, asm: Assembly-CSharp}
+      data:
+        TimingConfig: 1
+        TargetAttribute: {fileID: 11400000, guid: 5238e93ea6a409e4a84dd1dcf23dd45c, type: 2}
+        AllowSelfModification: 0
+        TargetModification: 3
+        ExclusivelyTargetModification: 0
+        SignPolicy: 0
+        AnyImpactType: 1
+        ImpactTypes: []
+        AnyContextTag: 1
+        ContextMatchingPolicy: 0
+        ValidContextTags: []
+        From: 0
+        RelativeTo: {fileID: 0}
+        RelativeMultiplier: 1
+        Operation: 1
+        OperationTarget: 0
+        OperationPolicy: 0
+    - rid: 1955962306424471834
+      type: {class: ThresholdAnalysisWorker, ns: FarEmerald.PlayForge, asm: Assembly-CSharp}
+      data:
+        Target: {fileID: 0}
+        Threshold: 0
+        Comparison: 1
+        TriggerOnce: 1
+    - rid: 1955962478581514807
       type: {class: SimpleScaler, ns: FarEmerald.PlayForge, asm: Assembly-CSharp}
       data:
         Name: 
@@ -103,7 +135,7 @@ MonoBehaviour:
           m_PostInfinity: 2
           m_RotationOrder: 4
         Behaviours: []
-    - rid: 1955962306424471765
+    - rid: 1955962478581514808
       type: {class: ScalerGroup, ns: FarEmerald.PlayForge, asm: Assembly-CSharp}
       data:
         Name: 
@@ -141,35 +173,3 @@ MonoBehaviour:
         Behaviours: []
         Calculations: []
         OverrideMemberCollisionPolicy: 0
-    - rid: 1955962306424471818
-      type: {class: AttributeWorkerGroup, ns: FarEmerald.PlayForge, asm: Assembly-CSharp}
-      data:
-        ChangeEvents:
-        - rid: 1955962306424471823
-    - rid: 1955962306424471823
-      type: {class: MathAttributeWorker, ns: FarEmerald.PlayForge, asm: Assembly-CSharp}
-      data:
-        TimingConfig: 1
-        TargetAttribute: {fileID: 11400000, guid: 5238e93ea6a409e4a84dd1dcf23dd45c, type: 2}
-        AllowSelfModification: 0
-        TargetModification: 3
-        ExclusivelyTargetModification: 0
-        SignPolicy: 0
-        AnyImpactType: 1
-        ImpactTypes: []
-        AnyContextTag: 1
-        ContextMatchingPolicy: 0
-        ValidContextTags: []
-        From: 0
-        RelativeTo: {fileID: 0}
-        RelativeMultiplier: 1
-        Operation: 1
-        OperationTarget: 0
-        OperationPolicy: 0
-    - rid: 1955962306424471834
-      type: {class: ThresholdAnalysisWorker, ns: FarEmerald.PlayForge, asm: Assembly-CSharp}
-      data:
-        Target: {fileID: 0}
-        Threshold: 0
-        Comparison: 1
-        TriggerOnce: 1

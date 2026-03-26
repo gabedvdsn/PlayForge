@@ -41,7 +41,7 @@ namespace FarEmerald.PlayForge
         protected virtual void WhenTargetingInvalid()
         {
             // Play some audio cue
-
+            
             if (BreakRuntimeOnInvalid) BreakAbilityRuntime();
         }
 

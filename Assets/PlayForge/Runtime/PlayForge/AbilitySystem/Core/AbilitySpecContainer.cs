@@ -9,6 +9,7 @@ namespace FarEmerald.PlayForge
     public class AbilitySpecContainer : ITagSource
     {
         public AbilitySpec Spec;
+        public readonly int Index;
 
         public bool IsActive { get; private set; }
         public bool IsTargeting { get; private set; }
@@ -20,9 +21,10 @@ namespace FarEmerald.PlayForge
         public CancellationTokenSource cts;
         private CancellationTokenSource targetingCts;
 
-        public AbilitySpecContainer(AbilitySpec spec)
+        public AbilitySpecContainer(AbilitySpec spec, int abilityIndex)
         {
             Spec = spec;
+            Index = abilityIndex;
             IsActive = false;
 
             Proxy = Spec.Base.Behaviour.GenerateProxy();

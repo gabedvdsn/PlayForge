@@ -47,6 +47,11 @@ namespace FarEmerald.PlayForge
 
         #region Construction
 
+        public static ProcessDataPacket Default()
+        {
+            return new ProcessDataPacket();
+        }
+
         public static ProcessDataPacket RootDefault()
         {
             var data = new ProcessDataPacket();

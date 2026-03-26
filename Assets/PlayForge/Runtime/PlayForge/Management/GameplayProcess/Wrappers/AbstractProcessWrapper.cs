@@ -10,6 +10,8 @@ namespace FarEmerald.PlayForge
         public ProcessRelay Relay;
         public ProcessDataPacket Data;
 
+        public Func<AbstractProcessWrapper, string> getName = null;
+
         protected AbstractProcessWrapper(ProcessDataPacket data)
         {
             Data = data;
@@ -41,7 +43,7 @@ namespace FarEmerald.PlayForge
         public abstract bool TryGetProcess<T>(out T process);
         
         public abstract bool IsInitialized();
-        public abstract string ProcessName { get; }
+        public virtual string ProcessName => getName?.Invoke(this) ?? "[Unknown Process]";
         public abstract EProcessStepPriorityMethod PriorityMethod { get; }
         public abstract int StepPriority { get; }
         public abstract EProcessStepTiming StepTiming { get; }

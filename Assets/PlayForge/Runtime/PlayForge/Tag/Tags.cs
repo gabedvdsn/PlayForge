@@ -73,6 +73,19 @@ namespace FarEmerald.PlayForge
         public static Tag TARGET_REAL => Tag.Generate("Target");
         public static Tag TARGET_POS => Tag.Generate("TargetPosition");
         public static Tag DATA => Tag.Generate("Data");
+        public static Tag OBJECT => Tag.Generate("Object");
+        public static Tag PROCESS => Tag.Generate("Process");
+        public static Tag DELTA => Tag.Generate("Delta");
+        public static Tag RADIUS => Tag.Generate("Radius");
+        public static Tag DURATION => Tag.Generate("Duration");
+        public static Tag DISTANCE => Tag.Generate("Distance");
+        public static Tag HEIGHT => Tag.Generate("Height");
+        public static Tag WAIT_FOR => Tag.Generate("WaitFor");
+        public static Tag ITERATIONS => Tag.Generate("Iterations");
+        public static Tag CAMERA => Tag.Generate("Camera");
+        public static Tag PROCESS_RELAY => Tag.Generate("ProcessRelay");
+        public static Tag CONTAINER => Tag.Generate("Container");
+        public static Tag UI => Tag.Generate("UI");
         
         // ═══════════════════════════════════════════════════════════════════════════
         // Functional Tags
@@ -82,7 +95,7 @@ namespace FarEmerald.PlayForge
         public static Tag TARGETED_INTENT => Tag.Generate("TargetedIntent");
         
         /// <summary>Used to communicate the act of targeting to the targeted entity</summary>
-        public static Tag PROJECTILE_SPEED => Tag.Generate("TargetedIntent");
+        public static Tag PROJECTILE_SPEED => Tag.Generate("ProjectileSpeed");
         
         // ═══════════════════════════════════════════════════════════════════════════
         // Report Tags
