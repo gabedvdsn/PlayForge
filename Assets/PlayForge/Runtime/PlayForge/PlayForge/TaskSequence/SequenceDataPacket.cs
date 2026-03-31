@@ -229,8 +229,7 @@ namespace FarEmerald.PlayForge
                 foreach (object data in kvp.Value) _payload[kvp.Key].Add(data);
             }
             
-            Handler = other;
-            Status = other.Status;
+            Handler = other.Handler;
             InUse = other.InUse;
         }
         

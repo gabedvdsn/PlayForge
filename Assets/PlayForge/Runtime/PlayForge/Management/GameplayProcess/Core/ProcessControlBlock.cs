@@ -10,11 +10,11 @@ namespace FarEmerald.PlayForge
     /// </summary>
     public class ProcessControlBlock
     {
-        public readonly AbstractProcessWrapper Process;
+        public readonly AbstractProcessWrapper Wrapper;
         public readonly IGameplayProcessHandler Handler;
         public readonly int CacheIndex;
 
-        public ProcessRelay Relay => Process?.Relay;
+        public ProcessRelay Relay => Wrapper?.Relay;
         
         public EProcessState State { get; private set; }
         public EProcessState QueuedState { get; private set; }
@@ -58,13 +58,13 @@ namespace FarEmerald.PlayForge
 
         #region Construction
 
-        private ProcessControlBlock(int cacheIndex, AbstractProcessWrapper process, IGameplayProcessHandler handler)
+        private ProcessControlBlock(int cacheIndex, AbstractProcessWrapper wrapper, IGameplayProcessHandler handler)
         {
             CacheIndex = cacheIndex;
-            Process = process;
+            Wrapper = wrapper;
             Handler = handler;
             
-            Process.Relay = new ProcessRelay(this);
+            Wrapper.Relay = new ProcessRelay(this);
             State = EProcessState.Created;
             _totalUpdateTime = 0;
         }
@@ -82,7 +82,7 @@ namespace FarEmerald.PlayForge
         {
             if (state == State) return;
             
-            if (ProcessControl.Instance.OutputLogs && ProcessControl.Instance.DetailedLogs) Debug.Log($"\t[ {Process.ProcessName} ] Queue {state}");
+            if (ProcessControl.Instance.OutputLogs && ProcessControl.Instance.DetailedLogs) Debug.Log($"\t[ {Wrapper.ProcessName} ] Queue {state}");
             
             switch (state)
             {
@@ -104,7 +104,7 @@ namespace FarEmerald.PlayForge
 
         private void SetQueuedState()
         {
-            if (ProcessControl.Instance.OutputLogs && ProcessControl.Instance.DetailedLogs) Debug.Log($"\t\t[{Process.ProcessName}] Setting queued state: {State} -> {QueuedState}");
+            if (ProcessControl.Instance.OutputLogs && ProcessControl.Instance.DetailedLogs) Debug.Log($"\t\t[{Wrapper.ProcessName}] Setting queued state: {State} -> {QueuedState}");
             
             State = QueuedState;
             
@@ -130,11 +130,11 @@ namespace FarEmerald.PlayForge
         {
             if (state == State) return;
 
-            if (ProcessControl.Instance.OutputLogs && ProcessControl.Instance.DetailedLogs) Debug.Log($"\t[ {Process.ProcessName} ] Force {state}");
+            if (ProcessControl.Instance.OutputLogs && ProcessControl.Instance.DetailedLogs) Debug.Log($"\t[ {Wrapper.ProcessName} ] Force {state}");
             
             if (State == EProcessState.Running && state != EProcessState.Running)
             {
-                if (state == EProcessState.Terminated || !Process.HandlePause(Relay)) Interrupt();
+                if (state == EProcessState.Terminated || !Wrapper.HandlePause(Relay)) Interrupt();
             }
             
             QueuedState = state;
@@ -156,7 +156,7 @@ namespace FarEmerald.PlayForge
             _lastCheckEnd = Time.time;
             _lastStepEnd = _lastCheckEnd;
             
-            Process.WhenInitialize(Process.Relay);
+            Wrapper.WhenInitialize(Wrapper.Relay);
         }
         
         public bool TryRun()
@@ -164,8 +164,14 @@ namespace FarEmerald.PlayForge
             if (State != EProcessState.Running) return false;
 
             QueuedState = ProcessControl.Instance.GetDefaultTransitionState(this);
-            if (_hasRun && Process.HandleResume(Relay)) return true;
-
+            if (_hasRun && Wrapper.HandleResume(Relay)) return true;
+            
+            if (Wrapper.Lifecycle == EProcessLifecycle.StepOnly)
+            {
+                _hasRun = true;
+                return true;
+            }
+            
             RunProcessAsync().Forget();
             
             return true;
@@ -175,7 +181,7 @@ namespace FarEmerald.PlayForge
         {
             if (State != EProcessState.Waiting) return false;
 
-            Process.WhenWait(Process.Relay);
+            Wrapper.WhenWait(Wrapper.Relay);
             return true;
         }
         
@@ -183,7 +189,7 @@ namespace FarEmerald.PlayForge
         {
             if (State != EProcessState.Terminated) return false;
             
-            Process.WhenTerminate(Process.Relay);
+            Wrapper.WhenTerminate(Wrapper.Relay);
             return ProcessControl.Instance.Unregister(this);
         }
 
@@ -204,18 +210,19 @@ namespace FarEmerald.PlayForge
                 case EProcessStepTiming.None:
                     break;
                 case EProcessStepTiming.Update:
-                    Process.WhenUpdate(Process.Relay);
+                    Wrapper.WhenUpdate(Wrapper.Relay);
                     break;
                 case EProcessStepTiming.LateUpdate:
-                    Process.WhenLateUpdate(Process.Relay);
+                    Wrapper.WhenLateUpdate(Wrapper.Relay);
                     break;
                 case EProcessStepTiming.FixedUpdate:
-                    Process.WhenFixedUpdate(Process.Relay);
+                    Wrapper.WhenFixedUpdate(Wrapper.Relay);
                     break;
                 case EProcessStepTiming.UpdateAndLate:
                 case EProcessStepTiming.UpdateAndFixed:
                 case EProcessStepTiming.LateAndFixed:
                     break;
+                case EProcessStepTiming.UpdateFixedAndLate:
                 default:
                     throw new ArgumentOutOfRangeException(nameof(timing), timing, null);
             }
@@ -243,7 +250,7 @@ namespace FarEmerald.PlayForge
             bool shouldTransition = true;
             try
             {
-                await Process.RunProcess(Process.Relay, _cts.Token);
+                await Wrapper.RunProcess(Wrapper.Relay, _cts.Token);
             }
             catch (OperationCanceledException)
             {
@@ -279,5 +286,12 @@ namespace FarEmerald.PlayForge
         Running,    // Actively running
         Waiting,    // Paused/waiting
         Terminated  // Terminated and cleaned up
+    }
+
+    public enum EProcessStatus
+    {
+        Async,  // waiting for an async process
+        Inline,
+        Unknown
     }
 }

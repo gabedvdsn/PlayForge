@@ -52,17 +52,19 @@ namespace FarEmerald.PlayForge
 
         public AbilityActivationRequest CreateActivationRequest(int index, EAbilityActivationPolicyExtended? policy = null)
         {
-            return new AbilityActivationRequest(index, policy);
+            return new AbilityActivationRequest(index, this, policy);
         }
         
         public struct AbilityActivationRequest
         {
             public int Index;
             public EAbilityActivationPolicyExtended? Policy;
+            public AbilitySystemComponent System;
             
-            public AbilityActivationRequest(int index, EAbilityActivationPolicyExtended? policy = null)
+            public AbilityActivationRequest(int index, AbilitySystemComponent asc, EAbilityActivationPolicyExtended? policy = null)
             {
                 Index = index;
+                System = asc;
                 Policy = policy;
             }
         }

@@ -1,7 +1,8 @@
-﻿using System.Threading;
+﻿using System;
+using System.Threading;
 using Cysharp.Threading.Tasks;
 using UnityEditor.PackageManager;
-using UnityEngine;
+using Object = UnityEngine.Object;
 
 namespace FarEmerald.PlayForge
 {
@@ -16,10 +17,11 @@ namespace FarEmerald.PlayForge
         /// The active Object process
         /// </summary>
         private AbstractMonoProcess activeMono;
-
+        
         public MonoWrapperProcess(AbstractMonoProcess storedMono, ProcessDataPacket data) : base(data)
         {
             StoredMono = storedMono;
+            getStatus = () => StoredMono.ProcessLifecycle == EProcessLifecycle.StepOnly ? EProcessStatus.Inline : EProcessStatus.Async;
         }
 
         /// <summary>

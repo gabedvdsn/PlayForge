@@ -11,6 +11,7 @@ namespace FarEmerald.PlayForge
         public RuntimeWrapperProcess(AbstractRuntimeProcess process, ProcessDataPacket data) : base(data)
         {
             Process = process;
+            getStatus = () => Process.Lifecycle == EProcessLifecycle.StepOnly ? EProcessStatus.Inline : EProcessStatus.Async;
         }
         
         public override void InitializeWrapper()

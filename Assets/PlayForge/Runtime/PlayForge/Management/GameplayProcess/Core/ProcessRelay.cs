@@ -14,7 +14,7 @@
         }
 
         public int CacheIndex => _pcb.CacheIndex;
-        public AbstractProcessWrapper Wrapper => _pcb.Process;
+        public AbstractProcessWrapper Wrapper => _pcb.Wrapper;
         public IGameplayProcessHandler Handler => _pcb.Handler;
         public EProcessState State => _pcb.State;
         public EProcessState QueuedState => _pcb.QueuedState;
@@ -24,7 +24,7 @@
 
         public bool TryGetProcess<T>(out T process)
         {
-            return _pcb.Process.TryGetProcess(out process);
+            return _pcb.Wrapper.TryGetProcess(out process);
         }
 
         /// <summary>

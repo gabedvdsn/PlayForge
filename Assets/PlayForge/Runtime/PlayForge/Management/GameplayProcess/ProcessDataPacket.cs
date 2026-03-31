@@ -22,8 +22,6 @@ namespace FarEmerald.PlayForge
     {
         protected Dictionary<Tag, List<object>> _payload = new();
         public IReadOnlyDictionary<Tag, List<object>> Payload => _payload;
-        
-        public EActionStatus Status { get; protected set; }
         public bool InUse = true;
         
         public IGameplayProcessHandler Handler;
@@ -33,18 +31,27 @@ namespace FarEmerald.PlayForge
             Handler = GameRoot.Instance;
         }
 
+        public ProcessDataPacket(ProcessDataPacket other)
+        {
+            _payload = new Dictionary<Tag, List<object>>();
+
+            if (other is null) return;
+            
+            foreach (var kvp in other.Payload)
+            {
+                _payload[kvp.Key] = new List<object>();
+                foreach (object data in kvp.Value) _payload[kvp.Key].Add(data);
+            }
+            
+            Handler = other.Handler;
+            InUse = other.InUse;
+        }
+
         private ProcessDataPacket(IGameplayProcessHandler handler)
         {
             Handler = handler;
         }
-
-        public void SetStatus(EActionStatus status)
-        {
-            Status = status;
-        }
-
-        public void ResetStatus(EActionStatus status = EActionStatus.Pending) => Status = status;
-
+        
         #region Construction
 
         public static ProcessDataPacket Default()

@@ -23,7 +23,12 @@ namespace FarEmerald.PlayForge
     {
         SelfTerminating,
         RunThenWait,
-        RequiresControl
+        RequiresControl,
+        
+        /// <summary>
+        /// No async-related overhead. Only attaches to update cycle.
+        /// </summary>
+        StepOnly
     }
     
     public enum EProcessStepPriorityMethod

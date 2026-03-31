@@ -1334,7 +1334,7 @@ namespace FarEmerald.PlayForge.Examples
                     {
                         var barFill = d.GetPrimary<VisualElement>(BAR_FILL);
                         var pctLabel = d.GetPrimary<Label>(PCT_LABEL);
-                        int segments = 20;
+                        int segments = 34;
                         
                         for (int i = 0; i < segments; i++)
                         {

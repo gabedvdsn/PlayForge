@@ -42,8 +42,7 @@ namespace FarEmerald.PlayForge
         private int _cacheCounter;
         private int NextCacheIndex => _cacheCounter++;
 
-        private int _freeBlockStart = int.MaxValue;
-        private int _freeBlockEnd = int.MinValue;
+        private Dictionary<int, ProcessWatcher> _watchers;
 
         public int Created => _cacheCounter;
         public int Active => _active.Count;
@@ -117,6 +116,23 @@ namespace FarEmerald.PlayForge
             
             public int Count => _indices.Count;
         }
+
+        private class ProcessWatcher
+        {
+            public readonly Action<ProcessDataPacket> onRegister;
+            public readonly Action<EProcessState, EProcessState, ProcessDataPacket> onStateChange;
+            public readonly Action<ProcessDataPacket> onUnregister;
+
+            public ProcessWatcher(ProcessRelay toWatch, Action<ProcessDataPacket> onRegister = null, Action<EProcessState, EProcessState, ProcessDataPacket> onStateChange = null, Action<ProcessDataPacket> onUnregister = null)
+            {
+                this.onRegister = onRegister;
+                this.onStateChange = onStateChange;
+                this.onUnregister = onUnregister;
+
+                toWatch.Wrapper.Data.SetPrimary(Tags.PROCESS_RELAY, toWatch);
+            }
+        }
+       
         
         #endregion
         
@@ -322,7 +338,7 @@ namespace FarEmerald.PlayForge
             return true;
         }
         
-        public bool Register(AbstractMonoProcess process, AbilityDataPacket data, out ProcessRelay relay)
+        /*public bool Register(AbstractMonoProcess process, AbilityDataPacket data, out ProcessRelay relay)
         {
             relay = default;
             
@@ -345,7 +361,7 @@ namespace FarEmerald.PlayForge
             data.Handler?.HandlerSubscribeProcess(relay);
             
             return true;
-        }
+        }*/
 
         public bool Register(AbstractRuntimeProcess process, out ProcessRelay relay)
         {
@@ -392,7 +408,7 @@ namespace FarEmerald.PlayForge
 
             if (OutputLogs)
             {
-                Debug.Log($"[Process Control] Unregister process \"{pcb.Process.ProcessName}\" ({pcb.CacheIndex})");
+                Debug.Log($"[Process Control] Unregister process \"{pcb.Wrapper.ProcessName}\" ({pcb.CacheIndex})");
             }
             
             return _active.Remove(pcb.CacheIndex);
@@ -584,18 +600,16 @@ namespace FarEmerald.PlayForge
 
         private void PrepareCreatedProcess(ProcessControlBlock pcb)
         {
-            pcb.Process.InitializeWrapper();
+            pcb.Wrapper.InitializeWrapper();
             
             _waiting.Add(pcb.CacheIndex);
             _active[pcb.CacheIndex] = pcb;
             
-            
-            
             if (OutputLogs)
             {
                 string msg = DetailedLogs 
-                    ? $"[Process Control] Registered Process \"{pcb.Process.ProcessName}\" ({pcb.Handler})"
-                    : $"[Process Control] Registered Process: {pcb.Process.ProcessName}";
+                    ? $"[Process Control] Registered Process \"{pcb.Wrapper.ProcessName}\" ({pcb.Handler})"
+                    : $"[Process Control] Registered Process: {pcb.Wrapper.ProcessName}";
                 Debug.Log(msg);
             }
             
@@ -646,7 +660,7 @@ namespace FarEmerald.PlayForge
 
         private void MoveToStepping(ProcessControlBlock pcb)
         {
-            var timing = pcb.Process.StepTiming;
+            var timing = pcb.Wrapper.StepTiming;
             int priority = GetEffectivePriority(pcb);
 
             AddToStepGroup(pcb.CacheIndex, priority, timing);
@@ -689,7 +703,7 @@ namespace FarEmerald.PlayForge
         
         private void RemoveFromStepping(ProcessControlBlock pcb)
         {
-            var timing = pcb.Process.StepTiming;
+            var timing = pcb.Wrapper.StepTiming;
 
             switch (timing)
             {
@@ -721,17 +735,19 @@ namespace FarEmerald.PlayForge
                     _stepping[EProcessStepTiming.LateUpdate].Remove(pcb.CacheIndex);
                     _stepping[EProcessStepTiming.FixedUpdate].Remove(pcb.CacheIndex);
                     break;
+                default:
+                    throw new ArgumentOutOfRangeException();
             }
         }
 
         private int GetEffectivePriority(ProcessControlBlock pcb)
         {
-            return pcb.Process.PriorityMethod switch
+            return pcb.Wrapper.PriorityMethod switch
             {
-                EProcessStepPriorityMethod.Manual => pcb.Process.StepPriority,
+                EProcessStepPriorityMethod.Manual => pcb.Wrapper.StepPriority,
                 EProcessStepPriorityMethod.First => 0,
                 EProcessStepPriorityMethod.Last => int.MaxValue,
-                _ => pcb.Process.StepPriority
+                _ => pcb.Wrapper.StepPriority
             };
         }
 
@@ -792,6 +808,11 @@ namespace FarEmerald.PlayForge
             { (EProcessControlState.Ready, EProcessLifecycle.RequiresControl, EProcessState.Waiting), EProcessState.Running },
             { (EProcessControlState.Ready, EProcessLifecycle.RequiresControl, EProcessState.Terminated), EProcessState.Terminated },
             
+            { (EProcessControlState.Ready, EProcessLifecycle.StepOnly, EProcessState.Created), EProcessState.Running },
+            { (EProcessControlState.Ready, EProcessLifecycle.StepOnly, EProcessState.Running), EProcessState.Waiting },
+            { (EProcessControlState.Ready, EProcessLifecycle.StepOnly, EProcessState.Waiting), EProcessState.Running },
+            { (EProcessControlState.Ready, EProcessLifecycle.StepOnly, EProcessState.Terminated), EProcessState.Terminated },
+            
             // Waiting state - everything goes to Waiting except Terminated
             { (EProcessControlState.Waiting, EProcessLifecycle.SelfTerminating, EProcessState.Created), EProcessState.Waiting },
             { (EProcessControlState.Waiting, EProcessLifecycle.SelfTerminating, EProcessState.Running), EProcessState.Waiting },
@@ -807,6 +828,11 @@ namespace FarEmerald.PlayForge
             { (EProcessControlState.Waiting, EProcessLifecycle.RequiresControl, EProcessState.Running), EProcessState.Waiting },
             { (EProcessControlState.Waiting, EProcessLifecycle.RequiresControl, EProcessState.Waiting), EProcessState.Waiting },
             { (EProcessControlState.Waiting, EProcessLifecycle.RequiresControl, EProcessState.Terminated), EProcessState.Terminated },
+            
+            { (EProcessControlState.Waiting, EProcessLifecycle.StepOnly, EProcessState.Created), EProcessState.Waiting },
+            { (EProcessControlState.Waiting, EProcessLifecycle.StepOnly, EProcessState.Running), EProcessState.Waiting },
+            { (EProcessControlState.Waiting, EProcessLifecycle.StepOnly, EProcessState.Waiting), EProcessState.Waiting },
+            { (EProcessControlState.Waiting, EProcessLifecycle.StepOnly, EProcessState.Terminated), EProcessState.Terminated },
             
             // Terminated states - everything goes to Terminated
             { (EProcessControlState.Terminated, EProcessLifecycle.SelfTerminating, EProcessState.Created), EProcessState.Terminated },
@@ -824,6 +850,11 @@ namespace FarEmerald.PlayForge
             { (EProcessControlState.Terminated, EProcessLifecycle.RequiresControl, EProcessState.Waiting), EProcessState.Terminated },
             { (EProcessControlState.Terminated, EProcessLifecycle.RequiresControl, EProcessState.Terminated), EProcessState.Terminated },
             
+            { (EProcessControlState.Terminated, EProcessLifecycle.StepOnly, EProcessState.Created), EProcessState.Terminated },
+            { (EProcessControlState.Terminated, EProcessLifecycle.StepOnly, EProcessState.Running), EProcessState.Terminated },
+            { (EProcessControlState.Terminated, EProcessLifecycle.StepOnly, EProcessState.Waiting), EProcessState.Terminated },
+            { (EProcessControlState.Terminated, EProcessLifecycle.StepOnly, EProcessState.Terminated), EProcessState.Terminated },
+            
             { (EProcessControlState.TerminatedImmediately, EProcessLifecycle.SelfTerminating, EProcessState.Created), EProcessState.Terminated },
             { (EProcessControlState.TerminatedImmediately, EProcessLifecycle.SelfTerminating, EProcessState.Running), EProcessState.Terminated },
             { (EProcessControlState.TerminatedImmediately, EProcessLifecycle.SelfTerminating, EProcessState.Waiting), EProcessState.Terminated },
@@ -838,6 +869,11 @@ namespace FarEmerald.PlayForge
             { (EProcessControlState.TerminatedImmediately, EProcessLifecycle.RequiresControl, EProcessState.Running), EProcessState.Terminated },
             { (EProcessControlState.TerminatedImmediately, EProcessLifecycle.RequiresControl, EProcessState.Waiting), EProcessState.Terminated },
             { (EProcessControlState.TerminatedImmediately, EProcessLifecycle.RequiresControl, EProcessState.Terminated), EProcessState.Terminated },
+            
+            { (EProcessControlState.TerminatedImmediately, EProcessLifecycle.StepOnly, EProcessState.Created), EProcessState.Terminated },
+            { (EProcessControlState.TerminatedImmediately, EProcessLifecycle.StepOnly, EProcessState.Running), EProcessState.Terminated },
+            { (EProcessControlState.TerminatedImmediately, EProcessLifecycle.StepOnly, EProcessState.Waiting), EProcessState.Terminated },
+            { (EProcessControlState.TerminatedImmediately, EProcessLifecycle.StepOnly, EProcessState.Terminated), EProcessState.Terminated },
             
             // Closed - let existing processes run/wait naturally
             { (EProcessControlState.Closed, EProcessLifecycle.SelfTerminating, EProcessState.Created), EProcessState.Terminated },
@@ -855,6 +891,11 @@ namespace FarEmerald.PlayForge
             { (EProcessControlState.Closed, EProcessLifecycle.RequiresControl, EProcessState.Waiting), EProcessState.Waiting },
             { (EProcessControlState.Closed, EProcessLifecycle.RequiresControl, EProcessState.Terminated), EProcessState.Terminated },
             
+            { (EProcessControlState.Closed, EProcessLifecycle.StepOnly, EProcessState.Created), EProcessState.Terminated },
+            { (EProcessControlState.Closed, EProcessLifecycle.StepOnly, EProcessState.Running), EProcessState.Terminated },
+            { (EProcessControlState.Closed, EProcessLifecycle.StepOnly, EProcessState.Waiting), EProcessState.Running },
+            { (EProcessControlState.Closed, EProcessLifecycle.StepOnly, EProcessState.Terminated), EProcessState.Terminated },
+            
             { (EProcessControlState.ClosedWaiting, EProcessLifecycle.SelfTerminating, EProcessState.Created), EProcessState.Terminated },
             { (EProcessControlState.ClosedWaiting, EProcessLifecycle.SelfTerminating, EProcessState.Running), EProcessState.Waiting },
             { (EProcessControlState.ClosedWaiting, EProcessLifecycle.SelfTerminating, EProcessState.Waiting), EProcessState.Waiting },
@@ -869,11 +910,16 @@ namespace FarEmerald.PlayForge
             { (EProcessControlState.ClosedWaiting, EProcessLifecycle.RequiresControl, EProcessState.Running), EProcessState.Waiting },
             { (EProcessControlState.ClosedWaiting, EProcessLifecycle.RequiresControl, EProcessState.Waiting), EProcessState.Waiting },
             { (EProcessControlState.ClosedWaiting, EProcessLifecycle.RequiresControl, EProcessState.Terminated), EProcessState.Terminated },
+            
+            { (EProcessControlState.ClosedWaiting, EProcessLifecycle.StepOnly, EProcessState.Created), EProcessState.Terminated },
+            { (EProcessControlState.ClosedWaiting, EProcessLifecycle.StepOnly, EProcessState.Running), EProcessState.Waiting },
+            { (EProcessControlState.ClosedWaiting, EProcessLifecycle.StepOnly, EProcessState.Waiting), EProcessState.Waiting },
+            { (EProcessControlState.ClosedWaiting, EProcessLifecycle.StepOnly, EProcessState.Terminated), EProcessState.Terminated },
         };
 
         public EProcessState GetDefaultTransitionState(ProcessControlBlock pcb)
         {
-            var key = (State, pcb.Process.Lifecycle, pcb.State);
+            var key = (State, pcb.Wrapper.Lifecycle, pcb.State);
             
             if (DefaultTransitions.TryGetValue(key, out var result))
                 return result;
@@ -890,7 +936,7 @@ namespace FarEmerald.PlayForge
             // When control state changes, determine what state processes should be in
             return State switch
             {
-                EProcessControlState.Ready => pcb.Process.Lifecycle switch
+                EProcessControlState.Ready => pcb.Wrapper.Lifecycle switch
                 {
                     EProcessLifecycle.SelfTerminating => pcb.State == EProcessState.Terminated 
                         ? EProcessState.Terminated 
@@ -901,13 +947,15 @@ namespace FarEmerald.PlayForge
                     EProcessLifecycle.RequiresControl => (pcb.State == EProcessState.Waiting && pcb.MidRun)
                         ? EProcessState.Running 
                         : pcb.State,
+                    EProcessLifecycle.StepOnly => pcb.State == EProcessState.Terminated 
+                        ? EProcessState.Terminated 
+                        : EProcessState.Running,
                     _ => pcb.State
                 },
                 EProcessControlState.Waiting or EProcessControlState.ClosedWaiting => 
                     pcb.State == EProcessState.Terminated ? EProcessState.Terminated : EProcessState.Waiting,
-                EProcessControlState.Closed => pcb.Process.Lifecycle switch
+                EProcessControlState.Closed => pcb.Wrapper.Lifecycle switch
                 {
-
                     EProcessLifecycle.SelfTerminating => pcb.State == EProcessState.Terminated 
                         ? EProcessState.Terminated 
                         : EProcessState.Running,
@@ -917,6 +965,9 @@ namespace FarEmerald.PlayForge
                     EProcessLifecycle.RequiresControl => (pcb.State == EProcessState.Waiting && pcb.MidRun)
                         ? EProcessState.Running 
                         : pcb.State,
+                    EProcessLifecycle.StepOnly => pcb.State == EProcessState.Terminated 
+                        ? EProcessState.Terminated 
+                        : EProcessState.Running,
                     _ => pcb.State
                 },
                 EProcessControlState.Terminated or EProcessControlState.TerminatedImmediately => EProcessState.Terminated,
@@ -927,7 +978,7 @@ namespace FarEmerald.PlayForge
         private bool ValidateStateTransition(ProcessControlBlock pcb, EProcessState to)
         {
             var from = pcb.State;
-            var lifecycle = pcb.Process.Lifecycle;
+            var lifecycle = pcb.Wrapper.Lifecycle;
             
             // Can't transition to Created
             if (to == EProcessState.Created) return false;

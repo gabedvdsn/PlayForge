@@ -40,7 +40,7 @@ namespace FarEmerald.PlayForge
             NativeDataPacket = AbilityDataPacket.GenerateFrom
             (
                 IEffectOrigin.GenerateSourceDerivation(this),
-                new AbilitySystemComponent.AbilityActivationRequest(-1),
+                AbilitySystem.CreateActivationRequest(-1),
                 false
             );
             

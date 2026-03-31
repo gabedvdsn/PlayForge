@@ -176,13 +176,13 @@ namespace FarEmerald.PlayForge.Examples
             var seq = TaskSequenceBuilder.Create("Close Sequences")
                 .Task(async (d, t) =>
                 {
+                    RemoveTemp(Sequences);
                     await SequenceTaskLibrary.MoveTo(cMain.transform, defCamPos, 1f, t);
                     cPos = defCamPos;
                 })
                 .OnTerminate((_, _) =>
                 {
                     _sequencesOpen = false;
-                    RemoveTemp(Sequences);
                     camLock = null;
                 })
                 .BuildSequence();
@@ -311,7 +311,7 @@ namespace FarEmerald.PlayForge.Examples
                 Scenarios.Add(button);
                 ConfigureButton(button, null, () => null, onClick: () =>
                 {
-                    var req = new AbilitySystemComponent.AbilityActivationRequest(container.Index);
+                    var req = Player.AbilitySystem.CreateActivationRequest(container.Index);
                     bool activated = Player.AbilitySystem.TryActivateAbility(req);
 
                     Debug.Log($"Activated ability ({container.Spec.Base.GetName()}): {activated}");

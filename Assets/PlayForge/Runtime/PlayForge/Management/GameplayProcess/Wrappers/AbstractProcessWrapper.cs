@@ -11,7 +11,9 @@ namespace FarEmerald.PlayForge
         public ProcessDataPacket Data;
 
         public Func<AbstractProcessWrapper, string> getName = null;
-
+        protected Func<EProcessStatus> getStatus = null;
+        public EProcessStatus Status => getStatus?.Invoke() ?? EProcessStatus.Unknown;
+        
         protected AbstractProcessWrapper(ProcessDataPacket data)
         {
             Data = data;
