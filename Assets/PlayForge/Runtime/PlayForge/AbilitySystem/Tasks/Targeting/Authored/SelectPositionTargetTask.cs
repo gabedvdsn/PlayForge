@@ -1,52 +1,71 @@
-﻿using System.Threading;
+using System;
+using System.Threading;
 using Cysharp.Threading.Tasks;
 using UnityEngine;
 
 namespace FarEmerald.PlayForge
 {
+    /// <summary>
+    /// Interactive targeting task: raycast to select a world position.
+    /// Waits for the player to click on a valid surface in the world.
+    /// Stores the hit position in the data packet under Tags.POSITION.
+    /// </summary>
+    [Serializable]
     public class SelectPositionTargetTask : AbstractTargetingAbilityTask
     {
-        public override string Description => "Use raycast to find ground target position";
-        public override void Prepare(AbilityDataPacket data)
-        {
-            base.Prepare(data);
-        }
-        public override void Clean(AbilityDataPacket data)
-        {
-            base.Clean(data);
-        }
+        [Header("Raycast Settings")]
+        [Tooltip("Layers to raycast against when selecting positions")]
+        public LayerMask RaycastLayers = ~0;
+
+        [Tooltip("Maximum raycast distance (0 = infinite)")]
+        public float MaxDistance;
+
+        [Header("Behaviour")]
+        [Tooltip("When true, an invalid click re-prompts for another click instead of failing")]
+        public bool RetryOnInvalid;
+
+        [Tooltip("Mouse button index to use for selection (0=Left, 1=Right, 2=Middle)")]
+        public int MouseButton;
+
+        public override string Description => "Raycast to select a ground/position target";
+
         public override async UniTask Activate(AbilityDataPacket data, CancellationToken token)
         {
-            while (true)
+            var cam = Camera.main;
+            var maxDist = MaxDistance > 0 ? MaxDistance : Mathf.Infinity;
+
+            while (!token.IsCancellationRequested)
             {
-                if (Input.GetKeyDown(KeyCode.Escape)) BreakAbilityRuntime();
-                if (Input.GetMouseButtonDown(0))
+                await UniTask.WaitUntil(() => Input.GetMouseButtonDown(MouseButton), cancellationToken: token);
+
+                var ray = cam.ScreenPointToRay(Input.mousePosition);
+                if (!Physics.Raycast(ray, out var hit, maxDist, RaycastLayers))
                 {
-                    var ray = Camera.main.ScreenPointToRay(Input.mousePosition);
-                    if (Physics.Raycast(ray, out var hitInfo, Mathf.Infinity))
-                    {
-                        if (!TargetIsValid(hitInfo.point, out var position))
-                        {
-                            WhenTargetingInvalid();
-                            break;
-                        }
-                        
-                        data.AddPayload(Tags.POSITION, position);
-                        break;
-                    }
+                    if (RetryOnInvalid) continue;
+                    WhenTargetingInvalid(data);
+                    return;
                 }
-                
-                await UniTask.NextFrame(token);
+
+                if (!TargetIsValid(hit.point, out var position))
+                {
+                    if (RetryOnInvalid) continue;
+                    WhenTargetingInvalid(data);
+                    return;
+                }
+
+                // Valid position acquired
+                data.AddPayload(Tags.POSITION, position);
+                return;
             }
         }
-        
+
         protected override bool ConnectInputHandler(AbilityDataPacket data)
         {
             return true;
         }
+
         protected override void DisconnectInputHandler(AbilityDataPacket data)
         {
-            
         }
     }
 }

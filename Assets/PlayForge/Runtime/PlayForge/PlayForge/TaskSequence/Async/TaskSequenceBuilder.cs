@@ -95,6 +95,41 @@ namespace FarEmerald.PlayForge
             _conditionStepTiming = timing;
             return this;
         }
+
+        /// <summary>
+        /// Sets the process lifecycle for this sequence.
+        /// Use Synchronous for per-frame stepping without async overhead.
+        /// Default is SelfTerminating (async).
+        /// </summary>
+        public TaskSequenceBuilder WithLifecycle(EProcessLifecycle lifecycle)
+        {
+            _metadata ??= new SequenceMetadata();
+            _metadata.Lifecycle = lifecycle;
+            return this;
+        }
+
+        /// <summary>
+        /// Sets the step timing for the process.
+        /// Required for Synchronous lifecycle (determines which Unity update loop to attach to).
+        /// </summary>
+        public TaskSequenceBuilder WithStepTiming(EProcessStepTiming timing)
+        {
+            _metadata ??= new SequenceMetadata();
+            _metadata.StepTiming = timing;
+            return this;
+        }
+
+        /// <summary>
+        /// Registers a per-step callback for a specific timing.
+        /// Called each frame during sync execution with the data packet and deltaTime.
+        /// </summary>
+        public TaskSequenceBuilder OnStep(EProcessStepTiming timing, Action<SequenceDataPacket, float> callback)
+        {
+            _metadata ??= new SequenceMetadata();
+            _metadata.OnStepCallbacks ??= new Dictionary<EProcessStepTiming, Action<SequenceDataPacket, float>>();
+            _metadata.OnStepCallbacks[timing] = callback;
+            return this;
+        }
         
         // ═══════════════════════════════════════════════════════════════════════════
         // EVENT CALLBACKS (Sequence-level)
@@ -380,9 +415,81 @@ namespace FarEmerald.PlayForge
         }
         
         // ═══════════════════════════════════════════════════════════════════════════
+        // SYNC TASKS (creates single-task stages with sync-first delegates)
+        // ═══════════════════════════════════════════════════════════════════════════
+
+        /// <summary>
+        /// Adds a sync-first step task as a single-task stage.
+        /// The task steps each frame and returns true when complete.
+        /// </summary>
+        public TaskSequenceBuilder SyncTask(Func<SequenceDataPacket, float, bool> step)
+        {
+            var stage = new SequenceStage();
+            stage.Tasks.Add(new DelegateSyncTask(step));
+            _stages.Add(stage);
+            return this;
+        }
+
+        /// <summary>
+        /// Adds a sync-first step task (no data packet) as a single-task stage.
+        /// </summary>
+        public TaskSequenceBuilder SyncTask(Func<float, bool> step)
+        {
+            var stage = new SequenceStage();
+            stage.Tasks.Add(new DelegateSyncTask(step));
+            _stages.Add(stage);
+            return this;
+        }
+
+        /// <summary>
+        /// Adds a sync-first ISequenceTask as a single-task stage.
+        /// Useful for SyncSequenceTaskLibrary tasks.
+        /// </summary>
+        public TaskSequenceBuilder SyncTask(ISequenceTask task)
+        {
+            var stage = new SequenceStage();
+            stage.Tasks.Add(task);
+            _stages.Add(stage);
+            return this;
+        }
+
+        /// <summary>
+        /// Adds a one-shot synchronous action as a single-task stage (completes in one frame).
+        /// </summary>
+        public TaskSequenceBuilder Do(Action<SequenceDataPacket> action)
+        {
+            var stage = new SequenceStage();
+            stage.Tasks.Add(new DelegateSyncTask(action));
+            _stages.Add(stage);
+            return this;
+        }
+
+        /// <summary>
+        /// Adds a sync wait-for-condition stage.
+        /// </summary>
+        public TaskSequenceBuilder WaitUntil(Func<SequenceDataPacket, bool> predicate)
+        {
+            var stage = new SequenceStage();
+            stage.Tasks.Add(new DelegateSyncTask((data, _) => predicate(data)));
+            _stages.Add(stage);
+            return this;
+        }
+
+        /// <summary>
+        /// Adds a sync wait-for-condition stage (no data packet).
+        /// </summary>
+        public TaskSequenceBuilder WaitUntil(Func<bool> predicate)
+        {
+            var stage = new SequenceStage();
+            stage.Tasks.Add(new DelegateSyncTask(_ => predicate()));
+            _stages.Add(stage);
+            return this;
+        }
+
+        // ═══════════════════════════════════════════════════════════════════════════
         // BUILD
         // ═══════════════════════════════════════════════════════════════════════════
-        
+
         public TaskSequenceDefinition Build()
         {
             return new TaskSequenceDefinition(
@@ -400,6 +507,36 @@ namespace FarEmerald.PlayForge
         public TaskSequence BuildSequence()
         {
             return new TaskSequence(Build());
+        }
+
+        /// <summary>
+        /// Builds a SyncedTaskSequence for per-frame stepping.
+        /// Converts SequenceStages into SyncSequenceStages using the unified ISequenceTask.Step path.
+        /// </summary>
+        public SyncedTaskSequence BuildSyncRunner()
+        {
+            var syncStages = new List<SyncSequenceStage>();
+
+            foreach (var stage in _stages)
+            {
+                var policy = stage.Policy is WhenAnyStagePolicy
+                    ? ESyncStagePolicy.WhenAny
+                    : ESyncStagePolicy.WhenAll;
+
+                var syncStage = new SyncSequenceStage(
+                    new List<ISequenceTask>(stage.Tasks),
+                    stage.Metadata?.Name,
+                    policy,
+                    stage.Repeat,
+                    stage.MaxDurationSeconds
+                );
+                syncStages.Add(syncStage);
+            }
+
+            var name = _metadata?.Name ?? "SyncSequence";
+            var repeat = _metadata?.Repeat ?? false;
+
+            return new SyncedTaskSequence(syncStages, name, repeat);
         }
     }
     
@@ -672,6 +809,68 @@ namespace FarEmerald.PlayForge
             return this;
         }
         
+        // ═══════════════════════════════════════════════════════════════════════════
+        // SYNC TASKS (sync-first delegates for stage-level)
+        // ═══════════════════════════════════════════════════════════════════════════
+
+        /// <summary>
+        /// Adds a sync-first step task to this stage.
+        /// </summary>
+        public StageBuilder SyncTask(Func<SequenceDataPacket, float, bool> step)
+        {
+            _stage.Tasks.Add(new DelegateSyncTask(step));
+            return this;
+        }
+
+        /// <summary>
+        /// Adds a sync-first step task (no data packet) to this stage.
+        /// </summary>
+        public StageBuilder SyncTask(Func<float, bool> step)
+        {
+            _stage.Tasks.Add(new DelegateSyncTask(step));
+            return this;
+        }
+
+        /// <summary>
+        /// Adds a one-shot synchronous action (completes in one frame).
+        /// </summary>
+        public StageBuilder Do(Action<SequenceDataPacket> action)
+        {
+            _stage.Tasks.Add(new DelegateSyncTask(action));
+            return this;
+        }
+
+        /// <summary>
+        /// Adds a sync wait-for-condition task.
+        /// </summary>
+        public StageBuilder WaitUntil(Func<SequenceDataPacket, bool> predicate)
+        {
+            _stage.Tasks.Add(new DelegateSyncTask((data, _) => predicate(data)));
+            return this;
+        }
+
+        /// <summary>
+        /// Adds a sync wait-for-condition task (no data packet).
+        /// </summary>
+        public StageBuilder WaitUntil(Func<bool> predicate)
+        {
+            _stage.Tasks.Add(new DelegateSyncTask(_ => predicate()));
+            return this;
+        }
+
+        /// <summary>
+        /// Adds a sync delay task that waits for the given number of seconds.
+        /// </summary>
+        public StageBuilder SyncDelay(float seconds)
+        {
+            float elapsed = 0f;
+            _stage.Tasks.Add(new DelegateSyncTask(
+                step: (_, dt) => { elapsed += dt; return elapsed >= seconds; },
+                prepare: _ => { elapsed = 0f; }
+            ));
+            return this;
+        }
+
         // ═══════════════════════════════════════════════════════════════════════════
         // SUB-STAGES
         // ═══════════════════════════════════════════════════════════════════════════

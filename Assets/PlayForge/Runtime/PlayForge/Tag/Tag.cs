@@ -34,11 +34,17 @@ namespace FarEmerald.PlayForge
             Name = name ?? "";
             CachedParentPath = null;
         }
-        
+
         public static Tag Generate(string _name)
         {
             var tag = new Tag(_name);
-            // Register with hierarchy for caching (if hierarchy is initialized)
+            TagHierarchy.Register(tag);
+            return tag;
+        }
+        
+        public static Tag GenerateAsUnique(string _name, string _prefix = "", int size = 64)
+        {
+            var tag = TagHierarchy.TagUtil.GenerateDeterministicTag(_name, _prefix, Mathf.Min(Mathf.Max(0, size), 64));
             TagHierarchy.Register(tag);
             return tag;
         }
@@ -53,7 +59,7 @@ namespace FarEmerald.PlayForge
                 return this;
             
             string newName = string.IsNullOrEmpty(Name) ? childName : $"{Name}.{childName}";
-            return Generate(newName);
+            return GenerateAsUnique(newName);
         }
 
         // ═══════════════════════════════════════════════════════════════════════════
@@ -114,7 +120,7 @@ namespace FarEmerald.PlayForge
         public Tag? GetParent()
         {
             var parentPath = GetParentPath();
-            return parentPath != null ? Generate(parentPath) : null;
+            return parentPath != null ? GenerateAsUnique(parentPath) : null;
         }
         
         /// <summary>
@@ -139,7 +145,7 @@ namespace FarEmerald.PlayForge
         {
             foreach (var path in GetAncestorPaths())
             {
-                yield return Generate(path);
+                yield return GenerateAsUnique(path);
             }
         }
         
@@ -151,7 +157,7 @@ namespace FarEmerald.PlayForge
         {
             if (string.IsNullOrEmpty(Name)) return this;
             int firstDot = Name.IndexOf('.');
-            return firstDot < 0 ? this : Generate(Name.Substring(0, firstDot));
+            return firstDot < 0 ? this : GenerateAsUnique(Name.Substring(0, firstDot));
         }
         
         /// <summary>
@@ -258,7 +264,7 @@ namespace FarEmerald.PlayForge
         // ═══════════════════════════════════════════════════════════════════════════
         
         public static implicit operator string(Tag tag) => tag.Name;
-        public static implicit operator Tag(string name) => Generate(name);
+        public static implicit operator Tag(string name) => GenerateAsUnique(name);
     }
     
     /// <summary>

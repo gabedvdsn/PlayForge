@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
@@ -8,22 +8,71 @@ using UnityEngine.Assertions;
 
 namespace FarEmerald.PlayForge
 {
+    /// <summary>
+    /// Bridge between ability activation and sequence-based execution.
+    ///
+    /// AbilityProxy compiles the AbilityBehaviour into reusable TaskSequences
+    /// at construction time — one for targeting and one for execution stages.
+    /// Both phases register with ProcessControl for full visibility.
+    ///
+    /// Since AbilityDataPacket extends SequenceDataPacket, the same packet
+    /// flows through targeting, execution, callbacks, and ProcessControl.
+    ///
+    /// Injection, callbacks, and usage effects are handled transparently:
+    /// - IAbilityInjection calls are translated to ISequenceInjection internally
+    /// - AbilitySystemCallbacks fire from sequence stage hooks
+    /// - Usage effects apply at configured stage boundaries
+    /// </summary>
     public class AbilityProxy
     {
         public int StageIndex;
         public readonly AbilityBehaviour Behaviour;
 
+        /// <summary>The compiled execution TaskSequence (reusable across activations).</summary>
+        public TaskSequence CompiledSequence { get; private set; }
+
+        /// <summary>The compiled targeting TaskSequence (reusable, null if no targeting task).</summary>
+        public TaskSequence CompiledTargeting { get; private set; }
+
+        /// <summary>The ProcessRelay for the active execution sequence (null when not running).</summary>
+        public ProcessRelay ActiveRelay { get; private set; }
+
+        /// <summary>The ProcessRelay for the active targeting sequence (null when not targeting).</summary>
+        public ProcessRelay TargetingRelay { get; private set; }
+
+        // Legacy fields preserved for injection compatibility
         public Dictionary<int, CancellationTokenSource> stageSources;
         public UniTaskCompletionSource nextStageSignal;
         public int maintainedStages;
 
         public bool usageEffectsApplied;
-        
+
         public AbilityProxy(AbilityBehaviour behaviour)
         {
             StageIndex = -1;
             Behaviour = behaviour;
         }
+
+        /// <summary>
+        /// Compiles the behaviour into TaskSequences (targeting + execution).
+        /// Called once, typically at grant time. Safe to call multiple times (recompiles).
+        /// </summary>
+        /// <param name="abilityName">Display name for ProcessControl visibility.</param>
+        public void CompileSequence(string abilityName = null)
+        {
+            CompiledSequence = AbilitySequenceCompiler.Compile(Behaviour, abilityName);
+            CompiledTargeting = AbilitySequenceCompiler.CompileTargeting(Behaviour, abilityName);
+        }
+
+        /// <summary>
+        /// Returns true if the proxy has a compiled execution sequence ready.
+        /// </summary>
+        public bool IsCompiled => CompiledSequence != null;
+
+        /// <summary>
+        /// Returns true if the proxy has a compiled targeting sequence.
+        /// </summary>
+        public bool HasCompiledTargeting => CompiledTargeting != null;
 
         private void Reset()
         {
@@ -31,10 +80,16 @@ namespace FarEmerald.PlayForge
             stageSources = new Dictionary<int, CancellationTokenSource>();
             maintainedStages = 0;
             usageEffectsApplied = false;
+            ActiveRelay = null;
+            TargetingRelay = null;
         }
 
         public void Clean()
         {
+            // Interrupt any running sequences
+            CompiledTargeting?.Interrupt();
+            CompiledSequence?.Interrupt();
+
             if (stageSources is not null)
             {
                 foreach (int stageIndex in stageSources.Keys)
@@ -45,13 +100,65 @@ namespace FarEmerald.PlayForge
 
                 stageSources.Clear();
             }
+
+            ActiveRelay = null;
+            TargetingRelay = null;
         }
+
+        // ═══════════════════════════════════════════════════════════════════════════
+        // TARGETING (sequence-based when compiled, legacy fallback otherwise)
+        // ═══════════════════════════════════════════════════════════════════════════
 
         public async UniTask ActivateTargetingTask(CancellationToken token, AbilityDataPacket implicitData)
         {
+            if (HasCompiledTargeting)
+            {
+                await ActivateTargetingViaSequence(token, implicitData);
+            }
+            else
+            {
+                await ActivateTargetingLegacy(token, implicitData);
+            }
+        }
+
+        /// <summary>
+        /// Runs the compiled targeting sequence through ProcessControl.
+        /// </summary>
+        private async UniTask ActivateTargetingViaSequence(CancellationToken token, AbilityDataPacket implicitData)
+        {
+            var handler = implicitData.Spec.GetOwner();
+            if (!ProcessControl.Register(CompiledTargeting, handler, implicitData, out var relay))
+            {
+                // Fallback to legacy if registration fails
+                await ActivateTargetingLegacy(token, implicitData);
+                return;
+            }
+
+            TargetingRelay = relay;
+
             try
             {
-                // If there is a targeting task assigned...
+                await UniTask.WaitUntil(
+                    () => relay.State == EProcessState.Terminated,
+                    cancellationToken: token);
+            }
+            catch (OperationCanceledException)
+            {
+                CompiledTargeting?.Interrupt();
+            }
+            finally
+            {
+                TargetingRelay = null;
+            }
+        }
+
+        /// <summary>
+        /// Legacy targeting: direct Prepare/Activate/Clean without ProcessControl.
+        /// </summary>
+        private async UniTask ActivateTargetingLegacy(CancellationToken token, AbilityDataPacket implicitData)
+        {
+            try
+            {
                 if (Behaviour.Targeting is not null)
                 {
                     Behaviour.Targeting.Prepare(implicitData);
@@ -68,20 +175,148 @@ namespace FarEmerald.PlayForge
             }
         }
 
+        // ═══════════════════════════════════════════════════════════════════════════
+        // SEQUENCE-BASED EXECUTION
+        // ═══════════════════════════════════════════════════════════════════════════
+
+        /// <summary>
+        /// Activates the ability via the compiled sequence, registering with ProcessControl.
+        /// Falls back to legacy execution if no compiled sequence exists.
+        /// </summary>
         public async UniTask Activate(CancellationToken token, AbilityDataPacket implicitData)
         {
             Reset();
-            
+
+            if (IsCompiled)
+            {
+                await ActivateViaSequence(token, implicitData);
+            }
+            else
+            {
+                await ActivateLegacy(token, implicitData);
+            }
+        }
+
+        /// <summary>
+        /// Runs the compiled execution TaskSequence through ProcessControl.
+        /// </summary>
+        private async UniTask ActivateViaSequence(CancellationToken token, AbilityDataPacket implicitData)
+        {
+            // AbilityDataPacket extends SequenceDataPacket, so pass it directly.
+            var handler = implicitData.Spec.GetOwner();
+            if (!ProcessControl.Register(CompiledSequence, handler, implicitData, out var relay))
+            {
+                Debug.LogWarning("[AbilityProxy] Failed to register ability sequence with ProcessControl. " +
+                                 "Falling back to legacy execution.");
+                await ActivateLegacy(token, implicitData);
+                return;
+            }
+
+            ActiveRelay = relay;
+
+            try
+            {
+                // Wait for the process to terminate (SelfTerminating lifecycle).
+                // The relay state transitions: Created → Running → Terminated.
+                await UniTask.WaitUntil(
+                    () => relay.State == EProcessState.Terminated,
+                    cancellationToken: token);
+            }
+            catch (OperationCanceledException)
+            {
+                // External cancellation (e.g., InterruptInjection from container).
+                // Interrupt the running sequence so it cleans up properly.
+                CompiledSequence?.Interrupt();
+            }
+            finally
+            {
+                implicitData.InUse = false;
+                ActiveRelay = null;
+            }
+        }
+
+        // ═══════════════════════════════════════════════════════════════════════════
+        // INJECTION (translates ability injections to sequence injections)
+        // ═══════════════════════════════════════════════════════════════════════════
+
+        public void Inject(IAbilityInjection injection, AbilityDataPacket activeData)
+        {
+            // If running via compiled sequence, translate to sequence injection
+            if (IsCompiled && CompiledSequence.IsRunning)
+            {
+                var success = AbilitySequenceInjectionBridge.TryApply(injection, CompiledSequence);
+
+                // Fire ability injection callback regardless of translation success
+                FireInjectionCallback(injection, activeData, success);
+                return;
+            }
+
+            // Legacy injection path
+            var _success = injection.OnProxyInject(this, activeData);
+
+            var owner = activeData.Spec.GetOwner();
+            if (!owner.FindAbilitySystem(out var asc)) return;
+
+            var stageSafe = (StageIndex >= 0 && StageIndex < Behaviour.Stages.Count)
+                ? Behaviour.Stages[StageIndex]
+                : new AbilityTaskBehaviourStage { Tasks = new List<AbstractAbilityTask>() };
+
+            var status = AbilityCallbackStatus.GenerateForInjection(
+                activeData,
+                stageSafe,
+                injection, _success);
+            owner.GetFrameSummary().RecordAbilityInjection(status);
+
+            asc.Callbacks.AbilityInjected(status);
+        }
+
+        private void FireInjectionCallback(
+            IAbilityInjection injection,
+            AbilityDataPacket activeData,
+            bool success)
+        {
+            var owner = activeData.Spec.GetOwner();
+            if (!owner.FindAbilitySystem(out var asc)) return;
+
+            var stageSafe = GetCurrentAbilityStage();
+
+            var status = AbilityCallbackStatus.GenerateForInjection(
+                activeData, stageSafe, injection, success);
+            owner.GetFrameSummary().RecordAbilityInjection(status);
+
+            asc.Callbacks.AbilityInjected(status);
+        }
+
+        /// <summary>
+        /// Resolves the current AbilityTaskBehaviourStage from the running sequence's stage index.
+        /// </summary>
+        private AbilityTaskBehaviourStage GetCurrentAbilityStage()
+        {
+            if (!IsCompiled || CompiledSequence.Runtime == null)
+                return new AbilityTaskBehaviourStage { Tasks = new List<AbstractAbilityTask>() };
+
+            int idx = CompiledSequence.Runtime.StageIndex;
+            if (idx >= 0 && idx < Behaviour.Stages.Count)
+            {
+                return Behaviour.Stages[idx];
+            }
+
+            return new AbilityTaskBehaviourStage { Tasks = new List<AbstractAbilityTask>() };
+        }
+
+        // ═══════════════════════════════════════════════════════════════════════════
+        // LEGACY EXECUTION (preserved for fallback / backward compatibility)
+        // ═══════════════════════════════════════════════════════════════════════════
+
+        private async UniTask ActivateLegacy(CancellationToken token, AbilityDataPacket implicitData)
+        {
             await ActivateNextStage(implicitData, token);
 
             await UniTask.WaitUntil(() => maintainedStages <= 0, cancellationToken: token);
 
             implicitData.InUse = false;
-            
-            // auto-fires usage costs at the end of execution
-            // if (!usageEffectsApplied && implicitData.Spec is AbilitySpec spec) spec.ApplyUsageEffects();
         }
-        
+
         private async UniTask ActivateNextStage(AbilityDataPacket data, CancellationToken token)
         {
             StageIndex += 1;
@@ -108,7 +343,7 @@ namespace FarEmerald.PlayForge
                         spec.ApplyUsageEffects();
                         usageEffectsApplied = true;
                     }
-                    
+
                     await ActivateNextStage(data, token);
                 }
             }
@@ -123,14 +358,14 @@ namespace FarEmerald.PlayForge
                 else maintainedStages -= 1;
                 return;
             }
-            
+
             var stageCts = CancellationTokenSource.CreateLinkedTokenSource(token);
             stageSources[stageIndex] = stageCts;
             var stageToken = stageCts.Token;
-            
+
             await UniTask.SwitchToMainThread(stageToken);
             asc.Callbacks.AbilityStageActivated(AbilityCallbackStatus.GenerateForStageEvent(data, stage, true));
-            
+
             var tasks = new UniTask[stage.Tasks.Count];
             for (int i = 0; i < stage.Tasks.Count; i++)
             {
@@ -164,43 +399,20 @@ namespace FarEmerald.PlayForge
             catch (Exception ex)
             {
                 err = ex;
-                Debug.LogError($"Stage {stageIndex} error: {ex}");  // Log errors!
+                Debug.LogError($"Stage {stageIndex} error: {ex}");
             }
             finally
             {
                 stageSources.Remove(stageIndex);
-                
-                // Signal completion BEFORE disposing
+
                 if (stageIndex == StageIndex) nextStageSignal?.TrySetResult();
                 else maintainedStages -= 1;
-                
-                // Switch thread using parent token, not the one we're about to dispose
+
                 await UniTask.SwitchToMainThread(token);
                 asc.Callbacks.AbilityStageEnded(AbilityCallbackStatus.GenerateForStageEvent(data, stage, !canceled && err is null));
-                
-                // Dispose LAST
+
                 stageCts.Dispose();
             }
-        }
-        
-        public void Inject(IAbilityInjection injection, AbilityDataPacket activeData)
-        {
-            var _success = injection.OnProxyInject(this, activeData);
-
-            var owner = activeData.Spec.GetOwner();
-            if (!owner.FindAbilitySystem(out var asc)) return;
-            
-            var stageSafe = (StageIndex >= 0 && StageIndex < Behaviour.Stages.Count)
-                ? Behaviour.Stages[StageIndex]
-                : new AbilityTaskBehaviourStage { Tasks = new List<AbstractAbilityTask>() };
-
-            var status = AbilityCallbackStatus.GenerateForInjection(
-                activeData,
-                stageSafe,
-                injection, _success);
-            owner.GetFrameSummary().RecordAbilityInjection(status);
-            
-            asc.Callbacks.AbilityInjected(status);
         }
 
         public UniTask[] GetWatchedTasks(UniTask[] tasks, AbilityTaskBehaviourStage stage, AbilityDataPacket data, AbilitySystemCallbacks callbacks, bool notifyOnCancel)
@@ -209,7 +421,7 @@ namespace FarEmerald.PlayForge
                 .Select((t, i) => WatchTask(t, callbacks, i, stage, data, notifyOnCancel))
                 .ToArray();
         }
-        
+
         public UniTask WatchTask(
             UniTask inner,
             AbilitySystemCallbacks callbacks,
@@ -248,6 +460,5 @@ namespace FarEmerald.PlayForge
                 }
             }
         }
-        
     }
 }

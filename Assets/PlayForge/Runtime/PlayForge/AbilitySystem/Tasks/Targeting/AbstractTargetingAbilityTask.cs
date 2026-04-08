@@ -1,7 +1,8 @@
-﻿using System;
+using System;
 using System.Linq;
 using System.Threading;
 using Cysharp.Threading.Tasks;
+using FarEmerald.PlayForge.Examples;
 using UnityEngine;
 
 namespace FarEmerald.PlayForge
@@ -10,20 +11,19 @@ namespace FarEmerald.PlayForge
     {
         [Tooltip("If target validation fails, break out of Ability runtime")]
         public bool BreakRuntimeOnInvalid = true;
-        
+
         public virtual string Description => null;
-        
+
         /// <summary>
         /// Prepare targeting measures.
         /// When overriding, put calls to base at the end of the method.
         /// </summary>
-        /// <param name="data"></param>
         public override void Prepare(AbilityDataPacket data)
         {
             // Hook into input handler here
             if (ConnectInputHandler(data)) return;
-            
-            WhenTargetingInvalid();
+
+            WhenTargetingInvalid(data);
 
             var abilitySystem = data.Spec.GetOwner().AsGAS().GetAbilitySystem();
             if (abilitySystem is not null && data.Spec is AbilitySpec spec)
@@ -31,17 +31,33 @@ namespace FarEmerald.PlayForge
                 abilitySystem.Inject(spec.Base, new InterruptInjection());
             }
         }
-        
+
         public override void Clean(AbilityDataPacket data)
         {
             // Unhook from input handler here
             DisconnectInputHandler(data);
         }
 
+        /// <summary>
+        /// Called when targeting produces an invalid result. Marks the data packet
+        /// as failed and optionally breaks the ability runtime.
+        /// Prefer this overload over the parameterless version in Activate() —
+        /// it ensures the TargetingFailed flag is set before any throw.
+        /// </summary>
+        protected virtual void WhenTargetingInvalid(AbilityDataPacket data)
+        {
+            data.TargetingFailed = true;
+            WhenTargetingInvalid();
+        }
+
+        /// <summary>
+        /// Parameterless fallback for subclass overrides that don't have data access.
+        /// Prefer WhenTargetingInvalid(data) when the data packet is available.
+        /// </summary>
         protected virtual void WhenTargetingInvalid()
         {
             // Play some audio cue
-            
+
             if (BreakRuntimeOnInvalid) BreakAbilityRuntime();
         }
 
@@ -82,12 +98,19 @@ namespace FarEmerald.PlayForge
         public override bool IsCriticalSection => true;
 
         /// <summary>
-        /// Input handler can use data to derive visualization and validity
+        /// Input handler can use data to derive visualization and validity.
+        /// Return true if input handler connected successfully.
+        /// Return false if connection failed (targeting will be marked invalid).
         /// </summary>
-        /// <param name="data"></param>
-        /// <returns></returns>
-        protected abstract bool ConnectInputHandler(AbilityDataPacket data);
+        protected virtual bool ConnectInputHandler(AbilityDataPacket data)
+        {
+            DemoManager.Input.SetTargetingCursor();
+            return true;
+        }
 
-        protected abstract void DisconnectInputHandler(AbilityDataPacket data);
+        protected virtual void DisconnectInputHandler(AbilityDataPacket data)
+        {
+            DemoManager.Input.ResetTargetingCursor();
+        }
     }
 }

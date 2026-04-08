@@ -10,7 +10,7 @@ namespace FarEmerald.PlayForge
         
         public static Tag Start()
         {
-            var tag = Tag.Generate("AnonymousTimer");
+            var tag = Tag.GenerateAsUnique("AnonymousTimer");
             Start(tag);
             return tag;
         }

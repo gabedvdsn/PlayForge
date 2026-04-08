@@ -18,39 +18,39 @@ public class TestSequences : MonoBehaviour
         if (Input.GetKeyDown(KeyCode.F1))
         {
             var seq = TaskSequenceExamples.CharacterChangeCameraEffect();
-            var data = SequenceDataPacket.RootDefault();
+            var data = SequenceDataPacket.SceneRoot();
             data.SetPrimary(Tags.DATA, Data);
-            TaskSequenceProcess.Register(seq, data);
+            ProcessControl.Register(seq, data, out _);
         }
         
         if (Input.GetKeyDown(KeyCode.F2))
         {
             var seq = TaskSequenceExamples.KunkkaTorrentStorm();
-            TaskSequenceProcess.Register(seq);
+            ProcessControl.Register(seq, out _);
         }
         
         if (Input.GetKeyDown(KeyCode.F3))
         {
             var seq = TaskSequenceExamples.OnHitStackProc();
-            TaskSequenceProcess.Register(seq);
+            ProcessControl.Register(seq, out _);
         }
         
         if (Input.GetKeyDown(KeyCode.F4))
         {
             var seq = TaskSequenceExamples.TpScroll();
-            TaskSequenceProcess.Register(seq);
+            ProcessControl.Register(seq, out _);
         }
         
         if (Input.GetKeyDown(KeyCode.F5))
         {
             var seq = TaskSequenceExamples.TwoPartAbility();
-            TaskSequenceProcess.Register(seq);
+            ProcessControl.Register(seq, out _);
         }
         
         if (Input.GetKeyDown(KeyCode.F6))
         {
             var seq = TaskSequenceExamples.DeathAndRespawn();
-            TaskSequenceProcess.Register(seq);
+            ProcessControl.Register(seq, out _);
         }
     }
 }

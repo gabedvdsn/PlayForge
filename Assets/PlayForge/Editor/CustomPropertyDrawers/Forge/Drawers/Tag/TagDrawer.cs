@@ -582,7 +582,7 @@ namespace FarEmerald.PlayForge.Extended.Editor
             
             // Create new tag with parent
             var newPath = $"{parentTag.Name}.{leafName}";
-            var newTag = Tag.Generate(newPath);
+            var newTag = Tag.GenerateAsUnique(newPath);
             
             SelectTag(state, newTag, valueBtn, dropdown);
         }
@@ -758,7 +758,7 @@ namespace FarEmerald.PlayForge.Extended.Editor
                 return;
             }
             
-            var newTag = Tag.Generate(tagName);
+            var newTag = Tag.GenerateAsUnique(tagName);
             SelectTag(state, newTag, valueBtn, dropdown);
         }
         
@@ -770,7 +770,7 @@ namespace FarEmerald.PlayForge.Extended.Editor
         {
             var nameProp = prop.FindPropertyRelative("Name");
             if (nameProp != null && !string.IsNullOrEmpty(nameProp.stringValue))
-                return Tag.Generate(nameProp.stringValue);
+                return Tag.GenerateAsUnique(nameProp.stringValue);
             return default;
         }
         

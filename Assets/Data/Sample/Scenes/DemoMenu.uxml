@@ -41,6 +41,7 @@
                 <ui:Button text="Day/Night Cycle" name="DayNightCycle" focusable="false" style="margin-bottom: 12px; -unity-text-align: middle-left; background-color: rgba(188, 188, 188, 0); -unity-font-style: bold; font-size: 18px; min-width: 120px;" />
                 <ui:Button text="Progress Bar" name="ProgressBar" focusable="false" style="margin-bottom: 12px; -unity-text-align: middle-left; background-color: rgba(188, 188, 188, 0); -unity-font-style: bold; font-size: 18px; min-width: 120px;" />
                 <ui:Button text="Aim Lab" name="AimLab" focusable="false" style="margin-bottom: 12px; -unity-text-align: middle-left; background-color: rgba(188, 188, 188, 0); -unity-font-style: bold; font-size: 18px; min-width: 120px;" />
+                <ui:Button text="Tendrils" name="Tendrils" focusable="false" style="margin-bottom: 12px; -unity-text-align: middle-left; background-color: rgba(188, 188, 188, 0); -unity-font-style: bold; font-size: 18px; min-width: 120px;" />
                 <ui:Label text="UI Sequences" style="-unity-font-style: bold; padding-left: 14px; font-size: 15px; -unity-text-align: upper-left; flex-grow: 0; align-self: stretch;" />
                 <ui:Button text="Slow Reveal" name="SlowReveal" focusable="false" style="margin-bottom: 12px; -unity-text-align: middle-left; background-color: rgba(188, 188, 188, 0); -unity-font-style: bold; font-size: 18px; min-width: 120px;" />
                 <ui:Button text="Boring Speech" name="BoringSpeech" focusable="false" style="margin-bottom: 12px; -unity-text-align: middle-left; background-color: rgba(188, 188, 188, 0); -unity-font-style: bold; font-size: 18px; min-width: 120px;" />
@@ -49,7 +50,9 @@
                 <ui:Button text="Loading Screen" name="LoadingScreen" focusable="false" style="margin-bottom: 12px; -unity-text-align: middle-left; background-color: rgba(188, 188, 188, 0); -unity-font-style: bold; font-size: 18px; min-width: 120px;" />
             </ui:ScrollView>
         </ui:VisualElement>
-        <ui:VisualElement name="Game" style="flex-grow: 1; align-self: stretch; margin-left: 25px; display: flex;">
+        <ui:VisualElement name="Spacer" style="flex-grow: 1;" />
+        <ui:VisualElement name="Game" style="flex-grow: 0; align-self: stretch; margin-left: 25px; display: flex; max-width: 400px;">
+            <ui:VisualElement name="Spacer" style="flex-grow: 1;" />
             <ui:VisualElement name="SequenceOverlay" picking-mode="Ignore" style="position: absolute; left: 0; top: 0; right: 0; bottom: 0; display: none;">
                 <ui:VisualElement name="DialoguePanel" style="position: absolute; bottom: 40px; left: 50%; translate: -50% 0; width: 60%; background-color: rgba(0, 0, 0, 0.85); border-radius: 8px; padding: 16px; display: none;">
                     <ui:Label name="SpeakerName" style="font-size: 14px; color: rgb(200, 180, 100); margin-bottom: 8px; -unity-font-style: bold;" />
@@ -60,7 +63,19 @@
                     <ui:Label name="ContinueHint" text="[Click to continue]" style="font-size: 11px; color: rgba(255, 255, 255, 0.4); align-self: flex-end; margin-top: 8px;" />
                 </ui:VisualElement>
             </ui:VisualElement>
-            <ui:VisualElement name="GameControls" style="flex-grow: 1; max-height: 80px;" />
+            <ui:VisualElement name="GameControls" style="flex-grow: 1; max-height: 80px; flex-direction: row;">
+                <ui:VisualElement name="InGameProcesses" style="flex-grow: 0;">
+                    <ui:VisualElement name="RowA" style="flex-grow: 1; flex-direction: row; flex-shrink: 0; max-height: 40px;">
+                        <ui:Button text="Orbit" name="Orbit" focusable="false" style="margin-bottom: 12px; -unity-text-align: middle-center; background-color: rgba(61, 61, 61, 0.48); -unity-font-style: bold; font-size: 14px; min-width: 120px; flex-direction: row; max-height: 28px; margin-right: 0; margin-left: 0;" />
+                        <ui:Button text="Chase" name="Chase" focusable="false" style="margin-bottom: 12px; -unity-text-align: middle-center; background-color: rgba(61, 61, 61, 0.48); -unity-font-style: bold; font-size: 14px; min-width: 120px; flex-direction: row; max-height: 28px; margin-right: 0; margin-left: 0;" />
+                        <ui:Button text="Patrol" name="Patrol" focusable="false" style="margin-bottom: 12px; -unity-text-align: middle-center; background-color: rgba(61, 61, 61, 0.48); -unity-font-style: bold; font-size: 14px; min-width: 120px; flex-direction: row; max-height: 28px; margin-right: 0; margin-left: 0;" />
+                    </ui:VisualElement>
+                    <ui:VisualElement name="RowA" style="flex-grow: 1; flex-direction: row; max-height: 28px; flex-shrink: 0;">
+                        <ui:Button text="Bob" name="Bob" focusable="false" style="margin-bottom: 12px; -unity-text-align: middle-center; background-color: rgba(61, 61, 61, 0.48); -unity-font-style: bold; font-size: 14px; min-width: 120px; flex-direction: row; max-height: 28px; margin-right: 0; margin-left: 0;" />
+                        <ui:Button text="Scale" name="Scale" focusable="false" style="margin-bottom: 12px; -unity-text-align: middle-center; background-color: rgba(61, 61, 61, 0.48); -unity-font-style: bold; font-size: 14px; min-width: 120px; flex-direction: row; max-height: 28px; margin-right: 0; margin-left: 0;" />
+                    </ui:VisualElement>
+                </ui:VisualElement>
+            </ui:VisualElement>
         </ui:VisualElement>
     </ui:VisualElement>
 </ui:UXML>

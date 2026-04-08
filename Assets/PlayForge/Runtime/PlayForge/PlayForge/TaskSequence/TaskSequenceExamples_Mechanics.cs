@@ -18,23 +18,23 @@ namespace FarEmerald.PlayForge.Examples
         // ADDITIONAL TAGS
         // ═══════════════════════════════════════════════════════════════════════════
         
-        private static readonly Tag CHANNEL_TICKS = Tag.Generate("Sequence.ChannelTicks");
-        private static readonly Tag CHANNEL_ACTIVE = Tag.Generate("Sequence.ChannelActive");
-        private static readonly Tag CHARGES = Tag.Generate("Sequence.Charges");
-        private static readonly Tag MAX_CHARGES = Tag.Generate("Sequence.MaxCharges");
-        private static readonly Tag STACKS = Tag.Generate("Sequence.Stacks");
-        private static readonly Tag COOLDOWN = Tag.Generate("Sequence.Cooldown");
-        private static readonly Tag COOLDOWN_ACTIVE = Tag.Generate("Sequence.CooldownActive");
-        private static readonly Tag SHIELD = Tag.Generate("Sequence.Shield");
-        private static readonly Tag TARGET_HEALTH = Tag.Generate("Sequence.TargetHealth");
-        private static readonly Tag GOLD = Tag.Generate("Sequence.Gold");
-        private static readonly Tag RESPAWN_TIME = Tag.Generate("Sequence.RespawnTime");
-        private static readonly Tag DEAD = Tag.Generate("Sequence.Dead");
-        private static readonly Tag TEAM_DPS = Tag.Generate("Sequence.TeamDps");
-        private static readonly Tag OBJECTIVE_HEALTH = Tag.Generate("Sequence.ObjectiveHealth");
-        private static readonly Tag ABILITY_PHASE = Tag.Generate("Sequence.AbilityPhase");
-        private static readonly Tag DAMAGE_TAKEN = Tag.Generate("Sequence.DamageTaken");
-        private static readonly Tag ITERATIONS = Tag.Generate("Sequence.Iterations");
+        private static readonly Tag CHANNEL_TICKS = Tag.GenerateAsUnique("Sequence.ChannelTicks");
+        private static readonly Tag CHANNEL_ACTIVE = Tag.GenerateAsUnique("Sequence.ChannelActive");
+        private static readonly Tag CHARGES = Tag.GenerateAsUnique("Sequence.Charges");
+        private static readonly Tag MAX_CHARGES = Tag.GenerateAsUnique("Sequence.MaxCharges");
+        private static readonly Tag STACKS = Tag.GenerateAsUnique("Sequence.Stacks");
+        private static readonly Tag COOLDOWN = Tag.GenerateAsUnique("Sequence.Cooldown");
+        private static readonly Tag COOLDOWN_ACTIVE = Tag.GenerateAsUnique("Sequence.CooldownActive");
+        private static readonly Tag SHIELD = Tag.GenerateAsUnique("Sequence.Shield");
+        private static readonly Tag TARGET_HEALTH = Tag.GenerateAsUnique("Sequence.TargetHealth");
+        private static readonly Tag GOLD = Tag.GenerateAsUnique("Sequence.Gold");
+        private static readonly Tag RESPAWN_TIME = Tag.GenerateAsUnique("Sequence.RespawnTime");
+        private static readonly Tag DEAD = Tag.GenerateAsUnique("Sequence.Dead");
+        private static readonly Tag TEAM_DPS = Tag.GenerateAsUnique("Sequence.TeamDps");
+        private static readonly Tag OBJECTIVE_HEALTH = Tag.GenerateAsUnique("Sequence.ObjectiveHealth");
+        private static readonly Tag ABILITY_PHASE = Tag.GenerateAsUnique("Sequence.AbilityPhase");
+        private static readonly Tag DAMAGE_TAKEN = Tag.GenerateAsUnique("Sequence.DamageTaken");
+        private static readonly Tag ITERATIONS = Tag.GenerateAsUnique("Sequence.Iterations");
 
         public static TaskSequence KunkkaTorrentStorm(AnimationCurve c = null)
         {
@@ -43,12 +43,12 @@ namespace FarEmerald.PlayForge.Examples
              * N torrents over D duration
              * Each torrent starts its own torrent sequence separate from storm sequence
              */
-            var D = Tag.Generate("Duration of Storm");
-            var R = Tag.Generate("Storm Radius");
+            var D = Tag.GenerateAsUnique("Duration of Storm");
+            var R = Tag.GenerateAsUnique("Storm Radius");
             
-            var N = Tag.Generate("Number of Torrents");
-            var tD = Tag.Generate("Duration of Torrent");
-            var yD = Tag.Generate("Torrent Y Delta");
+            var N = Tag.GenerateAsUnique("Number of Torrents");
+            var tD = Tag.GenerateAsUnique("Duration of Torrent");
+            var yD = Tag.GenerateAsUnique("Torrent Y Delta");
             
             var stormSequence = TaskSequenceBuilder.Create("Torrent Storm")
                 .Task(d =>
@@ -91,7 +91,7 @@ namespace FarEmerald.PlayForge.Examples
                         var torrentData = new SequenceDataPacket(d);
                         torrentData.SetPrimary(Tags.DATA, torrent);
 
-                        TaskSequenceProcess.Register(TorrentSequence2(), torrentData);
+                        ProcessControl.Register(TorrentSequence2(), torrentData, out _);
 
                         d.Decrement(ITERATIONS);
                     })

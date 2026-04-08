@@ -17,8 +17,12 @@ namespace FarEmerald.PlayForge
         [HideInInspector] public int ProcessStepPriority;
         
         [Tooltip("Uses Object.Instantiate and Object.Destroy when null")]
-        [HideInInspector] [SerializeReference] 
+        [HideInInspector] [SerializeReference]
         public AbstractMonoProcessInstantiator Instantiator;
+
+        [Tooltip("When false, this process won't be affected by sibling pause/terminate cascade")]
+        [HideInInspector]
+        public bool ParticipateInSiblingCascade = true;
         
         protected ProcessDataPacket regData;
         protected bool processActive;
@@ -29,6 +33,8 @@ namespace FarEmerald.PlayForge
         private bool _initialized;
         public bool IsInitialized => _initialized;
         public ProcessRelay Relay;
+        
+        public readonly Dictionary<int, ProcessRelay> HandlerRelays = new();
         
         #region Readable Definition
         
@@ -128,6 +134,12 @@ namespace FarEmerald.PlayForge
         public virtual void WhenTerminate(ProcessRelay relay)
         {
             processActive = false;
+            
+            foreach (var _relay in HandlerRelays.Values.ToArray())
+            {
+                Debug.Log($"\tUnsubscribing handled relay: {_relay.Wrapper.ProcessName}");
+                ProcessControl.Instance.TerminateImmediate(_relay.CacheIndex);
+            }
         }
         
         /// <summary>
@@ -166,6 +178,22 @@ namespace FarEmerald.PlayForge
                 .Select(user => ApplyBehaviour(cb.CreateInstance(), user, token))
                 .ToArray();
             await UniTask.WhenAll(tasks);
+        }
+        public bool HandlerValidateAgainst(IGameplayProcessHandler handler)
+        {
+            return (AbstractMonoProcess)handler == this;
+        }
+        public bool HandlerProcessIsSubscribed(ProcessRelay relay)
+        {
+            return HandlerRelays.ContainsKey(relay.CacheIndex);
+        }
+        public void HandlerSubscribeProcess(ProcessRelay relay)
+        {
+            HandlerRelays.Add(relay.CacheIndex, relay);
+        }
+        public bool HandlerVoidProcess(ProcessRelay relay)
+        {
+            return HandlerRelays.Remove(relay.CacheIndex);
         }
     }
 }

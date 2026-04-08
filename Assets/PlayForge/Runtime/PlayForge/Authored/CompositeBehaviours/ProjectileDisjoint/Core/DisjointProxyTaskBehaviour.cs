@@ -8,8 +8,8 @@ namespace FarEmerald.PlayForge
 {
     public class DisjointProxyTaskBehaviour : AbstractProxyTaskBehaviour
     {
-        public static Tag IS_DISJOINTABLE => Tag.Generate("CB_IS_DISJOINTABLE");
-        public static Tag COMMAND => Tag.Generate("CB_DISJOINT");
+        public static Tag IS_DISJOINTABLE => Tag.GenerateAsUnique("CB_IS_DISJOINTABLE");
+        public static Tag COMMAND => Tag.GenerateAsUnique("CB_DISJOINT");
 
         public override Tag Command => COMMAND;
 

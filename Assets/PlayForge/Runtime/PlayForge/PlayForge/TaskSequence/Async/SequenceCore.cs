@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Threading;
 using Cysharp.Threading.Tasks;
+using UnityEngine;
 
 namespace FarEmerald.PlayForge
 {
@@ -10,33 +11,72 @@ namespace FarEmerald.PlayForge
     // ═══════════════════════════════════════════════════════════════════════════
     
     /// <summary>
-    /// Interface for tasks that can be executed within a TaskSequence.
+    /// Unified interface for tasks that can be executed within a TaskSequence.
+    /// Supports both async execution (via Execute) and synchronous per-frame stepping (via Step).
+    /// Task authors implement whichever path(s) their task will be used under.
     /// </summary>
     public interface ISequenceTask
     {
         /// <summary>
-        /// Called before Execute. Use for setup/initialization.
+        /// Called before Execute or the first Step. Use for setup/initialization.
         /// </summary>
         void Prepare(SequenceDataPacket data);
-        
+
         /// <summary>
-        /// The main async execution of the task.
+        /// The main async execution of the task. Used when the sequence runs asynchronously.
         /// </summary>
         UniTask Execute(SequenceDataPacket data, CancellationToken token);
-        
+
         /// <summary>
-        /// Called after Execute completes (success, cancel, or error). Use for cleanup.
+        /// Called each frame when the sequence runs synchronously.
+        /// Returns true when the task is complete.
+        /// </summary>
+        bool Step(SequenceDataPacket data, float deltaTime);
+
+        /// <summary>
+        /// Called after Execute completes or after Step returns true. Use for cleanup.
         /// </summary>
         void Clean(SequenceDataPacket data);
     }
-    
+
     /// <summary>
-    /// Base class for sequence tasks with virtual no-op Prepare/Clean.
+    /// Base class for async-first sequence tasks.
+    /// Execute is abstract (must implement). Step defaults to instant completion (returns true).
+    /// If you need your task to work in synchronous sequences, override Step.
     /// </summary>
     public abstract class SequenceTaskBase : ISequenceTask
     {
         public virtual void Prepare(SequenceDataPacket data) { }
         public abstract UniTask Execute(SequenceDataPacket data, CancellationToken token);
+
+        /// <summary>
+        /// Default: completes instantly. Override for synchronous support.
+        /// </summary>
+        public virtual bool Step(SequenceDataPacket data, float deltaTime) => true;
+        public virtual void Clean(SequenceDataPacket data) { }
+    }
+
+    /// <summary>
+    /// Base class for sync-first sequence tasks (per-frame stepping).
+    /// Step is abstract (must implement). Execute bridges automatically by looping Step with per-frame yields.
+    /// </summary>
+    public abstract class SyncSequenceTaskBase : ISequenceTask
+    {
+        public virtual void Prepare(SequenceDataPacket data) { }
+
+        /// <summary>
+        /// Bridge: loops Step with per-frame yields for async execution.
+        /// Override if you need custom async behavior.
+        /// </summary>
+        public virtual async UniTask Execute(SequenceDataPacket data, CancellationToken token)
+        {
+            while (!Step(data, UnityEngine.Time.deltaTime))
+            {
+                await UniTask.Yield(PlayerLoopTiming.Update, token);
+            }
+        }
+
+        public abstract bool Step(SequenceDataPacket data, float deltaTime);
         public virtual void Clean(SequenceDataPacket data) { }
     }
     
@@ -59,9 +99,9 @@ namespace FarEmerald.PlayForge
             Action<SequenceDataPacket> clean = null)
         {
             if (execute == null) throw new ArgumentNullException(nameof(execute));
-            _execute = (data, token) => execute(data as SequenceDataPacket ?? SequenceDataPacket.RootDefault(), token);
-            _prepare = prepare != null ? d => prepare(d as SequenceDataPacket ?? SequenceDataPacket.RootDefault()) : null;
-            _clean = clean != null ? d => clean(d as SequenceDataPacket ?? SequenceDataPacket.RootDefault()) : null;
+            _execute = (data, token) => execute(data as SequenceDataPacket ?? SequenceDataPacket.SceneRoot(), token);
+            _prepare = prepare != null ? d => prepare(d as SequenceDataPacket ?? SequenceDataPacket.SceneRoot()) : null;
+            _clean = clean != null ? d => clean(d as SequenceDataPacket ?? SequenceDataPacket.SceneRoot()) : null;
         }
         
         /// <summary>
@@ -70,7 +110,7 @@ namespace FarEmerald.PlayForge
         public DelegateSequenceTask(Action<SequenceDataPacket> action)
         {
             if (action == null) throw new ArgumentNullException(nameof(action));
-            _execute = (data, token) => ExecuteSyncActionSafe(action, data as SequenceDataPacket ?? SequenceDataPacket.RootDefault(), token);
+            _execute = (data, token) => ExecuteSyncActionSafe(action, data as SequenceDataPacket ?? SequenceDataPacket.SceneRoot(), token);
         }
         
         private static async UniTask ExecuteSyncActionSafe(Action<SequenceDataPacket> action, SequenceDataPacket data, CancellationToken token)
@@ -92,6 +132,7 @@ namespace FarEmerald.PlayForge
         
         public void Prepare(SequenceDataPacket data) => _prepare?.Invoke(data);
         public UniTask Execute(SequenceDataPacket data, CancellationToken token) => _execute(data, token);
+        public bool Step(SequenceDataPacket data, float deltaTime) => true; // Async delegate tasks complete instantly in sync mode
         public void Clean(SequenceDataPacket data) => _clean?.Invoke(data);
     }
     
@@ -112,7 +153,7 @@ namespace FarEmerald.PlayForge
         public MainThreadSequenceTask(Action<SequenceDataPacket> action)
         {
             if (action == null) throw new ArgumentNullException(nameof(action));
-            _action = data => action(data as SequenceDataPacket ?? SequenceDataPacket.RootDefault());
+            _action = data => action(data as SequenceDataPacket ?? SequenceDataPacket.SceneRoot());
         }
         
         public MainThreadSequenceTask(
@@ -121,19 +162,25 @@ namespace FarEmerald.PlayForge
             Action<SequenceDataPacket> clean)
         {
             if (action == null) throw new ArgumentNullException(nameof(action));
-            _action = data => action(data as SequenceDataPacket ?? SequenceDataPacket.RootDefault());
-            _prepare = prepare != null ? d => prepare(d as SequenceDataPacket ?? SequenceDataPacket.RootDefault()) : null;
-            _clean = clean != null ? d => clean(d as SequenceDataPacket ?? SequenceDataPacket.RootDefault()) : null;
+            _action = data => action(data as SequenceDataPacket ?? SequenceDataPacket.SceneRoot());
+            _prepare = prepare != null ? d => prepare(d as SequenceDataPacket ?? SequenceDataPacket.SceneRoot()) : null;
+            _clean = clean != null ? d => clean(d as SequenceDataPacket ?? SequenceDataPacket.SceneRoot()) : null;
         }
         
         public void Prepare(SequenceDataPacket data) => _prepare?.Invoke(data);
-        
+
         public async UniTask Execute(SequenceDataPacket data, CancellationToken token)
         {
             await UniTask.SwitchToMainThread(token);
             _action(data);
         }
-        
+
+        public bool Step(SequenceDataPacket data, float deltaTime)
+        {
+            _action(data);
+            return true;
+        }
+
         public void Clean(SequenceDataPacket data) => _clean?.Invoke(data);
     }
     

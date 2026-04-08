@@ -45,7 +45,7 @@ namespace FarEmerald.PlayForge
             const string LevelAttributePrefix = "LVL_ATTRIBUTE_";
             
             string input = AttributeRegistry.RefactorByNamingConvention(assetTag.Name);
-            var result = TagHierarchy.GenerateDeterministicTag(input, LevelAttributePrefix);
+            var result = TagHierarchy.TagUtil.GenerateDeterministicTag(input, LevelAttributePrefix);
 
             return new RuntimeAttribute(result.Name, assetTag.Name, input);
         }
@@ -738,7 +738,7 @@ namespace FarEmerald.PlayForge
             
             if (commonDepth == 0) return null;
             
-            return Tag.Generate(string.Join(".", partsA.Take(commonDepth)));
+            return Tag.GenerateAsUnique(string.Join(".", partsA.Take(commonDepth)));
         }
         
         #endregion

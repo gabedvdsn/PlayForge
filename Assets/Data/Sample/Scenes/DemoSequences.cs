@@ -1,4 +1,7 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Net;
 using System.Threading;
 using Cysharp.Threading.Tasks;
 using UnityEngine;
@@ -15,6 +18,7 @@ namespace FarEmerald.PlayForge.Examples
     public static class DemoSequences
     {
         public static Material GenMat = null;
+
 
         internal static GameObject Scale(this GameObject obj, Vector3 scale)
         {
@@ -39,6 +43,11 @@ namespace FarEmerald.PlayForge.Examples
             {
                 obj.transform.position = DemoManager.Instance.Player.transform.position;
             }
+
+            foreach (var t in DemoManager.primProcesses)
+            {
+                t.toApply.Invoke(obj);
+            }
             
             return obj;
         }
@@ -51,17 +60,19 @@ namespace FarEmerald.PlayForge.Examples
             var mat = renderer.material;
             mat.color = color;
         }
+
+        
         
         #region Torrent Storm
         
         public static TaskSequence TorrentStorm(AnimationCurve c = null)
         {
-            var D = Tag.Generate("Duration of Storm");
-            var R = Tag.Generate("Storm Radius");
+            var D = Tag.GenerateAsUnique("Duration of Storm");
+            var R = Tag.GenerateAsUnique("Storm Radius");
             
-            var N = Tag.Generate("Number of Torrents");
-            var tD = Tag.Generate("Duration of Torrent");
-            var yD = Tag.Generate("Torrent Y Delta");
+            var N = Tag.GenerateAsUnique("Number of Torrents");
+            var tD = Tag.GenerateAsUnique("Duration of Torrent");
+            var yD = Tag.GenerateAsUnique("Torrent Y Delta");
             
             var stormSequence = TaskSequenceBuilder.Create("Torrent Storm")
                 .Task(d =>
@@ -97,8 +108,8 @@ namespace FarEmerald.PlayForge.Examples
                         var data = new SequenceDataPacket(d);
                         data.SetPrimary(Tags.DATA, obj);
 
-                        TaskSequenceProcess.Register(TorrentSequence(), data);
-
+                        ProcessControl.Register(TorrentSequence(), DemoManager.Instance, data, out _);
+                        
                         d.Decrement(Tags.ITERATIONS);
                     })
                     .Task(async (d, t) =>
@@ -148,7 +159,7 @@ namespace FarEmerald.PlayForge.Examples
         
         public static TaskSequence BouncyBalls()
         {
-            var N = Tag.Generate("Number of Torrents");
+            var N = Tag.GenerateAsUnique("Number of Torrents");
             
             var stormSequence = TaskSequenceBuilder.Create("Torrent Storm")
                 .Task(d =>
@@ -180,8 +191,8 @@ namespace FarEmerald.PlayForge.Examples
                         torrentData.SetPrimary(Tags.ROTATION, new Vector2(Random.Range(0, 360), Random.Range(0, 360)));
                         torrentData.SetPrimary(Tags.DATA, torrent);
 
-                        TaskSequenceProcess.Register(BounceSequence(), torrentData);
-
+                        ProcessControl.Register(BounceSequence(), DemoManager.Instance, torrentData, out _);
+                        
                         d.Decrement(Tags.ITERATIONS);
                     }))
                 .BuildSequence();
@@ -299,7 +310,8 @@ namespace FarEmerald.PlayForge.Examples
                         pos += new Vector2(5f * Mathf.Sign(pos.x), 5f * Mathf.Sign(pos.y));
                         obj.transform.position += new Vector3(pos.x, 0f, pos.y);
                         
-                        TaskSequenceProcess.Register(WaitForClick(), data);
+                        ProcessControl.Register(WaitForClick(), DemoManager.Instance, data, out var relay);
+                        //TaskSequenceProcess.Register(WaitForClick(), data);
                     }
                 })
                 .BuildSequence();
@@ -339,8 +351,7 @@ namespace FarEmerald.PlayForge.Examples
                         platformData.SetPrimary(Tags.DATA, obj);
                         platformData.SetPrimary(Tags.TARGET_POS, new Vector3(-20f, 0f, -20f));
 
-                        // FIX: was passing 'd' instead of 'platformData'
-                        TaskSequenceProcess.Register(PlatformMovement(), platformData);
+                        ProcessControl.Register(PlatformMovement(), DemoManager.Instance, platformData, out _);
 
                         await UniTask.Delay(1500, cancellationToken: t);
                     }))
@@ -401,9 +412,9 @@ namespace FarEmerald.PlayForge.Examples
         /// </summary>
         public static TaskSequence DayNightCycle()
         {
-            var SUN = Tag.Generate("Demo.Sun");
-            var TILES = Tag.Generate("Demo.Tiles");
-            var TIME_OF_DAY = Tag.Generate("Demo.TimeOfDay");
+            var SUN = Tag.GenerateAsUnique("Demo.Sun");
+            var TILES = Tag.GenerateAsUnique("Demo.Tiles");
+            var TIME_OF_DAY = Tag.GenerateAsUnique("Demo.TimeOfDay");
             
             return TaskSequenceBuilder.Create("Day/Night Cycle")
                 .Task(d =>
@@ -513,7 +524,7 @@ namespace FarEmerald.PlayForge.Examples
         /// </summary>
         public static TaskSequence ProgressBar()
         {
-            var PROGRESS_BAR = Tag.Generate("Demo.ProgressBar");
+            var PROGRESS_BAR = Tag.GenerateAsUnique("Demo.ProgressBar");
             int segmentCount = 8;
             
             return TaskSequenceBuilder.Create("Progress Bar")
@@ -593,8 +604,8 @@ namespace FarEmerald.PlayForge.Examples
         /// </summary>
         public static TaskSequence AimLab()
         {
-            var SCORE = Tag.Generate("Demo.Score");
-            var ACTIVE = Tag.Generate("Demo.Active");
+            var SCORE = Tag.GenerateAsUnique("Demo.Score");
+            var ACTIVE = Tag.GenerateAsUnique("Demo.Active");
             
             return TaskSequenceBuilder.Create("Aim Lab")
                 .Task(d =>
@@ -667,6 +678,114 @@ namespace FarEmerald.PlayForge.Examples
         
         #endregion
         
+        #region Tendrils of Destruction
+
+        /// <summary>
+        /// Creates a number of branching tendrils that spread away from the origin.
+        /// Each iteration spawns numTendrils line renderers that stretch outward,
+        /// then recursively branches from each endpoint for the given number of iterations.
+        /// </summary>
+        public static TaskSequence TendrilsOfDestruction()
+        {
+            int numTendrils = 12;
+            float degSep = 360f / numTendrils;
+            float tendrilLength = 25f;
+            float tendrilDuration = 2.5f;
+            int maxIterations = 3;
+
+            return TendrilsOfDestruction(numTendrils, degSep, tendrilLength, tendrilDuration, maxIterations);
+        }
+
+        private static TaskSequence TendrilsOfDestruction(int numTendrils, float degSep,
+            float tendrilLength, float tendrilDuration, int remainingIterations)
+        {
+            return TaskSequenceBuilder.Create("Tendrils of Destruction")
+                .Task(async (d, t) =>
+                {
+                    if (remainingIterations <= 0) return;
+
+                    var renderers = new List<LineRenderer>();
+                    var tendrils = new UniTask[numTendrils];
+                    var origin = d.GetPrimary(Tags.ORIGIN, DemoManager.Instance.Player.transform.position);
+                    var endpoints = new Vector3[numTendrils];
+
+                    // Shrink tendrils each iteration for a natural branching look
+                    float lengthScale = remainingIterations / 3f;
+                    //float actualLength = tendrilLength * Mathf.Max(lengthScale, 0.3f);
+                    float actualLength = tendrilLength * Mathf.Max(lengthScale, 0.3f);
+
+                    for (int i = 0; i < numTendrils; i++)
+                    {
+                        var obj = CreatePrim(PrimitiveType.Sphere, withPos: false).Scale(Vector3.one * .2f);
+                        obj.transform.position = origin;
+
+                        var lr = obj.AddComponent<LineRenderer>();
+                        renderers.Add(lr);
+
+                        lr.material = new Material(Shader.Find("Sprites/Default"));
+                        lr.startColor = Color.blue;
+                        lr.endColor = Color.red;
+                        lr.startWidth = .35f * lengthScale;
+                        lr.endWidth = .75f * lengthScale;
+
+                        lr.positionCount = 2;
+                        lr.SetPosition(0, origin);
+                        lr.SetPosition(1, origin);
+
+                        float angle = i * degSep * Mathf.Deg2Rad;
+                        // Add random angular offset for non-root iterations
+                        if (remainingIterations < 3)
+                            angle += (Random.value - 0.5f) * Mathf.Deg2Rad * 30f;
+
+                        var dir = new Vector3(
+                            Mathf.Cos(angle),
+                            0f,
+                            Mathf.Sin(angle)
+                        );
+                        var target = origin + dir * actualLength;
+                        endpoints[i] = target;
+
+                        var duration = tendrilDuration + Random.value * tendrilDuration * 0.5f;
+                        tendrils[i] = LerpVector3(origin, target, duration, v =>
+                        {
+                            if (lr) lr.SetPosition(1, v);
+                        }, t);
+                    }
+
+                    // Wait for all tendrils to reach their endpoints
+                    await UniTask.WhenAll(tendrils);
+
+                    // Recursively branch from each endpoint
+                    if (remainingIterations > 1)
+                    {
+                        var nextTendrils = new UniTask[numTendrils];
+
+                        for (int i = 0; i < numTendrils; i++)
+                        {
+                            // Each child gets its own fresh data packet with its own origin
+                            var childData = new SequenceDataPacket(d);
+                            childData.SetPrimary(Tags.ORIGIN, endpoints[i]);
+
+                            // Recursive call with decremented iteration count
+                            var childSequence = TendrilsOfDestruction(
+                                numTendrils, degSep, tendrilLength, tendrilDuration,
+                                remainingIterations - 1);
+                            nextTendrils[i] = childSequence.Run(childData, t);
+                        }
+
+                        await UniTask.WhenAll(nextTendrils);
+                    }
+
+                    // Clean up line renderers after children are done
+                    foreach (var renderer in renderers)
+                    {
+                        if (renderer) Object.Destroy(renderer.gameObject);
+                    }
+                })
+                .BuildSequence();
+        }
+        
+        #endregion
         
         #region Slow Reveal (UI)
         
@@ -678,7 +797,7 @@ namespace FarEmerald.PlayForge.Examples
         /// </summary>
         public static TaskSequence SlowReveal()
         {
-            var GRID = Tag.Generate("Demo.Grid");
+            var GRID = Tag.GenerateAsUnique("Demo.Grid");
             int rows = 7, cols = 7;
             float tileSize = 52f;
             float gap = 6f;
@@ -825,10 +944,10 @@ namespace FarEmerald.PlayForge.Examples
         /// </summary>
         public static TaskSequence BoringSpeech()
         {
-            var PANEL = Tag.Generate("Demo.Panel");
-            var SPEAKER = Tag.Generate("Demo.Speaker");
-            var TEXT_LABEL = Tag.Generate("Demo.TextLabel");
-            var HINT = Tag.Generate("Demo.Hint");
+            var PANEL = Tag.GenerateAsUnique("Demo.Panel");
+            var SPEAKER = Tag.GenerateAsUnique("Demo.Speaker");
+            var TEXT_LABEL = Tag.GenerateAsUnique("Demo.TextLabel");
+            var HINT = Tag.GenerateAsUnique("Demo.Hint");
             
             string[] speakers = { "NARRATOR", "NARRATOR", "HERO", "NARRATOR" };
             string[] lines =
@@ -970,8 +1089,8 @@ namespace FarEmerald.PlayForge.Examples
         /// </summary>
         public static TaskSequence RadialMenu()
         {
-            var ITEMS = Tag.Generate("Demo.Items");
-            var SELECTED = Tag.Generate("Demo.Selected");
+            var ITEMS = Tag.GenerateAsUnique("Demo.Items");
+            var SELECTED = Tag.GenerateAsUnique("Demo.Selected");
             int itemCount = 6;
             float radius = 110f;
             float itemSize = 54f;
@@ -1190,8 +1309,7 @@ namespace FarEmerald.PlayForge.Examples
                         // Fire toast lifecycle as its own process
                         var toastData = new SequenceDataPacket(d);
                         toastData.SetPrimary(Tags.DATA, toast);
-                        TaskSequenceProcess.Register(ToastLifecycle(), toastData);
-                        
+                        ProcessControl.Register(ToastLifecycle(), DemoManager.Instance, toastData, out _);
                         d.Increment(Tags.ITERATIONS);
                         await UniTask.Delay(700, cancellationToken: t);
                     }))
@@ -1240,9 +1358,9 @@ namespace FarEmerald.PlayForge.Examples
         /// </summary>
         public static TaskSequence LoadingScreen()
         {
-            var BAR_FILL = Tag.Generate("Demo.BarFill");
-            var TIP_LABEL = Tag.Generate("Demo.TipLabel");
-            var PCT_LABEL = Tag.Generate("Demo.PctLabel");
+            var BAR_FILL = Tag.GenerateAsUnique("Demo.BarFill");
+            var TIP_LABEL = Tag.GenerateAsUnique("Demo.TipLabel");
+            var PCT_LABEL = Tag.GenerateAsUnique("Demo.PctLabel");
             
             string[] tips = {
                 "Press W to move forward...",
@@ -1436,9 +1554,10 @@ namespace FarEmerald.PlayForge.Examples
                     var destination = obj.transform.position + new Vector3(x, 0f, z);
                     
                     var arcTo = ArcTo(obj.transform, destination, duration, height, t); 
-                    var rotate = RotateBy(obj.transform, new Vector3(0f, height * 150f, 0f), duration, t);
+                    var rotate = RotateBy(obj.transform, new Vector3(0f, height * 250f, 0f), duration, t);
+                    var punchScale = PunchScale(obj.transform, 1.5f, .35f, t);
                     
-                    var torrentTask = new[] { arcTo, rotate };
+                    var torrentTask = new[] { arcTo, rotate, punchScale };
                     await UniTask.WhenAll(torrentTask);
                         
                     d.Decrement(Tags.ITERATIONS);
@@ -1471,7 +1590,8 @@ namespace FarEmerald.PlayForge.Examples
                 {
                     Debug.Log($"Wait for click terminated: {success} ({ctx.Data.GetPrimary<GameObject>(Tags.DATA)}");
                     if (!success) Object.Destroy(ctx.Data.GetPrimary<GameObject>(Tags.DATA));
-                    else TaskSequenceProcess.Register(BounceSequence(), ctx.Data);
+                    else ProcessControl.Register(BounceSequence(), DemoManager.Instance, ctx.Data, out _);
+
                 })
                 .BuildSequence();
         }

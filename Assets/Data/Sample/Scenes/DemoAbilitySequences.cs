@@ -7,7 +7,7 @@ namespace FarEmerald.PlayForge.Examples
         [TaskSequenceMethod("Fireball")]
         public static TaskSequence FireballSequence()
         {
-            return TaskSequenceBuilder.Create("Fireball!")
+            var fireball = TaskSequenceBuilder.Create("Fireball!")
                 .Task(async (d, t) =>
                 {
                     var fireball = DemoSequences.CreatePrim(PrimitiveType.Sphere).Scale(Vector3.one * 3f);
@@ -24,6 +24,16 @@ namespace FarEmerald.PlayForge.Examples
                     Object.Destroy(fireball.gameObject);
                 })
                 .BuildSequence();
+
+            return fireball;
+
+            /*return TaskSequenceBuilder.Create()
+                .Task((packet, token) => token.WaitHandle.InitializeLifetimeService())
+                .Task(d =>
+                {
+                    ProcessControl.Register(fireball, d, out _);
+                })
+                .BuildSequence();*/
         }
     }
 }

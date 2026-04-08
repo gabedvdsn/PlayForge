@@ -6,6 +6,8 @@
     public class ProcessRelay
     {
         private readonly ProcessControlBlock _pcb;
+        private IGameplayProcessHandler handler;
+        
         public bool ProcessActive => ProcessControl.Instance.IsRegistered(_pcb.CacheIndex);
         
         public ProcessRelay(ProcessControlBlock pcb)
@@ -18,6 +20,7 @@
         public IGameplayProcessHandler Handler => _pcb.Handler;
         public EProcessState State => _pcb.State;
         public EProcessState QueuedState => _pcb.QueuedState;
+        public bool IsMono => _pcb.isMono;
         public float UnscaledLifetime => _pcb.UnscaledLifetime;
         public float Lifetime => _pcb.Lifetime;
         public float UpdateTime => _pcb.TotalUpdateTime;

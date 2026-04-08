@@ -1,40 +1,42 @@
-﻿using System.Threading;
+using System;
+using System.Threading;
 using Cysharp.Threading.Tasks;
 using UnityEngine;
 
 namespace FarEmerald.PlayForge
 {
+    /// <summary>
+    /// Test utility targeting task: finds the first "other" GAS entity in the scene.
+    /// Not intended for production use — useful for testing ability pipelines
+    /// without interactive targeting.
+    /// </summary>
+    [Serializable]
     public class GetTestTargetTask : AbstractTargetingAbilityTask
     {
+        public override string Description => "Find first non-self GAS target in scene (test only)";
+
         public override UniTask Activate(AbilityDataPacket data, CancellationToken token)
         {
-            var comps = Object.FindObjectsByType<GameplayAbilitySystem>(FindObjectsInactive.Exclude, FindObjectsSortMode.None);
-            if (!data.TryGet(Tags.TARGET_REAL, EDataTarget.Primary, out ISource source))
+            var owner = data.Spec.GetOwner();
+            var ownerGas = owner.AsGAS();
+
+            var comps = UnityEngine.Object.FindObjectsByType<GameplayAbilitySystem>(
+                FindObjectsInactive.Exclude, FindObjectsSortMode.None);
+
+            foreach (var comp in comps)
             {
+                if (comp == (GameplayAbilitySystem)ownerGas) continue;
+
+                data.SetPrimary(Tags.TARGET_REAL, comp);
                 return UniTask.CompletedTask;
             }
 
-            var gas = source.AsGAS();
-            
-            foreach (var comp in comps)
-            {
-                if (comp != (GameplayAbilitySystem)gas && comp != GameRoot.Instance)
-                {
-                    data.AddPayload(Tags.TARGET_REAL, comp);
-                    break;
-                }
-            }
-            
+            // No valid target found
+            WhenTargetingInvalid(data);
             return UniTask.CompletedTask;
         }
-        
-        protected override bool ConnectInputHandler(AbilityDataPacket data)
-        {
-            return true;
-        }
-        protected override void DisconnectInputHandler(AbilityDataPacket data)
-        {
-            
-        }
+
+        protected override bool ConnectInputHandler(AbilityDataPacket data) => true;
+        protected override void DisconnectInputHandler(AbilityDataPacket data) { }
     }
 }

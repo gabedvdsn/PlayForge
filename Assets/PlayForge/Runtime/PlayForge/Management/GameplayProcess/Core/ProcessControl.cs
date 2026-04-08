@@ -42,7 +42,7 @@ namespace FarEmerald.PlayForge
         private int _cacheCounter;
         private int NextCacheIndex => _cacheCounter++;
 
-        private Dictionary<int, ProcessWatcher> _watchers;
+        private Dictionary<int, ProcessWatcher> _watchers = new();
 
         public int Created => _cacheCounter;
         public int Active => _active.Count;
@@ -116,23 +116,80 @@ namespace FarEmerald.PlayForge
             
             public int Count => _indices.Count;
         }
-
-        private class ProcessWatcher
+        
+        #endregion
+        
+        #region Process Watching
+        
+        private struct ProcessWatcher
         {
-            public readonly Action<ProcessDataPacket> onRegister;
-            public readonly Action<EProcessState, EProcessState, ProcessDataPacket> onStateChange;
-            public readonly Action<ProcessDataPacket> onUnregister;
+            public Action<EProcessState, EProcessState, ProcessDataPacket> onStateChange;
+            public Action<ProcessDataPacket> onUnregister;
 
-            public ProcessWatcher(ProcessRelay toWatch, Action<ProcessDataPacket> onRegister = null, Action<EProcessState, EProcessState, ProcessDataPacket> onStateChange = null, Action<ProcessDataPacket> onUnregister = null)
+            public readonly ProcessRelay watching;
+
+            public ProcessWatcher(ProcessRelay toWatch, Action<EProcessState, EProcessState, ProcessDataPacket> onStateChange = null, Action<ProcessDataPacket> onUnregister = null)
             {
-                this.onRegister = onRegister;
                 this.onStateChange = onStateChange;
                 this.onUnregister = onUnregister;
 
-                toWatch.Wrapper.Data.SetPrimary(Tags.PROCESS_RELAY, toWatch);
+                watching = toWatch;
             }
         }
-       
+
+        public void WatchProcess(ProcessRelay toWatch, Action<ProcessDataPacket> onStartWatching = null, Action<EProcessState, EProcessState, ProcessDataPacket> onStateChange = null,
+            Action<ProcessDataPacket> onUnregister = null)
+        {
+            if (!Instance._watchers.TryGetValue(toWatch.CacheIndex, out var watcher))
+            {
+                Instance._watchers[toWatch.CacheIndex] = new ProcessWatcher(toWatch, onStateChange, onUnregister);
+                return;
+            }
+                
+            // Update onStateChange
+            if (watcher.onStateChange is not null)
+            {
+                watcher.onStateChange = (oldState, newState, data) =>
+                {
+                    watcher.onStateChange.Invoke(oldState, newState, data);
+                    onStateChange?.Invoke(oldState, newState, data);
+                };
+            }
+            else watcher.onStateChange = onStateChange;
+                    
+            // Update onUnregister
+            if (watcher.onUnregister is not null)
+            {
+                watcher.onUnregister = (data) =>
+                {
+                    watcher.onUnregister.Invoke(data);
+                    onUnregister?.Invoke(data);
+                };
+            }
+            else watcher.onUnregister = onUnregister;
+            
+            onStartWatching?.Invoke(toWatch.Wrapper.Data);
+        }
+
+        public void StopWatchingProcess(ProcessRelay toWatch)
+        {
+            if (!_watchers.ContainsKey(toWatch.CacheIndex)) return;
+            _watchers.Remove(toWatch.CacheIndex);
+        }
+
+        private void CheckWatcherOnStateChange(ProcessControlBlock pcb)
+        {
+            if (!_watchers.ContainsKey(pcb.CacheIndex)) return;
+            _watchers[pcb.CacheIndex].onStateChange?.Invoke(pcb.LastState, pcb.State, pcb.Wrapper.Data);
+        }
+
+        private void CheckWatcherOnUnregister(ProcessControlBlock pcb)
+        {
+            if (!_watchers.ContainsKey(pcb.CacheIndex)) return;
+            _watchers[pcb.CacheIndex].onUnregister?.Invoke(pcb.Wrapper.Data);
+            
+            StopWatchingProcess(pcb.Relay);
+        }
         
         #endregion
         
@@ -255,7 +312,7 @@ namespace FarEmerald.PlayForge
                     continue;
                 }
         
-                var data = ProcessDataPacket.LocalDefault(process, GameRoot.Instance);
+                var data = ProcessDataPacket.SceneRoot();
                 Register(process, data, out _);
             }
     
@@ -307,13 +364,30 @@ namespace FarEmerald.PlayForge
             
             State = nextState;
         }
-
-        public bool Register(AbstractMonoProcess process, out ProcessRelay relay)
+        
+        #region Mono Process
+        public static bool Register(AbstractMonoProcess process, out ProcessRelay relay)
         {
-            return Register(process, ProcessDataPacket.RootDefault(), out relay);
+            return Instance.Internal_RegisterMonoProcess(process, GameRoot.Instance, ProcessDataPacket.SceneRoot(), out relay);
+        }
+        public static bool Register(AbstractMonoProcess process, AbilityDataPacket data, out ProcessRelay relay)
+        {
+            return Instance.Internal_RegisterMonoProcess(process, data.Spec.GetOwner(), data, out relay);
+        }
+        public static bool Register(AbstractMonoProcess process, ProcessDataPacket data, out ProcessRelay relay)
+        {
+            return Instance.Internal_RegisterMonoProcess(process, GameRoot.Instance, data, out relay);
+        }
+        public static bool Register(AbstractMonoProcess process, IGameplayProcessHandler handler, out ProcessRelay relay)
+        {
+            return Instance.Internal_RegisterMonoProcess(process, handler, ProcessDataPacket.SceneRoot(), out relay);
+        }
+        public static bool Register(AbstractMonoProcess process, IGameplayProcessHandler handler, ProcessDataPacket data, out ProcessRelay relay)
+        {
+            return Instance.Internal_RegisterMonoProcess(process, handler, data, out relay);
         }
 
-        public bool Register(AbstractMonoProcess process, ProcessDataPacket data, out ProcessRelay relay)
+        private bool Internal_RegisterMonoProcess(AbstractMonoProcess process, IGameplayProcessHandler handler, ProcessDataPacket data, out ProcessRelay relay)
         {
             relay = default;
             
@@ -323,8 +397,8 @@ namespace FarEmerald.PlayForge
             if (!CanAcceptNewProcesses()) 
                 return false;
             
-            var wrapper = new MonoWrapperProcess(process, data);
-            var pcb = ProcessControlBlock.Generate(NextCacheIndex, wrapper, data.Handler);
+            var wrapper = new MonoWrapperProcess(process, data, handler);
+            var pcb = ProcessControlBlock.Generate(NextCacheIndex, wrapper);
             pcb.isMono = true;
             
             SetProcess(pcb);
@@ -333,47 +407,35 @@ namespace FarEmerald.PlayForge
             _hierarchy.Register(process, pcb.CacheIndex);
             
             relay = pcb.Relay;
-            data.Handler?.HandlerSubscribeProcess(relay);
+            handler?.HandlerSubscribeProcess(relay);
             
             return true;
         }
         
-        /*public bool Register(AbstractMonoProcess process, AbilityDataPacket data, out ProcessRelay relay)
+        #endregion
+        
+        #region Runtime Process
+        public static bool Register(AbstractRuntimeProcess process, out ProcessRelay relay)
         {
-            relay = default;
-            
-            if (process == null || process.IsInitialized) 
-                return false;
-            
-            if (!CanAcceptNewProcesses()) 
-                return false;
-            
-            var wrapper = new MonoWrapperProcess(process, data);
-            var pcb = ProcessControlBlock.Generate(NextCacheIndex, wrapper, data.Handler);
-            pcb.isMono = true;
-            
-            SetProcess(pcb);
-            
-            // Register in hierarchy
-            _hierarchy.Register(process, pcb.CacheIndex);
-            
-            relay = pcb.Relay;
-            data.Handler?.HandlerSubscribeProcess(relay);
-            
-            return true;
-        }*/
-
-        public bool Register(AbstractRuntimeProcess process, out ProcessRelay relay)
-        {
-            return Register(process, ProcessDataPacket.RootDefault(), out relay);
+            return Instance.Internal_RegisterRuntimeProcess(process, GameRoot.Instance, ProcessDataPacket.Default(), out relay);
         }
-
-        public bool Register(AbstractRuntimeProcess process, IGameplayProcessHandler handler, out ProcessRelay relay)
+        public static bool Register(AbstractRuntimeProcess process, AbilityDataPacket data, out ProcessRelay relay)
         {
-            return Register(process, ProcessDataPacket.RootDefault(handler), out relay);
+            return Instance.Internal_RegisterRuntimeProcess(process, data.Spec.GetOwner(), data, out relay);
         }
-
-        public bool Register(AbstractRuntimeProcess process, ProcessDataPacket data, out ProcessRelay relay)
+        public static bool Register(AbstractRuntimeProcess process, IGameplayProcessHandler handler, out ProcessRelay relay)
+        {
+            return Instance.Internal_RegisterRuntimeProcess(process, handler, ProcessDataPacket.Default(), out relay);
+        }
+        public static bool Register(AbstractRuntimeProcess process, ProcessDataPacket data, out ProcessRelay relay)
+        {
+            return Instance.Internal_RegisterRuntimeProcess(process, GameRoot.Instance, data, out relay);
+        }
+        public static bool Register(AbstractRuntimeProcess process, IGameplayProcessHandler handler, ProcessDataPacket data, out ProcessRelay relay)
+        {
+            return Instance.Internal_RegisterRuntimeProcess(process, handler, data, out relay);
+        }
+        private bool Internal_RegisterRuntimeProcess(AbstractRuntimeProcess process, IGameplayProcessHandler handler, ProcessDataPacket data, out ProcessRelay relay)
         {
             relay = default;
 
@@ -383,23 +445,80 @@ namespace FarEmerald.PlayForge
             if (!CanAcceptNewProcesses()) 
                 return false;
 
-            var wrapper = new RuntimeWrapperProcess(process, data);
-            var pcb = ProcessControlBlock.Generate(NextCacheIndex, wrapper, data.Handler);
+            var wrapper = new RuntimeWrapperProcess(process, data, handler);
+            var pcb = ProcessControlBlock.Generate(NextCacheIndex, wrapper);
             
             SetProcess(pcb);
             
             relay = pcb.Relay;
-            data.Handler?.HandlerSubscribeProcess(relay);
+            handler?.HandlerSubscribeProcess(relay);
 
             return true;
         }
+        #endregion
+        
+        #region Task Sequences (Async)
+
+        public static bool Register(TaskSequence sequence, out ProcessRelay relay)
+        {
+            return Instance.Internal_RegisterAsyncSequence(new TaskSequenceProcess(sequence), GameRoot.Instance, SequenceDataPacket.SceneRoot(), out relay);
+        }
+        public static bool Register(TaskSequence sequence, AbilityDataPacket data, out ProcessRelay relay)
+        {
+            return Instance.Internal_RegisterAsyncSequence(new TaskSequenceProcess(sequence), data.Spec.GetOwner(), data, out relay);
+        }
+        public static bool Register(TaskSequence sequence, IGameplayProcessHandler handler, out ProcessRelay relay)
+        {
+            return Instance.Internal_RegisterAsyncSequence(new TaskSequenceProcess(sequence), handler, SequenceDataPacket.SceneRoot(), out relay);
+        }
+        public static bool Register(TaskSequence sequence, SequenceDataPacket data, out ProcessRelay relay)
+        {
+            return Instance.Internal_RegisterAsyncSequence(new TaskSequenceProcess(sequence), GameRoot.Instance, data, out relay);
+        }
+        public static bool Register(TaskSequence sequence, IGameplayProcessHandler handler, SequenceDataPacket data, out ProcessRelay relay)
+        {
+            return Instance.Internal_RegisterAsyncSequence(new TaskSequenceProcess(sequence), handler, data, out relay);
+        }
+        
+        public static bool Register(TaskSequenceChain chain, out ProcessRelay relay)
+        {
+            return Instance.Internal_RegisterAsyncSequence(new TaskSequenceProcess(chain), GameRoot.Instance, SequenceDataPacket.SceneRoot(), out relay);
+        }
+        public static bool Register(TaskSequenceChain chain, AbilityDataPacket data, out ProcessRelay relay)
+        {
+            return Instance.Internal_RegisterAsyncSequence(new TaskSequenceProcess(chain), data.Spec.GetOwner(), data, out relay);
+        }
+        public static bool Register(TaskSequenceChain chain, IGameplayProcessHandler handler, out ProcessRelay relay)
+        {
+            return Instance.Internal_RegisterAsyncSequence(new TaskSequenceProcess(chain), handler, SequenceDataPacket.SceneRoot(), out relay);
+        }
+        public static bool Register(TaskSequenceChain chain, SequenceDataPacket data, out ProcessRelay relay)
+        {
+            return Instance.Internal_RegisterAsyncSequence(new TaskSequenceProcess(chain), GameRoot.Instance, data, out relay);
+        }
+        public static bool Register(TaskSequenceChain chain, IGameplayProcessHandler handler, SequenceDataPacket data, out ProcessRelay relay)
+        {
+            return Instance.Internal_RegisterAsyncSequence(new TaskSequenceProcess(chain), handler, data, out relay);
+        }
+        private bool Internal_RegisterAsyncSequence(TaskSequenceProcess process, IGameplayProcessHandler handler, SequenceDataPacket data, out ProcessRelay relay)
+        {
+            return Register(process, handler, data, out relay);
+        }
+        
+        #endregion
+        
+        #region Task Sequence (Synced)
+        
+        #endregion
         
         public bool Unregister(ProcessControlBlock pcb)
         {
-            if (pcb is null) return false;
+            if (pcb.Relay is null) return false;
             
             if (_waiting.Contains(pcb.CacheIndex)) _waiting.Remove(pcb.CacheIndex);
             else RemoveFromStepping(pcb);
+            
+            CheckWatcherOnUnregister(pcb);
 
             pcb.Handler?.HandlerVoidProcess(pcb.Relay);
             
@@ -511,17 +630,20 @@ namespace FarEmerald.PlayForge
             // Always terminate children when terminating parent
             if (cascade)
             {
+                var siblings = _hierarchy.GetSiblingProcessIds(cacheIndex);
                 var children = _hierarchy.GetCascadeTargets(cacheIndex, CascadeToSiblings, includeSelf: false, reverseList: true);
                 foreach (int childIndex in children)
                 {
-                    if (_active.TryGetValue(childIndex, out var childPcb))
-                    {
-                        Debug.Log($"Term chil");
-                        childPcb.ForceIntoState(EProcessState.Terminated);
-                    }
+                    if (!_active.TryGetValue(childIndex, out var childPcb)) continue;
+
+                    // Skip siblings that opted out of cascade
+                    if (siblings.Contains(childIndex) && !childPcb.Wrapper.ParticipateInSiblingCascade)
+                        continue;
+
+                    childPcb.ForceIntoState(EProcessState.Terminated);
                 }
             }
-            
+
             _active[cacheIndex].ForceIntoState(EProcessState.Terminated);
 
             return true;
@@ -555,17 +677,22 @@ namespace FarEmerald.PlayForge
 
         private void CascadeStateToChildren(int sourceIndex, EProcessState state)
         {
+            var siblings = _hierarchy.GetSiblingProcessIds(sourceIndex);
             var targets = _hierarchy.GetCascadeTargets(sourceIndex, CascadeToSiblings, includeSelf: false);
-            
+
             foreach (int targetIndex in targets)
             {
                 if (!_active.TryGetValue(targetIndex, out var targetPcb))
                     continue;
-                
+
                 // Skip if already in target state
                 if (targetPcb.State == state)
                     continue;
-                
+
+                // Skip siblings that opted out of cascade
+                if (siblings.Contains(targetIndex) && !targetPcb.Wrapper.ParticipateInSiblingCascade)
+                    continue;
+
                 switch (state)
                 {
                     case EProcessState.Running:
@@ -765,21 +892,43 @@ namespace FarEmerald.PlayForge
 
         #region Internal Process Communication
 
-        public void ProcessWillRun(ProcessControlBlock pcb)
+        public void ProcessWillChangeState(ProcessControlBlock pcb, EProcessState state)
+        {
+            switch (state)
+            {
+                case EProcessState.Created:
+                    return;
+                case EProcessState.Running:
+                    ProcessWillRun(pcb);
+                    break;
+                case EProcessState.Waiting:
+                    ProcessWillWait(pcb);
+                    break;
+                case EProcessState.Terminated:
+                    ProcessWillTerminate(pcb);
+                    break;
+                default:
+                    throw new ArgumentOutOfRangeException(nameof(state), state, null);
+            }
+
+            CheckWatcherOnStateChange(pcb);
+        }
+
+        private void ProcessWillRun(ProcessControlBlock pcb)
         {
             RemoveFromWaiting(pcb);
             MoveToStepping(pcb);
             pcb.TryRun();
         }
 
-        public void ProcessWillWait(ProcessControlBlock pcb)
+        private void ProcessWillWait(ProcessControlBlock pcb)
         {
             RemoveFromStepping(pcb);
             MoveToWaiting(pcb);
             pcb.TryWait();
         }
 
-        public void ProcessWillTerminate(ProcessControlBlock pcb)
+        private void ProcessWillTerminate(ProcessControlBlock pcb)
         {
             pcb.TryTerminate();
         }
@@ -808,10 +957,10 @@ namespace FarEmerald.PlayForge
             { (EProcessControlState.Ready, EProcessLifecycle.RequiresControl, EProcessState.Waiting), EProcessState.Running },
             { (EProcessControlState.Ready, EProcessLifecycle.RequiresControl, EProcessState.Terminated), EProcessState.Terminated },
             
-            { (EProcessControlState.Ready, EProcessLifecycle.StepOnly, EProcessState.Created), EProcessState.Running },
-            { (EProcessControlState.Ready, EProcessLifecycle.StepOnly, EProcessState.Running), EProcessState.Waiting },
-            { (EProcessControlState.Ready, EProcessLifecycle.StepOnly, EProcessState.Waiting), EProcessState.Running },
-            { (EProcessControlState.Ready, EProcessLifecycle.StepOnly, EProcessState.Terminated), EProcessState.Terminated },
+            { (EProcessControlState.Ready, EProcessLifecycle.Synchronous, EProcessState.Created), EProcessState.Running },
+            { (EProcessControlState.Ready, EProcessLifecycle.Synchronous, EProcessState.Running), EProcessState.Waiting },
+            { (EProcessControlState.Ready, EProcessLifecycle.Synchronous, EProcessState.Waiting), EProcessState.Running },
+            { (EProcessControlState.Ready, EProcessLifecycle.Synchronous, EProcessState.Terminated), EProcessState.Terminated },
             
             // Waiting state - everything goes to Waiting except Terminated
             { (EProcessControlState.Waiting, EProcessLifecycle.SelfTerminating, EProcessState.Created), EProcessState.Waiting },
@@ -829,10 +978,10 @@ namespace FarEmerald.PlayForge
             { (EProcessControlState.Waiting, EProcessLifecycle.RequiresControl, EProcessState.Waiting), EProcessState.Waiting },
             { (EProcessControlState.Waiting, EProcessLifecycle.RequiresControl, EProcessState.Terminated), EProcessState.Terminated },
             
-            { (EProcessControlState.Waiting, EProcessLifecycle.StepOnly, EProcessState.Created), EProcessState.Waiting },
-            { (EProcessControlState.Waiting, EProcessLifecycle.StepOnly, EProcessState.Running), EProcessState.Waiting },
-            { (EProcessControlState.Waiting, EProcessLifecycle.StepOnly, EProcessState.Waiting), EProcessState.Waiting },
-            { (EProcessControlState.Waiting, EProcessLifecycle.StepOnly, EProcessState.Terminated), EProcessState.Terminated },
+            { (EProcessControlState.Waiting, EProcessLifecycle.Synchronous, EProcessState.Created), EProcessState.Waiting },
+            { (EProcessControlState.Waiting, EProcessLifecycle.Synchronous, EProcessState.Running), EProcessState.Waiting },
+            { (EProcessControlState.Waiting, EProcessLifecycle.Synchronous, EProcessState.Waiting), EProcessState.Waiting },
+            { (EProcessControlState.Waiting, EProcessLifecycle.Synchronous, EProcessState.Terminated), EProcessState.Terminated },
             
             // Terminated states - everything goes to Terminated
             { (EProcessControlState.Terminated, EProcessLifecycle.SelfTerminating, EProcessState.Created), EProcessState.Terminated },
@@ -850,10 +999,10 @@ namespace FarEmerald.PlayForge
             { (EProcessControlState.Terminated, EProcessLifecycle.RequiresControl, EProcessState.Waiting), EProcessState.Terminated },
             { (EProcessControlState.Terminated, EProcessLifecycle.RequiresControl, EProcessState.Terminated), EProcessState.Terminated },
             
-            { (EProcessControlState.Terminated, EProcessLifecycle.StepOnly, EProcessState.Created), EProcessState.Terminated },
-            { (EProcessControlState.Terminated, EProcessLifecycle.StepOnly, EProcessState.Running), EProcessState.Terminated },
-            { (EProcessControlState.Terminated, EProcessLifecycle.StepOnly, EProcessState.Waiting), EProcessState.Terminated },
-            { (EProcessControlState.Terminated, EProcessLifecycle.StepOnly, EProcessState.Terminated), EProcessState.Terminated },
+            { (EProcessControlState.Terminated, EProcessLifecycle.Synchronous, EProcessState.Created), EProcessState.Terminated },
+            { (EProcessControlState.Terminated, EProcessLifecycle.Synchronous, EProcessState.Running), EProcessState.Terminated },
+            { (EProcessControlState.Terminated, EProcessLifecycle.Synchronous, EProcessState.Waiting), EProcessState.Terminated },
+            { (EProcessControlState.Terminated, EProcessLifecycle.Synchronous, EProcessState.Terminated), EProcessState.Terminated },
             
             { (EProcessControlState.TerminatedImmediately, EProcessLifecycle.SelfTerminating, EProcessState.Created), EProcessState.Terminated },
             { (EProcessControlState.TerminatedImmediately, EProcessLifecycle.SelfTerminating, EProcessState.Running), EProcessState.Terminated },
@@ -870,10 +1019,10 @@ namespace FarEmerald.PlayForge
             { (EProcessControlState.TerminatedImmediately, EProcessLifecycle.RequiresControl, EProcessState.Waiting), EProcessState.Terminated },
             { (EProcessControlState.TerminatedImmediately, EProcessLifecycle.RequiresControl, EProcessState.Terminated), EProcessState.Terminated },
             
-            { (EProcessControlState.TerminatedImmediately, EProcessLifecycle.StepOnly, EProcessState.Created), EProcessState.Terminated },
-            { (EProcessControlState.TerminatedImmediately, EProcessLifecycle.StepOnly, EProcessState.Running), EProcessState.Terminated },
-            { (EProcessControlState.TerminatedImmediately, EProcessLifecycle.StepOnly, EProcessState.Waiting), EProcessState.Terminated },
-            { (EProcessControlState.TerminatedImmediately, EProcessLifecycle.StepOnly, EProcessState.Terminated), EProcessState.Terminated },
+            { (EProcessControlState.TerminatedImmediately, EProcessLifecycle.Synchronous, EProcessState.Created), EProcessState.Terminated },
+            { (EProcessControlState.TerminatedImmediately, EProcessLifecycle.Synchronous, EProcessState.Running), EProcessState.Terminated },
+            { (EProcessControlState.TerminatedImmediately, EProcessLifecycle.Synchronous, EProcessState.Waiting), EProcessState.Terminated },
+            { (EProcessControlState.TerminatedImmediately, EProcessLifecycle.Synchronous, EProcessState.Terminated), EProcessState.Terminated },
             
             // Closed - let existing processes run/wait naturally
             { (EProcessControlState.Closed, EProcessLifecycle.SelfTerminating, EProcessState.Created), EProcessState.Terminated },
@@ -891,10 +1040,10 @@ namespace FarEmerald.PlayForge
             { (EProcessControlState.Closed, EProcessLifecycle.RequiresControl, EProcessState.Waiting), EProcessState.Waiting },
             { (EProcessControlState.Closed, EProcessLifecycle.RequiresControl, EProcessState.Terminated), EProcessState.Terminated },
             
-            { (EProcessControlState.Closed, EProcessLifecycle.StepOnly, EProcessState.Created), EProcessState.Terminated },
-            { (EProcessControlState.Closed, EProcessLifecycle.StepOnly, EProcessState.Running), EProcessState.Terminated },
-            { (EProcessControlState.Closed, EProcessLifecycle.StepOnly, EProcessState.Waiting), EProcessState.Running },
-            { (EProcessControlState.Closed, EProcessLifecycle.StepOnly, EProcessState.Terminated), EProcessState.Terminated },
+            { (EProcessControlState.Closed, EProcessLifecycle.Synchronous, EProcessState.Created), EProcessState.Terminated },
+            { (EProcessControlState.Closed, EProcessLifecycle.Synchronous, EProcessState.Running), EProcessState.Terminated },
+            { (EProcessControlState.Closed, EProcessLifecycle.Synchronous, EProcessState.Waiting), EProcessState.Running },
+            { (EProcessControlState.Closed, EProcessLifecycle.Synchronous, EProcessState.Terminated), EProcessState.Terminated },
             
             { (EProcessControlState.ClosedWaiting, EProcessLifecycle.SelfTerminating, EProcessState.Created), EProcessState.Terminated },
             { (EProcessControlState.ClosedWaiting, EProcessLifecycle.SelfTerminating, EProcessState.Running), EProcessState.Waiting },
@@ -911,10 +1060,10 @@ namespace FarEmerald.PlayForge
             { (EProcessControlState.ClosedWaiting, EProcessLifecycle.RequiresControl, EProcessState.Waiting), EProcessState.Waiting },
             { (EProcessControlState.ClosedWaiting, EProcessLifecycle.RequiresControl, EProcessState.Terminated), EProcessState.Terminated },
             
-            { (EProcessControlState.ClosedWaiting, EProcessLifecycle.StepOnly, EProcessState.Created), EProcessState.Terminated },
-            { (EProcessControlState.ClosedWaiting, EProcessLifecycle.StepOnly, EProcessState.Running), EProcessState.Waiting },
-            { (EProcessControlState.ClosedWaiting, EProcessLifecycle.StepOnly, EProcessState.Waiting), EProcessState.Waiting },
-            { (EProcessControlState.ClosedWaiting, EProcessLifecycle.StepOnly, EProcessState.Terminated), EProcessState.Terminated },
+            { (EProcessControlState.ClosedWaiting, EProcessLifecycle.Synchronous, EProcessState.Created), EProcessState.Terminated },
+            { (EProcessControlState.ClosedWaiting, EProcessLifecycle.Synchronous, EProcessState.Running), EProcessState.Waiting },
+            { (EProcessControlState.ClosedWaiting, EProcessLifecycle.Synchronous, EProcessState.Waiting), EProcessState.Waiting },
+            { (EProcessControlState.ClosedWaiting, EProcessLifecycle.Synchronous, EProcessState.Terminated), EProcessState.Terminated },
         };
 
         public EProcessState GetDefaultTransitionState(ProcessControlBlock pcb)
@@ -947,7 +1096,7 @@ namespace FarEmerald.PlayForge
                     EProcessLifecycle.RequiresControl => (pcb.State == EProcessState.Waiting && pcb.MidRun)
                         ? EProcessState.Running 
                         : pcb.State,
-                    EProcessLifecycle.StepOnly => pcb.State == EProcessState.Terminated 
+                    EProcessLifecycle.Synchronous => pcb.State == EProcessState.Terminated 
                         ? EProcessState.Terminated 
                         : EProcessState.Running,
                     _ => pcb.State
@@ -965,7 +1114,7 @@ namespace FarEmerald.PlayForge
                     EProcessLifecycle.RequiresControl => (pcb.State == EProcessState.Waiting && pcb.MidRun)
                         ? EProcessState.Running 
                         : pcb.State,
-                    EProcessLifecycle.StepOnly => pcb.State == EProcessState.Terminated 
+                    EProcessLifecycle.Synchronous => pcb.State == EProcessState.Terminated 
                         ? EProcessState.Terminated 
                         : EProcessState.Running,
                     _ => pcb.State
@@ -995,6 +1144,7 @@ namespace FarEmerald.PlayForge
                 // Running transitions
                 (EProcessState.Created, EProcessState.Running, EProcessLifecycle.SelfTerminating) => true,
                 (EProcessState.Created, EProcessState.Running, EProcessLifecycle.RunThenWait) => true,
+                (EProcessState.Created, EProcessState.Running, EProcessLifecycle.Synchronous) => true,
                 (EProcessState.Waiting, EProcessState.Running, _) => true,
                 
                 // Waiting transitions
@@ -1063,48 +1213,6 @@ namespace FarEmerald.PlayForge
         public bool TryGetPCB(int cacheIndex, out ProcessControlBlock pcb)
         {
             return _active.TryGetValue(cacheIndex, out pcb);
-        }
-        
-        #endregion
-        
-        #region Helper Processes
-        /// <summary>
-        /// Creates a sequence that watches another ProcessRelay. Invokes actions when that process' state changes and when it terminates.
-        /// </summary>
-        /// <param name="watch">The ProcessRelay to watch.</param>
-        /// <param name="onInit">Action on watcher init.</param>
-        /// <param name="onTerminate">Action on watched terminate.</param>
-        /// <param name="onStateChange">Func on watched state change: (oldState, newState, runtime) => success.</param>
-        /// <param name="data">Optional init data packet.</param>
-        /// <returns></returns>
-        public ProcessRelay WatchProcess(ProcessRelay watch, Action<SequenceDataPacket> onInit = null, Action<SequenceEventContext, bool> onTerminate = null, Func<EProcessState, EProcessState, TaskSequenceRuntime, bool> onStateChange = null, ProcessDataPacket data = null)
-        {
-            var lastState = EProcessState.Created;
-            
-            var watcher = TaskSequenceBuilder.Create($"Watcher ({watch.Wrapper.ProcessName})")
-                .WithDescription($"Watching process: {watch.Wrapper.ProcessName}." +
-                                 $"\nOnTerminate: {(onTerminate is null ? "None" : "Action<Context, Success>")}" +
-                                 $"\nOnStateChange: {(onStateChange is null ? "None" : "Func<NewState, SequenceRuntime, re: Success>")}")
-                .Task(d => onInit?.Invoke(d))
-                .Task(async (d, t) =>
-                {
-                    await UniTask.WaitUntil(() => !watch.ProcessActive, cancellationToken: t);
-                })
-                .InjectWhen(
-                    _ => watch.State != lastState, 
-                    new DelegateSequenceInjection(r =>
-                    {
-                        var result = onStateChange?.Invoke(lastState, watch.State, r) ?? false;
-                        lastState = watch.State;
-                        return result;
-                    }))
-                .OnTerminate((ctx, success) => onTerminate?.Invoke(ctx, success))
-                .BuildSequence();
-
-            var seqData = new SequenceDataPacket(data ?? watch.Wrapper.Data);
-            seqData.SetPrimary(Tags.PROCESS_RELAY, watch);
-            
-            return TaskSequenceProcess.Register(watcher, seqData);
         }
         
         #endregion

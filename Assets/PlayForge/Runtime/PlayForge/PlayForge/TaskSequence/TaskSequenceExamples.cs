@@ -17,30 +17,30 @@ namespace FarEmerald.PlayForge.Examples
         // COMMON TAGS FOR EXAMPLES
         // ═══════════════════════════════════════════════════════════════════════════
         
-        private static readonly Tag ROUND = Tag.Generate("Sequence.Round");
-        private static readonly Tag SCORE = Tag.Generate("Sequence.Score");
-        private static readonly Tag HEALTH = Tag.Generate("Sequence.Health");
-        private static readonly Tag MAX_HEALTH = Tag.Generate("Sequence.MaxHealth");
-        private static readonly Tag ENEMIES_ALIVE = Tag.Generate("Sequence.EnemiesAlive");
-        private static readonly Tag ENEMIES_TO_SPAWN = Tag.Generate("Sequence.EnemiesToSpawn");
-        private static readonly Tag PLAYER_ALIVE = Tag.Generate("Sequence.PlayerAlive");
-        private static readonly Tag POWER_UP = Tag.Generate("Sequence.PowerUp");
-        private static readonly Tag DIFFICULTY = Tag.Generate("Sequence.Difficulty");
-        private static readonly Tag BOSS_ACTIVE = Tag.Generate("Sequence.BossActive");
-        private static readonly Tag COUNTDOWN = Tag.Generate("Sequence.Countdown");
-        private static readonly Tag BOSS_HEALTH = Tag.Generate("Sequence.BossHealth");
-        private static readonly Tag BOSS_PHASE = Tag.Generate("Sequence.BossPhase");
-        private static readonly Tag WAVE_COUNT = Tag.Generate("Sequence.WaveCount");
-        private static readonly Tag COMBO_COUNT = Tag.Generate("Sequence.ComboCount");
-        private static readonly Tag COMBO_ACTIVE = Tag.Generate("Sequence.ComboActive");
-        private static readonly Tag TURN = Tag.Generate("Sequence.Turn");
-        private static readonly Tag ENEMY_HEALTH = Tag.Generate("Sequence.EnemyHealth");
-        private static readonly Tag PLAYER_MANA = Tag.Generate("Sequence.PlayerMana");
-        private static readonly Tag PLAYER_BLOCK = Tag.Generate("Sequence.PlayerBlock");
-        private static readonly Tag LAST_INPUT = Tag.Generate("Sequence.LastInput");
-        private static readonly Tag READY = Tag.Generate("Sequence.Ready");
-        private static readonly Tag DIALOGUE_CHOICE = Tag.Generate("Sequence.DialogueChoice");
-        private static readonly Tag GAME_STATE = Tag.Generate("Sequence.GameState");
+        private static readonly Tag ROUND = Tag.GenerateAsUnique("Sequence.Round");
+        private static readonly Tag SCORE = Tag.GenerateAsUnique("Sequence.Score");
+        private static readonly Tag HEALTH = Tag.GenerateAsUnique("Sequence.Health");
+        private static readonly Tag MAX_HEALTH = Tag.GenerateAsUnique("Sequence.MaxHealth");
+        private static readonly Tag ENEMIES_ALIVE = Tag.GenerateAsUnique("Sequence.EnemiesAlive");
+        private static readonly Tag ENEMIES_TO_SPAWN = Tag.GenerateAsUnique("Sequence.EnemiesToSpawn");
+        private static readonly Tag PLAYER_ALIVE = Tag.GenerateAsUnique("Sequence.PlayerAlive");
+        private static readonly Tag POWER_UP = Tag.GenerateAsUnique("Sequence.PowerUp");
+        private static readonly Tag DIFFICULTY = Tag.GenerateAsUnique("Sequence.Difficulty");
+        private static readonly Tag BOSS_ACTIVE = Tag.GenerateAsUnique("Sequence.BossActive");
+        private static readonly Tag COUNTDOWN = Tag.GenerateAsUnique("Sequence.Countdown");
+        private static readonly Tag BOSS_HEALTH = Tag.GenerateAsUnique("Sequence.BossHealth");
+        private static readonly Tag BOSS_PHASE = Tag.GenerateAsUnique("Sequence.BossPhase");
+        private static readonly Tag WAVE_COUNT = Tag.GenerateAsUnique("Sequence.WaveCount");
+        private static readonly Tag COMBO_COUNT = Tag.GenerateAsUnique("Sequence.ComboCount");
+        private static readonly Tag COMBO_ACTIVE = Tag.GenerateAsUnique("Sequence.ComboActive");
+        private static readonly Tag TURN = Tag.GenerateAsUnique("Sequence.Turn");
+        private static readonly Tag ENEMY_HEALTH = Tag.GenerateAsUnique("Sequence.EnemyHealth");
+        private static readonly Tag PLAYER_MANA = Tag.GenerateAsUnique("Sequence.PlayerMana");
+        private static readonly Tag PLAYER_BLOCK = Tag.GenerateAsUnique("Sequence.PlayerBlock");
+        private static readonly Tag LAST_INPUT = Tag.GenerateAsUnique("Sequence.LastInput");
+        private static readonly Tag READY = Tag.GenerateAsUnique("Sequence.Ready");
+        private static readonly Tag DIALOGUE_CHOICE = Tag.GenerateAsUnique("Sequence.DialogueChoice");
+        private static readonly Tag GAME_STATE = Tag.GenerateAsUnique("Sequence.GameState");
         
         // ═══════════════════════════════════════════════════════════════════════════
         // BASIC EXAMPLES

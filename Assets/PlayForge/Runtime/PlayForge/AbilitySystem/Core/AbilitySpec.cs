@@ -26,10 +26,8 @@ namespace FarEmerald.PlayForge
             
         public bool ValidateSourceActivationRequirements(AbilityDataPacket data)
         {
-            return Base.SourceActivationRules.All(rule => rule.Validate(data, data.Spec.GetOwner, out _));
-            /*return !(GetCooldown().DurationRemaining > 0f)
-                   && CanCoverCost()
-                   && Base.Tags.ValidateSourceRequirements(Owner);*/
+            var owner = data.Spec.GetOwner();
+            return Base.SourceActivationRules.All(rule => rule.Validate(data, () => owner, out _));
         }
 
         public bool ValidateAllActivationRequirements(ITarget target, AbilityDataPacket data)

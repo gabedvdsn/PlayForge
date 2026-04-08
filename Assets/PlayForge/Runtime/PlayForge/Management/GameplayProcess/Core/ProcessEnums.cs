@@ -26,9 +26,9 @@ namespace FarEmerald.PlayForge
         RequiresControl,
         
         /// <summary>
-        /// No async-related overhead. Only attaches to update cycle.
+        /// No async-related overhead. Only attaches to update cycle(s) as indicated by process step timing.
         /// </summary>
-        StepOnly
+        Synchronous
     }
     
     public enum EProcessStepPriorityMethod

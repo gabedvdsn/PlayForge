@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Threading;
 using Cysharp.Threading.Tasks;
+using JetBrains.Annotations;
 using UnityEngine;
 
 namespace FarEmerald.PlayForge
@@ -9,14 +10,23 @@ namespace FarEmerald.PlayForge
     {
         public ProcessRelay Relay;
         public ProcessDataPacket Data;
+        public IGameplayProcessHandler Handler;
 
-        public Func<AbstractProcessWrapper, string> getName = null;
-        protected Func<EProcessStatus> getStatus = null;
+        public string getProcessName = null;
+        protected Func<EProcessStatus> getStatus = () => EProcessStatus.Unknown;
         public EProcessStatus Status => getStatus?.Invoke() ?? EProcessStatus.Unknown;
         
-        protected AbstractProcessWrapper(ProcessDataPacket data)
+        /// <summary>
+        /// When false, this process is excluded from sibling cascade operations.
+        /// It will NOT be paused/terminated when a sibling process is paused/terminated.
+        /// Parent-to-child cascade is unaffected by this flag.
+        /// </summary>
+        public bool ParticipateInSiblingCascade = true;
+
+        protected AbstractProcessWrapper(ProcessDataPacket data, IGameplayProcessHandler handler)
         {
             Data = data;
+            Handler = handler;
         }
 
         /// <summary>
@@ -45,7 +55,7 @@ namespace FarEmerald.PlayForge
         public abstract bool TryGetProcess<T>(out T process);
         
         public abstract bool IsInitialized();
-        public virtual string ProcessName => getName?.Invoke(this) ?? "[Unknown Process]";
+        public virtual string ProcessName => getProcessName ?? "[Unknown Process]";
         public abstract EProcessStepPriorityMethod PriorityMethod { get; }
         public abstract int StepPriority { get; }
         public abstract EProcessStepTiming StepTiming { get; }

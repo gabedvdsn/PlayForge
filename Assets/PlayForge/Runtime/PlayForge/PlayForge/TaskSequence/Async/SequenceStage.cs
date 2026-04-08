@@ -322,7 +322,7 @@ namespace FarEmerald.PlayForge
         /// </summary>
         public SequenceStage Evaluate(ProcessDataPacket data)
         {
-            var seqData = data as SequenceDataPacket ?? SequenceDataPacket.RootDefault();
+            var seqData = data as SequenceDataPacket ?? SequenceDataPacket.SceneRoot();
             
             foreach (var branch in Branches)
             {
@@ -455,6 +455,35 @@ namespace FarEmerald.PlayForge
         }
         
         /// <summary>
+        /// Builds a SyncedTaskSequence from this definition for per-frame stepping.
+        /// </summary>
+        public SyncedTaskSequence BuildSyncRunner()
+        {
+            var syncStages = new List<SyncSequenceStage>();
+
+            foreach (var stage in Stages)
+            {
+                var policy = stage.Policy is WhenAnyStagePolicy
+                    ? ESyncStagePolicy.WhenAny
+                    : ESyncStagePolicy.WhenAll;
+
+                var syncStage = new SyncSequenceStage(
+                    new List<ISequenceTask>(stage.Tasks),
+                    stage.Metadata?.Name,
+                    policy,
+                    stage.Repeat,
+                    stage.MaxDurationSeconds
+                );
+                syncStages.Add(syncStage);
+            }
+
+            var name = Metadata?.Name ?? "SyncSequence";
+            var repeat = Metadata?.Repeat ?? false;
+
+            return new SyncedTaskSequence(syncStages, name, repeat);
+        }
+
+        /// <summary>
         /// Resets all conditions for a fresh run.
         /// </summary>
         internal void ResetConditions()
@@ -504,6 +533,24 @@ namespace FarEmerald.PlayForge
         public bool Repeat { get; set; } = false;
         public bool IsCritical { get; set; } = false;
         public HashSet<Type> CriticalAllowedInjections { get; set; }
+
+        /// <summary>
+        /// Process lifecycle for this sequence. Determines whether it runs async or sync.
+        /// Default is SelfTerminating (async).
+        /// </summary>
+        public EProcessLifecycle Lifecycle { get; set; } = EProcessLifecycle.SelfTerminating;
+
+        /// <summary>
+        /// Step timing for the process. Determines which Unity update loop the process attaches to.
+        /// For synchronous sequences this must be set (e.g. Update). For async, defaults to None
+        /// unless conditions are present.
+        /// </summary>
+        public EProcessStepTiming StepTiming { get; set; } = EProcessStepTiming.None;
+
+        /// <summary>
+        /// Per-step callbacks keyed by timing. Invoked each frame during sync execution.
+        /// </summary>
+        public Dictionary<EProcessStepTiming, Action<SequenceDataPacket, float>> OnStepCallbacks { get; set; }
         
         // ═══════════════════════════════════════════════════════════════════════════
         // EVENT CALLBACKS (all sync - called immediately when event occurs)

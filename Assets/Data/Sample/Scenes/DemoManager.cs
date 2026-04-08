@@ -45,6 +45,7 @@ namespace FarEmerald.PlayForge.Examples
         private VisualElement Scenarios;
         private VisualElement Sequences;
         private VisualElement Game;
+        private VisualElement GameControls;
 
         private HashSet<VisualElement> tempOpens = new();
 
@@ -103,6 +104,7 @@ namespace FarEmerald.PlayForge.Examples
 
             InitAbilityScenarios();
             InitSequences();
+            InitGameControls();
 
             Scenarios.style.display = DisplayStyle.None;
             Sequences.style.display = DisplayStyle.None;
@@ -119,6 +121,87 @@ namespace FarEmerald.PlayForge.Examples
             ConfigureButton(Nav.Q<Button>("ControlsButton"), null, closeTemps: true);
             ConfigureButton(Nav.Q<Button>("AboutButton"), null, closeTemps: true);
             ConfigureButton(Nav.Q<Button>("QuitButton"), null, closeTemps: true);
+        }
+
+        void InitGameControls()
+        {
+            GameControls = Root.Q("GameControls");
+            Debug.Log(GameControls);
+            var p = GameControls.Q("InGameProcesses");
+            
+            InitInGameProcesses();
+
+            return;
+            
+            void InitInGameProcesses()
+            {
+                ConfigureButton(p.Q<Button>("Bob"), null, () =>
+                {
+                    var d = new SyncDemoData(typeof(SyncDemo_Bob), go =>
+                    {
+                        var t = go.AddComponent(typeof(SyncDemo_Bob)) as SyncDemo_Bob;
+                    });
+                    if (ToggleSyncProcessType(d)) p.Q<Button>("Bob").style.backgroundColor = (Color.green * .54f);
+                    else p.Q<Button>("Bob").style.backgroundColor = Color.black * .54f;
+                    return null;
+                });     
+                ConfigureButton(p.Q<Button>("Scale"), null, () =>
+                {
+                    var d = new SyncDemoData(typeof(SyncDemo_PulseScale), go =>
+                    {
+                        var t = go.AddComponent(typeof(SyncDemo_PulseScale)) as SyncDemo_PulseScale;
+                    });
+                    if (ToggleSyncProcessType(d)) p.Q<Button>("Scale").style.backgroundColor = (Color.green * .54f);
+                    else p.Q<Button>("Scale").style.backgroundColor = Color.black * .54f;
+                    return null;
+                });  
+                /*ConfigureButton(p.Q<Button>("Orbit"), null, () =>
+                {
+                    DemoSequences.ToggleSyncProcessType(typeof(SyncDemo_Bob));
+                    return null;
+                });  
+                ConfigureButton(p.Q<Button>("Patrol"), null, () =>
+                {
+                    DemoSequences.ToggleSyncProcessType(typeof(SyncDemo_Patrol));
+                    return null;
+                });  
+                ConfigureButton(p.Q<Button>("Chase"), null, () =>
+                {
+                    DemoSequences.ToggleSyncProcessType(typeof(SyncDemo_ChaseTarget));
+                    return null;
+                }); */ 
+            }
+        }
+        
+        public static List<SyncDemoData> primProcesses = new List<SyncDemoData>();
+
+        private bool ToggleSyncProcessType(SyncDemoData data)
+        {
+            if (!data.Type.IsInstanceOfType(typeof(Component))) return false;
+
+            for (int i = 0; i < primProcesses.Count; i++)
+            {
+                if (primProcesses.Any(p => p.Type == data.Type))
+                {
+                    primProcesses.RemoveAt(i);
+                    return false;
+                }
+            }
+
+            primProcesses.Add(data);
+            return true;
+        }
+
+        public class SyncDemoData
+        {
+            public Type Type;
+            public Action<GameObject> toApply;
+
+            public SyncDemoData(Type type, Action<GameObject> toApply)
+            {
+                Type = type;
+                this.toApply = toApply;
+            }
         }
         
         private bool _sequencesOpen;
@@ -166,8 +249,8 @@ namespace FarEmerald.PlayForge.Examples
                     }
                 })
                 .BuildSequence();
-    
-            _transitionRelay = TaskSequenceProcess.Register(seq);
+
+            ProcessControl.Register(seq, this, out _transitionRelay);
             camLock = _transitionRelay;
         }
 
@@ -187,10 +270,9 @@ namespace FarEmerald.PlayForge.Examples
                 })
                 .BuildSequence();
     
-            _transitionRelay = TaskSequenceProcess.Register(seq);
+            ProcessControl.Register(seq, this, out _transitionRelay);
             camLock = _transitionRelay;
         }
-        
         
         
         private void ToggleScenarios()
@@ -219,6 +301,23 @@ namespace FarEmerald.PlayForge.Examples
         {
             var scenarioCamPos = defCamPos + new Vector3(-15f, 0f, 15f);
             var enemySpawnPos = new Vector3(0f, 1.5f, 45f);
+            var patrolA = new Vector3(20f, 1.5f, 45f);
+            var patrolB = new Vector3(-20f, 1.5f, 45f);
+            float speed = 7.5f;  // units per second
+            
+            var enemyPatrolSeq = TaskSequenceBuilder.Create("Demo Enemy Patrol")
+                .WithRepeat(true)
+                .Task(async (d, t) =>
+                {
+                    var duration = Vector3.Distance(enemy.transform.position, patrolA) / speed;
+                    await SequenceTaskLibrary.MoveTo(enemy.transform, patrolA, duration, t);
+                })
+                .Task(async (d, t) =>
+                {
+                    var duration = Vector3.Distance(enemy.transform.position, patrolB) / speed;
+                    await SequenceTaskLibrary.MoveTo(enemy.transform, patrolB, duration, t);
+                })
+                .BuildSequence();
     
             var seq = TaskSequenceBuilder.Create("Open Scenarios")
                 // Move camera
@@ -237,14 +336,16 @@ namespace FarEmerald.PlayForge.Examples
                     enemy = obj.AddComponent<GameplayAbilitySystem>();
                     enemy.EntityData = EnemyIdentity;
             
-                    if (!ProcessControl.Instance.Register(enemy, out enemyRelay))
+                    if (!ProcessControl.Register(enemy, this, out enemyRelay))
                     {
                         Debug.LogError("[Demo] Failed to register enemy GAS");
                         return;
                     }
 
-                    enemyRelay.Wrapper.getName = _ => "Demo Enemy";
+                    enemyRelay.Wrapper.getProcessName = "Demo Enemy";
                     await SequenceTaskLibrary.ScaleTo(enemy.transform, 3f, 0.5f, t);
+
+                    ProcessControl.Register(enemyPatrolSeq, enemy, d, out _);
                 })
                 .OnTerminate((_, success) =>
                 {
@@ -256,7 +357,7 @@ namespace FarEmerald.PlayForge.Examples
                 })
                 .BuildSequence();
     
-            _transitionRelay = TaskSequenceProcess.Register(seq);
+            ProcessControl.Register(seq, this, out _transitionRelay);
             camLock = _transitionRelay;
         }
         
@@ -294,7 +395,7 @@ namespace FarEmerald.PlayForge.Examples
                 })
                 .BuildSequence();
     
-            _transitionRelay = TaskSequenceProcess.Register(seq);
+            ProcessControl.Register(seq, this, out _transitionRelay);
             camLock = _transitionRelay;
         }
         
@@ -352,6 +453,10 @@ namespace FarEmerald.PlayForge.Examples
             ConfigureButton(Sequences.Q<Button>("AimLab"), null, () =>
             {
                 return RegisterDemoSequence(DemoSequences.AimLab());
+            });
+            ConfigureButton(Sequences.Q<Button>("Tendrils"), null, () =>
+            {
+                return RegisterDemoSequence(DemoSequences.TendrilsOfDestruction());
             });
             
             // UI
@@ -467,7 +572,7 @@ namespace FarEmerald.PlayForge.Examples
                 activeRelays.Add(relay);
                 
                 var watcher = WatchSequence(relay);
-                _ = TaskSequenceProcess.Register(watcher);
+                ProcessControl.Register(watcher, relay.Handler, out _);
             };
             
             button.RegisterCallback<PointerEnterEvent>(evt =>
@@ -523,20 +628,24 @@ namespace FarEmerald.PlayForge.Examples
 
         private ProcessRelay RegisterDemoSequence(TaskSequence seq)
         {
-            var data = SequenceDataPacket.RootDefault(Player);
+            var data = SequenceDataPacket.SceneLocal(Player.transform);
             data.SetPrimary(Tags.DATA, Player);
+
+            Debug.Log($"Registering demo sequence!!");
             
-            var relay = TaskSequenceProcess.Register(seq, data);
+            ProcessControl.Register(seq, this, data, out var relay);
+            // var relay = TaskSequenceProcess.Register(seq, data, this);
 
             return relay;
         }
         
         private ProcessRelay RegisterDemoSequence(TaskSequenceChain chain)
         {
-            var data = SequenceDataPacket.RootDefault(Player);
+            var data = SequenceDataPacket.SceneLocal(Player.transform);
             data.SetPrimary(Tags.DATA, Player);
             
-            var relay = TaskSequenceProcess.Register(chain, data);
+            ProcessControl.Register(chain, this, data, out var relay);
+            // var relay = TaskSequenceProcess.Register(chain, data);
 
             return relay;
         }

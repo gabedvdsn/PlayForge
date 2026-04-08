@@ -24,12 +24,10 @@ namespace FarEmerald.PlayForge
         public IReadOnlyDictionary<Tag, List<object>> Payload => _payload;
         public bool InUse = true;
         
-        public IGameplayProcessHandler Handler;
-
+        public readonly Dictionary<int, ProcessRelay> Relays = new();
+        
         protected ProcessDataPacket()
-        {
-            Handler = GameRoot.Instance;
-        }
+        { }
 
         public ProcessDataPacket(ProcessDataPacket other)
         {
@@ -43,77 +41,43 @@ namespace FarEmerald.PlayForge
                 foreach (object data in kvp.Value) _payload[kvp.Key].Add(data);
             }
             
-            Handler = other.Handler;
             InUse = other.InUse;
-        }
-
-        private ProcessDataPacket(IGameplayProcessHandler handler)
-        {
-            Handler = handler;
         }
         
         #region Construction
 
+        /// <summary>
+        /// Empty data packet handled by GameRoot.
+        /// </summary>
         public static ProcessDataPacket Default()
         {
-            return new ProcessDataPacket();
+            return Internal_GenerateDataPacket(false, null);
         }
 
-        public static ProcessDataPacket RootDefault()
+        /// <summary>
+        /// Data packet handled by GameRoot, automatically assigned as a child of GameRoot in-scene.
+        /// </summary>
+        public static ProcessDataPacket SceneRoot()
         {
-            var data = new ProcessDataPacket();
-            data.AddPayload(Tags.PARENT_TRANSFORM, GameRoot.Instance.transform);
-            return data;
-        }
-
-        public static ProcessDataPacket RootDefault(IGameplayProcessHandler handler)
-        {
-            var data = new ProcessDataPacket(handler);
-            data.AddPayload(Tags.PARENT_TRANSFORM, GameRoot.Instance.transform);
-            return data;
+            return Internal_GenerateDataPacket(true, GameRoot.Instance.transform);
         }
         
         /// <summary>
-        /// Returns a new data packet where GameRoot is the assigned Transform IF GameRoot is not within the parental hierarchy
+        /// Data packet handled by GameRoot, assigned as a child of parent in-scene
         /// </summary>
+        /// <param name="parent">Parent transform to assign</param>
         /// <returns></returns>
-        public static ProcessDataPacket RootLocal(MonoBehaviour obj)
+        public static ProcessDataPacket SceneLocal(Transform parent)
+        {
+            return Internal_GenerateDataPacket(true, parent);
+        }
+
+        private static ProcessDataPacket Internal_GenerateDataPacket(bool setParent, Transform parent)
         {
             var data = new ProcessDataPacket();
             
-            if (obj.GetComponentInParent<GameRoot>()) return data;
-            data.AddPayload(Tags.PARENT_TRANSFORM, GameRoot.Instance.transform);
-            return data;
-        }
-
-        public static ProcessDataPacket RootLocal(MonoBehaviour obj, IGameplayProcessHandler handler)
-        {
-            var data = new ProcessDataPacket(handler);
+            if (setParent) data.SetPrimary(Tags.PARENT_TRANSFORM, parent);
             
-            if (obj.GetComponentInParent<GameRoot>()) return data;
-            data.AddPayload(Tags.PARENT_TRANSFORM, GameRoot.Instance.transform);
-            return data;
-        }
-
-        public static ProcessDataPacket LocalDefault(MonoBehaviour obj)
-        {
-            var data = new ProcessDataPacket();
-            
-            data.AddPayload(Tags.POSITION, obj.transform.position);
-            data.AddPayload(Tags.ROTATION, obj.transform.rotation);
-            data.AddPayload(Tags.PARENT_TRANSFORM, obj.transform.parent);
-
-            return data;
-        }
-        
-        public static ProcessDataPacket LocalDefault(MonoBehaviour obj, IGameplayProcessHandler handler)
-        {
-            var data = new ProcessDataPacket(handler);
-            
-            data.AddPayload(Tags.POSITION, obj.transform.position);
-            data.AddPayload(Tags.ROTATION, obj.transform.rotation);
-            data.AddPayload(Tags.PARENT_TRANSFORM, obj.transform.parent);
-
             return data;
         }
         
@@ -381,8 +345,6 @@ namespace FarEmerald.PlayForge
         #endregion
         
         #region Process Handling
-
-        public readonly Dictionary<int, ProcessRelay> Relays = new();
         
         public bool HandlerValidateAgainst(IGameplayProcessHandler handler)
         {
@@ -404,11 +366,11 @@ namespace FarEmerald.PlayForge
         #endregion
         public virtual string GetName()
         {
-            return $"Process-{Handler?.GetName() ?? ("--")}";
+            return $"Anon-PDP";
         }
         public virtual string GetDescription()
         {
-            return $"Some process. {(Handler is null ? "No Handler." : $"Handler: {Handler.GetName()}")}";
+            return $"Anonymous Process Data Packet";
         }
         public virtual Texture2D GetPrimaryIcon()
         {

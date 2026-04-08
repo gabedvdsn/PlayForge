@@ -1,6 +1,6 @@
 ﻿namespace FarEmerald.PlayForge
 {
-    public interface IGameplayProcess : IHasReadableDefinition
+    public interface IGameplayProcess : IGameplayProcessHandler
     {
         public ProcessRelay ProcessRelay { get; }
     }

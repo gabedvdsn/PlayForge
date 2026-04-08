@@ -123,6 +123,100 @@ namespace FarEmerald.PlayForge
         }
 
         // ═══════════════════════════════════════════════════════════════════════════
+        // POSITION — TRACKING (dynamic target, speed-based)
+        // ═══════════════════════════════════════════════════════════════════════════
+
+        /// <summary>
+        /// Moves towards a target transform at a fixed speed until within stoppingDistance.
+        /// Re-samples target position each frame for dynamic following.
+        /// </summary>
+        public static async UniTask MoveTowards(Transform mover, Transform target, float speed,
+            CancellationToken token, float stoppingDistance = 0.1f)
+        {
+            while (target && Vector3.Distance(mover.position, target.position) > stoppingDistance)
+            {
+                await UniTask.Yield(PlayerLoopTiming.Update, token);
+                if (!target) break;
+                mover.position = Vector3.MoveTowards(mover.position, target.position, speed * Time.deltaTime);
+            }
+        }
+
+        /// <summary>
+        /// Moves towards a target transform at a fixed speed, arcing upward.
+        /// The arc offset is proportional to the remaining distance for a natural curve.
+        /// </summary>
+        public static async UniTask ArcTowards(Transform mover, Transform target, float speed,
+            float arcHeight, CancellationToken token, float stoppingDistance = 0.1f)
+        {
+            float initialDistance = target ? Vector3.Distance(mover.position, target.position) : 0f;
+
+            while (target)
+            {
+                await UniTask.Yield(PlayerLoopTiming.Update, token);
+                if (!target) break;
+
+                Vector3 dest = target.position;
+                float dist = Vector3.Distance(mover.position, dest);
+                if (dist <= stoppingDistance) { mover.position = dest; break; }
+
+                float ratio = initialDistance > 0f ? Mathf.Clamp01(dist / initialDistance) : 0f;
+                float parabola = 4f * arcHeight * ratio * (1f - ratio);
+
+                Vector3 flatTarget = Vector3.MoveTowards(mover.position, dest, speed * Time.deltaTime);
+                flatTarget.y += parabola;
+                mover.position = flatTarget;
+            }
+        }
+
+        /// <summary>
+        /// Orbits around a center transform at a given radius and angular speed.
+        /// Runs indefinitely until cancelled — pair with a stage timeout or WhenAny policy.
+        /// </summary>
+        public static async UniTask Orbit(Transform mover, Transform center, float radius,
+            float degreesPerSecond, Vector3 axis, CancellationToken token)
+        {
+            float angle = 0f;
+            while (center)
+            {
+                await UniTask.Yield(PlayerLoopTiming.Update, token);
+                if (!center) break;
+                angle += degreesPerSecond * Time.deltaTime;
+                Vector3 offset = Quaternion.AngleAxis(angle, axis) * (Vector3.forward * radius);
+                mover.position = center.position + offset;
+            }
+        }
+
+        /// <summary>
+        /// Moves a transform in a direction by a distance over a duration.
+        /// Useful for knockback, dash, or lunge effects.
+        /// </summary>
+        public static async UniTask Dash(Transform target, Vector3 direction, float distance,
+            float duration, CancellationToken token, AnimationCurve curve = null)
+        {
+            await MoveBy(target, direction.normalized * distance, duration, token, curve);
+        }
+
+        /// <summary>
+        /// Moves along a path of waypoints, tracking a moving target for the final waypoint.
+        /// All waypoints except the last are static; the last waypoint follows the target transform.
+        /// </summary>
+        public static async UniTask MoveAlongPathToTarget(Transform mover, Vector3[] waypoints,
+            Transform finalTarget, float speed, CancellationToken token, float stoppingDistance = 0.1f)
+        {
+            foreach (var wp in waypoints)
+            {
+                while (Vector3.Distance(mover.position, wp) > stoppingDistance)
+                {
+                    await UniTask.Yield(PlayerLoopTiming.Update, token);
+                    mover.position = Vector3.MoveTowards(mover.position, wp, speed * Time.deltaTime);
+                }
+                mover.position = wp;
+            }
+
+            await MoveTowards(mover, finalTarget, speed, token, stoppingDistance);
+        }
+
+        // ═══════════════════════════════════════════════════════════════════════════
         // ROTATION
         // ═══════════════════════════════════════════════════════════════════════════
         
@@ -174,6 +268,24 @@ namespace FarEmerald.PlayForge
             CancellationToken token, AnimationCurve curve = null)
         {
             await LookAt(target, lookTarget.position, duration, token, curve);
+        }
+
+        /// <summary>
+        /// Continuously rotates to face a target transform each frame at a given angular speed.
+        /// Runs indefinitely until cancelled — pair with a stage timeout or WhenAny policy.
+        /// </summary>
+        public static async UniTask LookAtTracking(Transform mover, Transform target,
+            float degreesPerSecond, CancellationToken token)
+        {
+            while (target)
+            {
+                await UniTask.Yield(PlayerLoopTiming.Update, token);
+                if (!target) break;
+                var dir = (target.position - mover.position).normalized;
+                if (dir == Vector3.zero) continue;
+                var desired = Quaternion.LookRotation(dir);
+                mover.rotation = Quaternion.RotateTowards(mover.rotation, desired, degreesPerSecond * Time.deltaTime);
+            }
         }
 
         // ═══════════════════════════════════════════════════════════════════════════

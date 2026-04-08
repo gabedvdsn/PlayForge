@@ -17,11 +17,12 @@ MonoBehaviour:
   _templateOverrides:
   - Behaviour.Targeting
   - Behaviour.UseImplicitTargeting
+  - Definition.ActivationPolicy
   _templateListSnapshots: []
   Definition:
     Name: Fireball
     Description: 
-    ActivationPolicy: 0
+    ActivationPolicy: 3
     ActivateImmediately: 0
     Textures: []
   Tags:

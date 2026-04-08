@@ -8,10 +8,10 @@ namespace FarEmerald.PlayForge
     {
         private AbstractRuntimeProcess Process;
         
-        public RuntimeWrapperProcess(AbstractRuntimeProcess process, ProcessDataPacket data) : base(data)
+        public RuntimeWrapperProcess(AbstractRuntimeProcess process, ProcessDataPacket data, IGameplayProcessHandler handler) : base(data, handler)
         {
             Process = process;
-            getStatus = () => Process.Lifecycle == EProcessLifecycle.StepOnly ? EProcessStatus.Inline : EProcessStatus.Async;
+            getStatus = () => Process.Lifecycle == EProcessLifecycle.Synchronous ? EProcessStatus.Synchronous : EProcessStatus.Asynchronous;
         }
         
         public override void InitializeWrapper()
@@ -78,7 +78,7 @@ namespace FarEmerald.PlayForge
         {
             return Process.IsInitialized;
         }
-        public override string ProcessName => getName?.Invoke(this) ?? Process.ProcessName;
+        public override string ProcessName => getProcessName ?? Process.ProcessName;
         public override EProcessStepPriorityMethod PriorityMethod => Process.PriorityMethod;
         public override int StepPriority => Process.StepPriority;
         public override EProcessStepTiming StepTiming => Process.StepTiming;

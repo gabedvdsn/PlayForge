@@ -10,7 +10,7 @@ namespace FarEmerald.PlayForge
     {
         private void Start()
         {
-            ProcessControl.Instance.Register(this, out _);
+            ProcessControl.Register(this, out _);
         }
     }
 }

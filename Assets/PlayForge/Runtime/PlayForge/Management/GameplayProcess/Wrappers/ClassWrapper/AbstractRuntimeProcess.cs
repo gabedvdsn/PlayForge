@@ -1,4 +1,5 @@
-﻿using System.Linq;
+﻿using System.Collections.Generic;
+using System.Linq;
 using System.Threading;
 using Cysharp.Threading.Tasks;
 using UnityEngine;
@@ -22,6 +23,9 @@ namespace FarEmerald.PlayForge
         private bool _initialized;
         public bool IsInitialized => _initialized;
         public ProcessRelay Relay;
+        
+        public readonly Dictionary<int, ProcessRelay> HandlerRelays = new();
+
         
         protected AbstractRuntimeProcess()
         {
@@ -142,6 +146,22 @@ namespace FarEmerald.PlayForge
         {
             var tasks = users.Select(user => ApplyBehaviour(cb.CreateInstance(), user, token)).ToArray();
             await UniTask.WhenAll(tasks);
+        }
+        public bool HandlerValidateAgainst(IGameplayProcessHandler handler)
+        {
+            return (AbstractRuntimeProcess)handler == this;
+        }
+        public bool HandlerProcessIsSubscribed(ProcessRelay relay)
+        {
+            return HandlerRelays.ContainsKey(relay.CacheIndex);
+        }
+        public void HandlerSubscribeProcess(ProcessRelay relay)
+        {
+            HandlerRelays.Add(relay.CacheIndex, relay);
+        }
+        public bool HandlerVoidProcess(ProcessRelay relay)
+        {
+            return HandlerRelays.Remove(relay.CacheIndex);
         }
     }
 }

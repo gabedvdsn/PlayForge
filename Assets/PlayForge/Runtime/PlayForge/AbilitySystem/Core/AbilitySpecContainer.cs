@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Threading;
 using Cysharp.Threading.Tasks;
@@ -16,7 +16,7 @@ namespace FarEmerald.PlayForge
         public bool IsClaiming => IsTargeting || IsActive;
 
         private AbilityDataPacket activeData;
-        
+
         private AbilityProxy Proxy;
         public CancellationTokenSource cts;
         private CancellationTokenSource targetingCts;
@@ -28,16 +28,25 @@ namespace FarEmerald.PlayForge
             IsActive = false;
 
             Proxy = Spec.Base.Behaviour.GenerateProxy();
+
+            // Compile the ability behaviour into a reusable TaskSequence at grant time.
+            // This enables ProcessControl visibility and sequence-based execution.
+            var abilityName = Spec.Base?.GetName() ?? $"Anon-Ability[{abilityIndex}]";
+            Proxy.CompileSequence(abilityName);
+
             ResetTokens();
         }
 
         public bool ActivateAbility(AbilityDataPacket implicitData)
         {
+            Debug.Log($"{IsClaiming}" +
+                      $"{!Spec.Source.AsData().AbilitySystem.ClaimActive(this, implicitData)}");
             if (IsClaiming) return false; // Prevent reactivation mid-use
             if (!Spec.Source.AsData().AbilitySystem.ClaimActive(this, implicitData)) return false;
-            
+
+            Debug.Log($"Activated!");
             activeData = implicitData;
-            activeData.AddPayload(Tags.DERIVATION, Spec);
+            activeData.SetPrimary(Tags.DERIVATION, Spec);
 
             Reset();
 
@@ -64,26 +73,34 @@ namespace FarEmerald.PlayForge
             }
             catch (OperationCanceledException)
             {
-                // Targeting is cancelled
+                // Targeting is cancelled (either externally or via BreakAbilityRuntime)
                 targetingCancelled = true;
             }
             finally
             {
                 IsTargeting = false;
-                
-                if (activeData.TryGetFirstTarget(out var target) && !Spec.ValidateAllActivationRequirements(target, activeData))
+
+                // Check the explicit targeting failure flag set by targeting tasks
+                if (activeData.TargetingFailed)
                 {
                     targetingCancelled = true;
                 }
-                
+
+                // Validate that the target meets activation requirements
+                if (!targetingCancelled && activeData.TryGetFirstTarget(out var target)
+                                        && !Spec.ValidateAllActivationRequirements(target, activeData))
+                {
+                    targetingCancelled = true;
+                }
+
                 if (targetingCancelled)
                 {
                     CleanAndRelease();
                 }
             }
-            
+
             if (targetingCancelled) return;
-            
+
             try
             {
                 IsActive = true;
@@ -101,9 +118,9 @@ namespace FarEmerald.PlayForge
             finally
             {
                 IsActive = false;
-                
+
                 Spec.Source.CompileGrantedTags();
-                
+
                 CleanAndRelease();
             }
         }
@@ -123,9 +140,10 @@ namespace FarEmerald.PlayForge
             CleanTargetingToken();
             CleanActivationToken();
 
-            Spec.Source.AsData().AbilitySystem.ReleaseClaim(this, activeData);
-
+            var asc = Spec.Source.AsData().AbilitySystem;
+            asc.ReleaseClaim(this, activeData);
             activeData = null;
+            asc.EndAbilityActivation();
         }
 
         private void CleanTargetingToken()

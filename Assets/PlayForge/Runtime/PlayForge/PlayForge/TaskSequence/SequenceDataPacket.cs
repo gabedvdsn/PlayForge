@@ -215,7 +215,7 @@ namespace FarEmerald.PlayForge
         // CONSTRUCTION
         // ═══════════════════════════════════════════════════════════════════════════
         
-        protected SequenceDataPacket() : base() { }
+        protected SequenceDataPacket() { }
 
         public SequenceDataPacket(ProcessDataPacket other) : base()
         {
@@ -229,40 +229,43 @@ namespace FarEmerald.PlayForge
                 foreach (object data in kvp.Value) _payload[kvp.Key].Add(data);
             }
             
-            Handler = other.Handler;
             InUse = other.InUse;
         }
         
-        public new static SequenceDataPacket RootDefault()
+        /// <summary>
+        /// Empty data packet handled by GameRoot.
+        /// </summary>
+        public new static SequenceDataPacket Default()
+        {
+            return Internal_GenerateDataPacket(false, null);
+        }
+
+        /// <summary>
+        /// Data packet handled by GameRoot, automatically assigned as a child of GameRoot in-scene.
+        /// </summary>
+        public new static SequenceDataPacket SceneRoot()
+        {
+            return Internal_GenerateDataPacket(true, GameRoot.Instance.transform);
+        }
+        
+        /// <summary>
+        /// Data packet handled by GameRoot, assigned as a child of parent in-scene
+        /// </summary>
+        /// <param name="parent">Parent transform to assign</param>
+        /// <returns></returns>
+        public new static SequenceDataPacket SceneLocal(Transform parent)
+        {
+            return Internal_GenerateDataPacket(true, parent);
+        }
+
+        private new static SequenceDataPacket Internal_GenerateDataPacket(bool setParent, Transform parent)
         {
             var data = new SequenceDataPacket();
+            
+            if (setParent) data.SetPrimary(Tags.PARENT_TRANSFORM, parent);
+            
             return data;
         }
         
-        public new static SequenceDataPacket RootDefault(IGameplayProcessHandler handler)
-        {
-            var data = new SequenceDataPacket();
-            data.Handler = handler;
-            return data;
-        }
-        
-        public new static SequenceDataPacket LocalDefault(MonoBehaviour obj)
-        {
-            var data = new SequenceDataPacket();
-            data.AddPayload(Tags.POSITION, obj.transform.position);
-            data.AddPayload(Tags.ROTATION, obj.transform.rotation);
-            data.AddPayload(Tags.PARENT_TRANSFORM, obj.transform.parent);
-            return data;
-        }
-        
-        public new static SequenceDataPacket LocalDefault(MonoBehaviour obj, IGameplayProcessHandler handler)
-        {
-            var data = new SequenceDataPacket();
-            data.Handler = handler;
-            data.AddPayload(Tags.POSITION, obj.transform.position);
-            data.AddPayload(Tags.ROTATION, obj.transform.rotation);
-            data.AddPayload(Tags.PARENT_TRANSFORM, obj.transform.parent);
-            return data;
-        }
     }
 }

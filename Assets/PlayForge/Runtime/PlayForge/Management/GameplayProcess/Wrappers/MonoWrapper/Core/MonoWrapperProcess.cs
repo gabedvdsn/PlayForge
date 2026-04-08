@@ -18,10 +18,11 @@ namespace FarEmerald.PlayForge
         /// </summary>
         private AbstractMonoProcess activeMono;
         
-        public MonoWrapperProcess(AbstractMonoProcess storedMono, ProcessDataPacket data) : base(data)
+        public MonoWrapperProcess(AbstractMonoProcess storedMono, ProcessDataPacket data, IGameplayProcessHandler handler) : base(data, handler)
         {
             StoredMono = storedMono;
-            getStatus = () => StoredMono.ProcessLifecycle == EProcessLifecycle.StepOnly ? EProcessStatus.Inline : EProcessStatus.Async;
+            ParticipateInSiblingCascade = storedMono.ParticipateInSiblingCascade;
+            getStatus = () => StoredMono.ProcessLifecycle == EProcessLifecycle.Synchronous ? EProcessStatus.Synchronous : EProcessStatus.Asynchronous;
         }
 
         /// <summary>
@@ -116,7 +117,7 @@ namespace FarEmerald.PlayForge
             return activeMono && activeMono.IsInitialized;
         }
 
-        public override string ProcessName => getName?.Invoke(this) ?? (activeMono ? activeMono.name : $"[<Is Destroyed>] - {(StoredMono ? StoredMono.name : "<Unknown>")}");
+        public override string ProcessName => getProcessName ?? (activeMono ? activeMono.name : $"[<Is Destroyed>] - {(StoredMono ? StoredMono.name : "<Unknown>")}");
         public override EProcessStepPriorityMethod PriorityMethod => activeMono.PriorityMethod;
 
         public override int StepPriority => activeMono.ProcessStepPriority;

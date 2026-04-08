@@ -16,6 +16,7 @@ namespace FarEmerald.PlayForge
         private EProcessSortMode _sortMode = EProcessSortMode.CacheIndex;
         private EUsageSortMode _usageMode = EUsageSortMode.Frame;
         private bool _showUsage = false;
+        private bool _showHandler = false;
         private string _searchFilter = "";
         private Vector2 _scrollPos;
         
@@ -40,6 +41,11 @@ namespace FarEmerald.PlayForge
         private static readonly Color WaitingColor = new Color(0.7f, 0.6f, 0.3f);
         private static readonly Color TerminatedColor = new Color(0.7f, 0.4f, 0.4f);
         private static readonly Color CreatedColor = new Color(0.5f, 0.5f, 0.7f);
+
+        // Type indicator colors
+        private static readonly Color MonoProcessColor = new Color(0.1f, 0.1f, 0.1f);
+        private static readonly Color RuntimeProcessColor = new Color(0.49f, 0.46f, 0.45f);
+        private const float TypeIndicatorWidth = 3f;
         
         [MenuItem("Tools/PlayForge/Runtime Tools/Process Control")]
         public static void ShowWindow()
@@ -248,6 +254,9 @@ namespace FarEmerald.PlayForge
             
             EditorGUILayout.Space(12);
             
+            // Handler toggle
+            _showHandler = GUILayout.Toggle(_showHandler, new GUIContent("Handler", "Show process handler"), EditorStyles.toolbarButton, GUILayout.Width(65));
+            
             // Usage toggle
             _showUsage = GUILayout.Toggle(_showUsage, new GUIContent("Usage", "Show update time usage per process"), EditorStyles.toolbarButton, GUILayout.Width(50));
             if (_showUsage)
@@ -282,7 +291,7 @@ namespace FarEmerald.PlayForge
             
             foreach (var pcb in _filteredProcesses)
             {
-                if (pcb?.Relay?.Wrapper == null) continue;
+                if (pcb.Relay?.Wrapper == null) continue;
                 
                 switch (_viewPolicy)
                 {
@@ -315,7 +324,7 @@ namespace FarEmerald.PlayForge
                 var all = ProcessControl.Instance.FetchActiveProcesses().Values;
                 
                 var valid = all
-                    .Where(pcb => pcb?.Relay?.Wrapper != null)
+                    .Where(pcb => pcb.Relay?.Wrapper != null)
                     .Where(pcb => MatchesStateFilter(pcb))
                     .Where(pcb => MatchesSearchFilter(pcb));
                 
@@ -435,26 +444,34 @@ namespace FarEmerald.PlayForge
             var relay = pcb.Relay;
             
             EditorGUILayout.BeginHorizontal(EditorStyles.helpBox);
-            
+
             // State indicator
             DrawStateIndicator(pcb.State, 12);
-            
+            GUILayout.Space(3);
+
             // Name
-            EditorGUILayout.LabelField(relay.Wrapper.ProcessName, EditorStyles.boldLabel, GUILayout.MinWidth(200));
-            
+            var compactLabel = _showHandler
+                ? $"{relay.Wrapper.ProcessName} <color=#888888><size=10>({relay.Wrapper.Handler?.GetName() ?? "No Handler"})</size></color>"
+                : relay.Wrapper.ProcessName;
+            var compactStyle = new GUIStyle(EditorStyles.boldLabel) { richText = true };
+            EditorGUILayout.LabelField(compactLabel, compactStyle, GUILayout.MinWidth(200));
+
             GUILayout.FlexibleSpace();
-            
+
             // Compact info
-            var stateText = pcb.QueuedState != pcb.State 
-                ? $"{pcb.State} → {pcb.QueuedState}" 
+            var stateText = pcb.QueuedState != pcb.State
+                ? $"{pcb.State} → {pcb.QueuedState}"
                 : pcb.State.ToString();
             EditorGUILayout.LabelField(stateText, GUILayout.Width(150));
             EditorGUILayout.LabelField($"{relay.UpdateTime:F1}s", GUILayout.Width(50));
             EditorGUILayout.LabelField($"{relay.Lifetime:F1}s", GUILayout.Width(50));
-            
+
             if (_showUsage) DrawUsageInline(pcb);
-            
+
             EditorGUILayout.EndHorizontal();
+
+            // Mono/Runtime left border
+            DrawTypeIndicatorBorder(GUILayoutUtility.GetLastRect(), pcb.isMono);
         }
         
         private void DrawProcessSimple(ProcessControlBlock pcb)
@@ -462,43 +479,51 @@ namespace FarEmerald.PlayForge
             var relay = pcb.Relay;
             
             EditorGUILayout.BeginVertical(EditorStyles.helpBox);
-            
+
             // Header row
             EditorGUILayout.BeginHorizontal();
-            DrawStateIndicator(pcb.State, 14);
-            EditorGUILayout.LabelField(relay.Wrapper.ProcessName, EditorStyles.boldLabel, GUILayout.MinWidth(300));
+            DrawStateIndicator(pcb.State, 12);
+            GUILayout.Space(3);
+            var simpleName = _showHandler
+                ? $"{relay.Wrapper.ProcessName} <color=#888888><size=10>({relay.Handler?.GetName() ?? "No Handler"})</size></color>"
+                : relay.Wrapper.ProcessName;
+            var simpleStyle = new GUIStyle(EditorStyles.boldLabel) { richText = true };
+            EditorGUILayout.LabelField(simpleName, simpleStyle, GUILayout.MinWidth(300));
             GUILayout.FlexibleSpace();
             EditorGUILayout.LabelField($"ID: {relay.CacheIndex}", EditorStyles.miniLabel, GUILayout.Width(50));
             EditorGUILayout.EndHorizontal();
-            
+
             // Info row
             EditorGUILayout.BeginHorizontal();
             EditorGUILayout.LabelField($"{relay.Wrapper.Lifecycle}", GUILayout.Width(120));
             EditorGUILayout.LabelField($"{relay.Wrapper.StepTiming}", GUILayout.Width(120));
-            
+
             GUILayout.FlexibleSpace();
-            
+
             // State with queued indicator
-            var stateLabel = pcb.QueuedState != pcb.State 
-                ? $"{pcb.State} → {pcb.QueuedState}" 
+            var stateLabel = pcb.QueuedState != pcb.State
+                ? $"{pcb.State} → {pcb.QueuedState}"
                 : pcb.State.ToString();
             EditorGUILayout.LabelField(stateLabel, GUILayout.Width(150));
             EditorGUILayout.EndHorizontal();
-            
+
             // Time row
             EditorGUILayout.BeginHorizontal();
             EditorGUILayout.LabelField($"Update: {relay.UpdateTime:F2}s", GUILayout.Width(100));
             EditorGUILayout.LabelField($"Lifetime: {relay.Lifetime:F2}s", GUILayout.Width(110));
-            
+
             if (_showUsage)
             {
                 GUILayout.FlexibleSpace();
                 DrawUsageInline(pcb);
             }
-            
+
             EditorGUILayout.EndHorizontal();
-            
+
             EditorGUILayout.EndVertical();
+
+            // Mono/Runtime left border
+            DrawTypeIndicatorBorder(GUILayoutUtility.GetLastRect(), pcb.isMono);
         }
         
         private void DrawProcessFull(ProcessControlBlock pcb)
@@ -507,11 +532,17 @@ namespace FarEmerald.PlayForge
             var pc = ProcessControl.Instance;
             
             EditorGUILayout.BeginVertical(EditorStyles.helpBox);
-            
+
             // Header
             EditorGUILayout.BeginHorizontal();
-            DrawStateIndicator(pcb.State, 16);
-            EditorGUILayout.LabelField(relay.Wrapper.ProcessName, EditorStyles.boldLabel, GUILayout.MinWidth(300));
+            DrawStateIndicator(pcb.State, 12);
+            GUILayout.Space(3);
+
+            var fullName = _showHandler
+                ? $"{relay.Wrapper.ProcessName} <color=#888888><size=10>({relay.Wrapper.Handler?.GetName() ?? "No Handler"})</size></color>"
+                : relay.Wrapper.ProcessName;
+            var fullStyle = new GUIStyle(EditorStyles.boldLabel) { richText = true };
+            EditorGUILayout.LabelField(fullName, fullStyle, GUILayout.MinWidth(300));
             GUILayout.FlexibleSpace();
             EditorGUILayout.LabelField($"ID: {relay.CacheIndex}", EditorStyles.miniLabel, GUILayout.Width(50));
             EditorGUILayout.EndHorizontal();
@@ -604,10 +635,13 @@ namespace FarEmerald.PlayForge
                 }
             }
             EditorGUI.EndDisabledGroup();
-            
+
             EditorGUILayout.EndVertical();
+
+            // Mono/Runtime left border
+            DrawTypeIndicatorBorder(GUILayoutUtility.GetLastRect(), pcb.isMono);
         }
-        
+
         // ═══════════════════════════════════════════════════════════════════════════
         // Usage Visualization
         // ═══════════════════════════════════════════════════════════════════════════
@@ -767,11 +801,28 @@ namespace FarEmerald.PlayForge
         
         private void DrawStateIndicator(EProcessState state, float size)
         {
+            GUILayout.Space(2);
+
             var color = GetProcessStateColor(state);
-            var rect = GUILayoutUtility.GetRect(size, size, GUILayout.Width(size), GUILayout.Height(size));
-            rect.y += (EditorGUIUtility.singleLineHeight - size) / 2;
-            
-            EditorGUI.DrawRect(rect, color);
+            // Request full line height so the element aligns with adjacent labels
+            var rect = GUILayoutUtility.GetRect(size, EditorGUIUtility.singleLineHeight, GUILayout.Width(size));
+            // Center the square within the line-height rect
+            var squareRect = new Rect(
+                rect.x,
+                rect.y + (rect.height - size) / 2f,
+                size,
+                size);
+            EditorGUI.DrawRect(squareRect, color);
+        }
+
+        /// <summary>
+        /// Draws a colored left border on a process box rect to indicate mono vs runtime process.
+        /// Call after EndVertical/EndHorizontal, using GUILayoutUtility.GetLastRect().
+        /// </summary>
+        private void DrawTypeIndicatorBorder(Rect boxRect, bool isMono)
+        {
+            var color = isMono ? MonoProcessColor : RuntimeProcessColor;
+            EditorGUI.DrawRect(new Rect(boxRect.x, boxRect.y, TypeIndicatorWidth, boxRect.height), color);
         }
         
         private Color GetProcessStateColor(EProcessState state)

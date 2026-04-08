@@ -30,12 +30,25 @@ namespace FarEmerald.PlayForge.Examples
         
         [Tooltip("Maximum raycast distance for world clicks.")]
         [SerializeField] private float _worldRaycastDistance = 500f;
+
+        public Texture2D targetingCursorTex;
         
         /// <summary>
         /// When true, all input queries return false / await indefinitely.
         /// Use to suppress input during cutscenes, menus, etc.
         /// </summary>
         public bool InputSuppressed { get; set; }
+
+        public void SetTargetingCursor()
+        {
+            var hotspot = new Vector2(targetingCursorTex.width / 2f, targetingCursorTex.height / 2f);
+            Cursor.SetCursor(targetingCursorTex, hotspot, CursorMode.Auto);
+        }
+        
+        public void ResetTargetingCursor()
+        {
+            Cursor.SetCursor(null, Vector2.zero, CursorMode.Auto);
+        }
         
         // ═══════════════════════════════════════════════════════════════════════════
         // SYNCHRONOUS QUERIES (for Update loops, conditions, etc.)

@@ -182,7 +182,7 @@ namespace FarEmerald.PlayForge
                 // Ensure parent is registered (creates implicit parent tags)
                 if (!_tagsByPath.ContainsKey(parentPath))
                 {
-                    RegisterInternal(Tag.Generate(parentPath));
+                    RegisterInternal(Tag.GenerateAsUnique(parentPath));
                 }
             }
             else
@@ -463,6 +463,120 @@ namespace FarEmerald.PlayForge
         // ═══════════════════════════════════════════════════════════════════════════
         // Utility Methods
         // ═══════════════════════════════════════════════════════════════════════════
+
+        public static class TagUtil
+        {
+            public const int rngGenerationBufferSize = 64;
+            
+            /// <summary>
+        /// Generates a random tag string of length 32–64 that does not exist in the hierarchy.
+        /// The tag uses letters, digits, dots, and underscores. Dot placement is controlled to
+        /// ensure the result satisfies <see cref="IsValidPath"/>.
+        /// </summary>
+        /// <returns>A unique random tag string guaranteed not to be registered.</returns>
+            public static Tag GenerateUniqueRandomTag(int N = rngGenerationBufferSize)
+            {
+                // Characters valid per IsValidPath: letters, digits, dot, underscore.
+                // Dots are excluded from the first/last positions and cannot appear consecutively.
+                const string AlphaNum = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+                const string Interior = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_.";
+
+                const int MinLength = 32;
+                const int MaxLength = 64;
+                
+                var rng    = new System.Random();
+                var buffer = new System.Text.StringBuilder(64);
+
+                while (true)
+                {
+                    buffer.Clear();
+
+                    int length = Mathf.Clamp(N, MinLength, MaxLength);
+
+                    // First character: letter or digit only (no dot/underscore at start)
+                    buffer.Append(AlphaNum[rng.Next(AlphaNum.Length)]);
+
+                    for (int i = 1; i < length - 1; i++)
+                    {
+                        // Never place a dot directly after another dot
+                        char prev = buffer[buffer.Length - 1];
+                        if (prev == '.')
+                        {
+                            // Force a non-dot character
+                            buffer.Append(AlphaNum[rng.Next(AlphaNum.Length)]);
+                        }
+                        else
+                        {
+                            buffer.Append(Interior[rng.Next(Interior.Length)]);
+                        }
+                    }
+
+                    // Last character: letter or digit only (no dot/underscore at end)
+                    buffer.Append(AlphaNum[rng.Next(AlphaNum.Length)]);
+
+                    string candidate = buffer.ToString();
+
+                    // Verify uniqueness against the live registry (lock for thread safety)
+                    lock (_lock)
+                    {
+                        if (!_tagsByPath.ContainsKey(candidate))
+                            return candidate;
+                    }
+                    // Collision is astronomically unlikely given the search space, but retry if it happens.
+                }
+            }
+            
+            /// <summary>
+            /// Creates a deterministic tag string from a given input and prefix, padded to
+            /// exactly <paramref name="N"/> characters using a SHA-256-derived fill.
+            ///
+            /// Output format: <c>[prefix][input][padding]</c>, hard-clamped to <paramref name="N"/>.
+            ///
+            /// If <c>prefix + input</c> already meets or exceeds <paramref name="N"/>, the
+            /// result is simply truncated — no padding is appended.
+            ///
+            /// The same <paramref name="input"/>, <paramref name="prefix"/>, and
+            /// <paramref name="N"/> will always produce the same output.
+            /// </summary>
+            /// <param name="input">The source string to encode into the tag.</param>
+            /// <param name="prefix">A fixed string prepended before the input.</param>
+            /// <param name="N">Target tag length, clamped internally to [32, 64].</param>
+            /// <returns>A deterministic tag string of exactly <paramref name="N"/> characters
+            /// (or fewer only if prefix + input together exceed it).</returns>
+            public static Tag GenerateDeterministicTag(string input, string prefix, int N = rngGenerationBufferSize)
+            {
+                // Valid characters per IsValidPath (no dot at end, so omit it from padding pool)
+                const string PaddingChars =
+                    "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_";
+
+                N = System.Math.Clamp(N, 32, 64);
+
+                string head = (prefix ?? string.Empty) + (input ?? string.Empty);
+
+                // Already at or beyond the target length — truncate and return
+                if (head.Length >= N)
+                    return Tag.Generate(head.Substring(0, N));
+
+                int paddingNeeded = N - head.Length;
+
+                // Derive padding deterministically from the head via SHA-256.
+                // Using the full head (not just input) means different prefixes always diverge.
+                byte[] hashBytes;
+                using (var sha = System.Security.Cryptography.SHA256.Create())
+                    hashBytes = sha.ComputeHash(System.Text.Encoding.UTF8.GetBytes(head));
+
+                var sb = new System.Text.StringBuilder(N);
+                sb.Append(head);
+
+                // Walk through hash bytes (cycling if needed) to pick padding characters.
+                // Each byte is mapped uniformly-ish onto PaddingChars via modulo — the
+                // character set size (63) is small enough that modulo bias is negligible.
+                for (int i = 0; i < paddingNeeded; i++)
+                    sb.Append(PaddingChars[hashBytes[i % hashBytes.Length] % PaddingChars.Length]);
+
+                return Tag.Generate(sb.ToString());
+            }
+        }
         
         /// <summary>
         /// Creates a new child tag under the given parent.
@@ -482,7 +596,7 @@ namespace FarEmerald.PlayForge
             if (segments == null || segments.Length == 0)
                 return default;
             
-            return Tag.Generate(string.Join(".", segments));
+            return Tag.GenerateAsUnique(string.Join(".", segments));
         }
         
         /// <summary>
@@ -515,115 +629,6 @@ namespace FarEmerald.PlayForge
         {
             return $"[TagHierarchy] Tags: {_tagsByPath.Count}, Roots: {_rootTags.Count}, " +
                    $"Parents: {_directChildren.Count}, Cache: {_allDescendantsCache.Count}";
-        }
-        
-        /// <summary>
-        /// Generates a random tag string of length 32–64 that does not exist in the hierarchy.
-        /// The tag uses letters, digits, dots, and underscores. Dot placement is controlled to
-        /// ensure the result satisfies <see cref="IsValidPath"/>.
-        /// </summary>
-        /// <returns>A unique random tag string guaranteed not to be registered.</returns>
-        public static Tag GenerateUniqueRandomTag(int N = 64)
-        {
-            // Characters valid per IsValidPath: letters, digits, dot, underscore.
-            // Dots are excluded from the first/last positions and cannot appear consecutively.
-            const string AlphaNum = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
-            const string Interior = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_.";
-
-            const int MinLength = 32;
-            const int MaxLength = 64;
-            
-            var rng    = new System.Random();
-            var buffer = new System.Text.StringBuilder(64);
-
-            while (true)
-            {
-                buffer.Clear();
-
-                int length = Mathf.Clamp(N, MinLength, MaxLength);
-
-                // First character: letter or digit only (no dot/underscore at start)
-                buffer.Append(AlphaNum[rng.Next(AlphaNum.Length)]);
-
-                for (int i = 1; i < length - 1; i++)
-                {
-                    // Never place a dot directly after another dot
-                    char prev = buffer[buffer.Length - 1];
-                    if (prev == '.')
-                    {
-                        // Force a non-dot character
-                        buffer.Append(AlphaNum[rng.Next(AlphaNum.Length)]);
-                    }
-                    else
-                    {
-                        buffer.Append(Interior[rng.Next(Interior.Length)]);
-                    }
-                }
-
-                // Last character: letter or digit only (no dot/underscore at end)
-                buffer.Append(AlphaNum[rng.Next(AlphaNum.Length)]);
-
-                string candidate = buffer.ToString();
-
-                // Verify uniqueness against the live registry (lock for thread safety)
-                lock (_lock)
-                {
-                    if (!_tagsByPath.ContainsKey(candidate))
-                        return candidate;
-                }
-                // Collision is astronomically unlikely given the search space, but retry if it happens.
-            }
-        }
-        
-        /// <summary>
-        /// Creates a deterministic tag string from a given input and prefix, padded to
-        /// exactly <paramref name="N"/> characters using a SHA-256-derived fill.
-        ///
-        /// Output format: <c>[prefix][input][padding]</c>, hard-clamped to <paramref name="N"/>.
-        ///
-        /// If <c>prefix + input</c> already meets or exceeds <paramref name="N"/>, the
-        /// result is simply truncated — no padding is appended.
-        ///
-        /// The same <paramref name="input"/>, <paramref name="prefix"/>, and
-        /// <paramref name="N"/> will always produce the same output.
-        /// </summary>
-        /// <param name="input">The source string to encode into the tag.</param>
-        /// <param name="prefix">A fixed string prepended before the input.</param>
-        /// <param name="N">Target tag length, clamped internally to [32, 64].</param>
-        /// <returns>A deterministic tag string of exactly <paramref name="N"/> characters
-        /// (or fewer only if prefix + input together exceed it).</returns>
-        public static Tag GenerateDeterministicTag(string input, string prefix, int N = 64)
-        {
-            // Valid characters per IsValidPath (no dot at end, so omit it from padding pool)
-            const string PaddingChars =
-                "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_";
-
-            N = System.Math.Clamp(N, 32, 64);
-
-            string head = (prefix ?? string.Empty) + (input ?? string.Empty);
-
-            // Already at or beyond the target length — truncate and return
-            if (head.Length >= N)
-                return head.Substring(0, N);
-
-            int paddingNeeded = N - head.Length;
-
-            // Derive padding deterministically from the head via SHA-256.
-            // Using the full head (not just input) means different prefixes always diverge.
-            byte[] hashBytes;
-            using (var sha = System.Security.Cryptography.SHA256.Create())
-                hashBytes = sha.ComputeHash(System.Text.Encoding.UTF8.GetBytes(head));
-
-            var sb = new System.Text.StringBuilder(N);
-            sb.Append(head);
-
-            // Walk through hash bytes (cycling if needed) to pick padding characters.
-            // Each byte is mapped uniformly-ish onto PaddingChars via modulo — the
-            // character set size (63) is small enough that modulo bias is negligible.
-            for (int i = 0; i < paddingNeeded; i++)
-                sb.Append(PaddingChars[hashBytes[i % hashBytes.Length] % PaddingChars.Length]);
-
-            return sb.ToString();
         }
     }
 }

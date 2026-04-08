@@ -52,16 +52,21 @@ namespace FarEmerald.PlayForge
 
         public AbilityActivationRequest CreateActivationRequest(int index, EAbilityActivationPolicyExtended? policy = null)
         {
-            return new AbilityActivationRequest(index, this, policy);
+            var _policy = policy?.Translate(this) 
+                         ?? (AbilityCache.TryGetValue(index, out var container) 
+                             ? container.Spec.Base.Definition.ActivationPolicy.Translate(this) 
+                             : DefaultActivationPolicy);
+            
+            return new AbilityActivationRequest(index, this, _policy);
         }
         
         public struct AbilityActivationRequest
         {
             public int Index;
-            public EAbilityActivationPolicyExtended? Policy;
+            public EAbilityActivationPolicy Policy;
             public AbilitySystemComponent System;
             
-            public AbilityActivationRequest(int index, AbilitySystemComponent asc, EAbilityActivationPolicyExtended? policy = null)
+            public AbilityActivationRequest(int index, AbilitySystemComponent asc, EAbilityActivationPolicy policy)
             {
                 Index = index;
                 System = asc;
@@ -246,10 +251,12 @@ namespace FarEmerald.PlayForge
 
         public bool CanActivateAbility(int index)
         {
-            return Enabled 
+            return TryGetAbilityContainer(index, out var container)
+                   && CanActivateAbility(container, AbilityDataPacket.GenerateFrom(container, this));
+            /*return Enabled 
                    && !Locked
                    && AbilityCache.TryGetValue(index, out var container)
-                   && (!container.Spec.Base.IgnoreWhenLevelZero || container.Spec.GetLevel() > 0); 
+                   && (!container.Spec.Base.IgnoreWhenLevelZero || container.Spec.GetLevel() > 0); */
         }
         
         private bool CanActivateAbility(AbilitySpecContainer container, AbilityDataPacket data)
@@ -269,21 +276,20 @@ namespace FarEmerald.PlayForge
         
         private bool ProcessActivationRequest(AbilityDataPacket data)
         {
-            var policy = data.Request.Policy?.Translate(this) 
-                         ?? AbilityCache[data.Request.Index].Spec.Base.Definition.ActivationPolicy.Translate(this);
+            Debug.Log($"Process activation req: {data.Spec.GetReadableDefinition().GetName()} => Policy: {data.Request.Policy} ({!IsExecutingPolicy(EAbilityActivationPolicy.QueueActivationIfBusy)})");
             
-            return policy switch
+            return data.Request.Policy switch
             {
                 EAbilityActivationPolicy.AlwaysActivate => 
                     AlwaysActivateTargetingValidation(data.Request.Index) && 
                     ActivateAbility(AbilityCache[data.Request.Index], data),
                     
                 EAbilityActivationPolicy.ActivateIfIdle => 
-                    !IsExecutingPolicyCritical(EAbilityActivationPolicy.ActivateIfIdle) && 
+                    !IsExecutingPolicy(EAbilityActivationPolicy.ActivateIfIdle) && 
                     ActivateAbility(AbilityCache[data.Request.Index], data),
                     
                 EAbilityActivationPolicy.QueueActivationIfBusy => 
-                    !IsExecutingPolicyCritical(EAbilityActivationPolicy.QueueActivationIfBusy) 
+                    !IsExecutingPolicy(EAbilityActivationPolicy.QueueActivationIfBusy) 
                         ? ActivateAbility(AbilityCache[data.Request.Index], data) 
                         : QueueAbilityActivation(data.Request),
                         
@@ -366,19 +372,31 @@ namespace FarEmerald.PlayForge
 
         public void ReleaseClaim(AbilitySpecContainer container, AbilityDataPacket data)
         {
-            if (!TryGetCacheIndexOf(container.Spec.Base, out int index)) return;
-
-            var policy = data?.Request.Policy?.Translate(this) 
-                         ?? container.Spec.Base.Definition.ActivationPolicy.Translate(this);
-            ActiveCache[policy].Remove(index);
+            if (!AbilityCache.ContainsKey(container.Index)) return;
+            // if (!TryGetCacheIndexOf(container.Spec.Base, out int index)) return;
 
             TimeUtility.End(container.Spec.Base.Tags.AssetTag, out _);
 
-            if (data is null) return;
-            
+            var policy = data?.Request.Policy;
+            Debug.Log($"\t\t{policy}");
+            if (!policy.HasValue)
+            {
+                Debug.Log($"\t\tCannot release properly: no activation policy");
+                return;
+            }
+
+            ActiveCache[policy.Value].Remove(container.Index);
             Callbacks.AbilityEnded(AbilityCallbackStatus.GenerateForAbilityEvent(data));
-            
-            if (policy == EAbilityActivationPolicy.QueueActivationIfBusy && activationQueue.Count > 0) 
+        }
+
+        public void EndAbilityActivation()
+        {
+            // Process the activation queue after ANY ability finishes.
+            // Previously this only fired for QueueActivationIfBusy, which meant
+            // abilities with AlwaysActivate or ActivateIfIdle policies could block
+            // queued abilities indefinitely. TryActivateAbility will re-queue the
+            // ability if the system is still busy with another critical process.
+            if (activationQueue.Count > 0)
                 TryActivateAbility(activationQueue.Dequeue());
         }
 
