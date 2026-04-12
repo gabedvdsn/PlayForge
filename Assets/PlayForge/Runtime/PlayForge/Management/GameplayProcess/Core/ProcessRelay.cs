@@ -16,6 +16,9 @@
         }
 
         public int CacheIndex => _pcb.CacheIndex;
+        public bool IsRunning => State == EProcessState.Running;
+        public bool IsWaiting => State == EProcessState.Waiting;
+        
         public AbstractProcessWrapper Wrapper => _pcb.Wrapper;
         public IGameplayProcessHandler Handler => _pcb.Handler;
         public EProcessState State => _pcb.State;

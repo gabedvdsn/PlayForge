@@ -16,9 +16,9 @@ namespace FarEmerald.PlayForge
                 return;
             }
 
-            var gas = target.AsGAS();
+            var gas = target.ToGAS();
             
-            foreach (GameplayEffect effect in Effects) target.ApplyGameplayEffect(gas.GenerateEffectSpec(data.Spec, effect));
+            foreach (GameplayEffect effect in Effects) target.ApplyGameplayEffect(gas.GenerateEffectSpec(data.EffectOrigin, effect));
         }
 
         public override UniTask Activate(AbilityDataPacket data, CancellationToken token)
@@ -32,7 +32,7 @@ namespace FarEmerald.PlayForge
             {
                 return;
             }
-            var gas = target.AsGAS();
+            var gas = target.ToGAS();
             foreach (GameplayEffect effect in Effects) gas.RemoveGameplayEffect(effect);
         }
         public override bool IsCriticalSection => false;

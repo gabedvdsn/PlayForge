@@ -15,9 +15,9 @@ namespace FarEmerald.PlayForge
         // Constructor
         // ═══════════════════════════════════════════════════════════════════════════
 
-        public ItemSpec(ISource owner, Item @base, int level) : base(owner, new AttributeValueClamped(level, @base.MaxLevel))
+        public ItemSpec(ISource owner, Item item, int level) : base(owner, new AttributeValueClamped(level, item.MaxLevel), item.Tags.AssetTag)
         {
-            Base = @base;
+            Base = item;
         }
         
         // ═══════════════════════════════════════════════════════════════════════════

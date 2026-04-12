@@ -111,6 +111,11 @@ namespace FarEmerald.PlayForge
 
         public async UniTask ActivateTargetingTask(CancellationToken token, AbilityDataPacket implicitData)
         {
+            if (Behaviour.Targeting != null)
+            {
+                implicitData.AppendPath($"Targeting[{Behaviour.Targeting.GetType().Name}]");
+            }
+
             if (HasCompiledTargeting)
             {
                 await ActivateTargetingViaSequence(token, implicitData);
@@ -126,7 +131,7 @@ namespace FarEmerald.PlayForge
         /// </summary>
         private async UniTask ActivateTargetingViaSequence(CancellationToken token, AbilityDataPacket implicitData)
         {
-            var handler = implicitData.Spec.GetOwner();
+            var handler = implicitData.EffectOrigin.GetOwner();
             if (!ProcessControl.Register(CompiledTargeting, handler, implicitData, out var relay))
             {
                 // Fallback to legacy if registration fails
@@ -187,6 +192,11 @@ namespace FarEmerald.PlayForge
         {
             Reset();
 
+            // Run asset loaders before any stages execute.
+            // These are synchronous tasks that populate the data packet with
+            // pre-configured assets (effects, entities, tags, etc.).
+            RunAssetLoaders(implicitData, token);
+
             if (IsCompiled)
             {
                 await ActivateViaSequence(token, implicitData);
@@ -198,12 +208,34 @@ namespace FarEmerald.PlayForge
         }
 
         /// <summary>
+        /// Executes all configured asset loading tasks, populating the data packet
+        /// with pre-configured assets before ability stages begin.
+        /// </summary>
+        private void RunAssetLoaders(AbilityDataPacket data, CancellationToken token)
+        {
+            if (Behaviour.AssetLoaders == null || Behaviour.AssetLoaders.Count == 0) return;
+
+            data.AppendPath($"Assets[{Behaviour.AssetLoaders.Count}]");
+
+            foreach (var loader in Behaviour.AssetLoaders)
+            {
+                if (loader == null) continue;
+                
+                loader.Prepare(data);
+                loader.Activate(data, token);
+                loader.Clean(data);
+                
+                data.AppendPath($"{loader.GetType().Name}");
+            }
+        }
+
+        /// <summary>
         /// Runs the compiled execution TaskSequence through ProcessControl.
         /// </summary>
         private async UniTask ActivateViaSequence(CancellationToken token, AbilityDataPacket implicitData)
         {
             // AbilityDataPacket extends SequenceDataPacket, so pass it directly.
-            var handler = implicitData.Spec.GetOwner();
+            var handler = implicitData.EffectOrigin.GetOwner();
             if (!ProcessControl.Register(CompiledSequence, handler, implicitData, out var relay))
             {
                 Debug.LogWarning("[AbilityProxy] Failed to register ability sequence with ProcessControl. " +
@@ -254,7 +286,7 @@ namespace FarEmerald.PlayForge
             // Legacy injection path
             var _success = injection.OnProxyInject(this, activeData);
 
-            var owner = activeData.Spec.GetOwner();
+            var owner = activeData.EffectOrigin.GetOwner();
             if (!owner.FindAbilitySystem(out var asc)) return;
 
             var stageSafe = (StageIndex >= 0 && StageIndex < Behaviour.Stages.Count)
@@ -275,7 +307,7 @@ namespace FarEmerald.PlayForge
             AbilityDataPacket activeData,
             bool success)
         {
-            var owner = activeData.Spec.GetOwner();
+            var owner = activeData.EffectOrigin.GetOwner();
             if (!owner.FindAbilitySystem(out var asc)) return;
 
             var stageSafe = GetCurrentAbilityStage();
@@ -310,14 +342,14 @@ namespace FarEmerald.PlayForge
 
         private async UniTask ActivateLegacy(CancellationToken token, AbilityDataPacket implicitData)
         {
-            await ActivateNextStage(implicitData, token);
+            await ActivateNextStageLegacy(implicitData, token);
 
             await UniTask.WaitUntil(() => maintainedStages <= 0, cancellationToken: token);
 
             implicitData.InUse = false;
         }
 
-        private async UniTask ActivateNextStage(AbilityDataPacket data, CancellationToken token)
+        private async UniTask ActivateNextStageLegacy(AbilityDataPacket data, CancellationToken token)
         {
             StageIndex += 1;
             if (StageIndex < Behaviour.Stages.Count)
@@ -328,7 +360,7 @@ namespace FarEmerald.PlayForge
 
                     foreach (var task in Behaviour.Stages[StageIndex].Tasks) task.Prepare(data);
 
-                    ActivateStage(Behaviour.Stages[StageIndex], StageIndex, data, token).Forget();
+                    ActivateStageLegacy(Behaviour.Stages[StageIndex], StageIndex, data, token).Forget();
                     await nextStageSignal.Task.AttachExternalCancellation(token);
                 }
                 catch (Exception ex)
@@ -338,20 +370,20 @@ namespace FarEmerald.PlayForge
                 finally
                 {
                     foreach (var task in Behaviour.Stages[StageIndex].Tasks) task.Clean(data);
-                    if (Behaviour.Stages[StageIndex].ApplyUsageEffects && !usageEffectsApplied && data.Spec is AbilitySpec spec)
+                    if (Behaviour.Stages[StageIndex].ApplyUsageEffects && !usageEffectsApplied && data.EffectOrigin is AbilitySpec spec)
                     {
                         spec.ApplyUsageEffects();
                         usageEffectsApplied = true;
                     }
 
-                    await ActivateNextStage(data, token);
+                    await ActivateNextStageLegacy(data, token);
                 }
             }
         }
 
-        private async UniTask ActivateStage(AbilityTaskBehaviourStage stage, int stageIndex, AbilityDataPacket data, CancellationToken token)
+        private async UniTask ActivateStageLegacy(AbilityTaskBehaviourStage stage, int stageIndex, AbilityDataPacket data, CancellationToken token)
         {
-            var asc = data.Spec.GetOwner().AsGAS().GetAbilitySystem();
+            var asc = data.EffectOrigin.GetOwner().ToGAS().GetAbilitySystem();
             if (asc is null)
             {
                 if (stageIndex == StageIndex) nextStageSignal?.TrySetResult();
@@ -415,7 +447,7 @@ namespace FarEmerald.PlayForge
             }
         }
 
-        public UniTask[] GetWatchedTasks(UniTask[] tasks, AbilityTaskBehaviourStage stage, AbilityDataPacket data, AbilitySystemCallbacks callbacks, bool notifyOnCancel)
+        public UniTask[] GetWatchedTasksLegacy(UniTask[] tasks, AbilityTaskBehaviourStage stage, AbilityDataPacket data, AbilitySystemCallbacks callbacks, bool notifyOnCancel)
         {
             return tasks
                 .Select((t, i) => WatchTask(t, callbacks, i, stage, data, notifyOnCancel))

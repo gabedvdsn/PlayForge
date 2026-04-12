@@ -80,7 +80,7 @@ namespace FarEmerald.PlayForge
             }
             else if (regData.TryGetFirst<IGameplayAbilitySystem>(Tags.POSITION, out var gasPos))
             {
-                transform.position = gasPos.AsTransform().position;
+                transform.position = gasPos.GetTargetingPacket().position;
             }
             else if (regData.TryGetFirst<Transform>(Tags.POSITION, out var tPos))
             {
@@ -94,7 +94,7 @@ namespace FarEmerald.PlayForge
             }
             else if (regData.TryGetFirst<IGameplayAbilitySystem>(Tags.ROTATION, out var gasRot))
             {
-                transform.rotation = gasRot.AsTransform().rotation;
+                transform.rotation = gasRot.GetTargetingPacket().rotation;
             }
             else if (regData.TryGetFirst<Transform>(Tags.ROTATION, out var tRot))
             {
@@ -137,7 +137,6 @@ namespace FarEmerald.PlayForge
             
             foreach (var _relay in HandlerRelays.Values.ToArray())
             {
-                Debug.Log($"\tUnsubscribing handled relay: {_relay.Wrapper.ProcessName}");
                 ProcessControl.Instance.TerminateImmediate(_relay.CacheIndex);
             }
         }
@@ -178,6 +177,10 @@ namespace FarEmerald.PlayForge
                 .Select(user => ApplyBehaviour(cb.CreateInstance(), user, token))
                 .ToArray();
             await UniTask.WhenAll(tasks);
+        }
+        public ProcessRelay[] GetRelays()
+        {
+            return HandlerRelays.Values.ToArray();
         }
         public bool HandlerValidateAgainst(IGameplayProcessHandler handler)
         {

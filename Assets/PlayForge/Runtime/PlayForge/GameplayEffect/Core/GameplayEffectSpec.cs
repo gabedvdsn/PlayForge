@@ -143,8 +143,8 @@ namespace FarEmerald.PlayForge
         }
         public bool DerivationAlive()
         {
-            Debug.Log($"Check if {Base.GetName()} is alive: {((Source.AsGAS()?.TryGetEffectContainer(Base, out var c) ?? false) && c.Spec == this)}");
-            return (Source.AsGAS()?.TryGetEffectContainer(Base, out var container) ?? false) && container.Spec == this;
+            Debug.Log($"Check if {Base.GetName()} is alive: {((Source.ToGAS()?.TryGetEffectContainer(Base, out var c) ?? false) && c.Spec == this)}");
+            return (Source.ToGAS()?.TryGetEffectContainer(Base, out var container) ?? false) && container.Spec == this;
         }
         public IAttribute GetAttribute()
         {

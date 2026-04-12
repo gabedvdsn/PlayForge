@@ -67,7 +67,7 @@ namespace FarEmerald.PlayForge
             if (!_cache.ContainsKey(impactData.Attribute)) return;
             
             var context = new ImpactWorkerContext(
-                impactData.Target?.AsGAS(),
+                impactData.Target?.ToGAS(),
                 impactData,
                 _frameSummary,
                 _actionQueue

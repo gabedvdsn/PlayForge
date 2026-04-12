@@ -26,6 +26,15 @@ namespace FarEmerald.PlayForge.Extended.Editor
         private VisualElement levelSourceContent;
         private VisualElement levelingContent;
 
+        private const string Section_Definition = "Section_Definition";
+        private const string Section_LevelSource = "Section_LevelSource";
+        private const string Section_Tags = "Section_Tags";
+        private const string Section_Runtime = "Section_Runtime";
+        private const string Section_Leveling = "Section_Leveling";
+        private const string Section_Validation = "Section_Validation";
+        private const string Section_Workers = "Section_Workers";
+        private const string Section_LocalData = "Section_LocalData";
+
         // ═══════════════════════════════════════════════════════════════════════════
         // Header Configuration (IMGUI Header)
         // ═══════════════════════════════════════════════════════════════════════════
@@ -100,9 +109,9 @@ namespace FarEmerald.PlayForge.Extended.Editor
         
         private void BuildDefinitionSection(VisualElement parent)
         {
-            var section = CreateCollapsibleSection(new SectionConfig
+            var section = CreateSection(new SectionConfig
             {
-                Name = "Definition",
+                Name = Section_Definition,
                 Title = "Definition",
                 AccentColor = GetAssetTypeColor(),
                 HelpUrl = "https://docs.playforge.dev/abilities/definition",
@@ -199,9 +208,9 @@ namespace FarEmerald.PlayForge.Extended.Editor
         
         private void BuildTagsSection(VisualElement parent)
         {
-            var section = CreateCollapsibleSection(new SectionConfig
+            var section = CreateSection(new SectionConfig
             {
-                Name = "Tags",
+                Name = Section_Tags,
                 Title = "Tags",
                 AccentColor = GetAssetTypeColor(),
                 HelpUrl = "https://docs.playforge.dev/abilities/tags",
@@ -262,9 +271,9 @@ namespace FarEmerald.PlayForge.Extended.Editor
         
         private void BuildRuntimeSection(VisualElement parent)
         {
-            var section = CreateCollapsibleSection(new SectionConfig
+            var section = CreateSection(new SectionConfig
             {
-                Name = "Runtime",
+                Name = Section_Runtime,
                 Title = "Runtime Behaviour",
                 AccentColor = GetAssetTypeColor(),
                 HelpUrl = "https://docs.playforge.dev/abilities/runtime",
@@ -303,19 +312,46 @@ namespace FarEmerald.PlayForge.Extended.Editor
             useImplicit.BindProperty(proxyProp.FindPropertyRelative(nameof(AbilityBehaviour.UseImplicitTargeting)));
             content.Add(useImplicit);
             
+            var implicitTargetingTagProp = proxyProp.FindPropertyRelative(nameof(AbilityBehaviour.ImplicitTag));
+            var implicitTargetingTag = new PropertyField(implicitTargetingTagProp, "Implicit Tag");
+            implicitTargetingTag.BindProperty(proxyProp.FindPropertyRelative(nameof(AbilityBehaviour.ImplicitTag)));
+            content.Add(implicitTargetingTag);
+
+            useImplicit.RegisterValueChangedCallback(evt =>
+            {
+                implicitTargetingTag.style.display = evt.newValue ? DisplayStyle.Flex : DisplayStyle.None;
+            });
+            
+            content.Add(CreateDivider());
+
+            content.Add(CreateHintLabel("Load assets and other data into the runtime data packet."));
+            var assetLoadersProp = proxyProp.FindPropertyRelative(nameof(AbilityBehaviour.AssetLoaders));
+            var assetLoadersField = new PropertyField(assetLoadersProp, "Asset Loaders");
+            assetLoadersField.style.marginBottom = 4;
+            assetLoadersField.style.marginTop = 2;
+            assetLoadersField.Bind(serializedObject);
+            content.Add(assetLoadersField);
+
+            content.Add(CreateDivider());
+            
             // Stages
+            content.Add(CreateHintLabel("Configure Ability runtime with tasks."));
             content.Add(CreatePropertyField(proxyProp.FindPropertyRelative(nameof(AbilityBehaviour.Stages)), "Stages", "Stages"));
         }
 
+        // ═══════════════════════════════════════════════════════════════════════════
+        // Asset Loaders List
+        // ═══════════════════════════════════════════════════════════════════════════
+        
         // ═══════════════════════════════════════════════════════════════════════════
         // Leveling Section
         // ═══════════════════════════════════════════════════════════════════════════
         
         private void BuildLevelingSection(VisualElement parent)
         {
-            var section = CreateCollapsibleSection(new SectionConfig
+            var section = CreateSection(new SectionConfig
             {
-                Name = "Leveling",
+                Name = Section_Leveling,
                 Title = "Leveling",
                 AccentColor = GetAssetTypeColor(),
                 HelpUrl = "https://docs.playforge.dev/abilities/leveling",
@@ -656,9 +692,9 @@ namespace FarEmerald.PlayForge.Extended.Editor
         
         private void BuildLevelSourceSection(VisualElement parent)
         {
-            var section = CreateCollapsibleSection(new SectionConfig
+            var section = CreateSection(new SectionConfig
             {
-                Name = "LevelSource",
+                Name = Section_Leveling,
                 Title = "Level Source",
                 AccentColor = GetAssetTypeColor(),
                 HelpUrl = "https://docs.playforge.dev/abilities/level-source",
@@ -957,9 +993,9 @@ namespace FarEmerald.PlayForge.Extended.Editor
         
         private void BuildValidationSection(VisualElement parent)
         {
-            var section = CreateCollapsibleSection(new SectionConfig
+            var section = CreateSection(new SectionConfig
             {
-                Name = "Validation",
+                Name = Section_Validation,
                 Title = "Validation Rules",
                 AccentColor = GetAssetTypeColor(),
                 HelpUrl = "https://docs.playforge.dev/abilities/validation",
@@ -1019,9 +1055,9 @@ namespace FarEmerald.PlayForge.Extended.Editor
         
         private void BuildWorkersSection(VisualElement parent)
         {
-            var section = CreateCollapsibleSection(new SectionConfig
+            var section = CreateSection(new SectionConfig
             {
-                Name = "Workers",
+                Name = Section_Workers,
                 Title = "Workers",
                 AccentColor = GetAssetTypeColor(),
                 HelpUrl = "https://docs.playforge.dev/abilities/workers",
@@ -1067,9 +1103,9 @@ namespace FarEmerald.PlayForge.Extended.Editor
         
         private void BuildLocalDataSection(VisualElement parent)
         {
-            var section = CreateCollapsibleSection(new SectionConfig
+            var section = CreateSection(new SectionConfig
             {
-                Name = "LocalData",
+                Name = Section_LocalData,
                 Title = "Local Data",
                 AccentColor = GetAssetTypeColor(),
                 HelpUrl = "https://docs.playforge.dev/abilities/localdata",

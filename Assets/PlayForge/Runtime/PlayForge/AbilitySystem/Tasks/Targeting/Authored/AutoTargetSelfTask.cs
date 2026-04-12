@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Threading;
 using Cysharp.Threading.Tasks;
 
@@ -16,10 +16,10 @@ namespace FarEmerald.PlayForge
 
         public override UniTask Activate(AbilityDataPacket data, CancellationToken token)
         {
-            var owner = data.Spec.GetOwner();
+            var owner = data.AbilitySpec.GetOwner();
             if (owner is ITarget selfTarget && TargetIsValid(selfTarget))
             {
-                data.SetPrimary(Tags.TARGET_REAL, selfTarget);
+                data.SetTargetingPacket(Tags.TARGET, selfTarget.GetTargetingPacket());
             }
             else
             {
@@ -28,8 +28,6 @@ namespace FarEmerald.PlayForge
 
             return UniTask.CompletedTask;
         }
-
-        protected override bool ConnectInputHandler(AbilityDataPacket data) => true;
-        protected override void DisconnectInputHandler(AbilityDataPacket data) { }
+        
     }
 }

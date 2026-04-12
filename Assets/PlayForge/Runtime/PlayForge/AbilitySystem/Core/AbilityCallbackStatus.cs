@@ -10,8 +10,7 @@ namespace FarEmerald.PlayForge
         public readonly IAbilityInjection Injection;
         public readonly bool Success;
 
-        public AbilitySpec Ability => Data.Spec as AbilitySpec;
-        public float TimeElapsed => TimeUtility.Get(Ability.Base.Tags.AssetTag, out float time) ? time : -1f;
+        public AbilitySpec Ability => Data.EffectOrigin as AbilitySpec;
         public AbstractAbilityTask Task => Tasks?.Count > 0 ? Tasks[0] : null;
 
         private AbilityCallbackStatus(AbilityDataPacket data, List<AbstractAbilityTask> tasks, AbilityTaskBehaviourStage stage, IAbilityInjection injection, bool success)

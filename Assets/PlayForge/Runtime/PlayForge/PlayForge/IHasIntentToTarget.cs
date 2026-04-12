@@ -2,6 +2,6 @@
 {
     public interface IHasIntentToTarget
     {
-        public void SetTarget(ITarget _target, AbstractTransformPacket _transform);
+        public void SetTarget(ITarget _target, AbstractTargetingPacket targeting);
     }
 }

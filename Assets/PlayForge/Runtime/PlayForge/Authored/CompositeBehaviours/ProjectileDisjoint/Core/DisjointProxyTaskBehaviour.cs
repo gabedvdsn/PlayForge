@@ -50,7 +50,7 @@ namespace FarEmerald.PlayForge
                 return UniTask.CompletedTask;
             }
 
-            userWithIntent.SetTarget(_target, _target.AsTransform());
+            userWithIntent.SetTarget(_target, _target.GetTargetingPacket());
             SetStatus(user, EActionStatus.Success);
             
             return UniTask.CompletedTask;

@@ -16,7 +16,6 @@ namespace FarEmerald.PlayForge
         /// </summary>
         public bool AddWorker(IAttribute attribute, AbstractAttributeWorker worker)
         {
-            Debug.Log(worker.GetType().Name);
             if (_workers.ContainsKey(attribute))
             {
                 if (_workers[attribute].Contains(worker)) return false;

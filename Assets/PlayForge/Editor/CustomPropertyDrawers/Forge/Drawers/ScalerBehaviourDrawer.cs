@@ -13,9 +13,9 @@ namespace FarEmerald.PlayForge.Extended.Editor
     [CustomPropertyDrawer(typeof(AbstractScalerBehaviour), true)]
     public class ScalerBehaviourDrawer : AbstractTypeRefDrawer<AbstractScalerBehaviour>
     {
-        private VisualElement _childFieldsContainer;
+        //private VisualElement _childFieldsContainer;
 
-        public override VisualElement CreatePropertyGUI(SerializedProperty prop)
+        /*public override VisualElement CreatePropertyGUI(SerializedProperty prop)
         {
             // Get the base GUI (type selector + dropdown)
             var baseGui = base.CreatePropertyGUI(prop);
@@ -52,14 +52,14 @@ namespace FarEmerald.PlayForge.Extended.Editor
             baseGui.TrackPropertyValue(prop, OnPropertyChanged);
             
             return baseGui;
-        }
+        }*/
 
         protected override Type GetDefault(SerializedProperty prop)
         {
             return typeof(AttenuateScalerBehaviour);
         }
 
-        private void OnPropertyChanged(SerializedProperty prop)
+        /*private void OnPropertyChanged(SerializedProperty prop)
         {
             PopulateChildFields(prop);
         }
@@ -119,7 +119,7 @@ namespace FarEmerald.PlayForge.Extended.Editor
             {
                 _childFieldsContainer.Bind(property.serializedObject);
             }
-        }
+        }*/
 
         protected override string GetStringValue(SerializedProperty prop, Type value)
         {

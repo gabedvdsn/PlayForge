@@ -103,27 +103,6 @@ namespace FarEmerald.PlayForge
             EndOfFrame();
         }
 
-        // Handling
-        public bool HandlerValidateAgainst(IGameplayProcessHandler handler)
-        {
-            return (GameplayAbilitySystem)handler == this;
-        }
-
-        public bool HandlerProcessIsSubscribed(ProcessRelay relay)
-        {
-            return Relays.ContainsKey(relay.CacheIndex);
-        }
-
-        public void HandlerSubscribeProcess(ProcessRelay relay)
-        {
-            Relays[relay.CacheIndex] = relay;
-        }
-
-        public bool HandlerVoidProcess(ProcessRelay relay)
-        {
-            return Relays.Remove(relay.CacheIndex);
-        }
-
         #endregion
         
         #region Source Targeting Parameters
@@ -156,9 +135,9 @@ namespace FarEmerald.PlayForge
             AttributeSystem.ModifyAttribute(attribute, sourcedModifiedValue, runEvents);
             return true;
         }
-        public AbstractTransformPacket AsTransform()
+        public AbstractTargetingPacket GetTargetingPacket()
         {
-            return new DefaultTransformPacket(transform);
+            return new DefaultTargetingPacket(transform, this);
         }
     
         #endregion
@@ -614,5 +593,12 @@ namespace FarEmerald.PlayForge
         }
         
         #endregion
+
+        public static GameplayAbilitySystem AddToGameObject(GameObject obj, EntityIdentity entity)
+        {
+            var gas = obj.AddComponent<GameplayAbilitySystem>();
+            gas.EntityData = entity;
+            return gas;
+        }
     }
 }

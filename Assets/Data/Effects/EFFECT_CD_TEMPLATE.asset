@@ -29,7 +29,9 @@ MonoBehaviour:
     effectValue: {fileID: 0}
     abilityValue: {fileID: 0}
     entityValue: {fileID: 0}
-  Template: {fileID: 0}
+  _template: {fileID: 0}
+  _templateOverrides: []
+  _templateListSnapshots: []
   Definition:
     Name: CD_TEMPLATE
     Description: Behind the mind of Shri'Lauck lie the depths of Vordll, and from
@@ -44,7 +46,7 @@ MonoBehaviour:
       Name: Ignore
   Tags:
     AssetTag:
-      Name: CDTEMPLATE
+      Name: Effect.CDTEMPLATE
     ContextTags:
     - Name: Status.Asda
     - Name: Status.Asda.Grag

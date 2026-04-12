@@ -16,9 +16,9 @@ namespace FarEmerald.PlayForge
         public bool FindAbilitySystem(out AbilitySystemComponent abilSystem);
         public bool TryGetAttributeValue(IAttribute attribute, out AttributeValue value);
         public bool TryModifyAttribute(IAttribute attribute, SourcedModifiedAttributeValue sourcedModifiedValue, bool runEvents = true);
-        public SystemComponentData AsData() => new SystemComponentData(this);
-        public IGameplayAbilitySystem AsGAS() => this is IGameplayAbilitySystem gas ? gas : null;
-        public AbstractTransformPacket AsTransform();
+        public SystemComponentData ToGASComponentData() => new SystemComponentData(this);
+        public IGameplayAbilitySystem ToGAS() => this is IGameplayAbilitySystem gas ? gas : null;
+        public AbstractTargetingPacket GetTargetingPacket();
         public void MarkDead();
         public bool IsDead { get; }
     }

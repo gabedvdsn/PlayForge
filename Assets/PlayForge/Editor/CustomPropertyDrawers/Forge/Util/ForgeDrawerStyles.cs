@@ -550,17 +550,17 @@ namespace FarEmerald.PlayForge.Extended.Editor
         /// Creates a complete collapsible section with header and content.
         /// Supports import/clear functionality when SerializedObject and PropertyPaths are provided.
         /// </summary>
-        public static SectionResult CreateCollapsibleSection(SectionConfig config)
+        public static SectionResult CreateCollapsibleSection(SectionConfig config, Action<string, bool> onClick = null)
         {
             var result = new SectionResult();
             
-            var section = new VisualElement { name = $"{config.Name}Section" };
+            var section = new VisualElement { name = $"{config.Name}_CONTAINER" };
             section.style.marginBottom = 4;
             section.AddToClassList("forge-section");
             result.Section = section;
 
             // Section Header
-            var header = new VisualElement { name = $"{config.Name}Header" };
+            var header = new VisualElement { name = $"{config.Name}" };
             header.style.flexDirection = FlexDirection.Row;
             header.style.alignItems = Align.Center;
             header.style.marginTop = 8;
@@ -706,7 +706,7 @@ namespace FarEmerald.PlayForge.Extended.Editor
             section.Add(content);
 
             // Setup collapse/expand behavior
-            SetupCollapseBehavior(header, content, arrow);
+            SetupCollapseBehavior(header, content, arrow, onClick);
 
             return result;
         }
@@ -728,7 +728,7 @@ namespace FarEmerald.PlayForge.Extended.Editor
             });
         }
         
-        private static void SetupCollapseBehavior(VisualElement header, VisualElement content, Label arrow)
+        private static void SetupCollapseBehavior(VisualElement header, VisualElement content, Label arrow, Action<string, bool> onClick)
         {
             bool isExpanded = content.style.display == DisplayStyle.Flex;
             
@@ -742,6 +742,8 @@ namespace FarEmerald.PlayForge.Extended.Editor
                 isExpanded = !isExpanded;
                 content.style.display = isExpanded ? DisplayStyle.Flex : DisplayStyle.None;
                 arrow.text = isExpanded ? Icons.ChevronDown : Icons.ChevronRight;
+                
+                onClick?.Invoke(header.name, isExpanded);
                 
                 evt.StopPropagation();
             });

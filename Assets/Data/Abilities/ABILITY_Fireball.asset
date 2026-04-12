@@ -18,7 +18,59 @@ MonoBehaviour:
   - Behaviour.Targeting
   - Behaviour.UseImplicitTargeting
   - Definition.ActivationPolicy
-  _templateListSnapshots: []
+  _templateListSnapshots:
+  - PropertyPath: LocalData
+    ElementIdentifiers: []
+  - PropertyPath: Tags.ContextTags
+    ElementIdentifiers: []
+  - PropertyPath: Tags.PassiveGrantedTags
+    ElementIdentifiers: []
+  - PropertyPath: Tags.ActiveGrantedTags
+    ElementIdentifiers: []
+  - PropertyPath: Tags.TagRequirements.Name.Array
+    ElementIdentifiers: []
+  - PropertyPath: Tags.TagRequirements.SourceRequirements.Name.Array
+    ElementIdentifiers: []
+  - PropertyPath: Tags.TagRequirements.SourceRequirements.AvoidTags
+    ElementIdentifiers:
+    - composite:5|0|1
+    - composite:5|0|1
+  - PropertyPath: Tags.TagRequirements.SourceRequirements.RequireTags
+    ElementIdentifiers: []
+  - PropertyPath: Tags.TagRequirements.TargetRequirements.Name.Array
+    ElementIdentifiers: []
+  - PropertyPath: Tags.TagRequirements.TargetRequirements.AvoidTags
+    ElementIdentifiers: []
+  - PropertyPath: Tags.TagRequirements.TargetRequirements.RequireTags
+    ElementIdentifiers: []
+  - PropertyPath: Behaviour.Stages
+    ElementIdentifiers:
+    - composite:False
+  - PropertyPath: SourceActivationRules
+    ElementIdentifiers:
+    - managed:FarEmerald.PlayForge.CooldownValidation:{}
+    - managed:FarEmerald.PlayForge.CostValidation:{}
+    - managed:FarEmerald.PlayForge.IsAliveValidation:{}
+  - PropertyPath: TargetActivationRules
+    ElementIdentifiers:
+    - managed:FarEmerald.PlayForge.IsAliveValidation:{}
+  - PropertyPath: WorkerGroup.Name.Array
+    ElementIdentifiers:
+    - value:87
+    - value:111
+    - value:114
+    - value:107
+    - value:101
+    - value:114
+    - value:115
+  - PropertyPath: WorkerGroup.AttributeWorkers
+    ElementIdentifiers: []
+  - PropertyPath: WorkerGroup.ImpactWorkers
+    ElementIdentifiers: []
+  - PropertyPath: WorkerGroup.TagWorkers
+    ElementIdentifiers: []
+  - PropertyPath: WorkerGroup.AnalysisWorkers
+    ElementIdentifiers: []
   Definition:
     Name: Fireball
     Description: 
@@ -57,11 +109,15 @@ MonoBehaviour:
         RequireTags: []
   Behaviour:
     Targeting:
-      rid: 1955962478581514663
+      rid: 7261146403316695516
     UseImplicitTargeting: 0
+    ImplicitTag:
+      Name: TargetzfvEmaa5gNtqhQ0_dE2_NOOAGh1QLRP8zfvEmaa5gNtqhQ0_dE2_NOOAGh
+    AssetLoaders:
+    - rid: 7261146403316695546
     Stages:
     - StagePolicy:
-        rid: 1955962478581514853
+        rid: 7261146403316695434
       Tasks:
       - rid: 1955962478581514847
       ApplyUsageEffects: 0
@@ -99,8 +155,18 @@ MonoBehaviour:
     - rid: 1955962478581514662
       type: {class: IsAliveValidation, ns: FarEmerald.PlayForge, asm: Assembly-CSharp}
       data: 
-    - rid: 1955962478581514663
-      type: {class: SelectGasTargetTask, ns: FarEmerald.PlayForge, asm: Assembly-CSharp}
+    - rid: 1955962478581514847
+      type: {class: RunSequenceTask, ns: FarEmerald.PlayForge, asm: Assembly-CSharp}
+      data:
+        SequenceReference:
+          _typeName: FarEmerald.PlayForge.Examples.DemoAbilitySequences, Assembly-CSharp,
+            Version=0.0.0.0, Culture=neutral, PublicKeyToken=null
+          _methodName: FireballSequence
+    - rid: 7261146403316695434
+      type: {class: AllProxyStagePolicy, ns: FarEmerald.PlayForge, asm: Assembly-CSharp}
+      data: 
+    - rid: 7261146403316695516
+      type: {class: SelectGasOrPositionTargetTask, ns: FarEmerald.PlayForge, asm: Assembly-CSharp}
       data:
         BreakRuntimeOnInvalid: 1
         Requirements:
@@ -109,13 +175,17 @@ MonoBehaviour:
           SyncWithTemplate: 0
           AvoidTags: []
           RequireTags: []
-    - rid: 1955962478581514847
-      type: {class: RunSequenceTask, ns: FarEmerald.PlayForge, asm: Assembly-CSharp}
+        RaycastLayers:
+          serializedVersion: 2
+          m_Bits: 4294967295
+        MaxDistance: Infinity
+        RetryOnInvalid: 0
+        MouseButton: 0
+        PreferGasTarget: 1
+    - rid: 7261146403316695546
+      type: {class: SetEffectsTask, ns: FarEmerald.PlayForge, asm: Assembly-CSharp}
       data:
-        SequenceReference:
-          _typeName: FarEmerald.PlayForge.Examples.DemoAbilitySequences, Assembly-CSharp,
-            Version=0.0.0.0, Culture=neutral, PublicKeyToken=null
-          _methodName: FireballSequence
-    - rid: 1955962478581514853
-      type: {class: AllProxyStagePolicy, ns: FarEmerald.PlayForge, asm: Assembly-CSharp}
-      data: 
+        Tag:
+          Name: Effects1hrldAfmelBJryWmirBAFALaw9ISFYz_1hrldAfmelBJryWmirBAFALaw
+        Effects:
+        - {fileID: 11400000, guid: 53a3e65d1d4a3eb49bce88eed63519d4, type: 2}

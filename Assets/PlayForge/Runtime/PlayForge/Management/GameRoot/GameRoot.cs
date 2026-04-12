@@ -41,7 +41,7 @@ namespace FarEmerald.PlayForge
             (
                 IEffectOrigin.GenerateSourceDerivation(this),
                 AbilitySystem.CreateActivationRequest(-1),
-                false
+                false, default
             );
             
             NativeDataPacket.AddPayload(Tags.PARENT_TRANSFORM, transform);

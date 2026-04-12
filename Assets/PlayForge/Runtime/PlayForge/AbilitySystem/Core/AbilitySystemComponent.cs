@@ -46,6 +46,8 @@ namespace FarEmerald.PlayForge
             => AbilityCache[index].Spec.Base.Behaviour.Stages.Any(
                 stage => stage.Tasks.Any(task => task.IsCriticalSection));
 
+        //public bool CriticalPolicyExecutionCheck()
+        
         public int AbilityCount => AbilityCache.Count;
         
         private Queue<AbilityActivationRequest> activationQueue = new();
@@ -270,13 +272,13 @@ namespace FarEmerald.PlayForge
         public bool TryActivateAbility(AbilityActivationRequest req)
         {
             if (!AbilityCache.TryGetValue(req.Index, out var container)) return false;
-            var data = AbilityDataPacket.GenerateFrom(container.Spec, req, container.Spec.Base.Behaviour.UseImplicitTargeting);
+            var data = AbilityDataPacket.GenerateFrom(container.Spec, req, container.Spec.Base.Behaviour.UseImplicitTargeting, container.Spec.Base.Behaviour.ImplicitTag);
             return CanActivateAbility(container, data) && ProcessActivationRequest(data);
         }
         
         private bool ProcessActivationRequest(AbilityDataPacket data)
         {
-            Debug.Log($"Process activation req: {data.Spec.GetReadableDefinition().GetName()} => Policy: {data.Request.Policy} ({!IsExecutingPolicy(EAbilityActivationPolicy.QueueActivationIfBusy)})");
+            Debug.Log($"Process activation req: {data.Request.Policy} ({AlwaysActivateTargetingValidation(data.Request.Index)})");
             
             return data.Request.Policy switch
             {
@@ -362,40 +364,38 @@ namespace FarEmerald.PlayForge
         {
             if (!TryGetCacheIndexOf(container.Spec.Base, out int index)) return false;
             
-            TimeUtility.Start(container.Spec.Base.Tags.AssetTag);
-            Callbacks.AbilityActivated(AbilityCallbackStatus.GenerateForAbilityEvent(data));
+            Callbacks.AbilityClaimed(AbilityCallbackStatus.GenerateForAbilityEvent(data));
             
             ActiveCache[AbilityCache[index].Spec.Base.Definition.ActivationPolicy.Translate(this)].Add(index);
             
             return true;
         }
 
+        /// <summary>
+        /// Called once the ability has completed all critical sections. Once released, the ability system will re-enable ability activation.
+        /// </summary>
+        /// <param name="container"></param>
+        /// <param name="data"></param>
         public void ReleaseClaim(AbilitySpecContainer container, AbilityDataPacket data)
         {
             if (!AbilityCache.ContainsKey(container.Index)) return;
-            // if (!TryGetCacheIndexOf(container.Spec.Base, out int index)) return;
+            
+            // Resolve policy from the data packet if available, otherwise from the ability definition.
+            // This fixes the case where ReleaseClaim is called with null data (e.g. from Inject cleanup),
+            // which previously caused the ability to stay stuck in ActiveCache forever.
+            var policy = data?.Request.Policy
+                         ?? container.Spec.Base.Definition.ActivationPolicy.Translate(this);
 
-            TimeUtility.End(container.Spec.Base.Tags.AssetTag, out _);
+            ActiveCache[policy].Remove(container.Index);
 
-            var policy = data?.Request.Policy;
-            Debug.Log($"\t\t{policy}");
-            if (!policy.HasValue)
+            if (data != null)
             {
-                Debug.Log($"\t\tCannot release properly: no activation policy");
-                return;
+                Callbacks.AbilityClaimReleased(AbilityCallbackStatus.GenerateForAbilityEvent(data));
             }
-
-            ActiveCache[policy.Value].Remove(container.Index);
-            Callbacks.AbilityEnded(AbilityCallbackStatus.GenerateForAbilityEvent(data));
         }
 
         public void EndAbilityActivation()
         {
-            // Process the activation queue after ANY ability finishes.
-            // Previously this only fired for QueueActivationIfBusy, which meant
-            // abilities with AlwaysActivate or ActivateIfIdle policies could block
-            // queued abilities indefinitely. TryActivateAbility will re-queue the
-            // ability if the system is still busy with another critical process.
             if (activationQueue.Count > 0)
                 TryActivateAbility(activationQueue.Dequeue());
         }

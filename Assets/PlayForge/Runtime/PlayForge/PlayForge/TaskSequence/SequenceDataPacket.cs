@@ -11,8 +11,6 @@ namespace FarEmerald.PlayForge
     /// </summary>
     public class SequenceDataPacket : ProcessDataPacket
     {
-        public string Name { get; set; }
-        
         // ═══════════════════════════════════════════════════════════════════════════
         // RUNTIME REFERENCES (set internally by TaskSequenceRuntime/Chain)
         // ═══════════════════════════════════════════════════════════════════════════

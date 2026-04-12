@@ -165,7 +165,7 @@ namespace FarEmerald.PlayForge
             _isInitialized = true;
 
             _lastCheckEnd = Time.time;
-            _lastStepEnd = _lastCheckEnd;
+            _lastStepEnd = Time.unscaledTime;
 
             Wrapper.WhenInitialize(Wrapper.Relay);
         }
@@ -174,9 +174,17 @@ namespace FarEmerald.PlayForge
         {
             if (State != EProcessState.Running) return false;
 
-            QueuedState = ProcessControl.Instance.GetDefaultTransitionState(this);
-            if (_hasRun && Wrapper.HandleResume(Relay)) return true;
+            // For async processes, set the default transition state so RunProcessAsync
+            // can flush it on completion. Synchronous processes have no async completion,
+            // so setting this would cause the Step() flush to eagerly transition them
+            // out of Running (e.g. into Waiting) on the very first frame.
+            if (Wrapper.Lifecycle != EProcessLifecycle.Synchronous)
+            {
+                QueuedState = ProcessControl.Instance.GetDefaultTransitionState(this);
+            }
 
+            if (_hasRun && Wrapper.HandleResume(Relay)) return true;
+            
             if (Wrapper.Lifecycle == EProcessLifecycle.Synchronous)
             {
                 _hasRun = true;
@@ -238,8 +246,17 @@ namespace FarEmerald.PlayForge
                     throw new ArgumentOutOfRangeException(nameof(timing), timing, null);
             }
 
-            _totalUpdateTime += Time.unscaledTime - (Time.time - _lastStepEnd) - Time.time;
-            _lastStepEnd = Time.time;
+            // Synchronous processes have no async completion to flush queued state.
+            // If a state change was queued during the step callback (e.g. relay.Terminate()
+            // called inside WhenUpdate), process it now.
+            if (Wrapper.Lifecycle == EProcessLifecycle.Synchronous && QueuedState != State)
+            {
+                SetQueuedState();
+                return;
+            }
+
+            _totalUpdateTime += Time.unscaledTime - _lastStepEnd;
+            _lastStepEnd = Time.unscaledTime;
         }
 
         #endregion

@@ -149,6 +149,18 @@ namespace FarEmerald.PlayForge.Extended.Editor
             titleLabel.style.flexGrow = 1;
             header.Add(titleLabel);
             
+            var tasksProp = property.FindPropertyRelative("Tasks");
+
+            // Critical section badge — iterate array elements, read managed reference
+            if (tasksProp != null && HasCriticalTask(tasksProp))
+            {
+                var critBadge = CreateBadge("⚠ Critical", Colors.AccentRed);
+                critBadge.style.marginRight = 2;
+                critBadge.tooltip = "This stage contains one or more critical section tasks";
+                critBadge.style.marginLeft = 4;
+                header.Add(critBadge);
+            }
+
             // Policy badge
             var stagePolicyProp = property.FindPropertyRelative("StagePolicy");
             if (stagePolicyProp != null && stagePolicyProp.managedReferenceValue != null)
@@ -169,7 +181,7 @@ namespace FarEmerald.PlayForge.Extended.Editor
             }
             
             // Task count badge
-            var tasksProp = property.FindPropertyRelative("Tasks");
+            
             if (tasksProp != null)
             {
                 int taskCount = tasksProp.arraySize;
@@ -349,7 +361,22 @@ namespace FarEmerald.PlayForge.Extended.Editor
             indexLabel.style.marginRight = 4;
             indexLabel.style.marginTop = 2;
             taskContainer.Add(indexLabel);
-            
+
+            // Critical section indicator per task
+            if (taskProp.managedReferenceValue is AbstractAbilityTask task && task.IsCriticalSection)
+            {
+                taskContainer.style.borderLeftWidth = 3;
+                taskContainer.style.borderLeftColor = Colors.AccentRed;
+
+                var critLabel = CreateBadge("⚠", Colors.AccentRed);
+                critLabel.tooltip = "This task is a critical section — blocks concurrent critical abilities";
+                critLabel.style.marginRight = 4;
+                critLabel.style.marginTop = 2;
+                critLabel.style.height = 18;
+                critLabel.style.alignSelf = Align.FlexStart;
+                taskContainer.Add(critLabel);
+            }
+
             // Task content area - this will contain the AbilityTaskDrawer output
             var taskContent = new VisualElement();
             taskContent.style.flexGrow = 1;
@@ -481,6 +508,22 @@ namespace FarEmerald.PlayForge.Extended.Editor
         // ═══════════════════════════════════════════════════════════════════════════
         // Helpers
         // ═══════════════════════════════════════════════════════════════════════════
+
+        /// <summary>
+        /// Checks whether any task in the Tasks array is a critical section.
+        /// Iterates individual array elements and reads managedReferenceValue
+        /// (not the array property itself, which has no managed reference).
+        /// </summary>
+        private static bool HasCriticalTask(SerializedProperty tasksArrayProp)
+        {
+            for (int i = 0; i < tasksArrayProp.arraySize; i++)
+            {
+                var element = tasksArrayProp.GetArrayElementAtIndex(i);
+                if (element.managedReferenceValue is AbstractAbilityTask task && task.IsCriticalSection)
+                    return true;
+            }
+            return false;
+        }
         
         private VisualElement CreatePolicyBadge(string policyName)
         {

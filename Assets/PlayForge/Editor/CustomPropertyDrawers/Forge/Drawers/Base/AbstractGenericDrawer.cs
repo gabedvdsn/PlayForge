@@ -64,24 +64,28 @@ namespace FarEmerald.PlayForge.Extended.Editor
         public override VisualElement CreatePropertyGUI(SerializedProperty prop)
         {
             CurrentProperty = prop;
-            
+
             var root = base.CreatePropertyGUI(prop);
-            
+
             // Find header row and add extensions
             HeaderRow = FindHeaderRow(root);
             if (HeaderRow != null)
                 SetupHeaderExtensions(prop);
-            
-            // Create and insert child fields container
-            ChildFieldsContainer = CreateChildFieldsContainer();
-            InsertAfterHeader(root, ChildFieldsContainer);
-            
-            // Initialize display
+
+            // Reuse the base class _childFieldsContainer instead of creating a duplicate.
+            // AbstractTypeRefDrawer already creates, inserts, and populates it.
+            ChildFieldsContainer = _childFieldsContainer;
+
+            // Apply accent color
+            if (ChildFieldsContainer != null)
+                ChildFieldsContainer.style.borderLeftColor = AccentColor;
+
+            // Initialize display (handles collapse/expand state)
             InitializeDisplayState(prop);
-            
+
             // Track changes
             root.TrackPropertyValue(prop, OnPropertyValueChanged);
-            
+
             return root;
         }
 
@@ -147,19 +151,9 @@ namespace FarEmerald.PlayForge.Extended.Editor
         // Child Fields
         // ═══════════════════════════════════════════════════════════════════════════
         
-        private VisualElement CreateChildFieldsContainer()
-        {
-            var container = new VisualElement { name = "child-fields" };
-            container.style.marginLeft = 8;
-            container.style.marginTop = 4;
-            container.style.marginBottom = 4;
-            container.style.paddingLeft = 8;
-            container.style.borderLeftWidth = 2;
-            container.style.borderLeftColor = AccentColor;
-            return container;
-        }
+        // Child fields container is reused from AbstractTypeRefDrawer._childFieldsContainer
         
-        /// <summary>Override to customize which fields are shown.</summary>
+        /*/// <summary>Override to customize which fields are shown.</summary>
         protected virtual void PopulateChildFields(SerializedProperty prop)
         {
             ChildFieldsContainer.Clear();
@@ -195,7 +189,7 @@ namespace FarEmerald.PlayForge.Extended.Editor
             {
                 ChildFieldsContainer.Bind(prop.serializedObject);
             }
-        }
+        }*/
 
         // ═══════════════════════════════════════════════════════════════════════════
         // Summary Badges
@@ -416,11 +410,7 @@ namespace FarEmerald.PlayForge.Extended.Editor
             root.childCount > 0 && root[0].style.flexDirection == FlexDirection.Row 
                 ? root[0] : null;
         
-        private static void InsertAfterHeader(VisualElement root, VisualElement el)
-        {
-            if (root.childCount >= 1) root.Insert(1, el);
-            else root.Add(el);
-        }
+        // InsertAfterHeader no longer needed — container comes from base class
         
         /// <summary>Count of serializable child fields for the current value.</summary>
         protected int GetChildFieldCount(SerializedProperty prop)

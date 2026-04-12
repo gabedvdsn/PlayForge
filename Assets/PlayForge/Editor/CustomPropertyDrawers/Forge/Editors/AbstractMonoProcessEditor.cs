@@ -32,9 +32,9 @@ namespace FarEmerald.PlayForge.Extended.Editor
             var timingContainer = new VisualElement();
             timingContainer.style.marginBottom = 8;
             processSection.Add(timingContainer);
-            
-            var timingField = new PropertyField(serializedObject.FindProperty(nameof(AbstractMonoProcess.ProcessTiming)));
-            timingField.RegisterValueChangeCallback(_ => UpdateTimingHint(timingContainer));
+
+            var timingProp = serializedObject.FindProperty(nameof(AbstractMonoProcess.ProcessTiming));
+            var timingField = new PropertyField(timingProp);
             timingContainer.Add(timingField);
             
             var timingHint = CreateHintLabel("TimingHint");
@@ -45,10 +45,16 @@ namespace FarEmerald.PlayForge.Extended.Editor
             priorityContainer.style.marginBottom = 8;
             processSection.Add(priorityContainer);
             
+            timingField.RegisterValueChangeCallback(_ =>
+            {
+                UpdateTimingHint(timingContainer);
+                UpdatePriorityVisibility(priorityContainer, timingProp.enumValueIndex);
+            });
+            
             var priorityMethodField = new PropertyField(serializedObject.FindProperty(nameof(AbstractMonoProcess.PriorityMethod)));
             priorityMethodField.RegisterValueChangeCallback(_ => 
             {
-                UpdatePriorityVisibility(priorityContainer);
+                UpdatePriorityVisibility(priorityContainer, timingProp.enumValueIndex);
                 UpdatePriorityMethodHint(priorityContainer);
             });
             priorityContainer.Add(priorityMethodField);
@@ -82,30 +88,6 @@ namespace FarEmerald.PlayForge.Extended.Editor
             separator.style.marginBottom = 8;
             root.Add(separator);
             
-            /*// Draw default inspector for all other fields
-            var defaultInspector = new IMGUIContainer(() =>
-            {
-                serializedObject.Update();
-                
-                var iterator = serializedObject.GetIterator();
-                iterator.NextVisible(true); // Skip script field
-                
-                while (iterator.NextVisible(false))
-                {
-                    // Skip the fields we already drew
-                    if (IsProcessField(iterator.name)) continue;
-                    
-                    EditorGUILayout.PropertyField(iterator, true);
-                }
-                
-                serializedObject.ApplyModifiedProperties();
-            });
-            root.Add(defaultInspector);*/
-
-            //Debug.Log(target);
-            //Debug.Log(serializedObject.targetObject);
-            //DrawDefaultInspector();
-            
             InspectorElement.FillDefaultInspector(root, serializedObject, this);
             
             // Initial hint updates
@@ -113,7 +95,7 @@ namespace FarEmerald.PlayForge.Extended.Editor
             {
                 UpdateLifecycleHint(lifecycleContainer);
                 UpdateTimingHint(timingContainer);
-                UpdatePriorityVisibility(priorityContainer);
+                UpdatePriorityVisibility(priorityContainer, timingProp.enumValueIndex);
                 UpdatePriorityMethodHint(priorityContainer);
             }).ExecuteLater(50);
             
@@ -178,6 +160,7 @@ namespace FarEmerald.PlayForge.Extended.Editor
                 0 => "Runs once, terminates when RunProcess completes.",
                 1 => "Runs once, then waits. Can be resumed externally.",
                 2 => "Starts waiting. Must be manually ran & terminated.",
+                3 => "Termination derived from Update loop. Produces no async overhead.",
                 _ => ""
             };
         }
@@ -202,15 +185,20 @@ namespace FarEmerald.PlayForge.Extended.Editor
             };
         }
         
-        private void UpdatePriorityVisibility(VisualElement container)
+        private void UpdatePriorityVisibility(VisualElement container, int stepIndex)
         {
             var manualField = container.Q("ManualPriorityField");
             if (manualField == null) return;
             
             var prop = serializedObject.FindProperty("PriorityMethod");
-            manualField.style.display = prop.enumValueIndex == 0 
+            manualField.style.display = prop.enumValueIndex == 0 && stepIndex > 0
                 ? DisplayStyle.Flex 
                 : DisplayStyle.None;
+
+            container.style.display = stepIndex > 0
+                ? DisplayStyle.Flex
+                : DisplayStyle.None;
+
         }
         
         private void UpdatePriorityMethodHint(VisualElement container)

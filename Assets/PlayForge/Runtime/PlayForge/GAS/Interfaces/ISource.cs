@@ -13,7 +13,6 @@ namespace FarEmerald.PlayForge
         public int GetLevel();
         public int GetMaxLevel();
         public void SetLevel(int level);
-        public string GetName();
         public EffectDurationRemaining GetLongestDurationFor(Tag lookForTag);
         public EffectDurationRemaining GetLongestDurationFor(List<Tag> lookForTags);
     }

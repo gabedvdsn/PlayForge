@@ -132,7 +132,7 @@ namespace FarEmerald.PlayForge
             AbilityTaskBehaviourStage abilityStage,
             int stageIndex)
         {
-            stage.WithName($"Stage {stageIndex}");
+            stage.WithName($"Stage {stageIndex.ToString()}");
 
             // Map stage policy
             MapStagePolicy(stage, abilityStage.StagePolicy);
@@ -215,7 +215,7 @@ namespace FarEmerald.PlayForge
                 // Apply usage effects if configured and successful
                 if (applyUsage && success && !abilityData.UsageEffectsApplied)
                 {
-                    if (abilityData.Spec is AbilitySpec spec)
+                    if (abilityData.EffectOrigin is AbilitySpec spec)
                     {
                         spec.ApplyUsageEffects();
                         abilityData.UsageEffectsApplied = true;
@@ -256,6 +256,10 @@ namespace FarEmerald.PlayForge
             {
                 if (!_isActivation) return;
                 if (data is not AbilityDataPacket abilityData) return;
+
+                // Track stage milestone on the data packet path
+                int taskCount = _abilityStage.Tasks?.Count ?? 0;
+                abilityData.AppendPath($"Stage[{_stageIndex},{taskCount}tasks]");
 
                 var callbacks = abilityData.Callbacks;
                 callbacks?.AbilityStageActivated(

@@ -16,7 +16,7 @@ namespace FarEmerald.PlayForge
         public async UniTask AwaitStageActivation(AbilityProxy proxy, AbilityTaskBehaviourStage stage, UniTask[] tasks, AbilityDataPacket data, AbilitySystemCallbacks callbacks,
             CancellationTokenSource stageCts)
         {
-            var watched = proxy.GetWatchedTasks(tasks, stage, data, callbacks, false);
+            var watched = proxy.GetWatchedTasksLegacy(tasks, stage, data, callbacks, false);
             await UniTask.WhenAny(watched);
             stageCts.Cancel();
         }
@@ -27,7 +27,7 @@ namespace FarEmerald.PlayForge
         public async UniTask AwaitStageActivation(AbilityProxy proxy, AbilityTaskBehaviourStage stage, UniTask[] tasks, AbilityDataPacket data, AbilitySystemCallbacks callbacks,
             CancellationTokenSource stageCts)
         {
-            var watched = proxy.GetWatchedTasks(tasks, stage, data, callbacks, true);
+            var watched = proxy.GetWatchedTasksLegacy(tasks, stage, data, callbacks, true);
             await UniTask.WhenAll(watched);
         }
     }

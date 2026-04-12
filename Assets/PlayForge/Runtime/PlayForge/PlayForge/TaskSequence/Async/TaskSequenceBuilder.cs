@@ -101,11 +101,11 @@ namespace FarEmerald.PlayForge
         /// Use Synchronous for per-frame stepping without async overhead.
         /// Default is SelfTerminating (async).
         /// </summary>
-        public TaskSequenceBuilder WithLifecycle(EProcessLifecycle lifecycle)
+        public TaskSequenceBuilder WithLifecycle(EProcessLifecycle lifecycle, EProcessStepTiming? timing = null)
         {
             _metadata ??= new SequenceMetadata();
             _metadata.Lifecycle = lifecycle;
-            return this;
+            return timing.HasValue ? WithStepTiming(timing.Value) : this;
         }
 
         /// <summary>

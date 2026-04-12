@@ -60,8 +60,6 @@ namespace FarEmerald.PlayForge.Examples
             var mat = renderer.material;
             mat.color = color;
         }
-
-        
         
         #region Torrent Storm
         
@@ -315,6 +313,83 @@ namespace FarEmerald.PlayForge.Examples
                     }
                 })
                 .BuildSequence();
+        }
+        
+        #endregion
+        
+        #region Torrent Storm
+
+        public static TaskSequence TorrentStorm()
+        {
+            var D = Tag.GenerateAsUnique("Duration of Storm");
+            var R = Tag.GenerateAsUnique("Storm Radius");
+            var N = Tag.GenerateAsUnique("Number of Torrents");
+            var tD = Tag.GenerateAsUnique("Duration of Torrent");
+            var yD = Tag.GenerateAsUnique("Torrent Y Delta");
+            
+            return TaskSequenceBuilder.Create("Torrent Storm")
+                .Task(d =>
+                {
+                    // Setup our parameters
+                    d.SetPrimary(D, 10f);
+                    d.SetPrimary(R, 27.5f);
+                    d.SetPrimary(N, 50);
+                    d.SetPrimary(tD, 4f);
+                    d.SetPrimary(yD, 25f);
+                    
+                    d.SetPrimary(Tags.ITERATIONS, d.GetPrimary<int>(N));
+                })
+                .Task(async (d, t) =>
+                {
+                    var torrents = new UniTask[d.GetPrimary<int>(N)];
+                    
+                    for (int i = 0; i < d.GetPrimary<int>(N); i++)
+                    {
+                        var obj = CreatePrim(PrimitiveType.Sphere);
+                        var pos = ForgeHelper.RandomPointWithinCircle(d.GetPrimary<float>(R), d.GetPrimary<float>(R) * .4f);
+                        obj.transform.position = pos;
+
+                        var data = new SequenceDataPacket(d);
+                        data.SetPrimary(Tags.DATA, obj);
+                        
+                        var torrent = TorrentSequence().Run(data, t);
+                        torrents[i] = torrent;
+
+                        await UniTask.Delay(75, cancellationToken: t);
+                    }
+
+                    await UniTask.WhenAll(torrents);
+
+                })
+                .BuildSequence();
+
+            TaskSequence TorrentSequence()
+            {
+                return TaskSequenceBuilder.Create("Torrent")
+                    .Task(async (d, t) =>
+                    {
+                        var torrent = d.GetPrimary<GameObject>(Tags.DATA);
+                        var delta = d.GetPrimary<float>(yD);
+                        var duration = d.GetPrimary<float>(tD);
+
+                        var x = delta * Mathf.Cos(Random.Range(0, 360)) - delta * Mathf.Sin(Random.Range(0, 360));
+                        var z = delta * Mathf.Sin(Random.Range(0, 360)) + delta * Mathf.Cos(Random.Range(0, 360));
+                        var destination = new Vector3(x, torrent.transform.position.y, z);
+                        
+                        var arcTo = ArcTo(torrent.transform, destination, duration, delta, t); 
+                        var rotate = RotateBy(torrent.transform, new Vector3(0f, delta * 150f, 0f), duration, t);
+                        var scale = PunchScale(torrent.transform, 2.5f, duration * .75f, t);
+                        
+                        var torrentTask = new[] { arcTo, rotate, scale };
+                        await UniTask.WhenAll(torrentTask);
+                    })
+                    .OnTerminate((ctx, success) =>
+                    {
+                        var torrent = ctx.Data.GetPrimary<GameObject>(Tags.DATA);
+                        Object.Destroy(torrent);
+                    })
+                    .BuildSequence();
+            }
         }
         
         #endregion

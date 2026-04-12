@@ -20,11 +20,20 @@ namespace FarEmerald.PlayForge
     /// </summary>
     public class ProcessDataPacket : IValidationReady, IGameplayProcessHandler
     {
+        private const char pathSeparator = '>';
+        
         protected Dictionary<Tag, List<object>> _payload = new();
         public IReadOnlyDictionary<Tag, List<object>> Payload => _payload;
         public bool InUse = true;
         
-        public readonly Dictionary<int, ProcessRelay> Relays = new();
+        public readonly Dictionary<int, ProcessRelay> HandlerRelays = new();
+
+        public string Path { get; protected set; }
+        public void AppendPath(string r)
+        {
+            if (!string.IsNullOrEmpty(Path)) Path += pathSeparator;
+            Path += r;
+        }
         
         protected ProcessDataPacket()
         { }
@@ -200,7 +209,7 @@ namespace FarEmerald.PlayForge
             }
 
             dataValue = new DataValue<T>(tObjects);
-            return true;
+            return dataValue.Valid;
         }
 
         public bool Remove(Tag key)
@@ -345,22 +354,25 @@ namespace FarEmerald.PlayForge
         #endregion
         
         #region Process Handling
-        
+        public ProcessRelay[] GetRelays()
+        {
+            return HandlerRelays.Values.ToArray();
+        }
         public bool HandlerValidateAgainst(IGameplayProcessHandler handler)
         {
             return (AbilityDataPacket)handler == this;
         }
         public bool HandlerProcessIsSubscribed(ProcessRelay relay)
         {
-            return Relays.ContainsKey(relay.CacheIndex);
+            return HandlerRelays.ContainsKey(relay.CacheIndex);
         }
         public void HandlerSubscribeProcess(ProcessRelay relay)
         {
-            Relays.Add(relay.CacheIndex, relay);
+            HandlerRelays.Add(relay.CacheIndex, relay);
         }
         public bool HandlerVoidProcess(ProcessRelay relay)
         {
-            return Relays.Remove(relay.CacheIndex);
+            return HandlerRelays.Remove(relay.CacheIndex);
         }
         
         #endregion

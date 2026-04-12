@@ -39,7 +39,7 @@ namespace FarEmerald.PlayForge
         protected Dictionary<int, ProcessRelay> Relays;
         
         // Transform (runtime entities have no Transform component)
-        private AbstractTransformPacket _transformPacket;
+        private AbstractTargetingPacket _targetingPacket;
         
         /// <summary>
         /// Callbacks for GAS-level events (frame completion, action queue, effects, etc.)
@@ -54,10 +54,10 @@ namespace FarEmerald.PlayForge
         /// Creates a runtime GAS entity with optional transform data.
         /// </summary>
         /// <param name="data">The entity identity defining this entity's configuration.</param>
-        /// <param name="transformPacket">Optional transform data. Defaults to origin if null.</param>
+        /// <param name="targetingPacket">Optional transform data. Defaults to origin if null.</param>
         public RuntimeGameplayAbilitySystem(
             EntityIdentity data,
-            AbstractTransformPacket transformPacket = null)
+            AbstractTargetingPacket targetingPacket = null)
             : base(
                 data?.Name ?? "RuntimeGAS",
                 EProcessStepPriorityMethod.First,
@@ -65,8 +65,8 @@ namespace FarEmerald.PlayForge
                 EProcessStepTiming.Update,
                 EProcessLifecycle.SelfTerminating)
         {
-            _transformPacket = transformPacket 
-                               ?? new PlaceholderTransformPacket(Vector3.zero, Quaternion.identity, Vector3.one);
+            _targetingPacket = targetingPacket 
+                               ?? new StaticTargetingPacket(Vector3.zero, Quaternion.identity, Vector3.one);
             
             AttributeSystem = new AttributeSystemComponent(this);
             AbilitySystem = new AbilitySystemComponent(this);
@@ -87,10 +87,10 @@ namespace FarEmerald.PlayForge
         /// Creates a runtime GAS entity with optional transform data.
         /// </summary>
         /// <param name="data">The entity identity defining this entity's configuration.</param>
-        /// <param name="transformPacket">Optional transform data. Defaults to origin if null.</param>
+        /// <param name="targetingPacket">Optional transform data. Defaults to origin if null.</param>
         public RuntimeGameplayAbilitySystem(
             RuntimeEntityIdentity data,
-            AbstractTransformPacket transformPacket = null)
+            AbstractTargetingPacket targetingPacket = null)
             : base(
                 data?.Name ?? "RuntimeGAS",
                 EProcessStepPriorityMethod.First,
@@ -98,8 +98,8 @@ namespace FarEmerald.PlayForge
                 EProcessStepTiming.Update,
                 EProcessLifecycle.SelfTerminating)
         {
-            _transformPacket = transformPacket 
-                               ?? new PlaceholderTransformPacket(Vector3.zero, Quaternion.identity, Vector3.one);
+            _targetingPacket = targetingPacket 
+                               ?? new StaticTargetingPacket(Vector3.zero, Quaternion.identity, Vector3.one);
             
             AttributeSystem = new AttributeSystemComponent(this);
             AbilitySystem = new AbilitySystemComponent(this);
@@ -123,7 +123,7 @@ namespace FarEmerald.PlayForge
             Vector3 position,
             Quaternion rotation,
             Vector3 scale)
-            : this(data, new PlaceholderTransformPacket(position, rotation, scale))
+            : this(data, new StaticTargetingPacket(position, rotation, scale))
         {
         }
 
@@ -253,9 +253,9 @@ namespace FarEmerald.PlayForge
         /// Returns the placeholder transform packet for this runtime entity.
         /// Unlike the MonoBehaviour version, this is not backed by a Unity Transform.
         /// </summary>
-        public AbstractTransformPacket AsTransform()
+        public AbstractTargetingPacket GetTargetingPacket()
         {
-            return _transformPacket;
+            return _targetingPacket;
         }
         
         // ═══════════════════════════════════════════════════════════════════════════

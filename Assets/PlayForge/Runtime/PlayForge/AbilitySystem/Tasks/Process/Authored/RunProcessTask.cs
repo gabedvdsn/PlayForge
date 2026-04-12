@@ -22,7 +22,7 @@ namespace FarEmerald.PlayForge
             relays = new List<ProcessRelay>();
             foreach (var p in Processes)
             {
-                if (!ProcessControl.Register(p, data.Spec.GetOwner(), out var relay)) continue;
+                if (!ProcessControl.Register(p, data.EffectOrigin.GetOwner(), out var relay)) continue;
                 relays.Add(relay);
             }
         }
@@ -30,7 +30,7 @@ namespace FarEmerald.PlayForge
         public override async UniTask Activate(AbilityDataPacket data, CancellationToken token)
         {
             float elapsedDuration = 0f;
-            await TaskUtil.DoWhileAsync(
+            await ProcessTaskUtil.DoWhileAsync(
                 body: async () =>
                 {
                     elapsedDuration += UseUnscaledDeltaTime ? Time.unscaledDeltaTime : Time.deltaTime;

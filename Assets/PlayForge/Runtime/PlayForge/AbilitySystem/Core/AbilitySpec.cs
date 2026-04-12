@@ -5,11 +5,11 @@ using UnityEngine;
 
 namespace FarEmerald.PlayForge
 {
-    public class AbilitySpec : BasicEffectOrigin, IEffectOrigin
+    public class AbilitySpec : BasicEffectOrigin
     {
         public Ability Base;
         
-        public AbilitySpec(ISource source, Ability ability, int level) : base(source, new AttributeValueClamped(level, ability.MaxLevel))
+        public AbilitySpec(ISource source, Ability ability, int level) : base(source, new AttributeValueClamped(level, ability.MaxLevel), ability.Tags.AssetTag)
         {
             Base = ability;
         }
@@ -26,7 +26,7 @@ namespace FarEmerald.PlayForge
             
         public bool ValidateSourceActivationRequirements(AbilityDataPacket data)
         {
-            var owner = data.Spec.GetOwner();
+            var owner = data.EffectOrigin.GetOwner();
             return Base.SourceActivationRules.All(rule => rule.Validate(data, () => owner, out _));
         }
 

@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Linq;
 using UnityEditor;
+using UnityEditor.UIElements;
 using UnityEngine;
 using UnityEngine.UIElements;
 
@@ -20,6 +21,46 @@ namespace FarEmerald.PlayForge.Extended.Editor
         // ═══════════════════════════════════════════════════════════════════════════
         
         protected Type CurrentType;
+        protected VisualElement _childFieldsContainer;
+        
+        public override VisualElement CreatePropertyGUI(SerializedProperty prop)
+        {
+            // Get the base GUI (type selector + dropdown)
+            var baseGui = base.CreatePropertyGUI(prop);
+            
+            // Create container for child fields
+            _childFieldsContainer = new VisualElement
+            {
+                name = "child-fields",
+                style =
+                {
+                    marginLeft = 8,
+                    marginTop = 4,
+                    marginBottom = 4,
+                    paddingLeft = 8,
+                    borderLeftWidth = 2,
+                    borderLeftColor = new Color(0.6f, 0.5f, 0.4f, 0.6f) // Orange-ish accent
+                }
+            };
+            
+            // Insert child fields container after the first child (the type selector row)
+            if (baseGui.childCount >= 1)
+            {
+                baseGui.Insert(1, _childFieldsContainer);
+            }
+            else
+            {
+                baseGui.Add(_childFieldsContainer);
+            }
+            
+            // Initial population of child fields
+            PopulateChildFields(prop);
+            
+            // Track property changes to refresh child fields when type changes
+            baseGui.TrackPropertyValue(prop, OnPropertyChanged);
+            
+            return baseGui;
+        }
 
         // ═══════════════════════════════════════════════════════════════════════════
         // Virtual Configuration
@@ -27,9 +68,15 @@ namespace FarEmerald.PlayForge.Extended.Editor
         
         /// <summary>Override to filter which types appear in the dropdown.</summary>
         protected virtual bool FilterType(Type type) => true;
-        
+
         /// <summary>Override to customize type name cleaning (e.g., removing suffixes).</summary>
-        protected virtual string CleanTypeName(string typeName) => typeName;
+        protected virtual string CleanTypeName(string typeName)
+        {
+            var _name = typeName; 
+            _name = typeName.Replace("AbilityTask", "");
+            _name = typeName.Replace("Task", "");
+            return _name;
+        }
 
         // ═══════════════════════════════════════════════════════════════════════════
         // AbstractRefDrawer Implementation
@@ -112,6 +159,68 @@ namespace FarEmerald.PlayForge.Extended.Editor
         
         /// <summary>Called after a new type is selected. Override for additional setup.</summary>
         protected virtual void OnTypeChanged(SerializedProperty prop, Type newType) { }
+        
+        protected virtual void OnPropertyChanged(SerializedProperty prop)
+        {
+            PopulateChildFields(prop);
+        }
+
+        /// <summary>
+        /// Populates the child fields container with PropertyFields for each
+        /// serialized field of the concrete behaviour implementation.
+        /// </summary>
+        protected virtual void PopulateChildFields(SerializedProperty property)
+        {
+            _childFieldsContainer.Clear();
+            
+            // Check if there's a managed reference value
+            if (property.propertyType != SerializedPropertyType.ManagedReference ||
+                property.managedReferenceValue == null)
+            {
+                return;
+            }
+            
+            // Iterate through all visible children of the SerializeReference property
+            var iterator = property.Copy();
+            var endProperty = property.GetEndProperty();
+            
+            bool hasFields = false;
+            
+            // Enter the first child
+            if (iterator.NextVisible(true))
+            {
+                do
+                {
+                    // Stop if we've gone past this property's scope
+                    if (SerializedProperty.EqualContents(iterator, endProperty))
+                        break;
+                    
+                    hasFields = true;
+                    
+                    // Create a PropertyField for each child property
+                    var childProp = iterator.Copy();
+                    var field = new PropertyField(childProp)
+                    {
+                        style =
+                        {
+                            marginBottom = 2
+                        }
+                    };
+                    
+                    // Use nicified label
+                    field.label = ObjectNames.NicifyVariableName(childProp.name);
+                    
+                    _childFieldsContainer.Add(field);
+                    
+                } while (iterator.NextVisible(false));
+            }
+            
+            // Bind to ensure property changes are tracked
+            if (hasFields)
+            {
+                _childFieldsContainer.Bind(property.serializedObject);
+            }
+        }
 
         // ═══════════════════════════════════════════════════════════════════════════
         // Helpers

@@ -13,16 +13,16 @@ namespace FarEmerald.PlayForge
     public abstract class AbstractTargetedMonoProcess : AbstractEffectingMonoProcess, IHasIntentToTarget
     {
         protected ITarget target;
-        protected AbstractTransformPacket targetTransform;
+        protected AbstractTargetingPacket targeting;
 
         public override void WhenInitialize(ProcessRelay relay)
         {
             base.WhenInitialize(relay);
             
             if (!regData.TryGet(Tags.TARGET_REAL, EDataTarget.Primary, out target)) Debug.Log($"Whelp!");
-            targetTransform = target.AsTransform();
+            targeting = target.GetTargetingPacket();
 
-            var to = Quaternion.LookRotation(targetTransform.position - transform.position);
+            var to = Quaternion.LookRotation(targeting.position - transform.position);
             transform.rotation = Quaternion.RotateTowards(transform.rotation, to, 360);
         }
         
@@ -37,10 +37,10 @@ namespace FarEmerald.PlayForge
 
         protected abstract UniTask RunTargetedProcess(ProcessRelay relay, CancellationToken token);
 
-        public void SetTarget(ITarget _target, AbstractTransformPacket _transform)
+        public void SetTarget(ITarget _target, AbstractTargetingPacket targeting)
         {
             target = _target;
-            targetTransform = _transform;
+            this.targeting = targeting;
 
             target.CommunicateTargetedIntent(this);
         }

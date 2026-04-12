@@ -184,7 +184,7 @@ namespace FarEmerald.PlayForge
                         CompletedSuccessfully = false;
                         if (Definition.Metadata?.EnableErrorLogging ?? true)
                         {
-                            Debug.LogError($"[TaskSequence] {Definition.Metadata?.Name ?? "Unnamed"} failed: {ex}");
+                            Debug.LogError($"[TaskSequence] {Definition.Metadata?.Name ?? "Unnamed"} ({Data.Path}) failed: {ex}");
                         }
                     }
                 }

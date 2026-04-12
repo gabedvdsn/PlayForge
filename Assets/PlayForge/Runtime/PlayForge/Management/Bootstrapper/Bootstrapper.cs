@@ -1,7 +1,9 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using FarEmerald.PlayForge.Extended;
 using UnityEngine;
+using UnityEngine.Serialization;
 
 namespace FarEmerald.PlayForge
 {
@@ -12,7 +14,7 @@ namespace FarEmerald.PlayForge
         public ProcessControl ProcessControlPrefab;
         public GameRoot GameRootPrefab;
 
-        public Dictionary<int, ProcessRelay> Relays;
+        [FormerlySerializedAs("Relays")] public Dictionary<int, ProcessRelay> HandlerRelays;
         
         private void Awake()
         {
@@ -91,7 +93,11 @@ namespace FarEmerald.PlayForge
         {
             // Any further bootstrap initialization here   
         }
-        
+
+        public ProcessRelay[] GetRelays()
+        {
+            return HandlerRelays.Values.ToArray();
+        }
         public bool HandlerValidateAgainst(IGameplayProcessHandler handler)
         {
             return (Bootstrapper)handler == this;
@@ -104,11 +110,11 @@ namespace FarEmerald.PlayForge
 
         public void HandlerSubscribeProcess(ProcessRelay relay)
         {
-            Relays[relay.CacheIndex] = relay;
+            HandlerRelays[relay.CacheIndex] = relay;
         }
         public bool HandlerVoidProcess(ProcessRelay relay)
         {
-            return Relays.Remove(relay.CacheIndex);
+            return HandlerRelays.Remove(relay.CacheIndex);
         }
     }
 }

@@ -11,8 +11,9 @@ namespace FarEmerald.PlayForge
     {
         [Tooltip("If target validation fails, break out of Ability runtime")]
         public bool BreakRuntimeOnInvalid = true;
-
         public virtual string Description => null;
+        
+        public override bool IsCriticalSection => true;
 
         /// <summary>
         /// Prepare targeting measures.
@@ -25,8 +26,8 @@ namespace FarEmerald.PlayForge
 
             WhenTargetingInvalid(data);
 
-            var abilitySystem = data.Spec.GetOwner().AsGAS().GetAbilitySystem();
-            if (abilitySystem is not null && data.Spec is AbilitySpec spec)
+            var abilitySystem = data.EffectOrigin.GetOwner().ToGAS().GetAbilitySystem();
+            if (abilitySystem is not null && data.EffectOrigin is AbilitySpec spec)
             {
                 abilitySystem.Inject(spec.Base, new InterruptInjection());
             }
@@ -68,7 +69,7 @@ namespace FarEmerald.PlayForge
 
         protected virtual bool TargetIsValid(ITarget target)
         {
-            return target is not null && TargetIsValid(target.AsGAS().ToGASObject()?.transform, out _);
+            return target is not null && TargetIsValid(target.ToGAS().ToGASObject()?.transform, out _);
         }
 
         protected virtual bool TargetIsValid(GameObject go, out ITarget target)
@@ -94,8 +95,6 @@ namespace FarEmerald.PlayForge
             target = position;
             return true;
         }
-
-        public override bool IsCriticalSection => true;
 
         /// <summary>
         /// Input handler can use data to derive visualization and validity.

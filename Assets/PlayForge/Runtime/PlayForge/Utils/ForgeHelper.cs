@@ -45,7 +45,7 @@ namespace FarEmerald.PlayForge
             const string LevelAttributePrefix = "LVL_ATTRIBUTE_";
             
             string input = AttributeRegistry.RefactorByNamingConvention(assetTag.Name);
-            var result = TagHierarchy.TagUtil.GenerateDeterministicTag(input, LevelAttributePrefix);
+            var result = Tag.GenerateAsUnique(input, LevelAttributePrefix);
 
             return new RuntimeAttribute(result.Name, assetTag.Name, input);
         }

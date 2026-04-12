@@ -11,7 +11,7 @@ namespace FarEmerald.PlayForge
         public bool Validate(AbilityDataPacket data, Func<ITarget> getSource, out string error)
         {
             error = "";
-            if (data.Spec is not AbilitySpec ability) return false;
+            if (data.EffectOrigin is not AbilitySpec ability) return false;
             if (ability.Base.Cost is null) return true;
             if (!ability.Source.FindAttributeSystem(out var attrSys) ||
                 !attrSys.TryGetAttributeValue(ability.Base.Cost.ImpactSpecification.AttributeTarget,
@@ -33,7 +33,7 @@ namespace FarEmerald.PlayForge
         public bool Validate(AbilityDataPacket data, Func<ITarget> getSource, out string error)
         {
             error = "";
-            if (data.Spec is not AbilitySpec ability) return false;
+            if (data.EffectOrigin is not AbilitySpec ability) return false;
             if (ability.Base.Cooldown is null) return true;
             return !ability.Source.GetTagCache().TryGetWeight(ability.Base.Cooldown.Tags.AssetTag, out _);
         }
@@ -99,7 +99,7 @@ namespace FarEmerald.PlayForge
         public virtual DataWrapper GetValue(AbilityDataPacket data)
         {
             // By default, query value from TagCache
-            var source = data.Spec.GetOwner();
+            var source = data.EffectOrigin.GetOwner();
             if (source.GetTagCache().TryGetWeight(Tag, out var value))
             {
                 var wrapper = new DataWrapper
@@ -111,7 +111,7 @@ namespace FarEmerald.PlayForge
             }
             
             // Otherwise, search for tag in LocalData on Ability
-            if (data.Spec is not AbilitySpec ability) return default;
+            if (data.EffectOrigin is not AbilitySpec ability) return default;
 
             return !ability.Base.TryGetLocalData(Tag, out var dataWrapper) ? default : dataWrapper;
 
@@ -126,16 +126,16 @@ namespace FarEmerald.PlayForge
         public override bool Validate(AbilityDataPacket data, Func<ITarget> getSource, out string error)
         {
             error = "";
-            if (data.Spec is not AbilitySpec ability) return false;
+            if (data.EffectOrigin is not AbilitySpec ability) return false;
 
             var value = GetValue(data);
             if (value is null) return false;
 
             if (!data.TryGetTarget(EDataTarget.Primary, out var targetObj)) return false;
-            var target = targetObj.AsGAS()?.ToGASObject();
+            var target = targetObj.ToGAS()?.ToGASObject();
             if (target is null) return false;
             
-            var source = data.Spec.GetOwner().AsGAS()?.ToGASObject();
+            var source = data.EffectOrigin.GetOwner().ToGAS()?.ToGASObject();
             if (source is null) return false;
             
             return Vector3.Distance(source.transform.position, target.transform.position) <= value.floatValue;

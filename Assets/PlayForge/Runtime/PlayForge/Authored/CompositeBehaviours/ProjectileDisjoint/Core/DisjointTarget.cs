@@ -9,9 +9,9 @@ namespace FarEmerald.PlayForge
     public class DisjointTarget : ITarget
     {
         private ITarget original;
-        private PlaceholderTransformPacket packet;
+        private StaticTargetingPacket packet;
 
-        public DisjointTarget(ITarget original, PlaceholderTransformPacket packet)
+        public DisjointTarget(ITarget original, StaticTargetingPacket packet)
         {
             this.original = original;
             this.packet = packet;
@@ -78,7 +78,7 @@ namespace FarEmerald.PlayForge
         {
             return false;
         }
-        public AbstractTransformPacket AsTransform()
+        public AbstractTargetingPacket GetTargetingPacket()
         {
             return packet;
         }
@@ -91,7 +91,7 @@ namespace FarEmerald.PlayForge
         {
             return new DisjointTarget(
                 _target,
-                new PlaceholderTransformPacket(_target.AsTransform())
+                new StaticTargetingPacket(_target.GetTargetingPacket())
             );
         }
     }

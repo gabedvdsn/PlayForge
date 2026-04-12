@@ -8,11 +8,11 @@ namespace FarEmerald.PlayForge
     {
         protected override async UniTask RunTargetedProcess(ProcessRelay relay, CancellationToken token)
         {
-            while (Vector3.Distance(transform.position, targetTransform.position) > .1f)
+            while (Vector3.Distance(transform.position, targeting.position) > .1f)
             {
                 token.ThrowIfCancellationRequested();
                 
-                transform.position = Vector3.MoveTowards(transform.position, targetTransform.position, GetProjectileSpeed() * Time.deltaTime);
+                transform.position = Vector3.MoveTowards(transform.position, targeting.position, GetProjectileSpeed() * Time.deltaTime);
                 
                 await UniTask.NextFrame(token);
             }

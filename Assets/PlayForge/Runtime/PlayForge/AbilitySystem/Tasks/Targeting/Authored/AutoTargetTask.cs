@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
@@ -46,8 +46,8 @@ namespace FarEmerald.PlayForge
 
         public override UniTask Activate(AbilityDataPacket data, CancellationToken token)
         {
-            var owner = data.Spec.GetOwner();
-            var ownerTransform = owner.AsGAS()?.ToGASObject()?.transform;
+            var owner = data.EffectOrigin.GetOwner();
+            var ownerTransform = owner.ToGAS()?.ToGASObject()?.transform;
 
             var candidates = GatherCandidates(ownerTransform, owner);
             var valid = FilterCandidates(candidates);
@@ -63,7 +63,7 @@ namespace FarEmerald.PlayForge
             // Add all selected targets to data
             foreach (var target in selected)
             {
-                data.AddPayload(Tags.TARGET_REAL, target);
+                data.SetTargetingPacket(Tags.TARGET, target.GetTargetingPacket());
             }
 
             return UniTask.CompletedTask;
@@ -79,10 +79,11 @@ namespace FarEmerald.PlayForge
 
             if (Range > 0f && origin != null)
             {
-                var colliders = Physics.OverlapSphere(origin.position, Range, DetectionLayers);
-                foreach (var col in colliders)
+                var colliders = new Collider[MaxTargets];
+                var size = Physics.OverlapSphereNonAlloc(origin.position, Range, colliders, DetectionLayers);
+                for (int i = 0; i < size; i++)
                 {
-                    var targets = col.GetComponents<ITarget>();
+                    var targets = colliders[i].GetComponents<ITarget>();
                     foreach (var t in targets)
                     {
                         if (!IncludeSelf && ReferenceEquals(t, owner)) continue;
@@ -188,13 +189,11 @@ namespace FarEmerald.PlayForge
 
         private static float DistanceTo(ITarget target, Vector3 origin)
         {
-            var transform = target.AsTransform();
+            var transform = target.GetTargetingPacket();
             if (transform == null) return float.MaxValue;
             return Vector3.Distance(origin, transform.position);
         }
 
-        protected override bool ConnectInputHandler(AbilityDataPacket data) => true;
-        protected override void DisconnectInputHandler(AbilityDataPacket data) { }
     }
 
     // ═══════════════════════════════════════════════════════════════════════════

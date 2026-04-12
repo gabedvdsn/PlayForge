@@ -19,7 +19,7 @@ namespace FarEmerald.PlayForge
                 Origin = GameRoot.Instance;
             }
 
-            Source = Origin.GetOwner().AsData();
+            Source = Origin.GetOwner().ToGASComponentData();
         }
 
         protected CachedAttributeValue GetAttributeValue(Tag key)

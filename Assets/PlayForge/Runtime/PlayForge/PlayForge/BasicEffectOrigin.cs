@@ -9,14 +9,15 @@ namespace FarEmerald.PlayForge
     public abstract class BasicEffectOrigin : IEffectOrigin, IValidationReady
     {
         public ISource Source { get; private set; }
+        
         public readonly RuntimeAttribute LevelKey;
-
-        protected BasicEffectOrigin(ISource source, AttributeValueClamped level)
+        
+        protected BasicEffectOrigin(ISource source, AttributeValueClamped level, Tag assetTag)
         {
             Source = source;
             
             if (!Source.FindLevelSystem(out var slc)) return;
-            LevelKey = slc.Register(Source.GetAssetTag(), level);
+            LevelKey = slc.Register(assetTag, level);
         }
         
         public LevelTracker GetLeveler(int fallback = 0)

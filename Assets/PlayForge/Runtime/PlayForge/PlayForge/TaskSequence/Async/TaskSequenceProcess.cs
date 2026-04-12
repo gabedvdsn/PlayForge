@@ -21,6 +21,8 @@ namespace FarEmerald.PlayForge
         private readonly bool _hasConditions;
         private readonly EProcessLifecycle _requestedLifecycle;
         private readonly EProcessStepTiming _requestedStepTiming;
+        
+        public SequenceDataPacket SeqData { get; private set; }
 
         /// <summary>The sequence being executed (null if using chain).</summary>
         public TaskSequence Sequence => _sequence;
@@ -122,6 +124,11 @@ namespace FarEmerald.PlayForge
         // LIFECYCLE
         // ═══════════════════════════════════════════════════════════════════════════
 
+        public override void WhenInitialize(ProcessRelay relay)
+        {
+            SeqData = regData as SequenceDataPacket;
+        }
+
         /// <summary>
         /// For async: checks conditions. For sync: drives the sync runner.
         /// </summary>
@@ -129,9 +136,9 @@ namespace FarEmerald.PlayForge
         {
             if (IsSynchronous && _syncRunner != null)
             {
-                if (_syncRunner.Step(regData as SequenceDataPacket ?? SequenceDataPacket.SceneRoot(), Time.deltaTime))
+                if (_syncRunner.Step(SeqData ?? SequenceDataPacket.SceneRoot(), Time.deltaTime))
                 {
-                    relay.Terminate();
+                    relay.TerminateImmediate();
                 }
                 return;
             }
@@ -183,9 +190,34 @@ namespace FarEmerald.PlayForge
             }
         }
 
+        /// <summary>
+        /// Fires the sequence-level OnTerminate callback for sync sequences.
+        /// Async sequences handle this internally via TaskSequenceRuntime.
+        /// </summary>
+        public override void WhenTerminate(ProcessRelay relay)
+        {
+            if (IsSynchronous && _sequence?.Definition?.Metadata?.OnTerminate != null)
+            {
+                try
+                {
+                    var data = regData as SequenceDataPacket ?? SequenceDataPacket.SceneRoot();
+                    var ctx = new SequenceEventContext(data, null);
+                    bool completed = _syncRunner?.IsComplete ?? false;
+                    _sequence.Definition.Metadata.OnTerminate.Invoke(ctx, completed);
+                }
+                catch (System.Exception ex)
+                {
+                    Debug.LogError($"[TaskSequenceProcess] Exception in sync OnTerminate handler: {ex}");
+                }
+            }
+
+            base.WhenTerminate(relay);
+        }
+
         public override void WhenWait(ProcessRelay relay)
         {
-            Time.timeScale = 0f;
+            // No-op. Previously set Time.timeScale = 0f here, but that's destructive
+            // as a default — it freezes the entire game whenever any sequence enters Waiting.
         }
 
         public override bool HandlePause(ProcessRelay relay)

@@ -34,6 +34,8 @@ namespace FarEmerald.PlayForge
         
         // All root tags (tags with no parent)
         private static readonly HashSet<string> _rootTags = new();
+
+        private static readonly Dictionary<string, Tag> _deterministicTagsByName = new();
         
         // Lock for thread safety during registration
         private static readonly object _lock = new();
@@ -83,6 +85,7 @@ namespace FarEmerald.PlayForge
                 _allDescendantsCache.Clear();
                 _parentMap.Clear();
                 _rootTags.Clear();
+                _deterministicTagsByName.Clear();
                 _initialized = false;
             }
         }
@@ -214,7 +217,19 @@ namespace FarEmerald.PlayForge
         {
             return !string.IsNullOrEmpty(tag.Name) && _tagsByPath.ContainsKey(tag.Name);
         }
-        
+
+        /// <summary>
+        /// Resolves a tag by its Name string, returning the registered instance with
+        /// DisplayName intact. If not registered, falls back to Tag.Generate (DisplayName = name).
+        /// Use this instead of Tag.GenerateAsUnique when reconstructing from a serialized Name.
+        /// </summary>
+        public static Tag Resolve(string name)
+        {
+            if (string.IsNullOrEmpty(name)) return default;
+            if (_tagsByPath.TryGetValue(name, out var tag)) return tag;
+            return Tag.Generate(name);
+        }
+
         /// <summary>
         /// Returns true if the tag exists in the hierarchy.
         /// </summary>
@@ -545,6 +560,11 @@ namespace FarEmerald.PlayForge
             /// (or fewer only if prefix + input together exceed it).</returns>
             public static Tag GenerateDeterministicTag(string input, string prefix, int N = rngGenerationBufferSize)
             {
+                lock (_lock)
+                {
+                    if (_deterministicTagsByName.TryGetValue(input + prefix, out var t)) return t;
+                }
+                
                 // Valid characters per IsValidPath (no dot at end, so omit it from padding pool)
                 const string PaddingChars =
                     "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_";
@@ -555,7 +575,11 @@ namespace FarEmerald.PlayForge
 
                 // Already at or beyond the target length — truncate and return
                 if (head.Length >= N)
-                    return Tag.Generate(head.Substring(0, N));
+                {
+                    var _tag = Tag.Generate(head.Substring(0, N), input);
+                    lock (_lock) _deterministicTagsByName[input + prefix] = _tag;
+                    return _tag;
+                }
 
                 int paddingNeeded = N - head.Length;
 
@@ -574,7 +598,9 @@ namespace FarEmerald.PlayForge
                 for (int i = 0; i < paddingNeeded; i++)
                     sb.Append(PaddingChars[hashBytes[i % hashBytes.Length] % PaddingChars.Length]);
 
-                return Tag.Generate(sb.ToString());
+                var _tag2 = Tag.Generate(sb.ToString(), input);
+                lock (_lock) _deterministicTagsByName[input + prefix] = _tag2;
+                return _tag2;
             }
         }
         

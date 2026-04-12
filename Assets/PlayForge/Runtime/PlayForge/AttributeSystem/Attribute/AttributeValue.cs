@@ -13,8 +13,9 @@ namespace FarEmerald.PlayForge
         public float CurrentValue;
         public float BaseValue;
 
+        public float Ratio => CurrentValue / BaseValue;
         public float RatioMinZero => BaseValue > 0 ? CurrentValue / BaseValue : 0f;
-        public float Ratio(float min) => Mathf.Lerp(min, BaseValue, CurrentValue);
+        public float LerpedRatio(float min) => Mathf.Lerp(min, BaseValue, CurrentValue);
         public bool ContainsImpact => CurrentValue != 0 || BaseValue != 0;
 
         public AttributeValue(float currentValue, float baseValue)

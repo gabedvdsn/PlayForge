@@ -317,7 +317,7 @@ namespace FarEmerald.PlayForge
             
             return impacts
                 .Where(i => i.RealImpact.CurrentValue > 0)
-                .Select(i => i.SourcedModifier.Derivation?.GetSource().AsGAS())
+                .Select(i => i.SourcedModifier.Derivation?.GetSource().ToGAS())
                 .Where(s => s != null)
                 .Distinct();
         }

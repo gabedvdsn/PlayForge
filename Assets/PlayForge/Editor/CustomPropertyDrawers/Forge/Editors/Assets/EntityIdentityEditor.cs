@@ -90,7 +90,7 @@ namespace FarEmerald.PlayForge.Extended.Editor
         
         private void BuildDefinitionSection(VisualElement parent)
         {
-            var section = CreateCollapsibleSection(new SectionConfig
+            var section = CreateSection(new SectionConfig
             {
                 Name = "Definition",
                 Title = "Definition",
@@ -150,7 +150,7 @@ namespace FarEmerald.PlayForge.Extended.Editor
         
         private void BuildLevelSourceSection(VisualElement parent)
         {
-            var section = CreateCollapsibleSection(new SectionConfig
+            var section = CreateSection(new SectionConfig
             {
                 Name = "Linking",
                 Title = "Level Source",
@@ -475,7 +475,7 @@ namespace FarEmerald.PlayForge.Extended.Editor
         
         private void BuildTagsSection(VisualElement parent)
         {
-            var section = CreateCollapsibleSection(new SectionConfig
+            var section = CreateSection(new SectionConfig
             {
                 Name = "Tags",
                 Title = "Tags",
@@ -522,7 +522,7 @@ namespace FarEmerald.PlayForge.Extended.Editor
         
         private void BuildLevelingSection(VisualElement parent)
         {
-            var section = CreateCollapsibleSection(new SectionConfig
+            var section = CreateSection(new SectionConfig
             {
                 Name = "Level",
                 Title = "Level",
@@ -820,7 +820,7 @@ namespace FarEmerald.PlayForge.Extended.Editor
         
         private void BuildAbilitiesSection(VisualElement parent)
         {
-            var section = CreateCollapsibleSection(new SectionConfig
+            var section = CreateSection(new SectionConfig
             {
                 Name = "Abilities",
                 Title = "Abilities",
@@ -880,7 +880,7 @@ namespace FarEmerald.PlayForge.Extended.Editor
         
         private void BuildItemsSection(VisualElement parent)
         {
-            var section = CreateCollapsibleSection(new SectionConfig
+            var section = CreateSection(new SectionConfig
             {
                 Name = "Items",
                 Title = "Items",
@@ -938,7 +938,7 @@ namespace FarEmerald.PlayForge.Extended.Editor
         
         private void BuildAttributesSection(VisualElement parent)
         {
-            var section = CreateCollapsibleSection(new SectionConfig
+            var section = CreateSection(new SectionConfig
             {
                 Name = "Attributes",
                 Title = "Attributes",
@@ -962,7 +962,7 @@ namespace FarEmerald.PlayForge.Extended.Editor
         
         private void BuildWorkersSection(VisualElement parent)
         {
-            var section = CreateCollapsibleSection(new SectionConfig
+            var section = CreateSection(new SectionConfig
             {
                 Name = "Workers",
                 Title = "Workers",
@@ -990,7 +990,7 @@ namespace FarEmerald.PlayForge.Extended.Editor
         
         private void BuildLocalDataSection(VisualElement parent)
         {
-            var section = CreateCollapsibleSection(new SectionConfig
+            var section = CreateSection(new SectionConfig
             {
                 Name = "LocalData",
                 Title = "Local Data",

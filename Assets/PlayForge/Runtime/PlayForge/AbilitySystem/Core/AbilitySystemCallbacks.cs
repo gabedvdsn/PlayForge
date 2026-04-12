@@ -29,7 +29,7 @@ namespace FarEmerald.PlayForge
             add => _onAbilityActivate = AddUnique(_onAbilityActivate, value);
             remove => _onAbilityActivate -= value;
         }
-        public void AbilityActivated(AbilityCallbackStatus status) => _onAbilityActivate?.Invoke(status);
+        public void AbilityClaimed(AbilityCallbackStatus status) => _onAbilityActivate?.Invoke(status);
         #endregion
         
         #region On Ability End
@@ -39,7 +39,7 @@ namespace FarEmerald.PlayForge
             add => _onAbilityEnd = AddUnique(_onAbilityEnd, value);
             remove => _onAbilityEnd -= value;
         }
-        public void AbilityEnded(AbilityCallbackStatus status) => _onAbilityEnd?.Invoke(status);
+        public void AbilityClaimReleased(AbilityCallbackStatus status) => _onAbilityEnd?.Invoke(status);
         #endregion
         
         // ═══════════════════════════════════════════════════════════════

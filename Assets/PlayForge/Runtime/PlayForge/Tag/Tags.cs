@@ -53,49 +53,51 @@ namespace FarEmerald.PlayForge
         public static Tag NOT_VISIBLE => Tag.GenerateAsUnique("Not Visible");
         
         // ═══════════════════════════════════════════════════════════════════════════
-        // Data Tags
-        // ═══════════════════════════════════════════════════════════════════════════
-        
-        public static Tag GAS => Tag.GenerateAsUnique("GAS");
-        
-        // ═══════════════════════════════════════════════════════════════════════════
         // Mono Process Initialization Tags
         // ═══════════════════════════════════════════════════════════════════════════
         
-        public static Tag PARENT_TRANSFORM => Tag.GenerateAsUnique("Transform");
-        public static Tag POSITION => Tag.GenerateAsUnique("Position");
-        public static Tag ROTATION => Tag.GenerateAsUnique("Rotation");
+        [ForgeContextDefault(ForgeContext.Data)] public static Tag PARENT_TRANSFORM => Tag.GenerateAsUnique("Transform");
+        [ForgeContextDefault(ForgeContext.Data)] public static Tag POSITION => Tag.GenerateAsUnique("Position");
+        [ForgeContextDefault(ForgeContext.Data)] public static Tag ROTATION => Tag.GenerateAsUnique("Rotation");
         
-        public static Tag DERIVATION => Tag.GenerateAsUnique("Derivation");
-        public static Tag AFFILIATION => Tag.GenerateAsUnique("Affiliation");
-        public static Tag SOURCE => Tag.GenerateAsUnique("Source");
-        
-        public static Tag TARGET_REAL => Tag.GenerateAsUnique("Target");
-        public static Tag TARGET_POS => Tag.GenerateAsUnique("TargetPosition");
-        public static Tag DATA => Tag.GenerateAsUnique("Data");
-        public static Tag INDEX => Tag.GenerateAsUnique("Index");
-        public static Tag OBJECT => Tag.GenerateAsUnique("Object");
-        public static Tag GAMEOBJECT => Tag.GenerateAsUnique("GameObject");
-        public static Tag PROCESS => Tag.GenerateAsUnique("Process");
-        public static Tag DELTA => Tag.GenerateAsUnique("Delta");
-        public static Tag RADIUS => Tag.GenerateAsUnique("Radius");
-        public static Tag DURATION => Tag.GenerateAsUnique("Duration");
-        public static Tag DISTANCE => Tag.GenerateAsUnique("Distance");
-        public static Tag CENTER => Tag.GenerateAsUnique("Center");
-        public static Tag ORIGIN => Tag.GenerateAsUnique("Origin");
-        public static Tag DIMENSIONS => Tag.GenerateAsUnique("Dimensions");
-        public static Tag VECTOR => Tag.GenerateAsUnique("Vector");
-        public static Tag VECTOR2 => Tag.GenerateAsUnique("Vector2");
-        public static Tag VECTOR3 => Tag.GenerateAsUnique("Vector3");
-        public static Tag HEIGHT => Tag.GenerateAsUnique("Height");
-        public static Tag WAIT_FOR => Tag.GenerateAsUnique("WaitFor");
-        public static Tag ITERATIONS => Tag.GenerateAsUnique("Iterations");
-        public static Tag VALID => Tag.GenerateAsUnique("Valid");
-        public static Tag INVALID => Tag.GenerateAsUnique("Invalid");
-        public static Tag CAMERA => Tag.GenerateAsUnique("Camera");
-        public static Tag PROCESS_RELAY => Tag.GenerateAsUnique("ProcessRelay");
-        public static Tag CONTAINER => Tag.GenerateAsUnique("Container");
-        public static Tag UI => Tag.GenerateAsUnique("UI");
+        [ForgeContextDefault(ForgeContext.Data)] public static Tag GAMEPLAY_ABILITY_SYSTEM => Tag.GenerateAsUnique("GameplayAbilitySystem");
+        [ForgeContextDefault(ForgeContext.Data)] public static Tag DERIVATION => Tag.GenerateAsUnique("Derivation");
+        [ForgeContextDefault(ForgeContext.Data)] public static Tag AFFILIATION => Tag.GenerateAsUnique("Affiliation");
+        [ForgeContextDefault(ForgeContext.Data)] public static Tag SOURCE => Tag.GenerateAsUnique("Source");
+        [ForgeContextDefault(ForgeContext.Data)] public static Tag TARGET => Tag.GenerateAsUnique("Target");
+        [ForgeContextDefault(ForgeContext.Data)] public static Tag TARGET_REAL => Tag.GenerateAsUnique("TargetReal");
+        [ForgeContextDefault(ForgeContext.Data)] public static Tag TARGET_POS => Tag.GenerateAsUnique("TargetPosition");
+        [ForgeContextDefault(ForgeContext.Data)] public static Tag DATA => Tag.GenerateAsUnique("Data");
+        [ForgeContextDefault(ForgeContext.Data)] public static Tag ASSETS => Tag.GenerateAsUnique("Assets");
+        [ForgeContextDefault(ForgeContext.Data)] public static Tag EFFECTS => Tag.GenerateAsUnique("Effects");
+        [ForgeContextDefault(ForgeContext.Data)] public static Tag ABILITIES => Tag.GenerateAsUnique("Abilities");
+        [ForgeContextDefault(ForgeContext.Data)] public static Tag ENTITIES => Tag.GenerateAsUnique("Entities");
+        [ForgeContextDefault(ForgeContext.Data)] public static Tag ATTRIBUTES => Tag.GenerateAsUnique("Attributes");
+        [ForgeContextDefault(ForgeContext.Data)] public static Tag ATTRIBUTE_SETS => Tag.GenerateAsUnique("AttributeSets");
+        [ForgeContextDefault(ForgeContext.Data)] public static Tag TAGS => Tag.GenerateAsUnique("Tags");
+        [ForgeContextDefault(ForgeContext.Data)] public static Tag INDEX => Tag.GenerateAsUnique("Index");
+        [ForgeContextDefault(ForgeContext.Data)] public static Tag OBJECT => Tag.GenerateAsUnique("Object");
+        [ForgeContextDefault(ForgeContext.Data)] public static Tag GAMEOBJECT => Tag.GenerateAsUnique("GameObject");
+        [ForgeContextDefault(ForgeContext.Data)] public static Tag PROCESS => Tag.GenerateAsUnique("Process");
+        [ForgeContextDefault(ForgeContext.Data)] public static Tag DELTA => Tag.GenerateAsUnique("Delta");
+        [ForgeContextDefault(ForgeContext.Data)] public static Tag RADIUS => Tag.GenerateAsUnique("Radius");
+        [ForgeContextDefault(ForgeContext.Data)] public static Tag DURATION => Tag.GenerateAsUnique("Duration");
+        [ForgeContextDefault(ForgeContext.Data)] public static Tag DISTANCE => Tag.GenerateAsUnique("Distance");
+        [ForgeContextDefault(ForgeContext.Data)] public static Tag CENTER => Tag.GenerateAsUnique("Center");
+        [ForgeContextDefault(ForgeContext.Data)] public static Tag ORIGIN => Tag.GenerateAsUnique("Origin");
+        [ForgeContextDefault(ForgeContext.Data)] public static Tag DIMENSIONS => Tag.GenerateAsUnique("Dimensions");
+        [ForgeContextDefault(ForgeContext.Data)] public static Tag VECTOR => Tag.GenerateAsUnique("Vector");
+        [ForgeContextDefault(ForgeContext.Data)] public static Tag VECTOR2 => Tag.GenerateAsUnique("Vector2");
+        [ForgeContextDefault(ForgeContext.Data)] public static Tag VECTOR3 => Tag.GenerateAsUnique("Vector3");
+        [ForgeContextDefault(ForgeContext.Data)] public static Tag HEIGHT => Tag.GenerateAsUnique("Height");
+        [ForgeContextDefault(ForgeContext.Data)] public static Tag WAIT_FOR => Tag.GenerateAsUnique("WaitFor");
+        [ForgeContextDefault(ForgeContext.Data)] public static Tag ITERATIONS => Tag.GenerateAsUnique("Iterations");
+        [ForgeContextDefault(ForgeContext.Data)] public static Tag VALID => Tag.GenerateAsUnique("Valid");
+        [ForgeContextDefault(ForgeContext.Data)] public static Tag INVALID => Tag.GenerateAsUnique("Invalid");
+        [ForgeContextDefault(ForgeContext.Data)] public static Tag CAMERA => Tag.GenerateAsUnique("Camera");
+        [ForgeContextDefault(ForgeContext.Data)] public static Tag PROCESS_RELAY => Tag.GenerateAsUnique("ProcessRelay");
+        [ForgeContextDefault(ForgeContext.Data)] public static Tag CONTAINER => Tag.GenerateAsUnique("Container");
+        [ForgeContextDefault(ForgeContext.Data)] public static Tag UI => Tag.GenerateAsUnique("UI");
         
         // ═══════════════════════════════════════════════════════════════════════════
         // Functional Tags

@@ -1301,7 +1301,7 @@ namespace FarEmerald.PlayForge.Extended.Editor
             section.style.borderTopWidth = 1;
             section.style.borderTopColor = new Color(0.3f, 0.3f, 0.3f, 0.5f);
             
-            var behavioursProp = property.FindPropertyRelative("Behaviours");
+            var behavioursProp = property.FindPropertyRelative(nameof(AbstractScaler.Behaviours));
             if (behavioursProp == null) return section;
             
             // Header row

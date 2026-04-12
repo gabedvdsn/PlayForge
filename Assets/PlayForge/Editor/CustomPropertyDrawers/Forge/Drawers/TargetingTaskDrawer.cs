@@ -12,5 +12,18 @@ namespace FarEmerald.PlayForge.Extended.Editor
         {
             return false;
         }
+
+        protected override string GetStringValue(SerializedProperty prop, Type value)
+        {
+            if (value is null) 
+                return base.GetStringValue(prop, value);
+            
+            // Clean up the display name
+            var name = value.Name;
+            name = name.Replace("TargetTask", "");
+            name = name.Replace("Task", "");
+
+            return ObjectNames.NicifyVariableName(name);
+        }
     }
 }

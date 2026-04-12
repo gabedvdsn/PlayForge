@@ -18,7 +18,7 @@ namespace FarEmerald.PlayForge
         public LayerMask RaycastLayers = ~0;
 
         [Tooltip("Maximum raycast distance (0 = infinite)")]
-        public float MaxDistance;
+        public float MaxDistance = Mathf.Infinity;
 
         [Header("Behaviour")]
         [Tooltip("When true, a completely invalid click re-prompts instead of failing")]
@@ -53,14 +53,14 @@ namespace FarEmerald.PlayForge
                 // Try GAS target first
                 if (PreferGasTarget && TargetIsValid(hit.collider.gameObject, out var target))
                 {
-                    data.SetPrimary(Tags.TARGET_REAL, target);
+                    data.SetTargetingPacket(Tags.TARGET, target.GetTargetingPacket());
                     return;
                 }
 
                 // Fall back to position
-                if (TargetIsValid(hit.point, out var position))
+                if (TargetIsValid(hit.point, out _))
                 {
-                    data.AddPayload(Tags.POSITION, position);
+                    data.SetTargetingPacket(Tags.TARGET, new StaticTargetingPacket(hit.point));
                     return;
                 }
 
@@ -69,15 +69,6 @@ namespace FarEmerald.PlayForge
                 WhenTargetingInvalid(data);
                 return;
             }
-        }
-
-        protected override bool ConnectInputHandler(AbilityDataPacket data)
-        {
-            return true;
-        }
-
-        protected override void DisconnectInputHandler(AbilityDataPacket data)
-        {
         }
     }
 }

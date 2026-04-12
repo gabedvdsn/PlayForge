@@ -41,17 +41,38 @@ namespace FarEmerald.PlayForge.Extended.Editor
         private const float ButtonSpacing = 4f;
         private const float Padding = 8f;
 
-        private static Dictionary<BaseForgeAsset, Dictionary<string, bool>> _collapsedStates = new();
+        /// <summary>
+        /// Stores section expand/collapse state keyed by editor Type (e.g., typeof(AbilityEditor)).
+        /// All instances of the same editor type share state, so collapsing "Tags" on one Ability
+        /// keeps it collapsed when switching to another Ability.
+        /// </summary>
+        private static readonly Dictionary<Type, Dictionary<string, bool>> _sectionStates = new();
 
-        protected static bool IsCollapsed(BaseForgeAsset obj, string section)
+        /// <summary>
+        /// Creates a collapsible section that remembers expand/collapse state per editor type.
+        /// All instances of the same editor (e.g., all AbilityEditors) share state.
+        /// Use this instead of CreateCollapsibleSection for automatic state persistence.
+        /// </summary>
+        protected SectionResult CreateSection(SectionConfig config)
         {
-            return !(_collapsedStates.TryGetValue(obj, out var sections) && sections.TryGetValue(section, out bool collapsed)) || collapsed;
-        }
+            var editorType = GetType();
 
-        protected static void SetCollapsed(BaseForgeAsset obj, string section, bool collapsed)
-        {
-            _collapsedStates.SafeAdd(obj, new Dictionary<string, bool>(), false);
-            _collapsedStates[obj].SafeAdd(section, collapsed, true);
+            // Read stored state, defaulting to config.StartExpanded if no state exists
+            if (_sectionStates.TryGetValue(editorType, out var states)
+                && states.TryGetValue(config.Name, out bool isExpanded))
+            {
+                config.StartExpanded = isExpanded;
+            }
+
+            // Wire the onClick to persist state
+            var result = CreateCollapsibleSection(config, (sectionName, expanded) =>
+            {
+                if (!_sectionStates.ContainsKey(editorType))
+                    _sectionStates[editorType] = new Dictionary<string, bool>();
+                _sectionStates[editorType][sectionName] = expanded;
+            });
+
+            return result;
         }
 
         protected virtual void OnEnable()

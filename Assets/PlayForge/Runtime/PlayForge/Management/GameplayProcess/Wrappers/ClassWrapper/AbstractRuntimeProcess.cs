@@ -8,11 +8,11 @@ namespace FarEmerald.PlayForge
 {
     public abstract class AbstractRuntimeProcess : IProxyTaskBehaviourCaller, IGameplayProcess
     {
-        public readonly string name;
-        public readonly EProcessStepPriorityMethod priorityMethod;
-        public readonly int stepPriority;
-        public readonly EProcessStepTiming stepTiming;
-        public readonly EProcessLifecycle lifecycle;
+        protected readonly string name;
+        protected readonly EProcessStepPriorityMethod priorityMethod;
+        protected readonly int stepPriority;
+        protected readonly EProcessStepTiming stepTiming;
+        protected readonly EProcessLifecycle lifecycle;
 
         protected ProcessDataPacket regData;
         protected bool processActive;
@@ -146,6 +146,10 @@ namespace FarEmerald.PlayForge
         {
             var tasks = users.Select(user => ApplyBehaviour(cb.CreateInstance(), user, token)).ToArray();
             await UniTask.WhenAll(tasks);
+        }
+        public ProcessRelay[] GetRelays()
+        {
+            return HandlerRelays.Values.ToArray();
         }
         public bool HandlerValidateAgainst(IGameplayProcessHandler handler)
         {

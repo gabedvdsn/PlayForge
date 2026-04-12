@@ -52,7 +52,7 @@ namespace FarEmerald.PlayForge
                 }
             }
 
-            var analysis = system.AsGAS()?.GetAnalysisCache();
+            var analysis = system.ToGAS()?.GetAnalysisCache();
             if (analysis != null)
             {
                 foreach (var worker in AnalysisWorkers)
@@ -94,7 +94,7 @@ namespace FarEmerald.PlayForge
                 }
             }
 
-            var analysis = system.AsGAS()?.GetAnalysisCache();
+            var analysis = system.ToGAS()?.GetAnalysisCache();
             if (analysis != null)
             {
                 foreach (var worker in AnalysisWorkers)

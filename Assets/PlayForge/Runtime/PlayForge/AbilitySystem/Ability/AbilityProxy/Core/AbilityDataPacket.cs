@@ -12,7 +12,7 @@ namespace FarEmerald.PlayForge
     /// </summary>
     public class AbilityDataPacket : SequenceDataPacket
     {
-        public readonly IEffectOrigin Spec;
+        public readonly IEffectOrigin EffectOrigin;
         public readonly AbilitySystemComponent.AbilityActivationRequest Request;
         public bool UsageEffectsApplied { get; set; }
 
@@ -26,34 +26,37 @@ namespace FarEmerald.PlayForge
         public AbilitySystemCallbacks Callbacks => System.Callbacks;
 
         /// <summary>Resolves the AbilitySpec (convenience cast from IEffectOrigin).</summary>
-        public AbilitySpec AbilitySpec => Spec as AbilitySpec;
+        public AbilitySpec AbilitySpec => EffectOrigin as AbilitySpec;
 
-        private AbilityDataPacket(IEffectOrigin spec, AbilitySystemComponent.AbilityActivationRequest request)
+        private AbilityDataPacket(IEffectOrigin effectOrigin, AbilitySystemComponent.AbilityActivationRequest request)
         {
-            Spec = spec;
+            EffectOrigin = effectOrigin;
             Request = request;
 
             AddPayload(
                 Tags.SOURCE,
-                spec.GetOwner()
+                effectOrigin.GetOwner()
             );
         }
 
         public static AbilityDataPacket GenerateFrom(AbilitySpecContainer container, AbilitySystemComponent asc)
         {
             var req = asc.CreateActivationRequest(container.Index);
-            return GenerateFrom(container.Spec, req, false);
+            var data = GenerateFrom(container.Spec, req, false, container.Spec.Base.Behaviour.ImplicitTag);
+            return data;
         }
 
-        public static AbilityDataPacket GenerateFrom(IEffectOrigin spec, AbilitySystemComponent.AbilityActivationRequest req, bool useImplicitTargeting)
+        public static AbilityDataPacket GenerateFrom(IEffectOrigin spec, AbilitySystemComponent.AbilityActivationRequest req, bool useImplicitTargeting, Tag implicitTargetingTag)
         {
             var data = new AbilityDataPacket(spec, req);
 
             if (useImplicitTargeting)
             {
-                data.AddPayload(Tags.TARGET_REAL, spec.GetOwner());
+                data.SetPrimary(implicitTargetingTag, spec.GetOwner().GetTargetingPacket());
             }
 
+            data.AppendPath($"GAS[{spec.GetOwner().GetName()}]");
+            data.AppendPath($"Ability[{spec.GetReadableDefinition().GetName()}]");
             return data;
         }
 
@@ -61,15 +64,15 @@ namespace FarEmerald.PlayForge
 
         public override string GetName()
         {
-            return $"AbilityDataPacket.{Spec.GetReadableDefinition().GetName()}";
+            return $"AbilityDataPacket.{EffectOrigin.GetReadableDefinition().GetName()}";
         }
         public override string GetDescription()
         {
-            return $"Active data packet for an active ability runtime: {Spec.GetReadableDefinition().GetName()}: {Spec.GetReadableDefinition().GetDescription()}";
+            return $"Active data packet for an active ability runtime: {EffectOrigin.GetReadableDefinition().GetName()}: {EffectOrigin.GetReadableDefinition().GetDescription()}";
         }
         public override Texture2D GetPrimaryIcon()
         {
-            return Spec.GetReadableDefinition().GetPrimaryIcon();
+            return EffectOrigin.GetReadableDefinition().GetPrimaryIcon();
         }
 
         #endregion

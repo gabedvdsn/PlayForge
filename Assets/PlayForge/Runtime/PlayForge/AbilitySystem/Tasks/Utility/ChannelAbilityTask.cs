@@ -18,13 +18,13 @@ namespace FarEmerald.PlayForge
         {
             //SliderManager.Instance.ToggleSlider(false);
         }
-        public override bool IsCriticalSection => false;
+        public override bool IsCriticalSection => true;
         
         public override async UniTask Activate(AbilityDataPacket data, CancellationToken token)
         {
             float elapsedDuration = 0f;
 
-            await TaskUtil.DoWhileAsync(
+            await ProcessTaskUtil.DoWhileAsync(
                 body: async () =>
                 {
                     elapsedDuration += Time.deltaTime;

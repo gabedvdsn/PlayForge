@@ -36,12 +36,14 @@ MonoBehaviour:
     Rounding: 0
   StartingAbilities:
   - {fileID: 11400000, guid: 1920f5e2b06d4094c974ba3d366050d7, type: 2}
-  - {fileID: 11400000, guid: d648d3ec866e705499bb6b60d025b2eb, type: 2}
-  - {fileID: 11400000, guid: a7b4646c74ca21c4cae987c303e5e49a, type: 2}
-  - {fileID: 11400000, guid: 74c3b6d82bc0b0640abe421d89758575, type: 2}
-  - {fileID: 11400000, guid: eff6c4a7808417745a1d84cb1737e436, type: 2}
-  - {fileID: 11400000, guid: 16d97f538db9e0749ad3e73654c92d50, type: 2}
-  - {fileID: 11400000, guid: b2544ade3661750489de3e00ee0efa68, type: 2}
+  - {fileID: 11400000, guid: 141bbb946c6bb0e4db8519f6c6edde00, type: 2}
+  - {fileID: 11400000, guid: 7bf0491311f253548be93f5cc437d3be, type: 2}
+  - {fileID: 11400000, guid: a97049ade4276034487c17dd350ec745, type: 2}
+  - {fileID: 11400000, guid: 1ea6c09203c597648b086220b33bb6df, type: 2}
+  - {fileID: 11400000, guid: 48d0a6bd10ec7604b9cb350d4842c7a8, type: 2}
+  - {fileID: 11400000, guid: 43a8e07e405e8484da11f86603fe36f3, type: 2}
+  - {fileID: 11400000, guid: ae6032613fdb88f4398ff540429245f0, type: 2}
+  - {fileID: 11400000, guid: 4bd2ddb7c2228c34aab2eacd2eea5269, type: 2}
   AllowDuplicateAbilities: 1
   MaxItemsOperation:
     Magnitude: 4

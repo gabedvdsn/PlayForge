@@ -50,7 +50,7 @@ namespace FarEmerald.PlayForge.Examples
             var tD = Tag.GenerateAsUnique("Duration of Torrent");
             var yD = Tag.GenerateAsUnique("Torrent Y Delta");
             
-            var stormSequence = TaskSequenceBuilder.Create("Torrent Storm")
+            var stormSequence = TaskSequenceBuilder.Create("Torrent Storm Sequence")
                 .Task(d =>
                 {
                     // Setup our parameters
@@ -68,6 +68,7 @@ namespace FarEmerald.PlayForge.Examples
                     /*var cPos = new Vector3(0, 30, 0);
                     Camera.main.transform.position = cPos;
                     Camera.main.transform.rotation = Quaternion.Euler(new Vector3(90, 0, 0));*/
+                    Debug.Log($"Storm sequence");
                 })
                 .Stage(s => s
                     .WithName("Torrent Storm")
@@ -81,6 +82,8 @@ namespace FarEmerald.PlayForge.Examples
                             d.Inject(BreakStageRepeatInjection.Instance, true);
                             return;
                         }
+
+                        Debug.Log($"Create storm ({d.GetPrimary<int>(ITERATIONS)})");
                         
                         // Create the torrent
                         var torrent = GameObject.CreatePrimitive(PrimitiveType.Cube);
@@ -137,7 +140,7 @@ namespace FarEmerald.PlayForge.Examples
             
             TaskSequence TorrentSequence2()
             {
-                return TaskSequenceBuilder.Create("Torrent")
+                return TaskSequenceBuilder.Create("Individual Torrent")
                     .Task(async (d, t) =>
                     {
                         var torrent = d.GetPrimary<GameObject>(Tags.DATA);

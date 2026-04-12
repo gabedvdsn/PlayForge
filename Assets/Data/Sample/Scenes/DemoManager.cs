@@ -13,6 +13,8 @@ namespace FarEmerald.PlayForge.Examples
     public class DemoManager : LazyMonoProcess
     {
         public static DemoManager Instance;
+
+        public GameplayAbilitySystem DemoEnemy;
         
         public UIDocument DemoUI;
         private VisualElement Root;
@@ -27,7 +29,7 @@ namespace FarEmerald.PlayForge.Examples
         public GameplayAbilitySystem Player;
         public static DemoInputConduit Input;
 
-        public EntityIdentity EnemyIdentity;
+        // public EntityIdentity EnemyIdentity;
         private GameplayAbilitySystem enemy;
         private ProcessRelay enemyRelay;
 
@@ -126,7 +128,6 @@ namespace FarEmerald.PlayForge.Examples
         void InitGameControls()
         {
             GameControls = Root.Q("GameControls");
-            Debug.Log(GameControls);
             var p = GameControls.Q("InGameProcesses");
             
             InitInGameProcesses();
@@ -332,15 +333,20 @@ namespace FarEmerald.PlayForge.Examples
                     var obj = DemoSequences.CreatePrim();
                     obj.transform.position = enemySpawnPos;
                     obj.transform.localScale = Vector3.zero;
-            
-                    enemy = obj.AddComponent<GameplayAbilitySystem>();
-                    enemy.EntityData = EnemyIdentity;
+
+                    ProcessControl.Register(DemoEnemy, this, out enemyRelay);
+                    enemyRelay.TryGetProcess(out enemy);
+
+                    ProcessControl.Register(enemy.GetComponent<Healthbar>(), enemy, out var healthbarRelay);
+                    healthbarRelay.Wrapper.getProcessName = "Demo Enemy Healthbar";
+                    
+                    /*//enemy = GameplayAbilitySystem.AddToGameObject(obj, EnemyIdentity);
             
                     if (!ProcessControl.Register(enemy, this, out enemyRelay))
                     {
                         Debug.LogError("[Demo] Failed to register enemy GAS");
                         return;
-                    }
+                    }*/
 
                     enemyRelay.Wrapper.getProcessName = "Demo Enemy";
                     await SequenceTaskLibrary.ScaleTo(enemy.transform, 3f, 0.5f, t);
@@ -415,7 +421,6 @@ namespace FarEmerald.PlayForge.Examples
                     var req = Player.AbilitySystem.CreateActivationRequest(container.Index);
                     bool activated = Player.AbilitySystem.TryActivateAbility(req);
 
-                    Debug.Log($"Activated ability ({container.Spec.Base.GetName()}): {activated}");
                     if (!activated) return;
                     
                     // var watcher = TaskSequenceProcess.Register(AbilityButtonWatcher(button, container));
@@ -437,6 +442,10 @@ namespace FarEmerald.PlayForge.Examples
             ConfigureButton(Sequences.Q<Button>("Smite"), null, () =>
             {
                 return RegisterDemoSequence(DemoSequences.Smite());
+            });
+            ConfigureButton(Sequences.Q<Button>("Torrents"), null, () =>
+            {
+                return RegisterDemoSequence(DemoSequences.TorrentStorm());
             });
             ConfigureButton(Sequences.Q<Button>("MovingPlatforms"), null, () =>
             {

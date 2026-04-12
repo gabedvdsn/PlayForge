@@ -246,6 +246,7 @@ namespace FarEmerald.PlayForge
         {
             try
             {
+                // data.AppendPath(task.GetType().Name);
                 await task.Execute(data, token);
             }
             catch (OperationCanceledException)

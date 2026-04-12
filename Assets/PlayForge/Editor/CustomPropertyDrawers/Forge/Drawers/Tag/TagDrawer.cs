@@ -146,15 +146,14 @@ namespace FarEmerald.PlayForge.Extended.Editor
             
             btn.tooltip = string.IsNullOrEmpty(fullPath) ? "No tag selected" : fullPath;
             
-            // Hover: show full path, restore leaf name on leave
+            // Hover: show display name, restore short name on leave
             btn.RegisterCallback<MouseEnterEvent>(_ =>
             {
                 btn.style.backgroundColor = Colors.ButtonHover;
-                // Get fresh tag on hover
                 var currentTag = GetCurrentTagFresh(state);
                 if (!ShowFullPath() && !currentTag.Equals(default(Tag)))
                 {
-                    btn.text = currentTag.Name;
+                    btn.text = currentTag.DisplayName;
                 }
             });
             
@@ -182,16 +181,17 @@ namespace FarEmerald.PlayForge.Extended.Editor
         private string GetDisplayText(Tag tag)
         {
             if (tag.Equals(default(Tag))) return "<None>";
-            
+
             if (ShowFullPath())
                 return tag.Name;
-            
-            var leafName = tag.GetLeafName();
+
+            // Use registered display name if available (strips the deterministic hash padding)
+            var displayName = tag.DisplayName;
             if (tag.Depth > 1)
             {
-                return $"…{leafName}";
+                return $"…{displayName}";
             }
-            return leafName;
+            return displayName;
         }
         
         // ═══════════════════════════════════════════════════════════════════════════
@@ -357,34 +357,14 @@ namespace FarEmerald.PlayForge.Extended.Editor
                 return;
             }
             
-            // Show full path with colored segments
-            var pathRow = new VisualElement();
-            pathRow.style.flexDirection = FlexDirection.Row;
-            pathRow.style.alignItems = Align.Center;
-            pathRow.style.flexWrap = Wrap.Wrap;
-            
-            var segments = tag.GetSegments();
-            for (int i = 0; i < segments.Length; i++)
-            {
-                if (i > 0)
-                {
-                    var sep = new Label(".");
-                    sep.style.fontSize = 11;
-                    sep.style.color = Colors.HintText;
-                    sep.style.marginLeft = 0;
-                    sep.style.marginRight = 0;
-                    pathRow.Add(sep);
-                }
-                
-                var isLast = i == segments.Length - 1;
-                var segLabel = new Label(segments[i]);
-                segLabel.style.fontSize = 11;
-                segLabel.style.color = isLast ? Colors.AccentCyan : Colors.LabelText;
-                segLabel.style.unityFontStyleAndWeight = isLast ? FontStyle.Bold : FontStyle.Normal;
-                pathRow.Add(segLabel);
-            }
-            
-            header.Add(pathRow);
+            // Show display name (clean, human-readable)
+            var displayName = tag.DisplayName;
+            var nameLabel = new Label(displayName);
+            nameLabel.style.fontSize = 11;
+            nameLabel.style.color = Colors.AccentCyan;
+            nameLabel.style.unityFontStyleAndWeight = FontStyle.Bold;
+            nameLabel.tooltip = tag.Name; // Full hashed name on hover
+            header.Add(nameLabel);
         }
         
         // ═══════════════════════════════════════════════════════════════════════════
@@ -515,9 +495,10 @@ namespace FarEmerald.PlayForge.Extended.Editor
             // Display with hierarchy indent
             var groupByRoot = GroupByRoot();
             var indent = groupByRoot ? (tag.Depth - 1) * 12 : 0;
-            var displayName = groupByRoot && tag.Depth > 1 
-                ? $"└ {tag.GetLeafName()}" 
-                : tag.Name;
+            var cleanName = tag.DisplayName;
+            var displayName = groupByRoot && tag.Depth > 1
+                ? $"└ {cleanName}"
+                : cleanName;
             
             tagBtn.text = displayName;
             tagBtn.style.paddingLeft = 6 + indent;
@@ -692,9 +673,9 @@ namespace FarEmerald.PlayForge.Extended.Editor
             {
                 var filterLower = filter.ToLowerInvariant();
                 state.Results = allTags
-                    .Where(t => t.Name.ToLowerInvariant().Contains(filterLower) ||
-                                t.GetLeafName().ToLowerInvariant().Contains(filterLower))
-                    .OrderBy(t => t.Name)
+                    .Where(t => t.DisplayName.ToLowerInvariant().Contains(filterLower) ||
+                                t.Name.ToLowerInvariant().Contains(filterLower))
+                    .OrderBy(t => t.DisplayName)
                     .ToList();
             }
             
@@ -770,7 +751,7 @@ namespace FarEmerald.PlayForge.Extended.Editor
         {
             var nameProp = prop.FindPropertyRelative("Name");
             if (nameProp != null && !string.IsNullOrEmpty(nameProp.stringValue))
-                return Tag.GenerateAsUnique(nameProp.stringValue);
+                return TagHierarchy.Resolve(nameProp.stringValue);
             return default;
         }
         

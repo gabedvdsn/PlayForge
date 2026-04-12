@@ -29,6 +29,8 @@
         /// <summary>Tags used in AttributeSet assets</summary>
         public const string AttributeSet = "AttributeSet";
         
+        public const string Data = "Data";
+        
         // ═══════════════════════════════════════════════════════════════════════════
         // Semantic Contexts
         // ═══════════════════════════════════════════════════════════════════════════

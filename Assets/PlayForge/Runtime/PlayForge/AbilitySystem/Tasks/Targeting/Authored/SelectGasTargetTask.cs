@@ -18,7 +18,7 @@ namespace FarEmerald.PlayForge
         public LayerMask RaycastLayers = ~0;
 
         [Tooltip("Maximum raycast distance (0 = infinite)")]
-        public float MaxDistance;
+        public float MaxDistance = Mathf.Infinity;
 
         [Header("Behaviour")]
         [Tooltip("When true, an invalid click re-prompts for another click instead of failing")]
@@ -55,7 +55,7 @@ namespace FarEmerald.PlayForge
                 }
 
                 // Valid target acquired
-                data.SetPrimary(Tags.TARGET_REAL, target);
+                data.SetTargetingPacket(Tags.TARGET, target.GetTargetingPacket());
                 return;
             }
         }

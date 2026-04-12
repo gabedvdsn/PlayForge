@@ -49,7 +49,7 @@ namespace FarEmerald.PlayForge
                    && Initialize(
                        attribute, source, cache,
                        Blueprint.Base.RetentionGroup,
-                       Blueprint.GetDefaultValue(source.AsGAS(), cache)
+                       Blueprint.GetDefaultValue(source.ToGAS(), cache)
                    );
         }
 
@@ -73,7 +73,7 @@ namespace FarEmerald.PlayForge
             if (!derivations.TryGetValue(key, out var rcv)) return default;
     
             var oldValue = rcv.Value;
-            var newDefaultValue = Blueprint.GetDefaultValue(source.AsGAS(), cache);
+            var newDefaultValue = Blueprint.GetDefaultValue(source.ToGAS(), cache);
     
             rcv.Set(root, newDefaultValue);
     

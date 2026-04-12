@@ -24,7 +24,7 @@ namespace FarEmerald.PlayForge.Extended.Editor
         private VisualElement _childFieldsContainer;
         private SerializedProperty _currentProperty;
 
-        public override VisualElement CreatePropertyGUI(SerializedProperty prop)
+        /*public override VisualElement CreatePropertyGUI(SerializedProperty prop)
         {
             _currentProperty = prop;
             
@@ -65,7 +65,7 @@ namespace FarEmerald.PlayForge.Extended.Editor
             baseGui.TrackPropertyValue(prop, OnPropertyChanged);
             
             return baseGui;
-        }
+        }*/
 
         private void OnPropertyChanged(SerializedProperty prop)
         {

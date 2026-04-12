@@ -11,11 +11,14 @@ namespace FarEmerald.PlayForge
         public AbilitySpec Spec;
         public readonly int Index;
 
-        public bool IsActive { get; private set; }
+        public int ActiveCount { get; private set; }
+        public bool IsActive => ActiveCount > 0;
         public bool IsTargeting { get; private set; }
         public bool IsClaiming => IsTargeting || IsActive;
 
         private AbilityDataPacket activeData;
+
+        private List<AbilityProxy> Proxies;
 
         private AbilityProxy Proxy;
         public CancellationTokenSource cts;
@@ -25,8 +28,10 @@ namespace FarEmerald.PlayForge
         {
             Spec = spec;
             Index = abilityIndex;
-            IsActive = false;
+            ActiveCount = 0;
 
+            Proxies = new List<AbilityProxy>();
+            
             Proxy = Spec.Base.Behaviour.GenerateProxy();
 
             // Compile the ability behaviour into a reusable TaskSequence at grant time.
@@ -39,12 +44,9 @@ namespace FarEmerald.PlayForge
 
         public bool ActivateAbility(AbilityDataPacket implicitData)
         {
-            Debug.Log($"{IsClaiming}" +
-                      $"{!Spec.Source.AsData().AbilitySystem.ClaimActive(this, implicitData)}");
             if (IsClaiming) return false; // Prevent reactivation mid-use
-            if (!Spec.Source.AsData().AbilitySystem.ClaimActive(this, implicitData)) return false;
+            if (!Spec.Source.ToGASComponentData().AbilitySystem.ClaimActive(this, implicitData)) return false;
 
-            Debug.Log($"Activated!");
             activeData = implicitData;
             activeData.SetPrimary(Tags.DERIVATION, Spec);
 
@@ -57,7 +59,7 @@ namespace FarEmerald.PlayForge
 
         private void Reset()
         {
-            IsActive = false;
+            ActiveCount = 0;
             IsTargeting = false;
 
             ResetTokens();
@@ -81,13 +83,14 @@ namespace FarEmerald.PlayForge
                 IsTargeting = false;
 
                 // Check the explicit targeting failure flag set by targeting tasks
-                if (activeData.TargetingFailed)
+                if (activeData != null && activeData.TargetingFailed)
                 {
                     targetingCancelled = true;
                 }
 
                 // Validate that the target meets activation requirements
-                if (!targetingCancelled && activeData.TryGetFirstTarget(out var target)
+                if (!targetingCancelled && activeData != null
+                                        && activeData.TryGetFirstTarget(out var target)
                                         && !Spec.ValidateAllActivationRequirements(target, activeData))
                 {
                     targetingCancelled = true;
@@ -103,7 +106,7 @@ namespace FarEmerald.PlayForge
 
             try
             {
-                IsActive = true;
+                ActiveCount += 1;
 
                 Spec.Source.CompileGrantedTags();
 
@@ -112,12 +115,12 @@ namespace FarEmerald.PlayForge
             catch (Exception ex)
             {
                 // Ability in execution is interrupted (cancelled)
-                // ALWAYS as a result of an injection (break or
+                // ALWAYS as a result of an injection (break or interrupt)
                 Debug.LogException(ex);
             }
             finally
             {
-                IsActive = false;
+                ActiveCount -= 1;
 
                 Spec.Source.CompileGrantedTags();
 
@@ -140,9 +143,18 @@ namespace FarEmerald.PlayForge
             CleanTargetingToken();
             CleanActivationToken();
 
-            var asc = Spec.Source.AsData().AbilitySystem;
-            asc.ReleaseClaim(this, activeData);
+            // Capture data before nulling — ReleaseClaim needs it for ActiveCache cleanup.
+            var data = activeData;
             activeData = null;
+
+            var asc = Spec.Source.ToGASComponentData().AbilitySystem;
+            asc.ReleaseClaim(this, data);
+
+            // Process the activation queue AFTER this container is fully clean.
+            // This prevents re-entrant activation from corrupting activeData:
+            // without this separation, EndAbilityActivation could trigger ActivateAbility
+            // on this same container (setting activeData to new data), and then the caller
+            // of CleanAndRelease would continue executing with the wrong activeData.
             asc.EndAbilityActivation();
         }
 

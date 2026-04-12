@@ -68,7 +68,7 @@ namespace FarEmerald.PlayForge
             return ForgeHelper.ValidateContextTags(AnyContextTag, ImpactAbilityContextTags,
                        impactData.SourcedModifier.Derivation.GetContextTags(), ContextMatchingPolicy)
                    && ForgeHelper.ValidateSelfModification(AllowSelfImpact,
-                       impactData.SourcedModifier.Derivation.GetSource(), impactData.Target.AsGAS())
+                       impactData.SourcedModifier.Derivation.GetSource(), impactData.Target.ToGAS())
                    && ForgeHelper.ValidateImpactTypes(AnyImpactType, 
                        impactData.SourcedModifier.Derivation.GetImpactTypes(), ImpactType)
                    && ForgeHelper.ValidateImpactTargets(ImpactTarget, impactData.RealImpact, ImpactTargetExclusive)

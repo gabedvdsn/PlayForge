@@ -44,6 +44,9 @@ namespace FarEmerald.PlayForge
 
         private Dictionary<int, ProcessWatcher> _watchers = new();
 
+        // Group process registry — maps user-facing Tag to the GroupProcess instance
+        private Dictionary<Tag, GroupProcess> _groups = new();
+
         public int Created => _cacheCounter;
         public int Active => _active.Count;
         public int Running => _active.Count - _waiting.Count;
@@ -123,50 +126,96 @@ namespace FarEmerald.PlayForge
         
         private struct ProcessWatcher
         {
-            public Action<EProcessState, EProcessState, ProcessDataPacket> onStateChange;
-            public Action<ProcessDataPacket> onUnregister;
+            public struct WatcherActions
+            {
+                public Action<EProcessState, EProcessState, ProcessDataPacket> onStateChange;
+                public Action<ProcessDataPacket> onUnregister;
+            }
+
+            private Dictionary<object, WatcherActions> actions;
+
+            public int ActionCount => actions.Count;
 
             public readonly ProcessRelay watching;
 
-            public ProcessWatcher(ProcessRelay toWatch, Action<EProcessState, EProcessState, ProcessDataPacket> onStateChange = null, Action<ProcessDataPacket> onUnregister = null)
+            public ProcessWatcher(ProcessRelay toWatch, object caller, Action<EProcessState, EProcessState, ProcessDataPacket> onStateChange = null, Action<ProcessDataPacket> onUnregister = null)
             {
-                this.onStateChange = onStateChange;
-                this.onUnregister = onUnregister;
+                actions = new Dictionary<object, WatcherActions>();
+                actions[caller] = new WatcherActions()
+                {
+                    onStateChange = onStateChange,
+                    onUnregister = onUnregister
+                };
 
                 watching = toWatch;
             }
+
+            public void AddActions(object caller, Action<EProcessState, EProcessState, ProcessDataPacket> onStateChange, Action<ProcessDataPacket> onUnregister)
+            {
+                if (!actions.TryGetValue(caller, out var _actions))
+                {
+                    actions[caller] = new WatcherActions()
+                    {
+                        onStateChange = onStateChange,
+                        onUnregister = onUnregister
+                    };
+                    return;
+                }
+                
+                // Update onStateChange
+                if (_actions.onStateChange is not null)
+                {
+                    _actions.onStateChange = (oldState, newState, data) =>
+                    {
+                        _actions.onStateChange.Invoke(oldState, newState, data);
+                        onStateChange?.Invoke(oldState, newState, data);
+                    };
+                }
+                else _actions.onStateChange = onStateChange;
+                    
+                // Update onUnregister
+                if (_actions.onUnregister is not null)
+                {
+                    _actions.onUnregister = (data) =>
+                    {
+                        _actions.onUnregister.Invoke(data);
+                        onUnregister?.Invoke(data);
+                    };
+                }
+                else _actions.onUnregister = onUnregister;
+            }
+
+            public WatcherActions GetActions(object caller)
+            {
+                return actions.TryGetValue(caller, out var _actions) ? _actions : default;
+            }
+
+            public bool RemoveActions(object caller)
+            {
+                return actions.Remove(caller);
+            }
+
+            public void RunOnStateChange(EProcessState oldState, EProcessState newState, ProcessDataPacket data)
+            {
+                foreach (var _actions in actions.Values) _actions.onStateChange?.Invoke(oldState, newState, data);
+            }
+            
+            public void RunOnUnregister(ProcessDataPacket data)
+            {
+                foreach (var _actions in actions.Values) _actions.onUnregister?.Invoke(data);
+            }
         }
 
-        public void WatchProcess(ProcessRelay toWatch, Action<ProcessDataPacket> onStartWatching = null, Action<EProcessState, EProcessState, ProcessDataPacket> onStateChange = null,
+        public void WatchProcess(ProcessRelay toWatch, object caller, Action<ProcessDataPacket> onStartWatching = null, Action<EProcessState, EProcessState, ProcessDataPacket> onStateChange = null,
             Action<ProcessDataPacket> onUnregister = null)
         {
             if (!Instance._watchers.TryGetValue(toWatch.CacheIndex, out var watcher))
             {
-                Instance._watchers[toWatch.CacheIndex] = new ProcessWatcher(toWatch, onStateChange, onUnregister);
+                Instance._watchers[toWatch.CacheIndex] = new ProcessWatcher(toWatch, caller, onStateChange, onUnregister);
                 return;
             }
-                
-            // Update onStateChange
-            if (watcher.onStateChange is not null)
-            {
-                watcher.onStateChange = (oldState, newState, data) =>
-                {
-                    watcher.onStateChange.Invoke(oldState, newState, data);
-                    onStateChange?.Invoke(oldState, newState, data);
-                };
-            }
-            else watcher.onStateChange = onStateChange;
-                    
-            // Update onUnregister
-            if (watcher.onUnregister is not null)
-            {
-                watcher.onUnregister = (data) =>
-                {
-                    watcher.onUnregister.Invoke(data);
-                    onUnregister?.Invoke(data);
-                };
-            }
-            else watcher.onUnregister = onUnregister;
+
+            watcher.AddActions(caller, onStateChange, onUnregister);
             
             onStartWatching?.Invoke(toWatch.Wrapper.Data);
         }
@@ -176,17 +225,24 @@ namespace FarEmerald.PlayForge
             if (!_watchers.ContainsKey(toWatch.CacheIndex)) return;
             _watchers.Remove(toWatch.CacheIndex);
         }
+        
+        public void StopWatchingProcess(ProcessRelay toWatch, object caller)
+        {
+            if (!_watchers.ContainsKey(toWatch.CacheIndex)) return;
+            _watchers[toWatch.CacheIndex].RemoveActions(caller);
+            if (_watchers[toWatch.CacheIndex].ActionCount <= 0) _watchers.Remove(toWatch.CacheIndex);
+        }
 
         private void CheckWatcherOnStateChange(ProcessControlBlock pcb)
         {
             if (!_watchers.ContainsKey(pcb.CacheIndex)) return;
-            _watchers[pcb.CacheIndex].onStateChange?.Invoke(pcb.LastState, pcb.State, pcb.Wrapper.Data);
+            _watchers[pcb.CacheIndex].RunOnStateChange(pcb.LastState, pcb.State, pcb.Wrapper.Data);
         }
 
         private void CheckWatcherOnUnregister(ProcessControlBlock pcb)
         {
             if (!_watchers.ContainsKey(pcb.CacheIndex)) return;
-            _watchers[pcb.CacheIndex].onUnregister?.Invoke(pcb.Wrapper.Data);
+            _watchers[pcb.CacheIndex].RunOnUnregister(pcb.Wrapper.Data);
             
             StopWatchingProcess(pcb.Relay);
         }
@@ -247,20 +303,29 @@ namespace FarEmerald.PlayForge
             StepProcesses(EProcessStepTiming.FixedUpdate);
         }
 
+        // Reusable snapshot buffer to avoid allocation during stepping.
+        // A step callback (e.g. a Synchronous process self-terminating) can mutate the
+        // live indices list, so we iterate a snapshot instead.
+        private readonly List<int> _stepSnapshot = new();
+
         private void StepProcesses(EProcessStepTiming timing)
         {
-            if (State is EProcessControlState.Waiting or EProcessControlState.TerminatedImmediately) 
+            if (State is EProcessControlState.Waiting or EProcessControlState.TerminatedImmediately)
                 return;
 
-            if (!_stepping.TryGetValue(timing, out var group)) 
+            if (!_stepping.TryGetValue(timing, out var group))
                 return;
 
-            // Cache-friendly iteration - no LINQ, no allocations
-            var indices = group.GetIndices();
-            int count = indices.Count;
+            // Snapshot the indices before iterating.
+            // A Synchronous process may self-terminate during Step(), which modifies the
+            // live list via RemoveFromStepping. Iterating a snapshot keeps the loop safe.
+            _stepSnapshot.Clear();
+            _stepSnapshot.AddRange(group.GetIndices());
+
+            int count = _stepSnapshot.Count;
             for (int i = 0; i < count; i++)
             {
-                int cacheIndex = indices[i];
+                int cacheIndex = _stepSnapshot[i];
                 if (_active.TryGetValue(cacheIndex, out var pcb))
                 {
                     pcb.Step(timing);
@@ -352,7 +417,8 @@ namespace FarEmerald.PlayForge
             _active = new Dictionary<int, ProcessControlBlock>();
             _waiting = new HashSet<int>();
             _hierarchy.Clear();
-            
+            _groups = new Dictionary<Tag, GroupProcess>();
+
             // Initialize stepping groups for each timing type
             _stepping = new Dictionary<EProcessStepTiming, StepGroup>
             {
@@ -372,7 +438,7 @@ namespace FarEmerald.PlayForge
         }
         public static bool Register(AbstractMonoProcess process, AbilityDataPacket data, out ProcessRelay relay)
         {
-            return Instance.Internal_RegisterMonoProcess(process, data.Spec.GetOwner(), data, out relay);
+            return Instance.Internal_RegisterMonoProcess(process, data.EffectOrigin.GetOwner(), data, out relay);
         }
         public static bool Register(AbstractMonoProcess process, ProcessDataPacket data, out ProcessRelay relay)
         {
@@ -421,7 +487,7 @@ namespace FarEmerald.PlayForge
         }
         public static bool Register(AbstractRuntimeProcess process, AbilityDataPacket data, out ProcessRelay relay)
         {
-            return Instance.Internal_RegisterRuntimeProcess(process, data.Spec.GetOwner(), data, out relay);
+            return Instance.Internal_RegisterRuntimeProcess(process, data.EffectOrigin.GetOwner(), data, out relay);
         }
         public static bool Register(AbstractRuntimeProcess process, IGameplayProcessHandler handler, out ProcessRelay relay)
         {
@@ -465,7 +531,7 @@ namespace FarEmerald.PlayForge
         }
         public static bool Register(TaskSequence sequence, AbilityDataPacket data, out ProcessRelay relay)
         {
-            return Instance.Internal_RegisterAsyncSequence(new TaskSequenceProcess(sequence), data.Spec.GetOwner(), data, out relay);
+            return Instance.Internal_RegisterAsyncSequence(new TaskSequenceProcess(sequence), data.EffectOrigin.GetOwner(), data, out relay);
         }
         public static bool Register(TaskSequence sequence, IGameplayProcessHandler handler, out ProcessRelay relay)
         {
@@ -486,7 +552,7 @@ namespace FarEmerald.PlayForge
         }
         public static bool Register(TaskSequenceChain chain, AbilityDataPacket data, out ProcessRelay relay)
         {
-            return Instance.Internal_RegisterAsyncSequence(new TaskSequenceProcess(chain), data.Spec.GetOwner(), data, out relay);
+            return Instance.Internal_RegisterAsyncSequence(new TaskSequenceProcess(chain), data.EffectOrigin.GetOwner(), data, out relay);
         }
         public static bool Register(TaskSequenceChain chain, IGameplayProcessHandler handler, out ProcessRelay relay)
         {
@@ -504,13 +570,112 @@ namespace FarEmerald.PlayForge
         {
             return Register(process, handler, data, out relay);
         }
-        
+
         #endregion
-        
-        #region Task Sequence (Synced)
-        
+
+        #region Group Processes
+
+        /// <summary>
+        /// Registers a pre-configured GroupProcess under the given tag.
+        /// Use this when you need to set MaxMembers, OverflowPolicy, callbacks, etc.
+        /// before any members are added.
+        /// </summary>
+        public static bool RegisterGroup(Tag groupTag, GroupProcess group, out ProcessRelay relay)
+        {
+            return Instance.Internal_RegisterGroup(groupTag, group, ProcessDataPacket.Default(), out relay);
+        }
+
+        public static bool RegisterGroup(Tag groupTag, GroupProcess group, ProcessDataPacket data, out ProcessRelay relay)
+        {
+            return Instance.Internal_RegisterGroup(groupTag, group, data, out relay);
+        }
+
+        private bool Internal_RegisterGroup(Tag groupTag, GroupProcess group, ProcessDataPacket data, out ProcessRelay relay)
+        {
+            relay = default;
+            if (group == null || _groups.ContainsKey(groupTag)) return false;
+
+            if (!Register(group, data, out relay)) return false;
+
+            _groups[groupTag] = group;
+
+            // When the group terminates, remove it from the registry
+            WatchProcess(relay, group, onUnregister: _ => _groups.Remove(groupTag));
+
+            return true;
+        }
+
+        /// <summary>
+        /// Registers a runtime process as a member of the group identified by groupTag.
+        /// If the group doesn't exist yet, it is auto-created with default settings.
+        /// The member uses the group's shared data packet by default.
+        /// </summary>
+        public static bool RegisterWithGroup(Tag groupTag, AbstractRuntimeProcess process, out ProcessRelay relay, bool useSharedData = true)
+        {
+            return Instance.Internal_RegisterWithGroup(groupTag, process, null, useSharedData, out relay);
+        }
+
+        /// <summary>
+        /// Registers a runtime process as a member with an explicit standalone data packet.
+        /// </summary>
+        public static bool RegisterWithGroup(Tag groupTag, AbstractRuntimeProcess process, ProcessDataPacket data, out ProcessRelay relay)
+        {
+            return Instance.Internal_RegisterWithGroup(groupTag, process, data, false, out relay);
+        }
+
+        private bool Internal_RegisterWithGroup(Tag groupTag, AbstractRuntimeProcess process, ProcessDataPacket explicitData, bool useSharedData, out ProcessRelay relay)
+        {
+            relay = default;
+            if (process == null) return false;
+
+            // Auto-create the group if it doesn't exist
+            if (!_groups.TryGetValue(groupTag, out var group))
+            {
+                group = new GroupProcess(groupTag.GetName());
+                if (!Internal_RegisterGroup(groupTag, group, ProcessDataPacket.Default(), out _))
+                    return false;
+            }
+
+            // Determine which data packet the member should use
+            var data = useSharedData && explicitData == null
+                ? group.Data   // Share the group's data packet
+                : explicitData ?? ProcessDataPacket.Default();
+
+            // Register the process normally through ProcessControl
+            if (!Register(process, data, out relay))
+                return false;
+
+            // Add as a group member
+            if (!group.AddMember(relay))
+            {
+                // Registration succeeded but group rejected the member (full + Reject policy).
+                // Terminate the process since it was registered but can't join the group.
+                relay.Terminate();
+                relay = default;
+                return false;
+            }
+
+            return true;
+        }
+
+        /// <summary>
+        /// Tries to get the GroupProcess associated with a tag.
+        /// </summary>
+        public static bool TryGetGroup(Tag groupTag, out GroupProcess group)
+        {
+            return Instance._groups.TryGetValue(groupTag, out group);
+        }
+
+        /// <summary>
+        /// Checks whether a group with the given tag exists and is active.
+        /// </summary>
+        public static bool HasGroup(Tag groupTag)
+        {
+            return Instance._groups.ContainsKey(groupTag);
+        }
+
         #endregion
-        
+
         public bool Unregister(ProcessControlBlock pcb)
         {
             if (pcb.Relay is null) return false;
@@ -527,7 +692,8 @@ namespace FarEmerald.PlayForge
 
             if (OutputLogs)
             {
-                Debug.Log($"[Process Control] Unregister process \"{pcb.Wrapper.ProcessName}\" ({pcb.CacheIndex})");
+                if (DetailedLogs) Debug.Log($"[Process Control] Unregister process: {pcb.Wrapper.ProcessName} ({pcb.Handler?.GetName() ?? "No handler"})");
+                else Debug.Log($"[Process Control] Unregister process: {pcb.Wrapper.ProcessName}");
             }
             
             return _active.Remove(pcb.CacheIndex);
@@ -1218,6 +1384,10 @@ namespace FarEmerald.PlayForge
         #endregion
         
         #region Handler Interface
+        public ProcessRelay[] GetRelays()
+        {
+            return _active.Values.Select(pcb => pcb.Relay).ToArray();
+        }
 
         public bool HandlerValidateAgainst(IGameplayProcessHandler handler)
         {

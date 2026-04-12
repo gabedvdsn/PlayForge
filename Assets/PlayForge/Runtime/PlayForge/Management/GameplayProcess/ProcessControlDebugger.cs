@@ -45,6 +45,8 @@ namespace FarEmerald.PlayForge
         // Type indicator colors
         private static readonly Color MonoProcessColor = new Color(0.1f, 0.1f, 0.1f);
         private static readonly Color RuntimeProcessColor = new Color(0.49f, 0.46f, 0.45f);
+
+        private static readonly Color SynchronousProcessColor = new Color(1f, .75f, .1f);
         private const float TypeIndicatorWidth = 3f;
         
         [MenuItem("Tools/PlayForge/Runtime Tools/Process Control")]
@@ -464,7 +466,7 @@ namespace FarEmerald.PlayForge
                 : pcb.State.ToString();
             EditorGUILayout.LabelField(stateText, GUILayout.Width(150));
             EditorGUILayout.LabelField($"{relay.UpdateTime:F1}s", GUILayout.Width(50));
-            EditorGUILayout.LabelField($"{relay.Lifetime:F1}s", GUILayout.Width(50));
+            EditorGUILayout.LabelField($"{relay.UnscaledLifetime:F1}s", GUILayout.Width(50));
 
             if (_showUsage) DrawUsageInline(pcb);
 
@@ -495,7 +497,14 @@ namespace FarEmerald.PlayForge
 
             // Info row
             EditorGUILayout.BeginHorizontal();
-            EditorGUILayout.LabelField($"{relay.Wrapper.Lifecycle}", GUILayout.Width(120));
+            GUIStyle style = null;
+            if (relay.Wrapper.Lifecycle == EProcessLifecycle.Synchronous)
+            {
+                style = new GUIStyle();
+                style.normal.textColor = SynchronousProcessColor;
+            }
+            else style = new GUIStyle(EditorStyles.label);
+            EditorGUILayout.LabelField($"{relay.Wrapper.Lifecycle}", style, GUILayout.Width(160));
             EditorGUILayout.LabelField($"{relay.Wrapper.StepTiming}", GUILayout.Width(120));
 
             GUILayout.FlexibleSpace();
@@ -510,7 +519,7 @@ namespace FarEmerald.PlayForge
             // Time row
             EditorGUILayout.BeginHorizontal();
             EditorGUILayout.LabelField($"Update: {relay.UpdateTime:F2}s", GUILayout.Width(100));
-            EditorGUILayout.LabelField($"Lifetime: {relay.Lifetime:F2}s", GUILayout.Width(110));
+            EditorGUILayout.LabelField($"Lifetime: {relay.UnscaledLifetime:F2}s", GUILayout.Width(110));
 
             if (_showUsage)
             {
@@ -549,7 +558,9 @@ namespace FarEmerald.PlayForge
             
             // Properties
             EditorGUILayout.BeginHorizontal();
-            EditorGUILayout.LabelField($"Lifecycle: {relay.Wrapper.Lifecycle}", GUILayout.Width(160));
+            var style = new GUIStyle();
+            if (relay.Wrapper.Lifecycle == EProcessLifecycle.Synchronous) style.normal.textColor = SynchronousProcessColor;
+            EditorGUILayout.LabelField($"Lifecycle: {relay.Wrapper.Lifecycle}", style, GUILayout.Width(160));
             EditorGUILayout.LabelField($"Timing: {relay.Wrapper.StepTiming}", GUILayout.Width(160));
             EditorGUILayout.EndHorizontal();
             

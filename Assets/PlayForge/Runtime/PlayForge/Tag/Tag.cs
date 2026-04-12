@@ -13,10 +13,26 @@ namespace FarEmerald.PlayForge
     public struct Tag : IHasReadableDefinition, IEquatable<Tag>
     {
         /// <summary>
-        /// The full hierarchical name using dot notation (e.g., "Status.Debuff.Burn")
+        /// The full hierarchical name using dot notation (e.g., "Status.Debuff.Burn").
+        /// For deterministic tags this includes hash padding.
         /// </summary>
         public string Name;
-        
+
+        /// <summary>
+        /// Human-readable display name shown in the editor.
+        /// For regular tags this equals Name. For deterministic tags this is the
+        /// original input before hash padding (e.g., "Position" instead of "PositionaBcDe...").
+        /// Falls back to Name if not set.
+        /// </summary>
+        public string DisplayName
+        {
+            get => string.IsNullOrEmpty(_displayName) ? Name : _displayName;
+            internal set => _displayName = value;
+        }
+
+        [NonSerialized]
+        private string _displayName;
+
         /// <summary>
         /// Cached parent path for performance. Set automatically when registered with TagHierarchy.
         /// </summary>
@@ -32,6 +48,14 @@ namespace FarEmerald.PlayForge
         private Tag(string name)
         {
             Name = name ?? "";
+            _displayName = name ?? "";
+            CachedParentPath = null;
+        }
+
+        private Tag(string name, string displayName)
+        {
+            Name = name ?? "";
+            _displayName = displayName ?? name ?? "";
             CachedParentPath = null;
         }
 
@@ -41,7 +65,18 @@ namespace FarEmerald.PlayForge
             TagHierarchy.Register(tag);
             return tag;
         }
-        
+
+        /// <summary>
+        /// Creates a tag with a separate display name. Used internally by
+        /// deterministic tag generation where Name contains hash padding.
+        /// </summary>
+        internal static Tag Generate(string _name, string _displayName)
+        {
+            var tag = new Tag(_name, _displayName);
+            TagHierarchy.Register(tag);
+            return tag;
+        }
+
         public static Tag GenerateAsUnique(string _name, string _prefix = "", int size = 64)
         {
             var tag = TagHierarchy.TagUtil.GenerateDeterministicTag(_name, _prefix, Mathf.Min(Mathf.Max(0, size), 64));

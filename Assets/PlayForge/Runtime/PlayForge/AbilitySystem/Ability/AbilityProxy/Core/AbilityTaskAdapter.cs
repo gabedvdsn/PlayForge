@@ -36,6 +36,7 @@ namespace FarEmerald.PlayForge
         {
             if (data is AbilityDataPacket abilityData)
             {
+                abilityData.AppendPath(AbilityTask.GetType().Name);
                 await AbilityTask.Activate(abilityData, token);
             }
         }

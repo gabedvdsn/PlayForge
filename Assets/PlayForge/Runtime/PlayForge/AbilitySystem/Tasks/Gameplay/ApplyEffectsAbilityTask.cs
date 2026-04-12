@@ -20,7 +20,7 @@ namespace FarEmerald.PlayForge
             
             foreach (GameplayEffect effect in Effects)
             {
-                target.ApplyGameplayEffect(target.GenerateEffectSpec(data.Spec, effect));
+                target.ApplyGameplayEffect(target.GenerateEffectSpec(data.EffectOrigin, effect));
                 await UniTask.Delay(DelayBetweenApplicationMs, cancellationToken: token);
             }
         }

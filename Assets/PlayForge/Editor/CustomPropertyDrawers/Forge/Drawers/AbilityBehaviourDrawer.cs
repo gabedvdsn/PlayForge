@@ -16,6 +16,7 @@ namespace FarEmerald.PlayForge.Extended.Editor
     {
         // Collapse state persistence
         private static Dictionary<string, bool> _targetingCollapsed = new Dictionary<string, bool>();
+        private static Dictionary<string, bool> _assetLoadersCollapsed = new Dictionary<string, bool>();
         private static Dictionary<string, bool> _stagesCollapsed = new Dictionary<string, bool>();
         
         public override VisualElement CreatePropertyGUI(SerializedProperty property)
@@ -38,6 +39,16 @@ namespace FarEmerald.PlayForge.Extended.Editor
             var targetingSection = CreateTargetingSection(property, root);
             root.Add(targetingSection);
             
+            root.Add(CreateDivider());
+
+            // ═══════════════════════════════════════════════════════════════════
+            // Asset Loaders Section
+            // ═══════════════════════════════════════════════════════════════════
+            var loadingSection = CreateAssetLoaderSection(property, root);
+            root.Add(loadingSection);
+
+            root.Add(CreateDivider());
+
             // ═══════════════════════════════════════════════════════════════════
             // Stages Section
             // ═══════════════════════════════════════════════════════════════════
@@ -136,6 +147,155 @@ namespace FarEmerald.PlayForge.Extended.Editor
                 container.Add(summaryLabel);
             }
             
+            return container;
+        }
+
+        private VisualElement CreateAssetLoaderSection(SerializedProperty property, VisualElement root)
+        {
+            var propPath = property.propertyPath + ".AssetLoaders";
+            bool isCollapsed = _assetLoadersCollapsed.TryGetValue(propPath, out bool c) && c;
+
+            var assetLoadersProp = property.FindPropertyRelative("AssetLoaders");
+
+            var container = new VisualElement { name = "AssetLoadersSection" };
+            container.style.borderLeftWidth = 3;
+            container.style.borderLeftColor = Colors.AccentOrange;
+            container.style.borderTopLeftRadius = 4;
+            container.style.borderBottomLeftRadius = 4;
+            container.style.borderTopRightRadius = 4;
+            container.style.borderBottomRightRadius = 4;
+            container.style.backgroundColor = Colors.SectionBackground;
+            container.style.paddingTop = 6;
+            container.style.paddingBottom = isCollapsed ? 6 : 8;
+            container.style.paddingLeft = 8;
+            container.style.paddingRight = 6;
+            container.style.marginTop = 4;
+            container.style.marginBottom = 4;
+
+            // Header
+            var header = new VisualElement();
+            header.style.flexDirection = FlexDirection.Row;
+            header.style.alignItems = Align.Center;
+            header.style.marginBottom = isCollapsed ? 0 : 6;
+
+            // Collapse button
+            var collapseBtn = CreateCollapseButton(isCollapsed, () =>
+            {
+                _assetLoadersCollapsed[propPath] = !isCollapsed;
+                ScheduleRebuild(root, property);
+            });
+            header.Add(collapseBtn);
+
+            // Icon and title
+            var iconLabel = new Label(Icons.Stack);
+            iconLabel.style.fontSize = 14;
+            iconLabel.style.marginRight = 6;
+            iconLabel.style.color = Colors.AccentOrange;
+            header.Add(iconLabel);
+
+            var titleLabel = new Label("Asset Loaders");
+            titleLabel.style.unityFontStyleAndWeight = FontStyle.Bold;
+            titleLabel.style.fontSize = 11;
+            titleLabel.style.color = Colors.HeaderText;
+            titleLabel.style.flexGrow = 1;
+            header.Add(titleLabel);
+
+            // Count badge
+            if (assetLoadersProp != null)
+            {
+                int count = assetLoadersProp.arraySize;
+                var badge = CreateBadge($"{count}", Colors.SectionOrange);
+                header.Add(badge);
+            }
+
+            container.Add(header);
+
+            if (!isCollapsed && assetLoadersProp != null)
+            {
+                // Hint
+                var hint = new Label("Load assets into the data packet before stages execute.");
+                hint.style.fontSize = 10;
+                hint.style.color = Colors.HintText;
+                hint.style.marginBottom = 6;
+                container.Add(hint);
+
+                // Asset loader entries
+                var loadersList = new VisualElement { name = "AssetLoadersList" };
+                loadersList.style.marginTop = 2;
+
+                for (int i = 0; i < assetLoadersProp.arraySize; i++)
+                {
+                    var loaderProp = assetLoadersProp.GetArrayElementAtIndex(i);
+
+                    var entryRow = new VisualElement();
+                    entryRow.style.flexDirection = FlexDirection.Row;
+                    entryRow.style.alignItems = Align.FlexStart;
+                    entryRow.style.marginBottom = 4;
+
+                    // Loader property field (takes up most of the row)
+                    var loaderField = new PropertyField(loaderProp);
+                    loaderField.style.flexGrow = 1;
+                    entryRow.Add(loaderField);
+
+                    // Remove button
+                    int capturedIndex = i;
+                    var removeBtn = new Button { text = Icons.Cross, tooltip = "Remove" };
+                    removeBtn.style.width = 20;
+                    removeBtn.style.height = 20;
+                    removeBtn.style.marginLeft = 4;
+                    removeBtn.style.paddingLeft = 0;
+                    removeBtn.style.paddingRight = 0;
+                    removeBtn.style.paddingTop = 0;
+                    removeBtn.style.paddingBottom = 0;
+                    removeBtn.style.fontSize = 10;
+                    removeBtn.style.unityTextAlign = TextAnchor.MiddleCenter;
+                    ApplyButtonStyle(removeBtn);
+                    removeBtn.clicked += () =>
+                    {
+                        assetLoadersProp.DeleteArrayElementAtIndex(capturedIndex);
+                        assetLoadersProp.serializedObject.ApplyModifiedProperties();
+                        ScheduleRebuild(root, property);
+                    };
+                    entryRow.Add(removeBtn);
+
+                    loadersList.Add(entryRow);
+                }
+
+                // Add loader button
+                var addButtonRow = new VisualElement();
+                addButtonRow.style.flexDirection = FlexDirection.Row;
+                addButtonRow.style.justifyContent = Justify.Center;
+                addButtonRow.style.marginTop = 8;
+
+                var addBtn = new Button { text = "+ Add Asset Loader" };
+                addBtn.style.paddingLeft = 16;
+                addBtn.style.paddingRight = 16;
+                addBtn.style.paddingTop = 4;
+                addBtn.style.paddingBottom = 4;
+                ApplyButtonStyle(addBtn);
+                addBtn.clicked += () =>
+                {
+                    assetLoadersProp.arraySize++;
+                    assetLoadersProp.serializedObject.ApplyModifiedProperties();
+                    ScheduleRebuild(root, property);
+                };
+                addButtonRow.Add(addBtn);
+
+                loadersList.Add(addButtonRow);
+                container.Add(loadersList);
+            }
+            else if (isCollapsed && assetLoadersProp != null)
+            {
+                int count = assetLoadersProp.arraySize;
+                var summary = count == 0 ? "No asset loaders" : $"{count} loader{(count != 1 ? "s" : "")}";
+                var summaryLabel = new Label(summary);
+                summaryLabel.style.fontSize = 10;
+                summaryLabel.style.color = Colors.HintText;
+                summaryLabel.style.marginLeft = 22;
+                summaryLabel.style.marginTop = 2;
+                container.Add(summaryLabel);
+            }
+
             return container;
         }
         
