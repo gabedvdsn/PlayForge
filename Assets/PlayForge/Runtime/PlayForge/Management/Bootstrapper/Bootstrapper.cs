@@ -7,31 +7,33 @@ using UnityEngine.Serialization;
 
 namespace FarEmerald.PlayForge
 {
-    public class Bootstrapper : MonoBehaviour, IGameplayProcessHandler
+    public class Bootstrapper : MonoBehaviour
     {
-        public static Bootstrapper Instance;
-        
         public ProcessControl ProcessControlPrefab;
         public GameRoot GameRootPrefab;
 
-        [FormerlySerializedAs("Relays")] public Dictionary<int, ProcessRelay> HandlerRelays;
+        [Tooltip("Or in Start() when false")]
+        public bool BootstrapOnAwake = true;
         
         private void Awake()
         {
-            //if (Framework is null) throw new NullReferenceException("[ PlayForge ] Bootstrapping failed: Framework cannot be null.");
-            
-            Bootstrap();
+            if (BootstrapOnAwake) Bootstrap();
         }
-        
+
+        private void Start()
+        {
+            if (!BootstrapOnAwake) Bootstrap();
+        }
+
         #region Readable Definition
         
         public virtual string GetName()
         {
-            return "Game Root";
+            return "Bootstrapper";
         }
         public virtual string GetDescription()
         {
-            return "Game Root is a fallback process handler.";
+            return "Bootstraps the PlayForge framework during runtime.";
         }
         public virtual Texture2D GetPrimaryIcon()
         {
@@ -42,11 +44,6 @@ namespace FarEmerald.PlayForge
         
         public void Bootstrap()
         {
-            if (Instance is not null && Instance != this) Destroy(gameObject);
-            Instance = this;
-            
-            DontDestroyOnLoad(gameObject);
-            
             TagHierarchy.Initialize();
             
             // Bootstrap ProcessControl
@@ -76,45 +73,17 @@ namespace FarEmerald.PlayForge
                 gameRoot.Bootstrap();
             }
             
-            Initialize();
+            BootstrapOverrides();
             
             ProcessControl.Instance.DeferredInit();
             GameRoot.Instance.DeferredInit();
             
-            TestStuff();
-        }
-
-        void TestStuff()
-        {
-            
+            Destroy(gameObject);
         }
         
-        private void Initialize()
+        protected virtual void BootstrapOverrides()
         {
             // Any further bootstrap initialization here   
-        }
-
-        public ProcessRelay[] GetRelays()
-        {
-            return HandlerRelays.Values.ToArray();
-        }
-        public bool HandlerValidateAgainst(IGameplayProcessHandler handler)
-        {
-            return (Bootstrapper)handler == this;
-        }
-
-        public bool HandlerProcessIsSubscribed(ProcessRelay relay)
-        {
-            return true;
-        }
-
-        public void HandlerSubscribeProcess(ProcessRelay relay)
-        {
-            HandlerRelays[relay.CacheIndex] = relay;
-        }
-        public bool HandlerVoidProcess(ProcessRelay relay)
-        {
-            return HandlerRelays.Remove(relay.CacheIndex);
         }
     }
 }

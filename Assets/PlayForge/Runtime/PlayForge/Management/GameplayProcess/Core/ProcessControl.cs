@@ -467,13 +467,14 @@ namespace FarEmerald.PlayForge
             var pcb = ProcessControlBlock.Generate(NextCacheIndex, wrapper);
             pcb.isMono = true;
             
-            SetProcess(pcb);
-            
             // Register in hierarchy
             _hierarchy.Register(process, pcb.CacheIndex);
             
             relay = pcb.Relay;
             handler?.HandlerSubscribeProcess(relay);
+            data.HandlerSubscribeProcess(relay);
+            
+            SetProcess(pcb);
             
             return true;
         }
@@ -514,10 +515,11 @@ namespace FarEmerald.PlayForge
             var wrapper = new RuntimeWrapperProcess(process, data, handler);
             var pcb = ProcessControlBlock.Generate(NextCacheIndex, wrapper);
             
-            SetProcess(pcb);
-            
             relay = pcb.Relay;
             handler?.HandlerSubscribeProcess(relay);
+            data.HandlerSubscribeProcess(relay);
+            
+            SetProcess(pcb);
 
             return true;
         }

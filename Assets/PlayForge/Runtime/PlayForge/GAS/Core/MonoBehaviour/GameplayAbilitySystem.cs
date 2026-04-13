@@ -137,7 +137,7 @@ namespace FarEmerald.PlayForge
         }
         public AbstractTargetingPacket GetTargetingPacket()
         {
-            return new DefaultTargetingPacket(transform, this);
+            return new TargetingPacket(transform, this);
         }
     
         #endregion

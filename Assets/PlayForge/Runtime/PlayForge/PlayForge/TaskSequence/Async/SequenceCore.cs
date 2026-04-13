@@ -482,6 +482,10 @@ namespace FarEmerald.PlayForge
 
     public class DelegateSequenceInjection : ISequenceInjection
     {
+        public DelegateSequenceInjection()
+        {
+        }
+
         public Func<TaskSequenceRuntime, bool> applyFunc;
         public DelegateSequenceInjection(Func<TaskSequenceRuntime, bool> applyFunc)
         {
@@ -552,7 +556,11 @@ namespace FarEmerald.PlayForge
     /// </summary>
     public class StopMaintainedAtIndexInjection : ISequenceInjection
     {
-        public readonly int TargetMaintainedIndex;
+        public int TargetMaintainedIndex;
+
+        public StopMaintainedAtIndexInjection()
+        {
+        }
 
         public StopMaintainedAtIndexInjection(int targetMaintainedIndex)
         {
@@ -583,8 +591,12 @@ namespace FarEmerald.PlayForge
     /// </summary>
     public class JumpToStageInjection : ISequenceInjection
     {
-        public readonly int TargetStageIndex;
-        
+        public int TargetStageIndex;
+
+        public JumpToStageInjection()
+        {
+        }
+
         public JumpToStageInjection(int targetStageIndex)
         {
             TargetStageIndex = targetStageIndex;

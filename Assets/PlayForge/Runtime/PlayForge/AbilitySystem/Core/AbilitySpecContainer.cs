@@ -11,31 +11,43 @@ namespace FarEmerald.PlayForge
         public AbilitySpec Spec;
         public readonly int Index;
 
-        public int ActiveCount { get; private set; }
+        public int ActiveCount;
+        //public int ActiveCount => activeRuntimes.Count + (cts is not null ? 1 : 0);
         public bool IsActive => ActiveCount > 0;
         public bool IsTargeting { get; private set; }
         public bool IsClaiming => IsTargeting || IsActive;
 
         private AbilityDataPacket activeData;
+        
+        /// <summary>The compiled execution TaskSequence (reusable across activations).</summary>
+        private TaskSequence CompiledSequence { get; set; }
 
-        private List<AbilityProxy> Proxies;
-
+        /// <summary>The compiled targeting TaskSequence (reusable, null if no targeting task).</summary>
+        private TaskSequence CompiledTargeting { get; set; }
+        
         private AbilityProxy Proxy;
         public CancellationTokenSource cts;
         private CancellationTokenSource targetingCts;
+
+        private Dictionary<int, ActiveRuntimes> activeRuntimes;
+        
+        private struct ActiveRuntimes
+        {
+            public ProcessRelay Relay;
+            public CancellationTokenSource RuntimeCts;
+            public CancellationTokenSource TargetingCts;
+        }
 
         public AbilitySpecContainer(AbilitySpec spec, int abilityIndex)
         {
             Spec = spec;
             Index = abilityIndex;
-            ActiveCount = 0;
-
-            Proxies = new List<AbilityProxy>();
+            
             
             Proxy = Spec.Base.Behaviour.GenerateProxy();
 
-            // Compile the ability behaviour into a reusable TaskSequence at grant time.
-            // This enables ProcessControl visibility and sequence-based execution.
+            activeRuntimes = new Dictionary<int, ActiveRuntimes>();
+            
             var abilityName = Spec.Base?.GetName() ?? $"Anon-Ability[{abilityIndex}]";
             Proxy.CompileSequence(abilityName);
 
@@ -128,11 +140,9 @@ namespace FarEmerald.PlayForge
             }
         }
 
-        public void Inject(IAbilityInjection injection)
+        public void Inject(ISequenceInjection injection)
         {
             if (!IsClaiming) return;
-
-            injection.OnContainerInject(this, activeData);
             Proxy.Inject(injection, activeData);
         }
 

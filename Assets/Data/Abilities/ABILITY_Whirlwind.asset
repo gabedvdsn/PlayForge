@@ -15,7 +15,6 @@ MonoBehaviour:
   LocalData: []
   _template: {fileID: 11400000, guid: 812c4e89b36cf1340b92ee9a57ac3ea3, type: 2}
   _templateOverrides:
-  - Behaviour.Targeting
   - Behaviour.UseImplicitTargeting
   _templateListSnapshots: []
   Definition:
@@ -56,7 +55,7 @@ MonoBehaviour:
         RequireTags: []
   Behaviour:
     Targeting:
-      rid: 7261146403316695458
+      rid: -2
     UseImplicitTargeting: 0
     ImplicitTag:
       Name: TargetzfvEmaa5gNtqhQ0_dE2_NOOAGh1QLRP8zfvEmaa5gNtqhQ0_dE2_NOOAGh
@@ -89,6 +88,8 @@ MonoBehaviour:
   references:
     version: 2
     RefIds:
+    - rid: -2
+      type: {class: , ns: , asm: }
     - rid: 1955962478581514659
       type: {class: CooldownValidation, ns: FarEmerald.PlayForge, asm: Assembly-CSharp}
       data: 
@@ -107,24 +108,7 @@ MonoBehaviour:
     - rid: 7261146403316695446
       type: {class: RunSequenceTask, ns: FarEmerald.PlayForge, asm: Assembly-CSharp}
       data:
-        SequenceReference:
+        Sequence:
           _typeName: FarEmerald.PlayForge.Examples.DemoAbilitySequences, Assembly-CSharp,
             Version=0.0.0.0, Culture=neutral, PublicKeyToken=null
           _methodName: WhirlwindSequence
-    - rid: 7261146403316695458
-      type: {class: SelectGasOrPositionTargetTask, ns: FarEmerald.PlayForge, asm: Assembly-CSharp}
-      data:
-        BreakRuntimeOnInvalid: 1
-        Requirements:
-          Name: 
-          SourceTemplate: {fileID: 0}
-          SyncWithTemplate: 0
-          AvoidTags: []
-          RequireTags: []
-        RaycastLayers:
-          serializedVersion: 2
-          m_Bits: 4294967295
-        MaxDistance: Infinity
-        RetryOnInvalid: 0
-        MouseButton: 0
-        PreferGasTarget: 1

@@ -6,7 +6,7 @@ namespace FarEmerald.PlayForge
 {
     public class InjectAbilityTask : AbstractAbilityTask
     {
-        [SerializeReference] public IAbilityInjection Injection;
+        [SerializeReference] public ISequenceInjection Injection;
 
         public override string Description => "Inject a command into the Ability's runtime";
 

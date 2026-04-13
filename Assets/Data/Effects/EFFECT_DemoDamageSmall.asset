@@ -39,7 +39,7 @@ MonoBehaviour:
     ImpactTypes: []
     ReverseImpactOnRemoval: 0
     MagnitudeOperation:
-      Magnitude: -15
+      Magnitude: -7.5
       RealMagnitude: 1
       Scaler:
         rid: 7261146469945573514

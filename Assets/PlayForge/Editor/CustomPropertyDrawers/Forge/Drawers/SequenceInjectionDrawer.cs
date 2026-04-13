@@ -3,8 +3,8 @@ using UnityEditor;
 
 namespace FarEmerald.PlayForge.Extended.Editor
 {
-    [CustomPropertyDrawer(typeof(IAbilityInjection))]
-    public class AbilityInjectionDrawer : AbstractGenericDrawer<IAbilityInjection>
+    [CustomPropertyDrawer(typeof(ISequenceInjection))]
+    public class SequenceInjectionDrawer : AbstractGenericDrawer<ISequenceInjection>
     {
         protected override bool AcceptOpen(SerializedProperty prop)
         {
@@ -20,7 +20,7 @@ namespace FarEmerald.PlayForge.Extended.Editor
         }
         protected override Type GetDefault(SerializedProperty prop)
         {
-            return typeof(InterruptInjection);
+            return typeof(InterruptSequenceInjection);
         }
 
         protected override string GetStringValue(SerializedProperty prop, Type value)

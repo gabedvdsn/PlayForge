@@ -21,7 +21,7 @@ namespace FarEmerald.PlayForge.Extended.Editor
     [CustomPropertyDrawer(typeof(IAbilityValidationRule))]
     public class AbilityValidationRuleDrawer : AbstractTypeRefDrawer<IAbilityValidationRule>
     {
-        private VisualElement _childFieldsContainer;
+        // private VisualElement _childFieldsContainer;
         private SerializedProperty _currentProperty;
 
         /*public override VisualElement CreatePropertyGUI(SerializedProperty prop)
@@ -67,13 +67,7 @@ namespace FarEmerald.PlayForge.Extended.Editor
             return baseGui;
         }*/
 
-        private void OnPropertyChanged(SerializedProperty prop)
-        {
-            // Refresh child fields when the managed reference type changes
-            PopulateChildFields(prop);
-        }
-
-        /// <summary>
+        /*/// <summary>
         /// Populates the child fields container with PropertyFields for each
         /// serialized field of the concrete validation rule implementation.
         /// </summary>
@@ -136,7 +130,7 @@ namespace FarEmerald.PlayForge.Extended.Editor
             
             // Bind to ensure property changes are tracked
             _childFieldsContainer.Bind(property.serializedObject);
-        }
+        }*/
 
         protected override string GetStringValue(SerializedProperty prop, Type value)
         {

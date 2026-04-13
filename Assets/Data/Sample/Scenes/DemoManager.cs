@@ -4,6 +4,7 @@ using System.Linq;
 using Cysharp.Threading.Tasks;
 using UnityEditor;
 using UnityEngine;
+using UnityEngine.InputSystem;
 using UnityEngine.Serialization;
 using UnityEngine.UIElements;
 using Object = UnityEngine.Object;
@@ -80,6 +81,17 @@ namespace FarEmerald.PlayForge.Examples
             cRot = cMain.transform.rotation;
 
             InitDemo();
+        }
+
+        private TaskSequence testSequence = DemoSequences.TestMultiSequence();
+        public override void WhenUpdate(ProcessRelay relay)
+        {
+            if (Input.IsKeyDown(Key.K))
+            {
+                //ProcessControl.Register(DemoSequences.TestMultiSequence(), out _);
+                //ProcessControl.Register(new TaskSequence(testSequence.Definition), out _);
+                ProcessControl.Register(testSequence, out _);
+            }
         }
 
         private void InitDemo()
@@ -639,11 +651,8 @@ namespace FarEmerald.PlayForge.Examples
         {
             var data = SequenceDataPacket.SceneLocal(Player.transform);
             data.SetPrimary(Tags.DATA, Player);
-
-            Debug.Log($"Registering demo sequence!!");
             
             ProcessControl.Register(seq, this, data, out var relay);
-            // var relay = TaskSequenceProcess.Register(seq, data, this);
 
             return relay;
         }

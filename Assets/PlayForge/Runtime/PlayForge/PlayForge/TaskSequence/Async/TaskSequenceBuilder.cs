@@ -22,7 +22,7 @@ namespace FarEmerald.PlayForge
         private float? _maxDurationSeconds;
         private ISequenceInjection _maxDurationInjection;
         private readonly List<SequenceTimeout> _timeouts = new();
-        private EProcessStepTiming _conditionStepTiming = EProcessStepTiming.Update;
+        private EProcessStepTiming _conditionStepTiming = EProcessStepTiming.Update;  // Check conditions in Update by default
         private SequenceMetadata _metadata;
         
         // ═══════════════════════════════════════════════════════════════════════════

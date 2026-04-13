@@ -29,7 +29,7 @@ namespace FarEmerald.PlayForge.Extended.Editor
         private EEffectDurationPolicy? analysisFilterDuration = null;
         private EEffectImpactTarget? analysisFilterImpactTarget = null;
         private ECalculationOperation? analysisFilterImpactOp = null;
-        private string analysisFilterContextTag = null;
+        // private string analysisFilterContextTag = null;
         
         // Ability-specific filters
         private EAbilityActivationPolicy? analysisFilterAbilityPolicy = null;

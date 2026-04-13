@@ -152,6 +152,36 @@ namespace FarEmerald.PlayForge.Examples
         }
         
         #endregion
+
+        public static TaskSequence TestMultiSequence()
+        {
+            return TaskSequenceBuilder.Create("Multi activation test")
+                .Do(d =>
+                {
+                    d.SetPrimary(Tags.ITERATIONS, 0);
+                    //Debug.Log($"Init test with 0");
+                    Debug.Log($"[{d.GetRelays()[0].CacheIndex}] Init test with 0");
+                })
+                .Stage(s => s
+                    .WithRepeat(true)
+                    .Task(async (d, t) =>
+                    {
+                        if (d.GetPrimary<int>(Tags.ITERATIONS) >= 5)
+                        {
+                            d.Inject(SkipStageInjection.Instance);
+                            return;
+                        }
+                        
+                        await UniTask.Delay(1000, cancellationToken: t);
+                        d.Increment(Tags.ITERATIONS);
+                        Debug.Log($"[{d.GetRelays()[0].CacheIndex}] Iterating test: {d.GetPrimary<int>(Tags.ITERATIONS)}");
+                    }))
+                .OnTerminate((ctx, success) =>
+                {
+                    Debug.Log($"[{ctx.Data.GetRelays()[0].CacheIndex}] Terminated test with {ctx.Data.GetPrimary<int>(Tags.ITERATIONS)}");
+                })
+                .BuildSequence();
+        }
         
         #region Bouncy Balls
         

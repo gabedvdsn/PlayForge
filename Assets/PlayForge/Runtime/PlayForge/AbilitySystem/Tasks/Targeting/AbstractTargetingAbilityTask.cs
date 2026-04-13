@@ -24,12 +24,13 @@ namespace FarEmerald.PlayForge
             // Hook into input handler here
             if (ConnectInputHandler(data)) return;
 
+            // If connection fails, interrupt ability
             WhenTargetingInvalid(data);
 
             var abilitySystem = data.EffectOrigin.GetOwner().ToGAS().GetAbilitySystem();
             if (abilitySystem is not null && data.EffectOrigin is AbilitySpec spec)
             {
-                abilitySystem.Inject(spec.Base, new InterruptInjection());
+                abilitySystem.Inject(spec.Base, InterruptSequenceInjection.Instance);
             }
         }
 

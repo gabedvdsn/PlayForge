@@ -15,7 +15,7 @@ namespace FarEmerald.PlayForge
         /// and converts it to a DefaultTransformPacket via ToDefault().
         /// Returns false and optionally interrupts the sequence if the target is missing or invalid.
         /// </summary>
-        public static bool GetTargetingPacket(this ProcessDataPacket data, Tag query, out DefaultTargetingPacket packet, bool autoInterrupt = true)
+        public static bool GetTargetingPacket(this ProcessDataPacket data, Tag query, out AbstractTargetingPacket packet, bool autoInterrupt = true)
         {
             packet = null;
             if (data is null)
@@ -24,20 +24,9 @@ namespace FarEmerald.PlayForge
                 return false;
             }
 
-            // Look up the transform packet directly using the provided tag.
-            var target = data.GetPrimary<AbstractTargetingPacket>(query);
-            if (target is null)
-            {
-                if (autoInterrupt) Interrupt();
-                return false;
-            }
-
-            // Convert to DefaultTransformPacket. DefaultTransformPacket.ToDefault() returns
-            // itself when its transform is valid, or NullTransformPacket when null.
-            // StaticTransformPacket.ToDefault() returns a NullTransformPacket with its values.
-            packet = target.ToDefault();
+            packet = data.GetPrimary<AbstractTargetingPacket>(query);
             if (packet is not null) return true;
-
+            
             if (autoInterrupt) Interrupt();
             return false;
 
@@ -49,7 +38,7 @@ namespace FarEmerald.PlayForge
                 }
             }
         }
-
+        
         public static void SetTargetingPacket(this ProcessDataPacket data, Tag query, AbstractTargetingPacket targeting)
         {
             data.SetPrimary(query, targeting);

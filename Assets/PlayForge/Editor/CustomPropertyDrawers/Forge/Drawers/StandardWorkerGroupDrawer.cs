@@ -188,15 +188,6 @@ namespace FarEmerald.PlayForge.Extended.Editor
         private Color GetWorkerTypeColor(string workerType)
         {
             return Colors.BorderDark;
-            
-            return workerType switch
-            {
-                "Attribute" => Colors.AccentOrange,
-                "Impact" => Colors.AccentRed,
-                "Tag" => Colors.AccentBlue,
-                "Analysis" => Colors.AccentGreen,
-                _ => Colors.AccentGray
-            };
         }
         
         private void CopyWorkerGroup(SerializedProperty property, StandardWorkerGroup source, VisualElement root)

@@ -8,6 +8,10 @@ namespace FarEmerald.PlayForge
         private Quaternion _rotation;
         private Vector3 _scale;
 
+        public StaticTargetingPacket() : base(null, null)
+        {
+        }
+
         public StaticTargetingPacket(Vector3 position) : base(null, null)
         {
             _position = position;
@@ -29,27 +33,13 @@ namespace FarEmerald.PlayForge
             _scale = transform.localScale;
         }
 
-        public StaticTargetingPacket(AbstractTargetingPacket other)  : base(other.transform, other.target)
+        public StaticTargetingPacket(AbstractTargetingPacket other) : base(other)
         {
             _position = other.position;
             _rotation = other.rotation;
             _scale = other.scale;
         }
-
-        /// <summary>
-        /// StaticTransformPacket has no live Transform. Returns a NullTransformPacket
-        /// initialized with this packet's static values, allowing position/rotation/scale
-        /// to be read without a null reference.
-        /// </summary>
-        public override DefaultTargetingPacket ToDefault()
-        {
-            var packet = new NullTargetingPacket();
-            packet.position = _position;
-            packet.rotation = _rotation;
-            packet.scale = _scale;
-            return packet;
-        }
-
+        
         public override Vector3 position
         {
             get => _position;

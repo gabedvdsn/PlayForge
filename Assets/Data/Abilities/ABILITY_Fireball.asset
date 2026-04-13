@@ -120,6 +120,8 @@ MonoBehaviour:
         rid: 7261146403316695434
       Tasks:
       - rid: 1955962478581514847
+      - rid: 7261146469945573582
+      - rid: 7261146469945573587
       ApplyUsageEffects: 0
   SourceActivationRules:
   - rid: 1955962478581514659
@@ -158,7 +160,7 @@ MonoBehaviour:
     - rid: 1955962478581514847
       type: {class: RunSequenceTask, ns: FarEmerald.PlayForge, asm: Assembly-CSharp}
       data:
-        SequenceReference:
+        Sequence:
           _typeName: FarEmerald.PlayForge.Examples.DemoAbilitySequences, Assembly-CSharp,
             Version=0.0.0.0, Culture=neutral, PublicKeyToken=null
           _methodName: FireballSequence
@@ -189,3 +191,15 @@ MonoBehaviour:
           Name: Effects1hrldAfmelBJryWmirBAFALaw9ISFYz_1hrldAfmelBJryWmirBAFALaw
         Effects:
         - {fileID: 11400000, guid: 53a3e65d1d4a3eb49bce88eed63519d4, type: 2}
+    - rid: 7261146469945573582
+      type: {class: ApplyRemoveEffectsAbilityTask, ns: FarEmerald.PlayForge, asm: Assembly-CSharp}
+      data:
+        Effects: []
+    - rid: 7261146469945573587
+      type: {class: InjectAbilityTask, ns: FarEmerald.PlayForge, asm: Assembly-CSharp}
+      data:
+        Injection:
+          rid: 7261146469945573608
+    - rid: 7261146469945573608
+      type: {class: StopMaintainedLastInjection, ns: FarEmerald.PlayForge, asm: Assembly-CSharp}
+      data: 

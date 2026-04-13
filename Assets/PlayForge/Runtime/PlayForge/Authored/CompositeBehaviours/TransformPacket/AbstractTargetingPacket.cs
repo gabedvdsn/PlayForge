@@ -12,15 +12,19 @@ namespace FarEmerald.PlayForge
         public bool HasTransform => transform;
         public bool HasTarget => target is not null;
 
+        protected AbstractTargetingPacket(AbstractTargetingPacket other)
+        {
+            if (other is null) return;
+            
+            transform = other.transform;
+            target = other.target;
+            direction = other.direction;
+        }
+
         protected AbstractTargetingPacket(Transform transform, ITarget target)
         {
             this.transform = transform;
             this.target = target;
-        }
-
-        public virtual DefaultTargetingPacket ToDefault()
-        {
-            return new NullTargetingPacket();
         }
         
         public abstract Vector3 position { get; set; }

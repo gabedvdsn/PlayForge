@@ -539,7 +539,7 @@ namespace FarEmerald.PlayForge
         /// Process lifecycle for this sequence. Determines whether it runs async or sync.
         /// Default is SelfTerminating (async).
         /// </summary>
-        public EProcessLifecycle Lifecycle { get; set; } = EProcessLifecycle.SelfTerminating;
+        public EProcessLifecycle Lifecycle { get; set; } = EProcessLifecycle.SelfTerminating;  // Async by default
 
         /// <summary>
         /// Step timing for the process. Determines which Unity update loop the process attaches to.

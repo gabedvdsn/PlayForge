@@ -215,7 +215,7 @@ namespace FarEmerald.PlayForge.Examples
                         float scale = Mathf.Lerp(0.35f, 0f, t);
                         shards[i].transform.localScale = Vector3.one * scale;
 
-                        shards[i].transform.Rotate(Vector3.one * 360f * dt);
+                        shards[i].transform.Rotate(Vector3.one * (360f * dt));
                     }
 
                     return shatterTimer >= shatterDuration;
@@ -246,6 +246,7 @@ namespace FarEmerald.PlayForge.Examples
             float totalDuration;
             float timer = 0f;
             Vector3 origin = Vector3.zero;
+            bool appliedEffect = false;
 
             totalDuration = expandDuration + holdDuration + contractDuration;
 
@@ -287,6 +288,11 @@ namespace FarEmerald.PlayForge.Examples
                     else if (timer < expandDuration + holdDuration)
                     {
                         currentRadius = maxRadius;
+                        if (!appliedEffect)
+                        {
+                            
+                            appliedEffect = true;
+                        }
                     }
                     else
                     {
@@ -384,11 +390,13 @@ namespace FarEmerald.PlayForge.Examples
 
                     return timer >= launchDuration;
                 })
+                .Do(d =>
+                {
+                    timer = 0f;
+                })
                 // Phase: Fall back down
                 .SyncTask((d, dt) =>
                 {
-                    // Reset timer for this phase on first frame
-                    if (timer >= launchDuration) timer = 0f;
 
                     timer += dt;
                     float tDown = Mathf.Clamp01(timer / fallDuration);
@@ -405,6 +413,10 @@ namespace FarEmerald.PlayForge.Examples
                     }
 
                     return timer >= fallDuration;
+                })
+                .Do(d =>
+                {
+                    timer = 0f;
                 })
                 // Phase: Shrink and disappear
                 .SyncTask((d, dt) =>
@@ -885,12 +897,10 @@ namespace FarEmerald.PlayForge.Examples
 
                     return false;
                 })
+                .Do(d => timer = 0f)
                 // Phase: Trail fades away
                 .SyncTask((d, dt) =>
                 {
-                    // Reset timer for fade phase
-                    if (timer >= dashDuration) timer = 0f;
-
                     timer += dt;
                     float tFade = Mathf.Clamp01(timer / trailFadeDuration);
 
@@ -926,7 +936,7 @@ namespace FarEmerald.PlayForge.Examples
         public static TaskSequence ArcaneBarrageSequence()
         {
             List<GameObject> orbs = new();
-            int orbCount = 15;
+            int orbCount = 9;
             float staggerInterval = 0.22f;
             float arcHeight = 16f;
             float travelDuration = 0.8f;

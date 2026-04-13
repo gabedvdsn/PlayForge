@@ -25,14 +25,14 @@ namespace FarEmerald.PlayForge
     /// </summary>
     public class AbilityProxy
     {
-        public int StageIndex;
-        public readonly AbilityBehaviour Behaviour;
+        private int StageIndex;
+        private readonly AbilityBehaviour Behaviour;
 
         /// <summary>The compiled execution TaskSequence (reusable across activations).</summary>
-        public TaskSequence CompiledSequence { get; private set; }
+        private TaskSequence CompiledSequence { get; set; }
 
         /// <summary>The compiled targeting TaskSequence (reusable, null if no targeting task).</summary>
-        public TaskSequence CompiledTargeting { get; private set; }
+        private TaskSequence CompiledTargeting { get; set; }
 
         /// <summary>The ProcessRelay for the active execution sequence (null when not running).</summary>
         public ProcessRelay ActiveRelay { get; private set; }
@@ -41,11 +41,11 @@ namespace FarEmerald.PlayForge
         public ProcessRelay TargetingRelay { get; private set; }
 
         // Legacy fields preserved for injection compatibility
-        public Dictionary<int, CancellationTokenSource> stageSources;
-        public UniTaskCompletionSource nextStageSignal;
-        public int maintainedStages;
+        private Dictionary<int, CancellationTokenSource> stageSources;
+        private UniTaskCompletionSource nextStageSignal;
+        private int maintainedStages;
 
-        public bool usageEffectsApplied;
+        private bool usageEffectsApplied;
 
         public AbilityProxy(AbilityBehaviour behaviour)
         {
@@ -60,8 +60,8 @@ namespace FarEmerald.PlayForge
         /// <param name="abilityName">Display name for ProcessControl visibility.</param>
         public void CompileSequence(string abilityName = null)
         {
-            CompiledSequence = AbilitySequenceCompiler.Compile(Behaviour, abilityName);
             CompiledTargeting = AbilitySequenceCompiler.CompileTargeting(Behaviour, abilityName);
+            CompiledSequence = AbilitySequenceCompiler.Compile(Behaviour, abilityName);
         }
 
         /// <summary>
@@ -271,20 +271,19 @@ namespace FarEmerald.PlayForge
         // INJECTION (translates ability injections to sequence injections)
         // ═══════════════════════════════════════════════════════════════════════════
 
-        public void Inject(IAbilityInjection injection, AbilityDataPacket activeData)
+        public void Inject(ISequenceInjection injection, AbilityDataPacket activeData)
         {
             // If running via compiled sequence, translate to sequence injection
             if (IsCompiled && CompiledSequence.IsRunning)
             {
-                var success = AbilitySequenceInjectionBridge.TryApply(injection, CompiledSequence);
-
+                var success = CompiledSequence.Inject(injection);
                 // Fire ability injection callback regardless of translation success
                 FireInjectionCallback(injection, activeData, success);
                 return;
             }
 
             // Legacy injection path
-            var _success = injection.OnProxyInject(this, activeData);
+            var _success = CompiledSequence.Inject(injection);
 
             var owner = activeData.EffectOrigin.GetOwner();
             if (!owner.FindAbilitySystem(out var asc)) return;
@@ -303,7 +302,7 @@ namespace FarEmerald.PlayForge
         }
 
         private void FireInjectionCallback(
-            IAbilityInjection injection,
+            ISequenceInjection injection,
             AbilityDataPacket activeData,
             bool success)
         {

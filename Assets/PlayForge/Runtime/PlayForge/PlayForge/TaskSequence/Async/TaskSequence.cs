@@ -33,6 +33,11 @@ namespace FarEmerald.PlayForge
         {
             Definition = definition ?? throw new ArgumentNullException(nameof(definition));
         }
+
+        public TaskSequence(TaskSequence other)
+        {
+            Definition = other.Definition ?? throw new ArgumentNullException(nameof(other.Definition));
+        }
         
         // ═══════════════════════════════════════════════════════════════════════════
         // EXECUTION

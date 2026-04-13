@@ -1,3 +1,4 @@
+/*
 namespace FarEmerald.PlayForge
 {
     /// <summary>
@@ -43,3 +44,4 @@ namespace FarEmerald.PlayForge
         }
     }
 }
+*/

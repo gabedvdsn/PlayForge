@@ -86,7 +86,7 @@ namespace FarEmerald.PlayForge
                 if (!value)
                 {
                     activationQueue.Clear();
-                    InjectAll(new InterruptInjection());
+                    InjectAll(InterruptSequenceInjection.Instance);
                 }
 
                 _enabled = value;
@@ -202,7 +202,7 @@ namespace FarEmerald.PlayForge
             if (!TryGetCacheIndexOf(ability, out int index)) return false;
             
             if (AbilityCache[index].IsClaiming) 
-                Inject(index, new InterruptInjection());
+                Inject(index, InterruptSequenceInjection.Instance);
             
             Self.CompileGrantedTags();
 
@@ -323,26 +323,26 @@ namespace FarEmerald.PlayForge
             foreach (var policy in ActiveCache.Keys)
             {
                 foreach (int index in ActiveCache[policy]) 
-                    AbilityCache[index].Inject(new InterruptInjection());
+                    AbilityCache[index].Inject(InterruptSequenceInjection.Instance);
                 ActiveCache[policy].Clear();
             }
 
             AbilityCache.Clear();
         }
 
-        public void Inject(int index, IAbilityInjection injection)
+        public void Inject(int index, ISequenceInjection injection)
         {
             if (!AbilityCache.TryGetValue(index, out var container) || !container.IsClaiming) return;
             container.Inject(injection);
         }
         
-        public void Inject(Ability ability, IAbilityInjection injection)
+        public void Inject(Ability ability, ISequenceInjection injection)
         {
             if (!TryGetAbilityContainer(ability, out var container) || !container.IsClaiming) return;
             container.Inject(injection);
         }
         
-        public void Inject(EAbilityActivationPolicy policy, IAbilityInjection injection)
+        public void Inject(EAbilityActivationPolicy policy, ISequenceInjection injection)
         {
             foreach (int index in ActiveCache[policy])
             {
@@ -352,7 +352,7 @@ namespace FarEmerald.PlayForge
             }
         }
 
-        public void InjectAll(IAbilityInjection injection)
+        public void InjectAll(ISequenceInjection injection)
         {
             foreach (var policy in ActiveCache.Keys)
             {

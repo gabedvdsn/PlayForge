@@ -464,7 +464,13 @@ namespace FarEmerald.PlayForge
             var stateText = pcb.QueuedState != pcb.State
                 ? $"{pcb.State} → {pcb.QueuedState}"
                 : pcb.State.ToString();
-            EditorGUILayout.LabelField(stateText, GUILayout.Width(150));
+            var style = new GUIStyle(EditorStyles.label);
+            if (relay.Wrapper.Lifecycle == EProcessLifecycle.Synchronous)
+            {
+                style = new GUIStyle();
+                style.normal.textColor = SynchronousProcessColor;
+            }
+            EditorGUILayout.LabelField(stateText, style, GUILayout.Width(150));
             EditorGUILayout.LabelField($"{relay.UpdateTime:F1}s", GUILayout.Width(50));
             EditorGUILayout.LabelField($"{relay.UnscaledLifetime:F1}s", GUILayout.Width(50));
 
@@ -497,13 +503,12 @@ namespace FarEmerald.PlayForge
 
             // Info row
             EditorGUILayout.BeginHorizontal();
-            GUIStyle style = null;
+            var style = new GUIStyle(EditorStyles.label);
             if (relay.Wrapper.Lifecycle == EProcessLifecycle.Synchronous)
             {
                 style = new GUIStyle();
                 style.normal.textColor = SynchronousProcessColor;
             }
-            else style = new GUIStyle(EditorStyles.label);
             EditorGUILayout.LabelField($"{relay.Wrapper.Lifecycle}", style, GUILayout.Width(160));
             EditorGUILayout.LabelField($"{relay.Wrapper.StepTiming}", GUILayout.Width(120));
 
@@ -558,8 +563,12 @@ namespace FarEmerald.PlayForge
             
             // Properties
             EditorGUILayout.BeginHorizontal();
-            var style = new GUIStyle();
-            if (relay.Wrapper.Lifecycle == EProcessLifecycle.Synchronous) style.normal.textColor = SynchronousProcessColor;
+            var style = new GUIStyle(EditorStyles.label);
+            if (relay.Wrapper.Lifecycle == EProcessLifecycle.Synchronous)
+            {
+                style = new GUIStyle();
+                style.normal.textColor = SynchronousProcessColor;
+            }
             EditorGUILayout.LabelField($"Lifecycle: {relay.Wrapper.Lifecycle}", style, GUILayout.Width(160));
             EditorGUILayout.LabelField($"Timing: {relay.Wrapper.StepTiming}", GUILayout.Width(160));
             EditorGUILayout.EndHorizontal();

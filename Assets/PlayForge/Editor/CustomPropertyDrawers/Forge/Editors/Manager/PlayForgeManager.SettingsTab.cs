@@ -1153,7 +1153,7 @@ namespace FarEmerald.PlayForge.Extended.Editor
 
             return;
             
-            // ═══════════════════════════════════════════════════════════════════════════
+            /*// ═══════════════════════════════════════════════════════════════════════════
             // Default Cost Template
             // ═══════════════════════════════════════════════════════════════════════════
             var costHeader = new Label("Default Cost Template");
@@ -1288,7 +1288,7 @@ namespace FarEmerald.PlayForge.Extended.Editor
             tagsHeader.style.marginBottom = 4;
             container.Add(tagsHeader);
             
-            BuildTypeSpecificTemplateTags(container, "Ability");
+            BuildTypeSpecificTemplateTags(container, "Ability");*/
         }
         
         // Add these static helper methods for accessing default templates from other classes
