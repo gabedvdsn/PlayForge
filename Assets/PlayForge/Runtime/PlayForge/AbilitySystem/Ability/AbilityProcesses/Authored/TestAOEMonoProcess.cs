@@ -9,16 +9,18 @@ namespace FarEmerald.PlayForge
 {
     public class TestAOEMonoProcess : AbstractEffectingMonoProcess
     {
+        public int DelayMs = 5000;
+        
         public override async UniTask RunProcess(ProcessRelay relay, CancellationToken token)
         {
-            await UniTask.Delay(5000, cancellationToken: token);
+            await UniTask.Delay(DelayMs, cancellationToken: token);
         }
 
         private void OnTriggerEnter(Collider other)
         {
-            if (!other.TryGetComponent(out GameplayAbilitySystem gas)) return;
+            /*if (!other.TryGetComponent(out GameplayAbilitySystem gas)) return;
             
-            ApplyEffects(gas);
+            ApplyEffects(gas);*/
         }
     }
 }

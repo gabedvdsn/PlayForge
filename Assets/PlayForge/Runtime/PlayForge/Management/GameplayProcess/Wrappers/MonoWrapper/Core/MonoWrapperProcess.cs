@@ -1,20 +1,28 @@
-﻿using System.Threading;
+﻿using System;
+using System.Threading;
 using Cysharp.Threading.Tasks;
-using UnityEngine;
+using UnityEditor.PackageManager;
+using Object = UnityEngine.Object;
 
 namespace FarEmerald.PlayForge
 {
     public class MonoWrapperProcess : AbstractProcessWrapper
     {
+        /// <summary>
+        /// The original Object process (prefab OR instance)
+        /// </summary>
         private AbstractMonoProcess StoredMono;
-        private ProcessDataPacket Data;
         
+        /// <summary>
+        /// The active Object process
+        /// </summary>
         private AbstractMonoProcess activeMono;
-
-        public MonoWrapperProcess(AbstractMonoProcess storedMono, ProcessDataPacket data)
+        
+        public MonoWrapperProcess(AbstractMonoProcess storedMono, ProcessDataPacket data, IGameplayProcessHandler handler) : base(data, handler)
         {
             StoredMono = storedMono;
-            Data = data;
+            ParticipateInSiblingCascade = storedMono.ParticipateInSiblingCascade;
+            getStatus = () => StoredMono.ProcessLifecycle == EProcessLifecycle.Synchronous ? EProcessStatus.Synchronous : EProcessStatus.Asynchronous;
         }
 
         /// <summary>
@@ -22,17 +30,20 @@ namespace FarEmerald.PlayForge
         /// </summary>
         public override void InitializeWrapper()
         {
-            if (StoredMono)
+            if (!StoredMono) return;
+
+            var inst = Handler?.GetInstantiator(StoredMono);
+            if (StoredMono.UseHandlerInstantiator && inst is not null)
             {
-                if (StoredMono.Instantiator is not null)
-                {
-                    activeMono = StoredMono.Instantiator.Create(StoredMono, Data);
-                    if (activeMono.gameObject.scene.isLoaded) return;
-                }
-
-                activeMono = StoredMono.gameObject.scene.isLoaded ? StoredMono : Object.Instantiate(StoredMono);
+                activeMono = inst.Create(StoredMono, Data, StoredMono.gameObject.scene.IsValid());
             }
-
+            else if (StoredMono.Instantiator is not null)
+            {
+                activeMono = StoredMono.Instantiator.Create(StoredMono, Data, StoredMono.gameObject.scene.IsValid());
+            }
+            if (activeMono && activeMono.gameObject.scene.IsValid()) return;
+            
+            activeMono = StoredMono.gameObject.scene.IsValid() ? StoredMono : Object.Instantiate(StoredMono);
             activeMono.name = activeMono.name.Replace("(Clone)", "");
         }
         
@@ -42,14 +53,31 @@ namespace FarEmerald.PlayForge
             activeMono.WhenInitialize(relay);
         }
 
-        public override void WhenUpdate(EProcessStepTiming timing, ProcessRelay relay)
+        public override void WhenUpdate(ProcessRelay relay)
         {
             activeMono.WhenUpdate(relay);
         }
-        
+
+        public override void WhenFixedUpdate(ProcessRelay relay)
+        {
+            activeMono.WhenFixedUpdate(relay);
+        }
+        public override void WhenLateUpdate(ProcessRelay relay)
+        {
+            activeMono.WhenLateUpdate(relay);
+        }
+
         public override void WhenWait(ProcessRelay relay)
         {
             activeMono.WhenWait(relay);
+        }
+        public override bool HandlePause(ProcessRelay relay)
+        {
+            return activeMono.HandleResume(relay);
+        }
+        public override bool HandleResume(ProcessRelay relay)
+        {
+            return activeMono.HandleResume(relay);
         }
 
         /// <summary>
@@ -59,11 +87,13 @@ namespace FarEmerald.PlayForge
         public override void WhenTerminate(ProcessRelay relay)
         {
             WhenTerminateSafe(relay);
-            if (activeMono.Instantiator is not null)
+            
+            if (activeMono.Instantiator is not null) activeMono.Instantiator.CleanProcess(activeMono);
+            else
             {
-                activeMono.Instantiator.CleanProcess(activeMono);
+                try { Object.Destroy(activeMono.gameObject); }
+                catch { }
             }
-            else Object.Destroy(activeMono.gameObject);
         }
         /// <summary>
         /// Terminates the behaviour of the process, without Destroying the process object
@@ -72,7 +102,6 @@ namespace FarEmerald.PlayForge
         public override void WhenTerminateSafe(ProcessRelay relay)
         {
             activeMono.WhenTerminate(relay);
-            ProcessControl.Instance.RemoveMonoProcess(activeMono);
         }
 
         public override async UniTask RunProcess(ProcessRelay relay, CancellationToken token)
@@ -96,7 +125,7 @@ namespace FarEmerald.PlayForge
             return activeMono && activeMono.IsInitialized;
         }
 
-        public override string ProcessName => activeMono ? activeMono.name : "[ ]";
+        public override string ProcessName => getProcessName ?? (activeMono ? activeMono.name : $"[<Is Destroyed>] - {(StoredMono ? StoredMono.name : "<Unknown>")}");
         public override EProcessStepPriorityMethod PriorityMethod => activeMono.PriorityMethod;
 
         public override int StepPriority => activeMono.ProcessStepPriority;

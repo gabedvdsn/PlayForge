@@ -4,50 +4,59 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.CompilerServices;
 using UnityEngine;
+using UnityEngine.Serialization;
 
 namespace FarEmerald.PlayForge
 {
-    public readonly struct Attribute : IEquatable<Attribute>, IHasReadableDefinition
+    [CreateAssetMenu(menuName = "PlayForge/Attribute", fileName = "Attribute_")]
+    public class Attribute : BaseForgeAsset, IAttribute
     {
-        private readonly string Name;
-        private readonly string Description;
+        public string Name;
+        public string Abbreviation;
+        public string Description;
+        public List<TextureItem> Textures;
         
-        private Attribute(string name, string description) 
-        {
-            Name = name;
-            Description = description;
-        }
-        
-        public static Attribute Generate(string name, string description)
-        {
-            return new Attribute(name, description);
-        }
-
         #region Internal
         
-        public string GetName()
+        public override string GetName()
         {
             return Name;
         }
-
-        public string GetDescription()
+        public override IEnumerable<Tag> GetGrantedTags()
+        {
+            yield break;
+        }
+        public string GetAbbreviation()
+        {
+            return Abbreviation;
+        }
+        public List<TextureItem> GetTextures()
+        {
+            return Textures;
+        }
+        public override string GetDescription()
         {
             return Description;
         }
-        public Sprite GetPrimaryIcon()
+        public override Texture2D GetPrimaryIcon()
         {
-            return null;
+            return ForgeHelper.GetTextureItem(Textures, PlayForge.Tags.PRIMARY);
         }
 
         public bool Equals(Attribute other)
         {
-            return other.Name == Name;
+            return other == this;
+        }
+
+        public bool Equals(IAttribute other)
+        {
+            return GetName() == other.GetName();
         }
         
-        public override bool Equals(object obj) => obj is Attribute other && Equals(other);
+        public override bool Equals(object obj) => obj is IAttribute other && Equals(other);
 
-        public override int GetHashCode() => HashCode.Combine(Name, Description);
-        
+        public override int GetHashCode() => base.GetHashCode();
+
         #endregion
     }
 }

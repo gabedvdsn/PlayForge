@@ -8,11 +8,11 @@ namespace FarEmerald.PlayForge
     {
         protected override async UniTask RunTargetedProcess(ProcessRelay relay, CancellationToken token)
         {
-            while (Vector3.Distance(transform.position, targetTransform.position) > .1f)
+            while (Vector3.Distance(transform.position, targeting.position) > .1f)
             {
                 token.ThrowIfCancellationRequested();
                 
-                transform.position = Vector3.MoveTowards(transform.position, targetTransform.position, GetProjectileSpeed() * Time.deltaTime);
+                transform.position = Vector3.MoveTowards(transform.position, targeting.position, GetProjectileSpeed() * Time.deltaTime);
                 
                 await UniTask.NextFrame(token);
             }
@@ -20,8 +20,10 @@ namespace FarEmerald.PlayForge
         
         protected virtual float GetProjectileSpeed()
         {
-            if (!AttributeLibrary.TryGetByName("projectile_speed", out var projSpeed)) return 10f;
-            return Source.AttributeSystem.TryGetAttributeValue(projSpeed, out AttributeValue val) ? val.CurrentValue : 10f;
+            var speed = GetAttributeValue(Tags.PROJECTILE_SPEED);
+            if (speed.RetainedValues is null) ReportStatus(Tags.FAILED_WHILE_ACTIVE);
+
+            return speed.Value.CurrentValue;
         }
     }
 }

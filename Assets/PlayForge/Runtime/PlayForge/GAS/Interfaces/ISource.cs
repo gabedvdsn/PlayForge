@@ -7,13 +7,14 @@ namespace FarEmerald.PlayForge
     {
         public List<Tag> GetContextTags();
         public TagCache GetTagCache();
+        public ActionQueue GetActionQueue();
+        public FrameSummary GetFrameSummary();
         public Tag GetAssetTag();
         public int GetLevel();
         public int GetMaxLevel();
         public void SetLevel(int level);
-        public string GetName();
-        public GameplayEffectDuration GetLongestDurationFor(Tag lookForTag);
-        public GameplayEffectDuration GetLongestDurationFor(List<Tag> lookForTags);
+        public EffectDurationRemaining GetLongestDurationFor(Tag lookForTag);
+        public EffectDurationRemaining GetLongestDurationFor(List<Tag> lookForTags);
     }
 
     public struct SystemComponentData

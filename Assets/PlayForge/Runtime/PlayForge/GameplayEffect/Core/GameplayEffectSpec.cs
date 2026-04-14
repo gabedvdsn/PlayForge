@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using UnityEngine;
 
 namespace FarEmerald.PlayForge
 {
@@ -10,23 +11,27 @@ namespace FarEmerald.PlayForge
         public IEffectOrigin Origin;
         public ISource Source;
         public ITarget Target;
+        
+        public TrackedImpact TrackedImpact;
 
-        public Dictionary<IMagnitudeModifier, AttributeValue?> SourceCapturedAttributes;
+        public Dictionary<IScaler, AttributeValue?> SourceCapturedAttributes;
 
-        public GameplayEffectSpec(GameplayEffect GameplayEffect, IEffectOrigin origin, IGameplayAbilitySystem target)
+        public GameplayEffectSpec(GameplayEffect GameplayEffect, IEffectOrigin origin, ITarget target)
         {
             Base = GameplayEffect;
             Origin = origin;
             
             Source = Origin.GetOwner();
             Target = target;
-            
-            SourceCapturedAttributes = new Dictionary<IMagnitudeModifier, AttributeValue?>();
+
+            TrackedImpact = new TrackedImpact();
+            SourceCapturedAttributes = new Dictionary<IScaler, AttributeValue?>();
         }
         
         public SourcedModifiedAttributeValue SourcedImpact(AttributeValue attributeValue)
         {
-            AttributeValue impactValue = AttributeImpact(attributeValue);
+            float magnitude = Base.ImpactSpecification.GetMagnitude(this);
+            var impactValue = AttributeImpact(magnitude, attributeValue);
             return new SourcedModifiedAttributeValue(
                 this,
                 impactValue.CurrentValue,
@@ -34,20 +39,21 @@ namespace FarEmerald.PlayForge
             );
         }
 
-        public SourcedModifiedAttributeValue SourcedImpact(IAttributeImpactDerivation baseDerivation, AttributeValue attributeValue)
+        public SourcedModifiedAttributeValue SourcedImpact(AbstractEffectContainer container, AttributeValue attributeValue)
         {
-            AttributeValue impactValue = AttributeImpact(attributeValue);
+            float magnitude = container is AbstractStackingEffectContainer _container 
+                ? Base.ImpactSpecification.GetMagnitude(_container) 
+                : Base.ImpactSpecification.GetMagnitude(this);
+            var impactValue = AttributeImpact(magnitude, attributeValue);
             return new SourcedModifiedAttributeValue(
                 this,
-                baseDerivation,
                 impactValue.CurrentValue,
                 impactValue.BaseValue
             );
         }
         
-        private AttributeValue AttributeImpact(AttributeValue attributeValue)
+        private AttributeValue AttributeImpact(float magnitude, AttributeValue attributeValue)
         {
-            float magnitude = Base.ImpactSpecification.GetMagnitude(this);
             float currValue = attributeValue.CurrentValue;
             float baseValue = attributeValue.BaseValue;
             
@@ -104,6 +110,23 @@ namespace FarEmerald.PlayForge
                             throw new ArgumentOutOfRangeException();
                     }
                     break;
+                case ECalculationOperation.FlatBonus:
+                    switch (Base.ImpactSpecification.TargetImpact)
+                    {
+                        case EEffectImpactTarget.Current:
+                            currValue += magnitude;
+                            break;
+                        case EEffectImpactTarget.Base:
+                            baseValue += magnitude;
+                            break;
+                        case EEffectImpactTarget.CurrentAndBase:
+                            currValue += magnitude;
+                            baseValue += magnitude;
+                            break;
+                        default:
+                            throw new ArgumentOutOfRangeException();
+                    }
+                    break;
                 default:
                     throw new ArgumentOutOfRangeException();
             }
@@ -113,8 +136,17 @@ namespace FarEmerald.PlayForge
                 baseValue - attributeValue.BaseValue
             );
         }
-
-        public Attribute GetAttribute()
+        
+        public Tag GetCacheKey()
+        {
+            return Base.Tags.AssetTag;
+        }
+        public bool DerivationAlive()
+        {
+            Debug.Log($"Check if {Base.GetName()} is alive: {((Source.ToGAS()?.TryGetEffectContainer(Base, out var c) ?? false) && c.Spec == this)}");
+            return (Source.ToGAS()?.TryGetEffectContainer(Base, out var container) ?? false) && container.Spec == this;
+        }
+        public IAttribute GetAttribute()
         {
             return Base.ImpactSpecification.AttributeTarget;
         }
@@ -134,47 +166,45 @@ namespace FarEmerald.PlayForge
         {
             return Base.ImpactSpecification.ImpactTypes;
         }
-        public Tag AttributeRetention()
+        public Tag GetRetentionGroup()
         {
-            return Tags.RETENTION_IGNORE;
+            return Base.Definition.RetentionGroup;
         }
-        public void TrackImpact(AbilityImpactData impactData)
+        public void TrackImpact(ImpactData impactData)
         {
-            // Specs do not track their own impact (tracked in effect containers)
+            TrackedImpact.Add(impactData.RealImpact);
         }
-        public bool TryGetTrackedImpact(out AttributeValue impactValue)
+        public TrackedImpact GetTrackedImpact()
         {
-            impactValue = default;
-            return false;
+            return TrackedImpact;
         }
-        public bool TryGetLastTrackedImpact(out AttributeValue impactValue)
+        public ImpactDerivationContext GetContextTags()
         {
-            impactValue = default;
-            return false;
+            return new ImpactDerivationContext(Origin.GetContextTags(), Base.Tags.ContextTags);
         }
-        public List<Tag> GetContextTags()
+        public void RunWorkerApplication(EffectWorkerContext ctx)
         {
-            return Origin.GetContextTags();
+            foreach (AbstractEffectWorker worker in Base.Workers) ctx.ActionQueue.EnqueueRange(worker.OnEffectApplication(ctx));
         }
-        public void RunEffectApplicationWorkers()
+        public void RunWorkerTick(EffectWorkerContext ctx)
         {
-            foreach (AbstractEffectWorker worker in Base.Workers) worker.OnEffectApplication(this);
+            foreach (var worker in Base.Workers) ctx.ActionQueue.EnqueueRange(worker.OnEffectTick(ctx));
         }
-        public void RunEffectTickWorkers()
+        public void RunWorkerRemoval(EffectWorkerContext ctx)
         {
-            // Specs never run this method (because non-durational specs, i.e. without containers, are never ticked)
+            foreach (AbstractEffectWorker worker in Base.Workers) ctx.ActionQueue.EnqueueRange(worker.OnEffectRemoval(ctx));
         }
-        public void RunEffectRemovalWorkers()
+        public void RunWorkerImpact(EffectWorkerContext ctx)
         {
-            foreach (AbstractEffectWorker worker in Base.Workers) worker.OnEffectRemoval(this);
+            foreach (AbstractEffectWorker worker in Base.Workers) ctx.ActionQueue.EnqueueRange(worker.OnEffectImpact(ctx));
         }
-        public void RunEffectImpactWorkers(AbilityImpactData impactData)
-        {
-            foreach (AbstractEffectWorker worker in Base.Workers) worker.OnEffectImpact(impactData);
-        }
-        public Dictionary<IMagnitudeModifier, AttributeValue?> GetSourcedCapturedAttributes()
+        public Dictionary<IScaler, AttributeValue?> GetSourcedCapturedAttributes()
         {
             return SourceCapturedAttributes;
+        }
+        public bool RetainImpact()
+        {
+            return Base.ImpactSpecification.TargetImpact != EEffectImpactTarget.Current || Base.DurationSpecification.DurationPolicy != EEffectDurationPolicy.Instant;
         }
     }
 }

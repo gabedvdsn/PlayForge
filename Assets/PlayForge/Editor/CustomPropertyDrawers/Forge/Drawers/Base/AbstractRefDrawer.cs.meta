@@ -1,0 +1,13 @@
+fileFormatVersion: 2
+guid: e8f3d641d61c44acafff7afe55aa1994
+MonoImporter:
+  externalObjects: {}
+  serializedVersion: 2
+  defaultReferences:
+  - Dropdown: {fileID: 9197481963319205126, guid: 152e1c9aa0189fb4a89cd648348fb57d, type: 3}
+  - DropdownEntry: {fileID: 9197481963319205126, guid: 437884dcceb000a48a6c9c8c0a75a05d, type: 3}
+  executionOrder: 0
+  icon: {instanceID: 0}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 

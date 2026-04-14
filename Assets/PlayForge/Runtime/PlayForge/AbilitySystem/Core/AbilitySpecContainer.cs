@@ -3,19 +3,30 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using Cysharp.Threading.Tasks;
+using UnityEngine;
 
 namespace FarEmerald.PlayForge
 {
-    public class AbilitySpecContainer
+    public class AbilitySpecContainer : ITagSource
     {
         public AbilitySpec Spec;
+        public readonly int Index;
 
         public bool IsActive => _activeHandles.Count > 0;
         public bool IsClaiming => _activeHandles.Any(h => !h.ClaimReleased && (h.IsTargeting || h.IsExecuting));
 
         private readonly List<AbilityActivationHandle> _activeHandles = new();
 
-        public AbilitySpecContainer(AbilitySpec spec)
+        private Dictionary<int, ActiveRuntimes> activeRuntimes;
+        
+        private struct ActiveRuntimes
+        {
+            public ProcessRelay Relay;
+            public CancellationTokenSource RuntimeCts;
+            public CancellationTokenSource TargetingCts;
+        }
+
+        public AbilitySpecContainer(AbilitySpec spec, int abilityIndex)
         {
             Spec = spec;
         }
@@ -68,7 +79,7 @@ namespace FarEmerald.PlayForge
             {
                 handle.IsExecuting = true;
 
-                Spec.Owner.GetTagCache().AddTags(Spec.Base.Tags.ActiveGrantedTags);
+                Spec.Source.CompileGrantedTags();
 
                 // Wire critical section callback before activation
                 handle.Proxy.OnCriticalSectionExited = () => handle.ReleaseClaimIfNeeded();
@@ -81,7 +92,7 @@ namespace FarEmerald.PlayForge
 
                 await handle.Proxy.Activate(handle.Cts.Token, handle.Data);
             }
-            catch (OperationCanceledException)
+            catch (Exception ex)
             {
                 // Ability in execution is interrupted (cancelled)
             }
@@ -94,7 +105,7 @@ namespace FarEmerald.PlayForge
             }
         }
 
-        public void Inject(IAbilityInjection injection)
+        public void Inject(ISequenceInjection injection)
         {
             if (!IsActive) return;
 
@@ -130,6 +141,12 @@ namespace FarEmerald.PlayForge
         public override string ToString()
         {
             return $"{Spec}";
+        }
+        public IEnumerable<Tag> GetGrantedTags()
+        {
+            foreach (var t in Spec.Base.Tags.PassiveGrantedTags) yield return t;
+            if (!IsActive) yield break;
+            foreach (var t in Spec.Base.Tags.ActiveGrantedTags) yield return t;
         }
     }
 }

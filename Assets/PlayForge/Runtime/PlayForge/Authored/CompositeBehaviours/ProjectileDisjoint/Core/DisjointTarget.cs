@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using UnityEngine;
 
 namespace FarEmerald.PlayForge
 {
@@ -10,9 +9,9 @@ namespace FarEmerald.PlayForge
     public class DisjointTarget : ITarget
     {
         private ITarget original;
-        private DisjointTransformPacket packet;
+        private StaticTargetingPacket packet;
 
-        public DisjointTarget(ITarget original, DisjointTransformPacket packet)
+        public DisjointTarget(ITarget original, StaticTargetingPacket packet)
         {
             this.original = original;
             this.packet = packet;
@@ -30,21 +29,37 @@ namespace FarEmerald.PlayForge
         {
             return new List<Tag>();
         }
-        public int GetWeight(Tag _tag)
+        public int GetTagWeight(Tag _tag)
         {
             return 0;
+        }
+        public bool QueryTags(TagQuery query)
+        {
+            return false;
+        }
+        public void CompileGrantedTags()
+        {
+            
         }
         public bool ApplyGameplayEffect(GameplayEffectSpec spec)
         {
             return false;
         }
-        public void RemoveGameplayEffect(GameplayEffect effect)
+        public bool RemoveGameplayEffect(GameplayEffect effect)
         {
-            
+            return false;
         }
         public GameplayEffectSpec GenerateEffectSpec(IEffectOrigin origin, GameplayEffect GameplayEffect)
         {
             return original.GenerateEffectSpec(origin, GameplayEffect);
+        }
+        public bool FindLevelSystem(out SystemLevelsComponent lvlSystem)
+        {
+            return original.FindLevelSystem(out lvlSystem);
+        }
+        public bool FindItemSystem(out ItemSystemComponent itemSystem)
+        {
+            return original.FindItemSystem(out itemSystem);
         }
         public bool FindAttributeSystem(out AttributeSystemComponent attrSystem)
         {
@@ -54,107 +69,31 @@ namespace FarEmerald.PlayForge
         {
             return original.FindAbilitySystem(out abilSystem);
         }
-        public bool TryGetAttributeValue(Attribute attribute, out AttributeValue value)
+        public bool TryGetAttributeValue(IAttribute attribute, out AttributeValue value)
         {
             value = default;
             return false;
         }
-        public bool TryModifyAttribute(Attribute attribute, SourcedModifiedAttributeValue sourcedModifiedValue, bool runEvents = true)
+        public bool TryModifyAttribute(IAttribute attribute, SourcedModifiedAttributeValue sourcedModifiedValue, bool runEvents = true)
         {
             return false;
         }
-        public AbstractTransformPacket AsTransform()
+        public AbstractTargetingPacket GetTargetingPacket()
         {
             return packet;
         }
+        public void MarkDead()
+        {
+            // Does nothing
+        }
+        public bool IsDead => true;
         public static DisjointTarget Generate(ITarget _target)
         {
             return new DisjointTarget(
                 _target,
-                new DisjointTransformPacket(_target.AsTransform())
+                new StaticTargetingPacket(_target.GetTargetingPacket())
             );
         }
     }
 
-    public abstract class AbstractTransformPacket
-    {
-        public abstract Vector3 position { get; set; }
-        public abstract Quaternion rotation { get; set; }
-        public abstract Vector3 scale { get; set; }
-    }
-
-    public class DefaultTransformPacket : AbstractTransformPacket
-    {
-        private Transform transform;
-
-        public DefaultTransformPacket(Transform transform)
-        {
-            this.transform = transform;
-        }
-
-        public override Vector3 position
-        {
-            get => transform.position;
-            set => transform.position = value;
-        }
-
-        public override Quaternion rotation
-        {
-            get => transform.rotation;
-            set => transform.rotation = value;
-        }
-            
-        public override Vector3 scale
-        {
-            get => transform.localScale;
-            set => transform.localScale = value;
-        }
-    }
-
-    public class DisjointTransformPacket : AbstractTransformPacket
-    {
-        private Vector3 _position;
-        private Quaternion _rotation;
-        private Vector3 _scale;
-        
-        public DisjointTransformPacket(Vector3 _pos, Quaternion _rot, Vector3 _scale)
-        {
-            _position = _pos;
-            _rotation = _rot;
-            this._scale = _scale;
-        }
-
-        public DisjointTransformPacket(Transform transform)
-        {
-            _position = transform.position;
-            _rotation = transform.rotation;
-            _scale = transform.localScale;
-        }
-
-        public DisjointTransformPacket(AbstractTransformPacket other)
-        {
-            _position = other.position;
-            _rotation = other.rotation;
-            _scale = other.scale;
-        }
-
-        public override Vector3 position
-        {
-            get => _position;
-            set => _position = value;
-        }
-
-        public override Quaternion rotation
-        {
-            get => _rotation;
-            set => _rotation = value;
-        }
-            
-        public override Vector3 scale
-        {
-            get => _scale;
-            set => _scale = value;
-        }
-    }
-    
 }

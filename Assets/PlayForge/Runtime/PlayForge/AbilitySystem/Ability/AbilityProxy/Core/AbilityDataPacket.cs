@@ -1,47 +1,86 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using Unity.VisualScripting;
-using UnityEngine;
+﻿using UnityEngine;
 
 namespace FarEmerald.PlayForge
 {
-    public class AbilityDataPacket : ProcessDataPacket
+    /// <summary>
+    /// Data packet for ability execution. Extends SequenceDataPacket so that
+    /// abilities run through the TaskSequence system natively — the same packet
+    /// flows through targeting, execution stages, callbacks, and ProcessControl.
+    ///
+    /// IMPORTANT: Ability tasks must be stateless. All per-activation data
+    /// flows through this packet, NOT as fields on the task itself.
+    /// </summary>
+    public class AbilityDataPacket : SequenceDataPacket
     {
-        public IEffectOrigin Spec;
+        public readonly IEffectOrigin EffectOrigin;
+        public readonly AbilitySystemComponent.AbilityActivationRequest Request;
+        public bool UsageEffectsApplied { get; set; }
 
-        private AbilityDataPacket(IEffectOrigin spec)
+        /// <summary>
+        /// Set by targeting tasks when targeting fails (e.g. invalid target selected with BreakRuntimeOnInvalid).
+        /// Checked by AbilitySpecContainer to cancel the ability before execution proceeds.
+        /// </summary>
+        public bool TargetingFailed { get; set; }
+
+        public AbilitySystemComponent System => Request.System;
+        public AbilitySystemCallbacks Callbacks => System.Callbacks;
+
+        /// <summary>Resolves the AbilitySpec (convenience cast from IEffectOrigin).</summary>
+        public AbilitySpec AbilitySpec => EffectOrigin as AbilitySpec;
+
+        private AbilityDataPacket(IEffectOrigin effectOrigin, AbilitySystemComponent.AbilityActivationRequest request)
         {
-            Spec = spec;
-            Handler = spec.GetOwner();
-            
+            EffectOrigin = effectOrigin;
+            Request = request;
+
             AddPayload(
-                Tags.PAYLOAD_SOURCE,
-                spec.GetOwner()
+                Tags.SOURCE,
+                effectOrigin.GetOwner()
             );
         }
 
-        public static AbilityDataPacket GenerateRoot()
+        public static AbilityDataPacket GenerateFrom(AbilitySpecContainer container, AbilitySystemComponent asc)
         {
-            return new AbilityDataPacket(IEffectOrigin.GenerateSourceDerivation(GameRoot.Instance));
-        }
-
-        public static AbilityDataPacket GenerateFrom(IEffectOrigin spec, bool useImplicitTargeting)
-        {
-            AbilityDataPacket data = new AbilityDataPacket(spec);
-            
-            if (useImplicitTargeting)
-            {
-                data.AddPayload(Tags.PAYLOAD_TARGET, spec.GetOwner());
-            }
-            
+            var req = asc.CreateActivationRequest(container.Index);
+            var data = GenerateFrom(container.Spec, req, false, container.Spec.Base.Behaviour.ImplicitTag);
             return data;
         }
-        
+
+        public static AbilityDataPacket GenerateFrom(IEffectOrigin spec, AbilitySystemComponent.AbilityActivationRequest req, bool useImplicitTargeting, Tag implicitTargetingTag)
+        {
+            var data = new AbilityDataPacket(spec, req);
+
+            if (useImplicitTargeting)
+            {
+                data.SetPrimary(implicitTargetingTag, spec.GetOwner().GetTargetingPacket());
+            }
+
+            data.AppendPath($"GAS[{spec.GetOwner().GetName()}]");
+            data.AppendPath($"Ability[{spec.GetReadableDefinition().GetName()}]");
+            return data;
+        }
+
+        #region Readable Definition
+
+        public override string GetName()
+        {
+            return $"AbilityDataPacket.{EffectOrigin.GetReadableDefinition().GetName()}";
+        }
+        public override string GetDescription()
+        {
+            return $"Active data packet for an active ability runtime: {EffectOrigin.GetReadableDefinition().GetName()}: {EffectOrigin.GetReadableDefinition().GetDescription()}";
+        }
+        public override Texture2D GetPrimaryIcon()
+        {
+            return EffectOrigin.GetReadableDefinition().GetPrimaryIcon();
+        }
+
+        #endregion
+
         #region Common
 
-        public bool TryGetTarget(EProxyDataValueTarget policy, out ITarget target) => TryGet(Tags.PAYLOAD_TARGET, policy, out target);
-        public bool TryGetFirstTarget(out ITarget target) => TryGetFirst(Tags.PAYLOAD_TARGET, out target);
+        public bool TryGetTarget(EDataTarget policy, out ITarget target) => TryGet(Tags.TARGET_REAL, policy, out target);
+        public bool TryGetFirstTarget(out ITarget target) => TryGetFirst(Tags.TARGET_REAL, out target);
 
         #endregion
     }

@@ -14,13 +14,15 @@ namespace FarEmerald.PlayForge
     [Serializable]
     public class AbilityBehaviour
     {
-        [Header("Targeting Instructions")]
+        [SerializeReference]
+        public AbstractTargetingAbilityTask Targeting;
         
-        public AbstractTargetingAbilityTask targeting;
         [Tooltip("Implicitly provides the casting system as a target.")]
         public bool UseImplicitTargeting = true;
-        
-        [Header("Proxy Stages")]
+        [FormerlySerializedAs("ImplicitTargetingTag")] public Tag ImplicitTag = Tags.TARGET;
+
+        [SerializeReference] 
+        public List<AbstractSetAssetsTask> AssetLoaders = new();
         
         public List<AbilityTaskBehaviourStage> Stages;
 
@@ -33,12 +35,18 @@ namespace FarEmerald.PlayForge
     [Serializable]
     public class AbilityTaskBehaviourStage
     {
-        public IProxyStagePolicy StagePolicy;
-        public List<AbstractAbilityTask> Tasks;
+        /// <summary>
+        /// Describes when the Stage should be considered complete
+        /// </summary>
+        [SerializeReference]
+        public IAbilityProxyStagePolicy StagePolicy = new AllProxyStagePolicy();
+        
+        [SerializeReference]
+        public List<AbstractAbilityTask> Tasks = new();
         
         [Space(5)]
         
-        [Tooltip("After this stage, should the ability usage effects be applied?")]
+        [Tooltip("At the beginning of this stage, should the ability usage effects be applied?")]
         public bool ApplyUsageEffects;
     }
 
@@ -47,4 +55,6 @@ namespace FarEmerald.PlayForge
         Any,
         All
     }
+    
+    
 }
