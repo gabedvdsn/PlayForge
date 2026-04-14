@@ -39,7 +39,7 @@ namespace FarEmerald.PlayForge
     {
         public override bool OnContainerInject(AbilitySpecContainer container, AbilityDataPacket data)
         {
-            container.cts?.Cancel();
+            // CTS cancellation is handled per-handle in AbilitySpecContainer.Inject
             return true;
         }
 

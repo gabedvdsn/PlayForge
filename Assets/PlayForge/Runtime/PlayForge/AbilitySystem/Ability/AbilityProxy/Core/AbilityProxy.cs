@@ -47,10 +47,17 @@ namespace FarEmerald.PlayForge
 
         private bool usageEffectsApplied;
 
+        public bool usageEffectsApplied;
+
+        private int _activeCriticalStages;
+        public bool HasAnyCriticalStage { get; private set; }
+        public Action OnCriticalSectionExited { get; set; }
+
         public AbilityProxy(AbilityBehaviour behaviour)
         {
             StageIndex = -1;
             Behaviour = behaviour;
+            HasAnyCriticalStage = Behaviour.Stages != null && Behaviour.Stages.Any(s => s.Tasks.Any(t => t.IsCriticalSection));
         }
 
         /// <summary>
@@ -80,8 +87,7 @@ namespace FarEmerald.PlayForge
             stageSources = new Dictionary<int, CancellationTokenSource>();
             maintainedStages = 0;
             usageEffectsApplied = false;
-            ActiveRelay = null;
-            TargetingRelay = null;
+            _activeCriticalStages = 0;
         }
 
         public void Clean()
@@ -382,9 +388,13 @@ namespace FarEmerald.PlayForge
 
         private async UniTask ActivateStageLegacy(AbilityTaskBehaviourStage stage, int stageIndex, AbilityDataPacket data, CancellationToken token)
         {
-            var asc = data.EffectOrigin.GetOwner().ToGAS().GetAbilitySystem();
+            bool isCriticalStage = stage.Tasks.Any(t => t.IsCriticalSection);
+            if (isCriticalStage) _activeCriticalStages++;
+
+            var asc = data.Spec.GetOwner().AsGAS().GetAbilitySystem();
             if (asc is null)
             {
+                if (isCriticalStage && --_activeCriticalStages == 0) OnCriticalSectionExited?.Invoke();
                 if (stageIndex == StageIndex) nextStageSignal?.TrySetResult();
                 else maintainedStages -= 1;
                 return;
@@ -436,10 +446,13 @@ namespace FarEmerald.PlayForge
             {
                 stageSources.Remove(stageIndex);
 
+                // If this stage is not maintained (hence stageIndex == StageIndex), then set next stage signal
                 if (stageIndex == StageIndex) nextStageSignal?.TrySetResult();
                 else maintainedStages -= 1;
 
-                await UniTask.SwitchToMainThread(token);
+                if (isCriticalStage && --_activeCriticalStages == 0) OnCriticalSectionExited?.Invoke();
+
+                await UniTask.SwitchToMainThread(stageToken);
                 asc.Callbacks.AbilityStageEnded(AbilityCallbackStatus.GenerateForStageEvent(data, stage, !canceled && err is null));
 
                 stageCts.Dispose();

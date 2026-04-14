@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading;
 using Cysharp.Threading.Tasks;
 using UnityEngine;
@@ -11,23 +12,10 @@ namespace FarEmerald.PlayForge
         public AbilitySpec Spec;
         public readonly int Index;
 
-        public int ActiveCount;
-        //public int ActiveCount => activeRuntimes.Count + (cts is not null ? 1 : 0);
-        public bool IsActive => ActiveCount > 0;
-        public bool IsTargeting { get; private set; }
-        public bool IsClaiming => IsTargeting || IsActive;
+        public bool IsActive => _activeHandles.Count > 0;
+        public bool IsClaiming => _activeHandles.Any(h => !h.ClaimReleased && (h.IsTargeting || h.IsExecuting));
 
-        private AbilityDataPacket activeData;
-        
-        /// <summary>The compiled execution TaskSequence (reusable across activations).</summary>
-        private TaskSequence CompiledSequence { get; set; }
-
-        /// <summary>The compiled targeting TaskSequence (reusable, null if no targeting task).</summary>
-        private TaskSequence CompiledTargeting { get; set; }
-        
-        private AbilityProxy Proxy;
-        public CancellationTokenSource cts;
-        private CancellationTokenSource targetingCts;
+        private readonly List<AbilityActivationHandle> _activeHandles = new();
 
         private Dictionary<int, ActiveRuntimes> activeRuntimes;
         
@@ -41,76 +29,47 @@ namespace FarEmerald.PlayForge
         public AbilitySpecContainer(AbilitySpec spec, int abilityIndex)
         {
             Spec = spec;
-            Index = abilityIndex;
-            
-            
-            Proxy = Spec.Base.Behaviour.GenerateProxy();
-
-            activeRuntimes = new Dictionary<int, ActiveRuntimes>();
-            
-            var abilityName = Spec.Base?.GetName() ?? $"Anon-Ability[{abilityIndex}]";
-            Proxy.CompileSequence(abilityName);
-
-            ResetTokens();
         }
 
         public bool ActivateAbility(AbilityDataPacket implicitData)
         {
-            if (IsClaiming) return false; // Prevent reactivation mid-use
-            if (!Spec.Source.ToGASComponentData().AbilitySystem.ClaimActive(this, implicitData)) return false;
+            if (IsClaiming) return false;
+            if (!Spec.Owner.AsData().AbilitySystem.ClaimActive(this, implicitData)) return false;
 
-            activeData = implicitData;
-            activeData.SetPrimary(Tags.DERIVATION, Spec);
+            implicitData.AddPayload(Tags.PAYLOAD_DERIVATION, Spec);
 
-            Reset();
+            var handle = new AbilityActivationHandle(this, implicitData);
+            _activeHandles.Add(handle);
 
-            AwaitAbility().Forget();
+            AwaitAbility(handle).Forget();
 
             return true;
         }
 
-        private void Reset()
-        {
-            ActiveCount = 0;
-            IsTargeting = false;
-
-            ResetTokens();
-        }
-
-        private async UniTaskVoid AwaitAbility()
+        private async UniTaskVoid AwaitAbility(AbilityActivationHandle handle)
         {
             bool targetingCancelled = false;
             try
             {
-                IsTargeting = true;
-                await Proxy.ActivateTargetingTask(targetingCts.Token, activeData);
+                handle.IsTargeting = true;
+                await handle.Proxy.ActivateTargetingTask(handle.TargetingCts.Token, handle.Data);
             }
             catch (OperationCanceledException)
             {
-                // Targeting is cancelled (either externally or via BreakAbilityRuntime)
                 targetingCancelled = true;
             }
             finally
             {
-                IsTargeting = false;
+                handle.IsTargeting = false;
 
-                // Check the explicit targeting failure flag set by targeting tasks
-                if (activeData != null && activeData.TargetingFailed)
-                {
-                    targetingCancelled = true;
-                }
-
-                // Validate that the target meets activation requirements
-                if (!targetingCancelled && activeData != null
-                                        && activeData.TryGetFirstTarget(out var target)
-                                        && !Spec.ValidateAllActivationRequirements(target, activeData))
+                if (handle.Data.TryGetFirstTarget(out var target) && !Spec.ValidateActivationRequirements(target, handle.Data))
                 {
                     targetingCancelled = true;
                 }
 
                 if (targetingCancelled)
                 {
-                    CleanAndRelease();
+                    CleanHandle(handle);
                 }
             }
 
@@ -118,81 +77,65 @@ namespace FarEmerald.PlayForge
 
             try
             {
-                ActiveCount += 1;
+                handle.IsExecuting = true;
 
                 Spec.Source.CompileGrantedTags();
 
-                await Proxy.Activate(cts.Token, activeData);
+                // Wire critical section callback before activation
+                handle.Proxy.OnCriticalSectionExited = () => handle.ReleaseClaimIfNeeded();
+
+                // If no critical stages, release claim immediately
+                if (!handle.Proxy.HasAnyCriticalStage)
+                {
+                    handle.ReleaseClaimIfNeeded();
+                }
+
+                await handle.Proxy.Activate(handle.Cts.Token, handle.Data);
             }
             catch (Exception ex)
             {
                 // Ability in execution is interrupted (cancelled)
-                // ALWAYS as a result of an injection (break or interrupt)
-                Debug.LogException(ex);
             }
             finally
             {
-                ActiveCount -= 1;
+                handle.IsExecuting = false;
+                Spec.Owner.GetTagCache().RemoveTags(Spec.Base.Tags.ActiveGrantedTags);
 
-                Spec.Source.CompileGrantedTags();
-
-                CleanAndRelease();
+                CleanHandle(handle);
             }
         }
 
         public void Inject(ISequenceInjection injection)
         {
-            if (!IsClaiming) return;
-            Proxy.Inject(injection, activeData);
+            if (!IsActive) return;
+
+            // Take a snapshot since injection may modify the list
+            var handles = _activeHandles.ToArray();
+            foreach (var handle in handles)
+            {
+                injection.OnContainerInject(this);
+                handle.Proxy.Inject(injection, handle.Data);
+
+                // For interrupt injections, cancel the appropriate tokens
+                if (injection is InterruptInjection)
+                {
+                    if (handle.IsTargeting) handle.TargetingCts?.Cancel();
+                    if (handle.IsExecuting) handle.Cts?.Cancel();
+                }
+            }
         }
 
-        public void CleanAndRelease()
+        internal void OnHandleClaimReleased(AbilityActivationHandle handle)
         {
-            Proxy.Clean();
-
-            CleanTargetingToken();
-            CleanActivationToken();
-
-            // Capture data before nulling — ReleaseClaim needs it for ActiveCache cleanup.
-            var data = activeData;
-            activeData = null;
-
-            var asc = Spec.Source.ToGASComponentData().AbilitySystem;
-            asc.ReleaseClaim(this, data);
-
-            // Process the activation queue AFTER this container is fully clean.
-            // This prevents re-entrant activation from corrupting activeData:
-            // without this separation, EndAbilityActivation could trigger ActivateAbility
-            // on this same container (setting activeData to new data), and then the caller
-            // of CleanAndRelease would continue executing with the wrong activeData.
-            asc.EndAbilityActivation();
+            Spec.Owner.AsData().AbilitySystem.ReleaseClaim(this, handle.Data);
         }
 
-        private void CleanTargetingToken()
+        private void CleanHandle(AbilityActivationHandle handle)
         {
-            if (targetingCts is null) return;
-
-            if (!targetingCts.IsCancellationRequested) targetingCts?.Cancel();
-            targetingCts?.Dispose();
-            targetingCts = null;
-        }
-
-        private void CleanActivationToken()
-        {
-            if (cts is null) return;
-
-            if (!cts.IsCancellationRequested) cts?.Cancel();
-            cts?.Dispose();
-            cts = null;
-        }
-
-        private void ResetTokens()
-        {
-            CleanTargetingToken();
-            CleanActivationToken();
-
-            cts = new CancellationTokenSource();
-            targetingCts = new CancellationTokenSource();
+            handle.ReleaseClaimIfNeeded();
+            handle.Proxy.Clean();
+            handle.CleanTokens();
+            _activeHandles.Remove(handle);
         }
 
         public override string ToString()

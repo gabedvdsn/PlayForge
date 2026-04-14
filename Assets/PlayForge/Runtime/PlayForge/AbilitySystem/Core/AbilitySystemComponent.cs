@@ -332,13 +332,13 @@ namespace FarEmerald.PlayForge
 
         public void Inject(int index, ISequenceInjection injection)
         {
-            if (!AbilityCache.TryGetValue(index, out var container) || !container.IsClaiming) return;
+            if (!AbilityCache.TryGetValue(index, out var container) || !container.IsActive) return;
             container.Inject(injection);
         }
-        
-        public void Inject(Ability ability, ISequenceInjection injection)
+
+        public void Inject(Ability ability, IAbilityInjection injection)
         {
-            if (!TryGetAbilityContainer(ability, out var container) || !container.IsClaiming) return;
+            if (!TryGetAbilityContainer(ability, out var container) || !container.IsActive) return;
             container.Inject(injection);
         }
         
@@ -346,8 +346,7 @@ namespace FarEmerald.PlayForge
         {
             foreach (int index in ActiveCache[policy])
             {
-                if (!AbilityCache[index].IsClaiming) 
-                    ReleaseClaim(AbilityCache[index], null);
+                if (!AbilityCache[index].IsActive) continue;
                 AbilityCache[index].Inject(injection);
             }
         }
