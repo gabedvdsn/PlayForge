@@ -19,6 +19,7 @@ namespace FarEmerald.PlayForge
         [Tooltip("Uses Object.Instantiate and Object.Destroy when null")]
         [HideInInspector] [SerializeReference]
         public AbstractMonoProcessInstantiator Instantiator;
+        public bool UseHandlerInstantiator;
 
         [Tooltip("When false, this process won't be affected by sibling pause/terminate cascade")]
         [HideInInspector]
@@ -33,7 +34,7 @@ namespace FarEmerald.PlayForge
         private bool _initialized;
         public bool IsInitialized => _initialized;
         public ProcessRelay Relay;
-        
+
         public readonly Dictionary<int, ProcessRelay> HandlerRelays = new();
         
         #region Readable Definition
@@ -197,6 +198,10 @@ namespace FarEmerald.PlayForge
         public bool HandlerVoidProcess(ProcessRelay relay)
         {
             return HandlerRelays.Remove(relay.CacheIndex);
+        }
+        public AbstractMonoProcessInstantiator GetInstantiator(AbstractMonoProcess mono)
+        {
+            return Instantiator;
         }
     }
 }

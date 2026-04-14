@@ -16,6 +16,8 @@ namespace FarEmerald.PlayForge
         public void HandlerSubscribeProcess(ProcessRelay relay);
 
         public bool HandlerVoidProcess(ProcessRelay relay);
+
+        public AbstractMonoProcessInstantiator GetInstantiator(AbstractMonoProcess mono);
     }
 
     public static class ProcessHandlerUtil

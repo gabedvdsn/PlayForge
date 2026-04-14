@@ -26,6 +26,7 @@ namespace FarEmerald.PlayForge
         
         public readonly Dictionary<int, ProcessRelay> HandlerRelays = new();
 
+        public AbstractMonoProcessInstantiator CustomInstantiator;
         
         protected AbstractRuntimeProcess()
         {
@@ -166,6 +167,10 @@ namespace FarEmerald.PlayForge
         public bool HandlerVoidProcess(ProcessRelay relay)
         {
             return HandlerRelays.Remove(relay.CacheIndex);
+        }
+        public AbstractMonoProcessInstantiator GetInstantiator(AbstractMonoProcess mono)
+        {
+            return CustomInstantiator;
         }
     }
 }

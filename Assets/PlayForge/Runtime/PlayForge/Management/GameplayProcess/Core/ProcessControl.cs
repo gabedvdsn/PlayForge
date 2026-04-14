@@ -26,6 +26,8 @@ namespace FarEmerald.PlayForge
         [Space]
         public bool OutputLogs;
         public bool DetailedLogs = true;
+
+        public AbstractMonoProcessInstantiator CustomInstantiator;
         
         public EProcessControlState State { get; private set; }
 
@@ -1410,7 +1412,10 @@ namespace FarEmerald.PlayForge
         {
             return true;
         }
-        
+        public AbstractMonoProcessInstantiator GetInstantiator(AbstractMonoProcess mono)
+        {
+            return CustomInstantiator;
+        }
         #endregion
     }
 

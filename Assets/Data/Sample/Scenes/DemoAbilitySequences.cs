@@ -43,7 +43,7 @@ namespace FarEmerald.PlayForge.Examples
             return TaskSequenceBuilder.Create("Fireball")
                 .WithLifecycle(EProcessLifecycle.Synchronous)
                 .WithStepTiming(EProcessStepTiming.Update)
-                .WithCriticalFlag(true)
+                //.WithCriticalFlag(true)
                 .Stage(s => s
                     .WithName("Setup")
                     .Do(d =>

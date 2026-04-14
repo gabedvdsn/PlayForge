@@ -13,22 +13,19 @@ namespace FarEmerald.PlayForge
 
     public class AnyProxyStagePolicy : IAbilityProxyStagePolicy
     {
-        public async UniTask AwaitStageActivation(AbilityProxy proxy, AbilityTaskBehaviourStage stage, UniTask[] tasks, AbilityDataPacket data, AbilitySystemCallbacks callbacks,
+        public UniTask AwaitStageActivation(AbilityProxy proxy, AbilityTaskBehaviourStage stage, UniTask[] tasks, AbilityDataPacket data, AbilitySystemCallbacks callbacks,
             CancellationTokenSource stageCts)
         {
-            var watched = proxy.GetWatchedTasksLegacy(tasks, stage, data, callbacks, false);
-            await UniTask.WhenAny(watched);
-            stageCts.Cancel();
+            return UniTask.CompletedTask;
         }
     }
     
     public class AllProxyStagePolicy : IAbilityProxyStagePolicy
     {
-        public async UniTask AwaitStageActivation(AbilityProxy proxy, AbilityTaskBehaviourStage stage, UniTask[] tasks, AbilityDataPacket data, AbilitySystemCallbacks callbacks,
+        public UniTask AwaitStageActivation(AbilityProxy proxy, AbilityTaskBehaviourStage stage, UniTask[] tasks, AbilityDataPacket data, AbilitySystemCallbacks callbacks,
             CancellationTokenSource stageCts)
         {
-            var watched = proxy.GetWatchedTasksLegacy(tasks, stage, data, callbacks, true);
-            await UniTask.WhenAll(watched);
+            return UniTask.CompletedTask;
         }
     }
 }

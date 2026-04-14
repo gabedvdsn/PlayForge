@@ -31,8 +31,16 @@ namespace FarEmerald.PlayForge
         public override void InitializeWrapper()
         {
             if (!StoredMono) return;
-            
-            if (StoredMono.Instantiator is not null) activeMono = StoredMono.Instantiator.Create(StoredMono, Data, StoredMono.gameObject.scene.IsValid());
+
+            var inst = Handler?.GetInstantiator(StoredMono);
+            if (StoredMono.UseHandlerInstantiator && inst is not null)
+            {
+                activeMono = inst.Create(StoredMono, Data, StoredMono.gameObject.scene.IsValid());
+            }
+            else if (StoredMono.Instantiator is not null)
+            {
+                activeMono = StoredMono.Instantiator.Create(StoredMono, Data, StoredMono.gameObject.scene.IsValid());
+            }
             if (activeMono && activeMono.gameObject.scene.IsValid()) return;
             
             activeMono = StoredMono.gameObject.scene.IsValid() ? StoredMono : Object.Instantiate(StoredMono);

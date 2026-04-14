@@ -27,6 +27,8 @@ namespace FarEmerald.PlayForge
         public bool InUse = true;
         
         public readonly Dictionary<int, ProcessRelay> HandlerRelays = new();
+        
+        public AbstractMonoProcessInstantiator CustomInstantiator;
 
         public string Path { get; protected set; }
         public void AppendPath(string r)
@@ -374,7 +376,10 @@ namespace FarEmerald.PlayForge
         {
             return HandlerRelays.Remove(relay.CacheIndex);
         }
-        
+        public AbstractMonoProcessInstantiator GetInstantiator(AbstractMonoProcess mono)
+        {
+            return CustomInstantiator;
+        }
         #endregion
         public virtual string GetName()
         {

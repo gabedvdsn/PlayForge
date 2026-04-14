@@ -66,11 +66,6 @@ MonoBehaviour:
       Tasks:
       - rid: 7261146403316695446
       ApplyUsageEffects: 0
-    - StagePolicy:
-        rid: 7261146403316695444
-      Tasks:
-      - rid: 7261146403316695445
-      ApplyUsageEffects: 0
   SourceActivationRules:
   - rid: 1955962478581514659
   - rid: 1955962478581514660
@@ -94,8 +89,6 @@ MonoBehaviour:
   references:
     version: 2
     RefIds:
-    - rid: -2
-      type: {class: , ns: , asm: }
     - rid: 1955962478581514659
       type: {class: CooldownValidation, ns: FarEmerald.PlayForge, asm: Assembly-CSharp}
       data: 
@@ -111,17 +104,10 @@ MonoBehaviour:
     - rid: 7261146403316695444
       type: {class: AllProxyStagePolicy, ns: FarEmerald.PlayForge, asm: Assembly-CSharp}
       data: 
-    - rid: 7261146403316695445
-      type: {class: SetAssetsAbilityTask, ns: FarEmerald.PlayForge, asm: Assembly-CSharp}
-      data:
-        Tag:
-          Name: Assetsas0D8m6eBt_MlSQb0FSGh4NV4XOSxf6qas0D8m6eBt_MlSQb0FSGh4NV4X
-        Assets:
-        - {fileID: 11400000, guid: 53a3e65d1d4a3eb49bce88eed63519d4, type: 2}
     - rid: 7261146403316695446
       type: {class: RunSequenceTask, ns: FarEmerald.PlayForge, asm: Assembly-CSharp}
       data:
-        SequenceReference:
+        Sequence:
           _typeName: FarEmerald.PlayForge.Examples.DemoAbilitySequences, Assembly-CSharp,
             Version=0.0.0.0, Culture=neutral, PublicKeyToken=null
           _methodName: DashStrikeSequence

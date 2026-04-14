@@ -10,7 +10,12 @@ namespace FarEmerald.PlayForge
 {
     [Serializable]
     public abstract class AbstractSetAssetsTask : AbstractAbilityTask
-    { }
+    {
+        public override UniTask Activate(AbilityDataPacket data, CancellationToken token)
+        {
+            return UniTask.CompletedTask;
+        }
+    }
     
     public class SetAssetsTask : AbstractSetAssetsTask
     {
@@ -19,17 +24,16 @@ namespace FarEmerald.PlayForge
         [SerializeReference] public BaseForgeAsset[] Assets;
 
         public override bool IsCriticalSection => false;
-        
-        public override UniTask Activate(AbilityDataPacket data, CancellationToken token)
+
+        public override void Prepare(AbilityDataPacket data)
         {
-            if (string.IsNullOrEmpty(Tag.Name)) return UniTask.CompletedTask;
+            if (string.IsNullOrEmpty(Tag.Name)) return;
+            
             foreach (var asset in Assets)
             {
                 if (asset is null) continue;
                 data.AddPayload(Tag, asset);
             }
-            
-            return UniTask.CompletedTask;
         }
     }
     
@@ -40,16 +44,14 @@ namespace FarEmerald.PlayForge
 
         public override bool IsCriticalSection => false;
         
-        public override UniTask Activate(AbilityDataPacket data, CancellationToken token)
+        public override void Prepare(AbilityDataPacket data)
         {
-            if (string.IsNullOrEmpty(Tag.Name)) return UniTask.CompletedTask;
+            if (string.IsNullOrEmpty(Tag.Name)) return;
             foreach (var asset in Effects)
             {
                 if (asset is null) continue;
                 data.AddPayload(Tag, asset);
             }
-            
-            return UniTask.CompletedTask;
         }
     }
     
@@ -61,16 +63,14 @@ namespace FarEmerald.PlayForge
 
         public override bool IsCriticalSection => false;
         
-        public override UniTask Activate(AbilityDataPacket data, CancellationToken token)
+        public override void Prepare(AbilityDataPacket data)
         {
-            if (string.IsNullOrEmpty(Tag.Name)) return UniTask.CompletedTask;
+            if (string.IsNullOrEmpty(Tag.Name)) return;
             foreach (var asset in Entities)
             {
                 if (asset is null) continue;
                 data.AddPayload(Tag, asset);
             }
-            
-            return UniTask.CompletedTask;
         }
     }
     
@@ -82,16 +82,14 @@ namespace FarEmerald.PlayForge
 
         public override bool IsCriticalSection => false;
         
-        public override UniTask Activate(AbilityDataPacket data, CancellationToken token)
+        public override void Prepare(AbilityDataPacket data)
         {
-            if (string.IsNullOrEmpty(Tag.Name)) return UniTask.CompletedTask;
+            if (string.IsNullOrEmpty(Tag.Name)) return;
             foreach (var asset in Attributes)
             {
                 if (asset is null) continue;
                 data.AddPayload(Tag, asset);
             }
-            
-            return UniTask.CompletedTask;
         }
     }
     
@@ -103,16 +101,14 @@ namespace FarEmerald.PlayForge
 
         public override bool IsCriticalSection => false;
         
-        public override UniTask Activate(AbilityDataPacket data, CancellationToken token)
+        public override void Prepare(AbilityDataPacket data)
         {
-            if (string.IsNullOrEmpty(Tag.Name)) return UniTask.CompletedTask;
+            if (string.IsNullOrEmpty(Tag.Name)) return;
             foreach (var asset in AttributeSets)
             {
                 if (asset is null) continue;
                 data.AddPayload(Tag, asset);
             }
-            
-            return UniTask.CompletedTask;
         }
     }
     
@@ -123,16 +119,14 @@ namespace FarEmerald.PlayForge
 
         public override bool IsCriticalSection => false;
         
-        public override UniTask Activate(AbilityDataPacket data, CancellationToken token)
+        public override void Prepare(AbilityDataPacket data)
         {
-            if (string.IsNullOrEmpty(Tag.Name)) return UniTask.CompletedTask;
+            if (string.IsNullOrEmpty(Tag.Name)) return;
             foreach (var asset in Abilities)
             {
                 if (asset is null) continue;
                 data.AddPayload(Tag, asset);
             }
-            
-            return UniTask.CompletedTask;
         }
     }
     
@@ -143,15 +137,13 @@ namespace FarEmerald.PlayForge
 
         public override bool IsCriticalSection => false;
         
-        public override UniTask Activate(AbilityDataPacket data, CancellationToken token)
+        public override void Prepare(AbilityDataPacket data)
         {
-            if (string.IsNullOrEmpty(Tag.Name)) return UniTask.CompletedTask;
+            if (string.IsNullOrEmpty(Tag.Name)) return;
             foreach (var asset in Tags)
             {
                 data.AddPayload(Tag, asset);
             }
-            
-            return UniTask.CompletedTask;
         }
     }
 }
