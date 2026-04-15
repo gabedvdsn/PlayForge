@@ -1,277 +1,122 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
+using FarEmerald.PlayForge.Extended;
 using Unity.VisualScripting;
 
 namespace FarEmerald.PlayForge
 {
-    public static class Tags
+    public static partial class Tags
     {
-        private static Dictionary<string, int> Library;
-        private static HashSet<int> used;
+        
+        // ═══════════════════════════════════════════════════════════════════════════
+        // Special Tags
+        // ═══════════════════════════════════════════════════════════════════════════
 
-        private const int _NULL = -1;
-        public static Tag NULL => Tag.Generate("NULL");
+        [ForgeContextDefault(ForgeContext.System, ForgeContext.Affiliation, ForgeContext.Debug)]
+        public static Tag SYSTEM => Tag.GenerateAsUnique("GameRoot");
+        
+        public static Tag NONE => Tag.GenerateAsUnique("None");
+        
+        [ForgeContextDefault(ForgeContext.Impact)]
+        public static Tag ALLOW => Tag.GenerateAsUnique("Always Allow");
 
-        public static void Initialize()
-        {
-            Library = new Dictionary<string, int>();
-            used = new HashSet<int>();
+        [ForgeContextDefault(ForgeContext.Impact)]
+        public static Tag DISALLOW => Tag.GenerateAsUnique("Never Allow");
+        
+        [ForgeContextDefault(ForgeContext.Debug, ForgeContext.Texture)]
+        public static Tag DEBUG => Tag.GenerateAsUnique("Debug");
+        
+        // ═══════════════════════════════════════════════════════════════════════════
+        // Base Tags
+        // ═══════════════════════════════════════════════════════════════════════════
+        
+        [ForgeContextDefault(ForgeContext.RetentionGroup)]
+        public static Tag IGNORE => Tag.GenerateAsUnique("Ignore");
+        
+        [ForgeContextDefault(ForgeContext.Texture)]
+        public static Tag PRIMARY => Tag.GenerateAsUnique("Primary");
+        
+        [ForgeContextDefault(ForgeContext.RetentionGroup)]
+        public static Tag DEFAULT => Tag.GenerateAsUnique("Default");
+        
+        [ForgeContextDefault(ForgeContext.RetentionGroup)]
+        public static Tag ADDITIONAL => Tag.GenerateAsUnique("Bonus");
+        
+        // ═══════════════════════════════════════════════════════════════════════════
+        // Classification Tags
+        // ═══════════════════════════════════════════════════════════════════════════
+        
+        [ForgeContextDefault(ForgeContext.Visibility)]
+        public static Tag ALWAYS_VISIBLE => Tag.GenerateAsUnique("Always Visible");
+        
+        [ForgeContextDefault(ForgeContext.Visibility)]
+        public static Tag NOT_VISIBLE => Tag.GenerateAsUnique("Not Visible");
+        
+        // ═══════════════════════════════════════════════════════════════════════════
+        // Mono Process Initialization Tags
+        // ═══════════════════════════════════════════════════════════════════════════
+        
+        [ForgeContextDefault(ForgeContext.Data)] public static Tag PARENT_TRANSFORM => Tag.GenerateAsUnique("Transform");
+        [ForgeContextDefault(ForgeContext.Data)] public static Tag POSITION => Tag.GenerateAsUnique("Position");
+        [ForgeContextDefault(ForgeContext.Data)] public static Tag ROTATION => Tag.GenerateAsUnique("Rotation");
+        
+        [ForgeContextDefault(ForgeContext.Data)] public static Tag GAMEPLAY_ABILITY_SYSTEM => Tag.GenerateAsUnique("GameplayAbilitySystem");
+        [ForgeContextDefault(ForgeContext.Data)] public static Tag DERIVATION => Tag.GenerateAsUnique("Derivation");
+        [ForgeContextDefault(ForgeContext.Data)] public static Tag AFFILIATION => Tag.GenerateAsUnique("Affiliation");
+        [ForgeContextDefault(ForgeContext.Data)] public static Tag SOURCE => Tag.GenerateAsUnique("Source");
+        [ForgeContextDefault(ForgeContext.Data)] public static Tag TARGET => Tag.GenerateAsUnique("Target");
+        [ForgeContextDefault(ForgeContext.Data)] public static Tag TARGET_REAL => Tag.GenerateAsUnique("TargetReal");
+        [ForgeContextDefault(ForgeContext.Data)] public static Tag TARGET_POS => Tag.GenerateAsUnique("TargetPosition");
+        [ForgeContextDefault(ForgeContext.Data)] public static Tag DATA => Tag.GenerateAsUnique("Data");
+        [ForgeContextDefault(ForgeContext.Data)] public static Tag ASSETS => Tag.GenerateAsUnique("Assets");
+        [ForgeContextDefault(ForgeContext.Data)] public static Tag EFFECTS => Tag.GenerateAsUnique("Effects");
+        [ForgeContextDefault(ForgeContext.Data)] public static Tag ABILITIES => Tag.GenerateAsUnique("Abilities");
+        [ForgeContextDefault(ForgeContext.Data)] public static Tag ENTITIES => Tag.GenerateAsUnique("Entities");
+        [ForgeContextDefault(ForgeContext.Data)] public static Tag ATTRIBUTES => Tag.GenerateAsUnique("Attributes");
+        [ForgeContextDefault(ForgeContext.Data)] public static Tag ATTRIBUTE_SETS => Tag.GenerateAsUnique("AttributeSets");
+        [ForgeContextDefault(ForgeContext.Data)] public static Tag TAGS => Tag.GenerateAsUnique("Tags");
+        [ForgeContextDefault(ForgeContext.Data)] public static Tag INDEX => Tag.GenerateAsUnique("Index");
+        [ForgeContextDefault(ForgeContext.Data)] public static Tag OBJECT => Tag.GenerateAsUnique("Object");
+        [ForgeContextDefault(ForgeContext.Data)] public static Tag GAMEOBJECT => Tag.GenerateAsUnique("GameObject");
+        [ForgeContextDefault(ForgeContext.Data)] public static Tag PROCESS => Tag.GenerateAsUnique("Process");
+        [ForgeContextDefault(ForgeContext.Data)] public static Tag DELTA => Tag.GenerateAsUnique("Delta");
+        [ForgeContextDefault(ForgeContext.Data)] public static Tag RADIUS => Tag.GenerateAsUnique("Radius");
+        [ForgeContextDefault(ForgeContext.Data)] public static Tag DURATION => Tag.GenerateAsUnique("Duration");
+        [ForgeContextDefault(ForgeContext.Data)] public static Tag DISTANCE => Tag.GenerateAsUnique("Distance");
+        [ForgeContextDefault(ForgeContext.Data)] public static Tag CENTER => Tag.GenerateAsUnique("Center");
+        [ForgeContextDefault(ForgeContext.Data)] public static Tag ORIGIN => Tag.GenerateAsUnique("Origin");
+        [ForgeContextDefault(ForgeContext.Data)] public static Tag DIMENSIONS => Tag.GenerateAsUnique("Dimensions");
+        [ForgeContextDefault(ForgeContext.Data)] public static Tag VECTOR => Tag.GenerateAsUnique("Vector");
+        [ForgeContextDefault(ForgeContext.Data)] public static Tag VECTOR2 => Tag.GenerateAsUnique("Vector2");
+        [ForgeContextDefault(ForgeContext.Data)] public static Tag VECTOR3 => Tag.GenerateAsUnique("Vector3");
+        [ForgeContextDefault(ForgeContext.Data)] public static Tag HEIGHT => Tag.GenerateAsUnique("Height");
+        [ForgeContextDefault(ForgeContext.Data)] public static Tag WAIT_FOR => Tag.GenerateAsUnique("WaitFor");
+        [ForgeContextDefault(ForgeContext.Data)] public static Tag ITERATIONS => Tag.GenerateAsUnique("Iterations");
+        [ForgeContextDefault(ForgeContext.Data)] public static Tag VALID => Tag.GenerateAsUnique("Valid");
+        [ForgeContextDefault(ForgeContext.Data)] public static Tag INVALID => Tag.GenerateAsUnique("Invalid");
+        [ForgeContextDefault(ForgeContext.Data)] public static Tag CAMERA => Tag.GenerateAsUnique("Camera");
+        [ForgeContextDefault(ForgeContext.Data)] public static Tag PROCESS_RELAY => Tag.GenerateAsUnique("ProcessRelay");
+        [ForgeContextDefault(ForgeContext.Data)] public static Tag CONTAINER => Tag.GenerateAsUnique("Container");
+        [ForgeContextDefault(ForgeContext.Data)] public static Tag UI => Tag.GenerateAsUnique("UI");
+        
+        // ═══════════════════════════════════════════════════════════════════════════
+        // Functional Tags
+        // ═══════════════════════════════════════════════════════════════════════════
+        
+        /// <summary>Used to communicate the act of targeting to the targeted entity</summary>
+        public static Tag TARGETED_INTENT => Tag.GenerateAsUnique("TargetedIntent");
+        
+        /// <summary>Used to communicate the act of targeting to the targeted entity</summary>
+        public static Tag PROJECTILE_SPEED => Tag.GenerateAsUnique("ProjectileSpeed");
+        
+        // ═══════════════════════════════════════════════════════════════════════════
+        // Report Tags
+        // ═══════════════════════════════════════════════════════════════════════════
 
-            RegisterDefined("NULL", _NULL);
-            
-            RegisterDefined();
-        }
-
-        #region Registration
+        /// <summary>Used to communicate the act of targeting to the targeted entity</summary>
+        public static Tag FAILED_TO_INITIALIZE => Tag.GenerateAsUnique("FailedToInitialize");
         
-        private static int nextFree = 0;
-        private static int last = 0;
-        private static string last_name = "";
-        
-        public static bool Register(string name)
-        {
-            if (Library.ContainsKey(name)) return false;
-            
-            return Register(name, nextFree++);
-        }
-        
-        public static bool Register(string name, int key)
-        {
-            int _key = key;
-            while (used.Contains(_key)) _key += 1;
-            
-            if (_key >= nextFree) nextFree = _key + 1;
-            
-            last = _key;
-            last_name = name;
-
-            Library[name] = _key;
-            used.Add(_key);
-
-            return true;
-        }
-        
-        private static int c_nextFree = 0;
-        private static int c_last = 0;
-        private static string c_last_name = "";
-        
-        public static void RegisterDefined(IEnumerable<string> names)
-        {
-            foreach (string name in names) RegisterDefined(name);
-        }
-
-        private static void RegisterDefined(int key)
-        {
-            if (used.Contains(key)) return;
-            
-            RegisterDefined($"DEF_{key}");
-        }
-        
-        private static void RegisterDefined(string name)
-        {
-            if (Library.ContainsKey(name)) return;
-            
-            RegisterDefined(name, c_nextFree);   
-        }
-
-        private static void RegisterDefined(string name, int key)
-        {
-            int _key = key;
-            while (used.Contains(_key)) _key -= 1;
-            
-            if (_key <= c_nextFree) c_nextFree = _key - 1;
-            
-            c_last = _key;
-            c_last_name = name;
-
-            Library[name] = _key;
-            used.Add(_key);
-        }
-        
-        #endregion
-        
-        #region Open
-        
-        public static Tag Get(string name)
-        {
-            return Tag.Generate(Library[name], name);
-        }
-
-        public static bool TryGet(string name, out Tag tag)
-        {
-            if (Library.TryGetValue(name, out int key))
-            {
-                tag = Tag.Generate(key, name);
-                return true;
-            }
-
-            tag = default;
-            return false;
-        }
-
-        public static IEnumerable<Tag> All()
-        {
-            return Library.Keys.Select(name => Tag.Generate(Library[name], name));
-        }
-        
-        #endregion
-        
-        #region Closed
-
-        private static Tag Get(int key, string name = "")
-        {
-            return Tag.Generate(key, name);
-        }
-
-        #region System Defined
-
-        private static void RegisterDefined()
-        {
-            RegisterDefined(_AFFILIATION_ROOT);
-            
-            RegisterDefined(_PAYLOAD_GAS);
-            RegisterDefined(_PAYLOAD_TRANSFORM);
-            RegisterDefined(_PAYLOAD_POSITION);
-            RegisterDefined(_PAYLOAD_ROTATION);
-            RegisterDefined(_PAYLOAD_DERIVATION);
-            RegisterDefined(_PAYLOAD_AFFILIATION);
-            RegisterDefined(_PAYLOAD_SOURCE);
-            RegisterDefined(_PAYLOAD_TARGET);
-            RegisterDefined(_PAYLOAD_DATA);
-            
-            RegisterDefined(_STORE_DISJOINTABLE);
-            
-            RegisterDefined(_RETENTION_IGNORE);
-            RegisterDefined(_RETENTION_DECLARED);
-            RegisterDefined(_RETENTION_BONUS);
-            
-            RegisterDefined(_TICK_RATE_DEFAULT);
-            RegisterDefined(_DELTA_TIME_DEFAULT);
-            
-            RegisterDefined(_CONTEXT_GAS);
-            RegisterDefined(_CONTEXT_SOURCE);
-            
-            
-        }
-        
-        #region Affiliation Tags
-        
-        /*
-         * Affiliation tags are used to indicate affiliations between GAS components.
-         */
-        
-        private const int _AFFILIATION_ROOT = -100_000_000;
-        public static Tag AFFILIATION_ROOT => Get(_AFFILIATION_ROOT);
-        
-        private const int _AFFILIATION_NONE = -100_000_000;
-        public static Tag AFFILIATION_NONE => Get(_AFFILIATION_NONE);
-        
-        #endregion
-        
-        #region Payload Tags
-        
-        /*
-         * Payload tags are used in data packets to associate data with their cast-types and use case.
-         */
-        
-        #region Ability Packets
-        
-        private const int _PAYLOAD_GAS = -200_000_000;
-        public static Tag PAYLOAD_GAS => Get(_PAYLOAD_GAS);
-        
-        private const int _PAYLOAD_TRANSFORM = -200_000_001;
-        public static Tag PAYLOAD_TRANSFORM => Get(_PAYLOAD_TRANSFORM);
-        
-        private const int _PAYLOAD_POSITION = -200_000_002;
-        public static Tag PAYLOAD_POSITION => Get(_PAYLOAD_POSITION);
-        
-        private const int _PAYLOAD_ROTATION = -200_000_003;
-        public static Tag PAYLOAD_ROTATION => Get(_PAYLOAD_ROTATION);
-        
-        private const int _PAYLOAD_DERIVATION = -200_000_004;
-        public static Tag PAYLOAD_DERIVATION => Get(_PAYLOAD_DERIVATION);
-        
-        private const int _PAYLOAD_AFFILIATION = -200_000_005;
-        public static Tag PAYLOAD_AFFILIATION => Get(_PAYLOAD_AFFILIATION);
-        
-        private const int _PAYLOAD_SOURCE = -200_000_006;
-        public static Tag PAYLOAD_SOURCE => Get(_PAYLOAD_SOURCE);
-        
-        private const int _PAYLOAD_TARGET = -200_000_007;
-        public static Tag PAYLOAD_TARGET => Get(_PAYLOAD_TARGET);
-        
-        private const int _PAYLOAD_DATA = -200_000_008;
-        public static Tag PAYLOAD_DATA => Get(_PAYLOAD_DATA);
-        
-        #endregion
-        
-        #region GAS Store (Coffer)
-        
-        private const int _STORE_DISJOINTABLE = -200_100_000;
-        public static Tag TARGETED_INTENT => Get(_STORE_DISJOINTABLE);
-        
-        #endregion
-        
-        #endregion
-        
-        #region Effect Tags
-        
-        #region Attribute Impact Retention
-        
-        /// <summary>
-        /// Empty
-        /// </summary>
-        private const int _RETENTION_IGNORE = -400_000_000;
-        public static Tag RETENTION_IGNORE => Get(_RETENTION_IGNORE);
-        
-        /// <summary>
-        /// Attribute retention level for low-level cached attribute values deriving from set & modifier declarations.
-        /// E.g. initial values, attribute backed values
-        /// </summary>
-        private const int _RETENTION_DECLARED = -400_000_001;
-        public static Tag RETENTION_DECLARED => Get(_RETENTION_DECLARED);
-        
-        /// <summary>
-        /// Attribute retention level for mid-level cached attribute values deriving from pseudo-permanent bonuses.
-        /// E.g. items
-        /// </summary>
-        private const int _RETENTION_BONUS = -400_000_002;
-        public static Tag RETENTION_BONUS => Get(_RETENTION_BONUS);
-        
-        #endregion
-        
-        #region Effect Timing
-
-        private const int _TICK_RATE_DEFAULT = -400_100_000;
-        public static Tag TICK_RATE_DEFAULT => Get(_TICK_RATE_DEFAULT);
-        private const int _DELTA_TIME_DEFAULT = -400_100_000;
-        public static Tag DELTA_TIME_DEFAULT => Get(_DELTA_TIME_DEFAULT);
-        
-        #endregion
-        
-        #endregion
-        
-        #region Context Tags
-        
-        private const int _CONTEXT_GAS = -500_000_000;
-        public static Tag CONTEXT_GAS => Get(_CONTEXT_GAS);
-        private const int _CONTEXT_SOURCE = -500_000_001;
-        public static Tag CONTEXT_SOURCE => Get(_CONTEXT_SOURCE); 
-        
-        #endregion
-        
-        #region General
-
-        private const int _GENERAL_NA = -600_000_000;
-        public static Tag GEN_NOT_APPLICABLE => Get(_GENERAL_NA);
-        
-        private const int _GENERAL_ANY = -600_000_000;
-        public static Tag GEN_ANY => Get(_GENERAL_NA);
-        
-        #endregion
-
-        #endregion
-
-        #endregion
+        /// <summary>Used to communicate the act of targeting to the targeted entity</summary>
+        public static Tag FAILED_WHILE_ACTIVE => Tag.GenerateAsUnique("FailedWhileActive");
     }
 }

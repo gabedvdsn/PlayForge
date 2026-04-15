@@ -6,12 +6,20 @@ namespace FarEmerald.PlayForge
     public class DisjointAbilityTask : AbstractAbilityTask
     {
         public override bool IsCriticalSection => false;
+        
+        /// <summary>
+        /// Owner disjoints incoming targeted projectiles!
+        /// Disjoint behaviour is called
+        /// </summary>
+        /// <param name="data"></param>
+        /// <param name="token"></param>
         public override async UniTask Activate(AbilityDataPacket data, CancellationToken token)
         {
-            var owner = data.Spec.GetOwner().AsGAS();
+            var owner = data.EffectOrigin.GetOwner().ToGAS();
             if (owner is null) return;
-            
-            await owner.CallBehaviour(DisjointProxyTaskBehaviour.Command, new DisjointProxyTaskBehaviour(), token);
+
+            if (!owner.Data.TryGet(Tags.TARGETED_INTENT, out DataValue<IProxyTaskBehaviourUser> targetingUsers)) return;
+            await owner.ApplyBehaviour(new DisjointProxyTaskBehaviour(), targetingUsers.ToArray(), token);
         }
     }
 }

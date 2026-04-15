@@ -1,21 +1,33 @@
-﻿using System.Threading;
+﻿using System.Collections.Generic;
+using System.Linq;
+using System.Threading;
 using Cysharp.Threading.Tasks;
 using UnityEngine;
 
 namespace FarEmerald.PlayForge
 {
-    public abstract class AbstractRuntimeProcess
+    public abstract class AbstractRuntimeProcess : IProxyTaskBehaviourCaller, IGameplayProcess
     {
-        protected bool processActive;
-
-        public readonly string name;
-        public readonly EProcessStepPriorityMethod priorityMethod;
-        public readonly int stepPriority;
-        public readonly EProcessStepTiming stepTiming;
-        public readonly EProcessLifecycle lifecycle;
+        protected readonly string name;
+        protected readonly EProcessStepPriorityMethod priorityMethod;
+        protected readonly int stepPriority;
+        protected readonly EProcessStepTiming stepTiming;
+        protected readonly EProcessLifecycle lifecycle;
 
         protected ProcessDataPacket regData;
+        protected bool processActive;
+        
+        public ProcessRelay ProcessRelay => Relay;
+        public ProcessDataPacket Data => regData;
+        
+        private bool _initialized;
+        public bool IsInitialized => _initialized;
+        public ProcessRelay Relay;
+        
+        public readonly Dictionary<int, ProcessRelay> HandlerRelays = new();
 
+        public AbstractMonoProcessInstantiator CustomInstantiator;
+        
         protected AbstractRuntimeProcess()
         {
             name = $"Anon-{GetType()}";
@@ -34,16 +46,42 @@ namespace FarEmerald.PlayForge
             this.lifecycle = lifecycle;
         }
 
+        #region Readable Definition
+        
+        public virtual string GetName()
+        {
+            return Relay.Wrapper.ProcessName;
+        }
+        public virtual string GetDescription()
+        {
+            return $"[{Relay.Wrapper.ProcessName}] This is a MonoProcess.";
+        }
+        public virtual Texture2D GetDefaultIcon()
+        {
+            return null;
+        }
+        
+        #endregion
+        
         public void SendProcessData(ProcessDataPacket processData) => regData = processData;
 
-        public abstract void WhenInitialize(ProcessRelay relay);
+        public virtual void WhenInitialize(ProcessRelay relay)
+        {
+            _initialized = true;
+            Relay = relay;
+        }
 
-        /// <summary>
-        /// Called via Step in ProcessControl as determined by the process's StepUpdateTiming
-        /// </summary>
-        /// <param name="timing">Step timing</param>
-        /// <param name="relay">Process Relay</param>
-        public abstract void WhenUpdate(EProcessStepTiming timing, ProcessRelay relay);
+        public virtual void WhenUpdate(ProcessRelay relay)
+        {
+        }
+
+        public virtual void WhenFixedUpdate(ProcessRelay relay)
+        {
+        }
+
+        public virtual void WhenLateUpdate(ProcessRelay relay)
+        {
+        }
         
         /// <summary>
         /// Called via ProcessControl when the process is set to Waiting
@@ -52,6 +90,16 @@ namespace FarEmerald.PlayForge
         public virtual void WhenWait(ProcessRelay relay)
         {
             processActive = false;
+        }
+
+        public virtual bool HandlePause(ProcessRelay relay)
+        {
+            return false;
+        }
+        
+        public virtual bool HandleResume(ProcessRelay relay)
+        {
+            return false;
         }
 
         /// <summary>
@@ -63,11 +111,6 @@ namespace FarEmerald.PlayForge
             processActive = false;
         }
         
-        public void WhenTerminateSafe(ProcessRelay relay)
-        {
-            processActive = false;
-        }
-
         /// <summary>
         /// Called via ProcessControl when the process is set to Running
         /// </summary>
@@ -87,7 +130,6 @@ namespace FarEmerald.PlayForge
             process = default;
             return false;
         }
-        public abstract bool IsInitialized();
 
         public string ProcessName => string.IsNullOrEmpty(name) ? "AnonymousClassProcess" : name;
         public virtual EProcessStepPriorityMethod PriorityMethod => priorityMethod;
@@ -95,5 +137,40 @@ namespace FarEmerald.PlayForge
         public virtual EProcessLifecycle Lifecycle => lifecycle;
         
         public virtual int StepPriority => stepPriority;
+        public virtual bool BehaviourIsApplicable(AbstractProxyTaskBehaviour behaviour) => false;
+        public async UniTask ApplyBehaviour(AbstractProxyTaskBehaviour cb, IProxyTaskBehaviourUser user, CancellationToken token)
+        {
+            await cb.RunAsync(this, user, token);
+            cb.End();
+        }
+        public async UniTask ApplyBehaviour(AbstractProxyTaskBehaviour cb, IProxyTaskBehaviourUser[] users, CancellationToken token)
+        {
+            var tasks = users.Select(user => ApplyBehaviour(cb.CreateInstance(), user, token)).ToArray();
+            await UniTask.WhenAll(tasks);
+        }
+        public ProcessRelay[] GetRelays()
+        {
+            return HandlerRelays.Values.ToArray();
+        }
+        public bool HandlerValidateAgainst(IGameplayProcessHandler handler)
+        {
+            return (AbstractRuntimeProcess)handler == this;
+        }
+        public bool HandlerProcessIsSubscribed(ProcessRelay relay)
+        {
+            return HandlerRelays.ContainsKey(relay.CacheIndex);
+        }
+        public void HandlerSubscribeProcess(ProcessRelay relay)
+        {
+            HandlerRelays.Add(relay.CacheIndex, relay);
+        }
+        public bool HandlerVoidProcess(ProcessRelay relay)
+        {
+            return HandlerRelays.Remove(relay.CacheIndex);
+        }
+        public AbstractMonoProcessInstantiator GetInstantiator(AbstractMonoProcess mono)
+        {
+            return CustomInstantiator;
+        }
     }
 }

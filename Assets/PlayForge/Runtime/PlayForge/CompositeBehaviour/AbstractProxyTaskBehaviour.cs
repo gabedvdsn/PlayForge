@@ -12,7 +12,8 @@ namespace FarEmerald.PlayForge
     {
         protected Dictionary<IProxyTaskBehaviourUser, EActionStatus> status = new();
 
-        public abstract UniTask RunAsync(CancellationToken token);
+        public abstract Tag Command { get; }
+        public abstract UniTask RunAsync(IProxyTaskBehaviourCaller caller, IProxyTaskBehaviourUser user, CancellationToken token);
         public abstract EActionStatus End();
         public virtual EActionStatus Status(IProxyTaskBehaviourUser user)
         {
@@ -22,6 +23,7 @@ namespace FarEmerald.PlayForge
         {
             status[user] = s;
         }
+        
         public abstract AbstractProxyTaskBehaviour CreateInstance();
     }
 }

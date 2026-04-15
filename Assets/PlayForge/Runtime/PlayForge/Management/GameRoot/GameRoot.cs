@@ -9,15 +9,18 @@ namespace FarEmerald.PlayForge
     /// <summary>
     /// GameRoot
     /// </summary>
-    public partial class GameRoot : GameplayAbilitySystem, IEffectOrigin, IManagerial
+    public class GameRoot : GameplayAbilitySystem, IEffectOrigin, IManagerial
     {
         [Header("Game Root")]
         
         public static GameRoot Instance;
         
         // Useful for backend systems like observers, audio, etc...
+        [SerializeReference]
         public List<AbstractCreateProcessAbilityTask> CreateProcessTasks = new();
         private AbilityDataPacket NativeDataPacket;
+
+        public static RuntimeAttribute LevelAttribute;
 
         public void Bootstrap()
         {
@@ -27,10 +30,9 @@ namespace FarEmerald.PlayForge
             }
 
             Instance = this;
-            
-            base.Awake();
 
-            Initialize(new GameRootEntity());
+            LevelAttribute = new RuntimeAttribute(TagHierarchy.TagUtil.GenerateUniqueRandomTag(), GetAssetTag());
+            AttributeRegistry.Add(LevelAttribute);
         }
         
         public void DeferredInit()
@@ -38,10 +40,11 @@ namespace FarEmerald.PlayForge
             NativeDataPacket = AbilityDataPacket.GenerateFrom
             (
                 IEffectOrigin.GenerateSourceDerivation(this),
-                false
+                AbilitySystem.CreateActivationRequest(-1),
+                false, default
             );
             
-            NativeDataPacket.AddPayload(Tags.PAYLOAD_TRANSFORM, transform);
+            NativeDataPacket.AddPayload(Tags.PARENT_TRANSFORM, transform);
             
             RunProcessTasks(CreateProcessTasks);
         }
@@ -86,10 +89,22 @@ namespace FarEmerald.PlayForge
         {
             return this;
         }
-        
+        public IHasReadableDefinition GetReadableDefinition()
+        {
+            return this;
+        }
+
         public float GetRelativeLevel()
         {
-            return Data.Identity.RelativeLevel;
+            return LevelSystem.GetLeveler(LevelAttribute).Level.Ratio;
+        }
+        public bool IsActive()
+        {
+            return true;
+        }
+        public bool RetainEffectImpact()
+        {
+            return true;
         }
     }
 }

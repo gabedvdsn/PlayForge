@@ -1,80 +1,85 @@
-﻿using System;
+using System;
+using System.Collections.Generic;
+using System.Linq;
 using System.Threading;
 using Cysharp.Threading.Tasks;
+using UnityEngine;
 
 namespace FarEmerald.PlayForge
 {
-    public class AbilitySpecContainer
+    public class AbilitySpecContainer : ITagSource
     {
         public AbilitySpec Spec;
+        public readonly int Index;
 
-        public bool IsActive { get; private set; }
-        public bool IsTargeting { get; private set; }
-        public bool IsClaiming => IsTargeting || IsActive;
+        public bool IsActive => _activeHandles.Count > 0;
+        public bool IsClaiming => _activeHandles.Any(h => !h.ClaimReleased && (h.IsTargeting || h.IsExecuting));
 
-        private AbilityDataPacket activeData;
+        private readonly List<AbilityActivationHandle> _activeHandles = new();
+
+        private Dictionary<int, ActiveRuntimes> activeRuntimes;
         
-        private AbilityProxy Proxy;
-        public CancellationTokenSource cts;
-        private CancellationTokenSource targetingCts;
+        private struct ActiveRuntimes
+        {
+            public ProcessRelay Relay;
+            public CancellationTokenSource RuntimeCts;
+            public CancellationTokenSource TargetingCts;
+        }
 
-        public AbilitySpecContainer(AbilitySpec spec)
+        public AbilitySpecContainer(AbilitySpec spec, int abilityIndex)
         {
             Spec = spec;
-            IsActive = false;
+            Index = abilityIndex;
+        }
 
-            Proxy = Spec.Base.Proxy.GenerateProxy();
-            ResetTokens();
+        private void AddActiveHandle(AbilityActivationHandle handle)
+        {
+            _activeHandles.Add(handle);
+        }
+
+        private void RemoveActiveHandle(AbilityActivationHandle handle)
+        {
+            _activeHandles.Remove(handle);
         }
 
         public bool ActivateAbility(AbilityDataPacket implicitData)
         {
-            if (IsClaiming) return false; // Prevent reactivation mid-use
-            if (!Spec.Owner.AsData().AbilitySystem.ClaimActive(this, implicitData)) return false;
+            if (IsClaiming) return false;
+            if (!implicitData.System.ClaimActive(this, implicitData)) return false;
 
-            activeData = implicitData;
-            activeData.AddPayload(Tags.PAYLOAD_DERIVATION, Spec);
+            string abilityName = $"{Spec.Base?.GetName() ?? "Anonymous"}";
+            var handle = new AbilityActivationHandle(this, implicitData, abilityName);
+            AddActiveHandle(handle);
 
-            Reset();
-
-            AwaitAbility().Forget();
+            AwaitAbility(handle).Forget();
 
             return true;
         }
 
-        private void Reset()
-        {
-            IsActive = false;
-            IsTargeting = false;
-
-            ResetTokens();
-        }
-
-        private async UniTaskVoid AwaitAbility()
+        private async UniTaskVoid AwaitAbility(AbilityActivationHandle handle)
         {
             bool targetingCancelled = false;
             try
             {
-                IsTargeting = true;
-                await Proxy.ActivateTargetingTask(targetingCts.Token, activeData);
+                handle.IsTargeting = true;
+                await handle.Proxy.ActivateTargetingTask(handle.TargetingCts.Token, handle.Data);
             }
             catch (OperationCanceledException)
             {
-                // Targeting is cancelled
                 targetingCancelled = true;
             }
             finally
             {
-                IsTargeting = false;
-                
-                if (activeData.TryGetFirstTarget(out var target) && !Spec.ValidateActivationRequirements(target, activeData))
+                handle.IsTargeting = false;
+
+                if (handle.Data.TryGetFirstTarget(out var target) && !Spec.ValidateAllActivationRequirements(target, handle.Data))
                 {
                     targetingCancelled = true;
                 }
-                
+
                 if (targetingCancelled)
                 {
-                    CleanAndRelease();
+                    CleanHandle(handle);
                 }
             }
 
@@ -82,76 +87,75 @@ namespace FarEmerald.PlayForge
 
             try
             {
-                IsActive = true;
+                handle.IsExecuting = true;
 
-                Spec.Owner.GetTagCache().AddTags(Spec.Base.Tags.ActiveGrantedTags);
+                Spec.Source.CompileGrantedTags();
 
-                await Proxy.Activate(cts.Token, activeData);
+                // Wire critical section callback before activation
+                handle.Proxy.OnCriticalSectionExited = () => handle.ReleaseClaimIfNeeded();
+
+                // If no critical stages, release claim immediately
+                if (!handle.Proxy.HasAnyCriticalStage)
+                {
+                    handle.ReleaseClaimIfNeeded();
+                }
+
+                await handle.Proxy.Activate(handle.Cts.Token, handle.Data);
             }
-            catch (OperationCanceledException)
+            catch (Exception ex)
             {
                 // Ability in execution is interrupted (cancelled)
-                // ALWAYS as a result of an injection (break or
             }
             finally
             {
-                IsActive = false;
-                Spec.Owner.GetTagCache().RemoveTags(Spec.Base.Tags.ActiveGrantedTags);
-                
-                CleanAndRelease();
+                handle.IsExecuting = false;
+                CleanHandle(handle);
+                Spec.Source.CompileGrantedTags();
             }
         }
 
-        public void Inject(IAbilityInjection injection)
+        public void Inject(ISequenceInjection injection)
         {
-            if (!IsClaiming) return;
+            if (!IsActive) return;
 
-            injection.OnContainerInject(this);
-            Proxy.Inject(injection, activeData);
+            // Take a snapshot since injection may modify the list
+            var handles = _activeHandles.ToArray();
+            foreach (var handle in handles)
+            {
+                handle.Proxy.Inject(injection, handle.Data);
+
+                // For interrupt injections, cancel the appropriate tokens
+                if (injection is InterruptSequenceInjection)
+                {
+                    if (handle.IsTargeting) handle.TargetingCts?.Cancel();
+                    if (handle.IsExecuting) handle.Cts?.Cancel();
+                }
+            }
         }
 
-        public void CleanAndRelease()
+        internal void OnHandleClaimReleased(AbilityActivationHandle handle)
         {
-            Proxy.Clean();
-
-            CleanTargetingToken();
-            CleanActivationToken();
-
-            Spec.Owner.AsData().AbilitySystem.ReleaseClaim(this, activeData);
-
-            activeData = null;
+            handle.Data.System.ReleaseClaim(this, handle.Data);
         }
 
-        private void CleanTargetingToken()
+        private void CleanHandle(AbilityActivationHandle handle)
         {
-            if (targetingCts is null) return;
-
-            if (!targetingCts.IsCancellationRequested) targetingCts?.Cancel();
-            targetingCts?.Dispose();
-            targetingCts = null;
-        }
-
-        private void CleanActivationToken()
-        {
-            if (cts is null) return;
-
-            if (!cts.IsCancellationRequested) cts?.Cancel();
-            cts?.Dispose();
-            cts = null;
-        }
-
-        private void ResetTokens()
-        {
-            CleanTargetingToken();
-            CleanActivationToken();
-
-            cts = new CancellationTokenSource();
-            targetingCts = new CancellationTokenSource();
+            handle.ReleaseClaimIfNeeded();
+            handle.Proxy.Clean();
+            handle.CleanTokens();
+            RemoveActiveHandle(handle);
+            handle.Data.System.EndActivation(this, handle.Data);
         }
 
         public override string ToString()
         {
             return $"{Spec}";
+        }
+        public IEnumerable<Tag> GetGrantedTags()
+        {
+            foreach (var t in Spec.Base.Tags.PassiveGrantedTags) yield return t;
+            if (!IsActive) yield break;
+            foreach (var t in Spec.Base.Tags.ActiveGrantedTags) yield return t;
         }
     }
 }

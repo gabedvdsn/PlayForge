@@ -7,15 +7,13 @@ namespace FarEmerald.PlayForge
     public class RuntimeWrapperProcess : AbstractProcessWrapper
     {
         private AbstractRuntimeProcess Process;
-        private ProcessDataPacket Data;
         
-
-        public RuntimeWrapperProcess(AbstractRuntimeProcess process, ProcessDataPacket data)
+        public RuntimeWrapperProcess(AbstractRuntimeProcess process, ProcessDataPacket data, IGameplayProcessHandler handler) : base(data, handler)
         {
             Process = process;
-            Data = data;
+            getStatus = () => Process.Lifecycle == EProcessLifecycle.Synchronous ? EProcessStatus.Synchronous : EProcessStatus.Asynchronous;
         }
-
+        
         public override void InitializeWrapper()
         {
             
@@ -25,13 +23,33 @@ namespace FarEmerald.PlayForge
             Process.SendProcessData(Data);
             Process.WhenInitialize(relay);
         }
-        public override void WhenUpdate(EProcessStepTiming timing, ProcessRelay relay)
+        
+        public override void WhenUpdate(ProcessRelay relay)
         {
-            Process.WhenUpdate(timing, relay);
+            Process.WhenUpdate(relay);
         }
+
+        public override void WhenFixedUpdate(ProcessRelay relay)
+        {
+            Process.WhenFixedUpdate(relay);
+        }
+        
+        public override void WhenLateUpdate(ProcessRelay relay)
+        {
+            Process.WhenLateUpdate(relay);
+        }
+
         public override void WhenWait(ProcessRelay relay)
         {
             Process.WhenWait(relay);
+        }
+        public override bool HandlePause(ProcessRelay relay)
+        {
+            return Process.HandlePause(relay);
+        }
+        public override bool HandleResume(ProcessRelay relay)
+        {
+            return Process.HandleResume(relay);
         }
         public override void WhenTerminate(ProcessRelay relay)
         {
@@ -58,9 +76,9 @@ namespace FarEmerald.PlayForge
         }
         public override bool IsInitialized()
         {
-            return Process.IsInitialized();
+            return Process.IsInitialized;
         }
-        public override string ProcessName => Process.ProcessName;
+        public override string ProcessName => getProcessName ?? Process.ProcessName;
         public override EProcessStepPriorityMethod PriorityMethod => Process.PriorityMethod;
         public override int StepPriority => Process.StepPriority;
         public override EProcessStepTiming StepTiming => Process.StepTiming;

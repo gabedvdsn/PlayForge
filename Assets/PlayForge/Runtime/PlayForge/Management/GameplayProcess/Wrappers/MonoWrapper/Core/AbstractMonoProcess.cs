@@ -7,26 +7,52 @@ using UnityEngine;
 
 namespace FarEmerald.PlayForge
 {
-    public abstract class AbstractMonoProcess : MonoBehaviour, IProxyTaskBehaviourCaller
+    public abstract class AbstractMonoProcess : MonoBehaviour, IProxyTaskBehaviourCaller, IGameplayProcess
     {
         [Header("Mono Gameplay Process")] 
         
-        public EProcessLifecycle ProcessLifecycle;
-        public EProcessStepTiming ProcessTiming;
-        public EProcessStepPriorityMethod PriorityMethod = EProcessStepPriorityMethod.First;
-        public int ProcessStepPriority;
+        [HideInInspector] public EProcessLifecycle ProcessLifecycle;
+        [HideInInspector] public EProcessStepTiming ProcessTiming;
+        [HideInInspector] public EProcessStepPriorityMethod PriorityMethod = EProcessStepPriorityMethod.First;
+        [HideInInspector] public int ProcessStepPriority;
         
-        [Space(5)]
-        
-        [Tooltip("Uses Object.Instantiate when null")]
+        [Tooltip("Uses Object.Instantiate and Object.Destroy when null")]
+        [HideInInspector] [SerializeReference]
         public AbstractMonoProcessInstantiator Instantiator;
+        public bool UseHandlerInstantiator;
+
+        [Tooltip("When false, this process won't be affected by sibling pause/terminate cascade")]
+        [HideInInspector]
+        public bool ParticipateInSiblingCascade = true;
         
         protected ProcessDataPacket regData;
         protected bool processActive;
 
+        public ProcessDataPacket Data => regData;
+        public ProcessRelay ProcessRelay => Relay;
+
         private bool _initialized;
         public bool IsInitialized => _initialized;
-        public ProcessRelay Relay;
+        protected ProcessRelay Relay;
+
+        private readonly Dictionary<int, ProcessRelay> HandlerRelays = new();
+        
+        #region Readable Definition
+        
+        public virtual string GetName()
+        {
+            return Relay.Wrapper.ProcessName;
+        }
+        public virtual string GetDescription()
+        {
+            return $"[{Relay.Wrapper.ProcessName}] This is a MonoProcess.";
+        }
+        public virtual Texture2D GetDefaultIcon()
+        {
+            return null;
+        }
+        
+        #endregion
         
         public void SendProcessData(ProcessDataPacket processData)
         {
@@ -43,35 +69,35 @@ namespace FarEmerald.PlayForge
             Relay = relay;
             
             // Transform
-            if (regData.TryGet<Transform>(Tags.PAYLOAD_TRANSFORM, EProxyDataValueTarget.Primary, out var pt))
+            if (regData.TryGetFirst<Transform>(Tags.PARENT_TRANSFORM, out var pt))
             {
                 transform.SetParent(pt);
             }
             
             // Position
-            if (regData.TryGet<Vector3>(Tags.PAYLOAD_POSITION, EProxyDataValueTarget.Primary, out var pos))
+            if (regData.TryGetFirst<Vector3>(Tags.POSITION, out var pos))
             {
                 transform.position = pos;
             }
-            else if (regData.TryGet<IGameplayAbilitySystem>(Tags.PAYLOAD_POSITION, EProxyDataValueTarget.Primary, out var gasPos))
+            else if (regData.TryGetFirst<IGameplayAbilitySystem>(Tags.POSITION, out var gasPos))
             {
-                transform.position = gasPos.AsTransform().position;
+                transform.position = gasPos.GetTargetingPacket().position;
             }
-            else if (regData.TryGet<Transform>(Tags.PAYLOAD_POSITION, EProxyDataValueTarget.Primary, out var tPos))
+            else if (regData.TryGetFirst<Transform>(Tags.POSITION, out var tPos))
             {
                 transform.position = tPos.position;
             }
             
             // Rotation
-            if (regData.TryGet<Quaternion>(Tags.PAYLOAD_ROTATION, EProxyDataValueTarget.Primary, out var rot))
+            if (regData.TryGetFirst<Quaternion>(Tags.ROTATION, out var rot))
             {
                 transform.rotation = rot;
             }
-            else if (regData.TryGet<GameplayAbilitySystem>(Tags.PAYLOAD_ROTATION, EProxyDataValueTarget.Primary, out var gasRot))
+            else if (regData.TryGetFirst<IGameplayAbilitySystem>(Tags.ROTATION, out var gasRot))
             {
-                transform.rotation = gasRot.transform.rotation;
+                transform.rotation = gasRot.GetTargetingPacket().rotation;
             }
-            else if (regData.TryGet<Transform>(Tags.PAYLOAD_ROTATION, EProxyDataValueTarget.Primary, out var tRot))
+            else if (regData.TryGetFirst<Transform>(Tags.ROTATION, out var tRot))
             {
                 transform.rotation = tRot.rotation;
             }
@@ -84,6 +110,10 @@ namespace FarEmerald.PlayForge
         /// <param name="relay">Process Relay</param>
         public abstract void WhenUpdate(ProcessRelay relay);
 
+        public virtual void WhenLateUpdate(ProcessRelay relay) { }
+        
+        public virtual void WhenFixedUpdate(ProcessRelay relay) { }
+        
         /// <summary>
         /// Called via ProcessControl when the process is set to Waiting
         /// </summary>
@@ -91,6 +121,11 @@ namespace FarEmerald.PlayForge
         public virtual void WhenWait(ProcessRelay relay)
         {
             processActive = false;
+        }
+        
+        public virtual bool HandleResume(ProcessRelay relay)
+        {
+            return false;
         }
 
         /// <summary>
@@ -100,6 +135,11 @@ namespace FarEmerald.PlayForge
         public virtual void WhenTerminate(ProcessRelay relay)
         {
             processActive = false;
+            
+            foreach (var _relay in HandlerRelays.Values.ToArray())
+            {
+                ProcessControl.Instance.TerminateImmediate(_relay.CacheIndex);
+            }
         }
         
         /// <summary>
@@ -125,30 +165,43 @@ namespace FarEmerald.PlayForge
             return name;
         }
 
-        public abstract void RunCompositeBehaviour(Tag command, AbstractProxyTaskBehaviour cb, IProxyTaskBehaviourCaller caller);
-        public abstract UniTask RunCompositeBehaviourAsync(Tag command, AbstractProxyTaskBehaviour cb, IProxyTaskBehaviourCaller caller, CancellationToken token);
-
-        public abstract UniTask CallBehaviour(Tag cmd, AbstractProxyTaskBehaviour cb, CancellationToken token);
+        public virtual bool BehaviourIsApplicable(AbstractProxyTaskBehaviour behaviour) => true;
         
-        public async UniTask CallBehaviour(Tag cmd, AbstractProxyTaskBehaviour cb, IProxyTaskBehaviourUser user, CancellationToken token)
+        public async UniTask ApplyBehaviour(AbstractProxyTaskBehaviour cb, IProxyTaskBehaviourUser user, CancellationToken token)
         {
-            var run = cb.RunAsync(token);
-            await user.RunCompositeBehaviourAsync(cmd, cb, this, token);
-            await run;
+            await cb.RunAsync(this, user, token);
             cb.End();
         }
-        
-        public async UniTask CallBehaviour(Tag cmd, AbstractProxyTaskBehaviour cb, IProxyTaskBehaviourUser[] users, CancellationToken token)
+        public async UniTask ApplyBehaviour(AbstractProxyTaskBehaviour cb, IProxyTaskBehaviourUser[] users, CancellationToken token)
         {
-            var tasks = users.Select(user => CallBehaviour(cmd, cb.CreateInstance(), user, token)).ToArray();
+            var tasks = users
+                .Select(user => ApplyBehaviour(cb.CreateInstance(), user, token))
+                .ToArray();
             await UniTask.WhenAll(tasks);
         }
-    }
-
-    public enum EProcessStepPriorityMethod
-    {
-        Manual,
-        First,
-        Last
+        public ProcessRelay[] GetRelays()
+        {
+            return HandlerRelays.Values.ToArray();
+        }
+        public bool HandlerValidateAgainst(IGameplayProcessHandler handler)
+        {
+            return (AbstractMonoProcess)handler == this;
+        }
+        public bool HandlerProcessIsSubscribed(ProcessRelay relay)
+        {
+            return HandlerRelays.ContainsKey(relay.CacheIndex);
+        }
+        public void HandlerSubscribeProcess(ProcessRelay relay)
+        {
+            HandlerRelays.Add(relay.CacheIndex, relay);
+        }
+        public bool HandlerVoidProcess(ProcessRelay relay)
+        {
+            return HandlerRelays.Remove(relay.CacheIndex);
+        }
+        public AbstractMonoProcessInstantiator GetInstantiator(AbstractMonoProcess mono)
+        {
+            return Instantiator;
+        }
     }
 }

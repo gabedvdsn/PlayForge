@@ -4,17 +4,16 @@ namespace FarEmerald.PlayForge
 {
     public struct AbilityCallbackStatus
     {
-        public AbilityDataPacket Data;
-        public List<AbstractAbilityTask> Tasks;
-        public AbilityTaskBehaviourStage Stage;
-        public IAbilityInjection Injection;
-        public bool Success;
+        public readonly AbilityDataPacket Data;
+        public readonly List<AbstractAbilityTask> Tasks;
+        public readonly AbilityTaskBehaviourStage Stage;
+        public readonly ISequenceInjection Injection;
+        public readonly bool Success;
 
-        public AbilitySpec Ability => Data.Spec as AbilitySpec;
-        public float TimeElapsed => TimeUtility.Get(Ability.Base.Tags.AssetTag, out float time) ? time : -1f;
+        public AbilitySpec Ability => Data.EffectOrigin as AbilitySpec;
         public AbstractAbilityTask Task => Tasks?.Count > 0 ? Tasks[0] : null;
 
-        private AbilityCallbackStatus(AbilityDataPacket data, List<AbstractAbilityTask> tasks, AbilityTaskBehaviourStage stage, IAbilityInjection injection, bool success)
+        private AbilityCallbackStatus(AbilityDataPacket data, List<AbstractAbilityTask> tasks, AbilityTaskBehaviourStage stage, ISequenceInjection injection, bool success)
         {
             Data = data;
             Tasks = tasks;
@@ -66,7 +65,7 @@ namespace FarEmerald.PlayForge
         /// <param name="injection">The injection</param>
         /// <param name="injectionSuccessful">Whether the injection was successful</param>
         /// <returns></returns>
-        public static AbilityCallbackStatus GenerateForInjection(AbilityDataPacket data, AbilityTaskBehaviourStage stage, IAbilityInjection injection, bool injectionSuccessful)
+        public static AbilityCallbackStatus GenerateForInjection(AbilityDataPacket data, AbilityTaskBehaviourStage stage, ISequenceInjection injection, bool injectionSuccessful)
         {
             return new AbilityCallbackStatus(data, stage.Tasks, stage, injection, injectionSuccessful);
         }

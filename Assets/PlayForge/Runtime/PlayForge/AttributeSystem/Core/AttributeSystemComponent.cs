@@ -1,227 +1,325 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using Unity.VisualScripting;
 using UnityEngine;
 
 namespace FarEmerald.PlayForge
 {
-    public class AttributeSystemComponent
+    /// <summary>
+    /// Component for managing attributes and their modifications.
+    /// Refactored to support WorkerContext and deferred execution.
+    /// </summary>
+    public class AttributeSystemComponent : DeferredContextSystem
     {
         protected AttributeSet attributeSet;
-        protected List<AbstractAttributeWorker> attributeChangeEvents = new();
-
-        private AttributeChangeMomentHandler PreChangeHandler;
-        private AttributeChangeMomentHandler PostChangeHandler;
+        protected List<AbstractAttributeWorker> attributeChangeWorkers = new();
         
-        private Dictionary<Attribute, CachedAttributeValue> AttributeCache;
+        private AttributeChangeMomentHandler PreChangeHandler = new();
+        private AttributeChangeMomentHandler PostChangeHandler = new();
+        
+        private Dictionary<IAttribute, CachedAttributeValue> AttributeCache;
         private AttributeModificationRule Rule;
+        
         public AttributeSystemCallbacks Callbacks;
         
-        public readonly IGameplayAbilitySystem Root;
-
-        public AttributeSystemComponent(IGameplayAbilitySystem root)
+        public readonly IGameplayAbilitySystem Self;
+        
+        public AttributeSystemComponent(IGameplayAbilitySystem self)
         {
-            Root = root;
+            Self = self;
+        }
+        
+        // ═══════════════════════════════════════════════════════════════════════════
+        // INITIALIZATION
+        // ═══════════════════════════════════════════════════════════════════════════
+        
+        public virtual void Setup(AttributeSet attrSet)
+        {
+            attributeSet = attrSet;
+            attributeChangeWorkers = new List<AbstractAttributeWorker>();
+            
+            SetupCaches();
+            SetupWorkers();
+        }
+        
+        private void SetupCaches()
+        {
+            AttributeCache = new Dictionary<IAttribute, CachedAttributeValue>();
+            Rule = new AttributeModificationRule();
+            Callbacks = new AttributeSystemCallbacks();
+        }
+        
+        private void SetupWorkers()
+        {
+            PreChangeHandler = new AttributeChangeMomentHandler();
+            PostChangeHandler = new AttributeChangeMomentHandler();
+            
+            foreach (var worker in attributeChangeWorkers)
+            {
+                worker.RegisterWithHandler(PreChangeHandler, PostChangeHandler);
+            }
         }
 
-        #region Initialization
-        
-        public virtual void Initialize(AttributeSet attributeSet, List<AbstractAttributeWorker> attributeChangeEvents)
+        public void Initialize()
         {
-            this.attributeSet = attributeSet;
-            this.attributeChangeEvents = attributeChangeEvents;
-
-            InitializeCaches();
-            InitializePriorityChangeEvents();
             InitializeAttributeSets();
+            
+            Callbacks.OnAttributeChanged += data =>
+            {
+                RefreshRegulatedAttributes(data.Attribute);
+            };
         }
         
-        private void InitializeCaches()
-        {
-            AttributeCache = new Dictionary<Attribute, CachedAttributeValue>();
-        }
-
         private void InitializeAttributeSets()
         {
-            if (attributeSet is null) return;
+            if (attributeSet == null) return;
             
-            attributeSet.Initialize(this);
+            ProvideAttributeSet(attributeSet);
+        }
 
-            foreach (var attr in AttributeCache.Keys)
+        public void ProvideAttributeSet(AttributeSet set)
+        {
+            set.Initialize(this);
+            Self.GetTagCache()?.AddTag(set.AssetTag);
+    
+            // Phase 2: Initialize with values (now all attributes exist in cache)
+            var failedAttributes = new List<IAttribute>();
+            foreach (var attr in set.Attributes.Select(elem => elem.Attribute))
+            {
+                if (!AttributeCache[attr].Initialize(attr, Self, AttributeCache))
+                {
+                    failedAttributes.Add(attr);
+                }
+            }
+    
+            // Remove failed
+            foreach (var attr in failedAttributes)
+            {
+                RemoveAttribute(attr);
+            }
+            
+            // Phase 3: Fire initial modification events
+            foreach (var attr in set.Attributes.Select(elem => elem.Attribute))
             {
                 ModifyAttribute(attr,
                     new SourcedModifiedAttributeValue(
-                        IAttributeImpactDerivation.GenerateSourceDerivation(Root, attr, Tags.RETENTION_BONUS, Tags.GEN_NOT_APPLICABLE),
+                        IAttributeImpactDerivation.GenerateSourceDerivation(
+                            Self, attr, 
+                            Tags.IgnoreRetention, 
+                            new List<Tag>(){ Tags.DisallowImpact }, AttributeCache[attr].Root),
                         0f, 0f,
                         false)
                 );
             }
         }
-
-        private void InitializePriorityChangeEvents()
-        {
-            PreChangeHandler = new AttributeChangeMomentHandler();
-            PostChangeHandler = new AttributeChangeMomentHandler();
-            foreach (AbstractAttributeWorker changeEvent in attributeChangeEvents) changeEvent.RegisterWithHandler(PreChangeHandler, PostChangeHandler);
-        }
         
-        #endregion
+        // ═══════════════════════════════════════════════════════════════════════════
+        // WORKER MANAGEMENT
+        // ═══════════════════════════════════════════════════════════════════════════
         
-        #region Management
-        
-        public bool ProvideChangeEvent(AbstractAttributeWorker worker)
+        public bool ProvideWorker(AbstractAttributeWorker worker)
         {
             return worker.RegisterWithHandler(PreChangeHandler, PostChangeHandler);
         }
-
-        public bool RescindChangeEvent(AbstractAttributeWorker worker)
+        
+        public bool RemoveWorker(AbstractAttributeWorker worker)
         {
             return worker.DeRegisterFromHandler(PreChangeHandler, PostChangeHandler);
         }
-
-        public void ProvideAttribute(Attribute attribute, DefaultAttributeValue defaultValue)
+        
+        // ═══════════════════════════════════════════════════════════════════════════
+        // ATTRIBUTE MANAGEMENT
+        // ═══════════════════════════════════════════════════════════════════════════
+        
+        public void ProvideAttribute(IAttribute attribute, AttributeBlueprint blueprint)
         {
             if (AttributeCache.ContainsKey(attribute)) return;
             
-            AttributeCache[attribute] = new CachedAttributeValue(attribute, Root, defaultValue);
+            AttributeCache[attribute] = new CachedAttributeValue(blueprint);
+            blueprint.Base.Scaling?.Regulate(attribute, Rule);
             
-            //AttributeCache[attribute] = new CachedAttributeValue(defaultValue.Overflow, defaultValue.Modifier);
-            //AttributeCache[attribute].Add(IAttributeImpactDerivation.GenerateSourceDerivation(Root, attribute), defaultValue.ToAttributeValue());
-
-            defaultValue.Modifier.Regulate(attribute, Rule);
-            
-            // Good practice to introduce attribute to library wherever/whenever registration occurs
-            AttributeLibrary.Add(attribute);
+            AttributeRegistry.Add(attribute);
+            Callbacks.AttributeRegister(attribute);
         }
-        
-        #endregion
-        
-        #region Helpers
-        
-        public bool DefinesAttribute(Attribute attribute) => AttributeCache.ContainsKey(attribute);
-        
-        public bool TryGetAttributeValue(Attribute attribute, out CachedAttributeValue attributeValue)
+
+        public void ProvideAttribute(IAttribute attribute, AttributeValue value)
         {
-            return AttributeCache.TryGetValue(attribute, out attributeValue);
+            if (AttributeCache.ContainsKey(attribute)) return;
+            
+            AttributeCache[attribute] = CachedAttributeValue.GenerateGeneric(attribute, Self, AttributeCache, Tags.IgnoreRetention, value);
+            AttributeRegistry.Add(attribute);
+            Callbacks.AttributeRegister(attribute);
         }
 
-        public bool TryGetAttributeValue(Attribute attribute, out AttributeValue attributeValue)
+        public void RemoveAttribute(IAttribute attribute)
+        {
+            if (!AttributeCache.ContainsKey(attribute)) return;
+
+            AttributeCache.Remove(attribute);
+            Callbacks.AttributeUnregister(attribute);
+        }
+        
+        public bool DefinesAttribute(IAttribute attribute) 
+            => attribute == null || AttributeCache.ContainsKey(attribute);
+        
+        public bool TryGetAttributeValue(IAttribute attribute, out CachedAttributeValue attributeValue)
+            => AttributeCache.TryGetValue(attribute, out attributeValue);
+        
+        public bool TryGetAttributeValue(IAttribute attribute, out AttributeValue attributeValue)
         {
             if (AttributeCache.TryGetValue(attribute, out var cachedValue))
             {
                 attributeValue = cachedValue.Value;
                 return true;
             }
-
+            
             attributeValue = default;
             return false;
         }
         
-        #endregion
+        // ═══════════════════════════════════════════════════════════════════════════
+        // ATTRIBUTE MODIFICATION (refactored for WorkerContext)
+        // ═══════════════════════════════════════════════════════════════════════════
         
-        #region Attribute Modification
-        
-        public void ModifyAttribute(Attribute attribute, SourcedModifiedAttributeValue sourcedModifiedValue, bool runEvents = true)
+        public ImpactData ModifyAttribute(IAttribute attribute, SourcedModifiedAttributeValue sourcedModifiedValue, bool runEvents = true)
         {
-            if (!AttributeCache.ContainsKey(attribute)) return;
+            if (!AttributeCache.ContainsKey(attribute)) return default;
+            
+            var change = new ChangeValue(sourcedModifiedValue);
+            var ctx = new WorkerContext(Self, AttributeCache, change, _frameSummary, _actionQueue);
 
-            // Create a temp value to track during change events
-            ChangeValue change = new ChangeValue(sourcedModifiedValue);
-            if (runEvents) PreChangeHandler.RunEvents(attribute, Root, AttributeCache, change);
+            Callbacks.AttributePreChange(attribute, change);
             
-            // Hold version of previous attribute value & apply changes
-            AttributeValue holdValue = AttributeCache[attribute].Value;
-            AttributeCache[attribute].Add(sourcedModifiedValue.BaseDerivation, change.Value.ToModified());
+            // ═══════════════════════════════════════════════════════════════════════
+            // PHASE 1: Pre-change workers
+            // ═══════════════════════════════════════════════════════════════════════
+            if (runEvents)
+            {
+                PreChangeHandler.RunWorkers(ctx);
+            }
             
-            // Note that post-change events receive change values that may fall outside logical bounds, such as an attribute being 150/100 when it should be bound to base as ceil
-            if (runEvents) PostChangeHandler.RunEvents(attribute, Root, AttributeCache, change);
+            // ═══════════════════════════════════════════════════════════════════════
+            // PHASE 2: Snapshot and apply modification
+            // ═══════════════════════════════════════════════════════════════════════
+            var holdValue = AttributeCache[attribute].Value;
+            AttributeCache[attribute].Add(sourcedModifiedValue.Derivation, change.Value.ToAttributeValue(), sourcedModifiedValue.Derivation.RetainImpact());
             
-            // Override the temp value to reflect real impact
+            if (runEvents) AttributeCache[attribute].ApplyBounds();
             change.Override(AttributeCache[attribute].Value - holdValue);
 
-            // Relay impact to source
-            var impactData = AbilityImpactData.Generate(Root, attribute, sourcedModifiedValue, change.Value.ToAttributeValue());
+            if (runEvents)
+            {
+                AttributeCache[attribute].EnforceScaling(ctx);
+            }
             
-            if (sourcedModifiedValue.BaseDerivation.GetSource().FindAbilitySystem(out var attr)) attr.ProvideFrameImpactDealt(impactData);
-            Callbacks.AttributeImpacted(impactData);
-        }
+            AttributeCache[attribute].ApplyRounding();
+            
+            // ═══════════════════════════════════════════════════════════════════════
+            // PHASE 3: Post-change workers
+            // ═══════════════════════════════════════════════════════════════════════
+                
+            if (runEvents)
+            {
+                PostChangeHandler.RunWorkers(ctx);
+            }
+            
+            // ═══════════════════════════════════════════════════════════════════════
+            // PHASE 4: Calculate real impact and relay
+            // ═══════════════════════════════════════════════════════════════════════
+            
+            change.Override(AttributeCache[attribute].Value - holdValue);
+            //AttributeCache[attribute].UpdateHeld(change.Value.ToAttributeValue());
+            
+            Callbacks.AttributePostChange(attribute, change);
+            
+            var impactData = ImpactData.Generate(
+                Self, 
+                attribute, 
+                sourcedModifiedValue, 
+                change.Value.ToAttributeValue(), holdValue);
+            
+            // Record to frame summary
+            _frameSummary?.RecordImpact(impactData);
+            
+            // Notify source system
+            if (sourcedModifiedValue.Derivation.GetSource().FindAbilitySystem(out var abilSystem))
+            {
+                abilSystem.ProvideFrameImpactDealt(impactData);
+            }
+            
+            // Fire callbacks
+            Callbacks.AttributeChanged(impactData);
 
-        public void RefreshAttributes(Attribute contact)
+            return impactData;
+        }
+        
+        // ═══════════════════════════════════════════════════════════════════════════
+        // ATTRIBUTE DERIVATION MANAGEMENT
+        // ═══════════════════════════════════════════════════════════════════════════
+        
+        private HashSet<IAttribute> _refreshingAttributes = new();
+        private void RefreshRegulatedAttributes(IAttribute contact)
         {
-            // AttributeCache[contact].Modifier.Initialize();
-        }
+            if (!Rule.TryGetRelatedAttributes(contact, out var related)) return;
+            
+            foreach (var relative in related)
+            {
+                // Guard against circular dependencies
+                if (_refreshingAttributes.Contains(relative)) continue;
+                _refreshingAttributes.Add(relative);
 
-        public void RemoveAttributeDerivation(IAttributeImpactDerivation derivation)
+                try
+                {
+                    if (!AttributeCache.TryGetValue(relative, out var cached)) continue;
+
+                    var oldValue = cached.Value;
+                    var delta = cached.RefreshDefaultValue(Self, AttributeCache);
+
+                    if (delta.CurrentValue != 0 || delta.BaseValue != 0)
+                    {
+                        var realImpact = cached.Value - oldValue;
+                        var sourcedModifier = new SourcedModifiedAttributeValue(cached.Root, realImpact.CurrentValue, realImpact.BaseValue);
+
+                        var derivedImpact = ImpactData.Generate(Self, relative, sourcedModifier, realImpact, oldValue);
+                        Callbacks.AttributeChanged(derivedImpact);
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Debug.LogException(ex);
+                }
+                finally
+                {
+                    _refreshingAttributes.Remove(relative);
+                }
+            }
+        }
+        
+        public void RemoveAttributeDerivation(IAttributeImpactDerivation derivation, bool nullify, bool retainCurrent)
         {
             if (!AttributeCache.ContainsKey(derivation.GetAttribute())) return;
-            AttributeCache[derivation.GetAttribute()].Remove(derivation);
+            AttributeCache[derivation.GetAttribute()].Remove(derivation, nullify, retainCurrent);
         }
 
-        public void RemoveAttributeDerivations(List<IAttributeImpactDerivation> derivations)
+        /// <summary>
+        /// Used to clean derivations when it is removed from local system, but the impact is persisted
+        /// </summary>
+        /// <param name="key"></param>
+        /// <param name="derivation"></param>
+        public void NullifyAttributeDerivation(IAttributeImpactDerivation derivation)
         {
-            foreach (IAttributeImpactDerivation derivation in derivations)
-            {
-                if (!AttributeCache.ContainsKey(derivation.GetAttribute())) continue;
-                AttributeCache[derivation.GetAttribute()].Remove(derivation);
-            }
-        }
-
-        #endregion
-        
-    }
-    
-    public class AttributeSystemCallbacks
-    {
-        public delegate void AttributeDelegate(Attribute attribute);
-        public delegate void AttributeImpactDelegate(AbilityImpactData data);
-        
-        #region Callbacks
-
-        public void AttributeRegister(Attribute attribute) => _onAttributeRegister?.Invoke(attribute);
-        private AttributeDelegate _onAttributeRegister;
-        public event AttributeDelegate OnAttributeRegister
-        {
-            add
-            {
-                if (Array.IndexOf(_onAttributeRegister.GetInvocationList(), value) == -1) _onAttributeRegister += value;
-            }
-            remove => _onAttributeRegister -= value;
-        }
-
-        public void AttributeUnregister(Attribute attribute) => _onAttributeUnregister?.Invoke(attribute);
-        private AttributeDelegate _onAttributeUnregister;
-        public event AttributeDelegate OnAttributeUnregister
-        {
-            add
-            {
-                if (Array.IndexOf(_onAttributeUnregister.GetInvocationList(), value) == -1) _onAttributeUnregister += value;
-            }
-            remove => _onAttributeUnregister -= value;
+            if (!AttributeCache.ContainsKey(derivation.GetAttribute())) return;
+            AttributeCache[derivation.GetAttribute()].NullifyDerivation(derivation);
         }
         
-        public void AttributeChanged(AbilityImpactData data) => _onAttributeChanged?.Invoke(data);
-        private AttributeImpactDelegate _onAttributeChanged;
-        public event AttributeImpactDelegate OnAttributeChanged
-        {
-            add
-            {
-                if (Array.IndexOf(_onAttributeChanged.GetInvocationList(), value) == -1) _onAttributeChanged += value;
-            }
-            remove => _onAttributeChanged -= value;
-        }
+        // ═══════════════════════════════════════════════════════════════════════════
+        // HELPERS
+        // ═══════════════════════════════════════════════════════════════════════════
         
-        public void AttributeImpacted(AbilityImpactData data) => _onAttributeImpacted?.Invoke(data);
-        private AttributeImpactDelegate _onAttributeImpacted;
-        public event AttributeImpactDelegate OnAttributeImpacted
-        {
-            add
-            {
-                if (Array.IndexOf(_onAttributeImpacted.GetInvocationList(), value) == -1) _onAttributeImpacted += value;
-            }
-            remove => _onAttributeImpacted -= value;
-        }
-
-        #endregion
+        public IReadOnlyDictionary<IAttribute, CachedAttributeValue> GetAttributeCache() 
+            => AttributeCache;
+        
+        public List<IAttribute> GetDefinedAttributes() 
+            => AttributeCache.Keys.ToList();
     }
 }

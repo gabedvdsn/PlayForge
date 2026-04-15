@@ -6,7 +6,7 @@ using UnityEngine;
 
 namespace FarEmerald.PlayForge
 {
-    public class SourcedModifiedAttributeCache
+    /*public class SourcedModifiedAttributeCache
     {
         private Dictionary<Attribute, List<SourcedModifiedAttributeValue>> cache = new();
         private List<Attribute> active = new();
@@ -73,8 +73,8 @@ namespace FarEmerald.PlayForge
             
             for (int i = 0; i < cache[attribute].Count; i++)
             {
-                if (cache[attribute][i].BaseDerivation.GetSource() == cache[attribute][i].BaseDerivation.GetTarget() && !allowSelfModify) continue;
-                if (!anyContextTag && !cache[attribute][i].BaseDerivation.GetContextTags().ContainsAll(contextTags)) continue;
+                if (cache[attribute][i].Derivation.GetSource() == cache[attribute][i].Derivation.GetTarget() && !allowSelfModify) continue;
+                if (!anyContextTag && !cache[attribute][i].Derivation.GetContextTags().ContainsAll(contextTags)) continue;
                 cache[attribute][i] = cache[attribute][i].Multiply(operand);
             }
         }
@@ -86,8 +86,8 @@ namespace FarEmerald.PlayForge
             for (int i = 0; i < cache[attribute].Count; i++)
             {
                 if (cache[attribute][i].SignPolicy != signPolicy) continue;
-                if (cache[attribute][i].BaseDerivation.GetSource() == cache[attribute][i].BaseDerivation.GetTarget() && !allowSelfModify) continue;
-                if (!anyContextTag && !cache[attribute][i].BaseDerivation.GetContextTags().ContainsAll(contextTags)) continue;
+                if (cache[attribute][i].Derivation.GetSource() == cache[attribute][i].Derivation.GetTarget() && !allowSelfModify) continue;
+                if (!anyContextTag && !cache[attribute][i].Derivation.GetContextTags().ContainsAll(contextTags)) continue;
                 cache[attribute][i] = cache[attribute][i].Multiply(operand);
             }
         }
@@ -98,10 +98,10 @@ namespace FarEmerald.PlayForge
             
             for (int i = 0; i < cache[attribute].Count; i++)
             {
-                if (!ForgeHelper.ValidateImpactTypes(impactType, cache[attribute][i].Derivation.GetImpactTypes())) continue;
+                if (!ForgeHelper.ValidateImpactTypes(false, impactType, cache[attribute][i].Derivation.GetImpactTypes())) continue;
                 if (cache[attribute][i].SignPolicy != signPolicy) continue;
-                if (cache[attribute][i].BaseDerivation.GetSource() == cache[attribute][i].BaseDerivation.GetTarget() && !allowSelfModify) continue;
-                if (!anyContextTag && !cache[attribute][i].BaseDerivation.GetContextTags().ContainsAll(contextTags)) continue;
+                if (cache[attribute][i].Derivation.GetSource() == cache[attribute][i].Derivation.GetTarget() && !allowSelfModify) continue;
+                if (!anyContextTag && !cache[attribute][i].Derivation.GetContextTags().ContainsAll(contextTags)) continue;
                 cache[attribute][i] = cache[attribute][i].Multiply(1 + operand);
             }
         }
@@ -112,10 +112,10 @@ namespace FarEmerald.PlayForge
             
             for (int i = 0; i < cache[attribute].Count; i++)
             {
-                if (!ForgeHelper.ValidateImpactTypes(impactType, cache[attribute][i].Derivation.GetImpactTypes())) continue;
+                if (!ForgeHelper.ValidateImpactTypes(false, impactType, cache[attribute][i].Derivation.GetImpactTypes())) continue;
                 if (cache[attribute][i].SignPolicy != signPolicy) continue;
-                if (cache[attribute][i].BaseDerivation.GetSource() == cache[attribute][i].BaseDerivation.GetTarget() && !allowSelfModify) continue;
-                if (!anyContextTag && !cache[attribute][i].BaseDerivation.GetContextTags().ContainsAll(contextTags)) continue;
+                if (cache[attribute][i].Derivation.GetSource() == cache[attribute][i].Derivation.GetTarget() && !allowSelfModify) continue;
+                if (!anyContextTag && !cache[attribute][i].Derivation.GetContextTags().ContainsAll(contextTags)) continue;
                 cache[attribute][i] = cache[attribute][i].Multiply(1 - operand);
             }
         }
@@ -127,8 +127,8 @@ namespace FarEmerald.PlayForge
             AttributeValue addValue = spread ? operand : operand / cache[attribute].Count;
             for (int i = 0; i < cache[attribute].Count; i++)
             {
-                if (cache[attribute][i].BaseDerivation.GetSource() == cache[attribute][i].BaseDerivation.GetTarget() && !allowSelfModify) continue;
-                if (!anyContextTag && !cache[attribute][i].BaseDerivation.GetContextTags().ContainsAll(contextTags)) continue;
+                if (cache[attribute][i].Derivation.GetSource() == cache[attribute][i].Derivation.GetTarget() && !allowSelfModify) continue;
+                if (!anyContextTag && !cache[attribute][i].Derivation.GetContextTags().ContainsAll(contextTags)) continue;
                 cache[attribute][i] = cache[attribute][i].Add(addValue);
             }
         }
@@ -141,8 +141,8 @@ namespace FarEmerald.PlayForge
             for (int i = 0; i < cache[attribute].Count; i++)
             {
                 if (cache[attribute][i].SignPolicy != signPolicy) continue;
-                if (cache[attribute][i].BaseDerivation.GetSource() == cache[attribute][i].BaseDerivation.GetTarget() && !allowSelfModify) continue;
-                if (!anyContextTag && !cache[attribute][i].BaseDerivation.GetContextTags().ContainsAll(contextTags)) continue;
+                if (cache[attribute][i].Derivation.GetSource() == cache[attribute][i].Derivation.GetTarget() && !allowSelfModify) continue;
+                if (!anyContextTag && !cache[attribute][i].Derivation.GetContextTags().ContainsAll(contextTags)) continue;
                 cache[attribute][i] = cache[attribute][i].Add(addValue);
             }
         }
@@ -153,8 +153,8 @@ namespace FarEmerald.PlayForge
             
             for (int i = 0; i < cache[attribute].Count; i++)
             {
-                if (cache[attribute][i].BaseDerivation.GetSource() == cache[attribute][i].BaseDerivation.GetTarget() && !allowSelfModify) continue;
-                if (!anyContextTag && !cache[attribute][i].BaseDerivation.GetContextTags().ContainsAll(contextTags)) continue;
+                if (cache[attribute][i].Derivation.GetSource() == cache[attribute][i].Derivation.GetTarget() && !allowSelfModify) continue;
+                if (!anyContextTag && !cache[attribute][i].Derivation.GetContextTags().ContainsAll(contextTags)) continue;
                 cache[attribute][i] = cache[attribute][i].Override(operand);
             }
         }
@@ -166,12 +166,12 @@ namespace FarEmerald.PlayForge
             for (int i = 0; i < cache[attribute].Count; i++)
             {
                 if (cache[attribute][i].SignPolicy != signPolicy) continue;
-                if (cache[attribute][i].BaseDerivation.GetSource() == cache[attribute][i].BaseDerivation.GetTarget() && !allowSelfModify) continue;
-                if (!anyContextTag && !cache[attribute][i].BaseDerivation.GetContextTags().ContainsAll(contextTags)) continue;
+                if (cache[attribute][i].Derivation.GetSource() == cache[attribute][i].Derivation.GetTarget() && !allowSelfModify) continue;
+                if (!anyContextTag && !cache[attribute][i].Derivation.GetContextTags().ContainsAll(contextTags)) continue;
                 cache[attribute][i] = cache[attribute][i].Override(operand);
             }
         }
-    }
+    }*/
 
     public enum EAttributeModificationMethod
     {
