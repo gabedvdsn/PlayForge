@@ -473,7 +473,8 @@ namespace FarEmerald.PlayForge
                     stage.Metadata?.Name,
                     policy,
                     stage.Repeat,
-                    stage.MaxDurationSeconds
+                    stage.MaxDurationSeconds,
+                    stage.Metadata?.IsCritical ?? false
                 );
                 syncStages.Add(syncStage);
             }

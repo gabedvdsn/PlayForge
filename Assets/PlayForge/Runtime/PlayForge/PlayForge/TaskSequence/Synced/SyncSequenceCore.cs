@@ -100,6 +100,8 @@ namespace FarEmerald.PlayForge
         private bool _stagePrepared;
         private float _elapsedTime;
         private ERunnerState _state;
+        private int _lastCriticalStageIndex;
+        private bool _criticalExitFired;
 
         /// <summary>Current stage index.</summary>
         public int StageIndex => _stageIndex;
@@ -122,6 +124,11 @@ namespace FarEmerald.PlayForge
         /// <summary>Runner name for debugging.</summary>
         public string Name => _name;
 
+        /// <summary>
+        /// Fired once when the last critical stage in this sync runner completes.
+        /// </summary>
+        public Action OnCriticalSectionExited { get; set; }
+
         public SyncedTaskSequence(List<SyncSequenceStage> stages, string name = null, bool repeat = false,
             Action<SyncedTaskSequence> onComplete = null)
         {
@@ -130,6 +137,17 @@ namespace FarEmerald.PlayForge
             _repeat = repeat;
             _onComplete = onComplete;
             _state = ERunnerState.Ready;
+
+            // Precompute the last critical stage index
+            _lastCriticalStageIndex = -1;
+            for (int i = _stages.Count - 1; i >= 0; i--)
+            {
+                if (_stages[i].IsCritical)
+                {
+                    _lastCriticalStageIndex = i;
+                    break;
+                }
+            }
         }
 
         /// <summary>
@@ -158,6 +176,17 @@ namespace FarEmerald.PlayForge
 
                 if (stage.Step(data, deltaTime))
                 {
+                    // Fire critical section exit when the last critical stage completes.
+                    // Must fire before advancing _stageIndex so the index is still valid.
+                    if (!_criticalExitFired &&
+                        stage.IsCritical &&
+                        _lastCriticalStageIndex >= 0 &&
+                        _stageIndex >= _lastCriticalStageIndex)
+                    {
+                        _criticalExitFired = true;
+                        OnCriticalSectionExited?.Invoke();
+                    }
+
                     stage.Clean(data);
                     _stageIndex++;
                     _stagePrepared = false;
@@ -212,6 +241,7 @@ namespace FarEmerald.PlayForge
             _stageIndex = 0;
             _stagePrepared = false;
             _elapsedTime = 0f;
+            _criticalExitFired = false;
             _state = ERunnerState.Ready;
         }
 
@@ -265,6 +295,7 @@ namespace FarEmerald.PlayForge
         public readonly ESyncStagePolicy Policy;
         public readonly bool Repeat;
         public readonly float? MaxDuration;
+        public readonly bool IsCritical;
 
         private readonly bool[] _taskComplete;
         private int _completedCount;
@@ -279,13 +310,14 @@ namespace FarEmerald.PlayForge
 
         public SyncSequenceStage(List<ISequenceTask> tasks, string name = null,
             ESyncStagePolicy policy = ESyncStagePolicy.WhenAll, bool repeat = false,
-            float? maxDuration = null)
+            float? maxDuration = null, bool isCritical = false)
         {
             Tasks = tasks;
             Name = name;
             Policy = policy;
             Repeat = repeat;
             MaxDuration = maxDuration;
+            IsCritical = isCritical;
             _taskComplete = new bool[tasks.Count];
         }
 

@@ -70,9 +70,9 @@ namespace FarEmerald.PlayForge
         {
             return $"Active data packet for an active ability runtime: {EffectOrigin.GetReadableDefinition().GetName()}: {EffectOrigin.GetReadableDefinition().GetDescription()}";
         }
-        public override Texture2D GetPrimaryIcon()
+        public override Texture2D GetDefaultIcon()
         {
-            return EffectOrigin.GetReadableDefinition().GetPrimaryIcon();
+            return EffectOrigin.GetReadableDefinition().GetDefaultIcon();
         }
 
         #endregion

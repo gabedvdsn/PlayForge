@@ -166,7 +166,7 @@ namespace FarEmerald.PlayForge
             return Definition.Description ?? string.Empty;
         }
         
-        public override Texture2D GetPrimaryIcon()
+        public override Texture2D GetDefaultIcon()
         {
             return ForgeHelper.GetTextureItem(Definition.Textures, PlayForge.Tags.PRIMARY);
         }

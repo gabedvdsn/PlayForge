@@ -56,10 +56,6 @@ namespace FarEmerald.PlayForge
         {
             return Owner.GetLevel();
         }
-        public void SetLevel(int level)
-        {
-            Owner.SetLevel(level);
-        }
         public virtual float GetRelativeLevel()
         {
             return ForgeHelper.RelativeOffsetValue(Owner.GetLevel(), Owner.GetMaxLevel());
@@ -69,10 +65,6 @@ namespace FarEmerald.PlayForge
             return Owner.GetAffiliation();
         }
         public bool IsActive()
-        {
-            return true;
-        }
-        public bool RetainEffectImpact()
         {
             return true;
         }

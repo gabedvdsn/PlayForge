@@ -528,7 +528,8 @@ namespace FarEmerald.PlayForge
                     stage.Metadata?.Name,
                     policy,
                     stage.Repeat,
-                    stage.MaxDurationSeconds
+                    stage.MaxDurationSeconds,
+                    stage.Metadata?.IsCritical ?? false
                 );
                 syncStages.Add(syncStage);
             }
@@ -548,6 +549,8 @@ namespace FarEmerald.PlayForge
     {
         private readonly SequenceStage _stage = new();
         private SequenceStageMetadata _metadata;
+
+        public bool IsCritical => _metadata?.IsCritical ?? false;
         
         // ═══════════════════════════════════════════════════════════════════════════
         // METADATA

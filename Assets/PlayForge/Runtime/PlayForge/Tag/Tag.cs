@@ -279,7 +279,7 @@ namespace FarEmerald.PlayForge
         
         public string GetName() => Name;
         public string GetDescription() => "";
-        public Texture2D GetPrimaryIcon() => null;
+        public Texture2D GetDefaultIcon() => null;
 
         // ═══════════════════════════════════════════════════════════════════════════
         // Equality & Operators

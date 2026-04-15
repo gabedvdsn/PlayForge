@@ -56,7 +56,7 @@ namespace FarEmerald.PlayForge
         {
             return $"[{Relay.Wrapper.ProcessName}] This is a MonoProcess.";
         }
-        public virtual Texture2D GetPrimaryIcon()
+        public virtual Texture2D GetDefaultIcon()
         {
             return null;
         }

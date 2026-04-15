@@ -55,8 +55,6 @@ namespace FarEmerald.PlayForge
 
                 // Valid position acquired
                 data.SetTargetingPacket(Tags.TARGET, new StaticTargetingPacket(hit.point));
-                Debug.Log($"{hit.transform.position}");
-                Debug.Log($"{hit.point}");
                 return;
             }
         }

@@ -61,6 +61,7 @@ namespace FarEmerald.PlayForge
             if (_requestedLifecycle == EProcessLifecycle.Synchronous)
             {
                 _syncRunner = sequence.Definition.BuildSyncRunner();
+                _syncRunner.OnCriticalSectionExited = sequence.OnCriticalSectionExited;
             }
         }
 
@@ -83,6 +84,7 @@ namespace FarEmerald.PlayForge
             if (lifecycle == EProcessLifecycle.Synchronous)
             {
                 _syncRunner = sequence.Definition.BuildSyncRunner();
+                _syncRunner.OnCriticalSectionExited = sequence.OnCriticalSectionExited;
             }
         }
 

@@ -47,17 +47,19 @@ namespace FarEmerald.PlayForge
 
         private bool usageEffectsApplied;
 
-        public bool usageEffectsApplied;
-
         private int _activeCriticalStages;
+        private int _lastCriticalStageIndex;
+        private int _maxFinishedCriticalStageIndex;
         public bool HasAnyCriticalStage { get; private set; }
         public Action OnCriticalSectionExited { get; set; }
 
-        public AbilityProxy(AbilityBehaviour behaviour)
+        public AbilityProxy(AbilityBehaviour behaviour, string abilityName = null)
         {
             StageIndex = -1;
             Behaviour = behaviour;
             HasAnyCriticalStage = Behaviour.Stages != null && Behaviour.Stages.Any(s => s.Tasks.Any(t => t.IsCriticalSection));
+            
+            CompileSequence(abilityName);
         }
 
         /// <summary>
@@ -88,6 +90,22 @@ namespace FarEmerald.PlayForge
             maintainedStages = 0;
             usageEffectsApplied = false;
             _activeCriticalStages = 0;
+            _maxFinishedCriticalStageIndex = -1;
+
+            // Precompute the last stage index that contains a critical task
+            _lastCriticalStageIndex = -1;
+            if (Behaviour.Stages != null)
+            {
+                for (int i = Behaviour.Stages.Count - 1; i >= 0; i--)
+                {
+                    if (Behaviour.Stages[i].Tasks != null &&
+                        Behaviour.Stages[i].Tasks.Any(t => t.IsCriticalSection))
+                    {
+                        _lastCriticalStageIndex = i;
+                        break;
+                    }
+                }
+            }
         }
 
         public void Clean()
@@ -240,6 +258,10 @@ namespace FarEmerald.PlayForge
         /// </summary>
         private async UniTask ActivateViaSequence(CancellationToken token, AbilityDataPacket implicitData)
         {
+            // Forward critical section exit from the compiled sequence up through the proxy.
+            // AbilitySpecContainer wires OnCriticalSectionExited → handle.ReleaseClaimIfNeeded().
+            CompiledSequence.OnCriticalSectionExited = () => OnCriticalSectionExited?.Invoke();
+
             // AbilityDataPacket extends SequenceDataPacket, so pass it directly.
             var handler = implicitData.EffectOrigin.GetOwner();
             if (!ProcessControl.Register(CompiledSequence, handler, implicitData, out var relay))
@@ -391,10 +413,15 @@ namespace FarEmerald.PlayForge
             bool isCriticalStage = stage.Tasks.Any(t => t.IsCriticalSection);
             if (isCriticalStage) _activeCriticalStages++;
 
-            var asc = data.Spec.GetOwner().AsGAS().GetAbilitySystem();
+            var asc = data.EffectOrigin.GetOwner().ToGAS().GetAbilitySystem();
             if (asc is null)
             {
-                if (isCriticalStage && --_activeCriticalStages == 0) OnCriticalSectionExited?.Invoke();
+                if (isCriticalStage)
+                {
+                    _maxFinishedCriticalStageIndex = Math.Max(_maxFinishedCriticalStageIndex, stageIndex);
+                    if (--_activeCriticalStages == 0 && _maxFinishedCriticalStageIndex >= _lastCriticalStageIndex)
+                        OnCriticalSectionExited?.Invoke();
+                }
                 if (stageIndex == StageIndex) nextStageSignal?.TrySetResult();
                 else maintainedStages -= 1;
                 return;
@@ -450,7 +477,12 @@ namespace FarEmerald.PlayForge
                 if (stageIndex == StageIndex) nextStageSignal?.TrySetResult();
                 else maintainedStages -= 1;
 
-                if (isCriticalStage && --_activeCriticalStages == 0) OnCriticalSectionExited?.Invoke();
+                if (isCriticalStage)
+                {
+                    _maxFinishedCriticalStageIndex = Math.Max(_maxFinishedCriticalStageIndex, stageIndex);
+                    if (--_activeCriticalStages == 0 && _maxFinishedCriticalStageIndex >= _lastCriticalStageIndex)
+                        OnCriticalSectionExited?.Invoke();
+                }
 
                 await UniTask.SwitchToMainThread(stageToken);
                 asc.Callbacks.AbilityStageEnded(AbilityCallbackStatus.GenerateForStageEvent(data, stage, !canceled && err is null));

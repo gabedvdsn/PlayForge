@@ -107,11 +107,12 @@ MonoBehaviour:
         RequireTags: []
   Behaviour:
     Targeting:
-      rid: 7261146469945573625
+      rid: 7261146469945573802
     UseImplicitTargeting: 1
     ImplicitTag:
       Name: TargetzfvEmaa5gNtqhQ0_dE2_NOOAGh1QLRP8zfvEmaa5gNtqhQ0_dE2_NOOAGh
-    AssetLoaders: []
+    AssetLoaders:
+    - rid: 7261146469945573799
     Stages:
     - StagePolicy:
         rid: 7261146403316695444
@@ -162,16 +163,17 @@ MonoBehaviour:
           _typeName: FarEmerald.PlayForge.Examples.DemoAbilitySequences, Assembly-CSharp,
             Version=0.0.0.0, Culture=neutral, PublicKeyToken=null
           _methodName: HealPulseSequence
-    - rid: 7261146469945573625
-      type: {class: SelectGasTargetTask, ns: FarEmerald.PlayForge, asm: Assembly-CSharp}
+    - rid: 7261146469945573799
+      type: {class: SetEffectsTask, ns: FarEmerald.PlayForge, asm: Assembly-CSharp}
+      data:
+        Tag:
+          Name: Effects1hrldAfmelBJryWmirBAFALaw9ISFYz_1hrldAfmelBJryWmirBAFALaw
+        Effects:
+        - {fileID: 11400000, guid: 2c00b6eb50563ca43839e9be362ac1af, type: 2}
+    - rid: 7261146469945573802
+      type: {class: SelectPositionTargetTask, ns: FarEmerald.PlayForge, asm: Assembly-CSharp}
       data:
         BreakRuntimeOnInvalid: 1
-        Requirements:
-          Name: 
-          SourceTemplate: {fileID: 0}
-          SyncWithTemplate: 0
-          AvoidTags: []
-          RequireTags: []
         RaycastLayers:
           serializedVersion: 2
           m_Bits: 4294967295

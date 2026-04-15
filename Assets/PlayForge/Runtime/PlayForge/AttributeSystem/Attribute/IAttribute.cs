@@ -50,7 +50,7 @@ namespace FarEmerald.PlayForge
         {
             return Description;
         }
-        public Texture2D GetPrimaryIcon()
+        public Texture2D GetDefaultIcon()
         {
             return ForgeHelper.GetTextureItem(Textures, PlayForge.Tags.PRIMARY);
         }

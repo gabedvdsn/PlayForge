@@ -261,7 +261,7 @@ namespace FarEmerald.PlayForge
         {
             return "Process Control manages active processes.";
         }
-        public Texture2D GetPrimaryIcon()
+        public Texture2D GetDefaultIcon()
         {
             return null;
         }

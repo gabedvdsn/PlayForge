@@ -131,13 +131,14 @@ namespace FarEmerald.PlayForge.Examples
             float speed = 55f;
 
             float shatterTimer = 0f;
-            float shatterDuration = 0.6f;
+            float shatterDuration = 1.6f;
             Vector3[] shardDirs = null;
             Vector3[] shardStarts = null;
 
             return TaskSequenceBuilder.Create("Ice Lance")
                 .WithLifecycle(EProcessLifecycle.Synchronous)
                 .WithStepTiming(EProcessStepTiming.Update)
+                //.WithCriticalFlag(true)
                 .Stage(s => s
                     .WithName("Setup")
                     .Do(d =>
@@ -153,49 +154,53 @@ namespace FarEmerald.PlayForge.Examples
                         }
                     })
                 )
-                // Phase: Fly toward target
-                .SyncTask((d, dt) =>
-                {
-                    if (!hasTarget || !lance) return true;
-
-                    var dest = liveTarget != null ? liveTarget.position : targetPos;
-                    var dir = (dest - lance.transform.position).normalized;
-                    if (dir != Vector3.zero)
-                        lance.transform.rotation = Quaternion.LookRotation(dir) * Quaternion.Euler(90, 0, 0);
-
-                    lance.transform.position = Vector3.MoveTowards(
-                        lance.transform.position, dest, speed * dt);
-
-                    if (Vector3.Distance(lance.transform.position, dest) < 0.8f)
+                .Stage(s => s
+                    .WithCriticalFlag(true)
+                    .WithPolicy(WhenAllStagePolicy.Instance)
+                    // Phase: Fly toward target
+                    .SyncTask((d, dt) =>
                     {
-                        // Shatter: replace lance with fragments
-                        var impactPos = lance.transform.position;
-                        Object.Destroy(lance);
-                        lance = null;
+                        if (!hasTarget || !lance) return true;
 
-                        int shardCount = 8;
-                        shardDirs = new Vector3[shardCount];
-                        shardStarts = new Vector3[shardCount];
-                        for (int i = 0; i < shardCount; i++)
+                        var dest = liveTarget != null ? liveTarget.position : targetPos;
+                        var dir = (dest - lance.transform.position).normalized;
+                        if (dir != Vector3.zero)
+                            lance.transform.rotation = Quaternion.LookRotation(dir) * Quaternion.Euler(90, 0, 0);
+
+                        lance.transform.position = Vector3.MoveTowards(
+                            lance.transform.position, dest, speed * dt);
+
+                        if (Vector3.Distance(lance.transform.position, dest) < 0.8f)
                         {
-                            var shard = DemoSequences.CreatePrim(PrimitiveType.Cube, withPos: false)
-                                .Scale(Vector3.one * 0.35f);
-                            shard.transform.position = impactPos;
-                            shards.Add(shard);
+                            // Shatter: replace lance with fragments
+                            var impactPos = lance.transform.position;
+                            Object.Destroy(lance);
+                            lance = null;
 
-                            float angle = (360f / shardCount) * i * Mathf.Deg2Rad;
-                            shardDirs[i] = new Vector3(
-                                Mathf.Cos(angle), Random.Range(0.3f, 1.2f), Mathf.Sin(angle));
-                            shardStarts[i] = impactPos;
-                        }
+                            int shardCount = 8;
+                            shardDirs = new Vector3[shardCount];
+                            shardStarts = new Vector3[shardCount];
+                            for (int i = 0; i < shardCount; i++)
+                            {
+                                var shard = DemoSequences.CreatePrim(PrimitiveType.Cube, withPos: false)
+                                    .Scale(Vector3.one * 0.35f);
+                                shard.transform.position = impactPos;
+                                shards.Add(shard);
+
+                                float angle = (360f / shardCount) * i * Mathf.Deg2Rad;
+                                shardDirs[i] = new Vector3(
+                                    Mathf.Cos(angle), Random.Range(0.3f, 1.2f), Mathf.Sin(angle));
+                                shardStarts[i] = impactPos;
+                            }
                         
-                        if (liveTarget) d.TryApplyEffects(liveTarget.gameObject, Tags.EFFECTS);
+                            if (liveTarget) d.TryApplyEffects(liveTarget.gameObject, Tags.EFFECTS);
 
-                        return true;
-                    }
+                            return true;
+                        }
 
-                    return false;
-                })
+                        return false;
+                    })
+                )
                 // Phase: Shards fly outward and shrink
                 .SyncTask((d, dt) =>
                 {
@@ -273,7 +278,7 @@ namespace FarEmerald.PlayForge.Examples
                 .SyncTask((d, dt) =>
                 {
                     if (!ring) return true;
-
+                    
                     timer += dt;
 
                     float maxRadius = 12f;
@@ -290,7 +295,12 @@ namespace FarEmerald.PlayForge.Examples
                         currentRadius = maxRadius;
                         if (!appliedEffect)
                         {
-                            
+                            var hits = new Collider[6];
+                            var size = Physics.OverlapSphereNonAlloc(origin, maxRadius, hits);
+                            for (int i = 0; i < size; i++)
+                            {
+                                d.TryApplyEffects(hits[i].gameObject, Tags.EFFECTS);
+                            }
                             appliedEffect = true;
                         }
                     }

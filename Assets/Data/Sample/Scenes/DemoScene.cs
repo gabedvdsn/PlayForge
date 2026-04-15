@@ -59,7 +59,7 @@ public class DemoScene : MonoBehaviour
         var c = Containers[index];
         
         var img = c.Q("Image");
-        img.style.backgroundImage = spec.Spec.Base.GetPrimaryIcon();
+        img.style.backgroundImage = spec.Spec.Base.GetDefaultIcon();
         
         var cooldown = Containers[index].Q<Slider>("Cooldown");
         cooldown.lowValue = 0f;

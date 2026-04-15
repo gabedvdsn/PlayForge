@@ -33,9 +33,9 @@ namespace FarEmerald.PlayForge
 
         private bool _initialized;
         public bool IsInitialized => _initialized;
-        public ProcessRelay Relay;
+        protected ProcessRelay Relay;
 
-        public readonly Dictionary<int, ProcessRelay> HandlerRelays = new();
+        private readonly Dictionary<int, ProcessRelay> HandlerRelays = new();
         
         #region Readable Definition
         
@@ -47,7 +47,7 @@ namespace FarEmerald.PlayForge
         {
             return $"[{Relay.Wrapper.ProcessName}] This is a MonoProcess.";
         }
-        public virtual Texture2D GetPrimaryIcon()
+        public virtual Texture2D GetDefaultIcon()
         {
             return null;
         }

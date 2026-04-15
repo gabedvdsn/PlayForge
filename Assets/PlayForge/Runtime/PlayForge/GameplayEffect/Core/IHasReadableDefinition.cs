@@ -6,6 +6,6 @@ namespace FarEmerald.PlayForge
     {
         public string GetName();
         public string GetDescription();
-        public Texture2D GetPrimaryIcon();
+        public Texture2D GetDefaultIcon();
     }
 }

@@ -61,6 +61,15 @@ namespace FarEmerald.PlayForge
         
         // Critical section tracking (incremented/decremented at stage push/pop level)
         private int _criticalFlagLocks;
+        private bool _criticalExitFired;
+        private int _lastCriticalStageIndex;
+
+        /// <summary>
+        /// Fired once when the last critical section in this sequence exits.
+        /// For whole-sequence-critical sequences, fires when the sequence terminates.
+        /// For stage-level critical sequences, fires when the last critical stage pops.
+        /// </summary>
+        public Action OnCriticalSectionExited { get; set; }
         
         // Tasks being cleaned (for error handling)
         private readonly List<ISequenceTask> _activeTasks = new();
@@ -193,6 +202,14 @@ namespace FarEmerald.PlayForge
                     CleanupAllActiveTasks();
                     Cleanup();
                     IsRunning = false;
+
+                    // For whole-sequence-critical sequences, fire once when the sequence exits.
+                    // Stage-level critical sequences fire earlier via PopActiveStage.
+                    if (!_criticalExitFired && (Definition.Metadata?.IsCritical ?? false))
+                    {
+                        _criticalExitFired = true;
+                        OnCriticalSectionExited?.Invoke();
+                    }
                 }
                 
                 // Invoke OnComplete callback (outside finally to avoid issues)
@@ -506,10 +523,21 @@ namespace FarEmerald.PlayForge
                 if (_activeStageStack.Count > 0 && _activeStageStack.Peek() == stage)
                 {
                     _activeStageStack.Pop();
-                    
+
                     if (stage.Metadata?.IsCritical ?? false)
                     {
                         _criticalFlagLocks = Math.Max(0, _criticalFlagLocks - 1);
+
+                        // Fire once when the last critical stage-level lock is released
+                        // and we've reached or passed the last known critical stage index.
+                        if (!_criticalExitFired &&
+                            _criticalFlagLocks == 0 &&
+                            _lastCriticalStageIndex >= 0 &&
+                            StageIndex >= _lastCriticalStageIndex)
+                        {
+                            _criticalExitFired = true;
+                            OnCriticalSectionExited?.Invoke();
+                        }
                     }
                 }
             }
@@ -988,10 +1016,22 @@ namespace FarEmerald.PlayForge
             _jumpToStageRequest = null;
             _pendingStageError = null;
             _criticalFlagLocks = 0;
+            _criticalExitFired = false;
             _stageSources.Clear();
             _activeTasks.Clear();
             _activeStageStack.Clear();
             Definition.ResetConditions();
+
+            // Precompute the index of the last stage-level critical stage
+            _lastCriticalStageIndex = -1;
+            for (int i = Definition.Stages.Count - 1; i >= 0; i--)
+            {
+                if (Definition.Stages[i].Metadata?.IsCritical ?? false)
+                {
+                    _lastCriticalStageIndex = i;
+                    break;
+                }
+            }
         }
         
         private void Cleanup()

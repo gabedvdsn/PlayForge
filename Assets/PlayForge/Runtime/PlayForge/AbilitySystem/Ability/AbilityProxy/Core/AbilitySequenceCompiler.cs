@@ -133,7 +133,7 @@ namespace FarEmerald.PlayForge
             int stageIndex)
         {
             stage.WithName($"Stage {stageIndex.ToString()}");
-
+            
             // Map stage policy
             MapStagePolicy(stage, abilityStage.StagePolicy);
 

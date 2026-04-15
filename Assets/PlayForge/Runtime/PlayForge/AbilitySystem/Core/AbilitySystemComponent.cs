@@ -30,19 +30,32 @@ namespace FarEmerald.PlayForge
             Self = self;
         }
 
+        /// <summary>True if any ability is currently executing (in ActiveCache).</summary>
         public bool IsExecuting => ActiveCache.Keys.Any(IsExecutingPolicy);
-        
-        public bool IsExecutingPolicy(EAbilityActivationPolicy policy) 
+
+        /// <summary>True if any ability in this policy is currently executing (in ActiveCache).</summary>
+        public bool IsExecutingPolicy(EAbilityActivationPolicy policy)
             => ActiveCache.ContainsKey(policy) && ActiveCache[policy].Count > 0;
-        
+
+        /// <summary>True if any ability is currently claiming (blocking reactivation).</summary>
+        public bool IsClaiming => ActiveCache.Keys.Any(IsClaimingPolicy);
+
+        /// <summary>True if any ability in this policy is currently claiming (blocking reactivation).</summary>
+        public bool IsClaimingPolicy(EAbilityActivationPolicy policy)
+            => ActiveCache.ContainsKey(policy) && ActiveCache[policy].Any(idx => AbilityCache[idx].IsClaiming);
+
         public bool IsExecutingCritical => IsExecuting && ActiveCache.Keys.Any(IsExecutingPolicyCritical);
-        
+
         public bool IsExecutingPolicyCritical(EAbilityActivationPolicy policy)
         {
             return IsExecutingPolicy(policy) && ActiveCache[policy].Any(IsCritical);
         }
 
-        public bool IsCritical(int index) 
+        /// <summary>True if any claiming ability in this policy is critical.</summary>
+        public bool IsClaimingPolicyCritical(EAbilityActivationPolicy policy)
+            => IsClaimingPolicy(policy) && ActiveCache[policy].Any(idx => AbilityCache[idx].IsClaiming && IsCritical(idx));
+
+        public bool IsCritical(int index)
             => AbilityCache[index].Spec.Base.Behaviour.Stages.Any(
                 stage => stage.Tasks.Any(task => task.IsCriticalSection));
 
@@ -286,13 +299,13 @@ namespace FarEmerald.PlayForge
                     AlwaysActivateTargetingValidation(data.Request.Index) && 
                     ActivateAbility(AbilityCache[data.Request.Index], data),
                     
-                EAbilityActivationPolicy.ActivateIfIdle => 
-                    !IsExecutingPolicy(EAbilityActivationPolicy.ActivateIfIdle) && 
+                EAbilityActivationPolicy.ActivateIfIdle =>
+                    !IsClaimingPolicy(EAbilityActivationPolicy.ActivateIfIdle) &&
                     ActivateAbility(AbilityCache[data.Request.Index], data),
-                    
-                EAbilityActivationPolicy.QueueActivationIfBusy => 
-                    !IsExecutingPolicy(EAbilityActivationPolicy.QueueActivationIfBusy) 
-                        ? ActivateAbility(AbilityCache[data.Request.Index], data) 
+
+                EAbilityActivationPolicy.QueueActivationIfBusy =>
+                    !IsClaimingPolicy(EAbilityActivationPolicy.QueueActivationIfBusy)
+                        ? ActivateAbility(AbilityCache[data.Request.Index], data)
                         : QueueAbilityActivation(data.Request),
                         
                 _ => throw new ArgumentOutOfRangeException()
@@ -301,7 +314,7 @@ namespace FarEmerald.PlayForge
         
         private bool AlwaysActivateTargetingValidation(int abilityIndex)
         {
-            if (!IsExecutingPolicyCritical(EAbilityActivationPolicy.AlwaysActivate)) return true;
+            if (!IsClaimingPolicyCritical(EAbilityActivationPolicy.AlwaysActivate)) return true;
             return !IsCritical(abilityIndex);
         }
 
@@ -336,7 +349,7 @@ namespace FarEmerald.PlayForge
             container.Inject(injection);
         }
 
-        public void Inject(Ability ability, IAbilityInjection injection)
+        public void Inject(Ability ability, ISequenceInjection injection)
         {
             if (!TryGetAbilityContainer(ability, out var container) || !container.IsActive) return;
             container.Inject(injection);
@@ -372,31 +385,34 @@ namespace FarEmerald.PlayForge
 
         /// <summary>
         /// Called once the ability has completed all critical sections. Once released, the ability system will re-enable ability activation.
+        /// The ability remains in ActiveCache (still executing) — only the reactivation gate opens.
         /// </summary>
-        /// <param name="container"></param>
-        /// <param name="data"></param>
         public void ReleaseClaim(AbilitySpecContainer container, AbilityDataPacket data)
         {
             if (!AbilityCache.ContainsKey(container.Index)) return;
-            
-            // Resolve policy from the data packet if available, otherwise from the ability definition.
-            // This fixes the case where ReleaseClaim is called with null data (e.g. from Inject cleanup),
-            // which previously caused the ability to stay stuck in ActiveCache forever.
-            var policy = data?.Request.Policy
-                         ?? container.Spec.Base.Definition.ActivationPolicy.Translate(this);
-
-            ActiveCache[policy].Remove(container.Index);
 
             if (data != null)
             {
                 Callbacks.AbilityClaimReleased(AbilityCallbackStatus.GenerateForAbilityEvent(data));
             }
-        }
 
-        public void EndAbilityActivation()
-        {
+            // Dequeue waiting activations now that the claim is released
             if (activationQueue.Count > 0)
                 TryActivateAbility(activationQueue.Dequeue());
+        }
+
+        /// <summary>
+        /// Called when the ability has fully completed (all stages done, handle cleaned up).
+        /// Removes the ability from ActiveCache.
+        /// </summary>
+        public void EndActivation(AbilitySpecContainer container, AbilityDataPacket data)
+        {
+            if (!AbilityCache.ContainsKey(container.Index)) return;
+
+            var policy = data?.Request.Policy
+                         ?? container.Spec.Base.Definition.ActivationPolicy.Translate(this);
+
+            ActiveCache[policy].Remove(container.Index);
         }
 
         #endregion

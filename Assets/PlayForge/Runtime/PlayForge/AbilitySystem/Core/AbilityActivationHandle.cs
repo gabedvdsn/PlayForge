@@ -16,14 +16,14 @@ namespace FarEmerald.PlayForge
 
         private static int _nextId;
 
-        public AbilityActivationHandle(AbilitySpecContainer container, AbilityDataPacket data)
+        public AbilityActivationHandle(AbilitySpecContainer container, AbilityDataPacket data, string abilityName = null)
         {
             Container = container;
             HandleId = _nextId++;
             Data = data;
             Cts = new CancellationTokenSource();
             TargetingCts = new CancellationTokenSource();
-            Proxy = container.Spec.Base.Proxy.GenerateProxy();
+            Proxy = container.Spec.Base.Behaviour.GenerateProxy(abilityName);
         }
 
         public void ReleaseClaimIfNeeded()

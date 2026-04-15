@@ -56,13 +56,10 @@ MonoBehaviour:
     Targeting:
       rid: -2
     UseImplicitTargeting: 1
-    Stages:
-    - StagePolicy:
-        rid: 7261146403316695444
-      Tasks:
-      - rid: 7261146403316695445
-      - rid: 7261146403316695446
-      ApplyUsageEffects: 0
+    ImplicitTag:
+      Name: TargetzfvEmaa5gNtqhQ0_dE2_NOOAGh1QLRP8zfvEmaa5gNtqhQ0_dE2_NOOAGh
+    AssetLoaders: []
+    Stages: []
   SourceActivationRules:
   - rid: 1955962478581514659
   - rid: 1955962478581514660
@@ -99,19 +96,3 @@ MonoBehaviour:
     - rid: 1955962478581514662
       type: {class: IsAliveValidation, ns: FarEmerald.PlayForge, asm: Assembly-CSharp}
       data: 
-    - rid: 7261146403316695444
-      type: {class: AllProxyStagePolicy, ns: FarEmerald.PlayForge, asm: Assembly-CSharp}
-      data: 
-    - rid: 7261146403316695445
-      type: {class: SetAssetsAbilityTask, ns: FarEmerald.PlayForge, asm: Assembly-CSharp}
-      data:
-        Tag:
-          Name: Assetsas0D8m6eBt_MlSQb0FSGh4NV4XOSxf6qas0D8m6eBt_MlSQb0FSGh4NV4X
-        Assets:
-        - {fileID: 11400000, guid: 53a3e65d1d4a3eb49bce88eed63519d4, type: 2}
-    - rid: 7261146403316695446
-      type: {class: RunSequenceTask, ns: FarEmerald.PlayForge, asm: Assembly-CSharp}
-      data:
-        SequenceReference:
-          _typeName: 
-          _methodName: 

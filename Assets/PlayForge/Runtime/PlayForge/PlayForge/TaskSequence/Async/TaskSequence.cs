@@ -49,7 +49,8 @@ namespace FarEmerald.PlayForge
         public async UniTask Run(ProcessDataPacket data, CancellationToken token = default)
         {
             Runtime = new TaskSequenceRuntime(Definition);
-            
+            Runtime.OnCriticalSectionExited = OnCriticalSectionExited;
+
             try
             {
                 await Runtime.Run(data, token);
@@ -66,7 +67,8 @@ namespace FarEmerald.PlayForge
         public async UniTask<bool> TryRun(ProcessDataPacket data, CancellationToken token = default)
         {
             Runtime = new TaskSequenceRuntime(Definition);
-            
+            Runtime.OnCriticalSectionExited = OnCriticalSectionExited;
+
             try
             {
                 await Runtime.Run(data, token);
@@ -79,6 +81,12 @@ namespace FarEmerald.PlayForge
         }
 
         public bool IsCriticalSection => IsRunning ? Runtime.IsCriticalSection : false;
+
+        /// <summary>
+        /// Fired once when the last critical section in this sequence exits.
+        /// Set this before calling Run() — it is forwarded to the runtime on each run.
+        /// </summary>
+        public Action OnCriticalSectionExited { get; set; }
 
         // ═══════════════════════════════════════════════════════════════════════════
         // INJECTION

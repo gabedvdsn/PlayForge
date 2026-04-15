@@ -29,17 +29,27 @@ namespace FarEmerald.PlayForge
         public AbilitySpecContainer(AbilitySpec spec, int abilityIndex)
         {
             Spec = spec;
+            Index = abilityIndex;
+        }
+
+        private void AddActiveHandle(AbilityActivationHandle handle)
+        {
+            _activeHandles.Add(handle);
+        }
+
+        private void RemoveActiveHandle(AbilityActivationHandle handle)
+        {
+            _activeHandles.Remove(handle);
         }
 
         public bool ActivateAbility(AbilityDataPacket implicitData)
         {
             if (IsClaiming) return false;
-            if (!Spec.Owner.AsData().AbilitySystem.ClaimActive(this, implicitData)) return false;
+            if (!implicitData.System.ClaimActive(this, implicitData)) return false;
 
-            implicitData.AddPayload(Tags.PAYLOAD_DERIVATION, Spec);
-
-            var handle = new AbilityActivationHandle(this, implicitData);
-            _activeHandles.Add(handle);
+            string abilityName = $"{Spec.Base?.GetName() ?? "Anonymous"}";
+            var handle = new AbilityActivationHandle(this, implicitData, abilityName);
+            AddActiveHandle(handle);
 
             AwaitAbility(handle).Forget();
 
@@ -62,7 +72,7 @@ namespace FarEmerald.PlayForge
             {
                 handle.IsTargeting = false;
 
-                if (handle.Data.TryGetFirstTarget(out var target) && !Spec.ValidateActivationRequirements(target, handle.Data))
+                if (handle.Data.TryGetFirstTarget(out var target) && !Spec.ValidateAllActivationRequirements(target, handle.Data))
                 {
                     targetingCancelled = true;
                 }
@@ -99,9 +109,8 @@ namespace FarEmerald.PlayForge
             finally
             {
                 handle.IsExecuting = false;
-                Spec.Owner.GetTagCache().RemoveTags(Spec.Base.Tags.ActiveGrantedTags);
-
                 CleanHandle(handle);
+                Spec.Source.CompileGrantedTags();
             }
         }
 
@@ -113,11 +122,10 @@ namespace FarEmerald.PlayForge
             var handles = _activeHandles.ToArray();
             foreach (var handle in handles)
             {
-                injection.OnContainerInject(this);
                 handle.Proxy.Inject(injection, handle.Data);
 
                 // For interrupt injections, cancel the appropriate tokens
-                if (injection is InterruptInjection)
+                if (injection is InterruptSequenceInjection)
                 {
                     if (handle.IsTargeting) handle.TargetingCts?.Cancel();
                     if (handle.IsExecuting) handle.Cts?.Cancel();
@@ -127,7 +135,7 @@ namespace FarEmerald.PlayForge
 
         internal void OnHandleClaimReleased(AbilityActivationHandle handle)
         {
-            Spec.Owner.AsData().AbilitySystem.ReleaseClaim(this, handle.Data);
+            handle.Data.System.ReleaseClaim(this, handle.Data);
         }
 
         private void CleanHandle(AbilityActivationHandle handle)
@@ -135,7 +143,8 @@ namespace FarEmerald.PlayForge
             handle.ReleaseClaimIfNeeded();
             handle.Proxy.Clean();
             handle.CleanTokens();
-            _activeHandles.Remove(handle);
+            RemoveActiveHandle(handle);
+            handle.Data.System.EndActivation(this, handle.Data);
         }
 
         public override string ToString()

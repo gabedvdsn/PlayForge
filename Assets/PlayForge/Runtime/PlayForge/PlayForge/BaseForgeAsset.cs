@@ -167,7 +167,7 @@ namespace FarEmerald.PlayForge
         public abstract IEnumerable<Tag> GetGrantedTags();
         public abstract string GetName();
         public abstract string GetDescription();
-        public abstract Texture2D GetPrimaryIcon();
+        public abstract Texture2D GetDefaultIcon();
     }
     
     // ═══════════════════════════════════════════════════════════════════════════════

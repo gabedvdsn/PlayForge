@@ -389,7 +389,7 @@ namespace FarEmerald.PlayForge
         {
             return $"Anonymous Process Data Packet";
         }
-        public virtual Texture2D GetPrimaryIcon()
+        public virtual Texture2D GetDefaultIcon()
         {
             return null;
         }

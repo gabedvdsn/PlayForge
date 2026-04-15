@@ -26,9 +26,9 @@ namespace FarEmerald.PlayForge
         
         public List<AbilityTaskBehaviourStage> Stages;
 
-        public AbilityProxy GenerateProxy()
+        public AbilityProxy GenerateProxy(string abilityName = null)
         {
-            return new AbilityProxy(this);
+            return new AbilityProxy(this, abilityName);
         }
     }
 
