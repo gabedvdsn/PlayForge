@@ -63,61 +63,52 @@ namespace FarEmerald.PlayForge
         
         #endregion
         
-        public void SendProcessData(ProcessDataPacket processData) => regData = processData;
+        public void SendProcessData(ProcessDataPacket data, ProcessRelay relay) => regData = data;
 
-        public virtual void WhenInitialize(ProcessRelay relay)
+        public void WhenInitialize()
         {
             _initialized = true;
-            Relay = relay;
         }
 
-        public virtual void WhenUpdate(ProcessRelay relay)
+        public void WhenUpdate()
         {
         }
 
-        public virtual void WhenFixedUpdate(ProcessRelay relay)
+        public void WhenFixedUpdate()
         {
         }
 
-        public virtual void WhenLateUpdate(ProcessRelay relay)
+        public void WhenLateUpdate()
         {
         }
         
-        /// <summary>
-        /// Called via ProcessControl when the process is set to Waiting
-        /// </summary>
-        /// <param name="relay">Process Relay</param>
-        public virtual void WhenWait(ProcessRelay relay)
+        public void WhenWait()
         {
             processActive = false;
         }
 
-        public virtual bool HandlePause(ProcessRelay relay)
+        public virtual bool HandlePause()
         {
             return false;
         }
         
-        public virtual bool HandleResume(ProcessRelay relay)
+        public bool TryHandleResume()
         {
             return false;
         }
+        
+        public void WhenDestroy()
+        {
+            // Does nothing
+        }
 
-        /// <summary>
-        /// Called via ProcessControl when the process is set to Terminated
-        /// </summary>
-        /// <param name="relay">Process Relay</param>
-        public virtual void WhenTerminate(ProcessRelay relay)
+
+        public void WhenTerminate()
         {
             processActive = false;
         }
         
-        /// <summary>
-        /// Called via ProcessControl when the process is set to Running
-        /// </summary>
-        /// <param name="relay">Process Relay</param>
-        /// <param name="token">Cancellation token</param>
-        /// <returns></returns>
-        public abstract UniTask RunProcess(ProcessRelay relay, CancellationToken token);
+        public abstract UniTask RunProcess(CancellationToken token);
 
         public bool TryGetProcess<T>(out T process)
         {

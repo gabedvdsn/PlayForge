@@ -18,8 +18,8 @@ namespace FarEmerald.PlayForge
         public AbstractTargetingAbilityTask Targeting;
         
         [Tooltip("Implicitly provides the casting system as a target.")]
-        public bool UseImplicitTargeting = true;
-        [FormerlySerializedAs("ImplicitTargetingTag")] public Tag ImplicitTag = Tags.TARGET;
+        public bool UseImplicitTargeting = true; 
+        public Tag ImplicitTag = Tags.TARGET;
 
         [SerializeReference] 
         public List<AbstractSetAssetsTask> AssetLoaders = new();

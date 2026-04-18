@@ -287,7 +287,7 @@ namespace FarEmerald.PlayForge.Extended.Editor
                 AssetGUID = guid,
                 TemplateTagName = tagName,
                 IsDefault = isDefault,
-                DisplayName = PlayForgeManager.GetAssetDisplayName(asset)
+                DisplayName = TheForge.GetAssetDisplayName(asset)
             };
             
             collection.Templates.Add(template);

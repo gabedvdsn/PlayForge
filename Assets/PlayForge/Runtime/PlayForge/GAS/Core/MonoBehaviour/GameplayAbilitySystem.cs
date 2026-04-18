@@ -41,13 +41,13 @@ namespace FarEmerald.PlayForge
         private void CollectInitialWorkers()
         {
             EntityData.WorkerGroup?.ProvideWorkersTo(this);
-            EntityData.AttributeSet?.WorkerGroup?.ProvideWorkersTo(this);
+            EntityData.AttributeSet.WorkerGroup?.ProvideWorkersTo(this);
         }
         
         #region Process Parameters
-        public override void WhenInitialize(ProcessRelay relay)
+        public override void WhenInitialize()
         {
-            base.WhenInitialize(relay);
+            base.WhenInitialize();
             
             AttributeSystem = new AttributeSystemComponent(this);
             AbilitySystem = new AbilitySystemComponent(this);
@@ -88,7 +88,6 @@ namespace FarEmerald.PlayForge
             Callbacks?.SystemInitialized();
         }
 
-        // Process
         public override void WhenUpdate(ProcessRelay relay)
         {
             TickEffectShelf();
@@ -144,6 +143,12 @@ namespace FarEmerald.PlayForge
         
         #region Effect Handling
 
+        /// <summary>
+        /// Generates a gameplay effect spec with the calling GAS as the target.
+        /// </summary>
+        /// <param name="origin">The origination of the effect (typically ability or item)</param>
+        /// <param name="effect">The effect to generate for</param>
+        /// <returns></returns>
         public GameplayEffectSpec GenerateEffectSpec(IEffectOrigin origin, GameplayEffect effect)
         {
             return effect.Generate(origin, this);
@@ -189,7 +194,7 @@ namespace FarEmerald.PlayForge
          /// <param name="origin"></param>
          /// <param name="GameplayEffect"></param>
          /// <returns></returns>
-        private bool ApplyGameplayEffect(IEffectOrigin origin, GameplayEffect GameplayEffect)
+        public bool ApplyGameplayEffect(IEffectOrigin origin, GameplayEffect GameplayEffect)
         {
             GameplayEffectSpec spec = GenerateEffectSpec(origin, GameplayEffect);
             return ApplyGameplayEffect(spec);
@@ -257,8 +262,6 @@ namespace FarEmerald.PlayForge
             
             var sourcedModifiedValue = spec.SourcedImpact(attributeValue);
             var impactData = AttributeSystem.ModifyAttribute(spec.Base.ImpactSpecification.AttributeTarget, sourcedModifiedValue);
-
-            Debug.Log(impactData);
             
             spec.RunWorkerRemoval(new EffectWorkerContext(this, spec, _frameSummary, _actionQueue, 1, impactData));
             TagCache.RemoveTags(spec.Base.Tags.GrantedTags);

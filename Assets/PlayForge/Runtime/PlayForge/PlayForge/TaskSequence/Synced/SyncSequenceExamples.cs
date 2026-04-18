@@ -51,9 +51,9 @@ namespace FarEmerald.PlayForge.Examples
             ProcessTiming = EProcessStepTiming.Update;
         }
 
-        public override void WhenInitialize(ProcessRelay relay)
+        public override void WhenInitialize()
         {
-            base.WhenInitialize(relay);
+            base.WhenInitialize();
             _data = new SequenceDataPacket(regData);
 
             _runner = TaskSequenceBuilder.Create("Repeating Tick")
@@ -105,9 +105,9 @@ namespace FarEmerald.PlayForge.Examples
             ProcessTiming = EProcessStepTiming.Update;
         }
 
-        public override void WhenInitialize(ProcessRelay relay)
+        public override void WhenInitialize()
         {
-            base.WhenInitialize(relay);
+            base.WhenInitialize();
             _data = new SequenceDataPacket(regData);
             _waypointIndex = 0;
 
@@ -168,9 +168,9 @@ namespace FarEmerald.PlayForge.Examples
             ProcessTiming = EProcessStepTiming.Update;
         }
 
-        public override void WhenInitialize(ProcessRelay relay)
+        public override void WhenInitialize()
         {
-            base.WhenInitialize(relay);
+            base.WhenInitialize();
             _data = new SequenceDataPacket(regData);
 
             _runner = TaskSequenceBuilder.Create("Chase Target")
@@ -219,9 +219,9 @@ namespace FarEmerald.PlayForge.Examples
             ProcessTiming = EProcessStepTiming.Update;
         }
 
-        public override void WhenInitialize(ProcessRelay relay)
+        public override void WhenInitialize()
         {
-            base.WhenInitialize(relay);
+            base.WhenInitialize();
             _data = new SequenceDataPacket(regData);
 
             _runner = TaskSequenceBuilder.Create("Bob")
@@ -268,9 +268,9 @@ namespace FarEmerald.PlayForge.Examples
             ProcessTiming = EProcessStepTiming.Update;
         }
 
-        public override void WhenInitialize(ProcessRelay relay)
+        public override void WhenInitialize()
         {
-            base.WhenInitialize(relay);
+            base.WhenInitialize();
             _data = new SequenceDataPacket(regData);
 
             _runner = TaskSequenceBuilder.Create("Orbit")
@@ -315,9 +315,9 @@ namespace FarEmerald.PlayForge.Examples
             ProcessTiming = EProcessStepTiming.Update;
         }
 
-        public override void WhenInitialize(ProcessRelay relay)
+        public override void WhenInitialize()
         {
-            base.WhenInitialize(relay);
+            base.WhenInitialize();
             _data = new SequenceDataPacket(regData);
             _ticksRemaining = totalTicks;
             _totalDamage = 0f;
@@ -379,9 +379,9 @@ namespace FarEmerald.PlayForge.Examples
             ProcessTiming = EProcessStepTiming.Update;
         }
 
-        public override void WhenInitialize(ProcessRelay relay)
+        public override void WhenInitialize()
         {
-            base.WhenInitialize(relay);
+            base.WhenInitialize();
             _data = new SequenceDataPacket(regData);
 
             _runner = TaskSequenceBuilder.Create("Pulse Scale")

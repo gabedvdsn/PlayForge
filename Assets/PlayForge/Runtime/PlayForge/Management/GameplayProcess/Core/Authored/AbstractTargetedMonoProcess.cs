@@ -15,9 +15,9 @@ namespace FarEmerald.PlayForge
         protected ITarget target;
         protected AbstractTargetingPacket targeting;
 
-        public override void WhenInitialize(ProcessRelay relay)
+        public override void WhenInitialize()
         {
-            base.WhenInitialize(relay);
+            base.WhenInitialize();
             
             if (!regData.TryGet(Tags.TARGET_REAL, EDataTarget.Primary, out target)) Debug.Log($"Whelp!");
             targeting = target.GetTargetingPacket();

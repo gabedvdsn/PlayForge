@@ -13,17 +13,23 @@ MonoBehaviour:
   m_Name: ENTITY_GameRoot
   m_EditorClassIdentifier: 
   LocalData: []
+  _template: {fileID: 0}
+  _templateOverrides: []
+  _templateListSnapshots: []
   Name: Game Root
   Description: 
-  Textures: []
+  Textures:
+  - Tag:
+      Name: Primary
+    Texture: {fileID: 2800000, guid: e6437192c5b780f4da9d9d372537b8d0, type: 3}
   Affiliation:
-  - Name: Game Root
+  - Name: Game RootmyZY1dFN98Sd0ORv96TQENlnm4Y172mmmyZY1dFN98Sd0ORv96TQENl
   AssetTag:
     Name: Entity.GameRoot
   GrantedTags: []
   ContextTags: []
   StartingLevel: 1
-  CapAtMaxLevel: 1
+  CapAtMaxLevel: 0
   MaxLevel: 99
   ActivationPolicy: 0
   MaxAbilitiesOperation:
@@ -47,8 +53,8 @@ MonoBehaviour:
       rid: -2
     Rounding: 0
   StartingItems: []
-  AllowDuplicateItems: 0
-  AllowDuplicateEquippedItems: 0
+  AllowDuplicateItems: 1
+  AllowDuplicateEquippedItems: 1
   AttributeSet: {fileID: 11400000, guid: ea591b955edd54d4fb185ea66c4d530e, type: 2}
   WorkerGroup:
     Name: Workers

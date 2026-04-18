@@ -28,7 +28,7 @@ namespace FarEmerald.PlayForge
             }
             
             var data = user.Data;
-            if (data.TryGet(IS_DISJOINTABLE, out DataValue<bool> results))
+            if (data.TryGetAll(IS_DISJOINTABLE, out DataValue<bool> results))
             {
                 if (results.ToArray().All(b => !b))
                 {

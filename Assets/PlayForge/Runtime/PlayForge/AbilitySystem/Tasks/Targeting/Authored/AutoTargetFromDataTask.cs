@@ -45,7 +45,7 @@ namespace FarEmerald.PlayForge
             else
             {
                 bool found = false;
-                if (data.TryGet<ITarget>(key, out var targets))
+                if (data.TryGetAll<ITarget>(key, out var targets))
                 {
                     foreach (var target in targets)
                     {

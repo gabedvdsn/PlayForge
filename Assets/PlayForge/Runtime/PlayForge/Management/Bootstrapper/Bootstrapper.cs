@@ -44,7 +44,7 @@ namespace FarEmerald.PlayForge
         
         public void Bootstrap()
         {
-            TagHierarchy.Initialize();
+            TagRegistry.Initialize();
             
             // Bootstrap ProcessControl
             if (ProcessControl.Instance is null)

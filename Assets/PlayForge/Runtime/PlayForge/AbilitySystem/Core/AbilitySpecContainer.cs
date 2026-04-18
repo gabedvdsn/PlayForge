@@ -94,6 +94,12 @@ namespace FarEmerald.PlayForge
                 // Wire critical section callback before activation
                 handle.Proxy.OnCriticalSectionExited = () => handle.ReleaseClaimIfNeeded();
 
+                // Also allow nested sub-sequences (e.g. RunSequenceTask) to release the claim
+                // when *their* critical section exits, without waiting for their outer stage to pop.
+                // This preserves the early-claim-release behavior even when the outer ability
+                // is effectively just a wrapper around a nested critical-containing sequence.
+                handle.Data.NotifyCriticalSectionExit = () => handle.ReleaseClaimIfNeeded();
+
                 // If no critical stages, release claim immediately
                 if (!handle.Proxy.HasAnyCriticalStage)
                 {

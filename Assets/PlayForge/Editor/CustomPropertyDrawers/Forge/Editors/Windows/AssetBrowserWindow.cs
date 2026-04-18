@@ -259,7 +259,7 @@ namespace FarEmerald.PlayForge.Extended.Editor
             Icon = "🔍",
             Label = "",
             Tooltip = "Open in Visualizer",
-            Action = visualizer ?? PlayForgeManager.OpenVisualizer,
+            Action = visualizer ?? TheForge.OpenVisualizer,
             Width = 24
         };
         

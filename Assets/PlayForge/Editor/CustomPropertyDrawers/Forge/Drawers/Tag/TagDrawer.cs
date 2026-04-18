@@ -125,7 +125,7 @@ namespace FarEmerald.PlayForge.Extended.Editor
             var contextColor = GetContextColor(state.ContextStrings);
             
             var displayText = GetDisplayText(tag);
-            var fullPath = tag.Equals(default(Tag)) ? "" : tag.Name;
+            var fullPath = tag.Equals(default(Tag)) ? "" : tag.DisplayName;
             
             var btn = new Button { name = "ValueButton", text = displayText, focusable = false };
             btn.style.flexGrow = 1;
@@ -170,20 +170,22 @@ namespace FarEmerald.PlayForge.Extended.Editor
         
         private bool ShowFullPath()
         {
-            return EditorPrefs.GetBool(PlayForgeManager.PREFS_PREFIX + "ShowFullTagPath", false);
+            return EditorPrefs.GetBool(TheForge.PREFS_PREFIX + "ShowFullTagPath", false);
         }
         
         private bool GroupByRoot()
         {
-            return EditorPrefs.GetBool(PlayForgeManager.PREFS_PREFIX + "GroupTagsByRoot", true);
+            return EditorPrefs.GetBool(TheForge.PREFS_PREFIX + "GroupTagsByRoot", true);
         }
         
         private string GetDisplayText(Tag tag)
         {
             if (tag.Equals(default(Tag))) return "<None>";
 
+            return tag.DisplayName;
+
             if (ShowFullPath())
-                return tag.Name;
+                return tag.DisplayName;
 
             // Use registered display name if available (strips the deterministic hash padding)
             var displayName = tag.DisplayName;
@@ -363,7 +365,7 @@ namespace FarEmerald.PlayForge.Extended.Editor
             nameLabel.style.fontSize = 11;
             nameLabel.style.color = Colors.AccentCyan;
             nameLabel.style.unityFontStyleAndWeight = FontStyle.Bold;
-            nameLabel.tooltip = tag.Name; // Full hashed name on hover
+            nameLabel.tooltip = tag.DisplayName; // Full hashed name on hover
             header.Add(nameLabel);
         }
         
@@ -502,7 +504,7 @@ namespace FarEmerald.PlayForge.Extended.Editor
             
             tagBtn.text = displayName;
             tagBtn.style.paddingLeft = 6 + indent;
-            tagBtn.tooltip = tag.Name;
+            tagBtn.tooltip = tag.DisplayName;
 
             var normalColor = isCurrent 
                 ? new Color(0.25f, 0.35f, 0.25f, 0.5f) 
@@ -534,7 +536,7 @@ namespace FarEmerald.PlayForge.Extended.Editor
                 // Update tooltip
                 if (!currentTag.Equals(default(Tag)))
                 {
-                    parentBtn.tooltip = $"Set '{tag.Name}' as parent of '{currentTag.GetLeafName()}'";
+                    parentBtn.tooltip = $"Set '{tag.DisplayName}' as parent of '{currentTag.GetLeafName()}'";
                 }
             }
 
@@ -562,7 +564,7 @@ namespace FarEmerald.PlayForge.Extended.Editor
             var leafName = currentTag.GetLeafName();
             
             // Create new tag with parent
-            var newPath = $"{parentTag.Name}.{leafName}";
+            var newPath = $"{parentTag.DisplayName}.{leafName}";
             var newTag = Tag.GenerateAsUnique(newPath);
             
             SelectTag(state, newTag, valueBtn, dropdown);
@@ -633,7 +635,7 @@ namespace FarEmerald.PlayForge.Extended.Editor
         
         private void LoadTagsHierarchically(DrawerState state)
         {
-            var allTags = TagRegistry.GetTagsForContext(state.ContextStrings, state.IncludeUniversal).ToList();
+            var allTags = ForgeTagRegistry.GetTagsForContext(state.ContextStrings, state.IncludeUniversal).ToList();
             
             if (GroupByRoot())
             {
@@ -663,7 +665,7 @@ namespace FarEmerald.PlayForge.Extended.Editor
         
         private void FilterResults(DrawerState state, string filter, ListView listView)
         {
-            var allTags = TagRegistry.GetTagsForContext(state.ContextStrings, state.IncludeUniversal);
+            var allTags = ForgeTagRegistry.GetTagsForContext(state.ContextStrings, state.IncludeUniversal);
             
             if (string.IsNullOrEmpty(filter))
             {
@@ -674,7 +676,7 @@ namespace FarEmerald.PlayForge.Extended.Editor
                 var filterLower = filter.ToLowerInvariant();
                 state.Results = allTags
                     .Where(t => t.DisplayName.ToLowerInvariant().Contains(filterLower) ||
-                                t.Name.ToLowerInvariant().Contains(filterLower))
+                                t.DisplayName.ToLowerInvariant().Contains(filterLower))
                     .OrderBy(t => t.DisplayName)
                     .ToList();
             }
@@ -693,7 +695,7 @@ namespace FarEmerald.PlayForge.Extended.Editor
             
             // Unregister old
             if (!oldTag.Equals(default(Tag)) && asset != null)
-                TagRegistry.UnregisterTagUsage(oldTag, state.ContextStrings, asset);
+                ForgeTagRegistry.UnregisterTagUsage(oldTag, state.ContextStrings, asset);
             
             // Set new
             SetTag(prop, tag);
@@ -706,8 +708,7 @@ namespace FarEmerald.PlayForge.Extended.Editor
             UpdateValueButton(valueBtn, tag);
             
             // Register new
-            if (!tag.Equals(default(Tag)) && asset != null)
-                TagRegistry.RegisterTagUsage(tag, state.ContextStrings, asset);
+            if (!tag.Equals(default(Tag)) && asset != null) ForgeTagRegistry.RegisterTagUsage(tag, state.ContextStrings, asset);
             
             CloseDropdown(state, dropdown);
         }
@@ -715,7 +716,7 @@ namespace FarEmerald.PlayForge.Extended.Editor
         private void UpdateValueButton(Button btn, Tag tag)
         {
             var displayText = GetDisplayText(tag);
-            var fullPath = tag.Equals(default(Tag)) ? "" : tag.Name;
+            var fullPath = tag.Equals(default(Tag)) ? "" : tag.DisplayName;
             
             btn.text = displayText;
             btn.tooltip = string.IsNullOrEmpty(fullPath) ? "No tag selected" : fullPath;
@@ -731,16 +732,18 @@ namespace FarEmerald.PlayForge.Extended.Editor
             
             tagName = tagName.Trim();
             
-            if (!TagHierarchy.IsValidPath(tagName))
+            if (!TagRegistry.IsValidPath(tagName))
             {
                 EditorUtility.DisplayDialog("Create Tag", 
                     "Invalid tag path. Use letters, numbers, underscores.\nUse dots for hierarchy (e.g., 'Status.Debuff.Burn').", 
                     "OK");
                 return;
             }
+
+            var t = Tag.GenerateAsUnique(tagName);
+            UnityEngine.Debug.Log($"Generating new tag {t.DisplayName} => {t.Name}");
             
-            var newTag = Tag.GenerateAsUnique(tagName);
-            SelectTag(state, newTag, valueBtn, dropdown);
+            SelectTag(state, Tag.GenerateAsUnique(tagName), valueBtn, dropdown);
         }
         
         // ═══════════════════════════════════════════════════════════════════════════
@@ -751,15 +754,20 @@ namespace FarEmerald.PlayForge.Extended.Editor
         {
             var nameProp = prop.FindPropertyRelative("Name");
             if (nameProp != null && !string.IsNullOrEmpty(nameProp.stringValue))
-                return TagHierarchy.Resolve(nameProp.stringValue);
+                return TagRegistry.Resolve(nameProp.stringValue);
             return default;
         }
         
         private void SetTag(SerializedProperty prop, Tag tag)
         {
-            var nameProp = prop.FindPropertyRelative("Name");
-            if (nameProp != null)
-                nameProp.stringValue = tag.Equals(default(Tag)) ? "" : tag.Name;
+            var nameProp = prop.FindPropertyRelative(nameof(Tag.Name));
+            if (nameProp != null) nameProp.stringValue = tag.Equals(default(Tag)) ? "" : tag.Name;
+
+            var displayNameProp = prop.FindPropertyRelative(nameof(Tag.DisplayName));
+            if (displayNameProp is not null)
+            {
+                displayNameProp.stringValue = tag.Equals(default(Tag)) ? "" : tag.DisplayName;
+            }
         }
         
         // ═══════════════════════════════════════════════════════════════════════════

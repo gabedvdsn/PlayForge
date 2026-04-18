@@ -105,11 +105,11 @@ namespace FarEmerald.PlayForge
             if (DurationPolicy == EEffectDurationPolicy.Durational) ApplyDurationalSpecs(container);
             else ApplyInfiniteSpecs(container);
 
-            DurationOperation.Scaler.Initialize(container.Spec);
+            DurationOperation?.Scaler?.Initialize(container.Spec);
             DeltaTimeScaler?.Initialize(container.Spec);
-            TickIntervalOperation.Scaler?.Initialize(container.Spec);
-            AdditionalExecuteTicksOperation.Scaler?.Initialize(container.Spec);
-            StackAmountOperation.Scaler?.Initialize(container.Spec);
+            TickIntervalOperation?.Scaler?.Initialize(container.Spec);
+            AdditionalExecuteTicksOperation?.Scaler?.Initialize(container.Spec);
+            StackAmountOperation?.Scaler?.Initialize(container.Spec);
 
             if (container is AbstractStackingEffectContainer _container)
             {

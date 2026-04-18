@@ -283,9 +283,9 @@ namespace FarEmerald.PlayForge.Examples
             ProcessTiming = EProcessStepTiming.Update;
         }
 
-        public override void WhenInitialize(ProcessRelay relay)
+        public override void WhenInitialize()
         {
-            base.WhenInitialize(relay);
+            base.WhenInitialize();
             _data = new SequenceDataPacket(regData);
             _buffCounter = 0;
 

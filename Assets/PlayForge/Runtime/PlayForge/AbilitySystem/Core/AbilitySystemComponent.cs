@@ -291,8 +291,6 @@ namespace FarEmerald.PlayForge
         
         private bool ProcessActivationRequest(AbilityDataPacket data)
         {
-            Debug.Log($"Process activation req: {data.Request.Policy} ({AlwaysActivateTargetingValidation(data.Request.Index)})");
-            
             return data.Request.Policy switch
             {
                 EAbilityActivationPolicy.AlwaysActivate => 

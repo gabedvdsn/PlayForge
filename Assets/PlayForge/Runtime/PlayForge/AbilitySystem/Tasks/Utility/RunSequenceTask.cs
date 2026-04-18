@@ -30,49 +30,62 @@ namespace FarEmerald.PlayForge
                 bool hasCritical = (taskSeq.Definition.Metadata?.IsCritical ?? false) ||
                                    taskSeq.Definition.Stages.Any(s => s.Metadata?.IsCritical ?? false);
 
-                // Synchronous lifecycle: register with ProcessControl.
-                if (taskSeq.Definition.Metadata?.Lifecycle == EProcessLifecycle.Synchronous)
-                {
-                    if (hasCritical)
-                    {
-                        // Wire critical section exit before registering so the callback
-                        // propagates into the runtime when ProcessControl starts the sequence.
-                        bool criticalDone = false;
-                        taskSeq.OnCriticalSectionExited = () => criticalDone = true;
-
-                        ProcessControl.Register(taskSeq, data, out var relay);
-
-                        // Return as soon as critical sections exit OR the process terminates.
-                        await UniTask.WaitUntil(
-                            () => criticalDone || !relay.ProcessActive,
-                            cancellationToken: token);
-                        return;
-                    }
-
-                    ProcessControl.Register(taskSeq, data, out var syncRelay);
-                    await UniTask.WaitWhile(() => syncRelay.ProcessActive, cancellationToken: token);
-                    return;
-                }
-
-                // Async lifecycle with critical sections: start the sequence in the
-                // background and return as soon as the critical sections are done.
-                // The non-critical tail continues running until the ability token is cancelled.
+                // Wire the inner sequence's critical exit to propagate into the outer ability's
+                // handle BEFORE kicking off the sequence — this lets the outer claim release as
+                // soon as the inner critical section exits, without forcing the outer runtime to
+                // end. The outer runtime (this task) continues to await the inner's full
+                // completion, which keeps the outer ability's activation handle alive and its
+                // process registered with ProcessControl for the entire duration.
                 if (hasCritical)
                 {
-                    bool criticalDone = false;
-                    taskSeq.OnCriticalSectionExited = () => criticalDone = true;
+                    var notify = data.NotifyCriticalSectionExit;
+                    taskSeq.OnCriticalSectionExited = () => notify?.Invoke();
+                }
+                else
+                {
+                    taskSeq.OnCriticalSectionExited = null;
+                }
 
-                    var seqData = new SequenceDataPacket(data);
-                    taskSeq.Run(seqData, token).Forget();
-
-                    await UniTask.WaitUntil(
-                        () => criticalDone || !taskSeq.IsRunning,
-                        cancellationToken: token);
+                // Register the inner sequence with ProcessControl in BOTH sync and async paths so
+                // the runtime is always visible and manageable. Previously the async+critical path
+                // started the sequence via .Forget() outside ProcessControl, producing an orphaned
+                // runtime that kept running after the outer ability tore down.
+                if (!ProcessControl.Register(taskSeq, data, out var relay))
+                {
+                    Debug.LogWarning("[RunSequenceTask] Failed to register inner sequence with ProcessControl.");
                     return;
                 }
+
+                try
+                {
+                    // Wait for the inner sequence's process to fully terminate. Critical-section
+                    // exit does NOT end the wait — it only releases the outer claim (via the
+                    // NotifyCriticalSectionExit callback wired above). This ensures the outer
+                    // ability's activation handle is only removed once the inner sequence has
+                    // genuinely finished.
+                    await UniTask.WaitUntil(
+                        () => relay.State == EProcessState.Terminated,
+                        cancellationToken: token);
+                }
+                catch (System.OperationCanceledException)
+                {
+                    // External cancellation (e.g., the outer ability was interrupted). Propagate
+                    // the cancellation to the inner sequence so it tears down cleanly rather than
+                    // being left behind as an orphaned runtime.
+                    taskSeq.Interrupt();
+                    throw;
+                }
+                finally
+                {
+                    // Clear the callback so a shared TaskSequence asset doesn't retain a dangling
+                    // reference to this activation's handle.
+                    taskSeq.OnCriticalSectionExited = null;
+                }
+
+                return;
             }
 
-            // No critical sections (or chain): await the full run.
+            // Non-TaskSequence path (e.g. chain): await the full run directly.
             var fullSeqData = new SequenceDataPacket(data);
             await seq.Run(fullSeqData, token);
         }

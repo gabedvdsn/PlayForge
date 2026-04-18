@@ -76,6 +76,7 @@ namespace FarEmerald.PlayForge
         public override IEnumerable<Tag> GetGrantedTags()
         {
             yield return AssetTag;
+            foreach (var _tag in Affiliation) yield return _tag;
             foreach (var tag in GrantedTags) yield return tag;
         }
         

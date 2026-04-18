@@ -11,46 +11,94 @@ namespace FarEmerald.PlayForge.Editor
 {
     /// <summary>
     /// Editor window for debugging all GameplayAbilitySystem instances in the scene.
-    /// Shows attributes, effects, abilities, and tags for each GAS entity.
+    /// Two tabs: Details (per-entity deep inspection) and Overview (cross-entity attribute comparison).
+    /// Entity list is sortable by Alphabetical, Affiliation, or Cache Index.
     /// </summary>
     public class GASDebugger : EditorWindow
     {
-        // UI Elements
+        // ═══════════════════════════════════════════════════════════════════════════
+        // ENUMS
+        // ═══════════════════════════════════════════════════════════════════════════
+
+        private enum ESortMode { Alphabetical, Affiliation, CacheIndex }
+        private enum ETab { Details, Overview }
+
+        // ═══════════════════════════════════════════════════════════════════════════
+        // UI ELEMENTS
+        // ═══════════════════════════════════════════════════════════════════════════
+
         private VisualElement _leftPanel;
         private VisualElement _rightPanel;
         private ScrollView _entityList;
         private ScrollView _detailsScroll;
+        private VisualElement _overviewContainer;
         private Label _statusLabel;
-        
-        // State
+        private VisualElement _tabBar;
+        private VisualElement _overviewAttributePicker;
+        private ScrollView _overviewTableScroll;
+
+        // ═══════════════════════════════════════════════════════════════════════════
+        // STATE
+        // ═══════════════════════════════════════════════════════════════════════════
+
         private List<GameplayAbilitySystem> _gasObjects = new();
         private GameplayAbilitySystem _selectedGAS;
         private bool _autoRefresh = true;
         private float _refreshInterval = 0.25f;
         private double _lastRefreshTime;
-        
-        // Reflection cache for accessing private fields
+        private ESortMode _sortMode = ESortMode.Alphabetical;
+        private ETab _activeTab = ETab.Details;
+
+        // Overview state
+        private HashSet<IAttribute> _selectedOverviewAttributes = new();
+        private bool _overviewPickerExpanded;
+        private bool _overviewAttributesInitialized;
+        private bool _useAbbreviatedAttrs = true;
+
+        // Reflection cache
         private FieldInfo _effectShelfField;
         private FieldInfo _tagCacheField;
-        
-        // Expansion state tracking
+
+        // Expansion state
         private HashSet<string> _expandedAttributes = new();
         private HashSet<string> _expandedAbilities = new();
-        
-        // Colors
-        private static readonly Color HeaderColor = new Color(0.4f, 0.8f, 0.9f);
-        private static readonly Color DerivationColor = new Color(0.6f, 0.6f, 0.8f);
-        private static readonly Color AttributeColor = new Color(0.9f, 0.7f, 0.3f);
-        private static readonly Color EffectColor = new Color(0.6f, 0.4f, 0.9f);
-        private static readonly Color AbilityColor = new Color(0.4f, 0.7f, 1f);
-        private static readonly Color TagColor = new Color(0.3f, 0.7f, 0.6f);
-        private static readonly Color ActiveTagColor = new Color(0.7f, 0.4f, 0.8f);
-        private static readonly Color ImpactColor = new Color(0.7f, 0.4f, 0.3f);
-        private static readonly Color SelectedColor = new Color(0.3f, 0.5f, 0.7f);
-        private static readonly Color HoverColor = new Color(0.25f, 0.25f, 0.28f);
-        private static readonly Color BackgroundDark = new Color(0.18f, 0.18f, 0.2f);
-        private static readonly Color BackgroundMedium = new Color(0.22f, 0.22f, 0.24f);
-        
+
+        // ═══════════════════════════════════════════════════════════════════════════
+        // COLORS
+        // ═══════════════════════════════════════════════════════════════════════════
+
+        private static readonly Color HeaderColor = new(0.4f, 0.8f, 0.9f);
+        private static readonly Color DerivationColor = new(0.6f, 0.6f, 0.8f);
+        private static readonly Color AttributeColor = new(0.9f, 0.7f, 0.3f);
+        private static readonly Color EffectColor = new(0.6f, 0.4f, 0.9f);
+        private static readonly Color AbilityColor = new(0.4f, 0.7f, 1f);
+        private static readonly Color TagColor = new(0.3f, 0.7f, 0.6f);
+        private static readonly Color ActiveTagColor = new(0.7f, 0.4f, 0.8f);
+        private static readonly Color ImpactColor = new(0.7f, 0.4f, 0.3f);
+        private static readonly Color SelectedColor = new(0.3f, 0.5f, 0.7f);
+        private static readonly Color HoverColor = new(0.25f, 0.25f, 0.28f);
+        private static readonly Color BackgroundDark = new(0.18f, 0.18f, 0.2f);
+        private static readonly Color BackgroundMedium = new(0.22f, 0.22f, 0.24f);
+
+        // Affiliation color palette (deterministic from tag name hash)
+        private static readonly Color[] AffiliationPalette =
+        {
+            new(0.26f, 0.59f, 0.98f), // Blue
+            new(0.30f, 0.69f, 0.31f), // Green
+            new(0.94f, 0.33f, 0.31f), // Red
+            new(0.93f, 0.69f, 0.13f), // Amber
+            new(0.61f, 0.15f, 0.69f), // Purple
+            new(0.00f, 0.74f, 0.83f), // Cyan
+            new(0.96f, 0.49f, 0.00f), // Orange
+            new(0.91f, 0.47f, 0.76f), // Pink
+        };
+
+        private static Dictionary<string, Color> affiliationColors;
+
+        // ═══════════════════════════════════════════════════════════════════════════
+        // WINDOW SETUP
+        // ═══════════════════════════════════════════════════════════════════════════
+
         [MenuItem("Tools/PlayForge/Runtime Tools/GAS Debugger")]
         public static void ShowWindow()
         {
@@ -58,64 +106,67 @@ namespace FarEmerald.PlayForge.Editor
             window.titleContent = new GUIContent("GAS Debug", EditorGUIUtility.IconContent("d_UnityEditor.DebugInspectorWindow").image);
             window.minSize = new Vector2(800, 500);
         }
-        
+
         private void OnEnable()
         {
-            // Cache reflection for private field access
-            _effectShelfField = typeof(GameplayAbilitySystem).GetField("EffectShelf", 
+            _effectShelfField = typeof(GameplayAbilitySystem).GetField("EffectShelf",
                 BindingFlags.NonPublic | BindingFlags.Instance);
-            _tagCacheField = typeof(GameplayAbilitySystem).GetField("TagCache", 
+            _tagCacheField = typeof(GameplayAbilitySystem).GetField("TagCache",
                 BindingFlags.NonPublic | BindingFlags.Instance);
-            
+            affiliationColors = new Dictionary<string, Color>();
+
             EditorApplication.playModeStateChanged += OnPlayModeChanged;
         }
-        
+
         private void OnDisable()
         {
             EditorApplication.playModeStateChanged -= OnPlayModeChanged;
         }
-        
+
         private void OnPlayModeChanged(PlayModeStateChange state)
         {
             _selectedGAS = null;
             _gasObjects.Clear();
             _expandedAttributes.Clear();
             _expandedAbilities.Clear();
-            
-            // Schedule rebuild on next frame to ensure UI is ready
+            _overviewAttributesInitialized = false;
+
             EditorApplication.delayCall += () =>
             {
                 if (this != null && rootVisualElement != null)
                 {
                     RefreshEntityList();
-                    RefreshDetails();
+                    RefreshRightPanel();
                     UpdatePlayModeIndicator();
                 }
             };
         }
-        
+
         private void UpdatePlayModeIndicator()
         {
             var indicator = rootVisualElement?.Q<Label>("play-mode-indicator");
             if (indicator != null)
             {
-                indicator.text = Application.isPlaying ? "▶ PLAYING" : "⏸ EDITOR";
-                indicator.style.color = Application.isPlaying 
-                    ? new Color(0.4f, 0.9f, 0.4f) 
+                indicator.text = Application.isPlaying ? "\u25b6 PLAYING" : "\u23f8 EDITOR";
+                indicator.style.color = Application.isPlaying
+                    ? new Color(0.4f, 0.9f, 0.4f)
                     : new Color(0.7f, 0.7f, 0.7f);
             }
         }
-        
+
+        // ═══════════════════════════════════════════════════════════════════════════
+        // GUI CONSTRUCTION
+        // ═══════════════════════════════════════════════════════════════════════════
+
         private void CreateGUI()
         {
             var root = rootVisualElement;
             root.style.flexDirection = FlexDirection.Column;
             root.style.backgroundColor = BackgroundDark;
-            
+
             // Toolbar
-            var toolbar = CreateToolbar();
-            root.Add(toolbar);
-            
+            root.Add(CreateToolbar());
+
             // Main content (split view)
             var mainContent = new VisualElement
             {
@@ -126,15 +177,15 @@ namespace FarEmerald.PlayForge.Editor
                 }
             };
             root.Add(mainContent);
-            
+
             // Left panel - Entity list
             _leftPanel = CreateLeftPanel();
             mainContent.Add(_leftPanel);
-            
-            // Right panel - Details
+
+            // Right panel - Tabs
             _rightPanel = CreateRightPanel();
             mainContent.Add(_rightPanel);
-            
+
             // Status bar
             _statusLabel = new Label("Ready")
             {
@@ -151,35 +202,37 @@ namespace FarEmerald.PlayForge.Editor
                 }
             };
             root.Add(_statusLabel);
-            
-            // Initial refresh
+
             RefreshEntityList();
             UpdatePlayModeIndicator();
         }
-        
+
         private void Update()
         {
             if (!_autoRefresh) return;
-            
-            if (EditorApplication.timeSinceStartup - _lastRefreshTime > _refreshInterval)
+            if (EditorApplication.timeSinceStartup - _lastRefreshTime <= _refreshInterval) return;
+            _lastRefreshTime = EditorApplication.timeSinceStartup;
+
+            int currentCount = FindObjectsByType<GameplayAbilitySystem>(FindObjectsSortMode.None).Length;
+            if (currentCount != _gasObjects.Count)
             {
-                _lastRefreshTime = EditorApplication.timeSinceStartup;
-                
-                // Check if entity count changed
-                int currentCount = FindObjectsByType<GameplayAbilitySystem>(FindObjectsSortMode.None).Length;
-                if (currentCount != _gasObjects.Count)
-                {
-                    RefreshEntityList();
-                }
-                
-                // Refresh details if something is selected
-                if (_selectedGAS != null)
-                {
-                    RefreshDetails();
-                }
+                RefreshEntityList();
+            }
+
+            if (_activeTab == ETab.Details && _selectedGAS != null)
+            {
+                RefreshDetails();
+            }
+            else if (_activeTab == ETab.Overview)
+            {
+                RefreshOverviewTable();
             }
         }
-        
+
+        // ═══════════════════════════════════════════════════════════════════════════
+        // TOOLBAR
+        // ═══════════════════════════════════════════════════════════════════════════
+
         private VisualElement CreateToolbar()
         {
             var toolbar = new VisualElement
@@ -188,17 +241,14 @@ namespace FarEmerald.PlayForge.Editor
                 {
                     flexDirection = FlexDirection.Row,
                     alignItems = Align.Center,
-                    paddingLeft = 8,
-                    paddingRight = 8,
-                    paddingTop = 4,
-                    paddingBottom = 4,
+                    paddingLeft = 8, paddingRight = 8,
+                    paddingTop = 4, paddingBottom = 4,
                     backgroundColor = BackgroundMedium,
                     borderBottomWidth = 1,
                     borderBottomColor = new Color(0.15f, 0.15f, 0.15f)
                 }
             };
-            
-            // Title
+
             toolbar.Add(new Label("GAS Debug")
             {
                 style =
@@ -209,32 +259,27 @@ namespace FarEmerald.PlayForge.Editor
                     marginRight = 16
                 }
             });
-            
-            // Refresh button
-            var refreshBtn = new Button(() => { RefreshEntityList(); RefreshDetails(); })
+
+            var refreshBtn = new Button(() => { RefreshEntityList(); RefreshRightPanel(); })
             {
-                text = "↻ Refresh",
+                text = "\u21bb Refresh",
                 style = { marginRight = 8 }
             };
             toolbar.Add(refreshBtn);
-            
-            // Auto-refresh toggle
+
             var autoRefreshToggle = new Toggle("Auto-refresh") { value = _autoRefresh };
             autoRefreshToggle.RegisterValueChangedCallback(evt => _autoRefresh = evt.newValue);
             autoRefreshToggle.style.marginRight = 16;
             toolbar.Add(autoRefreshToggle);
-            
-            // Refresh interval
+
             toolbar.Add(new Label("Interval:") { style = { marginRight = 4 } });
             var intervalField = new FloatField { value = _refreshInterval, style = { width = 50 } };
             intervalField.RegisterValueChangedCallback(evt => _refreshInterval = Mathf.Max(0.1f, evt.newValue));
             toolbar.Add(intervalField);
-            
-            // Spacer
+
             toolbar.Add(new VisualElement { style = { flexGrow = 1 } });
-            
-            // Play mode indicator
-            var playModeLabel = new Label(Application.isPlaying ? "▶ PLAYING" : "⏸ EDITOR")
+
+            var playModeLabel = new Label(Application.isPlaying ? "\u25b6 PLAYING" : "\u23f8 EDITOR")
             {
                 name = "play-mode-indicator",
                 style =
@@ -245,60 +290,77 @@ namespace FarEmerald.PlayForge.Editor
                 }
             };
             toolbar.Add(playModeLabel);
-            
+
             return toolbar;
         }
-        
+
+        // ═══════════════════════════════════════════════════════════════════════════
+        // LEFT PANEL (Entity List)
+        // ═══════════════════════════════════════════════════════════════════════════
+
         private VisualElement CreateLeftPanel()
         {
             var panel = new VisualElement
             {
                 style =
                 {
-                    width = 250,
+                    width = 260,
                     borderRightWidth = 1,
                     borderRightColor = new Color(0.15f, 0.15f, 0.15f),
                     backgroundColor = BackgroundDark
                 }
             };
-            
-            // Header
+
+            // Header with sort dropdown
             var header = new VisualElement
             {
                 style =
                 {
                     flexDirection = FlexDirection.Row,
                     alignItems = Align.Center,
-                    paddingLeft = 8,
-                    paddingRight = 8,
-                    paddingTop = 6,
-                    paddingBottom = 6,
+                    paddingLeft = 8, paddingRight = 8,
+                    paddingTop = 6, paddingBottom = 6,
                     backgroundColor = BackgroundMedium
                 }
             };
+
             header.Add(new Label("Entities")
             {
                 style =
                 {
                     fontSize = 11,
                     unityFontStyleAndWeight = FontStyle.Bold,
-                    color = new Color(0.8f, 0.8f, 0.8f)
+                    color = new Color(0.8f, 0.8f, 0.8f),
+                    marginRight = 8
                 }
             });
+
+            // Sort mode dropdown
+            var sortField = new EnumField(_sortMode)
+            {
+                style = { width = 100, height = 18 }
+            };
+            sortField.RegisterValueChangedCallback(evt =>
+            {
+                _sortMode = (ESortMode)evt.newValue;
+                RefreshEntityList();
+            });
+            header.Add(sortField);
+
             header.Add(new VisualElement { style = { flexGrow = 1 } });
             header.Add(new Label { name = "entity-count", style = { fontSize = 10, color = new Color(0.5f, 0.5f, 0.5f) } });
             panel.Add(header);
-            
-            // Entity list
-            _entityList = new ScrollView
-            {
-                style = { flexGrow = 1 }
-            };
+
+            _entityList = new ScrollView { style = { flexGrow = 1 } };
             panel.Add(_entityList);
-            
+
             return panel;
         }
-        
+
+        // ═══════════════════════════════════════════════════════════════════════════
+        // RIGHT PANEL (Tabs)
+        // ═══════════════════════════════════════════════════════════════════════════
+
         private VisualElement CreateRightPanel()
         {
             var panel = new VisualElement
@@ -309,23 +371,38 @@ namespace FarEmerald.PlayForge.Editor
                     backgroundColor = BackgroundDark
                 }
             };
-            
-            // Header
-            var header = new VisualElement
+
+            // Tab bar
+            _tabBar = new VisualElement
+            {
+                style =
+                {
+                    flexDirection = FlexDirection.Row,
+                    backgroundColor = BackgroundMedium,
+                    borderBottomWidth = 1,
+                    borderBottomColor = new Color(0.15f, 0.15f, 0.15f)
+                }
+            };
+            _tabBar.Add(CreateTabButton("Details", ETab.Details));
+            _tabBar.Add(CreateTabButton("Overview", ETab.Overview));
+            panel.Add(_tabBar);
+
+            // Details content
+            var detailsContainer = new VisualElement { name = "details-container" };
+
+            var detailsHeader = new VisualElement
             {
                 name = "details-header",
                 style =
                 {
                     flexDirection = FlexDirection.Row,
                     alignItems = Align.Center,
-                    paddingLeft = 12,
-                    paddingRight = 12,
-                    paddingTop = 8,
-                    paddingBottom = 8,
+                    paddingLeft = 12, paddingRight = 12,
+                    paddingTop = 8, paddingBottom = 8,
                     backgroundColor = BackgroundMedium
                 }
             };
-            header.Add(new Label("Select an entity to view details")
+            detailsHeader.Add(new Label("Select an entity to view details")
             {
                 name = "details-title",
                 style =
@@ -335,54 +412,111 @@ namespace FarEmerald.PlayForge.Editor
                     unityFontStyleAndWeight = FontStyle.Italic
                 }
             });
-            panel.Add(header);
-            
-            // Details scroll view
+            detailsContainer.Add(detailsHeader);
+
             _detailsScroll = new ScrollView
             {
                 style =
                 {
                     flexGrow = 1,
-                    paddingLeft = 12,
-                    paddingRight = 12,
-                    paddingTop = 8,
-                    paddingBottom = 8
+                    paddingLeft = 12, paddingRight = 12,
+                    paddingTop = 8, paddingBottom = 8
                 }
             };
-            panel.Add(_detailsScroll);
-            
+            detailsContainer.Add(_detailsScroll);
+            panel.Add(detailsContainer);
+
+            // Overview content
+            _overviewContainer = new VisualElement
+            {
+                name = "overview-container",
+                style = { flexGrow = 1, display = DisplayStyle.None }
+            };
+            panel.Add(_overviewContainer);
+
+            BuildOverviewContent();
+            UpdateTabVisuals();
+
             return panel;
         }
-        
+
+        private VisualElement CreateTabButton(string label, ETab tab)
+        {
+            bool isActive = _activeTab == tab;
+            var btn = new Button(() =>
+            {
+                _activeTab = tab;
+                UpdateTabVisuals();
+                RefreshRightPanel();
+            })
+            {
+                text = label,
+                name = $"tab-{tab}",
+                style =
+                {
+                    paddingLeft = 16, paddingRight = 16,
+                    paddingTop = 6, paddingBottom = 6,
+                    borderBottomWidth = 2,
+                    borderBottomColor = isActive ? HeaderColor : Color.clear,
+                    backgroundColor = Color.clear,
+                    color = isActive ? HeaderColor : new Color(0.6f, 0.6f, 0.6f),
+                    unityFontStyleAndWeight = isActive ? FontStyle.Bold : FontStyle.Normal,
+                    borderTopLeftRadius = 0, borderTopRightRadius = 0,
+                    borderBottomLeftRadius = 0, borderBottomRightRadius = 0
+                }
+            };
+            return btn;
+        }
+
+        private void UpdateTabVisuals()
+        {
+            // Update tab button styles
+            foreach (ETab tab in Enum.GetValues(typeof(ETab)))
+            {
+                var btn = _tabBar?.Q<Button>($"tab-{tab}");
+                if (btn == null) continue;
+                bool isActive = _activeTab == tab;
+                btn.style.borderBottomColor = isActive ? HeaderColor : Color.clear;
+                btn.style.color = isActive ? HeaderColor : new Color(0.6f, 0.6f, 0.6f);
+                btn.style.unityFontStyleAndWeight = isActive ? FontStyle.Bold : FontStyle.Normal;
+            }
+
+            // Show/hide containers
+            var detailsContainer = _rightPanel?.Q("details-container");
+            if (detailsContainer != null)
+                detailsContainer.style.display = _activeTab == ETab.Details ? DisplayStyle.Flex : DisplayStyle.None;
+
+            if (_overviewContainer != null)
+                _overviewContainer.style.display = _activeTab == ETab.Overview ? DisplayStyle.Flex : DisplayStyle.None;
+        }
+
+        private void RefreshRightPanel()
+        {
+            if (_activeTab == ETab.Details)
+                RefreshDetails();
+            else
+                RefreshOverviewTable();
+        }
+
+        // ═══════════════════════════════════════════════════════════════════════════
+        // ENTITY LIST
+        // ═══════════════════════════════════════════════════════════════════════════
+
         private void RefreshEntityList()
         {
             _gasObjects.Clear();
             _gasObjects.AddRange(FindObjectsByType<GameplayAbilitySystem>(FindObjectsSortMode.None));
-            
-            // Validate selected GAS still exists
-            if (_selectedGAS != null && !_gasObjects.Contains(_selectedGAS))
-            {
-                _selectedGAS = null;
-            }
 
-            _entityList ??= new ScrollView
-            {
-                style = { flexGrow = 1 }
-            };
+            if (_selectedGAS != null && !_gasObjects.Contains(_selectedGAS))
+                _selectedGAS = null;
+
+            _entityList ??= new ScrollView { style = { flexGrow = 1 } };
             _entityList.Clear();
-            
-            var countLabel = _leftPanel.Q<Label>("entity-count");
+
+            var countLabel = _leftPanel?.Q<Label>("entity-count");
             if (countLabel != null)
-            {
                 countLabel.text = $"({_gasObjects.Count})";
-            }
-            
-            foreach (var gas in _gasObjects)
-            {
-                var item = CreateEntityListItem(gas);
-                _entityList.Add(item);
-            }
-            
+
             if (_gasObjects.Count == 0)
             {
                 _entityList.Add(new Label("No GAS objects in scene")
@@ -391,50 +525,139 @@ namespace FarEmerald.PlayForge.Editor
                     {
                         color = new Color(0.5f, 0.5f, 0.5f),
                         unityFontStyleAndWeight = FontStyle.Italic,
-                        paddingLeft = 12,
-                        paddingTop = 12
+                        paddingLeft = 12, paddingTop = 12
                     }
                 });
+                _statusLabel.text = $"Found 0 GAS objects | {DateTime.Now:HH:mm:ss}";
+                UpdatePlayModeIndicator();
+                return;
             }
-            
+
+            var sorted = GetSortedEntities();
+
+            if (_sortMode == ESortMode.Affiliation)
+            {
+                BuildAffiliationGroupedList(sorted);
+            }
+            else
+            {
+                foreach (var gas in sorted)
+                {
+                    _entityList.Add(CreateEntityListItem(gas));
+                }
+            }
+
             _statusLabel.text = $"Found {_gasObjects.Count} GAS objects | {DateTime.Now:HH:mm:ss}";
             UpdatePlayModeIndicator();
         }
-        
+
+        private List<GameplayAbilitySystem> GetSortedEntities()
+        {
+            return _sortMode switch
+            {
+                ESortMode.Alphabetical => _gasObjects
+                    .OrderBy(g => GetDisplayName(g))
+                    .ToList(),
+                ESortMode.Affiliation => _gasObjects
+                    .OrderBy(g => GetFirstAffiliationName(g))
+                    .ThenBy(g => GetDisplayName(g))
+                    .ToList(),
+                ESortMode.CacheIndex => _gasObjects
+                    .OrderBy(g => GetCacheIndex(g))
+                    .ToList(),
+                _ => _gasObjects
+            };
+        }
+
+        private void BuildAffiliationGroupedList(List<GameplayAbilitySystem> sorted)
+        {
+            string lastGroup = null;
+
+            foreach (var gas in sorted)
+            {
+                string group = GetFirstAffiliationName(gas);
+                if (group != lastGroup)
+                {
+                    lastGroup = group;
+                    var groupColor = GetAffiliationColor(group);
+
+                    var groupHeader = new VisualElement
+                    {
+                        style =
+                        {
+                            flexDirection = FlexDirection.Row,
+                            alignItems = Align.Center,
+                            paddingLeft = 8, paddingRight = 8,
+                            paddingTop = 4, paddingBottom = 4,
+                            backgroundColor = new Color(groupColor.r, groupColor.g, groupColor.b, 0.1f),
+                            borderBottomWidth = 1,
+                            borderBottomColor = new Color(groupColor.r, groupColor.g, groupColor.b, 0.3f)
+                        }
+                    };
+
+                    // Colored dot
+                    groupHeader.Add(new VisualElement
+                    {
+                        style =
+                        {
+                            width = 8, height = 8,
+                            backgroundColor = groupColor,
+                            borderTopLeftRadius = 4, borderTopRightRadius = 4,
+                            borderBottomLeftRadius = 4, borderBottomRightRadius = 4,
+                            marginRight = 6
+                        }
+                    });
+
+                    groupHeader.Add(new Label(group)
+                    {
+                        style =
+                        {
+                            fontSize = 10,
+                            unityFontStyleAndWeight = FontStyle.Bold,
+                            color = groupColor
+                        }
+                    });
+
+                    _entityList.Add(groupHeader);
+                }
+
+                _entityList.Add(CreateEntityListItem(gas));
+            }
+        }
+
         private VisualElement CreateEntityListItem(GameplayAbilitySystem gas)
         {
             bool isSelected = gas == _selectedGAS;
-            
+            string displayName = GetDisplayName(gas);
+            string affiliation = GetFirstAffiliationName(gas);
+            Color affColor = GetAffiliationColor(affiliation);
+
             var item = new VisualElement
             {
                 name = $"entity-item-{gas.GetInstanceID()}",
                 userData = gas,
-                pickingMode = PickingMode.Position, // Ensure clicks are captured
+                pickingMode = PickingMode.Position,
                 style =
                 {
                     flexDirection = FlexDirection.Row,
                     alignItems = Align.Center,
-                    paddingLeft = 8,
-                    paddingRight = 8,
-                    paddingTop = 6,
-                    paddingBottom = 6,
+                    paddingLeft = 8, paddingRight = 8,
+                    paddingTop = 6, paddingBottom = 6,
                     backgroundColor = isSelected ? SelectedColor : Color.clear,
                     borderBottomWidth = 1,
                     borderBottomColor = new Color(0.15f, 0.15f, 0.15f)
                 }
             };
-            
-            // Use MouseDownEvent for more responsive clicking
+
             item.RegisterCallback<MouseDownEvent>(evt =>
             {
-                if (evt.button == 0) // Left click only
+                if (evt.button == 0)
                 {
                     SelectEntity(gas);
                     evt.StopPropagation();
                 }
             });
-            
-            // Hover effects (only if not selected)
+
             item.RegisterCallback<MouseEnterEvent>(_ =>
             {
                 if (item.userData as GameplayAbilitySystem != _selectedGAS)
@@ -445,21 +668,35 @@ namespace FarEmerald.PlayForge.Editor
                 if (item.userData as GameplayAbilitySystem != _selectedGAS)
                     item.style.backgroundColor = Color.clear;
             });
-            
-            // Icon
-            item.Add(new Label("◆")
+
+            // Icon with affiliation-colored background
+            var iconContainer = new VisualElement
             {
                 pickingMode = PickingMode.Ignore,
                 style =
                 {
-                    color = HeaderColor,
-                    fontSize = 10,
+                    width = 18, height = 18,
+                    backgroundColor = new Color(affColor.r, affColor.g, affColor.b, 0.35f),
+                    borderTopLeftRadius = 3, borderTopRightRadius = 3,
+                    borderBottomLeftRadius = 3, borderBottomRightRadius = 3,
+                    alignItems = Align.Center,
+                    justifyContent = Justify.Center,
                     marginRight = 6
                 }
+            };
+            iconContainer.Add(new Label("\u25c6")
+            {
+                pickingMode = PickingMode.Ignore,
+                style =
+                {
+                    color = affColor,
+                    fontSize = 9,
+                    unityTextAlign = TextAnchor.MiddleCenter
+                }
             });
-            
+            item.Add(iconContainer);
+
             // Name
-            string displayName = gas.EntityData != null ? gas.EntityData.GetName() : gas.gameObject.name;
             item.Add(new Label(displayName)
             {
                 name = "entity-name",
@@ -471,7 +708,17 @@ namespace FarEmerald.PlayForge.Editor
                     fontSize = 11
                 }
             });
-            
+
+            // Cache index badge (only in CacheIndex sort mode)
+            if (_sortMode == ESortMode.CacheIndex)
+            {
+                int idx = GetCacheIndex(gas);
+                var idxBadge = CreateBadge($"#{idx}", new Color(0.5f, 0.5f, 0.5f));
+                idxBadge.pickingMode = PickingMode.Ignore;
+                idxBadge.style.marginRight = 4;
+                item.Add(idxBadge);
+            }
+
             // Level badge
             if (gas.EntityData != null)
             {
@@ -479,27 +726,26 @@ namespace FarEmerald.PlayForge.Editor
                 badge.pickingMode = PickingMode.Ignore;
                 item.Add(badge);
             }
-            
+
             return item;
         }
-        
+
         private void SelectEntity(GameplayAbilitySystem gas)
         {
             var previousSelection = _selectedGAS;
             _selectedGAS = gas;
-            
-            // Clear expansion state when switching entities
+
             _expandedAttributes.Clear();
             _expandedAbilities.Clear();
-            
-            // Update visual state without full rebuild
+
             UpdateEntitySelectionVisuals(previousSelection, gas);
-            RefreshDetails();
+
+            if (_activeTab == ETab.Details)
+                RefreshDetails();
         }
-        
+
         private void UpdateEntitySelectionVisuals(GameplayAbilitySystem previous, GameplayAbilitySystem current)
         {
-            // Deselect previous (check if it still exists)
             if (previous != null)
             {
                 try
@@ -509,17 +755,12 @@ namespace FarEmerald.PlayForge.Editor
                     {
                         prevItem.style.backgroundColor = Color.clear;
                         var nameLabel = prevItem.Q<Label>("entity-name");
-                        if (nameLabel != null)
-                            nameLabel.style.color = new Color(0.85f, 0.85f, 0.85f);
+                        if (nameLabel != null) nameLabel.style.color = new Color(0.85f, 0.85f, 0.85f);
                     }
                 }
-                catch (MissingReferenceException)
-                {
-                    // Object was destroyed, ignore
-                }
+                catch (MissingReferenceException) { }
             }
-            
-            // Select current
+
             if (current != null)
             {
                 try
@@ -529,25 +770,26 @@ namespace FarEmerald.PlayForge.Editor
                     {
                         currItem.style.backgroundColor = SelectedColor;
                         var nameLabel = currItem.Q<Label>("entity-name");
-                        if (nameLabel != null)
-                            nameLabel.style.color = Color.white;
+                        if (nameLabel != null) nameLabel.style.color = Color.white;
                     }
                 }
                 catch (MissingReferenceException)
                 {
-                    // Object was destroyed, clear selection
                     _selectedGAS = null;
                 }
             }
         }
-        
+
+        // ═══════════════════════════════════════════════════════════════════════════
+        // DETAILS TAB
+        // ═══════════════════════════════════════════════════════════════════════════
+
         private void RefreshDetails()
         {
             _detailsScroll.Clear();
-            
+
             var titleLabel = _rightPanel.Q<Label>("details-title");
-            
-            // Check if selected GAS was destroyed
+
             if (_selectedGAS == null)
             {
                 if (titleLabel != null)
@@ -558,13 +800,8 @@ namespace FarEmerald.PlayForge.Editor
                 }
                 return;
             }
-            
-            // Verify object still exists (Unity null check for destroyed objects)
-            try
-            {
-                // Access something to trigger MissingReferenceException if destroyed
-                _ = _selectedGAS.gameObject;
-            }
+
+            try { _ = _selectedGAS.gameObject; }
             catch (MissingReferenceException)
             {
                 _selectedGAS = null;
@@ -576,111 +813,97 @@ namespace FarEmerald.PlayForge.Editor
                 }
                 return;
             }
-            
-            // Update header
+
             if (titleLabel != null)
             {
-                string name = _selectedGAS.EntityData != null ? _selectedGAS.EntityData.GetName() : _selectedGAS.gameObject.name;
-                titleLabel.text = name;
+                titleLabel.text = GetDisplayName(_selectedGAS);
                 titleLabel.style.unityFontStyleAndWeight = FontStyle.Bold;
                 titleLabel.style.color = HeaderColor;
             }
-            
-            // Entity Info Section
+
             _detailsScroll.Add(CreateEntityInfoSection());
-            
-            // Attributes Section
             _detailsScroll.Add(CreateAttributesSection());
-            
-            // Effects Section
             _detailsScroll.Add(CreateEffectsSection());
-            
-            // Abilities Section
             _detailsScroll.Add(CreateAbilitiesSection());
-            
-            // Tags Section
             _detailsScroll.Add(CreateTagsSection());
         }
-        
+
         private VisualElement CreateEntityInfoSection()
         {
             var section = CreateSection("Entity Info", HeaderColor);
-            
+
             if (_selectedGAS.EntityData == null)
             {
                 section.Add(CreateInfoRow("Status", "No EntityIdentity assigned", Color.red));
                 return section;
             }
-            
+
             var data = _selectedGAS.EntityData;
-            
+
             section.Add(CreateInfoRow("Name", data.GetName(), Color.white));
             section.Add(CreateInfoRow("Level", $"{_selectedGAS.GetLevel()} / {data.MaxLevel}", Color.white));
             section.Add(CreateInfoRow("Asset Tag", data.AssetTag.GetName(), new Color(0.7f, 0.7f, 0.7f)));
-            
-            // Affiliation
+            section.Add(CreateInfoRow("Cache Index", GetCacheIndex(_selectedGAS) < 0 ? "(Unregistered)" : GetCacheIndex(_selectedGAS).ToString(), new Color(0.7f, 0.7f, 0.7f)));
+
             if (data.Affiliation != null && data.Affiliation.Count > 0)
             {
                 var affiliationStr = string.Join(", ", data.Affiliation.Select(t => t.GetName()));
                 section.Add(CreateInfoRow("Affiliation", affiliationStr, TagColor));
             }
-            
+
             return section;
         }
-        
+
         private VisualElement CreateAttributesSection()
         {
             var section = CreateSection("Attributes", AttributeColor);
-            
+
             if (!_selectedGAS.FindAttributeSystem(out var attrSystem))
             {
                 section.Add(CreateEmptyLabel("No attribute system"));
                 return section;
             }
-            
+
             var cache = attrSystem.GetAttributeCache();
             if (cache == null || cache.Count == 0)
             {
                 section.Add(CreateEmptyLabel("No attributes defined"));
                 return section;
             }
-            
+
             // Header row
             var headerRow = new VisualElement
             {
                 style =
                 {
                     flexDirection = FlexDirection.Row,
-                    paddingBottom = 4,
-                    marginBottom = 4,
+                    paddingBottom = 4, marginBottom = 4,
                     borderBottomWidth = 1,
                     borderBottomColor = new Color(0.3f, 0.3f, 0.3f)
                 }
             };
-            headerRow.Add(new Label("") { style = { width = 20 } }); // Space for expand icon
+            headerRow.Add(new Label("") { style = { width = 20 } });
             headerRow.Add(new Label("Attribute") { style = { width = 130, color = new Color(0.6f, 0.6f, 0.6f), fontSize = 10 } });
             headerRow.Add(new Label("Current") { style = { width = 70, color = new Color(0.6f, 0.6f, 0.6f), fontSize = 10, unityTextAlign = TextAnchor.MiddleRight } });
             headerRow.Add(new Label("Base") { style = { width = 70, color = new Color(0.6f, 0.6f, 0.6f), fontSize = 10, unityTextAlign = TextAnchor.MiddleRight } });
             headerRow.Add(new Label("Ratio") { style = { width = 60, color = new Color(0.6f, 0.6f, 0.6f), fontSize = 10, unityTextAlign = TextAnchor.MiddleRight } });
             section.Add(headerRow);
-            
+
             foreach (var kvp in cache.OrderBy(k => k.Key?.GetName() ?? ""))
             {
-                var row = CreateAttributeRow(kvp.Key, kvp.Value);
-                section.Add(row);
+                section.Add(CreateAttributeRow(kvp.Key, kvp.Value));
             }
-            
+
             return section;
         }
-        
+
         private VisualElement CreateAttributeRow(IAttribute attribute, CachedAttributeValue cached)
         {
             string attrKey = attribute != null ? attribute.GetName() : "Unknown";
             bool isExpanded = _expandedAttributes.Contains(attrKey);
-            
+
             var container = new VisualElement();
-            
-            // Main row
+
             var row = new VisualElement
             {
                 pickingMode = PickingMode.Position,
@@ -688,19 +911,15 @@ namespace FarEmerald.PlayForge.Editor
                 {
                     flexDirection = FlexDirection.Row,
                     alignItems = Align.Center,
-                    paddingTop = 2,
-                    paddingBottom = 2,
-                    paddingLeft = 2,
+                    paddingTop = 2, paddingBottom = 2, paddingLeft = 2,
                     marginBottom = 1,
                     backgroundColor = isExpanded ? new Color(0.25f, 0.25f, 0.28f) : Color.clear,
-                    borderTopLeftRadius = 2,
-                    borderTopRightRadius = 2,
+                    borderTopLeftRadius = 2, borderTopRightRadius = 2,
                     borderBottomLeftRadius = isExpanded ? 0 : 2,
                     borderBottomRightRadius = isExpanded ? 0 : 2
                 }
             };
-            
-            // Click to expand/collapse
+
             row.RegisterCallback<MouseDownEvent>(evt =>
             {
                 if (evt.button == 0)
@@ -709,109 +928,61 @@ namespace FarEmerald.PlayForge.Editor
                         _expandedAttributes.Remove(attrKey);
                     else
                         _expandedAttributes.Add(attrKey);
-                    
                     RefreshDetails();
                     evt.StopPropagation();
                 }
             });
-            
-            // Hover effect
-            row.RegisterCallback<MouseEnterEvent>(_ =>
-            {
-                if (!isExpanded) row.style.backgroundColor = HoverColor;
-            });
-            row.RegisterCallback<MouseLeaveEvent>(_ =>
-            {
-                if (!isExpanded) row.style.backgroundColor = Color.clear;
-            });
-            
-            // Expand icon
-            row.Add(new Label(isExpanded ? "▼" : "▶")
+
+            row.RegisterCallback<MouseEnterEvent>(_ => { if (!isExpanded) row.style.backgroundColor = HoverColor; });
+            row.RegisterCallback<MouseLeaveEvent>(_ => { if (!isExpanded) row.style.backgroundColor = Color.clear; });
+
+            row.Add(new Label(isExpanded ? "\u25bc" : "\u25b6")
             {
                 pickingMode = PickingMode.Ignore,
-                style =
-                {
-                    width = 20,
-                    color = new Color(0.6f, 0.6f, 0.6f),
-                    fontSize = 8,
-                    unityTextAlign = TextAnchor.MiddleCenter
-                }
+                style = { width = 20, color = new Color(0.6f, 0.6f, 0.6f), fontSize = 8, unityTextAlign = TextAnchor.MiddleCenter }
             });
-            
-            // Attribute name
-            string attrName = attribute != null ? attribute.GetName() : "Unknown";
-            row.Add(new Label(attrName)
+
+            row.Add(new Label(attrKey)
             {
                 pickingMode = PickingMode.Ignore,
-                style =
-                {
-                    width = 130,
-                    color = Color.white,
-                    fontSize = 11
-                }
+                style = { width = 130, color = Color.white, fontSize = 11 }
             });
-            
-            // Current value
+
             float current = cached.Value.CurrentValue;
             row.Add(new Label(current.ToString("F1"))
             {
                 pickingMode = PickingMode.Ignore,
-                style =
-                {
-                    width = 70,
-                    color = AttributeColor,
-                    fontSize = 11,
-                    unityTextAlign = TextAnchor.MiddleRight
-                }
+                style = { width = 70, color = AttributeColor, fontSize = 11, unityTextAlign = TextAnchor.MiddleRight }
             });
-            
-            // Base value
+
             float baseVal = cached.Value.BaseValue;
             row.Add(new Label(baseVal.ToString("F1"))
             {
                 pickingMode = PickingMode.Ignore,
-                style =
-                {
-                    width = 70,
-                    color = new Color(0.7f, 0.7f, 0.7f),
-                    fontSize = 11,
-                    unityTextAlign = TextAnchor.MiddleRight
-                }
+                style = { width = 70, color = new Color(0.7f, 0.7f, 0.7f), fontSize = 11, unityTextAlign = TextAnchor.MiddleRight }
             });
-            
-            // Ratio
+
             float ratio = baseVal > 0 ? current / baseVal : 0;
             Color ratioColor = ratio >= 1f ? TagColor : (ratio > 0.25f ? AttributeColor : Color.red);
             row.Add(new Label($"{ratio:P0}")
             {
                 pickingMode = PickingMode.Ignore,
-                style =
-                {
-                    width = 60,
-                    color = ratioColor,
-                    fontSize = 11,
-                    unityTextAlign = TextAnchor.MiddleRight
-                }
+                style = { width = 60, color = ratioColor, fontSize = 11, unityTextAlign = TextAnchor.MiddleRight }
             });
-            
+
             // Progress bar
             var progressContainer = new VisualElement
             {
                 pickingMode = PickingMode.Ignore,
                 style =
                 {
-                    flexGrow = 1,
-                    height = 6,
-                    marginLeft = 8,
+                    flexGrow = 1, height = 6, marginLeft = 8,
                     backgroundColor = new Color(0.15f, 0.15f, 0.15f),
-                    borderTopLeftRadius = 2,
-                    borderTopRightRadius = 2,
-                    borderBottomLeftRadius = 2,
-                    borderBottomRightRadius = 2
+                    borderTopLeftRadius = 2, borderTopRightRadius = 2,
+                    borderBottomLeftRadius = 2, borderBottomRightRadius = 2
                 }
             };
-            
-            var progressBar = new VisualElement
+            progressContainer.Add(new VisualElement
             {
                 pickingMode = PickingMode.Ignore,
                 style =
@@ -819,27 +990,20 @@ namespace FarEmerald.PlayForge.Editor
                     width = Length.Percent(Mathf.Clamp01(ratio) * 100),
                     height = Length.Percent(100),
                     backgroundColor = ratioColor,
-                    borderTopLeftRadius = 2,
-                    borderTopRightRadius = 2,
-                    borderBottomLeftRadius = 2,
-                    borderBottomRightRadius = 2
+                    borderTopLeftRadius = 2, borderTopRightRadius = 2,
+                    borderBottomLeftRadius = 2, borderBottomRightRadius = 2
                 }
-            };
-            progressContainer.Add(progressBar);
+            });
             row.Add(progressContainer);
-            
+
             container.Add(row);
-            
-            // Expanded details
+
             if (isExpanded)
-            {
-                var details = CreateAttributeDerivationsPanel(cached);
-                container.Add(details);
-            }
-            
+                container.Add(CreateAttributeDerivationsPanel(cached));
+
             return container;
         }
-        
+
         private VisualElement CreateAttributeDerivationsPanel(CachedAttributeValue cached)
         {
             var panel = new VisualElement
@@ -847,170 +1011,95 @@ namespace FarEmerald.PlayForge.Editor
                 style =
                 {
                     backgroundColor = new Color(0.2f, 0.2f, 0.22f),
-                    paddingLeft = 24,
-                    paddingRight = 8,
-                    paddingTop = 4,
-                    paddingBottom = 6,
+                    paddingLeft = 24, paddingRight = 8,
+                    paddingTop = 4, paddingBottom = 6,
                     marginBottom = 4,
-                    borderBottomLeftRadius = 4,
-                    borderBottomRightRadius = 4,
-                    borderLeftWidth = 2,
-                    borderLeftColor = AttributeColor
+                    borderBottomLeftRadius = 4, borderBottomRightRadius = 4,
+                    borderLeftWidth = 2, borderLeftColor = AttributeColor
                 }
             };
-            
-            // Root value info
+
             var rootRow = new VisualElement
             {
-                style =
-                {
-                    flexDirection = FlexDirection.Row,
-                    alignItems = Align.Center,
-                    marginBottom = 4
-                }
+                style = { flexDirection = FlexDirection.Row, alignItems = Align.Center, marginBottom = 4 }
             };
-            rootRow.Add(new Label("Root Value:")
-            {
-                style = { color = new Color(0.5f, 0.5f, 0.5f), fontSize = 10, width = 80 }
-            });
-            rootRow.Add(new Label(cached.RootValue.ToString())
-            {
-                style = { color = new Color(0.7f, 0.7f, 0.7f), fontSize = 10 }
-            });
+            rootRow.Add(new Label("Root Value:") { style = { color = new Color(0.5f, 0.5f, 0.5f), fontSize = 10, width = 80 } });
+            rootRow.Add(new Label(cached.RootValue.ToString()) { style = { color = new Color(0.7f, 0.7f, 0.7f), fontSize = 10 } });
             panel.Add(rootRow);
-            
-            // Derivations header
+
             panel.Add(new Label("Derivations:")
             {
-                style =
-                {
-                    color = DerivationColor,
-                    fontSize = 10,
-                    unityFontStyleAndWeight = FontStyle.Bold,
-                    marginTop = 4,
-                    marginBottom = 4
-                }
+                style = { color = DerivationColor, fontSize = 10, unityFontStyleAndWeight = FontStyle.Bold, marginTop = 4, marginBottom = 4 }
             });
-            
+
             var retainedValues = cached.RetainedValues;
             if (retainedValues == null || retainedValues.Count == 0)
             {
                 panel.Add(new Label("No derivations")
                 {
-                    style =
-                    {
-                        color = new Color(0.5f, 0.5f, 0.5f),
-                        fontSize = 10,
-                        unityFontStyleAndWeight = FontStyle.Italic,
-                        marginLeft = 8
-                    }
+                    style = { color = new Color(0.5f, 0.5f, 0.5f), fontSize = 10, unityFontStyleAndWeight = FontStyle.Italic, marginLeft = 8 }
                 });
             }
             else
             {
                 foreach (var kvp in retainedValues)
-                {
-                    var derivationGroup = CreateDerivationGroupRow(kvp.Key, kvp.Value);
-                    panel.Add(derivationGroup);
-                }
+                    panel.Add(CreateDerivationGroupRow(kvp.Key, kvp.Value));
             }
-            
+
             return panel;
         }
-        
+
         private VisualElement CreateDerivationGroupRow(Tag groupTag, RetainedCachedValue rcv)
         {
             var group = new VisualElement
             {
-                style =
-                {
-                    marginBottom = 4,
-                    paddingLeft = 8,
-                    borderLeftWidth = 1,
-                    borderLeftColor = DerivationColor
-                }
+                style = { marginBottom = 4, paddingLeft = 8, borderLeftWidth = 1, borderLeftColor = DerivationColor }
             };
-            
-            // Group header
+
             var header = new VisualElement
             {
-                style =
-                {
-                    flexDirection = FlexDirection.Row,
-                    alignItems = Align.Center,
-                    marginBottom = 2
-                }
+                style = { flexDirection = FlexDirection.Row, alignItems = Align.Center, marginBottom = 2 }
             };
-            
+
             string groupName = $"{groupTag.GetName()} {(rcv.Derivations.Count > 0 ? !rcv.HasDerivations ? "(All Zombified)" : string.Empty : "(No Derivations)")}";
             header.Add(new Label(groupName)
             {
-                style =
-                {
-                    color = DerivationColor,
-                    fontSize = 10,
-                    unityFontStyleAndWeight = FontStyle.Bold,
-                    flexGrow = 1
-                }
+                style = { color = DerivationColor, fontSize = 10, unityFontStyleAndWeight = FontStyle.Bold, flexGrow = 1 }
             });
-            
             header.Add(new Label($"Total: {FormattedValueString(rcv.Value)}")
             {
-                style =
-                {
-                    color = AttributeColor,
-                    fontSize = 9
-                }
+                style = { color = AttributeColor, fontSize = 9 }
             });
-            
             group.Add(header);
-            
-            // Individual derivations
+
             if (rcv.Derivations != null)
             {
                 foreach (var derivKvp in rcv.Derivations)
                 {
                     var derivRow = new VisualElement
                     {
-                        style =
-                        {
-                            flexDirection = FlexDirection.Row,
-                            alignItems = Align.Center,
-                            paddingLeft = 8,
-                            marginBottom = 1
-                        }
+                        style = { flexDirection = FlexDirection.Row, alignItems = Align.Center, paddingLeft = 8, marginBottom = 1 }
                     };
-                    
+
                     string sourceName = derivKvp.Key?.GetCacheKey().GetName() ?? "Unknown";
-                    derivRow.Add(new Label($"• {sourceName}")
+                    derivRow.Add(new Label($"\u2022 {sourceName}")
                     {
-                        style =
-                        {
-                            color = new Color(0.6f, 0.6f, 0.6f),
-                            fontSize = 9
-                        }
+                        style = { color = new Color(0.6f, 0.6f, 0.6f), fontSize = 9 }
                     });
-                    
-                    if (!derivKvp.Key?.DerivationAlive() ?? false) derivRow.Add(CreateBadge("Zombie", ForgeDrawerStyles.Colors.BorderLight, "Attribute source no longer exists."));
-                    
-                    derivRow.Add(new VisualElement()
-                    {
-                        style = { flexGrow = 1 }
-                    });
-                    
+
+                    if (!derivKvp.Key?.DerivationAlive() ?? false)
+                        derivRow.Add(CreateBadge("Zombie", ForgeDrawerStyles.Colors.BorderLight, "Attribute source no longer exists."));
+
+                    derivRow.Add(new VisualElement { style = { flexGrow = 1 } });
                     derivRow.Add(new Label(FormattedValueString(derivKvp.Value))
                     {
-                        style =
-                        {
-                            color = new Color(0.7f, 0.7f, 0.7f),
-                            fontSize = 9
-                        }
+                        style = { color = new Color(0.7f, 0.7f, 0.7f), fontSize = 9 }
                     });
-                    
+
                     group.Add(derivRow);
                 }
             }
-            
+
             return group;
         }
 
@@ -1022,29 +1111,25 @@ namespace FarEmerald.PlayForge.Editor
             s += value.BaseValue > 0 ? $"+{value.BaseValue}" : value.BaseValue;
             return s;
         }
-        
+
         private VisualElement CreateEffectsSection()
         {
             var section = CreateSection("Active Effects", EffectColor);
-            
-            // Get effects via reflection
+
             var effectShelf = _effectShelfField?.GetValue(_selectedGAS) as List<AbstractEffectContainer>;
-            
+
             if (effectShelf == null || effectShelf.Count == 0)
             {
                 section.Add(CreateEmptyLabel("No active effects"));
                 return section;
             }
-            
+
             foreach (var container in effectShelf)
-            {
-                var effectRow = CreateEffectRow(container);
-                section.Add(effectRow);
-            }
-            
+                section.Add(CreateEffectRow(container));
+
             return section;
         }
-        
+
         private VisualElement CreateEffectRow(AbstractEffectContainer container)
         {
             var row = new VisualElement
@@ -1053,43 +1138,27 @@ namespace FarEmerald.PlayForge.Editor
                 {
                     flexDirection = FlexDirection.Row,
                     alignItems = Align.Center,
-                    paddingTop = 4,
-                    paddingBottom = 4,
-                    paddingLeft = 4,
+                    paddingTop = 4, paddingBottom = 4, paddingLeft = 4,
                     marginBottom = 2,
                     backgroundColor = new Color(EffectColor.r, EffectColor.g, EffectColor.b, 0.1f),
-                    borderLeftWidth = 2,
-                    borderLeftColor = EffectColor,
-                    borderTopLeftRadius = 2,
-                    borderTopRightRadius = 2,
-                    borderBottomLeftRadius = 2,
-                    borderBottomRightRadius = 2
+                    borderLeftWidth = 2, borderLeftColor = EffectColor,
+                    borderTopLeftRadius = 2, borderTopRightRadius = 2,
+                    borderBottomLeftRadius = 2, borderBottomRightRadius = 2
                 }
             };
-            
-            // Effect name
+
             string effectName = container.Spec?.Base?.GetName() ?? "Unknown Effect";
-            row.Add(new Label(effectName)
-            {
-                style =
-                {
-                    flexGrow = 1,
-                    color = Color.white,
-                    fontSize = 11
-                }
-            });
-            
-            // Impact
+            row.Add(new Label(effectName) { style = { flexGrow = 1, color = Color.white, fontSize = 11 } });
+
             var impact = container.Spec?.GetTrackedImpact() ?? new TrackedImpact();
             row.Add(CreateBadge(impact.Last.ToString(), ImpactColor));
             row.Add(CreateBadge(impact.Total.ToString(), ImpactColor));
-            
-            // Duration info
+
             var durationPolicy = container.Spec?.Base?.DurationSpecification?.DurationPolicy ?? EEffectDurationPolicy.Instant;
-            
+
             if (durationPolicy == EEffectDurationPolicy.Infinite)
             {
-                row.Add(CreateBadge("∞", EffectColor, "Infinite"));
+                row.Add(CreateBadge("\u221e", EffectColor, "Infinite"));
             }
             else if (durationPolicy == EEffectDurationPolicy.Durational)
             {
@@ -1101,47 +1170,40 @@ namespace FarEmerald.PlayForge.Editor
             {
                 row.Add(CreateBadge("Instant", new Color(0.5f, 0.5f, 0.5f)));
             }
-            
-            // Stacks if applicable
-            // (Add stack count if your system supports it)
-            
+
             return row;
         }
-        
+
         private VisualElement CreateAbilitiesSection()
         {
             var section = CreateSection("Abilities", AbilityColor);
-            
+
             if (!_selectedGAS.FindAbilitySystem(out var abilSystem))
             {
                 section.Add(CreateEmptyLabel("No ability system"));
                 return section;
             }
-            
+
             var containers = abilSystem.GetAbilityContainers();
             if (containers == null || containers.Count == 0)
             {
                 section.Add(CreateEmptyLabel("No abilities"));
                 return section;
             }
-            
+
             foreach (var container in containers)
-            {
-                var abilityRow = CreateAbilityRow(container);
-                section.Add(abilityRow);
-            }
-            
+                section.Add(CreateAbilityRow(container));
+
             return section;
         }
-        
+
         private VisualElement CreateAbilityRow(AbilitySpecContainer container)
         {
             string abilityKey = container.Spec?.Base?.GetName() ?? "Unknown";
             bool isExpanded = _expandedAbilities.Contains(abilityKey);
-            
+
             var outerContainer = new VisualElement();
-            
-            // Main row
+
             var row = new VisualElement
             {
                 pickingMode = PickingMode.Position,
@@ -1149,21 +1211,17 @@ namespace FarEmerald.PlayForge.Editor
                 {
                     flexDirection = FlexDirection.Row,
                     alignItems = Align.Center,
-                    paddingTop = 4,
-                    paddingBottom = 4,
-                    paddingLeft = 4,
+                    paddingTop = 4, paddingBottom = 4, paddingLeft = 4,
                     marginBottom = isExpanded ? 0 : 2,
                     backgroundColor = new Color(AbilityColor.r, AbilityColor.g, AbilityColor.b, isExpanded ? 0.2f : 0.1f),
                     borderLeftWidth = 2,
                     borderLeftColor = container.IsClaiming ? TagColor : AbilityColor,
-                    borderTopLeftRadius = 2,
-                    borderTopRightRadius = 2,
+                    borderTopLeftRadius = 2, borderTopRightRadius = 2,
                     borderBottomLeftRadius = isExpanded ? 0 : 2,
                     borderBottomRightRadius = isExpanded ? 0 : 2
                 }
             };
-            
-            // Click to expand
+
             row.RegisterCallback<MouseDownEvent>(evt =>
             {
                 if (evt.button == 0)
@@ -1172,88 +1230,60 @@ namespace FarEmerald.PlayForge.Editor
                         _expandedAbilities.Remove(abilityKey);
                     else
                         _expandedAbilities.Add(abilityKey);
-                    
                     RefreshDetails();
                     evt.StopPropagation();
                 }
             });
-            
-            // Expand icon
-            row.Add(new Label(isExpanded ? "▼" : "▶")
+
+            row.Add(new Label(isExpanded ? "\u25bc" : "\u25b6")
             {
                 pickingMode = PickingMode.Ignore,
-                style =
-                {
-                    width = 16,
-                    color = new Color(0.6f, 0.6f, 0.6f),
-                    fontSize = 8,
-                    unityTextAlign = TextAnchor.MiddleCenter,
-                    marginRight = 2
-                }
+                style = { width = 16, color = new Color(0.6f, 0.6f, 0.6f), fontSize = 8, unityTextAlign = TextAnchor.MiddleCenter, marginRight = 2 }
             });
-            
-            // Status indicator
+
             if (container.IsClaiming)
             {
-                row.Add(new Label("▶")
+                row.Add(new Label("\u25b6")
                 {
                     pickingMode = PickingMode.Ignore,
-                    style =
-                    {
-                        color = TagColor,
-                        fontSize = 10,
-                        marginRight = 4
-                    }
+                    style = { color = TagColor, fontSize = 10, marginRight = 4 }
                 });
             }
-            
-            // Ability name
-            string abilityName = container.Spec?.Base?.GetName() ?? "Unknown Ability";
-            row.Add(new Label(abilityName)
+
+            row.Add(new Label(container.Spec?.Base?.GetName() ?? "Unknown Ability")
             {
                 pickingMode = PickingMode.Ignore,
-                style =
-                {
-                    flexGrow = 1,
-                    color = Color.white,
-                    fontSize = 11
-                }
+                style = { flexGrow = 1, color = Color.white, fontSize = 11 }
             });
-            
-            // Level
+
             int level = container.Spec?.GetLevel() ?? 0;
-            int maxLevel = container.Spec?.Base?.GetMaxLevel()  ?? 1;
+            int maxLevel = container.Spec?.Base?.GetMaxLevel() ?? 1;
             var levelBadge = CreateBadge($"Lv.{level}/{maxLevel}", AbilityColor);
             levelBadge.pickingMode = PickingMode.Ignore;
             row.Add(levelBadge);
-            
-            // State badges
+
             if (container.IsActive)
             {
                 var activeBadge = CreateBadge("ACTIVE", ActiveTagColor);
                 activeBadge.pickingMode = PickingMode.Ignore;
                 row.Add(activeBadge);
             }
-            
+
             if (container.IsClaiming)
             {
                 var claimBadge = CreateBadge("CLAIMED", TagColor);
                 claimBadge.pickingMode = PickingMode.Ignore;
                 row.Add(claimBadge);
             }
-            
+
             outerContainer.Add(row);
-            
-            // Expanded details
+
             if (isExpanded)
-            {
-                var details = CreateAbilityDetailsPanel(container);
-                outerContainer.Add(details);
-            }
-            
+                outerContainer.Add(CreateAbilityDetailsPanel(container));
+
             return outerContainer;
         }
-        
+
         private VisualElement CreateAbilityDetailsPanel(AbilitySpecContainer container)
         {
             var panel = new VisualElement
@@ -1261,111 +1291,52 @@ namespace FarEmerald.PlayForge.Editor
                 style =
                 {
                     backgroundColor = new Color(0.2f, 0.2f, 0.22f),
-                    paddingLeft = 24,
-                    paddingRight = 8,
-                    paddingTop = 6,
-                    paddingBottom = 8,
+                    paddingLeft = 24, paddingRight = 8,
+                    paddingTop = 6, paddingBottom = 8,
                     marginBottom = 4,
-                    borderBottomLeftRadius = 4,
-                    borderBottomRightRadius = 4,
-                    borderLeftWidth = 2,
-                    borderLeftColor = AbilityColor
+                    borderBottomLeftRadius = 4, borderBottomRightRadius = 4,
+                    borderLeftWidth = 2, borderLeftColor = AbilityColor
                 }
             };
-            
+
             var ability = container.Spec?.Base;
             if (ability == null)
             {
                 panel.Add(CreateEmptyLabel("No ability data"));
                 return panel;
             }
-            
-            // Basic info
+
             panel.Add(CreateDetailRow("Name", ability.GetName(), Color.white));
             panel.Add(CreateDetailRow("Description", ability.GetDescription() ?? "N/A", new Color(0.7f, 0.7f, 0.7f)));
             panel.Add(CreateDetailRow("Level", $"{container.Spec.GetLevel()} / {ability.MaxLevel}", AbilityColor));
             panel.Add(CreateDetailRow("Asset Tag", ability.Tags?.AssetTag.GetName() ?? "None", new Color(0.6f, 0.6f, 0.6f)));
-            
-            // Definition info
+
             if (ability.Definition != null)
             {
-                panel.Add(new Label("Definition")
-                {
-                    style =
-                    {
-                        color = AbilityColor,
-                        fontSize = 10,
-                        unityFontStyleAndWeight = FontStyle.Bold,
-                        marginTop = 8,
-                        marginBottom = 4
-                    }
-                });
-                
+                panel.Add(CreateSubHeader("Definition"));
                 panel.Add(CreateDetailRow("  Activation Policy", ability.Definition.ActivationPolicy.ToString(), new Color(0.7f, 0.7f, 0.7f)));
             }
-            
-            // Cooldown info
+
             if (ability.Cooldown != null)
             {
-                panel.Add(new Label("Cooldown")
-                {
-                    style =
-                    {
-                        color = AbilityColor,
-                        fontSize = 10,
-                        unityFontStyleAndWeight = FontStyle.Bold,
-                        marginTop = 8,
-                        marginBottom = 4
-                    }
-                });
-                
+                panel.Add(CreateSubHeader("Cooldown"));
                 panel.Add(CreateDetailRow("  Duration", $"{ability.Cooldown.DurationSpecification.DurationOperation.Magnitude}s", new Color(0.7f, 0.7f, 0.7f)));
             }
-            
-            // Cost info
+
             if (ability.Cost != null && ability.Cost.ImpactSpecification is not null)
             {
-                panel.Add(new Label("Cost")
-                {
-                    style =
-                    {
-                        color = AbilityColor,
-                        fontSize = 10,
-                        unityFontStyleAndWeight = FontStyle.Bold,
-                        marginTop = 8,
-                        marginBottom = 4
-                    }
-                });
-                
+                panel.Add(CreateSubHeader("Cost"));
                 panel.Add(CreateDetailRow("  Attribute", ability.Cost.ImpactSpecification.AttributeTarget.GetName(), AttributeColor));
                 panel.Add(CreateDetailRow("  Amount", ability.Cost.ImpactSpecification.MagnitudeOperation.Magnitude.ToString("F1"), new Color(0.7f, 0.7f, 0.7f)));
             }
-            
-            // Granted tags
+
             if (ability.Tags?.PassiveGrantedTags != null && ability.Tags.PassiveGrantedTags.Count > 0)
             {
-                panel.Add(new Label("Granted Tags")
-                {
-                    style =
-                    {
-                        color = AbilityColor,
-                        fontSize = 10,
-                        unityFontStyleAndWeight = FontStyle.Bold,
-                        marginTop = 8,
-                        marginBottom = 4
-                    }
-                });
-                
+                panel.Add(CreateSubHeader("Granted Tags"));
                 var tagsContainer = new VisualElement
                 {
-                    style =
-                    {
-                        flexDirection = FlexDirection.Row,
-                        flexWrap = Wrap.Wrap,
-                        marginLeft = 8
-                    }
+                    style = { flexDirection = FlexDirection.Row, flexWrap = Wrap.Wrap, marginLeft = 8 }
                 };
-                
                 foreach (var tag in ability.Tags.PassiveGrantedTags)
                 {
                     var tagBadge = CreateBadge(tag.GetName(), TagColor);
@@ -1373,89 +1344,34 @@ namespace FarEmerald.PlayForge.Editor
                     tagBadge.style.marginBottom = 2;
                     tagsContainer.Add(tagBadge);
                 }
-                
                 panel.Add(tagsContainer);
             }
-            
-            // Runtime state
-            panel.Add(new Label("Runtime State")
-            {
-                style =
-                {
-                    color = AbilityColor,
-                    fontSize = 10,
-                    unityFontStyleAndWeight = FontStyle.Bold,
-                    marginTop = 8,
-                    marginBottom = 4
-                }
-            });
-            
+
+            panel.Add(CreateSubHeader("Runtime State"));
             panel.Add(CreateDetailRow("  Is Active", container.IsActive.ToString(), container.IsActive ? TagColor : new Color(0.5f, 0.5f, 0.5f)));
             panel.Add(CreateDetailRow("  Is Claiming", container.IsClaiming.ToString(), container.IsClaiming ? TagColor : new Color(0.5f, 0.5f, 0.5f)));
-            
+
             return panel;
         }
-        
-        private VisualElement CreateDetailRow(string label, string value, Color valueColor)
-        {
-            var row = new VisualElement
-            {
-                style =
-                {
-                    flexDirection = FlexDirection.Row,
-                    marginBottom = 2
-                }
-            };
-            
-            row.Add(new Label(label + ":")
-            {
-                style =
-                {
-                    width = 120,
-                    color = new Color(0.5f, 0.5f, 0.5f),
-                    fontSize = 10
-                }
-            });
-            
-            row.Add(new Label(value)
-            {
-                style =
-                {
-                    color = valueColor,
-                    fontSize = 10,
-                    flexGrow = 1,
-                    flexShrink = 1,
-                    overflow = Overflow.Hidden,
-                    textOverflow = TextOverflow.Ellipsis
-                }
-            });
-            
-            return row;
-        }
-        
+
         private VisualElement CreateTagsSection()
         {
             var section = CreateSection("Tags", TagColor);
-            
+
             var tagCache = _tagCacheField?.GetValue(_selectedGAS) as TagCache;
             var tags = tagCache?.GetAppliedTags();
-            
+
             if (tags == null || tags.Count == 0)
             {
                 section.Add(CreateEmptyLabel("No active tags"));
                 return section;
             }
-            
-            // Tag container with wrap
+
             var tagContainer = new VisualElement
             {
-                style =
-                {
-                    flexDirection = FlexDirection.Row,
-                    flexWrap = Wrap.Wrap
-                }
+                style = { flexDirection = FlexDirection.Row, flexWrap = Wrap.Wrap }
             };
-            
+
             foreach (var tag in tags.Where(t => t != null).OrderBy(t => t.ToString()))
             {
                 int weight = tagCache.GetWeight(tag);
@@ -1464,12 +1380,485 @@ namespace FarEmerald.PlayForge.Editor
                 tagElement.style.marginBottom = 4;
                 tagContainer.Add(tagElement);
             }
-            
+
             section.Add(tagContainer);
-            
             return section;
         }
-        
+
+        // ═══════════════════════════════════════════════════════════════════════════
+        // OVERVIEW TAB
+        // ═══════════════════════════════════════════════════════════════════════════
+
+        private void BuildOverviewContent()
+        {
+            _overviewContainer.Clear();
+
+            // Attribute picker toggle bar
+            var pickerBar = new VisualElement
+            {
+                style =
+                {
+                    flexDirection = FlexDirection.Row,
+                    alignItems = Align.Center,
+                    paddingLeft = 12, paddingRight = 12,
+                    paddingTop = 6, paddingBottom = 6,
+                    backgroundColor = BackgroundMedium
+                }
+            };
+
+            var togglePickerBtn = new Button(() =>
+            {
+                _overviewPickerExpanded = !_overviewPickerExpanded;
+                RefreshOverviewPicker();
+            })
+            {
+                text = "Attributes \u25bc",
+                style = { marginRight = 8 }
+            };
+            pickerBar.Add(togglePickerBtn);
+
+            pickerBar.Add(new Label { name = "overview-attr-count", style = { fontSize = 10, color = new Color(0.5f, 0.5f, 0.5f) } });
+            pickerBar.Add(new VisualElement { style = { flexGrow = 1 } });
+
+            _overviewContainer.Add(pickerBar);
+
+            // Picker panel (collapsible)
+            _overviewAttributePicker = new VisualElement
+            {
+                name = "overview-picker",
+                style =
+                {
+                    display = DisplayStyle.None,
+                    backgroundColor = new Color(0.2f, 0.2f, 0.22f),
+                    paddingLeft = 12, paddingRight = 12,
+                    paddingTop = 8, paddingBottom = 8,
+                    borderBottomWidth = 1,
+                    borderBottomColor = new Color(0.15f, 0.15f, 0.15f)
+                }
+            };
+            _overviewContainer.Add(_overviewAttributePicker);
+
+            // Table scroll
+            _overviewTableScroll = new ScrollView(ScrollViewMode.VerticalAndHorizontal)
+            {
+                style = { flexGrow = 1, paddingLeft = 8, paddingRight = 8, paddingTop = 8 }
+            };
+            _overviewContainer.Add(_overviewTableScroll);
+        }
+
+        private void RefreshOverviewPicker()
+        {
+            _overviewAttributePicker.Clear();
+            _overviewAttributePicker.style.display = _overviewPickerExpanded ? DisplayStyle.Flex : DisplayStyle.None;
+
+            if (!_overviewPickerExpanded) return;
+
+            // Collect all attribute names across all GAS entities
+            var allAttributes = CollectAllAttributes();
+
+            // Auto-select first 6 on first open
+            if (!_overviewAttributesInitialized && allAttributes.Count > 0)
+            {
+                _overviewAttributesInitialized = true;
+                foreach (var name in allAttributes.Take(6))
+                    _selectedOverviewAttributes.Add(name);
+            }
+
+            // All / None buttons
+            var btnRow = new VisualElement
+            {
+                style = { flexDirection = FlexDirection.Row, marginBottom = 6 }
+            };
+                
+            // btnRow.Add(new Toggle("Abbreviate"));
+            
+            btnRow.Add(new Button(() =>
+            {
+                foreach (var name in allAttributes) _selectedOverviewAttributes.Add(name);
+                RefreshOverviewPicker();
+                RefreshOverviewTable();
+            }) { text = "All", style = { marginRight = 4 } });
+            btnRow.Add(new Button(() =>
+            {
+                _selectedOverviewAttributes.Clear();
+                RefreshOverviewPicker();
+                RefreshOverviewTable();
+            }) { text = "None" });
+            _overviewAttributePicker.Add(btnRow);
+
+            // Attribute toggles in a wrap container
+            var toggleContainer = new VisualElement
+            {
+                style = { flexDirection = FlexDirection.Row, flexWrap = Wrap.Wrap }
+            };
+
+            foreach (var attrName in allAttributes)
+            {
+                bool selected = _selectedOverviewAttributes.Contains(attrName);
+                var toggle = new Toggle(attrName.GetAbbreviation()) { value = selected };
+                toggle.style.marginRight = 12;
+                toggle.style.marginBottom = 2;
+                toggle.RegisterValueChangedCallback(evt =>
+                {
+                    if (evt.newValue) _selectedOverviewAttributes.Add(attrName);
+                    else _selectedOverviewAttributes.Remove(attrName);
+                    UpdateOverviewAttrCount();
+                    RefreshOverviewTable();
+                });
+                toggleContainer.Add(toggle);
+            }
+
+            _overviewAttributePicker.Add(toggleContainer);
+            UpdateOverviewAttrCount();
+        }
+
+        private void UpdateOverviewAttrCount()
+        {
+            var countLabel = _overviewContainer?.Q<Label>("overview-attr-count");
+            if (countLabel != null)
+                countLabel.text = $"{_selectedOverviewAttributes.Count} attributes selected";
+        }
+
+        private void RefreshOverviewTable()
+        {
+            if (_overviewTableScroll == null) return;
+            _overviewTableScroll.Clear();
+
+            // Auto-initialize attribute selection if needed
+            if (!_overviewAttributesInitialized)
+            {
+                var allAttrs = CollectAllAttributes();
+                if (allAttrs.Count > 0)
+                {
+                    _overviewAttributesInitialized = true;
+                    foreach (var name in allAttrs.Take(6))
+                        _selectedOverviewAttributes.Add(name);
+                    UpdateOverviewAttrCount();
+                }
+            }
+
+            if (_gasObjects.Count == 0)
+            {
+                _overviewTableScroll.Add(CreateEmptyLabel("No GAS objects in scene"));
+                return;
+            }
+
+            var selectedAttrs = _selectedOverviewAttributes.OrderBy(s => s.GetName()).ToList();
+            if (selectedAttrs.Count == 0)
+            {
+                _overviewTableScroll.Add(CreateEmptyLabel("No attributes selected. Click 'Attributes' to configure."));
+                return;
+            }
+
+            // Build table
+            var table = new VisualElement();
+
+            // Header row
+            var headerRow = new VisualElement
+            {
+                style =
+                {
+                    flexDirection = FlexDirection.Row,
+                    paddingBottom = 4, marginBottom = 4,
+                    borderBottomWidth = 1,
+                    borderBottomColor = new Color(0.3f, 0.3f, 0.3f)
+                }
+            };
+
+            headerRow.Add(new Label("Entity")
+            {
+                style = { width = 160, color = new Color(0.6f, 0.6f, 0.6f), fontSize = 10, unityFontStyleAndWeight = FontStyle.Bold }
+            });
+
+            foreach (var attrName in selectedAttrs)
+            {
+                headerRow.Add(new Label(attrName.GetAbbreviation())
+                {
+                    style =
+                    {
+                        width = 80,
+                        color = AttributeColor,
+                        fontSize = 10,
+                        unityFontStyleAndWeight = FontStyle.Bold,
+                        unityTextAlign = TextAnchor.MiddleRight,
+                        overflow = Overflow.Hidden,
+                        textOverflow = TextOverflow.Ellipsis
+                    },
+                    tooltip = attrName.GetName()
+                });
+            }
+
+            table.Add(headerRow);
+
+            // Data rows
+            var sorted = GetSortedEntities();
+            foreach (var gas in sorted)
+            {
+                var dataRow = CreateOverviewRow(gas, selectedAttrs);
+                table.Add(dataRow);
+            }
+
+            _overviewTableScroll.Add(table);
+        }
+
+        private VisualElement CreateOverviewRow(GameplayAbilitySystem gas, List<IAttribute> selectedAttrs)
+        {
+            string displayName = GetDisplayName(gas);
+            string affiliation = GetFirstAffiliationName(gas);
+            Color affColor = GetAffiliationColor(affiliation);
+            bool isSelected = gas == _selectedGAS;
+
+            var row = new VisualElement
+            {
+                pickingMode = PickingMode.Position,
+                style =
+                {
+                    flexDirection = FlexDirection.Row,
+                    alignItems = Align.Center,
+                    paddingTop = 3, paddingBottom = 3, paddingLeft = 4,
+                    marginBottom = 1,
+                    backgroundColor = isSelected ? new Color(SelectedColor.r, SelectedColor.g, SelectedColor.b, 0.5f) : Color.clear,
+                    borderTopLeftRadius = 2, borderTopRightRadius = 2,
+                    borderBottomLeftRadius = 2, borderBottomRightRadius = 2
+                }
+            };
+
+            // Click to select and switch to details
+            row.RegisterCallback<MouseDownEvent>(evt =>
+            {
+                if (evt.button == 0)
+                {
+                    _activeTab = ETab.Details;
+                    UpdateTabVisuals();
+                    SelectEntity(gas);
+                    RefreshDetails();
+                    evt.StopPropagation();
+                }
+            });
+
+            row.RegisterCallback<MouseEnterEvent>(_ =>
+            {
+                if (gas != _selectedGAS) row.style.backgroundColor = HoverColor;
+            });
+            row.RegisterCallback<MouseLeaveEvent>(_ =>
+            {
+                if (gas != _selectedGAS) row.style.backgroundColor = Color.clear;
+            });
+
+            // Affiliation dot + name
+            var nameContainer = new VisualElement
+            {
+                pickingMode = PickingMode.Ignore,
+                style = { flexDirection = FlexDirection.Row, alignItems = Align.Center, width = 160 }
+            };
+
+            nameContainer.Add(new VisualElement
+            {
+                pickingMode = PickingMode.Ignore,
+                style =
+                {
+                    width = 6, height = 6,
+                    backgroundColor = affColor,
+                    borderTopLeftRadius = 3, borderTopRightRadius = 3,
+                    borderBottomLeftRadius = 3, borderBottomRightRadius = 3,
+                    marginRight = 6
+                }
+            });
+
+            nameContainer.Add(new Label(displayName)
+            {
+                pickingMode = PickingMode.Ignore,
+                style =
+                {
+                    color = Color.white, fontSize = 11,
+                    overflow = Overflow.Hidden, textOverflow = TextOverflow.Ellipsis
+                }
+            });
+            row.Add(nameContainer);
+
+            // Attribute values
+            IReadOnlyDictionary<IAttribute, CachedAttributeValue> cache = null;
+            if (gas.FindAttributeSystem(out var attrSystem))
+                cache = attrSystem.GetAttributeCache();
+
+            foreach (var attr in selectedAttrs)
+            {
+                string valText = "-";
+                Color valColor = new Color(0.4f, 0.4f, 0.4f);
+
+                if (cache != null)
+                {
+                    var match = cache.FirstOrDefault(k => k.Key?.GetName() == attr.GetName());
+                    if (match.Key != null)
+                    {
+                        float current = match.Value.Value.CurrentValue;
+                        float baseVal = match.Value.Value.BaseValue;
+                        valText = current.ToString("F1");
+
+                        float ratio = baseVal > 0 ? current / baseVal : 0;
+                        valColor = ratio >= 1f ? TagColor : (ratio > 0.25f ? AttributeColor : Color.red);
+                    }
+                }
+
+                row.Add(new Label(valText)
+                {
+                    pickingMode = PickingMode.Ignore,
+                    style = { width = 80, color = valColor, fontSize = 11, unityTextAlign = TextAnchor.MiddleRight }
+                });
+            }
+
+            return row;
+        }
+
+        private List<IAttribute> CollectAllAttributes()
+        {
+            var attributes = new HashSet<IAttribute>();
+            foreach (var gas in _gasObjects)
+            {
+                if (!gas.FindAttributeSystem(out var attrSystem)) continue;
+                var cache = attrSystem.GetAttributeCache();
+                if (cache == null) continue;
+                foreach (var kvp in cache)
+                {
+                    if (kvp.Key is null) continue;
+                    attributes.Add(kvp.Key);
+                }
+            }
+            return attributes.OrderBy(n => n.GetName()).ToList();
+        }
+
+        // ═══════════════════════════════════════════════════════════════════════════
+        // HELPERS
+        // ═══════════════════════════════════════════════════════════════════════════
+
+        private static string GetDisplayName(GameplayAbilitySystem gas)
+        {
+            return gas.EntityData != null ? gas.EntityData.GetName() : gas.gameObject.name;
+        }
+
+        private static string GetFirstAffiliationName(GameplayAbilitySystem gas)
+        {
+            if (gas.EntityData.Affiliation != null && gas.EntityData.Affiliation.Count > 0)
+            {
+                if (string.IsNullOrEmpty(gas.EntityData.Affiliation[0].DisplayName)) return "Unknown";
+                return gas.EntityData.Affiliation[0].DisplayName;
+            }
+            return "None";
+        }
+
+        private static int GetCacheIndex(GameplayAbilitySystem gas)
+        {
+            return gas.ProcessRelay?.CacheIndex ?? -1;
+        }
+
+        private static Color GetAffiliationColor(string affiliationName)
+        {
+            if (string.IsNullOrEmpty(affiliationName) || affiliationName == "None")
+                return new Color(0.5f, 0.5f, 0.5f);
+
+            if (affiliationColors.TryGetValue(affiliationName, out var c)) return c;
+            affiliationColors[affiliationName] = AffiliationPalette[affiliationColors.Count % AffiliationPalette.Length];
+            return affiliationColors[affiliationName];
+
+            int hash = affiliationName.GetHashCode();
+            int index = ((hash % AffiliationPalette.Length) + AffiliationPalette.Length) % AffiliationPalette.Length;
+            return AffiliationPalette[index];
+        }
+
+        private VisualElement CreateSection(string title, Color accentColor)
+        {
+            var section = new VisualElement
+            {
+                style =
+                {
+                    marginBottom = 16,
+                    paddingLeft = 8, paddingRight = 8,
+                    paddingTop = 8, paddingBottom = 8,
+                    backgroundColor = BackgroundMedium,
+                    borderLeftWidth = 3, borderLeftColor = accentColor,
+                    borderTopLeftRadius = 4, borderTopRightRadius = 4,
+                    borderBottomLeftRadius = 4, borderBottomRightRadius = 4
+                }
+            };
+
+            section.Add(new Label(title)
+            {
+                style =
+                {
+                    fontSize = 12,
+                    unityFontStyleAndWeight = FontStyle.Bold,
+                    color = accentColor,
+                    marginBottom = 8
+                }
+            });
+
+            return section;
+        }
+
+        private VisualElement CreateInfoRow(string label, string value, Color valueColor)
+        {
+            var row = new VisualElement
+            {
+                style = { flexDirection = FlexDirection.Row, marginBottom = 2 }
+            };
+            row.Add(new Label(label + ":") { style = { width = 100, color = new Color(0.6f, 0.6f, 0.6f), fontSize = 11 } });
+            row.Add(new Label(value) { style = { color = valueColor, fontSize = 11 } });
+            return row;
+        }
+
+        private VisualElement CreateDetailRow(string label, string value, Color valueColor)
+        {
+            var row = new VisualElement
+            {
+                style = { flexDirection = FlexDirection.Row, marginBottom = 2 }
+            };
+            row.Add(new Label(label + ":") { style = { width = 120, color = new Color(0.5f, 0.5f, 0.5f), fontSize = 10 } });
+            row.Add(new Label(value)
+            {
+                style =
+                {
+                    color = valueColor, fontSize = 10,
+                    flexGrow = 1, flexShrink = 1,
+                    overflow = Overflow.Hidden,
+                    textOverflow = TextOverflow.Ellipsis
+                }
+            });
+            return row;
+        }
+
+        private Label CreateSubHeader(string text)
+        {
+            return new Label(text)
+            {
+                style =
+                {
+                    color = AbilityColor,
+                    fontSize = 10,
+                    unityFontStyleAndWeight = FontStyle.Bold,
+                    marginTop = 8, marginBottom = 4
+                }
+            };
+        }
+
+        private VisualElement CreateBadge(string text, Color color, string tooltip = null)
+        {
+            return new Label(text)
+            {
+                tooltip = tooltip,
+                style =
+                {
+                    fontSize = 9,
+                    color = color,
+                    backgroundColor = new Color(color.r, color.g, color.b, 0.15f),
+                    paddingLeft = 6, paddingRight = 6,
+                    paddingTop = 2, paddingBottom = 2,
+                    borderTopLeftRadius = 3, borderTopRightRadius = 3,
+                    borderBottomLeftRadius = 3, borderBottomRightRadius = 3,
+                    unityTextAlign = TextAnchor.MiddleCenter
+                }
+            };
+        }
+
         private VisualElement CreateTagBadge(string tagName, int weight)
         {
             var container = new VisualElement
@@ -1480,31 +1869,18 @@ namespace FarEmerald.PlayForge.Editor
                     flexDirection = FlexDirection.Row,
                     alignItems = Align.Center,
                     backgroundColor = new Color(TagColor.r, TagColor.g, TagColor.b, 0.15f),
-                    paddingLeft = 6,
-                    paddingRight = 6,
-                    paddingTop = 2,
-                    paddingBottom = 2,
-                    borderTopLeftRadius = 3,
-                    borderTopRightRadius = 3,
-                    borderBottomLeftRadius = 3,
-                    borderBottomRightRadius = 3
+                    paddingLeft = 6, paddingRight = 6,
+                    paddingTop = 2, paddingBottom = 2,
+                    borderTopLeftRadius = 3, borderTopRightRadius = 3,
+                    borderBottomLeftRadius = 3, borderBottomRightRadius = 3
                 }
             };
-            
-            // Tag name
-            container.Add(new Label(tagName)
-            {
-                style =
-                {
-                    fontSize = 9,
-                    color = TagColor
-                }
-            });
-            
-            // Weight indicator (only show if > 1)
+
+            container.Add(new Label(tagName) { style = { fontSize = 9, color = TagColor } });
+
             if (weight > 1)
             {
-                container.Add(new Label($" ×{weight}")
+                container.Add(new Label($" \u00d7{weight}")
                 {
                     style =
                     {
@@ -1514,116 +1890,10 @@ namespace FarEmerald.PlayForge.Editor
                     }
                 });
             }
-            
+
             return container;
         }
-        
-        #region UI Helpers
-        
-        private VisualElement CreateSection(string title, Color accentColor)
-        {
-            var section = new VisualElement
-            {
-                style =
-                {
-                    marginBottom = 16,
-                    paddingLeft = 8,
-                    paddingRight = 8,
-                    paddingTop = 8,
-                    paddingBottom = 8,
-                    backgroundColor = BackgroundMedium,
-                    borderLeftWidth = 3,
-                    borderLeftColor = accentColor,
-                    borderTopLeftRadius = 4,
-                    borderTopRightRadius = 4,
-                    borderBottomLeftRadius = 4,
-                    borderBottomRightRadius = 4
-                }
-            };
-            
-            // Header
-            var header = new VisualElement
-            {
-                style =
-                {
-                    flexDirection = FlexDirection.Row,
-                    alignItems = Align.Center,
-                    marginBottom = 8
-                }
-            };
-            
-            header.Add(new Label(title)
-            {
-                style =
-                {
-                    fontSize = 12,
-                    unityFontStyleAndWeight = FontStyle.Bold,
-                    color = accentColor
-                }
-            });
-            
-            section.Add(header);
-            
-            return section;
-        }
-        
-        private VisualElement CreateInfoRow(string label, string value, Color valueColor)
-        {
-            var row = new VisualElement
-            {
-                style =
-                {
-                    flexDirection = FlexDirection.Row,
-                    marginBottom = 2
-                }
-            };
-            
-            row.Add(new Label(label + ":")
-            {
-                style =
-                {
-                    width = 100,
-                    color = new Color(0.6f, 0.6f, 0.6f),
-                    fontSize = 11
-                }
-            });
-            
-            row.Add(new Label(value)
-            {
-                style =
-                {
-                    color = valueColor,
-                    fontSize = 11
-                }
-            });
-            
-            return row;
-        }
-        
-        private VisualElement CreateBadge(string text, Color color, string tooltip = null)
-        {
-            var badge = new Label(text)
-            {
-                tooltip = tooltip,
-                style =
-                {
-                    fontSize = 9,
-                    color = color,
-                    backgroundColor = new Color(color.r, color.g, color.b, 0.15f),
-                    paddingLeft = 6,
-                    paddingRight = 6,
-                    paddingTop = 2,
-                    paddingBottom = 2,
-                    borderTopLeftRadius = 3,
-                    borderTopRightRadius = 3,
-                    borderBottomLeftRadius = 3,
-                    borderBottomRightRadius = 3,
-                    unityTextAlign = TextAnchor.MiddleCenter
-                }
-            };
-            return badge;
-        }
-        
+
         private Label CreateEmptyLabel(string text)
         {
             return new Label(text)
@@ -1636,7 +1906,5 @@ namespace FarEmerald.PlayForge.Editor
                 }
             };
         }
-        
-        #endregion
     }
 }

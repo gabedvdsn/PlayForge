@@ -13,7 +13,7 @@ namespace FarEmerald.PlayForge
         // ═══════════════════════════════════════════════════════════════════════════
 
         [ForgeContextDefault(ForgeContext.System, ForgeContext.Affiliation, ForgeContext.Debug)]
-        public static Tag SYSTEM => Tag.GenerateAsUnique("GameRoot");
+        public static Tag SYSTEM => Tag.GenerateAsUnique("Game Root");
         
         public static Tag NONE => Tag.GenerateAsUnique("None");
         

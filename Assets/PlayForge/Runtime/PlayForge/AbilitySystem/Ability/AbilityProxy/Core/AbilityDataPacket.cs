@@ -1,4 +1,5 @@
-﻿using UnityEngine;
+﻿using System;
+using UnityEngine;
 
 namespace FarEmerald.PlayForge
 {
@@ -21,6 +22,15 @@ namespace FarEmerald.PlayForge
         /// Checked by AbilitySpecContainer to cancel the ability before execution proceeds.
         /// </summary>
         public bool TargetingFailed { get; set; }
+
+        /// <summary>
+        /// Invoked by ability tasks that host sub-sequences (e.g. RunSequenceTask) when a nested
+        /// critical section exits. Allows the activation handle to release its claim early, while
+        /// the hosting ability runtime stays alive and fully tracked by ProcessControl until its
+        /// sub-sequence completes naturally. Wired by AbilitySpecContainer when activating a handle.
+        /// Invocation is expected to be idempotent on the consumer side.
+        /// </summary>
+        public Action NotifyCriticalSectionExit { get; set; }
 
         public AbilitySystemComponent System => Request.System;
         public AbilitySystemCallbacks Callbacks => System.Callbacks;

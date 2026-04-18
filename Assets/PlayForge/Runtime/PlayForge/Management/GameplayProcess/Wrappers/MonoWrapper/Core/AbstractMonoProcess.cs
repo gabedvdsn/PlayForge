@@ -54,19 +54,18 @@ namespace FarEmerald.PlayForge
         
         #endregion
         
-        public void SendProcessData(ProcessDataPacket processData)
+        public void SendProcessInternals(ProcessDataPacket processData, ProcessRelay relay)
         {
             regData = processData;
+            Relay = relay;
         }
 
         /// <summary>
         /// Called via ProcessControl after the process is Created
         /// </summary>
-        /// <param name="relay">Process Relay</param>
-        public virtual void WhenInitialize(ProcessRelay relay)
+        public virtual void WhenInitialize()
         {
             _initialized = true;
-            Relay = relay;
             
             // Transform
             if (regData.TryGetFirst<Transform>(Tags.PARENT_TRANSFORM, out var pt))
@@ -150,7 +149,7 @@ namespace FarEmerald.PlayForge
         /// <returns></returns>
         public abstract UniTask RunProcess(ProcessRelay relay, CancellationToken token);
 
-        protected virtual void WhenDestroy()
+        public virtual void WhenDestroy()
         {
             
         }

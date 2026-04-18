@@ -18,7 +18,7 @@ namespace FarEmerald.PlayForge
             var owner = data.EffectOrigin.GetOwner().ToGAS();
             if (owner is null) return;
 
-            if (!owner.Data.TryGet(Tags.TARGETED_INTENT, out DataValue<IProxyTaskBehaviourUser> targetingUsers)) return;
+            if (!owner.Data.TryGetAll(Tags.TARGETED_INTENT, out DataValue<IProxyTaskBehaviourUser> targetingUsers)) return;
             await owner.ApplyBehaviour(new DisjointProxyTaskBehaviour(), targetingUsers.ToArray(), token);
         }
     }

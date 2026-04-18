@@ -41,19 +41,19 @@ namespace FarEmerald.PlayForge
 
         public override void WhenWait(ProcessRelay relay)
         {
-            Process.WhenWait(relay);
+            Process.WhenWait();
         }
         public override bool HandlePause(ProcessRelay relay)
         {
-            return Process.HandlePause(relay);
+            return Process.HandlePause();
         }
         public override bool HandleResume(ProcessRelay relay)
         {
-            return Process.HandleResume(relay);
+            return Process.TryHandleResume();
         }
         public override void WhenTerminate(ProcessRelay relay)
         {
-            Process.WhenTerminate(relay);
+            Process.WhenTerminate();
         }
         public override void WhenTerminateSafe(ProcessRelay relay)
         {

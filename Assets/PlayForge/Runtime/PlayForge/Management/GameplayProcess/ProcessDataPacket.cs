@@ -26,7 +26,7 @@ namespace FarEmerald.PlayForge
         public IReadOnlyDictionary<Tag, List<object>> Payload => _payload;
         public bool InUse = true;
         
-        public readonly Dictionary<int, ProcessRelay> HandlerRelays = new();
+        protected readonly Dictionary<int, ProcessRelay> HandlerRelays = new();
         
         public AbstractMonoProcessInstantiator CustomInstantiator;
 
@@ -157,6 +157,12 @@ namespace FarEmerald.PlayForge
         {
             return TryGet<T>(key, target, out var value) ? value : fallback;
         }
+
+        public DataValue<T> GetAll<T>(Tag key)
+        {
+            TryGetAll(key, out DataValue<T> dataValues);
+            return dataValues;
+        }
         
         public bool TryGet<T>(Tag key, EDataTarget target, out T value)
         {
@@ -196,7 +202,7 @@ namespace FarEmerald.PlayForge
             return false;
         }
         
-        public bool TryGet<T>(Tag key, out DataValue<T> dataValue)
+        public bool TryGetAll<T>(Tag key, out DataValue<T> dataValue)
         {
             if (!_payload.ContainsKey(key))
             {
@@ -211,7 +217,7 @@ namespace FarEmerald.PlayForge
             }
 
             dataValue = new DataValue<T>(tObjects);
-            return dataValue.Valid;
+            return dataValue.IsValid;
         }
 
         public bool Remove(Tag key)
@@ -398,7 +404,8 @@ namespace FarEmerald.PlayForge
     public struct DataValue<T> : IEnumerable<T>
     {
         private List<T> Data;
-        public bool Valid => Data is not null && Data.Count > 0;
+        public bool IsValid => Data is not null && Data.Count > 0;
+        public int Count => Data.Count;
         
         public DataValue(List<T> data)
         {
@@ -409,7 +416,6 @@ namespace FarEmerald.PlayForge
         {
             return target switch
             {
-
                 EDataTarget.Primary => Primary,
                 EDataTarget.Any => Any,
                 EDataTarget.Last => Last,
@@ -417,11 +423,11 @@ namespace FarEmerald.PlayForge
             };
         }
 
-        public T Primary => Valid ? Data[0] : default;
-        public T Any => Valid ? Data.RandomChoice() : default;
-        public List<T> All => Valid ? Data : new List<T>();
-        public List<T> AllDistinct => Valid ? All.Distinct().ToList() : new List<T>();
-        public T Last => Valid ? Data[^1] : default;
+        public T Primary => IsValid ? Data[0] : default;
+        public T Any => IsValid ? Data.RandomChoice() : default;
+        public List<T> All => IsValid ? Data : new List<T>();
+        public List<T> AllDistinct => IsValid ? All.Distinct().ToList() : new List<T>();
+        public T Last => IsValid ? Data[^1] : default;
 
         public IEnumerator<T> GetEnumerator()
         {
@@ -429,7 +435,7 @@ namespace FarEmerald.PlayForge
         }
         public override string ToString()
         {
-            if (!Valid) return "NullProxyData";
+            if (!IsValid) return "NullProxyData";
             string s = "";
             for (int i = 0; i < Data.Count; i++)
             {

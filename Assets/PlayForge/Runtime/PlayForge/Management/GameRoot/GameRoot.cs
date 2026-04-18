@@ -31,7 +31,7 @@ namespace FarEmerald.PlayForge
 
             Instance = this;
 
-            LevelAttribute = new RuntimeAttribute(TagHierarchy.TagUtil.GenerateUniqueRandomTag(), GetAssetTag());
+            LevelAttribute = new RuntimeAttribute(TagRegistry.TagUtil.GenerateUniqueRandomTag(), GetAssetTag());
             AttributeRegistry.Add(LevelAttribute);
         }
         

@@ -12,7 +12,7 @@ namespace FarEmerald.PlayForge.Extended.Editor
     ///     BuildEffectTemplatesSection(scrollView);
     /// Place it before the Template Tags section.
     /// </summary>
-    public partial class PlayForgeManager
+    public partial class TheForge
     {
         private void BuildEffectTemplatesSection(VisualElement parent)
         {

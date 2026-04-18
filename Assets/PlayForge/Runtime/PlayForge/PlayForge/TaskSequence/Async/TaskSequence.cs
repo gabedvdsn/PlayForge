@@ -105,6 +105,7 @@ namespace FarEmerald.PlayForge
         /// </summary>
         public bool Interrupt()
         {
+            Debug.Log($"Interrupted");
             return Inject(InterruptSequenceInjection.Instance);
         }
         

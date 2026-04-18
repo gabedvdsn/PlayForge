@@ -129,12 +129,11 @@ namespace FarEmerald.PlayForge
         /// Process all deferred work for this frame.
         /// Call this at end of frame (e.g., in LateUpdate or via a manager).
         /// </summary>
-        public void EndOfFrame()
+        private void EndOfFrame()
         {
             if (_actionQueue == null) return;
             
             int totalExecuted = 0;
-            int totalInvalidated = 0;
             
             int executed = _actionQueue.ProcessAll(this);
             totalExecuted += executed;

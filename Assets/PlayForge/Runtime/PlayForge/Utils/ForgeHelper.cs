@@ -660,7 +660,7 @@ namespace FarEmerald.PlayForge
         /// </summary>
         public static bool IsValidTagPath(string path)
         {
-            return TagHierarchy.IsValidPath(path);
+            return TagRegistry.IsValidPath(path);
         }
         
         /// <summary>

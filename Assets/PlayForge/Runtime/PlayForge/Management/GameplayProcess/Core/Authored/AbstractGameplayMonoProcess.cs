@@ -10,9 +10,9 @@ namespace FarEmerald.PlayForge
         protected IEffectOrigin Origin;
         protected SystemComponentData Source;
 
-        public override void WhenInitialize(ProcessRelay relay)
+        public override void WhenInitialize()
         {
-            base.WhenInitialize(relay);
+            base.WhenInitialize();
             
             if (!regData.TryGet(Tags.DERIVATION, EDataTarget.Primary, out Origin))
             {

@@ -52,7 +52,7 @@ namespace FarEmerald.PlayForge
         public static bool TryApplyEffects(this ProcessDataPacket data, ITarget target, Tag query)
         {
             if (target is null) return false;
-            if (!data.GetEffectAssets(query, out var effects)) return false;
+            if (!data.TryGetLoadedAssets<GameplayEffect>(query, out var effects)) return false;
             if (data is not AbilityDataPacket adp) return false;
 
             foreach (var effect in effects) target.ApplyGameplayEffect(target.GenerateEffectSpec(adp.EffectOrigin, effect));
@@ -62,54 +62,20 @@ namespace FarEmerald.PlayForge
         public static bool TryApplyEffects(this AbilityDataPacket data, ITarget target, Tag query)
         {
             if (target is null) return false;
-            if (!data.GetEffectAssets(query, out var effects)) return false;
+            if (!data.TryGetLoadedAssets<GameplayEffect>(query, out var effects)) return false;
 
             foreach (var effect in effects) target.ApplyGameplayEffect(target.GenerateEffectSpec(data.EffectOrigin, effect));
             return true;
         }
-        
-        #endregion
-        
-        #region Asset Loader Getters
-        
-        public static bool GetAssets<T>(this ProcessDataPacket data, Tag query, out DataValue<T> assets)
+
+        public static DataValue<T> GetLoadedAssets<T>(this ProcessDataPacket data, Tag query)
         {
-            return data.TryGet(query, out assets);
+            return data.TryGetLoadedAssets<T>(query, out var assets) ? assets : new DataValue<T>();
         }
         
-        public static bool GetAssets(this ProcessDataPacket data, Tag query, out DataValue<BaseForgeAsset> assets)
+        public static bool TryGetLoadedAssets<T>(this ProcessDataPacket data, Tag query, out DataValue<T> assets)
         {
-            return data.TryGet(query, out assets);
-        }
-        
-        public static bool GetEffectAssets(this ProcessDataPacket data, Tag query, out DataValue<GameplayEffect> assets)
-        {
-            return data.TryGet(query, out assets);
-        }
-        
-        public static bool GetEntityAssets(this ProcessDataPacket data, Tag query, out DataValue<EntityIdentity> assets)
-        {
-            return data.TryGet(query, out assets);
-        }
-        
-        public static bool GetAbilityAssets(this ProcessDataPacket data, Tag query, out DataValue<Ability> assets)
-        {
-            return data.TryGet(query, out assets);
-        }
-        
-        public static bool GetAttributeAssets(this ProcessDataPacket data, Tag query, out DataValue<Attribute> assets)
-        {
-            return data.TryGet(query, out assets);
-        }
-        
-        public static bool GetAttributeSetAssets(this ProcessDataPacket data, Tag query, out DataValue<AttributeSet> assets)
-        {
-            return data.TryGet(query, out assets);
-        }
-        
-        public static bool GetTagAssets(this ProcessDataPacket data, Tag query, out DataValue<Tag> assets)
-        {
-            return data.TryGet(query, out assets);
+            return data.TryGetAll(query, out assets);
         }
         
         #endregion

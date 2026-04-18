@@ -15,10 +15,8 @@ namespace FarEmerald.PlayForge
             {
                 return;
             }
-
-            var gas = target.ToGAS();
             
-            foreach (GameplayEffect effect in Effects) target.ApplyGameplayEffect(gas.GenerateEffectSpec(data.EffectOrigin, effect));
+            foreach (GameplayEffect effect in Effects) target.ApplyGameplayEffect(target.GenerateEffectSpec(data.EffectOrigin, effect));
         }
 
         public override UniTask Activate(AbilityDataPacket data, CancellationToken token)

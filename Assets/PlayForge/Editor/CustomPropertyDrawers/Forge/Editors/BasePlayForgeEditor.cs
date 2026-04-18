@@ -57,22 +57,42 @@ namespace FarEmerald.PlayForge.Extended.Editor
         {
             var editorType = GetType();
 
+            var isExpanded = GetOrInitSectionState(editorType.FullName + '.' + config.Name, true);
+            config.StartExpanded = isExpanded;
+            
             // Read stored state, defaulting to config.StartExpanded if no state exists
-            if (_sectionStates.TryGetValue(editorType, out var states)
+            /*if (_sectionStates.TryGetValue(editorType, out var states)
                 && states.TryGetValue(config.Name, out bool isExpanded))
             {
                 config.StartExpanded = isExpanded;
-            }
+            }*/
 
             // Wire the onClick to persist state
             var result = CreateCollapsibleSection(config, (sectionName, expanded) =>
             {
-                if (!_sectionStates.ContainsKey(editorType))
+                SetSectionState(editorType.FullName + '.' + config.Name, expanded);
+                /*if (!_sectionStates.ContainsKey(editorType))
                     _sectionStates[editorType] = new Dictionary<string, bool>();
-                _sectionStates[editorType][sectionName] = expanded;
+                _sectionStates[editorType][sectionName] = expanded;*/
             });
 
             return result;
+
+            bool GetOrInitSectionState(string key, bool initValue)
+            {
+                if (!EditorPrefs.HasKey(key))
+                {
+                    SetSectionState(key, initValue);
+                    return initValue;
+                }
+
+                return EditorPrefs.GetBool(key, false);
+            }
+
+            void SetSectionState(string key, bool flag)
+            {
+                EditorPrefs.SetBool(key, flag);
+            }
         }
 
         protected virtual void OnEnable()
@@ -169,7 +189,7 @@ namespace FarEmerald.PlayForge.Extended.Editor
         /// <summary>Called when Open button is clicked. Opens PlayForge Manager to this asset.</summary>
         protected virtual void OnOpenInManager()
         {
-            PlayForgeManager.OpenToAsset(target);
+            TheForge.OpenToAsset(target);
         }
         
         /// <summary>Whether to show the Visualize button</summary>
@@ -451,8 +471,8 @@ namespace FarEmerald.PlayForge.Extended.Editor
 
             // Debug.Log($"[ Created ] {GetType().Name}");
             
-            configureDelayMs = EditorPrefs.GetInt(PlayForgeManager.PREFS_PREFIX + "EditorRefreshDelayMs", DefaultConfigureDelayMsMin);
-            forceConfigureDelayMs = EditorPrefs.GetInt(PlayForgeManager.PREFS_PREFIX + "EditorForceRefreshDelayMs", DefaultForceConfigureDelayMsMin);
+            configureDelayMs = EditorPrefs.GetInt(TheForge.PREFS_PREFIX + "EditorRefreshDelayMs", DefaultConfigureDelayMsMin);
+            forceConfigureDelayMs = EditorPrefs.GetInt(TheForge.PREFS_PREFIX + "EditorForceRefreshDelayMs", DefaultForceConfigureDelayMsMin);
             
             return root;
         }

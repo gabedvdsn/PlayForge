@@ -2,7 +2,7 @@
 
 namespace FarEmerald.PlayForge
 {
-    public interface IGameplayAbilitySystem : ISource, IAnalysisUser, IProxyTaskBehaviourCaller, IGameplayProcess
+    public interface IGameplayAbilitySystem : ISource, IAnalysisUser, IProxyTaskBehaviourCaller
     {
         public AttributeSystemComponent GetAttributeSystem();
         public AbilitySystemComponent GetAbilitySystem();

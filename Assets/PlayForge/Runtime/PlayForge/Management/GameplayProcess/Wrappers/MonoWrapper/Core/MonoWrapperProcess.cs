@@ -49,8 +49,8 @@ namespace FarEmerald.PlayForge
         
         public override void WhenInitialize(ProcessRelay relay)
         {
-            activeMono.SendProcessData(Data);
-            activeMono.WhenInitialize(relay);
+            activeMono.SendProcessInternals(Data);
+            activeMono.WhenInitialize();
         }
 
         public override void WhenUpdate(ProcessRelay relay)
