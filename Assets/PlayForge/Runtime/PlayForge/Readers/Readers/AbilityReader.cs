@@ -9,7 +9,7 @@ namespace FarEmerald.PlayForge
         
         private Tag target;
         
-        public override void WhenUpdate(ProcessRelay relay)
+        public override void WhenUpdate()
         {
             if (target == Tags.NONE) return;
 

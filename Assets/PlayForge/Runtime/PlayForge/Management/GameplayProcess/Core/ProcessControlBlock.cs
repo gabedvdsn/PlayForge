@@ -145,7 +145,7 @@ namespace FarEmerald.PlayForge
 
             if (State == EProcessState.Running && state != EProcessState.Running)
             {
-                if (state == EProcessState.Terminated || !Wrapper.HandlePause(Relay)) Interrupt();
+                if (state == EProcessState.Terminated || !Wrapper.TryHandlePause(Relay)) Interrupt();
             }
 
             QueuedState = state;
@@ -183,7 +183,7 @@ namespace FarEmerald.PlayForge
                 QueuedState = ProcessControl.Instance.GetDefaultTransitionState(this);
             }
 
-            if (_hasRun && Wrapper.HandleResume(Relay)) return true;
+            if (_hasRun && Wrapper.TryHandleResume(Relay)) return true;
             
             if (Wrapper.Lifecycle == EProcessLifecycle.Synchronous)
             {

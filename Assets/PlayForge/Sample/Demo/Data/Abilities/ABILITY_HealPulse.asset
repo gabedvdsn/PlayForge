@@ -69,6 +69,82 @@ MonoBehaviour:
     ElementIdentifiers: []
   - PropertyPath: WorkerGroup.AnalysisWorkers
     ElementIdentifiers: []
+  - PropertyPath: Behaviour.ImplicitTag.Name.Array
+    ElementIdentifiers:
+    - value:84
+    - value:97
+    - value:114
+    - value:103
+    - value:101
+    - value:116
+    - value:122
+    - value:102
+    - value:118
+    - value:69
+    - value:109
+    - value:97
+    - value:97
+    - value:53
+    - value:103
+    - value:78
+    - value:116
+    - value:113
+    - value:104
+    - value:81
+    - value:48
+    - value:95
+    - value:100
+    - value:69
+    - value:50
+    - value:95
+    - value:78
+    - value:79
+    - value:79
+    - value:65
+    - value:71
+    - value:104
+    - value:49
+    - value:81
+    - value:76
+    - value:82
+    - value:80
+    - value:56
+    - value:122
+    - value:102
+    - value:118
+    - value:69
+    - value:109
+    - value:97
+    - value:97
+    - value:53
+    - value:103
+    - value:78
+    - value:116
+    - value:113
+    - value:104
+    - value:81
+    - value:48
+    - value:95
+    - value:100
+    - value:69
+    - value:50
+    - value:95
+    - value:78
+    - value:79
+    - value:79
+    - value:65
+    - value:71
+    - value:104
+  - PropertyPath: Behaviour.ImplicitTag.DisplayName.Array
+    ElementIdentifiers:
+    - value:84
+    - value:97
+    - value:114
+    - value:103
+    - value:101
+    - value:116
+  - PropertyPath: Behaviour.AssetLoaders
+    ElementIdentifiers: []
   Definition:
     Name: Heal Pulse
     Description: 
@@ -78,6 +154,7 @@ MonoBehaviour:
   Tags:
     AssetTag:
       Name: Ability.HealPulse
+      DisplayName: 
     ContextTags: []
     PassiveGrantedTags: []
     ActiveGrantedTags: []
@@ -90,11 +167,13 @@ MonoBehaviour:
         AvoidTags:
         - Tag:
             Name: Silenced
+            DisplayName: 
           Operator: 5
           Magnitude: 0
           MatchMode: 1
         - Tag:
             Name: Stunned
+            DisplayName: 
           Operator: 5
           Magnitude: 0
           MatchMode: 1
@@ -111,6 +190,7 @@ MonoBehaviour:
     UseImplicitTargeting: 1
     ImplicitTag:
       Name: TargetzfvEmaa5gNtqhQ0_dE2_NOOAGh1QLRP8zfvEmaa5gNtqhQ0_dE2_NOOAGh
+      DisplayName: Target
     AssetLoaders:
     - rid: 7261146469945573799
     Stages:
@@ -168,6 +248,7 @@ MonoBehaviour:
       data:
         Tag:
           Name: Effects1hrldAfmelBJryWmirBAFALaw9ISFYz_1hrldAfmelBJryWmirBAFALaw
+          DisplayName: Effects
         Effects:
         - {fileID: 11400000, guid: 2c00b6eb50563ca43839e9be362ac1af, type: 2}
     - rid: 7261146469945573802

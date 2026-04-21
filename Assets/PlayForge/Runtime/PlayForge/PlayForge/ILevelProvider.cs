@@ -36,7 +36,7 @@ namespace FarEmerald.PlayForge
         /// <summary>
         /// Gets the asset tag identifying this provider.
         /// </summary>
-        Tag GetProviderTag();
+        Tag GetAssetTag();
     }
     
     /// <summary>

@@ -42,6 +42,12 @@ namespace FarEmerald.PlayForge
         // ═══════════════════════════════════════════════════════════════════════════
         // EXECUTION
         // ═══════════════════════════════════════════════════════════════════════════
+
+        public ProcessRelay RegisterAndRun(SequenceDataPacket data)
+        {
+            ProcessControl.Register(this, data, out var relay);
+            return relay;
+        }
         
         /// <summary>
         /// Runs the sequence with the provided data packet.
@@ -105,7 +111,6 @@ namespace FarEmerald.PlayForge
         /// </summary>
         public bool Interrupt()
         {
-            Debug.Log($"Interrupted");
             return Inject(InterruptSequenceInjection.Instance);
         }
         

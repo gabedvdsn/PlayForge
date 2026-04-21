@@ -4,7 +4,7 @@ using System.Linq;
 using UnityEditor;
 using UnityEngine;
 
-namespace FarEmerald.PlayForge.Editor
+namespace FarEmerald.PlayForge.Extended.Editor
 {
     /// <summary>
     /// Asset save hook that triggers template propagation and override detection.

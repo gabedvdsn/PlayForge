@@ -26,21 +26,21 @@ namespace FarEmerald.PlayForge
             transform.rotation = Quaternion.RotateTowards(transform.rotation, to, 360);
         }
         
-        public override async UniTask RunProcess(ProcessRelay relay, CancellationToken token)
+        public override async UniTask RunProcess(CancellationToken token)
         {
             target.CommunicateTargetedIntent(this);
             
-            await RunTargetedProcess(relay, token);
+            await RunTargetedProcess(token);
             
             ApplyEffects(target);
         }
 
-        protected abstract UniTask RunTargetedProcess(ProcessRelay relay, CancellationToken token);
+        protected abstract UniTask RunTargetedProcess(CancellationToken token);
 
-        public void SetTarget(ITarget _target, AbstractTargetingPacket targeting)
+        public void SetTarget(ITarget _target, AbstractTargetingPacket _targeting)
         {
             target = _target;
-            this.targeting = targeting;
+            targeting = _targeting;
 
             target.CommunicateTargetedIntent(this);
         }

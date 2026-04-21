@@ -66,9 +66,9 @@ namespace FarEmerald.PlayForge
                 EScalerCondition.TargetTagCondition => TagCondition.Validate(spec.GetTarget().GetAppliedTags()),
                 EScalerCondition.SourceAttributeThreshold => CheckAttributeThreshold(spec),
                 EScalerCondition.TargetAttributeThreshold => CheckAttributeThreshold(spec),
-                EScalerCondition.LevelAbove => spec.GetEffectDerivation().GetLevel() > ThresholdValue,
-                EScalerCondition.LevelBelow => spec.GetEffectDerivation().GetLevel() < ThresholdValue,
-                EScalerCondition.RelativeLevelAbove => spec.GetEffectDerivation().GetRelativeLevel() > ThresholdValue,
+                EScalerCondition.LevelAbove => spec.GetEffectDerivation().GetLevel().CurrentValue > ThresholdValue,
+                EScalerCondition.LevelBelow => spec.GetEffectDerivation().GetLevel().CurrentValue < ThresholdValue,
+                EScalerCondition.RelativeLevelAbove => spec.GetEffectDerivation().GetLevel().Ratio > ThresholdValue,
                 EScalerCondition.Always => true,
                 EScalerCondition.Never => false,
                 _ => false

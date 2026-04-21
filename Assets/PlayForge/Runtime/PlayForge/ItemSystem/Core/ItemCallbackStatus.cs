@@ -9,7 +9,7 @@
 
         public int Index => Container?.Index ?? -1;
         public Item Item => Spec?.Base;
-        public int Level => Spec?.GetLevel() ?? 0;
+        public int Level => Spec?.GetLevel().CurrentValue ?? 0;
         public bool IsEquipped => Container?.IsEquipped ?? false;
 
         private ItemCallbackStatus(ItemSpec spec, ItemSpecContainer container, ItemSystemComponent itemSystem, bool success)

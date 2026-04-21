@@ -43,6 +43,14 @@ namespace FarEmerald.PlayForge
             EffectOrigin = effectOrigin;
             Request = request;
 
+            if (request.Data is not null)
+            {
+                foreach (var d in request.Data.Payload)
+                {
+                    _payload[d.Key] = d.Value;
+                }
+            }
+            
             AddPayload(
                 Tags.SOURCE,
                 effectOrigin.GetOwner()

@@ -13,7 +13,7 @@ using Object = UnityEngine.Object;
 using Random = UnityEngine.Random;
 
 
-namespace FarEmerald.PlayForge.Examples
+namespace FarEmerald.PlayForge.Extended.Examples
 {
     public static class DemoSequences
     {

@@ -2,7 +2,7 @@
 using System;
 using System.Collections.Generic;
 
-namespace FarEmerald.PlayForge.Editor
+namespace FarEmerald.PlayForge.Extended.Editor
 {
     /// <summary>
     /// Defines which property paths are excluded from template propagation for each asset type.

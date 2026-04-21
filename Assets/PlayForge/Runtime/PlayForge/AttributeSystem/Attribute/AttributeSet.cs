@@ -179,6 +179,7 @@ namespace FarEmerald.PlayForge
             
             foreach (AttributeSetElement element in attributeSet.Attributes)
             {
+                Debug.Log($"Handling {element.Attribute.GetName()}");
                 if (!matrix.TryGetValue(element.Attribute, out var table))
                 {
                     table = matrix[element.Attribute] = new();

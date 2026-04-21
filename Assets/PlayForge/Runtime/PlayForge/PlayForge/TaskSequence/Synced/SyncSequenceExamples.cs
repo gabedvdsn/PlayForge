@@ -1,7 +1,7 @@
 using UnityEngine;
 using SyncSeq = FarEmerald.PlayForge.SyncSequenceTaskLibrary;
 
-namespace FarEmerald.PlayForge.Examples
+namespace FarEmerald.PlayForge.Extended.Examples
 {
     /// <summary>
     /// Demo synchronous sequences and processes you can drop into a scene to test.
@@ -73,7 +73,7 @@ namespace FarEmerald.PlayForge.Examples
                 .BuildSyncRunner();
         }
 
-        public override void WhenUpdate(ProcessRelay relay)
+        public override void WhenUpdate()
         {
             _runner.Step(_data, Time.deltaTime);
         }
@@ -136,7 +136,7 @@ namespace FarEmerald.PlayForge.Examples
                 .BuildSyncRunner();
         }
 
-        public override void WhenUpdate(ProcessRelay relay)
+        public override void WhenUpdate()
         {
             _runner.Step(_data, Time.deltaTime);
         }
@@ -189,7 +189,7 @@ namespace FarEmerald.PlayForge.Examples
                 .BuildSyncRunner();
         }
 
-        public override void WhenUpdate(ProcessRelay relay)
+        public override void WhenUpdate()
         {
             _runner.Step(_data, Time.deltaTime);
         }
@@ -237,7 +237,7 @@ namespace FarEmerald.PlayForge.Examples
                 .BuildSyncRunner();
         }
 
-        public override void WhenUpdate(ProcessRelay relay)
+        public override void WhenUpdate()
         {
             _runner.Step(_data, Time.deltaTime);
         }
@@ -281,7 +281,7 @@ namespace FarEmerald.PlayForge.Examples
                 .BuildSyncRunner();
         }
 
-        public override void WhenUpdate(ProcessRelay relay)
+        public override void WhenUpdate()
         {
             _runner.Step(_data, Time.deltaTime);
         }
@@ -341,7 +341,7 @@ namespace FarEmerald.PlayForge.Examples
                 .BuildSyncRunner();
         }
 
-        public override void WhenUpdate(ProcessRelay relay)
+        public override void WhenUpdate()
         {
             if (_runner.IsComplete) return;
 
@@ -350,7 +350,7 @@ namespace FarEmerald.PlayForge.Examples
             if (_ticksRemaining <= 0)
             {
                 Debug.Log($"[SyncDemo_DoT] Complete. Total damage: {_totalDamage:F1}");
-                relay.Terminate();
+                Relay.Terminate();
             }
         }
     }
@@ -397,7 +397,7 @@ namespace FarEmerald.PlayForge.Examples
                 .BuildSyncRunner();
         }
 
-        public override void WhenUpdate(ProcessRelay relay)
+        public override void WhenUpdate()
         {
             _runner.Step(_data, Time.deltaTime);
         }
@@ -429,9 +429,9 @@ namespace FarEmerald.PlayForge.Examples
             _target = target;
         }
 
-        public override void WhenInitialize(ProcessRelay relay)
+        public override void WhenInitialize()
         {
-            base.WhenInitialize(relay);
+            base.WhenInitialize();
             _data = new SequenceDataPacket(regData);
 
             _runner = TaskSequenceBuilder.Create("Runtime Choreography")
@@ -449,7 +449,7 @@ namespace FarEmerald.PlayForge.Examples
                 .BuildSyncRunner();
         }
 
-        public override void WhenUpdate(ProcessRelay relay)
+        public override void WhenUpdate()
         {
             _runner.Step(_data, Time.deltaTime);
         }

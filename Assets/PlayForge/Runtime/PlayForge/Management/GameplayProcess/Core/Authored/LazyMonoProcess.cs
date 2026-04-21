@@ -12,12 +12,12 @@ namespace FarEmerald.PlayForge
     /// </summary>
     public class LazyMonoProcess : AbstractMonoProcess
     {
-        public override void WhenUpdate(ProcessRelay relay)
+        public override void WhenUpdate()
         {
             
         }
 
-        public override async UniTask RunProcess(ProcessRelay relay, CancellationToken token)
+        public override async UniTask RunProcess(CancellationToken token)
         {
             processActive = true;
             await UniTask.WaitWhile(() => processActive, cancellationToken: token);

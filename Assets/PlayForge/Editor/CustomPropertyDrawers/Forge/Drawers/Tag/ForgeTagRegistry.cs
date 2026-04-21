@@ -634,11 +634,6 @@ namespace FarEmerald.PlayForge.Extended.Editor
                 _lastScanTime = DateTime.Now;
                 
                 Debug.Log($"[TagRegistry] Scanned {_allTags.Count} unique tags across {_contextToTags.Count} contexts. ({defaultCount} system defaults)");
-
-                foreach (var t in _allTags)
-                {
-                    Debug.Log($"\t\t[{t.DisplayName}] => {t.GetName()}");
-                }
             }
             finally
             {
@@ -961,15 +956,19 @@ namespace FarEmerald.PlayForge.Extended.Editor
                 _tagCache[tag] = record;
                 _allTags.Add(tag);
             }
-            
+
             record.AddUsage(context, asset, fieldPath);
-            
+
             if (!_contextToTags.TryGetValue(context.ContextKey, out var contextSet))
             {
                 contextSet = new HashSet<Tag>();
                 _contextToTags[context.ContextKey] = contextSet;
             }
             contextSet.Add(tag);
+
+            // Rebuild the runtime TagRegistry from serialized asset data so that
+            // TagRegistry.Resolve() works correctly after a domain reload.
+            TagRegistry.Register(tag);
         }
         
         private static IEnumerable<FieldInfo> GetAllFields(Type type)

@@ -15,7 +15,7 @@ namespace FarEmerald.PlayForge
         // Constructor
         // ═══════════════════════════════════════════════════════════════════════════
 
-        public ItemSpec(ISource owner, Item item, int level) : base(owner, new AttributeValueClamped(level, item.MaxLevel), item.Tags.AssetTag)
+        public ItemSpec(ISource owner, Item item, int level) : base(owner, new IntValuePairClamped(level, item.MaxLevel), item.Tags.AssetTag)
         {
             Base = item;
         }
@@ -24,9 +24,7 @@ namespace FarEmerald.PlayForge
         // ILevelProvider Implementation
         // ═══════════════════════════════════════════════════════════════════════════
 
-        public override int GetLevel() => GetLeveler().Level.CurrentValue;
-        public override float GetRelativeLevel() => GetLeveler().Level.Ratio;
-        
+        public override IntValuePairClamped GetLevel() => Source.GetLevel(GetAssetTag());
         public override List<Tag> GetAffiliation()
         {
             return Source.GetAffiliation();

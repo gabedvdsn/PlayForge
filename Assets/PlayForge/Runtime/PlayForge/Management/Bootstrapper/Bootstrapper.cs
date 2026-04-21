@@ -14,6 +14,9 @@ namespace FarEmerald.PlayForge
 
         [Tooltip("Or in Start() when false")]
         public bool BootstrapOnAwake = true;
+
+        [SerializeReference]
+        public List<AttributeSet> RegisterSets;
         
         private void Awake()
         {
@@ -42,9 +45,17 @@ namespace FarEmerald.PlayForge
         
         #endregion
         
-        public void Bootstrap()
+        private void Bootstrap()
         {
             TagRegistry.Initialize();
+
+            foreach (var attrSet in RegisterSets)
+            {
+                foreach (var attr in attrSet.GetUnique())
+                {
+                    AttributeRegistry.Add(attr);
+                }
+            }
             
             // Bootstrap ProcessControl
             if (ProcessControl.Instance is null)

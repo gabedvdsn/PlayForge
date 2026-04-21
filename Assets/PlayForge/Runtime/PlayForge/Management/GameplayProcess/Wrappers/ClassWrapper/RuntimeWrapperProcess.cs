@@ -20,34 +20,34 @@ namespace FarEmerald.PlayForge
         }
         public override void WhenInitialize(ProcessRelay relay)
         {
-            Process.SendProcessData(Data);
-            Process.WhenInitialize(relay);
+            Process.SendProcessData(Data, relay);
+            Process.WhenInitialize();
         }
         
         public override void WhenUpdate(ProcessRelay relay)
         {
-            Process.WhenUpdate(relay);
+            Process.WhenUpdate();
         }
 
         public override void WhenFixedUpdate(ProcessRelay relay)
         {
-            Process.WhenFixedUpdate(relay);
+            Process.WhenFixedUpdate();
         }
         
         public override void WhenLateUpdate(ProcessRelay relay)
         {
-            Process.WhenLateUpdate(relay);
+            Process.WhenLateUpdate();
         }
 
         public override void WhenWait(ProcessRelay relay)
         {
             Process.WhenWait();
         }
-        public override bool HandlePause(ProcessRelay relay)
+        public override bool TryHandlePause(ProcessRelay relay)
         {
-            return Process.HandlePause();
+            return Process.TryHandlePause();
         }
-        public override bool HandleResume(ProcessRelay relay)
+        public override bool TryHandleResume(ProcessRelay relay)
         {
             return Process.TryHandleResume();
         }
@@ -61,7 +61,7 @@ namespace FarEmerald.PlayForge
         }
         public override async UniTask RunProcess(ProcessRelay relay, CancellationToken token)
         {
-            await Process.RunProcess(relay, token);
+            await Process.RunProcess(token);
         }
         public override bool TryGetProcess<T>(out T process)
         {

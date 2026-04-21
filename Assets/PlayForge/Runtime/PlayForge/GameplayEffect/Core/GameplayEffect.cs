@@ -140,7 +140,7 @@ namespace FarEmerald.PlayForge
         public override int GetMaxLevel() => GetLinkedMaxLevel();
         public override int GetStartingLevel() => GetLinkedStartingLevel();
         public override string GetProviderName() => GetName();
-        public override Tag GetProviderTag() => Tags.AssetTag;
+        public override Tag GetAssetTag() => Tags.AssetTag;
 
         // ═══════════════════════════════════════════════════════════════════════════
         // Effect Generation

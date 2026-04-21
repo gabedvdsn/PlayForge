@@ -68,7 +68,7 @@ namespace FarEmerald.PlayForge
         {
             return GetName();
         }
-        public override Tag GetProviderTag()
+        public override Tag GetAssetTag()
         {
             return AssetTag;
         }

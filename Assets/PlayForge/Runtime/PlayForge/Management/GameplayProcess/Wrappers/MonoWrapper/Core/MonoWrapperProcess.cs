@@ -49,35 +49,35 @@ namespace FarEmerald.PlayForge
         
         public override void WhenInitialize(ProcessRelay relay)
         {
-            activeMono.SendProcessInternals(Data);
+            activeMono.SendProcessData(Data, relay);
             activeMono.WhenInitialize();
         }
 
         public override void WhenUpdate(ProcessRelay relay)
         {
-            activeMono.WhenUpdate(relay);
+            activeMono.WhenUpdate();
         }
 
         public override void WhenFixedUpdate(ProcessRelay relay)
         {
-            activeMono.WhenFixedUpdate(relay);
+            activeMono.WhenFixedUpdate();
         }
         public override void WhenLateUpdate(ProcessRelay relay)
         {
-            activeMono.WhenLateUpdate(relay);
+            activeMono.WhenLateUpdate();
         }
 
         public override void WhenWait(ProcessRelay relay)
         {
-            activeMono.WhenWait(relay);
+            activeMono.WhenWait();
         }
-        public override bool HandlePause(ProcessRelay relay)
+        public override bool TryHandlePause(ProcessRelay relay)
         {
-            return activeMono.HandleResume(relay);
+            return activeMono.TryHandlePause();
         }
-        public override bool HandleResume(ProcessRelay relay)
+        public override bool TryHandleResume(ProcessRelay relay)
         {
-            return activeMono.HandleResume(relay);
+            return activeMono.TryHandleResume();
         }
 
         /// <summary>
@@ -101,12 +101,12 @@ namespace FarEmerald.PlayForge
         /// <param name="relay"></param>
         public override void WhenTerminateSafe(ProcessRelay relay)
         {
-            activeMono.WhenTerminate(relay);
+            activeMono.WhenTerminate();
         }
 
         public override async UniTask RunProcess(ProcessRelay relay, CancellationToken token)
         {
-            await activeMono.RunProcess(relay, token);
+            await activeMono.RunProcess(token);
         }
 
         public override bool TryGetProcess<T>(out T process)

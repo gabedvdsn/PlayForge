@@ -9,7 +9,7 @@ using UnityEngine.Serialization;
 using UnityEngine.UIElements;
 using Object = UnityEngine.Object;
 
-namespace FarEmerald.PlayForge.Examples
+namespace FarEmerald.PlayForge.Extended.Examples
 {
     public class DemoManager : LazyMonoProcess
     {
@@ -85,7 +85,7 @@ namespace FarEmerald.PlayForge.Examples
         }
 
         private TaskSequence testSequence = DemoSequences.TestMultiSequence();
-        public override void WhenUpdate(ProcessRelay relay)
+        public override void WhenUpdate()
         {
             if (Input.IsKeyDown(Key.K))
             {

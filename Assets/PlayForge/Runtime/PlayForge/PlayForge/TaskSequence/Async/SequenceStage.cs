@@ -428,6 +428,11 @@ namespace FarEmerald.PlayForge
             ConditionStepTiming = conditionStepTiming;
             Metadata = metadata;
         }
+
+        internal void FixRepeatStages(List<SequenceStage> stages)
+        {
+            
+        }
         
         /// <summary>
         /// Checks if a given injection type is allowed globally.

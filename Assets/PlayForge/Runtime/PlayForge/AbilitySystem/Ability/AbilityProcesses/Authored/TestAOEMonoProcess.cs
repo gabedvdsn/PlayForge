@@ -11,7 +11,7 @@ namespace FarEmerald.PlayForge
     {
         public int DelayMs = 5000;
         
-        public override async UniTask RunProcess(ProcessRelay relay, CancellationToken token)
+        public override async UniTask RunProcess(CancellationToken token)
         {
             await UniTask.Delay(DelayMs, cancellationToken: token);
         }

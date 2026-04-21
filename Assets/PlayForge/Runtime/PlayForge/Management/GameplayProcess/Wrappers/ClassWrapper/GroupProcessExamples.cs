@@ -1,7 +1,7 @@
 using UnityEngine;
 using SyncSeq = FarEmerald.PlayForge.SyncSequenceTaskLibrary;
 
-namespace FarEmerald.PlayForge.Examples
+namespace FarEmerald.PlayForge.Extended.Examples
 {
     /// <summary>
     /// Demo processes that demonstrate Group Process functionality with Synchronous lifecycle.
@@ -55,9 +55,9 @@ namespace FarEmerald.PlayForge.Examples
             _remaining = duration;
         }
 
-        public override void WhenInitialize(ProcessRelay relay)
+        public override void WhenInitialize()
         {
-            base.WhenInitialize(relay);
+            base.WhenInitialize();
             _data = new SequenceDataPacket(regData);
 
             _runner = TaskSequenceBuilder.Create($"Buff Timer ({name})")
@@ -74,19 +74,19 @@ namespace FarEmerald.PlayForge.Examples
             Debug.Log($"[GroupDemo_TimedBuff] '{name}' started ({_duration}s)");
         }
 
-        public override void WhenUpdate(ProcessRelay relay)
+        public override void WhenUpdate()
         {
             if (_runner.Step(_data, Time.deltaTime))
             {
                 Debug.Log($"[GroupDemo_TimedBuff] '{name}' expired");
-                relay.Terminate();
+                Relay.Terminate();
             }
         }
 
-        public override void WhenTerminate(ProcessRelay relay)
+        public override void WhenTerminate()
         {
             Debug.Log($"[GroupDemo_TimedBuff] '{name}' terminated ({_remaining:F1}s remaining)");
-            base.WhenTerminate(relay);
+            base.WhenTerminate();
         }
     }
 
@@ -123,9 +123,9 @@ namespace FarEmerald.PlayForge.Examples
             _damage = damage;
         }
 
-        public override void WhenInitialize(ProcessRelay relay)
+        public override void WhenInitialize()
         {
-            base.WhenInitialize(relay);
+            base.WhenInitialize();
             _data = new SequenceDataPacket(regData);
 
             _runner = TaskSequenceBuilder.Create("Hazard Pulse")
@@ -153,11 +153,11 @@ namespace FarEmerald.PlayForge.Examples
                 .BuildSyncRunner();
         }
 
-        public override void WhenUpdate(ProcessRelay relay)
+        public override void WhenUpdate()
         {
             if (_target == null)
             {
-                relay.Terminate();
+                Relay.Terminate();
                 return;
             }
 
@@ -213,9 +213,9 @@ namespace FarEmerald.PlayForge.Examples
             FormationOffset = offset;
         }
 
-        public override void WhenInitialize(ProcessRelay relay)
+        public override void WhenInitialize()
         {
-            base.WhenInitialize(relay);
+            base.WhenInitialize();
             _data = new SequenceDataPacket(regData);
 
             _runner = TaskSequenceBuilder.Create($"Squad Follow ({_unit.name})")
@@ -236,11 +236,11 @@ namespace FarEmerald.PlayForge.Examples
                 .BuildSyncRunner();
         }
 
-        public override void WhenUpdate(ProcessRelay relay)
+        public override void WhenUpdate()
         {
             if (!_unit || !_leader)
             {
-                relay.Terminate();
+                Relay.Terminate();
                 return;
             }
 
@@ -322,7 +322,7 @@ namespace FarEmerald.PlayForge.Examples
                 .BuildSyncRunner();
         }
 
-        public override void WhenUpdate(ProcessRelay relay)
+        public override void WhenUpdate()
         {
             _runner.Step(_data, Time.deltaTime);
         }

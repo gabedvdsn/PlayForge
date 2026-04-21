@@ -4,6 +4,7 @@ using System.Linq;
 using System.Threading;
 using Cysharp.Threading.Tasks;
 using UnityEngine;
+using UnityEngine.Serialization;
 
 namespace FarEmerald.PlayForge
 {
@@ -18,7 +19,7 @@ namespace FarEmerald.PlayForge
     /// </summary>
     public partial class RuntimeGameplayAbilitySystem : LazyRuntimeProcess, IGameplayAbilitySystem
     {
-        public RuntimeEntityIdentity Data;
+        public RuntimeEntityIdentity EntityData;
         
         // Subsystems
         protected AttributeSystemComponent AttributeSystem;
@@ -34,9 +35,6 @@ namespace FarEmerald.PlayForge
         
         // Tags
         protected TagCache TagCache;
-        
-        // Process
-        protected Dictionary<int, ProcessRelay> Relays;
         
         // Transform (runtime entities have no Transform component)
         private AbstractTargetingPacket _targetingPacket;
@@ -76,8 +74,6 @@ namespace FarEmerald.PlayForge
             
             EffectShelf = new List<AbstractEffectContainer>();
             FinishedEffects = new List<AbstractEffectContainer>();
-
-            Relays = new Dictionary<int, ProcessRelay>();
             
             Initialize(new RuntimeEntityIdentity(data));
         }
@@ -109,8 +105,6 @@ namespace FarEmerald.PlayForge
             
             EffectShelf = new List<AbstractEffectContainer>();
             FinishedEffects = new List<AbstractEffectContainer>();
-
-            Relays = new Dictionary<int, ProcessRelay>();
             
             Initialize(data);
         }
@@ -134,25 +128,25 @@ namespace FarEmerald.PlayForge
 
         private void Initialize(RuntimeEntityIdentity data)
         {
-            Data = data;
+            EntityData = data;
 
-            if (Data is null) return;
+            if (EntityData is null) return;
             
             TagCache = new TagCache(this);
             
-            AbilitySystem.Setup(Data.ActivationPolicy, Data.AllowDuplicateAbilities, Data.MaxAbilitiesOperation);
-            AttributeSystem.Setup(Data.AttributeSet);
-            ItemSystem.Setup(Data.AllowDuplicateItems, Data.AllowDuplicateEquippedItems, Data.MaxItemsOperation, Data.MaxEquippedItemsOperation);
+            AbilitySystem.Setup(EntityData.ActivationPolicy, EntityData.AllowDuplicateAbilities, EntityData.MaxAbilitiesOperation);
+            AttributeSystem.Setup(EntityData.AttributeSet);
+            ItemSystem.Setup(EntityData.AllowDuplicateItems, EntityData.AllowDuplicateEquippedItems, EntityData.MaxItemsOperation, EntityData.MaxEquippedItemsOperation);
             
             InitializeEndOfFrameSystem();
             SetupDeferredContexts();
             CollectInitialWorkers();
 
-            LevelSystem.Register(GetAssetTag(), new AttributeValueClamped(Data.GetStartingLevel(), Data.GetMaxLevel()));
+            LevelSystem.Register(GetAssetTag(), new IntValuePairClamped(EntityData.GetStartingLevel(), EntityData.GetMaxLevel()));
             
-            AbilitySystem.Initialize(Data.StartingAbilities);
+            AbilitySystem.Initialize(EntityData.StartingAbilities);
             AttributeSystem.Initialize();
-            ItemSystem.Initialize(Data.StartingItems);
+            ItemSystem.Initialize(EntityData.StartingItems);
             
             CompileGrantedTags();
             
@@ -161,26 +155,26 @@ namespace FarEmerald.PlayForge
 
         private void CollectInitialWorkers()
         {
-            Data.WorkerGroup?.ProvideWorkersTo(this);
-            Data.AttributeSet?.WorkerGroup?.ProvideWorkersTo(this);
+            EntityData.WorkerGroup?.ProvideWorkersTo(this);
+            EntityData.AttributeSet?.WorkerGroup?.ProvideWorkersTo(this);
         }
         
         // ═══════════════════════════════════════════════════════════════════════════
         // PROCESS PARAMETERS
         // ═══════════════════════════════════════════════════════════════════════════
         
-        public override void WhenInitialize(ProcessRelay relay)
+        public override void WhenInitialize()
         {
-            base.WhenInitialize(relay);
+            base.WhenInitialize();
 
             // Attempt to find affiliation from registration data
             if (regData.TryGet(Tags.AFFILIATION, EDataTarget.Primary, out List<Tag> affiliation))
             {
-                Data.Affiliation = affiliation;
+                EntityData.Affiliation = affiliation;
             }
         }
 
-        public override void WhenUpdate(ProcessRelay relay)
+        public override void WhenUpdate()
         {
             TickEffectShelf();
             
@@ -189,30 +183,9 @@ namespace FarEmerald.PlayForge
             TagCache.TickTagWorkers();
         }
 
-        public override void WhenLateUpdate(ProcessRelay relay)
+        public override void WhenLateUpdate()
         {
             EndOfFrame();
-        }
-
-        // Handling
-        public bool HandlerValidateAgainst(IGameplayProcessHandler handler)
-        {
-            return (RuntimeGameplayAbilitySystem)handler == this;
-        }
-
-        public bool HandlerProcessIsSubscribed(ProcessRelay relay)
-        {
-            return Relays.ContainsKey(relay.CacheIndex);
-        }
-
-        public void HandlerSubscribeProcess(ProcessRelay relay)
-        {
-            Relays[relay.CacheIndex] = relay;
-        }
-
-        public bool HandlerVoidProcess(ProcessRelay relay)
-        {
-            return Relays.Remove(relay.CacheIndex);
         }
         
         // ═══════════════════════════════════════════════════════════════════════════
@@ -271,7 +244,7 @@ namespace FarEmerald.PlayForge
         {            
             if (spec is null) return false;
 
-            if (!ForgeHelper.ValidateEffectApplicationRequirements(spec, Data.Affiliation))
+            if (!ForgeHelper.ValidateEffectApplicationRequirements(spec, EntityData.Affiliation))
             {
                 return false;
             }
@@ -599,6 +572,18 @@ namespace FarEmerald.PlayForge
 
             return new EffectDurationRemaining(longestDuration, longestRemaining, longestDuration >= 0f);
         }
+        public IntValuePairClamped GetLevel(Tag key)
+        {
+            return LevelSystem.GetLeveler(key);
+        }
+        public LevelCallbackStatus SetLevel(Tag key, IntValuePair level)
+        {
+            return LevelSystem.TrySetLevel(key, level);
+        }
+        public LevelCallbackStatus ModifyLevel(Tag key, IntValuePair delta)
+        {
+            return LevelSystem.TryModifyLevel(key, delta);
+        }
 
         // ═══════════════════════════════════════════════════════════════════════════
         // TOSTRING
@@ -606,20 +591,34 @@ namespace FarEmerald.PlayForge
 
         public override string ToString()
         {
-            return $"{Data.GetName()}";
+            return $"{EntityData.GetName()}";
         }
         
         // ═══════════════════════════════════════════════════════════════════════════
         // TAG HANDLER / SOURCE INTERFACE
         // ═══════════════════════════════════════════════════════════════════════════
-        
-        public List<Tag> GetContextTags() => Data.ContextTags;
+
+        public ISource GetOwner()
+        {
+            return this;
+        }
+        public IHasReadableDefinition GetReadableDefinition()
+        {
+            return this;
+        }
+        public List<Tag> GetContextTags() => EntityData.ContextTags;
         public TagCache GetTagCache() => TagCache;
-        public Tag GetAssetTag() => Data.AssetTag;
-        public int GetLevel() => Data.StartingLevel;
-        public int GetMaxLevel() => Data.MaxLevel;
-        public void SetLevel(int level) => Data.StartingLevel = Mathf.Clamp(level, 0, Data.MaxLevel);
-        public string GetName() => Data.Name;
+        public Tag GetAssetTag() => EntityData.AssetTag;
+        public IntValuePairClamped GetLevel() => LevelSystem.GetLeveler(GetAssetTag());
+        public float GetRelativeLevel()
+        {
+            return ForgeHelper.RelativeOffsetValue(GetLevel());
+        }
+        public bool IsActive()
+        {
+            return !IsDead;
+        }
+        public override string GetName() => EntityData.Name;
         
         public void CommunicateTargetedIntent(AbstractGameplayMonoProcess entity)
         {
@@ -628,7 +627,7 @@ namespace FarEmerald.PlayForge
         
         public List<Tag> GetAffiliation()
         {
-            return Data.Affiliation;
+            return EntityData.Affiliation;
         }
         
         public List<Tag> GetAppliedTags()
@@ -650,9 +649,9 @@ namespace FarEmerald.PlayForge
         {
             TagCache.ResetWeights();
 
-            if (Data.AttributeSet)
+            if (EntityData.AttributeSet)
             {
-                foreach (var t in Data.AttributeSet.GetGrantedTags()) TagCache.AddTag(t);
+                foreach (var t in EntityData.AttributeSet.GetGrantedTags()) TagCache.AddTag(t);
             }
 
             foreach (var effect in EffectShelf)
@@ -676,7 +675,7 @@ namespace FarEmerald.PlayForge
                 foreach (var t in item.GetGrantedTags()) TagCache.AddTag(t);
             }
 
-            foreach (var t in Data.GetGrantedTags()) TagCache.AddTag(t);
+            foreach (var t in EntityData.GetGrantedTags()) TagCache.AddTag(t);
         }
         
         // ═══════════════════════════════════════════════════════════════════════════

@@ -16,7 +16,7 @@ namespace FarEmerald.PlayForge
 
         private IAttribute attribute;
 
-        public override void WhenUpdate(ProcessRelay relay)
+        public override void WhenUpdate()
         {
             if (Source is null) return;
             if (!Source.GetAttributeSystem().TryGetAttributeValue(attribute, out AttributeValue attributeValue)) return;

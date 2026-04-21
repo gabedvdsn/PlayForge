@@ -25,6 +25,7 @@ MonoBehaviour:
   Tags:
     AssetTag:
       Name: Ability.AbilityBase
+      DisplayName: 
     ContextTags: []
     PassiveGrantedTags: []
     ActiveGrantedTags: []
@@ -37,11 +38,13 @@ MonoBehaviour:
         AvoidTags:
         - Tag:
             Name: Silenced
+            DisplayName: 
           Operator: 5
           Magnitude: 0
           MatchMode: 1
         - Tag:
             Name: Stunned
+            DisplayName: 
           Operator: 5
           Magnitude: 0
           MatchMode: 1
@@ -58,8 +61,14 @@ MonoBehaviour:
     UseImplicitTargeting: 1
     ImplicitTag:
       Name: TargetzfvEmaa5gNtqhQ0_dE2_NOOAGh1QLRP8zfvEmaa5gNtqhQ0_dE2_NOOAGh
+      DisplayName: Target
     AssetLoaders: []
-    Stages: []
+    Stages:
+    - StagePolicy:
+        rid: 7261146560314999349
+      Tasks:
+      - rid: 7261146560314999350
+      ApplyUsageEffects: 0
   SourceActivationRules:
   - rid: 1955962478581514659
   - rid: 1955962478581514660
@@ -96,3 +105,12 @@ MonoBehaviour:
     - rid: 1955962478581514662
       type: {class: IsAliveValidation, ns: FarEmerald.PlayForge, asm: Assembly-CSharp}
       data: 
+    - rid: 7261146560314999349
+      type: {class: AllProxyStagePolicy, ns: FarEmerald.PlayForge, asm: Assembly-CSharp}
+      data: 
+    - rid: 7261146560314999350
+      type: {class: RunSequenceTask, ns: FarEmerald.PlayForge, asm: Assembly-CSharp}
+      data:
+        Sequence:
+          _typeName: 
+          _methodName: 

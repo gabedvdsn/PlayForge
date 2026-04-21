@@ -126,7 +126,7 @@ namespace FarEmerald.PlayForge
         // LIFECYCLE
         // ═══════════════════════════════════════════════════════════════════════════
 
-        public override void WhenInitialize(ProcessRelay relay)
+        public override void WhenInitialize()
         {
             SeqData = regData as SequenceDataPacket;
         }
@@ -134,13 +134,13 @@ namespace FarEmerald.PlayForge
         /// <summary>
         /// For async: checks conditions. For sync: drives the sync runner.
         /// </summary>
-        public override void WhenUpdate(ProcessRelay relay)
+        public override void WhenUpdate()
         {
             if (IsSynchronous && _syncRunner != null)
             {
                 if (_syncRunner.Step(SeqData ?? SequenceDataPacket.SceneRoot(), Time.deltaTime))
                 {
-                    relay.TerminateImmediate();
+                    Relay.TerminateImmediate();
                 }
                 return;
             }
@@ -162,7 +162,7 @@ namespace FarEmerald.PlayForge
         /// Runs the sequence or chain asynchronously.
         /// For Synchronous lifecycle, this is never called (ProcessControl skips RunProcess).
         /// </summary>
-        public override async UniTask RunProcess(ProcessRelay relay, CancellationToken token)
+        public override async UniTask RunProcess(CancellationToken token)
         {
             if (IsSynchronous)
             {
@@ -196,7 +196,7 @@ namespace FarEmerald.PlayForge
         /// Fires the sequence-level OnTerminate callback for sync sequences.
         /// Async sequences handle this internally via TaskSequenceRuntime.
         /// </summary>
-        public override void WhenTerminate(ProcessRelay relay)
+        public override void WhenTerminate()
         {
             if (IsSynchronous && _sequence?.Definition?.Metadata?.OnTerminate != null)
             {
@@ -213,21 +213,21 @@ namespace FarEmerald.PlayForge
                 }
             }
 
-            base.WhenTerminate(relay);
+            base.WhenTerminate();
         }
 
-        public override void WhenWait(ProcessRelay relay)
+        public override void WhenWait()
         {
             // No-op. Previously set Time.timeScale = 0f here, but that's destructive
             // as a default — it freezes the entire game whenever any sequence enters Waiting.
         }
 
-        public override bool HandlePause(ProcessRelay relay)
+        public override bool TryHandlePause()
         {
             return processActive;
         }
 
-        public override bool HandleResume(ProcessRelay relay)
+        public override bool TryHandleResume()
         {
             if (!processActive) return false;
 

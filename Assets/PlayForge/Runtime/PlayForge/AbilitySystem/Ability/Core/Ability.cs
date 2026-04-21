@@ -189,7 +189,7 @@ namespace FarEmerald.PlayForge
         
         public override string GetProviderName() => GetName();
         
-        public override Tag GetProviderTag() => Tags.AssetTag;
+        public override Tag GetAssetTag() => Tags.AssetTag;
 
         // ═══════════════════════════════════════════════════════════════════════════
         // Utility Methods

@@ -62,48 +62,51 @@ namespace FarEmerald.PlayForge
         }
         
         #endregion
-        
-        public void SendProcessData(ProcessDataPacket data, ProcessRelay relay) => regData = data;
 
-        public void WhenInitialize()
+        public void SendProcessData(ProcessDataPacket data, ProcessRelay relay)
+        {
+            regData = data;
+            Relay = relay;
+        }
+
+        public virtual void WhenInitialize()
         {
             _initialized = true;
         }
 
-        public void WhenUpdate()
+        public virtual void WhenUpdate()
         {
         }
 
-        public void WhenFixedUpdate()
+        public virtual void WhenFixedUpdate()
         {
         }
 
-        public void WhenLateUpdate()
+        public virtual void WhenLateUpdate()
         {
         }
         
-        public void WhenWait()
+        public virtual void WhenWait()
         {
             processActive = false;
         }
-
-        public virtual bool HandlePause()
+        
+        public virtual bool TryHandlePause()
+        {
+            return false;
+        }
+        public virtual bool TryHandleResume()
         {
             return false;
         }
         
-        public bool TryHandleResume()
-        {
-            return false;
-        }
-        
-        public void WhenDestroy()
+        public virtual void WhenDestroy()
         {
             // Does nothing
         }
 
 
-        public void WhenTerminate()
+        public virtual void WhenTerminate()
         {
             processActive = false;
         }

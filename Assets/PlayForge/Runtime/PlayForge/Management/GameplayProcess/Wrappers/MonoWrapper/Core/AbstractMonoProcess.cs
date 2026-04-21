@@ -54,14 +54,14 @@ namespace FarEmerald.PlayForge
         
         #endregion
         
-        public void SendProcessInternals(ProcessDataPacket processData, ProcessRelay relay)
+        public void SendProcessData(ProcessDataPacket processData, ProcessRelay relay)
         {
             regData = processData;
             Relay = relay;
         }
 
         /// <summary>
-        /// Called via ProcessControl after the process is Created
+        /// Should always be called by
         /// </summary>
         public virtual void WhenInitialize()
         {
@@ -103,35 +103,18 @@ namespace FarEmerald.PlayForge
             
         }
         
-        /// <summary>
-        /// Called via Step in ProcessControl as determined by the process's StepUpdateTiming
-        /// </summary>
-        /// <param name="relay">Process Relay</param>
-        public abstract void WhenUpdate(ProcessRelay relay);
+        public virtual void WhenUpdate() { }
 
-        public virtual void WhenLateUpdate(ProcessRelay relay) { }
+        public virtual void WhenLateUpdate() { }
         
-        public virtual void WhenFixedUpdate(ProcessRelay relay) { }
+        public virtual void WhenFixedUpdate() { }
         
-        /// <summary>
-        /// Called via ProcessControl when the process is set to Waiting
-        /// </summary>
-        /// <param name="relay">Process Relay</param>
-        public virtual void WhenWait(ProcessRelay relay)
+        public virtual void WhenWait()
         {
             processActive = false;
         }
         
-        public virtual bool HandleResume(ProcessRelay relay)
-        {
-            return false;
-        }
-
-        /// <summary>
-        /// Called via ProcessControl when the process is set to Terminated
-        /// </summary>
-        /// <param name="relay">Process Relay</param>
-        public virtual void WhenTerminate(ProcessRelay relay)
+        public virtual void WhenTerminate()
         {
             processActive = false;
             
@@ -141,13 +124,19 @@ namespace FarEmerald.PlayForge
             }
         }
         
-        /// <summary>
-        /// Called via ProcessControl when the process is set to Running
-        /// </summary>
-        /// <param name="relay">Process Relay</param>
-        /// <param name="token">Cancellation token</param>
-        /// <returns></returns>
-        public abstract UniTask RunProcess(ProcessRelay relay, CancellationToken token);
+        public abstract UniTask RunProcess(CancellationToken token);
+        public bool TryHandlePause()
+        {
+            return false;
+        }
+        public virtual bool TryHandleResume()
+        {
+            return false;
+        }
+        public AbstractMonoProcessInstantiator GetInstantiator(AbstractMonoProcess mono)
+        {
+            return Instantiator;
+        }
 
         public virtual void WhenDestroy()
         {
@@ -197,10 +186,6 @@ namespace FarEmerald.PlayForge
         public bool HandlerVoidProcess(ProcessRelay relay)
         {
             return HandlerRelays.Remove(relay.CacheIndex);
-        }
-        public AbstractMonoProcessInstantiator GetInstantiator(AbstractMonoProcess mono)
-        {
-            return Instantiator;
         }
     }
 }

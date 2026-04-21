@@ -486,7 +486,7 @@ namespace FarEmerald.PlayForge
         #region Runtime Process
         public static bool Register(AbstractRuntimeProcess process, out ProcessRelay relay)
         {
-            return Instance.Internal_RegisterRuntimeProcess(process, GameRoot.Instance, ProcessDataPacket.Default(), out relay);
+            return Instance.Internal_RegisterRuntimeProcess(process, GameRoot.Instance, null, out relay);
         }
         public static bool Register(AbstractRuntimeProcess process, AbilityDataPacket data, out ProcessRelay relay)
         {
@@ -494,7 +494,7 @@ namespace FarEmerald.PlayForge
         }
         public static bool Register(AbstractRuntimeProcess process, IGameplayProcessHandler handler, out ProcessRelay relay)
         {
-            return Instance.Internal_RegisterRuntimeProcess(process, handler, ProcessDataPacket.Default(), out relay);
+            return Instance.Internal_RegisterRuntimeProcess(process, handler, null, out relay);
         }
         public static bool Register(AbstractRuntimeProcess process, ProcessDataPacket data, out ProcessRelay relay)
         {

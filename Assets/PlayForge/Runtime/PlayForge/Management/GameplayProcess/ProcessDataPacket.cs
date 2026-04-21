@@ -91,6 +91,11 @@ namespace FarEmerald.PlayForge
             
             return data;
         }
+
+        public virtual ProcessDataPacket CreateNew()
+        {
+            return new ProcessDataPacket(this);
+        }
         
         #endregion
         
@@ -352,7 +357,7 @@ namespace FarEmerald.PlayForge
             return IncrementFloat(key, -amount);
         }
 
-        public bool Toggle(Tag key)
+        public bool Toggle(Tag key, bool fallback = false)
         {
             bool current = GetPrimary<bool>(key);
             SetPrimary(key, !current);

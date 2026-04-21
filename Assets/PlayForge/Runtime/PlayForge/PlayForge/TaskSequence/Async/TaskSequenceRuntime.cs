@@ -1036,8 +1036,12 @@ namespace FarEmerald.PlayForge
         
         private void Cleanup()
         {
-            foreach (var cts in _stageSources.Values)
+            if (_sequenceCts is null) return;
+
+            var sources = _stageSources.Values.ToArray();
+            foreach (var cts in sources)
             {
+                if (cts is null) continue;
                 try { cts?.Cancel(); cts?.Dispose(); } catch { }
             }
             _stageSources.Clear();

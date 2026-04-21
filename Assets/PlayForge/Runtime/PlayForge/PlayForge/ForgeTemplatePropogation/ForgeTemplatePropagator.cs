@@ -5,7 +5,7 @@ using System.Linq;
 using UnityEditor;
 using UnityEngine;
 
-namespace FarEmerald.PlayForge.Editor
+namespace FarEmerald.PlayForge.Extended.Editor
 {
     /// <summary>
     /// Core engine for template propagation. Handles:

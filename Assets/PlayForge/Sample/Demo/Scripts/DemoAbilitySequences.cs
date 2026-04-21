@@ -4,7 +4,7 @@ using UnityEngine;
 using SyncSeq = FarEmerald.PlayForge.SyncSequenceTaskLibrary;
 using Object = UnityEngine.Object;
 
-namespace FarEmerald.PlayForge.Examples
+namespace FarEmerald.PlayForge.Extended.Examples
 {
     /// <summary>
     /// Synchronous ability sequence tasks for the demo scene.

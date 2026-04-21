@@ -753,9 +753,27 @@ namespace FarEmerald.PlayForge.Extended.Editor
         private Tag GetCurrentTag(SerializedProperty prop)
         {
             var nameProp = prop.FindPropertyRelative("Name");
-            if (nameProp != null && !string.IsNullOrEmpty(nameProp.stringValue))
-                return TagRegistry.Resolve(nameProp.stringValue);
-            return default;
+            if (nameProp == null || string.IsNullOrEmpty(nameProp.stringValue)) return default;
+
+            var resolved = TagRegistry.Resolve(nameProp.stringValue);
+
+            // Resolve falls back to Tag.Generate(name) when the tag isn't in the runtime registry
+            // (e.g. after a domain reload), which leaves DisplayName == Name (the hash).
+            // Read the stored DisplayName field from the serialized property as a fallback.
+            if (resolved.DisplayName == resolved.Name)
+            {
+                var displayNameProp = prop.FindPropertyRelative(nameof(Tag.DisplayName));
+                if (displayNameProp != null
+                    && !string.IsNullOrEmpty(displayNameProp.stringValue)
+                    && displayNameProp.stringValue != resolved.Name)
+                {
+                    // Re-generate with the correct display name — also re-registers in TagRegistry
+                    // so subsequent Resolve() calls find it without hitting this fallback.
+                    return Tag.Generate(resolved.Name, displayNameProp.stringValue);
+                }
+            }
+
+            return resolved;
         }
         
         private void SetTag(SerializedProperty prop, Tag tag)

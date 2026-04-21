@@ -9,7 +9,7 @@ namespace FarEmerald.PlayForge
     /// <summary>
     /// GameRoot
     /// </summary>
-    public class GameRoot : GameplayAbilitySystem, IEffectOrigin, IManagerial
+    public class GameRoot : GameplayAbilitySystem, IManagerial
     {
         [Header("Game Root")]
         
@@ -19,9 +19,7 @@ namespace FarEmerald.PlayForge
         [SerializeReference]
         public List<AbstractCreateProcessAbilityTask> CreateProcessTasks = new();
         private AbilityDataPacket NativeDataPacket;
-
-        public static RuntimeAttribute LevelAttribute;
-
+        
         public void Bootstrap()
         {
             if (Instance is not null && Instance != this)
@@ -30,9 +28,6 @@ namespace FarEmerald.PlayForge
             }
 
             Instance = this;
-
-            LevelAttribute = new RuntimeAttribute(TagRegistry.TagUtil.GenerateUniqueRandomTag(), GetAssetTag());
-            AttributeRegistry.Add(LevelAttribute);
         }
         
         public void DeferredInit()
@@ -84,27 +79,5 @@ namespace FarEmerald.PlayForge
         }
         
         #endregion
-        
-        public ISource GetOwner()
-        {
-            return this;
-        }
-        public IHasReadableDefinition GetReadableDefinition()
-        {
-            return this;
-        }
-
-        public float GetRelativeLevel()
-        {
-            return LevelSystem.GetLeveler(LevelAttribute).Level.Ratio;
-        }
-        public bool IsActive()
-        {
-            return true;
-        }
-        public bool RetainEffectImpact()
-        {
-            return true;
-        }
     }
 }

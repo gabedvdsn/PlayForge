@@ -395,9 +395,9 @@ namespace FarEmerald.PlayForge
         {
             return Configuration switch
             {
-                ELevelConfig.LockToLevelProvider => spec.GetSource().GetMaxLevel(),
+                ELevelConfig.LockToLevelProvider => spec.GetSource().GetLevel().MaxValue,
                 ELevelConfig.Unlocked => MaxLevel,
-                ELevelConfig.Clamped => Mathf.Min(MaxLevel, spec.GetSource().GetLevel()),
+                ELevelConfig.Clamped => Mathf.Min(MaxLevel, spec.GetSource().GetLevel().CurrentValue),
                 _ => MaxLevel
             };
         }
@@ -415,7 +415,7 @@ namespace FarEmerald.PlayForge
         /// </summary>
         protected float EvaluateFromSpec(IAttributeImpactDerivation spec)
         {
-            float relativeLevel = spec.GetEffectDerivation().GetRelativeLevel();
+            float relativeLevel = spec.GetEffectDerivation().GetLevel().Ratio;
             return ApplyBehaviourEvaluation(spec, EvaluateAtRelativeLevel(relativeLevel));
 
         }

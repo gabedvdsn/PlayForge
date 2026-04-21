@@ -19,7 +19,7 @@ namespace FarEmerald.PlayForge
             this.action = action;
         }
 
-        public override void WhenUpdate(ProcessRelay relay)
+        public override void WhenUpdate()
         {
             action?.Invoke();
         }
@@ -44,7 +44,7 @@ namespace FarEmerald.PlayForge
             this.action = action;
         }
 
-        public override void WhenUpdate(ProcessRelay relay)
+        public override void WhenUpdate()
         {
             action?.Invoke(source);
         }

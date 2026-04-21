@@ -6,7 +6,7 @@ using System.Reflection;
 using UnityEditor;
 using UnityEngine;
 
-namespace FarEmerald.PlayForge.Editor
+namespace FarEmerald.PlayForge.Extended.Editor
 {
     [CustomPropertyDrawer(typeof(TaskSequenceReference))]
     public class TaskSequenceReferenceDrawer : PropertyDrawer

@@ -3,10 +3,10 @@ using JetBrains.Annotations;
 
 namespace FarEmerald.PlayForge
 {
-    public interface ITarget : ITagHandler, IValidationReady
+    public interface ITarget : IAffiliated, ITagHandler, IValidationReady
     {
         public void CommunicateTargetedIntent(AbstractGameplayMonoProcess entity);
-        public List<Tag> GetAffiliation();
+        //public List<Tag> GetAffiliation();
         public bool ApplyGameplayEffect(GameplayEffectSpec spec);
         public bool RemoveGameplayEffect(GameplayEffect effect);
         public GameplayEffectSpec GenerateEffectSpec(IEffectOrigin origin, GameplayEffect GameplayEffect);

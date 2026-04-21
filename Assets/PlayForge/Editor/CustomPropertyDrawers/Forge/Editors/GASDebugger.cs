@@ -7,7 +7,7 @@ using UnityEditor;
 using UnityEngine;
 using UnityEngine.UIElements;
 
-namespace FarEmerald.PlayForge.Editor
+namespace FarEmerald.PlayForge.Extended.Editor
 {
     /// <summary>
     /// Editor window for debugging all GameplayAbilitySystem instances in the scene.
@@ -839,9 +839,10 @@ namespace FarEmerald.PlayForge.Editor
             }
 
             var data = _selectedGAS.EntityData;
-
+            var level = _selectedGAS.GetLevel();
+            
             section.Add(CreateInfoRow("Name", data.GetName(), Color.white));
-            section.Add(CreateInfoRow("Level", $"{_selectedGAS.GetLevel()} / {data.MaxLevel}", Color.white));
+            section.Add(CreateInfoRow("Level", $"{level.CurrentValue} / {level.MaxValue}", Color.white));
             section.Add(CreateInfoRow("Asset Tag", data.AssetTag.GetName(), new Color(0.7f, 0.7f, 0.7f)));
             section.Add(CreateInfoRow("Cache Index", GetCacheIndex(_selectedGAS) < 0 ? "(Unregistered)" : GetCacheIndex(_selectedGAS).ToString(), new Color(0.7f, 0.7f, 0.7f)));
 
@@ -1256,8 +1257,8 @@ namespace FarEmerald.PlayForge.Editor
                 style = { flexGrow = 1, color = Color.white, fontSize = 11 }
             });
 
-            int level = container.Spec?.GetLevel() ?? 0;
-            int maxLevel = container.Spec?.Base?.GetMaxLevel() ?? 1;
+            int level = container.Spec?.GetLevel().CurrentValue ?? 0;
+            int maxLevel = container.Spec?.Base.GetMaxLevel() ?? 1;
             var levelBadge = CreateBadge($"Lv.{level}/{maxLevel}", AbilityColor);
             levelBadge.pickingMode = PickingMode.Ignore;
             row.Add(levelBadge);

@@ -45,11 +45,12 @@ namespace FarEmerald.PlayForge
 
         public bool Initialize(IAttribute attribute, IGameplayAbilitySystem source, IReadOnlyDictionary<IAttribute, CachedAttributeValue> cache)
         {
+            Debug.Log($"[{source.GetName()}] Pre-init attr {attribute.GetName()}: {(Blueprint is not null ? Blueprint.GetDefaultValue(source, cache) : "NULL BLUEPRINT")}");
             return Blueprint is not null
                    && Initialize(
                        attribute, source, cache,
                        Blueprint.Base.RetentionGroup,
-                       Blueprint.GetDefaultValue(source.ToGAS(), cache)
+                       Blueprint.GetDefaultValue(source, cache)
                    );
         }
 
@@ -63,6 +64,8 @@ namespace FarEmerald.PlayForge
             );
             
             Add(root, value, true);
+
+            Debug.Log($"[{source.GetName()}] Init attr {attribute.GetName()}: {value.ToString()}");
 
             return true;
         }

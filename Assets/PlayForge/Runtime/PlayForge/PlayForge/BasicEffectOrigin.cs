@@ -10,45 +10,26 @@ namespace FarEmerald.PlayForge
     {
         public ISource Source { get; private set; }
         
-        public readonly RuntimeAttribute LevelKey;
-        
-        protected BasicEffectOrigin(ISource source, AttributeValueClamped level, Tag assetTag)
+        protected BasicEffectOrigin(ISource source, IntValuePairClamped level, Tag assetTag)
         {
             Source = source;
             
             if (!Source.FindLevelSystem(out var slc)) return;
-            LevelKey = slc.Register(assetTag, level);
+            slc.Register(assetTag, level);
         }
         
-        public LevelTracker GetLeveler(int fallback = 0)
+        public IntValuePairClamped GetLeveler(int fallback = 0)
         {
             return Source.FindLevelSystem(out var slc)
-                ? slc.GetLeveler(LevelKey)
-                : new LevelTracker(Source.GetAssetTag(), new AttributeValueClamped(fallback));
-        }
-
-        public bool SetLevel(int level)
-        {
-            return Source.FindLevelSystem(out var slc) && slc.TrySetLevel(LevelKey, level);
-        }
-
-        public bool ModifyLevel(int amount, bool ignoreOverextensions = false)
-        {
-            var level = GetLeveler();
-            
-            int overextension = level.Overextension(amount);
-            if (overextension != 0 && ignoreOverextensions) return false;
-            level.Modify(amount + overextension);
-            
-            return true;
+                ? slc.GetLeveler(GetAssetTag())
+                : new IntValuePairClamped(fallback);
         }
         
         public abstract ISource GetOwner();
         public abstract IHasReadableDefinition GetReadableDefinition();
         public abstract List<Tag> GetContextTags();
         public abstract Tag GetAssetTag();
-        public abstract int GetLevel();
-        public abstract float GetRelativeLevel();
+        public abstract IntValuePairClamped GetLevel();
         public abstract List<Tag> GetAffiliation();
         public abstract bool IsActive();
     }

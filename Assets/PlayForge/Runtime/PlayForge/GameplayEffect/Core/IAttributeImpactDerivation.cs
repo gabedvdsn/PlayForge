@@ -27,9 +27,9 @@ namespace FarEmerald.PlayForge
         public Dictionary<IScaler, AttributeValue?> GetSourcedCapturedAttributes();
         public bool RetainImpact();
 
-        public static LevelerImpactDerivation GenerateLevelerDerivation(ISource source, int level, int maxLevel)
+        public static LevelerImpactDerivation GenerateLevelerDerivation(ISource source, IntValuePairClamped level)
         {
-            return new LevelerImpactDerivation(source, level, maxLevel);
+            return new LevelerImpactDerivation(source, level);
         }
         
         public static SourceAttributeImpact GenerateSourceDerivation(ISource source, IAttribute attribute, Tag retentionGroup, List<Tag> impactType, IAttributeImpactDerivation rootDerivation = null, bool retainOverride = false)
@@ -140,9 +140,9 @@ namespace FarEmerald.PlayForge
     {
         private LevelerEffectOrigin levelerOrigin;
         
-        public LevelerImpactDerivation(ISource source, int level, int maxLevel) : base(source, null, new List<Tag>(){ Tags.DisallowImpact}, Tags.IgnoreRetention, null, false)
+        public LevelerImpactDerivation(ISource source, IntValuePairClamped level) : base(source, null, new List<Tag>(){ Tags.DisallowImpact}, Tags.IgnoreRetention, null, false)
         {
-            levelerOrigin = IEffectOrigin.GenerateLevelerDerivation(source, level, maxLevel);
+            levelerOrigin = IEffectOrigin.GenerateLevelerDerivation(source, level);
         }
         
         public override bool DerivationAlive()

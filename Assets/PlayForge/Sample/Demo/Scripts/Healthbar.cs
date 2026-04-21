@@ -9,7 +9,7 @@ namespace FarEmerald.PlayForge
         public Image HealthBar;
         public GameplayAbilitySystem Gas;
         
-        public override void WhenUpdate(ProcessRelay relay)
+        public override void WhenUpdate()
         {
             Gas.TryGetAttributeValue(Attribute, out var value);
             HealthBar.fillAmount = value.RatioMinZero;

@@ -31,7 +31,7 @@ namespace FarEmerald.PlayForge
             if (Thresholds == null || Thresholds.Length == 0)
                 return DefaultValue;
             
-            int currentLevel = spec.GetEffectDerivation().GetLevel();
+            int currentLevel = spec.GetEffectDerivation().GetLevel().CurrentValue;
             
             // Find the highest threshold that is <= current level
             float result = DefaultValue;

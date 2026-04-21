@@ -41,7 +41,7 @@ namespace FarEmerald.PlayForge
         private void CollectInitialWorkers()
         {
             EntityData.WorkerGroup?.ProvideWorkersTo(this);
-            EntityData.AttributeSet.WorkerGroup?.ProvideWorkersTo(this);
+            if (EntityData.AttributeSet) EntityData.AttributeSet.WorkerGroup?.ProvideWorkersTo(this);
         }
         
         #region Process Parameters
@@ -77,7 +77,10 @@ namespace FarEmerald.PlayForge
             SetupDeferredContexts();
             CollectInitialWorkers();
 
-            LevelSystem.Register(GetAssetTag(), new AttributeValueClamped(EntityData.GetStartingLevel(), EntityData.GetMaxLevel()));
+            LevelSystem.Register(
+                GetAssetTag(),
+                new IntValuePairClamped(EntityData.GetStartingLevel(), EntityData.GetMaxLevel())
+            );
             
             AbilitySystem.Initialize(EntityData.StartingAbilities);
             AttributeSystem.Initialize();
@@ -88,7 +91,7 @@ namespace FarEmerald.PlayForge
             Callbacks?.SystemInitialized();
         }
 
-        public override void WhenUpdate(ProcessRelay relay)
+        public override void WhenUpdate()
         {
             TickEffectShelf();
             
@@ -97,7 +100,7 @@ namespace FarEmerald.PlayForge
             TagCache.TickTagWorkers();
         }
 
-        public override void WhenLateUpdate(ProcessRelay relay)
+        public override void WhenLateUpdate()
         {
             EndOfFrame();
         }
@@ -471,7 +474,8 @@ namespace FarEmerald.PlayForge
             float longestRemaining = float.MinValue;
             foreach (var container in EffectShelf)
             {
-                if (container.GetGrantedTags().All(specTag => specTag != lookForTag)) continue;
+                if (container.Spec.Base.GetAssetTag() != lookForTag 
+                    && container.GetGrantedTags().All(specTag => specTag != lookForTag)) continue;
                 if (container.Spec.Base.DurationSpecification.DurationPolicy == EEffectDurationPolicy.Infinite)
                     return new EffectDurationRemaining(float.MaxValue, float.MaxValue, true);
                 
@@ -491,7 +495,7 @@ namespace FarEmerald.PlayForge
             {
                 foreach (var specTag in container.Spec.Base.Tags.GrantedTags)
                 {
-                    if (!lookForTags.Contains(specTag)) continue;
+                    if (lookForTags.Contains(container.Spec.Base.GetAssetTag()) && !lookForTags.Contains(specTag)) continue;
                     if (container.Spec.Base.DurationSpecification.DurationPolicy == EEffectDurationPolicy.Infinite)
                     {
                         return new EffectDurationRemaining(float.MaxValue, float.MaxValue, true);
@@ -515,12 +519,34 @@ namespace FarEmerald.PlayForge
         }
 
         #region IAttributeDerivation
+        public ISource GetOwner()
+        {
+            return this;
+        }
+        public IHasReadableDefinition GetReadableDefinition()
+        {
+            return this;
+        }
         public List<Tag> GetContextTags() => EntityData.ContextTags;
         public TagCache GetTagCache() => TagCache;
         public Tag GetAssetTag() => EntityData.AssetTag;
-        public int GetLevel() => EntityData.StartingLevel;
-        public int GetMaxLevel() => EntityData.MaxLevel;
-        public void SetLevel(int level) => EntityData.StartingLevel = Mathf.Clamp(level, 0, EntityData.MaxLevel);
+        public IntValuePairClamped GetLevel() => GetLevel(GetAssetTag());
+        public IntValuePairClamped GetLevel(Tag key)
+        {
+            return LevelSystem.GetLeveler(key);
+        }
+        public LevelCallbackStatus SetLevel(Tag key, IntValuePair level)
+        {
+            return LevelSystem.TrySetLevel(key, level);
+        }
+        public LevelCallbackStatus ModifyLevel(Tag key, IntValuePair delta)
+        {
+            return LevelSystem.TryModifyLevel(key, delta);
+        }
+        public bool IsActive()
+        {
+            return !IsDead;
+        }
         public override string GetName() => EntityData.Name;
         public void CommunicateTargetedIntent(AbstractGameplayMonoProcess entity)
         {

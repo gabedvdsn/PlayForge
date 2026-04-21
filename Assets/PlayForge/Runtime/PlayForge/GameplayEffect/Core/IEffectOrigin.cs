@@ -5,15 +5,13 @@ namespace FarEmerald.PlayForge
     /// <summary>
     /// Sources of Gameplay Effects
     /// </summary>
-    public interface IEffectOrigin
+    public interface IEffectOrigin : IAffiliated
     {
         public ISource GetOwner();
         public IHasReadableDefinition GetReadableDefinition();
         public List<Tag> GetContextTags();
         public Tag GetAssetTag();
-        public int GetLevel();
-        public float GetRelativeLevel();
-        public List<Tag> GetAffiliation();
+        public IntValuePairClamped GetLevel();
         public bool IsActive();
         
         public static SourceEffectOrigin GenerateSourceDerivation(ISource source)
@@ -21,10 +19,15 @@ namespace FarEmerald.PlayForge
             return new SourceEffectOrigin(source);
         }
 
-        public static LevelerEffectOrigin GenerateLevelerDerivation(ISource source, int level, int maxLevel)
+        public static LevelerEffectOrigin GenerateLevelerDerivation(ISource source, IntValuePairClamped level)
         {
-            return new LevelerEffectOrigin(source, level, maxLevel);
+            return new LevelerEffectOrigin(source, level);
         }
+    }
+
+    public interface IAffiliated
+    {
+        public List<Tag> GetAffiliation();
     }
     
     public class SourceEffectOrigin : IEffectOrigin
@@ -52,13 +55,9 @@ namespace FarEmerald.PlayForge
         {
             return Owner.GetAssetTag();
         }
-        public virtual int GetLevel()
+        public virtual IntValuePairClamped GetLevel()
         {
             return Owner.GetLevel();
-        }
-        public virtual float GetRelativeLevel()
-        {
-            return ForgeHelper.RelativeOffsetValue(Owner.GetLevel(), Owner.GetMaxLevel());
         }
         public List<Tag> GetAffiliation()
         {
@@ -72,23 +71,16 @@ namespace FarEmerald.PlayForge
 
     public class LevelerEffectOrigin : SourceEffectOrigin
     {
-        public int Level;
-        public int MaxLevel;
+        public IntValuePairClamped Level;
 
-        public LevelerEffectOrigin(ISource owner, int level, int maxLevel) : base(owner)
+        public LevelerEffectOrigin(ISource owner, IntValuePairClamped level) : base(owner)
         {
             Level = level;
-            MaxLevel = maxLevel;
         }
 
-        public override int GetLevel()
+        public override IntValuePairClamped GetLevel()
         {
             return Level;
         }
-        public override float GetRelativeLevel()
-        {
-            return ForgeHelper.RelativeOffsetValue(Level, MaxLevel);
-        }
-
     }
 }

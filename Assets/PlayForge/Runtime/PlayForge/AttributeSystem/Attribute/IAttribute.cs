@@ -92,7 +92,7 @@ namespace FarEmerald.PlayForge
         }
         public override int GetHashCode()
         {
-            return HashCode.Combine(Name, Abbreviation, Description, Textures);
+            return HashCode.Combine(Name, Abbreviation);
         }
     }
 }

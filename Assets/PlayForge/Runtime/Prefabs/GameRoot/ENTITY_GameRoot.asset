@@ -18,14 +18,13 @@ MonoBehaviour:
   _templateListSnapshots: []
   Name: Game Root
   Description: 
-  Textures:
-  - Tag:
-      Name: Primary
-    Texture: {fileID: 2800000, guid: e6437192c5b780f4da9d9d372537b8d0, type: 3}
+  Textures: []
   Affiliation:
   - Name: Game RootmyZY1dFN98Sd0ORv96TQENlnm4Y172mmmyZY1dFN98Sd0ORv96TQENl
+    DisplayName: 
   AssetTag:
     Name: Entity.GameRoot
+    DisplayName: 
   GrantedTags: []
   ContextTags: []
   StartingLevel: 1
@@ -55,7 +54,7 @@ MonoBehaviour:
   StartingItems: []
   AllowDuplicateItems: 1
   AllowDuplicateEquippedItems: 1
-  AttributeSet: {fileID: 11400000, guid: ea591b955edd54d4fb185ea66c4d530e, type: 2}
+  AttributeSet: {fileID: 0}
   WorkerGroup:
     Name: Workers
     AttributeWorkers: []

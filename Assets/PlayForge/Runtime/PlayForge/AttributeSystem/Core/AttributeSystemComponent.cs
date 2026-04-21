@@ -84,7 +84,7 @@ namespace FarEmerald.PlayForge
     
             // Phase 2: Initialize with values (now all attributes exist in cache)
             var failedAttributes = new List<IAttribute>();
-            foreach (var attr in set.Attributes.Select(elem => elem.Attribute))
+            foreach (var attr in AttributeCache.Select(elem => elem.Key))
             {
                 if (!AttributeCache[attr].Initialize(attr, Self, AttributeCache))
                 {
@@ -99,7 +99,7 @@ namespace FarEmerald.PlayForge
             }
             
             // Phase 3: Fire initial modification events
-            foreach (var attr in set.Attributes.Select(elem => elem.Attribute))
+            foreach (var attr in AttributeCache.Select(elem => elem.Key))
             {
                 ModifyAttribute(attr,
                     new SourcedModifiedAttributeValue(

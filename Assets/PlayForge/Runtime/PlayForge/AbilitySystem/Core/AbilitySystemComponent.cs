@@ -65,27 +65,29 @@ namespace FarEmerald.PlayForge
         
         private Queue<AbilityActivationRequest> activationQueue = new();
 
-        public AbilityActivationRequest CreateActivationRequest(int index, EAbilityActivationPolicyExtended? policy = null)
+        public AbilityActivationRequest CreateActivationRequest(int index, ProcessDataPacket _data = null, EAbilityActivationPolicyExtended? policy = null)
         {
             var _policy = policy?.Translate(this) 
                          ?? (AbilityCache.TryGetValue(index, out var container) 
                              ? container.Spec.Base.Definition.ActivationPolicy.Translate(this) 
                              : DefaultActivationPolicy);
             
-            return new AbilityActivationRequest(index, this, _policy);
+            return new AbilityActivationRequest(index, this, _policy, _data);
         }
         
         public struct AbilityActivationRequest
         {
             public int Index;
             public EAbilityActivationPolicy Policy;
+            public ProcessDataPacket Data;
             public AbilitySystemComponent System;
             
-            public AbilityActivationRequest(int index, AbilitySystemComponent asc, EAbilityActivationPolicy policy)
+            public AbilityActivationRequest(int index, AbilitySystemComponent asc, EAbilityActivationPolicy policy, ProcessDataPacket data)
             {
                 Index = index;
                 System = asc;
                 Policy = policy;
+                Data = data;
             }
         }
 
@@ -226,7 +228,7 @@ namespace FarEmerald.PlayForge
         {
             if (!Enabled) return false;
             if (!allowDuplicateAbilities && HasAbility(ability)) return false;
-            if (AbilityCount >= maxAbilitiesOperation.Evaluate(IAttributeImpactDerivation.GenerateLevelerDerivation(Self, Self.GetLevel(), Self.GetMaxLevel()))) return false;
+            if (AbilityCount >= maxAbilitiesOperation.Evaluate(IAttributeImpactDerivation.GenerateLevelerDerivation(Self, Self.GetLevel()))) return false;
 
             return true;
         }
@@ -279,13 +281,14 @@ namespace FarEmerald.PlayForge
             return Enabled 
                    && !Locked
                    && container.Spec.ValidateSourceActivationRequirements(data)
-                   && (!container.Spec.Base.IgnoreWhenLevelZero || container.Spec.GetLevel() > 0);
+                   && (!container.Spec.Base.IgnoreWhenLevelZero || container.Spec.GetLevel().CurrentValue > 0);
         }
         
         public bool TryActivateAbility(AbilityActivationRequest req)
         {
             if (!AbilityCache.TryGetValue(req.Index, out var container)) return false;
-            var data = AbilityDataPacket.GenerateFrom(container.Spec, req, container.Spec.Base.Behaviour.UseImplicitTargeting, container.Spec.Base.Behaviour.ImplicitTag);
+            var data = AbilityDataPacket.GenerateFrom(container.Spec, 
+                req, container.Spec.Base.Behaviour.UseImplicitTargeting, container.Spec.Base.Behaviour.ImplicitTag);
             return CanActivateAbility(container, data) && ProcessActivationRequest(data);
         }
         

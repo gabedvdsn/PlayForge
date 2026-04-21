@@ -3,18 +3,16 @@ using UnityEngine;
 
 namespace FarEmerald.PlayForge
 {
-    public interface ISource : ITarget, IGameplayProcessHandler
+    public interface ISource : ITarget, IEffectOrigin, IGameplayProcessHandler
     {
-        public List<Tag> GetContextTags();
         public TagCache GetTagCache();
         public ActionQueue GetActionQueue();
         public FrameSummary GetFrameSummary();
-        public Tag GetAssetTag();
-        public int GetLevel();
-        public int GetMaxLevel();
-        public void SetLevel(int level);
         public EffectDurationRemaining GetLongestDurationFor(Tag lookForTag);
         public EffectDurationRemaining GetLongestDurationFor(List<Tag> lookForTags);
+        public IntValuePairClamped GetLevel(Tag key);
+        public LevelCallbackStatus SetLevel(Tag key, IntValuePair level);
+        public LevelCallbackStatus ModifyLevel(Tag key, IntValuePair delta);
     }
 
     public struct SystemComponentData

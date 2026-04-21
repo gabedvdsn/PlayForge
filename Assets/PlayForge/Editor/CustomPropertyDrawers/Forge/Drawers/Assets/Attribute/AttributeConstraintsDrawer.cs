@@ -4,7 +4,7 @@ using UnityEngine;
 using UnityEngine.UIElements;
 using static FarEmerald.PlayForge.Extended.Editor.ForgeDrawerStyles;
 
-namespace FarEmerald.PlayForge.Editor
+namespace FarEmerald.PlayForge.Extended.Editor
 {
     /// <summary>
     /// Custom property drawer for AttributeConstraints.

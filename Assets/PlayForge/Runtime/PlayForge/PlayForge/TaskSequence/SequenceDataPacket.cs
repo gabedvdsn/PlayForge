@@ -1,5 +1,7 @@
 using System;
 using System.Collections.Generic;
+using System.Threading;
+using Cysharp.Threading.Tasks;
 using UnityEngine;
 
 namespace FarEmerald.PlayForge
@@ -150,6 +152,15 @@ namespace FarEmerald.PlayForge
             return Runtime?.InjectStageLocal(injection, stage) ?? false;
         }
         
+        public async UniTask<bool> CheckInjectConditions(Func<bool> condition, ISequenceInjection injection, CancellationToken t)
+        {
+            if (!(condition?.Invoke() ?? false)) return false;
+
+            await UniTask.NextFrame(t);
+            Inject(injection);
+            return true;
+        }
+        
         // ═══════════════════════════════════════════════════════════════════════════
         // STAGE REPEAT CONTROL
         // ═══════════════════════════════════════════════════════════════════════════
@@ -264,6 +275,11 @@ namespace FarEmerald.PlayForge
             
             return data;
         }
-        
+
+        public override ProcessDataPacket CreateNew()
+        {
+            return new SequenceDataPacket(this);
+        }
+
     }
 }

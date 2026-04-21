@@ -6,7 +6,7 @@ namespace FarEmerald.PlayForge
 {
     public class ProjectileMonoProcess : AbstractTargetedMonoProcess
     {
-        protected override async UniTask RunTargetedProcess(ProcessRelay relay, CancellationToken token)
+        protected override async UniTask RunTargetedProcess(CancellationToken token)
         {
             while (Vector3.Distance(transform.position, targeting.position) > .1f)
             {

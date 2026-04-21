@@ -437,7 +437,7 @@ namespace FarEmerald.PlayForge.Extended.Editor
             if (string.IsNullOrEmpty(name)) return "";
             
             // Remove all whitespace
-            var sanitized = Regex.Replace(name, @"\s+", "");
+            var sanitized = Regex.Replace(name, @"\s+", "_");
             
             // Remove invalid file name characters
             foreach (var c in InvalidFileNameChars)

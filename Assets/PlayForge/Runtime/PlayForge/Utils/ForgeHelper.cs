@@ -35,21 +35,11 @@ namespace FarEmerald.PlayForge
             return _textures.Length > 0 ? _textures[0].Texture : null;
         }
 
-        public static RuntimeAttribute ConfigureLevelAttributeFor(BasicEffectOrigin spec)
+        public static float RelativeOffsetValue(IntValuePairClamped valuePair, float offset = 1f)
         {
-            return ConfigureLevelAttributeFor(spec.GetAssetTag());
+            return valuePair.MaxValue > offset ? (valuePair.CurrentValue - offset) / (valuePair.MaxValue - offset) : offset;
         }
-
-        public static RuntimeAttribute ConfigureLevelAttributeFor(Tag assetTag)
-        {
-            const string LevelAttributePrefix = "LVL_ATTRIBUTE_";
-            
-            string input = AttributeRegistry.RefactorByNamingConvention(assetTag.Name);
-            var result = Tag.GenerateAsUnique(input, LevelAttributePrefix);
-
-            return new RuntimeAttribute(result.Name, assetTag.Name, input);
-        }
-
+        
         public static float RelativeOffsetValue(float value, float max, float offset = 1f)
         {
             return max > offset ? (value - offset) / (max - offset) : offset;

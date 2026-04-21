@@ -145,7 +145,7 @@ namespace FarEmerald.PlayForge
             if (Spec.Source.FindAbilitySystem(out var abilitySystem))
             {
                 // Grant the ability at the item's level
-                var success = abilitySystem.GiveAbility(Spec.Base.ActiveAbility, Spec.GetLevel(), out _);
+                var success = abilitySystem.GiveAbility(Spec.Base.ActiveAbility, Spec.GetLevel().CurrentValue, out _);
                 if (Spec.Source.FindItemSystem(out var isc))
                 {
                     isc.Callbacks.ItemAbilityGranted(ItemCallbackStatus.Generate(this, isc, success));

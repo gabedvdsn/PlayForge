@@ -118,36 +118,4 @@ namespace FarEmerald.PlayForge
         }
     }
 
-    public struct AttributeValueClamped
-    {
-        public int CurrentValue;
-        
-        public int MinValue;
-        public int MaxValue;
-
-        public float Ratio => Mathf.Lerp(MinValue, MaxValue, CurrentValue);
-        public bool ContainsImpact => CurrentValue != 0;
-
-        public AttributeValueClamped(int value) : this()
-        {
-            CurrentValue = value;
-            MinValue = value;
-            MaxValue = value;
-        }
-
-        public AttributeValueClamped(int value, int maxValue) : this()
-        {
-            CurrentValue = value;
-            MinValue = value;
-            MaxValue = maxValue;
-        }
-
-        public AttributeValueClamped(int value, int minValue, int maxValue)
-        {
-            CurrentValue = value;
-            MinValue = minValue;
-            MaxValue = maxValue;
-        }
-    }
-    
 }

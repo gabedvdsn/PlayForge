@@ -15,7 +15,7 @@ namespace FarEmerald.PlayForge
             {
             }
 
-            float EvalFunc(IAttributeImpactDerivation spec) => spec.GetEffectDerivation().GetRelativeLevel();
+            float EvalFunc(IAttributeImpactDerivation spec) => spec.GetEffectDerivation().GetLevel().Ratio;
         }
 
         public static CustomScaler Generate(Action<IAttributeImpactDerivation> initAction, Func<IAttributeImpactDerivation, float> evalFunc)

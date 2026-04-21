@@ -308,7 +308,7 @@ namespace FarEmerald.PlayForge
 
         private bool _terminating;
 
-        public override void WhenTerminate(ProcessRelay relay)
+        public override void WhenTerminate()
         {
             _terminating = true;
 
@@ -317,10 +317,10 @@ namespace FarEmerald.PlayForge
                 TerminateAllMembers();
             }
 
-            base.WhenTerminate(relay);
+            base.WhenTerminate();
         }
 
-        public override async UniTask RunProcess(ProcessRelay relay, CancellationToken token)
+        public override async UniTask RunProcess(CancellationToken token)
         {
             // Synchronous lifecycle - RunProcess is never called.
             // The group stays alive via ProcessControl stepping until terminated.

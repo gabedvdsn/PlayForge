@@ -46,8 +46,8 @@ namespace FarEmerald.PlayForge
         public abstract void WhenLateUpdate(ProcessRelay relay);
         
         public abstract void WhenWait(ProcessRelay relay);
-        public abstract bool HandlePause(ProcessRelay relay);
-        public abstract bool HandleResume(ProcessRelay relay);
+        public abstract bool TryHandlePause(ProcessRelay relay);
+        public abstract bool TryHandleResume(ProcessRelay relay);
         public abstract void WhenTerminate(ProcessRelay relay);
         public abstract void WhenTerminateSafe(ProcessRelay relay);
         

@@ -9,7 +9,7 @@ namespace FarEmerald.PlayForge
     {
         public Ability Base;
         
-        public AbilitySpec(ISource source, Ability ability, int level) : base(source, new AttributeValueClamped(level, ability.MaxLevel), ability.Tags.AssetTag)
+        public AbilitySpec(ISource source, Ability ability, int level) : base(source, new IntValuePairClamped(level, ability.MaxLevel), ability.Tags.AssetTag)
         {
             Base = ability;
         }
@@ -50,8 +50,7 @@ namespace FarEmerald.PlayForge
         {
             return Base.Tags.AssetTag;
         }
-        public override int GetLevel() => GetLeveler().Level.CurrentValue;
-        public override float GetRelativeLevel() => GetLeveler().Level.Ratio;
+        public override IntValuePairClamped GetLevel() => Source.GetLevel(GetAssetTag());
         public override List<Tag> GetAffiliation()
         {
             return Source.GetAffiliation();
