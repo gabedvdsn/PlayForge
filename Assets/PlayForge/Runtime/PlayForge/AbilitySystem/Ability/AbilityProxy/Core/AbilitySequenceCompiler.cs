@@ -208,26 +208,52 @@ namespace FarEmerald.PlayForge
             // Combined OnTerminate: fire AbilityStageEnded + apply usage effects
             bool applyUsage = abilityStage.ApplyUsageEffects;
 
-            stage.OnTerminate((ctx, success) =>
+            if (abilityStage.ApplyUsageAtStageStart)
             {
-                if (ctx.Data is not AbilityDataPacket abilityData) return;
-
-                // Apply usage effects if configured and successful
-                if (applyUsage && success && !abilityData.UsageEffectsApplied)
+                stage.OnInit(data =>
                 {
-                    if (abilityData.EffectOrigin is AbilitySpec spec)
-                    {
-                        spec.ApplyUsageEffects();
-                        abilityData.UsageEffectsApplied = true;
-                    }
-                }
+                    if (data is not AbilityDataPacket abilityData) return;
 
-                // Fire AbilityStageEnded callback
-                var callbacks = abilityData.Callbacks;
-                callbacks?.AbilityStageEnded(
-                    AbilityCallbackStatus.GenerateForStageEvent(
-                        abilityData, abilityStage, success));
-            });
+                    // Apply usage effects if configured and successful
+                    if (applyUsage && !abilityData.UsageEffectsApplied)
+                    {
+                        if (abilityData.EffectOrigin is AbilitySpec spec)
+                        {
+                            spec.ApplyUsageEffects();
+                            abilityData.UsageEffectsApplied = true;
+                        }
+                    }
+
+                    // Fire AbilityStageEnded callback
+                    var callbacks = abilityData.Callbacks;
+                    callbacks?.AbilityStageEnded(
+                        AbilityCallbackStatus.GenerateForStageEvent(
+                            abilityData, abilityStage, true));
+                });
+            }
+            else
+            {
+                stage.OnTerminate((ctx, success) =>
+                {
+                    if (ctx.Data is not AbilityDataPacket abilityData) return;
+
+                    // Apply usage effects if configured and successful
+                    if (applyUsage && success && !abilityData.UsageEffectsApplied)
+                    {
+                        if (abilityData.EffectOrigin is AbilitySpec spec)
+                        {
+                            spec.ApplyUsageEffects();
+                            abilityData.UsageEffectsApplied = true;
+                        }
+                    }
+
+                    // Fire AbilityStageEnded callback
+                    var callbacks = abilityData.Callbacks;
+                    callbacks?.AbilityStageEnded(
+                        AbilityCallbackStatus.GenerateForStageEvent(
+                            abilityData, abilityStage, success));
+                });
+            }
         }
 
         // ═══════════════════════════════════════════════════════════════════════════

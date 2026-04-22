@@ -37,7 +37,8 @@ namespace FarEmerald.PlayForge
             }
         }
 
-        public float Ratio => Mathf.Lerp(MinValue, MaxValue, CurrentValue);
+        public float Ratio => ForgeHelper.RelativeOffsetValue(this);
+        // public float Ratio => Mathf.Lerp(MinValue, MaxValue, (CurrentValue - MinValue) / (float)(MaxValue - MinValue)) / MaxValue;
         public bool ContainsImpact => CurrentValue != 0;
 
         public IntValuePairClamped(int value) : this()
@@ -61,9 +62,21 @@ namespace FarEmerald.PlayForge
             _currentValue = Mathf.Clamp(value, minValue, maxValue);
         }
 
+        public static IntValuePairClamped operator +(IntValuePairClamped a, IntValuePairClamped b)
+        {
+            return new IntValuePairClamped(a.CurrentValue + b.CurrentValue, a.MaxValue + b.MaxValue);
+        }
+
+        public static IntValuePairClamped operator -(IntValuePairClamped a, IntValuePairClamped b)
+        {
+            return new IntValuePairClamped(a.CurrentValue - b.CurrentValue, a.MaxValue - b.MaxValue);
+        }
+
+        public string PrettyString(bool spaceSeparated = false) => spaceSeparated ? $"{_currentValue} / {_maxValue}" : $"{_currentValue}/{_maxValue}";
+        
         public override string ToString()
         {
-            return $"{_currentValue}/{_maxValue}";
+            return $"{_minValue}/{_currentValue}/{_maxValue}";
         }
     }
 }

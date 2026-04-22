@@ -417,7 +417,6 @@ namespace FarEmerald.PlayForge
         {
             float relativeLevel = spec.GetEffectDerivation().GetLevel().Ratio;
             return ApplyBehaviourEvaluation(spec, EvaluateAtRelativeLevel(relativeLevel));
-
         }
 
         protected float ApplyBehaviourEvaluation(IAttributeImpactDerivation spec, float magnitude)

@@ -106,7 +106,7 @@ public class DemoScene : MonoBehaviour
             slider.value = dur.Ratio;
         }
 
-        HealthSlider.value = Source.TryGetAttributeValue(Health, out var health) ? health.RatioMinZero : 0f;
-        ManaSlider.value = Source.TryGetAttributeValue(Mana, out var mana) ? mana.RatioMinZero : 0f;
+        HealthSlider.value = Source.TryGetAttributeValue(Health, out var health) ? health.ClampedRatio : 0f;
+        ManaSlider.value = Source.TryGetAttributeValue(Mana, out var mana) ? mana.ClampedRatio : 0f;
     }
 }

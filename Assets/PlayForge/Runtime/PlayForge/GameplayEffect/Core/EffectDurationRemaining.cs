@@ -4,7 +4,7 @@ namespace FarEmerald.PlayForge
 {
     public struct EffectDurationRemaining
     {
-        [FormerlySerializedAs("Valid")] public bool FoundDuration;
+        public bool FoundDuration;
         public float TotalDuration;
         public float DurationRemaining;
 

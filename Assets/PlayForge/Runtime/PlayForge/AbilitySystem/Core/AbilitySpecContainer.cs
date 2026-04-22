@@ -15,6 +15,8 @@ namespace FarEmerald.PlayForge
         public bool IsActive => _activeHandles.Count > 0;
         public bool IsClaiming => _activeHandles.Any(h => !h.ClaimReleased && (h.IsTargeting || h.IsExecuting));
 
+        public bool IsCooldown => Spec.Base.Cooldown is not null && Spec.Source.GetLongestDurationFor(Spec.Base.Cooldown.Tags.AssetTag).FoundDuration;
+        
         private readonly List<AbilityActivationHandle> _activeHandles = new();
 
         private Dictionary<int, ActiveRuntimes> activeRuntimes;
@@ -108,7 +110,7 @@ namespace FarEmerald.PlayForge
 
                 await handle.Proxy.Activate(handle.Cts.Token, handle.Data);
             }
-            catch (Exception ex)
+            catch
             {
                 // Ability in execution is interrupted (cancelled)
             }

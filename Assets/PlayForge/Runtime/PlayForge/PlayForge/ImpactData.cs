@@ -25,7 +25,7 @@
         
         public override string ToString()
         {
-            return $"{SourcedModifier.Derivation.GetCacheKey()} -> {Target} => {Attribute} ({RealImpact})";
+            return $"{SourcedModifier.Derivation.GetCacheKey()} -> {Target.GetName()} => {Attribute.GetName()} ({RealImpact})";
         }
     }
 }

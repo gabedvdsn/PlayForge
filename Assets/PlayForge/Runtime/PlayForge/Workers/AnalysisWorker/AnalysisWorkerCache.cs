@@ -34,8 +34,11 @@ namespace FarEmerald.PlayForge
         public void RemoveWorker(AbstractAnalysisWorker worker)
         {
             if (worker == null) return;
-            
+
             _workers.Remove(worker);
         }
+
+        /// <summary>Read-only view of registered analysis workers (for debuggers / inspectors).</summary>
+        public IReadOnlyList<AbstractAnalysisWorker> Workers => _workers;
     }
 }

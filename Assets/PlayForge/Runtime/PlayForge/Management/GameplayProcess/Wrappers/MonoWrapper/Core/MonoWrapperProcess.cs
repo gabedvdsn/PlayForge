@@ -28,7 +28,7 @@ namespace FarEmerald.PlayForge
         /// <summary>
         /// Regulates the instantiation of the MonoBehaviour process
         /// </summary>
-        public override void InitializeWrapper()
+        public override void ConfigureWrapper()
         {
             if (!StoredMono) return;
 

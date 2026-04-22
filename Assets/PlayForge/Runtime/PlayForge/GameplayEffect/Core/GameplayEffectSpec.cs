@@ -14,7 +14,7 @@ namespace FarEmerald.PlayForge
         
         public TrackedImpact TrackedImpact;
 
-        public Dictionary<IScaler, AttributeValue?> SourceCapturedAttributes;
+        private Dictionary<IScaler, AttributeValue?> SourceCapturedAttributes;
 
         public GameplayEffectSpec(GameplayEffect GameplayEffect, IEffectOrigin origin, ITarget target)
         {

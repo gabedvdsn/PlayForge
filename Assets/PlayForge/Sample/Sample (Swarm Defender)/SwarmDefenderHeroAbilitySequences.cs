@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using Cysharp.Threading.Tasks;
 using UnityEngine;
+using Random = UnityEngine.Random;
 
 namespace FarEmerald.PlayForge.Extended.SwarmDefenderSample
 {
@@ -35,6 +36,12 @@ namespace FarEmerald.PlayForge.Extended.SwarmDefenderSample
         // GRENADE — lobbed projectile, AoE explosion on landing
         // ═══════════════════════════════════════════════════════════════════════
 
+        private static Vector3 AimRandomization(float radius)
+        {
+            var range = radius * Random.insideUnitCircle;
+            return new Vector3(range.x, 0f, range.y);
+        }
+        
         [TaskSequenceMethod("Ability: Grenade")]
         public static TaskSequence Grenade()
         {
@@ -61,7 +68,9 @@ namespace FarEmerald.PlayForge.Extended.SwarmDefenderSample
                     if (!TryAcquireDirectedTarget(d, searchRadius, out casterT, out var target))
                         return;
 
-                    landingPos = target.transform.position;
+                    // if (!TryAcquireRandomTarget(d, searchRadius, out target)) return;
+
+                    landingPos = target.transform.position + AimRandomization(2f);
                     launchPos = casterT.position + Vector3.up * 1.2f;
                     grenade = MakePrimitive(PrimitiveType.Sphere, 0.4f, new Color(0.3f, 0.9f, 0.3f));
                     grenade.transform.position = launchPos;
@@ -293,7 +302,7 @@ namespace FarEmerald.PlayForge.Extended.SwarmDefenderSample
                         return;
 
                     hitOnce = new HashSet<Collider>();
-                    forward = (target.transform.position - casterT.position).WithY(0).normalized;
+                    forward = ((target.transform.position + AimRandomization(1f)) - casterT.position).WithY(0).normalized;
                     if (forward.sqrMagnitude < 0.0001f) forward = casterT.forward;
 
                     blade = MakePrimitive(PrimitiveType.Cube, 1f, new Color(0.9f, 0.4f, 0.9f, 0.9f));
@@ -347,7 +356,7 @@ namespace FarEmerald.PlayForge.Extended.SwarmDefenderSample
             Transform casterT = null;
             float elapsed = 0f;
             const float duration = 0.75f;
-            const float maxRadius = 8f;
+            const float maxRadius = 12f;
             bool applied = false;
 
             return TaskSequenceBuilder.Create("Frost Nova")
@@ -493,8 +502,8 @@ namespace FarEmerald.PlayForge.Extended.SwarmDefenderSample
             GameObject beam = null;
             Transform casterT = null;
             Vector3 landingPos = Vector3.zero;
-            const float telegraphDuration = 1.0f;
-            const float beamDuration = 0.25f;
+            const float telegraphDuration = 0.6f;
+            const float beamDuration = 0.3f;
             const float aoeRadius = 6f;
             const float searchRadius = 25f;
             float elapsed = 0f;
@@ -507,9 +516,11 @@ namespace FarEmerald.PlayForge.Extended.SwarmDefenderSample
                 {
                     if (!TryAcquireDirectedTarget(d, searchRadius, out casterT, out var target))
                         return;
+                    
+                    //b if (!TryAcquireRandomTarget(d, searchRadius, out target)) return;
 
-                    landingPos = target.transform.position;
-
+                    landingPos = target.transform.position + AimRandomization(4f);
+                    
                     marker = MakePrimitive(PrimitiveType.Cylinder, 0.05f,
                         new Color(1f, 0.2f, 0.2f, 0.55f));
                     marker.transform.position = landingPos;
@@ -627,6 +638,8 @@ namespace FarEmerald.PlayForge.Extended.SwarmDefenderSample
         // HELPERS
         // ═══════════════════════════════════════════════════════════════════════
 
+        
+        
         /// <summary>
         /// Resolves the caster transform and finds the nearest enemy within
         /// `searchRadius`. Returns false and calls `d.Interrupt()` if either
@@ -663,6 +676,14 @@ namespace FarEmerald.PlayForge.Extended.SwarmDefenderSample
                 d.Interrupt();
                 return false;
             }
+            return true;
+        }
+
+        private static bool TryAcquireRandomTarget(SequenceDataPacket d, float radius, out Character target)
+        {
+            target = null;
+            if (!d.TryGet(SwarmTags.ACTIVE_ENEMIES, EDataTarget.Any, out List<Character> enemies)) return false;
+            target = enemies.RandomChoice();
             return true;
         }
 

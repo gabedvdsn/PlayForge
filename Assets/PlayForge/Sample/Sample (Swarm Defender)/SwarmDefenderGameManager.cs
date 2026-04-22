@@ -82,6 +82,8 @@ namespace FarEmerald.PlayForge.Extended.SwarmDefenderSample
         private IAttribute _healthAttr;
         private IAttribute _xpAttr;
 
+        private bool _initAttrs;
+        
         // ═══════════════════════════════════════════════════════════════════════
         // Lifecycle
         // ═══════════════════════════════════════════════════════════════════════
@@ -92,9 +94,6 @@ namespace FarEmerald.PlayForge.Extended.SwarmDefenderSample
 
             if (uiDocument == null) uiDocument = GetComponent<UIDocument>();
 
-            _healthAttr = AttributeRegistry.GetByName("Health");
-            _xpAttr     = AttributeRegistry.GetByName("Experience");
-
             BuildUI();
             SeedDataPacket();
             StartGameChain();
@@ -102,9 +101,8 @@ namespace FarEmerald.PlayForge.Extended.SwarmDefenderSample
 
         public override void WhenUpdate()
         {
-            base.WhenUpdate();
             if (_gameData == null) return;
-
+            
             RefreshHud();
             RefreshLevelUpModal();
             RefreshGameOverPanel();
@@ -127,6 +125,18 @@ namespace FarEmerald.PlayForge.Extended.SwarmDefenderSample
             ProcessControl.Register(heroPrefab, out var heroRelay);
             heroRelay.TryGetProcess(out hero);
 
+            // Experience
+            /*hero.Callbacks.OnImpactReceived += impact =>
+            {
+                Debug.Log(impact.RealImpact);
+            };*/
+            
+            _healthAttr = AttributeRegistry.GetByName("Health");
+            _xpAttr     = AttributeRegistry.GetByName("Experience");
+
+            Debug.Log(_healthAttr);
+            Debug.Log(_xpAttr);
+            
             _gameData.SetPrimary(Tags.GAMEOBJECT, hero);
             _gameData.SetPrimary(SwarmTags.HERO, hero);
             _gameData.SetPrimary(SwarmTags.SPAWN_RADIUS, spawnRadius);
@@ -147,12 +157,8 @@ namespace FarEmerald.PlayForge.Extended.SwarmDefenderSample
         {
             CancelChain();
             var chain = SwarmDefenderAbilitySequences.BuildGameChain();
-
-            Debug.Log(_gameData.GetPrimary<Hero>(SwarmTags.HERO));
-            Debug.Log(_gameData.GetPrimary<Hero>(Tags.GAMEOBJECT));
             
             ProcessControl.Register(new TaskSequenceProcess(chain), this, _gameData, out _);
-            
         }
 
         private void CancelChain()
@@ -335,12 +341,12 @@ namespace FarEmerald.PlayForge.Extended.SwarmDefenderSample
 
             // Level
             var levelVal = hero.GetLevel();
-            _levelLabel.text = $"Lvl {levelVal.CurrentValue}";
+            _levelLabel.text = $"Lvl {levelVal.PrettyString()}";
 
             // Health
             if (_healthAttr != null && hero.TryGetAttributeValue(_healthAttr, out var hp))
             {
-                _healthBar.value = Mathf.Clamp01(hp.RatioMinZero);
+                _healthBar.value = Mathf.Clamp01(hp.ClampedRatio);
                 _healthBar.title = $"HP {hp.CurrentValue:0} / {hp.BaseValue:0}";
             }
 
@@ -348,9 +354,10 @@ namespace FarEmerald.PlayForge.Extended.SwarmDefenderSample
             if (_xpAttr != null && hero.TryGetAttributeValue(_xpAttr, out var xp))
             {
                 float threshold = 100f * Mathf.Max(1, levelVal.CurrentValue);
-                float ratio = threshold <= 0f ? 0f : Mathf.Clamp01(xp.CurrentValue / threshold);
+                //float ratio = threshold <= 0f ? 0f : Mathf.Clamp01(xp.CurrentValue / xp.BaseValue);
+                float ratio = Mathf.Clamp01(xp.CurrentValue / xp.BaseValue);
                 _xpBar.value = ratio;
-                _xpBar.title = $"XP {xp.CurrentValue:0} / {threshold:0}";
+                _xpBar.title = $"XP {xp.CurrentValue:0} / {xp.BaseValue:0}";
             }
 
             RefreshBuffRow();
@@ -404,11 +411,10 @@ namespace FarEmerald.PlayForge.Extended.SwarmDefenderSample
             bool pending = _gameData.GetPrimary<bool>(SwarmTags.LEVEL_UP_PENDING);
             bool alreadyMade = _gameData.GetPrimary<bool>(SwarmTags.LEVEL_UP_CHOICE);
             bool shouldShow = pending && !alreadyMade;
-
-            Debug.Log(shouldShow);
-
+            
             if (shouldShow && !_levelUpVisible)
             {
+                Time.timeScale = 0f;
                 PopulateLevelUpOptions();
                 _levelUpModal.style.display = DisplayStyle.Flex;
                 _levelUpVisible = true;
@@ -418,6 +424,7 @@ namespace FarEmerald.PlayForge.Extended.SwarmDefenderSample
                 _levelUpModal.style.display = DisplayStyle.None;
                 _levelUpVisible = false;
             }
+            else if (!shouldShow) Time.timeScale = 1f;
         }
 
         private void RefreshGameOverPanel()
@@ -497,7 +504,8 @@ namespace FarEmerald.PlayForge.Extended.SwarmDefenderSample
             foreach (var a in abilityPool)
             {
                 if (a == null) continue;
-                if (owned.Contains(a)) upgrades.Add(a);
+                if (hero.AbilitySystem.HasAbility(a)) upgrades.Add(a);
+                // if (owned.Contains(a)) upgrades.Add(a);
                 else newOnes.Add(a);
             }
 

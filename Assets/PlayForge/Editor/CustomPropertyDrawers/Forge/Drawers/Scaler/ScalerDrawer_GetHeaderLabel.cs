@@ -26,7 +26,7 @@ namespace FarEmerald.PlayForge.Extended.Editor
             {
                 var keyword = GetParentScalerOperationKeyword(prop);
                 if (!string.IsNullOrEmpty(keyword))
-                    return $"{keyword}";
+                    return $"{keyword} Scaler";
             }
 
             // 3. Fallback to property display name

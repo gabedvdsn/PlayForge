@@ -14,7 +14,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   LocalData: []
   _template: {fileID: 11400000, guid: 812c4e89b36cf1340b92ee9a57ac3ea3, type: 2}
-  _templateOverrides: []
+  _templateOverrides:
+  - Cooldown
   _templateListSnapshots:
   - PropertyPath: Behaviour.Stages
     ElementIdentifiers:
@@ -91,13 +92,14 @@ MonoBehaviour:
       Name: TargetzfvEmaa5gNtqhQ0_dE2_NOOAGh1QLRP8zfvEmaa5gNtqhQ0_dE2_NOOAGh
       DisplayName: Target
     AssetLoaders:
-    - rid: 7261146684025471125
+    - rid: 7261146684025471468
     Stages:
     - StagePolicy:
         rid: 7261146560314999359
       Tasks:
       - rid: 7261146560314999360
-      ApplyUsageEffects: 0
+      ApplyUsageEffects: 1
+      ApplyUsageAtStageStart: 1
   SourceActivationRules:
   - rid: 1955962478581514659
   - rid: 1955962478581514660
@@ -108,7 +110,7 @@ MonoBehaviour:
   MaxLevel: 4
   IgnoreWhenLevelZero: 1
   Cost: {fileID: 0}
-  Cooldown: {fileID: 0}
+  Cooldown: {fileID: 11400000, guid: 53c4bb3d0154ec34e9db8d66726fb2b5, type: 2}
   WorkerGroup:
     Name: Workers
     AttributeWorkers: []
@@ -144,7 +146,7 @@ MonoBehaviour:
           _typeName: FarEmerald.PlayForge.Extended.SwarmDefenderSample.SwarmDefenderHeroAbilitySequences,
             Assembly-CSharp, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null
           _methodName: HomingMissile
-    - rid: 7261146684025471125
+    - rid: 7261146684025471468
       type: {class: SetEffectsTask, ns: FarEmerald.PlayForge, asm: Assembly-CSharp}
       data:
         Tag:

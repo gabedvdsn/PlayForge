@@ -1,3 +1,5 @@
+using UnityEngine;
+
 namespace FarEmerald.PlayForge
 {
     public struct LevelCallbackStatus
@@ -54,6 +56,11 @@ namespace FarEmerald.PlayForge
         public static LevelCallbackStatus GenerateForNoOp(IntValuePairClamped level, Tag levelKey)
         {
             return new LevelCallbackStatus(level, levelKey, level.CurrentValue, level.MaxValue, false);
+        }
+
+        public override string ToString()
+        {
+            return $"[LevelCallbackStatus-{Success}] {LevelKey}: {PreviousLevel}/{PreviousMaxLevel} => {Level}";
         }
     }
 }

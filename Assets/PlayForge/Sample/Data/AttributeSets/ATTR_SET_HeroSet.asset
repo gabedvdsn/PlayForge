@@ -36,7 +36,7 @@ MonoBehaviour:
         BaseValue: 100
     Scaling:
       rid: -2
-    RealMagnitude: 2
+    RealMagnitude: 0
     RetentionGroup:
       Name: Default
       DisplayName: Default

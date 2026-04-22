@@ -1,6 +1,7 @@
 using System;
 using System.Threading;
 using Cysharp.Threading.Tasks;
+using Unity.VisualScripting;
 using UnityEngine;
 using UnityEngine.UIElements;
 
@@ -133,10 +134,10 @@ namespace FarEmerald.PlayForge
         public static async UniTask MoveTowards(Transform mover, Transform target, float speed,
             CancellationToken token, float stoppingDistance = 0.1f)
         {
-            while (target && Vector3.Distance(mover.position, target.position) > stoppingDistance)
+            while (mover && target && Vector3.Distance(mover.position, target.position) > stoppingDistance)
             {
                 await UniTask.Yield(PlayerLoopTiming.Update, token);
-                if (!target) break;
+                if (!target || !mover) break;
                 mover.position = Vector3.MoveTowards(mover.position, target.position, speed * Time.deltaTime);
             }
         }
@@ -150,10 +151,10 @@ namespace FarEmerald.PlayForge
         {
             float initialDistance = target ? Vector3.Distance(mover.position, target.position) : 0f;
 
-            while (target)
+            while (mover && target)
             {
                 await UniTask.Yield(PlayerLoopTiming.Update, token);
-                if (!target) break;
+                if (!target || !mover) break;
 
                 Vector3 dest = target.position;
                 float dist = Vector3.Distance(mover.position, dest);
@@ -176,10 +177,10 @@ namespace FarEmerald.PlayForge
             float degreesPerSecond, Vector3 axis, CancellationToken token)
         {
             float angle = 0f;
-            while (center)
+            while (mover && center)
             {
                 await UniTask.Yield(PlayerLoopTiming.Update, token);
-                if (!center) break;
+                if (!center || !mover) break;
                 angle += degreesPerSecond * Time.deltaTime;
                 Vector3 offset = Quaternion.AngleAxis(angle, axis) * (Vector3.forward * radius);
                 mover.position = center.position + offset;
@@ -208,11 +209,14 @@ namespace FarEmerald.PlayForge
                 while (Vector3.Distance(mover.position, wp) > stoppingDistance)
                 {
                     await UniTask.Yield(PlayerLoopTiming.Update, token);
+                    if (!mover) break;
                     mover.position = Vector3.MoveTowards(mover.position, wp, speed * Time.deltaTime);
                 }
+
+                if (!mover) break;
                 mover.position = wp;
             }
-
+            
             await MoveTowards(mover, finalTarget, speed, token, stoppingDistance);
         }
 
@@ -277,10 +281,10 @@ namespace FarEmerald.PlayForge
         public static async UniTask LookAtTracking(Transform mover, Transform target,
             float degreesPerSecond, CancellationToken token)
         {
-            while (target)
+            while (mover && target)
             {
                 await UniTask.Yield(PlayerLoopTiming.Update, token);
-                if (!target) break;
+                if (!target || !mover) break;
                 var dir = (target.position - mover.position).normalized;
                 if (dir == Vector3.zero) continue;
                 var desired = Quaternion.LookRotation(dir);
@@ -549,20 +553,24 @@ namespace FarEmerald.PlayForge
                 {
                     await UniTask.Yield(PlayerLoopTiming.FixedUpdate, token);
                     elapsed += Time.fixedDeltaTime;
-                    
+
+                    if (!rb) break;
                     // Apply custom gravity as acceleration (ForceMode.Acceleration ignores mass)
                     rb.AddForce(gravityForce, ForceMode.Acceleration);
                 }
             }
             finally
             {
-                // Restore gravity setting
-                rb.useGravity = wasUsingGravity;
-                
-                if (snapOnComplete)
+                if (rb)
                 {
-                    rb.linearVelocity = Vector3.zero;
-                    rb.position = destination;
+                    // Restore gravity setting
+                    rb.useGravity = wasUsingGravity;
+
+                    if (snapOnComplete)
+                    {
+                        rb.linearVelocity = Vector3.zero;
+                        rb.position = destination;
+                    }
                 }
             }
         }

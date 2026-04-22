@@ -55,7 +55,8 @@ namespace FarEmerald.PlayForge
             ApplyActiveAbility();
             
             // Provide workers
-            Spec.Base.WorkerGroup?.ProvideWorkersTo(Spec.Source);
+            Spec.Base.InitWorkers(Spec.Source);
+            // Spec.Base.WorkerGroup?.ProvideWorkersTo(Spec.Source);
             
             // Recompile tags (effects already added their tags, but this ensures consistency)
             Spec.Source.CompileGrantedTags();
@@ -90,7 +91,8 @@ namespace FarEmerald.PlayForge
             RemoveGrantedEffects();
             
             // Remove workers
-            Spec.Base.WorkerGroup?.RemoveWorkersFrom(Spec.Source);
+            Spec.Base.RemoveWorkers(Spec.Source);
+            // Spec.Base.WorkerGroup?.RemoveWorkersFrom(Spec.Source);
             
             // Recompile tags
             Spec.Source.CompileGrantedTags();

@@ -150,6 +150,7 @@ namespace FarEmerald.PlayForge
         /// </summary>
         public Action<SequenceEventContext> OnRepeat { get; set; }
         public Action<SequenceEventContext, bool> OnTerminate { get; set; }
+        public Action<SequenceDataPacket> OnInit { get; set; }
         
         // ═══════════════════════════════════════════════════════════════════════════
         // HELPERS

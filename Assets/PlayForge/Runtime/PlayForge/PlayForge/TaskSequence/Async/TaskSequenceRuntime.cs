@@ -121,7 +121,8 @@ namespace FarEmerald.PlayForge
             if (data is SequenceDataPacket seqData) Data = seqData;
             else throw new InvalidOperationException(nameof(data));
             
-            seqData.Runtime = this;
+            Data.Runtime = this;
+            Data.AppendPath($"Seq[{Definition?.Metadata?.Name}]");
             
             // Use loop for repeat - await in finally blocks can have issues with UniTask
             while (true)
@@ -193,7 +194,7 @@ namespace FarEmerald.PlayForge
                         CompletedSuccessfully = false;
                         if (Definition.Metadata?.EnableErrorLogging ?? true)
                         {
-                            Debug.LogError($"[TaskSequence] {Definition.Metadata?.Name ?? "Unnamed"} ({Data.Path}) failed: {ex}");
+                            Debug.LogError($"[TaskSequence] {Definition.Metadata?.Name ?? "Unnamed"} {(!string.IsNullOrEmpty(Data.Path) ? $"({Data.Path})" : "")} failed: {ex}");
                         }
                     }
                 }
@@ -322,8 +323,12 @@ namespace FarEmerald.PlayForge
             bool cancelled = false;
             Exception error = null;
             
+            Data.AppendPath($"Stage[{stage.Metadata?.Name}]");
+            
             try
             {
+                stage.OnInit?.Invoke(Data);
+                
                 // Start stage max duration timeout if configured
                 if (stage.HasMaxDuration)
                 {

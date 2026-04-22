@@ -12,38 +12,69 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 2d34fc1f98f8a0b4c9b37da3e706e0e1, type: 3}
   m_Name: EFFECT_SDCooldownReduction
   m_EditorClassIdentifier: 
-  LocalData: []
+  LocalData:
+  - Key:
+      Name: Status.Asda.Grag
+      DisplayName: 
+    Type: 0
+    stringValue: 
+    boolValue: 0
+    intValue: 0
+    floatValue: 0
+    objectValue: {fileID: 0}
+    monoBehaviourValue: {fileID: 0}
+    scriptableObjectValue: {fileID: 0}
+    tagValue:
+      Name: 
+      DisplayName: 
+    attributeValue: {fileID: 0}
+    effectValue: {fileID: 0}
+    abilityValue: {fileID: 0}
+    entityValue: {fileID: 0}
   _template: {fileID: 0}
   _templateOverrides: []
   _templateListSnapshots: []
   Definition:
     Name: SD Cooldown Reduction
-    Description: 
+    Description: Behind the mind of Shri'Lauck lie the depths of Vordll, and from
+      them storm the mountains.
     Visibility:
-      Name: 
+      Name: Not Visible
       DisplayName: 
-    Textures: []
+    Textures:
+    - Tag:
+        Name: Primary
+        DisplayName: 
+      Texture: {fileID: -2236324273849735119, guid: 4b55e36981175c84b8d84324fc6cdc34, type: 3}
     RetentionGroup:
-      Name: IgnoreaQ90wcmjZGnP0AQuPovNalcismrHWacbaQ90wcmjZGnP0AQuPovNalcism
+      Name: Ignore
       DisplayName: Ignore
   Tags:
     AssetTag:
       Name: Effect.SDCooldownReduction
       DisplayName: 
-    ContextTags: []
+    ContextTags:
+    - Name: Status.Asda
+      DisplayName: 
+    - Name: Status.Asda.Grag
+      DisplayName: 
+    - Name: Status.Fraes
+      DisplayName: 
+    - Name: Status.Asda.Grag
+      DisplayName: 
     GrantedTags: []
   ImpactSpecification:
-    AttributeTarget: {fileID: 11400000, guid: e5dbfe136ca40104f88d152dd4e836de, type: 2}
-    TargetImpact: 2
+    AttributeTarget: {fileID: 0}
+    TargetImpact: 0
     ImpactOperation: 0
-    AffiliationPolicy: 3
+    AffiliationPolicy: 2
     AffiliationComparison: 0
     Affiliations: []
     ImpactTypes: []
     ReverseImpactOnRemoval: 0
     MagnitudeOperation:
-      Magnitude: 0.05
-      RealMagnitude: 2
+      Magnitude: 0
+      RealMagnitude: 1
       Scaler:
         rid: -2
     Packets: []
@@ -51,17 +82,17 @@ MonoBehaviour:
     DurationPolicy: 0
     DurationOperation:
       Magnitude: 0
-      RealMagnitude: 1
+      RealMagnitude: 0
       Scaler:
         rid: -2
     RealDeltaTime: 1
     DeltaTimeScaler:
       rid: -2
-    EnablePeriodicTicks: 1
+    EnablePeriodicTicks: 0
     TickOnApplication: 0
     TicksOperation:
       Magnitude: 0
-      RealMagnitude: 1
+      RealMagnitude: 0
       Scaler:
         rid: -2
       Rounding: 0
@@ -76,7 +107,7 @@ MonoBehaviour:
       Scaler:
         rid: -2
       Rounding: 0
-    ReApplicationPolicy: 0
+    ReApplicationPolicy: 1
     ReApplicationInteraction: 0
     StackPolicy: 0
     StackAmountOperation:

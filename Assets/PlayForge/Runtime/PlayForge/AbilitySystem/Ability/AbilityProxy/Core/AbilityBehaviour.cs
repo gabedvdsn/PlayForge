@@ -48,6 +48,7 @@ namespace FarEmerald.PlayForge
         
         [Tooltip("At the beginning of this stage, should the ability usage effects be applied?")]
         public bool ApplyUsageEffects;
+        public bool ApplyUsageAtStageStart = true;
     }
 
     public enum EAnyAllPolicy

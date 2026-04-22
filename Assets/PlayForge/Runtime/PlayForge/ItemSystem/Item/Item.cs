@@ -9,7 +9,7 @@ namespace FarEmerald.PlayForge
     /// Supports level scaling for linked effects and abilities.
     /// </summary>
     [CreateAssetMenu(menuName = "PlayForge/Item", fileName = "Item_")]
-    public class Item : BaseForgeLevelProvider
+    public class Item : BaseForgeLevelProvider, IWorkerGroupSource
     {
         public ItemDefinition Definition = new();
         public ItemTags Tags = new();
@@ -307,6 +307,14 @@ namespace FarEmerald.PlayForge
         public override string ToString()
         {
             return $"Item[{GetName()}]";
+        }
+        public void InitWorkers(ISource system)
+        {
+            WorkerGroup?.ProvideWorkersTo(system);
+        }
+        public void RemoveWorkers(ISource system)
+        {
+            WorkerGroup?.RemoveWorkersFrom(system);
         }
     }
 

@@ -38,6 +38,8 @@ namespace FarEmerald.PlayForge
         
         // Transform (runtime entities have no Transform component)
         private AbstractTargetingPacket _targetingPacket;
+
+        protected LocalDataStructure localData;
         
         /// <summary>
         /// Callbacks for GAS-level events (frame completion, action queue, effects, etc.)
@@ -129,7 +131,9 @@ namespace FarEmerald.PlayForge
         private void Initialize(RuntimeEntityIdentity data)
         {
             EntityData = data;
-
+            
+            InitLocalData(EntityData);
+            
             if (EntityData is null) return;
             
             TagCache = new TagCache(this);
@@ -155,8 +159,8 @@ namespace FarEmerald.PlayForge
 
         private void CollectInitialWorkers()
         {
-            EntityData.WorkerGroup?.ProvideWorkersTo(this);
-            EntityData.AttributeSet?.WorkerGroup?.ProvideWorkersTo(this);
+            EntityData.InitWorkers(this);
+            if (EntityData.AttributeSet) EntityData.AttributeSet.InitWorkers(this);
         }
         
         // ═══════════════════════════════════════════════════════════════════════════
@@ -531,6 +535,10 @@ namespace FarEmerald.PlayForge
             containers = EffectShelf.Where(c => c.Spec.Base.Tags.AssetTag == effect.Tags.AssetTag).ToArray();
             return containers.Any();
         }
+        public GameplayAbilitySystemCallbacks GetCallbacks()
+        {
+            return Callbacks;
+        }
 
         public EffectDurationRemaining GetLongestDurationFor(Tag lookForTag)
         {
@@ -574,7 +582,7 @@ namespace FarEmerald.PlayForge
         }
         public IntValuePairClamped GetLevel(Tag key)
         {
-            return LevelSystem.GetLeveler(key);
+            return LevelSystem.GetLevel(key);
         }
         public LevelCallbackStatus SetLevel(Tag key, IntValuePair level)
         {
@@ -609,7 +617,7 @@ namespace FarEmerald.PlayForge
         public List<Tag> GetContextTags() => EntityData.ContextTags;
         public TagCache GetTagCache() => TagCache;
         public Tag GetAssetTag() => EntityData.AssetTag;
-        public IntValuePairClamped GetLevel() => LevelSystem.GetLeveler(GetAssetTag());
+        public IntValuePairClamped GetLevel() => LevelSystem.GetLevel(GetAssetTag());
         public float GetRelativeLevel()
         {
             return ForgeHelper.RelativeOffsetValue(GetLevel());
@@ -704,9 +712,26 @@ namespace FarEmerald.PlayForge
         {
             return null;
         }
+        public void InitLocalData(ILocalDataSource source)
+        {
+            localData ??= new LocalDataStructure();
+            localData.Init(source);
+        }
+        public void SetLocalData(Tag key, DataWrapper data)
+        {
+            localData.Set(key, data);
+        }
+        public bool TryGetLocalData(Tag key, out DataWrapper data)
+        {
+            return localData.TryGet(key, out data);
+        }
+        public LocalDataStructure GetLocalDataStructure()
+        {
+            return localData;
+        }
     }
 
-    public class RuntimeEntityIdentity : IHasReadableDefinition, ITagSource
+    public class RuntimeEntityIdentity : IHasReadableDefinition, ITagSource, ILocalDataSource, IWorkerGroupSource
     {
         public string Name;
         public string Description;
@@ -797,6 +822,18 @@ namespace FarEmerald.PlayForge
         {
             yield return AssetTag;
             foreach (var tag in GrantedTags) yield return tag;
+        }
+        public List<DataWrapper> GetLocalData()
+        {
+            return new List<DataWrapper>();
+        }
+        public void InitWorkers(ISource system)
+        {
+            WorkerGroup?.ProvideWorkersTo(system);
+        }
+        public void RemoveWorkers(ISource system)
+        {
+            WorkerGroup?.RemoveWorkersFrom(system);
         }
     }
 }

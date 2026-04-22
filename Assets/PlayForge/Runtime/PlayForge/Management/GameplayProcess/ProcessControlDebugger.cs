@@ -770,9 +770,6 @@ namespace FarEmerald.PlayForge
         /// </summary>
         private static Color GetUsageColor(float t)
         {
-            float min = .35f;
-            float max = .65f;
-
             switch (t)
             {
                 // Two-stop gradient: green -> yellow -> red

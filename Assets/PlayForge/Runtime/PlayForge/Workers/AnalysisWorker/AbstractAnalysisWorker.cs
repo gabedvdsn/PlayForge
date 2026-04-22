@@ -26,6 +26,34 @@ namespace FarEmerald.PlayForge
         {
             return Enumerable.Empty<IRootAction>();
         }
+
+        protected const string MY_KEY_PREFIX = "Analysis_Worker_";
+        protected Tag MyKey => Tag.GenerateAsUnique(GetType().Name, MY_KEY_PREFIX);
+        
+        protected virtual bool HasTriggered(ILocalDataUser system)
+        {
+            return system.TryGetLocalData(MyKey, out var _hasTriggered) && _hasTriggered.boolValue;
+        }
+
+        protected virtual void SetTriggered(ILocalDataUser system)
+        {
+            system.SetLocalData(MyKey, new DataWrapper(){ boolValue = true });
+        }
+
+        protected virtual void ResetTriggered(ILocalDataUser system)
+        {
+            if (!system.TryGetLocalData(MyKey, out var data)) return;
+            data.boolValue = false;
+        }
+    }
+
+    [Serializable]
+    public class DeathWatcherAnalysisWorker : ThresholdAnalysisWorker
+    {
+        protected override IEnumerable<IRootAction> OnThresholdReached(IGameplayAbilitySystem system, AttributeValue value, FrameSummary frameSummary)
+        {
+            yield return new DeathAction(system);
+        }
     }
     
     /// <summary>
@@ -74,12 +102,10 @@ namespace FarEmerald.PlayForge
         public EThresholdComparison Comparison = EThresholdComparison.LessThanOrEqual;
         public bool TriggerOnce = true;
         
-        private bool _hasTriggered = false;
-        
         public override IEnumerable<IRootAction> Analyze(IGameplayAbilitySystem system, FrameSummary frameSummary)
         {
-            if (Target == null) yield break;
-            if (TriggerOnce && _hasTriggered) yield break;
+            if (Target is null) yield break;
+            if (TriggerOnce && HasTriggered(system)) yield break;
             if (!system.GetAttributeSystem().TryGetAttributeValue(Target, out AttributeValue value)) yield break;
             
             bool conditionMet = Comparison switch
@@ -94,7 +120,11 @@ namespace FarEmerald.PlayForge
             
             if (conditionMet)
             {
-                _hasTriggered = true;
+                if (TriggerOnce && HasTriggered(system))
+                {
+                    yield break;
+                }
+                if (TriggerOnce) SetTriggered(system);
                 
                 // Return actions from derived implementation
                 foreach (var action in OnThresholdReached(system, value, frameSummary))
@@ -113,11 +143,6 @@ namespace FarEmerald.PlayForge
             FrameSummary frameSummary)
         {
             yield return new LogAction($"Threshold reached! {Target}-{Threshold}");
-        }
-        
-        public void ResetTrigger()
-        {
-            _hasTriggered = false;
         }
     }
     

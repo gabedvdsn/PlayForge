@@ -102,27 +102,39 @@ namespace FarEmerald.PlayForge
         /// <summary>
         /// Called after frame is fully complete. Override for custom cleanup.
         /// </summary>
-        protected virtual void HandleDestruction()
+        private void HandleDestruction()
         {
             Callbacks?.SystemDisabled();
             
-            if (ProcessControl.Instance.Terminate(Relay.CacheIndex)) return;
+            if (ProcessControl.Instance.TerminateImmediate(Relay.CacheIndex)) return;
+            
             
             Destroy(gameObject);
         }
+
+        protected virtual bool HandleDestructionInternally()
+        {
+            return false;
+        }
         
         /// <summary>
-        /// Record an impact for the frame summary.
+        /// Record an impact this GAS DEALT (this GAS is the ISource).
+        /// Call this from the source path after impact is calculated.
+        /// </summary>
+        public void RecordFrameImpactDealt(ImpactData impact)
+        {
+            _frameSummary?.RecordImpactDealt(impact);
+            Callbacks?.ImpactDealt(impact);
+        }
+
+        /// <summary>
+        /// Record an impact this GAS RECEIVED (this GAS is the ITarget).
         /// Call this from ModifyAttribute after impact is calculated.
         /// </summary>
-        public void RecordFrameImpact(ImpactData impact)
+        public void RecordFrameImpactReceived(ImpactData impact)
         {
-            _frameSummary?.RecordImpact(impact);
-            
-            // Fire immediate callbacks
-            Callbacks?.Impact(impact);
-            Callbacks?.ReductionDealt(impact);
-            Callbacks?.IncreaseDealt(impact);
+            _frameSummary?.RecordImpactReceived(impact);
+            Callbacks?.ImpactReceived(impact);
         }
         
         /// <summary>

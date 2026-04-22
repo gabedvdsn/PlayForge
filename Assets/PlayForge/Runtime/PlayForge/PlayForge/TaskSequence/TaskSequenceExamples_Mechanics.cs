@@ -110,33 +110,6 @@ namespace FarEmerald.PlayForge.Extended.Examples
                 .BuildSequence();
 
             return stormSequence;
-
-            TaskSequence TorrentSequence()
-            {
-                return TaskSequenceBuilder.Create("Torrent")
-                    .Task(async (d, t) =>
-                    {
-                        var torrent = d.GetPrimary<GameObject>(Tags.DATA);
-                        var delta = new Vector3(0f, d.GetPrimary<float>(yD), 0f);
-                        var duration = d.GetPrimary<float>(tD) * .5f;
-
-                        var moveUp = MoveBy(torrent.transform, delta, duration, t, c);
-                        var rotateUp = RotateBy(torrent.transform, delta * 40f, duration, t);
-                        var upTasks = new[] { moveUp, rotateUp };
-                        await UniTask.WhenAll(upTasks);
-                    
-                        var moveDown = MoveBy(torrent.transform, -delta, duration, t, c);
-                        var rotateDown = RotateBy(torrent.transform, delta * 40f, duration, t);
-                        var downTasks = new[] { moveDown, rotateDown };
-                        await UniTask.WhenAll(downTasks);
-                    })
-                    .OnTerminate((ctx, success) =>
-                    {
-                        var torrent = ctx.Data.GetPrimary<GameObject>(Tags.DATA);
-                        Object.Destroy(torrent);
-                    })
-                    .BuildSequence();
-            }
             
             TaskSequence TorrentSequence2()
             {

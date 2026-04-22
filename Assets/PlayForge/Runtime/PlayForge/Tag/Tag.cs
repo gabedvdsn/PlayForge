@@ -278,7 +278,7 @@ namespace FarEmerald.PlayForge
         // Equality & Operators
         // ═══════════════════════════════════════════════════════════════════════════
 
-        public override string ToString() => Name ?? "";
+        public override string ToString() => string.IsNullOrEmpty(DisplayName) ? Name : DisplayName;
 
         public static bool operator !=(Tag a, Tag b) => !a.Equals(b);
         public static bool operator ==(Tag a, Tag b) => a.Equals(b);

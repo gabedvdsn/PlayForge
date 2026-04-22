@@ -18,13 +18,6 @@ namespace FarEmerald.PlayForge
             slc.Register(assetTag, level);
         }
         
-        public IntValuePairClamped GetLeveler(int fallback = 0)
-        {
-            return Source.FindLevelSystem(out var slc)
-                ? slc.GetLeveler(GetAssetTag())
-                : new IntValuePairClamped(fallback);
-        }
-        
         public abstract ISource GetOwner();
         public abstract IHasReadableDefinition GetReadableDefinition();
         public abstract List<Tag> GetContextTags();

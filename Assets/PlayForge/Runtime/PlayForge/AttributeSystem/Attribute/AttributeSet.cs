@@ -8,7 +8,7 @@ using UnityEngine.Serialization;
 namespace FarEmerald.PlayForge
 {
     [CreateAssetMenu(menuName = "PlayForge/Attribute Set", fileName = "AttributeSet_")]
-    public class AttributeSet : BaseForgeAsset
+    public class AttributeSet : BaseForgeAsset, IWorkerGroupSource
     {
         public string Name;
         public string Description;
@@ -78,7 +78,25 @@ namespace FarEmerald.PlayForge
         {
             return ForgeHelper.GetTextureItem(Textures, PlayForge.Tags.PRIMARY);
         }
-        
+
+        public void InitWorkers(ISource system)
+        {
+            WorkerGroup?.ProvideWorkersTo(system);
+            foreach (var subSet in SubSets)
+            {
+                if (!subSet) continue;
+                subSet.InitWorkers(system);
+            }
+        }
+        public void RemoveWorkers(ISource system)
+        {
+            WorkerGroup?.RemoveWorkersFrom(system);
+            foreach (var subSet in SubSets)
+            {
+                if (!subSet) continue;
+                subSet.RemoveWorkers(system);
+            }
+        }
     }
     
     public enum ELimitedEffectImpactTarget
@@ -179,7 +197,6 @@ namespace FarEmerald.PlayForge
             
             foreach (AttributeSetElement element in attributeSet.Attributes)
             {
-                Debug.Log($"Handling {element.Attribute.GetName()}");
                 if (!matrix.TryGetValue(element.Attribute, out var table))
                 {
                     table = matrix[element.Attribute] = new();

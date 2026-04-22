@@ -179,55 +179,161 @@ namespace FarEmerald.PlayForge
         
         // ═══════════════════════════════════════════════════════════════════════════
         // IMPACT TRACKING (for observer systems)
+        //
+        // Impact events are split by perspective:
+        //   • DEALT     — this GAS is the ISource of the impact
+        //   • RECEIVED  — this GAS is the ITarget of the impact
+        //
+        // The generic OnImpact event fires for both perspectives (backwards-compat).
         // ═══════════════════════════════════════════════════════════════════════════
-        
-        /// <summary>
-        /// Invoked for every impact that occurs (attribute modification with real effect).
-        /// This is the primary hook for damage tracking systems, combat logs, etc.
-        /// </summary>
+
         public delegate void ImpactDelegate(ImpactData impact);
-        
+
+        /// <summary>
+        /// Invoked for every impact this GAS was involved in (either dealt or received).
+        /// </summary>
         private ImpactDelegate _onImpact;
         public event ImpactDelegate OnImpact
         {
             add => _onImpact += value;
             remove => _onImpact -= value;
         }
-        
+
         public void Impact(ImpactData impact) => _onImpact?.Invoke(impact);
-        
+
+        // ──────────────────────────────────────────────────────────────────────
+        // DEALT (this GAS is the source)
+        // ──────────────────────────────────────────────────────────────────────
+
         /// <summary>
-        /// Invoked when damage is dealt (negative current value impact).
-        /// Convenience event for damage-specific tracking.
+        /// Invoked whenever this GAS deals any impact (as the ISource).
         /// </summary>
-        private ImpactDelegate _onDamageDealt;
-        public event ImpactDelegate OnAttributeReduced
+        private ImpactDelegate _onImpactDealt;
+        public event ImpactDelegate OnImpactDealt
         {
-            add => _onDamageDealt += value;
-            remove => _onDamageDealt -= value;
+            add => _onImpactDealt += value;
+            remove => _onImpactDealt -= value;
         }
-        
+
+        public void ImpactDealt(ImpactData impact)
+        {
+            _onImpactDealt?.Invoke(impact);
+            _onImpact?.Invoke(impact);
+            if (impact.RealImpact.CurrentValue < 0) _onReductionDealt?.Invoke(impact);
+            else if (impact.RealImpact.CurrentValue > 0) _onIncreaseDealt?.Invoke(impact);
+        }
+
+        /// <summary>
+        /// Invoked when this GAS deals a reduction (damage, debuff value &lt; 0) to another.
+        /// </summary>
+        private ImpactDelegate _onReductionDealt;
+        public event ImpactDelegate OnReductionDealt
+        {
+            add => _onReductionDealt += value;
+            remove => _onReductionDealt -= value;
+        }
+
         public void ReductionDealt(ImpactData impact)
         {
             if (impact.RealImpact.CurrentValue < 0)
-                _onDamageDealt?.Invoke(impact);
+                _onReductionDealt?.Invoke(impact);
         }
-        
+
         /// <summary>
-        /// Invoked when healing occurs (positive current value impact).
-        /// Convenience event for healing-specific tracking.
+        /// Invoked when this GAS deals an increase (heal, buff value &gt; 0) to another.
         /// </summary>
-        private ImpactDelegate _onHealingDone;
-        public event ImpactDelegate OnAttributeIncreased
+        private ImpactDelegate _onIncreaseDealt;
+        public event ImpactDelegate OnIncreaseDealt
         {
-            add => _onHealingDone += value;
-            remove => _onHealingDone -= value;
+            add => _onIncreaseDealt += value;
+            remove => _onIncreaseDealt -= value;
         }
-        
+
         public void IncreaseDealt(ImpactData impact)
         {
             if (impact.RealImpact.CurrentValue > 0)
-                _onHealingDone?.Invoke(impact);
+                _onIncreaseDealt?.Invoke(impact);
+        }
+
+        // ──────────────────────────────────────────────────────────────────────
+        // RECEIVED (this GAS is the target)
+        // ──────────────────────────────────────────────────────────────────────
+
+        /// <summary>
+        /// Invoked whenever this GAS receives any impact (as the ITarget).
+        /// </summary>
+        private ImpactDelegate _onImpactReceived;
+        public event ImpactDelegate OnImpactReceived
+        {
+            add => _onImpactReceived += value;
+            remove => _onImpactReceived -= value;
+        }
+
+        public void ImpactReceived(ImpactData impact)
+        {
+            _onImpactReceived?.Invoke(impact);
+            _onImpact?.Invoke(impact);
+            if (impact.RealImpact.CurrentValue < 0)
+            {
+                _onReductionReceived?.Invoke(impact);
+                _onAttributeReduced?.Invoke(impact);
+            }
+            else if (impact.RealImpact.CurrentValue > 0)
+            {
+                _onIncreaseReceived?.Invoke(impact);
+                _onAttributeIncreased?.Invoke(impact);
+            }
+        }
+
+        /// <summary>
+        /// Invoked when this GAS receives a reduction (took damage).
+        /// </summary>
+        private ImpactDelegate _onReductionReceived;
+        public event ImpactDelegate OnReductionReceived
+        {
+            add => _onReductionReceived += value;
+            remove => _onReductionReceived -= value;
+        }
+
+        public void ReductionReceived(ImpactData impact)
+        {
+            if (impact.RealImpact.CurrentValue < 0)
+                _onReductionReceived?.Invoke(impact);
+        }
+
+        /// <summary>
+        /// Invoked when this GAS receives an increase (was healed).
+        /// </summary>
+        private ImpactDelegate _onIncreaseReceived;
+        public event ImpactDelegate OnIncreaseReceived
+        {
+            add => _onIncreaseReceived += value;
+            remove => _onIncreaseReceived -= value;
+        }
+
+        public void IncreaseReceived(ImpactData impact)
+        {
+            if (impact.RealImpact.CurrentValue > 0)
+                _onIncreaseReceived?.Invoke(impact);
+        }
+
+        // ──────────────────────────────────────────────────────────────────────
+        // LEGACY ATTRIBUTE EVENTS (fired on RECEIVED side)
+        // Retained for backwards-compat; equivalent to the Received variants.
+        // ──────────────────────────────────────────────────────────────────────
+
+        private ImpactDelegate _onAttributeReduced;
+        public event ImpactDelegate OnAttributeReduced
+        {
+            add => _onAttributeReduced += value;
+            remove => _onAttributeReduced -= value;
+        }
+
+        private ImpactDelegate _onAttributeIncreased;
+        public event ImpactDelegate OnAttributeIncreased
+        {
+            add => _onAttributeIncreased += value;
+            remove => _onAttributeIncreased -= value;
         }
         
         // ═══════════════════════════════════════════════════════════════════════════

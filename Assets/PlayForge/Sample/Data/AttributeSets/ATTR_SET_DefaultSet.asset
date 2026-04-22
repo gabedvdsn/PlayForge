@@ -54,7 +54,7 @@ MonoBehaviour:
     ImpactWorkers: []
     TagWorkers: []
     AnalysisWorkers:
-    - rid: 7261146560314999347
+    - rid: 7261146684025471443
   references:
     version: 2
     RefIds:
@@ -325,8 +325,8 @@ MonoBehaviour:
           m_PostInfinity: 2
           m_RotationOrder: 4
         Behaviours: []
-    - rid: 7261146560314999347
-      type: {class: ThresholdAnalysisWorker, ns: FarEmerald.PlayForge, asm: Assembly-CSharp}
+    - rid: 7261146684025471443
+      type: {class: DeathWatcherAnalysisWorker, ns: FarEmerald.PlayForge, asm: Assembly-CSharp}
       data:
         Target: {fileID: 11400000, guid: 5238e93ea6a409e4a84dd1dcf23dd45c, type: 2}
         Threshold: 0

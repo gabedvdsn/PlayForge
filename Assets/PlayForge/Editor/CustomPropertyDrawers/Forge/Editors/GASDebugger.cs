@@ -53,7 +53,6 @@ namespace FarEmerald.PlayForge.Extended.Editor
         private HashSet<IAttribute> _selectedOverviewAttributes = new();
         private bool _overviewPickerExpanded;
         private bool _overviewAttributesInitialized;
-        private bool _useAbbreviatedAttrs = true;
 
         // Reflection cache
         private FieldInfo _effectShelfField;
@@ -62,6 +61,35 @@ namespace FarEmerald.PlayForge.Extended.Editor
         // Expansion state
         private HashSet<string> _expandedAttributes = new();
         private HashSet<string> _expandedAbilities = new();
+
+        // Frame summary display state
+        //   • Per-GAS rolling sample buffer → configurable window size (in frames)
+        //   • Last significant impact dealt / received per GAS (persists across frames)
+        private int _frameSummaryWindowFrames = 60;
+        private float _significantImpactThreshold = 0f; // any non-zero counts
+        private readonly Dictionary<GameplayAbilitySystem, FrameSummaryRollingStats> _frameSummaryStats = new();
+        private bool _frameSummaryHooked;
+
+        private class FrameSummaryRollingStats
+        {
+            public readonly Queue<FrameSummarySample> Samples = new();
+            public ImpactData? LastSignificantDealt;
+            public ImpactData? LastSignificantReceived;
+            public int LastSnapshotFrame = -1;
+        }
+
+        private struct FrameSummarySample
+        {
+            public int ImpactCount;
+            public int DealtCount;
+            public int ReceivedCount;
+            public float TotalDamageDealt;
+            public float TotalHealingDealt;
+            public float TotalDamageReceived;
+            public float TotalHealingReceived;
+            public int ExecutedActions;
+            public int InvalidatedActions;
+        }
 
         // ═══════════════════════════════════════════════════════════════════════════
         // COLORS
@@ -74,6 +102,7 @@ namespace FarEmerald.PlayForge.Extended.Editor
         private static readonly Color AbilityColor = new(0.4f, 0.7f, 1f);
         private static readonly Color TagColor = new(0.3f, 0.7f, 0.6f);
         private static readonly Color ActiveTagColor = new(0.7f, 0.4f, 0.8f);
+        private static readonly Color CooldownColor = new(0.8f, 0.4f, 0.3f);
         private static readonly Color ImpactColor = new(0.7f, 0.4f, 0.3f);
         private static readonly Color SelectedColor = new(0.3f, 0.5f, 0.7f);
         private static readonly Color HoverColor = new(0.25f, 0.25f, 0.28f);
@@ -130,6 +159,7 @@ namespace FarEmerald.PlayForge.Extended.Editor
             _expandedAttributes.Clear();
             _expandedAbilities.Clear();
             _overviewAttributesInitialized = false;
+            _frameSummaryStats.Clear();
 
             EditorApplication.delayCall += () =>
             {
@@ -219,6 +249,10 @@ namespace FarEmerald.PlayForge.Extended.Editor
                 RefreshEntityList();
             }
 
+            // Ensure every live GAS has frame-summary hooks attached. Cheap check:
+            // _frameSummaryStats already has the GAS registered on first hook.
+            EnsureFrameSummaryHooks();
+
             if (_activeTab == ETab.Details && _selectedGAS != null)
             {
                 RefreshDetails();
@@ -227,6 +261,82 @@ namespace FarEmerald.PlayForge.Extended.Editor
             {
                 RefreshOverviewTable();
             }
+        }
+
+        /// <summary>
+        /// Subscribe to OnFrameComplete on any GAS we haven't seen yet.
+        /// The subscription appends a rolling sample + last-significant-impact tracker.
+        /// </summary>
+        private void EnsureFrameSummaryHooks()
+        {
+            foreach (var gas in _gasObjects)
+            {
+                if (gas == null) continue;
+                if (_frameSummaryStats.ContainsKey(gas)) continue;
+
+                var callbacks = gas.Callbacks;
+                if (callbacks == null) continue;
+
+                var stats = new FrameSummaryRollingStats();
+                _frameSummaryStats[gas] = stats;
+
+                // Capture the GAS reference for the closure
+                var capturedGas = gas;
+                GameplayAbilitySystemCallbacks.FrameCompleteDelegate onFrame = snapshot =>
+                {
+                    if (!_frameSummaryStats.TryGetValue(capturedGas, out var s)) return;
+                    RecordFrameSummarySample(s, snapshot);
+                };
+                callbacks.OnFrameComplete += onFrame;
+
+                GameplayAbilitySystemCallbacks.ImpactDelegate onDealt = impact =>
+                {
+                    if (!_frameSummaryStats.TryGetValue(capturedGas, out var s)) return;
+                    if (Mathf.Abs(impact.RealImpact.CurrentValue) > _significantImpactThreshold)
+                        s.LastSignificantDealt = impact;
+                };
+                GameplayAbilitySystemCallbacks.ImpactDelegate onReceived = impact =>
+                {
+                    if (!_frameSummaryStats.TryGetValue(capturedGas, out var s)) return;
+                    if (Mathf.Abs(impact.RealImpact.CurrentValue) > _significantImpactThreshold)
+                        s.LastSignificantReceived = impact;
+                };
+                callbacks.OnImpactDealt += onDealt;
+                callbacks.OnImpactReceived += onReceived;
+            }
+        }
+
+        private void RecordFrameSummarySample(FrameSummaryRollingStats stats, FrameSummarySnapshot snapshot)
+        {
+            float dDmg = 0f, dHeal = 0f, rDmg = 0f, rHeal = 0f;
+            for (int i = 0; i < snapshot.ImpactsDealt.Count; i++)
+            {
+                var v = snapshot.ImpactsDealt[i].RealImpact.CurrentValue;
+                if (v < 0) dDmg += -v; else if (v > 0) dHeal += v;
+            }
+            for (int i = 0; i < snapshot.ImpactsReceived.Count; i++)
+            {
+                var v = snapshot.ImpactsReceived[i].RealImpact.CurrentValue;
+                if (v < 0) rDmg += -v; else if (v > 0) rHeal += v;
+            }
+
+            var sample = new FrameSummarySample
+            {
+                ImpactCount = snapshot.Impacts.Count,
+                DealtCount = snapshot.ImpactsDealt.Count,
+                ReceivedCount = snapshot.ImpactsReceived.Count,
+                TotalDamageDealt = dDmg,
+                TotalHealingDealt = dHeal,
+                TotalDamageReceived = rDmg,
+                TotalHealingReceived = rHeal,
+                ExecutedActions = snapshot.Executed,
+                InvalidatedActions = snapshot.Invalidated
+            };
+
+            stats.Samples.Enqueue(sample);
+            while (stats.Samples.Count > Mathf.Max(1, _frameSummaryWindowFrames))
+                stats.Samples.Dequeue();
+            stats.LastSnapshotFrame = Time.frameCount;
         }
 
         // ═══════════════════════════════════════════════════════════════════════════
@@ -372,12 +482,13 @@ namespace FarEmerald.PlayForge.Extended.Editor
                 }
             };
 
-            // Tab bar
+            // Tab bar (fixed-height, never shrinks)
             _tabBar = new VisualElement
             {
                 style =
                 {
                     flexDirection = FlexDirection.Row,
+                    flexShrink = 0,
                     backgroundColor = BackgroundMedium,
                     borderBottomWidth = 1,
                     borderBottomColor = new Color(0.15f, 0.15f, 0.15f)
@@ -387,8 +498,17 @@ namespace FarEmerald.PlayForge.Extended.Editor
             _tabBar.Add(CreateTabButton("Overview", ETab.Overview));
             panel.Add(_tabBar);
 
-            // Details content
-            var detailsContainer = new VisualElement { name = "details-container" };
+            // Details content — must flex-grow so ScrollView has a bounded height
+            var detailsContainer = new VisualElement
+            {
+                name = "details-container",
+                style =
+                {
+                    flexGrow = 1,
+                    flexShrink = 1,
+                    minHeight = 0
+                }
+            };
 
             var detailsHeader = new VisualElement
             {
@@ -396,10 +516,14 @@ namespace FarEmerald.PlayForge.Extended.Editor
                 style =
                 {
                     flexDirection = FlexDirection.Row,
+                    flexShrink = 0,
                     alignItems = Align.Center,
                     paddingLeft = 12, paddingRight = 12,
-                    paddingTop = 8, paddingBottom = 8,
-                    backgroundColor = BackgroundMedium
+                    paddingTop = 10, paddingBottom = 10,
+                    marginTop = 2,
+                    backgroundColor = BackgroundMedium,
+                    borderBottomWidth = 1,
+                    borderBottomColor = new Color(0.15f, 0.15f, 0.15f)
                 }
             };
             detailsHeader.Add(new Label("Select an entity to view details")
@@ -419,6 +543,8 @@ namespace FarEmerald.PlayForge.Extended.Editor
                 style =
                 {
                     flexGrow = 1,
+                    flexShrink = 1,
+                    minHeight = 0,
                     paddingLeft = 12, paddingRight = 12,
                     paddingTop = 8, paddingBottom = 8
                 }
@@ -786,6 +912,10 @@ namespace FarEmerald.PlayForge.Extended.Editor
 
         private void RefreshDetails()
         {
+            // Preserve scroll position across rebuild so sections that
+            // populate/unpopulate (e.g. effects) don't cause the view to jump.
+            var savedOffset = _detailsScroll?.scrollOffset ?? Vector2.zero;
+
             _detailsScroll.Clear();
 
             var titleLabel = _rightPanel.Q<Label>("details-title");
@@ -819,13 +949,310 @@ namespace FarEmerald.PlayForge.Extended.Editor
                 titleLabel.text = GetDisplayName(_selectedGAS);
                 titleLabel.style.unityFontStyleAndWeight = FontStyle.Bold;
                 titleLabel.style.color = HeaderColor;
+                ConfigureTitleGameObjectShortcut(titleLabel, _selectedGAS);
             }
 
             _detailsScroll.Add(CreateEntityInfoSection());
             _detailsScroll.Add(CreateAttributesSection());
-            _detailsScroll.Add(CreateEffectsSection());
             _detailsScroll.Add(CreateAbilitiesSection());
             _detailsScroll.Add(CreateTagsSection());
+            _detailsScroll.Add(CreateEffectsSection());
+            _detailsScroll.Add(CreateFrameSummarySection());
+            _detailsScroll.Add(CreateWorkersSection());
+
+            // Restore scroll position after layout is recalculated.
+            // Using GeometryChangedEvent once so we only set it after the
+            // new content has real dimensions — otherwise the offset would
+            // be clamped to zero against stale (empty) content height.
+            RestoreScrollOffset(savedOffset);
+        }
+
+        private void RestoreScrollOffset(Vector2 offset)
+        {
+            if (_detailsScroll == null) return;
+            if (offset.sqrMagnitude <= 0.0001f) return;
+
+            void OnGeometryChanged(GeometryChangedEvent _)
+            {
+                _detailsScroll.UnregisterCallback<GeometryChangedEvent>(OnGeometryChanged);
+
+                // Clamp against the new content so we don't over-scroll when
+                // content shrinks (e.g. an effect section collapsing).
+                var content = _detailsScroll.contentContainer;
+                var viewport = _detailsScroll.contentViewport;
+                float maxY = Mathf.Max(0f, content.layout.height - viewport.layout.height);
+                float maxX = Mathf.Max(0f, content.layout.width - viewport.layout.width);
+
+                _detailsScroll.scrollOffset = new Vector2(
+                    Mathf.Clamp(offset.x, 0f, maxX),
+                    Mathf.Clamp(offset.y, 0f, maxY));
+            }
+
+            _detailsScroll.RegisterCallback<GeometryChangedEvent>(OnGeometryChanged);
+        }
+
+        /// <summary>
+        /// Makes the details title behave as an interactive button:
+        ///   • Single-click  → pings the GameObject in the Hierarchy
+        ///   • Double-click  → selects it as the active editor object
+        /// </summary>
+        private void ConfigureTitleGameObjectShortcut(Label titleLabel, GameplayAbilitySystem gas)
+        {
+            titleLabel.tooltip = "Click to ping in Hierarchy, double-click to select";
+            titleLabel.style.unityTextAlign = TextAnchor.MiddleLeft;
+            titleLabel.pickingMode = PickingMode.Position;
+            titleLabel.RegisterCallback<MouseEnterEvent>(_ =>
+            {
+                titleLabel.style.color = new Color(
+                    Mathf.Min(1f, HeaderColor.r + 0.1f),
+                    Mathf.Min(1f, HeaderColor.g + 0.1f),
+                    Mathf.Min(1f, HeaderColor.b + 0.1f));
+            });
+            titleLabel.RegisterCallback<MouseLeaveEvent>(_ =>
+            {
+                titleLabel.style.color = HeaderColor;
+            });
+            titleLabel.RegisterCallback<ClickEvent>(evt =>
+            {
+                if (_selectedGAS == null) return;
+                try
+                {
+                    var go = _selectedGAS.gameObject;
+                    if (go == null) return;
+                    if (evt.clickCount >= 2)
+                    {
+                        Selection.activeGameObject = go;
+                        EditorGUIUtility.PingObject(go);
+                    }
+                    else
+                    {
+                        EditorGUIUtility.PingObject(go);
+                    }
+                }
+                catch (MissingReferenceException) { }
+            });
+        }
+
+        private VisualElement CreateFrameSummarySection()
+        {
+            var section = CreateSection("Frame Summary", ImpactColor);
+
+            // ── Configuration row (window size + threshold) ──────────────────
+            var configRow = new VisualElement
+            {
+                style = { flexDirection = FlexDirection.Row, alignItems = Align.Center, marginBottom = 6 }
+            };
+            configRow.Add(new Label("Avg window (frames):")
+            {
+                style = { fontSize = 10, color = new Color(0.65f, 0.65f, 0.65f), marginRight = 4 }
+            });
+            var windowField = new IntegerField { value = _frameSummaryWindowFrames, style = { width = 60, marginRight = 12 } };
+            windowField.RegisterValueChangedCallback(evt =>
+                _frameSummaryWindowFrames = Mathf.Clamp(evt.newValue, 1, 600));
+            configRow.Add(windowField);
+
+            configRow.Add(new Label("Significant ≥")
+            {
+                style = { fontSize = 10, color = new Color(0.65f, 0.65f, 0.65f), marginRight = 4 }
+            });
+            var threshField = new FloatField { value = _significantImpactThreshold, style = { width = 60 } };
+            threshField.RegisterValueChangedCallback(evt =>
+                _significantImpactThreshold = Mathf.Max(0f, evt.newValue));
+            configRow.Add(threshField);
+            section.Add(configRow);
+
+            // ── Averages / totals over the window ────────────────────────────
+            if (!_frameSummaryStats.TryGetValue(_selectedGAS, out var stats) || stats.Samples.Count == 0)
+            {
+                section.Add(CreateEmptyLabel("No frame data yet"));
+            }
+            else
+            {
+                int n = stats.Samples.Count;
+                double impacts = 0, dealt = 0, received = 0;
+                double dDmg = 0, dHeal = 0, rDmg = 0, rHeal = 0;
+                double executed = 0, invalidated = 0;
+                foreach (var s in stats.Samples)
+                {
+                    impacts += s.ImpactCount;
+                    dealt += s.DealtCount;
+                    received += s.ReceivedCount;
+                    dDmg += s.TotalDamageDealt;
+                    dHeal += s.TotalHealingDealt;
+                    rDmg += s.TotalDamageReceived;
+                    rHeal += s.TotalHealingReceived;
+                    executed += s.ExecutedActions;
+                    invalidated += s.InvalidatedActions;
+                }
+
+                section.Add(new Label($"Averages over last {n} frame(s):")
+                {
+                    style = { fontSize = 10, color = new Color(0.55f, 0.55f, 0.55f), marginBottom = 2 }
+                });
+                section.Add(CreateDetailRow("Impacts / frame", (impacts / n).ToString("F2"), Color.white));
+                section.Add(CreateDetailRow("  Dealt / frame", (dealt / n).ToString("F2"), Color.white));
+                section.Add(CreateDetailRow("  Received / frame", (received / n).ToString("F2"), Color.white));
+                section.Add(CreateDetailRow("Damage dealt / frame", (dDmg / n).ToString("F2"), new Color(0.95f, 0.45f, 0.4f)));
+                section.Add(CreateDetailRow("Healing dealt / frame", (dHeal / n).ToString("F2"), new Color(0.45f, 0.9f, 0.5f)));
+                section.Add(CreateDetailRow("Damage received / frame", (rDmg / n).ToString("F2"), new Color(0.95f, 0.45f, 0.4f)));
+                section.Add(CreateDetailRow("Healing received / frame", (rHeal / n).ToString("F2"), new Color(0.45f, 0.9f, 0.5f)));
+                section.Add(CreateDetailRow("Actions executed / frame", (executed / n).ToString("F2"), new Color(0.7f, 0.7f, 0.9f)));
+                section.Add(CreateDetailRow("Actions invalidated / frame", (invalidated / n).ToString("F2"), new Color(0.8f, 0.6f, 0.4f)));
+            }
+
+            // ── Last significant impact (dealt / received) ──────────────────
+            section.Add(CreateSubHeader("Last Significant Impact"));
+            if (stats != null && stats.LastSignificantDealt.HasValue)
+            {
+                section.Add(CreateImpactDetailRow("Dealt", stats.LastSignificantDealt.Value));
+            }
+            else
+            {
+                section.Add(CreateEmptyLabel("No significant impact dealt"));
+            }
+
+            if (stats != null && stats.LastSignificantReceived.HasValue)
+            {
+                section.Add(CreateImpactDetailRow("Received", stats.LastSignificantReceived.Value));
+            }
+            else
+            {
+                section.Add(CreateEmptyLabel("No significant impact received"));
+            }
+
+            return section;
+        }
+
+        /// <summary>
+        /// Render a one-line summary of an impact: "[direction] attribute ±N (from/to name)".
+        /// </summary>
+        private VisualElement CreateImpactDetailRow(string direction, ImpactData impact)
+        {
+            string attrName = impact.Attribute?.GetName() ?? "?";
+            float delta = impact.RealImpact.CurrentValue;
+            string sign = delta < 0 ? "" : "+";
+            Color valueColor = delta < 0
+                ? new Color(0.95f, 0.45f, 0.4f)
+                : new Color(0.45f, 0.9f, 0.5f);
+
+            string counterparty;
+            if (direction == "Dealt")
+            {
+                counterparty = ResolveDisplayNameFor(impact.Target);
+            }
+            else // Received
+            {
+                counterparty = ResolveDisplayNameFor(impact.SourcedModifier.Derivation?.GetSource());
+            }
+
+            string text = $"{attrName} {sign}{delta:F2}  ({(direction == "Dealt" ? "→" : "←")} {counterparty})";
+            return CreateDetailRow(direction, text, valueColor);
+        }
+
+        private VisualElement CreateWorkersSection()
+        {
+            var section = CreateSection("Workers", new Color(0.85f, 0.55f, 0.25f));
+
+            // ── Impact workers (via AbilitySystem) ──────────────────────────
+            section.Add(CreateSubHeader("Impact Workers"));
+            if (_selectedGAS.FindAbilitySystem(out var abilSys))
+            {
+                var impactWorkers = CollectImpactWorkers(abilSys);
+                if (impactWorkers.Count == 0)
+                {
+                    section.Add(CreateEmptyLabel("No impact workers"));
+                }
+                else
+                {
+                    foreach (var kv in impactWorkers)
+                    {
+                        string attrName = kv.Key?.GetName() ?? "(any)";
+                        section.Add(CreateDetailRow(attrName, $"{kv.Value.Count} worker(s)", Color.white));
+                        foreach (var w in kv.Value)
+                            section.Add(CreateDetailRow("  " + WorkerTypeName(w), $"[{w.Execution}]", new Color(0.7f, 0.7f, 0.7f)));
+                    }
+                }
+            }
+            else
+            {
+                section.Add(CreateEmptyLabel("No ability system"));
+            }
+
+            // ── Analysis workers (via GAS) ──────────────────────────────────
+            section.Add(CreateSubHeader("Analysis Workers"));
+            var analysisCache = _selectedGAS.GetAnalysisCache();
+            if (analysisCache == null || analysisCache.Workers.Count == 0)
+            {
+                section.Add(CreateEmptyLabel("No analysis workers"));
+            }
+            else
+            {
+                foreach (var w in analysisCache.Workers)
+                    section.Add(CreateDetailRow(WorkerTypeName(w), w.GetType().Namespace ?? "", new Color(0.8f, 0.8f, 0.8f)));
+            }
+
+            // ── Tag workers (via TagCache reflection field) ─────────────────
+            section.Add(CreateSubHeader("Tag Workers"));
+            var tagCache = _tagCacheField?.GetValue(_selectedGAS) as TagCache;
+            if (tagCache == null)
+            {
+                section.Add(CreateEmptyLabel("No tag cache"));
+            }
+            else
+            {
+                int reg = tagCache.RegisteredWorkerCount;
+                int act = tagCache.ActiveWorkerCount;
+                section.Add(CreateInfoRow("Registered", reg.ToString(), Color.white));
+                section.Add(CreateInfoRow("Active", act.ToString(), act > 0 ? ActiveTagColor : new Color(0.55f, 0.55f, 0.55f)));
+
+                foreach (var w in tagCache.RegisteredWorkers)
+                {
+                    bool isActive = tagCache.IsWorkerActive(w);
+                    section.Add(CreateDetailRow(
+                        WorkerTypeName(w),
+                        isActive ? "ACTIVE" : "idle",
+                        isActive ? ActiveTagColor : new Color(0.55f, 0.55f, 0.55f)));
+                }
+            }
+
+            return section;
+        }
+
+        private static Dictionary<IAttribute, List<AbstractImpactWorker>> CollectImpactWorkers(AbilitySystemComponent abilSys)
+        {
+            var result = new Dictionary<IAttribute, List<AbstractImpactWorker>>();
+            var field = typeof(AbilitySystemComponent).GetField("ImpactWorkerCache",
+                BindingFlags.NonPublic | BindingFlags.Public | BindingFlags.Instance);
+            var cache = field?.GetValue(abilSys) as ImpactWorkerCache;
+            if (cache == null) return result;
+            foreach (var kv in cache.Cache)
+            {
+                result[kv.Key] = new List<AbstractImpactWorker>(kv.Value);
+            }
+            return result;
+        }
+
+        /// <summary>
+        /// Best-effort name for an ITarget/ISource: EntityData name → GameObject name → "unknown".
+        /// </summary>
+        private static string ResolveDisplayNameFor(ITarget target)
+        {
+            if (target == null) return "unknown";
+            var gasObj = target.ToGAS()?.ToGASObject();
+            if (gasObj != null)
+            {
+                if (gasObj.EntityData != null && !string.IsNullOrEmpty(gasObj.EntityData.GetName()))
+                    return gasObj.EntityData.GetName();
+                if (gasObj.gameObject != null) return gasObj.gameObject.name;
+            }
+            return "unknown";
+        }
+
+        private static string WorkerTypeName(object worker)
+        {
+            if (worker == null) return "(null)";
+            var t = worker.GetType();
+            return t.Name;
         }
 
         private VisualElement CreateEntityInfoSection()
@@ -1258,7 +1685,7 @@ namespace FarEmerald.PlayForge.Extended.Editor
             });
 
             int level = container.Spec?.GetLevel().CurrentValue ?? 0;
-            int maxLevel = container.Spec?.Base.GetMaxLevel() ?? 1;
+            int maxLevel = container.Spec?.GetLevel().MaxValue ?? 1;
             var levelBadge = CreateBadge($"Lv.{level}/{maxLevel}", AbilityColor);
             levelBadge.pickingMode = PickingMode.Ignore;
             row.Add(levelBadge);
@@ -1275,6 +1702,13 @@ namespace FarEmerald.PlayForge.Extended.Editor
                 var claimBadge = CreateBadge("CLAIMED", TagColor);
                 claimBadge.pickingMode = PickingMode.Ignore;
                 row.Add(claimBadge);
+            }
+            
+            if (container.IsCooldown)
+            {
+                var cooldownBadge = CreateBadge("COOLDOWN", CooldownColor);
+                cooldownBadge.pickingMode = PickingMode.Ignore;
+                row.Add(cooldownBadge);
             }
 
             outerContainer.Add(row);
@@ -1359,7 +1793,8 @@ namespace FarEmerald.PlayForge.Extended.Editor
         {
             var section = CreateSection("Tags", TagColor);
 
-            var tagCache = _tagCacheField?.GetValue(_selectedGAS) as TagCache;
+            // var tagCache = _tagCacheField?.GetValue(_selectedGAS) as TagCache;
+            var tagCache = _selectedGAS.GetTagCache();
             var tags = tagCache?.GetAppliedTags();
 
             if (tags == null || tags.Count == 0)
@@ -1760,10 +2195,6 @@ namespace FarEmerald.PlayForge.Extended.Editor
             if (affiliationColors.TryGetValue(affiliationName, out var c)) return c;
             affiliationColors[affiliationName] = AffiliationPalette[affiliationColors.Count % AffiliationPalette.Length];
             return affiliationColors[affiliationName];
-
-            int hash = affiliationName.GetHashCode();
-            int index = ((hash % AffiliationPalette.Length) + AffiliationPalette.Length) % AffiliationPalette.Length;
-            return AffiliationPalette[index];
         }
 
         private VisualElement CreateSection(string title, Color accentColor)

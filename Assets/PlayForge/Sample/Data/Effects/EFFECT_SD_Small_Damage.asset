@@ -15,7 +15,9 @@ MonoBehaviour:
   LocalData: []
   _template: {fileID: 11400000, guid: eea235da25bf59a468c3da6a4fd1c6a3, type: 2}
   _templateOverrides:
+  - ImpactSpecification.AttributeTarget
   - ImpactSpecification.MagnitudeOperation.Magnitude
+  - ImpactSpecification.MagnitudeOperation.Scaler
   _templateListSnapshots: []
   Definition:
     Name: SD Small Damage
@@ -43,10 +45,10 @@ MonoBehaviour:
     ImpactTypes: []
     ReverseImpactOnRemoval: 0
     MagnitudeOperation:
-      Magnitude: -7.5
+      Magnitude: -9
       RealMagnitude: 1
       Scaler:
-        rid: -2
+        rid: 7261146684025471478
     Packets: []
   DurationSpecification:
     DurationPolicy: 0
@@ -128,9 +130,66 @@ MonoBehaviour:
       AvoidTags: []
       RequireTags: []
   LinkMode: 1
-  _linkedSource: {fileID: 11400000, guid: eea235da25bf59a468c3da6a4fd1c6a3, type: 2}
+  _linkedSource: {fileID: 11400000, guid: 812c4e89b36cf1340b92ee9a57ac3ea3, type: 2}
   references:
     version: 2
     RefIds:
     - rid: -2
       type: {class: , ns: , asm: }
+    - rid: 7261146684025471478
+      type: {class: SimpleScaler, ns: FarEmerald.PlayForge, asm: Assembly-CSharp}
+      data:
+        Name: 
+        sourcePipeline: {fileID: 0}
+        SyncWithTemplate: 0
+        Configuration: 0
+        MaxLevel: 20
+        LevelValues:
+        - 0
+        - -3
+        - -6
+        - -9
+        Interpolation: 1
+        Scaling:
+          serializedVersion: 2
+          m_Curve:
+          - serializedVersion: 3
+            time: 0
+            value: 0
+            inSlope: 0
+            outSlope: -9
+            tangentMode: 69
+            weightedMode: 0
+            inWeight: 0
+            outWeight: 0
+          - serializedVersion: 3
+            time: 0.33333334
+            value: -3
+            inSlope: -9
+            outSlope: -9
+            tangentMode: 69
+            weightedMode: 0
+            inWeight: 0
+            outWeight: 0
+          - serializedVersion: 3
+            time: 0.6666667
+            value: -6
+            inSlope: -9
+            outSlope: -9.000001
+            tangentMode: 69
+            weightedMode: 0
+            inWeight: 0
+            outWeight: 0
+          - serializedVersion: 3
+            time: 1
+            value: -9
+            inSlope: -9.000001
+            outSlope: 0
+            tangentMode: 69
+            weightedMode: 0
+            inWeight: 0
+            outWeight: 0
+          m_PreInfinity: 2
+          m_PostInfinity: 2
+          m_RotationOrder: 4
+        Behaviours: []

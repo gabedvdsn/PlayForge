@@ -101,8 +101,6 @@ namespace FarEmerald.PlayForge
             {
                 var action = DequeueNext();
                 if (action == null) break;
-
-                Debug.Log($"[ActionQ] {action.Description}");
                 
                 if (action.IsValid)
                 {

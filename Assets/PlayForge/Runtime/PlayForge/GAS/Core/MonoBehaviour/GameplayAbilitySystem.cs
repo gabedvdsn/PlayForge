@@ -32,6 +32,8 @@ namespace FarEmerald.PlayForge
         
         // Process
         protected Dictionary<int, ProcessRelay> Relays;
+
+        protected LocalDataStructure localData;
         
         /// <summary>
         /// Callbacks for GAS-level events (frame completion, action queue, effects, etc.)
@@ -40,8 +42,8 @@ namespace FarEmerald.PlayForge
         
         private void CollectInitialWorkers()
         {
-            EntityData.WorkerGroup?.ProvideWorkersTo(this);
-            if (EntityData.AttributeSet) EntityData.AttributeSet.WorkerGroup?.ProvideWorkersTo(this);
+            EntityData.InitWorkers(this);
+            if (EntityData.AttributeSet) EntityData.AttributeSet.InitWorkers(this);
         }
         
         #region Process Parameters
@@ -60,6 +62,8 @@ namespace FarEmerald.PlayForge
 
             Relays = new Dictionary<int, ProcessRelay>();
             TagCache = new TagCache(this);
+            
+            InitLocalData(EntityData);
             
             if (EntityData is null) return;
 
@@ -431,11 +435,14 @@ namespace FarEmerald.PlayForge
                     this, container.Spec, 
                     _frameSummary, _actionQueue);
                 container.Spec.RunWorkerRemoval(effectContext);
-                
-                // Retain only if not reverse and if impact includes base
-                var nullify = !container.Spec.Base.ImpactSpecification.ReverseImpactOnRemoval && container.Spec.TrackedImpact.Total.BaseValue != 0f;
-                var retainCurrent = container.Spec.TrackedImpact.Total.CurrentValue != 0f;
-                AttributeSystem.RemoveAttributeDerivation(container.Spec, nullify, retainCurrent);
+
+                if (container.Spec.Base.ImpactSpecification.AttributeTarget)
+                {
+                    // Retain only if not reverse and if impact includes base
+                    var nullify = !container.Spec.Base.ImpactSpecification.ReverseImpactOnRemoval && container.Spec.TrackedImpact.Total.BaseValue != 0f;
+                    var retainCurrent = container.Spec.TrackedImpact.Total.CurrentValue != 0f;
+                    AttributeSystem.RemoveAttributeDerivation(container.Spec, nullify, retainCurrent);
+                }
                 
                 Callbacks?.EffectRemoved(container.Spec.Base);
             }
@@ -449,7 +456,6 @@ namespace FarEmerald.PlayForge
         #endregion
         
         #region Effect Helpers
-
         public bool TryGetEffectContainer(GameplayEffect effect, out AbstractEffectContainer container)
         {
             foreach (var _container in EffectShelf.Where(_container => _container.Spec.Base.Tags.AssetTag == effect.Tags.AssetTag))
@@ -461,13 +467,15 @@ namespace FarEmerald.PlayForge
             container = null;
             return false;
         }
-
         public bool TryGetEffectContainers(GameplayEffect effect, out AbstractEffectContainer[] containers)
         {
             containers = EffectShelf.Where(c => c.Spec.Base.Tags.AssetTag == effect.Tags.AssetTag).ToArray();
             return containers.Any();
         }
-
+        public GameplayAbilitySystemCallbacks GetCallbacks()
+        {
+            return Callbacks;
+        }
         public EffectDurationRemaining GetLongestDurationFor(Tag lookForTag)
         {
             float longestDuration = float.MinValue;
@@ -486,7 +494,6 @@ namespace FarEmerald.PlayForge
 
             return new EffectDurationRemaining(longestDuration, longestRemaining, longestDuration >= 0f);
         }
-        
         public EffectDurationRemaining GetLongestDurationFor(List<Tag> lookForTags)
         {
             float longestDuration = float.MinValue;
@@ -509,7 +516,6 @@ namespace FarEmerald.PlayForge
 
             return new EffectDurationRemaining(longestDuration, longestRemaining, longestDuration >= 0f);
         }
-        
         #endregion
 
         public override string ToString()
@@ -533,7 +539,7 @@ namespace FarEmerald.PlayForge
         public IntValuePairClamped GetLevel() => GetLevel(GetAssetTag());
         public IntValuePairClamped GetLevel(Tag key)
         {
-            return LevelSystem.GetLeveler(key);
+            return LevelSystem.GetLevel(key);
         }
         public LevelCallbackStatus SetLevel(Tag key, IntValuePair level)
         {
@@ -628,6 +634,23 @@ namespace FarEmerald.PlayForge
             var gas = obj.AddComponent<GameplayAbilitySystem>();
             gas.EntityData = entity;
             return gas;
+        }
+        public void InitLocalData(ILocalDataSource source)
+        {
+            localData ??= new LocalDataStructure();
+            localData.Init(source);
+        }
+        public void SetLocalData(Tag key, DataWrapper data)
+        {
+            localData.Set(key, data);
+        }
+        public bool TryGetLocalData(Tag key, out DataWrapper data)
+        {
+            return localData.TryGet(key, out data);
+        }
+        public LocalDataStructure GetLocalDataStructure()
+        {
+            return localData;
         }
     }
 }

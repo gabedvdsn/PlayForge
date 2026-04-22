@@ -92,8 +92,8 @@ namespace FarEmerald.PlayForge
             if (data.RealImpact.BaseValue != 0f) AttributeBaseChanged(data.Attribute, data.OldValue, data.OldValue + data.RealImpact);
             if (data.RealImpact.CurrentValue != 0 && data.Target.TryGetAttributeValue(data.Attribute, out AttributeValue currValue))
             {
-                if (Mathf.Approximately(currValue.RatioMinZero, 1f)) AttributeCurrentFull(data.Attribute);
-                if (Mathf.Approximately(currValue.RatioMinZero, 0f)) AttributeCurrentZero(data.Attribute);
+                if (Mathf.Approximately(currValue.ClampedRatio, 1f)) AttributeCurrentFull(data.Attribute);
+                if (Mathf.Approximately(currValue.ClampedRatio, 0f)) AttributeCurrentZero(data.Attribute);
             }
             
             

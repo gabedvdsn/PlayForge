@@ -14,7 +14,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   LocalData: []
   _template: {fileID: 11400000, guid: 812c4e89b36cf1340b92ee9a57ac3ea3, type: 2}
-  _templateOverrides: []
+  _templateOverrides:
+  - Cooldown
   _templateListSnapshots:
   - PropertyPath: Behaviour.Stages
     ElementIdentifiers:
@@ -91,13 +92,14 @@ MonoBehaviour:
       Name: TargetzfvEmaa5gNtqhQ0_dE2_NOOAGh1QLRP8zfvEmaa5gNtqhQ0_dE2_NOOAGh
       DisplayName: Target
     AssetLoaders:
-    - rid: 7261146684025471127
+    - rid: 7261146684025471470
     Stages:
     - StagePolicy:
         rid: 7261146560314999361
       Tasks:
       - rid: 7261146560314999362
-      ApplyUsageEffects: 0
+      ApplyUsageEffects: 1
+      ApplyUsageAtStageStart: 1
   SourceActivationRules:
   - rid: 1955962478581514659
   - rid: 1955962478581514660
@@ -108,7 +110,7 @@ MonoBehaviour:
   MaxLevel: 4
   IgnoreWhenLevelZero: 1
   Cost: {fileID: 0}
-  Cooldown: {fileID: 0}
+  Cooldown: {fileID: 11400000, guid: 70bfb019a57eba6468a2a0f4a24ea23c, type: 2}
   WorkerGroup:
     Name: Workers
     AttributeWorkers: []
@@ -144,11 +146,11 @@ MonoBehaviour:
           _typeName: FarEmerald.PlayForge.Extended.SwarmDefenderSample.SwarmDefenderHeroAbilitySequences,
             Assembly-CSharp, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null
           _methodName: OrbitalStrike
-    - rid: 7261146684025471127
+    - rid: 7261146684025471470
       type: {class: SetEffectsTask, ns: FarEmerald.PlayForge, asm: Assembly-CSharp}
       data:
         Tag:
           Name: Effects1hrldAfmelBJryWmirBAFALaw9ISFYz_1hrldAfmelBJryWmirBAFALaw
           DisplayName: Effects
         Effects:
-        - {fileID: 11400000, guid: fe678cd9f432dfc46abc2ecf87de3cc2, type: 2}
+        - {fileID: 11400000, guid: 2465aa03214e0e54fa488dd7f9161509, type: 2}

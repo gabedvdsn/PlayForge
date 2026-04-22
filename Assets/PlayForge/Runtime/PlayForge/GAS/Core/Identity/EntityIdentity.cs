@@ -7,7 +7,7 @@ using UnityEngine.Serialization;
 namespace FarEmerald.PlayForge
 {
     [CreateAssetMenu(menuName = "PlayForge/Entity", fileName = "Entity_")]
-    public class EntityIdentity : BaseForgeLevelProvider
+    public class EntityIdentity : BaseForgeLevelProvider, IWorkerGroupSource
     {
         public string Name;
         public string Description;
@@ -210,6 +210,14 @@ namespace FarEmerald.PlayForge
                     if (ability && ability.IsLinkedTo(this)) ability.LinkToProvider(this);
                 }
             }
+        }
+        public void InitWorkers(ISource system)
+        {
+            WorkerGroup?.ProvideWorkersTo(system);
+        }
+        public void RemoveWorkers(ISource system)
+        {
+            WorkerGroup?.RemoveWorkersFrom(system);
         }
     }
 

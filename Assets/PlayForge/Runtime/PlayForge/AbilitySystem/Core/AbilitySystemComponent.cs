@@ -204,8 +204,9 @@ namespace FarEmerald.PlayForge
 
             var container = new AbilitySpecContainer(ability.Generate(Self, level), abilityIndex);
             AbilityCache[abilityIndex] = container;
-            
-            ability.WorkerGroup?.ProvideWorkersTo(Self);
+
+            ability.InitWorkers(Self);
+            // ability.WorkerGroup?.ProvideWorkersTo(Self);
             
             Self.CompileGrantedTags();
 
@@ -216,8 +217,10 @@ namespace FarEmerald.PlayForge
         {
             if (!TryGetCacheIndexOf(ability, out int index)) return false;
             
-            if (AbilityCache[index].IsClaiming) 
+            if (AbilityCache[index].IsActive) 
                 Inject(index, InterruptSequenceInjection.Instance);
+
+            ability.RemoveWorkers(Self);
             
             Self.CompileGrantedTags();
 
@@ -421,26 +424,30 @@ namespace FarEmerald.PlayForge
         #region Impact Workers
 
         /// <summary>
-        /// Process impact data through workers and callbacks.
+        /// Process impact data dealt by this GAS through source-side workers, record it
+        /// to the source's frame summary, and fire source-side GAS callbacks.
         /// Inline workers execute immediately, deferred workers queue actions.
         /// </summary>
         public void ProvideFrameImpactDealt(ImpactData impactData, bool runWorkers = true)
         {
             // Track impact on derivation
             impactData.SourcedModifier.Derivation.TrackImpact(impactData);
-            
+
             // Run effect-specific workers
             var effectContext = new EffectWorkerContext(
-                Self, impactData.SourcedModifier.Derivation, 
-                Self.GetFrameSummary(), Self.GetActionQueue(), 
+                Self, impactData.SourcedModifier.Derivation,
+                Self.GetFrameSummary(), Self.GetActionQueue(),
                 1, impactData);
             impactData.SourcedModifier.Derivation.RunWorkerImpact(effectContext);
-            
-            // Run global impact workers
+
+            // Run global impact workers (source-side)
             if (runWorkers)
             {
                 ImpactWorkerCache.RunImpactData(impactData);
             }
+
+            // Record DEALT impact on this (source) GAS — fires source-side callbacks
+            Self.RecordFrameImpactDealt(impactData);
         }
         
         /// <summary>

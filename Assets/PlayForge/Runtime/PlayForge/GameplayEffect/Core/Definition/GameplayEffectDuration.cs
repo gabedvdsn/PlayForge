@@ -20,7 +20,7 @@ namespace FarEmerald.PlayForge
         // Duration
         // ═══════════════════════════════════════════════════════════════════════════
 
-        [ScalerOperationKeyword("Duration Scaler")]
+        [ScalerOperationKeyword("Duration")]
         public ScalerMagnitudeOperation DurationOperation;
 
         public EMagnitudeOperation RealDeltaTime = EMagnitudeOperation.AddScaler;
@@ -36,17 +36,17 @@ namespace FarEmerald.PlayForge
         [Tooltip("Execute effect impact immediately on application (before any periodic ticks).")]
         public bool TickOnApplication;
 
-        [ScalerOperationKeyword("Ticks Scaler")]
+        [ScalerOperationKeyword("Ticks")]
         public ScalerIntegerMagnitudeOperation TicksOperation;
         
-        [ScalerOperationKeyword("Tick Interval Scaler")]
+        [ScalerOperationKeyword("Tick Interval")]
         public ScalerMagnitudeOperation TickIntervalOperation;
 
         // ═══════════════════════════════════════════════════════════════════════════
         // Execute Ticks
         // ═══════════════════════════════════════════════════════════════════════════
 
-        [ScalerOperationKeyword("Additional Execute Ticks Scaler")]
+        [ScalerOperationKeyword("Additional Execute Ticks")]
         public ScalerIntegerMagnitudeOperation AdditionalExecuteTicksOperation;
         
         // ═══════════════════════════════════════════════════════════════════════════

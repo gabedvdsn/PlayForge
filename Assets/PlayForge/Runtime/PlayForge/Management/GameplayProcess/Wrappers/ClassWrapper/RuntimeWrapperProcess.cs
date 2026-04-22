@@ -14,7 +14,7 @@ namespace FarEmerald.PlayForge
             getStatus = () => Process.Lifecycle == EProcessLifecycle.Synchronous ? EProcessStatus.Synchronous : EProcessStatus.Asynchronous;
         }
         
-        public override void InitializeWrapper()
+        public override void ConfigureWrapper()
         {
             
         }

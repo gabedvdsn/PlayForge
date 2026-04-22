@@ -3,6 +3,8 @@ using System.Collections.Generic;
 using System.Threading;
 using Cysharp.Threading.Tasks;
 using UnityEngine;
+using Object = UnityEngine.Object;
+using Random = UnityEngine.Random;
 
 namespace FarEmerald.PlayForge.Extended.SwarmDefenderSample
 {
@@ -44,14 +46,13 @@ namespace FarEmerald.PlayForge.Extended.SwarmDefenderSample
     public static class SwarmDefenderAbilitySequences
     {
         private const float DEFAULT_SPAWN_RADIUS = 20f;
-        private const float HERO_CAST_COOLDOWN   = 0.3f;    // min delay between cast attempts
+        private const float HERO_CAST_COOLDOWN   = 0.1f;    // min delay between cast attempts
 
         // ═══════════════════════════════════════════════════════════════════════
         // HERO — continuous ability casting
         // ═══════════════════════════════════════════════════════════════════════
 
-        [TaskSequenceMethod("SD: Hero Routine")]
-        public static TaskSequence HeroRoutine()
+        private static TaskSequence HeroRoutine()
         {
             Hero hero = null;
             int cursor = 0;
@@ -68,10 +69,6 @@ namespace FarEmerald.PlayForge.Extended.SwarmDefenderSample
                         // Mandatory yield per iteration — prevents sync-loop freezes when every
                         // path below early-returns (e.g., if `hero` vanishes between iterations).
                         await UniTask.Yield(t);
-
-                        Debug.Log(hero);
-                        Debug.Log(hero is null ? "Null hero" : hero.IsDead);
-                        Debug.Log(hero is null || hero.IsDead);
                         
                         if (hero == null || hero.IsDead) return;
 
@@ -88,7 +85,7 @@ namespace FarEmerald.PlayForge.Extended.SwarmDefenderSample
                             int idx = (cursor + i) % count;
                             if (!hero.AbilitySystem.CanActivateAbility(idx))
                             {
-                                Debug.Log("cant activate");
+                                Debug.Log($"Cant activate {(hero.AbilitySystem.TryGetAbilityContainer(idx, out var container) ? container.Spec.Base.GetName() : "[Unknown]")}");
                                 continue;
                             }
                             var req = hero.AbilitySystem.CreateActivationRequest(idx, ProcessDataPacket.Default());
@@ -113,8 +110,7 @@ namespace FarEmerald.PlayForge.Extended.SwarmDefenderSample
         /// Walk toward the hero; once within AttackRadius, pause for AttackPause
         /// seconds, then "explode" — if the hero is still in range, the hero dies.
         /// </summary>
-        [TaskSequenceMethod("SD: Enemy Behaviour")]
-        public static TaskSequence EnemyBehaviour()
+        private static TaskSequence EnemyBehaviour()
         {
             Character enemy = null;
             Hero hero = null;
@@ -129,11 +125,25 @@ namespace FarEmerald.PlayForge.Extended.SwarmDefenderSample
                     enemy = d.GetPrimary<Character>(Tags.GAMEOBJECT);
                     hero = d.GetPrimary<Hero>(SwarmTags.HERO);
                 })
+                .Task(async (d, t) =>
+                {
+                    if (enemy is null) return;
+                    
+                    enemy.transform.localScale = Vector3.zero;
+                    await SequenceTaskLibrary.ScaleTo(enemy.transform, 1.5f, .25f, t);
+                    await SequenceTaskLibrary.ScaleTo(enemy.transform, 1f, .1f, t);
+                })
                 .Stage(s => s
                     .WithName("Chase Hero")
                     .SkipWhen(_ => enemy == null || enemy.IsDead || hero == null || hero.IsDead)
                     .Task(async (d, t) =>
                     {
+                        if (enemy is null || enemy.IsDead)
+                        {
+                            await UniTask.Yield(t);
+                            return;
+                        }
+                        
                         float speed = ReadAttr(enemy, speedAttr, fallback: 2f);
                         float radius = ReadAttr(enemy, radiusAttr, fallback: 1.5f);
                         await SequenceTaskLibrary.MoveTowards(
@@ -145,9 +155,14 @@ namespace FarEmerald.PlayForge.Extended.SwarmDefenderSample
                     .SkipWhen(_ => enemy == null || enemy.IsDead)
                     .Task(async (d, t) =>
                     {
+                        if (enemy is null || enemy.IsDead)
+                        {
+                            await UniTask.Yield(t);
+                            return;
+                        }
                         float pause = ReadAttr(enemy, pauseAttr, fallback: 0.75f);
                         // Little telegraph: pulse scale up while armed
-                        await SequenceTaskLibrary.PunchScale(enemy.transform, 0.4f, pause, t);
+                        await SequenceTaskLibrary.PunchScale(enemy.transform, 1f, pause, t);
                     })
                     .Do(d =>
                     {
@@ -167,8 +182,7 @@ namespace FarEmerald.PlayForge.Extended.SwarmDefenderSample
         // ═══════════════════════════════════════════════════════════════════════
 
         /// <summary>Boss jumps in arcs from spot to spot, closing in each jump.</summary>
-        [TaskSequenceMethod("SD: Boss - Jumper")]
-        public static TaskSequence BossJumper()
+        private static TaskSequence BossJumper()
         {
             Character boss = null;
             Hero hero = null;
@@ -202,8 +216,7 @@ namespace FarEmerald.PlayForge.Extended.SwarmDefenderSample
         }
 
         /// <summary>Boss slides along a sine wave toward the hero.</summary>
-        [TaskSequenceMethod("SD: Boss - Sine Walker")]
-        public static TaskSequence BossSineWalker()
+        private static TaskSequence BossSineWalker()
         {
             Character boss = null;
             Hero hero = null;
@@ -245,8 +258,7 @@ namespace FarEmerald.PlayForge.Extended.SwarmDefenderSample
         }
 
         /// <summary>Boss pauses, then charges in a straight line; repeats.</summary>
-        [TaskSequenceMethod("SD: Boss - Charger")]
-        public static TaskSequence BossCharger()
+        private static TaskSequence BossCharger()
         {
             Character boss = null;
             Hero hero = null;
@@ -287,8 +299,7 @@ namespace FarEmerald.PlayForge.Extended.SwarmDefenderSample
         /// Spawns a single enemy at a random off-screen position on the XZ plane
         /// and fires off its behaviour sequence as fire-and-forget.
         /// </summary>
-        [TaskSequenceMethod("SD: Spawn Enemy")]
-        public static TaskSequence SpawnEnemy()
+        private static TaskSequence SpawnEnemy()
         {
             Hero hero = null;
 
@@ -301,6 +312,8 @@ namespace FarEmerald.PlayForge.Extended.SwarmDefenderSample
                 .Task(async (d, t) =>
                 {
                     if (hero == null || hero.IsDead) return;
+
+                    Debug.Log($"Spawn Enemy");
 
                     var prefabs = ResolveCharacterList(d, SwarmTags.ENEMY_PREFABS);
                     if (prefabs.Count == 0) return;
@@ -323,8 +336,7 @@ namespace FarEmerald.PlayForge.Extended.SwarmDefenderSample
         /// Spawns a configurable wave of enemies in quick succession and waits
         /// for the wave to be cleared (or the hero to die).
         /// </summary>
-        [TaskSequenceMethod("SD: Spawn Wave")]
-        public static TaskSequence SpawnWave()
+        private static TaskSequence SpawnWave()
         {
             Hero hero = null;
             List<Character> activeEnemies = null;
@@ -356,6 +368,8 @@ namespace FarEmerald.PlayForge.Extended.SwarmDefenderSample
                         var prefab = prefabs[UnityEngine.Random.Range(0, prefabs.Count)];
                         var pos = RandomOnRing(hero.transform.position, radius);
                         var enemy = UnityEngine.Object.Instantiate(prefab, pos, Quaternion.identity);
+                        Debug.Log($"Spawn Wave Enemy");
+                        
                         RegisterEnemy(d, enemy);
                         LaunchEnemyBehaviour(d, hero, enemy, t);
                         await UniTask.Delay(TimeSpan.FromSeconds(0.12f), cancellationToken: t);
@@ -375,15 +389,16 @@ namespace FarEmerald.PlayForge.Extended.SwarmDefenderSample
         /// to die, then drops a random buff (damage amp or cooldown reduction)
         /// onto the hero.
         /// </summary>
-        [TaskSequenceMethod("SD: Boss Round")]
-        public static TaskSequence BossRound()
+        private static TaskSequence BossRound()
         {
             Hero hero = null;
             Character boss = null;
+            List<Character> activeEnemies = null;
 
             return TaskSequenceBuilder.Create("Boss Round")
                 .WithLifecycle(EProcessLifecycle.SelfTerminating, EProcessStepTiming.None)
                 .Do(d => hero = d.GetPrimary<Hero>(SwarmTags.HERO))
+                .Do(d => activeEnemies = GetOrCreateEnemyList(d))
                 .Task(async (d, t) =>
                 {
                     if (hero == null || hero.IsDead) return;
@@ -394,33 +409,40 @@ namespace FarEmerald.PlayForge.Extended.SwarmDefenderSample
                     float radius = d.GetPrimary<float>(SwarmTags.SPAWN_RADIUS);
                     if (radius <= 0f) radius = DEFAULT_SPAWN_RADIUS;
 
-                    var prefab = bossPrefabs[UnityEngine.Random.Range(0, bossPrefabs.Count)];
-                    var pos = RandomOnRing(hero.transform.position, radius + 4f);
-                    boss = UnityEngine.Object.Instantiate(prefab, pos, Quaternion.identity);
-                    RegisterEnemy(d, boss);
+                    Debug.Log($"Spawn Boss");
 
-                    // Pick a movement variant at random.
-                    var bossData = ProcessDataPacket.Default();
-                    bossData.SetPrimary(Tags.GAMEOBJECT, boss);
-                    bossData.SetPrimary(SwarmTags.HERO, hero);
-
-                    TaskSequence variant = UnityEngine.Random.Range(0, 3) switch
+                    for (int i = 0; i < 2; i++)
                     {
-                        0 => BossJumper(),
-                        1 => BossSineWalker(),
-                        _ => BossCharger()
-                    };
+                        var prefab = bossPrefabs[Random.Range(0, bossPrefabs.Count)];
+                        var pos = RandomOnRing(hero.transform.position, radius + 4f);
+                        boss = Object.Instantiate(prefab, pos, Quaternion.identity);
+                        RegisterEnemy(d, boss);
 
-                    // Fire movement loop in parallel; it'll self-terminate when the
-                    // boss dies via its StopRepeatWhen guard.
-                    variant.Run(bossData, t).Forget();
+                        // Pick a movement variant at random.
+                        var bossData = SequenceDataPacket.Default();
+                        bossData.SetPrimary(Tags.GAMEOBJECT, boss);
+                        bossData.SetPrimary(SwarmTags.HERO, hero);
 
-                    // Announcement pulse so the player notices.
-                    await SequenceTaskLibrary.PunchScale(boss.transform, 0.6f, 0.4f, t);
+                        TaskSequence variant = Random.Range(0, 3) switch
+                        {
+                            0 => BossJumper(),
+                            1 => BossSineWalker(),
+                            _ => BossCharger()
+                        };
+
+                        Debug.Log($"\t\t{variant.Definition.Metadata.Name}");
+
+                        // Fire movement loop in parallel; it'll self-terminate when the
+                        // boss dies via its StopRepeatWhen guard.
+                        variant.Run(bossData, t).Forget();
+
+                        // Announcement pulse so the player notices.
+                        await SequenceTaskLibrary.PunchScale(boss.transform, 0.6f, 0.4f, t);
+                    }
                 })
                 .Stage(s => s
                     .WithName("Wait for boss defeat")
-                    .DelayUntil(_ => hero == null || hero.IsDead || boss == null || boss.IsDead)
+                    .DelayUntil(_ => hero == null || hero.IsDead || activeEnemies == null || activeEnemies.TrueForAll(e => e == null || e.IsDead))
                 )
                 .Stage(s => s
                     .WithName("Drop buff")
@@ -440,8 +462,7 @@ namespace FarEmerald.PlayForge.Extended.SwarmDefenderSample
         /// setting CHOSEN_ABILITY (the Ability instance) and CHOSE_NEW_ABILITY
         /// (true = grant new, false = level up existing) before toggling the flag.
         /// </summary>
-        [TaskSequenceMethod("SD: Level Up")]
-        public static TaskSequence LevelUp()
+        private static TaskSequence LevelUp()
         {
             Hero hero = null;
 
@@ -454,8 +475,8 @@ namespace FarEmerald.PlayForge.Extended.SwarmDefenderSample
                     d.SetPrimary(SwarmTags.LEVEL_UP_CHOICE, false);
                     d.SetPrimary<Ability>(SwarmTags.CHOSEN_ABILITY, null);
 
-                        Debug.Log(hero);
-                    Debug.Log("LEVEL UP");
+                    hero.ModifyLevel(hero.GetAssetTag(), new IntValuePair(1, 0));
+
                 })
                 .Stage(s => s
                     .WithName("Wait for UI choice")
@@ -463,7 +484,6 @@ namespace FarEmerald.PlayForge.Extended.SwarmDefenderSample
                 )
                 .Do(d =>
                 {
-                    Debug.Log(hero);
                     if (hero == null) return;
 
                     var chosen = d.GetPrimary<Ability>(SwarmTags.CHOSEN_ABILITY);
@@ -475,7 +495,6 @@ namespace FarEmerald.PlayForge.Extended.SwarmDefenderSample
                         {
                             if (hero.AbilitySystem.CanGiveAbility(chosen))
                                 hero.AbilitySystem.GiveAbility(chosen, chosen.StartingLevel, out _);
-                            Debug.Log($"Given {chosen.GetName()} at level {hero.GetLevel(chosen.GetAssetTag()).CurrentValue.ToString()}");
                         }
                         else
                         {
@@ -499,8 +518,7 @@ namespace FarEmerald.PlayForge.Extended.SwarmDefenderSample
         /// level-up sequence, wait for it to resolve, then resume.
         /// Threshold curve: 100 * currentLevel.
         /// </summary>
-        [TaskSequenceMethod("SD: XP Watcher")]
-        public static TaskSequence XpWatcher()
+        private static TaskSequence XpWatcher()
         {
             Hero hero = null;
             IAttribute xpAttr = AttributeRegistry.GetByName("Experience");
@@ -521,12 +539,12 @@ namespace FarEmerald.PlayForge.Extended.SwarmDefenderSample
                         if (hero == null || hero.IsDead) return;
 
                         float xp = ReadAttr(hero, xpAttr, fallback: 0f);
-                        float threshold = 100f * Mathf.Max(1, hero.GetLevel().CurrentValue);
 
-                        if (hero.TryGetAttributeValue(xpAttr, out var attrValue) && attrValue.RatioMinZero >= 1)
+                        if (hero.TryGetAttributeValue(xpAttr, out var attrValue) && attrValue.ClampedRatio >= 1f)
                         {
                             // Drain XP by the threshold amount so the overflow carries over.
-                            WriteAttrDelta(hero, xpAttr, -threshold);
+                            WriteAttrDelta(hero, xpAttr, -xp, 25);
+                            
 
                             // Run the level-up flow inline and wait for it to finish.
                             await LevelUp().Run(d, t);
@@ -559,8 +577,7 @@ namespace FarEmerald.PlayForge.Extended.SwarmDefenderSample
         /// watcher + hero cast loop in parallel, and alternates between constant
         /// spawning, waves, and boss rounds until the hero dies.
         /// </summary>
-        [TaskSequenceMethod("SD: Main Game Loop")]
-        public static TaskSequence MainGameLoop()
+        private static TaskSequence MainGameLoop()
         {
             Hero hero = null;
             float modeTimer = 0f;
@@ -576,9 +593,7 @@ namespace FarEmerald.PlayForge.Extended.SwarmDefenderSample
                     d.SetPrimary(SwarmTags.ELAPSED_TIME, 0f);
                     d.SetPrimary(SwarmTags.WAVE_INDEX, 0);
                     GetOrCreateEnemyList(d);
-
-                    Debug.Log(hero);
-
+                    
                     Debug.Log($"Game Loop Initialized");
                 })
                 // Initial level-up at game start.
@@ -586,14 +601,21 @@ namespace FarEmerald.PlayForge.Extended.SwarmDefenderSample
                 // Kick off the hero cast loop + XP watcher in parallel.
                 .Do(d =>
                 {
-                    Debug.Log($"{d.GetPrimary<Hero>(SwarmTags.HERO)}");
                     HeroRoutine().RegisterAndRun(d);
                     XpWatcher().RegisterAndRun(d);
                 })
+                .WithStepTiming(EProcessStepTiming.Update)
                 .Stage(s => s
                     .WithName("Spawn Mode Cycler")
                     .WithRepeat(true)
+                    .WithPolicy(WhenAnyStagePolicy.Instance)
                     .StopRepeatWhen(_ => hero == null || hero.IsDead)
+                    .SyncTask(((d, dt) =>
+                    {
+                        d.IncrementFloat(SwarmTags.ELAPSED_TIME, dt);
+                        modeTimer += dt;
+                        return false;
+                    }))
                     .Task(async (d, t) =>
                     {
                         // Unconditional yield per iteration — CheckInjectConditions returns sync
@@ -606,20 +628,19 @@ namespace FarEmerald.PlayForge.Extended.SwarmDefenderSample
                             d.Inject(SkipStageInjection.Instance);
                             return;
                         }
-
-                        Debug.Log($"Enemy loop stage");
                         
-                        // Tick elapsed time.
+                        /*// Tick elapsed time.
                         d.IncrementFloat(SwarmTags.ELAPSED_TIME, Time.deltaTime);
                         modeTimer += Time.deltaTime;
-
+                        Debug.Log(modeTimer);*/
+                        
                         // Every ~15 seconds, advance to the next mode.
                         // 0 = constant spawn, 1 = wave, 2 = boss round
-                        if (modeIndex == 0 || modeIndex == 2)
+                        if (modeIndex == 0)
                         {
                             // Constant spawning: one enemy every ~0.75s for 15s.
-                            float interval = Mathf.Lerp(1.2f, 0.35f,
-                                Mathf.Clamp01(d.GetPrimary<float>(SwarmTags.ELAPSED_TIME) / 120f));
+                            float interval = Mathf.Lerp(0.8f, 0.35f,
+                                Mathf.Clamp01(d.GetPrimary<float>(SwarmTags.ELAPSED_TIME) / (100f / (hero.GetLevel().CurrentValue * .25f))));
                             await SpawnEnemy().Run(d, t);
                             await UniTask.Delay(TimeSpan.FromSeconds(interval), cancellationToken: t);
 
@@ -649,8 +670,7 @@ namespace FarEmerald.PlayForge.Extended.SwarmDefenderSample
         /// Idle sequence that keeps running until the UI resets the GAME_OVER flag
         /// (the UI handles the "play again" decision).
         /// </summary>
-        [TaskSequenceMethod("SD: Game Over")]
-        public static TaskSequence GameOver()
+        private static TaskSequence GameOver()
         {
             return TaskSequenceBuilder.Create("Game Over")
                 .WithLifecycle(EProcessLifecycle.SelfTerminating, EProcessStepTiming.None)
@@ -701,10 +721,10 @@ namespace FarEmerald.PlayForge.Extended.SwarmDefenderSample
             /*
             var data = ProcessDataPacket.Default();
             */
-            var data = new SequenceDataPacket(parentData);
-            data.SetPrimary(Tags.GAMEOBJECT, enemy);
-            data.SetPrimary(SwarmTags.HERO, hero);
-            EnemyBehaviour().Run(data, parentToken).Forget();
+            var enemyData = new SequenceDataPacket(parentData);
+            enemyData.SetPrimary(Tags.GAMEOBJECT, enemy);
+            enemyData.SetPrimary(SwarmTags.HERO, hero);
+            EnemyBehaviour().Run(enemyData, parentToken).Forget();
         }
 
         private static List<Character> GetOrCreateEnemyList(ProcessDataPacket d)
@@ -719,6 +739,40 @@ namespace FarEmerald.PlayForge.Extended.SwarmDefenderSample
             ProcessControl.Register(enemy, d, out _);
             var list = GetOrCreateEnemyList(d);
             list.Add(enemy);
+
+            var healthBar = enemy.GetComponent<Healthbar>();
+            if (healthBar)
+            {
+                ProcessControl.Register(healthBar, enemy, out _);
+            }
+
+            var hero = d.GetPrimary<Hero>(SwarmTags.HERO);
+            if (hero is null) return;
+
+            GameplayAbilitySystemCallbacks.ImpactDelegate impactReceived = impact =>
+            {
+                // Debug.Log($"[{enemy.GetName()}] Received {impact}");
+            };
+
+            GameplayAbilitySystemCallbacks.DeathDelegate action = _ =>
+            {
+                GiveHeroExperience(hero, 20f + Mathf.FloorToInt(Random.value * 6));
+            };
+            enemy.Callbacks.OnImpactReceived += impactReceived;
+            enemy.Callbacks.OnEntityDied += _ =>
+            {
+                action.Invoke(hero);
+                enemy.Callbacks.OnEntityDied -= action;
+                enemy.Callbacks.OnImpactReceived -= impactReceived;
+            };
+        }
+
+        private static void GiveHeroExperience(Hero hero, float amount)
+        {
+            IAttribute xpAttr = AttributeRegistry.GetByName("Experience");
+            if (xpAttr is null) return;
+
+            hero.AttributeSystem.ModifyAttribute(xpAttr, SourcedModifiedAttributeValue.GenerateSimple(hero, xpAttr, amount, 0f));
         }
 
         private static void ApplyRandomBuff(ProcessDataPacket d, Hero hero)
@@ -764,8 +818,7 @@ namespace FarEmerald.PlayForge.Extended.SwarmDefenderSample
         private static void LevelUpExistingAbility(Hero hero, Ability ability)
         {
             hero.ModifyLevel(ability.GetAssetTag(), new IntValuePair(1, 0));
-
-            Debug.Log($"{ability.GetName()} leveled up: {hero.GetLevel(ability.GetAssetTag()).CurrentValue.ToString()}");
+            
             // Walk the ability cache to find the matching granted instance and bump its level.
             for (int i = 0; i < hero.AbilitySystem.AbilityCount; i++)
             {
@@ -785,10 +838,10 @@ namespace FarEmerald.PlayForge.Extended.SwarmDefenderSample
             return owner.TryGetAttributeValue(attr, out var value) ? value.CurrentValue : fallback;
         }
 
-        private static void WriteAttrDelta(GameplayAbilitySystem owner, IAttribute attr, float delta)
+        private static void WriteAttrDelta(GameplayAbilitySystem owner, IAttribute attr, float delta, float deltaBase = 0f)
         {
             if (owner == null || attr == null) return;
-            var mod = SourcedModifiedAttributeValue.GenerateSimple(owner, attr, delta, 0f);
+            var mod = SourcedModifiedAttributeValue.GenerateSimple(owner, attr, delta, deltaBase);
             owner.TryModifyAttribute(attr, mod);
         }
 

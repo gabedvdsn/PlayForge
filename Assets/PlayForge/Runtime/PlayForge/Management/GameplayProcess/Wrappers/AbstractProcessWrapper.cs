@@ -32,7 +32,7 @@ namespace FarEmerald.PlayForge
         /// <summary>
         /// Initializing the process wrapper, as opposed to the process itself
         /// </summary>
-        public abstract void InitializeWrapper();
+        public abstract void ConfigureWrapper();
 
         /// <summary>
         /// Initializing the process, as opposed to the process wrapper

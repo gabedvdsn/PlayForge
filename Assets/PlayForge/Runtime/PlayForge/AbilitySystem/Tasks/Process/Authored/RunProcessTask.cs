@@ -31,9 +31,10 @@ namespace FarEmerald.PlayForge
         {
             float elapsedDuration = 0f;
             await ProcessTaskUtil.DoWhileAsync(
-                body: async () =>
+                body: () =>
                 {
                     elapsedDuration += UseUnscaledDeltaTime ? Time.unscaledDeltaTime : Time.deltaTime;
+                    return UniTask.CompletedTask;
                 },
                 condition: () => 
                     elapsedDuration < MaxDuration 

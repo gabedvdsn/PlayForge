@@ -9,7 +9,7 @@ using Object = UnityEngine.Object;
 namespace FarEmerald.PlayForge
 {
     [CreateAssetMenu(menuName = "PlayForge/Ability", fileName = "Ability_")]
-    public class Ability : BaseForgeLevelProvider
+    public class Ability : BaseForgeLevelProvider, IWorkerGroupSource
     {
         public AbilityDefinition Definition = new();
         public AbilityTags Tags = new();
@@ -204,6 +204,14 @@ namespace FarEmerald.PlayForge
         public override string ToString()
         {
             return Tags.AssetTag.GetName();
+        }
+        public void InitWorkers(ISource system)
+        {
+            WorkerGroup?.ProvideWorkersTo(system);
+        }
+        public void RemoveWorkers(ISource system)
+        {
+            WorkerGroup?.RemoveWorkersFrom(system);
         }
     }
 

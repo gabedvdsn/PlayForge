@@ -707,6 +707,12 @@ namespace FarEmerald.PlayForge
             _stage.OnTerminate = (_, _) => handler();
             return this;
         }
+
+        public StageBuilder OnInit(Action<SequenceDataPacket> handler)
+        {
+            _stage.OnInit = handler;
+            return this;
+        }
         
         // ═══════════════════════════════════════════════════════════════════════════
         // TASKS - SequenceDataPacket

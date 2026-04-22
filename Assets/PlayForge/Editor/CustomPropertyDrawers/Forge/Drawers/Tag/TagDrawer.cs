@@ -184,6 +184,7 @@ namespace FarEmerald.PlayForge.Extended.Editor
 
             return tag.DisplayName;
 
+            /*
             if (ShowFullPath())
                 return tag.DisplayName;
 
@@ -193,7 +194,7 @@ namespace FarEmerald.PlayForge.Extended.Editor
             {
                 return $"…{displayName}";
             }
-            return displayName;
+            return displayName;*/
         }
         
         // ═══════════════════════════════════════════════════════════════════════════

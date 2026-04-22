@@ -49,6 +49,17 @@ namespace FarEmerald.PlayForge
         // Group process registry — maps user-facing Tag to the GroupProcess instance
         private Dictionary<Tag, GroupProcess> _groups = new();
 
+        // GAS-owned process registry — maps the registering IGameplayAbilitySystem to
+        // the set of process cache indices it owns. A process is associated with a GAS
+        // when its handler is an IGameplayAbilitySystem (either directly passed as the
+        // handler or derived from an AbilityDataPacket's EffectOrigin.GetOwner()).
+        private Dictionary<IGameplayAbilitySystem, HashSet<int>> _gasProcesses = new();
+
+        /// <summary>
+        /// High-level lifecycle callbacks for observers (debuggers, recorders, etc.).
+        /// </summary>
+        public ProcessControlCallbacks Callbacks { get; private set; } = new();
+
         public int Created => _cacheCounter;
         public int Active => _active.Count;
         public int Running => _active.Count - _waiting.Count;
@@ -335,7 +346,7 @@ namespace FarEmerald.PlayForge
             }
         }
         
-        private async void OnDestroy()
+        private void OnDestroy()
         {
             TerminateAllImmediately();
         }
@@ -420,6 +431,7 @@ namespace FarEmerald.PlayForge
             _waiting = new HashSet<int>();
             _hierarchy.Clear();
             _groups = new Dictionary<Tag, GroupProcess>();
+            _gasProcesses = new Dictionary<IGameplayAbilitySystem, HashSet<int>>();
 
             // Initialize stepping groups for each timing type
             _stepping = new Dictionary<EProcessStepTiming, StepGroup>
@@ -429,8 +441,25 @@ namespace FarEmerald.PlayForge
                 [EProcessStepTiming.LateUpdate] = new StepGroup(),
                 [EProcessStepTiming.FixedUpdate] = new StepGroup()
             };
-            
+
+            var oldState = State;
             State = nextState;
+            if (oldState != nextState) Callbacks?.ControlStateChanged(oldState, nextState);
+        }
+
+        /// <summary>
+        /// Resolves the owning IGameplayAbilitySystem (if any) for a registration.
+        /// Checks the handler first, then falls back to data.EffectOrigin.GetOwner().
+        /// </summary>
+        private static IGameplayAbilitySystem ResolveOwningGAS(IGameplayProcessHandler handler, ProcessDataPacket data)
+        {
+            if (handler is IGameplayAbilitySystem handlerGas) return handlerGas;
+            if (data is AbilityDataPacket ability)
+            {
+                var owner = ability.EffectOrigin?.GetOwner();
+                if (owner is IGameplayAbilitySystem ownerGas) return ownerGas;
+            }
+            return null;
         }
         
         #region Mono Process
@@ -683,24 +712,40 @@ namespace FarEmerald.PlayForge
         public bool Unregister(ProcessControlBlock pcb)
         {
             if (pcb.Relay is null) return false;
-            
+
             if (_waiting.Contains(pcb.CacheIndex)) _waiting.Remove(pcb.CacheIndex);
             else RemoveFromStepping(pcb);
-            
+
             CheckWatcherOnUnregister(pcb);
 
             pcb.Handler?.HandlerVoidProcess(pcb.Relay);
-            
+
             // Remove from hierarchy
             _hierarchy.Unregister(pcb.CacheIndex);
+
+            // Clear GAS association
+            var gas = ResolveOwningGAS(pcb.Handler, pcb.Wrapper.Data);
+            if (gas != null && _gasProcesses.TryGetValue(gas, out var set))
+            {
+                set.Remove(pcb.CacheIndex);
+                if (set.Count == 0) _gasProcesses.Remove(gas);
+            }
 
             if (OutputLogs)
             {
                 if (DetailedLogs) Debug.Log($"[Process Control] Unregister process: {pcb.Wrapper.ProcessName} ({pcb.Handler?.GetName() ?? "No handler"})");
                 else Debug.Log($"[Process Control] Unregister process: {pcb.Wrapper.ProcessName}");
             }
-            
-            return _active.Remove(pcb.CacheIndex);
+
+            var removed = _active.Remove(pcb.CacheIndex);
+
+            if (removed)
+            {
+                Callbacks?.ProcessUnregistered(pcb.Relay, pcb.Wrapper.Data);
+                if (gas != null) Callbacks?.GASProcessUnregistered(gas, pcb.Relay, pcb.Wrapper.Data);
+            }
+
+            return removed;
         }
         
         public Dictionary<int, ProcessControlBlock> FetchActiveProcesses() => _active;
@@ -720,9 +765,11 @@ namespace FarEmerald.PlayForge
         public void SetControlState(EProcessControlState state)
         {
             if (state == State) return;
-            
+
+            var oldState = State;
             State = state;
             SetAllProcessesUponStateChange();
+            Callbacks?.ControlStateChanged(oldState, state);
         }
 
         /// <summary>
@@ -897,20 +944,36 @@ namespace FarEmerald.PlayForge
 
         private void PrepareCreatedProcess(ProcessControlBlock pcb)
         {
-            pcb.Wrapper.InitializeWrapper();
-            
+            pcb.Wrapper.ConfigureWrapper();
+
             _waiting.Add(pcb.CacheIndex);
             _active[pcb.CacheIndex] = pcb;
-            
+
+            // Track GAS-owned processes so observers can query "what processes does this GAS own?"
+            var gas = ResolveOwningGAS(pcb.Handler, pcb.Wrapper.Data);
+            if (gas != null)
+            {
+                if (!_gasProcesses.TryGetValue(gas, out var set))
+                {
+                    set = new HashSet<int>();
+                    _gasProcesses[gas] = set;
+                }
+                set.Add(pcb.CacheIndex);
+            }
+
             if (OutputLogs)
             {
-                string msg = DetailedLogs 
+                string msg = DetailedLogs
                     ? $"[Process Control] Registered Process \"{pcb.Wrapper.ProcessName}\" ({pcb.Handler})"
                     : $"[Process Control] Registered Process: {pcb.Wrapper.ProcessName}";
                 Debug.Log(msg);
             }
-            
+
             pcb.Initialize();
+
+            // Fire callbacks AFTER pcb.Initialize so state is fully consistent
+            Callbacks?.ProcessRegistered(pcb.Relay, pcb.Wrapper.Data);
+            if (gas != null) Callbacks?.GASProcessRegistered(gas, pcb.Relay, pcb.Wrapper.Data);
         }
         
         private void SetAllProcessesUponStateChange()
@@ -1064,6 +1127,8 @@ namespace FarEmerald.PlayForge
 
         public void ProcessWillChangeState(ProcessControlBlock pcb, EProcessState state)
         {
+            var oldState = pcb.State;
+
             switch (state)
             {
                 case EProcessState.Created:
@@ -1082,6 +1147,7 @@ namespace FarEmerald.PlayForge
             }
 
             CheckWatcherOnStateChange(pcb);
+            Callbacks?.ProcessStateChanged(pcb.Relay, oldState, pcb.State, pcb.Wrapper.Data);
         }
 
         private void ProcessWillRun(ProcessControlBlock pcb)
@@ -1384,7 +1450,112 @@ namespace FarEmerald.PlayForge
         {
             return _active.TryGetValue(cacheIndex, out pcb);
         }
-        
+
+        // ───────────────────────────────────────────────────────────────────────
+        // GAS-SPECIFIC REGISTRATION HELPERS
+        //
+        // These convenience overloads make the owning GAS explicit at the call
+        // site. Any process registered with an IGameplayAbilitySystem handler
+        // (or whose data packet resolves to one) is auto-tracked in _gasProcesses.
+        // ───────────────────────────────────────────────────────────────────────
+
+        public static bool Register(AbstractRuntimeProcess process, IGameplayAbilitySystem gas, out ProcessRelay relay)
+        {
+            return Instance.Internal_RegisterRuntimeProcess(process, gas, ProcessDataPacket.Default(), out relay);
+        }
+
+        public static bool Register(AbstractRuntimeProcess process, IGameplayAbilitySystem gas, ProcessDataPacket data, out ProcessRelay relay)
+        {
+            return Instance.Internal_RegisterRuntimeProcess(process, gas, data ?? ProcessDataPacket.Default(), out relay);
+        }
+
+        public static bool Register(AbstractMonoProcess process, IGameplayAbilitySystem gas, out ProcessRelay relay)
+        {
+            return Instance.Internal_RegisterMonoProcess(process, gas, ProcessDataPacket.SceneRoot(), out relay);
+        }
+
+        public static bool Register(AbstractMonoProcess process, IGameplayAbilitySystem gas, ProcessDataPacket data, out ProcessRelay relay)
+        {
+            return Instance.Internal_RegisterMonoProcess(process, gas, data ?? ProcessDataPacket.SceneRoot(), out relay);
+        }
+
+        public static bool Register(TaskSequence sequence, IGameplayAbilitySystem gas, out ProcessRelay relay)
+        {
+            return Instance.Internal_RegisterAsyncSequence(new TaskSequenceProcess(sequence), gas, SequenceDataPacket.SceneRoot(), out relay);
+        }
+
+        public static bool Register(TaskSequence sequence, IGameplayAbilitySystem gas, SequenceDataPacket data, out ProcessRelay relay)
+        {
+            return Instance.Internal_RegisterAsyncSequence(new TaskSequenceProcess(sequence), gas, data ?? SequenceDataPacket.SceneRoot(), out relay);
+        }
+
+        public static bool Register(TaskSequenceChain chain, IGameplayAbilitySystem gas, out ProcessRelay relay)
+        {
+            return Instance.Internal_RegisterAsyncSequence(new TaskSequenceProcess(chain), gas, SequenceDataPacket.SceneRoot(), out relay);
+        }
+
+        public static bool Register(TaskSequenceChain chain, IGameplayAbilitySystem gas, SequenceDataPacket data, out ProcessRelay relay)
+        {
+            return Instance.Internal_RegisterAsyncSequence(new TaskSequenceProcess(chain), gas, data ?? SequenceDataPacket.SceneRoot(), out relay);
+        }
+
+        /// <summary>
+        /// Returns the cache indices of all active processes owned by the given GAS.
+        /// </summary>
+        public static IReadOnlyCollection<int> GetProcessIdsForGAS(IGameplayAbilitySystem gas)
+        {
+            if (gas == null || Instance == null) return Array.Empty<int>();
+            return Instance._gasProcesses.TryGetValue(gas, out var set)
+                ? (IReadOnlyCollection<int>)set
+                : Array.Empty<int>();
+        }
+
+        /// <summary>
+        /// Returns ProcessRelays for all active processes owned by the given GAS.
+        /// </summary>
+        public static IEnumerable<ProcessRelay> GetProcessesForGAS(IGameplayAbilitySystem gas)
+        {
+            if (gas == null || Instance == null) yield break;
+            if (!Instance._gasProcesses.TryGetValue(gas, out var set)) yield break;
+            foreach (int idx in set)
+            {
+                if (Instance._active.TryGetValue(idx, out var pcb))
+                    yield return pcb.Relay;
+            }
+        }
+
+        /// <summary>
+        /// Number of active processes owned by the given GAS.
+        /// </summary>
+        public static int GetProcessCountForGAS(IGameplayAbilitySystem gas)
+        {
+            if (gas == null || Instance == null) return 0;
+            return Instance._gasProcesses.TryGetValue(gas, out var set) ? set.Count : 0;
+        }
+
+        /// <summary>
+        /// Terminates every process owned by the given GAS. When <paramref name="immediate"/>
+        /// is true, uses TerminateImmediate; otherwise queues graceful termination.
+        /// Returns the number of processes that received a termination request.
+        /// </summary>
+        public static int TerminateAllForGAS(IGameplayAbilitySystem gas, bool immediate = false)
+        {
+            if (gas == null || Instance == null) return 0;
+            if (!Instance._gasProcesses.TryGetValue(gas, out var set) || set.Count == 0) return 0;
+
+            // Copy because Terminate paths may mutate the backing set
+            var indices = new List<int>(set);
+            int count = 0;
+            foreach (int idx in indices)
+            {
+                bool ok = immediate
+                    ? Instance.TerminateImmediate(idx)
+                    : Instance.Terminate(idx);
+                if (ok) count++;
+            }
+            return count;
+        }
+
         #endregion
         
         #region Handler Interface

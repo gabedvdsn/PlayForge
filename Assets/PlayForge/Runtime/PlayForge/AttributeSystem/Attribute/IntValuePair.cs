@@ -15,5 +15,10 @@
         {
             return new IntValuePairClamped(CurrentValue, MaxValue);
         }
+
+        public override string ToString()
+        {
+            return $"{CurrentValue}/{MaxValue}";
+        }
     }
 }

@@ -5,7 +5,7 @@ using UnityEngine;
 
 namespace FarEmerald.PlayForge
 {
-    public abstract class BaseForgeAsset : ScriptableObject, IHasReadableDefinition, ITagSource
+    public abstract class BaseForgeAsset : ScriptableObject, ILocalDataSource, IHasReadableDefinition, ITagSource
     {
         [SerializeField]
         public List<DataWrapper> LocalData = new();
@@ -168,6 +168,10 @@ namespace FarEmerald.PlayForge
         public abstract string GetName();
         public abstract string GetDescription();
         public abstract Texture2D GetDefaultIcon();
+        public List<DataWrapper> GetLocalData()
+        {
+            return LocalData;
+        }
     }
     
     // ═══════════════════════════════════════════════════════════════════════════════
@@ -190,6 +194,57 @@ namespace FarEmerald.PlayForge
         {
             PropertyPath = path;
             ElementIdentifiers = new List<string>(identifiers);
+        }
+    }
+
+    public interface ILocalDataUser
+    {
+        public void InitLocalData(ILocalDataSource source);
+        public void SetLocalData(Tag key, DataWrapper data);
+        public bool TryGetLocalData(Tag key, out DataWrapper data);
+        public LocalDataStructure GetLocalDataStructure();
+    }
+
+    public interface ILocalDataSource
+    {
+        public List<DataWrapper> GetLocalData();
+    }
+
+    public class LocalDataStructure
+    {
+        private Dictionary<Tag, DataWrapper> data;
+
+        public LocalDataStructure()
+        {
+            data = new Dictionary<Tag, DataWrapper>();
+        }
+
+        public LocalDataStructure(ILocalDataSource source)
+        {
+            data = new Dictionary<Tag, DataWrapper>();
+            Init(source);
+        }
+
+        public void Init(ILocalDataSource source)
+        {
+            if (source is null) return;
+            
+            foreach (var wrapper in source.GetLocalData())
+            {
+                data[wrapper.Key] = wrapper;
+            }
+        }
+
+        public void Set(Tag key, DataWrapper wrapper) => data[key] = wrapper;
+        public DataWrapper GetOrInit(Tag key, DataWrapper fallback = null)
+        {
+            if (data.TryGetValue(key, out var wrapper)) return wrapper;
+            data[key] = fallback ?? new DataWrapper();
+            return data[key];
+        }
+        public bool TryGet(Tag key, out DataWrapper wrapper)
+        {
+            return data.TryGetValue(key, out wrapper);
         }
     }
 }

@@ -298,9 +298,15 @@ namespace FarEmerald.PlayForge
         }
         
         public bool IsWorkerActive(AbstractTagWorker worker) => _activeWorkers.Contains(worker);
-        
+
         public int ActiveWorkerCount => _activeWorkers.Count;
         public int RegisteredWorkerCount => _tagWorkers.Count;
+
+        /// <summary>Read-only view of all registered tag workers (for debuggers/inspectors).</summary>
+        public IReadOnlyList<AbstractTagWorker> RegisteredWorkers => _tagWorkers;
+
+        /// <summary>Read-only view of currently-active tag workers.</summary>
+        public IReadOnlyCollection<AbstractTagWorker> ActiveWorkers => _activeWorkers;
         
         // ═══════════════════════════════════════════════════════════════════════════
         // END-OF-FRAME PROCESSING

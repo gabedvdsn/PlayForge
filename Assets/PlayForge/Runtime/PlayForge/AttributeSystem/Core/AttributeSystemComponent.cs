@@ -167,7 +167,7 @@ namespace FarEmerald.PlayForge
         
         public bool TryGetAttributeValue(IAttribute attribute, out AttributeValue attributeValue)
         {
-            if (AttributeCache.TryGetValue(attribute, out var cachedValue))
+            if (attribute is not null && AttributeCache.TryGetValue(attribute, out var cachedValue))
             {
                 attributeValue = cachedValue.Value;
                 return true;
@@ -180,6 +180,11 @@ namespace FarEmerald.PlayForge
         // ═══════════════════════════════════════════════════════════════════════════
         // ATTRIBUTE MODIFICATION (refactored for WorkerContext)
         // ═══════════════════════════════════════════════════════════════════════════
+
+        public ImpactData ModifyAttribute(SourcedModifiedAttributeValue sourcedModifiedValue, bool runEvents = true)
+        {
+            return ModifyAttribute(sourcedModifiedValue.Derivation.GetAttribute(), sourcedModifiedValue, runEvents);
+        }
         
         public ImpactData ModifyAttribute(IAttribute attribute, SourcedModifiedAttributeValue sourcedModifiedValue, bool runEvents = true)
         {
@@ -238,16 +243,16 @@ namespace FarEmerald.PlayForge
                 sourcedModifiedValue, 
                 change.Value.ToAttributeValue(), holdValue);
             
-            // Record to frame summary
-            _frameSummary?.RecordImpact(impactData);
-            
-            // Notify source system
+            // Record RECEIVED impact on this (target) GAS — fires target-side callbacks
+            Self.RecordFrameImpactReceived(impactData);
+
+            // Notify source system — source will record DEALT impact + run source-side workers/callbacks
             if (sourcedModifiedValue.Derivation.GetSource().FindAbilitySystem(out var abilSystem))
             {
                 abilSystem.ProvideFrameImpactDealt(impactData);
             }
-            
-            // Fire callbacks
+
+            // Fire attribute-system level callback
             Callbacks.AttributeChanged(impactData);
 
             return impactData;

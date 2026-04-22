@@ -231,22 +231,40 @@ namespace FarEmerald.PlayForge.Extended.Editor
             settings.Add(policyRow);
             
             // Apply Usage Effects - use PropertyField with label
+            var applyUsageOnStartContainer = CreateRow();
+            applyUsageOnStartContainer.style.flexGrow = 1;
+            applyUsageOnStartContainer.style.marginRight = 18;
+            applyUsageOnStartContainer.style.marginLeft = 8;
+            
+            applyUsageOnStartContainer.Add(CreateFieldLabel("Apply Usage At Start"));
+            var applyUsageOnStartProp = property.FindPropertyRelative(nameof(AbilityTaskBehaviourStage.ApplyUsageAtStageStart));
+            if (applyUsageOnStartProp != null)
+            {
+                var usageField = new PropertyField(applyUsageOnStartProp, "");
+                usageField.tooltip = "Apply usage effects at the beginning or end of this stage";
+                usageField.style.minHeight = 20;
+                usageField.style.marginLeft = 10;
+                applyUsageOnStartContainer.Add(usageField);
+            }
+            
+            // Apply Usage Effects - use PropertyField with label
             var applyUsageContainer = CreateRow();
             applyUsageContainer.style.flexGrow = 1;
             applyUsageContainer.style.marginRight = 18;
             applyUsageContainer.style.marginLeft = 8;
             
             applyUsageContainer.Add(CreateFieldLabel("Apply Usage Effects"));
-            var applyUsageProp = property.FindPropertyRelative("ApplyUsageEffects");
+            var applyUsageProp = property.FindPropertyRelative(nameof(AbilityTaskBehaviourStage.ApplyUsageEffects));
             if (applyUsageProp != null)
             {
                 var usageField = new PropertyField(applyUsageProp, "");
-                usageField.tooltip = "After this stage completes, apply the ability's cost and cooldown";
+                usageField.tooltip = "During this stage, apply the ability's cost and cooldown";
                 usageField.style.minHeight = 20;
                 usageField.style.marginLeft = 10;
                 applyUsageContainer.Add(usageField);
             }
             settings.Add(applyUsageContainer);
+            settings.Add(applyUsageOnStartContainer);
             
             content.Add(settings);
             

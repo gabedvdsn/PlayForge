@@ -337,8 +337,8 @@ namespace FarEmerald.PlayForge.Extended.Editor
                     freshProp.managedReferenceValue = newScaler;
                     
                     // Initialize LevelValues array after setting managed reference
-                    var lvp = freshProp.FindPropertyRelative("LevelValues");
-                    var maxLvl = freshProp.FindPropertyRelative("MaxLevel");
+                    var lvp = freshProp.FindPropertyRelative(nameof(AbstractScaler.LevelValues));
+                    var maxLvl = freshProp.FindPropertyRelative(nameof(AbstractScaler.MaxLevel));
                     if (lvp != null && lvp.arraySize == 0)
                     {
                         int size = (maxLvl != null && maxLvl.intValue > 0) ? maxLvl.intValue : 10;
@@ -378,7 +378,7 @@ namespace FarEmerald.PlayForge.Extended.Editor
             var type = scaler.GetType();
             
             // Initialize MaxLevel
-            var maxLevelProp = property.FindPropertyRelative("MaxLevel");
+            var maxLevelProp = property.FindPropertyRelative(nameof(AbstractScaler.MaxLevel));
             if (maxLevelProp != null && maxLevelProp.intValue <= 0)
             {
                 maxLevelProp.intValue = 10;
@@ -386,14 +386,14 @@ namespace FarEmerald.PlayForge.Extended.Editor
             }
             
             // Check config and linked provider
-            var configProp = property.FindPropertyRelative("Configuration");
+            var configProp = property.FindPropertyRelative(nameof(AbstractScaler.Configuration));
             var currentConfig = configProp != null ? (ELevelConfig)configProp.enumValueIndex : ELevelConfig.Unlocked;
             
             // For LockToLevelProvider, sync with linked source if available
             if (currentConfig == ELevelConfig.LockToLevelProvider)
             {
                 int linkedMax = GetLinkedMaxLevel(property, 1);
-                var lvpCheck = property.FindPropertyRelative("LevelValues");
+                var lvpCheck = property.FindPropertyRelative(nameof(AbstractScaler.LevelValues));
                 if (lvpCheck != null && lvpCheck.arraySize != linkedMax)
                 {
                     ResizeLevelValues(property, scaler, linkedMax);
@@ -403,7 +403,7 @@ namespace FarEmerald.PlayForge.Extended.Editor
             else
             {
                 // Sync LevelValues array for other modes
-                var lvpCheck = property.FindPropertyRelative("LevelValues");
+                var lvpCheck = property.FindPropertyRelative(nameof(AbstractScaler.LevelValues));
                 if (lvpCheck != null && maxLevelProp != null)
                 {
                     int targetSize = maxLevelProp.intValue;
@@ -924,7 +924,7 @@ namespace FarEmerald.PlayForge.Extended.Editor
             // Ensure params exist
             if (!_quickFillParams.ContainsKey(propPath))
             {
-                var lvp = property.FindPropertyRelative("LevelValues");
+                var lvp = property.FindPropertyRelative(nameof(AbstractScaler.LevelValues));
                 _quickFillParams[propPath] = new QuickFillParams
                 {
                     StartValue = lvp != null && lvp.arraySize > 0 ? lvp.GetArrayElementAtIndex(0).floatValue : 1f,

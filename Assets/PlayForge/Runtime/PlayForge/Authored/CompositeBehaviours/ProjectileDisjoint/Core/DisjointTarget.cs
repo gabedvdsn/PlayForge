@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using UnityEngine;
 
 namespace FarEmerald.PlayForge
 {
@@ -93,6 +94,18 @@ namespace FarEmerald.PlayForge
                 _target,
                 new StaticTargetingPacket(_target.GetTargetingPacket())
             );
+        }
+        public string GetName()
+        {
+            return $"Disjoint Target ({(original is not null ? original.GetName() : "Null")})";
+        }
+        public string GetDescription()
+        {
+            return "Disjoint targets are replacement placeholder targets for ongoing targeted actions.";
+        }
+        public Texture2D GetDefaultIcon()
+        {
+            return null;
         }
     }
 

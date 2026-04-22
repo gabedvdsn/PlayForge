@@ -122,7 +122,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   ProcessLifecycle: 0
-  ProcessTiming: 0
+  ProcessTiming: 4
   PriorityMethod: 1
   ProcessStepPriority: 0
   Instantiator:

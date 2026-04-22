@@ -11,6 +11,8 @@ namespace FarEmerald.PlayForge
         private Dictionary<Tag, IntValuePairClamped> Levels = new();
         public readonly LevelSystemCallbacks Callbacks = new();
         
+        public int LevelCount => Levels.Count;
+        
         public LevelCallbackStatus Register(Tag assetTag, IntValuePairClamped levelBounds)
         {
             Levels[assetTag] = levelBounds;
@@ -35,6 +37,8 @@ namespace FarEmerald.PlayForge
             return removed;
         }
 
+        public IReadOnlyDictionary<Tag, IntValuePairClamped> GetAllLevels() => Levels;
+
         public LevelCallbackStatus TrySetLevel(Tag key, IntValuePair value)
         {
             if (!Levels.TryGetValue(key, out var level)) return LevelCallbackStatus.GenerateForInvalid(key);
@@ -44,6 +48,8 @@ namespace FarEmerald.PlayForge
             
             level.CurrentValue = value.CurrentValue;
             level.MaxValue = value.MaxValue;
+
+            Internal_SetLevel(key, level);
 
             if (prevLevel == level.CurrentValue && prevMax == level.MaxValue) return LevelCallbackStatus.GenerateForNoOp(level, key);
             
@@ -66,6 +72,8 @@ namespace FarEmerald.PlayForge
             
             level.CurrentValue += value.CurrentValue;
             level.MaxValue += value.MaxValue;
+            
+            Internal_SetLevel(key, level);
 
             if (prevLevel == level.CurrentValue && prevMax == level.MaxValue) return LevelCallbackStatus.GenerateForNoOp(level, key);
             
@@ -79,23 +87,26 @@ namespace FarEmerald.PlayForge
 
         }
         
-        public IntValuePairClamped GetLeveler(Tag key, int fallback = 0)
+        public IntValuePairClamped GetLevel(Tag key, int fallback = 0)
         {
             return Levels.TryGetValue(key, out var level) 
                 ? level 
                 : new IntValuePairClamped(fallback);
         }
         
-        public bool TryGetLeveler(Tag levelAttribute, out IntValuePairClamped tracker)
+        public bool TryGetLevel(Tag levelAttribute, out IntValuePairClamped tracker)
         {
             return Levels.TryGetValue(levelAttribute, out tracker);
         }
         
-        public bool HasLevel(Tag levelAttribute)
+        public bool HasLevelFor(Tag levelAttribute)
         {
             return Levels.ContainsKey(levelAttribute);
         }
-        
-        public int LevelCount => Levels.Count;
+
+        private void Internal_SetLevel(Tag key, IntValuePairClamped value)
+        {
+            Levels[key] = value;
+        }
     }
 }

@@ -267,7 +267,7 @@ namespace FarEmerald.PlayForge
             return Internal_GenerateDataPacket(true, parent);
         }
 
-        private new static SequenceDataPacket Internal_GenerateDataPacket(bool setParent, Transform parent)
+        private static SequenceDataPacket Internal_GenerateDataPacket(bool setParent, Transform parent)
         {
             var data = new SequenceDataPacket();
             

@@ -37,7 +37,9 @@ namespace FarEmerald.PlayForge
 
         public static float RelativeOffsetValue(IntValuePairClamped valuePair, float offset = 1f)
         {
-            return valuePair.MaxValue > offset ? (valuePair.CurrentValue - offset) / (valuePair.MaxValue - offset) : offset;
+            return valuePair.MaxValue > valuePair.MinValue && valuePair.MaxValue > offset 
+                ? (valuePair.CurrentValue - valuePair.MinValue) / (valuePair.MaxValue - valuePair.MinValue + offset) 
+                : valuePair.MinValue;
         }
         
         public static float RelativeOffsetValue(float value, float max, float offset = 1f)

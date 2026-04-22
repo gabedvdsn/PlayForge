@@ -58,12 +58,10 @@ MonoBehaviour:
   AttributeSet: {fileID: 11400000, guid: f7ede2fd45f079042a0470b9b71ea1f1, type: 2}
   WorkerGroup:
     Name: Workers
-    AttributeWorkers:
-    - rid: 1955962306424471818
+    AttributeWorkers: []
     ImpactWorkers: []
     TagWorkers: []
-    AnalysisWorkers:
-    - rid: 1955962306424471834
+    AnalysisWorkers: []
   LinkMode: 1
   _linkedSource: {fileID: 11400000, guid: 834e2d32492cd994789c68e2c19323d3, type: 2}
   references:
@@ -145,35 +143,3 @@ MonoBehaviour:
         Behaviours: []
         Calculations: []
         OverrideMemberCollisionPolicy: 0
-    - rid: 1955962306424471818
-      type: {class: AttributeWorkerGroup, ns: FarEmerald.PlayForge, asm: Assembly-CSharp}
-      data:
-        ChangeEvents:
-        - rid: 1955962306424471823
-    - rid: 1955962306424471823
-      type: {class: MathAttributeWorker, ns: FarEmerald.PlayForge, asm: Assembly-CSharp}
-      data:
-        TimingConfig: 1
-        TargetAttribute: {fileID: 11400000, guid: 5238e93ea6a409e4a84dd1dcf23dd45c, type: 2}
-        AllowSelfModification: 0
-        TargetModification: 3
-        ExclusivelyTargetModification: 0
-        SignPolicy: 0
-        AnyImpactType: 1
-        ImpactTypes: []
-        AnyContextTag: 1
-        ContextMatchingPolicy: 0
-        ValidContextTags: []
-        From: 0
-        RelativeTo: {fileID: 0}
-        RelativeMultiplier: 1
-        Operation: 1
-        OperationTarget: 0
-        OperationPolicy: 0
-    - rid: 1955962306424471834
-      type: {class: ThresholdAnalysisWorker, ns: FarEmerald.PlayForge, asm: Assembly-CSharp}
-      data:
-        Target: {fileID: 0}
-        Threshold: 0
-        Comparison: 1
-        TriggerOnce: 1

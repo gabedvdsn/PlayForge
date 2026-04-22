@@ -36,7 +36,7 @@ namespace FarEmerald.PlayForge
         {
             CurrentText.text = $"{attributeValue.CurrentValue:0.0}";
             BaseText.text = $"{attributeValue.BaseValue:0.0}";
-            ValueSlider.value = attributeValue.RatioMinZero;
+            ValueSlider.value = attributeValue.ClampedRatio;
         }
 
         public void AssignAttribute(IAttribute attr)
