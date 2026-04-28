@@ -1,5 +1,6 @@
 ﻿using UnityEditor;
 using UnityEditor.UIElements;
+using UnityEngine;
 using UnityEngine.UIElements;
 
 namespace FarEmerald.PlayForge.Extended.Editor
@@ -11,9 +12,15 @@ namespace FarEmerald.PlayForge.Extended.Editor
         {
             var container = new VisualElement();
             
-            var policyProp = property.FindPropertyRelative("Policy");
-            var floorProp = property.FindPropertyRelative("Floor");
-            var ceilProp = property.FindPropertyRelative("Ceil");
+            var policyProp = property.FindPropertyRelative(nameof(AttributeOverflowData.Policy));
+            var floorProp = property.FindPropertyRelative(nameof(AttributeOverflowData.Floor));
+            var ceilProp = property.FindPropertyRelative(nameof(AttributeOverflowData.Ceil));
+
+            var floorBase = floorProp.FindPropertyRelative(nameof(AttributeValue.BaseValue));
+            var floorCurr = floorProp.FindPropertyRelative(nameof(AttributeValue.CurrentValue));
+            
+            var ceilBase = ceilProp.FindPropertyRelative(nameof(AttributeValue.BaseValue));
+            var ceilCurr = ceilProp.FindPropertyRelative(nameof(AttributeValue.CurrentValue));
             
             // Policy row
             var policyRow = new VisualElement();
@@ -44,6 +51,21 @@ namespace FarEmerald.PlayForge.Extended.Editor
             floorField.style.flexGrow = 1;
             floorField.BindProperty(floorProp);
             floorRow.Add(floorField);
+
+            var floorButton = new Button()
+            {
+                text = "",
+                tooltip = "Set to unlimited floor bounds",
+                style =
+                {
+                    maxWidth = 20,
+                    height = 20,
+                    marginLeft = 8
+                },
+                focusable = false
+            };
+            floorButton.clicked += () => UpdateUnlimitedBounds(floorBase, floorCurr, Mathf.NegativeInfinity);
+            floorRow.Add(floorButton);
             
             // Ceil row (shown for ZeroToCeil, FloorToCeil)
             var ceilRow = new VisualElement { name = "CeilRow" };
@@ -62,6 +84,21 @@ namespace FarEmerald.PlayForge.Extended.Editor
             ceilField.style.flexGrow = 1;
             ceilField.BindProperty(ceilProp);
             ceilRow.Add(ceilField);
+
+            var ceilButton = new Button()
+            {
+                text = "",
+                tooltip = "Set to unlimited ceil bounds",
+                style =
+                {
+                    height = 20,
+                    maxWidth = 20,
+                    marginLeft = 8
+                },
+                focusable = false
+            };
+            ceilButton.clicked += () => UpdateUnlimitedBounds(ceilBase, ceilCurr, Mathf.Infinity);
+            ceilRow.Add(ceilButton);
             
             void UpdateVisibility()
             {
@@ -81,6 +118,12 @@ namespace FarEmerald.PlayForge.Extended.Editor
             
             container.schedule.Execute(UpdateVisibility).StartingIn(50);
             policyField.RegisterValueChangeCallback(_ => UpdateVisibility());
+            
+            void UpdateUnlimitedBounds(SerializedProperty baseProp, SerializedProperty currProp, float value)
+            {
+                baseProp.floatValue = value;
+                currProp.floatValue = value;
+            }
             
             return container;
         }

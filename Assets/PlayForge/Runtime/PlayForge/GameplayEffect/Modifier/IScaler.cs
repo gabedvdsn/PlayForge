@@ -4,8 +4,8 @@ namespace FarEmerald.PlayForge
 {
     public interface IScaler
     {
-        public void Initialize(IAttributeImpactDerivation spec);
-        public float Evaluate(IAttributeImpactDerivation spec);
+        public void Initialize(IAttributeImpactDerivation deriv);
+        public float Evaluate(IAttributeImpactDerivation deriv);
 
         public static CustomScaler Generate()
         {
@@ -36,13 +36,13 @@ namespace FarEmerald.PlayForge
             EvaluationFunc = evaluationFunc;
         }
 
-        public void Initialize(IAttributeImpactDerivation spec)
+        public void Initialize(IAttributeImpactDerivation deriv)
         {
-            InitializationAction(spec);
+            InitializationAction(deriv);
         }
-        public float Evaluate(IAttributeImpactDerivation spec)
+        public float Evaluate(IAttributeImpactDerivation deriv)
         {
-            return EvaluationFunc(spec);
+            return EvaluationFunc(deriv);
         }
     }
 }

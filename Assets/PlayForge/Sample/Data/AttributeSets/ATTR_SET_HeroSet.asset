@@ -27,15 +27,38 @@ MonoBehaviour:
     Magnitude: 100
     Target: 0
     Overflow:
-      Policy: 4
+      Policy: 3
       Floor:
-        CurrentValue: 0
+        CurrentValue: -Infinity
         BaseValue: 0
       Ceil:
         CurrentValue: 0
         BaseValue: 100
     Scaling:
       rid: -2
+    RealMagnitude: 0
+    RetentionGroup:
+      Name: Default
+      DisplayName: Default
+    CollisionPolicy: 0
+    Constraints:
+      AutoClamp: 0
+      AutoScaleWithBase: 0
+      RoundingMode: 0
+      SnapInterval: 0
+  - Attribute: {fileID: 11400000, guid: 3d035a62577527e4b9627eb5443a2aae, type: 2}
+    Magnitude: 100
+    Target: 0
+    Overflow:
+      Policy: 3
+      Floor:
+        CurrentValue: -Infinity
+        BaseValue: 0
+      Ceil:
+        CurrentValue: 0
+        BaseValue: 100
+    Scaling:
+      rid: 7261146684025471527
     RealMagnitude: 0
     RetentionGroup:
       Name: Default
@@ -60,3 +83,43 @@ MonoBehaviour:
     RefIds:
     - rid: -2
       type: {class: , ns: , asm: }
+    - rid: 7261146684025471527
+      type: {class: CachedAttributeScaler, ns: FarEmerald.PlayForge, asm: Assembly-CSharp}
+      data:
+        Name: 
+        sourcePipeline: {fileID: 0}
+        SyncWithTemplate: 0
+        Configuration: 0
+        MaxLevel: 20
+        LevelValues:
+        - 1
+        Interpolation: 1
+        Scaling:
+          serializedVersion: 2
+          m_Curve:
+          - serializedVersion: 3
+            time: 0
+            value: 1
+            inSlope: 0
+            outSlope: 0
+            tangentMode: 0
+            weightedMode: 0
+            inWeight: 0
+            outWeight: 0
+          - serializedVersion: 3
+            time: 1
+            value: 1
+            inSlope: 0
+            outSlope: 0
+            tangentMode: 0
+            weightedMode: 0
+            inWeight: 0
+            outWeight: 0
+          m_PreInfinity: 2
+          m_PostInfinity: 2
+          m_RotationOrder: 4
+        Behaviours: []
+        CaptureAttribute: {fileID: 0}
+        CaptureFrom: 1
+        CaptureWhen: 1
+        CaptureWhat: 0

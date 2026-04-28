@@ -54,6 +54,10 @@ namespace FarEmerald.PlayForge
         {
             return original.GenerateEffectSpec(origin, GameplayEffect);
         }
+        public IntValuePairClamped GetLevel(Tag key)
+        {
+            return original?.GetLevel(key) ?? new IntValuePairClamped();
+        }
         public bool FindLevelSystem(out SystemLevelsComponent lvlSystem)
         {
             return original.FindLevelSystem(out lvlSystem);
@@ -97,15 +101,17 @@ namespace FarEmerald.PlayForge
         }
         public string GetName()
         {
-            return $"Disjoint Target ({(original is not null ? original.GetName() : "Null")})";
+            var _o = original?.GetName() ?? "Null";
+            return $"Disjoint Target (Original: [{_o}])";
         }
         public string GetDescription()
         {
-            return "Disjoint targets are replacement placeholder targets for ongoing targeted actions.";
+            var _o = original?.GetName() ?? "Null";
+            return $"Disjoint targets are replacement placeholder targets for ongoing targeted actions (Original: [{_o}])";
         }
         public Texture2D GetDefaultIcon()
         {
-            return null;
+            return original?.GetDefaultIcon();
         }
     }
 

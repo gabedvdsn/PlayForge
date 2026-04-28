@@ -11,7 +11,7 @@ namespace FarEmerald.PlayForge
     {
         [Header("Math Operation")]
         public ECalculationOperation Operation = ECalculationOperation.Multiply;
-        public EEffectImpactTarget OperationTarget;
+        public EAttributeTarget OperationTarget;
         public EMathApplicationPolicy OperationPolicy;
         
         public override EWorkerExecution Execution => EWorkerExecution.Inline;

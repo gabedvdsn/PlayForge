@@ -27,7 +27,7 @@ namespace FarEmerald.PlayForge
         public bool AllowSelfModification;
         
         [Tooltip("The type of modification to monitor (Current, Base, or both)")]
-        public EEffectImpactTargetExpanded TargetModification = EEffectImpactTargetExpanded.CurrentOrBase;
+        public EAttributeTargetExpanded TargetModification = EAttributeTargetExpanded.CurrentOrBase;
         
         [Tooltip("Exclude changes that don't exactly match the modification type")]
         public bool ExclusivelyTargetModification;

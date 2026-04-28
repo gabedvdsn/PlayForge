@@ -18,7 +18,7 @@ namespace FarEmerald.PlayForge
         private AttributeChangeMomentHandler PostChangeHandler = new();
         
         private Dictionary<IAttribute, CachedAttributeValue> AttributeCache;
-        private AttributeModificationRule Rule;
+        private AttributeRegulationCache RegulationCache;
         
         public AttributeSystemCallbacks Callbacks;
         
@@ -45,7 +45,7 @@ namespace FarEmerald.PlayForge
         private void SetupCaches()
         {
             AttributeCache = new Dictionary<IAttribute, CachedAttributeValue>();
-            Rule = new AttributeModificationRule();
+            RegulationCache = new AttributeRegulationCache();
             Callbacks = new AttributeSystemCallbacks();
         }
         
@@ -63,7 +63,14 @@ namespace FarEmerald.PlayForge
         public void Initialize()
         {
             InitializeAttributeSets();
+
+            // Initial re-calculation after init
+            foreach (var attr in RegulationCache.GetAllContactAttributes())
+            {
+                RefreshRegulatedAttributes(attr);
+            }
             
+            // Subscribe refresh to attribute change callback
             Callbacks.OnAttributeChanged += data =>
             {
                 RefreshRegulatedAttributes(data.Attribute);
@@ -136,7 +143,7 @@ namespace FarEmerald.PlayForge
             if (AttributeCache.ContainsKey(attribute)) return;
             
             AttributeCache[attribute] = new CachedAttributeValue(blueprint);
-            blueprint.Base.Scaling?.Regulate(attribute, Rule);
+            blueprint.SetElement.Scaling?.RegulateContactWith(attribute, RegulationCache);
             
             AttributeRegistry.Add(attribute);
             Callbacks.AttributeRegister(attribute);
@@ -169,7 +176,7 @@ namespace FarEmerald.PlayForge
         {
             if (attribute is not null && AttributeCache.TryGetValue(attribute, out var cachedValue))
             {
-                attributeValue = cachedValue.Value;
+                attributeValue = cachedValue.ActiveValue;
                 return true;
             }
             
@@ -206,11 +213,11 @@ namespace FarEmerald.PlayForge
             // ═══════════════════════════════════════════════════════════════════════
             // PHASE 2: Snapshot and apply modification
             // ═══════════════════════════════════════════════════════════════════════
-            var holdValue = AttributeCache[attribute].Value;
+            var holdValue = AttributeCache[attribute].ActiveValue;
             AttributeCache[attribute].Add(sourcedModifiedValue.Derivation, change.Value.ToAttributeValue(), sourcedModifiedValue.Derivation.RetainImpact());
             
             if (runEvents) AttributeCache[attribute].ApplyBounds();
-            change.Override(AttributeCache[attribute].Value - holdValue);
+            change.Override(AttributeCache[attribute].ActiveValue - holdValue);
 
             if (runEvents)
             {
@@ -232,7 +239,7 @@ namespace FarEmerald.PlayForge
             // PHASE 4: Calculate real impact and relay
             // ═══════════════════════════════════════════════════════════════════════
             
-            change.Override(AttributeCache[attribute].Value - holdValue);
+            change.Override(AttributeCache[attribute].ActiveValue - holdValue);
             //AttributeCache[attribute].UpdateHeld(change.Value.ToAttributeValue());
             
             Callbacks.AttributePostChange(attribute, change);
@@ -265,7 +272,7 @@ namespace FarEmerald.PlayForge
         private HashSet<IAttribute> _refreshingAttributes = new();
         private void RefreshRegulatedAttributes(IAttribute contact)
         {
-            if (!Rule.TryGetRelatedAttributes(contact, out var related)) return;
+            if (!RegulationCache.TryGetRelatedAttributes(contact, out var related)) return;
             
             foreach (var relative in related)
             {
@@ -277,12 +284,12 @@ namespace FarEmerald.PlayForge
                 {
                     if (!AttributeCache.TryGetValue(relative, out var cached)) continue;
 
-                    var oldValue = cached.Value;
-                    var delta = cached.RefreshDefaultValue(Self, AttributeCache);
+                    var oldValue = cached.ActiveValue;
+                    var delta = cached.RefreshActiveValue(Self, AttributeCache);
 
                     if (delta.CurrentValue != 0 || delta.BaseValue != 0)
                     {
-                        var realImpact = cached.Value - oldValue;
+                        var realImpact = cached.ActiveValue - oldValue;
                         var sourcedModifier = new SourcedModifiedAttributeValue(cached.Root, realImpact.CurrentValue, realImpact.BaseValue);
 
                         var derivedImpact = ImpactData.Generate(Self, relative, sourcedModifier, realImpact, oldValue);

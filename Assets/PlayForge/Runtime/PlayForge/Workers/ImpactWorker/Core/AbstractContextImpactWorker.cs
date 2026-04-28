@@ -24,7 +24,7 @@ namespace FarEmerald.PlayForge
         public List<Tag> ImpactType;
         
         [Tooltip("Which part of the attribute was impacted")]
-        public EEffectImpactTargetExpanded ImpactTarget;
+        public EAttributeTargetExpanded ImpactTarget;
         
         [Tooltip("Require exact match for impact target (e.g., Current only, not CurrentAndBase)")]
         public bool ImpactTargetExclusive;

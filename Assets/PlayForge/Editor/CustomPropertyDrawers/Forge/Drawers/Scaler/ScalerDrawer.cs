@@ -46,10 +46,25 @@ namespace FarEmerald.PlayForge.Extended.Editor
         {
             return !_collapsedStates.TryGetValue(propertyPath, out bool collapsed) || collapsed;
         }
-        
+
         private static void SetCollapsed(string propertyPath, bool collapsed)
         {
             _collapsedStates[propertyPath] = collapsed;
+        }
+
+        /// <summary>
+        /// Builds a composite cache key that scopes a SerializedProperty's
+        /// drawer-state (quick-fill params, expanded flag, mode) to its owning
+        /// target object. Without the instance-id prefix the static dictionaries
+        /// collide across assets whose attribute lists share the same property
+        /// path (e.g. "Attributes.Array.data[0].Scaling" on two different
+        /// AttributeSet assets) and surface stale values from the previous asset.
+        /// </summary>
+        private static string GetStateKey(SerializedProperty property)
+        {
+            var target = property?.serializedObject?.targetObject;
+            int id = target != null ? target.GetInstanceID() : 0;
+            return id + "|" + (property?.propertyPath ?? string.Empty);
         }
         
         static ScalerDrawer()
@@ -92,6 +107,78 @@ namespace FarEmerald.PlayForge.Extended.Editor
             return sb.ToString();
         }
         
+        // ═══════════════════════════════════════════════════════════════════════════
+        // SerializeReference Aliasing Guard
+        // ═══════════════════════════════════════════════════════════════════════════
+
+        /// <summary>
+        /// Detects and repairs [SerializeReference] aliasing between siblings in the
+        /// same list. When Unity's default array "+" button duplicates a list entry,
+        /// the new entry inherits the SAME managed-reference id as the previous one —
+        /// so every list entry ends up pointing to a single shared scaler instance.
+        /// This walks the immediate parent array and, if another sibling shares this
+        /// property's managedReferenceId, deep-clones the current instance so each
+        /// list element owns an independent scaler. Only acts on properties that live
+        /// inside a list/array element; direct fields (e.g. scalers on GameplayEffect)
+        /// are never affected.
+        /// </summary>
+        private static void EnsureUniqueManagedReference(SerializedProperty property)
+        {
+            if (property == null) return;
+            if (property.propertyType != SerializedPropertyType.ManagedReference) return;
+
+            var current = property.managedReferenceValue;
+            if (current == null) return; // null refs can't drift state across siblings
+
+            long id = property.managedReferenceId;
+
+            // Only list-element properties can exhibit the duplication bug.
+            string path = property.propertyPath;
+            const string ArrayDataMarker = ".Array.data[";
+            int arrayMarker = path.LastIndexOf(ArrayDataMarker, StringComparison.Ordinal);
+            if (arrayMarker < 0) return;
+
+            string arrayPath = path.Substring(0, arrayMarker);
+            int bracketStart = path.IndexOf('[', arrayMarker);
+            int bracketEnd = path.IndexOf(']', bracketStart);
+            if (bracketStart < 0 || bracketEnd < 0) return;
+            if (!int.TryParse(
+                    path.Substring(bracketStart + 1, bracketEnd - bracketStart - 1),
+                    out int myIndex))
+                return;
+
+            // Suffix between "]" and the end of the path — e.g. ".Scaling".
+            // Empty when the property IS the list element itself.
+            string relativeSuffix = path.Substring(bracketEnd + 1).TrimStart('.');
+
+            var so = property.serializedObject;
+            var arrayProp = so.FindProperty(arrayPath);
+            if (arrayProp == null || !arrayProp.isArray) return;
+
+            for (int i = 0; i < arrayProp.arraySize; i++)
+            {
+                if (i == myIndex) continue;
+                var sibling = arrayProp.GetArrayElementAtIndex(i);
+                SerializedProperty siblingRef = string.IsNullOrEmpty(relativeSuffix)
+                    ? sibling
+                    : sibling.FindPropertyRelative(relativeSuffix);
+                if (siblingRef == null) continue;
+                if (siblingRef.propertyType != SerializedPropertyType.ManagedReference) continue;
+                if (siblingRef.managedReferenceId != id) continue;
+
+                // Aliased — clone into a unique instance so each list element owns
+                // an independent object. Use the same JSON-overwrite pattern as
+                // CopyScaler so all serialized sub-state (LevelValues, Behaviours,
+                // type-specific fields) is preserved verbatim.
+                var type = current.GetType();
+                var clone = Activator.CreateInstance(type);
+                JsonUtility.FromJsonOverwrite(JsonUtility.ToJson(current), clone);
+                property.managedReferenceValue = clone;
+                so.ApplyModifiedProperties();
+                return;
+            }
+        }
+
         // ═══════════════════════════════════════════════════════════════════════════
         // Linked Source Detection
         // ═══════════════════════════════════════════════════════════════════════════
@@ -174,7 +261,15 @@ namespace FarEmerald.PlayForge.Extended.Editor
         {
             root.Clear();
             if (property?.serializedObject?.targetObject == null) return;
-            
+
+            // Defend against Unity's [SerializeReference] list-aliasing quirk:
+            // the default array "+" button duplicates the previous element's
+            // managed-reference id, causing every list entry to resolve to the
+            // SAME scaler instance. Without this guard, editing level values
+            // or quick-fill on one attribute-set-element writes through to all
+            // other elements that share the same reference id.
+            EnsureUniqueManagedReference(property);
+
             var container = new VisualElement { name = "ScalerContainer" };
             container.style.borderLeftWidth = 3;
             container.style.borderLeftColor = Colors.AssetScaler;
@@ -917,21 +1012,25 @@ namespace FarEmerald.PlayForge.Extended.Editor
             var section = new VisualElement { name = "QuickFillSection" };
             section.style.marginTop = 4;
             section.style.marginBottom = 4;
-            
+
+            // Composite key (targetInstanceID + propertyPath) so quick-fill state
+            // is scoped to the actual scaler instance being edited, not a bare
+            // path that can collide across assets or list siblings.
+            var stateKey = GetStateKey(property);
             var propPath = property.propertyPath;
-            bool isExpanded = _quickFillExpanded.TryGetValue(propPath, out bool exp) && exp;
-            
+            bool isExpanded = _quickFillExpanded.TryGetValue(stateKey, out bool exp) && exp;
+
             // Ensure params exist
-            if (!_quickFillParams.ContainsKey(propPath))
+            if (!_quickFillParams.ContainsKey(stateKey))
             {
                 var lvp = property.FindPropertyRelative(nameof(AbstractScaler.LevelValues));
-                _quickFillParams[propPath] = new QuickFillParams
+                _quickFillParams[stateKey] = new QuickFillParams
                 {
                     StartValue = lvp != null && lvp.arraySize > 0 ? lvp.GetArrayElementAtIndex(0).floatValue : 1f,
                     EndValue = lvp != null && lvp.arraySize > 0 ? lvp.GetArrayElementAtIndex(lvp.arraySize - 1).floatValue : 10f
                 };
             }
-            var qfParams = _quickFillParams[propPath];
+            var qfParams = _quickFillParams[stateKey];
             
             // Header row
             var header = new VisualElement();
@@ -974,11 +1073,11 @@ namespace FarEmerald.PlayForge.Extended.Editor
             modeRow.style.flexDirection = FlexDirection.Row;
             modeRow.style.marginBottom = 4;
             
-            var currentMode = _quickFillMode.TryGetValue(propPath, out var mode) ? mode : EQuickFillMode.Linear;
-            
-            var linearTab = CreateModeTab("Linear", EQuickFillMode.Linear, currentMode, propPath, root, property);
-            var additiveTab = CreateModeTab("Additive", EQuickFillMode.Additive, currentMode, propPath, root, property);
-            var stepsTab = CreateModeTab("Steps", EQuickFillMode.Steps, currentMode, propPath, root, property);
+            var currentMode = _quickFillMode.TryGetValue(stateKey, out var mode) ? mode : EQuickFillMode.Linear;
+
+            var linearTab = CreateModeTab("Linear", EQuickFillMode.Linear, currentMode, stateKey, root, property);
+            var additiveTab = CreateModeTab("Additive", EQuickFillMode.Additive, currentMode, stateKey, root, property);
+            var stepsTab = CreateModeTab("Steps", EQuickFillMode.Steps, currentMode, stateKey, root, property);
             
             modeRow.Add(linearTab);
             modeRow.Add(additiveTab);
@@ -1030,14 +1129,14 @@ namespace FarEmerald.PlayForge.Extended.Editor
             return section;
         }
         
-        private VisualElement CreateModeTab(string label, EQuickFillMode mode, EQuickFillMode current, 
-            string propPath, VisualElement root, SerializedProperty property)
+        private VisualElement CreateModeTab(string label, EQuickFillMode mode, EQuickFillMode current,
+            string stateKey, VisualElement root, SerializedProperty property)
         {
             bool isActive = mode == current;
-            
+
             var tab = new Button(() =>
             {
-                _quickFillMode[propPath] = mode;
+                _quickFillMode[stateKey] = mode;
                 ScheduleRebuild(root, property);
             });
             tab.text = label;

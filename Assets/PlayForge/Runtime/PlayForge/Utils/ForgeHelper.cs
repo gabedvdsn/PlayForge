@@ -42,16 +42,6 @@ namespace FarEmerald.PlayForge
                 : valuePair.MinValue;
         }
         
-        public static float RelativeOffsetValue(float value, float max, float offset = 1f)
-        {
-            return max > offset ? (value - offset) / (max - offset) : offset;
-        }
-
-        public static float RelativeValue(float value, float minValue, float maxValue)
-        {
-            return Mathf.Lerp(minValue, maxValue, value);
-        }
-        
         #endregion
         
         #region Sign Related Utils
@@ -224,75 +214,75 @@ namespace FarEmerald.PlayForge
             };
         }
 
-        public static bool ValidateImpactTargets(EEffectImpactTargetExpanded impactTarget, AttributeValue attributeValue, bool exclusive)
+        public static bool ValidateImpactTargets(EAttributeTargetExpanded impactTarget, AttributeValue attributeValue, bool exclusive)
         {
-            if (exclusive && impactTarget is EEffectImpactTargetExpanded.Current or EEffectImpactTargetExpanded.Base)
+            if (exclusive && impactTarget is EAttributeTargetExpanded.Current or EAttributeTargetExpanded.Base)
             {
                 return impactTarget switch
                 {
-                    EEffectImpactTargetExpanded.Current => attributeValue.CurrentValue != 0 && attributeValue.BaseValue == 0,
-                    EEffectImpactTargetExpanded.Base => attributeValue.CurrentValue == 0 && attributeValue.BaseValue != 0,
+                    EAttributeTargetExpanded.Current => attributeValue.CurrentValue != 0 && attributeValue.BaseValue == 0,
+                    EAttributeTargetExpanded.Base => attributeValue.CurrentValue == 0 && attributeValue.BaseValue != 0,
                     _ => throw new ArgumentOutOfRangeException(nameof(impactTarget), impactTarget, null)
                 };
             }
             
             return impactTarget switch
             {
-                EEffectImpactTargetExpanded.Current => attributeValue.CurrentValue != 0,
-                EEffectImpactTargetExpanded.Base => attributeValue.BaseValue != 0,
-                EEffectImpactTargetExpanded.CurrentAndBase => attributeValue.CurrentValue != 0 && attributeValue.BaseValue != 0,
-                EEffectImpactTargetExpanded.CurrentOrBase => attributeValue.CurrentValue != 0 || attributeValue.BaseValue != 0,
+                EAttributeTargetExpanded.Current => attributeValue.CurrentValue != 0,
+                EAttributeTargetExpanded.Base => attributeValue.BaseValue != 0,
+                EAttributeTargetExpanded.CurrentAndBase => attributeValue.CurrentValue != 0 && attributeValue.BaseValue != 0,
+                EAttributeTargetExpanded.CurrentOrBase => attributeValue.CurrentValue != 0 || attributeValue.BaseValue != 0,
                 _ => throw new ArgumentOutOfRangeException(nameof(impactTarget), impactTarget, null)
             };
         }
 
-        public static bool ValidateSignPolicy(ESignPolicy signPolicy, EEffectImpactTargetExpanded impactTarget, AttributeValue attributeValue)
+        public static bool ValidateSignPolicy(ESignPolicy signPolicy, EAttributeTargetExpanded impactTarget, AttributeValue attributeValue)
         {
             return impactTarget switch
             {
-                EEffectImpactTargetExpanded.Current => SignPolicy(attributeValue.CurrentValue) == signPolicy,
-                EEffectImpactTargetExpanded.Base => SignPolicy(attributeValue.BaseValue) == signPolicy,
-                EEffectImpactTargetExpanded.CurrentAndBase => SignPolicy(attributeValue.CurrentValue) == signPolicy && SignPolicy(attributeValue.BaseValue) == signPolicy,
-                EEffectImpactTargetExpanded.CurrentOrBase => SignPolicy(attributeValue.CurrentValue) == signPolicy || SignPolicy(attributeValue.BaseValue) == signPolicy,
+                EAttributeTargetExpanded.Current => SignPolicy(attributeValue.CurrentValue) == signPolicy,
+                EAttributeTargetExpanded.Base => SignPolicy(attributeValue.BaseValue) == signPolicy,
+                EAttributeTargetExpanded.CurrentAndBase => SignPolicy(attributeValue.CurrentValue) == signPolicy && SignPolicy(attributeValue.BaseValue) == signPolicy,
+                EAttributeTargetExpanded.CurrentOrBase => SignPolicy(attributeValue.CurrentValue) == signPolicy || SignPolicy(attributeValue.BaseValue) == signPolicy,
                 _ => throw new ArgumentOutOfRangeException(nameof(impactTarget), impactTarget, null)
             };
         }
         
-        public static bool ValidateSignPolicy(ESignPolicy signPolicy, EEffectImpactTarget impactTarget, AttributeValue attributeValue)
+        public static bool ValidateSignPolicy(ESignPolicy signPolicy, EAttributeTarget impactTarget, AttributeValue attributeValue)
         {
             return impactTarget switch
             {
 
-                EEffectImpactTarget.Current => SignPolicy(attributeValue.CurrentValue) == signPolicy,
-                EEffectImpactTarget.Base => SignPolicy(attributeValue.BaseValue) == signPolicy,
-                EEffectImpactTarget.CurrentAndBase => SignPolicy(attributeValue.CurrentValue) == signPolicy && SignPolicy(attributeValue.BaseValue) == signPolicy,
+                EAttributeTarget.Current => SignPolicy(attributeValue.CurrentValue) == signPolicy,
+                EAttributeTarget.Base => SignPolicy(attributeValue.BaseValue) == signPolicy,
+                EAttributeTarget.CurrentAndBase => SignPolicy(attributeValue.CurrentValue) == signPolicy && SignPolicy(attributeValue.BaseValue) == signPolicy,
                 _ => throw new ArgumentOutOfRangeException(nameof(impactTarget), impactTarget, null)
             };
         }
         
-        public static bool ValidateSignPolicy(ESignPolicyExtended signPolicy, EEffectImpactTarget impactTarget, AttributeValue attributeValue)
+        public static bool ValidateSignPolicy(ESignPolicyExtended signPolicy, EAttributeTarget impactTarget, AttributeValue attributeValue)
         {
             if (signPolicy == ESignPolicyExtended.Any) return true;
             return impactTarget switch
             {
 
-                EEffectImpactTarget.Current => SignPolicyExtended(attributeValue.CurrentValue) == signPolicy,
-                EEffectImpactTarget.Base => SignPolicyExtended(attributeValue.BaseValue) == signPolicy,
-                EEffectImpactTarget.CurrentAndBase => SignPolicyExtended(attributeValue.CurrentValue) == signPolicy && SignPolicyExtended(attributeValue.BaseValue) == signPolicy,
+                EAttributeTarget.Current => SignPolicyExtended(attributeValue.CurrentValue) == signPolicy,
+                EAttributeTarget.Base => SignPolicyExtended(attributeValue.BaseValue) == signPolicy,
+                EAttributeTarget.CurrentAndBase => SignPolicyExtended(attributeValue.CurrentValue) == signPolicy && SignPolicyExtended(attributeValue.BaseValue) == signPolicy,
                 _ => throw new ArgumentOutOfRangeException(nameof(impactTarget), impactTarget, null)
             };
         }
         
-        public static bool ValidateSignPolicy(ESignPolicyExtended signPolicy, EEffectImpactTargetExpanded impactTarget, AttributeValue attributeValue)
+        public static bool ValidateSignPolicy(ESignPolicyExtended signPolicy, EAttributeTargetExpanded impactTarget, AttributeValue attributeValue)
         {
             if (signPolicy == ESignPolicyExtended.Any) return true;
             return impactTarget switch
             {
 
-                EEffectImpactTargetExpanded.Current => SignPolicyExtended(attributeValue.CurrentValue) == signPolicy,
-                EEffectImpactTargetExpanded.Base => SignPolicyExtended(attributeValue.BaseValue) == signPolicy,
-                EEffectImpactTargetExpanded.CurrentAndBase => SignPolicyExtended(attributeValue.CurrentValue) == signPolicy && SignPolicyExtended(attributeValue.BaseValue) == signPolicy,
-                EEffectImpactTargetExpanded.CurrentOrBase => SignPolicyExtended(attributeValue.CurrentValue) == signPolicy || SignPolicyExtended(attributeValue.BaseValue) == signPolicy,
+                EAttributeTargetExpanded.Current => SignPolicyExtended(attributeValue.CurrentValue) == signPolicy,
+                EAttributeTargetExpanded.Base => SignPolicyExtended(attributeValue.BaseValue) == signPolicy,
+                EAttributeTargetExpanded.CurrentAndBase => SignPolicyExtended(attributeValue.CurrentValue) == signPolicy && SignPolicyExtended(attributeValue.BaseValue) == signPolicy,
+                EAttributeTargetExpanded.CurrentOrBase => SignPolicyExtended(attributeValue.CurrentValue) == signPolicy || SignPolicyExtended(attributeValue.BaseValue) == signPolicy,
                 _ => throw new ArgumentOutOfRangeException(nameof(impactTarget), impactTarget, null)
             };
         }
@@ -747,7 +737,7 @@ namespace FarEmerald.PlayForge
         /// <param name="policy"></param>
         /// <returns></returns>
         /// <exception cref="ArgumentOutOfRangeException"></exception>
-        public static AttributeValue AttributeMathEvent(AttributeValue value, AttributeValue operand, ECalculationOperation operation, EEffectImpactTarget target,
+        public static AttributeValue AttributeMathEvent(AttributeValue value, AttributeValue operand, ECalculationOperation operation, EAttributeTarget target,
             EMathApplicationPolicy policy) 
         {
             AttributeValue _operand;
@@ -766,27 +756,14 @@ namespace FarEmerald.PlayForge
                     throw new ArgumentOutOfRangeException(nameof(policy), policy, null);
             }
 
-            AttributeValue result = PerformOperation(value, _operand);
+            var result = PerformCalculationOperation(value, _operand, operation);
             return target switch
             {
-                EEffectImpactTarget.Current => new AttributeValue(result.CurrentValue, 0f),
-                EEffectImpactTarget.Base => new AttributeValue(0, result.BaseValue),
-                EEffectImpactTarget.CurrentAndBase => new AttributeValue(result.CurrentValue, result.BaseValue),
+                EAttributeTarget.Current => new AttributeValue(result.CurrentValue, 0f),
+                EAttributeTarget.Base => new AttributeValue(0, result.BaseValue),
+                EAttributeTarget.CurrentAndBase => new AttributeValue(result.CurrentValue, result.BaseValue),
                 _ => throw new ArgumentOutOfRangeException()
             };
-
-            AttributeValue PerformOperation(AttributeValue a, AttributeValue b)
-            {
-                return operation switch
-                {
-
-                    ECalculationOperation.Add => a + b,
-                    ECalculationOperation.Multiply => a * b,
-                    ECalculationOperation.Override => b,
-                    ECalculationOperation.FlatBonus => a + b,
-                    _ => throw new ArgumentOutOfRangeException(nameof(operation), operation, null)
-                };
-            }
         }
         public static AttributeValue LogicalAdd(AttributeValue value, AttributeValue operand, AttributeOverflowData overflow)
         {
@@ -842,6 +819,79 @@ namespace FarEmerald.PlayForge
                     Mathf.Clamp(operand.BaseValue, overflow.Floor.BaseValue, overflow.Ceil.BaseValue)),
                 EAttributeOverflowPolicy.Unlimited => new AttributeValue(operand.CurrentValue, operand.BaseValue),
                 _ => throw new ArgumentOutOfRangeException()
+            };
+        }
+
+        public static bool TryComputeCachedMagnitudeModifierGroupValue(IAttributeImpactDerivation deriv, CachedMagnitudeModifierGroupMember[] calculations, Func<CachedMagnitudeModifierGroupMember, float> selector, EValueCollisionPolicy overridePolicy, out float value)
+        {
+            if (calculations is null || calculations.Length == 0)
+            {
+                value = 0f;
+                return false;
+            }
+            
+            // Check for override members first
+            var overrides = calculations.Where(m => m.RelativeOperation == ECalculationOperation.Override && m.Calculation != null);
+            var members = overrides as CachedMagnitudeModifierGroupMember[] ?? overrides.ToArray();
+            if (members.Any() && overridePolicy != EValueCollisionPolicy.Ignore)
+            {
+                value = overridePolicy switch
+                {
+                    EValueCollisionPolicy.UseMaximum => members.Max(selector.Invoke),
+                    EValueCollisionPolicy.UseMinimum => members.Min(selector.Invoke),
+                    EValueCollisionPolicy.UseAverage => members.Average(selector.Invoke),
+                    EValueCollisionPolicy.UseFirst => selector.Invoke(members.First()),
+                    EValueCollisionPolicy.UseLast => selector.Invoke(members.Last()),
+                    _ => throw new ArgumentOutOfRangeException()
+                };
+                return true;
+            }
+            
+            // Calculate additive sum
+            value = calculations
+                .Where(m => m.RelativeOperation == ECalculationOperation.Add && m.Calculation != null)
+                .Sum(member => member.Calculation.Evaluate(deriv));
+            
+            // Apply multipliers
+            foreach (var member in calculations.Where(m => m.RelativeOperation == ECalculationOperation.Multiply && m.Calculation != null))
+            {
+                value *= member.Calculation.Evaluate(deriv);
+            }
+
+            float flatBonus = calculations
+                .Where(m => m.RelativeOperation == ECalculationOperation.FlatBonus && m.Calculation != null)
+                .Sum(member => member.Calculation.Evaluate(deriv));
+            
+            value += flatBonus;
+            return true;
+        }
+        
+        #endregion
+        
+        #region Math Utils
+        
+        public static AttributeValue PerformCalculationOperation(AttributeValue a, AttributeValue b, ECalculationOperation operation)
+        {
+            return operation switch
+            {
+
+                ECalculationOperation.Add => a + b,
+                ECalculationOperation.Multiply => a * b,
+                ECalculationOperation.Override => b,
+                ECalculationOperation.FlatBonus => a + b,
+                _ => throw new ArgumentOutOfRangeException(nameof(operation), operation, null)
+            };
+        }
+
+        public static float PerformCalculationOperation(float a, float b, ECalculationOperation operation)
+        {
+            return operation switch
+            {
+                ECalculationOperation.Add => a + b,
+                ECalculationOperation.Multiply => a * b,
+                ECalculationOperation.Override => b,
+                ECalculationOperation.FlatBonus => a + b,
+                _ => throw new ArgumentOutOfRangeException(nameof(operation), operation, null)
             };
         }
         
@@ -954,6 +1004,29 @@ namespace FarEmerald.PlayForge
                 EAbilityActivationPolicyExtended.ActivateIfIdle => EAbilityActivationPolicy.ActivateIfIdle,
                 EAbilityActivationPolicyExtended.QueueActivationIfBusy => EAbilityActivationPolicy.QueueActivationIfBusy,
                 _ => throw new ArgumentOutOfRangeException(nameof(policy), policy, null)
+            };
+        }
+
+        public static ECalculationOperation Translate(this EMagnitudeOperation oper)
+        {
+            return oper switch
+            {
+
+                EMagnitudeOperation.MultiplyWithScaler => ECalculationOperation.Multiply,
+                EMagnitudeOperation.AddScaler => ECalculationOperation.Add,
+                EMagnitudeOperation.UseMagnitude => ECalculationOperation.Override,
+                EMagnitudeOperation.UseScaler => ECalculationOperation.Override,
+                _ => throw new ArgumentOutOfRangeException(nameof(oper), oper, null)
+            };
+        }
+
+        public static EAttributeTarget Translate(this EAttributeTargetLimited oper)
+        {
+            return oper switch
+            {
+                EAttributeTargetLimited.CurrentAndBase => EAttributeTarget.CurrentAndBase,
+                EAttributeTargetLimited.Base => EAttributeTarget.Base,
+                _ => throw new ArgumentOutOfRangeException(nameof(oper), oper, null)
             };
         }
         

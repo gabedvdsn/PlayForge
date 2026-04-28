@@ -1,5 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
+using Unity.VisualScripting;
 using UnityEngine;
 
 namespace FarEmerald.PlayForge
@@ -10,19 +12,42 @@ namespace FarEmerald.PlayForge
     /// </summary>
     public abstract class AbstractCachedScaler : AbstractScaler
     {
+        public override void Initialize(IAttributeImpactDerivation deriv)
+        {
+            // Cached scalers do nothing by default
+        }
+
+        /// <summary>
+        /// Cached scalers do not care about the default scaler Evaluate(...). Use EvaluateActiveValue(...) instead.
+        /// </summary>
+        /// <param name="deriv"></param>
+        /// <returns></returns>
+        public override float Evaluate(IAttributeImpactDerivation deriv)
+        {
+            return 0f;
+        }
+
         /// <summary>
         /// Registers attribute relationships for cache invalidation.
-        /// When the contact attribute changes, related attributes need recalculation.
+        /// When the contact attribute (to set) changes, related attributes (the locally associated attribute) need recalculation.
         /// </summary>
-        public abstract void Regulate(IAttribute attribute, AttributeModificationRule rules);
-        public abstract float Evaluate(IGameplayAbilitySystem gas, AttributeBlueprint blueprint, IReadOnlyDictionary<IAttribute, CachedAttributeValue> cache);
+        public virtual void RegulateContactWith(IAttribute related, AttributeRegulationCache rules)
+        {
+        }
+
+        public abstract AttributeValue EvaluateActiveValue(ISource source, AttributeBlueprint blueprint, IReadOnlyDictionary<IAttribute, CachedAttributeValue> cache);
+        
+        public virtual AttributeValue EvaluateInitialValue(ISource source, AttributeBlueprint blueprint, IReadOnlyDictionary<IAttribute, CachedAttributeValue> cache)
+        {
+            return blueprint.RootValue;
+        }
     }
 
     /// <summary>
     /// Tracks attribute dependencies for cache invalidation.
     /// When an attribute changes, this tells us which other attributes need recalculation.
     /// </summary>
-    public class AttributeModificationRule
+    public class AttributeRegulationCache
     {
         private readonly Dictionary<IAttribute, List<IAttribute>> matrix = new();
 
@@ -58,5 +83,7 @@ namespace FarEmerald.PlayForge
         {
             return matrix.Keys;
         }
+
+        public IReadOnlyDictionary<IAttribute, List<IAttribute>> GetCache() => matrix;
     }
 }

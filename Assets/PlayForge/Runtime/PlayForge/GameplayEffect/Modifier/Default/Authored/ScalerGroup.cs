@@ -16,13 +16,13 @@ namespace FarEmerald.PlayForge
         [Tooltip("How to handle multiple Override members")]
         public EValueCollisionPolicy OverrideMemberCollisionPolicy = EValueCollisionPolicy.UseMaximum;
         
-        public override void Initialize(IAttributeImpactDerivation spec)
+        public override void Initialize(IAttributeImpactDerivation deriv)
         {
             if (Calculations == null) return;
             
             foreach (var member in Calculations)
             {
-                member.Calculation?.Initialize(spec);
+                member.Calculation?.Initialize(deriv);
             }
         }
 
@@ -31,10 +31,10 @@ namespace FarEmerald.PlayForge
             return false;
         }
 
-        public override float Evaluate(IAttributeImpactDerivation spec)
+        public override float Evaluate(IAttributeImpactDerivation deriv)
         {
             if (Calculations == null || Calculations.Length == 0)
-                return EvaluateFromSpec(spec);
+                return EvaluateFromSpec(deriv);
             
             // Check for override members first
             var overrides = Calculations.Where(m => m is { RelativeOperation: ECalculationOperation.Override, Calculation: not null }).ToArray();
@@ -42,11 +42,11 @@ namespace FarEmerald.PlayForge
             {
                 return OverrideMemberCollisionPolicy switch
                 {
-                    EValueCollisionPolicy.UseMaximum => overrides.Max(m => m.Calculation.Evaluate(spec)),
-                    EValueCollisionPolicy.UseMinimum => overrides.Min(m => m.Calculation.Evaluate(spec)),
-                    EValueCollisionPolicy.UseAverage => overrides.Average(m => m.Calculation.Evaluate(spec)),
-                    EValueCollisionPolicy.UseFirst => overrides.First().Calculation.Evaluate(spec),
-                    EValueCollisionPolicy.UseLast => overrides.Last().Calculation.Evaluate(spec),
+                    EValueCollisionPolicy.UseMaximum => overrides.Max(m => m.Calculation.Evaluate(deriv)),
+                    EValueCollisionPolicy.UseMinimum => overrides.Min(m => m.Calculation.Evaluate(deriv)),
+                    EValueCollisionPolicy.UseAverage => overrides.Average(m => m.Calculation.Evaluate(deriv)),
+                    EValueCollisionPolicy.UseFirst => overrides.First().Calculation.Evaluate(deriv),
+                    EValueCollisionPolicy.UseLast => overrides.Last().Calculation.Evaluate(deriv),
                     _ => throw new ArgumentOutOfRangeException()
                 };
             }
@@ -54,12 +54,12 @@ namespace FarEmerald.PlayForge
             // Calculate additive sum
             float value = Calculations
                 .Where(m => m.RelativeOperation == ECalculationOperation.Add && m.Calculation != null)
-                .Sum(member => member.Calculation.Evaluate(spec));
+                .Sum(member => member.Calculation.Evaluate(deriv));
             
             // Apply multipliers
             foreach (var member in Calculations.Where(m => m is { RelativeOperation: ECalculationOperation.Multiply, Calculation: not null }))
             {
-                value *= member.Calculation.Evaluate(spec);
+                value *= member.Calculation.Evaluate(deriv);
             }
             
             return value;
@@ -107,6 +107,9 @@ namespace FarEmerald.PlayForge
         UseFirst,
         
         [Tooltip("Use the last matching member")]
-        UseLast
+        UseLast,
+        
+        [Tooltip("Ignore all overriding member values")]
+        Ignore
     }
 }

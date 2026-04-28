@@ -76,7 +76,36 @@ namespace FarEmerald.PlayForge
         }
         public override float Evaluate(IGameplayAbilitySystem gas, AttributeBlueprint blueprint, IReadOnlyDictionary<IAttribute, CachedAttributeValue> cache)
         {
-            return 0f;
+            if (Calculations == null || Calculations.Length == 0) return 0f;
+
+            var overrides = Calculations.Where(m => m.RelativeOperation == ECalculationOperation.Override && m.Calculation != null);
+            if (overrides.Any())
+            {
+                return OverrideMemberCollisionPolicy switch
+                {
+                    EValueCollisionPolicy.UseMaximum => overrides.Max(m => m.Calculation.Evaluate(gas, blueprint, cache)),
+                    EValueCollisionPolicy.UseMinimum => overrides.Min(m => m.Calculation.Evaluate(gas, blueprint, cache)),
+                    EValueCollisionPolicy.UseAverage => overrides.Average(m => m.Calculation.Evaluate(gas, blueprint, cache)),
+                    EValueCollisionPolicy.UseFirst => overrides.First().Calculation.Evaluate(gas, blueprint, cache),
+                    EValueCollisionPolicy.UseLast => overrides.Last().Calculation.Evaluate(gas, blueprint, cache),
+                    _ => throw new ArgumentOutOfRangeException()
+                };
+            }
+
+            float value = Calculations
+                .Where(m => m.RelativeOperation == ECalculationOperation.Add && m.Calculation != null)
+                .Sum(member => member.Calculation.Evaluate(gas, blueprint, cache));
+
+            foreach (var member in Calculations.Where(m => m.RelativeOperation == ECalculationOperation.Multiply && m.Calculation != null))
+            {
+                value *= member.Calculation.Evaluate(gas, blueprint, cache);
+            }
+
+            float flatBonus = Calculations
+                .Where(m => m.RelativeOperation == ECalculationOperation.FlatBonus && m.Calculation != null)
+                .Sum(member => member.Calculation.Evaluate(gas, blueprint, cache));
+
+            return value + flatBonus;
         }
     }
 

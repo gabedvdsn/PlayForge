@@ -14,7 +14,7 @@ namespace FarEmerald.PlayForge
             // No initialization needed
         }
         
-        public override float Evaluate(IAttributeImpactDerivation spec)
+        public override AttributeValue EvaluateActiveValue(ISource source, AttributeBlueprint blueprint, IReadOnlyDictionary<IAttribute, CachedAttributeValue> cache)
         {
             return EvaluateFromSpec(spec);
         }
@@ -22,10 +22,6 @@ namespace FarEmerald.PlayForge
         public override void Regulate(IAttribute attribute, AttributeModificationRule rules)
         {
             // No attribute dependencies - this scaler only uses level, not attributes
-        }
-        public override float Evaluate(IGameplayAbilitySystem gas, AttributeBlueprint blueprint, IReadOnlyDictionary<IAttribute, CachedAttributeValue> cache)
-        {
-            return blueprint.Base.Magnitude;
         }
     }
 }

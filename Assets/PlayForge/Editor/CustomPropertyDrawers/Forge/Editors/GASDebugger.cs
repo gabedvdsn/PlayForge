@@ -1376,14 +1376,14 @@ namespace FarEmerald.PlayForge.Extended.Editor
                 style = { width = 130, color = Color.white, fontSize = 11 }
             });
 
-            float current = cached.Value.CurrentValue;
+            float current = cached.ActiveValue.CurrentValue;
             row.Add(new Label(current.ToString("F1"))
             {
                 pickingMode = PickingMode.Ignore,
                 style = { width = 70, color = AttributeColor, fontSize = 11, unityTextAlign = TextAnchor.MiddleRight }
             });
 
-            float baseVal = cached.Value.BaseValue;
+            float baseVal = cached.ActiveValue.BaseValue;
             row.Add(new Label(baseVal.ToString("F1"))
             {
                 pickingMode = PickingMode.Ignore,
@@ -2127,8 +2127,8 @@ namespace FarEmerald.PlayForge.Extended.Editor
                     var match = cache.FirstOrDefault(k => k.Key?.GetName() == attr.GetName());
                     if (match.Key != null)
                     {
-                        float current = match.Value.Value.CurrentValue;
-                        float baseVal = match.Value.Value.BaseValue;
+                        float current = match.Value.ActiveValue.CurrentValue;
+                        float baseVal = match.Value.ActiveValue.BaseValue;
                         valText = current.ToString("F1");
 
                         float ratio = baseVal > 0 ? current / baseVal : 0;

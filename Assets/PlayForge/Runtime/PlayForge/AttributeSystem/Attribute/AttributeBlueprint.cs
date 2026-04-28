@@ -7,41 +7,47 @@ namespace FarEmerald.PlayForge
     {
         public AttributeValue RootValue;
         
-        public readonly AttributeSetElement Base;
+        public readonly AttributeSetElement SetElement;
 
-        public AttributeBlueprint(AttributeSetElement @base)
+        public AttributeBlueprint(AttributeSetElement setElement)
         {
-            Base = @base;
-            RootValue = Base.RootValue;
+            SetElement = setElement;
+            RootValue = SetElement.ValueFromMagnitude;
+        }
+
+        public AttributeValue GetInitialValue(IGameplayAbilitySystem system, IReadOnlyDictionary<IAttribute, CachedAttributeValue> cache)
+        {
+            if (SetElement.Scaling is null) return RootValue;
+            if (SetElement.RealMagnitude == EMagnitudeOperation.UseMagnitude) return RootValue;
+            
+            var value = SetElement.Scaling.EvaluateInitialValue(system, this, cache);
+            var operand = SetElement.Target switch
+            {
+                EAttributeTargetLimited.CurrentAndBase => new AttributeValue(value, value),
+                EAttributeTargetLimited.Base => new AttributeValue(0f, value),
+                _ => throw new ArgumentOutOfRangeException()
+            };
+            
+            var realMagnitude = SetElement.RealMagnitude.Translate();
+            return ForgeHelper.AttributeMathEvent(RootValue, operand, realMagnitude, SetElement.Target.Translate(), EMathApplicationPolicy.AsIs);
         }
         
-        public AttributeValue GetDefaultValue(IGameplayAbilitySystem system, IReadOnlyDictionary<IAttribute, CachedAttributeValue> cache)
+        public AttributeValue GetActiveValue(IGameplayAbilitySystem system, IReadOnlyDictionary<IAttribute, CachedAttributeValue> cache)
         {
-            if (Base.Scaling is null) return RootValue;
-            if (Base.RealMagnitude == EMagnitudeOperation.UseMagnitude) return RootValue;
-            
-            float value = Base.Scaling.Evaluate(system, this, cache);
-            var operand = Base.Target switch
+            if (SetElement.Scaling is null) return RootValue;
+            if (SetElement.RealMagnitude == EMagnitudeOperation.UseMagnitude) return RootValue;
+
+            var deriv = IAttributeImpactDerivation.GenerateLevelerDerivation(system, system.GetLevel(), SetElement.Attribute);
+            float value = SetElement.Scaling.Evaluate(deriv);
+            var operand = SetElement.Target switch
             {
-                ELimitedEffectImpactTarget.CurrentAndBase => new AttributeValue(value, value),
-                ELimitedEffectImpactTarget.Base => new AttributeValue(0f, value),
-                _ => throw new ArgumentOutOfRangeException()
-            };
-            var realMagnitude = Base.RealMagnitude switch
-            {
-                EMagnitudeOperation.MultiplyWithScaler => ECalculationOperation.Multiply,
-                EMagnitudeOperation.AddScaler => ECalculationOperation.Add,
-                EMagnitudeOperation.UseMagnitude => ECalculationOperation.Override,  // Never true
-                EMagnitudeOperation.UseScaler => ECalculationOperation.Override,
+                EAttributeTargetLimited.CurrentAndBase => new AttributeValue(value, value),
+                EAttributeTargetLimited.Base => new AttributeValue(0f, value),
                 _ => throw new ArgumentOutOfRangeException()
             };
             
-            return Base.Target switch
-            {
-                ELimitedEffectImpactTarget.Base => ForgeHelper.AttributeMathEvent(RootValue, operand, realMagnitude, EEffectImpactTarget.Base, EMathApplicationPolicy.AsIs),
-                ELimitedEffectImpactTarget.CurrentAndBase => ForgeHelper.AttributeMathEvent(RootValue, operand, realMagnitude, EEffectImpactTarget.CurrentAndBase, EMathApplicationPolicy.AsIs),
-                _ => throw new ArgumentOutOfRangeException()
-            };
+            var realMagnitude = SetElement.RealMagnitude.Translate();
+            return ForgeHelper.AttributeMathEvent(RootValue, operand, realMagnitude, SetElement.Target.Translate(), EMathApplicationPolicy.AsIs);
         }
 
         public void Combine(AttributeBlueprint other)

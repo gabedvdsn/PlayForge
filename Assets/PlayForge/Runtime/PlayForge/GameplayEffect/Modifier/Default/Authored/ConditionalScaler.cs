@@ -33,23 +33,23 @@ namespace FarEmerald.PlayForge
         [ScalerRootAssignment(null, typeof(AbstractCachedScaler))] [SerializeReference] 
         public AbstractScaler FalseScaler;
         
-        public override void Initialize(IAttributeImpactDerivation spec)
+        public override void Initialize(IAttributeImpactDerivation deriv)
         {
-            TrueScaler?.Initialize(spec);
-            FalseScaler?.Initialize(spec);
+            TrueScaler?.Initialize(deriv);
+            FalseScaler?.Initialize(deriv);
         }
         
-        public override float Evaluate(IAttributeImpactDerivation spec)
+        public override float Evaluate(IAttributeImpactDerivation deriv)
         {
-            bool conditionMet = EvaluateCondition(spec);
+            bool conditionMet = EvaluateCondition(deriv);
             
             if (conditionMet)
             {
-                return TrueScaler?.Evaluate(spec) ?? EvaluateFromSpec(spec);
+                return TrueScaler?.Evaluate(deriv) ?? EvaluateFromSpec(deriv);
             }
             else
             {
-                return FalseScaler?.Evaluate(spec) ?? 0f;
+                return FalseScaler?.Evaluate(deriv) ?? 0f;
             }
         }
 

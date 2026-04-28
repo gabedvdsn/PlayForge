@@ -20,9 +20,9 @@ namespace FarEmerald.PlayForge
         public ECaptureAttributeWhen CaptureWhen = ECaptureAttributeWhen.OnApplication;
         
         [Tooltip("Use base or current attribute value")]
-        public EEffectImpactTargetLimited CaptureWhat = EEffectImpactTargetLimited.Current;
+        public EAttributeTargetBinary CaptureWhat = EAttributeTargetBinary.Current;
         
-        public override void Initialize(IAttributeImpactDerivation spec)
+        public override void Initialize(IAttributeImpactDerivation deriv)
         {
             if (CaptureWhen != ECaptureAttributeWhen.OnCreation) return;
             if (CaptureAttribute is null) return;
@@ -30,17 +30,17 @@ namespace FarEmerald.PlayForge
             switch (CaptureFrom)
             {
                 case ESourceTarget.Source:
-                    if (!spec.GetSource().FindAttributeSystem(out var sourceAttr) || 
+                    if (!deriv.GetSource().FindAttributeSystem(out var sourceAttr) || 
                         !sourceAttr.TryGetAttributeValue(CaptureAttribute, out AttributeValue sourceValue)) 
                         break;
-                    spec.GetSourcedCapturedAttributes()[this] = sourceValue;
+                    deriv.GetSourcedCapturedAttributes()[this] = sourceValue;
                     break;
                     
                 case ESourceTarget.Target:
-                    if (!spec.GetTarget().FindAttributeSystem(out var targetAttr) || 
+                    if (!deriv.GetTarget().FindAttributeSystem(out var targetAttr) || 
                         !targetAttr.TryGetAttributeValue(CaptureAttribute, out AttributeValue targetValue)) 
                         break;
-                    spec.GetSourcedCapturedAttributes()[this] = targetValue;
+                    deriv.GetSourcedCapturedAttributes()[this] = targetValue;
                     break;
                     
                 default:
@@ -48,34 +48,36 @@ namespace FarEmerald.PlayForge
             }
         }
         
-        public override float Evaluate(IAttributeImpactDerivation spec)
+        public override float Evaluate(IAttributeImpactDerivation deriv)
         {
-            float attributeValue = GetAttributeValue(spec);
+            float attributeValue = GetAttributeValue(deriv);
 
-            return ApplyBehaviourEvaluation(spec, attributeValue);
+            return ApplyBehaviourEvaluation(deriv, attributeValue);
         }
         
-        private float GetAttributeValue(IAttributeImpactDerivation spec)
+        private float GetAttributeValue(IAttributeImpactDerivation deriv)
         {
             // Use captured value if captured on creation
             if (CaptureWhen == ECaptureAttributeWhen.OnCreation)
             {
-                if (spec.GetSourcedCapturedAttributes().TryGetValue(this, out var capturedValue))
+                if (deriv?.GetSourcedCapturedAttributes().TryGetValue(this, out var capturedValue) ?? false)
                 {
                     return CaptureWhat switch
                     {
-                        EEffectImpactTargetLimited.Current => capturedValue?.CurrentValue ?? 0f,
-                        EEffectImpactTargetLimited.Base => capturedValue?.BaseValue ?? 0f,
+                        EAttributeTargetBinary.Current => capturedValue?.CurrentValue ?? 0f,
+                        EAttributeTargetBinary.Base => capturedValue?.BaseValue ?? 0f,
                         _ => throw new ArgumentOutOfRangeException()
                     };
                 }
+
+                Debug.LogWarning($"[PlayForge] Attribute backed scaler operation failed: impact derivation is null.");
                 return 0f;
             }
             
             // Get live attribute value
             var entity = CaptureFrom == ESourceTarget.Source 
-                ? spec.GetSource() 
-                : spec.GetTarget();
+                ? deriv.GetSource() 
+                : deriv.GetTarget();
             
             if (!entity.FindAttributeSystem(out var attrSystem) || 
                 !attrSystem.TryGetAttributeValue(CaptureAttribute, out AttributeValue attrValue))
@@ -85,8 +87,8 @@ namespace FarEmerald.PlayForge
             
             return CaptureWhat switch
             {
-                EEffectImpactTargetLimited.Current => attrValue.CurrentValue,
-                EEffectImpactTargetLimited.Base => attrValue.BaseValue,
+                EAttributeTargetBinary.Current => attrValue.CurrentValue,
+                EAttributeTargetBinary.Base => attrValue.BaseValue,
                 _ => throw new ArgumentOutOfRangeException()
             };
         }

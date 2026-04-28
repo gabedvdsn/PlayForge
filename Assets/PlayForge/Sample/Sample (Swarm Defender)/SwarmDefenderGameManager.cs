@@ -34,6 +34,8 @@ namespace FarEmerald.PlayForge.Extended.SwarmDefenderSample
         [SerializeField] private UIDocument uiDocument;
         [SerializeField] private Hero heroPrefab;
 
+        [SerializeReference] public List<AbstractScaler> Scalers = new();
+
         [Header("Content")]
         [Tooltip("Prefabs used by the enemy/wave spawners.")]
         [SerializeField] private List<Character> enemyPrefabs = new();

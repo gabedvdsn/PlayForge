@@ -163,7 +163,7 @@ namespace FarEmerald.PlayForge
     public class EffectImpactConfig : AbstractEffectConfig<AbstractEffectContainer>
     {
         public Attribute AttributeTarget;
-        public EEffectImpactTarget TargetImpact;
+        public EAttributeTarget TargetImpact;
         public ECalculationOperation ImpactOperation;
         
         public List<ValueModifier> MagnitudeModifiers;

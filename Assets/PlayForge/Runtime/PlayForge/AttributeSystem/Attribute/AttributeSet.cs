@@ -99,19 +99,13 @@ namespace FarEmerald.PlayForge
         }
     }
     
-    public enum ELimitedEffectImpactTarget
-    {
-        CurrentAndBase,
-        Base
-    }
-    
     [Serializable]
     public class AttributeSetElement
     {
         public Attribute Attribute;
         public float Magnitude;
         
-        public ELimitedEffectImpactTarget Target;
+        public EAttributeTargetLimited Target;
         public AttributeOverflowData Overflow;
         
         [ScalerRootAssignment(typeof(AbstractCachedScaler))]
@@ -125,10 +119,10 @@ namespace FarEmerald.PlayForge
 
         public AttributeConstraints Constraints = new();
 
-        public AttributeValue RootValue => Target switch
+        public AttributeValue ValueFromMagnitude => Target switch
         {
-            ELimitedEffectImpactTarget.CurrentAndBase => new AttributeValue(Magnitude, Magnitude),
-            ELimitedEffectImpactTarget.Base => new AttributeValue(0f, Magnitude),
+            EAttributeTargetLimited.CurrentAndBase => new AttributeValue(Magnitude, Magnitude),
+            EAttributeTargetLimited.Base => new AttributeValue(0f, Magnitude),
             _ => throw new ArgumentOutOfRangeException()
         };
     }
@@ -169,6 +163,7 @@ namespace FarEmerald.PlayForge
         FloorToBase,
         ZeroToCeil,
         FloorToCeil,
+        
         Unlimited
     }
 
@@ -256,7 +251,7 @@ namespace FarEmerald.PlayForge
                     float _base = defaults.Average(mav => mav.RootValue.BaseValue);
 
                     system.ProvideAttribute(attribute,
-                        new AttributeBlueprint(defaults[0].Base)
+                        new AttributeBlueprint(defaults[0].SetElement)
                     );
                     break;
                 }

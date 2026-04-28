@@ -8,28 +8,13 @@ namespace FarEmerald.PlayForge
     /// Cached scaler backed by an attribute value.
     /// Registers the attribute dependency for cache invalidation.
     /// </summary>
-    public class CachedAttributeBackedScaler : AbstractCachedScaler
+    public class CachedAttributeBackedScaler : CachedAttributeScaler
     {
-        [Tooltip("The attribute to read for scaling")]
-        public Attribute CaptureAttribute;
-        
-        [Tooltip("Use base or current attribute value")]
-        public EEffectImpactTargetLimited ScalingPolicy = EEffectImpactTargetLimited.Current;
-        
-        [Tooltip("Minimum expected attribute value (maps to 0 on curve)")]
-        public float AttributeMin = 0f;
-        
-        [Tooltip("Maximum expected attribute value (maps to 1 on curve)")]
-        public float AttributeMax = 100f;
-        
-        public override void Initialize(IAttributeImpactDerivation spec)
-        {
-            // No special initialization needed
-        }
+        public ECalculationOperation RelativeOperation = ECalculationOperation.Multiply;
         
         public override float Evaluate(IAttributeImpactDerivation spec)
         {
-            if (CaptureAttribute == null) return 0f;
+            if (CaptureAttribute is null) return 0f;
             
             if (!spec.GetSource().FindAttributeSystem(out var attrSystem) || 
                 !attrSystem.TryGetAttributeValue(CaptureAttribute, out AttributeValue attributeValue))
@@ -37,29 +22,25 @@ namespace FarEmerald.PlayForge
                 return 0f;
             }
             
-            float rawValue = ScalingPolicy switch
-            {
-                EEffectImpactTargetLimited.Current => attributeValue.CurrentValue,
-                EEffectImpactTargetLimited.Base => attributeValue.BaseValue,
-                _ => throw new ArgumentOutOfRangeException()
-            };
             
-            // Normalize to 0-1 range for curve evaluation
-            float normalized = Mathf.InverseLerp(AttributeMin, AttributeMax, rawValue);
-            return EvaluateAtRelativeLevel(Mathf.Clamp01(normalized));
         }
-        
-        public override void Regulate(IAttribute attribute, AttributeModificationRule rules)
+
+        public override AttributeValue EvaluateInitialValue(ISource source, AttributeBlueprint blueprint, IReadOnlyDictionary<IAttribute, CachedAttributeValue> cache)
         {
-            if (CaptureAttribute != null && attribute != null)
-            {
-                rules.RegisterRelation(CaptureAttribute, attribute);
-            }
+            if (!cache.TryGetValue(CaptureAttribute, out var value)) return new AttributeValue(0f, 0f);
+
+            var deriv = IAttributeImpactDerivation.GenerateSourceDerivation(source, blueprint.SetElement.Attribute);
+            var relativeLevel = GetEffectiveRelativeLevel(deriv);
+            var scalingValue = EvaluateScalingAtRelativeLevel(relativeLevel);
+            
+            var operand = 
+            
+            var result = ForgeHelper.AttributeMathEvent(value, r)
         }
-        public override float Evaluate(IGameplayAbilitySystem gas, AttributeBlueprint blueprint, IReadOnlyDictionary<IAttribute, CachedAttributeValue> cache)
+
+        public override bool UseScalingOptions()
         {
-            var value = cache[blueprint.Base.Attribute].Value;
-            return 0f;
+            return true;
         }
     }
 }

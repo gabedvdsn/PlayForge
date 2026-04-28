@@ -62,13 +62,13 @@ namespace FarEmerald.PlayForge
                 case ECalculationOperation.Add:
                     switch (Base.ImpactSpecification.TargetImpact)
                     {
-                        case EEffectImpactTarget.Current:
+                        case EAttributeTarget.Current:
                             currValue += magnitude;
                             break;
-                        case EEffectImpactTarget.Base:
+                        case EAttributeTarget.Base:
                             baseValue += magnitude;
                             break;
-                        case EEffectImpactTarget.CurrentAndBase:
+                        case EAttributeTarget.CurrentAndBase:
                             currValue += magnitude;
                             baseValue += magnitude;
                             break;
@@ -79,13 +79,13 @@ namespace FarEmerald.PlayForge
                 case ECalculationOperation.Multiply:
                     switch (Base.ImpactSpecification.TargetImpact)
                     {
-                        case EEffectImpactTarget.Current:
+                        case EAttributeTarget.Current:
                             currValue *= magnitude;
                             break;
-                        case EEffectImpactTarget.Base:
+                        case EAttributeTarget.Base:
                             baseValue *= magnitude;
                             break;
-                        case EEffectImpactTarget.CurrentAndBase:
+                        case EAttributeTarget.CurrentAndBase:
                             currValue *= magnitude;
                             baseValue *= magnitude;
                             break;
@@ -96,13 +96,13 @@ namespace FarEmerald.PlayForge
                 case ECalculationOperation.Override:
                     switch (Base.ImpactSpecification.TargetImpact)
                     {
-                        case EEffectImpactTarget.Current:
+                        case EAttributeTarget.Current:
                             currValue = magnitude;
                             break;
-                        case EEffectImpactTarget.Base:
+                        case EAttributeTarget.Base:
                             baseValue = magnitude;
                             break;
-                        case EEffectImpactTarget.CurrentAndBase:
+                        case EAttributeTarget.CurrentAndBase:
                             currValue = magnitude;
                             baseValue = magnitude;
                             break;
@@ -113,13 +113,13 @@ namespace FarEmerald.PlayForge
                 case ECalculationOperation.FlatBonus:
                     switch (Base.ImpactSpecification.TargetImpact)
                     {
-                        case EEffectImpactTarget.Current:
+                        case EAttributeTarget.Current:
                             currValue += magnitude;
                             break;
-                        case EEffectImpactTarget.Base:
+                        case EAttributeTarget.Base:
                             baseValue += magnitude;
                             break;
-                        case EEffectImpactTarget.CurrentAndBase:
+                        case EAttributeTarget.CurrentAndBase:
                             currValue += magnitude;
                             baseValue += magnitude;
                             break;
@@ -204,7 +204,7 @@ namespace FarEmerald.PlayForge
         }
         public bool RetainImpact()
         {
-            return Base.ImpactSpecification.TargetImpact != EEffectImpactTarget.Current || Base.DurationSpecification.DurationPolicy != EEffectDurationPolicy.Instant;
+            return Base.ImpactSpecification.TargetImpact != EAttributeTarget.Current || Base.DurationSpecification.DurationPolicy != EEffectDurationPolicy.Instant;
         }
     }
 }

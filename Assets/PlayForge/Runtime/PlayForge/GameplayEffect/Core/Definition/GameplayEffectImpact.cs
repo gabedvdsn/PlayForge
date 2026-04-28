@@ -12,7 +12,7 @@ namespace FarEmerald.PlayForge
     public class GameplayEffectImpact
     {
         public Attribute AttributeTarget;
-        public EEffectImpactTarget TargetImpact;
+        public EAttributeTarget TargetImpact;
         public ECalculationOperation ImpactOperation = ECalculationOperation.Add;
         
         public EAffiliationPolicy AffiliationPolicy = EAffiliationPolicy.AlwaysAllow;
@@ -97,21 +97,27 @@ namespace FarEmerald.PlayForge
         UseMagnitude,
         UseScaler
     }
+    
+    public enum EAttributeTargetLimited
+    {
+        CurrentAndBase,
+        Base
+    }
 
-    public enum EEffectImpactTargetLimited
+    public enum EAttributeTargetBinary
     {
         Current,
         Base
     }
 
-    public enum EEffectImpactTarget
+    public enum EAttributeTarget
     {
         Current,
         Base,
         CurrentAndBase
     }
 
-    public enum EEffectImpactTargetExpanded
+    public enum EAttributeTargetExpanded
     {
         Current,
         Base,

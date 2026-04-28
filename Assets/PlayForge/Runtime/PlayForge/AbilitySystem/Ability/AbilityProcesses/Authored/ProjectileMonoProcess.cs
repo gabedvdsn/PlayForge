@@ -23,7 +23,7 @@ namespace FarEmerald.PlayForge
             var speed = GetAttributeValue(Tags.PROJECTILE_SPEED);
             if (speed.RetainedValues is null) ReportStatus(Tags.FAILED_WHILE_ACTIVE);
 
-            return speed.Value.CurrentValue;
+            return speed.ActiveValue.CurrentValue;
         }
     }
 }

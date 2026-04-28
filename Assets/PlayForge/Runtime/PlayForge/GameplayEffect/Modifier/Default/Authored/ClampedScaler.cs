@@ -14,14 +14,14 @@ namespace FarEmerald.PlayForge
         [Tooltip("Maximum value (ceiling)")]
         public float MaxValue = 100f;
         
-        public override void Initialize(IAttributeImpactDerivation spec)
+        public override void Initialize(IAttributeImpactDerivation deriv)
         {
             // No initialization needed
         }
         
-        public override float Evaluate(IAttributeImpactDerivation spec)
+        public override float Evaluate(IAttributeImpactDerivation deriv)
         {
-            float value = EvaluateFromSpec(spec);
+            float value = EvaluateFromSpec(deriv);
             return Mathf.Clamp(value, MinValue, MaxValue);
         }
     }

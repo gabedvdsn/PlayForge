@@ -21,14 +21,14 @@ namespace FarEmerald.PlayForge
         [Tooltip("Maximum multiplier when using random range")]
         public float MaxMultiplier = 1.1f;
         
-        public override void Initialize(IAttributeImpactDerivation spec)
+        public override void Initialize(IAttributeImpactDerivation deriv)
         {
             // No initialization needed
         }
         
-        public override float Evaluate(IAttributeImpactDerivation spec)
+        public override float Evaluate(IAttributeImpactDerivation deriv)
         {
-            float baseValue = EvaluateFromSpec(spec);
+            float baseValue = EvaluateFromSpec(deriv);
             
             switch (VarianceMode)
             {

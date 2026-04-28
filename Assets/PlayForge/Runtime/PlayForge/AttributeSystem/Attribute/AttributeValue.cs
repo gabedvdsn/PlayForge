@@ -15,7 +15,7 @@ namespace FarEmerald.PlayForge
 
         public float Ratio => CurrentValue / BaseValue;
         public float ClampedRatio => BaseValue > 0 ? Mathf.Clamp01(CurrentValue / BaseValue) : 0f;
-        public float LerpedRatio(float min) => Mathf.Lerp(min, BaseValue, CurrentValue);
+        public float LerpedRatio(float min = 0f) => Mathf.InverseLerp(min, BaseValue, CurrentValue);
         public bool ContainsImpact => CurrentValue != 0 || BaseValue != 0;
 
         public AttributeValue(float currentValue, float baseValue)
@@ -23,17 +23,7 @@ namespace FarEmerald.PlayForge
             CurrentValue = currentValue;
             BaseValue = baseValue;
         }
-
-        public AttributeValue ApplyModified(ModifiedAttributeValue modifiedAttributeValue)
-        {
-            return new AttributeValue(
-                CurrentValue + modifiedAttributeValue.DeltaCurrentValue,
-                BaseValue + modifiedAttributeValue.DeltaBaseValue
-            );
-        }
-
-        public ModifiedAttributeValue ToModified => new ModifiedAttributeValue(CurrentValue, BaseValue);
-
+        
         public AttributeValue Combine(AttributeValue other) => this + other;
 
         public AttributeValue Negate() => this * -1;

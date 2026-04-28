@@ -42,15 +42,15 @@ namespace FarEmerald.PlayForge.Extended.Editor
             bool startCollapsed = IsCollapsed(property.propertyPath);
             
             // Get all properties upfront
-            var attributeProp = property.FindPropertyRelative("Attribute");
-            var magnitudeProp = property.FindPropertyRelative("Magnitude");
-            var modifierProp = property.FindPropertyRelative("Scaling");
-            var realMagProp = property.FindPropertyRelative("RealMagnitude");
-            var targetProp = property.FindPropertyRelative("Target");
-            var overflowProp = property.FindPropertyRelative("Overflow");
-            var collisionProp = property.FindPropertyRelative("CollisionPolicy");
-            var constraintsProp = property.FindPropertyRelative("Constraints");
-            var retGroupProp = property.FindPropertyRelative("RetentionGroup");
+            var attributeProp = property.FindPropertyRelative(nameof(AttributeSetElement.Attribute));
+            var magnitudeProp = property.FindPropertyRelative(nameof(AttributeSetElement.Magnitude));
+            var modifierProp = property.FindPropertyRelative(nameof(AttributeSetElement.Scaling));
+            var realMagProp = property.FindPropertyRelative(nameof(AttributeSetElement.RealMagnitude));
+            var targetProp = property.FindPropertyRelative(nameof(AttributeSetElement.Target));
+            var overflowProp = property.FindPropertyRelative(nameof(AttributeSetElement.Overflow));
+            var collisionProp = property.FindPropertyRelative(nameof(AttributeSetElement.CollisionPolicy));
+            var constraintsProp = property.FindPropertyRelative(nameof(AttributeSetElement.Constraints));
+            var retGroupProp = property.FindPropertyRelative(nameof(AttributeSetElement.RetentionGroup));
             
             // Main container
             var container = new VisualElement { name = "Container" };
@@ -256,23 +256,6 @@ namespace FarEmerald.PlayForge.Extended.Editor
             overflowRow.Add(ovField);
             
             // Collision row
-            var collisionRow = new VisualElement();
-            collisionRow.style.flexDirection = FlexDirection.Row;
-            collisionRow.style.alignItems = Align.Center;
-            expandedContent.Add(collisionRow);
-            
-            var collLabel = new Label("Collision");
-            collLabel.style.width = 65;
-            collLabel.style.fontSize = 10;
-            collLabel.style.color = Colors.HintText;
-            collisionRow.Add(collLabel);
-            
-            var collField = new PropertyField(collisionProp, "");
-            collField.style.flexGrow = 1;
-            collField.BindProperty(collisionProp);
-            collisionRow.Add(collField);
-            
-            // Collision row
             var constraintsRow = new VisualElement();
             constraintsRow.style.flexDirection = FlexDirection.Row;
             constraintsRow.style.alignItems = Align.Center;
@@ -289,6 +272,26 @@ namespace FarEmerald.PlayForge.Extended.Editor
             constraintField.BindProperty(constraintsProp);
             constraintsRow.Add(constraintField);
             
+            expandedContent.Add(CreateDivider());
+            expandedContent.Add(CreateHintLabel("Collision resolution policy for this attribute (overrides "));
+            
+            // Collision row
+            var collisionRow = new VisualElement();
+            collisionRow.style.flexDirection = FlexDirection.Row;
+            collisionRow.style.alignItems = Align.Center;
+            expandedContent.Add(collisionRow);
+            
+            var collLabel = new Label("Collision");
+            collLabel.style.width = 65;
+            collLabel.style.fontSize = 10;
+            collLabel.style.color = Colors.HintText;
+            collisionRow.Add(collLabel);
+            
+            var collField = new PropertyField(collisionProp, "");
+            collField.style.flexGrow = 1;
+            collField.BindProperty(collisionProp);
+            collisionRow.Add(collField);
+            
             // ═══════════════════════════════════════════════════════════════════
             // Update Functions
             // ═══════════════════════════════════════════════════════════════════
@@ -301,8 +304,8 @@ namespace FarEmerald.PlayForge.Extended.Editor
                 magBadge.tooltip = $"Magnitude: {mag:F2}";
                 
                 // Target
-                var target = (ELimitedEffectImpactTarget)targetProp.enumValueIndex;
-                targetBadge.text = target == ELimitedEffectImpactTarget.CurrentAndBase ? "C+B" : "B";
+                var target = (EAttributeTargetLimited)targetProp.enumValueIndex;
+                targetBadge.text = target == EAttributeTargetLimited.CurrentAndBase ? "C+B" : "B";
                 targetBadge.tooltip = $"Targets: {target.ToString()}";
                 
                 string retentionGroup = retGroupProp.FindPropertyRelative("Name").stringValue;

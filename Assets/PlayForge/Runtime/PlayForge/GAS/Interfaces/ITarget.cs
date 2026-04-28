@@ -10,6 +10,7 @@ namespace FarEmerald.PlayForge
         public bool ApplyGameplayEffect(GameplayEffectSpec spec);
         public bool RemoveGameplayEffect(GameplayEffect effect);
         public GameplayEffectSpec GenerateEffectSpec(IEffectOrigin origin, GameplayEffect GameplayEffect);
+        public IntValuePairClamped GetLevel(Tag key);
         public bool FindLevelSystem(out SystemLevelsComponent lvlSystem);
         public bool FindItemSystem(out ItemSystemComponent itemSystem);
         public bool FindAttributeSystem(out AttributeSystemComponent attrSystem);

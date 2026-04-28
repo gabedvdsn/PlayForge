@@ -13,7 +13,7 @@ namespace FarEmerald.PlayForge
         
         [Space]
         
-        public EEffectImpactTarget Target;
+        public EAttributeTarget Target;
         public EComparisonOperator Policy;
 
         public override IEnumerable<IRootAction> OnEffectApplication(EffectWorkerContext ctx)
@@ -68,9 +68,9 @@ namespace FarEmerald.PlayForge
         {
             return Target switch
             {
-                EEffectImpactTarget.Current => policyFunc(attributeValue.CurrentValue, Threshold.CurrentValue),
-                EEffectImpactTarget.Base => policyFunc(attributeValue.BaseValue, Threshold.BaseValue),
-                EEffectImpactTarget.CurrentAndBase => policyFunc(attributeValue.CurrentValue, Threshold.CurrentValue) && policyFunc(attributeValue.BaseValue, Threshold.BaseValue),
+                EAttributeTarget.Current => policyFunc(attributeValue.CurrentValue, Threshold.CurrentValue),
+                EAttributeTarget.Base => policyFunc(attributeValue.BaseValue, Threshold.BaseValue),
+                EAttributeTarget.CurrentAndBase => policyFunc(attributeValue.CurrentValue, Threshold.CurrentValue) && policyFunc(attributeValue.BaseValue, Threshold.BaseValue),
                 _ => throw new ArgumentOutOfRangeException()
             };
         }

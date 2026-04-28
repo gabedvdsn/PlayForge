@@ -56,7 +56,7 @@ namespace FarEmerald.PlayForge
                         ? value * RelativeMultiplier
                         : default,
                 EFromSelfSource.FromSelf => ctx.AttributeCache.TryGetValue(RelativeTo, out var cached)
-                    ? cached.Value * RelativeMultiplier
+                    ? cached.ActiveValue * RelativeMultiplier
                     : default,
                 _ => default
             };

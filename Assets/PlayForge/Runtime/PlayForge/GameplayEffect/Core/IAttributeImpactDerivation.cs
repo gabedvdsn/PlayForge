@@ -27,16 +27,23 @@ namespace FarEmerald.PlayForge
         public Dictionary<IScaler, AttributeValue?> GetSourcedCapturedAttributes();
         public bool RetainImpact();
 
-        public static LevelerImpactDerivation GenerateLevelerDerivation(ISource source, IntValuePairClamped level)
+        public static LevelerImpactDerivation GenerateLevelerDerivation(ISource source, IntValuePairClamped level, IAttribute attribute = null)
         {
-            return new LevelerImpactDerivation(source, level);
+            return new LevelerImpactDerivation(source, level, attribute);
+        }
+
+        public static SourceAttributeImpact GenerateSourceDerivation(ISource source, IAttribute attribute)
+        {
+            return new SourceAttributeImpact(source, attribute,
+                new List<Tag>() { Tags.DisallowImpact }, Tags.IgnoreRetention,
+                null, false);
         }
         
-        public static SourceAttributeImpact GenerateSourceDerivation(ISource source, IAttribute attribute, Tag retentionGroup, List<Tag> impactType, IAttributeImpactDerivation rootDerivation = null, bool retainOverride = false)
+        public static SourceAttributeImpact GenerateSourceDerivation(ISource source, IAttribute attribute, Tag retentionGroup, List<Tag> impactType = null, IAttributeImpactDerivation rootDerivation = null, bool retainOverride = false)
         {
             return new SourceAttributeImpact(
                 source, attribute, 
-                impactType, retentionGroup,
+                impactType ?? new List<Tag>() { Tags.DisallowImpact }, retentionGroup,
                 rootDerivation, retainOverride);
         }
 
@@ -140,7 +147,7 @@ namespace FarEmerald.PlayForge
     {
         private LevelerEffectOrigin levelerOrigin;
         
-        public LevelerImpactDerivation(ISource source, IntValuePairClamped level) : base(source, null, new List<Tag>(){ Tags.DisallowImpact}, Tags.IgnoreRetention, null, false)
+        public LevelerImpactDerivation(ISource source, IntValuePairClamped level, IAttribute attribute = null) : base(source, attribute, new List<Tag>(){ Tags.DisallowImpact}, Tags.IgnoreRetention, null, false)
         {
             levelerOrigin = IEffectOrigin.GenerateLevelerDerivation(source, level);
         }

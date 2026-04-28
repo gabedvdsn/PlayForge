@@ -21,17 +21,17 @@ namespace FarEmerald.PlayForge
         [Tooltip("Value to use if below all thresholds")]
         public float DefaultValue = 1f;
         
-        public override void Initialize(IAttributeImpactDerivation spec)
+        public override void Initialize(IAttributeImpactDerivation deriv)
         {
             // No initialization needed
         }
         
-        public override float Evaluate(IAttributeImpactDerivation spec)
+        public override float Evaluate(IAttributeImpactDerivation deriv)
         {
             if (Thresholds == null || Thresholds.Length == 0)
                 return DefaultValue;
             
-            int currentLevel = spec.GetEffectDerivation().GetLevel().CurrentValue;
+            int currentLevel = deriv.GetEffectDerivation().GetLevel().CurrentValue;
             
             // Find the highest threshold that is <= current level
             float result = DefaultValue;

@@ -12,7 +12,7 @@ namespace FarEmerald.PlayForge
         /// IEffectOrigin.AssetTag : RCV
         /// </summary>
         private Dictionary<Tag, RetainedCachedValue> derivations = new();
-        public AttributeValue Value { get; private set; }
+        public AttributeValue ActiveValue { get; private set; }
         public AttributeBlueprint Blueprint { get; }
 
         private IAttributeImpactDerivation root;
@@ -48,12 +48,12 @@ namespace FarEmerald.PlayForge
             return Blueprint is not null
                    && Initialize(
                        attribute, source, cache,
-                       Blueprint.Base.RetentionGroup,
-                       Blueprint.GetDefaultValue(source, cache)
+                       Blueprint.SetElement.RetentionGroup,
+                       Blueprint.GetInitialValue(source, cache)
                    );
         }
 
-        public bool Initialize(IAttribute attribute, IGameplayAbilitySystem source, IReadOnlyDictionary<IAttribute, CachedAttributeValue> cache, Tag retentionGroup,
+        private bool Initialize(IAttribute attribute, IGameplayAbilitySystem source, IReadOnlyDictionary<IAttribute, CachedAttributeValue> cache, Tag retentionGroup,
             AttributeValue value)
         {
             root = IAttributeImpactDerivation.GenerateSourceDerivation(
@@ -67,19 +67,19 @@ namespace FarEmerald.PlayForge
             return true;
         }
 
-        public AttributeValue RefreshDefaultValue(ISource source, IReadOnlyDictionary<IAttribute, CachedAttributeValue> cache)
+        public AttributeValue RefreshActiveValue(ISource source, IReadOnlyDictionary<IAttribute, CachedAttributeValue> cache)
         {
             var key = source.GetAssetTag();
             if (!derivations.TryGetValue(key, out var rcv)) return default;
     
             var oldValue = rcv.Value;
-            var newDefaultValue = Blueprint.GetDefaultValue(source.ToGAS(), cache);
+            var newDefaultValue = Blueprint.GetActiveValue(source.ToGAS(), cache);
     
             rcv.Set(root, newDefaultValue);
     
             // Update total value
             var delta = rcv.Value - oldValue;
-            Value += delta;
+            ActiveValue += delta;
     
             return delta;
         }
@@ -92,7 +92,7 @@ namespace FarEmerald.PlayForge
         
         public void Add(IAttributeImpactDerivation derivation, AttributeValue attributeValue, bool retain)
         {
-            Value += attributeValue;
+            ActiveValue += attributeValue;
 
             if (!retain) return;
             
@@ -115,7 +115,7 @@ namespace FarEmerald.PlayForge
             var key = derivation.GetEffectDerivation().GetAssetTag();
             var delta = derivations[key].Value;
             if (retainCurrent) delta.CurrentValue = 0f;
-            Value -= delta;
+            ActiveValue -= delta;
             if (derivations.ContainsKey(key)) derivations.Remove(key);
         }
 
@@ -130,32 +130,32 @@ namespace FarEmerald.PlayForge
         {
             if (Blueprint is null) return;
             
-            var newValue = Value;
+            var newValue = ActiveValue;
             
-            if (Blueprint.Base.Constraints.AutoClamp)
+            if (Blueprint.SetElement.Constraints.AutoClamp)
             {
-                switch (Blueprint.Base.Overflow.Policy)
+                switch (Blueprint.SetElement.Overflow.Policy)
                 {
                     case EAttributeOverflowPolicy.ZeroToBase:
                         newValue = new AttributeValue(
-                            Mathf.Clamp(Value.CurrentValue, 0, Value.BaseValue),
-                            Value.BaseValue);
+                            Mathf.Clamp(ActiveValue.CurrentValue, 0, ActiveValue.BaseValue),
+                            ActiveValue.BaseValue);
                         break;
                     case EAttributeOverflowPolicy.FloorToBase:
                         newValue = new AttributeValue(
-                            Mathf.Clamp(Value.CurrentValue, Blueprint.Base.Overflow.Floor.CurrentValue, Value.BaseValue),
-                            Value.BaseValue);
+                            Mathf.Clamp(ActiveValue.CurrentValue, Blueprint.SetElement.Overflow.Floor.CurrentValue, ActiveValue.BaseValue),
+                            ActiveValue.BaseValue);
                         break;
                     case EAttributeOverflowPolicy.ZeroToCeil:
                         newValue = new AttributeValue(
-                            Mathf.Clamp(Value.CurrentValue, 0, Blueprint.Base.Overflow.Ceil.CurrentValue),
-                            Mathf.Clamp(Value.BaseValue, 0, Blueprint.Base.Overflow.Ceil.BaseValue)
+                            Mathf.Clamp(ActiveValue.CurrentValue, 0, Blueprint.SetElement.Overflow.Ceil.CurrentValue),
+                            Mathf.Clamp(ActiveValue.BaseValue, 0, Blueprint.SetElement.Overflow.Ceil.BaseValue)
                         );
                         break;
                     case EAttributeOverflowPolicy.FloorToCeil:
                         newValue = new AttributeValue(
-                            Mathf.Clamp(Value.CurrentValue, Blueprint.Base.Overflow.Floor.CurrentValue, Blueprint.Base.Overflow.Ceil.CurrentValue),
-                            Mathf.Clamp(Value.BaseValue, Blueprint.Base.Overflow.Floor.BaseValue, Blueprint.Base.Overflow.Ceil.BaseValue)
+                            Mathf.Clamp(ActiveValue.CurrentValue, Blueprint.SetElement.Overflow.Floor.CurrentValue, Blueprint.SetElement.Overflow.Ceil.CurrentValue),
+                            Mathf.Clamp(ActiveValue.BaseValue, Blueprint.SetElement.Overflow.Floor.BaseValue, Blueprint.SetElement.Overflow.Ceil.BaseValue)
                         );
                         break;
                     case EAttributeOverflowPolicy.Unlimited:
@@ -165,19 +165,19 @@ namespace FarEmerald.PlayForge
                 }
             }
             
-            Value = newValue;
+            ActiveValue = newValue;
         }
 
         public void EnforceScaling(WorkerContext ctx)
         {
             if (Blueprint is null) return;
             
-            if (!Blueprint.Base.Constraints.AutoScaleWithBase || ctx.Change.Value.BaseValue == 0) return;
-            float oldBase = Value.BaseValue - ctx.Change.Value.BaseValue;
+            if (!Blueprint.SetElement.Constraints.AutoScaleWithBase || ctx.Change.Value.BaseValue == 0) return;
+            float oldBase = ActiveValue.BaseValue - ctx.Change.Value.BaseValue;
             if (Mathf.Approximately(oldBase, 0f)) return;
             float proportion = ctx.Change.Value.BaseValue / oldBase;  // change / oldBase
             
-            float delta = proportion * Value.CurrentValue;
+            float delta = proportion * ActiveValue.CurrentValue;
 
             var derivation = IAttributeImpactDerivation.GenerateSourceDerivation(
                 ctx.Change.Value, Tags.IgnoreRetention, new List<Tag>() { Tags.AllowImpact });
@@ -191,27 +191,27 @@ namespace FarEmerald.PlayForge
         { 
             if (Blueprint is null) return;
             
-            var newValue = Blueprint.Base.Constraints.RoundingMode switch
+            var newValue = Blueprint.SetElement.Constraints.RoundingMode switch
             {
-                EAttributeRoundingPolicy.None => Value,
+                EAttributeRoundingPolicy.None => ActiveValue,
                 EAttributeRoundingPolicy.ToFloor => new AttributeValue(
-                    Mathf.Floor(Value.CurrentValue),
-                    Mathf.Floor(Value.BaseValue)),
+                    Mathf.Floor(ActiveValue.CurrentValue),
+                    Mathf.Floor(ActiveValue.BaseValue)),
                 EAttributeRoundingPolicy.ToCeil => new AttributeValue(
-                    Mathf.Ceil(Value.CurrentValue),
-                    Mathf.Ceil(Value.BaseValue)),
+                    Mathf.Ceil(ActiveValue.CurrentValue),
+                    Mathf.Ceil(ActiveValue.BaseValue)),
                 EAttributeRoundingPolicy.Round => new AttributeValue(
-                    Mathf.Round(Value.CurrentValue),
-                    Mathf.Round(Value.BaseValue)),
-                EAttributeRoundingPolicy.SnapTo => Mathf.Approximately(Blueprint.Base.Constraints.SnapInterval, 0f)
-                    ? Value
+                    Mathf.Round(ActiveValue.CurrentValue),
+                    Mathf.Round(ActiveValue.BaseValue)),
+                EAttributeRoundingPolicy.SnapTo => Mathf.Approximately(Blueprint.SetElement.Constraints.SnapInterval, 0f)
+                    ? ActiveValue
                     : new AttributeValue(
-                        Mathf.Round(Value.CurrentValue / Blueprint.Base.Constraints.SnapInterval) * Blueprint.Base.Constraints.SnapInterval,
-                        Mathf.Round(Value.BaseValue / Blueprint.Base.Constraints.SnapInterval) * Blueprint.Base.Constraints.SnapInterval),
+                        Mathf.Round(ActiveValue.CurrentValue / Blueprint.SetElement.Constraints.SnapInterval) * Blueprint.SetElement.Constraints.SnapInterval,
+                        Mathf.Round(ActiveValue.BaseValue / Blueprint.SetElement.Constraints.SnapInterval) * Blueprint.SetElement.Constraints.SnapInterval),
                 _ => throw new ArgumentOutOfRangeException()
             };
 
-            Value = newValue;
+            ActiveValue = newValue;
         }
     }
     

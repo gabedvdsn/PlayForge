@@ -27,7 +27,7 @@ namespace FarEmerald.PlayForge.Extended.Editor
         // Filtering
         private string analysisSearchFilter = "";
         private EEffectDurationPolicy? analysisFilterDuration = null;
-        private EEffectImpactTarget? analysisFilterImpactTarget = null;
+        private EAttributeTarget? analysisFilterImpactTarget = null;
         private ECalculationOperation? analysisFilterImpactOp = null;
         // private string analysisFilterContextTag = null;
         
@@ -505,9 +505,9 @@ namespace FarEmerald.PlayForge.Extended.Editor
             // Impact target filter
             filterBar.Add(CreateFilterLabel("Target:"));
             filterBar.Add(CreateEffectImpactTargetFilterButton("All", null));
-            filterBar.Add(CreateEffectImpactTargetFilterButton("Curr", EEffectImpactTarget.Current));
-            filterBar.Add(CreateEffectImpactTargetFilterButton("Base", EEffectImpactTarget.Base));
-            filterBar.Add(CreateEffectImpactTargetFilterButton("Both", EEffectImpactTarget.CurrentAndBase));
+            filterBar.Add(CreateEffectImpactTargetFilterButton("Curr", EAttributeTarget.Current));
+            filterBar.Add(CreateEffectImpactTargetFilterButton("Base", EAttributeTarget.Base));
+            filterBar.Add(CreateEffectImpactTargetFilterButton("Both", EAttributeTarget.CurrentAndBase));
             
             filterBar.Add(CreateFilterSeparator());
             
@@ -578,7 +578,7 @@ namespace FarEmerald.PlayForge.Extended.Editor
             return btn;
         }
         
-        private Button CreateEffectImpactTargetFilterButton(string text, EEffectImpactTarget? value)
+        private Button CreateEffectImpactTargetFilterButton(string text, EAttributeTarget? value)
         {
             bool isSelected = analysisFilterImpactTarget == value;
             var btn = new Button { text = text };

@@ -10,7 +10,6 @@ namespace FarEmerald.PlayForge
         public FrameSummary GetFrameSummary();
         public EffectDurationRemaining GetLongestDurationFor(Tag lookForTag);
         public EffectDurationRemaining GetLongestDurationFor(List<Tag> lookForTags);
-        public IntValuePairClamped GetLevel(Tag key);
         public LevelCallbackStatus SetLevel(Tag key, IntValuePair level);
         public LevelCallbackStatus ModifyLevel(Tag key, IntValuePair delta);
     }

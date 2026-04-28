@@ -127,8 +127,8 @@ namespace FarEmerald.PlayForge
         // Abstract Methods
         // ═══════════════════════════════════════════════════════════════════════════
         
-        public abstract void Initialize(IAttributeImpactDerivation spec);
-        public abstract float Evaluate(IAttributeImpactDerivation spec);
+        public abstract void Initialize(IAttributeImpactDerivation deriv);
+        public abstract float Evaluate(IAttributeImpactDerivation deriv);
 
         public virtual void Initialize(AbstractStackingEffectContainer container) => Initialize(container.Spec);
         public virtual float Evaluate(AbstractStackingEffectContainer container) => Evaluate(container.Spec);
@@ -401,11 +401,19 @@ namespace FarEmerald.PlayForge
                 _ => MaxLevel
             };
         }
+
+        protected float GetEffectiveRelativeLevel(IAttributeImpactDerivation deriv)
+        {
+            var level = deriv.GetEffectDerivation().GetLevel();
+            int maxLevel = GetEffectiveMaxLevel(deriv);
+            float relativeLevel = Mathf.InverseLerp(level.MinValue, maxLevel, level.CurrentValue);
+            return Mathf.Clamp01(relativeLevel);
+        }
         
         /// <summary>
         /// Evaluates the scaling curve at the given relative level.
         /// </summary>
-        protected float EvaluateAtRelativeLevel(float relativeLevel)
+        protected float EvaluateScalingAtRelativeLevel(float relativeLevel)
         {
             return Scaling.Evaluate(Mathf.Clamp01(relativeLevel));
         }
@@ -415,8 +423,8 @@ namespace FarEmerald.PlayForge
         /// </summary>
         protected float EvaluateFromSpec(IAttributeImpactDerivation spec)
         {
-            float relativeLevel = spec.GetEffectDerivation().GetLevel().Ratio;
-            return ApplyBehaviourEvaluation(spec, EvaluateAtRelativeLevel(relativeLevel));
+            float relativeLevel = GetEffectiveRelativeLevel(spec);
+            return ApplyBehaviourEvaluation(spec, EvaluateScalingAtRelativeLevel(relativeLevel));
         }
 
         protected float ApplyBehaviourEvaluation(IAttributeImpactDerivation spec, float magnitude)
@@ -447,7 +455,7 @@ namespace FarEmerald.PlayForge
 
     public enum ELevelConfig
     {
-        [Tooltip("Uses the owning Ability/Entity's level range automatically.\n" +
+        [Tooltip("Uses the provider's level range automatically.\n" +
                  "Level values array should match the source's max level.\n" +
                  "The provider is determined at runtime from the effect's derivation context.")]
         LockToLevelProvider,
@@ -458,7 +466,8 @@ namespace FarEmerald.PlayForge
         
         [Tooltip("Uses min(MaxLevel, provider's current level).\n" +
                  "Useful for effects that scale up to the provider's current level,\n" +
-                 "but cap at a maximum even if provider exceeds it.")]
+                 "but cap at a maximum even if provider exceeds it.\n" +
+                 "Useful for scalers that need a fixed level range.")]
         Clamped
     }
     

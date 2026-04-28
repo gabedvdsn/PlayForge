@@ -10,9 +10,9 @@ namespace FarEmerald.PlayForge
             return Target switch
             {
 
-                EEffectImpactTarget.Current => policyFunc(attributeValue.CurrentValue / attributeValue.BaseValue, Threshold.CurrentValue),
-                EEffectImpactTarget.Base => policyFunc(attributeValue.BaseValue / attributeValue.BaseValue, Threshold.CurrentValue),
-                EEffectImpactTarget.CurrentAndBase => policyFunc(attributeValue.CurrentValue / attributeValue.BaseValue, Threshold.CurrentValue) &&
+                EAttributeTarget.Current => policyFunc(attributeValue.CurrentValue / attributeValue.BaseValue, Threshold.CurrentValue),
+                EAttributeTarget.Base => policyFunc(attributeValue.BaseValue / attributeValue.BaseValue, Threshold.CurrentValue),
+                EAttributeTarget.CurrentAndBase => policyFunc(attributeValue.CurrentValue / attributeValue.BaseValue, Threshold.CurrentValue) &&
                                                       policyFunc(attributeValue.BaseValue / attributeValue.BaseValue, Threshold.CurrentValue),
                 _ => throw new ArgumentOutOfRangeException()
             };

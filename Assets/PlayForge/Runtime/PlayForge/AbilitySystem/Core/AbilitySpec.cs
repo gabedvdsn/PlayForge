@@ -9,7 +9,7 @@ namespace FarEmerald.PlayForge
     {
         public Ability Base;
         
-        public AbilitySpec(ISource source, Ability ability, int level) : base(source, new IntValuePairClamped(level, ability.MaxLevel), ability.Tags.AssetTag)
+        public AbilitySpec(ISource source, Ability ability, int level) : base(source, new IntValuePairClamped(level, ability.StartingLevel, ability.MaxLevel), ability.Tags.AssetTag)
         {
             Base = ability;
         }
