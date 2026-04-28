@@ -67,10 +67,10 @@ namespace FarEmerald.PlayForge
 
     public class SourceAttributeImpact : IAttributeImpactDerivation
     {
-        private ISource Source;
-        public IAttribute Attribute;
-        private List<Tag> ImpactType;
-        private Tag RetentionGroup;
+        public readonly ISource Source;
+        public readonly IAttribute Attribute;
+        private readonly List<Tag> ImpactType;
+        private readonly Tag RetentionGroup;
         
         private IAttributeImpactDerivation RootDerivation;
         private bool RetainFallback = false;

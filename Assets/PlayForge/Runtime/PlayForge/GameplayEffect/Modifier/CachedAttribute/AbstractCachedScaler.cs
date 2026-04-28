@@ -12,9 +12,13 @@ namespace FarEmerald.PlayForge
     /// </summary>
     public abstract class AbstractCachedScaler : AbstractScaler
     {
+        /// <summary>
+        /// Attach update calls to ASC callbacks as needed to appropriately evaluate and maintain the cached attribute
+        /// </summary>
+        /// <param name="deriv"></param>
         public override void Initialize(IAttributeImpactDerivation deriv)
         {
-            // Cached scalers do nothing by default
+            // By default, cached attribute scalers do not initialize anything
         }
 
         /// <summary>
@@ -35,9 +39,9 @@ namespace FarEmerald.PlayForge
         {
         }
 
-        public abstract AttributeValue EvaluateActiveValue(ISource source, AttributeBlueprint blueprint, IReadOnlyDictionary<IAttribute, CachedAttributeValue> cache);
+        public abstract AttributeValue EvaluateActiveValue(SourceAttributeImpact deriv, AttributeBlueprint blueprint, IReadOnlyDictionary<IAttribute, CachedAttributeValue> cache);
         
-        public virtual AttributeValue EvaluateInitialValue(ISource source, AttributeBlueprint blueprint, IReadOnlyDictionary<IAttribute, CachedAttributeValue> cache)
+        public virtual AttributeValue EvaluateInitialValue(SourceAttributeImpact deriv, AttributeBlueprint blueprint, IReadOnlyDictionary<IAttribute, CachedAttributeValue> cache)
         {
             return blueprint.RootValue;
         }

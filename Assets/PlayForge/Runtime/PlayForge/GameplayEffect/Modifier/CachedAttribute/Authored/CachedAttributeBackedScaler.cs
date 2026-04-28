@@ -25,11 +25,11 @@ namespace FarEmerald.PlayForge
             
         }
 
-        public override AttributeValue EvaluateInitialValue(ISource source, AttributeBlueprint blueprint, IReadOnlyDictionary<IAttribute, CachedAttributeValue> cache)
+        public override AttributeValue EvaluateInitialValue(SourceAttributeImpact deriv1, AttributeBlueprint blueprint, IReadOnlyDictionary<IAttribute, CachedAttributeValue> cache)
         {
             if (!cache.TryGetValue(CaptureAttribute, out var value)) return new AttributeValue(0f, 0f);
 
-            var deriv = IAttributeImpactDerivation.GenerateSourceDerivation(source, blueprint.SetElement.Attribute);
+            var deriv = IAttributeImpactDerivation.GenerateSourceDerivation(deriv1, blueprint.SetElement.Attribute);
             var relativeLevel = GetEffectiveRelativeLevel(deriv);
             var scalingValue = EvaluateScalingAtRelativeLevel(relativeLevel);
             

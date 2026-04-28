@@ -5,22 +5,25 @@ namespace FarEmerald.PlayForge
 {
     public class AttributeBlueprint
     {
-        public AttributeValue RootValue;
+        public AttributeValue RootValue => SetElement.ValueFromMagnitude;
         
         public readonly AttributeSetElement SetElement;
+        private SourceAttributeImpact Derivation;
 
         public AttributeBlueprint(AttributeSetElement setElement)
         {
             SetElement = setElement;
-            RootValue = SetElement.ValueFromMagnitude;
+            
         }
 
         public AttributeValue GetInitialValue(IGameplayAbilitySystem system, IReadOnlyDictionary<IAttribute, CachedAttributeValue> cache)
         {
+            Derivation ??= IAttributeImpactDerivation.GenerateSourceDerivation(system, SetElement.Attribute);
+            
             if (SetElement.Scaling is null) return RootValue;
             if (SetElement.RealMagnitude == EMagnitudeOperation.UseMagnitude) return RootValue;
             
-            var value = SetElement.Scaling.EvaluateInitialValue(system, this, cache);
+            var value = SetElement.Scaling.EvaluateInitialValue(Derivation, this, cache);
             var operand = SetElement.Target switch
             {
                 EAttributeTargetLimited.CurrentAndBase => new AttributeValue(value, value),

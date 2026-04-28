@@ -26,7 +26,7 @@ namespace FarEmerald.PlayForge
             }
         }
         
-        public override AttributeValue EvaluateInitialValue(ISource source, AttributeBlueprint blueprint, IReadOnlyDictionary<IAttribute, CachedAttributeValue> cache)
+        public override AttributeValue EvaluateInitialValue(SourceAttributeImpact deriv, AttributeBlueprint blueprint, IReadOnlyDictionary<IAttribute, CachedAttributeValue> cache)
         {
             return cache.TryGetValue(CaptureAttribute, out var value) 
                 ? value.RootValue 

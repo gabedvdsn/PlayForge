@@ -14,7 +14,7 @@ namespace FarEmerald.PlayForge
             // No initialization needed
         }
         
-        public override AttributeValue EvaluateActiveValue(ISource source, AttributeBlueprint blueprint, IReadOnlyDictionary<IAttribute, CachedAttributeValue> cache)
+        public override AttributeValue EvaluateActiveValue(SourceAttributeImpact deriv, AttributeBlueprint blueprint, IReadOnlyDictionary<IAttribute, CachedAttributeValue> cache)
         {
             return EvaluateFromSpec(spec);
         }
