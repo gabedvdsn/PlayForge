@@ -49,7 +49,7 @@ namespace FarEmerald.PlayForge
                    && Initialize(
                        attribute, source, cache,
                        Blueprint.SetElement.RetentionGroup,
-                       Blueprint.GetInitialValue(source, cache)
+                       Blueprint.GetInitialValue(cache)
                    );
         }
 
@@ -62,7 +62,7 @@ namespace FarEmerald.PlayForge
                 new List<Tag>() { Tags.DisallowImpact }
             );
             
-            Add(root, value, true);
+            ApplyModification(root, value, true);
             
             return true;
         }
@@ -73,7 +73,7 @@ namespace FarEmerald.PlayForge
             if (!derivations.TryGetValue(key, out var rcv)) return default;
     
             var oldValue = rcv.Value;
-            var newDefaultValue = Blueprint.GetActiveValue(source.ToGAS(), cache);
+            var newDefaultValue = Blueprint.GetActiveValue(cache);
     
             rcv.Set(root, newDefaultValue);
     
@@ -90,7 +90,7 @@ namespace FarEmerald.PlayForge
             rcv.NullifyDerivation(derivation);
         }
         
-        public void Add(IAttributeImpactDerivation derivation, AttributeValue attributeValue, bool retain)
+        public void ApplyModification(IAttributeImpactDerivation derivation, AttributeValue attributeValue, bool retain)
         {
             ActiveValue += attributeValue;
 
@@ -125,47 +125,15 @@ namespace FarEmerald.PlayForge
         }
 
         /// <summary>
+        /// Clamp <see cref="ActiveValue"/> to the element's overflow bounds (single source of
+        /// truth lives on <see cref="AttributeOverflowData.Clamp"/> so the drawer's live input
+        /// clamp and this runtime clamp can never disagree).
         /// </summary>
         public void ApplyBounds()
         {
-            if (Blueprint is null) return;
-            
-            var newValue = ActiveValue;
-            
-            if (Blueprint.SetElement.Constraints.AutoClamp)
-            {
-                switch (Blueprint.SetElement.Overflow.Policy)
-                {
-                    case EAttributeOverflowPolicy.ZeroToBase:
-                        newValue = new AttributeValue(
-                            Mathf.Clamp(ActiveValue.CurrentValue, 0, ActiveValue.BaseValue),
-                            ActiveValue.BaseValue);
-                        break;
-                    case EAttributeOverflowPolicy.FloorToBase:
-                        newValue = new AttributeValue(
-                            Mathf.Clamp(ActiveValue.CurrentValue, Blueprint.SetElement.Overflow.Floor.CurrentValue, ActiveValue.BaseValue),
-                            ActiveValue.BaseValue);
-                        break;
-                    case EAttributeOverflowPolicy.ZeroToCeil:
-                        newValue = new AttributeValue(
-                            Mathf.Clamp(ActiveValue.CurrentValue, 0, Blueprint.SetElement.Overflow.Ceil.CurrentValue),
-                            Mathf.Clamp(ActiveValue.BaseValue, 0, Blueprint.SetElement.Overflow.Ceil.BaseValue)
-                        );
-                        break;
-                    case EAttributeOverflowPolicy.FloorToCeil:
-                        newValue = new AttributeValue(
-                            Mathf.Clamp(ActiveValue.CurrentValue, Blueprint.SetElement.Overflow.Floor.CurrentValue, Blueprint.SetElement.Overflow.Ceil.CurrentValue),
-                            Mathf.Clamp(ActiveValue.BaseValue, Blueprint.SetElement.Overflow.Floor.BaseValue, Blueprint.SetElement.Overflow.Ceil.BaseValue)
-                        );
-                        break;
-                    case EAttributeOverflowPolicy.Unlimited:
-                        break;
-                    default:
-                        throw new ArgumentOutOfRangeException();
-                }
-            }
-            
-            ActiveValue = newValue;
+            if (!(Blueprint?.SetElement.Constraints.AutoClamp ?? false)) return;
+
+            ActiveValue = Blueprint.SetElement.Overflow.Clamp(ActiveValue);
         }
 
         public void EnforceScaling(WorkerContext ctx)

@@ -153,7 +153,7 @@ namespace FarEmerald.PlayForge
         /// <summary>
         /// Generates a gameplay effect spec with the calling GAS as the target.
         /// </summary>
-        /// <param name="origin">The origination of the effect (typically ability or item)</param>
+        /// <param name="origin">The origination of the effect (typically entity, ability, or item)</param>
         /// <param name="effect">The effect to generate for</param>
         /// <returns></returns>
         public GameplayEffectSpec GenerateEffectSpec(IEffectOrigin origin, GameplayEffect effect)

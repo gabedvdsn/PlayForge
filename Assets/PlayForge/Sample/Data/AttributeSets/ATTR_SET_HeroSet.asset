@@ -24,19 +24,25 @@ MonoBehaviour:
     DisplayName: 
   Attributes:
   - Attribute: {fileID: 11400000, guid: b46aa27e88015f24296721fc2f8200fd, type: 2}
-    Magnitude: 100
-    Target: 0
+    Current:
+      Magnitude: 0
+      Scaling:
+        rid: -2
+      RealMagnitude: 2
+    Base:
+      Magnitude: 100
+      Scaling:
+        rid: -2
+      RealMagnitude: 2
+    LinkCurrentToBase: 0
     Overflow:
-      Policy: 3
+      Policy: 0
       Floor:
-        CurrentValue: -Infinity
-        BaseValue: 0
-      Ceil:
         CurrentValue: 0
-        BaseValue: 100
-    Scaling:
-      rid: -2
-    RealMagnitude: 0
+        BaseValue: 50
+      Ceil:
+        CurrentValue: Infinity
+        BaseValue: Infinity
     RetentionGroup:
       Name: Default
       DisplayName: Default
@@ -46,26 +52,90 @@ MonoBehaviour:
       AutoScaleWithBase: 0
       RoundingMode: 0
       SnapInterval: 0
-  - Attribute: {fileID: 11400000, guid: 3d035a62577527e4b9627eb5443a2aae, type: 2}
-    Magnitude: 100
-    Target: 0
+  - Attribute: {fileID: 11400000, guid: 5ca0e75a1898b9e4e9866b437301ab35, type: 2}
+    Current:
+      Magnitude: 24
+      Scaling:
+        rid: -2
+      RealMagnitude: 2
+    Base:
+      Magnitude: 100
+      Scaling:
+        rid: -2
+      RealMagnitude: 2
+    LinkCurrentToBase: 0
     Overflow:
-      Policy: 3
+      Policy: 4
       Floor:
-        CurrentValue: -Infinity
-        BaseValue: 0
-      Ceil:
         CurrentValue: 0
-        BaseValue: 100
-    Scaling:
-      rid: 7261146684025471527
-    RealMagnitude: 0
+        BaseValue: 50
+      Ceil:
+        CurrentValue: Infinity
+        BaseValue: Infinity
+    RetentionGroup:
+      Name: Default
+      DisplayName: Default
+    CollisionPolicy: 0
+    Constraints:
+      AutoClamp: 1
+      AutoScaleWithBase: 0
+      RoundingMode: 0
+      SnapInterval: 0
+  - Attribute: {fileID: 11400000, guid: 3d035a62577527e4b9627eb5443a2aae, type: 2}
+    Current:
+      Magnitude: 0.25
+      Scaling:
+        rid: 7261146900724187206
+      RealMagnitude: 1
+    Base:
+      Magnitude: 100
+      Scaling:
+        rid: -2
+      RealMagnitude: 2
+    LinkCurrentToBase: 0
+    Overflow:
+      Policy: 4
+      Floor:
+        CurrentValue: 0
+        BaseValue: 50
+      Ceil:
+        CurrentValue: Infinity
+        BaseValue: Infinity
     RetentionGroup:
       Name: Default
       DisplayName: Default
     CollisionPolicy: 0
     Constraints:
       AutoClamp: 0
+      AutoScaleWithBase: 0
+      RoundingMode: 0
+      SnapInterval: 0
+  - Attribute: {fileID: 11400000, guid: 9e3481fbb0007434d9416c20f647c10f, type: 2}
+    Current:
+      Magnitude: 50
+      Scaling:
+        rid: -2
+      RealMagnitude: 1
+    Base:
+      Magnitude: 550
+      Scaling:
+        rid: -2
+      RealMagnitude: 2
+    LinkCurrentToBase: 0
+    Overflow:
+      Policy: 1
+      Floor:
+        CurrentValue: 50
+        BaseValue: 550
+      Ceil:
+        CurrentValue: Infinity
+        BaseValue: Infinity
+    RetentionGroup:
+      Name: Default
+      DisplayName: Default
+    CollisionPolicy: 0
+    Constraints:
+      AutoClamp: 1
       AutoScaleWithBase: 0
       RoundingMode: 0
       SnapInterval: 0
@@ -78,40 +148,35 @@ MonoBehaviour:
     ImpactWorkers: []
     TagWorkers: []
     AnalysisWorkers: []
+  StartingLevel: 1
+  MaxLevel: 4
+  LinkMode: 1
+  _linkedSource: {fileID: 11400000, guid: a1606c6a60ec0f949b85e416565b4fd0, type: 2}
   references:
     version: 2
     RefIds:
     - rid: -2
       type: {class: , ns: , asm: }
-    - rid: 7261146684025471527
-      type: {class: CachedAttributeScaler, ns: FarEmerald.PlayForge, asm: Assembly-CSharp}
+    - rid: 7261146900724187206
+      type: {class: CachedAttributeBackedScaler, ns: FarEmerald.PlayForge, asm: Assembly-CSharp}
       data:
         Name: 
         sourcePipeline: {fileID: 0}
         SyncWithTemplate: 0
-        Configuration: 0
-        MaxLevel: 20
+        Configuration: 2
+        MaxLevel: 1
         LevelValues:
-        - 1
+        - 0.15
         Interpolation: 1
         Scaling:
           serializedVersion: 2
           m_Curve:
           - serializedVersion: 3
             time: 0
-            value: 1
+            value: 0.15
             inSlope: 0
             outSlope: 0
-            tangentMode: 0
-            weightedMode: 0
-            inWeight: 0
-            outWeight: 0
-          - serializedVersion: 3
-            time: 1
-            value: 1
-            inSlope: 0
-            outSlope: 0
-            tangentMode: 0
+            tangentMode: 69
             weightedMode: 0
             inWeight: 0
             outWeight: 0
@@ -119,7 +184,6 @@ MonoBehaviour:
           m_PostInfinity: 2
           m_RotationOrder: 4
         Behaviours: []
-        CaptureAttribute: {fileID: 0}
-        CaptureFrom: 1
-        CaptureWhen: 1
+        CaptureAttribute: {fileID: 11400000, guid: 5ca0e75a1898b9e4e9866b437301ab35, type: 2}
         CaptureWhat: 0
+        RelativeOperation: 1

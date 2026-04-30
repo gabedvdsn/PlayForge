@@ -895,6 +895,18 @@ namespace FarEmerald.PlayForge
             };
         }
         
+        public static float PerformScalerRelativeOperation(float attr, float scaler, EScalerRelativeOperation operation)
+        {
+            return operation switch
+            {
+                EScalerRelativeOperation.Add => attr + scaler,
+                EScalerRelativeOperation.Multiply => attr * scaler,
+                EScalerRelativeOperation.UseAttributeValue => attr,
+                EScalerRelativeOperation.UseScalerValue => scaler,
+                _ => throw new ArgumentOutOfRangeException(nameof(operation), operation, null)
+            };
+        }
+        
         #endregion
         
         #region Collection Utils

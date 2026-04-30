@@ -65,7 +65,7 @@ namespace FarEmerald.PlayForge.Extended.Editor
         // Frame summary display state
         //   • Per-GAS rolling sample buffer → configurable window size (in frames)
         //   • Last significant impact dealt / received per GAS (persists across frames)
-        private int _frameSummaryWindowFrames = 60;
+        private int _frameSummaryWindowFrames = 20;
         private float _significantImpactThreshold = 0f; // any non-zero counts
         private readonly Dictionary<GameplayAbilitySystem, FrameSummaryRollingStats> _frameSummaryStats = new();
         private bool _frameSummaryHooked;
@@ -1377,14 +1377,14 @@ namespace FarEmerald.PlayForge.Extended.Editor
             });
 
             float current = cached.ActiveValue.CurrentValue;
-            row.Add(new Label(current.ToString("F1"))
+            row.Add(new Label(current.ToString("F2"))
             {
                 pickingMode = PickingMode.Ignore,
                 style = { width = 70, color = AttributeColor, fontSize = 11, unityTextAlign = TextAnchor.MiddleRight }
             });
 
             float baseVal = cached.ActiveValue.BaseValue;
-            row.Add(new Label(baseVal.ToString("F1"))
+            row.Add(new Label(baseVal.ToString("F2"))
             {
                 pickingMode = PickingMode.Ignore,
                 style = { width = 70, color = new Color(0.7f, 0.7f, 0.7f), fontSize = 11, unityTextAlign = TextAnchor.MiddleRight }
@@ -1392,7 +1392,7 @@ namespace FarEmerald.PlayForge.Extended.Editor
 
             float ratio = baseVal > 0 ? current / baseVal : 0;
             Color ratioColor = ratio >= 1f ? TagColor : (ratio > 0.25f ? AttributeColor : Color.red);
-            row.Add(new Label($"{ratio:P0}")
+            row.Add(new Label($"{ratio:P1}")
             {
                 pickingMode = PickingMode.Ignore,
                 style = { width = 60, color = ratioColor, fontSize = 11, unityTextAlign = TextAnchor.MiddleRight }

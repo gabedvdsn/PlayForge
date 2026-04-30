@@ -88,11 +88,11 @@ namespace FarEmerald.PlayForge
                 switch (worker.Execution)
                 {
                     case EWorkerExecution.Inline:
-                        worker.Activate(impactData);
+                        worker.ActivateInline(impactData);
                         break;
                         
                     case EWorkerExecution.Deferred:
-                        var actions = worker.CreateActions(context);
+                        var actions = worker.CreateDeferredActions(context);
                         _actionQueue?.EnqueueRange(actions);
                         break;
                 }

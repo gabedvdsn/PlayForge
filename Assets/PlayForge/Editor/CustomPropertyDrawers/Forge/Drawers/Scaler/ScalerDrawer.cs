@@ -197,7 +197,12 @@ namespace FarEmerald.PlayForge.Extended.Editor
         }
         
         /// <summary>
-        /// Gets the linked level provider from the parent effect, if any.
+        /// Gets the linked level provider for the scaler being drawn. Resolution order:
+        ///   1. If the property's parent target is a <see cref="GameplayEffect"/> with a linked
+        ///      provider, return that provider (existing behaviour for effect-owned scalers).
+        ///   2. If the parent target is itself an <see cref="ILevelProvider"/> (e.g. an
+        ///      AttributeSet asset hosting a cached scaler), follow its link if any, otherwise
+        ///      return the provider itself — the scaler can derive bounds from its host asset.
         /// </summary>
         private static ILevelProvider GetLinkedProvider(SerializedProperty property)
         {
@@ -206,6 +211,15 @@ namespace FarEmerald.PlayForge.Extended.Editor
             {
                 return effect.LinkedProvider;
             }
+
+            // Cached scalers can live on assets that ARE level providers (AttributeSet, …).
+            // Walk one link further if that host is itself linked, otherwise the host serves
+            // as the bounds source directly.
+            if (property?.serializedObject?.targetObject is BaseForgeLevelProvider hostProvider)
+            {
+                return hostProvider.IsLinked ? hostProvider.LinkedProvider : (ILevelProvider)hostProvider;
+            }
+
             return null;
         }
         

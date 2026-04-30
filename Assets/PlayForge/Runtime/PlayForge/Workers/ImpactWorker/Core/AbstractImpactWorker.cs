@@ -40,7 +40,7 @@ namespace FarEmerald.PlayForge
         /// Override this for simple transformations that don't call system methods.
         /// </summary>
         /// <param name="impactData">The impact data</param>
-        public virtual void Activate(ImpactData impactData) { }
+        public virtual void ActivateInline(ImpactData impactData) { }
         
         /// <summary>
         /// For DEFERRED workers: Create actions to queue for end-of-frame execution.
@@ -48,7 +48,7 @@ namespace FarEmerald.PlayForge
         /// </summary>
         /// <param name="ctx">The impact worker context</param>
         /// <returns>Actions to queue for end-of-frame execution</returns>
-        public virtual IEnumerable<IRootAction> CreateActions(ImpactWorkerContext ctx)
+        public virtual IEnumerable<IRootAction> CreateDeferredActions(ImpactWorkerContext ctx)
         {
             return Array.Empty<IRootAction>();
         }

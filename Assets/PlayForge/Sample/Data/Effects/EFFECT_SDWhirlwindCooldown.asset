@@ -12,25 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 2d34fc1f98f8a0b4c9b37da3e706e0e1, type: 3}
   m_Name: EFFECT_SDWhirlwindCooldown
   m_EditorClassIdentifier: 
-  LocalData:
-  - Key:
-      Name: Status.Asda.Grag
-      DisplayName: 
-    Type: 0
-    stringValue: 
-    boolValue: 0
-    intValue: 0
-    floatValue: 0
-    objectValue: {fileID: 0}
-    monoBehaviourValue: {fileID: 0}
-    scriptableObjectValue: {fileID: 0}
-    tagValue:
-      Name: 
-      DisplayName: 
-    attributeValue: {fileID: 0}
-    effectValue: {fileID: 0}
-    abilityValue: {fileID: 0}
-    entityValue: {fileID: 0}
+  LocalData: []
   _template: {fileID: 0}
   _templateOverrides: []
   _templateListSnapshots: []
@@ -38,8 +20,8 @@ MonoBehaviour:
     Name: SD Whirlwind Cooldown
     Description: 
     Visibility:
-      Name: 
-      DisplayName: 
+      Name: Not Visibled2xuDNqtid9uamDM5aBXkxUexwFpJUF4d2xuDNqtid9uamDM5aBXk
+      DisplayName: Not Visible
     Textures: []
     RetentionGroup:
       Name: IgnoreaQ90wcmjZGnP0AQuPovNalcismrHWacbaQ90wcmjZGnP0AQuPovNalcism
@@ -48,15 +30,7 @@ MonoBehaviour:
     AssetTag:
       Name: Effect.SDWhirlwindCooldown
       DisplayName: 
-    ContextTags:
-    - Name: Status.Asda
-      DisplayName: 
-    - Name: Status.Asda.Grag
-      DisplayName: 
-    - Name: Status.Fraes
-      DisplayName: 
-    - Name: Status.Asda.Grag
-      DisplayName: 
+    ContextTags: []
     GrantedTags: []
   ImpactSpecification:
     AttributeTarget: {fileID: 0}

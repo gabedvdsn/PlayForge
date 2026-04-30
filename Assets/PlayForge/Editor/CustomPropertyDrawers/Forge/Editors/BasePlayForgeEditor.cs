@@ -1217,6 +1217,7 @@ namespace FarEmerald.PlayForge.Extended.Editor
             BuildLinkToButton<Ability>(linkButtonsContainer, src);
             BuildLinkToButton<GameplayEffect>(linkButtonsContainer, src);
             BuildLinkToButton<Item>(linkButtonsContainer, src);
+            BuildLinkToButton<AttributeSet>(linkButtonsContainer, src);
         }
 
         protected abstract void RebuildLevelingContent();

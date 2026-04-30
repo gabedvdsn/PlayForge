@@ -734,7 +734,7 @@ namespace FarEmerald.PlayForge.Extended.Editor
                     var tag = (Tag)field.GetValue(null);
                     if (!IsTagSetForScanning(tag))
                         continue;
-                    
+                       
                     RegisterSystemDefaultTag(tag, contextAttr.Context, $"{type.Name}.{field.Name}");
                     count++;
                 }

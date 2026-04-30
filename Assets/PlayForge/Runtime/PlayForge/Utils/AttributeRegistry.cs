@@ -53,9 +53,13 @@ namespace FarEmerald.PlayForge
             return true;
         }
 
-        public static IAttribute GetByName(string attrName)
+        public static IAttribute GetByName(string attrName, bool createIfFalse = false)
         {
-            return TryGetByName(attrName, out var attr) ? attr : default;
+            return TryGetByName(attrName, out var attr) 
+                ? attr 
+                : (createIfFalse 
+                    ? new RuntimeAttribute(attrName, Tag.GenerateAsUnique(attrName)) 
+                    : default);
         }
 
         public static List<IAttribute> GetAll() => Library.Values.ToList();

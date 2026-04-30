@@ -108,15 +108,7 @@ namespace FarEmerald.PlayForge
             // Phase 3: Fire initial modification events
             foreach (var attr in AttributeCache.Select(elem => elem.Key))
             {
-                ModifyAttribute(attr,
-                    new SourcedModifiedAttributeValue(
-                        IAttributeImpactDerivation.GenerateSourceDerivation(
-                            Self, attr, 
-                            Tags.IgnoreRetention, 
-                            new List<Tag>(){ Tags.DisallowImpact }, AttributeCache[attr].Root),
-                        0f, 0f,
-                        false)
-                );
+                ModifyAttribute(SourcedModifiedAttributeValue.GenerateSimple(Self, attr, 0f, 0f), false);
             }
         }
         
@@ -143,7 +135,12 @@ namespace FarEmerald.PlayForge
             if (AttributeCache.ContainsKey(attribute)) return;
             
             AttributeCache[attribute] = new CachedAttributeValue(blueprint);
-            blueprint.SetElement.Scaling?.RegulateContactWith(attribute, RegulationCache);
+            // Regulate the Base scaler always; regulate Current's scaler only when it isn't
+            // linked-to-Base (otherwise we'd register the same scaler instance twice for the
+            // same owning attribute).
+            blueprint.SetElement.Base?.Scaling?.RegulateContactWith(attribute, RegulationCache);
+            if (!blueprint.SetElement.LinkCurrentToBase)
+                blueprint.SetElement.Current?.Scaling?.RegulateContactWith(attribute, RegulationCache);
             
             AttributeRegistry.Add(attribute);
             Callbacks.AttributeRegister(attribute);
@@ -214,7 +211,11 @@ namespace FarEmerald.PlayForge
             // PHASE 2: Snapshot and apply modification
             // ═══════════════════════════════════════════════════════════════════════
             var holdValue = AttributeCache[attribute].ActiveValue;
-            AttributeCache[attribute].Add(sourcedModifiedValue.Derivation, change.Value.ToAttributeValue(), sourcedModifiedValue.Derivation.RetainImpact());
+            AttributeCache[attribute].ApplyModification(
+                sourcedModifiedValue.Derivation,
+                change.Value.ToAttributeValue(),
+                sourcedModifiedValue.Derivation.RetainImpact()
+            );
             
             if (runEvents) AttributeCache[attribute].ApplyBounds();
             change.Override(AttributeCache[attribute].ActiveValue - holdValue);

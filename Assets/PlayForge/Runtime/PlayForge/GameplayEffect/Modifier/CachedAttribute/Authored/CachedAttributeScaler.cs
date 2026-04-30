@@ -1,22 +1,22 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using UnityEngine;
 
 namespace FarEmerald.PlayForge
 {
+    /// <summary>
+    /// Cached scaler that mirrors a captured attribute's value. Registers a regulation relation
+    /// so the owning attribute is recomputed whenever the captured attribute changes.
+    /// Initial value reads from the captured attribute's RootValue (its base definition);
+    /// active value reads from its current ActiveValue.
+    /// </summary>
     public class CachedAttributeScaler : AbstractCachedScaler
     {
         [Tooltip("Which attribute to read")]
         public Attribute CaptureAttribute;
-        
-        [Tooltip("Use base or current attribute value")]
+
+        [Tooltip("Use base or current attribute value (used when projecting to a single float)")]
         public EAttributeTargetBinary CaptureWhat = EAttributeTargetBinary.Current;
-        
-        public override float Evaluate(IAttributeImpactDerivation deriv)
-        {
-            float attributeValue = CaptureAttribute is null ? 0f : GetAttributeValueTarget(GetAttributeValue(deriv));
-            return ApplyBehaviourEvaluation(deriv, attributeValue);
-        }
         
         public override void RegulateContactWith(IAttribute related, AttributeRegulationCache rules)
         {
@@ -25,15 +25,22 @@ namespace FarEmerald.PlayForge
                 rules.RegisterRelation(CaptureAttribute, related);
             }
         }
-        
-        public override AttributeValue EvaluateInitialValue(SourceAttributeImpact deriv, AttributeBlueprint blueprint, IReadOnlyDictionary<IAttribute, CachedAttributeValue> cache)
+
+        public override AttributeValue EvaluateInitialValue(AttributeBlueprint blueprint, IReadOnlyDictionary<IAttribute, CachedAttributeValue> cache)
         {
-            return cache.TryGetValue(CaptureAttribute, out var value) 
-                ? value.RootValue 
+            return cache.TryGetValue(CaptureAttribute, out var value)
+                ? value.RootValue
                 : new AttributeValue(0f, 0f);
         }
 
-        protected float GetAttributeValueTarget(AttributeValue value)
+        public override AttributeValue EvaluateActiveValue(AttributeBlueprint blueprint, IReadOnlyDictionary<IAttribute, CachedAttributeValue> cache)
+        {
+            return cache.TryGetValue(CaptureAttribute, out var value)
+                ? value.ActiveValue
+                : new AttributeValue(0f, 0f);
+        }
+
+        protected float ProjectToBinaryTarget(AttributeValue value)
         {
             return CaptureWhat switch
             {
@@ -43,21 +50,6 @@ namespace FarEmerald.PlayForge
             };
         }
 
-        protected AttributeValue GetAttributeValue(IAttributeImpactDerivation deriv)
-        {
-            if (!deriv.GetSource().FindAttributeSystem(out var attrSystem) || 
-                !attrSystem.TryGetAttributeValue(CaptureAttribute, out AttributeValue attrValue))
-            {
-                return new AttributeValue(0f, 0f);
-            }
-
-            return attrValue;
-        }
-
-        public override bool UseScalingOptions()
-        {
-            return false;
-        }
-
+        public override bool UseScalingOptions() => false;
     }
 }

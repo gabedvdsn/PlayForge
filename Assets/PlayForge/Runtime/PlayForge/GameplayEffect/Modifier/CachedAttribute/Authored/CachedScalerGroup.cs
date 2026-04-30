@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
@@ -6,106 +6,127 @@ using UnityEngine;
 namespace FarEmerald.PlayForge
 {
     /// <summary>
-    /// Combines multiple cached scalers with mathematical operations.
-    /// Propagates attribute regulation to all members.
+    /// Combines multiple cached scalers using the active <see cref="AttributeValue"/> interface.
+    /// Members are evaluated component-wise (Current and Base independently) and combined per
+    /// the member's <see cref="ECalculationOperation"/>. Override members short-circuit other
+    /// operations and resolve via <see cref="OverrideMemberCollisionPolicy"/>.
+    /// Regulation propagates to all members so any captured-attribute change triggers a refresh.
     /// </summary>
     public class CachedScalerGroup : AbstractCachedScaler
     {
         [Tooltip("Group members with their operations")]
         public CachedMagnitudeModifierGroupMember[] Calculations = Array.Empty<CachedMagnitudeModifierGroupMember>();
-        
+
         [Tooltip("How to handle multiple Override members")]
         public EValueCollisionPolicy OverrideMemberCollisionPolicy = EValueCollisionPolicy.UseMaximum;
-        
-        public override void Initialize(IAttributeImpactDerivation spec)
+
+        public override void RegulateContactWith(IAttribute related, AttributeRegulationCache rules)
         {
             if (Calculations == null) return;
-            
             foreach (var member in Calculations)
             {
-                member.Calculation?.Initialize(spec);
+                member.Calculation?.RegulateContactWith(related, rules);
             }
         }
-        
-        public override float Evaluate(IAttributeImpactDerivation spec)
+
+        public override AttributeValue EvaluateInitialValue(AttributeBlueprint blueprint, IReadOnlyDictionary<IAttribute, CachedAttributeValue> cache)
         {
-            if (Calculations == null || Calculations.Length == 0)
-                return EvaluateFromSpec(spec);
-            
-            // Check for override members first
-            var overrides = Calculations.Where(m => m.RelativeOperation == ECalculationOperation.Override && m.Calculation != null);
-            if (overrides.Any())
+            return Combine(blueprint, cache, initial: true);
+        }
+
+        public override AttributeValue EvaluateActiveValue(AttributeBlueprint blueprint, IReadOnlyDictionary<IAttribute, CachedAttributeValue> cache)
+        {
+            return Combine(blueprint, cache, initial: false);
+        }
+
+        private AttributeValue Combine(
+            AttributeBlueprint blueprint,
+            IReadOnlyDictionary<IAttribute, CachedAttributeValue> cache,
+            bool initial)
+        {
+            if (Calculations == null || Calculations.Length == 0) return new AttributeValue(0f, 0f);
+
+            AttributeValue Eval(AbstractCachedScaler s) =>
+                initial ? s.EvaluateInitialValue(blueprint, cache) : s.EvaluateActiveValue(blueprint, cache);
+
+            // Override members short-circuit everything else.
+            var overrides = Calculations
+                .Where(m => m.RelativeOperation == ECalculationOperation.Override && m.Calculation != null)
+                .ToList();
+
+            if (overrides.Count > 0)
             {
-                return OverrideMemberCollisionPolicy switch
-                {
-                    EValueCollisionPolicy.UseMaximum => overrides.Max(m => m.Calculation.Evaluate(spec)),
-                    EValueCollisionPolicy.UseMinimum => overrides.Min(m => m.Calculation.Evaluate(spec)),
-                    EValueCollisionPolicy.UseAverage => overrides.Average(m => m.Calculation.Evaluate(spec)),
-                    EValueCollisionPolicy.UseFirst => overrides.First().Calculation.Evaluate(spec),
-                    EValueCollisionPolicy.UseLast => overrides.Last().Calculation.Evaluate(spec),
-                    _ => throw new ArgumentOutOfRangeException()
-                };
+                return ResolveOverrideCollision(overrides, Eval);
             }
-            
-            // Calculate additive sum
-            float value = Calculations
-                .Where(m => m.RelativeOperation == ECalculationOperation.Add && m.Calculation != null)
-                .Sum(member => member.Calculation.Evaluate(spec));
-            
-            // Apply multipliers
+
+            // Additive sum.
+            var value = new AttributeValue(0f, 0f);
+            foreach (var member in Calculations.Where(m => m.RelativeOperation == ECalculationOperation.Add && m.Calculation != null))
+            {
+                value += Eval(member.Calculation);
+            }
+
+            // Multiplicative.
             foreach (var member in Calculations.Where(m => m.RelativeOperation == ECalculationOperation.Multiply && m.Calculation != null))
             {
-                value *= member.Calculation.Evaluate(spec);
+                var factor = Eval(member.Calculation);
+                value = new AttributeValue(value.CurrentValue * factor.CurrentValue, value.BaseValue * factor.BaseValue);
             }
 
-            float flatBonus = Calculations
-                .Where(m => m.RelativeOperation == ECalculationOperation.FlatBonus && m.Calculation != null)
-                .Sum(member => member.Calculation.Evaluate(spec));
-            
-            return value + flatBonus;
-        }
-        
-        public override void Regulate(IAttribute attribute, AttributeModificationRule rules)
-        {
-            if (Calculations == null) return;
-            
-            foreach (var member in Calculations)
+            // Flat bonus added at the end.
+            foreach (var member in Calculations.Where(m => m.RelativeOperation == ECalculationOperation.FlatBonus && m.Calculation != null))
             {
-                member.Calculation?.Regulate(attribute, rules);
+                value += Eval(member.Calculation);
             }
-        }
-        public override float Evaluate(IGameplayAbilitySystem gas, AttributeBlueprint blueprint, IReadOnlyDictionary<IAttribute, CachedAttributeValue> cache)
-        {
-            if (Calculations == null || Calculations.Length == 0) return 0f;
 
-            var overrides = Calculations.Where(m => m.RelativeOperation == ECalculationOperation.Override && m.Calculation != null);
-            if (overrides.Any())
+            return value;
+        }
+
+        private AttributeValue ResolveOverrideCollision(
+            List<CachedMagnitudeModifierGroupMember> overrides,
+            Func<AbstractCachedScaler, AttributeValue> eval)
+        {
+            switch (OverrideMemberCollisionPolicy)
             {
-                return OverrideMemberCollisionPolicy switch
+                case EValueCollisionPolicy.UseFirst:
+                    return eval(overrides[0].Calculation);
+                case EValueCollisionPolicy.UseLast:
+                    return eval(overrides[overrides.Count - 1].Calculation);
+                case EValueCollisionPolicy.UseMaximum:
                 {
-                    EValueCollisionPolicy.UseMaximum => overrides.Max(m => m.Calculation.Evaluate(gas, blueprint, cache)),
-                    EValueCollisionPolicy.UseMinimum => overrides.Min(m => m.Calculation.Evaluate(gas, blueprint, cache)),
-                    EValueCollisionPolicy.UseAverage => overrides.Average(m => m.Calculation.Evaluate(gas, blueprint, cache)),
-                    EValueCollisionPolicy.UseFirst => overrides.First().Calculation.Evaluate(gas, blueprint, cache),
-                    EValueCollisionPolicy.UseLast => overrides.Last().Calculation.Evaluate(gas, blueprint, cache),
-                    _ => throw new ArgumentOutOfRangeException()
-                };
+                    var best = eval(overrides[0].Calculation);
+                    for (int i = 1; i < overrides.Count; i++)
+                    {
+                        var v = eval(overrides[i].Calculation);
+                        best = new AttributeValue(Mathf.Max(best.CurrentValue, v.CurrentValue), Mathf.Max(best.BaseValue, v.BaseValue));
+                    }
+                    return best;
+                }
+                case EValueCollisionPolicy.UseMinimum:
+                {
+                    var best = eval(overrides[0].Calculation);
+                    for (int i = 1; i < overrides.Count; i++)
+                    {
+                        var v = eval(overrides[i].Calculation);
+                        best = new AttributeValue(Mathf.Min(best.CurrentValue, v.CurrentValue), Mathf.Min(best.BaseValue, v.BaseValue));
+                    }
+                    return best;
+                }
+                case EValueCollisionPolicy.UseAverage:
+                {
+                    float c = 0f, b = 0f;
+                    foreach (var m in overrides)
+                    {
+                        var v = eval(m.Calculation);
+                        c += v.CurrentValue;
+                        b += v.BaseValue;
+                    }
+                    int n = overrides.Count;
+                    return new AttributeValue(c / n, b / n);
+                }
+                default:
+                    throw new ArgumentOutOfRangeException();
             }
-
-            float value = Calculations
-                .Where(m => m.RelativeOperation == ECalculationOperation.Add && m.Calculation != null)
-                .Sum(member => member.Calculation.Evaluate(gas, blueprint, cache));
-
-            foreach (var member in Calculations.Where(m => m.RelativeOperation == ECalculationOperation.Multiply && m.Calculation != null))
-            {
-                value *= member.Calculation.Evaluate(gas, blueprint, cache);
-            }
-
-            float flatBonus = Calculations
-                .Where(m => m.RelativeOperation == ECalculationOperation.FlatBonus && m.Calculation != null)
-                .Sum(member => member.Calculation.Evaluate(gas, blueprint, cache));
-
-            return value + flatBonus;
         }
     }
 
@@ -115,7 +136,7 @@ namespace FarEmerald.PlayForge
         [SerializeReference]
         [Tooltip("The cached scaler calculation")]
         public AbstractCachedScaler Calculation;
-        
+
         [Tooltip("How this member's result combines with others")]
         public ECalculationOperation RelativeOperation;
     }

@@ -8,51 +8,57 @@ using static FarEmerald.PlayForge.Extended.Editor.ForgeDrawerStyles;
 namespace FarEmerald.PlayForge.Extended.Editor
 {
     // ═══════════════════════════════════════════════════════════════════════════
-    // AttributeValue Drawer
+    // AttributeSetElement Drawer
+    //
+    // Layout
+    //   ▸ Header           collapse toggle + Attribute field
+    //                      compact 2-line summary (visible only when collapsed)
+    //
+    //   When expanded:
+    //     - Retention group
+    //     - Collision policy
+    //     - ALWAYS-VISIBLE summary block (so the user can see the configured magnitudes /
+    //       overflow / constraints without having to flip between tabs).
+    //     - "🔗 Link Current to Base" toggle (always visible, persisted on the element via
+    //       LinkCurrentToBase). When ON, the Current tab is disabled and shows a hint;
+    //       runtime resolution forwards Current → Base.
+    //     - TabView: Current | Base — each edits Magnitude / Real Magnitude / Scaling.
+    //     - Overflow (element-wide)
+    //     - Constraints (element-wide)
     // ═══════════════════════════════════════════════════════════════════════════
 
-    // ═══════════════════════════════════════════════════════════════════════════
-    // AttributeOverflowData Drawer - Vertical layout for Floor/Ceil
-    // ═══════════════════════════════════════════════════════════════════════════
-
-    // ═══════════════════════════════════════════════════════════════════════════
-    // AttributeSetElement Drawer - Show/Hide approach (no rebuild)
-    // ═══════════════════════════════════════════════════════════════════════════
-    
     [CustomPropertyDrawer(typeof(AttributeSetElement))]
     public class AttributeSetElementDrawer : PropertyDrawer
     {
-        // Collapse state persisted by property path
-        private static Dictionary<string, bool> _collapsedStates = new Dictionary<string, bool>();
-        
-        private static bool IsCollapsed(string path)
-        {
-            return _collapsedStates.TryGetValue(path, out bool c) && c;
-        }
-        
-        private static void SetCollapsed(string path, bool collapsed)
-        {
-            _collapsedStates[path] = collapsed;
-        }
-        
+        private static readonly Dictionary<string, bool> _collapsedStates = new();
+
+        private static bool IsCollapsed(string path) => _collapsedStates.TryGetValue(path, out var c) && c;
+        private static void SetCollapsed(string path, bool collapsed) => _collapsedStates[path] = collapsed;
+
         public override VisualElement CreatePropertyGUI(SerializedProperty property)
         {
             var root = new VisualElement { name = "AttributeSetElementRoot" };
-            
             bool startCollapsed = IsCollapsed(property.propertyPath);
-            
-            // Get all properties upfront
-            var attributeProp = property.FindPropertyRelative(nameof(AttributeSetElement.Attribute));
-            var magnitudeProp = property.FindPropertyRelative(nameof(AttributeSetElement.Magnitude));
-            var modifierProp = property.FindPropertyRelative(nameof(AttributeSetElement.Scaling));
-            var realMagProp = property.FindPropertyRelative(nameof(AttributeSetElement.RealMagnitude));
-            var targetProp = property.FindPropertyRelative(nameof(AttributeSetElement.Target));
-            var overflowProp = property.FindPropertyRelative(nameof(AttributeSetElement.Overflow));
-            var collisionProp = property.FindPropertyRelative(nameof(AttributeSetElement.CollisionPolicy));
+
+            // ─── Locate sub-properties ───────────────────────────────────────
+            var attributeProp   = property.FindPropertyRelative(nameof(AttributeSetElement.Attribute));
+            var currentProp     = property.FindPropertyRelative(nameof(AttributeSetElement.Current));
+            var baseProp        = property.FindPropertyRelative(nameof(AttributeSetElement.Base));
+            var linkProp        = property.FindPropertyRelative(nameof(AttributeSetElement.LinkCurrentToBase));
+            var overflowProp    = property.FindPropertyRelative(nameof(AttributeSetElement.Overflow));
+            var collisionProp   = property.FindPropertyRelative(nameof(AttributeSetElement.CollisionPolicy));
             var constraintsProp = property.FindPropertyRelative(nameof(AttributeSetElement.Constraints));
-            var retGroupProp = property.FindPropertyRelative(nameof(AttributeSetElement.RetentionGroup));
-            
-            // Main container
+            var retGroupProp    = property.FindPropertyRelative(nameof(AttributeSetElement.RetentionGroup));
+
+            var curMagProp     = currentProp.FindPropertyRelative(nameof(AttributeMagnitudeSpec.Magnitude));
+            var curScalingProp = currentProp.FindPropertyRelative(nameof(AttributeMagnitudeSpec.Scaling));
+            var curRealMagProp = currentProp.FindPropertyRelative(nameof(AttributeMagnitudeSpec.RealMagnitude));
+
+            var baseMagProp     = baseProp.FindPropertyRelative(nameof(AttributeMagnitudeSpec.Magnitude));
+            var baseScalingProp = baseProp.FindPropertyRelative(nameof(AttributeMagnitudeSpec.Scaling));
+            var baseRealMagProp = baseProp.FindPropertyRelative(nameof(AttributeMagnitudeSpec.RealMagnitude));
+
+            // ─── Container chrome ────────────────────────────────────────────
             var container = new VisualElement { name = "Container" };
             container.style.backgroundColor = new Color(0.18f, 0.18f, 0.18f, 0.5f);
             container.style.borderTopLeftRadius = 4;
@@ -68,18 +74,15 @@ namespace FarEmerald.PlayForge.Extended.Editor
             container.style.marginTop = 2;
             container.style.marginBottom = 2;
             root.Add(container);
-            
-            // ═══════════════════════════════════════════════════════════════════
-            // Header Row (always visible)
-            // ═══════════════════════════════════════════════════════════════════
-            
+
+            // ─── Header row (always visible) ─────────────────────────────────
             var headerRow = new VisualElement { name = "HeaderRow" };
             headerRow.style.flexDirection = FlexDirection.Row;
             headerRow.style.alignItems = Align.Center;
             container.Add(headerRow);
-            
-            // Collapse button
+
             var collapseBtn = new Button { name = "CollapseBtn" };
+            collapseBtn.focusable = false;
             collapseBtn.text = startCollapsed ? Icons.ChevronRight : Icons.ChevronDown;
             collapseBtn.style.width = 18;
             collapseBtn.style.height = 18;
@@ -96,304 +99,528 @@ namespace FarEmerald.PlayForge.Extended.Editor
             collapseBtn.style.borderBottomLeftRadius = 3;
             collapseBtn.style.borderBottomRightRadius = 3;
             headerRow.Add(collapseBtn);
-            
-            // Attribute field
+
             var attributeField = new PropertyField(attributeProp, "");
             attributeField.style.flexGrow = 1;
             attributeField.style.minWidth = 100;
             attributeField.BindProperty(attributeProp);
             headerRow.Add(attributeField);
-            
-            // ═══════════════════════════════════════════════════════════════════
-            // Summary badges (visible when collapsed)
-            // ═══════════════════════════════════════════════════════════════════
-            
-            var summaryContainer = new VisualElement { name = "SummaryContainer" };
-            summaryContainer.style.flexDirection = FlexDirection.Row;
-            summaryContainer.style.alignItems = Align.Center;
-            summaryContainer.style.marginLeft = 8;
-            summaryContainer.style.display = startCollapsed ? DisplayStyle.Flex : DisplayStyle.None;
-            headerRow.Add(summaryContainer);
-            
-            // Magnitude badge
-            var magBadge = CreateBadge("0", Colors.AccentBlue);
-            magBadge.name = "MagBadge";
-            summaryContainer.Add(magBadge);
-            
-            // Target badge
-            var targetBadge = CreateBadge("C+B", Colors.HintText);
-            targetBadge.name = "TargetBadge";
-            targetBadge.style.marginLeft = 4;
-            summaryContainer.Add(targetBadge);
-            
-            // Collision badge
-            var retentionBadge = CreateBadge("Def", Colors.HintText);
-            retentionBadge.name = "RetentionBadge";
-            retentionBadge.style.marginLeft = 4;
-            summaryContainer.Add(retentionBadge);
-            
-            // Target badge
-            var clampScaleBadge = CreateBadge("C+B", Colors.HintText);
-            clampScaleBadge.name = "ClampScaleBadge";
-            clampScaleBadge.style.marginLeft = 4;
-            summaryContainer.Add(clampScaleBadge);
-            
-            // Target badge
-            var roundingBadge = CreateBadge("C+B", Colors.HintText);
-            roundingBadge.name = "RoundingBadge";
-            roundingBadge.style.marginLeft = 4;
-            summaryContainer.Add(roundingBadge);
-            
-            // ═══════════════════════════════════════════════════════════════════
-            // Expanded Content (visible when expanded)
-            // ═══════════════════════════════════════════════════════════════════
-            
+
+            // ─── Collapsed summary (shown ONLY when collapsed; the always-visible
+            //     summary lives inside expandedContent below) ─────────────────
+            var collapsedSummary = BuildSummaryColumn();
+            collapsedSummary.style.marginLeft = 22; // align under collapse btn
+            collapsedSummary.style.display = startCollapsed ? DisplayStyle.Flex : DisplayStyle.None;
+            container.Add(collapsedSummary);
+
+            // ─── Expanded content ────────────────────────────────────────────
             var expandedContent = new VisualElement { name = "ExpandedContent" };
             expandedContent.style.marginTop = 6;
             expandedContent.style.display = startCollapsed ? DisplayStyle.None : DisplayStyle.Flex;
             container.Add(expandedContent);
-            
-            // Retention group row
-            var retGroupRow = new VisualElement();
-            retGroupRow.style.flexDirection = FlexDirection.Row;
-            retGroupRow.style.alignItems = Align.FlexStart;
-            retGroupRow.style.marginBottom = 4;
-            expandedContent.Add(retGroupRow);
-            
-            var retGroupLabel = new Label("Retention Group");
-            retGroupLabel.style.width = 100;
-            retGroupLabel.style.alignSelf = Align.Center;
-            retGroupLabel.style.fontSize = 10;
-            retGroupLabel.style.color = Colors.HintText;
-            retGroupLabel.style.marginTop = 2;
-            retGroupRow.Add(retGroupLabel);
 
-            var retGroupField = new PropertyField(retGroupProp, "");
-            retGroupField.style.flexGrow = 1;
-            retGroupField.BindProperty(retGroupProp);
-            retGroupRow.Add(retGroupField);
+            // Retention + Collision (element-wide)
+            expandedContent.Add(BuildLabeledRow("Retention Group", new PropertyField(retGroupProp, "") { style = { flexGrow = 1 } }, retGroupProp));
+            expandedContent.Add(BuildLabeledRow("Collision",       new PropertyField(collisionProp, "") { style = { flexGrow = 1 } }, collisionProp));
             
-            // Retention row
-            var retentionRow = new VisualElement();
-            retentionRow.style.flexDirection = FlexDirection.Row;
-            retentionRow.style.alignItems = Align.FlexStart;
-            retentionRow.style.marginBottom = 4;
-            expandedContent.Add(retentionRow);
-            
-            // Magnitude + Target row
-            var valuesRow = new VisualElement();
-            valuesRow.style.flexDirection = FlexDirection.Row;
-            valuesRow.style.alignItems = Align.Center;
-            valuesRow.style.marginBottom = 4;
-            expandedContent.Add(valuesRow);
-            
-            var magLabel = new Label("Magnitude");
-            magLabel.style.width = 65;
-            magLabel.style.fontSize = 10;
-            magLabel.style.color = Colors.HintText;
-            valuesRow.Add(magLabel);
-            
-            var magField = new FloatField();
-            magField.style.width = 60;
-            magField.bindingPath = magnitudeProp.propertyPath;
-            valuesRow.Add(magField);
-            
-            var targetLabel = new Label("Target");
-            targetLabel.style.width = 40;
-            targetLabel.style.fontSize = 10;
-            targetLabel.style.color = Colors.HintText;
-            targetLabel.style.marginLeft = 12;
-            valuesRow.Add(targetLabel);
-            
-            var targetField = new PropertyField(targetProp, "");
-            targetField.style.flexGrow = 1;
-            targetField.BindProperty(targetProp);
-            valuesRow.Add(targetField);
-            
-            // Real magnitude row
-            var realMagRow = new VisualElement();
-            realMagRow.style.flexDirection = FlexDirection.Row;
-            realMagRow.style.alignItems = Align.FlexStart;
-            realMagRow.style.marginBottom = 4;
-            expandedContent.Add(realMagRow);
-            
-            var realMagLabel = new Label("Real Magnitude");
-            realMagLabel.style.width = 100;
-            realMagLabel.style.alignSelf = Align.Center;
-            realMagLabel.style.fontSize = 10;
-            realMagLabel.style.color = Colors.HintText;
-            realMagLabel.style.marginTop = 2;
-            realMagRow.Add(realMagLabel);
+            expandedContent.Add(CreateDivider(6, 0));
 
-            var realMagField = new PropertyField(realMagProp, "");
-            realMagField.style.flexGrow = 1;
-            realMagField.BindProperty(realMagProp);
-            realMagRow.Add(realMagField);  
+            var persistentSummary = BuildSummaryColumn();
+            persistentSummary.style.backgroundColor = new Color(0.13f, 0.13f, 0.13f, 0.55f);
+            persistentSummary.style.paddingLeft = 6;
+            persistentSummary.style.paddingRight = 6;
+            persistentSummary.style.paddingTop = 4;
+            persistentSummary.style.paddingBottom = 4;
+            persistentSummary.style.borderTopLeftRadius = 3;
+            persistentSummary.style.borderTopRightRadius = 3;
+            persistentSummary.style.borderBottomLeftRadius = 3;
+            persistentSummary.style.borderBottomRightRadius = 3;
+            persistentSummary.style.marginBottom = 6;
+            expandedContent.Add(persistentSummary);
             
-            // Modifier row
-            var modifierField = new PropertyField(modifierProp, "Scaling");
-            modifierField.style.marginBottom = 4;
-            modifierField.BindProperty(modifierProp);
-            expandedContent.Add(modifierField);
+            // ─── Tabs: Current | Base ───────────────────────────────────────
+            var tabHeaderRow = new VisualElement();
+            tabHeaderRow.style.flexDirection = FlexDirection.Row;
+            tabHeaderRow.style.marginTop = 2;
+            tabHeaderRow.style.marginBottom = 4;
+            expandedContent.Add(tabHeaderRow);
+
+            var currentTabBtn = MakeTabButton("Current", true);
+            var baseTabBtn    = MakeTabButton("Base", false);
+            tabHeaderRow.Add(currentTabBtn);
+            tabHeaderRow.Add(baseTabBtn);
             
-            // Overflow row
-            var overflowRow = new VisualElement();
-            overflowRow.style.flexDirection = FlexDirection.Row;
-            overflowRow.style.alignItems = Align.FlexStart;
-            overflowRow.style.marginBottom = 4;
-            expandedContent.Add(overflowRow);
-            
-            var ovLabel = new Label("Bounds");
-            ovLabel.style.width = 65;
-            ovLabel.style.fontSize = 10;
-            ovLabel.style.color = Colors.HintText;
-            ovLabel.style.marginTop = 2;
-            overflowRow.Add(ovLabel);
-            
-            var ovField = new PropertyField(overflowProp, "");
-            ovField.style.flexGrow = 1;
-            ovField.BindProperty(overflowProp);
-            overflowRow.Add(ovField);
-            
-            // Collision row
-            var constraintsRow = new VisualElement();
-            constraintsRow.style.flexDirection = FlexDirection.Row;
-            constraintsRow.style.alignItems = Align.Center;
-            expandedContent.Add(constraintsRow);
-            
-            var constraintLabel = new Label("Constraints");
-            constraintLabel.style.width = 65;
-            constraintLabel.style.fontSize = 10;
-            constraintLabel.style.color = Colors.HintText;
-            constraintsRow.Add(constraintLabel);
-            
-            var constraintField = new PropertyField(constraintsProp, "");
-            constraintField.style.flexGrow = 1;
-            constraintField.BindProperty(constraintsProp);
-            constraintsRow.Add(constraintField);
-            
-            expandedContent.Add(CreateDivider());
-            expandedContent.Add(CreateHintLabel("Collision resolution policy for this attribute (overrides "));
-            
-            // Collision row
-            var collisionRow = new VisualElement();
-            collisionRow.style.flexDirection = FlexDirection.Row;
-            collisionRow.style.alignItems = Align.Center;
-            expandedContent.Add(collisionRow);
-            
-            var collLabel = new Label("Collision");
-            collLabel.style.width = 65;
-            collLabel.style.fontSize = 10;
-            collLabel.style.color = Colors.HintText;
-            collisionRow.Add(collLabel);
-            
-            var collField = new PropertyField(collisionProp, "");
-            collField.style.flexGrow = 1;
-            collField.BindProperty(collisionProp);
-            collisionRow.Add(collField);
-            
-            // ═══════════════════════════════════════════════════════════════════
-            // Update Functions
-            // ═══════════════════════════════════════════════════════════════════
-            
-            void UpdateSummary()
+            tabHeaderRow.Add(CreateFlexSpacer());
+
+            // Quick Import button — copies the inactive tab's spec into the active one in one click.
+            // Label/tooltip swap to reflect direction of the copy as the user changes tabs.
+            // Disabled while LinkCurrentToBase is ON, since Current is already mirrored.
+            bool currentTabActive = true; // tracked locally so the button knows the direction at click time
+            var importMagnitudeButton = new Button
             {
-                // Magnitude
-                float mag = magnitudeProp.floatValue;
-                magBadge.text = mag.ToString("F2");
-                magBadge.tooltip = $"Magnitude: {mag:F2}";
-                
-                // Target
-                var target = (EAttributeTargetLimited)targetProp.enumValueIndex;
-                targetBadge.text = target == EAttributeTargetLimited.CurrentAndBase ? "C+B" : "B";
-                targetBadge.tooltip = $"Targets: {target.ToString()}";
-                
-                string retentionGroup = retGroupProp.FindPropertyRelative("Name").stringValue;
-                retentionBadge.text = retentionGroup;
-                retentionBadge.style.color = Colors.AccentGreen;
-                retentionBadge.style.backgroundColor = new Color(Colors.AccentBlue.r, Colors.AccentBlue.g, Colors.AccentBlue.b, 0.15f);
-                retentionBadge.tooltip = $"Retention Group: {retentionGroup}";
-
-                string clampScale = "";
-                if (constraintsProp.FindPropertyRelative("AutoClamp").boolValue)
+                text = "↑ Import from Base",
+                tooltip = "Copy Base's Magnitude / Scaling / Real Magnitude into Current",
+                focusable = false,
+                style =
                 {
-                    clampScale += "C";
-                    if (constraintsProp.FindPropertyRelative("AutoScaleWithBase").boolValue) clampScale += "/S";
+                    fontSize = 9,
+                    height = 20,
+                    paddingLeft = 6,
+                    paddingRight = 6,
+                    marginRight = 6,
+                    backgroundColor = Colors.ButtonBackground,
+                    color = Colors.AccentGreen,
+                    borderTopLeftRadius = 3,
+                    borderTopRightRadius = 3,
+                    borderBottomLeftRadius = 3,
+                    borderBottomRightRadius = 3
                 }
-                else if (constraintsProp.FindPropertyRelative("AutoScaleWithBase").boolValue) clampScale += "S";
-                clampScaleBadge.text = clampScale;
-                clampScaleBadge.style.color = Colors.AccentOrange;
-                clampScaleBadge.style.backgroundColor = new Color(Colors.AccentOrange.r, Colors.AccentOrange.g, Colors.AccentOrange.b, 0.15f);
-                clampScaleBadge.tooltip = $"Clamp/Scale: {(clampScale.Contains("C") ? "True" : "False")}/{(clampScale.Contains("S") ? "True" : "False")}";
-                
-                var roundingTarget = (EAttributeRoundingPolicy)constraintsProp.FindPropertyRelative("RoundingMode").enumValueIndex;
-                if (roundingTarget == EAttributeRoundingPolicy.None) roundingBadge.style.display = DisplayStyle.None;
+            };
+            importMagnitudeButton.clicked += () =>
+            {
+                // Copy spec FROM the inactive tab INTO the active tab.
+                // Scaling is a [SerializeReference] managed reference — both sides share the
+                // same instance after copy (same semantics as the Link toggle's previous behavior).
+                if (currentTabActive)
+                {
+                    curMagProp.floatValue = baseMagProp.floatValue;
+                }
                 else
                 {
-                    roundingBadge.style.display = DisplayStyle.Flex;
-                    string roundingText = $"{roundingTarget.ToString()}" +
-                                          (roundingTarget == EAttributeRoundingPolicy.SnapTo ? $"/{constraintsProp.FindPropertyRelative("SnapInterval").floatValue:g2}" : string.Empty);
-                    roundingBadge.text = roundingText;
-                    roundingBadge.style.color = Colors.AccentPurple;
-                    roundingBadge.style.backgroundColor = new Color(Colors.AccentPurple.r, Colors.AccentPurple.g, Colors.AccentPurple.b, 0.15f);
-                    roundingBadge.tooltip = $"Rounding: {roundingText}";
+                    baseMagProp.floatValue = curMagProp.floatValue;
                 }
-                
-                // Border color
+                property.serializedObject.ApplyModifiedProperties();
+            };
+            
+            var importButton = new Button
+            {
+                text = "↑ Import from Base",
+                tooltip = "Copy Base's Magnitude / Scaling / Real Magnitude into Current",
+                focusable = false,
+                style =
+                {
+                    fontSize = 9,
+                    height = 20,
+                    paddingLeft = 6,
+                    paddingRight = 6,
+                    marginRight = 6,
+                    backgroundColor = Colors.ButtonBackground,
+                    color = Colors.AccentGreen,
+                    borderTopLeftRadius = 3,
+                    borderTopRightRadius = 3,
+                    borderBottomLeftRadius = 3,
+                    borderBottomRightRadius = 3
+                }
+            };
+            importButton.clicked += () =>
+            {
+                // Copy spec FROM the inactive tab INTO the active tab.
+                // Scaling is a [SerializeReference] managed reference — both sides share the
+                // same instance after copy (same semantics as the Link toggle's previous behavior).
+                if (currentTabActive)
+                {
+                    curMagProp.floatValue           = baseMagProp.floatValue;
+                    curRealMagProp.enumValueIndex   = baseRealMagProp.enumValueIndex;
+                    curScalingProp.managedReferenceValue = baseScalingProp.managedReferenceValue;
+                }
+                else
+                {
+                    baseMagProp.floatValue           = curMagProp.floatValue;
+                    baseRealMagProp.enumValueIndex   = curRealMagProp.enumValueIndex;
+                    baseScalingProp.managedReferenceValue = curScalingProp.managedReferenceValue;
+                }
+                property.serializedObject.ApplyModifiedProperties();
+            };
+            tabHeaderRow.Add(importMagnitudeButton);
+            tabHeaderRow.Add(importButton);
+
+            var linkToggle = new Toggle("🔗 Link Current to Base") { tooltip = "When ON, Current always mirrors Base. The Current tab is disabled and runtime resolution forwards Current → Base." };
+            linkToggle.style.flexGrow = 0;
+            linkToggle.style.marginRight = 8;
+            linkToggle.BindProperty(linkProp);
+            tabHeaderRow.Add(linkToggle);
+
+            var currentTabContent = BuildSideEditor(curMagProp, curScalingProp, curRealMagProp);
+            var baseTabContent    = BuildSideEditor(baseMagProp, baseScalingProp, baseRealMagProp);
+            currentTabContent.style.display = DisplayStyle.Flex;
+            baseTabContent.style.display = DisplayStyle.None;
+            expandedContent.Add(currentTabContent);
+            expandedContent.Add(baseTabContent);
+
+            // Hint shown over the Current tab body when linked
+            var linkedHint = new Label("Current is linked to Base — values shown for reference only. Toggle off to edit independently.");
+            linkedHint.style.fontSize = 9;
+            linkedHint.style.color = Colors.AccentGreen;
+            linkedHint.style.unityFontStyleAndWeight = FontStyle.Italic;
+            linkedHint.style.marginBottom = 4;
+            linkedHint.style.display = DisplayStyle.None;
+            currentTabContent.Insert(0, linkedHint);
+
+            void RefreshImportAllButton()
+            {
+                if (currentTabActive)
+                {
+                    importButton.text = "↑ Import All";
+                    importButton.tooltip = "Copy Base's Magnitude / Scaling / Real Magnitude into Current";
+                }
+                else
+                {
+                    importButton.text = "↓ Import All";
+                    importButton.tooltip = "Copy Current's Magnitude / Scaling / Real Magnitude into Base";
+                }
+                // While linked, Current mirrors Base automatically — importing into Current is
+                // a no-op and importing FROM Current would copy the (mirrored) Base value back
+                // onto itself. Disable to avoid confusion.
+                importButton.SetEnabled(!linkProp.boolValue);
+            }
+            
+            void RefreshImportMagnitudeButton()
+            {
+                if (currentTabActive)
+                {
+                    importMagnitudeButton.text = "↑ Import Magnitude";
+                    importMagnitudeButton.tooltip = "Copy Base's Magnitude into Current";
+                }
+                else
+                {
+                    importMagnitudeButton.text = "↓ Import Magnitude";
+                    importMagnitudeButton.tooltip = "Copy Current's Magnitude into Base";
+                }
+                // While linked, Current mirrors Base automatically — importing into Current is
+                // a no-op and importing FROM Current would copy the (mirrored) Base value back
+                // onto itself. Disable to avoid confusion.
+                importMagnitudeButton.SetEnabled(!linkProp.boolValue);
+            }
+
+            void ApplyLinkedState()
+            {
+                bool linked = linkProp.boolValue;
+                currentTabContent.SetEnabled(!linked);
+                linkedHint.style.display = linked ? DisplayStyle.Flex : DisplayStyle.None;
+                RefreshImportAllButton();
+                RefreshImportMagnitudeButton();
+            }
+
+            void SelectTab(bool current)
+            {
+                currentTabActive = current;
+                currentTabContent.style.display = current ? DisplayStyle.Flex : DisplayStyle.None;
+                baseTabContent.style.display    = current ? DisplayStyle.None : DisplayStyle.Flex;
+                StyleTabButton(currentTabBtn, current);
+                StyleTabButton(baseTabBtn,   !current);
+                RefreshImportAllButton();
+                RefreshImportMagnitudeButton();
+            }
+
+            currentTabBtn.clicked += () => SelectTab(true);
+            baseTabBtn.clicked    += () => SelectTab(false);
+            linkToggle.RegisterValueChangedCallback(_ => ApplyLinkedState());
+
+            // ─── Overflow + Constraints ─────────────────────────────────────
+            expandedContent.Add(CreateDivider());
+            expandedContent.Add(BuildLabeledRow("Bounds",      new PropertyField(overflowProp, "")    { style = { flexGrow = 1 } }, overflowProp));
+            expandedContent.Add(BuildLabeledRow("Constraints", new PropertyField(constraintsProp, "") { style = { flexGrow = 1 } }, constraintsProp));
+
+            // ═══════════════════════════════════════════════════════════════════
+            // Summary update — runs both summary columns off the same data
+            // ═══════════════════════════════════════════════════════════════════
+            void UpdateSummary()
+            {
+                string attrName = attributeProp.objectReferenceValue != null && attributeProp.objectReferenceValue is Attribute attr
+                    ? attr.GetName()
+                    : "(no attribute)";
+
+                string currentText = linkProp.boolValue
+                    ? $"={FormatSide(baseMagProp, baseScalingProp, baseRealMagProp)} (linked)"
+                    : FormatSide(curMagProp, curScalingProp, curRealMagProp);
+                string baseText = FormatSide(baseMagProp, baseScalingProp, baseRealMagProp);
+
+                string line1 = $"{attrName}    C: {currentText}    B: {baseText}";
+                string line2 = $"{FormatOverflow(overflowProp)}    {FormatConstraints(constraintsProp)}";
+
+                ((Label)collapsedSummary.ElementAt(0)).text = line1;
+                ((Label)collapsedSummary.ElementAt(1)).text = line2;
+                ((Label)persistentSummary.ElementAt(0)).text = line1;
+                ((Label)persistentSummary.ElementAt(1)).text = line2;
+
+                // Border tint by collision policy
                 container.style.borderLeftColor = (EAttributeElementCollisionPolicy)collisionProp.enumValueIndex switch
                 {
-                    EAttributeElementCollisionPolicy.UseThis => Colors.AccentGreen,
+                    EAttributeElementCollisionPolicy.UseThis     => Colors.AccentGreen,
                     EAttributeElementCollisionPolicy.UseExisting => Colors.AccentOrange,
-                    EAttributeElementCollisionPolicy.Combine => Colors.AccentBlue,
+                    EAttributeElementCollisionPolicy.Combine     => Colors.AccentBlue,
                     _ => Colors.AccentGray
                 };
             }
-            
+
             void ToggleCollapse()
             {
-                bool isCollapsed = IsCollapsed(property.propertyPath);
-                bool newState = !isCollapsed;
+                bool newState = !IsCollapsed(property.propertyPath);
                 SetCollapsed(property.propertyPath, newState);
-                
                 collapseBtn.text = newState ? Icons.ChevronRight : Icons.ChevronDown;
-                summaryContainer.style.display = newState ? DisplayStyle.Flex : DisplayStyle.None;
-                expandedContent.style.display = newState ? DisplayStyle.None : DisplayStyle.Flex;
-                
-                if (newState)
+                collapsedSummary.style.display = newState ? DisplayStyle.Flex : DisplayStyle.None;
+                expandedContent.style.display  = newState ? DisplayStyle.None : DisplayStyle.Flex;
+                if (newState) UpdateSummary();
+            }
+
+            collapseBtn.clicked += ToggleCollapse;
+
+            // ─── Live bounds enforcement ────────────────────────────────────
+            // Whenever the user edits Current/Base magnitudes OR the Overflow policy /
+            // Floor / Ceil values change, clamp the magnitudes through AttributeOverflowData.
+            // The runtime ApplyBounds() uses the same helper — drawer and runtime cannot
+            // disagree on policy semantics.
+            //
+            // Reentrancy guard: writing the clamped values back through SerializedProperty
+            // re-fires TrackSerializedObjectValue. The guard ensures we don't recurse, and
+            // the equality check on the second pass would short-circuit anyway.
+            bool clampingInProgress = false;
+
+            void EnforceOverflowBounds()
+            {
+                if (clampingInProgress) return;
+                clampingInProgress = true;
+                try
                 {
-                    UpdateSummary();
+                    var overflow = ReadOverflowFromProperty(overflowProp);
+
+                    float baseMagOriginal = baseMagProp.floatValue;
+                    float curMagOriginal  = curMagProp.floatValue;
+
+                    float clampedBase = overflow.ClampBase(baseMagOriginal);
+                    float clampedCur  = overflow.ClampCurrent(curMagOriginal, clampedBase);
+
+                    bool dirty = false;
+                    if (!Mathf.Approximately(clampedBase, baseMagOriginal))
+                    {
+                        baseMagProp.floatValue = clampedBase;
+                        dirty = true;
+                    }
+                    if (!Mathf.Approximately(clampedCur, curMagOriginal))
+                    {
+                        curMagProp.floatValue = clampedCur;
+                        dirty = true;
+                    }
+                    if (dirty) property.serializedObject.ApplyModifiedProperties();
+                }
+                finally
+                {
+                    clampingInProgress = false;
                 }
             }
-            
-            // Wire up collapse button
-            collapseBtn.clicked += ToggleCollapse;
-            
-            // Initial summary update
-            root.schedule.Execute(UpdateSummary).StartingIn(100);
-            
-            // Update summary when values change (for when it becomes visible)
-            magField.RegisterValueChangedCallback(_ => UpdateSummary());
-            targetField.RegisterValueChangeCallback(_ => UpdateSummary());
-            collField.RegisterValueChangeCallback(_ => UpdateSummary());
-            
+
+            // Initial state — Current tab selected, link state honored
+            SelectTab(true);
+            ApplyLinkedState();
+
+            // Initial summary build (delayed so bindings settle)
+            root.schedule.Execute(() =>
+            {
+                EnforceOverflowBounds();
+                UpdateSummary();
+            }).StartingIn(50);
+
+            // Rebuild summary + enforce bounds on ANY property change inside this element.
+            // (Single track callback so a magnitude change and a policy change both flow
+            // through the same path; cheap because both ops bail out when nothing changed.)
+            root.TrackSerializedObjectValue(property.serializedObject, _ =>
+            {
+                EnforceOverflowBounds();
+                UpdateSummary();
+            });
+
             return root;
         }
-        
-        private Label CreateBadge(string text, Color color)
+
+        /// <summary>Reconstruct an <see cref="AttributeOverflowData"/> from its serialized form
+        /// so we can call its clamp helpers from the drawer without touching the underlying object.</summary>
+        private static AttributeOverflowData ReadOverflowFromProperty(SerializedProperty overflowProp)
         {
-            var badge = new Label(text);
-            badge.style.fontSize = 9;
-            badge.style.color = color;
-            badge.style.backgroundColor = new Color(color.r, color.g, color.b, 0.15f);
-            badge.style.paddingLeft = 4;
-            badge.style.paddingRight = 4;
-            badge.style.paddingTop = 1;
-            badge.style.paddingBottom = 1;
-            badge.style.borderTopLeftRadius = 3;
-            badge.style.borderTopRightRadius = 3;
-            badge.style.borderBottomLeftRadius = 3;
-            badge.style.borderBottomRightRadius = 3;
-            return badge;
+            var policyProp = overflowProp.FindPropertyRelative(nameof(AttributeOverflowData.Policy));
+            var floorProp  = overflowProp.FindPropertyRelative(nameof(AttributeOverflowData.Floor));
+            var ceilProp   = overflowProp.FindPropertyRelative(nameof(AttributeOverflowData.Ceil));
+
+            return new AttributeOverflowData
+            {
+                Policy = (EAttributeOverflowPolicy)policyProp.enumValueIndex,
+                Floor = new AttributeValue(
+                    floorProp.FindPropertyRelative(nameof(AttributeValue.CurrentValue)).floatValue,
+                    floorProp.FindPropertyRelative(nameof(AttributeValue.BaseValue)).floatValue),
+                Ceil = new AttributeValue(
+                    ceilProp.FindPropertyRelative(nameof(AttributeValue.CurrentValue)).floatValue,
+                    ceilProp.FindPropertyRelative(nameof(AttributeValue.BaseValue)).floatValue),
+            };
+        }
+
+        // ─────────────────────────────────────────────────────────────────────
+        // Component builders
+        // ─────────────────────────────────────────────────────────────────────
+
+        private static VisualElement BuildSummaryColumn()
+        {
+            // Two-line column: line 1 = magnitudes, line 2 = overflow + constraints.
+            var col = new VisualElement();
+            col.style.flexDirection = FlexDirection.Column;
+
+            var line1 = new Label();
+            line1.style.fontSize = 10;
+            line1.style.color = Colors.AccentBlue;
+            line1.style.whiteSpace = WhiteSpace.Normal;
+            col.Add(line1);
+
+            var line2 = new Label();
+            line2.style.fontSize = 10;
+            line2.style.color = Colors.HintText;
+            line2.style.whiteSpace = WhiteSpace.Normal;
+            line2.style.marginTop = 1;
+            col.Add(line2);
+
+            return col;
+        }
+
+        private static Button MakeTabButton(string label, bool active)
+        {
+            var btn = new Button { text = label };
+            btn.style.height = 20;
+            btn.style.paddingLeft = 10;
+            btn.style.paddingRight = 10;
+            btn.style.borderTopLeftRadius = 3;
+            btn.style.borderTopRightRadius = 3;
+            btn.style.borderBottomLeftRadius = 0;
+            btn.style.borderBottomRightRadius = 0;
+            StyleTabButton(btn, active);
+            return btn;
+        }
+
+        private static void StyleTabButton(Button btn, bool active)
+        {
+            btn.style.backgroundColor = active
+                ? new Color(Colors.AccentBlue.r, Colors.AccentBlue.g, Colors.AccentBlue.b, 0.25f)
+                : Colors.ButtonBackground;
+            btn.style.color = active ? Colors.AccentBlue : Colors.LabelText;
+            btn.style.unityFontStyleAndWeight = active ? FontStyle.Bold : FontStyle.Normal;
+            btn.focusable = false;
+        }
+
+        private static VisualElement BuildSideEditor(
+            SerializedProperty magnitudeProp,
+            SerializedProperty scalingProp,
+            SerializedProperty realMagProp)
+        {
+            var box = new VisualElement();
+            box.style.paddingLeft = 6;
+            box.style.paddingTop = 6;
+            box.style.paddingBottom = 6;
+            box.style.paddingRight = 6;
+            box.style.backgroundColor = new Color(0.13f, 0.13f, 0.13f, 0.6f);
+            box.style.borderTopLeftRadius = 0;
+            box.style.borderTopRightRadius = 3;
+            box.style.borderBottomLeftRadius = 3;
+            box.style.borderBottomRightRadius = 3;
+            box.style.marginBottom = 4;
+
+            var magRow = new VisualElement { style = { flexDirection = FlexDirection.Row, alignItems = Align.Center, marginBottom = 4 } };
+            var magLabel = new Label("Magnitude") { style = { width = 100, fontSize = 10, color = Colors.HintText } };
+            magRow.Add(magLabel);
+            var magField = new FloatField { bindingPath = magnitudeProp.propertyPath };
+            magField.style.flexGrow = 1;
+            magRow.Add(magField);
+            box.Add(magRow);
+
+            var realMagField = new PropertyField(realMagProp, "Real Magnitude");
+            realMagField.style.marginBottom = 4;
+            realMagField.BindProperty(realMagProp);
+            box.Add(realMagField);
+
+            var scalingField = new PropertyField(scalingProp, "Scaling");
+            scalingField.BindProperty(scalingProp);
+            box.Add(scalingField);
+
+            return box;
+        }
+
+        private static VisualElement BuildLabeledRow(string label, VisualElement editor, SerializedProperty bindTo = null)
+        {
+            var row = new VisualElement();
+            row.style.flexDirection = FlexDirection.Row;
+            row.style.alignItems = Align.Center;
+            row.style.marginBottom = 4;
+
+            var lbl = new Label(label);
+            lbl.style.width = 100;
+            lbl.style.fontSize = 10;
+            lbl.style.color = Colors.HintText;
+            row.Add(lbl);
+
+            if (editor is PropertyField pf && bindTo != null) pf.BindProperty(bindTo);
+            row.Add(editor);
+            return row;
+        }
+
+        // ─────────────────────────────────────────────────────────────────────
+        // Summary formatters
+        // ─────────────────────────────────────────────────────────────────────
+
+        private static string FormatSide(SerializedProperty magProp, SerializedProperty scalingProp, SerializedProperty realMagProp)
+        {
+            float mag = magProp.floatValue;
+            string scalerName = scalingProp.managedReferenceValue is AbstractCachedScaler s ? PrettyScalerName(s) : null;
+            var realMag = (EMagnitudeOperation)realMagProp.enumValueIndex;
+
+            if (string.IsNullOrEmpty(scalerName) || realMag == EMagnitudeOperation.UseMagnitude)
+                return $"{mag:F2}";
+
+            string op = realMag switch
+            {
+                EMagnitudeOperation.AddScaler          => "+",
+                EMagnitudeOperation.MultiplyWithScaler => "×",
+                EMagnitudeOperation.UseScaler          => "=",
+                _ => "?"
+            };
+            return realMag == EMagnitudeOperation.UseScaler
+                ? $"{op}{scalerName}"
+                : $"{mag:F2}{op}{scalerName}";
+        }
+
+        private static string PrettyScalerName(AbstractCachedScaler s)
+        {
+            string n = s.GetType().Name;
+            if (n.StartsWith("Cached")) n = n.Substring("Cached".Length);
+            if (n.EndsWith("Scaler")) n = n.Substring(0, n.Length - "Scaler".Length);
+            return n.Length > 0 ? n : "Scaler";
+        }
+
+        private static string FormatOverflow(SerializedProperty overflowProp)
+        {
+            var policyProp = overflowProp.FindPropertyRelative("Policy");
+            if (policyProp == null) return "Bounds: ?";
+            var policy = (EAttributeOverflowPolicy)policyProp.enumValueIndex;
+            return policy switch
+            {
+                EAttributeOverflowPolicy.ZeroToBase   => "Bounds: 0 → Base",
+                EAttributeOverflowPolicy.FloorToBase  => "Bounds: Floor → Base",
+                EAttributeOverflowPolicy.ZeroToCeil   => "Bounds: 0 → Ceil",
+                EAttributeOverflowPolicy.FloorToCeil  => "Bounds: Floor → Ceil",
+                EAttributeOverflowPolicy.Unlimited    => "Bounds: ∞",
+                _ => $"Bounds: {policy}"
+            };
+        }
+
+        private static string FormatConstraints(SerializedProperty constraintsProp)
+        {
+            bool clamp     = constraintsProp.FindPropertyRelative("AutoClamp")?.boolValue ?? false;
+            bool autoScale = constraintsProp.FindPropertyRelative("AutoScaleWithBase")?.boolValue ?? false;
+            var rounding   = (EAttributeRoundingPolicy)(constraintsProp.FindPropertyRelative("RoundingMode")?.enumValueIndex ?? 0);
+            float snap     = constraintsProp.FindPropertyRelative("SnapInterval")?.floatValue ?? 0f;
+
+            var parts = new List<string>();
+            if (clamp) parts.Add("Clamp");
+            if (autoScale) parts.Add("AutoScale");
+            if (rounding != EAttributeRoundingPolicy.None)
+            {
+                parts.Add(rounding == EAttributeRoundingPolicy.SnapTo ? $"Snap({snap:g2})" : rounding.ToString());
+            }
+            return parts.Count == 0 ? "Constraints: none" : "Constraints: " + string.Join(", ", parts);
         }
     }
 }

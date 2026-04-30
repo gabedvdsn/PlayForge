@@ -1,27 +1,25 @@
-﻿using System.Collections.Generic;
-using UnityEngine;
+using System.Collections.Generic;
 
 namespace FarEmerald.PlayForge
 {
     /// <summary>
-    /// Simple cached scaler based on relative level.
-    /// Does not register any attribute dependencies since it only uses level.
+    /// Simple cached scaler based on the owning system's relative level.
+    /// Has no attribute dependencies, so RegulateContactWith is a no-op (inherited from base).
+    /// Returns the same scalar on both Current and Base sides — the blueprint will project
+    /// whichever slot it needs.
     /// </summary>
     public class CachedSimpleScaler : AbstractCachedScaler
     {
-        public override void Initialize(IAttributeImpactDerivation spec)
+        public override AttributeValue EvaluateActiveValue(AttributeBlueprint blueprint, IReadOnlyDictionary<IAttribute, CachedAttributeValue> cache)
         {
-            // No initialization needed
-        }
-        
-        public override AttributeValue EvaluateActiveValue(SourceAttributeImpact deriv, AttributeBlueprint blueprint, IReadOnlyDictionary<IAttribute, CachedAttributeValue> cache)
-        {
-            return EvaluateFromSpec(spec);
+            float v = EvaluateFromSpec(blueprint.Derivation);
+            return new AttributeValue(v, v);
         }
 
-        public override void Regulate(IAttribute attribute, AttributeModificationRule rules)
+        public override AttributeValue EvaluateInitialValue(AttributeBlueprint blueprint, IReadOnlyDictionary<IAttribute, CachedAttributeValue> cache)
         {
-            // No attribute dependencies - this scaler only uses level, not attributes
+            // Initial = active for level-only scalers (no transient attribute state involved).
+            return EvaluateActiveValue(blueprint, cache);
         }
     }
 }

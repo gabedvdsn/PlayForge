@@ -39,9 +39,9 @@ namespace FarEmerald.PlayForge
         {
         }
 
-        public abstract AttributeValue EvaluateActiveValue(SourceAttributeImpact deriv, AttributeBlueprint blueprint, IReadOnlyDictionary<IAttribute, CachedAttributeValue> cache);
+        public abstract AttributeValue EvaluateActiveValue(AttributeBlueprint blueprint, IReadOnlyDictionary<IAttribute, CachedAttributeValue> cache);
         
-        public virtual AttributeValue EvaluateInitialValue(SourceAttributeImpact deriv, AttributeBlueprint blueprint, IReadOnlyDictionary<IAttribute, CachedAttributeValue> cache)
+        public virtual AttributeValue EvaluateInitialValue(AttributeBlueprint blueprint, IReadOnlyDictionary<IAttribute, CachedAttributeValue> cache)
         {
             return blueprint.RootValue;
         }

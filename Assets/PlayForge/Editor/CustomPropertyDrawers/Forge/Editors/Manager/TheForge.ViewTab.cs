@@ -22,24 +22,37 @@ namespace FarEmerald.PlayForge.Extended.Editor
         private HashSet<string> expandedTags = new HashSet<string>();
         private HashSet<string> expandedRequirements = new HashSet<string>();
 
-        private bool groupTagResults = false;
+        private bool groupTagResults = true;
         private bool showFullTagPath = false;
         private string selectedTagParentFilter = null;
-        
+
+        // Tag list — sort & quality filters (new)
+        private enum ETagSortMode { UsageDesc, AlphaAsc, DepthAsc }
+        private ETagSortMode tagSortMode = ETagSortMode.UsageDesc;
+        private string selectedTagSourceFilter = null; // null = All, "System", "Authored"
+        private string selectedTagUsageFilter  = null; // null = All, "Used", "Orphan"
+
         // Secondary view modes
         private bool showScalersView = false;
         private bool showRequirementsView = false;
-        
+
         // Requirements filter
         private string selectedRequirementFilter = null; // null = All, "Source", "Target", "Required", "Avoid"
-        
+        private bool requirementsNamedOnly = false;        // chip toggle: only records that belong to a named group
+
         // Scalers filter
-        private string selectedScalerTypeFilter = null; // null = All, or specific scaler type name
-        private string selectedScalerContextFilter = null; // null = All, "Duration", "Magnitude", etc.
-        private Type selectedScalerAssetTypeFilter = null; // null = All, or specific asset type
-        
-        // All assets view filter
-        private string selectedAllViewFilter = null; // null = None, "HasScalers", "HasRequirements", "HasTags", "Leveled"
+        private string selectedScalerTypeFilter = null;        // null = All, or specific scaler type name
+        private string selectedScalerContextFilter = null;     // null = All, "Duration", "Magnitude", etc.
+        private Type selectedScalerAssetTypeFilter = null;     // null = All, or specific asset type
+        private ELevelConfig? selectedScalerLevelConfigFilter = null; // null = All, or LockToLevelProvider/Unlocked/Clamped
+
+        // All-assets view filter (no specific type selected)
+        // null = None | "HasScalers" | "HasRequirements" | "HasTags" | "Leveled"
+        private string selectedAllViewFilter = null;
+
+        // Per-typed-asset contextual filter (driven by BaseForgeLevelProvider.IsLinked)
+        // null = All | "Linked" | "Standalone"
+        private string selectedTypedAssetFilter = null;
         
         // Cached scaler discovery
         private static List<ScalerRecord> _cachedScalerRecords = null;
@@ -242,8 +255,11 @@ namespace FarEmerald.PlayForge.Extended.Editor
                 BuildRequirementsFilterBar();
             if (showScalersView)
                 BuildScalersFilterBar();
-            if (!showTagsView && !showScalersView && !showRequirementsView && selectedTypeFilter == null)
-                BuildAllViewFilterBar();
+            if (!showTagsView && !showScalersView && !showRequirementsView)
+            {
+                if (selectedTypeFilter == null) BuildAllViewFilterBar();
+                else                            BuildTypedAssetFilterBar();
+            }
             
             // Search Bar
             var searchBar = new VisualElement();
@@ -491,37 +507,36 @@ namespace FarEmerald.PlayForge.Extended.Editor
         
         private void BuildAllViewFilterBar()
         {
-            var filterBar = new VisualElement();
-            filterBar.style.flexDirection = FlexDirection.Row;
-            filterBar.style.flexWrap = Wrap.Wrap;
-            filterBar.style.marginBottom = 8;
-            filterBar.style.paddingLeft = 8;
-            filterBar.style.paddingTop = 4;
-            filterBar.style.paddingBottom = 4;
-            filterBar.style.backgroundColor = new Color(0.15f, 0.15f, 0.15f, 0.5f);
-            filterBar.style.borderTopLeftRadius = 4;
-            filterBar.style.borderTopRightRadius = 4;
-            filterBar.style.borderBottomLeftRadius = 4;
-            filterBar.style.borderBottomRightRadius = 4;
-            contentContainer.Add(filterBar);
+            var strip = CreateFilterStrip();
+            contentContainer.Add(strip);
 
-            var label = CreateLabel("Filter:", 50, 10, Colors.HintText);
-            label.style.alignSelf = Align.Center;
-            filterBar.Add(label);
-            
-            filterBar.Add(CreateAllViewFilterButton("All", null));
-            filterBar.Add(CreateAllViewFilterButton("Has Scalers", "HasScalers"));
-            filterBar.Add(CreateAllViewFilterButton("Has Requirements", "HasRequirements"));
-            filterBar.Add(CreateAllViewFilterButton("Leveled", "Leveled"));
+            strip.Add(CreateFilterSectionLabel("Filter:"));
+            strip.Add(CreateFilterChip(() => "All",              () => selectedAllViewFilter == null,             Colors.AccentGray,   () => { selectedAllViewFilter = null;             ShowTab(1); }));
+            strip.Add(CreateFilterChip(() => "Has Scalers",      () => selectedAllViewFilter == "HasScalers",     Colors.AccentPurple, () => { selectedAllViewFilter = "HasScalers";     ShowTab(1); }, tooltip: "Assets that author at least one scaler"));
+            strip.Add(CreateFilterChip(() => "Has Requirements", () => selectedAllViewFilter == "HasRequirements", RequirementColor,    () => { selectedAllViewFilter = "HasRequirements";ShowTab(1); }, tooltip: "Assets that declare at least one tag requirement"));
+            strip.Add(CreateFilterChip(() => "Has Tags",         () => selectedAllViewFilter == "HasTags",         Colors.AccentCyan,   () => { selectedAllViewFilter = "HasTags";        ShowTab(1); }, tooltip: "Assets that grant or reference any tag"));
+            strip.Add(CreateFilterChip(() => "Leveled",          () => selectedAllViewFilter == "Leveled",         Colors.AccentBlue,   () => { selectedAllViewFilter = "Leveled";        ShowTab(1); }, tooltip: "Assets with their own level range"));
         }
-        
-        private Button CreateAllViewFilterButton(string text, string filterValue)
+
+        /// <summary>
+        /// Per-typed-asset chip strip (shown when a specific asset type is selected).
+        /// All asset types in the framework that participate in level provision share the
+        /// same Linked / Standalone distinction via <see cref="BaseForgeLevelProvider.IsLinked"/>,
+        /// so one strip serves Ability, Item, Effect, Entity, and AttributeSet uniformly.
+        /// </summary>
+        private void BuildTypedAssetFilterBar()
         {
-            bool isSelected = selectedAllViewFilter == filterValue;
-            var btn = new Button { text = text };
-            StyleSmallFilterButton(btn, isSelected, Colors.AccentGray);
-            btn.clicked += () => { selectedAllViewFilter = filterValue; ShowTab(1); };
-            return btn;
+            // Only meaningful for types that derive from BaseForgeLevelProvider.
+            if (selectedTypeFilter == null) return;
+            if (!typeof(BaseForgeLevelProvider).IsAssignableFrom(selectedTypeFilter)) return;
+
+            var strip = CreateFilterStrip();
+            contentContainer.Add(strip);
+
+            strip.Add(CreateFilterSectionLabel("Link:"));
+            strip.Add(CreateFilterChip(() => "All",        () => selectedTypedAssetFilter == null,         Colors.AccentGray,  () => { selectedTypedAssetFilter = null;         ShowTab(1); }));
+            strip.Add(CreateFilterChip(() => "Standalone", () => selectedTypedAssetFilter == "Standalone", Colors.AccentGreen, () => { selectedTypedAssetFilter = "Standalone"; ShowTab(1); }, tooltip: "Assets that own their level range"));
+            strip.Add(CreateFilterChip(() => "Linked",     () => selectedTypedAssetFilter == "Linked",     Colors.AccentBlue,  () => { selectedTypedAssetFilter = "Linked";     ShowTab(1); }, tooltip: "Assets with a Linked Provider"));
         }
         
         private void BuildStandardListView(VisualElement container)
@@ -545,22 +560,49 @@ namespace FarEmerald.PlayForge.Extended.Editor
             var assets = selectedTypeFilter == null
                 ? cachedAssets.ToList()
                 : cachedAssets.Where(a => a.GetType() == selectedTypeFilter).ToList();
-            
-            // Apply All view filter
+
+            // ── All-view filter (no specific type selected) ──────────────────
             if (selectedTypeFilter == null && !string.IsNullOrEmpty(selectedAllViewFilter))
             {
                 var scalerAssets = new HashSet<ScriptableObject>(GetScalerCache().Select(r => r.Asset));
-                var reqAssets = new HashSet<ScriptableObject>(GetRequirementsCache().Select(r => r.Asset));
-                
+                var reqAssets    = new HashSet<ScriptableObject>(GetRequirementsCache().Select(r => r.Asset));
+
+                // "Has Tags" — any asset that contributes to or references the tag registry.
+                // ITagSource.GetGrantedTags + AssetTag fields cover the bulk of authored tags.
+                bool HasAnyTag(ScriptableObject so)
+                {
+                    if (so is ITagSource ts)
+                    {
+                        foreach (var t in ts.GetGrantedTags())
+                            if (!string.IsNullOrEmpty(t.Name)) return true;
+                    }
+                    return false;
+                }
+
                 assets = selectedAllViewFilter switch
                 {
-                    "HasScalers" => assets.Where(a => scalerAssets.Contains(a)).ToList(),
+                    "HasScalers"      => assets.Where(a => scalerAssets.Contains(a)).ToList(),
                     "HasRequirements" => assets.Where(a => reqAssets.Contains(a)).ToList(),
-                    "Leveled" => assets.Where(a => a is Ability || a is Item || a is EntityIdentity).ToList(),
-                    _ => assets
+                    "HasTags"         => assets.Where(HasAnyTag).ToList(),
+                    "Leveled"         => assets.Where(a => a is BaseForgeLevelProvider).ToList(),
+                    _                 => assets
                 };
             }
-            
+
+            // ── Per-type Linked/Standalone filter ────────────────────────────
+            if (selectedTypeFilter != null
+                && typeof(BaseForgeLevelProvider).IsAssignableFrom(selectedTypeFilter)
+                && !string.IsNullOrEmpty(selectedTypedAssetFilter))
+            {
+                assets = assets.Where(a =>
+                {
+                    if (a is BaseForgeLevelProvider lp)
+                        return selectedTypedAssetFilter == "Linked" ? lp.IsLinked : !lp.IsLinked;
+                    return false;
+                }).ToList();
+            }
+
+            // ── Search ───────────────────────────────────────────────────────
             if (!string.IsNullOrEmpty(searchFilter))
             {
                 var filter = searchFilter.ToLower();
@@ -569,7 +611,7 @@ namespace FarEmerald.PlayForge.Extended.Editor
                     GetAssetDisplayName(a).ToLower().Contains(filter)
                 ).ToList();
             }
-            
+
             return SortAssets(assets);
         }
         
@@ -809,6 +851,16 @@ namespace FarEmerald.PlayForge.Extended.Editor
             {
                 filterBar.Add(CreateRequirementFilterButton(ctx, $"ctx:{ctx}"));
             }
+
+            filterBar.Add(CreateFilterSeparator());
+
+            // Named-groups-only toggle — surfaces explicitly-authored groups so designers can
+            // audit naming conventions without hunting through anonymous defaults.
+            var namedBtn = new Button { text = requirementsNamedOnly ? "🏷 Named Only ✓" : "🏷 Named Only" };
+            StyleSmallFilterButton(namedBtn, requirementsNamedOnly, Colors.AccentCyan);
+            namedBtn.tooltip = "Show only requirements that belong to a named AvoidRequireTagGroup";
+            namedBtn.clicked += () => { requirementsNamedOnly = !requirementsNamedOnly; ShowTab(1); };
+            filterBar.Add(namedBtn);
         }
         
         private VisualElement CreateFilterSeparator()
@@ -864,6 +916,9 @@ namespace FarEmerald.PlayForge.Extended.Editor
                     records = records.Where(r => r.Context == ctx);
                 }
             }
+
+            if (requirementsNamedOnly)
+                records = records.Where(r => !string.IsNullOrEmpty(r.GroupName));
             
             // Apply search
             if (!string.IsNullOrEmpty(searchFilter))
@@ -878,26 +933,28 @@ namespace FarEmerald.PlayForge.Extended.Editor
             
             var recordList = records.ToList();
             
-            // Group by tag name
+            // Group by tag name (encoded — used as identity); the display label is
+            // projected from the first record's Tag so the user reads the friendly form.
             var grouped = recordList
                 .GroupBy(r => r.TagName)
                 .OrderByDescending(g => g.Count())
                 .ToList();
-            
+
             var resultsLabel = rootVisualElement.Q<Label>("ResultsCount");
-            if (resultsLabel != null) 
+            if (resultsLabel != null)
                 resultsLabel.text = $"{grouped.Count} tags ({recordList.Count} total requirements)";
-            
+
             foreach (var group in grouped)
             {
-                container.Add(CreateRequirementTagRow(group.Key, group.ToList()));
+                var tagDisplay = GetTagDisplay(group.First().Tag);
+                container.Add(CreateRequirementTagRow(group.Key, tagDisplay, group.ToList()));
             }
-            
+
             if (!grouped.Any())
                 container.Add(CreateEmptyLabel("No requirements found"));
         }
-        
-        private VisualElement CreateRequirementTagRow(string tagName, List<RequirementRecord> records)
+
+        private VisualElement CreateRequirementTagRow(string tagName, string tagDisplay, List<RequirementRecord> records)
         {
             var tagKey = $"req_{tagName}";
             bool isExpanded = expandedRequirements.Contains(tagKey);
@@ -930,7 +987,9 @@ namespace FarEmerald.PlayForge.Extended.Editor
             tagContainer.Add(row);
             
             row.Add(CreateLabel(isExpanded ? "▼" : "▶", 16, 9, Colors.HintText));
-            row.Add(CreateLabel(tagName, 180, 11, Colors.LabelText, false, FontStyle.Bold));
+            var tagLabel = CreateLabel(tagDisplay, 180, 11, Colors.LabelText, false, FontStyle.Bold);
+            tagLabel.tooltip = tagName;
+            row.Add(tagLabel);
             row.Add(CreateLabel($"{records.Count} uses", 70, 10, Colors.HintText));
             
             // Badges
@@ -992,38 +1051,34 @@ namespace FarEmerald.PlayForge.Extended.Editor
             {
                 content.Add(CreateSectionLabel(group.Key, content.childCount > 0 ? 8 : 0));
                 
-                foreach (var record in group.Take(8))
+                foreach (var record in group)
                 {
                     var typeInfo = AssetTypes.FirstOrDefault(t => t.Type == record.Asset.GetType());
-                    
+
                     var assetRow = new VisualElement();
                     assetRow.style.flexDirection = FlexDirection.Row;
                     assetRow.style.alignItems = Align.Center;
                     assetRow.style.paddingTop = 2;
                     assetRow.style.paddingBottom = 2;
                     assetRow.style.marginBottom = 1;
-                    
+
                     assetRow.RegisterCallback<MouseEnterEvent>(_ => assetRow.style.backgroundColor = new Color(0.22f, 0.22f, 0.22f, 0.5f));
                     assetRow.RegisterCallback<MouseLeaveEvent>(_ => assetRow.style.backgroundColor = Color.clear);
                     assetRow.RegisterCallback<ClickEvent>(_ => { Selection.activeObject = record.Asset; EditorGUIUtility.PingObject(record.Asset); });
-                    
+
                     assetRow.Add(CreateLabel(typeInfo?.Icon ?? "?", 20, 10, typeInfo?.Color ?? Colors.HintText));
-                    
-                    // Show group name if available
+
                     if (!string.IsNullOrEmpty(record.GroupName))
                     {
                         assetRow.Add(CreateLabel($"\"{record.GroupName}\"", 120, 10, Colors.AccentCyan));
                         assetRow.Add(CreateLabel("—", 16, 10, Colors.HintText));
                     }
-                    
+
                     assetRow.Add(CreateLabel(GetAssetDisplayName(record.Asset), 0, 10, Colors.LabelText, true));
                     assetRow.Add(CreateBadge(record.AssetType, 50, typeInfo?.Color ?? Colors.HintText));
-                    
+
                     content.Add(assetRow);
                 }
-                
-                if (group.Count() > 8)
-                    content.Add(CreateLabel($"... and {group.Count() - 8} more", 0, 9, Colors.HintText));
             }
             
             return content;
@@ -1087,6 +1142,27 @@ namespace FarEmerald.PlayForge.Extended.Editor
             filterBar.Add(CreateScalerAssetTypeFilterButton("⚡ Ability", typeof(Ability)));
             filterBar.Add(CreateScalerAssetTypeFilterButton("✦ Effect", typeof(GameplayEffect)));
             filterBar.Add(CreateScalerAssetTypeFilterButton("📦 Item", typeof(Item)));
+
+            filterBar.Add(CreateFilterSeparator());
+
+            // Level Config — surfaces which scalers lock to their host's level vs. self-managed.
+            var lvlLabel = CreateLabel("Level Cfg:", 60, 10, Colors.HintText);
+            lvlLabel.style.alignSelf = Align.Center;
+            filterBar.Add(lvlLabel);
+
+            filterBar.Add(CreateScalerLevelConfigChip("All",       null));
+            filterBar.Add(CreateScalerLevelConfigChip("Lock",      ELevelConfig.LockToLevelProvider));
+            filterBar.Add(CreateScalerLevelConfigChip("Unlocked",  ELevelConfig.Unlocked));
+            filterBar.Add(CreateScalerLevelConfigChip("Clamped",   ELevelConfig.Clamped));
+        }
+
+        private Button CreateScalerLevelConfigChip(string text, ELevelConfig? value)
+        {
+            bool isSelected = selectedScalerLevelConfigFilter == value;
+            var btn = new Button { text = text };
+            StyleSmallFilterButton(btn, isSelected, Colors.AccentGreen);
+            btn.clicked += () => { selectedScalerLevelConfigFilter = value; ShowTab(1); };
+            return btn;
         }
         
         private Button CreateScalerTypeFilterButton(string text, string filterValue)
@@ -1131,6 +1207,174 @@ namespace FarEmerald.PlayForge.Extended.Editor
             btn.style.backgroundColor = isSelected ? accentColor : Colors.ButtonBackground;
             btn.style.color = isSelected ? Colors.HeaderText : Colors.LabelText;
         }
+
+        // ═══════════════════════════════════════════════════════════════════════════
+        // Unified Filter Primitives
+        //
+        // All four view modes (Standard / Tags / Scalers / Requirements) used to roll
+        // their own filter bars with subtly-different paddings, backgrounds, and chip
+        // styles. These helpers funnel them into one consistent visual language so
+        // the user can move between views without re-learning the layout.
+        // ═══════════════════════════════════════════════════════════════════════════
+
+        /// <summary>
+        /// Adds a filter "strip" container (rounded card, dark backdrop) to the content
+        /// area and returns its root element so callers can append filter sections.
+        /// </summary>
+        private VisualElement CreateFilterStrip()
+        {
+            var strip = new VisualElement();
+            strip.style.flexDirection = FlexDirection.Row;
+            strip.style.flexWrap = Wrap.Wrap;
+            strip.style.alignItems = Align.Center;
+            strip.style.marginBottom = 8;
+            strip.style.paddingLeft = 8;
+            strip.style.paddingRight = 8;
+            strip.style.paddingTop = 5;
+            strip.style.paddingBottom = 5;
+            strip.style.backgroundColor = new Color(0.15f, 0.15f, 0.15f, 0.5f);
+            strip.style.borderTopLeftRadius = 4;
+            strip.style.borderTopRightRadius = 4;
+            strip.style.borderBottomLeftRadius = 4;
+            strip.style.borderBottomRightRadius = 4;
+            return strip;
+        }
+
+        /// <summary>
+        /// Inline label that introduces a filter section ("Context:", "Sort:", …).
+        /// </summary>
+        private Label CreateFilterSectionLabel(string text)
+        {
+            var lbl = new Label(text);
+            lbl.style.fontSize = 10;
+            lbl.style.color = Colors.HintText;
+            lbl.style.marginRight = 6;
+            lbl.style.alignSelf = Align.Center;
+            lbl.style.unityFontStyleAndWeight = FontStyle.Bold;
+            return lbl;
+        }
+
+        /// <summary>
+        /// One uniform filter chip — used by all view modes. Selected chips get a
+        /// softly-tinted backdrop in the section's accent color; idle chips share
+        /// the standard button background. Optional <paramref name="count"/> shows
+        /// in muted parentheses next to the label.
+        /// </summary>
+        private Button CreateFilterChip(Func<string> text, Func<bool> isSelected, Color accentColor, Action onClick, int count = -1, string tooltip = null)
+        {
+            var btn = new Button { focusable = false };
+            btn.tooltip = tooltip;
+            btn.style.fontSize = 10;
+            btn.style.paddingLeft = 8;
+            btn.style.paddingRight = 8;
+            btn.style.paddingTop = 3;
+            btn.style.paddingBottom = 3;
+            btn.style.marginRight = 4;
+            btn.style.marginTop = 2;
+            btn.style.marginBottom = 2;
+            btn.style.borderTopLeftRadius = 3;
+            btn.style.borderTopRightRadius = 3;
+            btn.style.borderBottomLeftRadius = 3;
+            btn.style.borderBottomRightRadius = 3;
+
+            var content = new VisualElement { pickingMode = PickingMode.Ignore };
+            content.style.flexDirection = FlexDirection.Row;
+            content.style.alignItems = Align.Center;
+
+            var label = new Label(text()) { pickingMode = PickingMode.Ignore };
+            label.style.fontSize = 10;
+            label.style.color = isSelected() ? accentColor : Colors.LabelText;
+            content.Add(label);
+
+            if (count >= 0)
+            {
+                var c = new Label($" ({count})") { pickingMode = PickingMode.Ignore };
+                c.style.fontSize = 9;
+                c.style.color = Colors.HintText;
+                content.Add(c);
+            }
+            btn.Add(content);
+
+            btn.RegisterCallback<MouseEnterEvent>(_ => { if (!isSelected()) btn.style.backgroundColor = Colors.ButtonHover; });
+            btn.RegisterCallback<MouseLeaveEvent>(_ => Style());
+            if (onClick != null) btn.clicked += onClick;
+            btn.clicked += Style;
+            
+            Style();
+            
+            return btn;
+            
+            void Style()
+            {
+                if (isSelected())
+                {
+                    btn.style.backgroundColor = new Color(accentColor.r * 0.35f, accentColor.g * 0.35f, accentColor.b * 0.35f, 0.85f);
+                    btn.style.color = accentColor;
+                    btn.style.unityFontStyleAndWeight = FontStyle.Bold;
+                }
+                else
+                {
+                    btn.style.backgroundColor = Colors.ButtonBackground;
+                    btn.style.color = Colors.LabelText;
+                    btn.style.unityFontStyleAndWeight = FontStyle.Normal;
+                }
+
+                label.text = text();
+                label.style.color = isSelected() ? accentColor : Colors.LabelText;
+            }
+        }
+
+        /// <summary>Vertical hairline used between filter sections inside a strip.</summary>
+        private VisualElement CreateSectionDivider()
+        {
+            var sep = new VisualElement();
+            sep.style.width = 1;
+            sep.style.height = 18;
+            sep.style.backgroundColor = Colors.BorderDark;
+            sep.style.marginLeft = 6;
+            sep.style.marginRight = 6;
+            sep.style.alignSelf = Align.Center;
+            return sep;
+        }
+
+        // ═══════════════════════════════════════════════════════════════════════════
+        // Tag Display Helpers
+        //
+        // A Tag's `Name` may carry deterministic hash padding (e.g. "PositionXyZ12")
+        // while its `DisplayName` is the original human-readable input (e.g. "Position").
+        // Hierarchical tags mirror dot structure between the two fields, so display-side
+        // segments can be obtained by splitting DisplayName, while identity / grouping
+        // / filter comparisons must continue to use Name. These helpers funnel the
+        // projection through one place so the View tab never accidentally renders a
+        // padded name to the user.
+        // ═══════════════════════════════════════════════════════════════════════════
+
+        private static string GetTagDisplay(Tag tag)
+            => string.IsNullOrEmpty(tag.DisplayName) ? tag.Name : tag.DisplayName;
+
+        private static string GetTagLeafDisplay(Tag tag)
+        {
+            var s = GetTagDisplay(tag);
+            int lastDot = s.LastIndexOf('.');
+            return lastDot < 0 ? s : s.Substring(lastDot + 1);
+        }
+
+        private static string GetTagRootDisplay(Tag tag)
+        {
+            var s = GetTagDisplay(tag);
+            int firstDot = s.IndexOf('.');
+            return firstDot < 0 ? s : s.Substring(0, firstDot);
+        }
+
+        private static string GetTagParentDisplay(Tag tag)
+        {
+            var s = GetTagDisplay(tag);
+            int lastDot = s.LastIndexOf('.');
+            return lastDot < 0 ? null : s.Substring(0, lastDot);
+        }
+
+        private static string[] GetTagDisplaySegments(Tag tag)
+            => GetTagDisplay(tag).Split('.');
         
         private void BuildScalersListView(VisualElement container)
         {
@@ -1147,6 +1391,10 @@ namespace FarEmerald.PlayForge.Extended.Editor
             // Apply asset type filter
             if (selectedScalerAssetTypeFilter != null)
                 records = records.Where(r => r.Asset.GetType() == selectedScalerAssetTypeFilter);
+
+            // Apply level-config filter
+            if (selectedScalerLevelConfigFilter.HasValue)
+                records = records.Where(r => r.Scaler != null && r.Scaler.Configuration == selectedScalerLevelConfigFilter.Value);
             
             // Apply search filter
             if (!string.IsNullOrEmpty(searchFilter))
@@ -1169,11 +1417,8 @@ namespace FarEmerald.PlayForge.Extended.Editor
                 var groupHeader = CreateGroupHeader("◆", group.Key, group.Count(), Colors.AccentPurple);
                 container.Add(groupHeader);
                 
-                foreach (var record in group.Take(10))
+                foreach (var record in group)
                     container.Add(CreateScalerRow(record));
-                
-                if (group.Count() > 10)
-                    container.Add(CreateMoreLabel(group.Count() - 10));
             }
             
             if (!recordList.Any())
@@ -1256,230 +1501,194 @@ namespace FarEmerald.PlayForge.Extended.Editor
         
         private void BuildTagContextFilterBar()
         {
-            var contextBar = new VisualElement();
-            contextBar.style.flexDirection = FlexDirection.Row;
-            contextBar.style.flexWrap = Wrap.Wrap;
-            contextBar.style.marginBottom = 8;
-            contextBar.style.paddingLeft = 8;
-            contextBar.style.paddingTop = 4;
-            contextBar.style.paddingBottom = 4;
-            contextBar.style.backgroundColor = new Color(0.15f, 0.15f, 0.15f, 0.5f);
-            contextBar.style.borderTopLeftRadius = 4;
-            contextBar.style.borderTopRightRadius = 4;
-            contextBar.style.borderBottomLeftRadius = 4;
-            contextBar.style.borderBottomRightRadius = 4;
-            contentContainer.Add(contextBar);
+            // ─── Strip 1: Context ────────────────────────────────────────────
+            var ctxStrip = CreateFilterStrip();
+            contentContainer.Add(ctxStrip);
 
-            // Context filter section
-            var ctxLabel = CreateLabel("Context:", 60, 10, Colors.HintText);
-            ctxLabel.style.alignSelf = Align.Center;
-            contextBar.Add(ctxLabel);
-            
-            var allCtxBtn = CreateContextButton("All", selectedTagContextFilter == null);
-            allCtxBtn.clicked += () => { selectedTagContextFilter = null; ShowTab(1); };
-            contextBar.Add(allCtxBtn);
-            
-            foreach (var ctx in ForgeTagRegistry.GetAllContextKeys())
+            ctxStrip.Add(CreateFilterSectionLabel("Context:"));
+            ctxStrip.Add(CreateFilterChip(() => "All", () => selectedTagContextFilter == null, Colors.AccentCyan,
+                () => { selectedTagContextFilter = null; ShowTab(1); }));
+
+            // Use TagContext.FriendlyName for display ("Effect / Cost") but key by
+            // ContextKey ("Effect+Cost") so the existing filter pipeline keeps working.
+            foreach (var ctx in ForgeTagRegistry.GetAllContexts().OrderBy(c => c.FriendlyName))
             {
-                var context = ctx;
-                var btn = CreateContextButton(ctx, selectedTagContextFilter == ctx);
-                btn.clicked += () => { selectedTagContextFilter = context; ShowTab(1); };
-                contextBar.Add(btn);
+                var capturedKey = ctx.ContextKey;
+                ctxStrip.Add(CreateFilterChip(() => ctx.FriendlyName, () => selectedTagContextFilter == capturedKey, Colors.AccentCyan,
+                    () => { selectedTagContextFilter = capturedKey; ShowTab(1); }));
             }
-            
-            // Separator
-            contextBar.Add(CreateFilterSeparator());
 
-            var hierarchyBar = new VisualElement();
-            hierarchyBar.style.backgroundColor = Colors.AccentGreen;
-            hierarchyBar.style.flexWrap = Wrap.Wrap;
-            hierarchyBar.style.marginBottom = 8;
-            hierarchyBar.style.paddingLeft = 8;
-            hierarchyBar.style.paddingTop = 4;
-            hierarchyBar.style.paddingBottom = 4;
-            hierarchyBar.style.backgroundColor = new Color(0.15f, 0.15f, 0.15f, 0.5f);
-            hierarchyBar.style.borderTopLeftRadius = 4;
-            hierarchyBar.style.borderTopRightRadius = 4;
-            hierarchyBar.style.borderBottomLeftRadius = 4;
-            hierarchyBar.style.borderBottomRightRadius = 4;
-            contentContainer.Add(hierarchyBar);
-            
-            // Parent/Root filter section
-            var parentLabel = CreateLabel("Parent:", 50, 10, Colors.HintText);
-            parentLabel.style.alignSelf = Align.Center;
-            hierarchyBar.Add(parentLabel);
-            
-            var allParentBtn = CreateTagParentFilterButton("All", null);
-            hierarchyBar.Add(allParentBtn);
-            
-            // Get unique root tags
-            var allTags = ForgeTagRegistry.GetAllTags().ToList();
-            var rootTags = allTags
-                .Select(t => t.GetRoot().Name)
-                .Distinct()
-                .OrderBy(n => n)
-                .Take(10) // Limit to prevent overflow
+            // ─── Strip 2: Hierarchy / Quality / Sort / Display ───────────────
+            var qStrip = CreateFilterStrip();
+            contentContainer.Add(qStrip);
+
+            // Root picker — popup menu when too many to fit as chips.
+            // Group by encoded root name (used as filter key) but pick a friendly
+            // display label from one of the tags whose root that is.
+            qStrip.Add(CreateFilterSectionLabel("Root:"));
+
+            var rootEntries = ForgeTagRegistry.GetAllTags()
+                .GroupBy(t => t.GetRoot().Name)
+                .Select(g => new { Key = g.Key, Display = GetTagRootDisplay(g.First()) })
+                .OrderBy(x => x.Display)
                 .ToList();
-            
-            foreach (var root in rootTags)
+
+            qStrip.Add(CreateFilterChip(() => "All", () => selectedTagParentFilter == null, Colors.AccentPurple,
+                () => { selectedTagParentFilter = null; ShowTab(1); }));
+
+            const int rootInlineLimit = 6;
+            foreach (var entry in rootEntries.Take(rootInlineLimit))
             {
-                var btn = CreateTagParentFilterButton(root, root);
-                hierarchyBar.Add(btn);
+                var capturedKey = entry.Key;
+                qStrip.Add(CreateFilterChip(() => entry.Display, () => selectedTagParentFilter == capturedKey, Colors.AccentPurple,
+                    () => { selectedTagParentFilter = capturedKey; ShowTab(1); }));
             }
-            
-            if (rootTags.Count < allTags.Select(t => t.GetRoot().Name).Distinct().Count())
+            if (rootEntries.Count > rootInlineLimit)
             {
-                var moreLabel = CreateLabel($"+{allTags.Select(t => t.GetRoot().Name).Distinct().Count() - rootTags.Count} more", 0, 9, Colors.HintText);
-                moreLabel.style.alignSelf = Align.Center;
-                moreLabel.style.marginLeft = 4;
-                hierarchyBar.Add(moreLabel);
+                var overflow = rootEntries.Skip(rootInlineLimit).ToList();
+                var overflowSelectedEntry = overflow.FirstOrDefault(e => e.Key == selectedTagParentFilter);
+                bool overflowSelected = overflowSelectedEntry != null;
+                var label = overflowSelected ? overflowSelectedEntry.Display + " ▾" : $"More ({overflow.Count}) ▾";
+                qStrip.Add(CreateFilterChip(() => label, () => overflowSelected, Colors.AccentPurple, () =>
+                {
+                    var menu = new GenericMenu();
+                    foreach (var e in overflow)
+                    {
+                        var captured = e.Key;
+                        menu.AddItem(new GUIContent(e.Display), selectedTagParentFilter == captured, () =>
+                        {
+                            selectedTagParentFilter = captured;
+                            ShowTab(1);
+                        });
+                    }
+                    menu.ShowAsContext();
+                }, tooltip: "Select another root tag"));
             }
+
+            qStrip.Add(CreateSectionDivider());
+
+            // Source: System vs Authored
+            qStrip.Add(CreateFilterSectionLabel("Source:"));
+            qStrip.Add(CreateFilterChip(() => "All",      () => selectedTagSourceFilter == null,       Colors.PolicyPurple, () => { selectedTagSourceFilter = null;        ShowTab(1); }));
+            qStrip.Add(CreateFilterChip(() => "System",   () => selectedTagSourceFilter == "System",   Colors.PolicyPurple, () => { selectedTagSourceFilter = "System";    ShowTab(1); }, tooltip: "Default system tags"));
+            qStrip.Add(CreateFilterChip(() => "Authored", () => selectedTagSourceFilter == "Authored", Colors.PolicyPurple, () => { selectedTagSourceFilter = "Authored";  ShowTab(1); }, tooltip: "Tags introduced by user assets"));
+
+            qStrip.Add(CreateSectionDivider());
+
+            // Usage: Used vs Orphan
+            qStrip.Add(CreateFilterSectionLabel("Usage:"));
+            qStrip.Add(CreateFilterChip(() => "All",    () => selectedTagUsageFilter == null,     Colors.AccentOrange, () => { selectedTagUsageFilter = null;     ShowTab(1); }));
+            qStrip.Add(CreateFilterChip(() => "Used",   () => selectedTagUsageFilter == "Used",   Colors.AccentOrange, () => { selectedTagUsageFilter = "Used";   ShowTab(1); }, tooltip: "Tags referenced by at least one asset"));
+            qStrip.Add(CreateFilterChip(() => "Orphan", () => selectedTagUsageFilter == "Orphan", Colors.AccentOrange, () => { selectedTagUsageFilter = "Orphan"; ShowTab(1); }, tooltip: "Tags with zero usages"));
+
+            qStrip.Add(CreateSectionDivider());
+
+            // Sort
+            qStrip.Add(CreateFilterSectionLabel("Sort:"));
+            qStrip.Add(CreateFilterChip(() => "Most Used",    () => tagSortMode == ETagSortMode.UsageDesc, Colors.AccentBlue, () => { tagSortMode = ETagSortMode.UsageDesc; ShowTab(1); }));
+            qStrip.Add(CreateFilterChip(() => "A → Z",        () => tagSortMode == ETagSortMode.AlphaAsc,  Colors.AccentBlue, () => { tagSortMode = ETagSortMode.AlphaAsc;  ShowTab(1); }));
+            qStrip.Add(CreateFilterChip(() => "Depth",        () => tagSortMode == ETagSortMode.DepthAsc,  Colors.AccentBlue, () => { tagSortMode = ETagSortMode.DepthAsc;  ShowTab(1); }, tooltip: "Roots first, then nested"));
+
+            qStrip.Add(CreateSectionDivider());
+
+            // Display toggles
+            qStrip.Add(CreateFilterSectionLabel("Display:"));
+            var fullPathToggle = CreateFilterChip(() => showFullTagPath ? "Full Path ✓" : "Full Path",
+                () => showFullTagPath, Colors.AccentGreen,
+                () => { showFullTagPath = !showFullTagPath; RefreshViewList(); },
+                tooltip: "Show full hierarchical path on each row");
+            var groupResultsToggle = CreateFilterChip(() => groupTagResults ? "Group by Root ✓" : "Group by Root",
+                () => groupTagResults, Colors.AccentGreen,
+                () => { groupTagResults = !groupTagResults; RefreshViewList(); },
+                tooltip: "Group tags under their root category");
             
-            // Separator
-            hierarchyBar.Add(CreateFilterSeparator());
+            qStrip.Add(fullPathToggle);
+            qStrip.Add(groupResultsToggle);
             
-            // Show Full Path Toggle
-            var toggleLabel = CreateLabel("Full Path:", 55, 10, Colors.HintText);
-            toggleLabel.style.alignSelf = Align.Center;
-            hierarchyBar.Add(toggleLabel);
-            
-            var fullPathToggle = new Toggle();
-            fullPathToggle.value = showFullTagPath;
-            fullPathToggle.style.marginRight = 8;
-            fullPathToggle.tooltip = "Always show full hierarchical tag path instead of leaf name";
-            fullPathToggle.RegisterValueChangedCallback(evt =>
+            void RefreshToggleOptions(Button button)
             {
-                showFullTagPath = evt.newValue;
-                RefreshViewList();
-            });
-            hierarchyBar.Add(fullPathToggle);
-            
-            // Show Full Path Toggle
-            var groupResultsLabel = CreateLabel("Group Results:", 75, 10, Colors.HintText);
-            groupResultsLabel.style.alignSelf = Align.Center;
-            hierarchyBar.Add(groupResultsLabel);
-            
-            var groupResultsToggle = new Toggle();
-            groupResultsToggle.value = groupTagResults;
-            groupResultsToggle.style.marginRight = 8;
-            groupResultsToggle.tooltip = "Group tags by root";
-            groupResultsToggle.RegisterValueChangedCallback(evt =>
-            {
-                groupTagResults = evt.newValue;
-                RefreshViewList();
-            });
-            hierarchyBar.Add(groupResultsToggle);
-        }
-        
-        private Button CreateTagParentFilterButton(string text, string filterValue)
-        {
-            bool isSelected = selectedTagParentFilter == filterValue;
-            var btn = new Button { text = text };
-            btn.style.fontSize = 9;
-            btn.style.flexGrow = 0;
-            btn.style.paddingLeft = 6;
-            btn.style.paddingRight = 6;
-            btn.style.paddingTop = 2;
-            btn.style.paddingBottom = 2;
-            btn.style.marginRight = 4;
-            btn.style.borderTopLeftRadius = 3;
-            btn.style.borderTopRightRadius = 3;
-            btn.style.borderBottomLeftRadius = 3;
-            btn.style.borderBottomRightRadius = 3;
-            btn.style.backgroundColor = isSelected ? Colors.AccentPurple : Colors.ButtonBackground;
-            btn.style.color = isSelected ? Colors.HeaderText : Colors.LabelText;
-            btn.clicked += () => { selectedTagParentFilter = filterValue; ShowTab(1); };
-            return btn;
-        }
-        
-        private Button CreateContextButton(string text, bool isSelected)
-        {
-            var btn = new Button { text = text };
-            btn.style.fontSize = 9;
-            btn.style.paddingLeft = 6;
-            btn.style.paddingRight = 6;
-            btn.style.paddingTop = 2;
-            btn.style.paddingBottom = 2;
-            btn.style.marginRight = 4;
-            btn.style.borderTopLeftRadius = 3;
-            btn.style.borderTopRightRadius = 3;
-            btn.style.borderBottomLeftRadius = 3;
-            btn.style.borderBottomRightRadius = 3;
-            btn.style.backgroundColor = isSelected ? Colors.AccentCyan : Colors.ButtonBackground;
-            btn.style.color = isSelected ? Colors.HeaderText : Colors.LabelText;
-            return btn;
+                
+            }
         }
         
         private void BuildTagsListView(VisualElement container)
         {
             var tagRecords = ForgeTagRegistry.GetAllTagRecords();
-            
-            // Apply search filter (matches full path or leaf name)
+
+            // Search — full path OR leaf name (case-insensitive)
             if (!string.IsNullOrEmpty(searchFilter))
             {
                 var filterLower = searchFilter.ToLower();
-                tagRecords = tagRecords.Where(r => 
-                    r.Tag.Name.ToLower().Contains(filterLower) ||
+                tagRecords = tagRecords.Where(r =>
+                    r.Tag.DisplayName.ToLower().Contains(filterLower) ||
                     r.Tag.GetLeafName().ToLower().Contains(filterLower));
             }
-            
-            // Apply context filter
+
+            // Context
             if (!string.IsNullOrEmpty(selectedTagContextFilter))
                 tagRecords = tagRecords.Where(r => r.UsageByContext.ContainsKey(selectedTagContextFilter));
-            
-            // Apply parent/root filter
+
+            // Root / parent
             if (!string.IsNullOrEmpty(selectedTagParentFilter))
             {
-                tagRecords = tagRecords.Where(r => 
-                    r.Tag.GetRoot().Name == selectedTagParentFilter ||
-                    r.Tag.Name.StartsWith(selectedTagParentFilter + "."));
+                tagRecords = tagRecords.Where(r =>
+                    r.Tag.GetRoot().DisplayName == selectedTagParentFilter ||
+                    r.Tag.DisplayName.StartsWith(selectedTagParentFilter + "."));
             }
-            
-            var sorted = tagRecords.OrderByDescending(r => r.TotalUsageCount).ToList();
-            
-            // Group by root if filtering by parent
-            bool groupByRoot = !string.IsNullOrEmpty(selectedTagParentFilter) || 
-                               EditorPrefs.GetBool(PREFS_PREFIX + "GroupTagsByRoot", true);
-            
+
+            // Source: System / Authored
+            if (selectedTagSourceFilter == "System")
+                tagRecords = tagRecords.Where(r => r.IsSystemDefault);
+            else if (selectedTagSourceFilter == "Authored")
+                tagRecords = tagRecords.Where(r => !r.IsSystemDefault);
+
+            // Usage: Used / Orphan
+            if (selectedTagUsageFilter == "Used")
+                tagRecords = tagRecords.Where(r => r.TotalUsageCount > 0);
+            else if (selectedTagUsageFilter == "Orphan")
+                tagRecords = tagRecords.Where(r => r.TotalUsageCount == 0);
+
+            // Sort
+            var sorted = tagSortMode switch
+            {
+                ETagSortMode.AlphaAsc  => tagRecords.OrderBy(r => r.Tag.DisplayName).ToList(),
+                ETagSortMode.DepthAsc  => tagRecords.OrderBy(r => r.Tag.Depth).ThenBy(r => r.Tag.DisplayName).ToList(),
+                _                      => tagRecords.OrderByDescending(r => r.TotalUsageCount).ThenBy(r => r.Tag.DisplayName).ToList(),
+            };
+
+            // Results readout
             var resultsLabel = rootVisualElement.Q<Label>("ResultsCount");
-            if (resultsLabel != null) 
+            if (resultsLabel != null)
             {
-                var rootCount = sorted.Select(r => r.Tag.GetRoot().Name).Distinct().Count();
-                resultsLabel.text = $"{sorted.Count} tags ({rootCount} root categories)";
+                var rootCount = sorted.Select(r => r.Tag.GetRoot().DisplayName).Distinct().Count();
+                resultsLabel.text = $"{sorted.Count} tag{(sorted.Count == 1 ? "" : "s")} · {rootCount} root{(rootCount == 1 ? "" : "s")}";
             }
-            
-            if (groupByRoot && string.IsNullOrEmpty(searchFilter))
+
+            // Render — Group by root respects the toggle even when searching/filtering.
+            // Group key is the encoded root Name (correct uniqueness); the header label
+            // pulls the friendly DisplayName from any tag in the group.
+            if (groupTagResults)
             {
-                // Group by root category
                 var grouped = sorted
-                    .GroupBy(r => r.Tag.GetRoot().Name)
-                    .OrderBy(g => g.Key);
-                
+                    .GroupBy(r => r.Tag.GetRoot().DisplayName)
+                    .OrderBy(g => GetTagRootDisplay(g.First().Tag));
+
                 foreach (var group in grouped)
                 {
-                    // Root header
-                    if (groupTagResults)
-                    {
-                        var rootHeader = CreateTagRootHeader(group.Key, group.Count(), group.Sum(r => r.TotalUsageCount));
-                        container.Add(rootHeader);
-                    }
-                    
-                    // Tags in this root
-                    foreach (var record in group.OrderBy(r => r.Tag.Name))
-                    {
+                    var rootDisplay = GetTagRootDisplay(group.First().Tag);
+                    container.Add(CreateTagRootHeader(rootDisplay, group.Count(), group.Sum(r => r.TotalUsageCount)));
+                    foreach (var record in group)
                         container.Add(CreateTagRowWithExpansion(record));
-                    }
                 }
             }
             else
             {
-                // Flat list
                 foreach (var record in sorted)
                     container.Add(CreateTagRowWithExpansion(record));
             }
-            
+
             if (!sorted.Any())
-                container.Add(CreateEmptyLabel("No tags found"));
+                container.Add(CreateEmptyLabel("No tags match the current filters."));
         }
         
         private VisualElement CreateTagRootHeader(string rootName, int tagCount, int totalUsages)
@@ -1510,26 +1719,25 @@ namespace FarEmerald.PlayForge.Extended.Editor
         
         private VisualElement CreateTagRowWithExpansion(ForgeTagRegistry.TagUsageRecord record)
         {
-            var tagKey = record.Tag.Name;
+            var tag = record.Tag;
+            var tagKey = tag.Name;
             bool isExpanded = expandedTags.Contains(tagKey);
-            
+            bool isOrphan = record.TotalUsageCount == 0;
+            int depth = Mathf.Max(1, tag.Depth);
+
+            // Indent purely via padding — no glyph prefix on the leaf.
+            // Depth-decayed left-border tint gives a subtle hierarchy cue.
+            float depthFade = Mathf.Clamp01(1f - (depth - 1) * 0.15f);
+            Color borderColor = new Color(Colors.AccentCyan.r, Colors.AccentCyan.g, Colors.AccentCyan.b, depthFade);
+            int indentPx = showFullTagPath ? 8 : 8 + (depth - 1) * 14;
+
             var tagContainer = new VisualElement();
             tagContainer.style.marginBottom = 2;
-            
-            // Determine display text
-            var tag = record.Tag;
-            var leafName = tag.GetLeafName();
-            var fullPath = tag.Name;
-            var isNested = tag.Depth > 1;
-            
-            // Display text based on settings
-            string displayText = showFullTagPath ? fullPath : (isNested ? $"└ {leafName}" : leafName);
-            
-            // Main row
+
             var row = new VisualElement();
             row.style.flexDirection = FlexDirection.Row;
             row.style.alignItems = Align.Center;
-            row.style.paddingLeft = isNested && !showFullTagPath ? 8 + ((tag.Depth - 1) * 12) : 8;
+            row.style.paddingLeft = indentPx;
             row.style.paddingRight = 8;
             row.style.paddingTop = 6;
             row.style.paddingBottom = 6;
@@ -1539,54 +1747,98 @@ namespace FarEmerald.PlayForge.Extended.Editor
             row.style.borderBottomLeftRadius = isExpanded ? 0 : 4;
             row.style.borderBottomRightRadius = isExpanded ? 0 : 4;
             row.style.borderLeftWidth = 3;
-            row.style.borderLeftColor = isNested ? Colors.AccentCyan.Fade(0.6f) : Colors.AccentCyan;
+            row.style.borderLeftColor = borderColor;
             tagContainer.Add(row);
-            
-            // Expand arrow
-            row.Add(CreateLabel(isExpanded ? "▼" : "▶", 16, 9, Colors.HintText));
-            
-            // Tag name label with hover behavior
-            var nameLabel = CreateLabel(displayText, 180, 11, Colors.LabelText, false, FontStyle.Bold);
-            nameLabel.tooltip = fullPath; // Always show full path in tooltip
-            
-            // Hover behavior: show full path when hovering
-            if (!showFullTagPath && isNested)
+
+            // Chevron
+            var chevron = CreateLabel(isExpanded ? "▼" : "▶", 16, 9, Colors.HintText);
+            chevron.style.marginRight = 4;
+            row.Add(chevron);
+
+            // Tag name — leaf bold, parent path muted prefix when not "Full Path".
+            // Always render the user-facing DisplayName (ToString-equivalent) so
+            // deterministic-hash padding never leaks into the UI.
+            var displayPath   = GetTagDisplay(tag);
+            var displayLeaf   = GetTagLeafDisplay(tag);
+            var displayParent = GetTagParentDisplay(tag);
+
+            var nameContainer = new VisualElement();
+            nameContainer.style.flexDirection = FlexDirection.Row;
+            nameContainer.style.alignItems = Align.Center;
+            nameContainer.style.flexGrow = 1;
+            nameContainer.style.minWidth = 180;
+            nameContainer.tooltip = displayPath;
+            row.Add(nameContainer);
+
+            if (showFullTagPath || depth == 1)
             {
-                nameLabel.RegisterCallback<MouseEnterEvent>(_ => nameLabel.text = fullPath);
-                nameLabel.RegisterCallback<MouseLeaveEvent>(_ => nameLabel.text = displayText);
+                var name = new Label(displayPath);
+                name.style.fontSize = 11;
+                name.style.unityFontStyleAndWeight = FontStyle.Bold;
+                name.style.color = Colors.LabelText;
+                nameContainer.Add(name);
             }
-            row.Add(nameLabel);
-            
-            // Depth indicator for nested tags
-            if (isNested && !showFullTagPath)
+            else
             {
-                var depthBadge = CreateBadge($"Depth {tag.Depth}", 55, Colors.AccentPurple);
-                depthBadge.tooltip = $"Parent: {tag.GetParentPath()}";
-                row.Add(depthBadge);
+                // "Parent.Path." in muted, leaf in bold — easier scan than "└ leaf".
+                var prefix = new Label((displayParent ?? "") + ".");
+                prefix.style.fontSize = 10;
+                prefix.style.color = Colors.HintText;
+                prefix.style.marginRight = 0;
+                nameContainer.Add(prefix);
+
+                var leaf = new Label(displayLeaf);
+                leaf.style.fontSize = 11;
+                leaf.style.unityFontStyleAndWeight = FontStyle.Bold;
+                leaf.style.color = Colors.LabelText;
+                nameContainer.Add(leaf);
             }
-            
-            row.Add(CreateLabel($"{record.TotalUsageCount} uses", 70, 10, Colors.HintText));
-            
-            // Context badges
+
+            // Usage count — colorize when zero (orphans) for quick scan
+            var useLabel = new Label(isOrphan ? "unused" : $"{record.TotalUsageCount} use{(record.TotalUsageCount == 1 ? "" : "s")}");
+            useLabel.style.width = 70;
+            useLabel.style.fontSize = 10;
+            useLabel.style.color = isOrphan ? Colors.HintText.Fade(0.7f) : Colors.LabelText;
+            useLabel.style.unityFontStyleAndWeight = isOrphan ? FontStyle.Italic : FontStyle.Normal;
+            useLabel.style.unityTextAlign = TextAnchor.MiddleRight;
+            useLabel.style.marginRight = 8;
+            row.Add(useLabel);
+
+            // All context badges (no truncation). Wrap is enabled so dense rows breathe
+            // onto extra lines instead of clipping.
             var contextContainer = new VisualElement();
             contextContainer.style.flexDirection = FlexDirection.Row;
-            contextContainer.style.flexGrow = 1;
+            contextContainer.style.alignItems = Align.Center;
             contextContainer.style.flexWrap = Wrap.Wrap;
-            foreach (var ctx in record.UsageByContext.Take(4))
-                contextContainer.Add(CreateBadge($"{ctx.Value.Context.FriendlyName} ({ctx.Value.Usages.Count})", 0, Colors.AccentBlue));
-            if (record.UsageByContext.Count > 4)
-                contextContainer.Add(CreateLabel($"+{record.UsageByContext.Count - 4}", 30, 9, Colors.HintText));
+            foreach (var ctx in record.UsageByContext.OrderByDescending(c => c.Value.Usages.Count))
+                contextContainer.Add(CreateBadge($"{ctx.Value.Context.FriendlyName} {ctx.Value.Usages.Count}", 0, Colors.AccentBlue));
             row.Add(contextContainer);
 
-            Label sysBadge = null;
+            // Trailing badges: depth (when not Full Path), system, orphan
+            row.Add(CreateSpacer());
+
+            if (depth > 1 && !showFullTagPath)
+            {
+                var depthBadge = CreateBadge($"d{depth}", 0, Colors.AccentPurple);
+                depthBadge.tooltip = $"Depth {depth} — parent: {displayParent}";
+                row.Add(depthBadge);
+            }
+
             if (record.IsSystemDefault)
             {
-                row.Add(CreateSpacer());
-                sysBadge = CreateBadge("System Tag", 72, Colors.PolicyPurple);
-                sysBadge.tooltip = $"Default system tag ({record.Tag.Name})";
+                var sysBadge = CreateBadge("System", 0, Colors.PolicyPurple);
+                sysBadge.tooltip = "Default system tag";
                 row.Add(sysBadge);
             }
-            
+
+            if (isOrphan && !record.IsSystemDefault)
+            {
+                var orphanBadge = CreateBadge("Orphan", 0, Colors.AccentOrange);
+                orphanBadge.tooltip = "No assets currently reference this tag";
+                row.Add(orphanBadge);
+            }
+
+            // Hover + click-to-expand
             row.RegisterCallback<MouseEnterEvent>(_ => row.style.backgroundColor = Colors.ButtonHover);
             row.RegisterCallback<MouseLeaveEvent>(_ => row.style.backgroundColor = Colors.ItemBackground);
             row.RegisterCallback<ClickEvent>(evt =>
@@ -1595,10 +1847,10 @@ namespace FarEmerald.PlayForge.Extended.Editor
                 if (expandedTags.Contains(tagKey)) expandedTags.Remove(tagKey); else expandedTags.Add(tagKey);
                 RefreshViewList();
             });
-            
+
             if (isExpanded)
                 tagContainer.Add(CreateTagExpandedContent(record));
-            
+
             return tagContainer;
         }
         
@@ -1614,99 +1866,17 @@ namespace FarEmerald.PlayForge.Extended.Editor
             content.style.borderBottomRightRadius = 4;
             content.style.borderLeftWidth = 3;
             content.style.borderLeftColor = new Color(Colors.AccentCyan.r, Colors.AccentCyan.g, Colors.AccentCyan.b, 0.5f);
-            
+
             var tag = record.Tag;
-            
-            // Hierarchy Info (if nested)
-            if (tag.Depth > 1)
-            {
-                content.Add(CreateSectionLabel("Hierarchy"));
-                
-                var hierarchyRow = new VisualElement();
-                hierarchyRow.style.flexDirection = FlexDirection.Row;
-                hierarchyRow.style.alignItems = Align.Center;
-                hierarchyRow.style.marginBottom = 8;
-                hierarchyRow.style.flexWrap = Wrap.Wrap;
-                
-                var segments = tag.GetSegments();
-                var currentPath = "";
-                
-                for (int i = 0; i < segments.Length; i++)
-                {
-                    if (i > 0)
-                    {
-                        var sep = CreateLabel(" › ", 0, 10, Colors.HintText);
-                        sep.style.marginRight = 0;
-                        hierarchyRow.Add(sep);
-                    }
-                    
-                    currentPath = i == 0 ? segments[i] : $"{currentPath}.{segments[i]}";
-                    var segPath = currentPath;
-                    var isLast = i == segments.Length - 1;
-                    
-                    var segBtn = new Button { text = segments[i] };
-                    segBtn.style.fontSize = 10;
-                    segBtn.style.paddingLeft = 4;
-                    segBtn.style.paddingRight = 4;
-                    segBtn.style.paddingTop = 2;
-                    segBtn.style.paddingBottom = 2;
-                    segBtn.style.marginRight = 0;
-                    segBtn.style.borderTopLeftRadius = 2;
-                    segBtn.style.borderTopRightRadius = 2;
-                    segBtn.style.borderBottomLeftRadius = 2;
-                    segBtn.style.borderBottomRightRadius = 2;
-                    segBtn.style.backgroundColor = isLast ? Colors.AccentCyan.Fade(0.3f) : new Color(0, 0, 0, 0);
-                    segBtn.style.color = isLast ? Colors.AccentCyan : Colors.LabelText;
-                    segBtn.tooltip = segPath;
-                    
-                    if (!isLast)
-                    {
-                        segBtn.clicked += () =>
-                        {
-                            // Filter by this parent
-                            selectedTagParentFilter = segPath.Split('.')[0]; // Use root
-                            searchFilter = segPath;
-                            ShowTab(1);
-                        };
-                        segBtn.RegisterCallback<MouseEnterEvent>(_ => segBtn.style.backgroundColor = Colors.ButtonHover);
-                        segBtn.RegisterCallback<MouseLeaveEvent>(_ => segBtn.style.backgroundColor = new Color(0, 0, 0, 0));
-                    }
-                    
-                    hierarchyRow.Add(segBtn);
-                }
-                
-                content.Add(hierarchyRow);
-                
-                // Parent info
-                var parentPath = tag.GetParentPath();
-                if (parentPath != null)
-                {
-                    var parentRow = new VisualElement();
-                    parentRow.style.flexDirection = FlexDirection.Row;
-                    parentRow.style.alignItems = Align.Center;
-                    parentRow.style.marginBottom = 4;
-                    
-                    parentRow.Add(CreateLabel("Parent:", 50, 9, Colors.HintText));
-                    parentRow.Add(CreateLabel(parentPath, 0, 10, Colors.AccentPurple, true));
-                    content.Add(parentRow);
-                }
-                
-                var depthRow = new VisualElement();
-                depthRow.style.flexDirection = FlexDirection.Row;
-                depthRow.style.alignItems = Align.Center;
-                depthRow.style.marginBottom = 8;
-                
-                depthRow.Add(CreateLabel("Depth:", 50, 9, Colors.HintText));
-                depthRow.Add(CreateLabel(tag.Depth.ToString(), 0, 10, Colors.LabelText));
-                content.Add(depthRow);
-            }
-            
-            // Full Path (always show for reference)
+
+            // ─── Breadcrumb path with copy button (also covers depth-1 tags) ─
             var pathRow = new VisualElement();
             pathRow.style.flexDirection = FlexDirection.Row;
             pathRow.style.alignItems = Align.Center;
+            pathRow.style.flexWrap = Wrap.Wrap;
             pathRow.style.marginBottom = 8;
-            pathRow.style.paddingLeft = 4;
+            pathRow.style.paddingLeft = 6;
+            pathRow.style.paddingRight = 6;
             pathRow.style.paddingTop = 4;
             pathRow.style.paddingBottom = 4;
             pathRow.style.backgroundColor = new Color(0.1f, 0.1f, 0.1f, 0.5f);
@@ -1714,14 +1884,80 @@ namespace FarEmerald.PlayForge.Extended.Editor
             pathRow.style.borderTopRightRadius = 3;
             pathRow.style.borderBottomLeftRadius = 3;
             pathRow.style.borderBottomRightRadius = 3;
-            
-            pathRow.Add(CreateLabel("Path:", 40, 9, Colors.HintText));
-            var pathLabel = CreateLabel(tag.Name, 0, 10, Colors.AccentCyan, true, FontStyle.Bold);
-            pathLabel.style.unityFontStyleAndWeight = FontStyle.Normal;
+            content.Add(pathRow);
+
+            var pathLabel = CreateLabel("Path:", 40, 9, Colors.HintText);
+            pathLabel.style.alignSelf = Align.Center;
             pathRow.Add(pathLabel);
-            
-            // Copy button
-            var copyBtn = new Button { text = "📋", tooltip = "Copy full path to clipboard" };
+
+            // Segment arrays — `nameSegs` for filter routing (uses Tag.Name), `displaySegs`
+            // for what the user reads (uses Tag.DisplayName). The two arrays are in lockstep
+            // because hierarchical tags mirror dot structure between Name and DisplayName.
+            var nameSegs    = tag.GetSegments();
+            var displaySegs = GetTagDisplaySegments(tag);
+
+            var accumulated = "";
+            for (int i = 0; i < nameSegs.Length; i++)
+            {
+                if (i > 0)
+                {
+                    var sep = CreateLabel(" › ", 0, 10, Colors.HintText);
+                    sep.style.marginRight = 0;
+                    sep.style.alignSelf = Align.Center;
+                    pathRow.Add(sep);
+                }
+
+                accumulated = i == 0 ? nameSegs[i] : accumulated + "." + nameSegs[i];
+                string segPath = accumulated;                       // encoded — used for filtering
+                string segDisplay = i < displaySegs.Length ? displaySegs[i] : nameSegs[i];
+                bool isLast = i == nameSegs.Length - 1;
+                bool isRoot = i == 0;
+
+                var seg = new Button { text = segDisplay, focusable = false };
+                seg.style.fontSize = 10;
+                seg.style.paddingLeft = 6;
+                seg.style.paddingRight = 6;
+                seg.style.paddingTop = 2;
+                seg.style.paddingBottom = 2;
+                seg.style.marginRight = 0;
+                seg.style.borderTopLeftRadius = 2;
+                seg.style.borderTopRightRadius = 2;
+                seg.style.borderBottomLeftRadius = 2;
+                seg.style.borderBottomRightRadius = 2;
+                seg.style.backgroundColor = isLast ? Colors.AccentCyan.Fade(0.3f) : new Color(0, 0, 0, 0);
+                seg.style.color = isLast ? Colors.AccentCyan : Colors.LabelText;
+
+                if (!isLast)
+                {
+                    // FIX: previously this always used `segPath.Split('.')[0]` so every
+                    // breadcrumb segment filtered to the root regardless of which one
+                    // was clicked. Drive the parent filter from the root segment, then
+                    // pre-fill search with the full breadcrumb path so deep matches
+                    // narrow down. Tooltip text uses display labels for readability.
+                    var displayUpToHere = string.Join(".", displaySegs.Take(i + 1));
+                    seg.tooltip = isRoot
+                        ? $"Filter by root '{displaySegs[0]}'"
+                        : $"Filter by root '{displaySegs[0]}' and narrow to '{displayUpToHere}'";
+                    seg.clicked += () =>
+                    {
+                        selectedTagParentFilter = nameSegs[0];
+                        searchFilter = isRoot ? "" : segPath;
+                        ShowTab(1);
+                    };
+                    seg.RegisterCallback<MouseEnterEvent>(_ => seg.style.backgroundColor = Colors.ButtonHover);
+                    seg.RegisterCallback<MouseLeaveEvent>(_ => seg.style.backgroundColor = new Color(0, 0, 0, 0));
+                }
+                else
+                {
+                    seg.tooltip = string.Join(".", displaySegs);
+                }
+
+                pathRow.Add(seg);
+            }
+
+            // Copy button — pinned to the right
+            pathRow.Add(CreateSpacer());
+            var copyBtn = new Button { text = "📋", tooltip = "Copy full path to clipboard", focusable = false };
             copyBtn.style.width = 24;
             copyBtn.style.height = 20;
             copyBtn.style.fontSize = 10;
@@ -1735,11 +1971,31 @@ namespace FarEmerald.PlayForge.Extended.Editor
             copyBtn.style.borderBottomRightRadius = 3;
             copyBtn.clicked += () =>
             {
-                EditorGUIUtility.systemCopyBuffer = tag.Name;
-                Debug.Log($"Copied tag path: {tag.Name}");
+                // Copy the user-facing display path so the clipboard matches what they see.
+                var copied = GetTagDisplay(tag);
+                EditorGUIUtility.systemCopyBuffer = copied;
+                Debug.Log($"Copied tag path: {copied}");
             };
             pathRow.Add(copyBtn);
-            content.Add(pathRow);
+
+            // Quick-stat strip: Depth · Parent · Source
+            var metaRow = new VisualElement();
+            metaRow.style.flexDirection = FlexDirection.Row;
+            metaRow.style.alignItems = Align.Center;
+            metaRow.style.flexWrap = Wrap.Wrap;
+            metaRow.style.marginBottom = 8;
+            content.Add(metaRow);
+
+            metaRow.Add(CreateBadge($"Depth {tag.Depth}", 0, Colors.AccentPurple));
+            if (tag.Depth > 1)
+            {
+                var parentBadge = CreateBadge($"Parent: {GetTagParentDisplay(tag)}", 0, Colors.HintText);
+                parentBadge.tooltip = "Click breadcrumb above to filter to this branch";
+                metaRow.Add(parentBadge);
+            }
+            metaRow.Add(CreateBadge(record.IsSystemDefault ? "System" : "Authored", 0, record.IsSystemDefault ? Colors.PolicyPurple : Colors.AccentGreen));
+            if (record.TotalUsageCount == 0)
+                metaRow.Add(CreateBadge("Orphan", 0, Colors.AccentOrange));
             
             // Usage by Context
             content.Add(CreateSectionLabel("Usage by Context", 8));
@@ -1783,14 +2039,13 @@ namespace FarEmerald.PlayForge.Extended.Editor
             var assetsUsingTag = record.UsageByContext.Values
                 .SelectMany(ctx => ctx.Assets)
                 .Distinct()
-                .Take(8)
                 .ToList();
 
             if (assetsUsingTag.Count == 0)
             {
                 content.Add(CreateLabel("No assets found", 140, 10, Colors.HintText));
             }
-            
+
             foreach (var asset in assetsUsingTag)
             {
                 var typeInfo = AssetTypes.FirstOrDefault(t => t.Type == asset.GetType());
@@ -1803,17 +2058,13 @@ namespace FarEmerald.PlayForge.Extended.Editor
                 assetRow.RegisterCallback<MouseEnterEvent>(_ => assetRow.style.backgroundColor = new Color(0.22f, 0.22f, 0.22f, 0.5f));
                 assetRow.RegisterCallback<MouseLeaveEvent>(_ => assetRow.style.backgroundColor = Color.clear);
                 assetRow.RegisterCallback<ClickEvent>(_ => { Selection.activeObject = asset; EditorGUIUtility.PingObject(asset); });
-                
+
                 assetRow.Add(CreateLabel(typeInfo?.Icon ?? "?", 20, 10, typeInfo?.Color ?? Colors.HintText));
                 assetRow.Add(CreateLabel(GetAssetDisplayName(asset), 0, 10, Colors.LabelText, true));
                 assetRow.Add(CreateBadge(typeInfo?.DisplayName ?? "Asset", 0, typeInfo?.Color ?? Colors.HintText));
                 content.Add(assetRow);
             }
-            
-            var totalCount = record.UsageByContext.Values.SelectMany(ctx => ctx.Assets).Distinct().Count();
-            if (totalCount > 8)
-                content.Add(CreateLabel($"... and {totalCount - 8} more assets", 0, 9, Colors.HintText));
-            
+
             return content;
         }
         
@@ -2066,11 +2317,8 @@ namespace FarEmerald.PlayForge.Extended.Editor
                 header.RegisterCallback<MouseLeaveEvent>(_ => header.style.backgroundColor = new Color(0.18f, 0.18f, 0.18f, 0.8f));
                 container.Add(header);
                 
-                foreach (var asset in group.Take(5))
+                foreach (var asset in group)
                     container.Add(CreateCompactAssetRow(asset, typeInfo, showFileNames));
-                
-                if (group.Count() > 5)
-                    container.Add(CreateMoreLabel(group.Count() - 5));
             }
             
             if (!assets.Any())
@@ -2183,17 +2431,6 @@ namespace FarEmerald.PlayForge.Extended.Editor
             label.style.unityFontStyleAndWeight = FontStyle.Bold;
             label.style.marginTop = marginTop;
             label.style.marginBottom = 6;
-            return label;
-        }
-        
-        private Label CreateMoreLabel(int count)
-        {
-            var label = new Label($"  ... and {count} more");
-            label.style.fontSize = 10;
-            label.style.color = Colors.HintText;
-            label.style.paddingLeft = 24;
-            label.style.marginTop = 2;
-            label.style.marginBottom = 4;
             return label;
         }
         

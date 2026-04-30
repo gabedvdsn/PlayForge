@@ -16,6 +16,7 @@ MonoBehaviour:
   _template: {fileID: 11400000, guid: 812c4e89b36cf1340b92ee9a57ac3ea3, type: 2}
   _templateOverrides:
   - Cooldown
+  - Behaviour.UseImplicitTargeting
   _templateListSnapshots:
   - PropertyPath: Behaviour.Stages
     ElementIdentifiers:
@@ -87,7 +88,7 @@ MonoBehaviour:
   Behaviour:
     Targeting:
       rid: -2
-    UseImplicitTargeting: 1
+    UseImplicitTargeting: 0
     ImplicitTag:
       Name: TargetzfvEmaa5gNtqhQ0_dE2_NOOAGh1QLRP8zfvEmaa5gNtqhQ0_dE2_NOOAGh
       DisplayName: Target

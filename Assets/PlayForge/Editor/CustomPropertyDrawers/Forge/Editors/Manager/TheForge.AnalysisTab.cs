@@ -713,7 +713,8 @@ namespace FarEmerald.PlayForge.Extended.Editor
                 }
                 if (warnings.Count > 10)
                 {
-                    container.Add(CreateMoreLabel(warnings.Count - 10));
+                    // TODO
+                    // container.Add(CreateMoreLabel(warnings.Count - 10));
                 }
             }
         }
@@ -1457,7 +1458,8 @@ namespace FarEmerald.PlayForge.Extended.Editor
                 
                 if (analysis.DiscoveredEffects.Count > 8)
                 {
-                    effectsContainer.Add(CreateMoreLabel(analysis.DiscoveredEffects.Count - 8));
+                    // TODO
+                    // effectsContainer.Add(CreateMoreLabel(analysis.DiscoveredEffects.Count - 8));
                 }
             }
             

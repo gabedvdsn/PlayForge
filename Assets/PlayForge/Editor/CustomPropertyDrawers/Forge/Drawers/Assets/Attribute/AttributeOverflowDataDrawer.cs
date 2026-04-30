@@ -54,17 +54,24 @@ namespace FarEmerald.PlayForge.Extended.Editor
 
             var floorButton = new Button()
             {
-                text = "",
-                tooltip = "Set to unlimited floor bounds",
+                text = "−∞",
+                tooltip = "Set both floor values to negative infinity (unlimited lower bound)",
                 style =
                 {
-                    maxWidth = 20,
+                    minWidth = 32,
                     height = 20,
-                    marginLeft = 8
+                    marginLeft = 8,
+                    fontSize = 11,
+                    unityTextAlign = TextAnchor.MiddleCenter,
+                    color = ForgeDrawerStyles.Colors.AccentBlue
                 },
                 focusable = false
             };
-            floorButton.clicked += () => UpdateUnlimitedBounds(floorBase, floorCurr, Mathf.NegativeInfinity);
+            floorButton.clicked += () =>
+            {
+                UpdateUnlimitedBounds(floorBase, floorCurr, Mathf.NegativeInfinity);
+                property.serializedObject.ApplyModifiedProperties();
+            };
             floorRow.Add(floorButton);
             
             // Ceil row (shown for ZeroToCeil, FloorToCeil)
@@ -87,17 +94,24 @@ namespace FarEmerald.PlayForge.Extended.Editor
 
             var ceilButton = new Button()
             {
-                text = "",
-                tooltip = "Set to unlimited ceil bounds",
+                text = "+∞",
+                tooltip = "Set both ceil values to positive infinity (unlimited upper bound)",
                 style =
                 {
+                    minWidth = 32,
                     height = 20,
-                    maxWidth = 20,
-                    marginLeft = 8
+                    marginLeft = 8,
+                    fontSize = 11,
+                    unityTextAlign = TextAnchor.MiddleCenter,
+                    color = ForgeDrawerStyles.Colors.AccentBlue
                 },
                 focusable = false
             };
-            ceilButton.clicked += () => UpdateUnlimitedBounds(ceilBase, ceilCurr, Mathf.Infinity);
+            ceilButton.clicked += () =>
+            {
+                UpdateUnlimitedBounds(ceilBase, ceilCurr, Mathf.Infinity);
+                property.serializedObject.ApplyModifiedProperties();
+            };
             ceilRow.Add(ceilButton);
             
             void UpdateVisibility()

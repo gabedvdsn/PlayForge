@@ -94,10 +94,10 @@ namespace FarEmerald.PlayForge
         }
         public virtual bool DerivationAlive()
         {
-            return true;
+            return Source?.IsActive() ?? false;
         }
         public IAttribute GetAttribute() => Attribute;
-        public virtual IEffectOrigin GetEffectDerivation() => IEffectOrigin.GenerateSourceDerivation(Source);
+        public virtual IEffectOrigin GetEffectDerivation() => RootDerivation?.GetEffectDerivation() ?? IEffectOrigin.GenerateSourceDerivation(Source);
         public ISource GetSource() => Source;
         public ITarget GetTarget() => Source;
         public List<Tag> GetImpactTypes() => ImpactType;
@@ -123,13 +123,13 @@ namespace FarEmerald.PlayForge
 
     public class NullifiedImpactDerivation : SourceAttributeImpact
     {
-        public Tag RootKey;
         public Tag CacheKey;
+        public Tag RootKey;
         
         public NullifiedImpactDerivation(Tag cacheKey, ISource source, IAttribute attribute, List<Tag> impactType, Tag retentionGroup, IAttributeImpactDerivation rootDerivation) : base(source, attribute, impactType, retentionGroup, null, rootDerivation.RetainImpact())
         {
-            RootKey = rootDerivation.GetEffectDerivation().GetAssetTag();
             CacheKey = cacheKey;
+            RootKey = rootDerivation.GetEffectDerivation().GetAssetTag();
         }
 
         public override Tag GetCacheKey()

@@ -8,11 +8,11 @@ namespace FarEmerald.PlayForge
     {
         public List<AbstractImpactWorker> Workers;
         
-        public override void Activate(ImpactData impactData)
+        public override void ActivateInline(ImpactData impactData)
         {
             foreach (var worker in Workers.Where(worker => worker.PreValidateWorkFor(impactData)).Where(worker => worker.ValidateWorkFor(impactData)))
             {
-                worker.Activate(impactData);
+                worker.ActivateInline(impactData);
             }
         }
 

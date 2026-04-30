@@ -108,7 +108,7 @@ namespace FarEmerald.PlayForge.Extended.Editor
                 actionsContainer.Add(createBtn);
             }
             
-            BuildGoButton(prop, actionsContainer);
+            // BuildGoButton(prop, actionsContainer);
             
             // Add link info section
             var linkSection = new VisualElement { name = "LinkSection" };
@@ -156,6 +156,8 @@ namespace FarEmerald.PlayForge.Extended.Editor
 
         void BuildGoButton(SerializedProperty prop, VisualElement container)
         {
+            return;
+            
             var btn = container.Q("GoBtn");
             if (btn is not null) container.Remove(btn);
             

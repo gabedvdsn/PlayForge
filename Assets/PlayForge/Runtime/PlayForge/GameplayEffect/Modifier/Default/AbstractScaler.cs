@@ -453,6 +453,14 @@ namespace FarEmerald.PlayForge
         FlatBonus
     }
 
+    public enum EScalerRelativeOperation
+    {
+        Add,
+        Multiply,
+        UseAttributeValue,
+        UseScalerValue
+    }
+
     public enum ELevelConfig
     {
         [Tooltip("Uses the provider's level range automatically.\n" +

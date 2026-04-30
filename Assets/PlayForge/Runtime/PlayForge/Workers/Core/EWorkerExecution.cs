@@ -17,6 +17,8 @@
         /// Cannot modify ChangeValue. Safe to call any system method
         /// since execution is deferred.
         /// </summary>
-        Deferred
+        Deferred,
+        
+        InlineAndDeferred
     }
 }

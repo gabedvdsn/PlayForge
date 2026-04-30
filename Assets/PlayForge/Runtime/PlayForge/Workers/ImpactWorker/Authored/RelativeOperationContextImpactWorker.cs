@@ -27,13 +27,13 @@ namespace FarEmerald.PlayForge
         
         public override EWorkerExecution Execution => ExecutionMode;
         
-        public override void Activate(ImpactData impactData)
+        public override void ActivateInline(ImpactData impactData)
         {
             // For inline execution
             PerformWork(impactData);
         }
         
-        public override IEnumerable<IRootAction> CreateActions(ImpactWorkerContext ctx)
+        public override IEnumerable<IRootAction> CreateDeferredActions(ImpactWorkerContext ctx)
         {
             // For deferred execution
             var impactData = ctx.ImpactData;
@@ -99,7 +99,7 @@ namespace FarEmerald.PlayForge
                 attributeValue.BaseValue,
                 WorkerImpactWorkable
             );
-            
+
             attr.ModifyAttribute(WorkAttribute, sourcedModifier);
         }
         

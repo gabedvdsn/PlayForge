@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using UnityEngine;
 
 namespace FarEmerald.PlayForge
@@ -75,6 +76,12 @@ namespace FarEmerald.PlayForge
                         var actions = worker.DeferredIntercept(context);
                         context.ActionQueue?.EnqueueRange(actions);
                         break;
+                    case EWorkerExecution.InlineAndDeferred:
+                        worker.Intercept(context);
+                        context.ActionQueue?.EnqueueRange(worker.DeferredIntercept(context));
+                        break;
+                    default:
+                        throw new ArgumentOutOfRangeException();
                 }
             }
         }

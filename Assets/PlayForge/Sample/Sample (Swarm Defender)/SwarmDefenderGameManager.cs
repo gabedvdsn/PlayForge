@@ -2,7 +2,9 @@ using System;
 using System.Collections.Generic;
 using System.Threading;
 using Cysharp.Threading.Tasks;
+using FarEmerald.PlayForge.Extended.Examples;
 using UnityEngine;
+using UnityEngine.InputSystem;
 using UnityEngine.SceneManagement;
 using UnityEngine.UIElements;
 using Random = UnityEngine.Random;
@@ -26,6 +28,13 @@ namespace FarEmerald.PlayForge.Extended.SwarmDefenderSample
     [RequireComponent(typeof(UIDocument))]
     public class SwarmDefenderGameManager : LazyMonoProcess
     {
+        
+        public static DemoInputConduit Input;
+        
+        public GameplayEffect TestIntEffect;
+        public GameplayEffect TestIntEffect2;
+        public GameplayEffect TestIntEffect3;
+        
         // ═══════════════════════════════════════════════════════════════════════
         // Inspector
         // ═══════════════════════════════════════════════════════════════════════
@@ -95,6 +104,7 @@ namespace FarEmerald.PlayForge.Extended.SwarmDefenderSample
             base.WhenInitialize();
 
             if (uiDocument == null) uiDocument = GetComponent<UIDocument>();
+            Input ??= GetComponent<DemoInputConduit>() ?? gameObject.AddComponent<DemoInputConduit>();
 
             BuildUI();
             SeedDataPacket();
@@ -108,6 +118,17 @@ namespace FarEmerald.PlayForge.Extended.SwarmDefenderSample
             RefreshHud();
             RefreshLevelUpModal();
             RefreshGameOverPanel();
+
+            if (hero && Input.IsKeyDown(Key.P))
+            {
+                var intAttr = AttributeRegistry.GetByName("Intelligence");
+                var smav = SourcedModifiedAttributeValue.GenerateSimple(hero, intAttr, 18, 0);
+                hero.AttributeSystem.ModifyAttribute(smav);
+            }
+
+            if (hero && Input.IsKeyDown(Key.Digit1)) hero.ApplyGameplayEffect(hero.GenerateEffectSpec(hero, TestIntEffect));
+            if (hero && Input.IsKeyDown(Key.Digit2)) hero.ApplyGameplayEffect(hero.GenerateEffectSpec(hero, TestIntEffect2));
+            if (hero && Input.IsKeyDown(Key.Digit3)) hero.ApplyGameplayEffect(hero.GenerateEffectSpec(hero, TestIntEffect3));
         }
 
         public override void WhenTerminate()

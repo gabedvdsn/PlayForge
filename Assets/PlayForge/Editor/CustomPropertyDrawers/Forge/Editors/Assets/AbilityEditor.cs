@@ -94,10 +94,9 @@ namespace FarEmerald.PlayForge.Extended.Editor
             // Build all sections inside ScrollView
             BuildDefinitionSection(contentScrollView);
             BuildLevelSourceSection(contentScrollView);
-            BuildTagsSection(contentScrollView);
-            BuildRuntimeSection(contentScrollView);
             BuildLevelingSection(contentScrollView);
-            
+            BuildRuntimeSection(contentScrollView);
+            BuildTagsSection(contentScrollView);
             BuildValidationSection(contentScrollView);
             BuildWorkersSection(contentScrollView);
             BuildLocalDataSection(contentScrollView);
@@ -117,7 +116,7 @@ namespace FarEmerald.PlayForge.Extended.Editor
                 HelpUrl = "https://docs.playforge.dev/abilities/definition",
                 
                 SerializedObject = serializedObject,
-                PropertyPaths = new []{nameof(Ability.Definition)},
+                PropertyPaths = new []{nameof(Ability.Definition), nameof(Ability.Cost), nameof(Ability.Cooldown)},
                 OnImportComplete = () =>
                 {
                     serializedObject.Update();
@@ -133,6 +132,15 @@ namespace FarEmerald.PlayForge.Extended.Editor
                     UpdateHeader();
                     MarkDirty(ability);
                     Repaint();
+                },
+                GetDefaultValue = path =>
+                {
+                    return path switch
+                    {
+                        nameof(Ability.Definition) => new AbilityDefinition(),
+                        nameof(Ability.Cooldown) => null,
+                        nameof(Ability.Cost) => null
+                    };
                 }
             });
             parent.Add(section.Section);
@@ -183,14 +191,16 @@ namespace FarEmerald.PlayForge.Extended.Editor
             });
             content.Add(activateImmediately);
             
-            // Icons Subsection
+            var defProp = serializedObject.FindProperty(nameof(Ability.Definition));
+            
+            /*// Icons Subsection
             var iconsSubsection = CreateSubsection("IconsSubsection", "Icons", Colors.AccentBlue);
             content.Add(iconsSubsection);
             
             var iconsRow = CreateRow(4, wrap: true);
             iconsSubsection.Add(iconsRow);
             
-            var defProp = serializedObject.FindProperty(nameof(Ability.Definition));
+            
             var iconsProp = CreatePropertyField(defProp.FindPropertyRelative(nameof(AbilityDefinition.Textures)), "Textures", "");
             iconsProp.style.flexGrow = 1;
             iconsProp.RegisterCallback<SerializedPropertyChangeEvent>(_ =>
@@ -199,7 +209,18 @@ namespace FarEmerald.PlayForge.Extended.Editor
                 MarkDirty(ability);
                 Repaint();
             });
-            iconsSubsection.Add(iconsProp);
+            iconsSubsection.Add(iconsProp);*/
+
+            var texturesField = CreatePropertyField(defProp.FindPropertyRelative(nameof(AbilityDefinition.Textures)), "Textures", "");
+            texturesField.RegisterCallback<SerializedPropertyChangeEvent>(_ =>
+            {
+                UpdateHeader();
+                MarkDirty(ability);
+                Repaint();
+            });
+            content.Add(texturesField);
+            
+            BuildCostCooldownSubsection(content);
         }
 
         // ═══════════════════════════════════════════════════════════════════════════
@@ -357,7 +378,7 @@ namespace FarEmerald.PlayForge.Extended.Editor
                 HelpUrl = "https://docs.playforge.dev/abilities/leveling",
                 
                 SerializedObject = serializedObject,
-                PropertyPaths = new []{nameof(Ability.StartingLevel), nameof(Ability.MaxLevel), nameof(Ability.IgnoreWhenLevelZero), nameof(Ability.Cost), nameof(Ability.Cooldown)},
+                PropertyPaths = new []{nameof(Ability.StartingLevel), nameof(Ability.MaxLevel), nameof(Ability.IgnoreWhenLevelZero)},
                 OnImportComplete = () =>
                 {
                     serializedObject.Update();
@@ -383,8 +404,6 @@ namespace FarEmerald.PlayForge.Extended.Editor
                         nameof(Ability.StartingLevel) => 0,
                         nameof(Ability.MaxLevel) => 4,
                         nameof(Ability.IgnoreWhenLevelZero) => true,
-                        nameof(Ability.Cost) => null,
-                        nameof(Ability.Cooldown) => null,
                         _ => null
                     };
                 }
@@ -426,7 +445,7 @@ namespace FarEmerald.PlayForge.Extended.Editor
             }
             
             // Cost & Cooldown Subsection (always shown)
-            BuildCostCooldownSubsection();
+            // BuildCostCooldownSubsection();
             
             // Re-bind the content after rebuilding to ensure PropertyFields work
             levelingContent.Bind(serializedObject);
@@ -672,10 +691,10 @@ namespace FarEmerald.PlayForge.Extended.Editor
             levelingContent.Add(ignoreZero);
         }
         
-        private void BuildCostCooldownSubsection()
+        private void BuildCostCooldownSubsection(VisualElement parent)
         {
             var costSubsection = CreateSubsection("CostCooldownSubsection", "", Colors.AccentOrange);
-            levelingContent.Add(costSubsection);
+            parent.Add(costSubsection);
             
             costSubsection.Add(CreateHintLabel("Ability Cost"));
             var costField = CreatePropertyField(serializedObject.FindProperty(nameof(Ability.Cost)), "Cost", "");

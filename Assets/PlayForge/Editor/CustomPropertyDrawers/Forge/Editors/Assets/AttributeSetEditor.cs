@@ -15,10 +15,14 @@ namespace FarEmerald.PlayForge.Extended.Editor
         
         private AttributeSet attributeSet;
         private Label assetTagValueLabel;
-        
+
         private Label attributeCountLabel;
         private Label subsetCountLabel;
         private Label uniqueAttributesLabel;
+
+        // Level provider sections
+        private VisualElement levelSourceContent;
+        private VisualElement levelingContent;
 
         // ═══════════════════════════════════════════════════════════════════════════
         // Header Configuration (IMGUI Header)
@@ -26,7 +30,7 @@ namespace FarEmerald.PlayForge.Extended.Editor
 
         protected override BaseForgeLevelProvider GetAsset()
         {
-            return null;
+            return attributeSet;
         }
         protected override string GetDisplayName()
         {
@@ -64,13 +68,371 @@ namespace FarEmerald.PlayForge.Extended.Editor
         
         protected override bool ShowVisualizeButton => true;
         protected override bool ShowImportButton => true;
+        // ═══════════════════════════════════════════════════════════════════════════
+        // Level Provider Sections
+        //
+        // Mirrors the Ability/Item editor pattern. The AttributeSet itself is now a
+        // BaseForgeLevelProvider so cached scalers authored on its elements can derive
+        // their level bounds from the set (or from a chained linked provider).
+        // ═══════════════════════════════════════════════════════════════════════════
+
+        private void BuildLevelSourceSection(VisualElement parent)
+        {
+            var section = CreateSection(new SectionConfig
+            {
+                Name = "LevelSource",
+                Title = "Level Source",
+                AccentColor = GetAssetTypeColor(),
+                HelpUrl = "https://docs.playforge.dev/attributesets/levelsource",
+            });
+            parent.Add(section.Section);
+
+            levelSourceContent = section.Content;
+            RebuildLevelSourceContent();
+        }
+
         protected override void RebuildLevelSourceContent()
         {
-            
+            if (levelSourceContent == null) return;
+            levelSourceContent.Clear();
+
+            var info = CreateHintLabel(
+                "Determines the level range used by cached scalers authored on this set's elements.");
+            info.style.marginBottom = 8;
+            levelSourceContent.Add(info);
+
+            var linkModeField = new EnumField("Link Mode", attributeSet.LinkMode);
+            linkModeField.style.marginBottom = 6;
+            linkModeField.RegisterValueChangedCallback(evt =>
+            {
+                attributeSet.LinkMode = (EAttributeSetLinkMode)evt.newValue;
+                serializedObject.Update();
+                MarkDirty(attributeSet);
+                RebuildLevelSourceContent();
+                RebuildLevelingContent();
+                Repaint();
+            });
+            levelSourceContent.Add(linkModeField);
+
+            if (attributeSet.LinkMode == EAttributeSetLinkMode.LinkedToProvider)
+            {
+                BuildProviderSelector(levelSourceContent, attributeSet);
+                BuildLinkStatusDisplay();
+            }
+            else
+            {
+                var standaloneInfo = new VisualElement();
+                standaloneInfo.style.flexDirection = FlexDirection.Row;
+                standaloneInfo.style.alignItems = Align.Center;
+                standaloneInfo.style.paddingLeft = 8;
+                standaloneInfo.style.paddingTop = 6;
+                standaloneInfo.style.paddingBottom = 6;
+                standaloneInfo.style.backgroundColor = new Color(0.18f, 0.18f, 0.2f, 0.4f);
+                standaloneInfo.style.borderTopLeftRadius = 3;
+                standaloneInfo.style.borderTopRightRadius = 3;
+                standaloneInfo.style.borderBottomLeftRadius = 3;
+                standaloneInfo.style.borderBottomRightRadius = 3;
+                
+                var icon = new Label("○");
+                icon.style.color = Colors.HintText;
+                icon.style.marginRight = 6;
+                standaloneInfo.Add(icon);
+                
+                var text = new Label("Attribute Set operates independently with its own level tracking for cached scalers.");
+                text.style.fontSize = 10;
+                text.style.color = Colors.HintText;
+                text.style.unityFontStyleAndWeight = FontStyle.Italic;
+                standaloneInfo.Add(text);
+                
+                levelSourceContent.Add(standaloneInfo);
+                
+                /*var standalone = CreateHintLabel(
+                    "Standalone — cached scalers use this set's local StartingLevel/MaxLevel.");
+                standalone.style.marginTop = 6;
+                levelSourceContent.Add(standalone);*/
+            }
+
+            levelSourceContent.Bind(serializedObject);
         }
+        
+        private void BuildLinkStatusDisplay()
+        {
+            var statusBox = new VisualElement();
+            statusBox.style.marginTop = 8;
+            statusBox.style.paddingLeft = 8;
+            statusBox.style.paddingRight = 8;
+            statusBox.style.paddingTop = 8;
+            statusBox.style.paddingBottom = 8;
+            statusBox.style.borderTopLeftRadius = 4;
+            statusBox.style.borderTopRightRadius = 4;
+            statusBox.style.borderBottomLeftRadius = 4;
+            statusBox.style.borderBottomRightRadius = 4;
+            statusBox.style.borderLeftWidth = 3;
+            
+            if (attributeSet.IsLinked)
+            {
+                var provider = attributeSet.LinkedProvider;
+                
+                statusBox.style.backgroundColor = new Color(0.2f, 0.3f, 0.2f, 0.3f);
+                statusBox.style.borderLeftColor = Colors.AccentGreen;
+                
+                var headerRow = new VisualElement();
+                headerRow.style.flexDirection = FlexDirection.Row;
+                headerRow.style.alignItems = Align.Center;
+                headerRow.style.marginBottom = 6;
+                
+                var linkIcon = new Label("🔗");
+                linkIcon.style.marginRight = 6;
+                headerRow.Add(linkIcon);
+                
+                var linkedLabel = new Label("Linked to Level Provider");
+                linkedLabel.style.unityFontStyleAndWeight = FontStyle.Bold;
+                linkedLabel.style.color = Colors.AccentGreen;
+                headerRow.Add(linkedLabel);
+                
+                statusBox.Add(headerRow);
+                
+                var infoGrid = new VisualElement();
+                infoGrid.style.marginLeft = 4;
+
+                var typeName = GetProviderTypeName(provider.GetType());
+                var typeColor = Colors.GetAssetColor(provider.GetType());
+                
+                infoGrid.Add(CreateInfoRow("Type:", typeName, typeColor));
+                infoGrid.Add(CreateInfoRow("Name:", provider.GetProviderName(), Colors.LabelText));
+                infoGrid.Add(CreateInfoRow("Start Level:", provider.GetStartingLevel().ToString(), Colors.LabelText));
+                infoGrid.Add(CreateInfoRow("Max Level:", provider.GetMaxLevel().ToString(), Colors.AccentGreen));
+                
+                statusBox.Add(infoGrid);
+                
+                var actionsRow = new VisualElement();
+                actionsRow.style.flexDirection = FlexDirection.Row;
+                actionsRow.style.marginTop = 8;
+                actionsRow.style.justifyContent = Justify.FlexEnd;
+                
+                var gotoBtn = new Button(() =>
+                {
+                    Selection.activeObject = provider;
+                    EditorGUIUtility.PingObject(provider);
+                });
+                gotoBtn.text = "Go to Provider";
+                gotoBtn.style.fontSize = 10;
+                gotoBtn.style.height = 20;
+                ApplyButtonHoverStyle(gotoBtn);
+                actionsRow.Add(gotoBtn);
+                
+                var unlinkBtn = new Button(() =>
+                {
+                    if (EditorUtility.DisplayDialog(
+                        "Unlink Ability",
+                        $"Remove link to '{provider.GetProviderName()}'?\n\nThe ability will become standalone.",
+                        "Unlink", "Cancel"))
+                    {
+                        attributeSet.Unlink();
+                        serializedObject.Update();
+                        MarkDirty(attributeSet);
+                        RebuildLevelSourceContent();
+                        RebuildLevelingContent();
+                        Repaint();
+                    }
+                });
+                unlinkBtn.text = "Unlink";
+                unlinkBtn.style.fontSize = 10;
+                unlinkBtn.style.height = 20;
+                unlinkBtn.style.marginLeft = 4;
+                unlinkBtn.style.backgroundColor = new Color(0.5f, 0.3f, 0.3f);
+                ApplyButtonHoverStyle(unlinkBtn);
+                actionsRow.Add(unlinkBtn);
+                
+                statusBox.Add(actionsRow);
+            }
+            else
+            {
+                statusBox.style.backgroundColor = new Color(0.3f, 0.25f, 0.2f, 0.3f);
+                statusBox.style.borderLeftColor = Colors.AccentYellow;
+                
+                var warningRow = new VisualElement();
+                warningRow.style.flexDirection = FlexDirection.Row;
+                warningRow.style.alignItems = Align.Center;
+                
+                var warningIcon = new Label("⚠");
+                warningIcon.style.color = Colors.AccentYellow;
+                warningIcon.style.marginRight = 6;
+                warningRow.Add(warningIcon);
+                
+                var warningText = new Label("No provider selected. Select an Item above.");
+                warningText.style.fontSize = 11;
+                warningText.style.color = Colors.AccentYellow;
+                warningRow.Add(warningText);
+                
+                statusBox.Add(warningRow);
+            }
+            
+            levelSourceContent.Add(statusBox);
+            
+            VisualElement CreateInfoRow(string label, string value, Color valueColor)
+            {
+                var row = new VisualElement();
+                row.style.flexDirection = FlexDirection.Row;
+                row.style.marginBottom = 2;
+            
+                var labelElement = new Label(label);
+                labelElement.style.width = 80;
+                labelElement.style.fontSize = 10;
+                labelElement.style.color = Colors.HintText;
+                row.Add(labelElement);
+            
+                var valueElement = new Label(value);
+                valueElement.style.fontSize = 10;
+                valueElement.style.color = valueColor;
+                row.Add(valueElement);
+            
+                return row;
+            }
+        }
+
+        private void BuildLevelingSection(VisualElement parent)
+        {
+            var section = CreateSection(new SectionConfig
+            {
+                Name = "Leveling",
+                Title = "Leveling",
+                AccentColor = GetAssetTypeColor(),
+                HelpUrl = "https://docs.playforge.dev/attributesets/leveling",
+
+                SerializedObject = serializedObject,
+                PropertyPaths = new[] { nameof(AttributeSet.StartingLevel), nameof(AttributeSet.MaxLevel) },
+                OnImportComplete = () =>
+                {
+                    serializedObject.Update();
+                    MarkDirty(attributeSet);
+                    RebuildLevelingContent();
+                    Repaint();
+                },
+                OnClearComplete = () =>
+                {
+                    serializedObject.Update();
+                    MarkDirty(attributeSet);
+                    RebuildLevelingContent();
+                    Repaint();
+                },
+                GetDefaultValue = path => path switch
+                {
+                    nameof(AttributeSet.StartingLevel) => 1,
+                    nameof(AttributeSet.MaxLevel)      => 4,
+                    _ => null
+                }
+            });
+            parent.Add(section.Section);
+
+            levelingContent = section.Content;
+            RebuildLevelingContent();
+        }
+
         protected override void RebuildLevelingContent()
         {
-            
+            if (levelingContent == null) return;
+            levelingContent.Clear();
+
+            // Three states (parallels AbilityEditor / ItemEditor):
+            //   1. Standalone           — editable StartingLevel + MaxLevel.
+            //   2. Linked, no provider  — warning + disabled local fields.
+            //   3. Linked + resolved    — read-only display of derived values.
+            if (attributeSet.LinkMode == EAttributeSetLinkMode.LinkedToProvider)
+            {
+                if (attributeSet.LinkedProvider != null) BuildLinkedDisplay();
+                else BuildNoProviderWarning();
+            }
+            else
+            {
+                BuildStandaloneFields();
+            }
+
+            levelingContent.Bind(serializedObject);
+        }
+
+        private void BuildStandaloneFields()
+        {
+            var row = CreateRow(8);
+            levelingContent.Add(row);
+
+            var startField = CreatePropertyField(serializedObject.FindProperty(nameof(AttributeSet.StartingLevel)), "Level", "Starting Level");
+            startField.style.flexGrow = 1;
+            row.Add(startField);
+
+            var maxField = CreatePropertyField(serializedObject.FindProperty(nameof(AttributeSet.MaxLevel)), "Level", "Max Level");
+            maxField.style.flexGrow = 1;
+            row.Add(maxField);
+
+            levelingContent.Add(CreateHintLabel(
+                "Cached scalers in this set whose Level Configuration is 'Lock to Level Provider' " +
+                "use this MaxLevel to size their level-value arrays."));
+        }
+
+        private void BuildNoProviderWarning()
+        {
+            var warning = CreateHintLabel(
+                "Link Mode is set to 'Linked to Provider' but no provider is selected. " +
+                "Pick a provider above or switch back to Standalone to edit levels here.");
+            warning.style.color = Colors.AccentYellow;
+            warning.style.marginBottom = 6;
+            levelingContent.Add(warning);
+
+            var row = CreateRow(8);
+            levelingContent.Add(row);
+
+            var startField = CreatePropertyField(serializedObject.FindProperty(nameof(AttributeSet.StartingLevel)), "Level", "Starting Level");
+            startField.style.flexGrow = 1;
+            startField.SetEnabled(false);
+            row.Add(startField);
+
+            var maxField = CreatePropertyField(serializedObject.FindProperty(nameof(AttributeSet.MaxLevel)), "Level", "Max Level");
+            maxField.style.flexGrow = 1;
+            maxField.SetEnabled(false);
+            row.Add(maxField);
+        }
+
+        private void BuildLinkedDisplay()
+        {
+            var provider = attributeSet.LinkedProvider;
+
+            var box = new VisualElement();
+            box.style.backgroundColor = new Color(0.2f, 0.25f, 0.3f, 0.4f);
+            box.style.borderTopLeftRadius = 4;
+            box.style.borderTopRightRadius = 4;
+            box.style.borderBottomLeftRadius = 4;
+            box.style.borderBottomRightRadius = 4;
+            box.style.borderLeftWidth = 3;
+            box.style.borderLeftColor = Colors.AccentBlue;
+            box.style.paddingLeft = 8;
+            box.style.paddingRight = 8;
+            box.style.paddingTop = 8;
+            box.style.paddingBottom = 8;
+            box.style.marginBottom = 8;
+            levelingContent.Add(box);
+
+            var header = new Label($"🔗  Levels derived from {provider.GetProviderName()} ({GetProviderTypeName(provider.GetType())})");
+            header.style.unityFontStyleAndWeight = FontStyle.Bold;
+            header.style.color = Colors.AccentBlue;
+            header.style.marginBottom = 6;
+            box.Add(header);
+
+            var row = CreateRow(8);
+            box.Add(row);
+
+            var startField = new IntegerField("Starting Level") { value = provider.GetStartingLevel() };
+            startField.SetEnabled(false);
+            startField.style.flexGrow = 1;
+            startField.style.opacity = 0.85f;
+            row.Add(startField);
+
+            var maxField = new IntegerField("Max Level") { value = provider.GetMaxLevel() };
+            maxField.SetEnabled(false);
+            maxField.style.flexGrow = 1;
+            maxField.style.opacity = 0.85f;
+            row.Add(maxField);
+
+            box.Add(CreateHintLabel("These values are controlled by the linked provider. Unlink to edit manually."));
         }
         
         // ═══════════════════════════════════════════════════════════════════════════
@@ -86,6 +448,8 @@ namespace FarEmerald.PlayForge.Extended.Editor
         protected override void BuildInspectorContent(VisualElement parent)
         {
             BuildDefinitionSection(parent);
+            BuildLevelSourceSection(parent);
+            BuildLevelingSection(parent);
             BuildAttributesSection(parent);
             BuildSubsetsSection(parent);
             BuildSettingsSection(parent);
@@ -544,6 +908,8 @@ namespace FarEmerald.PlayForge.Extended.Editor
             serializedObject.Update();
             RefreshCounts();
             UpdateAssetTagDisplay();
+            RebuildLevelSourceContent();
+            RebuildLevelingContent();
             Repaint();
         }
     }

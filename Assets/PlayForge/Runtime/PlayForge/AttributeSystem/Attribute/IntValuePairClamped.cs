@@ -39,7 +39,7 @@ namespace FarEmerald.PlayForge
 
         // public float Ratio => ForgeHelper.RelativeOffsetValue(this, _minValue);
         public float Ratio => Mathf.InverseLerp(_minValue, _maxValue, _currentValue);
-        public float ClampedRatio => Mathf.Clamp01(Mathf.InverseLerp(_minValue, _maxValue, _currentValue));
+        public float ClampedRatio => Mathf.Clamp01(Ratio);
         
         public bool ContainsImpact => CurrentValue != 0;
 
