@@ -218,7 +218,7 @@ namespace FarEmerald.PlayForge
         }
         public bool TryGetAttributeValue(IAttribute attribute, out AttributeValue value)
         {
-            return AttributeSystem.TryGetAttributeValue(attribute, out value);
+            return AttributeSystem.TryGetValue(attribute, out value);
         }
         public bool TryModifyAttribute(IAttribute attribute, SourcedModifiedAttributeValue sourcedModifiedValue, bool runEvents = true)
         {
@@ -272,7 +272,7 @@ namespace FarEmerald.PlayForge
             
             foreach (var containedEffect in spec.Base.ImpactSpecification.GetContainedEffects(EApplyTickRemove.OnApply))
             {
-                ApplyGameplayEffect(spec.Origin, containedEffect);
+                ApplyGameplayEffect(spec.GetOrigin(), containedEffect);
             }
             
             return true;
@@ -311,9 +311,22 @@ namespace FarEmerald.PlayForge
             var container = spec.Base.DurationSpecification.GenerateContainer(spec, ongoing);
             EffectShelf.Add(container);
 
+            // Mode A (sustained modifier) — register with the attribute system so it
+            // lands in retainedGroups and folds into Recompute. Mode B (tick-delivered)
+            // specs are intentionally NOT registered here: their apply event carries no
+            // attribute impact; every commit flows through the tick path
+            // (ApplyDurationGameplayEffectAsInstant → TickAttribute). Fired BEFORE
+            // RunWorkerApplication so workers observe the post-apply attribute state.
+            if (spec.IsSustainedModifier())
+            {
+                AttributeSystem.ModifyAttribute(
+                    spec.Base.ImpactSpecification.AttributeTarget,
+                    new SourcedModifiedAttributeValue(spec, 0f, 0f));
+            }
+
             var effectContext = new EffectWorkerContext(this, container.Spec, _frameSummary, _actionQueue);
             container.Spec.RunWorkerApplication(effectContext);
-            
+
             if (ongoing && spec.Base.DurationSpecification.TickOnApplication)
             {
                 ApplyTickOnApplication(container);
@@ -330,32 +343,38 @@ namespace FarEmerald.PlayForge
         
         private void ApplyInstantGameplayEffect(GameplayEffectSpec spec)
         {
-            if (!AttributeSystem.TryGetAttributeValue(spec.Base.ImpactSpecification.AttributeTarget, out AttributeValue attributeValue)) return;
+            if (!AttributeSystem.TryGetValue(spec.Base.ImpactSpecification.AttributeTarget, out _)) return;
 
             TagCache.AddTags(spec.Base.Tags.GrantedTags);
             spec.RunWorkerApplication(new EffectWorkerContext(this, spec, _frameSummary, _actionQueue));
-            
-            var sourcedModifiedValue = spec.SourcedImpact(attributeValue);
+
+            // No precomputed delta — the spec's ScalerImpacter pipeline drives magnitude
+            // freshly during ApplyCarrier → recompute. The zero-delta SourcedModifiedAttributeValue
+            // is just the transport struct that ModifyAttribute uses for callbacks.
+            var sourcedModifiedValue = new SourcedModifiedAttributeValue(spec, 0f, 0f);
             var impactData = AttributeSystem.ModifyAttribute(spec.Base.ImpactSpecification.AttributeTarget, sourcedModifiedValue);
 
             Debug.Log(impactData);
-            
+
             spec.RunWorkerRemoval(new EffectWorkerContext(this, spec, _frameSummary, _actionQueue, 1, impactData));
             TagCache.RemoveTags(spec.Base.Tags.GrantedTags);
-            
+
             HandleGameplayEffects();
         }
-        
+
         private void ApplyDurationGameplayEffectAsInstant(AbstractEffectContainer container)
         {
-            if (!AttributeSystem.TryGetAttributeValue(container.Spec.Base.ImpactSpecification.AttributeTarget, out AttributeValue attributeValue)) return;
+            if (!AttributeSystem.TryGetValue(container.Spec.Base.ImpactSpecification.AttributeTarget, out _)) return;
 
-            var sourcedModifiedValue = container.Spec.SourcedImpact(container, attributeValue);
-            
-            AttributeSystem.ModifyAttribute(container.Spec.Base.ImpactSpecification.AttributeTarget, sourcedModifiedValue);
-            
+            var sourcedModifiedValue = new SourcedModifiedAttributeValue(container.Spec, 0f, 0f);
+            // TickAttribute (not ModifyAttribute) bypasses the apply-side retention check
+            // and idempotency guard. Each tick of a retained spec must commit one-shot —
+            // otherwise the second/third/Nth tick of any retained spec collapses to a
+            // no-op refresh because the apply path would match its own idempotency guard.
+            AttributeSystem.TickAttribute(container.Spec.Base.ImpactSpecification.AttributeTarget, sourcedModifiedValue);
+
             container.Spec.RunWorkerApplication(new EffectWorkerContext(this, container.Spec, _frameSummary, _actionQueue));
-            
+
             foreach (var containedEffect in container.Spec.Base.ImpactSpecification.GetContainedEffects(EApplyTickRemove.OnTick))
             {
                 ApplyGameplayEffect(container.Spec.Origin, containedEffect);
@@ -501,9 +520,7 @@ namespace FarEmerald.PlayForge
                     _frameSummary, _actionQueue);
                 container.Spec.RunWorkerRemoval(effectContext);
                 
-                var nullify = !container.Spec.Base.ImpactSpecification.ReverseImpactOnRemoval && container.Spec.TrackedImpact.Total.BaseValue != 0f;
-                var retainCurrent = container.Spec.TrackedImpact.Total.CurrentValue != 0f;
-                AttributeSystem.RemoveAttributeDerivation(container.Spec, nullify, retainCurrent);
+                AttributeSystem.RemoveAttributeDerivation(container.Spec);
                 
                 Callbacks?.EffectRemoved(container.Spec.Base);
             }
@@ -606,7 +623,7 @@ namespace FarEmerald.PlayForge
         // TAG HANDLER / SOURCE INTERFACE
         // ═══════════════════════════════════════════════════════════════════════════
 
-        public ISource GetOwner()
+        public ISource GetSource()
         {
             return this;
         }

@@ -1,0 +1,143 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 2d34fc1f98f8a0b4c9b37da3e706e0e1, type: 3}
+  m_Name: EFECT_Speed_Override
+  m_EditorClassIdentifier: 
+  LocalData: []
+  _template: {fileID: 11400000, guid: eea235da25bf59a468c3da6a4fd1c6a3, type: 2}
+  _templateOverrides:
+  - DurationSpecification.DurationPolicy
+  - DurationSpecification.DurationOperation.Magnitude
+  - ImpactSpecification.AttributeTarget
+  - ImpactSpecification.ImpactOperation
+  - DurationSpecification.EnablePeriodicTicks
+  - DurationSpecification.TickOnApplication
+  - DurationSpecification.ReApplicationPolicy
+  - ImpactSpecification.MagnitudeOperation.Magnitude
+  _templateListSnapshots: []
+  Definition:
+    Name: Speed Override
+    Description: 
+    Visibility:
+      Name: Not Visibled2xuDNqtid9uamDM5aBXkxUexwFpJUF4d2xuDNqtid9uamDM5aBXk
+      DisplayName: Not Visible
+    Textures: []
+    RetentionGroup:
+      Name: IgnoreaQ90wcmjZGnP0AQuPovNalcismrHWacbaQ90wcmjZGnP0AQuPovNalcism
+      DisplayName: Ignore
+  Tags:
+    AssetTag:
+      Name: Effect.SpeedOverride
+      DisplayName: 
+    ContextTags: []
+    GrantedTags: []
+  ImpactSpecification:
+    AttributeTarget: {fileID: 11400000, guid: 9e3481fbb0007434d9416c20f647c10f, type: 2}
+    TargetImpact: 0
+    ImpactOperation: 2
+    AffiliationPolicy: 3
+    AffiliationComparison: 0
+    Affiliations: []
+    ImpactTypes: []
+    ReverseImpactOnRemoval: 0
+    MagnitudeOperation:
+      Magnitude: 67
+      RealMagnitude: 1
+      Scaler:
+        rid: -2
+    Packets: []
+  DurationSpecification:
+    DurationPolicy: 1
+    DurationOperation:
+      Magnitude: 5
+      RealMagnitude: 1
+      Scaler:
+        rid: -2
+    RealDeltaTime: 1
+    DeltaTimeScaler:
+      rid: -2
+    EnablePeriodicTicks: 0
+    TickOnApplication: 1
+    TicksOperation:
+      Magnitude: 0
+      RealMagnitude: 1
+      Scaler:
+        rid: -2
+      Rounding: 0
+    TickIntervalOperation:
+      Magnitude: 0
+      RealMagnitude: 1
+      Scaler:
+        rid: -2
+    AdditionalExecuteTicksOperation:
+      Magnitude: 0
+      RealMagnitude: 1
+      Scaler:
+        rid: -2
+      Rounding: 0
+    ReApplicationPolicy: 2
+    ReApplicationInteraction: 0
+    StackPolicy: 0
+    StackAmountOperation:
+      Magnitude: 0
+      RealMagnitude: 1
+      Scaler:
+        rid: -2
+      Rounding: 0
+  Workers: []
+  SourceRequirements:
+    Name: 
+    ApplicationRequirements:
+      Name: 
+      SourceTemplate: {fileID: 0}
+      SyncWithTemplate: 0
+      AvoidTags: []
+      RequireTags: []
+    OngoingRequirements:
+      Name: 
+      SourceTemplate: {fileID: 0}
+      SyncWithTemplate: 0
+      AvoidTags: []
+      RequireTags: []
+    RemovalRequirements:
+      Name: 
+      SourceTemplate: {fileID: 0}
+      SyncWithTemplate: 0
+      AvoidTags: []
+      RequireTags: []
+  TargetRequirements:
+    Name: 
+    ApplicationRequirements:
+      Name: 
+      SourceTemplate: {fileID: 0}
+      SyncWithTemplate: 0
+      AvoidTags: []
+      RequireTags: []
+    OngoingRequirements:
+      Name: 
+      SourceTemplate: {fileID: 0}
+      SyncWithTemplate: 0
+      AvoidTags: []
+      RequireTags: []
+    RemovalRequirements:
+      Name: 
+      SourceTemplate: {fileID: 0}
+      SyncWithTemplate: 0
+      AvoidTags: []
+      RequireTags: []
+  LinkMode: 1
+  _linkedSource: {fileID: 11400000, guid: 812c4e89b36cf1340b92ee9a57ac3ea3, type: 2}
+  references:
+    version: 2
+    RefIds:
+    - rid: -2
+      type: {class: , ns: , asm: }

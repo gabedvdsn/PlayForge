@@ -64,6 +64,7 @@ namespace FarEmerald.PlayForge.Extended.SwarmDefenderSample
                 .WithStepTiming(EProcessStepTiming.Update)
                 .Stage(s => s.WithName("Setup").Do(d =>
                 {
+                    Debug.Log(1);
                     // No target → no spawn, no cast.
                     if (!TryAcquireDirectedTarget(d, searchRadius, out casterT, out var target))
                         return;
@@ -78,6 +79,7 @@ namespace FarEmerald.PlayForge.Extended.SwarmDefenderSample
                 // Phase: arc toward landing position
                 .SyncTask((d, dt) =>
                 {
+                    Debug.Log(2);
                     if (grenade == null) return true;
                     flightTimer += dt;
                     float t = Mathf.Clamp01(flightTimer / flightDuration);
@@ -92,6 +94,7 @@ namespace FarEmerald.PlayForge.Extended.SwarmDefenderSample
                 // Phase: detonate — spawn shockwave ring, overlap-apply effects, cleanup
                 .SyncTask((d, dt) =>
                 {
+                    Debug.Log(3);
                     if (grenade == null && shockRing == null) return true;
 
                     if (grenade != null)
@@ -512,7 +515,8 @@ namespace FarEmerald.PlayForge.Extended.SwarmDefenderSample
             return TaskSequenceBuilder.Create("Orbital Strike")
                 .WithLifecycle(EProcessLifecycle.Synchronous)
                 .WithStepTiming(EProcessStepTiming.Update)
-                .Stage(s => s.WithName("Setup & Telegraph").Do(d =>
+                .Stage(s => s
+                    .WithName("Setup & Telegraph").Do(d =>
                 {
                     if (!TryAcquireDirectedTarget(d, searchRadius, out casterT, out var target))
                         return;

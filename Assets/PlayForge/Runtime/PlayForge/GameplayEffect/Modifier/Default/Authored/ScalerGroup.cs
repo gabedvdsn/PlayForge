@@ -16,7 +16,7 @@ namespace FarEmerald.PlayForge
         [Tooltip("How to handle multiple Override members")]
         public EValueCollisionPolicy OverrideMemberCollisionPolicy = EValueCollisionPolicy.UseMaximum;
         
-        public override void Initialize(IAttributeImpactDerivation deriv)
+        public override void Initialize(IAttributeImpactCarrier deriv)
         {
             if (Calculations == null) return;
             
@@ -31,7 +31,7 @@ namespace FarEmerald.PlayForge
             return false;
         }
 
-        public override float Evaluate(IAttributeImpactDerivation deriv)
+        public override float Evaluate(IAttributeImpactCarrier deriv)
         {
             if (Calculations == null || Calculations.Length == 0)
                 return EvaluateFromSpec(deriv);

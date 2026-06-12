@@ -50,7 +50,7 @@ namespace FarEmerald.PlayForge
         /// </summary>
         public void RunWorkers(WorkerContext context)
         {
-            var attribute = context.Change.Value.Derivation?.GetAttribute();
+            var attribute = context.Change.Value.Carrier?.GetAttribute();
             if (attribute is null) return;
             
             if (!_workers.ContainsKey(attribute)) return;

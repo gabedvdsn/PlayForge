@@ -21,7 +21,9 @@ MonoBehaviour:
   Name: Hero
   Description: 
   Textures: []
-  Affiliation: []
+  Affiliation:
+  - Name: BlueV_xIwhaELb2LxiLUadIIxnACfElYl0B6V_xIwhaELb2LxiLUadIIxnACfElY
+    DisplayName: Blue
   AssetTag:
     Name: Entity.Hero
     DisplayName: 

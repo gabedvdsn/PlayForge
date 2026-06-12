@@ -456,7 +456,7 @@ namespace FarEmerald.PlayForge
             if (handler is IGameplayAbilitySystem handlerGas) return handlerGas;
             if (data is AbilityDataPacket ability)
             {
-                var owner = ability.EffectOrigin?.GetOwner();
+                var owner = ability.EffectOrigin?.GetSource();
                 if (owner is IGameplayAbilitySystem ownerGas) return ownerGas;
             }
             return null;
@@ -469,7 +469,7 @@ namespace FarEmerald.PlayForge
         }
         public static bool Register(AbstractMonoProcess process, AbilityDataPacket data, out ProcessRelay relay)
         {
-            return Instance.Internal_RegisterMonoProcess(process, data.EffectOrigin.GetOwner(), data, out relay);
+            return Instance.Internal_RegisterMonoProcess(process, data.EffectOrigin.GetSource(), data, out relay);
         }
         public static bool Register(AbstractMonoProcess process, ProcessDataPacket data, out ProcessRelay relay)
         {
@@ -519,7 +519,7 @@ namespace FarEmerald.PlayForge
         }
         public static bool Register(AbstractRuntimeProcess process, AbilityDataPacket data, out ProcessRelay relay)
         {
-            return Instance.Internal_RegisterRuntimeProcess(process, data.EffectOrigin.GetOwner(), data, out relay);
+            return Instance.Internal_RegisterRuntimeProcess(process, data.EffectOrigin.GetSource(), data, out relay);
         }
         public static bool Register(AbstractRuntimeProcess process, IGameplayProcessHandler handler, out ProcessRelay relay)
         {
@@ -564,7 +564,7 @@ namespace FarEmerald.PlayForge
         }
         public static bool Register(TaskSequence sequence, AbilityDataPacket data, out ProcessRelay relay)
         {
-            return Instance.Internal_RegisterAsyncSequence(new TaskSequenceProcess(sequence), data.EffectOrigin.GetOwner(), data, out relay);
+            return Instance.Internal_RegisterAsyncSequence(new TaskSequenceProcess(sequence), data.EffectOrigin.GetSource(), data, out relay);
         }
         public static bool Register(TaskSequence sequence, IGameplayProcessHandler handler, out ProcessRelay relay)
         {
@@ -585,7 +585,7 @@ namespace FarEmerald.PlayForge
         }
         public static bool Register(TaskSequenceChain chain, AbilityDataPacket data, out ProcessRelay relay)
         {
-            return Instance.Internal_RegisterAsyncSequence(new TaskSequenceProcess(chain), data.EffectOrigin.GetOwner(), data, out relay);
+            return Instance.Internal_RegisterAsyncSequence(new TaskSequenceProcess(chain), data.EffectOrigin.GetSource(), data, out relay);
         }
         public static bool Register(TaskSequenceChain chain, IGameplayProcessHandler handler, out ProcessRelay relay)
         {

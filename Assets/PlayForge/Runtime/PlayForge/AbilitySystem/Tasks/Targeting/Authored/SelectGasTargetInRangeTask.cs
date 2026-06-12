@@ -43,7 +43,7 @@ namespace FarEmerald.PlayForge
         {
             var cam = Camera.main;
             var maxDist = MaxRayDistance > 0 ? MaxRayDistance : Mathf.Infinity;
-            var owner = data.EffectOrigin.GetOwner();
+            var owner = data.EffectOrigin.GetSource();
             var ownerTransform = owner.ToGAS()?.ToGASObject()?.transform;
 
             if (ownerTransform == null)

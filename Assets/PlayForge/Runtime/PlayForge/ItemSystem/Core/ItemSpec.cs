@@ -38,9 +38,7 @@ namespace FarEmerald.PlayForge
         // IAttributeImpactDerivation Implementation
         // ═══════════════════════════════════════════════════════════════════════════
 
-        public ISource GetSource() => Source;
-        public IEffectOrigin GetEffectDerivation() => this;
-        public override ISource GetOwner()
+        public override ISource GetSource()
         {
             return Source;
         }

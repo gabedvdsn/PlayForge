@@ -19,7 +19,7 @@ namespace FarEmerald.PlayForge
         [SerializeReference]
         public AvoidRequireTagGroup Condition;
 
-        public void Initialize(IAttributeImpactDerivation spec)
+        public void Initialize(IAttributeImpactCarrier spec)
         {
             MagnitudeOperation?.Scaler?.Initialize(spec);
         }
@@ -52,7 +52,7 @@ namespace FarEmerald.PlayForge
             return Validate(appliedTags?.ToList() ?? new List<Tag>());
         }
         
-        public float Evaluate(float magnitude, IAttributeImpactDerivation spec)
+        public float Evaluate(float magnitude, IAttributeImpactCarrier spec)
         {
             float m = MagnitudeOperation?.Evaluate(spec) ?? 0f;
             return Operation switch
@@ -81,7 +81,7 @@ namespace FarEmerald.PlayForge
         [SerializeReference]
         public AvoidRequireTagGroup Condition;
 
-        public void Initialize(IAttributeImpactDerivation spec)
+        public void Initialize(IAttributeImpactCarrier spec)
         {
             MagnitudeOperation?.Scaler?.Initialize(spec);
         }
@@ -114,7 +114,7 @@ namespace FarEmerald.PlayForge
             return Validate(appliedTags?.ToList() ?? new List<Tag>());
         }
         
-        public float Evaluate(float magnitude, IAttributeImpactDerivation spec)
+        public float Evaluate(float magnitude, IAttributeImpactCarrier spec)
         {
             int m = MagnitudeOperation?.Evaluate(spec) ?? 0;
             return Operation switch

@@ -93,7 +93,7 @@ namespace FarEmerald.PlayForge
             }
             byAttr.Add(impact);
 
-            var source = impact.SourcedModifier.Derivation?.GetSource();
+            var source = impact.SourcedModifier.Carrier?.GetOrigin().GetSource();
             if (source != null)
             {
                 if (!ImpactsReceivedBySource.TryGetValue(source, out var list))
@@ -278,7 +278,7 @@ namespace FarEmerald.PlayForge
         {
             return ImpactsReceived
                 .Where(i => i.RealImpact.CurrentValue < 0)
-                .Select(i => i.SourcedModifier.Derivation?.GetSource())
+                .Select(i => i.SourcedModifier.Carrier?.GetOrigin().GetSource())
                 .Where(s => s != null)
                 .Distinct();
         }
@@ -288,7 +288,7 @@ namespace FarEmerald.PlayForge
         {
             return ImpactsReceived
                 .Where(i => i.RealImpact.CurrentValue > 0)
-                .Select(i => i.SourcedModifier.Derivation?.GetSource())
+                .Select(i => i.SourcedModifier.Carrier?.GetOrigin().GetSource())
                 .Where(s => s != null)
                 .Distinct();
         }

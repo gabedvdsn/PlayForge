@@ -46,7 +46,7 @@ namespace FarEmerald.PlayForge
 
         public override UniTask Activate(AbilityDataPacket data, CancellationToken token)
         {
-            var owner = data.EffectOrigin.GetOwner();
+            var owner = data.EffectOrigin.GetSource();
             var ownerTransform = owner.ToGAS()?.ToGASObject()?.transform;
 
             var candidates = GatherCandidates(ownerTransform, owner);

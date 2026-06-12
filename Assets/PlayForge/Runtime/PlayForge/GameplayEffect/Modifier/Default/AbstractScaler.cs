@@ -127,8 +127,8 @@ namespace FarEmerald.PlayForge
         // Abstract Methods
         // ═══════════════════════════════════════════════════════════════════════════
         
-        public abstract void Initialize(IAttributeImpactDerivation deriv);
-        public abstract float Evaluate(IAttributeImpactDerivation deriv);
+        public abstract void Initialize(IAttributeImpactCarrier deriv);
+        public abstract float Evaluate(IAttributeImpactCarrier deriv);
 
         public virtual void Initialize(AbstractStackingEffectContainer container) => Initialize(container.Spec);
         public virtual float Evaluate(AbstractStackingEffectContainer container) => Evaluate(container.Spec);
@@ -391,20 +391,20 @@ namespace FarEmerald.PlayForge
         /// <summary>
         /// Gets the effective max level based on configuration.
         /// </summary>
-        protected int GetEffectiveMaxLevel(IAttributeImpactDerivation spec)
+        protected int GetEffectiveMaxLevel(IAttributeImpactCarrier spec)
         {
             return Configuration switch
             {
-                ELevelConfig.LockToLevelProvider => spec.GetSource().GetLevel().MaxValue,
+                ELevelConfig.LockToLevelProvider => spec.GetOrigin().GetSource().GetLevel().MaxValue,
                 ELevelConfig.Unlocked => MaxLevel,
-                ELevelConfig.Clamped => Mathf.Min(MaxLevel, spec.GetSource().GetLevel().CurrentValue),
+                ELevelConfig.Clamped => Mathf.Min(MaxLevel, spec.GetOrigin().GetSource().GetLevel().CurrentValue),
                 _ => MaxLevel
             };
         }
 
-        protected float GetEffectiveRelativeLevel(IAttributeImpactDerivation deriv)
+        protected float GetEffectiveRelativeLevel(IAttributeImpactCarrier deriv)
         {
-            var level = deriv.GetEffectDerivation().GetLevel();
+            var level = deriv.GetOrigin().GetLevel();
             int maxLevel = GetEffectiveMaxLevel(deriv);
             float relativeLevel = Mathf.InverseLerp(level.MinValue, maxLevel, level.CurrentValue);
             return Mathf.Clamp01(relativeLevel);
@@ -421,13 +421,13 @@ namespace FarEmerald.PlayForge
         /// <summary>
         /// Evaluates using the spec's relative level.
         /// </summary>
-        protected float EvaluateFromSpec(IAttributeImpactDerivation spec)
+        protected float EvaluateFromSpec(IAttributeImpactCarrier spec)
         {
             float relativeLevel = GetEffectiveRelativeLevel(spec);
             return ApplyBehaviourEvaluation(spec, EvaluateScalingAtRelativeLevel(relativeLevel));
         }
 
-        protected float ApplyBehaviourEvaluation(IAttributeImpactDerivation spec, float magnitude)
+        protected float ApplyBehaviourEvaluation(IAttributeImpactCarrier spec, float magnitude)
         {
             float m = magnitude;
             

@@ -13,11 +13,9 @@ namespace FarEmerald.PlayForge
             error = "";
             if (data.EffectOrigin is not AbilitySpec ability) return false;
             if (ability.Base.Cost is null) return true;
-            if (!ability.Source.FindAttributeSystem(out var attrSys) ||
-                !attrSys.TryGetAttributeValue(ability.Base.Cost.ImpactSpecification.AttributeTarget,
-                    out AttributeValue attrVal)) return false;
+            if (!ability.Source.TryGetAttributeValue(ability.Base.Cost.ImpactSpecification.AttributeTarget,
+                    out var attrVal)) return false;
 
-            var spec = ability.Source.GenerateEffectSpec(ability, ability.Base.Cost);
             return attrVal.CurrentValue >=
                    ability.Base.Cost.ImpactSpecification.GetMagnitude(
                        ability.Source.GenerateEffectSpec(ability, ability.Base.Cost));
@@ -70,8 +68,7 @@ namespace FarEmerald.PlayForge
             var source = getSource?.Invoke();
             if (source is null) return false;
             
-            if (!source.FindAttributeSystem(out var attrSys) ||
-                !attrSys.TryGetAttributeValue(Attribute, out AttributeValue attrVal))
+            if (!source.TryGetAttributeValue(Attribute, out var attrVal))
                 return false;
             
             return Comparison switch
@@ -99,7 +96,7 @@ namespace FarEmerald.PlayForge
         public virtual DataWrapper GetValue(AbilityDataPacket data)
         {
             // By default, query value from TagCache
-            var source = data.EffectOrigin.GetOwner();
+            var source = data.EffectOrigin.GetSource();
             if (source.GetTagCache().TryGetWeight(Tag, out var value))
             {
                 var wrapper = new DataWrapper
@@ -135,7 +132,7 @@ namespace FarEmerald.PlayForge
             var target = targetObj.ToGAS()?.ToGASObject();
             if (target is null) return false;
             
-            var source = data.EffectOrigin.GetOwner().ToGAS()?.ToGASObject();
+            var source = data.EffectOrigin.GetSource().ToGAS()?.ToGASObject();
             if (source is null) return false;
             
             return Vector3.Distance(source.transform.position, target.transform.position) <= value.floatValue;

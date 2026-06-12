@@ -66,11 +66,11 @@ namespace FarEmerald.PlayForge
         public override bool ValidateWorkFor(ImpactData impactData)
         {
             return ForgeHelper.ValidateContextTags(AnyContextTag, ImpactAbilityContextTags,
-                       impactData.SourcedModifier.Derivation.GetContextTags(), ContextMatchingPolicy)
+                       impactData.SourcedModifier.Carrier.GetContextTags(), ContextMatchingPolicy)
                    && ForgeHelper.ValidateSelfModification(AllowSelfImpact,
-                       impactData.SourcedModifier.Derivation.GetSource(), impactData.Target.ToGAS())
+                       impactData.SourcedModifier.Carrier.GetOrigin().GetSource(), impactData.Target.ToGAS())
                    && ForgeHelper.ValidateImpactTypes(AnyImpactType, 
-                       impactData.SourcedModifier.Derivation.GetImpactTypes(), ImpactType)
+                       impactData.SourcedModifier.Carrier.GetImpactTypes(), ImpactType)
                    && ForgeHelper.ValidateImpactTargets(ImpactTarget, impactData.RealImpact, ImpactTargetExclusive)
                    && ForgeHelper.ValidateSignPolicy(ImpactSign, ImpactTarget, impactData.RealImpact);
         }

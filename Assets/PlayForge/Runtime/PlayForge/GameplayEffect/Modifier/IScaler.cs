@@ -4,21 +4,21 @@ namespace FarEmerald.PlayForge
 {
     public interface IScaler
     {
-        public void Initialize(IAttributeImpactDerivation deriv);
-        public float Evaluate(IAttributeImpactDerivation deriv);
+        public void Initialize(IAttributeImpactCarrier deriv);
+        public float Evaluate(IAttributeImpactCarrier deriv);
 
         public static CustomScaler Generate()
         {
             return new CustomScaler(InitFunc, EvalFunc);
 
-            void InitFunc(IAttributeImpactDerivation spec)
+            void InitFunc(IAttributeImpactCarrier spec)
             {
             }
 
-            float EvalFunc(IAttributeImpactDerivation spec) => spec.GetEffectDerivation().GetLevel().Ratio;
+            float EvalFunc(IAttributeImpactCarrier spec) => spec.GetOrigin().GetLevel().Ratio;
         }
 
-        public static CustomScaler Generate(Action<IAttributeImpactDerivation> initAction, Func<IAttributeImpactDerivation, float> evalFunc)
+        public static CustomScaler Generate(Action<IAttributeImpactCarrier> initAction, Func<IAttributeImpactCarrier, float> evalFunc)
         {
             return new CustomScaler(initAction, evalFunc);
         }
@@ -27,20 +27,20 @@ namespace FarEmerald.PlayForge
 
     public class CustomScaler : IScaler
     {
-        private Action<IAttributeImpactDerivation> InitializationAction;
-        private Func<IAttributeImpactDerivation, float> EvaluationFunc;
+        private Action<IAttributeImpactCarrier> InitializationAction;
+        private Func<IAttributeImpactCarrier, float> EvaluationFunc;
 
-        public CustomScaler(Action<IAttributeImpactDerivation> initializationAction, Func<IAttributeImpactDerivation, float> evaluationFunc)
+        public CustomScaler(Action<IAttributeImpactCarrier> initializationAction, Func<IAttributeImpactCarrier, float> evaluationFunc)
         {
             InitializationAction = initializationAction;
             EvaluationFunc = evaluationFunc;
         }
 
-        public void Initialize(IAttributeImpactDerivation deriv)
+        public void Initialize(IAttributeImpactCarrier deriv)
         {
             InitializationAction(deriv);
         }
-        public float Evaluate(IAttributeImpactDerivation deriv)
+        public float Evaluate(IAttributeImpactCarrier deriv)
         {
             return EvaluationFunc(deriv);
         }

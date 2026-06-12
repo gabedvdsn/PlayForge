@@ -10,7 +10,7 @@ namespace FarEmerald.PlayForge
 
         protected void ApplyEffects(ITarget target)
         {
-            foreach (var effect in Effects) target.ApplyGameplayEffect(target.GenerateEffectSpec(Origin, effect));
+            foreach (var effect in Effects) target.ApplyCarrier(target.GenerateEffectSpec(Origin, effect));
         }
     }
 }

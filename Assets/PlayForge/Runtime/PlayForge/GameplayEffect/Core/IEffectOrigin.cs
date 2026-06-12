@@ -7,7 +7,7 @@ namespace FarEmerald.PlayForge
     /// </summary>
     public interface IEffectOrigin : IAffiliated
     {
-        public ISource GetOwner();
+        public ISource GetSource();
         public IHasReadableDefinition GetReadableDefinition();
         public List<Tag> GetContextTags();
         public Tag GetAssetTag();
@@ -39,7 +39,7 @@ namespace FarEmerald.PlayForge
             Owner = owner;
         }
 
-        public ISource GetOwner()
+        public ISource GetSource()
         {
             return Owner;
         }

@@ -31,10 +31,10 @@ namespace FarEmerald.PlayForge
         // ═══════════════════════════════════════════════════════════════════════════
 
         [Tooltip("When disabled, the effect will not tick periodically. TickOnApplication is still respected.")]
-        public bool EnablePeriodicTicks = true;
+        public bool EnablePeriodicTicks = false;
         
         [Tooltip("Execute effect impact immediately on application (before any periodic ticks).")]
-        public bool TickOnApplication;
+        public bool TickOnApplication = true;
 
         [ScalerOperationKeyword("Ticks")]
         public ScalerIntegerMagnitudeOperation TicksOperation;
@@ -53,7 +53,7 @@ namespace FarEmerald.PlayForge
         // Re-Application
         // ═══════════════════════════════════════════════════════════════════════════
 
-        public EEffectReApplicationPolicy ReApplicationPolicy;
+        public EEffectReApplicationPolicy ReApplicationPolicy = EEffectReApplicationPolicy.AppendNewContainer;
         public EEffectInteractionPolicy ReApplicationInteraction = EEffectInteractionPolicy.DoNothing;
         
         // ═══════════════════════════════════════════════════════════════════════════
@@ -169,7 +169,7 @@ namespace FarEmerald.PlayForge
         // Getters
         // ═══════════════════════════════════════════════════════════════════════════
 
-        public float GetDeltaTime(IAttributeImpactDerivation spec)
+        public float GetDeltaTime(IAttributeImpactCarrier spec)
         {
             float dt = Time.deltaTime;
             return DeltaTimeScaler is null 
@@ -177,7 +177,7 @@ namespace FarEmerald.PlayForge
                 : ForgeHelper.MagnitudeAndScalerOperation(dt, DeltaTimeScaler.Evaluate(spec), RealDeltaTime);
         }
 
-        public float GetTotalDuration(IAttributeImpactDerivation spec)
+        public float GetTotalDuration(IAttributeImpactCarrier spec)
         {
             if (DurationPolicy == EEffectDurationPolicy.Infinite) return float.MaxValue;
             

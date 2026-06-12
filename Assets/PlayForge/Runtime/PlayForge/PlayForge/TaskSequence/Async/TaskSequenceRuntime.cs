@@ -194,7 +194,7 @@ namespace FarEmerald.PlayForge
                         CompletedSuccessfully = false;
                         if (Definition.Metadata?.EnableErrorLogging ?? true)
                         {
-                            Debug.LogError($"[TaskSequence] {Definition.Metadata?.Name ?? "Unnamed"} {(!string.IsNullOrEmpty(Data.Path) ? $"({Data.Path})" : "")} failed: {ex}");
+                            Debug.LogError($"[TaskSequence] {Definition.Metadata?.Name ?? "Unnamed"} {(!string.IsNullOrEmpty(Data.Path) ? $"({Data.Path})" : "")} failed: {FailureException}");
                         }
                     }
                 }
@@ -265,7 +265,7 @@ namespace FarEmerald.PlayForge
                 {
                     break;
                 }
-                
+
                 token.ThrowIfCancellationRequested();
                 
                 var stage = Definition.Stages[StageIndex];

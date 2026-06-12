@@ -6,7 +6,7 @@ namespace FarEmerald.PlayForge
 {
     public struct SourcedModifiedAttributeValue
     {
-        public IAttributeImpactDerivation Derivation;
+        public IAttributeImpactCarrier Carrier;
         
         public float CurrentValue;
         public float BaseValue;
@@ -14,19 +14,21 @@ namespace FarEmerald.PlayForge
         public bool ImpactIsWorkable;
 
         public ESignPolicy SignPolicy => ForgeHelper.SignPolicy(CurrentValue, BaseValue);
+        public ISource Source => Carrier.GetOrigin().GetSource();
+        public ITarget Target => Carrier.GetTarget();
 
         public SourcedModifiedAttributeValue(SourcedModifiedAttributeValue derivation, float currentValue, float baseValue, bool impactIsWorkable = true)
         {
-            Derivation = derivation.Derivation;
+            Carrier = derivation.Carrier;
             CurrentValue = currentValue;
             BaseValue = baseValue;
 
             ImpactIsWorkable = impactIsWorkable;
         }
         
-        public SourcedModifiedAttributeValue(IAttributeImpactDerivation derivation, float currentValue, float baseValue, bool impactIsWorkable = true)
+        public SourcedModifiedAttributeValue(IAttributeImpactCarrier carrier, float currentValue, float baseValue, bool impactIsWorkable = true)
         {
-            Derivation = derivation;
+            this.Carrier = carrier;
             
             CurrentValue = currentValue;
             BaseValue = baseValue;
@@ -36,7 +38,7 @@ namespace FarEmerald.PlayForge
 
         public static SourcedModifiedAttributeValue GenerateSimple(ISource source, IAttribute attribute, float currentValue, float baseValue)
         {
-            var derivation = IAttributeImpactDerivation.GenerateSourceDerivation(source, attribute, Tags.IgnoreRetention, new List<Tag>() { Tags.DisallowImpact });
+            var derivation = IAttributeImpactCarrier.GenerateSourceDerivation(source, attribute, Tags.IgnoreRetention, new List<Tag>() { Tags.DisallowImpact });
             return new SourcedModifiedAttributeValue(derivation, currentValue, baseValue, false);
         }
         
@@ -44,13 +46,13 @@ namespace FarEmerald.PlayForge
         
         public SourcedModifiedAttributeValue Combine(SourcedModifiedAttributeValue other, bool allowMismatchedDerivation = false)
         {
-            if (other.Derivation != Derivation && !allowMismatchedDerivation)
+            if (other.Carrier != Carrier && !allowMismatchedDerivation)
             {
                 return this;
             }
             
             return new SourcedModifiedAttributeValue(
-                Derivation,
+                Carrier,
                 CurrentValue + other.CurrentValue, 
                 BaseValue + other.BaseValue
             );
@@ -59,7 +61,7 @@ namespace FarEmerald.PlayForge
         public SourcedModifiedAttributeValue Negate()
         {
             return new SourcedModifiedAttributeValue(
-                Derivation,
+                Carrier,
                 -CurrentValue,
                 -BaseValue
             );
@@ -76,7 +78,7 @@ namespace FarEmerald.PlayForge
         public SourcedModifiedAttributeValue Add(AttributeValue operand)
         {
             return new SourcedModifiedAttributeValue(
-                Derivation,
+                Carrier,
                 CurrentValue + operand.CurrentValue,
                 BaseValue + operand.BaseValue
             );
@@ -85,7 +87,7 @@ namespace FarEmerald.PlayForge
         public SourcedModifiedAttributeValue Multiply(AttributeValue operand)
         {
             return new SourcedModifiedAttributeValue(
-                Derivation,
+                Carrier,
                 CurrentValue * operand.CurrentValue,
                 BaseValue * operand.BaseValue
             );
@@ -94,7 +96,7 @@ namespace FarEmerald.PlayForge
         public SourcedModifiedAttributeValue Override(AttributeValue operand)
         {
             return new SourcedModifiedAttributeValue(
-                Derivation,
+                Carrier,
                 operand.CurrentValue,
                 operand.BaseValue
             );
@@ -106,7 +108,7 @@ namespace FarEmerald.PlayForge
         {
             //if (Derivation is null && BaseDerivation is null) return $"[ SMAV-INSTANT ] {CurrentValue}/{BaseValue}";
             //if (Derivation is null) return $"[ SMAV-{BaseDerivation.GetEffectDerivation().GetName()} ] {CurrentValue}/{BaseValue}";
-            return $"[ SMAV-{Derivation.GetEffectDerivation().GetReadableDefinition().GetName()} ] {CurrentValue}/{BaseValue}";
+            return $"[ SMAV-{Carrier.GetOrigin().GetReadableDefinition().GetName()} ] {CurrentValue}/{BaseValue}";
         }
     }
 

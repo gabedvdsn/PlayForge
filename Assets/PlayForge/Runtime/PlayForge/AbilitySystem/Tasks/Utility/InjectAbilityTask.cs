@@ -13,7 +13,7 @@ namespace FarEmerald.PlayForge
         public override bool IsCriticalSection => false;
         public override UniTask Activate(AbilityDataPacket data, CancellationToken token)
         {
-            if (data.EffectOrigin.GetOwner().FindAbilitySystem(out var asc)
+            if (data.EffectOrigin.GetSource().FindAbilitySystem(out var asc)
                 && data.EffectOrigin is AbilitySpec spec) asc.Inject(spec.Base, Injection);
             
             return UniTask.CompletedTask;

@@ -8,12 +8,12 @@ namespace FarEmerald.PlayForge
     /// </summary>
     public class SimpleScaler : AbstractScaler
     {
-        public override void Initialize(IAttributeImpactDerivation deriv)
+        public override void Initialize(IAttributeImpactCarrier deriv)
         {
             // No initialization needed
         }
         
-        public override float Evaluate(IAttributeImpactDerivation deriv)
+        public override float Evaluate(IAttributeImpactCarrier deriv)
         {
             return EvaluateFromSpec(deriv);
         }

@@ -55,7 +55,7 @@ namespace FarEmerald.PlayForge
             if (!data.TryGetLoadedAssets<GameplayEffect>(query, out var effects)) return false;
             if (data is not AbilityDataPacket adp) return false;
 
-            foreach (var effect in effects) target.ApplyGameplayEffect(target.GenerateEffectSpec(adp.EffectOrigin, effect));
+            foreach (var effect in effects) target.ApplyCarrier(target.GenerateEffectSpec(adp.EffectOrigin, effect));
             return true;
         }
         
@@ -64,7 +64,7 @@ namespace FarEmerald.PlayForge
             if (target is null) return false;
             if (!data.TryGetLoadedAssets<GameplayEffect>(query, out var effects)) return false;
 
-            foreach (var effect in effects) target.ApplyGameplayEffect(target.GenerateEffectSpec(data.EffectOrigin, effect));
+            foreach (var effect in effects) target.ApplyCarrier(target.GenerateEffectSpec(data.EffectOrigin, effect));
             return true;
         }
 

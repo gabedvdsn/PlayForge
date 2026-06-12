@@ -17,16 +17,16 @@ namespace FarEmerald.PlayForge
         public void ApplyUsageEffects()
         {
             // Apply cost and cooldown effects
-            if (Base.Cooldown is not null) 
-                Source.ApplyGameplayEffect(Source.GenerateEffectSpec(this, Base.Cooldown));
+            if (Base.Cooldown is not null)
+                Source.ApplyCarrier(Source.GenerateEffectSpec(this, Base.Cooldown));
 
-            if (Base.Cost is not null) 
-                Source.ApplyGameplayEffect(Source.GenerateEffectSpec(this, Base.Cost));
+            if (Base.Cost is not null)
+                Source.ApplyCarrier(Source.GenerateEffectSpec(this, Base.Cost));
         }
             
         public bool ValidateSourceActivationRequirements(AbilityDataPacket data)
         {
-            var owner = data.EffectOrigin.GetOwner();
+            var owner = data.EffectOrigin.GetSource();
             return Base.SourceActivationRules.All(rule => rule.Validate(data, () => owner, out _));
         }
 
@@ -37,7 +37,7 @@ namespace FarEmerald.PlayForge
                    && Base.Tags.ValidateTargetRequirements(target) ;
         }
 
-        public override ISource GetOwner() => Source;
+        public override ISource GetSource() => Source;
         public override IHasReadableDefinition GetReadableDefinition()
         {
             return Base;

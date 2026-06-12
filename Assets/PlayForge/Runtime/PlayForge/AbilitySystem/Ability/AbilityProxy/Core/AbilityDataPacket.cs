@@ -53,7 +53,7 @@ namespace FarEmerald.PlayForge
             
             AddPayload(
                 Tags.SOURCE,
-                effectOrigin.GetOwner()
+                effectOrigin.GetSource()
             );
         }
 
@@ -70,10 +70,10 @@ namespace FarEmerald.PlayForge
 
             if (useImplicitTargeting)
             {
-                data.SetPrimary(implicitTargetingTag, spec.GetOwner().GetTargetingPacket());
+                data.SetPrimary(implicitTargetingTag, spec.GetSource().GetTargetingPacket());
             }
 
-            data.AppendPath($"GAS[{spec.GetOwner().GetName()}]");
+            data.AppendPath($"GAS[{spec.GetSource().GetName()}]");
             data.AppendPath($"Ability[{spec.GetReadableDefinition().GetName()}]");
             return data;
         }

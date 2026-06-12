@@ -953,10 +953,10 @@ namespace FarEmerald.PlayForge.Extended.Editor
         protected const string UnnamedAssetTag = "Unnamed";
         protected const string UnknownAssetName = "Error";
         
-        protected (string result, bool isUnknown) GenerateAssetTag(string assetName, string typeName)
+        protected (string result, string display, bool isUnknown) GenerateAssetTag(string assetName, string typeName)
         {
             if (string.IsNullOrEmpty(assetName))
-                return ($"{UnnamedAssetTag} {typeName}!", true);
+                return ($"{UnnamedAssetTag} {typeName}!", UnnamedAssetTag, true);
             
             // Remove special characters (keep only alphanumeric and spaces)
             string cleaned = Regex.Replace(assetName, @"[^a-zA-Z0-9\s]", "");
@@ -982,22 +982,7 @@ namespace FarEmerald.PlayForge.Extended.Editor
                 result = $"{typeName}." + result;
             }
 
-            return string.IsNullOrEmpty(result) ? ($"{UnnamedAssetTag} {typeName}!", true) : (result, false);
-        }
-        
-        /// <summary>
-        /// Updates the Name field of a Tag based on the asset's display name.
-        /// </summary>
-        protected string UpdateTagName(ref Tag tag, string assetName, string typeName, string fallback)
-        {
-            var (generatedName, isUnknown) = GenerateAssetTag(assetName, fallback);
-            
-            if (!isUnknown)
-            {
-                tag.Name = generatedName;
-            }
-            
-            return generatedName;
+            return string.IsNullOrEmpty(result) ? ($"{UnnamedAssetTag} {typeName}!", UnnamedAssetTag, true) : (result, string.Join("", words), false);
         }
 
         // ═══════════════════════════════════════════════════════════════════════════

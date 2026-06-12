@@ -34,6 +34,7 @@ namespace FarEmerald.PlayForge.Extended.SwarmDefenderSample
         public GameplayEffect TestIntEffect;
         public GameplayEffect TestIntEffect2;
         public GameplayEffect TestIntEffect3;
+        public GameplayEffect TestIntEffect4;
         
         // ═══════════════════════════════════════════════════════════════════════
         // Inspector
@@ -129,6 +130,7 @@ namespace FarEmerald.PlayForge.Extended.SwarmDefenderSample
             if (hero && Input.IsKeyDown(Key.Digit1)) hero.ApplyGameplayEffect(hero.GenerateEffectSpec(hero, TestIntEffect));
             if (hero && Input.IsKeyDown(Key.Digit2)) hero.ApplyGameplayEffect(hero.GenerateEffectSpec(hero, TestIntEffect2));
             if (hero && Input.IsKeyDown(Key.Digit3)) hero.ApplyGameplayEffect(hero.GenerateEffectSpec(hero, TestIntEffect3));
+            if (hero && Input.IsKeyDown(Key.Digit4)) hero.ApplyGameplayEffect(hero.GenerateEffectSpec(hero, TestIntEffect4));
         }
 
         public override void WhenTerminate()
@@ -156,9 +158,6 @@ namespace FarEmerald.PlayForge.Extended.SwarmDefenderSample
             
             _healthAttr = AttributeRegistry.GetByName("Health");
             _xpAttr     = AttributeRegistry.GetByName("Experience");
-
-            Debug.Log(_healthAttr);
-            Debug.Log(_xpAttr);
             
             _gameData.SetPrimary(Tags.GAMEOBJECT, hero);
             _gameData.SetPrimary(SwarmTags.HERO, hero);

@@ -1170,6 +1170,7 @@ namespace FarEmerald.PlayForge.Extended.Editor
                 var tags = ability.Tags;
                 var assetTag = tags.AssetTag;
                 assetTag.Name = result.result;
+                assetTag.DisplayName = result.display;
                 tags.AssetTag = assetTag;
                 ability.Tags = tags;
             }

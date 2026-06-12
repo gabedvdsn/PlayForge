@@ -12,7 +12,7 @@ namespace FarEmerald.PlayForge
             {
                 new LambdaAction(_ =>
                 {
-                    Debug.Log($"Threshold is met: {ctx.Derivation}");
+                    Debug.Log($"Threshold is met: {ctx.Carrier}");
                 })
             };
         }

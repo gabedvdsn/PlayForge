@@ -8,6 +8,17 @@ namespace FarEmerald.PlayForge
         public void CommunicateTargetedIntent(AbstractGameplayMonoProcess entity);
         //public List<Tag> GetAffiliation();
         public bool ApplyGameplayEffect(GameplayEffectSpec spec);
+
+        /// <summary>
+        /// Apply any <see cref="ICarrierApplication"/> to this target. Default implementation
+        /// dispatches through <see cref="ApplyGameplayEffect"/> when the carrier is a
+        /// <see cref="GameplayEffectSpec"/> — preserving every existing call site during the
+        /// Origin/Carrier/Impacter cutover. Concrete <see cref="ITarget"/> implementations
+        /// can override later to handle other carrier kinds natively.
+        /// </summary>
+        public bool ApplyCarrier(ICarrierApplication carrier)
+            => carrier is GameplayEffectSpec spec && ApplyGameplayEffect(spec);
+
         public bool RemoveGameplayEffect(GameplayEffect effect);
         public GameplayEffectSpec GenerateEffectSpec(IEffectOrigin origin, GameplayEffect GameplayEffect);
         public IntValuePairClamped GetLevel(Tag key);

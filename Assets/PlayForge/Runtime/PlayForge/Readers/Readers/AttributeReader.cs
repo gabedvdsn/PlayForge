@@ -19,7 +19,7 @@ namespace FarEmerald.PlayForge
         public override void WhenUpdate()
         {
             if (Source is null) return;
-            if (!Source.GetAttributeSystem().TryGetAttributeValue(attribute, out AttributeValue attributeValue)) return;
+            if (!Source.TryGetAttributeValue(attribute, out var attributeValue)) return;
 
             Set(attributeValue);
         }
@@ -28,7 +28,7 @@ namespace FarEmerald.PlayForge
         {
             Source.GetAttributeSystem().Callbacks.OnAttributeChanged += data =>
             {
-                if (data.Attribute.Equals(attribute)) Set(Source.GetAttributeSystem().TryGetAttributeValue(attribute, out AttributeValue value) ? value : default);
+                if (data.Attribute.Equals(attribute)) Set(Source.TryGetAttributeValue(attribute, out var value) ? value : default);
             };
         }
 

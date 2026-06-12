@@ -27,7 +27,7 @@ namespace FarEmerald.PlayForge
             // If connection fails, interrupt ability
             WhenTargetingInvalid(data);
 
-            var abilitySystem = data.EffectOrigin.GetOwner().ToGAS().GetAbilitySystem();
+            var abilitySystem = data.EffectOrigin.GetSource().ToGAS().GetAbilitySystem();
             if (abilitySystem is not null && data.EffectOrigin is AbilitySpec spec)
             {
                 abilitySystem.Inject(spec.Base, InterruptSequenceInjection.Instance);

@@ -37,9 +37,8 @@ namespace FarEmerald.PlayForge
             if (priority.HasValue) Priority = priority.Value;
         }
         
-        public void Execute(IGameplayAbilitySystem system)
+        public void Execute(ISource system)
         {
-            Debug.Log($"Executing {_value.ToAttributeValue()}");
             _target.TryModifyAttribute(_attribute, _value, _runEvents);
         }
     }
@@ -74,10 +73,10 @@ namespace FarEmerald.PlayForge
             if (priority.HasValue) Priority = priority.Value;
         }
         
-        public void Execute(IGameplayAbilitySystem system)
+        public void Execute(ISource system)
         {
             var spec = _target.GenerateEffectSpec(_origin, _effect);
-            _target.ApplyGameplayEffect(spec);
+            _target.ApplyCarrier(spec);
         }
     }
     
@@ -108,7 +107,7 @@ namespace FarEmerald.PlayForge
             if (priority.HasValue) Priority = priority.Value;
         }
         
-        public void Execute(IGameplayAbilitySystem system)
+        public void Execute(ISource system)
         {
             _target.RemoveGameplayEffect(_effect);
         }
@@ -127,7 +126,7 @@ namespace FarEmerald.PlayForge
         public int Priority { get; set; } = ActionPriority.Normal;
         public abstract string Description { get; }
         
-        protected readonly IAttributeImpactDerivation Derivation;
+        protected readonly IAttributeImpactCarrier carrier;
         private readonly int _effectInstanceId;
         
         /// <summary>
@@ -137,20 +136,20 @@ namespace FarEmerald.PlayForge
         {
             get
             {
-                if (Derivation == null) return false;
+                if (carrier == null) return false;
                 
                 // Check if the effect derivation is still valid
-                var effectOrigin = Derivation.GetEffectDerivation();
+                var effectOrigin = carrier.GetOrigin();
                 return effectOrigin?.IsActive() ?? false;
             }
         }
         
-        protected EffectScopedAction(IAttributeImpactDerivation derivation)
+        protected EffectScopedAction(IAttributeImpactCarrier carrier)
         {
-            Derivation = derivation;
+            this.carrier = carrier;
         }
         
-        public abstract void Execute(IGameplayAbilitySystem system);
+        public abstract void Execute(ISource system);
     }
     
     // ═══════════════════════════════════════════════════════════════════════════
@@ -166,11 +165,11 @@ namespace FarEmerald.PlayForge
         public bool IsValid => _isValid?.Invoke() ?? true;
         public string Description { get; }
         
-        private readonly Action<IGameplayAbilitySystem> _action;
+        private readonly Action<ISource> _action;
         private readonly Func<bool> _isValid;
         
         public LambdaAction(
-            Action<IGameplayAbilitySystem> action,
+            Action<ISource> action,
             string description = "LambdaAction",
             int priority = ActionPriority.Normal,
             Func<bool> isValid = null)
@@ -181,7 +180,7 @@ namespace FarEmerald.PlayForge
             _isValid = isValid;
         }
         
-        public void Execute(IGameplayAbilitySystem system)
+        public void Execute(ISource system)
         {
             if (!_isValid?.Invoke() ?? false) return;
             _action.Invoke(system);
@@ -209,7 +208,7 @@ namespace FarEmerald.PlayForge
             _isValid = isValid;
         }
         
-        public void Execute(IGameplayAbilitySystem system)
+        public void Execute(ISource system)
         {
             if (!_isValid?.Invoke() ?? false) return;
             UnityEngine.Debug.Log(Log);
@@ -230,7 +229,7 @@ namespace FarEmerald.PlayForge
             _system = system;
         }
     
-        public void Execute(IGameplayAbilitySystem system)
+        public void Execute(ISource system)
         {
             // Mark as dead (fires callbacks, records in summary)
             _system.MarkDead();

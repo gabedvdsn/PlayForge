@@ -155,7 +155,7 @@ namespace FarEmerald.PlayForge
         /// </summary>
         private async UniTask ActivateTargetingViaSequence(CancellationToken token, AbilityDataPacket implicitData)
         {
-            var handler = implicitData.EffectOrigin.GetOwner();
+            var handler = implicitData.EffectOrigin.GetSource();
             if (!ProcessControl.Register(CompiledTargeting, handler, implicitData, out var relay))
             {
                 // Fallback to legacy if registration fails
@@ -263,7 +263,7 @@ namespace FarEmerald.PlayForge
             CompiledSequence.OnCriticalSectionExited = () => OnCriticalSectionExited?.Invoke();
 
             // AbilityDataPacket extends SequenceDataPacket, so pass it directly.
-            var handler = implicitData.EffectOrigin.GetOwner();
+            var handler = implicitData.EffectOrigin.GetSource();
             if (!ProcessControl.Register(CompiledSequence, handler, implicitData, out var relay))
             {
                 Debug.LogWarning("[AbilityProxy] Failed to register ability sequence with ProcessControl. " +
@@ -313,7 +313,7 @@ namespace FarEmerald.PlayForge
             // Legacy injection path
             var _success = CompiledSequence.Inject(injection);
 
-            var owner = activeData.EffectOrigin.GetOwner();
+            var owner = activeData.EffectOrigin.GetSource();
             if (!owner.FindAbilitySystem(out var asc)) return;
 
             var stageSafe = (StageIndex >= 0 && StageIndex < Behaviour.Stages.Count)
@@ -334,7 +334,7 @@ namespace FarEmerald.PlayForge
             AbilityDataPacket activeData,
             bool success)
         {
-            var owner = activeData.EffectOrigin.GetOwner();
+            var owner = activeData.EffectOrigin.GetSource();
             if (!owner.FindAbilitySystem(out var asc)) return;
 
             var stageSafe = GetCurrentAbilityStage();
@@ -413,7 +413,7 @@ namespace FarEmerald.PlayForge
             bool isCriticalStage = stage.Tasks.Any(t => t.IsCriticalSection);
             if (isCriticalStage) _activeCriticalStages++;
 
-            var asc = data.EffectOrigin.GetOwner().ToGAS().GetAbilitySystem();
+            var asc = data.EffectOrigin.GetSource().ToGAS().GetAbilitySystem();
             if (asc is null)
             {
                 if (isCriticalStage)

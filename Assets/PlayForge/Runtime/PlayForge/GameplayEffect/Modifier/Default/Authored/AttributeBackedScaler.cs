@@ -22,7 +22,7 @@ namespace FarEmerald.PlayForge
         [Tooltip("Use base or current attribute value")]
         public EAttributeTargetBinary CaptureWhat = EAttributeTargetBinary.Current;
         
-        public override void Initialize(IAttributeImpactDerivation deriv)
+        public override void Initialize(IAttributeImpactCarrier deriv)
         {
             if (CaptureWhen != ECaptureAttributeWhen.OnCreation) return;
             if (CaptureAttribute is null) return;
@@ -30,15 +30,13 @@ namespace FarEmerald.PlayForge
             switch (CaptureFrom)
             {
                 case ESourceTarget.Source:
-                    if (!deriv.GetSource().FindAttributeSystem(out var sourceAttr) || 
-                        !sourceAttr.TryGetAttributeValue(CaptureAttribute, out AttributeValue sourceValue)) 
+                    if (!deriv.GetOrigin().GetSource().TryGetAttributeValue(CaptureAttribute, out var sourceValue)) 
                         break;
                     deriv.GetSourcedCapturedAttributes()[this] = sourceValue;
                     break;
                     
                 case ESourceTarget.Target:
-                    if (!deriv.GetTarget().FindAttributeSystem(out var targetAttr) || 
-                        !targetAttr.TryGetAttributeValue(CaptureAttribute, out AttributeValue targetValue)) 
+                    if (!deriv.GetTarget().TryGetAttributeValue(CaptureAttribute, out var targetValue)) 
                         break;
                     deriv.GetSourcedCapturedAttributes()[this] = targetValue;
                     break;
@@ -48,14 +46,14 @@ namespace FarEmerald.PlayForge
             }
         }
         
-        public override float Evaluate(IAttributeImpactDerivation deriv)
+        public override float Evaluate(IAttributeImpactCarrier deriv)
         {
             float attributeValue = GetAttributeValue(deriv);
 
             return ApplyBehaviourEvaluation(deriv, attributeValue);
         }
         
-        private float GetAttributeValue(IAttributeImpactDerivation deriv)
+        private float GetAttributeValue(IAttributeImpactCarrier deriv)
         {
             // Use captured value if captured on creation
             if (CaptureWhen == ECaptureAttributeWhen.OnCreation)
@@ -76,11 +74,10 @@ namespace FarEmerald.PlayForge
             
             // Get live attribute value
             var entity = CaptureFrom == ESourceTarget.Source 
-                ? deriv.GetSource() 
+                ? deriv.GetOrigin().GetSource() 
                 : deriv.GetTarget();
             
-            if (!entity.FindAttributeSystem(out var attrSystem) || 
-                !attrSystem.TryGetAttributeValue(CaptureAttribute, out AttributeValue attrValue))
+            if (!entity.TryGetAttributeValue(CaptureAttribute, out var attrValue))
             {
                 return 0f;
             }

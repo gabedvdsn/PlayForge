@@ -18,7 +18,7 @@ namespace FarEmerald.PlayForge
             slc.Register(assetTag, level);
         }
         
-        public abstract ISource GetOwner();
+        public abstract ISource GetSource();
         public abstract IHasReadableDefinition GetReadableDefinition();
         public abstract List<Tag> GetContextTags();
         public abstract Tag GetAssetTag();

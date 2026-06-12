@@ -57,41 +57,6 @@ namespace FarEmerald.PlayForge
     }
     
     /// <summary>
-    /// Built-in analysis worker that watches an attribute and deactivates the entity when it reaches zero.
-    /// Common use case: death when health reaches 0.
-    /// </summary>
-    [Serializable]
-    public class AttributeWatcherAnalysisWorker : AbstractAnalysisWorker
-    {
-        public Attribute Target;
-        public bool DeactivateOnZero = true;
-        public bool DeactivateOnNegative = true;
-        
-        public override IEnumerable<IRootAction> Analyze(IGameplayAbilitySystem system, FrameSummary frameSummary)
-        {
-            if (Target == null) yield break;
-            if (!system.GetAttributeSystem().TryGetAttributeValue(Target, out AttributeValue value)) yield break;
-            
-            bool shouldDeactivate = false;
-            
-            if (DeactivateOnZero && value.CurrentValue == 0)
-                shouldDeactivate = true;
-            else if (DeactivateOnNegative && value.CurrentValue < 0)
-                shouldDeactivate = true;
-            
-            if (shouldDeactivate)
-            {
-                // Queue deactivation action
-                yield return new LambdaAction(
-                    sys => sys.ToGASObject()?.gameObject.SetActive(false),
-                    $"Deactivate({Target.Name} <= 0)",
-                    ActionPriority.Analysis
-                );
-            }
-        }
-    }
-    
-    /// <summary>
     /// Analysis worker that triggers callbacks based on attribute thresholds.
     /// </summary>
     [Serializable]
@@ -106,7 +71,7 @@ namespace FarEmerald.PlayForge
         {
             if (Target is null) yield break;
             if (TriggerOnce && HasTriggered(system)) yield break;
-            if (!system.GetAttributeSystem().TryGetAttributeValue(Target, out AttributeValue value)) yield break;
+            if (!system.TryGetAttributeValue(Target, out AttributeValue value)) yield break;
             
             bool conditionMet = Comparison switch
             {

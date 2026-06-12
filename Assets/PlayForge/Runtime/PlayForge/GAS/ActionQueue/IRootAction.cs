@@ -22,12 +22,12 @@
         /// Human-readable description for debugging and logging.
         /// </summary>
         string Description { get; }
-        
+
         /// <summary>
         /// Execute the action. Only called if IsValid returns true.
         /// May queue additional actions during execution.
         /// </summary>
         /// <param name="system">The gameplay ability system context</param>
-        void Execute(IGameplayAbilitySystem system);
+        void Execute(ISource system);
     }
 }

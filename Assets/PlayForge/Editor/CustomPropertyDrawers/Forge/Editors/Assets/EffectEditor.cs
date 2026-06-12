@@ -600,6 +600,7 @@ namespace FarEmerald.PlayForge.Extended.Editor
                 var tags = effect.Tags;
                 var assetTag = tags.AssetTag;
                 assetTag.Name = result.result;
+                assetTag.DisplayName = result.display;
                 tags.AssetTag = assetTag;
                 effect.Tags = tags;
             }

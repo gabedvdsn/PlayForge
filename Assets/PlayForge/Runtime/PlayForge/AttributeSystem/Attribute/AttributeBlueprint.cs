@@ -24,7 +24,7 @@ namespace FarEmerald.PlayForge
         public AttributeBlueprint(AttributeSetElement setElement, ISource owner)
         {
             SetElement = setElement;
-            Derivation = IAttributeImpactDerivation.GenerateSourceDerivation(owner, SetElement.Attribute);
+            Derivation = IAttributeImpactCarrier.GenerateSourceDerivation(owner, SetElement.Attribute);
         }
 
         public AttributeValue GetInitialValue(IReadOnlyDictionary<IAttribute, CachedAttributeValue> cache)

@@ -19,15 +19,16 @@ MonoBehaviour:
   - DurationSpecification.DurationOperation.Magnitude
   - DurationSpecification.EnablePeriodicTicks
   - DurationSpecification.TickOnApplication
-  - ImpactSpecification.ReverseImpactOnRemoval
   - ImpactSpecification.AttributeTarget
   - ImpactSpecification.ImpactOperation
   - ImpactSpecification.MagnitudeOperation.Magnitude
   - ImpactSpecification.MagnitudeOperation.RealMagnitude
   - DurationSpecification.ReApplicationPolicy
+  - ImpactSpecification.ReverseImpactOnRemoval
+  - ImpactSpecification.MultiplyBehaviour
   _templateListSnapshots: []
   Definition:
-    Name: Speed % Increase
+    Name: Increase Speed by 20% (Additive)
     Description: 
     Visibility:
       Name: Not Visibled2xuDNqtid9uamDM5aBXkxUexwFpJUF4d2xuDNqtid9uamDM5aBXk
@@ -38,14 +39,15 @@ MonoBehaviour:
       DisplayName: Ignore
   Tags:
     AssetTag:
-      Name: Effect.SpeedIncrease
-      DisplayName: 
+      Name: Effect.IncreaseSpeedBy20Additive
+      DisplayName: IncreaseSpeedBy20Additive
     ContextTags: []
     GrantedTags: []
   ImpactSpecification:
     AttributeTarget: {fileID: 11400000, guid: 9e3481fbb0007434d9416c20f647c10f, type: 2}
     TargetImpact: 0
     ImpactOperation: 1
+    MultiplyBehaviour: 1
     AffiliationPolicy: 3
     AffiliationComparison: 0
     Affiliations: []
@@ -60,7 +62,7 @@ MonoBehaviour:
   DurationSpecification:
     DurationPolicy: 1
     DurationOperation:
-      Magnitude: 2
+      Magnitude: 5
       RealMagnitude: 1
       Scaler:
         rid: -2

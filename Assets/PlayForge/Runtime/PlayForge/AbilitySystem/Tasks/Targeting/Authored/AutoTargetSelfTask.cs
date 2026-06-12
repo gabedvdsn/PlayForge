@@ -16,7 +16,7 @@ namespace FarEmerald.PlayForge
 
         public override UniTask Activate(AbilityDataPacket data, CancellationToken token)
         {
-            var owner = data.AbilitySpec.GetOwner();
+            var owner = data.AbilitySpec.GetSource();
             if (owner is ITarget selfTarget && TargetIsValid(selfTarget))
             {
                 data.SetTargetingPacket(Tags.TARGET, selfTarget.GetTargetingPacket());

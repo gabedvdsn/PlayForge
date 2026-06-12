@@ -15,7 +15,7 @@ namespace FarEmerald.PlayForge
         /// <param name="token"></param>
         public override async UniTask Activate(AbilityDataPacket data, CancellationToken token)
         {
-            var owner = data.EffectOrigin.GetOwner().ToGAS();
+            var owner = data.EffectOrigin.GetSource().ToGAS();
             if (owner is null) return;
 
             if (!owner.Data.TryGetAll(Tags.TARGETED_INTENT, out DataValue<IProxyTaskBehaviourUser> targetingUsers)) return;

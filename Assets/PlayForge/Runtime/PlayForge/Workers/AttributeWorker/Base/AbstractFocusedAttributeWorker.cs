@@ -60,7 +60,7 @@ namespace FarEmerald.PlayForge
         public override bool PreValidateWorkFor(ChangeValue change)
         {
             // Fast check: is this the right attribute?
-            return change.Value.Derivation.GetAttribute().Equals(TargetAttribute);
+            return change.Value.Carrier.GetAttribute().Equals(TargetAttribute);
         }
         
         public override bool ValidateWorkFor(WorkerContext ctx)
@@ -70,12 +70,12 @@ namespace FarEmerald.PlayForge
             
             // Context tags check
             if (!ForgeHelper.ValidateContextTags(AnyContextTag, ValidContextTags,
-                change.Value.Derivation.GetContextTags(), ContextMatchingPolicy))
+                change.Value.Carrier.GetContextTags(), ContextMatchingPolicy))
                 return false;
             
             // Self-modification check
             if (!ForgeHelper.ValidateSelfModification(AllowSelfModification,
-                change.Value.Derivation.GetSource(), system))
+                change.Value.Carrier.GetOrigin().GetSource(), system))
                 return false;
             
             // Impact target check (Current, Base, Both)
@@ -88,7 +88,7 @@ namespace FarEmerald.PlayForge
             
             // Impact type check
             if (!ForgeHelper.ValidateImpactTypes(AnyImpactType,
-                change.Value.Derivation.GetImpactTypes(), ImpactTypes))
+                change.Value.Carrier.GetImpactTypes(), ImpactTypes))
                 return false;
             
             return true;

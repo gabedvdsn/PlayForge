@@ -22,7 +22,7 @@ namespace FarEmerald.PlayForge
             relays = new List<ProcessRelay>();
             foreach (var p in Processes)
             {
-                if (!ProcessControl.Register(p, data.EffectOrigin.GetOwner(), out var relay)) continue;
+                if (!ProcessControl.Register(p, data.EffectOrigin.GetSource(), out var relay)) continue;
                 relays.Add(relay);
             }
         }

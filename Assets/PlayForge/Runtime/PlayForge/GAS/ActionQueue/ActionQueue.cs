@@ -88,10 +88,10 @@ namespace FarEmerald.PlayForge
         /// Process all queued actions.
         /// New actions queued during processing will be included in the same pass.
         /// </summary>
-        /// <param name="system">The gameplay ability system context</param>
+        /// <param name="system">The source system context</param>
         /// <param name="maxIterations">Safety limit to prevent infinite loops</param>
         /// <returns>Number of actions processed</returns>
-        public int ProcessAll(IGameplayAbilitySystem system, int maxIterations = 10000)
+        public int ProcessAll(ISource system, int maxIterations = 10000)
         {
             int iterations = 0;
             int executed = 0;

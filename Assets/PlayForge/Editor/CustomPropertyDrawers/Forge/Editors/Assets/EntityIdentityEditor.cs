@@ -1021,6 +1021,7 @@ namespace FarEmerald.PlayForge.Extended.Editor
             {
                 var assetTag = entity.AssetTag;
                 assetTag.Name = result.result;
+                assetTag.DisplayName = result.display;
                 entity.AssetTag = assetTag;
             }
         }

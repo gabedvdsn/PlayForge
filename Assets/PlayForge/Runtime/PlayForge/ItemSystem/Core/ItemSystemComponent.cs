@@ -57,7 +57,7 @@ namespace FarEmerald.PlayForge
         {
             if (item is null) return false;
             if (!allowDuplicateItems && HasItem(item)) return false;
-            if (ItemCount >= maxItemsOperation.Evaluate(IAttributeImpactDerivation.GenerateLevelerDerivation(Self, Self.GetLevel()))) return false;
+            if (ItemCount >= maxItemsOperation.Evaluate(IAttributeImpactCarrier.GenerateLevelerDerivation(Self, Self.GetLevel()))) return false;
 
             return true;
         }
@@ -66,7 +66,7 @@ namespace FarEmerald.PlayForge
         {
             if (!allowDuplicateEquippedItems && IsItemEquipped(item)) return false;
             if (EquippedItemCount >=
-                maxEquippedItemsOperation.Evaluate(IAttributeImpactDerivation.GenerateLevelerDerivation(Self, Self.GetLevel()))) return false;
+                maxEquippedItemsOperation.Evaluate(IAttributeImpactCarrier.GenerateLevelerDerivation(Self, Self.GetLevel()))) return false;
 
             return true;
         }

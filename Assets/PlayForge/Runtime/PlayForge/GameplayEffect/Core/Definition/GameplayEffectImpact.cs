@@ -14,18 +14,39 @@ namespace FarEmerald.PlayForge
         public Attribute AttributeTarget;
         public EAttributeTarget TargetImpact;
         public ECalculationOperation ImpactOperation = ECalculationOperation.Add;
-        
+
+        /// <summary>
+        /// Only meaningful when <see cref="ImpactOperation"/> is Multiply. Controls how this
+        /// multiply impacter composes with multiply impacters from OTHER carriers acting on
+        /// the same attribute slot. See <see cref="EMultiplyBehaviour"/> for semantics.
+        /// </summary>
+        public EMultiplyBehaviour MultiplyBehaviour = EMultiplyBehaviour.Multiplicative;
+
         public EAffiliationPolicy AffiliationPolicy = EAffiliationPolicy.AlwaysAllow;
         public EAnyAllPolicy AffiliationComparison = EAnyAllPolicy.Any;
         [ForgeTagContext(ForgeContext.Affiliation)] public List<Tag> Affiliations = new List<Tag>();
-        
-        [ForgeTagContext(ForgeContext.Impact)] 
+
+        [ForgeTagContext(ForgeContext.Impact)]
         public List<Tag> ImpactTypes;
+
+        /// <summary>
+        /// Drives both the retention rule and the per-tick rollback path:
+        /// <list type="bullet">
+        ///   <item>For Current-only impacters, set true to be retained as a sustained modifier
+        ///   (auto-reverses on removal via Recompute).</item>
+        ///   <item>For periodic-tick contributions committed past the impacter list, set true
+        ///   to enqueue a synthetic rollback carrier on container removal that subtracts
+        ///   <see cref="TrackedImpact"/> from the attribute's one-shot history.</item>
+        ///   <item>Redundant for Base-touching impacters (Base contributions are always retained).
+        ///   The drawer flags this with a warning.</item>
+        ///   <item>Meaningless for instant-policy effects (no removal phase). Drawer hides.</item>
+        /// </list>
+        /// </summary>
         public bool ReverseImpactOnRemoval;
-        
+
         [ScalerOperationKeyword("Magnitude")]
         public ScalerMagnitudeOperation MagnitudeOperation;
-        
+
         public ContainedEffectPacket[] Packets;
 
         public GameplayEffectImpact()
@@ -37,6 +58,7 @@ namespace FarEmerald.PlayForge
             AttributeTarget = o.AttributeTarget;
             TargetImpact = o.TargetImpact;
             ImpactOperation = o.ImpactOperation;
+            MultiplyBehaviour = o.MultiplyBehaviour;
             AffiliationPolicy = o.AffiliationPolicy;
             ImpactTypes = o.ImpactTypes;
             ReverseImpactOnRemoval = o.ReverseImpactOnRemoval;

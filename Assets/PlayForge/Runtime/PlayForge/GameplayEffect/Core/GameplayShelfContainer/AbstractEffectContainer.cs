@@ -60,21 +60,51 @@ namespace FarEmerald.PlayForge
         public virtual void OnRemove()
         {
             ContainerIsActive = false;
-            if (Spec.Base.ImpactSpecification.ReverseImpactOnRemoval)
+
+            var attribute = Spec.Base.ImpactSpecification.AttributeTarget;
+            AttributeSystemComponent attrSystem = null;
+            bool foundAttrSys = attribute && (Spec.Target?.FindAttributeSystem(out attrSystem) ?? false);
+
+            // Containers only exist for durational/infinite effects, so the spec is in
+            // exactly one of two modes (see ICarrierApplication.IsSustainedModifier):
+            //   • Mode A — sustained modifier  → it was retained.
+            //   • Mode B — tick-delivered      → it committed one-shot per tick.
+            bool wasSustainedModifier = Spec.IsSustainedModifier();
+
+            // ─── Mode A reversal — drop from the retained list ───────────────
+            // RemoveCarrier triggers Recompute, which re-derives ActiveValue without
+            // the spec's impacters. That IS the reversal for sustained modifiers.
+            // Skipped for Mode B specs: they were never retained, so there's nothing
+            // to remove and the recompute would be a pure no-op.
+            if (wasSustainedModifier && foundAttrSys)
             {
-                AttributeValue negatedImpact = Spec.TrackedImpact.Total.Negate();
-                Spec.Source.GetActionQueue().Enqueue(new ModifyAttributeAction(
-                    Spec.Source, Spec.Base.ImpactSpecification.AttributeTarget,
-                    new SourcedModifiedAttributeValue(Spec,
-                        negatedImpact.CurrentValue, negatedImpact.BaseValue,
-                        false),
-                    false
-                ));
+                attrSystem.RemoveAttributeDerivation(Spec);
             }
-            
+
+            // ─── Mode B reversal — roll back the cumulative tick history ─────
+            // Tick-delivered specs committed each tick one-shot into the attribute's
+            // committedOneShotDelta. TrackedImpact.Total is exactly the sum of those
+            // commits, so subtracting it "undoes every tick this spec ever ran."
+            //
+            // Gated on !wasSustainedModifier: a Mode A spec's TrackedImpact.Total is
+            // its apply-time retained contribution (also non-zero!), and that was
+            // ALREADY reversed by the RemoveAttributeDerivation above — rolling it back
+            // again here would double-undo.
+            if (!wasSustainedModifier
+                && Spec.Base.ImpactSpecification.ReverseImpactOnRemoval
+                && foundAttrSys
+                && attrSystem.TryGetCachedValue(attribute, out var cachedAttr))
+            {
+                AttributeValue tickedTotal = Spec.TrackedImpact?.Total ?? default;
+                if (tickedTotal.CurrentValue != 0f || tickedTotal.BaseValue != 0f)
+                {
+                    cachedAttr.RollbackCommittedDelta(tickedTotal, attrSystem.GetAttributeCache());
+                }
+            }
+
             foreach (var containedEffect in Spec.Base.ImpactSpecification.GetContainedEffects(EApplyTickRemove.OnRemove))
             {
-                Spec.Source.ApplyGameplayEffect(Spec.Source.GenerateEffectSpec(Spec.Origin, containedEffect));
+                Spec.Source.ApplyCarrier(Spec.Source.GenerateEffectSpec(Spec.Origin, containedEffect));
             }
         }
         public override string ToString()

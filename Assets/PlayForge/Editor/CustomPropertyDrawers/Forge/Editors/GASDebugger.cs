@@ -955,10 +955,10 @@ namespace FarEmerald.PlayForge.Extended.Editor
             _detailsScroll.Add(CreateEntityInfoSection());
             _detailsScroll.Add(CreateAttributesSection());
             _detailsScroll.Add(CreateAbilitiesSection());
-            _detailsScroll.Add(CreateTagsSection());
             _detailsScroll.Add(CreateEffectsSection());
-            _detailsScroll.Add(CreateFrameSummarySection());
+            _detailsScroll.Add(CreateTagsSection());
             _detailsScroll.Add(CreateWorkersSection());
+            _detailsScroll.Add(CreateFrameSummarySection());
 
             // Restore scroll position after layout is recalculated.
             // Using GeometryChangedEvent once so we only set it after the
@@ -1142,7 +1142,7 @@ namespace FarEmerald.PlayForge.Extended.Editor
             }
             else // Received
             {
-                counterparty = ResolveDisplayNameFor(impact.SourcedModifier.Derivation?.GetSource());
+                counterparty = ResolveDisplayNameFor(impact.SourcedModifier.Carrier?.GetOrigin().GetSource());
             }
 
             string text = $"{attrName} {sign}{delta:F2}  ({(direction == "Dealt" ? "→" : "←")} {counterparty})";
@@ -1275,7 +1275,7 @@ namespace FarEmerald.PlayForge.Extended.Editor
 
             if (data.Affiliation != null && data.Affiliation.Count > 0)
             {
-                var affiliationStr = string.Join(", ", data.Affiliation.Select(t => t.GetName()));
+                var affiliationStr = string.Join(", ", data.Affiliation.Select(t => t.DisplayName));
                 section.Add(CreateInfoRow("Affiliation", affiliationStr, TagColor));
             }
 
@@ -1460,8 +1460,8 @@ namespace FarEmerald.PlayForge.Extended.Editor
                 style = { color = DerivationColor, fontSize = 10, unityFontStyleAndWeight = FontStyle.Bold, marginTop = 4, marginBottom = 4 }
             });
 
-            var retainedValues = cached.RetainedValues;
-            if (retainedValues == null || retainedValues.Count == 0)
+            var retainedGroups = cached.RetainedGroups;
+            if (retainedGroups == null || retainedGroups.Count == 0)
             {
                 panel.Add(new Label("No derivations")
                 {
@@ -1470,14 +1470,14 @@ namespace FarEmerald.PlayForge.Extended.Editor
             }
             else
             {
-                foreach (var kvp in retainedValues)
+                foreach (var kvp in retainedGroups)
                     panel.Add(CreateDerivationGroupRow(kvp.Key, kvp.Value));
             }
 
             return panel;
         }
 
-        private VisualElement CreateDerivationGroupRow(Tag groupTag, RetainedCachedValue rcv)
+        private VisualElement CreateDerivationGroupRow(Tag groupTag, RetainedGroup rg)
         {
             var group = new VisualElement
             {
@@ -1489,43 +1489,47 @@ namespace FarEmerald.PlayForge.Extended.Editor
                 style = { flexDirection = FlexDirection.Row, alignItems = Align.Center, marginBottom = 2 }
             };
 
-            string groupName = $"{groupTag.GetName()} {(rcv.Derivations.Count > 0 ? !rcv.HasDerivations ? "(All Zombified)" : string.Empty : "(No Derivations)")}";
+            string groupName = $"{groupTag.DisplayName} {(rg.Carriers.Count > 0 ? string.Empty : "(No Carriers)")}";
             header.Add(new Label(groupName)
             {
                 style = { color = DerivationColor, fontSize = 10, unityFontStyleAndWeight = FontStyle.Bold, flexGrow = 1 }
             });
-            header.Add(new Label($"Total: {FormattedValueString(rcv.Value)}")
+            header.Add(new Label($"Carriers: {rg.Carriers.Count}")
             {
                 style = { color = AttributeColor, fontSize = 9 }
             });
             group.Add(header);
 
-            if (rcv.Derivations != null)
+            foreach (var carrier in rg.Carriers)
             {
-                foreach (var derivKvp in rcv.Derivations)
+                var derivRow = new VisualElement
                 {
-                    var derivRow = new VisualElement
-                    {
-                        style = { flexDirection = FlexDirection.Row, alignItems = Align.Center, paddingLeft = 8, marginBottom = 1 }
-                    };
+                    style = { flexDirection = FlexDirection.Row, alignItems = Align.Center, paddingLeft = 8, marginBottom = 1 }
+                };
 
-                    string sourceName = derivKvp.Key?.GetCacheKey().GetName() ?? "Unknown";
-                    derivRow.Add(new Label($"\u2022 {sourceName}")
+                string sourceName = carrier?.GetReadableDefinition().GetName() ?? "Unknown";
+                derivRow.Add(new Label($"\u2022 {sourceName}")
+                {
+                    style = { color = new Color(0.6f, 0.6f, 0.6f), fontSize = 9 }
+                });
+
+                if (!carrier?.DerivationAlive() ?? false)
+                    derivRow.Add(CreateBadge("Zombie", ForgeDrawerStyles.Colors.BorderLight, "Impact carrier origin no longer exists."));
+
+                // Impacter summary \u2014 shows op + slot per impacter so designers can audit
+                // which carriers are contributing what without diving into the inspector.
+                var impacters = carrier?.GetImpacters();
+                if (impacters != null && impacters.Count > 0)
+                {
+                    derivRow.Add(new Label($" [{impacters.Count} impacter{(impacters.Count == 1 ? "" : "s")}]")
                     {
-                        style = { color = new Color(0.6f, 0.6f, 0.6f), fontSize = 9 }
+                        style = { color = new Color(0.5f, 0.55f, 0.6f), fontSize = 9 }
                     });
-
-                    if (!derivKvp.Key?.DerivationAlive() ?? false)
-                        derivRow.Add(CreateBadge("Zombie", ForgeDrawerStyles.Colors.BorderLight, "Attribute source no longer exists."));
-
-                    derivRow.Add(new VisualElement { style = { flexGrow = 1 } });
-                    derivRow.Add(new Label(FormattedValueString(derivKvp.Value))
-                    {
-                        style = { color = new Color(0.7f, 0.7f, 0.7f), fontSize = 9 }
-                    });
-
-                    group.Add(derivRow);
                 }
+
+                derivRow.Add(new VisualElement { style = { flexGrow = 1 } });
+
+                group.Add(derivRow);
             }
 
             return group;
@@ -1744,7 +1748,7 @@ namespace FarEmerald.PlayForge.Extended.Editor
             panel.Add(CreateDetailRow("Name", ability.GetName(), Color.white));
             panel.Add(CreateDetailRow("Description", ability.GetDescription() ?? "N/A", new Color(0.7f, 0.7f, 0.7f)));
             panel.Add(CreateDetailRow("Level", $"{container.Spec.GetLevel()} / {ability.MaxLevel}", AbilityColor));
-            panel.Add(CreateDetailRow("Asset Tag", ability.Tags?.AssetTag.GetName() ?? "None", new Color(0.6f, 0.6f, 0.6f)));
+            panel.Add(CreateDetailRow("Asset Tag", ability.Tags?.AssetTag.DisplayName ?? "None", new Color(0.6f, 0.6f, 0.6f)));
 
             if (ability.Definition != null)
             {

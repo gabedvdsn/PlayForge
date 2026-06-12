@@ -425,7 +425,7 @@ namespace FarEmerald.PlayForge
                     // fall back to the first blueprint to preserve existing behaviour and keep
                     // the constructor signature consistent.
                     system.ProvideAttribute(attribute,
-                        new AttributeBlueprint(defaults[0].SetElement, defaults[0].Derivation.GetSource())
+                        new AttributeBlueprint(defaults[0].SetElement, defaults[0].Derivation.GetOrigin().GetSource())
                     );
                     break;
                 }

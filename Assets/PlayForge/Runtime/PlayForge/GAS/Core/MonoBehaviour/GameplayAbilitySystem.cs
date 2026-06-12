@@ -134,7 +134,7 @@ namespace FarEmerald.PlayForge
         }
         public bool TryGetAttributeValue(IAttribute attribute, out AttributeValue value)
         {
-            return AttributeSystem.TryGetAttributeValue(attribute, out value);
+            return AttributeSystem.TryGetValue(attribute, out value);
         }
         public bool TryModifyAttribute(IAttribute attribute, SourcedModifiedAttributeValue sourcedModifiedValue, bool runEvents = true)
         {
@@ -203,7 +203,7 @@ namespace FarEmerald.PlayForge
          /// <returns></returns>
         public bool ApplyGameplayEffect(IEffectOrigin origin, GameplayEffect GameplayEffect)
         {
-            GameplayEffectSpec spec = GenerateEffectSpec(origin, GameplayEffect);
+            var spec = GenerateEffectSpec(origin, GameplayEffect);
             return ApplyGameplayEffect(spec);
         }
         
@@ -239,9 +239,20 @@ namespace FarEmerald.PlayForge
             var container = spec.Base.DurationSpecification.GenerateContainer(spec, ongoing);
             EffectShelf.Add(container);
 
+            // Mode A (sustained modifier) only — register with the attribute system so
+            // it lands in retainedGroups. Mode B (tick-delivered) specs commit purely
+            // through the tick path. See RuntimeGameplayAbilitySystem.ApplyDurationalGameplayEffect
+            // for the full rationale.
+            if (spec.IsSustainedModifier())
+            {
+                AttributeSystem.ModifyAttribute(
+                    spec.Base.ImpactSpecification.AttributeTarget,
+                    new SourcedModifiedAttributeValue(spec, 0f, 0f));
+            }
+
             var effectContext = new EffectWorkerContext(this, container.Spec, _frameSummary, _actionQueue);
             container.Spec.RunWorkerApplication(effectContext);
-            
+
             if (ongoing && spec.Base.DurationSpecification.TickOnApplication)
             {
                 ApplyTickOnApplication(container);
@@ -262,32 +273,35 @@ namespace FarEmerald.PlayForge
         /// <param name="spec"></param>
         private void ApplyInstantGameplayEffect(GameplayEffectSpec spec)
         {
-            if (!AttributeSystem.TryGetAttributeValue(spec.Base.ImpactSpecification.AttributeTarget, out AttributeValue attributeValue)) return;
+            if (!AttributeSystem.TryGetValue(spec.Base.ImpactSpecification.AttributeTarget, out _)) return;
 
             TagCache.AddTags(spec.Base.Tags.GrantedTags);
             spec.RunWorkerApplication(new EffectWorkerContext(this, spec, _frameSummary, _actionQueue));
-            
-            var sourcedModifiedValue = spec.SourcedImpact(attributeValue);
+
+            // Magnitude resolved by the spec's ScalerImpacter pipeline during ApplyCarrier;
+            // no precomputed delta needed.
+            var sourcedModifiedValue = new SourcedModifiedAttributeValue(spec, 0f, 0f);
             var impactData = AttributeSystem.ModifyAttribute(spec.Base.ImpactSpecification.AttributeTarget, sourcedModifiedValue);
-            
+
             spec.RunWorkerRemoval(new EffectWorkerContext(this, spec, _frameSummary, _actionQueue, 1, impactData));
             TagCache.RemoveTags(spec.Base.Tags.GrantedTags);
-            
+
             HandleGameplayEffects();
         }
-        
+
         /// <summary>
         /// Instantly applies the effects of a durational/infinite gameplay effect
         /// </summary>
         /// <param name="container"></param>
         private void ApplyDurationGameplayEffectAsInstant(AbstractEffectContainer container)
         {
-            if (!AttributeSystem.TryGetAttributeValue(container.Spec.Base.ImpactSpecification.AttributeTarget, out AttributeValue attributeValue)) return;
+            if (!AttributeSystem.TryGetValue(container.Spec.Base.ImpactSpecification.AttributeTarget, out _)) return;
 
-            var sourcedModifiedValue = container.Spec.SourcedImpact(container, attributeValue);
-            
-            AttributeSystem.ModifyAttribute(container.Spec.Base.ImpactSpecification.AttributeTarget, sourcedModifiedValue);
-            
+            var sourcedModifiedValue = new SourcedModifiedAttributeValue(container.Spec, 0f, 0f);
+            // Tick path — see RuntimeGameplayAbilitySystem.ApplyDurationGameplayEffectAsInstant
+            // for the rationale (TickAttribute bypasses apply-side retention/idempotency).
+            AttributeSystem.TickAttribute(container.Spec.Base.ImpactSpecification.AttributeTarget, sourcedModifiedValue);
+
             container.Spec.RunWorkerApplication(new EffectWorkerContext(this, container.Spec, _frameSummary, _actionQueue));
             
             foreach (var containedEffect in container.Spec.Base.ImpactSpecification.GetContainedEffects(EApplyTickRemove.OnTick))
@@ -438,10 +452,7 @@ namespace FarEmerald.PlayForge
 
                 if (container.Spec.Base.ImpactSpecification.AttributeTarget)
                 {
-                    // Retain only if not reverse and if impact includes base
-                    var nullify = !container.Spec.Base.ImpactSpecification.ReverseImpactOnRemoval && container.Spec.TrackedImpact.Total.BaseValue != 0f;
-                    var retainCurrent = container.Spec.TrackedImpact.Total.CurrentValue != 0f;
-                    AttributeSystem.RemoveAttributeDerivation(container.Spec, nullify, retainCurrent);
+                    AttributeSystem.RemoveAttributeDerivation(container.Spec);
                 }
                 
                 Callbacks?.EffectRemoved(container.Spec.Base);
@@ -525,7 +536,7 @@ namespace FarEmerald.PlayForge
         }
 
         #region IAttributeDerivation
-        public ISource GetOwner()
+        public ISource GetSource()
         {
             return this;
         }

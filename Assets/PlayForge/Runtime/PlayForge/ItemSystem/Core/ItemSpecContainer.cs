@@ -118,7 +118,7 @@ namespace FarEmerald.PlayForge
                 if (effect == null) continue;
                 
                 // Generate spec with item as the origin (provides level context)
-                bool applied = Spec.Source.ApplyGameplayEffect(effect.Generate(Spec, Spec.Source));
+                bool applied = Spec.Source.ApplyCarrier(effect.Generate(Spec, Spec.Source));
                 if (Spec.Source.FindItemSystem(out var isc))
                 {
                     isc.Callbacks.ItemEffectsApplied(ItemCallbackStatus.Generate(this, isc, applied));

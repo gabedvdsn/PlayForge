@@ -77,8 +77,8 @@ MonoBehaviour:
       Scaler:
         rid: -2
       Rounding: 0
-    ReApplicationPolicy: 1
-    ReApplicationInteraction: 0
+    ReApplicationPolicy: 0
+    ReApplicationInteraction: 1
     StackPolicy: 0
     StackAmountOperation:
       Magnitude: 0

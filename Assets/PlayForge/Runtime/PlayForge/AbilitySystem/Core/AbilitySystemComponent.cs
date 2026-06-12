@@ -231,7 +231,7 @@ namespace FarEmerald.PlayForge
         {
             if (!Enabled) return false;
             if (!allowDuplicateAbilities && HasAbility(ability)) return false;
-            if (AbilityCount >= maxAbilitiesOperation.Evaluate(IAttributeImpactDerivation.GenerateLevelerDerivation(Self, Self.GetLevel()))) return false;
+            if (AbilityCount >= maxAbilitiesOperation.Evaluate(IAttributeImpactCarrier.GenerateLevelerDerivation(Self, Self.GetLevel()))) return false;
 
             return true;
         }
@@ -431,14 +431,19 @@ namespace FarEmerald.PlayForge
         public void ProvideFrameImpactDealt(ImpactData impactData, bool runWorkers = true)
         {
             // Track impact on derivation
-            impactData.SourcedModifier.Derivation.TrackImpact(impactData);
+            impactData.SourcedModifier.Carrier.TrackImpact(impactData);
 
-            // Run effect-specific workers
-            var effectContext = new EffectWorkerContext(
-                Self, impactData.SourcedModifier.Derivation,
-                Self.GetFrameSummary(), Self.GetActionQueue(),
-                1, impactData);
-            impactData.SourcedModifier.Derivation.RunWorkerImpact(effectContext);
+            // Run effect-specific workers — only ICarrierApplication carriers have a
+            // worker lifecycle. Synthetic delta carriers (SourceAttributeImpact, etc.)
+            // skip this entirely.
+            if (impactData.SourcedModifier.Carrier is ICarrierApplication appCarrier)
+            {
+                var effectContext = new EffectWorkerContext(
+                    Self, impactData.SourcedModifier.Carrier,
+                    Self.GetFrameSummary(), Self.GetActionQueue(),
+                    1, impactData);
+                appCarrier.RunWorkerImpact(effectContext);
+            }
 
             // Run global impact workers (source-side)
             if (runWorkers)

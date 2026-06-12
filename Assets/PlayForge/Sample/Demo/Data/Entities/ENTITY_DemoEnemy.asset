@@ -24,7 +24,7 @@ MonoBehaviour:
     DisplayName: Red
   AssetTag:
     Name: Entity.DemoEnemy
-    DisplayName: 
+    DisplayName: DemoEnemy
   GrantedTags: []
   ContextTags: []
   StartingLevel: 1
@@ -61,7 +61,7 @@ MonoBehaviour:
     ImpactWorkers: []
     TagWorkers: []
     AnalysisWorkers:
-    - rid: 1955962306424471834
+    - rid: 6997630944598032384
   LinkMode: 1
   _linkedSource: {fileID: 11400000, guid: 834e2d32492cd994789c68e2c19323d3, type: 2}
   references:
@@ -69,13 +69,6 @@ MonoBehaviour:
     RefIds:
     - rid: -2
       type: {class: , ns: , asm: }
-    - rid: 1955962306424471834
-      type: {class: ThresholdAnalysisWorker, ns: FarEmerald.PlayForge, asm: Assembly-CSharp}
-      data:
-        Target: {fileID: 11400000, guid: 5238e93ea6a409e4a84dd1dcf23dd45c, type: 2}
-        Threshold: 0
-        Comparison: 1
-        TriggerOnce: 1
     - rid: 1955962478581514807
       type: {class: SimpleScaler, ns: FarEmerald.PlayForge, asm: Assembly-CSharp}
       data:
@@ -150,3 +143,10 @@ MonoBehaviour:
         Behaviours: []
         Calculations: []
         OverrideMemberCollisionPolicy: 0
+    - rid: 6997630944598032384
+      type: {class: DeathWatcherAnalysisWorker, ns: FarEmerald.PlayForge, asm: Assembly-CSharp}
+      data:
+        Target: {fileID: 11400000, guid: 5238e93ea6a409e4a84dd1dcf23dd45c, type: 2}
+        Threshold: 0
+        Comparison: 1
+        TriggerOnce: 1

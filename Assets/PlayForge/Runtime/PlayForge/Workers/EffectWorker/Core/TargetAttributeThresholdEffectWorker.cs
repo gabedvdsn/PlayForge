@@ -15,19 +15,7 @@ namespace FarEmerald.PlayForge
         
         public EAttributeTarget Target;
         public EComparisonOperator Policy;
-
-        public override IEnumerable<IRootAction> OnEffectApplication(EffectWorkerContext ctx)
-        {
-            return base.OnEffectApplication(ctx);
-        }
-        public override IEnumerable<IRootAction> OnEffectTick(EffectWorkerContext ctx)
-        {
-            return base.OnEffectTick(ctx);
-        }
-        public override IEnumerable<IRootAction> OnEffectRemoval(EffectWorkerContext ctx)
-        {
-            return base.OnEffectRemoval(ctx);
-        }
+        
         public override IEnumerable<IRootAction> OnEffectImpact(EffectWorkerContext ctx)
         {
             return PerformThresholdWork(ctx);
@@ -35,7 +23,7 @@ namespace FarEmerald.PlayForge
 
         protected IEnumerable<IRootAction> PerformThresholdWork(EffectWorkerContext ctx)
         {
-            if (!ctx.Derivation.GetTarget().FindAttributeSystem(out var attrSystem) || !attrSystem.TryGetAttributeValue(TargetAttribute, out AttributeValue value)) return null;
+            if (!ctx.System.TryGetAttributeValue(TargetAttribute, out var value)) return null;
             switch (Policy)
             {
 

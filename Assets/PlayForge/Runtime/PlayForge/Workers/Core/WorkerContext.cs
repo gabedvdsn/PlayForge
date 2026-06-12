@@ -63,13 +63,13 @@ namespace FarEmerald.PlayForge
     /// </summary>
     public readonly struct ImpactWorkerContext
     {
-        public readonly IGameplayAbilitySystem System;
+        public readonly ISource System;
         public readonly ImpactData ImpactData;
         public readonly FrameSummary FrameSummary;
         public readonly ActionQueue ActionQueue;
         
         public ImpactWorkerContext(
-            IGameplayAbilitySystem system,
+            ISource system,
             ImpactData impactData,
             FrameSummary frameSummary,
             ActionQueue actionQueue)
@@ -87,7 +87,7 @@ namespace FarEmerald.PlayForge
     public readonly struct EffectWorkerContext
     {
         public readonly IGameplayAbilitySystem System;
-        public readonly IAttributeImpactDerivation Derivation;
+        public readonly IAttributeImpactCarrier Carrier;
         public readonly FrameSummary FrameSummary;
         public readonly ActionQueue ActionQueue;
         
@@ -103,14 +103,14 @@ namespace FarEmerald.PlayForge
         
         public EffectWorkerContext(
             IGameplayAbilitySystem system,
-            IAttributeImpactDerivation derivation,
+            IAttributeImpactCarrier carrier,
             FrameSummary frameSummary,
             ActionQueue actionQueue,
             int executeTicks = 0,
             ImpactData? impactData = null)
         {
             System = system;
-            Derivation = derivation;
+            this.Carrier = carrier;
             FrameSummary = frameSummary;
             ActionQueue = actionQueue;
             ExecuteTicks = executeTicks;

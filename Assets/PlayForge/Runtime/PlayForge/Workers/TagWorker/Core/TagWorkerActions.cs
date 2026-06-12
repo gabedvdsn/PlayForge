@@ -24,7 +24,7 @@
             _frameSummary = frameSummary;
         }
         
-        public void Execute(IGameplayAbilitySystem system)
+        public void Execute(ISource system)
         {
             // Mark as active in cache
             _system.GetTagCache()?.MarkWorkerActive(_worker);
@@ -61,7 +61,7 @@
             _frameSummary = frameSummary;
         }
         
-        public void Execute(IGameplayAbilitySystem system)
+        public void Execute(ISource system)
         {
             // Call worker's resolve
             _worker.Resolve(_system);

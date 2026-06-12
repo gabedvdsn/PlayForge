@@ -13,7 +13,7 @@ namespace FarEmerald.PlayForge
         [DeriveScalerName]
         public AbstractScaler Scaler;
 
-        public float Evaluate(IAttributeImpactDerivation spec)
+        public float Evaluate(IAttributeImpactCarrier spec)
         {
             return ForgeHelper.MagnitudeAndScalerOperation(
                 Magnitude, Scaler?.Evaluate(spec) ?? 0f, RealMagnitude
@@ -32,7 +32,7 @@ namespace FarEmerald.PlayForge
         public AbstractScaler Scaler;
         public ERoundingOperation Rounding;
 
-        public int Evaluate(IAttributeImpactDerivation spec)
+        public int Evaluate(IAttributeImpactCarrier spec)
         {
             return ForgeHelper.MagnitudeAndScalerOperation(
                 Magnitude, Scaler?.Evaluate(spec) ?? 0f, RealMagnitude, Rounding

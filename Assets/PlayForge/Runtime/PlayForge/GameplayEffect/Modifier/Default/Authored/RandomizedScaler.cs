@@ -21,12 +21,12 @@ namespace FarEmerald.PlayForge
         [Tooltip("Maximum multiplier when using random range")]
         public float MaxMultiplier = 1.1f;
         
-        public override void Initialize(IAttributeImpactDerivation deriv)
+        public override void Initialize(IAttributeImpactCarrier deriv)
         {
             // No initialization needed
         }
         
-        public override float Evaluate(IAttributeImpactDerivation deriv)
+        public override float Evaluate(IAttributeImpactCarrier deriv)
         {
             float baseValue = EvaluateFromSpec(deriv);
             
@@ -58,7 +58,7 @@ namespace FarEmerald.PlayForge
         /// <summary>
         /// Gets the minimum possible value at current level (for UI display).
         /// </summary>
-        public float GetMinValue(IAttributeImpactDerivation spec)
+        public float GetMinValue(IAttributeImpactCarrier spec)
         {
             float baseValue = EvaluateFromSpec(spec);
             
@@ -78,7 +78,7 @@ namespace FarEmerald.PlayForge
         /// <summary>
         /// Gets the maximum possible value at current level (for UI display).
         /// </summary>
-        public float GetMaxValue(IAttributeImpactDerivation spec)
+        public float GetMaxValue(IAttributeImpactCarrier spec)
         {
             float baseValue = EvaluateFromSpec(spec);
             

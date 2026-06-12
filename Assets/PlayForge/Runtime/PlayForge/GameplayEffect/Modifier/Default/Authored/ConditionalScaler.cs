@@ -33,13 +33,13 @@ namespace FarEmerald.PlayForge
         [ScalerRootAssignment(null, typeof(AbstractCachedScaler))] [SerializeReference] 
         public AbstractScaler FalseScaler;
         
-        public override void Initialize(IAttributeImpactDerivation deriv)
+        public override void Initialize(IAttributeImpactCarrier deriv)
         {
             TrueScaler?.Initialize(deriv);
             FalseScaler?.Initialize(deriv);
         }
         
-        public override float Evaluate(IAttributeImpactDerivation deriv)
+        public override float Evaluate(IAttributeImpactCarrier deriv)
         {
             bool conditionMet = EvaluateCondition(deriv);
             
@@ -58,29 +58,28 @@ namespace FarEmerald.PlayForge
             return false;
         }
 
-        private bool EvaluateCondition(IAttributeImpactDerivation spec)
+        private bool EvaluateCondition(IAttributeImpactCarrier spec)
         {
             return Condition switch
             {
-                EScalerCondition.SourceTagCondition => TagCondition.Validate(spec.GetSource().GetTagCache()),
+                EScalerCondition.SourceTagCondition => TagCondition.Validate(spec.GetOrigin().GetSource().GetTagCache()),
                 EScalerCondition.TargetTagCondition => TagCondition.Validate(spec.GetTarget().GetAppliedTags()),
                 EScalerCondition.SourceAttributeThreshold => CheckAttributeThreshold(spec),
                 EScalerCondition.TargetAttributeThreshold => CheckAttributeThreshold(spec),
-                EScalerCondition.LevelAbove => spec.GetEffectDerivation().GetLevel().CurrentValue > ThresholdValue,
-                EScalerCondition.LevelBelow => spec.GetEffectDerivation().GetLevel().CurrentValue < ThresholdValue,
-                EScalerCondition.RelativeLevelAbove => spec.GetEffectDerivation().GetLevel().Ratio > ThresholdValue,
+                EScalerCondition.LevelAbove => spec.GetOrigin().GetLevel().CurrentValue > ThresholdValue,
+                EScalerCondition.LevelBelow => spec.GetOrigin().GetLevel().CurrentValue < ThresholdValue,
+                EScalerCondition.RelativeLevelAbove => spec.GetOrigin().GetLevel().Ratio > ThresholdValue,
                 EScalerCondition.Always => true,
                 EScalerCondition.Never => false,
                 _ => false
             };
         }
         
-        private bool CheckAttributeThreshold(IAttributeImpactDerivation spec)
+        private bool CheckAttributeThreshold(IAttributeImpactCarrier spec)
         {
             if (CheckAttribute is null) return false;
             
-            if (!spec.GetSource().FindAttributeSystem(out var attrSystem) ||
-                !attrSystem.TryGetAttributeValue(CheckAttribute, out AttributeValue attrValue))
+            if (!spec.GetOrigin().GetSource().TryGetAttributeValue(CheckAttribute, out var attrValue))
             {
                 return false;
             }

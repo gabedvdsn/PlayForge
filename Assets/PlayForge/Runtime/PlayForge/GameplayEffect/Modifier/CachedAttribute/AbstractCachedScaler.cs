@@ -16,7 +16,7 @@ namespace FarEmerald.PlayForge
         /// Attach update calls to ASC callbacks as needed to appropriately evaluate and maintain the cached attribute
         /// </summary>
         /// <param name="deriv"></param>
-        public override void Initialize(IAttributeImpactDerivation deriv)
+        public override void Initialize(IAttributeImpactCarrier deriv)
         {
             // By default, cached attribute scalers do not initialize anything
         }
@@ -26,7 +26,7 @@ namespace FarEmerald.PlayForge
         /// </summary>
         /// <param name="deriv"></param>
         /// <returns></returns>
-        public override float Evaluate(IAttributeImpactDerivation deriv)
+        public override float Evaluate(IAttributeImpactCarrier deriv)
         {
             return 0f;
         }

@@ -43,8 +43,31 @@ namespace FarEmerald.PlayForge.Extended.Editor
             var impactOpField = new PropertyField(property.FindPropertyRelative(nameof(GameplayEffectImpact.ImpactOperation)), "Operation");
             impactOpField.style.flexGrow = 1;
             targetRow.Add(impactOpField);
-            
+
             targetSection.Add(targetRow);
+
+            // Multiply Behaviour — only meaningful when ImpactOperation = Multiply.
+            // Hidden otherwise to avoid clutter; refreshed on a 250ms tick to react to
+            // operation changes without rebuilding the whole drawer.
+            var multBehaviourField = new PropertyField(property.FindPropertyRelative(nameof(GameplayEffectImpact.MultiplyBehaviour)), "Multiply Behaviour");
+            multBehaviourField.tooltip =
+                "How this Multiply impacter composes with multiply impacters from OTHER carriers " +
+                "on the same attribute slot.\n\n" +
+                "• Multiplicative (default) — each multiply compounds: ×1.5 × ×1.5 → ×2.25.\n" +
+                "• AdditiveBonus — bonuses sum, then one final multiply: +50% & +50% → ×2.0 (not ×2.25). " +
+                "Use for diminishing-returns-style buffs that shouldn't exponentially stack.";
+            multBehaviourField.style.marginTop = 2;
+            targetSection.Add(multBehaviourField);
+
+            void RefreshMultiplyBehaviourVisibility()
+            {
+                var opProp = property.FindPropertyRelative(nameof(GameplayEffectImpact.ImpactOperation));
+                bool isMultiply = opProp != null
+                                  && opProp.enumValueIndex == (int)ECalculationOperation.Multiply;
+                multBehaviourField.style.display = isMultiply ? DisplayStyle.Flex : DisplayStyle.None;
+            }
+            RefreshMultiplyBehaviourVisibility();
+            targetSection.schedule.Execute(RefreshMultiplyBehaviourVisibility).Every(250);
 
             var affSection = CreateSubsection("Affiliation", "Affiliation", Colors.SectionRed);
             
@@ -92,9 +115,33 @@ namespace FarEmerald.PlayForge.Extended.Editor
             
             var reverseField = new PropertyField(property.FindPropertyRelative(nameof(GameplayEffectImpact.ReverseImpactOnRemoval)), "Reverse On Removal");
             reverseField.style.flexGrow = 1;
+            reverseField.tooltip =
+                "Reverses the impact when the effect is removed.\n\n" +
+                "• Sustained-modifier effects (durational, no per-tick contributions) reverse " +
+                "AUTOMATICALLY via recompute on removal — this flag is redundant for them.\n" +
+                "• Periodic-tick effects (impact committed past the impacter list each tick) " +
+                "DO need this flag to negate their tracked total on removal.\n" +
+                "• Instant effects have no removal phase — flag is meaningless.";
             behaviorRow.Add(reverseField);
-            
+
             behaviorSection.Add(behaviorRow);
+
+            // Hide the Reverse field entirely when DurationPolicy is Instant — the flag has
+            // no effect at runtime in that case (instant effects don't get a removal phase).
+            // Bound via a scheduled refresh so the visibility tracks live edits to duration.
+            void RefreshReverseFieldVisibility()
+            {
+                if (property.serializedObject?.targetObject is not GameplayEffect ge ||
+                    ge.DurationSpecification == null)
+                {
+                    reverseField.style.display = DisplayStyle.Flex;
+                    return;
+                }
+                bool isInstant = ge.DurationSpecification.DurationPolicy == EEffectDurationPolicy.Instant;
+                reverseField.style.display = isInstant ? DisplayStyle.None : DisplayStyle.Flex;
+            }
+            RefreshReverseFieldVisibility();
+            behaviorRow.schedule.Execute(RefreshReverseFieldVisibility).Every(250);
             
             // ═══════════════════════════════════════════════════════════════════
             // Contained Effects Section

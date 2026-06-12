@@ -822,7 +822,7 @@ namespace FarEmerald.PlayForge
             };
         }
 
-        public static bool TryComputeCachedMagnitudeModifierGroupValue(IAttributeImpactDerivation deriv, CachedMagnitudeModifierGroupMember[] calculations, Func<CachedMagnitudeModifierGroupMember, float> selector, EValueCollisionPolicy overridePolicy, out float value)
+        public static bool TryComputeCachedMagnitudeModifierGroupValue(IAttributeImpactCarrier deriv, CachedMagnitudeModifierGroupMember[] calculations, Func<CachedMagnitudeModifierGroupMember, float> selector, EValueCollisionPolicy overridePolicy, out float value)
         {
             if (calculations is null || calculations.Length == 0)
             {

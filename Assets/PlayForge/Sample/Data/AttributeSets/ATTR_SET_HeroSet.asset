@@ -125,7 +125,7 @@ MonoBehaviour:
     Overflow:
       Policy: 1
       Floor:
-        CurrentValue: 50
+        CurrentValue: 30
         BaseValue: 550
       Ceil:
         CurrentValue: Infinity

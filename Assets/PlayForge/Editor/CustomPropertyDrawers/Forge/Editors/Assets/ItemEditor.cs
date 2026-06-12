@@ -883,6 +883,7 @@ namespace FarEmerald.PlayForge.Extended.Editor
                 var tags = item.Tags;
                 var assetTag = tags.AssetTag;
                 assetTag.Name = result.result;
+                assetTag.DisplayName = result.display;
                 tags.AssetTag = assetTag;
                 item.Tags = tags;
             }

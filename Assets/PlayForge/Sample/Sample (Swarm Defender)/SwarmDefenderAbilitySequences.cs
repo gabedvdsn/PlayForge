@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Net;
 using System.Threading;
 using Cysharp.Threading.Tasks;
 using UnityEngine;
@@ -74,6 +75,12 @@ namespace FarEmerald.PlayForge.Extended.SwarmDefenderSample
 
                         int count = hero.AbilitySystem.AbilityCount;
                         if (count <= 0)
+                        {
+                            await UniTask.Delay(TimeSpan.FromSeconds(HERO_CAST_COOLDOWN), cancellationToken: t);
+                            return;
+                        }
+
+                        if (GetOrCreateEnemyList(d).Count == 0)
                         {
                             await UniTask.Delay(TimeSpan.FromSeconds(HERO_CAST_COOLDOWN), cancellationToken: t);
                             return;
@@ -633,18 +640,21 @@ namespace FarEmerald.PlayForge.Extended.SwarmDefenderSample
                         d.IncrementFloat(SwarmTags.ELAPSED_TIME, Time.deltaTime);
                         modeTimer += Time.deltaTime;
                         Debug.Log(modeTimer);*/
+
+                        const float _a = 1100f;
+                        const float _b = 1150f;
                         
                         // Every ~15 seconds, advance to the next mode.
                         // 0 = constant spawn, 1 = wave, 2 = boss round
                         if (modeIndex == 0)
                         {
                             // Constant spawning: one enemy every ~0.75s for 15s.
-                            float interval = Mathf.Lerp(0.8f, 0.35f,
+                            float interval = Mathf.Lerp(_a, _b,
                                 Mathf.Clamp01(d.GetPrimary<float>(SwarmTags.ELAPSED_TIME) / (100f / (hero.GetLevel().CurrentValue * .25f))));
-                            await SpawnEnemy().Run(d, t);
                             await UniTask.Delay(TimeSpan.FromSeconds(interval), cancellationToken: t);
+                            await SpawnEnemy().Run(d, t);
 
-                            if (modeTimer >= 15f) { modeTimer = 0f; modeIndex += 1; }
+                            if (modeTimer >= 1115f) { modeTimer = 0f; modeIndex += 1; }
                         }
                         else if (modeIndex == 1)
                         {
