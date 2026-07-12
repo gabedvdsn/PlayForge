@@ -19,6 +19,18 @@ namespace FarEmerald.PlayForge
                 Magnitude, Scaler?.Evaluate(spec) ?? 0f, RealMagnitude
             );
         }
+
+        /// <summary>
+        /// Container-aware evaluation — scalers that read container state (stack count)
+        /// see the live container instead of just the spec. Scalers that don't care fall
+        /// back to spec-based evaluation via <see cref="AbstractScaler.Evaluate(AbstractStackingEffectContainer)"/>.
+        /// </summary>
+        public float Evaluate(AbstractStackingEffectContainer container)
+        {
+            return ForgeHelper.MagnitudeAndScalerOperation(
+                Magnitude, Scaler?.Evaluate(container) ?? 0f, RealMagnitude
+            );
+        }
     }
     
     [Serializable]

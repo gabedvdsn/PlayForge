@@ -27,14 +27,25 @@ namespace FarEmerald.PlayForge
             Ongoing = ongoing;
 
             ContainerIsActive = true;
-            
+
+            Spec.SetRuntimeContainer(this);
             Spec.Base.ApplyDurationSpecifications(this);
         }
 
+        /// <summary>
+        /// Adopt another container's configuration: duration values AND its spec. Used by
+        /// ReplaceOldContainer re-application — the old spec's contribution must be reversed
+        /// by the caller (via <see cref="ReverseImpact"/>) BEFORE calling this, and the new
+        /// spec's sustained contribution registered after. Accumulated container state
+        /// (e.g. stack count) is intentionally preserved.
+        /// </summary>
         public virtual void ReplaceValuesWith(AbstractEffectContainer container)
         {
             totalDuration = container.totalDuration;
             periodDuration = container.periodDuration;
+
+            Spec = container.Spec;
+            Spec.SetRuntimeContainer(this);
         }
 
         public void SetTotalDuration(float duration)
@@ -61,6 +72,22 @@ namespace FarEmerald.PlayForge
         {
             ContainerIsActive = false;
 
+            ReverseImpact();
+
+            foreach (var containedEffect in Spec.Base.ImpactSpecification.GetContainedEffects(EApplyTickRemove.OnRemove))
+            {
+                Spec.Source.ApplyCarrier(Spec.Source.GenerateEffectSpec(Spec.Origin, containedEffect));
+            }
+        }
+
+        /// <summary>
+        /// Mode-aware reversal of this container's spec contribution. Called by
+        /// <see cref="OnRemove"/> and by the ReplaceOldContainer re-application path
+        /// (replacing a spec ends its contribution exactly like removal does).
+        /// Safe to call for specs that contributed nothing.
+        /// </summary>
+        public void ReverseImpact()
+        {
             var attribute = Spec.Base.ImpactSpecification.AttributeTarget;
             AttributeSystemComponent attrSystem = null;
             bool foundAttrSys = attribute && (Spec.Target?.FindAttributeSystem(out attrSystem) ?? false);
@@ -100,11 +127,6 @@ namespace FarEmerald.PlayForge
                 {
                     cachedAttr.RollbackCommittedDelta(tickedTotal, attrSystem.GetAttributeCache());
                 }
-            }
-
-            foreach (var containedEffect in Spec.Base.ImpactSpecification.GetContainedEffects(EApplyTickRemove.OnRemove))
-            {
-                Spec.Source.ApplyCarrier(Spec.Source.GenerateEffectSpec(Spec.Origin, containedEffect));
             }
         }
         public override string ToString()

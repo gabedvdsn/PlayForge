@@ -34,9 +34,19 @@ namespace FarEmerald.PlayForge
 
         public float Evaluate(IAttributeImpactCarrier carrier)
         {
-            // ScalerMagnitudeOperation already takes the carrier as evaluation context
-            // (level, captured attrs, etc.) — reuse that surface unchanged.
-            return magnitudeOperation?.Evaluate(carrier) ?? 0f;
+            if (magnitudeOperation is null) return 0f;
+
+            // Specs shelved in a stacking container evaluate container-aware so stack
+            // count feeds the magnitude (both the retained Recompute path and per-tick
+            // commits). Everything else uses the carrier as evaluation context directly
+            // (level, captured attrs, etc.).
+            if (carrier is GameplayEffectSpec spec
+                && spec.RuntimeContainer is AbstractStackingEffectContainer stackingContainer)
+            {
+                return magnitudeOperation.Evaluate(stackingContainer);
+            }
+
+            return magnitudeOperation.Evaluate(carrier);
         }
     }
 }

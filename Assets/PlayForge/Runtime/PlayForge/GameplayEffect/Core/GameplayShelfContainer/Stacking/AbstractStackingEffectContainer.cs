@@ -15,15 +15,9 @@ namespace FarEmerald.PlayForge
         
         public abstract void Stack(int amount);
 
-        public override void ReplaceValuesWith(AbstractEffectContainer container)
-        {
-            if (container is AbstractStackingEffectContainer _container)
-            {
-                _container.Stacks = Stacks;
-            }
-            
-            base.ReplaceValuesWith(container);
-        }
+        // ReplaceValuesWith intentionally not overridden: the base adopts the new spec +
+        // duration values while `Stacks` (accumulated state, not config) is preserved.
+        // The old override copied Stacks onto the incoming throwaway container — a no-op.
     }
 
 }

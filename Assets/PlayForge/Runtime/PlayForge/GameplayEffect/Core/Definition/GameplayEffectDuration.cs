@@ -33,8 +33,11 @@ namespace FarEmerald.PlayForge
         [Tooltip("When disabled, the effect will not tick periodically. TickOnApplication is still respected.")]
         public bool EnablePeriodicTicks = false;
         
-        [Tooltip("Execute effect impact immediately on application (before any periodic ticks).")]
-        public bool TickOnApplication = true;
+        [Tooltip("Execute effect impact immediately on application (before any periodic ticks). " +
+                 "Enabling this makes a durational effect tick-delivered (Mode B): each tick commits " +
+                 "permanently and does NOT auto-reverse on removal unless ReverseImpactOnRemoval is set. " +
+                 "Leave disabled for sustained modifiers (auto-reversing buffs).")]
+        public bool TickOnApplication = false;
 
         [ScalerOperationKeyword("Ticks")]
         public ScalerIntegerMagnitudeOperation TicksOperation;

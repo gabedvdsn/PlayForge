@@ -220,7 +220,9 @@ namespace FarEmerald.PlayForge
         /// </summary>
         private ImpactData CommitWithCarrier(IAttribute attribute, SourcedModifiedAttributeValue sourcedModifiedValue, bool runEvents, bool isTick)
         {
-            if (!AttributeCache.ContainsKey(attribute)) return default;
+            // Null attribute = carrier with no attribute impact (e.g. a pure tag-granting
+            // effect). Nothing to commit — Dictionary.ContainsKey(null) would throw.
+            if (attribute is null || !AttributeCache.ContainsKey(attribute)) return default;
 
             var change = new ChangeValue(sourcedModifiedValue);
             var ctx = new WorkerContext(Self, AttributeCache, change, _frameSummary, _actionQueue);
@@ -361,7 +363,7 @@ namespace FarEmerald.PlayForge
         {
             if (carrier == null) return;
             var attribute = carrier.GetAttribute();
-            if (!AttributeCache.ContainsKey(attribute)) return;
+            if (attribute is null || !AttributeCache.ContainsKey(attribute)) return;
             // Removal IS nullification under the recompute model — a removed carrier
             // contributes nothing whether it's in the list as "dead" or simply absent.
             AttributeCache[attribute].RemoveCarrier(carrier, AttributeCache);

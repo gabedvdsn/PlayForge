@@ -217,11 +217,24 @@ namespace FarEmerald.PlayForge
             var toRemove = EffectShelf.Where(container => container.Spec.Base.Tags.AssetTag == identifier).ToArray();
             foreach (AbstractEffectContainer container in toRemove)
             {
-                FinishedEffects.Add(container);
-                needsCleaning = true;
+                MarkFinished(container);
             }
 
             return toRemove.Length > 0;
+        }
+
+        /// <summary>
+        /// Queue a container for removal exactly once. Every path that finishes a container
+        /// (expiry, removal requirements, explicit removal) funnels through here — a duplicate
+        /// entry in <see cref="FinishedEffects"/> would run OnRemove twice, double-reversing
+        /// the effect's attribute contribution.
+        /// </summary>
+        private void MarkFinished(AbstractEffectContainer container)
+        {
+            if (FinishedEffects.Contains(container)) return;
+
+            FinishedEffects.Add(container);
+            needsCleaning = true;
         }
         
         /// <summary>
@@ -261,7 +274,14 @@ namespace FarEmerald.PlayForge
 
         private void ApplyTickOnApplication(AbstractEffectContainer container)
         {
-            for (int _ = 0; _ < container.Spec.Base.DurationSpecification.GetExecuteTicks(container.Spec, container.InstantExecuteTicks); _++)
+            // Evaluate the tick count ONCE (a scaler-driven count must not be re-rolled
+            // per loop iteration), run tick workers with that count, then execute.
+            int executeTicks = container.Spec.Base.DurationSpecification.GetExecuteTicks(container.Spec, container.InstantExecuteTicks);
+            if (executeTicks <= 0) return;
+
+            container.Spec.RunWorkerTick(new EffectWorkerContext(this, container.Spec, _frameSummary, _actionQueue, executeTicks));
+
+            for (int _ = 0; _ < executeTicks; _++)
             {
                 ApplyDurationGameplayEffectAsInstant(container);
             }
@@ -302,8 +322,11 @@ namespace FarEmerald.PlayForge
             // for the rationale (TickAttribute bypasses apply-side retention/idempotency).
             AttributeSystem.TickAttribute(container.Spec.Base.ImpactSpecification.AttributeTarget, sourcedModifiedValue);
 
-            container.Spec.RunWorkerApplication(new EffectWorkerContext(this, container.Spec, _frameSummary, _actionQueue));
-            
+            // No worker call here — tick workers run once per batch in the callers
+            // (TickEffectShelf for periodic ticks, ApplyTickOnApplication for apply-time
+            // ticks). Running application workers per tick was a bug: they'd re-fire on
+            // every periodic tick and double-fire on TickOnApplication applies.
+
             foreach (var containedEffect in container.Spec.Base.ImpactSpecification.GetContainedEffects(EApplyTickRemove.OnTick))
             {
                 ApplyGameplayEffect(container.Spec.Origin, containedEffect);
@@ -322,7 +345,23 @@ namespace FarEmerald.PlayForge
                 case EEffectReApplicationPolicy.ReplaceOldContainer:
                 {
                     var newContainer = spec.Base.DurationSpecification.GenerateContainer(spec, ongoing);
-                    foreach (var oldContainer in _containers) oldContainer.ReplaceValuesWith(newContainer);
+                    foreach (var oldContainer in _containers)
+                    {
+                        // Replacement ends the old spec's contribution (mode-aware
+                        // reversal), the container adopts the new spec + duration values,
+                        // and the new spec's sustained contribution is registered. Without
+                        // the swap, re-applying a stronger buff silently kept the old
+                        // spec's magnitudes retained.
+                        oldContainer.ReverseImpact();
+                        oldContainer.ReplaceValuesWith(newContainer);
+
+                        if (spec.IsSustainedModifier())
+                        {
+                            AttributeSystem.ModifyAttribute(
+                                spec.Base.ImpactSpecification.AttributeTarget,
+                                new SourcedModifiedAttributeValue(spec, 0f, 0f));
+                        }
+                    }
                     break;
                 }
                 case EEffectReApplicationPolicy.AppendNewContainer:
@@ -337,69 +376,96 @@ namespace FarEmerald.PlayForge
                         flag = false;
                         break;
                     }
-                    
+
                     int stacks = spec.Base.DurationSpecification.GetStackAmount(container);
                     container.Stack(stacks);
+
+                    // Stacks feed magnitude through the container-aware impacter path —
+                    // refresh the retained contribution so the attribute recomputes with
+                    // the new stack count. (Tick-delivered specs pick it up on their next
+                    // tick without help.)
+                    if (container.Spec.IsSustainedModifier())
+                    {
+                        AttributeSystem.ModifyAttribute(
+                            container.Spec.Base.ImpactSpecification.AttributeTarget,
+                            new SourcedModifiedAttributeValue(container.Spec, 0f, 0f));
+                    }
 
                     break;
                 }
                 default:
                     throw new ArgumentOutOfRangeException();
             }
-            
-            switch (spec.Base.DurationSpecification.ReApplicationInteraction)
+
+            // Interaction only applies when the re-application was absorbed by existing
+            // containers. On the append path (flag == false) the caller proceeds with a
+            // fresh application — running Refresh/Extend + ApplyTickOnApplication here as
+            // well would double-tick the effect.
+            if (flag)
             {
-                case EEffectInteractionPolicy.DoNothing:
-                    break;
-                case EEffectInteractionPolicy.RefreshContainerDuration:
-                    foreach (var c in _containers)
-                    {
-                        c.Refresh();
-                        if (c.Spec.Base.DurationSpecification.TickOnApplication) ApplyTickOnApplication(c);
-                    }
-                    break;
-                case EEffectInteractionPolicy.ExtendContainerDuration:
-                    foreach (var c in _containers)
-                    {
-                        c.Extend(spec.Base.DurationSpecification.GetTotalDuration(spec));
-                        if (c.Spec.Base.DurationSpecification.TickOnApplication) ApplyTickOnApplication(c);
-                    }
-                    break;
-                default:
-                    throw new ArgumentOutOfRangeException();
+                switch (spec.Base.DurationSpecification.ReApplicationInteraction)
+                {
+                    case EEffectInteractionPolicy.DoNothing:
+                        break;
+                    case EEffectInteractionPolicy.RefreshContainerDuration:
+                        foreach (var c in _containers)
+                        {
+                            c.Refresh();
+                            if (c.Spec.Base.DurationSpecification.TickOnApplication) ApplyTickOnApplication(c);
+                        }
+                        break;
+                    case EEffectInteractionPolicy.ExtendContainerDuration:
+                        foreach (var c in _containers)
+                        {
+                            c.Extend(spec.Base.DurationSpecification.GetTotalDuration(spec));
+                            if (c.Spec.Base.DurationSpecification.TickOnApplication) ApplyTickOnApplication(c);
+                        }
+                        break;
+                    default:
+                        throw new ArgumentOutOfRangeException();
+                }
+
+                CompileGrantedTags();
             }
 
-            if (flag) CompileGrantedTags();
-            
             return flag;
         }
 
         private void HandleGameplayEffects()
         {
-            // Validate removal and ongoing requirements
             foreach (var container in EffectShelf)
             {
+                if (FinishedEffects.Contains(container)) continue;
+
                 if (ForgeHelper.ValidateEffectRemovalRequirements(container.Spec))
                 {
-                    FinishedEffects.Add(container);
-                    needsCleaning = true;
+                    MarkFinished(container);
                 }
                 else
                 {
                     container.Ongoing = ForgeHelper.ValidateEffectOngoingRequirements(container.Spec);
                 }
             }
-            
+
             CompileGrantedTags();
         }
 
         private void TickEffectShelf()
         {
-            foreach (var container in EffectShelf)
+            // Index-based over the frame-start count: executing a tick can apply contained
+            // effects, which land NEW containers on the shelf mid-loop (a foreach would
+            // throw). Containers are never removed from the shelf during this pass
+            // (removal is deferred through FinishedEffects), so indices stay stable;
+            // late additions start ticking next frame.
+            int shelfCount = EffectShelf.Count;
+            for (int i = 0; i < shelfCount; i++)
             {
+                var container = EffectShelf[i];
+                if (FinishedEffects.Contains(container)) continue;
+
                 var durationPolicy = container.Spec.Base.DurationSpecification.DurationPolicy;
                 if (durationPolicy == EEffectDurationPolicy.Instant) continue;
-                
+
                 float deltaTime = container.Spec.Base.DurationSpecification.GetDeltaTime(container.Spec);
 
                 if (container.Spec.Base.DurationSpecification.EnablePeriodicTicks)
@@ -414,53 +480,57 @@ namespace FarEmerald.PlayForge
                     }
 
                     var effectContext = new EffectWorkerContext(
-                        this, container.Spec, 
-                        _frameSummary, _actionQueue, 
+                        this, container.Spec,
+                        _frameSummary, _actionQueue,
                         executeTicks);
                     container.Spec.RunWorkerTick(effectContext);
-                
+
                     if (executeTicks > 0 && container.Ongoing)
                     {
                         Callbacks?.EffectTick(container.Spec, executeTicks);
-                        
+
                         for (int _ = 0; _ < executeTicks; _++) ApplyDurationGameplayEffectAsInstant(container);
                     }
                 }
 
                 if (durationPolicy == EEffectDurationPolicy.Infinite) continue;
-                
+
                 container.UpdateTimeRemaining(deltaTime);
 
                 if (container.DurationRemaining > 0) continue;
-                
-                FinishedEffects.Add(container);
-                needsCleaning = true;
+
+                MarkFinished(container);
             }
         }
-        
+
         private void ClearFinishedEffects()
         {
-            foreach (var container in FinishedEffects)
+            // Snapshot-and-clear: OnRemove / removal workers / callbacks can re-enter
+            // HandleGameplayEffects and mark MORE containers finished mid-loop. Those land
+            // in the (now empty) live list, re-flag needsCleaning, and are processed next
+            // update — mutating the list we're iterating would throw.
+            var finished = FinishedEffects.ToArray();
+            FinishedEffects.Clear();
+            needsCleaning = false;
+
+            foreach (var container in finished)
             {
-                container.OnRemove();
+                // Off the shelf FIRST so re-entrant HandleGameplayEffects passes can't
+                // re-mark a container that is mid-removal (double OnRemove = double
+                // reversal of its attribute contribution).
                 EffectShelf.Remove(container);
-                
+                container.OnRemove();
+
                 var effectContext = new EffectWorkerContext(
-                    this, container.Spec, 
+                    this, container.Spec,
                     _frameSummary, _actionQueue);
                 container.Spec.RunWorkerRemoval(effectContext);
 
-                if (container.Spec.Base.ImpactSpecification.AttributeTarget)
-                {
-                    AttributeSystem.RemoveAttributeDerivation(container.Spec);
-                }
-                
+                AttributeSystem.RemoveAttributeDerivation(container.Spec);
+
                 Callbacks?.EffectRemoved(container.Spec.Base);
             }
-            
-            FinishedEffects.Clear();
-            needsCleaning = false;
-            
+
             HandleGameplayEffects();
         }
 
@@ -511,18 +581,16 @@ namespace FarEmerald.PlayForge
             float longestRemaining = float.MinValue;
             foreach (var container in EffectShelf)
             {
-                foreach (var specTag in container.Spec.Base.Tags.GrantedTags)
+                if (!lookForTags.Contains(container.Spec.Base.GetAssetTag())
+                    && !container.GetGrantedTags().Any(lookForTags.Contains)) continue;
+                if (container.Spec.Base.DurationSpecification.DurationPolicy == EEffectDurationPolicy.Infinite)
                 {
-                    if (lookForTags.Contains(container.Spec.Base.GetAssetTag()) && !lookForTags.Contains(specTag)) continue;
-                    if (container.Spec.Base.DurationSpecification.DurationPolicy == EEffectDurationPolicy.Infinite)
-                    {
-                        return new EffectDurationRemaining(float.MaxValue, float.MaxValue, true);
-                    }
-
-                    if (!(container.TotalDuration > longestDuration)) continue;
-                    longestDuration = container.TotalDuration;
-                    longestRemaining = container.DurationRemaining;
+                    return new EffectDurationRemaining(float.MaxValue, float.MaxValue, true);
                 }
+
+                if (!(container.TotalDuration > longestDuration)) continue;
+                longestDuration = container.TotalDuration;
+                longestRemaining = container.DurationRemaining;
             }
 
             return new EffectDurationRemaining(longestDuration, longestRemaining, longestDuration >= 0f);

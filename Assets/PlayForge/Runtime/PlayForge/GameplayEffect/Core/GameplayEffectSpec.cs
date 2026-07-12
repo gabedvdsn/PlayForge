@@ -14,6 +14,20 @@ namespace FarEmerald.PlayForge
 
         public TrackedImpact TrackedImpact;
 
+        /// <summary>
+        /// The shelf container currently holding this spec (null for instant effects and
+        /// for specs not yet shelved). Set by <see cref="AbstractEffectContainer"/> on
+        /// construction and on <see cref="AbstractEffectContainer.ReplaceValuesWith"/>.
+        /// Lets the impacter pipeline evaluate container-dependent state (stack count)
+        /// without the attribute system knowing about containers.
+        /// </summary>
+        public AbstractEffectContainer RuntimeContainer { get; private set; }
+
+        public void SetRuntimeContainer(AbstractEffectContainer container)
+        {
+            RuntimeContainer = container;
+        }
+
         private Dictionary<IScaler, AttributeValue?> SourceCapturedAttributes;
 
         // Cached impacter list — built lazily on first GetImpacters() call so we don't
