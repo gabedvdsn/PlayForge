@@ -44,6 +44,22 @@ MonoBehaviour:
     ContextTags: []
     GrantedTags: []
   ImpactSpecification:
+    Entries:
+    - AttributeTarget: {fileID: 11400000, guid: 9e3481fbb0007434d9416c20f647c10f, type: 2}
+      Delivery: 0
+      TargetSlot: 0
+      Operation: 1
+      MultiplyBehaviour: 0
+      SortOrder: 0
+      Magnitude:
+        Magnitude: 1.2
+        RealMagnitude: 2
+        Scaler:
+          rid: -2
+      RetentionGroupOverride:
+        Name: 
+        DisplayName: 
+      ImpactTypes: []
     AttributeTarget: {fileID: 11400000, guid: 9e3481fbb0007434d9416c20f647c10f, type: 2}
     TargetImpact: 0
     ImpactOperation: 1

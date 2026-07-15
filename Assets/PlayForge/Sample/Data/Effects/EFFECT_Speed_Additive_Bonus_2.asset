@@ -22,9 +22,10 @@ MonoBehaviour:
   - DurationSpecification.TickOnApplication
   - DurationSpecification.ReApplicationPolicy
   - ImpactSpecification.TargetImpact
+  - ImpactSpecification.MagnitudeOperation.RealMagnitude
   _templateListSnapshots: []
   Definition:
-    Name: Decrease Speed C+B by 15
+    Name: Up Health B 15
     Description: 
     Visibility:
       Name: Not Visibled2xuDNqtid9uamDM5aBXkxUexwFpJUF4d2xuDNqtid9uamDM5aBXk
@@ -35,13 +36,13 @@ MonoBehaviour:
       DisplayName: Ignore
   Tags:
     AssetTag:
-      Name: Effect.DecreaseSpeedCBBy15
-      DisplayName: DecreaseSpeedCBBy15
+      Name: Effect.UpHealthB15
+      DisplayName: UpHealthB15
     ContextTags: []
     GrantedTags: []
   ImpactSpecification:
     AttributeTarget: {fileID: 11400000, guid: 9e3481fbb0007434d9416c20f647c10f, type: 2}
-    TargetImpact: 2
+    TargetImpact: 1
     ImpactOperation: 0
     MultiplyBehaviour: 0
     AffiliationPolicy: 3
@@ -50,8 +51,8 @@ MonoBehaviour:
     ImpactTypes: []
     ReverseImpactOnRemoval: 0
     MagnitudeOperation:
-      Magnitude: -15
-      RealMagnitude: 1
+      Magnitude: 15
+      RealMagnitude: 2
       Scaler:
         rid: -2
     Packets: []

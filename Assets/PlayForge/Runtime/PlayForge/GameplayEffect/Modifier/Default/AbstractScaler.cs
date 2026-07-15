@@ -389,17 +389,34 @@ namespace FarEmerald.PlayForge
         // ═══════════════════════════════════════════════════════════════════════════
         
         /// <summary>
-        /// Gets the effective max level based on configuration.
+        /// Gets the effective max level based on configuration. Falls back to the
+        /// origin's own level pair when there is no live source — synthetic leveler
+        /// carriers (tooltip/analysis evaluation via <see cref="LevelerEffectOrigin"/>)
+        /// carry their min/max on the origin itself.
         /// </summary>
         protected int GetEffectiveMaxLevel(IAttributeImpactCarrier spec)
         {
-            return Configuration switch
+            var origin = spec.GetOrigin();
+            var source = origin?.GetSource();
+
+            switch (Configuration)
             {
-                ELevelConfig.LockToLevelProvider => spec.GetOrigin().GetSource().GetLevel().MaxValue,
-                ELevelConfig.Unlocked => MaxLevel,
-                ELevelConfig.Clamped => Mathf.Min(MaxLevel, spec.GetOrigin().GetSource().GetLevel().CurrentValue),
-                _ => MaxLevel
-            };
+                case ELevelConfig.LockToLevelProvider:
+                    if (source is not null) return source.GetLevel().MaxValue;
+                    return origin is not null ? origin.GetLevel().MaxValue : MaxLevel;
+
+                case ELevelConfig.Unlocked:
+                    return MaxLevel;
+
+                case ELevelConfig.Clamped:
+                    int current = source is not null ? source.GetLevel().CurrentValue
+                        : origin is not null ? origin.GetLevel().CurrentValue
+                        : MaxLevel;
+                    return Mathf.Min(MaxLevel, current);
+
+                default:
+                    return MaxLevel;
+            }
         }
 
         protected float GetEffectiveRelativeLevel(IAttributeImpactCarrier deriv)

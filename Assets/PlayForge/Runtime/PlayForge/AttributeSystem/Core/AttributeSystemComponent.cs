@@ -181,44 +181,92 @@ namespace FarEmerald.PlayForge
                 attributeValue = cachedValue.ActiveValue;
                 return true;
             }
-            
+
             attributeValue = default;
             return false;
         }
+
+        // ─── Per-group attribution surface (IMPACT_MODEL_REFACTOR.md §2.3) ─────────
+        // Groups partition an attribute's pool for UX/consumer queries (base vs bonus
+        // health, base vs bonus damage). Slices always sum exactly to ActiveValue.
+
+        /// <summary>This group's slice of the attribute (committed history + attributed modifier effect).</summary>
+        public bool TryGetGroupValue(IAttribute attribute, Tag group, out AttributeValue value)
+        {
+            if (attribute is not null && AttributeCache.TryGetValue(attribute, out var cached))
+            {
+                value = cached.GetGroupValue(group);
+                return true;
+            }
+
+            value = default;
+            return false;
+        }
+
+        /// <summary>Ordered per-group slices of the attribute's ActiveValue.</summary>
+        public IReadOnlyList<GroupContribution> GetBreakdown(IAttribute attribute)
+        {
+            if (attribute is not null && AttributeCache.TryGetValue(attribute, out var cached))
+            {
+                return cached.GetBreakdown();
+            }
+
+            return System.Array.Empty<GroupContribution>();
+        }
         
         // ═══════════════════════════════════════════════════════════════════════════
-        // ATTRIBUTE MODIFICATION (refactored for WorkerContext)
+        // ATTRIBUTE MODIFICATION — the four-verb surface (IMPACT_MODEL_REFACTOR.md §2.4)
+        //
+        //   RegisterModifier   — Continuous entries; transient, derived, auto-reversing.
+        //   UnregisterModifier — the ONLY reversal mechanism. Runs through the same
+        //                        pipeline as every other change, so workers, callbacks and
+        //                        the regulation refresh all observe removals (fixes the
+        //                        stale-derived-attribute bug).
+        //   CommitImpact       — OnApply/Periodic entries; permanent per-group history.
+        //   ApplyDelta         — synthetic writes (init pulse, auto-scale propagation,
+        //                        external systems) with a precomputed (current, base) delta.
+        //
+        // All four run the identical 4-phase machinery (pre-workers → mutate →
+        // post-workers → impact relay); they differ only in the PHASE-2 dispatch.
         // ═══════════════════════════════════════════════════════════════════════════
+
+        private enum ECommitMode
+        {
+            RegisterModifier,
+            UnregisterModifier,
+            CommitImpact,
+        }
+
+        public ImpactData RegisterModifier(IAttribute attribute, SourcedModifiedAttributeValue sourcedModifiedValue, IReadOnlyList<IAttributeImpacter> impacters, bool runEvents = true)
+            => CommitWithCarrier(attribute, sourcedModifiedValue, runEvents, ECommitMode.RegisterModifier, impacters);
+
+        public ImpactData UnregisterModifier(IAttribute attribute, SourcedModifiedAttributeValue sourcedModifiedValue, bool runEvents = true)
+            => CommitWithCarrier(attribute, sourcedModifiedValue, runEvents, ECommitMode.UnregisterModifier, null);
+
+        public ImpactData CommitImpact(IAttribute attribute, SourcedModifiedAttributeValue sourcedModifiedValue, IReadOnlyList<IAttributeImpacter> impacters, bool runEvents = true)
+            => CommitWithCarrier(attribute, sourcedModifiedValue, runEvents, ECommitMode.CommitImpact, impacters);
+
+        // ─── ApplyDelta — synthetic/direct writes ────────────────────────────────
+        // `ModifyAttribute` is the historical public name; semantically this is the
+        // ApplyDelta verb: a permanent commit of a precomputed (current, base) delta or
+        // of the carrier's own impacters. Gameplay-effect specs never route here — the
+        // effect lifecycle uses Register/Unregister/Commit with per-entry impacters.
 
         public ImpactData ModifyAttribute(SourcedModifiedAttributeValue sourcedModifiedValue, bool runEvents = true)
         {
             return ModifyAttribute(sourcedModifiedValue.Carrier.GetAttribute(), sourcedModifiedValue, runEvents);
         }
-        
+
         public ImpactData ModifyAttribute(IAttribute attribute, SourcedModifiedAttributeValue sourcedModifiedValue, bool runEvents = true)
-            => CommitWithCarrier(attribute, sourcedModifiedValue, runEvents, isTick: false);
+            => CommitWithCarrier(attribute, sourcedModifiedValue, runEvents, ECommitMode.CommitImpact, null);
 
         /// <summary>
-        /// Tick-path entry point — used by periodic-tick handlers in
-        /// <c>RuntimeGameplayAbilitySystem.ApplyDurationGameplayEffectAsInstant</c>. Bypasses
-        /// the apply-side retention rule and idempotency guard so each tick of a retained
-        /// spec correctly commits its impacters as one-shot history. Without this path,
-        /// ticks of any retained spec collapse into no-op refreshes (the apply path's
-        /// idempotency catches the re-applied carrier instance).
+        /// The shared 4-phase pipeline. Every attribute mutation — registration,
+        /// removal, commit, synthetic delta — funnels through here so worker phases,
+        /// callbacks, frame-impact relays and the regulation refresh behave identically
+        /// regardless of what kind of change occurred.
         /// </summary>
-        public ImpactData TickAttribute(IAttribute attribute, SourcedModifiedAttributeValue sourcedModifiedValue, bool runEvents = true)
-            => CommitWithCarrier(attribute, sourcedModifiedValue, runEvents, isTick: true);
-
-        public ImpactData TickAttribute(SourcedModifiedAttributeValue sourcedModifiedValue, bool runEvents = true)
-            => TickAttribute(sourcedModifiedValue.Carrier.GetAttribute(), sourcedModifiedValue, runEvents);
-
-        /// <summary>
-        /// Shared commit pipeline used by both <see cref="ModifyAttribute"/> (apply path,
-        /// retention rule applies) and <see cref="TickAttribute"/> (tick path, always one-shot).
-        /// All worker / callback / impact-relay machinery lives here so the two entry points
-        /// stay perfectly symmetric except for the dispatch decision in PHASE 2.
-        /// </summary>
-        private ImpactData CommitWithCarrier(IAttribute attribute, SourcedModifiedAttributeValue sourcedModifiedValue, bool runEvents, bool isTick)
+        private ImpactData CommitWithCarrier(IAttribute attribute, SourcedModifiedAttributeValue sourcedModifiedValue, bool runEvents, ECommitMode mode, IReadOnlyList<IAttributeImpacter> impacters)
         {
             // Null attribute = carrier with no attribute impact (e.g. a pure tag-granting
             // effect). Nothing to commit — Dictionary.ContainsKey(null) would throw.
@@ -235,25 +283,21 @@ namespace FarEmerald.PlayForge
             if (runEvents) PreChangeHandler.RunWorkers(ctx);
 
             // ═══════════════════════════════════════════════════════════════════════
-            // PHASE 2: Resolve carrier → Apply / Tick → recompute
+            // PHASE 2: Dispatch per mode.
             //
-            // Resolve the carrier whose impacters drive this modification.
-            //  • Carrier already exposes impacters (real GameplayEffectSpec → ScalerImpacter,
-            //    or any new carrier kind built directly with ConstantImpacter): apply it
-            //    as-is. Magnitudes get freshly evaluated by the impacter pipeline,
-            //    decoupling from any stale precomputed delta on the SourcedModifiedAttributeValue.
-            //
-            //  • Carrier has no impacters (legacy "hand-rolled delta" callsite — e.g.
-            //    EnforceScaling propagation, the synthetic zero-impact pulse fired on
-            //    attribute-set initialisation, third-party wrappers): synthesize a
-            //    SourceAttributeImpact carrying ConstantImpacter(s) from the precomputed
-            //    (CurrentValue, BaseValue) delta so the recompute aggregator can apply
-            //    bounds + rounding + frame-impact tracking uniformly.
+            // Carriers with no impacters (hand-rolled delta callsites — EnforceScaling
+            // propagation, the synthetic zero-impact init pulse, third-party wrappers)
+            // are wrapped in a SourceAttributeImpact carrying ConstantImpacter(s) built
+            // from the precomputed (CurrentValue, BaseValue) delta, so every path flows
+            // through the same impacter machinery (bounds + rounding + attribution).
             // ═══════════════════════════════════════════════════════════════════════
             var holdValue = AttributeCache[attribute].ActiveValue;
 
             var carrier = sourcedModifiedValue.Carrier;
-            if (carrier == null || carrier.GetImpacters().Count == 0)
+            // Wrap delta-only carriers for the COMMIT path only. Register/Unregister are
+            // identity-based — substituting a synthetic wrapper would register under the
+            // wrong identity and make later unregistration miss.
+            if (mode == ECommitMode.CommitImpact && (carrier == null || carrier.GetImpacters().Count == 0))
             {
                 carrier = SourceAttributeImpact.FromAdditiveDelta(
                     sourcedModifiedValue.Carrier?.GetOrigin()?.GetSource() ?? Self,
@@ -266,13 +310,21 @@ namespace FarEmerald.PlayForge
                     sourcedModifiedValue.Carrier?.RetainImpact() ?? false);
             }
 
-            // Tick path always one-shots (preserves history in committedOneShotDelta).
-            // Apply path runs the retention rule (carrier.IsSustainedModifier()):
-            // Mode A → retain + Recompute; Mode B → one-shot now (instant/synthetic) or
-            // no-op (durational tick-delivered, which commits via the tick path instead).
-            // Both internally handle bounds + rounding via ApplyOneShotImpacters or Recompute.
-            if (isTick) AttributeCache[attribute].TickCarrier(carrier, AttributeCache);
-            else        AttributeCache[attribute].ApplyCarrier(carrier, AttributeCache);
+            var cached = AttributeCache[attribute];
+            switch (mode)
+            {
+                case ECommitMode.RegisterModifier:
+                    cached.RegisterModifier(carrier, impacters ?? carrier.GetImpacters(), AttributeCache);
+                    break;
+                case ECommitMode.UnregisterModifier:
+                    cached.UnregisterModifier(carrier, AttributeCache);
+                    break;
+                case ECommitMode.CommitImpact:
+                    cached.CommitImpact(carrier, impacters ?? carrier.GetImpacters(), AttributeCache);
+                    break;
+                default:
+                    throw new ArgumentOutOfRangeException(nameof(mode), mode, null);
+            }
 
             change.Override(AttributeCache[attribute].ActiveValue - holdValue);
 
@@ -364,9 +416,11 @@ namespace FarEmerald.PlayForge
             if (carrier == null) return;
             var attribute = carrier.GetAttribute();
             if (attribute is null || !AttributeCache.ContainsKey(attribute)) return;
-            // Removal IS nullification under the recompute model — a removed carrier
-            // contributes nothing whether it's in the list as "dead" or simply absent.
-            AttributeCache[attribute].RemoveCarrier(carrier, AttributeCache);
+
+            // Route through the full pipeline (not a silent RemoveCarrier) so workers,
+            // callbacks and the regulation refresh observe the removal — otherwise
+            // attributes derived from this one keep their stale value.
+            UnregisterModifier(attribute, new SourcedModifiedAttributeValue(carrier, 0f, 0f));
         }
         
         // ═══════════════════════════════════════════════════════════════════════════

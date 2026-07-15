@@ -15,7 +15,6 @@ MonoBehaviour:
   LocalData: []
   _template: {fileID: 11400000, guid: eea235da25bf59a468c3da6a4fd1c6a3, type: 2}
   _templateOverrides:
-  - DurationSpecification.DurationPolicy
   - DurationSpecification.DurationOperation.Magnitude
   - ImpactSpecification.AttributeTarget
   - ImpactSpecification.MagnitudeOperation.Magnitude
@@ -23,9 +22,10 @@ MonoBehaviour:
   - DurationSpecification.TicksOperation.Magnitude
   - ImpactSpecification.TargetImpact
   - DurationSpecification.EnablePeriodicTicks
+  - ImpactSpecification.MagnitudeOperation.RealMagnitude
   _templateListSnapshots: []
   Definition:
-    Name: Increase Speed C+B by 15
+    Name: Down Health B 15
     Description: 
     Visibility:
       Name: Not Visibled2xuDNqtid9uamDM5aBXkxUexwFpJUF4d2xuDNqtid9uamDM5aBXk
@@ -36,13 +36,13 @@ MonoBehaviour:
       DisplayName: Ignore
   Tags:
     AssetTag:
-      Name: Effect.IncreaseSpeedCBBy15
-      DisplayName: IncreaseSpeedCBBy15
+      Name: Effect.DownHealthB15
+      DisplayName: DownHealthB15
     ContextTags: []
     GrantedTags: []
   ImpactSpecification:
-    AttributeTarget: {fileID: 11400000, guid: 9e3481fbb0007434d9416c20f647c10f, type: 2}
-    TargetImpact: 2
+    AttributeTarget: {fileID: 11400000, guid: 5238e93ea6a409e4a84dd1dcf23dd45c, type: 2}
+    TargetImpact: 1
     ImpactOperation: 0
     MultiplyBehaviour: 0
     AffiliationPolicy: 3
@@ -51,13 +51,13 @@ MonoBehaviour:
     ImpactTypes: []
     ReverseImpactOnRemoval: 0
     MagnitudeOperation:
-      Magnitude: 25
-      RealMagnitude: 1
+      Magnitude: -15
+      RealMagnitude: 2
       Scaler:
         rid: -2
     Packets: []
   DurationSpecification:
-    DurationPolicy: 1
+    DurationPolicy: 0
     DurationOperation:
       Magnitude: 5
       RealMagnitude: 1

@@ -55,7 +55,6 @@ namespace FarEmerald.PlayForge.Extended.Editor
         private bool _overviewAttributesInitialized;
 
         // Reflection cache
-        private FieldInfo _effectShelfField;
         private FieldInfo _tagCacheField;
 
         // Expansion state
@@ -138,8 +137,8 @@ namespace FarEmerald.PlayForge.Extended.Editor
 
         private void OnEnable()
         {
-            _effectShelfField = typeof(GameplayAbilitySystem).GetField("EffectShelf",
-                BindingFlags.NonPublic | BindingFlags.Instance);
+            // Effect shelf moved to the shared EffectSystemComponent (public surface) —
+            // no reflection needed anymore; see CreateEffectsSection.
             _tagCacheField = typeof(GameplayAbilitySystem).GetField("TagCache",
                 BindingFlags.NonPublic | BindingFlags.Instance);
             affiliationColors = new Dictionary<string, Color>();
@@ -1548,7 +1547,7 @@ namespace FarEmerald.PlayForge.Extended.Editor
         {
             var section = CreateSection("Active Effects", EffectColor);
 
-            var effectShelf = _effectShelfField?.GetValue(_selectedGAS) as List<AbstractEffectContainer>;
+            var effectShelf = _selectedGAS?.GetEffectSystem()?.Shelf;
 
             if (effectShelf == null || effectShelf.Count == 0)
             {

@@ -7,6 +7,7 @@ namespace FarEmerald.PlayForge
         public AttributeSystemComponent GetAttributeSystem();
         public AbilitySystemComponent GetAbilitySystem();
         public ItemSystemComponent GetItemSystem();
+        public EffectSystemComponent GetEffectSystem();
         
         [CanBeNull] public GameplayAbilitySystem ToGASObject();
 

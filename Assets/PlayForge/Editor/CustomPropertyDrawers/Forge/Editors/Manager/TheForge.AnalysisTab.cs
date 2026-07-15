@@ -1736,22 +1736,39 @@ namespace FarEmerald.PlayForge.Extended.Editor
         {
             var impact = effect.ImpactSpecification;
             var duration = effect.DurationSpecification;
-            
-            // Impact Magnitude
-            float magnitude = impact?.MagnitudeOperation.Magnitude ?? 0f;
-            if (impact?.MagnitudeOperation.Scaler?.LevelValues != null && impact.MagnitudeOperation.Scaler.LevelValues.Length > 0)
+
+            // Evaluate the effect at its MAX level through the real scaler pipeline
+            // (AbilityInspector drives synthetic leveler carriers through the authored
+            // impact entries) — replaces the old ad-hoc LevelValues.Max() math and is
+            // delivery-aware (Continuous vs OnApply vs Periodic).
+            int maxLevel = Mathf.Max(1, effect.GetLinkedMaxLevel());
+            var series = AbilityInspector.BuildEffectSeries(effect, 1, maxLevel);
+
+            float magnitude = 0f;      // strongest single application / tick / modifier value
+            float periodicTotal = 0f;  // total delivered by Periodic entries over the lifetime
+            if (series != null)
             {
-                magnitude = impact.MagnitudeOperation.RealMagnitude switch
+                foreach (var impactSeries in series.Impacts)
                 {
-                    EMagnitudeOperation.AddScaler => impact.MagnitudeOperation.Magnitude + impact.MagnitudeOperation.Scaler.LevelValues.Max(),
-                    EMagnitudeOperation.MultiplyWithScaler => impact.MagnitudeOperation.Magnitude * impact.MagnitudeOperation.Scaler.LevelValues.Max(),
-                    EMagnitudeOperation.UseScaler => impact.MagnitudeOperation.Scaler.LevelValues.Max(),
-                    _ => impact.MagnitudeOperation.Magnitude
-                };
+                    float atMax = Mathf.Abs(impactSeries.Magnitude[^1]);
+                    if (impactSeries.Operation == ECalculationOperation.Multiply)
+                    {
+                        // A ×1.2 modifier is "20% of the attribute" — score the bonus part
+                        // on a comparable scale rather than the raw multiplier.
+                        atMax = Mathf.Abs(impactSeries.Magnitude[^1] - 1f) * 100f;
+                    }
+                    magnitude = Mathf.Max(magnitude, atMax);
+
+                    if (impactSeries.Delivery == EImpactDelivery.Periodic)
+                    {
+                        periodicTotal += Mathf.Abs(impactSeries.Total[^1]);
+                    }
+                }
             }
-            analysis.Metrics.Add(new PowerMetric("ImpactMagnitude", "Magnitude", 
-                "The magnitude of attribute modification", Mathf.Abs(magnitude)));
-            
+
+            analysis.Metrics.Add(new PowerMetric("ImpactMagnitude", "Magnitude",
+                "Strongest per-application magnitude at max level (multiplies scored as %)", magnitude));
+
             // Impact Operation multiplier
             float opMultiplier = impact?.ImpactOperation switch
             {
@@ -1763,32 +1780,31 @@ namespace FarEmerald.PlayForge.Extended.Editor
             };
             analysis.Metrics.Add(new PowerMetric("ImpactOpMultiplier", "Op Weight",
                 "Weight based on operation type (Multiply/Override = stronger)", opMultiplier));
-            
-            // Duration Score
+
+            // Duration Score — durational length evaluated at max level (scaler-aware)
+            float maxDuration = series?.Duration != null && series.Duration.Length > 0 ? series.Duration[^1] : 0f;
             float durationScore = duration?.DurationPolicy switch
             {
                 EEffectDurationPolicy.Instant => 1f,
                 EEffectDurationPolicy.Infinite => 10f,
-                EEffectDurationPolicy.Durational => Mathf.Clamp(duration.DurationOperation.Magnitude * 0.5f, 1f, 20f),
+                EEffectDurationPolicy.Durational => Mathf.Clamp(maxDuration * 0.5f, 1f, 20f),
                 _ => 1f
             };
             analysis.Metrics.Add(new PowerMetric("DurationScore", "Duration",
-                "Score based on duration policy and length", durationScore));
-            
-            // Tick Potential (magnitude × ticks)
-            float tickPotential = 0f;
-            if (duration != null && duration.EnablePeriodicTicks)
+                "Score based on duration policy and length (max level)", durationScore));
+
+            // Tick Potential — total delivered by Periodic entries at max level.
+            // Infinite periodic effects have unbounded totals; score one tick's worth
+            // per second of interval as a proxy.
+            float tickPotential = periodicTotal;
+            if (duration is { EnablePeriodicTicks: true, DurationPolicy: EEffectDurationPolicy.Infinite }
+                && duration.TickIntervalOperation.Magnitude > 0 && tickPotential <= 0f)
             {
-                tickPotential = duration.DurationPolicy switch
-                {
-                    EEffectDurationPolicy.Durational => Mathf.Max(0, duration.TicksOperation.Magnitude - 1) * Mathf.Abs(magnitude),
-                    EEffectDurationPolicy.Infinite => duration.TickIntervalOperation.Magnitude > 0 ? Mathf.Abs(magnitude) : 0f,
-                    _ => 0f
-                };
+                tickPotential = magnitude / Mathf.Max(0.01f, duration.TickIntervalOperation.Magnitude);
             }
             analysis.Metrics.Add(new PowerMetric("TickPotential", "Tick Potential",
-                "Magnitude × (ticks - 1) for periodic effects", tickPotential));
-            
+                "Total delivered by periodic entries over the effect's lifetime (max level)", tickPotential));
+
             // Stack Potential
             float stackPotential = 0f;
             if (duration != null && duration.ReApplicationPolicy == EEffectReApplicationPolicy.StackExistingContainers)
@@ -1798,7 +1814,7 @@ namespace FarEmerald.PlayForge.Extended.Editor
                 {
                     stackPotential = Mathf.Max(stackPotential, duration.StackAmountOperation.Scaler.LevelValues.Max());
                 }
-                stackPotential *= Mathf.Abs(magnitude);
+                stackPotential *= magnitude;
             }
             analysis.Metrics.Add(new PowerMetric("StackPotential", "Stack Potential",
                 "Maximum stacks × magnitude", stackPotential));
@@ -1836,67 +1852,52 @@ namespace FarEmerald.PlayForge.Extended.Editor
         
         private void AnalyzeAbility(Ability ability, PowerAnalysis analysis)
         {
-            // Discover all effects the ability applies
-            var discoveredEffects = DiscoverAbilityEffects(ability);
-            analysis.DiscoveredEffects = discoveredEffects;
-            
-            // Effect Power Sum - sum of all effect power scores
-            float effectPowerSum = 0f;
-            foreach (var effect in discoveredEffects)
+            // Static introspection: what the ability applies, in what role, with
+            // per-level numbers (AbilityInspector walks stages/tasks/contained chains).
+            var breakdown = AbilityInspector.Build(ability);
+
+            // Gameplay effects only — cost/cooldown are accounted by their own
+            // (negatively weighted) metrics below; including them in the power sum
+            // double-counted them as both power AND penalty.
+            var gameplayEffects = new List<GameplayEffect>();
+            void Collect(AbilityEffectUsage usage)
             {
-                if (_effectPowerCache.TryGetValue(effect, out var power))
-                {
-                    effectPowerSum += power;
-                }
+                if (usage.Effect != null && !gameplayEffects.Contains(usage.Effect)) gameplayEffects.Add(usage.Effect);
+                foreach (var contained in usage.Contained) Collect(contained);
             }
+            foreach (var usage in breakdown.GameplayUsages) Collect(usage);
+
+            analysis.DiscoveredEffects = gameplayEffects;
+
+            // Effect Power Sum — order-independent: falls back to computing on demand
+            // for effects outside the precomputed cache (contained chains, filtered dirs).
+            float effectPowerSum = gameplayEffects.Sum(GetOrComputeEffectPower);
             analysis.Metrics.Add(new PowerMetric("EffectPowerSum", "Effect Power",
-                "Sum of all applied effect power scores", effectPowerSum));
-            
+                "Sum of applied effect power scores (cost/cooldown excluded)", effectPowerSum));
+
             // Effect Count
             analysis.Metrics.Add(new PowerMetric("EffectCount", "Effect Count",
-                "Number of distinct effects applied", discoveredEffects.Count));
-            
-            // Cost Score (higher cost = higher score, but negative weight makes it reduce power)
+                "Number of distinct effects applied", gameplayEffects.Count));
+
+            // Cost Score — total committed by the cost effect at max level, evaluated
+            // through the real scaler pipeline (negative preset weight reduces power).
             float costScore = 0f;
-            if (ability.Cost != null)
+            var costSeries = breakdown.Cost?.Series;
+            if (costSeries != null)
             {
-                var costMag = ability.Cost.ImpactSpecification?.MagnitudeOperation.Magnitude ?? 0f;
-                if (ability.Cost.ImpactSpecification?.MagnitudeOperation.Scaler?.LevelValues != null)
+                foreach (var impactSeries in costSeries.Impacts)
                 {
-                    var scaler = ability.Cost.ImpactSpecification.MagnitudeOperation.Scaler;
-                    costMag = ability.Cost.ImpactSpecification.MagnitudeOperation.RealMagnitude switch
-                    {
-                        EMagnitudeOperation.AddScaler => costMag + scaler.LevelValues.Average(),
-                        EMagnitudeOperation.MultiplyWithScaler => costMag * scaler.LevelValues.Average(),
-                        EMagnitudeOperation.UseScaler => scaler.LevelValues.Average(),
-                        _ => costMag
-                    };
+                    costScore += Mathf.Abs(impactSeries.Total[^1]);
                 }
-                costScore = Mathf.Abs(costMag);
             }
             analysis.Metrics.Add(new PowerMetric("CostScore", "Cost",
-                "Cost magnitude (higher = less efficient)", costScore));
-            
-            // Cooldown Score (longer cooldown = higher score, negative weight)
-            float cooldownScore = 0f;
-            if (ability.Cooldown != null)
-            {
-                var cdDuration = ability.Cooldown.DurationSpecification?.DurationOperation.Magnitude ?? 0f;
-                if (ability.Cooldown.DurationSpecification?.DurationOperation.Scaler?.LevelValues != null)
-                {
-                    var scaler = ability.Cooldown.DurationSpecification.DurationOperation.Scaler;
-                    cdDuration = ability.Cooldown.DurationSpecification.DurationOperation.RealMagnitude switch
-                    {
-                        EMagnitudeOperation.AddScaler => cdDuration + scaler.LevelValues.Average(),
-                        EMagnitudeOperation.MultiplyWithScaler => cdDuration * scaler.LevelValues.Average(),
-                        EMagnitudeOperation.UseScaler => scaler.LevelValues.Average(),
-                        _ => cdDuration
-                    };
-                }
-                cooldownScore = cdDuration;
-            }
+                "Cost magnitude at max level (higher = less efficient)", costScore));
+
+            // Cooldown Score — cooldown duration at max level (scaler-aware).
+            var cooldownSeries = breakdown.Cooldown?.Series;
+            float cooldownScore = cooldownSeries?.Duration is { Length: > 0 } cd ? cd[^1] : 0f;
             analysis.Metrics.Add(new PowerMetric("CooldownScore", "Cooldown",
-                "Cooldown duration in seconds", cooldownScore));
+                "Cooldown duration in seconds at max level", cooldownScore));
             
             // Stage Count
             int stageCount = ability.Behaviour?.Stages?.Count ?? 0;
@@ -1938,105 +1939,38 @@ namespace FarEmerald.PlayForge.Extended.Editor
                 "Total tag requirements", tagReqs));
             
             // Ability Complexity (composite)
-            float complexity = stageCount + taskCount * 0.5f + ruleCount + tagReqs * 0.3f + discoveredEffects.Count;
+            float complexity = stageCount + taskCount * 0.5f + ruleCount + tagReqs * 0.3f + gameplayEffects.Count;
             analysis.Metrics.Add(new PowerMetric("AbilityComplexity", "Complexity",
                 "Composite ability complexity", complexity));
         }
         
         /// <summary>
-        /// Discovers all GameplayEffect references in an ability by:
-        /// 1. Checking Cost and Cooldown
-        /// 2. Traversing all tasks in all stages
-        /// 3. Using reflection to find GameplayEffect fields on tasks
+        /// Effect power with an on-demand fallback: effects reached through ability
+        /// breakdowns (contained chains, assets outside the scanned set) may not be in
+        /// the precomputed cache — compute and cache them here so ability power is
+        /// independent of analysis ordering.
         /// </summary>
-        private List<GameplayEffect> DiscoverAbilityEffects(Ability ability)
+        private float GetOrComputeEffectPower(GameplayEffect effect)
         {
-            var effects = new HashSet<GameplayEffect>();
-            
-            // Add Cost and Cooldown if present
-            if (ability.Cost != null)
-                effects.Add(ability.Cost);
-            if (ability.Cooldown != null)
-                effects.Add(ability.Cooldown);
-            
-            // Traverse stages and tasks
-            if (ability.Behaviour?.Stages != null)
+            if (effect == null) return 0f;
+            if (_effectPowerCache.TryGetValue(effect, out var power)) return power;
+
+            var analysis = new PowerAnalysis { Asset = effect, Group = EAnalysisGroup.Effects };
+            AnalyzeEffect(effect, analysis);
+
+            float total = 0f;
+            foreach (var metric in analysis.Metrics)
             {
-                foreach (var stage in ability.Behaviour.Stages)
-                {
-                    if (stage.Tasks == null) continue;
-                    
-                    foreach (var task in stage.Tasks)
-                    {
-                        if (task == null) continue;
-                        DiscoverEffectsInObject(task, effects);
-                    }
-                }
+                total += metric.RawValue * currentPreset.GetWeight(metric.Id);
             }
-            
-            // Also check targeting task if present
-            if (ability.Behaviour?.Targeting != null)
-            {
-                DiscoverEffectsInObject(ability.Behaviour.Targeting, effects);
-            }
-            
-            return effects.Where(e => e != null).ToList();
+
+            _effectPowerCache[effect] = total;
+            return total;
         }
-        
-        /// <summary>
-        /// Uses reflection to find all GameplayEffect fields and List fields on an object.
-        /// </summary>
-        private void DiscoverEffectsInObject(object obj, HashSet<GameplayEffect> effects)
-        {
-            if (obj == null) return;
-            
-            var type = obj.GetType();
-            var fields = type.GetFields(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance);
-            
-            foreach (var field in fields)
-            {
-                try
-                {
-                    // Direct GameplayEffect field
-                    if (field.FieldType == typeof(GameplayEffect))
-                    {
-                        var effect = field.GetValue(obj) as GameplayEffect;
-                        if (effect != null)
-                            effects.Add(effect);
-                    }
-                    // List<GameplayEffect> field
-                    else if (field.FieldType == typeof(List<GameplayEffect>))
-                    {
-                        var list = field.GetValue(obj) as List<GameplayEffect>;
-                        if (list != null)
-                        {
-                            foreach (var effect in list)
-                            {
-                                if (effect != null)
-                                    effects.Add(effect);
-                            }
-                        }
-                    }
-                    // Array of GameplayEffect
-                    else if (field.FieldType == typeof(GameplayEffect[]))
-                    {
-                        var arr = field.GetValue(obj) as GameplayEffect[];
-                        if (arr != null)
-                        {
-                            foreach (var effect in arr)
-                            {
-                                if (effect != null)
-                                    effects.Add(effect);
-                            }
-                        }
-                    }
-                }
-                catch
-                {
-                    // Ignore reflection errors
-                }
-            }
-        }
+
+        // Effect discovery moved to AbilityInspector (runtime): Build() walks stages,
+        // tasks (known types + reflection fallback via FindEffectReferences), targeting,
+        // and contained-effect chains, with per-level series evaluation.
         
         // ═══════════════════════════════════════════════════════════════════════════
         // PLACEHOLDER ANALYZERS (To be implemented)

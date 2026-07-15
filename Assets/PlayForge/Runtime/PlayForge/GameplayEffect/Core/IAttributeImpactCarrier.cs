@@ -133,9 +133,10 @@ namespace FarEmerald.PlayForge
             IAttributeImpactCarrier rootCarrier = null,
             bool retainFallback = false)
         {
+            var group = retentionGroup.IsValid ? retentionGroup : Tags.IgnoreRetention;
             var built = new System.Collections.Generic.List<IAttributeImpacter>(2);
-            if (currentDelta != 0f) built.Add(new ConstantImpacter(currentDelta, ECalculationOperation.Add, EAttributeTarget.Current));
-            if (baseDelta    != 0f) built.Add(new ConstantImpacter(baseDelta,    ECalculationOperation.Add, EAttributeTarget.Base));
+            if (currentDelta != 0f) built.Add(new ConstantImpacter(currentDelta, ECalculationOperation.Add, EAttributeTarget.Current, group: group));
+            if (baseDelta    != 0f) built.Add(new ConstantImpacter(baseDelta,    ECalculationOperation.Add, EAttributeTarget.Base,    group: group));
             return new SourceAttributeImpact(
                 source, attribute,
                 impactType ?? new List<Tag>() { Tags.DisallowImpact },

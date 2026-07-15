@@ -1,376 +1,228 @@
 # PlayForge — Gameplay Effect & Attribute Pipeline
 
 How a `GameplayEffect` becomes an attribute change, stays correct while it lives, and reverses
-when it dies. This is the authoritative description of the runtime pipeline; if code and doc
-disagree, one of them has a bug — file it either way.
+when it dies — under the **two-kind impact model** (design rationale: `IMPACT_MODEL_REFACTOR.md`).
+This is the authoritative description of the runtime pipeline; if code and doc disagree, one of
+them has a bug — file it either way.
 
-All paths are relative to `Assets/PlayForge/Runtime/PlayForge/`.
-
----
-
-## 1. Cast of characters
-
-| Concept | Type | Role |
-|---|---|---|
-| Carrier | `IAttributeImpactCarrier` | Anything that impacts an attribute. Identity (source, origin, retention group, impact types) + an impacter list. |
-| Applicable carrier | `ICarrierApplication : IAttributeImpactCarrier` | A carrier with a *lifecycle*: duration policy, container generation, worker phases, contained carriers, `IsSustainedModifier()`. |
-| Effect spec | `GameplayEffectSpec` | THE applicable carrier. Runtime instance of a `GameplayEffect` asset: origin/source/target, `TrackedImpact`, captured attributes, cached impacter list, back-reference to its shelf container (`RuntimeContainer`). |
-| Synthetic carrier | `SourceAttributeImpact` | Carrier for hand-rolled deltas (init pulses, auto-scale propagation, third-party writes). Built via `FromAdditiveDelta` with `ConstantImpacter`s. |
-| Impacter | `IAttributeImpacter` | One magnitude-evaluation unit: `{ Operation, TargetSlot, SortOrder, MultiplyBehaviour, Evaluate(carrier) }`. A spec exposes exactly one `ScalerImpacter` built from its `ImpactSpecification`. |
-| Cached value | `CachedAttributeValue` | Per-attribute state: `ActiveValue`, retained carriers (`retainedGroups`), one-shot history (`committedOneShotDelta`), blueprint root. |
-| Container | `AbstractEffectContainer` | Shelf bookkeeping for one durational/infinite spec: duration, tick timers, stacks, removal reversal. |
-| Shelf | `List<AbstractEffectContainer> EffectShelf` | Per-GAS list of live durational effects. Ticked every update. |
-
-Key files:
-
-- `AttributeSystem/Attribute/CachedAttributeValue.cs`
-- `AttributeSystem/Core/AttributeSystemComponent.cs`
-- `GAS/Core/Runtime/RuntimeGameplayAbilitySystem.cs` ⟷ `GAS/Core/MonoBehaviour/GameplayAbilitySystem.cs` (**twins — keep in sync, always edit both**)
-- `GameplayEffect/Core/GameplayEffectSpec.cs`, `ICarrierApplication.cs`, `IAttributeImpactCarrier.cs`
-- `GameplayEffect/Core/ScalerImpacter.cs`, `ConstantImpacter.cs`, `IAttributeImpacter.cs`
-- `GameplayEffect/Core/Definition/GameplayEffectDuration.cs`, `GameplayEffectImpact.cs`
-- `GameplayEffect/Core/GameplayShelfContainer/AbstractEffectContainer.cs` + stacking subclasses
+All paths relative to `Assets/PlayForge/Runtime/PlayForge/`.
 
 ---
 
-## 2. The two-mode model (the crux)
+## 1. The model in one page
 
-Every applicable carrier interacts with an attribute in **exactly one** of two modes, decided by
-one predicate:
+Every authored impact is an **`AttributeImpactEntry`** on `GameplayEffectImpact.Entries`:
+`{ AttributeTarget, Delivery, Operation, TargetSlot, MultiplyBehaviour, SortOrder, Magnitude,
+RetentionGroupOverride, ImpactTypes }`. One effect may carry many entries across many
+attributes ("+10% speed while active AND 5 HP per tick" is one asset).
 
-```
-IsSustainedModifier() == DurationPolicy is Durational/Infinite
-                         AND NOT (TickOnApplication || EnablePeriodicTicks)
-```
+**Delivery decides everything** — there is deliberately no separate "retained?" or
+"reverse on removal?" switch:
 
-### Mode A — sustained modifier (`IsSustainedModifier() == true`)
+| Delivery | Kind | When | Reversal |
+|---|---|---|---|
+| `Continuous` | **Modifier** — transient, derived | registered on apply, while the carrier lives | automatic & exact: unregister + recompute. The ONLY reversal mechanism. |
+| `OnApply` | **Commit** — permanent | once at application | never |
+| `Periodic` | **Commit** — permanent | once per execute tick | never |
 
-*"+50% damage while equipped", "+100 max HP buff".*
+- *Modifier* = "while this carrier is present" — item stat bonuses, auras, durational %-buffs.
+  Its magnitude is re-evaluated on every recompute; removing the carrier recomputes without it.
+  A `×1.2` buff can never leave residue because its value is never stored, always derived.
+- *Commit* = an event that permanently changed the attribute — damage, heals, DoT/HoT ticks.
+  The post-constraint delta is recorded into per-group committed history and survives everything.
 
-- Registered into `CachedAttributeValue.retainedGroups` on apply.
-- Its impacters are **re-evaluated on every `Recompute()`** — the value is *derived*, never stored.
-- Reversal is automatic: remove the carrier, recompute, contribution is gone.
-- A durational effect with no tick events has no other way to deliver impact, so retention is
-  exactly what it means to be a sustained modifier.
+**Retention groups** (`Tag`) are pure attribution: every contribution — root value, modifiers,
+commits — belongs to a group (entry override → else the effect's `Definition.RetentionGroup`;
+attribute-set roots use their element's `RetentionGroup`). Groups partition one pool for
+queries/UI (base vs bonus health, base vs bonus damage); they never change the math.
 
-### Mode B — discrete impact (`IsSustainedModifier() == false`)
-
-*Instant damage, every tick of a DoT/HoT.*
-
-- Instant effects commit on apply; tick-delivered effects commit **once per execute tick** — the
-  apply event itself carries nothing.
-- Each commit goes through `ApplyOneShotImpacters`, which mutates `ActiveValue` and records the
-  **post-bounds** delta into `committedOneShotDelta` (permanent history).
-- Reversal is opt-in: `ReverseImpactOnRemoval` + `TrackedImpact` rollback on container removal
-  (see §7). Without it, Mode B history is permanent by design.
-
-**Neither "touches Base" nor "wants reversal" influences the mode.** Base one-shots survive
-recomputes via `committedOneShotDelta.BaseValue`; reversal is a removal-time concern.
-
-> ⚠ `TickOnApplication` makes a durational effect Mode B. Its serialized default is `false`
-> so that a plain durational effect is a sustained modifier out of the box. Enabling it on a
-> buff-style effect makes the impact **permanent** unless `ReverseImpactOnRemoval` is also set.
+Validation: `Continuous` requires a durational/infinite effect; `Periodic` requires ticks.
+(`AttributeImpactEntry.IsDeliveryValidFor`.)
 
 ---
 
-## 3. Attribute state anatomy (`CachedAttributeValue`)
+## 2. Attribute state (`CachedAttributeValue`)
 
 ```
-ActiveValue  = clamp+round(
-                   Blueprint.GetActiveValue(cache)        ← root: re-derived fresh every time
-                 + retained-impacter aggregation           ← Mode A, op-precedence order
-                 + committedOneShotDelta )                 ← Mode B history, late additive layer
+ActiveValue = ConstrainValue(                         ← element clamp + rounding
+                 ModifierPipeline(                    ← Add → Multiply → FlatBonus → Override
+                     root                             ← Blueprint.GetActiveValue(cache), re-derived
+                   + Σ committedByGroup ) )           ←   fresh every recompute (or generic seed)
 ```
 
-- **Root**: `AttributeBlueprint.GetActiveValue(cache)` re-runs the element's cached scalers
-  (Current and Base sides independently, `LinkCurrentToBase` respected), so attributes derived
-  from other attributes always read their sources' *current* values. Blueprint-less (generic)
-  attributes use their construction-time seed instead.
-- **`retainedGroups`**: `Dictionary<Tag, RetainedGroup>` keyed by retention-group tag
-  (`GameplayEffect.Definition.RetentionGroup`; synthetic carriers use `Tags.IgnoreRetention`).
-  Plain storage in apply order. No "alive" flags, no zombie state — presence == contribution.
-  Lifecycle owners MUST call `RemoveCarrier` when contribution should end.
-- **`committedOneShotDelta`**: the running sum of every post-bounds Mode B delta. Applied as a
-  late additive layer so one-shot history (damage taken, heals received) is **not** retroactively
-  scaled when sustained modifiers come and go around it.
-- **`DirtyValue`**: diagnostic snapshot after the Add pass, before Multiply/FlatBonus/Override.
+State:
+- `modifiers` — ordered `(carrier, impacter, group)` entries. Presence == contribution; no
+  alive-flags, no zombie state. Re-registering a carrier **replaces** its entries (idempotent
+  refresh — the stacking path relies on this).
+- `committedByGroup` — permanent history per retention group. Written only by `CommitImpact`.
+- Attribution — rebuilt on every `Recompute`; per-group slices that sum exactly to `ActiveValue`.
 
-### 3.1 `Recompute(cache)` operation order
+### 2.1 Recompute pipeline
 
-1. Root from blueprint (or generic seed).
-2. **Add** — additive impacters, per target slot (Current / Base / CurrentAndBase).
-3. **Multiply** — two coexisting pools:
-   - `Multiplicative` impacters compound (`×1.5, ×1.5 → ×2.25`);
-   - `AdditiveBonus` impacters pool `(eval − 1)` and apply one final `×(1 + Σ)` (`+50%, +50% → ×2.0`).
+1. Baseline = root + all committed history. **Committed history joins the baseline**, so
+   transient % modifiers scale permanent gains: (50 base + 10 tome) × 1.5 aura = 90.
+2. **Add** — additive modifier impacters, per slot (Current / Base / CurrentAndBase) → `DirtyValue`.
+3. **Multiply** — `Multiplicative` impacters compound (×1.5, ×1.5 → ×2.25);
+   `AdditiveBonus` impacters pool `(eval − 1)` into one `×(1 + Σ)` (+50%, +50% → ×2.0).
 4. **FlatBonus** — post-multiplication additive.
-5. **Override** — per-slot, lowest `SortOrder` wins; a `CurrentAndBase` override competes in both slots.
-6. `+ committedOneShotDelta`.
-7. `ApplyBounds()` (element's overflow clamp) → `ApplyRounding()` (element's rounding policy).
+5. **Override** — per-slot, lowest `SortOrder` wins.
+6. Constrain: element overflow clamp (`AttributeOverflowData.Clamp`) + rounding policy.
 
-### 3.2 Entry points
+Attribution is captured during the walk (root → its group; commits → their groups; each
+modifier → the value swing its op produced; pooled multiplies → proportional shares; the
+constraint shift → the unattributed slice) so `GetBreakdown()` always sums to `ActiveValue`.
 
-| Method | Caller | Behavior |
+### 2.2 Commit math
+
+`CommitImpact(carrier, impacters)` runs each impacter as a sequential mini-step against the
+live value (op → clamp → round), records each step's **post-constraint delta** into its group
+(a +50 heal clamped to +30 commits +30), then runs one canonical `Recompute`.
+
+**Reproducibility invariant**: `ActiveValue` is always exactly `Recompute(state)` — every
+mutation path ends in a recompute. There is no second bookkeeping system to drift.
+
+### 2.3 Query surface
+
+- `GetGroupValue(Tag)` / `GetBreakdown()` on `CachedAttributeValue`;
+  `TryGetGroupValue(attr, group, out v)` / `GetBreakdown(attr)` on `AttributeSystemComponent`.
+- Consumer pattern: UI splits a health bar by group slices; a damage formula reads
+  `GetGroupValue(damage, Group.Base)` vs `GetGroupValue(damage, Group.Bonus)` and applies
+  different outgoing calculations — group-specific math lives in consumers, not the pipeline.
+
+---
+
+## 3. The four-verb attribute API (`AttributeSystemComponent`)
+
+Every attribute mutation funnels through one shared 4-phase pipeline
+(`CommitWithCarrier`): pre-change workers → PHASE-2 dispatch → post-change workers →
+impact relay (`ImpactData`, frame summaries, source-side `TrackImpact`, `AttributeChanged`).
+
+| Verb | Dispatch | Used by |
 |---|---|---|
-| `ApplyCarrier` | `ModifyAttribute` (apply path) | Mode A → retain (same-instance re-apply is an idempotent refresh, not a stack) + `Recompute`. Mode B instant/synthetic → `ApplyOneShotImpacters` now. Mode B durational tick-delivered → **no-op** (ticks own every commit). |
-| `TickCarrier` | `TickAttribute` (tick path) | Always `ApplyOneShotImpacters` (defensive skip if the carrier is somehow retained). |
-| `RemoveCarrier` | `RemoveAttributeDerivation` | Drop from retained group + `Recompute`. Reversal of retained contribution is implicit. |
-| `RollbackCommittedDelta` | container removal (§7) | Subtract a tracked total from `committedOneShotDelta` + `Recompute`. |
+| `RegisterModifier(attr, smv, impacters)` | register/refresh in `modifiers` + recompute | Continuous entries on apply / stack refresh / replace |
+| `UnregisterModifier(attr, smv)` | remove carrier's entries + recompute | removal & replacement — **fires callbacks like any change**, so regulated attributes refresh (removal used to be silent → stale derived values) |
+| `CommitImpact(attr, smv, impacters)` | permanent per-group commit | OnApply / Periodic entries |
+| `ModifyAttribute(attr, smv)` | CommitImpact; delta-only carriers are wrapped in a synthetic `SourceAttributeImpact` with `ConstantImpacter`s | init pulse, `EnforceScaling` propagation, external systems (`TryModifyAttribute`) |
 
-### 3.3 Idempotency invariant
+Registration/unregistration are **identity-based** on the carrier instance — they are never
+wrapped in synthetic carriers.
 
-`Recompute` must reproduce `ActiveValue` exactly from `root + retained + committedOneShotDelta`
-at any time, unprompted. This holds because `ApplyOneShotImpacters` records **post-bounds**
-deltas: if a +50 heal clamps to +30, history records +30. Any code that mutates `ActiveValue`
-without going through `ApplyOneShotImpacters`/`Recompute` breaks this invariant.
+Null / undefined attribute targets early-out safely (pure tag-grant effects are legal).
 
 ---
 
-## 4. Apply path
+## 4. Effect lifecycle (`EffectSystemComponent`)
 
-`ApplyGameplayEffect(spec)` — both GAS twins:
-
-```
-ValidateEffectApplicationRequirements (affiliation + source/target tag requirements)
-│
-├── Instant ──► ApplyInstantGameplayEffect
-│     1. add GrantedTags (transient, for the duration of the commit)
-│     2. RunWorkerApplication
-│     3. ModifyAttribute(spec, Δ0) ──► CommitWithCarrier (apply path)   [Mode B commit]
-│     4. RunWorkerRemoval
-│     5. remove GrantedTags
-│     6. HandleGameplayEffects
-│
-└── Durational / Infinite ──► ApplyDurationalGameplayEffect
-      1. DefinesAttribute gate (null attribute allowed — pure tag-grant effects are legal)
-      2. TryHandleExistingDurationalGameplayEffect (§6) — returns true if absorbed
-      3. GenerateContainer → EffectShelf.Add
-         (container ctor sets spec.RuntimeContainer and applies duration/tick math)
-      4. IF IsSustainedModifier(): ModifyAttribute(spec, Δ0)            [Mode A register]
-      5. RunWorkerApplication
-      6. IF ongoing && TickOnApplication: ApplyTickOnApplication        [Mode B first commits]
-│
-then (both branches):
-  HandleGameplayEffects → Callbacks.EffectApplied → contained OnApply effects
-  (each contained effect generates a fresh spec with THIS spec's origin → recursion)
-```
-
-The `Δ0` (`SourcedModifiedAttributeValue(spec, 0f, 0f)`) is transport only — magnitudes are
-evaluated freshly by the impacter pipeline inside the attribute system, never precomputed.
-
-### 4.1 The commit pipeline (`AttributeSystemComponent.CommitWithCarrier`)
-
-Both `ModifyAttribute` (apply path) and `TickAttribute` (tick path) funnel here; they differ
-*only* in the PHASE 2 dispatch (`ApplyCarrier` vs `TickCarrier`). Null attribute → early out.
+One shared component owns the shelf; both `RuntimeGameplayAbilitySystem` and the MonoBehaviour
+`GameplayAbilitySystem` hold an instance and delegate (public API unchanged). **The twins no
+longer duplicate effect logic — edit `EffectSystemComponent`, not the GAS classes.**
 
 ```
-PHASE 1  Callbacks.AttributePreChange → pre-change workers
-PHASE 2  resolve carrier:
-           • carrier has impacters → use as-is
-           • no impacters (legacy delta callsite: init pulse, EnforceScaling, wrappers)
-             → synthesize SourceAttributeImpact.FromAdditiveDelta(ConstantImpacters)
-         dispatch: isTick ? TickCarrier : ApplyCarrier
-         change ← ActiveValue − holdValue
-         EnforceScaling (AutoScaleWithBase: enqueues a deferred proportional Current
-         adjustment through a synthetic carrier — NOT synchronous)
-PHASE 3  post-change workers
-PHASE 4  change ← ActiveValue − holdValue (re-measured)
-         Callbacks.AttributePostChange
-         ImpactData.Generate → RecordFrameImpactReceived (target side)
-         → source.AbilitySystem.ProvideFrameImpactDealt   ← this is where spec.TrackImpact
-           accumulates TrackedImpact (source-side workers + callbacks run here too)
-         Callbacks.AttributeChanged  ← triggers regulation refresh (§8)
+ApplyGameplayEffect(spec)
+│  validate (affiliation + source/target tag requirements)
+├─ Instant  → grant tags → app workers → CommitImpact per OnApply entry
+│             → removal workers → remove tags
+└─ Durational/Infinite
+      → TryHandleExistingDurationalGameplayEffect (absorbed? → done)
+      → GenerateContainer → shelf (container ctor sets spec.RuntimeContainer + duration math)
+      → RegisterModifier per Continuous entry
+      → app workers
+      → if TickOnApplication: tick workers once + CommitImpact per Periodic entry × executeTicks
+then: HandleGameplayEffects → EffectApplied callback → contained OnApply effects (recursive)
+
+Tick (per update, EnablePeriodicTicks):
+   timers advance → executeTicks → tick workers (every frame, even 0)
+   → per execute tick: CommitImpact per Periodic entry + contained OnTick effects
+
+Remove (ClearFinishedEffects):
+   off shelf → OnRemove: ReverseImpact() = UnregisterModifier per Continuous entry,
+   then contained OnRemove effects → removal workers → EffectRemoved callback
 ```
 
-**Why `TickAttribute` exists**: the apply path's retention rule treats a re-applied retained
-instance as an idempotent refresh. Ticks of a spec must commit as one-shots regardless, so the
-tick path bypasses retention/idempotency entirely. Without it, every tick after the first would
-collapse into a no-op refresh.
+`SourcedModifiedAttributeValue(spec, 0, 0)` is transport only — magnitudes are always evaluated
+freshly by the impacter pipeline.
 
----
+### 4.1 Re-application (`ReApplicationPolicy`)
 
-## 5. Tick path
-
-`WhenUpdate()` → `TickEffectShelf()` → (if `needsCleaning`) `ClearFinishedEffects()`.
-
-`TickEffectShelf` — per container with `EnablePeriodicTicks`:
-
-```
-deltaTime  = DurationSpecification.GetDeltaTime(spec)      (optionally scaler-warped)
-TickPeriodic(deltaTime, out executeTicks)                  (timer advance; stacking containers
-                                                            may yield >1, e.g. per-stack ticks)
-executeTicks = GetExecuteTicks(spec, executeTicks)          (additional-execute-ticks operation)
-RunWorkerTick(ctx with executeTicks)                        (runs EVERY frame, even 0 ticks)
-IF executeTicks > 0 && Ongoing:
-    Callbacks.EffectTick
-    executeTicks × ApplyDurationGameplayEffectAsInstant(container)
-then: durational containers decrement DurationRemaining; expired → MarkFinished
-```
-
-`ApplyDurationGameplayEffectAsInstant(container)` — the single execute-tick:
-
-```
-TickAttribute(spec, Δ0) ──► CommitWithCarrier(isTick) ──► TickCarrier ──► one-shot commit
-contained OnTick effects applied (fresh specs, recursive ApplyGameplayEffect)
-```
-
-No worker phase runs inside the execute-tick — tick workers run **once per batch** in the two
-callers (`TickEffectShelf` for periodic ticks, `ApplyTickOnApplication` for apply-time ticks).
-
-`ApplyTickOnApplication(container)`:
-
-```
-executeTicks = GetExecuteTicks(spec, container.InstantExecuteTicks)   ← evaluated ONCE
-                (InstantExecuteTicks: 1 for non-stacking, Stacks for stacking containers)
-RunWorkerTick(ctx with executeTicks)
-executeTicks × ApplyDurationGameplayEffectAsInstant(container)
-```
-
-### 5.1 Loop-safety invariants (do not undo these)
-
-- `TickEffectShelf` iterates **by index over the frame-start count**: executing a tick can apply
-  contained effects that `EffectShelf.Add` mid-loop. Containers are never *removed* from the
-  shelf during the pass (removal defers through `FinishedEffects`), so indices are stable; late
-  additions start ticking next frame.
-- Containers already in `FinishedEffects` are skipped — a container marked for removal earlier
-  in the frame must not tick again.
-
----
-
-## 6. Re-application (`TryHandleExistingDurationalGameplayEffect`)
-
-Runs when a spec's effect asset (matched by `Tags.AssetTag`) already has container(s) on the
-shelf. Returns `true` if the re-application was absorbed (caller stops), `false` if the caller
-should proceed with a fresh application.
-
-| `ReApplicationPolicy` | What happens |
+| Policy | Behavior |
 |---|---|
-| `DoNothing` | Absorbed; only the interaction (below) runs. |
-| `ReplaceOldContainer` | For each old container: `ReverseImpact()` (mode-aware — ends the old spec's contribution exactly like removal, §7), `ReplaceValuesWith(newContainer)` (adopts the **new spec** + duration values; accumulated stack count preserved), then re-registers the new spec if it's a sustained modifier. |
-| `AppendNewContainer` | Not absorbed → fresh container, distinct spec instance, genuine co-existing retained entry (stacking by coexistence). |
-| `StackExistingContainers` | `FindStackingContainer` picks the target (stacking configs, priority-ordered); `Stack(n)` with `n = GetStackAmount(...)`; then a Δ0 `ModifyAttribute` refresh so a retained spec **recomputes with the new stack count**. If no container found → falls back to fresh application. |
+| `DoNothing` | absorbed; only the interaction runs |
+| `ReplaceOldContainer` | `ReverseImpact()` old spec → container adopts new spec (+durations; stack count preserved) → register new spec's Continuous entries. Old commits stay — commits never reverse. |
+| `AppendNewContainer` | fresh container + distinct spec instance → modifiers coexist (stacking by coexistence; `MultiplyBehaviour` controls composition) |
+| `StackExistingContainers` | `Stack(n)` on the found container → re-register Continuous entries so stack-aware magnitudes recompute now (`ScalerImpacter` evaluates container-aware via `spec.RuntimeContainer`) |
 
-Then, **only when absorbed** (`flag == true`), the `ReApplicationInteraction` runs:
-`RefreshContainerDuration` / `ExtendContainerDuration` on each container, each re-firing
-`ApplyTickOnApplication` if the (possibly new) spec has `TickOnApplication`. It deliberately does
-NOT run on the append path — the fresh application will tick on its own; running both would
-double-commit.
+`ReApplicationInteraction` (Refresh/Extend + re-fire TickOnApplication) runs **only when
+absorbed** — the append path would double-tick otherwise.
 
-### 6.1 Stacks → magnitude
+### 4.2 Loop-safety invariants (do not undo)
 
-`ScalerImpacter.Evaluate(carrier)` is container-aware: when the carrier is a
-`GameplayEffectSpec` whose `RuntimeContainer` is an `AbstractStackingEffectContainer`, magnitude
-evaluation routes through `ScalerMagnitudeOperation.Evaluate(container)` →
-`AbstractScaler.Evaluate(container)` (default falls back to spec-based evaluation; stack-aware
-scalers override it). This applies to **both** the retained Recompute path and per-tick commits —
-authors opt in by using a stack-reading scaler.
+- All finish paths go through `MarkFinished` (exactly-once; duplicate OnRemove = double reversal).
+- `TickEffectShelf` iterates by index over the frame-start count (contained effects add to the
+  shelf mid-loop); already-finished containers are skipped.
+- `ClearFinishedEffects` snapshots-and-clears, removes from the shelf **before** `OnRemove`.
+- Scaler-driven execute-tick counts are evaluated once per batch, never per loop iteration.
 
 ---
 
-## 7. Removal path
+## 5. Recalculation (regulated attributes)
 
-Containers are *marked* (never removed inline) via `MarkFinished(container)`, which enforces the
-**exactly-once** invariant: a duplicate `FinishedEffects` entry would run `OnRemove` twice and
-double-reverse the effect. Marking happens from: duration expiry (`TickEffectShelf`), removal
-requirements (`HandleGameplayEffects`), and explicit `RemoveGameplayEffect`.
+Blueprint cached scalers register `contact → dependent` edges at attribute registration
+(`ProvideAttribute` → `RegulateContactWith`). Any commit **or modifier registration or
+unregistration** fires `AttributeChanged` → `RefreshRegulatedAttributes(contact)` → dependents
+`Recompute` (re-deriving their root from the contact's fresh `ActiveValue` while their own
+modifiers and committed history are preserved) → chained `AttributeChanged`, cycle-guarded.
 
-`ClearFinishedEffects()` — snapshot-and-clear:
-
-```
-finished = FinishedEffects.ToArray(); FinishedEffects.Clear(); needsCleaning = false
-per container:
-    1. EffectShelf.Remove(container)      ← FIRST, so re-entrant HandleGameplayEffects
-                                            passes can't re-mark a mid-removal container
-    2. container.OnRemove()
-         a. ContainerIsActive = false
-         b. ReverseImpact()               ← mode-aware, see below
-         c. contained OnRemove effects → Spec.Source.ApplyCarrier(fresh spec)
-    3. RunWorkerRemoval
-    4. RemoveAttributeDerivation(spec)    ← idempotent safety net (no-op if already removed)
-    5. Callbacks.EffectRemoved
-finally: HandleGameplayEffects()
-```
-
-Anything marked finished *during* the pass (worker/callback re-entry) lands in the now-empty
-live list and is processed next update.
-
-`AbstractEffectContainer.ReverseImpact()` — the mode-aware reversal, shared by removal and
-ReplaceOldContainer:
-
-- **Mode A**: `RemoveAttributeDerivation(spec)` → `RemoveCarrier` → `Recompute` re-derives
-  `ActiveValue` without the spec's impacters. That IS the reversal.
-- **Mode B** (only if `ReverseImpactOnRemoval`): `RollbackCommittedDelta(TrackedImpact.Total)` —
-  subtracts the cumulative post-bounds tick history from `committedOneShotDelta`. "Undo every
-  tick this spec ever ran."
-- The two are mutually exclusive by the mode predicate — running both would double-undo.
-
-**Rollback correctness invariant**: `TrackedImpact.Total` must equal exactly what the spec
-committed into `committedOneShotDelta`. Both sides record post-bounds real impacts
-(`TrackImpact` fires in commit PHASE 4 with the measured `ActiveValue − holdValue`), so clamped
-ticks stay consistent. `EnforceScaling` propagation runs through a *separate* synthetic carrier
-with its own `TrackedImpact` and does not pollute the spec's total.
+Effect-magnitude scalers that read attributes capture snapshots at apply time by design — only
+blueprint scalers create live dependencies.
 
 ---
 
-## 8. Recalculation (regulated attributes)
+## 6. Initialization & auto-scaling
 
-Built at attribute registration (`ProvideAttribute`): each blueprint side's cached scaler calls
-`RegulateContactWith(owningAttribute, RegulationCache)`, registering `contact → dependent` edges
-(e.g. `CachedAttributeScaler` registers its `CaptureAttribute` as contact). The Base side is
-always regulated; the Current side only when not `LinkCurrentToBase` (avoids double
-registration of the same scaler).
-
-At runtime:
-
-```
-any commit → Callbacks.AttributeChanged(impactData)
-  → RefreshRegulatedAttributes(changedAttribute)
-      for each dependent (cycle-guarded by _refreshingAttributes):
-          Recompute(cache)      ← re-derives root via Blueprint.GetActiveValue, which reads
-                                  the contact's fresh ActiveValue; retained carriers and
-                                  one-shot history are preserved through the recompute
-          if value changed → Callbacks.AttributeChanged(derived impact)   ← chains onward
-```
-
-`AttributeSystemComponent.Initialize()` performs one initial refresh sweep over all contact
-attributes and then subscribes the refresh to `OnAttributeChanged`.
-
-Note: only *blueprint* scalers participate in the regulation graph. An effect-magnitude scaler
-that reads another attribute captures at apply time (spec's `SourceCapturedAttributes`) — it is
-a snapshot by design and does not create a live dependency.
+- `ProvideAttributeSet`: register attributes → initialize each cached value (first recompute)
+  → zero-delta `ModifyAttribute` pulse per attribute (workers/callbacks observe initial values;
+  commits nothing).
+- `EnforceScaling` (`AutoScaleWithBase`): Base changes enqueue a deferred proportional Current
+  adjustment through a synthetic carrier — lands as ordinary committed history.
 
 ---
 
-## 9. Initialization pulse & auto-scaling
+## 7. Entry derivation (no asset migration)
 
-- `ProvideAttributeSet`: phase 1 registers attributes, phase 2 initializes each
-  `CachedAttributeValue` (root derivation + first `Recompute`), phase 3 fires a **zero-delta
-  `ModifyAttribute` pulse** per attribute so workers/callbacks observe initial values. The pulse
-  synthesizes an empty impacter list → commits nothing (bounds/rounding are already applied by
-  init `Recompute`).
-- `EnforceScaling` (`AutoScaleWithBase`): when a commit changes Base, a deferred
-  `ModifyAttributeAction` is enqueued that adjusts Current by `(ΔBase / oldBase) × Current` —
-  proportional scaling ("max HP +100% → current HP +100%"). It routes through a synthetic
-  carrier (`Tags.AllowImpact`), so it lands as ordinary Mode B history.
+**Entries are derived, never serialized.** The serialized authoring surface is the effect's
+single impact quad + duration flags; `GameplayEffectImpact.RebuildEntries` re-derives the
+entry list on **every `Generate()`**, so inspector edits (magnitude, attribute target,
+duration policy, tick flags) always take effect on the next application. `Magnitude` on the
+derived entry references the live `ScalerMagnitudeOperation`, so even already-registered
+modifiers re-evaluate new magnitudes on their next recompute.
+
+> Serializing entries was tried and reverted: `OnValidate` froze half-authored state into
+> assets (null targets, stale magnitudes, deliveries minted while the policy was still
+> Instant) and never re-synced. Do not reintroduce serialized entries until a dedicated
+> multi-entry drawer makes the entry list the *authored* surface.
+
+Delivery derivation (`ResolveDelivery`):
+
+| Authored shape | Derived delivery |
+|---|---|
+| Instant | `OnApply` |
+| Durational/Infinite, no ticks | `Continuous` |
+| + periodic ticks | `Periodic` (`ReverseImpactOnRemoval` flagged: rollback no longer exists) |
+| TickOnApplication-only trap | `Continuous` for Multiply/Override (flagged), else `OnApply` |
+
+**PlayForge → Audit Effect Impact Deliveries** reports every asset's derived delivery and
+flags the shapes above — read-only, nothing is written.
+
+Deleted outright: `IsSustainedModifier()`, the Mode A/B inference, `TickAttribute`,
+`RollbackCommittedDelta`, tick-rollback via `TrackedImpact` (which is analytics-only now).
 
 ---
 
-## 10. Invariants checklist (regression tripwires)
+## 8. Verification
 
-1. **Twins**: `RuntimeGameplayAbilitySystem` and `GameplayAbilitySystem` implement identical
-   effect logic. Every change to apply/tick/re-apply/remove goes in **both**.
-2. **Exactly-once removal**: all finish paths go through `MarkFinished`; `ClearFinishedEffects`
-   removes from the shelf before `OnRemove`.
-3. **Recompute reproducibility**: `root + retained + committedOneShotDelta` (then bounds +
-   rounding) must reproduce `ActiveValue` at any moment.
-4. **Post-bounds bookkeeping**: both `committedOneShotDelta` and `TrackedImpact` record
-   post-bounds deltas — never raw magnitudes.
-5. **Mode exclusivity**: a spec is retained XOR tick-committing. The tick path never retains;
-   the apply path never commits for durational tick-delivered specs.
-6. **One reversal**: `ReverseImpact` runs Mode A OR Mode B reversal, never both, and runs at
-   most once per spec lifetime (removal or replacement).
-7. **Shelf iteration**: no `foreach` over `EffectShelf`/`FinishedEffects` in any code path that
-   can re-enter effect application (contained effects, workers, callbacks).
-8. **Batch-evaluated tick counts**: scaler-driven execute-tick counts are evaluated once per
-   batch, not once per loop iteration.
-9. **Null attribute targets are legal** (pure tag-grant effects): `CommitWithCarrier` and
-   `RemoveAttributeDerivation` early-out; container reversal guards on the attribute.
+`Assets/PlayForge/Tests/Editor/PlayForgeGoldenTests.cs` — **PlayForge → Run Golden Tests**
+(or batchmode `-executeMethod FarEmerald.PlayForge.Tests.PlayForgeGoldenTests.RunAll`).
+Scenarios pin: multiplicative/pooled buff add/remove ordering (the 50→60→72→60→50 case),
+item modifier reversal, HoT permanence through expiry, clamp + history reproducibility,
+committed-joins-baseline, stack-aware magnitudes, regulation propagation on removal,
+null-target effects, replace idempotency, group attribution sums.

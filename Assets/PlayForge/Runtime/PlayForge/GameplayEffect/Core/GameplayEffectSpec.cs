@@ -135,26 +135,95 @@ namespace FarEmerald.PlayForge
         }
 
         // ════════════════════════════════════════════════════════════════════════
-        // Impacter pipeline (additive — see refactor plan §2.3 / step 2)
+        // Impacter pipeline — entry-driven (IMPACT_MODEL_REFACTOR.md §3.1)
         //
-        // The current asset shape exposes one (magnitude, scaler, op, target) quad on
-        // GameplayEffectImpact, so one ScalerImpacter per spec is the right cardinality
-        // for now. Multi-impacter authoring per asset is deferred (plan §5A → option B).
+        // One ScalerImpacter per authored AttributeImpactEntry, built lazily and cached
+        // for the spec's lifetime. Entries carry their own attribute target, delivery
+        // and retention group, so the attribute system can ask for exactly the
+        // impacters that apply to (attribute, delivery) without re-deriving intent.
         // ════════════════════════════════════════════════════════════════════════
 
+        private List<(AttributeImpactEntry entry, IAttributeImpacter impacter)> entryImpacters;
+
+        private void BuildEntryImpacters()
+        {
+            if (entryImpacters != null) return;
+            entryImpacters = new List<(AttributeImpactEntry, IAttributeImpacter)>();
+
+            var impact = Base.ImpactSpecification;
+            if (impact?.Entries == null) return;
+
+            var defaultGroup = Base.Definition.RetentionGroup;
+            foreach (var entry in impact.Entries)
+            {
+                if (entry == null) continue;
+                entryImpacters.Add((entry, new ScalerImpacter(
+                    entry.Magnitude,
+                    entry.Operation,
+                    entry.TargetSlot,
+                    entry.SortOrder,
+                    entry.MultiplyBehaviour,
+                    entry.ResolveGroup(defaultGroup))));
+            }
+        }
+
+        /// <summary>All impacters whose entry targets <paramref name="attribute"/> with the given delivery.</summary>
+        public IReadOnlyList<IAttributeImpacter> GetImpactersFor(IAttribute attribute, EImpactDelivery delivery)
+        {
+            BuildEntryImpacters();
+            var list = new List<IAttributeImpacter>();
+            foreach (var (entry, impacter) in entryImpacters)
+            {
+                if (entry.Delivery != delivery) continue;
+                if (!AttributeMatches(entry.AttributeTarget, attribute)) continue;
+                list.Add(impacter);
+            }
+            return list;
+        }
+
+        /// <summary>Distinct attributes impacted at the given delivery (null target entries are skipped).</summary>
+        public IEnumerable<IAttribute> GetImpactedAttributes(EImpactDelivery delivery)
+        {
+            BuildEntryImpacters();
+            var seen = new HashSet<IAttribute>();
+            foreach (var (entry, _) in entryImpacters)
+            {
+                if (entry.Delivery != delivery) continue;
+                if (entry.AttributeTarget == null) continue;
+                if (seen.Add(entry.AttributeTarget)) yield return entry.AttributeTarget;
+            }
+        }
+
+        public bool HasImpacters(EImpactDelivery delivery)
+        {
+            BuildEntryImpacters();
+            foreach (var (entry, _) in entryImpacters)
+            {
+                if (entry.Delivery == delivery) return true;
+            }
+            return false;
+        }
+
+        private static bool AttributeMatches(IAttribute a, IAttribute b)
+            => a == null ? b == null : b != null && ReferenceEquals(a, b);
+
+        /// <summary>
+        /// Legacy carrier surface: impacters for the PRIMARY attribute
+        /// (<c>ImpactSpecification.AttributeTarget</c>) across all deliveries. Transitional —
+        /// the attribute system consumes <see cref="GetImpactersFor"/> in the new model.
+        /// </summary>
         public IReadOnlyList<IAttributeImpacter> GetImpacters()
         {
             if (cachedImpacters != null) return cachedImpacters;
-            var impact = Base.ImpactSpecification;
-            cachedImpacters = new IAttributeImpacter[]
+            BuildEntryImpacters();
+
+            var primary = Base.ImpactSpecification.AttributeTarget;
+            var list = new List<IAttributeImpacter>();
+            foreach (var (entry, impacter) in entryImpacters)
             {
-                new ScalerImpacter(
-                    impact.MagnitudeOperation,
-                    impact.ImpactOperation,
-                    impact.TargetImpact,
-                    sortOrder: 0,
-                    multiplyBehaviour: impact.MultiplyBehaviour)
-            };
+                if (AttributeMatches(entry.AttributeTarget, primary)) list.Add(impacter);
+            }
+            cachedImpacters = list;
             return cachedImpacters;
         }
 
@@ -185,21 +254,9 @@ namespace FarEmerald.PlayForge
             }
         }
 
-        /// <summary>
-        /// Mode A iff durational/infinite AND not tick-delivered. A durational effect with
-        /// no tick (no TickOnApplication, no periodic ticks) has no way to commit impact
-        /// other than being retained as a sustained modifier — so that's exactly what it
-        /// is. Instant effects and anything tick-delivered are Mode B (discrete impact).
-        /// </summary>
-        public bool IsSustainedModifier()
-        {
-            var dur = Base?.DurationSpecification;
-            if (dur == null) return false;
-            if (dur.DurationPolicy == EEffectDurationPolicy.Instant) return false;
-
-            bool tickDelivered = dur.TickOnApplication || dur.EnablePeriodicTicks;
-            return !tickDelivered;
-        }
+        // IsSustainedModifier removed — the Mode A/B inference is gone. Each impact entry
+        // declares its own delivery (Continuous | OnApply | Periodic); delivery implies
+        // the contribution kind. See AttributeImpactEntry / IMPACT_MODEL_REFACTOR.md §1.
 
         public bool ValidateApplication(ITarget target)
         {

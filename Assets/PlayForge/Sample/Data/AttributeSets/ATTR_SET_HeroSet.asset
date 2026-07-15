@@ -21,7 +21,7 @@ MonoBehaviour:
   Textures: []
   AssetTag:
     Name: AttributeSet.HeroSet
-    DisplayName: 
+    DisplayName: HeroSet
   Attributes:
   - Attribute: {fileID: 11400000, guid: b46aa27e88015f24296721fc2f8200fd, type: 2}
     Current:
@@ -123,10 +123,10 @@ MonoBehaviour:
       RealMagnitude: 2
     LinkCurrentToBase: 0
     Overflow:
-      Policy: 1
+      Policy: 3
       Floor:
-        CurrentValue: 30
-        BaseValue: 550
+        CurrentValue: -Infinity
+        BaseValue: -Infinity
       Ceil:
         CurrentValue: Infinity
         BaseValue: Infinity

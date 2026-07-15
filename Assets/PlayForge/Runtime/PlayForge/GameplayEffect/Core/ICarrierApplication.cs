@@ -43,33 +43,9 @@ namespace FarEmerald.PlayForge
         /// </summary>
         bool ValidateApplication(ITarget target);
 
-        /// <summary>
-        /// The single retention predicate. A carrier interacts with an attribute in
-        /// exactly one of two modes:
-        ///
-        /// <list type="bullet">
-        ///   <item><b>Mode A — Sustained modifier</b> (<c>IsSustainedModifier() == true</c>):
-        ///   retained in <c>CachedAttributeValue.RetainedGroups</c>, re-evaluated on every
-        ///   Recompute, reversed automatically when removed. e.g. "+50% damage while
-        ///   equipped", "+100 max HP buff".</item>
-        ///
-        ///   <item><b>Mode B — Discrete impact</b> (<c>IsSustainedModifier() == false</c>):
-        ///   committed one-shot into <c>committedOneShotDelta</c> (instant effects on
-        ///   apply, every tick of a tick-delivered effect). Reversed only via the
-        ///   explicit <c>ReverseImpactOnRemoval</c> + <c>TrackedImpact</c> rollback.</item>
-        /// </list>
-        ///
-        /// <para>A carrier is a sustained modifier iff it is durational/infinite AND does
-        /// NOT deliver its impact via ticks (no TickOnApplication, no periodic ticks).
-        /// A durational non-ticking effect can only have effect by being retained — it
-        /// has no tick events to commit through — so that's exactly Mode A. Everything
-        /// else (instant, or anything tick-delivered) is Mode B.</para>
-        ///
-        /// <para>Note: neither "touches Base" nor "wants reversal on removal" influence
-        /// this decision. Base one-shots survive Recompute via <c>committedOneShotDelta.Base</c>;
-        /// reversal-on-removal is a removal-time concern handled separately in
-        /// <c>AbstractEffectContainer.OnRemove</c>.</para>
-        /// </summary>
-        bool IsSustainedModifier();
+        // IsSustainedModifier removed (impact-model overhaul). The old Mode A/B inference
+        // from duration + tick flags is replaced by per-entry EImpactDelivery declarations:
+        // Continuous entries are modifiers (transient, derived, auto-reversing);
+        // OnApply/Periodic entries are commits (permanent). See AttributeImpactEntry.
     }
 }

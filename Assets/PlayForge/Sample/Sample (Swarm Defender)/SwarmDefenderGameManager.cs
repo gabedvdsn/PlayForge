@@ -100,10 +100,15 @@ namespace FarEmerald.PlayForge.Extended.SwarmDefenderSample
         // Lifecycle
         // ═══════════════════════════════════════════════════════════════════════
 
+        public Ability TestDebugAbility;
+        
         public override void WhenInitialize()
         {
             base.WhenInitialize();
 
+            var debug = AbilityInspector.Build(TestDebugAbility).Describe(1);
+            foreach (var d in debug) Debug.Log(d);
+            
             if (uiDocument == null) uiDocument = GetComponent<UIDocument>();
             Input ??= GetComponent<DemoInputConduit>() ?? gameObject.AddComponent<DemoInputConduit>();
 

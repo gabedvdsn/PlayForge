@@ -21,7 +21,7 @@ MonoBehaviour:
   Textures: []
   AssetTag:
     Name: AttributeSet.DefaultSet
-    DisplayName: 
+    DisplayName: DefaultSet
   Attributes:
   - Attribute: {fileID: 11400000, guid: 5238e93ea6a409e4a84dd1dcf23dd45c, type: 2}
     Current:

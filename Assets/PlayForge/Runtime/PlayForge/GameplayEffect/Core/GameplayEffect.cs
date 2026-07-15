@@ -148,9 +148,14 @@ namespace FarEmerald.PlayForge
 
         public GameplayEffectSpec Generate(IEffectOrigin origin, ITarget target)
         {
+            // Entries are DERIVED from the authored impact + duration flags on every
+            // generation (never serialized) — inspector edits always take effect on the
+            // next application, and delivery always reflects the CURRENT duration policy.
+            ImpactSpecification.RebuildEntries(DurationSpecification);
+
             var spec = new GameplayEffectSpec(this, origin, target);
             ImpactSpecification.ApplyImpactSpecifications(spec);
-            
+
             return spec;
         }
         

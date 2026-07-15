@@ -81,52 +81,22 @@ namespace FarEmerald.PlayForge
         }
 
         /// <summary>
-        /// Mode-aware reversal of this container's spec contribution. Called by
-        /// <see cref="OnRemove"/> and by the ReplaceOldContainer re-application path
-        /// (replacing a spec ends its contribution exactly like removal does).
-        /// Safe to call for specs that contributed nothing.
+        /// Reverse this container's spec contribution: unregister its Continuous entries
+        /// through the attribute pipeline (workers, callbacks and the regulation refresh
+        /// all observe the removal). Called by <see cref="OnRemove"/> and by the
+        /// ReplaceOldContainer re-application path.
+        ///
+        /// <para>Commits (OnApply / Periodic entries) are permanent by design — there is
+        /// no rollback path in the two-kind impact model.</para>
         /// </summary>
         public void ReverseImpact()
         {
-            var attribute = Spec.Base.ImpactSpecification.AttributeTarget;
             AttributeSystemComponent attrSystem = null;
-            bool foundAttrSys = attribute && (Spec.Target?.FindAttributeSystem(out attrSystem) ?? false);
+            if (!(Spec.Target?.FindAttributeSystem(out attrSystem) ?? false) || attrSystem == null) return;
 
-            // Containers only exist for durational/infinite effects, so the spec is in
-            // exactly one of two modes (see ICarrierApplication.IsSustainedModifier):
-            //   • Mode A — sustained modifier  → it was retained.
-            //   • Mode B — tick-delivered      → it committed one-shot per tick.
-            bool wasSustainedModifier = Spec.IsSustainedModifier();
-
-            // ─── Mode A reversal — drop from the retained list ───────────────
-            // RemoveCarrier triggers Recompute, which re-derives ActiveValue without
-            // the spec's impacters. That IS the reversal for sustained modifiers.
-            // Skipped for Mode B specs: they were never retained, so there's nothing
-            // to remove and the recompute would be a pure no-op.
-            if (wasSustainedModifier && foundAttrSys)
+            foreach (var attribute in Spec.GetImpactedAttributes(EImpactDelivery.Continuous))
             {
-                attrSystem.RemoveAttributeDerivation(Spec);
-            }
-
-            // ─── Mode B reversal — roll back the cumulative tick history ─────
-            // Tick-delivered specs committed each tick one-shot into the attribute's
-            // committedOneShotDelta. TrackedImpact.Total is exactly the sum of those
-            // commits, so subtracting it "undoes every tick this spec ever ran."
-            //
-            // Gated on !wasSustainedModifier: a Mode A spec's TrackedImpact.Total is
-            // its apply-time retained contribution (also non-zero!), and that was
-            // ALREADY reversed by the RemoveAttributeDerivation above — rolling it back
-            // again here would double-undo.
-            if (!wasSustainedModifier
-                && Spec.Base.ImpactSpecification.ReverseImpactOnRemoval
-                && foundAttrSys
-                && attrSystem.TryGetCachedValue(attribute, out var cachedAttr))
-            {
-                AttributeValue tickedTotal = Spec.TrackedImpact?.Total ?? default;
-                if (tickedTotal.CurrentValue != 0f || tickedTotal.BaseValue != 0f)
-                {
-                    cachedAttr.RollbackCommittedDelta(tickedTotal, attrSystem.GetAttributeCache());
-                }
+                attrSystem.UnregisterModifier(attribute, new SourcedModifiedAttributeValue(Spec, 0f, 0f));
             }
         }
         public override string ToString()

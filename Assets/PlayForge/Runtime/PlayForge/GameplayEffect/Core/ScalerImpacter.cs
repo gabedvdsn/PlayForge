@@ -17,19 +17,22 @@ namespace FarEmerald.PlayForge
         public EAttributeTarget      TargetSlot { get; }
         public int                   SortOrder { get; }
         public EMultiplyBehaviour    MultiplyBehaviour { get; }
+        public Tag                   Group { get; }
 
         public ScalerImpacter(
             ScalerMagnitudeOperation magnitudeOperation,
             ECalculationOperation operation,
             EAttributeTarget targetSlot,
             int sortOrder = 0,
-            EMultiplyBehaviour multiplyBehaviour = EMultiplyBehaviour.Multiplicative)
+            EMultiplyBehaviour multiplyBehaviour = EMultiplyBehaviour.Multiplicative,
+            Tag group = default)
         {
             this.magnitudeOperation = magnitudeOperation;
             Operation         = operation;
             TargetSlot        = targetSlot;
             SortOrder         = sortOrder;
             MultiplyBehaviour = multiplyBehaviour;
+            Group             = group.IsValid ? group : Tags.IgnoreRetention;
         }
 
         public float Evaluate(IAttributeImpactCarrier carrier)

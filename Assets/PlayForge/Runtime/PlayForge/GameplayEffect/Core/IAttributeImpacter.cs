@@ -41,6 +41,13 @@ namespace FarEmerald.PlayForge
         EMultiplyBehaviour MultiplyBehaviour => EMultiplyBehaviour.Multiplicative;
 
         /// <summary>
+        /// Retention group this impacter's contribution is attributed to (per-group value
+        /// breakdown — base vs bonus health, etc.). Attribution only; never changes the
+        /// math. Default: unattributed.
+        /// </summary>
+        Tag Group => Tags.IgnoreRetention;
+
+        /// <summary>
         /// Evaluate the impacter's magnitude. Pure: must be safe to call repeatedly during a
         /// recompute pass. The carrier is supplied so the impacter can reach its origin's
         /// level, captured attributes, target context, etc.
