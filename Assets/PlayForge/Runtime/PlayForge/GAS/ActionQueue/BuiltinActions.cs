@@ -29,7 +29,6 @@ namespace FarEmerald.PlayForge
             bool runEvents = true,
             int? priority = null)
         {
-            Debug.Log($"Modify attribute action created : runEvents={runEvents} ({value})");
             _target = target;
             _attribute = attribute;
             _value = value;

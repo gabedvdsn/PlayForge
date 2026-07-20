@@ -39,8 +39,38 @@ namespace FarEmerald.PlayForge
         ContainedOnTick,
         /// <summary>Contained effect fired when the parent is removed.</summary>
         ContainedOnRemove,
+        /// <summary>
+        /// Applied by a code-driven task sequence that declared it via
+        /// <c>TaskSequenceBuilder.WithAppliedEffects</c> (loaded into the data packet by
+        /// an asset loader, applied inside the sequence body).
+        /// </summary>
+        SequenceApplication,
+        /// <summary>
+        /// Loaded into the data packet by an asset loader but not claimed by any
+        /// sequence annotation — almost certainly applied somewhere at runtime; annotate
+        /// the sequence with WithAppliedEffects to upgrade fidelity.
+        /// </summary>
+        LoadedAsset,
         /// <summary>Referenced by a custom task (found via reflection) — application manner unknown.</summary>
         Referenced,
+    }
+
+    /// <summary>An asset-loader task and the effects it loads into the data packet.</summary>
+    public class AssetLoaderInfo
+    {
+        public string TaskType;
+        /// <summary>The data-packet key the assets are loaded under (invalid when unknown).</summary>
+        public Tag DataTag;
+        public List<GameplayEffect> Effects = new();
+    }
+
+    /// <summary>A code-driven sequence referenced by a RunSequenceTask, with its declared behavior.</summary>
+    public class SequenceInfo
+    {
+        public string Name;
+        public string Description;
+        public int StageIndex;
+        public List<SequenceAnnotation> Annotations = new();
     }
 
     /// <summary>Who an effect application lands on, as statically determinable.</summary>
@@ -129,6 +159,15 @@ namespace FarEmerald.PlayForge
         /// <summary>The effect's own affiliation gate (enemies/allies/anyone).</summary>
         public EAffiliationPolicy Affiliation;
 
+        /// <summary>
+        /// Upper bound on applications per activation (from a sequence annotation —
+        /// e.g. Chain Lightning applies its damage effect up to 4 times). 1 otherwise.
+        /// </summary>
+        public int ApplicationsHint = 1;
+
+        /// <summary>Author note from the sequence annotation ("per enemy struck").</summary>
+        public string Annotation;
+
         public EffectLevelSeries Series;
 
         public List<AbilityEffectUsage> Contained = new();
@@ -146,7 +185,15 @@ namespace FarEmerald.PlayForge
 
         /// <summary>Type name of the targeting task, or null when the ability self-targets implicitly.</summary>
         public string TargetingTaskType;
+        /// <summary>The targeting task's authored Description, when it provides one.</summary>
+        public string TargetingDescription;
         public bool HasImplicitSelfTarget;
+
+        /// <summary>Asset-loader tasks and what they load into the data packet.</summary>
+        public List<AssetLoaderInfo> AssetLoaders = new();
+
+        /// <summary>Code-driven sequences (RunSequenceTask) and their declared behavior.</summary>
+        public List<SequenceInfo> Sequences = new();
 
         /// <summary>Everything the ability applies, stage-ordered; cost/cooldown last.</summary>
         public List<AbilityEffectUsage> Usages = new();
@@ -162,6 +209,28 @@ namespace FarEmerald.PlayForge
         public List<string> Describe(int level)
         {
             var lines = new List<string>();
+
+            if (!string.IsNullOrEmpty(TargetingDescription))
+            {
+                lines.Add($"Targeting: {TargetingDescription}");
+            }
+            else if (TargetingTaskType != null)
+            {
+                lines.Add($"Targeting: {TargetingTaskType}");
+            }
+
+            foreach (var sequence in Sequences)
+            {
+                if (!string.IsNullOrEmpty(sequence.Description)) lines.Add(sequence.Description);
+                foreach (var annotation in sequence.Annotations)
+                {
+                    if (!annotation.AppliesLoadedEffects && !string.IsNullOrEmpty(annotation.Text))
+                    {
+                        lines.Add(annotation.Text);
+                    }
+                }
+            }
+
             foreach (var usage in GameplayUsages) DescribeUsage(usage, level, lines, depth: 0);
 
             var cd = Cooldown?.Series;
@@ -189,10 +258,13 @@ namespace FarEmerald.PlayForge
                 _ => "?",
             };
 
+            string suffix = usage.ApplicationsHint > 1 ? $" ×{usage.ApplicationsHint}" : "";
+            if (!string.IsNullOrEmpty(usage.Annotation)) suffix += $" ({usage.Annotation})";
+
             var series = usage.Series;
             if (series == null || series.Impacts.Count == 0)
             {
-                lines.Add($"{indent}Applies {usage.Effect?.GetName()} to {target}");
+                lines.Add($"{indent}Applies {usage.Effect?.GetName()} to {target}{suffix}");
             }
             else
             {
@@ -205,13 +277,13 @@ namespace FarEmerald.PlayForge
                     string line = impact.Delivery switch
                     {
                         EImpactDelivery.Continuous when impact.Operation == ECalculationOperation.Multiply =>
-                            $"{indent}{FormatPercent(total)} {attr}{dyn} to {target} while active",
+                            $"{indent}{FormatPercent(total)} {attr}{dyn} to {target} while active{suffix}",
                         EImpactDelivery.Continuous =>
-                            $"{indent}{Signed(total)} {attr}{dyn} to {target} while active",
+                            $"{indent}{Signed(total)} {attr}{dyn} to {target} while active{suffix}",
                         EImpactDelivery.Periodic =>
-                            $"{indent}{VerbFor(total)} {Mathf.Abs(total):0.##} {attr}{dyn} to {target} over {ValueAt(series.Duration, series.MinLevel, level):0.##}s",
+                            $"{indent}{VerbFor(total)} {Mathf.Abs(total):0.##} {attr}{dyn} to {target} over {ValueAt(series.Duration, series.MinLevel, level):0.##}s{suffix}",
                         _ =>
-                            $"{indent}{VerbFor(total)} {Mathf.Abs(total):0.##} {attr}{dyn} to {target}",
+                            $"{indent}{VerbFor(total)} {Mathf.Abs(total):0.##} {attr}{dyn} to {target}{suffix}",
                     };
                     lines.Add(line);
                 }
@@ -254,6 +326,7 @@ namespace FarEmerald.PlayForge
                 MinLevel = minLevel,
                 MaxLevel = maxLevel,
                 TargetingTaskType = ability.Behaviour?.Targeting?.GetType().Name,
+                TargetingDescription = ability.Behaviour?.Targeting?.Description,
                 HasImplicitSelfTarget = ability.Behaviour?.UseImplicitTargeting ?? false,
             };
 
@@ -265,6 +338,47 @@ namespace FarEmerald.PlayForge
 
             var visited = new HashSet<GameplayEffect>();
 
+            // ─── Asset loaders — what gets loaded into the data packet, per tag ─────
+            // Sequences apply these via data.TryApplyEffects(target, tag); sequence
+            // annotations (WithAppliedEffects) claim them by tag below.
+            var loadedByTag = new Dictionary<Tag, List<GameplayEffect>>();
+            var claimedLoadedEffects = new HashSet<GameplayEffect>();
+
+            if (ability.Behaviour?.AssetLoaders != null)
+            {
+                foreach (var loader in ability.Behaviour.AssetLoaders)
+                {
+                    if (loader == null) continue;
+
+                    var info = new AssetLoaderInfo { TaskType = loader.GetType().Name };
+                    switch (loader)
+                    {
+                        case SetEffectsTask setEffects:
+                            info.DataTag = setEffects.Tag;
+                            if (setEffects.Effects != null) info.Effects.AddRange(setEffects.Effects.Where(e => e != null));
+                            break;
+                        case SetAssetsTask setAssets:
+                            info.DataTag = setAssets.Tag;
+                            if (setAssets.Assets != null) info.Effects.AddRange(setAssets.Assets.OfType<GameplayEffect>());
+                            break;
+                        default:
+                            info.Effects.AddRange(FindEffectReferences(loader));
+                            break;
+                    }
+
+                    if (info.Effects.Count > 0 && info.DataTag.IsValid)
+                    {
+                        if (!loadedByTag.TryGetValue(info.DataTag, out var list))
+                        {
+                            loadedByTag[info.DataTag] = list = new List<GameplayEffect>();
+                        }
+                        list.AddRange(info.Effects);
+                    }
+
+                    breakdown.AssetLoaders.Add(info);
+                }
+            }
+
             if (ability.Behaviour?.Stages != null)
             {
                 for (int stageIndex = 0; stageIndex < ability.Behaviour.Stages.Count; stageIndex++)
@@ -275,8 +389,23 @@ namespace FarEmerald.PlayForge
                     foreach (var task in stage.Tasks)
                     {
                         if (task == null) continue;
-                        CollectTaskUsages(task, stageIndex, defaultScope, breakdown, minLevel, maxLevel, visited);
+                        CollectTaskUsages(task, stageIndex, defaultScope, breakdown, minLevel, maxLevel, visited, loadedByTag, claimedLoadedEffects);
                     }
+                }
+            }
+
+            // Loaded effects no sequence annotation claimed — surface them anyway so
+            // nothing an ability can apply is invisible; annotating the sequence
+            // upgrades these to SequenceApplication with counts and scope.
+            foreach (var loaderInfo in breakdown.AssetLoaders)
+            {
+                foreach (var effect in loaderInfo.Effects)
+                {
+                    if (claimedLoadedEffects.Contains(effect)) continue;
+                    if (breakdown.Usages.Any(u => u.Effect == effect)) continue;
+
+                    AddUsage(breakdown, effect, EAbilityEffectRole.LoadedAsset, -1,
+                        loaderInfo.TaskType, defaultScope, minLevel, maxLevel, visited);
                 }
             }
 
@@ -395,7 +524,8 @@ namespace FarEmerald.PlayForge
         // ═══════════════════════════════════════════════════════════════════════════
 
         private static void CollectTaskUsages(AbstractAbilityTask task, int stageIndex, EEffectTargetScope defaultScope,
-            AbilityBreakdown breakdown, int minLevel, int maxLevel, HashSet<GameplayEffect> visited)
+            AbilityBreakdown breakdown, int minLevel, int maxLevel, HashSet<GameplayEffect> visited,
+            Dictionary<Tag, List<GameplayEffect>> loadedByTag = null, HashSet<GameplayEffect> claimedLoadedEffects = null)
         {
             string taskType = task.GetType().Name;
 
@@ -415,6 +545,10 @@ namespace FarEmerald.PlayForge
                     }
                     break;
 
+                case RunSequenceTask runSequence:
+                    CollectSequenceUsages(runSequence, stageIndex, defaultScope, breakdown, minLevel, maxLevel, visited, loadedByTag, claimedLoadedEffects);
+                    break;
+
                 default:
                     // Custom tasks: find effect references via reflection; the application
                     // manner can't be known statically, so they land as Referenced.
@@ -423,6 +557,56 @@ namespace FarEmerald.PlayForge
                         AddUsage(breakdown, effect, EAbilityEffectRole.Referenced, stageIndex, taskType, defaultScope, minLevel, maxLevel, visited);
                     }
                     break;
+            }
+        }
+
+        /// <summary>
+        /// Resolve a RunSequenceTask's sequence (edit-time safe: the builder method only
+        /// constructs the definition — runtime lambdas are not invoked) and turn its
+        /// declared annotations into usages. WithAppliedEffects annotations claim the
+        /// effects loaded under their tag by the ability's asset loaders.
+        /// </summary>
+        private static void CollectSequenceUsages(RunSequenceTask runSequence, int stageIndex, EEffectTargetScope defaultScope,
+            AbilityBreakdown breakdown, int minLevel, int maxLevel, HashSet<GameplayEffect> visited,
+            Dictionary<Tag, List<GameplayEffect>> loadedByTag, HashSet<GameplayEffect> claimedLoadedEffects)
+        {
+            TaskSequence sequence = null;
+            try
+            {
+                sequence = runSequence.Sequence.GetActiveSequence() as TaskSequence;
+            }
+            catch (Exception)
+            {
+                // Builder method threw (missing scene context etc.) — fall through to
+                // the name-only info below.
+            }
+
+            var metadata = sequence?.Definition?.Metadata;
+            var info = new SequenceInfo
+            {
+                Name = metadata?.Name ?? runSequence.Sequence.GetDisplayName(),
+                Description = metadata?.Description,
+                StageIndex = stageIndex,
+            };
+            if (metadata?.Annotations != null) info.Annotations.AddRange(metadata.Annotations);
+            breakdown.Sequences.Add(info);
+
+            foreach (var annotation in info.Annotations)
+            {
+                if (!annotation.AppliesLoadedEffects) continue;
+                if (loadedByTag == null || !loadedByTag.TryGetValue(annotation.AppliedEffectsTag, out var effects)) continue;
+
+                foreach (var effect in effects)
+                {
+                    var usage = BuildUsage(effect, EAbilityEffectRole.SequenceApplication, stageIndex,
+                        nameof(RunSequenceTask), annotation.Scope, minLevel, maxLevel, visited);
+                    if (usage == null) continue;
+
+                    usage.ApplicationsHint = annotation.MaxApplications;
+                    usage.Annotation = annotation.Text;
+                    breakdown.Usages.Add(usage);
+                    claimedLoadedEffects?.Add(effect);
+                }
             }
         }
 

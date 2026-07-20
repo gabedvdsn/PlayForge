@@ -85,7 +85,7 @@ namespace FarEmerald.PlayForge.Extended.Editor
         // Window Management
         // ═══════════════════════════════════════════════════════════════════════════
         
-        [MenuItem("Tools/PlayForge/The Forge")]
+        [MenuItem("PlayForge/The Forge", false, 0)]
         public static void ShowWindow()
         {
             var window = GetWindow<TheForge>();

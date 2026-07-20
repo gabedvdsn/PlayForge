@@ -79,22 +79,25 @@ namespace FarEmerald.PlayForge.Extended.Editor
         private static readonly Dictionary<Type, List<ColumnDef>> ColumnDefinitions = new Dictionary<Type, List<ColumnDef>>
         {
             { typeof(Ability), new List<ColumnDef> {
-                new ColumnDef("Name", 160, a => GetAbilityName((Ability)a)),
-                new ColumnDef("Level Provider", 110, a => ((Ability)a).LinkedProvider?.GetProviderName() ?? "-"),
+                new ColumnDef("Name", 180, a => GetAbilityName((Ability)a),
+                    buildCell: (forge, a) => forge.CreateAbilityNameCell((Ability)a)),
+                new ColumnDef("Level Provider", 110, a => ((Ability)a).LinkedProvider?.GetProviderName() ?? "-",
+                    buildCell: (forge, a) => forge.CreateAssetLinkCell(((Ability)a).LinkedProvider)),
                 new ColumnDef("Policy", 110, a => ((Ability)a).Definition.ActivationPolicy.ToString()),
                 new ColumnDef("Start Lvl", 65, a => ((Ability)a).StartingLevel.ToString()),
                 new ColumnDef("Max Lvl", 65, a => ((Ability)a).MaxLevel.ToString()),
-                new ColumnDef("Cost", 85, a => GetAbilityCostSummary((Ability)a), true),
-                new ColumnDef("Cooldown", 85, a => GetAbilityCooldownSummary((Ability)a), true),
+                new ColumnDef("Cost", 115, a => GetAbilityCostSummary((Ability)a), true),
+                new ColumnDef("Cooldown", 105, a => GetAbilityCooldownSummary((Ability)a), true),
                 new ColumnDef("Stages", 55, a => ((Ability)a).Behaviour?.Stages?.Count.ToString() ?? "0"),
                 new ColumnDef("Src Reqs", 60, a => GetAbilitySourceReqCount((Ability)a)),
                 new ColumnDef("Tgt Reqs", 60, a => GetAbilityTargetReqCount((Ability)a)),
             }},
             { typeof(GameplayEffect), new List<ColumnDef> {
                 new ColumnDef("Name", 160, a => GetEffectName((GameplayEffect)a)),
-                new ColumnDef("Level Provider", 110, a => ((GameplayEffect)a).LinkedProvider?.GetProviderName() ?? "-"),                
-                new ColumnDef("Duration", 110, a => GetEffectDuration((GameplayEffect)a)),
-                new ColumnDef("Impact", 110, a => GetEffectImpact((GameplayEffect)a)),
+                new ColumnDef("Level Provider", 110, a => ((GameplayEffect)a).LinkedProvider?.GetProviderName() ?? "-",
+                    buildCell: (forge, a) => forge.CreateAssetLinkCell(((GameplayEffect)a).LinkedProvider)),
+                new ColumnDef("Duration", 115, a => GetEffectDuration((GameplayEffect)a)),
+                new ColumnDef("Impact", 150, a => GetEffectImpact((GameplayEffect)a)),
                 new ColumnDef("Workers", 60, a => ((GameplayEffect)a).Workers?.Count.ToString() ?? "0"),
                 new ColumnDef("Visibility", 90, a => ((GameplayEffect)a).Definition?.Visibility.ToString() ?? "-"),
                 new ColumnDef("Src Reqs", 60, a => GetEffectSourceReqCount((GameplayEffect)a)),
@@ -102,7 +105,8 @@ namespace FarEmerald.PlayForge.Extended.Editor
             }},
             { typeof(Item), new List<ColumnDef> {
                 new ColumnDef("Name", 160, a => GetItemName((Item)a)),
-                new ColumnDef("Level Provider", 110, a => ((Item)a).LinkedProvider?.GetProviderName() ?? "-"),                
+                new ColumnDef("Level Provider", 110, a => ((Item)a).LinkedProvider?.GetProviderName() ?? "-",
+                    buildCell: (forge, a) => forge.CreateAssetLinkCell(((Item)a).LinkedProvider)),
                 new ColumnDef("Start Lvl", 65, a => ((Item)a).StartingLevel.ToString()),
                 new ColumnDef("Max Lvl", 65, a => ((Item)a).MaxLevel.ToString()),
                 new ColumnDef("Effects", 60, a => ((Item)a).GrantedEffects?.Count.ToString() ?? "0"),
@@ -122,13 +126,19 @@ namespace FarEmerald.PlayForge.Extended.Editor
             }},
             { typeof(EntityIdentity), new List<ColumnDef> {
                 new ColumnDef("Name", 160, a => GetEntityName((EntityIdentity)a)),
-                new ColumnDef("Level Provider", 110, a => ((EntityIdentity)a).LinkedProvider?.GetProviderName() ?? "-"),                
+                new ColumnDef("Level Provider", 110, a => ((EntityIdentity)a).LinkedProvider?.GetProviderName() ?? "-",
+                    buildCell: (forge, a) => forge.CreateAssetLinkCell(((EntityIdentity)a).LinkedProvider)),
+                new ColumnDef("Attribute Set", 130, a => ((EntityIdentity)a).AttributeSet != null ? ((EntityIdentity)a).AttributeSet.GetName() ?? ((EntityIdentity)a).AttributeSet.name : "-",
+                    buildCell: (forge, a) => forge.CreateAssetLinkCell(((EntityIdentity)a).AttributeSet)),
                 new ColumnDef("Policy", 100, a => ((EntityIdentity)a).ActivationPolicy.ToString()),
                 new ColumnDef("Max Abilities", 90, a => ((EntityIdentity)a).MaxAbilitiesOperation.Magnitude.ToString()),
                 new ColumnDef("Starting", 70, a => ((EntityIdentity)a).StartingAbilities?.Count.ToString() ?? "0"),
                 new ColumnDef("Duplicates", 75, a => ((EntityIdentity)a).AllowDuplicateAbilities ? "Yes" : "No"),
             }},
         };
+
+        /// <summary>Instance IDs of ability rows whose description pane is expanded.</summary>
+        private readonly HashSet<int> expandedAbilityRows = new();
         
         // ═══════════════════════════════════════════════════════════════════════════
         // Record Classes
@@ -304,18 +314,28 @@ namespace FarEmerald.PlayForge.Extended.Editor
                 searchBar.Add(cacheInfo);
             }
             
-            // Main Content Area
+            // Main Content Area — two hosts:
+            //  • "AssetListScroll" (outer ScrollView) for grouped/tags/scalers/requirements views
+            //  • "AssetTableHost" for the typed column view: the header stays fixed while
+            //    rows scroll vertically inside the table (sticky header), with a shared
+            //    horizontal scroller so header and rows stay aligned.
             var scrollView = new ScrollView();
             scrollView.style.flexGrow = 1;
             scrollView.name = "AssetListScroll";
             scrollView.horizontalScrollerVisibility = ScrollerVisibility.Auto;
             contentContainer.Add(scrollView);
-            
+
             var listContainer = new VisualElement();
             listContainer.name = "AssetList";
             listContainer.style.minWidth = 700;
             scrollView.Add(listContainer);
-            
+
+            var tableHost = new VisualElement();
+            tableHost.name = "AssetTableHost";
+            tableHost.style.flexGrow = 1;
+            tableHost.style.display = DisplayStyle.None;
+            contentContainer.Add(tableHost);
+
             RefreshViewList();
         }
         
@@ -477,28 +497,40 @@ namespace FarEmerald.PlayForge.Extended.Editor
         {
             var listContainer = rootVisualElement.Q<VisualElement>("AssetList");
             if (listContainer == null) return;
-            
+
+            var scrollHost = rootVisualElement.Q<ScrollView>("AssetListScroll");
+            var tableHost = rootVisualElement.Q<VisualElement>("AssetTableHost");
+
             listContainer.Clear();
-            
+            tableHost?.Clear();
+
+            // Typed column view renders into the sticky-header table host; every other
+            // view uses the plain outer scroll.
+            bool useTableHost = !showRequirementsView && !showScalersView && !showTagsView
+                                && selectedTypeFilter != null && ColumnDefinitions.ContainsKey(selectedTypeFilter);
+
+            if (scrollHost != null) scrollHost.style.display = useTableHost ? DisplayStyle.None : DisplayStyle.Flex;
+            if (tableHost != null) tableHost.style.display = useTableHost ? DisplayStyle.Flex : DisplayStyle.None;
+
             if (showRequirementsView)
             {
                 BuildRequirementsListView(listContainer);
                 return;
             }
-            
+
             if (showScalersView)
             {
                 BuildScalersListView(listContainer);
                 return;
             }
-            
+
             if (showTagsView)
             {
                 BuildTagsListView(listContainer);
                 return;
             }
-            
-            BuildStandardListView(listContainer);
+
+            BuildStandardListView(useTableHost && tableHost != null ? tableHost : listContainer);
         }
         
         // ═══════════════════════════════════════════════════════════════════════════
@@ -2074,7 +2106,16 @@ namespace FarEmerald.PlayForge.Extended.Editor
         
         private void BuildColumnListView(VisualElement container, List<ScriptableObject> assets, List<ColumnDef> columns)
         {
+            // Sticky-header layout: one horizontal scroller wraps { fixed header +
+            // vertical rows scroller }, so the header never scrolls away vertically and
+            // stays column-aligned during horizontal scrolling.
+            var hScroll = new ScrollView(ScrollViewMode.Horizontal);
+            hScroll.style.flexGrow = 1;
+            hScroll.horizontalScrollerVisibility = ScrollerVisibility.Auto;
+            container.Add(hScroll);
+
             var tableContainer = new VisualElement();
+            tableContainer.style.minWidth = 700;
             tableContainer.style.borderTopWidth = 1;
             tableContainer.style.borderBottomWidth = 1;
             tableContainer.style.borderLeftWidth = 1;
@@ -2088,37 +2129,50 @@ namespace FarEmerald.PlayForge.Extended.Editor
             tableContainer.style.borderBottomLeftRadius = 6;
             tableContainer.style.borderBottomRightRadius = 6;
             tableContainer.style.overflow = Overflow.Hidden;
-            container.Add(tableContainer);
-            
-            // Header
+            hScroll.Add(tableContainer);
+
+            // Pin the table's height to the horizontal scroller's viewport so the rows
+            // scroller below the header gets a real height to scroll within.
+            hScroll.RegisterCallback<GeometryChangedEvent>(_ =>
+            {
+                float viewportHeight = hScroll.contentViewport.resolvedStyle.height;
+                if (viewportHeight > 0) tableContainer.style.height = viewportHeight;
+            });
+
+            // Header (fixed)
             var headerRow = new VisualElement();
             headerRow.style.flexDirection = FlexDirection.Row;
             headerRow.style.backgroundColor = HeaderBgColor;
             headerRow.style.minHeight = HEADER_HEIGHT;
+            headerRow.style.flexShrink = 0;
             headerRow.style.borderBottomWidth = 2;
             headerRow.style.borderBottomColor = TableBorderColor;
             tableContainer.Add(headerRow);
-            
+
             foreach (var col in columns)
                 headerRow.Add(CreateHeaderCell(col));
-            
+
             headerRow.Add(CreateHeaderCell("Actions", ACTIONS_COLUMN_WIDTH, false));
-            
-            // Rows
+
+            // Rows (vertical scroll under the header)
+            var rowsScroll = new ScrollView(ScrollViewMode.Vertical);
+            rowsScroll.style.flexGrow = 1;
+            tableContainer.Add(rowsScroll);
+
             bool alt = false;
             foreach (var asset in assets)
             {
-                tableContainer.Add(CreateDataRow(asset, columns, alt));
+                rowsScroll.Add(CreateDataRow(asset, columns, alt));
                 alt = !alt;
             }
-            
+
             if (!assets.Any())
             {
                 var empty = new VisualElement();
                 empty.style.paddingTop = 20;
                 empty.style.paddingBottom = 20;
                 empty.Add(CreateEmptyLabel("No assets found"));
-                tableContainer.Add(empty);
+                rowsScroll.Add(empty);
             }
         }
         
@@ -2159,35 +2213,241 @@ namespace FarEmerald.PlayForge.Extended.Editor
         {
             var typeInfo = AssetTypes.FirstOrDefault(t => t.Type == asset.GetType());
             bool doubleClickVisualize = EditorPrefs.GetBool(PREFS_PREFIX + "DoubleClickVisualize", true);
-            
+
             var row = new VisualElement();
             row.style.flexDirection = FlexDirection.Row;
             row.style.minHeight = ROW_HEIGHT;
             row.style.backgroundColor = alternate ? RowAltColor : Color.clear;
             row.style.borderBottomWidth = 1;
             row.style.borderBottomColor = new Color(TableBorderColor.r, TableBorderColor.g, TableBorderColor.b, 0.3f);
-            
+
             row.RegisterCallback<MouseEnterEvent>(_ => row.style.backgroundColor = RowHoverColor);
             row.RegisterCallback<MouseLeaveEvent>(_ => row.style.backgroundColor = alternate ? RowAltColor : Color.clear);
-            row.RegisterCallback<ClickEvent>(evt => 
-            { 
-                if (evt.clickCount == 2) 
-                { 
+            row.RegisterCallback<ClickEvent>(evt =>
+            {
+                if (evt.clickCount == 2)
+                {
                     if (doubleClickVisualize && typeInfo != null && typeInfo.CanVisualize)
                         OpenVisualizer(asset);
                     else
                     {
-                        Selection.activeObject = asset; 
-                        EditorGUIUtility.PingObject(asset); 
+                        Selection.activeObject = asset;
+                        EditorGUIUtility.PingObject(asset);
                     }
-                } 
+                }
             });
-            
+
             foreach (var col in columns)
-                row.Add(CreateDataCell(col.GetValue(asset) ?? "-", col.Width, col.IsAssetReference));
-            
+            {
+                if (col.BuildCell != null)
+                    row.Add(WrapInteractiveCell(col.BuildCell(this, asset), col.Width));
+                else
+                    row.Add(CreateDataCell(col.GetValue(asset) ?? "-", col.Width, col.IsAssetReference));
+            }
+
             row.Add(CreateActionsCell(asset, typeInfo));
+
+            // Abilities get an expandable description pane under the row (fed by
+            // AbilityInspector) — the Name cell's chevron toggles it.
+            if (asset is Ability ability)
+            {
+                var block = new VisualElement();
+                block.Add(row);
+
+                var detail = new VisualElement { name = "AbilityDetail" };
+                detail.style.display = expandedAbilityRows.Contains(ability.GetInstanceID())
+                    ? DisplayStyle.Flex
+                    : DisplayStyle.None;
+                if (detail.style.display == DisplayStyle.Flex)
+                    detail.Add(BuildAbilityDescriptionPane(ability));
+                block.Add(detail);
+
+                return block;
+            }
+
             return row;
+        }
+
+        /// <summary>Standard cell chrome around an interactive cell body.</summary>
+        private VisualElement WrapInteractiveCell(VisualElement body, int width)
+        {
+            var cell = new VisualElement();
+            cell.style.width = width;
+            cell.style.minHeight = ROW_HEIGHT;
+            cell.style.paddingLeft = CELL_PADDING_H;
+            cell.style.paddingRight = CELL_PADDING_H;
+            cell.style.justifyContent = Justify.Center;
+            cell.style.borderRightWidth = 1;
+            cell.style.borderRightColor = TableBorderColor.Fade(.2f);
+            cell.Add(body);
+            return cell;
+        }
+
+        /// <summary>
+        /// Click-to-select link for an asset reference (level providers, attribute sets).
+        /// Shows "-" when null. Clicks select + ping without triggering the row action.
+        /// </summary>
+        private VisualElement CreateAssetLinkCell(UnityEngine.Object reference)
+        {
+            // AttributeSet derives from BaseForgeLevelProvider — match it FIRST so the
+            // set's own name (not the provider name) is shown.
+            string text = reference switch
+            {
+                null => "-",
+                AttributeSet set => set.GetName() is { Length: > 0 } n ? n : reference.name,
+                BaseForgeLevelProvider provider => provider.GetProviderName() is { Length: > 0 } n ? n : reference.name,
+                _ => reference.name,
+            };
+
+            var label = new Label(text);
+            label.style.fontSize = 11;
+            label.style.overflow = Overflow.Hidden;
+            label.style.textOverflow = TextOverflow.Ellipsis;
+            label.style.whiteSpace = WhiteSpace.NoWrap;
+
+            if (reference == null)
+            {
+                label.style.color = Colors.HintText;
+                return label;
+            }
+
+            label.style.color = Colors.AccentBlue;
+            label.tooltip = "Click to select in the inspector";
+            label.RegisterCallback<MouseEnterEvent>(_ => label.style.unityFontStyleAndWeight = FontStyle.Bold);
+            label.RegisterCallback<MouseLeaveEvent>(_ => label.style.unityFontStyleAndWeight = FontStyle.Normal);
+            label.RegisterCallback<ClickEvent>(evt =>
+            {
+                Selection.activeObject = reference;
+                EditorGUIUtility.PingObject(reference);
+                evt.StopPropagation();
+            });
+            return label;
+        }
+
+        /// <summary>
+        /// Ability name cell with an expander chevron — toggles the description pane
+        /// (AbilityInspector breakdown) under the row.
+        /// </summary>
+        private VisualElement CreateAbilityNameCell(Ability ability)
+        {
+            var body = new VisualElement();
+            body.style.flexDirection = FlexDirection.Row;
+            body.style.alignItems = Align.Center;
+
+            bool expanded = expandedAbilityRows.Contains(ability.GetInstanceID());
+
+            var chevron = new Label(expanded ? "▾" : "▸");
+            chevron.style.fontSize = 10;
+            chevron.style.color = Colors.AccentBlue;
+            chevron.style.marginRight = 4;
+            chevron.style.minWidth = 12;
+            body.Add(chevron);
+
+            var name = new Label(GetAbilityName(ability));
+            name.style.fontSize = 11;
+            name.style.color = Colors.LabelText;
+            name.style.overflow = Overflow.Hidden;
+            name.style.textOverflow = TextOverflow.Ellipsis;
+            name.style.whiteSpace = WhiteSpace.NoWrap;
+            body.Add(name);
+
+            body.tooltip = "Click to show what this ability does";
+            body.RegisterCallback<ClickEvent>(evt =>
+            {
+                int id = ability.GetInstanceID();
+                if (!expandedAbilityRows.Remove(id)) expandedAbilityRows.Add(id);
+                RefreshViewList();
+                evt.StopPropagation();
+            });
+
+            return body;
+        }
+
+        /// <summary>The expandable "what does this ability do" pane (AbilityInspector-fed).</summary>
+        private VisualElement BuildAbilityDescriptionPane(Ability ability)
+        {
+            var pane = new VisualElement();
+            pane.style.paddingLeft = 34;
+            pane.style.paddingRight = 12;
+            pane.style.paddingTop = 6;
+            pane.style.paddingBottom = 8;
+            pane.style.backgroundColor = new Color(0.14f, 0.15f, 0.17f, 0.9f);
+            pane.style.borderLeftWidth = 3;
+            pane.style.borderLeftColor = Colors.AssetAbility;
+            pane.style.borderBottomWidth = 1;
+            pane.style.borderBottomColor = TableBorderColor.Fade(.3f);
+
+            try
+            {
+                var breakdown = AbilityInspector.Build(ability);
+
+                var levelLabel = new Label(breakdown.MaxLevel > breakdown.MinLevel
+                    ? $"Levels {breakdown.MinLevel}–{breakdown.MaxLevel} (values shown across levels)"
+                    : $"Level {breakdown.MinLevel}");
+                levelLabel.style.fontSize = 9;
+                levelLabel.style.color = Colors.HintText;
+                levelLabel.style.marginBottom = 4;
+                pane.Add(levelLabel);
+
+                var lines = breakdown.Describe(breakdown.MaxLevel);
+                if (lines.Count == 0)
+                {
+                    var none = new Label("No declared gameplay (custom tasks without annotations?)");
+                    none.style.fontSize = 11;
+                    none.style.color = Colors.HintText;
+                    pane.Add(none);
+                }
+
+                foreach (var line in lines)
+                {
+                    var lineLabel = new Label(line);
+                    lineLabel.style.fontSize = 11;
+                    lineLabel.style.color = Colors.LabelText;
+                    lineLabel.style.whiteSpace = WhiteSpace.Normal;
+                    pane.Add(lineLabel);
+                }
+
+                // Per-level series for each impact — the "20/30/40/50" view.
+                bool seriesHeaderAdded = false;
+                foreach (var usage in breakdown.GameplayUsages)
+                {
+                    var series = usage.Series;
+                    if (series == null || series.Impacts.Count == 0) continue;
+
+                    if (!seriesHeaderAdded && breakdown.MaxLevel > breakdown.MinLevel)
+                    {
+                        var seriesHeader = new Label("Across levels:");
+                        seriesHeader.style.fontSize = 9;
+                        seriesHeader.style.color = Colors.HintText;
+                        seriesHeader.style.marginTop = 4;
+                        pane.Add(seriesHeader);
+                        seriesHeaderAdded = true;
+                    }
+
+                    foreach (var impact in series.Impacts)
+                    {
+                        if (breakdown.MaxLevel <= breakdown.MinLevel) break;
+                        string attr = impact.Attribute != null ? impact.Attribute.GetName() : "?";
+                        string values = impact.Operation == ECalculationOperation.Multiply
+                            ? $"×{impact.FormatMagnitude()}"
+                            : impact.FormatTotal();
+                        var seriesLine = new Label($"{usage.Effect.GetName()} → {attr}: {values}");
+                        seriesLine.style.fontSize = 10;
+                        seriesLine.style.color = Colors.AccentBlue;
+                        seriesLine.style.marginLeft = 8;
+                        pane.Add(seriesLine);
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                var error = new Label($"Failed to build breakdown: {ex.Message}");
+                error.style.fontSize = 10;
+                error.style.color = Colors.AccentRed;
+                pane.Add(error);
+            }
+
+            return pane;
         }
         
         // private void ConfigureDataCell(VisualElement cell, VisualElement row)
@@ -2453,13 +2713,22 @@ namespace FarEmerald.PlayForge.Extended.Editor
             public int Width { get; }
             public Func<ScriptableObject, string> GetValue { get; }
             public bool IsAssetReference { get; }
-            
-            public ColumnDef(string name, int width, Func<ScriptableObject, string> getValue, bool isAssetRef = false)
+
+            /// <summary>
+            /// Optional interactive cell factory (click-to-select provider links, expander
+            /// chevrons). When set, GetValue is still used for sorting; the factory
+            /// supplies the rendered cell content.
+            /// </summary>
+            public Func<TheForge, ScriptableObject, VisualElement> BuildCell { get; }
+
+            public ColumnDef(string name, int width, Func<ScriptableObject, string> getValue, bool isAssetRef = false,
+                Func<TheForge, ScriptableObject, VisualElement> buildCell = null)
             {
                 Name = name;
                 Width = width;
                 GetValue = getValue;
                 IsAssetReference = isAssetRef;
+                BuildCell = buildCell;
             }
         }
     }

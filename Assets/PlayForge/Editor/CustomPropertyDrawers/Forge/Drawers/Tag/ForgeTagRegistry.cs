@@ -623,7 +623,10 @@ namespace FarEmerald.PlayForge.Extended.Editor
                 
                 // Scan ForgeContextDefault attributes first (system defaults)
                 int defaultCount = ScanContextDefaults();
-                
+
+                // Declared tags from project tag libraries (created via The Forge)
+                ScanTagLibraries();
+
                 // Then scan assets
                 foreach (var assetType in ScanTypes)
                 {
@@ -632,8 +635,8 @@ namespace FarEmerald.PlayForge.Extended.Editor
                 
                 _isDirty = false;
                 _lastScanTime = DateTime.Now;
-                
-                Debug.Log($"[TagRegistry] Scanned {_allTags.Count} unique tags across {_contextToTags.Count} contexts. ({defaultCount} system defaults)");
+
+                ForgeLog.Verbose($"[TagRegistry] Scanned {_allTags.Count} unique tags across {_contextToTags.Count} contexts. ({defaultCount} system defaults)");
             }
             finally
             {
@@ -767,6 +770,68 @@ namespace FarEmerald.PlayForge.Extended.Editor
             }
         }
         
+        /// <summary>
+        /// Scans every <see cref="ForgeTagLibrary"/> asset and registers its declared
+        /// entries under their chosen contexts. Declared tags behave like authored tag
+        /// usages (they carry their library asset as the usage source) so pickers and
+        /// the View tab surface them even before any gameplay asset references them.
+        /// </summary>
+        private static int ScanTagLibraries()
+        {
+            int count = 0;
+            var guids = AssetDatabase.FindAssets("t:ForgeTagLibrary");
+
+            foreach (var guid in guids)
+            {
+                var library = AssetDatabase.LoadAssetAtPath<ForgeTagLibrary>(AssetDatabase.GUIDToAssetPath(guid));
+                if (library?.Entries == null) continue;
+
+                foreach (var entry in library.Entries)
+                {
+                    if (entry == null || string.IsNullOrWhiteSpace(entry.Name)) continue;
+
+                    var tag = Tag.Generate(entry.Name.Trim());
+                    string[] contexts = entry.Contexts is { Count: > 0 }
+                        ? entry.Contexts.Where(c => !string.IsNullOrWhiteSpace(c)).ToArray()
+                        : new[] { ForgeContext.Universal };
+                    if (contexts.Length == 0) contexts = new[] { ForgeContext.Universal };
+
+                    foreach (var contextString in contexts)
+                    {
+                        RegisterTagInCacheForAsset(tag, new TagContext(new[] { contextString }), library, "Entries");
+                    }
+
+                    if (contexts.Length > 1)
+                    {
+                        RegisterTagInCacheForAsset(tag, new TagContext(contexts), library, "Entries");
+                    }
+
+                    count++;
+                }
+            }
+
+            return count;
+        }
+
+        private static void RegisterTagInCacheForAsset(Tag tag, TagContext context, ScriptableObject asset, string fieldPath)
+        {
+            if (!_tagCache.TryGetValue(tag, out var record))
+            {
+                record = new TagUsageRecord(tag);
+                _tagCache[tag] = record;
+                _allTags.Add(tag);
+            }
+
+            record.AddUsage(context, asset, fieldPath, isSystemDefault: false);
+
+            if (!_contextToTags.TryGetValue(context.ContextKey, out var contextSet))
+            {
+                contextSet = new HashSet<Tag>();
+                _contextToTags[context.ContextKey] = contextSet;
+            }
+            contextSet.Add(tag);
+        }
+
         /// <summary>
         /// Registers a tag in the cache as a system default.
         /// </summary>

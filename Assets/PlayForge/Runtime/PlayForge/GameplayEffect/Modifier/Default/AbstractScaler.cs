@@ -248,16 +248,16 @@ namespace FarEmerald.PlayForge
                 switch (Interpolation)
                 {
                     case EScalerInterpolation.Constant:
-                        AnimationUtility.SetKeyLeftTangentMode(Scaling, i, UnityEditor.AnimationUtility.TangentMode.Constant);
-                        AnimationUtility.SetKeyRightTangentMode(Scaling, i, UnityEditor.AnimationUtility.TangentMode.Constant);
+                        AnimationUtility.SetKeyLeftTangentMode(Scaling, i, ECurveTangentMode.Constant);
+                        AnimationUtility.SetKeyRightTangentMode(Scaling, i, ECurveTangentMode.Constant);
                         break;
                     case EScalerInterpolation.Linear:
-                        AnimationUtility.SetKeyLeftTangentMode(Scaling, i, UnityEditor.AnimationUtility.TangentMode.Linear);
-                        AnimationUtility.SetKeyRightTangentMode(Scaling, i, UnityEditor.AnimationUtility.TangentMode.Linear);
+                        AnimationUtility.SetKeyLeftTangentMode(Scaling, i, ECurveTangentMode.Linear);
+                        AnimationUtility.SetKeyRightTangentMode(Scaling, i, ECurveTangentMode.Linear);
                         break;
                     case EScalerInterpolation.Smooth:
-                        AnimationUtility.SetKeyLeftTangentMode(Scaling, i, UnityEditor.AnimationUtility.TangentMode.ClampedAuto);
-                        AnimationUtility.SetKeyRightTangentMode(Scaling, i, UnityEditor.AnimationUtility.TangentMode.ClampedAuto);
+                        AnimationUtility.SetKeyLeftTangentMode(Scaling, i, ECurveTangentMode.ClampedAuto);
+                        AnimationUtility.SetKeyRightTangentMode(Scaling, i, ECurveTangentMode.ClampedAuto);
                         break;
                 }
             }
@@ -509,25 +509,44 @@ namespace FarEmerald.PlayForge
     }
     
     // ═══════════════════════════════════════════════════════════════════════════
-    // Animation Utility (Editor-safe wrapper)
+    // Animation Utility (editor-safe wrapper)
+    //
+    // Player builds have no UnityEditor — the signatures use a runtime-safe enum and
+    // tangent application becomes a no-op outside the editor (curve keys keep Unity's
+    // default tangents; LevelValues remain the authoritative data either way).
     // ═══════════════════════════════════════════════════════════════════════════
-    
+
+    /// <summary>Runtime-safe mirror of the editor tangent modes used by scaler curves.</summary>
+    public enum ECurveTangentMode
+    {
+        Constant,
+        Linear,
+        ClampedAuto,
+    }
+
     public static class AnimationUtility
     {
-        public static void SetKeyLeftTangentMode(AnimationCurve curve, int index, UnityEditor.AnimationUtility.TangentMode mode)
+        public static void SetKeyLeftTangentMode(AnimationCurve curve, int index, ECurveTangentMode mode)
         {
 #if UNITY_EDITOR
-            UnityEditor.AnimationUtility.SetKeyLeftTangentMode(curve, index, 
-                (UnityEditor.AnimationUtility.TangentMode)mode);
+            UnityEditor.AnimationUtility.SetKeyLeftTangentMode(curve, index, Convert(mode));
 #endif
         }
-        
-        public static void SetKeyRightTangentMode(AnimationCurve curve, int index, UnityEditor.AnimationUtility.TangentMode mode)
+
+        public static void SetKeyRightTangentMode(AnimationCurve curve, int index, ECurveTangentMode mode)
         {
 #if UNITY_EDITOR
-            UnityEditor.AnimationUtility.SetKeyRightTangentMode(curve, index, 
-                (UnityEditor.AnimationUtility.TangentMode)mode);
+            UnityEditor.AnimationUtility.SetKeyRightTangentMode(curve, index, Convert(mode));
 #endif
         }
+
+#if UNITY_EDITOR
+        private static UnityEditor.AnimationUtility.TangentMode Convert(ECurveTangentMode mode) => mode switch
+        {
+            ECurveTangentMode.Constant => UnityEditor.AnimationUtility.TangentMode.Constant,
+            ECurveTangentMode.Linear => UnityEditor.AnimationUtility.TangentMode.Linear,
+            _ => UnityEditor.AnimationUtility.TangentMode.ClampedAuto,
+        };
+#endif
     }
 }

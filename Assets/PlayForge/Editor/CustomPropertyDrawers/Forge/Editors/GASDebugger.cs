@@ -127,7 +127,7 @@ namespace FarEmerald.PlayForge.Extended.Editor
         // WINDOW SETUP
         // ═══════════════════════════════════════════════════════════════════════════
 
-        [MenuItem("Tools/PlayForge/Runtime Tools/GAS Debugger")]
+        [MenuItem("PlayForge/GAS Debugger", false, 11)]
         public static void ShowWindow()
         {
             var window = GetWindow<GASDebugger>();

@@ -392,7 +392,7 @@ namespace FarEmerald.PlayForge
                 }
                 catch (Exception ex)
                 {
-                    UnityEngine.Debug.Log($"Stage {StageIndex} Error: {ex}");
+                    UnityEngine.Debug.LogError($"[AbilityProxy] Stage {StageIndex} error: {ex}");
                 }
                 finally
                 {

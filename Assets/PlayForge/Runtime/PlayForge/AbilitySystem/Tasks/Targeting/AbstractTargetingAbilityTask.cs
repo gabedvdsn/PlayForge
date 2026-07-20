@@ -104,13 +104,11 @@ namespace FarEmerald.PlayForge
         /// </summary>
         protected virtual bool ConnectInputHandler(AbilityDataPacket data)
         {
-            DemoManager.Input.SetTargetingCursor();
             return true;
         }
 
         protected virtual void DisconnectInputHandler(AbilityDataPacket data)
         {
-            DemoManager.Input.ResetTargetingCursor();
         }
     }
 }

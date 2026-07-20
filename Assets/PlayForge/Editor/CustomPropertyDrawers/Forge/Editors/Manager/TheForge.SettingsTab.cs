@@ -124,12 +124,29 @@ namespace FarEmerald.PlayForge.Extended.Editor
             var showFileNamesToggleRow = CreateSettingRow("Show file names in grouped view");
             var showFileNamesToggle = new Toggle();
             showFileNamesToggle.value = EditorPrefs.GetBool(PREFS_PREFIX + "ShowFileNames", true);
-            showFileNamesToggle.RegisterValueChangedCallback(evt => 
+            showFileNamesToggle.RegisterValueChangedCallback(evt =>
                 EditorPrefs.SetBool(PREFS_PREFIX + "ShowFileNames", evt.newValue));
             showFileNamesToggle.style.marginTop = 4;
             showFileNamesToggleRow.Add(showFileNamesToggle);
             viewSection.Add(showFileNamesToggleRow);
-            
+
+            // Logging
+            var loggingSection = CreateSettingsSection("Logging", "PlayForge runtime/editor log verbosity (ForgeLog)", Colors.AccentYellow);
+            scrollView.Add(loggingSection);
+
+            var logLevelRow = CreateSettingRow("Minimum log level");
+            var logLevelField = new EnumField(ForgeLogSettingsBridge.CurrentLevel);
+            logLevelField.style.marginTop = 8;
+            logLevelField.style.width = 140;
+            logLevelField.tooltip = "Verbose: all framework traces • Info: notable events (default) • " +
+                                    "Warning/Error: problems only • None: silence everything.\n" +
+                                    "Applies in-editor and persists across sessions; builds default to Info " +
+                                    "unless game code sets ForgeLog.MinimumLevel.";
+            logLevelField.RegisterValueChangedCallback(evt =>
+                ForgeLogSettingsBridge.SetLevel((ForgeLog.ELevel)evt.newValue));
+            logLevelRow.Add(logLevelField);
+            loggingSection.Add(logLevelRow);
+
             // Create Tab Settings
             var createSection = CreateSettingsSection("Create Tab Settings", "Customize the Create tab", Colors.AccentBlue);
             scrollView.Add(createSection);
@@ -1915,6 +1932,31 @@ namespace FarEmerald.PlayForge.Extended.Editor
             TemplateRegistry.UpdateTag(targetTag.Name, new TemplateTag(newName, newColor));
             onSaved?.Invoke();
             Close();
+        }
+    }
+
+    /// <summary>
+    /// Persists the ForgeLog verbosity chosen in The Forge → Settings → Logging and
+    /// re-applies it to <see cref="ForgeLog.MinimumLevel"/> on every domain reload
+    /// (static fields reset on reload; EditorPrefs is the durable store).
+    /// </summary>
+    [InitializeOnLoad]
+    public static class ForgeLogSettingsBridge
+    {
+        private const string PrefsKey = "PlayForge_ForgeLogMinLevel";
+
+        static ForgeLogSettingsBridge()
+        {
+            ForgeLog.MinimumLevel = CurrentLevel;
+        }
+
+        public static ForgeLog.ELevel CurrentLevel =>
+            (ForgeLog.ELevel)EditorPrefs.GetInt(PrefsKey, (int)ForgeLog.ELevel.Info);
+
+        public static void SetLevel(ForgeLog.ELevel level)
+        {
+            EditorPrefs.SetInt(PrefsKey, (int)level);
+            ForgeLog.MinimumLevel = level;
         }
     }
 }

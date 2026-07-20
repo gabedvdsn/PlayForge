@@ -407,10 +407,10 @@ namespace FarEmerald.PlayForge.Extended.Editor
             
             for (int i = 0; i < curve.length; i++)
             {
-                AnimationUtility.SetKeyLeftTangentMode(curve, i, tm);
-                AnimationUtility.SetKeyRightTangentMode(curve, i, tm);
+                UnityEditor.AnimationUtility.SetKeyLeftTangentMode(curve, i, tm);
+                UnityEditor.AnimationUtility.SetKeyRightTangentMode(curve, i, tm);
             }
-            
+
             if (sp != null)
                 sp.animationCurveValue = curve;
         }

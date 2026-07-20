@@ -4,6 +4,7 @@ using System.IO;
 using System.Linq;
 using System.Text.RegularExpressions;
 using UnityEditor;
+using UnityEditor.UIElements;
 using UnityEngine;
 using UnityEngine.UIElements;
 using static FarEmerald.PlayForge.Extended.Editor.ForgeDrawerStyles;
@@ -16,15 +17,47 @@ namespace FarEmerald.PlayForge.Extended.Editor
         // CREATE TAB
         // ═══════════════════════════════════════════════════════════════════════════
         
+        // Create-tab sub-tabs: Assets (asset creation) and Tags (declare project tags).
+        private int currentCreateTab = 0;
+        private static readonly string[] createTabNames = { "Assets", "Tags" };
+
         private void BuildCreateTab()
         {
+            // Sub-tab bar
+            var subBar = new VisualElement();
+            subBar.style.flexDirection = FlexDirection.Row;
+            subBar.style.marginBottom = 8;
+            contentContainer.Add(subBar);
+
+            for (int i = 0; i < createTabNames.Length; i++)
+            {
+                int idx = i;
+                var btn = new Button(() => { currentCreateTab = idx; ShowTab(0); }) { text = createTabNames[i] };
+                bool active = currentCreateTab == i;
+                btn.style.marginRight = 4;
+                btn.style.paddingLeft = 14;
+                btn.style.paddingRight = 14;
+                btn.style.paddingTop = 5;
+                btn.style.paddingBottom = 5;
+                btn.style.backgroundColor = active ? Colors.AccentBlue : Colors.ButtonBackground;
+                btn.style.color = active ? Color.white : Colors.LabelText;
+                btn.style.unityFontStyleAndWeight = active ? FontStyle.Bold : FontStyle.Normal;
+                subBar.Add(btn);
+            }
+
+            if (currentCreateTab == 1)
+            {
+                BuildCreateTagsSubTab();
+                return;
+            }
+
             var scrollView = new ScrollView();
             scrollView.style.flexGrow = 1;
             contentContainer.Add(scrollView);
-            
+
             var content = new VisualElement();
             scrollView.Add(content);
-            
+
             // Quick Create Section
             var titleRow = CreateSectionHeader("Quick Create", "Create new PlayForge assets");
             content.Add(titleRow);
@@ -261,11 +294,248 @@ namespace FarEmerald.PlayForge.Extended.Editor
             labelText.style.color = Colors.HintText;
             labelText.style.unityTextAlign = TextAnchor.MiddleCenter;
             card.Add(labelText);
-            
+
             return card;
         }
+
+        // ═══════════════════════════════════════════════════════════════════════════
+        // CREATE TAB — TAGS SUB-TAB
+        //
+        // Declares project tags into a ForgeTagLibrary asset. Declared tags appear in
+        // tag pickers (via ForgeTagRegistry scanning every library) under their chosen
+        // contexts — even before any asset references them.
+        // ═══════════════════════════════════════════════════════════════════════════
+
+        private ForgeTagLibrary selectedTagLibrary;
+        private string newTagName = "";
+        private string newTagNote = "";
+        private readonly HashSet<string> newTagContexts = new();
+
+        /// <summary>Context constants offered when authoring a tag (from ForgeContext).</summary>
+        private static readonly string[] TagContextOptions =
+        {
+            ForgeContext.Ability, ForgeContext.Effect, ForgeContext.Entity, ForgeContext.Attribute,
+            ForgeContext.AttributeSet, ForgeContext.AssetIdentifier, ForgeContext.ContextIdentifier, ForgeContext.Granted,
+            ForgeContext.Data, ForgeContext.Texture, ForgeContext.Modifier, ForgeContext.Condition,
+            ForgeContext.Required, ForgeContext.Blocked, ForgeContext.Visibility, ForgeContext.Affiliation,
+            ForgeContext.Category, ForgeContext.Targeting, ForgeContext.Impact, ForgeContext.Duration,
+            ForgeContext.RetentionGroup, ForgeContext.Cost, ForgeContext.Cooldown, ForgeContext.Worker,
+            ForgeContext.Trigger, ForgeContext.Stage, ForgeContext.Universal, ForgeContext.System, 
+        };
+
+        private void BuildCreateTagsSubTab()
+        {
+            var scrollView = new ScrollView();
+            scrollView.style.flexGrow = 1;
+            contentContainer.Add(scrollView);
+            var content = new VisualElement();
+            scrollView.Add(content);
+
+            content.Add(CreateSectionHeader("Declare Tag", "Add a project tag and assign its contexts"));
+
+            EnsureTagLibrarySelection();
+
+            // ── Target library ────────────────────────────────────────────────
+            var libRow = new VisualElement { style = { flexDirection = FlexDirection.Row, alignItems = Align.Center, marginTop = 10, marginBottom = 8 } };
+            content.Add(libRow);
+
+            var libLabel = new Label("Library:") { style = { width = 70, color = Colors.LabelText, fontSize = 11 } };
+            libRow.Add(libLabel);
+
+            var libField = new ObjectField { objectType = typeof(ForgeTagLibrary), value = selectedTagLibrary, allowSceneObjects = false };
+            libField.style.flexGrow = 1;
+            libField.RegisterValueChangedCallback(evt => selectedTagLibrary = evt.newValue as ForgeTagLibrary);
+            libRow.Add(libField);
+
+            var newLibBtn = new Button(CreateNewTagLibrary) { text = "New" };
+            newLibBtn.style.marginLeft = 4;
+            libRow.Add(newLibBtn);
+
+            // ── Tag name ──────────────────────────────────────────────────────
+            var nameRow = new VisualElement { style = { flexDirection = FlexDirection.Row, alignItems = Align.Center, marginBottom = 6 } };
+            content.Add(nameRow);
+            nameRow.Add(new Label("Name:") { style = { width = 70, color = Colors.LabelText, fontSize = 11 } });
+            var nameField = new TextField { value = newTagName };
+            nameField.style.flexGrow = 1;
+            nameField.tooltip = "Dot-delimited hierarchical name, e.g. Status.Debuff.Burn";
+            nameField.RegisterValueChangedCallback(evt => newTagName = evt.newValue);
+            nameRow.Add(nameField);
+
+            // ── Note ──────────────────────────────────────────────────────────
+            var noteRow = new VisualElement { style = { flexDirection = FlexDirection.Row, alignItems = Align.Center, marginBottom = 8 } };
+            content.Add(noteRow);
+            noteRow.Add(new Label("Note:") { style = { width = 70, color = Colors.LabelText, fontSize = 11 } });
+            var noteField = new TextField { value = newTagNote };
+            noteField.style.flexGrow = 1;
+            noteField.RegisterValueChangedCallback(evt => newTagNote = evt.newValue);
+            noteRow.Add(noteField);
+
+            // ── Contexts (multi-select chips) ─────────────────────────────────
+            content.Add(new Label("Contexts") { style = { fontSize = 11, unityFontStyleAndWeight = FontStyle.Bold, color = Colors.HeaderText, marginBottom = 4 } });
+            var hint = new Label("None selected = Universal (available everywhere).");
+            hint.style.fontSize = 9;
+            hint.style.color = Colors.HintText;
+            hint.style.marginBottom = 6;
+            content.Add(hint);
+
+            var chipGrid = new VisualElement { style = { flexDirection = FlexDirection.Row, flexWrap = Wrap.Wrap, marginBottom = 10 } };
+            content.Add(chipGrid);
+            foreach (var context in TagContextOptions)
+            {
+                chipGrid.Add(CreateTagContextChip(context));
+            }
+
+            // ── Add button ────────────────────────────────────────────────────
+            var addBtn = new Button(AddDeclaredTag) { text = "＋ Add Tag" };
+            addBtn.style.marginTop = 4;
+            addBtn.style.paddingTop = 6;
+            addBtn.style.paddingBottom = 6;
+            addBtn.style.backgroundColor = Colors.AccentGreen;
+            addBtn.style.color = Color.white;
+            addBtn.style.unityFontStyleAndWeight = FontStyle.Bold;
+            content.Add(addBtn);
+
+            content.Add(CreateDivider(16));
+
+            // ── Existing declared tags in the selected library ────────────────
+            content.Add(CreateSectionHeader("Declared Tags", selectedTagLibrary != null ? selectedTagLibrary.name : "No library selected"));
+
+            if (selectedTagLibrary?.Entries is { Count: > 0 } entries)
+            {
+                foreach (var entry in entries.ToList())
+                {
+                    content.Add(CreateDeclaredTagRow(entry));
+                }
+            }
+            else
+            {
+                var empty = new Label("No tags declared yet.");
+                empty.style.color = Colors.HintText;
+                empty.style.fontSize = 11;
+                empty.style.marginTop = 6;
+                content.Add(empty);
+            }
+        }
+
+        private Button CreateTagContextChip(string context)
+        {
+            bool selected = newTagContexts.Contains(context);
+            var chip = new Button { text = context };
+            chip.style.marginRight = 4;
+            chip.style.marginBottom = 4;
+            chip.style.paddingLeft = 8;
+            chip.style.paddingRight = 8;
+            chip.style.paddingTop = 3;
+            chip.style.paddingBottom = 3;
+            chip.style.fontSize = 10;
+            chip.style.backgroundColor = selected ? Colors.AccentBlue : Colors.ButtonBackground;
+            chip.style.color = selected ? Color.white : Colors.LabelText;
+            chip.clicked += () =>
+            {
+                if (!newTagContexts.Remove(context)) newTagContexts.Add(context);
+                ShowTab(0);
+            };
+            return chip;
+        }
+
+        private VisualElement CreateDeclaredTagRow(ForgeTagLibrary.Entry entry)
+        {
+            var row = new VisualElement { style = { flexDirection = FlexDirection.Row, alignItems = Align.Center, paddingTop = 3, paddingBottom = 3, paddingLeft = 6, marginBottom = 2 } };
+            row.style.backgroundColor = new Color(0.18f, 0.18f, 0.18f, 0.6f);
+            row.style.borderTopLeftRadius = 3;
+            row.style.borderBottomLeftRadius = 3;
+
+            var name = new Label(entry.Name) { style = { width = 200, color = Colors.AccentCyan, fontSize = 11, unityFontStyleAndWeight = FontStyle.Bold } };
+            row.Add(name);
+
+            string contexts = entry.Contexts is { Count: > 0 } ? string.Join(", ", entry.Contexts) : "Universal";
+            var ctx = new Label(contexts) { style = { flexGrow = 1, color = Colors.HintText, fontSize = 10 } };
+            row.Add(ctx);
+
+            var removeBtn = new Button(() =>
+            {
+                selectedTagLibrary.Entries.Remove(entry);
+                EditorUtility.SetDirty(selectedTagLibrary);
+                AssetDatabase.SaveAssets();
+                ForgeTagRegistry.MarkDirty();
+                ShowTab(0);
+            }) { text = "✕" };
+            removeBtn.style.fontSize = 10;
+            removeBtn.tooltip = "Remove tag declaration";
+            row.Add(removeBtn);
+
+            return row;
+        }
+
+        private void EnsureTagLibrarySelection()
+        {
+            if (selectedTagLibrary != null) return;
+
+            var guids = AssetDatabase.FindAssets("t:ForgeTagLibrary");
+            if (guids.Length > 0)
+            {
+                selectedTagLibrary = AssetDatabase.LoadAssetAtPath<ForgeTagLibrary>(AssetDatabase.GUIDToAssetPath(guids[0]));
+            }
+        }
+
+        private void CreateNewTagLibrary()
+        {
+            string folder = EditorPrefs.GetString(TheForge.PREFS_PREFIX + "DefaultCreateFolder", "Assets");
+            if (!AssetDatabase.IsValidFolder(folder)) folder = "Assets";
+
+            var library = ScriptableObject.CreateInstance<ForgeTagLibrary>();
+            var path = AssetDatabase.GenerateUniqueAssetPath($"{folder}/TagLibrary.asset");
+            AssetDatabase.CreateAsset(library, path);
+            AssetDatabase.SaveAssets();
+
+            selectedTagLibrary = library;
+            Selection.activeObject = library;
+            EditorGUIUtility.PingObject(library);
+            ShowTab(0);
+        }
+
+        private void AddDeclaredTag()
+        {
+            if (string.IsNullOrWhiteSpace(newTagName))
+            {
+                EditorUtility.DisplayDialog("Error", "Enter a tag name.", "OK");
+                return;
+            }
+
+            if (selectedTagLibrary == null)
+            {
+                CreateNewTagLibrary();
+                if (selectedTagLibrary == null) return;
+            }
+
+            var name = newTagName.Trim();
+            if (selectedTagLibrary.Entries.Any(e => string.Equals(e.Name, name, StringComparison.OrdinalIgnoreCase)))
+            {
+                EditorUtility.DisplayDialog("Duplicate", $"'{name}' is already declared in this library.", "OK");
+                return;
+            }
+
+            selectedTagLibrary.Entries.Add(new ForgeTagLibrary.Entry
+            {
+                Name = name,
+                Contexts = newTagContexts.ToList(),
+                Note = newTagNote,
+            });
+
+            EditorUtility.SetDirty(selectedTagLibrary);
+            AssetDatabase.SaveAssets();
+
+            // Register immediately so pickers surface the tag without a manual rescan.
+            Tag.Generate(name);
+            ForgeTagRegistry.MarkDirty();
+
+            newTagName = "";
+            newTagNote = "";
+            newTagContexts.Clear();
+            ShowTab(0);
+        }
     }
-    
+
     // ═══════════════════════════════════════════════════════════════════════════════
     // Create Asset Dialog
     // ═══════════════════════════════════════════════════════════════════════════════
@@ -809,7 +1079,7 @@ namespace FarEmerald.PlayForge.Extended.Editor
                     modified = true;
                 }
             }
-            
+
             return modified;
         }
     }

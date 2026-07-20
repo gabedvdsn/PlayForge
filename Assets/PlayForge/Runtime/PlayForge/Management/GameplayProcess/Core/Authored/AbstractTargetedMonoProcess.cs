@@ -19,7 +19,10 @@ namespace FarEmerald.PlayForge
         {
             base.WhenInitialize();
             
-            if (!regData.TryGet(Tags.TARGET_REAL, EDataTarget.Primary, out target)) Debug.Log($"Whelp!");
+            if (!regData.TryGet(Tags.TARGET_REAL, EDataTarget.Primary, out target))
+            {
+                ForgeLog.Warning($"{GetType().Name}: no {nameof(Tags.TARGET_REAL)} target in registration data — process cannot orient.", this);
+            }
             targeting = target.GetTargetingPacket();
 
             var to = Quaternion.LookRotation(targeting.position - transform.position);

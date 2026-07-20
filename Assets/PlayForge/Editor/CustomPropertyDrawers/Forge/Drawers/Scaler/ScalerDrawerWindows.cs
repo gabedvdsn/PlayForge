@@ -533,10 +533,10 @@ namespace FarEmerald.PlayForge.Extended.Editor
             
             for (int i = 0; i < curve.length; i++)
             {
-                AnimationUtility.SetKeyLeftTangentMode(curve, i, tm);
-                AnimationUtility.SetKeyRightTangentMode(curve, i, tm);
+                UnityEditor.AnimationUtility.SetKeyLeftTangentMode(curve, i, tm);
+                UnityEditor.AnimationUtility.SetKeyRightTangentMode(curve, i, tm);
             }
-            
+
             if (sp != null) sp.animationCurveValue = curve;
             targetProp.serializedObject.ApplyModifiedProperties();
             onApply?.Invoke();
@@ -703,8 +703,8 @@ namespace FarEmerald.PlayForge.Extended.Editor
             if (curve == null || curve.length < 2) return;
             for (int i = 0; i < curve.length; i++)
             {
-                AnimationUtility.SetKeyLeftTangentMode(curve, i, UnityEditor.AnimationUtility.TangentMode.ClampedAuto);
-                AnimationUtility.SetKeyRightTangentMode(curve, i, UnityEditor.AnimationUtility.TangentMode.ClampedAuto);
+                UnityEditor.AnimationUtility.SetKeyLeftTangentMode(curve, i, UnityEditor.AnimationUtility.TangentMode.ClampedAuto);
+                UnityEditor.AnimationUtility.SetKeyRightTangentMode(curve, i, UnityEditor.AnimationUtility.TangentMode.ClampedAuto);
             }
             var sp = targetProp.FindPropertyRelative("Scaling");
             if (sp != null)
