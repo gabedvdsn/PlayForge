@@ -541,6 +541,9 @@ namespace FarEmerald.PlayForge
             if (!CanAcceptNewProcesses()) 
                 return false;
 
+            // The overloads without a packet pass null, and the handler and wrapper below both need one
+            data ??= ProcessDataPacket.Default();
+
             var wrapper = new RuntimeWrapperProcess(process, data, handler);
             var pcb = ProcessControlBlock.Generate(NextCacheIndex, wrapper);
             
