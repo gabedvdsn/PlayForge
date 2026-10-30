@@ -167,8 +167,8 @@ namespace FarEmerald.PlayForge
             // Process any actions queued by analysis workers
             executed = _actionQueue.ProcessAll(this);
             totalExecuted += executed;
-            var snapshot = _frameSummary.CreateSnapshot(totalExecuted);
-            Callbacks?.FrameComplete(snapshot);
+            // The snapshot copies six lists, so it's built only for someone listening (PF-006)
+            if (Callbacks != null && Callbacks.HasFrameCompleteListeners) Callbacks.FrameComplete(_frameSummary.CreateSnapshot(totalExecuted));
             
             _frameSummary.Clear();
             

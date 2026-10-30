@@ -67,6 +67,7 @@ namespace FarEmerald.PlayForge.Tests
             RunScenario(nameof(S14_GAS_11_AbilitySourceTagRequirements_BlockActivation), S14_GAS_11_AbilitySourceTagRequirements_BlockActivation);
             RunScenario(nameof(S15_GAS_02_PreChangeWorkers_AdjustTheCommittedDelta), S15_GAS_02_PreChangeWorkers_AdjustTheCommittedDelta);
             RunScenario(nameof(S16_GAS_12_RawDelta_MovesBaseAndCurrentTogether), S16_GAS_12_RawDelta_MovesBaseAndCurrentTogether);
+            RunScenario(nameof(S17_GAS_P1_IdleFrame_AllocatesNothing), S17_GAS_P1_IdleFrame_AllocatesNothing);
             RunScenario(nameof(S23_TS_01_Resume_LeavesTimeScaleAlone), S23_TS_01_Resume_LeavesTimeScaleAlone);
 
             Report();
@@ -891,6 +892,35 @@ namespace FarEmerald.PlayForge.Tests
 
             gas.TryModifyAttribute(poise, SourcedModifiedAttributeValue.GenerateSimple(gas, poise, 0f, -20f));
             AssertValue(gas, poise, "lowering only the Base pulls Current down with it", 7.5f, 7.5f);
+        }
+
+        /// <summary>
+        /// A GAS with nothing going on costs no garbage per frame. Every fighter's GAS runs its end of
+        /// frame each frame, and that used to allocate about 1 KB apiece: the action queue enumerated a
+        /// SortedDictionary to learn it was empty, and a frame summary snapshot copied six lists for a
+        /// callback nobody listened to (PlayForge log PF-006).
+        /// </summary>
+        private static void S17_GAS_P1_IdleFrame_AllocatesNothing()
+        {
+            var health = MakeAttribute("Health");
+            var gas = MakeGAS(MakeSet(MakeElement(health, 100, 100, EAttributeOverflowPolicy.ZeroToBase)));
+
+            const int Frames = 2000;
+            long bytes = long.MaxValue;
+            for (int attempt = 0; attempt < 3 && bytes > 0; attempt++)
+            {
+                for (int i = 0; i < 50; i++) gas.EndOfFrame();
+
+                int collections = System.GC.CollectionCount(0);
+                long before = UnityEngine.Profiling.Profiler.GetMonoUsedSizeLong();
+                for (int i = 0; i < Frames; i++) gas.EndOfFrame();
+                long after = UnityEngine.Profiling.Profiler.GetMonoUsedSizeLong();
+
+                // A collection mid-measure hides allocations; measure again
+                if (System.GC.CollectionCount(0) == collections) bytes = after - before;
+            }
+
+            AssertTrue($"an idle end of frame allocates nothing (measured {bytes / (float)Frames:0.#} bytes per frame)", bytes <= 0);
         }
 
         /// <summary>

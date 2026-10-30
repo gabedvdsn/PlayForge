@@ -201,8 +201,8 @@ namespace FarEmerald.PlayForge
             // ═══════════════════════════════════════════════════════════════════════
             // PHASE 5: Fire frame complete callback
             // ═══════════════════════════════════════════════════════════════════════
-            var snapshot = _frameSummary.CreateSnapshot(totalExecuted);
-            Callbacks?.FrameComplete(snapshot);
+            // The snapshot copies six lists, so it's built only for someone listening (PF-006)
+            if (Callbacks != null && Callbacks.HasFrameCompleteListeners) Callbacks.FrameComplete(_frameSummary.CreateSnapshot(totalExecuted));
             
             // ═══════════════════════════════════════════════════════════════════════
             // PHASE 6: Reset for next frame

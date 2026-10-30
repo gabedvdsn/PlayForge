@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
 using UnityEngine;
 
 namespace FarEmerald.PlayForge
@@ -14,6 +13,10 @@ namespace FarEmerald.PlayForge
     {
         // Priority buckets - sorted descending (higher priority first)
         private readonly SortedDictionary<int, Queue<IRootAction>> _buckets;
+
+        // Actions across every bucket. Kept so the per-frame "anything to do?" check never enumerates the
+        // SortedDictionary, whose enumerator allocates even when every bucket is empty (PF-006)
+        private int _count;
         
         // Callbacks for pipeline transparency
         public delegate void ActionCallback(IRootAction action);
@@ -38,12 +41,12 @@ namespace FarEmerald.PlayForge
         /// <summary>
         /// Whether there are any pending actions.
         /// </summary>
-        public bool HasActions => _buckets.Values.Any(q => q.Count > 0);
+        public bool HasActions => _count > 0;
         
         /// <summary>
         /// Total number of pending actions across all priority levels.
         /// </summary>
-        public int TotalCount => _buckets.Values.Sum(q => q.Count);
+        public int TotalCount => _count;
         
         /// <summary>
         /// Queue an action for deferred execution.
@@ -60,6 +63,7 @@ namespace FarEmerald.PlayForge
                 _buckets[priority] = new Queue<IRootAction>();
             
             _buckets[priority].Enqueue(action);
+            _count++;
             
             try
             {
@@ -153,10 +157,15 @@ namespace FarEmerald.PlayForge
         /// </summary>
         private IRootAction DequeueNext()
         {
+            if (_count == 0) return null;
+
             foreach (var kvp in _buckets)
             {
                 if (kvp.Value.Count > 0)
+                {
+                    _count--;
                     return kvp.Value.Dequeue();
+                }
             }
             return null;
         }
@@ -168,6 +177,7 @@ namespace FarEmerald.PlayForge
         {
             foreach (var bucket in _buckets.Values)
                 bucket.Clear();
+            _count = 0;
         }
         
         /// <summary>

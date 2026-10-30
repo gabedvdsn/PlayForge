@@ -324,8 +324,10 @@ namespace FarEmerald.PlayForge
                 return;
             }
             
-            // Check workers that should resolve (no longer valid)
-            foreach (var worker in _activeWorkers.ToList())
+            // Check workers that should resolve (no longer valid). Resolving is queued, not done here, so
+            // the set isn't changed while it's walked and needs no copy: copying it allocated every frame
+            // for every GAS, workers or not (PF-007)
+            foreach (var worker in _activeWorkers)
             {
                 if (worker.ValidateWorkFor(_handler)) continue;
                 

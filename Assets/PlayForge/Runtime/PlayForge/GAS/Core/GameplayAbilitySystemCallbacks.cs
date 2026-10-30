@@ -27,6 +27,9 @@ namespace FarEmerald.PlayForge
         }
         
         public void FrameComplete(FrameSummarySnapshot summary) => _onFrameComplete?.Invoke(summary);
+
+        /// <summary>True when anything listens for <see cref="OnFrameComplete"/>, so the snapshot is worth building.</summary>
+        public bool HasFrameCompleteListeners => _onFrameComplete != null;
         
         // ═══════════════════════════════════════════════════════════════════════════
         // ACTION QUEUE EVENTS
