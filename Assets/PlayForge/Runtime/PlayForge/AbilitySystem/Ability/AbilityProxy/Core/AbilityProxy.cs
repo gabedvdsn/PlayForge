@@ -155,6 +155,13 @@ namespace FarEmerald.PlayForge
             {
                 await ActivateTargetingLegacy(token, implicitData);
             }
+
+            // A targeting task gives up by throwing, which only ends its own sequence, so the ability hears of
+            // it here. A task set not to break lets the ability go on (TS-C)
+            if (implicitData.TargetingFailed && Behaviour.Targeting is { BreakRuntimeOnInvalid: true })
+            {
+                throw new OperationCanceledException();
+            }
         }
 
         /// <summary>
@@ -181,6 +188,7 @@ namespace FarEmerald.PlayForge
             catch (OperationCanceledException)
             {
                 CompiledTargeting?.Interrupt();
+                throw;
             }
             finally
             {
@@ -200,10 +208,6 @@ namespace FarEmerald.PlayForge
                     Behaviour.Targeting.Prepare(implicitData);
                     await Behaviour.Targeting.Activate(implicitData, token);
                 }
-            }
-            catch (OperationCanceledException)
-            {
-                //
             }
             finally
             {
