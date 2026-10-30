@@ -94,12 +94,14 @@ from. It lives outside `Assets/` so it never ships in the package.
   Do not push.
 - Decision 2, 2026-10-29: PlayForge Proving Grounds is a **separate Unity project** that references PlayForge
   as a local UPM package. That needs a `package.json` in `Assets/PlayForge`, which does not exist yet.
+- Decision 3, 2026-10-30: Arcade Fighter switches to upstream PlayForge, consuming it as the same local UPM
+  package as Proving Grounds, once that package works. Until then it keeps its copy in
+  `Assets/Internal/PlayForge`.
 
 **Open. Ask the user; do not assume:**
 1. ~~**Uncommitted changes**~~: decided, see above.
 2. ~~**The test project, "PlayForge Proving Grounds"**~~: decided, see above.
-3. **Arcade Fighter after Phase 0:** does it switch to consuming upstream PlayForge, and how (copy, or a local
-   package)?
+3. ~~**Arcade Fighter after Phase 0**~~: decided, see above.
 4. **Commit space (GAS-15):** should commits be stored in baseline space and read through modifiers (current
    behaviour, which amplifies damage), or applied to the current value?
 5. **Pause (TS-Y, PC-7, PC-11):** which single meaning of pause is canonical?
