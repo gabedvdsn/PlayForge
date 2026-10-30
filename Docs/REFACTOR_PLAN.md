@@ -462,6 +462,36 @@ GAS-4 with GAS-5, PC-6, and TS-I with PC-5.
 
 Record baselines, gate results and notable decisions here, newest first.
 
+- 2026-10-30, **Phase 1, the last critical rows.** PC-8, TS-G, TS-M, GAS-8, GAS-9 and GAS-32 are `fixed`, so Phase 1
+  has no critical row open. 54 rows are still open, 40 high and 14 medium.
+  - **Result:** 580 tests with no category filter: 573 pass, 0 fail, 7 planted skipped, in three orders. Planted 7 of
+    7. The custom golden runner in PlayForge passes 25/25.
+  - **What the rows turned out to be:**
+    - TS-M is a freeze, not only a missed `Prepare`. `SyncDelay` resets in `Prepare`, so from a repeat's second
+      iteration it finished at once. Nothing in the repeat loop yielded, so a stage that finishes without yielding
+      repeated for ever inside one frame. It took a fuse to test: on the old code it reached 1,000 iterations in a
+      frame. Each iteration now gets its own `Clean` and `Prepare`, and one that took no frame takes one. The synced
+      runner cleans before it prepares again, and a repeat broken from `OnRepeat` prepares nothing more. The
+      whole-sequence repeat never had this problem, because it waits a frame on its maintained stages. The sample's
+      "mandatory yield" is no longer needed, and was left alone.
+    - GAS-32 grew. An item with no `ActiveAbility`, which is any passive item, threw on equip with its effects already
+      on. `IsActive` being false dropped every action queued by an item's effect. Tags compiled before `IsEquipped`
+      cleared, so they outlived the item. Unequipping now removes only what that item applied, through a new
+      `ITarget.RemoveGameplayEffect(effect, origin)`, a default method so other implementers still compile.
+    - PC-8 covers a watcher's `OnUnregister` too, which kept the block the same way, and a Mono process's object now
+      goes whatever `WhenTerminate` threw.
+    - TS-G ends the nested sequence through its relay. An interrupt can be refused by a critical section and can't
+      reach a run that hasn't started.
+    - GAS-8's contained effects now go through `GetContainedCarriers`, and a test walks every field `EntityIdentity`
+      and `RuntimeEntityIdentity` share, so GAS-9's kind of gap can't come back unnoticed.
+  - **Proof:** each row's tests failed on the old code first. 11 mutants of the new branches were then run against the
+    suites, and all 11 are caught. Two survived at first, and each showed a test was missing: a repeat broken from
+    `OnRepeat`, and a passive item reporting a failed ability grant.
+  - **Behaviour to expect:** tasks in a repeating stage now get `Prepare` and `Clean` on every iteration, not once. A
+    task that kept state across iterations in `Prepare` now starts each one fresh. `CleanStage` cleans only what was
+    prepared, so a stage that fails while preparing no longer cleans tasks it never reached.
+  - **Next:** the 40 open high rows.
+
 - 2026-10-30, **Phase 1, pause**, after Decision 5. PC-7, PC-27, PC-11, PC-12 and TS-Y are `fixed`, plus TS-AB, found
   on the way. No test is red any more, for the first time. 60 Phase 1 rows are still open (6 critical, 40 high).
   - **Result:** 542 tests with no category filter: 535 pass, 0 fail, 7 planted skipped, in three orders (default,
