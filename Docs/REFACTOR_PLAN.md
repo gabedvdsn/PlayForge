@@ -92,11 +92,12 @@ from. It lives outside `Assets/` so it never ships in the package.
 - Decision 1, 2026-10-29: the pending changes were committed on `refactor/handoff` (see Environment).
 - Phase 0, 2026-10-29: commit locally once per fix on the phase branch (red test, fix and Status together).
   Do not push.
+- Decision 2, 2026-10-29: PlayForge Proving Grounds is a **separate Unity project** that references PlayForge
+  as a local UPM package. That needs a `package.json` in `Assets/PlayForge`, which does not exist yet.
 
 **Open. Ask the user; do not assume:**
 1. ~~**Uncommitted changes**~~: decided, see above.
-2. **The test project, "PlayForge Proving Grounds":** a separate Unity project referencing PlayForge as a local
-   UPM package, which needs a `package.json` in `Assets/PlayForge`? Or a test assembly inside this repo for now?
+2. ~~**The test project, "PlayForge Proving Grounds"**~~: decided, see above.
 3. **Arcade Fighter after Phase 0:** does it switch to consuming upstream PlayForge, and how (copy, or a local
    package)?
 4. **Commit space (GAS-15):** should commits be stored in baseline space and read through modifiers (current
@@ -344,7 +345,8 @@ had no letter in the review.
 
 ## Test project: PlayForge Proving Grounds
 
-The full plan is in the review doc's section "The test project: PlayForge Proving Grounds". In short:
+A separate Unity project that consumes PlayForge as a local UPM package (Decision 2). The full plan is in the
+review doc's section "The test project: PlayForge Proving Grounds". In short:
 
 - **The shared harness:**
   - a frame stepper;
