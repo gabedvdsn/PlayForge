@@ -177,7 +177,7 @@ namespace FarEmerald.PlayForge
         {
             if (relay == null || !_memberRelays.ContainsKey(relay.CacheIndex)) return false;
 
-            ProcessControl.Instance.StopWatchingProcess(relay);
+            ProcessControl.Instance.StopWatchingProcess(relay, this);
             RemoveMember(relay.CacheIndex);
             return true;
         }

@@ -151,6 +151,13 @@ namespace FarEmerald.PlayForge
             QueueNextState(EProcessState.Terminated);
             if (State != EProcessState.Running) return;
 
+            // With no run to end and no step to apply it on, nothing else ever would (PC-17)
+            if (Wrapper.Lifecycle == EProcessLifecycle.Synchronous && Wrapper.StepTiming == EProcessStepTiming.None)
+            {
+                SetQueuedState();
+                return;
+            }
+
             try
             {
                 Wrapper.WhenTerminateQueued(Relay);
