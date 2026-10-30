@@ -64,6 +64,7 @@ namespace FarEmerald.PlayForge.Tests
             RunScenario(nameof(S11_GroupAttribution_BaseVsBonus), S11_GroupAttribution_BaseVsBonus, targetSemantics: true);
             RunScenario(nameof(S12_AbilityInspector_PerLevelSeries), S12_AbilityInspector_PerLevelSeries);
             RunScenario(nameof(S13_GAS_10_OngoingRequirement_PausesPeriodicTicks), S13_GAS_10_OngoingRequirement_PausesPeriodicTicks);
+            RunScenario(nameof(S14_GAS_11_AbilitySourceTagRequirements_BlockActivation), S14_GAS_11_AbilitySourceTagRequirements_BlockActivation);
             RunScenario(nameof(S23_TS_01_Resume_LeavesTimeScaleAlone), S23_TS_01_Resume_LeavesTimeScaleAlone);
 
             Report();
@@ -738,6 +739,50 @@ namespace FarEmerald.PlayForge.Tests
 
             Frame(gas, 4);
             AssertTrue("regen resumes once the tag is gone", gas.TryGetAttributeValue(attr, out var value) && value.CurrentValue > 5);
+        }
+
+        /// <summary>
+        /// An ability's own source tag requirements gate activation: avoiding "stunned" blocks it
+        /// while the caster has that tag, and allows it again once the tag is gone. These used to be
+        /// authored but never checked (PlayForge log PF-003).
+        /// </summary>
+        private static void S14_GAS_11_AbilitySourceTagRequirements_BlockActivation()
+        {
+            var gas = MakeGAS(MakeSet(MakeElement(MakeAttribute("Unused"), 1, 1)));
+            var stunned = Tag.Generate(Unique("Test.Status.Stunned"));
+
+            var ability = ScriptableObject.CreateInstance<Ability>();
+            ability.name = "Strike";
+            ability.Definition = new AbilityDefinition { Name = "Strike", Textures = new List<TextureItem>() };
+            ability.Tags = new AbilityTags
+            {
+                AssetTag = Tag.Generate(Unique("Test.Ability.Strike")),
+                ContextTags = new List<Tag>(),
+                PassiveGrantedTags = new List<Tag>(),
+                ActiveGrantedTags = new List<Tag>(),
+                TagRequirements = new AbilityTagRequirements
+                {
+                    SourceRequirements = new AvoidRequireTagGroup
+                    {
+                        AvoidTags = new List<TagQuery> { TagQuery.HasTag(stunned) },
+                        RequireTags = new List<TagQuery>(),
+                    },
+                    TargetRequirements = new AvoidRequireTagGroup { AvoidTags = new List<TagQuery>(), RequireTags = new List<TagQuery>() },
+                },
+            };
+            ability.Behaviour = new AbilityBehaviour { Stages = new List<AbilityTaskBehaviourStage>() };
+            ability.WorkerGroup = new StandardWorkerGroup();
+
+            var abilities = gas.GetAbilitySystem();
+            AssertTrue("ability granted", abilities.GiveAbility(ability, 1, out int index));
+            AssertTrue("activatable while not stunned", abilities.CanActivateAbility(index));
+
+            var stun = MakeEffect("Stun", new EffectConfig { Target = null, GrantedTags = new List<Tag> { stunned } });
+            Apply(gas, stun);
+            AssertTrue("blocked while the avoided tag is on the caster", !abilities.CanActivateAbility(index));
+
+            Remove(gas, stun);
+            AssertTrue("activatable again once the tag is gone", abilities.CanActivateAbility(index));
         }
 
         /// <summary>

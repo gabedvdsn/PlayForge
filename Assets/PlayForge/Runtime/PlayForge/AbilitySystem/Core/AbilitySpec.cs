@@ -27,6 +27,11 @@ namespace FarEmerald.PlayForge
         public bool ValidateSourceActivationRequirements(AbilityDataPacket data)
         {
             var owner = data.EffectOrigin.GetSource();
+
+            // The ability's own source tag requirements ("can't use while stunned") are part of
+            // activation, alongside the validation rules. Missing groups mean no requirement.
+            if (!(Base.Tags?.TagRequirements?.CheckSourceRequirements(owner.GetAppliedTags()) ?? true)) return false;
+
             return Base.SourceActivationRules.All(rule => rule.Validate(data, () => owner, out _));
         }
 
