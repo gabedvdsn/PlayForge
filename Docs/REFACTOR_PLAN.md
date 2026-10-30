@@ -122,7 +122,7 @@ from. It lives outside `Assets/` so it never ships in the package.
 
   | Fix | Canonical location | Tracker ID | Status |
   |---|---|---|---|
-  | PF-001 Resume set `Time.timeScale = 1` | `TaskSequenceProcess.cs:234` | TS-1 | open |
+  | PF-001 Resume set `Time.timeScale = 1` | `TaskSequenceProcess.cs:234` | TS-1 | fixed |
   | PF-002 Ongoing requirements checked before tags compiled | `EffectSystemComponent.cs:127, 330-334, 372` | GAS-10 | open |
   | PF-003 Source requirements never read | `AbilitySpec.cs:27-31`, `AbilityTags.cs:30-33` | GAS-11 | open |
   | PF-004 Pre-change workers got a copy (frozen `ConstantImpacter.Snapshot` + `PreviewCommit`) | `AttributeSystemComponent.cs:275-341` | GAS-2 | open |
@@ -185,7 +185,7 @@ had no letter in the review.
 
 | ID | Sev | Phase | Problem | Where | Status |
 |---|---|---|---|---|---|
-| TS-1 | C | 0 | Resume sets `Time.timeScale = 1` (PF-001) | `TaskSequenceProcess.cs:234` | open |
+| TS-1 | C | 0 | Resume sets `Time.timeScale = 1` (PF-001) | `TaskSequenceProcess.cs:234` | fixed |
 | TS-2 | M | 0 | The README names types that do not exist (PF-010) | `Core/TaskSequence/README.md` | open |
 | TS-3 | H | 0 | The proxy and sequences are recompiled on every activation; `IsCriticalSection` builds the inner sequence 4–5 times (PF-012) | `AbilityProxy.cs:62`, `AbilitySequenceCompiler.cs:30-80`, `RunSequenceTask.cs:18-21` | open |
 | TS-4 | H | 0 | A bare `catch { }` swallows ability errors (PF-008) | `AbilitySpecContainer.cs:113-116` | open |
@@ -358,6 +358,13 @@ GAS-4 with GAS-5, PC-6, and TS-I with PC-5.
 ## Log
 
 Record baselines, gate results and notable decisions here, newest first.
+
+- 2026-10-29, **Phase 0 port**, one commit per fix. Each row gives the red result without the fix and the
+  golden total with it. Arcade Fighter's scenarios keep their S-numbers and gain the tracker ID
+  (`S13_GAS_10_…`); scenarios new to canonical start at S23.
+  - PF-001 / TS-1: S23 red without the fix ("time scale after the resume: expected 0.25, got 1"); 13/13 with
+    it. S23 clears the TimeManager's dirty flag, or the editor rewrites `ProjectSettings/TimeManager.asset`
+    in the Unity 6 format on exit.
 
 - 2026-10-29, **Phase 0 baseline** at `455dd44`, no code changed:
   - **Build:** both MSBuild commands under Environment succeed. The only C# diagnostics are the three ED-1

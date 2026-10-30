@@ -229,10 +229,9 @@ namespace FarEmerald.PlayForge
 
         public override bool TryHandleResume()
         {
-            if (!processActive) return false;
-
-            Time.timeScale = 1f;
-            return true;
+            // Time.timeScale is left alone for the same reason as WhenWait: it is global, so resuming one
+            // sequence must not end a hit-stop or slow motion someone else started.
+            return processActive;
         }
 
         /// <summary>

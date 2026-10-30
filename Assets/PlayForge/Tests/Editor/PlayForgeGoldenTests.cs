@@ -63,6 +63,7 @@ namespace FarEmerald.PlayForge.Tests
             RunScenario(nameof(S10_ReplaceOldContainer_Idempotent), S10_ReplaceOldContainer_Idempotent);
             RunScenario(nameof(S11_GroupAttribution_BaseVsBonus), S11_GroupAttribution_BaseVsBonus, targetSemantics: true);
             RunScenario(nameof(S12_AbilityInspector_PerLevelSeries), S12_AbilityInspector_PerLevelSeries);
+            RunScenario(nameof(S23_TS_01_Resume_LeavesTimeScaleAlone), S23_TS_01_Resume_LeavesTimeScaleAlone);
 
             Report();
         }
@@ -699,6 +700,34 @@ namespace FarEmerald.PlayForge.Tests
 
             Remove(gas, buff);
             AssertValue(gas, attr, "removed", 50);
+        }
+
+        /// <summary>
+        /// Resuming a sequence leaves Time.timeScale alone (TS-1, PlayForge log PF-001). Time scale is
+        /// global, so a sequence resuming during a hit-stop or slow motion must not end it.
+        /// </summary>
+        private static void S23_TS_01_Resume_LeavesTimeScaleAlone()
+        {
+            float saved = Time.timeScale;
+            try
+            {
+                var process = new TaskSequenceProcess(new TaskSequenceChain());
+                typeof(AbstractRuntimeProcess)
+                    .GetField("processActive", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance)
+                    .SetValue(process, true);
+
+                Time.timeScale = 0.25f;
+                AssertTrue("an active sequence accepts the resume", process.TryHandleResume());
+                AssertApprox("time scale after the resume", Time.timeScale, 0.25f);
+            }
+            finally
+            {
+                Time.timeScale = saved;
+                // Setting the time scale dirties the TimeManager, and the editor would then save it into
+                // ProjectSettings. The value is restored, so the dirty flag goes too.
+                foreach (var settings in AssetDatabase.LoadAllAssetsAtPath("ProjectSettings/TimeManager.asset"))
+                    EditorUtility.ClearDirty(settings);
+            }
         }
     }
 }
