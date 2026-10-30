@@ -495,10 +495,7 @@ namespace FarEmerald.PlayForge
             var wrapper = new MonoWrapperProcess(process, data, handler);
             var pcb = ProcessControlBlock.Generate(NextCacheIndex, wrapper);
             pcb.isMono = true;
-            
-            // Register in hierarchy
-            _hierarchy.Register(process, pcb.CacheIndex);
-            
+
             relay = pcb.Relay;
             handler?.HandlerSubscribeProcess(relay);
             data.HandlerSubscribeProcess(relay);
@@ -946,6 +943,10 @@ namespace FarEmerald.PlayForge
         private void PrepareCreatedProcess(ProcessControlBlock pcb)
         {
             pcb.Wrapper.ConfigureWrapper();
+
+            // By the live object, which for a prefab is its clone. The prefab is shared, so every clone of it
+            // landed on one node and ending any of them cascaded to the rest (PC-3)
+            if (pcb.Wrapper.TryGetProcess<AbstractMonoProcess>(out var mono)) _hierarchy.Register(mono, pcb.CacheIndex);
 
             _waiting.Add(pcb.CacheIndex);
             _active[pcb.CacheIndex] = pcb;
