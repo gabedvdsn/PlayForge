@@ -162,6 +162,15 @@ from. It lives outside `Assets/` so it never ships in the package.
   remote. The package is `com.faremerald.playforge` 0.1.0. Commit locally as work goes; do not push.
 - Decision 8, 2026-10-30: a test for an unfixed bug carries the `Red` category. A full run stays red until the
   bug is fixed, `-testCategory "!Red"` is the green gate, and a red test loses the category in its fix's commit.
+- Decision 5, 2026-10-30: pause means **hold in place**.
+  - A pause takes effect at once: the process goes to Waiting and stops stepping.
+  - A process that can hold its run (`TryHandlePause` returns true) keeps it, and `TryHandleResume` picks it up. A
+    process that can't has its run cancelled, and a new run starts on resume.
+  - ProcessControl's own pause (Waiting, ClosedWaiting) stops what is running and, when it ends, sends back exactly
+    that. A process paused on its own, or Waiting for any other reason, stays where it was.
+  - `Unpause` is refused while ProcessControl is paused. A requested Terminate outranks a Pause.
+  - A sequence holds its run: no stage starts or ends, timeouts and built-in delays stop counting, and conditions
+    aren't checked. A task's own code holds if it times itself through `SequenceTaskLibrary`.
 
 **Open. Ask the user; do not assume:**
 1. ~~**Uncommitted changes**~~: decided, see above.
@@ -169,7 +178,7 @@ from. It lives outside `Assets/` so it never ships in the package.
 3. ~~**Arcade Fighter after Phase 0**~~: decided, see above.
 4. **Commit space (GAS-15):** should commits be stored in baseline space and read through modifiers (current
    behaviour, which amplifies damage), or applied to the current value?
-5. **Pause (TS-Y, PC-7, PC-11):** which single meaning of pause is canonical?
+5. ~~**Pause (TS-Y, PC-7, PC-11)**~~: decided, see above.
 6. **Licence (SP-13):** MIT on public GitHub, or the Asset Store EULA?
 7. **Material packs (SP-17):** move the 842 MB and 206 MB of tracked third-party material packs to LFS, or out
    of the repo?
