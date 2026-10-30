@@ -144,7 +144,9 @@ from. It lives outside `Assets/` so it never ships in the package.
   (`RuntimeGameplayAbilitySystem.cs:61`, and the second constructor at `:92`).
 - [x] GAS-3: initialize `ItemShelf` (`ItemSystemComponent.cs:11`). Done ahead of PF-007, whose S18 needs it.
   The finding's other three bugs are now GAS-32 (Phase 1).
-- [ ] SP-16: remove the `targetSemantics: true` masks on S6, S8 and S11 (`PlayForgeGoldenTests.cs:55, 61, 64`).
+- [x] SP-16: remove the `targetSemantics: true` masks on S6, S8 and S11 (`PlayForgeGoldenTests.cs:55, 61, 64`).
+  They already passed at the baseline, so there was no red. S6 now pins today's answer to Decision 4
+  (GAS-15). The runner's move to the Unity Test Framework is now SP-18 (Phase 2).
 - [ ] Gate: the golden tests are green with none masked. Record the result here.
 
 ## Bug tracker
@@ -313,8 +315,9 @@ had no letter in the review.
 | SP-13 | C | 2 | Licence: MIT versus the Asset Store EULA (Decisions 6) | `LICENSE` | open |
 | SP-14 | M | 2 | No version or changelog; `productName: GAS` | `ProjectSettings` | open |
 | SP-15 | M | 2 | Stale docs: PUBLISHING claims 12/12 and names `Samples/InputHandling`; wrong menu paths | `PUBLISHING.md:11, 56, 68` | open |
-| SP-16 | H | 0 | S6, S8 and S11 are masked as target semantics; the custom runner should move to the Unity Test Framework (B04) | `PlayForgeGoldenTests.cs:55, 61, 64, 94-103` | open |
+| SP-16 | H | 0 | S6, S8 and S11 are masked as target semantics. The runner move is now SP-18 | `PlayForgeGoldenTests.cs:55, 61, 64` | fixed |
 | SP-17 | M | 2 | 842 MB and 206 MB of material packs tracked without LFS (Decisions 7) | repo | open |
+| SP-18 | M | 2 | Split from SP-16: the custom golden runner should move to the Unity Test Framework (B04), so `unity test` and CI report pass/fail | `PlayForgeGoldenTests.cs` | open |
 
 ### Missing features (Phase 5)
 
@@ -412,6 +415,8 @@ Record baselines, gate results and notable decisions here, newest first.
     without the fix ("ran 0" ends of frame); 25/25 with it. Both constructors hard-coded `Update`. Side
     effect: the runtime GAS's `WhenUpdate` and its `EndOfFrame` both call `TagCache.TickTagWorkers`, so its
     tag workers now tick twice a frame, as the Mono GAS's already did. That is GAS-19 (Phase 1).
+  - SP-16: masks removed from S6, S8 and S11, plus the stale "expected to fail" notes and the header's
+    Assembly-CSharp claim. No red (they passed at the baseline); 25/25, 0 expected-red.
 
 - 2026-10-29, **Phase 0 baseline** at `455dd44`, no code changed:
   - **Build:** both MSBuild commands under Environment succeed. The only C# diagnostics are the three ED-1

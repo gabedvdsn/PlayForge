@@ -10,18 +10,17 @@ namespace FarEmerald.PlayForge.Tests
     /// <summary>
     /// Golden tests for the impact-model overhaul (IMPACT_MODEL_REFACTOR.md, Phase 0).
     ///
-    /// These encode the TARGET semantics of the new model. Scenarios marked
-    /// [TargetSemantics] are EXPECTED to fail until the corresponding phase lands —
-    /// they pin the decisions in §7 of the plan. Everything else must stay green the
-    /// whole way through (regression tripwires).
+    /// Every scenario must pass. RunScenario's targetSemantics flag reports a failure as
+    /// expected-red instead; no scenario uses it, and none may (SP-16 in Docs/REFACTOR_PLAN.md).
+    /// S13 onward carry the tracker ID they pin in their names.
     ///
-    /// Run from the menu (PlayForge → Run Golden Tests) or headless:
-    ///   Unity -batchmode -quit -projectPath &lt;proj&gt;
+    /// Run from the menu (PlayForge → Run Golden Tests) or headless; RunAll exits batch mode
+    /// itself, with 1 on failure:
+    ///   Unity -batchmode -projectPath &lt;proj&gt;
     ///         -executeMethod FarEmerald.PlayForge.Tests.PlayForgeGoldenTests.RunAll
     ///
-    /// Deliberately NOT NUnit: the PlayForge runtime lives in Assembly-CSharp, which
-    /// test-framework asmdefs cannot reference. A plain runner in Assembly-CSharp-Editor
-    /// sidesteps the whole assembly problem; migrating to UTF later is mechanical.
+    /// A custom runner rather than the Unity Test Framework, which the asmdefs now allow;
+    /// moving to it is planned for Phase 2 (SP-18).
     /// </summary>
     public static class PlayForgeGoldenTests
     {
@@ -52,16 +51,12 @@ namespace FarEmerald.PlayForge.Tests
             RunScenario(nameof(S3_ContinuousAdd_ItemStyle_RegisterRemove), S3_ContinuousAdd_ItemStyle_RegisterRemove);
             RunScenario(nameof(S4_HoT_TicksArePermanentAfterExpiry), S4_HoT_TicksArePermanentAfterExpiry);
             RunScenario(nameof(S5_InstantDamage_ClampAndHistorySurvival), S5_InstantDamage_ClampAndHistorySurvival);
-            RunScenario(nameof(S6_CommittedHistoryJoinsBaseline), S6_CommittedHistoryJoinsBaseline, targetSemantics: true);
+            RunScenario(nameof(S6_CommittedHistoryJoinsBaseline), S6_CommittedHistoryJoinsBaseline);
             RunScenario(nameof(S7_Stacking_MagnitudePerStack), S7_Stacking_MagnitudePerStack);
-            // Target-semantics: modifier REMOVAL must propagate to regulated attributes.
-            // Today RemoveAttributeDerivation recomputes silently (no AttributeChanged),
-            // so the derived attribute goes stale — the user-reported "not recalculated"
-            // symptom. Fixed when UnregisterModifier routes through the commit pipeline.
-            RunScenario(nameof(S8_Regulation_DerivedAttributeFollowsSource), S8_Regulation_DerivedAttributeFollowsSource, targetSemantics: true);
+            RunScenario(nameof(S8_Regulation_DerivedAttributeFollowsSource), S8_Regulation_DerivedAttributeFollowsSource);
             RunScenario(nameof(S9_NullTargetEffect_TagGrantOnly), S9_NullTargetEffect_TagGrantOnly);
             RunScenario(nameof(S10_ReplaceOldContainer_Idempotent), S10_ReplaceOldContainer_Idempotent);
-            RunScenario(nameof(S11_GroupAttribution_BaseVsBonus), S11_GroupAttribution_BaseVsBonus, targetSemantics: true);
+            RunScenario(nameof(S11_GroupAttribution_BaseVsBonus), S11_GroupAttribution_BaseVsBonus);
             RunScenario(nameof(S12_AbilityInspector_PerLevelSeries), S12_AbilityInspector_PerLevelSeries);
             RunScenario(nameof(S13_GAS_10_OngoingRequirement_PausesPeriodicTicks), S13_GAS_10_OngoingRequirement_PausesPeriodicTicks);
             RunScenario(nameof(S14_GAS_11_AbilitySourceTagRequirements_BlockActivation), S14_GAS_11_AbilitySourceTagRequirements_BlockActivation);
@@ -464,8 +459,9 @@ namespace FarEmerald.PlayForge.Tests
         }
 
         /// <summary>
-        /// [TargetSemantics — red until Phase 2] Plan §2.2/§7.1: committed history joins the
-        /// BASELINE, so transient % modifiers scale permanent gains:
+        /// Plan §2.2/§7.1: committed history joins the
+        /// BASELINE, so transient % modifiers scale permanent gains. This pins today's answer to
+        /// the refactor plan's open Decision 4 (GAS-15); change it with that decision:
         /// 50 +(instant ×1.2 → +10 committed) → baseline 60; ×1.5 modifier → 90 (not 85).
         /// </summary>
         private static void S6_CommittedHistoryJoinsBaseline()
@@ -573,7 +569,7 @@ namespace FarEmerald.PlayForge.Tests
         }
 
         /// <summary>
-        /// [TargetSemantics — needs the per-group attribution surface] One health pool split
+        /// Per-group attribution. One health pool split
         /// into base (attribute-set root) and bonus (item-style modifier + regen commits)
         /// retention groups. Slices must sum to the total and answer "how much of this
         /// attribute comes from group X" for UI.
