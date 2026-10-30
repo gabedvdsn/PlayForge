@@ -17,8 +17,8 @@ Every process has a lifecycle that determines how it starts, runs, and finishes:
 
 ### Process Types
 
-- **MonoProcess** (`SynchronousMonoProcess`, `LazyMonoProcess`, etc.) — MonoBehaviour-based. Can be prefabs, exist in scenes, and use Unity's component model. Instantiated and destroyed automatically by ProcessControl.
-- **RuntimeProcess** (`SynchronousRuntimeProcess`, `LazyRuntimeProcess`, etc.) — Plain C# classes. No GameObject overhead. Ideal for logic-only processes.
+- **MonoProcess** (`LazyMonoProcess`, etc.; set `ProcessLifecycle = Synchronous` for one stepped every frame) — MonoBehaviour-based. Can be prefabs, exist in scenes, and use Unity's component model. Instantiated and destroyed automatically by ProcessControl.
+- **RuntimeProcess** (`LazyRuntimeProcess`, etc.; the same lifecycle setting applies) — Plain C# classes. No GameObject overhead. Ideal for logic-only processes.
 
 ### Registration & Control
 
@@ -189,49 +189,51 @@ Synchronous Sequences are the frame-driven counterpart to async Task Sequences. 
 
 ### Building a Sync Sequence
 
+A sync sequence is built with the same `TaskSequenceBuilder` as an async one, finished with `BuildSyncRunner()`,
+which returns a `SyncedTaskSequence`. `SyncSeq` is the alias the examples use for the sync task library.
+
 ```csharp
-var runner = SyncSequenceBuilder.Create("HealthRegen")
+using SyncSeq = FarEmerald.PlayForge.SyncSequenceTaskLibrary;
+
+SyncedTaskSequence runner = TaskSequenceBuilder.Create("HealthRegen")
     .WithRepeat(true)
     .Stage(s => s
         .Task(SyncSeq.Delay(1f))
     )
     .Stage(s => s
-        .Do(data =>
-        {
-            var health = data.GetPrimary<Attribute>(Tags.HEALTH);
-            health.Modify(5f);
-        })
+        .Do(_ => HealPlayer(5))
     )
-    .Build();
+    .BuildSyncRunner();
 ```
 
 ### Using in a Synchronous Process
 
 ```csharp
-public class HealthRegenProcess : SynchronousMonoProcess
+// A LazyMonoProcess registered with ProcessLifecycle = EProcessLifecycle.Synchronous, so WhenUpdate runs every frame
+public class HealthRegenProcess : LazyMonoProcess
 {
-    private SyncSequenceRunner _runner;
+    private SyncedTaskSequence _runner;
 
-    public override void WhenInitialize(ProcessRelay relay)
+    public override void WhenInitialize()
     {
-        base.WhenInitialize(relay);
-        _runner = SyncSequenceBuilder.Create("HealthRegen")
+        base.WhenInitialize();
+        _runner = TaskSequenceBuilder.Create("HealthRegen")
             .WithRepeat(true)
             .Stage(s => s.Task(SyncSeq.Delay(1f)))
             .Stage(s => s.Do(_ => HealPlayer(5)))
-            .Build();
+            .BuildSyncRunner();
     }
 
-    public override void WhenUpdate(ProcessRelay relay)
+    public override void WhenUpdate()
     {
-        _runner.Step(regData as SequenceDataPacket ?? SequenceDataPacket.RootDefault(), Time.deltaTime);
+        _runner.Step(Data as SequenceDataPacket ?? SequenceDataPacket.SceneRoot(), Time.deltaTime);
     }
 }
 ```
 
 ### Sync Task Library (`SyncSeq` / `SyncSequenceTaskLibrary`)
 
-The sync library returns `ISyncSequenceTask` instances for use with `SyncSequenceBuilder`:
+The sync library returns `ISequenceTask` instances for the stages of a sync runner (`BuildSyncRunner()`):
 
 **Position (timed)**
 - `SyncSeq.MoveTo`, `SyncSeq.MoveBy`, `SyncSeq.MoveLocalTo`, `SyncSeq.ArcTo`, `SyncSeq.Dash`
@@ -289,8 +291,8 @@ Async Sequences (TaskSequence + TaskSequenceProcess)
 ├── Chain support for multi-sequence workflows
 └── SequenceTaskLibrary (Seq) — awaitable building blocks
 
-Sync Sequences (SyncSequenceRunner)
-├── Fluent builder API (SyncSequenceBuilder)
+Sync Sequences (SyncedTaskSequence)
+├── Same fluent builder (TaskSequenceBuilder … BuildSyncRunner())
 ├── Stage → Task composition with policies (WhenAll, WhenAny)
 ├── Manual flow control (Skip, Jump, Interrupt, Reset)
 ├── Repeat support for looping behaviors
