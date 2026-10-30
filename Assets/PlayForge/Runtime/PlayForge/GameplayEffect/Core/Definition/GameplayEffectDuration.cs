@@ -68,7 +68,7 @@ namespace FarEmerald.PlayForge
         [SerializeReference] public List<AbstractStackingConfig> StackingConfigs = new();
 
         [ScalerOperationKeyword("Stack Amount")]
-        public ScalerIntegerMagnitudeOperation StackAmountOperation;
+        public ScalerIntegerMagnitudeOperation StackAmountOperation = new() { Magnitude = 1 };
         
         // ═══════════════════════════════════════════════════════════════════════════
         // Constructor
@@ -251,10 +251,12 @@ namespace FarEmerald.PlayForge
         
         public int GetStackAmount(AbstractStackingEffectContainer container)
         {
-            if (StackAmountOperation.Scaler is null) return StackAmountOperation.Magnitude;
-            
-            int stacks = ForgeHelper.MagnitudeAndScalerOperation(StackAmountOperation.Magnitude, StackAmountOperation.Scaler.Evaluate(container), StackAmountOperation.RealMagnitude, StackAmountOperation.Rounding);
-            foreach (var behaviour in StackingConfigs)
+            // An amount left at 0 means one stack, which is what every application added before amounts counted
+            int stacks = StackAmountOperation.Scaler is null
+                ? Mathf.Max(1, StackAmountOperation.Magnitude)
+                : ForgeHelper.MagnitudeAndScalerOperation(StackAmountOperation.Magnitude, StackAmountOperation.Scaler.Evaluate(container), StackAmountOperation.RealMagnitude, StackAmountOperation.Rounding);
+
+            foreach (var behaviour in ConfigsByPriority())
             {
                 stacks = behaviour.GetStacks(container, stacks);
             }
@@ -278,11 +280,14 @@ namespace FarEmerald.PlayForge
             return container;
         }
 
+        // Lowest first, so the highest priority has the last word: a stack bound outranks any amount or choice
+        // made before it
+        private IEnumerable<AbstractStackingConfig> ConfigsByPriority() => StackingConfigs.OrderBy(sb => sb.ConfigPriority);
+
         public AbstractStackingEffectContainer FindStackingContainer(GameplayEffectSpec spec, bool ongoing, AbstractStackingEffectContainer[] containers)
         {
             AbstractStackingEffectContainer container = containers.FirstOrDefault();
-            var inOrder = StackingConfigs.OrderBy(sb => sb.Priority);
-            foreach (var sb in inOrder)
+            foreach (var sb in ConfigsByPriority())
             {
                 container = sb.GetCorrectContainer(spec, ongoing, containers);
             }

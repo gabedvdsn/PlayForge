@@ -231,6 +231,10 @@ namespace FarEmerald.PlayForge
         public int? MaxStacks;
         
         public abstract void InitializeContainer(AbstractStackingEffectContainer container);
+
+        /// <summary>
+        /// How many stacks to add to the container, given the amount the configs before this one settled on.
+        /// </summary>
         public abstract int GetStacks(AbstractStackingEffectContainer container, int amount = 1);
         
         public override AbstractStackingEffectContainer GetCorrectContainer(GameplayEffectSpec spec, bool ongoing, AbstractStackingEffectContainer[] containers)
@@ -260,7 +264,8 @@ namespace FarEmerald.PlayForge
         
         public override int GetStacks(AbstractStackingEffectContainer container, int amount = 1)
         {
-            return Mathf.Min(Max, Mathf.Max(Min, container.Stacks + amount));
+            int total = Mathf.Min(Max, Mathf.Max(Min, container.Stacks + amount));
+            return Mathf.Max(0, total - container.Stacks);
         }
         
 

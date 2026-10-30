@@ -59,7 +59,9 @@
         }
         public override void Stack(int amount)
         {
-            Stacks += 1;
+            if (amount <= 0) return;
+
+            Stacks += amount;
             Refresh();
         }
         
