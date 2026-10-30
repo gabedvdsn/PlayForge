@@ -307,7 +307,9 @@ namespace FarEmerald.PlayForge
             _cts?.Dispose();
             _cts = null;
 
-            SetQueuedState();
+            // A forced state change didn't wait for this run, so there is nothing left to apply. Applying it
+            // again ran WhenTerminate or WhenWait a second time (PC-4)
+            if (State == EProcessState.Running) SetQueuedState();
         }
 
         #endregion
