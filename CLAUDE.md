@@ -25,8 +25,9 @@ The full review behind it is https://claude.ai/artifact/1GsrCxW3Wff2KvXM6fnai9.
 ## Build and test
 
 - **Unity:** 6000.0.33f1.
-- **Compile check:** MSBuild from VS 2022 Community; there is no dotnet SDK. Unity regenerates the csproj files
-  only while the editor is open, so new files may need a manual `<Compile>` entry until then.
+- **Compile check:** MSBuild from VS 2022 Build Tools; there is no dotnet SDK. Build `Assembly-CSharp.csproj`
+  and `FarEmerald.PlayForge.Tests.csproj` (exact commands in the plan). Unity regenerates the csproj files only
+  while the editor is open, so new files may need a manual `<Compile>` entry until then.
 - **Golden tests:** menu `PlayForge → Run Golden Tests`, or
   `-executeMethod FarEmerald.PlayForge.Tests.PlayForgeGoldenTests.RunAll` in batch mode with the editor closed.
   The exact commands are in `Docs/REFACTOR_PLAN.md`.

@@ -29,16 +29,30 @@ from. It lives outside `Assets/` so it never ships in the package.
   `FarEmerald.PlayForge.Tests` (Tests, editor-only).
 - **Dependencies:** UniTask (UPM git) is the only runtime dependency. `com.unity.test-framework` 1.4.5 is
   already in `Packages/manifest.json`.
-- **Compile check:** MSBuild from VS 2022 Community; there is no dotnet SDK. Build the
-  `FarEmerald.PlayForge*.csproj` files, or `Assembly-CSharp-Editor.csproj`, which references them. Confirm the
-  exact command during the baseline step and record it here.
+- **Compile check:** MSBuild 17.14 from **VS 2022 Build Tools** (not Community); there is no dotnet SDK. Two
+  builds cover everything, since MSBuild takes one project per call:
+  ```
+  "C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\MSBuild\Current\Bin\MSBuild.exe" Assembly-CSharp.csproj -t:Rebuild -nologo -v:minimal
+  "C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\MSBuild\Current\Bin\MSBuild.exe" FarEmerald.PlayForge.Tests.csproj -t:Rebuild -nologo -v:minimal
+  ```
+  - `Assembly-CSharp.csproj` builds Runtime, Editor and the samples; the Tests project references Runtime only.
+    Output goes to `Temp\Bin\Debug\`.
+  - Two `MSB3277` reference-conflict warnings come from the code-coverage and collab-proxy package DLLs. They
+    are not ours; count only `CS` diagnostics.
+  - Do not build `Assembly-CSharp-Editor.csproj`. It is stale (July 2026, from before the Editor asmdef) and
+    compiles the Editor sources itself.
   - Unity regenerates the csproj files only while its editor is open. New files may need a manual `<Compile>`
-    entry for MSBuild until then.
+    entry for MSBuild until then. On 2026-10-29 the three `FarEmerald.PlayForge*` projects matched the sources
+    on disk exactly.
 - **Golden tests:** the custom runner in `Assets/PlayForge/Tests/Editor/PlayForgeGoldenTests.cs`. Three ways to
   run it:
   - **Menu:** `PlayForge → Run Golden Tests`.
-  - **Batch mode, editor closed:** `Unity.exe -batchmode -projectPath <repo> -executeMethod
-    FarEmerald.PlayForge.Tests.PlayForgeGoldenTests.RunAll`. It exits with 1 on failure.
+  - **Batch mode, editor closed** (used for the baseline):
+    ```
+    "C:\Program Files\Unity\Hub\Editor\6000.0.33f1\Editor\Unity.exe" -batchmode -nographics -projectPath "C:\Users\17074\Documents\GitHub\PlayForge" -executeMethod FarEmerald.PlayForge.Tests.PlayForgeGoldenTests.RunAll -logFile <path>
+    ```
+    `RunAll` calls `EditorApplication.Exit` itself in batch mode: 0 when nothing fails, 1 otherwise. No `-quit`
+    is needed. The report is in the log file, after `PlayForge Golden Tests`.
   - **Unity CLI, editor open** (this is how Arcade Fighter runs it):
     `unity command eval --code 'FarEmerald.PlayForge.Tests.PlayForgeGoldenTests.RunAll(); return "ran";'`, then
     `unity command console --tail 3`.
@@ -47,14 +61,17 @@ from. It lives outside `Assets/` so it never ships in the package.
   - Its log is `Docs/PlayForge-Log.md`, with entries PF-001 to PF-013, considerations C01 to C19, and backlog
     items.
   - Its baseline on 2026-10-18 was 22 of 22 golden tests passing, and no warnings.
+  - Its copy was taken in its commit `3ae8838` (2026-10-06). That copy matches canonical `01258b8` except for
+    line endings (Arcade Fighter's files are CRLF; canonical's working tree is mostly LF) and one line:
+    Arcade Fighter's `GameRoot.Awake` adds `DontDestroyOnLoad(gameObject)` (PC-21, Phase 1). Its fixes are
+    therefore the diff `3ae8838..HEAD` under `Assets/Internal/PlayForge`.
 - **Ignore** `.claude/worktrees/` at the repo root and under `Assets/PlayForge/.claude/`. They hold stale git
   worktrees (about 1.1 GB) and are not in `.gitignore` yet (SP-10).
-- **Working tree at handoff:** branch `refactor/handoff`, with the user's uncommitted changes:
-  - an edit to `PUBLISHING.md`;
-  - QuickOutline moved from `Assets/QuickOutline` into `Assets/PlayForge/Samples/QuickOutline`, untracked;
-  - an untracked `Editor/Tools/BuildVerification.cs`.
-
-  Do not commit or revert these without asking.
+- **Working tree at handoff:** branch `refactor/handoff` had the user's uncommitted changes: an edit to
+  `PUBLISHING.md`, QuickOutline moved into `Assets/PlayForge/Samples/QuickOutline`, a new
+  `Editor/Tools/BuildVerification.cs` and a `UnityConnectSettings.asset` change. At the user's request they
+  were committed on 2026-10-29 as `455dd44`, after the handoff files (`33c04f6`). `Assets/PlayForge/.claude/`
+  stays untracked.
 - **Corrections to older notes:**
   - There is no `StepOnly` lifecycle. The lifecycles are SelfTerminating, RunThenWait, RequiresControl and
     Synchronous.
@@ -68,8 +85,12 @@ from. It lives outside `Assets/` so it never ships in the package.
 - Tests are written red first.
 - Phase 0, the Arcade Fighter port, comes first.
 
+- Decision 1, 2026-10-29: the pending changes were committed on `refactor/handoff` (see Environment).
+- Phase 0, 2026-10-29: commit locally once per fix on the phase branch (red test, fix and Status together).
+  Do not push.
+
 **Open. Ask the user; do not assume:**
-1. **Uncommitted changes:** commit or stash the user's pending changes, listed under Environment, before Phase 0?
+1. ~~**Uncommitted changes**~~: decided, see above.
 2. **The test project, "PlayForge Proving Grounds":** a separate Unity project referencing PlayForge as a local
    UPM package, which needs a `package.json` in `Assets/PlayForge`? Or a test assembly inside this repo for now?
 3. **Arcade Fighter after Phase 0:** does it switch to consuming upstream PlayForge, and how (copy, or a local
@@ -94,7 +115,8 @@ from. It lives outside `Assets/` so it never ships in the package.
 
 ## Phase 0 checklist
 
-- [ ] **Baseline.** Build, run the 12 golden tests, and record the result here with the date. Change nothing.
+- [x] **Baseline.** Build, run the 12 golden tests, and record the result here with the date. Change nothing.
+  Done 2026-10-29; see the Log.
 - [ ] Port each Arcade Fighter fix: diff Arcade Fighter's copy against canonical, and keep canonical's later
   changes where the two have diverged.
 
@@ -337,4 +359,10 @@ GAS-4 with GAS-5, PC-6, and TS-I with PC-5.
 
 Record baselines, gate results and notable decisions here, newest first.
 
+- 2026-10-29, **Phase 0 baseline** at `455dd44`, no code changed:
+  - **Build:** both MSBuild commands under Environment succeed. The only C# diagnostics are the three ED-1
+    warnings: CS0162 `GameplayEffectDrawer.cs:161`, CS8509 `AbilityEditor.cs:138`, CS8321
+    `TheForge.ViewTab.cs:1640`.
+  - **Golden tests:** batch mode, editor closed, exit code 0. **12/12 pass, 0 fail, 0 expected-red.** S6, S8
+    and S11 are still marked `targetSemantics`, but they pass, so the masks currently hide nothing (SP-16).
 - 2026-10-29: plan created from the review; branch `refactor/handoff`.
