@@ -363,7 +363,8 @@ namespace FarEmerald.PlayForge
 
             if (stageComplete && Repeat && !_repeatBroken)
             {
-                // Reset for next repeat iteration
+                // Reset for next repeat iteration, which is a run of the tasks like the last one
+                Clean(data);
                 ResetInternal();
                 foreach (var task in Tasks)
                     task.Prepare(data);

@@ -501,6 +501,8 @@ namespace FarEmerald.PlayForge
             {
                 while (!token.IsCancellationRequested && !IsRepeatBroken(stage))
                 {
+                    int startFrame = Time.frameCount;
+
                     await ExecuteStageInternal(stage, Data, token);
                     
                     if (token.IsCancellationRequested || IsRepeatBroken(stage))
@@ -518,6 +520,11 @@ namespace FarEmerald.PlayForge
                     }
                     
                     _repeatCounts[stage] = GetRepeatCount(stage) + 1;
+
+                    if (token.IsCancellationRequested || IsRepeatBroken(stage))
+                        break;
+
+                    await RestartStage(stage, startFrame, token);
                 }
             }
             else
@@ -527,6 +534,20 @@ namespace FarEmerald.PlayForge
             }
         }
         
+        /// <summary>
+        /// Readies a repeating stage for its next iteration. Each iteration is a run of its tasks, so they're
+        /// cleaned and prepared again: a task that resets in Prepare otherwise finishes at once from then on.
+        /// An iteration that took no frame takes one here, or a stage whose tasks finish without yielding
+        /// repeats for ever inside a frame (TS-M).
+        /// </summary>
+        internal async UniTask RestartStage(SequenceStage stage, int startFrame, CancellationToken token)
+        {
+            if (Time.frameCount == startFrame) await UniTask.Yield(PlayerLoopTiming.Update, token);
+
+            CleanStage(stage);
+            PrepareStage(stage);
+        }
+
         /// <summary>
         /// Executes a stage (used for both top-level and sub-stages).
         /// </summary>
@@ -714,8 +735,8 @@ namespace FarEmerald.PlayForge
         {
             foreach (var task in stage.Tasks)
             {
-                task.Prepare(Data);
                 RegisterActiveTask(task);
+                task.Prepare(Data);
             }
             
             foreach (var subStage in stage.SubStages)
@@ -728,6 +749,9 @@ namespace FarEmerald.PlayForge
         {
             foreach (var task in stage.Tasks)
             {
+                // A stage can stop part way through preparing, and what it didn't get to has nothing to clean
+                if (!UnregisterActiveTask(task)) continue;
+
                 try
                 {
                     task.Clean(Data);
@@ -736,7 +760,6 @@ namespace FarEmerald.PlayForge
                 {
                     Debug.LogError($"[TaskSequence] Exception in task Clean: {ex}");
                 }
-                UnregisterActiveTask(task);
             }
             
             foreach (var subStage in stage.SubStages)
@@ -753,11 +776,11 @@ namespace FarEmerald.PlayForge
             }
         }
         
-        private void UnregisterActiveTask(ISequenceTask task)
+        private bool UnregisterActiveTask(ISequenceTask task)
         {
             lock (_activeTasksLock)
             {
-                _activeTasks.Remove(task);
+                return _activeTasks.Remove(task);
             }
         }
         

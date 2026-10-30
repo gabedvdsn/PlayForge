@@ -408,6 +408,8 @@ namespace FarEmerald.PlayForge
             
             while (!token.IsCancellationRequested && !runtime.IsRepeatBroken(stage))
             {
+                int startFrame = Time.frameCount;
+
                 // Wait for all tasks to complete using safe pattern
                 await WaitAllTasksSafe(taskUnits);
                 
@@ -421,8 +423,9 @@ namespace FarEmerald.PlayForge
                     await runtime.Delay(DelayBetweenRepeats.Value, token);
                 }
                 
+                await runtime.RestartStage(stage, startFrame, token);
+
                 // Recreate task units for next iteration
-                // Note: Prepare is NOT called again, only Execute
                 taskUnits = stage.CreateExecutionUnits(runtime, stage, runtime.Data, token);
                 // taskUnits = stage.CreateExecutionUnits(runtime, runtime.Data, token);
             }
