@@ -1,5 +1,5 @@
-﻿using System.Collections.Generic;
-using UnityEngine;
+﻿using System;
+using System.Collections.Generic;
 
 namespace FarEmerald.PlayForge
 {
@@ -23,9 +23,9 @@ namespace FarEmerald.PlayForge
         {
             get
             {
-                float longest = 0f;
-                foreach (var packet in Packets) longest = Mathf.Max(longest, packet.DurationRemaining);
-                return longest;
+                double longest = 0d;
+                foreach (var packet in Packets) longest = Math.Max(longest, packet.DurationRemaining);
+                return (float)longest;
             }
         }
 
@@ -33,9 +33,9 @@ namespace FarEmerald.PlayForge
         {
             get
             {
-                float soonest = float.MaxValue;
-                foreach (var packet in Packets) soonest = Mathf.Min(soonest, packet.DurationRemaining);
-                return soonest;
+                double soonest = float.MaxValue;
+                foreach (var packet in Packets) soonest = Math.Min(soonest, packet.DurationRemaining);
+                return (float)soonest;
             }
         }
 
@@ -43,9 +43,9 @@ namespace FarEmerald.PlayForge
         {
             get
             {
-                float soonest = float.MaxValue;
-                foreach (var packet in Packets) soonest = Mathf.Min(soonest, packet.TimeUntilPeriodTick);
-                return soonest;
+                double soonest = float.MaxValue;
+                foreach (var packet in Packets) soonest = Math.Min(soonest, packet.TimeUntilPeriodTick);
+                return (float)soonest;
             }
         }
 
@@ -53,8 +53,9 @@ namespace FarEmerald.PlayForge
 
         private sealed class StackableContainerPacket
         {
-            public float DurationRemaining;
-            public float TimeUntilPeriodTick;
+            // Doubles for the reason NonStackingEffectContainer's timers are
+            public double DurationRemaining;
+            public double TimeUntilPeriodTick;
 
             public StackableContainerPacket(float totalDuration, float periodDuration)
             {
@@ -70,7 +71,7 @@ namespace FarEmerald.PlayForge
             public void TickPeriodic(float deltaTime, float periodDuration, out bool executeTick)
             {
                 TimeUntilPeriodTick -= deltaTime;
-                if (TimeUntilPeriodTick <= 0f)
+                if (TickIsDue(TimeUntilPeriodTick, periodDuration, DurationRemaining - deltaTime))
                 {
                     TimeUntilPeriodTick += periodDuration;
                     executeTick = true;
@@ -90,12 +91,12 @@ namespace FarEmerald.PlayForge
 
         public override void SetDurationRemaining(float duration)
         {
-            foreach (var packet in Packets) packet.DurationRemaining = Mathf.Min(packet.DurationRemaining, duration);
+            foreach (var packet in Packets) packet.DurationRemaining = Math.Min(packet.DurationRemaining, duration);
         }
 
         public override void SetTimeUntilPeriodTick(float duration)
         {
-            foreach (var packet in Packets) packet.TimeUntilPeriodTick = Mathf.Min(packet.TimeUntilPeriodTick, duration);
+            foreach (var packet in Packets) packet.TimeUntilPeriodTick = Math.Min(packet.TimeUntilPeriodTick, duration);
         }
 
         public override void UpdateTimeRemaining(float deltaTime)
@@ -103,7 +104,7 @@ namespace FarEmerald.PlayForge
             for (int i = Packets.Count - 1; i >= 0; i--)
             {
                 Packets[i].UpdateTimeRemaining(deltaTime);
-                if (Packets[i].DurationRemaining > 0f) continue;
+                if (Packets[i].DurationRemaining > 0d) continue;
 
                 Packets.RemoveAt(i);
                 Stacks -= 1;

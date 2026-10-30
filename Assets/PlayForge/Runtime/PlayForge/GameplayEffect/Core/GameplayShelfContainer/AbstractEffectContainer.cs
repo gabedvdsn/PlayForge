@@ -8,6 +8,9 @@ namespace FarEmerald.PlayForge
         public GameplayEffectSpec Spec;
         public bool Ongoing;
         public bool ContainerIsActive;
+
+        // How near due a tick can be on a duration's last frame and still count, as a share of the period
+        private const float LastTickTolerance = 0.001f;
         
         protected float totalDuration;
         protected float periodDuration;
@@ -65,6 +68,19 @@ namespace FarEmerald.PlayForge
         public abstract void UpdateTimeRemaining(float deltaTime);
         public abstract void TickPeriodic(float deltaTime, out int executeTicks);
         
+        /// <summary>
+        /// Whether a tick falls due this frame. A duration's last tick falls due as the duration ends, and the
+        /// two count down apart, so rounding could end the duration a hair before the tick, which then never
+        /// landed (GAS-33). A tick that near due on the duration's last frame is that tick.
+        /// </summary>
+        /// <param name="timeUntilTick">Time to the tick, this frame included</param>
+        /// <param name="period">Time between ticks</param>
+        /// <param name="durationLeft">Duration left, this frame included</param>
+        protected static bool TickIsDue(double timeUntilTick, float period, double durationLeft)
+        {
+            return timeUntilTick <= 0d || (durationLeft <= 0d && timeUntilTick <= period * LastTickTolerance);
+        }
+
         public abstract void Refresh();
         public abstract void Extend(float duration);
 
