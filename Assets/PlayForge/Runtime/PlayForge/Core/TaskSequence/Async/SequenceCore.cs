@@ -264,14 +264,15 @@ namespace FarEmerald.PlayForge
         {
             if (taskUnits.Length == 0) return;
             
+            int cancelled = 0;
             Exception firstError = null;
             var tcs = new UniTaskCompletionSource();
-            
+
             foreach (var task in taskUnits)
             {
                 WatchTaskCompletion(task).Forget();
             }
-            
+
             await tcs.Task;
             stageCts.Cancel();
             
@@ -290,7 +291,10 @@ namespace FarEmerald.PlayForge
                 }
                 catch (OperationCanceledException)
                 {
-                    // Ignore cancellation
+                    // Cancellation doesn't complete the stage, unless it took every task: then the stage was
+                    // stopped from outside, and nothing is left that could finish it (TS-A)
+                    cancelled++;
+                    if (cancelled >= taskUnits.Length) tcs.TrySetResult();
                 }
                 catch (Exception ex)
                 {
@@ -325,14 +329,15 @@ namespace FarEmerald.PlayForge
             if (taskUnits.Length == 0) return;
             
             int completed = 0;
+            int ended = 0;
             Exception firstError = null;
             var tcs = new UniTaskCompletionSource();
-            
+
             foreach (var task in taskUnits)
             {
                 WatchTask(task).Forget();
             }
-            
+
             await tcs.Task;
             stageCts.Cancel();
             
@@ -347,10 +352,11 @@ namespace FarEmerald.PlayForge
                 try
                 {
                     await task;
+                    completed++;
                 }
                 catch (OperationCanceledException)
                 {
-                    return; // Cancellation doesn't count as completion
+                    // Cancellation doesn't count as completion
                 }
                 catch (Exception ex)
                 {
@@ -358,10 +364,12 @@ namespace FarEmerald.PlayForge
                     {
                         firstError = ex;
                     }
+                    completed++;
                 }
-                
-                completed++;
-                if (completed >= RequiredCount)
+
+                // With every task over, N can't be reached any more: the stage was stopped from outside (TS-A)
+                ended++;
+                if (completed >= RequiredCount || ended >= taskUnits.Length)
                 {
                     tcs.TrySetResult();
                 }
