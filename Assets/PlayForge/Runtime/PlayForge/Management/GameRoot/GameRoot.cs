@@ -14,6 +14,9 @@ namespace FarEmerald.PlayForge
         [Header("Game Root")]
         
         public static GameRoot Instance;
+
+        [Tooltip("Keeps GameRoot through scene loads. It's the handler for every Register overload that isn't given one.")]
+        [SerializeField] private new bool DontDestroyOnLoad = true;
         
         // Useful for backend systems like observers, audio, etc...
         [SerializeReference]
@@ -28,6 +31,7 @@ namespace FarEmerald.PlayForge
             }
 
             Instance = this;
+            if (DontDestroyOnLoad) DontDestroyOnLoad(gameObject);
         }
         
         public void DeferredInit()
