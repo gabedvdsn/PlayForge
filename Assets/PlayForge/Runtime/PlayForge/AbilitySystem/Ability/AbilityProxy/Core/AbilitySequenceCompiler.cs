@@ -194,117 +194,52 @@ namespace FarEmerald.PlayForge
 
         /// <summary>
         /// Wires AbilitySystemCallbacks and usage effects into the generated sequence stage.
-        /// - Stage activated fires when the stage begins (via a prepare-phase callback task)
-        /// - Stage ended and usage effects fire in a single OnTerminate callback
+        /// - Stage activated fires when the stage begins, with its tasks prepared
+        /// - Stage ended fires when it terminates
+        /// - Usage effects apply at whichever of the two the stage asks for
+        /// These are stage hooks rather than a task, because a task counts toward the stage's policy: a task
+        /// that finished at once ended every Any stage as it began (TS-B).
         /// </summary>
         private static void WireStageCallbacks(
             StageBuilder stage,
             AbilityTaskBehaviourStage abilityStage,
             int stageIndex)
         {
-            // Fire AbilityStageActivated when stage begins via a prepare-phase task
-            stage.Task(new StageCallbackTask(abilityStage, stageIndex, isActivation: true));
-
-            // Combined OnTerminate: fire AbilityStageEnded + apply usage effects
             bool applyUsage = abilityStage.ApplyUsageEffects;
+            bool applyAtStart = abilityStage.ApplyUsageAtStageStart;
 
-            if (abilityStage.ApplyUsageAtStageStart)
+            stage.OnInit(data =>
             {
-                stage.OnInit(data =>
-                {
-                    if (data is not AbilityDataPacket abilityData) return;
-
-                    // Apply usage effects if configured and successful
-                    if (applyUsage && !abilityData.UsageEffectsApplied)
-                    {
-                        if (abilityData.EffectOrigin is AbilitySpec spec)
-                        {
-                            spec.ApplyUsageEffects();
-                            abilityData.UsageEffectsApplied = true;
-                        }
-                    }
-
-                    // Fire AbilityStageEnded callback
-                    var callbacks = abilityData.Callbacks;
-                    callbacks?.AbilityStageEnded(
-                        AbilityCallbackStatus.GenerateForStageEvent(
-                            abilityData, abilityStage, true));
-                });
-            }
-            else
-            {
-                stage.OnTerminate((ctx, success) =>
-                {
-                    if (ctx.Data is not AbilityDataPacket abilityData) return;
-
-                    // Apply usage effects if configured and successful
-                    if (applyUsage && success && !abilityData.UsageEffectsApplied)
-                    {
-                        if (abilityData.EffectOrigin is AbilitySpec spec)
-                        {
-                            spec.ApplyUsageEffects();
-                            abilityData.UsageEffectsApplied = true;
-                        }
-                    }
-
-                    // Fire AbilityStageEnded callback
-                    var callbacks = abilityData.Callbacks;
-                    callbacks?.AbilityStageEnded(
-                        AbilityCallbackStatus.GenerateForStageEvent(
-                            abilityData, abilityStage, success));
-                });
-            }
-        }
-
-        // ═══════════════════════════════════════════════════════════════════════════
-        // CALLBACK HELPER TASK
-        // ═══════════════════════════════════════════════════════════════════════════
-
-        /// <summary>
-        /// A zero-work sequence task that fires AbilitySystemCallbacks during its
-        /// lifecycle. Used to inject stage/task activation callbacks into the
-        /// sequence flow without modifying the adapted ability tasks.
-        /// </summary>
-        private class StageCallbackTask : ISequenceTask
-        {
-            private readonly AbilityTaskBehaviourStage _abilityStage;
-            private readonly int _stageIndex;
-            private readonly bool _isActivation;
-
-            public StageCallbackTask(AbilityTaskBehaviourStage abilityStage, int stageIndex, bool isActivation)
-            {
-                _abilityStage = abilityStage;
-                _stageIndex = stageIndex;
-                _isActivation = isActivation;
-            }
-
-            public void Prepare(SequenceDataPacket data)
-            {
-                if (!_isActivation) return;
                 if (data is not AbilityDataPacket abilityData) return;
 
                 // Track stage milestone on the data packet path
-                int taskCount = _abilityStage.Tasks?.Count ?? 0;
-                abilityData.AppendPath($"Stage[{_stageIndex},{taskCount}tasks]");
+                int taskCount = abilityStage.Tasks?.Count ?? 0;
+                abilityData.AppendPath($"Stage[{stageIndex},{taskCount}tasks]");
 
-                var callbacks = abilityData.Callbacks;
-                callbacks?.AbilityStageActivated(
-                    AbilityCallbackStatus.GenerateForStageEvent(
-                        abilityData, _abilityStage, true));
-            }
+                abilityData.Callbacks?.AbilityStageActivated(
+                    AbilityCallbackStatus.GenerateForStageEvent(abilityData, abilityStage, true));
 
-            public UniTask Execute(SequenceDataPacket data, System.Threading.CancellationToken token)
+                if (applyUsage && applyAtStart) ApplyUsageEffects(abilityData);
+            });
+
+            stage.OnTerminate((ctx, success) =>
             {
-                // No work — callback was fired in Prepare
-                return UniTask.CompletedTask;
-            }
+                if (ctx.Data is not AbilityDataPacket abilityData) return;
 
-            public bool Step(SequenceDataPacket data, float deltaTime) => true; // Callback fires in Prepare
+                // Apply usage effects if configured and successful
+                if (applyUsage && !applyAtStart && success) ApplyUsageEffects(abilityData);
 
-            public void Clean(SequenceDataPacket data)
-            {
-                // No cleanup needed
-            }
+                abilityData.Callbacks?.AbilityStageEnded(
+                    AbilityCallbackStatus.GenerateForStageEvent(abilityData, abilityStage, success));
+            });
+        }
+
+        private static void ApplyUsageEffects(AbilityDataPacket abilityData)
+        {
+            if (abilityData.UsageEffectsApplied || abilityData.EffectOrigin is not AbilitySpec spec) return;
+
+            spec.ApplyUsageEffects();
+            abilityData.UsageEffectsApplied = true;
         }
     }
 }
