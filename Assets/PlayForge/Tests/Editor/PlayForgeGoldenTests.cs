@@ -72,6 +72,7 @@ namespace FarEmerald.PlayForge.Tests
             RunScenario(nameof(S19_TS_04_BrokenAbility_IsReported), S19_TS_04_BrokenAbility_IsReported);
             RunScenario(nameof(S20_PC_01_ThrowingStep_DoesNotStallTheFrame), S20_PC_01_ThrowingStep_DoesNotStallTheFrame);
             RunScenario(nameof(S21_TS_03_RepeatedActivation_ReusesItsCompiledBehaviour), S21_TS_03_RepeatedActivation_ReusesItsCompiledBehaviour);
+            RunScenario(nameof(S22_GAS_13_SystemInitialized_ReachesEarlySubscribers), S22_GAS_13_SystemInitialized_ReachesEarlySubscribers);
             RunScenario(nameof(S23_TS_01_Resume_LeavesTimeScaleAlone), S23_TS_01_Resume_LeavesTimeScaleAlone);
             RunScenario(nameof(S24_GAS_03_GiveItem_LandsOnTheShelf), S24_GAS_03_GiveItem_LandsOnTheShelf);
 
@@ -1149,6 +1150,90 @@ namespace FarEmerald.PlayForge.Tests
                 logger.logHandler = original;
                 control.TerminateAllImmediately();
                 Object.DestroyImmediate(host);
+                ProcessControl.Instance = previous;
+            }
+        }
+
+        /// <summary>
+        /// PF-013: a MonoBehaviour GAS raises <c>OnSystemInitialized</c> to a subscriber that attached before it
+        /// was registered, once it's ready to use. Its callbacks used to be created partway through
+        /// initialization, just before the event fired, so nobody outside could subscribe in time (PF-C18).
+        /// </summary>
+        private static void S22_GAS_13_SystemInitialized_ReachesEarlySubscribers()
+        {
+            // A process control of its own, as in S20
+            var previous = ProcessControl.Instance;
+            var host = new GameObject("S22 Process Control") { hideFlags = HideFlags.HideAndDontSave };
+            var control = host.AddComponent<ProcessControl>();
+            var options = new SerializedObject(control);
+            options.FindProperty("DontDestroyOnLoad").boolValue = false;
+            options.FindProperty("CollectOnAwake").boolValue = false;
+            options.ApplyModifiedPropertiesWithoutUndo();
+
+            var entity = ScriptableObject.CreateInstance<EntityIdentity>();
+            entity.name = entity.Name = Unique("S22 Entity");
+            entity.Description = "";
+            entity.Textures = new List<TextureItem>();
+            entity.AssetTag = Tag.Generate(Unique("Test.Entity.S22"));
+            entity.Affiliation = new List<Tag>();
+            entity.GrantedTags = new List<Tag>();
+            entity.ContextTags = new List<Tag>();
+            entity.MaxLevel = 1;
+            entity.MaxAbilitiesOperation = new ScalerIntegerMagnitudeOperation { Magnitude = 8 };
+            entity.MaxItemsOperation = new ScalerIntegerMagnitudeOperation { Magnitude = 8 };
+            entity.MaxEquippedItemsOperation = new ScalerIntegerMagnitudeOperation { Magnitude = 8 };
+            entity.StartingAbilities = new List<Ability>();
+            entity.StartingItems = new List<StartingItemContainer>();
+            entity.AttributeSet = MakeSet(MakeElement(MakeAttribute("S22 Health"), 100f, 100f));
+            entity.WorkerGroup = new StandardWorkerGroup();
+
+            // Hidden but in the scene: a GameObject outside any scene (HideAndDontSave) is cloned on registration
+            // and the clone initialized instead (PF-C19)
+            var body = new GameObject("S22 Body") { hideFlags = HideFlags.HideInHierarchy | HideFlags.DontSaveInEditor };
+
+            try
+            {
+                ProcessControl.Instance = null;
+                control.Bootstrap();
+
+                var gas = GameplayAbilitySystem.AddToGameObject(body, entity);
+                gas.ProcessLifecycle = EProcessLifecycle.Synchronous;
+                gas.ProcessTiming = EProcessStepTiming.Update;
+
+                // Subscribed after the GAS is added and before it's registered, as game code would
+                var callbacks = gas.Callbacks;
+                AssertTrue("the GAS has its callbacks before it's initialized", callbacks != null);
+                if (callbacks == null) return;
+
+                int fired = 0;
+                bool readyWhenFired = false;
+                callbacks.OnSystemInitialized += () =>
+                {
+                    fired++;
+                    readyWhenFired = gas.IsInitialized && gas.AttributeSystem != null;
+                };
+
+                AssertTrue("register the GAS", ProcessControl.Register(gas, control, ProcessDataPacket.Default(), out _));
+
+                var stepProcesses = typeof(ProcessControl).GetMethod("StepProcesses",
+                    System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic);
+                for (int frame = 0; frame < 3 && !gas.IsInitialized && stepProcesses != null; frame++)
+                {
+                    stepProcesses.Invoke(control, new object[] { EProcessStepTiming.Update });
+                }
+
+                AssertTrue($"the GAS initializes (initialized {gas.IsInitialized})", gas.IsInitialized);
+                AssertTrue($"OnSystemInitialized reaches the early subscriber once (fired {fired} times)", fired == 1);
+                AssertTrue("the GAS is ready to use when it fires", readyWhenFired);
+                AssertTrue("initialization keeps the callbacks it had", ReferenceEquals(callbacks, gas.Callbacks));
+            }
+            finally
+            {
+                control.TerminateAllImmediately();
+                Object.DestroyImmediate(body);
+                Object.DestroyImmediate(host);
+                Object.DestroyImmediate(entity.AttributeSet);
+                Object.DestroyImmediate(entity);
                 ProcessControl.Instance = previous;
             }
         }

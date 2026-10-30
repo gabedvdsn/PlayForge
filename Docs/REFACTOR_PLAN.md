@@ -134,7 +134,7 @@ from. It lives outside `Assets/` so it never ships in the package.
   | PF-010 README names types that do not exist | `Runtime/PlayForge/Core/TaskSequence/README.md` | TS-2 | fixed |
   | PF-011 Step exceptions stalled the frame | `ProcessControlBlock.cs:225-247`, `ProcessControl.cs:337-344` | PC-1 | fixed |
   | PF-012 Proxies recompiled every activation (`AbilityProxy.IsIdle`, `CompiledProxies`) | `AbilityActivationHandle.cs:26`, `AbilityProxy.cs:62-74` | TS-3 | fixed |
-  | PF-013 `OnSystemInitialized` could not be observed | `GameplayAbilitySystem.EndOfFrame.cs:34`, `RuntimeGameplayAbilitySystem.cs:137, 149` | GAS-13 | open |
+  | PF-013 `OnSystemInitialized` could not be observed | `GameplayAbilitySystem.EndOfFrame.cs:34`, `RuntimeGameplayAbilitySystem.cs:137, 149` | GAS-13 | fixed |
 
 - [ ] Port Arcade Fighter's extra 10 golden scenarios, taking the suite from 12 to 22.
 - [ ] GAS-1: give `RuntimeGameplayAbilitySystem` the timing `EProcessStepTiming.UpdateAndLate`
@@ -239,7 +239,7 @@ had no letter in the review.
 | GAS-10 | C | 0 | Ongoing requirements are evaluated before tags exist and never re-checked (PF-002) | `EffectSystemComponent.cs:127, 330-334, 372` | fixed |
 | GAS-11 | H | 0 | Source tag requirements are never enforced (PF-003) | `AbilitySpec.cs:27-31`, `AbilityTags.cs:30-33` | fixed |
 | GAS-12 | H | 0 | Current is applied before Base, so the clamp loses the delta (PF-005) | `IAttributeImpactCarrier.cs:138-139`, `CachedAttributeValue.cs:242-281` | fixed |
-| GAS-13 | H | 0 | `OnSystemInitialized` cannot be observed (PF-013) | `GameplayAbilitySystem.EndOfFrame.cs:34`, `RuntimeGameplayAbilitySystem.cs:137, 149`, `AttributeSystemComponent.cs:49` | open |
+| GAS-13 | H | 0 | `OnSystemInitialized` cannot be observed (PF-013) | `GameplayAbilitySystem.EndOfFrame.cs:34`, `RuntimeGameplayAbilitySystem.cs:137, 149`, `AttributeSystemComponent.cs:49` | fixed |
 | GAS-14 | H | 1 | Shelved effects grant the source's asset tag to their target | `AbstractEffectContainer.cs:108` | open |
 | GAS-15 | H | 1 | Commits are stored before modifiers but read through them (−30 under ×1.5 lands as −45). See Decisions 4 | `CachedAttributeValue.cs:241-327` | open |
 | GAS-16 | H | 1 | Tag queries count distinct tags, not weights; `SameRoot` differs between overloads | `GameplayAbilitySystem.cs:246-249`, `TagQuery.cs:83-128` | open |
@@ -402,6 +402,9 @@ Record baselines, gate results and notable decisions here, newest first.
     that counter at today's compile site (not committed): "compiled 5 times". 23/23 with the fix. The
     tracker's other TS-3 cost (`IsCriticalSection` building the inner sequence 4–5 times per compile) is
     not touched by PF-012; it now runs once per proxy instead of once per activation.
+  - PF-013 / GAS-13: S22 red without the fix ("the GAS has its callbacks before it's initialized"); 24/24
+    with it. As Arcade Fighter noted, a runtime GAS still initializes in its constructor, so its
+    `OnSystemInitialized` has fired before anyone can subscribe.
 
 - 2026-10-29, **Phase 0 baseline** at `455dd44`, no code changed:
   - **Build:** both MSBuild commands under Environment succeed. The only C# diagnostics are the three ED-1

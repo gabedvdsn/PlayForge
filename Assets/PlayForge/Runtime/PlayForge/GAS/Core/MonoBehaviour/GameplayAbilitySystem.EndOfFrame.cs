@@ -31,7 +31,7 @@ namespace FarEmerald.PlayForge
         {
             _actionQueue = new();
             _frameSummary = new();
-            Callbacks = new();
+            Callbacks ??= new();
             AnalysisCache = new();
             
             // Wire up action queue callbacks to GAS callbacks

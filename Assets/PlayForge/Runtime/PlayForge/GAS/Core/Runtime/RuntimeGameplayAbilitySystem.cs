@@ -38,9 +38,11 @@ namespace FarEmerald.PlayForge
         protected LocalDataStructure localData;
         
         /// <summary>
-        /// Callbacks for GAS-level events (frame completion, action queue, effects, etc.)
+        /// Callbacks for GAS-level events (frame completion, action queue, effects, etc.). Created with the
+        /// GAS and kept by initialization (PF-013). A runtime GAS initializes inside its constructor, so
+        /// <c>OnSystemInitialized</c> has fired before anyone can subscribe to it.
         /// </summary>
-        public GameplayAbilitySystemCallbacks Callbacks { get; private set; }
+        public GameplayAbilitySystemCallbacks Callbacks { get; private set; } = new();
         
         // ═══════════════════════════════════════════════════════════════════════════
         // CONSTRUCTION
