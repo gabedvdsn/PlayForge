@@ -451,10 +451,13 @@ namespace FarEmerald.PlayForge
             MaxLevel = data.MaxLevel;
             ActivationPolicy = data.ActivationPolicy;
             MaxAbilitiesOperation = data.MaxAbilitiesOperation;
+            StartingAbilities = data.StartingAbilities;
             AllowDuplicateAbilities = data.AllowDuplicateAbilities;
             MaxItemsOperation = data.MaxItemsOperation;
             MaxEquippedItemsOperation = data.MaxEquippedItemsOperation;
+            StartingItems = data.StartingItems;
             AllowDuplicateItems = data.AllowDuplicateItems;
+            AllowDuplicateEquippedItems = data.AllowDuplicateEquippedItems;
             AttributeSet = data.AttributeSet;
             WorkerGroup = data.WorkerGroup;
         }
