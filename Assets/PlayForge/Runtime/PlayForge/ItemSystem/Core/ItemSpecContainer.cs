@@ -13,7 +13,12 @@ namespace FarEmerald.PlayForge
     {
         public ItemSpec Spec { get; private set; }
         public int Index;
-        public bool IsEquipped { get; private set; }
+        public bool IsEquipped
+        {
+            get => Spec.IsEquipped;
+            private set => Spec.IsEquipped = value;
+        }
+
         public int ItemStacks { get; private set; }
 
         // ═══════════════════════════════════════════════════════════════════════════
@@ -94,11 +99,12 @@ namespace FarEmerald.PlayForge
             Spec.Base.RemoveWorkers(Spec.Source);
             // Spec.Base.WorkerGroup?.RemoveWorkersFrom(Spec.Source);
             
+            // Ahead of the compile, which is what reads it
+            IsEquipped = false;
+
             // Recompile tags
             Spec.Source.CompileGrantedTags();
-            
-            IsEquipped = false;
-            
+
             if (Spec.Source.FindItemSystem(out var isc))
             {
                 isc.Callbacks.ItemUnequipped(ItemCallbackStatus.Generate(this, isc, true));
@@ -130,7 +136,10 @@ namespace FarEmerald.PlayForge
         {
             foreach (var effect in Spec.Base.GrantedEffects)
             {
-                bool removed = Spec.Source.RemoveGameplayEffect(effect);
+                if (effect == null) continue;
+
+                // Only what this item applied: the same effect can be on the entity from somewhere else
+                bool removed = Spec.Source.RemoveGameplayEffect(effect, Spec);
                 if (Spec.Source.FindItemSystem(out var isc))
                 {
                     isc.Callbacks.ItemEffectsRemoved(ItemCallbackStatus.Generate(this, isc, removed));
@@ -144,6 +153,9 @@ namespace FarEmerald.PlayForge
 
         private void ApplyActiveAbility()
         {
+            // Most items have none, and are worn for their effects
+            if (Spec.Base.ActiveAbility == null) return;
+
             if (Spec.Source.FindAbilitySystem(out var abilitySystem))
             {
                 // Grant the ability at the item's level
@@ -157,6 +169,8 @@ namespace FarEmerald.PlayForge
 
         private void RemoveActiveAbility()
         {
+            if (Spec.Base.ActiveAbility == null) return;
+
             if (Spec.Source.FindAbilitySystem(out var abilitySystem))
             {
                 var success = abilitySystem.RemoveAbility(Spec.Base.ActiveAbility);

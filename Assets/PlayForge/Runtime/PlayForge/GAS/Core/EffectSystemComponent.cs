@@ -302,6 +302,18 @@ namespace FarEmerald.PlayForge
             return toRemove.Length > 0;
         }
 
+        public bool RemoveGameplayEffect(GameplayEffect effect, IEffectOrigin origin)
+        {
+            var toRemove = EffectShelf.Where(container => container.Spec.Base.Tags.AssetTag == effect.Tags.AssetTag
+                                                          && container.Spec.Origin == origin).ToArray();
+            foreach (AbstractEffectContainer container in toRemove)
+            {
+                MarkFinished(container);
+            }
+
+            return toRemove.Length > 0;
+        }
+
         /// <summary>
         /// Queue a container for removal exactly once. Every path that finishes a container
         /// (expiry, removal requirements, explicit removal) funnels through here — a duplicate

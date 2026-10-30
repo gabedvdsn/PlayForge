@@ -11,6 +11,9 @@ namespace FarEmerald.PlayForge
     { 
         public Item Base { get; private set; }
 
+        /// <summary>True while the item is equipped, which is when what it grants is on the entity.</summary>
+        public bool IsEquipped { get; internal set; }
+
         // ═══════════════════════════════════════════════════════════════════════════
         // Constructor
         // ═══════════════════════════════════════════════════════════════════════════
@@ -31,7 +34,7 @@ namespace FarEmerald.PlayForge
         }
         public override bool IsActive()
         {
-            return false;
+            return IsEquipped;
         }
 
         // ═══════════════════════════════════════════════════════════════════════════

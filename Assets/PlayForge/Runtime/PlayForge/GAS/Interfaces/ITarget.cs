@@ -20,6 +20,12 @@ namespace FarEmerald.PlayForge
             => carrier is GameplayEffectSpec spec && ApplyGameplayEffect(spec);
 
         public bool RemoveGameplayEffect(GameplayEffect effect);
+
+        /// <summary>
+        /// Removes the effect where this origin applied it, and leaves the same effect from anywhere else.
+        /// </summary>
+        public bool RemoveGameplayEffect(GameplayEffect effect, IEffectOrigin origin) => RemoveGameplayEffect(effect);
+
         public GameplayEffectSpec GenerateEffectSpec(IEffectOrigin origin, GameplayEffect GameplayEffect);
         public IntValuePairClamped GetLevel(Tag key);
         public bool FindLevelSystem(out SystemLevelsComponent lvlSystem);

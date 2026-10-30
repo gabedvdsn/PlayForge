@@ -227,12 +227,12 @@ namespace FarEmerald.PlayForge
         /// </summary>
         public void ClearAllItems()
         {
-            for (int i = 0; i < ItemShelf.Count; i++)
+            // From the end, because removing an item moves the ones after it down. Counting up skipped every
+            // other item, and clearing the shelf dropped those with their effects still on (GAS-32)
+            for (int i = ItemShelf.Count - 1; i >= 0; i--)
             {
                 RemoveItem(i);
             }
-            
-            ItemShelf?.Clear();
         }
 
         public bool HasItem(Item item)

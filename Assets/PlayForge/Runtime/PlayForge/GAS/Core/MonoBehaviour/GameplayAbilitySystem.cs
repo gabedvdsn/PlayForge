@@ -168,6 +168,8 @@ namespace FarEmerald.PlayForge
 
         public bool RemoveGameplayEffect(GameplayEffect effect) => EffectSystem.RemoveGameplayEffect(effect);
 
+        public bool RemoveGameplayEffect(GameplayEffect effect, IEffectOrigin origin) => EffectSystem.RemoveGameplayEffect(effect, origin);
+
         public bool RemoveGameplayEffect(Tag identifier) => EffectSystem.RemoveGameplayEffect(identifier);
 
         #endregion

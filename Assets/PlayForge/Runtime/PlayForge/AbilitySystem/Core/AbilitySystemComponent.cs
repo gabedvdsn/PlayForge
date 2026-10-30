@@ -232,6 +232,7 @@ namespace FarEmerald.PlayForge
 
         public bool CanGiveAbility(Ability ability)
         {
+            if (ability == null) return false;
             if (!Enabled) return false;
             if (!allowDuplicateAbilities && HasAbility(ability)) return false;
             if (AbilityCount >= maxAbilitiesOperation.Evaluate(IAttributeImpactCarrier.GenerateLevelerDerivation(Self, Self.GetLevel()))) return false;
