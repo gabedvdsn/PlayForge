@@ -83,15 +83,25 @@ namespace FarEmerald.PlayForge
         public int CountMatches(List<Tag> appliedTags)
         {
             if (appliedTags == null || appliedTags.Count == 0) return 0;
-            
-            return MatchMode switch
+
+            // Plain loops: this runs on every requirement check, and LINQ here allocated a closure and
+            // an enumerator each time (PF-007)
+            int count = 0;
+            switch (MatchMode)
             {
-                ETagMatchMode.Exact => appliedTags.Count(t => t.Equals(Tag)),
-                ETagMatchMode.IncludeChildren => appliedTags.Count(t => t.MatchesOrIsChildOf(Tag)),
-                ETagMatchMode.IncludeParents => appliedTags.Count(t => t.MatchesOrIsParentOf(Tag)),
-                ETagMatchMode.SameRoot => CountSameRoot(appliedTags),
-                _ => 0
-            };
+                case ETagMatchMode.Exact:
+                    for (int i = 0; i < appliedTags.Count; i++) if (appliedTags[i].Equals(Tag)) count++;
+                    break;
+                case ETagMatchMode.IncludeChildren:
+                    for (int i = 0; i < appliedTags.Count; i++) if (appliedTags[i].MatchesOrIsChildOf(Tag)) count++;
+                    break;
+                case ETagMatchMode.IncludeParents:
+                    for (int i = 0; i < appliedTags.Count; i++) if (appliedTags[i].MatchesOrIsParentOf(Tag)) count++;
+                    break;
+                case ETagMatchMode.SameRoot:
+                    return CountSameRoot(appliedTags);
+            }
+            return count;
         }
         
         /// <summary>
@@ -119,6 +129,7 @@ namespace FarEmerald.PlayForge
         public int CountMatches(IEnumerable<Tag> appliedTags)
         {
             if (appliedTags == null) return 0;
+            if (appliedTags is List<Tag> list) return CountMatches(list);
             
             return MatchMode switch
             {

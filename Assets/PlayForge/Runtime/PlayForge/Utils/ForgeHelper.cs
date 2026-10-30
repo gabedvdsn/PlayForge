@@ -302,7 +302,8 @@ namespace FarEmerald.PlayForge
             IEnumerable<Tag> avoid,
             ETagMatchMode matchMode = ETagMatchMode.Exact)
         {
-            var tagList = tags?.ToList() ?? new List<Tag>();
+            // Applied tags already come as a list (the tag cache's own); only other sequences are copied (PF-007)
+            var tagList = tags as List<Tag> ?? tags?.ToList() ?? NoTags;
             
             // Check required tags
             if (required != null)
@@ -394,14 +395,22 @@ namespace FarEmerald.PlayForge
             IEnumerable<TagQuery> requiredQueries,
             IEnumerable<TagQuery> avoidQueries)
         {
-            var tags = appliedTags ?? new List<Tag>();
+            var tags = appliedTags ?? NoTags;
             
             // All required queries must pass
             if (!ValidateAllQueries(requiredQueries, tags))
                 return false;
             
-            // Avoid queries are inverted - they must all FAIL
-            if (avoidQueries != null)
+            // Avoid queries are inverted - they must all FAIL. A list is walked by index (PF-007)
+            if (avoidQueries is List<TagQuery> avoidList)
+            {
+                for (int i = 0; i < avoidList.Count; i++)
+                {
+                    if (avoidList[i].Validate(tags))
+                        return false;
+                }
+            }
+            else if (avoidQueries != null)
             {
                 foreach (var query in avoidQueries)
                 {
@@ -421,12 +430,15 @@ namespace FarEmerald.PlayForge
             IEnumerable<TagQuery> requiredQueries,
             IEnumerable<TagQuery> avoidQueries)
         {
-            return ValidateAvoidRequireQueries(appliedTags?.ToList(), requiredQueries, avoidQueries);
+            return ValidateAvoidRequireQueries(appliedTags as List<Tag> ?? appliedTags?.ToList(), requiredQueries, avoidQueries);
         }
         
         #endregion
         
         #region Tag Query Validation
+
+        /// <summary>Stands in for a missing tag list. Read only.</summary>
+        private static readonly List<Tag> NoTags = new();
         
         /// <summary>
         /// Validates a single TagQuery against a tag collection.
@@ -434,7 +446,7 @@ namespace FarEmerald.PlayForge
         public static bool ValidateTagQuery(TagQuery query, IEnumerable<Tag> tags)
         {
             if (query == null) return true;
-            return query.Validate(tags?.ToList() ?? new List<Tag>());
+            return query.Validate(tags as List<Tag> ?? tags?.ToList() ?? NoTags);
         }
         
         /// <summary>
@@ -453,7 +465,20 @@ namespace FarEmerald.PlayForge
         {
             if (queries == null) return true;
             
-            var tagList = tags?.ToList() ?? new List<Tag>();
+            // Applied tags already come as a list (the tag cache's own), and queries as a list: neither is
+            // copied, and lists are walked by index, since a foreach over the interface boxes an
+            // enumerator on every requirement check (PF-007)
+            var tagList = tags as List<Tag> ?? tags?.ToList() ?? NoTags;
+
+            if (queries is List<TagQuery> list)
+            {
+                for (int i = 0; i < list.Count; i++)
+                {
+                    if (!list[i].Validate(tagList))
+                        return false;
+                }
+                return true;
+            }
             
             foreach (var query in queries)
             {

@@ -15,6 +15,11 @@ namespace FarEmerald.PlayForge
         private readonly ITagHandler _handler;
         private readonly List<AbstractTagWorker> _tagWorkers;
         private readonly Dictionary<Tag, int> _tagWeights;
+
+        // The applied tags as a list, rebuilt only when a tag is added or removed: requirement checks
+        // ask for it every time an effect is applied, removed or re-validated (PF-007)
+        private readonly List<Tag> _appliedTags = new();
+        private bool _appliedTagsDirty = true;
         
         // Active worker tracking (no instances needed)
         private readonly HashSet<AbstractTagWorker> _activeWorkers;
@@ -57,7 +62,20 @@ namespace FarEmerald.PlayForge
         /// <summary>
         /// Returns all currently applied tags.
         /// </summary>
-        public List<Tag> GetAppliedTags() => _tagWeights.Keys.ToList();
+        /// <summary>
+        /// The tags applied now. The list belongs to the cache and is reused until a tag is added or
+        /// removed: read it, don't change it, and copy it to keep it across tag changes.
+        /// </summary>
+        public List<Tag> GetAppliedTags()
+        {
+            if (_appliedTagsDirty)
+            {
+                _appliedTags.Clear();
+                _appliedTags.AddRange(_tagWeights.Keys);
+                _appliedTagsDirty = false;
+            }
+            return _appliedTags;
+        }
         
         /// <summary>
         /// Gets the weight (stack count) of a specific tag. Returns -1 if tag not present.
@@ -216,6 +234,7 @@ namespace FarEmerald.PlayForge
             else
             {
                 _tagWeights[tag] = 1;
+                _appliedTagsDirty = true;
             }
         }
         
@@ -238,7 +257,10 @@ namespace FarEmerald.PlayForge
             
             _tagWeights[tag]--;
             if (_tagWeights[tag] <= 0)
+            {
                 _tagWeights.Remove(tag);
+                _appliedTagsDirty = true;
+            }
         }
         
         /// <summary>
@@ -256,7 +278,7 @@ namespace FarEmerald.PlayForge
         /// </summary>
         public void RemoveTagCompletely(Tag tag)
         {
-            _tagWeights.Remove(tag);
+            if (_tagWeights.Remove(tag)) _appliedTagsDirty = true;
         }
         
         /// <summary>
@@ -269,6 +291,7 @@ namespace FarEmerald.PlayForge
             {
                 _tagWeights.Remove(tag);
             }
+            if (toRemove.Count > 0) _appliedTagsDirty = true;
             return toRemove.Count;
         }
         
@@ -405,6 +428,7 @@ namespace FarEmerald.PlayForge
         public void ResetWeights()
         {
             _tagWeights.Clear();
+            _appliedTagsDirty = true;
         }
 
         public void ResetCache()
@@ -418,6 +442,7 @@ namespace FarEmerald.PlayForge
             _activeWorkers.Clear();
             _tickCounters.Clear();
             _tagWeights.Clear();
+            _appliedTagsDirty = true;
         }
         
         // ═══════════════════════════════════════════════════════════════════════════

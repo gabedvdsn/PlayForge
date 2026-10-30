@@ -68,6 +68,7 @@ namespace FarEmerald.PlayForge.Tests
             RunScenario(nameof(S15_GAS_02_PreChangeWorkers_AdjustTheCommittedDelta), S15_GAS_02_PreChangeWorkers_AdjustTheCommittedDelta);
             RunScenario(nameof(S16_GAS_12_RawDelta_MovesBaseAndCurrentTogether), S16_GAS_12_RawDelta_MovesBaseAndCurrentTogether);
             RunScenario(nameof(S17_GAS_P1_IdleFrame_AllocatesNothing), S17_GAS_P1_IdleFrame_AllocatesNothing);
+            RunScenario(nameof(S18_GAS_P2_TagChecks_AllocateNothing), S18_GAS_P2_TagChecks_AllocateNothing);
             RunScenario(nameof(S23_TS_01_Resume_LeavesTimeScaleAlone), S23_TS_01_Resume_LeavesTimeScaleAlone);
             RunScenario(nameof(S24_GAS_03_GiveItem_LandsOnTheShelf), S24_GAS_03_GiveItem_LandsOnTheShelf);
 
@@ -922,6 +923,57 @@ namespace FarEmerald.PlayForge.Tests
             }
 
             AssertTrue($"an idle end of frame allocates nothing (measured {bytes / (float)Frames:0.#} bytes per frame)", bytes <= 0);
+        }
+
+        /// <summary>
+        /// Compiling granted tags and checking tag requirements allocate nothing, while the applied tags
+        /// they read still follow tags as they come and go. Both run several times for every effect
+        /// applied or removed, and they used to allocate about 15 KB per effect between them: the
+        /// applied tags were copied into a new list for every check (twice over), the granted tags were
+        /// gathered through iterators, and tag queries counted with LINQ (PlayForge log PF-007).
+        /// </summary>
+        private static void S18_GAS_P2_TagChecks_AllocateNothing()
+        {
+            var health = MakeAttribute("Health");
+            var gas = MakeGAS(MakeSet(MakeElement(health, 100, 100, EAttributeOverflowPolicy.ZeroToBase)));
+
+            var marked = Tag.Generate(Unique("Test.Status.Marked"));
+            var parent = Tag.Generate(Unique("Test.Status"));
+            var markFx = MakeEffect("Mark", new EffectConfig { Target = null, GrantedTags = new List<Tag> { marked } });
+            AssertTrue("apply the marking effect", Apply(gas, markFx));
+            AssertTrue("the applied tags include a granted tag", gas.GetAppliedTags().Contains(marked));
+
+            var required = new List<TagQuery> { TagQuery.HasTag(marked) };
+            var avoid = new List<TagQuery> { TagQuery.HasTag(parent) };
+            AssertTrue("requirements read the applied tags", ForgeHelper.ValidateAvoidRequireQueries(gas.GetAppliedTags(), required, avoid));
+
+            const int Checks = 2000;
+            long bytes = long.MaxValue;
+            for (int attempt = 0; attempt < 3 && bytes > 0; attempt++)
+            {
+                for (int i = 0; i < 20; i++) Check();
+
+                int collections = System.GC.CollectionCount(0);
+                long before = UnityEngine.Profiling.Profiler.GetMonoUsedSizeLong();
+                for (int i = 0; i < Checks; i++) Check();
+                long after = UnityEngine.Profiling.Profiler.GetMonoUsedSizeLong();
+
+                if (System.GC.CollectionCount(0) == collections) bytes = after - before;
+            }
+
+            AssertTrue($"compiling and checking tags allocates nothing (measured {bytes / (float)Checks:0.#} bytes per round)", bytes <= 0);
+
+            // The cached list follows the tags: gone once the effect that granted it is
+            Remove(gas, markFx);
+            AssertTrue("the applied tags drop a removed tag", !gas.GetAppliedTags().Contains(marked));
+            AssertTrue("requirements see it gone", !ForgeHelper.ValidateAvoidRequireQueries(gas.GetAppliedTags(), required, avoid));
+
+            void Check()
+            {
+                gas.CompileGrantedTags();
+                ForgeHelper.ValidateAvoidRequireQueries(gas.GetAppliedTags(), required, avoid);
+                ForgeHelper.ValidateAllQueries(required, (IEnumerable<Tag>)gas.GetAppliedTags());
+            }
         }
 
         /// <summary>

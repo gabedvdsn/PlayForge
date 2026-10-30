@@ -30,11 +30,37 @@ namespace FarEmerald.PlayForge
         
         public AbstractMonoProcessInstantiator CustomInstantiator;
 
-        public string Path { get; protected set; }
+        // The path's parts, joined only when the path is read: it's a debugging breadcrumb, read when a
+        // sequence fails, and joining on every append cost about 1 KB per ability activation (PF-007)
+        private List<string> _pathParts;
+        private string _path;
+
+        public string Path
+        {
+            get
+            {
+                if (_path == null && _pathParts != null) _path = string.Join(pathSeparator.ToString(), _pathParts);
+                return _path;
+            }
+            protected set
+            {
+                _path = value;
+                _pathParts = null;
+            }
+        }
+
         public void AppendPath(string r)
         {
-            if (!string.IsNullOrEmpty(Path)) Path += pathSeparator;
-            Path += r;
+            if (string.IsNullOrEmpty(r)) return;
+
+            if (_pathParts == null)
+            {
+                _pathParts = new List<string>(4);
+                if (!string.IsNullOrEmpty(_path)) _pathParts.Add(_path);
+            }
+
+            _pathParts.Add(r);
+            _path = null;
         }
         
         protected ProcessDataPacket()

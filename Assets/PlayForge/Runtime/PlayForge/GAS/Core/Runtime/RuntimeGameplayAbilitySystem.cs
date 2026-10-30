@@ -340,34 +340,11 @@ namespace FarEmerald.PlayForge
         public void CompileGrantedTags()
         {
             TagCache.ResetWeights();
+            GrantedTagCompiler.Compile(TagCache, EntityData.AttributeSet, EffectSystem, AbilitySystem, ItemSystem);
 
-            if (EntityData.AttributeSet)
-            {
-                foreach (var t in EntityData.AttributeSet.GetGrantedTags()) TagCache.AddTag(t);
-            }
-
-            foreach (var effect in EffectSystem.Shelf)
-            {
-                TagCache.AddTag(effect.Spec.Base.Tags.AssetTag);
-                foreach (var t in effect.GetGrantedTags())
-                {
-                    TagCache.AddTag(t);
-                }
-            }
-
-            foreach (var ability in AbilitySystem.GetAbilityContainers())
-            {
-                TagCache.AddTag(ability.Spec.Base.Tags.AssetTag);
-                foreach (var t in ability.GetGrantedTags()) TagCache.AddTag(t);
-            }
-
-            foreach (var item in ItemSystem.GetItemContainers())
-            {
-                TagCache.AddTag(item.Spec.Base.Tags.AssetTag);
-                foreach (var t in item.GetGrantedTags()) TagCache.AddTag(t);
-            }
-
-            foreach (var t in EntityData.GetGrantedTags()) TagCache.AddTag(t);
+            // The identity's own, as RuntimeEntityIdentity.GetGrantedTags yields them
+            TagCache.AddTag(EntityData.AssetTag);
+            GrantedTagCompiler.AddAll(TagCache, EntityData.GrantedTags);
         }
         
         // ═══════════════════════════════════════════════════════════════════════════

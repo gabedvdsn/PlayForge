@@ -391,7 +391,20 @@ namespace FarEmerald.PlayForge
         /// <summary>
         /// Returns true if any stage has conditions that need checking.
         /// </summary>
-        public bool HasAnyStageConditions => Stages?.Any(StageHasConditionsRecursive) ?? false;
+        public bool HasAnyStageConditions
+        {
+            get
+            {
+                // A loop, not Any(method group): this is read for every sequence run, and the delegate
+                // and enumerator allocated each time (PF-007)
+                if (Stages == null) return false;
+                for (int i = 0; i < Stages.Count; i++)
+                {
+                    if (StageHasConditionsRecursive(Stages[i])) return true;
+                }
+                return false;
+            }
+        }
         
         /// <summary>
         /// Returns true if this sequence or any stage has conditions.

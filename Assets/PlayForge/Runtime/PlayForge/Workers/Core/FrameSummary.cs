@@ -81,6 +81,22 @@ namespace FarEmerald.PlayForge
         /// Record an impact RECEIVED by this GAS (this GAS is the target).
         /// Keyed by the ISource that produced the impact.
         /// </summary>
+        // Lists handed out for the by-attribute and by-source groupings, kept across frames so a commit
+        // doesn't allocate fresh ones every frame (PF-007)
+        private readonly Stack<List<ImpactData>> _spareLists = new();
+
+        private List<ImpactData> RentList() => _spareLists.Count > 0 ? _spareLists.Pop() : new List<ImpactData>();
+
+        private void ReturnLists<TKey>(Dictionary<TKey, List<ImpactData>> groups)
+        {
+            foreach (var list in groups.Values)
+            {
+                list.Clear();
+                _spareLists.Push(list);
+            }
+            groups.Clear();
+        }
+
         public void RecordImpactReceived(ImpactData impact)
         {
             Impacts.Add(impact);
@@ -88,7 +104,7 @@ namespace FarEmerald.PlayForge
 
             if (!ImpactsByAttribute.TryGetValue(impact.Attribute, out var byAttr))
             {
-                byAttr = new List<ImpactData>();
+                byAttr = RentList();
                 ImpactsByAttribute[impact.Attribute] = byAttr;
             }
             byAttr.Add(impact);
@@ -98,7 +114,7 @@ namespace FarEmerald.PlayForge
             {
                 if (!ImpactsReceivedBySource.TryGetValue(source, out var list))
                 {
-                    list = new List<ImpactData>();
+                    list = RentList();
                     ImpactsReceivedBySource[source] = list;
                 }
                 list.Add(impact);
@@ -116,7 +132,7 @@ namespace FarEmerald.PlayForge
 
             if (!ImpactsByAttribute.TryGetValue(impact.Attribute, out var byAttr))
             {
-                byAttr = new List<ImpactData>();
+                byAttr = RentList();
                 ImpactsByAttribute[impact.Attribute] = byAttr;
             }
             byAttr.Add(impact);
@@ -125,7 +141,7 @@ namespace FarEmerald.PlayForge
             {
                 if (!ImpactsDealtByTarget.TryGetValue(impact.Target, out var list))
                 {
-                    list = new List<ImpactData>();
+                    list = RentList();
                     ImpactsDealtByTarget[impact.Target] = list;
                 }
                 list.Add(impact);
@@ -303,9 +319,9 @@ namespace FarEmerald.PlayForge
             Impacts.Clear();
             ImpactsDealt.Clear();
             ImpactsReceived.Clear();
-            ImpactsByAttribute.Clear();
-            ImpactsDealtByTarget.Clear();
-            ImpactsReceivedBySource.Clear();
+            ReturnLists(ImpactsByAttribute);
+            ReturnLists(ImpactsDealtByTarget);
+            ReturnLists(ImpactsReceivedBySource);
             InvalidatedActions.Clear();
             ActivatedTagWorkers.Clear();
             ResolvedTagWorkers.Clear();

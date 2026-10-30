@@ -175,6 +175,9 @@ namespace FarEmerald.PlayForge
         }
 
         public List<AbilitySpecContainer> GetAbilityContainers() => AbilityCache.Values.ToList();
+
+        /// <summary>The granted abilities, without copying them into a list as <see cref="GetAbilityContainers"/> does.</summary>
+        public Dictionary<int, AbilitySpecContainer>.ValueCollection Containers => AbilityCache.Values;
         
         public bool TryGetAbilityContainer(int index, out AbilitySpecContainer container)
         {
