@@ -342,8 +342,9 @@ namespace FarEmerald.PlayForge
                     continue;
                 }
         
-                var data = ProcessDataPacket.SceneRoot();
-                Register(process, data, out _);
+                // Not SceneRoot's packet, which reparents what it's handed: a scene's processes stay where the
+                // scene put them (PC-20)
+                Register(process, ProcessDataPacket.Default(), out _);
             }
     
             if (OutputLogs) Debug.Log($"[ProcessControl] {_hierarchy.GetDebugInfo()}");
