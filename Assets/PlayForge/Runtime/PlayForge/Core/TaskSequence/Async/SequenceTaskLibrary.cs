@@ -23,6 +23,8 @@ namespace FarEmerald.PlayForge
     ///   - Snap to the final value after completion to avoid float drift
     ///   - Respect CancellationToken for interrupt/skip/timeout support
     ///   - Handle zero/negative duration by snapping immediately
+    ///   - Hold while their sequence is paused, given the token the task was handed. ArcForce can't: physics
+    ///     moves the body whatever the sequence is doing
     /// </summary>
     public static class SequenceTaskLibrary
     {
@@ -137,7 +139,7 @@ namespace FarEmerald.PlayForge
             {
                 await UniTask.Yield(PlayerLoopTiming.Update, token);
                 if (!target || !mover) break;
-                mover.position = Vector3.MoveTowards(mover.position, target.position, speed * Time.deltaTime);
+                mover.position = Vector3.MoveTowards(mover.position, target.position, speed * DeltaTime(token));
             }
         }
 
@@ -162,7 +164,7 @@ namespace FarEmerald.PlayForge
                 float ratio = initialDistance > 0f ? Mathf.Clamp01(dist / initialDistance) : 0f;
                 float parabola = 4f * arcHeight * ratio * (1f - ratio);
 
-                Vector3 flatTarget = Vector3.MoveTowards(mover.position, dest, speed * Time.deltaTime);
+                Vector3 flatTarget = Vector3.MoveTowards(mover.position, dest, speed * DeltaTime(token));
                 flatTarget.y += parabola;
                 mover.position = flatTarget;
             }
@@ -180,7 +182,7 @@ namespace FarEmerald.PlayForge
             {
                 await UniTask.Yield(PlayerLoopTiming.Update, token);
                 if (!center || !mover) break;
-                angle += degreesPerSecond * Time.deltaTime;
+                angle += degreesPerSecond * DeltaTime(token);
                 Vector3 offset = Quaternion.AngleAxis(angle, axis) * (Vector3.forward * radius);
                 mover.position = center.position + offset;
             }
@@ -209,7 +211,7 @@ namespace FarEmerald.PlayForge
                 {
                     await UniTask.Yield(PlayerLoopTiming.Update, token);
                     if (!mover) break;
-                    mover.position = Vector3.MoveTowards(mover.position, wp, speed * Time.deltaTime);
+                    mover.position = Vector3.MoveTowards(mover.position, wp, speed * DeltaTime(token));
                 }
 
                 if (!mover) break;
@@ -287,7 +289,7 @@ namespace FarEmerald.PlayForge
                 var dir = (target.position - mover.position).normalized;
                 if (dir == Vector3.zero) continue;
                 var desired = Quaternion.LookRotation(dir);
-                mover.rotation = Quaternion.RotateTowards(mover.rotation, desired, degreesPerSecond * Time.deltaTime);
+                mover.rotation = Quaternion.RotateTowards(mover.rotation, desired, degreesPerSecond * DeltaTime(token));
             }
         }
 
@@ -437,7 +439,7 @@ namespace FarEmerald.PlayForge
             CancellationToken token)
         {
             source.PlayOneShot(clip, volume);
-            await UniTask.Delay(TimeSpan.FromSeconds(clip.length), cancellationToken: token);
+            await Delay(clip.length, token);
         }
         
         /// <summary>
@@ -702,7 +704,7 @@ namespace FarEmerald.PlayForge
                 float delay = charDelay;
                 if (c is '.' or '!' or '?' or ',') delay *= punctuationMultiplier;
                 
-                await UniTask.Delay(TimeSpan.FromSeconds(delay), cancellationToken: token);
+                await Delay(delay, token);
             }
         }
         
@@ -742,7 +744,7 @@ namespace FarEmerald.PlayForge
                 while (elapsed < delay)
                 {
                     await UniTask.Yield(PlayerLoopTiming.Update, token);
-                    elapsed += Time.deltaTime;
+                    elapsed += DeltaTime(token);
             
                     if (skipCondition())
                     {
@@ -840,6 +842,36 @@ namespace FarEmerald.PlayForge
         // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
         
         /// <summary>
+        /// True while the sequence running the task that holds this token is paused.
+        /// </summary>
+        public static bool IsPaused(CancellationToken token)
+        {
+            return TaskSequenceRuntime.IsPausedRun(token);
+        }
+
+        /// <summary>
+        /// This frame's delta time, which is 0 while the task's sequence is paused. A task that uses this rather
+        /// than Time.deltaTime holds with its sequence.
+        /// </summary>
+        public static float DeltaTime(CancellationToken token)
+        {
+            return IsPaused(token) ? 0f : Time.deltaTime;
+        }
+
+        /// <summary>
+        /// Waits as UniTask.Delay does, without counting a frame the task's sequence is paused for.
+        /// </summary>
+        public static async UniTask Delay(float seconds, CancellationToken token)
+        {
+            float elapsed = 0f;
+            do
+            {
+                await UniTask.Yield(PlayerLoopTiming.Update, token);
+                elapsed += DeltaTime(token);
+            } while (elapsed < seconds);
+        }
+
+        /// <summary>
         /// Yields for one frame. Shorthand for UniTask.Yield().
         /// </summary>
         public static async UniTask Yield(CancellationToken token,
@@ -854,7 +886,11 @@ namespace FarEmerald.PlayForge
         public static async UniTask WaitFrames(int frameCount, CancellationToken token,
             PlayerLoopTiming timing = PlayerLoopTiming.Update)
         {
-            await UniTask.DelayFrame(frameCount, timing, token);
+            for (int frames = 0; frames < frameCount;)
+            {
+                await UniTask.Yield(timing, token);
+                if (!IsPaused(token)) frames++;
+            }
         }
         
         // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
@@ -877,7 +913,7 @@ namespace FarEmerald.PlayForge
             while (elapsed < duration)
             {
                 await UniTask.Yield(PlayerLoopTiming.Update, token);
-                elapsed += Time.deltaTime;
+                elapsed += DeltaTime(token);
                 
                 float t = Mathf.Clamp01(elapsed / duration);
                 float progress = curve?.Evaluate(t) ?? t;

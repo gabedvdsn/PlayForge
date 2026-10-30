@@ -418,7 +418,7 @@ namespace FarEmerald.PlayForge
                 // Optional delay between repetitions
                 if (DelayBetweenRepeats.HasValue && DelayBetweenRepeats.Value > 0)
                 {
-                    await UniTask.Delay(TimeSpan.FromSeconds(DelayBetweenRepeats.Value), cancellationToken: token);
+                    await runtime.Delay(DelayBetweenRepeats.Value, token);
                 }
                 
                 // Recreate task units for next iteration

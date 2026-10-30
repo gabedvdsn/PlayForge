@@ -27,10 +27,37 @@ Every process has a lifecycle that determines how it starts, runs, and finishes:
 ProcessControl.Instance.Register(myProcess, data, out ProcessRelay relay);
 
 // Control via ProcessRelay
-relay.Pause();       // Move to Waiting (removes from update loop)
+relay.Pause();       // Move to Waiting at once (removes from update loop)
 relay.Unpause();     // Move to Running (re-adds to update loop)
 relay.Terminate();   // Graceful termination and cleanup
 ```
+
+### Pausing
+
+A pause holds a process in place. It takes effect at once, and what happens to the run depends on the process:
+
+- A process that can hold its run says so by returning true from `TryHandlePause`. Its run stays alive, watches `relay.IsWaiting`, and carries on after `TryHandleResume`.
+- Any other process has its run cancelled, and a new run starts on `Unpause`.
+
+Setting ProcessControl itself to `Waiting` or `ClosedWaiting` pauses everything that's running the same way, and leaving those states sends back exactly what they stopped. A process paused on its own stays paused, and `Unpause` is refused until ProcessControl is back. A requested `Terminate` outranks a pause.
+
+A sequence holds its run. No stage starts or ends, timeouts and max durations stop counting, and conditions aren't checked. `Delay` and the `SequenceTaskLibrary` helpers stop too, given the token the task was handed.
+
+A task's own code can't be stopped from outside, so it should keep time through the library, or watch `data.IsPaused`:
+
+```csharp
+.Task(async (data, token) =>
+{
+    float elapsed = 0f;
+    while (elapsed < 2f)
+    {
+        await UniTask.Yield(PlayerLoopTiming.Update, token);
+        elapsed += SequenceTaskLibrary.DeltaTime(token);   // 0 while the sequence is paused
+    }
+})
+```
+
+A task that doesn't finishes when it finishes, and its stage waits for the resume. `ArcForce` can't hold, because physics moves the body whatever the sequence is doing.
 
 ### When to Use Synchronous vs Async
 

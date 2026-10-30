@@ -21,7 +21,7 @@ namespace FarEmerald.PlayForge
             foreach (GameplayEffect effect in Effects)
             {
                 target.ApplyCarrier(target.GenerateEffectSpec(data.EffectOrigin, effect));
-                await UniTask.Delay(DelayBetweenApplicationMs, cancellationToken: token);
+                await SequenceTaskLibrary.Delay(DelayBetweenApplicationMs / 1000f, token);
             }
         }
         public override bool IsCriticalSection => false;

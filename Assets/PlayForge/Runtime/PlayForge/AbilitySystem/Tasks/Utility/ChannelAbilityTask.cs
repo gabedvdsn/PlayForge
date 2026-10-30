@@ -25,14 +25,15 @@ namespace FarEmerald.PlayForge
             float elapsedDuration = 0f;
 
             await ProcessTaskUtil.DoWhileAsync(
-                body: async () =>
+                body: () =>
                 {
-                    elapsedDuration += Time.deltaTime;
+                    elapsedDuration += SequenceTaskLibrary.DeltaTime(token);
                     //SliderManager.Instance.SetValue(elapsedDuration / ChannelDuration);
-                    await UniTask.Yield(Timing, token);
+                    return UniTask.CompletedTask;
                 },
                 condition: () => elapsedDuration < ChannelDuration,
-                token: token
+                token: token,
+                timing: Timing
             );
             /*while (elapsedDuration < ChannelDuration)
             {

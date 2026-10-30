@@ -207,6 +207,7 @@ namespace FarEmerald.PlayForge
         private TaskSequence _currentSequence;
         private CancellationTokenSource _chainCts;
         private bool _interrupted;
+        private bool _paused;
         private bool _repeats;
         private bool _enableLogging;
         private EProcessStepTiming _conditionStepTiming = EProcessStepTiming.Update;
@@ -368,6 +369,7 @@ namespace FarEmerald.PlayForge
             _currentIndex = -1;
             _currentSequence = null;
             _interrupted = false;
+            _paused = false;
             IsRunning = true;
             
             // Create chain-level CTS
@@ -389,6 +391,8 @@ namespace FarEmerald.PlayForge
                     _currentIndex = i;
                     _currentSequence = _sequences[i];
                     
+                    if (_paused) await UniTask.WaitWhile(() => _paused, cancellationToken: chainToken);
+
                     // Check if chain was interrupted before starting sequence
                     if (chainToken.IsCancellationRequested || _interrupted)
                     {
@@ -553,6 +557,24 @@ namespace FarEmerald.PlayForge
             return _currentSequence?.Inject(injection) ?? false;
         }
         
+        /// <summary>
+        /// Holds the chain where it is: the running sequence holds, and the next one doesn't start.
+        /// </summary>
+        public void Pause()
+        {
+            _paused = true;
+            _currentSequence?.Runtime?.Pause();
+        }
+
+        /// <summary>
+        /// Carries on from where <see cref="Pause"/> stopped.
+        /// </summary>
+        public void Resume()
+        {
+            _paused = false;
+            _currentSequence?.Runtime?.Resume();
+        }
+
         /// <summary>
         /// Interrupts the entire chain (cancels current and all remaining sequences).
         /// </summary>

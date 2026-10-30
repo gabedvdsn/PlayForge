@@ -62,6 +62,9 @@ namespace FarEmerald.PlayForge
         
         /// <summary>True if the sequence is currently inside a critical section.</summary>
         public bool IsCriticalSection => Runtime?.IsCriticalSection ?? false;
+
+        /// <summary>True while the sequence is paused. A task's own code can watch this to hold with it.</summary>
+        public bool IsPaused => Runtime?.IsPaused ?? false;
         
         // ═══════════════════════════════════════════════════════════════════════════
         // SEQUENCE CONTROL

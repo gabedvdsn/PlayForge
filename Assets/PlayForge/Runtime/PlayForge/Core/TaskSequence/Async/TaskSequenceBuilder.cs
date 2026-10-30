@@ -302,7 +302,7 @@ namespace FarEmerald.PlayForge
             var stage = new SequenceStage();
             stage.Tasks.Add(new DelegateSequenceTask(async token =>
             {
-                await UniTask.Delay(TimeSpan.FromSeconds(seconds), cancellationToken: token);
+                await SequenceTaskLibrary.Delay(seconds, token);
             }));
             _stages.Add(stage);
             return this;
@@ -794,7 +794,7 @@ namespace FarEmerald.PlayForge
         {
             _stage.Tasks.Add(new DelegateSequenceTask(async token =>
             {
-                await UniTask.Delay(TimeSpan.FromSeconds(seconds), cancellationToken: token);
+                await SequenceTaskLibrary.Delay(seconds, token);
             }));
             return this;
         }

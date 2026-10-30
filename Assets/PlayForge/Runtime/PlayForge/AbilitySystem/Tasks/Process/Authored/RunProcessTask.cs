@@ -33,6 +33,8 @@ namespace FarEmerald.PlayForge
             await ProcessTaskUtil.DoWhileAsync(
                 body: () =>
                 {
+                    if (SequenceTaskLibrary.IsPaused(token)) return UniTask.CompletedTask;
+
                     elapsedDuration += UseUnscaledDeltaTime ? Time.unscaledDeltaTime : Time.deltaTime;
                     return UniTask.CompletedTask;
                 },

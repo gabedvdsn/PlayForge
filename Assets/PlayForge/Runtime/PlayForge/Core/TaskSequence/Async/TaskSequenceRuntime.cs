@@ -41,12 +41,19 @@ namespace FarEmerald.PlayForge
         /// <summary>Time elapsed since sequence started.</summary>
         public float ElapsedTime { get; private set; }
 
+        /// <summary>True while this run is paused. See <see cref="Pause"/>.</summary>
+        public bool IsPaused { get; private set; }
+
         /// <summary>
         /// True if the sequence is currently inside a critical section.
         /// When true, injections are restricted to only those allowed by the critical policy.
         /// </summary>
         public bool IsCriticalSection => (Definition.Metadata?.IsCritical ?? false) || _criticalFlagLocks > 0;
         
+        // The run each stage's token belongs to. Code inside a task often has only that token, as the library's
+        // helpers do, and it's enough to ask whether the run is paused
+        private static readonly Dictionary<CancellationToken, TaskSequenceRuntime> RunsByToken = new();
+
         // Cancellation management
         private CancellationTokenSource _sequenceCts;
         private readonly Dictionary<int, CancellationTokenSource> _stageSources = new();
@@ -93,6 +100,52 @@ namespace FarEmerald.PlayForge
             Definition = definition ?? throw new ArgumentNullException(nameof(definition));
         }
         
+        // ═══════════════════════════════════════════════════════════════════════════
+        // PAUSE
+        // ═══════════════════════════════════════════════════════════════════════════
+
+        /// <summary>
+        /// Holds this run where it is: no stage starts or ends, and timeouts, max durations and delays stop
+        /// counting. A task's own code can't be stopped from out here, so it holds if it keeps its time through
+        /// <see cref="SequenceTaskLibrary"/>. If it doesn't, it finishes when it finishes, and its stage waits.
+        /// </summary>
+        public void Pause()
+        {
+            IsPaused = true;
+        }
+
+        /// <summary>Carries on from where <see cref="Pause"/> stopped.</summary>
+        public void Resume()
+        {
+            IsPaused = false;
+        }
+
+        /// <summary>True if the token is one a stage gave its tasks, and that stage's run is paused.</summary>
+        public static bool IsPausedRun(CancellationToken token)
+        {
+            lock (RunsByToken)
+            {
+                return RunsByToken.TryGetValue(token, out var run) && run.IsPaused;
+            }
+        }
+
+        /// <summary>Waits for the given time of this run, which a paused frame isn't.</summary>
+        public async UniTask Delay(float seconds, CancellationToken token)
+        {
+            float elapsed = 0f;
+            do
+            {
+                await UniTask.Yield(PlayerLoopTiming.Update, token);
+                if (!IsPaused) elapsed += Time.deltaTime;
+            } while (elapsed < seconds);
+        }
+
+        // Not awaited unless it has to be, so that a run that isn't paused doesn't lose a frame here
+        private UniTask HoldWhilePaused(CancellationToken token)
+        {
+            return IsPaused ? UniTask.WaitWhile(() => IsPaused, cancellationToken: token) : UniTask.CompletedTask;
+        }
+
         // ═══════════════════════════════════════════════════════════════════════════
         // HELPERS
         // ═══════════════════════════════════════════════════════════════════════════
@@ -258,6 +311,8 @@ namespace FarEmerald.PlayForge
         {
             while (true)
             {
+                await HoldWhilePaused(token);
+
                 StageIndex++;
                 
                 // Handle jump requests
@@ -507,19 +562,37 @@ namespace FarEmerald.PlayForge
             // Create policy CTS FIRST so tasks use this token
             using var policyCts = CancellationTokenSource.CreateLinkedTokenSource(token);
             var policyToken = policyCts.Token;
-            
-            // Create execution units using the policy token
-            var units = stage.CreateExecutionUnits(this, stage, data, policyToken);
-            
-            if (units.Length == 0)
+
+            lock (RunsByToken)
             {
-                return;
+                RunsByToken[policyToken] = this;
             }
-            
-            // Use stage policy to determine completion
-            var policy = stage.Policy ?? WhenAllStagePolicy.Instance;
-            
-            await policy.AwaitCompletion(this, stage, units, policyCts);
+
+            try
+            {
+                // Create execution units using the policy token
+                var units = stage.CreateExecutionUnits(this, stage, data, policyToken);
+
+                if (units.Length == 0)
+                {
+                    return;
+                }
+
+                // Use stage policy to determine completion
+                var policy = stage.Policy ?? WhenAllStagePolicy.Instance;
+
+                await policy.AwaitCompletion(this, stage, units, policyCts);
+
+                // A task that doesn't hold can finish during a pause, but its stage ends with the pause (TS-Y)
+                await HoldWhilePaused(token);
+            }
+            finally
+            {
+                lock (RunsByToken)
+                {
+                    RunsByToken.Remove(policyToken);
+                }
+            }
         }
         
         // ═══════════════════════════════════════════════════════════════════════════
@@ -715,12 +788,15 @@ namespace FarEmerald.PlayForge
         {
             try
             {
-                var startTime = Time.time;
+                float elapsed = 0f;
                 while (true)
                 {
                     await UniTask.Yield(PlayerLoopTiming.Update, token);
-                    ElapsedTime = Time.time - startTime;
-                    
+                    if (IsPaused) continue;
+
+                    elapsed += Time.deltaTime;
+                    ElapsedTime = elapsed;
+
                     if (ElapsedTime >= Definition.MaxDurationSeconds.Value)
                     {
                         // Invoke callback before injection
@@ -747,12 +823,15 @@ namespace FarEmerald.PlayForge
         {
             try
             {
-                var startTime = Time.time;
+                float elapsed = 0f;
                 while (true)
                 {
                     await UniTask.Yield(PlayerLoopTiming.Update, token);
-                    ElapsedTime = Time.time - startTime;
-                    
+                    if (IsPaused) continue;
+
+                    elapsed += Time.deltaTime;
+                    ElapsedTime = elapsed;
+
                     if (ElapsedTime >= timeout.Seconds)
                     {
                         // Invoke callback before injection
@@ -779,7 +858,7 @@ namespace FarEmerald.PlayForge
         {
             try
             {
-                await UniTask.Delay(TimeSpan.FromSeconds(stage.MaxDurationSeconds.Value), cancellationToken: token);
+                await Delay(stage.MaxDurationSeconds.Value, token);
                 
                 if (_stageSources.ContainsKey(stageIndex))
                 {
@@ -805,7 +884,7 @@ namespace FarEmerald.PlayForge
         {
             try
             {
-                await UniTask.Delay(TimeSpan.FromSeconds(timeout.Seconds), cancellationToken: token);
+                await Delay(timeout.Seconds, token);
                 
                 if (_stageSources.ContainsKey(stageIndex))
                 {

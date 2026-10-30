@@ -236,16 +236,30 @@ namespace FarEmerald.PlayForge
             // as a default — it freezes the entire game whenever any sequence enters Waiting.
         }
 
+        /// <summary>
+        /// Holds the running sequence where it is, as <see cref="TaskSequenceRuntime.Pause"/> describes. With no
+        /// run there's nothing to hold, which goes for a synchronous sequence too: it holds by not being stepped.
+        /// </summary>
         public override bool TryHandlePause()
         {
-            return processActive;
+            if (!processActive) return false;
+
+            if (IsChain) _chain.Pause();
+            else _runtime?.Pause();
+
+            return true;
         }
 
         public override bool TryHandleResume()
         {
+            if (!processActive) return false;
+
             // Time.timeScale is left alone for the same reason as WhenWait: it is global, so resuming one
             // sequence must not end a hit-stop or slow motion someone else started.
-            return processActive;
+            if (IsChain) _chain.Resume();
+            else _runtime?.Resume();
+
+            return true;
         }
 
         /// <summary>
