@@ -125,7 +125,7 @@ from. It lives outside `Assets/` so it never ships in the package.
   | PF-001 Resume set `Time.timeScale = 1` | `TaskSequenceProcess.cs:234` | TS-1 | fixed |
   | PF-002 Ongoing requirements checked before tags compiled | `EffectSystemComponent.cs:127, 330-334, 372` | GAS-10 | fixed |
   | PF-003 Source requirements never read | `AbilitySpec.cs:27-31`, `AbilityTags.cs:30-33` | GAS-11 | fixed |
-  | PF-004 Pre-change workers got a copy (frozen `ConstantImpacter.Snapshot` + `PreviewCommit`) | `AttributeSystemComponent.cs:275-341` | GAS-2 | open |
+  | PF-004 Pre-change workers got a copy (frozen `ConstantImpacter.Snapshot` + `PreviewCommit`) | `AttributeSystemComponent.cs:275-341` | GAS-2 | fixed |
   | PF-005 Current applied before Base | `IAttributeImpactCarrier.cs:138-139` | GAS-12 | open |
   | PF-006 `HasActions` allocated; snapshot built every frame | `ActionQueue.cs:41, 46, 156`; both `EndOfFrame` files | GAS-P1 | open |
   | PF-007 Tag and FrameSummary allocations (`GrantedTagCompiler`, pooling) | `TagCache.cs:60`, `TagQuery.cs:89-136`, `FrameSummary.cs:306-308` | GAS-P2 | open |
@@ -227,7 +227,7 @@ had no letter in the review.
 | ID | Sev | Phase | Problem | Where | Status |
 |---|---|---|---|---|---|
 | GAS-1 | C | 0 | The runtime GAS steps in Update only, so its end of frame (workers, death) never runs | `RuntimeGameplayAbilitySystem.cs:61` | open |
-| GAS-2 | C | 0 | Pre-change workers have no effect (PF-004, now worse) | `AttributeSystemComponent.cs:275-341`, `EffectSystemComponent.cs:115, 157, 186`, `ForgeHelper.cs:229-235` | open |
+| GAS-2 | C | 0 | Pre-change workers have no effect (PF-004, now worse) | `AttributeSystemComponent.cs:275-341`, `EffectSystemComponent.cs:115, 157, 186`, `ForgeHelper.cs:229-235` | fixed |
 | GAS-3 | C | 0 | `ItemShelf` is never created, so `GiveItem` throws; `ClearAllItems` skips items; unequip removes every source's effect; `IsActive` is always false | `ItemSystemComponent.cs:11, 82, 230-240`, `ItemSpecContainer.cs:133, 150`, `ItemSpec.cs:32-35` | open |
 | GAS-4 | C | 1 | The independent-durations container throws on construction; its struct copies never count down | `AbstractEffectContainer.cs:32, 54`, `IndependentDurationsContainer.cs:18-110` | open |
 | GAS-5 | C | 1 | Re-application always adds one stack; Max is never enforced; the last config wins | `SingleDurationEffectContainer.cs:58`, `StackQueueEffectContainer.cs:62`, `AbstractEffectConfig.cs:261-264`, `GameplayEffectDuration.cs:281-291` | open |
@@ -369,6 +369,8 @@ Record baselines, gate results and notable decisions here, newest first.
     got 10"); 14/14 with it.
   - PF-003 / GAS-11: S14 red without the fix ("blocked while the avoided tag is on the caster: expected
     true"); 15/15 with it.
+  - PF-004 / GAS-2: S15 red without the fix (five checks, e.g. "armor halves a 30 hit: expected 85, got
+    70"; "pre-change callback halves a raw −30: expected 35, got 20"); 16/16 with it.
 
 - 2026-10-29, **Phase 0 baseline** at `455dd44`, no code changed:
   - **Build:** both MSBuild commands under Environment succeed. The only C# diagnostics are the three ED-1

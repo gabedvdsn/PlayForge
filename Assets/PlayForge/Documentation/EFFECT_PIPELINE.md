@@ -107,6 +107,20 @@ impact relay (`ImpactData`, frame summaries, source-side `TrackImpact`, `Attribu
 Registration/unregistration are **identity-based** on the carrier instance — they are never
 wrapped in synthetic carriers.
 
+**Pre-change phase (commits).** Before the pre-change callback and workers run, a commit
+evaluates its impacters once (frozen as `ConstantImpacter`s, so a randomized scaler can't roll
+differently twice) and previews the **incoming** delta: ops in order, no bounds or rounding.
+That delta is what `ChangeValue` holds, since effect specs arrive as `(0,0)` transport, and an
+Inline worker's edit is what commits:
+- untouched → the frozen impacters commit as authored (op semantics, per-impacter groups);
+- adjusted → the new delta commits as one constant Add in the impacters' shared group (mixed
+  groups fall back to the carrier's retention group).
+
+Either way §2.2 applies: post-constraint delta recorded, then `Recompute`. Armor therefore acts
+on incoming damage and the clamp comes after: 20 HP, −30 hit, 50% armor → −15 → 5 HP. Raw
+deltas (`ModifyAttribute`) preview as themselves. Register/Unregister are observe-only here,
+because modifiers are re-derived every recompute, so a one-off adjustment has nowhere to live.
+
 Null / undefined attribute targets early-out safely (pure tag-grant effects are legal).
 
 ---
@@ -225,4 +239,5 @@ Deleted outright: `IsSustainedModifier()`, the Mode A/B inference, `TickAttribut
 Scenarios pin: multiplicative/pooled buff add/remove ordering (the 50→60→72→60→50 case),
 item modifier reversal, HoT permanence through expiry, clamp + history reproducibility,
 committed-joins-baseline, stack-aware magnitudes, regulation propagation on removal,
-null-target effects, replace idempotency, group attribution sums.
+null-target effects, replace idempotency, group attribution sums, pre-change workers adjusting
+the committed delta (armor before the clamp).

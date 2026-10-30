@@ -74,7 +74,11 @@ namespace FarEmerald.PlayForge
         /// </summary>
         public enum EChangeEventTiming
         {
-            /// <summary>Before the modification is applied to the cache</summary>
+            /// <summary>
+            /// Before the modification is applied to the cache. For commits the change holds
+            /// the incoming (unclamped) delta, and an Inline worker's edit is what commits;
+            /// bounds and rounding apply after. Modifier register/unregister is observe-only.
+            /// </summary>
             PreChange,
             /// <summary>After the modification is applied to the cache</summary>
             PostChange,

@@ -65,6 +65,7 @@ namespace FarEmerald.PlayForge.Tests
             RunScenario(nameof(S12_AbilityInspector_PerLevelSeries), S12_AbilityInspector_PerLevelSeries);
             RunScenario(nameof(S13_GAS_10_OngoingRequirement_PausesPeriodicTicks), S13_GAS_10_OngoingRequirement_PausesPeriodicTicks);
             RunScenario(nameof(S14_GAS_11_AbilitySourceTagRequirements_BlockActivation), S14_GAS_11_AbilitySourceTagRequirements_BlockActivation);
+            RunScenario(nameof(S15_GAS_02_PreChangeWorkers_AdjustTheCommittedDelta), S15_GAS_02_PreChangeWorkers_AdjustTheCommittedDelta);
             RunScenario(nameof(S23_TS_01_Resume_LeavesTimeScaleAlone), S23_TS_01_Resume_LeavesTimeScaleAlone);
 
             Report();
@@ -783,6 +784,85 @@ namespace FarEmerald.PlayForge.Tests
 
             Remove(gas, stun);
             AssertTrue("activatable again once the tag is gone", abilities.CanActivateAbility(index));
+        }
+
+        /// <summary>
+        /// Pre-change workers and the pre-change callback adjust what a commit records. Armor is a
+        /// pre-change <see cref="MathAttributeWorker"/> scaling incoming Health loss by (1 − Armor):
+        /// it sees the INCOMING delta, the commit clamps after, and history records the clamped
+        /// result. Both used to be silent no-ops — the commit ran from the original value
+        /// (PlayForge log PF-004).
+        /// </summary>
+        private static void S15_GAS_02_PreChangeWorkers_AdjustTheCommittedDelta()
+        {
+            var health = MakeAttribute("Health");
+            var armor = MakeAttribute("Armor");
+            var gas = MakeGAS(MakeSet(
+                MakeElement(health, 100, 100, EAttributeOverflowPolicy.ZeroToBase),
+                MakeElement(armor, 0.5f, 0.5f)));
+            var attrSystem = gas.GetAttributeSystem();
+
+            attrSystem.ProvideWorker(new MathAttributeWorker
+            {
+                TimingConfig = AbstractAttributeWorker.EChangeEventTiming.PreChange,
+                TargetAttribute = health,
+                AllowSelfModification = true,
+                TargetModification = EAttributeTargetExpanded.Current,
+                SignPolicy = ESignPolicyExtended.Negative,
+                From = EFromSelfSource.FromSelf,
+                RelativeTo = armor,
+                Operation = ECalculationOperation.Multiply,
+                OperationTarget = EAttributeTarget.Current,
+                OperationPolicy = EMathApplicationPolicy.OneMinus,
+            });
+
+            var damageGroup = Tag.Generate(Unique("Test.Group.Damage"));
+            var hit30 = MakeEffect("Hit30", new EffectConfig
+            {
+                Policy = EEffectDurationPolicy.Instant, Target = health, Op = ECalculationOperation.Add, Magnitude = -30,
+            });
+            hit30.Definition.RetentionGroup = damageGroup;
+            var hit150 = MakeEffect("Hit150", new EffectConfig
+            {
+                Policy = EEffectDurationPolicy.Instant, Target = health, Op = ECalculationOperation.Add, Magnitude = -150,
+            });
+            var heal50 = MakeEffect("Heal50", new EffectConfig
+            {
+                Policy = EEffectDurationPolicy.Instant, Target = health, Op = ECalculationOperation.Add, Magnitude = 50,
+            });
+
+            Apply(gas, hit30);
+            AssertValue(gas, health, "armor halves a 30 hit", 85);
+            Apply(gas, hit30);
+            AssertValue(gas, health, "second 30 hit", 70);
+            attrSystem.TryGetGroupValue(health, damageGroup, out var damageSlice);
+            AssertApprox("adjusted commits land in the effect's group", damageSlice.CurrentValue, -30);
+
+            // Incoming −150 → −75, THEN clamp: 70 → 0. Halving the clamped −70 would leave 35.
+            Apply(gas, hit150);
+            AssertValue(gas, health, "armor applies before the clamp", 0);
+
+            // History holds the clamped −70, not −75: the heal lands on 50, not 45. The worker
+            // ignores heals (Negative sign policy), so this commit takes the untouched path.
+            Apply(gas, heal50);
+            AssertValue(gas, health, "heal after an overkill hit", 50);
+
+            // Raw deltas go through the same path. The pre-change callback is the original repro:
+            // it halves a −30 delta, and Health must fall by 15. (Workers skip GenerateSimple
+            // deltas — their DisallowImpact type fails validation — so only the callback acts.)
+            AttributeSystemCallbacks.AttributeChangeDelegate halveLoss = (attribute, change) =>
+            {
+                if (ReferenceEquals(attribute, health) && change.Value.CurrentValue < 0f)
+                    change.Override(change.Value.ToAttributeValue() * 0.5f);
+            };
+            attrSystem.Callbacks.OnAttributePreChange += halveLoss;
+            gas.TryModifyAttribute(health, SourcedModifiedAttributeValue.GenerateSimple(gas, health, -30f, 0f));
+            attrSystem.Callbacks.OnAttributePreChange -= halveLoss;
+            AssertValue(gas, health, "pre-change callback halves a raw −30", 35, 100);
+
+            float sum = 0f;
+            foreach (var slice in attrSystem.GetBreakdown(health)) sum += slice.Value.CurrentValue;
+            AssertApprox("breakdown sums to ActiveValue", sum, 35);
         }
 
         /// <summary>

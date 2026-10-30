@@ -37,5 +37,15 @@ namespace FarEmerald.PlayForge
         }
 
         public float Evaluate(IAttributeImpactCarrier carrier) => magnitude;
+
+        /// <summary>
+        /// Freeze <paramref name="impacter"/>'s magnitude for <paramref name="carrier"/> into a
+        /// constant with the same op, slot, sort order, multiply behaviour and group. Commits
+        /// evaluate through these once, so the delta pre-change workers saw is the delta
+        /// that commits — even for a randomized scaler.
+        /// </summary>
+        public static ConstantImpacter Snapshot(IAttributeImpacter impacter, IAttributeImpactCarrier carrier)
+            => new(impacter.Evaluate(carrier), impacter.Operation, impacter.TargetSlot,
+                impacter.SortOrder, impacter.MultiplyBehaviour, impacter.Group);
     }
 }

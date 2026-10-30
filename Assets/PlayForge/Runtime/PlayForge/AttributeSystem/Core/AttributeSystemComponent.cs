@@ -272,8 +272,46 @@ namespace FarEmerald.PlayForge
             // effect). Nothing to commit — Dictionary.ContainsKey(null) would throw.
             if (attribute is null || !AttributeCache.ContainsKey(attribute)) return default;
 
+            var cached = AttributeCache[attribute];
             var change = new ChangeValue(sourcedModifiedValue);
             var ctx = new WorkerContext(Self, AttributeCache, change, _frameSummary, _actionQueue);
+
+            // ═══════════════════════════════════════════════════════════════════════
+            // PHASE 0: A commit proposes its incoming delta.
+            //
+            // Carriers with no impacters (hand-rolled delta callsites — EnforceScaling
+            // propagation, the synthetic zero-impact init pulse, third-party wrappers)
+            // are wrapped in a SourceAttributeImpact carrying ConstantImpacter(s) built
+            // from the precomputed (CurrentValue, BaseValue) delta, so every path flows
+            // through the same impacter machinery (bounds + rounding + attribution).
+            //
+            // The impacters are evaluated ONCE, frozen as constants, and previewed: the
+            // pre-change phase sees the delta they propose (effect specs arrive as (0,0)
+            // transport) and may change it. Unconstrained, so armor acts on incoming
+            // damage and the clamp applies after.
+            //
+            // Register/Unregister keep the transport value. Modifiers are re-derived on
+            // every recompute, so a one-off pre-change adjustment has nowhere to live.
+            // ═══════════════════════════════════════════════════════════════════════
+            var carrier = sourcedModifiedValue.Carrier;
+            IReadOnlyList<IAttributeImpacter> commitImpacters = null;
+            AttributeValue incoming = default;
+            if (mode == ECommitMode.CommitImpact)
+            {
+                // Wrap delta-only carriers for the COMMIT path only. Register/Unregister
+                // are identity-based — substituting a synthetic wrapper would register
+                // under the wrong identity and make later unregistration miss.
+                if (carrier == null || carrier.GetImpacters().Count == 0)
+                {
+                    carrier = WrapDelta(attribute, sourcedModifiedValue, sourcedModifiedValue.ToAttributeValue(),
+                        sourcedModifiedValue.Carrier?.GetRetentionGroup() ?? Tags.IgnoreRetention);
+                }
+
+                commitImpacters = FreezeImpacters(carrier, impacters ?? carrier.GetImpacters());
+                incoming = cached.PreviewCommit(carrier, commitImpacters);
+                change.Value = new SourcedModifiedAttributeValue(sourcedModifiedValue,
+                    incoming.CurrentValue, incoming.BaseValue, sourcedModifiedValue.ImpactIsWorkable);
+            }
 
             Callbacks.AttributePreChange(attribute, change);
 
@@ -284,33 +322,9 @@ namespace FarEmerald.PlayForge
 
             // ═══════════════════════════════════════════════════════════════════════
             // PHASE 2: Dispatch per mode.
-            //
-            // Carriers with no impacters (hand-rolled delta callsites — EnforceScaling
-            // propagation, the synthetic zero-impact init pulse, third-party wrappers)
-            // are wrapped in a SourceAttributeImpact carrying ConstantImpacter(s) built
-            // from the precomputed (CurrentValue, BaseValue) delta, so every path flows
-            // through the same impacter machinery (bounds + rounding + attribution).
             // ═══════════════════════════════════════════════════════════════════════
-            var holdValue = AttributeCache[attribute].ActiveValue;
+            var holdValue = cached.ActiveValue;
 
-            var carrier = sourcedModifiedValue.Carrier;
-            // Wrap delta-only carriers for the COMMIT path only. Register/Unregister are
-            // identity-based — substituting a synthetic wrapper would register under the
-            // wrong identity and make later unregistration miss.
-            if (mode == ECommitMode.CommitImpact && (carrier == null || carrier.GetImpacters().Count == 0))
-            {
-                carrier = SourceAttributeImpact.FromAdditiveDelta(
-                    sourcedModifiedValue.Carrier?.GetOrigin()?.GetSource() ?? Self,
-                    attribute,
-                    sourcedModifiedValue.CurrentValue,
-                    sourcedModifiedValue.BaseValue,
-                    sourcedModifiedValue.Carrier?.GetRetentionGroup() ?? Tags.IgnoreRetention,
-                    sourcedModifiedValue.Carrier?.GetImpactTypes(),
-                    sourcedModifiedValue.Carrier,
-                    sourcedModifiedValue.Carrier?.RetainImpact() ?? false);
-            }
-
-            var cached = AttributeCache[attribute];
             switch (mode)
             {
                 case ECommitMode.RegisterModifier:
@@ -320,7 +334,18 @@ namespace FarEmerald.PlayForge
                     cached.UnregisterModifier(carrier, AttributeCache);
                     break;
                 case ECommitMode.CommitImpact:
-                    cached.CommitImpact(carrier, impacters ?? carrier.GetImpacters(), AttributeCache);
+                    // Untouched, the frozen impacters commit as authored (op semantics and
+                    // per-impacter groups intact). Adjusted, the new delta commits as one
+                    // constant Add in the impacters' group. Either way CachedAttributeValue
+                    // records the post-constraint delta and recomputes.
+                    var adjusted = change.Value.ToAttributeValue();
+                    if (adjusted != incoming)
+                    {
+                        carrier = WrapDelta(attribute, sourcedModifiedValue, adjusted,
+                            AdjustedCommitGroup(commitImpacters, sourcedModifiedValue.Carrier));
+                        commitImpacters = carrier.GetImpacters();
+                    }
+                    cached.CommitImpact(carrier, commitImpacters, AttributeCache);
                     break;
                 default:
                     throw new ArgumentOutOfRangeException(nameof(mode), mode, null);
@@ -359,6 +384,48 @@ namespace FarEmerald.PlayForge
             Callbacks.AttributeChanged(impactData);
 
             return impactData;
+        }
+
+        /// <summary>A synthetic carrier committing <paramref name="delta"/> as constant Adds, attributed to <paramref name="group"/>.</summary>
+        private SourceAttributeImpact WrapDelta(IAttribute attribute, SourcedModifiedAttributeValue sourcedModifiedValue, AttributeValue delta, Tag group)
+        {
+            return SourceAttributeImpact.FromAdditiveDelta(
+                sourcedModifiedValue.Carrier?.GetOrigin()?.GetSource() ?? Self,
+                attribute,
+                delta.CurrentValue,
+                delta.BaseValue,
+                group,
+                sourcedModifiedValue.Carrier?.GetImpactTypes(),
+                sourcedModifiedValue.Carrier,
+                sourcedModifiedValue.Carrier?.RetainImpact() ?? false);
+        }
+
+        private static IReadOnlyList<IAttributeImpacter> FreezeImpacters(IAttributeImpactCarrier carrier, IReadOnlyList<IAttributeImpacter> impacters)
+        {
+            var frozen = new List<IAttributeImpacter>(impacters.Count);
+            foreach (var imp in impacters)
+            {
+                if (imp != null) frozen.Add(ConstantImpacter.Snapshot(imp, carrier));
+            }
+            return frozen;
+        }
+
+        /// <summary>
+        /// Where a pre-change-adjusted commit is recorded: the group its impacters share,
+        /// else (mixed groups, or none) the carrier's retention group.
+        /// </summary>
+        private static Tag AdjustedCommitGroup(IReadOnlyList<IAttributeImpacter> impacters, IAttributeImpactCarrier carrier)
+        {
+            var fallback = carrier?.GetRetentionGroup() ?? Tags.IgnoreRetention;
+            Tag shared = default;
+            foreach (var imp in impacters)
+            {
+                if (imp == null) continue;
+                var group = imp.Group.IsValid ? imp.Group : Tags.IgnoreRetention;
+                if (!shared.IsValid) shared = group;
+                else if (shared != group) return fallback;
+            }
+            return shared.IsValid ? shared : fallback;
         }
         
         // ═══════════════════════════════════════════════════════════════════════════

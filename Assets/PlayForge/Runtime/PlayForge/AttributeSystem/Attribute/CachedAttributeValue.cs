@@ -243,34 +243,9 @@ namespace FarEmerald.PlayForge
             {
                 if (imp == null) continue;
 
-                float v = imp.Evaluate(carrier);
-                float curr = working.CurrentValue;
-                float baseV = working.BaseValue;
-                bool coversCurr = imp.TargetSlot is EAttributeTarget.Current or EAttributeTarget.CurrentAndBase;
-                bool coversBase = imp.TargetSlot is EAttributeTarget.Base or EAttributeTarget.CurrentAndBase;
-
-                switch (imp.Operation)
-                {
-                    case ECalculationOperation.Add:
-                    case ECalculationOperation.FlatBonus:
-                        if (coversCurr) curr += v;
-                        if (coversBase) baseV += v;
-                        break;
-                    case ECalculationOperation.Multiply:
-                        if (coversCurr) curr *= v;
-                        if (coversBase) baseV *= v;
-                        break;
-                    case ECalculationOperation.Override:
-                        if (coversCurr) curr = v;
-                        if (coversBase) baseV = v;
-                        break;
-                    default:
-                        throw new ArgumentOutOfRangeException();
-                }
-
                 // Record the POST-CONSTRAINT delta this step actually produced — a +50
                 // heal clamped to +30 commits +30, keeping history reproducible.
-                var stepped = ConstrainValue(new AttributeValue(curr, baseV));
+                var stepped = ConstrainValue(ApplyCommitStep(working, imp, imp.Evaluate(carrier)));
                 var delta = stepped - working;
                 working = stepped;
 
@@ -282,6 +257,55 @@ namespace FarEmerald.PlayForge
             }
 
             Recompute(cache);
+        }
+
+        /// <summary>
+        /// The INCOMING delta a commit of these impacters proposes: each op runs in order
+        /// against the live value with no bounds or rounding, and nothing is written.
+        /// Pre-change workers adjust this delta; <see cref="CommitImpact"/> constrains
+        /// whatever is finally committed (armor acts on incoming damage, the clamp after).
+        /// </summary>
+        public AttributeValue PreviewCommit(IAttributeImpactCarrier carrier, IReadOnlyList<IAttributeImpacter> impacters)
+        {
+            if (carrier is null || impacters == null) return default;
+
+            var working = ActiveValue;
+            foreach (var imp in impacters)
+            {
+                if (imp == null) continue;
+                working = ApplyCommitStep(working, imp, imp.Evaluate(carrier));
+            }
+            return working - ActiveValue;
+        }
+
+        /// <summary>One unconstrained commit step: the impacter's op, magnitude <paramref name="v"/>, on its slot(s).</summary>
+        private static AttributeValue ApplyCommitStep(AttributeValue value, IAttributeImpacter imp, float v)
+        {
+            float curr = value.CurrentValue;
+            float baseV = value.BaseValue;
+            bool coversCurr = imp.TargetSlot is EAttributeTarget.Current or EAttributeTarget.CurrentAndBase;
+            bool coversBase = imp.TargetSlot is EAttributeTarget.Base or EAttributeTarget.CurrentAndBase;
+
+            switch (imp.Operation)
+            {
+                case ECalculationOperation.Add:
+                case ECalculationOperation.FlatBonus:
+                    if (coversCurr) curr += v;
+                    if (coversBase) baseV += v;
+                    break;
+                case ECalculationOperation.Multiply:
+                    if (coversCurr) curr *= v;
+                    if (coversBase) baseV *= v;
+                    break;
+                case ECalculationOperation.Override:
+                    if (coversCurr) curr = v;
+                    if (coversBase) baseV = v;
+                    break;
+                default:
+                    throw new ArgumentOutOfRangeException();
+            }
+
+            return new AttributeValue(curr, baseV);
         }
 
         private void AccumulateCommitted(Tag group, AttributeValue delta)
