@@ -85,13 +85,18 @@ namespace FarEmerald.PlayForge
         /// <param name="relay"></param>
         public override void WhenTerminate(ProcessRelay relay)
         {
-            WhenTerminateSafe(relay);
-            
-            if (activeMono.Instantiator is not null) activeMono.Instantiator.CleanProcess(activeMono);
-            else
+            try
             {
-                try { Object.Destroy(activeMono.gameObject); }
-                catch { }
+                WhenTerminateSafe(relay);
+            }
+            finally
+            {
+                if (activeMono.Instantiator is not null) activeMono.Instantiator.CleanProcess(activeMono);
+                else
+                {
+                    try { Object.Destroy(activeMono.gameObject); }
+                    catch { }
+                }
             }
         }
         /// <summary>

@@ -302,7 +302,17 @@ namespace FarEmerald.PlayForge
             // A run that a pause left going has nothing else to end it
             _cts?.Cancel();
 
-            Wrapper.WhenTerminate(Wrapper.Relay);
+            // The process's own code, and the unregister has to happen whatever it does. A throw that skipped
+            // it left a block that was Terminated, still stepped, and that nothing could end (PC-8)
+            try
+            {
+                Wrapper.WhenTerminate(Wrapper.Relay);
+            }
+            catch (Exception ex)
+            {
+                Debug.LogException(ex);
+            }
+
             return ProcessControl.Instance.Unregister(this);
         }
 

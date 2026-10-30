@@ -253,8 +253,17 @@ namespace FarEmerald.PlayForge
         private void CheckWatcherOnUnregister(ProcessControlBlock pcb)
         {
             if (!_watchers.ContainsKey(pcb.CacheIndex)) return;
-            _watchers[pcb.CacheIndex].RunOnUnregister(pcb.Wrapper.Data);
-            
+
+            // A callback's throw can't be let past here: the unregister still has to finish
+            try
+            {
+                _watchers[pcb.CacheIndex].RunOnUnregister(pcb.Wrapper.Data);
+            }
+            catch (Exception ex)
+            {
+                Debug.LogException(ex);
+            }
+
             StopWatchingProcess(pcb.Relay);
         }
         
