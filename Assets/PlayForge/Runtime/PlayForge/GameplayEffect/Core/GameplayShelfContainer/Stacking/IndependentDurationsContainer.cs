@@ -1,5 +1,5 @@
 ﻿using System.Collections.Generic;
-using System.Linq;
+using UnityEngine;
 
 namespace FarEmerald.PlayForge
 {
@@ -7,7 +7,6 @@ namespace FarEmerald.PlayForge
     {
         protected IndependentDurationsContainer(GameplayEffectSpec spec, bool ongoing) : base(spec, ongoing)
         {
-            Packets = new List<StackableContainerPacket>();
         }
 
         public static IndependentDurationsContainer Generate(GameplayEffectSpec spec, bool ongoing)
@@ -15,15 +14,44 @@ namespace FarEmerald.PlayForge
             return new IndependentDurationsContainer(spec, ongoing);
         }
 
-        private List<StackableContainerPacket> Packets;
-        
-        public override float DurationRemaining => Packets.Count > 0 ? Packets.Sum(p => p.DurationRemaining) : float.MaxValue;
-        public override float NextDurationRemaining => Packets.Count > 0 ? Packets[0].DurationRemaining : float.MaxValue;
-        public override float TimeUntilPeriodTick => Packets.Count > 0 ? Packets[0].TimeUntilPeriodTick : float.MaxValue;
+        // Made here and not in the constructor: the base constructor applies the duration spec, which reads
+        // the packets and can add to them
+        private readonly List<StackableContainerPacket> Packets = new();
+
+        // The effect lasts as long as its longest stack, and is over when none are left
+        public override float DurationRemaining
+        {
+            get
+            {
+                float longest = 0f;
+                foreach (var packet in Packets) longest = Mathf.Max(longest, packet.DurationRemaining);
+                return longest;
+            }
+        }
+
+        public override float NextDurationRemaining
+        {
+            get
+            {
+                float soonest = float.MaxValue;
+                foreach (var packet in Packets) soonest = Mathf.Min(soonest, packet.DurationRemaining);
+                return soonest;
+            }
+        }
+
+        public override float TimeUntilPeriodTick
+        {
+            get
+            {
+                float soonest = float.MaxValue;
+                foreach (var packet in Packets) soonest = Mathf.Min(soonest, packet.TimeUntilPeriodTick);
+                return soonest;
+            }
+        }
 
         public override int InstantExecuteTicks => 1;
-        
-        private struct StackableContainerPacket
+
+        private sealed class StackableContainerPacket
         {
             public float DurationRemaining;
             public float TimeUntilPeriodTick;
@@ -58,44 +86,30 @@ namespace FarEmerald.PlayForge
                 DurationRemaining = totalDuration;
                 TimeUntilPeriodTick = periodDuration;
             }
-
-            public void Extend(float duration, float extendDuration) => DurationRemaining = duration + extendDuration;
         }
-        
+
         public override void SetDurationRemaining(float duration)
         {
-            for (int i = 0; i < Packets.Count; i++)
-            {
-                if (Packets[i].DurationRemaining > duration) Packets[i] = new StackableContainerPacket(duration, periodDuration);
-            }
-        }
-        
-        public override void SetTimeUntilPeriodTick(float duration)
-        {
-            for (int i = 0; i < Packets.Count; i++)
-            {
-                if (Packets[i].TimeUntilPeriodTick > duration) Packets[i] = new StackableContainerPacket(totalDuration, duration);
-            }
-        }
-        
-        public override void UpdateTimeRemaining(float deltaTime)
-        {
-            int removeIndex = -1;
-            foreach (StackableContainerPacket packet in Packets)
-            {
-                packet.UpdateTimeRemaining(deltaTime);
-                if (packet.DurationRemaining <= 0f) removeIndex += 1;
-            }
-            
-            if (removeIndex >= 0) RemoveStacks(removeIndex);
+            foreach (var packet in Packets) packet.DurationRemaining = Mathf.Min(packet.DurationRemaining, duration);
         }
 
-        private void RemoveStacks(int rangeIndex)
+        public override void SetTimeUntilPeriodTick(float duration)
         {
-            for (int i = 0; i <= rangeIndex; i++) Packets.RemoveAt(i);
-            Stacks -= rangeIndex + 1;
+            foreach (var packet in Packets) packet.TimeUntilPeriodTick = Mathf.Min(packet.TimeUntilPeriodTick, duration);
         }
-        
+
+        public override void UpdateTimeRemaining(float deltaTime)
+        {
+            for (int i = Packets.Count - 1; i >= 0; i--)
+            {
+                Packets[i].UpdateTimeRemaining(deltaTime);
+                if (Packets[i].DurationRemaining > 0f) continue;
+
+                Packets.RemoveAt(i);
+                Stacks -= 1;
+            }
+        }
+
         public override void TickPeriodic(float deltaTime, out int executeTicks)
         {
             executeTicks = 0;
@@ -107,7 +121,7 @@ namespace FarEmerald.PlayForge
         }
         public override void Refresh()
         {
-            Packets[0].Refresh(totalDuration, periodDuration);
+            if (Packets.Count > 0) Packets[0].Refresh(totalDuration, periodDuration);
         }
         public override void Extend(float duration)
         {
