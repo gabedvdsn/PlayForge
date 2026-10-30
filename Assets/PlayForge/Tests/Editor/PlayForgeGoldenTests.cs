@@ -75,6 +75,7 @@ namespace FarEmerald.PlayForge.Tests
             RunScenario(nameof(S22_GAS_13_SystemInitialized_ReachesEarlySubscribers), S22_GAS_13_SystemInitialized_ReachesEarlySubscribers);
             RunScenario(nameof(S23_TS_01_Resume_LeavesTimeScaleAlone), S23_TS_01_Resume_LeavesTimeScaleAlone);
             RunScenario(nameof(S24_GAS_03_GiveItem_LandsOnTheShelf), S24_GAS_03_GiveItem_LandsOnTheShelf);
+            RunScenario(nameof(S25_GAS_01_RuntimeGAS_RunsItsEndOfFrame), S25_GAS_01_RuntimeGAS_RunsItsEndOfFrame);
 
             Report();
         }
@@ -1317,6 +1318,52 @@ namespace FarEmerald.PlayForge.Tests
             AssertTrue("give the item", items.GiveItem(sword, out int index));
             AssertTrue("it is on the shelf at index 0", index == 0 && items.HasItem(sword) && items.ItemCount == 1);
             AssertTrue("the containers list it", items.GetItemContainers().Count == 1);
+        }
+
+        /// <summary>
+        /// A runtime GAS registered with ProcessControl runs its end of frame each frame (GAS-1). It stepped
+        /// in Update only, so WhenLateUpdate, and with it EndOfFrame (queued actions, tag workers, analysis
+        /// workers, death), never ran. The other scenarios call WhenLateUpdate by hand, which is how this
+        /// stayed hidden, so this one steps the GAS through a ProcessControl's own loop.
+        /// </summary>
+        private static void S25_GAS_01_RuntimeGAS_RunsItsEndOfFrame()
+        {
+            // A process control of its own, as in S20, so the test steps only its own process
+            var previous = ProcessControl.Instance;
+            var host = new GameObject("S25 Process Control") { hideFlags = HideFlags.HideAndDontSave };
+            var control = host.AddComponent<ProcessControl>();
+            var options = new SerializedObject(control);
+            options.FindProperty("DontDestroyOnLoad").boolValue = false;
+            options.FindProperty("CollectOnAwake").boolValue = false;
+            options.ApplyModifiedPropertiesWithoutUndo();
+
+            try
+            {
+                ProcessControl.Instance = null;
+                control.Bootstrap();
+
+                var gas = MakeGAS(MakeSet(MakeElement(MakeAttribute("Unused"), 1, 1)));
+                int framesCompleted = 0;
+                gas.Callbacks.OnFrameComplete += _ => framesCompleted++;
+                AssertTrue("register the GAS", ProcessControl.Register(gas, control, ProcessDataPacket.Default(), out var relay));
+                AssertTrue("it is running", relay.IsRunning);
+
+                var stepProcesses = typeof(ProcessControl).GetMethod("StepProcesses",
+                    System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic);
+                AssertTrue("ProcessControl steps through StepProcesses", stepProcesses != null);
+                if (stepProcesses == null) return;
+
+                stepProcesses.Invoke(control, new object[] { EProcessStepTiming.Update });
+                stepProcesses.Invoke(control, new object[] { EProcessStepTiming.LateUpdate });
+
+                AssertTrue($"one stepped frame runs one end of frame (ran {framesCompleted})", framesCompleted == 1);
+            }
+            finally
+            {
+                control.TerminateAllImmediately();
+                Object.DestroyImmediate(host);
+                ProcessControl.Instance = previous;
+            }
         }
     }
 }

@@ -117,8 +117,10 @@ from. It lives outside `Assets/` so it never ships in the package.
 
 - [x] **Baseline.** Build, run the 12 golden tests, and record the result here with the date. Change nothing.
   Done 2026-10-29; see the Log.
-- [ ] Port each Arcade Fighter fix: diff Arcade Fighter's copy against canonical, and keep canonical's later
-  changes where the two have diverged.
+- [x] Port each Arcade Fighter fix: diff Arcade Fighter's copy against canonical, and keep canonical's later
+  changes where the two have diverged. Canonical had no later changes (see Environment). After the port,
+  canonical differs from Arcade Fighter's `HEAD` only by GAS-3, the extra TS-2 README fixes, the golden test
+  names and S23 onward, and Arcade Fighter's `GameRoot` `DontDestroyOnLoad` (PC-21, not ported).
 
   | Fix | Canonical location | Tracker ID | Status |
   |---|---|---|---|
@@ -136,9 +138,10 @@ from. It lives outside `Assets/` so it never ships in the package.
   | PF-012 Proxies recompiled every activation (`AbilityProxy.IsIdle`, `CompiledProxies`) | `AbilityActivationHandle.cs:26`, `AbilityProxy.cs:62-74` | TS-3 | fixed |
   | PF-013 `OnSystemInitialized` could not be observed | `GameplayAbilitySystem.EndOfFrame.cs:34`, `RuntimeGameplayAbilitySystem.cs:137, 149` | GAS-13 | fixed |
 
-- [ ] Port Arcade Fighter's extra 10 golden scenarios, taking the suite from 12 to 22.
-- [ ] GAS-1: give `RuntimeGameplayAbilitySystem` the timing `EProcessStepTiming.UpdateAndLate`
-  (`RuntimeGameplayAbilitySystem.cs:61`).
+- [x] Port Arcade Fighter's extra 10 golden scenarios, taking the suite from 12 to 22. S13–S22 carry their
+  tracker IDs in their names; S23–S25 are canonical's own (TS-1, GAS-3, GAS-1).
+- [x] GAS-1: give `RuntimeGameplayAbilitySystem` the timing `EProcessStepTiming.UpdateAndLate`
+  (`RuntimeGameplayAbilitySystem.cs:61`, and the second constructor at `:92`).
 - [x] GAS-3: initialize `ItemShelf` (`ItemSystemComponent.cs:11`). Done ahead of PF-007, whose S18 needs it.
   The finding's other three bugs are now GAS-32 (Phase 1).
 - [ ] SP-16: remove the `targetSemantics: true` masks on S6, S8 and S11 (`PlayForgeGoldenTests.cs:55, 61, 64`).
@@ -227,7 +230,7 @@ had no letter in the review.
 
 | ID | Sev | Phase | Problem | Where | Status |
 |---|---|---|---|---|---|
-| GAS-1 | C | 0 | The runtime GAS steps in Update only, so its end of frame (workers, death) never runs | `RuntimeGameplayAbilitySystem.cs:61` | open |
+| GAS-1 | C | 0 | The runtime GAS steps in Update only, so its end of frame (workers, death) never runs | `RuntimeGameplayAbilitySystem.cs:61` | fixed |
 | GAS-2 | C | 0 | Pre-change workers have no effect (PF-004, now worse) | `AttributeSystemComponent.cs:275-341`, `EffectSystemComponent.cs:115, 157, 186`, `ForgeHelper.cs:229-235` | fixed |
 | GAS-3 | C | 0 | `ItemShelf` is never created, so `GiveItem` throws, and every read of the empty inventory allocates a new list. The rest of this finding moved to GAS-32 | `ItemSystemComponent.cs:11, 279` | fixed |
 | GAS-4 | C | 1 | The independent-durations container throws on construction; its struct copies never count down | `AbstractEffectContainer.cs:32, 54`, `IndependentDurationsContainer.cs:18-110` | open |
@@ -405,6 +408,10 @@ Record baselines, gate results and notable decisions here, newest first.
   - PF-013 / GAS-13: S22 red without the fix ("the GAS has its callbacks before it's initialized"); 24/24
     with it. As Arcade Fighter noted, a runtime GAS still initializes in its constructor, so its
     `OnSystemInitialized` has fired before anyone can subscribe.
+  - GAS-1: S25 steps a runtime GAS through a test ProcessControl's own `StepProcesses`, as S20 does. Red
+    without the fix ("ran 0" ends of frame); 25/25 with it. Both constructors hard-coded `Update`. Side
+    effect: the runtime GAS's `WhenUpdate` and its `EndOfFrame` both call `TagCache.TickTagWorkers`, so its
+    tag workers now tick twice a frame, as the Mono GAS's already did. That is GAS-19 (Phase 1).
 
 - 2026-10-29, **Phase 0 baseline** at `455dd44`, no code changed:
   - **Build:** both MSBuild commands under Environment succeed. The only C# diagnostics are the three ED-1

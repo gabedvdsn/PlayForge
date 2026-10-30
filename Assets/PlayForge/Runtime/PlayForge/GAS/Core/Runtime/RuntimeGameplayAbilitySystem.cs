@@ -60,7 +60,8 @@ namespace FarEmerald.PlayForge
                 data?.Name ?? "RuntimeGAS",
                 EProcessStepPriorityMethod.First,
                 0,
-                EProcessStepTiming.Update,
+                // Update ticks effects and tag workers; LateUpdate runs the end of frame (GAS-1)
+                EProcessStepTiming.UpdateAndLate,
                 EProcessLifecycle.SelfTerminating)
         {
             _targetingPacket = targetingPacket 
@@ -89,7 +90,8 @@ namespace FarEmerald.PlayForge
                 data?.Name ?? "RuntimeGAS",
                 EProcessStepPriorityMethod.First,
                 0,
-                EProcessStepTiming.Update,
+                // Update ticks effects and tag workers; LateUpdate runs the end of frame (GAS-1)
+                EProcessStepTiming.UpdateAndLate,
                 EProcessLifecycle.SelfTerminating)
         {
             _targetingPacket = targetingPacket 
