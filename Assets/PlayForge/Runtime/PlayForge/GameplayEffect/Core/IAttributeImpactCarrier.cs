@@ -135,8 +135,15 @@ namespace FarEmerald.PlayForge
         {
             var group = retentionGroup.IsValid ? retentionGroup : Tags.IgnoreRetention;
             var built = new System.Collections.Generic.List<IAttributeImpacter>(2);
-            if (currentDelta != 0f) built.Add(new ConstantImpacter(currentDelta, ECalculationOperation.Add, EAttributeTarget.Current, group: group));
-            if (baseDelta    != 0f) built.Add(new ConstantImpacter(baseDelta,    ECalculationOperation.Add, EAttributeTarget.Base,    group: group));
+            var currentStep = currentDelta != 0f ? new ConstantImpacter(currentDelta, ECalculationOperation.Add, EAttributeTarget.Current, group: group) : null;
+            var baseStep    = baseDelta    != 0f ? new ConstantImpacter(baseDelta,    ECalculationOperation.Add, EAttributeTarget.Base,    group: group) : null;
+
+            // A commit clamps after every step, and Current is bounded by Base. So a growing Base
+            // goes first (else the Current gain is clamped against the old Base and lost), and a
+            // shrinking one goes last (it then pulls Current down to the new bound). PF-005.
+            if (baseDelta > 0f && baseStep != null) built.Add(baseStep);
+            if (currentStep != null) built.Add(currentStep);
+            if (baseDelta < 0f && baseStep != null) built.Add(baseStep);
             return new SourceAttributeImpact(
                 source, attribute,
                 impactType ?? new List<Tag>() { Tags.DisallowImpact },

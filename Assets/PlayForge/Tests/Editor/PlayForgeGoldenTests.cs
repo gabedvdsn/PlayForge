@@ -66,6 +66,7 @@ namespace FarEmerald.PlayForge.Tests
             RunScenario(nameof(S13_GAS_10_OngoingRequirement_PausesPeriodicTicks), S13_GAS_10_OngoingRequirement_PausesPeriodicTicks);
             RunScenario(nameof(S14_GAS_11_AbilitySourceTagRequirements_BlockActivation), S14_GAS_11_AbilitySourceTagRequirements_BlockActivation);
             RunScenario(nameof(S15_GAS_02_PreChangeWorkers_AdjustTheCommittedDelta), S15_GAS_02_PreChangeWorkers_AdjustTheCommittedDelta);
+            RunScenario(nameof(S16_GAS_12_RawDelta_MovesBaseAndCurrentTogether), S16_GAS_12_RawDelta_MovesBaseAndCurrentTogether);
             RunScenario(nameof(S23_TS_01_Resume_LeavesTimeScaleAlone), S23_TS_01_Resume_LeavesTimeScaleAlone);
 
             Report();
@@ -863,6 +864,33 @@ namespace FarEmerald.PlayForge.Tests
             float sum = 0f;
             foreach (var slice in attrSystem.GetBreakdown(health)) sum += slice.Value.CurrentValue;
             AssertApprox("breakdown sums to ActiveValue", sum, 35);
+        }
+
+        /// <summary>
+        /// A raw delta that moves Base and Current together lands whole on a pool clamped to its Base.
+        /// Raising both (a max-Health bonus that also heals; an enemy's dials) used to lose the
+        /// Current gain: it was clamped against the old Base before the Base rose (PlayForge log
+        /// PF-005). Lowering both still ends with Current inside the new Base.
+        /// </summary>
+        private static void S16_GAS_12_RawDelta_MovesBaseAndCurrentTogether()
+        {
+            var poise = MakeAttribute("Poise");
+            var dial = MakeAttribute("Dial");
+            var gas = MakeGAS(MakeSet(
+                MakeElement(poise, 25, 25, EAttributeOverflowPolicy.ZeroToBase),
+                MakeElement(dial, 0, 0, EAttributeOverflowPolicy.ZeroToBase)));
+
+            gas.TryModifyAttribute(dial, SourcedModifiedAttributeValue.GenerateSimple(gas, dial, 2f, 2f));
+            AssertValue(gas, dial, "raising an empty pool by 2/2", 2, 2);
+
+            gas.TryModifyAttribute(poise, SourcedModifiedAttributeValue.GenerateSimple(gas, poise, 12.5f, 12.5f));
+            AssertValue(gas, poise, "raising a full pool by 12.5/12.5", 37.5f, 37.5f);
+
+            gas.TryModifyAttribute(poise, SourcedModifiedAttributeValue.GenerateSimple(gas, poise, -10f, -10f));
+            AssertValue(gas, poise, "lowering it by 10/10", 27.5f, 27.5f);
+
+            gas.TryModifyAttribute(poise, SourcedModifiedAttributeValue.GenerateSimple(gas, poise, 0f, -20f));
+            AssertValue(gas, poise, "lowering only the Base pulls Current down with it", 7.5f, 7.5f);
         }
 
         /// <summary>
