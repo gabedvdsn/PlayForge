@@ -70,6 +70,7 @@ namespace FarEmerald.PlayForge.Tests
             RunScenario(nameof(S17_GAS_P1_IdleFrame_AllocatesNothing), S17_GAS_P1_IdleFrame_AllocatesNothing);
             RunScenario(nameof(S18_GAS_P2_TagChecks_AllocateNothing), S18_GAS_P2_TagChecks_AllocateNothing);
             RunScenario(nameof(S19_TS_04_BrokenAbility_IsReported), S19_TS_04_BrokenAbility_IsReported);
+            RunScenario(nameof(S20_PC_01_ThrowingStep_DoesNotStallTheFrame), S20_PC_01_ThrowingStep_DoesNotStallTheFrame);
             RunScenario(nameof(S23_TS_01_Resume_LeavesTimeScaleAlone), S23_TS_01_Resume_LeavesTimeScaleAlone);
             RunScenario(nameof(S24_GAS_03_GiveItem_LandsOnTheShelf), S24_GAS_03_GiveItem_LandsOnTheShelf);
 
@@ -1037,6 +1038,99 @@ namespace FarEmerald.PlayForge.Tests
 
             public override bool IsCriticalSection => false;
             public override void Prepare(AbilityDataPacket data) => throw new System.InvalidOperationException(Message);
+        }
+
+        /// <summary>
+        /// A process whose step throws is reported, and the frame goes on without it: the processes stepped
+        /// after it still step, and a state queued for it, such as a termination, still applies. A throwing
+        /// step used to end the whole frame's stepping and skip its own flush, so a fighter despawned on a
+        /// frame where something else threw kept stepping its destroyed body for good, throwing every frame
+        /// and starving every process stepped after it (PlayForge log PF-011).
+        /// </summary>
+        private static void S20_PC_01_ThrowingStep_DoesNotStallTheFrame()
+        {
+            // A process control of its own, so the test steps only its processes
+            var previous = ProcessControl.Instance;
+            var host = new GameObject("S20 Process Control") { hideFlags = HideFlags.HideAndDontSave };
+            var control = host.AddComponent<ProcessControl>();
+            var options = new SerializedObject(control);
+            options.FindProperty("DontDestroyOnLoad").boolValue = false;
+            options.FindProperty("CollectOnAwake").boolValue = false;
+            options.ApplyModifiedPropertiesWithoutUndo();
+
+            var logger = Debug.unityLogger;
+            var original = logger.logHandler;
+            var recorder = new RecordingLogHandler();
+
+            try
+            {
+                ProcessControl.Instance = null;
+                control.Bootstrap();
+
+                // Stepped in the order registered: the broken one first
+                var broken = new SteppedProcess("S20 Broken", throws: true);
+                var after = new SteppedProcess("S20 After", throws: false);
+                AssertTrue("register the broken process", ProcessControl.Register(broken, control, ProcessDataPacket.Default(), out var brokenRelay));
+                AssertTrue("register the process after it", ProcessControl.Register(after, control, ProcessDataPacket.Default(), out _));
+                AssertTrue("both are running", brokenRelay.IsRunning && after.Relay.IsRunning);
+
+                var stepProcesses = typeof(ProcessControl).GetMethod("StepProcesses",
+                    System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic);
+                AssertTrue("ProcessControl steps through StepProcesses", stepProcesses != null);
+                if (stepProcesses == null) return;
+
+                // Torn down while running, as a despawned fighter is: the termination waits for its step
+                control.Terminate(brokenRelay.CacheIndex);
+
+                bool escaped = false;
+                logger.logHandler = recorder;
+                try
+                {
+                    stepProcesses.Invoke(control, new object[] { EProcessStepTiming.Update });
+                }
+                catch (System.Reflection.TargetInvocationException)
+                {
+                    escaped = true;
+                }
+                finally
+                {
+                    logger.logHandler = original;
+                }
+
+                AssertTrue("the broken step's exception stays in its step", !escaped);
+                AssertTrue($"the process after the broken one still steps that frame (stepped {after.Steps} times)", after.Steps == 1);
+                AssertTrue($"the broken process's termination applies (state {brokenRelay.State})", brokenRelay.State == EProcessState.Terminated);
+                AssertTrue($"the broken step is reported (logged: {recorder.Errors.Count} errors)",
+                    recorder.Errors.Exists(message => message.Contains(SteppedProcess.Message)));
+            }
+            finally
+            {
+                logger.logHandler = original;
+                control.TerminateAllImmediately();
+                Object.DestroyImmediate(host);
+                ProcessControl.Instance = previous;
+            }
+        }
+
+        /// <summary>A synchronous process stepped every Update that counts its steps; a broken one throws in each.</summary>
+        private class SteppedProcess : LazyRuntimeProcess
+        {
+            public const string Message = "S20: the step broke";
+
+            private readonly bool throws;
+            public int Steps;
+
+            public SteppedProcess(string name, bool throws)
+                : base(name, EProcessStepPriorityMethod.Manual, 0, EProcessStepTiming.Update, EProcessLifecycle.Synchronous)
+            {
+                this.throws = throws;
+            }
+
+            public override void WhenUpdate()
+            {
+                Steps++;
+                if (throws) throw new System.InvalidOperationException(Message);
+            }
         }
 
         /// <summary>Keeps errors and exceptions logged while it's installed, and prints nothing.</summary>

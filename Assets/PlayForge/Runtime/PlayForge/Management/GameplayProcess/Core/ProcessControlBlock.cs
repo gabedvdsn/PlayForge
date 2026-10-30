@@ -224,26 +224,37 @@ namespace FarEmerald.PlayForge
 
         public void Step(EProcessStepTiming timing)
         {
-            switch (timing)
+            // A step that throws is reported and goes no further, as a MonoBehaviour's Update would: the
+            // rest of the frame's processes still step, and a state queued for this one still applies
+            // below. Escaping, it ended the whole frame's stepping and skipped the flush, so a process
+            // terminated while its step kept throwing never left Running (PF-011).
+            try
             {
-                case EProcessStepTiming.None:
-                    break;
-                case EProcessStepTiming.Update:
-                    Wrapper.WhenUpdate(Wrapper.Relay);
-                    break;
-                case EProcessStepTiming.LateUpdate:
-                    Wrapper.WhenLateUpdate(Wrapper.Relay);
-                    break;
-                case EProcessStepTiming.FixedUpdate:
-                    Wrapper.WhenFixedUpdate(Wrapper.Relay);
-                    break;
-                case EProcessStepTiming.UpdateAndLate:
-                case EProcessStepTiming.UpdateAndFixed:
-                case EProcessStepTiming.LateAndFixed:
-                    break;
-                case EProcessStepTiming.UpdateFixedAndLate:
-                default:
-                    throw new ArgumentOutOfRangeException(nameof(timing), timing, null);
+                switch (timing)
+                {
+                    case EProcessStepTiming.None:
+                        break;
+                    case EProcessStepTiming.Update:
+                        Wrapper.WhenUpdate(Wrapper.Relay);
+                        break;
+                    case EProcessStepTiming.LateUpdate:
+                        Wrapper.WhenLateUpdate(Wrapper.Relay);
+                        break;
+                    case EProcessStepTiming.FixedUpdate:
+                        Wrapper.WhenFixedUpdate(Wrapper.Relay);
+                        break;
+                    case EProcessStepTiming.UpdateAndLate:
+                    case EProcessStepTiming.UpdateAndFixed:
+                    case EProcessStepTiming.LateAndFixed:
+                        break;
+                    case EProcessStepTiming.UpdateFixedAndLate:
+                    default:
+                        throw new ArgumentOutOfRangeException(nameof(timing), timing, null);
+                }
+            }
+            catch (Exception ex)
+            {
+                Debug.LogException(ex);
             }
 
             // Synchronous processes have no async completion to flush queued state.
