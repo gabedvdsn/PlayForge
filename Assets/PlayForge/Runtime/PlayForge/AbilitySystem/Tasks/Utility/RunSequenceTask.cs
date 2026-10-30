@@ -69,10 +69,11 @@ namespace FarEmerald.PlayForge
                 }
                 catch (System.OperationCanceledException)
                 {
-                    // External cancellation (e.g., the outer ability was interrupted). Propagate
-                    // the cancellation to the inner sequence so it tears down cleanly rather than
-                    // being left behind as an orphaned runtime.
-                    taskSeq.Interrupt();
+                    // External cancellation (e.g., the outer ability was interrupted). End the inner
+                    // sequence so it tears down cleanly rather than being left behind as an orphaned
+                    // runtime. Through its relay, because an interrupt can be refused by a critical
+                    // section, and can't reach a run that hasn't started (TS-G).
+                    relay.TerminateImmediate();
                     throw;
                 }
                 finally
