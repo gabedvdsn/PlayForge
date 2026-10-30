@@ -209,7 +209,7 @@ namespace FarEmerald.PlayForge
                     if (!_criticalExitFired && (Definition.Metadata?.IsCritical ?? false))
                     {
                         _criticalExitFired = true;
-                        OnCriticalSectionExited?.Invoke();
+                        NotifyCriticalSectionExited();
                     }
                 }
                 
@@ -387,8 +387,17 @@ namespace FarEmerald.PlayForge
             }
             finally
             {
-                var ctx = new SequenceEventContext(Data, this, stage);
-                stage.OnTerminate?.Invoke(ctx, !cancelled && error is null);
+                // The rest of this block is what moves the sequence on, so a throwing handler can't be let
+                // past here (TS-E)
+                try
+                {
+                    var ctx = new SequenceEventContext(Data, this, stage);
+                    stage.OnTerminate?.Invoke(ctx, !cancelled && error is null);
+                }
+                catch (Exception ex)
+                {
+                    Debug.LogError($"[TaskSequence] Exception in stage OnTerminate handler: {ex}");
+                }
 
                 // Pop stage from active stack (also decrements critical locks if applicable)
                 PopActiveStage(stage);
@@ -543,13 +552,28 @@ namespace FarEmerald.PlayForge
                             StageIndex >= _lastCriticalStageIndex)
                         {
                             _criticalExitFired = true;
-                            OnCriticalSectionExited?.Invoke();
+                            NotifyCriticalSectionExited();
                         }
                     }
                 }
             }
         }
         
+        /// <summary>
+        /// Both places this fires are in cleanup that has to finish, and a listener's throw is its own (TS-E).
+        /// </summary>
+        private void NotifyCriticalSectionExited()
+        {
+            try
+            {
+                OnCriticalSectionExited?.Invoke();
+            }
+            catch (Exception ex)
+            {
+                Debug.LogError($"[TaskSequence] Exception in OnCriticalSectionExited handler: {ex}");
+            }
+        }
+
         private SequenceStage[] GetActiveStages()
         {
             lock (_activeStageStack)
