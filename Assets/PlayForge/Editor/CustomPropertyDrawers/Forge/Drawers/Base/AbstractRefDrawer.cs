@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
-using log4net.Appender;
 using UnityEditor;
 using UnityEngine;
 using UnityEngine.UIElements;
