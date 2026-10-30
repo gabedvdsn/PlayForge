@@ -64,12 +64,20 @@ namespace FarEmerald.PlayForge
         /// <summary>True while this process is Waiting because ProcessControl is, and goes back when it isn't.</summary>
         public bool HeldByControl => _heldByControl;
 
+        /// <summary>True once something has asked this process to terminate. It outranks a pause.</summary>
+        public bool TerminateRequested => _terminateRequested;
+
         private bool _isInitialized;
         private bool _hasRun;
         private bool _midRun;
         private bool _heldByControl;
+        private bool _terminateRequested;
+        private bool _runEndedWhilePaused;
 
         private CancellationTokenSource _cts;
+
+        // A pause left this run going, for the process to hold
+        private bool RunIsHeld => _cts != null && !_cts.IsCancellationRequested;
 
         private ProcessControlBlock(int cacheIndex, AbstractProcessWrapper wrapper)
         {
@@ -139,6 +147,7 @@ namespace FarEmerald.PlayForge
         /// </summary>
         public void QueueTerminate()
         {
+            _terminateRequested = true;
             QueueNextState(EProcessState.Terminated);
             if (State != EProcessState.Running) return;
 
@@ -169,7 +178,7 @@ namespace FarEmerald.PlayForge
 
             if (State == EProcessState.Running && state != EProcessState.Running)
             {
-                if (state == EProcessState.Terminated || !Wrapper.TryHandlePause(Relay)) Interrupt();
+                if (state == EProcessState.Terminated || !TryHoldRun()) Interrupt();
             }
 
             QueuedState = state;
@@ -194,6 +203,14 @@ namespace FarEmerald.PlayForge
         public void WaitForControl()
         {
             _heldByControl = true;
+        }
+
+        /// <summary>
+        /// Makes ProcessControl's pause this process's own, so it stays paused when that ends.
+        /// </summary>
+        public void KeepPaused()
+        {
+            _heldByControl = false;
         }
 
         /// <summary>
@@ -238,12 +255,31 @@ namespace FarEmerald.PlayForge
                 QueuedState = ProcessControl.Instance.GetDefaultTransitionState(this);
             }
 
-            if (_hasRun && Wrapper.TryHandleResume(Relay)) return true;
-            
+            if (_terminateRequested) QueuedState = EProcessState.Terminated;
+
+            // Nothing to go back to: the run finished during a pause, or a Terminate is due and the pause
+            // cancelled the run it was waiting for
+            if (_runEndedWhilePaused || (_terminateRequested && !RunIsHeld))
+            {
+                _runEndedWhilePaused = false;
+                SetQueuedState();
+                return true;
+            }
+
             if (Wrapper.Lifecycle == EProcessLifecycle.Synchronous)
             {
+                if (_hasRun) TryResumeRun();
+
                 _hasRun = true;
                 return true;
+            }
+
+            // A run the pause left going picks up where it stopped, or is cancelled like any other
+            if (RunIsHeld)
+            {
+                if (TryResumeRun()) return true;
+
+                _cts.Cancel();
             }
 
             RunProcessAsync().Forget();
@@ -262,6 +298,9 @@ namespace FarEmerald.PlayForge
         public bool TryTerminate()
         {
             if (State != EProcessState.Terminated) return false;
+
+            // A run that a pause left going has nothing else to end it
+            _cts?.Cancel();
 
             Wrapper.WhenTerminate(Wrapper.Relay);
             return ProcessControl.Instance.Unregister(this);
@@ -329,9 +368,39 @@ namespace FarEmerald.PlayForge
 
         #region Private Helpers
 
+        // The process's own code, so a throw is reported and counts as a no
+        private bool TryHoldRun()
+        {
+            try
+            {
+                return Wrapper.TryHandlePause(Relay);
+            }
+            catch (Exception ex)
+            {
+                Debug.LogException(ex);
+                return false;
+            }
+        }
+
+        private bool TryResumeRun()
+        {
+            try
+            {
+                return Wrapper.TryHandleResume(Relay);
+            }
+            catch (Exception ex)
+            {
+                Debug.LogException(ex);
+                return false;
+            }
+        }
+
         private async UniTask RunProcessAsync()
         {
-            _cts = new CancellationTokenSource();
+            // A token source per run: a pause and resume in one frame starts a new run while the old one is
+            // still unwinding, and sharing one let the old run cancel the new one and end the process (PC-12)
+            var cts = new CancellationTokenSource();
+            _cts = cts;
             _hasRun = true;
 
             if (!_midRun)
@@ -339,13 +408,14 @@ namespace FarEmerald.PlayForge
                 _totalUpdateTime = 0f;
             }
 
+            bool cancelled = false;
             try
             {
-                await Wrapper.RunProcess(Wrapper.Relay, _cts.Token);
+                await Wrapper.RunProcess(Wrapper.Relay, cts.Token);
             }
             catch (OperationCanceledException)
             {
-                _midRun = true;
+                cancelled = true;
             }
             catch (Exception ex)
             {
@@ -354,17 +424,27 @@ namespace FarEmerald.PlayForge
                 Debug.LogException(ex);
             }
 
-            if (_cts != null && !_cts.IsCancellationRequested)
+            bool replaced = _cts != cts;
+            cancelled |= cts.IsCancellationRequested;
+
+            if (!cts.IsCancellationRequested)
             {
-                _cts.Cancel();
+                cts.Cancel();
             }
 
-            _cts?.Dispose();
+            cts.Dispose();
+
+            if (replaced) return;
+
             _cts = null;
+            _midRun = cancelled;
 
             // A forced state change didn't wait for this run, so there is nothing left to apply. Applying it
             // again ran WhenTerminate or WhenWait a second time (PC-4)
             if (State == EProcessState.Running) SetQueuedState();
+
+            // Left going by a pause, it finished anyway, and is what a resume moves on from
+            else if (State == EProcessState.Waiting && !cancelled) _runEndedWhilePaused = true;
         }
 
         #endregion

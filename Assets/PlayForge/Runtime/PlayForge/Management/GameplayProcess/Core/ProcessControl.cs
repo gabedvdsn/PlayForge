@@ -794,17 +794,19 @@ namespace FarEmerald.PlayForge
         }
         
         /// <summary>
-        /// Pauses/waits the process. If cascading is enabled, also pauses children.
+        /// Pauses/waits the process. If cascading is enabled, also pauses children. It takes effect at once:
+        /// a process that can hold its run keeps it, and one that can't has it cancelled, to start again on
+        /// resume. Refused for a process that's been told to terminate.
         /// </summary>
         public bool Wait(int cacheIndex, bool cascade = true)
         {
             if (!_active.TryGetValue(cacheIndex, out var pcb)) 
                 return false;
-            if (!ValidateStateTransition(pcb, EProcessState.Waiting)) 
-                return false;
-            
-            pcb.QueueNextState(EProcessState.Waiting);
-            
+            // Already stopped by ProcessControl, asking makes the pause its own, so it outlasts ProcessControl's
+            if (pcb.HeldByControl) pcb.KeepPaused();
+            else if (ValidateStateTransition(pcb, EProcessState.Waiting)) pcb.ForceIntoState(EProcessState.Waiting);
+            else return false;
+
             if (cascade && CascadeToChildren)
             {
                 CascadeStateToChildren(cacheIndex, EProcessState.Waiting);
@@ -903,13 +905,16 @@ namespace FarEmerald.PlayForge
                 if (!_active.TryGetValue(targetIndex, out var targetPcb))
                     continue;
 
-                // Skip if already in target state
-                if (targetPcb.State == state)
-                    continue;
-
                 // Skip siblings that opted out of cascade
                 if (siblings.Contains(targetIndex) && !targetPcb.Wrapper.ParticipateInSiblingCascade)
                     continue;
+
+                // Skip if already in target state
+                if (targetPcb.State == state)
+                {
+                    if (state == EProcessState.Waiting) targetPcb.KeepPaused();
+                    continue;
+                }
 
                 switch (state)
                 {
@@ -919,7 +924,7 @@ namespace FarEmerald.PlayForge
                         break;
                     case EProcessState.Waiting:
                         if (ValidateStateTransition(targetPcb, EProcessState.Waiting))
-                            targetPcb.QueueNextState(EProcessState.Waiting);
+                            targetPcb.ForceIntoState(EProcessState.Waiting);
                         break;
                     case EProcessState.Terminated:
                         targetPcb.QueueTerminate();
@@ -1338,7 +1343,7 @@ namespace FarEmerald.PlayForge
                 (EProcessState.Waiting, EProcessState.Running, _) => GetDefaultTransitionState(pcb) == EProcessState.Running,
                 
                 // Waiting transitions
-                (EProcessState.Running, EProcessState.Waiting, _) => true,
+                (EProcessState.Running, EProcessState.Waiting, _) => !pcb.TerminateRequested,
                 (EProcessState.Created, EProcessState.Waiting, EProcessLifecycle.RequiresControl) => true,
                 
                 _ => false

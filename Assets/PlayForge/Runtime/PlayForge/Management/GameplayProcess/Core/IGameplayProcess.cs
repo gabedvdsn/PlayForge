@@ -39,7 +39,18 @@ namespace FarEmerald.PlayForge
         /// <param name="token">Cancellation token</param>
         /// <returns></returns>
         public UniTask RunProcess(CancellationToken token);
+
+        /// <summary>
+        /// Called via ProcessControl when a running process is paused. Return true to keep the run and hold it
+        /// yourself, which it does by watching its relay. Return false, as the default does, and the run is
+        /// cancelled and a new one starts on resume.
+        /// </summary>
         public bool TryHandlePause();
+
+        /// <summary>
+        /// Called via ProcessControl on resume, for a run that was kept. Return true once it has picked up where
+        /// it stopped. Return false and it's cancelled, and a new one starts.
+        /// </summary>
         public bool TryHandleResume();
         
         public void WhenDestroy();

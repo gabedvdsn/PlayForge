@@ -51,13 +51,15 @@
             => runtime - (unscaled ? UnscaledLifetime : Lifetime);
 
         /// <summary>
-        /// Pauses this process and optionally its children.
+        /// Pauses this process and optionally its children, at once. Returns false for a process that's been
+        /// told to terminate, or one that's already paused.
         /// </summary>
         public bool Pause(bool cascade = true) 
             => ProcessControl.Instance.Pause(CacheIndex, cascade);
 
         /// <summary>
-        /// Resumes this process and optionally its children.
+        /// Resumes this process and optionally its children. A process that held its run carries on, and one
+        /// that didn't starts a new run. Returns false while ProcessControl itself is paused.
         /// </summary>
         public bool Unpause(bool cascade = true) 
             => ProcessControl.Instance.Unpause(CacheIndex, cascade);
