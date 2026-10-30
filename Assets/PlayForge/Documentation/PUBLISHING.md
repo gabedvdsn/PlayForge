@@ -65,6 +65,17 @@ Copyright (c) 2019 Yoshifumi Kawai / Cysharp, Inc.
 5. Open + play the sample scene.
 6. Make a **Windows standalone build** (and IL2CPP if claiming support) — must succeed.
 
+Verified in the DEV project (2026-07-19, headless): golden tests 12/12; Windows
+standalone (Mono) build SUCCEEDED — 0 errors. Re-run both in the clean project at
+packaging time via:
+`Unity -batchmode -nographics -projectPath <proj> -executeMethod FarEmerald.PlayForge.Tests.PlayForgeGoldenTests.RunAll`
+`Unity -batchmode -nographics -projectPath <proj> -executeMethod FarEmerald.PlayForge.Extended.Editor.BuildVerification.BuildWindowsPlayer`
+
+Minor dev-project cleanups noted during verification (not package blockers):
+three editor-assembly compile warnings (GameplayEffectDrawer.cs:161 unreachable code,
+AbilityEditor.cs:138 non-exhaustive switch, TheForge.ViewTab.cs:1640 unused local) and
+a scratch scene `Assets/asda.unity` at the project root.
+
 ## ☐ 6. Submission mechanics
 
 - ☐ Publisher account; support email/website.
