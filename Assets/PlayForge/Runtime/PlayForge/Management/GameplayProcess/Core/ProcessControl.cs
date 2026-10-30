@@ -65,74 +65,41 @@ namespace FarEmerald.PlayForge
         #region Stepping Optimization
         
         /// <summary>
-        /// Optimized container for processes that need to be stepped.
-        /// Uses flat array iteration instead of nested dictionary + LINQ.
+        /// The processes stepped at one timing, in step order: by priority, lowest first, and within a
+        /// priority in the order they arrived. Stepping reads this every frame, so it's kept in order as
+        /// processes come and go. The priority used to be stored and never applied (PC-22).
         /// </summary>
         private class StepGroup
         {
-            // Flat list of process indices, grouped by priority
             private readonly List<int> _indices = new();
-            private readonly Dictionary<int, int> _priorityStarts = new(); // priority -> start index
-            private readonly Dictionary<int, int> _priorityCounts = new(); // priority -> count
-            private readonly List<int> _sortedPriorities = new();
-            
-            private bool _dirty;
+            private readonly List<int> _priorities = new();
 
             public void Add(int cacheIndex, int priority)
             {
-                if (!_priorityCounts.ContainsKey(priority))
-                {
-                    _priorityCounts[priority] = 0;
-                    _sortedPriorities.Add(priority);
-                    _sortedPriorities.Sort();
-                    _dirty = true;
-                }
-                
-                _indices.Add(cacheIndex);
-                _priorityCounts[priority]++;
-                _dirty = true;
+                int position = _priorities.Count;
+                while (position > 0 && _priorities[position - 1] > priority) position--;
+
+                _indices.Insert(position, cacheIndex);
+                _priorities.Insert(position, priority);
             }
 
             public bool Remove(int cacheIndex)
             {
-                int idx = _indices.IndexOf(cacheIndex);
-                if (idx < 0) return false;
-                
-                _indices.RemoveAt(idx);
-                _dirty = true;
+                int position = _indices.IndexOf(cacheIndex);
+                if (position < 0) return false;
+
+                _indices.RemoveAt(position);
+                _priorities.RemoveAt(position);
                 return true;
             }
 
-            private void RebuildIfDirty()
-            {
-                if (!_dirty) return;
-                
-                // Recalculate priority starts
-                _priorityStarts.Clear();
-                int currentStart = 0;
-                foreach (int priority in _sortedPriorities)
-                {
-                    if (_priorityCounts.TryGetValue(priority, out int count) && count > 0)
-                    {
-                        _priorityStarts[priority] = currentStart;
-                        currentStart += count;
-                    }
-                }
-                
-                _dirty = false;
-            }
+            public List<int> GetIndices() => _indices;
 
-            public List<int> GetIndices()
-            {
-                RebuildIfDirty();
-                return _indices;
-            }
-            
             public int Count => _indices.Count;
         }
-        
+
         #endregion
-        
+
         #region Process Watching
         
         private struct ProcessWatcher
