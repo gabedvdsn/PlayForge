@@ -139,7 +139,8 @@ from. It lives outside `Assets/` so it never ships in the package.
 - [ ] Port Arcade Fighter's extra 10 golden scenarios, taking the suite from 12 to 22.
 - [ ] GAS-1: give `RuntimeGameplayAbilitySystem` the timing `EProcessStepTiming.UpdateAndLate`
   (`RuntimeGameplayAbilitySystem.cs:61`).
-- [ ] GAS-3: initialize `ItemShelf` (`ItemSystemComponent.cs:11`).
+- [x] GAS-3: initialize `ItemShelf` (`ItemSystemComponent.cs:11`). Done ahead of PF-007, whose S18 needs it.
+  The finding's other three bugs are now GAS-32 (Phase 1).
 - [ ] SP-16: remove the `targetSemantics: true` masks on S6, S8 and S11 (`PlayForgeGoldenTests.cs:55, 61, 64`).
 - [ ] Gate: the golden tests are green with none masked. Record the result here.
 
@@ -228,7 +229,7 @@ had no letter in the review.
 |---|---|---|---|---|---|
 | GAS-1 | C | 0 | The runtime GAS steps in Update only, so its end of frame (workers, death) never runs | `RuntimeGameplayAbilitySystem.cs:61` | open |
 | GAS-2 | C | 0 | Pre-change workers have no effect (PF-004, now worse) | `AttributeSystemComponent.cs:275-341`, `EffectSystemComponent.cs:115, 157, 186`, `ForgeHelper.cs:229-235` | fixed |
-| GAS-3 | C | 0 | `ItemShelf` is never created, so `GiveItem` throws; `ClearAllItems` skips items; unequip removes every source's effect; `IsActive` is always false | `ItemSystemComponent.cs:11, 82, 230-240`, `ItemSpecContainer.cs:133, 150`, `ItemSpec.cs:32-35` | open |
+| GAS-3 | C | 0 | `ItemShelf` is never created, so `GiveItem` throws, and every read of the empty inventory allocates a new list. The rest of this finding moved to GAS-32 | `ItemSystemComponent.cs:11, 279` | fixed |
 | GAS-4 | C | 1 | The independent-durations container throws on construction; its struct copies never count down | `AbstractEffectContainer.cs:32, 54`, `IndependentDurationsContainer.cs:18-110` | open |
 | GAS-5 | C | 1 | Re-application always adds one stack; Max is never enforced; the last config wins | `SingleDurationEffectContainer.cs:58`, `StackQueueEffectContainer.cs:62`, `AbstractEffectConfig.cs:261-264`, `GameplayEffectDuration.cs:281-291` | open |
 | GAS-6 | C | 1 | Removal requirements are inverted and AND-ed; application requires the removal group to pass | `EffectTagRequirements.cs:60-63`, `GameplayEffect.cs:169-179` | open |
@@ -257,6 +258,7 @@ had no letter in the review.
 | GAS-29 | M | 1 | Target validation and range checks fail for a runtime GAS | `AbstractTargetingAbilityTask.cs:73, 89-91`, `CommonValidations.cs:132-138` | open |
 | GAS-30 | M | 1 | `UnlinkAllChildren` re-links; Ability unlink checks Cost instead of Cooldown | `EntityIdentity.cs:202, 210`, `Ability.cs:151` | open |
 | GAS-31 | M | 1 | `AbstractTargetedMonoProcess` dereferences a missing target after warning about it | `AbstractTargetedMonoProcess.cs:22-26` | open |
+| GAS-32 | C | 1 | Split from GAS-3, reachable once items can be given: `ClearAllItems` skips every other item, so their equipped effects stay; unequip removes every source's effect; `ItemSpec.IsActive` is always false | `ItemSystemComponent.cs:230-240`, `ItemSpecContainer.cs:133, 150`, `ItemSpec.cs:32-35` | open |
 | GAS-P1 | M | 0 | `ActionQueue` LINQ allocations; snapshot built every frame (PF-006) | `ActionQueue.cs:41, 46, 156`, `FrameSummary.cs:340-351` | fixed |
 | GAS-P2 | M | 0 | Tag and FrameSummary allocations (PF-007) | `TagCache.cs:60`, `TagQuery.cs:89-136`, `FrameSummary.cs:306-308` | open |
 | GAS-P3 | M | 3 | Each application revalidates every container and rebuilds all tags (area application is quadratic) | `EffectSystemComponent.cs:312-348`, `GameplayAbilitySystem.cs:250-281` | open |
@@ -377,6 +379,11 @@ Record baselines, gate results and notable decisions here, newest first.
     settled). With only the four files Arcade Fighter lists, S17 still measured 49.2 bytes per frame; the
     rest was `TagCache.EvaluateTagWorkers` copying its active workers each frame. Arcade Fighter logged that
     under PF-007 (one commit held both), so that hunk lands here. 18/18 with it.
+  - GAS-3 (ahead of PF-007): with PF-007 applied, S18 still measured 47.1 bytes per round in batch mode,
+    though Arcade Fighter reported it green (in-editor runs; not re-checked there). The allocation was
+    `ItemSystemComponent.GetItemContainers` returning a new list for the never-created shelf; initializing
+    the shelf took S18 to green. So GAS-3 landed first: S24 red without it (`ArgumentNullException` from
+    `HasItem`); 19/19 with it.
 
 - 2026-10-29, **Phase 0 baseline** at `455dd44`, no code changed:
   - **Build:** both MSBuild commands under Environment succeed. The only C# diagnostics are the three ED-1

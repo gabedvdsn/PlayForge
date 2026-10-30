@@ -69,6 +69,7 @@ namespace FarEmerald.PlayForge.Tests
             RunScenario(nameof(S16_GAS_12_RawDelta_MovesBaseAndCurrentTogether), S16_GAS_12_RawDelta_MovesBaseAndCurrentTogether);
             RunScenario(nameof(S17_GAS_P1_IdleFrame_AllocatesNothing), S17_GAS_P1_IdleFrame_AllocatesNothing);
             RunScenario(nameof(S23_TS_01_Resume_LeavesTimeScaleAlone), S23_TS_01_Resume_LeavesTimeScaleAlone);
+            RunScenario(nameof(S24_GAS_03_GiveItem_LandsOnTheShelf), S24_GAS_03_GiveItem_LandsOnTheShelf);
 
             Report();
         }
@@ -949,6 +950,25 @@ namespace FarEmerald.PlayForge.Tests
                 foreach (var settings in AssetDatabase.LoadAllAssetsAtPath("ProjectSettings/TimeManager.asset"))
                     EditorUtility.ClearDirty(settings);
             }
+        }
+
+        /// <summary>
+        /// A GAS can be given an item (GAS-3). ItemSystemComponent never created its shelf, so GiveItem
+        /// threw a NullReferenceException, and every read of the empty inventory allocated a new list.
+        /// </summary>
+        private static void S24_GAS_03_GiveItem_LandsOnTheShelf()
+        {
+            var gas = MakeGAS(MakeSet(MakeElement(MakeAttribute("Unused"), 1, 1)));
+            var items = gas.GetItemSystem();
+
+            var sword = ScriptableObject.CreateInstance<Item>();
+            sword.name = "TestSword";
+            sword.Tags.AssetTag = Tag.Generate(Unique("Test.Item.Sword"));
+
+            AssertTrue("an empty inventory holds nothing", items.ItemCount == 0 && items.GetItemContainers().Count == 0);
+            AssertTrue("give the item", items.GiveItem(sword, out int index));
+            AssertTrue("it is on the shelf at index 0", index == 0 && items.HasItem(sword) && items.ItemCount == 1);
+            AssertTrue("the containers list it", items.GetItemContainers().Count == 1);
         }
     }
 }

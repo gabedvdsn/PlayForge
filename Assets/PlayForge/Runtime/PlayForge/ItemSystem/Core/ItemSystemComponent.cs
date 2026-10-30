@@ -8,7 +8,7 @@ namespace FarEmerald.PlayForge
         public readonly IGameplayAbilitySystem Self;
         public readonly ItemSystemCallbacks Callbacks = new();
 
-        private List<ItemSpecContainer> ItemShelf;
+        private readonly List<ItemSpecContainer> ItemShelf = new();
 
         private bool allowDuplicateItems;
         private bool allowDuplicateEquippedItems;
