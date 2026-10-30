@@ -463,7 +463,7 @@ GAS-4 with GAS-5, PC-6, and TS-I with PC-5.
 Record baselines, gate results and notable decisions here, newest first.
 
 - 2026-10-30, **Phase 1, pause**, after Decision 5. PC-7, PC-27, PC-11, PC-12 and TS-Y are `fixed`, plus TS-AB, found
-  on the way. No test is red any more, for the first time. 59 Phase 1 rows are still open (6 critical, 39 high).
+  on the way. No test is red any more, for the first time. 60 Phase 1 rows are still open (6 critical, 40 high).
   - **Result:** 542 tests with no category filter: 535 pass, 0 fail, 7 planted skipped, in three orders (default,
     seeds 1729 and 90210). Planted 7 of 7. The custom golden runner in PlayForge passes 25/25.
   - **Processes:**
