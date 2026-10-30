@@ -282,8 +282,10 @@ namespace FarEmerald.PlayForge
                     // Start stage execution (fire and forget, we wait on signal)
                     ExecuteStageAsync(stage, StageIndex, token).Forget();
                     
-                    // Wait for stage to signal completion (or skip)
-                    await _nextStageSignal.Task.AttachExternalCancellation(token);
+                    // Wait for stage to signal completion (or skip). A cancelled stage signals too, once its
+                    // tasks have stopped, so this doesn't watch the token: leaving at the moment it cancelled
+                    // ran CleanStage below under tasks that were still unwinding (TS-AA)
+                    await _nextStageSignal.Task;
                     
                     // Check if stage had an error that wasn't suppressed
                     if (_pendingStageError != null)
