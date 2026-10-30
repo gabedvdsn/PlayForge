@@ -13,10 +13,6 @@ namespace FarEmerald.PlayForge
         {
         }
         
-        public override void WhenInitialize()
-        {
-            
-        }
         public override void WhenUpdate()
         {
             

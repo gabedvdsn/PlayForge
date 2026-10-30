@@ -53,7 +53,14 @@ namespace FarEmerald.PlayForge
         }
         public override void WhenTerminate(ProcessRelay relay)
         {
-            Process.WhenTerminate();
+            try
+            {
+                Process.WhenTerminate();
+            }
+            finally
+            {
+                Process.MarkEnded();
+            }
         }
         public override void WhenTerminateSafe(ProcessRelay relay)
         {

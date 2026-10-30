@@ -21,6 +21,11 @@ namespace FarEmerald.PlayForge
         public ProcessDataPacket Data => regData;
         
         private bool _initialized;
+
+        /// <summary>
+        /// True from registration until the process ends, which is what stops one instance running twice at
+        /// once. A process that has ended can be registered again.
+        /// </summary>
         public bool IsInitialized => _initialized;
         public ProcessRelay Relay;
         
@@ -72,6 +77,11 @@ namespace FarEmerald.PlayForge
         public virtual void WhenInitialize()
         {
             _initialized = true;
+        }
+
+        internal void MarkEnded()
+        {
+            _initialized = false;
         }
 
         public virtual void WhenUpdate()

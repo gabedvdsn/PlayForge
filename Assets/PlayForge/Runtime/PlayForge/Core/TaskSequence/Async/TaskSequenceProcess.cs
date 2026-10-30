@@ -131,6 +131,7 @@ namespace FarEmerald.PlayForge
 
         public override void WhenInitialize()
         {
+            base.WhenInitialize();
             SeqData = regData as SequenceDataPacket;
         }
 
