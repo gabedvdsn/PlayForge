@@ -58,7 +58,7 @@ namespace FarEmerald.PlayForge
         public string StageName => CurrentStage?.Metadata?.Name;
         
         /// <summary>How many times the current stage has repeated.</summary>
-        public int StageRepeatCount => CurrentStage?.RepeatCount ?? 0;
+        public int StageRepeatCount => Runtime?.GetRepeatCount(CurrentStage) ?? 0;
         
         /// <summary>True if the sequence is currently inside a critical section.</summary>
         public bool IsCriticalSection => Runtime?.IsCriticalSection ?? false;

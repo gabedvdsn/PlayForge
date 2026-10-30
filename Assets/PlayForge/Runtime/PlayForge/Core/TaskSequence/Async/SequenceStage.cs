@@ -87,18 +87,6 @@ namespace FarEmerald.PlayForge
         /// </summary>
         public bool Repeat { get; set; }
         
-        /// <summary>
-        /// Set to true to break out of a repeat loop (for Repeat or RepeatUntilSkippedPolicy).
-        /// Reset at the start of each stage execution.
-        /// </summary>
-        public bool RepeatBroken { get; internal set; }
-        
-        /// <summary>
-        /// Count of how many times this stage has repeated in the current run.
-        /// Reset at the start of each stage execution.
-        /// </summary>
-        public int RepeatCount { get; internal set; }
-        
         // ═══════════════════════════════════════════════════════════════════════════
         // STAGE-LOCAL INJECTION SETTINGS
         // ═══════════════════════════════════════════════════════════════════════════
@@ -190,31 +178,6 @@ namespace FarEmerald.PlayForge
         {
             if (AllowedInjections == null) return null; // Inherit from sequence
             return AllowedInjections.Contains(injection.GetType());
-        }
-        
-        /// <summary>
-        /// Resets repeat state for a new execution.
-        /// </summary>
-        internal void ResetRepeatState()
-        {
-            RepeatBroken = false;
-            RepeatCount = 0;
-        }
-        
-        /// <summary>
-        /// Resets all stage conditions for reuse.
-        /// </summary>
-        public void ResetConditions()
-        {
-            foreach (var condition in Conditions)
-            {
-                condition.Reset();
-            }
-            
-            foreach (var subStage in SubStages)
-            {
-                subStage.ResetConditions();
-            }
         }
         
         /// <summary>
@@ -504,22 +467,6 @@ namespace FarEmerald.PlayForge
             return new SyncedTaskSequence(syncStages, name, repeat);
         }
 
-        /// <summary>
-        /// Resets all conditions for a fresh run.
-        /// </summary>
-        internal void ResetConditions()
-        {
-            foreach (var condition in Conditions)
-            {
-                condition.Reset();
-            }
-            
-            foreach (var stage in Stages)
-            {
-                stage.ResetConditions();
-            }
-        }
-        
         private static bool StageHasConditionsRecursive(SequenceStage stage)
         {
             if (stage.HasConditions) return true;

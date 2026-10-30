@@ -20,8 +20,12 @@ namespace FarEmerald.PlayForge
         /// <summary>The immutable definition of this sequence.</summary>
         public TaskSequenceDefinition Definition { get; }
         
-        /// <summary>The current runtime (null when not running).</summary>
-        public TaskSequenceRuntime Runtime { get; private set; }
+        // Every run in progress, newest last. Each has a runtime of its own, because one slot left all but the
+        // newest run out of reach when a sequence ran more than once (TS-I)
+        private readonly List<TaskSequenceRuntime> _runs = new();
+
+        /// <summary>The newest run's runtime (null when not running).</summary>
+        public TaskSequenceRuntime Runtime => _runs.Count > 0 ? _runs[_runs.Count - 1] : null;
         
         /// <summary>True if the sequence is currently executing.</summary>
         public bool IsRunning => Runtime?.IsRunning ?? false;
@@ -50,20 +54,36 @@ namespace FarEmerald.PlayForge
         }
         
         /// <summary>
+        /// Makes a runtime for one run, for a caller that needs to reach that run and no other.
+        /// Pass it to <see cref="Run(TaskSequenceRuntime, ProcessDataPacket, CancellationToken)"/>.
+        /// </summary>
+        public TaskSequenceRuntime CreateRuntime()
+        {
+            return new TaskSequenceRuntime(Definition) { OnCriticalSectionExited = OnCriticalSectionExited };
+        }
+
+        /// <summary>
         /// Runs the sequence with the provided data packet.
         /// </summary>
-        public async UniTask Run(ProcessDataPacket data, CancellationToken token = default)
+        public UniTask Run(ProcessDataPacket data, CancellationToken token = default)
         {
-            Runtime = new TaskSequenceRuntime(Definition);
-            Runtime.OnCriticalSectionExited = OnCriticalSectionExited;
+            return Run(CreateRuntime(), data, token);
+        }
+
+        /// <summary>
+        /// Runs the sequence on a runtime from <see cref="CreateRuntime"/>.
+        /// </summary>
+        public async UniTask Run(TaskSequenceRuntime runtime, ProcessDataPacket data, CancellationToken token = default)
+        {
+            _runs.Add(runtime);
 
             try
             {
-                await Runtime.Run(data, token);
+                await runtime.Run(data, token);
             }
             finally
             {
-                Runtime = null;
+                _runs.Remove(runtime);
             }
         }
 
@@ -72,18 +92,9 @@ namespace FarEmerald.PlayForge
         /// </summary>
         public async UniTask<bool> TryRun(ProcessDataPacket data, CancellationToken token = default)
         {
-            Runtime = new TaskSequenceRuntime(Definition);
-            Runtime.OnCriticalSectionExited = OnCriticalSectionExited;
-
-            try
-            {
-                await Runtime.Run(data, token);
-                return Runtime.CompletedSuccessfully;
-            }
-            finally
-            {
-                Runtime = null;
-            }
+            var runtime = CreateRuntime();
+            await Run(runtime, data, token);
+            return runtime.CompletedSuccessfully;
         }
 
         public bool IsCriticalSection => IsRunning ? Runtime.IsCriticalSection : false;
@@ -99,15 +110,23 @@ namespace FarEmerald.PlayForge
         // ═══════════════════════════════════════════════════════════════════════════
         
         /// <summary>
-        /// Applies an injection to the running sequence.
+        /// Applies an injection to every run of this sequence. To reach one run, inject into its runtime.
         /// </summary>
         public bool Inject(ISequenceInjection injection)
         {
-            return Runtime?.Inject(injection) ?? false;
+            bool applied = false;
+
+            // Backwards, and checked each time, because an injection can end a run
+            for (int i = _runs.Count - 1; i >= 0; i--)
+            {
+                if (i < _runs.Count && _runs[i].Inject(injection)) applied = true;
+            }
+
+            return applied;
         }
         
         /// <summary>
-        /// Interrupts the running sequence.
+        /// Interrupts every run of this sequence.
         /// </summary>
         public bool Interrupt()
         {
@@ -115,7 +134,7 @@ namespace FarEmerald.PlayForge
         }
         
         /// <summary>
-        /// Skips the current stage.
+        /// Skips the current stage of every run of this sequence.
         /// </summary>
         public bool SkipCurrentStage()
         {
@@ -131,7 +150,10 @@ namespace FarEmerald.PlayForge
         /// </summary>
         public void CheckConditions()
         {
-            Runtime?.CheckConditions();
+            for (int i = _runs.Count - 1; i >= 0; i--)
+            {
+                if (i < _runs.Count) _runs[i].CheckConditions();
+            }
         }
         
         /// <summary>
@@ -139,7 +161,10 @@ namespace FarEmerald.PlayForge
         /// </summary>
         public void CheckConditions(IReadOnlyList<SequenceCondition> conditions)
         {
-            Runtime?.CheckConditions(conditions);
+            for (int i = _runs.Count - 1; i >= 0; i--)
+            {
+                if (i < _runs.Count) _runs[i].CheckConditions(conditions);
+            }
         }
         
         // ═══════════════════════════════════════════════════════════════════════════

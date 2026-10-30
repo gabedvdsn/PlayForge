@@ -1530,7 +1530,7 @@ namespace FarEmerald.PlayForge.Extended.Examples
                 .Stage(s => s
                     .WithName("Wave Spawner")
                     .WithRepeat(true)
-                    .OnRepeat(ctx => Debug.Log($"[Wave] Iteration {ctx.Stage.RepeatCount + 1} complete"))
+                    .OnRepeat(ctx => Debug.Log($"[Wave] Iteration {ctx.Runtime.GetRepeatCount(ctx.Stage) + 1} complete"))
                     .Task(async (d, t) =>
                     {
                         int wave = d.Increment(WAVE_COUNT);

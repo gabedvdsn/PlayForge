@@ -21,6 +21,9 @@ namespace FarEmerald.PlayForge
         private readonly bool _hasConditions;
         private readonly EProcessLifecycle _requestedLifecycle;
         private readonly EProcessStepTiming _requestedStepTiming;
+
+        // This process's run, which isn't necessarily the only run of its sequence
+        private TaskSequenceRuntime _runtime;
         
         public SequenceDataPacket SeqData { get; private set; }
 
@@ -154,7 +157,7 @@ namespace FarEmerald.PlayForge
             }
             else
             {
-                _sequence.CheckConditions();
+                _runtime?.CheckConditions();
             }
         }
 
@@ -183,12 +186,14 @@ namespace FarEmerald.PlayForge
                 }
                 else
                 {
-                    await _sequence.Run(regData, token);
+                    _runtime = _sequence.CreateRuntime();
+                    await _sequence.Run(_runtime, regData, token);
                 }
             }
             finally
             {
                 processActive = false;
+                _runtime = null;
             }
         }
 
@@ -272,7 +277,7 @@ namespace FarEmerald.PlayForge
         /// </summary>
         public bool Inject(ISequenceInjection injection)
         {
-            return IsChain ? _chain.Inject(injection) : _sequence.Inject(injection);
+            return IsChain ? _chain.Inject(injection) : _runtime?.Inject(injection) ?? false;
         }
 
         /// <summary>
@@ -281,7 +286,7 @@ namespace FarEmerald.PlayForge
         /// </summary>
         public bool Interrupt()
         {
-            return IsChain ? _chain.Interrupt() : _sequence.Interrupt();
+            return IsChain ? _chain.Interrupt() : Inject(InterruptSequenceInjection.Instance);
         }
 
         /// <summary>

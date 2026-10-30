@@ -56,6 +56,12 @@ namespace FarEmerald.PlayForge
         // Jump request
         private int? _jumpToStageRequest;
         
+        // What this run has done to stages and conditions. Those belong to the definition, which every run
+        // shares, so recording it on them let one run break another's repeat or re-arm its conditions (TS-I)
+        private readonly HashSet<SequenceCondition> _firedConditions = new();
+        private readonly HashSet<SequenceStage> _brokenRepeats = new();
+        private readonly Dictionary<SequenceStage, int> _repeatCounts = new();
+
         // Stage error storage (safer than TrySetException which can cause issues)
         private Exception _pendingStageError;
         
@@ -320,7 +326,8 @@ namespace FarEmerald.PlayForge
             PushActiveStage(stage);
             
             // Reset repeat state
-            stage.ResetRepeatState();
+            _brokenRepeats.Remove(stage);
+            _repeatCounts.Remove(stage);
             
             bool cancelled = false;
             Exception error = null;
@@ -437,11 +444,11 @@ namespace FarEmerald.PlayForge
             // If stage has Repeat flag, we loop here
             if (stage.Repeat)
             {
-                while (!token.IsCancellationRequested && !stage.RepeatBroken)
+                while (!token.IsCancellationRequested && !IsRepeatBroken(stage))
                 {
                     await ExecuteStageInternal(stage, Data, token);
                     
-                    if (token.IsCancellationRequested || stage.RepeatBroken)
+                    if (token.IsCancellationRequested || IsRepeatBroken(stage))
                         break;
                     
                     // Invoke repeat iteration callback
@@ -455,7 +462,7 @@ namespace FarEmerald.PlayForge
                         Debug.LogError($"[TaskSequence] Exception in OnRepeatIteration handler: {ex}");
                     }
                     
-                    stage.RepeatCount++;
+                    _repeatCounts[stage] = GetRepeatCount(stage) + 1;
                 }
             }
             else
@@ -824,17 +831,30 @@ namespace FarEmerald.PlayForge
         {
             if (CurrentStage is null) return false;
 
-            CurrentStage.Timeouts.Add(timeout);
-            
             StartStageTimeout(CurrentStage, timeout, StageIndex, _stageSources[StageIndex].Token).Forget();
 
             return true;
         }
         
         // ═══════════════════════════════════════════════════════════════════════════
+        // PER-RUN STATE
+        // ═══════════════════════════════════════════════════════════════════════════
+
+        /// <summary>True if this run has broken the stage's repeat loop.</summary>
+        public bool IsRepeatBroken(SequenceStage stage) => _brokenRepeats.Contains(stage);
+
+        /// <summary>How many times the stage has repeated in this run.</summary>
+        public int GetRepeatCount(SequenceStage stage) => stage is not null && _repeatCounts.TryGetValue(stage, out int count) ? count : 0;
+
+        /// <summary>True if the condition has fired in this run.</summary>
+        internal bool HasFired(SequenceCondition condition) => _firedConditions.Contains(condition);
+
+        internal void MarkFired(SequenceCondition condition) => _firedConditions.Add(condition);
+
+        // ═══════════════════════════════════════════════════════════════════════════
         // CONDITION CHECKING
         // ═══════════════════════════════════════════════════════════════════════════
-        
+
         public void CheckConditions()
         {
             if (!IsRunning || Data == null) return;
@@ -1021,7 +1041,7 @@ namespace FarEmerald.PlayForge
         internal bool RequestBreakCurrentStageRepeat()
         {
             if (CurrentStage == null) return false;
-            CurrentStage.RepeatBroken = true;
+            _brokenRepeats.Add(CurrentStage);
             return true;
         }
         
@@ -1031,7 +1051,7 @@ namespace FarEmerald.PlayForge
         internal bool RequestBreakStageRepeat(SequenceStage stage)
         {
             if (stage == null) return false;
-            stage.RepeatBroken = true;
+            _brokenRepeats.Add(stage);
             return true;
         }
         
@@ -1051,7 +1071,9 @@ namespace FarEmerald.PlayForge
             _stageSources.Clear();
             _activeTasks.Clear();
             _activeStageStack.Clear();
-            Definition.ResetConditions();
+            _firedConditions.Clear();
+            _brokenRepeats.Clear();
+            _repeatCounts.Clear();
 
             // Precompute the index of the last stage-level critical stage
             _lastCriticalStageIndex = -1;

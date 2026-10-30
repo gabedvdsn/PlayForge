@@ -406,13 +406,13 @@ namespace FarEmerald.PlayForge
         {
             var token = stageCts.Token;
             
-            while (!token.IsCancellationRequested && !stage.RepeatBroken)
+            while (!token.IsCancellationRequested && !runtime.IsRepeatBroken(stage))
             {
                 // Wait for all tasks to complete using safe pattern
                 await WaitAllTasksSafe(taskUnits);
                 
                 // Check if we should break
-                if (token.IsCancellationRequested || stage.RepeatBroken)
+                if (token.IsCancellationRequested || runtime.IsRepeatBroken(stage))
                     break;
                 
                 // Optional delay between repetitions
@@ -670,7 +670,8 @@ namespace FarEmerald.PlayForge
         public bool FireOnce { get; }
         
         /// <summary>
-        /// Has this condition already fired (for FireOnce conditions).
+        /// Has this chain-level condition already fired. A sequence's conditions are shared by all its runs, so
+        /// each run keeps its own record, in its runtime.
         /// </summary>
         public bool HasFired { get; private set; }
         
@@ -707,24 +708,24 @@ namespace FarEmerald.PlayForge
         /// <returns>True if injection was applied</returns>
         public bool CheckAndApply(SequenceDataPacket data, TaskSequenceRuntime runtime)
         {
-            if (FireOnce && HasFired) return false;
+            if (FireOnce && runtime.HasFired(this)) return false;
             
             if (Predicate(data, runtime))
             {
-                HasFired = true;
+                runtime.MarkFired(this);
                 return Injection.Apply(runtime);
             }
-            
+
             return false;
         }
-        
+
         /// <summary>
         /// Checks condition, respects permissions, and applies injection if allowed.
         /// </summary>
         /// <returns>True if injection was applied</returns>
         public bool CheckAndApplyWithPermission(SequenceDataPacket data, TaskSequenceRuntime runtime, SequenceStage stage = null)
         {
-            if (FireOnce && HasFired) return false;
+            if (FireOnce && runtime.HasFired(this)) return false;
             
             if (Predicate(data, runtime))
             {
@@ -733,8 +734,8 @@ namespace FarEmerald.PlayForge
                 {
                     return false;
                 }
-                
-                HasFired = true;
+
+                runtime.MarkFired(this);
                 return Injection.Apply(runtime);
             }
             
