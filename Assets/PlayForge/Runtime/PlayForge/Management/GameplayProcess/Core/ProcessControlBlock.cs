@@ -128,6 +128,26 @@ namespace FarEmerald.PlayForge
             }
         }
 
+        /// <summary>
+        /// Queues Terminated at someone's request. A running process only moves on when its run ends, and a run
+        /// may be waiting for exactly this, so the process is told (PC-5). A default transition queues the same
+        /// state without asking anything to stop, so it doesn't come through here.
+        /// </summary>
+        public void QueueTerminate()
+        {
+            QueueNextState(EProcessState.Terminated);
+            if (State != EProcessState.Running) return;
+
+            try
+            {
+                Wrapper.WhenTerminateQueued(Relay);
+            }
+            catch (Exception ex)
+            {
+                Debug.LogException(ex);
+            }
+        }
+
         private void SetQueuedState()
         {
             if (ProcessControl.Instance.OutputLogs && ProcessControl.Instance.DetailedLogs) Debug.Log($"\t\t[{Wrapper.ProcessName}] Setting queued state: {State} -> {QueuedState}");

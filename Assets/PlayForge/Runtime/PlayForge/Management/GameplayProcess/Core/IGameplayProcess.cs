@@ -26,6 +26,12 @@ namespace FarEmerald.PlayForge
         /// Called via ProcessControl when the process is set to Terminated
         /// </summary>
         public void WhenTerminate();
+
+        /// <summary>
+        /// Called via ProcessControl when a Terminate is requested while the process runs. It applies once the
+        /// run ends, so a run that is waiting on nothing else has to end here.
+        /// </summary>
+        public void WhenTerminateQueued();
         
         /// <summary>
         /// Called via ProcessControl when the process is set to Running

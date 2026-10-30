@@ -59,6 +59,10 @@ namespace FarEmerald.PlayForge
         {
             // Doesn't do anything
         }
+        public override void WhenTerminateQueued(ProcessRelay relay)
+        {
+            Process.WhenTerminateQueued();
+        }
         public override async UniTask RunProcess(ProcessRelay relay, CancellationToken token)
         {
             await Process.RunProcess(token);

@@ -103,6 +103,11 @@ namespace FarEmerald.PlayForge
             activeMono.WhenTerminate();
         }
 
+        public override void WhenTerminateQueued(ProcessRelay relay)
+        {
+            activeMono.WhenTerminateQueued();
+        }
+
         public override async UniTask RunProcess(ProcessRelay relay, CancellationToken token)
         {
             await activeMono.RunProcess(token);

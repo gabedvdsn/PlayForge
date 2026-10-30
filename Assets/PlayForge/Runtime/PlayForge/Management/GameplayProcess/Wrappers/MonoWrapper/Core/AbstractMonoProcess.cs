@@ -124,6 +124,11 @@ namespace FarEmerald.PlayForge
             }
         }
         
+        public virtual void WhenTerminateQueued()
+        {
+            processActive = false;
+        }
+
         public abstract UniTask RunProcess(CancellationToken token);
         public bool TryHandlePause()
         {

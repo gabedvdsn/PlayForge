@@ -216,6 +216,15 @@ namespace FarEmerald.PlayForge
             base.WhenTerminate();
         }
 
+        /// <summary>
+        /// The run lasts as long as the sequence does, so a requested Terminate interrupts it. A sync sequence
+        /// has no run, and applies the Terminate on its next step.
+        /// </summary>
+        public override void WhenTerminateQueued()
+        {
+            if (!IsSynchronous) Interrupt();
+        }
+
         public override void WhenWait()
         {
             // No-op. Previously set Time.timeScale = 0f here, but that's destructive

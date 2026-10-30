@@ -50,6 +50,7 @@ namespace FarEmerald.PlayForge
         public abstract bool TryHandleResume(ProcessRelay relay);
         public abstract void WhenTerminate(ProcessRelay relay);
         public abstract void WhenTerminateSafe(ProcessRelay relay);
+        public virtual void WhenTerminateQueued(ProcessRelay relay) { }
         
         public abstract UniTask RunProcess(ProcessRelay relay, CancellationToken token);
         public abstract bool TryGetProcess<T>(out T process);

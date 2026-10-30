@@ -834,7 +834,7 @@ namespace FarEmerald.PlayForge
                 CascadeStateToChildren(cacheIndex, EProcessState.Terminated);
             }
             
-            _active[cacheIndex].QueueNextState(EProcessState.Terminated);
+            _active[cacheIndex].QueueTerminate();
             return true;
         }
         
@@ -919,7 +919,7 @@ namespace FarEmerald.PlayForge
                             targetPcb.QueueNextState(EProcessState.Waiting);
                         break;
                     case EProcessState.Terminated:
-                        targetPcb.QueueNextState(EProcessState.Terminated);
+                        targetPcb.QueueTerminate();
                         break;
                 }
             }
