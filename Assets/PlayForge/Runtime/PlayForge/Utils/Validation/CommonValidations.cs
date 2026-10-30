@@ -16,9 +16,12 @@ namespace FarEmerald.PlayForge
             if (!ability.Source.TryGetAttributeValue(ability.Base.Cost.ImpactSpecification.AttributeTarget,
                     out var attrVal)) return false;
 
-            return attrVal.CurrentValue >=
-                   ability.Base.Cost.ImpactSpecification.GetMagnitude(
-                       ability.Source.GenerateEffectSpec(ability, ability.Base.Cost));
+            // A cost's magnitude is the signed change it makes, so what matters is what that leaves. Comparing
+            // the value with the magnitude itself passed every cost, as a cost is negative (GAS-7)
+            float change = ability.Base.Cost.ImpactSpecification.GetMagnitude(
+                ability.Source.GenerateEffectSpec(ability, ability.Base.Cost));
+
+            return attrVal.CurrentValue + change >= 0f;
         }
         public string GetName()
         {
