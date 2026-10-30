@@ -7,8 +7,8 @@ namespace FarEmerald.PlayForge
         private Action action;
 
         public ActionProcess(Action action)
+            : this("Action", EProcessStepPriorityMethod.First, 0, EProcessStepTiming.Update, EProcessLifecycle.SelfTerminating, action)
         {
-            this.action = action;
         }
         
         public ActionProcess(
@@ -31,17 +31,17 @@ namespace FarEmerald.PlayForge
         private T source;
         
         public ActionProcess(Action<T> action, T source)
+            : this("Action", EProcessStepPriorityMethod.First, 0, EProcessStepTiming.Update, EProcessLifecycle.SelfTerminating, action, source)
         {
-            this.action = action;
-            this.source = source;
         }
         
         public ActionProcess(
             string name, EProcessStepPriorityMethod priorityMethod, int stepPriority, 
-            EProcessStepTiming stepTiming, EProcessLifecycle lifecycle, Action<T> action) 
+            EProcessStepTiming stepTiming, EProcessLifecycle lifecycle, Action<T> action, T source)
             : base(name, priorityMethod, stepPriority, stepTiming, lifecycle)
         {
             this.action = action;
+            this.source = source;
         }
 
         public override void WhenUpdate()
