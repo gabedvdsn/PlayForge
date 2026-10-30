@@ -150,6 +150,10 @@ namespace FarEmerald.PlayForge
 
         private void OnDestroy()
         {
+            // Destroyed from outside, with its scene, or by a process sharing the object, its block would stay
+            // registered with nothing behind it. After a normal end the block is already gone
+            if (Relay != null && ProcessControl.Instance) ProcessControl.Instance.EndDestroyedProcess(Relay);
+
             WhenDestroy();
         }
 

@@ -833,6 +833,17 @@ namespace FarEmerald.PlayForge
             return true;
         }
         
+        /// <summary>
+        /// Ends the process of an object that has been destroyed, which nothing else tells ProcessControl about.
+        /// </summary>
+        public void EndDestroyedProcess(ProcessRelay relay)
+        {
+            if (_active.TryGetValue(relay.CacheIndex, out var pcb) && pcb.Relay == relay)
+            {
+                TerminateImmediate(relay.CacheIndex);
+            }
+        }
+
         public void TerminateAll()
         {
             // Create copy to avoid modification during iteration
