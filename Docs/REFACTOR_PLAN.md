@@ -96,12 +96,16 @@ from. It lives outside `Assets/` so it never ships in the package.
   - **Clean import:** delete the project's `Library`, then run the compile check. It takes about 30 seconds and
     needs network access for UniTask. **Use this for packaging checks:** with `Library` warm, the same project
     logged 0 import warnings instead of 47, so a warm run proves nothing about Phase 2's gate.
-  - **Harness tests, editor closed.** Exit code 0 means they passed and 2 means tests failed. A run takes about
-    10 seconds. Print the results with `python Tools/test-report.py <xml>`. The project's `README.md` covers how
-    to write a test.
+  - **All its tests, editor closed.** Exit code 0 means they passed and 2 means tests failed. A run takes about
+    10 seconds. `python Tools/test-report.py <xml>` lists known reds apart from new failures. The project's
+    `README.md` covers how to write a test.
     ```
     "C:\Program Files\Unity\Hub\Editor\6000.0.33f1\Editor\Unity.exe" -batchmode -nographics -projectPath "C:\Users\17074\Documents\GitHub\PlayForge Proving Grounds" -runTests -testPlatform PlayMode -testResults <xml> -logFile <path>
     ```
+  - **The green gate.** The same command with `-testCategory "!Red"`. A test for a bug not fixed yet carries the
+    `Red` category, so a full run stays red until the bug is fixed, and this run shows nothing else broke. Use it
+    after any runtime change, alongside the golden tests. When a fix turns a red test green, the report says so:
+    remove its category in the same commit as the fix.
   - **Planted failures, after changing the harness.** The same command with `-testCategory Planted`. Every test
     there must fail, so exit code 2 is correct; `python Tools/check-planted.py <xml>` checks each failed for its
     own reason.
@@ -159,6 +163,8 @@ from. It lives outside `Assets/` so it never ships in the package.
 6. **Licence (SP-13):** MIT on public GitHub, or the Asset Store EULA?
 7. **Material packs (SP-17):** move the 842 MB and 206 MB of tracked third-party material packs to LFS, or out
    of the repo?
+8. **Known-red tests:** tests for unfixed bugs carry the `Red` category for now, so a full run stays red and a
+   `!Red` run is the green gate. Is that the right shape before the top 15 add many more?
 
 ## Roadmap
 
@@ -247,7 +253,7 @@ Severity: **C** critical, **H** high, **M** medium or low. The phase is the road
 ### TaskSequence
 
 TS-1 to TS-10 are Arcade Fighter's findings. TS-A to TS-X are new findings from the review. TS-Y and TS-Z
-had no letter in the review.
+had no letter in the review. TS-AA onward came from the test project.
 
 | ID | Sev | Phase | Problem | Where | Status |
 |---|---|---|---|---|---|
@@ -287,6 +293,7 @@ had no letter in the review.
 | TS-X | M | 1 | Payload lists are aliased between packets | `AbilityDataPacket.cs:50` | open |
 | TS-Y | M | 1 | Fake pause: `TryHandlePause` returns `processActive`, so a paused sequence keeps running | `TaskSequenceProcess.cs:225-228` | open |
 | TS-Z | M | 3 | Frame drift: `Task(Action)` costs a frame, and relay polling adds a frame per nesting level | `AbilityProxy.cs:171, 282` | open |
+| TS-AA | H | 1 | A cancelled sequence cleans its tasks while they still run: `AttachExternalCancellation` throws the moment the token cancels, so `CleanStage` runs before `Execute` has unwound | `TaskSequenceRuntime.cs:286, 305` | red |
 
 ### GAS core
 
@@ -324,6 +331,7 @@ had no letter in the review.
 | GAS-30 | M | 1 | `UnlinkAllChildren` re-links; Ability unlink checks Cost instead of Cooldown | `EntityIdentity.cs:202, 210`, `Ability.cs:151` | open |
 | GAS-31 | M | 1 | `AbstractTargetedMonoProcess` dereferences a missing target after warning about it | `AbstractTargetedMonoProcess.cs:22-26` | open |
 | GAS-32 | C | 1 | Split from GAS-3, reachable once items can be given: `ClearAllItems` skips every other item, so their equipped effects stay; unequip removes every source's effect; `ItemSpec.IsActive` is always false | `ItemSystemComponent.cs:230-240`, `ItemSpecContainer.cs:133, 150`, `ItemSpec.cs:32-35` | open |
+| GAS-33 | H | 1 | At a fixed frame time, a durational periodic effect can lose its last tick for good. Its period and duration timers lose the same delta, so the last tick and the expiry share a frame and rounding decides which comes first: 5 ticks in 5 s lands 4 at 60, 120 and 144 fps. Jittered frame time hides it | `EffectSystemComponent.cs:361, 391-393`, `NonStackingEffectContainer.cs:31` | red |
 | GAS-P1 | M | 0 | `ActionQueue` LINQ allocations; snapshot built every frame (PF-006) | `ActionQueue.cs:41, 46, 156`, `FrameSummary.cs:340-351` | verified |
 | GAS-P2 | M | 0 | Tag and FrameSummary allocations (PF-007) | `TagCache.cs:60`, `TagQuery.cs:89-136`, `FrameSummary.cs:306-308` | verified |
 | GAS-P3 | M | 3 | Each application revalidates every container and rebuilds all tags (area application is quadratic) | `EffectSystemComponent.cs:312-348`, `GameplayAbilitySystem.cs:250-281` | open |
@@ -422,7 +430,7 @@ review doc's section "The test project: PlayForge Proving Grounds". In short:
 - **Plus stretch scenarios.**
 - **Rule:** run under a live ProcessControl. Never call `WhenUpdate` or `WhenLateUpdate` by hand; that is how
   GAS-1 stayed hidden.
-- **First build step:** the harness (done), the 25 golden scenarios ported, and red tests for the top 15.
+- **First build step:** the harness (done), the 25 golden scenarios ported (done), and red tests for the top 15.
 
 **Top 15 to test first:** GAS-1, PC-1, PC-2 with TS-4, PC-3, TS-1, TS-A, TS-B, TS-C, GAS-2, GAS-3, GAS-6, GAS-7,
 GAS-4 with GAS-5, PC-6, and TS-I with PC-5.
@@ -430,6 +438,26 @@ GAS-4 with GAS-5, PC-6, and TS-I with PC-5.
 ## Log
 
 Record baselines, gate results and notable decisions here, newest first.
+
+- 2026-10-30, **Golden scenarios ported to Proving Grounds**, the second part of the first build step. PlayForge's
+  source is unchanged. Same scenarios and expected values, now stepped by a live ProcessControl.
+  - **Result:** all 25 pass. That's 46 cases, because a scenario runs on both GAS hubs wherever it applies, and the
+    hubs agree on every one. With the harness's own tests, a `!Red` run passes 199 of 199.
+  - **They can fail.** Against pre-Phase-0 `455dd44`, with only SP-19 and S21's counter added to compile, S13 to S25
+    all go red on every hub they run on, 22 cases, each with the symptom this Log recorded for it (S13 10 vs 5, S15
+    70 vs 85, S16 0 vs 2). S1 to S12 stay green, as they pin behaviour Phase 0 didn't change, and so does S25 on the
+    Mono hub, since GAS-1 was the runtime hub's bug. There, S21 stopped at TS-4's swallowed exception, so its own
+    assertion got a separate check: breaking only proxy reuse on current code gives "expected 1, was 5" on both hubs.
+  - **Cost of the old code, measured live:** S17 reads 960 bytes a frame on a runtime GAS and 1,920 on a Mono GAS.
+  - **What had to change:** S20, S22 and S25 lost their reflection on `StepProcesses`, since live frames do that.
+    S23 now pauses and resumes ProcessControl with a sequence mid-run, and that real path still reaches TS-1 (1.0 vs
+    0.25). S19 and S21 assert through the fault injector, which found the framework reports them through `LogError`.
+  - **Two new bugs, both `red`:**
+    - GAS-33, found by running S4 on frame time, which the original's whole-second delta couldn't show. Across 9 fixed
+      rates and 8 tick counts, 17 of 72 combinations lost a tick. With frame time jittered between 45 and 120 fps, 0 of
+      200 runs did, so it bites fixed-step simulation: captured time, deterministic ticks, frame-data games.
+    - TS-AA, found by the ledger invariant when S23 first left a sequence running at teardown.
+  - **The custom runner stays** in the package until SP-18 (Phase 2), so `PlayForgeGoldenTests.RunAll` still works.
 
 - 2026-10-30, **Proving Grounds harness built**, the first part of the first build step. PlayForge's source is
   unchanged. All of it runs in PlayMode under a live ProcessControl, brought up by the real Bootstrapper.
