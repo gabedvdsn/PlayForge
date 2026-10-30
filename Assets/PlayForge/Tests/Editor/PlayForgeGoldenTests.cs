@@ -71,6 +71,7 @@ namespace FarEmerald.PlayForge.Tests
             RunScenario(nameof(S18_GAS_P2_TagChecks_AllocateNothing), S18_GAS_P2_TagChecks_AllocateNothing);
             RunScenario(nameof(S19_TS_04_BrokenAbility_IsReported), S19_TS_04_BrokenAbility_IsReported);
             RunScenario(nameof(S20_PC_01_ThrowingStep_DoesNotStallTheFrame), S20_PC_01_ThrowingStep_DoesNotStallTheFrame);
+            RunScenario(nameof(S21_TS_03_RepeatedActivation_ReusesItsCompiledBehaviour), S21_TS_03_RepeatedActivation_ReusesItsCompiledBehaviour);
             RunScenario(nameof(S23_TS_01_Resume_LeavesTimeScaleAlone), S23_TS_01_Resume_LeavesTimeScaleAlone);
             RunScenario(nameof(S24_GAS_03_GiveItem_LandsOnTheShelf), S24_GAS_03_GiveItem_LandsOnTheShelf);
 
@@ -987,28 +988,7 @@ namespace FarEmerald.PlayForge.Tests
         private static void S19_TS_04_BrokenAbility_IsReported()
         {
             var gas = MakeGAS(MakeSet(MakeElement(MakeAttribute("Unused"), 1, 1)));
-
-            var ability = ScriptableObject.CreateInstance<Ability>();
-            ability.name = "Broken";
-            ability.Definition = new AbilityDefinition { Name = "Broken", Textures = new List<TextureItem>() };
-            ability.Tags = new AbilityTags
-            {
-                AssetTag = Tag.Generate(Unique("Test.Ability.Broken")),
-                ContextTags = new List<Tag>(),
-                PassiveGrantedTags = new List<Tag>(),
-                ActiveGrantedTags = new List<Tag>(),
-                TagRequirements = new AbilityTagRequirements
-                {
-                    SourceRequirements = new AvoidRequireTagGroup { AvoidTags = new List<TagQuery>(), RequireTags = new List<TagQuery>() },
-                    TargetRequirements = new AvoidRequireTagGroup { AvoidTags = new List<TagQuery>(), RequireTags = new List<TagQuery>() },
-                },
-            };
-            ability.Behaviour = new AbilityBehaviour
-            {
-                Stages = new List<AbilityTaskBehaviourStage>(),
-                AssetLoaders = new List<AbstractSetAssetsTask> { new ThrowingLoader() },
-            };
-            ability.WorkerGroup = new StandardWorkerGroup();
+            var ability = MakeLoaderAbility("Broken", new ThrowingLoader());
 
             var abilities = gas.GetAbilitySystem();
             AssertTrue("ability granted", abilities.GiveAbility(ability, 1, out int index));
@@ -1029,6 +1009,67 @@ namespace FarEmerald.PlayForge.Tests
 
             AssertTrue($"the loader's exception is reported (logged: {recorder.Errors.Count} errors)",
                 recorder.Errors.Exists(message => message.Contains(ThrowingLoader.Message)));
+        }
+
+        /// <summary>An ability with no stages, whose only work is <paramref name="loader"/>, run as it activates.</summary>
+        private static Ability MakeLoaderAbility(string name, AbstractSetAssetsTask loader)
+        {
+            var ability = ScriptableObject.CreateInstance<Ability>();
+            ability.name = name;
+            ability.Definition = new AbilityDefinition { Name = name, Textures = new List<TextureItem>() };
+            ability.Tags = new AbilityTags
+            {
+                AssetTag = Tag.Generate(Unique($"Test.Ability.{name}")),
+                ContextTags = new List<Tag>(),
+                PassiveGrantedTags = new List<Tag>(),
+                ActiveGrantedTags = new List<Tag>(),
+                TagRequirements = new AbilityTagRequirements
+                {
+                    SourceRequirements = new AvoidRequireTagGroup { AvoidTags = new List<TagQuery>(), RequireTags = new List<TagQuery>() },
+                    TargetRequirements = new AvoidRequireTagGroup { AvoidTags = new List<TagQuery>(), RequireTags = new List<TagQuery>() },
+                },
+            };
+            ability.Behaviour = new AbilityBehaviour
+            {
+                Stages = new List<AbilityTaskBehaviourStage>(),
+                AssetLoaders = new List<AbstractSetAssetsTask> { loader },
+            };
+            ability.WorkerGroup = new StandardWorkerGroup();
+            return ability;
+        }
+
+        /// <summary>
+        /// Activating an ability again reuses the behaviour an earlier activation compiled, once that activation
+        /// is over, instead of compiling it anew. Compiling was most of what an activation allocated, about
+        /// 2.8 KB each, and a fighter activates several abilities a second (PlayForge log PF-012, was PF-B09).
+        /// The activations here end at once, on their loader failing, which they do the same way every time.
+        /// </summary>
+        private static void S21_TS_03_RepeatedActivation_ReusesItsCompiledBehaviour()
+        {
+            var gas = MakeGAS(MakeSet(MakeElement(MakeAttribute("Unused"), 1, 1)));
+            var ability = MakeLoaderAbility("Repeated", new ThrowingLoader());
+
+            var abilities = gas.GetAbilitySystem();
+            AssertTrue("ability granted", abilities.GiveAbility(ability, 1, out int index));
+            AssertTrue("its container", abilities.TryGetAbilityContainer(index, out var container));
+
+            const int Activations = 5;
+            var logger = Debug.unityLogger;
+            var original = logger.logHandler;
+            var recorder = new RecordingLogHandler();
+            logger.logHandler = recorder;
+            try
+            {
+                for (int i = 0; i < Activations; i++) abilities.TryActivateAbility(abilities.CreateActivationRequest(index));
+            }
+            finally
+            {
+                logger.logHandler = original;
+            }
+
+            int ran = recorder.Errors.FindAll(message => message.Contains(ThrowingLoader.Message)).Count;
+            AssertTrue($"every activation ran its behaviour ({ran} of {Activations})", ran == Activations);
+            AssertTrue($"the behaviour was compiled once, not once per activation (compiled {container.CompiledProxies} times)", container.CompiledProxies == 1);
         }
 
         /// <summary>An asset loader that fails, as a broken ability would.</summary>

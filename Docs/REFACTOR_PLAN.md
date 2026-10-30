@@ -133,7 +133,7 @@ from. It lives outside `Assets/` so it never ships in the package.
   | PF-009 Three editor warnings | `GameplayEffectDrawer.cs:159-176`, `AbilityEditor.cs:138-143`, `TheForge.ViewTab.cs:1640` | ED-1 | fixed |
   | PF-010 README names types that do not exist | `Runtime/PlayForge/Core/TaskSequence/README.md` | TS-2 | fixed |
   | PF-011 Step exceptions stalled the frame | `ProcessControlBlock.cs:225-247`, `ProcessControl.cs:337-344` | PC-1 | fixed |
-  | PF-012 Proxies recompiled every activation (`AbilityProxy.IsIdle`, `CompiledProxies`) | `AbilityActivationHandle.cs:26`, `AbilityProxy.cs:62-74` | TS-3 | open |
+  | PF-012 Proxies recompiled every activation (`AbilityProxy.IsIdle`, `CompiledProxies`) | `AbilityActivationHandle.cs:26`, `AbilityProxy.cs:62-74` | TS-3 | fixed |
   | PF-013 `OnSystemInitialized` could not be observed | `GameplayAbilitySystem.EndOfFrame.cs:34`, `RuntimeGameplayAbilitySystem.cs:137, 149` | GAS-13 | open |
 
 - [ ] Port Arcade Fighter's extra 10 golden scenarios, taking the suite from 12 to 22.
@@ -188,7 +188,7 @@ had no letter in the review.
 |---|---|---|---|---|---|
 | TS-1 | C | 0 | Resume sets `Time.timeScale = 1` (PF-001) | `TaskSequenceProcess.cs:234` | fixed |
 | TS-2 | M | 0 | The README names types that do not exist (PF-010) | `Core/TaskSequence/README.md` | fixed |
-| TS-3 | H | 0 | The proxy and sequences are recompiled on every activation; `IsCriticalSection` builds the inner sequence 4–5 times (PF-012) | `AbilityProxy.cs:62`, `AbilitySequenceCompiler.cs:30-80`, `RunSequenceTask.cs:18-21` | open |
+| TS-3 | H | 0 | The proxy and sequences are recompiled on every activation; `IsCriticalSection` builds the inner sequence 4–5 times (PF-012) | `AbilityProxy.cs:62`, `AbilitySequenceCompiler.cs:30-80`, `RunSequenceTask.cs:18-21` | fixed |
 | TS-4 | H | 0 | A bare `catch { }` swallows ability errors (PF-008) | `AbilitySpecContainer.cs:113-116` | fixed |
 | TS-5 | M | 3 | LINQ on a hot path; `AppendPath` concatenates strings and grows without bound on repeat | `SequenceStage.cs:394`, `AbilityDataPacket.cs:76-77` | open |
 | TS-6 | M | 5 | Global time only; `RunProcessTask` defaults to unscaled time (C02) → FEAT-7 | `RunProcessTask.cs:14` | open |
@@ -398,6 +398,10 @@ Record baselines, gate results and notable decisions here, newest first.
     the example's own placeholders.
   - PF-011 / PC-1: S20 red without the fix, all four checks (the exception escapes, the next process
     steps 0 times, the broken one stays Running, nothing logged); 22/22 with it.
+  - PF-012 / TS-3: S21 needs the fix's `CompiledProxies` counter to compile, so the red run added only
+    that counter at today's compile site (not committed): "compiled 5 times". 23/23 with the fix. The
+    tracker's other TS-3 cost (`IsCriticalSection` building the inner sequence 4–5 times per compile) is
+    not touched by PF-012; it now runs once per proxy instead of once per activation.
 
 - 2026-10-29, **Phase 0 baseline** at `455dd44`, no code changed:
   - **Build:** both MSBuild commands under Environment succeed. The only C# diagnostics are the three ED-1

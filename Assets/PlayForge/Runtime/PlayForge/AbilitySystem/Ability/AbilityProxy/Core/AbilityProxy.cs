@@ -83,6 +83,13 @@ namespace FarEmerald.PlayForge
         /// </summary>
         public bool HasCompiledTargeting => CompiledTargeting != null;
 
+        /// <summary>
+        /// True when nothing of an activation is still running on this proxy, so it can run the next one. Its
+        /// compiled sequences hold one run at a time.
+        /// </summary>
+        public bool IsIdle => ActiveRelay == null && TargetingRelay == null
+                              && CompiledSequence?.Runtime == null && CompiledTargeting?.Runtime == null;
+
         private void Reset()
         {
             StageIndex = -1;
