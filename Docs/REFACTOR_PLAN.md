@@ -120,6 +120,9 @@ from. It lives outside `Assets/` so it never ships in the package.
       bytes from the test runner's coroutine tick. `AllocationProbe` measures only the player loop, less that
       tick, so a clean frame reads exactly 0. **Don't go back to a calibrated baseline:** one taken while the
       noise ran high hides real allocation.
+    - Now and then a burst of about 1 KB still lands on a few frames, at random. It was seen in a world with no
+      spawned entities, a collection before measuring doesn't stop it, and its source isn't known. It doesn't
+      repeat, so `MeasureFrames` retakes a measure that isn't clean, up to 3 times. A real leak fails every attempt.
   - **Live sources:** a `file:` package is read in place, so edits to `Assets/PlayForge` reach the project on its
     next run. There is nothing to copy or sync.
 - **Ignore** `.claude/worktrees/` at the repo root and under `Assets/PlayForge/.claude/`. They hold stale git
@@ -152,6 +155,8 @@ from. It lives outside `Assets/` so it never ships in the package.
   `Assets/Internal/PlayForge`.
 - Proving Grounds setup, 2026-10-30: the project sits next to PlayForge, in its own local git repo with no
   remote. The package is `com.faremerald.playforge` 0.1.0. Commit locally as work goes; do not push.
+- Decision 8, 2026-10-30: a test for an unfixed bug carries the `Red` category. A full run stays red until the
+  bug is fixed, `-testCategory "!Red"` is the green gate, and a red test loses the category in its fix's commit.
 
 **Open. Ask the user; do not assume:**
 1. ~~**Uncommitted changes**~~: decided, see above.
@@ -163,8 +168,7 @@ from. It lives outside `Assets/` so it never ships in the package.
 6. **Licence (SP-13):** MIT on public GitHub, or the Asset Store EULA?
 7. **Material packs (SP-17):** move the 842 MB and 206 MB of tracked third-party material packs to LFS, or out
    of the repo?
-8. **Known-red tests:** tests for unfixed bugs carry the `Red` category for now, so a full run stays red and a
-   `!Red` run is the green gate. Is that the right shape before the top 15 add many more?
+8. ~~**Known-red tests**~~: decided, see above.
 
 ## Roadmap
 
@@ -223,12 +227,12 @@ Severity: **C** critical, **H** high, **M** medium or low. The phase is the road
 | ID | Sev | Phase | Problem | Where | Status |
 |---|---|---|---|---|---|
 | PC-1 | C | 0 | A throw in `WhenUpdate` aborts the step loop; every later process misses its step (PF-011) | `ProcessControlBlock.cs:225-247`, `ProcessControl.cs:337-344` | verified |
-| PC-2 | C | 1 | A throw in async `RunProcess` skips the queued state; the process stays Running forever and abilities hang (B10) | `ProcessControlBlock.cs:285-302`, `AbilityProxy.cs:171, 282` | open |
-| PC-3 | C | 1 | The hierarchy is keyed by prefab, not clone, so one GAS death cascades to every instance of the prefab | `ProcessControl.cs:500, 506`, `ProcessHierarchy.cs:112-118`, `GameplayAbilitySystem.EndOfFrame.cs:109` | open |
+| PC-2 | C | 1 | A throw in async `RunProcess` skips the queued state; the process stays Running forever and abilities hang (B10) | `ProcessControlBlock.cs:285-302`, `AbilityProxy.cs:171, 282` | red |
+| PC-3 | C | 1 | The hierarchy is keyed by prefab, not clone, so one GAS death cascades to every instance of the prefab | `ProcessControl.cs:500, 506`, `ProcessHierarchy.cs:112-118`, `GameplayAbilitySystem.EndOfFrame.cs:109` | red |
 | PC-4 | C | 1 | A forced terminate runs `WhenTerminate` twice (two Destroys, unregisters and events); forced Waiting doubles `WhenWait` | `ProcessControlBlock.cs:131-138, 207-219, 281-302` | open |
-| PC-5 | C | 1 | A queued Terminate on a running Lazy process never completes (`ActionProcess`, runtime GAS, `TaskSequenceProcess`) | `LazyMonoProcess.cs:20-24`, `LazyRuntimeProcess.cs:24-28` | open |
-| PC-6 | C | 1 | The runtime `Register` overloads that take null data throw a NullReferenceException after using up a cache index; `RunProcessTask` hits this on every activation | `ProcessControl.cs:516, 524, 549`, `RunProcessTask.cs:25` | open |
-| PC-7 | C | 1 | A control-state change queues a default transition for every process: it parks Synchronous processes, starts RequiresControl ones and re-runs RunThenWait ones | `ProcessControl.cs:1009, 1186-1195, 1278` | open |
+| PC-5 | C | 1 | A queued Terminate on a running Lazy process never completes (`ActionProcess`, runtime GAS, `TaskSequenceProcess`) | `LazyMonoProcess.cs:20-24`, `LazyRuntimeProcess.cs:24-28` | red |
+| PC-6 | C | 1 | The runtime `Register` overloads that take null data throw a NullReferenceException after using up a cache index; `RunProcessTask` hits this on every activation | `ProcessControl.cs:516, 524, 549`, `RunProcessTask.cs:25` | red |
+| PC-7 | C | 1 | A control-state change queues a default transition for every process: it parks Synchronous processes, starts RequiresControl ones and re-runs RunThenWait ones | `ProcessControl.cs:1009, 1186-1195, 1278` | red |
 | PC-8 | C | 1 | A throw in `WhenTerminate` leaves an unkillable zombie that is still stepped | `ProcessControlBlock.cs:211-212` | open |
 | PC-9 | H | 1 | An out-of-scene object is cloned as if it were a prefab; the original stays uninitialized and leaks (C19) | `MonoWrapperProcess.cs:43-53` | open |
 | PC-10 | H | 1 | A GameObject with several processes has no single teardown; an external Destroy or scene unload never unregisters (C13) | `MonoWrapperProcess.cs:93`, `AbstractMonoProcess.cs:146-149` | open |
@@ -248,7 +252,7 @@ Severity: **C** critical, **H** high, **M** medium or low. The phase is the road
 | PC-24 | M | 3 | `PooledMonoProcessInstantiator` is a stub that returns null and leaks GameObjects | `PooledMonoProcessInstantiator.cs:7-22`, `MonoWrapperProcess.cs:90` | open |
 | PC-25 | M | 1 | `ProcessTaskUtil.DoWhile` loops forever; `RemainingRuntime` truncates before multiplying | `ProcessTaskUtil.cs:111-117`, `ProcessRelay.cs:42-43` | open |
 | PC-26 | M | 1 | Lifecycle edges: no domain-reload reset; `is null` misses destroyed singletons; the hierarchy throws after a root is destroyed; changing `ProcessTiming` at runtime; `ResetProcessControl` keeps its watchers | `ProcessHierarchy.cs:313`, `ProcessControl.cs:424-446, 1021, 1064` | open |
-| PC-27 | H | 1 | `Unpause` runs a process while ProcessControl itself is Waiting or ClosedWaiting, against 8 cells of the transition table: `ValidateStateTransition` never reads the control state. See Decisions 5 | `ProcessControl.cs:776-791, 1361-1390` | open |
+| PC-27 | H | 1 | `Unpause` runs a process while ProcessControl itself is Waiting or ClosedWaiting, against 8 cells of the transition table: `ValidateStateTransition` never reads the control state. See Decisions 5 | `ProcessControl.cs:776-791, 1361-1390` | red |
 
 ### TaskSequence
 
@@ -267,15 +271,15 @@ had no letter in the review. TS-AA onward came from the test project.
 | TS-8 | M | 3 | `TryActivate` runs synchronously deep into the first stages (C16) | `AbilityProxy.cs` | open |
 | TS-9 | H | 1 | `OnAbilityEnd` means claim released; task callbacks fire only on the legacy path (C07) | `AbilityProxy.cs` | open |
 | TS-10 | M | 3 | About 14 CancellationTokenSources per three-stage ability (C08, B11) | `TaskSequenceRuntime.cs` | open |
-| TS-A | C | 1 | A WhenAny or WhenN stage hangs on outside skip, timeout or max duration | `SequenceCore.cs:291-294, 351-354` | open |
-| TS-B | C | 1 | Any-policy ability stages end at once (`StageCallbackTask` satisfies "any") | `AbilitySequenceCompiler.cs:206, 296-300` | open |
-| TS-C | C | 1 | Interrupted or failed targeting still executes; `TargetingFailed` is never read | `AbilityProxy.cs:174-177, 197-200`, `AbilitySpecContainer.cs:63-88, 138`, `AbstractTargetingAbilityTask.cs:66-69` | open |
+| TS-A | C | 1 | A WhenAny or WhenN stage hangs on outside skip, timeout or max duration | `SequenceCore.cs:291-294, 351-354` | red |
+| TS-B | C | 1 | Any-policy ability stages end at once (`StageCallbackTask` satisfies "any") | `AbilitySequenceCompiler.cs:206, 296-300` | red |
+| TS-C | C | 1 | Interrupted or failed targeting still executes; `TargetingFailed` is never read | `AbilityProxy.cs:174-177, 197-200`, `AbilitySpecContainer.cs:63-88, 138`, `AbstractTargetingAbilityTask.cs:66-69` | red |
 | TS-D | H | 1 | `ApplyUsageAtStageStart` fires `AbilityStageEnded` at stage start | `AbilitySequenceCompiler.cs:211-232` | open |
 | TS-E | C | 1 | Unguarded callbacks in `finally` blocks; a throwing listener skips claim release | `TaskSequenceRuntime.cs:212, 389, 544` | open |
 | TS-F | H | 1 | `RunSequenceTask` shares the outer data packet | `TaskSequenceRuntime.cs:124, 231-232` | open |
 | TS-G | C | 1 | Cancelling the outer ability can orphan the nested sequence | `RunSequenceTask.cs:75`, `TaskSequence.cs:106` | open |
 | TS-H | H | 1 | FixedUpdate and LateUpdate sequences never step | `TaskSequenceProcess.cs:137`, `RuntimeWrapperProcess.cs:32-40` | open |
-| TS-I | C | 1 | Definitions are mutated at runtime and have a single `Runtime` slot, so concurrent runs clobber each other | `TaskSequence.cs:57-67`, `TaskSequenceRuntime.cs:801` | open |
+| TS-I | C | 1 | Definitions are mutated at runtime and have a single `Runtime` slot, so concurrent runs clobber each other | `TaskSequence.cs:57-67`, `TaskSequenceRuntime.cs:801` | red |
 | TS-J | H | 1 | Skip-and-maintain calls `Clean` on tasks that are still running | `TaskSequenceRuntime.cs:302-306` | open |
 | TS-K | H | 1 | Maintained-stage bug (first of two) | `TaskSequenceRuntime.cs:777-791` | open |
 | TS-L | H | 1 | Maintained-stage bug (second of two) | `TaskSequenceRuntime.cs:962, 969-971` | open |
@@ -302,10 +306,10 @@ had no letter in the review. TS-AA onward came from the test project.
 | GAS-1 | C | 0 | The runtime GAS steps in Update only, so its end of frame (workers, death) never runs | `RuntimeGameplayAbilitySystem.cs:61` | verified |
 | GAS-2 | C | 0 | Pre-change workers have no effect (PF-004, now worse) | `AttributeSystemComponent.cs:275-341`, `EffectSystemComponent.cs:115, 157, 186`, `ForgeHelper.cs:229-235` | verified |
 | GAS-3 | C | 0 | `ItemShelf` is never created, so `GiveItem` throws, and every read of the empty inventory allocates a new list. The rest of this finding moved to GAS-32 | `ItemSystemComponent.cs:11, 279` | verified |
-| GAS-4 | C | 1 | The independent-durations container throws on construction; its struct copies never count down | `AbstractEffectContainer.cs:32, 54`, `IndependentDurationsContainer.cs:18-110` | open |
-| GAS-5 | C | 1 | Re-application always adds one stack; Max is never enforced; the last config wins | `SingleDurationEffectContainer.cs:58`, `StackQueueEffectContainer.cs:62`, `AbstractEffectConfig.cs:261-264`, `GameplayEffectDuration.cs:281-291` | open |
-| GAS-6 | C | 1 | Removal requirements are inverted and AND-ed; application requires the removal group to pass | `EffectTagRequirements.cs:60-63`, `GameplayEffect.cs:169-179` | open |
-| GAS-7 | C | 1 | Cost validation compares against the signed magnitude, so it always passes | `CommonValidations.cs:19-21` | open |
+| GAS-4 | C | 1 | The independent-durations container throws on construction; its struct copies never count down | `AbstractEffectContainer.cs:32, 54`, `IndependentDurationsContainer.cs:18-110` | red |
+| GAS-5 | C | 1 | Re-application always adds one stack; Max is never enforced; the last config wins | `SingleDurationEffectContainer.cs:58`, `StackQueueEffectContainer.cs:62`, `AbstractEffectConfig.cs:261-264`, `GameplayEffectDuration.cs:281-291` | red |
+| GAS-6 | C | 1 | Removal requirements are inverted and AND-ed; application requires the removal group to pass | `EffectTagRequirements.cs:60-63`, `GameplayEffect.cs:169-179` | red |
+| GAS-7 | C | 1 | Cost validation compares against the signed magnitude, so it always passes | `CommonValidations.cs:19-21` | red |
 | GAS-8 | C | 1 | OnRemove contained effects land on the source | `AbstractEffectContainer.cs:77-80` | open |
 | GAS-9 | C | 1 | The runtime identity copy drops starting abilities, starting items and the duplicate-equip flag | `RuntimeGameplayAbilitySystem.cs:459-479` | open |
 | GAS-10 | C | 0 | Ongoing requirements are evaluated before tags exist and never re-checked (PF-002) | `EffectSystemComponent.cs:127, 330-334, 372` | verified |
@@ -430,7 +434,7 @@ review doc's section "The test project: PlayForge Proving Grounds". In short:
 - **Plus stretch scenarios.**
 - **Rule:** run under a live ProcessControl. Never call `WhenUpdate` or `WhenLateUpdate` by hand; that is how
   GAS-1 stayed hidden.
-- **First build step:** the harness (done), the 25 golden scenarios ported (done), and red tests for the top 15.
+- **First build step:** done. The harness, the 25 golden scenarios ported, and red tests for the top 15.
 
 **Top 15 to test first:** GAS-1, PC-1, PC-2 with TS-4, PC-3, TS-1, TS-A, TS-B, TS-C, GAS-2, GAS-3, GAS-6, GAS-7,
 GAS-4 with GAS-5, PC-6, and TS-I with PC-5.
@@ -438,6 +442,26 @@ GAS-4 with GAS-5, PC-6, and TS-I with PC-5.
 ## Log
 
 Record baselines, gate results and notable decisions here, newest first.
+
+- 2026-10-30, **Red tests for the top 15**, which finishes the first build step. PlayForge's source is unchanged.
+  - **Coverage:** six of the top 15 were already fixed and pinned by goldens: GAS-1 (S25), PC-1 (S20), TS-4 (S19),
+    TS-1 (S23), GAS-2 (S15) and GAS-3 (S24). The other twelve IDs are now `red`: PC-2, PC-3, PC-5, PC-6, TS-A, TS-B,
+    TS-C, TS-I, GAS-4, GAS-5, GAS-6 and GAS-7. PC-7 and PC-27 joined them through the state oracle, whose other
+    82 cells are a green test. With GAS-33 and TS-AA that's 16 IDs and 63 failing cases.
+  - **Each red is proven both ways.** Every failure message was read against its tracker row. Then, against a
+    throwaway copy of the package with a minimal sketch of a fix for each of the 16 bugs, all 63 went green and
+    nothing else broke: 356 of 356. The sketches prove the tests; they are not the fixes. Several are too blunt to
+    ship, and two (PC-7, PC-27) assume an answer to Decision 5.
+  - **What that checking caught:** all six GAS-6 cases first failed on a null list in the test itself. Fixed, one
+    passed: with a requirement on the target alone, the AND-ing hides the inversion. It's now a green control, and a
+    new test with a requirement on both sides shows the inversion.
+  - **Controls:** PC-3, GAS-5, GAS-6, GAS-7, TS-A and TS-C each have a green test beside the red one, so a fix can't
+    pass by refusing everything.
+  - **Keeping the bugs apart:** TS-A, TS-B and TS-C avoid ledger-tracked tasks where they'd cancel one, or TS-AA would
+    keep them red after their own fixes.
+  - **The allocation probe gained retries.** Two idle tests failed intermittently once the reds landed, then not in
+    the next 41 clean runs. See Environment for what's known. A one-off burst now passes and a leak still fails,
+    which `A_one_off_burst_doesnt_fail_a_measure` and the leak tests pin.
 
 - 2026-10-30, **Golden scenarios ported to Proving Grounds**, the second part of the first build step. PlayForge's
   source is unchanged. Same scenarios and expected values, now stepped by a live ProcessControl.
