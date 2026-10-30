@@ -69,6 +69,7 @@ namespace FarEmerald.PlayForge.Tests
             RunScenario(nameof(S16_GAS_12_RawDelta_MovesBaseAndCurrentTogether), S16_GAS_12_RawDelta_MovesBaseAndCurrentTogether);
             RunScenario(nameof(S17_GAS_P1_IdleFrame_AllocatesNothing), S17_GAS_P1_IdleFrame_AllocatesNothing);
             RunScenario(nameof(S18_GAS_P2_TagChecks_AllocateNothing), S18_GAS_P2_TagChecks_AllocateNothing);
+            RunScenario(nameof(S19_TS_04_BrokenAbility_IsReported), S19_TS_04_BrokenAbility_IsReported);
             RunScenario(nameof(S23_TS_01_Resume_LeavesTimeScaleAlone), S23_TS_01_Resume_LeavesTimeScaleAlone);
             RunScenario(nameof(S24_GAS_03_GiveItem_LandsOnTheShelf), S24_GAS_03_GiveItem_LandsOnTheShelf);
 
@@ -974,6 +975,81 @@ namespace FarEmerald.PlayForge.Tests
                 ForgeHelper.ValidateAvoidRequireQueries(gas.GetAppliedTags(), required, avoid);
                 ForgeHelper.ValidateAllQueries(required, (IEnumerable<Tag>)gas.GetAppliedTags());
             }
+        }
+
+        /// <summary>
+        /// An exception thrown while an ability runs is reported, not swallowed. A bare catch around
+        /// execution, meant for cancellation, also ate real failures, such as an asset loader that throws
+        /// before any stage starts, so a broken ability looked like one that did nothing (PlayForge log
+        /// PF-008, was PF-B08). Cancellation stays silent.
+        /// </summary>
+        private static void S19_TS_04_BrokenAbility_IsReported()
+        {
+            var gas = MakeGAS(MakeSet(MakeElement(MakeAttribute("Unused"), 1, 1)));
+
+            var ability = ScriptableObject.CreateInstance<Ability>();
+            ability.name = "Broken";
+            ability.Definition = new AbilityDefinition { Name = "Broken", Textures = new List<TextureItem>() };
+            ability.Tags = new AbilityTags
+            {
+                AssetTag = Tag.Generate(Unique("Test.Ability.Broken")),
+                ContextTags = new List<Tag>(),
+                PassiveGrantedTags = new List<Tag>(),
+                ActiveGrantedTags = new List<Tag>(),
+                TagRequirements = new AbilityTagRequirements
+                {
+                    SourceRequirements = new AvoidRequireTagGroup { AvoidTags = new List<TagQuery>(), RequireTags = new List<TagQuery>() },
+                    TargetRequirements = new AvoidRequireTagGroup { AvoidTags = new List<TagQuery>(), RequireTags = new List<TagQuery>() },
+                },
+            };
+            ability.Behaviour = new AbilityBehaviour
+            {
+                Stages = new List<AbilityTaskBehaviourStage>(),
+                AssetLoaders = new List<AbstractSetAssetsTask> { new ThrowingLoader() },
+            };
+            ability.WorkerGroup = new StandardWorkerGroup();
+
+            var abilities = gas.GetAbilitySystem();
+            AssertTrue("ability granted", abilities.GiveAbility(ability, 1, out int index));
+
+            // Record what gets logged, without printing it, so a passing run leaves the console clean
+            var logger = Debug.unityLogger;
+            var original = logger.logHandler;
+            var recorder = new RecordingLogHandler();
+            logger.logHandler = recorder;
+            try
+            {
+                abilities.TryActivateAbility(abilities.CreateActivationRequest(index));
+            }
+            finally
+            {
+                logger.logHandler = original;
+            }
+
+            AssertTrue($"the loader's exception is reported (logged: {recorder.Errors.Count} errors)",
+                recorder.Errors.Exists(message => message.Contains(ThrowingLoader.Message)));
+        }
+
+        /// <summary>An asset loader that fails, as a broken ability would.</summary>
+        private class ThrowingLoader : AbstractSetAssetsTask
+        {
+            public const string Message = "S19: the loader broke";
+
+            public override bool IsCriticalSection => false;
+            public override void Prepare(AbilityDataPacket data) => throw new System.InvalidOperationException(Message);
+        }
+
+        /// <summary>Keeps errors and exceptions logged while it's installed, and prints nothing.</summary>
+        private class RecordingLogHandler : ILogHandler
+        {
+            public readonly List<string> Errors = new();
+
+            public void LogFormat(LogType logType, Object context, string format, params object[] args)
+            {
+                if (logType is LogType.Error or LogType.Exception or LogType.Assert) Errors.Add(string.Format(format, args));
+            }
+
+            public void LogException(System.Exception exception, Object context) => Errors.Add(exception.ToString());
         }
 
         /// <summary>

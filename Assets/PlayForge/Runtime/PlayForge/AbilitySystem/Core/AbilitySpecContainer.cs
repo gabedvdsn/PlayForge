@@ -110,9 +110,15 @@ namespace FarEmerald.PlayForge
 
                 await handle.Proxy.Activate(handle.Cts.Token, handle.Data);
             }
-            catch
+            catch (OperationCanceledException)
             {
                 // Ability in execution is interrupted (cancelled)
+            }
+            catch (Exception e)
+            {
+                // Anything else is a broken ability. Report it, rather than leave it looking like one that
+                // did nothing (PF-008)
+                Debug.LogError($"[Ability] {Spec.Base.GetName()} failed: {e}");
             }
             finally
             {
