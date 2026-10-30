@@ -90,9 +90,10 @@ namespace FarEmerald.PlayForge
 
             ReverseImpact();
 
-            foreach (var containedEffect in Spec.Base.ImpactSpecification.GetContainedEffects(EApplyTickRemove.OnRemove))
+            // Onto the target, where the OnApply and OnTick ones land. These went to the source (GAS-8)
+            foreach (var carrier in Spec.GetContainedCarriers(EApplyTickRemove.OnRemove))
             {
-                Spec.Source.ApplyCarrier(Spec.Source.GenerateEffectSpec(Spec.Origin, containedEffect));
+                Spec.Target.ApplyCarrier(carrier);
             }
         }
 
