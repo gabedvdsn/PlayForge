@@ -40,10 +40,17 @@ namespace FarEmerald.PlayForge
             {
                 activeMono = StoredMono.Instantiator.Create(StoredMono, Data, StoredMono.gameObject.scene.IsValid());
             }
-            if (activeMono && activeMono.gameObject.scene.IsValid()) return;
-            
-            activeMono = StoredMono.gameObject.scene.IsValid() ? StoredMono : Object.Instantiate(StoredMono);
+            if (activeMono) return;
+
+            activeMono = IsPrefab(StoredMono) ? Object.Instantiate(StoredMono) : StoredMono;
             activeMono.name = activeMono.name.Replace("(Clone)", "");
+        }
+
+        // Being outside a scene isn't enough: a live HideAndDontSave object is too, and cloning one left the
+        // object that was registered uninitialized, with whatever was set on it (PC-9). A prefab is never active
+        private static bool IsPrefab(AbstractMonoProcess process)
+        {
+            return !process.gameObject.scene.IsValid() && !process.gameObject.activeInHierarchy;
         }
         
         public override void WhenInitialize(ProcessRelay relay)
