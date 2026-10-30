@@ -96,6 +96,26 @@ from. It lives outside `Assets/` so it never ships in the package.
   - **Clean import:** delete the project's `Library`, then run the compile check. It takes about 30 seconds and
     needs network access for UniTask. **Use this for packaging checks:** with `Library` warm, the same project
     logged 0 import warnings instead of 47, so a warm run proves nothing about Phase 2's gate.
+  - **Harness tests, editor closed.** Exit code 0 means they passed and 2 means tests failed. A run takes about
+    10 seconds. Print the results with `python Tools/test-report.py <xml>`. The project's `README.md` covers how
+    to write a test.
+    ```
+    "C:\Program Files\Unity\Hub\Editor\6000.0.33f1\Editor\Unity.exe" -batchmode -nographics -projectPath "C:\Users\17074\Documents\GitHub\PlayForge Proving Grounds" -runTests -testPlatform PlayMode -testResults <xml> -logFile <path>
+    ```
+  - **Planted failures, after changing the harness.** The same command with `-testCategory Planted`. Every test
+    there must fail, so exit code 2 is correct; `python Tools/check-planted.py <xml>` checks each failed for its
+    own reason.
+  - **Batch-mode facts,** each measured:
+    - `WaitForEndOfFrame` never resumes under `-nographics`, so the frame stepper waits on the last player loop
+      stage instead.
+    - `Time.captureDeltaTime` makes `Time.time` exact, but `Time.unscaledTime` stays on the wall clock. Anything
+      timed on unscaled time (C02) can't be stepped.
+    - The GC API returns 0 under Mono (C15).
+    - The counter "GC Allocated In Frame" works with the profiler off, but its frame total is noise: 450 to 532
+      bytes a frame with nothing running, moving at random. All of that is outside the player loop, except 40
+      bytes from the test runner's coroutine tick. `AllocationProbe` measures only the player loop, less that
+      tick, so a clean frame reads exactly 0. **Don't go back to a calibrated baseline:** one taken while the
+      noise ran high hides real allocation.
   - **Live sources:** a `file:` package is read in place, so edits to `Assets/PlayForge` reach the project on its
     next run. There is nothing to copy or sync.
 - **Ignore** `.claude/worktrees/` at the repo root and under `Assets/PlayForge/.claude/`. They hold stale git
@@ -222,6 +242,7 @@ Severity: **C** critical, **H** high, **M** medium or low. The phase is the road
 | PC-24 | M | 3 | `PooledMonoProcessInstantiator` is a stub that returns null and leaks GameObjects | `PooledMonoProcessInstantiator.cs:7-22`, `MonoWrapperProcess.cs:90` | open |
 | PC-25 | M | 1 | `ProcessTaskUtil.DoWhile` loops forever; `RemainingRuntime` truncates before multiplying | `ProcessTaskUtil.cs:111-117`, `ProcessRelay.cs:42-43` | open |
 | PC-26 | M | 1 | Lifecycle edges: no domain-reload reset; `is null` misses destroyed singletons; the hierarchy throws after a root is destroyed; changing `ProcessTiming` at runtime; `ResetProcessControl` keeps its watchers | `ProcessHierarchy.cs:313`, `ProcessControl.cs:424-446, 1021, 1064` | open |
+| PC-27 | H | 1 | `Unpause` runs a process while ProcessControl itself is Waiting or ClosedWaiting, against 8 cells of the transition table: `ValidateStateTransition` never reads the control state. See Decisions 5 | `ProcessControl.cs:776-791, 1361-1390` | open |
 
 ### TaskSequence
 
@@ -381,9 +402,9 @@ had no letter in the review.
 
 ## Test project: PlayForge Proving Grounds
 
-A separate Unity project that consumes PlayForge as a local UPM package (Decision 2). The project exists and
-runs the golden suite; the harness below is not started. See Environment for its location and commands. The full
-plan is in the review doc's section "The test project: PlayForge Proving Grounds". In short:
+A separate Unity project that consumes PlayForge as a local UPM package (Decision 2). The project and its shared
+harness exist; the suites below don't yet. See Environment for its location and commands. The full plan is in the
+review doc's section "The test project: PlayForge Proving Grounds". In short:
 
 - **The shared harness:**
   - a frame stepper;
@@ -401,7 +422,7 @@ plan is in the review doc's section "The test project: PlayForge Proving Grounds
 - **Plus stretch scenarios.**
 - **Rule:** run under a live ProcessControl. Never call `WhenUpdate` or `WhenLateUpdate` by hand; that is how
   GAS-1 stayed hidden.
-- **First build step:** the harness, the 25 golden scenarios ported, and red tests for the top 15.
+- **First build step:** the harness (done), the 25 golden scenarios ported, and red tests for the top 15.
 
 **Top 15 to test first:** GAS-1, PC-1, PC-2 with TS-4, PC-3, TS-1, TS-A, TS-B, TS-C, GAS-2, GAS-3, GAS-6, GAS-7,
 GAS-4 with GAS-5, PC-6, and TS-I with PC-5.
@@ -409,6 +430,22 @@ GAS-4 with GAS-5, PC-6, and TS-I with PC-5.
 ## Log
 
 Record baselines, gate results and notable decisions here, newest first.
+
+- 2026-10-30, **Proving Grounds harness built**, the first part of the first build step. PlayForge's source is
+  unchanged. All of it runs in PlayMode under a live ProcessControl, brought up by the real Bootstrapper.
+  - **Result:** 153 harness tests pass, in three runs and a run with `-randomOrderSeed`; golden tests 25/25 from
+    the project. The 7 planted failures each fail for their own reason, which proves a broken invariant, a swallowed
+    fault, an unexpected error log and a timed-out wait really fail a test.
+  - **Measured under live stepping:** a runtime GAS and a Mono GAS together allocate exactly 0 bytes across 1,200
+    idle frames (GAS-P1 holds with real frames, not just hand-stepped ones). The probe still catches an `object`
+    allocated in a single Update every frame, well below the runner's 82-byte noise.
+  - **The state oracle against live processes, all 96 cells:** 41 agree, 41 can't be reached, 14 disagree.
+    - 6 `Closed` cells: closing ProcessControl terminates processes the table keeps going, by the default transition
+      PC-7 describes.
+    - 8 `Waiting` and `ClosedWaiting` cells: `Unpause` runs a process while ProcessControl is paused. New row PC-27.
+    - A cell can't be reached when ProcessControl refuses the registration, a terminated block is already gone, or
+      a synchronous process has no run to end.
+    - The cells aren't asserted yet: that test is PC-7's, with the red tests.
 
 - 2026-10-30, **Proving Grounds set up** on `refactor/proving-grounds` at `555b2e9` (Decision 2). The new project's
   own repo is at `2c49575`. Commands are under Environment.
