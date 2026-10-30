@@ -69,6 +69,35 @@ from. It lives outside `Assets/` so it never ships in the package.
     line endings (Arcade Fighter's files are CRLF; canonical's working tree is mostly LF) and one line:
     Arcade Fighter's `GameRoot.Awake` adds `DontDestroyOnLoad(gameObject)` (PC-21, Phase 1). Its fixes are
     therefore the diff `3ae8838..HEAD` under `Assets/Internal/PlayForge`.
+- **PlayForge Proving Grounds:** `C:\Users\17074\Documents\GitHub\PlayForge Proving Grounds`, a separate project
+  in its own local git repo, with no remote. It consumes `Assets/PlayForge` as the package
+  `com.faremerald.playforge` 0.1.0. It was created with
+  `Unity.exe -batchmode -nographics -createProject "<path>" -quit -logFile <path>`.
+  - **Manifest:** three lines on top of Unity's default project. Relative `file:` paths resolve from the project's
+    `Packages` folder, so Arcade Fighter, which also sits next to PlayForge, can use the same lines (Decision 3).
+    ```
+    "com.cysharp.unitask": "https://github.com/Cysharp/UniTask.git?path=src/UniTask/Assets/Plugins/UniTask",
+    "com.faremerald.playforge": "file:../../PlayForge/Assets/PlayForge",
+    "com.unity.test-framework": "1.4.5",
+    ```
+    - A `package.json` can't declare a git dependency, so every consumer adds UniTask itself (SP-8).
+    - `com.unity.ugui` arrives through `package.json`; the default project doesn't have it.
+    - The golden runner doesn't use the Test Framework. It's there for the harness and SP-18.
+  - **Compile check, editor closed.** Exit code 0 means it compiled. There are no csproj files, because the project
+    has no IDE package, so MSBuild doesn't apply here. After a compile error Unity stops before importing assets,
+    so fix those first.
+    ```
+    "C:\Program Files\Unity\Hub\Editor\6000.0.33f1\Editor\Unity.exe" -batchmode -nographics -projectPath "C:\Users\17074\Documents\GitHub\PlayForge Proving Grounds" -quit -logFile <path>
+    ```
+  - **Golden tests, editor closed.** A run takes about 6 seconds with `Library` warm.
+    ```
+    "C:\Program Files\Unity\Hub\Editor\6000.0.33f1\Editor\Unity.exe" -batchmode -nographics -projectPath "C:\Users\17074\Documents\GitHub\PlayForge Proving Grounds" -executeMethod FarEmerald.PlayForge.Tests.PlayForgeGoldenTests.RunAll -logFile <path>
+    ```
+  - **Clean import:** delete the project's `Library`, then run the compile check. It takes about 30 seconds and
+    needs network access for UniTask. **Use this for packaging checks:** with `Library` warm, the same project
+    logged 0 import warnings instead of 47, so a warm run proves nothing about Phase 2's gate.
+  - **Live sources:** a `file:` package is read in place, so edits to `Assets/PlayForge` reach the project on its
+    next run. There is nothing to copy or sync.
 - **Ignore** `.claude/worktrees/` at the repo root and under `Assets/PlayForge/.claude/`. They hold stale git
   worktrees (about 1.1 GB) and are not in `.gitignore` yet (SP-10).
 - **Working tree at handoff:** branch `refactor/handoff` had the user's uncommitted changes: an edit to
@@ -93,10 +122,12 @@ from. It lives outside `Assets/` so it never ships in the package.
 - Phase 0, 2026-10-29: commit locally once per fix on the phase branch (red test, fix and Status together).
   Do not push.
 - Decision 2, 2026-10-29: PlayForge Proving Grounds is a **separate Unity project** that references PlayForge
-  as a local UPM package. That needs a `package.json` in `Assets/PlayForge`, which does not exist yet.
+  as a local UPM package. That needed a `package.json` in `Assets/PlayForge`, added on 2026-10-30.
 - Decision 3, 2026-10-30: Arcade Fighter switches to upstream PlayForge, consuming it as the same local UPM
   package as Proving Grounds, once that package works. Until then it keeps its copy in
   `Assets/Internal/PlayForge`.
+- Proving Grounds setup, 2026-10-30: the project sits next to PlayForge, in its own local git repo with no
+  remote. The package is `com.faremerald.playforge` 0.1.0. Commit locally as work goes; do not push.
 
 **Open. Ask the user; do not assume:**
 1. ~~**Uncommitted changes**~~: decided, see above.
@@ -315,7 +346,7 @@ had no letter in the review.
 | SP-5 | C | 2 | QuickOutline is "All rights reserved" and missing from the notices | `Samples/QuickOutline/Scripts/Outline.cs:1-7` | open |
 | SP-6 | H | 2 | Swarm Defender depends on the Demo; `TestIntEffect` leftovers | `SwarmDefenderGameManager.cs:5, 32-37` | open |
 | SP-7 | M | 2 | Lorem and "ASda" descriptions; an `EFECT_` typo; no sample README | `Samples/Data` | open |
-| SP-8 | H | 2 | UniTask not embedded; the Input System dependency is undeclared | `Packages/manifest.json`, `PUBLISHING.md:14-29` | open |
+| SP-8 | H | 2 | UniTask not embedded and not pinned to a revision, so projects drift (PlayForge 2.5.10, Proving Grounds 2.5.11); the Input System dependency is undeclared | `Packages/manifest.json`, `PUBLISHING.md:14-29` | open |
 | SP-9 | M | 2 | Stray files: the stale `PlayForge_1.0.0.unitypackage`, `asda.unity`, `PlayForgeTesting.cs`, tracked `UIElementsSchema` and `.idea` | repo root and `Assets/` | open |
 | SP-10 | M | 2 | `.claude/worktrees` (1.1 GB) is not in `.gitignore` | `.gitignore` | open |
 | SP-11 | H | 2 | Examples and test processes compile into Runtime | `TaskSequenceExamples*.cs`, `SyncSequenceExamples.cs`, `GroupProcessExamples.cs`, `TestAOEMonoProcess.cs`, `TestMultiProcess.cs` | open |
@@ -327,6 +358,8 @@ had no letter in the review.
 | SP-17 | M | 2 | 842 MB and 206 MB of material packs tracked without LFS (Decisions 7) | repo | open |
 | SP-18 | M | 2 | Split from SP-16: the custom golden runner should move to the Unity Test Framework (B04), so `unity test` and CI report pass/fail | `PlayForgeGoldenTests.cs` | open |
 | SP-19 | C | 2 | Unused `using log4net.Appender` and `using Codice.CM.SEIDInfo` compiled only through the DLLs in `com.unity.collab-proxy`, so the Editor assembly failed in any project without that package | `AbstractRefDrawer.cs:5`, `ForgeDrawerStyles.cs:2` | fixed |
+| SP-20 | H | 2 | `Samples/` is neither `Samples~` nor covered by an asmdef, so as a package its 15 scripts never compile, Unity warns about each one on every compile, and the samples can't run | `Samples/` | open |
+| SP-21 | M | 2 | Editor UXML and USS break on a clean import: 4 `TypeLoadException`s from stale `…, Assembly-CSharp` type names (`FESGameplayAbilitySystem.GameRoot` and `.ProcessControl`, the removed `FrameworkIndex`, and `EAbilityActivationPolicyExtended`, which moved assembly), 9 invalid paths to assets outside the package (`Editor/Icons/Creator/ability.png`, `Assets/TextMesh Pro/…`), and an unknown `:last-child` pseudo class. Nothing references `forge_abilityDrawer.uxml`; the other two are default references in script `.meta` files, so check them against ED-20's dead UXML and USS | `fesgas_bootstrapper.uxml`, `forge_abilityDrawer.uxml`, `AbilityInspector.uss:52` | open |
 
 ### Missing features (Phase 5)
 
@@ -348,8 +381,9 @@ had no letter in the review.
 
 ## Test project: PlayForge Proving Grounds
 
-A separate Unity project that consumes PlayForge as a local UPM package (Decision 2). The full plan is in the
-review doc's section "The test project: PlayForge Proving Grounds". In short:
+A separate Unity project that consumes PlayForge as a local UPM package (Decision 2). The project exists and
+runs the golden suite; the harness below is not started. See Environment for its location and commands. The full
+plan is in the review doc's section "The test project: PlayForge Proving Grounds". In short:
 
 - **The shared harness:**
   - a frame stepper;
@@ -367,8 +401,7 @@ review doc's section "The test project: PlayForge Proving Grounds". In short:
 - **Plus stretch scenarios.**
 - **Rule:** run under a live ProcessControl. Never call `WhenUpdate` or `WhenLateUpdate` by hand; that is how
   GAS-1 stayed hidden.
-- **First build step:** the harness, the 12 golden scenarios ported (22 after Phase 0), and red tests for the
-  top 15.
+- **First build step:** the harness, the 25 golden scenarios ported, and red tests for the top 15.
 
 **Top 15 to test first:** GAS-1, PC-1, PC-2 with TS-4, PC-3, TS-1, TS-A, TS-B, TS-C, GAS-2, GAS-3, GAS-6, GAS-7,
 GAS-4 with GAS-5, PC-6, and TS-I with PC-5.
@@ -376,6 +409,33 @@ GAS-4 with GAS-5, PC-6, and TS-I with PC-5.
 ## Log
 
 Record baselines, gate results and notable decisions here, newest first.
+
+- 2026-10-30, **Proving Grounds set up** on `refactor/proving-grounds` at `555b2e9` (Decision 2). The new project's
+  own repo is at `2c49575`. Commands are under Environment.
+  - **Red:** the first compile exited 1. Runtime, Tests and UniTask built, but the Editor assembly failed with
+    CS0246 on `log4net` and `Codice` (SP-19). Both were unused usings that only compiled through
+    `com.unity.collab-proxy`, which a clean consumer doesn't have.
+  - **Green:** with SP-19 fixed, a clean import from an empty `Library` takes 31 s (680 imports) and exits 0, with
+    0 C# errors and 0 C# warnings.
+  - **Golden tests from Proving Grounds:** batch mode, run twice, exit code 0 both times. **25/25 pass, 0 fail,
+    0 expected-red**, in about 6 s. That includes S17 and S18, the heap-growth checks.
+  - **Canonical after SP-19:** batch mode 25/25, exit code 0. Both MSBuild rebuilds report 0 C# diagnostics.
+  - **Dot-folder:** Unity ignores `Assets/PlayForge/.claude/`. No `.claude.meta` appeared, neither the compile
+    response files nor the import log mention it, and the asset count (415 scripts, 265 others) matches a copy of
+    the package without the folder.
+  - **Clean-import findings,** none blocking. Only the first line shows on a warm `Library`; the other warnings
+    appear once, on import.
+
+    | Finding | Tracker |
+    |---|---|
+    | 15 sample scripts "will not be compiled" (60 log lines) | SP-20, new |
+    | 32 assets log "Missing types referenced", 16 framework types under `Assembly-CSharp`; 39 sample assets hold the old assembly name | SP-1, confirmed |
+    | `DemoMenu.uxml:2` references `Assets/demo_uss.uss`, outside the package | SP-4, confirmed |
+    | 4 `TypeLoadException`s, 9 invalid asset paths and 1 `:last-child` warning in editor UXML and USS | SP-21, new |
+    | Consumers must add UniTask by hand; PlayForge resolved 2.5.10 and Proving Grounds 2.5.11, as nothing pins it | SP-8, confirmed |
+
+  - **Phase 2's gate is not met:** the package compiles and passes its tests from a clean project, but SP-1, SP-4,
+    SP-20 and SP-21 still break "zero warnings, zero missing types".
 
 - 2026-10-29, **Phase 0 gate passed** on `refactor/phase-0-upstream` at `6a82037`:
   - **Build:** both MSBuild commands with `-t:Rebuild` report 0 C# diagnostics (the baseline had ED-1's three).
