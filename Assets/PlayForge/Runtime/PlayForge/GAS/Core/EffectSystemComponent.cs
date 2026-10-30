@@ -317,6 +317,10 @@ namespace FarEmerald.PlayForge
 
         private void HandleGameplayEffects()
         {
+            // Requirements read the applied tags, so compile first: a container that just landed on
+            // the shelf must have its granted tags count toward everyone else's ongoing state.
+            Self.CompileGrantedTags();
+
             foreach (var container in EffectShelf)
             {
                 if (FinishedEffects.Contains(container)) continue;
@@ -361,6 +365,11 @@ namespace FarEmerald.PlayForge
                         executeTicks = container.Spec.Base.DurationSpecification.GetExecuteTicks(
                             container.Spec, executeTicks
                         );
+
+                        // Re-check at the moment a tick would execute. Tags can change without any
+                        // effect being applied or removed (abilities, items, other systems), and only
+                        // apply/remove re-evaluates the stored Ongoing state.
+                        container.Ongoing = ForgeHelper.ValidateEffectOngoingRequirements(container.Spec);
                     }
 
                     var effectContext = new EffectWorkerContext(

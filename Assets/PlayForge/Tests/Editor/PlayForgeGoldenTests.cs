@@ -63,6 +63,7 @@ namespace FarEmerald.PlayForge.Tests
             RunScenario(nameof(S10_ReplaceOldContainer_Idempotent), S10_ReplaceOldContainer_Idempotent);
             RunScenario(nameof(S11_GroupAttribution_BaseVsBonus), S11_GroupAttribution_BaseVsBonus, targetSemantics: true);
             RunScenario(nameof(S12_AbilityInspector_PerLevelSeries), S12_AbilityInspector_PerLevelSeries);
+            RunScenario(nameof(S13_GAS_10_OngoingRequirement_PausesPeriodicTicks), S13_GAS_10_OngoingRequirement_PausesPeriodicTicks);
             RunScenario(nameof(S23_TS_01_Resume_LeavesTimeScaleAlone), S23_TS_01_Resume_LeavesTimeScaleAlone);
 
             Report();
@@ -700,6 +701,43 @@ namespace FarEmerald.PlayForge.Tests
 
             Remove(gas, buff);
             AssertValue(gas, attr, "removed", 50);
+        }
+
+        /// <summary>
+        /// Ongoing requirements gate periodic ticks: a regen that avoids a tag stops ticking while
+        /// another effect grants that tag, and resumes once it is gone. The granting effect lands AFTER
+        /// the regen — the order that used to leave the regen ticking, because ongoing state was
+        /// evaluated before the new effect's tags were compiled (PlayForge log PF-002).
+        /// </summary>
+        private static void S13_GAS_10_OngoingRequirement_PausesPeriodicTicks()
+        {
+            var attr = MakeAttribute("Poise");
+            var gas = MakeGAS(MakeSet(MakeElement(attr, 0, 100)));
+            var blocked = Tag.Generate(Unique("Test.Status.RegenBlocked"));
+
+            var regen = MakeEffect("Regen", new EffectConfig
+            {
+                Policy = EEffectDurationPolicy.Infinite, Target = attr, Op = ECalculationOperation.Add, Magnitude = 5,
+                PeriodicTicks = true, FixedDeltaTime = 1f,
+            });
+            regen.TargetRequirements.OngoingRequirements.AvoidTags = new List<TagQuery> { TagQuery.HasTag(blocked) };
+
+            var blocker = MakeEffect("Blocker", new EffectConfig
+            {
+                Policy = EEffectDurationPolicy.Durational, Duration = 2f, Target = null,
+                GrantedTags = new List<Tag> { blocked }, FixedDeltaTime = 1f,
+            });
+
+            Apply(gas, regen);
+            Frame(gas);
+            AssertValue(gas, attr, "regen ticks while unblocked", 5);
+
+            Apply(gas, blocker);
+            Frame(gas);
+            AssertValue(gas, attr, "regen paused while the avoided tag is granted", 5);
+
+            Frame(gas, 4);
+            AssertTrue("regen resumes once the tag is gone", gas.TryGetAttributeValue(attr, out var value) && value.CurrentValue > 5);
         }
 
         /// <summary>
