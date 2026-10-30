@@ -125,6 +125,11 @@ from. It lives outside `Assets/` so it never ships in the package.
       repeat, so `MeasureFrames` retakes a measure that isn't clean, up to 3 times. A real leak fails every attempt.
   - **Live sources:** a `file:` package is read in place, so edits to `Assets/PlayForge` reach the project on its
     next run. There is nothing to copy or sync.
+  - **With the project open in the editor,** batch mode can't lock it and exits 21 with "another Unity instance is
+    running". Run a private copy instead of closing the editor: mirror `Assets`, `Packages`, `ProjectSettings` and
+    `Library/PackageCache` to a short path (Unity's cache paths run close to MAX_PATH), point the package at an
+    absolute `file:` path in the copy's manifest, drop it from the copy's lock file, and mirror `Assets` again before
+    each run. A run takes about 30 seconds. A new `.cs` file's `.meta` has to be copied back to the real project.
 - **Ignore** `.claude/worktrees/` at the repo root and under `Assets/PlayForge/.claude/`. They hold stale git
   worktrees (about 1.1 GB) and are not in `.gitignore` yet (SP-10).
 - **Working tree at handoff:** branch `refactor/handoff` had the user's uncommitted changes: an edit to
@@ -337,6 +342,7 @@ had no letter in the review. TS-AA onward came from the test project.
 | GAS-31 | M | 1 | `AbstractTargetedMonoProcess` dereferences a missing target after warning about it | `AbstractTargetedMonoProcess.cs:22-26` | open |
 | GAS-32 | C | 1 | Split from GAS-3, reachable once items can be given: `ClearAllItems` skips every other item, so their equipped effects stay; unequip removes every source's effect; `ItemSpec.IsActive` is always false | `ItemSystemComponent.cs:230-240`, `ItemSpecContainer.cs:133, 150`, `ItemSpec.cs:32-35` | open |
 | GAS-33 | H | 1 | At a fixed frame time, a durational periodic effect can lose its last tick for good. Its period and duration timers lose the same delta, so the last tick and the expiry share a frame and rounding decides which comes first: 5 ticks in 5 s lands 4 at 60, 120 and 144 fps. Jittered frame time hides it | `EffectSystemComponent.cs:361, 391-393`, `NonStackingEffectContainer.cs:31` | fixed |
+| GAS-34 | M | 1 | A stack expiring doesn't refresh Continuous entries, though gaining one does, so a scaler that reads the container keeps the old stack count until the next application | `EffectSystemComponent.cs:237-243, 391`, `StackQueueEffectContainer.cs:31-34`, `IndependentDurationsContainer.cs` | open |
 | GAS-P1 | M | 0 | `ActionQueue` LINQ allocations; snapshot built every frame (PF-006) | `ActionQueue.cs:41, 46, 156`, `FrameSummary.cs:340-351` | verified |
 | GAS-P2 | M | 0 | Tag and FrameSummary allocations (PF-007) | `TagCache.cs:60`, `TagQuery.cs:89-136`, `FrameSummary.cs:306-308` | verified |
 | GAS-P3 | M | 3 | Each application revalidates every container and rebuilds all tags (area application is quadratic) | `EffectSystemComponent.cs:312-348`, `GameplayAbilitySystem.cs:250-281` | open |
@@ -416,7 +422,8 @@ had no letter in the review. TS-AA onward came from the test project.
 ## Test project: PlayForge Proving Grounds
 
 A separate Unity project that consumes PlayForge as a local UPM package (Decision 2). The project and its shared
-harness exist; the suites below don't yet. See Environment for its location and commands. The full plan is in the
+harness exist, with the golden scenarios and the first framework tests; the other suites below don't yet. See
+Environment for its location and commands. The full plan is in the
 review doc's section "The test project: PlayForge Proving Grounds". In short:
 
 - **The shared harness:**
@@ -443,6 +450,51 @@ GAS-4 with GAS-5, PC-6, and TS-I with PC-5.
 ## Log
 
 Record baselines, gate results and notable decisions here, newest first.
+
+- 2026-10-30, **Phase 1, first batch**, on `refactor/phase-1-correctness`. Every ID with a red test that needs no
+  decision is `fixed`: PC-2, PC-3, PC-5, PC-6, TS-A, TS-AA, TS-B, TS-C, TS-I, GAS-4, GAS-5, GAS-6, GAS-7 and GAS-33,
+  plus PC-4, TS-D and TS-E, which share their code (below). They stay `fixed` until the phase's gate.
+  - **Result:** 488 tests: 464 pass, 17 known red (PC-7 has 9 cases, PC-27 has 8, and both need Decision 5), 7 planted
+    skipped. The green gate passes 464 of 464 in three orders (default, seeds 1729 and 90210). Planted 7 of 7. The
+    custom golden runner in PlayForge passes 25/25, which also compiles the sources there.
+  - **Added to the batch, each with its own red test:**
+    - PC-4 sits on PC-2's lines. PC-2's fix sent a throwing run down the path that doubled `WhenTerminate`.
+    - TS-D is the same wiring as TS-B. `ApplyUsageAtStageStart` defaults to true, so every default stage reported
+      `AbilityStageEnded` as it began and never at its end.
+    - TS-E became urgent with TS-AA. A throwing stage callback skips the stage's signal, and with TS-AA a cancel
+      no longer escapes a stage that never signals.
+  - **Choices in the fixes, where the sketch wouldn't do:**
+    - PC-5: not the sketch's blanket interrupt, which cut every graceful `Terminate` short and missed cascades.
+      `Terminate` and cascades go through `QueueTerminate`, which calls a new virtual `WhenTerminateQueued`. Its
+      default clears `processActive`, so a run with nothing left to do ends and one with work finishes
+      (`A_queued_terminate_lets_a_run_with_work_finish`). `TaskSequenceProcess` interrupts its sequence. Default
+      transitions don't call it, so `Closed` still lets runs finish. Only Terminate is covered: a queued Wait on a
+      Lazy process is PC-11, under Decision 5.
+    - GAS-5: an amount left at 0 still means one stack, and new effects default to 1. The inspector's default is 0,
+      and the containers always added one, so a literal fix would have silently stopped stacking. No asset in this
+      repo or Arcade Fighter uses `StackExistingContainers` today. Configs run by `ConfigPriority`, so a bound has
+      the last word on both the amount and the container.
+    - GAS-7: the check is what the change leaves, not the size of the magnitude, so an effect that adds to the
+      attribute isn't refused.
+    - GAS-33: not the sketch's epsilon. Both parts of the fix are measured: with float timers and a tolerance, a
+      five-minute effect at 144 fps still lost ticks; with double timers and no tolerance, 11 of 92 cases lost one.
+      Timers are doubles behind the float API, with a tolerance of 0.1% of a period on the duration's last frame.
+    - TS-I: not the sketch's `TerminateImmediate`. Each run has a runtime, a `TaskSequenceProcess` reaches only its
+      own, and sequence-level calls (`Inject`, `Interrupt`, `SkipCurrentStage`, `CheckConditions`) reach every run.
+      `SequenceStage.RepeatBroken`, `RepeatCount` and `ResetConditions` are gone, replaced by
+      `TaskSequenceRuntime.IsRepeatBroken` and `GetRepeatCount`. Chains keep their own state: a chain is a single run.
+  - **Behaviour to expect:**
+    - A task that ignores its cancellation token now holds its sequence until it ends (TS-AA). Before, the sequence
+      left it behind and cleaned it mid-run. `TerminateImmediate` still ends the process at once.
+    - For Arcade Fighter's switch (Decision 3): `AbilityStageEnded` moves to the stage's end, and costs now block
+      activation. Among this repo's and Arcade Fighter's assets, only `ABILITY_Meteor_Blast` has a cost and none has
+      a removal requirement, so GAS-6 and GAS-7 change nothing else that ships.
+  - **Open tracker rows found on the way:** PC-28 (a process parented through its data joins the hierarchy before
+    `WhenInitialize` moves it; decide with PC-20) and GAS-34.
+  - **Flake to watch:** S17 failed once in about 20 full runs, on a single 942-byte frame, with the editor open on
+    another project. It passed the next 4 runs alone and every full run after. It looks like the known burst
+    outlasting `MeasureFrames`'s 3 attempts. If it comes back, raise the attempts or quarantine the check.
+  - **Next:** Decision 5 unblocks PC-7, PC-27, PC-11 and TS-Y. Without it, the other open Phase 1 rows go on.
 
 - 2026-10-30, **Red tests for the top 15**, which finishes the first build step. PlayForge's source is unchanged.
   - **Coverage:** six of the top 15 were already fixed and pinned by goldens: GAS-1 (S25), PC-1 (S20), TS-4 (S19),
