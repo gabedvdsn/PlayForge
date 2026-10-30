@@ -475,10 +475,11 @@ namespace FarEmerald.PlayForge
             relay = pcb.Relay;
             handler?.HandlerSubscribeProcess(relay);
             data.HandlerSubscribeProcess(relay);
-            
-            SetProcess(pcb);
-            
-            return true;
+
+            if (SetProcess(pcb)) return true;
+
+            relay = default;
+            return false;
         }
         
         #endregion
@@ -523,10 +524,11 @@ namespace FarEmerald.PlayForge
             relay = pcb.Relay;
             handler?.HandlerSubscribeProcess(relay);
             data.HandlerSubscribeProcess(relay);
-            
-            SetProcess(pcb);
 
-            return true;
+            if (SetProcess(pcb)) return true;
+
+            relay = default;
+            return false;
         }
         #endregion
         
@@ -913,21 +915,20 @@ namespace FarEmerald.PlayForge
 
         #region Process Setup
 
-        private void SetProcess(ProcessControlBlock pcb)
+        private bool SetProcess(ProcessControlBlock pcb)
         {
-            if (pcb.State == EProcessState.Created)
-            {
-                PrepareCreatedProcess(pcb);
-            }
+            if (pcb.State == EProcessState.Created && !PrepareCreatedProcess(pcb)) return false;
             
             var state = GetDefaultTransitionState(pcb);
             pcb.QueueNextState(state);
 
             // Registered during a pause, it waits with the rest and goes when they do, unless it waits to be told
             if (IsPaused && pcb.Wrapper.Lifecycle != EProcessLifecycle.RequiresControl) pcb.WaitForControl();
+
+            return true;
         }
 
-        private void PrepareCreatedProcess(ProcessControlBlock pcb)
+        private bool PrepareCreatedProcess(ProcessControlBlock pcb)
         {
             pcb.Wrapper.ConfigureWrapper();
 
@@ -958,11 +959,24 @@ namespace FarEmerald.PlayForge
                 Debug.Log(msg);
             }
 
-            pcb.Initialize();
+            // The process's own code, with the block already in place. A throw goes through the usual
+            // teardown and refuses the process, rather than leaving it half registered (PC-15)
+            try
+            {
+                pcb.Initialize();
+            }
+            catch (Exception ex)
+            {
+                Debug.LogException(ex);
+                pcb.ForceIntoState(EProcessState.Terminated);
+                return false;
+            }
 
             // Fire callbacks AFTER pcb.Initialize so state is fully consistent
             Callbacks?.ProcessRegistered(pcb.Relay, pcb.Wrapper.Data);
             if (gas != null) Callbacks?.GASProcessRegistered(gas, pcb.Relay, pcb.Wrapper.Data);
+
+            return true;
         }
         
         private void SetAllProcessesUponStateChange()
