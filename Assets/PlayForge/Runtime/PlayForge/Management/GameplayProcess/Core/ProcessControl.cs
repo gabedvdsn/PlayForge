@@ -130,37 +130,13 @@ namespace FarEmerald.PlayForge
 
             public void AddActions(object caller, Action<EProcessState, EProcessState, ProcessDataPacket> onStateChange, Action<ProcessDataPacket> onUnregister)
             {
-                if (!actions.TryGetValue(caller, out var _actions))
+                // Written back, as WatcherActions is a struct: changing the copy read out changes nothing
+                actions.TryGetValue(caller, out var _actions);
+                actions[caller] = new WatcherActions()
                 {
-                    actions[caller] = new WatcherActions()
-                    {
-                        onStateChange = onStateChange,
-                        onUnregister = onUnregister
-                    };
-                    return;
-                }
-                
-                // Update onStateChange
-                if (_actions.onStateChange is not null)
-                {
-                    _actions.onStateChange = (oldState, newState, data) =>
-                    {
-                        _actions.onStateChange.Invoke(oldState, newState, data);
-                        onStateChange?.Invoke(oldState, newState, data);
-                    };
-                }
-                else _actions.onStateChange = onStateChange;
-                    
-                // Update onUnregister
-                if (_actions.onUnregister is not null)
-                {
-                    _actions.onUnregister = (data) =>
-                    {
-                        _actions.onUnregister.Invoke(data);
-                        onUnregister?.Invoke(data);
-                    };
-                }
-                else _actions.onUnregister = onUnregister;
+                    onStateChange = _actions.onStateChange + onStateChange,
+                    onUnregister = _actions.onUnregister + onUnregister
+                };
             }
 
             public WatcherActions GetActions(object caller)
@@ -175,12 +151,13 @@ namespace FarEmerald.PlayForge
 
             public void RunOnStateChange(EProcessState oldState, EProcessState newState, ProcessDataPacket data)
             {
-                foreach (var _actions in actions.Values) _actions.onStateChange?.Invoke(oldState, newState, data);
+                // A snapshot, as a callback can stop watching, which changes what's being walked
+                foreach (var _actions in actions.Values.ToArray()) _actions.onStateChange?.Invoke(oldState, newState, data);
             }
             
             public void RunOnUnregister(ProcessDataPacket data)
             {
-                foreach (var _actions in actions.Values) _actions.onUnregister?.Invoke(data);
+                foreach (var _actions in actions.Values.ToArray()) _actions.onUnregister?.Invoke(data);
             }
         }
 
@@ -190,11 +167,12 @@ namespace FarEmerald.PlayForge
             if (!Instance._watchers.TryGetValue(toWatch.CacheIndex, out var watcher))
             {
                 Instance._watchers[toWatch.CacheIndex] = new ProcessWatcher(toWatch, caller, onStateChange, onUnregister);
-                return;
+            }
+            else
+            {
+                watcher.AddActions(caller, onStateChange, onUnregister);
             }
 
-            watcher.AddActions(caller, onStateChange, onUnregister);
-            
             onStartWatching?.Invoke(toWatch.Wrapper.Data);
         }
 
