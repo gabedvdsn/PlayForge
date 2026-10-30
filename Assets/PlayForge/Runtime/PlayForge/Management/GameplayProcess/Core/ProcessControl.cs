@@ -748,6 +748,9 @@ namespace FarEmerald.PlayForge
         
         public Dictionary<int, ProcessControlBlock> FetchActiveProcesses() => _active;
         
+        /// <summary>True while ProcessControl itself is paused.</summary>
+        public bool IsPaused => State is EProcessControlState.Waiting or EProcessControlState.ClosedWaiting;
+
         private bool CanAcceptNewProcesses()
         {
             return State is not (EProcessControlState.Closed 
@@ -938,6 +941,9 @@ namespace FarEmerald.PlayForge
             
             var state = GetDefaultTransitionState(pcb);
             pcb.QueueNextState(state);
+
+            // Registered during a pause, it waits with the rest and goes when they do, unless it waits to be told
+            if (IsPaused && pcb.Wrapper.Lifecycle != EProcessLifecycle.RequiresControl) pcb.WaitForControl();
         }
 
         private void PrepareCreatedProcess(ProcessControlBlock pcb)
@@ -991,27 +997,15 @@ namespace FarEmerald.PlayForge
             // If ready, closed, waiting, closedwaiting
             else
             {
+                // Only a pause or the end of one moves anything. Giving every process its default transition
+                // here parked Synchronous processes, started RequiresControl ones and re-ran finished ones,
+                // and closing ended GameRoot and everything it handled (PC-7)
                 var pcbs = _active.Values.ToArray();
                 foreach (var pcb in pcbs)
                 {
-                    if (pcb.State == EProcessState.Created)
-                    {
-                        SetProcess(pcb);
-                    }
-                    else
-                    {
-                        var targetState = GetDefaultStateWhenControlChanged(pcb);
-                        //targetState = GetDefaultTransitionState(pcb);
-                        //Debug.Log($"[{pcb.Process.ProcessName}] from {pcb.State} -> {targetState} --> {(DefaultTransitions.TryGetValue((State, pcb.Process.Lifecycle, pcb.State), out var _qState) ? _qState : $"{pcb.State}/")} ({State}) ({(pcb.State != targetState ? "Will Set" : "No Set")})");
-                        
-                        if (State is EProcessControlState.Ready or EProcessControlState.Waiting or EProcessControlState.ClosedWaiting)
-                            pcb.ForceIntoState(targetState);
-                        else
-                            pcb.QueueNextState(targetState);
-
-                        //Debug.Log($"[{pcb.Process.ProcessName}] Queues Default State Next {pcb.State} -> {GetDefaultTransitionState(pcb)}");
-                        pcb.QueueNextState(GetDefaultTransitionState(pcb));
-                    }
+                    if (pcb.State == EProcessState.Created) SetProcess(pcb);
+                    else if (IsPaused) pcb.HoldForControl();
+                    else pcb.ReleaseFromControl();
                 }
             }
         }
@@ -1318,50 +1312,6 @@ namespace FarEmerald.PlayForge
             return pcb.State; // Stay in current state
         }
 
-        private EProcessState GetDefaultStateWhenControlChanged(ProcessControlBlock pcb)
-        {
-            // When control state changes, determine what state processes should be in
-            return State switch
-            {
-                EProcessControlState.Ready => pcb.Wrapper.Lifecycle switch
-                {
-                    EProcessLifecycle.SelfTerminating => pcb.State == EProcessState.Terminated 
-                        ? EProcessState.Terminated 
-                        : EProcessState.Running,
-                    EProcessLifecycle.RunThenWait => (pcb.State == EProcessState.Waiting && (!pcb.HasRun || pcb.MidRun))
-                        ? EProcessState.Running 
-                        : pcb.State,
-                    EProcessLifecycle.RequiresControl => (pcb.State == EProcessState.Waiting && pcb.MidRun)
-                        ? EProcessState.Running 
-                        : pcb.State,
-                    EProcessLifecycle.Synchronous => pcb.State == EProcessState.Terminated 
-                        ? EProcessState.Terminated 
-                        : EProcessState.Running,
-                    _ => pcb.State
-                },
-                EProcessControlState.Waiting or EProcessControlState.ClosedWaiting => 
-                    pcb.State == EProcessState.Terminated ? EProcessState.Terminated : EProcessState.Waiting,
-                EProcessControlState.Closed => pcb.Wrapper.Lifecycle switch
-                {
-                    EProcessLifecycle.SelfTerminating => pcb.State == EProcessState.Terminated 
-                        ? EProcessState.Terminated 
-                        : EProcessState.Running,
-                    EProcessLifecycle.RunThenWait => (pcb.State == EProcessState.Waiting && (!pcb.HasRun || pcb.MidRun))
-                        ? EProcessState.Running 
-                        : pcb.State,
-                    EProcessLifecycle.RequiresControl => (pcb.State == EProcessState.Waiting && pcb.MidRun)
-                        ? EProcessState.Running 
-                        : pcb.State,
-                    EProcessLifecycle.Synchronous => pcb.State == EProcessState.Terminated 
-                        ? EProcessState.Terminated 
-                        : EProcessState.Running,
-                    _ => pcb.State
-                },
-                EProcessControlState.Terminated or EProcessControlState.TerminatedImmediately => EProcessState.Terminated,
-                _ => pcb.State
-            };
-        }
-
         private bool ValidateStateTransition(ProcessControlBlock pcb, EProcessState to)
         {
             var from = pcb.State;
@@ -1383,7 +1333,9 @@ namespace FarEmerald.PlayForge
                 (EProcessState.Created, EProcessState.Running, EProcessLifecycle.SelfTerminating) => true,
                 (EProcessState.Created, EProcessState.Running, EProcessLifecycle.RunThenWait) => true,
                 (EProcessState.Created, EProcessState.Running, EProcessLifecycle.Synchronous) => true,
-                (EProcessState.Waiting, EProcessState.Running, _) => true,
+                // The table has the last word on a resume, so what a paused or closed ProcessControl keeps still
+                // stays still. Allowing every resume let Unpause walk a process out of a pause (PC-27)
+                (EProcessState.Waiting, EProcessState.Running, _) => GetDefaultTransitionState(pcb) == EProcessState.Running,
                 
                 // Waiting transitions
                 (EProcessState.Running, EProcessState.Waiting, _) => true,

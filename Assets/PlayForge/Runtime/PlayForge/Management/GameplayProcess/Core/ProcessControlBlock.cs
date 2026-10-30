@@ -61,9 +61,13 @@ namespace FarEmerald.PlayForge
         public bool MidRun => _midRun;
         public bool isMono;
 
+        /// <summary>True while this process is Waiting because ProcessControl is, and goes back when it isn't.</summary>
+        public bool HeldByControl => _heldByControl;
+
         private bool _isInitialized;
         private bool _hasRun;
         private bool _midRun;
+        private bool _heldByControl;
 
         private CancellationTokenSource _cts;
 
@@ -170,6 +174,37 @@ namespace FarEmerald.PlayForge
 
             QueuedState = state;
             SetQueuedState();
+        }
+
+        /// <summary>
+        /// Stops a running process for ProcessControl's own pause, marking it to go back when that ends.
+        /// Nothing else goes back then: what was already Waiting was Waiting for a reason of its own.
+        /// </summary>
+        public void HoldForControl()
+        {
+            if (State != EProcessState.Running) return;
+
+            _heldByControl = true;
+            ForceIntoState(EProcessState.Waiting);
+        }
+
+        /// <summary>
+        /// Marks a process that came in during ProcessControl's pause, to start when that ends.
+        /// </summary>
+        public void WaitForControl()
+        {
+            _heldByControl = true;
+        }
+
+        /// <summary>
+        /// Sends back what ProcessControl's pause stopped.
+        /// </summary>
+        public void ReleaseFromControl()
+        {
+            if (!_heldByControl) return;
+
+            _heldByControl = false;
+            ForceIntoState(EProcessState.Running);
         }
 
         #endregion

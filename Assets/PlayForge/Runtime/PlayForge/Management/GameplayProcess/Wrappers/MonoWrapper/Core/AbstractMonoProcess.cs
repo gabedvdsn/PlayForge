@@ -130,7 +130,7 @@ namespace FarEmerald.PlayForge
         }
 
         public abstract UniTask RunProcess(CancellationToken token);
-        public bool TryHandlePause()
+        public virtual bool TryHandlePause()
         {
             return false;
         }
