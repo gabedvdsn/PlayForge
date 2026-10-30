@@ -313,6 +313,7 @@ had no letter in the review. TS-AA onward came from the test project.
 | TS-Y | M | 1 | Fake pause: `TryHandlePause` returns `processActive`, so a paused sequence keeps running | `TaskSequenceProcess.cs:225-228` | fixed |
 | TS-Z | M | 3 | Frame drift: `Task(Action)` costs a frame, and relay polling adds a frame per nesting level | `AbilityProxy.cs:171, 282` | open |
 | TS-AA | H | 1 | A cancelled sequence cleans its tasks while they still run: `AttachExternalCancellation` throws the moment the token cancels, so `CleanStage` runs before `Execute` has unwound | `TaskSequenceRuntime.cs:286, 305` | fixed |
+| TS-AC | H | 1 | An ability activated while ProcessControl refuses new processes (Closed, ClosedWaiting) falls back to legacy execution, outside ProcessControl, so it runs anyway and no pause can hold it | `AbilityProxy.cs` `ActivateViaSequence`, `ActivateTargetingViaSequence` | open |
 | TS-AB | H | 1 | `ChannelAbilityTask` yields in its body and `DoWhileAsync` yields again, so a channel counts one frame in two and lasts twice its `ChannelDuration` | `ChannelAbilityTask.cs:27-36`, `ProcessTaskUtil.cs:94-102` | fixed |
 
 ### GAS core
@@ -460,6 +461,45 @@ GAS-4 with GAS-5, PC-6, and TS-I with PC-5.
 ## Log
 
 Record baselines, gate results and notable decisions here, newest first.
+
+- 2026-10-30, **Phase 1, pause**, after Decision 5. PC-7, PC-27, PC-11, PC-12 and TS-Y are `fixed`, plus TS-AB, found
+  on the way. No test is red any more, for the first time. 59 Phase 1 rows are still open (6 critical, 39 high).
+  - **Result:** 542 tests with no category filter: 535 pass, 0 fail, 7 planted skipped, in three orders (default,
+    seeds 1729 and 90210). Planted 7 of 7. The custom golden runner in PlayForge passes 25/25.
+  - **Processes:**
+    - `Wait` forces Waiting at once, so a pause no longer waits for the run. `TryHandlePause` true keeps the run, and
+      false cancels it. It's virtual on Mono processes now, as it was on runtime ones.
+    - ProcessControl marks what it stops (`HeldByControl`) and sends back exactly that, so the stateless guess in
+      `GetDefaultStateWhenControlChanged` is gone. A process registered during a pause is marked too, unless it's
+      RequiresControl.
+    - A resume follows the transition table, so `Unpause` is refused while ProcessControl is paused (PC-27), and a
+      RequiresControl process doesn't start under `Closed`.
+    - Each run owns its token source. An old run still unwinding can't cancel the new one or end the process
+      (PC-12), which restart-on-resume would otherwise hit every time.
+    - `TerminateRequested` outranks a pause and survives ProcessControl's. A run that ends during a pause moves on at
+      resume, and terminating a paused process cancels a run it held.
+  - **PC-7's closing cells had one cause.** `GameRoot` is a Synchronous process, so closing queued it Terminated, and
+    its `WhenTerminate` ended everything it handled. Under `Closed`, a Synchronous process now just keeps running.
+    The table's `Closed Synchronous Running` says Terminated, but nothing triggers it, so that cell is unreachable,
+    as the same cell is under `Ready`.
+  - **Sequences:** `TaskSequenceRuntime.Pause`, `Resume`, `IsPaused` and `Delay` hold the run. A stage's end waits, the
+    next stage waits, and timers stop. A static map from each stage's token to its run means a token is enough to
+    ask, so `SequenceTaskLibrary`'s helpers hold with no change of signature, through the new `IsPaused`, `DeltaTime`
+    and `Delay`. Builder delays, `DelayTask`, `ChannelAbilityTask`, `ApplyEffectsAbilityTask` and `RunProcessTask` use
+    them. `SequenceDataPacket.IsPaused` serves a task's own code, and `TaskSequenceChain` holds between sequences.
+  - **TS-AB,** measured by TS-Y's test: a channel yielded twice a loop, so it lasted twice its duration.
+  - **Proof:** 13 mutants, each removing one new branch of the pause logic, were run against the suites, and all 13
+    are caught. Two survived at first, which showed no test had something end during a pause. Those tests were added:
+    a stage skipped during a pause, and a sequence skipped during a chain's pause.
+  - **Limits of hold in place:**
+    - A task's own code holds only if it keeps time through the library, with the token it was handed. Otherwise it
+      finishes when it finishes, and its stage waits.
+    - `ArcForce` can't hold, because physics moves the body.
+    - `relay.Pause()` on an ability's sequence doesn't reach a nested `RunSequenceTask` sequence, which is a process
+      of its own. ProcessControl's pause does. This belongs with TS-F and TS-G.
+    - An ability activated under `Closed` or `ClosedWaiting` isn't held at all. That's TS-AC, now tracked.
+  - **Found on the way:** a synchronous sequence terminated mid-task never cleans that task, which belongs with TS-P.
+  - **Next:** the 6 open critical rows, PC-8, TS-G, TS-M, GAS-8, GAS-9 and GAS-32, then the high ones.
 
 - 2026-10-30, **Phase 1, first batch**, on `refactor/phase-1-correctness`. Every ID with a red test that needs no
   decision is `fixed`: PC-2, PC-3, PC-5, PC-6, TS-A, TS-AA, TS-B, TS-C, TS-I, GAS-4, GAS-5, GAS-6, GAS-7 and GAS-33,
