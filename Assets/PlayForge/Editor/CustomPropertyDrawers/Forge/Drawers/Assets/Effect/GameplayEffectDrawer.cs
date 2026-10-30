@@ -154,9 +154,13 @@ namespace FarEmerald.PlayForge.Extended.Editor
             return root;
         }
 
+        // The "Go to" button is switched off for now; set this to bring it back. A readonly field rather
+        // than an early return, so the code below isn't unreachable (PF-009)
+        private static readonly bool ShowGoButton = false;
+
         void BuildGoButton(SerializedProperty prop, VisualElement container)
         {
-            return;
+            if (!ShowGoButton) return;
             
             var btn = container.Q("GoBtn");
             if (btn is not null) container.Remove(btn);

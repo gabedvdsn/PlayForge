@@ -1636,11 +1636,6 @@ namespace FarEmerald.PlayForge.Extended.Editor
             
             qStrip.Add(fullPathToggle);
             qStrip.Add(groupResultsToggle);
-            
-            void RefreshToggleOptions(Button button)
-            {
-                
-            }
         }
         
         private void BuildTagsListView(VisualElement container)

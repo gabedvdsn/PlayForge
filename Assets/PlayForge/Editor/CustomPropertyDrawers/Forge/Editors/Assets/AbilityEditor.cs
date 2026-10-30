@@ -139,7 +139,8 @@ namespace FarEmerald.PlayForge.Extended.Editor
                     {
                         nameof(Ability.Definition) => new AbilityDefinition(),
                         nameof(Ability.Cooldown) => null,
-                        nameof(Ability.Cost) => null
+                        nameof(Ability.Cost) => null,
+                        _ => null
                     };
                 }
             });
