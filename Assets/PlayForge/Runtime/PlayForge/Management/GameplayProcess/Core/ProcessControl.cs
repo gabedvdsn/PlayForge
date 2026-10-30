@@ -695,6 +695,7 @@ namespace FarEmerald.PlayForge
             CheckWatcherOnUnregister(pcb);
 
             pcb.Handler?.HandlerVoidProcess(pcb.Relay);
+            pcb.Wrapper.Data?.HandlerVoidProcess(pcb.Relay);
 
             // Remove from hierarchy
             _hierarchy.Unregister(pcb.CacheIndex);
