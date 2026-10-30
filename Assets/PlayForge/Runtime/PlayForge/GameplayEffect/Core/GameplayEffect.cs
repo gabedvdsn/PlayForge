@@ -175,7 +175,7 @@ namespace FarEmerald.PlayForge
         public bool ValidateRemovalRequirements(GameplayEffectSpec spec)
         {
             return TargetRequirements.CheckRemovalRequirements(spec.Target.GetAppliedTags())
-                   && SourceRequirements.CheckRemovalRequirements(spec.Source.GetAppliedTags());
+                   || SourceRequirements.CheckRemovalRequirements(spec.Source.GetAppliedTags());
         }
         
         public bool ValidateOngoingRequirements(GameplayEffectSpec spec)

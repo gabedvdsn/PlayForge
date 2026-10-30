@@ -57,9 +57,12 @@ namespace FarEmerald.PlayForge
             return OngoingRequirements?.Validate(tags) ?? true;
         }
         
+        /// <summary>
+        /// True when this group asks for the effect's removal. An empty group asks for nothing.
+        /// </summary>
         public bool CheckRemovalRequirements(List<Tag> tags)
         {
-            return !(RemovalRequirements?.Validate(tags) ?? false);
+            return GroupHasRequirements(RemovalRequirements) && RemovalRequirements.Validate(tags);
         }
     }
 }
