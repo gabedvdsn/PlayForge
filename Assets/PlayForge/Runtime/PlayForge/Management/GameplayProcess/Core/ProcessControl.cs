@@ -714,15 +714,21 @@ namespace FarEmerald.PlayForge
                 else Debug.Log($"[Process Control] Unregister process: {pcb.Wrapper.ProcessName}");
             }
 
-            var removed = _active.Remove(pcb.CacheIndex);
-
-            if (removed)
+            // Fired ahead of the removal, as the callback says, and guarded so a throw can't stop it
+            if (_active.ContainsKey(pcb.CacheIndex))
             {
-                Callbacks?.ProcessUnregistered(pcb.Relay, pcb.Wrapper.Data);
-                if (gas != null) Callbacks?.GASProcessUnregistered(gas, pcb.Relay, pcb.Wrapper.Data);
+                try
+                {
+                    Callbacks?.ProcessUnregistered(pcb.Relay, pcb.Wrapper.Data);
+                    if (gas != null) Callbacks?.GASProcessUnregistered(gas, pcb.Relay, pcb.Wrapper.Data);
+                }
+                catch (Exception ex)
+                {
+                    Debug.LogException(ex);
+                }
             }
 
-            return removed;
+            return _active.Remove(pcb.CacheIndex);
         }
         
         public Dictionary<int, ProcessControlBlock> FetchActiveProcesses() => _active;
@@ -1119,12 +1125,17 @@ namespace FarEmerald.PlayForge
 
         public void ProcessWillChangeState(ProcessControlBlock pcb, EProcessState state)
         {
-            var oldState = pcb.State;
+            if (state == EProcessState.Created) return;
+
+            // Reported ahead of acting on it: terminating takes the watchers away, and a run that ends at
+            // once moves the state on again, so afterwards was too late to say this (PC-13)
+            ReportStateChange(pcb);
+
+            // A listener can move the process on itself
+            if (pcb.State != state) return;
 
             switch (state)
             {
-                case EProcessState.Created:
-                    return;
                 case EProcessState.Running:
                     ProcessWillRun(pcb);
                     break;
@@ -1137,9 +1148,19 @@ namespace FarEmerald.PlayForge
                 default:
                     throw new ArgumentOutOfRangeException(nameof(state), state, null);
             }
+        }
 
-            CheckWatcherOnStateChange(pcb);
-            Callbacks?.ProcessStateChanged(pcb.Relay, oldState, pcb.State, pcb.Wrapper.Data);
+        private void ReportStateChange(ProcessControlBlock pcb)
+        {
+            try
+            {
+                CheckWatcherOnStateChange(pcb);
+                Callbacks?.ProcessStateChanged(pcb.Relay, pcb.LastState, pcb.State, pcb.Wrapper.Data);
+            }
+            catch (Exception ex)
+            {
+                Debug.LogException(ex);
+            }
         }
 
         private void ProcessWillRun(ProcessControlBlock pcb)
