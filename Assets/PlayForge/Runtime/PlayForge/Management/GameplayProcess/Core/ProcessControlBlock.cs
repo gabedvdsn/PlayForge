@@ -284,7 +284,6 @@ namespace FarEmerald.PlayForge
                 _totalUpdateTime = 0f;
             }
 
-            bool shouldTransition = true;
             try
             {
                 await Wrapper.RunProcess(Wrapper.Relay, _cts.Token);
@@ -295,8 +294,9 @@ namespace FarEmerald.PlayForge
             }
             catch (Exception ex)
             {
+                // A run that throws is over like any other, so the state queued for its end still applies.
+                // Skipping it left the process Running for good, with anything waiting on it hanging (PC-2)
                 Debug.LogException(ex);
-                shouldTransition = false;
             }
 
             if (_cts != null && !_cts.IsCancellationRequested)
@@ -307,10 +307,7 @@ namespace FarEmerald.PlayForge
             _cts?.Dispose();
             _cts = null;
 
-            if (shouldTransition)
-            {
-                SetQueuedState();
-            }
+            SetQueuedState();
         }
 
         #endregion
