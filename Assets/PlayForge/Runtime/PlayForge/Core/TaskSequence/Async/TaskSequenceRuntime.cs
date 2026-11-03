@@ -546,8 +546,13 @@ namespace FarEmerald.PlayForge
                 // Pop stage from active stack (also decrements critical locks if applicable)
                 PopActiveStage(stage, stageId);
 
-                _stageSources.Remove(stageId);
-                stageCts.Dispose();
+                // Cancelled as well as disposed: a disposed source never cancels, so the stage's timers outlived it
+                // and fired into whatever ran next (TS-AD). The run's cleanup may have done both already
+                if (_stageSources.Remove(stageId))
+                {
+                    stageCts.Cancel();
+                    stageCts.Dispose();
+                }
             }
 
             return error;
@@ -1346,7 +1351,8 @@ namespace FarEmerald.PlayForge
             _activeStages.Clear();
             _criticalFlagLocks = 0;
             
-            try { _sequenceCts?.Dispose(); } catch { }
+            // Cancelled as well as disposed, or the run's own timers go on and fire into its next round (TS-AD)
+            try { _sequenceCts?.Cancel(); _sequenceCts?.Dispose(); } catch { }
             _sequenceCts = null;
         }
     }
