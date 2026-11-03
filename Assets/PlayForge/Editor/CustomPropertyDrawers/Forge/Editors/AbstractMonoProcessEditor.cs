@@ -79,6 +79,12 @@ namespace FarEmerald.PlayForge.Extended.Editor
                 instantiatorHint.text = "Custom instantiation/destruction logic. Uses Object.Instantiate and Object.Destroy when null.";
                 processSection.Add(instantiatorHint);
             }
+
+            // Hidden from the default inspector with the other process fields, and drawn nowhere, though ProcessControl
+            // reads it (ED-24)
+            var cascadeField = new PropertyField(serializedObject.FindProperty(nameof(AbstractMonoProcess.ParticipateInSiblingCascade)));
+            cascadeField.style.marginBottom = 4;
+            processSection.Add(cascadeField);
             
             // Separator
             var separator = new VisualElement();
@@ -105,7 +111,7 @@ namespace FarEmerald.PlayForge.Extended.Editor
         private bool IsProcessField(string name)
         {
             return name is "ProcessLifecycle" or "ProcessTiming" or "PriorityMethod" 
-                or "ProcessStepPriority" or "Instantiator";
+                or "ProcessStepPriority" or "Instantiator" or "ParticipateInSiblingCascade";
         }
         
         private VisualElement CreateSection(string title, Color accentColor, bool withTitle = true)
