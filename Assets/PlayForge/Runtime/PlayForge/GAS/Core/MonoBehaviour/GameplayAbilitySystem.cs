@@ -92,7 +92,8 @@ namespace FarEmerald.PlayForge
         {
             EffectSystem.Tick();
 
-            TagCache.TickTagWorkers();
+            // Tag workers tick once a frame, at its end, once their activations are settled. Ticked here as well,
+            // they ran at twice their rate (GAS-19)
         }
 
         public override void WhenLateUpdate()
