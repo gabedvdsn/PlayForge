@@ -364,6 +364,9 @@ namespace FarEmerald.PlayForge
             }
 
             Data = seqData;
+
+            // Given back at the end, as a sequence gives back the packet's runtime (TS-F)
+            var outerChain = seqData.Chain;
             seqData.Chain = this;
 
             _interrupted = false;
@@ -413,7 +416,7 @@ namespace FarEmerald.PlayForge
                 _chainCts?.Dispose();
                 _chainCts = null;
 
-                Data.Chain = null;
+                Data.Chain = outerChain;
             }
         }
 

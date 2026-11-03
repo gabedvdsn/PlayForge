@@ -180,6 +180,9 @@ namespace FarEmerald.PlayForge
             if (data is SequenceDataPacket seqData) Data = seqData;
             else throw new InvalidOperationException(nameof(data));
             
+            // A run nested on the same packet, as a task's own sequence can be, gives it back as it found it. It
+            // used to clear it, which left the outer run with no runtime and its packet marked unused (TS-F)
+            var outerRuntime = Data.Runtime;
             Data.Runtime = this;
             Data.AppendPath($"Seq[{Definition?.Metadata?.Name}]");
             
@@ -287,8 +290,8 @@ namespace FarEmerald.PlayForge
                 bool shouldRepeat = (Definition.Metadata?.Repeat ?? false) && CompletedSuccessfully;
                 if (!shouldRepeat)
                 {
-                    Data.InUse = false;
-                    Data.Runtime = null;
+                    Data.InUse = outerRuntime != null;
+                    Data.Runtime = outerRuntime;
 
                     try
                     {
