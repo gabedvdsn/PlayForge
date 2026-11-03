@@ -18,14 +18,18 @@ namespace FarEmerald.PlayForge
         public ESourceTarget WithRespectTo;
         
         [Header("Execution Mode")]
-        [Tooltip("Inline executes immediately, Deferred queues for end-of-frame")]
+        [Tooltip("Inline executes immediately, Deferred queues for end-of-frame. InlineAndDeferred runs deferred, as " +
+                 "both halves do the same work")]
         public EWorkerExecution ExecutionMode = EWorkerExecution.Deferred;
         
         [Header("Danger! [ KEEP FALSE ]")]
         [Tooltip("Only set TRUE if you know what you are doing. FALSE breaks infinite cycles.")]
         public bool WorkerImpactWorkable = false;
         
-        public override EWorkerExecution Execution => ExecutionMode;
+        // Both halves do the same work, so InlineAndDeferred runs deferred, the safe default. It did the work twice, and
+        // lifesteal healed double (GAS-41)
+        public override EWorkerExecution Execution =>
+            ExecutionMode == EWorkerExecution.InlineAndDeferred ? EWorkerExecution.Deferred : ExecutionMode;
         
         public override void ActivateInline(ImpactData impactData)
         {
