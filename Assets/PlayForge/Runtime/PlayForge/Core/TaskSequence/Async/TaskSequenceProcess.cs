@@ -132,7 +132,10 @@ namespace FarEmerald.PlayForge
         public override void WhenInitialize()
         {
             base.WhenInitialize();
-            SeqData = regData as SequenceDataPacket;
+
+            // Made once, here. A sync sequence made a new one for every step, and a plain packet was swapped for an
+            // empty one, so what it carried never reached the tasks (TS-P)
+            SeqData = regData as SequenceDataPacket ?? new SequenceDataPacket(regData);
         }
 
         public override void WhenUpdate() => StepAt(EProcessStepTiming.Update);
@@ -156,7 +159,7 @@ namespace FarEmerald.PlayForge
                 // run that many times too fast
                 if (timing != AdvancingTiming(StepTiming)) return;
 
-                if (_syncRunner.Step(SeqData ?? SequenceDataPacket.SceneRoot(), Time.deltaTime))
+                if (_syncRunner.Step(SeqData, Time.deltaTime))
                 {
                     Relay.TerminateImmediate();
                 }
@@ -197,12 +200,12 @@ namespace FarEmerald.PlayForge
             {
                 if (IsChain)
                 {
-                    await _chain.Run(regData, token);
+                    await _chain.Run(SeqData, token);
                 }
                 else
                 {
                     _runtime = _sequence.CreateRuntime();
-                    await _sequence.Run(_runtime, regData, token);
+                    await _sequence.Run(_runtime, SeqData, token);
                 }
             }
             finally
@@ -218,12 +221,14 @@ namespace FarEmerald.PlayForge
         /// </summary>
         public override void WhenTerminate()
         {
+            // Ended part way through, a sync sequence cleans the stage it's in, as an async one does (TS-P)
+            if (IsSynchronous) _syncRunner?.Interrupt(SeqData);
+
             if (IsSynchronous && _sequence?.Definition?.Metadata?.OnTerminate != null)
             {
                 try
                 {
-                    var data = regData as SequenceDataPacket ?? SequenceDataPacket.SceneRoot();
-                    var ctx = new SequenceEventContext(data, null);
+                    var ctx = new SequenceEventContext(SeqData, null);
                     bool completed = _syncRunner?.IsComplete ?? false;
                     _sequence.Definition.Metadata.OnTerminate.Invoke(ctx, completed);
                 }
@@ -315,6 +320,9 @@ namespace FarEmerald.PlayForge
         /// </summary>
         public bool Interrupt()
         {
+            // A sync sequence has no run to inject into: its runner stops, and its next step ends the process (TS-P)
+            if (IsSynchronous) return _syncRunner.Interrupt(SeqData);
+
             return IsChain ? _chain.Interrupt() : Inject(InterruptSequenceInjection.Instance);
         }
 

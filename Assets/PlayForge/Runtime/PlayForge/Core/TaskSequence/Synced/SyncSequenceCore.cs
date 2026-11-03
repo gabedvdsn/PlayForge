@@ -174,7 +174,12 @@ namespace FarEmerald.PlayForge
                     _stagePrepared = true;
                 }
 
-                if (stage.Step(data, deltaTime))
+                bool stageComplete = stage.Step(data, deltaTime);
+
+                // A task can end the sequence from inside its step, and the stage it was in is cleaned already (TS-P)
+                if (_state == ERunnerState.Interrupted) return true;
+
+                if (stageComplete)
                 {
                     // Fire critical section exit when the last critical stage completes.
                     // Must fire before advancing _stageIndex so the index is still valid.
@@ -219,18 +224,22 @@ namespace FarEmerald.PlayForge
         }
 
         /// <summary>
-        /// Interrupts the runner, cleaning up the current stage.
+        /// Interrupts the runner, cleaning up the current stage. False if it had already ended.
         /// </summary>
-        public void Interrupt(SequenceDataPacket data)
+        public bool Interrupt(SequenceDataPacket data)
         {
-            if (_state != ERunnerState.Running) return;
+            // One that hasn't stepped yet is stopped too: it would otherwise start on its next step as if nothing
+            // had happened (TS-P)
+            if (_state is ERunnerState.Completed or ERunnerState.Interrupted) return false;
 
             if (_stageIndex < _stages.Count && _stagePrepared)
             {
+                _stagePrepared = false;
                 _stages[_stageIndex].Clean(data);
             }
 
             _state = ERunnerState.Interrupted;
+            return true;
         }
 
         /// <summary>
