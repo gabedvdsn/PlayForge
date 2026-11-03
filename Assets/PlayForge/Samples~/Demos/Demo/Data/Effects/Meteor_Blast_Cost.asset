@@ -18,7 +18,7 @@ MonoBehaviour:
   _templateListSnapshots: []
   Definition:
     Name: Meteor Blast_Cost
-    Description: ASda
+    Description: Meteor Blast's cost, a hidden System impact on Mana.
     Visibility:
       Name: Not Visible
       DisplayName: 

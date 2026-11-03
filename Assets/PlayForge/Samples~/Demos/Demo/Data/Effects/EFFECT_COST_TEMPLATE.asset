@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   Definition:
     Name: COST_TEMPLATE
-    Description: ASda
+    Description: The template for the Demo's ability costs, a hidden System impact on Mana.
     Visibility:
       Name: Not Visible
       Parent: 

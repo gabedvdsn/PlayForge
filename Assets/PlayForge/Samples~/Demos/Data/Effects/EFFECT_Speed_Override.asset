@@ -10,7 +10,7 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 2d34fc1f98f8a0b4c9b37da3e706e0e1, type: 3}
-  m_Name: EFECT_Speed_Override
+  m_Name: EFFECT_Speed_Override
   m_EditorClassIdentifier: 
   LocalData: []
   _template: {fileID: 11400000, guid: eea235da25bf59a468c3da6a4fd1c6a3, type: 2}
