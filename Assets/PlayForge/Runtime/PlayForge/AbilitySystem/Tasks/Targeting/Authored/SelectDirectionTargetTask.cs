@@ -46,15 +46,17 @@ namespace FarEmerald.PlayForge
             var cam = Camera.main;
             var maxDist = MaxDistance > 0 ? MaxDistance : Mathf.Infinity;
             var owner = data.EffectOrigin.GetSource();
-            var ownerTransform = owner.ToGAS()?.ToGASObject()?.transform;
+            // From the caster's targeting packet, which every caster has. Through its transform, a runtime caster, which
+            // has none, always failed (GAS-38)
+            var ownerPacket = owner?.GetTargetingPacket();
 
-            if (ownerTransform == null)
+            if (ownerPacket == null)
             {
                 WhenTargetingInvalid(data);
                 return;
             }
 
-            var origin = ownerTransform.position;
+            var origin = ownerPacket.position;
 
             while (!token.IsCancellationRequested)
             {

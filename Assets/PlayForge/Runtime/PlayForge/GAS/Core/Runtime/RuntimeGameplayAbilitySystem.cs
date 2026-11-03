@@ -223,7 +223,8 @@ namespace FarEmerald.PlayForge
         
         /// <summary>
         /// Returns the placeholder transform packet for this runtime entity.
-        /// Unlike the MonoBehaviour version, this is not backed by a Unity Transform.
+        /// Unlike the MonoBehaviour version, this is not backed by a Unity Transform: the entity's position is this
+        /// packet's, which whoever drives the entity keeps current. Targeting and range checks read it (GAS-38).
         /// </summary>
         public AbstractTargetingPacket GetTargetingPacket()
         {

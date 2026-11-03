@@ -47,11 +47,13 @@ namespace FarEmerald.PlayForge
         public override UniTask Activate(AbilityDataPacket data, CancellationToken token)
         {
             var owner = data.EffectOrigin.GetSource();
-            var ownerTransform = owner.ToGAS()?.ToGASObject()?.transform;
+            // From the caster's targeting packet, which every caster has. From its transform, a runtime caster, which has
+            // none, searched the whole scene whatever its range, and sorted nothing (GAS-38)
+            var origin = owner?.GetTargetingPacket();
 
-            var candidates = GatherCandidates(ownerTransform, owner);
+            var candidates = GatherCandidates(origin, owner);
             var valid = FilterCandidates(candidates);
-            var sorted = SortCandidates(valid, ownerTransform);
+            var sorted = SortCandidates(valid, origin);
             var selected = SelectTargets(sorted);
 
             if (selected.Count == 0)
@@ -73,7 +75,7 @@ namespace FarEmerald.PlayForge
         /// Gathers raw ITarget candidates from the world.
         /// Uses OverlapSphere when Range > 0, otherwise FindObjectsByType.
         /// </summary>
-        private List<ITarget> GatherCandidates(Transform origin, ISource owner)
+        private List<ITarget> GatherCandidates(AbstractTargetingPacket origin, ISource owner)
         {
             var results = new List<ITarget>();
 
@@ -134,7 +136,7 @@ namespace FarEmerald.PlayForge
         /// <summary>
         /// Sorts candidates based on the configured mode.
         /// </summary>
-        private List<ITarget> SortCandidates(List<ITarget> candidates, Transform origin)
+        private List<ITarget> SortCandidates(List<ITarget> candidates, AbstractTargetingPacket origin)
         {
             if (origin == null || candidates.Count <= 1) return candidates;
 

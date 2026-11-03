@@ -44,9 +44,11 @@ namespace FarEmerald.PlayForge
             var cam = Camera.main;
             var maxDist = MaxRayDistance > 0 ? MaxRayDistance : Mathf.Infinity;
             var owner = data.EffectOrigin.GetSource();
-            var ownerTransform = owner.ToGAS()?.ToGASObject()?.transform;
+            // From the caster's targeting packet, which every caster has. Through its transform, a runtime caster, which
+            // has none, always failed (GAS-38)
+            var ownerPacket = owner?.GetTargetingPacket();
 
-            if (ownerTransform == null)
+            if (ownerPacket == null)
             {
                 WhenTargetingInvalid(data);
                 return;
@@ -72,7 +74,7 @@ namespace FarEmerald.PlayForge
                 }
 
                 // Range check
-                if (!IsWithinRange(ownerTransform, target))
+                if (!IsWithinRange(ownerPacket, target))
                 {
                     if (RetryOnInvalid) continue;
                     WhenTargetingInvalid(data);
@@ -84,7 +86,7 @@ namespace FarEmerald.PlayForge
             }
         }
 
-        private bool IsWithinRange(Transform caster, ITarget target)
+        private bool IsWithinRange(AbstractTargetingPacket caster, ITarget target)
         {
             var targetTransform = target.GetTargetingPacket();
             if (targetTransform == null) return false;
