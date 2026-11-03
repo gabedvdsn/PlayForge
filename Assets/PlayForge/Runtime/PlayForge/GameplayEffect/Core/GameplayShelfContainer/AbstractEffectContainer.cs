@@ -122,7 +122,9 @@ namespace FarEmerald.PlayForge
         }
         public IEnumerable<Tag> GetGrantedTags()
         {
-            yield return Spec.Origin.GetAssetTag();
+            // Its own asset tag, as an ability or an item grants. This gave its source's, so a target carried the tag
+            // of whoever had affected it (GAS-14)
+            yield return Spec.Base.GetAssetTag();
             foreach (var t in Spec.Base.GetGrantedTags()) yield return t;
         }
 

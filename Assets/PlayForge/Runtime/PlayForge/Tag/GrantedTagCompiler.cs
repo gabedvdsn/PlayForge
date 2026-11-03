@@ -23,7 +23,6 @@ namespace FarEmerald.PlayForge
             {
                 var spec = shelf[i].Spec;
                 cache.AddTag(spec.Base.Tags.AssetTag);
-                cache.AddTag(spec.Origin.GetAssetTag());
                 if (spec.Base.GetGrantedTags() is List<Tag> granted) AddAll(cache, granted);
                 else foreach (var t in spec.Base.GetGrantedTags()) cache.AddTag(t);
             }
