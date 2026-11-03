@@ -526,6 +526,27 @@ GAS-4 with GAS-5, PC-6, and TS-I with PC-5.
 
 Record baselines, gate results and notable decisions here, newest first.
 
+- 2026-11-03, **Phase 2, the first 27 rows.** On `refactor/phase-2-release`, SP-1 to SP-15, SP-17 to SP-21, PC-32,
+  ED-17, ED-22 to ED-24, ED-26 and ED-28 are `fixed`, one commit each. Nine Phase 2 rows are open.
+  - **The gate:** a clean import into a fresh Unity 6 project shows 0 compile errors or warnings, 0 uncompiled scripts,
+    0 missing types, 0 exceptions and 0 asset warnings. With `--samples`, it also finds 0 missing scripts, references
+    or types (Proving Grounds' `Tools/clean-import.py`).
+  - **Tests:** the PlayMode suite runs 838 tests, 831 pass, 0 fail and 7 planted are skipped, in three orders.
+    Planted 7 of 7. Proving Grounds' new EditMode tests in `Tests/Editor` pass 7 of 7, each red first. The golden
+    scenarios pass 25/25 in the Test Runner (SP-18) and in the custom runner.
+  - **Calls made:** Decisions 6, 7, 15 and 16. UniTask is pinned to 2.5.11; embedding it waits for the packaging branch
+    (`PUBLISHING.md` section 2). SP-7 is content only, so it has no test. ED-28 leaves the editor's UXML and USS that
+    still resolve to ED-20.
+  - **A slip:** `git add` on the removed QuickOutline folder failed, so SP-6's commit `592a978` also took QuickOutline's
+    removal and SP-5's status. SP-5's own commit `ed32de9` holds the rest. Neither was amended.
+  - **New rows:** the editor survey behind the UI interview doc turned up ED-22 to ED-28, plus two more timers for
+    ED-11. The Asset Store's submission guidelines (updated 2026-10-23) add SP-22 and SP-23, and open decision 17.
+    Running the golden scenarios in the Test Runner turned up PC-32.
+  - **Open:** ED-16 and ED-19 wait on the UI interview's questions 31 to 33, and SP-22 and SP-23 on decision 17. ED-8,
+    the hard delete, ties into question 16, so it waits too. ED-6, ED-7, ED-10 and ED-25 are next, along with ED-12's
+    Phase 2 part (`UpdateAssetTagDisplay` writing the asset on refresh).
+  - **Not merged:** nothing is merged into `main` or pushed.
+
 - 2026-11-03, **Phase 1 closed.** Its exit gate, the fault-injection and framework suites passing, is met, so all 96
   Phase 1 rows move from `fixed` to `verified`.
   - **The gate's run:** 838 tests with no category filter: 831 pass, 0 fail, 7 planted skipped, in three orders.
