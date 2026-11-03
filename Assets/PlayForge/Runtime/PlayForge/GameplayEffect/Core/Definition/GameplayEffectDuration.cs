@@ -105,14 +105,18 @@ namespace FarEmerald.PlayForge
 
         public void ApplyDurationSpecifications(AbstractEffectContainer container)
         {
-            if (DurationPolicy == EEffectDurationPolicy.Durational) ApplyDurationalSpecs(container);
-            else ApplyInfiniteSpecs(container);
-
+            // Scalers first: the duration and its ticks are read from them below, and a scaler reads nothing until
+            // it's initialized, so an attribute-backed duration came out as 0. The ticks' scaler was never
+            // initialized at all (GAS-22)
             DurationOperation?.Scaler?.Initialize(container.Spec);
             DeltaTimeScaler?.Initialize(container.Spec);
+            TicksOperation?.Scaler?.Initialize(container.Spec);
             TickIntervalOperation?.Scaler?.Initialize(container.Spec);
             AdditionalExecuteTicksOperation?.Scaler?.Initialize(container.Spec);
             StackAmountOperation?.Scaler?.Initialize(container.Spec);
+
+            if (DurationPolicy == EEffectDurationPolicy.Durational) ApplyDurationalSpecs(container);
+            else ApplyInfiniteSpecs(container);
 
             if (container is AbstractStackingEffectContainer _container)
             {
