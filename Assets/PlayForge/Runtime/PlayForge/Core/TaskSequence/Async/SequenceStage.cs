@@ -197,10 +197,10 @@ namespace FarEmerald.PlayForge
                 units.Add(ExecuteTaskUnit(task, data, stageToken));
             }
             
-            // Add sub-stage executions
+            // Add sub-stage executions. Each runs as a stage, with its own settings (TS-N)
             foreach (var subStage in stage.SubStages)
             {
-                units.Add(runtime.ExecuteStageInternal(subStage, data, stageToken));
+                units.Add(runtime.ExecuteSubStage(subStage, stageToken));
             }
             
             return units.ToArray();

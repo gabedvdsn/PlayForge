@@ -92,8 +92,13 @@ namespace FarEmerald.PlayForge
         private readonly object _activeTasksLock = new();
         
         // Active stages for condition checking and the critical section, oldest first. A maintained stage ends
-        // under the stages after it, so this can't be a stack: one that ended off the top stayed on it (TS-J)
-        private readonly List<SequenceStage> _activeStages = new();
+        // under the stages after it, so this can't be a stack: one that ended off the top stayed on it (TS-J).
+        // Each is kept with its id in _stageSources (TS-N)
+        private readonly List<(SequenceStage Stage, int Id)> _activeStages = new();
+
+        // Sub-stages are kept in _stageSources with the top-level stages, counting down from -2 so that the two
+        // never meet, and -1 stays StageIndex's "not started"
+        private int _nextSubStageId = -2;
         
         // ═══════════════════════════════════════════════════════════════════════════
         // CONSTRUCTION
@@ -395,43 +400,93 @@ namespace FarEmerald.PlayForge
             }
         }
         
+        /// <summary>
+        /// Runs a top-level stage, and moves the sequence on when it ends, unless it's been maintained.
+        /// </summary>
         private async UniTask ExecuteStageAsync(SequenceStage stage, int stageIndex, CancellationToken parentToken)
         {
+            var error = await RunStage(stage, stageIndex, parentToken);
+
+            // Signal completion
+            if (!_maintainedStages.Remove(stageIndex))
+            {
+                // Store error for main loop to check (safer than TrySetException)
+                if (error != null)
+                {
+                    _pendingStageError = error;
+                }
+                // Always signal completion - error is checked after await
+                _nextStageSignal?.TrySetResult();
+            }
+            else
+            {
+                // Nothing waits on a maintained stage, so it cleans its own tasks as it ends (TS-J)
+                CleanStage(stage);
+
+                // For maintained stages with errors, we need to cancel the sequence
+                if (error != null)
+                {
+                    _sequenceCts?.Cancel();
+                }
+            }
+        }
+
+        /// <summary>
+        /// Runs a sub-stage, or the stage a branch chose, as one unit of the stage it's in. Its error is thrown on
+        /// for that stage's policy, and so is a cancellation from that stage, while its own skip or timeout just
+        /// ends it.
+        /// </summary>
+        internal async UniTask ExecuteSubStage(SequenceStage stage, CancellationToken parentToken)
+        {
+            var error = await RunStage(stage, _nextSubStageId--, parentToken);
+
+            if (error != null) throw error;
+            parentToken.ThrowIfCancellationRequested();
+        }
+
+        /// <summary>
+        /// What every stage does, wherever it is: its callbacks, timers, repeat and error handler, and its place on
+        /// the active list for conditions and the critical section. A sub-stage ran its tasks and nothing else, so
+        /// all of that was ignored for one (TS-N). Returns the error that ended the stage, if its handler didn't
+        /// take it.
+        /// </summary>
+        private async UniTask<Exception> RunStage(SequenceStage stage, int stageId, CancellationToken parentToken)
+        {
             var stageCts = CancellationTokenSource.CreateLinkedTokenSource(parentToken);
-            _stageSources[stageIndex] = stageCts;
+            _stageSources[stageId] = stageCts;
             var stageToken = stageCts.Token;
-            
+
             // Push stage onto active stack for condition checking + critical tracking
-            PushActiveStage(stage);
-            
+            PushActiveStage(stage, stageId);
+
             // Reset repeat state
             _brokenRepeats.Remove(stage);
             _repeatCounts.Remove(stage);
-            
+
             bool cancelled = false;
             Exception error = null;
-            
+
             Data.AppendPath($"Stage[{stage.Metadata?.Name}]");
-            
+
             try
             {
                 stage.OnInit?.Invoke(Data);
-                
+
                 // Start stage max duration timeout if configured
                 if (stage.HasMaxDuration)
                 {
-                    StartStageMaxDurationTimeout(stage, stageIndex, stageToken).Forget();
+                    StartStageMaxDurationTimeout(stage, stageId, stageToken).Forget();
                 }
-                
+
                 // Start timeout if configured
                 if (stage.HasTimeouts)
                 {
                     foreach (var timeout in stage.Timeouts)
                     {
-                        StartStageTimeout(stage, timeout, stageIndex, stageToken).Forget();
+                        StartStageTimeout(stage, timeout, stageId, stageToken).Forget();
                     }
                 }
-                
+
                 // Execute the stage (handles repeat internally if needed)
                 await ExecuteStageWithRepeat(stage, stageToken);
             }
@@ -442,13 +497,13 @@ namespace FarEmerald.PlayForge
             catch (Exception ex)
             {
                 error = ex;
-                
+
                 // Try stage-level exception handler if present
                 if (stage.OnException != null)
                 {
                     var ctx = new SequenceEventContext(Data, this, stage);
                     bool suppressed = false;
-                    
+
                     try
                     {
                         suppressed = stage.OnException.Invoke(ctx, ex);
@@ -457,7 +512,7 @@ namespace FarEmerald.PlayForge
                     {
                         Debug.LogError($"[TaskSequence] Exception in stage OnException handler: {handlerEx}");
                     }
-                    
+
                     if (suppressed)
                     {
                         // Stage exception was suppressed - don't propagate
@@ -466,15 +521,14 @@ namespace FarEmerald.PlayForge
                     else if (stage.Metadata?.EnableErrorLogging ?? true)
                     {
                         // Stage handler chose not to suppress - log at stage level
-                        Debug.LogError($"[TaskSequence] Stage {stageIndex} ({stage.Metadata?.Name ?? "unnamed"}) error: {ex}");
+                        Debug.LogError($"[TaskSequence] Stage {stageId} ({stage.Metadata?.Name ?? "unnamed"}) error: {ex}");
                     }
                 }
                 // If no stage handler, let exception propagate silently to sequence level
             }
             finally
             {
-                // The rest of this block is what moves the sequence on, so a throwing handler can't be let
-                // past here (TS-E)
+                // The rest of this block has to happen, so a throwing handler can't be let past here (TS-E)
                 try
                 {
                     var ctx = new SequenceEventContext(Data, this, stage);
@@ -486,35 +540,13 @@ namespace FarEmerald.PlayForge
                 }
 
                 // Pop stage from active stack (also decrements critical locks if applicable)
-                PopActiveStage(stage);
-                
-                _stageSources.Remove(stageIndex);
-                
-                // Signal completion
-                if (!_maintainedStages.Remove(stageIndex))
-                {
-                    // Store error for main loop to check (safer than TrySetException)
-                    if (error != null)
-                    {
-                        _pendingStageError = error;
-                    }
-                    // Always signal completion - error is checked after await
-                    _nextStageSignal?.TrySetResult();
-                }
-                else
-                {
-                    // Nothing waits on a maintained stage, so it cleans its own tasks as it ends (TS-J)
-                    CleanStage(stage);
+                PopActiveStage(stage, stageId);
 
-                    // For maintained stages with errors, we need to cancel the sequence
-                    if (error != null)
-                    {
-                        _sequenceCts?.Cancel();
-                    }
-                }
-                
+                _stageSources.Remove(stageId);
                 stageCts.Dispose();
             }
+
+            return error;
         }
         
         /// <summary>
@@ -579,22 +611,20 @@ namespace FarEmerald.PlayForge
         /// </summary>
         internal async UniTask ExecuteStageInternal(SequenceStage stage, SequenceDataPacket data, CancellationToken token)
         {
-            // Handle branch stages
+            // Handle branch stages. The stage chosen runs as a sub-stage does, its settings with it (TS-N)
             if (stage is BranchStage branchStage)
             {
                 var selectedBranch = branchStage.Evaluate(data);
                 if (selectedBranch != null)
                 {
-                    PushActiveStage(selectedBranch);
                     PrepareStage(selectedBranch);
                     try
                     {
-                        await ExecuteStageInternal(selectedBranch, data, token);
+                        await ExecuteSubStage(selectedBranch, token);
                     }
                     finally
                     {
                         CleanStage(selectedBranch);
-                        PopActiveStage(selectedBranch);
                     }
                 }
                 return;
@@ -646,11 +676,11 @@ namespace FarEmerald.PlayForge
         // ACTIVE STAGE STACK (with critical section tracking)
         // ═══════════════════════════════════════════════════════════════════════════
         
-        private void PushActiveStage(SequenceStage stage)
+        private void PushActiveStage(SequenceStage stage, int stageId)
         {
             lock (_activeStages)
             {
-                _activeStages.Add(stage);
+                _activeStages.Add((stage, stageId));
                 
                 if (stage.Metadata?.IsCritical ?? false)
                 {
@@ -659,11 +689,11 @@ namespace FarEmerald.PlayForge
             }
         }
         
-        private void PopActiveStage(SequenceStage stage)
+        private void PopActiveStage(SequenceStage stage, int stageId)
         {
             lock (_activeStages)
             {
-                int index = _activeStages.LastIndexOf(stage);
+                int index = _activeStages.IndexOf((stage, stageId));
                 if (index >= 0)
                 {
                     _activeStages.RemoveAt(index);
@@ -703,7 +733,7 @@ namespace FarEmerald.PlayForge
         }
 
         // Innermost first, as the stack gave them
-        private SequenceStage[] GetActiveStages()
+        private (SequenceStage Stage, int Id)[] GetActiveStages()
         {
             lock (_activeStages)
             {
@@ -735,7 +765,7 @@ namespace FarEmerald.PlayForge
             
             // Check active critical stages (innermost first) for stage-level override
             var activeStages = GetActiveStages();
-            foreach (var stage in activeStages)
+            foreach (var (stage, _) in activeStages)
             {
                 if (!(stage.Metadata?.IsCritical ?? false)) continue;
                 
@@ -1007,7 +1037,7 @@ namespace FarEmerald.PlayForge
             
             // Check stage-local conditions (these respect stage-local permissions)
             var activeStages = GetActiveStages();
-            foreach (var stage in activeStages)
+            foreach (var (stage, _) in activeStages)
             {
                 if (stage.HasConditions)
                 {
@@ -1207,6 +1237,7 @@ namespace FarEmerald.PlayForge
             StageIndex = -1;
             CurrentStage = null;
             _maintainedStages.Clear();
+            _nextSubStageId = -2;
             _jumpToStageRequest = null;
             _pendingStageError = null;
             _criticalFlagLocks = 0;
@@ -1218,11 +1249,12 @@ namespace FarEmerald.PlayForge
             _brokenRepeats.Clear();
             _repeatCounts.Clear();
 
-            // Precompute the index of the last stage-level critical stage
+            // Precompute the index of the last stage-level critical stage. A critical sub-stage counts for the stage
+            // it's in, now that it holds the critical section (TS-N)
             _lastCriticalStageIndex = -1;
             for (int i = Definition.Stages.Count - 1; i >= 0; i--)
             {
-                if (Definition.Stages[i].Metadata?.IsCritical ?? false)
+                if (HoldsCriticalStage(Definition.Stages[i]))
                 {
                     _lastCriticalStageIndex = i;
                     break;
@@ -1230,6 +1262,27 @@ namespace FarEmerald.PlayForge
             }
         }
         
+        private static bool HoldsCriticalStage(SequenceStage stage)
+        {
+            if (stage.Metadata?.IsCritical ?? false) return true;
+
+            foreach (var subStage in stage.SubStages)
+            {
+                if (HoldsCriticalStage(subStage)) return true;
+            }
+
+            if (stage is BranchStage branch)
+            {
+                foreach (var branchCase in branch.Branches)
+                {
+                    if (HoldsCriticalStage(branchCase.Stage)) return true;
+                }
+                if (branch.DefaultBranch != null && HoldsCriticalStage(branch.DefaultBranch)) return true;
+            }
+
+            return false;
+        }
+
         private void Cleanup()
         {
             if (_sequenceCts is null) return;
