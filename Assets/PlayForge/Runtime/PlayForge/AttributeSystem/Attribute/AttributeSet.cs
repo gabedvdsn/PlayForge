@@ -52,7 +52,8 @@ namespace FarEmerald.PlayForge
             var meta = new AttributeSetMeta(this, system.Self);
             meta.InitializeAttributeSystem(system, this);
 
-            WorkerGroup.ProvideWorkersTo(system.Self);
+            // The GAS gives out the set's workers, its subsets' with them, through InitWorkers. Given here too, each
+            // ran twice for whatever it saw (GAS-18)
         }
 
         public HashSet<IAttribute> GetUnique()
