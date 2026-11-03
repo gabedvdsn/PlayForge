@@ -50,6 +50,13 @@ namespace FarEmerald.PlayForge
         // Blocks whose object wasn't active when they registered. Unity sends no OnDestroy to an object that was never
         // active, so one destroyed before it woke left its block stepping with nothing behind it (PC-30)
         private readonly List<int> _dormant = new();
+
+        // Blocks whose process's class declares its own OnDestroy, which hides the base's, so Unity never says when
+        // their object goes. Watched for as long as they run (PC-31)
+        private readonly List<int> _unheard = new();
+
+        // Per class, whether it hides AbstractMonoProcess's OnDestroy, so each is looked up, and warned of, once (PC-31)
+        private readonly Dictionary<Type, bool> _hidesOnDestroy = new();
         
         // Hierarchy management for MonoProcesses
         private ProcessHierarchy _hierarchy = new();
@@ -290,32 +297,60 @@ namespace FarEmerald.PlayForge
 
         private void Update()
         {
-            SweepDormant();
+            Sweep(_dormant, untilAwake: true);
+            Sweep(_unheard, untilAwake: false);
             StepProcesses(EProcessStepTiming.Update);
         }
 
         /// <summary>
-        /// Ends the block of each dormant process whose object has been destroyed, and stops watching those that woke,
-        /// whose OnDestroy will come (PC-30).
+        /// Ends the block of each watched process whose object has been destroyed. A dormant one stops being watched once
+        /// it wakes, as its OnDestroy will come then (PC-30); one whose class hides OnDestroy never does (PC-31).
         /// </summary>
-        private void SweepDormant()
+        private void Sweep(List<int> watched, bool untilAwake)
         {
-            for (int i = _dormant.Count - 1; i >= 0; i--)
+            for (int i = watched.Count - 1; i >= 0; i--)
             {
-                if (!_active.TryGetValue(_dormant[i], out var pcb) || !pcb.Wrapper.TryGetProcess<AbstractMonoProcess>(out var mono))
+                if (!_active.TryGetValue(watched[i], out var pcb) || !pcb.Wrapper.TryGetProcess<AbstractMonoProcess>(out var mono))
                 {
-                    _dormant.RemoveAt(i);
+                    watched.RemoveAt(i);
                 }
                 else if (!mono)
                 {
-                    _dormant.RemoveAt(i);
+                    watched.RemoveAt(i);
                     EndDestroyedProcess(pcb.Relay);
                 }
-                else if (mono.gameObject.activeInHierarchy)
+                else if (untilAwake && mono.gameObject.activeInHierarchy)
                 {
-                    _dormant.RemoveAt(i);
+                    watched.RemoveAt(i);
                 }
             }
+        }
+
+        /// <summary>
+        /// Whether the process's class, or one between it and AbstractMonoProcess, declares its own OnDestroy. Unity calls
+        /// only that one, so AbstractMonoProcess's, which ends the process, never runs (PC-31).
+        /// </summary>
+        private bool HidesOnDestroy(AbstractMonoProcess mono)
+        {
+            var type = mono.GetType();
+            if (_hidesOnDestroy.TryGetValue(type, out bool hides)) return hides;
+
+            const System.Reflection.BindingFlags declared = System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.Public
+                | System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.DeclaredOnly;
+            for (var t = type; t != null && t != typeof(AbstractMonoProcess) && !hides; t = t.BaseType)
+            {
+                hides = t.GetMethod("OnDestroy", declared, null, Type.EmptyTypes, null) != null;
+            }
+
+            _hidesOnDestroy[type] = hides;
+            if (hides)
+            {
+                ForgeLog.Warning($"{type.Name} declares its own OnDestroy, which hides {nameof(AbstractMonoProcess)}'s, so " +
+                                 "Unity never says when its object goes. ProcessControl watches its processes instead; " +
+                                 $"override {nameof(AbstractMonoProcess.WhenDestroy)} to act on it.", mono);
+            }
+
+            return hides;
         }
 
         private void LateUpdate()
@@ -448,6 +483,7 @@ namespace FarEmerald.PlayForge
 
             _steppedAs = new Dictionary<int, EProcessStepTiming>();
             _dormant.Clear();
+            _unheard.Clear();
 
             // Initialize stepping groups for each timing type
             _stepping = new Dictionary<EProcessStepTiming, StepGroup>
@@ -1038,7 +1074,12 @@ namespace FarEmerald.PlayForge
             // WhenInitialize applies the parent the process's data asks for after the hierarchy filed it, so it's filed
             // again where its transform now is. It stayed no one's child (PC-28)
             if (mono) _hierarchy.Reparent(mono.gameObject);
-            if (mono && !mono.gameObject.activeInHierarchy) _dormant.Add(pcb.CacheIndex);
+            if (mono)
+            {
+                // A class that hides OnDestroy is watched for as long as it runs, one asleep only until it wakes (PC-31)
+                if (HidesOnDestroy(mono)) _unheard.Add(pcb.CacheIndex);
+                else if (!mono.gameObject.activeInHierarchy) _dormant.Add(pcb.CacheIndex);
+            }
 
             // Fire callbacks AFTER pcb.Initialize so state is fully consistent
             Callbacks?.ProcessRegistered(pcb.Relay, pcb.Wrapper.Data);
