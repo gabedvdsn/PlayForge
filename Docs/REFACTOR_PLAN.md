@@ -306,7 +306,7 @@ had no letter in the review. TS-AA onward came from the test project.
 | TS-R | M | 1 | Rethrows lose the stack trace | — | open |
 | TS-S | M | 1 | The legacy `Inject` path throws a NullReferenceException | — | open |
 | TS-T | H | 1 | `ActiveCache` drifts from the real state | `AbilitySystemComponent.cs:22, 385, 419` | open |
-| TS-U | H | 1 | `RunProcessTask` keeps state on a shared `[SerializeReference]` instance | `RunProcessTask.cs:11, 18` | open |
+| TS-U | H | 1 | `RunProcessTask` keeps state on a shared `[SerializeReference]` instance | `RunProcessTask.cs:11, 18` | fixed |
 | TS-V | H | 1 | A non-cancellation targeting exception leaks the activation handle | `AbilityProxy.cs` | open |
 | TS-W | M | 1 | `ElapsedTime` is unreliable | — | open |
 | TS-X | M | 1 | Payload lists are aliased between packets | `AbilityDataPacket.cs:50` | open |

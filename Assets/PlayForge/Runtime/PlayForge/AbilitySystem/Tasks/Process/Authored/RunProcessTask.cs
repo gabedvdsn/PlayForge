@@ -15,11 +15,13 @@ namespace FarEmerald.PlayForge
         
         public override bool IsCriticalSection => false;
 
-        private List<ProcessRelay> relays;
-        
+        // The relays are the activation's, so they're kept on its packet. Kept here, they were replaced by the next
+        // activation's, which left the first one's processes running for good (TS-U)
         public override void Prepare(AbilityDataPacket data)
         {
-            relays = new List<ProcessRelay>();
+            var relays = data.GetTaskState<List<ProcessRelay>>(this);
+            relays.Clear();
+
             foreach (var p in Processes)
             {
                 if (!ProcessControl.Register(p, data.EffectOrigin.GetSource(), out var relay)) continue;
@@ -29,6 +31,7 @@ namespace FarEmerald.PlayForge
         
         public override async UniTask Activate(AbilityDataPacket data, CancellationToken token)
         {
+            var relays = data.GetTaskState<List<ProcessRelay>>(this);
             float elapsedDuration = 0f;
             await ProcessTaskUtil.DoWhileAsync(
                 body: () =>
@@ -48,13 +51,15 @@ namespace FarEmerald.PlayForge
 
         public override void Clean(AbilityDataPacket data)
         {
-            if (relays is null || relays.Count == 0) return;
+            var relays = data.GetTaskState<List<ProcessRelay>>(this);
 
             foreach (var relay in relays)
             {
                 if (!ProcessControl.Instance.IsRegistered(relay.CacheIndex)) continue;
                 if (!ProcessControl.Instance.TerminateImmediate(relay.CacheIndex)) continue;
             }
+
+            relays.Clear();
         }
 
     }

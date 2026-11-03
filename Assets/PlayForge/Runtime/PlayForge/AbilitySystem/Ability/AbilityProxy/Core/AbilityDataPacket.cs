@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using UnityEngine;
 
 namespace FarEmerald.PlayForge
@@ -31,6 +32,23 @@ namespace FarEmerald.PlayForge
         /// Invocation is expected to be idempotent on the consumer side.
         /// </summary>
         public Action NotifyCriticalSectionExit { get; set; }
+
+        // What tasks keep for this activation, by task
+        private Dictionary<AbstractAbilityTask, object> _taskStates;
+
+        /// <summary>
+        /// The state a task keeps for this activation, made the first time it's asked for. A task is one object
+        /// shared by every activation of its ability, so whatever it keeps for an activation belongs here (TS-U).
+        /// </summary>
+        public T GetTaskState<T>(AbstractAbilityTask task) where T : class, new()
+        {
+            _taskStates ??= new Dictionary<AbstractAbilityTask, object>();
+            if (_taskStates.TryGetValue(task, out var state)) return (T)state;
+
+            var created = new T();
+            _taskStates[task] = created;
+            return created;
+        }
 
         public AbilitySystemComponent System => Request.System;
         public AbilitySystemCallbacks Callbacks => System.Callbacks;
