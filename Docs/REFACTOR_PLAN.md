@@ -390,7 +390,7 @@ had no letter in the review. TS-AA onward came from the test project.
 | GAS-40 | L | 1 | A set's `UseAverage` takes the first element, and `Ignore` throws | `AttributeSet.cs:423-458` | fixed |
 | GAS-41 | L | 1 | On `RelativeOperationContextImpactWorker`, `InlineAndDeferred` does the work twice, once inline and once queued, so lifesteal heals double. Hide the option there, or document it | `RelativeOperationContextImpactWorker.cs:22` | fixed |
 | GAS-42 | M | 1 | A runtime GAS's death dereferences `Relay`, so one stepped by hand, outside ProcessControl, throws at its end of frame | `RuntimeGameplayAbilitySystem_EndOfFrame.cs:127` | fixed |
-| GAS-43 | M | 1 | `AutoTargetTask` sizes its collider buffer by `MaxTargets`, so 0, meaning every match, finds nothing, and at 1 the caster's own collider can fill the buffer and leave no target | `AutoTargetTask.cs:84-85` | red |
+| GAS-43 | M | 1 | `AutoTargetTask` sizes its collider buffer by `MaxTargets`, so 0, meaning every match, finds nothing, and at 1 the caster's own collider can fill the buffer and leave no target | `AutoTargetTask.cs:84-85` | fixed |
 | GAS-P1 | M | 0 | `ActionQueue` LINQ allocations; snapshot built every frame (PF-006) | `ActionQueue.cs:41, 46, 156`, `FrameSummary.cs:340-351` | verified |
 | GAS-P2 | M | 0 | Tag and FrameSummary allocations (PF-007) | `TagCache.cs:60`, `TagQuery.cs:89-136`, `FrameSummary.cs:306-308` | verified |
 | GAS-P3 | M | 3 | Each application revalidates every container and rebuilds all tags (area application is quadratic) | `EffectSystemComponent.cs:312-348`, `GameplayAbilitySystem.cs:250-281` | open |

@@ -81,9 +81,10 @@ namespace FarEmerald.PlayForge
 
             if (Range > 0f && origin != null)
             {
-                var colliders = new Collider[MaxTargets];
-                var size = Physics.OverlapSphereNonAlloc(origin.position, Range, colliders, DetectionLayers);
-                for (int i = 0; i < size; i++)
+                // Every collider in range. A buffer MaxTargets long had no room at 0, which means every match, and at 1
+                // the caster's own collider could fill it (GAS-43)
+                var colliders = Physics.OverlapSphere(origin.position, Range, DetectionLayers);
+                for (int i = 0; i < colliders.Length; i++)
                 {
                     var targets = colliders[i].GetComponents<ITarget>();
                     foreach (var t in targets)
