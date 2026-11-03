@@ -193,6 +193,9 @@ namespace FarEmerald.PlayForge
             }
         }
 
+        private static int StackCount(AbstractEffectContainer container)
+            => (container as AbstractStackingEffectContainer)?.Stacks ?? 0;
+
         private void ApplyTickOnApplication(AbstractEffectContainer container)
         {
             // Evaluate the tick count ONCE (a scaler-driven count must not be re-rolled
@@ -302,7 +305,11 @@ namespace FarEmerald.PlayForge
                     case EEffectInteractionPolicy.ExtendContainerDuration:
                         foreach (var c in _containers)
                         {
+                            int stacksBefore = StackCount(c);
                             c.Extend(spec.Base.DurationSpecification.GetTotalDuration(spec));
+
+                            // Independent durations extend by adding a stack, which refreshes as any other does (GAS-34)
+                            if (StackCount(c) != stacksBefore) RegisterContinuousEntries(c.Spec);
                             if (c.Spec.Base.DurationSpecification.TickOnApplication) ApplyTickOnApplication(c);
                         }
                         break;
@@ -434,9 +441,17 @@ namespace FarEmerald.PlayForge
 
                 if (durationPolicy == EEffectDurationPolicy.Infinite) continue;
 
+                int stacksBefore = StackCount(container);
                 container.UpdateTimeRemaining(deltaTime);
 
-                if (container.DurationRemaining > 0) continue;
+                if (container.DurationRemaining > 0)
+                {
+                    // A stack ran out and others are left. A per-stack magnitude reads the count only when its
+                    // attribute recomputes, so this refreshes as gaining a stack does. The old count held until
+                    // something else recomputed the attribute, and that change took the credit (GAS-34)
+                    if (StackCount(container) != stacksBefore) RegisterContinuousEntries(container.Spec);
+                    continue;
+                }
 
                 MarkFinished(container);
             }
