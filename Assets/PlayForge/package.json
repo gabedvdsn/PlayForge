@@ -16,6 +16,11 @@
       "displayName": "Demos",
       "description": "The Demo scene, the Swarm Defender game and the abilities, effects and entities they share. They import together, as they use each other's assets. The Demo needs the Input System package.",
       "path": "Samples~/Demos"
+    },
+    {
+      "displayName": "Code Examples",
+      "description": "Annotated TaskSequence and group process examples, as code to read. They compiled into the runtime until they moved here. The synced sequence examples ship with the Demos, which use them.",
+      "path": "Samples~/Code Examples"
     }
   ]
 }
