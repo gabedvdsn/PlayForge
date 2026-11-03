@@ -177,11 +177,11 @@ namespace FarEmerald.PlayForge
         private async UniTask ActivateTargetingViaSequence(CancellationToken token, AbilityDataPacket implicitData)
         {
             var handler = implicitData.EffectOrigin.GetSource();
+            // Refused, targeting ends here, and the ability with it. It used to run outside ProcessControl, where no
+            // pause or terminate could reach it (TS-AC)
             if (!ProcessControl.Register(CompiledTargeting, handler, implicitData, out var relay))
             {
-                // Fallback to legacy if registration fails
-                await ActivateTargetingLegacy(token, implicitData);
-                return;
+                throw new OperationCanceledException();
             }
 
             TargetingRelay = relay;
@@ -282,12 +282,12 @@ namespace FarEmerald.PlayForge
 
             // AbilityDataPacket extends SequenceDataPacket, so pass it directly.
             var handler = implicitData.EffectOrigin.GetSource();
+            // Refused, the ability ends here. It used to run its stages outside ProcessControl instead, where no
+            // pause or terminate could reach them (TS-AC)
             if (!ProcessControl.Register(CompiledSequence, handler, implicitData, out var relay))
             {
-                Debug.LogWarning("[AbilityProxy] Failed to register ability sequence with ProcessControl. " +
-                                 "Falling back to legacy execution.");
-                await ActivateLegacy(token, implicitData);
-                return;
+                ForgeLog.Warning("ProcessControl refused an ability's sequence, so the ability ends without running.");
+                throw new OperationCanceledException();
             }
 
             ActiveRelay = relay;

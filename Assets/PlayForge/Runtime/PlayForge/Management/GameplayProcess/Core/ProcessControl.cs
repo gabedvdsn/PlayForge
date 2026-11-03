@@ -715,6 +715,9 @@ namespace FarEmerald.PlayForge
         /// <summary>True while ProcessControl itself is paused.</summary>
         public bool IsPaused => State is EProcessControlState.Waiting or EProcessControlState.ClosedWaiting;
 
+        /// <summary>True while ProcessControl takes new processes, which it stops doing once closed or terminated.</summary>
+        public bool AcceptsNewProcesses => CanAcceptNewProcesses();
+
         private bool CanAcceptNewProcesses()
         {
             return State is not (EProcessControlState.Closed 

@@ -285,8 +285,10 @@ namespace FarEmerald.PlayForge
         
         private bool CanActivateAbility(AbilitySpecContainer container, AbilityDataPacket data)
         {
-            return Enabled 
+            // An ability runs as a process, so it can't start while ProcessControl refuses new ones (TS-AC)
+            return Enabled
                    && !Locked
+                   && ProcessControl.Instance is not { AcceptsNewProcesses: false }
                    && container.Spec.ValidateSourceActivationRequirements(data)
                    && (!container.Spec.Base.IgnoreWhenLevelZero || container.Spec.GetLevel().CurrentValue > 0);
         }
