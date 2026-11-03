@@ -422,7 +422,7 @@ had no letter in the review. TS-AA onward came from the test project.
 | ED-4 | H | 4 | GAS Debugger: rebuilds every 0.25 s, `FindObjectsByType` every tick, Mono only, reflection on `TagCache`, raw cooldown magnitude, unlabelled badges | `GASDebugger.cs:142, 239-258, 1462, 1581-1603, 1761` | open |
 | ED-5 | M | 4 | ProcessControlDebugger: usage is not CPU time; the Terminated filter is dead; Pause misleads; per-row style allocations | `ProcessControlDebugger.cs:429, 458, 617-620, 727, 776-799` | open |
 | ED-6 | M | 2 | Settings: an inverted range check; Reset All goes to the wrong tab and is partial; Auto Refresh is never read | `TheForge.SettingsTab.cs:233-236, 264, 346, 1770-1785` | open |
-| ED-7 | M | 2 | Numeric columns sort as strings | `TheForge.ViewTab.cs:656` | open |
+| ED-7 | M | 2 | Numeric columns sort as strings | `TheForge.ViewTab.cs:656` | fixed |
 | ED-8 | H | 2 | Hard delete with no reference check | `TheForge.ViewTab.cs:2552`, `AssetBrowserWindow.cs:285` | open |
 | ED-9 | M | 4 | The Visualizer is blank for items and sets, and after a domain reload | `TheForge.Utilities.cs:344, 407-412` | open |
 | ED-10 | M | 2 | Analysis exposes "Not Implemented" groups and truncates silently | `TheForge.AnalysisTab.cs:362, 716, 1461, 1979-1991` | open |

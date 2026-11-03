@@ -649,13 +649,15 @@ namespace FarEmerald.PlayForge.Extended.Editor
         
         private List<ScriptableObject> SortAssets(List<ScriptableObject> assets)
         {
+            // Natural order: every column's value is a string, and sorting them as strings put 10 before 9 (ED-7)
+            var natural = Comparer<string>.Create(EditorUtility.NaturalCompare);
             if (selectedTypeFilter != null && ColumnDefinitions.TryGetValue(selectedTypeFilter, out var columns))
             {
                 var sortCol = columns.FirstOrDefault(c => c.Name == currentSortColumn) ?? columns.FirstOrDefault();
                 if (sortCol != null)
-                    return sortAscending ? assets.OrderBy(a => sortCol.GetValue(a) ?? "").ToList() : assets.OrderByDescending(a => sortCol.GetValue(a) ?? "").ToList();
+                    return sortAscending ? assets.OrderBy(a => sortCol.GetValue(a) ?? "", natural).ToList() : assets.OrderByDescending(a => sortCol.GetValue(a) ?? "", natural).ToList();
             }
-            return sortAscending ? assets.OrderBy(a => GetAssetDisplayName(a)).ToList() : assets.OrderByDescending(a => GetAssetDisplayName(a)).ToList();
+            return sortAscending ? assets.OrderBy(a => GetAssetDisplayName(a), natural).ToList() : assets.OrderByDescending(a => GetAssetDisplayName(a), natural).ToList();
         }
         
         // ═══════════════════════════════════════════════════════════════════════════
