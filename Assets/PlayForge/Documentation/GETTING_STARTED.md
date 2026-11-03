@@ -7,8 +7,12 @@ task pipelines, and tags glue everything together for requirements, filtering an
 ## Requirements
 
 - **Unity 6.0+** (built and tested on 6000.0)
-- **UniTask** (Cysharp, MIT) — install via UPM:
-  `https://github.com/Cysharp/UniTask.git?path=src/UniTask/Assets/Plugins/UniTask`
+- **UniTask** 2.5.11 (Cysharp, MIT): add it in Package Manager by git URL, pinned to that release:
+  `https://github.com/Cysharp/UniTask.git?path=src/UniTask/Assets/Plugins/UniTask#2.5.11`.
+  A package can't declare a git dependency, so the project's manifest has to name it.
+- The samples import from Package Manager's Samples tab. **Demos** needs the **Input System** package, with
+  Active Input Handling set to Input System or Both; without it the sample's scripts don't compile and its
+  scenes do nothing. **Code Examples** needs nothing more.
 - Samples use the **Built-in Render Pipeline**.
 
 ## The pieces in one paragraph
@@ -32,7 +36,7 @@ sequences), with cost and cooldown expressed as effects. Full pipeline reference
 
 ## Quickstart: a damage ability in ~10 minutes
 
-Everything below can be done from **Tools → PlayForge → The Forge** (Create tab), or via
+Everything below can be done from **PlayForge → The Forge** (Create tab), or via
 the `Create → PlayForge` asset menu.
 
 1. **Attribute** — create `Attribute` asset "Health".
@@ -83,10 +87,10 @@ string perLevel = impact.FormatTotal();           // "20/30/40/50"
 
 ## Tooling tour
 
-- **The Forge** (`Tools → PlayForge → The Forge`) — create/browse/analyze every asset:
+- **The Forge** (`PlayForge → The Forge`) — create/browse/analyze every asset:
   level-range columns, ability description dropdowns, per-asset visualizers
   (double-click a row), balance analysis, tag declaration (Create → Tags).
-- **GAS Debugger** (`Tools → PlayForge → Runtime Tools → GAS Debugger`) — live entity
+- **GAS Debugger** (`PlayForge → GAS Debugger`) — live entity
   state in play mode: attributes, active effects, abilities, frame impacts.
 - **Golden tests** (`PlayForge → Run Golden Tests`) — the framework's behavioral
   contract; run after upgrading.
