@@ -2,6 +2,7 @@ using System;
 using System.Linq;
 using UnityEditor;
 using UnityEditor.Build.Reporting;
+using UnityEditor.SceneManagement;
 using UnityEngine;
 
 namespace FarEmerald.PlayForge.Extended.Editor
@@ -10,13 +11,17 @@ namespace FarEmerald.PlayForge.Extended.Editor
     /// Headless player-build verification (asset-store readiness / CI):
     ///   Unity -batchmode -nographics -projectPath &lt;proj&gt;
     ///         -executeMethod FarEmerald.PlayForge.Extended.Editor.BuildVerification.BuildWindowsPlayer
-    /// Exit codes: 0 = build succeeded, 1 = build failed, 2 = no scene found, 3 = exception.
+    /// Exit codes: 0 = build succeeded, 1 = build failed, 3 = exception.
     /// Proves the runtime assembly compiles and links in a real player (no editor-only leaks).
     /// </summary>
     public static class BuildVerification
     {
+        private const string MadeScenePath = "Assets/PlayForgeBuildVerification.unity";
+
         public static void BuildWindowsPlayer()
         {
+            int code;
+            string madeScene = null;
             try
             {
                 var scenes = EditorBuildSettings.scenes
@@ -24,20 +29,14 @@ namespace FarEmerald.PlayForge.Extended.Editor
                     .Select(s => s.path)
                     .ToArray();
 
+                // With none enabled, an empty scene made for the purpose: the build proves the runtime compiles and
+                // links, which needs no content. It built whichever scene the AssetDatabase listed first (SP-12)
                 if (scenes.Length == 0)
                 {
-                    var guid = AssetDatabase.FindAssets("t:SceneAsset", new[] { "Assets" }).FirstOrDefault();
-                    if (!string.IsNullOrEmpty(guid))
-                    {
-                        scenes = new[] { AssetDatabase.GUIDToAssetPath(guid) };
-                    }
-                }
-
-                if (scenes.Length == 0)
-                {
-                    Debug.LogError("[BuildVerification] No scene available to build.");
-                    EditorApplication.Exit(2);
-                    return;
+                    madeScene = MadeScenePath;
+                    var scene = EditorSceneManager.NewScene(NewSceneSetup.EmptyScene, NewSceneMode.Single);
+                    EditorSceneManager.SaveScene(scene, madeScene);
+                    scenes = new[] { madeScene };
                 }
 
                 Debug.Log($"[BuildVerification] Building StandaloneWindows64 with scene: {scenes[0]}");
@@ -53,13 +52,17 @@ namespace FarEmerald.PlayForge.Extended.Editor
                 var summary = report.summary;
                 Debug.Log($"[BuildVerification] Result: {summary.result} — {summary.totalErrors} errors, {summary.totalWarnings} warnings, {summary.totalSize / (1024 * 1024)} MB, {summary.totalTime.TotalSeconds:0}s");
 
-                EditorApplication.Exit(summary.result == BuildResult.Succeeded ? 0 : 1);
+                code = summary.result == BuildResult.Succeeded ? 0 : 1;
             }
             catch (Exception ex)
             {
                 Debug.LogError($"[BuildVerification] Exception: {ex}");
-                EditorApplication.Exit(3);
+                code = 3;
             }
+
+            // Before exiting, as Exit ends the process at once
+            if (madeScene != null) AssetDatabase.DeleteAsset(madeScene);
+            EditorApplication.Exit(code);
         }
     }
 }
