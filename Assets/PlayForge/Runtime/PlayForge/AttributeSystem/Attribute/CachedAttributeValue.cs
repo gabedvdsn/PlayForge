@@ -561,8 +561,10 @@ namespace FarEmerald.PlayForge
 
             float delta = proportion * ActiveValue.CurrentValue;
 
+            // The system's own change, so typed DisallowImpact, as the pulse each attribute starts with is. Typed
+            // AllowImpact, it passed every type filter, and a worker taking unworkable impacts acted on it (GAS-35, Decision 9)
             var derivation = IAttributeImpactCarrier.GenerateSourceDerivation(
-                ctx.Change.Value, Tags.IgnoreRetention, new List<Tag>() { Tags.AllowImpact });
+                ctx.Change.Value, Tags.IgnoreRetention, new List<Tag>() { Tags.DisallowImpact });
             var scaleAmount = new SourcedModifiedAttributeValue(derivation, delta, 0f, false);
             ctx.ActionQueue.Enqueue(new ModifyAttributeAction(
                 ctx.System, ctx.Change.Value.Carrier.GetAttribute(), scaleAmount, false)
