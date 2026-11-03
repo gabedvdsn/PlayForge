@@ -70,7 +70,10 @@ namespace FarEmerald.PlayForge
 
         protected virtual bool TargetIsValid(ITarget target)
         {
-            return target is not null && TargetIsValid(target.ToGAS().ToGASObject()?.transform, out _);
+            // Through the target's packet, which both hubs have. Through its GameObject, a runtime GAS, which has
+            // none, threw (GAS-29)
+            if (target?.GetTargetingPacket() is not { } packet) return false;
+            return packet.HasTransform ? TargetIsValid(packet.transform, out _) : TargetIsValid(packet.position, out _);
         }
 
         protected virtual bool TargetIsValid(GameObject go, out ITarget target)
@@ -88,7 +91,9 @@ namespace FarEmerald.PlayForge
 
         protected virtual bool TargetIsValid(Transform transform, out Vector3 target)
         {
-            return TargetIsValid(transform.position, out target);
+            // A missing or destroyed transform is no target. It threw (GAS-29)
+            target = default;
+            return transform && TargetIsValid(transform.position, out target);
         }
 
         protected virtual bool TargetIsValid(Vector3 position, out Vector3 target)

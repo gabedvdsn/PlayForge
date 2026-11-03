@@ -132,13 +132,16 @@ namespace FarEmerald.PlayForge
             if (value is null) return false;
 
             if (!data.TryGetTarget(EDataTarget.Primary, out var targetObj)) return false;
-            var target = targetObj.ToGAS()?.ToGASObject();
+
+            // From the targeting packets, which both hubs have. From their GameObjects, a runtime GAS at either end,
+            // which has none, failed every check (GAS-29)
+            var target = targetObj?.GetTargetingPacket();
             if (target is null) return false;
-            
-            var source = data.EffectOrigin.GetSource().ToGAS()?.ToGASObject();
+
+            var source = data.EffectOrigin.GetSource()?.GetTargetingPacket();
             if (source is null) return false;
-            
-            return Vector3.Distance(source.transform.position, target.transform.position) <= value.floatValue;
+
+            return Vector3.Distance(source.position, target.position) <= value.floatValue;
         }
         public override string GetName()
         {
