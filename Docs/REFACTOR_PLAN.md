@@ -294,6 +294,7 @@ Severity: **C** critical, **H** high, **M** medium or low. The phase is the road
 | PC-28 | M | 1 | The hierarchy reads a process's parent when it registers, before `WhenInitialize` applies `PARENT_TRANSFORM`, and never hears of a later re-parent, so a process parented through its data is no one's child for a cascade. Decide this with PC-20, because every `SceneRoot` process would become GameRoot's child. See Decision 11 | `ProcessControl.cs` `PrepareCreatedProcess`, `AbstractMonoProcess.cs:71-74`, `ProcessHierarchy.cs:121` | fixed |
 | PC-29 | M | 1 | A `StartState` of Closed or ClosedWaiting refuses GameRoot as well, so neither works as a start state. Since PC-23 the Bootstrapper reports the refusal. Registering GameRoot under Ready and entering `StartState` afterwards would fix it | `ProcessControl.cs:247`, `Bootstrapper.cs` | fixed |
 | PC-30 | M | 1 | A process registered on an object that was never active outlives it. Unity sends no OnDestroy to such an object, so the process's block keeps stepping and its hierarchy node stays. This is a gap in PC-10's fix | `AbstractMonoProcess.cs` `OnDestroy`, `ProcessControl.cs` `EndDestroyedProcess` | fixed |
+| PC-31 | M | 1 | A Mono process class that declares its own `OnDestroy` hides the base's, which Unity then never calls, so the process outlives its object. PC-30's watch covers only objects that never woke. A warning once per such class at registration, and watching its processes as PC-30 does, would close it | `AbstractMonoProcess.cs:151`, `ProcessControl.cs` `SweepDormant` | open |
 
 ### TaskSequence
 
@@ -388,7 +389,8 @@ had no letter in the review. TS-AA onward came from the test project.
 | GAS-39 | L | 1 | `FrameSummarySnapshot` copies neither the applied and removed effects nor the deaths and ability injections, so `FrameComplete` listeners never see them | `FrameSummary.cs:356-367` | fixed |
 | GAS-40 | L | 1 | A set's `UseAverage` takes the first element, and `Ignore` throws | `AttributeSet.cs:423-458` | fixed |
 | GAS-41 | L | 1 | On `RelativeOperationContextImpactWorker`, `InlineAndDeferred` does the work twice, once inline and once queued, so lifesteal heals double. Hide the option there, or document it | `RelativeOperationContextImpactWorker.cs:22` | fixed |
-| GAS-42 | M | 1 | A runtime GAS's death dereferences `Relay`, per the review. Whether one can die without a relay isn't checked; verify first | `RuntimeGameplayAbilitySystem_EndOfFrame.cs:127` | fixed |
+| GAS-42 | M | 1 | A runtime GAS's death dereferences `Relay`, so one stepped by hand, outside ProcessControl, throws at its end of frame | `RuntimeGameplayAbilitySystem_EndOfFrame.cs:127` | fixed |
+| GAS-43 | M | 1 | `AutoTargetTask` sizes its collider buffer by `MaxTargets`, so 0, meaning every match, finds nothing, and at 1 the caster's own collider can fill the buffer and leave no target | `AutoTargetTask.cs:84-85` | open |
 | GAS-P1 | M | 0 | `ActionQueue` LINQ allocations; snapshot built every frame (PF-006) | `ActionQueue.cs:41, 46, 156`, `FrameSummary.cs:340-351` | verified |
 | GAS-P2 | M | 0 | Tag and FrameSummary allocations (PF-007) | `TagCache.cs:60`, `TagQuery.cs:89-136`, `FrameSummary.cs:306-308` | verified |
 | GAS-P3 | M | 3 | Each application revalidates every container and rebuilds all tags (area application is quadratic) | `EffectSystemComponent.cs:312-348`, `GameplayAbilitySystem.cs:250-281` | open |
@@ -496,6 +498,43 @@ GAS-4 with GAS-5, PC-6, and TS-I with PC-5.
 ## Log
 
 Record baselines, gate results and notable decisions here, newest first.
+
+- 2026-11-03, **Phase 1, the rows the medium ones turned up.** PC-29, PC-30 and GAS-37 to GAS-42 are `fixed`. Two
+  more turned up on the way, both open: PC-31 and GAS-43.
+  - **Result:** 833 tests with no category filter: 826 pass, 0 fail, 7 planted skipped, in three orders. Planted
+    7 of 7. The custom golden runner in PlayForge passes 25/25.
+  - **The fixes,** one commit each:
+    - PC-29: the Bootstrapper bootstraps the ProcessControl it makes Ready, registers GameRoot, then enters
+      StartState. `Bootstrap()` called any other way enters StartState at once, as before.
+    - PC-30: ProcessControl watches processes registered on an object that isn't active, and ends the block of one
+      whose object is destroyed before it wakes.
+    - GAS-37: a rescale is a share of Current before the bounds, where it lands, so the bounds clamp once.
+    - GAS-38: the four built-in targeting tasks measure from the caster's targeting packet.
+    - GAS-39: the frame snapshot carries the applied and removed effects, the deaths and the ability injections.
+    - GAS-40: `UseAverage` averages colliding elements, and `Ignore` keeps the first.
+    - GAS-41: on the relative-operation worker, `InlineAndDeferred` runs deferred.
+    - GAS-42: a runtime GAS stepped by hand can die. The Mono hub has the same guard, though nothing reaches it.
+  - **Calls made here, with no decision:**
+    - PC-29: StartState comes in after GameRoot registers and before `BootstrapOverrides` and the scene's processes,
+      so those still meet it, as before.
+    - GAS-37 leaves a change to Current and Base together as it was: it adds, then scales. A test holds it.
+    - GAS-38: a runtime GAS still can't be found by a physics query, so these tasks find Mono targets only. A
+      runtime GAS's position is its targeting packet's, which whoever drives it keeps current, as its summary now
+      says.
+    - GAS-40: `Ignore` passes the overriding values by, as a scaler group does, so the first element stands, as with
+      `UseFirst`. An average is of resolved values, with bounds and rounding from the first.
+    - GAS-41 maps `InlineAndDeferred` to Deferred, the safe default, rather than hiding the option.
+  - **Corrections:**
+    - GAS-37's diagnosis read 100/100 going to 25/50. The clamp puts that case right; 80/100 is the one that went
+      wrong, ending at 50/50 rather than 40/50.
+    - The red tests' commit says fifteen failed alongside nine controls. It was fourteen and eight.
+  - **Proof:** 14 red tests failed on the old code first, alongside 8 controls. GAS-39's test came with its fix, as
+    its properties are new. 12 mutants, each undoing one branch of a fix, are all caught. The first run let one
+    through: PC-30's watch had kept PC-26's test from reaching the guard it tests, so that test now registers in the
+    frame its root goes.
+  - **Found on the way:** PC-31, a class that hides `OnDestroy`, which PC-30's watch doesn't cover. GAS-43,
+    `AutoTargetTask`'s collider buffer.
+  - **Next:** PC-31 and GAS-43, then Phase 1's gate.
 
 - 2026-11-03, **Phase 1, the medium rows.** All 15 are `fixed`, so every Phase 1 row from the review is. The
   diagnoses turned up 8 more, all open: PC-29, PC-30 and GAS-37 to GAS-42.

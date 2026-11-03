@@ -212,7 +212,9 @@ blueprint scalers create live dependencies.
 - `EnforceScaling` (`AutoScaleWithBase`): Base changes, a dependent's refresh included, enqueue a
   deferred proportional Current adjustment through a synthetic carrier — lands as ordinary committed
   history. The carrier is typed `DisallowImpact` and unworkable, as the pulse is, so no worker that
-  checks impact types sees it (GAS-35).
+  checks impact types sees it (GAS-35). The adjustment is a share of Current before the bounds, where
+  it lands, so the bounds clamp the result once: under ZeroToBase an 80/100 attribute that loses half
+  its Base ends at 40/50 (GAS-37).
 
 ---
 
