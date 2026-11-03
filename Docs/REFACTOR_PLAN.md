@@ -378,7 +378,7 @@ had no letter in the review. TS-AA onward came from the test project.
 | ED-11 | M | 4 | The sticky-header workaround and drawer timers poll forever | `BasePlayForgeEditor.cs:524-611`, `GameplayEffectDrawer.cs:147-152` | open |
 | ED-12 | H | 4 | No Undo, multi-edit or prefab overrides; `UpdateAssetTagDisplay` writes the asset on refresh (that part belongs in Phase 2) | `AbilityEditor.cs:153-160, 1167-1176`, `BasePlayForgeEditor.cs:446-447` | open |
 | ED-13 | M | 4 | Template propagation on save loads everything, opens a modal mid-save and records no Undo; the validator is empty | `ForgeTemplateProcessor.cs:45-52`, `ForgeTemplatePropagator.cs:201-229` | open |
-| ED-14 | H | 1 | The `GameplayEffectImpact` copy constructor drops affiliation and throws on null packets | `GameplayEffectImpact.cs:155-176` | open |
+| ED-14 | H | 1 | The `GameplayEffectImpact` copy constructor drops affiliation and throws on null packets | `GameplayEffectImpact.cs:155-176` | fixed |
 | ED-15 | M | 4 | "Validate All" is noisy and capped at 15; "Find All References" is a dialog | `TheForge.SettingsTab.cs:1808-1832`, `AttributeEditor.cs:261-273` | open |
 | ED-16 | M | 2 | About 60 placeholder `docs.playforge.dev` links, some pointing at the wrong page | `AbilityEditor.cs:77, 116`, `EntityIdentityEditor.cs:158` | open |
 | ED-17 | M | 2 | Stray `Debug.Log` calls | `GameplayEffectImpactDrawer.cs:33`, `AssetBrowserWindow.cs:348`, `AbstractRefDrawer.cs:81`, `TagDrawer.cs:745`, `TheForge.ViewTab.cs:2009` | open |

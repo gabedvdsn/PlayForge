@@ -160,10 +160,15 @@ namespace FarEmerald.PlayForge
             ImpactOperation = o.ImpactOperation;
             MultiplyBehaviour = o.MultiplyBehaviour;
             AffiliationPolicy = o.AffiliationPolicy;
+            AffiliationComparison = o.AffiliationComparison;
+            Affiliations = o.Affiliations is null ? null : new List<Tag>(o.Affiliations);
             ImpactTypes = o.ImpactTypes;
             ReverseImpactOnRemoval = o.ReverseImpactOnRemoval;
             MagnitudeOperation = o.MagnitudeOperation;
-            
+
+            // The affiliation above was left behind, and an impact with no packets threw here (ED-14)
+            if (o.Packets is null) return;
+
             Packets = new ContainedEffectPacket[o.Packets.Length];
             for (int i = 0; i < o.Packets.Length; i++)
             {
