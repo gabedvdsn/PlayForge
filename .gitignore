@@ -81,3 +81,9 @@ crashlytics-build.properties
 # Rider settings and UI Builder's generated schema, both per machine (SP-9)
 .idea/
 /UIElementsSchema/
+
+# Third-party material packs: kept on disk, out of the repo (SP-17, Decision 7)
+/Assets/WorldMaterialsFree/
+/Assets/WorldMaterialsFree.meta
+/Assets/YughuesFreeConcreteMaterials/
+/Assets/YughuesFreeConcreteMaterials.meta
