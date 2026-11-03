@@ -321,7 +321,13 @@ namespace FarEmerald.PlayForge
         
         public void CommunicateTargetedIntent(AbstractGameplayMonoProcess entity)
         {
-            regData.AddPayload(Tags.TARGETED_INTENT, entity);
+            // Once: a process that runs again after a pause says it again (GAS-26)
+            if (!regData.Contains(entity, Tags.TARGETED_INTENT)) regData.AddPayload(Tags.TARGETED_INTENT, entity);
+        }
+
+        public void WithdrawTargetedIntent(AbstractGameplayMonoProcess entity)
+        {
+            regData.Remove(Tags.TARGETED_INTENT, entity);
         }
         
         public List<Tag> GetAffiliation()

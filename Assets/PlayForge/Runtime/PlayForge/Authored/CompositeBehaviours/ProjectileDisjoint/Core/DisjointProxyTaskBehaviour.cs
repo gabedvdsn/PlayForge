@@ -50,7 +50,10 @@ namespace FarEmerald.PlayForge
                 return UniTask.CompletedTask;
             }
 
-            userWithIntent.SetTarget(_target, _target.GetTargetingPacket());
+            // At a placeholder where the target stood, which takes nothing. This aimed the shot back at the target it
+            // had already, so it went on and hit (GAS-26)
+            var disjoint = DisjointTarget.Generate(_target);
+            userWithIntent.SetTarget(disjoint, disjoint.GetTargetingPacket());
             SetStatus(user, EActionStatus.Success);
             
             return UniTask.CompletedTask;

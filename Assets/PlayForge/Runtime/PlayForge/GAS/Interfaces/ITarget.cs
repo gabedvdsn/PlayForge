@@ -6,6 +6,9 @@ namespace FarEmerald.PlayForge
     public interface ITarget : IAffiliated, ITagHandler, IValidationReady, IHasReadableDefinition
     {
         public void CommunicateTargetedIntent(AbstractGameplayMonoProcess entity);
+
+        /// <summary>Takes back <see cref="CommunicateTargetedIntent"/>, for a process no longer aimed here.</summary>
+        public void WithdrawTargetedIntent(AbstractGameplayMonoProcess entity) { }
         //public List<Tag> GetAffiliation();
         public bool ApplyGameplayEffect(GameplayEffectSpec spec);
 
