@@ -31,6 +31,9 @@ namespace FarEmerald.PlayForge
     {
         public AttributeValue ActiveValue { get; private set; }
 
+        // The last recompute's value before bounds and rounding, where commits land, so where a rescale aims from (GAS-37)
+        private AttributeValue unconstrained;
+
         /// <summary>
         /// Intermediate aggregation snapshot — the value AFTER the Add pass but BEFORE
         /// Multiply / FlatBonus / Override. Diagnostics only. Updated by <see cref="Recompute"/>.
@@ -453,6 +456,7 @@ namespace FarEmerald.PlayForge
 
             // ─── Constraints ─────────────────────────────────────────────────────
             var preConstraint = new AttributeValue(curr, baseV);
+            unconstrained = preConstraint;
             ActiveValue = ConstrainValue(preConstraint);
 
             // Bounds/rounding shift is attributed to the unattributed slice so the
@@ -559,7 +563,10 @@ namespace FarEmerald.PlayForge
             if (Mathf.Approximately(oldBase, 0f)) return;
             float proportion = ctx.Change.Value.BaseValue / oldBase;  // change / oldBase
 
-            float delta = proportion * ActiveValue.CurrentValue;
+            // A share of Current before the bounds, where the commit lands, so the bounds clamp the result once. Taken
+            // from the clamped Current, under ZeroToBase an 80/100 attribute losing half its Base was clamped to 50 and
+            // lost only 25 under the clamp, which held it at 50, not 40 (GAS-37). With nothing clamped, the two are one
+            float delta = proportion * unconstrained.CurrentValue;
 
             // The system's own change, so typed DisallowImpact, as the pulse each attribute starts with is. Typed
             // AllowImpact, it passed every type filter, and a worker taking unworkable impacts acted on it (GAS-35, Decision 9)
