@@ -464,7 +464,7 @@ https://claude.ai/artifact/BbnGybqgX3spJsT6HoTafp. ED-16 and ED-19 wait on its q
 | SP-11 | H | 2 | Examples and test processes compile into Runtime | `TaskSequenceExamples*.cs`, `SyncSequenceExamples.cs`, `GroupProcessExamples.cs`, `TestAOEMonoProcess.cs`, `TestMultiProcess.cs` | fixed |
 | SP-12 | M | 2 | BuildVerification builds an arbitrary scene | `Editor/Tools/BuildVerification.cs:27-33` | fixed |
 | SP-13 | C | 2 | Licence: MIT versus the Asset Store EULA (Decisions 6) | `LICENSE` | fixed |
-| SP-14 | M | 2 | No version or changelog; `productName: GAS` | `ProjectSettings` | open |
+| SP-14 | M | 2 | No version or changelog; `productName: GAS` | `ProjectSettings` | fixed |
 | SP-15 | M | 2 | Stale docs: PUBLISHING claims 12/12 and names `Samples/InputHandling`; wrong menu paths | `PUBLISHING.md:11, 56, 68` | fixed |
 | SP-16 | H | 0 | S6, S8 and S11 are masked as target semantics. The runner move is now SP-18 | `PlayForgeGoldenTests.cs:55, 61, 64` | verified |
 | SP-17 | M | 2 | 842 MB and 206 MB of material packs tracked without LFS (Decisions 7) | repo | fixed |
