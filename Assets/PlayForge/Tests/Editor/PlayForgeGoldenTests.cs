@@ -852,9 +852,9 @@ namespace FarEmerald.PlayForge.Tests
             Apply(gas, heal50);
             AssertValue(gas, health, "heal after an overkill hit", 50);
 
-            // Raw deltas go through the same path. The pre-change callback is the original repro:
-            // it halves a −30 delta, and Health must fall by 15. (Workers skip GenerateSimple
-            // deltas — their DisallowImpact type fails validation — so only the callback acts.)
+            // Raw deltas go through the same path. The pre-change callback is the original repro: it
+            // halves a −30 delta to −15. Workers see raw deltas too (Decision 9), so the armor worker
+            // then halves what the callback left, and Health falls by 7.5.
             AttributeSystemCallbacks.AttributeChangeDelegate halveLoss = (attribute, change) =>
             {
                 if (ReferenceEquals(attribute, health) && change.Value.CurrentValue < 0f)
@@ -863,11 +863,11 @@ namespace FarEmerald.PlayForge.Tests
             attrSystem.Callbacks.OnAttributePreChange += halveLoss;
             gas.TryModifyAttribute(health, SourcedModifiedAttributeValue.GenerateSimple(gas, health, -30f, 0f));
             attrSystem.Callbacks.OnAttributePreChange -= halveLoss;
-            AssertValue(gas, health, "pre-change callback halves a raw −30", 35, 100);
+            AssertValue(gas, health, "the callback and then armor halve a raw −30", 42.5f, 100);
 
             float sum = 0f;
             foreach (var slice in attrSystem.GetBreakdown(health)) sum += slice.Value.CurrentValue;
-            AssertApprox("breakdown sums to ActiveValue", sum, 35);
+            AssertApprox("breakdown sums to ActiveValue", sum, 42.5f);
         }
 
         /// <summary>

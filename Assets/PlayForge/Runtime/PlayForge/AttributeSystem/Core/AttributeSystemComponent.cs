@@ -108,7 +108,7 @@ namespace FarEmerald.PlayForge
             // Phase 3: Fire initial modification events
             foreach (var attr in AttributeCache.Select(elem => elem.Key))
             {
-                ModifyAttribute(SourcedModifiedAttributeValue.GenerateSimple(Self, attr, 0f, 0f), false);
+                ModifyAttribute(SourcedModifiedAttributeValue.GenerateUnworkable(Self, attr, 0f, 0f), false);
             }
         }
         

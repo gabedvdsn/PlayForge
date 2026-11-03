@@ -171,6 +171,10 @@ from. It lives outside `Assets/` so it never ships in the package.
   - `Unpause` is refused while ProcessControl is paused. A requested Terminate outranks a Pause.
   - A sequence holds its run: no stage starts or ends, timeouts and built-in delays stop counting, and conditions
     aren't checked. A task's own code holds if it times itself through `SequenceTaskLibrary`.
+- Decision 9, 2026-11-03: a raw delta, one handed to the GAS without an effect, reaches attribute and impact
+  workers, with no impact type: a worker that takes any type acts on it, and one that wants a type doesn't. The
+  changes the system makes to itself keep `DisallowImpact`, and no worker sees them. Golden S15 now expects 42.5,
+  since armor halves what the pre-change callback leaves of the raw -30.
 
 **Open. Ask the user; do not assume:**
 1. ~~**Uncommitted changes**~~: decided, see above.
@@ -183,11 +187,7 @@ from. It lives outside `Assets/` so it never ships in the package.
 7. **Material packs (SP-17):** move the 842 MB and 206 MB of tracked third-party material packs to LFS, or out
    of the repo?
 8. ~~**Known-red tests**~~: decided, see above.
-9. **Raw deltas and workers (GAS-25):** should a raw delta, one handed to `TryModifyAttribute` without an effect,
-   reach attribute and impact workers? Today none does. The fix is ready: a raw delta becomes workable with no
-   impact type, and the system's own changes keep `DisallowImpact`. From reading, not run yet: it changes golden
-   S15, where armor then cuts the raw -30 too (35 becomes 42.5), and once Arcade Fighter moves over, armor cuts its
-   fall chip.
+9. ~~**Raw deltas and workers (GAS-25)**~~: decided, see above.
 10. **Disjoint and skill shots (GAS-36):** should a disjoint also stop a skill shot, one that hits whatever it
     crosses? Dota leaves skill shots alone. If not, GAS-36 becomes a line in the docs.
 
@@ -352,7 +352,7 @@ had no letter in the review. TS-AA onward came from the test project.
 | GAS-22 | H | 1 | Duration scalers are evaluated before they are initialized (attribute-backed duration returns 0) | `GameplayEffectDuration.cs:106-115` | fixed |
 | GAS-23 | H | 1 | Max-abilities and max-items have no initializer, so magnitude is likely 0. From reading only; verify first | `EntityIdentity.cs:31, 36` | fixed |
 | GAS-24 | H | 1 | Infinite periodic effects ignore the tick-interval scaler (C05) | `GameplayEffectDuration.cs:158-161` | fixed |
-| GAS-25 | H | 1 | Raw deltas are tagged `DisallowImpact`, so workers skip them (C10). See Decision 9 | `SourcedModifiedAttributeValue.cs:40`, `ForgeHelper.cs:205` | open |
+| GAS-25 | H | 1 | Raw deltas are tagged `DisallowImpact`, so workers skip them (C10). See Decision 9 | `SourcedModifiedAttributeValue.cs:40`, `ForgeHelper.cs:205` | fixed |
 | GAS-26 | H | 1 | Projectile disjoint re-targets the same caller, and its payloads pile up (C14). Its covering homing shots only is GAS-36 | `DisjointProxyTaskBehaviour.cs:53`, `DisjointTarget.cs:95`, `GameplayAbilitySystem.cs:230-233` | fixed |
 | GAS-36 | H | 1 | Projectile disjoint covers homing shots only: a skill shot registers no intent, so it lands in full on an entity that disjointed. Dota leaves skill shots alone. See Decision 10 | `DisjointProxyTaskBehaviour.cs`, `AbstractTargetedMonoProcess.cs` | open |
 | GAS-27 | M | 1 | Scalers and workers: `RandomizedScaler` re-rolls; `InlineAndDeferred` workers are dropped; `StandardWorkerGroup` NREs; set "Combine" double-counts; derived refresh bypasses workers | `RandomizedScaler.cs:29-46`, `ImpactWorkerCache.cs:119-129`, `StandardWorkerGroup.cs:30-89`, `AttributeSet.cs:401-430` | open |

@@ -41,10 +41,11 @@ namespace FarEmerald.PlayForge
             return new LevelerImpactDerivation(source, level, attribute);
         }
 
+        // A raw delta's carrier, with no impact type, as GenerateSimple's is (GAS-25)
         public static SourceAttributeImpact GenerateSourceDerivation(ISource source, IAttribute attribute)
         {
             return new SourceAttributeImpact(source, attribute,
-                new List<Tag>() { Tags.DisallowImpact }, Tags.IgnoreRetention,
+                new List<Tag>(), Tags.IgnoreRetention,
                 null, false);
         }
         
