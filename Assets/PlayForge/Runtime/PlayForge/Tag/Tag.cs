@@ -87,7 +87,10 @@ namespace FarEmerald.PlayForge
                 return this;
             
             string newName = string.IsNullOrEmpty(Name) ? childName : $"{Name}.{childName}";
-            return GenerateAsUnique(newName);
+
+            // The tag of that name. These helpers made deterministic tags, whose names are padded with a hash, so
+            // none of them was ever the tag of the name it stood for (GAS-17)
+            return Generate(newName);
         }
 
         // ═══════════════════════════════════════════════════════════════════════════
@@ -148,7 +151,7 @@ namespace FarEmerald.PlayForge
         public Tag? GetParent()
         {
             var parentPath = GetParentPath();
-            return parentPath != null ? GenerateAsUnique(parentPath) : null;
+            return parentPath != null ? Generate(parentPath) : null;
         }
         
         /// <summary>
@@ -173,7 +176,7 @@ namespace FarEmerald.PlayForge
         {
             foreach (var path in GetAncestorPaths())
             {
-                yield return GenerateAsUnique(path);
+                yield return Generate(path);
             }
         }
         
@@ -185,7 +188,7 @@ namespace FarEmerald.PlayForge
         {
             if (string.IsNullOrEmpty(Name)) return this;
             int firstDot = Name.IndexOf('.');
-            return firstDot < 0 ? this : GenerateAsUnique(Name.Substring(0, firstDot));
+            return firstDot < 0 ? this : Generate(Name.Substring(0, firstDot));
         }
         
         /// <summary>
@@ -292,7 +295,8 @@ namespace FarEmerald.PlayForge
         // ═══════════════════════════════════════════════════════════════════════════
         
         public static implicit operator string(Tag tag) => tag.Name;
-        public static implicit operator Tag(string name) => GenerateAsUnique(name);
+        // The tag of that name, not a deterministic one padded with a hash, which matched nothing written by name (GAS-17)
+        public static implicit operator Tag(string name) => Generate(name);
     }
     
     /// <summary>
