@@ -183,6 +183,13 @@ from. It lives outside `Assets/` so it never ships in the package.
 7. **Material packs (SP-17):** move the 842 MB and 206 MB of tracked third-party material packs to LFS, or out
    of the repo?
 8. ~~**Known-red tests**~~: decided, see above.
+9. **Raw deltas and workers (GAS-25):** should a raw delta, one handed to `TryModifyAttribute` without an effect,
+   reach attribute and impact workers? Today none does. The fix is ready: a raw delta becomes workable with no
+   impact type, and the system's own changes keep `DisallowImpact`. From reading, not run yet: it changes golden
+   S15, where armor then cuts the raw -30 too (35 becomes 42.5), and once Arcade Fighter moves over, armor cuts its
+   fall chip.
+10. **Disjoint and skill shots (GAS-36):** should a disjoint also stop a skill shot, one that hits whatever it
+    crosses? Dota leaves skill shots alone. If not, GAS-36 becomes a line in the docs.
 
 ## Roadmap
 
@@ -345,7 +352,7 @@ had no letter in the review. TS-AA onward came from the test project.
 | GAS-22 | H | 1 | Duration scalers are evaluated before they are initialized (attribute-backed duration returns 0) | `GameplayEffectDuration.cs:106-115` | fixed |
 | GAS-23 | H | 1 | Max-abilities and max-items have no initializer, so magnitude is likely 0. From reading only; verify first | `EntityIdentity.cs:31, 36` | fixed |
 | GAS-24 | H | 1 | Infinite periodic effects ignore the tick-interval scaler (C05) | `GameplayEffectDuration.cs:158-161` | fixed |
-| GAS-25 | H | 1 | Raw deltas are tagged `DisallowImpact`, so workers skip them (C10) | `SourcedModifiedAttributeValue.cs:40`, `ForgeHelper.cs:205` | open |
+| GAS-25 | H | 1 | Raw deltas are tagged `DisallowImpact`, so workers skip them (C10). See Decision 9 | `SourcedModifiedAttributeValue.cs:40`, `ForgeHelper.cs:205` | open |
 | GAS-26 | H | 1 | Projectile disjoint re-targets the same caller, and its payloads pile up (C14). Its covering homing shots only is GAS-36 | `DisjointProxyTaskBehaviour.cs:53`, `DisjointTarget.cs:95`, `GameplayAbilitySystem.cs:230-233` | fixed |
 | GAS-36 | H | 1 | Projectile disjoint covers homing shots only: a skill shot registers no intent, so it lands in full on an entity that disjointed. Dota leaves skill shots alone. See Decision 10 | `DisjointProxyTaskBehaviour.cs`, `AbstractTargetedMonoProcess.cs` | open |
 | GAS-27 | M | 1 | Scalers and workers: `RandomizedScaler` re-rolls; `InlineAndDeferred` workers are dropped; `StandardWorkerGroup` NREs; set "Combine" double-counts; derived refresh bypasses workers | `RandomizedScaler.cs:29-46`, `ImpactWorkerCache.cs:119-129`, `StandardWorkerGroup.cs:30-89`, `AttributeSet.cs:401-430` | open |
@@ -356,6 +363,7 @@ had no letter in the review. TS-AA onward came from the test project.
 | GAS-32 | C | 1 | Split from GAS-3, reachable once items can be given: `ClearAllItems` skips every other item, so their equipped effects stay; unequip removes every source's effect; `ItemSpec.IsActive` is always false, which drops every action queued by an item's effect; an item with no `ActiveAbility` throws on equip with its effects already on; tags compile before `IsEquipped` clears, so they outlive the item | `ItemSystemComponent.cs:230-240`, `ItemSpecContainer.cs:133, 150`, `ItemSpec.cs:32-35` | fixed |
 | GAS-33 | H | 1 | At a fixed frame time, a durational periodic effect can lose its last tick for good. Its period and duration timers lose the same delta, so the last tick and the expiry share a frame and rounding decides which comes first: 5 ticks in 5 s lands 4 at 60, 120 and 144 fps. Jittered frame time hides it | `EffectSystemComponent.cs:361, 391-393`, `NonStackingEffectContainer.cs:31` | fixed |
 | GAS-34 | M | 1 | A stack expiring doesn't refresh Continuous entries, though gaining one does, so a scaler that reads the container keeps the old stack count until the next application | `EffectSystemComponent.cs:237-243, 391`, `StackQueueEffectContainer.cs:31-34`, `IndependentDurationsContainer.cs` | open |
+| GAS-35 | M | 1 | `EnforceScaling` tags its rescale `AllowImpact`, so an impact worker that accepts unworkable impacts sees the system's own rescaling. From reading only; verify first | `CachedAttributeValue.cs` `EnforceScaling` | open |
 | GAS-P1 | M | 0 | `ActionQueue` LINQ allocations; snapshot built every frame (PF-006) | `ActionQueue.cs:41, 46, 156`, `FrameSummary.cs:340-351` | verified |
 | GAS-P2 | M | 0 | Tag and FrameSummary allocations (PF-007) | `TagCache.cs:60`, `TagQuery.cs:89-136`, `FrameSummary.cs:306-308` | verified |
 | GAS-P3 | M | 3 | Each application revalidates every container and rebuilds all tags (area application is quadratic) | `EffectSystemComponent.cs:312-348`, `GameplayAbilitySystem.cs:250-281` | open |
@@ -463,6 +471,67 @@ GAS-4 with GAS-5, PC-6, and TS-I with PC-5.
 ## Log
 
 Record baselines, gate results and notable decisions here, newest first.
+
+- 2026-11-03, **Phase 1, the high rows.** 38 of the 40 open high rows are `fixed`: the 12 ProcessControl rows, the
+  14 TaskSequence rows and 12 GAS rows, ED-14 among them. TS-AD, found on the way, is fixed as well. Two high rows wait on you: GAS-15
+  on Decision 4 and GAS-25 on the new Decision 9. GAS-26's third part, covering homing shots only, is now GAS-36, on
+  the new Decision 10. 18 Phase 1 rows are still open: those 3 high and 15 medium, GAS-35 among them, found on the way.
+  - **Result:** 731 tests with no category filter: 724 pass, 0 fail, 7 planted skipped, in three orders. Planted
+    7 of 7. The custom golden runner in PlayForge passes 25/25.
+  - **ProcessControl:** processes step in priority order (PC-22). One instance can't be registered twice at once, and an
+    ended one can be again (PC-18). Action processes run their action (PC-19). A throw in `WhenInitialize` refuses the
+    process (PC-15), and a packet lets go of a process that ends (PC-16). A state change reports the old state and the
+    new one while the watchers are still there (PC-13), and watching works (PC-14). A group ends with its last member
+    (PC-17). Scene processes stay where the scene put them (PC-20), GameRoot survives a scene change (PC-21), only a
+    prefab is cloned (PC-9), and a destroyed object ends its process (PC-10).
+  - **What the sequence rows turned out to be:**
+    - TS-J went wider than `Clean`. Maintained stages are tracked by index, and each cleans itself as it ends. A run
+      that ends early waits for them before its cleanup, which cleaned them at once, under tasks still unwinding. The
+      active stages are a list now: a maintained stage ends under the stages after it, and the stack let a stage go only
+      from the top, so a maintained critical stage held the critical section for good. Past the last stage, maintaining
+      counted a stage that nothing would end, and the run waited on it for ever.
+    - TS-N and TS-K went together. Every stage, top-level, sub-stage or chosen branch, runs through one core, so a
+      sub-stage has its callbacks, timers, repeat, error handler, conditions and critical section. A stage's own timer
+      or condition acts on that stage. It went to the current top-level stage, which skipped a sub-stage's parent, or
+      the stage after a maintained one.
+    - TS-AD is new. Stage and sequence sources were disposed and never cancelled, so their timers kept counting and
+      fired into the next round of a repeating sequence.
+    - TS-Q: `BuildSyncRunner` existed twice. A sync stage now runs its callbacks, WhenN, RepeatUntilSkipped and skip
+      timeouts, and the sequence its OnComplete and whole-sequence critical flag. What a runner still can't do
+      (sub-stages, branches, conditions, sequence timers, async-only tasks) is named in a warning as it's built.
+    - TS-H: OnStep callbacks were stored by timing and never called. They fire at their timing now, and a composite
+      timing moves a sync sequence on at one of its timings only.
+    - TS-V went wider: closing ProcessControl doesn't end what's running, it only refuses new processes. The ability
+      goes on only if its targeting task got to its end, whatever cut it short.
+    - TS-T, GAS-20 and GAS-21 went in one commit, since they share `ClaimActive` and `EndActivation`. Removing an
+      ability also kept whatever was queued behind it waiting.
+  - **What the GAS rows turned out to be:**
+    - GAS-16: both hubs asked tag queries through the tag list, which has no weights, so even an exact query counted
+      each tag once.
+    - GAS-17: the hierarchy helpers and `string → Tag` made deterministic tags, padded with a hash, so a `SameRoot`
+      query with a root tag never found its own children.
+    - GAS-23 is confirmed: a runtime identity's maximums were null and threw, and a new asset's were 0. They default to
+      99, as max level does.
+    - GAS-26: a disjoint re-aimed each shot at the entity it was already aimed at, and nothing took an intent back, so
+      three shots and two disjoints left 12 entries on their target.
+  - **Proof:** each row's tests failed on the old code first. 23 mutants of the new branches were then run
+    against the suites, and all 23 are caught. Getting there took six more tests. Choosing the mutants showed
+    three branches no test reached: a stop by index aimed at the current stage, a sync task that ends its own
+    sequence, and a sync Any stage with no tasks. Three mutants survived at first: a repeat broken from OnRepeat that
+    ran once more, a run that ended before its slow-to-stop maintained stage, and a landed shot living on after its
+    run that kept its intent.
+  - **Behaviour to expect:**
+    - `OnAbilityEnd` fires when the activation ends. The claim's release has its own event, `OnAbilityClaimReleased`,
+      and compiled abilities fire the task callbacks.
+    - An ability can't activate while ProcessControl takes no new processes, and a refusal later on ends it rather than
+      running it outside ProcessControl.
+    - Tag queries count weights. `Tag.GetParent`, `GetRoot`, `GetAncestors`, `Child` and `string → Tag` give plain
+      tags, so code that matched the implicit conversion against `GenerateAsUnique` of the same name no longer matches.
+    - Effects don't grant their source's asset tag. Set workers run once, and tag workers tick once a frame.
+    - Sequences step at FixedUpdate and LateUpdate, and a sequence's timers end with it.
+    - For Arcade Fighter's switch (Decision 3): tag workers tick at half their old rate, set workers run half as often,
+      and `OnAbilityEnd` moves from the claim's release to the activation's end.
+  - **Next:** Decisions 4, 9 and 10, then the 15 medium rows.
 
 - 2026-10-30, **Phase 1, the last critical rows.** PC-8, TS-G, TS-M, GAS-8, GAS-9 and GAS-32 are `fixed`, so Phase 1
   has no critical row open. 54 rows are still open, 40 high and 14 medium.
