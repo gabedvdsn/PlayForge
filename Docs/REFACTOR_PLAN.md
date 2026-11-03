@@ -475,6 +475,25 @@ GAS-4 with GAS-5, PC-6, and TS-I with PC-5.
 
 Record baselines, gate results and notable decisions here, newest first.
 
+- 2026-11-03, **GAS-15, after Decision 4.** GAS-15 is `fixed`, so all 40 high rows are. Phase 1 has 15 rows still
+  open, all medium.
+  - **Result:** 745 tests with no category filter: 738 pass, 0 fail, 7 planted skipped, in three orders. Planted
+    7 of 7. The custom golden runner in PlayForge passes 25/25.
+  - **The fix:** committed history moved from the baseline to after FlatBonus, before Override. A commit's delta was
+    always measured against the live value, after the modifiers, and now it lands where it was measured. Override
+    still comes last, so the case the impact model fixed, an override leaking committed history, stays fixed, and a
+    test holds it there.
+  - **Docs:** `EFFECT_PIPELINE.md` §2.1 has the new order. `IMPACT_MODEL_REFACTOR.md`, the design that chose the
+    baseline, has a dated amendment, and its decision 7.1 is struck through.
+  - **Golden S6** is renamed `S6_CommittedHistoryLandsAfterModifiers` and expects 85, not 90, in both runners. No other
+    test assumed the old order.
+  - **Proof:** the new test failed on the old code first. Two mutants, putting committed history back in the baseline
+    or past the override, are both caught.
+  - **Behaviour to expect:** a % modifier no longer scales permanent history. Under a ×1.5 aura a 30 hit takes 30, not
+    45, and a +10 tome is worth 10, not 15. Once the modifier is gone, the value is the same either way. For Arcade
+    Fighter's switch (Decision 3): a hit landing under a multiplier on the attribute it hits takes what it says.
+  - **Next:** the 15 medium rows, then Phase 1's gate.
+
 - 2026-11-03, **GAS-36, after Decision 10.** A disjoint stops homing shots only, as in Dota, so GAS-36 is closed by
   saying so: `DisjointProxyTaskBehaviour`, `DisjointTarget` and `DisjointAbilityTask` now describe what a disjoint
   reaches. One of their summaries was empty and another stopped mid-sentence. 16 Phase 1 rows are still open: GAS-15
