@@ -69,9 +69,10 @@ namespace FarEmerald.PlayForge
 
             if (request.Data is not null)
             {
+                // Lists of its own: these were the request's, so writing to one packet wrote to both (TS-X)
                 foreach (var d in request.Data.Payload)
                 {
-                    _payload[d.Key] = d.Value;
+                    _payload[d.Key] = new List<object>(d.Value);
                 }
             }
             
