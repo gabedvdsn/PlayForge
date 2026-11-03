@@ -472,6 +472,21 @@ GAS-4 with GAS-5, PC-6, and TS-I with PC-5.
 
 Record baselines, gate results and notable decisions here, newest first.
 
+- 2026-11-03, **GAS-25, after Decision 9.** GAS-25 is `fixed`, so 39 of the 40 high rows are. 17 Phase 1 rows are
+  still open: GAS-15 (Decision 4), GAS-36 (Decision 10) and 15 medium.
+  - **Result:** 741 tests with no category filter: 734 pass, 0 fail, 7 planted skipped, in three orders. Planted
+    7 of 7. The custom golden runner in PlayForge passes 25/25.
+  - **The fix:** a raw delta has no impact type and is workable, so a worker that takes any impact type acts on it and
+    one that wants a type doesn't. That holds for both ways a caller makes one, `GenerateSimple` and the two-argument
+    `GenerateSourceDerivation`. The pulse each attribute starts with goes through a new `GenerateUnworkable`, so no
+    worker sees the changes the system makes to itself.
+  - **Golden S15** expects 42.5 instead of 35, in both runners: the pre-change callback halves the raw -30 to -15, and
+    armor then halves that. The value was predicted from reading, and holds when run.
+  - **Proof:** the new tests failed on the old code first. The control, armor that wants one impact type, passed
+    before and after. 4 mutants of the new branches are all caught.
+  - **For Arcade Fighter's switch (Decision 3):** once it uses the package, armor and any other worker that takes every
+    impact type act on its raw deltas, its fall chip among them.
+
 - 2026-11-03, **Phase 1, the high rows.** 38 of the 40 open high rows are `fixed`: the 12 ProcessControl rows, the
   14 TaskSequence rows and 12 GAS rows, ED-14 among them. TS-AD, found on the way, is fixed as well. Two high rows wait on you: GAS-15
   on Decision 4 and GAS-25 on the new Decision 9. GAS-26's third part, covering homing shots only, is now GAS-36, on
