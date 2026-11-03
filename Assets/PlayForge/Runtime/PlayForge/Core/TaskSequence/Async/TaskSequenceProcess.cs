@@ -135,13 +135,27 @@ namespace FarEmerald.PlayForge
             SeqData = regData as SequenceDataPacket;
         }
 
+        public override void WhenUpdate() => StepAt(EProcessStepTiming.Update);
+
+        public override void WhenFixedUpdate() => StepAt(EProcessStepTiming.FixedUpdate);
+
+        public override void WhenLateUpdate() => StepAt(EProcessStepTiming.LateUpdate);
+
         /// <summary>
-        /// For async: checks conditions. For sync: drives the sync runner.
+        /// For async: checks conditions. For sync: drives the sync runner. Every timing the process steps at comes
+        /// here: only Update used to, so a sequence set to step at any other never ran (TS-H).
         /// </summary>
-        public override void WhenUpdate()
+        private void StepAt(EProcessStepTiming timing)
         {
             if (IsSynchronous && _syncRunner != null)
             {
+                var onStep = _sequence?.Definition.Metadata?.OnStepCallbacks;
+                if (onStep != null && onStep.TryGetValue(timing, out var callback)) callback?.Invoke(SeqData, Time.deltaTime);
+
+                // A composite timing steps this more than once a frame, and a sequence that moved on at each would
+                // run that many times too fast
+                if (timing != AdvancingTiming(StepTiming)) return;
+
                 if (_syncRunner.Step(SeqData ?? SequenceDataPacket.SceneRoot(), Time.deltaTime))
                 {
                     Relay.TerminateImmediate();
@@ -316,6 +330,15 @@ namespace FarEmerald.PlayForge
         // ═══════════════════════════════════════════════════════════════════════════
         // HELPERS
         // ═══════════════════════════════════════════════════════════════════════════
+
+        // The one timing a sync sequence moves on at: Update if it steps at Update, LateUpdate if not but it steps
+        // then, and FixedUpdate only when that's all it steps at
+        private static EProcessStepTiming AdvancingTiming(EProcessStepTiming timing) => timing switch
+        {
+            EProcessStepTiming.LateUpdate or EProcessStepTiming.LateAndFixed => EProcessStepTiming.LateUpdate,
+            EProcessStepTiming.FixedUpdate => EProcessStepTiming.FixedUpdate,
+            _ => EProcessStepTiming.Update
+        };
 
         private static EProcessLifecycle ResolveLifecycle(TaskSequence sequence)
         {
