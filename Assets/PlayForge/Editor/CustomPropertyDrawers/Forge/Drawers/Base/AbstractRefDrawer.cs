@@ -77,7 +77,7 @@ namespace FarEmerald.PlayForge.Extended.Editor
             }
             catch (Exception ex)
             {
-                Debug.Log(ex);
+                Debug.LogException(ex);
             }
             
             SelectItem(prop, default, valueBtn, state, dropdown);

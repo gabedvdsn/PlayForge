@@ -741,9 +741,6 @@ namespace FarEmerald.PlayForge.Extended.Editor
                 return;
             }
 
-            var t = Tag.GenerateAsUnique(tagName);
-            UnityEngine.Debug.Log($"Generating new tag {t.DisplayName} => {t.Name}");
-            
             SelectTag(state, Tag.GenerateAsUnique(tagName), valueBtn, dropdown);
         }
         

@@ -314,7 +314,7 @@ namespace FarEmerald.PlayForge.Extended.Editor
             
             _onImportComplete?.Invoke();
             
-            Debug.Log($"Imported {_sectionName} from {sourceAsset.name}");
+            Debug.Log($"[PlayForge] Imported {_sectionName} from {sourceAsset.name}");
             Close();
         }
         
@@ -496,7 +496,7 @@ namespace FarEmerald.PlayForge.Extended.Editor
             targetObject.ApplyModifiedProperties();
             onClearComplete?.Invoke();
             
-            Debug.Log($"Cleared {sectionName} properties");
+            Debug.Log($"[PlayForge] Cleared {sectionName} properties");
         }
         
         private static void SetPropertyValue(SerializedProperty prop, object value)

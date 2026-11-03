@@ -30,7 +30,6 @@ namespace FarEmerald.PlayForge.Extended.Editor
             var attrTargetField = new PropertyField(property.FindPropertyRelative(nameof(GameplayEffectImpact.AttributeTarget)), "Attribute");
             attrTargetField.style.marginBottom = 2;
             targetSection.Add(attrTargetField);
-            attrTargetField.RegisterValueChangeCallback(evt => Debug.Log(evt.changedProperty.objectReferenceValue));
             
             var targetRow = new VisualElement();
             targetRow.style.flexDirection = FlexDirection.Row;

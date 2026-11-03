@@ -2001,7 +2001,6 @@ namespace FarEmerald.PlayForge.Extended.Editor
                 // Copy the user-facing display path so the clipboard matches what they see.
                 var copied = GetTagDisplay(tag);
                 EditorGUIUtility.systemCopyBuffer = copied;
-                Debug.Log($"Copied tag path: {copied}");
             };
             pathRow.Add(copyBtn);
 

@@ -345,7 +345,6 @@ namespace FarEmerald.PlayForge.Extended.Editor
                 return null;
             }
 
-            Debug.Log(config);
             var window = GetWindow<AssetBrowserWindow>(config.ShowAsUtility, config.Title);
             window._config = config;
             window.minSize = config.MinSize;
