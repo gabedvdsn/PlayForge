@@ -19,8 +19,10 @@ namespace FarEmerald.PlayForge.Tests
     ///   Unity -batchmode -projectPath &lt;proj&gt;
     ///         -executeMethod FarEmerald.PlayForge.Tests.PlayForgeGoldenTests.RunAll
     ///
-    /// A custom runner rather than the Unity Test Framework, which the asmdefs now allow;
-    /// moving to it is planned for Phase 2 (SP-18).
+    /// The Test Runner also runs each scenario as a case of GoldenScenarioTests (Tests/Golden), so
+    /// -runTests and CI report each one by name (SP-18):
+    ///   Unity -batchmode -projectPath &lt;proj&gt; -runTests -testPlatform EditMode
+    ///         -assemblyNames FarEmerald.PlayForge.Tests.Golden -testResults &lt;file&gt;
     /// </summary>
     public static class PlayForgeGoldenTests
     {
@@ -42,40 +44,65 @@ namespace FarEmerald.PlayForge.Tests
         [MenuItem("PlayForge/Run Golden Tests")]
         public static void RunFromMenu() => RunAll();
 
+        /// <summary>
+        /// Every scenario, in the order RunAll runs them. GoldenScenarioTests runs each as a test case (SP-18).
+        /// </summary>
+        private static readonly (string Name, System.Action Run)[] Scenarios =
+        {
+            (nameof(S1_ContinuousMultiply_TwoBuffs_Multiplicative), S1_ContinuousMultiply_TwoBuffs_Multiplicative),
+            (nameof(S2_ContinuousMultiply_TwoBuffs_AdditiveBonus), S2_ContinuousMultiply_TwoBuffs_AdditiveBonus),
+            (nameof(S3_ContinuousAdd_ItemStyle_RegisterRemove), S3_ContinuousAdd_ItemStyle_RegisterRemove),
+            (nameof(S4_HoT_TicksArePermanentAfterExpiry), S4_HoT_TicksArePermanentAfterExpiry),
+            (nameof(S5_InstantDamage_ClampAndHistorySurvival), S5_InstantDamage_ClampAndHistorySurvival),
+            (nameof(S6_CommittedHistoryLandsAfterModifiers), S6_CommittedHistoryLandsAfterModifiers),
+            (nameof(S7_Stacking_MagnitudePerStack), S7_Stacking_MagnitudePerStack),
+            (nameof(S8_Regulation_DerivedAttributeFollowsSource), S8_Regulation_DerivedAttributeFollowsSource),
+            (nameof(S9_NullTargetEffect_TagGrantOnly), S9_NullTargetEffect_TagGrantOnly),
+            (nameof(S10_ReplaceOldContainer_Idempotent), S10_ReplaceOldContainer_Idempotent),
+            (nameof(S11_GroupAttribution_BaseVsBonus), S11_GroupAttribution_BaseVsBonus),
+            (nameof(S12_AbilityInspector_PerLevelSeries), S12_AbilityInspector_PerLevelSeries),
+            (nameof(S13_GAS_10_OngoingRequirement_PausesPeriodicTicks), S13_GAS_10_OngoingRequirement_PausesPeriodicTicks),
+            (nameof(S14_GAS_11_AbilitySourceTagRequirements_BlockActivation), S14_GAS_11_AbilitySourceTagRequirements_BlockActivation),
+            (nameof(S15_GAS_02_PreChangeWorkers_AdjustTheCommittedDelta), S15_GAS_02_PreChangeWorkers_AdjustTheCommittedDelta),
+            (nameof(S16_GAS_12_RawDelta_MovesBaseAndCurrentTogether), S16_GAS_12_RawDelta_MovesBaseAndCurrentTogether),
+            (nameof(S17_GAS_P1_IdleFrame_AllocatesNothing), S17_GAS_P1_IdleFrame_AllocatesNothing),
+            (nameof(S18_GAS_P2_TagChecks_AllocateNothing), S18_GAS_P2_TagChecks_AllocateNothing),
+            (nameof(S19_TS_04_BrokenAbility_IsReported), S19_TS_04_BrokenAbility_IsReported),
+            (nameof(S20_PC_01_ThrowingStep_DoesNotStallTheFrame), S20_PC_01_ThrowingStep_DoesNotStallTheFrame),
+            (nameof(S21_TS_03_RepeatedActivation_ReusesItsCompiledBehaviour), S21_TS_03_RepeatedActivation_ReusesItsCompiledBehaviour),
+            (nameof(S22_GAS_13_SystemInitialized_ReachesEarlySubscribers), S22_GAS_13_SystemInitialized_ReachesEarlySubscribers),
+            (nameof(S23_TS_01_Resume_LeavesTimeScaleAlone), S23_TS_01_Resume_LeavesTimeScaleAlone),
+            (nameof(S24_GAS_03_GiveItem_LandsOnTheShelf), S24_GAS_03_GiveItem_LandsOnTheShelf),
+            (nameof(S25_GAS_01_RuntimeGAS_RunsItsEndOfFrame), S25_GAS_01_RuntimeGAS_RunsItsEndOfFrame),
+        };
+
+        /// <summary>Each scenario's name, for the Test Runner's cases.</summary>
+        public static IEnumerable<string> ScenarioNames => Scenarios.Select(s => s.Name);
+
         public static void RunAll()
         {
             results.Clear();
-
-            RunScenario(nameof(S1_ContinuousMultiply_TwoBuffs_Multiplicative), S1_ContinuousMultiply_TwoBuffs_Multiplicative);
-            RunScenario(nameof(S2_ContinuousMultiply_TwoBuffs_AdditiveBonus), S2_ContinuousMultiply_TwoBuffs_AdditiveBonus);
-            RunScenario(nameof(S3_ContinuousAdd_ItemStyle_RegisterRemove), S3_ContinuousAdd_ItemStyle_RegisterRemove);
-            RunScenario(nameof(S4_HoT_TicksArePermanentAfterExpiry), S4_HoT_TicksArePermanentAfterExpiry);
-            RunScenario(nameof(S5_InstantDamage_ClampAndHistorySurvival), S5_InstantDamage_ClampAndHistorySurvival);
-            RunScenario(nameof(S6_CommittedHistoryLandsAfterModifiers), S6_CommittedHistoryLandsAfterModifiers);
-            RunScenario(nameof(S7_Stacking_MagnitudePerStack), S7_Stacking_MagnitudePerStack);
-            RunScenario(nameof(S8_Regulation_DerivedAttributeFollowsSource), S8_Regulation_DerivedAttributeFollowsSource);
-            RunScenario(nameof(S9_NullTargetEffect_TagGrantOnly), S9_NullTargetEffect_TagGrantOnly);
-            RunScenario(nameof(S10_ReplaceOldContainer_Idempotent), S10_ReplaceOldContainer_Idempotent);
-            RunScenario(nameof(S11_GroupAttribution_BaseVsBonus), S11_GroupAttribution_BaseVsBonus);
-            RunScenario(nameof(S12_AbilityInspector_PerLevelSeries), S12_AbilityInspector_PerLevelSeries);
-            RunScenario(nameof(S13_GAS_10_OngoingRequirement_PausesPeriodicTicks), S13_GAS_10_OngoingRequirement_PausesPeriodicTicks);
-            RunScenario(nameof(S14_GAS_11_AbilitySourceTagRequirements_BlockActivation), S14_GAS_11_AbilitySourceTagRequirements_BlockActivation);
-            RunScenario(nameof(S15_GAS_02_PreChangeWorkers_AdjustTheCommittedDelta), S15_GAS_02_PreChangeWorkers_AdjustTheCommittedDelta);
-            RunScenario(nameof(S16_GAS_12_RawDelta_MovesBaseAndCurrentTogether), S16_GAS_12_RawDelta_MovesBaseAndCurrentTogether);
-            RunScenario(nameof(S17_GAS_P1_IdleFrame_AllocatesNothing), S17_GAS_P1_IdleFrame_AllocatesNothing);
-            RunScenario(nameof(S18_GAS_P2_TagChecks_AllocateNothing), S18_GAS_P2_TagChecks_AllocateNothing);
-            RunScenario(nameof(S19_TS_04_BrokenAbility_IsReported), S19_TS_04_BrokenAbility_IsReported);
-            RunScenario(nameof(S20_PC_01_ThrowingStep_DoesNotStallTheFrame), S20_PC_01_ThrowingStep_DoesNotStallTheFrame);
-            RunScenario(nameof(S21_TS_03_RepeatedActivation_ReusesItsCompiledBehaviour), S21_TS_03_RepeatedActivation_ReusesItsCompiledBehaviour);
-            RunScenario(nameof(S22_GAS_13_SystemInitialized_ReachesEarlySubscribers), S22_GAS_13_SystemInitialized_ReachesEarlySubscribers);
-            RunScenario(nameof(S23_TS_01_Resume_LeavesTimeScaleAlone), S23_TS_01_Resume_LeavesTimeScaleAlone);
-            RunScenario(nameof(S24_GAS_03_GiveItem_LandsOnTheShelf), S24_GAS_03_GiveItem_LandsOnTheShelf);
-            RunScenario(nameof(S25_GAS_01_RuntimeGAS_RunsItsEndOfFrame), S25_GAS_01_RuntimeGAS_RunsItsEndOfFrame);
-
+            foreach (var (name, run) in Scenarios)
+                results.Add(RunScenario(name, run));
             Report();
         }
 
-        private static void RunScenario(string name, System.Action scenario, bool targetSemantics = false)
+        /// <summary>
+        /// Runs one scenario by name and returns what went wrong, or null when it passed. The Test Runner's cases call
+        /// this, one per scenario (SP-18).
+        /// </summary>
+        public static string Run(string name)
+        {
+            foreach (var (scenarioName, run) in Scenarios)
+            {
+                if (scenarioName != name) continue;
+                var result = RunScenario(scenarioName, run);
+                return result.Passed ? null : result.Detail.Trim();
+            }
+            throw new System.ArgumentException($"No golden scenario is named {name}", nameof(name));
+        }
+
+        private static Result RunScenario(string name, System.Action scenario, bool targetSemantics = false)
         {
             current = new Result { Name = name, Passed = true, TargetSemantics = targetSemantics, Detail = "" };
             try
@@ -87,8 +114,9 @@ namespace FarEmerald.PlayForge.Tests
                 current.Passed = false;
                 current.Detail += $"\n    EXCEPTION: {ex.GetType().Name}: {ex.Message}\n{ex.StackTrace}";
             }
-            results.Add(current);
+            var result = current;
             current = null;
+            return result;
         }
 
         private static void Report()
