@@ -548,35 +548,10 @@ namespace FarEmerald.PlayForge
         }
 
         /// <summary>
-        /// Builds a SyncedTaskSequence for per-frame stepping.
-        /// Converts SequenceStages into SyncSequenceStages using the unified ISequenceTask.Step path.
+        /// Builds a SyncedTaskSequence for per-frame stepping, as <see cref="TaskSequenceDefinition.BuildSyncRunner"/>
+        /// does. This was a second copy of it, which fell behind (TS-Q).
         /// </summary>
-        public SyncedTaskSequence BuildSyncRunner()
-        {
-            var syncStages = new List<SyncSequenceStage>();
-
-            foreach (var stage in _stages)
-            {
-                var policy = stage.Policy is WhenAnyStagePolicy
-                    ? ESyncStagePolicy.WhenAny
-                    : ESyncStagePolicy.WhenAll;
-
-                var syncStage = new SyncSequenceStage(
-                    new List<ISequenceTask>(stage.Tasks),
-                    stage.Metadata?.Name,
-                    policy,
-                    stage.Repeat,
-                    stage.MaxDurationSeconds,
-                    stage.Metadata?.IsCritical ?? false
-                );
-                syncStages.Add(syncStage);
-            }
-
-            var name = _metadata?.Name ?? "SyncSequence";
-            var repeat = _metadata?.Repeat ?? false;
-
-            return new SyncedTaskSequence(syncStages, name, repeat);
-        }
+        public SyncedTaskSequence BuildSyncRunner() => Build().BuildSyncRunner();
     }
     
     // ═══════════════════════════════════════════════════════════════════════════

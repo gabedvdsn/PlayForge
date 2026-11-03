@@ -22,6 +22,9 @@ namespace FarEmerald.PlayForge
         
         /// <summary>Current chain (null if running single sequence).</summary>
         public TaskSequenceChain Chain { get; internal set; }
+
+        /// <summary>The runner stepping a sync sequence with this packet. A sync sequence has no runtime.</summary>
+        internal SyncedTaskSequence SyncRunner { get; set; }
         
         /// <summary>True if currently running within a chain.</summary>
         public bool IsInChain => Chain != null;
@@ -174,7 +177,8 @@ namespace FarEmerald.PlayForge
         /// </summary>
         public bool BreakStageRepeat()
         {
-            return Runtime?.RequestBreakCurrentStageRepeat() ?? false;
+            // A sync sequence's repeating stages had no other way to stop (TS-Q)
+            return Runtime?.RequestBreakCurrentStageRepeat() ?? SyncRunner?.BreakStageRepeat() ?? false;
         }
         
         /// <summary>

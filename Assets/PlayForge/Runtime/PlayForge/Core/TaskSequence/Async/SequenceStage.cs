@@ -438,33 +438,105 @@ namespace FarEmerald.PlayForge
         }
         
         /// <summary>
-        /// Builds a SyncedTaskSequence from this definition for per-frame stepping.
+        /// Builds a SyncedTaskSequence from this definition for per-frame stepping. A runner steps tasks and has no
+        /// runtime to inject into, so what needs one can't come across. Each such thing is named in a warning as the
+        /// runner is built, where it used to be left out without a word (TS-Q).
         /// </summary>
         public SyncedTaskSequence BuildSyncRunner()
         {
+            var name = Metadata?.Name ?? "SyncSequence";
+            bool wholeSequenceIsCritical = Metadata?.IsCritical ?? false;
+
+            if (HasConditions) WarnLeftOut(name, "its conditions");
+            if (HasTimeout) WarnLeftOut(name, "its timeouts");
+            if (HasMaxDuration) WarnLeftOut(name, "its max duration");
+            if (Metadata?.OnException != null) WarnLeftOut(name, "its OnException handler");
+
             var syncStages = new List<SyncSequenceStage>();
 
-            foreach (var stage in Stages)
+            for (int i = 0; i < Stages.Count; i++)
             {
-                var policy = stage.Policy is WhenAnyStagePolicy
-                    ? ESyncStagePolicy.WhenAny
-                    : ESyncStagePolicy.WhenAll;
-
-                var syncStage = new SyncSequenceStage(
-                    new List<ISequenceTask>(stage.Tasks),
-                    stage.Metadata?.Name,
-                    policy,
-                    stage.Repeat,
-                    stage.MaxDurationSeconds,
-                    stage.Metadata?.IsCritical ?? false
-                );
-                syncStages.Add(syncStage);
+                var stage = Stages[i];
+                string stageName = stage.Metadata?.Name ?? "stage " + i;
+                syncStages.Add(BuildSyncStage(stage, name + ", " + stageName, wholeSequenceIsCritical));
             }
 
-            var name = Metadata?.Name ?? "SyncSequence";
-            var repeat = Metadata?.Repeat ?? false;
+            var runner = new SyncedTaskSequence(syncStages, name, Metadata?.Repeat ?? false);
 
-            return new SyncedTaskSequence(syncStages, name, repeat);
+            var onComplete = Metadata?.OnComplete;
+            if (onComplete != null) runner.OnComplete = (data, completed) => onComplete(new SequenceEventContext(data, null), completed);
+
+            return runner;
+        }
+
+        private static SyncSequenceStage BuildSyncStage(SequenceStage stage, string owner, bool wholeSequenceIsCritical)
+        {
+            if (stage is BranchStage) WarnLeftOut(owner, "its branches");
+            if (stage.SubStages.Count > 0) WarnLeftOut(owner, "its sub-stages");
+            if (stage.HasConditions) WarnLeftOut(owner, "its conditions");
+            if (stage.OnException != null) WarnLeftOut(owner, "its OnException handler");
+            if (stage.OnTimeout != null || stage.OnMaxDuration != null) WarnLeftOut(owner, "its timeout handlers");
+            if (stage.Tasks.Exists(task => task is DelegateSequenceTask))
+            {
+                ForgeLog.Warning($"{owner}: its async-only tasks do nothing in a synchronous sequence, and finish at once.");
+            }
+
+            var policy = ESyncStagePolicy.WhenAll;
+            int requiredCount = 0;
+            switch (stage.Policy)
+            {
+                case WhenAnyStagePolicy:
+                    policy = ESyncStagePolicy.WhenAny;
+                    break;
+                case WhenNStagePolicy whenN:
+                    policy = ESyncStagePolicy.WhenN;
+                    requiredCount = whenN.RequiredCount;
+                    break;
+                case RepeatUntilSkippedPolicy repeatUntilSkipped:
+                    if (repeatUntilSkipped.DelayBetweenRepeats > 0) WarnLeftOut(owner, "its delay between repeats");
+                    break;
+                case null:
+                case WhenAllStagePolicy:
+                    break;
+                default:
+                    ForgeLog.Warning($"{owner}: a synchronous sequence can't run its {stage.Policy.GetType().Name}, so it waits for all its tasks.");
+                    break;
+            }
+
+            // A timer that skips its stage is a limit on the stage, which a sync stage has. One that does anything
+            // else needs a runtime, and just ends the stage here
+            float? limit = stage.MaxDurationSeconds;
+            if (stage.HasMaxDuration && stage.MaxDurationInjection is not SkipStageInjection) WarnTimer(owner, stage.MaxDurationInjection);
+
+            foreach (var timeout in stage.Timeouts)
+            {
+                limit = limit.HasValue ? Math.Min(limit.Value, timeout.Seconds) : timeout.Seconds;
+                if (timeout.Injection is not SkipStageInjection) WarnTimer(owner, timeout.Injection);
+            }
+
+            return new SyncSequenceStage(
+                new List<ISequenceTask>(stage.Tasks),
+                stage.Metadata?.Name,
+                policy,
+                stage.ShouldRepeat,
+                limit,
+                (stage.Metadata?.IsCritical ?? false) || wholeSequenceIsCritical)
+            {
+                RequiredCount = requiredCount,
+                OnInit = stage.OnInit,
+                OnRepeat = stage.OnRepeat,
+                OnTerminate = stage.OnTerminate
+            };
+        }
+
+        private static void WarnLeftOut(string owner, string feature)
+        {
+            ForgeLog.Warning($"{owner}: left out {feature}, which a synchronous sequence can't run.");
+        }
+
+        private static void WarnTimer(string owner, ISequenceInjection injection)
+        {
+            ForgeLog.Warning($"{owner}: a timer that applies {injection?.GetType().Name ?? "nothing"} just ends its stage in a synchronous sequence.");
         }
 
         private static bool StageHasConditionsRecursive(SequenceStage stage)
