@@ -2,7 +2,7 @@
   "name": "com.faremerald.playforge",
   "version": "0.1.0",
   "displayName": "PlayForge",
-  "description": "A gameplay framework modelled on Unreal's Gameplay Ability System: abilities, attributes, effects, tags and items, scheduled by ProcessControl and run through TaskSequence. Requires UniTask, which a package cannot declare because it is a git dependency, so add com.cysharp.unitask to the project's manifest.",
+  "description": "A gameplay framework modelled on Unreal's Gameplay Ability System: abilities, attributes, effects, tags and items, scheduled by ProcessControl and run through TaskSequence. Requires UniTask 2.5.11, which a package cannot declare because it is a git dependency, so add com.cysharp.unitask, pinned to #2.5.11, to the project's manifest.",
   "unity": "6000.0",
   "author": {
     "name": "gabedvdsn"
