@@ -190,6 +190,11 @@ from. It lives outside `Assets/` so it never ships in the package.
 - Decision 14, 2026-11-03: a derived attribute's refresh is the system's own change (GAS-27). It takes the
   post-change half of the pipeline (AutoScaleWithBase, post-change workers, `AttributePostChange`) and reaches the
   frame summary, typed `DisallowImpact` as the startup pulse is, so a worker that checks types skips it (Decision 9).
+- Decision 6, 2026-11-03: PlayForge ships under the Unity Asset Store EULA (SP-13). The MIT `LICENSE` goes.
+- Decision 7, 2026-11-03: the two material packs, `WorldMaterialsFree` and `YughuesFreeConcreteMaterials`, are
+  untracked and ignored, and stay on disk (SP-17). History isn't rewritten, so the repo keeps their past size.
+- Decision 15, 2026-11-03: QuickOutline, whose header reserves all rights, is replaced by an outline of PlayForge's own
+  in the Demo (SP-5).
 
 **Open. Ask the user; do not assume:**
 1. ~~**Uncommitted changes**~~: decided, see above.
@@ -197,9 +202,8 @@ from. It lives outside `Assets/` so it never ships in the package.
 3. ~~**Arcade Fighter after Phase 0**~~: decided, see above.
 4. ~~**Commit space (GAS-15)**~~: decided, see above.
 5. ~~**Pause (TS-Y, PC-7, PC-11)**~~: decided, see above.
-6. **Licence (SP-13):** MIT on public GitHub, or the Asset Store EULA?
-7. **Material packs (SP-17):** move the 842 MB and 206 MB of tracked third-party material packs to LFS, or out
-   of the repo?
+6. ~~**Licence (SP-13)**~~: decided, see above.
+7. ~~**Material packs (SP-17)**~~: decided, see above.
 8. ~~**Known-red tests**~~: decided, see above.
 9. ~~**Raw deltas and workers (GAS-25)**~~: decided, see above.
 10. ~~**Disjoint and skill shots (GAS-36)**~~: decided, see above.
@@ -207,6 +211,7 @@ from. It lives outside `Assets/` so it never ships in the package.
 12. ~~**When a random scaler rolls (GAS-27)**~~: decided, see above.
 13. ~~**What Combine does (GAS-27)**~~: decided, see above.
 14. ~~**Derived refreshes (GAS-27)**~~: decided, see above.
+15. ~~**QuickOutline (SP-5)**~~: decided, see above.
 
 ## Roadmap
 
@@ -436,7 +441,7 @@ had no letter in the review. TS-AA onward came from the test project.
 | SP-7 | M | 2 | Lorem and "ASda" descriptions; an `EFECT_` typo; no sample README | `Samples/Data` | open |
 | SP-8 | H | 2 | UniTask not embedded and not pinned to a revision, so projects drift (PlayForge 2.5.10, Proving Grounds 2.5.11); the Input System dependency is undeclared | `Packages/manifest.json`, `PUBLISHING.md:14-29` | open |
 | SP-9 | M | 2 | Stray files: the stale `PlayForge_1.0.0.unitypackage`, `asda.unity`, `PlayForgeTesting.cs`, tracked `UIElementsSchema` and `.idea` | repo root and `Assets/` | open |
-| SP-10 | M | 2 | `.claude/worktrees` (1.1 GB) is not in `.gitignore` | `.gitignore` | open |
+| SP-10 | M | 2 | `.claude/worktrees` (1.1 GB) is not in `.gitignore` | `.gitignore` | fixed |
 | SP-11 | H | 2 | Examples and test processes compile into Runtime | `TaskSequenceExamples*.cs`, `SyncSequenceExamples.cs`, `GroupProcessExamples.cs`, `TestAOEMonoProcess.cs`, `TestMultiProcess.cs` | open |
 | SP-12 | M | 2 | BuildVerification builds an arbitrary scene | `Editor/Tools/BuildVerification.cs:27-33` | open |
 | SP-13 | C | 2 | Licence: MIT versus the Asset Store EULA (Decisions 6) | `LICENSE` | open |
