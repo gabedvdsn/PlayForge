@@ -3,6 +3,11 @@
 Status: **IMPLEMENTED** (2026-07-12) — Phases 0–4 landed; `EFFECT_PIPELINE.md` is the
 authoritative description of the shipped pipeline.
 
+Amendment (2026-11-03, Decision 4): committed history now lands **after** Add, Multiply and
+FlatBonus, and before Override, which reverses §2.2 and §7.1. A 30 hit under a ×1.5 aura takes 30,
+not 45, and a +10 tome under it is worth 10. Override still pins the value. `EFFECT_PIPELINE.md`
+§2.1 has the order.
+
 Amendment (2026-07-14): entries are **derived on every `Generate()`, never serialized**
 (§3.1 as-built differs from the plan here). The serialized-entries approach froze
 half-authored inspector state into assets; the single quad remains the authored surface
@@ -308,7 +313,8 @@ Verification per phase: `MSBuild Assembly-CSharp.csproj` (zero errors) + EditMod
 
 ## 7. Decisions taken (flag disagreement before Phase 1)
 
-1. **Commits join the baseline** (§2.2) — permanent history is multiplied by live % modifiers.
+1. ~~**Commits join the baseline** (§2.2)~~ — reversed by Decision 4 on 2026-11-03: commits land after the
+   % modifiers and before Override.
 2. **Tick rollback is dropped**, not ported (§1, Axis 1). Migration warns on assets using it.
 3. **Delivery implies kind** — no independent "retained?" checkbox to get wrong.
 4. **Groups are attribution-only** — group-specific *math* (e.g. "bonus damage ignores armor")

@@ -51,7 +51,7 @@ namespace FarEmerald.PlayForge.Tests
             RunScenario(nameof(S3_ContinuousAdd_ItemStyle_RegisterRemove), S3_ContinuousAdd_ItemStyle_RegisterRemove);
             RunScenario(nameof(S4_HoT_TicksArePermanentAfterExpiry), S4_HoT_TicksArePermanentAfterExpiry);
             RunScenario(nameof(S5_InstantDamage_ClampAndHistorySurvival), S5_InstantDamage_ClampAndHistorySurvival);
-            RunScenario(nameof(S6_CommittedHistoryJoinsBaseline), S6_CommittedHistoryJoinsBaseline);
+            RunScenario(nameof(S6_CommittedHistoryLandsAfterModifiers), S6_CommittedHistoryLandsAfterModifiers);
             RunScenario(nameof(S7_Stacking_MagnitudePerStack), S7_Stacking_MagnitudePerStack);
             RunScenario(nameof(S8_Regulation_DerivedAttributeFollowsSource), S8_Regulation_DerivedAttributeFollowsSource);
             RunScenario(nameof(S9_NullTargetEffect_TagGrantOnly), S9_NullTargetEffect_TagGrantOnly);
@@ -459,12 +459,11 @@ namespace FarEmerald.PlayForge.Tests
         }
 
         /// <summary>
-        /// Plan §2.2/§7.1: committed history joins the
-        /// BASELINE, so transient % modifiers scale permanent gains. This pins today's answer to
-        /// the refactor plan's open Decision 4 (GAS-15); change it with that decision:
-        /// 50 +(instant ×1.2 → +10 committed) → baseline 60; ×1.5 modifier → 90 (not 85).
+        /// Committed history lands where it was measured, after the % modifiers, so they don't
+        /// scale it (Decision 4, GAS-15): 50 +(instant ×1.2 → +10 committed) → 60; ×1.5 modifier
+        /// → 50×1.5 + 10 = 85. It joined the baseline before, and the aura made it 90.
         /// </summary>
-        private static void S6_CommittedHistoryJoinsBaseline()
+        private static void S6_CommittedHistoryLandsAfterModifiers()
         {
             var attr = MakeAttribute("Damage");
             var gas = MakeGAS(MakeSet(MakeElement(attr, 50, 50)));
@@ -482,7 +481,7 @@ namespace FarEmerald.PlayForge.Tests
             AssertValue(gas, attr, "permanent ×1.2 commit", 60);
 
             Apply(gas, aura);
-            AssertValue(gas, attr, "aura multiplies committed history: (50+10)×1.5", 90);
+            AssertValue(gas, attr, "the aura leaves committed history alone: 50×1.5 + 10", 85);
 
             Remove(gas, aura);
             AssertValue(gas, attr, "aura removed", 60);

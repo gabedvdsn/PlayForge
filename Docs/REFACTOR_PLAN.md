@@ -177,13 +177,15 @@ from. It lives outside `Assets/` so it never ships in the package.
   since armor halves what the pre-change callback leaves of the raw -30.
 - Decision 10, 2026-11-03: a disjoint stops homing shots only, as in Dota. A skill shot, one that hits whatever it
   crosses, registers no intent with a target and lands as usual. The disjoint's docs say so (GAS-36).
+- Decision 4, 2026-11-03: a commit lands on the current value as it was measured. Committed history comes
+  after Add, Multiply and FlatBonus, and before Override, so a 30 hit under a ×1.5 aura takes 30, a +10 tome
+  under it is worth 10, and an override still pins the value. Golden S6 now expects 85, not 90.
 
 **Open. Ask the user; do not assume:**
 1. ~~**Uncommitted changes**~~: decided, see above.
 2. ~~**The test project, "PlayForge Proving Grounds"**~~: decided, see above.
 3. ~~**Arcade Fighter after Phase 0**~~: decided, see above.
-4. **Commit space (GAS-15):** should commits be stored in baseline space and read through modifiers (current
-   behaviour, which amplifies damage), or applied to the current value?
+4. ~~**Commit space (GAS-15)**~~: decided, see above.
 5. ~~**Pause (TS-Y, PC-7, PC-11)**~~: decided, see above.
 6. **Licence (SP-13):** MIT on public GitHub, or the Asset Store EULA?
 7. **Material packs (SP-17):** move the 842 MB and 206 MB of tracked third-party material packs to LFS, or out
@@ -343,7 +345,7 @@ had no letter in the review. TS-AA onward came from the test project.
 | GAS-12 | H | 0 | Current is applied before Base, so the clamp loses the delta (PF-005) | `IAttributeImpactCarrier.cs:138-139`, `CachedAttributeValue.cs:242-281` | verified |
 | GAS-13 | H | 0 | `OnSystemInitialized` cannot be observed (PF-013) | `GameplayAbilitySystem.EndOfFrame.cs:34`, `RuntimeGameplayAbilitySystem.cs:137, 149`, `AttributeSystemComponent.cs:49` | verified |
 | GAS-14 | H | 1 | Shelved effects grant the source's asset tag to their target | `AbstractEffectContainer.cs:108` | fixed |
-| GAS-15 | H | 1 | Commits are stored before modifiers but read through them (−30 under ×1.5 lands as −45). See Decisions 4 | `CachedAttributeValue.cs:241-327` | open |
+| GAS-15 | H | 1 | Commits are stored before modifiers but read through them (−30 under ×1.5 lands as −45). See Decisions 4 | `CachedAttributeValue.cs:241-327` | fixed |
 | GAS-16 | H | 1 | Tag queries count distinct tags, not weights; `SameRoot` differs between overloads | `GameplayAbilitySystem.cs:246-249`, `TagQuery.cs:83-128` | fixed |
 | GAS-17 | H | 1 | Tag hierarchy helpers and the implicit `string → Tag` conversion return hash-padded tags | `Tag.cs:73-91, 148-189, 295` | fixed |
 | GAS-18 | H | 1 | Attribute-set impact workers are registered and run twice | `GameplayAbilitySystem.cs:39`, `AttributeSet.cs:55`, `ForgeHelper.cs:922-926` | fixed |

@@ -18,10 +18,10 @@ namespace FarEmerald.PlayForge
     ///   and NEVER reversed.</item>
     /// </list>
     ///
-    /// <para>The formula (§2.2):
-    /// <c>ActiveValue = ConstrainValue( ModifierPipeline( root + Σ committedByGroup ) )</c>.
-    /// Committed history joins the BASELINE, so transient % modifiers scale permanent
-    /// gains — (50 base + 10 tome) × 1.5 aura = 90.</para>
+    /// <para>The formula (EFFECT_PIPELINE.md §2.1):
+    /// <c>ActiveValue = ConstrainValue( Override( FlatBonus( Multiply( Add( root ) ) ) + Σ committedByGroup ) )</c>.
+    /// Committed history lands where it was measured, after the % modifiers, so they don't scale it:
+    /// 50 base × 1.5 aura + 10 tome = 85, and a 30 hit under the aura takes 30 (Decision 4).</para>
     ///
     /// <para>Reproducibility invariant: <see cref="ActiveValue"/> is always exactly what
     /// <see cref="Recompute"/> produces from current state — every mutation path ends in a
@@ -224,7 +224,7 @@ namespace FarEmerald.PlayForge
         /// sequential mini-step against the live value (op → bounds → rounding), and the
         /// post-constraint delta it produced is recorded into its retention group's
         /// committed history. A final <see cref="Recompute"/> then rebuilds ActiveValue
-        /// canonically (committed history joins the baseline, §2.2).
+        /// canonically (committed history lands after the modifiers, where it was measured).
         ///
         /// <para>Commits are never reversed. There is deliberately no rollback path.</para>
         /// </summary>
@@ -327,28 +327,20 @@ namespace FarEmerald.PlayForge
         /// <summary>
         /// Rebuild <see cref="DirtyValue"/>, <see cref="ActiveValue"/> and the per-group
         /// attribution from scratch:
-        /// baseline = root + committed history → Add → Multiply → FlatBonus → Override
-        /// → bounds → rounding.
+        /// root → Add → Multiply → FlatBonus → committed history → Override → bounds
+        /// → rounding.
         /// </summary>
         public AttributeValue Recompute(IReadOnlyDictionary<IAttribute, CachedAttributeValue> cache)
         {
             attribution.Clear();
             attributionOrder.Clear();
 
-            // ─── Baseline: root + committed history ─────────────────────────────
+            // ─── Baseline: root ──────────────────────────────────────────────────
             var rootValue = Blueprint is not null ? Blueprint.GetActiveValue(cache) : genericRootValue;
             Attribute_Accumulate(rootGroup.IsValid ? rootGroup : Tags.DEFAULT, rootValue);
 
             float curr = rootValue.CurrentValue;
             float baseV = rootValue.BaseValue;
-
-            foreach (var group in committedOrder)
-            {
-                var committed = committedByGroup[group];
-                curr += committed.CurrentValue;
-                baseV += committed.BaseValue;
-                Attribute_Accumulate(group, committed);
-            }
 
             // ─── Add ─────────────────────────────────────────────────────────────
             foreach (var m in modifiers)
@@ -421,6 +413,18 @@ namespace FarEmerald.PlayForge
                 if (imp.TargetSlot is EAttributeTarget.Current or EAttributeTarget.CurrentAndBase) { curr += v; dc = v; }
                 if (imp.TargetSlot is EAttributeTarget.Base or EAttributeTarget.CurrentAndBase) { baseV += v; db = v; }
                 Attribute_Accumulate(m.Group, new AttributeValue(dc, db));
+            }
+
+            // ─── Committed history ───────────────────────────────────────────────
+            // Where a commit was measured, after the modifiers, so it lands as it was taken: a 30 hit under a ×1.5
+            // aura takes 30. Joining the baseline, it went through the multipliers and took 45 (GAS-15, Decision 4).
+            // Before the override, so an override still pins the value
+            foreach (var group in committedOrder)
+            {
+                var committed = committedByGroup[group];
+                curr += committed.CurrentValue;
+                baseV += committed.BaseValue;
+                Attribute_Accumulate(group, committed);
             }
 
             // ─── Override (per-slot, lowest sort wins) ───────────────────────────

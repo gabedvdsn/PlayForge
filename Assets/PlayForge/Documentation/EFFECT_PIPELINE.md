@@ -59,14 +59,17 @@ State:
 
 ### 2.1 Recompute pipeline
 
-1. Baseline = root + all committed history. **Committed history joins the baseline**, so
-   transient % modifiers scale permanent gains: (50 base + 10 tome) × 1.5 aura = 90.
+1. Baseline = the root value.
 2. **Add** — additive modifier impacters, per slot (Current / Base / CurrentAndBase) → `DirtyValue`.
 3. **Multiply** — `Multiplicative` impacters compound (×1.5, ×1.5 → ×2.25);
    `AdditiveBonus` impacters pool `(eval − 1)` into one `×(1 + Σ)` (+50%, +50% → ×2.0).
 4. **FlatBonus** — post-multiplication additive.
-5. **Override** — per-slot, lowest `SortOrder` wins.
-6. Constrain: element overflow clamp (`AttributeOverflowData.Clamp`) + rounding policy.
+5. **Committed history** — all of it, where it was measured: after the modifiers, so a transient %
+   modifier doesn't scale it. 50 base × 1.5 aura + 10 tome = 85, and a 30 hit under the aura takes 30.
+   Until Decision 4 (2026-11-03) it joined the baseline, and the same hit took 45.
+6. **Override** — per-slot, lowest `SortOrder` wins. It comes after the committed history, so an
+   override ("stun: speed = 0") still pins the value.
+7. Constrain: element overflow clamp (`AttributeOverflowData.Clamp`) + rounding policy.
 
 Attribution is captured during the walk (root → its group; commits → their groups; each
 modifier → the value swing its op produced; pooled multiplies → proportional shares; the
@@ -238,6 +241,6 @@ Deleted outright: `IsSustainedModifier()`, the Mode A/B inference, `TickAttribut
 (or batchmode `-executeMethod FarEmerald.PlayForge.Tests.PlayForgeGoldenTests.RunAll`).
 Scenarios pin: multiplicative/pooled buff add/remove ordering (the 50→60→72→60→50 case),
 item modifier reversal, HoT permanence through expiry, clamp + history reproducibility,
-committed-joins-baseline, stack-aware magnitudes, regulation propagation on removal,
+committed history landing after the modifiers, stack-aware magnitudes, regulation propagation on removal,
 null-target effects, replace idempotency, group attribution sums, pre-change workers adjusting
 the committed delta (armor before the clamp).
