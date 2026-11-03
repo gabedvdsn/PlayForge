@@ -10,6 +10,11 @@ namespace FarEmerald.PlayForge
     {
         public static ProcessControl Instance;
 
+        // Statics outlive play mode when domain reload is off, so the last session's destroyed ProcessControl was
+        // still Instance when the next began (PC-26)
+        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
+        private static void ClearInstance() => Instance = null;
+
         [Header("Process Control")]
         [SerializeField] private EProcessControlState StartState = EProcessControlState.Ready;
         [SerializeField] private new bool DontDestroyOnLoad = true;
@@ -37,6 +42,10 @@ namespace FarEmerald.PlayForge
         // Empty until Bootstrap fills it, so a ProcessControl nothing bootstrapped steps nothing. Null, it threw in
         // every Update, LateUpdate and FixedUpdate (PC-23)
         private Dictionary<EProcessStepTiming, StepGroup> _stepping = new();
+
+        // The timing each block joined its step groups by, which is the one it leaves them by. A process's own can
+        // change while it runs, and leaving by that left the block stepping where it had joined (PC-26)
+        private Dictionary<int, EProcessStepTiming> _steppedAs = new();
         
         // Hierarchy management for MonoProcesses
         private ProcessHierarchy _hierarchy = new();
@@ -397,6 +406,8 @@ namespace FarEmerald.PlayForge
             _hierarchy.Clear();
             _groups = new Dictionary<Tag, GroupProcess>();
             _gasProcesses = new Dictionary<IGameplayAbilitySystem, HashSet<int>>();
+
+            _steppedAs = new Dictionary<int, EProcessStepTiming>();
 
             // Initialize stepping groups for each timing type
             _stepping = new Dictionary<EProcessStepTiming, StepGroup>
@@ -1026,6 +1037,7 @@ namespace FarEmerald.PlayForge
             var timing = pcb.Wrapper.StepTiming;
             int priority = GetEffectivePriority(pcb);
 
+            _steppedAs[pcb.CacheIndex] = timing;
             AddToStepGroup(pcb.CacheIndex, priority, timing);
         }
 
@@ -1066,7 +1078,8 @@ namespace FarEmerald.PlayForge
         
         private void RemoveFromStepping(ProcessControlBlock pcb)
         {
-            var timing = pcb.Wrapper.StepTiming;
+            if (!_steppedAs.TryGetValue(pcb.CacheIndex, out var timing)) return;
+            _steppedAs.Remove(pcb.CacheIndex);
 
             switch (timing)
             {

@@ -56,8 +56,8 @@ namespace FarEmerald.PlayForge
                 }
             }
             
-            // Bootstrap ProcessControl
-            if (ProcessControl.Instance is null)
+            // Bootstrap ProcessControl. Unity's null, so a destroyed one is replaced; `is null` kept it (PC-26)
+            if (!ProcessControl.Instance)
             {
                 ProcessControl control;
                 if (ProcessControlPrefab) control = Instantiate(ProcessControlPrefab, Vector3.zero, Quaternion.identity);
@@ -71,8 +71,8 @@ namespace FarEmerald.PlayForge
                 control.Bootstrap();
             }
             
-            // Bootstrap GameRoot
-            if (GameRoot.Instance is null)
+            // Bootstrap GameRoot, by Unity's null as above (PC-26)
+            if (!GameRoot.Instance)
             {
                 // Refused, there's no relay to read, and a bare clone would never initialize or step, so it's
                 // reported. Reading the relay threw, and the Bootstrapper never finished (PC-23)

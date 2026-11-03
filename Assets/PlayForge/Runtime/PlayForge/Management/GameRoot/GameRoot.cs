@@ -15,6 +15,11 @@ namespace FarEmerald.PlayForge
         
         public static GameRoot Instance;
 
+        // Statics outlive play mode when domain reload is off, so the last session's destroyed GameRoot was still
+        // Instance when the next began (PC-26)
+        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
+        private static void ClearInstance() => Instance = null;
+
         [Tooltip("Keeps GameRoot through scene loads. It's the handler for every Register overload that isn't given one.")]
         [SerializeField] private new bool DontDestroyOnLoad = true;
         
@@ -25,7 +30,8 @@ namespace FarEmerald.PlayForge
         
         public void Bootstrap()
         {
-            if (Instance is not null && Instance != this)
+            // Unity's null, so a destroyed GameRoot gives way. `is not null` kept it (PC-26)
+            if (Instance != null && Instance != this)
             {
                 Destroy(gameObject);
 

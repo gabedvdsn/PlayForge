@@ -309,6 +309,9 @@ namespace FarEmerald.PlayForge
             {
                 var root = _roots[i];
                 if (root == potentialParent) continue;
+
+                // A root whose object went without its processes ending has no transform to read (PC-26)
+                if (!root.GameObject) continue;
                 
                 if (IsTransformDescendantOf(root.GameObject.transform, potentialParent.GameObject.transform))
                 {
