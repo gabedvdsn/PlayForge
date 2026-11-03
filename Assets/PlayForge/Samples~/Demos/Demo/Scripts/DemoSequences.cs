@@ -33,8 +33,7 @@ namespace FarEmerald.PlayForge.Extended.Examples
             if (GenMat && withMat) obj.GetComponent<MeshRenderer>().material = GenMat;
             if (withOutline)
             {
-                var outline = obj.AddComponent<Outline>();
-                outline.OutlineMode = Outline.Mode.OutlineAll;
+                var outline = obj.AddComponent<DemoOutline>();
                 outline.OutlineColor = DemoManager.Instance.ObjectColor;
             }
 

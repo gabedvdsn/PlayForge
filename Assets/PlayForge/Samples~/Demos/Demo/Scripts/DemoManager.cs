@@ -71,7 +71,7 @@ namespace FarEmerald.PlayForge.Extended.Examples
             base.WhenInitialize();
 
             Input ??= GetComponent<DemoInputConduit>() ?? gameObject.AddComponent<DemoInputConduit>();
-            Player.GetComponent<Outline>().OutlineColor = PlayerColor;
+            Player.GetComponent<DemoOutline>().OutlineColor = PlayerColor;
             
             Root = DemoUI.rootVisualElement;
 
