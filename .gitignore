@@ -75,5 +75,5 @@ crashlytics-build.properties
 /[Aa]ssets/[Ss]treamingAssets/aa/*
 
 # Claude Code: per-user settings, and the stale copies its worktrees leave, 1.1 GB of them (SP-10)
-.claude/worktrees/
-.claude/settings.local.json
+**/.claude/worktrees/
+**/.claude/settings.local.json
