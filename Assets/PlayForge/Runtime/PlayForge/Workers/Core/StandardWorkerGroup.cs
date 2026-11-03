@@ -27,7 +27,8 @@ namespace FarEmerald.PlayForge
         {
             if (system == null) return;
             
-            if (!system.FindAttributeSystem(out var attrSystem) || attrSystem != null)
+            // Only into a system the source has. "Not found, or found one" always held, so a missing one threw (GAS-27)
+            if (system.FindAttributeSystem(out var attrSystem) && attrSystem != null)
             {
                 foreach (var worker in AttributeWorkers)
                 {
@@ -44,7 +45,7 @@ namespace FarEmerald.PlayForge
                 }
             }
 
-            if (!system.FindAbilitySystem(out var abilSystem) || abilSystem != null)
+            if (system.FindAbilitySystem(out var abilSystem) && abilSystem != null)
             {
                 foreach (var worker in ImpactWorkers)
                 {
@@ -69,7 +70,8 @@ namespace FarEmerald.PlayForge
         {
             if (system == null) return;
             
-            if (!system.FindAttributeSystem(out var attrSystem) || attrSystem != null)
+            // Only from a system the source has, as above (GAS-27)
+            if (system.FindAttributeSystem(out var attrSystem) && attrSystem != null)
             {
                 foreach (var worker in AttributeWorkers)
                 {
@@ -86,7 +88,7 @@ namespace FarEmerald.PlayForge
                 }
             }
 
-            if (!system.FindAbilitySystem(out var abilSystem) || abilSystem != null)
+            if (system.FindAbilitySystem(out var abilSystem) && abilSystem != null)
             {
                 foreach (var worker in ImpactWorkers)
                 {

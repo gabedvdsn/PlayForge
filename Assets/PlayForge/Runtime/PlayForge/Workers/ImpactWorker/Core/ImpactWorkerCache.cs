@@ -95,6 +95,12 @@ namespace FarEmerald.PlayForge
                         var actions = worker.CreateDeferredActions(context);
                         _actionQueue?.EnqueueRange(actions);
                         break;
+
+                    // Both halves, as attribute workers run it. With no case, it ran neither (GAS-27)
+                    case EWorkerExecution.InlineAndDeferred:
+                        worker.ActivateInline(impactData);
+                        _actionQueue?.EnqueueRange(worker.CreateDeferredActions(context));
+                        break;
                 }
             }
         }
