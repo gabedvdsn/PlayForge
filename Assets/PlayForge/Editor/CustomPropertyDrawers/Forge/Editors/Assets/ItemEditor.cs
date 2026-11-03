@@ -77,6 +77,7 @@ namespace FarEmerald.PlayForge.Extended.Editor
             BuildEffectsSection(parent);
             BuildAbilitiesSection(parent);
             BuildWorkersSection(parent);
+            BuildLocalDataSection(parent);
         }
 
         // ═══════════════════════════════════════════════════════════════════════════
@@ -865,6 +866,44 @@ namespace FarEmerald.PlayForge.Extended.Editor
                 ""
             );
             content.Add(workerGroupField);
+        }
+
+        // ═══════════════════════════════════════════════════════════════════════════
+        // Local Data Section
+        // ═══════════════════════════════════════════════════════════════════════════
+
+        // Items inherit Local Data, as every asset does, but this inspector drew none, so it couldn't be edited (ED-23)
+        private void BuildLocalDataSection(VisualElement parent)
+        {
+            var section = CreateSection(new SectionConfig
+            {
+                Name = "LocalData",
+                Title = "Local Data",
+                AccentColor = GetAssetTypeColor(),
+                HelpUrl = "https://docs.playforge.dev/items/localdata",
+
+                SerializedObject = serializedObject,
+                PropertyPaths = new[] { nameof(Item.LocalData) },
+                OnImportComplete = () =>
+                {
+                    serializedObject.Update();
+                    UpdateAssetTagDisplay();
+                    UpdateHeader();
+                    MarkDirty(item);
+                    Repaint();
+                },
+                OnClearComplete = () =>
+                {
+                    serializedObject.Update();
+                    UpdateAssetTagDisplay();
+                    UpdateHeader();
+                    MarkDirty(item);
+                    Repaint();
+                }
+            });
+            parent.Add(section.Section);
+
+            section.Content.Add(CreatePropertyField(serializedObject.FindProperty(nameof(Item.LocalData)), "LocalData", ""));
         }
 
         // ═══════════════════════════════════════════════════════════════════════════
