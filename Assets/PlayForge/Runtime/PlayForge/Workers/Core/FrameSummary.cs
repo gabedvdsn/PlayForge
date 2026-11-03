@@ -349,6 +349,10 @@ namespace FarEmerald.PlayForge
         public IReadOnlyList<IRootAction> InvalidatedActions { get; }
         public IReadOnlyList<AbstractTagWorker> ActivatedTagWorkers { get; }
         public IReadOnlyList<AbstractTagWorker> ResolvedTagWorkers { get; }
+        public IReadOnlyList<GameplayEffectSpec> AppliedEffects { get; }
+        public IReadOnlyList<GameplayEffect> RemovedEffects { get; }
+        public IReadOnlyList<IGameplayAbilitySystem> Deaths { get; }
+        public IReadOnlyList<AbilityCallbackStatus> AbilityInjections { get; }
 
         public int Executed { get; }
         public int Invalidated { get; }
@@ -361,6 +365,12 @@ namespace FarEmerald.PlayForge
             InvalidatedActions = summary.InvalidatedActions.ToList();
             ActivatedTagWorkers = summary.ActivatedTagWorkers.ToList();
             ResolvedTagWorkers = summary.ResolvedTagWorkers.ToList();
+
+            // The rest of what the frame recorded, which FrameComplete listeners never saw (GAS-39)
+            AppliedEffects = summary.AppliedEffects.ToList();
+            RemovedEffects = summary.RemovedEffects.ToList();
+            Deaths = summary.Deaths.ToList();
+            AbilityInjections = summary.AbilityInjections.ToList();
 
             Executed = executed;
             Invalidated = summary.InvalidatedActions.Count;
