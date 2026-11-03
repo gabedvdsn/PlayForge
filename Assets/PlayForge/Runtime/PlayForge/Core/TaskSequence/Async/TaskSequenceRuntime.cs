@@ -58,7 +58,10 @@ namespace FarEmerald.PlayForge
         private CancellationTokenSource _sequenceCts;
         private readonly Dictionary<int, CancellationTokenSource> _stageSources = new();
         private UniTaskCompletionSource _nextStageSignal;
-        private int _maintainedStages;
+
+        // The stages left running behind the current one. Each cleans its tasks as it ends, since moving on
+        // cleaned them while they still ran (TS-J)
+        private readonly HashSet<int> _maintainedStages = new();
         
         // Jump request
         private int? _jumpToStageRequest;
@@ -88,8 +91,9 @@ namespace FarEmerald.PlayForge
         private readonly List<ISequenceTask> _activeTasks = new();
         private readonly object _activeTasksLock = new();
         
-        // Active stages stack for condition checking (supports nested stages)
-        private readonly Stack<SequenceStage> _activeStageStack = new();
+        // Active stages for condition checking and the critical section, oldest first. A maintained stage ends
+        // under the stages after it, so this can't be a stack: one that ended off the top stayed on it (TS-J)
+        private readonly List<SequenceStage> _activeStages = new();
         
         // ═══════════════════════════════════════════════════════════════════════════
         // CONSTRUCTION
@@ -219,14 +223,15 @@ namespace FarEmerald.PlayForge
                     await ExecuteStagesSequentially(token);
                     
                     // Wait for maintained stages to complete
-                    await UniTask.WaitUntil(() => _maintainedStages <= 0, cancellationToken: token);
-                    
+                    await UniTask.WaitUntil(() => _maintainedStages.Count == 0, cancellationToken: token);
+
                     CompletedSuccessfully = true;
                 }
                 catch (OperationCanceledException)
                 {
                     // Sequence was cancelled or interrupted
                     CompletedSuccessfully = false;
+                    await StopMaintainedStages();
                 }
                 catch (Exception ex)
                 {
@@ -259,6 +264,8 @@ namespace FarEmerald.PlayForge
                             Debug.LogError($"[TaskSequence] {Definition.Metadata?.Name ?? "Unnamed"} {(!string.IsNullOrEmpty(Data.Path) ? $"({Data.Path})" : "")} failed: {FailureException}");
                         }
                     }
+
+                    await StopMaintainedStages();
                 }
                 finally
                 {
@@ -310,6 +317,19 @@ namespace FarEmerald.PlayForge
             }
         }
         
+        /// <summary>
+        /// Stops what's still maintained when a run ends early, and waits for it to stop. Each maintained stage
+        /// cleans its tasks as it ends, which mustn't happen under them, and the run's cleanup cleaned them at once
+        /// (TS-J). A normal end has none left.
+        /// </summary>
+        private async UniTask StopMaintainedStages()
+        {
+            if (_maintainedStages.Count == 0) return;
+
+            _sequenceCts?.Cancel();
+            await UniTask.WaitUntil(() => _maintainedStages.Count == 0);
+        }
+
         private async UniTask ExecuteStagesSequentially(CancellationToken token)
         {
             while (true)
@@ -367,8 +387,9 @@ namespace FarEmerald.PlayForge
                 }
                 finally
                 {
-                    // Clean all tasks in this stage
-                    CleanStage(stage);
+                    // Clean all tasks in this stage, unless it's maintained: its tasks are still running, and it
+                    // cleans them itself when it ends (TS-J)
+                    if (!_maintainedStages.Contains(StageIndex)) CleanStage(stage);
                     CurrentStage = null;
                 }
             }
@@ -470,7 +491,7 @@ namespace FarEmerald.PlayForge
                 _stageSources.Remove(stageIndex);
                 
                 // Signal completion
-                if (stageIndex == StageIndex)
+                if (!_maintainedStages.Remove(stageIndex))
                 {
                     // Store error for main loop to check (safer than TrySetException)
                     if (error != null)
@@ -482,7 +503,9 @@ namespace FarEmerald.PlayForge
                 }
                 else
                 {
-                    _maintainedStages--;
+                    // Nothing waits on a maintained stage, so it cleans its own tasks as it ends (TS-J)
+                    CleanStage(stage);
+
                     // For maintained stages with errors, we need to cancel the sequence
                     if (error != null)
                     {
@@ -625,9 +648,9 @@ namespace FarEmerald.PlayForge
         
         private void PushActiveStage(SequenceStage stage)
         {
-            lock (_activeStageStack)
+            lock (_activeStages)
             {
-                _activeStageStack.Push(stage);
+                _activeStages.Add(stage);
                 
                 if (stage.Metadata?.IsCritical ?? false)
                 {
@@ -638,11 +661,12 @@ namespace FarEmerald.PlayForge
         
         private void PopActiveStage(SequenceStage stage)
         {
-            lock (_activeStageStack)
+            lock (_activeStages)
             {
-                if (_activeStageStack.Count > 0 && _activeStageStack.Peek() == stage)
+                int index = _activeStages.LastIndexOf(stage);
+                if (index >= 0)
                 {
-                    _activeStageStack.Pop();
+                    _activeStages.RemoveAt(index);
 
                     if (stage.Metadata?.IsCritical ?? false)
                     {
@@ -678,11 +702,14 @@ namespace FarEmerald.PlayForge
             }
         }
 
+        // Innermost first, as the stack gave them
         private SequenceStage[] GetActiveStages()
         {
-            lock (_activeStageStack)
+            lock (_activeStages)
             {
-                return _activeStageStack.ToArray();
+                var stages = _activeStages.ToArray();
+                Array.Reverse(stages);
+                return stages;
             }
         }
         
@@ -1102,7 +1129,11 @@ namespace FarEmerald.PlayForge
         
         internal bool RequestSkipAndMaintain()
         {
-            _maintainedStages++;
+            // Only a running stage can be maintained. Past the last one, this counted a stage that nothing would
+            // ever end, and the run waited on it for ever (TS-J)
+            if (CurrentStage == null) return false;
+
+            _maintainedStages.Add(StageIndex);
             _nextStageSignal?.TrySetResult();
             return true;
         }
@@ -1133,7 +1164,8 @@ namespace FarEmerald.PlayForge
         
         internal bool RequestJumpToStage(int targetIndex)
         {
-            if (targetIndex < 0 || targetIndex >= Definition.Stages.Count)
+            // A maintained stage is still running, and jumping to it ran its tasks again while they ran (TS-J)
+            if (targetIndex < 0 || targetIndex >= Definition.Stages.Count || _maintainedStages.Contains(targetIndex))
                 return false;
             _jumpToStageRequest = targetIndex;
             RequestSkipCurrentStage();
@@ -1168,14 +1200,14 @@ namespace FarEmerald.PlayForge
         {
             StageIndex = -1;
             CurrentStage = null;
-            _maintainedStages = 0;
+            _maintainedStages.Clear();
             _jumpToStageRequest = null;
             _pendingStageError = null;
             _criticalFlagLocks = 0;
             _criticalExitFired = false;
             _stageSources.Clear();
             _activeTasks.Clear();
-            _activeStageStack.Clear();
+            _activeStages.Clear();
             _firedConditions.Clear();
             _brokenRepeats.Clear();
             _repeatCounts.Clear();
@@ -1203,7 +1235,7 @@ namespace FarEmerald.PlayForge
                 try { cts?.Cancel(); cts?.Dispose(); } catch { }
             }
             _stageSources.Clear();
-            _activeStageStack.Clear();
+            _activeStages.Clear();
             _criticalFlagLocks = 0;
             
             try { _sequenceCts?.Dispose(); } catch { }
