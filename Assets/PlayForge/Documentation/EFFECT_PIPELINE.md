@@ -138,14 +138,15 @@ longer duplicate effect logic — edit `EffectSystemComponent`, not the GAS clas
 ApplyGameplayEffect(spec)
 │  validate (affiliation + source/target tag requirements)
 ├─ Instant  → grant tags → app workers → CommitImpact per OnApply entry
-│             → removal workers → remove tags
+│             → removal workers (every impact made; none when nothing committed) → remove tags
 └─ Durational/Infinite
       → TryHandleExistingDurationalGameplayEffect (absorbed? → done)
       → GenerateContainer → shelf (container ctor sets spec.RuntimeContainer + duration math)
       → RegisterModifier per Continuous entry
       → app workers
       → if TickOnApplication: tick workers once + CommitImpact per Periodic entry × executeTicks
-then: HandleGameplayEffects → EffectApplied callback → contained OnApply effects (recursive)
+then: HandleGameplayEffects → RecordEffectApplied + EffectApplied callback
+      → contained OnApply effects (recursive; see §4.2 for the cycle guard)
 
 Tick (per update, EnablePeriodicTicks):
    timers advance → executeTicks → tick workers (every frame, even 0)
@@ -153,7 +154,7 @@ Tick (per update, EnablePeriodicTicks):
 
 Remove (ClearFinishedEffects):
    off shelf → OnRemove: ReverseImpact() = UnregisterModifier per Continuous entry,
-   then contained OnRemove effects → removal workers → EffectRemoved callback
+   then contained OnRemove effects → removal workers → RecordEffectRemoved + EffectRemoved callback
 ```
 
 `SourcedModifiedAttributeValue(spec, 0, 0)` is transport only — magnitudes are always evaluated
@@ -166,7 +167,7 @@ freshly by the impacter pipeline.
 | `DoNothing` | absorbed; only the interaction runs |
 | `ReplaceOldContainer` | `ReverseImpact()` old spec → container adopts new spec (+durations; stack count preserved) → register new spec's Continuous entries. Old commits stay — commits never reverse. |
 | `AppendNewContainer` | fresh container + distinct spec instance → modifiers coexist (stacking by coexistence; `MultiplyBehaviour` controls composition) |
-| `StackExistingContainers` | `Stack(n)` on the found container → re-register Continuous entries so stack-aware magnitudes recompute now (`ScalerImpacter` evaluates container-aware via `spec.RuntimeContainer`) |
+| `StackExistingContainers` | `Stack(n)` on the found container → re-register Continuous entries so stack-aware magnitudes recompute now (`ScalerImpacter` evaluates container-aware via `spec.RuntimeContainer`). A stack lost when its time runs out re-registers the same way, as does the stack `Extend` adds to independent durations (GAS-34) |
 
 `ReApplicationInteraction` (Refresh/Extend + re-fire TickOnApplication) runs **only when
 absorbed** — the append path would double-tick otherwise.
@@ -178,6 +179,10 @@ absorbed** — the append path would double-tick otherwise.
   shelf mid-loop); already-finished containers are skipped.
 - `ClearFinishedEffects` snapshots-and-clears, removes from the shelf **before** `OnRemove`.
 - Scaler-driven execute-tick counts are evaluated once per batch, never per loop iteration.
+- An effect asked for again on an entity before its own application there is over is refused, with one
+  warning per entity and effect. An effect that contains itself, directly or through other contained
+  effects or what applying it sets off, recursed until the stack overflowed (GAS-28).
+- Any change to a container's stack count re-registers its Continuous entries, gained or lost (GAS-34).
 
 ---
 
@@ -189,6 +194,11 @@ unregistration** fires `AttributeChanged` → `RefreshRegulatedAttributes(contac
 `Recompute` (re-deriving their root from the contact's fresh `ActiveValue` while their own
 modifiers and committed history are preserved) → chained `AttributeChanged`, cycle-guarded.
 
+A dependent's refresh is the system's own change (Decision 14). It takes the post-change half of
+the pipeline: `EnforceScaling`, post-change workers and `AttributePostChange`. It is recorded in
+the frame summary as received and dealt, self to self. Its carrier is the attribute's root, typed
+`DisallowImpact`, so a worker that checks impact types passes it by.
+
 Effect-magnitude scalers that read attributes capture snapshots at apply time by design — only
 blueprint scalers create live dependencies.
 
@@ -199,8 +209,10 @@ blueprint scalers create live dependencies.
 - `ProvideAttributeSet`: register attributes → initialize each cached value (first recompute)
   → zero-delta `ModifyAttribute` pulse per attribute (workers/callbacks observe initial values;
   commits nothing).
-- `EnforceScaling` (`AutoScaleWithBase`): Base changes enqueue a deferred proportional Current
-  adjustment through a synthetic carrier — lands as ordinary committed history.
+- `EnforceScaling` (`AutoScaleWithBase`): Base changes, a dependent's refresh included, enqueue a
+  deferred proportional Current adjustment through a synthetic carrier — lands as ordinary committed
+  history. The carrier is typed `DisallowImpact` and unworkable, as the pulse is, so no worker that
+  checks impact types sees it (GAS-35).
 
 ---
 

@@ -289,9 +289,11 @@ Severity: **C** critical, **H** high, **M** medium or low. The phase is the road
 | PC-23 | M | 1 | Bootstrap: a duplicate GameRoot still claims Instance; a failed register throws before the fallback; `[SerializeReference]` on ScriptableObjects (C03); an un-bootstrapped ProcessControl throws every frame | `GameRoot.cs:25-30`, `Bootstrapper.cs:18-19, 78-82`, `ProcessControl.cs:37, 327` | fixed |
 | PC-24 | M | 3 | `PooledMonoProcessInstantiator` is a stub that returns null and leaks GameObjects | `PooledMonoProcessInstantiator.cs:7-22`, `MonoWrapperProcess.cs:90` | open |
 | PC-25 | M | 1 | `ProcessTaskUtil.DoWhile` loops forever; `RemainingRuntime` truncates before multiplying | `ProcessTaskUtil.cs:111-117`, `ProcessRelay.cs:42-43` | fixed |
-| PC-26 | M | 1 | Lifecycle edges: no domain-reload reset; `is null` misses destroyed singletons; the hierarchy throws after a root is destroyed; changing `ProcessTiming` at runtime; `ResetProcessControl` keeps its watchers | `ProcessHierarchy.cs:313`, `ProcessControl.cs:424-446, 1021, 1064` | fixed |
+| PC-26 | M | 1 | Lifecycle edges: no domain-reload reset; `is null` misses destroyed singletons; the hierarchy throws after a root is destroyed; changing `ProcessTiming` at runtime; `ResetProcessControl` keeps its watchers, which is harmless, as it only runs on a fresh instance | `ProcessHierarchy.cs:313`, `ProcessControl.cs:424-446, 1021, 1064` | fixed |
 | PC-27 | H | 1 | `Unpause` runs a process while ProcessControl itself is Waiting or ClosedWaiting, against 8 cells of the transition table: `ValidateStateTransition` never reads the control state. See Decisions 5 | `ProcessControl.cs:776-791, 1361-1390` | fixed |
-| PC-28 | M | 1 | The hierarchy reads a process's parent when it registers, before `WhenInitialize` applies `PARENT_TRANSFORM`, and never hears of a later re-parent, so a process parented through its data is no one's child for a cascade. Decide this with PC-20, because every `SceneRoot` process would become GameRoot's child | `ProcessControl.cs` `PrepareCreatedProcess`, `AbstractMonoProcess.cs:71-74`, `ProcessHierarchy.cs:121` | fixed |
+| PC-28 | M | 1 | The hierarchy reads a process's parent when it registers, before `WhenInitialize` applies `PARENT_TRANSFORM`, and never hears of a later re-parent, so a process parented through its data is no one's child for a cascade. Decide this with PC-20, because every `SceneRoot` process would become GameRoot's child. See Decision 11 | `ProcessControl.cs` `PrepareCreatedProcess`, `AbstractMonoProcess.cs:71-74`, `ProcessHierarchy.cs:121` | fixed |
+| PC-29 | M | 1 | A `StartState` of Closed or ClosedWaiting refuses GameRoot as well, so neither works as a start state. Since PC-23 the Bootstrapper reports the refusal. Registering GameRoot under Ready and entering `StartState` afterwards would fix it | `ProcessControl.cs:247`, `Bootstrapper.cs` | open |
+| PC-30 | M | 1 | A process registered on an object that was never active outlives it. Unity sends no OnDestroy to such an object, so the process's block keeps stepping and its hierarchy node stays. This is a gap in PC-10's fix | `AbstractMonoProcess.cs` `OnDestroy`, `ProcessControl.cs` `EndDestroyedProcess` | open |
 
 ### TaskSequence
 
@@ -372,7 +374,7 @@ had no letter in the review. TS-AA onward came from the test project.
 | GAS-25 | H | 1 | Raw deltas are tagged `DisallowImpact`, so workers skip them (C10). See Decision 9 | `SourcedModifiedAttributeValue.cs:40`, `ForgeHelper.cs:205` | fixed |
 | GAS-26 | H | 1 | Projectile disjoint re-targets the same caller, and its payloads pile up (C14). Its covering homing shots only is GAS-36 | `DisjointProxyTaskBehaviour.cs:53`, `DisjointTarget.cs:95`, `GameplayAbilitySystem.cs:230-233` | fixed |
 | GAS-36 | H | 1 | Projectile disjoint covers homing shots only: a skill shot registers no intent, so it lands in full on an entity that disjointed. Dota leaves skill shots alone, and so does PlayForge, under Decision 10: the disjoint's docs say so | `DisjointProxyTaskBehaviour.cs`, `AbstractTargetedMonoProcess.cs` | fixed |
-| GAS-27 | M | 1 | Scalers and workers: `RandomizedScaler` re-rolls; `InlineAndDeferred` workers are dropped; `StandardWorkerGroup` NREs; set "Combine" double-counts; derived refresh bypasses workers | `RandomizedScaler.cs:29-46`, `ImpactWorkerCache.cs:119-129`, `StandardWorkerGroup.cs:30-89`, `AttributeSet.cs:401-430` | fixed |
+| GAS-27 | M | 1 | Scalers and workers: `RandomizedScaler` re-rolls (Decision 12); `InlineAndDeferred` impact workers are dropped; `StandardWorkerGroup` NREs; set "Combine" did nothing, so the first element stood alone, and its loop took each element twice (Decision 13); derived refresh bypasses workers (Decision 14) | `RandomizedScaler.cs:29-46`, `ImpactWorkerCache.cs:88-98`, `StandardWorkerGroup.cs:30-89`, `AttributeSet.cs:401-430`, `AttributeBlueprint.cs` `Combine`, `AttributeSystemComponent.cs` `RefreshRegulatedAttributes` | fixed |
 | GAS-28 | M | 1 | Effects: removal workers see only the last impact; contained OnApply recursion has no cycle guard; `RecordEffectApplied` and `RecordEffectRemoved` are never called | `EffectSystemComponent.cs:82-89, 110-119`, `FrameSummary.cs:154-157` | fixed |
 | GAS-29 | M | 1 | Target validation and range checks fail for a runtime GAS | `AbstractTargetingAbilityTask.cs:73, 89-91`, `CommonValidations.cs:132-138` | fixed |
 | GAS-30 | M | 1 | `UnlinkAllChildren` re-links; Ability unlink checks Cost instead of Cooldown | `EntityIdentity.cs:202, 210`, `Ability.cs:151` | fixed |
@@ -381,6 +383,12 @@ had no letter in the review. TS-AA onward came from the test project.
 | GAS-33 | H | 1 | At a fixed frame time, a durational periodic effect can lose its last tick for good. Its period and duration timers lose the same delta, so the last tick and the expiry share a frame and rounding decides which comes first: 5 ticks in 5 s lands 4 at 60, 120 and 144 fps. Jittered frame time hides it | `EffectSystemComponent.cs:361, 391-393`, `NonStackingEffectContainer.cs:31` | fixed |
 | GAS-34 | M | 1 | A stack expiring doesn't refresh Continuous entries, though gaining one does, so a scaler that reads the container keeps the old stack count until the next application | `EffectSystemComponent.cs:237-243, 391`, `StackQueueEffectContainer.cs:31-34`, `IndependentDurationsContainer.cs` | fixed |
 | GAS-35 | M | 1 | `EnforceScaling` tags its rescale `AllowImpact`, so an impact worker that accepts unworkable impacts sees the system's own rescaling. From reading only; verify first | `CachedAttributeValue.cs` `EnforceScaling` | fixed |
+| GAS-37 | M | 1 | `EnforceScaling` scales from Current after the clamp has moved it, so under ZeroToBase a 100/100 attribute that loses 50 Base ends at 25/50, not 50/50. `ATTR_SET_DefaultSet` pairs ZeroToBase with `AutoScaleWithBase`. From reading only; verify first | `CachedAttributeValue.cs:558-562` | open |
+| GAS-38 | M | 1 | A runtime GAS's position is a `StaticTargetingPacket` that nothing updates, and the built-in targeting tasks read the caster's transform. For a runtime caster, `AutoTargetTask` ignores its range and takes every Mono GAS, unsorted, and `SelectDirectionTargetTask` always fails | `AutoTargetTask.cs:50`, `AutoTargetByAffinityTask.cs:50`, `SelectDirectionTargetTask.cs:49`, `SelectGasTargetInRangeTask.cs:47`, `RuntimeGameplayAbilitySystem.cs:228` | open |
+| GAS-39 | L | 1 | `FrameSummarySnapshot` copies neither the applied and removed effects nor the deaths and ability injections, so `FrameComplete` listeners never see them | `FrameSummary.cs:356-367` | open |
+| GAS-40 | L | 1 | A set's `UseAverage` takes the first element, and `Ignore` throws | `AttributeSet.cs:423-458` | open |
+| GAS-41 | L | 1 | On `RelativeOperationContextImpactWorker`, `InlineAndDeferred` does the work twice, once inline and once queued, so lifesteal heals double. Hide the option there, or document it | `RelativeOperationContextImpactWorker.cs:22` | open |
+| GAS-42 | M | 1 | A runtime GAS's death dereferences `Relay`, per the review. Whether one can die without a relay isn't checked; verify first | `RuntimeGameplayAbilitySystem_EndOfFrame.cs:127` | open |
 | GAS-P1 | M | 0 | `ActionQueue` LINQ allocations; snapshot built every frame (PF-006) | `ActionQueue.cs:41, 46, 156`, `FrameSummary.cs:340-351` | verified |
 | GAS-P2 | M | 0 | Tag and FrameSummary allocations (PF-007) | `TagCache.cs:60`, `TagQuery.cs:89-136`, `FrameSummary.cs:306-308` | verified |
 | GAS-P3 | M | 3 | Each application revalidates every container and rebuilds all tags (area application is quadratic) | `EffectSystemComponent.cs:312-348`, `GameplayAbilitySystem.cs:250-281` | open |
@@ -488,6 +496,55 @@ GAS-4 with GAS-5, PC-6, and TS-I with PC-5.
 ## Log
 
 Record baselines, gate results and notable decisions here, newest first.
+
+- 2026-11-03, **Phase 1, the medium rows.** All 15 are `fixed`, so every Phase 1 row from the review is. The
+  diagnoses turned up 8 more, all open: PC-29, PC-30 and GAS-37 to GAS-42.
+  - **Result:** 809 tests with no category filter: 802 pass, 0 fail, 7 planted skipped, in three orders. Planted
+    7 of 7. The custom golden runner in PlayForge passes 25/25.
+  - **The fixes,** one commit each:
+    - PC-25, TS-W, TS-X, GAS-30 and GAS-31 were plain.
+    - PC-23: bootstrapping survives a duplicate GameRoot, a refused one and a stray ProcessControl.
+    - PC-26: singletons, roots and timings at their edges.
+    - PC-28: the hierarchy follows transforms.
+    - GAS-27: scalers, worker modes, Combine and derived refreshes.
+    - GAS-28: effects guard, record and report.
+    - GAS-29: targeting and range checks work for a runtime GAS.
+    - GAS-34: a lost stack refreshes.
+    - GAS-35: a rescale is typed as the system's.
+    - TS-R and TS-S didn't reproduce, and a test now holds each where it is.
+  - **Decisions 11 to 14** are the user's: the hierarchy follows transforms, GameRoot included; a random scaler
+    rolls once per spec, with a switch back; Combine adds up; a derived refresh is the system's own change.
+  - **Calls made here, with no decision:**
+    - GAS-28: an effect asked for again on an entity before its application there is over is refused, with one
+      warning per entity and effect. That rules out an effect that applies itself until a requirement stops it.
+      Nothing in PlayForge or Arcade Fighter uses contained effects.
+    - GAS-28: with several impacts, `ImpactData` is the last and the new `Impacts` holds them all.
+    - GAS-28: applications and removals are recorded where their callbacks fire. An instant effect counts as
+      applied but never removed, and an absorbed re-application counts as applied.
+    - GAS-34 takes in its sibling: the stack `Extend` adds to independent durations refreshes too.
+    - GAS-35 types the rescale `DisallowImpact` and fixes the `AcceptUnworkableImpact` tooltip. The cache doesn't
+      refuse `DisallowImpact` for every worker, which would also hide carriers that have no type list.
+    - PC-23: a refused GameRoot is reported, with no fallback to a bare clone, which would never have initialized
+      or stepped. Why a closed StartState refuses it is PC-29.
+    - PC-23: `[SerializeReference]` came off all 11 fields of Unity objects, not only the Bootstrapper's. Unity
+      stores those as plain references either way, so no data moves.
+    - PC-26's watcher part is harmless: the reset only runs on a fresh instance.
+  - **Proof:**
+    - 38 red tests failed on the old code first, each for its row's reason, alongside 8 controls.
+    - 13 mutants, each undoing one branch of a fix, are all caught. The first run let one through: the filing
+      after initialization (PC-28), which `OnTransformParentChanged` already covers. A test with a class that hides
+      that message now needs it.
+    - Coverage tests were added for a hit on an attribute the entity lacks and for a combined part's scaler.
+  - **Docs:** `EFFECT_PIPELINE.md` §4 to §6 describe the cycle guard, the records, the stack refresh, the derived
+    refresh and the rescale's type.
+  - **Behaviour to expect,** for Arcade Fighter's switch (Decision 3):
+    - Pausing GameRoot pauses every process spawned at SceneRoot.
+    - A random buff keeps its roll, and every tick of one periodic application deals the same. Turn
+      `RollOncePerSpec` off for a roll per tick.
+    - Combined elements add up.
+    - A derived refresh reaches post-change workers, `OnImpactReceived` and the frame summary.
+    - An effect can't apply itself inside its own application.
+  - **Next:** the 8 new rows, then Phase 1's gate.
 
 - 2026-11-03, **GAS-15, after Decision 4.** GAS-15 is `fixed`, so all 40 high rows are. Phase 1 has 15 rows still
   open, all medium.
