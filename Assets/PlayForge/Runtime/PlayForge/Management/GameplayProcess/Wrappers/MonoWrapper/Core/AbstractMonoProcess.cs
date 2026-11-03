@@ -157,6 +157,12 @@ namespace FarEmerald.PlayForge
             WhenDestroy();
         }
 
+        // A later SetParent files the process again under its new ancestors, as a cascade follows them (PC-28)
+        private void OnTransformParentChanged()
+        {
+            if (Relay != null && ProcessControl.Instance) ProcessControl.Instance.ProcessReparented(Relay);
+        }
+
         public override string ToString()
         {
             return name;

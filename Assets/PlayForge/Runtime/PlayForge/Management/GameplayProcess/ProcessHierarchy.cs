@@ -140,6 +140,30 @@ namespace FarEmerald.PlayForge
         /// <summary>
         /// Unregisters a process from the hierarchy.
         /// </summary>
+        /// <summary>
+        /// Files a node again under its first ancestor with processes, once its transform has moved. It was filed when
+        /// its first process registered, before WhenInitialize applied a parent, and never again (PC-28, Decision 11).
+        /// </summary>
+        public void Reparent(GameObject go)
+        {
+            if (!go || !_nodesByGameObject.TryGetValue(go, out var node)) return;
+
+            var parentNode = FindParentNode(go.transform.parent);
+            if (parentNode == node.Parent) return;
+
+            // Never into its own subtree, which a move nothing reported could fake
+            for (var above = parentNode; above != null; above = above.Parent)
+            {
+                if (above == node) return;
+            }
+
+            if (node.Parent != null) node.Parent.RemoveChild(node);
+            else _roots.Remove(node);
+
+            if (parentNode != null) parentNode.AddChild(node);
+            else _roots.Add(node);
+        }
+
         public void Unregister(int cacheIndex)
         {
             if (!_nodesByProcessId.TryGetValue(cacheIndex, out var node))

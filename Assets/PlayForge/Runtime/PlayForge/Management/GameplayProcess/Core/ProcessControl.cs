@@ -995,6 +995,10 @@ namespace FarEmerald.PlayForge
                 return false;
             }
 
+            // WhenInitialize applies the parent the process's data asks for after the hierarchy filed it, so it's filed
+            // again where its transform now is. It stayed no one's child (PC-28)
+            if (mono) _hierarchy.Reparent(mono.gameObject);
+
             // Fire callbacks AFTER pcb.Initialize so state is fully consistent
             Callbacks?.ProcessRegistered(pcb.Relay, pcb.Wrapper.Data);
             if (gas != null) Callbacks?.GASProcessRegistered(gas, pcb.Relay, pcb.Wrapper.Data);
@@ -1383,6 +1387,16 @@ namespace FarEmerald.PlayForge
         #endregion
 
         #region Public API
+
+        /// <summary>
+        /// A Mono process's transform has a new parent, so the hierarchy files it again under its new ancestors. It
+        /// heard only where the process registered (PC-28, Decision 11).
+        /// </summary>
+        public void ProcessReparented(ProcessRelay relay)
+        {
+            if (relay is null || !_active.TryGetValue(relay.CacheIndex, out var pcb) || pcb.Relay != relay) return;
+            if (pcb.Wrapper.TryGetProcess<AbstractMonoProcess>(out var mono) && mono) _hierarchy.Reparent(mono.gameObject);
+        }
 
         /// <summary>
         /// Gets all child process IDs for a given process
