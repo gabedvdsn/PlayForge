@@ -210,6 +210,10 @@ namespace FarEmerald.PlayForge
                 
                 _sequenceCts = CancellationTokenSource.CreateLinkedTokenSource(externalToken);
                 var token = _sequenceCts.Token;
+
+                // The run keeps its own time. The sequence's timers kept it, so a sequence without one read 0
+                // throughout, and one whose timer had fired stopped where it fired (TS-W)
+                RunClock(token).Forget();
                 
                 try
                 {
@@ -876,6 +880,20 @@ namespace FarEmerald.PlayForge
         // TIMERS
         // ═══════════════════════════════════════════════════════════════════════════
         
+        // Counts the run's time, which a paused frame isn't
+        private async UniTaskVoid RunClock(CancellationToken token)
+        {
+            try
+            {
+                while (true)
+                {
+                    await UniTask.Yield(PlayerLoopTiming.Update, token);
+                    if (!IsPaused) ElapsedTime += Time.deltaTime;
+                }
+            }
+            catch (OperationCanceledException) { }
+        }
+
         private async UniTaskVoid StartMaxDurationTimeout(CancellationToken token)
         {
             try
@@ -887,9 +905,7 @@ namespace FarEmerald.PlayForge
                     if (IsPaused) continue;
 
                     elapsed += Time.deltaTime;
-                    ElapsedTime = elapsed;
-
-                    if (ElapsedTime >= Definition.MaxDurationSeconds.Value)
+                    if (elapsed >= Definition.MaxDurationSeconds.Value)
                     {
                         // Invoke callback before injection
                         var ctx = new SequenceEventContext(Data, this, CurrentStage);
@@ -922,9 +938,7 @@ namespace FarEmerald.PlayForge
                     if (IsPaused) continue;
 
                     elapsed += Time.deltaTime;
-                    ElapsedTime = elapsed;
-
-                    if (ElapsedTime >= timeout.Seconds)
+                    if (elapsed >= timeout.Seconds)
                     {
                         // Invoke callback before injection
                         var ctx = new SequenceEventContext(Data, this, CurrentStage);

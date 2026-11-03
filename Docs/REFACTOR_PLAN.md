@@ -318,7 +318,7 @@ had no letter in the review. TS-AA onward came from the test project.
 | TS-T | H | 1 | `ActiveCache` drifts from the real state | `AbilitySystemComponent.cs:22, 385, 419` | fixed |
 | TS-U | H | 1 | `RunProcessTask` keeps state on a shared `[SerializeReference]` instance | `RunProcessTask.cs:11, 18` | fixed |
 | TS-V | H | 1 | A non-cancellation targeting exception leaks the activation handle | `AbilityProxy.cs` | fixed |
-| TS-W | M | 1 | `ElapsedTime` is unreliable | — | open |
+| TS-W | M | 1 | `ElapsedTime` is unreliable | — | fixed |
 | TS-X | M | 1 | Payload lists are aliased between packets | `AbilityDataPacket.cs:50` | open |
 | TS-Y | M | 1 | Fake pause: `TryHandlePause` returns `processActive`, so a paused sequence keeps running | `TaskSequenceProcess.cs:225-228` | fixed |
 | TS-Z | M | 3 | Frame drift: `Task(Action)` costs a frame, and relay polling adds a frame per nesting level | `AbilityProxy.cs:171, 282` | open |
