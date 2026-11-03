@@ -159,10 +159,12 @@ namespace FarEmerald.PlayForge
             container.SetTotalDuration(float.MaxValue);
             container.SetDurationRemaining(container.TotalDuration);
             
-            if (EnablePeriodicTicks && TickIntervalOperation.Magnitude > 0)
+            // Through its scaler, which this read past to the bare magnitude (GAS-24)
+            float interval = GetTickInterval(container.Spec);
+            if (EnablePeriodicTicks && interval > 0)
             {
-                container.SetPeriodDuration(TickIntervalOperation.Magnitude);
-                container.SetTimeUntilPeriodTick(TickIntervalOperation.Magnitude);
+                container.SetPeriodDuration(interval);
+                container.SetTimeUntilPeriodTick(interval);
             }
             else
             {
@@ -201,6 +203,15 @@ namespace FarEmerald.PlayForge
             return DurationOperation.Scaler is null 
                 ? DurationOperation.Magnitude 
                 : ForgeHelper.MagnitudeAndScalerOperation(DurationOperation.Magnitude, DurationOperation.Scaler.Evaluate(container), DurationOperation.RealMagnitude);
+        }
+
+        public float GetTickInterval(IAttributeImpactCarrier spec)
+        {
+            if (TickIntervalOperation is null) return 0f;
+
+            return TickIntervalOperation.Scaler is null
+                ? TickIntervalOperation.Magnitude
+                : ForgeHelper.MagnitudeAndScalerOperation(TickIntervalOperation.Magnitude, TickIntervalOperation.Scaler.Evaluate(spec), TickIntervalOperation.RealMagnitude);
         }
 
         public int GetDurationalTicks(GameplayEffectSpec spec)
