@@ -162,6 +162,13 @@ namespace FarEmerald.PlayForge
             {
                 throw new OperationCanceledException();
             }
+
+            // Targeting that didn't get to its end has no target to give, whether it threw or something ended its
+            // sequence first. The ability went on regardless (TS-V)
+            if (HasCompiledTargeting && !implicitData.TargetingFinished)
+            {
+                throw new OperationCanceledException();
+            }
         }
 
         /// <summary>

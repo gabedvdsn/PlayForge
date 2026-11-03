@@ -25,6 +25,12 @@ namespace FarEmerald.PlayForge
         public bool TargetingFailed { get; set; }
 
         /// <summary>
+        /// Set once the targeting task gets to its end. Targeting cut short, by a throw or by anything ending its
+        /// sequence, has no target to give, and the ability goes no further (TS-V).
+        /// </summary>
+        public bool TargetingFinished { get; internal set; }
+
+        /// <summary>
         /// Invoked by ability tasks that host sub-sequences (e.g. RunSequenceTask) when a nested
         /// critical section exits. Allows the activation handle to release its claim early, while
         /// the hosting ability runtime stays alive and fully tracked by ProcessControl until its

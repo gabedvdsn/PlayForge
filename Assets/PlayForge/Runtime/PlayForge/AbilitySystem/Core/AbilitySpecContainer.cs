@@ -78,6 +78,13 @@ namespace FarEmerald.PlayForge
             {
                 targetingCancelled = true;
             }
+            catch (Exception e)
+            {
+                // Anything else went past targeting without the handle being cleaned, and the activation held its
+                // place for good (TS-V)
+                Debug.LogError($"[Ability] {Spec.Base.GetName()} failed in targeting: {e}");
+                targetingCancelled = true;
+            }
             finally
             {
                 handle.IsTargeting = false;

@@ -109,6 +109,7 @@ namespace FarEmerald.PlayForge
                 if (data is AbilityDataPacket abilityData)
                 {
                     await _targetingTask.Activate(abilityData, token);
+                    abilityData.TargetingFinished = true;
                 }
             }
 
