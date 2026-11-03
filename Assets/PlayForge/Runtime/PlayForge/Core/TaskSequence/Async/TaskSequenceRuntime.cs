@@ -99,6 +99,10 @@ namespace FarEmerald.PlayForge
         // Sub-stages are kept in _stageSources with the top-level stages, counting down from -2 so that the two
         // never meet, and -1 stays StageIndex's "not started"
         private int _nextSubStageId = -2;
+
+        // The stage whose own timer or condition is applying an injection. Injections act on the current stage,
+        // which a maintained stage or a sub-stage isn't, so theirs acted on the wrong one (TS-K)
+        private (SequenceStage Stage, int Id)? _injectionSource;
         
         // ═══════════════════════════════════════════════════════════════════════════
         // CONSTRUCTION
@@ -957,7 +961,7 @@ namespace FarEmerald.PlayForge
                     }
                     
                     LogInjection(stage.MaxDurationInjection, $"Stage {stageIndex} MaxDuration", stage);
-                    stage.MaxDurationInjection?.Apply(this);
+                    ApplyFromStage(stage.MaxDurationInjection, stage, stageIndex);
                 }
             }
             catch (OperationCanceledException) { }
@@ -983,7 +987,7 @@ namespace FarEmerald.PlayForge
                     }
                     
                     LogInjection(timeout.Injection, $"Stage {stageIndex} Timeout", stage);
-                    timeout.Injection?.Apply(this);
+                    ApplyFromStage(timeout.Injection, stage, stageIndex);
                 }
             }
             catch (OperationCanceledException) { }
@@ -1037,7 +1041,7 @@ namespace FarEmerald.PlayForge
             
             // Check stage-local conditions (these respect stage-local permissions)
             var activeStages = GetActiveStages();
-            foreach (var (stage, _) in activeStages)
+            foreach (var (stage, stageId) in activeStages)
             {
                 if (stage.HasConditions)
                 {
@@ -1045,14 +1049,42 @@ namespace FarEmerald.PlayForge
                     {
                         // Skip if critical section blocks this injection type
                         if (!IsCriticalInjectionAllowed(condition.Injection)) continue;
-                        
+
                         // Use CheckAndApplyWithPermission to respect stage-local AllowedInjections
-                        if (condition.CheckAndApplyWithPermission(seqData, this, stage))
+                        if (CheckFromStage(condition, stage, stageId))
                         {
                             LogInjection(condition.Injection, "Stage Condition", stage);
                         }
                     }
                 }
+            }
+        }
+
+        // Checks a stage's own condition, so that what it applies acts on that stage
+        private bool CheckFromStage(SequenceCondition condition, SequenceStage stage, int stageId)
+        {
+            _injectionSource = (stage, stageId);
+            try
+            {
+                return condition.CheckAndApplyWithPermission(Data, this, stage);
+            }
+            finally
+            {
+                _injectionSource = null;
+            }
+        }
+
+        // Applies a stage's own timer's injection, so that it acts on that stage
+        private bool ApplyFromStage(ISequenceInjection injection, SequenceStage stage, int stageId)
+        {
+            _injectionSource = (stage, stageId);
+            try
+            {
+                return injection?.Apply(this) ?? false;
+            }
+            finally
+            {
+                _injectionSource = null;
             }
         }
 
@@ -1151,17 +1183,16 @@ namespace FarEmerald.PlayForge
         
         internal bool RequestSkipCurrentStage()
         {
-            if (StageIndex < 0 || !_stageSources.TryGetValue(StageIndex, out var cts))
-                return false;
-            cts?.Cancel();
-            return true;
+            // The stage applying it, if a stage is, and otherwise the current one (TS-K)
+            return CancelStage(_injectionSource?.Id ?? StageIndex);
         }
         
         internal bool RequestSkipAndMaintain()
         {
             // Only a running stage can be maintained. Past the last one, this counted a stage that nothing would
-            // ever end, and the run waited on it for ever (TS-J)
-            if (CurrentStage == null) return false;
+            // ever end, and the run waited on it for ever (TS-J). A maintained stage's own timer or condition finds
+            // it maintained already (TS-K)
+            if (CurrentStage == null || _injectionSource is { } source && _maintainedStages.Contains(source.Id)) return false;
 
             _maintainedStages.Add(StageIndex);
             _nextStageSignal?.TrySetResult();
@@ -1194,6 +1225,9 @@ namespace FarEmerald.PlayForge
         private bool CancelStage(int stageId)
         {
             if (!_stageSources.TryGetValue(stageId, out var cts)) return false;
+
+            // Cancelling can start the next stage from right here, and what that injects is its own
+            _injectionSource = null;
             cts?.Cancel();
             return true;
         }
@@ -1204,7 +1238,9 @@ namespace FarEmerald.PlayForge
             if (targetIndex < 0 || targetIndex >= Definition.Stages.Count || _maintainedStages.Contains(targetIndex))
                 return false;
             _jumpToStageRequest = targetIndex;
-            RequestSkipCurrentStage();
+
+            // From the current stage, whichever stage asked
+            CancelStage(StageIndex);
             return true;
         }
         
@@ -1213,9 +1249,22 @@ namespace FarEmerald.PlayForge
         /// </summary>
         internal bool RequestBreakCurrentStageRepeat()
         {
-            if (CurrentStage == null) return false;
-            _brokenRepeats.Add(CurrentStage);
+            // The stage applying it, if a stage is, and otherwise the innermost one that repeats: with a maintained
+            // stage or a sub-stage repeating, that needn't be the current one (TS-K)
+            var stage = _injectionSource?.Stage ?? InnermostRepeatingStage() ?? CurrentStage;
+            if (stage == null) return false;
+            _brokenRepeats.Add(stage);
             return true;
+        }
+
+        private SequenceStage InnermostRepeatingStage()
+        {
+            foreach (var (stage, _) in GetActiveStages())
+            {
+                if (stage.ShouldRepeat) return stage;
+            }
+
+            return null;
         }
         
         /// <summary>
