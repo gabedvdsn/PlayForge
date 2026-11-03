@@ -20,30 +20,53 @@ namespace FarEmerald.PlayForge
         
         [Tooltip("Maximum multiplier when using random range")]
         public float MaxMultiplier = 1.1f;
-        
+
+        [Tooltip("Roll once per effect spec and keep it, so a buff holds its roll and every tick of one application " +
+                 "deals the same. Off, it rolls on every evaluation, and a buff re-rolls whenever its attribute recomputes")]
+        public bool RollOncePerSpec = true;
+
         public override void Initialize(IAttributeImpactCarrier deriv)
         {
-            // No initialization needed
+            // One roll per spec, kept with what the spec captures. Rolled on every evaluation, a modifier re-rolled
+            // whenever its attribute recomputed (GAS-27, Decision 12). Initialize can run twice for one spec
+            var captured = deriv?.GetSourcedCapturedAttributes();
+            if (!RollOncePerSpec || captured is null || captured.ContainsKey(this)) return;
+
+            float roll = Random.value;
+            captured[this] = new AttributeValue(roll, roll);
         }
-        
+
+        // The spec's roll, or a fresh one when rolling every time or for a carrier that keeps none
+        private float Roll(IAttributeImpactCarrier deriv)
+        {
+            if (RollOncePerSpec && deriv?.GetSourcedCapturedAttributes() is { } captured
+                                && captured.TryGetValue(this, out var kept) && kept.HasValue)
+            {
+                return kept.Value.CurrentValue;
+            }
+
+            return Random.value;
+        }
+
         public override float Evaluate(IAttributeImpactCarrier deriv)
         {
             float baseValue = EvaluateFromSpec(deriv);
-            
+            float roll = Roll(deriv);
+
             switch (VarianceMode)
             {
                 case EVarianceMode.Percentage:
                     // ±Variance% of base value
                     float range = baseValue * Variance;
-                    return baseValue + Random.Range(-range, range);
-                    
+                    return baseValue + Mathf.Lerp(-range, range, roll);
+
                 case EVarianceMode.Flat:
                     // ±Variance flat amount
-                    return baseValue + Random.Range(-Variance, Variance);
-                    
+                    return baseValue + Mathf.Lerp(-Variance, Variance, roll);
+
                 case EVarianceMode.Multiplier:
                     // Multiply by random value in range
-                    return baseValue * Random.Range(MinMultiplier, MaxMultiplier);
+                    return baseValue * Mathf.Lerp(MinMultiplier, MaxMultiplier, roll);
                     
                 default:
                     return baseValue;
