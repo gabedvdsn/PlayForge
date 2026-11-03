@@ -19,9 +19,11 @@ namespace FarEmerald.PlayForge
         {
             base.WhenInitialize();
             
+            // With nothing to fly at, its run ends at once. It went on to use the missing target, and threw (GAS-31)
             if (!regData.TryGet(Tags.TARGET_REAL, EDataTarget.Primary, out target))
             {
-                ForgeLog.Warning($"{GetType().Name}: no {nameof(Tags.TARGET_REAL)} target in registration data — process cannot orient.", this);
+                ForgeLog.Warning($"{GetType().Name}: no {nameof(Tags.TARGET_REAL)} target in registration data, so it has nothing to fly at and ends.", this);
+                return;
             }
             targeting = target.GetTargetingPacket();
 
@@ -31,6 +33,8 @@ namespace FarEmerald.PlayForge
         
         public override async UniTask RunProcess(CancellationToken token)
         {
+            if (target is null) return;
+
             target.CommunicateTargetedIntent(this);
             
             await RunTargetedProcess(token);
