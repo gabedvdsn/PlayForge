@@ -362,90 +362,41 @@ namespace FarEmerald.PlayForge
             {
                 throw new InvalidOperationException("TaskSequenceChain requires SequenceDataPacket");
             }
-            
+
             Data = seqData;
             seqData.Chain = this;
-            
-            _currentIndex = -1;
-            _currentSequence = null;
+
             _interrupted = false;
             _paused = false;
             IsRunning = true;
-            
+
             // Create chain-level CTS
             _chainCts = CancellationTokenSource.CreateLinkedTokenSource(externalToken);
             var chainToken = _chainCts.Token;
-            
-            bool completedAllSequences = false;
-            
+
             try
             {
-                // Reset all conditions
-                foreach (var condition in _conditions)
+                // A loop: a repeat used to call Run again from inside the last one, a level deeper each time
+                // round (TS-O)
+                while (true)
                 {
-                    condition.Reset();
-                }
-                
-                for (int i = 0; i < _sequences.Count; i++)
-                {
-                    _currentIndex = i;
-                    _currentSequence = _sequences[i];
-                    
-                    if (_paused) await UniTask.WaitWhile(() => _paused, cancellationToken: chainToken);
+                    int startFrame = Time.frameCount;
 
-                    // Check if chain was interrupted before starting sequence
-                    if (chainToken.IsCancellationRequested || _interrupted)
-                    {
-                        if (_enableLogging)
-                        {
-                            Debug.Log($"[TaskSequenceChain] Chain interrupted before sequence {i}");
-                        }
-                        break;
-                    }
-                    
+                    bool completedAllSequences = await RunSequences(chainToken);
+
+                    // Handle repeat - ONLY if completed successfully and not interrupted. An empty chain has
+                    // nothing to repeat
+                    if (!_repeats || !completedAllSequences || _sequences.Count == 0) break;
+
                     if (_enableLogging)
                     {
-                        Debug.Log($"[TaskSequenceChain] Starting sequence {i}: {_currentSequence.Definition.Metadata?.Name ?? "unnamed"}");
+                        Debug.Log("[TaskSequenceChain] Repeating chain...");
                     }
-                    
-                    // Run the sequence with the CHAIN's token
-                    bool success = await _currentSequence.TryRun(Data, chainToken);
-                    
-                    // Check if chain was interrupted during sequence
-                    if (_interrupted)
-                    {
-                        if (_enableLogging)
-                        {
-                            Debug.Log($"[TaskSequenceChain] Chain was interrupted during sequence {i}");
-                        }
-                        break;
-                    }
-                    
-                    // If sequence failed but chain wasn't interrupted, it might be a skip
-                    // Continue to next sequence (skip behavior)
-                    if (!success && !chainToken.IsCancellationRequested)
-                    {
-                        if (_enableLogging)
-                        {
-                            Debug.Log($"[TaskSequenceChain] Sequence {i} was skipped/cancelled, continuing chain");
-                        }
-                        continue;
-                    }
-                    
-                    // If chain token was cancelled externally, break
-                    if (chainToken.IsCancellationRequested)
-                    {
-                        break;
-                    }
-                    
-                    if (_enableLogging)
-                    {
-                        Debug.Log($"[TaskSequenceChain] Sequence {i} completed successfully");
-                    }
+
+                    // Every sequence can fail at once, and a round that took no frame would go round for ever
+                    // inside one
+                    if (Time.frameCount == startFrame) await UniTask.Yield(PlayerLoopTiming.Update, chainToken);
                 }
-                
-                // Mark as completed if we ran all sequences without interrupt
-                completedAllSequences = _currentIndex >= _sequences.Count - 1 && !_interrupted && !chainToken.IsCancellationRequested;
             }
             catch (OperationCanceledException)
             {
@@ -453,30 +404,94 @@ namespace FarEmerald.PlayForge
                 {
                     Debug.Log("[TaskSequenceChain] Chain was cancelled");
                 }
-                completedAllSequences = false;
             }
             finally
             {
                 _currentSequence = null;
                 IsRunning = false;
-                
+
                 _chainCts?.Dispose();
                 _chainCts = null;
-            }
-            
-            // Handle repeat - ONLY if completed successfully and not interrupted
-            if (_repeats && completedAllSequences && !_interrupted)
-            {
-                if (_enableLogging)
-                {
-                    Debug.Log("[TaskSequenceChain] Repeating chain...");
-                }
-                await Run(data, externalToken);
-            }
-            else
-            {
+
                 Data.Chain = null;
             }
+        }
+
+        /// <summary>
+        /// One time through the chain, each sequence in turn. True if it got through them all with nothing
+        /// interrupting it.
+        /// </summary>
+        private async UniTask<bool> RunSequences(CancellationToken chainToken)
+        {
+            _currentIndex = -1;
+            _currentSequence = null;
+
+            // Reset all conditions
+            foreach (var condition in _conditions)
+            {
+                condition.Reset();
+            }
+
+            for (int i = 0; i < _sequences.Count; i++)
+            {
+                _currentIndex = i;
+                _currentSequence = _sequences[i];
+                
+                if (_paused) await UniTask.WaitWhile(() => _paused, cancellationToken: chainToken);
+
+                // Check if chain was interrupted before starting sequence
+                if (chainToken.IsCancellationRequested || _interrupted)
+                {
+                    if (_enableLogging)
+                    {
+                        Debug.Log($"[TaskSequenceChain] Chain interrupted before sequence {i}");
+                    }
+                    break;
+                }
+                
+                if (_enableLogging)
+                {
+                    Debug.Log($"[TaskSequenceChain] Starting sequence {i}: {_currentSequence.Definition.Metadata?.Name ?? "unnamed"}");
+                }
+                
+                // Run the sequence with the CHAIN's token
+                bool success = await _currentSequence.TryRun(Data, chainToken);
+                
+                // Check if chain was interrupted during sequence
+                if (_interrupted)
+                {
+                    if (_enableLogging)
+                    {
+                        Debug.Log($"[TaskSequenceChain] Chain was interrupted during sequence {i}");
+                    }
+                    break;
+                }
+                
+                // If sequence failed but chain wasn't interrupted, it might be a skip
+                // Continue to next sequence (skip behavior)
+                if (!success && !chainToken.IsCancellationRequested)
+                {
+                    if (_enableLogging)
+                    {
+                        Debug.Log($"[TaskSequenceChain] Sequence {i} was skipped/cancelled, continuing chain");
+                    }
+                    continue;
+                }
+                
+                // If chain token was cancelled externally, break
+                if (chainToken.IsCancellationRequested)
+                {
+                    break;
+                }
+                
+                if (_enableLogging)
+                {
+                    Debug.Log($"[TaskSequenceChain] Sequence {i} completed successfully");
+                }
+            }
+
+            // Mark as completed if we ran all sequences without interrupt
+            return _currentIndex >= _sequences.Count - 1 && !_interrupted && !chainToken.IsCancellationRequested;
         }
         
         /// <summary>
@@ -488,7 +503,8 @@ namespace FarEmerald.PlayForge
             return !_interrupted && _currentIndex >= _sequences.Count - 1;
         }
 
-        public bool IsCriticalSection => IsRunning && _currentSequence.Runtime.IsCriticalSection;
+        // Between two sequences there's no runtime to ask, and asking threw (TS-O)
+        public bool IsCriticalSection => _currentSequence?.Runtime?.IsCriticalSection ?? false;
 
         // ═══════════════════════════════════════════════════════════════════════════
         // CONDITION CHECKING
