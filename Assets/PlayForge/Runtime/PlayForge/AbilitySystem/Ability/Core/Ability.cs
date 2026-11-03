@@ -148,7 +148,8 @@ namespace FarEmerald.PlayForge
         public void UnlinkAllChildren()
         {
             if (Cost && Cost.IsLinkedTo(this)) Cost.Unlink();
-            if (Cooldown && Cost.IsLinkedTo(this)) Cooldown.Unlink();
+            // The cooldown's own link. This asked the cost's, and threw on an ability with no cost (GAS-30)
+            if (Cooldown && Cooldown.IsLinkedTo(this)) Cooldown.Unlink();
         }
         
         // ═══════════════════════════════════════════════════════════════════════════

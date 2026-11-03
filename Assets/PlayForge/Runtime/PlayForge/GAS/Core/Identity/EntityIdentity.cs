@@ -196,19 +196,20 @@ namespace FarEmerald.PlayForge
         /// </summary>
         public void UnlinkAllChildren()
         {
+            // Unlinked. This linked them again (GAS-30)
             if (StartingItems is not null)
             {
                 foreach (var item in StartingItems)
                 {
-                    if (item.Item && item.Item.IsLinkedTo(this)) item.Item.LinkToProvider(this);
+                    if (item.Item && item.Item.IsLinkedTo(this)) item.Item.Unlink();
                 }
             }
-            
+
             if (StartingAbilities is not null)
             {
                 foreach (var ability in StartingAbilities)
                 {
-                    if (ability && ability.IsLinkedTo(this)) ability.LinkToProvider(this);
+                    if (ability && ability.IsLinkedTo(this)) ability.Unlink();
                 }
             }
         }
