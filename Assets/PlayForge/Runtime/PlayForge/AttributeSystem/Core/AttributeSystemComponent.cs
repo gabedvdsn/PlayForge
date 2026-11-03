@@ -461,8 +461,22 @@ namespace FarEmerald.PlayForge
 
                     if (realImpact.CurrentValue != 0 || realImpact.BaseValue != 0)
                     {
+                        // The system's own change, carried by the attribute's root, which is typed DisallowImpact, so a
+                        // worker that checks types passes it by. It takes the post-change half of the pipeline and
+                        // reaches the frame summary; it fired OnAttributeChanged alone (GAS-27, Decision 14)
                         var sourcedModifier = new SourcedModifiedAttributeValue(cached.Root, realImpact.CurrentValue, realImpact.BaseValue);
+                        var change = new ChangeValue(sourcedModifier);
+                        var ctx = new WorkerContext(Self, AttributeCache, change, _frameSummary, _actionQueue);
+                        cached.EnforceScaling(ctx);
+                        PostChangeHandler.RunWorkers(ctx);
+                        Callbacks.AttributePostChange(relative, change);
+
                         var derivedImpact = ImpactData.Generate(Self, relative, sourcedModifier, realImpact, oldValue);
+                        Self.RecordFrameImpactReceived(derivedImpact);
+
+                        // Dealt as well, self to self, so what an entity deals still matches what's dealt to it. Not
+                        // ProvideFrameImpactDealt, whose tracking would keep every refresh for the attribute's life
+                        Self.RecordFrameImpactDealt(derivedImpact);
                         Callbacks.AttributeChanged(derivedImpact);
                     }
                 }
