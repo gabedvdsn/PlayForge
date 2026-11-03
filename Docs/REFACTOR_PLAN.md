@@ -343,7 +343,7 @@ had no letter in the review. TS-AA onward came from the test project.
 | GAS-20 | H | 1 | Ability removal leaves stale tags and a stale active index; the next claim throws | `AbilitySystemComponent.cs:45, 225-227, 414` | fixed |
 | GAS-21 | H | 1 | `ClaimActive` picks the wrong slot for duplicates and mismatches policies | `AbilitySystemComponent.cs:381-385, 416-419` | fixed |
 | GAS-22 | H | 1 | Duration scalers are evaluated before they are initialized (attribute-backed duration returns 0) | `GameplayEffectDuration.cs:106-115` | fixed |
-| GAS-23 | H | 1 | Max-abilities and max-items have no initializer, so magnitude is likely 0. From reading only; verify first | `EntityIdentity.cs:31, 36` | open |
+| GAS-23 | H | 1 | Max-abilities and max-items have no initializer, so magnitude is likely 0. From reading only; verify first | `EntityIdentity.cs:31, 36` | fixed |
 | GAS-24 | H | 1 | Infinite periodic effects ignore the tick-interval scaler (C05) | `GameplayEffectDuration.cs:158-161` | fixed |
 | GAS-25 | H | 1 | Raw deltas are tagged `DisallowImpact`, so workers skip them (C10) | `SourcedModifiedAttributeValue.cs:40`, `ForgeHelper.cs:205` | open |
 | GAS-26 | H | 1 | Projectile disjoint covers homing only, re-targets the same caller, and its payloads pile up (C14) | `DisjointProxyTaskBehaviour.cs:53`, `DisjointTarget.cs:95`, `GameplayAbilitySystem.cs:230-233` | open |

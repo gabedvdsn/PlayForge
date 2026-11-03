@@ -27,15 +27,16 @@ namespace FarEmerald.PlayForge
         
         public EAbilityActivationPolicy ActivationPolicy = EAbilityActivationPolicy.QueueActivationIfBusy;
         
+        // These had no default, so an identity that didn't set them could hold nothing: a new asset's were 0 (GAS-23)
         [ScalerOperationKeyword("Max Abilities")]
-        public ScalerIntegerMagnitudeOperation MaxAbilitiesOperation;
+        public ScalerIntegerMagnitudeOperation MaxAbilitiesOperation = new() { Magnitude = 99 };
         public List<Ability> StartingAbilities = new();
         public bool AllowDuplicateAbilities;
 
         [ScalerOperationKeyword("Max Items")]
-        public ScalerIntegerMagnitudeOperation MaxItemsOperation;
+        public ScalerIntegerMagnitudeOperation MaxItemsOperation = new() { Magnitude = 99 };
         [ScalerOperationKeyword("Max Equipped Items")]
-        public ScalerIntegerMagnitudeOperation MaxEquippedItemsOperation;
+        public ScalerIntegerMagnitudeOperation MaxEquippedItemsOperation = new() { Magnitude = 99 };
         public List<StartingItemContainer> StartingItems = new();
         public bool AllowDuplicateItems;
         public bool AllowDuplicateEquippedItems;
