@@ -421,12 +421,11 @@ namespace FarEmerald.PlayForge
             {
                 case EValueCollisionPolicy.UseAverage:
                 {
-                    // NOTE: averaged values aren't propagated yet — historical TODO. We just
-                    // fall back to the first blueprint to preserve existing behaviour and keep
-                    // the constructor signature consistent.
-                    system.ProvideAttribute(attribute,
-                        new AttributeBlueprint(defaults[0].SetElement, defaults[0].Derivation.GetOrigin().GetSource())
-                    );
+                    // The elements' resolved values, averaged, with bounds and rounding the first's. It took the first
+                    // alone (GAS-40)
+                    var blueprint = defaults[0];
+                    for (int i = 1; i < defaults.Count; i++) blueprint.Average(defaults[i]);
+                    system.ProvideAttribute(attribute, blueprint);
                     break;
                 }
                 case EValueCollisionPolicy.UseMaximum:
@@ -451,6 +450,13 @@ namespace FarEmerald.PlayForge
                 {
                     var bp = defaults.Last();
                     system.ProvideAttribute(attribute, bp);
+                    break;
+                }
+                // The values that would override the first are passed by, as a scaler group passes its overrides by, so
+                // the first stands. It fell through to the default and threw (GAS-40)
+                case EValueCollisionPolicy.Ignore:
+                {
+                    system.ProvideAttribute(attribute, defaults.First());
                     break;
                 }
                 default:
