@@ -16,9 +16,6 @@ namespace FarEmerald.PlayForge.Extended.Editor
     [CustomEditor(typeof(Ability))]
     public class AbilityEditor : BasePlayForgeEditor
     {
-        // Icon asset (assign in Inspector)
-        [SerializeField] private Texture2D m_AbilityIcon;
-        
         private Ability ability;
         
         // UI References for updates
@@ -67,7 +64,7 @@ namespace FarEmerald.PlayForge.Extended.Editor
                 var tex = ability.Definition.Textures[0].Texture;
                 if (tex != null) return tex;
             }
-            return m_AbilityIcon;
+            return null;
         }
         
         protected override string GetAssetTypeLabel() => "ABILITY";
