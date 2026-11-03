@@ -244,7 +244,14 @@ namespace FarEmerald.PlayForge
 
         #region Unity Events
 
-        public void Bootstrap()
+        public void Bootstrap() => Bootstrap(deferStartState: false);
+
+        /// <summary>
+        /// Makes this the ProcessControl and resets it into StartState, or into Ready when <paramref name="deferStartState"/>
+        /// is set, so the framework's own processes can register first; <see cref="EnterStartState"/> then enters it.
+        /// A StartState that refuses processes refused GameRoot too (PC-29).
+        /// </summary>
+        public void Bootstrap(bool deferStartState)
         {
             if (Instance != null && Instance != this)
             {
@@ -254,9 +261,12 @@ namespace FarEmerald.PlayForge
 
             Instance = this;
             if (DontDestroyOnLoad) DontDestroyOnLoad(gameObject);
-            
-            ResetProcessControl(StartState);
+
+            ResetProcessControl(deferStartState ? EProcessControlState.Ready : StartState);
         }
+
+        /// <summary>Enters the StartState set in the inspector, after a Bootstrap that deferred it (PC-29).</summary>
+        public void EnterStartState() => SetControlState(StartState);
 
         public void DeferredInit()
         {

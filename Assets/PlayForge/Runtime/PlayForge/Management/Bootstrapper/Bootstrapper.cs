@@ -57,6 +57,7 @@ namespace FarEmerald.PlayForge
             }
             
             // Bootstrap ProcessControl. Unity's null, so a destroyed one is replaced; `is null` kept it (PC-26)
+            ProcessControl made = null;
             if (!ProcessControl.Instance)
             {
                 ProcessControl control;
@@ -68,7 +69,10 @@ namespace FarEmerald.PlayForge
                 }
 
                 control.name = "ProcessControl";
-                control.Bootstrap();
+
+                // Ready until GameRoot is in, as a StartState that refuses processes refused GameRoot too (PC-29)
+                control.Bootstrap(deferStartState: true);
+                made = control;
             }
             
             // Bootstrap GameRoot, by Unity's null as above (PC-26)
@@ -87,6 +91,9 @@ namespace FarEmerald.PlayForge
                                    "so the Register overloads that default to it won't work.", this);
                 }
             }
+
+            // The StartState the ProcessControl made here was set to, now that GameRoot is in (PC-29)
+            if (made) made.EnterStartState();
 
             BootstrapOverrides();
 
