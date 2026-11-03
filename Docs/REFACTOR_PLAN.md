@@ -180,6 +180,16 @@ from. It lives outside `Assets/` so it never ships in the package.
 - Decision 4, 2026-11-03: a commit lands on the current value as it was measured. Committed history comes
   after Add, Multiply and FlatBonus, and before Override, so a 30 hit under a ×1.5 aura takes 30, a +10 tome
   under it is worth 10, and an override still pins the value. Golden S6 now expects 85, not 90.
+- Decision 11, 2026-11-03: the process hierarchy follows transforms everywhere, GameRoot included (PC-28). A Mono
+  process spawned at SceneRoot is GameRoot's child, so ending GameRoot ends it first, and pausing GameRoot pauses it.
+- Decision 12, 2026-11-03: `RandomizedScaler` rolls once per effect spec (GAS-27). A buff keeps its roll, and every
+  tick of one application deals the same. A per-scaler switch, `RollOncePerSpec`, goes back to rolling on every
+  evaluation, buffs re-rolling included.
+- Decision 13, 2026-11-03: elements set to Combine add up (GAS-27). Each element's resolved Current and Base are
+  summed, and bounds, rounding and retention group come from the first.
+- Decision 14, 2026-11-03: a derived attribute's refresh is the system's own change (GAS-27). It takes the
+  post-change half of the pipeline (AutoScaleWithBase, post-change workers, `AttributePostChange`) and reaches the
+  frame summary, typed `DisallowImpact` as the startup pulse is, so a worker that checks types skips it (Decision 9).
 
 **Open. Ask the user; do not assume:**
 1. ~~**Uncommitted changes**~~: decided, see above.
@@ -193,6 +203,10 @@ from. It lives outside `Assets/` so it never ships in the package.
 8. ~~**Known-red tests**~~: decided, see above.
 9. ~~**Raw deltas and workers (GAS-25)**~~: decided, see above.
 10. ~~**Disjoint and skill shots (GAS-36)**~~: decided, see above.
+11. ~~**GameRoot and the hierarchy (PC-28)**~~: decided, see above.
+12. ~~**When a random scaler rolls (GAS-27)**~~: decided, see above.
+13. ~~**What Combine does (GAS-27)**~~: decided, see above.
+14. ~~**Derived refreshes (GAS-27)**~~: decided, see above.
 
 ## Roadmap
 
@@ -277,7 +291,7 @@ Severity: **C** critical, **H** high, **M** medium or low. The phase is the road
 | PC-25 | M | 1 | `ProcessTaskUtil.DoWhile` loops forever; `RemainingRuntime` truncates before multiplying | `ProcessTaskUtil.cs:111-117`, `ProcessRelay.cs:42-43` | fixed |
 | PC-26 | M | 1 | Lifecycle edges: no domain-reload reset; `is null` misses destroyed singletons; the hierarchy throws after a root is destroyed; changing `ProcessTiming` at runtime; `ResetProcessControl` keeps its watchers | `ProcessHierarchy.cs:313`, `ProcessControl.cs:424-446, 1021, 1064` | fixed |
 | PC-27 | H | 1 | `Unpause` runs a process while ProcessControl itself is Waiting or ClosedWaiting, against 8 cells of the transition table: `ValidateStateTransition` never reads the control state. See Decisions 5 | `ProcessControl.cs:776-791, 1361-1390` | fixed |
-| PC-28 | M | 1 | The hierarchy reads a process's parent when it registers, before `WhenInitialize` applies `PARENT_TRANSFORM`, and never hears of a later re-parent, so a process parented through its data is no one's child for a cascade. Decide this with PC-20, because every `SceneRoot` process would become GameRoot's child | `ProcessControl.cs` `PrepareCreatedProcess`, `AbstractMonoProcess.cs:71-74`, `ProcessHierarchy.cs:121` | open |
+| PC-28 | M | 1 | The hierarchy reads a process's parent when it registers, before `WhenInitialize` applies `PARENT_TRANSFORM`, and never hears of a later re-parent, so a process parented through its data is no one's child for a cascade. Decide this with PC-20, because every `SceneRoot` process would become GameRoot's child | `ProcessControl.cs` `PrepareCreatedProcess`, `AbstractMonoProcess.cs:71-74`, `ProcessHierarchy.cs:121` | red |
 
 ### TaskSequence
 
