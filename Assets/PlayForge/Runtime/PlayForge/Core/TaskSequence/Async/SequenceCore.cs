@@ -563,7 +563,8 @@ namespace FarEmerald.PlayForge
     }
     
     /// <summary>
-    /// Stops the oldest maintained stage.
+    /// Stops the maintained stage at a stage index. A stage that isn't maintained, the current one among them, is
+    /// left alone.
     /// </summary>
     public class StopMaintainedAtIndexInjection : ISequenceInjection
     {

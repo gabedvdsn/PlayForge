@@ -1138,27 +1138,33 @@ namespace FarEmerald.PlayForge
             return true;
         }
         
+        // These choose among the maintained stages alone. They chose among every running stage, the current one
+        // too, and checked an index against how many stages ran rather than which (TS-L)
+
         internal bool RequestStopMaintainedLast()
         {
-            if (_stageSources.Count == 0) return false;
-            var firstKey = _stageSources.Keys.OrderBy(k => k).First();
-            _stageSources[firstKey]?.Cancel();
-            return true;
+            if (_maintainedStages.Count == 0) return false;
+            return CancelStage(_maintainedStages.Min());
         }
-        
+
         internal bool RequestStopMaintainedAt(int index)
         {
-            if (_stageSources.Count == 0 
-                || index < 0 || index >= _stageSources.Count
-                || !_stageSources.ContainsKey(index)) return false;
-            _stageSources[index]?.Cancel();
-            return true;
+            return _maintainedStages.Contains(index) && CancelStage(index);
         }
-        
+
         internal bool RequestStopMaintainedAll()
         {
-            if (_stageSources.Count == 0) return false;
-            foreach (var cts in _stageSources.Values) cts?.Cancel();
+            if (_maintainedStages.Count == 0) return false;
+
+            // A copy, since a stage that stops at once leaves the set while this goes through it
+            foreach (int index in _maintainedStages.ToArray()) CancelStage(index);
+            return true;
+        }
+
+        private bool CancelStage(int stageId)
+        {
+            if (!_stageSources.TryGetValue(stageId, out var cts)) return false;
+            cts?.Cancel();
             return true;
         }
         
