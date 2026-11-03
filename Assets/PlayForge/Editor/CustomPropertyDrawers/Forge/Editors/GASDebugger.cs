@@ -42,6 +42,10 @@ namespace FarEmerald.PlayForge.Extended.Editor
         // ═══════════════════════════════════════════════════════════════════════════
 
         private List<GameplayAbilitySystem> _gasObjects = new();
+
+        // Undoes each entity's frame-summary hooks. They outlived the window, kept sampling every entity after it closed,
+        // and stacked when it reopened (ED-26)
+        private readonly List<System.Action> _frameSummaryUnhooks = new();
         private GameplayAbilitySystem _selectedGAS;
         private bool _autoRefresh = true;
         private float _refreshInterval = 0.25f;
@@ -149,6 +153,7 @@ namespace FarEmerald.PlayForge.Extended.Editor
         private void OnDisable()
         {
             EditorApplication.playModeStateChanged -= OnPlayModeChanged;
+            RemoveFrameSummaryHooks();
         }
 
         private void OnPlayModeChanged(PlayModeStateChange state)
@@ -158,6 +163,7 @@ namespace FarEmerald.PlayForge.Extended.Editor
             _expandedAttributes.Clear();
             _expandedAbilities.Clear();
             _overviewAttributesInitialized = false;
+            RemoveFrameSummaryHooks();
             _frameSummaryStats.Clear();
 
             EditorApplication.delayCall += () =>
@@ -302,7 +308,19 @@ namespace FarEmerald.PlayForge.Extended.Editor
                 };
                 callbacks.OnImpactDealt += onDealt;
                 callbacks.OnImpactReceived += onReceived;
+                _frameSummaryUnhooks.Add(() =>
+                {
+                    callbacks.OnFrameComplete -= onFrame;
+                    callbacks.OnImpactDealt -= onDealt;
+                    callbacks.OnImpactReceived -= onReceived;
+                });
             }
+        }
+
+        private void RemoveFrameSummaryHooks()
+        {
+            foreach (var unhook in _frameSummaryUnhooks) unhook();
+            _frameSummaryUnhooks.Clear();
         }
 
         private void RecordFrameSummarySample(FrameSummaryRollingStats stats, FrameSummarySnapshot snapshot)
