@@ -84,23 +84,10 @@ namespace FarEmerald.PlayForge
         {
             if (appliedTags == null || appliedTags.Count == 0) return 0;
 
-            // Plain loops: this runs on every requirement check, and LINQ here allocated a closure and
-            // an enumerator each time (PF-007)
+            // A plain loop: this runs on every requirement check, and LINQ here allocated a closure and an
+            // enumerator each time (PF-007)
             int count = 0;
-            switch (MatchMode)
-            {
-                case ETagMatchMode.Exact:
-                    for (int i = 0; i < appliedTags.Count; i++) if (appliedTags[i].Equals(Tag)) count++;
-                    break;
-                case ETagMatchMode.IncludeChildren:
-                    for (int i = 0; i < appliedTags.Count; i++) if (appliedTags[i].MatchesOrIsChildOf(Tag)) count++;
-                    break;
-                case ETagMatchMode.IncludeParents:
-                    for (int i = 0; i < appliedTags.Count; i++) if (appliedTags[i].MatchesOrIsParentOf(Tag)) count++;
-                    break;
-                case ETagMatchMode.SameRoot:
-                    return CountSameRoot(appliedTags);
-            }
+            for (int i = 0; i < appliedTags.Count; i++) if (Matches(appliedTags[i])) count++;
             return count;
         }
         
@@ -119,8 +106,15 @@ namespace FarEmerald.PlayForge
                 return weight >= 0 ? weight : 0;
             }
             
-            // For hierarchical matching, we need to check all applied tags
-            return CountMatches(tags.GetAppliedTags());
+            // A hierarchical match counts each matching tag by its weight, as an exact match does. Counting the tags
+            // made a magnitude mean grants in one mode and different tags in the others (GAS-16)
+            var applied = tags.GetAppliedTags();
+            int count = 0;
+            for (int i = 0; i < applied.Count; i++)
+            {
+                if (Matches(applied[i])) count += Math.Max(0, tags.GetWeight(applied[i]));
+            }
+            return count;
         }
         
         /// <summary>
@@ -131,21 +125,21 @@ namespace FarEmerald.PlayForge
             if (appliedTags == null) return 0;
             if (appliedTags is List<Tag> list) return CountMatches(list);
             
-            return MatchMode switch
-            {
-                ETagMatchMode.Exact => appliedTags.Count(t => t.Equals(Tag)),
-                ETagMatchMode.IncludeChildren => appliedTags.Count(t => t.MatchesOrIsChildOf(Tag)),
-                ETagMatchMode.IncludeParents => appliedTags.Count(t => t.MatchesOrIsParentOf(Tag)),
-                ETagMatchMode.SameRoot => appliedTags.Count(t => t.SharesAncestorWith(Tag)),
-                _ => 0
-            };
+            // Through the match the other overloads use. SameRoot was written two ways (GAS-16)
+            int count = 0;
+            foreach (var applied in appliedTags) if (Matches(applied)) count++;
+            return count;
         }
-        
-        private int CountSameRoot(List<Tag> appliedTags)
+
+        // Whether one applied tag answers this query
+        private bool Matches(Tag applied) => MatchMode switch
         {
-            var queryRoot = Tag.GetRoot();
-            return appliedTags.Count(t => t.GetRoot().Equals(queryRoot));
-        }
+            ETagMatchMode.Exact => applied.Equals(Tag),
+            ETagMatchMode.IncludeChildren => applied.MatchesOrIsChildOf(Tag),
+            ETagMatchMode.IncludeParents => applied.MatchesOrIsParentOf(Tag),
+            ETagMatchMode.SameRoot => applied.SharesAncestorWith(Tag),
+            _ => false
+        };
         
         // ═══════════════════════════════════════════════════════════════════════════
         // Internal Validation

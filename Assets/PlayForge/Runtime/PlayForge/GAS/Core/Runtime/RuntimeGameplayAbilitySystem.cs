@@ -340,7 +340,8 @@ namespace FarEmerald.PlayForge
         
         public bool QueryTags(TagQuery query)
         {
-            return query.Validate(TagCache.GetAppliedTags());
+            // The cache, which has the weights. The list counted each tag once, however often it was granted (GAS-16)
+            return query.Validate(TagCache);
         }
         
         public void CompileGrantedTags()
