@@ -145,7 +145,7 @@ namespace FarEmerald.PlayForge
                 {
                     if (abilityTask == null) continue;
 
-                    var adapter = new AbilityTaskAdapter(abilityTask);
+                    var adapter = new AbilityTaskAdapter(abilityTask, abilityStage);
                     stage.Task(adapter);
 
                     // If the task is a critical section, mark the stage as critical

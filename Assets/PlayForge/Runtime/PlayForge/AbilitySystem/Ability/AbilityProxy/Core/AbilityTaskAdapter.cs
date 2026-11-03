@@ -19,9 +19,13 @@ namespace FarEmerald.PlayForge
         /// <summary>The underlying ability task being adapted.</summary>
         public readonly AbstractAbilityTask AbilityTask;
 
-        public AbilityTaskAdapter(AbstractAbilityTask abilityTask)
+        // The stage the task is in, for the task callbacks
+        private readonly AbilityTaskBehaviourStage _stage;
+
+        public AbilityTaskAdapter(AbstractAbilityTask abilityTask, AbilityTaskBehaviourStage stage = null)
         {
             AbilityTask = abilityTask;
+            _stage = stage;
         }
 
         public void Prepare(SequenceDataPacket data)
@@ -37,7 +41,20 @@ namespace FarEmerald.PlayForge
             if (data is AbilityDataPacket abilityData)
             {
                 abilityData.AppendPath(AbilityTask.GetType().Name);
-                await AbilityTask.Activate(abilityData, token);
+
+                // The task callbacks fired only on the legacy path, which a compiled ability never takes (TS-9)
+                abilityData.Callbacks?.AbilityTaskActivated(AbilityCallbackStatus.GenerateForTask(abilityData, AbilityTask, _stage, true));
+
+                bool completed = false;
+                try
+                {
+                    await AbilityTask.Activate(abilityData, token);
+                    completed = true;
+                }
+                finally
+                {
+                    abilityData.Callbacks?.AbilityTaskEnded(AbilityCallbackStatus.GenerateForTask(abilityData, AbilityTask, _stage, completed));
+                }
             }
         }
 

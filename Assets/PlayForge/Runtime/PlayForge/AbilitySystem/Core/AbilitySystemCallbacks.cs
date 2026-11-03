@@ -33,13 +33,26 @@ namespace FarEmerald.PlayForge
         #endregion
         
         #region On Ability End
+        // When the activation is over. This fired when the claim was let go, which for an ability with no critical
+        // stage is as it starts (TS-9)
         private AbilitySystemCallbackDelegate _onAbilityEnd;
         public event AbilitySystemCallbackDelegate OnAbilityEnd
         {
             add => _onAbilityEnd = AddUnique(_onAbilityEnd, value);
             remove => _onAbilityEnd -= value;
         }
-        public void AbilityClaimReleased(AbilityCallbackStatus status) => _onAbilityEnd?.Invoke(status);
+        public void AbilityEnded(AbilityCallbackStatus status) => _onAbilityEnd?.Invoke(status);
+        #endregion
+
+        #region On Ability Claim Released
+        // When the ability lets other activations in, which is as its last critical stage ends
+        private AbilitySystemCallbackDelegate _onAbilityClaimReleased;
+        public event AbilitySystemCallbackDelegate OnAbilityClaimReleased
+        {
+            add => _onAbilityClaimReleased = AddUnique(_onAbilityClaimReleased, value);
+            remove => _onAbilityClaimReleased -= value;
+        }
+        public void AbilityClaimReleased(AbilityCallbackStatus status) => _onAbilityClaimReleased?.Invoke(status);
         #endregion
         
         // ═══════════════════════════════════════════════════════════════

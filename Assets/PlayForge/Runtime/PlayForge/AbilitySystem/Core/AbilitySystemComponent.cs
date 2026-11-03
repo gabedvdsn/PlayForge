@@ -425,13 +425,20 @@ namespace FarEmerald.PlayForge
         public void EndActivation(AbilitySpecContainer container, AbilityDataPacket data)
         {
             // A removed ability's slot left the active list with it, and may hold another ability by now (GAS-20)
-            if (!AbilityCache.TryGetValue(container.Index, out var cached) || cached != container) return;
+            if (AbilityCache.TryGetValue(container.Index, out var cached) && cached == container)
+            {
+                var policy = data?.Request.Policy
+                             ?? container.Spec.Base.Definition.ActivationPolicy.Translate(this);
 
-            var policy = data?.Request.Policy
-                         ?? container.Spec.Base.Definition.ActivationPolicy.Translate(this);
+                // Overlapping activations share the slot, which stays while one under this policy still runs (TS-T)
+                if (!container.IsActiveUnder(policy)) ActiveCache[policy].Remove(container.Index);
+            }
 
-            // Overlapping activations share the slot, which stays while one under this policy still runs (TS-T)
-            if (!container.IsActiveUnder(policy)) ActiveCache[policy].Remove(container.Index);
+            // After the active list is told, so that a listener finds the ability over (TS-9)
+            if (data != null)
+            {
+                Callbacks.AbilityEnded(AbilityCallbackStatus.GenerateForAbilityEvent(data));
+            }
         }
 
         #endregion
