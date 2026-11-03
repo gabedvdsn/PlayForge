@@ -21,7 +21,7 @@ namespace FarEmerald.PlayForge
     {
         
         [ForgeTagContext(ForgeContext.Data)]  public Tag Tag = Tags.ASSETS;
-        [SerializeReference] public BaseForgeAsset[] Assets;
+        public BaseForgeAsset[] Assets;
 
         public override bool IsCriticalSection => false;
 
@@ -40,7 +40,7 @@ namespace FarEmerald.PlayForge
     public class SetEffectsTask : AbstractSetAssetsTask
     {
         [ForgeTagContext(ForgeContext.Data)]  public Tag Tag = Tags.EFFECTS;
-        [SerializeReference] public GameplayEffect[] Effects;
+        public GameplayEffect[] Effects;
 
         public override bool IsCriticalSection => false;
         
@@ -59,7 +59,7 @@ namespace FarEmerald.PlayForge
     {
         
         [ForgeTagContext(ForgeContext.Data)]  public Tag Tag = Tags.ENTITIES;
-        [SerializeReference] public EntityIdentity[] Entities;
+        public EntityIdentity[] Entities;
 
         public override bool IsCriticalSection => false;
         
@@ -78,7 +78,7 @@ namespace FarEmerald.PlayForge
     {
         
         [ForgeTagContext(ForgeContext.Data)]  public Tag Tag = Tags.ATTRIBUTES;
-        [SerializeReference] public BaseForgeAsset[] Attributes;
+        public BaseForgeAsset[] Attributes;
 
         public override bool IsCriticalSection => false;
         
@@ -97,7 +97,7 @@ namespace FarEmerald.PlayForge
     {
         
         [ForgeTagContext(ForgeContext.Data)]  public Tag Tag = Tags.ATTRIBUTE_SETS;
-        [SerializeReference] public AttributeSet[] AttributeSets;
+        public AttributeSet[] AttributeSets;
 
         public override bool IsCriticalSection => false;
         
@@ -115,7 +115,7 @@ namespace FarEmerald.PlayForge
     public class SetAbilitiesTask : AbstractSetAssetsTask
     {
         [ForgeTagContext(ForgeContext.Data)]  public Tag Tag = Tags.ABILITIES;
-        [SerializeReference] public Ability[] Abilities;
+        public Ability[] Abilities;
 
         public override bool IsCriticalSection => false;
         

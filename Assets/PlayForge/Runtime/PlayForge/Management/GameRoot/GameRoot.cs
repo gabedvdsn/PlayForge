@@ -28,6 +28,9 @@ namespace FarEmerald.PlayForge
             if (Instance is not null && Instance != this)
             {
                 Destroy(gameObject);
+
+                // On its way out, so Instance stays where it is. It took Instance anyway (PC-23)
+                return;
             }
 
             Instance = this;

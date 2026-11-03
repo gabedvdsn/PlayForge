@@ -15,7 +15,6 @@ namespace FarEmerald.PlayForge
         [Tooltip("Or in Start() when false")]
         public bool BootstrapOnAwake = true;
 
-        [SerializeReference]
         public List<AttributeSet> RegisterSets;
         
         private void Awake()
@@ -75,19 +74,24 @@ namespace FarEmerald.PlayForge
             // Bootstrap GameRoot
             if (GameRoot.Instance is null)
             {
-                ProcessControl.Register(GameRootPrefab, ProcessDataPacket.Default(), out var relay);
-                
-                // If failed to register the game root process, instantiate it manually
-                var status = relay.TryGetProcess<GameRoot>(out var gameRoot);
-                if (!status) gameRoot = Instantiate(GameRootPrefab, Vector3.zero, Quaternion.identity);
-                
-                gameRoot.Bootstrap();
+                // Refused, there's no relay to read, and a bare clone would never initialize or step, so it's
+                // reported. Reading the relay threw, and the Bootstrapper never finished (PC-23)
+                if (ProcessControl.Register(GameRootPrefab, ProcessDataPacket.Default(), out var relay)
+                    && relay.TryGetProcess<GameRoot>(out var gameRoot))
+                {
+                    gameRoot.Bootstrap();
+                }
+                else
+                {
+                    ForgeLog.Error($"{GetName()}: couldn't register GameRoot (ProcessControl is {ProcessControl.Instance.State}), " +
+                                   "so the Register overloads that default to it won't work.", this);
+                }
             }
-            
+
             BootstrapOverrides();
-            
+
             ProcessControl.Instance.DeferredInit();
-            GameRoot.Instance.DeferredInit();
+            if (GameRoot.Instance) GameRoot.Instance.DeferredInit();
             
             Destroy(gameObject);
         }

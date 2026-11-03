@@ -16,7 +16,7 @@ namespace FarEmerald.PlayForge
         public EDataTarget DataTarget = EDataTarget.Primary;
         [Tooltip("When true, processes inside [InternalMonoProcesses] override data.")]
         public bool InternalIsOverride = false;
-        [FormerlySerializedAs("MonoProcesses")] [SerializeReference] public List<AbstractMonoProcess> InternalMonoProcesses = new();
+        [FormerlySerializedAs("MonoProcesses")] public List<AbstractMonoProcess> InternalMonoProcesses = new();
 
         public CreateMonoProcessAbilityTask()
         {

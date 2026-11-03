@@ -440,7 +440,7 @@ namespace FarEmerald.PlayForge
         public bool AllowDuplicateItems;
         public bool AllowDuplicateEquippedItems;
         
-        [SerializeReference] public AttributeSet AttributeSet;
+        public AttributeSet AttributeSet;
 
         public StandardWorkerGroup WorkerGroup;
 

@@ -34,7 +34,9 @@ namespace FarEmerald.PlayForge
         private HashSet<int> _waiting = new();
         
         // Optimized stepping - flat lists per timing type for cache-friendly iteration
-        private Dictionary<EProcessStepTiming, StepGroup> _stepping;
+        // Empty until Bootstrap fills it, so a ProcessControl nothing bootstrapped steps nothing. Null, it threw in
+        // every Update, LateUpdate and FixedUpdate (PC-23)
+        private Dictionary<EProcessStepTiming, StepGroup> _stepping = new();
         
         // Hierarchy management for MonoProcesses
         private ProcessHierarchy _hierarchy = new();
@@ -253,6 +255,16 @@ namespace FarEmerald.PlayForge
             CollectSceneProcesses();
         }
         
+        // Start, not Awake: a Bootstrapper bootstraps the ProcessControl it makes after that one's Awake (PC-23)
+        private void Start()
+        {
+            if (Instance != this)
+            {
+                ForgeLog.Warning($"{name} was never bootstrapped, so it steps nothing. A Bootstrapper makes the " +
+                                 "ProcessControl it uses, so this one can go.", this);
+            }
+        }
+
         private void Update()
         {
             StepProcesses(EProcessStepTiming.Update);

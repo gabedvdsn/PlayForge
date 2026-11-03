@@ -22,7 +22,6 @@ namespace FarEmerald.PlayForge
         
         [Space]
 
-        [SerializeReference]
         public List<AttributeSet> SubSets;
         public EValueCollisionPolicy CollisionResolutionPolicy = EValueCollisionPolicy.UseMaximum;
 
