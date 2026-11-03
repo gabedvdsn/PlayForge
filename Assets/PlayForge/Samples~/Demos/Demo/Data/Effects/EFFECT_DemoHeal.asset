@@ -134,7 +134,7 @@ MonoBehaviour:
     - rid: -2
       type: {class: , ns: , asm: }
     - rid: 7261146469945573796
-      type: {class: RandomizedScaler, ns: FarEmerald.PlayForge, asm: Assembly-CSharp}
+      type: {class: RandomizedScaler, ns: FarEmerald.PlayForge, asm: FarEmerald.PlayForge}
       data:
         Name: 
         sourcePipeline: {fileID: 0}

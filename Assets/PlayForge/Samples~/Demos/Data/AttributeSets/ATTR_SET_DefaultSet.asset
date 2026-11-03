@@ -71,7 +71,7 @@ MonoBehaviour:
     - rid: -2
       type: {class: , ns: , asm: }
     - rid: 7261146684025471443
-      type: {class: DeathWatcherAnalysisWorker, ns: FarEmerald.PlayForge, asm: Assembly-CSharp}
+      type: {class: DeathWatcherAnalysisWorker, ns: FarEmerald.PlayForge, asm: FarEmerald.PlayForge}
       data:
         Target: {fileID: 11400000, guid: 5238e93ea6a409e4a84dd1dcf23dd45c, type: 2}
         Threshold: 0

@@ -70,7 +70,7 @@ MonoBehaviour:
     - rid: -2
       type: {class: , ns: , asm: }
     - rid: 1955962306424471764
-      type: {class: SimpleScaler, ns: FarEmerald.PlayForge, asm: Assembly-CSharp}
+      type: {class: SimpleScaler, ns: FarEmerald.PlayForge, asm: FarEmerald.PlayForge}
       data:
         Name: 
         sourcePipeline: {fileID: 0}
@@ -106,7 +106,7 @@ MonoBehaviour:
           m_RotationOrder: 4
         Behaviours: []
     - rid: 1955962306424471765
-      type: {class: ScalerGroup, ns: FarEmerald.PlayForge, asm: Assembly-CSharp}
+      type: {class: ScalerGroup, ns: FarEmerald.PlayForge, asm: FarEmerald.PlayForge}
       data:
         Name: 
         sourcePipeline: {fileID: 0}

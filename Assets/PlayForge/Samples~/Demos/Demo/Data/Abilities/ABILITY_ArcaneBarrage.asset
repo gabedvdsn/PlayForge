@@ -222,29 +222,29 @@ MonoBehaviour:
     version: 2
     RefIds:
     - rid: 1955962478581514659
-      type: {class: CooldownValidation, ns: FarEmerald.PlayForge, asm: Assembly-CSharp}
+      type: {class: CooldownValidation, ns: FarEmerald.PlayForge, asm: FarEmerald.PlayForge}
       data: 
     - rid: 1955962478581514660
-      type: {class: CostValidation, ns: FarEmerald.PlayForge, asm: Assembly-CSharp}
+      type: {class: CostValidation, ns: FarEmerald.PlayForge, asm: FarEmerald.PlayForge}
       data: 
     - rid: 1955962478581514661
-      type: {class: IsAliveValidation, ns: FarEmerald.PlayForge, asm: Assembly-CSharp}
+      type: {class: IsAliveValidation, ns: FarEmerald.PlayForge, asm: FarEmerald.PlayForge}
       data: 
     - rid: 1955962478581514662
-      type: {class: IsAliveValidation, ns: FarEmerald.PlayForge, asm: Assembly-CSharp}
+      type: {class: IsAliveValidation, ns: FarEmerald.PlayForge, asm: FarEmerald.PlayForge}
       data: 
     - rid: 7261146403316695444
-      type: {class: AllProxyStagePolicy, ns: FarEmerald.PlayForge, asm: Assembly-CSharp}
+      type: {class: AllProxyStagePolicy, ns: FarEmerald.PlayForge, asm: FarEmerald.PlayForge}
       data: 
     - rid: 7261146403316695446
-      type: {class: RunSequenceTask, ns: FarEmerald.PlayForge, asm: Assembly-CSharp}
+      type: {class: RunSequenceTask, ns: FarEmerald.PlayForge, asm: FarEmerald.PlayForge}
       data:
         Sequence:
           _typeName: FarEmerald.PlayForge.Examples.DemoAbilitySequences, Assembly-CSharp,
             Version=0.0.0.0, Culture=neutral, PublicKeyToken=null
           _methodName: ArcaneBarrageSequence
     - rid: 7261146403316695457
-      type: {class: SelectGasOrPositionTargetTask, ns: FarEmerald.PlayForge, asm: Assembly-CSharp}
+      type: {class: SelectGasOrPositionTargetTask, ns: FarEmerald.PlayForge, asm: FarEmerald.PlayForge}
       data:
         BreakRuntimeOnInvalid: 1
         Requirements:
@@ -261,7 +261,7 @@ MonoBehaviour:
         MouseButton: 0
         PreferGasTarget: 1
     - rid: 7261146469945573521
-      type: {class: SetEffectsTask, ns: FarEmerald.PlayForge, asm: Assembly-CSharp}
+      type: {class: SetEffectsTask, ns: FarEmerald.PlayForge, asm: FarEmerald.PlayForge}
       data:
         Tag:
           Name: Effects1hrldAfmelBJryWmirBAFALaw9ISFYz_1hrldAfmelBJryWmirBAFALaw

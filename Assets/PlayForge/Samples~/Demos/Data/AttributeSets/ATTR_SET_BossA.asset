@@ -71,7 +71,7 @@ MonoBehaviour:
     - rid: -2
       type: {class: , ns: , asm: }
     - rid: 7261146854011175004
-      type: {class: CachedAttributeBackedScaler, ns: FarEmerald.PlayForge, asm: Assembly-CSharp}
+      type: {class: CachedAttributeBackedScaler, ns: FarEmerald.PlayForge, asm: FarEmerald.PlayForge}
       data:
         Name: 
         sourcePipeline: {fileID: 0}

@@ -125,24 +125,24 @@ MonoBehaviour:
     - rid: -2
       type: {class: , ns: , asm: }
     - rid: 1955962478581514659
-      type: {class: CooldownValidation, ns: FarEmerald.PlayForge, asm: Assembly-CSharp}
+      type: {class: CooldownValidation, ns: FarEmerald.PlayForge, asm: FarEmerald.PlayForge}
     - rid: 1955962478581514660
-      type: {class: CostValidation, ns: FarEmerald.PlayForge, asm: Assembly-CSharp}
+      type: {class: CostValidation, ns: FarEmerald.PlayForge, asm: FarEmerald.PlayForge}
     - rid: 1955962478581514661
-      type: {class: IsAliveValidation, ns: FarEmerald.PlayForge, asm: Assembly-CSharp}
+      type: {class: IsAliveValidation, ns: FarEmerald.PlayForge, asm: FarEmerald.PlayForge}
     - rid: 1955962478581514662
-      type: {class: IsAliveValidation, ns: FarEmerald.PlayForge, asm: Assembly-CSharp}
+      type: {class: IsAliveValidation, ns: FarEmerald.PlayForge, asm: FarEmerald.PlayForge}
     - rid: 7261146560314999351
-      type: {class: AllProxyStagePolicy, ns: FarEmerald.PlayForge, asm: Assembly-CSharp}
+      type: {class: AllProxyStagePolicy, ns: FarEmerald.PlayForge, asm: FarEmerald.PlayForge}
     - rid: 7261146560314999352
-      type: {class: RunSequenceTask, ns: FarEmerald.PlayForge, asm: Assembly-CSharp}
+      type: {class: RunSequenceTask, ns: FarEmerald.PlayForge, asm: FarEmerald.PlayForge}
       data:
         Sequence:
           _typeName: FarEmerald.PlayForge.Extended.SwarmDefenderSample.SwarmDefenderHeroAbilitySequences,
             Assembly-CSharp, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null
           _methodName: Grenade
     - rid: 7261146684025471460
-      type: {class: SetEffectsTask, ns: FarEmerald.PlayForge, asm: Assembly-CSharp}
+      type: {class: SetEffectsTask, ns: FarEmerald.PlayForge, asm: FarEmerald.PlayForge}
       data:
         Tag:
           Name: Effects1hrldAfmelBJryWmirBAFALaw9ISFYz_1hrldAfmelBJryWmirBAFALaw

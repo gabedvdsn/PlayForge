@@ -222,22 +222,22 @@ MonoBehaviour:
     - rid: -2
       type: {class: , ns: , asm: }
     - rid: 1955962478581514659
-      type: {class: CooldownValidation, ns: FarEmerald.PlayForge, asm: Assembly-CSharp}
+      type: {class: CooldownValidation, ns: FarEmerald.PlayForge, asm: FarEmerald.PlayForge}
       data: 
     - rid: 1955962478581514660
-      type: {class: CostValidation, ns: FarEmerald.PlayForge, asm: Assembly-CSharp}
+      type: {class: CostValidation, ns: FarEmerald.PlayForge, asm: FarEmerald.PlayForge}
       data: 
     - rid: 1955962478581514661
-      type: {class: IsAliveValidation, ns: FarEmerald.PlayForge, asm: Assembly-CSharp}
+      type: {class: IsAliveValidation, ns: FarEmerald.PlayForge, asm: FarEmerald.PlayForge}
       data: 
     - rid: 1955962478581514662
-      type: {class: IsAliveValidation, ns: FarEmerald.PlayForge, asm: Assembly-CSharp}
+      type: {class: IsAliveValidation, ns: FarEmerald.PlayForge, asm: FarEmerald.PlayForge}
       data: 
     - rid: 7261146403316695444
-      type: {class: AllProxyStagePolicy, ns: FarEmerald.PlayForge, asm: Assembly-CSharp}
+      type: {class: AllProxyStagePolicy, ns: FarEmerald.PlayForge, asm: FarEmerald.PlayForge}
       data: 
     - rid: 7261146403316695446
-      type: {class: RunSequenceTask, ns: FarEmerald.PlayForge, asm: Assembly-CSharp}
+      type: {class: RunSequenceTask, ns: FarEmerald.PlayForge, asm: FarEmerald.PlayForge}
       data:
         Sequence:
           _typeName: FarEmerald.PlayForge.Examples.DemoAbilitySequences, Assembly-CSharp,

@@ -70,7 +70,7 @@ MonoBehaviour:
     - rid: -2
       type: {class: , ns: , asm: }
     - rid: 1955962478581514807
-      type: {class: SimpleScaler, ns: FarEmerald.PlayForge, asm: Assembly-CSharp}
+      type: {class: SimpleScaler, ns: FarEmerald.PlayForge, asm: FarEmerald.PlayForge}
       data:
         Name: 
         sourcePipeline: {fileID: 0}
@@ -106,7 +106,7 @@ MonoBehaviour:
           m_RotationOrder: 4
         Behaviours: []
     - rid: 1955962478581514808
-      type: {class: ScalerGroup, ns: FarEmerald.PlayForge, asm: Assembly-CSharp}
+      type: {class: ScalerGroup, ns: FarEmerald.PlayForge, asm: FarEmerald.PlayForge}
       data:
         Name: 
         sourcePipeline: {fileID: 0}
@@ -144,7 +144,7 @@ MonoBehaviour:
         Calculations: []
         OverrideMemberCollisionPolicy: 0
     - rid: 6997630944598032384
-      type: {class: DeathWatcherAnalysisWorker, ns: FarEmerald.PlayForge, asm: Assembly-CSharp}
+      type: {class: DeathWatcherAnalysisWorker, ns: FarEmerald.PlayForge, asm: FarEmerald.PlayForge}
       data:
         Target: {fileID: 11400000, guid: 5238e93ea6a409e4a84dd1dcf23dd45c, type: 2}
         Threshold: 0
