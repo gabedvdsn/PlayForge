@@ -219,15 +219,20 @@ namespace FarEmerald.PlayForge
         public bool RemoveAbility(Ability ability)
         {
             if (!TryGetCacheIndexOf(ability, out int index)) return false;
-            
-            if (AbilityCache[index].IsActive) 
+
+            if (AbilityCache[index].IsActive)
                 Inject(index, InterruptSequenceInjection.Instance);
 
             ability.RemoveWorkers(Self);
-            
+
+            // Off the active list too, where the next claim check looked its slot up and threw, and gone before
+            // the tags are compiled, which counted it still granted (GAS-20)
+            foreach (var active in ActiveCache.Values) active.Remove(index);
+            AbilityCache.Remove(index);
+
             Self.CompileGrantedTags();
 
-            return AbilityCache.Remove(index);
+            return true;
         }
 
         public bool CanGiveAbility(Ability ability)
@@ -384,12 +389,15 @@ namespace FarEmerald.PlayForge
 
         public bool ClaimActive(AbilitySpecContainer container, AbilityDataPacket data)
         {
-            if (!TryGetCacheIndexOf(container.Spec.Base, out int index)) return false;
-            
+            // The container's own slot, under the policy the activation asked for. The claim went to the first slot
+            // holding the same ability (GAS-21), and under the definition's policy, where EndActivation never
+            // looked (TS-T)
+            if (!AbilityCache.TryGetValue(container.Index, out var cached) || cached != container) return false;
+
             Callbacks.AbilityClaimed(AbilityCallbackStatus.GenerateForAbilityEvent(data));
-            
-            ActiveCache[AbilityCache[index].Spec.Base.Definition.ActivationPolicy.Translate(this)].Add(index);
-            
+
+            ActiveCache[data.Request.Policy].Add(container.Index);
+
             return true;
         }
 
@@ -399,8 +407,7 @@ namespace FarEmerald.PlayForge
         /// </summary>
         public void ReleaseClaim(AbilitySpecContainer container, AbilityDataPacket data)
         {
-            if (!AbilityCache.ContainsKey(container.Index)) return;
-
+            // A removed ability lets go too, or what's queued behind it waits on someone else (GAS-20)
             if (data != null)
             {
                 Callbacks.AbilityClaimReleased(AbilityCallbackStatus.GenerateForAbilityEvent(data));
@@ -417,12 +424,14 @@ namespace FarEmerald.PlayForge
         /// </summary>
         public void EndActivation(AbilitySpecContainer container, AbilityDataPacket data)
         {
-            if (!AbilityCache.ContainsKey(container.Index)) return;
+            // A removed ability's slot left the active list with it, and may hold another ability by now (GAS-20)
+            if (!AbilityCache.TryGetValue(container.Index, out var cached) || cached != container) return;
 
             var policy = data?.Request.Policy
                          ?? container.Spec.Base.Definition.ActivationPolicy.Translate(this);
 
-            ActiveCache[policy].Remove(container.Index);
+            // Overlapping activations share the slot, which stays while one under this policy still runs (TS-T)
+            if (!container.IsActiveUnder(policy)) ActiveCache[policy].Remove(container.Index);
         }
 
         #endregion

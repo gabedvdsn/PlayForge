@@ -15,6 +15,17 @@ namespace FarEmerald.PlayForge
         public bool IsActive => _activeHandles.Count > 0;
         public bool IsClaiming => _activeHandles.Any(h => !h.ClaimReleased && (h.IsTargeting || h.IsExecuting));
 
+        /// <summary>True if an activation made under the policy is still running.</summary>
+        public bool IsActiveUnder(EAbilityActivationPolicy policy)
+        {
+            foreach (var handle in _activeHandles)
+            {
+                if (handle.Data.Request.Policy == policy) return true;
+            }
+
+            return false;
+        }
+
         public bool IsCooldown => Spec.Base.Cooldown is not null && Spec.Source.GetLongestDurationFor(Spec.Base.Cooldown.Tags.AssetTag).FoundDuration;
         
         private readonly List<AbilityActivationHandle> _activeHandles = new();
