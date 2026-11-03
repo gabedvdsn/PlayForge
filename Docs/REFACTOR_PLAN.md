@@ -499,6 +499,19 @@ GAS-4 with GAS-5, PC-6, and TS-I with PC-5.
 
 Record baselines, gate results and notable decisions here, newest first.
 
+- 2026-11-03, **PC-31 and GAS-43.** Both are `fixed`, so no Phase 1 row is open: all 96 are `fixed`.
+  - **Result:** 838 tests with no category filter: 831 pass, 0 fail, 7 planted skipped, in three orders. Planted
+    7 of 7. The custom golden runner in PlayForge passes 25/25.
+  - **The fixes,** one commit each:
+    - PC-31: ProcessControl looks each process class up once. One that declares its own `OnDestroy` hides
+      `AbstractMonoProcess`'s, so it's warned of, and its processes are watched as dormant ones are (PC-30), each
+      ended when its object goes. No class in PlayForge or Arcade Fighter does this today.
+    - GAS-43: `AutoTargetTask` takes every collider in range, as the affinity task does.
+  - **Proof:** 4 red tests failed on the old code first. A control holds that a class that leaves `OnDestroy` alone
+    isn't warned about. 4 mutants, each undoing one branch of a fix, are all caught.
+  - **Next:** Phase 1's gate. Its exit criterion, the fault-injection and framework suites passing, is met by the
+    result above, so the 96 rows can move to `verified`.
+
 - 2026-11-03, **Phase 1, the rows the medium ones turned up.** PC-29, PC-30 and GAS-37 to GAS-42 are `fixed`. Two
   more turned up on the way, both open: PC-31 and GAS-43.
   - **Result:** 833 tests with no category filter: 826 pass, 0 fail, 7 planted skipped, in three orders. Planted
