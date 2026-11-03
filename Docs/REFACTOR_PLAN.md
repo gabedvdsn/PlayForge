@@ -195,6 +195,9 @@ from. It lives outside `Assets/` so it never ships in the package.
   untracked and ignored, and stay on disk (SP-17). History isn't rewritten, so the repo keeps their past size.
 - Decision 15, 2026-11-03: QuickOutline, whose header reserves all rights, is replaced by an outline of PlayForge's own
   in the Demo (SP-5).
+- Decision 16, 2026-11-03: the samples move to `Samples~`, Unity's layout for package samples (SP-20). Package Manager
+  lists them and imports one on request, and a fresh import contains none. Editing one in this repo means importing
+  it first. The Asset Store export copies them in on the packaging branch, beside the UniTask embedding.
 
 **Open. Ask the user; do not assume:**
 1. ~~**Uncommitted changes**~~: decided, see above.
@@ -212,6 +215,7 @@ from. It lives outside `Assets/` so it never ships in the package.
 13. ~~**What Combine does (GAS-27)**~~: decided, see above.
 14. ~~**Derived refreshes (GAS-27)**~~: decided, see above.
 15. ~~**QuickOutline (SP-5)**~~: decided, see above.
+16. ~~**Sample layout (SP-20)**~~: decided, see above.
 
 ## Roadmap
 
@@ -451,7 +455,7 @@ had no letter in the review. TS-AA onward came from the test project.
 | SP-17 | M | 2 | 842 MB and 206 MB of material packs tracked without LFS (Decisions 7) | repo | open |
 | SP-18 | M | 2 | Split from SP-16: the custom golden runner should move to the Unity Test Framework (B04), so `unity test` and CI report pass/fail | `PlayForgeGoldenTests.cs` | open |
 | SP-19 | C | 2 | Unused `using log4net.Appender` and `using Codice.CM.SEIDInfo` compiled only through the DLLs in `com.unity.collab-proxy`, so the Editor assembly failed in any project without that package | `AbstractRefDrawer.cs:5`, `ForgeDrawerStyles.cs:2` | fixed |
-| SP-20 | H | 2 | `Samples/` is neither `Samples~` nor covered by an asmdef, so as a package its 15 scripts never compile, Unity warns about each one on every compile, and the samples can't run | `Samples/` | open |
+| SP-20 | H | 2 | `Samples/` is neither `Samples~` nor covered by an asmdef, so as a package its 15 scripts never compile, Unity warns about each one on every compile, and the samples can't run | `Samples/` | fixed |
 | SP-21 | M | 2 | Editor UXML and USS break on a clean import: 4 `TypeLoadException`s from stale `…, Assembly-CSharp` type names (`FESGameplayAbilitySystem.GameRoot` and `.ProcessControl`, the removed `FrameworkIndex`, and `EAbilityActivationPolicyExtended`, which moved assembly), 9 invalid paths to assets outside the package (`Editor/Icons/Creator/ability.png`, `Assets/TextMesh Pro/…`), and an unknown `:last-child` pseudo class. Nothing references `forge_abilityDrawer.uxml`; the other two are default references in script `.meta` files, so check them against ED-20's dead UXML and USS | `fesgas_bootstrapper.uxml`, `forge_abilityDrawer.uxml`, `AbilityInspector.uss:52` | open |
 
 ### Missing features (Phase 5)

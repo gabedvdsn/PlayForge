@@ -10,5 +10,12 @@
   "hideInEditor": false,
   "dependencies": {
     "com.unity.ugui": "2.0.0"
-  }
+  },
+  "samples": [
+    {
+      "displayName": "Demos",
+      "description": "The Demo scene, the Swarm Defender game and the abilities, effects and entities they share. They import together, as they use each other's assets. The Demo needs the Input System package.",
+      "path": "Samples~/Demos"
+    }
+  ]
 }
