@@ -100,14 +100,21 @@ namespace FarEmerald.PlayForge
         /// For impact events - the impact data.
         /// </summary>
         public readonly ImpactData? ImpactData;
-        
+
+        /// <summary>
+        /// For an instant effect's removal, every impact it made, one per attribute, of which ImpactData is the
+        /// last. Its removal workers saw only that one (GAS-28). Empty otherwise.
+        /// </summary>
+        public readonly IReadOnlyList<ImpactData> Impacts;
+
         public EffectWorkerContext(
             IGameplayAbilitySystem system,
             IAttributeImpactCarrier carrier,
             FrameSummary frameSummary,
             ActionQueue actionQueue,
             int executeTicks = 0,
-            ImpactData? impactData = null)
+            ImpactData? impactData = null,
+            IReadOnlyList<ImpactData> impacts = null)
         {
             System = system;
             this.Carrier = carrier;
@@ -115,6 +122,7 @@ namespace FarEmerald.PlayForge
             ActionQueue = actionQueue;
             ExecuteTicks = executeTicks;
             ImpactData = impactData;
+            Impacts = impacts ?? global::System.Array.Empty<ImpactData>();
         }
     }
 }

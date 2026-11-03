@@ -31,6 +31,10 @@ namespace FarEmerald.PlayForge
         private readonly List<AbstractEffectContainer> FinishedEffects = new();
         private bool needsCleaning;
 
+        // Effects part way through applying here, and those already reported for asking to apply again (GAS-28)
+        private readonly HashSet<GameplayEffect> applying = new();
+        private readonly HashSet<GameplayEffect> reportedCycles = new();
+
         /// <summary>Live containers — read-only view (tag compilation, debuggers).</summary>
         public IReadOnlyList<AbstractEffectContainer> Shelf => EffectShelf;
 
@@ -65,27 +69,50 @@ namespace FarEmerald.PlayForge
             {
                 return false;
             }
-            
-            switch (spec.Base.DurationSpecification.DurationPolicy)
+
+            // Asked for again before its own application is over, an effect contains itself, through its contained
+            // effects or what applying it sets off. It recursed until the stack overflowed, which nothing catches (GAS-28)
+            if (!applying.Add(spec.Base))
             {
-                case EEffectDurationPolicy.Instant:
-                    ApplyInstantGameplayEffect(spec);
-                    break;
-                case EEffectDurationPolicy.Infinite:
-                case EEffectDurationPolicy.Durational:
-                    ApplyDurationalGameplayEffect(spec);
-                    break;
-                default:
-                    throw new ArgumentOutOfRangeException();
+                if (reportedCycles.Add(spec.Base))
+                {
+                    ForgeLog.Warning($"{spec.Base.GetName()} was applied again inside its own application, so that " +
+                                     "application is refused. An effect that contains itself, directly or through " +
+                                     "other effects, would recurse until the stack overflowed.", spec.Base);
+                }
+                return false;
             }
 
-            HandleGameplayEffects();
-
-            Self.GetCallbacks()?.EffectApplied(spec);
-
-            foreach (var containedEffect in spec.Base.ImpactSpecification.GetContainedEffects(EApplyTickRemove.OnApply))
+            try
             {
-                ApplyGameplayEffect(spec.GetOrigin(), containedEffect);
+                switch (spec.Base.DurationSpecification.DurationPolicy)
+                {
+                    case EEffectDurationPolicy.Instant:
+                        ApplyInstantGameplayEffect(spec);
+                        break;
+                    case EEffectDurationPolicy.Infinite:
+                    case EEffectDurationPolicy.Durational:
+                        ApplyDurationalGameplayEffect(spec);
+                        break;
+                    default:
+                        throw new ArgumentOutOfRangeException();
+                }
+
+                HandleGameplayEffects();
+
+                // Recorded where the callback fires, for analysis workers. Nothing recorded it (GAS-28)
+                Self.GetFrameSummary()?.RecordEffectApplied(spec);
+                Self.GetCallbacks()?.EffectApplied(spec);
+
+                foreach (var containedEffect in spec.Base.ImpactSpecification.GetContainedEffects(EApplyTickRemove.OnApply))
+                {
+                    ApplyGameplayEffect(spec.GetOrigin(), containedEffect);
+                }
+            }
+            finally
+            {
+                // A throw part way mustn't leave the effect refused here for good
+                applying.Remove(spec.Base);
             }
 
             return true;
@@ -107,16 +134,23 @@ namespace FarEmerald.PlayForge
             // Commit every OnApply entry, per attribute. Undefined/null attribute targets
             // early-out inside the attribute system — an instant effect can be pure
             // worker/tag utility.
-            ImpactData impactData = default;
+            //
+            // Every commit goes to the removal workers. They saw only the last, and an empty one, on no attribute,
+            // when nothing committed (GAS-28)
+            List<ImpactData> impacts = null;
             foreach (var attribute in spec.GetImpactedAttributes(EImpactDelivery.OnApply))
             {
-                impactData = AttributeSystem.CommitImpact(
+                var impact = AttributeSystem.CommitImpact(
                     attribute,
                     new SourcedModifiedAttributeValue(spec, 0f, 0f),
                     spec.GetImpactersFor(attribute, EImpactDelivery.OnApply));
+
+                // An attribute the target doesn't have commits nothing, and comes back empty
+                if (impact.Attribute is not null) (impacts ??= new List<ImpactData>(1)).Add(impact);
             }
 
-            spec.RunWorkerRemoval(new EffectWorkerContext(Self, spec, Self.GetFrameSummary(), Self.GetActionQueue(), 1, impactData));
+            spec.RunWorkerRemoval(new EffectWorkerContext(Self, spec, Self.GetFrameSummary(), Self.GetActionQueue(), 1,
+                impacts?[impacts.Count - 1], impacts));
             tagCache.RemoveTags(spec.Base.Tags.GrantedTags);
 
             HandleGameplayEffects();
@@ -430,6 +464,8 @@ namespace FarEmerald.PlayForge
                     Self.GetFrameSummary(), Self.GetActionQueue());
                 container.Spec.RunWorkerRemoval(effectContext);
 
+                // Recorded where the callback fires, as an application is (GAS-28)
+                Self.GetFrameSummary()?.RecordEffectRemoved(container.Spec.Base);
                 Self.GetCallbacks()?.EffectRemoved(container.Spec.Base);
             }
 
