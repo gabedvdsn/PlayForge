@@ -39,8 +39,9 @@
         /// <param name="runtime">Total runtime in milliseconds</param>
         /// <param name="multiplier">Conversion multiplier (default 1000 for ms)</param>
         /// <param name="unscaled"></param>
-        public int RemainingRuntime(int runtime, int multiplier = 1000, bool unscaled = true) 
-            => runtime - (unscaled ? (int)UnscaledLifetime : (int)Lifetime) * multiplier;
+        // Converted, then cut to whole units. Cut first, it lost up to a second (PC-25)
+        public int RemainingRuntime(int runtime, int multiplier = 1000, bool unscaled = true)
+            => runtime - (int)((unscaled ? UnscaledLifetime : Lifetime) * multiplier);
         
         /// <summary>
         /// Calculates remaining runtime based on elapsed update time.
