@@ -31,11 +31,6 @@ namespace FarEmerald.PlayForge.Extended.SwarmDefenderSample
         
         public static DemoInputConduit Input;
         
-        public GameplayEffect TestIntEffect;
-        public GameplayEffect TestIntEffect2;
-        public GameplayEffect TestIntEffect3;
-        public GameplayEffect TestIntEffect4;
-        
         // ═══════════════════════════════════════════════════════════════════════
         // Inspector
         // ═══════════════════════════════════════════════════════════════════════
@@ -125,17 +120,6 @@ namespace FarEmerald.PlayForge.Extended.SwarmDefenderSample
             RefreshLevelUpModal();
             RefreshGameOverPanel();
 
-            if (hero && Input.IsKeyDown(Key.P))
-            {
-                var intAttr = AttributeRegistry.GetByName("Intelligence");
-                var smav = SourcedModifiedAttributeValue.GenerateSimple(hero, intAttr, 18, 0);
-                hero.AttributeSystem.ModifyAttribute(smav);
-            }
-
-            if (hero && Input.IsKeyDown(Key.Digit1)) hero.ApplyGameplayEffect(hero.GenerateEffectSpec(hero, TestIntEffect));
-            if (hero && Input.IsKeyDown(Key.Digit2)) hero.ApplyGameplayEffect(hero.GenerateEffectSpec(hero, TestIntEffect2));
-            if (hero && Input.IsKeyDown(Key.Digit3)) hero.ApplyGameplayEffect(hero.GenerateEffectSpec(hero, TestIntEffect3));
-            if (hero && Input.IsKeyDown(Key.Digit4)) hero.ApplyGameplayEffect(hero.GenerateEffectSpec(hero, TestIntEffect4));
         }
 
         public override void WhenTerminate()

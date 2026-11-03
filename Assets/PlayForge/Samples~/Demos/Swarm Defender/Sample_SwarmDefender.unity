@@ -233,10 +233,6 @@ MonoBehaviour:
     rid: -2
   UseHandlerInstantiator: 0
   ParticipateInSiblingCascade: 1
-  TestIntEffect: {fileID: 11400000, guid: 6ea9eaf94f9c1254babdc95c541575e3, type: 2}
-  TestIntEffect2: {fileID: 11400000, guid: cf334c9bafcbcff45bcc7167c102746c, type: 2}
-  TestIntEffect3: {fileID: 11400000, guid: 786ebf0278255bd4ab06491deb61215a, type: 2}
-  TestIntEffect4: {fileID: 11400000, guid: 73bdc173a13e94246bb1d40ccc7ebbdc, type: 2}
   uiDocument: {fileID: 1602786369}
   heroPrefab: {fileID: -8216242127820092695, guid: 3e54571714d447740b91d46b2057ceff, type: 3}
   Scalers: []
