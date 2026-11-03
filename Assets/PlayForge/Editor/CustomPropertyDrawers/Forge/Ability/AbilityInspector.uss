@@ -49,7 +49,6 @@
     min-width: 56px;
     min-height: 56px;
     flex-shrink: 0;
-    background-image: url("project://database/Assets/PlayForge/Editor/Icons/Creator/ability.png");
     -unity-background-scale-mode: scale-to-fit;
     border-radius: var(--radius-small);
     border-width: 1px;
@@ -252,10 +251,6 @@
 .level-field {
     flex-grow: 1;
     margin-right: 8px;
-}
-
-.level-field:last-child {
-    margin-right: 0;
 }
 
 /* Usage Fields */
