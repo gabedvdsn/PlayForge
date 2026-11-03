@@ -107,7 +107,11 @@ namespace FarEmerald.PlayForge.Extended.Editor
     /// </summary>
     public static class TemplateRegistry
     {
-        private const string PREFS_KEY = "PlayForge_TemplateRegistry";
+        // Each project keeps an entry of its own. One entry served every project on the machine, and Save drops the
+        // templates whose assets the current project lacks, so saving in one project wiped every other's (ED-22).
+        // The shared entry is read once, to migrate, and never written again
+        private const string SHARED_PREFS_KEY = "PlayForge_TemplateRegistry";
+        private static string PrefsKey => SHARED_PREFS_KEY + "_" + PlayerSettings.productGUID.ToString("N");
         
         private static TemplateRegistryData _data;
         private static bool _isDirty;
@@ -134,7 +138,14 @@ namespace FarEmerald.PlayForge.Extended.Editor
         
         public static void Load()
         {
-            var json = EditorPrefs.GetString(PREFS_KEY, "");
+            _data = null;
+            var json = EditorPrefs.GetString(PrefsKey, "");
+
+            // The first load in a project takes its templates from the shared entry: Save keeps those whose assets
+            // are here. The shared entry stays as it was, for the projects that still read it
+            bool migrating = string.IsNullOrEmpty(json) && EditorPrefs.HasKey(SHARED_PREFS_KEY);
+            if (migrating) json = EditorPrefs.GetString(SHARED_PREFS_KEY, "");
+
             if (!string.IsNullOrEmpty(json))
             {
                 try
@@ -159,6 +170,8 @@ namespace FarEmerald.PlayForge.Extended.Editor
                 if (!_data.Tags.Any(t => t.Name == defaultTag.Name))
                     _data.Tags.Add(defaultTag);
             }
+
+            if (migrating) Save();
         }
         
         public static void Save()
@@ -172,7 +185,7 @@ namespace FarEmerald.PlayForge.Extended.Editor
             }
             
             var json = JsonUtility.ToJson(_data, false);
-            EditorPrefs.SetString(PREFS_KEY, json);
+            EditorPrefs.SetString(PrefsKey, json);
             _isDirty = false;
         }
         
