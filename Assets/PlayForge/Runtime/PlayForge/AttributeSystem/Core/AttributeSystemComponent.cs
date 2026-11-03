@@ -138,9 +138,14 @@ namespace FarEmerald.PlayForge
             // Regulate the Base scaler always; regulate Current's scaler only when it isn't
             // linked-to-Base (otherwise we'd register the same scaler instance twice for the
             // same owning attribute).
-            blueprint.SetElement.Base?.Scaling?.RegulateContactWith(attribute, RegulationCache);
-            if (!blueprint.SetElement.LinkCurrentToBase)
-                blueprint.SetElement.Current?.Scaling?.RegulateContactWith(attribute, RegulationCache);
+            //
+            // Every combined part's too, so one scaled from another attribute refreshes with it (GAS-27)
+            foreach (var part in blueprint.Parts)
+            {
+                part.SetElement.Base?.Scaling?.RegulateContactWith(attribute, RegulationCache);
+                if (!part.SetElement.LinkCurrentToBase)
+                    part.SetElement.Current?.Scaling?.RegulateContactWith(attribute, RegulationCache);
+            }
             
             AttributeRegistry.Add(attribute);
             Callbacks.AttributeRegister(attribute);

@@ -398,8 +398,8 @@ namespace FarEmerald.PlayForge
                     AttributeBlueprint blueprint = null;
                     if (defaults.Count > 0)
                     {
+                        // The first takes in the others, once each. It took itself, and each of the others twice (GAS-27)
                         blueprint = defaults[0];
-                        foreach (var bp in defaults) blueprint.Combine(bp);
                         for (int i = 1; i < defaults.Count; i++)
                         {
                             blueprint.Combine(defaults[i]);

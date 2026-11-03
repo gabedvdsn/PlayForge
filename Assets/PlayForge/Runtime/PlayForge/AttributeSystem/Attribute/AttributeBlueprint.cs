@@ -21,6 +21,19 @@ namespace FarEmerald.PlayForge
         public readonly AttributeSetElement SetElement;
         public readonly SourceAttributeImpact Derivation;
 
+        // The blueprints combined into this one, each resolved on its own and added in (GAS-27, Decision 13)
+        private readonly List<AttributeBlueprint> combined = new();
+
+        /// <summary>This blueprint and those combined into it, each with scalers of its own to regulate.</summary>
+        public IEnumerable<AttributeBlueprint> Parts
+        {
+            get
+            {
+                yield return this;
+                foreach (var part in combined) yield return part;
+            }
+        }
+
         public AttributeBlueprint(AttributeSetElement setElement, ISource owner)
         {
             SetElement = setElement;
@@ -32,18 +45,22 @@ namespace FarEmerald.PlayForge
             // EffectiveCurrent transparently switches to Base when LinkCurrentToBase is set —
             // resolving with isCurrent=true still projects the Current slot from the scaler
             // result, which matches author intent ("use Base's config for the Current side").
-            return new AttributeValue(
+            var value = new AttributeValue(
                 ResolveSide(SetElement.EffectiveCurrent, cache, isCurrent: true,  initial: true),
                 ResolveSide(SetElement.Base,             cache, isCurrent: false, initial: true)
             );
+            foreach (var part in combined) value += part.GetInitialValue(cache);
+            return value;
         }
 
         public AttributeValue GetActiveValue(IReadOnlyDictionary<IAttribute, CachedAttributeValue> cache)
         {
-            return new AttributeValue(
+            var value = new AttributeValue(
                 ResolveSide(SetElement.EffectiveCurrent, cache, isCurrent: true,  initial: false),
                 ResolveSide(SetElement.Base,             cache, isCurrent: false, initial: false)
             );
+            foreach (var part in combined) value += part.GetActiveValue(cache);
+            return value;
         }
 
         private float ResolveSide(
@@ -64,12 +81,11 @@ namespace FarEmerald.PlayForge
 
         public void Combine(AttributeBlueprint other)
         {
-            // Element-level Combine: base values bubble up. Combine semantics for the per-side
-            // scalers are not defined yet — current behaviour mirrors the prior single-magnitude
-            // path. Authors using Combine should be aware that scaler/RealMagnitude config from
-            // 'other' is not merged here.
-            // (Intentional no-op aside from RootValue accumulation already done at the
-            // AttributeValue level if needed.)
+            // Elements set to Combine add up: each resolves on its own, scalers included, and this blueprint's value is
+            // the sum. Bounds, rounding and retention group are this one's. It did nothing, so the first element stood
+            // alone (GAS-27, Decision 13). RootValue stays this element's own, as cached scalers read it per element
+            if (other is null || other == this || combined.Contains(other)) return;
+            combined.Add(other);
         }
     }
 }
