@@ -124,7 +124,8 @@ namespace FarEmerald.PlayForge
         {
             Callbacks?.SystemDisabled();
             
-            ProcessControl.Instance.Terminate(Relay.CacheIndex);
+            // One stepped by hand, outside ProcessControl, has no process to end. It threw (GAS-42)
+            if (Relay != null && ProcessControl.Instance) ProcessControl.Instance.Terminate(Relay.CacheIndex);
         }
         
         // ═══════════════════════════════════════════════════════════════════════════

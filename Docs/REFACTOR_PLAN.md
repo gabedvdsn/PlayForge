@@ -388,7 +388,7 @@ had no letter in the review. TS-AA onward came from the test project.
 | GAS-39 | L | 1 | `FrameSummarySnapshot` copies neither the applied and removed effects nor the deaths and ability injections, so `FrameComplete` listeners never see them | `FrameSummary.cs:356-367` | fixed |
 | GAS-40 | L | 1 | A set's `UseAverage` takes the first element, and `Ignore` throws | `AttributeSet.cs:423-458` | fixed |
 | GAS-41 | L | 1 | On `RelativeOperationContextImpactWorker`, `InlineAndDeferred` does the work twice, once inline and once queued, so lifesteal heals double. Hide the option there, or document it | `RelativeOperationContextImpactWorker.cs:22` | fixed |
-| GAS-42 | M | 1 | A runtime GAS's death dereferences `Relay`, per the review. Whether one can die without a relay isn't checked; verify first | `RuntimeGameplayAbilitySystem_EndOfFrame.cs:127` | red |
+| GAS-42 | M | 1 | A runtime GAS's death dereferences `Relay`, per the review. Whether one can die without a relay isn't checked; verify first | `RuntimeGameplayAbilitySystem_EndOfFrame.cs:127` | fixed |
 | GAS-P1 | M | 0 | `ActionQueue` LINQ allocations; snapshot built every frame (PF-006) | `ActionQueue.cs:41, 46, 156`, `FrameSummary.cs:340-351` | verified |
 | GAS-P2 | M | 0 | Tag and FrameSummary allocations (PF-007) | `TagCache.cs:60`, `TagQuery.cs:89-136`, `FrameSummary.cs:306-308` | verified |
 | GAS-P3 | M | 3 | Each application revalidates every container and rebuilds all tags (area application is quadratic) | `EffectSystemComponent.cs:312-348`, `GameplayAbilitySystem.cs:250-281` | open |

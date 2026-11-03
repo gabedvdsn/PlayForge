@@ -106,7 +106,8 @@ namespace FarEmerald.PlayForge
         {
             Callbacks?.SystemDisabled();
             
-            if (ProcessControl.Instance.TerminateImmediate(Relay.CacheIndex)) return;
+            // As the runtime hub's: one with no process to end is destroyed outright (GAS-42)
+            if (Relay != null && ProcessControl.Instance && ProcessControl.Instance.TerminateImmediate(Relay.CacheIndex)) return;
             
             
             Destroy(gameObject);
