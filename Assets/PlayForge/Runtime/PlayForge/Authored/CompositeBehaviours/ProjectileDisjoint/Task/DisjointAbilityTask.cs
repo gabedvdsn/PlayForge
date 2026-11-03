@@ -8,8 +8,8 @@ namespace FarEmerald.PlayForge
         public override bool IsCriticalSection => false;
         
         /// <summary>
-        /// Owner disjoints incoming targeted projectiles!
-        /// Disjoint behaviour is called
+        /// The owner disjoints: every homing shot aimed at it that's marked disjointable loses it, as
+        /// <see cref="DisjointProxyTaskBehaviour"/> describes. Skill shots aren't affected (GAS-36).
         /// </summary>
         /// <param name="data"></param>
         /// <param name="token"></param>

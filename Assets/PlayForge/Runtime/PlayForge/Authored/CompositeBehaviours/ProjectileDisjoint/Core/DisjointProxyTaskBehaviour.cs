@@ -6,6 +6,12 @@ using Cysharp.Threading.Tasks;
 
 namespace FarEmerald.PlayForge
 {
+    /// <summary>
+    /// A disjoint, as in Dota: the shots already aimed at an entity lose it, fly on to where it stood, and land on
+    /// nothing. A shot is found through the intent it registers with its target, which only a homing shot does
+    /// (<see cref="AbstractTargetedMonoProcess"/>), and only one whose data marks it <see cref="IS_DISJOINTABLE"/>
+    /// is disjointed. A skill shot, one that hits whatever it crosses, registers no intent, and lands as usual (GAS-36).
+    /// </summary>
     public class DisjointProxyTaskBehaviour : AbstractProxyTaskBehaviour
     {
         public static Tag IS_DISJOINTABLE => Tag.GenerateAsUnique("CB_IS_DISJOINTABLE");
@@ -14,6 +20,8 @@ namespace FarEmerald.PlayForge
         public override Tag Command => COMMAND;
 
         /// <summary>
+        /// Aims one shot at a placeholder where its target stood. A user that isn't a homing shot fails, and one not
+        /// marked disjointable is left alone.
         /// </summary>
         /// <param name="caller">The target (e.g. a GAS system)</param>
         /// <param name="user">The targeting entity (e.g. homing projectile)</param>

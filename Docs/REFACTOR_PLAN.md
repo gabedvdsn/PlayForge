@@ -175,6 +175,8 @@ from. It lives outside `Assets/` so it never ships in the package.
   workers, with no impact type: a worker that takes any type acts on it, and one that wants a type doesn't. The
   changes the system makes to itself keep `DisallowImpact`, and no worker sees them. Golden S15 now expects 42.5,
   since armor halves what the pre-change callback leaves of the raw -30.
+- Decision 10, 2026-11-03: a disjoint stops homing shots only, as in Dota. A skill shot, one that hits whatever it
+  crosses, registers no intent with a target and lands as usual. The disjoint's docs say so (GAS-36).
 
 **Open. Ask the user; do not assume:**
 1. ~~**Uncommitted changes**~~: decided, see above.
@@ -188,8 +190,7 @@ from. It lives outside `Assets/` so it never ships in the package.
    of the repo?
 8. ~~**Known-red tests**~~: decided, see above.
 9. ~~**Raw deltas and workers (GAS-25)**~~: decided, see above.
-10. **Disjoint and skill shots (GAS-36):** should a disjoint also stop a skill shot, one that hits whatever it
-    crosses? Dota leaves skill shots alone. If not, GAS-36 becomes a line in the docs.
+10. ~~**Disjoint and skill shots (GAS-36)**~~: decided, see above.
 
 ## Roadmap
 
@@ -354,7 +355,7 @@ had no letter in the review. TS-AA onward came from the test project.
 | GAS-24 | H | 1 | Infinite periodic effects ignore the tick-interval scaler (C05) | `GameplayEffectDuration.cs:158-161` | fixed |
 | GAS-25 | H | 1 | Raw deltas are tagged `DisallowImpact`, so workers skip them (C10). See Decision 9 | `SourcedModifiedAttributeValue.cs:40`, `ForgeHelper.cs:205` | fixed |
 | GAS-26 | H | 1 | Projectile disjoint re-targets the same caller, and its payloads pile up (C14). Its covering homing shots only is GAS-36 | `DisjointProxyTaskBehaviour.cs:53`, `DisjointTarget.cs:95`, `GameplayAbilitySystem.cs:230-233` | fixed |
-| GAS-36 | H | 1 | Projectile disjoint covers homing shots only: a skill shot registers no intent, so it lands in full on an entity that disjointed. Dota leaves skill shots alone. See Decision 10 | `DisjointProxyTaskBehaviour.cs`, `AbstractTargetedMonoProcess.cs` | open |
+| GAS-36 | H | 1 | Projectile disjoint covers homing shots only: a skill shot registers no intent, so it lands in full on an entity that disjointed. Dota leaves skill shots alone, and so does PlayForge, under Decision 10: the disjoint's docs say so | `DisjointProxyTaskBehaviour.cs`, `AbstractTargetedMonoProcess.cs` | fixed |
 | GAS-27 | M | 1 | Scalers and workers: `RandomizedScaler` re-rolls; `InlineAndDeferred` workers are dropped; `StandardWorkerGroup` NREs; set "Combine" double-counts; derived refresh bypasses workers | `RandomizedScaler.cs:29-46`, `ImpactWorkerCache.cs:119-129`, `StandardWorkerGroup.cs:30-89`, `AttributeSet.cs:401-430` | open |
 | GAS-28 | M | 1 | Effects: removal workers see only the last impact; contained OnApply recursion has no cycle guard; `RecordEffectApplied` and `RecordEffectRemoved` are never called | `EffectSystemComponent.cs:82-89, 110-119`, `FrameSummary.cs:154-157` | open |
 | GAS-29 | M | 1 | Target validation and range checks fail for a runtime GAS | `AbstractTargetingAbilityTask.cs:73, 89-91`, `CommonValidations.cs:132-138` | open |
@@ -471,6 +472,13 @@ GAS-4 with GAS-5, PC-6, and TS-I with PC-5.
 ## Log
 
 Record baselines, gate results and notable decisions here, newest first.
+
+- 2026-11-03, **GAS-36, after Decision 10.** A disjoint stops homing shots only, as in Dota, so GAS-36 is closed by
+  saying so: `DisjointProxyTaskBehaviour`, `DisjointTarget` and `DisjointAbilityTask` now describe what a disjoint
+  reaches. One of their summaries was empty and another stopped mid-sentence. 16 Phase 1 rows are still open: GAS-15
+  (Decision 4) and 15 medium.
+  - **Result:** 741 tests with no category filter: 734 pass, 0 fail, 7 planted skipped. The custom golden runner
+    passes 25/25. The change is to comments only, so one order was run.
 
 - 2026-11-03, **GAS-25, after Decision 9.** GAS-25 is `fixed`, so 39 of the 40 high rows are. 17 Phase 1 rows are
   still open: GAS-15 (Decision 4), GAS-36 (Decision 10) and 15 medium.

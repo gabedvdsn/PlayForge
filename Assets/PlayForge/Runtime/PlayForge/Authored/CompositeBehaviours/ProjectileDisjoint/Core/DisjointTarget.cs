@@ -5,7 +5,8 @@ using UnityEngine;
 namespace FarEmerald.PlayForge
 {
     /// <summary>
-    /// Modifications applied to disjoint targets are
+    /// The placeholder a disjointed shot is aimed at instead of its entity. It stays where the entity stood, has no
+    /// tags, and takes no effects, so the shot lands on nothing.
     /// </summary>
     public class DisjointTarget : ITarget
     {
