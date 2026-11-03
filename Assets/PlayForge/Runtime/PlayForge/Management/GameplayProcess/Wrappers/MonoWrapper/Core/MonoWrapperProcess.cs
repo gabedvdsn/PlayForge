@@ -101,7 +101,13 @@ namespace FarEmerald.PlayForge
                 if (activeMono.Instantiator is not null) activeMono.Instantiator.CleanProcess(activeMono);
                 else
                 {
-                    try { Object.Destroy(activeMono.gameObject); }
+                    // Destroy is refused outside play mode, where editor tools and edit-mode tests terminate processes;
+                    // there only DestroyImmediate works (PC-32)
+                    try
+                    {
+                        if (UnityEngine.Application.isPlaying) Object.Destroy(activeMono.gameObject);
+                        else Object.DestroyImmediate(activeMono.gameObject);
+                    }
                     catch { }
                 }
             }
