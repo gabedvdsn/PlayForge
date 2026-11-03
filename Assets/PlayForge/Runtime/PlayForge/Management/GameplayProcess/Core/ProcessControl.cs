@@ -46,6 +46,10 @@ namespace FarEmerald.PlayForge
         // The timing each block joined its step groups by, which is the one it leaves them by. A process's own can
         // change while it runs, and leaving by that left the block stepping where it had joined (PC-26)
         private Dictionary<int, EProcessStepTiming> _steppedAs = new();
+
+        // Blocks whose object wasn't active when they registered. Unity sends no OnDestroy to an object that was never
+        // active, so one destroyed before it woke left its block stepping with nothing behind it (PC-30)
+        private readonly List<int> _dormant = new();
         
         // Hierarchy management for MonoProcesses
         private ProcessHierarchy _hierarchy = new();
@@ -286,7 +290,32 @@ namespace FarEmerald.PlayForge
 
         private void Update()
         {
+            SweepDormant();
             StepProcesses(EProcessStepTiming.Update);
+        }
+
+        /// <summary>
+        /// Ends the block of each dormant process whose object has been destroyed, and stops watching those that woke,
+        /// whose OnDestroy will come (PC-30).
+        /// </summary>
+        private void SweepDormant()
+        {
+            for (int i = _dormant.Count - 1; i >= 0; i--)
+            {
+                if (!_active.TryGetValue(_dormant[i], out var pcb) || !pcb.Wrapper.TryGetProcess<AbstractMonoProcess>(out var mono))
+                {
+                    _dormant.RemoveAt(i);
+                }
+                else if (!mono)
+                {
+                    _dormant.RemoveAt(i);
+                    EndDestroyedProcess(pcb.Relay);
+                }
+                else if (mono.gameObject.activeInHierarchy)
+                {
+                    _dormant.RemoveAt(i);
+                }
+            }
         }
 
         private void LateUpdate()
@@ -418,6 +447,7 @@ namespace FarEmerald.PlayForge
             _gasProcesses = new Dictionary<IGameplayAbilitySystem, HashSet<int>>();
 
             _steppedAs = new Dictionary<int, EProcessStepTiming>();
+            _dormant.Clear();
 
             // Initialize stepping groups for each timing type
             _stepping = new Dictionary<EProcessStepTiming, StepGroup>
@@ -1008,6 +1038,7 @@ namespace FarEmerald.PlayForge
             // WhenInitialize applies the parent the process's data asks for after the hierarchy filed it, so it's filed
             // again where its transform now is. It stayed no one's child (PC-28)
             if (mono) _hierarchy.Reparent(mono.gameObject);
+            if (mono && !mono.gameObject.activeInHierarchy) _dormant.Add(pcb.CacheIndex);
 
             // Fire callbacks AFTER pcb.Initialize so state is fully consistent
             Callbacks?.ProcessRegistered(pcb.Relay, pcb.Wrapper.Data);
