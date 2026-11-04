@@ -41,6 +41,14 @@ tracks each fix below by its ID.
 - PlayForge works with domain reloading off (Enter Play Mode Options): each play session starts clean.
 - The Forge: its settings save, reset and refresh as labelled; Analysis hides the groups it can't analyse yet and says
   how much a list leaves out; the tag display settings apply everywhere.
+- An entity's affiliation is its own: the sides it registers with no longer change its Entity asset, and with it every
+  entity that shares the asset.
+- Unequipping an item takes back the ability that item granted, not another copy of it.
+- Abilities that activate immediately wait until the entity's attributes, items and tags exist, so an opening ability
+  with a cost activates.
+- An effect that only ticks on application lands its change.
+- An attribute set that includes itself, directly or through another set, no longer recurses forever, and a set reached
+  by two paths counts once.
 
 ### Removed
 - QuickOutline, replaced by the Demo's own outline.

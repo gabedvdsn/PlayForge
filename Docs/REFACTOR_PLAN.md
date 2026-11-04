@@ -559,6 +559,20 @@ GAS-4 with GAS-5, PC-6, and TS-I with PC-5.
 
 Record baselines, gate results and notable decisions here, newest first.
 
+- 2026-11-03, **Phase 3, the first five rows.** On `main`, GAS-47 (`fdc1886`), GAS-48 (`27c2325`), GAS-49
+  (`999e779`), GAS-50 (`e40b3b6`) and GAS-44 (`57ea4ff`) are `fixed`, one commit each, each pushed once its checks
+  passed. They are the runtime bugs the docs survey found.
+  - **Tests:** Proving Grounds' PlayMode suite runs 854 tests: 847 pass, 0 fail and 7 planted are skipped, in three
+    orders. Planted 7 of 7; EditMode 37 of 37. Each new test was seen failing first; GAS-44's loop case crashed the
+    run with a stack overflow, so the crash was its red.
+  - **Golden:** the 25 ported scenarios pass inside the PlayMode suite. The custom runner did not run, because the
+    user's editor holds PlayForge's project lock.
+  - **GAS-P2 held:** GAS-44's first fix allocated on every tag compile, and S18 caught it. The compiler now walks the
+    sets into reused buffers.
+  - **Waiting on the user:** GAS-45, implement or remove the two settings nothing reads.
+  - **Next:** GAS-S1, one GAS core for both hubs, so the performance rows that touch both (GAS-P3, GAS-P4) change one
+    place; then TS-5, TS-10, TS-8, TS-Z and PC-24.
+
 - 2026-11-03, **Phase 2 closed.** Its exit gate, a clean import into a fresh Unity 6 project with zero warnings and
   zero missing types, is met on `main` at `3cff9d4`, plain and with `--samples`. So all 39 Phase 2 rows move from
   `fixed` to `verified`.
