@@ -57,6 +57,10 @@ tracks each fix below by its ID.
   `OnActionQueued` or `OnActionExecuted` reads an action during the call. `ActionQueue.EnqueueRange` reads a list or
   an array by index, and `RelativeOperationContextImpactWorker.CreateDeferredActions` returns a list the worker
   reuses for its next action, so what it returns is queued at once.
+- Tags compare and hash by an ID each is given at run time, as it's made or loaded, so a lookup costs the same however
+  long a tag's name is. Nothing new is serialized. Two tags are still equal exactly when their names are, and a tag
+  whose `Name` is changed in place takes its new name's ID. `Tag.GetHashCode` no longer returns the name's hash, and
+  can differ from one run to the next.
 
 ### Fixed
 - Runtime correctness: 96 fixes across ProcessControl, TaskSequence and the GAS core, among them exception isolation,
