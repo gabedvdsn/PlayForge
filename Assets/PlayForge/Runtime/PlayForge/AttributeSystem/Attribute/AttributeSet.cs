@@ -55,26 +55,42 @@ namespace FarEmerald.PlayForge
             // ran twice for whatever it saw (GAS-18)
         }
 
+        /// <summary>
+        /// This set and every set below it, each once: this set, then each sub-set's in turn, depth first, the order
+        /// collisions resolve in. A set that included itself, directly or through another, sent every walk over the
+        /// sub-sets round forever, and one reached by two paths counted twice (GAS-44).
+        /// </summary>
+        public List<AttributeSet> SelfAndSubSets()
+        {
+            var order = new List<AttributeSet>();
+            CollectSelfAndSubSets(order, new HashSet<AttributeSet>());
+            return order;
+        }
+
+        /// <summary>
+        /// <see cref="SelfAndSubSets"/> into the caller's buffers, passing over any set already in
+        /// <paramref name="seen"/>. It allocates nothing once the buffers have grown, for walks that run often, such as
+        /// tag compiling (GAS-P2).
+        /// </summary>
+        public void CollectSelfAndSubSets(List<AttributeSet> into, HashSet<AttributeSet> seen)
+        {
+            if (!seen.Add(this)) return;
+            into.Add(this);
+            if (SubSets == null) return;
+            for (int i = 0; i < SubSets.Count; i++)
+            {
+                if (SubSets[i]) SubSets[i].CollectSelfAndSubSets(into, seen);
+            }
+        }
+
         public HashSet<IAttribute> GetUnique()
         {
             var attributes = new HashSet<IAttribute>();
-            foreach (var attr in Attributes)
+            foreach (var set in SelfAndSubSets())
             {
-                attributes.Add(attr.Attribute);
+                if (set.Attributes == null) continue;
+                foreach (var attr in set.Attributes) attributes.Add(attr.Attribute);
             }
-
-            if (SubSets is not null)
-            {
-                foreach (var subSet in SubSets)
-                {
-                    if (subSet is null || subSet == this) continue;
-                    foreach (var unique in subSet.GetUnique())
-                    {
-                        attributes.Add(unique);
-                    }
-                }
-            }
-
             return attributes;
         }
         public override string GetName()
@@ -83,11 +99,7 @@ namespace FarEmerald.PlayForge
         }
         public override IEnumerable<Tag> GetGrantedTags()
         {
-            yield return AssetTag;
-            foreach (var subset in SubSets)
-            {
-                foreach (var t in subset.GetGrantedTags()) yield return t;
-            }
+            foreach (var set in SelfAndSubSets()) yield return set.AssetTag;
         }
         public override BaseForgeLevelProvider LinkedProvider
         {
@@ -143,21 +155,11 @@ namespace FarEmerald.PlayForge
 
         public void InitWorkers(ISource system)
         {
-            WorkerGroup?.ProvideWorkersTo(system);
-            foreach (var subSet in SubSets)
-            {
-                if (!subSet) continue;
-                subSet.InitWorkers(system);
-            }
+            foreach (var set in SelfAndSubSets()) set.WorkerGroup?.ProvideWorkersTo(system);
         }
         public void RemoveWorkers(ISource system)
         {
-            WorkerGroup?.RemoveWorkersFrom(system);
-            foreach (var subSet in SubSets)
-            {
-                if (!subSet) continue;
-                subSet.RemoveWorkers(system);
-            }
+            foreach (var set in SelfAndSubSets()) set.WorkerGroup?.RemoveWorkersFrom(system);
         }
     }
 
@@ -357,13 +359,13 @@ namespace FarEmerald.PlayForge
         public AttributeSetMeta(AttributeSet attributeSet, ISource owner)
         {
             matrix = new Dictionary<IAttribute, Dictionary<EAttributeElementCollisionPolicy, List<AttributeBlueprint>>>();
-            HandleAttributeSet(attributeSet, owner);
+            if (!attributeSet) return;
+            foreach (var set in attributeSet.SelfAndSubSets()) HandleAttributeSet(set, owner);
         }
 
+        // One set's elements; the constructor walks the sets, each once (GAS-44)
         private void HandleAttributeSet(AttributeSet attributeSet, ISource owner)
         {
-            if (!attributeSet) return;
-            
             foreach (AttributeSetElement element in attributeSet.Attributes)
             {
                 if (!matrix.TryGetValue(element.Attribute, out var table))
@@ -377,8 +379,6 @@ namespace FarEmerald.PlayForge
                 }
                 else matrix[element.Attribute][element.CollisionPolicy].Add(new AttributeBlueprint(element, owner));
             }
-            
-            foreach (AttributeSet subSet in attributeSet.SubSets) HandleAttributeSet(subSet, owner);
         }
 
         public void InitializeAttributeSystem(AttributeSystemComponent system, AttributeSet attributeSet)

@@ -50,15 +50,20 @@ namespace FarEmerald.PlayForge
             for (int i = 0; i < tags.Count; i++) cache.AddTag(tags[i]);
         }
 
-        /// <summary>A set's asset tag, then its subsets' in turn, as <see cref="AttributeSet.GetGrantedTags"/> yields them.</summary>
+        // The set walk's buffers, kept so compiling allocates nothing and emptied after each walk
+        private static readonly List<AttributeSet> setWalk = new List<AttributeSet>();
+        private static readonly HashSet<AttributeSet> setsSeen = new HashSet<AttributeSet>();
+
+        /// <summary>
+        /// A set's asset tag, then its subsets' in turn, each set once, as <see cref="AttributeSet.GetGrantedTags"/>
+        /// yields them (GAS-44).
+        /// </summary>
         private static void AddAttributeSet(TagCache cache, AttributeSet set)
         {
-            cache.AddTag(set.AssetTag);
-            if (set.SubSets == null) return;
-            for (int i = 0; i < set.SubSets.Count; i++)
-            {
-                if (set.SubSets[i]) AddAttributeSet(cache, set.SubSets[i]);
-            }
+            set.CollectSelfAndSubSets(setWalk, setsSeen);
+            for (int i = 0; i < setWalk.Count; i++) cache.AddTag(setWalk[i].AssetTag);
+            setWalk.Clear();
+            setsSeen.Clear();
         }
     }
 }
