@@ -572,22 +572,24 @@ namespace FarEmerald.PlayForge
         #endregion
     }
 
+    // What an activation does when another holds its claim, which the inspectors show as When Busy. The names the
+    // inspectors show say the choice, as the Ability mockup does: Queue, not Queue Activation If Busy (ED-37)
     public enum EAbilityActivationPolicy
     {
         /// <summary>
         /// Do not restrict activation attempts to this ability
         /// </summary>
-        AlwaysActivate,
-        
+        [InspectorName("Activate Anyway")] AlwaysActivate,
+
         /// <summary>
         /// Activate this ability only if ability system is idle
         /// </summary>
-        ActivateIfIdle, 
-        
+        [InspectorName("Refuse")] ActivateIfIdle,
+
         /// <summary>
         /// If ability system is busy, queue activation attempt
         /// </summary>
-        QueueActivationIfBusy
+        [InspectorName("Queue")] QueueActivationIfBusy
     }
 
     public enum EAbilityActivationPolicyExtended
@@ -595,21 +597,21 @@ namespace FarEmerald.PlayForge
         /// <summary>
         /// Use whatever the local source policy is
         /// </summary>
-        UseLocalPolicy,
-        
+        [InspectorName("Entity's Policy")] UseLocalPolicy,
+
         /// <summary>
         /// Do not restrict activation attempts to this ability
         /// </summary>
-        AlwaysActivate,
-        
+        [InspectorName("Activate Anyway")] AlwaysActivate,
+
         /// <summary>
         /// Activate this ability only if ability system is idle
         /// </summary>
-        ActivateIfIdle,
-        
+        [InspectorName("Refuse")] ActivateIfIdle,
+
         /// <summary>
         /// If ability system is busy, queue activation attempt
         /// </summary>
-        QueueActivationIfBusy
+        [InspectorName("Queue")] QueueActivationIfBusy
     }
 }

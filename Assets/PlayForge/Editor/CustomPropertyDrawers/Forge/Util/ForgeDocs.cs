@@ -17,12 +17,13 @@ namespace FarEmerald.PlayForge.Extended.Editor
         private static readonly Dictionary<string, (string page, string heading)> Topics = new()
         {
             ["abilities"]                  = ("ABILITIES.md", null),
-            ["abilities/definition"]       = ("ABILITIES.md", "Definition"),
+            // The Identity and Requirements sections keep their first topic names, from Definition and Validation Rules
+            ["abilities/definition"]       = ("ABILITIES.md", "Identity"),
             ["abilities/tags"]             = ("ABILITIES.md", "Tags"),
-            ["abilities/runtime"]          = ("ABILITIES.md", "Runtime Behaviour"),
+            ["abilities/activation"]       = ("ABILITIES.md", "Activation"),
+            ["abilities/stages"]           = ("ABILITIES.md", "Stages"),
             ["abilities/leveling"]         = ("ABILITIES.md", "Leveling"),
-            ["abilities/level-source"]     = ("ABILITIES.md", "Level Source"),
-            ["abilities/validation"]       = ("ABILITIES.md", "Validation Rules"),
+            ["abilities/validation"]       = ("ABILITIES.md", "Requirements"),
             ["abilities/workers"]          = ("ABILITIES.md", "Workers"),
             ["abilities/localdata"]        = ("ABILITIES.md", "Local Data"),
             ["effects"]                    = ("EFFECTS.md", null),

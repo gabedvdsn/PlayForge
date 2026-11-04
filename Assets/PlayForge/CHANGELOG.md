@@ -15,6 +15,12 @@ tracks each fix below by its ID.
   or New, which makes one where The Forge puts its type and uses it. An effect field says under it how the effect takes
   its levels, with Link, and setting it no longer asks in a dialog; its template, a pick of unlinked effects and New
   Linked Effect are in its right-click menu (ED-38).
+- The Ability inspector's sections are Identity, Leveling, Tags, Activation, Stages, Requirements, Workers, Local Data
+  and Used By, as the other asset inspectors' follow the style doc. Activation holds When Busy (Activation Policy),
+  Activate At Start (Activate Immediately), Cost, Cooldown and the targeting; Stages holds the asset loaders and the
+  stages; Requirements holds the tag requirements and the Caster and Target Checks (Source and Target Rules). When Busy
+  shows its choices by what they do, in the Ability and Entity inspectors: Entity's Policy, Activate Anyway, Refuse and
+  Queue (ED-37).
 - The Attribute Set inspector's sections are Identity, Leveling, Attributes, Sub-Sets, Collision Settings, All
   Attributes, Workers, Local Data and Used By, as the Item and Entity inspectors' follow the style doc. All Attributes
   is a table of each attribute the set gives, its sub-sets' included, with the value it starts at and its range, settled

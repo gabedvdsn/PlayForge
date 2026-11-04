@@ -715,6 +715,14 @@ namespace FarEmerald.PlayForge.Extended.Editor
         protected static string LevelRange(int starting, int max) =>
             starting == max ? $"Level {starting}" : $"Levels {starting}–{max}";
 
+        /// <summary>The name an enum field shows for a value: its InspectorName, or its own name spaced out.</summary>
+        protected static string EnumName(Enum value)
+        {
+            var field = value.GetType().GetField(value.ToString());
+            var shown = field != null ? (InspectorNameAttribute)System.Attribute.GetCustomAttribute(field, typeof(InspectorNameAttribute)) : null;
+            return shown?.displayName ?? ObjectNames.NicifyVariableName(value.ToString());
+        }
+
         /// <summary>An asset's PlayForge name, or its file name when it has none, as Used By names it.</summary>
         protected static string NameOf(BaseForgeAsset asset) =>
             asset == null ? "None" : string.IsNullOrEmpty(asset.GetName()) ? asset.name : asset.GetName();

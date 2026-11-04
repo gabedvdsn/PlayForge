@@ -350,10 +350,12 @@ namespace FarEmerald.PlayForge.Extended.Editor
 
             // Activation Policy and Allow Duplicates bind to their properties, so an edit undoes. They wrote straight into
             // the asset, with no Undo (ED-12).
-            var policyField = new EnumField("Activation Policy", entity.ActivationPolicy)
+            // When Busy, as the mockup names it, with its choices by their own names, such as Queue (ED-37)
+            var policyField = new EnumField("When Busy", entity.ActivationPolicy)
             {
                 name = nameof(EntityIdentity.ActivationPolicy),
                 bindingPath = nameof(EntityIdentity.ActivationPolicy),
+                tooltip = "What happens when an ability set to the entity's policy is activated while another runs",
             };
             policyField.AddToClassList(BaseField<System.Enum>.alignedFieldUssClassName);
             content.Add(policyField);

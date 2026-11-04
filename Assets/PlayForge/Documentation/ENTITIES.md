@@ -67,12 +67,12 @@ unchanged.
 
 ## Abilities
 
-- **Activation Policy** (default Queue Activation If Busy): the entity's own policy, used by its abilities that are set
-  to Use Local Policy. Always Activate starts an ability at once. Activate If Idle starts it only when no ability under
-  that policy is busy, and refuses it otherwise. Queue Activation If Busy makes it wait in a queue while one is busy.
-  [ABILITIES.md](ABILITIES.md) explains each.
+- **When Busy** (default Queue): what the entity's abilities set to Entity's Policy do when one is asked to activate
+  while another is busy. Activate Anyway starts it at once. Refuse starts it only when no ability under that choice is
+  busy, and refuses it otherwise. Queue makes it wait in a queue while one is busy. [ABILITIES.md](ABILITIES.md)
+  explains each.
 - **Starting Abilities**: abilities the entity learns when its GAS initializes, each at its own Starting Level. Those
-  set to Activate Immediately then try to activate.
+  set to Activate At Start then try to activate.
 - **Max Abilities** (default 99), with **Real Max Abilities**, rounding and a scaler: the most abilities the entity can
   hold. A scaler can change the limit with the entity's level.
 - **Allow Duplicates** (default off): let the entity hold the same ability more than once.

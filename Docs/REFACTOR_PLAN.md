@@ -551,7 +551,7 @@ had no letter in the review. TS-AA onward came from the test project.
 | ED-34 | H | 4 | Opening a scaler writes to it while drawing. On an effect with no level link, Lock mode cuts its per-level table to one value; the other modes resize the table to Max Level, a Max Level of 0 or less becomes 10, and building the drawer clones a scaler that shares its reference id. Now nothing is written while drawing: a table keeps its length until the user changes it, and a shared scaler shows a warning with a button that makes a separate copy | `ScalerDrawer.cs:125-180, 285, 489-529` | fixed |
 | ED-36 | M | 4 | The asset header scrolls away with the content. It stays at the top of the inspector while the content scrolls under it (Decision 29), following the Inspector's scroll view by its events, so nothing polls (ED-11) | `BasePlayForgeEditor.cs` (`CreateInspectorGUI`), `ForgeAssetHeader.cs` (`StickTo`) | fixed |
 | ED-35 | M | 4 | Whole-asset import copies the template and level-link fields (`_template`, `_linkedSource`) and doesn't skip the nested `Definition.Name` | `BasePlayForgeEditor.cs` (`ImportFromAsset`) | open |
-| ED-37 | M | 4 | The asset inspectors don't follow `Docs/EDITOR_STYLE.md`: their sections stray from its order, Level Source sits apart from Leveling, a collapsed section shows nothing, sentences explain the fields, the link state sits in tinted boxes with colored borders, and many sections' Import and Clear only log a warning. Each inspector is redone in Phase 4's fifth step. Fixed so far: the Attribute (`ed6295a`, with ED-15), Item (`cf70e8f`), Entity (`a06a4fb`) and Attribute Set inspectors: the style doc's order, Leveling with the level link and its provider in Unity's object field, the asset tag under the name, a summary on each section, Import and Clear on each, Used By, and no look set in code; and the Entity mockup's attribute table, in the Entity and Attribute Set inspectors. Left: the Ability and Effect inspectors | `AbilityEditor.cs`, `EffectEditor.cs` | open |
+| ED-37 | M | 4 | The asset inspectors don't follow `Docs/EDITOR_STYLE.md`: their sections stray from its order, Level Source sits apart from Leveling, a collapsed section shows nothing, sentences explain the fields, the link state sits in tinted boxes with colored borders, and many sections' Import and Clear only log a warning. Each inspector is redone in Phase 4's fifth step. Fixed so far: the Attribute (`ed6295a`, with ED-15), Item (`cf70e8f`), Entity (`a06a4fb`), Attribute Set (`86ead05`) and Ability inspectors: the style doc's order, Leveling with the level link and its provider in Unity's object field, the asset tag under the name, a summary on each section, Import and Clear on each, Used By, and no look set in code; the Entity mockup's attribute table, in the Entity and Attribute Set inspectors; and the mockups' When Busy, in the Ability and Entity inspectors. Left: the Effect inspector | `EffectEditor.cs` | open |
 | ED-38 | M | 4 | An asset reference isn't Unity's object field: `AbstractRefDrawer` draws a button that opens a dropdown list of its own, with hover colors and Clear and Open icon buttons set in C#, and setting an effect asks in a dialog whether to link it. Now every asset reference is Unity's object field with a plain button beside it: Open, which shows the asset in a window of its own, or New, which makes one where The Forge puts its type, named and tagged, and uses it (Q15). An effect field says on a line under it how the effect takes its levels, with Link; its template, a pick of unlinked effects and New Linked Effect are in its right-click menu (Q18) | `AbstractForgeObjectDrawer.cs`, `GameplayEffectDrawer.cs` | fixed |
 | ED-39 | M | 4 | Opening an attribute set element can change the set: 50 ms after it draws, and on every change to the set, `AttributeSetElementDrawer` clamps a Current or Base magnitude that sits outside the element's bounds and applies it to the asset, so looking at a set marks it modified. The runtime clamps the same values as the entity starts. Now the drawer writes nothing as it draws: a help box says how the runtime clamps such a magnitude, and only a value typed into a Magnitude field is kept within the bounds, as part of the same edit. The drawer follows the style sheet | `AttributeSetElementDrawer.cs` | fixed |
 
@@ -571,9 +571,9 @@ Phase 2 part, and set Phase 4's direction.
    ED-21, ED-27 and ED-31; one runtime debugger for the GAS, Process and Tag views (Q4), with ED-4 and ED-5; and the
    Visualizer, with ED-9.
    The asset inspectors go one at a time, each following the style doc (ED-37): the Attribute, Item, Entity and
-   Attribute Set inspectors first (done), then the reference fields (ED-38, done), the Ability inspector, then the Effect
-   inspector with ED-2 and ED-3, then the Import window and shared scalers (ED-32, ED-33), which also free ED-12's
-   last part.
+   Attribute Set inspectors first (done), then the reference fields (ED-38, done), the Ability inspector (done), then
+   the Effect inspector with ED-2 and ED-3, then the Import window and shared scalers (ED-32, ED-33), which also free
+   ED-12's last part.
 
 ### Samples and packaging
 
@@ -657,6 +657,37 @@ GAS-4 with GAS-5, PC-6, and TS-I with PC-5.
 ## Log
 
 Record baselines, gate results and notable decisions here, newest first.
+
+- 2026-11-04, **Step 5: the Ability inspector (ED-37).** The redesign's fifth surface, after the other asset
+  inspectors' pattern and the Ability mockup.
+  - **Its sections:** Identity, Leveling, Tags, Activation, Stages, Requirements, Workers, Local Data and Used By.
+    Identity was Definition, and holds the asset tag under the name. Level Source merged into Leveling. Runtime
+    Behaviour, which came before Tags, split into Activation and Stages.
+  - **Activation** holds When Busy, Activate At Start, Cost, Cooldown and the targeting, as the mockup's does. Cost and
+    Cooldown sat in a tinted box at the end of Definition. Implicit Tag shows while Use Implicit Targeting is on; it
+    showed as the inspector opened, whatever the toggle said.
+  - **When Busy** is the mockups' name for Activation Policy, in the Ability and Entity inspectors. Its choices show by
+    what they do: Entity's Policy, Activate Anyway, Refuse and Queue. They showed the enums' names, such as Queue
+    Activation If Busy. The two enums carry `InspectorName`s, so every field of theirs shows the same names, and the
+    base editor's new `EnumName` reads them for the summaries.
+  - **Activate At Start** is the mockup's Activate When Granted, renamed to say what the runtime does: it tries the
+    ability only as the entity's GAS starts, for its Starting Abilities. An ability an item or code grants later
+    doesn't try it. Making such a grant try it would be a runtime change, so it waits for the user.
+  - **Requirements** holds the tag requirements, which sat in Tags, and the checks, which sat in Validation Rules:
+    Caster Checks and Target Checks, the mockup's names for Source and Target Rules. Clear empties the tag
+    requirements and leaves the checks, since an ability without its Cost and Cooldown checks would skip them.
+  - **Summaries,** such as "Queue · Fireball Cost · Fireball Cooldown", "3 stages" and "4 checks · 2 tag
+    requirements".
+  - **Multiple selection** works as before (ED-12). The targeting, the stages and the checks, which each ability keeps
+    of its own, ask for one ability.
+  - **Docs:** `ABILITIES.md` follows the inspector, and `ENTITIES.md` names When Busy. The help topics name the new
+    headings: `abilities/activation` and `abilities/stages` are new, and `abilities/runtime` and
+    `abilities/level-source` are gone.
+  - **Its tests,** `ED_37_The_Ability_inspector_keeps_the_style_docs_sections`,
+    `ED_37_The_Ability_inspector_sets_no_look_in_code` and `ED_37_The_Ability_inspector_lists_what_uses_it`, were seen
+    failing first. `ED_12_An_edit_in_the_Ability_inspector_undoes` finds the provider in Leveling now.
+  - **Tests:** PlayMode 949: 942 pass, 0 fail and 7 planted are skipped, in three orders. Planted 7 of 7; EditMode
+    395 of 395.
 
 - 2026-11-04, **ED-39: the attribute set element drawer.** It wrote to the set as it drew, and it drew in its own look.
   - **No write while drawing.** 50 ms after an element drew, and on every change to the set, it clamped a magnitude
