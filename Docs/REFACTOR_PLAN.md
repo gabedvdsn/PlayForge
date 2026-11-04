@@ -507,7 +507,7 @@ had no letter in the review. TS-AA onward came from the test project.
 | ED-9 | M | 4 | The Visualizer is blank for items and sets, and after a domain reload | `TheForge.Utilities.cs:344, 407-412` | open |
 | ED-10 | M | 2 | Analysis exposes "Not Implemented" groups and truncates silently | `TheForge.AnalysisTab.cs:362, 716, 1461, 1979-1991` | verified |
 | ED-11 | M | 4 | The sticky-header workaround and drawer timers poll forever, among them two 250 ms timers in each impact drawer | `BasePlayForgeEditor.cs:524-611`, `GameplayEffectDrawer.cs:147-152`, `GameplayEffectImpactDrawer.cs:71, 145` | open |
-| ED-12 | H | 4 | No Undo, multi-edit or prefab overrides. The inspectors wrote 42 edits straight into their asset, and only the 5 renames recorded Undo; no inspector took a multiple selection; six drawers copy their SerializedObject for one target, and two write while drawing. Fixed so far: Phase 2's part (a rename stores the tag in the same undoable step, and showing never writes), the Attribute inspector (its fields bind, it takes a multiple selection, and every inspector's header follows Undo), the MonoProcess inspector's multiple selection, and the Effect inspector's Description and Link Mode. Left: the Ability, Item, Entity and Attribute Set inspectors; Link and Unlink in every inspector; template assignment; the drawers' one-target copies; and the writes while drawing. A multiple selection in the Effect, Entity and Attribute Set inspectors, whose assets hold scalers, also waits for ScalerDrawer, which edits a one-target copy and changes with the scaler workflow the user is deciding | `AbilityEditor.cs:155-189, 743`, `EntityIdentityEditor.cs:790-919`, `BasePlayForgeEditor.cs` (`ShowTemplatePicker`), `TagDrawer.cs:104-109`, `AbstractTypeRefDrawer.cs:123-128`, `ScalerDrawer.cs:169-177` | open |
+| ED-12 | H | 4 | No Undo, multi-edit or prefab overrides. The inspectors wrote 42 edits straight into their asset, and only the 5 renames recorded Undo; no inspector took a multiple selection; six drawers copy their SerializedObject for one target, and two write while drawing. Fixed so far: Phase 2's part (a rename stores the tag in the same undoable step, and showing never writes), the Attribute inspector (its fields bind, it takes a multiple selection, and every inspector's header follows Undo), the MonoProcess inspector's multiple selection, and the Effect and Item inspectors' Description and Link Mode. Left: the Ability, Entity and Attribute Set inspectors; Link and Unlink in every inspector; template assignment; the drawers' one-target copies; and the writes while drawing. A multiple selection in the Effect, Entity and Attribute Set inspectors, whose assets hold scalers, also waits for ScalerDrawer, which edits a one-target copy and changes with the scaler workflow the user is deciding | `AbilityEditor.cs:155-189, 743`, `EntityIdentityEditor.cs:790-919`, `BasePlayForgeEditor.cs` (`ShowTemplatePicker`), `TagDrawer.cs:104-109`, `AbstractTypeRefDrawer.cs:123-128`, `ScalerDrawer.cs:169-177` | open |
 | ED-13 | M | 4 | Template propagation on save loads everything, opens a modal mid-save and records no Undo; the validator is empty | `ForgeTemplateProcessor.cs:45-52`, `ForgeTemplatePropagator.cs:201-229` | open |
 | ED-14 | H | 1 | The `GameplayEffectImpact` copy constructor drops affiliation and throws on null packets | `GameplayEffectImpact.cs:155-176` | verified |
 | ED-15 | M | 4 | "Validate All" is noisy and capped at 15; "Find All References" is a dialog | `TheForge.SettingsTab.cs:1808-1832`, `AttributeEditor.cs:261-273` | open |
@@ -623,6 +623,13 @@ GAS-4 with GAS-5, PC-6, and TS-I with PC-5.
 ## Log
 
 Record baselines, gate results and notable decisions here, newest first.
+
+- 2026-11-04, **ED-12, the Item inspector: Description and Link Mode undo.** As in the Effect inspector, both wrote
+  straight into the asset with no Undo, and Level Source and Leveling were drawn from the mode once. Both now bind,
+  and `OnAssetChanged` redraws the two sections when the mode changes, an Undo among them. Its test,
+  `ED_12_An_edit_in_the_Item_inspector_undoes`, was seen failing first.
+  - **Tests:** PlayMode 941: 934 pass, 0 fail and 7 planted are skipped, in three orders. Planted 7 of 7; EditMode
+    45 of 45.
 
 - 2026-11-04, **ED-12, the Effect inspector: Description and Link Mode undo.** The Effect inspector wrote its
   Description and Link Mode straight into the asset, with no Undo, and drew its Level Source section from the mode

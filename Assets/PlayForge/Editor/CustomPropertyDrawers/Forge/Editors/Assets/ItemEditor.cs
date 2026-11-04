@@ -15,6 +15,7 @@ namespace FarEmerald.PlayForge.Extended.Editor
         private Item item;
         private Label assetTagValueLabel;
         private VisualElement levelSourceContent;
+        private EItemLinkMode shownLinkMode;
         private VisualElement levelingContent;
         private VisualElement effectLinkStatusContainer;
         private VisualElement abilityLinkStatusContainer;
@@ -113,16 +114,10 @@ namespace FarEmerald.PlayForge.Extended.Editor
             });
             content.Add(nameField);
             
-            var descField = CreateTextField("Description", "Description", multiline: true, minHeight: 18);
-            descField.value = item.Definition.Description;
-            descField.RegisterCallback<FocusOutEvent>(_ =>
-            {
-                item.Definition.Description = descField.value;
-                MarkDirty(item);
-                UpdateHeader();
-                Repaint();
-            });
-            content.Add(descField);
+            // Description binds to its property, so an edit undoes. It wrote straight into the asset when it lost focus,
+            // with no Undo (ED-12).
+            content.Add(CreateBoundTextField($"{nameof(Item.Definition)}.{nameof(ItemDefinition.Description)}",
+                "Description", multiline: true, minHeight: 18, name: "Description"));
             
             var visibilityField = CreatePropertyField(definition.FindPropertyRelative(nameof(ItemDefinition.Visibility)), "Visibility", "Visibility");
             content.Add(visibilityField);
@@ -185,26 +180,29 @@ namespace FarEmerald.PlayForge.Extended.Editor
             RebuildLevelSourceContent();
         }
         
+        // Level Source and Leveling are drawn from the link mode, so they redraw when the mode changes, an Undo among
+        // them (ED-12)
+        protected override void OnAssetChanged()
+        {
+            if (levelSourceContent == null || item.LinkMode == shownLinkMode) return;
+            RebuildLevelSourceContent();
+            RebuildLevelingContent();
+        }
+
         protected override void RebuildLevelSourceContent()
         {
             levelSourceContent.Clear();
-            
+            shownLinkMode = item.LinkMode;
+
             var infoLabel = CreateHintLabel(
                 "Items typically use their own level. Optionally, link to another asset to inherit its level range.");
             infoLabel.style.marginBottom = 8;
             levelSourceContent.Add(infoLabel);
-            
-            var linkModeField = new EnumField("Link Mode", item.LinkMode);
+
+            // Link Mode binds to its property, so a change undoes, and OnAssetChanged redraws from it. It wrote the mode
+            // straight into the asset, with no Undo, and redrew only then (ED-12).
+            var linkModeField = new EnumField("Link Mode", item.LinkMode) { bindingPath = nameof(Item.LinkMode) };
             linkModeField.style.marginBottom = 6;
-            linkModeField.RegisterValueChangedCallback(evt =>
-            {
-                item.LinkMode = (EItemLinkMode)evt.newValue;
-                serializedObject.Update();
-                MarkDirty(item);
-                RebuildLevelSourceContent();
-                RebuildLevelingContent();
-                Repaint();
-            });
             levelSourceContent.Add(linkModeField);
             
             if (item.LinkMode == EItemLinkMode.LinkedToProvider)
