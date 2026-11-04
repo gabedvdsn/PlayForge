@@ -1,7 +1,7 @@
 # PlayForge refactor: code tour
 
 This tour lists the places where the refactor changed code, so you can open each one in your IDE and read it. It
-covers `01258b8..b50a80b` on `main`: 205 commits. Phase 0 ported Arcade Fighter's fixes, Phase 1 made the runtime
+covers `01258b8..e019b15` on `main`: 207 commits. Phase 0 ported Arcade Fighter's fixes, Phase 1 made the runtime
 correct, Phase 2 got the package ready to release, and Phase 3 has begun. Each entry says what behaves differently and
 why, names its tracker IDs and Decisions, and points at the two or three places to read. `Docs/REFACTOR_PLAN.md` has
 every tracker row, the numbered Decisions, and a Log of each batch's test results.
@@ -9,8 +9,8 @@ every tracker row, the numbered Decisions, and a Log of each batch's test result
 ## How to use this
 
 - Paths are relative to the repo root.
-- Line numbers are as of commit `b50a80b`, the head of `main` on 2026-11-03. A later commit may move them, so each
-  entry also names the class and method to search for. `git show b50a80b:<path>` shows a file as it was then.
+- Line numbers are as of commit `e019b15`, the head of `main` on 2026-11-03. A later commit may move them, so each
+  entry also names the class and method to search for. `git show e019b15:<path>` shows a file as it was then.
 - In Rider, Go to File accepts `path:line`. In Visual Studio, open the file, then Go To Line (Ctrl+G).
   A bare `:123` after a path means another line in the same file.
 - `git grep "<ID>"` finds the comment at each fix, and `git log --grep "<ID>"` finds its commit. Three exceptions:
@@ -29,9 +29,9 @@ every tracker row, the numbered Decisions, and a Log of each batch's test result
 ## Phase 3 so far
 
 Phase 3 began on `main` with the rows that writing the reference docs turned up, five runtime bugs and two settings
-nothing read, then gave the two GAS hubs one core (GAS-S1) and turned to cost (GAS-P3, GAS-P5, GAS-P4). Each has a
-test in Proving Grounds named after its ID, seen failing first; the runtime tests run on both hubs. The plan's Log has
-the gate results.
+nothing read, then gave the two GAS hubs one core (GAS-S1) and turned to cost (GAS-P3, GAS-P5, GAS-P4, GAS-P6). Each
+has a test in Proving Grounds named after its ID, seen failing first; the runtime tests run on both hubs. The plan's Log
+has the gate results.
 
 ### An entity's affiliation is its own (GAS-47)
 
@@ -233,10 +233,35 @@ removed entries through a lambda and built new ones (288), and a same-root tag q
   `GAS_P4_Refreshing_a_modifier_allocates_nothing` in `EffectCostTests`, and
   `GAS_P4_A_same_root_query_allocates_nothing` in `TagTests`.
 
+### A commit allocates nothing (GAS-P6)
+
+A commit made a `ChangeValue`, and a list of frozen impacters with a constant impacter for each. `TrackedImpact` kept a
+node for every impact, and the commit's sign check built a params array and summed it through LINQ. A frame in which an
+effect ticked and committed allocated 328 bytes. A commit a worker adjusted, as armor does, also wrapped the new delta
+in a carrier, and the worker's own sign check allocated. A frame now allocates nothing, with armor or without.
+
+- **IDs:** GAS-P6, commit `e019b15`. Found fixing GAS-P4.
+- **Read:**
+  - `Assets/PlayForge/Runtime/PlayForge/AttributeSystem/Core/AttributeSystemComponent.cs:281`, in
+    `CommitWithCarrier`, where a commit rents what it works with, and `:394`, where it gives it back. `RentScratch`
+    (`:419`) and `ReturnScratch` (`:426`) keep one set for each commit in progress.
+  - `Assets/PlayForge/Runtime/PlayForge/AttributeSystem/Core/AttributeSystemComponent.cs:433` `CommitScratch`.
+    `Freeze` (`:447`) evaluates each impacter once into a reused `FrozenImpacter` (`:501`), and `FreezeDelta` (`:467`)
+    freezes an adjusted delta's Adds (`:354`). `Release` (`:488`) leaves a kept change to its worker's actions.
+  - `Assets/PlayForge/Runtime/PlayForge/AttributeSystem/Core/AttributeChangeMomentHandler.cs:77`, where a deferred
+    worker is handed the change, which is then marked kept.
+  - `Assets/PlayForge/Runtime/PlayForge/GameplayEffect/Core/TrackedImpact.cs:14` `TrackedImpact.Add`, totals only.
+  - `Assets/PlayForge/Runtime/PlayForge/Utils/ForgeHelper.cs:53` `SignPolicy` for one value, and `:60` for two;
+    `SignPolicyExtended` is at `:72` and `:79`.
+- **Watch for:** a `ChangeValue` belongs to its commit. A callback or an inline worker reads it during the call, or
+  copies its `Value`, and doesn't keep it. A deferred worker's actions may keep it.
+- **Tests:** `GAS_P6_A_frame_in_which_an_effect_commits_allocates_nothing` and
+  `GAS_P6_A_frame_in_which_armor_adjusts_a_commit_allocates_nothing` in `EffectCostTests`.
+
 ### Still open in Phase 3
 
-Performance and structure work: GAS-P6 (a commit still allocates, about 1.4 KB a tick), GAS-P7 (tags hashed and
-compared as strings, which needs a design call), PC-24, TS-5, TS-8, TS-10 and TS-Z. GAS-51, item stacking that is
+Performance and structure work: GAS-P7 (tags hashed and compared as strings, which needs a design call), GAS-P8 (a raw
+delta and auto-scaling allocate their carriers), PC-24, TS-5, TS-8, TS-10 and TS-Z. GAS-51, item stacking that is
 declared but not built, moved to Phase 5 as FEAT-14, so an Item's `MaxStackSize` does nothing until then.
 
 ## ProcessControl
@@ -664,10 +689,10 @@ system's changes to itself, such as each attribute's startup pulse, stay `Disall
   then armor halves that.
 - **Read:**
   - `Assets/PlayForge/Runtime/PlayForge/AttributeSystem/Core/AttributeSystemComponent.cs:274`
-    `AttributeSystemComponent.CommitWithCarrier`. Phase 0 (freeze and preview) runs from `:284`, using
+    `AttributeSystemComponent.CommitWithCarrier`. Phase 0 (freeze and preview) runs from `:285`, using
     `CachedAttributeValue.PreviewCommit`
-    (`Assets/PlayForge/Runtime/PlayForge/AttributeSystem/Attribute/CachedAttributeValue.cs:306`) and
-    `ConstantImpacter.Snapshot` (`Assets/PlayForge/Runtime/PlayForge/GameplayEffect/Core/ConstantImpacter.cs:47`).
+    (`Assets/PlayForge/Runtime/PlayForge/AttributeSystem/Attribute/CachedAttributeValue.cs:306`). It froze through
+    `ConstantImpacter.Snapshot`; since GAS-P6 it freezes the same way in impacters it reuses.
   - `Assets/PlayForge/Runtime/PlayForge/GameplayEffect/Core/IAttributeImpactCarrier.cs:127`
     `SourceAttributeImpact.FromAdditiveDelta` (GAS-12).
   - `Assets/PlayForge/Runtime/PlayForge/AttributeSystem/Attribute/SourcedModifiedAttributeValue.cs:43`
@@ -757,7 +782,7 @@ The `GameplayEffectImpact` copy constructor keeps the affiliation and accepts an
     `EffectSystemComponent.ApplyGameplayEffect`. The guard is at `:96`, the record at `:125`.
   - `Assets/PlayForge/Runtime/PlayForge/GameplayEffect/Core/GameplayShelfContainer/AbstractEffectContainer.cs:87`
     `AbstractEffectContainer.OnRemove` (GAS-8), and `GetGrantedTags` (`:123`, GAS-14).
-  - `Assets/PlayForge/Runtime/PlayForge/Workers/Core/WorkerContext.cs:108` `EffectWorkerContext.Impacts`, filled by
+  - `Assets/PlayForge/Runtime/PlayForge/Workers/Core/WorkerContext.cs:110` `EffectWorkerContext.Impacts`, filled by
     `ApplyInstantGameplayEffect` (`Assets/PlayForge/Runtime/PlayForge/GAS/Core/EffectSystemComponent.cs:161`).
 - **New:** `EffectWorkerContext.Impacts`.
 - **Watch for:** an effect can no longer apply itself inside its own application.
@@ -792,8 +817,8 @@ followed a derived Base, and the frame summary never heard of it. It now takes t
 It's carried by the attribute's root, typed `DisallowImpact`, so a worker that checks impact types passes it by.
 
 - **IDs:** GAS-27 (part 5), Decision 14.
-- **Read:** `Assets/PlayForge/Runtime/PlayForge/AttributeSystem/Core/AttributeSystemComponent.cs:441`
-  `AttributeSystemComponent.RefreshRegulatedAttributes`. The new half starts at `:462`.
+- **Read:** `Assets/PlayForge/Runtime/PlayForge/AttributeSystem/Core/AttributeSystemComponent.cs:551`
+  `AttributeSystemComponent.RefreshRegulatedAttributes`. The new half starts at `:572`.
 
 #### Random scalers keep their roll (Decision 12)
 
@@ -1235,7 +1260,7 @@ Newest first. Each row is a good place to start reading.
 | Showing an asset never writes its tag; a rename is one Undo | ED-12 | `Assets/PlayForge/Editor/CustomPropertyDrawers/Forge/Editors/BasePlayForgeEditor.cs:996` | `4d71636` |
 | Delete names what uses the asset and moves it to the trash | ED-8 | `Assets/PlayForge/Editor/CustomPropertyDrawers/Forge/Util/ForgeAssetDeletion.cs:25` | `e89a9f7` |
 | The samples live in `Samples~` and import on request | SP-20, Decision 16 | `Assets/PlayForge/package.json:14` | `8d17bc0` |
-| A derived refresh runs the post-change pipeline | GAS-27, Decision 14 | `Assets/PlayForge/Runtime/PlayForge/AttributeSystem/Core/AttributeSystemComponent.cs:441` | `550d07b` |
+| A derived refresh runs the post-change pipeline | GAS-27, Decision 14 | `Assets/PlayForge/Runtime/PlayForge/AttributeSystem/Core/AttributeSystemComponent.cs:551` | `550d07b` |
 | Combined elements add up | GAS-27, Decision 13 | `Assets/PlayForge/Runtime/PlayForge/AttributeSystem/Attribute/AttributeBlueprint.cs:85` | `5244d99` |
 | The hierarchy follows transforms; SceneRoot spawns are GameRoot's children | PC-28, Decision 11 | `Assets/PlayForge/Runtime/PlayForge/Management/GameplayProcess/Core/ProcessControl.cs:1477` | `5f6c0eb` |
 | Commits land after the modifiers | GAS-15, Decision 4 | `Assets/PlayForge/Runtime/PlayForge/AttributeSystem/Attribute/CachedAttributeValue.cs:457` | `66b33ad` |
