@@ -1,7 +1,7 @@
 # PlayForge refactor: code tour
 
 This tour lists the places where the refactor changed code, so you can open each one in your IDE and read it. It
-covers `01258b8..0a29e6d` on `main`: 192 commits. Phase 0 ported Arcade Fighter's fixes, Phase 1 made the runtime
+covers `01258b8..5ccaa88` on `main`: 194 commits. Phase 0 ported Arcade Fighter's fixes, Phase 1 made the runtime
 correct, Phase 2 got the package ready to release, and Phase 3 has begun. Each entry says what behaves differently and
 why, names its tracker IDs and Decisions, and points at the two or three places to read. `Docs/REFACTOR_PLAN.md` has
 every tracker row, the numbered Decisions, and a Log of each batch's test results.
@@ -9,8 +9,8 @@ every tracker row, the numbered Decisions, and a Log of each batch's test result
 ## How to use this
 
 - Paths are relative to the repo root.
-- Line numbers are as of commit `0a29e6d`, the head of `main` on 2026-11-03. A later commit may move them, so each
-  entry also names the class and method to search for. `git show 0a29e6d:<path>` shows a file as it was then.
+- Line numbers are as of commit `5ccaa88`, the head of `main` on 2026-11-03. A later commit may move them, so each
+  entry also names the class and method to search for. `git show 5ccaa88:<path>` shows a file as it was then.
 - In Rider, Go to File accepts `path:line`. In Visual Studio, open the file, then Go To Line (Ctrl+G).
   A bare `:123` after a path means another line in the same file.
 - `git grep "<ID>"` finds the comment at each fix, and `git log --grep "<ID>"` finds its commit. Three exceptions:
@@ -28,8 +28,9 @@ every tracker row, the numbered Decisions, and a Log of each batch's test result
 
 ## Phase 3 so far
 
-Phase 3 began on `main` with five runtime bugs that writing the reference docs turned up. Each has a test in Proving
-Grounds named after its ID. The test runs on both hubs and was seen failing first. The plan's Log has the gate results.
+Phase 3 began on `main` with the rows that writing the reference docs turned up: five runtime bugs, and two settings
+nothing read. Each has a test in Proving Grounds named after its ID, seen failing first; the runtime tests run on both
+hubs. The plan's Log has the gate results.
 
 ### An entity's affiliation is its own (GAS-47)
 
@@ -111,11 +112,27 @@ everything that walked the sub-sets uses it.
 - **Tests:** `GAS_44_A_set_that_includes_itself_counts_once` and `GAS_44_A_set_reached_by_two_paths_counts_once` in
   `AttributeValueTests`.
 
+### Two settings nothing read are gone (GAS-45)
+
+An entity's Cap At Max and an item's Allow Duplicates were stored and shown, but nothing read them. The entity's level
+always stays between Starting Level and Max Level, and the entity's Allow Duplicate Items decides whether an inventory
+holds an item twice. Both fields are gone, with the runtime identity's copy, the two inspector toggles, and the values
+the package's entity assets stored. Code that set either no longer compiles.
+
+- **IDs:** GAS-45, commit `5ccaa88`. Removing them, not building them, was the user's call.
+- **Read:** what decides instead.
+  - `Assets/PlayForge/Runtime/PlayForge/GAS/Core/MonoBehaviour/GameplayAbilitySystem.cs:79` and
+    `Assets/PlayForge/Runtime/PlayForge/GAS/Core/Runtime/RuntimeGameplayAbilitySystem.cs:155`, where each hub
+    registers the level clamped to its range.
+  - `Assets/PlayForge/Runtime/PlayForge/ItemSystem/Core/ItemSystemComponent.cs:58`, in
+    `ItemSystemComponent.CanGiveItem`, where the entity's setting refuses a second copy.
+- **Removed:** `EntityIdentity.CapAtMaxLevel`, `RuntimeEntityIdentity.CapAtMaxLevel`, `ItemDefinition.AllowDuplicates`.
+- **Test:** `GAS_45_Settings_nothing_reads_are_gone` in `ForgeInspectorTests`, in EditMode.
+
 ### Still open in Phase 3
 
-GAS-45 waits on a decision: implement or remove two settings nothing reads, an Item's `AllowDuplicates` and an
-entity's `CapAtMaxLevel`. The rest are performance and structure work: GAS-S1, GAS-P3, GAS-P4, PC-24, TS-5, TS-8, TS-10
-and TS-Z.
+GAS-51 waits on the same kind of call: item stacking is declared but not built, so an Item's `MaxStackSize` does
+nothing. The rest are performance and structure work: GAS-S1, GAS-P3, GAS-P4, PC-24, TS-5, TS-8, TS-10 and TS-Z.
 
 ## ProcessControl
 
@@ -794,7 +811,9 @@ cleared, so they outlived the item.
   `ItemSpec.IsEquipped`.
 - **Fixed in Phase 3:** GAS-48, unequipping removed the Active Ability even when equipping hadn't granted it. See
   [Phase 3 so far](#phase-3-so-far).
-- **Still open:** GAS-45, an Item's `AllowDuplicates` is never read.
+- **Fixed in Phase 3:** GAS-45, an Item's `AllowDuplicates` was never read, and it is gone. See
+  [Phase 3 so far](#phase-3-so-far).
+- **Still open:** GAS-51, item stacking is declared but not built.
 
 ### Tags
 
@@ -851,7 +870,7 @@ runtime identity's were null and threw. A hub stepped by hand, outside ProcessCo
   above.
 - **Read:**
   - `Assets/PlayForge/Runtime/PlayForge/GAS/Core/Runtime/RuntimeGameplayAbilitySystem.cs:60`, the constructor
-    (`UpdateAndLate` at `:68`), and `RuntimeEntityIdentity(EntityIdentity)` at `:464` (GAS-9).
+    (`UpdateAndLate` at `:68`), and `RuntimeEntityIdentity(EntityIdentity)` at `:463` (GAS-9).
   - `Assets/PlayForge/Runtime/PlayForge/GAS/Core/Runtime/RuntimeGameplayAbilitySystem_EndOfFrame.cs:123` and
     `Assets/PlayForge/Runtime/PlayForge/GAS/Core/MonoBehaviour/GameplayAbilitySystem.EndOfFrame.cs:105`, each hub's
     `HandleDestruction` (GAS-42).
@@ -958,7 +977,7 @@ Golden Tests left the menu; the Test Runner runs the scenarios (SP-18).
 ### Inspector fixes
 
 - **ED-23.** An Item's Local Data can be edited; `ItemEditor` drew no section for it.
-  `Assets/PlayForge/Editor/CustomPropertyDrawers/Forge/Editors/Assets/ItemEditor.cs:878` `BuildLocalDataSection`.
+  `Assets/PlayForge/Editor/CustomPropertyDrawers/Forge/Editors/Assets/ItemEditor.cs:867` `BuildLocalDataSection`.
 - **ED-24.** `ParticipateInSiblingCascade` is drawn; it was hidden and drawn nowhere, though ProcessControl reads it.
   `Assets/PlayForge/Editor/CustomPropertyDrawers/Forge/Editors/AbstractMonoProcessEditor.cs:85`, in
   `CreateInspectorGUI`.
@@ -966,7 +985,7 @@ Golden Tests left the menu; the Test Runner runs the scenarios (SP-18).
   stacked when it reopened. `Assets/PlayForge/Editor/CustomPropertyDrawers/Forge/Editors/GASDebugger.cs:153`
   `OnDisable`, and `:320` `RemoveFrameSummaryHooks`.
 - **ED-29.** Allow Duplicate Equipped Items opens with its own value.
-  `Assets/PlayForge/Editor/CustomPropertyDrawers/Forge/Editors/Assets/EntityIdentityEditor.cs:928`, in
+  `Assets/PlayForge/Editor/CustomPropertyDrawers/Forge/Editors/Assets/EntityIdentityEditor.cs:915`, in
   `BuildItemsSection`.
 - **ED-30.** Local Data's ScriptableObject and MonoBehaviour rows each bind their own field.
   `Assets/PlayForge/Editor/CustomPropertyDrawers/Forge/Drawers/Other/DataWrapperDrawer.cs:128`, in `UpdateValueField`.
