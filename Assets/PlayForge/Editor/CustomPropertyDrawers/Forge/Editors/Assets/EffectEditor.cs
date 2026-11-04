@@ -95,11 +95,13 @@ namespace FarEmerald.PlayForge.Extended.Editor
             
             var nameField = CreateTextField("Name", "Name");
             nameField.value = effect.Definition.Name;
-            nameField.RegisterValueChangedCallback(_ => UpdateAssetTagDisplay());
+            // Typing previews the tag; leaving the field stores the name and the tag in one undoable step (ED-12)
+            nameField.RegisterValueChangedCallback(evt => UpdateAssetTagDisplay(evt.newValue));
             nameField.RegisterCallback<FocusOutEvent>(_ =>
             {
+                Undo.RecordObject(effect, "Rename Effect");
                 effect.Definition.Name = nameField.value;
-                UpdateAssetTagDisplay();
+                SyncAssetTag();
                 UpdateHeader();
                 MarkDirty(effect);
                 Repaint();
@@ -565,7 +567,7 @@ namespace FarEmerald.PlayForge.Extended.Editor
                 OnImportComplete = () =>
                 {
                     serializedObject.Update();
-                    UpdateAssetTagDisplay();
+                    SyncAssetTag();
                     UpdateHeader();
                     MarkDirty(effect);
                     Repaint();
@@ -573,7 +575,7 @@ namespace FarEmerald.PlayForge.Extended.Editor
                 OnClearComplete = () =>
                 {
                     serializedObject.Update();
-                    UpdateAssetTagDisplay();
+                    SyncAssetTag();
                     UpdateHeader();
                     MarkDirty(effect);
                     Repaint();
@@ -588,28 +590,25 @@ namespace FarEmerald.PlayForge.Extended.Editor
         // Helper Methods
         // ═══════════════════════════════════════════════════════════════════════════
 
-        private void UpdateAssetTagDisplay()
+        // Shows the tag a name gives: the stored name's, or the one being typed (ED-12)
+        private void UpdateAssetTagDisplay(string name = null) =>
+            ShowAssetTag(assetTagValueLabel, name ?? effect.Definition?.Name, "Effect", effect.Tags.AssetTag, SyncAssetTag);
+
+        // Stores the tag the name gives, then shows it (ED-12)
+        private void SyncAssetTag()
         {
-            if (assetTagValueLabel == null) return;
-            
-            var result = GenerateAssetTag(effect.Definition?.Name, "Effect");
-            assetTagValueLabel.text = result.result;
-            
-            if (!result.isUnknown)
+            StoreAssetTag(effect, effect.Definition?.Name, "Effect", effect.Tags.AssetTag, tag =>
             {
                 var tags = effect.Tags;
-                var assetTag = tags.AssetTag;
-                assetTag.Name = result.result;
-                assetTag.DisplayName = result.display;
-                tags.AssetTag = assetTag;
+                tags.AssetTag = tag;
                 effect.Tags = tags;
-            }
+            });
+            UpdateAssetTagDisplay();
         }
 
         protected override void Refresh()
         {
             serializedObject.Update();
-            UpdateAssetTagDisplay();
             UpdateAssetTagDisplay();
             RebuildLevelSourceContent();
             Repaint();

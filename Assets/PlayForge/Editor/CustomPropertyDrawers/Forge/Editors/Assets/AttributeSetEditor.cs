@@ -476,7 +476,7 @@ namespace FarEmerald.PlayForge.Extended.Editor
                 OnImportComplete = () =>
                 {
                     serializedObject.Update();
-                    UpdateAssetTagDisplay();
+                    SyncAssetTag();
                     UpdateHeader();
                     MarkDirty(attributeSet);
                     Repaint();
@@ -485,7 +485,7 @@ namespace FarEmerald.PlayForge.Extended.Editor
                 {
                     serializedObject.Update();
                     UpdateHeader();
-                    UpdateAssetTagDisplay();
+                    SyncAssetTag();
                     MarkDirty(attributeSet);
                     Repaint();
                 },
@@ -504,26 +504,18 @@ namespace FarEmerald.PlayForge.Extended.Editor
             
             var content = section.Content;
 
-            var nameField = CreatePropertyField(serializedObject.FindProperty(nameof(AttributeSet.Name)), label: "Name");
-            nameField.RegisterValueChangeCallback(evt =>
-            {
-                //attributeSet.Name = nameField.value;
-                //MarkDirty(attributeSet);
-                UpdateAssetTagDisplay();
-                UpdateHeader();
-                Repaint();
-            });
-            
-            /*var nameField = CreateTextField("Name", "Name");
+            // The name and the tag it gives change in one undoable step, as in the other asset editors (ED-12)
+            var nameField = CreateTextField("Name", "Name");
             nameField.value = attributeSet.Name;
             nameField.RegisterCallback<FocusOutEvent>(_ =>
             {
+                Undo.RecordObject(attributeSet, "Rename Attribute Set");
                 attributeSet.Name = nameField.value;
                 MarkDirty(attributeSet);
-                UpdateAssetTagDisplay();
+                SyncAssetTag();
                 UpdateHeader();
                 Repaint();
-            });*/
+            });
             content.Add(nameField);
             
             var descField = CreateTextField("Description", "Description", multiline: true, minHeight: 18);
@@ -574,7 +566,7 @@ namespace FarEmerald.PlayForge.Extended.Editor
                 OnImportComplete = () =>
                 {
                     serializedObject.Update();
-                    UpdateAssetTagDisplay();
+                    SyncAssetTag();
                     UpdateHeader();
                     MarkDirty(attributeSet);
                     Repaint();
@@ -583,7 +575,7 @@ namespace FarEmerald.PlayForge.Extended.Editor
                 {
                     serializedObject.Update();
                     UpdateHeader();
-                    UpdateAssetTagDisplay();
+                    SyncAssetTag();
                     MarkDirty(attributeSet);
                     Repaint();
                 },
@@ -628,7 +620,7 @@ namespace FarEmerald.PlayForge.Extended.Editor
                 OnImportComplete = () =>
                 {
                     serializedObject.Update();
-                    UpdateAssetTagDisplay();
+                    SyncAssetTag();
                     UpdateHeader();
                     MarkDirty(attributeSet);
                     Repaint();
@@ -637,7 +629,7 @@ namespace FarEmerald.PlayForge.Extended.Editor
                 {
                     serializedObject.Update();
                     UpdateHeader();
-                    UpdateAssetTagDisplay();
+                    SyncAssetTag();
                     MarkDirty(attributeSet);
                     Repaint();
                 },
@@ -684,7 +676,7 @@ namespace FarEmerald.PlayForge.Extended.Editor
                 OnImportComplete = () =>
                 {
                     serializedObject.Update();
-                    UpdateAssetTagDisplay();
+                    SyncAssetTag();
                     UpdateHeader();
                     MarkDirty(attributeSet);
                     Repaint();
@@ -693,7 +685,7 @@ namespace FarEmerald.PlayForge.Extended.Editor
                 {
                     serializedObject.Update();
                     UpdateHeader();
-                    UpdateAssetTagDisplay();
+                    SyncAssetTag();
                     MarkDirty(attributeSet);
                     Repaint();
                 },
@@ -741,7 +733,7 @@ namespace FarEmerald.PlayForge.Extended.Editor
                 OnImportComplete = () =>
                 {
                     serializedObject.Update();
-                    UpdateAssetTagDisplay();
+                    SyncAssetTag();
                     UpdateHeader();
                     MarkDirty(attributeSet);
                     Repaint();
@@ -750,7 +742,7 @@ namespace FarEmerald.PlayForge.Extended.Editor
                 {
                     serializedObject.Update();
                     UpdateHeader();
-                    UpdateAssetTagDisplay();
+                    SyncAssetTag();
                     MarkDirty(attributeSet);
                     Repaint();
                 },
@@ -822,7 +814,7 @@ namespace FarEmerald.PlayForge.Extended.Editor
                 OnImportComplete = () =>
                 {
                     serializedObject.Update();
-                    UpdateAssetTagDisplay();
+                    SyncAssetTag();
                     UpdateHeader();
                     MarkDirty(attributeSet);
                     Repaint();
@@ -830,7 +822,7 @@ namespace FarEmerald.PlayForge.Extended.Editor
                 OnClearComplete = () =>
                 {
                     serializedObject.Update();
-                    UpdateAssetTagDisplay();
+                    SyncAssetTag();
                     UpdateHeader();
                     MarkDirty(attributeSet);
                     Repaint();
@@ -845,20 +837,15 @@ namespace FarEmerald.PlayForge.Extended.Editor
         // Helper Methods
         // ═══════════════════════════════════════════════════════════════════════════
         
-        private void UpdateAssetTagDisplay()
+        private void UpdateAssetTagDisplay() =>
+            ShowAssetTag(assetTagValueLabel, attributeSet.Name, "AttributeSet", attributeSet.AssetTag, SyncAssetTag);
+
+        // Stores the tag the name gives, then shows it (ED-12)
+        private void SyncAssetTag()
         {
-            if (assetTagValueLabel == null) return;
-            
-            var result = GenerateAssetTag(attributeSet.Name, "AttributeSet");
-            assetTagValueLabel.text = result.result;
-            
-            if (!result.isUnknown)
-            {
-                var assetTag = attributeSet.AssetTag;
-                assetTag.Name = result.result;
-                assetTag.DisplayName = result.display;
-                attributeSet.AssetTag = assetTag;
-            }
+            StoreAssetTag(attributeSet, attributeSet.Name, "AttributeSet", attributeSet.AssetTag,
+                tag => attributeSet.AssetTag = tag);
+            UpdateAssetTagDisplay();
         }
         
         private void RefreshCounts()

@@ -117,7 +117,7 @@ namespace FarEmerald.PlayForge.Extended.Editor
                 OnImportComplete = () =>
                 {
                     serializedObject.Update();
-                    UpdateAssetTagDisplay();
+                    SyncAssetTag();
                     UpdateHeader();
                     MarkDirty(ability);
                     Repaint();
@@ -125,7 +125,7 @@ namespace FarEmerald.PlayForge.Extended.Editor
                 OnClearComplete = () =>
                 {
                     serializedObject.Update();
-                    UpdateAssetTagDisplay();
+                    SyncAssetTag();
                     UpdateHeader();
                     MarkDirty(ability);
                     Repaint();
@@ -150,8 +150,10 @@ namespace FarEmerald.PlayForge.Extended.Editor
             nameField.value = ability.Definition.Name;
             nameField.RegisterCallback<FocusOutEvent>(_ =>
             {
+                // The name and the tag it gives change in one undoable step (ED-12)
+                Undo.RecordObject(ability, "Rename Ability");
                 ability.Definition.Name = nameField.value;
-                UpdateAssetTagDisplay();
+                SyncAssetTag();
                 UpdateHeader();
                 MarkDirty(ability);
                 Repaint(); // Refresh IMGUI header
@@ -239,7 +241,7 @@ namespace FarEmerald.PlayForge.Extended.Editor
                 OnImportComplete = () =>
                 {
                     serializedObject.Update();
-                    UpdateAssetTagDisplay();
+                    SyncAssetTag();
                     UpdateHeader();
                     MarkDirty(ability);
                     Repaint();
@@ -247,7 +249,7 @@ namespace FarEmerald.PlayForge.Extended.Editor
                 OnClearComplete = () =>
                 {
                     serializedObject.Update();
-                    UpdateAssetTagDisplay();
+                    SyncAssetTag();
                     UpdateHeader();
                     MarkDirty(ability);
                     Repaint();
@@ -302,7 +304,7 @@ namespace FarEmerald.PlayForge.Extended.Editor
                 OnImportComplete = () =>
                 {
                     serializedObject.Update();
-                    UpdateAssetTagDisplay();
+                    SyncAssetTag();
                     UpdateHeader();
                     MarkDirty(ability);
                     Repaint();
@@ -310,7 +312,7 @@ namespace FarEmerald.PlayForge.Extended.Editor
                 OnClearComplete = () =>
                 {
                     serializedObject.Update();
-                    UpdateAssetTagDisplay();
+                    SyncAssetTag();
                     UpdateHeader();
                     MarkDirty(ability);
                     Repaint();
@@ -380,7 +382,7 @@ namespace FarEmerald.PlayForge.Extended.Editor
                 OnImportComplete = () =>
                 {
                     serializedObject.Update();
-                    UpdateAssetTagDisplay();
+                    SyncAssetTag();
                     UpdateHeader();
                     RebuildLevelingContent();
                     MarkDirty(ability);
@@ -389,7 +391,7 @@ namespace FarEmerald.PlayForge.Extended.Editor
                 OnClearComplete = () =>
                 {
                     serializedObject.Update();
-                    UpdateAssetTagDisplay();
+                    SyncAssetTag();
                     UpdateHeader();
                     RebuildLevelingContent();
                     MarkDirty(ability);
@@ -1022,7 +1024,7 @@ namespace FarEmerald.PlayForge.Extended.Editor
                 OnImportComplete = () =>
                 {
                     serializedObject.Update();
-                    UpdateAssetTagDisplay();
+                    SyncAssetTag();
                     UpdateHeader();
                     MarkDirty(ability);
                     Repaint();
@@ -1030,7 +1032,7 @@ namespace FarEmerald.PlayForge.Extended.Editor
                 OnClearComplete = () =>
                 {
                     serializedObject.Update();
-                    UpdateAssetTagDisplay();
+                    SyncAssetTag();
                     UpdateHeader();
                     MarkDirty(ability);
                     Repaint();
@@ -1084,7 +1086,7 @@ namespace FarEmerald.PlayForge.Extended.Editor
                 OnImportComplete = () =>
                 {
                     serializedObject.Update();
-                    UpdateAssetTagDisplay();
+                    SyncAssetTag();
                     UpdateHeader();
                     MarkDirty(ability);
                     Repaint();
@@ -1092,7 +1094,7 @@ namespace FarEmerald.PlayForge.Extended.Editor
                 OnClearComplete = () =>
                 {
                     serializedObject.Update();
-                    UpdateAssetTagDisplay();
+                    SyncAssetTag();
                     UpdateHeader();
                     MarkDirty(ability);
                     Repaint();
@@ -1132,7 +1134,7 @@ namespace FarEmerald.PlayForge.Extended.Editor
                 OnImportComplete = () =>
                 {
                     serializedObject.Update();
-                    UpdateAssetTagDisplay();
+                    SyncAssetTag();
                     UpdateHeader();
                     MarkDirty(ability);
                     Repaint();
@@ -1140,7 +1142,7 @@ namespace FarEmerald.PlayForge.Extended.Editor
                 OnClearComplete = () =>
                 {
                     serializedObject.Update();
-                    UpdateAssetTagDisplay();
+                    SyncAssetTag();
                     UpdateHeader();
                     MarkDirty(ability);
                     Repaint();
@@ -1155,23 +1157,19 @@ namespace FarEmerald.PlayForge.Extended.Editor
         // Helper Methods
         // ═══════════════════════════════════════════════════════════════════════════
 
-        private void UpdateAssetTagDisplay()
+        private void UpdateAssetTagDisplay() =>
+            ShowAssetTag(assetTagValueLabel, ability.Definition.Name, "Ability", ability.Tags.AssetTag, SyncAssetTag);
+
+        // Stores the tag the name gives, then shows it (ED-12)
+        private void SyncAssetTag()
         {
-            if (assetTagValueLabel == null) return;
-            
-            var result = GenerateAssetTag(ability.Definition.Name, "Ability");
-            assetTagValueLabel.text = result.result;
-            
-            // Sync the actual AssetTag.Name field
-            if (!result.isUnknown)
+            StoreAssetTag(ability, ability.Definition.Name, "Ability", ability.Tags.AssetTag, tag =>
             {
                 var tags = ability.Tags;
-                var assetTag = tags.AssetTag;
-                assetTag.Name = result.result;
-                assetTag.DisplayName = result.display;
-                tags.AssetTag = assetTag;
+                tags.AssetTag = tag;
                 ability.Tags = tags;
-            }
+            });
+            UpdateAssetTagDisplay();
         }
         
         private new void MarkDirty(Object obj)

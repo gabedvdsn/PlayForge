@@ -105,9 +105,11 @@ namespace FarEmerald.PlayForge.Extended.Editor
             nameField.value = entity.Name;
             nameField.RegisterCallback<FocusOutEvent>(_ =>
             {
+                // The name and the tag it gives change in one undoable step (ED-12)
+                Undo.RecordObject(entity, "Rename Entity");
                 entity.Name = nameField.value;
                 MarkDirty(entity);
-                UpdateAssetTagDisplay();
+                SyncAssetTag();
                 UpdateHeader();
                 Repaint();
             });
@@ -1010,20 +1012,14 @@ namespace FarEmerald.PlayForge.Extended.Editor
         // Helper Methods
         // ═══════════════════════════════════════════════════════════════════════════
         
-        private void UpdateAssetTagDisplay()
+        private void UpdateAssetTagDisplay() =>
+            ShowAssetTag(assetTagValueLabel, entity.Name, "Entity", entity.AssetTag, SyncAssetTag);
+
+        // Stores the tag the name gives, then shows it (ED-12)
+        private void SyncAssetTag()
         {
-            if (assetTagValueLabel == null) return;
-            
-            var result = GenerateAssetTag(entity.Name, "Entity");
-            assetTagValueLabel.text = result.result;
-            
-            if (!result.isUnknown)
-            {
-                var assetTag = entity.AssetTag;
-                assetTag.Name = result.result;
-                assetTag.DisplayName = result.display;
-                entity.AssetTag = assetTag;
-            }
+            StoreAssetTag(entity, entity.Name, "Entity", entity.AssetTag, tag => entity.AssetTag = tag);
+            UpdateAssetTagDisplay();
         }
 
         // ═══════════════════════════════════════════════════════════════════════════

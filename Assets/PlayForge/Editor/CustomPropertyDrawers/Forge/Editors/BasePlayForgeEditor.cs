@@ -985,6 +985,52 @@ namespace FarEmerald.PlayForge.Extended.Editor
             return string.IsNullOrEmpty(result) ? ($"{UnnamedAssetTag} {typeName}!", UnnamedAssetTag, true) : (result, string.Join("", words), false);
         }
 
+        private const string AssetTagUpdateName = "AssetTagUpdate";
+
+        /// <summary>
+        /// Shows the asset tag a name gives. When the stored tag differs, the label turns amber and an Update button
+        /// appears, which calls sync. Showing never writes: each asset editor rewrote the tag every time it built or
+        /// refreshed, with no Undo and no modified mark (ED-12).
+        /// </summary>
+        protected void ShowAssetTag(Label valueLabel, string assetName, string typeName, Tag stored, Action sync)
+        {
+            if (valueLabel == null) return;
+
+            var (result, display, isUnknown) = GenerateAssetTag(assetName, typeName);
+            var stale = !isUnknown && (stored.Name != result || stored.DisplayName != display);
+            valueLabel.text = result;
+            valueLabel.style.color = stale ? Colors.AccentYellow : Colors.AssetTagText;
+            valueLabel.tooltip = stale ? $"Stored as \"{stored.Name}\". Update stores the tag this name gives." : null;
+
+            var row = valueLabel.parent?.parent;
+            if (row == null) return;
+            var update = row.Q<Button>(AssetTagUpdateName);
+            if (update == null)
+            {
+                update = new Button { name = AssetTagUpdateName, text = "Update", tooltip = "Store the tag this name gives" };
+                update.style.marginLeft = 4;
+                row.Add(update);
+            }
+            update.clickable = new Clickable(sync);
+            update.style.display = stale ? DisplayStyle.Flex : DisplayStyle.None;
+        }
+
+        /// <summary>
+        /// Stores the tag a name gives, recorded for Undo and marked modified. A rename calls it in the same step as the
+        /// name's own change, so one Undo takes back both (ED-12).
+        /// </summary>
+        protected void StoreAssetTag(Object asset, string assetName, string typeName, Tag stored, Action<Tag> store)
+        {
+            var (result, display, isUnknown) = GenerateAssetTag(assetName, typeName);
+            if (isUnknown || (stored.Name == result && stored.DisplayName == display)) return;
+
+            Undo.RecordObject(asset, "Update Asset Tag");
+            stored.Name = result;
+            stored.DisplayName = display;
+            store(stored);
+            EditorUtility.SetDirty(asset);
+        }
+
         // ═══════════════════════════════════════════════════════════════════════════
         // Utility Methods
         // ═══════════════════════════════════════════════════════════════════════════
