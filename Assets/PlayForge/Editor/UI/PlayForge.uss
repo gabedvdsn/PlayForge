@@ -481,6 +481,30 @@
     display: none;
 }
 
+/* A button at the end of the foldout row, such as an impact's Remove (ED-3) */
+.pf-root .pf-element__action {
+    flex-shrink: 0;
+    margin: 0 0 0 4px;
+}
+
+/* A contained effect: when it's applied, then the effect, on one row */
+.pf-root .pf-contained-effect {
+    flex-direction: row;
+    align-items: center;
+}
+
+.pf-root .pf-contained-effect__policy {
+    width: 96px;
+    flex-shrink: 0;
+    margin-left: 0;
+}
+
+.pf-root .pf-contained-effect__effect {
+    flex-grow: 1;
+    flex-shrink: 1;
+    min-width: 0;
+}
+
 /* A two-button switch, as Current and Base: the button shown takes the pressed toolbar toggle's color */
 .pf-root .pf-segmented {
     flex-direction: row;

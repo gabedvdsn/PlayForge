@@ -14,7 +14,8 @@ All paths relative to `Assets/PlayForge/Runtime/PlayForge/`.
 Every authored impact is an **`AttributeImpactEntry`** on `GameplayEffectImpact.Entries`:
 `{ AttributeTarget, Delivery, Operation, TargetSlot, MultiplyBehaviour, SortOrder, Magnitude,
 RetentionGroupOverride, ImpactTypes }`. One effect may carry many entries across many
-attributes ("+10% speed while active AND 5 HP per tick" is one asset).
+attributes ("+10% speed while active AND 5 HP per tick" is one asset): the first derived from
+its impact's fields, then each of its `AdditionalImpacts` (§7).
 
 **Delivery decides everything** — there is deliberately no separate "retained?" or
 "reverse on removal?" switch:
@@ -262,17 +263,22 @@ blueprint scalers create live dependencies.
 
 ## 7. Entry derivation (no asset migration)
 
-**Entries are derived, never serialized.** The serialized authoring surface is the effect's
-single impact quad + duration flags; `GameplayEffectImpact.RebuildEntries` re-derives the
-entry list on **every `Generate()`**, so inspector edits (magnitude, attribute target,
-duration policy, tick flags) always take effect on the next application. `Magnitude` on the
-derived entry references the live `ScalerMagnitudeOperation`, so even already-registered
-modifiers re-evaluate new magnitudes on their next recompute.
+**The first entry is derived, never serialized.** The effect's impact quad + duration flags
+are its authored surface; `GameplayEffectImpact.RebuildEntries` re-derives that entry on
+**every `Generate()`**, so inspector edits (magnitude, attribute target, duration policy, tick
+flags) always take effect on the next application. `Magnitude` on the derived entry references
+the live `ScalerMagnitudeOperation`, so even already-registered modifiers re-evaluate new
+magnitudes on their next recompute.
 
-> Serializing entries was tried and reverted: `OnValidate` froze half-authored state into
-> assets (null targets, stale magnitudes, deliveries minted while the policy was still
-> Instant) and never re-synced. Do not reintroduce serialized entries until a dedicated
-> multi-entry drawer makes the entry list the *authored* surface.
+> Serializing the derived entry was tried and reverted: `OnValidate` froze half-authored state
+> into assets (null targets, stale magnitudes, deliveries minted while the policy was still
+> Instant) and never re-synced.
+
+**Additional impacts are authored entries** (ED-3). `GameplayEffectImpact.AdditionalImpacts`
+holds `AttributeImpactEntry` values that the impact drawer edits, each naming its own delivery,
+and `RebuildEntries` appends them, live, after the derived entry. One with no attribute is
+skipped, and so is one whose delivery the duration can't make (`IsDeliveryValidFor`), which the
+drawer flags in place.
 
 Delivery derivation (`ResolveDelivery`):
 

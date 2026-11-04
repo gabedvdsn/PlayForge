@@ -1,223 +1,229 @@
-﻿using UnityEditor;
+﻿using System.Collections.Generic;
+using System.Linq;
+using UnityEditor;
 using UnityEditor.UIElements;
-using UnityEngine;
 using UnityEngine.UIElements;
-using static FarEmerald.PlayForge.Extended.Editor.ForgeDrawerStyles;
 
 namespace FarEmerald.PlayForge.Extended.Editor
 {
+    /// <summary>
+    /// An effect's impact, in Docs/EDITOR_STYLE.md's terms and the Effect mockup's: the attribute, the operation, the
+    /// magnitude, then how the impact is delivered, which the duration gives it, and what a periodic one commits (ED-2).
+    /// Then its impact types and who it affects, its additional impacts, each with a delivery of its own, with Add Impact
+    /// (ED-3), and its contained effects. It no longer draws Reverse On Removal, which the impact model removed (ED-2),
+    /// and it takes its look from the style sheet: it drew tinted boxes with colored headings.
+    /// </summary>
     [CustomPropertyDrawer(typeof(GameplayEffectImpact))]
     public class GameplayEffectImpactDrawer : PropertyDrawer
     {
+        // The element that holds the additional impacts' entries, which an entry's Remove lets go of
+        internal const string EntriesName = "AdditionalImpacts";
+
         public override VisualElement CreatePropertyGUI(SerializedProperty property)
         {
-            var container = new VisualElement();
-            
-            // Main container with themed styling
-            //var mainBox = CreateMainContainer(Colors.AccentRed);
-            //container.Add(mainBox);
-            
-            // Header
-            //var header = CreateHeader(Icons.Impact, "Impact Specification", Colors.AccentRed);
-            //mainBox.Add(header);
-            
-            // ═══════════════════════════════════════════════════════════════════
-            // Target Section
-            // ═══════════════════════════════════════════════════════════════════
-            var targetSection = CreateSection("Target", Colors.SectionOrange);
-            container.Add(targetSection);
-            
-            var attrTargetField = new PropertyField(property.FindPropertyRelative(nameof(GameplayEffectImpact.AttributeTarget)), "Attribute");
-            attrTargetField.style.marginBottom = 2;
-            targetSection.Add(attrTargetField);
-            
-            var targetRow = new VisualElement();
-            targetRow.style.flexDirection = FlexDirection.Row;
-            targetRow.style.marginBottom = 2;
-            
-            var targetImpactField = new PropertyField(property.FindPropertyRelative(nameof(GameplayEffectImpact.TargetImpact)), "Target");
-            targetImpactField.style.flexGrow = 1;
-            targetImpactField.style.marginRight = 4;
-            targetRow.Add(targetImpactField);
-            
-            var impactOpField = new PropertyField(property.FindPropertyRelative(nameof(GameplayEffectImpact.ImpactOperation)), "Operation");
-            impactOpField.style.flexGrow = 1;
-            targetRow.Add(impactOpField);
+            var root = new VisualElement { name = "ImpactRoot" };
+            // The style sheet lays out the impact, wherever the drawer is drawn (ED-20)
+            ForgeTheme.Apply(root);
 
-            targetSection.Add(targetRow);
+            var attributeProp    = property.FindPropertyRelative(nameof(GameplayEffectImpact.AttributeTarget));
+            var slotProp         = property.FindPropertyRelative(nameof(GameplayEffectImpact.TargetImpact));
+            var operationProp    = property.FindPropertyRelative(nameof(GameplayEffectImpact.ImpactOperation));
+            var multiplyProp     = property.FindPropertyRelative(nameof(GameplayEffectImpact.MultiplyBehaviour));
+            var magnitudeProp    = property.FindPropertyRelative(nameof(GameplayEffectImpact.MagnitudeOperation));
+            var typesProp        = property.FindPropertyRelative(nameof(GameplayEffectImpact.ImpactTypes));
+            var affiliationProp  = property.FindPropertyRelative(nameof(GameplayEffectImpact.AffiliationPolicy));
+            var comparisonProp   = property.FindPropertyRelative(nameof(GameplayEffectImpact.AffiliationComparison));
+            var affiliationsProp = property.FindPropertyRelative(nameof(GameplayEffectImpact.Affiliations));
+            var additionalProp   = property.FindPropertyRelative(nameof(GameplayEffectImpact.AdditionalImpacts));
+            var packetsProp      = property.FindPropertyRelative(nameof(GameplayEffectImpact.Packets));
 
-            // Multiply Behaviour — only meaningful when ImpactOperation = Multiply.
-            // Hidden otherwise to avoid clutter. It follows the operation as it changes, an Undo among them; it
-            // re-checked a stale copy of the operation every 250 ms, so it never saw an Undo (ED-11).
-            var multBehaviourField = new PropertyField(property.FindPropertyRelative(nameof(GameplayEffectImpact.MultiplyBehaviour)), "Multiply Behaviour");
-            multBehaviourField.tooltip =
-                "How this Multiply impacter composes with multiply impacters from OTHER carriers " +
-                "on the same attribute slot.\n\n" +
-                "• Multiplicative (default) — each multiply compounds: ×1.5 × ×1.5 → ×2.25.\n" +
-                "• AdditiveBonus — bonuses sum, then one final multiply: +50% & +50% → ×2.0 (not ×2.25). " +
-                "Use for diminishing-returns-style buffs that shouldn't exponentially stack.";
-            multBehaviourField.style.marginTop = 2;
-            targetSection.Add(multBehaviourField);
-
-            void RefreshMultiplyBehaviourVisibility()
+            // ─── The first impact ──────────────────────────────────────────────
+            root.Add(new PropertyField(attributeProp, "Attribute"));
+            var operation = new ImpactFields.OperationField(operationProp, slotProp);
+            root.Add(operation);
+            // Shown for Multiply, which it qualifies. It followed a stale copy of the operation every 250 ms (ED-11)
+            var multiply = new EnumField("Multiply Behaviour")
             {
-                var opProp = property.FindPropertyRelative(nameof(GameplayEffectImpact.ImpactOperation));
-                bool isMultiply = opProp != null
-                                  && opProp.enumValueIndex == (int)ECalculationOperation.Multiply;
-                multBehaviourField.style.display = isMultiply ? DisplayStyle.Flex : DisplayStyle.None;
-            }
-            RefreshMultiplyBehaviourVisibility();
-            multBehaviourField.TrackPropertyValue(property.FindPropertyRelative(nameof(GameplayEffectImpact.ImpactOperation)),
-                _ => RefreshMultiplyBehaviourVisibility());
+                name = "MultiplyBehaviour",
+                tooltip = "How this multiply combines with others on the attribute: each compounds, or the bonuses add first",
+            };
+            multiply.AddToClassList(EnumField.alignedFieldUssClassName);
+            multiply.AddToClassList("pf-dependent");
+            multiply.BindProperty(multiplyProp);
+            root.Add(multiply);
+            root.Add(new PropertyField(magnitudeProp, "Magnitude"));
 
-            var affSection = CreateSubsection("Affiliation", "Affiliation", Colors.SectionRed);
-            
-            var affiliationField = new PropertyField(property.FindPropertyRelative(nameof(GameplayEffectImpact.AffiliationPolicy)), "Policy");
-            affSection.Add(affiliationField);
-            
-            var affiliationComparisonField = new PropertyField(property.FindPropertyRelative(nameof(GameplayEffectImpact.AffiliationComparison)), "Comparison");
-            affSection.Add(affiliationComparisonField);
-            
-            var affiliationListField = new PropertyField(property.FindPropertyRelative(nameof(GameplayEffectImpact.Affiliations)), "Affiliations");
-            affSection.Add(affiliationListField);
-            
-            affiliationField.RegisterValueChangeCallback(evt =>
+            // How the runtime delivers it, which the duration decides, and how often a periodic one lands. The drawer
+            // didn't say, and drew Reverse On Removal, which nothing reads since commits stay (ED-2)
+            var delivery = ImpactFields.ValueRow("Delivery", "Delivery", "When the impact lands, which the effect's duration gives it");
+            root.Add(delivery);
+            var commits = ImpactFields.ValueRow("Commits", "Commits", "How many times a periodic impact lands, at the effect's first level");
+            root.Add(commits);
+            var deliveryNote = new HelpBox("", HelpBoxMessageType.Info) { name = "DeliveryNote" };
+            root.Add(deliveryNote);
+
+            root.Add(new PropertyField(typesProp, "Impact Types"));
+
+            // Who it affects: Comparison asks of every choice but Always Allow, and the list only of its own choice
+            var affiliation = new EnumField("Affiliation")
             {
-                EAffiliationPolicy policy = (EAffiliationPolicy)evt.changedProperty.enumValueIndex;
-                affiliationListField.style.display = policy == EAffiliationPolicy.UseAffiliationList ? DisplayStyle.Flex : DisplayStyle.None;
+                name = "AffiliationPolicy",
+                tooltip = "Whom the effect may change, by their affiliation and its source's",
+            };
+            affiliation.AddToClassList(EnumField.alignedFieldUssClassName);
+            affiliation.BindProperty(affiliationProp);
+            root.Add(affiliation);
+            var comparison = new EnumField("Comparison")
+            {
+                name = "AffiliationComparison",
+                tooltip = "Whether any one affiliation is enough, or all of them must match",
+            };
+            comparison.AddToClassList(EnumField.alignedFieldUssClassName);
+            comparison.AddToClassList("pf-dependent");
+            comparison.BindProperty(comparisonProp);
+            root.Add(comparison);
+            var affiliations = new PropertyField(affiliationsProp, "Affiliations") { name = "Affiliations" };
+            root.Add(affiliations);
+
+            // ─── Additional impacts, each its own entry, then Add Impact ─────────
+            var entries = new VisualElement { name = EntriesName };
+            root.Add(entries);
+            var addRow = new VisualElement { name = "AddImpactRow" };
+            addRow.AddToClassList("pf-button-row");
+            addRow.Add(new Button(() => AddImpact(property))
+            {
+                name = "AddImpact",
+                text = "Add Impact",
+                tooltip = "Adds an impact on another attribute, or the same one, with a delivery of its own",
             });
-            
-            targetSection.Add(affSection);
-            
-            // ═══════════════════════════════════════════════════════════════════
-            // Magnitude Section
-            // ═══════════════════════════════════════════════════════════════════
-            var magnitudeSection = CreateSection("Impact Magnitude", Colors.SectionBlue);
-            container.Add(magnitudeSection);
-            
-            var magnitudeField = new PropertyField(property.FindPropertyRelative(nameof(GameplayEffectImpact.MagnitudeOperation)), "");
-            magnitudeField.style.marginBottom = 2;
-            magnitudeSection.Add(magnitudeField);
-            
-            // ═══════════════════════════════════════════════════════════════════
-            // Behavior Section
-            // ═══════════════════════════════════════════════════════════════════
-            var behaviorSection = CreateSection("Behavior", Colors.SectionPurple);
-            container.Add(behaviorSection);
-            
-            var impactTypesField = new PropertyField(property.FindPropertyRelative(nameof(GameplayEffectImpact.ImpactTypes)), "Impact Types");
-            impactTypesField.style.marginBottom = 4;
-            behaviorSection.Add(impactTypesField);
-            
-            var behaviorRow = new VisualElement();
-            behaviorRow.style.flexDirection = FlexDirection.Row;
-            behaviorRow.style.alignItems = Align.Center;
-            behaviorRow.style.marginBottom = 2;
-            
-            var reverseField = new PropertyField(property.FindPropertyRelative(nameof(GameplayEffectImpact.ReverseImpactOnRemoval)), "Reverse On Removal");
-            reverseField.style.flexGrow = 1;
-            reverseField.tooltip =
-                "Reverses the impact when the effect is removed.\n\n" +
-                "• Sustained-modifier effects (durational, no per-tick contributions) reverse " +
-                "AUTOMATICALLY via recompute on removal — this flag is redundant for them.\n" +
-                "• Periodic-tick effects (impact committed past the impacter list each tick) " +
-                "DO need this flag to negate their tracked total on removal.\n" +
-                "• Instant effects have no removal phase — flag is meaningless.";
-            behaviorRow.Add(reverseField);
+            root.Add(addRow);
 
-            behaviorSection.Add(behaviorRow);
-
-            // Hide the Reverse field entirely when DurationPolicy is Instant — the flag has
-            // no effect at runtime in that case (instant effects don't get a removal phase).
-            // It follows the effect's duration policy as it changes; it re-checked every 250 ms (ED-11).
-            void RefreshReverseFieldVisibility()
+            root.Add(new PropertyField(packetsProp, "Contained Effects")
             {
-                if (property.serializedObject?.targetObject is not GameplayEffect ge ||
-                    ge.DurationSpecification == null)
+                tooltip = "Effects this one applies as it's applied, on each tick, or as it's removed",
+            });
+
+            // ─── Behaviour ─────────────────────────────────────────────────────
+            int shownEntries = -1;
+            void ShowEntries(bool bind)
+            {
+                int count = additionalProp.arraySize;
+                if (count == shownEntries && entries.childCount == count) return;
+                shownEntries = count;
+                entries.Clear();
+                for (int i = 0; i < count; i++)
                 {
-                    reverseField.style.display = DisplayStyle.Flex;
-                    return;
+                    var entry = new PropertyField(additionalProp.GetArrayElementAtIndex(i), "");
+                    entries.Add(entry);
+                    // Drawn again after the panel bound the drawer, so each binds itself
+                    if (bind) entry.Bind(property.serializedObject);
                 }
-                bool isInstant = ge.DurationSpecification.DurationPolicy == EEffectDurationPolicy.Instant;
-                reverseField.style.display = isInstant ? DisplayStyle.None : DisplayStyle.Flex;
             }
-            RefreshReverseFieldVisibility();
-            var durationPolicy = property.serializedObject.FindProperty(
-                $"{nameof(GameplayEffect.DurationSpecification)}.{nameof(GameplayEffectDuration.DurationPolicy)}");
-            if (durationPolicy != null) reverseField.TrackPropertyValue(durationPolicy, _ => RefreshReverseFieldVisibility());
-            
-            // ═══════════════════════════════════════════════════════════════════
-            // Contained Effects Section
-            // ═══════════════════════════════════════════════════════════════════
-            var packetsSection = CreateSection("Contained Effects", Colors.SectionGreen);
-            container.Add(packetsSection);
-            
-            var packetsHint = CreateHintLabel("Effects triggered on Apply, Tick, or Remove");
-            packetsSection.Add(packetsHint);
-            
-            var packetsField = new PropertyField(property.FindPropertyRelative(nameof(GameplayEffectImpact.Packets)), "");
-            packetsSection.Add(packetsField);
-            
-            return container;
+
+            void Show(bool bind)
+            {
+                operation.Refresh();
+                var kind = (ECalculationOperation)operationProp.intValue;
+                multiply.style.display = kind == ECalculationOperation.Multiply ? DisplayStyle.Flex : DisplayStyle.None;
+
+                var policy = (EAffiliationPolicy)affiliationProp.intValue;
+                comparison.style.display = policy != EAffiliationPolicy.AlwaysAllow ? DisplayStyle.Flex : DisplayStyle.None;
+                affiliations.style.display = policy == EAffiliationPolicy.UseAffiliationList ? DisplayStyle.Flex : DisplayStyle.None;
+
+                ShowDelivery(property, delivery, commits, deliveryNote);
+                ShowEntries(bind);
+            }
+
+            // The rows follow the asset, an Undo among its changes, and the effect's duration; they only read it
+            root.TrackSerializedObjectValue(property.serializedObject, _ => Show(true));
+            Show(false);
+            return root;
+        }
+
+        // The first impact's delivery, and how often it lands when it's periodic. Hidden when the first impact changes
+        // nothing, as in an effect that only grants tags
+        private static void ShowDelivery(SerializedProperty property, TextField delivery, TextField commits, HelpBox note)
+        {
+            var effect = property.serializedObject.targetObject as GameplayEffect;
+            var impact = effect != null ? effect.ImpactSpecification : null;
+            var duration = effect != null ? effect.DurationSpecification : null;
+            bool authored = impact != null && (impact.AttributeTarget != null ||
+                impact.MagnitudeOperation != null && (impact.MagnitudeOperation.Scaler != null || impact.MagnitudeOperation.Magnitude != 0f));
+
+            delivery.style.display = authored ? DisplayStyle.Flex : DisplayStyle.None;
+            if (!authored)
+            {
+                commits.style.display = DisplayStyle.None;
+                note.style.display = DisplayStyle.None;
+                return;
+            }
+
+            var kind = impact.ResolveDelivery(duration, out _);
+            delivery.SetValueWithoutNotify(ImpactFields.DeliveryText(kind, duration));
+            var times = kind == EImpactDelivery.Periodic ? ImpactFields.CommitsText(effect) : null;
+            commits.SetValueWithoutNotify(times ?? "");
+            commits.style.display = times != null ? DisplayStyle.Flex : DisplayStyle.None;
+
+            // Tick On Application alone on a lasting multiply or override: the runtime keeps it as a modifier, so it
+            // reverses as the effect ends, though the setting reads as a single tick
+            bool trap = kind == EImpactDelivery.Continuous && duration is { TickOnApplication: true, EnablePeriodicTicks: false };
+            note.text = trap
+                ? "With Tick On Application and no periodic ticks, a multiply or override lasts while the effect does, then reverses. Turn Tick On Application off to say so."
+                : "";
+            note.style.display = trap ? DisplayStyle.Flex : DisplayStyle.None;
+        }
+
+        // Adds an impact the effect's duration can make, which uses its own magnitude, in one undoable step
+        private static void AddImpact(SerializedProperty property)
+        {
+            var serialized = property.serializedObject;
+            var effects = serialized.targetObjects.OfType<GameplayEffect>().Where(effect => effect.ImpactSpecification != null).ToArray();
+            if (effects.Length == 0) return;
+            Undo.RecordObjects(effects, "Add Impact");
+            foreach (var effect in effects)
+            {
+                effect.ImpactSpecification.AdditionalImpacts ??= new List<AttributeImpactEntry>();
+                effect.ImpactSpecification.AdditionalImpacts.Add(new AttributeImpactEntry
+                {
+                    Delivery = ImpactFields.DefaultDelivery(effect.DurationSpecification),
+                    Magnitude = new ScalerMagnitudeOperation { RealMagnitude = EMagnitudeOperation.UseMagnitude },
+                });
+                EditorUtility.SetDirty(effect);
+            }
+            serialized.Update();
         }
     }
-    
+
     // ═══════════════════════════════════════════════════════════════════════════
     // ContainedEffectPacket Drawer
     // ═══════════════════════════════════════════════════════════════════════════
+
+    /// <summary>
+    /// A contained effect, on one row: when it's applied, then the effect. It drew a tinted, rounded box with a stripe in
+    /// its policy's color, set 50 ms after it drew (ED-37).
+    /// </summary>
     [CustomPropertyDrawer(typeof(ContainedEffectPacket))]
     public class ContainedEffectPacketDrawer : PropertyDrawer
     {
         public override VisualElement CreatePropertyGUI(SerializedProperty property)
         {
-            var container = new VisualElement();
-            container.style.flexDirection = FlexDirection.Row;
-            container.style.alignItems = Align.Center;
-            container.style.marginBottom = 2;
-            container.style.paddingLeft = 4;
-            container.style.paddingRight = 4;
-            container.style.paddingTop = 2;
-            container.style.paddingBottom = 2;
-            container.style.backgroundColor = Colors.ItemBackground;
-            container.style.borderTopLeftRadius = 3;
-            container.style.borderTopRightRadius = 3;
-            container.style.borderBottomLeftRadius = 3;
-            container.style.borderBottomRightRadius = 3;
-            
-            // Policy indicator with color coding
-            var policyProp = property.FindPropertyRelative(nameof(ContainedEffectPacket.Policy));
-            var policyField = new PropertyField(policyProp, "");
-            policyField.style.minWidth = 90;
-            policyField.style.maxWidth = 90;
-            policyField.style.marginRight = 8;
-            container.Add(policyField);
-            
-            // Policy color indicator
-            var colorIndicator = CreateColorIndicator(Colors.AccentGray);
-            container.Insert(0, colorIndicator);
-            
-            // Effect reference
-            var effectField = new PropertyField(property.FindPropertyRelative(nameof(ContainedEffectPacket.ContainedEffect)), "");
-            effectField.style.flexGrow = 1;
-            container.Add(effectField);
-            
-            // Update color indicator based on policy
-            void UpdateColorIndicator()
+            var row = new VisualElement { name = "ContainedEffect" };
+            ForgeTheme.Apply(row);
+            row.AddToClassList("pf-contained-effect");
+
+            var policy = new EnumField
             {
-                var policy = (EApplyTickRemove)policyProp.enumValueIndex;
-                colorIndicator.style.backgroundColor = policy switch
-                {
-                    EApplyTickRemove.OnApply => Colors.PolicyGreen,
-                    EApplyTickRemove.OnTick => Colors.PolicyYellow,
-                    EApplyTickRemove.OnRemove => Colors.PolicyRed,
-                    _ => Colors.AccentGray
-                };
-            }
-            
-            container.schedule.Execute(UpdateColorIndicator).StartingIn(50);
-            policyField.RegisterValueChangeCallback(_ => UpdateColorIndicator());
-            
-            return container;
+                name = "Policy",
+                tooltip = "When the effect is applied: as this one is applied, on each tick, or as this one is removed",
+            };
+            policy.AddToClassList("pf-contained-effect__policy");
+            policy.BindProperty(property.FindPropertyRelative(nameof(ContainedEffectPacket.Policy)));
+            row.Add(policy);
+
+            var effect = new PropertyField(property.FindPropertyRelative(nameof(ContainedEffectPacket.ContainedEffect)), "") { name = "Effect" };
+            effect.AddToClassList("pf-contained-effect__effect");
+            row.Add(effect);
+            return row;
         }
     }
 }

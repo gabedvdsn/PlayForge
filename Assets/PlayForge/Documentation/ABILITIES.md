@@ -132,8 +132,8 @@ Requirements are what an activation must pass. If one fails, the ability doesn't
 The check types:
 
 - **Cooldown**: passes when the ability has no cooldown, or the caster doesn't carry the cooldown effect's asset tag.
-- **Cost**: passes when the ability has no cost, or the cost would leave its attribute at 0 or more. The caster must
-  have that attribute.
+- **Cost**: passes when the ability has no cost, or the cost would leave each attribute it spends at 0 or more. The
+  caster must have each of them.
 - **Is Alive**: passes when the checked entity isn't dead.
 - **Attribute**: compares the checked entity's Current value of **Attribute** with **Value**, using **Comparison**.
 - **Check Range**: passes when the target is within range of the caster. The range is the number of times the caster

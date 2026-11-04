@@ -15,8 +15,12 @@ until a multi-entry drawer ships, at which point an explicitly-authored entry li
 precedence over derivation. The migration tool became the read-only
 **Window → PlayForge → Audit Effect Impact Deliveries**.
 
-Remaining follow-ups: multi-entry property drawer (unlocks authored entry lists + per-entry
-groups in the inspector), per-group payloads on `AttributeSystemCallbacks` (queries via
+Amendment (2026-11-04, ED-3): the multi-entry drawer has shipped. The quad stays the effect's
+first impact, derived as before; `GameplayEffectImpact.AdditionalImpacts` holds authored entries,
+each with its own delivery and retention group, which `RebuildEntries` appends after it. The Cost
+rule checks each attribute a cost's entries spend.
+
+Remaining follow-ups: per-group payloads on `AttributeSystemCallbacks` (queries via
 `GetBreakdown`/`TryGetGroupValue` cover the UX case), GASDebugger modernization (currently
 renders through the compatibility `RetainedGroups` projection).
 Verification: the golden tests, in the Test Runner's EditMode tab.

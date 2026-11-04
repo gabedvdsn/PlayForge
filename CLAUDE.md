@@ -58,8 +58,8 @@ The full review behind it is https://claude.ai/artifact/1GsrCxW3Wff2KvXM6fnai9.
 
 ## Gotchas
 
-- **Impact entries are derived on every `Generate()` and never serialized.** Do not serialize them until a
-  multi-entry drawer exists.
+- **An effect's first impact entry is derived on every `Generate()` and never serialized.** Its Additional Impacts
+  are the authored entries, each with its own delivery (ED-3); `RebuildEntries` appends them after the derived one.
 - **`TagCache.GetWeight` returns −1 for an absent tag,** not 0.
 - **Both GAS hubs forward to one internal `GASCore`** (GAS-S1). It owns the subsystems (the effect shelf is its
   `EffectSystemComponent`), the tag compile, level, Local Data, affiliation, end of frame and death, so put GAS

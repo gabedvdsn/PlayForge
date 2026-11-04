@@ -13,18 +13,17 @@ namespace FarEmerald.PlayForge
     public class GameplayEffectImpact
     {
         // ═══════════════════════════════════════════════════════════════════════════
-        // IMPACT ENTRIES — DERIVED, NEVER SERIALIZED (IMPACT_MODEL_REFACTOR.md §3.1)
+        // IMPACT ENTRIES — REBUILT ON EVERY Generate() (IMPACT_MODEL_REFACTOR.md §3.1)
         //
-        // The serialized authoring surface is still the single quad below (the drawer
-        // edits those fields). Entries are re-derived from the quad + duration flags on
-        // EVERY Generate(), so inspector edits — magnitude, attribute target, duration
-        // policy, tick flags — always take effect immediately. Serializing entries was
-        // a bug: OnValidate froze half-authored state into the asset (null targets,
-        // stale magnitudes, deliveries minted while the policy was still Instant) and
-        // never re-synced.
+        // The first entry is derived from the single quad below and the duration flags,
+        // and never serialized, so inspector edits — magnitude, attribute target, duration
+        // policy, tick flags — always take effect immediately. Serializing it was a bug:
+        // OnValidate froze half-authored state into the asset (null targets, stale
+        // magnitudes, deliveries minted while the policy was still Instant) and never
+        // re-synced.
         //
-        // When a multi-entry drawer ships, an explicitly-authored serialized entry list
-        // can take precedence over this derivation — flip at that point, not before.
+        // The entries after it are AdditionalImpacts, authored as entries, each with its
+        // own delivery, now that a drawer edits them (ED-3).
         // ═══════════════════════════════════════════════════════════════════════════
 
         [NonSerialized] private List<AttributeImpactEntry> derivedEntries;
@@ -35,9 +34,9 @@ namespace FarEmerald.PlayForge
         public bool HasEntries => derivedEntries is { Count: > 0 };
 
         /// <summary>
-        /// Re-derive the entry list from the authored quad + duration flags. Called by
-        /// <see cref="GameplayEffect.Generate"/> before every spec creation. Delivery
-        /// mapping (plan §5):
+        /// Rebuild the entry list: the one the authored quad + duration flags give, then each of the
+        /// <see cref="AdditionalImpacts"/>. Called by <see cref="GameplayEffect.Generate"/> before every spec
+        /// creation. The quad's delivery mapping (plan §5):
         ///   Instant → OnApply;
         ///   durational/infinite without ticks → Continuous;
         ///   with periodic ticks → Periodic;
@@ -49,24 +48,32 @@ namespace FarEmerald.PlayForge
             derivedEntries ??= new List<AttributeImpactEntry>(1);
             derivedEntries.Clear();
 
-            if (AttributeTarget == null && (MagnitudeOperation == null || MagnitudeOperation.Scaler == null && MagnitudeOperation.Magnitude == 0f))
+            // Nothing authored in the quad: a tag-grant or worker-only effect, or one whose impacts are all additional
+            if (AttributeTarget != null || MagnitudeOperation != null && (MagnitudeOperation.Scaler != null || MagnitudeOperation.Magnitude != 0f))
             {
-                // Nothing authored — pure tag-grant / worker-only effect.
-                return;
+                derivedEntries.Add(new AttributeImpactEntry
+                {
+                    AttributeTarget = AttributeTarget,
+                    Delivery = ResolveDelivery(duration, out _),
+                    TargetSlot = TargetImpact,
+                    Operation = ImpactOperation,
+                    MultiplyBehaviour = MultiplyBehaviour,
+                    SortOrder = 0,
+                    Magnitude = MagnitudeOperation, // live reference — inspector edits apply instantly
+                    RetentionGroupOverride = default, // falls back to Definition.RetentionGroup
+                    ImpactTypes = ImpactTypes,
+                });
             }
 
-            derivedEntries.Add(new AttributeImpactEntry
+            // Then each additional impact as authored, live, as the quad's magnitude is (ED-3). One with no attribute, as
+            // a new row leaves it, changes nothing, and one whose delivery the duration can't make never happens, as the
+            // drawer says in place
+            if (AdditionalImpacts == null) return;
+            foreach (var impact in AdditionalImpacts)
             {
-                AttributeTarget = AttributeTarget,
-                Delivery = ResolveDelivery(duration, out _),
-                TargetSlot = TargetImpact,
-                Operation = ImpactOperation,
-                MultiplyBehaviour = MultiplyBehaviour,
-                SortOrder = 0,
-                Magnitude = MagnitudeOperation, // live reference — inspector edits apply instantly
-                RetentionGroupOverride = default, // falls back to Definition.RetentionGroup
-                ImpactTypes = ImpactTypes,
-            });
+                if (impact?.AttributeTarget == null || !impact.IsDeliveryValidFor(duration)) continue;
+                derivedEntries.Add(impact);
+            }
         }
 
         /// <summary>
@@ -147,6 +154,13 @@ namespace FarEmerald.PlayForge
         [ScalerOperationKeyword("Magnitude")]
         public ScalerMagnitudeOperation MagnitudeOperation;
 
+        /// <summary>
+        /// The effect's further impacts, after the one above: each with its own attribute, operation, magnitude and
+        /// delivery, so one effect can lower armor while it lasts and burn each tick. The one above takes its delivery
+        /// from the duration; each of these names its own (ED-3).
+        /// </summary>
+        public List<AttributeImpactEntry> AdditionalImpacts = new();
+
         public ContainedEffectPacket[] Packets;
 
         public GameplayEffectImpact()
@@ -166,6 +180,10 @@ namespace FarEmerald.PlayForge
             ImpactTypes = o.ImpactTypes;
             ReverseImpactOnRemoval = o.ReverseImpactOnRemoval;
             MagnitudeOperation = o.MagnitudeOperation;
+            // Each its own copy, as the affiliation list is; a copy shares a magnitude, as the quad's does (ED-3)
+            AdditionalImpacts = o.AdditionalImpacts is null
+                ? new List<AttributeImpactEntry>()
+                : o.AdditionalImpacts.Select(impact => impact is null ? null : new AttributeImpactEntry(impact)).ToList();
 
             // The affiliation above was left behind, and an impact with no packets threw here (ED-14)
             if (o.Packets is null) return;

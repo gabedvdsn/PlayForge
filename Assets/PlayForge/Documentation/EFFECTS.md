@@ -3,7 +3,7 @@
 A **Gameplay Effect** asset describes a change to an entity: damage, a heal, a timed buff, a poison, a cost or a
 cooldown. An entity is anything that runs a gameplay ability system (GAS), such as the player or an enemy. Abilities
 and items apply effects to a target entity, and so can your code. The ability, item or entity that applies an effect
-is its *origin*. An effect can change one attribute (a number such as Health), grant tags, apply other effects and run
+is its *origin*. An effect can change attributes (numbers such as Health), grant tags, apply other effects and run
 workers.
 
 The Duration Policy decides how long an effect lives. An Instant effect makes its change once and is done. A Durational
@@ -68,26 +68,30 @@ inspectors offer this link when you assign an effect to them.
 
 ## Impact Specification
 
-The impact is the change the effect makes to one attribute.
+The impact is the change the effect makes to an attribute. The fields below are its first impact, whose delivery the
+duration gives it. Additional Impacts change more attributes, or the same one again, each with a delivery of its own.
 
 ### Target
 
 - **Attribute**: the attribute to change. Leave it empty for an effect that only grants tags, applies other effects or
   runs workers. A target that lacks the attribute isn't changed.
-- **Target**: which of the attribute's two values to change. **Base** is the value the attribute is measured against,
-  and **Current** is the value in play. For Health, Base is the maximum and Current is what is left. Choose Current,
-  Base or Current And Base.
-- **Operation**: Add adds the magnitude. Use a negative magnitude to subtract. Multiply multiplies by it. Override sets
-  the value to it. Flat Bonus adds too, but as a modifier it lands after the attribute's multipliers, so they don't
-  scale it.
+- **Operation**: how the impact changes the attribute, and which of its two values, in one choice, such as Add to
+  Current or Multiply Base. **Base** is the value the attribute is measured against, and **Current** is the value in
+  play. For Health, Base is the maximum and Current is what is left. Add adds the magnitude. Use a negative magnitude to
+  subtract. Multiply multiplies by it. Override sets the value to it. Flat Bonus adds too, but as a modifier it lands
+  after the attribute's multipliers, so they don't scale it.
 - **Multiply Behaviour** (Multiply only): Multiplicative (default) compounds with other multipliers, so ×1.5 and ×1.5
   give ×2.25. Additive Bonus adds the bonuses first, so +50% and +50% give ×2.0.
+- **Delivery**, read-only: when the impact lands, which the duration gives it (see the table above). On applying,
+  While the effect lasts, or Each tick, which adds ", and on applying" when Tick On Application is on. A note says when
+  Tick On Application alone keeps a multiply or override as a modifier, so it reverses as the effect ends.
+- **Commits**, read-only, for a periodic impact: how many times it lands at the effect's first level, as in "7 over
+  6 s, level 1". For an Infinite effect, it says how far apart the ticks are.
 - **Affiliation** decides which targets the effect can be applied to. An entity's affiliation tags are its team or
-  faction, set on its Entity asset. If the check fails, the effect isn't applied.
-  - **Policy**: Always Allow (default) allows any target. Affiliated allows targets that share the origin's
-    affiliation, and Unaffiliated allows those that don't. Use Affiliation List compares the target with the
-    **Affiliations** list instead.
-  - **Comparison**: Any (default) needs one tag to match. All needs every tag to match.
+  faction, set on its Entity asset. If the check fails, the effect isn't applied. Always Allow (default) allows any
+  target. Affiliated allows targets that share the origin's affiliation, and Unaffiliated allows those that don't. Use
+  Affiliation List compares the target with the **Affiliations** list instead.
+  - **Comparison** (all but Always Allow): Any (default) needs one tag to match. All needs every tag to match.
 
 ### Impact Magnitude
 
@@ -103,9 +107,29 @@ A Continuous modifier works its magnitude out again whenever the attribute is re
 
 - **Impact Types**: tags that label the kind of change, such as `Damage.Fire`. Workers can accept or skip changes by
   type. `Never Allow` hides the change from workers that check types. `Always Allow` passes every type check.
-- **Reverse On Removal** (hidden for Instant effects): this flag no longer changes anything. A Continuous modifier
-  always reverses when the effect ends, and a commit never does. The Audit Effect Impact Deliveries menu item flags a
-  periodic effect that sets it.
+
+The inspector no longer shows Reverse On Removal. A Continuous modifier always reverses when the effect ends, and a
+commit never does, so the flag changes nothing. The Audit Effect Impact Deliveries menu item still flags a periodic
+effect that sets it.
+
+### Additional Impacts
+
+Each additional impact changes an attribute of its own, or the same one again, with a delivery of its own. One effect
+can lower Armor while it lasts and burn Health on each tick. **Add Impact** adds one with a delivery the duration can
+make: Continuous on a Durational or Infinite effect, On Apply on an Instant one. While it's folded, an impact shows one
+line, such as "Mana −10 · Continuous", and its trash button removes it. Each has:
+
+- **Attribute**, **Operation**, **Multiply Behaviour** and **Magnitude**, as above.
+- **Delivery**: Continuous lasts while the effect does, then reverses. On Apply lands once, as the effect is applied.
+  Periodic lands on each tick, and as the effect is applied when Tick On Application is on. It offers what the duration
+  can make: an Instant effect makes only On Apply impacts, and Periodic needs ticks. If the duration changes so that an
+  impact's delivery can't happen, a warning under it says so, and the impact never applies.
+- **Order** (Override only): among overrides of one attribute, the lowest order wins.
+- **Retention Group**: the group the change counts toward. Empty, it takes the effect's.
+- **Impact Types**, as above.
+
+An impact with no Attribute changes nothing. The Cost rule checks every attribute a cost spends (see
+[ABILITIES.md](ABILITIES.md)).
 
 ### Contained Effects
 

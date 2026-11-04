@@ -13,15 +13,23 @@ namespace FarEmerald.PlayForge
             error = "";
             if (data.EffectOrigin is not AbilitySpec ability) return false;
             if (ability.Base.Cost is null) return true;
-            if (!ability.Source.TryGetAttributeValue(ability.Base.Cost.ImpactSpecification.AttributeTarget,
-                    out var attrVal)) return false;
 
-            // A cost's magnitude is the signed change it makes, so what matters is what that leaves. Comparing
-            // the value with the magnitude itself passed every cost, as a cost is negative (GAS-7)
-            float change = ability.Base.Cost.ImpactSpecification.GetMagnitude(
-                ability.Source.GenerateEffectSpec(ability, ability.Base.Cost));
+            // Generating the spec rebuilds the cost's impacts, and each attribute it spends is checked: a cost can spend
+            // more than one, and only the first was (ED-3). The caster must have each attribute
+            var spec = ability.Source.GenerateEffectSpec(ability, ability.Base.Cost);
+            var impacts = ability.Base.Cost.ImpactSpecification.Entries;
+            if (impacts.Count == 0) return false;
+            foreach (var impact in impacts)
+            {
+                if (impact == null) continue;
+                if (!ability.Source.TryGetAttributeValue(impact.AttributeTarget, out var attrVal)) return false;
 
-            return attrVal.CurrentValue + change >= 0f;
+                // A cost's magnitude is the signed change it makes, so what matters is what that leaves. Comparing
+                // the value with the magnitude itself passed every cost, as a cost is negative (GAS-7)
+                float change = impact.Magnitude?.Evaluate(spec) ?? 0f;
+                if (attrVal.CurrentValue + change < 0f) return false;
+            }
+            return true;
         }
         public string GetName()
         {

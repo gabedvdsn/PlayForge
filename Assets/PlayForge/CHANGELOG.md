@@ -7,10 +7,16 @@ tracks each fix below by its ID.
 ## [Unreleased]
 
 ### Added
+- An effect can make more than one impact. Its Additional Impacts each change an attribute with an operation, magnitude
+  and delivery of their own, so one effect can lower Armor while it lasts and burn Health on each tick. Add Impact adds
+  one the duration can make, and the Cost rule checks each attribute a cost spends (ED-3).
 - Reference pages for the six asset types in `Documentation`. Each inspector section's help button opens its type's
   page, through one table of links in the editor.
 
 ### Changed
+- An effect's impact says how it is delivered, which the duration gives it, and how often a periodic one lands, as in
+  "7 over 6 s, level 1". Operation sets the operation and the value it changes in one choice, such as Add to Current.
+  Reverse On Removal, which changes nothing, is no longer shown (ED-2).
 - Every reference to a PlayForge asset is Unity's object field, with Open, which shows the asset in a window of its own,
   or New, which makes one where The Forge puts its type and uses it. An effect field says under it how the effect takes
   its levels, with Link, and setting it no longer asks in a dialog; its template, a pick of unlinked effects and New

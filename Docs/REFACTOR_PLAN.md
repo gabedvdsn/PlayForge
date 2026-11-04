@@ -516,8 +516,8 @@ had no letter in the review. TS-AA onward came from the test project.
 | ID | Sev | Phase | Problem | Where | Status |
 |---|---|---|---|---|---|
 | ED-1 | M | 0 | Three compiler warnings: CS0162, CS8509, CS8321 (PF-009) | `GameplayEffectDrawer.cs:159-176`, `AbilityEditor.cs:138-143`, `TheForge.ViewTab.cs:1640` | verified |
-| ED-2 | H | 4 | The effect inspector never shows delivery and still draws `ReverseImpactOnRemoval` | `GameplayEffectImpactDrawer.cs:117-126`, `GameplayEffectImpact.cs:131-144` | open |
-| ED-3 | H | 4 | There is no `AttributeImpactEntry` drawer, so multi-entry effects cannot be authored | — | open |
+| ED-2 | H | 4 | The effect inspector never shows delivery and still draws `ReverseImpactOnRemoval`. Now the impact says its delivery, which the duration gives it, and how often a periodic one commits, as in "7 over 6 s, level 1", and Reverse On Removal, which nothing reads, is gone from the inspector | `GameplayEffectImpactDrawer.cs` | fixed |
+| ED-3 | H | 4 | There is no `AttributeImpactEntry` drawer, so multi-entry effects cannot be authored. Now an effect's Additional Impacts are authored entries, each with its own attribute, operation, magnitude and delivery, which `AttributeImpactEntryDrawer` edits and the runtime appends after the derived one; the Cost rule checks each attribute a cost spends | `GameplayEffectImpact.cs` (`RebuildEntries`), `AttributeImpactEntryDrawer.cs`, `CommonValidations.cs` | fixed |
 | ED-4 | H | 4 | GAS Debugger: rebuilds every 0.25 s, `FindObjectsByType` every tick, Mono only, reflection on `TagCache`, raw cooldown magnitude, unlabelled badges | `GASDebugger.cs:142, 239-258, 1462, 1581-1603, 1761` | open |
 | ED-5 | M | 4 | ProcessControlDebugger: usage is not CPU time; the Terminated filter is dead; Pause misleads; per-row style allocations | `ProcessControlDebugger.cs:429, 458, 617-620, 727, 776-799` | open |
 | ED-6 | M | 2 | Settings: an inverted range check; Reset All goes to the wrong tab and is partial; Auto Refresh is never read | `TheForge.SettingsTab.cs:233-236, 264, 346, 1770-1785` | verified |
@@ -657,6 +657,37 @@ GAS-4 with GAS-5, PC-6, and TS-I with PC-5.
 ## Log
 
 Record baselines, gate results and notable decisions here, newest first.
+
+- 2026-11-04, **ED-2 and ED-3: an effect's impacts.** The Effect step begins with its impact.
+  - **ED-3, additional impacts.** An effect made one change, so a drain that took health and mana took two effects.
+    `GameplayEffectImpact.AdditionalImpacts` holds authored entries, each with its own attribute, operation, magnitude
+    and delivery. `RebuildEntries` appends them, live, after the entry it derives from the impact's fields; one with
+    no attribute is skipped, and so is one whose delivery the duration can't make. The runtime already applied entries
+    by delivery, so nothing else changed there. This is the flip the impact model's design waited for, a multi-entry
+    drawer, and `CLAUDE.md`'s gotcha says so now.
+  - **The new drawer,** `AttributeImpactEntryDrawer`: a foldout row with the attribute and Remove, and while folded
+    one line such as "Mana −10 · Continuous"; open, Operation, Multiply Behaviour, Magnitude, Delivery, Order (Override
+    only), Retention Group and Impact Types. Delivery offers what the duration can make, and a help box says when the
+    one it names can't happen. **Add Impact** adds one the duration can make: Continuous on a lasting effect, On Apply
+    on an Instant one. Add and Remove are one Undo step each.
+  - **The Cost rule** checked only the first impact, so 0 stamina paid a cost of 10 mana and 10 stamina. It checks
+    each attribute a cost's impacts spend.
+  - **ED-2, the impact drawer,** `GameplayEffectImpactDrawer`, follows the style sheet: Attribute; Operation, the
+    mockup's one choice for the operation and the value it changes, such as Add to Current; Multiply Behaviour
+    (Multiply only); Magnitude; then Delivery and, for a periodic impact, Commits, read from the runtime's own
+    `AbilityInspector.BuildEffectSeries`. A note says when Tick On Application alone keeps a multiply or override as a
+    modifier. Reverse On Removal is gone, since nothing reads it. Comparison shows for every affiliation but Always
+    Allow, and the list for Use Affiliation List. It drew tinted boxes with colored headings, and a contained effect
+    drew a tinted box with a stripe in its policy's color, set 50 ms after it drew; that's one row now.
+  - **Docs:** `EFFECTS.md` (Impact Specification), `EFFECT_PIPELINE.md` §1 and §7, an amendment to
+    `IMPACT_MODEL_REFACTOR.md`, `ABILITIES.md` (the Cost check) and `CLAUDE.md`.
+  - **Their tests,** `ED_3_An_effect_makes_each_of_its_impacts`, `ED_3_Each_impact_keeps_its_own_delivery` and
+    `ED_3_A_cost_is_checked_for_each_attribute_it_spends`, on both hubs, and `ED_2_The_impact_says_how_it_is_delivered`,
+    `ED_3_An_additional_impact_draws_as_an_entry` and `ED_3_An_impact_is_added_and_removed_in_place`, were seen
+    failing first.
+  - **The control** `The_impact_drawer_follows_its_operation` finds Multiply Behaviour as the enum field it is now.
+  - **Tests:** PlayMode 957: 950 pass, 0 fail and 7 planted are skipped, in three orders. Planted 7 of 7; EditMode
+    398 of 398.
 
 - 2026-11-04, **Step 5: the Ability inspector (ED-37).** The redesign's fifth surface, after the other asset
   inspectors' pattern and the Ability mockup.
