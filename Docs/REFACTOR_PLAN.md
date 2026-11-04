@@ -543,7 +543,7 @@ had no letter in the review. TS-AA onward came from the test project.
 | ED-31 | L | 4 | The four unlink dialogs count with `IsLinkedTo(this)`, the editor rather than the asset, so they always say 0 | `AbilityEditor.cs:837`, `EffectEditor.cs:276`, `EntityIdentityEditor.cs:298`, `ItemEditor.cs:308` | open |
 | ED-32 | H | 4 | Six import windows behave differently. Section import copies every field with no choice and Clear asks in a modal; the Effect's Duration and Impact sections can't import at all, since their Import button only logs a warning; scaler import ignores the kinds a field allows and caches its list for 120 s. One Import window replaces them (Decision 28): choose a source, choose the fields, import as one Undo step | `SectionImportWindow.cs`, `ScalerDrawerWindows.cs:17-350`, `TagRequirementDrawers.cs:567-945`, `StandardWorkerGroupDrawer.cs:362`, `EffectEditor.cs:467-500` | open |
 | ED-33 | M | 4 | Scalers can't be shared. Every scaler is copied into its field, and the Scaler Template asset's link code has no callers, so reuse means copying and then propagating. Shared Scaler assets that fields reference replace it (Decision 28) | `AbstractScaler.cs:76-104`, `ScalerPipeline.cs:17-62` | open |
-| ED-34 | H | 4 | Opening a scaler writes to it while drawing. On an effect with no level link, Lock mode cuts its per-level table to one value; the other modes resize the table to Max Level, a Max Level of 0 or less becomes 10, and building the drawer clones a scaler that shares its reference id | `ScalerDrawer.cs:125-180, 285, 489-529` | open |
+| ED-34 | H | 4 | Opening a scaler writes to it while drawing. On an effect with no level link, Lock mode cuts its per-level table to one value; the other modes resize the table to Max Level, a Max Level of 0 or less becomes 10, and building the drawer clones a scaler that shares its reference id. Now nothing is written while drawing: a table keeps its length until the user changes it, and a shared scaler shows a warning with a button that makes a separate copy | `ScalerDrawer.cs:125-180, 285, 489-529` | fixed |
 | ED-35 | M | 4 | Whole-asset import copies the template and level-link fields (`_template`, `_linkedSource`) and doesn't skip the nested `Definition.Name` | `BasePlayForgeEditor.cs` (`ImportFromAsset`) | open |
 
 The design questions behind Phase 4's rows, each with its evidence, are in the UI interview doc of 2026-11-03,
@@ -643,6 +643,20 @@ GAS-4 with GAS-5, PC-6, and TS-I with PC-5.
 ## Log
 
 Record baselines, gate results and notable decisions here, newest first.
+
+- 2026-11-04, **ED-34: opening a scaler writes nothing.** The user chose to fix it now, ahead of the scaler workflow
+  of Decision 28. Opening a scaler wrote to it while drawing. On an effect with no level link, Lock mode cut its
+  per-level table to one value, since the unlinked effect counts as its own level provider, with a Max Level of 1. The
+  other modes resized the table to Max Level, and a Max Level of 0 or less became 10. Building the drawer also cloned
+  a scaler that another list element shared. Now drawing writes nothing: a table keeps its length until the user
+  changes it, and a level past its end reads its last value, as `GetValueAtLevel` already did. A shared scaler shows
+  a warning under its header, with a button that makes a separate copy as one undoable step. Its tests,
+  `ED_34_Opening_a_scaler_leaves_its_table_alone` and `ED_34_Opening_a_shared_scaler_leaves_it_shared`, were seen
+  failing first: the first lost four of five values, and the second found its scaler cloned.
+  - **Tests:** PlayMode 941: 934 pass, 0 fail and 7 planted are skipped, in three orders. Planted 7 of 7; EditMode
+    50 of 50.
+  - **Found on the way:** inside the Attribute Set inspector, in the test's panel, the elements' scaler drawers never
+    ran, so the second test draws the element's scaler with a PropertyField of its own.
 
 - 2026-11-04, **ED-12, the Ability inspector: its fields undo.** Its Description, Activation Policy, Activate
   Immediately and Link Mode wrote straight into the asset, with no Undo, and Level Source and Leveling were drawn from

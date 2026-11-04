@@ -112,48 +112,40 @@ namespace FarEmerald.PlayForge.Extended.Editor
         // ═══════════════════════════════════════════════════════════════════════════
 
         /// <summary>
-        /// Detects and repairs [SerializeReference] aliasing between siblings in the
-        /// same list. When Unity's default array "+" button duplicates a list entry,
-        /// the new entry inherits the SAME managed-reference id as the previous one —
-        /// so every list entry ends up pointing to a single shared scaler instance.
-        /// This walks the immediate parent array and, if another sibling shares this
-        /// property's managedReferenceId, deep-clones the current instance so each
-        /// list element owns an independent scaler. Only acts on properties that live
-        /// inside a list/array element; direct fields (e.g. scalers on GameplayEffect)
-        /// are never affected.
+        /// Finds another element of the same list whose scaler has this property's managed-reference id. Unity's array
+        /// "+" copies the previous element's id, so two elements can hold one scaler, and an edit to one changes both.
+        /// Returns that element's index, or -1. Only list elements can share this way; direct fields (e.g. scalers on
+        /// GameplayEffect) never do. It only reads: building the drawer cloned the scaler, so drawing an asset changed
+        /// it (ED-34).
         /// </summary>
-        private static void EnsureUniqueManagedReference(SerializedProperty property)
+        private static int FindSharedSibling(SerializedProperty property)
         {
-            if (property == null) return;
-            if (property.propertyType != SerializedPropertyType.ManagedReference) return;
-
-            var current = property.managedReferenceValue;
-            if (current == null) return; // null refs can't drift state across siblings
+            if (property == null) return -1;
+            if (property.propertyType != SerializedPropertyType.ManagedReference) return -1;
+            if (property.managedReferenceValue == null) return -1; // null refs share nothing
 
             long id = property.managedReferenceId;
 
-            // Only list-element properties can exhibit the duplication bug.
             string path = property.propertyPath;
             const string ArrayDataMarker = ".Array.data[";
             int arrayMarker = path.LastIndexOf(ArrayDataMarker, StringComparison.Ordinal);
-            if (arrayMarker < 0) return;
+            if (arrayMarker < 0) return -1;
 
             string arrayPath = path.Substring(0, arrayMarker);
             int bracketStart = path.IndexOf('[', arrayMarker);
             int bracketEnd = path.IndexOf(']', bracketStart);
-            if (bracketStart < 0 || bracketEnd < 0) return;
+            if (bracketStart < 0 || bracketEnd < 0) return -1;
             if (!int.TryParse(
                     path.Substring(bracketStart + 1, bracketEnd - bracketStart - 1),
                     out int myIndex))
-                return;
+                return -1;
 
             // Suffix between "]" and the end of the path — e.g. ".Scaling".
             // Empty when the property IS the list element itself.
             string relativeSuffix = path.Substring(bracketEnd + 1).TrimStart('.');
 
-            var so = property.serializedObject;
-            var arrayProp = so.FindProperty(arrayPath);
-            if (arrayProp == null || !arrayProp.isArray) return;
+            var arrayProp = property.serializedObject.FindProperty(arrayPath);
+            if (arrayProp == null || !arrayProp.isArray) return -1;
 
             for (int i = 0; i < arrayProp.arraySize; i++)
             {
@@ -164,19 +156,23 @@ namespace FarEmerald.PlayForge.Extended.Editor
                     : sibling.FindPropertyRelative(relativeSuffix);
                 if (siblingRef == null) continue;
                 if (siblingRef.propertyType != SerializedPropertyType.ManagedReference) continue;
-                if (siblingRef.managedReferenceId != id) continue;
-
-                // Aliased — clone into a unique instance so each list element owns
-                // an independent object. Use the same JSON-overwrite pattern as
-                // CopyScaler so all serialized sub-state (LevelValues, Behaviours,
-                // type-specific fields) is preserved verbatim.
-                var type = current.GetType();
-                var clone = Activator.CreateInstance(type);
-                JsonUtility.FromJsonOverwrite(JsonUtility.ToJson(current), clone);
-                property.managedReferenceValue = clone;
-                so.ApplyModifiedProperties();
-                return;
+                if (siblingRef.managedReferenceId == id) return i;
             }
+            return -1;
+        }
+
+        /// <summary>
+        /// Gives this element a scaler of its own, a copy of the one it shares, as one undoable step. The JSON overwrite
+        /// keeps all serialized sub-state (LevelValues, Behaviours, type-specific fields), as CopyScaler does.
+        /// </summary>
+        private static void GiveOwnCopy(SerializedProperty property)
+        {
+            var current = property.managedReferenceValue;
+            if (current == null) return;
+            var clone = Activator.CreateInstance(current.GetType());
+            JsonUtility.FromJsonOverwrite(JsonUtility.ToJson(current), clone);
+            property.managedReferenceValue = clone;
+            property.serializedObject.ApplyModifiedProperties();
         }
 
         // ═══════════════════════════════════════════════════════════════════════════
@@ -276,13 +272,10 @@ namespace FarEmerald.PlayForge.Extended.Editor
             root.Clear();
             if (property?.serializedObject?.targetObject == null) return;
 
-            // Defend against Unity's [SerializeReference] list-aliasing quirk:
-            // the default array "+" button duplicates the previous element's
-            // managed-reference id, causing every list entry to resolve to the
-            // SAME scaler instance. Without this guard, editing level values
-            // or quick-fill on one attribute-set-element writes through to all
-            // other elements that share the same reference id.
-            EnsureUniqueManagedReference(property);
+            // A scaler that another list element shares, after Unity's array "+" copied its reference id, shows a note
+            // under its header and a button that gives this element its own copy. Building the drawer cloned it, so
+            // drawing an asset changed it (ED-34).
+            int sharedWith = FindSharedSibling(property);
 
             var container = new VisualElement { name = "ScalerContainer" };
             container.style.borderLeftWidth = 3;
@@ -302,6 +295,18 @@ namespace FarEmerald.PlayForge.Extended.Editor
             
             bool isCollapsed = IsCollapsed(property.propertyPath);
             container.Add(CreateHeader(property, root, isCollapsed));
+            if (sharedWith >= 0)
+            {
+                var note = new HelpBox(
+                    $"Element {sharedWith} holds the same scaler, so an edit here changes it too.",
+                    HelpBoxMessageType.Warning);
+                note.Add(new Button(() =>
+                {
+                    GiveOwnCopy(property);
+                    ScheduleRebuild(root, property);
+                }) { text = "Make a Separate Copy" });
+                container.Add(note);
+            }
             
             if (property.managedReferenceValue != null)
             {
@@ -485,48 +490,13 @@ namespace FarEmerald.PlayForge.Extended.Editor
             }
             
             var type = scaler.GetType();
-            
-            // Initialize MaxLevel
-            var maxLevelProp = property.FindPropertyRelative(nameof(AbstractScaler.MaxLevel));
-            if (maxLevelProp != null && maxLevelProp.intValue <= 0)
-            {
-                maxLevelProp.intValue = 10;
-                property.serializedObject.ApplyModifiedProperties();
-            }
-            
-            // Check config and linked provider
+
+            // Drawing writes nothing (ED-34). Opening a scaler set a Max Level of 0 or less to 10 and resized its table:
+            // to the level provider's levels in Lock mode, which cut an unlinked effect's table to one value, and to Max
+            // Level otherwise. A table now keeps its length until the user changes it, and a level past its end reads its
+            // last value, as GetValueAtLevel does.
             var configProp = property.FindPropertyRelative(nameof(AbstractScaler.Configuration));
             var currentConfig = configProp != null ? (ELevelConfig)configProp.enumValueIndex : ELevelConfig.Unlocked;
-            
-            // For LockToLevelProvider, sync with linked source if available
-            if (currentConfig == ELevelConfig.LockToLevelProvider)
-            {
-                int linkedMax = GetLinkedMaxLevel(property, 1);
-                var lvpCheck = property.FindPropertyRelative(nameof(AbstractScaler.LevelValues));
-                if (lvpCheck != null && lvpCheck.arraySize != linkedMax)
-                {
-                    ResizeLevelValues(property, scaler, linkedMax);
-                    property.serializedObject.ApplyModifiedProperties();
-                }
-            }
-            else
-            {
-                // Sync LevelValues array for other modes
-                var lvpCheck = property.FindPropertyRelative(nameof(AbstractScaler.LevelValues));
-                if (lvpCheck != null && maxLevelProp != null)
-                {
-                    int targetSize = maxLevelProp.intValue;
-                    if (lvpCheck.arraySize != targetSize)
-                    {
-                        int oldSize = lvpCheck.arraySize;
-                        float lastVal = oldSize > 0 ? lvpCheck.GetArrayElementAtIndex(oldSize - 1).floatValue : 1f;
-                        lvpCheck.arraySize = targetSize;
-                        for (int i = oldSize; i < targetSize; i++)
-                            lvpCheck.GetArrayElementAtIndex(i).floatValue = lastVal;
-                        property.serializedObject.ApplyModifiedProperties();
-                    }
-                }
-            }
             
             // Type-specific properties (defined in partial class)
             AddTypeSpecificProperties(content, property, type, root);

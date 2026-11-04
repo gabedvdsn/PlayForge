@@ -88,6 +88,9 @@ tracks each fix below by its ID.
 - The Attribute Set inspector's Description and Link Mode undo, and its Level Source and Leveling sections follow an
   Undo (ED-12).
 - The Ability inspector's Description, Activation Policy, Activate Immediately and Link Mode undo (ED-12).
+- Opening a scaler no longer changes it. On an effect with no level link, Lock mode cut its per-level table to one
+  value; other modes resized the table, a Max Level of 0 became 10, and a scaler two list elements shared was cloned.
+  A shared scaler now shows a warning with a button that makes a separate copy (ED-34).
 - Runtime correctness: 96 fixes across ProcessControl, TaskSequence and the GAS core, among them exception isolation,
   queued state changes, pause, effect stacking and ticking, commit order, worker scheduling and targeting.
 - A fresh project imports the package with no warning and no missing type, and the samples import with no missing
