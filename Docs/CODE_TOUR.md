@@ -1,7 +1,7 @@
 # PlayForge refactor: code tour
 
 This tour lists the places where the refactor changed code, so you can open each one in your IDE and read it. It
-covers `01258b8..473ea8e` on `main`: 227 commits. Phase 0 ported Arcade Fighter's fixes, Phase 1 made the runtime
+covers `01258b8..ec008f7` on `main`: 230 commits. Phase 0 ported Arcade Fighter's fixes, Phase 1 made the runtime
 correct, Phase 2 got the package ready to release, and Phase 3 has begun. Each entry says what behaves differently and
 why, names its tracker IDs and Decisions, and points at the two or three places to read. `Docs/REFACTOR_PLAN.md` has
 every tracker row, the numbered Decisions, and a Log of each batch's test results.
@@ -9,8 +9,8 @@ every tracker row, the numbered Decisions, and a Log of each batch's test result
 ## How to use this
 
 - Paths are relative to the repo root.
-- Line numbers are as of commit `473ea8e`, the head of `main` on 2026-11-04. A later commit may move them, so each
-  entry also names the class and method to search for. `git show 473ea8e:<path>` shows a file as it was then.
+- Line numbers are as of commit `ec008f7`, the head of `main` on 2026-11-04. A later commit may move them, so each
+  entry also names the class and method to search for. `git show ec008f7:<path>` shows a file as it was then.
 - In Rider, Go to File accepts `path:line`. In Visual Studio, open the file, then Go To Line (Ctrl+G).
   A bare `:123` after a path means another line in the same file.
 - `git grep "<ID>"` finds the comment at each fix, and `git log --grep "<ID>"` finds its commit. Three exceptions:
@@ -33,8 +33,9 @@ nothing read, then gave the two GAS hubs one core (GAS-S1), turned to cost (GAS-
 GAS-P9, GAS-P7, TS-5, TS-10), removed a stub nothing used (PC-24), made sequences and abilities end in the frame their
 last task does (TS-Z), and kept activation synchronous while a loop of activations goes round once a frame (TS-8).
 Measuring the phase's exit gate turned up two more: a runtime entity's abilities outlived it (GAS-52), and
-interrupting every running ability at once threw, which TS-Z had exposed (GAS-53). Each has a test in Proving Grounds
-named after its ID, seen failing first; the runtime tests run on both hubs. The plan's Log has the gate results.
+interrupting every running ability at once threw, which TS-Z had exposed (GAS-53). The last two steady-state
+allocations it found are gone too (GAS-P10, TS-11). Each has a test in Proving Grounds named after its ID, seen
+failing first; the runtime tests run on both hubs. The plan's Log has the gate results.
 
 ### An entity's affiliation is its own (GAS-47)
 
@@ -45,7 +46,7 @@ own: the registration data's, or else a copy of the asset's.
 - **IDs:** GAS-47, commit `fdc1886`.
 - **Read:**
   - `Assets/PlayForge/Runtime/PlayForge/GAS/Core/GASCore.cs:68`, in `GASCore.Initialize`. The field is at `:18`,
-    `GetAffiliation` at `:208` reads it, and the tag compile at `:228` adds it. The fix went into each hub's copy;
+    `GetAffiliation` at `:209` reads it, and the tag compile at `:229` adds it. The fix went into each hub's copy;
     GAS-S1 later moved it into the core both share.
   - `Assets/PlayForge/Runtime/PlayForge/GAS/Core/MonoBehaviour/GameplayAbilitySystem.cs:41`, where the Mono hub reads
     the registration data's sides as it initializes, and
@@ -145,7 +146,7 @@ away.
 - **IDs:** GAS-S1, commit `5e7f077`.
 - **Read:**
   - `Assets/PlayForge/Runtime/PlayForge/GAS/Core/GASCore.cs:59` `GASCore.Initialize`, the one build order, then
-    `EndOfFrame` (`:131`), `MarkDead` (`:181`) and `CompileGrantedTags` (`:220`).
+    `EndOfFrame` (`:131`), `MarkDead` (`:182`) and `CompileGrantedTags` (`:221`).
   - `Assets/PlayForge/Runtime/PlayForge/GAS/Core/MonoBehaviour/GameplayAbilitySystem.cs:36`
     `GameplayAbilitySystem.WhenInitialize`. The Mono hub builds its core as it registers, from a copy of its asset.
   - `Assets/PlayForge/Runtime/PlayForge/GAS/Core/Runtime/RuntimeGameplayAbilitySystem.cs:64`, the constructor, where
@@ -342,11 +343,11 @@ joins the review found; the parts are now formatted once, and the LINQ left on a
 - **Read:**
   - `Assets/PlayForge/Runtime/PlayForge/Management/GameplayProcess/ProcessDataPacket.cs:74` `TrimPath`, which takes
     the path back to a depth (`:67`).
-  - `Assets/PlayForge/Runtime/PlayForge/Core/TaskSequence/Async/TaskSequenceRuntime.cs:216`, in `Run`, which takes
-    its part off as it ends (`:349`) and starts each time round from it (`:224`). Its failure log reads the path where
-    the run failed (`:310`).
-  - `Assets/PlayForge/Runtime/PlayForge/Core/TaskSequence/Async/TaskSequenceRuntime.cs:514`, in `RunStage`, which
-    notes where its iterations start (`:520`) and keeps the path where it failed (`:577`). `RestartStage` (`:664`)
+  - `Assets/PlayForge/Runtime/PlayForge/Core/TaskSequence/Async/TaskSequenceRuntime.cs:227`, in `Run`, which takes
+    its part off as it ends (`:360`) and starts each time round from it (`:235`). Its failure log reads the path where
+    the run failed (`:321`).
+  - `Assets/PlayForge/Runtime/PlayForge/Core/TaskSequence/Async/TaskSequenceRuntime.cs:525`, in `RunStage`, which
+    notes where its iterations start (`:531`) and keeps the path where it failed (`:588`). `RestartStage` (`:675`)
     takes off what the last iteration added, for both kinds of stage repeat.
   - `Assets/PlayForge/Runtime/PlayForge/Core/TaskSequence/Async/SequenceStage.cs:176` `SequenceStage.PathPart`, and
     `:398` for a sequence, each formatted once for its name.
@@ -366,11 +367,11 @@ runs one stage of one instant task allocated 1,912 bytes either way; under WhenA
 
 - **IDs:** TS-10, commit `a406552`.
 - **Read:**
-  - `Assets/PlayForge/Runtime/PlayForge/Core/TaskSequence/Async/TaskSequenceRuntime.cs:676` `ExecuteStageInternal`,
-    which hands the policy the stage's own source (`:712`) or makes one of its own (`:715`), and disposes only that
-    (`:747`). `OnlyWaits` (`:753`) names the two built-in policies by exact type.
-  - `Assets/PlayForge/Runtime/PlayForge/Core/TaskSequence/Async/TaskSequenceRuntime.cs:538`, in `RunStage`, which passes
-    its source down through `ExecuteStageWithRepeat` (`:613`).
+  - `Assets/PlayForge/Runtime/PlayForge/Core/TaskSequence/Async/TaskSequenceRuntime.cs:687` `ExecuteStageInternal`,
+    which hands the policy the stage's own source (`:723`) or makes one of its own (`:726`), and disposes only that
+    (`:758`). `OnlyWaits` (`:764`) names the two built-in policies by exact type.
+  - `Assets/PlayForge/Runtime/PlayForge/Core/TaskSequence/Async/TaskSequenceRuntime.cs:549`, in `RunStage`, which passes
+    its source down through `ExecuteStageWithRepeat` (`:624`).
 - **Watch for:** a policy of your own still gets a source of its own, as it may cancel what it's handed. One that only
   waits gets no saving unless it's one of the two built in.
 - **Test:** `TS_10_A_stage_that_waits_for_all_its_tasks_makes_no_second_token_source` in `SequenceCostTests`.
@@ -407,8 +408,8 @@ Now each ends in the frame its last task does, and an instant ability in the fra
     (`Assets/PlayForge/Runtime/PlayForge/AbilitySystem/Ability/AbilityProxy/Core/AbilityProxy.cs:210`, `:317`) and
     `RunSequenceTask` for its sequence
     (`Assets/PlayForge/Runtime/PlayForge/AbilitySystem/Tasks/Utility/RunSequenceTask.cs:69`).
-  - `Assets/PlayForge/Runtime/PlayForge/Core/TaskSequence/Async/TaskSequenceRuntime.cs:261`, in `Run`, which waits only
-    for maintained stages it has, and `:269`, where a repeating run that took no frame takes one.
+  - `Assets/PlayForge/Runtime/PlayForge/Core/TaskSequence/Async/TaskSequenceRuntime.cs:272`, in `Run`, which waits only
+    for maintained stages it has, and `:280`, where a repeating run that took no frame takes one.
 - **Watch for:** an instant sequence can end inside `ProcessControl.Register`, and an instant ability inside
   `TryActivateAbility`, so their end callbacks can fire before those calls return. A waiter resumes as the process
   terminates, after it's unregistered.
@@ -452,7 +453,7 @@ too, and an ending entity's ability system shuts before its abilities end.
     `WhenTerminate`, which ends what the process handles, as
     `Assets/PlayForge/Runtime/PlayForge/Management/GameplayProcess/Wrappers/MonoWrapper/Core/AbstractMonoProcess.cs:117`
     does.
-  - `Assets/PlayForge/Runtime/PlayForge/GAS/Core/GASCore.cs:167` `WhenTerminate`, which each hub's `WhenTerminate`
+  - `Assets/PlayForge/Runtime/PlayForge/GAS/Core/GASCore.cs:168` `WhenTerminate`, which each hub's `WhenTerminate`
     calls before its base's, and `ShutDown` in
     `Assets/PlayForge/Runtime/PlayForge/AbilitySystem/Core/AbilitySystemComponent.cs:117`, with the check
     `TryActivateAbility` now makes first (`:346`).
@@ -476,12 +477,42 @@ threw once the first had ended, and the rest ran on. It now walks a copy.
 - **Test:** `GAS_53_Interrupting_every_running_ability_ends_each` in `AbilityLifecycleTests`, on both hubs and each
   way of interrupting.
 
+### A frame whose summary has a listener allocates nothing (GAS-P10)
+
+Each frame made a new snapshot for the `OnFrameComplete` listeners, copying the frame's ten lists: 504 bytes a frame for
+an entity whose summary anyone listened to, 824 with an effect ticking. The listeners' snapshot is now the entity's
+own, refilled each frame, so a listener reads it during the call.
+
+- **IDs:** GAS-P10, commit `11a0f66`, Decision 26.
+- **Read:**
+  - `Assets/PlayForge/Runtime/PlayForge/Workers/Core/FrameSummary.cs:347` `TakeSnapshot`, which refills the summary's
+    one snapshot, and `FrameSummarySnapshot` (`:360`), whose lists it keeps from frame to frame (`Fill`, `:392`).
+    `CreateSnapshot` (`:335`) still makes a copy to keep.
+  - `Assets/PlayForge/Runtime/PlayForge/GAS/Core/GASCore.cs:154`, in `EndOfFrame`, which hands the listeners the
+    refilled snapshot, only when there are some.
+- **Watch for:** a listener that keeps the snapshot sees it change next frame. Copy what you need during the call.
+- **Test:** `GAS_P10_A_frame_whose_summary_has_a_listener_allocates_nothing` in `EffectCostTests`, idle and with an
+  effect ticking. `GAS_39_The_frame_snapshot_carries_effects_injections_and_deaths`, in `WorkerTests`, still holds.
+
+### A task waiting in a delay allocates nothing a frame (TS-11)
+
+A task asks whether its sequence is paused by looking its token up, and the dictionary's default comparer boxed the
+token on every lookup under Unity's Mono, where a token isn't IEquatable: 24 bytes a frame for an ability waiting in a
+`DelayTask` or a `ChannelAbilityTask`. The dictionary now compares tokens as tokens.
+
+- **IDs:** TS-11, commit `ec008f7`.
+- **Read:** `Assets/PlayForge/Runtime/PlayForge/Core/TaskSequence/Async/TaskSequenceRuntime.cs:55` `RunsByToken`,
+  made with `TokenComparer` (`:59`), which `IsPausedRun` (`:162`) looks tokens up in for
+  `SequenceTaskLibrary.IsPaused`.
+- **Test:** `TS_11_A_frame_in_which_an_ability_waits_in_a_delay_allocates_nothing` in `SequenceCostTests`, in both
+  tasks.
+
 ### Still open in Phase 3
 
 No Phase 3 row is open. GAS-51, item stacking that is declared but not built, moved to Phase 5 as FEAT-14, so an
 Item's `MaxStackSize` does nothing until then. The phase's exit gate, zero steady-state allocation enforced in CI,
-isn't met yet: a task's pause lookup takes 24 bytes a frame, a frame summary with a listener 504, and the repo has
-no CI. The plan's Log has the measurement.
+isn't met yet: every steady-state frame its measuring covered allocates nothing now, but the repo has no CI. The
+plan's Log has the measurement.
 
 ## ProcessControl
 
@@ -683,10 +714,10 @@ shared definition. A second run left the first out of reach, and runs broke each
 - **Read:**
   - `Assets/PlayForge/Runtime/PlayForge/Core/TaskSequence/Async/TaskSequence.cs:24` `TaskSequence._runs`, then
     `CreateRuntime` (`:59`) and `Run(TaskSequenceRuntime, ProcessDataPacket, CancellationToken)` (`:75`).
-  - `Assets/PlayForge/Runtime/PlayForge/Core/TaskSequence/Async/TaskSequenceRuntime.cs:79`, the per-run record of
-    fired conditions, broken repeats and repeat counts, read through `IsRepeatBroken` (`:1100`) and `GetRepeatCount`
-    (`:1103`).
-  - `Assets/PlayForge/Runtime/PlayForge/Core/TaskSequence/Async/TaskSequenceRuntime.cs:955`
+  - `Assets/PlayForge/Runtime/PlayForge/Core/TaskSequence/Async/TaskSequenceRuntime.cs:90`, the per-run record of
+    fired conditions, broken repeats and repeat counts, read through `IsRepeatBroken` (`:1111`) and `GetRepeatCount`
+    (`:1114`).
+  - `Assets/PlayForge/Runtime/PlayForge/Core/TaskSequence/Async/TaskSequenceRuntime.cs:966`
     `TaskSequenceRuntime.RunClock` (TS-W).
 - **New:** `TaskSequence.CreateRuntime`, the `Run` overload that takes a runtime, `TaskSequenceRuntime.IsRepeatBroken`
   and `GetRepeatCount`.
@@ -704,12 +735,12 @@ the stages after it. The stop-maintained requests choose among maintained stages
 
 - **IDs:** TS-N, TS-K, TS-J, TS-L.
 - **Read:**
-  - `Assets/PlayForge/Runtime/PlayForge/Core/TaskSequence/Async/TaskSequenceRuntime.cs:496`
-    `TaskSequenceRuntime.RunStage`, and `ExecuteSubStage` (`:482`).
-  - `Assets/PlayForge/Runtime/PlayForge/Core/TaskSequence/Async/TaskSequenceRuntime.cs:1274`
-    `RequestSkipCurrentStage`, which acts on `_injectionSource` (`:119`), the stage applying the injection. Then
-    `RequestSkipAndMaintain` (`:1280`) and the stop-maintained requests from `:1292`.
-  - `Assets/PlayForge/Runtime/PlayForge/Core/TaskSequence/Async/TaskSequenceRuntime.cs:373`
+  - `Assets/PlayForge/Runtime/PlayForge/Core/TaskSequence/Async/TaskSequenceRuntime.cs:507`
+    `TaskSequenceRuntime.RunStage`, and `ExecuteSubStage` (`:493`).
+  - `Assets/PlayForge/Runtime/PlayForge/Core/TaskSequence/Async/TaskSequenceRuntime.cs:1285`
+    `RequestSkipCurrentStage`, which acts on `_injectionSource` (`:130`), the stage applying the injection. Then
+    `RequestSkipAndMaintain` (`:1291`) and the stop-maintained requests from `:1303`.
+  - `Assets/PlayForge/Runtime/PlayForge/Core/TaskSequence/Async/TaskSequenceRuntime.cs:384`
     `TaskSequenceRuntime.StopMaintainedStages`.
 
 ### Cancellation and cleanup
@@ -723,12 +754,12 @@ of a repeating sequence.
 
 - **IDs:** TS-AA, TS-A, TS-E, TS-AD.
 - **Read:**
-  - `Assets/PlayForge/Runtime/PlayForge/Core/TaskSequence/Async/TaskSequenceRuntime.cs:381`
-    `TaskSequenceRuntime.ExecuteStagesSequentially`. The wait on the stage signal is at `:420` (TS-AA).
+  - `Assets/PlayForge/Runtime/PlayForge/Core/TaskSequence/Async/TaskSequenceRuntime.cs:392`
+    `TaskSequenceRuntime.ExecuteStagesSequentially`. The wait on the stage signal is at `:431` (TS-AA).
   - `Assets/PlayForge/Runtime/PlayForge/Core/TaskSequence/Async/SequenceCore.cs:268`
     `WhenAnyStagePolicy.AwaitCompletion` (the fix at `:303`), and `:332` `WhenNStagePolicy.AwaitCompletion` (`:379`).
-  - `Assets/PlayForge/Runtime/PlayForge/Core/TaskSequence/Async/TaskSequenceRuntime.cs:579`, the `finally` of
-    `RunStage` (TS-E, TS-AD), and `:1425` `Cleanup` (TS-AD).
+  - `Assets/PlayForge/Runtime/PlayForge/Core/TaskSequence/Async/TaskSequenceRuntime.cs:590`, the `finally` of
+    `RunStage` (TS-E, TS-AD), and `:1436` `Cleanup` (TS-AD).
 
 ### Repeats
 
@@ -737,8 +768,8 @@ task that resets in `Prepare`, such as `SyncDelay`, finished at once from the se
 finished without yielding repeated forever inside one frame.
 
 - **IDs:** TS-M.
-- **Read:** `Assets/PlayForge/Runtime/PlayForge/Core/TaskSequence/Async/TaskSequenceRuntime.cs:613`
-  `TaskSequenceRuntime.ExecuteStageWithRepeat`, and `:661` `RestartStage`.
+- **Read:** `Assets/PlayForge/Runtime/PlayForge/Core/TaskSequence/Async/TaskSequenceRuntime.cs:624`
+  `TaskSequenceRuntime.ExecuteStageWithRepeat`, and `:672` `RestartStage`.
 - **Watch for:** tasks in a repeating stage get `Prepare` and `Clean` on every iteration, not once.
 
 ### Pause inside a sequence (Decision 5)
@@ -752,10 +783,10 @@ helpers kept their signatures. `ChannelAbilityTask` yielded twice a loop, so a c
 
 - **IDs:** TS-Y, TS-AB, Decision 5.
 - **Read:**
-  - `Assets/PlayForge/Runtime/PlayForge/Core/TaskSequence/Async/TaskSequenceRuntime.cs:139`
-    `TaskSequenceRuntime.Pause`, then `IsPausedRun` (`:151`), `Delay` (`:160`) and `HoldWhilePaused` (`:171`). The
-    token map is at `:55`; `ExecuteStageInternal` adds each stage's token at `:720` and holds a finished stage at
-    `:738`.
+  - `Assets/PlayForge/Runtime/PlayForge/Core/TaskSequence/Async/TaskSequenceRuntime.cs:150`
+    `TaskSequenceRuntime.Pause`, then `IsPausedRun` (`:162`), `Delay` (`:171`) and `HoldWhilePaused` (`:182`). The
+    token map is at `:55`; `ExecuteStageInternal` adds each stage's token at `:731` and holds a finished stage at
+    `:749`.
   - `Assets/PlayForge/Runtime/PlayForge/Core/TaskSequence/Async/TaskSequenceProcess.cs:263`
     `TaskSequenceProcess.TryHandlePause`, and `TryHandleResume` (`:273`).
   - `Assets/PlayForge/Runtime/PlayForge/Core/TaskSequence/Async/SequenceTaskLibrary.cs:847`
@@ -777,8 +808,8 @@ between two sequences is false rather than a throw.
 
 - **IDs:** TS-F, TS-G, TS-O.
 - **Read:**
-  - `Assets/PlayForge/Runtime/PlayForge/Core/TaskSequence/Async/TaskSequenceRuntime.cs:199`
-    `TaskSequenceRuntime.Run`. The outer runtime is kept at `:212` and given back at `:348`.
+  - `Assets/PlayForge/Runtime/PlayForge/Core/TaskSequence/Async/TaskSequenceRuntime.cs:210`
+    `TaskSequenceRuntime.Run`. The outer runtime is kept at `:223` and given back at `:359`.
   - `Assets/PlayForge/Runtime/PlayForge/AbilitySystem/Tasks/Utility/RunSequenceTask.cs:23`
     `RunSequenceTask.Activate`. The relay ends the inner sequence at `:77`.
   - `Assets/PlayForge/Runtime/PlayForge/Core/TaskSequence/Async/TaskSequence.cs:364` `TaskSequenceChain.Run`, and
@@ -1180,7 +1211,7 @@ the sources' lists instead of allocating iterators.
 - **Read:**
   - `Assets/PlayForge/Runtime/PlayForge/Tag/TagQuery.cs:98` `TagQuery.CountMatches(TagCache)`, and `Matches`
     (`:135`). The hubs call it from `QueryTags`
-    (`Assets/PlayForge/Runtime/PlayForge/GAS/Core/GASCore.cs:232`).
+    (`Assets/PlayForge/Runtime/PlayForge/GAS/Core/GASCore.cs:233`).
   - `Assets/PlayForge/Runtime/PlayForge/Tag/Tag.cs:94` `Tag.Child`, and the implicit conversion at `:348`.
   - `Assets/PlayForge/Runtime/PlayForge/Tag/GrantedTagCompiler.cs:14` `GrantedTagCompiler`.
 - **New:** `GrantedTagCompiler` (internal).
@@ -1202,8 +1233,8 @@ idle frame allocates nothing: `ActionQueue` keeps a count, and the snapshot is b
     `ImpactWorkerCache.RunImpactData`. The new case is at `:100`.
   - `Assets/PlayForge/Runtime/PlayForge/Workers/ImpactWorker/Authored/RelativeOperationContextImpactWorker.cs:31`
     `RelativeOperationContextImpactWorker.Execution` (GAS-41).
-  - `Assets/PlayForge/Runtime/PlayForge/Workers/Core/FrameSummary.cs:360`, the `FrameSummarySnapshot` constructor
-    (GAS-39). `StandardWorkerGroup.ProvideWorkersTo`
+  - `Assets/PlayForge/Runtime/PlayForge/Workers/Core/FrameSummary.cs:392` `FrameSummarySnapshot.Fill`, which takes
+    them (GAS-39). `StandardWorkerGroup.ProvideWorkersTo`
     (`Assets/PlayForge/Runtime/PlayForge/Workers/Core/StandardWorkerGroup.cs:26`) has the guard.
 - How raw deltas and the system's own changes reach workers is under Effects (Decision 9) and Attributes (Decision 14).
 
@@ -1392,7 +1423,7 @@ kept on purpose: static tag fields register once per domain, as their types init
 - **IDs:** SP-22, PC-26, Decision 17. The Asset Store requires this from Editor 6.6 (rule 2.5.h).
 - **Read:**
   - `Assets/PlayForge/Runtime/PlayForge/Utils/AttributeRegistry.cs:14` `AttributeRegistry.Clear`.
-  - `Assets/PlayForge/Runtime/PlayForge/Core/TaskSequence/Async/TaskSequenceRuntime.cs:60`
+  - `Assets/PlayForge/Runtime/PlayForge/Core/TaskSequence/Async/TaskSequenceRuntime.cs:71`
     `TaskSequenceRuntime.ClearRuns`.
   - `Assets/PlayForge/Runtime/PlayForge/AbilitySystem/Core/AbilityActivationHandle.cs:22`
     `AbilityActivationHandle.ResetIds`.
@@ -1465,6 +1496,8 @@ Newest first. Each row is a good place to start reading.
 
 | What | IDs | Where | Commit |
 |---|---|---|---|
+| A task waiting in a delay allocates nothing a frame | TS-11 | `Assets/PlayForge/Runtime/PlayForge/Core/TaskSequence/Async/TaskSequenceRuntime.cs:55` | `ec008f7` |
+| A frame whose summary has a listener allocates nothing | GAS-P10, Decision 26 | `Assets/PlayForge/Runtime/PlayForge/Workers/Core/FrameSummary.cs:347` | `11a0f66` |
 | Interrupting every running ability ends each | GAS-53 | `Assets/PlayForge/Runtime/PlayForge/AbilitySystem/Core/AbilitySystemComponent.cs:435` | `473ea8e` |
 | A runtime entity's abilities end when it does | GAS-52 | `Assets/PlayForge/Runtime/PlayForge/Management/GameplayProcess/Wrappers/ClassWrapper/AbstractRuntimeProcess.cs:119` | `3102975` |
 | An ability asked for inside its own activation starts next frame | TS-8, Decision 25 | `Assets/PlayForge/Runtime/PlayForge/AbilitySystem/Core/AbilitySystemComponent.cs:342` | `c45f4f1` |
