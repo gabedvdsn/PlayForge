@@ -198,6 +198,22 @@ from. It lives outside `Assets/` so it never ships in the package.
 - Decision 16, 2026-11-03: the samples move to `Samples~`, Unity's layout for package samples (SP-20). Package Manager
   lists them and imports one on request, and a fresh import contains none. Editing one in this repo means importing
   it first. The Asset Store export copies them in on the packaging branch, beside the UniTask embedding.
+- Decision 17, 2026-11-03: PlayForge is submitted from 6000.0, the oldest Editor it supports, as `PUBLISHING.md`
+  says. SP-22 and SP-23 are done anyway, so a buyer on URP or with domain reloading off meets no surprise.
+- Decision 18, 2026-11-03: the UI interview's 37 questions are answered, and the doc's Answers section lists every
+  answer. Each one took the doc's lean except Q18, which only the user could answer, and Q34, which adds a
+  first-ability wizard. What Phase 2 takes from it:
+  - ED-19: the main window is The Forge, and every window's title matches its menu item (Q31). The menu moves to
+    `Window/PlayForge/` (Q32). Run Golden Tests leaves the menu, since the Test Runner runs the scenarios (SP-18) and
+    batch mode still calls `RunAll`. The Audit stays until Phase 4's Problems view.
+  - ED-16: the help buttons open the package's own `Documentation/*.md`, through one table of links (Q33).
+  - ED-8: Undo is to cover everything (Q16), so deleting an asset moves it to the trash.
+  - ED-12's Phase 2 part: an asset's tag is written only when its name is edited, in the same Undo step, and the
+    asset is marked dirty. Viewing never writes; a stale tag shows a warning with an Update button.
+  - Phase 4 is a redesign, one surface at a time (Q3): native to Unity (Q2), legible in both themes (Q10), and built
+    from a kit of C# controls styled in USS (Q13). Undo through SerializedObject, multi-editing and no polling come
+    first (Q35). The editor code becomes internal before 1.0 (Q37). The smoke suite proves, in each theme, that every
+    window opens without an exception and scripted edits undo (Q36).
 
 **Open. Ask the user; do not assume:**
 1. ~~**Uncommitted changes**~~: decided, see above.
@@ -216,11 +232,7 @@ from. It lives outside `Assets/` so it never ships in the package.
 14. ~~**Derived refreshes (GAS-27)**~~: decided, see above.
 15. ~~**QuickOutline (SP-5)**~~: decided, see above.
 16. ~~**Sample layout (SP-20)**~~: decided, see above.
-17. **The submission Editor (SP-22, SP-23)**: which Editor uploads to the Asset Store? `PUBLISHING.md` says the oldest
-    supported, 6000.0. The guidelines (page updated 2026-10-23) require URP or HDRP support of anything submitted
-    from 6.5 or newer (1.3.c), and the Demos are Built-in RP. They also require every package to work with domain
-    reloading off "starting with" 6.6 (2.5.h), without saying whether that means the Editor submitted from or the
-    versions supported.
+17. ~~**The submission Editor (SP-22, SP-23)**~~: decided, see above.
 
 ## Roadmap
 
@@ -446,7 +458,8 @@ had no letter in the review. TS-AA onward came from the test project.
 | ED-28 | L | 2 | Dead UI: `QuickFillWindow` is never opened, `m_AbilityIcon` is never assigned, and four editor `.cs.meta` files name UXML GUIDs that exist nowhere | `ScalerDrawerWindows.cs:356-372`, `AbilityEditor.cs:19-20, 70`, `AbilityEditor.cs.meta:7` | fixed |
 
 The design questions behind Phase 4's rows, each with its evidence, are in the UI interview doc of 2026-11-03,
-https://claude.ai/artifact/BbnGybqgX3spJsT6HoTafp. ED-16 and ED-19 wait on its questions 31 to 33.
+https://claude.ai/artifact/BbnGybqgX3spJsT6HoTafp. Its answers (Decision 18) settle ED-8, ED-16, ED-19 and ED-12's
+Phase 2 part, and set Phase 4's direction.
 
 ### Samples and packaging
 
@@ -473,8 +486,8 @@ https://claude.ai/artifact/BbnGybqgX3spJsT6HoTafp. ED-16 and ED-19 wait on its q
 | SP-19 | C | 2 | Unused `using log4net.Appender` and `using Codice.CM.SEIDInfo` compiled only through the DLLs in `com.unity.collab-proxy`, so the Editor assembly failed in any project without that package | `AbstractRefDrawer.cs:5`, `ForgeDrawerStyles.cs:2` | fixed |
 | SP-20 | H | 2 | `Samples/` is neither `Samples~` nor covered by an asmdef, so as a package its 15 scripts never compile, Unity warns about each one on every compile, and the samples can't run | `Samples/` | fixed |
 | SP-21 | M | 2 | Editor UXML and USS break on a clean import: 4 `TypeLoadException`s from stale `…, Assembly-CSharp` type names (`FESGameplayAbilitySystem.GameRoot` and `.ProcessControl`, the removed `FrameworkIndex`, and `EAbilityActivationPolicyExtended`, which moved assembly), 9 invalid paths to assets outside the package (`Editor/Icons/Creator/ability.png`, `Assets/TextMesh Pro/…`), and an unknown `:last-child` pseudo class. Nothing references `forge_abilityDrawer.uxml`; the other two are default references in script `.meta` files, so check them against ED-20's dead UXML and USS | `fesgas_bootstrapper.uxml`, `forge_abilityDrawer.uxml`, `AbilityInspector.uss:52` | fixed |
-| SP-22 | M | 2 | Untested with domain reloading off (Enter Play Mode Options). The Asset Store requires every package to work that way starting with Editor 6.6 (rule 2.5.h), so the static state in ProcessControl, the registries and the caches needs a check. Decision 17 is pending | — | open |
-| SP-23 | M | 2 | The Demos are Built-in RP only: all ten of their materials use the Standard shader, which renders magenta under URP. The Asset Store requires URP or HDRP support of new assets and updates submitted from Editor 6.5 or newer (rule 1.3.c). Decision 17 is pending | `Samples~/Demos/**/*.mat`, `PUBLISHING.md` | open |
+| SP-22 | M | 2 | Untested with domain reloading off (Enter Play Mode Options). The Asset Store requires every package to work that way starting with Editor 6.6 (rule 2.5.h), so the static state in ProcessControl, the registries and the caches needs a check. Decision 17 keeps it in Phase 2 | — | open |
+| SP-23 | M | 2 | The Demos are Built-in RP only: all ten of their materials use the Standard shader, which renders magenta under URP. The Asset Store requires URP or HDRP support of new assets and updates submitted from Editor 6.5 or newer (rule 1.3.c). Decision 17 keeps it in Phase 2, though a 6.0 submission isn't bound by the rule | `Samples~/Demos/**/*.mat`, `PUBLISHING.md` | open |
 
 ### Missing features (Phase 5)
 
