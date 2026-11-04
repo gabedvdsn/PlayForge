@@ -1,7 +1,7 @@
 # PlayForge refactor: code tour
 
 This tour lists the places where the refactor changed code, so you can open each one in your IDE and read it. It
-covers `01258b8..a33a0bd` on `main`: 209 commits. Phase 0 ported Arcade Fighter's fixes, Phase 1 made the runtime
+covers `01258b8..6860c24` on `main`: 211 commits. Phase 0 ported Arcade Fighter's fixes, Phase 1 made the runtime
 correct, Phase 2 got the package ready to release, and Phase 3 has begun. Each entry says what behaves differently and
 why, names its tracker IDs and Decisions, and points at the two or three places to read. `Docs/REFACTOR_PLAN.md` has
 every tracker row, the numbered Decisions, and a Log of each batch's test results.
@@ -9,8 +9,8 @@ every tracker row, the numbered Decisions, and a Log of each batch's test result
 ## How to use this
 
 - Paths are relative to the repo root.
-- Line numbers are as of commit `a33a0bd`, the head of `main` on 2026-11-03. A later commit may move them, so each
-  entry also names the class and method to search for. `git show a33a0bd:<path>` shows a file as it was then.
+- Line numbers are as of commit `6860c24`, the head of `main` on 2026-11-03. A later commit may move them, so each
+  entry also names the class and method to search for. `git show 6860c24:<path>` shows a file as it was then.
 - In Rider, Go to File accepts `path:line`. In Visual Studio, open the file, then Go To Line (Ctrl+G).
   A bare `:123` after a path means another line in the same file.
 - `git grep "<ID>"` finds the comment at each fix, and `git log --grep "<ID>"` finds its commit. Three exceptions:
@@ -30,8 +30,8 @@ every tracker row, the numbered Decisions, and a Log of each batch's test result
 
 Phase 3 began on `main` with the rows that writing the reference docs turned up, five runtime bugs and two settings
 nothing read, then gave the two GAS hubs one core (GAS-S1) and turned to cost (GAS-P3, GAS-P5, GAS-P4, GAS-P6,
-GAS-P8). Each has a test in Proving Grounds named after its ID, seen failing first; the runtime tests run on both hubs.
-The plan's Log has the gate results.
+GAS-P8, GAS-P9). Each has a test in Proving Grounds named after its ID, seen failing first; the runtime tests run on
+both hubs. The plan's Log has the gate results.
 
 ### An entity's affiliation is its own (GAS-47)
 
@@ -278,12 +278,41 @@ its carrier kept, allocated 356 bytes; it now allocates nothing. `GenerateSimple
   `IAttributeImpactCarrier.GenerateSourceDerivation(source, attribute)`. `GenerateSimple` makes a new one per call.
 - **Test:** `GAS_P8_A_frame_in_which_a_raw_delta_lands_allocates_nothing` in `RawDeltaTests`.
 
+### Rescales, lifesteal and the action queue allocate nothing (GAS-P9)
+
+Each rescale that keeps Current in proportion to Base, and each lifesteal heal, made a new carrier for the source, and
+a new action when deferred. Taking any action off the queue walked a SortedDictionary, whose enumerator allocated. A
+frame in which an attribute rescaled with its Base allocated 500 bytes, one in which lifesteal healed 164 inline and
+532 deferred, and taking one action off the queue 104. Each is now 0.
+
+- **IDs:** GAS-P9, commit `6860c24`, Decision 21. Split from GAS-P8.
+- **Read:**
+  - `Assets/PlayForge/Runtime/PlayForge/GameplayEffect/Core/IAttributeImpactCarrier.cs:208` `SourceCarriers`, the
+    table keyed weakly by source. `For` (`:224`) makes a carrier again only when its impact types or group change.
+  - `Assets/PlayForge/Runtime/PlayForge/AttributeSystem/Attribute/CachedAttributeValue.cs:593` `EnforceScaling`, which
+    takes its carrier from one table for every attribute (`:621`) and its action from the attribute's spares (`:616`).
+  - `Assets/PlayForge/Runtime/PlayForge/Workers/ImpactWorker/Authored/RelativeOperationContextImpactWorker.cs:69`
+    `TryWork`, the change both halves make, and `CreateDeferredActions` (`:51`), which hands its action back in a
+    list it reuses.
+  - `Assets/PlayForge/Runtime/PlayForge/GAS/ActionQueue/BuiltinActions.cs:54` `ModifyAttributeAction.Rent`, and
+    `:67` `Release`, which the queue calls once it has run the action
+    (`Assets/PlayForge/Runtime/PlayForge/GAS/ActionQueue/ActionQueue.cs:157`).
+  - `Assets/PlayForge/Runtime/PlayForge/GAS/ActionQueue/ActionQueue.cs:187` `DequeueNext`, which walks the buckets
+    (`:16`) by index. `BucketFor` (`:82`) puts a new priority in its place, and `EnqueueRange` reads a list by index
+    (`:105`).
+- **Watch for:** a listener of `OnActionQueued` or `OnActionExecuted` reads an action during the call, since one the
+  system made is used again. The lifesteal worker's `CreateDeferredActions` returns a list it reuses: queue what it
+  returns at once.
+- **Tests:** `GAS_P9_A_frame_in_which_an_attribute_rescales_with_its_Base_allocates_nothing` and
+  `GAS_P9_A_frame_in_which_lifesteal_heals_allocates_nothing` in `EffectCostTests`, and
+  `GAS_P9_Taking_an_action_off_the_queue_allocates_nothing` with its control,
+  `Actions_run_by_priority_and_in_the_order_queued`, in `ActionQueueTests`.
+
 ### Still open in Phase 3
 
-Performance and structure work: GAS-P7 (tags hashed and compared as strings, which needs a design call), GAS-P9 (the
-changes the system makes on someone's behalf, auto-scaling's and lifesteal's, allocate per change, which needs a call
-too), PC-24, TS-5, TS-8, TS-10 and TS-Z. GAS-51, item stacking that is declared but not built, moved to Phase 5 as
-FEAT-14, so an Item's `MaxStackSize` does nothing until then.
+Performance and structure work: GAS-P7 (tags hashed and compared as strings, which needs a design call), PC-24, TS-5,
+TS-8, TS-10 and TS-Z. GAS-51, item stacking that is declared but not built, moved to Phase 5 as FEAT-14, so an Item's
+`MaxStackSize` does nothing until then.
 
 ## ProcessControl
 
