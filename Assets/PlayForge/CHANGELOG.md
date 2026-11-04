@@ -37,6 +37,9 @@ tracks each fix below by its ID.
 - Applying an effect costs the same however many effects the entity carries. It no longer re-checks every effect's
   requirements or rebuilds the entity's tags: the requirements are checked once, at the entity's next update, and a
   durational effect's tags count from the moment it lands, so its own application workers see them.
+- Ending an effect costs the same however many end with it, so a cleanse or a mass expiry costs as many as it ends,
+  not their square. Effects ending in the same update leave the entity together before any of their removals run, so
+  a removal worker no longer finds another effect that is ending with its own.
 
 ### Fixed
 - Runtime correctness: 96 fixes across ProcessControl, TaskSequence and the GAS core, among them exception isolation,

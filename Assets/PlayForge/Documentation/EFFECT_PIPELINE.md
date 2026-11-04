@@ -157,7 +157,8 @@ Tick (per update):
    → per execute tick: CommitImpact per Periodic entry + contained OnTick effects
 
 Remove (ClearFinishedEffects):
-   off shelf → OnRemove: ReverseImpact() = UnregisterModifier per Continuous entry,
+   the pass's finished containers off the shelf and the index together
+   → each: OnRemove: ReverseImpact() = UnregisterModifier per Continuous entry,
    then contained OnRemove effects → removal workers → RecordEffectRemoved + EffectRemoved callback
 ```
 
@@ -178,10 +179,13 @@ absorbed** — the append path would double-tick otherwise.
 
 ### 4.2 Loop-safety invariants (do not undo)
 
-- All finish paths go through `MarkFinished` (exactly-once; duplicate OnRemove = double reversal).
+- All finish paths go through `MarkFinished` (exactly-once; duplicate OnRemove = double reversal). A
+  set mirrors the finished list, so marking a container and skipping a finished one never walk it.
 - `TickEffectShelf` iterates by index over the frame-start count (contained effects add to the
   shelf mid-loop); already-finished containers are skipped.
-- `ClearFinishedEffects` snapshots-and-clears, removes from the shelf **before** `OnRemove`.
+- `ClearFinishedEffects` snapshots-and-clears, then takes the whole pass off the shelf and out of the
+  index, in one walk of each, **before** any `OnRemove`. Taken off one at a time, each a linear
+  remove, ending n containers cost n² (GAS-P5).
 - Scaler-driven execute-tick counts are evaluated once per batch, never per loop iteration.
 - An effect asked for again on an entity before its own application there is over is refused, with one
   warning per entity and effect. An effect that contains itself, directly or through other contained

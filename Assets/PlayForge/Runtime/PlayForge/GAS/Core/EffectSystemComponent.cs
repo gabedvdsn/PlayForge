@@ -31,6 +31,14 @@ namespace FarEmerald.PlayForge
         private readonly List<AbstractEffectContainer> FinishedEffects = new();
         private bool needsCleaning;
 
+        // What FinishedEffects holds, to look up without walking it. Marking a container finished, and the tick's and
+        // the requirement pass's skip of a finished one, each searched the list, so ending n effects cost n² (GAS-P5)
+        private readonly HashSet<AbstractEffectContainer> finishedSet = new();
+
+        // A cleaning pass's containers, which leave the shelf and the index together (GAS-P5)
+        private readonly HashSet<AbstractEffectContainer> leaving = new();
+        private readonly Predicate<AbstractEffectContainer> isLeaving;
+
         // The shelf's containers by asset tag, in shelf order, for re-application and removal to find their own. They
         // walked the whole shelf, comparing every container's tag (GAS-P3)
         private readonly Dictionary<Tag, List<AbstractEffectContainer>> byTag = new();
@@ -50,6 +58,7 @@ namespace FarEmerald.PlayForge
         public EffectSystemComponent(IGameplayAbilitySystem self)
         {
             Self = self;
+            isLeaving = leaving.Contains;
         }
 
         private AttributeSystemComponent AttributeSystem => Self.GetAttributeSystem();
@@ -202,16 +211,20 @@ namespace FarEmerald.PlayForge
             GrantedTagCompiler.AddEffect(Self.GetTagCache(), container.Spec);
         }
 
-        private void Unshelve(AbstractEffectContainer container)
+        /// <summary>
+        /// Takes a cleaning pass's containers off the shelf and out of the index, in one walk of each. Taken off one at a
+        /// time, each a linear remove, ending n containers cost n² (GAS-P5).
+        /// </summary>
+        private void Unshelve(AbstractEffectContainer[] finished)
         {
-            EffectShelf.Remove(container);
+            for (int i = 0; i < finished.Length; i++) leaving.Add(finished[i]);
 
-            // Under the tag it was shelved with, unless the effect's tag has changed since
-            if (byTag.TryGetValue(container.Spec.Base.Tags.AssetTag, out var same) && same.Remove(container)) return;
-            foreach (var list in byTag.Values)
-            {
-                if (list.Remove(container)) return;
-            }
+            EffectShelf.RemoveAll(isLeaving);
+
+            // Every list, not only the one under each container's tag, which may have changed since it was shelved
+            foreach (var list in byTag.Values) list.RemoveAll(isLeaving);
+
+            leaving.Clear();
         }
 
         /// <summary>
@@ -423,7 +436,7 @@ namespace FarEmerald.PlayForge
         /// </summary>
         private void MarkFinished(AbstractEffectContainer container)
         {
-            if (FinishedEffects.Contains(container)) return;
+            if (!finishedSet.Add(container)) return;
 
             FinishedEffects.Add(container);
             needsCleaning = true;
@@ -439,7 +452,7 @@ namespace FarEmerald.PlayForge
 
             foreach (var container in EffectShelf)
             {
-                if (FinishedEffects.Contains(container)) continue;
+                if (finishedSet.Contains(container)) continue;
 
                 if (ForgeHelper.ValidateEffectRemovalRequirements(container.Spec))
                 {
@@ -465,7 +478,7 @@ namespace FarEmerald.PlayForge
             for (int i = 0; i < shelfCount; i++)
             {
                 var container = EffectShelf[i];
-                if (FinishedEffects.Contains(container)) continue;
+                if (finishedSet.Contains(container)) continue;
 
                 var durationPolicy = container.Spec.Base.DurationSpecification.DurationPolicy;
                 if (durationPolicy == EEffectDurationPolicy.Instant) continue;
@@ -528,13 +541,15 @@ namespace FarEmerald.PlayForge
             // update — mutating the list we're iterating would throw.
             var finished = FinishedEffects.ToArray();
             FinishedEffects.Clear();
+            finishedSet.Clear();
             needsCleaning = false;
+
+            // Off the shelf and out of the index FIRST, the whole pass together, so re-entrant
+            // HandleGameplayEffects passes and removals can't re-mark a container that is mid-removal (GAS-P5)
+            Unshelve(finished);
 
             foreach (var container in finished)
             {
-                // Off the shelf FIRST so re-entrant HandleGameplayEffects passes can't
-                // re-mark a container that is mid-removal.
-                Unshelve(container);
                 container.OnRemove();
 
                 var effectContext = new EffectWorkerContext(

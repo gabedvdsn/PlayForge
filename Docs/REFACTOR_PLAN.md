@@ -440,7 +440,7 @@ had no letter in the review. TS-AA onward came from the test project.
 | GAS-P2 | M | 0 | Tag and FrameSummary allocations (PF-007) | `TagCache.cs:60`, `TagQuery.cs:89-136`, `FrameSummary.cs:306-308` | verified |
 | GAS-P3 | M | 3 | Each application revalidates every container and rebuilds all tags (area application is quadratic). Measured: an instant application on an entity carrying 1,000 effects took 0.49 ms, 135 times one on an entity carrying 2. Now the requirements wait for one pass at the next tick, a shelved container's tags are counted as it lands, and re-application and removal find containers in an index by asset tag | `EffectSystemComponent.cs:312-348`, `GameplayAbilitySystem.cs:250-281` | fixed |
 | GAS-P4 | M | 3 | Recompute allocations; impacter lookups allocate every tick; string tags with no interning | `CachedAttributeValue.cs:175, 203, 348`, `GameplayEffectSpec.cs:174, 188`, `Tag.cs:266, 286-288` | open |
-| GAS-P5 | M | 3 | Ending effects is quadratic. `FinishedEffects` is a list, so marking a container finished searches it, the shelf's tick and the requirement pass search it for every container, and clearing takes each off the shelf with a linear remove. A cleanse or a mass expiry of n containers costs n². Found fixing GAS-P3 | `EffectSystemComponent.cs` (`MarkFinished`, `TickEffectShelf`, `HandleGameplayEffects`, `ClearFinishedEffects`) | open |
+| GAS-P5 | M | 3 | Ending effects is quadratic. `FinishedEffects` is a list, so marking a container finished searches it, the shelf's tick and the requirement pass search it for every container, and clearing takes each off the shelf with a linear remove. A cleanse or a mass expiry of n containers costs n². Found fixing GAS-P3. Measured: ending 3,000 at once cost 0.0057 ms each, five to nine times as much as ending 50. Now a set mirrors the finished list, and a cleaning pass takes its containers off the shelf and out of the index together, in one walk of each | `EffectSystemComponent.cs` (`MarkFinished`, `TickEffectShelf`, `HandleGameplayEffects`, `ClearFinishedEffects`) | fixed |
 | GAS-S1 | M | 3 | The GAS twins duplicate about 400 lines and have drifted; `ToGASObject()` returns null on Runtime. Both now forward to one `GASCore`. The drift found: a runtime GAS applied no affiliation tags and lost its Entity asset's Local Data, and the GAS Debugger, asking `ToGASObject()`, named every runtime entity "unknown". `ToGASObject()` stays null on Runtime, which has no MonoBehaviour. What a hub keeps on purpose: the Mono hub builds at registration and a runtime GAS in its constructor, and on death the Mono hub ends at once while a runtime GAS queues its end | `GameplayAbilitySystem*.cs`, `RuntimeGameplayAbilitySystem*.cs`, `GASCore.cs` | fixed |
 
 ### Editor and UI
@@ -563,6 +563,18 @@ GAS-4 with GAS-5, PC-6, and TS-I with PC-5.
 ## Log
 
 Record baselines, gate results and notable decisions here, newest first.
+
+- 2026-11-03, **GAS-P5: ending an effect costs the same however many end with it.** A set mirrors the finished list,
+  so marking a container and skipping a finished one no longer walk it, and a cleaning pass takes its containers off
+  the shelf and out of the index together, in one walk of each, before any `OnRemove`. Its test,
+  `GAS_P5_Ending_an_effect_costs_the_same_however_many_end_with_it`, was seen failing first on both hubs.
+  - **Measured,** per ended effect, ending 50 at once and 3,000 at once: 0.0006 or 0.0012 ms and 0.0057 ms before,
+    and 0.0005 ms for either now. GAS-P3's application cost still holds at about 0.001 ms.
+  - **Tests:** PlayMode 862: 855 pass, 0 fail and 7 planted are skipped, in three orders. Planted 7 of 7; EditMode
+    39 of 39. The 25 golden scenarios pass inside PlayMode; the custom runner still can't run while the user's editor
+    holds PlayForge's lock.
+  - **Changed on purpose:** effects ending in the same update leave the shelf together, so one's removal workers no
+    longer find another that is ending with it.
 
 - 2026-11-03, **GAS-P3: an application costs the same however much the entity carries.** Applying no longer walks the
   shelf. The shelf's requirements wait for one pass at the next tick, a shelved container's tags are counted as it
