@@ -23,7 +23,7 @@ name.
 - **Textures**: icons, each paired with a tag. The texture tagged `Primary` is the item's icon. Without one, the first
   texture is used.
 - **Allow Duplicates**: marks an item that an inventory may hold more than once. The runtime doesn't read this flag in
-  this version. The entity's **Allow Duplicate Items** setting decides instead.
+  this version. The entity's **Allow Duplicate Items** setting decides instead (see [ENTITIES.md](ENTITIES.md)).
 
 ## Tags
 

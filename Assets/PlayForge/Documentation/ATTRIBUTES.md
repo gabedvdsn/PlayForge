@@ -6,7 +6,8 @@ starting values for the attribute from its Attribute Set, and gameplay effects c
 
 At runtime each entity holds two values for each of its attributes. **Base** is the value the attribute is measured
 against, and **Current** is the value in play. For a pool such as Health, Base is the maximum and Current is what is
-left. For a stat such as Strength, the two are often the same. The Attribute Set's bounds keep them in range.
+left. For a stat such as Strength, the two are often the same. The Attribute Set's bounds keep them in range (see
+[ATTRIBUTE_SETS.md](ATTRIBUTE_SETS.md)).
 
 Attribute sets, effects, validation rules and workers refer to the attribute asset itself. An attribute has no asset
 tag. Each section below matches the inspector section of the same name.

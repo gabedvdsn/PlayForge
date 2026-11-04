@@ -34,12 +34,12 @@ the ability's level under it. Each section below matches the inspector section o
   the entity's GAS initializes.
 - **Textures**: icons, each paired with a tag. The texture tagged `Primary` is the ability's icon. Without one, the
   first texture is used.
-- **Ability Cost** and **Ability Cooldown**: gameplay effects applied to the caster when a stage applies usage effects
-  (see Runtime Behaviour). A cost is usually an Instant effect that lowers a resource such as Mana. A cooldown is usually
-  a Durational effect: while it is active, the caster carries its asset tag, and the Cooldown validation rule refuses
-  the ability. When you assign an effect, the field offers to link it to this ability. Its **+** button creates a new
-  effect that is already linked. If The Forge's settings name a template for costs or cooldowns, an import button
-  creates the effect from that template.
+- **Ability Cost** and **Ability Cooldown**: gameplay effects ([EFFECTS.md](EFFECTS.md)) applied to the caster when a
+  stage applies usage effects (see Runtime Behaviour). A cost is usually an Instant effect that lowers a resource such
+  as Mana. A cooldown is usually a Durational effect: while it is active, the caster carries its asset tag, and the
+  Cooldown validation rule refuses the ability. When you assign an effect, the field offers to link it to this ability.
+  Its **+** button creates a new effect that is already linked. If The Forge's settings name a template for costs or
+  cooldowns, an import button creates the effect from that template.
 
 ## Tags
 
@@ -97,9 +97,9 @@ one value per level.
   the entity must raise the ability's level before it can use it.
 
 Code changes an ability's level through the entity's GAS, with `SetLevel` or `ModifyLevel` and the ability's asset
-tag. An ability that an Item grants starts at the item's level, kept within this range. A level provider is an asset whose level range another
-asset follows. When Link Mode is Linked To Provider (see Level Source), this section shows the provider's range,
-read-only, and Ignore When Level Zero stays editable.
+tag. An ability that an Item grants starts at the item's level, kept within this range. A level provider is an asset
+whose level range another asset follows. When Link Mode is Linked To Provider (see Level Source), this section shows
+the provider's range, read-only, and Ignore When Level Zero stays editable.
 
 ## Level Source
 

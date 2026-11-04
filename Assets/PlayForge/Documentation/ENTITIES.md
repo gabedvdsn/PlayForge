@@ -90,7 +90,8 @@ or equip that breaks a limit fails.
 
 The entity's attributes come from its **Attribute Set**. When the GAS initializes, it creates every attribute in the set
 and its sub-sets, each at its starting Current and Base values. It also applies the set's asset tags to the entity and
-subscribes the set's workers. Gameplay effects then change the values.
+subscribes the set's workers. Gameplay effects then change the values. [ATTRIBUTE_SETS.md](ATTRIBUTE_SETS.md) describes
+the set itself.
 
 An entity with no Attribute Set has no attributes. An effect that targets an attribute the entity lacks leaves it
 unchanged.
