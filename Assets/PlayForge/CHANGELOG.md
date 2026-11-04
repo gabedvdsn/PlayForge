@@ -105,6 +105,9 @@ tracks each fix below by its ID.
   Asking whether its sequence was paused took 24 bytes a frame.
 
 ### Fixed
+- Opening an attribute set no longer changes it: its element drawer clamped a magnitude outside the bounds into the
+  asset as it drew, and again on every change to the set. A help box says the runtime clamps it, and a typed magnitude
+  is still kept within the bounds. The element drawer follows the style sheet (ED-39).
 - An attribute set element with no Attribute no longer stops an entity from starting; it gives nothing (GAS-54).
 - An attribute set whose collisions settle by Use Minimum takes the lowest value; it took the first (GAS-55).
 - The Attribute inspector's Name, Abbreviation and Description undo, and the inspector edits several attributes at once.

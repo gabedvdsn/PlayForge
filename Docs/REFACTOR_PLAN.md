@@ -553,7 +553,7 @@ had no letter in the review. TS-AA onward came from the test project.
 | ED-35 | M | 4 | Whole-asset import copies the template and level-link fields (`_template`, `_linkedSource`) and doesn't skip the nested `Definition.Name` | `BasePlayForgeEditor.cs` (`ImportFromAsset`) | open |
 | ED-37 | M | 4 | The asset inspectors don't follow `Docs/EDITOR_STYLE.md`: their sections stray from its order, Level Source sits apart from Leveling, a collapsed section shows nothing, sentences explain the fields, the link state sits in tinted boxes with colored borders, and many sections' Import and Clear only log a warning. Each inspector is redone in Phase 4's fifth step. Fixed so far: the Attribute (`ed6295a`, with ED-15), Item (`cf70e8f`), Entity (`a06a4fb`) and Attribute Set inspectors: the style doc's order, Leveling with the level link and its provider in Unity's object field, the asset tag under the name, a summary on each section, Import and Clear on each, Used By, and no look set in code; and the Entity mockup's attribute table, in the Entity and Attribute Set inspectors. Left: the Ability and Effect inspectors | `AbilityEditor.cs`, `EffectEditor.cs` | open |
 | ED-38 | M | 4 | An asset reference isn't Unity's object field: `AbstractRefDrawer` draws a button that opens a dropdown list of its own, with hover colors and Clear and Open icon buttons set in C#, and setting an effect asks in a dialog whether to link it. Now every asset reference is Unity's object field with a plain button beside it: Open, which shows the asset in a window of its own, or New, which makes one where The Forge puts its type, named and tagged, and uses it (Q15). An effect field says on a line under it how the effect takes its levels, with Link; its template, a pick of unlinked effects and New Linked Effect are in its right-click menu (Q18) | `AbstractForgeObjectDrawer.cs`, `GameplayEffectDrawer.cs` | fixed |
-| ED-39 | M | 4 | Opening an attribute set element can change the set: 50 ms after it draws, and on every change to the set, `AttributeSetElementDrawer` clamps a Current or Base magnitude that sits outside the element's bounds and applies it to the asset, so looking at a set marks it modified. The runtime clamps the same values as the entity starts | `AttributeSetElementDrawer.cs:380-431` | open |
+| ED-39 | M | 4 | Opening an attribute set element can change the set: 50 ms after it draws, and on every change to the set, `AttributeSetElementDrawer` clamps a Current or Base magnitude that sits outside the element's bounds and applies it to the asset, so looking at a set marks it modified. The runtime clamps the same values as the entity starts. Now the drawer writes nothing as it draws: a help box says how the runtime clamps such a magnitude, and only a value typed into a Magnitude field is kept within the bounds, as part of the same edit. The drawer follows the style sheet | `AttributeSetElementDrawer.cs` | fixed |
 
 The design questions behind Phase 4's rows, each with its evidence, are in the UI interview doc of 2026-11-03,
 https://claude.ai/artifact/BbnGybqgX3spJsT6HoTafp. Its answers (Decision 18) settle ED-8, ED-16, ED-19 and ED-12's
@@ -657,6 +657,25 @@ GAS-4 with GAS-5, PC-6, and TS-I with PC-5.
 ## Log
 
 Record baselines, gate results and notable decisions here, newest first.
+
+- 2026-11-04, **ED-39: the attribute set element drawer.** It wrote to the set as it drew, and it drew in its own look.
+  - **No write while drawing.** 50 ms after an element drew, and on every change to the set, it clamped a magnitude
+    outside the bounds into the asset. It writes nothing now: a help box says the magnitude is outside its bounds and
+    what the runtime clamps it to. Only a value typed into a Magnitude field is kept within the bounds, as part of the
+    same edit, so one Undo takes it back; a typed Base keeps Current within the bounds Base sets.
+  - **Only a typed value.** Binding a field sends it change events of its own as it draws, so the drawer clamps only
+    while the field has the focus, as it does while a value is typed. The first version clamped on those events and
+    wrote as it drew; the test caught it.
+  - **Its look,** from the style sheet: a foldout row with the attribute (the new reference field), and while folded,
+    one line such as "Current 150 · Base 100 · 0–100". Current and Base sit on a two-button switch, the copy buttons say
+    what they copy ("Copy Base's Settings"), and Link Current to Base sits among the fields. It drew a tinted, rounded
+    box with a border in its collision policy's color, tab buttons, arrows in its button text and 9 px colored text.
+  - **Docs:** `ATTRIBUTE_SETS.md` describes the element as it draws now.
+  - **Its tests,** `ED_39_Opening_an_attribute_set_writes_nothing` and `ED_39_A_typed_magnitude_stays_in_bounds`,
+    were seen failing first. The first failed on the old drawer's write only once it changed the set elsewhere: the
+    50 ms clamp doesn't land in batch mode.
+  - **Tests:** PlayMode 949: 942 pass, 0 fail and 7 planted are skipped, in three orders. Planted 7 of 7; EditMode
+    392 of 392.
 
 - 2026-11-04, **ED-38: the reference fields.** Every reference to a PlayForge asset, in every inspector and drawer.
   - **Unity's object field,** from the reworked `AbstractForgeObjectDrawer`, with a plain button beside it: Open,

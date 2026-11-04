@@ -43,21 +43,22 @@ asset whose level range another asset follows.
 
 ## Attributes
 
-Each element sets up one attribute. Collapsed, an element shows a summary of its values, bounds and constraints.
+Each element sets up one attribute. Folded, an element shows one line: how its Current and Base start, and its range.
 
-- **Attribute** (in the element's header): the attribute asset.
+- **Attribute** (in the element's row): the attribute asset.
 - **Retention Group**: the group the root value counts toward. Groups split an attribute's value for queries and UI,
   such as base and bonus health. They never change the math.
 - **Collision**: what to do when this attribute appears more than once across the set and its sub-sets. See Collision
   Settings.
-- **Current** and **Base** tabs each hold:
+- **Link Current to Base**: Current takes Base's settings, and its own are disabled.
+- **Current** and **Base**, one at a time on a two-button switch, each hold:
   - **Magnitude**: the starting value.
   - **Scaling**: an optional cached scaler. One kind follows the entity's level. Another follows a different attribute,
     and this attribute is then recalculated whenever that one changes.
   - **Real Magnitude**: how Magnitude and Scaling combine: Add Scaler, Multiply With Scaler, Use Magnitude or Use
     Scaler. With no Scaling, Magnitude is used as it is.
-- **Import Magnitude** and **Import All** copy the other tab's Magnitude, or all three settings, into the open tab.
-- **Link Current to Base**: Current uses Base's settings, and the Current tab is disabled.
+- **Copy Base's Magnitude** and **Copy Base's Settings**, or Current's while Base shows, copy the other side's
+  Magnitude, or all three of its settings, into the side shown.
 - **Bounds**: the range the values are held in.
   - **Zero To Base**: Current stays between 0 and Base.
   - **Floor To Base**: Current stays between the Floor's Current and Base. Base stays at or above the Floor's Base.
@@ -65,8 +66,8 @@ Each element sets up one attribute. Collapsed, an element shows a summary of its
   - **Floor To Ceil**: Current and Base each stay between their Floor and Ceil.
   - **Unlimited**: no bounds.
 
-  The −∞ and +∞ buttons make a Floor or Ceil unlimited. The inspector also keeps the magnitudes you type within the
-  bounds.
+  The −∞ and +∞ buttons make a Floor or Ceil unlimited. A magnitude you type is kept within the bounds. A stored
+  magnitude outside them, as after the bounds change, shows a warning, and the runtime clamps it.
 - **Constraints**:
   - **Clamp**: apply the Bounds. With Clamp off, the Bounds are ignored at runtime.
   - **Scale Current**: when Base changes, change Current by the same proportion. A value of 80/100 that loses half its

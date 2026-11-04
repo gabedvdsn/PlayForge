@@ -220,11 +220,17 @@ namespace FarEmerald.PlayForge.Extended.Editor
 
         private static string Join(string fact, string how) => how == null ? fact : $"{fact}. {how}.";
 
-        // The range the set keeps Current in (AttributeOverflowData), as in "0–max", where max is the Base value
-        private static (string text, string tooltip) RangeOf(AttributeSetElement element)
+        // The range the set keeps an element's Current in
+        private static (string text, string tooltip) RangeOf(AttributeSetElement element) =>
+            RangeOf(element.Overflow, element.Constraints == null || element.Constraints.AutoClamp);
+
+        /// <summary>
+        /// The range bounds keep Current in (AttributeOverflowData), as in "0–max", where max is the Base value, and "—"
+        /// when nothing bounds it or Auto Clamp is off. The element drawer's line shows it too.
+        /// </summary>
+        internal static (string text, string tooltip) RangeOf(AttributeOverflowData overflow, bool clamped)
         {
-            if (element.Constraints != null && !element.Constraints.AutoClamp) return ("—", "Not clamped: Auto Clamp is off");
-            var overflow = element.Overflow;
+            if (!clamped) return ("—", "Not clamped: Auto Clamp is off");
             var floor = Number(overflow.Floor.CurrentValue);
             var ceil = Number(overflow.Ceil.CurrentValue);
             return overflow.Policy switch
