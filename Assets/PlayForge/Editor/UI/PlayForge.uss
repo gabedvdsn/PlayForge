@@ -166,6 +166,19 @@
     border-bottom-color: var(--pf-line);
 }
 
+/* The header stays at the top of the Inspector while the content scrolls under it (Decision 29). It's placed over
+   the content, and a space of its height holds its place at the top */
+.pf-root .pf-asset-header--sticky {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+}
+
+.pf-root .pf-asset-header-space {
+    flex-shrink: 0;
+}
+
 .pf-root .pf-asset-header__icon {
     width: 32px;
     height: 32px;

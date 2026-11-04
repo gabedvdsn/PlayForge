@@ -279,6 +279,9 @@ from. It lives outside `Assets/` so it never ships in the package.
     each with a checkbox, pre-checked. A list is replaced by default, and each list can choose Add to the List. One
     Undo takes an import back.
   - Clear empties its section at once, with no confirmation; Undo takes it back.
+- Decision 29, 2026-11-04: the asset header stays at the top of the inspector while the content scrolls under it.
+  The user's call after seeing ED-20, which reverses Q17's answer, that the header scrolls with the content. It
+  follows the Inspector's scroll view by its events and polls nothing, so ED-11 holds (ED-36).
 
 **Open. Ask the user; do not assume:**
 1. ~~**Uncommitted changes**~~: decided, see above.
@@ -520,7 +523,7 @@ had no letter in the review. TS-AA onward came from the test project.
 | ED-8 | H | 2 | Hard delete with no reference check | `TheForge.ViewTab.cs:2552`, `AssetBrowserWindow.cs:285` | verified |
 | ED-9 | M | 4 | The Visualizer is blank for items and sets, and after a domain reload | `TheForge.Utilities.cs:344, 407-412` | open |
 | ED-10 | M | 2 | Analysis exposes "Not Implemented" groups and truncates silently | `TheForge.AnalysisTab.cs:362, 716, 1461, 1979-1991` | verified |
-| ED-11 | M | 4 | The sticky-header workaround and drawer timers poll forever, among them two 250 ms timers in each impact drawer. Now nothing polls: the drawers follow the properties they show, the object picker's listener runs only while a picker is open, and the header scrolls with the content (Q17), so nothing measures the window | `BasePlayForgeEditor.cs` (`OnAttachedToPanel`, `ConfigureScrollView`, `OnEditorUpdate`) | fixed |
+| ED-11 | M | 4 | The sticky-header workaround and drawer timers poll forever, among them two 250 ms timers in each impact drawer. Now nothing polls: the drawers follow the properties they show, the object picker's listener runs only while a picker is open, and the inspector keeps no scroll view of its own, so nothing measures the window; the header follows the Inspector's scroll events (ED-36) | `BasePlayForgeEditor.cs` (`OnAttachedToPanel`, `ConfigureScrollView`, `OnEditorUpdate`) | fixed |
 | ED-12 | H | 4 | No Undo, multi-edit or prefab overrides. The inspectors wrote 42 edits straight into their asset, and only the 5 renames recorded Undo; no inspector took a multiple selection; six drawers copy their SerializedObject for one target, and two write while drawing. Fixed so far: Phase 2's part (a rename stores the tag in the same undoable step, and showing never writes), the Attribute inspector (its fields bind, it takes a multiple selection, and every inspector's header follows Undo), the MonoProcess inspector's multiple selection, the Effect, Item and Attribute Set inspectors' Description and Link Mode, the Entity inspector's fields, the Ability inspector's Description, Activation Policy, Activate Immediately and Link Mode, Link, Unlink and template assignment in every inspector, the drawers that rebuilt on a one-target copy, the type drawers that wrote a default while drawing, and the Item and Ability inspectors' multiple selection. Left: a multiple selection in the Effect, Entity and Attribute Set inspectors. In the Effect, Entity and Attribute Set inspectors, whose assets hold scalers, that also waits for ScalerDrawer's one-target copy, which changes with Decision 28's scaler workflow (ED-32, ED-33) | `AbilityEditor.cs:155-189, 743`, `EntityIdentityEditor.cs:790-919`, `BasePlayForgeEditor.cs` (`ShowTemplatePicker`), `TagDrawer.cs:104-109`, `AbstractTypeRefDrawer.cs:123-128`, `ScalerDrawer.cs:169-177` | open |
 | ED-13 | M | 4 | Template propagation on save loads everything, opens a modal mid-save and records no Undo; the validator is empty | `ForgeTemplateProcessor.cs:45-52`, `ForgeTemplatePropagator.cs:201-229` | open |
 | ED-14 | H | 1 | The `GameplayEffectImpact` copy constructor drops affiliation and throws on null packets | `GameplayEffectImpact.cs:155-176` | verified |
@@ -544,6 +547,7 @@ had no letter in the review. TS-AA onward came from the test project.
 | ED-32 | H | 4 | Six import windows behave differently. Section import copies every field with no choice and Clear asks in a modal; the Effect's Duration and Impact sections can't import at all, since their Import button only logs a warning; scaler import ignores the kinds a field allows and caches its list for 120 s. One Import window replaces them (Decision 28): choose a source, choose the fields, import as one Undo step | `SectionImportWindow.cs`, `ScalerDrawerWindows.cs:17-350`, `TagRequirementDrawers.cs:567-945`, `StandardWorkerGroupDrawer.cs:362`, `EffectEditor.cs:467-500` | open |
 | ED-33 | M | 4 | Scalers can't be shared. Every scaler is copied into its field, and the Scaler Template asset's link code has no callers, so reuse means copying and then propagating. Shared Scaler assets that fields reference replace it (Decision 28) | `AbstractScaler.cs:76-104`, `ScalerPipeline.cs:17-62` | open |
 | ED-34 | H | 4 | Opening a scaler writes to it while drawing. On an effect with no level link, Lock mode cuts its per-level table to one value; the other modes resize the table to Max Level, a Max Level of 0 or less becomes 10, and building the drawer clones a scaler that shares its reference id. Now nothing is written while drawing: a table keeps its length until the user changes it, and a shared scaler shows a warning with a button that makes a separate copy | `ScalerDrawer.cs:125-180, 285, 489-529` | fixed |
+| ED-36 | M | 4 | The asset header scrolls away with the content. It stays at the top of the inspector while the content scrolls under it (Decision 29), following the Inspector's scroll view by its events, so nothing polls (ED-11) | `BasePlayForgeEditor.cs` (`CreateInspectorGUI`), `ForgeAssetHeader.cs` (`StickTo`) | fixed |
 | ED-35 | M | 4 | Whole-asset import copies the template and level-link fields (`_template`, `_linkedSource`) and doesn't skip the nested `Definition.Name` | `BasePlayForgeEditor.cs` (`ImportFromAsset`) | open |
 
 The design questions behind Phase 4's rows, each with its evidence, are in the UI interview doc of 2026-11-03,
@@ -644,6 +648,16 @@ GAS-4 with GAS-5, PC-6, and TS-I with PC-5.
 ## Log
 
 Record baselines, gate results and notable decisions here, newest first.
+
+- 2026-11-04, **ED-36: the asset header stays at the top.** The user looked at ED-20 in the editor and asked for the
+  header to stay at the top of the inspector while the content scrolls (Decision 29), which reverses Q17's answer.
+  The header now comes after the content, so it draws over it, and a space of its height holds its place at the top.
+  It follows the Inspector's scroll view by its events and its own layout, so nothing polls, and it stops where its
+  inspector ends. Before ED-11 it stayed put by hiding the Inspector's scroll view and measuring the window on timers.
+  Its test, `ED_36_The_asset_header_stays_at_the_top_as_the_content_scrolls`, was seen failing first;
+  `ED_11_The_asset_header_scrolls_with_the_content` is now `ED_11_The_inspector_keeps_no_scroll_view_of_its_own`.
+  - **Tests:** PlayMode 945: 938 pass, 0 fail and 7 planted are skipped, in three orders. Planted 7 of 7; EditMode
+    373 of 373.
 
 - 2026-11-04, **ED-20, part 2: no emoji.** The editor showed 102 emoji, as icons and inside its text: pictographs
   such as a link, a clipboard or a mage, and symbols with an emoji form, such as the warning sign, the lightning bolt

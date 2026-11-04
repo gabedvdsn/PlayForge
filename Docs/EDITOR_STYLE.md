@@ -93,8 +93,9 @@ The only other colors:
 ## Inspectors
 
 - **The asset header** holds the 32 px type icon, the asset's name, its type and asset tag, and its problem count.
-  Then come Open in The Forge (Show in Project, inside The Forge), Help and the asset menu. It scrolls with the
-  content (Q17).
+  Then come Open in The Forge (Show in Project, inside The Forge), Help and the asset menu. It stays at the top of
+  the inspector while the content scrolls under it (Decision 29, the user's call after seeing it scroll, which
+  replaces Q17's answer).
 - **Sections are Unity foldout headers**: the arrow and the bold title, then Import, Clear and Help, always visible
   (Q18). A collapsed header shows a one-line summary of its section, such as "Levels 1–5" or "Removed by
   Status.Wet".

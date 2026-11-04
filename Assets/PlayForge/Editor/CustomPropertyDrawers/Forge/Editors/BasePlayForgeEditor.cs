@@ -498,11 +498,15 @@ namespace FarEmerald.PlayForge.Extended.Editor
             if (!AssignLocalAsset())
                 return CreateIneligibleGUI("Critical error: Could not assign local asset.");
 
-            // The header scrolls with the content, in the Inspector's own scroll view (Q17). It stayed put over a scroll
-            // view of the inspector's own, which hid the Inspector's and was sized by measuring the window on timers that
-            // ran for as long as the inspector was open (ED-11)
-            headerContainer = CreateEditorHeader();
-            root.Add(headerContainer);
+            // The header stays at the top of the Inspector while the content scrolls under it (Decision 29). It comes
+            // after the content, so it draws over it, and a space holds its place at the top. It follows the Inspector's
+            // own scroll view by its events (ED-36): it used to hide that scroll view and size one of its own by
+            // measuring the window on timers that ran for as long as the inspector was open (ED-11)
+            var header = CreateEditorHeader();
+            headerContainer = header;
+            var headerSpace = new VisualElement { name = "AssetHeaderSpace" };
+            headerSpace.AddToClassList("pf-asset-header-space");
+            root.Add(headerSpace);
 
             var content = new VisualElement { name = "Content" };
             content.style.marginRight = 4;
@@ -512,6 +516,9 @@ namespace FarEmerald.PlayForge.Extended.Editor
             BuildInspectorContent(content);
 
             content.Add(CreateBottomPadding());
+
+            root.Add(header);
+            header.StickTo(headerSpace);
 
             root.Bind(serializedObject);
 
@@ -549,7 +556,7 @@ namespace FarEmerald.PlayForge.Extended.Editor
         /// Forge, Help and the asset menu (Decision 20). The other actions are in the menu. The header took the type's
         /// color as a thick border and badge, showed the description, and set its own dark colors (ED-20).
         /// </summary>
-        private VisualElement CreateEditorHeader()
+        private ForgeAssetHeader CreateEditorHeader()
         {
             var header = new ForgeAssetHeader(target.GetType());
             _headerNameLabel = header.NameLabel;

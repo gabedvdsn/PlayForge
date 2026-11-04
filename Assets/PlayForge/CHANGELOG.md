@@ -101,8 +101,8 @@ tracks each fix below by its ID.
 - The Impact and Effect drawers follow the properties they show instead of re-checking on a timer, and the Impact
   drawer's Multiply Behaviour hides again after an Undo (ED-11).
 - An asset inspector listens to the editor's update only while an object picker is open; it ran every frame (ED-11).
-- An asset inspector measures nothing on a timer. Its header scrolls with the content, in the Inspector's own scroll
-  view; it stayed put by measuring the window every 200 to 300 ms for as long as the inspector was open (ED-11).
+- An asset inspector measures nothing on a timer. Its header stays at the top of the Inspector by following the
+  Inspector's own scroll view; it measured the window every 200 to 300 ms for as long as it was open (ED-11, ED-36).
 - An asset inspector's header and sections are legible in the Light theme; they kept hard-coded dark colors. A
   section shows Import, Clear and Help at all times, not only while the pointer is over its header (ED-20).
 - A drawer keeps its collapsed parts for each asset until the editor closes, through domain reloads. Collapsing a part
