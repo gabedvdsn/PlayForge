@@ -1,7 +1,7 @@
 # PlayForge refactor: code tour
 
 This tour lists the places where the refactor changed code, so you can open each one in your IDE and read it. It
-covers `01258b8..a406552` on `main`: 217 commits. Phase 0 ported Arcade Fighter's fixes, Phase 1 made the runtime
+covers `01258b8..70c2b77` on `main`: 219 commits. Phase 0 ported Arcade Fighter's fixes, Phase 1 made the runtime
 correct, Phase 2 got the package ready to release, and Phase 3 has begun. Each entry says what behaves differently and
 why, names its tracker IDs and Decisions, and points at the two or three places to read. `Docs/REFACTOR_PLAN.md` has
 every tracker row, the numbered Decisions, and a Log of each batch's test results.
@@ -9,8 +9,8 @@ every tracker row, the numbered Decisions, and a Log of each batch's test result
 ## How to use this
 
 - Paths are relative to the repo root.
-- Line numbers are as of commit `a406552`, the head of `main` on 2026-11-03. A later commit may move them, so each
-  entry also names the class and method to search for. `git show a406552:<path>` shows a file as it was then.
+- Line numbers are as of commit `70c2b77`, the head of `main` on 2026-11-03. A later commit may move them, so each
+  entry also names the class and method to search for. `git show 70c2b77:<path>` shows a file as it was then.
 - In Rider, Go to File accepts `path:line`. In Visual Studio, open the file, then Go To Line (Ctrl+G).
   A bare `:123` after a path means another line in the same file.
 - `git grep "<ID>"` finds the comment at each fix, and `git log --grep "<ID>"` finds its commit. Three exceptions:
@@ -29,9 +29,9 @@ every tracker row, the numbered Decisions, and a Log of each batch's test result
 ## Phase 3 so far
 
 Phase 3 began on `main` with the rows that writing the reference docs turned up, five runtime bugs and two settings
-nothing read, then gave the two GAS hubs one core (GAS-S1) and turned to cost (GAS-P3, GAS-P5, GAS-P4, GAS-P6,
-GAS-P8, GAS-P9, GAS-P7, TS-5, TS-10). Each has a test in Proving Grounds named after its ID, seen failing first; the
-runtime tests run on both hubs. The plan's Log has the gate results.
+nothing read, then gave the two GAS hubs one core (GAS-S1), turned to cost (GAS-P3, GAS-P5, GAS-P4, GAS-P6, GAS-P8,
+GAS-P9, GAS-P7, TS-5, TS-10), and removed a stub nothing used (PC-24). Each has a test in Proving Grounds named after
+its ID, seen failing first; the runtime tests run on both hubs. The plan's Log has the gate results.
 
 ### An entity's affiliation is its own (GAS-47)
 
@@ -372,10 +372,25 @@ runs one stage of one instant task allocated 1,912 bytes either way; under WhenA
   waits gets no saving unless it's one of the two built in.
 - **Test:** `TS_10_A_stage_that_waits_for_all_its_tasks_makes_no_second_token_source` in `SequenceCostTests`.
 
+### The pooled instantiator stub is gone (PC-24)
+
+`PooledMonoProcessInstantiator` was a stub: it gave back no process, and its `CleanProcess` did nothing, so a process
+made through it kept its GameObject when it ended. Nothing used it. It's removed rather than built into a pool.
+
+- **IDs:** PC-24, commit `70c2b77`, Decision 23.
+- **Read:**
+  - `Assets/PlayForge/Runtime/PlayForge/Management/GameplayProcess/Wrappers/MonoWrapper/Core/MonoWrapperProcess.cs:101`,
+    in `WhenTerminate`, where a process's wrapper hands its object to an instantiator to clean, or destroys it itself.
+  - `Assets/PlayForge/Runtime/PlayForge/Management/GameplayProcess/Wrappers/MonoWrapper/Instantiator/AbstractMonoProcessInstantiator.cs:5`
+    `AbstractMonoProcessInstantiator`, which a pool extends. Its `CleanProcess` (`:35`) owns the object from then on.
+- **Watch for:** code that named the stub no longer compiles. A pool of your own extends the base class.
+- **Test:** `PC_24_The_pooled_instantiator_stub_is_gone` in `ProcessControlEditModeTests`, in EditMode.
+
 ### Still open in Phase 3
 
-Performance and structure work: PC-24, TS-8 and TS-Z. GAS-51, item stacking that is declared but not built, moved to
-Phase 5 as FEAT-14, so an Item's `MaxStackSize` does nothing until then.
+Timing work: TS-8 and TS-Z, each of which changes when things happen in a frame, so the behaviour is the user's call
+first. GAS-51, item stacking that is declared but not built, moved to Phase 5 as FEAT-14, so an Item's
+`MaxStackSize` does nothing until then.
 
 ## ProcessControl
 
