@@ -23,8 +23,7 @@ namespace FarEmerald.PlayForge.Extended.Editor
 
         // Header element references for live updates
         private Label _headerNameLabel;
-        private Label _headerDescLabel;
-        private VisualElement _headerIconContainer;
+        private Label _headerSubtitleLabel;
         
         protected int _pickerControlId;
         protected bool _waitingForPicker;
@@ -32,12 +31,6 @@ namespace FarEmerald.PlayForge.Extended.Editor
         protected System.Type _pickerType;
         protected System.Action<Object> _pickerCallback;
         
-        // Header configuration
-        private const float HeaderHeight = 72f;
-        private const float IconSize = 48f;
-        private const float ButtonSize = 22f;
-        private const float ButtonSpacing = 4f;
-        private const float Padding = 8f;
 
         /// <summary>
         /// Creates a collapsible section that remembers expand/collapse state per editor type.
@@ -497,6 +490,8 @@ namespace FarEmerald.PlayForge.Extended.Editor
         public override VisualElement CreateInspectorGUI()
         {
             root = CreateRoot();
+            // PlayForge's style sheet, in the editor's theme (ED-20)
+            ForgeTheme.Apply(root);
 
             if (IsMultiple && !SupportsMultipleObjects)
                 return CreateIneligibleGUI("Cannot edit multiple assets at once.");
@@ -550,229 +545,48 @@ namespace FarEmerald.PlayForge.Extended.Editor
         }
         
         /// <summary>
-        /// Creates the header: the asset's icon, name, type and description, and its buttons.
+        /// Creates the header from the kit: the type icon, the asset's name, its type and asset tag, then Open in The
+        /// Forge, Help and the asset menu (Decision 20). The other actions are in the menu. The header took the type's
+        /// color as a thick border and badge, showed the description, and set its own dark colors (ED-20).
         /// </summary>
         private VisualElement CreateEditorHeader()
         {
-            var header = new VisualElement();
-            header.name = "AssetHeader";
-            header.style.height = HeaderHeight;
-            header.style.flexShrink = 0;
-            header.style.flexGrow = 0;
-            header.style.backgroundColor = new Color(0.16f, 0.16f, 0.16f);
-            header.style.borderBottomWidth = 3.5f;
-            header.style.borderBottomColor = GetAssetTypeColor().Fade(.8f).Amplify(1f);
-            header.style.paddingLeft = Padding;
-            header.style.paddingRight = Padding;
-            header.style.paddingTop = Padding;
-            header.style.paddingBottom = Padding;
-            header.style.flexDirection = FlexDirection.Row;
-            
-            // Extend header to compensate
-            header.style.marginLeft = -InspectorMarginInset - InspectorMarginInsetFix;
-            header.style.marginRight = -InspectorMarginInset - InspectorMarginInsetFix;
-            header.style.paddingLeft = Padding; // Your internal padding
-            header.style.paddingRight = Padding;
-            
-            // Left: Icon
-            _headerIconContainer = new VisualElement();
-            _headerIconContainer.name = "HeaderIconContainer";
-            _headerIconContainer.style.width = IconSize;
-            _headerIconContainer.style.height = IconSize;
-            _headerIconContainer.style.backgroundColor = new Color(0.12f, 0.12f, 0.12f);
-            _headerIconContainer.style.alignSelf = Align.Center;
-            _headerIconContainer.style.marginRight = 12;
-            _headerIconContainer.style.justifyContent = Justify.Center;
-            _headerIconContainer.style.alignItems = Align.Center;
-            
-            RebuildHeaderIcon();
-            header.Add(_headerIconContainer);
-            
-            // Center: Text content
-            var textContainer = new VisualElement();
-            textContainer.name = "HeaderTextContainer";
-            textContainer.style.flexGrow = 1;
-            textContainer.style.justifyContent = Justify.Center;
+            var header = new ForgeAssetHeader(target.GetType());
+            _headerNameLabel = header.NameLabel;
+            _headerSubtitleLabel = header.Subtitle;
+            UpdateHeader();
 
-            var infoContainer = new VisualElement();
-            infoContainer.style.flexGrow = 1;
-            infoContainer.style.flexDirection = FlexDirection.Row;
-            infoContainer.style.alignItems = Align.Center;
-            infoContainer.style.marginTop = 2;
-            
-            textContainer.Add(infoContainer);
-            
-            // Asset type badge
-            var typeBadge = new Label(GetAssetTypeLabel());
-            typeBadge.style.fontSize = 9;
-            typeBadge.style.unityFontStyleAndWeight = FontStyle.Bold;
-            typeBadge.style.color = GetAssetTypeColor();
-            typeBadge.style.backgroundColor = GetAssetTypeColor().Fade(.8f).Amplify(.2f);
+            // Open in The Forge and the template act on one asset, so a multiple selection leaves them out (ED-12)
+            if (!IsMultiple) header.AddButton("Open in The Forge", "Show this asset in The Forge", OnOpenInManager);
 
-            typeBadge.style.paddingLeft = 4;
-            typeBadge.style.paddingRight = 4;
-            typeBadge.style.paddingTop = 2;
-            typeBadge.style.paddingBottom = 2;
-            typeBadge.style.alignSelf = Align.FlexStart;
-            typeBadge.style.marginBottom = 2;
-            infoContainer.Add(typeBadge);
-            
-            // Template badge
-            if (!IsMultiple && target is BaseForgeAsset obj && obj.HasTemplate)
-            {
-                var templateBadge = new Label($"T: {obj.Template.GetName()}");
-                templateBadge.tooltip = $"Template: {obj.Template.GetName()}";
-                templateBadge.style.fontSize = 9;
-                templateBadge.style.unityFontStyleAndWeight = FontStyle.Bold;
-                templateBadge.style.color = GetAssetTypeColor();
-                templateBadge.style.backgroundColor = GetAssetTypeColor().Fade(.6f).Amplify(.4f);
+            var topic = GetDocumentationTopic();
+            if (!string.IsNullOrEmpty(topic)) header.AddIconButton(ForgeGlyphShape.Help, "Open the documentation", () => ForgeDocs.Open(topic));
 
-                templateBadge.style.paddingLeft = 4;
-                templateBadge.style.paddingRight = 4;
-                templateBadge.style.paddingTop = 2;
-                templateBadge.style.paddingBottom = 2;
-                templateBadge.style.alignSelf = Align.FlexStart;
-                templateBadge.style.marginLeft = 4;
-                templateBadge.style.marginBottom = 2;
-                infoContainer.Add(templateBadge);
-            }
-            
-            // Name label (store reference for updates)
-            _headerNameLabel = new Label(HeaderName());
-            _headerNameLabel.name = "HeaderName";
-            _headerNameLabel.style.fontSize = 14;
-            _headerNameLabel.style.unityFontStyleAndWeight = FontStyle.Bold;
-            _headerNameLabel.style.color = new Color(0.9f, 0.9f, 0.9f);
-            _headerNameLabel.style.overflow = Overflow.Hidden;
-            _headerNameLabel.style.textOverflow = TextOverflow.Ellipsis;
-            textContainer.Add(_headerNameLabel);
-            
-            // Description label (store reference for updates)
-            // Always create it, just hide when empty
-            _headerDescLabel = new Label();
-            _headerDescLabel.name = "HeaderDescription";
-            _headerDescLabel.style.fontSize = 10;
-            _headerDescLabel.style.color = new Color(0.55f, 0.55f, 0.55f);
-            _headerDescLabel.style.overflow = Overflow.Hidden;
-            _headerDescLabel.style.textOverflow = TextOverflow.Ellipsis;
-            _headerDescLabel.style.whiteSpace = WhiteSpace.Normal;
-            _headerDescLabel.style.maxHeight = 28;
-            textContainer.Add(_headerDescLabel);
-            
-            // Set initial description
-            UpdateHeaderDescription();
-            
-            header.Add(textContainer);
-            
-            // Right: Buttons
-            var buttonsContainer = new VisualElement();
-            buttonsContainer.style.alignSelf = Align.FlexStart;
-            buttonsContainer.style.flexDirection = FlexDirection.Column;
-            buttonsContainer.style.alignItems = Align.FlexEnd;
-            buttonsContainer.style.marginRight = 12;
-            
-            // Top row: Doc button
-            var topButtonRow = new VisualElement();
-            topButtonRow.style.flexDirection = FlexDirection.Row;
-            topButtonRow.style.marginBottom = 4;
-            
-            var docBtn = CreateHeaderButton("?", "Open Documentation", new Color(0.4f, 0.4f, 0.4f), () =>
-            {
-                var topic = GetDocumentationTopic();
-                if (!string.IsNullOrEmpty(topic))
-                    ForgeDocs.Open(topic);
-            });
-            topButtonRow.Add(docBtn);
-            buttonsContainer.Add(topButtonRow);
-            
-            // Bottom row: Action buttons
-            var bottomButtonRow = new VisualElement();
-            bottomButtonRow.style.flexDirection = FlexDirection.Row;
-            
-            // Refresh button
-            var refreshBtn = CreateHeaderButton("↻", "Refresh", Colors.AccentGray, () => Refresh());  //new Color(0.5f, 0.5f, 0.5f)
-            bottomButtonRow.Add(refreshBtn);
-            
-            // Import button (if enabled)
-            if (ShowImportButton)
-            {
-                var importBtn = CreateHeaderButton("↓", "Import from another asset", Colors.AccentGreen, () => OpenImportPicker());  //new Color(0.4f, 0.6f, 0.4f)
-                importBtn.style.marginLeft = ButtonSpacing;
-                bottomButtonRow.Add(importBtn);
-            }
-
-            // Template, Visualize and Open in The Forge act on one asset, so a multiple selection leaves them out (ED-12)
-            if (ShowTemplateButton && !IsMultiple)
-            {
-                var templateButton = CreateHeaderButton("T", "Set template asset", Colors.AccentRed, ShowTemplatePicker);
-                templateButton.style.marginLeft = ButtonSpacing;
-                bottomButtonRow.Add(templateButton);
-            }
-
-            // Visualize button (if enabled)
-            if (ShowVisualizeButton && !IsMultiple)
-            {
-                var vizBtn = CreateHeaderButton("◉", "Visualize", Colors.AccentPurple, () => OnVisualize());  //new Color(0.6f, 0.4f, 0.7f)
-                vizBtn.style.marginLeft = ButtonSpacing;
-                bottomButtonRow.Add(vizBtn);
-            }
-
-            // Open in The Forge button
-            if (!IsMultiple)
-            {
-                var openBtn = CreateHeaderButton("⊞", "Open in The Forge", Colors.AccentBlue, () => OnOpenInManager());  //new Color(0.3f, 0.5f, 0.7f)
-                openBtn.style.marginLeft = ButtonSpacing;
-                bottomButtonRow.Add(openBtn);
-            }
-            
-            buttonsContainer.Add(bottomButtonRow);
-            header.Add(buttonsContainer);
-            
+            Button menuButton = null;
+            menuButton = header.AddIconButton(ForgeGlyphShape.Menu, "Asset menu", () => ShowAssetMenu(menuButton));
             return header;
         }
-        
-        private Button CreateHeaderButton(string icon, string tooltip, Color baseColor, Action onClick)
+
+        // The asset's other actions: import, its template, and the Visualizer
+        private void ShowAssetMenu(VisualElement under)
         {
-            var btn = new Button(onClick);
-            btn.text = icon;
-            btn.tooltip = tooltip;
-            btn.focusable = false;
-            btn.style.width = ButtonSize;
-            btn.style.height = ButtonSize;
-            btn.style.fontSize = 12;
-            btn.style.unityFontStyleAndWeight = FontStyle.Bold;
-            btn.style.backgroundColor = baseColor;
-            btn.style.color = new Color(0.8f, 0.8f, 0.8f);
-            btn.style.borderTopWidth = 0;
-            btn.style.borderBottomWidth = 0;
-            btn.style.borderLeftWidth = 0;
-            btn.style.borderRightWidth = 0;
-            btn.style.paddingLeft = 0;
-            btn.style.paddingRight = 0;
-            btn.style.paddingTop = 0;
-            btn.style.paddingBottom = 0;
-            btn.style.marginLeft = 0;
-            btn.style.marginRight = 0;
-            
-            var hoverColor = new Color(baseColor.r + 0.15f, baseColor.g + 0.15f, baseColor.b + 0.15f);
-            btn.RegisterCallback<MouseEnterEvent>(_ =>
+            var menu = new GenericMenu();
+            if (ShowImportButton) menu.AddItem(new GUIContent("Import from Another Asset..."), false, OpenImportPicker);
+            if (ShowTemplateButton && !IsMultiple)
             {
-                btn.style.backgroundColor = hoverColor;
-                btn.style.color = Color.white;
-            });
-            btn.RegisterCallback<MouseLeaveEvent>(_ =>
-            {
-                btn.style.backgroundColor = baseColor;
-                btn.style.color = new Color(0.8f, 0.8f, 0.8f);
-            });
-            
-            return btn;
+                menu.AddItem(new GUIContent("Set Template..."), false, ShowTemplatePicker);
+                if (target is BaseForgeAsset asset && asset.HasTemplate)
+                    menu.AddItem(new GUIContent($"Unassign Template \"{asset.Template.GetName()}\""), false, () => AssignTemplate(null));
+            }
+            if (ShowVisualizeButton && !IsMultiple) menu.AddItem(new GUIContent("Visualize"), false, OnVisualize);
+            if (menu.GetItemCount() == 0) menu.AddDisabledItem(new GUIContent("No Actions"));
+            menu.DropDown(under.worldBound);
         }
-        
+
         // ═══════════════════════════════════════════════════════════════════════════
         // Header Update Methods - Call these when header data changes
         // ═══════════════════════════════════════════════════════════════════════════
-        
+
         /// <summary>
         /// Updates the header name label. Call when Name field changes.
         /// </summary>
@@ -783,53 +597,36 @@ namespace FarEmerald.PlayForge.Extended.Editor
                 _headerNameLabel.text = HeaderName();
             }
         }
-        
+
         /// <summary>
-        /// Updates the header description label. Call when Description field changes.
+        /// Updates the line under the name: the asset's type, its asset tag, and its template, as in
+        /// "Gameplay Effect · Effect.Burning". The header showed the description here; the Identity section has it.
         /// </summary>
         protected void UpdateHeaderDescription()
         {
-            if (_headerDescLabel == null) return;
+            if (_headerSubtitleLabel == null) return;
 
-            var desc = IsMultiple ? null : GetDisplayDescription();
-            _headerDescLabel.text = desc;
-            _headerDescLabel.style.display = string.IsNullOrEmpty(desc) ? DisplayStyle.None : DisplayStyle.Flex;
+            var parts = new List<string> { ForgeAssetTypes.NameOf(target.GetType()) };
+            if (!IsMultiple)
+            {
+                if (target is BaseForgeLevelProvider provider)
+                {
+                    var tag = provider.GetAssetTag();
+                    if (!string.IsNullOrEmpty(tag.Name) && !tag.Equals(Tags.NONE)) parts.Add(tag.Name);
+                }
+                if (target is BaseForgeAsset asset && asset.HasTemplate) parts.Add($"Template {asset.Template.GetName()}");
+            }
+            _headerSubtitleLabel.text = string.Join(" · ", parts);
         }
-        
+
         /// <summary>
-        /// Rebuilds the header icon. Call when Textures field changes.
+        /// The header shows the asset's type icon, which doesn't change, so there's nothing to update. It showed the
+        /// asset's own icon texture.
         /// </summary>
         protected void UpdateHeaderIcon()
         {
-            RebuildHeaderIcon();
         }
-        
-        private void RebuildHeaderIcon()
-        {
-            if (_headerIconContainer == null) return;
-            
-            _headerIconContainer.Clear();
-            
-            var icon = GetHeaderIcon();
-            if (icon != null)
-            {
-                var iconImage = new Image();
-                iconImage.image = icon;
-                iconImage.style.width = IconSize - 4;
-                iconImage.style.height = IconSize - 4;
-                iconImage.scaleMode = ScaleMode.ScaleToFit;
-                _headerIconContainer.Add(iconImage);
-            }
-            else
-            {
-                var placeholder = new Label("?");
-                placeholder.style.fontSize = 20;
-                placeholder.style.color = Colors.HintText;
-                placeholder.style.unityTextAlign = TextAnchor.MiddleCenter;
-                _headerIconContainer.Add(placeholder);
-            }
-        }
-        
+
         /// <summary>
         /// Updates all header elements. Call from Refresh() or when multiple fields change.
         /// </summary>
@@ -837,7 +634,6 @@ namespace FarEmerald.PlayForge.Extended.Editor
         {
             UpdateHeaderName();
             UpdateHeaderDescription();
-            UpdateHeaderIcon();
         }
 
         // ═══════════════════════════════════════════════════════════════════════════

@@ -529,7 +529,7 @@ had no letter in the review. TS-AA onward came from the test project.
 | ED-17 | M | 2 | Stray `Debug.Log` calls | `GameplayEffectImpactDrawer.cs:33`, `AssetBrowserWindow.cs:348`, `AbstractRefDrawer.cs:81`, `TagDrawer.cs:745`, `TheForge.ViewTab.cs:2009` | verified |
 | ED-18 | M | 4 | Collapse state lives in static dictionaries keyed by property path, so every asset shares it and a domain reload loses it. Each drawer now keeps it per asset for the editor session, in SessionState; a [SerializeReference] field's state follows the object it holds, and deleting a stage moves the later stages' states up with them | `AbilityTaskBehaviourStageDrawer.cs:31`, `AbilityBehaviourDrawer.cs:18-20` | fixed |
 | ED-19 | M | 2 | Naming drift: The Forge or PlayForge Manager, and no window's title matches its menu item. The top-level `PlayForge/` menu is not among the placements the Asset Store's rule 2.5.1.a describes: an existing menu such as `Window/`, or else `Tools/`. The docs follow whatever wins | `TheForge.cs:16-28, 88`, `GASDebugger.cs:134`, `GETTING_STARTED.md` | verified |
-| ED-20 | H | 4 | No theming: inline styles, hard-coded dark backgrounds, emoji icons, dead UXML and USS | `TheForge.cs:183`, `GASDebugger.cs:108`, `ForgeDrawerStyles.cs:111-131` | open |
+| ED-20 | H | 4 | No theming: inline styles, hard-coded dark backgrounds, emoji icons, dead UXML and USS. Fixed so far: one style sheet, `Editor/UI/PlayForge.uss`, holds every value `Docs/EDITOR_STYLE.md` lists, in a Dark and a Light set, and a kit of controls reads it: the asset header, the section, the glyphs and the type icons. Every asset inspector's header and sections use the kit; The Forge and the GAS Debugger take the theme; the dead style sheet and layouts are gone. Left: the emoji. Each surface's own inline styles go with its redesign, Phase 4's fifth step | `TheForge.cs:183`, `GASDebugger.cs:108`, `ForgeDrawerStyles.cs:111-131` | open |
 | ED-21 | M | 4 | Settings live in EditorPrefs and are machine-wide | `EffectTemplateRegistry.cs:12, 46`, `TemplateRegistry.cs:175` | open |
 | ED-22 | H | 2 | A second project wipes the first project's templates: `TemplateRegistry` keeps one EditorPrefs JSON for every project on the machine, and `Save()` drops each template whose GUID doesn't resolve in the current project | `TemplateRegistry.cs:110, 164-177` | verified |
 | ED-23 | M | 2 | An Item's Local Data can't be edited: Items inherit `LocalData` and the five other asset editors draw it, but `ItemEditor` builds no section for it | `ItemEditor.cs:71-80`, `BaseForgeAsset.cs:11` | verified |
@@ -644,6 +644,31 @@ GAS-4 with GAS-5, PC-6, and TS-I with PC-5.
 ## Log
 
 Record baselines, gate results and notable decisions here, newest first.
+
+- 2026-11-04, **ED-20, part 1: one style sheet and a kit of controls.** Phase 4's fourth step, in the style
+  `Docs/EDITOR_STYLE.md` records (Decision 20).
+  - **The style sheet:** `Editor/UI/PlayForge.uss` holds every color the style doc lists as a variable, in a Dark and a
+    Light set, and the kit's rules. `ForgeTheme.Apply` gives a root the sheet and the editor's theme, `.pf-theme-dark`
+    or `.pf-theme-light`, chosen by `EditorGUIUtility.isProSkin`. The sheet loads by its GUID, so it's found whether
+    the package is in `Packages` or in `Assets`.
+  - **The kit,** in `Editor/UI/Kit`: `ForgeGlyph` draws the mockups' vector glyphs with `Painter2D`, in the color
+    the sheet gives it; `ForgeTypeIcon` is a type's glyph in its type's color; `ForgeIconButton`, `ForgeSection` and
+    `ForgeAssetHeader` build on them. None sets a style in code.
+  - **What uses it:** every asset inspector's header and sections, through `BasePlayForgeEditor` and
+    `CreateCollapsibleSection`, whose signature and result stay. The header shows the type icon, the name, the type
+    and asset tag, then Open in The Forge, Help and a menu that holds import, the template and Visualize. It no longer
+    shows the description or the asset's own icon. Sections keep Import, Clear and Help in view; they appeared only on
+    hover (Q18). The Forge and the GAS Debugger take the theme instead of painting their windows dark gray.
+  - **Removed:** a style sheet nothing loaded and two UXML layouts nothing used, with the three scripts' default
+    references to them.
+  - **Left in ED-20:** the emoji. Each surface's own inline styles go with its redesign, Phase 4's fifth step.
+  - **Its tests,** in the smoke suite, so each runs in Dark and in Light: every color resolves to the style doc's value,
+    the header's type icon takes its type's color, the header and section headers set no style in code, the section
+    actions always show, and The Forge and the GAS Debugger take the theme. `ED_20_The_editor_has_one_style_sheet_and_no_unused_layouts`
+    scans the editor folder. All were seen failing first. A probe confirmed the glyphs draw in batch mode, each at its
+    size and in its theme's color.
+  - **Tests:** PlayMode 945: 938 pass, 0 fail and 7 planted are skipped, in three orders. Planted 7 of 7; EditMode
+    371 of 371.
 
 - 2026-11-04, **Phase 4's gate: the editor smoke suite.** Phase 4's third step, from the UI interview's Q36:
   `EditorSmokeTests` in Proving Grounds runs in each editor theme, Dark and Light, and checks two things.

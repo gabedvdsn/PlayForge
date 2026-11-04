@@ -589,8 +589,9 @@ namespace FarEmerald.PlayForge.Extended.Editor
             });
             parent.Add(section.Section);
             
-            attributeCountLabel = CreateBadge((attributeSet.Attributes?.Count ?? 0).ToString());
-            attributeCountLabel.name = "AttributeCount";
+            // A count beside the title, in the style sheet's secondary text. It was a tinted badge (ED-20)
+            attributeCountLabel = new Label((attributeSet.Attributes?.Count ?? 0).ToString()) { name = "AttributeCount" };
+            attributeCountLabel.AddToClassList("pf-section__count");
             section.Header.Insert(2, attributeCountLabel);
             
             var content = section.Content;
@@ -643,8 +644,8 @@ namespace FarEmerald.PlayForge.Extended.Editor
             });
             parent.Add(section.Section);
             
-            subsetCountLabel = CreateBadge((attributeSet.SubSets?.Count ?? 0).ToString());
-            subsetCountLabel.name = "SubsetCount";
+            subsetCountLabel = new Label((attributeSet.SubSets?.Count ?? 0).ToString()) { name = "SubsetCount" };
+            subsetCountLabel.AddToClassList("pf-section__count");
             section.Header.Insert(2, subsetCountLabel);
             
             var content = section.Content;

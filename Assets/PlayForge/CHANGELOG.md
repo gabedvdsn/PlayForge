@@ -11,6 +11,10 @@ tracks each fix below by its ID.
   page, through one table of links in the editor.
 
 ### Changed
+- Every asset inspector's header and sections follow PlayForge's one style sheet, in the editor's Dark or Light
+  theme. The header shows the type icon, the asset's name, its type and asset tag, then Open in The Forge, Help and a
+  menu that holds import, the template and Visualize. It no longer shows the description or the asset's own icon. The
+  Forge and the GAS Debugger take the editor's theme (ED-20).
 - PlayForge is licensed under the Unity Asset Store EULA.
 - The samples moved to `Samples~`, so Package Manager imports them on request: **Demos** and **Code Examples**. The
   TaskSequence and group process examples no longer compile into the runtime.
@@ -97,6 +101,8 @@ tracks each fix below by its ID.
 - An asset inspector listens to the editor's update only while an object picker is open; it ran every frame (ED-11).
 - An asset inspector measures nothing on a timer. Its header scrolls with the content, in the Inspector's own scroll
   view; it stayed put by measuring the window every 200 to 300 ms for as long as the inspector was open (ED-11).
+- An asset inspector's header and sections are legible in the Light theme; they kept hard-coded dark colors. A
+  section shows Import, Clear and Help at all times, not only while the pointer is over its header (ED-20).
 - A drawer keeps its collapsed parts for each asset until the editor closes, through domain reloads. Collapsing a part
   on one asset collapsed it on every asset, and a reload opened everything again. A worker's state follows it when its
   list is reordered, and deleting a stage leaves the later stages as they were; it opened them all (ED-18).
@@ -152,6 +158,7 @@ tracks each fix below by its ID.
   hook, and each hub's protected `localData` field. A subclass reads Local Data through `GetLocalDataStructure()`.
 - `PooledMonoProcessInstantiator`, a stub that gave back no process and kept a process's object when it ended, so it
   leaked. Nothing used it. To pool processes, extend `AbstractMonoProcessInstantiator`.
+- An unused style sheet and two unused UXML layouts. `SectionResult.Arrow` is now the section's arrow button (ED-20).
 - The Forge's Inspector settings, two delays for the asset inspector's sticky header, which is gone (ED-11). With it
   went `BasePlayForgeEditor.contentScrollView` and `ForgeDrawerStyles.CreateScrollView`: an inspector builds into the
   container `BuildInspectorContent` is handed.

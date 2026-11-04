@@ -201,7 +201,9 @@ namespace FarEmerald.PlayForge.Extended.Editor
         {
             root = rootVisualElement;
             root.style.flexGrow = 1;
-            root.style.backgroundColor = new Color(0.2f, 0.2f, 0.2f, 1f);
+            // PlayForge's style sheet, in the editor's theme, over the window's own background. It painted the window a
+            // hard-coded dark gray, whatever the theme (ED-20)
+            ForgeTheme.Apply(root);
             
             BuildHeader();
             BuildMainTabBar();

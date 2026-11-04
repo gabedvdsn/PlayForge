@@ -1,0 +1,284 @@
+/* PlayForge's one style sheet (Decision 20). Docs/EDITOR_STYLE.md lists every value here, from the style mockups.
+
+   Each PlayForge window and inspector root carries .pf-root and the editor's theme, .pf-theme-dark or
+   .pf-theme-light, which set the variables below. The kit's controls read only those, and set nothing in C#. */
+
+/* ─── The Dark theme ──────────────────────────────────────────────────────────────────────────────────────────────── */
+
+.pf-theme-dark {
+    --pf-panel: #383838;
+    --pf-tab-strip: #282828;
+    --pf-toolbar: #3C3C3C;
+    --pf-header: #3E3E3E;
+    --pf-line: #232323;
+    --pf-inner-line: #2E2E2E;
+    --pf-field: #2A2A2A;
+    --pf-field-border: #212121;
+    --pf-button: #585858;
+    --pf-button-border: #303030;
+    --pf-list-header: #353535;
+    --pf-list-body: #414141;
+    --pf-alternate-row: #3B3B3B;
+    --pf-help-box: #414141;
+    --pf-help-box-border: #2B2B2B;
+    --pf-selection: #2C5D87;
+    --pf-toggle-on: #46607C;
+    --pf-text: #C4C4C4;
+    --pf-strong-text: #D2D2D2;
+    --pf-secondary-text: #B0B0B0;
+    --pf-button-text: #EEEEEE;
+    --pf-link: #81B4FF;
+
+    --pf-type-ability: #80ADE1;
+    --pf-type-effect: #A979E0;
+    --pf-type-entity: #D26BAC;
+    --pf-type-item: #4AD077;
+    --pf-type-attribute: #A8E8E6;
+    --pf-type-attribute-set: #88C8D8;
+
+    --pf-warning: #DBB468;
+    --pf-warning-text: #DBB468;
+    --pf-destructive: #EA8A85;
+}
+
+/* ─── The Light theme ─────────────────────────────────────────────────────────────────────────────────────────────── */
+
+.pf-theme-light {
+    --pf-panel: #C8C8C8;
+    --pf-tab-strip: #A5A5A5;
+    --pf-toolbar: #CBCBCB;
+    --pf-header: #D5D5D5;
+    --pf-line: #999999;
+    --pf-inner-line: #B5B5B5;
+    --pf-field: #F0F0F0;
+    --pf-field-border: #A5A5A5;
+    --pf-button: #E4E4E4;
+    --pf-button-border: #A0A0A0;
+    --pf-list-header: #CDCDCD;
+    --pf-list-body: #DEDEDE;
+    --pf-alternate-row: #CDCDCD;
+    --pf-help-box: #DCDCDC;
+    --pf-help-box-border: #ABABAB;
+    --pf-selection: #3A72B0;
+    --pf-toggle-on: #9DB7D8;
+    --pf-text: #1F1F1F;
+    --pf-strong-text: #090909;
+    --pf-secondary-text: #4A4A4A;
+    --pf-button-text: #090909;
+    --pf-link: #0A4FA8;
+
+    --pf-type-ability: #1757A0;
+    --pf-type-effect: #4F277E;
+    --pf-type-entity: #B61B7D;
+    --pf-type-item: #1D6033;
+    --pf-type-attribute: #1F5F5D;
+    --pf-type-attribute-set: #13687E;
+
+    /* The palette's #83601B is too faint for 12 px text on Light's neutrals */
+    --pf-warning: #D9A21B;
+    --pf-warning-text: #6B4C10;
+    --pf-destructive: #902E28;
+}
+
+/* ─── Text ────────────────────────────────────────────────────────────────────────────────────────────────────────── */
+
+.pf-root .pf-strong {
+    color: var(--pf-strong-text);
+}
+
+.pf-root .pf-secondary {
+    color: var(--pf-secondary-text);
+}
+
+/* A unit follows its field in full, in secondary text, as in "6 seconds" */
+.pf-root .pf-unit {
+    color: var(--pf-secondary-text);
+    padding-left: 6px;
+    -unity-text-align: middle-left;
+}
+
+/* ─── Glyphs: inline vector icons on Unity's 16 px grid, drawn in their color ────────────────────────────────────── */
+
+.pf-root .pf-glyph {
+    width: 16px;
+    height: 16px;
+    flex-shrink: 0;
+    color: var(--pf-text);
+}
+
+/* The mark cut into a filled glyph, such as the warning triangle's: the panel in Dark, the text in Light */
+.pf-theme-dark .pf-glyph {
+    --pf-glyph-cutout: #383838;
+}
+
+.pf-theme-light .pf-glyph {
+    --pf-glyph-cutout: #1F1F1F;
+}
+
+/* An asset type's color goes in its icon and nowhere else */
+.pf-root .pf-type-icon--ability { color: var(--pf-type-ability); }
+.pf-root .pf-type-icon--effect { color: var(--pf-type-effect); }
+.pf-root .pf-type-icon--entity { color: var(--pf-type-entity); }
+.pf-root .pf-type-icon--item { color: var(--pf-type-item); }
+.pf-root .pf-type-icon--attribute { color: var(--pf-type-attribute); }
+.pf-root .pf-type-icon--attribute-set { color: var(--pf-type-attribute-set); }
+
+.pf-root .pf-glyph--warning {
+    color: var(--pf-warning);
+}
+
+.pf-root .pf-glyph--destructive {
+    color: var(--pf-destructive);
+}
+
+/* ─── Icon buttons: a glyph in a flat button ──────────────────────────────────────────────────────────────────────── */
+
+.pf-root .pf-icon-button {
+    width: 20px;
+    height: 18px;
+    margin: 0;
+    padding: 0;
+    border-width: 0;
+    border-radius: 3px;
+    background-color: rgba(0, 0, 0, 0);
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+.pf-root .pf-icon-button .pf-glyph {
+    width: 14px;
+    height: 14px;
+}
+
+/* ─── The asset header: the type icon, the asset's name, its type and tag, then its actions ────────────────────────── */
+
+.pf-root .pf-asset-header {
+    flex-direction: row;
+    align-items: center;
+    flex-shrink: 0;
+    /* It reaches the Inspector's edges, past the root's own margins */
+    margin-left: -9px;
+    margin-right: -9px;
+    padding: 8px 6px 8px 8px;
+    background-color: var(--pf-header);
+    border-bottom-width: 1px;
+    border-bottom-color: var(--pf-line);
+}
+
+.pf-root .pf-asset-header__icon {
+    width: 32px;
+    height: 32px;
+    margin-right: 8px;
+}
+
+.pf-root .pf-asset-header__text {
+    flex-grow: 1;
+    flex-shrink: 1;
+    min-width: 0;
+}
+
+.pf-root .pf-asset-header__name {
+    font-size: 13px;
+    -unity-font-style: bold;
+    color: var(--pf-strong-text);
+    margin: 0;
+    padding: 0;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+}
+
+.pf-root .pf-asset-header__subtitle {
+    color: var(--pf-secondary-text);
+    margin: 0;
+    padding: 0;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+}
+
+.pf-root .pf-asset-header__button {
+    height: 20px;
+    margin: 0 0 0 8px;
+    flex-shrink: 0;
+}
+
+.pf-root .pf-asset-header .pf-icon-button {
+    width: 20px;
+    height: 20px;
+    margin-left: 2px;
+}
+
+/* ─── Sections: Unity's foldout headers, with Import, Clear and Help always showing ───────────────────────────────── */
+
+.pf-root .pf-section {
+    flex-shrink: 0;
+    /* A section reaches the Inspector's edges, as the asset header does */
+    margin-left: -9px;
+    margin-right: -9px;
+}
+
+.pf-root .pf-section__header {
+    flex-direction: row;
+    align-items: center;
+    height: 22px;
+    padding: 0 4px 0 2px;
+    background-color: var(--pf-header);
+    border-top-width: 1px;
+    border-top-color: var(--pf-line);
+}
+
+.pf-root .pf-section__arrow {
+    width: 16px;
+    height: 16px;
+}
+
+.pf-root .pf-section__arrow .pf-glyph {
+    width: 10px;
+    height: 10px;
+}
+
+/* The title can shrink to nothing and ends in an ellipsis, while the values on its right never shrink */
+.pf-root .pf-section__title {
+    flex-grow: 1;
+    flex-shrink: 1;
+    min-width: 0;
+    margin: 0;
+    padding: 0 0 0 2px;
+    -unity-font-style: bold;
+    color: var(--pf-strong-text);
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+}
+
+/* A collapsed section's one-line summary, such as "Levels 1–5" */
+.pf-root .pf-section__summary {
+    flex-shrink: 0;
+    margin: 0;
+    padding: 0 6px 0 0;
+    color: var(--pf-secondary-text);
+    display: none;
+}
+
+.pf-root .pf-section--collapsed > .pf-section__header > .pf-section__summary {
+    display: flex;
+}
+
+/* A count a section shows beside its title, such as an attribute set's size */
+.pf-root .pf-section__count {
+    flex-shrink: 0;
+    margin: 0;
+    padding: 0 6px 0 0;
+    color: var(--pf-secondary-text);
+}
+
+/* The content indents 18 px, past the foldout arrow */
+.pf-root .pf-section__content {
+    padding: 4px 8px 8px 18px;
+}
+
+.pf-root .pf-section--collapsed > .pf-section__content {
+    display: none;
+}

@@ -498,7 +498,7 @@ namespace FarEmerald.PlayForge.Extended.Editor
         {
             public VisualElement Section;
             public VisualElement Header;
-            public Label Arrow;
+            public Button Arrow;
             public VisualElement Content;
             public Button HelpButton;
             public Button ImportButton;
@@ -516,85 +516,31 @@ namespace FarEmerald.PlayForge.Extended.Editor
         }
         
         /// <summary>
-        /// Creates a complete collapsible section with header and content.
-        /// Supports import/clear functionality when SerializedObject and PropertyPaths are provided.
+        /// Creates a complete collapsible section with header and content, from the kit's ForgeSection, which takes its
+        /// look from PlayForge's style sheet (Decision 20). Supports import/clear functionality when SerializedObject and
+        /// PropertyPaths are provided. Import, Clear and Help always show: they appeared only while the pointer was over
+        /// the header (Q18), and the section set its own dark colors and an accent divider (ED-20).
         /// </summary>
         public static SectionResult CreateCollapsibleSection(SectionConfig config, Action<string, bool> onClick = null)
         {
-            var result = new SectionResult();
-            
-            var section = new VisualElement { name = $"{config.Name}_CONTAINER" };
-            section.style.marginBottom = 4;
-            section.AddToClassList("forge-section");
-            result.Section = section;
-
-            // Section Header
-            var header = new VisualElement { name = $"{config.Name}" };
-            header.style.flexDirection = FlexDirection.Row;
-            header.style.alignItems = Align.Center;
-            header.style.marginTop = 8;
-            header.style.marginBottom = 4;
-            header.style.paddingLeft = 2;
-            header.style.paddingRight = 2;
-            header.style.paddingTop = 4;
-            header.style.paddingBottom = 4;
-            header.style.backgroundColor = Colors.SectionHeaderBackground;
-            header.style.borderTopLeftRadius = 3;
-            header.style.borderTopRightRadius = 3;
-            header.style.borderBottomLeftRadius = 3;
-            header.style.borderBottomRightRadius = 3;
-            header.style.height = 32;
-            header.AddToClassList("forge-section-header");
-            result.Header = header;
-            section.Add(header);
-
-            // Arrow
-            var arrow = new Label(config.StartExpanded ? Icons.ChevronDown : Icons.ChevronRight);
-            arrow.name = $"{config.Name}Arrow";
-            arrow.style.width = 16;
-            arrow.style.fontSize = 10;
-            arrow.style.unityTextAlign = TextAnchor.MiddleCenter;
-            arrow.style.color = Colors.ArrowText;
-            arrow.style.marginRight = 2;
-            arrow.AddToClassList("forge-section-arrow");
-            result.Arrow = arrow;
-            header.Add(arrow);
-
-            // Title
-            var title = new Label(config.Title);
-            title.style.fontSize = 14;
-            title.style.unityFontStyleAndWeight = FontStyle.Bold;
-            title.style.unityTextAlign = TextAnchor.MiddleLeft;
-            title.style.color = Colors.SectionTitle;
-            title.style.paddingRight = 8;
-            title.style.flexShrink = 0;
-            title.AddToClassList("forge-section-title");
-            header.Add(title);
-
-            // Divider line
-            var divider = new VisualElement();
-            divider.style.flexGrow = 1;
-            divider.style.height = 2;
-            divider.style.backgroundColor = config.GetAccentColor(.28f);
-            divider.style.marginLeft = 4;
-            divider.style.marginRight = 8;
-            divider.style.alignSelf = Align.Center;
-            divider.style.borderTopLeftRadius = 1;
-            divider.style.borderTopRightRadius = 1;
-            divider.style.borderBottomLeftRadius = 1;
-            divider.style.borderBottomRightRadius = 1;
-            header.Add(divider);
+            var section = new ForgeSection(config.Name, config.Title, config.StartExpanded);
+            var result = new SectionResult
+            {
+                Section = section,
+                Header = section.Header,
+                Arrow = section.Arrow,
+                Content = section.Content,
+            };
 
             // Determine button visibility
             bool showImport = config.IncludeButtons?[0] ?? true;
             bool showClear = config.IncludeButtons?[1] ?? true;
             bool showHelp = (config.IncludeButtons?[2] ?? true) && !string.IsNullOrEmpty(config.HelpTopic);
-            
+
             // Override with explicit hide flags
             if (config.HideImportButton) showImport = false;
             if (config.HideClearButton) showClear = false;
-            
-            // Create Import Button
+
             if (showImport)
             {
                 Action importAction = config.HasImportClearSupport
@@ -604,20 +550,11 @@ namespace FarEmerald.PlayForge.Extended.Editor
                         config.PropertyPaths,
                         config.OnImportComplete)
                     : (Action)(() => Debug.LogWarning($"Import not configured for section '{config.Name}'. Set SerializedObject and PropertyPaths."));
-                
-                result.ImportButton = CreateCircularButton(
-                    $"{config.Name}Import",
-                    Icons.ArrowDown,
-                    Colors.PolicyGreen,
+                result.ImportButton = section.AddAction($"{config.Name}Import", ForgeGlyphShape.Import,
+                    config.HasImportClearSupport ? $"Import {config.Title} from another asset" : "Import not configured",
                     importAction);
-                result.ImportButton.tooltip = config.HasImportClearSupport 
-                    ? $"Import {config.Title} from another asset" 
-                    : "Import not configured";
-                result.ImportButton.style.display = DisplayStyle.None;
-                header.Add(result.ImportButton);
             }
 
-            // Create Clear Button
             if (showClear)
             {
                 Action clearAction = config.HasImportClearSupport
@@ -628,96 +565,21 @@ namespace FarEmerald.PlayForge.Extended.Editor
                         config.OnClearComplete,
                         config.GetDefaultValue)
                     : () => Debug.LogWarning($"Clear not configured for section '{config.Name}'. Set SerializedObject and PropertyPaths.");
-                
-                result.ClearButton = CreateCircularButton(
-                    $"{config.Name}Clear",
-                    Icons.Clear,
-                    Colors.PolicyRed,
+                result.ClearButton = section.AddAction($"{config.Name}Clear", ForgeGlyphShape.Clear,
+                    config.HasImportClearSupport ? $"Reset {config.Title} to default values" : "Clear not configured",
                     clearAction);
-                result.ClearButton.tooltip = config.HasImportClearSupport 
-                    ? $"Reset {config.Title} to default values" 
-                    : "Clear not configured";
-                result.ClearButton.style.display = DisplayStyle.None;
-                header.Add(result.ClearButton);
             }
 
-            // Create Help Button
             if (showHelp)
             {
-                result.HelpButton = CreateCircularButton(
-                    $"{config.Name}Help",
-                    Icons.Help,
-                    Colors.PolicyPurple,
+                result.HelpButton = section.AddAction($"{config.Name}Help", ForgeGlyphShape.Help, "Open the documentation",
                     () => ForgeDocs.Open(config.HelpTopic));
-                result.HelpButton.tooltip = "Open documentation";
-                result.HelpButton.style.display = DisplayStyle.None;
-                header.Add(result.HelpButton);
             }
 
-            // Setup hover show/hide for buttons
-            SetupButtonHoverBehavior(header, result);
-
-            // Content container
-            var content = new VisualElement { name = config.Name };
-            content.style.paddingLeft = 8;
-            content.style.paddingRight = 4;
-            content.style.paddingTop = 4;
-            content.style.paddingBottom = 8;
-            content.style.marginLeft = 2;
-            content.style.borderLeftWidth = config.BorderWidth;
-            content.style.borderBottomWidth = config.BorderWidth;
-            content.style.borderLeftColor = Colors.SectionHeaderBackground;
-            content.style.borderBottomColor = Colors.SectionHeaderBackground;
-            content.style.borderBottomLeftRadius = 3;
-            content.style.display = config.StartExpanded ? DisplayStyle.Flex : DisplayStyle.None;
-            content.AddToClassList("forge-section-content");
-            result.Content = content;
-            section.Add(content);
-
-            // Setup collapse/expand behavior
-            SetupCollapseBehavior(header, content, arrow, onClick);
-
+            section.Toggled += expanded => onClick?.Invoke(config.Name, expanded);
             return result;
         }
-        
-        private static void SetupButtonHoverBehavior(VisualElement header, SectionResult result)
-        {
-            header.RegisterCallback<PointerEnterEvent>(_ =>
-            {
-                if (result.ImportButton != null) result.ImportButton.style.display = DisplayStyle.Flex;
-                if (result.ClearButton != null) result.ClearButton.style.display = DisplayStyle.Flex;
-                if (result.HelpButton != null) result.HelpButton.style.display = DisplayStyle.Flex;
-            });
-            
-            header.RegisterCallback<PointerLeaveEvent>(_ =>
-            {
-                if (result.ImportButton != null) result.ImportButton.style.display = DisplayStyle.None;
-                if (result.ClearButton != null) result.ClearButton.style.display = DisplayStyle.None;
-                if (result.HelpButton != null) result.HelpButton.style.display = DisplayStyle.None;
-            });
-        }
-        
-        private static void SetupCollapseBehavior(VisualElement header, VisualElement content, Label arrow, Action<string, bool> onClick)
-        {
-            bool isExpanded = content.style.display == DisplayStyle.Flex;
-            
-            header.RegisterCallback<MouseEnterEvent>(_ => header.style.backgroundColor = Colors.SectionHeaderHover);
-            header.RegisterCallback<MouseLeaveEvent>(_ => header.style.backgroundColor = Colors.SectionHeaderBackground);
-            
-            header.RegisterCallback<ClickEvent>(evt =>
-            {
-                if (evt.target is Button) return;
-                
-                isExpanded = !isExpanded;
-                content.style.display = isExpanded ? DisplayStyle.Flex : DisplayStyle.None;
-                arrow.text = isExpanded ? Icons.ChevronDown : Icons.ChevronRight;
-                
-                onClick?.Invoke(header.name, isExpanded);
-                
-                evt.StopPropagation();
-            });
-        }
-        
+
         // ═══════════════════════════════════════════════════════════════════════════
         // SECTION 6: Subsections
         // ═══════════════════════════════════════════════════════════════════════════
