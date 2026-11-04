@@ -30,6 +30,10 @@ tracks each fix below by its ID.
 - A random scaler keeps one roll per effect spec, unless set to roll on every evaluation.
 - Attribute elements set to Combine add up, and a set's `UseAverage` averages.
 - A derived attribute's refresh runs the post-change pipeline and reaches the frame summary.
+- `GameplayAbilitySystem` and `RuntimeGameplayAbilitySystem` forward to one core, so the two hubs behave alike. A
+  hub's `AttributeSystem`, `AbilitySystem`, `ItemSystem`, `EffectSystem` and `LevelSystem` are read-only properties,
+  public on both. Each hub has what only the other had: `ApplyGameplayEffect(origin, effect)` and
+  `GetRelativeLevel()`.
 
 ### Fixed
 - Runtime correctness: 96 fixes across ProcessControl, TaskSequence and the GAS core, among them exception isolation,
@@ -49,6 +53,9 @@ tracks each fix below by its ID.
 - An effect that only ticks on application lands its change.
 - An attribute set that includes itself, directly or through another set, no longer recurses forever, and a set reached
   by two paths counts once.
+- A runtime GAS applies its entity's affiliation as tags, as a GameObject's does, and one made from an Entity asset
+  keeps the asset's Local Data.
+- The GAS Debugger names runtime entities. It showed each as "unknown".
 
 ### Removed
 - QuickOutline, replaced by the Demo's own outline.
@@ -56,6 +63,8 @@ tracks each fix below by its ID.
 - Two settings nothing read: an entity's **Cap At Max**, since its level always stays between Starting Level and Max
   Level, and an item's **Allow Duplicates**, since the entity's **Allow Duplicate Items** decides. Code that set
   either field no longer compiles; delete the assignment.
+- From the GAS hubs, what nothing used: `GameplayAbilitySystem`'s `Relays` field and `HandleDestructionInternally`
+  hook, and each hub's protected `localData` field. A subclass reads Local Data through `GetLocalDataStructure()`.
 
 ## [0.1.0] - 2026-10-30
 

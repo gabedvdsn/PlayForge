@@ -9,6 +9,10 @@ namespace FarEmerald.PlayForge
         public ItemSystemComponent GetItemSystem();
         public EffectSystemComponent GetEffectSystem();
         
+        /// <summary>
+        /// The MonoBehaviour hub, for its GameObject or transform; null for a runtime GAS, which has none. What every GAS
+        /// has, its name among it, ask of this interface instead.
+        /// </summary>
         [CanBeNull] public GameplayAbilitySystem ToGASObject();
 
         public bool RemoveGameplayEffect(Tag identifier);

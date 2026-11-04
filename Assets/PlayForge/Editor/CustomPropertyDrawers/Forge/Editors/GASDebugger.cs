@@ -58,9 +58,6 @@ namespace FarEmerald.PlayForge.Extended.Editor
         private bool _overviewPickerExpanded;
         private bool _overviewAttributesInitialized;
 
-        // Reflection cache
-        private FieldInfo _tagCacheField;
-
         // Expansion state
         private HashSet<string> _expandedAttributes = new();
         private HashSet<string> _expandedAbilities = new();
@@ -141,10 +138,6 @@ namespace FarEmerald.PlayForge.Extended.Editor
 
         private void OnEnable()
         {
-            // Effect shelf moved to the shared EffectSystemComponent (public surface) —
-            // no reflection needed anymore; see CreateEffectsSection.
-            _tagCacheField = typeof(GameplayAbilitySystem).GetField("TagCache",
-                BindingFlags.NonPublic | BindingFlags.Instance);
             affiliationColors = new Dictionary<string, Color>();
 
             EditorApplication.playModeStateChanged += OnPlayModeChanged;
@@ -1208,9 +1201,10 @@ namespace FarEmerald.PlayForge.Extended.Editor
                     section.Add(CreateDetailRow(WorkerTypeName(w), w.GetType().Namespace ?? "", new Color(0.8f, 0.8f, 0.8f)));
             }
 
-            // ── Tag workers (via TagCache reflection field) ─────────────────
+            // ── Tag workers ─────────────────
+            // From GetTagCache. A reflected TagCache field found nothing once the cache moved into GASCore (GAS-S1)
             section.Add(CreateSubHeader("Tag Workers"));
-            var tagCache = _tagCacheField?.GetValue(_selectedGAS) as TagCache;
+            var tagCache = _selectedGAS.GetTagCache();
             if (tagCache == null)
             {
                 section.Add(CreateEmptyLabel("No tag cache"));
@@ -1250,19 +1244,19 @@ namespace FarEmerald.PlayForge.Extended.Editor
         }
 
         /// <summary>
-        /// Best-effort name for an ITarget/ISource: EntityData name → GameObject name → "unknown".
+        /// Best-effort name for an ITarget/ISource: its own name → GameObject name → "unknown". Asked of the
+        /// MonoBehaviour alone, through ToGASObject, which a runtime GAS answers with null, every runtime entity
+        /// showed as "unknown" (GAS-S1).
         /// </summary>
         private static string ResolveDisplayNameFor(ITarget target)
         {
             if (target == null) return "unknown";
+
+            var name = target.GetName();
+            if (!string.IsNullOrEmpty(name)) return name;
+
             var gasObj = target.ToGAS()?.ToGASObject();
-            if (gasObj != null)
-            {
-                if (gasObj.EntityData != null && !string.IsNullOrEmpty(gasObj.EntityData.GetName()))
-                    return gasObj.EntityData.GetName();
-                if (gasObj.gameObject != null) return gasObj.gameObject.name;
-            }
-            return "unknown";
+            return gasObj != null ? gasObj.gameObject.name : "unknown";
         }
 
         private static string WorkerTypeName(object worker)
@@ -1814,7 +1808,6 @@ namespace FarEmerald.PlayForge.Extended.Editor
         {
             var section = CreateSection("Tags", TagColor);
 
-            // var tagCache = _tagCacheField?.GetValue(_selectedGAS) as TagCache;
             var tagCache = _selectedGAS.GetTagCache();
             var tags = tagCache?.GetAppliedTags();
 

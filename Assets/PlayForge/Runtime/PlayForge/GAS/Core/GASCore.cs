@@ -1,0 +1,254 @@
+using System.Collections.Generic;
+
+namespace FarEmerald.PlayForge
+{
+    /// <summary>
+    /// What makes an entity a GAS, whichever hub carries it: its subsystems and tag cache, its level, Local Data and
+    /// affiliation, its end of frame, and its death. <see cref="GameplayAbilitySystem"/>, a MonoBehaviour, and
+    /// <see cref="RuntimeGameplayAbilitySystem"/>, a plain process, each own one and forward to it. What stays with a hub
+    /// is how it is built, where its entity is, and how it goes away.
+    ///
+    /// Each hub kept its own copy of all this, about 400 lines, and the copies drifted: only the Mono hub applied the
+    /// entity's affiliation as tags, and a runtime GAS made from an Entity asset lost the asset's Local Data (GAS-S1).
+    /// </summary>
+    internal sealed class GASCore
+    {
+        private readonly IGameplayAbilitySystem owner;
+        private readonly LocalDataStructure localData = new();
+        private List<Tag> affiliation;
+        private bool pendingDestruction;
+
+        public AttributeSystemComponent AttributeSystem { get; }
+        public AbilitySystemComponent AbilitySystem { get; }
+        public ItemSystemComponent ItemSystem { get; }
+        public EffectSystemComponent EffectSystem { get; }
+        public SystemLevelsComponent LevelSystem { get; }
+        public TagCache TagCache { get; }
+        public GameplayAbilitySystemCallbacks Callbacks { get; }
+
+        /// <summary>The entity's settings as this GAS uses them, or null for a hub given none.</summary>
+        public RuntimeEntityIdentity Identity { get; private set; }
+
+        public ActionQueue ActionQueue { get; private set; }
+        public FrameSummary FrameSummary { get; private set; }
+        public AnalysisWorkerCache AnalysisCache { get; private set; }
+        public LocalDataStructure LocalData => localData;
+        public bool IsDead { get; private set; }
+
+        /// <param name="owner">The hub, which the subsystems, workers and callbacks see as this GAS.</param>
+        /// <param name="callbacks">The hub's, made with it so a caller can subscribe before it initializes (PF-013).</param>
+        public GASCore(IGameplayAbilitySystem owner, GameplayAbilitySystemCallbacks callbacks)
+        {
+            this.owner = owner;
+            Callbacks = callbacks;
+
+            AttributeSystem = new AttributeSystemComponent(owner);
+            AbilitySystem = new AbilitySystemComponent(owner);
+            ItemSystem = new ItemSystemComponent(owner);
+            EffectSystem = new EffectSystemComponent(owner);
+            LevelSystem = new SystemLevelsComponent();
+            TagCache = new TagCache(owner);
+        }
+
+        /// <summary>
+        /// Builds the GAS from <paramref name="identity"/>: its rules, end of frame, workers and level, its starting
+        /// abilities, attributes and items, then its tags, then the abilities that activate at once. A hub given no
+        /// identity keeps its empty subsystems.
+        /// </summary>
+        /// <param name="registered">The sides the hub's registration data gives, which replace the identity's.</param>
+        public void Initialize(RuntimeEntityIdentity identity, List<Tag> registered = null)
+        {
+            Identity = identity;
+            localData.Init(identity);
+
+            if (identity is null) return;
+
+            // This entity's sides: the registration data's, or else a copy of the identity's. They were written onto the
+            // identity, which every entity of this kind shares, so one turncoat moved them all (GAS-47)
+            affiliation = registered ?? (identity.Affiliation != null ? new List<Tag>(identity.Affiliation) : null);
+
+            AbilitySystem.Setup(identity.ActivationPolicy, identity.AllowDuplicateAbilities, identity.MaxAbilitiesOperation);
+            AttributeSystem.Setup(identity.AttributeSet);
+            ItemSystem.Setup(identity.AllowDuplicateItems, identity.AllowDuplicateEquippedItems, identity.MaxItemsOperation, identity.MaxEquippedItemsOperation);
+
+            InitializeEndOfFrame();
+
+            identity.InitWorkers(owner);
+            if (identity.AttributeSet) identity.AttributeSet.InitWorkers(owner);
+
+            LevelSystem.Register(identity.AssetTag, new IntValuePairClamped(identity.GetStartingLevel(), identity.GetMaxLevel()));
+
+            AbilitySystem.Initialize(identity.StartingAbilities);
+            AttributeSystem.Initialize();
+            ItemSystem.Initialize(identity.StartingItems);
+
+            CompileGrantedTags();
+
+            // Once attributes, items and tags exist, so the rules can check them (GAS-49)
+            AbilitySystem.ActivateImmediateAbilities();
+
+            Callbacks?.SystemInitialized();
+        }
+
+        private void InitializeEndOfFrame()
+        {
+            ActionQueue = new ActionQueue();
+            FrameSummary = new FrameSummary();
+            AnalysisCache = new AnalysisWorkerCache();
+
+            ActionQueue.OnActionQueued += action => Callbacks.ActionQueued(action);
+            ActionQueue.OnActionExecuted += action => Callbacks.ActionExecuted(action);
+            ActionQueue.OnActionInvalidated += action =>
+            {
+                FrameSummary.RecordInvalidatedAction(action);
+                Callbacks.ActionInvalidated(action);
+            };
+
+            TagCache.SetDeferredContext(owner, ActionQueue, FrameSummary);
+            AnalysisCache.SetDeferredContext(owner, ActionQueue, FrameSummary);
+
+            AttributeSystem.SetDeferredContext(owner, ActionQueue, FrameSummary);
+            AbilitySystem.SetDeferredContext(owner, ActionQueue, FrameSummary);
+            ItemSystem.SetDeferredContext(owner, ActionQueue, FrameSummary);
+        }
+
+        // ═══════════════════════════════════════════════════════════════════════════
+        // Frame
+        // ═══════════════════════════════════════════════════════════════════════════
+
+        public void Tick()
+        {
+            EffectSystem.Tick();
+
+            // Tag workers tick once a frame, at its end, once their activations are settled. Ticked here as well,
+            // they ran at twice their rate (GAS-19)
+        }
+
+        /// <summary>
+        /// The frame's deferred work: the queued actions, then the tag workers' and the analysis workers', each with what
+        /// it queued in turn, then the frame's summary. True once the entity has died, for its hub to end it.
+        /// </summary>
+        public bool EndOfFrame()
+        {
+            if (ActionQueue == null) return false;
+
+            int totalExecuted = ActionQueue.ProcessAll(owner);
+
+            TagCache.EvaluateTagWorkers();
+
+            // Tag worker activate/resolve actions
+            totalExecuted += ActionQueue.ProcessAll(owner);
+
+            TagCache.TickTagWorkers();
+
+            // Actions queued by ticks
+            totalExecuted += ActionQueue.ProcessAll(owner);
+
+            AnalysisCache.Analyze(owner);
+
+            // Actions queued by analysis workers
+            totalExecuted += ActionQueue.ProcessAll(owner);
+
+            // The snapshot copies ten lists, so it's built only for someone listening (PF-006)
+            if (Callbacks != null && Callbacks.HasFrameCompleteListeners) Callbacks.FrameComplete(FrameSummary.CreateSnapshot(totalExecuted));
+
+            FrameSummary.Clear();
+
+            if (!pendingDestruction) return false;
+
+            Callbacks?.SystemDisabled();
+            return true;
+        }
+
+        public void QueueAction(IRootAction action) => ActionQueue?.Enqueue(action);
+
+        public void QueueActions(IEnumerable<IRootAction> actions) => ActionQueue?.EnqueueRange(actions);
+
+        // ═══════════════════════════════════════════════════════════════════════════
+        // Death and impacts
+        // ═══════════════════════════════════════════════════════════════════════════
+
+        /// <summary>
+        /// Marks the entity dead. Listeners hear at once, and the frame completes as usual; its end hands the death to
+        /// the hub, which ends the entity as its kind ends.
+        /// </summary>
+        public void MarkDead()
+        {
+            if (IsDead) return;
+
+            IsDead = true;
+            Callbacks?.EntityDied(owner);
+            FrameSummary?.RecordDeath(owner);
+
+            pendingDestruction = true;
+        }
+
+        public void RecordImpactDealt(ImpactData impact)
+        {
+            FrameSummary?.RecordImpactDealt(impact);
+            Callbacks?.ImpactDealt(impact);
+        }
+
+        public void RecordImpactReceived(ImpactData impact)
+        {
+            FrameSummary?.RecordImpactReceived(impact);
+            Callbacks?.ImpactReceived(impact);
+        }
+
+        // ═══════════════════════════════════════════════════════════════════════════
+        // Tags and affiliation
+        // ═══════════════════════════════════════════════════════════════════════════
+
+        public List<Tag> GetAffiliation() => affiliation ?? Identity?.Affiliation;
+
+        /// <summary>
+        /// The sides a runtime GAS's registration data gives. It learns them only once registered, after it built itself
+        /// in its constructor. They replace the identity's, and its tags follow.
+        /// </summary>
+        public void SetAffiliation(List<Tag> sides)
+        {
+            affiliation = sides;
+            if (Identity != null) CompileGrantedTags();
+        }
+
+        public void CompileGrantedTags()
+        {
+            TagCache.ResetWeights();
+            GrantedTagCompiler.Compile(TagCache, Identity.AttributeSet, EffectSystem, AbilitySystem, ItemSystem);
+
+            // The identity's own, as EntityIdentity.GetGrantedTags yields them. The runtime hub left out the
+            // affiliation (GAS-S1)
+            TagCache.AddTag(Identity.AssetTag);
+            GrantedTagCompiler.AddAll(TagCache, GetAffiliation());
+            GrantedTagCompiler.AddAll(TagCache, Identity.GrantedTags);
+        }
+
+        public bool QueryTags(TagQuery query)
+        {
+            // The cache, which has the weights. The list counted each tag once, however often it was granted (GAS-16)
+            return query.Validate(TagCache);
+        }
+
+        // ═══════════════════════════════════════════════════════════════════════════
+        // Attributes, effects and levels
+        // ═══════════════════════════════════════════════════════════════════════════
+
+        public bool TryModifyAttribute(IAttribute attribute, SourcedModifiedAttributeValue sourcedModifiedValue, bool runEvents)
+        {
+            AttributeSystem.ModifyAttribute(attribute, sourcedModifiedValue, runEvents);
+            return true;
+        }
+
+        /// <summary>Generates a gameplay effect spec with this GAS as the target.</summary>
+        /// <param name="origin">The origination of the effect (typically entity, ability, or item)</param>
+        public GameplayEffectSpec GenerateEffectSpec(IEffectOrigin origin, GameplayEffect effect) => effect.Generate(origin, owner);
+
+        /// <summary>Applies a gameplay effect with respect to an origin (typically entity, ability, or item).</summary>
+        public bool ApplyGameplayEffect(IEffectOrigin origin, GameplayEffect effect)
+            => EffectSystem.ApplyGameplayEffect(GenerateEffectSpec(origin, effect));
+
+        public IntValuePairClamped GetLevel() => LevelSystem.GetLevel(Identity.AssetTag);
+
+        public float GetRelativeLevel() => ForgeHelper.RelativeOffsetValue(GetLevel());
+    }
+}

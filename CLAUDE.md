@@ -59,8 +59,10 @@ The full review behind it is https://claude.ai/artifact/1GsrCxW3Wff2KvXM6fnai9.
 - **Impact entries are derived on every `Generate()` and never serialized.** Do not serialize them until a
   multi-entry drawer exists.
 - **`TagCache.GetWeight` returns −1 for an absent tag,** not 0.
-- **The effect shelf lives in the shared `EffectSystemComponent`.** About 400 other lines are still duplicated
-  between the Mono and Runtime GAS hubs (end of frame, death, tag compile and others), so mirror changes in both
-  until the planned merge (GAS-S1).
+- **Both GAS hubs forward to one internal `GASCore`** (GAS-S1). It owns the subsystems (the effect shelf is its
+  `EffectSystemComponent`), the tag compile, level, Local Data, affiliation, end of frame and death, so put GAS
+  behaviour there. A hub keeps only how it is built (the Mono hub at registration, a runtime GAS in its constructor),
+  where its entity is, and how it goes away (`TerminateImmediate` or `Destroy` for Mono, a queued `Terminate` for a
+  runtime GAS).
 - **A GAS must step in LateUpdate** for its end of frame to run (GAS-1).
 - **Lifecycles** are SelfTerminating, RunThenWait, RequiresControl and Synchronous. There is no StepOnly.

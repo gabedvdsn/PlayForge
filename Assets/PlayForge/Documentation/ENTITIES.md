@@ -48,8 +48,7 @@ At runtime, the entity's level range comes from its own Starting Level and Max L
 - **Granted Tags** are always applied to the entity.
 - **Affiliation**: the entity's team or faction tags. An effect's Affiliation check compares its origin's affiliation
   with its target's. Code that starts a GAS can pass affiliation tags in its registration data, and those replace this
-  list. The `GameplayAbilitySystem` component also applies these tags to the entity. A `RuntimeGameplayAbilitySystem`
-  doesn't.
+  list. The GAS also applies these tags to the entity, on either hub.
 
 ## Leveling
 

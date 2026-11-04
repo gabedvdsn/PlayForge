@@ -130,9 +130,10 @@ Null / undefined attribute targets early-out safely (pure tag-grant effects are 
 
 ## 4. Effect lifecycle (`EffectSystemComponent`)
 
-One shared component owns the shelf; both `RuntimeGameplayAbilitySystem` and the MonoBehaviour
-`GameplayAbilitySystem` hold an instance and delegate (public API unchanged). **The twins no
-longer duplicate effect logic — edit `EffectSystemComponent`, not the GAS classes.**
+One shared component owns the shelf. Both `RuntimeGameplayAbilitySystem` and the MonoBehaviour
+`GameplayAbilitySystem` forward to a `GASCore`, which holds it (public API unchanged). **Edit
+`EffectSystemComponent` for effect logic and `GASCore` for the rest of the GAS, not the hub
+classes.**
 
 ```
 ApplyGameplayEffect(spec)

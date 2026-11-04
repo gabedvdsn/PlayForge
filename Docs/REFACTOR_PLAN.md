@@ -440,7 +440,7 @@ had no letter in the review. TS-AA onward came from the test project.
 | GAS-P2 | M | 0 | Tag and FrameSummary allocations (PF-007) | `TagCache.cs:60`, `TagQuery.cs:89-136`, `FrameSummary.cs:306-308` | verified |
 | GAS-P3 | M | 3 | Each application revalidates every container and rebuilds all tags (area application is quadratic) | `EffectSystemComponent.cs:312-348`, `GameplayAbilitySystem.cs:250-281` | open |
 | GAS-P4 | M | 3 | Recompute allocations; impacter lookups allocate every tick; string tags with no interning | `CachedAttributeValue.cs:175, 203, 348`, `GameplayEffectSpec.cs:174, 188`, `Tag.cs:266, 286-288` | open |
-| GAS-S1 | M | 3 | The GAS twins duplicate about 400 lines and have drifted; `ToGASObject()` returns null on Runtime | `GameplayAbilitySystem*.cs`, `RuntimeGameplayAbilitySystem*.cs` | open |
+| GAS-S1 | M | 3 | The GAS twins duplicate about 400 lines and have drifted; `ToGASObject()` returns null on Runtime. Both now forward to one `GASCore`. The drift found: a runtime GAS applied no affiliation tags and lost its Entity asset's Local Data, and the GAS Debugger, asking `ToGASObject()`, named every runtime entity "unknown". `ToGASObject()` stays null on Runtime, which has no MonoBehaviour. What a hub keeps on purpose: the Mono hub builds at registration and a runtime GAS in its constructor, and on death the Mono hub ends at once while a runtime GAS queues its end | `GameplayAbilitySystem*.cs`, `RuntimeGameplayAbilitySystem*.cs`, `GASCore.cs` | fixed |
 
 ### Editor and UI
 
@@ -562,6 +562,16 @@ GAS-4 with GAS-5, PC-6, and TS-I with PC-5.
 ## Log
 
 Record baselines, gate results and notable decisions here, newest first.
+
+- 2026-11-03, **GAS-S1: one core for both hubs.** `GameplayAbilitySystem` and `RuntimeGameplayAbilitySystem` forward
+  to one internal `GASCore`, which builds the entity, compiles its tags and runs its end of frame and death. Its three
+  tests were seen failing first: a runtime GAS applied no affiliation tags and lost its Entity asset's Local Data,
+  and the GAS Debugger named a runtime entity "unknown".
+  - **Tests:** PlayMode 858: 851 pass, 0 fail and 7 planted are skipped, in three orders. Planted 7 of 7; EditMode
+    39 of 39. Clean import, plain and with samples, is 0 on every count.
+  - **Each hub keeps on purpose:** when it builds (the Mono hub at registration, a runtime GAS in its constructor)
+    and how it ends (the Mono hub at once, a runtime GAS by a queued Terminate).
+  - **Next:** GAS-P3 and GAS-P4, the performance rows that touched both hubs, now change one place.
 
 - 2026-11-03, **GAS-51 moved to Phase 5.** The user chose to keep item stacking's two fields and build stacking in
   Phase 5, as FEAT-14. Comments at `ItemDefinition.MaxStackSize` and `ItemSpecContainer.ItemStacks` say they do

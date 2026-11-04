@@ -241,6 +241,12 @@ Extract the entire effect shelf (apply / tick / re-apply / remove / `MarkFinishe
 MonoBehaviour keeps only Unity glue (transform, update forwarding). Twin drift stops being a
 class of bug.
 
+Amendment (2026-11-03, GAS-S1): the rest of what the twins shared followed the shelf into one plain
+class, **`GASCore`**: the subsystems, the tag cache and its compile, the level, Local Data,
+affiliation, the end of frame and death. Each hub owns one and forwards to it, and keeps only how it
+is built, where its entity is, and how it goes away. The copies had drifted: only the Mono hub
+applied the affiliation as tags, and a runtime GAS lost its Entity asset's Local Data.
+
 ---
 
 ## 4. What is deleted (the simplification dividend)

@@ -1,223 +1,87 @@
 using System.Collections.Generic;
-using UnityEngine;
 
 namespace FarEmerald.PlayForge
 {
     /// <summary>
-    /// Partial class for RuntimeGameplayAbilitySystem adding end-of-frame processing.
-    /// This handles the ActionQueue, FrameSummary, and deferred worker execution.
-    /// Mirrors GameplayAbilitySystem.EndOfFrame.cs but with runtime-appropriate destruction.
+    /// The end of frame and death of a RuntimeGameplayAbilitySystem. <see cref="GASCore"/> runs the ActionQueue,
+    /// FrameSummary and deferred workers; this ends the entity as a runtime GAS ends, with no GameObject to destroy.
     /// </summary>
     public partial class RuntimeGameplayAbilitySystem
     {
-        // ═══════════════════════════════════════════════════════════════════════════
-        // END-OF-FRAME STATE
-        // ═══════════════════════════════════════════════════════════════════════════
-        
-        private ActionQueue _actionQueue;
-        private FrameSummary _frameSummary;
-        private AnalysisWorkerCache AnalysisCache;
-        
-        // Death/destruction state
-        private bool _isDead;
-        private bool _pendingDestruction;
+        public AnalysisWorkerCache GetAnalysisCache() => core.AnalysisCache;
+        public bool IsDead => core.IsDead;
 
-        public AnalysisWorkerCache GetAnalysisCache()
-        {
-            return AnalysisCache;
-        }
-        public bool IsDead => _isDead;
-        
-        // ═══════════════════════════════════════════════════════════════════════════
-        // INITIALIZATION
-        // ═══════════════════════════════════════════════════════════════════════════
-        
-        /// <summary>
-        /// Initialize the end-of-frame processing system.
-        /// Called during construction via Initialize().
-        /// </summary>
-        private void InitializeEndOfFrameSystem()
-        {
-            _actionQueue = new();
-            _frameSummary = new();
-            Callbacks ??= new();
-            AnalysisCache = new();
-            
-            // Wire up action queue callbacks to GAS callbacks
-            _actionQueue.OnActionQueued += action => Callbacks.ActionQueued(action);
-            _actionQueue.OnActionExecuted += action => Callbacks.ActionExecuted(action);
-            _actionQueue.OnActionInvalidated += action =>
-            {
-                _frameSummary.RecordInvalidatedAction(action);
-                Callbacks.ActionInvalidated(action);
-            };
-        }
-        
-        private void SetupDeferredContexts()
-        {
-            TagCache.SetDeferredContext(this, _actionQueue, _frameSummary);
-            AnalysisCache.SetDeferredContext(this, _actionQueue, _frameSummary);
-            
-            AttributeSystem.SetDeferredContext(this, _actionQueue, _frameSummary);
-            AbilitySystem.SetDeferredContext(this, _actionQueue, _frameSummary);
-            ItemSystem.SetDeferredContext(this, _actionQueue, _frameSummary);
-        }
-        
         // ═══════════════════════════════════════════════════════════════════════════
         // ACTION QUEUE ACCESS
         // ═══════════════════════════════════════════════════════════════════════════
-        
+
         /// <summary>
         /// Queue an action for end-of-frame execution.
         /// </summary>
-        public void QueueAction(IRootAction action)
-        {
-            _actionQueue?.Enqueue(action);
-        }
-        
+        public void QueueAction(IRootAction action) => core.QueueAction(action);
+
         /// <summary>
         /// Queue multiple actions for end-of-frame execution.
         /// </summary>
-        public void QueueActions(IEnumerable<IRootAction> actions)
-        {
-            _actionQueue?.EnqueueRange(actions);
-        }
-        
+        public void QueueActions(IEnumerable<IRootAction> actions) => core.QueueActions(actions);
+
         /// <summary>
         /// Get the action queue (for advanced usage).
         /// </summary>
-        public ActionQueue GetActionQueue() => _actionQueue;
-        
+        public ActionQueue GetActionQueue() => core.ActionQueue;
+
         /// <summary>
         /// Get the current frame summary (for debugging/analysis).
         /// </summary>
-        public FrameSummary GetFrameSummary() => _frameSummary;
-        
+        public FrameSummary GetFrameSummary() => core.FrameSummary;
+
         // ═══════════════════════════════════════════════════════════════════════════
         // DEATH HANDLING
         // ═══════════════════════════════════════════════════════════════════════════
-        
+
         /// <summary>
         /// Mark this entity as dead. Does NOT destroy immediately.
         /// The frame will complete normally, then destruction occurs.
         /// </summary>
-        public void MarkDead()
-        {
-            if (_isDead) return;
-            
-            _isDead = true;
-    
-            // Fire death callback immediately so listeners can react
-            Callbacks?.EntityDied(this);
-    
-            // Record in frame summary
-            _frameSummary?.RecordDeath(this);
-            
-            _pendingDestruction = true;
-        }
+        public void MarkDead() => core.MarkDead();
 
         /// <summary>
-        /// Called after frame is fully complete. Terminates the process via ProcessControl.
+        /// Called after frame is fully complete, once the entity has died. Terminates the process via ProcessControl.
         /// Unlike the MonoBehaviour version, there is no GameObject to destroy.
         /// </summary>
         protected virtual void HandleDestruction()
         {
-            Callbacks?.SystemDisabled();
-            
             // One stepped by hand, outside ProcessControl, has no process to end. It threw (GAS-42)
             if (Relay != null && ProcessControl.Instance) ProcessControl.Instance.Terminate(Relay.CacheIndex);
         }
-        
+
         // ═══════════════════════════════════════════════════════════════════════════
         // IMPACT RECORDING
         // ═══════════════════════════════════════════════════════════════════════════
-        
+
         /// <summary>
         /// Record an impact this GAS DEALT (this GAS is the ISource).
         /// Call this from the source path after impact is calculated.
         /// </summary>
-        public void RecordFrameImpactDealt(ImpactData impact)
-        {
-            _frameSummary?.RecordImpactDealt(impact);
-            Callbacks?.ImpactDealt(impact);
-        }
+        public void RecordFrameImpactDealt(ImpactData impact) => core.RecordImpactDealt(impact);
 
         /// <summary>
         /// Record an impact this GAS RECEIVED (this GAS is the ITarget).
         /// Call this from ModifyAttribute after impact is calculated.
         /// </summary>
-        public void RecordFrameImpactReceived(ImpactData impact)
-        {
-            _frameSummary?.RecordImpactReceived(impact);
-            Callbacks?.ImpactReceived(impact);
-        }
-        
+        public void RecordFrameImpactReceived(ImpactData impact) => core.RecordImpactReceived(impact);
+
         // ═══════════════════════════════════════════════════════════════════════════
         // END-OF-FRAME PROCESSING
         // ═══════════════════════════════════════════════════════════════════════════
-        
+
         /// <summary>
-        /// Process all deferred work for this frame.
-        /// Called from WhenLateUpdate via the process system.
+        /// Process all deferred work for this frame, then end the entity if it died.
+        /// Called from WhenLateUpdate via the process system, or by whoever steps this GAS by hand.
         /// </summary>
         public void EndOfFrame()
         {
-            if (_actionQueue == null) return;
-            
-            int totalExecuted = 0;
-            
-            // ═══════════════════════════════════════════════════════════════════════
-            // PHASE 1: Process queued actions (may queue more actions)
-            // ═══════════════════════════════════════════════════════════════════════
-            int executed = _actionQueue.ProcessAll(this);
-            totalExecuted += executed;
-            
-            // ═══════════════════════════════════════════════════════════════════════
-            // PHASE 2: Evaluate tag workers (queues activate/resolve actions)
-            // ═══════════════════════════════════════════════════════════════════════
-            TagCache.EvaluateTagWorkers();
-            
-            // Process tag worker activate/resolve actions
-            executed = _actionQueue.ProcessAll(this);
-            totalExecuted += executed;
-            
-            // ═══════════════════════════════════════════════════════════════════════
-            // PHASE 3: Tick active tag workers (may queue more actions)
-            // ═══════════════════════════════════════════════════════════════════════
-            TagCache.TickTagWorkers();
-            
-            // Process any actions queued by ticks
-            executed = _actionQueue.ProcessAll(this);
-            totalExecuted += executed;
-            
-            // ═══════════════════════════════════════════════════════════════════════
-            // PHASE 4: Run analysis workers
-            // ═══════════════════════════════════════════════════════════════════════
-            AnalysisCache.Analyze(this);
-            
-            // Process any actions queued by analysis workers
-            executed = _actionQueue.ProcessAll(this);
-            totalExecuted += executed;
-            
-            // ═══════════════════════════════════════════════════════════════════════
-            // PHASE 5: Fire frame complete callback
-            // ═══════════════════════════════════════════════════════════════════════
-            // The snapshot copies ten lists, so it's built only for someone listening (PF-006)
-            if (Callbacks != null && Callbacks.HasFrameCompleteListeners) Callbacks.FrameComplete(_frameSummary.CreateSnapshot(totalExecuted));
-            
-            // ═══════════════════════════════════════════════════════════════════════
-            // PHASE 6: Reset for next frame
-            // ═══════════════════════════════════════════════════════════════════════
-            _frameSummary.Clear();
-            
-            // ═══════════════════════════════════════════════════════════════════════
-            // PHASE 7: Handle pending destruction
-            // ═══════════════════════════════════════════════════════════════════════
-
-            if (_pendingDestruction)
-            {
-                HandleDestruction();
-            }
+            if (core.EndOfFrame()) HandleDestruction();
         }
     }
 }
