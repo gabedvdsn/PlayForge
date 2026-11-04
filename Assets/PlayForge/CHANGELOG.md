@@ -83,6 +83,9 @@ tracks each fix below by its ID.
 - A runtime GAS applies its entity's affiliation as tags, as a GameObject's does, and one made from an Entity asset
   keeps the asset's Local Data.
 - The GAS Debugger names runtime entities. It showed each as "unknown".
+- A sequence that repeats no longer grows its packet's path for as long as it runs. Each part a run or a stage adds to
+  the path comes off as it ends, and a failed run still logs the path to where it failed. The parts are formatted
+  once, and the LINQ left on an ability's activation is gone.
 
 ### Removed
 - QuickOutline, replaced by the Demo's own outline.

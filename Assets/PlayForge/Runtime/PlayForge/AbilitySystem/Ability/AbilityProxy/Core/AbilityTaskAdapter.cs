@@ -22,10 +22,14 @@ namespace FarEmerald.PlayForge
         // The stage the task is in, for the task callbacks
         private readonly AbilityTaskBehaviourStage _stage;
 
+        // The task's part of the packet's path, its type's name, read once: it was read on every run (TS-5)
+        private readonly string _pathPart;
+
         public AbilityTaskAdapter(AbstractAbilityTask abilityTask, AbilityTaskBehaviourStage stage = null)
         {
             AbilityTask = abilityTask;
             _stage = stage;
+            _pathPart = abilityTask?.GetType().Name;
         }
 
         public void Prepare(SequenceDataPacket data)
@@ -40,7 +44,7 @@ namespace FarEmerald.PlayForge
         {
             if (data is AbilityDataPacket abilityData)
             {
-                abilityData.AppendPath(AbilityTask.GetType().Name);
+                abilityData.AppendPath(_pathPart);
 
                 // The task callbacks fired only on the legacy path, which a compiled ability never takes (TS-9)
                 abilityData.Callbacks?.AbilityTaskActivated(AbilityCallbackStatus.GenerateForTask(abilityData, AbilityTask, _stage, true));

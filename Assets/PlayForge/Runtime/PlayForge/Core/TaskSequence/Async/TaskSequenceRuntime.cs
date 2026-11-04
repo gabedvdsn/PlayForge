@@ -80,6 +80,12 @@ namespace FarEmerald.PlayForge
         private readonly HashSet<SequenceStage> _brokenRepeats = new();
         private readonly Dictionary<SequenceStage, int> _repeatCounts = new();
 
+        // Where on its packet's path each running stage's iterations start, so a repeat takes off what the last one
+        // added; and the path where this run failed, kept for its log, as the failing stage has taken its part off by
+        // then. Each part stayed, so a repeat grew the path for as long as it ran (TS-5)
+        private readonly Dictionary<SequenceStage, int> _iterationPathDepths = new();
+        private string _failurePath;
+
         // Stage error storage (safer than TrySetException which can cause issues)
         private Exception _pendingStageError;
         
@@ -205,12 +211,18 @@ namespace FarEmerald.PlayForge
             // used to clear it, which left the outer run with no runtime and its packet marked unused (TS-F)
             var outerRuntime = Data.Runtime;
             Data.Runtime = this;
-            Data.AppendPath($"Seq[{Definition?.Metadata?.Name}]");
-            
+
+            // The run's part of the path comes off as it ends, and each time round starts from it (TS-5)
+            int outerPathDepth = Data.PathDepth;
+            Data.AppendPath(Definition?.PathPart ?? "Seq[]");
+            int runPathDepth = Data.PathDepth;
+
             // Use loop for repeat - await in finally blocks can have issues with UniTask
             while (true)
             {
                 Reset();
+                Data.TrimPath(runPathDepth);
+                _failurePath = null;
                 IsRunning = true;
                 CompletedSuccessfully = false;
                 FailureException = null;
@@ -282,7 +294,8 @@ namespace FarEmerald.PlayForge
                         CompletedSuccessfully = false;
                         if (Definition.Metadata?.EnableErrorLogging ?? true)
                         {
-                            Debug.LogError($"[TaskSequence] {Definition.Metadata?.Name ?? "Unnamed"} {(!string.IsNullOrEmpty(Data.Path) ? $"({Data.Path})" : "")} failed: {FailureException}");
+                            var path = _failurePath ?? Data.Path;
+                            Debug.LogError($"[TaskSequence] {Definition.Metadata?.Name ?? "Unnamed"} {(!string.IsNullOrEmpty(path) ? $"({path})" : "")} failed: {FailureException}");
                         }
                     }
 
@@ -320,6 +333,7 @@ namespace FarEmerald.PlayForge
                 {
                     Data.InUse = outerRuntime != null;
                     Data.Runtime = outerRuntime;
+                    Data.TrimPath(outerPathDepth);
 
                     try
                     {
@@ -482,11 +496,15 @@ namespace FarEmerald.PlayForge
             bool cancelled = false;
             Exception error = null;
 
-            Data.AppendPath($"Stage[{stage.Metadata?.Name}]");
+            // The stage's part of the path, and whatever its init adds, come off as it ends, and each iteration of a
+            // repeat starts after them (TS-5)
+            int pathDepth = Data.PathDepth;
+            Data.AppendPath(stage.PathPart);
 
             try
             {
                 stage.OnInit?.Invoke(Data);
+                _iterationPathDepths[stage] = Data.PathDepth;
 
                 // Start stage max duration timeout if configured
                 if (stage.HasMaxDuration)
@@ -541,6 +559,9 @@ namespace FarEmerald.PlayForge
                     }
                 }
                 // If no stage handler, let exception propagate silently to sequence level
+
+                // Where the run failed, for its log: the innermost stage to fail keeps it first (TS-5)
+                if (error != null) _failurePath ??= Data.Path;
             }
             finally
             {
@@ -565,6 +586,9 @@ namespace FarEmerald.PlayForge
                     stageCts.Cancel();
                     stageCts.Dispose();
                 }
+
+                _iterationPathDepths.Remove(stage);
+                Data.TrimPath(pathDepth);
             }
 
             return error;
@@ -621,6 +645,9 @@ namespace FarEmerald.PlayForge
         /// </summary>
         internal async UniTask RestartStage(SequenceStage stage, int startFrame, CancellationToken token)
         {
+            // What the last iteration added to the path comes off, so each one finds it as the first did (TS-5)
+            if (_iterationPathDepths.TryGetValue(stage, out int pathDepth)) Data.TrimPath(pathDepth);
+
             if (Time.frameCount == startFrame) await UniTask.Yield(PlayerLoopTiming.Update, token);
 
             CleanStage(stage);

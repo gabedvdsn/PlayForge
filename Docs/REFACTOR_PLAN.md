@@ -363,7 +363,7 @@ had no letter in the review. TS-AA onward came from the test project.
 | TS-2 | M | 0 | The README names types that do not exist (PF-010) | `Core/TaskSequence/README.md` | verified |
 | TS-3 | H | 0 | The proxy and sequences are recompiled on every activation; `IsCriticalSection` builds the inner sequence 4–5 times (PF-012) | `AbilityProxy.cs:62`, `AbilitySequenceCompiler.cs:30-80`, `RunSequenceTask.cs:18-21` | verified |
 | TS-4 | H | 0 | A bare `catch { }` swallows ability errors (PF-008) | `AbilitySpecContainer.cs:113-116` | verified |
-| TS-5 | M | 3 | LINQ on a hot path; `AppendPath` concatenates strings and grows without bound on repeat | `SequenceStage.cs:394`, `AbilityDataPacket.cs:76-77` | open |
+| TS-5 | M | 3 | LINQ on a hot path; `AppendPath` concatenates strings and grows without bound on repeat. PF-007 (Phase 0) took the LINQ out of `HasAnyStageConditions` and made the path's parts join only when read, which left them to grow: a sequence that repeated added its stages' parts every time round, and its twentieth run had a 272-character path to its first's 25. Now each part a run or a stage adds comes off as it ends, each repeat starts where its iteration began, and a failed run keeps the path to where it failed for its log. The parts are formatted once, and the LINQ left on an ability's activation, in `AbilityProxy`, and in a chain's `HasConditions` is loops | `TaskSequenceRuntime.cs` (`Run`, `RunStage`, `RestartStage`), `ProcessDataPacket.cs` (`TrimPath`), `AbilityProxy.cs`, `AbilityTaskAdapter.cs`, `AbilitySequenceCompiler.cs` | fixed |
 | TS-6 | M | 5 | Global time only; `RunProcessTask` defaults to unscaled time (C02) → FEAT-7 | `RunProcessTask.cs:14` | open |
 | TS-7 | M | 5 | Critical sections are static; the compiler never emits a `BranchStage` (C12) | `AbilitySequenceCompiler.cs` | open |
 | TS-8 | M | 3 | `TryActivate` runs synchronously deep into the first stages (C16) | `AbilityProxy.cs` | open |
@@ -586,6 +586,18 @@ GAS-4 with GAS-5, PC-6, and TS-I with PC-5.
 ## Log
 
 Record baselines, gate results and notable decisions here, newest first.
+
+- 2026-11-03, **TS-5: a repeating sequence keeps its path the same.** Each part a run or a stage adds to its
+  packet's path comes off as it ends, each repeat starts where its iteration began, and a failed run keeps the path
+  to where it failed for its log. The parts are formatted once, and the LINQ left on an ability's activation is
+  loops. PF-007 had already taken out the LINQ and the joins the review cited. Its test,
+  `TS_5_A_repeating_sequence_keeps_its_path_the_same`, was seen failing first; its control, that a failed run logs
+  the path where it failed, passed before and after.
+  - **Measured:** the twentieth run's path was 272 characters to the first's 25; now both are 25.
+  - **Tests:** PlayMode 888: 881 pass, 0 fail and 7 planted are skipped, in three orders. Planted 7 of 7; EditMode
+    39 of 39. The 25 golden scenarios pass inside PlayMode; the custom runner can't run while the user's editor holds
+    PlayForge's lock.
+  - **Changed on purpose:** the path is where a packet is now. A run or a stage that has ended is off it.
 
 - 2026-11-03, **GAS-P7: a tag lookup costs the same however long its name.** Each tag has an ID, given at run time
   as it's made or as an asset holding it loads, and never serialized; equality and hashing compare IDs. Its test,

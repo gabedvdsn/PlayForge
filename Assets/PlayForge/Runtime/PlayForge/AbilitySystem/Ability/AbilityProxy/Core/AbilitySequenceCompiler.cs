@@ -209,13 +209,16 @@ namespace FarEmerald.PlayForge
             bool applyUsage = abilityStage.ApplyUsageEffects;
             bool applyAtStart = abilityStage.ApplyUsageAtStageStart;
 
+            // The stage's milestone on the packet's path, formatted once as it compiles: it was formatted on every run
+            // (TS-5)
+            string pathPart = $"Stage[{stageIndex},{abilityStage.Tasks?.Count ?? 0}tasks]";
+
             stage.OnInit(data =>
             {
                 if (data is not AbilityDataPacket abilityData) return;
 
                 // Track stage milestone on the data packet path
-                int taskCount = abilityStage.Tasks?.Count ?? 0;
-                abilityData.AppendPath($"Stage[{stageIndex},{taskCount}tasks]");
+                abilityData.AppendPath(pathPart);
 
                 abilityData.Callbacks?.AbilityStageActivated(
                     AbilityCallbackStatus.GenerateForStageEvent(abilityData, abilityStage, true));

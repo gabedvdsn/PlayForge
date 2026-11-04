@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Threading;
 using Cysharp.Threading.Tasks;
 using UnityEngine;
@@ -57,9 +56,29 @@ namespace FarEmerald.PlayForge
         {
             StageIndex = -1;
             Behaviour = behaviour;
-            HasAnyCriticalStage = Behaviour.Stages != null && Behaviour.Stages.Any(s => s.Tasks.Any(t => t.IsCriticalSection));
-            
+
+            HasAnyCriticalStage = false;
+            if (Behaviour.Stages != null)
+            {
+                for (int i = 0; i < Behaviour.Stages.Count && !HasAnyCriticalStage; i++)
+                    HasAnyCriticalStage = HasCriticalTask(Behaviour.Stages[i]);
+            }
+
             CompileSequence(abilityName);
+        }
+
+        // Whether a stage holds a critical task, by index. It was asked through LINQ on every activation, whose
+        // enumerators allocated (TS-5)
+        private static bool HasCriticalTask(AbilityTaskBehaviourStage stage)
+        {
+            var tasks = stage?.Tasks;
+            if (tasks == null) return false;
+
+            for (int i = 0; i < tasks.Count; i++)
+            {
+                if (tasks[i] != null && tasks[i].IsCriticalSection) return true;
+            }
+            return false;
         }
 
         /// <summary>
@@ -105,8 +124,7 @@ namespace FarEmerald.PlayForge
             {
                 for (int i = Behaviour.Stages.Count - 1; i >= 0; i--)
                 {
-                    if (Behaviour.Stages[i].Tasks != null &&
-                        Behaviour.Stages[i].Tasks.Any(t => t.IsCriticalSection))
+                    if (HasCriticalTask(Behaviour.Stages[i]))
                     {
                         _lastCriticalStageIndex = i;
                         break;
@@ -428,7 +446,7 @@ namespace FarEmerald.PlayForge
 
         private async UniTask ActivateStageLegacy(AbilityTaskBehaviourStage stage, int stageIndex, AbilityDataPacket data, CancellationToken token)
         {
-            bool isCriticalStage = stage.Tasks.Any(t => t.IsCriticalSection);
+            bool isCriticalStage = HasCriticalTask(stage);
             if (isCriticalStage) _activeCriticalStages++;
 
             var asc = data.EffectOrigin.GetSource().ToGAS().GetAbilitySystem();
@@ -511,9 +529,11 @@ namespace FarEmerald.PlayForge
 
         public UniTask[] GetWatchedTasksLegacy(UniTask[] tasks, AbilityTaskBehaviourStage stage, AbilityDataPacket data, AbilitySystemCallbacks callbacks, bool notifyOnCancel)
         {
-            return tasks
-                .Select((t, i) => WatchTask(t, callbacks, i, stage, data, notifyOnCancel))
-                .ToArray();
+            // By index, into an array of their count: LINQ allocated its enumerators and a list to grow (TS-5)
+            var watched = new UniTask[tasks.Length];
+            for (int i = 0; i < tasks.Length; i++)
+                watched[i] = WatchTask(tasks[i], callbacks, i, stage, data, notifyOnCancel);
+            return watched;
         }
 
         public UniTask WatchTask(

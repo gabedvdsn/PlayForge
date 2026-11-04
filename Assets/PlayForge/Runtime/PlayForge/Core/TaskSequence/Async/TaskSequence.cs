@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Threading;
 using Cysharp.Threading.Tasks;
 using UnityEngine;
@@ -245,7 +244,13 @@ namespace FarEmerald.PlayForge
             get
             {
                 if (_conditions.Count > 0) return true;
-                return _sequences.Any(seq => seq.HasConditions);
+
+                // By index: Any through LINQ allocated its enumerator each time the chain was read (TS-5)
+                for (int i = 0; i < _sequences.Count; i++)
+                {
+                    if (_sequences[i].HasConditions) return true;
+                }
+                return false;
             }
         }
         

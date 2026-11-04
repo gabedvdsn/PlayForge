@@ -169,6 +169,23 @@ namespace FarEmerald.PlayForge
         /// Returns true if this stage should repeat.
         /// </summary>
         public bool ShouldRepeat => Repeat || Policy is RepeatUntilSkippedPolicy;
+
+        // The stage's part of a packet's path, made again only when its name changes. It was formatted on every run (TS-5)
+        private string _pathPart, _pathPartName;
+
+        internal string PathPart
+        {
+            get
+            {
+                var name = Metadata?.Name;
+                if (_pathPart == null || !ReferenceEquals(_pathPartName, name))
+                {
+                    _pathPartName = name;
+                    _pathPart = $"Stage[{name}]";
+                }
+                return _pathPart;
+            }
+        }
         
         /// <summary>
         /// Checks if a given injection type is allowed at this stage level.
@@ -373,6 +390,24 @@ namespace FarEmerald.PlayForge
         /// Returns true if this sequence or any stage has conditions.
         /// </summary>
         public bool HasAnyConditions => HasConditions || HasAnyStageConditions;
+
+        // The sequence's part of a packet's path, made again only when its name changes. It was formatted on every run
+        // (TS-5)
+        private string _pathPart, _pathPartName;
+
+        internal string PathPart
+        {
+            get
+            {
+                var name = Metadata?.Name;
+                if (_pathPart == null || !ReferenceEquals(_pathPartName, name))
+                {
+                    _pathPartName = name;
+                    _pathPart = $"Seq[{name}]";
+                }
+                return _pathPart;
+            }
+        }
         
         /// <summary>
         /// Returns true if this sequence has a max duration limit.

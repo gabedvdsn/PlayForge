@@ -62,6 +62,25 @@ namespace FarEmerald.PlayForge
             _pathParts.Add(r);
             _path = null;
         }
+
+        /// <summary>How many parts the path has, for a run or a stage to take it back to as it ends (TS-5).</summary>
+        internal int PathDepth => _pathParts?.Count ?? (string.IsNullOrEmpty(_path) ? 0 : 1);
+
+        /// <summary>
+        /// Takes the path back to its first <paramref name="depth"/> parts. A run or a stage takes off what it added as it
+        /// ends: each part stayed, so a sequence that repeated added its stages again every time round, and its path
+        /// grew for as long as it ran (TS-5).
+        /// </summary>
+        internal void TrimPath(int depth)
+        {
+            if (_pathParts == null) return;
+
+            depth = Math.Max(0, depth);
+            if (depth >= _pathParts.Count) return;
+
+            _pathParts.RemoveRange(depth, _pathParts.Count - depth);
+            _path = null;
+        }
         
         protected ProcessDataPacket()
         { }
