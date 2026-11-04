@@ -124,8 +124,9 @@ namespace FarEmerald.PlayForge.Extended.Editor
                 EDataWrapperType.Ability => CreatePropertyField(abilityProp),
                 EDataWrapperType.Entity => CreatePropertyField(entityProp),
                 EDataWrapperType.Object => CreateObjectField(objectProp, typeof(Object)),
-                EDataWrapperType.ScriptableObject => CreateObjectField(monoProp, typeof(ScriptableObject)),
-                EDataWrapperType.MonoBehaviour => CreateObjectField(soProp, typeof(MonoBehaviour)),
+                // Each edits its own value; they had each other's (ED-30)
+                EDataWrapperType.ScriptableObject => CreateObjectField(soProp, typeof(ScriptableObject)),
+                EDataWrapperType.MonoBehaviour => CreateObjectField(monoProp, typeof(MonoBehaviour)),
                 _ => new Label("Select a type")
             };
 
