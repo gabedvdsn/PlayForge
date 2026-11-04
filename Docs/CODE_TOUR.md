@@ -1,7 +1,7 @@
 # PlayForge refactor: code tour
 
 This tour lists the places where the refactor changed code, so you can open each one in your IDE and read it. It
-covers `01258b8..04c3db1` on `main`: 221 commits. Phase 0 ported Arcade Fighter's fixes, Phase 1 made the runtime
+covers `01258b8..c45f4f1` on `main`: 223 commits. Phase 0 ported Arcade Fighter's fixes, Phase 1 made the runtime
 correct, Phase 2 got the package ready to release, and Phase 3 has begun. Each entry says what behaves differently and
 why, names its tracker IDs and Decisions, and points at the two or three places to read. `Docs/REFACTOR_PLAN.md` has
 every tracker row, the numbered Decisions, and a Log of each batch's test results.
@@ -9,8 +9,8 @@ every tracker row, the numbered Decisions, and a Log of each batch's test result
 ## How to use this
 
 - Paths are relative to the repo root.
-- Line numbers are as of commit `04c3db1`, the head of `main` on 2026-11-03. A later commit may move them, so each
-  entry also names the class and method to search for. `git show 04c3db1:<path>` shows a file as it was then.
+- Line numbers are as of commit `c45f4f1`, the head of `main` on 2026-11-03. A later commit may move them, so each
+  entry also names the class and method to search for. `git show c45f4f1:<path>` shows a file as it was then.
 - In Rider, Go to File accepts `path:line`. In Visual Studio, open the file, then Go To Line (Ctrl+G).
   A bare `:123` after a path means another line in the same file.
 - `git grep "<ID>"` finds the comment at each fix, and `git log --grep "<ID>"` finds its commit. Three exceptions:
@@ -30,9 +30,10 @@ every tracker row, the numbered Decisions, and a Log of each batch's test result
 
 Phase 3 began on `main` with the rows that writing the reference docs turned up, five runtime bugs and two settings
 nothing read, then gave the two GAS hubs one core (GAS-S1), turned to cost (GAS-P3, GAS-P5, GAS-P4, GAS-P6, GAS-P8,
-GAS-P9, GAS-P7, TS-5, TS-10), removed a stub nothing used (PC-24), and made sequences and abilities end in the frame
-their last task does (TS-Z). Each has a test in Proving Grounds named after its ID, seen failing first; the runtime
-tests run on both hubs. The plan's Log has the gate results.
+GAS-P9, GAS-P7, TS-5, TS-10), removed a stub nothing used (PC-24), made sequences and abilities end in the frame their
+last task does (TS-Z), and kept activation synchronous while a loop of activations goes round once a frame (TS-8).
+Each has a test in Proving Grounds named after its ID, seen failing first; the runtime tests run on both hubs. The
+plan's Log has the gate results.
 
 ### An entity's affiliation is its own (GAS-47)
 
@@ -63,8 +64,8 @@ took, and takes back that slot only if the slot still holds its ability.
   - `Assets/PlayForge/Runtime/PlayForge/ItemSystem/Core/ItemSpecContainer.cs:183`, in
     `ItemSpecContainer.RemoveActiveAbility`. `ApplyActiveAbility` notes the slot at `:167`, in `grantedAbilityIndex`
     (`:18`).
-  - `Assets/PlayForge/Runtime/PlayForge/AbilitySystem/Core/AbilitySystemComponent.cs:238`
-    `AbilitySystemComponent.RemoveAbilityAt`, which removes one slot. `RemoveAbility` (`:228`) finds a slot and calls
+  - `Assets/PlayForge/Runtime/PlayForge/AbilitySystem/Core/AbilitySystemComponent.cs:239`
+    `AbilitySystemComponent.RemoveAbilityAt`, which removes one slot. `RemoveAbility` (`:229`) finds a slot and calls
     it.
 - **New:** `AbilitySystemComponent.RemoveAbilityAt(int, Ability)`.
 - **Test:** `GAS_48_Unequipping_removes_only_the_ability_the_item_granted` in `ItemTests`.
@@ -77,7 +78,7 @@ only then try the immediate ones.
 
 - **IDs:** GAS-49, commit `999e779`.
 - **Read:**
-  - `Assets/PlayForge/Runtime/PlayForge/AbilitySystem/Core/AbilitySystemComponent.cs:169`
+  - `Assets/PlayForge/Runtime/PlayForge/AbilitySystem/Core/AbilitySystemComponent.cs:170`
     `AbilitySystemComponent.ActivateImmediateAbilities`, taken out of `Initialize`.
   - `Assets/PlayForge/Runtime/PlayForge/GAS/Core/GASCore.cs:88`, the call in `GASCore.Initialize`, after
     `CompileGrantedTags`. Each hub made it until GAS-S1 gave them one core.
@@ -415,11 +416,33 @@ Now each ends in the frame its last task does, and an instant ability in the fra
   flat and nested, in `SequenceTimingTests`. `An_instant_sequence_repeats_once_a_frame`, in `SequenceRepeatTests`, still
   holds.
 
+### Activation stays synchronous, and a loop of activations goes round once a frame (TS-8)
+
+`TryActivateAbility` runs an ability until one of its tasks waits: its targeting, then its first stage, so an instant
+ability has ended inside the call. That stays, as Unreal's does. An ability asked for again from inside its own
+activation nested in the call, so a loop of instant activations, such as an ability that asks for itself as it ends,
+nested until the stack overflowed. Such a request now starts next frame.
+
+- **IDs:** TS-8, commit `c45f4f1`, Decision 25.
+- **Read:**
+  - `Assets/PlayForge/Runtime/PlayForge/AbilitySystem/Core/AbilitySystemComponent.cs:331` `TryActivateAbility`,
+    which puts the request off (`:340`) while the ability's activation call still runs, and `ActivateNextFrame`
+    (`:350`), which tries it again next frame.
+  - `Assets/PlayForge/Runtime/PlayForge/AbilitySystem/Core/AbilitySpecContainer.cs:36` `IsActivating`, open from the
+    claim to the end of `ActivateAbility` (`:80`).
+- **Watch for:** `TryActivateAbility` returns true for a request it puts off. Next frame it's tried in full, and dropped
+  if the ability's slot no longer holds it. A queued activation that its own ability's activation call releases waits
+  a frame too.
+- **Tests:** `TS_8_An_ability_asked_again_inside_its_own_activation_starts_next_frame`, from its end, its claim release
+  and through another ability, in `SequenceTimingTests`, with its controls
+  `An_ability_runs_inside_the_call_that_activates_it` and
+  `An_ability_asked_for_outside_its_own_activation_starts_at_once`.
+
 ### Still open in Phase 3
 
-Timing work: TS-8, how far `TryActivate` runs into an ability's first stages before it returns, which changes when
-things happen in a frame, so the behaviour is the user's call first. GAS-51, item stacking that is declared but not
-built, moved to Phase 5 as FEAT-14, so an Item's `MaxStackSize` does nothing until then.
+No Phase 3 row is open. GAS-51, item stacking that is declared but not built, moved to Phase 5 as FEAT-14, so an
+Item's `MaxStackSize` does nothing until then. The phase's exit gate, zero steady-state allocation enforced in CI,
+isn't checked yet, and the repo has no CI.
 
 ## ProcessControl
 
@@ -753,13 +776,13 @@ targeting is logged and cleans the activation; it used to leak the handle.
 
 - **IDs:** TS-AC, TS-C, TS-V.
 - **Read:**
-  - `Assets/PlayForge/Runtime/PlayForge/AbilitySystem/Core/AbilitySystemComponent.cs:312`
-    `AbilitySystemComponent.CanActivateAbility` (TS-AC at `:317`).
+  - `Assets/PlayForge/Runtime/PlayForge/AbilitySystem/Core/AbilitySystemComponent.cs:313`
+    `AbilitySystemComponent.CanActivateAbility` (TS-AC at `:318`).
   - `Assets/PlayForge/Runtime/PlayForge/AbilitySystem/Ability/AbilityProxy/Core/AbilityProxy.cs:161`
     `AbilityProxy.ActivateTargetingTask` (TS-C at `:179`, TS-V at `:186`), then `ActivateTargetingViaSequence`
     (`:195`) and `ActivateViaSequence` (`:294`) for TS-AC.
-  - `Assets/PlayForge/Runtime/PlayForge/AbilitySystem/Core/AbilitySpecContainer.cs:80`
-    `AbilitySpecContainer.AwaitAbility`. The catch at `:92` is TS-V.
+  - `Assets/PlayForge/Runtime/PlayForge/AbilitySystem/Core/AbilitySpecContainer.cs:99`
+    `AbilitySpecContainer.AwaitAbility`. The catch at `:111` is TS-V.
 - **New:** `AbilityDataPacket.TargetingFinished`, set by the targeting adapter
   (`Assets/PlayForge/Runtime/PlayForge/AbilitySystem/Ability/AbilityProxy/Core/AbilitySequenceCompiler.cs:112`).
   `ProcessControl.AcceptsNewProcesses`.
@@ -798,7 +821,7 @@ swallowed by a bare `catch`, and resuming a sequence no longer sets `Time.timeSc
     `AbilityDataPacket.GetTaskState<T>`, used by `RunProcessTask.Prepare`
     (`Assets/PlayForge/Runtime/PlayForge/AbilitySystem/Tasks/Process/Authored/RunProcessTask.cs:20`). TS-X is in the
     constructor, at `Assets/PlayForge/Runtime/PlayForge/AbilitySystem/Ability/AbilityProxy/Core/AbilityDataPacket.cs:72`.
-  - `Assets/PlayForge/Runtime/PlayForge/AbilitySystem/Core/AbilitySpecContainer.cs:195`
+  - `Assets/PlayForge/Runtime/PlayForge/AbilitySystem/Core/AbilitySpecContainer.cs:214`
     `AbilitySpecContainer.TakeProxy`, with `AbilityProxy.IsIdle`
     (`Assets/PlayForge/Runtime/PlayForge/AbilitySystem/Ability/AbilityProxy/Core/AbilityProxy.cs:109`).
   - `Assets/PlayForge/Runtime/PlayForge/Core/TaskSequence/Async/TaskSequenceProcess.cs:273`
@@ -1005,8 +1028,8 @@ points back at it, as a Mono GAS's does.
 - **Read:**
   - `Assets/PlayForge/Runtime/PlayForge/AbilitySystem/Ability/AbilityProxy/Core/AbilityDataPacket.cs:133`
     `AbilityDataPacket.ResolveTarget`.
-  - `Assets/PlayForge/Runtime/PlayForge/AbilitySystem/Core/AbilitySpecContainer.cs:104`, in
-    `AbilitySpecContainer.AwaitAbility`, followed by `ValidateAllActivationRequirements` at `:106`.
+  - `Assets/PlayForge/Runtime/PlayForge/AbilitySystem/Core/AbilitySpecContainer.cs:123`, in
+    `AbilitySpecContainer.AwaitAbility`, followed by `ValidateAllActivationRequirements` at `:125`.
   - `Assets/PlayForge/Runtime/PlayForge/GAS/Core/Runtime/RuntimeGameplayAbilitySystem.cs:79`, in the constructor the
     others call.
 - **New:** `AbilityDataPacket.ResolveTarget(Tag)`.
@@ -1022,9 +1045,9 @@ Removing an ability takes it off the active list before tags compile, and still 
 
 - **IDs:** GAS-21, TS-T, GAS-20.
 - **Read:**
-  - `Assets/PlayForge/Runtime/PlayForge/AbilitySystem/Core/AbilitySystemComponent.cs:411`
-    `AbilitySystemComponent.ClaimActive`, then `ReleaseClaim` (`:429`) and `EndActivation` (`:446`).
-  - `Assets/PlayForge/Runtime/PlayForge/AbilitySystem/Core/AbilitySystemComponent.cs:228`
+  - `Assets/PlayForge/Runtime/PlayForge/AbilitySystem/Core/AbilitySystemComponent.cs:438`
+    `AbilitySystemComponent.ClaimActive`, then `ReleaseClaim` (`:456`) and `EndActivation` (`:473`).
+  - `Assets/PlayForge/Runtime/PlayForge/AbilitySystem/Core/AbilitySystemComponent.cs:229`
     `AbilitySystemComponent.RemoveAbility`.
 - **New:** `AbilitySpecContainer.IsActiveUnder(EAbilityActivationPolicy)`.
 
@@ -1403,6 +1426,7 @@ Newest first. Each row is a good place to start reading.
 
 | What | IDs | Where | Commit |
 |---|---|---|---|
+| An ability asked for inside its own activation starts next frame | TS-8, Decision 25 | `Assets/PlayForge/Runtime/PlayForge/AbilitySystem/Core/AbilitySystemComponent.cs:331` | `c45f4f1` |
 | Sequences and abilities end the frame their last task does | TS-Z, Decision 24 | `Assets/PlayForge/Runtime/PlayForge/Management/GameplayProcess/Core/ProcessRelay.cs:44` | `04c3db1` |
 | A tick, a recompute and a tag query allocate nothing | GAS-P4 | `Assets/PlayForge/Runtime/PlayForge/GameplayEffect/Core/GameplayEffectSpec.cs:155` | `b50a80b` |
 | Ending an effect costs the same however many end with it | GAS-P5 | `Assets/PlayForge/Runtime/PlayForge/GAS/Core/EffectSystemComponent.cs:536` | `7ce68aa` |
@@ -1410,7 +1434,7 @@ Newest first. Each row is a good place to start reading.
 | Both GAS hubs forward to one core | GAS-S1 | `Assets/PlayForge/Runtime/PlayForge/GAS/Core/GASCore.cs:59` | `5e7f077` |
 | An attribute set reached twice counts once | GAS-44 | `Assets/PlayForge/Runtime/PlayForge/AttributeSystem/Attribute/AttributeSet.cs:63` | `57ea4ff` |
 | Tick On Application alone lands its change | GAS-50 | `Assets/PlayForge/Runtime/PlayForge/GAS/Core/EffectSystemComponent.cs:249` | `e40b3b6` |
-| Opening abilities wait for the entity's attributes | GAS-49 | `Assets/PlayForge/Runtime/PlayForge/AbilitySystem/Core/AbilitySystemComponent.cs:169` | `999e779` |
+| Opening abilities wait for the entity's attributes | GAS-49 | `Assets/PlayForge/Runtime/PlayForge/AbilitySystem/Core/AbilitySystemComponent.cs:170` | `999e779` |
 | Unequipping takes back only the item's grant | GAS-48 | `Assets/PlayForge/Runtime/PlayForge/ItemSystem/Core/ItemSpecContainer.cs:183` | `27c2325` |
 | Each entity keeps its own affiliation | GAS-47 | `Assets/PlayForge/Runtime/PlayForge/GAS/Core/GASCore.cs:68` | `fdc1886` |
 | Targeting's packet resolves to the entity, so Apply Effects finds its target | GAS-46 | `Assets/PlayForge/Runtime/PlayForge/AbilitySystem/Ability/AbilityProxy/Core/AbilityDataPacket.cs:133` | `fe4271c` |
