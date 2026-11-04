@@ -620,9 +620,8 @@ Record baselines, gate results and notable decisions here, newest first.
   user chose to close the phase on the local gates (Decision 27). All 23 Phase 3 rows move from `fixed` to
   `verified`, and GAS-51 stays `moved`, as FEAT-14.
   - **The last full runs:** PlayMode 941 tests, 934 pass and 7 planted are skipped, in three orders; planted 7 of 7;
-    EditMode 40 of 40. The run was on the code as committed at `ec008f7`, and later commits change only docs. The
-    25 golden scenarios pass inside PlayMode; the custom runner can't run while the user's editor holds PlayForge's
-    lock.
+    EditMode 40 of 40. The run was on the code as committed at `ec008f7`, and later commits change only docs. Once
+    the user had closed the editor, the custom golden runner in PlayForge passed 25/25 in batch mode.
   - **Filed:** SP-24, CI, which waits on two things only the user can provide (Decision 27).
   - **Scope not built:** the roadmap gave Phase 3 pooling and a Register builder. Decision 23 settled pooling:
     PC-24 removed the stub instead of building a pool. No row asked for a Register builder, so none was built; it
