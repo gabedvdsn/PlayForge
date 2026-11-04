@@ -74,10 +74,10 @@ Copyright (c) 2019 Yoshifumi Kawai / Cysharp, Inc.
 - ☐ Publisher account; support email/website.
 - ☐ Key images: icon 160×160, card 420×280, cover 1950×1300; ≥5 screenshots (The Forge
   tabs, GAS Debugger, Visualizer are the strongest material); optional video.
-- ☐ Description; tags; state "Built-in RP samples; runtime is render-pipeline-agnostic".
+- ☐ Description; tags; state "samples render in the Built-in RP and URP; the runtime is render-pipeline-agnostic".
 - ☐ Upload from the OLDEST supported Unity version (claim Unity 6.0+ → upload from 6000.0.x).
 - ☑ Which Editor submits: 6000.0, the oldest supported (the plan's decision 17).
-- ☐ The Demos render in URP (SP-23), and the package works with domain reloading off (SP-22). The
+- ☑ The Demos render in URP (SP-23), and the package works with domain reloading off (SP-22). The
   [submission guidelines](https://assetstore.unity.com/publishing/submission-guidelines) (updated 2026-10-23) require
   them of anything submitted from 6.5 (rule 1.3.c) and 6.6 (rule 2.5.h). Decision 17 does both anyway.
 - ☑ Menus under an existing menu (rule 2.5.1.a): every item sits under `Window/PlayForge/` (ED-19).

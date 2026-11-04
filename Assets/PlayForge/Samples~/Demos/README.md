@@ -7,7 +7,9 @@ since each uses the other's assets.
 
 - The **Input System** package, with *Project Settings → Player → Active Input Handling* set to **Input System Package**
   or **Both**. Without it, this sample's scripts don't compile and its scenes do nothing.
-- The **Built-in Render Pipeline**. The materials use the Standard shader, which renders magenta under URP or HDRP.
+- The **Built-in Render Pipeline** or **URP**. The materials use `PlayForge/Samples/Demo Lit`, which is Standard in
+  the Built-in pipeline. Under URP it is lit by the main light alone, and casts and receives no shadows. HDRP isn't
+  supported.
 - UniTask 2.5.11, which PlayForge itself needs.
 
 ## The scenes
