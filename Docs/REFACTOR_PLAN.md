@@ -540,7 +540,7 @@ had no letter in the review. TS-AA onward came from the test project.
 | ED-28 | L | 2 | Dead UI: `QuickFillWindow` is never opened, `m_AbilityIcon` is never assigned, and four editor `.cs.meta` files name UXML GUIDs that exist nowhere | `ScalerDrawerWindows.cs:356-372`, `AbilityEditor.cs:19-20, 70`, `AbilityEditor.cs.meta:7` | verified |
 | ED-29 | L | 2 | The Entity inspector's Allow Duplicate Equipped Items toggle opens showing Allow Duplicate Items' value | `EntityIdentityEditor.cs:927` | verified |
 | ED-30 | M | 2 | Local Data's object rows edit each other's value: a ScriptableObject row binds the MonoBehaviour field and the other way round, so neither keeps what's assigned | `DataWrapperDrawer.cs:127-128` | verified |
-| ED-31 | L | 4 | The four unlink dialogs count with `IsLinkedTo(this)`, the editor rather than the asset, so they always say 0 | `AbilityEditor.cs:837`, `EffectEditor.cs:276`, `EntityIdentityEditor.cs:298`, `ItemEditor.cs:308` | open |
+| ED-31 | L | 4 | The four unlink dialogs count with `IsLinkedTo(this)`, the editor rather than the asset, so they always say 0. Each now counts the children its unlink would change | `AbilityEditor.cs:840`, `EffectEditor.cs:279`, `EntityIdentityEditor.cs:301`, `ItemEditor.cs:311` | fixed |
 | ED-32 | H | 4 | Six import windows behave differently. Section import copies every field with no choice and Clear asks in a modal; the Effect's Duration and Impact sections can't import at all, since their Import button only logs a warning; scaler import ignores the kinds a field allows and caches its list for 120 s. One Import window replaces them (Decision 28): choose a source, choose the fields, import as one Undo step | `SectionImportWindow.cs`, `ScalerDrawerWindows.cs:17-350`, `TagRequirementDrawers.cs:567-945`, `StandardWorkerGroupDrawer.cs:362`, `EffectEditor.cs:467-500` | open |
 | ED-33 | M | 4 | Scalers can't be shared. Every scaler is copied into its field, and the Scaler Template asset's link code has no callers, so reuse means copying and then propagating. Shared Scaler assets that fields reference replace it (Decision 28) | `AbstractScaler.cs:76-104`, `ScalerPipeline.cs:17-62` | open |
 | ED-34 | H | 4 | Opening a scaler writes to it while drawing. On an effect with no level link, Lock mode cuts its per-level table to one value; the other modes resize the table to Max Level, a Max Level of 0 or less becomes 10, and building the drawer clones a scaler that shares its reference id. Now nothing is written while drawing: a table keeps its length until the user changes it, and a shared scaler shows a warning with a button that makes a separate copy | `ScalerDrawer.cs:125-180, 285, 489-529` | fixed |
@@ -643,6 +643,15 @@ GAS-4 with GAS-5, PC-6, and TS-I with PC-5.
 ## Log
 
 Record baselines, gate results and notable decisions here, newest first.
+
+- 2026-11-04, **ED-31: each unlink question counts the children it would change.** The Effect, Ability, Item and
+  Entity inspectors' Unlink All questions counted children linked to `this`, the editor, which no asset links to, so
+  they always said 0. Each now counts as its asset's `UnlinkAllChildren` decides: an effect's contained effects linked
+  to its provider, and an ability's, item's or entity's children linked to the asset itself. Its test,
+  `ED_31_The_unlink_question_counts_the_linked_children`, which links one child of each and reads the question, was
+  seen failing first.
+  - **Tests:** PlayMode 941: 934 pass, 0 fail and 7 planted are skipped, in three orders. Planted 7 of 7; EditMode
+    52 of 52.
 
 - 2026-11-04, **ED-12: Link, Unlink and template assignment undo.** Each asset inspector's Link and Unlink buttons,
   for the asset's own provider and for its children (contained effects, cost and cooldown, granted effects and the

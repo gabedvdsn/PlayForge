@@ -304,10 +304,11 @@ namespace FarEmerald.PlayForge.Extended.Editor
             
             var unlinkAllBtn = new Button(() =>
             {
+                // Counts the children the unlink would change; it asked IsLinkedTo(this), the editor, so it always said 0 (ED-31)
                 if (ConfirmLinkChange(
                         $"Confirm Unlink {linkFocus}",
                         $"Are you sure you want to unlink active ability and effects?" +
-                        $"\n\nThis will affect {(item.ActiveAbility && item.ActiveAbility.IsLinkedTo(this) ? 1 : 0) + item.GrantedEffects?.Count(i => i.IsLinkedTo(this)) ?? 0} assets." +
+                        $"\n\nThis will affect {(item.ActiveAbility && item.ActiveAbility.IsLinkedTo(item) ? 1 : 0) + (item.GrantedEffects?.Count(i => i && i.IsLinkedTo(item)) ?? 0)} assets." +
                         $"\n\nThis change only applies to assets linked to this item.",
                         "Yes"))
                 {
