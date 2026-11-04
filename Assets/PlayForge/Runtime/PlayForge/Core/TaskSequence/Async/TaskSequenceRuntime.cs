@@ -52,7 +52,18 @@ namespace FarEmerald.PlayForge
         
         // The run each stage's token belongs to. Code inside a task often has only that token, as the library's
         // helpers do, and it's enough to ask whether the run is paused
-        private static readonly Dictionary<CancellationToken, TaskSequenceRuntime> RunsByToken = new();
+        private static readonly Dictionary<CancellationToken, TaskSequenceRuntime> RunsByToken = new(TokenComparer.Instance);
+
+        // Compares tokens as tokens. The default comparer boxed one on every lookup under Unity's Mono, where a token
+        // isn't IEquatable, so a task waiting in a delay allocated 24 bytes a frame asking whether it was paused (TS-11)
+        private sealed class TokenComparer : IEqualityComparer<CancellationToken>
+        {
+            public static readonly TokenComparer Instance = new();
+
+            public bool Equals(CancellationToken x, CancellationToken y) => x.Equals(y);
+
+            public int GetHashCode(CancellationToken token) => token.GetHashCode();
+        }
 
         // A run cut off when play mode ended could stay here into the next session, since statics outlive play mode
         // when domain reload is off (SP-22)

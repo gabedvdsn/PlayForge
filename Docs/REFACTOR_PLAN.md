@@ -386,6 +386,7 @@ had no letter in the review. TS-AA onward came from the test project.
 | TS-8 | M | 3 | `TryActivate` runs synchronously deep into the first stages (C16). Measured: it runs an instant ability to its end, and a slower one to its first wait, before it returns. An ability asked for again from its own end or claim-released callback nested inside the call: 40 activations, 40 deep, in one frame before a cap, so an uncapped loop overflowed the stack. Activation stays synchronous (Decision 25); an ability asked for again while its own activation call still runs starts next frame | `AbilitySystemComponent.cs` (`TryActivateAbility`), `AbilitySpecContainer.cs` (`ActivateAbility`) | fixed |
 | TS-9 | H | 1 | `OnAbilityEnd` means claim released; task callbacks fire only on the legacy path (C07) | `AbilityProxy.cs` | verified |
 | TS-10 | M | 3 | About 14 CancellationTokenSources per three-stage ability (C08, B11). Every stage made a second source for its policy, linked to its own, though only WhenAny and WhenN cancel one. Measured: a frame that runs one stage of one instant task allocated 1,912 bytes under WhenAll, the same as under a policy the runtime doesn't know. Now a stage under WhenAll or RepeatUntilSkipped hands its policy its own source: 1,464 bytes, 448 less a stage, and about 10 sources to a three-stage ability. The rest are one each for an activation phase, a run of a process, a sequence run and a stage | `TaskSequenceRuntime.cs` (`ExecuteStageInternal`) | fixed |
+| TS-11 | L | 3 | A task asks whether its sequence is paused by looking its token up in a dictionary whose default comparer boxed the token on every lookup under Unity's Mono, where a token isn't IEquatable: 24 bytes a frame for an ability waiting in a `DelayTask` or a `ChannelAbilityTask`, measured for Phase 3's exit gate. The dictionary now compares tokens as tokens | `TaskSequenceRuntime.cs` (`RunsByToken`) | fixed |
 | TS-A | C | 1 | A WhenAny or WhenN stage hangs on outside skip, timeout or max duration | `SequenceCore.cs:291-294, 351-354` | verified |
 | TS-B | C | 1 | Any-policy ability stages end at once (`StageCallbackTask` satisfies "any") | `AbilitySequenceCompiler.cs:206, 296-300` | verified |
 | TS-C | C | 1 | Interrupted or failed targeting still executes; `TargetingFailed` is never read | `AbilityProxy.cs:174-177, 197-200`, `AbilitySpecContainer.cs:63-88, 138`, `AbstractTargetingAbilityTask.cs:66-69` | verified |
@@ -606,6 +607,19 @@ GAS-4 with GAS-5, PC-6, and TS-I with PC-5.
 ## Log
 
 Record baselines, gate results and notable decisions here, newest first.
+
+- 2026-11-04, **TS-11: a task waiting in a delay allocates nothing a frame.** A task asks whether its sequence is
+  paused by looking its token up, and the dictionary's default comparer boxed the token on every lookup under Unity's
+  Mono, where a token isn't IEquatable. The dictionary now compares tokens as tokens. Its test,
+  `TS_11_A_frame_in_which_an_ability_waits_in_a_delay_allocates_nothing`, on both hubs, in a `DelayTask` and a
+  `ChannelAbilityTask`, was seen failing first.
+  - **Measured,** in bytes a frame: 24 before, on both hubs and in both tasks; 0 now.
+  - **Tests:** PlayMode 941: 934 pass, 0 fail and 7 planted are skipped, in three orders. Planted 7 of 7; EditMode
+    40 of 40. The 25 golden scenarios pass inside PlayMode; the custom runner can't run while the user's editor holds
+    PlayForge's lock.
+  - **Phase 3's exit gate:** with GAS-P10 and this, every steady-state frame the gate's measuring covered allocates
+    nothing. Its "enforced in CI" is still to settle: the repo has no CI, and the allocation tests live in Proving
+    Grounds, which has no remote.
 
 - 2026-11-04, **GAS-P10: a frame whose summary has a listener allocates nothing.** Each frame made a new snapshot for
   the `OnFrameComplete` listeners, copying the frame's ten lists. The listeners' snapshot is now the entity's own,

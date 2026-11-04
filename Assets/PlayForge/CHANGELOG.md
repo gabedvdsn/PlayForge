@@ -73,6 +73,8 @@ tracks each fix below by its ID.
 - A frame whose summary has a listener allocates nothing. The `FrameSummarySnapshot` that `OnFrameComplete` hands a
   listener is its entity's own and is refilled each frame, so read it during the call, or copy what you need.
   `FrameSummary.CreateSnapshot` still makes one to keep.
+- A task waiting out a time in its sequence, as `DelayTask` and `ChannelAbilityTask` do, allocates nothing a frame.
+  Asking whether its sequence was paused took 24 bytes a frame.
 
 ### Fixed
 - Runtime correctness: 96 fixes across ProcessControl, TaskSequence and the GAS core, among them exception isolation,
