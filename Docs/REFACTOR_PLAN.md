@@ -265,6 +265,20 @@ from. It lives outside `Assets/` so it never ships in the package.
   before every push, but the repo has no CI. The user chose closing the phase over setting up CI first. CI is now
   SP-24, which needs two things only the user can provide: tests that CI can reach, and a Unity license stored as
   GitHub secrets.
+- Decision 28, 2026-11-04: the scaler and import workflow, from the user's answers to nine interview questions on the
+  design canvas's new boards (https://claude.ai/artifact/PSDAMf8GYvhzZDb1uoF5gr, second row).
+  - A scaler lives in its field by default. One needed in more places is saved as a shared Scaler asset, which fields
+    reference; editing it changes every field that uses it, so nothing propagates (ED-33).
+  - A field adjusts a shared scaler only through its Magnitude multiplier, as in Fire Duration × 1.5.
+  - A scaler's values are its per-level table, and every view of a scaler shows a read-only curve preview beside it.
+    Quick Fill is one step that fills the table.
+  - Levels map exactly: level 4 reads the 4th value, and past the end the last value holds. Stretching over an
+    asset's levels is an option on each scaler. Nothing resizes a table while it is drawn (ED-34).
+  - All eight kinds stay, grouped in the Kind menu.
+  - One Import window serves sections, scalers, requirements and workers (ED-32). It lists the fields that differ,
+    each with a checkbox, pre-checked. A list is replaced by default, and each list can choose Add to the List. One
+    Undo takes an import back.
+  - Clear empties its section at once, with no confirmation; Undo takes it back.
 
 **Open. Ask the user; do not assume:**
 1. ~~**Uncommitted changes**~~: decided, see above.
@@ -526,18 +540,24 @@ had no letter in the review. TS-AA onward came from the test project.
 | ED-28 | L | 2 | Dead UI: `QuickFillWindow` is never opened, `m_AbilityIcon` is never assigned, and four editor `.cs.meta` files name UXML GUIDs that exist nowhere | `ScalerDrawerWindows.cs:356-372`, `AbilityEditor.cs:19-20, 70`, `AbilityEditor.cs.meta:7` | verified |
 | ED-29 | L | 2 | The Entity inspector's Allow Duplicate Equipped Items toggle opens showing Allow Duplicate Items' value | `EntityIdentityEditor.cs:927` | verified |
 | ED-30 | M | 2 | Local Data's object rows edit each other's value: a ScriptableObject row binds the MonoBehaviour field and the other way round, so neither keeps what's assigned | `DataWrapperDrawer.cs:127-128` | verified |
-| ED-31 | L | 4 | The four unlink dialogs count with `IsLinkedTo(this)`, the editor rather than the asset, so they always say 0 | `AbilityEditor.cs:850`, `EffectEditor.cs:280`, `EntityIdentityEditor.cs:301`, `ItemEditor.cs:321` | open |
+| ED-31 | L | 4 | The four unlink dialogs count with `IsLinkedTo(this)`, the editor rather than the asset, so they always say 0 | `AbilityEditor.cs:837`, `EffectEditor.cs:276`, `EntityIdentityEditor.cs:298`, `ItemEditor.cs:308` | open |
+| ED-32 | H | 4 | Six import windows behave differently. Section import copies every field with no choice and Clear asks in a modal; the Effect's Duration and Impact sections can't import at all, since their Import button only logs a warning; scaler import ignores the kinds a field allows and caches its list for 120 s. One Import window replaces them (Decision 28): choose a source, choose the fields, import as one Undo step | `SectionImportWindow.cs`, `ScalerDrawerWindows.cs:17-350`, `TagRequirementDrawers.cs:567-945`, `StandardWorkerGroupDrawer.cs:362`, `EffectEditor.cs:467-500` | open |
+| ED-33 | M | 4 | Scalers can't be shared. Every scaler is copied into its field, and the Scaler Template asset's link code has no callers, so reuse means copying and then propagating. Shared Scaler assets that fields reference replace it (Decision 28) | `AbstractScaler.cs:76-104`, `ScalerPipeline.cs:17-62` | open |
+| ED-34 | H | 4 | Opening a scaler writes to it while drawing. On an effect with no level link, Lock mode cuts its per-level table to one value; the other modes resize the table to Max Level, a Max Level of 0 or less becomes 10, and building the drawer clones a scaler that shares its reference id | `ScalerDrawer.cs:125-180, 285, 489-529` | open |
+| ED-35 | M | 4 | Whole-asset import copies the template and level-link fields (`_template`, `_linkedSource`) and doesn't skip the nested `Definition.Name` | `BasePlayForgeEditor.cs` (`ImportFromAsset`) | open |
 
 The design questions behind Phase 4's rows, each with its evidence, are in the UI interview doc of 2026-11-03,
 https://claude.ai/artifact/BbnGybqgX3spJsT6HoTafp. Its answers (Decision 18) settle ED-8, ED-16, ED-19 and ED-12's
 Phase 2 part, and set Phase 4's direction.
 
 **Phase 4's order,** from Q35, Q36 and Q3:
-1. ED-12, Undo and multi-editing, one inspector at a time.
+1. ED-12, Undo and multi-editing, one inspector at a time; with its drawer part, ED-34, so opening a scaler writes
+   nothing.
 2. No polling: ED-11 and ED-18.
 3. The smoke suite, the phase's gate: in each theme, every window opens without an exception and scripted edits undo.
 4. ED-20: one style sheet and a kit of controls, in the style `Docs/EDITOR_STYLE.md` records (Decision 20).
-5. The redesign, one surface at a time: the asset inspectors, with ED-2 and ED-3; The Forge, with ED-13, ED-15,
+5. The redesign, one surface at a time: the asset inspectors, with ED-2, ED-3, and the Import window and shared
+   scalers of Decision 28 (ED-32, ED-33); The Forge, with ED-13, ED-15,
    ED-21, ED-27 and ED-31; one runtime debugger for the GAS, Process and Tag views (Q4), with ED-4 and ED-5; and the
    Visualizer, with ED-9.
 
