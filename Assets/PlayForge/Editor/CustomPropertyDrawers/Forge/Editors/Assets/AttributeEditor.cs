@@ -75,28 +75,33 @@ namespace FarEmerald.PlayForge.Extended.Editor
             return attribute is not null;
         }
         
+        private SectionResult identitySection;
+        private SectionResult localDataSection;
+        private SectionResult usedBySection;
+        private ForgeUsedBy usedBy;
+
         protected override void BuildInspectorContent(VisualElement parent)
         {
-            // Sections inside ScrollView
-            BuildDefinitionSection(parent);
+            // The style doc's order: Identity first, Local Data last among what the asset holds (Q9). Used By then
+            // shows what refers to the attribute (ED-15)
+            BuildIdentitySection(parent);
             BuildLocalDataSection(parent);
-            BuildUsageSection(parent);
-
+            BuildUsedBySection(parent);
+            UpdateSummaries();
         }
 
         // ═══════════════════════════════════════════════════════════════════════════
-        // Definition Section
+        // Identity Section
         // ═══════════════════════════════════════════════════════════════════════════
-        
-        private void BuildDefinitionSection(VisualElement parent)
+
+        private void BuildIdentitySection(VisualElement parent)
         {
-            var section = CreateSection(new SectionConfig
+            identitySection = CreateSection(new SectionConfig
             {
-                Name = "Definition",
-                Title = "Definition",
-                AccentColor = GetAssetTypeColor(),
+                Name = "Identity",
+                Title = "Identity",
                 HelpTopic = "attributes/definition",
-                
+
                 SerializedObject = serializedObject,
                 PropertyPaths = new []{nameof(Attribute.Name), nameof(Attribute.Abbreviation), nameof(Attribute.Description), nameof(Attribute.Textures)},
                 OnImportComplete = () =>
@@ -125,10 +130,10 @@ namespace FarEmerald.PlayForge.Extended.Editor
                     };
                 }
             });
-            parent.Add(section.Section);
-            
-            var content = section.Content;
-            
+            parent.Add(identitySection.Section);
+
+            var content = identitySection.Content;
+
             // Name, Abbreviation and Description bind to their properties. They wrote straight into the asset when they
             // lost focus, with no Undo; now an edit goes through the SerializedObject, so Undo takes it back, it reaches
             // every selected attribute, and the header follows it (ED-12).
@@ -146,14 +151,13 @@ namespace FarEmerald.PlayForge.Extended.Editor
             });
             content.Add(texturesField);
         }
-        
+
         private void BuildLocalDataSection(VisualElement parent)
         {
-            var section = CreateSection(new SectionConfig
+            localDataSection = CreateSection(new SectionConfig
             {
                 Name = "LocalData",
                 Title = "Local Data",
-                AccentColor = GetAssetTypeColor(),
                 HelpTopic = "attributes/localdata",
 
                 SerializedObject = serializedObject,
@@ -173,78 +177,54 @@ namespace FarEmerald.PlayForge.Extended.Editor
                     Repaint();
                 }
             });
-            parent.Add(section.Section);
-            
-            section.Content.Add(CreatePropertyField(serializedObject.FindProperty(nameof(Attribute.LocalData)), "LocalData", ""));
+            parent.Add(localDataSection.Section);
+
+            localDataSection.Content.Add(CreatePropertyField(serializedObject.FindProperty(nameof(Attribute.LocalData)), "LocalData", ""));
         }
 
         // ═══════════════════════════════════════════════════════════════════════════
-        // Usage Section
+        // Used By Section
         // ═══════════════════════════════════════════════════════════════════════════
-        
-        private void BuildUsageSection(VisualElement parent)
+
+        // The assets that use the attribute, each a row that selects it. The section was a list of sentences about where
+        // attributes can go, and a Find All References button that opened a dialog telling the user how to search (ED-15)
+        private void BuildUsedBySection(VisualElement parent)
         {
-            var section = CreateSection(new SectionConfig
+            usedBySection = CreateSection(new SectionConfig
             {
-                Name = "Usage",
-                Title = "Usage",
-                AccentColor = GetAssetTypeColor(),
+                Name = "UsedBy",
+                Title = "Used By",
                 HelpTopic = "attributes/usage",
-                IncludeButtons = new[] { false, false, false }
+                IncludeButtons = new[] { false, false, true }
             });
-            parent.Add(section.Section);
-            
-            var content = section.Content;
-            
-            // Usage hints
-            content.Add(CreateHintLabel("This attribute can be used in:"));
-            
-            var usageList = new VisualElement();
-            usageList.style.paddingLeft = 8;
-            usageList.style.marginBottom = 8;
-            content.Add(usageList);
-            
-            var usageItems = new[]
+            parent.Add(usedBySection.Section);
+
+            if (IsMultiple)
             {
-                "• Attribute Sets - Define starting values",
-                "• Gameplay Effects - Modify attribute values",
-                "• Validation Rules - Check attribute thresholds",
-                "• Ability Costs - Resource consumption"
-            };
-            
-            foreach (var item in usageItems)
-            {
-                var label = new Label(item);
-                label.style.fontSize = 11;
-                label.style.color = Colors.HintText;
-                usageList.Add(label);
+                usedBySection.Content.Add(CreateHintLabel("Select one attribute to see what uses it."));
+                return;
             }
-            
-            // Find References button
-            var findRefsBtn = new Button(FindReferences) { text = "Find All References" };
-            findRefsBtn.style.alignSelf = Align.FlexStart;
-            findRefsBtn.style.marginTop = 8;
-            ApplyButtonHoverStyle(findRefsBtn);
-            content.Add(findRefsBtn);
+            usedBy = new ForgeUsedBy(attribute);
+            usedBy.Changed += UpdateSummaries;
+            usedBySection.Content.Add(usedBy);
         }
 
         // ═══════════════════════════════════════════════════════════════════════════
-        // Helper Methods
+        // Summaries: the line each collapsed section shows
         // ═══════════════════════════════════════════════════════════════════════════
-        
-        private void FindReferences()
+
+        protected override void OnAssetChanged() => UpdateSummaries();
+
+        private void UpdateSummaries()
         {
-            var guid = GetAssetGuid(attribute);
-            PingAsset(attribute);
-            
-            EditorUtility.DisplayDialog("Find References", 
-                $"To find all references to this attribute:\n\n" +
-                $"1. Open Edit > Project Settings > Search\n" +
-                $"2. Use the Search window (Ctrl+K)\n" +
-                $"3. Search for: ref:{guid}\n\n" +
-                $"Or use 'Find References In Scene' from the context menu.", 
-                "OK");
+            if (identitySection != null) identitySection.Summary.text = IsMultiple ? "" : attribute.Abbreviation;
+            if (localDataSection != null)
+                localDataSection.Summary.text = IsMultiple ? "" : CountOf(attribute.LocalData?.Count ?? 0, "entry", "entries");
+            if (usedBySection != null) usedBySection.Summary.text = usedBy == null ? "" : CountOf(usedBy.Count, "asset", "assets");
         }
+
+        private static string CountOf(int count, string one, string many) =>
+            count == 0 ? "None" : count == 1 ? $"1 {one}" : $"{count} {many}";
 
         // ═══════════════════════════════════════════════════════════════════════════
         // Abstract Implementations

@@ -11,6 +11,10 @@ tracks each fix below by its ID.
   page, through one table of links in the editor.
 
 ### Changed
+- The Attribute inspector's sections are Identity, Local Data and Used By, which lists the assets that use the
+  attribute; a row selects its asset. It replaces Find All References, a dialog that told you how to search. A
+  collapsed section shows a one-line summary, and every inspector's text fields line up with its other fields' labels
+  (ED-15).
 - Every asset inspector's header and sections follow PlayForge's one style sheet, in the editor's Dark or Light
   theme. The header shows the type icon, the asset's name, its type and asset tag, then Open in The Forge, Help and a
   menu that holds import, the template and Visualize. It no longer shows the description or the asset's own icon. The

@@ -295,3 +295,35 @@
 .pf-root .pf-section--collapsed > .pf-section__content {
     display: none;
 }
+
+/* ─── Used By: the assets that refer to this one, each a row that selects it ─────────────────────────────────────── */
+
+.pf-root .pf-used-by__row {
+    flex-direction: row;
+    align-items: center;
+    height: 20px;
+}
+
+.pf-root .pf-used-by__row .pf-glyph {
+    width: 14px;
+    height: 14px;
+    margin-right: 6px;
+}
+
+.pf-root .pf-used-by__name {
+    flex-grow: 1;
+    flex-shrink: 1;
+    min-width: 0;
+    margin: 0;
+    padding: 0;
+    color: var(--pf-link);
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+}
+
+.pf-root .pf-used-by__none {
+    margin: 0;
+    padding: 0;
+    color: var(--pf-secondary-text);
+}

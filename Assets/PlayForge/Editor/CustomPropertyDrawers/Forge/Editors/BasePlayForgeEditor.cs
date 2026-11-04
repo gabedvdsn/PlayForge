@@ -239,6 +239,8 @@ namespace FarEmerald.PlayForge.Extended.Editor
             var field = CreateTextField(name ?? propertyPath, label, multiline, minHeight);
             field.isDelayed = true;
             field.bindingPath = propertyPath;
+            // Its label takes the Inspector's one label column, as a PropertyField's does (Docs/EDITOR_STYLE.md)
+            field.AddToClassList(BaseField<string>.alignedFieldUssClassName);
             return field;
         }
 

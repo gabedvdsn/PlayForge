@@ -527,7 +527,7 @@ had no letter in the review. TS-AA onward came from the test project.
 | ED-12 | H | 4 | No Undo, multi-edit or prefab overrides. The inspectors wrote 42 edits straight into their asset, and only the 5 renames recorded Undo; no inspector took a multiple selection; six drawers copy their SerializedObject for one target, and two write while drawing. Fixed so far: Phase 2's part (a rename stores the tag in the same undoable step, and showing never writes), the Attribute inspector (its fields bind, it takes a multiple selection, and every inspector's header follows Undo), the MonoProcess inspector's multiple selection, the Effect, Item and Attribute Set inspectors' Description and Link Mode, the Entity inspector's fields, the Ability inspector's Description, Activation Policy, Activate Immediately and Link Mode, Link, Unlink and template assignment in every inspector, the drawers that rebuilt on a one-target copy, the type drawers that wrote a default while drawing, and the Item and Ability inspectors' multiple selection. Left: a multiple selection in the Effect, Entity and Attribute Set inspectors. In the Effect, Entity and Attribute Set inspectors, whose assets hold scalers, that also waits for ScalerDrawer's one-target copy, which changes with Decision 28's scaler workflow (ED-32, ED-33) | `AbilityEditor.cs:155-189, 743`, `EntityIdentityEditor.cs:790-919`, `BasePlayForgeEditor.cs` (`ShowTemplatePicker`), `TagDrawer.cs:104-109`, `AbstractTypeRefDrawer.cs:123-128`, `ScalerDrawer.cs:169-177` | open |
 | ED-13 | M | 4 | Template propagation on save loads everything, opens a modal mid-save and records no Undo; the validator is empty | `ForgeTemplateProcessor.cs:45-52`, `ForgeTemplatePropagator.cs:201-229` | open |
 | ED-14 | H | 1 | The `GameplayEffectImpact` copy constructor drops affiliation and throws on null packets | `GameplayEffectImpact.cs:155-176` | verified |
-| ED-15 | M | 4 | "Validate All" is noisy and capped at 15; "Find All References" is a dialog | `TheForge.SettingsTab.cs:1808-1832`, `AttributeEditor.cs:261-273` | open |
+| ED-15 | M | 4 | "Validate All" is noisy and capped at 15; "Find All References" is a dialog. Fixed so far: the Attribute inspector's Find All References, which a Used By section replaces: the assets that use the attribute, each a row that selects it. Left: Validate All, with The Forge's redesign | `TheForge.SettingsTab.cs:1808-1832`, `AttributeEditor.cs:261-273` | open |
 | ED-16 | M | 2 | 49 placeholder `docs.playforge.dev` links in six editors, some pointing at the wrong page, with slugs that vary (`level-source`, `levelsource`). The Asset Store strongly recommends offline docs (rule 2.3.a) | `AbilityEditor.cs:77, 116`, `AttributeSetEditor.cs:818`, `AttributeEditor.cs:183`, `EntityIdentityEditor.cs:158` | verified |
 | ED-17 | M | 2 | Stray `Debug.Log` calls | `GameplayEffectImpactDrawer.cs:33`, `AssetBrowserWindow.cs:348`, `AbstractRefDrawer.cs:81`, `TagDrawer.cs:745`, `TheForge.ViewTab.cs:2009` | verified |
 | ED-18 | M | 4 | Collapse state lives in static dictionaries keyed by property path, so every asset shares it and a domain reload loses it. Each drawer now keeps it per asset for the editor session, in SessionState; a [SerializeReference] field's state follows the object it holds, and deleting a stage moves the later stages' states up with them | `AbilityTaskBehaviourStageDrawer.cs:31`, `AbilityBehaviourDrawer.cs:18-20` | fixed |
@@ -565,6 +565,9 @@ Phase 2 part, and set Phase 4's direction.
    scalers of Decision 28 (ED-32, ED-33); The Forge, with ED-13, ED-15,
    ED-21, ED-27 and ED-31; one runtime debugger for the GAS, Process and Tag views (Q4), with ED-4 and ED-5; and the
    Visualizer, with ED-9.
+   The asset inspectors go one at a time, each following the style doc: the Attribute inspector first (done), then
+   the Item, Entity, Attribute Set and Ability inspectors, then the Effect inspector with ED-2 and ED-3, then the
+   Import window and shared scalers (ED-32, ED-33), which also free ED-12's last part.
 
 ### Samples and packaging
 
@@ -648,6 +651,23 @@ GAS-4 with GAS-5, PC-6, and TS-I with PC-5.
 ## Log
 
 Record baselines, gate results and notable decisions here, newest first.
+
+- 2026-11-04, **Step 5 begins: the Attribute inspector.** The first surface of Phase 4's redesign, in the style doc's
+  rules.
+  - **Its sections:** Identity, Local Data and Used By. Identity was Definition: the style doc's section order starts
+    with it (Q9).
+  - **Used By** lists the PlayForge assets whose data refers to the attribute, each with its type icon, and a row
+    selects its asset. It follows the project as it changes (Q30). It replaces a section of sentences about where
+    attributes can go and a Find All References button that opened a dialog telling the user how to search, which is
+    ED-15's first part.
+  - **Summaries:** a collapsed section shows one line: the abbreviation, how many Local Data entries, how many assets
+    use the attribute.
+  - **One label column:** a bound text field's label lines up with the PropertyFields' in every inspector.
+  - **Its test,** `ED_15_The_Attribute_inspector_lists_what_uses_it`, was seen failing first.
+  - **Tests:** PlayMode 945: 938 pass, 0 fail and 7 planted are skipped, in three orders. In the first run of order
+    90210 a timing test, `GAS_P3_An_application_costs_the_same_however_much_the_entity_carries`, measured 0.0073 ms
+    a re-application against its 0.0024 ms limit; it passed three runs alone, and the rerun of that order passed.
+    Planted 7 of 7; EditMode 374 of 374.
 
 - 2026-11-04, **ED-36: the asset header stays at the top.** The user looked at ED-20 in the editor and asked for the
   header to stay at the top of the inspector while the content scrolls (Decision 29), which reverses Q17's answer.
