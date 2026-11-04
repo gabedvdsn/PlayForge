@@ -5,7 +5,9 @@ using UnityEditor.UIElements;
 
 namespace FarEmerald.PlayForge.Extended.Editor
 {
-    [CustomEditor(typeof(AbstractMonoProcess), true)]
+    // Every field is a PropertyField bound to its property, so a multiple selection edits each process, and a prefab
+    // instance's edits show as overrides. Without [CanEditMultipleObjects] the Inspector never offered one (ED-12).
+    [CustomEditor(typeof(AbstractMonoProcess), true), CanEditMultipleObjects]
     public class AbstractMonoProcessEditor : UnityEditor.Editor
     {
         public override VisualElement CreateInspectorGUI()
