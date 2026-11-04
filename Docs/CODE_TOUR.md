@@ -1,17 +1,17 @@
 # PlayForge refactor: code tour
 
 This tour lists the places where the refactor changed code, so you can open each one in your IDE and read it. It
-covers `01258b8..ec008f7` on `main`: 230 commits. Phase 0 ported Arcade Fighter's fixes, Phase 1 made the runtime
-correct, Phase 2 got the package ready to release, and Phase 3 made it cheaper to run and gave the two GAS hubs one
-core. Each entry says what behaves differently and why, names its tracker IDs and Decisions, and points at the two or
-three places to read. `Docs/REFACTOR_PLAN.md` has every tracker row, the numbered Decisions, and a Log of each batch's
-test results.
+covers `01258b8..e1d1dd0` on `main`: 235 commits. Phase 0 ported Arcade Fighter's fixes, Phase 1 made the runtime
+correct, Phase 2 got the package ready to release, Phase 3 made it cheaper to run and gave the two GAS hubs one core,
+and Phase 4 has begun. Each entry says what behaves differently and why, names its tracker IDs and Decisions, and
+points at the two or three places to read. `Docs/REFACTOR_PLAN.md` has every tracker row, the numbered Decisions,
+and a Log of each batch's test results.
 
 ## How to use this
 
 - Paths are relative to the repo root.
-- Line numbers are as of commit `ec008f7`, the head of `main` on 2026-11-04. A later commit may move them, so each
-  entry also names the class and method to search for. `git show ec008f7:<path>` shows a file as it was then.
+- Line numbers are as of commit `e1d1dd0`, the head of `main` on 2026-11-04. A later commit may move them, so each
+  entry also names the class and method to search for. `git show e1d1dd0:<path>` shows a file as it was then.
 - In Rider, Go to File accepts `path:line`. In Visual Studio, open the file, then Go To Line (Ctrl+G).
   A bare `:123` after a path means another line in the same file.
 - `git grep "<ID>"` finds the comment at each fix, and `git log --grep "<ID>"` finds its commit. Three exceptions:
@@ -26,6 +26,35 @@ test results.
 - "Still open" names a later tracker row on the same code, and "Fixed in Phase 3" points to
   [Phase 3](#phase-3). The plan's tracker has each row's current status.
 - Most fixed code carries a comment that says what it used to do, so the old behaviour is readable in place.
+
+## Phase 4 so far
+
+Phase 4 redesigns the editor one surface at a time, and it starts where the UI interview's Q35 asks: with Undo and
+multi-editing, one inspector at a time. The plan's Editor and UI section lists the phase's order. Each fix has a test
+in Proving Grounds named after its ID, seen failing first.
+
+### The Attribute inspector undoes every edit and edits a multiple selection (ED-12)
+
+The Attribute inspector wrote its Name, Abbreviation and Description straight into the asset when a field lost focus,
+and recorded no Undo. Like every PlayForge inspector, it also refused a multiple selection. Its fields now bind to
+their properties, so an edit goes through the SerializedObject: Undo takes it back, it reaches every selected
+attribute, and a selection that disagrees shows as mixed. The other asset inspectors still write straight into their
+asset; ED-12's row lists what is left.
+
+- **IDs:** ED-12, commit `e1d1dd0`.
+- **Read:**
+  - `Assets/PlayForge/Editor/CustomPropertyDrawers/Forge/Editors/Assets/AttributeEditor.cs:135`, the three bound
+    fields. The inspector turns on `SupportsMultipleObjects` at `:17` and carries `[CanEditMultipleObjects]` at `:9`.
+  - `Assets/PlayForge/Editor/CustomPropertyDrawers/Forge/Editors/BasePlayForgeEditor.cs:220` `CreateBoundTextField`,
+    which binds a text field and writes when the edit is committed. `SupportsMultipleObjects` (`:209`) lets
+    `CreateInspectorGUI` take a multiple selection (`:473`), and `HeaderName` (`:213`) counts it in the header.
+  - `:496`, where every inspector's header follows the asset's changes, Undo and Redo among them, through
+    `TrackSerializedObjectValue`.
+- **Watch for:** with several assets selected, the header leaves out Template, Visualize and Open in The Forge
+  (`:845`), since they act on one asset.
+- **Test:** `ED_12_An_edit_in_the_Attribute_inspector_undoes` and
+  `ED_12_The_Attribute_inspector_edits_every_selected_attribute` in `InspectorUndoTests`. They build the whole
+  inspector in a runtime panel, where its bindings run in batch mode.
 
 ## Phase 3
 
@@ -1275,7 +1304,7 @@ Markdown, and only on a click (Asset Store rule 2.5.1.d). Six reference pages ar
   - `Assets/PlayForge/Editor/CustomPropertyDrawers/Forge/Util/ForgeDocs.cs:79` `ForgeDocs.Open`, with the `Topics`
     table at `:17` and `DocumentationFolder` at `:88`, which finds the folder in a package or under `Assets`.
   - `Assets/PlayForge/Editor/CustomPropertyDrawers/Forge/Editors/BasePlayForgeEditor.cs:157`
-    `BasePlayForgeEditor.GetDocumentationTopic`, read by `CreateEditorHeader` at `:792`.
+    `BasePlayForgeEditor.GetDocumentationTopic`, read by `CreateEditorHeader` at `:821`.
   - `Assets/PlayForge/Editor/CustomPropertyDrawers/Forge/Util/ForgeDrawerStyles.cs:460` `SectionConfig.HelpTopic`.
 - **New:** `ForgeDocs`; `Documentation/ABILITIES.md`, `EFFECTS.md`, `ITEMS.md`, `ENTITIES.md`, `ATTRIBUTES.md`,
   `ATTRIBUTE_SETS.md`.
@@ -1305,8 +1334,8 @@ records the name and the tag it gives in one undoable step. Item and Effect prev
 
 - **IDs:** ED-12 (its Phase 2 part; the row stays open for Phase 4's Undo, multi-editing and prefab overrides).
 - **Read:**
-  - `Assets/PlayForge/Editor/CustomPropertyDrawers/Forge/Editors/BasePlayForgeEditor.cs:996`
-    `BasePlayForgeEditor.ShowAssetTag`, and `StoreAssetTag` (`:1023`).
+  - `Assets/PlayForge/Editor/CustomPropertyDrawers/Forge/Editors/BasePlayForgeEditor.cs:1029`
+    `BasePlayForgeEditor.ShowAssetTag`, and `StoreAssetTag` (`:1056`).
   - `Assets/PlayForge/Editor/CustomPropertyDrawers/Forge/Editors/Assets/AbilityEditor.cs:151`, the rename callback,
     and `SyncAssetTag` (`:1164`). The other four editors follow the same shape.
 - **New:** `BasePlayForgeEditor.ShowAssetTag` and `StoreAssetTag`, and a `SyncAssetTag` in each asset editor.
@@ -1498,6 +1527,7 @@ Newest first. Each row is a good place to start reading.
 
 | What | IDs | Where | Commit |
 |---|---|---|---|
+| The Attribute inspector undoes every edit and edits a multiple selection | ED-12 | `Assets/PlayForge/Editor/CustomPropertyDrawers/Forge/Editors/Assets/AttributeEditor.cs:135` | `e1d1dd0` |
 | A task waiting in a delay allocates nothing a frame | TS-11 | `Assets/PlayForge/Runtime/PlayForge/Core/TaskSequence/Async/TaskSequenceRuntime.cs:55` | `ec008f7` |
 | A frame whose summary has a listener allocates nothing | GAS-P10, Decision 26 | `Assets/PlayForge/Runtime/PlayForge/Workers/Core/FrameSummary.cs:347` | `11a0f66` |
 | Interrupting every running ability ends each | GAS-53 | `Assets/PlayForge/Runtime/PlayForge/AbilitySystem/Core/AbilitySystemComponent.cs:435` | `473ea8e` |
@@ -1517,7 +1547,7 @@ Newest first. Each row is a good place to start reading.
 | Help buttons open the package's own docs through one table | ED-16, Decision 18 | `Assets/PlayForge/Editor/CustomPropertyDrawers/Forge/Util/ForgeDocs.cs:79` | `67db441` |
 | Demo Lit draws the Demos under URP and Built-in | SP-23, Decision 17 | `Assets/PlayForge/Samples~/Demos/Demo/Shaders/DemoLit.shader:42` | `954a11a` |
 | Statics clear at the start of a play session | SP-22, PC-26 | `Assets/PlayForge/Runtime/PlayForge/Utils/AttributeRegistry.cs:14` | `86e9e11` |
-| Showing an asset never writes its tag; a rename is one Undo | ED-12 | `Assets/PlayForge/Editor/CustomPropertyDrawers/Forge/Editors/BasePlayForgeEditor.cs:996` | `4d71636` |
+| Showing an asset never writes its tag; a rename is one Undo | ED-12 | `Assets/PlayForge/Editor/CustomPropertyDrawers/Forge/Editors/BasePlayForgeEditor.cs:1029` | `4d71636` |
 | Delete names what uses the asset and moves it to the trash | ED-8 | `Assets/PlayForge/Editor/CustomPropertyDrawers/Forge/Util/ForgeAssetDeletion.cs:25` | `e89a9f7` |
 | The samples live in `Samples~` and import on request | SP-20, Decision 16 | `Assets/PlayForge/package.json:14` | `8d17bc0` |
 | A derived refresh runs the post-change pipeline | GAS-27, Decision 14 | `Assets/PlayForge/Runtime/PlayForge/AttributeSystem/Core/AttributeSystemComponent.cs:566` | `550d07b` |
