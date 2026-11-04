@@ -11,41 +11,35 @@ attribute is recalculated.
 
 Tags are names, such as `State.Stunned`, that an entity carries and that requirements check. Each asset stores a tag
 made from its Name: Hero Stats gives `AttributeSet.HeroStats`. The entity carries the set's tag and the tags of its
-sub-sets. Each section below matches the inspector section of the same name.
+sub-sets. Each section below matches the inspector section of the same name. A collapsed section shows one line
+about what it holds, such as the level range or how many attributes the set gives.
 
-## Definition
+## Identity
 
 - **Name**: the set's display name. It also gives the asset tag, so renaming the set changes its tag. Update anything
   that names the old tag.
-- **Description**: free text. The inspector header shows it. Without one, the header counts the set's attributes and
-  sub-sets.
-- The **asset tag** shows below, read-only. It is made from the Name: punctuation is dropped, and each word is
-  capitalised and joined. The tag is stored when you edit the Name. If the stored tag differs from the one the Name
-  gives, it shows in amber with an **Update** button that stores the new one.
+- **Description**: free text for your UI.
+- **Asset Tag**: read-only, made from the Name: punctuation is dropped, and each word is capitalised and joined. The
+  tag is stored when you edit the Name, and the inspector header shows it after the set's type. If the stored tag
+  differs from the one the Name gives, it shows in warning text with an **Update** button that stores the new one.
 - **Textures**: icons, each paired with a tag. The texture tagged `Primary` is the set's icon. Without one, the first
   texture is used.
 
-## Level Source
-
-This section sets the level range that the cached scalers on this set's elements are authored for. A cached scaler is
-a value source for an element, such as a table with one value per level. At runtime those scalers follow the level of
-the entity that owns the set. Linking the set to that Entity asset gives the scalers one value per entity level.
-
-A level provider is an asset whose level range another asset follows.
-
-- **Link Mode**: Standalone (default) uses the set's own Leveling values. Linked To Provider takes the range from the
-  provider instead.
-- **Level Provider**: the linked asset, or No Provider Linked.
-- **Link to**: pick a provider of one type: Entity, Ability, Effect, Item or Attribute Set. A link that would make a
-  loop is refused, with an error in the Console. The status box below shows the provider's type, name and range, with
-  **Go to Provider** and **Unlink** buttons.
-
 ## Leveling
 
-- **Starting Level** (default 1) and **Max Level** (default 4): the set's own level range. Cached scalers on its
-  elements whose Level Configuration is Lock To Level Provider use the Max Level to size their per-level values.
+The set's level range is the one the cached scalers on its elements are authored for. A cached scaler is a value source
+for an element, such as a table with one value per level. At runtime those scalers follow the level of the entity that
+owns the set. Linking the set to that Entity asset gives the scalers one value per entity level. A level provider is an
+asset whose level range another asset follows.
 
-When Link Mode is Linked To Provider, this section shows the provider's range, read-only.
+- **Link Mode**: Standalone (default) keeps the set's own range. Linked To Provider takes the range from a level
+  provider instead.
+- **Starting Level** (default 1) and **Max Level** (default 4): the set's own range. Cached scalers on its elements
+  whose Level Configuration is Lock To Level Provider use the Max Level to size their per-level values.
+- **Level Provider**, while linked: the asset the range comes from, an Entity, Ability, Effect, Item or Attribute Set.
+  Right-click the field to pick from one type. A link that would make a loop is refused, with an error in the Console.
+  While no provider is set, a warning says the set uses its own range. While linked, Starting Level and Max Level show
+  the range in use, read-only.
 
 ## Attributes
 
@@ -87,8 +81,8 @@ turn. Their asset tags are applied to the entity, and their workers are subscrib
 appears more than once, Collision Settings decide which value it starts with. Only the Collision Settings of the set
 the entity names are used.
 
-Don't let a set include itself, directly or through another set: nothing stops the loop. The Summary section at the end
-of the inspector counts the unique attributes, sub-sets included.
+Don't let a set include itself, directly or through another set: nothing stops the loop. All Attributes lists each
+attribute the set gives, sub-sets included.
 
 ## Collision Settings
 
@@ -106,6 +100,13 @@ Collision Setting, Use This, Combine, Use Existing. Elements in the other groups
   - **Use Average**: the average of the elements' values. Bounds and rounding come from the first element.
   - **Use First** and **Use Last**: the first or the last element.
   - **Ignore**: the first element stands.
+
+## All Attributes
+
+A table of each attribute the set gives an entity, its sub-sets' included, once each: the value its Current starts at,
+and the range the set keeps it in. Where several elements give an attribute, the value is the one Collision Settings
+settle on. A value a scaler sets reads Scaled, since it is worked out as the entity starts. Hover over a value for its
+Current and Base. The Entity inspector shows the same table under the entity's Attribute Set.
 
 ## Workers
 
@@ -128,3 +129,8 @@ Object fields take project assets, not scene objects.
 
 PlayForge doesn't read an attribute set's Local Data itself. Your code and workers can, with
 `set.TryGetLocalData(key, out var data)`. The first row with that key wins.
+
+## Used By
+
+The PlayForge assets that refer to this set, each with its type icon, such as an entity built from it or a set that
+holds it as a sub-set. Click a row to select the asset. The list follows the project as it changes.

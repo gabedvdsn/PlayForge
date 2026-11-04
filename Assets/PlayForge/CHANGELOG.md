@@ -11,6 +11,11 @@ tracks each fix below by its ID.
   page, through one table of links in the editor.
 
 ### Changed
+- The Attribute Set inspector's sections are Identity, Leveling, Attributes, Sub-Sets, Collision Settings, All
+  Attributes, Workers, Local Data and Used By, as the Item and Entity inspectors' follow the style doc. All Attributes
+  is a table of each attribute the set gives, its sub-sets' included, with the value it starts at and its range, settled
+  as the runtime settles them; it replaces a dialog that listed their names. The Entity inspector shows the same table
+  under its Attribute Set (ED-37).
 - The Entity inspector's sections are Identity, Leveling, Tags, Attributes, Abilities, Items, Workers, Local Data and
   Used By, as the Item inspector's follow the style doc. The Attribute Set has an Attributes section of its own. A
   starting item takes one row with its Equip checkbox, and Equipped Too (Allow Duplicate Equipped Items) waits for

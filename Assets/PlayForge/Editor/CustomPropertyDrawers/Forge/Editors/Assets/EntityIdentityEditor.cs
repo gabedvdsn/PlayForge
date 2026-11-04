@@ -27,6 +27,7 @@ namespace FarEmerald.PlayForge.Extended.Editor
         private string shownLeveling;
         private Toggle equippedTooField;
         private Label equippedTooNote;
+        private ForgeAttributeTable attributeTable;
 
         private SectionResult identitySection;
         private SectionResult levelingSection;
@@ -296,7 +297,8 @@ namespace FarEmerald.PlayForge.Extended.Editor
         // Attributes, Abilities and Items Sections: what the entity starts with
         // ═══════════════════════════════════════════════════════════════════════════
 
-        // The set the entity's attributes come from. It sat in Definition, and the Attributes section was left out (ED-37)
+        // The set the entity's attributes come from, then the table of what it gives the entity, as the mockup draws them.
+        // The set sat in Definition, and the Attributes section was left out (ED-37)
         private void BuildAttributesSection(VisualElement parent)
         {
             attributesSection = CreateSection(new SectionConfig
@@ -313,6 +315,11 @@ namespace FarEmerald.PlayForge.Extended.Editor
             parent.Add(attributesSection.Section);
 
             attributesSection.Content.Add(CreatePropertyField(serializedObject.FindProperty(nameof(EntityIdentity.AttributeSet)), "AttributeSet", "Attribute Set"));
+
+            attributeTable = new ForgeAttributeTable();
+            attributeTable.Changed += UpdateSummaries;
+            attributesSection.Content.Add(attributeTable);
+            attributeTable.Show(entity.AttributeSet);
         }
 
         private void BuildAbilitiesSection(VisualElement parent)
@@ -497,6 +504,8 @@ namespace FarEmerald.PlayForge.Extended.Editor
                 nameField.SetValueWithoutNotify(entity.Name ?? "");
             UpdateAssetTagDisplay();
             UpdateEquippedToo();
+            // The table follows its set's own changes; here it follows the entity to another set
+            if (attributeTable != null && attributeTable.Set != entity.AttributeSet) attributeTable.Show(entity.AttributeSet);
             UpdateSummaries();
         }
 
@@ -531,7 +540,7 @@ namespace FarEmerald.PlayForge.Extended.Editor
         {
             var set = entity.AttributeSet;
             if (set == null) return "None";
-            var count = set.GetUnique().Count(attribute => attribute is Object asset ? asset != null : attribute != null);
+            var count = attributeTable?.Count ?? set.GetUnique().Count(attribute => attribute is Object asset ? asset != null : attribute != null);
             return $"{NameOf(set)} · {CountOf(count, "attribute", "attributes")}";
         }
 

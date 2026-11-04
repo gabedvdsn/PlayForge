@@ -382,6 +382,98 @@
     margin: 0 0 0 6px;
 }
 
+/* ─── Tables: a header row, then rows that alternate, inside an outline, as the Entity mockup's attributes ─────────── */
+
+.pf-root .pf-table {
+    margin-top: 4px;
+    border-width: 1px;
+    border-color: var(--pf-line);
+    border-radius: 3px;
+    overflow: hidden;
+}
+
+.pf-root .pf-table__header,
+.pf-root .pf-table__row {
+    flex-direction: row;
+    align-items: center;
+    height: 20px;
+    flex-shrink: 0;
+}
+
+.pf-root .pf-table__header {
+    background-color: var(--pf-header);
+    border-bottom-width: 1px;
+    border-bottom-color: var(--pf-line);
+}
+
+.pf-root .pf-table__row {
+    background-color: var(--pf-panel);
+}
+
+.pf-root .pf-table__row--alternate {
+    background-color: var(--pf-alternate-row);
+}
+
+.pf-root .pf-table__cell {
+    margin: 0;
+    padding: 0 6px;
+    color: var(--pf-text);
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+}
+
+/* The name can shrink to nothing and ends in an ellipsis, while the columns on its right keep their width */
+.pf-root .pf-table__cell--name {
+    flex-grow: 1;
+    flex-shrink: 1;
+    min-width: 0;
+    flex-direction: row;
+    align-items: center;
+}
+
+.pf-root .pf-table__cell--name .pf-glyph {
+    width: 12px;
+    height: 12px;
+    margin-right: 4px;
+}
+
+.pf-root .pf-table__name {
+    flex-shrink: 1;
+    min-width: 0;
+    margin: 0;
+    padding: 0;
+    color: var(--pf-strong-text);
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+}
+
+.pf-root .pf-table__cell--number {
+    width: 72px;
+    flex-shrink: 0;
+    -unity-text-align: middle-right;
+}
+
+.pf-root .pf-table__cell--range {
+    width: 88px;
+    flex-shrink: 0;
+}
+
+.pf-root .pf-table__header > .pf-table__cell--number,
+.pf-root .pf-table__header > .pf-table__cell--range {
+    border-left-width: 1px;
+    border-left-color: var(--pf-line);
+}
+
+.pf-root .pf-table__row > .pf-table__start {
+    color: var(--pf-strong-text);
+}
+
+.pf-root .pf-table__row > .pf-table__range {
+    color: var(--pf-secondary-text);
+}
+
 /* A message is a Unity help box, in the flow under the field it is about */
 .pf-root .unity-help-box {
     background-color: var(--pf-help-box);

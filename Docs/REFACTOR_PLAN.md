@@ -549,8 +549,9 @@ had no letter in the review. TS-AA onward came from the test project.
 | ED-34 | H | 4 | Opening a scaler writes to it while drawing. On an effect with no level link, Lock mode cuts its per-level table to one value; the other modes resize the table to Max Level, a Max Level of 0 or less becomes 10, and building the drawer clones a scaler that shares its reference id. Now nothing is written while drawing: a table keeps its length until the user changes it, and a shared scaler shows a warning with a button that makes a separate copy | `ScalerDrawer.cs:125-180, 285, 489-529` | fixed |
 | ED-36 | M | 4 | The asset header scrolls away with the content. It stays at the top of the inspector while the content scrolls under it (Decision 29), following the Inspector's scroll view by its events, so nothing polls (ED-11) | `BasePlayForgeEditor.cs` (`CreateInspectorGUI`), `ForgeAssetHeader.cs` (`StickTo`) | fixed |
 | ED-35 | M | 4 | Whole-asset import copies the template and level-link fields (`_template`, `_linkedSource`) and doesn't skip the nested `Definition.Name` | `BasePlayForgeEditor.cs` (`ImportFromAsset`) | open |
-| ED-37 | M | 4 | The asset inspectors don't follow `Docs/EDITOR_STYLE.md`: their sections stray from its order, Level Source sits apart from Leveling, a collapsed section shows nothing, sentences explain the fields, the link state sits in tinted boxes with colored borders, and many sections' Import and Clear only log a warning. Each inspector is redone in Phase 4's fifth step. Fixed so far: the Attribute (`ed6295a`, with ED-15), Item (`cf70e8f`) and Entity inspectors: the style doc's order, Leveling with the level link and its provider in Unity's object field, the asset tag under the name, a summary on each section, Import and Clear on each, Used By, and no look set in code. Left: the Attribute Set, Ability and Effect inspectors, and the Entity mockup's attribute table, which comes with the Attribute Set inspector | `ItemEditor.cs`, `EntityIdentityEditor.cs`, `AttributeSetEditor.cs`, `AbilityEditor.cs`, `EffectEditor.cs` | open |
+| ED-37 | M | 4 | The asset inspectors don't follow `Docs/EDITOR_STYLE.md`: their sections stray from its order, Level Source sits apart from Leveling, a collapsed section shows nothing, sentences explain the fields, the link state sits in tinted boxes with colored borders, and many sections' Import and Clear only log a warning. Each inspector is redone in Phase 4's fifth step. Fixed so far: the Attribute (`ed6295a`, with ED-15), Item (`cf70e8f`), Entity (`a06a4fb`) and Attribute Set inspectors: the style doc's order, Leveling with the level link and its provider in Unity's object field, the asset tag under the name, a summary on each section, Import and Clear on each, Used By, and no look set in code; and the Entity mockup's attribute table, in the Entity and Attribute Set inspectors. Left: the Ability and Effect inspectors | `AbilityEditor.cs`, `EffectEditor.cs` | open |
 | ED-38 | M | 4 | An asset reference isn't Unity's object field: `AbstractRefDrawer` draws a button that opens a dropdown list of its own, with hover colors and Clear and Open icon buttons set in C#. The style doc asks for Unity's object field, with New and Open as plain buttons beside it and the rest in its right-click menu (Q15, Q18). Every inspector shows it, for an entity's Attribute Set, Starting Abilities and Starting Items among others | `AbstractRefDrawer.cs:129`, `AbstractForgeObjectDrawer.cs` | open |
+| ED-39 | M | 4 | Opening an attribute set element can change the set: 50 ms after it draws, and on every change to the set, `AttributeSetElementDrawer` clamps a Current or Base magnitude that sits outside the element's bounds and applies it to the asset, so looking at a set marks it modified. The runtime clamps the same values as the entity starts | `AttributeSetElementDrawer.cs:380-431` | open |
 
 The design questions behind Phase 4's rows, each with its evidence, are in the UI interview doc of 2026-11-03,
 https://claude.ai/artifact/BbnGybqgX3spJsT6HoTafp. Its answers (Decision 18) settle ED-8, ED-16, ED-19 and ED-12's
@@ -567,10 +568,10 @@ Phase 2 part, and set Phase 4's direction.
    scalers of Decision 28 (ED-32, ED-33); The Forge, with ED-13, ED-15,
    ED-21, ED-27 and ED-31; one runtime debugger for the GAS, Process and Tag views (Q4), with ED-4 and ED-5; and the
    Visualizer, with ED-9.
-   The asset inspectors go one at a time, each following the style doc (ED-37): the Attribute, Item and Entity
-   inspectors first (done), then the Attribute Set inspector, the reference fields (ED-38), the Ability inspector,
-   then the Effect inspector with ED-2 and ED-3, then the Import window and shared scalers (ED-32, ED-33), which
-   also free ED-12's last part.
+   The asset inspectors go one at a time, each following the style doc (ED-37): the Attribute, Item, Entity and
+   Attribute Set inspectors first (done), then the reference fields (ED-38), the Ability inspector, then the Effect
+   inspector with ED-2 and ED-3, then the Import window and shared scalers (ED-32, ED-33), which also free ED-12's
+   last part.
 
 ### Samples and packaging
 
@@ -654,6 +655,32 @@ GAS-4 with GAS-5, PC-6, and TS-I with PC-5.
 ## Log
 
 Record baselines, gate results and notable decisions here, newest first.
+
+- 2026-11-04, **Step 5: the Attribute Set inspector (ED-37).** The redesign's fourth surface, after the Item and Entity
+  inspectors' pattern.
+  - **Its sections:** Identity, Leveling, Attributes, Sub-Sets, Collision Settings, All Attributes, Workers, Local Data
+    and Used By. Identity was Definition, and Import no longer copies the name (ED-35's rule). Level Source merged into
+    Leveling.
+  - **All Attributes** replaces the Summary section, which counted the unique attributes and opened a dialog that
+    listed their names. It is the Entity mockup's attribute table, in the kit's new `ForgeAttributeTable`: each
+    attribute the set gives, its sub-sets' included, the value its Current starts at, and its range. Where elements
+    overlap, it settles the value by the runtime's rules (`AttributeSetMeta`), through the runtime's own helpers; a
+    value a scaler sets reads Scaled. The Entity inspector shows the same table under its Attribute Set, which it owed
+    from its own step, and both follow the set as it changes.
+  - **Summaries** replace the counts beside the Attributes and Sub-Sets titles: "2 attributes", "1 sub-set", "Use
+    Maximum".
+  - **New row ED-39:** the element drawer clamps magnitudes into the asset when it opens. Its redesign is a step of its
+    own.
+  - **Docs:** `ATTRIBUTE_SETS.md` follows the inspector, and `ENTITIES.md` names the table.
+  - **Its tests,** `ED_37_The_Attribute_Set_inspector_keeps_the_style_docs_sections`,
+    `ED_37_The_attribute_table_shows_what_an_entity_starts_with`, `ED_37_The_Attribute_Set_inspector_sets_no_look_in_code`
+    and `ED_37_The_Attribute_Set_inspector_lists_what_uses_it`, were seen failing first.
+    `ED_12_An_edit_in_the_Attribute_Set_inspector_undoes` finds the provider in Leveling now.
+  - **Noticed, not fixed, in the runtime:** an attribute set element with no Attribute throws as an entity starts, since
+    `AttributeSetMeta` keys a dictionary by it; and `ForgeUtils.IndexMin` starts from `float.MinValue`, so Use Minimum
+    always takes the first element. The table follows the runtime, so it shows that first element too.
+  - **Tests:** PlayMode 945: 938 pass, 0 fail and 7 planted are skipped, in three orders. Planted 7 of 7; EditMode
+    387 of 387.
 
 - 2026-11-04, **Step 5: the Entity inspector (ED-37).** The redesign's third surface, after the Item inspector's
   pattern and the Entity mockup.

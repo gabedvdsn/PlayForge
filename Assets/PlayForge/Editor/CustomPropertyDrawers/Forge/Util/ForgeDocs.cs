@@ -59,8 +59,8 @@ namespace FarEmerald.PlayForge.Extended.Editor
             ["attributes/usage"]           = ("ATTRIBUTES.md", "Used By"),
             ["attributes/localdata"]       = ("ATTRIBUTES.md", "Local Data"),
             ["attributesets"]              = ("ATTRIBUTE_SETS.md", null),
-            ["attributesets/definition"]   = ("ATTRIBUTE_SETS.md", "Definition"),
-            ["attributesets/level-source"] = ("ATTRIBUTE_SETS.md", "Level Source"),
+            // The Identity section keeps its first topic name, from when it was Definition
+            ["attributesets/definition"]   = ("ATTRIBUTE_SETS.md", "Identity"),
             ["attributesets/leveling"]     = ("ATTRIBUTE_SETS.md", "Leveling"),
             ["attributesets/attributes"]   = ("ATTRIBUTE_SETS.md", "Attributes"),
             ["attributesets/subsets"]      = ("ATTRIBUTE_SETS.md", "Sub-Sets"),
