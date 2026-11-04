@@ -101,6 +101,8 @@ tracks each fix below by its ID.
   Asking whether its sequence was paused took 24 bytes a frame.
 
 ### Fixed
+- An attribute set element with no Attribute no longer stops an entity from starting; it gives nothing (GAS-54).
+- An attribute set whose collisions settle by Use Minimum takes the lowest value; it took the first (GAS-55).
 - The Attribute inspector's Name, Abbreviation and Description undo, and the inspector edits several attributes at once.
   Every asset inspector's header follows Undo and Redo (ED-12).
 - The MonoProcess inspector edits several selected processes at once (ED-12).

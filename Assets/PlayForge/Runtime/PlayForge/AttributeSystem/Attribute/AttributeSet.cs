@@ -89,7 +89,8 @@ namespace FarEmerald.PlayForge
             foreach (var set in SelfAndSubSets())
             {
                 if (set.Attributes == null) continue;
-                foreach (var attr in set.Attributes) attributes.Add(attr.Attribute);
+                // An element with no attribute gives none, so it isn't counted as one (GAS-54)
+                foreach (var attr in set.Attributes) if (attr?.Attribute != null) attributes.Add(attr.Attribute);
             }
             return attributes;
         }
@@ -368,6 +369,9 @@ namespace FarEmerald.PlayForge
         {
             foreach (AttributeSetElement element in attributeSet.Attributes)
             {
+                // An element with no attribute, as a list's "+" leaves one, gives nothing. As a dictionary key it threw,
+                // and the entity got none of its attributes (GAS-54)
+                if (element?.Attribute == null) continue;
                 if (!matrix.TryGetValue(element.Attribute, out var table))
                 {
                     table = matrix[element.Attribute] = new();

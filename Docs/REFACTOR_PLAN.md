@@ -497,6 +497,8 @@ had no letter in the review. TS-AA onward came from the test project.
 | GAS-51 | L | 3 | Item stacking is declared but not built: an Item's `MaxStackSize` is never read, and the inspector doesn't draw it; `ItemSpecContainer.ItemStacks` is never set. Remove both, or build stacking as a Phase 5 feature. Found removing GAS-45. The user's call: keep both and build stacking in Phase 5, as FEAT-14 | `ItemDefinition.cs:25`, `ItemSpecContainer.cs:25` | moved |
 | GAS-52 | H | 3 | A runtime entity's abilities outlive it. A Mono process ends the processes it handles as it ends, and a runtime process didn't, so an ability running on a runtime entity ran on, however the entity ended: a 10-minute delay was still running 5 frames after. An entity of either kind also took activations once ended, and a destroyed Mono entity threw on one. Found measuring Phase 3's exit gate. A runtime process now ends what it handles, as a Mono process does, and an ending entity's ability system shuts first, refusing activation before it reads the entity | `AbstractRuntimeProcess.cs` (`WhenTerminate`), `GASCore.cs` (`WhenTerminate`), `AbilitySystemComponent.cs` (`ShutDown`, `TryActivateAbility`), both hubs' `WhenTerminate` | verified |
 | GAS-53 | H | 3 | Interrupting every running ability under a policy, all at once or by turning the ability system off walked the live set of them. TS-Z made an interrupted ability end inside the interrupt, taking itself off that set, so the walk threw "Collection was modified" once the first had ended, and the rest ran on: 1 of 2 ended, on both hubs. It now walks a copy | `AbilitySystemComponent.cs` (`Inject`, `ClearAbilityCache`) | verified |
+| GAS-54 | M | 4 | An attribute set element with no Attribute, as a list's "+" leaves one, throws as the entity starts: `AttributeSetMeta` files the set's elements in a dictionary by their attribute, and a null key throws, so the entity gets none of its attributes. Such an element now gives nothing, and the set's unique count leaves it out | `AttributeSet.cs:92, 369-373` | fixed |
+| GAS-55 | M | 4 | Use Minimum takes the first colliding element: `ForgeUtils.IndexMin` started its search from `float.MinValue`, so no value was ever below it. It starts from `float.MaxValue` | `ForgeUtils.cs:23-38` | fixed |
 | GAS-P1 | M | 0 | `ActionQueue` LINQ allocations; snapshot built every frame (PF-006) | `ActionQueue.cs:41, 46, 156`, `FrameSummary.cs:340-351` | verified |
 | GAS-P2 | M | 0 | Tag and FrameSummary allocations (PF-007) | `TagCache.cs:60`, `TagQuery.cs:89-136`, `FrameSummary.cs:306-308` | verified |
 | GAS-P3 | M | 3 | Each application revalidates every container and rebuilds all tags (area application is quadratic). Measured: an instant application on an entity carrying 1,000 effects took 0.49 ms, 135 times one on an entity carrying 2. Now the requirements wait for one pass at the next tick, a shelved container's tags are counted as it lands, and re-application and removal find containers in an index by asset tag | `EffectSystemComponent.cs:312-348`, `GameplayAbilitySystem.cs:250-281` | verified |
@@ -656,6 +658,17 @@ GAS-4 with GAS-5, PC-6, and TS-I with PC-5.
 
 Record baselines, gate results and notable decisions here, newest first.
 
+- 2026-11-04, **GAS-54 and GAS-55: two attribute set bugs.** Found while building the attribute table; the user asked
+  for bugs found along the way to be fixed as they appear.
+  - **GAS-54:** an element with no Attribute threw as the entity started, since `AttributeSetMeta` keys a dictionary
+    by the attribute, so the entity got none of its attributes. It is passed by, and `GetUnique` no longer counts it.
+  - **GAS-55:** `ForgeUtils.IndexMin` started from `float.MinValue`, so Use Minimum always took the first element. It
+    starts from `float.MaxValue`. The attribute table settles Use Minimum through the same helper, so it follows.
+  - **Their tests,** `GAS_54_An_element_with_no_attribute_gives_nothing` and `GAS_55_Use_Minimum_takes_the_lowest`,
+    on both hubs, were seen failing first: the first threw `ArgumentNullException`, the second gave 100, not 60.
+  - **Tests:** PlayMode 949: 942 pass, 0 fail and 7 planted are skipped, in three orders, the golden scenarios
+    among them. Planted 7 of 7; EditMode 387 of 387.
+
 - 2026-11-04, **Step 5: the Attribute Set inspector (ED-37).** The redesign's fourth surface, after the Item and Entity
   inspectors' pattern.
   - **Its sections:** Identity, Leveling, Attributes, Sub-Sets, Collision Settings, All Attributes, Workers, Local Data
@@ -676,9 +689,9 @@ Record baselines, gate results and notable decisions here, newest first.
     `ED_37_The_attribute_table_shows_what_an_entity_starts_with`, `ED_37_The_Attribute_Set_inspector_sets_no_look_in_code`
     and `ED_37_The_Attribute_Set_inspector_lists_what_uses_it`, were seen failing first.
     `ED_12_An_edit_in_the_Attribute_Set_inspector_undoes` finds the provider in Leveling now.
-  - **Noticed, not fixed, in the runtime:** an attribute set element with no Attribute throws as an entity starts, since
-    `AttributeSetMeta` keys a dictionary by it; and `ForgeUtils.IndexMin` starts from `float.MinValue`, so Use Minimum
-    always takes the first element. The table follows the runtime, so it shows that first element too.
+  - **Noticed in the runtime,** and fixed next as GAS-54 and GAS-55: an attribute set element with no Attribute threw
+    as an entity started, and Use Minimum always took the first element. The table follows the runtime, so it settles
+    Use Minimum correctly from then on.
   - **Tests:** PlayMode 945: 938 pass, 0 fail and 7 planted are skipped, in three orders. Planted 7 of 7; EditMode
     387 of 387.
 

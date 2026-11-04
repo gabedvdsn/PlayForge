@@ -23,7 +23,9 @@ namespace FarEmerald.PlayForge
         public static int IndexMin<T>(this IList<T> list, Func<T, float> selector)
         {
             int minIndex = 0;
-            float minValue = float.MinValue;
+            // The search starts above every value. It started at the lowest float, so nothing was below it and the first
+            // always won: Use Minimum took the first element (GAS-55)
+            float minValue = float.MaxValue;
             for (int i = 0; i < list.Count; i++)
             {
                 float value = selector(list[i]);
