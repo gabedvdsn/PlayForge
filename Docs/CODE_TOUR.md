@@ -1,7 +1,7 @@
 # PlayForge refactor: code tour
 
 This tour lists the places where the refactor changed code, so you can open each one in your IDE and read it. It
-covers `01258b8..c45f4f1` on `main`: 223 commits. Phase 0 ported Arcade Fighter's fixes, Phase 1 made the runtime
+covers `01258b8..3102975` on `main`: 225 commits. Phase 0 ported Arcade Fighter's fixes, Phase 1 made the runtime
 correct, Phase 2 got the package ready to release, and Phase 3 has begun. Each entry says what behaves differently and
 why, names its tracker IDs and Decisions, and points at the two or three places to read. `Docs/REFACTOR_PLAN.md` has
 every tracker row, the numbered Decisions, and a Log of each batch's test results.
@@ -9,8 +9,8 @@ every tracker row, the numbered Decisions, and a Log of each batch's test result
 ## How to use this
 
 - Paths are relative to the repo root.
-- Line numbers are as of commit `c45f4f1`, the head of `main` on 2026-11-03. A later commit may move them, so each
-  entry also names the class and method to search for. `git show c45f4f1:<path>` shows a file as it was then.
+- Line numbers are as of commit `3102975`, the head of `main` on 2026-11-04. A later commit may move them, so each
+  entry also names the class and method to search for. `git show 3102975:<path>` shows a file as it was then.
 - In Rider, Go to File accepts `path:line`. In Visual Studio, open the file, then Go To Line (Ctrl+G).
   A bare `:123` after a path means another line in the same file.
 - `git grep "<ID>"` finds the comment at each fix, and `git log --grep "<ID>"` finds its commit. Three exceptions:
@@ -31,9 +31,10 @@ every tracker row, the numbered Decisions, and a Log of each batch's test result
 Phase 3 began on `main` with the rows that writing the reference docs turned up, five runtime bugs and two settings
 nothing read, then gave the two GAS hubs one core (GAS-S1), turned to cost (GAS-P3, GAS-P5, GAS-P4, GAS-P6, GAS-P8,
 GAS-P9, GAS-P7, TS-5, TS-10), removed a stub nothing used (PC-24), made sequences and abilities end in the frame their
-last task does (TS-Z), and kept activation synchronous while a loop of activations goes round once a frame (TS-8).
-Each has a test in Proving Grounds named after its ID, seen failing first; the runtime tests run on both hubs. The
-plan's Log has the gate results.
+last task does (TS-Z), kept activation synchronous while a loop of activations goes round once a frame (TS-8), and
+made a runtime entity's abilities end with it (GAS-52), which measuring the phase's exit gate turned up. Each has a
+test in Proving Grounds named after its ID, seen failing first; the runtime tests run on both hubs. The plan's Log has
+the gate results.
 
 ### An entity's affiliation is its own (GAS-47)
 
@@ -44,7 +45,7 @@ own: the registration data's, or else a copy of the asset's.
 - **IDs:** GAS-47, commit `fdc1886`.
 - **Read:**
   - `Assets/PlayForge/Runtime/PlayForge/GAS/Core/GASCore.cs:68`, in `GASCore.Initialize`. The field is at `:18`,
-    `GetAffiliation` at `:202` reads it, and the tag compile at `:222` adds it. The fix went into each hub's copy;
+    `GetAffiliation` at `:208` reads it, and the tag compile at `:228` adds it. The fix went into each hub's copy;
     GAS-S1 later moved it into the core both share.
   - `Assets/PlayForge/Runtime/PlayForge/GAS/Core/MonoBehaviour/GameplayAbilitySystem.cs:41`, where the Mono hub reads
     the registration data's sides as it initializes, and
@@ -64,8 +65,8 @@ took, and takes back that slot only if the slot still holds its ability.
   - `Assets/PlayForge/Runtime/PlayForge/ItemSystem/Core/ItemSpecContainer.cs:183`, in
     `ItemSpecContainer.RemoveActiveAbility`. `ApplyActiveAbility` notes the slot at `:167`, in `grantedAbilityIndex`
     (`:18`).
-  - `Assets/PlayForge/Runtime/PlayForge/AbilitySystem/Core/AbilitySystemComponent.cs:239`
-    `AbilitySystemComponent.RemoveAbilityAt`, which removes one slot. `RemoveAbility` (`:229`) finds a slot and calls
+  - `Assets/PlayForge/Runtime/PlayForge/AbilitySystem/Core/AbilitySystemComponent.cs:249`
+    `AbilitySystemComponent.RemoveAbilityAt`, which removes one slot. `RemoveAbility` (`:239`) finds a slot and calls
     it.
 - **New:** `AbilitySystemComponent.RemoveAbilityAt(int, Ability)`.
 - **Test:** `GAS_48_Unequipping_removes_only_the_ability_the_item_granted` in `ItemTests`.
@@ -78,7 +79,7 @@ only then try the immediate ones.
 
 - **IDs:** GAS-49, commit `999e779`.
 - **Read:**
-  - `Assets/PlayForge/Runtime/PlayForge/AbilitySystem/Core/AbilitySystemComponent.cs:170`
+  - `Assets/PlayForge/Runtime/PlayForge/AbilitySystem/Core/AbilitySystemComponent.cs:180`
     `AbilitySystemComponent.ActivateImmediateAbilities`, taken out of `Initialize`.
   - `Assets/PlayForge/Runtime/PlayForge/GAS/Core/GASCore.cs:88`, the call in `GASCore.Initialize`, after
     `CompileGrantedTags`. Each hub made it until GAS-S1 gave them one core.
@@ -144,7 +145,7 @@ away.
 - **IDs:** GAS-S1, commit `5e7f077`.
 - **Read:**
   - `Assets/PlayForge/Runtime/PlayForge/GAS/Core/GASCore.cs:59` `GASCore.Initialize`, the one build order, then
-    `EndOfFrame` (`:131`), `MarkDead` (`:175`) and `CompileGrantedTags` (`:214`).
+    `EndOfFrame` (`:131`), `MarkDead` (`:181`) and `CompileGrantedTags` (`:220`).
   - `Assets/PlayForge/Runtime/PlayForge/GAS/Core/MonoBehaviour/GameplayAbilitySystem.cs:36`
     `GameplayAbilitySystem.WhenInitialize`. The Mono hub builds its core as it registers, from a copy of its asset.
   - `Assets/PlayForge/Runtime/PlayForge/GAS/Core/Runtime/RuntimeGameplayAbilitySystem.cs:64`, the constructor, where
@@ -425,9 +426,9 @@ nested until the stack overflowed. Such a request now starts next frame.
 
 - **IDs:** TS-8, commit `c45f4f1`, Decision 25.
 - **Read:**
-  - `Assets/PlayForge/Runtime/PlayForge/AbilitySystem/Core/AbilitySystemComponent.cs:331` `TryActivateAbility`,
-    which puts the request off (`:340`) while the ability's activation call still runs, and `ActivateNextFrame`
-    (`:350`), which tries it again next frame.
+  - `Assets/PlayForge/Runtime/PlayForge/AbilitySystem/Core/AbilitySystemComponent.cs:341` `TryActivateAbility`,
+    which puts the request off (`:353`) while the ability's activation call still runs, and `ActivateNextFrame`
+    (`:363`), which tries it again next frame.
   - `Assets/PlayForge/Runtime/PlayForge/AbilitySystem/Core/AbilitySpecContainer.cs:36` `IsActivating`, open from the
     claim to the end of `ActivateAbility` (`:80`).
 - **Watch for:** `TryActivateAbility` returns true for a request it puts off. Next frame it's tried in full, and dropped
@@ -438,11 +439,35 @@ nested until the stack overflowed. Such a request now starts next frame.
   `An_ability_runs_inside_the_call_that_activates_it` and
   `An_ability_asked_for_outside_its_own_activation_starts_at_once`.
 
+### A runtime entity's abilities end when it does (GAS-52)
+
+A Mono process ends the processes it handles as it ends, and a runtime process didn't, so an ability running on a
+runtime entity ran on after the entity ended, for as long as its stages lasted. An entity of either kind also took
+activations once it had ended, and a destroyed Mono entity threw on one. Now a runtime process ends what it handles
+too, and an ending entity's ability system shuts before its abilities end.
+
+- **IDs:** GAS-52, commit `3102975`.
+- **Read:**
+  - `Assets/PlayForge/Runtime/PlayForge/Management/GameplayProcess/Wrappers/ClassWrapper/AbstractRuntimeProcess.cs:119`
+    `WhenTerminate`, which ends what the process handles, as
+    `Assets/PlayForge/Runtime/PlayForge/Management/GameplayProcess/Wrappers/MonoWrapper/Core/AbstractMonoProcess.cs:117`
+    does.
+  - `Assets/PlayForge/Runtime/PlayForge/GAS/Core/GASCore.cs:167` `WhenTerminate`, which each hub's `WhenTerminate`
+    calls before its base's, and `ShutDown` in
+    `Assets/PlayForge/Runtime/PlayForge/AbilitySystem/Core/AbilitySystemComponent.cs:116`, with the check
+    `TryActivateAbility` now makes first (`:345`).
+- **Watch for:** any runtime process that handles others now ends them as it ends. A process registered with
+  ProcessControl as its handler, as a group's members are, isn't one of them. A runtime GAS registered again after it
+  ended keeps its ability system shut.
+- **Test:** `GAS_52_Ending_an_entity_ends_its_abilities` in `AbilityLifecycleTests`, on both hubs, ended three ways, in
+  targeting, a stage and a critical stage.
+
 ### Still open in Phase 3
 
 No Phase 3 row is open. GAS-51, item stacking that is declared but not built, moved to Phase 5 as FEAT-14, so an
 Item's `MaxStackSize` does nothing until then. The phase's exit gate, zero steady-state allocation enforced in CI,
-isn't checked yet, and the repo has no CI.
+isn't met yet: a task's pause lookup takes 24 bytes a frame, a frame summary with a listener 504, and the repo has
+no CI. The plan's Log has the measurement.
 
 ## ProcessControl
 
@@ -776,8 +801,8 @@ targeting is logged and cleans the activation; it used to leak the handle.
 
 - **IDs:** TS-AC, TS-C, TS-V.
 - **Read:**
-  - `Assets/PlayForge/Runtime/PlayForge/AbilitySystem/Core/AbilitySystemComponent.cs:313`
-    `AbilitySystemComponent.CanActivateAbility` (TS-AC at `:318`).
+  - `Assets/PlayForge/Runtime/PlayForge/AbilitySystem/Core/AbilitySystemComponent.cs:323`
+    `AbilitySystemComponent.CanActivateAbility` (TS-AC at `:328`).
   - `Assets/PlayForge/Runtime/PlayForge/AbilitySystem/Ability/AbilityProxy/Core/AbilityProxy.cs:161`
     `AbilityProxy.ActivateTargetingTask` (TS-C at `:179`, TS-V at `:186`), then `ActivateTargetingViaSequence`
     (`:195`) and `ActivateViaSequence` (`:294`) for TS-AC.
@@ -1045,9 +1070,9 @@ Removing an ability takes it off the active list before tags compile, and still 
 
 - **IDs:** GAS-21, TS-T, GAS-20.
 - **Read:**
-  - `Assets/PlayForge/Runtime/PlayForge/AbilitySystem/Core/AbilitySystemComponent.cs:438`
-    `AbilitySystemComponent.ClaimActive`, then `ReleaseClaim` (`:456`) and `EndActivation` (`:473`).
-  - `Assets/PlayForge/Runtime/PlayForge/AbilitySystem/Core/AbilitySystemComponent.cs:229`
+  - `Assets/PlayForge/Runtime/PlayForge/AbilitySystem/Core/AbilitySystemComponent.cs:451`
+    `AbilitySystemComponent.ClaimActive`, then `ReleaseClaim` (`:469`) and `EndActivation` (`:486`).
+  - `Assets/PlayForge/Runtime/PlayForge/AbilitySystem/Core/AbilitySystemComponent.cs:239`
     `AbilitySystemComponent.RemoveAbility`.
 - **New:** `AbilitySpecContainer.IsActiveUnder(EAbilityActivationPolicy)`.
 
@@ -1141,7 +1166,7 @@ the sources' lists instead of allocating iterators.
 - **Read:**
   - `Assets/PlayForge/Runtime/PlayForge/Tag/TagQuery.cs:98` `TagQuery.CountMatches(TagCache)`, and `Matches`
     (`:135`). The hubs call it from `QueryTags`
-    (`Assets/PlayForge/Runtime/PlayForge/GAS/Core/GASCore.cs:226`).
+    (`Assets/PlayForge/Runtime/PlayForge/GAS/Core/GASCore.cs:232`).
   - `Assets/PlayForge/Runtime/PlayForge/Tag/Tag.cs:94` `Tag.Child`, and the implicit conversion at `:348`.
   - `Assets/PlayForge/Runtime/PlayForge/Tag/GrantedTagCompiler.cs:14` `GrantedTagCompiler`.
 - **New:** `GrantedTagCompiler` (internal).
@@ -1182,7 +1207,7 @@ runtime identity's were null and threw. A hub stepped by hand, outside ProcessCo
   above.
 - **Read:**
   - `Assets/PlayForge/Runtime/PlayForge/GAS/Core/Runtime/RuntimeGameplayAbilitySystem.cs:64`, the constructor
-    (`UpdateAndLate` at `:72`), and `RuntimeEntityIdentity(EntityIdentity)` at `:293` (GAS-9).
+    (`UpdateAndLate` at `:72`), and `RuntimeEntityIdentity(EntityIdentity)` at `:301` (GAS-9).
   - `Assets/PlayForge/Runtime/PlayForge/GAS/Core/Runtime/RuntimeGameplayAbilitySystem_EndOfFrame.cs:52` and
     `Assets/PlayForge/Runtime/PlayForge/GAS/Core/MonoBehaviour/GameplayAbilitySystem.EndOfFrame.cs:44`, each hub's
     `HandleDestruction` (GAS-42).
@@ -1426,7 +1451,8 @@ Newest first. Each row is a good place to start reading.
 
 | What | IDs | Where | Commit |
 |---|---|---|---|
-| An ability asked for inside its own activation starts next frame | TS-8, Decision 25 | `Assets/PlayForge/Runtime/PlayForge/AbilitySystem/Core/AbilitySystemComponent.cs:331` | `c45f4f1` |
+| A runtime entity's abilities end when it does | GAS-52 | `Assets/PlayForge/Runtime/PlayForge/Management/GameplayProcess/Wrappers/ClassWrapper/AbstractRuntimeProcess.cs:119` | `3102975` |
+| An ability asked for inside its own activation starts next frame | TS-8, Decision 25 | `Assets/PlayForge/Runtime/PlayForge/AbilitySystem/Core/AbilitySystemComponent.cs:341` | `c45f4f1` |
 | Sequences and abilities end the frame their last task does | TS-Z, Decision 24 | `Assets/PlayForge/Runtime/PlayForge/Management/GameplayProcess/Core/ProcessRelay.cs:44` | `04c3db1` |
 | A tick, a recompute and a tag query allocate nothing | GAS-P4 | `Assets/PlayForge/Runtime/PlayForge/GameplayEffect/Core/GameplayEffectSpec.cs:155` | `b50a80b` |
 | Ending an effect costs the same however many end with it | GAS-P5 | `Assets/PlayForge/Runtime/PlayForge/GAS/Core/EffectSystemComponent.cs:536` | `7ce68aa` |
@@ -1434,7 +1460,7 @@ Newest first. Each row is a good place to start reading.
 | Both GAS hubs forward to one core | GAS-S1 | `Assets/PlayForge/Runtime/PlayForge/GAS/Core/GASCore.cs:59` | `5e7f077` |
 | An attribute set reached twice counts once | GAS-44 | `Assets/PlayForge/Runtime/PlayForge/AttributeSystem/Attribute/AttributeSet.cs:63` | `57ea4ff` |
 | Tick On Application alone lands its change | GAS-50 | `Assets/PlayForge/Runtime/PlayForge/GAS/Core/EffectSystemComponent.cs:249` | `e40b3b6` |
-| Opening abilities wait for the entity's attributes | GAS-49 | `Assets/PlayForge/Runtime/PlayForge/AbilitySystem/Core/AbilitySystemComponent.cs:170` | `999e779` |
+| Opening abilities wait for the entity's attributes | GAS-49 | `Assets/PlayForge/Runtime/PlayForge/AbilitySystem/Core/AbilitySystemComponent.cs:180` | `999e779` |
 | Unequipping takes back only the item's grant | GAS-48 | `Assets/PlayForge/Runtime/PlayForge/ItemSystem/Core/ItemSpecContainer.cs:183` | `27c2325` |
 | Each entity keeps its own affiliation | GAS-47 | `Assets/PlayForge/Runtime/PlayForge/GAS/Core/GASCore.cs:68` | `fdc1886` |
 | Targeting's packet resolves to the entity, so Apply Effects finds its target | GAS-46 | `Assets/PlayForge/Runtime/PlayForge/AbilitySystem/Ability/AbilityProxy/Core/AbilityDataPacket.cs:133` | `fe4271c` |
