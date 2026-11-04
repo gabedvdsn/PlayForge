@@ -7,12 +7,16 @@ using static FarEmerald.PlayForge.Extended.Editor.ForgeDrawerStyles;
 
 namespace FarEmerald.PlayForge.Extended.Editor
 {
-    [CustomEditor(typeof(Item))]
+    [CustomEditor(typeof(Item)), CanEditMultipleObjects]
     public class ItemEditor : BasePlayForgeEditor
     {
         [SerializeField] private Texture2D m_ItemIcon;
-        
+
         private Item item;
+
+        // Its fields write through the SerializedObject, so it edits a multiple selection, and what acts on one item steps
+        // aside: the name, the asset tag, linking, and a linked item's levels (ED-12)
+        protected override bool SupportsMultipleObjects => true;
         private Label assetTagValueLabel;
         private VisualElement levelSourceContent;
         private EItemLinkMode shownLinkMode;
@@ -112,6 +116,13 @@ namespace FarEmerald.PlayForge.Extended.Editor
                 MarkDirty(item);
                 Repaint();
             });
+            // Each item's tag comes from its own name, so a multiple selection shows the names and can't rename (ED-12)
+            if (IsMultiple)
+            {
+                nameField.SetEnabled(false);
+                nameField.showMixedValue = targets.Select(target => ((Item)target).Definition.Name).Distinct().Count() > 1;
+                nameField.tooltip = "Rename one item at a time: each item's tag comes from its own name.";
+            }
             content.Add(nameField);
             
             // Description binds to its property, so an edit undoes. It wrote straight into the asset when it lost focus,
@@ -151,10 +162,14 @@ namespace FarEmerald.PlayForge.Extended.Editor
             var content = section.Content;
             var tags = serializedObject.FindProperty(nameof(Item.Tags));
             
-            var (assetTagContainer, valueLabel) = CreateAssetTagDisplay();
-            assetTagValueLabel = valueLabel;
-            UpdateAssetTagDisplay();
-            content.Add(assetTagContainer);
+            // Each item has its own asset tag, so a multiple selection doesn't show one (ED-12)
+            if (!IsMultiple)
+            {
+                var (assetTagContainer, valueLabel) = CreateAssetTagDisplay();
+                assetTagValueLabel = valueLabel;
+                UpdateAssetTagDisplay();
+                content.Add(assetTagContainer);
+            }
             
             content.Add(CreatePropertyField(tags.FindPropertyRelative(nameof(ItemTags.ContextTags)), "ContextTags", "Context Tags"));
             content.Add(CreatePropertyField(tags.FindPropertyRelative(nameof(ItemTags.PassiveGrantedTags)), "PassiveGrantedTags", "Granted Tags"));
@@ -204,7 +219,15 @@ namespace FarEmerald.PlayForge.Extended.Editor
             var linkModeField = new EnumField("Link Mode", item.LinkMode) { bindingPath = nameof(Item.LinkMode) };
             linkModeField.style.marginBottom = 6;
             levelSourceContent.Add(linkModeField);
-            
+
+            // A provider and a child's link belong to one item, so a multiple selection sets the mode alone (ED-12)
+            if (IsMultiple)
+            {
+                levelSourceContent.Add(CreateHintLabel("Select one item to choose its provider or link its children."));
+                levelSourceContent.Bind(serializedObject);
+                return;
+            }
+
             if (item.LinkMode == EItemLinkMode.LinkedToProvider)
             {
                 BuildProviderSelector(levelSourceContent, item);
@@ -514,11 +537,21 @@ namespace FarEmerald.PlayForge.Extended.Editor
             
             levelingContent.Clear();
             
+            // A multiple selection edits the level range when every item keeps its own; a linked item's range comes from
+            // its provider, which differs by item (ED-12)
+            if (IsMultiple)
+            {
+                if (targets.All(target => ((Item)target).LinkMode == EItemLinkMode.Standalone)) BuildStandaloneLevelingFields();
+                else levelingContent.Add(CreateHintLabel("A linked item takes its levels from its provider. Select standalone items to edit their range together."));
+                levelingContent.Bind(serializedObject);
+                return;
+            }
+
             // Determine which state we're in:
             // 1. Standalone mode - show editable level fields
             // 2. LinkedToProvider mode with no provider - show disabled level fields + warning
             // 3. LinkedToProvider mode with provider - show read-only derived values
-            
+
             if (item.LinkMode == EItemLinkMode.LinkedToProvider)
             {
                 if (item.IsLinked)

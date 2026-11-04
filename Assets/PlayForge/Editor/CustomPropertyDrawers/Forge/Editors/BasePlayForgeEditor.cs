@@ -233,8 +233,9 @@ namespace FarEmerald.PlayForge.Extended.Editor
         protected static void RecordLinkChange(string undoName, params Object[] touched) =>
             RecordLinkChange(undoName, (IEnumerable<Object>)touched);
 
-        // A multiple selection shows its count in the header, and only the actions that act on every selected asset
-        private bool IsMultiple => serializedObject.isEditingMultipleObjects;
+        // A multiple selection shows its count in the header, and only the actions that act on every selected asset.
+        // An inspector checks it too, to set aside what acts on one asset (ED-12)
+        protected bool IsMultiple => serializedObject.isEditingMultipleObjects;
         private string HeaderName() => IsMultiple ? $"{targets.Length} selected" : GetDisplayName();
 
         /// <summary>
