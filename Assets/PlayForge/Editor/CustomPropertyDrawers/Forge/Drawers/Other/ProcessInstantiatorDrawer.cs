@@ -20,9 +20,5 @@ namespace FarEmerald.PlayForge.Extended.Editor
         {
             return true;
         }
-        protected override Type GetDefault(SerializedProperty prop)
-        {
-            return null;
-        }
     }
 }

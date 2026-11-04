@@ -37,10 +37,6 @@ namespace FarEmerald.PlayForge.Extended.Editor
             if (prop.isArray) return null;
             return new Label(prop.displayName);
         }
-        protected override T GetDefault(SerializedProperty prop)
-        {
-            return GetCurrentValue(prop);
-        }
         protected override void ClearReferenceValue(SerializedProperty prop)
         {
             prop.objectReferenceValue = null;

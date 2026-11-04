@@ -176,9 +176,5 @@ namespace FarEmerald.PlayForge.Extended.Editor
         {
             return false;
         }
-        protected override Type GetDefault(SerializedProperty prop)
-        {
-            return typeof(IsAliveValidation);
-        }
     }
 }

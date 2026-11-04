@@ -49,10 +49,6 @@ namespace FarEmerald.PlayForge.Extended.Editor
 
         protected virtual bool AcceptClear(SerializedProperty prop) => GetCurrentValue(prop) != null;
 
-        /// <summary>Gets the default value when none is selected.</summary>
-        /// <param name="prop"></param>
-        protected virtual T GetDefault(SerializedProperty prop) => default;
-
         /// <summary>Called when the open button is clicked. Override to implement navigation.</summary>
         protected virtual void OnOpen(SerializedProperty prop, T value)
         {

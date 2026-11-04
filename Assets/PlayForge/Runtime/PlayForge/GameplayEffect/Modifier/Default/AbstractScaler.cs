@@ -450,6 +450,8 @@ namespace FarEmerald.PlayForge
             
             foreach (var behaviour in Behaviours)
             {
+                // An empty slot, which a list's "+" can leave, changes nothing; it threw on every evaluation (ED-12)
+                if (behaviour == null) continue;
                 behaviour.Initialize(spec);
                 m = behaviour.Evaluate(m, spec);
             }

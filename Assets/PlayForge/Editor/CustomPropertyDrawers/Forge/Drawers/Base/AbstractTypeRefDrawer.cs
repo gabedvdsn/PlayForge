@@ -120,14 +120,9 @@ namespace FarEmerald.PlayForge.Extended.Editor
             if (CurrentType != null)
                 return CurrentType;
 
-            // Apply default if configured
-            var defaultType = GetDefault(prop);
-            if (defaultType != null)
-            {
-                SetValue(prop, defaultType);
-                return defaultType;
-            }
-
+            // An empty field stays empty. Drawing wrote the drawer's default type into it, so opening an asset changed
+            // it, and a field whose class Unity couldn't find lost the data Unity kept for it (ED-12). A field that needs
+            // a value gets it from its initializer, which runs when the type picker makes the object that holds it.
             return null;
         }
 

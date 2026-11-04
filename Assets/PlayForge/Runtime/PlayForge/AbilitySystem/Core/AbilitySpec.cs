@@ -32,13 +32,14 @@ namespace FarEmerald.PlayForge
             // activation, alongside the validation rules. Missing groups mean no requirement.
             if (!(Base.Tags?.TagRequirements?.CheckSourceRequirements(owner.GetAppliedTags()) ?? true)) return false;
 
-            return Base.SourceActivationRules.All(rule => rule.Validate(data, () => owner, out _));
+            // An empty rule slot, which a list's "+" can leave, asks nothing; it threw (ED-12)
+            return Base.SourceActivationRules.All(rule => rule == null || rule.Validate(data, () => owner, out _));
         }
 
         public bool ValidateAllActivationRequirements(ITarget target, AbilityDataPacket data)
         {
             return ValidateSourceActivationRequirements(data)
-                   && Base.TargetActivationRules.All(rule => rule.Validate(data, () => target, out _))
+                   && Base.TargetActivationRules.All(rule => rule == null || rule.Validate(data, () => target, out _))
                    && Base.Tags.ValidateTargetRequirements(target) ;
         }
 

@@ -18,10 +18,6 @@ namespace FarEmerald.PlayForge.Extended.Editor
         {
             return false;
         }
-        protected override Type GetDefault(SerializedProperty prop)
-        {
-            return typeof(InterruptSequenceInjection);
-        }
 
         protected override string GetStringValue(SerializedProperty prop, Type value)
         {

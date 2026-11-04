@@ -54,10 +54,6 @@ namespace FarEmerald.PlayForge.Extended.Editor
             return baseGui;
         }*/
 
-        protected override Type GetDefault(SerializedProperty prop)
-        {
-            return typeof(AttenuateScalerBehaviour);
-        }
 
         /*private void OnPropertyChanged(SerializedProperty prop)
         {
