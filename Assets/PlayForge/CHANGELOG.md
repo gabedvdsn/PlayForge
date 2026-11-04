@@ -85,6 +85,8 @@ tracks each fix below by its ID.
   (ED-12).
 - Every field of the Entity inspector undoes: Description, Starting and Max Level, Activation Policy, the three Allow
   Duplicate toggles and Link Mode (ED-12).
+- The Attribute Set inspector's Description and Link Mode undo, and its Level Source and Leveling sections follow an
+  Undo (ED-12).
 - Runtime correctness: 96 fixes across ProcessControl, TaskSequence and the GAS core, among them exception isolation,
   queued state changes, pause, effect stacking and ticking, commit order, worker scheduling and targeting.
 - A fresh project imports the package with no warning and no missing type, and the samples import with no missing

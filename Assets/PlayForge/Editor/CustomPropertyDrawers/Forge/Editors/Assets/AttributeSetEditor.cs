@@ -22,6 +22,7 @@ namespace FarEmerald.PlayForge.Extended.Editor
 
         // Level provider sections
         private VisualElement levelSourceContent;
+        private EAttributeSetLinkMode shownLinkMode;
         private VisualElement levelingContent;
 
         // ═══════════════════════════════════════════════════════════════════════════
@@ -91,27 +92,30 @@ namespace FarEmerald.PlayForge.Extended.Editor
             RebuildLevelSourceContent();
         }
 
+        // Level Source and Leveling are drawn from the link mode, so they redraw when the mode changes, an Undo among
+        // them (ED-12)
+        protected override void OnAssetChanged()
+        {
+            if (levelSourceContent == null || attributeSet.LinkMode == shownLinkMode) return;
+            RebuildLevelSourceContent();
+            RebuildLevelingContent();
+        }
+
         protected override void RebuildLevelSourceContent()
         {
             if (levelSourceContent == null) return;
             levelSourceContent.Clear();
+            shownLinkMode = attributeSet.LinkMode;
 
             var info = CreateHintLabel(
                 "Determines the level range used by cached scalers authored on this set's elements.");
             info.style.marginBottom = 8;
             levelSourceContent.Add(info);
 
-            var linkModeField = new EnumField("Link Mode", attributeSet.LinkMode);
+            // Link Mode binds to its property, so a change undoes, and OnAssetChanged redraws from it. It wrote the mode
+            // straight into the asset, with no Undo, and redrew only then (ED-12).
+            var linkModeField = new EnumField("Link Mode", attributeSet.LinkMode) { bindingPath = nameof(AttributeSet.LinkMode) };
             linkModeField.style.marginBottom = 6;
-            linkModeField.RegisterValueChangedCallback(evt =>
-            {
-                attributeSet.LinkMode = (EAttributeSetLinkMode)evt.newValue;
-                serializedObject.Update();
-                MarkDirty(attributeSet);
-                RebuildLevelSourceContent();
-                RebuildLevelingContent();
-                Repaint();
-            });
             levelSourceContent.Add(linkModeField);
 
             if (attributeSet.LinkMode == EAttributeSetLinkMode.LinkedToProvider)
@@ -518,16 +522,9 @@ namespace FarEmerald.PlayForge.Extended.Editor
             });
             content.Add(nameField);
             
-            var descField = CreateTextField("Description", "Description", multiline: true, minHeight: 18);
-            descField.value = attributeSet.Description;
-            descField.RegisterCallback<FocusOutEvent>(_ =>
-            {
-                attributeSet.Description = descField.value;
-                MarkDirty(attributeSet);
-                UpdateHeader();
-                Repaint();
-            });
-            content.Add(descField);
+            // Description binds to its property, so an edit undoes. It wrote straight into the asset when it lost focus,
+            // with no Undo (ED-12).
+            content.Add(CreateBoundTextField(nameof(AttributeSet.Description), "Description", multiline: true, minHeight: 18));
             
             var (assetTagContainer, valueLabel) = CreateAssetTagDisplay();
             assetTagValueLabel = valueLabel;
