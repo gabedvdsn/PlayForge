@@ -15,6 +15,7 @@ namespace FarEmerald.PlayForge.Extended.Editor
         private EntityIdentity entity;
         private Label assetTagValueLabel;
         private VisualElement levelSourceContent;
+        private EItemLinkMode shownLinkMode;
         private VisualElement levelingContent;
 
         // ═══════════════════════════════════════════════════════════════════════════
@@ -115,16 +116,9 @@ namespace FarEmerald.PlayForge.Extended.Editor
             });
             content.Add(nameField);
             
-            var descriptionField = CreateTextField("Description", "Description", multiline: true, minHeight: 18);
-            descriptionField.value = entity.Description;
-            descriptionField.RegisterCallback<FocusOutEvent>(_ =>
-            {
-                entity.Description = descriptionField.value;
-                MarkDirty(entity);
-                UpdateHeader();
-                Repaint();
-            });
-            content.Add(descriptionField);
+            // Description binds to its property, so an edit undoes. It wrote straight into the asset when it lost focus,
+            // with no Undo (ED-12).
+            content.Add(CreateBoundTextField(nameof(EntityIdentity.Description), "Description", multiline: true, minHeight: 18));
             
             var texturesField = CreatePropertyField(
                 serializedObject.FindProperty(nameof(EntityIdentity.Textures)), 
@@ -166,26 +160,29 @@ namespace FarEmerald.PlayForge.Extended.Editor
             RebuildLevelSourceContent();
         }
         
+        // Level Source and Leveling are drawn from the link mode, so they redraw when the mode changes, an Undo among
+        // them (ED-12)
+        protected override void OnAssetChanged()
+        {
+            if (levelSourceContent == null || entity.LinkMode == shownLinkMode) return;
+            RebuildLevelSourceContent();
+            RebuildLevelingContent();
+        }
+
         protected override void RebuildLevelSourceContent()
         {
             levelSourceContent.Clear();
-            
+            shownLinkMode = entity.LinkMode;
+
             var infoLabel = CreateHintLabel(
                 "Entities typically use their own level. Optionally, link to another asset to inherit its level range.");
             infoLabel.style.marginBottom = 8;
             levelSourceContent.Add(infoLabel);
-            
-            var linkModeField = new EnumField("Link Mode", entity.LinkMode);
+
+            // Link Mode binds to its property, so a change undoes, and OnAssetChanged redraws from it. It wrote the mode
+            // straight into the asset, with no Undo, and redrew only then (ED-12).
+            var linkModeField = new EnumField("Link Mode", entity.LinkMode) { bindingPath = nameof(EntityIdentity.LinkMode) };
             linkModeField.style.marginBottom = 6;
-            linkModeField.RegisterValueChangedCallback(evt =>
-            {
-                entity.LinkMode = (EItemLinkMode)evt.newValue;
-                serializedObject.Update();
-                MarkDirty(entity);
-                RebuildLevelSourceContent();
-                RebuildLevelingContent();
-                Repaint();
-            });
             levelSourceContent.Add(linkModeField);
             
             if (entity.LinkMode == EItemLinkMode.LinkedToProvider)
@@ -783,23 +780,17 @@ namespace FarEmerald.PlayForge.Extended.Editor
         
         private void BuildStandaloneLevelingFields()
         {
+            // Starting and Max Level bind to their properties, so an edit undoes. They wrote straight into the asset, with
+            // no Undo (ED-12).
             var startlevelField = CreateIntegerField("StartingLevel", "Starting Level", entity.StartingLevel);
+            startlevelField.bindingPath = nameof(EntityIdentity.StartingLevel);
             startlevelField.style.flexGrow = 1;
-            startlevelField.RegisterValueChangedCallback(evt =>
-            {
-                entity.StartingLevel = evt.newValue;
-                MarkDirty(entity);
-            });
             levelingContent.Add(startlevelField);
 
             // On a line of its own: the Cap At Max toggle that shared its row set a value nothing read (GAS-45)
             var maxLevelField = CreateIntegerField("MaxLevel", "Max Level", entity.MaxLevel);
+            maxLevelField.bindingPath = nameof(EntityIdentity.MaxLevel);
             maxLevelField.style.flexGrow = 1;
-            maxLevelField.RegisterValueChangedCallback(evt =>
-            {
-                entity.MaxLevel = evt.newValue;
-                MarkDirty(entity);
-            });
             levelingContent.Add(maxLevelField);
         }
 
@@ -820,12 +811,10 @@ namespace FarEmerald.PlayForge.Extended.Editor
             
             var content = section.Content;
             
+            // Activation Policy and the Allow Duplicate toggles bind to their properties, so an edit undoes. They wrote
+            // straight into the asset, with no Undo (ED-12).
             var policyField = CreateEnumField("ActivationPolicy", "Activation Policy", entity.ActivationPolicy);
-            policyField.RegisterValueChangedCallback(evt =>
-            {
-                entity.ActivationPolicy = (EAbilityActivationPolicy)evt.newValue;
-                MarkDirty(entity);
-            });
+            policyField.bindingPath = nameof(EntityIdentity.ActivationPolicy);
             content.Add(policyField);
             
             var startingField = CreatePropertyField(
@@ -854,12 +843,8 @@ namespace FarEmerald.PlayForge.Extended.Editor
             
             var allowDupsToggle = CreateToggle("AllowDuplicates", "Allow Duplicate Abilities");
             allowDupsToggle.value = entity.AllowDuplicateAbilities;
+            allowDupsToggle.bindingPath = nameof(EntityIdentity.AllowDuplicateAbilities);
             allowDupsToggle.style.minWidth = 120;
-            allowDupsToggle.RegisterValueChangedCallback(evt =>
-            {
-                entity.AllowDuplicateAbilities = evt.newValue;
-                MarkDirty(entity);
-            });
             content.Add(allowDupsToggle);
         }
 
@@ -894,14 +879,11 @@ namespace FarEmerald.PlayForge.Extended.Editor
             maxItemsField.style.marginBottom = 2;
             content.Add(maxItemsField);
             
+            // The Allow Duplicate toggles bind to their properties, so an edit undoes (ED-12)
             var allowDupsToggle = CreateToggle("AllowDuplicateItems", "Allow Duplicate Items");
             allowDupsToggle.value = entity.AllowDuplicateItems;
+            allowDupsToggle.bindingPath = nameof(EntityIdentity.AllowDuplicateItems);
             allowDupsToggle.style.minWidth = 120;
-            allowDupsToggle.RegisterValueChangedCallback(evt =>
-            {
-                entity.AllowDuplicateItems = evt.newValue;
-                MarkDirty(entity);
-            });
             content.Add(allowDupsToggle);
             
             content.Add(CreateDivider());
@@ -913,12 +895,8 @@ namespace FarEmerald.PlayForge.Extended.Editor
             var allowEquippedDupsToggle = CreateToggle("AllowDuplicateEquippedItems", "Allow Duplicate Equipped Items");
             // It opened showing Allow Duplicate Items' value (ED-29)
             allowEquippedDupsToggle.value = entity.AllowDuplicateEquippedItems;
+            allowEquippedDupsToggle.bindingPath = nameof(EntityIdentity.AllowDuplicateEquippedItems);
             allowEquippedDupsToggle.style.minWidth = 120;
-            allowEquippedDupsToggle.RegisterValueChangedCallback(evt =>
-            {
-                entity.AllowDuplicateEquippedItems = evt.newValue;
-                MarkDirty(entity);
-            });
             content.Add(allowEquippedDupsToggle);
         }
 
