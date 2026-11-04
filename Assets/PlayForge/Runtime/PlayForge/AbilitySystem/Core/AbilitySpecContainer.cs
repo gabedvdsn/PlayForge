@@ -100,6 +100,9 @@ namespace FarEmerald.PlayForge
             {
                 handle.IsTargeting = false;
 
+                // Targeting leaves a packet, and what reads a target asks for the entity it points at (GAS-46)
+                handle.Data.ResolveTarget(Spec.Base.Behaviour.ImplicitTag);
+
                 if (handle.Data.TryGetFirstTarget(out var target) && !Spec.ValidateAllActivationRequirements(target, handle.Data))
                 {
                     targetingCancelled = true;

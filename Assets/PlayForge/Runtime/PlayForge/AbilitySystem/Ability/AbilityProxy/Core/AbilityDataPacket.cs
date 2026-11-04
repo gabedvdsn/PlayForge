@@ -125,6 +125,18 @@ namespace FarEmerald.PlayForge
         public bool TryGetTarget(EDataTarget policy, out ITarget target) => TryGet(Tags.TARGET_REAL, policy, out target);
         public bool TryGetFirstTarget(out ITarget target) => TryGetFirst(Tags.TARGET_REAL, out target);
 
+        /// <summary>
+        /// Files the entity a targeting packet points at under Target Real, where tasks, rules and spawned processes
+        /// look for it, unless a target is there already. Targeting leaves only the packet, under Target or the
+        /// implicit tag, and nothing filed the entity, so Apply Effects never found its target (GAS-46).
+        /// </summary>
+        public void ResolveTarget(Tag implicitTag)
+        {
+            if (TryGetFirst(Tags.TARGET_REAL, out ITarget _)) return;
+            if (!TryGetFirst(Tags.TARGET, out AbstractTargetingPacket packet) && !TryGetFirst(implicitTag, out packet)) return;
+            if (packet.target is not null) SetPrimary(Tags.TARGET_REAL, packet.target);
+        }
+
         #endregion
     }
 }

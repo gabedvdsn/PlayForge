@@ -66,6 +66,9 @@ namespace FarEmerald.PlayForge
         {
             _targetingPacket = targetingPacket 
                                ?? new StaticTargetingPacket(Vector3.zero, Quaternion.identity, Vector3.one);
+            // The packet points back at its entity, as the Mono GAS's does, so what targeting finds can be resolved
+            // to it (GAS-46)
+            _targetingPacket.target ??= this;
             
             AttributeSystem = new AttributeSystemComponent(this);
             AbilitySystem = new AbilitySystemComponent(this);
@@ -96,6 +99,9 @@ namespace FarEmerald.PlayForge
         {
             _targetingPacket = targetingPacket 
                                ?? new StaticTargetingPacket(Vector3.zero, Quaternion.identity, Vector3.one);
+            // The packet points back at its entity, as the Mono GAS's does, so what targeting finds can be resolved
+            // to it (GAS-46)
+            _targetingPacket.target ??= this;
             
             AttributeSystem = new AttributeSystemComponent(this);
             AbilitySystem = new AbilitySystemComponent(this);
