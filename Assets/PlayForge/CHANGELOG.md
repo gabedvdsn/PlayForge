@@ -98,6 +98,8 @@ tracks each fix below by its ID.
   either field no longer compiles; delete the assignment.
 - From the GAS hubs, what nothing used: `GameplayAbilitySystem`'s `Relays` field and `HandleDestructionInternally`
   hook, and each hub's protected `localData` field. A subclass reads Local Data through `GetLocalDataStructure()`.
+- `PooledMonoProcessInstantiator`, a stub that gave back no process and kept a process's object when it ended, so it
+  leaked. Nothing used it. To pool processes, extend `AbstractMonoProcessInstantiator`.
 
 ## [0.1.0] - 2026-10-30
 

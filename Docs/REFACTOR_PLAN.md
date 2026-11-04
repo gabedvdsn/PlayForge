@@ -243,6 +243,8 @@ from. It lives outside `Assets/` so it never ships in the package.
   is never given to another name, and `TagRegistry.Reset` leaves them. Two tags are equal exactly when their names
   are, as before, and a tag whose `Name` is changed in place takes its new name's ID. The user chose this over an ID
   serialized with each tag, which would have meant migrating every asset.
+- Decision 23, 2026-11-03: `PooledMonoProcessInstantiator`, a stub nothing used, is removed rather than built into a
+  pool (PC-24). Pooling Mono processes is left to an instantiator that extends `AbstractMonoProcessInstantiator`.
 
 **Open. Ask the user; do not assume:**
 1. ~~**Uncommitted changes**~~: decided, see above.
@@ -342,7 +344,7 @@ Severity: **C** critical, **H** high, **M** medium or low. The phase is the road
 | PC-21 | H | 1 | GameRoot is not DontDestroyOnLoad; after a scene load, every default overload uses a destroyed handler | `GameRoot.cs`, `Bootstrapper.cs:76`, `ProcessDataPacket.cs:73` | verified |
 | PC-22 | H | 1 | Step priority is computed but never used | `ProcessControl.cs:91, 106-129` | verified |
 | PC-23 | M | 1 | Bootstrap: a duplicate GameRoot still claims Instance; a failed register throws before the fallback; `[SerializeReference]` on ScriptableObjects (C03); an un-bootstrapped ProcessControl throws every frame | `GameRoot.cs:25-30`, `Bootstrapper.cs:18-19, 78-82`, `ProcessControl.cs:37, 327` | verified |
-| PC-24 | M | 3 | `PooledMonoProcessInstantiator` is a stub that returns null and leaks GameObjects | `PooledMonoProcessInstantiator.cs:7-22`, `MonoWrapperProcess.cs:90` | open |
+| PC-24 | M | 3 | `PooledMonoProcessInstantiator` is a stub that returns null and leaks GameObjects. Its `CleanProcess` did nothing, and a process's wrapper hands an instantiator its object to clean, so a process made through it kept its GameObject. Nothing used it. Removed, rather than built into a pool (Decision 23); a pool extends `AbstractMonoProcessInstantiator` | `PooledMonoProcessInstantiator.cs:7-22`, `MonoWrapperProcess.cs:90` | fixed |
 | PC-25 | M | 1 | `ProcessTaskUtil.DoWhile` loops forever; `RemainingRuntime` truncates before multiplying | `ProcessTaskUtil.cs:111-117`, `ProcessRelay.cs:42-43` | verified |
 | PC-26 | M | 1 | Lifecycle edges: no domain-reload reset; `is null` misses destroyed singletons; the hierarchy throws after a root is destroyed; changing `ProcessTiming` at runtime; `ResetProcessControl` keeps its watchers, which is harmless, as it only runs on a fresh instance | `ProcessHierarchy.cs:313`, `ProcessControl.cs:424-446, 1021, 1064` | verified |
 | PC-27 | H | 1 | `Unpause` runs a process while ProcessControl itself is Waiting or ClosedWaiting, against 8 cells of the transition table: `ValidateStateTransition` never reads the control state. See Decisions 5 | `ProcessControl.cs:776-791, 1361-1390` | verified |
@@ -586,6 +588,16 @@ GAS-4 with GAS-5, PC-6, and TS-I with PC-5.
 ## Log
 
 Record baselines, gate results and notable decisions here, newest first.
+
+- 2026-11-03, **PC-24: the pooled instantiator stub is gone.** `PooledMonoProcessInstantiator` gave back no process
+  and kept a process's object when it ended, so the GameObject leaked. Nothing used it, and it's removed rather than
+  built into a pool. Its test, `PC_24_The_pooled_instantiator_stub_is_gone`, an EditMode check that the type no
+  longer exists, was seen failing first.
+  - **Tests:** PlayMode 889: 882 pass, 0 fail and 7 planted are skipped, in three orders. Planted 7 of 7; EditMode
+    40 of 40. The 25 golden scenarios pass inside PlayMode; the custom runner can't run while the user's editor holds
+    PlayForge's lock.
+  - **Calls made:** Decision 23. Code that named the stub no longer compiles; a pool extends
+    `AbstractMonoProcessInstantiator`.
 
 - 2026-11-03, **TS-10: a stage that waits for all its tasks makes no second token source.** A stage under WhenAll
   or RepeatUntilSkipped hands its policy the stage's own source; WhenAny, WhenN and a policy the runtime doesn't
