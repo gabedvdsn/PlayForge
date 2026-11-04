@@ -276,15 +276,8 @@ namespace FarEmerald.PlayForge.Extended.Editor
         {
             Icon = "🗑",
             Label = "",
-            Tooltip = "Delete this asset",
-            Action = deleteAction ?? (asset =>
-            {
-                if (EditorUtility.DisplayDialog("Delete Asset", $"Delete '{asset.name}'?", "Delete", "Cancel"))
-                {
-                    var path = AssetDatabase.GetAssetPath(asset);
-                    AssetDatabase.DeleteAsset(path);
-                }
-            }),
+            Tooltip = "Move this asset to the trash",
+            Action = deleteAction ?? (asset => ForgeAssetDeletion.MoveToTrash(asset)),
             Color = Colors.AccentRed,
             Width = 24
         };

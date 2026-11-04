@@ -2541,12 +2541,9 @@ namespace FarEmerald.PlayForge.Extended.Editor
                 });
                 menu.AddItem(new GUIContent("Delete"), false, () =>
                 {
-                    if (EditorUtility.DisplayDialog("Delete Asset", $"Delete '{asset.name}'?", "Delete", "Cancel"))
-                    {
-                        AssetDatabase.DeleteAsset(AssetDatabase.GetAssetPath(asset));
-                        RefreshAssetCache();
-                        RefreshViewList();
-                    }
+                    if (!ForgeAssetDeletion.MoveToTrash(asset)) return;
+                    RefreshAssetCache();
+                    RefreshViewList();
                 });
                 menu.ShowAsContext();
             };
