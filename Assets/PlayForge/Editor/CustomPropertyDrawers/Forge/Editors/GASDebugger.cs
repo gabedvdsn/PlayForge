@@ -131,11 +131,11 @@ namespace FarEmerald.PlayForge.Extended.Editor
         // WINDOW SETUP
         // ═══════════════════════════════════════════════════════════════════════════
 
-        [MenuItem("PlayForge/GAS Debugger", false, 11)]
+        [MenuItem("Window/PlayForge/GAS Debugger", false, 11)]
         public static void ShowWindow()
         {
             var window = GetWindow<GASDebugger>();
-            window.titleContent = new GUIContent("GAS Debug", EditorGUIUtility.IconContent("d_UnityEditor.DebugInspectorWindow").image);
+            window.titleContent = new GUIContent("GAS Debugger", EditorGUIUtility.IconContent("d_UnityEditor.DebugInspectorWindow").image);
             window.minSize = new Vector2(800, 500);
         }
 
@@ -376,7 +376,7 @@ namespace FarEmerald.PlayForge.Extended.Editor
                 }
             };
 
-            toolbar.Add(new Label("GAS Debug")
+            toolbar.Add(new Label("GAS Debugger")
             {
                 style =
                 {

@@ -224,7 +224,7 @@ namespace FarEmerald.PlayForge.Extended.Editor
             tagSection.Add(tagStatsLabel);
             
             // General Preferences
-            var generalSection = CreateSettingsSection("General", "Manager preferences", Colors.AccentOrange);
+            var generalSection = CreateSettingsSection("General", "Window preferences", Colors.AccentOrange);
             scrollView.Add(generalSection);
             
             var autoRefreshToggleRow = CreateSettingRow("Auto-refresh on window focus");
@@ -248,7 +248,7 @@ namespace FarEmerald.PlayForge.Extended.Editor
             generalSection.Add(notifyToggleRow);
             
             // Editor Settings
-            var editorSection = CreateSettingsSection("Inspector", "Manager preferences", Colors.AccentCyan);
+            var editorSection = CreateSettingsSection("Inspector", "Asset inspector timing", Colors.AccentCyan);
             scrollView.Add(editorSection);
             
             // Each delay is a number field and a slider, saved through one method. The number field's range check was
@@ -286,7 +286,7 @@ namespace FarEmerald.PlayForge.Extended.Editor
             var resetSettingsBtn = CreateButton("Reset All Settings", () =>
             {
                 if (EditorUtility.DisplayDialog("Reset Settings",
-                        "Reset every PlayForge Manager setting to its default? Templates and template tags are kept.",
+                        "Reset every one of The Forge's settings to its default? Templates and template tags are kept.",
                         "Reset", "Cancel"))
                     ResetAllSettings();
             });

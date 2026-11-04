@@ -17,10 +17,10 @@ namespace FarEmerald.PlayForge.Extended.Editor
         private double _lastRefreshTime;
         private List<GameplayAbilitySystem> _cachedSystems = new();
         
-        [MenuItem("PlayForge/Tag Debugger", false, 21)]
+        [MenuItem("Window/PlayForge/Tag Debugger", false, 21)]
         public static void ShowWindow()
         {
-            var window = GetWindow<RuntimeTagViewer>("Runtime Tags");
+            var window = GetWindow<RuntimeTagViewer>("Tag Debugger");
             window.minSize = new Vector2(300, 200);
         }
         

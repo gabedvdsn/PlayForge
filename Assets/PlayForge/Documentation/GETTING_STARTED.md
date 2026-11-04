@@ -36,7 +36,7 @@ sequences), with cost and cooldown expressed as effects. Full pipeline reference
 
 ## Quickstart: a damage ability in ~10 minutes
 
-Everything below can be done from **PlayForge → The Forge** (Create tab), or via
+Everything below can be done from **Window → PlayForge → The Forge** (Create tab), or via
 the `Create → PlayForge` asset menu.
 
 1. **Attribute** — create `Attribute` asset "Health".
@@ -87,14 +87,14 @@ string perLevel = impact.FormatTotal();           // "20/30/40/50"
 
 ## Tooling tour
 
-- **The Forge** (`PlayForge → The Forge`) — create/browse/analyze every asset:
+- **The Forge** (`Window → PlayForge → The Forge`) — create/browse/analyze every asset:
   level-range columns, ability description dropdowns, per-asset visualizers
   (double-click a row), balance analysis, tag declaration (Create → Tags).
-- **GAS Debugger** (`PlayForge → GAS Debugger`) — live entity
+- **GAS Debugger** (`Window → PlayForge → GAS Debugger`) — live entity
   state in play mode: attributes, active effects, abilities, frame impacts.
-- **Golden tests** (`PlayForge → Run Golden Tests`) — the framework's behavioral
+- **Golden tests** (the Test Runner's EditMode tab, `FarEmerald.PlayForge.Tests.Golden`) — the framework's behavioral
   contract; run after upgrading.
-- **Audit** (`PlayForge → Audit Effect Impact Deliveries`) — reports every effect's
+- **Audit** (`Window → PlayForge → Audit Effect Impact Deliveries`) — reports every effect's
   derived delivery and flags review-worthy authoring shapes.
 
 ## Logging

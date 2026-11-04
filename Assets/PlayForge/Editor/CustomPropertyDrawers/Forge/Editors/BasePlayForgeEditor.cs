@@ -826,8 +826,8 @@ namespace FarEmerald.PlayForge.Extended.Editor
                 bottomButtonRow.Add(vizBtn);
             }
             
-            // Open in Manager button
-            var openBtn = CreateHeaderButton("⊞", "Open in Manager", Colors.AccentBlue, () => OnOpenInManager());  //new Color(0.3f, 0.5f, 0.7f)
+            // Open in The Forge button
+            var openBtn = CreateHeaderButton("⊞", "Open in The Forge", Colors.AccentBlue, () => OnOpenInManager());  //new Color(0.3f, 0.5f, 0.7f)
             openBtn.style.marginLeft = ButtonSpacing;
             bottomButtonRow.Add(openBtn);
             

@@ -11,6 +11,8 @@ tracks each fix below by its ID.
 - The samples moved to `Samples~`, so Package Manager imports them on request: **Demos** and **Code Examples**. The
   TaskSequence and group process examples no longer compile into the runtime.
 - UniTask is pinned to 2.5.11.
+- The menu moved under **Window → PlayForge**, and each window's title matches its menu item. The main window is
+  **The Forge** everywhere. Run Golden Tests left the menu: the Test Runner runs the golden scenarios.
 - Pausing a process holds it in place: it stops stepping at once, and on resume it picks up its run if it can hold
   one.
 - The process hierarchy follows transforms: a process spawned at `SceneRoot` is GameRoot's child.

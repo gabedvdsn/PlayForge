@@ -231,7 +231,7 @@ namespace FarEmerald.PlayForge.Extended.Editor
             {
                 EditorUtility.DisplayDialog("Template Not Found", 
                     $"The {templateKey} template is not configured or the asset was deleted.\n\n" +
-                    "Configure it in PlayForge Manager > Settings > Assets > Effect Templates.", "OK");
+                    "Configure it in The Forge > Settings > Assets > Effect Templates.", "OK");
                 return;
             }
             

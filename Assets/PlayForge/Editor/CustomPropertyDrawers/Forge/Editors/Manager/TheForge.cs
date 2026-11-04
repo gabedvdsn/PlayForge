@@ -11,13 +11,14 @@ using static FarEmerald.PlayForge.Extended.Editor.ForgeDrawerStyles;
 namespace FarEmerald.PlayForge.Extended.Editor
 {
     /// <summary>
-    /// PlayForge Manager - Central hub for managing PlayForge assets.
+    /// The Forge - Central hub for managing PlayForge assets.
     /// Split into partial classes for maintainability:
-    /// - PlayForgeManager.cs (this file) - Core window, header, tab navigation
-    /// - PlayForgeManager.CreateTab.cs - Create tab with statistics
-    /// - PlayForgeManager.ViewTab.cs - View tab with spreadsheet/tags
-    /// - PlayForgeManager.SettingsTab.cs - Settings with General/Assets tabs
-    /// - PlayForgeManager.Utilities.cs - Shared helper methods
+    /// - TheForge.cs (this file) - Core window, header, tab navigation
+    /// - TheForge.CreateTab.cs - Create tab with statistics
+    /// - TheForge.ViewTab.cs - View tab with spreadsheet/tags
+    /// - TheForge.AnalysisTab.cs - Analysis tab with power scores
+    /// - TheForge.SettingsTab.cs - Settings with General/Assets tabs
+    /// - TheForge.Utilities.cs - Shared helper methods
     /// </summary>
     public partial class TheForge : EditorWindow
     {
@@ -25,7 +26,8 @@ namespace FarEmerald.PlayForge.Extended.Editor
         // Constants & Static Data
         // ═══════════════════════════════════════════════════════════════════════════
         
-        private const string WINDOW_TITLE = "PlayForge Manager";
+        // The title is the menu item's name. It said "PlayForge Manager" (ED-19)
+        private const string WINDOW_TITLE = "The Forge";
         internal const string PREFS_PREFIX = "PlayForge_";
         internal const int COLOR_INDICATOR_WIDTH = 3;
         internal const string TAGS_VIEW_MARKER = "__TAGS__";
@@ -85,7 +87,8 @@ namespace FarEmerald.PlayForge.Extended.Editor
         // Window Management
         // ═══════════════════════════════════════════════════════════════════════════
         
-        [MenuItem("PlayForge/The Forge", false, 0)]
+        // Under Window, where the Asset Store expects a package's menu (rule 2.5.1.a, ED-19)
+        [MenuItem("Window/PlayForge/" + WINDOW_TITLE, false, 0)]
         public static void ShowWindow()
         {
             var window = GetWindow<TheForge>();

@@ -49,10 +49,10 @@ namespace FarEmerald.PlayForge
         private static readonly Color SynchronousProcessColor = new Color(1f, .75f, .1f);
         private const float TypeIndicatorWidth = 3f;
         
-        [MenuItem("PlayForge/Process Control", false, 11)]
+        [MenuItem("Window/PlayForge/Process Control", false, 11)]
         public static void ShowWindow()
         {
-            var window = GetWindow<ProcessControlDebugger>("Process Debugger");
+            var window = GetWindow<ProcessControlDebugger>("Process Control");
             window.minSize = new Vector2(400, 300);
         }
 

@@ -241,7 +241,7 @@ Delivery derivation (`ResolveDelivery`):
 | + periodic ticks | `Periodic` (`ReverseImpactOnRemoval` flagged: rollback no longer exists) |
 | TickOnApplication-only trap | `Continuous` for Multiply/Override (flagged), else `OnApply` |
 
-**PlayForge → Audit Effect Impact Deliveries** reports every asset's derived delivery and
+**Window → PlayForge → Audit Effect Impact Deliveries** reports every asset's derived delivery and
 flags the shapes above — read-only, nothing is written.
 
 Deleted outright: `IsSustainedModifier()`, the Mode A/B inference, `TickAttribute`,
@@ -251,7 +251,7 @@ Deleted outright: `IsSustainedModifier()`, the Mode A/B inference, `TickAttribut
 
 ## 8. Verification
 
-`Assets/PlayForge/Tests/Editor/PlayForgeGoldenTests.cs` — **PlayForge → Run Golden Tests**
+`Assets/PlayForge/Tests/Editor/PlayForgeGoldenTests.cs` — the Test Runner's EditMode tab, `FarEmerald.PlayForge.Tests.Golden`
 (or batchmode `-executeMethod FarEmerald.PlayForge.Tests.PlayForgeGoldenTests.RunAll`).
 Scenarios pin: multiplicative/pooled buff add/remove ordering (the 50→60→72→60→50 case),
 item modifier reversal, HoT permanence through expiry, clamp + history reproducibility,

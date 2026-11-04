@@ -12,7 +12,7 @@ namespace FarEmerald.PlayForge.Extended
     /// </summary>
     public static class ImpactModelMigrationTool
     {
-        [MenuItem("PlayForge/Audit Effect Impact Deliveries")]
+        [MenuItem("Window/PlayForge/Audit Effect Impact Deliveries")]
         public static void AuditAll()
         {
             var guids = AssetDatabase.FindAssets("t:GameplayEffect");

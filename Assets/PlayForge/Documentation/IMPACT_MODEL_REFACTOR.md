@@ -13,13 +13,13 @@ Amendment (2026-07-14): entries are **derived on every `Generate()`, never seria
 half-authored inspector state into assets; the single quad remains the authored surface
 until a multi-entry drawer ships, at which point an explicitly-authored entry list can take
 precedence over derivation. The migration tool became the read-only
-**PlayForge → Audit Effect Impact Deliveries**.
+**Window → PlayForge → Audit Effect Impact Deliveries**.
 
 Remaining follow-ups: multi-entry property drawer (unlocks authored entry lists + per-entry
 groups in the inspector), per-group payloads on `AttributeSystemCallbacks` (queries via
 `GetBreakdown`/`TryGetGroupValue` cover the UX case), GASDebugger modernization (currently
 renders through the compatibility `RetainedGroups` projection).
-Verification: **PlayForge → Run Golden Tests**.
+Verification: the golden tests, in the Test Runner's EditMode tab.
 Paths relative to `Assets/PlayForge/Runtime/PlayForge/`.
 
 ---

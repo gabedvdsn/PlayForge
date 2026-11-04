@@ -14,7 +14,7 @@ namespace FarEmerald.PlayForge.Tests
     /// expected-red instead; no scenario uses it, and none may (SP-16 in Docs/REFACTOR_PLAN.md).
     /// S13 onward carry the tracker ID they pin in their names.
     ///
-    /// Run from the menu (PlayForge → Run Golden Tests) or headless; RunAll exits batch mode
+    /// Run in the Test Runner (GoldenScenarioTests) or headless; RunAll exits batch mode
     /// itself, with 1 on failure:
     ///   Unity -batchmode -projectPath &lt;proj&gt;
     ///         -executeMethod FarEmerald.PlayForge.Tests.PlayForgeGoldenTests.RunAll
@@ -40,9 +40,6 @@ namespace FarEmerald.PlayForge.Tests
 
         private static readonly List<Result> results = new();
         private static Result current;
-
-        [MenuItem("PlayForge/Run Golden Tests")]
-        public static void RunFromMenu() => RunAll();
 
         /// <summary>
         /// Every scenario, in the order RunAll runs them. GoldenScenarioTests runs each as a test case (SP-18).
