@@ -10,24 +10,17 @@ left. For a stat such as Strength, the two are often the same. The Attribute Set
 [ATTRIBUTE_SETS.md](ATTRIBUTE_SETS.md)).
 
 Attribute sets, effects, validation rules and workers refer to the attribute asset itself. An attribute has no asset
-tag. Each section below matches the inspector section of the same name.
+tag. Each section below matches the inspector section of the same name. A collapsed section shows one line about what
+it holds, such as the abbreviation or how many assets use the attribute.
 
-## Definition
+## Identity
 
 - **Name**: the attribute's display name. Give each attribute its own Name: some lookups compare attributes by Name,
   such as an attribute worker matching the attribute it watches.
-- **Abbreviation**: a short form, such as HP. The inspector header shows it after the Name.
-- **Description**: free text for your UI. The inspector header shows it.
+- **Abbreviation**: a short form, such as HP. The collapsed section shows it.
+- **Description**: free text for your UI.
 - **Textures**: icons, each paired with a tag. The texture tagged `Primary` is the attribute's icon. Without one, the
   first texture is used.
-
-## Usage
-
-A reminder of where an attribute is used: in Attribute Sets, which give its starting values; in Gameplay Effects, which
-change it; in validation rules, which check it against a threshold; and in ability costs, which spend it.
-
-**Find All References** pings the attribute in the Project window and shows how to find what uses it with Unity Search:
-search for `ref:` followed by the asset's GUID, which the message gives.
 
 ## Local Data
 
@@ -37,3 +30,9 @@ Object fields take project assets, not scene objects.
 
 PlayForge doesn't read an attribute's Local Data itself. Your code and workers can, with
 `attribute.TryGetLocalData(key, out var data)`. The first row with that key wins.
+
+## Used By
+
+The PlayForge assets that refer to this attribute, each with its type icon: the Attribute Sets that give its starting
+values, the Gameplay Effects that change it, and the validation rules and ability costs that check or spend it. Click
+a row to select the asset. The list follows the project as it changes.

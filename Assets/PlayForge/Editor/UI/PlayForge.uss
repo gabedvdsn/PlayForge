@@ -296,6 +296,57 @@
     display: none;
 }
 
+/* ─── Fields: values shown but not edited, rows of buttons, messages and notes ───────────────────────────────────── */
+
+/* A value the inspector shows but doesn't edit, such as the asset tag: Unity's text field, read-only and without its
+   box, in secondary text, so the value can still be selected and copied */
+.pf-root .pf-value-field > .unity-base-text-field__input {
+    background-color: rgba(0, 0, 0, 0);
+    border-width: 0;
+    color: var(--pf-secondary-text);
+}
+
+.pf-root .pf-value-field > .unity-base-text-field__input .unity-text-element {
+    color: var(--pf-secondary-text);
+}
+
+/* A value that disagrees with what it should be, such as a stored asset tag the name no longer gives */
+.pf-root .pf-value-field--warning > .unity-base-text-field__input,
+.pf-root .pf-value-field--warning > .unity-base-text-field__input .unity-text-element {
+    color: var(--pf-warning-text);
+}
+
+/* The button that sets such a value right */
+.pf-root .pf-value-field__button {
+    flex-shrink: 0;
+    margin: 0 0 0 4px;
+}
+
+/* Buttons that share a row, each taking an equal part */
+.pf-root .pf-button-row {
+    flex-direction: row;
+    margin-top: 4px;
+}
+
+.pf-root .pf-button-row > .unity-button {
+    flex-grow: 1;
+    flex-basis: 0;
+}
+
+/* A message is a Unity help box, in the flow under the field it is about */
+.pf-root .unity-help-box {
+    background-color: var(--pf-help-box);
+    border-color: var(--pf-help-box-border);
+}
+
+/* A line where values would be, such as in a multiple selection */
+.pf-root .pf-note {
+    margin: 2px 0;
+    padding: 0;
+    color: var(--pf-secondary-text);
+    white-space: normal;
+}
+
 /* ─── Used By: the assets that refer to this one, each a row that selects it ─────────────────────────────────────── */
 
 .pf-root .pf-used-by__row {

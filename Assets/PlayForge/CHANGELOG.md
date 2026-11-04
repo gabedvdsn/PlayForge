@@ -11,6 +11,11 @@ tracks each fix below by its ID.
   page, through one table of links in the editor.
 
 ### Changed
+- The Item inspector's sections are Identity, Leveling, Tags, Effects, Abilities, Workers, Local Data and Used By, in
+  the style doc's order. Identity holds the asset tag. Leveling holds the level link that Level Source did, with the
+  provider in Unity's object field, whose right-click menu picks one type; a help box says when none is set. Each
+  collapsed section shows one line, such as "Levels 1–20 · from Hero", every section's Import and Clear work, and Used
+  By lists the assets that use the item (ED-37).
 - The Attribute inspector's sections are Identity, Local Data and Used By, which lists the assets that use the
   attribute; a row selects its asset. It replaces Find All References, a dialog that told you how to search. A
   collapsed section shows a one-line summary, and every inspector's text fields line up with its other fields' labels

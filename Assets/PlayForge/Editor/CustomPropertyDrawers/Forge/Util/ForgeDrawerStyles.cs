@@ -866,6 +866,17 @@ namespace FarEmerald.PlayForge.Extended.Editor
             return hint;
         }
 
+        /// <summary>
+        /// A line where values would be, such as in a multiple selection, in secondary text from the style sheet. A
+        /// hint label set its own 10 px size and color in code (ED-37).
+        /// </summary>
+        public static Label CreateNote(string text)
+        {
+            var note = new Label(text);
+            note.AddToClassList("pf-note");
+            return note;
+        }
+
         public static Label CreateFieldLabel(string text, int fontSize = 12)
         {
             var label = new Label(text);

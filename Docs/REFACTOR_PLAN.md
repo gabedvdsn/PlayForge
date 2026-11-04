@@ -549,6 +549,7 @@ had no letter in the review. TS-AA onward came from the test project.
 | ED-34 | H | 4 | Opening a scaler writes to it while drawing. On an effect with no level link, Lock mode cuts its per-level table to one value; the other modes resize the table to Max Level, a Max Level of 0 or less becomes 10, and building the drawer clones a scaler that shares its reference id. Now nothing is written while drawing: a table keeps its length until the user changes it, and a shared scaler shows a warning with a button that makes a separate copy | `ScalerDrawer.cs:125-180, 285, 489-529` | fixed |
 | ED-36 | M | 4 | The asset header scrolls away with the content. It stays at the top of the inspector while the content scrolls under it (Decision 29), following the Inspector's scroll view by its events, so nothing polls (ED-11) | `BasePlayForgeEditor.cs` (`CreateInspectorGUI`), `ForgeAssetHeader.cs` (`StickTo`) | fixed |
 | ED-35 | M | 4 | Whole-asset import copies the template and level-link fields (`_template`, `_linkedSource`) and doesn't skip the nested `Definition.Name` | `BasePlayForgeEditor.cs` (`ImportFromAsset`) | open |
+| ED-37 | M | 4 | The asset inspectors don't follow `Docs/EDITOR_STYLE.md`: their sections stray from its order, Level Source sits apart from Leveling, a collapsed section shows nothing, sentences explain the fields, the link state sits in tinted boxes with colored borders, and many sections' Import and Clear only log a warning. Each inspector is redone in Phase 4's fifth step. Fixed so far: the Attribute inspector (`ed6295a`, with ED-15), and the Item inspector: the style doc's order, Leveling with the level link and its provider in Unity's object field, the asset tag under the name, a summary on each section, Import and Clear on each, Used By, and no look set in code. Left: the Entity, Attribute Set, Ability and Effect inspectors | `ItemEditor.cs`, `EntityIdentityEditor.cs`, `AttributeSetEditor.cs`, `AbilityEditor.cs`, `EffectEditor.cs` | open |
 
 The design questions behind Phase 4's rows, each with its evidence, are in the UI interview doc of 2026-11-03,
 https://claude.ai/artifact/BbnGybqgX3spJsT6HoTafp. Its answers (Decision 18) settle ED-8, ED-16, ED-19 and ED-12's
@@ -565,9 +566,9 @@ Phase 2 part, and set Phase 4's direction.
    scalers of Decision 28 (ED-32, ED-33); The Forge, with ED-13, ED-15,
    ED-21, ED-27 and ED-31; one runtime debugger for the GAS, Process and Tag views (Q4), with ED-4 and ED-5; and the
    Visualizer, with ED-9.
-   The asset inspectors go one at a time, each following the style doc: the Attribute inspector first (done), then
-   the Item, Entity, Attribute Set and Ability inspectors, then the Effect inspector with ED-2 and ED-3, then the
-   Import window and shared scalers (ED-32, ED-33), which also free ED-12's last part.
+   The asset inspectors go one at a time, each following the style doc (ED-37): the Attribute and Item inspectors
+   first (done), then the Entity, Attribute Set and Ability inspectors, then the Effect inspector with ED-2 and
+   ED-3, then the Import window and shared scalers (ED-32, ED-33), which also free ED-12's last part.
 
 ### Samples and packaging
 
@@ -651,6 +652,30 @@ GAS-4 with GAS-5, PC-6, and TS-I with PC-5.
 ## Log
 
 Record baselines, gate results and notable decisions here, newest first.
+
+- 2026-11-04, **Step 5: the Item inspector (ED-37).** The redesign's second surface. The new row ED-37 tracks how the
+  asset inspectors stray from the style doc, one inspector at a time, the Attribute inspector first.
+  - **Its sections:** Identity, Leveling, Tags, Effects, Abilities, Workers, Local Data and Used By, in the style doc's
+    order (Q9). Identity was Definition, and holds the asset tag under the name, in the kit's new
+    `ForgeAssetTagField`: a read-only text field in secondary text, whose Update shows while the stored tag differs.
+    The tag sat at the top of Tags.
+  - **Leveling** holds what Level Source did: Link Mode, then the item's own range, or its provider and the range the
+    provider gives. The provider is Unity's object field, whose right-click menu picks one type (the style doc's "link
+    filter"), and a help box says when none is set. Link and Unlink Ability & Effects follow as plain buttons. Level
+    Source drew the link in tinted boxes with colored borders, under sentences and a small bold heading.
+  - **Summaries:** each collapsed section shows one line, such as "Levels 1–20 · from Hero", "1 effect" or "None".
+  - **Import and Clear** work on every section. Seven of the eight only logged a warning. They leave the name and the
+    asset tag, which identify the item (ED-35's rule).
+  - **Used By** lists the assets that use the item, such as an entity that starts with it or an effect linked to it.
+  - **No look in code:** the inspector sets no color, border or font in C#. The style sheet has new rules for value
+    fields, rows of buttons, help boxes and notes. The Attribute inspector's multiple-selection note uses them too.
+  - **Docs:** `ITEMS.md` and `ATTRIBUTES.md` follow the two inspectors, and their help topics name the new headings.
+    `ATTRIBUTES.md` still described Find All References.
+  - **Its tests,** `ED_37_The_Item_inspector_keeps_the_style_docs_sections`, `ED_37_The_Item_inspector_sets_no_look_in_code`,
+    `ED_37_The_Item_inspector_lists_what_uses_it` and `ED_37_The_Level_Provider_field_links_the_item`, were seen failing
+    first. `ED_12_An_edit_in_the_Item_inspector_undoes` finds the provider in Leveling now.
+  - **Tests:** PlayMode 945: 938 pass, 0 fail and 7 planted are skipped, in three orders. Planted 7 of 7; EditMode
+    378 of 378.
 
 - 2026-11-04, **Step 5 begins: the Attribute inspector.** The first surface of Phase 4's redesign, in the style doc's
   rules.

@@ -14,7 +14,7 @@ namespace FarEmerald.PlayForge.Extended.Editor
 {
     /// <summary>
     /// Base class for all PlayForge asset inspectors: a header with the asset's name and type, and the content below it.
-    /// Both scroll together in the Inspector's own scroll view (Q17).
+    /// The content scrolls in the Inspector's own scroll view, and the header stays at its top (Decision 29).
     /// </summary>
     public abstract class BasePlayForgeEditor : UnityEditor.Editor
     {
@@ -695,8 +695,7 @@ namespace FarEmerald.PlayForge.Extended.Editor
         {
             if (valueLabel == null) return;
 
-            var (result, display, isUnknown) = GenerateAssetTag(assetName, typeName);
-            var stale = !isUnknown && (stored.Name != result || stored.DisplayName != display);
+            var (result, stale) = AssetTagState(assetName, typeName, stored);
             valueLabel.text = result;
             valueLabel.style.color = stale ? Colors.AccentYellow : Colors.AssetTagText;
             valueLabel.tooltip = stale ? $"Stored as \"{stored.Name}\". Update stores the tag this name gives." : null;
@@ -713,6 +712,40 @@ namespace FarEmerald.PlayForge.Extended.Editor
             update.clickable = new Clickable(sync);
             update.style.display = stale ? DisplayStyle.Flex : DisplayStyle.None;
         }
+
+        /// <summary>
+        /// Shows the asset tag a name gives in the kit's asset tag field. When the stored tag differs, the tag shows in
+        /// warning text and Update calls sync. Showing never writes (ED-12).
+        /// </summary>
+        private protected void ShowAssetTag(ForgeAssetTagField field, string assetName, string typeName, Tag stored, Action sync)
+        {
+            if (field == null) return;
+            var (result, stale) = AssetTagState(assetName, typeName, stored);
+            field.Show(result, stale ? stored.Name : null, sync);
+        }
+
+        // The tag a name gives, and whether the stored one differs from it
+        private (string tag, bool stale) AssetTagState(string assetName, string typeName, Tag stored)
+        {
+            var (result, display, isUnknown) = GenerateAssetTag(assetName, typeName);
+            return (result, !isUnknown && (stored.Name != result || stored.DisplayName != display));
+        }
+
+        // ═══════════════════════════════════════════════════════════════════════════
+        // Summaries: the line a collapsed section shows
+        // ═══════════════════════════════════════════════════════════════════════════
+
+        /// <summary>A count in a summary, as in "None", "1 entry" or "3 entries".</summary>
+        protected static string CountOf(int count, string one, string many) =>
+            count == 0 ? "None" : count == 1 ? $"1 {one}" : $"{count} {many}";
+
+        /// <summary>A level range in a summary, as in "Levels 1–4", or "Level 3" when it holds one level.</summary>
+        protected static string LevelRange(int starting, int max) =>
+            starting == max ? $"Level {starting}" : $"Levels {starting}–{max}";
+
+        /// <summary>An asset's PlayForge name, or its file name when it has none, as Used By names it.</summary>
+        protected static string NameOf(BaseForgeAsset asset) =>
+            asset == null ? "None" : string.IsNullOrEmpty(asset.GetName()) ? asset.name : asset.GetName();
 
         /// <summary>
         /// Stores the tag a name gives, recorded for Undo and marked modified. A rename calls it in the same step as the
@@ -857,17 +890,7 @@ namespace FarEmerald.PlayForge.Extended.Editor
         protected void BuildLinkToButton<T>(VisualElement parent, BaseForgeLevelProvider src) where T : BaseForgeLevelProvider
         {
             // Link to Entity button
-            var linkAssetButton = new Button(() =>
-            {
-                _pickerControlId = GUIUtility.GetControlID(FocusType.Passive);
-                _waitingForPicker = true;
-                _pickerType = typeof(T);
-                _pickerCallback = obj =>
-                {
-                    if (obj is T asset) LinkTo(src, asset);
-                };
-                ShowProviderPicker<T>(src);
-            });
+            var linkAssetButton = new Button(() => PickProvider<T>(src));
             linkAssetButton.text = GetProviderTypeName(typeof(T));
             linkAssetButton.tooltip = $"Link to an {GetProviderTypeName(typeof(T))} to use its level range";
             linkAssetButton.style.marginRight = 4;
@@ -876,8 +899,24 @@ namespace FarEmerald.PlayForge.Extended.Editor
             parent.Add(linkAssetButton);
         }
 
-        /// <summary>Links an asset to the level provider the picker chose, unless the link would make a loop.</summary>
-        internal void LinkTo(BaseForgeLevelProvider src, BaseForgeLevelProvider provider)
+        // Opens the object picker on one type of level provider, and links the asset to the one chosen
+        private void PickProvider<T>(BaseForgeLevelProvider src) where T : BaseForgeLevelProvider
+        {
+            _pickerControlId = GUIUtility.GetControlID(FocusType.Passive);
+            _waitingForPicker = true;
+            _pickerType = typeof(T);
+            _pickerCallback = obj =>
+            {
+                if (obj is T asset) LinkTo(src, asset);
+            };
+            ShowProviderPicker<T>(src);
+        }
+
+        /// <summary>
+        /// Links an asset to the level provider the picker chose, unless the link would make a loop. Returns whether it
+        /// linked.
+        /// </summary>
+        internal bool LinkTo(BaseForgeLevelProvider src, BaseForgeLevelProvider provider)
         {
             if (src.HasCircularDependency(provider, out var issue, out var chain))
             {
@@ -885,7 +924,7 @@ namespace FarEmerald.PlayForge.Extended.Editor
                                $"\nRoot Issue: {issue.GetProviderName()} is linked to {src.GetProviderName()}." +
                                $"\nLink Chain: {chain}." +
                                $"\n");
-                return;
+                return false;
             }
 
             RecordLinkChange($"Link to {provider.GetProviderName()}", src);
@@ -893,6 +932,51 @@ namespace FarEmerald.PlayForge.Extended.Editor
             MarkDirty(src);
             RebuildLevelSourceContent();
             RebuildLevelingContent();
+            return true;
+        }
+
+        /// <summary>
+        /// The level provider a linked asset takes its levels from, in Unity's object field, with its label in the
+        /// Inspector's label column. Choosing a provider links the asset, as one Undo step, unless the link would make a
+        /// loop; clearing the field leaves the asset linked to nothing. The field's right-click menu picks a provider of
+        /// one type (Docs/EDITOR_STYLE.md: the link filter goes in its right-click menu). The provider showed as a name in
+        /// a tinted box, under a row of Link to buttons, one per type (ED-37).
+        /// </summary>
+        protected ObjectField CreateLevelProviderField(BaseForgeLevelProvider src)
+        {
+            var field = new ObjectField("Level Provider")
+            {
+                name = "LevelProvider",
+                objectType = typeof(BaseForgeLevelProvider),
+                allowSceneObjects = false,
+                tooltip = "The asset this one takes its levels from",
+            };
+            field.SetValueWithoutNotify(src.LinkedProvider);
+            field.AddToClassList(ObjectField.alignedFieldUssClassName);
+            field.RegisterValueChangedCallback(change =>
+            {
+                var provider = change.newValue as BaseForgeLevelProvider;
+                if (provider == src.LinkedProvider) return;
+                if (provider == null)
+                {
+                    RecordLinkChange("Clear Level Provider", src);
+                    src.LinkedProvider = null;
+                    MarkDirty(src);
+                    RebuildLevelSourceContent();
+                    RebuildLevelingContent();
+                    return;
+                }
+                if (!LinkTo(src, provider)) field.SetValueWithoutNotify(src.LinkedProvider);
+            });
+            field.AddManipulator(new ContextualMenuManipulator(menu =>
+            {
+                menu.menu.AppendAction("Pick an Entity", _ => PickProvider<EntityIdentity>(src));
+                menu.menu.AppendAction("Pick an Ability", _ => PickProvider<Ability>(src));
+                menu.menu.AppendAction("Pick an Effect", _ => PickProvider<GameplayEffect>(src));
+                menu.menu.AppendAction("Pick an Item", _ => PickProvider<Item>(src));
+                menu.menu.AppendAction("Pick an Attribute Set", _ => PickProvider<AttributeSet>(src));
+            }));
+            return field;
         }
         
         protected void ShowProviderPicker<T>(BaseForgeLevelProvider src) where T : BaseForgeLevelProvider

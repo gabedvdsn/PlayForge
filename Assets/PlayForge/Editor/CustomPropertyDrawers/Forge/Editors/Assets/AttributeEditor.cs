@@ -201,7 +201,7 @@ namespace FarEmerald.PlayForge.Extended.Editor
 
             if (IsMultiple)
             {
-                usedBySection.Content.Add(CreateHintLabel("Select one attribute to see what uses it."));
+                usedBySection.Content.Add(CreateNote("Select one attribute to see what uses it."));
                 return;
             }
             usedBy = new ForgeUsedBy(attribute);
@@ -222,9 +222,6 @@ namespace FarEmerald.PlayForge.Extended.Editor
                 localDataSection.Summary.text = IsMultiple ? "" : CountOf(attribute.LocalData?.Count ?? 0, "entry", "entries");
             if (usedBySection != null) usedBySection.Summary.text = usedBy == null ? "" : CountOf(usedBy.Count, "asset", "assets");
         }
-
-        private static string CountOf(int count, string one, string many) =>
-            count == 0 ? "None" : count == 1 ? $"1 {one}" : $"{count} {many}";
 
         // ═══════════════════════════════════════════════════════════════════════════
         // Abstract Implementations
