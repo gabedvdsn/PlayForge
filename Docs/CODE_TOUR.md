@@ -1,7 +1,7 @@
 # PlayForge refactor: code tour
 
 This tour lists the places where the refactor changed code, so you can open each one in your IDE and read it. It
-covers `01258b8..6c0c3fe` on `main`: 262 commits. Phase 0 ported Arcade Fighter's fixes, Phase 1 made the runtime
+covers `01258b8..ed6295a` on `main`: 265 commits. Phase 0 ported Arcade Fighter's fixes, Phase 1 made the runtime
 correct, Phase 2 got the package ready to release, Phase 3 made it cheaper to run and gave the two GAS hubs one core,
 and Phase 4 has begun. Each entry says what behaves differently and why, names its tracker IDs and Decisions, and
 points at the two or three places to read. `Docs/REFACTOR_PLAN.md` has every tracker row, the numbered Decisions,
@@ -10,8 +10,8 @@ and a Log of each batch's test results.
 ## How to use this
 
 - Paths are relative to the repo root.
-- Line numbers are as of commit `6c0c3fe`, the head of `main` on 2026-11-04. A later commit may move them, so each
-  entry also names the class and method to search for. `git show 6c0c3fe:<path>` shows a file as it was then.
+- Line numbers are as of commit `ed6295a`, the head of `main` on 2026-11-04. A later commit may move them, so each
+  entry also names the class and method to search for. `git show ed6295a:<path>` shows a file as it was then.
 - In Rider, Go to File accepts `path:line`. In Visual Studio, open the file, then Go To Line (Ctrl+G).
   A bare `:123` after a path means another line in the same file.
 - `git grep "<ID>"` finds the comment at each fix, and `git log --grep "<ID>"` finds its commit. Three exceptions:
@@ -31,7 +31,8 @@ and a Log of each batch's test results.
 
 Phase 4 redesigns the editor one surface at a time, and it starts where the UI interview's Q35 asks: with Undo and
 multi-editing, one inspector at a time, then no polling, then the smoke suite that gates the phase, then one style
-sheet and a kit of controls. The plan's Editor and UI section lists the phase's order. Each fix has a test in
+sheet and a kit of controls, then the redesign, one surface at a time. The plan's Editor and UI section lists the
+phase's order. Each fix has a test in
 Proving Grounds named after its ID, seen failing first.
 
 ### The Attribute inspector undoes every edit and edits a multiple selection (ED-12)
@@ -44,15 +45,15 @@ asset; ED-12's row lists what is left.
 
 - **IDs:** ED-12, commit `e1d1dd0`.
 - **Read:**
-  - `Assets/PlayForge/Editor/CustomPropertyDrawers/Forge/Editors/Assets/AttributeEditor.cs:135`, the three bound
+  - `Assets/PlayForge/Editor/CustomPropertyDrawers/Forge/Editors/Assets/AttributeEditor.cs:140`, the three bound
     fields. The inspector turns on `SupportsMultipleObjects` at `:17` and carries `[CanEditMultipleObjects]` at `:9`.
   - `Assets/PlayForge/Editor/CustomPropertyDrawers/Forge/Editors/BasePlayForgeEditor.cs:236` `CreateBoundTextField`,
     which binds a text field and writes when the edit is committed. `SupportsMultipleObjects` (`:199`) lets
-    `CreateInspectorGUI` take a multiple selection (`:496`), and `HeaderName` (`:229`) counts it in the header.
-  - `:520`, where every inspector's header follows the asset's changes, Undo and Redo among them, through
+    `CreateInspectorGUI` take a multiple selection (`:498`), and `HeaderName` (`:229`) counts it in the header.
+  - `:529`, where every inspector's header follows the asset's changes, Undo and Redo among them, through
     `TrackSerializedObjectValue`.
-- **Watch for:** with several assets selected, the header leaves out Open in The Forge (`:560`), and its menu leaves
-  out Template and Visualize (`:575`), since they act on one asset.
+- **Watch for:** with several assets selected, the header leaves out Open in The Forge (`:569`), and its menu leaves
+  out Template and Visualize (`:584`), since they act on one asset.
 - **Test:** `ED_12_An_edit_in_the_Attribute_inspector_undoes` and
   `ED_12_The_Attribute_inspector_edits_every_selected_attribute` in `InspectorUndoTests`. They build the whole
   inspector in a runtime panel, where its bindings run in batch mode.
@@ -82,7 +83,7 @@ Undo and Redo among them. Renames already undid in one step, since Phase 2.
   `62ed48e` (Ability).
 - **Read:**
   - `Assets/PlayForge/Editor/CustomPropertyDrawers/Forge/Editors/BasePlayForgeEditor.cs:205` `OnAssetChanged`, a
-    virtual no-op that the header's tracker at `:520` calls.
+    virtual no-op that the header's tracker at `:529` calls.
   - `Assets/PlayForge/Editor/CustomPropertyDrawers/Forge/Editors/Assets/EffectEditor.cs:155`, the Effect's override,
     which redraws Level Source when the mode it shows has changed, and `:172`, the bound Link Mode field. The other four
     inspectors do the same.
@@ -103,7 +104,7 @@ it changes first, so one Undo takes it back.
 - **Read:**
   - `Assets/PlayForge/Editor/CustomPropertyDrawers/Forge/Editors/BasePlayForgeEditor.cs:216` `RecordLinkChange`, and
     `ConfirmLinkChange` (`:209`), the hook the 13 confirmations ask through, which a test can answer.
-  - `:871` `LinkTo` and `:324` `AssignTemplate`, the two pickers' steps.
+  - `:880` `LinkTo` and `:326` `AssignTemplate`, the two pickers' steps.
   - `Assets/PlayForge/Editor/CustomPropertyDrawers/Forge/Editors/Assets/EffectEditor.cs:255`, Link Contained Effects
     recording the effect and its contained effects before it links them.
 - **Still open:** ED-31, the unlink dialogs that count with the editor rather than the asset, so they say 0.
@@ -221,19 +222,21 @@ off when the picker closes.
   and `:94` `OnEditorUpdate`.
 - **Test:** `ED_11_An_idle_inspector_listens_to_no_update` in `EditorPollingTests`.
 
-### The asset header scrolls with the content (ED-11)
+### The inspector keeps no scroll view of its own (ED-11)
 
 The header stayed put while the content scrolled under it. For that, each inspector hid the Inspector's own scroll
 view and gave its content one of its own, sized by measuring the window on two loops that ran every 200 and 300 ms for
-as long as the inspector was open. With the UI interview's Q17, the header scrolls with the content in the Inspector's
-own scroll view, so nothing is measured. The Forge's two Inspector delay settings, which those loops read, are gone.
+as long as the inspector was open. With the UI interview's Q17, the header first scrolled with the content in the
+Inspector's own scroll view, so nothing was measured. The Forge's two Inspector delay settings, which those loops read,
+are gone. Later the user asked for the header to stay at the top again (Decision 29), and ED-36 does that by the
+Inspector's scroll events, still measuring nothing on a timer.
 
 - **IDs:** ED-11, commit `88d0f3f`, Q17.
-- **Read:** `Assets/PlayForge/Editor/CustomPropertyDrawers/Forge/Editors/BasePlayForgeEditor.cs:504`, in
-  `CreateInspectorGUI`, where the header and a plain content element go into the root.
+- **Read:** `Assets/PlayForge/Editor/CustomPropertyDrawers/Forge/Editors/BasePlayForgeEditor.cs:507`, in
+  `CreateInspectorGUI`, where the header, a space and a plain content element go into the root.
 - **Watch for:** `BasePlayForgeEditor.contentScrollView` and `ForgeDrawerStyles.CreateScrollView` are gone. An
   inspector builds into the container `BuildInspectorContent` is handed.
-- **Test:** `ED_11_The_asset_header_scrolls_with_the_content` in `EditorPollingTests`.
+- **Test:** `ED_11_The_inspector_keeps_no_scroll_view_of_its_own` in `EditorPollingTests`.
 
 ### A drawer keeps its collapse state per asset (ED-18)
 
@@ -279,14 +282,14 @@ GAS Debugger take the theme instead of painting their windows dark gray.
 - **IDs:** ED-20, commit `f5832df`, Decision 20, Q13, Q18.
 - **Read:**
   - `Assets/PlayForge/Editor/UI/PlayForge.uss:8`, the Dark set, and `:46`, the Light set. The kit's rules follow:
-    the type icons' colors at `:119`, the asset header at `:156` and the section header at `:222`.
+    the type icons' colors at `:119`, the asset header at `:156` and the section header at `:235`.
   - `Assets/PlayForge/Editor/UI/ForgeTheme.cs:35` `Apply`, which gives a root the sheet and the theme's class. The
     sheet loads by its GUID (`:15`), so it's found whether the package is in `Packages` or in `Assets`.
   - `Assets/PlayForge/Editor/UI/Kit/ForgeGlyph.cs:79` `Draw`, the mockups' vector glyphs drawn with `Painter2D` in
     the color the sheet gives, and `:324` `ForgeTypeIcon`.
-  - `Assets/PlayForge/Editor/CustomPropertyDrawers/Forge/Editors/BasePlayForgeEditor.cs:552` `CreateEditorHeader`, and
-    `:571` `ShowAssetMenu`, which holds import, the template and Visualize.
-  - `Assets/PlayForge/Editor/CustomPropertyDrawers/Forge/Util/ForgeDrawerStyles.cs:514` `CreateCollapsibleSection`,
+  - `Assets/PlayForge/Editor/CustomPropertyDrawers/Forge/Editors/BasePlayForgeEditor.cs:561` `CreateEditorHeader`, and
+    `:580` `ShowAssetMenu`, which holds import, the template and Visualize.
+  - `Assets/PlayForge/Editor/CustomPropertyDrawers/Forge/Util/ForgeDrawerStyles.cs:516` `CreateCollapsibleSection`,
     which builds the kit's `ForgeSection` behind the same signature.
 - **Watch for:** a control in the kit sets no style in C#; a test checks the header and section headers.
 - **Test:** in `EditorSmokeTests`, run in both themes: `ED_20_An_inspector_takes_each_color_from_the_style_sheet`,
@@ -311,6 +314,39 @@ the glyph is sized and colored in Unity's own inspector too.
     what it does.
 - **Still open:** text symbols with no emoji form, such as a check mark or an arrow, go with each surface's redesign.
 - **Test:** `ED_20_No_editor_text_shows_an_emoji` in `EditorSourceTests`.
+
+### The asset header stays at the top (ED-36)
+
+The user looked at ED-20 in the editor and asked for the asset header to stay at the top of the inspector while the
+content scrolls under it (Decision 29), which reverses Q17's answer. The header now comes after the content, so it
+draws over it, and a space of its height holds its place at the top. It follows the Inspector's scroll view by its
+events and its own layout, and stops where its inspector ends. Before ED-11 it stayed put by hiding the Inspector's
+scroll view and measuring the window on timers; nothing polls now.
+
+- **IDs:** ED-36, commit `d851e30`, Decision 29.
+- **Read:**
+  - `Assets/PlayForge/Editor/UI/Kit/ForgeAssetHeader.cs:72` `StickTo`, and `:104` `Place`, which puts the header at
+    the view's top, no higher than its inspector's top and no lower than its end.
+  - `Assets/PlayForge/Editor/CustomPropertyDrawers/Forge/Editors/BasePlayForgeEditor.cs:509`, the space, and `:523`,
+    where the header goes in after the content.
+- **Test:** `ED_36_The_asset_header_stays_at_the_top_as_the_content_scrolls` in `EditorPollingTests`.
+
+### Step 5 begins: the Attribute inspector (ED-15)
+
+The redesign's first surface. Its sections are Identity, Local Data and Used By. Used By lists the PlayForge assets
+whose data refers to the attribute, each with its type icon, and a row selects its asset; it follows the project as it
+changes (Q30). It replaces a section of sentences about where attributes can go, and a Find All References button that
+opened a dialog telling the user how to search. A collapsed section shows one line, and a bound text field's label
+takes the Inspector's one label column in every inspector.
+
+- **IDs:** ED-15 (its first part), commit `ed6295a`.
+- **Read:**
+  - `Assets/PlayForge/Editor/UI/Kit/ForgeUsedBy.cs:38` `UsersOf`, and `:55` `Rebuild`, which draws the rows.
+  - `Assets/PlayForge/Editor/CustomPropertyDrawers/Forge/Editors/Assets/AttributeEditor.cs:83`, the sections in
+    order; `:191` `BuildUsedBySection`; and `:218` `UpdateSummaries`, the line each collapsed section shows.
+  - `Assets/PlayForge/Editor/CustomPropertyDrawers/Forge/Editors/BasePlayForgeEditor.cs:243`, the label column.
+- **Still open:** ED-15's Validate All, with The Forge's redesign.
+- **Test:** `ED_15_The_Attribute_inspector_lists_what_uses_it` in `ForgeInspectorTests`.
 
 ## Phase 3
 
@@ -1560,7 +1596,7 @@ Markdown, and only on a click (Asset Store rule 2.5.1.d). Six reference pages ar
   - `Assets/PlayForge/Editor/CustomPropertyDrawers/Forge/Util/ForgeDocs.cs:79` `ForgeDocs.Open`, with the `Topics`
     table at `:17` and `DocumentationFolder` at `:88`, which finds the folder in a package or under `Assets`.
   - `Assets/PlayForge/Editor/CustomPropertyDrawers/Forge/Editors/BasePlayForgeEditor.cs:147`
-    `BasePlayForgeEditor.GetDocumentationTopic`, read by `CreateEditorHeader` at `:562`.
+    `BasePlayForgeEditor.GetDocumentationTopic`, read by `CreateEditorHeader` at `:571`.
   - `Assets/PlayForge/Editor/CustomPropertyDrawers/Forge/Util/ForgeDrawerStyles.cs:419` `SectionConfig.HelpTopic`.
 - **New:** `ForgeDocs`; `Documentation/ABILITIES.md`, `EFFECTS.md`, `ITEMS.md`, `ENTITIES.md`, `ATTRIBUTES.md`,
   `ATTRIBUTE_SETS.md`.
@@ -1590,8 +1626,8 @@ records the name and the tag it gives in one undoable step. Item and Effect prev
 
 - **IDs:** ED-12 (its Phase 2 part; the row stays open for Phase 4's Undo, multi-editing and prefab overrides).
 - **Read:**
-  - `Assets/PlayForge/Editor/CustomPropertyDrawers/Forge/Editors/BasePlayForgeEditor.cs:685`
-    `BasePlayForgeEditor.ShowAssetTag`, and `StoreAssetTag` (`:712`).
+  - `Assets/PlayForge/Editor/CustomPropertyDrawers/Forge/Editors/BasePlayForgeEditor.cs:694`
+    `BasePlayForgeEditor.ShowAssetTag`, and `StoreAssetTag` (`:721`).
   - `Assets/PlayForge/Editor/CustomPropertyDrawers/Forge/Editors/Assets/AbilityEditor.cs:157`, the rename callback,
     and `SyncAssetTag` (`:1208`). The other four editors follow the same shape.
 - **New:** `BasePlayForgeEditor.ShowAssetTag` and `StoreAssetTag`, and a `SyncAssetTag` in each asset editor.
@@ -1786,10 +1822,12 @@ Newest first. Each row is a good place to start reading.
 
 | What | IDs | Where | Commit |
 |---|---|---|---|
+| The Attribute inspector lists what uses it | ED-15 | `Assets/PlayForge/Editor/UI/Kit/ForgeUsedBy.cs:38` | `ed6295a` |
+| The asset header stays at the top | ED-36, Decision 29 | `Assets/PlayForge/Editor/UI/Kit/ForgeAssetHeader.cs:104` | `d851e30` |
 | The editor shows no emoji | ED-20 | `Assets/PlayForge/Editor/UI/Kit/ForgeGlyph.cs:136` | `6c0c3fe` |
 | One style sheet and a kit of controls | ED-20, Decision 20 | `Assets/PlayForge/Editor/UI/PlayForge.uss:8` | `f5832df` |
 | A drawer keeps its collapse state per asset | ED-18 | `Assets/PlayForge/Editor/CustomPropertyDrawers/Forge/Util/DrawerCollapseState.cs:48` | `1ae0833` |
-| The asset header scrolls with the content | ED-11, Q17 | `Assets/PlayForge/Editor/CustomPropertyDrawers/Forge/Editors/BasePlayForgeEditor.cs:504` | `88d0f3f` |
+| The inspector keeps no scroll view of its own | ED-11 | `Assets/PlayForge/Editor/CustomPropertyDrawers/Forge/Editors/BasePlayForgeEditor.cs:507` | `88d0f3f` |
 | An inspector listens to the editor only while a picker is open | ED-11 | `Assets/PlayForge/Editor/CustomPropertyDrawers/Forge/Editors/BasePlayForgeEditor.cs:87` | `850f8fb` |
 | The Impact and Effect drawers follow what they show | ED-11 | `Assets/PlayForge/Editor/CustomPropertyDrawers/Forge/Drawers/Assets/Effect/GameplayEffectImpactDrawer.cs:70` | `c5d5480` |
 | The Item and Ability inspectors edit a multiple selection | ED-12 | `Assets/PlayForge/Editor/CustomPropertyDrawers/Forge/Editors/BasePlayForgeEditor.cs:228` | `1a203c1` |
@@ -1799,7 +1837,7 @@ Newest first. Each row is a good place to start reading.
 | Link, Unlink and template assignment undo | ED-12 | `Assets/PlayForge/Editor/CustomPropertyDrawers/Forge/Editors/BasePlayForgeEditor.cs:216` | `097384f` |
 | Opening a scaler writes nothing | ED-34, Decision 28 | `Assets/PlayForge/Editor/CustomPropertyDrawers/Forge/Drawers/Scaler/ScalerDrawer.cs:489` | `7cc83c0` |
 | Every asset inspector's own fields undo | ED-12 | `Assets/PlayForge/Editor/CustomPropertyDrawers/Forge/Editors/BasePlayForgeEditor.cs:205` | `62ed48e` |
-| The Attribute inspector undoes every edit and edits a multiple selection | ED-12 | `Assets/PlayForge/Editor/CustomPropertyDrawers/Forge/Editors/Assets/AttributeEditor.cs:135` | `e1d1dd0` |
+| The Attribute inspector undoes every edit and edits a multiple selection | ED-12 | `Assets/PlayForge/Editor/CustomPropertyDrawers/Forge/Editors/Assets/AttributeEditor.cs:140` | `e1d1dd0` |
 | A task waiting in a delay allocates nothing a frame | TS-11 | `Assets/PlayForge/Runtime/PlayForge/Core/TaskSequence/Async/TaskSequenceRuntime.cs:55` | `ec008f7` |
 | A frame whose summary has a listener allocates nothing | GAS-P10, Decision 26 | `Assets/PlayForge/Runtime/PlayForge/Workers/Core/FrameSummary.cs:347` | `11a0f66` |
 | Interrupting every running ability ends each | GAS-53 | `Assets/PlayForge/Runtime/PlayForge/AbilitySystem/Core/AbilitySystemComponent.cs:435` | `473ea8e` |
@@ -1819,7 +1857,7 @@ Newest first. Each row is a good place to start reading.
 | Help buttons open the package's own docs through one table | ED-16, Decision 18 | `Assets/PlayForge/Editor/CustomPropertyDrawers/Forge/Util/ForgeDocs.cs:79` | `67db441` |
 | Demo Lit draws the Demos under URP and Built-in | SP-23, Decision 17 | `Assets/PlayForge/Samples~/Demos/Demo/Shaders/DemoLit.shader:42` | `954a11a` |
 | Statics clear at the start of a play session | SP-22, PC-26 | `Assets/PlayForge/Runtime/PlayForge/Utils/AttributeRegistry.cs:14` | `86e9e11` |
-| Showing an asset never writes its tag; a rename is one Undo | ED-12 | `Assets/PlayForge/Editor/CustomPropertyDrawers/Forge/Editors/BasePlayForgeEditor.cs:685` | `4d71636` |
+| Showing an asset never writes its tag; a rename is one Undo | ED-12 | `Assets/PlayForge/Editor/CustomPropertyDrawers/Forge/Editors/BasePlayForgeEditor.cs:694` | `4d71636` |
 | Delete names what uses the asset and moves it to the trash | ED-8 | `Assets/PlayForge/Editor/CustomPropertyDrawers/Forge/Util/ForgeAssetDeletion.cs:25` | `e89a9f7` |
 | The samples live in `Samples~` and import on request | SP-20, Decision 16 | `Assets/PlayForge/package.json:14` | `8d17bc0` |
 | A derived refresh runs the post-change pipeline | GAS-27, Decision 14 | `Assets/PlayForge/Runtime/PlayForge/AttributeSystem/Core/AttributeSystemComponent.cs:566` | `550d07b` |
