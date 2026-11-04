@@ -1,43 +1,21 @@
 ﻿namespace FarEmerald.PlayForge
 {
+    /// <summary>
+    /// What a carrier's impacts came to: their total, the last of them, and how many. It kept a node for every impact
+    /// on a list nothing walked, so an effect that ticked kept an allocation for every tick for as long as it lasted
+    /// (GAS-P6).
+    /// </summary>
     public class TrackedImpact
     {
-        private class Node
-        {
-            public AttributeValue Impact;
-            public Node Next;
-
-            public Node(AttributeValue impact)
-            {
-                Impact = impact;
-            }
-        }
-        
         public AttributeValue Total { get; private set; }
-        public AttributeValue Last => end?.Impact ?? default;
-        
+        public AttributeValue Last { get; private set; }
         public int Count { get; private set; }
-        
-        private Node root;
-        private Node end;
 
         public void Add(AttributeValue value)
         {
-            if (root is null)
-            {
-                root = new Node(value);
-                end = root;
-                
-                Total = value;
-                Count = 1;
-                return;
-            }
-            
-            end.Next = new Node(value);
-            end = end.Next;
-            
             Total += value;
-            Count += 1;
+            Last = value;
+            Count++;
         }
     }
 }

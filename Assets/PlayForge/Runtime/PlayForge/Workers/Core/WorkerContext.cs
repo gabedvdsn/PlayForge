@@ -22,6 +22,8 @@ namespace FarEmerald.PlayForge
         /// <summary>
         /// The change value being processed.
         /// Inline workers can modify this via Override/Add/Multiply.
+        /// The commit reuses it once it's done, so an inline worker reads it during the call. A deferred worker's
+        /// actions may keep it: a change handed to one is left to them (GAS-P6).
         /// </summary>
         public readonly ChangeValue Change;
         

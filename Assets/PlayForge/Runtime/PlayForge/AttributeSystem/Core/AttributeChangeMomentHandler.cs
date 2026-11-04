@@ -71,13 +71,16 @@ namespace FarEmerald.PlayForge
                         worker.Intercept(context);
                         break;
                         
+                    // A deferred worker's actions run later and may keep the change, so its commit doesn't reuse it (GAS-P6)
                     case EWorkerExecution.Deferred:
                         // Queue actions for end-of-frame
+                        context.Change.Kept = true;
                         var actions = worker.DeferredIntercept(context);
                         context.ActionQueue?.EnqueueRange(actions);
                         break;
                     case EWorkerExecution.InlineAndDeferred:
                         worker.Intercept(context);
+                        context.Change.Kept = true;
                         context.ActionQueue?.EnqueueRange(worker.DeferredIntercept(context));
                         break;
                     default:

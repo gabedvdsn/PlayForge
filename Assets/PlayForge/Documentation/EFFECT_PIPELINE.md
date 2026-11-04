@@ -112,7 +112,7 @@ Registration/unregistration are **identity-based** on the carrier instance — t
 wrapped in synthetic carriers.
 
 **Pre-change phase (commits).** Before the pre-change callback and workers run, a commit
-evaluates its impacters once (frozen as `ConstantImpacter`s, so a randomized scaler can't roll
+evaluates its impacters once (frozen as constants, so a randomized scaler can't roll
 differently twice) and previews the **incoming** delta: ops in order, no bounds or rounding.
 That delta is what `ChangeValue` holds, since effect specs arrive as `(0,0)` transport, and an
 Inline worker's edit is what commits:
@@ -124,6 +124,18 @@ Either way §2.2 applies: post-constraint delta recorded, then `Recompute`. Armo
 on incoming damage and the clamp comes after: 20 HP, −30 hit, 50% armor → −15 → 5 HP. Raw
 deltas (`ModifyAttribute`) preview as themselves. Register/Unregister are observe-only here,
 because modifiers are re-derived every recompute, so a one-off adjustment has nowhere to live.
+
+**A commit allocates nothing** (GAS-P6), adjusted or not. It rents its `ChangeValue` and its
+frozen impacters and gives them back when it's done, one set for each commit in progress, since
+a worker or a listener can commit inside another. An adjusted delta's Adds are frozen in the same
+impacters. So:
+- a `ChangeValue` belongs to its commit. A callback or an Inline worker reads it during the call,
+  or copies its `Value`, and doesn't keep it;
+- a Deferred worker's actions may keep it. A change handed to one is left to them, and its commit
+  takes a new one for the next;
+- the source-side `TrackImpact` keeps a total, the last impact and a count, not every impact.
+
+A raw delta still allocates its own carrier, and so does the change `EnforceScaling` queues (GAS-P8).
 
 Null / undefined attribute targets early-out safely (pure tag-grant effects are legal).
 

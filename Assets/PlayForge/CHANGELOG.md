@@ -44,6 +44,11 @@ tracks each fix below by its ID.
   allocate nothing. The built-in `Tags` are made once, not on every read. `GameplayEffectSpec.GetImpactedAttributes`
   returns a `ReadOnlyListView` and `GameplayEffectImpact.GetContainedEffects` a `ContainedEffects`, which `foreach`
   walks without allocating and which still enumerate as before. `Tag.IsChildOf` compares ordinally.
+- A commit allocates nothing, so a frame in which an effect ticks and commits allocates nothing, with or without a
+  worker adjusting it as armor does. A `ChangeValue` handed to a callback or a worker is reused once its commit is
+  done: read it during the call, or copy its `Value`. A deferred worker's actions may still keep it. `TrackedImpact`
+  keeps a total, the last impact and a count, not every impact. `ForgeHelper.SignPolicy` and `SignPolicyExtended`
+  take one or two values without allocating.
 
 ### Fixed
 - Runtime correctness: 96 fixes across ProcessControl, TaskSequence and the GAS core, among them exception isolation,

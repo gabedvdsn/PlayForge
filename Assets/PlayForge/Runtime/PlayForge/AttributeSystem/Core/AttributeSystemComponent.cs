@@ -278,7 +278,8 @@ namespace FarEmerald.PlayForge
             if (attribute is null || !AttributeCache.ContainsKey(attribute)) return default;
 
             var cached = AttributeCache[attribute];
-            var change = new ChangeValue(sourcedModifiedValue);
+            var scratch = RentScratch(sourcedModifiedValue);
+            var change = scratch.Change;
             var ctx = new WorkerContext(Self, AttributeCache, change, _frameSummary, _actionQueue);
 
             // ═══════════════════════════════════════════════════════════════════════
@@ -312,7 +313,8 @@ namespace FarEmerald.PlayForge
                         sourcedModifiedValue.Carrier?.GetRetentionGroup() ?? Tags.IgnoreRetention);
                 }
 
-                commitImpacters = FreezeImpacters(carrier, impacters ?? carrier.GetImpacters());
+                scratch.Freeze(carrier, impacters ?? carrier.GetImpacters());
+                commitImpacters = scratch.Frozen;
                 incoming = cached.PreviewCommit(carrier, commitImpacters);
                 change.Value = new SourcedModifiedAttributeValue(sourcedModifiedValue,
                     incoming.CurrentValue, incoming.BaseValue, sourcedModifiedValue.ImpactIsWorkable);
@@ -343,12 +345,13 @@ namespace FarEmerald.PlayForge
                     // per-impacter groups intact). Adjusted, the new delta commits as one
                     // constant Add in the impacters' group. Either way CachedAttributeValue
                     // records the post-constraint delta and recomputes.
+                    //
+                    // The Adds are frozen in the commit's own impacters. They came in a carrier made to wrap them, which
+                    // only the commit read, on every commit a worker adjusted (GAS-P6)
                     var adjusted = change.Value.ToAttributeValue();
                     if (adjusted != incoming)
                     {
-                        carrier = WrapDelta(attribute, sourcedModifiedValue, adjusted,
-                            AdjustedCommitGroup(commitImpacters, sourcedModifiedValue.Carrier));
-                        commitImpacters = carrier.GetImpacters();
+                        scratch.FreezeDelta(adjusted, AdjustedCommitGroup(commitImpacters, sourcedModifiedValue.Carrier));
                     }
                     cached.CommitImpact(carrier, commitImpacters, AttributeCache);
                     break;
@@ -388,6 +391,7 @@ namespace FarEmerald.PlayForge
 
             Callbacks.AttributeChanged(impactData);
 
+            ReturnScratch(scratch);
             return impactData;
         }
 
@@ -405,14 +409,117 @@ namespace FarEmerald.PlayForge
                 sourcedModifiedValue.Carrier?.RetainImpact() ?? false);
         }
 
-        private static IReadOnlyList<IAttributeImpacter> FreezeImpacters(IAttributeImpactCarrier carrier, IReadOnlyList<IAttributeImpacter> impacters)
+        // ─── A commit's scratch (GAS-P6) ──────────────────────────────────────────
+        // A commit made a new change, a new list, and a constant impacter for each of its impacters, so every tick that
+        // committed allocated. A commit now rents what it works with and gives it back, one set for each commit in
+        // progress, since a worker or a listener can commit inside another
+
+        private readonly Stack<CommitScratch> spareScratch = new();
+
+        private CommitScratch RentScratch(SourcedModifiedAttributeValue value)
         {
-            var frozen = new List<IAttributeImpacter>(impacters.Count);
-            foreach (var imp in impacters)
+            var scratch = spareScratch.Count > 0 ? spareScratch.Pop() : new CommitScratch();
+            scratch.Change.Value = value;
+            return scratch;
+        }
+
+        private void ReturnScratch(CommitScratch scratch)
+        {
+            scratch.Release();
+            spareScratch.Push(scratch);
+        }
+
+        /// <summary>What one commit works with: its change, and its impacters frozen.</summary>
+        private sealed class CommitScratch
+        {
+            public ChangeValue Change = new(default);
+
+            /// <summary>The commit's impacters, each frozen at the magnitude it has now.</summary>
+            public readonly List<IAttributeImpacter> Frozen = new();
+
+            // Frozen's impacters, kept by place: the n-th one frozen is always the n-th made
+            private readonly List<FrozenImpacter> made = new();
+
+            /// <summary>
+            /// Evaluates each impacter once and freezes it at that magnitude, so the delta the pre-change phase sees is
+            /// the delta that commits, even for a randomized scaler.
+            /// </summary>
+            public void Freeze(IAttributeImpactCarrier carrier, IReadOnlyList<IAttributeImpacter> impacters)
             {
-                if (imp != null) frozen.Add(ConstantImpacter.Snapshot(imp, carrier));
+                Frozen.Clear();
+
+                // By index: a foreach through the interface boxed the list's enumerator
+                for (int i = 0; i < impacters.Count; i++)
+                {
+                    var imp = impacters[i];
+                    if (imp == null) continue;
+
+                    float magnitude = imp.Evaluate(carrier);
+                    Next().Set(magnitude, imp.Operation, imp.TargetSlot, imp.SortOrder, imp.MultiplyBehaviour, imp.Group);
+                }
             }
-            return frozen;
+
+            /// <summary>
+            /// Freezes <paramref name="delta"/> as constant Adds in <paramref name="group"/>, in the order
+            /// <see cref="SourceAttributeImpact.FromAdditiveDelta"/> gives them. A commit clamps after every step, and
+            /// Current is bounded by Base, so a growing Base goes first and a shrinking one last (PF-005).
+            /// </summary>
+            public void FreezeDelta(AttributeValue delta, Tag group)
+            {
+                Frozen.Clear();
+
+                if (delta.BaseValue > 0f) Next().Set(delta.BaseValue, ECalculationOperation.Add, EAttributeTarget.Base, 0, EMultiplyBehaviour.Multiplicative, group);
+                if (delta.CurrentValue != 0f) Next().Set(delta.CurrentValue, ECalculationOperation.Add, EAttributeTarget.Current, 0, EMultiplyBehaviour.Multiplicative, group);
+                if (delta.BaseValue < 0f) Next().Set(delta.BaseValue, ECalculationOperation.Add, EAttributeTarget.Base, 0, EMultiplyBehaviour.Multiplicative, group);
+            }
+
+            private FrozenImpacter Next()
+            {
+                if (Frozen.Count == made.Count) made.Add(new FrozenImpacter());
+                var next = made[Frozen.Count];
+                Frozen.Add(next);
+                return next;
+            }
+
+            /// <summary>
+            /// Lets go of the commit's carrier, so a spare doesn't hold it. A change a deferred worker kept stays with
+            /// that worker's actions, and the next commit gets a new one.
+            /// </summary>
+            public void Release()
+            {
+                Frozen.Clear();
+                if (Change.Kept) Change = new ChangeValue(default);
+                else Change.Value = default;
+            }
+        }
+
+        /// <summary>
+        /// An impacter frozen for one commit: a magnitude with the op, slot, sort order, multiply behaviour and group of
+        /// the impacter it was taken from. What <see cref="ConstantImpacter"/> is, made to be reused: it never leaves
+        /// the commit.
+        /// </summary>
+        private sealed class FrozenImpacter : IAttributeImpacter
+        {
+            private float magnitude;
+
+            public ECalculationOperation Operation { get; private set; }
+            public EAttributeTarget TargetSlot { get; private set; }
+            public int SortOrder { get; private set; }
+            public EMultiplyBehaviour MultiplyBehaviour { get; private set; }
+            public Tag Group { get; private set; }
+
+            public float Evaluate(IAttributeImpactCarrier carrier) => magnitude;
+
+            public void Set(float value, ECalculationOperation operation, EAttributeTarget slot, int sortOrder,
+                EMultiplyBehaviour multiplyBehaviour, Tag group)
+            {
+                magnitude = value;
+                Operation = operation;
+                TargetSlot = slot;
+                SortOrder = sortOrder;
+                MultiplyBehaviour = multiplyBehaviour;
+                Group = group.IsValid ? group : Tags.IgnoreRetention;
+            }
         }
 
         /// <summary>
@@ -423,8 +530,11 @@ namespace FarEmerald.PlayForge
         {
             var fallback = carrier?.GetRetentionGroup() ?? Tags.IgnoreRetention;
             Tag shared = default;
-            foreach (var imp in impacters)
+
+            // By index: a foreach through the interface boxed the list's enumerator (GAS-P6)
+            for (int i = 0; i < impacters.Count; i++)
             {
+                var imp = impacters[i];
                 if (imp == null) continue;
                 var group = imp.Group.IsValid ? imp.Group : Tags.IgnoreRetention;
                 if (!shared.IsValid) shared = group;
@@ -465,11 +575,12 @@ namespace FarEmerald.PlayForge
                         // worker that checks types passes it by. It takes the post-change half of the pipeline and
                         // reaches the frame summary; it fired OnAttributeChanged alone (GAS-27, Decision 14)
                         var sourcedModifier = new SourcedModifiedAttributeValue(cached.Root, realImpact.CurrentValue, realImpact.BaseValue);
-                        var change = new ChangeValue(sourcedModifier);
-                        var ctx = new WorkerContext(Self, AttributeCache, change, _frameSummary, _actionQueue);
+                        var scratch = RentScratch(sourcedModifier);
+                        var ctx = new WorkerContext(Self, AttributeCache, scratch.Change, _frameSummary, _actionQueue);
                         cached.EnforceScaling(ctx);
                         PostChangeHandler.RunWorkers(ctx);
-                        Callbacks.AttributePostChange(relative, change);
+                        Callbacks.AttributePostChange(relative, scratch.Change);
+                        ReturnScratch(scratch);
 
                         var derivedImpact = ImpactData.Generate(Self, relative, sourcedModifier, realImpact, oldValue);
                         Self.RecordFrameImpactReceived(derivedImpact);

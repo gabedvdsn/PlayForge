@@ -11,6 +11,11 @@ namespace FarEmerald.PlayForge
     {
         public delegate void AttributeDelegate(IAttribute attribute);
         public delegate void AttributeImpactDelegate(ImpactData data);
+
+        /// <summary>
+        /// A change on its way through the pipeline. It's reused once its commit is done, so read it during the call or
+        /// copy its <see cref="ChangeValue.Value"/>; don't keep it (GAS-P6).
+        /// </summary>
         public delegate void AttributeChangeDelegate(IAttribute attribute, ChangeValue change);
         
         // ═══════════════════════════════════════════════════════════════

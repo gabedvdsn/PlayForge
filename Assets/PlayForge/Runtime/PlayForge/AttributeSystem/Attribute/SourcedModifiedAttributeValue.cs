@@ -123,14 +123,23 @@ namespace FarEmerald.PlayForge
         }
     }
 
+    /// <summary>
+    /// A change on its way through the attribute pipeline, which workers and listeners may adjust. The attribute system
+    /// reuses it once the commit it belongs to is done, so read it during the call you're handed it in, or copy its
+    /// <see cref="Value"/>. A deferred worker's actions may keep it: a change handed to one is left to them (GAS-P6).
+    /// </summary>
     public class ChangeValue
     {
         public SourcedModifiedAttributeValue Value;
+
+        // Set once a deferred worker is handed the change, so its commit leaves it to that worker's actions
+        internal bool Kept;
+
         public ChangeValue(SourcedModifiedAttributeValue value)
         {
             Value = value;
         }
-        
+
         public void Add(AttributeValue operand)
         {
             Value = Value.Add(operand);

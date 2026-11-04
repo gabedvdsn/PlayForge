@@ -45,7 +45,49 @@ namespace FarEmerald.PlayForge
         #endregion
         
         #region Sign Related Utils
-        
+
+        // One and two magnitudes, the cases every caller has, without the params array and the LINQ sum, which
+        // allocated on every commit and in every sign check a worker made (GAS-P6). Each gives what the params form
+        // gives, which sums in double and returns the sum as a float
+
+        public static ESignPolicy SignPolicy(float magnitude) => magnitude switch
+        {
+            > 0 => ESignPolicy.Positive,
+            < 0 => ESignPolicy.Negative,
+            _ => ESignPolicy.ZeroNeutral
+        };
+
+        public static ESignPolicy SignPolicy(float a, float b)
+        {
+            float sum = (float)((double)a + b);
+            return sum switch
+            {
+                > 0 => ESignPolicy.Positive,
+                < 0 => ESignPolicy.Negative,
+                0 when a != 0 || b != 0 => ESignPolicy.ZeroBiased,
+                _ => ESignPolicy.ZeroNeutral
+            };
+        }
+
+        public static ESignPolicyExtended SignPolicyExtended(float magnitude) => magnitude switch
+        {
+            > 0 => ESignPolicyExtended.Positive,
+            < 0 => ESignPolicyExtended.Negative,
+            _ => ESignPolicyExtended.ZeroNeutral
+        };
+
+        public static ESignPolicyExtended SignPolicyExtended(float a, float b)
+        {
+            float sum = (float)((double)a + b);
+            return sum switch
+            {
+                > 0 => ESignPolicyExtended.Positive,
+                < 0 => ESignPolicyExtended.Negative,
+                0 when a != 0 || b != 0 => ESignPolicyExtended.ZeroBiased,
+                _ => ESignPolicyExtended.ZeroNeutral
+            };
+        }
+
         public static ESignPolicy SignPolicy(params float[] magnitudes)
         {
             float sum = magnitudes.Sum();
