@@ -536,8 +536,9 @@ namespace FarEmerald.PlayForge.Extended.Editor
 
             if (showImport)
             {
+                // The one Import window: choose a source, then the fields that differ (ED-32)
                 Action importAction = config.HasImportClearSupport
-                    ? () => SectionImportWindow.Show(
+                    ? () => ForgeImportWindow.ShowFor(
                         config.SerializedObject,
                         config.Title,
                         config.PropertyPaths,
@@ -550,8 +551,9 @@ namespace FarEmerald.PlayForge.Extended.Editor
 
             if (showClear)
             {
+                // Clear empties the section at once, with no question, and one Undo takes it back (Decision 28)
                 Action clearAction = config.HasImportClearSupport
-                    ? () => SectionClearUtility.ClearWithConfirmation(
+                    ? () => SectionClearUtility.Clear(
                         config.SerializedObject,
                         config.Title,
                         config.PropertyPaths,

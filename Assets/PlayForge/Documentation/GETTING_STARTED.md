@@ -96,6 +96,13 @@ string perLevel = impact.FormatTotal();           // "20/30/40/50"
   in a window of its own; **New**, beside an empty one, makes the asset where The Forge's settings put its type, named
   for the asset that holds the field. An effect field's right-click menu has its template, a pick of the effects
   nothing links, and New Linked Effect.
+- **Import and Clear** — each inspector section's header has Import, Clear and Help. Import opens the Import window:
+  choose a source on the left, templates first, then the assets of the type; the right lists the fields that differ,
+  each checked, beside their values now and the source's. Uncheck a field to leave it. A list is replaced, unless its
+  row's **Add** is on, which adds the source's items after its own. **Import N Changes** is one Undo step. The asset
+  menu's **Import from Another Asset...** does the same for the whole asset, which keeps its name, description, icons,
+  asset tag, template and level link. A worker group's and a requirement group's import buttons open the same window,
+  listing every asset that has one. **Clear** resets the section's fields at once, and Undo takes it back.
 - **Golden tests** (the Test Runner's EditMode tab, `FarEmerald.PlayForge.Tests.Golden`) — the framework's behavioral
   contract; run after upgrading.
 - **Audit** (`Window → PlayForge → Audit Effect Impact Deliveries`) — reports every effect's

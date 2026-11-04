@@ -546,11 +546,11 @@ had no letter in the review. TS-AA onward came from the test project.
 | ED-29 | L | 2 | The Entity inspector's Allow Duplicate Equipped Items toggle opens showing Allow Duplicate Items' value | `EntityIdentityEditor.cs:927` | verified |
 | ED-30 | M | 2 | Local Data's object rows edit each other's value: a ScriptableObject row binds the MonoBehaviour field and the other way round, so neither keeps what's assigned | `DataWrapperDrawer.cs:127-128` | verified |
 | ED-31 | L | 4 | The four unlink dialogs count with `IsLinkedTo(this)`, the editor rather than the asset, so they always say 0. Each now counts the children its unlink would change | `AbilityEditor.cs:840`, `EffectEditor.cs:279`, `EntityIdentityEditor.cs:301`, `ItemEditor.cs:311` | fixed |
-| ED-32 | H | 4 | Six import windows behave differently. Section import copies every field with no choice and Clear asks in a modal; the Effect's Duration and Impact sections couldn't import at all, since their Import button only logged a warning (they open the section window since ED-37); scaler import ignores the kinds a field allows and caches its list for 120 s. One Import window replaces them (Decision 28): choose a source, choose the fields, import as one Undo step | `SectionImportWindow.cs`, `ScalerDrawerWindows.cs:17-350`, `TagRequirementDrawers.cs:567-945`, `StandardWorkerGroupDrawer.cs:362`, `EffectEditor.cs:467-500` | open |
+| ED-32 | H | 4 | Six import windows behave differently. Section import copies every field with no choice and Clear asks in a modal; the Effect's Duration and Impact sections couldn't import at all, since their Import button only logged a warning (they open the section window since ED-37); scaler import ignores the kinds a field allows and caches its list for 120 s. One Import window replaces them (Decision 28): choose a source, choose the fields, import as one Undo step. Fixed so far: `ForgeImportWindow` serves every section, a whole asset, worker groups and requirement groups, in place of five windows, and Clear asks nothing. Left: the scaler's import, with ED-33's Import Values | `ScalerDrawerWindows.cs:17-350` | open |
 | ED-33 | M | 4 | Scalers can't be shared. Every scaler is copied into its field, and the Scaler Template asset's link code has no callers, so reuse means copying and then propagating. Shared Scaler assets that fields reference replace it (Decision 28) | `AbstractScaler.cs:76-104`, `ScalerPipeline.cs:17-62` | open |
 | ED-34 | H | 4 | Opening a scaler writes to it while drawing. On an effect with no level link, Lock mode cuts its per-level table to one value; the other modes resize the table to Max Level, a Max Level of 0 or less becomes 10, and building the drawer clones a scaler that shares its reference id. Now nothing is written while drawing: a table keeps its length until the user changes it, and a shared scaler shows a warning with a button that makes a separate copy | `ScalerDrawer.cs:125-180, 285, 489-529` | fixed |
 | ED-36 | M | 4 | The asset header scrolls away with the content. It stays at the top of the inspector while the content scrolls under it (Decision 29), following the Inspector's scroll view by its events, so nothing polls (ED-11) | `BasePlayForgeEditor.cs` (`CreateInspectorGUI`), `ForgeAssetHeader.cs` (`StickTo`) | fixed |
-| ED-35 | M | 4 | Whole-asset import copies the template and level-link fields (`_template`, `_linkedSource`) and doesn't skip the nested `Definition.Name` | `BasePlayForgeEditor.cs` (`ImportFromAsset`) | open |
+| ED-35 | M | 4 | Whole-asset import copies the template and level-link fields (`_template`, `_linkedSource`) and doesn't skip the nested `Definition.Name`. It copied each top-level field whole, so the asset tag came along in Tags too. The Import window's whole-asset import keeps the name, description, icons, asset tag, template and level link | `ForgeImportWindow.cs` (`KeepsOwn`) | fixed |
 | ED-37 | M | 4 | The asset inspectors don't follow `Docs/EDITOR_STYLE.md`: their sections stray from its order, Level Source sits apart from Leveling, a collapsed section shows nothing, sentences explain the fields, the link state sits in tinted boxes with colored borders, and many sections' Import and Clear only log a warning. Each inspector is redone in Phase 4's fifth step. Fixed: the Attribute (`ed6295a`, with ED-15), Item (`cf70e8f`), Entity (`a06a4fb`), Attribute Set (`86ead05`), Ability (`031c2d4`) and Effect inspectors: the style doc's order, Leveling with the level link and its provider in Unity's object field, the asset tag under the name, a summary on each section, Import and Clear on each, Used By, and no look set in code; the Entity mockup's attribute table, in the Entity and Attribute Set inspectors; the mockups' When Busy, in the Ability and Entity inspectors; and the Effect mockup's requirements table, in the Effect and Ability inspectors | `EffectEditor.cs`, `AbilityEditor.cs`, `ForgeRequirementsTable.cs` | fixed |
 | ED-38 | M | 4 | An asset reference isn't Unity's object field: `AbstractRefDrawer` draws a button that opens a dropdown list of its own, with hover colors and Clear and Open icon buttons set in C#, and setting an effect asks in a dialog whether to link it. Now every asset reference is Unity's object field with a plain button beside it: Open, which shows the asset in a window of its own, or New, which makes one where The Forge puts its type, named and tagged, and uses it (Q15). An effect field says on a line under it how the effect takes its levels, with Link; its template, a pick of unlinked effects and New Linked Effect are in its right-click menu (Q18) | `AbstractForgeObjectDrawer.cs`, `GameplayEffectDrawer.cs` | fixed |
 | ED-39 | M | 4 | Opening an attribute set element can change the set: 50 ms after it draws, and on every change to the set, `AttributeSetElementDrawer` clamps a Current or Base magnitude that sits outside the element's bounds and applies it to the asset, so looking at a set marks it modified. The runtime clamps the same values as the entity starts. Now the drawer writes nothing as it draws: a help box says how the runtime clamps such a magnitude, and only a value typed into a Magnitude field is kept within the bounds, as part of the same edit. The drawer follows the style sheet | `AttributeSetElementDrawer.cs` | fixed |
@@ -657,6 +657,32 @@ GAS-4 with GAS-5, PC-6, and TS-I with PC-5.
 ## Log
 
 Record baselines, gate results and notable decisions here, newest first.
+
+- 2026-11-04, **ED-32 and ED-35: one Import window.** Decision 28's window, from the canvas's Import board.
+  - **The window,** `ForgeImportWindow`: Into, then 1 Choose a Source (a search, then the templates, then the assets of
+    the type, each with its icon and tag), 2 Choose What to Import (a table of the fields that differ, each checked,
+    beside its value now and the source's; Show Matching; and a line listing the unchanged ones), then 3 the count and
+    Import N Changes, one Undo step. A field is a value, a list or a reference, down to two levels of a class; a
+    magnitude reads as its field, as "Duration" and "Duration scaler". A list is replaced unless its row's Add is on.
+  - **It serves** every section's Import, the asset menu's Import from Another Asset, and the worker group's and
+    requirement group's import buttons, which list every asset with such a group at that path. It replaces five
+    windows: `SectionImportWindow`, `WorkerGroupImportWindow`, and the effect's, ability's and group's requirement
+    windows. The scaler's waits for ED-33's Import Values. The old worker import shared each worker object with its
+    source; the window copies them.
+  - **ED-35:** the whole-asset import copied each top-level field whole, so `Definition` brought its Name, `Tags` the
+    asset tag, and the private template and level-link fields came along. It keeps the name, description, icons,
+    asset tag, template and link now. Its dialog is gone, and so is the error it showed when no template existed,
+    though other assets did.
+  - **Clear** resets at once, where it asked in a modal dialog (Decision 28). `SectionImportWindow.cs` is
+    `SectionClearUtility.cs` now.
+  - **Docs:** `GETTING_STARTED.md` describes Import and Clear.
+  - **Its tests,** `ED_32_The_import_window_lists_the_fields_that_differ`,
+    `ED_32_A_list_can_take_the_sources_items_after_its_own` and
+    `ED_35_Importing_a_whole_asset_leaves_its_identity_and_links`, in the new `ImportWindowTests`, were written with
+    the window rather than before it, since they open it; ED-35's fault was read in the old code. The smoke suite opens
+    the one window in place of the five.
+  - **Tests:** PlayMode 957: 950 pass, 0 fail and 7 planted are skipped, in three orders. Planted 7 of 7; EditMode
+    398 of 398, four windows fewer in each theme.
 
 - 2026-11-04, **Step 5: the Effect inspector (ED-37).** The redesign's sixth and last asset inspector, after the
   others' pattern and the Effect mockup. ED-37 is fixed with it.

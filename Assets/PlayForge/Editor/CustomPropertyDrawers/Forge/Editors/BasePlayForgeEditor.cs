@@ -248,51 +248,16 @@ namespace FarEmerald.PlayForge.Extended.Editor
         protected virtual void SetupCollapsibleSections() { }
 
         // ═══════════════════════════════════════════════════════════════════════════
-        // Import Functionality - Generic implementation
+        // Import: the one Import window, for the whole asset (ED-32, ED-35)
         // ═══════════════════════════════════════════════════════════════════════════
-        
+
         /// <summary>
-        /// Opens an object picker to import properties from another asset of the same type.
+        /// Opens the Import window for the whole asset: choose a source, then the fields that differ. The asset keeps its
+        /// name, description, icons, asset tag, template and level link (ED-35). A menu of templates opened, and a dialog
+        /// asked before an import that copied every field, the template and the link among them, and showed an error when
+        /// no template existed though other assets did.
         /// </summary>
-        /// <summary>
-        /// Opens a dropdown menu to import from templates or pick any asset.
-        /// </summary>
-        protected void OpenImportPicker()
-        {
-            var assetType = target.GetType();
-            var templates = TemplateRegistry.GetTemplates(assetType).Where(t => t.IsValid() && t.IsNotTarget(target)).ToList();
-            
-            // Section: Templates (if any exist)
-            if (templates.Count > 0)
-            {
-                var menu = new GenericMenu();
-                menu.AddDisabledItem(new GUIContent("Templates"));
-                
-                foreach (var template in templates)
-                {
-                    var asset = template.GetAsset();
-                    if (asset == null) continue;
-                    
-                    var displayName = GetTemplateDisplayName(template, asset);
-                    menu.AddItem(new GUIContent(displayName), false, () =>
-                    {
-                        ImportFromAsset(asset);
-                        Refresh();
-                    });
-                }
-                
-                menu.AddSeparator("");
-                
-                // Section: Browse for any asset
-                menu.AddItem(new GUIContent("Browse All Assets..."), false, () =>
-                {
-                    OpenAssetPicker(assetType);
-                });
-                
-                menu.ShowAsContext();
-            }
-            else Debug.LogError($"[ PlayForge ] No importable assets found.");
-        }
+        protected void OpenImportPicker() => ForgeImportWindow.ShowForAsset(serializedObject, Refresh);
 
         protected void ShowTemplatePicker()
         {
@@ -330,147 +295,6 @@ namespace FarEmerald.PlayForge.Extended.Editor
             asset.SetTemplate(template);
             MarkDirty(asset);
             Repaint();
-        }
-
-        private string GetTemplateDisplayName(AssetTemplate template, ScriptableObject asset)
-        {
-            var name = GetAssetDisplayName(asset);
-            if (string.IsNullOrEmpty(name) || name == asset.GetType().Name)
-                name = asset.name;
-            
-            // Add tag indicator if present
-            if (!string.IsNullOrEmpty(template.TemplateTagName))
-            {
-                var tag = TemplateRegistry.GetTag(template.TemplateTagName);
-                if (tag != null)
-                    name = $"[{tag.Name}] {name}";
-            }
-            
-            // Add default indicator
-            if (template.IsDefault)
-                name = $"★ {name}";
-            
-            return name;
-        }
-
-        /// <summary>
-        /// Opens the standard Unity object picker for any asset of the given type.
-        /// </summary>
-        private void OpenAssetPicker(Type assetType)
-        {
-            _pickerControlId = GUIUtility.GetControlID(FocusType.Passive) + 10000 + Random.Range(1, 1000);
-            WaitForPicker();
-            _lastPickedObject = null;
-            _pickerCallback = sourceAsset =>
-            {
-                if (sourceAsset != null && sourceAsset != target && sourceAsset.GetType() == assetType)
-                {
-                    ImportFromAsset(sourceAsset);
-                    Refresh();
-                }
-            };
-            
-            EditorGUIUtility.ShowObjectPicker<ScriptableObject>(null, false, $"t:{assetType.Name}", _pickerControlId);
-        }
-
-        /// <summary>
-        /// Helper to get display name from an asset (override in subclasses if needed).
-        /// </summary>
-        protected virtual string GetAssetDisplayName(ScriptableObject asset)
-        {
-            // Try common patterns
-            if (asset is Ability ability)
-                return ability.GetName() ?? ability.name;
-            if (asset is GameplayEffect effect)
-                return effect.GetName() ?? effect.name;
-            if (asset is Item item)
-                return item.GetName() ?? item.name;
-            if (asset is EntityIdentity entity)
-                return entity.GetName() ?? entity.name;
-            if (asset is Attribute attr)
-                return attr.GetName() ?? attr.name;
-            if (asset is AttributeSet set)
-                return set.GetName();
-            
-            return asset.name;
-        }
-        
-        /// <summary>
-        /// Imports properties from another asset using SerializedObject.
-        /// Override this to customize import behavior.
-        /// </summary>
-        protected virtual void ImportFromAsset(Object sourceAsset)
-        {
-            if (sourceAsset == null || Array.IndexOf(targets, sourceAsset) >= 0) return;
-
-            // The import writes through the SerializedObject, so it reaches every selected asset (ED-12)
-            var into = IsMultiple ? $"{targets.Length} assets" : $"'{target.name}'";
-            var confirmed = EditorUtility.DisplayDialog(
-                "Import Properties",
-                $"Import properties from '{sourceAsset.name}' to {into}?\n\nThis will overwrite current values (except for Name and Description).",
-                "Import",
-                "Cancel"
-            );
-
-            if (!confirmed) return;
-
-            Undo.RecordObjects(targets, $"Import from {sourceAsset.name}");
-            
-            var sourceSO = new SerializedObject(sourceAsset);
-            var targetSO = serializedObject;
-            
-            // Copy all serialized properties except m_Script, Name, and Description
-            var sourceIterator = sourceSO.GetIterator();
-            sourceIterator.NextVisible(true); // Enter the first property
-            
-            do
-            {
-                var path = sourceIterator.propertyPath;
-                
-                // Skip the script reference
-                if (path == "m_Script") continue;
-                
-                // Skip Name and Description fields - check both the property name and path
-                // This handles fields at root level AND nested in Definition
-                if (ShouldSkipForImport(path)) continue;
-                
-                var targetProp = targetSO.FindProperty(path);
-                if (targetProp != null)
-                {
-                    targetSO.CopyFromSerializedProperty(sourceIterator);
-                }
-            }
-            while (sourceIterator.NextVisible(false));
-            
-            targetSO.ApplyModifiedProperties();
-            
-            MarkDirty(target);
-            Refresh();
-            
-            Debug.Log($"[PlayForge] Imported properties from '{sourceAsset.name}' to '{target.name}'");
-        }
-        
-        /// <summary>
-        /// Determines if a property should be skipped during import.
-        /// Override to customize which properties are excluded.
-        /// </summary>
-        protected virtual bool ShouldSkipForImport(string propertyPath)
-        {
-            // Skip Name fields (handles Definition.Name, Tags.Name, etc.)
-            if (propertyPath == "Name" || propertyPath.EndsWith(".Name"))
-                return true;
-            
-            // Skip Description fields
-            if (propertyPath == "Description" || propertyPath.EndsWith(".Description"))
-                return true;
-            
-            // Skip Textures/icons (part of visual identity)
-            if (propertyPath == "Textures" || propertyPath.EndsWith(".Textures"))
-                return true;
-            if (propertyPath.StartsWith("Definition.Textures"))
-                return true;
-            
-            return false;
         }
 
         // ═══════════════════════════════════════════════════════════════════════════

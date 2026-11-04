@@ -14,6 +14,9 @@ tracks each fix below by its ID.
   page, through one table of links in the editor.
 
 ### Changed
+- One Import window serves every inspector section, a whole asset, a worker group and a requirement group: choose a
+  source, then the fields that differ, each checked, and import them as one Undo step. A list can take the source's
+  items after its own instead of being replaced. Clear resets a section at once, and Undo takes it back (ED-32).
 - The Effect inspector's sections are Identity, Leveling, Tags, Duration, Impact, Requirements, Workers, Local Data and
   Used By, as the other asset inspectors' follow the style doc. Duration shows the fields its Policy uses, by the
   Effect mockup's names; Re-application's choices are Add Another, Replace Existing, Stack Existing and Do Nothing.
@@ -122,6 +125,7 @@ tracks each fix below by its ID.
   Asking whether its sequence was paused took 24 bytes a frame.
 
 ### Fixed
+- Importing a whole asset no longer copies its name, asset tag, template or level link (ED-35).
 - Opening an attribute set no longer changes it: its element drawer clamped a magnitude outside the bounds into the
   asset as it drew, and again on every change to the set. A help box says the runtime clamps it, and a typed magnitude
   is still kept within the bounds. The element drawer follows the style sheet (ED-39).

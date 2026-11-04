@@ -662,6 +662,228 @@
     margin-top: 4px;
 }
 
+/* ─── The Import window: choose a source, then the fields that differ, then import them as one Undo step (ED-32) ──── */
+
+.pf-root.pf-import {
+    flex-grow: 1;
+    background-color: var(--pf-panel);
+}
+
+.pf-root .pf-import__into {
+    flex-direction: row;
+    align-items: center;
+    height: 30px;
+    flex-shrink: 0;
+    padding: 0 10px;
+    background-color: var(--pf-toolbar);
+    border-bottom-width: 1px;
+    border-bottom-color: var(--pf-line);
+}
+
+.pf-root .pf-import__into > * {
+    margin: 0 6px 0 0;
+    padding: 0;
+}
+
+.pf-root .pf-import__into > .pf-glyph {
+    width: 14px;
+    height: 14px;
+}
+
+.pf-root .pf-import__name {
+    -unity-font-style: bold;
+    color: var(--pf-strong-text);
+}
+
+.pf-root .pf-import__kind {
+    color: var(--pf-secondary-text);
+}
+
+.pf-root .pf-import__body {
+    flex-direction: row;
+    flex-grow: 1;
+    min-height: 0;
+}
+
+.pf-root .pf-import__sources {
+    width: 290px;
+    flex-shrink: 0;
+    border-right-width: 1px;
+    border-right-color: var(--pf-line);
+}
+
+.pf-root .pf-import__fields {
+    flex-grow: 1;
+    min-width: 0;
+    padding: 0 10px;
+}
+
+.pf-root .pf-import__step {
+    flex-direction: row;
+    align-items: center;
+    height: 26px;
+    flex-shrink: 0;
+    padding: 0 10px;
+}
+
+.pf-root .pf-import__fields > .pf-import__step {
+    padding: 0;
+}
+
+/* The step's number, in a ring, as the mockup has it */
+.pf-root .pf-import__step-number {
+    width: 16px;
+    height: 16px;
+    flex-shrink: 0;
+    margin: 0 6px 0 0;
+    padding: 0;
+    border-width: 1px;
+    border-color: var(--pf-field-border);
+    border-radius: 8px;
+    -unity-text-align: middle-center;
+    color: var(--pf-strong-text);
+}
+
+.pf-root .pf-import__step-text {
+    flex-grow: 1;
+    margin: 0;
+    padding: 0;
+    -unity-font-style: bold;
+    color: var(--pf-strong-text);
+}
+
+.pf-root .pf-import__search {
+    width: auto;
+    margin: 0 8px 6px 8px;
+}
+
+.pf-root .pf-import__list {
+    flex-grow: 1;
+    border-top-width: 1px;
+    border-top-color: var(--pf-line);
+}
+
+.pf-root .pf-import__group {
+    height: 20px;
+    margin: 0;
+    padding: 0 8px;
+    -unity-text-align: middle-left;
+    background-color: var(--pf-header);
+    color: var(--pf-secondary-text);
+    border-bottom-width: 1px;
+    border-bottom-color: var(--pf-line);
+}
+
+/* A source: its type icon, its name, then its tag, which clips first */
+.pf-root .pf-import__source {
+    flex-direction: row;
+    align-items: center;
+    height: 20px;
+    margin: 0;
+    padding: 0 8px;
+    border-width: 0;
+    border-radius: 0;
+    background-color: var(--pf-panel);
+}
+
+.pf-root .pf-import__source--alternate {
+    background-color: var(--pf-alternate-row);
+}
+
+.pf-root .pf-import__source--selected {
+    background-color: var(--pf-selection);
+}
+
+.pf-root .pf-import__source > .pf-glyph {
+    width: 12px;
+    height: 12px;
+    flex-shrink: 0;
+    margin-right: 4px;
+}
+
+.pf-root .pf-import__source-name {
+    flex-grow: 1;
+    flex-shrink: 1;
+    min-width: 0;
+    margin: 0;
+    padding: 0;
+    color: var(--pf-text);
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+}
+
+.pf-root .pf-import__source-tag {
+    flex-shrink: 1;
+    min-width: 0;
+    max-width: 45%;
+    margin: 0 0 0 6px;
+    padding: 0;
+    color: var(--pf-secondary-text);
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+}
+
+.pf-root .pf-import__matching {
+    flex-shrink: 0;
+    margin: 0;
+}
+
+/* A field's row: its checkbox, its name, the value now, the source's, and Add for a list */
+.pf-root .pf-import__check {
+    width: 28px;
+    flex-shrink: 0;
+    margin: 0;
+    justify-content: center;
+}
+
+.pf-root .pf-import__field,
+.pf-root .pf-import__value {
+    flex-grow: 1;
+    flex-basis: 0;
+    min-width: 0;
+}
+
+.pf-root .pf-import__now {
+    color: var(--pf-secondary-text);
+}
+
+.pf-root .pf-import__append {
+    width: 52px;
+    flex-shrink: 0;
+    margin: 0;
+}
+
+.pf-root .pf-import__row--same > .pf-table__cell {
+    color: var(--pf-secondary-text);
+}
+
+.pf-root .pf-import__note {
+    margin: 4px 0;
+}
+
+.pf-root .pf-import__footer {
+    flex-direction: row;
+    align-items: center;
+    height: 36px;
+    flex-shrink: 0;
+    padding: 0 10px;
+    background-color: var(--pf-toolbar);
+    border-top-width: 1px;
+    border-top-color: var(--pf-line);
+}
+
+.pf-root .pf-import__changes {
+    flex-grow: 1;
+    min-width: 0;
+    margin: 0;
+    padding: 0;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+}
+
 /* A message is a Unity help box, in the flow under the field it is about */
 .pf-root .unity-help-box {
     background-color: var(--pf-help-box);
