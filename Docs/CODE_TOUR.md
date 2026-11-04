@@ -1,7 +1,7 @@
 # PlayForge refactor: code tour
 
 This tour lists the places where the refactor changed code, so you can open each one in your IDE and read it. It
-covers `01258b8..835b75c` on `main`: 196 commits. Phase 0 ported Arcade Fighter's fixes, Phase 1 made the runtime
+covers `01258b8..5e7f077` on `main`: 198 commits. Phase 0 ported Arcade Fighter's fixes, Phase 1 made the runtime
 correct, Phase 2 got the package ready to release, and Phase 3 has begun. Each entry says what behaves differently and
 why, names its tracker IDs and Decisions, and points at the two or three places to read. `Docs/REFACTOR_PLAN.md` has
 every tracker row, the numbered Decisions, and a Log of each batch's test results.
@@ -9,8 +9,8 @@ every tracker row, the numbered Decisions, and a Log of each batch's test result
 ## How to use this
 
 - Paths are relative to the repo root.
-- Line numbers are as of commit `835b75c`, the head of `main` on 2026-11-03. A later commit may move them, so each
-  entry also names the class and method to search for. `git show 835b75c:<path>` shows a file as it was then.
+- Line numbers are as of commit `5e7f077`, the head of `main` on 2026-11-03. A later commit may move them, so each
+  entry also names the class and method to search for. `git show 5e7f077:<path>` shows a file as it was then.
 - In Rider, Go to File accepts `path:line`. In Visual Studio, open the file, then Go To Line (Ctrl+G).
   A bare `:123` after a path means another line in the same file.
 - `git grep "<ID>"` finds the comment at each fix, and `git log --grep "<ID>"` finds its commit. Three exceptions:
@@ -28,9 +28,9 @@ every tracker row, the numbered Decisions, and a Log of each batch's test result
 
 ## Phase 3 so far
 
-Phase 3 began on `main` with the rows that writing the reference docs turned up: five runtime bugs, and two settings
-nothing read. Each has a test in Proving Grounds named after its ID, seen failing first; the runtime tests run on both
-hubs. The plan's Log has the gate results.
+Phase 3 began on `main` with the rows that writing the reference docs turned up, five runtime bugs and two settings
+nothing read, then gave the two GAS hubs one core (GAS-S1). Each has a test in Proving Grounds named after its ID,
+seen failing first; the runtime tests run on both hubs. The plan's Log has the gate results.
 
 ### An entity's affiliation is its own (GAS-47)
 
@@ -40,12 +40,14 @@ own: the registration data's, or else a copy of the asset's.
 
 - **IDs:** GAS-47, commit `fdc1886`.
 - **Read:**
-  - `Assets/PlayForge/Runtime/PlayForge/GAS/Core/MonoBehaviour/GameplayAbilitySystem.cs:68`, in
-    `GameplayAbilitySystem.WhenInitialize`. The field is at `:33`, `GetAffiliation` at `:250` reads it, and the tag
-    compile at `:274` adds it.
-  - `Assets/PlayForge/Runtime/PlayForge/GAS/Core/Runtime/RuntimeGameplayAbilitySystem.cs:185`, in
-    `RuntimeGameplayAbilitySystem.WhenInitialize`. It does the same for a runtime GAS, where two entities can share one
-    runtime identity. The field is at `:42` and `GetAffiliation` at `:346`.
+  - `Assets/PlayForge/Runtime/PlayForge/GAS/Core/GASCore.cs:68`, in `GASCore.Initialize`. The field is at `:18`,
+    `GetAffiliation` at `:202` reads it, and the tag compile at `:222` adds it. The fix went into each hub's copy;
+    GAS-S1 later moved it into the core both share.
+  - `Assets/PlayForge/Runtime/PlayForge/GAS/Core/MonoBehaviour/GameplayAbilitySystem.cs:41`, where the Mono hub reads
+    the registration data's sides as it initializes, and
+    `Assets/PlayForge/Runtime/PlayForge/GAS/Core/Runtime/RuntimeGameplayAbilitySystem.cs:112`, where a runtime GAS,
+    built before it registers, takes them through `GASCore.SetAffiliation`. Two entities can share one runtime
+    identity.
 - **Test:** `GAS_47_A_registered_affiliation_stays_with_its_entity` in `EntityIdentityTests`.
 
 ### Unequipping takes back only the item's grant (GAS-48)
@@ -75,9 +77,8 @@ only then try the immediate ones.
 - **Read:**
   - `Assets/PlayForge/Runtime/PlayForge/AbilitySystem/Core/AbilitySystemComponent.cs:169`
     `AbilitySystemComponent.ActivateImmediateAbilities`, taken out of `Initialize`.
-  - `Assets/PlayForge/Runtime/PlayForge/GAS/Core/MonoBehaviour/GameplayAbilitySystem.cs:91` and
-    `Assets/PlayForge/Runtime/PlayForge/GAS/Core/Runtime/RuntimeGameplayAbilitySystem.cs:164`, each hub's call, after
-    `CompileGrantedTags`.
+  - `Assets/PlayForge/Runtime/PlayForge/GAS/Core/GASCore.cs:88`, the call in `GASCore.Initialize`, after
+    `CompileGrantedTags`. Each hub made it until GAS-S1 gave them one core.
 - **New:** `AbilitySystemComponent.ActivateImmediateAbilities`.
 - **Test:** `GAS_49_An_opening_ability_with_a_cost_activates` in `AbilityLifecycleTests`.
 
@@ -121,17 +122,45 @@ the package's entity assets stored. Code that set either no longer compiles.
 
 - **IDs:** GAS-45, commit `5ccaa88`. Removing them, not building them, was the user's call.
 - **Read:** what decides instead.
-  - `Assets/PlayForge/Runtime/PlayForge/GAS/Core/MonoBehaviour/GameplayAbilitySystem.cs:79` and
-    `Assets/PlayForge/Runtime/PlayForge/GAS/Core/Runtime/RuntimeGameplayAbilitySystem.cs:155`, where each hub
-    registers the level clamped to its range.
+  - `Assets/PlayForge/Runtime/PlayForge/GAS/Core/GASCore.cs:79`, in `GASCore.Initialize`, where the GAS registers its
+    level clamped to its range.
   - `Assets/PlayForge/Runtime/PlayForge/ItemSystem/Core/ItemSystemComponent.cs:58`, in
     `ItemSystemComponent.CanGiveItem`, where the entity's setting refuses a second copy.
 - **Removed:** `EntityIdentity.CapAtMaxLevel`, `RuntimeEntityIdentity.CapAtMaxLevel`, `ItemDefinition.AllowDuplicates`.
 - **Test:** `GAS_45_Settings_nothing_reads_are_gone` in `ForgeInspectorTests`, in EditMode.
 
+### One core for both hubs (GAS-S1)
+
+`GameplayAbilitySystem` and `RuntimeGameplayAbilitySystem` each kept a copy of the same code, about 400 lines:
+building the entity, compiling its tags, the end of frame, death, level and Local Data. The copies drifted. A runtime
+GAS applied no affiliation tags, and one made from an Entity asset lost the asset's Local Data. The GAS Debugger named
+entities through `ToGASObject()`, which a runtime GAS answers with null, so every runtime entity showed as "unknown".
+Both hubs now own a `GASCore` and forward to it. A hub keeps only how it is built, where its entity is, and how it goes
+away.
+
+- **IDs:** GAS-S1, commit `5e7f077`.
+- **Read:**
+  - `Assets/PlayForge/Runtime/PlayForge/GAS/Core/GASCore.cs:59` `GASCore.Initialize`, the one build order, then
+    `EndOfFrame` (`:131`), `MarkDead` (`:175`) and `CompileGrantedTags` (`:214`).
+  - `Assets/PlayForge/Runtime/PlayForge/GAS/Core/MonoBehaviour/GameplayAbilitySystem.cs:36`
+    `GameplayAbilitySystem.WhenInitialize`. The Mono hub builds its core as it registers, from a copy of its asset.
+  - `Assets/PlayForge/Runtime/PlayForge/GAS/Core/Runtime/RuntimeGameplayAbilitySystem.cs:64`, the constructor, where
+    a runtime GAS builds its core before it registers.
+  - How each goes away: `Assets/PlayForge/Runtime/PlayForge/GAS/Core/MonoBehaviour/GameplayAbilitySystem.EndOfFrame.cs:44`
+    ends at once, and `Assets/PlayForge/Runtime/PlayForge/GAS/Core/Runtime/RuntimeGameplayAbilitySystem_EndOfFrame.cs:52`
+    queues a Terminate. Both predate the refactor, and each hub's tests pass on its own.
+  - `Assets/PlayForge/Editor/CustomPropertyDrawers/Forge/Editors/GASDebugger.cs:1251`
+    `GASDebugger.ResolveDisplayNameFor`, which asks the entity's own name.
+- **New:** `GASCore` (internal). `RuntimeEntityIdentity.LocalData`. Each hub gains what only the other had:
+  `ApplyGameplayEffect(IEffectOrigin, GameplayEffect)` and `GetRelativeLevel()`.
+- **Removed:** `GameplayAbilitySystem.Relays` and `HandleDestructionInternally`, which nothing used, and each hub's
+  protected `localData`.
+- **Tests:** `GAS_S1_Both_hubs_apply_the_affiliation_as_tags` and `GAS_S1_Both_hubs_keep_the_entity_s_local_data` in
+  `EntityIdentityTests`, and `GAS_S1_The_debugger_names_a_runtime_entity` in `GASDebuggerTests`, in EditMode.
+
 ### Still open in Phase 3
 
-Performance and structure work: GAS-S1, GAS-P3, GAS-P4, PC-24, TS-5, TS-8, TS-10 and TS-Z. GAS-51, item stacking that
+Performance and structure work: GAS-P3, GAS-P4, PC-24, TS-5, TS-8, TS-10 and TS-Z. GAS-51, item stacking that
 is declared but not built, moved to Phase 5 as FEAT-14, so an Item's `MaxStackSize` does nothing until then.
 
 ## ProcessControl
@@ -718,8 +747,8 @@ points back at it, as a Mono GAS's does.
     `AbilityDataPacket.ResolveTarget`.
   - `Assets/PlayForge/Runtime/PlayForge/AbilitySystem/Core/AbilitySpecContainer.cs:104`, in
     `AbilitySpecContainer.AwaitAbility`, followed by `ValidateAllActivationRequirements` at `:106`.
-  - `Assets/PlayForge/Runtime/PlayForge/GAS/Core/Runtime/RuntimeGameplayAbilitySystem.cs:75`, in the first
-    constructor, and `:108` in the second.
+  - `Assets/PlayForge/Runtime/PlayForge/GAS/Core/Runtime/RuntimeGameplayAbilitySystem.cs:79`, in the constructor the
+    others call.
 - **New:** `AbilityDataPacket.ResolveTarget(Tag)`.
 - **Watch for:** target activation rules and target tag requirements now find a target, so they run and can refuse an
   activation.
@@ -829,7 +858,7 @@ the sources' lists instead of allocating iterators.
 - **Read:**
   - `Assets/PlayForge/Runtime/PlayForge/Tag/TagQuery.cs:98` `TagQuery.CountMatches(TagCache)`, and `Matches`
     (`:135`). The hubs call it from `QueryTags`
-    (`Assets/PlayForge/Runtime/PlayForge/GAS/Core/MonoBehaviour/GameplayAbilitySystem.cs:262`).
+    (`Assets/PlayForge/Runtime/PlayForge/GAS/Core/GASCore.cs:226`).
   - `Assets/PlayForge/Runtime/PlayForge/Tag/Tag.cs:84` `Tag.Child`, and the implicit conversion at `:299`.
   - `Assets/PlayForge/Runtime/PlayForge/Tag/GrantedTagCompiler.cs:14` `GrantedTagCompiler`.
 - **New:** `GrantedTagCompiler` (internal).
@@ -858,8 +887,8 @@ idle frame allocates nothing: `ActionQueue` keeps a count, and the snapshot is b
 
 ### The two GAS hubs
 
-Fixes land in both `GameplayAbilitySystem` and `RuntimeGameplayAbilitySystem`, which still duplicate about 400 lines;
-the merge is GAS-S1, Phase 3. The runtime hub steps `UpdateAndLate`, so its end of frame (workers, death) runs; it
+Until GAS-S1 gave `GameplayAbilitySystem` and `RuntimeGameplayAbilitySystem` one core, in Phase 3, these fixes landed
+in both copies of about 400 lines. The runtime hub steps `UpdateAndLate`, so its end of frame (workers, death) runs; it
 stepped in Update only. Both hubs create `Callbacks` with the object, so a caller can subscribe to
 `OnSystemInitialized` before a Mono GAS initializes. A runtime GAS still initializes inside its constructor. A runtime
 identity copied from an `EntityIdentity` keeps its starting abilities, starting items and
@@ -869,15 +898,14 @@ runtime identity's were null and threw. A hub stepped by hand, outside ProcessCo
 - **IDs:** GAS-1, GAS-13 (PF-013), GAS-9, GAS-23, GAS-42. The runtime hub's targeting packet is GAS-46 and GAS-38,
   above.
 - **Read:**
-  - `Assets/PlayForge/Runtime/PlayForge/GAS/Core/Runtime/RuntimeGameplayAbilitySystem.cs:60`, the constructor
-    (`UpdateAndLate` at `:68`), and `RuntimeEntityIdentity(EntityIdentity)` at `:463` (GAS-9).
-  - `Assets/PlayForge/Runtime/PlayForge/GAS/Core/Runtime/RuntimeGameplayAbilitySystem_EndOfFrame.cs:123` and
-    `Assets/PlayForge/Runtime/PlayForge/GAS/Core/MonoBehaviour/GameplayAbilitySystem.EndOfFrame.cs:105`, each hub's
+  - `Assets/PlayForge/Runtime/PlayForge/GAS/Core/Runtime/RuntimeGameplayAbilitySystem.cs:64`, the constructor
+    (`UpdateAndLate` at `:72`), and `RuntimeEntityIdentity(EntityIdentity)` at `:293` (GAS-9).
+  - `Assets/PlayForge/Runtime/PlayForge/GAS/Core/Runtime/RuntimeGameplayAbilitySystem_EndOfFrame.cs:52` and
+    `Assets/PlayForge/Runtime/PlayForge/GAS/Core/MonoBehaviour/GameplayAbilitySystem.EndOfFrame.cs:44`, each hub's
     `HandleDestruction` (GAS-42).
   - `Assets/PlayForge/Runtime/PlayForge/GAS/Core/Identity/EntityIdentity.cs:30`, the defaults (GAS-23).
-- **Still open:** GAS-S1, one core for both hubs.
-- **Fixed in Phase 3:** GAS-47, the Mono GAS wrote the affiliation from its registration data onto its shared Entity
-  asset. See [Phase 3 so far](#phase-3-so-far).
+- **Fixed in Phase 3:** GAS-S1, one core for both hubs, and GAS-47, the Mono GAS wrote the affiliation from its
+  registration data onto its shared Entity asset. See [Phase 3 so far](#phase-3-so-far).
 
 ## Editor
 
@@ -952,7 +980,7 @@ Golden Tests left the menu; the Test Runner runs the scenarios (SP-18).
 - **IDs:** ED-19, Decision 18 (Q31, Q32).
 - **Read:** `Assets/PlayForge/Editor/CustomPropertyDrawers/Forge/Editors/Manager/TheForge.cs:91`
   `TheForge.ShowWindow`, with `WINDOW_TITLE` at `:30`. The other menu items are
-  `Assets/PlayForge/Editor/CustomPropertyDrawers/Forge/Editors/GASDebugger.cs:134`,
+  `Assets/PlayForge/Editor/CustomPropertyDrawers/Forge/Editors/GASDebugger.cs:131`,
   `Assets/PlayForge/Editor/Tools/ProcessControlDebugger.cs:52` and `Assets/PlayForge/Editor/Tools/RuntimeTagViewer.cs:20`.
 
 ### The Forge: settings, sorting, analysis and templates
@@ -982,8 +1010,8 @@ Golden Tests left the menu; the Test Runner runs the scenarios (SP-18).
   `Assets/PlayForge/Editor/CustomPropertyDrawers/Forge/Editors/AbstractMonoProcessEditor.cs:85`, in
   `CreateInspectorGUI`.
 - **ED-26.** The GAS Debugger removes its frame-summary hooks when it closes. They kept sampling every entity and
-  stacked when it reopened. `Assets/PlayForge/Editor/CustomPropertyDrawers/Forge/Editors/GASDebugger.cs:153`
-  `OnDisable`, and `:320` `RemoveFrameSummaryHooks`.
+  stacked when it reopened. `Assets/PlayForge/Editor/CustomPropertyDrawers/Forge/Editors/GASDebugger.cs:146`
+  `OnDisable`, and `:313` `RemoveFrameSummaryHooks`.
 - **ED-29.** Allow Duplicate Equipped Items opens with its own value.
   `Assets/PlayForge/Editor/CustomPropertyDrawers/Forge/Editors/Assets/EntityIdentityEditor.cs:915`, in
   `BuildItemsSection`.
@@ -1115,11 +1143,12 @@ Newest first. Each row is a good place to start reading.
 
 | What | IDs | Where | Commit |
 |---|---|---|---|
+| Both GAS hubs forward to one core | GAS-S1 | `Assets/PlayForge/Runtime/PlayForge/GAS/Core/GASCore.cs:59` | `5e7f077` |
 | An attribute set reached twice counts once | GAS-44 | `Assets/PlayForge/Runtime/PlayForge/AttributeSystem/Attribute/AttributeSet.cs:63` | `57ea4ff` |
 | Tick On Application alone lands its change | GAS-50 | `Assets/PlayForge/Runtime/PlayForge/GAS/Core/EffectSystemComponent.cs:199` | `e40b3b6` |
 | Opening abilities wait for the entity's attributes | GAS-49 | `Assets/PlayForge/Runtime/PlayForge/AbilitySystem/Core/AbilitySystemComponent.cs:169` | `999e779` |
 | Unequipping takes back only the item's grant | GAS-48 | `Assets/PlayForge/Runtime/PlayForge/ItemSystem/Core/ItemSpecContainer.cs:183` | `27c2325` |
-| Each entity keeps its own affiliation | GAS-47 | `Assets/PlayForge/Runtime/PlayForge/GAS/Core/MonoBehaviour/GameplayAbilitySystem.cs:68` | `fdc1886` |
+| Each entity keeps its own affiliation | GAS-47 | `Assets/PlayForge/Runtime/PlayForge/GAS/Core/GASCore.cs:68` | `fdc1886` |
 | Targeting's packet resolves to the entity, so Apply Effects finds its target | GAS-46 | `Assets/PlayForge/Runtime/PlayForge/AbilitySystem/Ability/AbilityProxy/Core/AbilityDataPacket.cs:133` | `fe4271c` |
 | Help buttons open the package's own docs through one table | ED-16, Decision 18 | `Assets/PlayForge/Editor/CustomPropertyDrawers/Forge/Util/ForgeDocs.cs:79` | `67db441` |
 | Demo Lit draws the Demos under URP and Built-in | SP-23, Decision 17 | `Assets/PlayForge/Samples~/Demos/Demo/Shaders/DemoLit.shader:42` | `954a11a` |
