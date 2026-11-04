@@ -53,6 +53,8 @@ The full review behind it is https://claude.ai/artifact/1GsrCxW3Wff2KvXM6fnai9.
 - Extend base classes directly (for example `AbstractMonoProcess`) when an intermediate class's patterns
   don't apply.
 - Log through `ForgeLog`, which is level-gated. ProcessControl and sequences have their own log gates.
+- **Editor UI follows `Docs/EDITOR_STYLE.md`** (Decision 20): Unity's own controls and neutrals, a type's color
+  only in its icon, no colored borders or floating cards, and columns that clip their own text.
 
 ## Gotchas
 

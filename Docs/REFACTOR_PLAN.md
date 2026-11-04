@@ -224,6 +224,14 @@ from. It lives outside `Assets/` so it never ships in the package.
   you go. So each commit whose checks pass is pushed to `origin/main`, fast-forward only, never forced; a rejected
   push stops work until it's reported. This replaces Phase 0's "Do not push". Proving Grounds has no remote and
   stays local.
+- Decision 20, 2026-11-03: Phase 4's editor style is recorded in `Docs/EDITOR_STYLE.md`. It comes from the style
+  mockups the user reviewed, a private design canvas: https://claude.ai/artifact/PSDAMf8GYvhzZDb1uoF5gr.
+  - Windows use Unity's own controls and neutrals. An asset type's color goes in its type icon and nowhere else.
+  - No colored borders, tinted or floating cards, shadows, or small letter-spaced headings.
+  - Each inspector has one label column, and section headers keep Import, Clear and Help visible.
+  - Every column clips its own text, so the columns on the right always show in full.
+  - Problems show in place, under what they are about.
+  - The type icons are placeholders, to revisit.
 
 **Open. Ask the user; do not assume:**
 1. ~~**Uncommitted changes**~~: decided, see above.
