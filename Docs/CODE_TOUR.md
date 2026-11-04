@@ -1,7 +1,7 @@
 # PlayForge refactor: code tour
 
 This tour lists the places where the refactor changed code, so you can open each one in your IDE and read it. It
-covers `01258b8..2096552` on `main`: 215 commits. Phase 0 ported Arcade Fighter's fixes, Phase 1 made the runtime
+covers `01258b8..a406552` on `main`: 217 commits. Phase 0 ported Arcade Fighter's fixes, Phase 1 made the runtime
 correct, Phase 2 got the package ready to release, and Phase 3 has begun. Each entry says what behaves differently and
 why, names its tracker IDs and Decisions, and points at the two or three places to read. `Docs/REFACTOR_PLAN.md` has
 every tracker row, the numbered Decisions, and a Log of each batch's test results.
@@ -9,8 +9,8 @@ every tracker row, the numbered Decisions, and a Log of each batch's test result
 ## How to use this
 
 - Paths are relative to the repo root.
-- Line numbers are as of commit `2096552`, the head of `main` on 2026-11-03. A later commit may move them, so each
-  entry also names the class and method to search for. `git show 2096552:<path>` shows a file as it was then.
+- Line numbers are as of commit `a406552`, the head of `main` on 2026-11-03. A later commit may move them, so each
+  entry also names the class and method to search for. `git show a406552:<path>` shows a file as it was then.
 - In Rider, Go to File accepts `path:line`. In Visual Studio, open the file, then Go To Line (Ctrl+G).
   A bare `:123` after a path means another line in the same file.
 - `git grep "<ID>"` finds the comment at each fix, and `git log --grep "<ID>"` finds its commit. Three exceptions:
@@ -30,8 +30,8 @@ every tracker row, the numbered Decisions, and a Log of each batch's test result
 
 Phase 3 began on `main` with the rows that writing the reference docs turned up, five runtime bugs and two settings
 nothing read, then gave the two GAS hubs one core (GAS-S1) and turned to cost (GAS-P3, GAS-P5, GAS-P4, GAS-P6,
-GAS-P8, GAS-P9, GAS-P7, TS-5). Each has a test in Proving Grounds named after its ID, seen failing first; the runtime
-tests run on both hubs. The plan's Log has the gate results.
+GAS-P8, GAS-P9, GAS-P7, TS-5, TS-10). Each has a test in Proving Grounds named after its ID, seen failing first; the
+runtime tests run on both hubs. The plan's Log has the gate results.
 
 ### An entity's affiliation is its own (GAS-47)
 
@@ -343,7 +343,7 @@ joins the review found; the parts are now formatted once, and the LINQ left on a
     its part off as it ends (`:336`) and starts each time round from it (`:224`). Its failure log reads the path where
     the run failed (`:297`).
   - `Assets/PlayForge/Runtime/PlayForge/Core/TaskSequence/Async/TaskSequenceRuntime.cs:501`, in `RunStage`, which
-    notes where its iterations start (`:507`) and keeps the path where it failed (`:564`). `RestartStage` (`:649`)
+    notes where its iterations start (`:507`) and keeps the path where it failed (`:564`). `RestartStage` (`:651`)
     takes off what the last iteration added, for both kinds of stage repeat.
   - `Assets/PlayForge/Runtime/PlayForge/Core/TaskSequence/Async/SequenceStage.cs:176` `SequenceStage.PathPart`, and
     `:398` for a sequence, each formatted once for its name.
@@ -354,10 +354,28 @@ joins the review found; the parts are now formatted once, and the LINQ left on a
 - **Tests:** `TS_5_A_repeating_sequence_keeps_its_path_the_same` in `SequencePathTests`, and its control,
   `A_failed_run_logs_the_path_where_it_failed`.
 
+### A stage that waits for all its tasks makes no second token source (TS-10)
+
+Every stage made a token source for its policy, linked to its own, though only a policy that stops the tasks still
+running needs one, as WhenAny and WhenN do. With the stage's own, a three-stage ability made about 14. A stage under
+WhenAll or RepeatUntilSkipped now hands its policy the stage's own source, and the ability makes about 10. A frame that
+runs one stage of one instant task allocated 1,912 bytes either way; under WhenAll it now allocates 1,464.
+
+- **IDs:** TS-10, commit `a406552`.
+- **Read:**
+  - `Assets/PlayForge/Runtime/PlayForge/Core/TaskSequence/Async/TaskSequenceRuntime.cs:663` `ExecuteStageInternal`,
+    which hands the policy the stage's own source (`:699`) or makes one of its own (`:702`), and disposes only that
+    (`:734`). `OnlyWaits` (`:740`) names the two built-in policies by exact type.
+  - `Assets/PlayForge/Runtime/PlayForge/Core/TaskSequence/Async/TaskSequenceRuntime.cs:525`, in `RunStage`, which passes
+    its source down through `ExecuteStageWithRepeat` (`:600`).
+- **Watch for:** a policy of your own still gets a source of its own, as it may cancel what it's handed. One that only
+  waits gets no saving unless it's one of the two built in.
+- **Test:** `TS_10_A_stage_that_waits_for_all_its_tasks_makes_no_second_token_source` in `SequenceCostTests`.
+
 ### Still open in Phase 3
 
-Performance and structure work: PC-24, TS-8, TS-10 and TS-Z. GAS-51, item stacking that is declared but not built,
-moved to Phase 5 as FEAT-14, so an Item's `MaxStackSize` does nothing until then.
+Performance and structure work: PC-24, TS-8 and TS-Z. GAS-51, item stacking that is declared but not built, moved to
+Phase 5 as FEAT-14, so an Item's `MaxStackSize` does nothing until then.
 
 ## ProcessControl
 
@@ -560,9 +578,9 @@ shared definition. A second run left the first out of reach, and runs broke each
   - `Assets/PlayForge/Runtime/PlayForge/Core/TaskSequence/Async/TaskSequence.cs:24` `TaskSequence._runs`, then
     `CreateRuntime` (`:59`) and `Run(TaskSequenceRuntime, ProcessDataPacket, CancellationToken)` (`:75`).
   - `Assets/PlayForge/Runtime/PlayForge/Core/TaskSequence/Async/TaskSequenceRuntime.cs:79`, the per-run record of
-    fired conditions, broken repeats and repeat counts, read through `IsRepeatBroken` (`:1064`) and `GetRepeatCount`
-    (`:1067`).
-  - `Assets/PlayForge/Runtime/PlayForge/Core/TaskSequence/Async/TaskSequenceRuntime.cs:919`
+    fired conditions, broken repeats and repeat counts, read through `IsRepeatBroken` (`:1087`) and `GetRepeatCount`
+    (`:1090`).
+  - `Assets/PlayForge/Runtime/PlayForge/Core/TaskSequence/Async/TaskSequenceRuntime.cs:942`
     `TaskSequenceRuntime.RunClock` (TS-W).
 - **New:** `TaskSequence.CreateRuntime`, the `Run` overload that takes a runtime, `TaskSequenceRuntime.IsRepeatBroken`
   and `GetRepeatCount`.
@@ -582,9 +600,9 @@ the stages after it. The stop-maintained requests choose among maintained stages
 - **Read:**
   - `Assets/PlayForge/Runtime/PlayForge/Core/TaskSequence/Async/TaskSequenceRuntime.cs:483`
     `TaskSequenceRuntime.RunStage`, and `ExecuteSubStage` (`:469`).
-  - `Assets/PlayForge/Runtime/PlayForge/Core/TaskSequence/Async/TaskSequenceRuntime.cs:1238`
+  - `Assets/PlayForge/Runtime/PlayForge/Core/TaskSequence/Async/TaskSequenceRuntime.cs:1261`
     `RequestSkipCurrentStage`, which acts on `_injectionSource` (`:119`), the stage applying the injection. Then
-    `RequestSkipAndMaintain` (`:1244`) and the stop-maintained requests from `:1256`.
+    `RequestSkipAndMaintain` (`:1267`) and the stop-maintained requests from `:1279`.
   - `Assets/PlayForge/Runtime/PlayForge/Core/TaskSequence/Async/TaskSequenceRuntime.cs:360`
     `TaskSequenceRuntime.StopMaintainedStages`.
 
@@ -604,7 +622,7 @@ of a repeating sequence.
   - `Assets/PlayForge/Runtime/PlayForge/Core/TaskSequence/Async/SequenceCore.cs:259`
     `WhenAnyStagePolicy.AwaitCompletion` (the fix at `:294`), and `:323` `WhenNStagePolicy.AwaitCompletion` (`:370`).
   - `Assets/PlayForge/Runtime/PlayForge/Core/TaskSequence/Async/TaskSequenceRuntime.cs:566`, the `finally` of
-    `RunStage` (TS-E, TS-AD), and `:1389` `Cleanup` (TS-AD).
+    `RunStage` (TS-E, TS-AD), and `:1412` `Cleanup` (TS-AD).
 
 ### Repeats
 
@@ -614,7 +632,7 @@ finished without yielding repeated forever inside one frame.
 
 - **IDs:** TS-M.
 - **Read:** `Assets/PlayForge/Runtime/PlayForge/Core/TaskSequence/Async/TaskSequenceRuntime.cs:600`
-  `TaskSequenceRuntime.ExecuteStageWithRepeat`, and `:646` `RestartStage`.
+  `TaskSequenceRuntime.ExecuteStageWithRepeat`, and `:648` `RestartStage`.
 - **Watch for:** tasks in a repeating stage get `Prepare` and `Clean` on every iteration, not once.
 
 ### Pause inside a sequence (Decision 5)
@@ -630,8 +648,8 @@ helpers kept their signatures. `ChannelAbilityTask` yielded twice a loop, so a c
 - **Read:**
   - `Assets/PlayForge/Runtime/PlayForge/Core/TaskSequence/Async/TaskSequenceRuntime.cs:139`
     `TaskSequenceRuntime.Pause`, then `IsPausedRun` (`:151`), `Delay` (`:160`) and `HoldWhilePaused` (`:171`). The
-    token map is at `:55`; `ExecuteStageInternal` adds each stage's token at `:691` and holds a finished stage at
-    `:712`.
+    token map is at `:55`; `ExecuteStageInternal` adds each stage's token at `:707` and holds a finished stage at
+    `:725`.
   - `Assets/PlayForge/Runtime/PlayForge/Core/TaskSequence/Async/TaskSequenceProcess.cs:263`
     `TaskSequenceProcess.TryHandlePause`, and `TryHandleResume` (`:273`).
   - `Assets/PlayForge/Runtime/PlayForge/Core/TaskSequence/Async/SequenceTaskLibrary.cs:847`
