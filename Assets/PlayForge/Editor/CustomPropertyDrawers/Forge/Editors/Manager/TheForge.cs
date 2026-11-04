@@ -159,6 +159,7 @@ namespace FarEmerald.PlayForge.Extended.Editor
         
         private void OnEnable()
         {
+            EditorApplication.projectChanged += OnProjectChanged;
             RefreshAssetCache();
             
             if (EditorPrefs.GetBool(PREFS_PREFIX + "RememberTypeFilter", true))
@@ -176,6 +177,23 @@ namespace FarEmerald.PlayForge.Extended.Editor
             }
         }
         
+        private void OnDisable()
+        {
+            EditorApplication.projectChanged -= OnProjectChanged;
+        }
+
+        // "Auto-refresh on window focus" was saved but never read (ED-6). Focus refreshes only after the project has
+        // changed, so clicking into the window doesn't rebuild what's under the pointer for nothing
+        private bool projectChangedSinceRefresh;
+
+        private void OnProjectChanged() => projectChangedSinceRefresh = true;
+
+        private void OnFocus()
+        {
+            if (!projectChangedSinceRefresh || contentContainer == null) return;
+            if (EditorPrefs.GetBool(PREFS_PREFIX + "AutoRefresh", true)) RefreshAll();
+        }
+
         private void CreateGUI()
         {
             root = rootVisualElement;

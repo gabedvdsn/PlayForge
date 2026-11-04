@@ -73,6 +73,7 @@ namespace FarEmerald.PlayForge.Extended.Editor
 
         private void RefreshAssetCache()
         {
+            projectChangedSinceRefresh = false;
             cachedAssets.Clear();
             
             foreach (var typeInfo in AssetTypes)

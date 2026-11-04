@@ -252,68 +252,14 @@ namespace FarEmerald.PlayForge.Extended.Editor
             var editorSection = CreateSettingsSection("Inspector", "Manager preferences", Colors.AccentCyan);
             scrollView.Add(editorSection);
             
+            // Each delay is a number field and a slider, saved through one method. The number field's range check was
+            // inverted, so it saved values out of range and turned valid ones away (ED-6)
             var editorRefreshMsRow = CreateSettingRow("Inspector Refresh Delay Ms");
-            
-            var editorRefreshMsInt = new IntegerField();
-            var editorRefreshMs = new SliderInt(DefaultConfigureDelayMsMin, DefaultConfigureDelayMsMax);
-            
-            editorRefreshMsInt.value = EditorPrefs.GetInt(PREFS_PREFIX + "EditorRefreshDelayMs", DefaultConfigureDelayMsMin);
-            editorRefreshMsInt.style.width = 45;
-            editorRefreshMsInt.RegisterValueChangedCallback(evt =>
-            {
-                if (evt.newValue < DefaultConfigureDelayMsMin || evt.newValue > DefaultConfigureDelayMsMax)
-                {
-                    EditorPrefs.SetInt(PREFS_PREFIX + "EditorRefreshDelayMs", evt.newValue);
-                    editorRefreshMs.SetValueWithoutNotify(evt.newValue);
-                }
-                else editorRefreshMsInt.SetValueWithoutNotify(Mathf.Clamp(evt.newValue, DefaultConfigureDelayMsMin, DefaultConfigureDelayMsMax));
-                
-            });
-            editorRefreshMsInt.style.marginTop = 8;
-            editorRefreshMsRow.Add(editorRefreshMsInt);
-            
-            editorRefreshMs.value = EditorPrefs.GetInt(PREFS_PREFIX + "EditorRefreshDelayMs", 250);
-            editorRefreshMs.style.width = 140;
-            editorRefreshMs.RegisterValueChangedCallback(evt =>
-            {
-                editorRefreshMsInt.SetValueWithoutNotify(evt.newValue);
-                EditorPrefs.SetInt(PREFS_PREFIX + "EditorRefreshDelayMs", evt.newValue);
-            });
-            editorRefreshMs.style.marginTop = 8;
-            editorRefreshMsRow.Add(editorRefreshMs);
-            
+            AddDelaySetting(editorRefreshMsRow, PREFS_PREFIX + "EditorRefreshDelayMs", DefaultConfigureDelayMsMin, DefaultConfigureDelayMsMax);
             editorSection.Add(editorRefreshMsRow);
-            
+
             var editorForceRefreshMsRow = CreateSettingRow("Inspector Force Refresh Delay Ms");
-            
-            var editorForceRefreshMsInt = new IntegerField();
-            var editorForceRefreshMs = new SliderInt(DefaultForceConfigureDelayMsMin, DefaultForceConfigureDelayMsMax);
-            
-            editorForceRefreshMsInt.value = EditorPrefs.GetInt(PREFS_PREFIX + "EditorForceRefreshDelayMs", DefaultForceConfigureDelayMsMin);
-            editorForceRefreshMsInt.style.width = 45;
-            editorForceRefreshMsInt.RegisterValueChangedCallback(evt =>
-            {
-                if (evt.newValue >= DefaultForceConfigureDelayMsMin && evt.newValue <= DefaultForceConfigureDelayMsMax)
-                {
-                    EditorPrefs.SetInt(PREFS_PREFIX + "EditorForceRefreshDelayMs", evt.newValue);
-                    editorForceRefreshMs.SetValueWithoutNotify(evt.newValue);
-                }
-                else editorForceRefreshMsInt.SetValueWithoutNotify(Mathf.Clamp(evt.newValue, DefaultForceConfigureDelayMsMin, DefaultForceConfigureDelayMsMax));
-                
-            });
-            editorForceRefreshMsInt.style.marginTop = 8;
-            editorForceRefreshMsRow.Add(editorForceRefreshMsInt);
-            
-            editorForceRefreshMs.value = EditorPrefs.GetInt(PREFS_PREFIX + "EditorForceRefreshDelayMs", DefaultForceConfigureDelayMsMin);
-            editorForceRefreshMs.style.width = 140;
-            editorForceRefreshMs.RegisterValueChangedCallback(evt =>
-            {
-                EditorPrefs.SetInt(PREFS_PREFIX + "EditorForceRefreshDelayMs", evt.newValue);
-                editorForceRefreshMsInt.SetValueWithoutNotify(evt.newValue);
-            });
-            editorForceRefreshMs.style.marginTop = 8;
-            editorForceRefreshMsRow.Add(editorForceRefreshMs);
-            
+            AddDelaySetting(editorForceRefreshMsRow, PREFS_PREFIX + "EditorForceRefreshDelayMs", DefaultForceConfigureDelayMsMin, DefaultForceConfigureDelayMsMax);
             editorSection.Add(editorForceRefreshMsRow);
             
             // Danger Zone
@@ -340,11 +286,10 @@ namespace FarEmerald.PlayForge.Extended.Editor
             //var resetSettingsBtnRow = CreateSettingRow("Reset All Settings");
             var resetSettingsBtn = CreateButton("Reset All Settings", () =>
             {
-                if (EditorUtility.DisplayDialog("Reset Settings", "Reset all PlayForge Manager settings to defaults?", "Yes", "Cancel"))
-                {
+                if (EditorUtility.DisplayDialog("Reset Settings",
+                        "Reset every PlayForge Manager setting to its default? Templates and template tags are kept.",
+                        "Reset", "Cancel"))
                     ResetAllSettings();
-                    ShowTab(2);
-                }
             });
             resetSettingsBtn.style.alignSelf = Align.FlexStart;
             resetSettingsBtn.style.width = 240;
@@ -1767,21 +1712,59 @@ namespace FarEmerald.PlayForge.Extended.Editor
             return section;
         }
         
+        // Every setting The Forge writes, besides each asset type's path and name affixes. Templates and template tags
+        // are content you registered, not settings, so Reset All keeps them. It used to miss most of these (ED-6)
+        private static readonly string[] SettingKeys =
+        {
+            "RememberTypeFilter", "LastTypeFilter", "DoubleClickVisualize", "ShowFileNames", "AutoRefresh",
+            "ShowNotifications", "RecentlyCreatedRows", "ShowFullTagPath", "GroupTagsByRoot", "EditorRefreshDelayMs",
+            "EditorForceRefreshDelayMs", "Ability_AutoLevel", "Effect_DurationPolicy", "Effect_StackingPolicy",
+            "Attribute_AutoBaseValue", "Attribute_DefaultBaseValue", "Entity_AutoLevel", "Item_AutoMaxStack",
+            "Item_DefaultMaxStack", "ScalerTemplate_DefaultCategory", "RequirementTemplate_DefaultCategory",
+        };
+
         private void ResetAllSettings()
         {
-            EditorPrefs.DeleteKey(PREFS_PREFIX + "RememberTypeFilter");
-            EditorPrefs.DeleteKey(PREFS_PREFIX + "LastTypeFilter");
-            EditorPrefs.DeleteKey(PREFS_PREFIX + "DoubleClickVisualize");
-            EditorPrefs.DeleteKey(PREFS_PREFIX + "ShowFileNames");
-            EditorPrefs.DeleteKey(PREFS_PREFIX + "AutoRefresh");
-            EditorPrefs.DeleteKey(PREFS_PREFIX + "ShowNotifications");
-            EditorPrefs.DeleteKey(PREFS_PREFIX + "RecentlyCreatedRows");
+            foreach (var key in SettingKeys)
+                EditorPrefs.DeleteKey(PREFS_PREFIX + key);
             foreach (var t in AssetTypes)
             {
                 EditorPrefs.DeleteKey(PREFS_PREFIX + "Path_" + t.Type.Name);
                 EditorPrefs.DeleteKey(PREFS_PREFIX + "Prefix_" + t.Type.Name);
                 EditorPrefs.DeleteKey(PREFS_PREFIX + "Postfix_" + t.Type.Name);
             }
+            ForgeLogSettingsBridge.ResetLevel();
+
+            // Rebuild the tab it was pressed on, so its controls show the defaults. It went to Analysis instead (ED-6)
+            if (contentContainer != null) ShowTab(currentTab);
+        }
+
+        /// <summary>
+        /// Adds a number field and a slider for one inspector delay. Either one saves the value, clamped to its range,
+        /// and moves the other. Unset, the delay is its minimum, as BasePlayForgeEditor reads it.
+        /// </summary>
+        private static void AddDelaySetting(VisualElement row, string key, int min, int max)
+        {
+            var current = Mathf.Clamp(EditorPrefs.GetInt(key, min), min, max);
+            var number = new IntegerField { value = current };
+            number.style.width = 45;
+            number.style.marginTop = 8;
+            var slider = new SliderInt(min, max) { value = current };
+            slider.style.width = 140;
+            slider.style.marginTop = 8;
+
+            void Save(int value)
+            {
+                var clamped = Mathf.Clamp(value, min, max);
+                EditorPrefs.SetInt(key, clamped);
+                number.SetValueWithoutNotify(clamped);
+                slider.SetValueWithoutNotify(clamped);
+            }
+            number.RegisterValueChangedCallback(evt => Save(evt.newValue));
+            slider.RegisterValueChangedCallback(evt => Save(evt.newValue));
+
+            row.Add(number);
+            row.Add(slider);
         }
         
         private void RunValidation()
@@ -1957,6 +1940,12 @@ namespace FarEmerald.PlayForge.Extended.Editor
         {
             EditorPrefs.SetInt(PrefsKey, (int)level);
             ForgeLog.MinimumLevel = level;
+        }
+
+        public static void ResetLevel()
+        {
+            EditorPrefs.DeleteKey(PrefsKey);
+            ForgeLog.MinimumLevel = CurrentLevel;
         }
     }
 }
