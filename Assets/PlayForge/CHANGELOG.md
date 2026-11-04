@@ -90,6 +90,8 @@ tracks each fix below by its ID.
 - The Ability inspector's Description, Activation Policy, Activate Immediately and Link Mode undo (ED-12).
 - Link, Unlink and template assignment undo in every asset inspector, children included (ED-12).
 - Each inspector's Unlink All question counts the children it would unlink; it always said 0 (ED-31).
+- A drawer that rebuilds itself, such as the tag requirements or worker group drawer, keeps editing every selected
+  asset; after a rebuild it edited only the first (ED-12).
 - Opening a scaler no longer changes it. On an effect with no level link, Lock mode cut its per-level table to one
   value; other modes resized the table, a Max Level of 0 became 10, and a scaler two list elements shared was cloned.
   A shared scaler now shows a warning with a button that makes a separate copy (ED-34).

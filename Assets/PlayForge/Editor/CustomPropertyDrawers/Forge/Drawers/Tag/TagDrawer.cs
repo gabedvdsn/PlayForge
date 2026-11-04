@@ -33,6 +33,7 @@ namespace FarEmerald.PlayForge.Extended.Editor
             // For fresh property access (fixes list item issues)
             public string PropertyPath;
             public UnityEngine.Object TargetObject;
+            public SerializedObject SerializedObject;
         }
         
         public override VisualElement CreatePropertyGUI(SerializedProperty prop)
@@ -41,7 +42,8 @@ namespace FarEmerald.PlayForge.Extended.Editor
             var state = new DrawerState
             {
                 PropertyPath = prop.propertyPath,
-                TargetObject = prop.serializedObject.targetObject
+                TargetObject = prop.serializedObject.targetObject,
+                SerializedObject = prop.serializedObject,
             };
             root.userData = state;
             
@@ -104,8 +106,10 @@ namespace FarEmerald.PlayForge.Extended.Editor
         private SerializedProperty GetFreshProperty(DrawerState state)
         {
             if (state.TargetObject == null) return null;
-            var so = new SerializedObject(state.TargetObject);
-            return so.FindProperty(state.PropertyPath);
+            // The drawer's own SerializedObject, refreshed, so a read or a pick covers every selected asset. A copy over
+            // the first target read and wrote that asset alone (ED-12)
+            state.SerializedObject.Update();
+            return state.SerializedObject.FindProperty(state.PropertyPath);
         }
         
         private Tag GetCurrentTagFresh(DrawerState state)

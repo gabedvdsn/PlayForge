@@ -64,13 +64,18 @@ namespace FarEmerald.PlayForge.Extended.Editor
         {
             var propPath = property.propertyPath;
             var targetObject = property.serializedObject.targetObject;
+            var serializedObject = property.serializedObject;
             if (RebuildingProperties.Contains(propPath)) return;
             RebuildingProperties.Add(propPath);
             root.schedule.Execute(() =>
             {
                 RebuildingProperties.Remove(propPath);
                 if (targetObject == null) return;
-                var so = new SerializedObject(targetObject);
+                // The drawer's own SerializedObject, so the rebuilt UI edits every selected asset. A copy over the
+                // first target edited that asset alone (ED-12)
+                if (root.panel == null) return;
+                var so = serializedObject;
+                so.Update();
                 var freshProp = so.FindProperty(propPath);
                 if (freshProp != null) BuildUI(root, freshProp);
             });
@@ -976,13 +981,18 @@ namespace FarEmerald.PlayForge.Extended.Editor
         {
             var propPath = property.propertyPath;
             var targetObject = property.serializedObject.targetObject;
+            var serializedObject = property.serializedObject;
             if (_rebuildingProperties.Contains(propPath)) return;
             _rebuildingProperties.Add(propPath);
             root.schedule.Execute(() =>
             {
                 _rebuildingProperties.Remove(propPath);
                 if (targetObject == null) return;
-                var so = new SerializedObject(targetObject);
+                // The drawer's own SerializedObject, so the rebuilt UI edits every selected asset. A copy over the
+                // first target edited that asset alone (ED-12)
+                if (root.panel == null) return;
+                var so = serializedObject;
+                so.Update();
                 var freshProp = so.FindProperty(propPath);
                 if (freshProp != null) BuildUI(root, freshProp);
             });

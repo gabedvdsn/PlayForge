@@ -521,7 +521,7 @@ had no letter in the review. TS-AA onward came from the test project.
 | ED-9 | M | 4 | The Visualizer is blank for items and sets, and after a domain reload | `TheForge.Utilities.cs:344, 407-412` | open |
 | ED-10 | M | 2 | Analysis exposes "Not Implemented" groups and truncates silently | `TheForge.AnalysisTab.cs:362, 716, 1461, 1979-1991` | verified |
 | ED-11 | M | 4 | The sticky-header workaround and drawer timers poll forever, among them two 250 ms timers in each impact drawer | `BasePlayForgeEditor.cs:524-611`, `GameplayEffectDrawer.cs:147-152`, `GameplayEffectImpactDrawer.cs:71, 145` | open |
-| ED-12 | H | 4 | No Undo, multi-edit or prefab overrides. The inspectors wrote 42 edits straight into their asset, and only the 5 renames recorded Undo; no inspector took a multiple selection; six drawers copy their SerializedObject for one target, and two write while drawing. Fixed so far: Phase 2's part (a rename stores the tag in the same undoable step, and showing never writes), the Attribute inspector (its fields bind, it takes a multiple selection, and every inspector's header follows Undo), the MonoProcess inspector's multiple selection, the Effect, Item and Attribute Set inspectors' Description and Link Mode, the Entity inspector's fields, the Ability inspector's Description, Activation Policy, Activate Immediately and Link Mode, and Link, Unlink and template assignment in every inspector. Left: the drawers' one-target copies and a write while drawing, and then a multiple selection in each asset inspector. In the Effect, Entity and Attribute Set inspectors, whose assets hold scalers, that also waits for ScalerDrawer's one-target copy, which changes with Decision 28's scaler workflow (ED-32, ED-33) | `AbilityEditor.cs:155-189, 743`, `EntityIdentityEditor.cs:790-919`, `BasePlayForgeEditor.cs` (`ShowTemplatePicker`), `TagDrawer.cs:104-109`, `AbstractTypeRefDrawer.cs:123-128`, `ScalerDrawer.cs:169-177` | open |
+| ED-12 | H | 4 | No Undo, multi-edit or prefab overrides. The inspectors wrote 42 edits straight into their asset, and only the 5 renames recorded Undo; no inspector took a multiple selection; six drawers copy their SerializedObject for one target, and two write while drawing. Fixed so far: Phase 2's part (a rename stores the tag in the same undoable step, and showing never writes), the Attribute inspector (its fields bind, it takes a multiple selection, and every inspector's header follows Undo), the MonoProcess inspector's multiple selection, the Effect, Item and Attribute Set inspectors' Description and Link Mode, the Entity inspector's fields, the Ability inspector's Description, Activation Policy, Activate Immediately and Link Mode, Link, Unlink and template assignment in every inspector, and the drawers that rebuilt on a one-target copy. Left: a write while drawing, and then a multiple selection in each asset inspector. In the Effect, Entity and Attribute Set inspectors, whose assets hold scalers, that also waits for ScalerDrawer's one-target copy, which changes with Decision 28's scaler workflow (ED-32, ED-33) | `AbilityEditor.cs:155-189, 743`, `EntityIdentityEditor.cs:790-919`, `BasePlayForgeEditor.cs` (`ShowTemplatePicker`), `TagDrawer.cs:104-109`, `AbstractTypeRefDrawer.cs:123-128`, `ScalerDrawer.cs:169-177` | open |
 | ED-13 | M | 4 | Template propagation on save loads everything, opens a modal mid-save and records no Undo; the validator is empty | `ForgeTemplateProcessor.cs:45-52`, `ForgeTemplatePropagator.cs:201-229` | open |
 | ED-14 | H | 1 | The `GameplayEffectImpact` copy constructor drops affiliation and throws on null packets | `GameplayEffectImpact.cs:155-176` | verified |
 | ED-15 | M | 4 | "Validate All" is noisy and capped at 15; "Find All References" is a dialog | `TheForge.SettingsTab.cs:1808-1832`, `AttributeEditor.cs:261-273` | open |
@@ -643,6 +643,17 @@ GAS-4 with GAS-5, PC-6, and TS-I with PC-5.
 ## Log
 
 Record baselines, gate results and notable decisions here, newest first.
+
+- 2026-11-04, **ED-12: a rebuilt drawer edits every selected asset.** Five drawers rebuilt themselves on a new
+  SerializedObject over the first selected asset: the ability behaviour and stage drawers, the worker group drawer,
+  and the two tag requirement drawers. After a rebuild, such as opening one, an edit reached that asset alone. The tag
+  drawer did the same for every read and every pick. Each now rebuilds or reads through its own SerializedObject,
+  refreshed first, and a rebuild that comes after the drawer has left its panel is skipped. Its test,
+  `ED_12_A_rebuilt_drawer_edits_every_selected_asset`, opens the Effect requirements drawer on two effects and edits
+  the group's Name; it was seen failing first, with the second effect untouched. ScalerDrawer's two copies wait for
+  Decision 28's scaler work (ED-32, ED-33).
+  - **Tests:** PlayMode 941: 934 pass, 0 fail and 7 planted are skipped, in three orders. Planted 7 of 7; EditMode
+    53 of 53.
 
 - 2026-11-04, **ED-31: each unlink question counts the children it would change.** The Effect, Ability, Item and
   Entity inspectors' Unlink All questions counted children linked to `this`, the editor, which no asset links to, so
