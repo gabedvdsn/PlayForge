@@ -218,8 +218,10 @@ from. It lives outside `Assets/` so it never ships in the package.
     first (Q35). The editor code becomes internal before 1.0 (Q37). The smoke suite proves, in each theme, that every
     window opens without an exception and scripted edits undo (Q36).
 - Decision 19, 2026-11-03: work goes on `main`, with no new phase branches. The user switched the checkout to it, and
-  `main` holds Phases 0 to 2; `refactor/phase-2-release` stays at `901c974`. Another session has pushed `main` to
-  GitHub on the user's word. Whether this one pushes as it goes is the user's call.
+  `main` holds Phases 0 to 2; `refactor/phase-2-release` stays at `901c974`. The user's word, the same day: push as
+  you go. So each commit whose checks pass is pushed to `origin/main`, fast-forward only, never forced; a rejected
+  push stops work until it's reported. This replaces Phase 0's "Do not push". Proving Grounds has no remote and
+  stays local.
 
 **Open. Ask the user; do not assume:**
 1. ~~**Uncommitted changes**~~: decided, see above.
