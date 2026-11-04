@@ -208,6 +208,12 @@ namespace FarEmerald.PlayForge.Extended.Editor
         /// </summary>
         protected virtual bool SupportsMultipleObjects => false;
 
+        /// <summary>
+        /// Called after any change to the asset, an Undo or a Redo among them (ED-12). A section drawn from the asset's
+        /// values rather than bound redraws here. Does nothing by default.
+        /// </summary>
+        protected virtual void OnAssetChanged() { }
+
         // A multiple selection shows its count in the header, and only the actions that act on every selected asset
         private bool IsMultiple => serializedObject.isEditingMultipleObjects;
         private string HeaderName() => IsMultiple ? $"{targets.Length} selected" : GetDisplayName();
@@ -217,9 +223,10 @@ namespace FarEmerald.PlayForge.Extended.Editor
         /// (ED-12). Binding sends the edit through the SerializedObject, so Undo takes it back, it reaches every selected
         /// asset, and a selection that disagrees shows as mixed.
         /// </summary>
-        protected static TextField CreateBoundTextField(string propertyPath, string label, bool multiline = false, int minHeight = 0)
+        protected static TextField CreateBoundTextField(string propertyPath, string label, bool multiline = false, int minHeight = 0,
+            string name = null)
         {
-            var field = CreateTextField(propertyPath, label, multiline, minHeight);
+            var field = CreateTextField(name ?? propertyPath, label, multiline, minHeight);
             field.isDelayed = true;
             field.bindingPath = propertyPath;
             return field;
@@ -492,8 +499,13 @@ namespace FarEmerald.PlayForge.Extended.Editor
             
             root.Bind(serializedObject);
 
-            // The header follows every change to the asset, an Undo or a Redo among them (ED-12)
-            root.TrackSerializedObjectValue(serializedObject, _ => UpdateHeader());
+            // The header, and any section drawn from the asset's values rather than bound, follow every change to the
+            // asset, an Undo or a Redo among them (ED-12)
+            root.TrackSerializedObjectValue(serializedObject, _ =>
+            {
+                UpdateHeader();
+                OnAssetChanged();
+            });
 
             // Hook into panel attachment to disable Inspector's native ScrollView
             root.RegisterCallback<AttachToPanelEvent>(OnAttachedToPanel);

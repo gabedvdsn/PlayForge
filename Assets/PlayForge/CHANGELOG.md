@@ -80,6 +80,7 @@ tracks each fix below by its ID.
 - The Attribute inspector's Name, Abbreviation and Description undo, and the inspector edits several attributes at once.
   Every asset inspector's header follows Undo and Redo (ED-12).
 - The MonoProcess inspector edits several selected processes at once (ED-12).
+- The Effect inspector's Description and Link Mode undo, and its Level Source section follows an Undo (ED-12).
 - Runtime correctness: 96 fixes across ProcessControl, TaskSequence and the GAS core, among them exception isolation,
   queued state changes, pause, effect stacking and ticking, commit order, worker scheduling and targeting.
 - A fresh project imports the package with no warning and no missing type, and the samples import with no missing

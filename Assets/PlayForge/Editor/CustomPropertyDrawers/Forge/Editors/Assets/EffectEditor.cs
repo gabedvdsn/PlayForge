@@ -15,6 +15,7 @@ namespace FarEmerald.PlayForge.Extended.Editor
         private GameplayEffect effect;
         private Label assetTagValueLabel;
         private VisualElement levelSourceContent;
+        private EEffectLinkMode shownLinkMode;
 
         // ═══════════════════════════════════════════════════════════════════════════
         // Header Configuration (IMGUI Header)
@@ -108,16 +109,10 @@ namespace FarEmerald.PlayForge.Extended.Editor
             });
             content.Add(nameField);
             
-            var descField = CreateTextField("Description", "Description", multiline: true, minHeight: 18);
-            descField.value = effect.Definition.Description;
-            descField.RegisterCallback<FocusOutEvent>(_ =>
-            {
-                effect.Definition.Description = descField.value;
-                UpdateHeader();
-                MarkDirty(effect);
-                Repaint();
-            });
-            content.Add(descField);
+            // Description binds to its property, so an edit undoes. It wrote straight into the asset when it lost focus,
+            // with no Undo (ED-12).
+            content.Add(CreateBoundTextField($"{nameof(GameplayEffect.Definition)}.{nameof(GameplayEffectDefinition.Description)}",
+                "Description", multiline: true, minHeight: 18, name: "Description"));
             
             var retGroupField = CreatePropertyField(definition.FindPropertyRelative(nameof(GameplayEffectDefinition.RetentionGroup)), "RetentionGroup", "Retention Group");
             //retGroupField.Q<Label>().style.marginRight = 12;
@@ -156,25 +151,26 @@ namespace FarEmerald.PlayForge.Extended.Editor
             RebuildLevelSourceContent();
         }
         
+        // Level Source is drawn from the link mode, so it redraws when the mode changes, an Undo among them (ED-12)
+        protected override void OnAssetChanged()
+        {
+            if (levelSourceContent != null && effect.LinkMode != shownLinkMode) RebuildLevelSourceContent();
+        }
+
         protected override void RebuildLevelSourceContent()
         {
             levelSourceContent.Clear();
-            
+            shownLinkMode = effect.LinkMode;
+
             var infoLabel = CreateHintLabel(
                 "Link this effect to another asset to derive its level range.");
             infoLabel.style.marginBottom = 8;
             levelSourceContent.Add(infoLabel);
-            
-            var linkModeField = new EnumField("Link Mode", effect.LinkMode);
+
+            // Link Mode binds to its property, so a change undoes, and OnAssetChanged redraws the section from it. It
+            // wrote the mode straight into the asset, with no Undo, and redrew only then (ED-12).
+            var linkModeField = new EnumField("Link Mode", effect.LinkMode) { bindingPath = nameof(GameplayEffect.LinkMode) };
             linkModeField.style.marginBottom = 6;
-            linkModeField.RegisterValueChangedCallback(evt =>
-            {
-                effect.LinkMode = (EEffectLinkMode)evt.newValue;
-                serializedObject.Update();
-                MarkDirty(effect);
-                RebuildLevelSourceContent();
-                Repaint();
-            });
             levelSourceContent.Add(linkModeField);
             
             if (effect.LinkMode == EEffectLinkMode.LinkedToProvider)
