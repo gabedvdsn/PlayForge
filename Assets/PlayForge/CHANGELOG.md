@@ -93,6 +93,8 @@ tracks each fix below by its ID.
 - A drawer that rebuilds itself, such as the tag requirements or worker group drawer, keeps editing every selected
   asset; after a rebuild it edited only the first (ED-12).
 - The Item inspector edits several selected items at once. Name, the asset tag and linking wait for one item (ED-12).
+- The Ability inspector edits several selected abilities at once. Name, the asset tag, linking, targeting, asset
+  loaders, stages and activation rules wait for one ability (ED-12).
 - Drawing an empty type field no longer writes its default type into it (ED-12). An empty activation rule or scaler
   behaviour is now skipped; both threw. A new Inject task starts with Interrupt.
 - Opening a scaler no longer changes it. On an effect with no level link, Lock mode cut its per-level table to one

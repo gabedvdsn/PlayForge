@@ -521,7 +521,7 @@ had no letter in the review. TS-AA onward came from the test project.
 | ED-9 | M | 4 | The Visualizer is blank for items and sets, and after a domain reload | `TheForge.Utilities.cs:344, 407-412` | open |
 | ED-10 | M | 2 | Analysis exposes "Not Implemented" groups and truncates silently | `TheForge.AnalysisTab.cs:362, 716, 1461, 1979-1991` | verified |
 | ED-11 | M | 4 | The sticky-header workaround and drawer timers poll forever, among them two 250 ms timers in each impact drawer | `BasePlayForgeEditor.cs:524-611`, `GameplayEffectDrawer.cs:147-152`, `GameplayEffectImpactDrawer.cs:71, 145` | open |
-| ED-12 | H | 4 | No Undo, multi-edit or prefab overrides. The inspectors wrote 42 edits straight into their asset, and only the 5 renames recorded Undo; no inspector took a multiple selection; six drawers copy their SerializedObject for one target, and two write while drawing. Fixed so far: Phase 2's part (a rename stores the tag in the same undoable step, and showing never writes), the Attribute inspector (its fields bind, it takes a multiple selection, and every inspector's header follows Undo), the MonoProcess inspector's multiple selection, the Effect, Item and Attribute Set inspectors' Description and Link Mode, the Entity inspector's fields, the Ability inspector's Description, Activation Policy, Activate Immediately and Link Mode, Link, Unlink and template assignment in every inspector, the drawers that rebuilt on a one-target copy, the type drawers that wrote a default while drawing, and the Item inspector's multiple selection. Left: a multiple selection in the other asset inspectors. In the Effect, Entity and Attribute Set inspectors, whose assets hold scalers, that also waits for ScalerDrawer's one-target copy, which changes with Decision 28's scaler workflow (ED-32, ED-33) | `AbilityEditor.cs:155-189, 743`, `EntityIdentityEditor.cs:790-919`, `BasePlayForgeEditor.cs` (`ShowTemplatePicker`), `TagDrawer.cs:104-109`, `AbstractTypeRefDrawer.cs:123-128`, `ScalerDrawer.cs:169-177` | open |
+| ED-12 | H | 4 | No Undo, multi-edit or prefab overrides. The inspectors wrote 42 edits straight into their asset, and only the 5 renames recorded Undo; no inspector took a multiple selection; six drawers copy their SerializedObject for one target, and two write while drawing. Fixed so far: Phase 2's part (a rename stores the tag in the same undoable step, and showing never writes), the Attribute inspector (its fields bind, it takes a multiple selection, and every inspector's header follows Undo), the MonoProcess inspector's multiple selection, the Effect, Item and Attribute Set inspectors' Description and Link Mode, the Entity inspector's fields, the Ability inspector's Description, Activation Policy, Activate Immediately and Link Mode, Link, Unlink and template assignment in every inspector, the drawers that rebuilt on a one-target copy, the type drawers that wrote a default while drawing, and the Item and Ability inspectors' multiple selection. Left: a multiple selection in the Effect, Entity and Attribute Set inspectors. In the Effect, Entity and Attribute Set inspectors, whose assets hold scalers, that also waits for ScalerDrawer's one-target copy, which changes with Decision 28's scaler workflow (ED-32, ED-33) | `AbilityEditor.cs:155-189, 743`, `EntityIdentityEditor.cs:790-919`, `BasePlayForgeEditor.cs` (`ShowTemplatePicker`), `TagDrawer.cs:104-109`, `AbstractTypeRefDrawer.cs:123-128`, `ScalerDrawer.cs:169-177` | open |
 | ED-13 | M | 4 | Template propagation on save loads everything, opens a modal mid-save and records no Undo; the validator is empty | `ForgeTemplateProcessor.cs:45-52`, `ForgeTemplatePropagator.cs:201-229` | open |
 | ED-14 | H | 1 | The `GameplayEffectImpact` copy constructor drops affiliation and throws on null packets | `GameplayEffectImpact.cs:155-176` | verified |
 | ED-15 | M | 4 | "Validate All" is noisy and capped at 15; "Find All References" is a dialog | `TheForge.SettingsTab.cs:1808-1832`, `AttributeEditor.cs:261-273` | open |
@@ -643,6 +643,17 @@ GAS-4 with GAS-5, PC-6, and TS-I with PC-5.
 ## Log
 
 Record baselines, gate results and notable decisions here, newest first.
+
+- 2026-11-04, **ED-12: the Ability inspector edits a multiple selection.** As in the Item inspector, a field the
+  abilities disagree on shows as mixed and an edit reaches every ability. Name, the asset tag, linking and a linked
+  ability's levels step aside the same way. Targeting, the asset loaders, the stages and the activation rules are
+  objects and lists each ability keeps of its own, and the stage drawers resize lists directly, so a multiple
+  selection could cut a longer list. A note stands in for them until one ability is selected. Its test,
+  `ED_12_The_Ability_inspector_edits_every_selected_ability`, was seen failing first.
+  - **Tests:** PlayMode 945: 938 pass, 0 fail and 7 planted are skipped, in three orders. Planted 7 of 7; EditMode
+    57 of 57.
+  - **Left in ED-12:** the Effect, Entity and Attribute Set inspectors' multiple selection, which waits for
+    ScalerDrawer's one-target copies, reworked with Decision 28 (ED-32, ED-33).
 
 - 2026-11-04, **ED-12: the Item inspector edits a multiple selection.** It refused one. Now a field the items
   disagree on shows as mixed and an edit reaches every item. What acts on one item steps aside:

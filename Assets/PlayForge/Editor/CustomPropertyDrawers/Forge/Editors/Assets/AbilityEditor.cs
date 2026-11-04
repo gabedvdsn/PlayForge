@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Linq;
 using System.Text.RegularExpressions;
 using UnityEditor;
 using UnityEditor.UIElements;
@@ -13,10 +14,15 @@ using Random = UnityEngine.Random;
 
 namespace FarEmerald.PlayForge.Extended.Editor
 { 
-    [CustomEditor(typeof(Ability))]
+    [CustomEditor(typeof(Ability)), CanEditMultipleObjects]
     public class AbilityEditor : BasePlayForgeEditor
     {
         private Ability ability;
+
+        // Its fields write through the SerializedObject, so it edits a multiple selection, and what acts on one ability
+        // steps aside: the name, the asset tag, linking, a linked ability's levels, and the lists each ability keeps of
+        // its own (ED-12)
+        protected override bool SupportsMultipleObjects => true;
         
         // UI References for updates
         private Label assetTagValueLabel;
@@ -159,6 +165,13 @@ namespace FarEmerald.PlayForge.Extended.Editor
                 MarkDirty(ability);
                 Repaint(); // Refresh IMGUI header
             });
+            // Each ability's tag comes from its own name, so a multiple selection shows the names and can't rename (ED-12)
+            if (IsMultiple)
+            {
+                nameField.SetEnabled(false);
+                nameField.showMixedValue = targets.Select(target => ((Ability)target).Definition.Name).Distinct().Count() > 1;
+                nameField.tooltip = "Rename one ability at a time: each ability's tag comes from its own name.";
+            }
             content.Add(nameField);
             
             // Description, Activation Policy and Activate Immediately bind to their properties, so an edit undoes. They
@@ -244,11 +257,14 @@ namespace FarEmerald.PlayForge.Extended.Editor
             var content = section.Content;
             var tagsProp = serializedObject.FindProperty(nameof(Ability.Tags));
             
-            // Asset Tag Display (read-only)
-            var (assetTagContainer, valueLabel) = CreateAssetTagDisplay();
-            assetTagValueLabel = valueLabel;
-            UpdateAssetTagDisplay();
-            content.Add(assetTagContainer);
+            // Asset Tag Display (read-only). Each ability has its own, so a multiple selection doesn't show one (ED-12)
+            if (!IsMultiple)
+            {
+                var (assetTagContainer, valueLabel) = CreateAssetTagDisplay();
+                assetTagValueLabel = valueLabel;
+                UpdateAssetTagDisplay();
+                content.Add(assetTagContainer);
+            }
             
             // Context Tags
             content.Add(CreatePropertyField(tagsProp.FindPropertyRelative(nameof(AbilityTags.ContextTags)), "ContextTags", "Context Tags"));
@@ -307,10 +323,18 @@ namespace FarEmerald.PlayForge.Extended.Editor
             var content = section.Content;
             var proxyProp = serializedObject.FindProperty(nameof(Ability.Behaviour));
             
-            // Target Mode
-            var targetMode = CreatePropertyField(proxyProp.FindPropertyRelative(nameof(AbilityBehaviour.Targeting)), "Targeting", "Targeting");
-            content.Add(targetMode);
-            
+            // Target Mode. Targeting, the asset loaders and the stages are objects each ability keeps of its own, which a
+            // multiple selection can't edit safely: a list of a different length would be cut. A note stands in (ED-12)
+            if (IsMultiple)
+            {
+                content.Add(CreateHintLabel("Select one ability to edit its targeting, asset loaders and stages."));
+            }
+            else
+            {
+                var targetMode = CreatePropertyField(proxyProp.FindPropertyRelative(nameof(AbilityBehaviour.Targeting)), "Targeting", "Targeting");
+                content.Add(targetMode);
+            }
+
             // Use Implicit Targeting
             content.Add(CreateHintLabel("Automatically set Source as Target?"));
             var useImplicit = CreateToggle("UseImplicitTargeting", "Use Implicit Targeting");
@@ -326,7 +350,9 @@ namespace FarEmerald.PlayForge.Extended.Editor
             {
                 implicitTargetingTag.style.display = evt.newValue ? DisplayStyle.Flex : DisplayStyle.None;
             });
-            
+
+            if (IsMultiple) return;
+
             content.Add(CreateDivider());
 
             content.Add(CreateHintLabel("Load assets and other data into the runtime data packet."));
@@ -403,12 +429,22 @@ namespace FarEmerald.PlayForge.Extended.Editor
             if (levelingContent == null) return;
             
             levelingContent.Clear();
-            
+
+            // A multiple selection edits the level range when every ability keeps its own; a linked ability's range
+            // comes from its provider, which differs by ability (ED-12)
+            if (IsMultiple)
+            {
+                if (targets.All(target => ((Ability)target).LinkMode == EAbilityLinkMode.Standalone)) BuildStandaloneLevelingFields();
+                else levelingContent.Add(CreateHintLabel("A linked ability takes its levels from its provider. Select standalone abilities to edit their range together."));
+                levelingContent.Bind(serializedObject);
+                return;
+            }
+
             // Determine which state we're in:
             // 1. Standalone mode - show editable level fields
             // 2. LinkedToProvider mode with no provider - show disabled level fields + warning
             // 3. LinkedToProvider mode with provider - show read-only derived values
-            
+
             if (ability.LinkMode == EAbilityLinkMode.LinkedToProvider)
             {
                 if (ability.LinkedProvider != null)
@@ -735,7 +771,15 @@ namespace FarEmerald.PlayForge.Extended.Editor
             var linkModeField = new EnumField("Link Mode", ability.LinkMode) { bindingPath = nameof(Ability.LinkMode) };
             linkModeField.style.marginBottom = 6;
             levelSourceContent.Add(linkModeField);
-            
+
+            // A provider and a child's link belong to one ability, so a multiple selection sets the mode alone (ED-12)
+            if (IsMultiple)
+            {
+                levelSourceContent.Add(CreateHintLabel("Select one ability to choose its provider or link its cost and cooldown."));
+                levelSourceContent.Bind(serializedObject);
+                return;
+            }
+
             if (ability.LinkMode == EAbilityLinkMode.LinkedToProvider)
             {
                 BuildProviderSelector(levelSourceContent, ability);
@@ -1052,7 +1096,14 @@ namespace FarEmerald.PlayForge.Extended.Editor
             parent.Add(section.Section);
             
             var content = section.Content;
-            
+
+            // Each ability keeps its own lists of rules, which a multiple selection can't edit safely (ED-12)
+            if (IsMultiple)
+            {
+                content.Add(CreateHintLabel("Select one ability to edit its activation rules."));
+                return;
+            }
+
             var sourceRules = CreatePropertyField(serializedObject.FindProperty(nameof(Ability.SourceActivationRules)), "SourceActivationRules", "Source Rules");
             sourceRules.tooltip = "Rules that validate the ability source (caster)";
             content.Add(sourceRules);
