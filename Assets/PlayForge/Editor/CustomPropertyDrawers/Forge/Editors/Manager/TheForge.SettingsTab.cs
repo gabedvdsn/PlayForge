@@ -189,18 +189,17 @@ namespace FarEmerald.PlayForge.Extended.Editor
             
             var showFullTagPath = CreateSettingRow("Display full tag path");
             var showFullTagPathToggle = new Toggle();
-            showFullTagPathToggle.value = EditorPrefs.GetBool(PREFS_PREFIX + "ShowFullTagPath", false);
-            showFullTagPathToggle.RegisterValueChangedCallback(evt => 
-                EditorPrefs.SetBool(PREFS_PREFIX + "ShowFullTagPath", evt.newValue));
+            showFullTagPathToggle.value = TagDisplaySettings.ShowFullPath;
+            showFullTagPathToggle.RegisterValueChangedCallback(evt => TagDisplaySettings.ShowFullPath = evt.newValue);
             showFullTagPathToggle.style.marginTop = 4;
             showFullTagPath.Add(showFullTagPathToggle);
             tagSection.Add(showFullTagPath);
             
             var groupTagsByRoot = CreateSettingRow("Group tags by root");
             var groupTagsByRootToggle = new Toggle();
-            groupTagsByRootToggle.value = EditorPrefs.GetBool(PREFS_PREFIX + "GroupTagsByRoot", false);
-            groupTagsByRootToggle.RegisterValueChangedCallback(evt => 
-                EditorPrefs.SetBool(PREFS_PREFIX + "GroupTagsByRoot", evt.newValue));
+            // This showed off for an unset value, which the tag field treats as on (ED-25)
+            groupTagsByRootToggle.value = TagDisplaySettings.GroupByRoot;
+            groupTagsByRootToggle.RegisterValueChangedCallback(evt => TagDisplaySettings.GroupByRoot = evt.newValue);
             groupTagsByRootToggle.style.marginTop = 4;
             groupTagsByRoot.Add(groupTagsByRootToggle);
             tagSection.Add(groupTagsByRoot);
@@ -1915,6 +1914,30 @@ namespace FarEmerald.PlayForge.Extended.Editor
             TemplateRegistry.UpdateTag(targetTag.Name, new TemplateTag(newName, newColor));
             onSaved?.Invoke();
             Close();
+        }
+    }
+
+    /// <summary>
+    /// The tag display settings, which the tag field, the View tab's tag list and the Settings tab share. Each used to
+    /// keep a default, or a switch, of its own (ED-25).
+    /// </summary>
+    internal static class TagDisplaySettings
+    {
+        private const string FullPathKey = TheForge.PREFS_PREFIX + "ShowFullTagPath";
+        private const string GroupByRootKey = TheForge.PREFS_PREFIX + "GroupTagsByRoot";
+
+        /// <summary>A tag's whole path, rather than its leaf after an ellipsis. Off unless set.</summary>
+        public static bool ShowFullPath
+        {
+            get => EditorPrefs.GetBool(FullPathKey, false);
+            set => EditorPrefs.SetBool(FullPathKey, value);
+        }
+
+        /// <summary>Tags grouped under their root. On unless set.</summary>
+        public static bool GroupByRoot
+        {
+            get => EditorPrefs.GetBool(GroupByRootKey, true);
+            set => EditorPrefs.SetBool(GroupByRootKey, value);
         }
     }
 

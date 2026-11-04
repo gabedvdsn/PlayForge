@@ -168,33 +168,19 @@ namespace FarEmerald.PlayForge.Extended.Editor
             return btn;
         }
         
-        private bool ShowFullPath()
-        {
-            return EditorPrefs.GetBool(TheForge.PREFS_PREFIX + "ShowFullTagPath", false);
-        }
-        
-        private bool GroupByRoot()
-        {
-            return EditorPrefs.GetBool(TheForge.PREFS_PREFIX + "GroupTagsByRoot", true);
-        }
-        
+        private bool ShowFullPath() => TagDisplaySettings.ShowFullPath;
+
+        private bool GroupByRoot() => TagDisplaySettings.GroupByRoot;
+
         private string GetDisplayText(Tag tag)
         {
             if (tag.Equals(default(Tag))) return "<None>";
 
-            return tag.DisplayName;
-
-            /*
-            if (ShowFullPath())
-                return tag.DisplayName;
-
-            // Use registered display name if available (strips the deterministic hash padding)
-            var displayName = tag.DisplayName;
-            if (tag.Depth > 1)
-            {
-                return $"…{displayName}";
-            }
-            return displayName;*/
+            // The display name drops a deterministic tag's hash padding. The setting was read only in code after this
+            // had already returned (ED-25)
+            var path = string.IsNullOrEmpty(tag.DisplayName) ? tag.Name : tag.DisplayName;
+            var lastDot = path.LastIndexOf('.');
+            return ShowFullPath() || lastDot < 0 ? path : "…" + path.Substring(lastDot + 1);
         }
         
         // ═══════════════════════════════════════════════════════════════════════════

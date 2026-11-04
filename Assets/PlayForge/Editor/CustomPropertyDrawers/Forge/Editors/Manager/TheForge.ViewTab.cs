@@ -22,8 +22,6 @@ namespace FarEmerald.PlayForge.Extended.Editor
         private HashSet<string> expandedTags = new HashSet<string>();
         private HashSet<string> expandedRequirements = new HashSet<string>();
 
-        private bool groupTagResults = true;
-        private bool showFullTagPath = false;
         private string selectedTagParentFilter = null;
 
         // Tag list — sort & quality filters (new)
@@ -1625,15 +1623,15 @@ namespace FarEmerald.PlayForge.Extended.Editor
 
             qStrip.Add(CreateSectionDivider());
 
-            // Display toggles
+            // Display toggles: the tag display settings themselves, not switches of the list's own (ED-25)
             qStrip.Add(CreateFilterSectionLabel("Display:"));
-            var fullPathToggle = CreateFilterChip(() => showFullTagPath ? "Full Path ✓" : "Full Path",
-                () => showFullTagPath, Colors.AccentGreen,
-                () => { showFullTagPath = !showFullTagPath; RefreshViewList(); },
+            var fullPathToggle = CreateFilterChip(() => TagDisplaySettings.ShowFullPath ? "Full Path ✓" : "Full Path",
+                () => TagDisplaySettings.ShowFullPath, Colors.AccentGreen,
+                () => { TagDisplaySettings.ShowFullPath = !TagDisplaySettings.ShowFullPath; RefreshViewList(); },
                 tooltip: "Show full hierarchical path on each row");
-            var groupResultsToggle = CreateFilterChip(() => groupTagResults ? "Group by Root ✓" : "Group by Root",
-                () => groupTagResults, Colors.AccentGreen,
-                () => { groupTagResults = !groupTagResults; RefreshViewList(); },
+            var groupResultsToggle = CreateFilterChip(() => TagDisplaySettings.GroupByRoot ? "Group by Root ✓" : "Group by Root",
+                () => TagDisplaySettings.GroupByRoot, Colors.AccentGreen,
+                () => { TagDisplaySettings.GroupByRoot = !TagDisplaySettings.GroupByRoot; RefreshViewList(); },
                 tooltip: "Group tags under their root category");
             
             qStrip.Add(fullPathToggle);
@@ -1696,7 +1694,7 @@ namespace FarEmerald.PlayForge.Extended.Editor
             // Render — Group by root respects the toggle even when searching/filtering.
             // Group key is the encoded root Name (correct uniqueness); the header label
             // pulls the friendly DisplayName from any tag in the group.
-            if (groupTagResults)
+            if (TagDisplaySettings.GroupByRoot)
             {
                 var grouped = sorted
                     .GroupBy(r => r.Tag.GetRoot().DisplayName)
@@ -1758,7 +1756,7 @@ namespace FarEmerald.PlayForge.Extended.Editor
             // Depth-decayed left-border tint gives a subtle hierarchy cue.
             float depthFade = Mathf.Clamp01(1f - (depth - 1) * 0.15f);
             Color borderColor = new Color(Colors.AccentCyan.r, Colors.AccentCyan.g, Colors.AccentCyan.b, depthFade);
-            int indentPx = showFullTagPath ? 8 : 8 + (depth - 1) * 14;
+            int indentPx = TagDisplaySettings.ShowFullPath ? 8 : 8 + (depth - 1) * 14;
 
             var tagContainer = new VisualElement();
             tagContainer.style.marginBottom = 2;
@@ -1799,7 +1797,7 @@ namespace FarEmerald.PlayForge.Extended.Editor
             nameContainer.tooltip = displayPath;
             row.Add(nameContainer);
 
-            if (showFullTagPath || depth == 1)
+            if (TagDisplaySettings.ShowFullPath || depth == 1)
             {
                 var name = new Label(displayPath);
                 name.style.fontSize = 11;
@@ -1846,7 +1844,7 @@ namespace FarEmerald.PlayForge.Extended.Editor
             // Trailing badges: depth (when not Full Path), system, orphan
             row.Add(CreateSpacer());
 
-            if (depth > 1 && !showFullTagPath)
+            if (depth > 1 && !TagDisplaySettings.ShowFullPath)
             {
                 var depthBadge = CreateBadge($"d{depth}", 0, Colors.AccentPurple);
                 depthBadge.tooltip = $"Depth {depth} — parent: {displayParent}";
