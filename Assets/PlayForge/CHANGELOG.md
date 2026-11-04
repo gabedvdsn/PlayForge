@@ -49,6 +49,9 @@ tracks each fix below by its ID.
   done: read it during the call, or copy its `Value`. A deferred worker's actions may still keep it. `TrackedImpact`
   keeps a total, the last impact and a count, not every impact. `ForgeHelper.SignPolicy` and `SignPolicyExtended`
   take one or two values without allocating.
+- A raw delta allocates nothing on its way through the GAS. `GenerateSimple` still makes a new carrier on every call,
+  so a raw delta made every frame keeps one, made once with `IAttributeImpactCarrier.GenerateSourceDerivation`. A
+  `SourceAttributeImpact` with no root carrier gives the same origin each time it's asked for one.
 
 ### Fixed
 - Runtime correctness: 96 fixes across ProcessControl, TaskSequence and the GAS core, among them exception isolation,

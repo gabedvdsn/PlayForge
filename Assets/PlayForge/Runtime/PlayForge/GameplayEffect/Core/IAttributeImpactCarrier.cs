@@ -83,6 +83,10 @@ namespace FarEmerald.PlayForge
 
         private TrackedImpact TrackedImpact;
 
+        // The origin a carrier with no root carrier gives, made the first time it's asked for. It was made each time it
+        // was asked for, which a raw delta's commit did three times (GAS-P8). It only passes the source's own answers on
+        private SourceEffectOrigin sourceOrigin;
+
         // Optional impacter list — populated when this carrier represents a synthetic
         // (precomputed) delta. Identity-only carriers (the common case for source
         // derivations attached to instant attribute writes) leave it null and the
@@ -162,7 +166,7 @@ namespace FarEmerald.PlayForge
             return Source?.IsActive() ?? false;
         }
         public IAttribute GetAttribute() => Attribute;
-        public virtual IEffectOrigin GetOrigin() => RootCarrier?.GetOrigin() ?? IEffectOrigin.GenerateSourceDerivation(Source);
+        public virtual IEffectOrigin GetOrigin() => RootCarrier?.GetOrigin() ?? (sourceOrigin ??= IEffectOrigin.GenerateSourceDerivation(Source));
         public ITarget GetTarget() => Source;
         public List<Tag> GetImpactTypes() => ImpactType;
         public Tag GetRetentionGroup() => RetentionGroup;

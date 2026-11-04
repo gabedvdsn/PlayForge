@@ -39,6 +39,10 @@ namespace FarEmerald.PlayForge
         /// A raw delta: a change made directly, with no effect behind it. Workers see it as they see an effect's change,
         /// with no impact type, so a worker that takes any type acts on it and one that wants a type doesn't. It was
         /// unworkable and typed DisallowImpact, so no worker ever saw one (GAS-25, Decision 9).
+        ///
+        /// <para>It makes a new carrier on every call. A raw delta made every frame, as regeneration might be, keeps one
+        /// instead: make it once with <see cref="IAttributeImpactCarrier.GenerateSourceDerivation(ISource, IAttribute)"/>,
+        /// the carrier this makes, and hand the GAS a new value over it each time. That allocates nothing (GAS-P8).</para>
         /// </summary>
         public static SourcedModifiedAttributeValue GenerateSimple(ISource source, IAttribute attribute, float currentValue, float baseValue)
         {

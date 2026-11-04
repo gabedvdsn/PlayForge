@@ -106,7 +106,7 @@ impact relay (`ImpactData`, frame summaries, source-side `TrackImpact`, `Attribu
 | `RegisterModifier(attr, smv, impacters)` | register/refresh in `modifiers` + recompute | Continuous entries on apply / stack refresh / replace |
 | `UnregisterModifier(attr, smv)` | remove carrier's entries + recompute | removal & replacement — **fires callbacks like any change**, so regulated attributes refresh (removal used to be silent → stale derived values) |
 | `CommitImpact(attr, smv, impacters)` | permanent per-group commit | OnApply / Periodic entries |
-| `ModifyAttribute(attr, smv)` | CommitImpact; delta-only carriers are wrapped in a synthetic `SourceAttributeImpact` with `ConstantImpacter`s | init pulse, `EnforceScaling` propagation, external systems (`TryModifyAttribute`) |
+| `ModifyAttribute(attr, smv)` | CommitImpact; a delta-only carrier's delta commits as constant Adds in its retention group | init pulse, `EnforceScaling` propagation, external systems (`TryModifyAttribute`) |
 
 Registration/unregistration are **identity-based** on the carrier instance — they are never
 wrapped in synthetic carriers.
@@ -135,7 +135,12 @@ impacters. So:
   takes a new one for the next;
 - the source-side `TrackImpact` keeps a total, the last impact and a count, not every impact.
 
-A raw delta still allocates its own carrier, and so does the change `EnforceScaling` queues (GAS-P8).
+A raw delta allocates nothing on its way through either: its delta's Adds are frozen in the same
+impacters, and a `SourceAttributeImpact` keeps the origin it makes (GAS-P8). `GenerateSimple` makes a
+new carrier on every call, so a raw delta made every frame keeps its carrier, made once with
+`IAttributeImpactCarrier.GenerateSourceDerivation(source, attribute)`. The changes the system makes
+on someone's behalf, `EnforceScaling`'s rescale and the lifesteal worker's, still make a carrier
+and an action each (GAS-P9).
 
 Null / undefined attribute targets early-out safely (pure tag-grant effects are legal).
 

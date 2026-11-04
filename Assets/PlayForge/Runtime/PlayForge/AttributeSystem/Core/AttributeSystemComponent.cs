@@ -287,9 +287,10 @@ namespace FarEmerald.PlayForge
             //
             // Carriers with no impacters (hand-rolled delta callsites — EnforceScaling
             // propagation, the synthetic zero-impact init pulse, third-party wrappers)
-            // are wrapped in a SourceAttributeImpact carrying ConstantImpacter(s) built
-            // from the precomputed (CurrentValue, BaseValue) delta, so every path flows
-            // through the same impacter machinery (bounds + rounding + attribution).
+            // commit their precomputed (CurrentValue, BaseValue) delta as constant Adds,
+            // so every path flows through the same impacter machinery (bounds + rounding
+            // + attribution). The Adds are frozen in the commit's own impacters; they came
+            // in a SourceAttributeImpact made to wrap them, on every raw delta (GAS-P8).
             //
             // The impacters are evaluated ONCE, frozen as constants, and previewed: the
             // pre-change phase sees the delta they propose (effect specs arrive as (0,0)
@@ -304,16 +305,30 @@ namespace FarEmerald.PlayForge
             AttributeValue incoming = default;
             if (mode == ECommitMode.CommitImpact)
             {
-                // Wrap delta-only carriers for the COMMIT path only. Register/Unregister
+                // Delta-only carriers take this path for the COMMIT only. Register/Unregister
                 // are identity-based — substituting a synthetic wrapper would register
                 // under the wrong identity and make later unregistration miss.
                 if (carrier == null || carrier.GetImpacters().Count == 0)
                 {
-                    carrier = WrapDelta(attribute, sourcedModifiedValue, sourcedModifiedValue.ToAttributeValue(),
-                        sourcedModifiedValue.Carrier?.GetRetentionGroup() ?? Tags.IgnoreRetention);
+                    var group = sourcedModifiedValue.Carrier?.GetRetentionGroup() ?? Tags.IgnoreRetention;
+                    if (impacters == null)
+                    {
+                        // The delta, as the wrapper's Adds were. The commit only checks that it has a carrier and
+                        // evaluates through it, which a constant ignores, so a change with none commits through the root
+                        scratch.FreezeDelta(sourcedModifiedValue.ToAttributeValue(), group);
+                        carrier ??= cached.Root;
+                    }
+                    else
+                    {
+                        // Impacters handed to a carrier with none of its own evaluate through a wrapper, as they did
+                        carrier = WrapDelta(attribute, sourcedModifiedValue, sourcedModifiedValue.ToAttributeValue(), group);
+                        scratch.Freeze(carrier, impacters);
+                    }
                 }
-
-                scratch.Freeze(carrier, impacters ?? carrier.GetImpacters());
+                else
+                {
+                    scratch.Freeze(carrier, impacters ?? carrier.GetImpacters());
+                }
                 commitImpacters = scratch.Frozen;
                 incoming = cached.PreviewCommit(carrier, commitImpacters);
                 change.Value = new SourcedModifiedAttributeValue(sourcedModifiedValue,
