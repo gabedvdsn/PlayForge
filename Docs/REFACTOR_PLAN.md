@@ -507,7 +507,7 @@ had no letter in the review. TS-AA onward came from the test project.
 | ED-9 | M | 4 | The Visualizer is blank for items and sets, and after a domain reload | `TheForge.Utilities.cs:344, 407-412` | open |
 | ED-10 | M | 2 | Analysis exposes "Not Implemented" groups and truncates silently | `TheForge.AnalysisTab.cs:362, 716, 1461, 1979-1991` | verified |
 | ED-11 | M | 4 | The sticky-header workaround and drawer timers poll forever, among them two 250 ms timers in each impact drawer | `BasePlayForgeEditor.cs:524-611`, `GameplayEffectDrawer.cs:147-152`, `GameplayEffectImpactDrawer.cs:71, 145` | open |
-| ED-12 | H | 4 | No Undo, multi-edit or prefab overrides; `UpdateAssetTagDisplay` wrote the asset on refresh (that Phase 2 part is fixed: a rename stores the tag in the same undoable step, and showing never writes) | `AbilityEditor.cs:153-160, 1167-1176`, `BasePlayForgeEditor.cs:446-447` | open |
+| ED-12 | H | 4 | No Undo, multi-edit or prefab overrides. The inspectors wrote 42 edits straight into their asset, and only the 5 renames recorded Undo; no inspector took a multiple selection; six drawers copy their SerializedObject for one target, and two write while drawing. Fixed so far: Phase 2's part (a rename stores the tag in the same undoable step, and showing never writes), and the Attribute inspector (its fields bind, it takes a multiple selection, and every inspector's header follows Undo). Left: the Ability, Effect, Item, Entity and Attribute Set inspectors, the MonoProcess inspector's multiple selection, template assignment, the drawers' one-target copies, and the writes while drawing | `AbilityEditor.cs:155-189, 743`, `EntityIdentityEditor.cs:790-919`, `BasePlayForgeEditor.cs` (`ShowTemplatePicker`), `TagDrawer.cs:104-109`, `AbstractTypeRefDrawer.cs:123-128`, `ScalerDrawer.cs:169-177` | open |
 | ED-13 | M | 4 | Template propagation on save loads everything, opens a modal mid-save and records no Undo; the validator is empty | `ForgeTemplateProcessor.cs:45-52`, `ForgeTemplatePropagator.cs:201-229` | open |
 | ED-14 | H | 1 | The `GameplayEffectImpact` copy constructor drops affiliation and throws on null packets | `GameplayEffectImpact.cs:155-176` | verified |
 | ED-15 | M | 4 | "Validate All" is noisy and capped at 15; "Find All References" is a dialog | `TheForge.SettingsTab.cs:1808-1832`, `AttributeEditor.cs:261-273` | open |
@@ -531,6 +531,15 @@ had no letter in the review. TS-AA onward came from the test project.
 The design questions behind Phase 4's rows, each with its evidence, are in the UI interview doc of 2026-11-03,
 https://claude.ai/artifact/BbnGybqgX3spJsT6HoTafp. Its answers (Decision 18) settle ED-8, ED-16, ED-19 and ED-12's
 Phase 2 part, and set Phase 4's direction.
+
+**Phase 4's order,** from Q35, Q36 and Q3:
+1. ED-12, Undo and multi-editing, one inspector at a time.
+2. No polling: ED-11 and ED-18.
+3. The smoke suite, the phase's gate: in each theme, every window opens without an exception and scripted edits undo.
+4. ED-20: one style sheet and a kit of controls, in the style `Docs/EDITOR_STYLE.md` records (Decision 20).
+5. The redesign, one surface at a time: the asset inspectors, with ED-2 and ED-3; The Forge, with ED-13, ED-15,
+   ED-21, ED-27 and ED-31; one runtime debugger for the GAS, Process and Tag views (Q4), with ED-4 and ED-5; and the
+   Visualizer, with ED-9.
 
 ### Samples and packaging
 
@@ -614,6 +623,22 @@ GAS-4 with GAS-5, PC-6, and TS-I with PC-5.
 ## Log
 
 Record baselines, gate results and notable decisions here, newest first.
+
+- 2026-11-04, **ED-12, the Attribute inspector: every edit undoes, and it edits a multiple selection.** Phase 4 starts
+  with Undo and multi-editing, as Q35 asks, one inspector at a time. The Attribute inspector wrote its Name,
+  Abbreviation and Description straight into the asset when a field lost focus, with no Undo. They now bind to their
+  properties and write when an edit is committed, so each edit goes through the SerializedObject. An inspector that
+  writes that way turns on the base's new `SupportsMultipleObjects` hook and takes a multiple selection: its header
+  counts the selection and leaves out Template, Visualize and Open in The Forge, which act on one asset. Every
+  inspector's header now follows the asset's changes, an Undo or a Redo among them. Its tests,
+  `ED_12_An_edit_in_the_Attribute_inspector_undoes` and `ED_12_The_Attribute_inspector_edits_every_selected_attribute`,
+  were seen failing first. They build the whole inspector in a runtime panel, where its bindings run in batch mode.
+  - **Surveyed:** the inspectors wrote 42 edits straight into their asset, and only the 5 renames recorded Undo. No
+    inspector took a multiple selection. Most drawers already write through SerializedProperty; six copy their
+    SerializedObject for one target, and two write while drawing. ED-12's row lists what is left.
+  - **Tests:** PlayMode 941: 934 pass, 0 fail and 7 planted are skipped, in three orders. Planted 7 of 7; EditMode
+    42 of 42.
+  - **Order:** the Editor and UI section now lists Phase 4's order, from the interview's Q35, Q36 and Q3.
 
 - 2026-11-04, **Phase 3 closed.** Its exit gate asks for zero steady-state allocation, enforced in CI. The first
   half is met: every steady-state frame the gate's measuring covered allocates nothing. The repo has no CI, so the

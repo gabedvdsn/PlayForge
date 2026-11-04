@@ -6,12 +6,15 @@ using static FarEmerald.PlayForge.Extended.Editor.ForgeDrawerStyles;
 
 namespace FarEmerald.PlayForge.Extended.Editor
 {
-    [CustomEditor(typeof(Attribute))]
+    [CustomEditor(typeof(Attribute)), CanEditMultipleObjects]
     public class AttributeEditor : BasePlayForgeEditor
     {
         [SerializeField] private Texture2D m_AttributeIcon;
-        
+
         private Attribute attribute;
+
+        // Every field writes through the SerializedObject, so the inspector edits a multiple selection (ED-12)
+        protected override bool SupportsMultipleObjects => true;
 
         // ═══════════════════════════════════════════════════════════════════════════
         // Header Configuration (IMGUI Header)
@@ -126,41 +129,12 @@ namespace FarEmerald.PlayForge.Extended.Editor
             
             var content = section.Content;
             
-            // Name field
-            var nameField = CreateTextField("Name", "Name");
-            nameField.value = attribute.Name;
-            nameField.RegisterCallback<FocusOutEvent>(_ =>
-            {
-                attribute.Name = nameField.value;
-                MarkDirty(attribute);
-                UpdateHeader();
-                Repaint(); // Refresh IMGUI header
-            });
-            content.Add(nameField);
-            
-            // Name field
-            var shortNameField = CreateTextField("Abbreviation", "Abbreviation");
-            shortNameField.value = attribute.Abbreviation;
-            shortNameField.RegisterCallback<FocusOutEvent>(_ =>
-            {
-                attribute.Abbreviation = shortNameField.value;
-                MarkDirty(attribute);
-                UpdateHeader();
-                Repaint(); // Refresh IMGUI header
-            });
-            content.Add(shortNameField);
-            
-            // Description field
-            var descField = CreateTextField("Description", "Description", multiline: true, minHeight: 18);
-            descField.value = attribute.Description;
-            descField.RegisterCallback<FocusOutEvent>(_ =>
-            {
-                attribute.Description = descField.value;
-                MarkDirty(attribute);
-                UpdateHeader();
-                Repaint(); // Refresh IMGUI header
-            });
-            content.Add(descField);
+            // Name, Abbreviation and Description bind to their properties. They wrote straight into the asset when they
+            // lost focus, with no Undo; now an edit goes through the SerializedObject, so Undo takes it back, it reaches
+            // every selected attribute, and the header follows it (ED-12).
+            content.Add(CreateBoundTextField(nameof(Attribute.Name), "Name"));
+            content.Add(CreateBoundTextField(nameof(Attribute.Abbreviation), "Abbreviation"));
+            content.Add(CreateBoundTextField(nameof(Attribute.Description), "Description", multiline: true, minHeight: 18));
 
             var textures = serializedObject.FindProperty(nameof(Attribute.Textures));
             var texturesField = CreatePropertyField(textures, "Textures", "Textures");

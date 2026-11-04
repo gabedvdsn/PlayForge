@@ -200,7 +200,31 @@ namespace FarEmerald.PlayForge.Extended.Editor
         protected virtual bool ShowImportButton => false;
 
         protected virtual bool ShowTemplateButton => true;
-        
+
+        /// <summary>
+        /// Whether this inspector edits several assets at once (ED-12). An inspector that writes every edit through its
+        /// SerializedObject turns this on and carries [CanEditMultipleObjects]; the others still refuse a multiple
+        /// selection.
+        /// </summary>
+        protected virtual bool SupportsMultipleObjects => false;
+
+        // A multiple selection shows its count in the header, and only the actions that act on every selected asset
+        private bool IsMultiple => serializedObject.isEditingMultipleObjects;
+        private string HeaderName() => IsMultiple ? $"{targets.Length} selected" : GetDisplayName();
+
+        /// <summary>
+        /// A text field bound to a property, which writes when an edit is committed rather than on each keystroke
+        /// (ED-12). Binding sends the edit through the SerializedObject, so Undo takes it back, it reaches every selected
+        /// asset, and a selection that disagrees shows as mixed.
+        /// </summary>
+        protected static TextField CreateBoundTextField(string propertyPath, string label, bool multiline = false, int minHeight = 0)
+        {
+            var field = CreateTextField(propertyPath, label, multiline, minHeight);
+            field.isDelayed = true;
+            field.bindingPath = propertyPath;
+            return field;
+        }
+
         /// <summary>For programmatic editors, this can be empty</summary>
         protected virtual void SetupCollapsibleSections() { }
 
@@ -354,18 +378,20 @@ namespace FarEmerald.PlayForge.Extended.Editor
         /// </summary>
         protected virtual void ImportFromAsset(Object sourceAsset)
         {
-            if (sourceAsset == null || sourceAsset == target) return;
-            
+            if (sourceAsset == null || Array.IndexOf(targets, sourceAsset) >= 0) return;
+
+            // The import writes through the SerializedObject, so it reaches every selected asset (ED-12)
+            var into = IsMultiple ? $"{targets.Length} assets" : $"'{target.name}'";
             var confirmed = EditorUtility.DisplayDialog(
                 "Import Properties",
-                $"Import properties from '{sourceAsset.name}' to '{target.name}'?\n\nThis will overwrite current values (except for Name and Description).",
+                $"Import properties from '{sourceAsset.name}' to {into}?\n\nThis will overwrite current values (except for Name and Description).",
                 "Import",
                 "Cancel"
             );
-            
+
             if (!confirmed) return;
-            
-            Undo.RecordObject(target, $"Import from {sourceAsset.name}");
+
+            Undo.RecordObjects(targets, $"Import from {sourceAsset.name}");
             
             var sourceSO = new SerializedObject(sourceAsset);
             var targetSO = serializedObject;
@@ -444,7 +470,7 @@ namespace FarEmerald.PlayForge.Extended.Editor
         {
             root = CreateRoot();
             
-            if (serializedObject.isEditingMultipleObjects) 
+            if (IsMultiple && !SupportsMultipleObjects)
                 return CreateIneligibleGUI("Cannot edit multiple assets at once.");
             if (!AssignLocalAsset()) 
                 return CreateIneligibleGUI("Critical error: Could not assign local asset.");
@@ -465,7 +491,10 @@ namespace FarEmerald.PlayForge.Extended.Editor
             contentScrollView.Add(CreateBottomPadding());
             
             root.Bind(serializedObject);
-            
+
+            // The header follows every change to the asset, an Undo or a Redo among them (ED-12)
+            root.TrackSerializedObjectValue(serializedObject, _ => UpdateHeader());
+
             // Hook into panel attachment to disable Inspector's native ScrollView
             root.RegisterCallback<AttachToPanelEvent>(OnAttachedToPanel);
             root.RegisterCallback<DetachFromPanelEvent>(OnDetachedFromPanel);
@@ -729,7 +758,7 @@ namespace FarEmerald.PlayForge.Extended.Editor
             infoContainer.Add(typeBadge);
             
             // Template badge
-            if (target is BaseForgeAsset obj && obj.HasTemplate)
+            if (!IsMultiple && target is BaseForgeAsset obj && obj.HasTemplate)
             {
                 var templateBadge = new Label($"T: {obj.Template.GetName()}");
                 templateBadge.tooltip = $"Template: {obj.Template.GetName()}";
@@ -749,7 +778,7 @@ namespace FarEmerald.PlayForge.Extended.Editor
             }
             
             // Name label (store reference for updates)
-            _headerNameLabel = new Label(GetDisplayName());
+            _headerNameLabel = new Label(HeaderName());
             _headerNameLabel.name = "HeaderName";
             _headerNameLabel.style.fontSize = 14;
             _headerNameLabel.style.unityFontStyleAndWeight = FontStyle.Bold;
@@ -812,25 +841,29 @@ namespace FarEmerald.PlayForge.Extended.Editor
                 bottomButtonRow.Add(importBtn);
             }
 
-            if (ShowTemplateButton)
+            // Template, Visualize and Open in The Forge act on one asset, so a multiple selection leaves them out (ED-12)
+            if (ShowTemplateButton && !IsMultiple)
             {
                 var templateButton = CreateHeaderButton("T", "Set template asset", Colors.AccentRed, ShowTemplatePicker);
                 templateButton.style.marginLeft = ButtonSpacing;
                 bottomButtonRow.Add(templateButton);
             }
-            
+
             // Visualize button (if enabled)
-            if (ShowVisualizeButton)
+            if (ShowVisualizeButton && !IsMultiple)
             {
                 var vizBtn = CreateHeaderButton("◉", "Visualize", Colors.AccentPurple, () => OnVisualize());  //new Color(0.6f, 0.4f, 0.7f)
                 vizBtn.style.marginLeft = ButtonSpacing;
                 bottomButtonRow.Add(vizBtn);
             }
-            
+
             // Open in The Forge button
-            var openBtn = CreateHeaderButton("⊞", "Open in The Forge", Colors.AccentBlue, () => OnOpenInManager());  //new Color(0.3f, 0.5f, 0.7f)
-            openBtn.style.marginLeft = ButtonSpacing;
-            bottomButtonRow.Add(openBtn);
+            if (!IsMultiple)
+            {
+                var openBtn = CreateHeaderButton("⊞", "Open in The Forge", Colors.AccentBlue, () => OnOpenInManager());  //new Color(0.3f, 0.5f, 0.7f)
+                openBtn.style.marginLeft = ButtonSpacing;
+                bottomButtonRow.Add(openBtn);
+            }
             
             buttonsContainer.Add(bottomButtonRow);
             header.Add(buttonsContainer);
@@ -887,7 +920,7 @@ namespace FarEmerald.PlayForge.Extended.Editor
         {
             if (_headerNameLabel != null)
             {
-                _headerNameLabel.text = GetDisplayName();
+                _headerNameLabel.text = HeaderName();
             }
         }
         
@@ -897,8 +930,8 @@ namespace FarEmerald.PlayForge.Extended.Editor
         protected void UpdateHeaderDescription()
         {
             if (_headerDescLabel == null) return;
-            
-            var desc = GetDisplayDescription();
+
+            var desc = IsMultiple ? null : GetDisplayDescription();
             _headerDescLabel.text = desc;
             _headerDescLabel.style.display = string.IsNullOrEmpty(desc) ? DisplayStyle.None : DisplayStyle.Flex;
         }
