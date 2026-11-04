@@ -546,12 +546,12 @@ had no letter in the review. TS-AA onward came from the test project.
 | ED-29 | L | 2 | The Entity inspector's Allow Duplicate Equipped Items toggle opens showing Allow Duplicate Items' value | `EntityIdentityEditor.cs:927` | verified |
 | ED-30 | M | 2 | Local Data's object rows edit each other's value: a ScriptableObject row binds the MonoBehaviour field and the other way round, so neither keeps what's assigned | `DataWrapperDrawer.cs:127-128` | verified |
 | ED-31 | L | 4 | The four unlink dialogs count with `IsLinkedTo(this)`, the editor rather than the asset, so they always say 0. Each now counts the children its unlink would change | `AbilityEditor.cs:840`, `EffectEditor.cs:279`, `EntityIdentityEditor.cs:301`, `ItemEditor.cs:311` | fixed |
-| ED-32 | H | 4 | Six import windows behave differently. Section import copies every field with no choice and Clear asks in a modal; the Effect's Duration and Impact sections can't import at all, since their Import button only logs a warning; scaler import ignores the kinds a field allows and caches its list for 120 s. One Import window replaces them (Decision 28): choose a source, choose the fields, import as one Undo step | `SectionImportWindow.cs`, `ScalerDrawerWindows.cs:17-350`, `TagRequirementDrawers.cs:567-945`, `StandardWorkerGroupDrawer.cs:362`, `EffectEditor.cs:467-500` | open |
+| ED-32 | H | 4 | Six import windows behave differently. Section import copies every field with no choice and Clear asks in a modal; the Effect's Duration and Impact sections couldn't import at all, since their Import button only logged a warning (they open the section window since ED-37); scaler import ignores the kinds a field allows and caches its list for 120 s. One Import window replaces them (Decision 28): choose a source, choose the fields, import as one Undo step | `SectionImportWindow.cs`, `ScalerDrawerWindows.cs:17-350`, `TagRequirementDrawers.cs:567-945`, `StandardWorkerGroupDrawer.cs:362`, `EffectEditor.cs:467-500` | open |
 | ED-33 | M | 4 | Scalers can't be shared. Every scaler is copied into its field, and the Scaler Template asset's link code has no callers, so reuse means copying and then propagating. Shared Scaler assets that fields reference replace it (Decision 28) | `AbstractScaler.cs:76-104`, `ScalerPipeline.cs:17-62` | open |
 | ED-34 | H | 4 | Opening a scaler writes to it while drawing. On an effect with no level link, Lock mode cuts its per-level table to one value; the other modes resize the table to Max Level, a Max Level of 0 or less becomes 10, and building the drawer clones a scaler that shares its reference id. Now nothing is written while drawing: a table keeps its length until the user changes it, and a shared scaler shows a warning with a button that makes a separate copy | `ScalerDrawer.cs:125-180, 285, 489-529` | fixed |
 | ED-36 | M | 4 | The asset header scrolls away with the content. It stays at the top of the inspector while the content scrolls under it (Decision 29), following the Inspector's scroll view by its events, so nothing polls (ED-11) | `BasePlayForgeEditor.cs` (`CreateInspectorGUI`), `ForgeAssetHeader.cs` (`StickTo`) | fixed |
 | ED-35 | M | 4 | Whole-asset import copies the template and level-link fields (`_template`, `_linkedSource`) and doesn't skip the nested `Definition.Name` | `BasePlayForgeEditor.cs` (`ImportFromAsset`) | open |
-| ED-37 | M | 4 | The asset inspectors don't follow `Docs/EDITOR_STYLE.md`: their sections stray from its order, Level Source sits apart from Leveling, a collapsed section shows nothing, sentences explain the fields, the link state sits in tinted boxes with colored borders, and many sections' Import and Clear only log a warning. Each inspector is redone in Phase 4's fifth step. Fixed so far: the Attribute (`ed6295a`, with ED-15), Item (`cf70e8f`), Entity (`a06a4fb`), Attribute Set (`86ead05`) and Ability inspectors: the style doc's order, Leveling with the level link and its provider in Unity's object field, the asset tag under the name, a summary on each section, Import and Clear on each, Used By, and no look set in code; the Entity mockup's attribute table, in the Entity and Attribute Set inspectors; and the mockups' When Busy, in the Ability and Entity inspectors. Left: the Effect inspector | `EffectEditor.cs` | open |
+| ED-37 | M | 4 | The asset inspectors don't follow `Docs/EDITOR_STYLE.md`: their sections stray from its order, Level Source sits apart from Leveling, a collapsed section shows nothing, sentences explain the fields, the link state sits in tinted boxes with colored borders, and many sections' Import and Clear only log a warning. Each inspector is redone in Phase 4's fifth step. Fixed: the Attribute (`ed6295a`, with ED-15), Item (`cf70e8f`), Entity (`a06a4fb`), Attribute Set (`86ead05`), Ability (`031c2d4`) and Effect inspectors: the style doc's order, Leveling with the level link and its provider in Unity's object field, the asset tag under the name, a summary on each section, Import and Clear on each, Used By, and no look set in code; the Entity mockup's attribute table, in the Entity and Attribute Set inspectors; the mockups' When Busy, in the Ability and Entity inspectors; and the Effect mockup's requirements table, in the Effect and Ability inspectors | `EffectEditor.cs`, `AbilityEditor.cs`, `ForgeRequirementsTable.cs` | fixed |
 | ED-38 | M | 4 | An asset reference isn't Unity's object field: `AbstractRefDrawer` draws a button that opens a dropdown list of its own, with hover colors and Clear and Open icon buttons set in C#, and setting an effect asks in a dialog whether to link it. Now every asset reference is Unity's object field with a plain button beside it: Open, which shows the asset in a window of its own, or New, which makes one where The Forge puts its type, named and tagged, and uses it (Q15). An effect field says on a line under it how the effect takes its levels, with Link; its template, a pick of unlinked effects and New Linked Effect are in its right-click menu (Q18) | `AbstractForgeObjectDrawer.cs`, `GameplayEffectDrawer.cs` | fixed |
 | ED-39 | M | 4 | Opening an attribute set element can change the set: 50 ms after it draws, and on every change to the set, `AttributeSetElementDrawer` clamps a Current or Base magnitude that sits outside the element's bounds and applies it to the asset, so looking at a set marks it modified. The runtime clamps the same values as the entity starts. Now the drawer writes nothing as it draws: a help box says how the runtime clamps such a magnitude, and only a value typed into a Magnitude field is kept within the bounds, as part of the same edit. The drawer follows the style sheet | `AttributeSetElementDrawer.cs` | fixed |
 
@@ -572,8 +572,8 @@ Phase 2 part, and set Phase 4's direction.
    Visualizer, with ED-9.
    The asset inspectors go one at a time, each following the style doc (ED-37): the Attribute, Item, Entity and
    Attribute Set inspectors first (done), then the reference fields (ED-38, done), the Ability inspector (done), then
-   the Effect inspector with ED-2 and ED-3, then the Import window and shared scalers (ED-32, ED-33), which also free
-   ED-12's last part.
+   the Effect inspector with ED-2 and ED-3 (done), then the Import window and shared scalers (ED-32, ED-33), which also
+   free ED-12's last part.
 
 ### Samples and packaging
 
@@ -657,6 +657,43 @@ GAS-4 with GAS-5, PC-6, and TS-I with PC-5.
 ## Log
 
 Record baselines, gate results and notable decisions here, newest first.
+
+- 2026-11-04, **Step 5: the Effect inspector (ED-37).** The redesign's sixth and last asset inspector, after the
+  others' pattern and the Effect mockup. ED-37 is fixed with it.
+  - **Its sections:** Identity, Leveling, Tags, Duration, Impact, Requirements, Workers, Local Data and Used By. Identity
+    was Definition and holds the asset tag; Retention Group moved to Impact, which it's about. Level Source merged into
+    Leveling: a standalone effect takes the level of what applies it, as a note says, and Link and Unlink Contained
+    Effects show while it's linked, since with no provider Link would unlink them. Impact came before Duration, and
+    Workers before Requirements.
+  - **Duration**, `GameplayEffectDurationDrawer`, shows the fields its Policy uses, by the mockup's names: Policy,
+    Duration, Periodic Ticks with Ticks or Tick Every, Tick On Application, Additional Executions, the clock,
+    Re-application and Then, and Stacking for Stack Existing. Re-application's and Then's choices carry
+    `InspectorName`s: Add Another, Replace Existing, Stack Existing and Do Nothing; Refresh Duration and Extend
+    Duration. It drew tinted boxes with colored headings under explaining sentences, and showed or hid them 50 ms after
+    it drew; it follows the policy now. Then hides for Add Another, which never takes an application in.
+  - **Requirements** is the mockup's table, in the kit's new `ForgeRequirementsTable`: a row for each group, Applying,
+    While On and Removed By, with a Requires and a Must Not Have cell that list their tags. A cell opens its list under
+    the table, with the row's template. A two-button switch shows the target's table, then the source's. The Ability
+    inspector's tag requirements use the same table, with a Caster and a Target row. The old drawer drew a tinted box
+    with colored subsections, a type badge, a Name and import buttons, and rebuilt itself as it opened; its import
+    windows stay until ED-32's one window.
+  - **The base editor's** Leveling helpers take what an asset with no levels of its own needs: `AddLinkedLevels` a
+    message for no provider, and `CreateChildLinks` the asset the children link to, so Unlink counts the contained
+    effects linked to the effect's provider.
+  - **Left for later:** the mockup's problems in place, such as "Nothing grants Status.Wet, so this removal never
+    happens", and the header's problem count, with the Problems view (ED-15's Validate All); and the units and "scaled
+    by" beside Duration, Tick Every and Magnitude, with the scaler workflow (ED-33).
+  - **Docs:** `EFFECTS.md` follows the inspector, and `ABILITIES.md` the table. The help topics name the new headings;
+    `effects/leveling` is new and `effects/level-source` is gone.
+  - **Its tests,** `ED_37_The_Effect_inspector_keeps_the_style_docs_sections`,
+    `ED_37_The_Effect_inspector_sets_no_look_in_code`, `ED_37_The_Effect_inspector_lists_what_uses_it`,
+    `ED_37_The_requirements_table_opens_a_cell_to_edit_it` and `ED_37_The_duration_shows_what_its_policy_uses`, were
+    seen failing first. The Effect's two ED-12 tests find the provider in Leveling and unlink through its field;
+    `ED_12_A_rebuilt_drawer_edits_every_selected_asset` edits a table row's Sync With Template on two effects; and
+    `ED_18_Opening_a_drawer_on_one_asset_leaves_another_as_it_was` folds an additional impact, since the table doesn't
+    fold.
+  - **Tests:** PlayMode 957: 950 pass, 0 fail and 7 planted are skipped, in three orders. Planted 7 of 7; EditMode
+    403 of 403.
 
 - 2026-11-04, **ED-2 and ED-3: an effect's impacts.** The Effect step begins with its impact.
   - **ED-3, additional impacts.** An effect made one change, so a drain that took health and mana took two effects.

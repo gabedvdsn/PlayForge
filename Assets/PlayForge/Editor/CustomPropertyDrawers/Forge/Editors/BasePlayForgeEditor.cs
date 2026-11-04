@@ -753,13 +753,15 @@ namespace FarEmerald.PlayForge.Extended.Editor
 
         /// <summary>
         /// Leveling while Link Mode is Linked To Provider: the provider in an object field, a warning when none is set,
-        /// then the range in use, in disabled fields. Level Source drew this in tinted boxes with colored borders.
+        /// then the range in use, in disabled fields. Level Source drew this in tinted boxes with colored borders. An
+        /// asset with no levels of its own, as an effect, says what it uses instead (<paramref name="whenUnset"/>).
         /// </summary>
-        protected void AddLinkedLevels(VisualElement parent, BaseForgeLevelProvider src, string kind, int starting, int max)
+        protected void AddLinkedLevels(VisualElement parent, BaseForgeLevelProvider src, string kind, int starting, int max,
+            string whenUnset = null)
         {
             parent.Add(CreateLevelProviderField(src));
             if (!src.IsLinked)
-                parent.Add(new HelpBox($"No level provider is set, so the {kind} uses its own levels.", HelpBoxMessageType.Warning));
+                parent.Add(new HelpBox(whenUnset ?? $"No level provider is set, so the {kind} uses its own levels.", HelpBoxMessageType.Warning));
             parent.Add(ShownLevel("StartingLevel", "Starting Level", starting));
             parent.Add(ShownLevel("MaxLevel", "Max Level", max));
         }
@@ -792,10 +794,13 @@ namespace FarEmerald.PlayForge.Extended.Editor
         /// <summary>
         /// Link and Unlink for the assets that can take this one's levels, such as an item's active ability and granted
         /// effects: plain buttons sharing a row. Each asks first, counting what it changes, and is one Undo step. They sat
-        /// under a divider and a small bold heading, with a sentence about them, and Unlink was tinted red (ED-37).
+        /// under a divider and a small bold heading, with a sentence about them, and Unlink was tinted red (ED-37). The
+        /// children link to <paramref name="linkTarget"/> when it's given, as an effect's contained effects take its
+        /// provider's levels, and to the asset itself otherwise.
         /// </summary>
         protected VisualElement CreateChildLinks(BaseForgeLevelProvider src, string kind, string linkFocus, string children,
-            Func<IEnumerable<BaseForgeLevelProvider>> childAssets, Action linkAll, Action unlinkAll)
+            Func<IEnumerable<BaseForgeLevelProvider>> childAssets, Action linkAll, Action unlinkAll,
+            BaseForgeLevelProvider linkTarget = null)
         {
             var row = new VisualElement { name = "ChildLinks" };
             row.AddToClassList("pf-button-row");
@@ -816,7 +821,7 @@ namespace FarEmerald.PlayForge.Extended.Editor
             row.Add(new Button(() =>
             {
                 // Counts the children the unlink would change; it asked IsLinkedTo(this), the editor, so it always said 0 (ED-31)
-                var linked = childAssets().Count(child => child.IsLinkedTo(src));
+                var linked = childAssets().Count(child => child.IsLinkedTo(linkTarget != null ? linkTarget : src));
                 if (!ConfirmLinkChange($"Confirm Unlink {linkFocus}",
                         $"Are you sure you want to unlink {children}?\n\nThis will affect {linked} {(linked == 1 ? "asset" : "assets")}." +
                         $"\n\nThis change only applies to assets linked to this {kind}.",

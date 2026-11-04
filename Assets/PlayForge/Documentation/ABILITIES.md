@@ -120,10 +120,13 @@ This section is what the ability does once it has started.
 
 Requirements are what an activation must pass. If one fails, the ability doesn't run.
 
-- **Ability Requirements** holds tag checks. **Source** checks the caster: it must match every **Require** entry and no
-  **Avoid** entry, for example Avoid `State.Stunned`. Source is checked with the Caster Checks. **Target** checks the
-  target the same way, after targeting. Each entry is a tag query: a **Tag**, a **Match** mode such as Include
-  Children, and a comparison with a number. Greater Than 0 means "the tag is present". An empty group always passes.
+- The **tag requirements** table holds tag checks, a row for each side. **Caster** checks the caster, with the Caster
+  Checks. **Target** checks the target the same way, after targeting. Each row's **Requires** cell lists the tags the
+  entity must have, and its **Must not have** cell the tags it must not have, such as `State.Stunned`, or says None. A
+  row passes when the entity has every tag it requires and none it must not have, so an empty row always passes. Click
+  a cell to edit its list under the table, with the row's **Template** and **Sync With Template** (see
+  [EFFECTS.md](EFFECTS.md)). Each entry is a tag query: a **Tag**, a **Match** mode such as Include Children, and a
+  comparison with a number. Greater Than 0 means "the tag is present".
 - **Caster Checks** check the caster. They run when the ability is asked to activate, before targeting, and again after
   targeting. The defaults are Cooldown, Cost and Is Alive. You pick each check's type from a list.
 - **Target Checks** check the target, after targeting. The default is Is Alive. If targeting found no target, they are

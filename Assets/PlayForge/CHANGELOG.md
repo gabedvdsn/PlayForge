@@ -14,6 +14,11 @@ tracks each fix below by its ID.
   page, through one table of links in the editor.
 
 ### Changed
+- The Effect inspector's sections are Identity, Leveling, Tags, Duration, Impact, Requirements, Workers, Local Data and
+  Used By, as the other asset inspectors' follow the style doc. Duration shows the fields its Policy uses, by the
+  Effect mockup's names; Re-application's choices are Add Another, Replace Existing, Stack Existing and Do Nothing.
+  Requirements is a table of what each group requires and must not have, for the target and then the source, and a
+  cell opens its list to edit. The Ability inspector's tag requirements use the same table (ED-37).
 - An effect's impact says how it is delivered, which the duration gives it, and how often a periodic one lands, as in
   "7 over 6 s, level 1". Operation sets the operation and the value it changes in one choice, such as Add to Current.
   Reverse On Removal, which changes nothing, is no longer shown (ED-2).

@@ -386,8 +386,10 @@
     margin: 0 0 0 6px;
 }
 
-/* A field that depends on another indents its label 14 px under it, as Equipped Too does under Allow Duplicates */
-.pf-root .pf-dependent > .unity-base-field__label {
+/* A field that depends on another indents its label 14 px under it, as Equipped Too does under Allow Duplicates. A
+   property field's own field takes the indent too, as Ticks does under Periodic Ticks */
+.pf-root .pf-dependent > .unity-base-field__label,
+.pf-root .pf-dependent > .unity-base-field > .unity-base-field__label {
     padding-left: 14px;
 }
 
@@ -612,6 +614,52 @@
 
 .pf-root .pf-table__row > .pf-table__range {
     color: var(--pf-secondary-text);
+}
+
+/* ─── Tag requirements: the Effect mockup's table, a row for each group, a cell for what it requires and what it must
+   not have, each opening its list under the table (ED-37) ─────────────────────────────────────────────────────────── */
+
+.pf-root .pf-requirements__when {
+    width: 84px;
+    flex-shrink: 0;
+}
+
+.pf-root .pf-table__header > .pf-requirements__tags {
+    flex-grow: 1;
+    flex-basis: 0;
+    min-width: 0;
+    border-left-width: 1px;
+    border-left-color: var(--pf-line);
+}
+
+/* A cell is a flat button that fills its part of the row, and clips its tags with an ellipsis */
+.pf-root .pf-requirements__cell {
+    flex-grow: 1;
+    flex-basis: 0;
+    min-width: 0;
+    height: 20px;
+    margin: 0;
+    padding: 0 6px;
+    border-width: 0;
+    border-radius: 0;
+    background-color: rgba(0, 0, 0, 0);
+    color: var(--pf-text);
+    -unity-text-align: middle-left;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+}
+
+.pf-root .pf-requirements__cell--none {
+    color: var(--pf-secondary-text);
+}
+
+.pf-root .pf-requirements__cell--open {
+    background-color: var(--pf-selection);
+}
+
+.pf-root .pf-requirements__editor {
+    margin-top: 4px;
 }
 
 /* A message is a Unity help box, in the flow under the field it is about */

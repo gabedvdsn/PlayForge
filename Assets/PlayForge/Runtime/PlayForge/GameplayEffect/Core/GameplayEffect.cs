@@ -242,19 +242,20 @@ namespace FarEmerald.PlayForge
         [ForgeTagContext(ForgeContext.Granted)] public List<Tag> GrantedTags;
     }
     
+    // The names the inspector shows say the choice, as the Effect mockup's Stack Existing and Refresh Duration do (ED-37)
     public enum EEffectReApplicationPolicy
     {
-        DoNothing,  // Completely ignore new effect
-        ReplaceOldContainer,
-        AppendNewContainer,  // Create another instance of the effect independent of the existing one(s)
-        StackExistingContainers  // Inject a duration-independent stack of the effect into the existing one 
+        [InspectorName("Do Nothing")] DoNothing,  // Completely ignore new effect
+        [InspectorName("Replace Existing")] ReplaceOldContainer,
+        [InspectorName("Add Another")] AppendNewContainer,  // Create another instance of the effect independent of the existing one(s)
+        [InspectorName("Stack Existing")] StackExistingContainers  // Inject a duration-independent stack of the effect into the existing one
     }
 
     public enum EEffectInteractionPolicy
     {
-        DoNothing,
-        RefreshContainerDuration,  // Refresh the duration of the effect
-        ExtendContainerDuration,  // Extend the duration of the effect
+        [InspectorName("Do Nothing")] DoNothing,
+        [InspectorName("Refresh Duration")] RefreshContainerDuration,  // Refresh the duration of the effect
+        [InspectorName("Extend Duration")] ExtendContainerDuration,  // Extend the duration of the effect
     }
 
 }
