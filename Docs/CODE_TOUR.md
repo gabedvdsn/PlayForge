@@ -2,9 +2,10 @@
 
 This tour lists the places where the refactor changed code, so you can open each one in your IDE and read it. It
 covers `01258b8..ec008f7` on `main`: 230 commits. Phase 0 ported Arcade Fighter's fixes, Phase 1 made the runtime
-correct, Phase 2 got the package ready to release, and Phase 3 has begun. Each entry says what behaves differently and
-why, names its tracker IDs and Decisions, and points at the two or three places to read. `Docs/REFACTOR_PLAN.md` has
-every tracker row, the numbered Decisions, and a Log of each batch's test results.
+correct, Phase 2 got the package ready to release, and Phase 3 made it cheaper to run and gave the two GAS hubs one
+core. Each entry says what behaves differently and why, names its tracker IDs and Decisions, and points at the two or
+three places to read. `Docs/REFACTOR_PLAN.md` has every tracker row, the numbered Decisions, and a Log of each batch's
+test results.
 
 ## How to use this
 
@@ -23,10 +24,10 @@ every tracker row, the numbered Decisions, and a Log of each batch's test result
     up. To match one ID exactly: `git grep -E "GAS-4([^0-9]|$)"` and `git log -E --grep "GAS-0?4([^0-9]|$)"`.
 - "Decision n" is a numbered Decision in the plan. "New" means added since `01258b8`.
 - "Still open" names a later tracker row on the same code, and "Fixed in Phase 3" points to
-  [Phase 3 so far](#phase-3-so-far). The plan's tracker has each row's current status.
+  [Phase 3](#phase-3). The plan's tracker has each row's current status.
 - Most fixed code carries a comment that says what it used to do, so the old behaviour is readable in place.
 
-## Phase 3 so far
+## Phase 3
 
 Phase 3 began on `main` with the rows that writing the reference docs turned up, five runtime bugs and two settings
 nothing read, then gave the two GAS hubs one core (GAS-S1), turned to cost (GAS-P3, GAS-P5, GAS-P4, GAS-P6, GAS-P8,
@@ -35,7 +36,8 @@ last task does (TS-Z), and kept activation synchronous while a loop of activatio
 Measuring the phase's exit gate turned up two more: a runtime entity's abilities outlived it (GAS-52), and
 interrupting every running ability at once threw, which TS-Z had exposed (GAS-53). The last two steady-state
 allocations it found are gone too (GAS-P10, TS-11). Each has a test in Proving Grounds named after its ID, seen
-failing first; the runtime tests run on both hubs. The plan's Log has the gate results.
+failing first; the runtime tests run on both hubs. The plan's Log has the gate results. The phase closed on
+2026-11-04 on its local gates, without the CI its exit gate asked for, since the repo has none (Decision 27, SP-24).
 
 ### An entity's affiliation is its own (GAS-47)
 
@@ -507,12 +509,12 @@ token on every lookup under Unity's Mono, where a token isn't IEquatable: 24 byt
 - **Test:** `TS_11_A_frame_in_which_an_ability_waits_in_a_delay_allocates_nothing` in `SequenceCostTests`, in both
   tasks.
 
-### Still open in Phase 3
+### Left after Phase 3
 
-No Phase 3 row is open. GAS-51, item stacking that is declared but not built, moved to Phase 5 as FEAT-14, so an
-Item's `MaxStackSize` does nothing until then. The phase's exit gate, zero steady-state allocation enforced in CI,
-isn't met yet: every steady-state frame its measuring covered allocates nothing now, but the repo has no CI. The
-plan's Log has the measurement.
+GAS-51, item stacking that is declared but not built, moved to Phase 5 as FEAT-14, so an Item's `MaxStackSize` does
+nothing until then. The phase's exit gate asked for zero steady-state allocation, enforced in CI. Every steady-state
+frame its measuring covered allocates nothing, but the repo has no CI, so the phase closed on its local gates
+(Decision 27), and CI is SP-24. The plan's Log has the measurement.
 
 ## ProcessControl
 
@@ -924,7 +926,7 @@ a hit takes what it says and an override still pins the value.
   has a dated amendment.
 - **Fixed in Phase 3:** GAS-50. A Durational or Infinite effect with Tick On Application but no periodic ticks
   derives OnApply for Add and Flat Bonus, and only the Instant path committed OnApply. See
-  [Phase 3 so far](#phase-3-so-far).
+  [Phase 3](#phase-3).
 
 #### Pre-change workers and raw deltas (Decision 9)
 
@@ -1059,7 +1061,7 @@ the resolved values; it took the first. `Ignore` keeps the first; it threw.
     `AttributeSystemComponent.ProvideAttribute`, which regulates every part (`:143`).
 - **New:** `AttributeBlueprint.Parts`, `AttributeBlueprint.Average`.
 - **Fixed in Phase 3:** GAS-44, an attribute set that included itself recursed without end. See
-  [Phase 3 so far](#phase-3-so-far).
+  [Phase 3](#phase-3).
 
 #### Derived refreshes (Decision 14)
 
@@ -1134,7 +1136,7 @@ requirements ("can't use while stunned") are enforced; they were authored and ne
     `AbilitySpec.ValidateSourceActivationRequirements`.
 - **Watch for:** costs now block activation.
 - **Fixed in Phase 3:** GAS-49. Both hubs gave Starting Abilities before building attributes, so the Cost rule
-  refused an Activate Immediately ability that had a cost. See [Phase 3 so far](#phase-3-so-far).
+  refused an Activate Immediately ability that had a cost. See [Phase 3](#phase-3).
 
 #### Targeting for a runtime GAS
 
@@ -1192,9 +1194,9 @@ cleared, so they outlived the item.
   overload so other implementers still compile (`Assets/PlayForge/Runtime/PlayForge/GAS/Interfaces/ITarget.cs:30`).
   `ItemSpec.IsEquipped`.
 - **Fixed in Phase 3:** GAS-48, unequipping removed the Active Ability even when equipping hadn't granted it. See
-  [Phase 3 so far](#phase-3-so-far).
+  [Phase 3](#phase-3).
 - **Fixed in Phase 3:** GAS-45, an Item's `AllowDuplicates` was never read, and it is gone. See
-  [Phase 3 so far](#phase-3-so-far).
+  [Phase 3](#phase-3).
 - **Moved to Phase 5:** GAS-51, item stacking is declared but not built. FEAT-14 builds it.
 
 ### Tags
@@ -1258,7 +1260,7 @@ runtime identity's were null and threw. A hub stepped by hand, outside ProcessCo
     `HandleDestruction` (GAS-42).
   - `Assets/PlayForge/Runtime/PlayForge/GAS/Core/Identity/EntityIdentity.cs:30`, the defaults (GAS-23).
 - **Fixed in Phase 3:** GAS-S1, one core for both hubs, and GAS-47, the Mono GAS wrote the affiliation from its
-  registration data onto its shared Entity asset. See [Phase 3 so far](#phase-3-so-far).
+  registration data onto its shared Entity asset. See [Phase 3](#phase-3).
 
 ## Editor
 
