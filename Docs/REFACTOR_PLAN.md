@@ -368,7 +368,7 @@ had no letter in the review. TS-AA onward came from the test project.
 | TS-7 | M | 5 | Critical sections are static; the compiler never emits a `BranchStage` (C12) | `AbilitySequenceCompiler.cs` | open |
 | TS-8 | M | 3 | `TryActivate` runs synchronously deep into the first stages (C16) | `AbilityProxy.cs` | open |
 | TS-9 | H | 1 | `OnAbilityEnd` means claim released; task callbacks fire only on the legacy path (C07) | `AbilityProxy.cs` | verified |
-| TS-10 | M | 3 | About 14 CancellationTokenSources per three-stage ability (C08, B11) | `TaskSequenceRuntime.cs` | open |
+| TS-10 | M | 3 | About 14 CancellationTokenSources per three-stage ability (C08, B11). Every stage made a second source for its policy, linked to its own, though only WhenAny and WhenN cancel one. Measured: a frame that runs one stage of one instant task allocated 1,912 bytes under WhenAll, the same as under a policy the runtime doesn't know. Now a stage under WhenAll or RepeatUntilSkipped hands its policy its own source: 1,464 bytes, 448 less a stage, and about 10 sources to a three-stage ability. The rest are one each for an activation phase, a run of a process, a sequence run and a stage | `TaskSequenceRuntime.cs` (`ExecuteStageInternal`) | fixed |
 | TS-A | C | 1 | A WhenAny or WhenN stage hangs on outside skip, timeout or max duration | `SequenceCore.cs:291-294, 351-354` | verified |
 | TS-B | C | 1 | Any-policy ability stages end at once (`StageCallbackTask` satisfies "any") | `AbilitySequenceCompiler.cs:206, 296-300` | verified |
 | TS-C | C | 1 | Interrupted or failed targeting still executes; `TargetingFailed` is never read | `AbilityProxy.cs:174-177, 197-200`, `AbilitySpecContainer.cs:63-88, 138`, `AbstractTargetingAbilityTask.cs:66-69` | verified |
@@ -586,6 +586,18 @@ GAS-4 with GAS-5, PC-6, and TS-I with PC-5.
 ## Log
 
 Record baselines, gate results and notable decisions here, newest first.
+
+- 2026-11-03, **TS-10: a stage that waits for all its tasks makes no second token source.** A stage under WhenAll
+  or RepeatUntilSkipped hands its policy the stage's own source; WhenAny, WhenN and a policy the runtime doesn't
+  know still get one of their own to cancel. A three-stage ability makes about 10 token sources, not 14. Its test,
+  `TS_10_A_stage_that_waits_for_all_its_tasks_makes_no_second_token_source`, was seen failing first.
+  - **Measured,** in bytes a frame for one stage of one instant task: 1,912 under WhenAll and 1,912 under a policy
+    the runtime doesn't know before; 1,464 and 1,912 now, 448 less a stage.
+  - **Tests:** PlayMode 889: 882 pass, 0 fail and 7 planted are skipped, in three orders. Planted 7 of 7; EditMode
+    39 of 39. The 25 golden scenarios pass inside PlayMode; the custom runner can't run while the user's editor holds
+    PlayForge's lock.
+  - **Left as it is:** one source each for an activation phase, a run of a process, a sequence run and a stage. The
+    handle's two are public fields, and the others are what interrupts, pauses, skips and timers cancel.
 
 - 2026-11-03, **TS-5: a repeating sequence keeps its path the same.** Each part a run or a stage adds to its
   packet's path comes off as it ends, each repeat starts where its iteration began, and a failed run keeps the path

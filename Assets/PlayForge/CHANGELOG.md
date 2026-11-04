@@ -61,6 +61,9 @@ tracks each fix below by its ID.
   long a tag's name is. Nothing new is serialized. Two tags are still equal exactly when their names are, and a tag
   whose `Name` is changed in place takes its new name's ID. `Tag.GetHashCode` no longer returns the name's hash, and
   can differ from one run to the next.
+- A stage under WhenAll or RepeatUntilSkipped hands its policy the stage's own token source and makes no second one,
+  so a three-stage ability makes about 10 token sources, not 14. A stage under WhenAny, WhenN or a policy of your own
+  still makes one, as its policy may cancel what it's handed.
 
 ### Fixed
 - Runtime correctness: 96 fixes across ProcessControl, TaskSequence and the GAS core, among them exception isolation,

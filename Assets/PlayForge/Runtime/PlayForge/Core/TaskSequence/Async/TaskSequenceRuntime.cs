@@ -522,7 +522,7 @@ namespace FarEmerald.PlayForge
                 }
 
                 // Execute the stage (handles repeat internally if needed)
-                await ExecuteStageWithRepeat(stage, stageToken);
+                await ExecuteStageWithRepeat(stage, stageCts);
             }
             catch (OperationCanceledException)
             {
@@ -597,8 +597,10 @@ namespace FarEmerald.PlayForge
         /// <summary>
         /// Executes a stage with repeat support.
         /// </summary>
-        private async UniTask ExecuteStageWithRepeat(SequenceStage stage, CancellationToken token)
+        private async UniTask ExecuteStageWithRepeat(SequenceStage stage, CancellationTokenSource stageSource)
         {
+            var token = stageSource.Token;
+
             // If stage has Repeat flag, we loop here
             if (stage.Repeat)
             {
@@ -606,7 +608,7 @@ namespace FarEmerald.PlayForge
                 {
                     int startFrame = Time.frameCount;
 
-                    await ExecuteStageInternal(stage, Data, token);
+                    await ExecuteStageInternal(stage, Data, token, stageSource);
                     
                     if (token.IsCancellationRequested || IsRepeatBroken(stage))
                         break;
@@ -633,7 +635,7 @@ namespace FarEmerald.PlayForge
             else
             {
                 // Normal single execution (policy may handle its own repeat like RepeatUntilSkippedPolicy)
-                await ExecuteStageInternal(stage, Data, token);
+                await ExecuteStageInternal(stage, Data, token, stageSource);
             }
         }
         
@@ -655,9 +657,11 @@ namespace FarEmerald.PlayForge
         }
 
         /// <summary>
-        /// Executes a stage (used for both top-level and sub-stages).
+        /// Executes a stage (used for both top-level and sub-stages). <paramref name="stageSource"/> is the stage's own
+        /// token source, which a policy that only waits for its tasks is handed.
         /// </summary>
-        internal async UniTask ExecuteStageInternal(SequenceStage stage, SequenceDataPacket data, CancellationToken token)
+        internal async UniTask ExecuteStageInternal(SequenceStage stage, SequenceDataPacket data, CancellationToken token,
+            CancellationTokenSource stageSource = null)
         {
             // Handle branch stages. The stage chosen runs as a sub-stage does, its settings with it (TS-N)
             if (stage is BranchStage branchStage)
@@ -684,9 +688,21 @@ namespace FarEmerald.PlayForge
                 return;
             }
             
-            // Create policy CTS FIRST so tasks use this token
-            using var policyCts = CancellationTokenSource.CreateLinkedTokenSource(token);
-            var policyToken = policyCts.Token;
+            // Use stage policy to determine completion
+            var policy = stage.Policy ?? WhenAllStagePolicy.Instance;
+
+            // The source the policy is handed, FIRST, so tasks use its token. A policy that stops the tasks still
+            // running, as WhenAny and WhenN do, gets one of its own to cancel, so the stage isn't cancelled with them;
+            // so does one the runtime doesn't know. One that only waits is handed the stage's own. Every stage made a
+            // second source for its policy, and with its own, a three-stage ability made about 14 (TS-10)
+            CancellationTokenSource ownSource = null;
+            var policySource = stageSource;
+            if (policySource == null || !OnlyWaits(policy))
+            {
+                ownSource = CancellationTokenSource.CreateLinkedTokenSource(token);
+                policySource = ownSource;
+            }
+            var policyToken = policySource.Token;
 
             lock (RunsByToken)
             {
@@ -703,10 +719,7 @@ namespace FarEmerald.PlayForge
                     return;
                 }
 
-                // Use stage policy to determine completion
-                var policy = stage.Policy ?? WhenAllStagePolicy.Instance;
-
-                await policy.AwaitCompletion(this, stage, units, policyCts);
+                await policy.AwaitCompletion(this, stage, units, policySource);
 
                 // A task that doesn't hold can finish during a pause, but its stage ends with the pause (TS-Y)
                 await HoldWhilePaused(token);
@@ -717,7 +730,17 @@ namespace FarEmerald.PlayForge
                 {
                     RunsByToken.Remove(policyToken);
                 }
+
+                ownSource?.Dispose();
             }
+        }
+
+        // The built-in policies that only wait for their tasks and never cancel what they're handed. By exact type: a
+        // policy that extends one could cancel it
+        private static bool OnlyWaits(ISequenceStagePolicy policy)
+        {
+            var type = policy.GetType();
+            return type == typeof(WhenAllStagePolicy) || type == typeof(RepeatUntilSkippedPolicy);
         }
         
         // ═══════════════════════════════════════════════════════════════════════════
