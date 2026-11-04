@@ -27,7 +27,16 @@ namespace FarEmerald.PlayForge
         }
 
         public bool IsCooldown => Spec.Base.Cooldown is not null && Spec.Source.GetLongestDurationFor(Spec.Base.Cooldown.Tags.AssetTag).FoundDuration;
-        
+
+        /// <summary>
+        /// True while a call to <see cref="ActivateAbility"/> runs, nested or not: as long as the activation runs before
+        /// it first waits, which is all of it for an instant ability. Asked for again meanwhile, the ability starts next
+        /// frame (TS-8).
+        /// </summary>
+        internal bool IsActivating => _activating > 0;
+
+        private int _activating;
+
         private readonly List<AbilityActivationHandle> _activeHandles = new();
 
         /// <summary>How many times this ability's behaviour has been compiled into a proxy for an activation. Diagnostics.</summary>
@@ -66,15 +75,25 @@ namespace FarEmerald.PlayForge
         public bool ActivateAbility(AbilityDataPacket implicitData)
         {
             if (IsClaiming) return false;
-            if (!implicitData.System.ClaimActive(this, implicitData)) return false;
 
-            string abilityName = $"{Spec.Base?.GetName() ?? "Anonymous"}";
-            var handle = new AbilityActivationHandle(this, implicitData, TakeProxy(abilityName));
-            AddActiveHandle(handle);
+            // Open from the claim on, as its callback can ask for the ability too
+            _activating++;
+            try
+            {
+                if (!implicitData.System.ClaimActive(this, implicitData)) return false;
 
-            AwaitAbility(handle).Forget();
+                string abilityName = $"{Spec.Base?.GetName() ?? "Anonymous"}";
+                var handle = new AbilityActivationHandle(this, implicitData, TakeProxy(abilityName));
+                AddActiveHandle(handle);
 
-            return true;
+                AwaitAbility(handle).Forget();
+
+                return true;
+            }
+            finally
+            {
+                _activating--;
+            }
         }
 
         private async UniTaskVoid AwaitAbility(AbilityActivationHandle handle)

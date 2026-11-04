@@ -95,6 +95,10 @@ tracks each fix below by its ID.
 - A sequence that repeats no longer grows its packet's path for as long as it runs. Each part a run or a stage adds to
   the path comes off as it ends, and a failed run still logs the path to where it failed. The parts are formatted
   once, and the LINQ left on an ability's activation is gone.
+- An ability asked for again from inside its own activation, by its own callbacks or by another ability's that it
+  started, starts in the next frame. It started inside the call, so a loop of instant activations nested until the
+  stack overflowed. `TryActivateAbility` returns true for such a request. Activation is otherwise as before: the
+  ability runs inside the call until one of its tasks waits.
 
 ### Removed
 - QuickOutline, replaced by the Demo's own outline.

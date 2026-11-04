@@ -250,6 +250,13 @@ from. It lives outside `Assets/` so it never ships in the package.
   frame it ends, through `ProcessRelay.WhenTerminated`. An instant ability ends in the frame it starts, even inside
   `TryActivateAbility`. A repeating sequence that takes no frame still takes one per repeat, as a stage does (TS-M).
   The user chose all of it over fixing `Task(Action)` alone.
+- Decision 25, 2026-11-03: activation stays synchronous, as Unreal's is (TS-8). `TryActivateAbility` runs an ability
+  until a task waits, so an instant ability ends inside it. An ability asked for again while its own activation call
+  still runs, from its own callbacks or from another ability's that it started, starts next frame, so a loop of
+  instant activations goes round once a frame, as a repeating sequence does. `TryActivateAbility` returns true for
+  such a request, which is tried in full next frame while the ability's slot still holds it. The user chose this over
+  deferring every activation's start to the next frame, the review's suggestion, which would cost every ability a
+  frame.
 
 **Open. Ask the user; do not assume:**
 1. ~~**Uncommitted changes**~~: decided, see above.
@@ -373,7 +380,7 @@ had no letter in the review. TS-AA onward came from the test project.
 | TS-5 | M | 3 | LINQ on a hot path; `AppendPath` concatenates strings and grows without bound on repeat. PF-007 (Phase 0) took the LINQ out of `HasAnyStageConditions` and made the path's parts join only when read, which left them to grow: a sequence that repeated added its stages' parts every time round, and its twentieth run had a 272-character path to its first's 25. Now each part a run or a stage adds comes off as it ends, each repeat starts where its iteration began, and a failed run keeps the path to where it failed for its log. The parts are formatted once, and the LINQ left on an ability's activation, in `AbilityProxy`, and in a chain's `HasConditions` is loops | `TaskSequenceRuntime.cs` (`Run`, `RunStage`, `RestartStage`), `ProcessDataPacket.cs` (`TrimPath`), `AbilityProxy.cs`, `AbilityTaskAdapter.cs`, `AbilitySequenceCompiler.cs` | fixed |
 | TS-6 | M | 5 | Global time only; `RunProcessTask` defaults to unscaled time (C02) → FEAT-7 | `RunProcessTask.cs:14` | open |
 | TS-7 | M | 5 | Critical sections are static; the compiler never emits a `BranchStage` (C12) | `AbilitySequenceCompiler.cs` | open |
-| TS-8 | M | 3 | `TryActivate` runs synchronously deep into the first stages (C16) | `AbilityProxy.cs` | open |
+| TS-8 | M | 3 | `TryActivate` runs synchronously deep into the first stages (C16). Measured: it runs an instant ability to its end, and a slower one to its first wait, before it returns. An ability asked for again from its own end or claim-released callback nested inside the call: 40 activations, 40 deep, in one frame before a cap, so an uncapped loop overflowed the stack. Activation stays synchronous (Decision 25); an ability asked for again while its own activation call still runs starts next frame | `AbilitySystemComponent.cs` (`TryActivateAbility`), `AbilitySpecContainer.cs` (`ActivateAbility`) | fixed |
 | TS-9 | H | 1 | `OnAbilityEnd` means claim released; task callbacks fire only on the legacy path (C07) | `AbilityProxy.cs` | verified |
 | TS-10 | M | 3 | About 14 CancellationTokenSources per three-stage ability (C08, B11). Every stage made a second source for its policy, linked to its own, though only WhenAny and WhenN cancel one. Measured: a frame that runs one stage of one instant task allocated 1,912 bytes under WhenAll, the same as under a policy the runtime doesn't know. Now a stage under WhenAll or RepeatUntilSkipped hands its policy its own source: 1,464 bytes, 448 less a stage, and about 10 sources to a three-stage ability. The rest are one each for an activation phase, a run of a process, a sequence run and a stage | `TaskSequenceRuntime.cs` (`ExecuteStageInternal`) | fixed |
 | TS-A | C | 1 | A WhenAny or WhenN stage hangs on outside skip, timeout or max duration | `SequenceCore.cs:291-294, 351-354` | verified |
@@ -593,6 +600,25 @@ GAS-4 with GAS-5, PC-6, and TS-I with PC-5.
 ## Log
 
 Record baselines, gate results and notable decisions here, newest first.
+
+- 2026-11-03, **TS-8: activation stays synchronous, and a loop of activations goes round once a frame.**
+  `TryActivateAbility` runs an ability until one of its tasks waits: an instant one to its end, a slower one to its
+  first wait, and targeting before the stages. That stays, as Unreal's does. An ability asked for again from inside
+  its own activation nested in the call, so a loop of instant activations nested until the stack overflowed; from an
+  end callback, TS-Z made this so, as the end had come 2 frames later. Such a request now starts next frame. Its test,
+  `TS_8_An_ability_asked_again_inside_its_own_activation_starts_next_frame`, from its end, its claim release and
+  through another ability, on both hubs, was seen failing first. Its controls,
+  `An_ability_runs_inside_the_call_that_activates_it` and
+  `An_ability_asked_for_outside_its_own_activation_starts_at_once`, passed before and after.
+  - **Measured:** an instant ability that asked for itself again from its end or its claim release ran 40
+    activations, nested 40 deep, in one frame, where a diagnostic capped it; uncapped, it recursed without end. Each
+    round now starts the next frame.
+  - **Tests:** PlayMode 909: 902 pass, 0 fail and 7 planted are skipped, in three orders. Planted 7 of 7; EditMode
+    40 of 40. The 25 golden scenarios pass inside PlayMode; the custom runner can't run while the user's editor holds
+    PlayForge's lock.
+  - **Calls made:** Decision 25. `TryActivateAbility` returns true for a request it puts off, which is tried in full
+    next frame while the ability's slot still holds it. Every Phase 3 row is now fixed, or moved as GAS-51 was. The
+    phase's exit gate, zero steady-state allocation enforced in CI, isn't checked yet, and the repo has no CI.
 
 - 2026-11-03, **TS-Z: sequences and abilities end in the frame their last task does.** A `Task(Action)` yielded a
   frame before its action, a run waited a frame at its end for maintained stages it didn't have, and waiting on a

@@ -67,6 +67,11 @@ This section is what the ability does when it runs. One activation goes through 
 4. The Asset Loaders run.
 5. The Stages run, one after another.
 
+These steps start inside the call that asks for the ability, `AbilitySystemComponent.TryActivateAbility`, and run until
+a task waits. So an ability whose tasks all finish at once has ended, and its callbacks have fired, by the time the call
+returns. An ability asked for again while that call still runs, from its own callbacks or from another ability's that
+it started, starts in the next frame instead.
+
 - **Targeting**: the task that picks what the ability acts on, such as an entity the player clicks, or the caster
   itself. Targeting holds the activation's claim. If the task fails while its **Break Runtime On Invalid** is on, or it
   doesn't finish, the activation ends. Leave Targeting empty to skip this step.

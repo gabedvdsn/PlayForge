@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using Cysharp.Threading.Tasks;
 using UnityEngine;
 
 namespace FarEmerald.PlayForge
@@ -319,12 +320,38 @@ namespace FarEmerald.PlayForge
                    && (!container.Spec.Base.IgnoreWhenLevelZero || container.Spec.GetLevel().CurrentValue > 0);
         }
         
+        /// <summary>
+        /// Activates the ability the request names, if it may run. The ability runs inside this call until one of its
+        /// tasks waits: its claim, its targeting and its first stage. So an instant ability has ended, and its callbacks
+        /// have fired, by the time this returns (Decision 25). An ability asked for again while its own activation call
+        /// still runs, from its own callbacks or from another ability's that it started, starts next frame instead, so
+        /// a loop of instant activations goes round once a frame (TS-8).
+        /// </summary>
+        /// <returns>True if the ability activated, was queued behind a busy one, or was put off to the next frame.</returns>
         public bool TryActivateAbility(AbilityActivationRequest req)
         {
             if (!AbilityCache.TryGetValue(req.Index, out var container)) return false;
-            var data = AbilityDataPacket.GenerateFrom(container.Spec, 
+            var data = AbilityDataPacket.GenerateFrom(container.Spec,
                 req, container.Spec.Base.Behaviour.UseImplicitTargeting, container.Spec.Base.Behaviour.ImplicitTag);
-            return CanActivateAbility(container, data) && ProcessActivationRequest(data);
+            if (!CanActivateAbility(container, data)) return false;
+
+            // Run at once, it nested inside its own activation, and a loop of instant activations nested until the
+            // stack overflowed (TS-8)
+            if (container.IsActivating)
+            {
+                ActivateNextFrame(container, req).Forget();
+                return true;
+            }
+
+            return ProcessActivationRequest(data);
+        }
+
+        // Asked for again next frame, as long as its slot still holds it
+        private async UniTaskVoid ActivateNextFrame(AbilitySpecContainer container, AbilityActivationRequest req)
+        {
+            await UniTask.NextFrame();
+
+            if (AbilityCache.TryGetValue(req.Index, out var cached) && cached == container) TryActivateAbility(req);
         }
         
         private bool ProcessActivationRequest(AbilityDataPacket data)
