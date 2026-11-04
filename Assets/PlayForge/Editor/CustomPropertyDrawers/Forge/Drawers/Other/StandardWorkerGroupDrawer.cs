@@ -17,13 +17,15 @@ namespace FarEmerald.PlayForge.Extended.Editor
     [CustomPropertyDrawer(typeof(StandardWorkerGroup))]
     public class StandardWorkerGroupDrawer : PropertyDrawer
     {
-        private static Dictionary<string, bool> _collapsedStates = new Dictionary<string, bool>();
         private static HashSet<string> _rebuildingProperties = new HashSet<string>();
         
         private static readonly Color WorkerGroupAccent = Colors.AccentGreen;
         
-        private static bool IsCollapsed(string propertyPath) => !_collapsedStates.TryGetValue(propertyPath, out bool c) || c;
-        private static void SetCollapsed(string propertyPath, bool collapsed) => _collapsedStates[propertyPath] = collapsed;
+        // Kept per asset for the editor session, starting collapsed (ED-18)
+        private static bool IsCollapsed(SerializedProperty property) =>
+            DrawerCollapseState.IsCollapsed(property, collapsedByDefault: true);
+        private static void SetCollapsed(SerializedProperty property, bool collapsed) =>
+            DrawerCollapseState.SetCollapsed(property, collapsed);
         
         public override VisualElement CreatePropertyGUI(SerializedProperty property)
         {
@@ -59,7 +61,7 @@ namespace FarEmerald.PlayForge.Extended.Editor
             root.Clear();
             if (property?.serializedObject?.targetObject == null) return;
             
-            bool isCollapsed = IsCollapsed(property.propertyPath);
+            bool isCollapsed = IsCollapsed(property);
             
             var nameProp = property.FindPropertyRelative("Name");
             string customName = nameProp?.stringValue ?? "";
@@ -107,7 +109,7 @@ namespace FarEmerald.PlayForge.Extended.Editor
             collapseBtn.style.paddingBottom = 0;
             collapseBtn.style.unityTextAlign = TextAnchor.MiddleCenter;
             ApplyButtonStyle(collapseBtn);
-            collapseBtn.clicked += () => { SetCollapsed(property.propertyPath, !isCollapsed); ScheduleRebuild(root, property); };
+            collapseBtn.clicked += () => { SetCollapsed(property, !isCollapsed); ScheduleRebuild(root, property); };
             header.Add(collapseBtn);
             
             // Title - show custom name if set, otherwise "Worker Group"

@@ -16,7 +16,6 @@ namespace FarEmerald.PlayForge.Extended.Editor
     
     public abstract class AbstractTagRequirementsDrawer<T> : PropertyDrawer where T : AbstractTagRequirements
     {
-        private static readonly Dictionary<string, bool> CollapsedStates = new();
         private static readonly HashSet<string> RebuildingProperties = new();
         
         // ═══════════════════════════════════════════════════════════════════════════
@@ -42,11 +41,12 @@ namespace FarEmerald.PlayForge.Extended.Editor
         // Collapse State Management
         // ═══════════════════════════════════════════════════════════════════════════
         
-        protected static bool IsCollapsed(string propertyPath) => 
-            !CollapsedStates.TryGetValue(propertyPath, out bool c) || c;
+        // Kept per asset for the editor session, starting collapsed (ED-18)
+        protected static bool IsCollapsed(SerializedProperty property) => 
+            DrawerCollapseState.IsCollapsed(property, collapsedByDefault: true);
         
-        protected static void SetCollapsed(string propertyPath, bool collapsed) => 
-            CollapsedStates[propertyPath] = collapsed;
+        protected static void SetCollapsed(SerializedProperty property, bool collapsed) => 
+            DrawerCollapseState.SetCollapsed(property, collapsed);
         
         // ═══════════════════════════════════════════════════════════════════════════
         // Entry Point
@@ -90,7 +90,7 @@ namespace FarEmerald.PlayForge.Extended.Editor
             root.Clear();
             if (property?.serializedObject?.targetObject == null) return;
             
-            bool isCollapsed = IsCollapsed(property.propertyPath);
+            bool isCollapsed = IsCollapsed(property);
             var nameProp = property.FindPropertyRelative("Name");
             string customName = nameProp?.stringValue ?? "";
             
@@ -166,7 +166,7 @@ namespace FarEmerald.PlayForge.Extended.Editor
             collapseBtn.style.paddingBottom = 0;
             collapseBtn.style.unityTextAlign = TextAnchor.MiddleCenter;
             ApplyButtonStyle(collapseBtn);
-            collapseBtn.clicked += () => { SetCollapsed(property.propertyPath, !isCollapsed); ScheduleRebuild(root, property); };
+            collapseBtn.clicked += () => { SetCollapsed(property, !isCollapsed); ScheduleRebuild(root, property); };
             header.Add(collapseBtn);
             
             // Label
@@ -956,7 +956,6 @@ namespace FarEmerald.PlayForge.Extended.Editor
     [CustomPropertyDrawer(typeof(AvoidRequireTagGroup))]
     public class AvoidRequireTagGroupDrawer : PropertyDrawer
     {
-        private static readonly Dictionary<string, bool> _collapsedStates = new();
         private static readonly HashSet<string> _rebuildingProperties = new();
 
         private Color RequirementOrange
@@ -1003,7 +1002,8 @@ namespace FarEmerald.PlayForge.Extended.Editor
             root.Clear();
             if (property?.serializedObject?.targetObject == null) return;
             
-            bool isCollapsed = !_collapsedStates.TryGetValue(property.propertyPath, out bool c) || c;
+            // Kept per asset for the editor session, starting collapsed (ED-18)
+            bool isCollapsed = DrawerCollapseState.IsCollapsed(property, collapsedByDefault: true);
             var nameProp = property.FindPropertyRelative("Name");
             var requireProp = property.FindPropertyRelative("RequireTags");
             var avoidProp = property.FindPropertyRelative("AvoidTags");
@@ -1054,7 +1054,7 @@ namespace FarEmerald.PlayForge.Extended.Editor
             collapseBtn.style.backgroundColor = Colors.ButtonBackground;
             collapseBtn.RegisterCallback<MouseEnterEvent>(_ => collapseBtn.style.backgroundColor = Colors.ButtonHover);
             collapseBtn.RegisterCallback<MouseLeaveEvent>(_ => collapseBtn.style.backgroundColor = Colors.ButtonBackground);
-            collapseBtn.clicked += () => { _collapsedStates[property.propertyPath] = !isCollapsed; ScheduleRebuild(root, property); };
+            collapseBtn.clicked += () => { DrawerCollapseState.SetCollapsed(property, !isCollapsed); ScheduleRebuild(root, property); };
             header.Add(collapseBtn);
             
             if (!string.IsNullOrEmpty(customName))

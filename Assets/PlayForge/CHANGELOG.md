@@ -97,6 +97,9 @@ tracks each fix below by its ID.
 - An asset inspector listens to the editor's update only while an object picker is open; it ran every frame (ED-11).
 - An asset inspector measures nothing on a timer. Its header scrolls with the content, in the Inspector's own scroll
   view; it stayed put by measuring the window every 200 to 300 ms for as long as the inspector was open (ED-11).
+- A drawer keeps its collapsed parts for each asset until the editor closes, through domain reloads. Collapsing a part
+  on one asset collapsed it on every asset, and a reload opened everything again. A worker's state follows it when its
+  list is reordered, and deleting a stage leaves the later stages as they were; it opened them all (ED-18).
 - The Item inspector edits several selected items at once. Name, the asset tag and linking wait for one item (ED-12).
 - The Ability inspector edits several selected abilities at once. Name, the asset tag, linking, targeting, asset
   loaders, stages and activation rules wait for one ability (ED-12).

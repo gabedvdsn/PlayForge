@@ -27,18 +27,12 @@ namespace FarEmerald.PlayForge.Extended.Editor
             Colors.AccentYellow
         };
         
-        // Collapse state persistence
-        private static Dictionary<string, bool> _collapsedStates = new Dictionary<string, bool>();
+        // Kept per asset for the editor session (ED-18)
+        private static bool IsCollapsed(SerializedProperty property) =>
+            DrawerCollapseState.IsCollapsed(property, collapsedByDefault: false);
         
-        private static bool IsCollapsed(string propertyPath)
-        {
-            return _collapsedStates.TryGetValue(propertyPath, out bool collapsed) && collapsed;
-        }
-        
-        private static void SetCollapsed(string propertyPath, bool collapsed)
-        {
-            _collapsedStates[propertyPath] = collapsed;
-        }
+        private static void SetCollapsed(SerializedProperty property, bool collapsed) =>
+            DrawerCollapseState.SetCollapsed(property, collapsed);
         
         public override VisualElement CreatePropertyGUI(SerializedProperty property)
         {
@@ -56,7 +50,7 @@ namespace FarEmerald.PlayForge.Extended.Editor
             
             int stageIndex = GetStageIndex(property.propertyPath);
             Color stageColor = StageColors[stageIndex % StageColors.Length];
-            bool isCollapsed = IsCollapsed(property.propertyPath);
+            bool isCollapsed = IsCollapsed(property);
             
             // Main container
             var container = new VisualElement { name = "StageContainer" };
@@ -115,7 +109,7 @@ namespace FarEmerald.PlayForge.Extended.Editor
             ApplyButtonStyle(collapseBtn);
             collapseBtn.clicked += () =>
             {
-                SetCollapsed(property.propertyPath, !isCollapsed);
+                SetCollapsed(property, !isCollapsed);
                 ScheduleRebuild(root, property);
             };
             header.Add(collapseBtn);
@@ -609,15 +603,12 @@ namespace FarEmerald.PlayForge.Extended.Editor
             if (arrayProp != null && arrayProp.isArray)
             {
                 int index = GetStageIndex(path);
+                int countBefore = arrayProp.arraySize;
                 arrayProp.DeleteArrayElementAtIndex(index);
                 so.ApplyModifiedProperties();
                 
-                // Clear collapsed state for deleted and shifted items
-                var keysToRemove = _collapsedStates.Keys
-                    .Where(k => k.StartsWith(arrayPath))
-                    .ToList();
-                foreach (var key in keysToRemove)
-                    _collapsedStates.Remove(key);
+                // Each later stage keeps its own collapse state. Every stage's was cleared, so all of them opened (ED-18)
+                DrawerCollapseState.RemoveElement(arrayProp, index, countBefore);
             }
         }
         

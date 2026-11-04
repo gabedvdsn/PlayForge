@@ -30,15 +30,16 @@ namespace FarEmerald.PlayForge.Extended.Editor
     [CustomPropertyDrawer(typeof(AttributeSetElement))]
     public class AttributeSetElementDrawer : PropertyDrawer
     {
-        private static readonly Dictionary<string, bool> _collapsedStates = new();
-
-        private static bool IsCollapsed(string path) => _collapsedStates.TryGetValue(path, out var c) && c;
-        private static void SetCollapsed(string path, bool collapsed) => _collapsedStates[path] = collapsed;
+        // Kept per asset for the editor session (ED-18)
+        private static bool IsCollapsed(SerializedProperty property) =>
+            DrawerCollapseState.IsCollapsed(property, collapsedByDefault: false);
+        private static void SetCollapsed(SerializedProperty property, bool collapsed) =>
+            DrawerCollapseState.SetCollapsed(property, collapsed);
 
         public override VisualElement CreatePropertyGUI(SerializedProperty property)
         {
             var root = new VisualElement { name = "AttributeSetElementRoot" };
-            bool startCollapsed = IsCollapsed(property.propertyPath);
+            bool startCollapsed = IsCollapsed(property);
 
             // ─── Locate sub-properties ───────────────────────────────────────
             var attributeProp   = property.FindPropertyRelative(nameof(AttributeSetElement.Attribute));
@@ -355,8 +356,8 @@ namespace FarEmerald.PlayForge.Extended.Editor
 
             void ToggleCollapse()
             {
-                bool newState = !IsCollapsed(property.propertyPath);
-                SetCollapsed(property.propertyPath, newState);
+                bool newState = !IsCollapsed(property);
+                SetCollapsed(property, newState);
                 collapseBtn.text = newState ? Icons.ChevronRight : Icons.ChevronDown;
                 collapsedSummary.style.display = newState ? DisplayStyle.Flex : DisplayStyle.None;
                 expandedContent.style.display  = newState ? DisplayStyle.None : DisplayStyle.Flex;

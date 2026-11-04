@@ -21,11 +21,6 @@ namespace FarEmerald.PlayForge.Extended.Editor
         private static string[] _scalerTypeNames;
         private static HashSet<string> _rebuildingProperties = new HashSet<string>();
         
-        // Collapse state per property path (persists across rebuilds)
-        private static Dictionary<string, bool> _collapsedStates = new Dictionary<string, bool>();
-        
-        // Quick fill expanded state
-        private static Dictionary<string, bool> _quickFillExpanded = new Dictionary<string, bool>();
         private static Dictionary<string, EQuickFillMode> _quickFillMode = new Dictionary<string, EQuickFillMode>();
         
         private enum EQuickFillMode { Linear, Additive, Steps }
@@ -42,15 +37,12 @@ namespace FarEmerald.PlayForge.Extended.Editor
             public int StepCount = 5;
         }
         
-        private static bool IsCollapsed(string propertyPath)
-        {
-            return !_collapsedStates.TryGetValue(propertyPath, out bool collapsed) || collapsed;
-        }
+        // Kept per asset for the editor session, starting collapsed (ED-18)
+        private static bool IsCollapsed(SerializedProperty property) =>
+            DrawerCollapseState.IsCollapsed(property, collapsedByDefault: true);
 
-        private static void SetCollapsed(string propertyPath, bool collapsed)
-        {
-            _collapsedStates[propertyPath] = collapsed;
-        }
+        private static void SetCollapsed(SerializedProperty property, bool collapsed) =>
+            DrawerCollapseState.SetCollapsed(property, collapsed);
 
         /// <summary>
         /// Builds a composite cache key that scopes a SerializedProperty's
@@ -293,7 +285,7 @@ namespace FarEmerald.PlayForge.Extended.Editor
             StyleSpecialContainer(container, Colors.AssetScaler);
             root.Add(container);
             
-            bool isCollapsed = IsCollapsed(property.propertyPath);
+            bool isCollapsed = IsCollapsed(property);
             container.Add(CreateHeader(property, root, isCollapsed));
             if (sharedWith >= 0)
             {
@@ -379,7 +371,7 @@ namespace FarEmerald.PlayForge.Extended.Editor
             ApplyButtonStyle(collapseBtn);
             collapseBtn.clicked += () =>
             {
-                SetCollapsed(property.propertyPath, !isCollapsed);
+                SetCollapsed(property, !isCollapsed);
                 ScheduleRebuild(root, property);
             };
             header.Add(collapseBtn);
@@ -1002,7 +994,6 @@ namespace FarEmerald.PlayForge.Extended.Editor
             // path that can collide across assets or list siblings.
             var stateKey = GetStateKey(property);
             var propPath = property.propertyPath;
-            bool isExpanded = _quickFillExpanded.TryGetValue(stateKey, out bool exp) && exp;
 
             // Ensure params exist
             if (!_quickFillParams.ContainsKey(stateKey))

@@ -527,7 +527,7 @@ had no letter in the review. TS-AA onward came from the test project.
 | ED-15 | M | 4 | "Validate All" is noisy and capped at 15; "Find All References" is a dialog | `TheForge.SettingsTab.cs:1808-1832`, `AttributeEditor.cs:261-273` | open |
 | ED-16 | M | 2 | 49 placeholder `docs.playforge.dev` links in six editors, some pointing at the wrong page, with slugs that vary (`level-source`, `levelsource`). The Asset Store strongly recommends offline docs (rule 2.3.a) | `AbilityEditor.cs:77, 116`, `AttributeSetEditor.cs:818`, `AttributeEditor.cs:183`, `EntityIdentityEditor.cs:158` | verified |
 | ED-17 | M | 2 | Stray `Debug.Log` calls | `GameplayEffectImpactDrawer.cs:33`, `AssetBrowserWindow.cs:348`, `AbstractRefDrawer.cs:81`, `TagDrawer.cs:745`, `TheForge.ViewTab.cs:2009` | verified |
-| ED-18 | M | 4 | Collapse state lives in static dictionaries keyed by property path | `AbilityTaskBehaviourStageDrawer.cs:31`, `AbilityBehaviourDrawer.cs:18-20` | open |
+| ED-18 | M | 4 | Collapse state lives in static dictionaries keyed by property path, so every asset shares it and a domain reload loses it. Each drawer now keeps it per asset for the editor session, in SessionState; a [SerializeReference] field's state follows the object it holds, and deleting a stage moves the later stages' states up with them | `AbilityTaskBehaviourStageDrawer.cs:31`, `AbilityBehaviourDrawer.cs:18-20` | fixed |
 | ED-19 | M | 2 | Naming drift: The Forge or PlayForge Manager, and no window's title matches its menu item. The top-level `PlayForge/` menu is not among the placements the Asset Store's rule 2.5.1.a describes: an existing menu such as `Window/`, or else `Tools/`. The docs follow whatever wins | `TheForge.cs:16-28, 88`, `GASDebugger.cs:134`, `GETTING_STARTED.md` | verified |
 | ED-20 | H | 4 | No theming: inline styles, hard-coded dark backgrounds, emoji icons, dead UXML and USS | `TheForge.cs:183`, `GASDebugger.cs:108`, `ForgeDrawerStyles.cs:111-131` | open |
 | ED-21 | M | 4 | Settings live in EditorPrefs and are machine-wide | `EffectTemplateRegistry.cs:12, 46`, `TemplateRegistry.cs:175` | open |
@@ -643,6 +643,19 @@ GAS-4 with GAS-5, PC-6, and TS-I with PC-5.
 ## Log
 
 Record baselines, gate results and notable decisions here, newest first.
+
+- 2026-11-04, **ED-18: a drawer keeps its collapse state per asset.** Eight drawers kept whether a part is collapsed
+  in static dictionaries keyed by property path alone. So opening a part on one asset opened it on every asset, a
+  domain reload forgot it, and a moved worker took the state of the worker that had been in its place. Deleting a
+  stage cleared every stage's state, so they all opened. One helper, `DrawerCollapseState`, keeps it per asset in
+  SessionState, for the editor session and through domain reloads, with each drawer's own default. A
+  [SerializeReference] field keeps it with the object it holds, so it follows the object through its list, and
+  deleting a stage moves the later stages' states up. The scaler's Quick Fill state, which nothing wrote, and the base
+  inspector's unused section dictionary are gone. Its tests, the three in `DrawerCollapseTests` and
+  `ED_18_No_drawer_keeps_collapse_state_in_a_static_dictionary`, were seen failing first. With ED-11, Phase 4's second
+  step, no polling, is done.
+  - **Tests:** PlayMode 945: 938 pass, 0 fail and 7 planted are skipped, in three orders. Planted 7 of 7; EditMode
+    64 of 64.
 
 - 2026-11-04, **ED-11, the sticky header: the header scrolls with the content.** The asset header stayed put while
   the content scrolled under it. For that, each inspector hid the Inspector's own scroll view and gave its content one

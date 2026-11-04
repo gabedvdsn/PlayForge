@@ -20,12 +20,6 @@ namespace FarEmerald.PlayForge.Extended.Editor
     public abstract class AbstractGenericDrawer<T> : AbstractTypeRefDrawer<T> where T : class
     {
         // ═══════════════════════════════════════════════════════════════════════════
-        // Static State
-        // ═══════════════════════════════════════════════════════════════════════════
-        
-        private static readonly Dictionary<string, bool> CollapseStates = new();
-        
-        // ═══════════════════════════════════════════════════════════════════════════
         // Instance State
         // ═══════════════════════════════════════════════════════════════════════════
         
@@ -396,11 +390,12 @@ namespace FarEmerald.PlayForge.Extended.Editor
         // Helpers
         // ═══════════════════════════════════════════════════════════════════════════
         
+        // Kept with the object the field holds, so it follows the object through its list (ED-18)
         private static bool GetCollapseState(SerializedProperty prop) =>
-            CollapseStates.TryGetValue(prop.propertyPath, out bool c) && c;
-        
+            DrawerCollapseState.IsCollapsed(prop, collapsedByDefault: false);
+
         private static void SetCollapseState(SerializedProperty prop, bool collapsed) =>
-            CollapseStates[prop.propertyPath] = collapsed;
+            DrawerCollapseState.SetCollapsed(prop, collapsed);
         
         protected static bool HasValue(SerializedProperty prop) =>
             prop.propertyType == SerializedPropertyType.ManagedReference && 

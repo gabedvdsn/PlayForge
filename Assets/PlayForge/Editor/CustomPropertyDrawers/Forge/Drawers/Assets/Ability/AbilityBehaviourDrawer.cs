@@ -14,11 +14,6 @@ namespace FarEmerald.PlayForge.Extended.Editor
     [CustomPropertyDrawer(typeof(AbilityBehaviour))]
     public class AbilityBehaviourDrawer : PropertyDrawer
     {
-        // Collapse state persistence
-        private static Dictionary<string, bool> _targetingCollapsed = new Dictionary<string, bool>();
-        private static Dictionary<string, bool> _assetLoadersCollapsed = new Dictionary<string, bool>();
-        private static Dictionary<string, bool> _stagesCollapsed = new Dictionary<string, bool>();
-        
         public override VisualElement CreatePropertyGUI(SerializedProperty property)
         {
             var root = new VisualElement { name = "AbilityBehaviourRoot" };
@@ -58,8 +53,8 @@ namespace FarEmerald.PlayForge.Extended.Editor
         
         private VisualElement CreateTargetingSection(SerializedProperty property, VisualElement root)
         {
-            var propPath = property.propertyPath + ".Targeting";
-            bool isCollapsed = _targetingCollapsed.TryGetValue(propPath, out bool c) && c;
+            // Kept per asset for the editor session (ED-18)
+            bool isCollapsed = DrawerCollapseState.IsCollapsed(property, collapsedByDefault: false, "Targeting");
             
             var container = new VisualElement { name = "TargetingSection" };
             container.style.borderLeftWidth = 3;
@@ -85,7 +80,7 @@ namespace FarEmerald.PlayForge.Extended.Editor
             // Collapse button
             var collapseBtn = CreateCollapseButton(isCollapsed, () =>
             {
-                _targetingCollapsed[propPath] = !isCollapsed;
+                DrawerCollapseState.SetCollapsed(property, !isCollapsed, "Targeting");
                 ScheduleRebuild(root, property);
             });
             header.Add(collapseBtn);
@@ -152,8 +147,8 @@ namespace FarEmerald.PlayForge.Extended.Editor
 
         private VisualElement CreateAssetLoaderSection(SerializedProperty property, VisualElement root)
         {
-            var propPath = property.propertyPath + ".AssetLoaders";
-            bool isCollapsed = _assetLoadersCollapsed.TryGetValue(propPath, out bool c) && c;
+            // Kept per asset for the editor session (ED-18)
+            bool isCollapsed = DrawerCollapseState.IsCollapsed(property, collapsedByDefault: false, "AssetLoaders");
 
             var assetLoadersProp = property.FindPropertyRelative("AssetLoaders");
 
@@ -181,7 +176,7 @@ namespace FarEmerald.PlayForge.Extended.Editor
             // Collapse button
             var collapseBtn = CreateCollapseButton(isCollapsed, () =>
             {
-                _assetLoadersCollapsed[propPath] = !isCollapsed;
+                DrawerCollapseState.SetCollapsed(property, !isCollapsed, "AssetLoaders");
                 ScheduleRebuild(root, property);
             });
             header.Add(collapseBtn);
@@ -301,8 +296,8 @@ namespace FarEmerald.PlayForge.Extended.Editor
         
         private VisualElement CreateStagesSection(SerializedProperty property, VisualElement root)
         {
-            var propPath = property.propertyPath + ".Stages";
-            bool isCollapsed = _stagesCollapsed.TryGetValue(propPath, out bool c) && c;
+            // Kept per asset for the editor session (ED-18)
+            bool isCollapsed = DrawerCollapseState.IsCollapsed(property, collapsedByDefault: false, "Stages");
             
             var container = new VisualElement { name = "StagesSection" };
             container.style.borderLeftWidth = 3;
@@ -328,7 +323,7 @@ namespace FarEmerald.PlayForge.Extended.Editor
             // Collapse button
             var collapseBtn = CreateCollapseButton(isCollapsed, () =>
             {
-                _stagesCollapsed[propPath] = !isCollapsed;
+                DrawerCollapseState.SetCollapsed(property, !isCollapsed, "Stages");
                 ScheduleRebuild(root, property);
             });
             header.Add(collapseBtn);
