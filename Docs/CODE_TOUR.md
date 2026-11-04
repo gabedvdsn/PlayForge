@@ -1714,7 +1714,9 @@ kept on purpose: static tag fields register once per domain, as their types init
     `AbilityActivationTests.GAS_46_Apply_Effects_reaches_the_target_targeting_found`, so a search for `GAS_46` finds
     it.
   - `Editor` holds the EditMode tests for the editor code and the framework outside play mode, `DomainReloadTests`
-    (SP-22) among them.
+    (SP-22) among them. `EditorSmokeTests` is Phase 4's gate (Q36): in each editor theme, every inspector and window
+    opens without an error, on new assets and on the Demos' assets, and one Undo takes back every edit an inspector
+    makes. Its README section says how it reaches collapsed parts and puts the theme back.
   - `Golden` runs the 25 golden scenarios on both hubs. `Harness` and `Planted` test the harness itself; every planted
     test must fail. The harness is in `Assets/ProvingGrounds/Harness`.
   - A test for a bug not fixed yet carries `[Category("Red")]` (Decision 8), and `-testCategory "!Red"` is the green

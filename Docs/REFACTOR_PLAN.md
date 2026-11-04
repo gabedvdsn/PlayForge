@@ -555,6 +555,7 @@ Phase 2 part, and set Phase 4's direction.
    nothing.
 2. No polling: ED-11 and ED-18.
 3. The smoke suite, the phase's gate: in each theme, every window opens without an exception and scripted edits undo.
+   Done: `EditorSmokeTests` in Proving Grounds, which its README describes. It runs in the EditMode gate.
 4. ED-20: one style sheet and a kit of controls, in the style `Docs/EDITOR_STYLE.md` records (Decision 20).
 5. The redesign, one surface at a time: the asset inspectors, with ED-2, ED-3, and the Import window and shared
    scalers of Decision 28 (ED-32, ED-33); The Forge, with ED-13, ED-15,
@@ -613,8 +614,8 @@ Phase 2 part, and set Phase 4's direction.
 ## Test project: PlayForge Proving Grounds
 
 A separate Unity project that consumes PlayForge as a local UPM package (Decision 2). The project and its shared
-harness exist, with the golden scenarios, the framework and planted suites, and the first editor tests (34
-EditMode tests in `Tests/Editor`, which its README explains how to write). The stress suite and the gameplay labs
+harness exist, with the golden scenarios, the framework and planted suites, and the editor tests (360 EditMode
+tests in `Tests/Editor`, among them the editor smoke suite, which its README explains). The stress suite and the gameplay labs
 don't exist yet. See
 Environment for its location and commands. The full plan is in the
 review doc's section "The test project: PlayForge Proving Grounds". In short:
@@ -643,6 +644,28 @@ GAS-4 with GAS-5, PC-6, and TS-I with PC-5.
 ## Log
 
 Record baselines, gate results and notable decisions here, newest first.
+
+- 2026-11-04, **Phase 4's gate: the editor smoke suite.** Phase 4's third step, from the UI interview's Q36:
+  `EditorSmokeTests` in Proving Grounds runs in each editor theme, Dark and Light, and checks two things.
+  - **Every inspector and window opens without an error.** The inspectors open on a new asset of each type, on two
+    selected together, and on each of the 82 assets in the Demos sample's Data folders, copied in while the suite
+    runs. The 19 windows open the way the editor opens them, in 30 cases: The Forge on each tab, the debuggers, every
+    import window and every dialog. An IMGUI window's `OnGUI` runs too, handed a layout event, since batch mode
+    repaints no view.
+  - **Every edit in an inspector undoes.** A sweep changes each value an inspector shows, one at a time, and one Undo
+    must put the asset back exactly as it was. It covers a new asset of each type, a MonoProcess, and the fullest
+    Demo asset in each Data folder. One sweep reaches up to 63 controls and makes up to 42 edits.
+  - **Coverage:** before it checks an inspector, the suite opens every collapsed part: the sections, each drawer's
+    collapsed parts and every foldout. It shows a section without its header's click, which saves the state
+    machine-wide, as the user's. Two checks fail when a new inspector or window isn't in the suite, and three check
+    the suite itself: OnGUI runs, every list draws a row for each element, and an edit that records no Undo is
+    reported.
+  - **Found:** nothing. Every inspector and window opens without an error in both themes, and every edit undoes.
+    ED-12's work shows here: before it, the inspectors wrote 42 edits straight into their asset.
+  - **How the theme is set:** through Unity's own skin setting, which saves it machine-wide as the user's choice in
+    the `UserSkin` EditorPrefs key. Each fixture puts that key back as it found it.
+  - **Tests:** PlayMode 945: 938 pass, 0 fail and 7 planted are skipped, in three orders. Planted 7 of 7; EditMode
+    360 of 360, the suite's 296 among them.
 
 - 2026-11-04, **ED-18: a drawer keeps its collapse state per asset.** Eight drawers kept whether a part is collapsed
   in static dictionaries keyed by property path alone. So opening a part on one asset opened it on every asset, a
