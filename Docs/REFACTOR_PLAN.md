@@ -438,8 +438,9 @@ had no letter in the review. TS-AA onward came from the test project.
 | GAS-51 | L | 3 | Item stacking is declared but not built: an Item's `MaxStackSize` is never read, and the inspector doesn't draw it; `ItemSpecContainer.ItemStacks` is never set. Remove both, or build stacking as a Phase 5 feature. Found removing GAS-45. The user's call: keep both and build stacking in Phase 5, as FEAT-14 | `ItemDefinition.cs:25`, `ItemSpecContainer.cs:25` | moved |
 | GAS-P1 | M | 0 | `ActionQueue` LINQ allocations; snapshot built every frame (PF-006) | `ActionQueue.cs:41, 46, 156`, `FrameSummary.cs:340-351` | verified |
 | GAS-P2 | M | 0 | Tag and FrameSummary allocations (PF-007) | `TagCache.cs:60`, `TagQuery.cs:89-136`, `FrameSummary.cs:306-308` | verified |
-| GAS-P3 | M | 3 | Each application revalidates every container and rebuilds all tags (area application is quadratic) | `EffectSystemComponent.cs:312-348`, `GameplayAbilitySystem.cs:250-281` | open |
+| GAS-P3 | M | 3 | Each application revalidates every container and rebuilds all tags (area application is quadratic). Measured: an instant application on an entity carrying 1,000 effects took 0.49 ms, 135 times one on an entity carrying 2. Now the requirements wait for one pass at the next tick, a shelved container's tags are counted as it lands, and re-application and removal find containers in an index by asset tag | `EffectSystemComponent.cs:312-348`, `GameplayAbilitySystem.cs:250-281` | fixed |
 | GAS-P4 | M | 3 | Recompute allocations; impacter lookups allocate every tick; string tags with no interning | `CachedAttributeValue.cs:175, 203, 348`, `GameplayEffectSpec.cs:174, 188`, `Tag.cs:266, 286-288` | open |
+| GAS-P5 | M | 3 | Ending effects is quadratic. `FinishedEffects` is a list, so marking a container finished searches it, the shelf's tick and the requirement pass search it for every container, and clearing takes each off the shelf with a linear remove. A cleanse or a mass expiry of n containers costs n². Found fixing GAS-P3 | `EffectSystemComponent.cs` (`MarkFinished`, `TickEffectShelf`, `HandleGameplayEffects`, `ClearFinishedEffects`) | open |
 | GAS-S1 | M | 3 | The GAS twins duplicate about 400 lines and have drifted; `ToGASObject()` returns null on Runtime. Both now forward to one `GASCore`. The drift found: a runtime GAS applied no affiliation tags and lost its Entity asset's Local Data, and the GAS Debugger, asking `ToGASObject()`, named every runtime entity "unknown". `ToGASObject()` stays null on Runtime, which has no MonoBehaviour. What a hub keeps on purpose: the Mono hub builds at registration and a runtime GAS in its constructor, and on death the Mono hub ends at once while a runtime GAS queues its end | `GameplayAbilitySystem*.cs`, `RuntimeGameplayAbilitySystem*.cs`, `GASCore.cs` | fixed |
 
 ### Editor and UI
@@ -562,6 +563,19 @@ GAS-4 with GAS-5, PC-6, and TS-I with PC-5.
 ## Log
 
 Record baselines, gate results and notable decisions here, newest first.
+
+- 2026-11-03, **GAS-P3: an application costs the same however much the entity carries.** Applying no longer walks the
+  shelf. The shelf's requirements wait for one pass at the next tick, a shelved container's tags are counted as it
+  lands, re-application and removal find containers in an index by asset tag, and `HandleGameplayEffects` compiles
+  the tags once, not twice. Its test, `GAS_P3_An_application_costs_the_same_however_much_the_entity_carries`, was
+  seen failing first on both hubs.
+  - **Measured,** per application, on an entity carrying 2 effects and one carrying 1,000: an instant effect took
+    0.0036 ms and 0.49 ms before, 135 times as much, and about 0.001 ms on either now. A re-application takes about
+    0.001 ms on either.
+  - **Tests:** PlayMode 860: 853 pass, 0 fail and 7 planted are skipped, in three orders. Planted 7 of 7; EditMode
+    39 of 39. The 25 golden scenarios pass inside PlayMode. The custom runner didn't run, because the user's editor
+    holds PlayForge's project lock.
+  - **Next:** GAS-P5, which this fix found: ending effects is still quadratic.
 
 - 2026-11-03, **GAS-S1: one core for both hubs.** `GameplayAbilitySystem` and `RuntimeGameplayAbilitySystem` forward
   to one internal `GASCore`, which builds the entity, compiles its tags and runs its end of frame and death. Its three

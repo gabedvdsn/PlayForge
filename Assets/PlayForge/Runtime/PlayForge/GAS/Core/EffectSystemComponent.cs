@@ -31,6 +31,15 @@ namespace FarEmerald.PlayForge
         private readonly List<AbstractEffectContainer> FinishedEffects = new();
         private bool needsCleaning;
 
+        // The shelf's containers by asset tag, in shelf order, for re-application and removal to find their own. They
+        // walked the whole shelf, comparing every container's tag (GAS-P3)
+        private readonly Dictionary<Tag, List<AbstractEffectContainer>> byTag = new();
+
+        // An application leaves the shelf's removal and ongoing requirements to be checked once, at the next tick. Each
+        // application checked every container and rebuilt all tags, twice over for an instant effect, so it cost as
+        // much as the entity carried (GAS-P3)
+        private bool requirementsDirty;
+
         // Effects part way through applying here, and those already reported for asking to apply again (GAS-28)
         private readonly HashSet<GameplayEffect> applying = new();
         private readonly HashSet<GameplayEffect> reportedCycles = new();
@@ -52,6 +61,9 @@ namespace FarEmerald.PlayForge
         /// <summary>Per-frame entry point — called from the owning GAS's update.</summary>
         public void Tick()
         {
+            // Before the shelf ticks, so a container a requirement ends is skipped, as it was when applying checked
+            if (requirementsDirty) HandleGameplayEffects();
+
             TickEffectShelf();
 
             if (needsCleaning) ClearFinishedEffects();
@@ -98,7 +110,7 @@ namespace FarEmerald.PlayForge
                         throw new ArgumentOutOfRangeException();
                 }
 
-                HandleGameplayEffects();
+                requirementsDirty = true;
 
                 // Recorded where the callback fires, for analysis workers. Nothing recorded it (GAS-28)
                 Self.GetFrameSummary()?.RecordEffectApplied(spec);
@@ -152,8 +164,6 @@ namespace FarEmerald.PlayForge
             spec.RunWorkerRemoval(new EffectWorkerContext(Self, spec, Self.GetFrameSummary(), Self.GetActionQueue(), 1,
                 impacts?[impacts.Count - 1], impacts));
             tagCache.RemoveTags(spec.Base.Tags.GrantedTags);
-
-            HandleGameplayEffects();
         }
 
         private void ApplyDurationalGameplayEffect(GameplayEffectSpec spec)
@@ -162,7 +172,7 @@ namespace FarEmerald.PlayForge
             if (TryHandleExistingDurationalGameplayEffect(spec, ongoing)) return;
 
             var container = spec.Base.DurationSpecification.GenerateContainer(spec, ongoing);
-            EffectShelf.Add(container);
+            Shelve(container);
 
             // Continuous entries register as modifiers — transient, derived, reversed by
             // unregistration on removal. Registered BEFORE application workers so workers
@@ -174,6 +184,33 @@ namespace FarEmerald.PlayForge
             if (ongoing && spec.Base.DurationSpecification.TickOnApplication)
             {
                 ApplyTickOnApplication(container);
+            }
+        }
+
+        /// <summary>
+        /// Puts a container on the shelf and in the index, and counts its tags now, as a rebuild would. Counted as it is
+        /// shelved, nothing counts them twice: any rebuild after this counts the shelf afresh (GAS-P3).
+        /// </summary>
+        private void Shelve(AbstractEffectContainer container)
+        {
+            EffectShelf.Add(container);
+
+            var tag = container.Spec.Base.Tags.AssetTag;
+            if (!byTag.TryGetValue(tag, out var same)) byTag[tag] = same = new List<AbstractEffectContainer>();
+            same.Add(container);
+
+            GrantedTagCompiler.AddEffect(Self.GetTagCache(), container.Spec);
+        }
+
+        private void Unshelve(AbstractEffectContainer container)
+        {
+            EffectShelf.Remove(container);
+
+            // Under the tag it was shelved with, unless the effect's tag has changed since
+            if (byTag.TryGetValue(container.Spec.Base.Tags.AssetTag, out var same) && same.Remove(container)) return;
+            foreach (var list in byTag.Values)
+            {
+                if (list.Remove(container)) return;
             }
         }
 
@@ -247,7 +284,10 @@ namespace FarEmerald.PlayForge
 
         private bool TryHandleExistingDurationalGameplayEffect(GameplayEffectSpec spec, bool ongoing)
         {
-            if (!TryGetEffectContainers(spec.Base, out var _containers)) return false;
+            if (!byTag.TryGetValue(spec.Base.Tags.AssetTag, out var existing) || existing.Count == 0) return false;
+
+            // By index over the count found here: a tick on application can apply effects, which shelve containers
+            int count = existing.Count;
 
             bool flag = true;
             switch (spec.Base.DurationSpecification.ReApplicationPolicy)
@@ -257,8 +297,11 @@ namespace FarEmerald.PlayForge
                 case EEffectReApplicationPolicy.ReplaceOldContainer:
                 {
                     var newContainer = spec.Base.DurationSpecification.GenerateContainer(spec, ongoing);
-                    foreach (var oldContainer in _containers)
+                    for (int i = 0; i < count; i++)
                     {
+                        var oldContainer = existing[i];
+                        bool otherEffect = oldContainer.Spec.Base != spec.Base;
+
                         // Replacement ends the old spec's modifier contribution, the
                         // container adopts the new spec + duration values, and the new
                         // spec's Continuous entries register fresh. (Old commits are
@@ -266,6 +309,9 @@ namespace FarEmerald.PlayForge
                         oldContainer.ReverseImpact();
                         oldContainer.ReplaceValuesWith(newContainer);
                         RegisterContinuousEntries(spec);
+
+                        // Another effect under the same tag grants its own tags, which only a rebuild counts
+                        if (otherEffect) Self.CompileGrantedTags();
                     }
                     break;
                 }
@@ -274,7 +320,7 @@ namespace FarEmerald.PlayForge
                     break;
                 case EEffectReApplicationPolicy.StackExistingContainers:
                 {
-                    var containers = _containers.Select(c => c as AbstractStackingEffectContainer).ToArray();
+                    var containers = existing.Select(c => c as AbstractStackingEffectContainer).ToArray();
                     var container = spec.Base.DurationSpecification.FindStackingContainer(spec, ongoing, containers);
                     if (container is null)
                     {
@@ -307,15 +353,17 @@ namespace FarEmerald.PlayForge
                     case EEffectInteractionPolicy.DoNothing:
                         break;
                     case EEffectInteractionPolicy.RefreshContainerDuration:
-                        foreach (var c in _containers)
+                        for (int i = 0; i < count; i++)
                         {
+                            var c = existing[i];
                             c.Refresh();
                             if (c.Spec.Base.DurationSpecification.TickOnApplication) ApplyTickOnApplication(c);
                         }
                         break;
                     case EEffectInteractionPolicy.ExtendContainerDuration:
-                        foreach (var c in _containers)
+                        for (int i = 0; i < count; i++)
                         {
+                            var c = existing[i];
                             int stacksBefore = StackCount(c);
                             c.Extend(spec.Base.DurationSpecification.GetTotalDuration(spec));
 
@@ -328,7 +376,8 @@ namespace FarEmerald.PlayForge
                         throw new ArgumentOutOfRangeException();
                 }
 
-                Self.CompileGrantedTags();
+                // No tags to rebuild: the containers that absorbed it grant what they did. A rebuild here walked every
+                // source of every tag (GAS-P3)
             }
 
             return flag;
@@ -345,25 +394,26 @@ namespace FarEmerald.PlayForge
 
         public bool RemoveGameplayEffect(Tag identifier)
         {
-            var toRemove = EffectShelf.Where(container => container.Spec.Base.Tags.AssetTag == identifier).ToArray();
-            foreach (AbstractEffectContainer container in toRemove)
-            {
-                MarkFinished(container);
-            }
+            if (!byTag.TryGetValue(identifier, out var same) || same.Count == 0) return false;
 
-            return toRemove.Length > 0;
+            // Marking finished leaves the shelf, and so the index, as it is until the next clean
+            foreach (var container in same) MarkFinished(container);
+            return true;
         }
 
         public bool RemoveGameplayEffect(GameplayEffect effect, IEffectOrigin origin)
         {
-            var toRemove = EffectShelf.Where(container => container.Spec.Base.Tags.AssetTag == effect.Tags.AssetTag
-                                                          && container.Spec.Origin == origin).ToArray();
-            foreach (AbstractEffectContainer container in toRemove)
-            {
-                MarkFinished(container);
-            }
+            if (!byTag.TryGetValue(effect.Tags.AssetTag, out var same)) return false;
 
-            return toRemove.Length > 0;
+            bool any = false;
+            foreach (var container in same)
+            {
+                if (container.Spec.Origin != origin) continue;
+
+                MarkFinished(container);
+                any = true;
+            }
+            return any;
         }
 
         /// <summary>
@@ -381,6 +431,8 @@ namespace FarEmerald.PlayForge
 
         private void HandleGameplayEffects()
         {
+            requirementsDirty = false;
+
             // Requirements read the applied tags, so compile first: a container that just landed on
             // the shelf must have its granted tags count toward everyone else's ongoing state.
             Self.CompileGrantedTags();
@@ -399,7 +451,7 @@ namespace FarEmerald.PlayForge
                 }
             }
 
-            Self.CompileGrantedTags();
+            // Once: checking requirements changes no tag, and a second compile here rebuilt the same ones (GAS-P3)
         }
 
         private void TickEffectShelf()
@@ -482,7 +534,7 @@ namespace FarEmerald.PlayForge
             {
                 // Off the shelf FIRST so re-entrant HandleGameplayEffects passes can't
                 // re-mark a container that is mid-removal.
-                EffectShelf.Remove(container);
+                Unshelve(container);
                 container.OnRemove();
 
                 var effectContext = new EffectWorkerContext(
@@ -504,20 +556,14 @@ namespace FarEmerald.PlayForge
 
         public bool TryGetEffectContainer(GameplayEffect effect, out AbstractEffectContainer container)
         {
-            foreach (var _container in EffectShelf.Where(_container => _container.Spec.Base.Tags.AssetTag == effect.Tags.AssetTag))
-            {
-                container = _container;
-                return true;
-            }
-
-            container = null;
-            return false;
+            container = byTag.TryGetValue(effect.Tags.AssetTag, out var same) && same.Count > 0 ? same[0] : null;
+            return container != null;
         }
 
         public bool TryGetEffectContainers(GameplayEffect effect, out AbstractEffectContainer[] containers)
         {
-            containers = EffectShelf.Where(c => c.Spec.Base.Tags.AssetTag == effect.Tags.AssetTag).ToArray();
-            return containers.Any();
+            containers = byTag.TryGetValue(effect.Tags.AssetTag, out var same) ? same.ToArray() : Array.Empty<AbstractEffectContainer>();
+            return containers.Length > 0;
         }
 
         public EffectDurationRemaining GetLongestDurationFor(Tag lookForTag)

@@ -34,6 +34,9 @@ tracks each fix below by its ID.
   hub's `AttributeSystem`, `AbilitySystem`, `ItemSystem`, `EffectSystem` and `LevelSystem` are read-only properties,
   public on both. Each hub has what only the other had: `ApplyGameplayEffect(origin, effect)` and
   `GetRelativeLevel()`.
+- Applying an effect costs the same however many effects the entity carries. It no longer re-checks every effect's
+  requirements or rebuilds the entity's tags: the requirements are checked once, at the entity's next update, and a
+  durational effect's tags count from the moment it lands, so its own application workers see them.
 
 ### Fixed
 - Runtime correctness: 96 fixes across ProcessControl, TaskSequence and the GAS core, among them exception isolation,

@@ -142,15 +142,18 @@ ApplyGameplayEffect(spec)
 │             → removal workers (every impact made; none when nothing committed) → remove tags
 └─ Durational/Infinite
       → TryHandleExistingDurationalGameplayEffect (absorbed? → done)
-      → GenerateContainer → shelf (container ctor sets spec.RuntimeContainer + duration math)
+      → GenerateContainer → shelf (container ctor sets spec.RuntimeContainer + duration math);
+        its tags count from here
       → RegisterModifier per Continuous entry
       → app workers
       → if TickOnApplication: tick workers once + CommitImpact per Periodic entry × executeTicks
-then: HandleGameplayEffects → RecordEffectApplied + EffectApplied callback
+then: requirements left for the next tick → RecordEffectApplied + EffectApplied callback
       → contained OnApply effects (recursive; see §4.2 for the cycle guard)
 
-Tick (per update, EnablePeriodicTicks):
-   timers advance → executeTicks → tick workers (every frame, even 0)
+Tick (per update):
+   if anything was applied since the last: HandleGameplayEffects (compile tags once → a met removal
+   requirement finishes its container, ongoing requirements set Ongoing)
+   EnablePeriodicTicks: timers advance → executeTicks → tick workers (every frame, even 0)
    → per execute tick: CommitImpact per Periodic entry + contained OnTick effects
 
 Remove (ClearFinishedEffects):
@@ -184,6 +187,10 @@ absorbed** — the append path would double-tick otherwise.
   warning per entity and effect. An effect that contains itself, directly or through other contained
   effects or what applying it sets off, recursed until the stack overflowed (GAS-28).
 - Any change to a container's stack count re-registers its Continuous entries, gained or lost (GAS-34).
+- Applying never walks the shelf. Its requirements wait for one pass at the next tick, a container's tags
+  count from the moment it is shelved, and re-application finds its containers in an index by asset tag,
+  which `Shelve` and `Unshelve` keep. Each application re-checked every container and rebuilt all tags, so
+  it cost as much as the entity carried (GAS-P3).
 
 ---
 

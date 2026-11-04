@@ -19,13 +19,7 @@ namespace FarEmerald.PlayForge
             if (attributeSet) AddAttributeSet(cache, attributeSet);
 
             var shelf = effects.Shelf;
-            for (int i = 0; i < shelf.Count; i++)
-            {
-                var spec = shelf[i].Spec;
-                cache.AddTag(spec.Base.Tags.AssetTag);
-                if (spec.Base.GetGrantedTags() is List<Tag> granted) AddAll(cache, granted);
-                else foreach (var t in spec.Base.GetGrantedTags()) cache.AddTag(t);
-            }
+            for (int i = 0; i < shelf.Count; i++) AddEffect(cache, shelf[i].Spec);
 
             foreach (var ability in abilities.Containers)
             {
@@ -42,6 +36,17 @@ namespace FarEmerald.PlayForge
                 cache.AddTag(item.Spec.Base.Tags.AssetTag);
                 foreach (var t in item.GetGrantedTags()) cache.AddTag(t);
             }
+        }
+
+        /// <summary>
+        /// An effect on the shelf: its asset tag and the tags it grants. The effect system counts a container's this way
+        /// as it shelves it, so an application needs no rebuild (GAS-P3).
+        /// </summary>
+        public static void AddEffect(TagCache cache, GameplayEffectSpec spec)
+        {
+            cache.AddTag(spec.Base.Tags.AssetTag);
+            if (spec.Base.GetGrantedTags() is List<Tag> granted) AddAll(cache, granted);
+            else foreach (var t in spec.Base.GetGrantedTags()) cache.AddTag(t);
         }
 
         public static void AddAll(TagCache cache, List<Tag> tags)
