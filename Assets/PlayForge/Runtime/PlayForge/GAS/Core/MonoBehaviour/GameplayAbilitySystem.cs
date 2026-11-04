@@ -27,6 +27,10 @@ namespace FarEmerald.PlayForge
         protected Dictionary<int, ProcessRelay> Relays;
 
         protected LocalDataStructure localData;
+
+        // This entity's sides: the registration data's, or else a copy of its identity's. They were written onto the
+        // identity, which every entity of this kind shares, so one turncoat moved them all (GAS-47)
+        private List<Tag> affiliation;
         
         /// <summary>
         /// Callbacks for GAS-level events (frame completion, action queue, effects, etc.). Created with the
@@ -60,11 +64,9 @@ namespace FarEmerald.PlayForge
             
             if (EntityData is null) return;
 
-            // Attempt to find affiliation
-            if (regData.TryGet(Tags.AFFILIATION, EDataTarget.Primary, out List<Tag> affiliation))
-            {
-                EntityData.Affiliation = affiliation;
-            }
+            // The registration data's sides, or else the asset's, kept on this entity (GAS-47)
+            if (regData.TryGet(Tags.AFFILIATION, EDataTarget.Primary, out List<Tag> registered)) affiliation = registered;
+            else if (EntityData.Affiliation != null) affiliation = new List<Tag>(EntityData.Affiliation);
             
             AbilitySystem.Setup(EntityData.ActivationPolicy, EntityData.AllowDuplicateAbilities, EntityData.MaxAbilitiesOperation);
             AttributeSystem.Setup(EntityData.AttributeSet);
@@ -244,7 +246,7 @@ namespace FarEmerald.PlayForge
         }
         public List<Tag> GetAffiliation()
         {
-            return EntityData.Affiliation;
+            return affiliation ?? EntityData?.Affiliation;
         }
         public List<Tag> GetAppliedTags()
         {
@@ -266,7 +268,7 @@ namespace FarEmerald.PlayForge
 
             // The identity's own, as EntityIdentity.GetGrantedTags yields them
             TagCache.AddTag(EntityData.AssetTag);
-            GrantedTagCompiler.AddAll(TagCache, EntityData.Affiliation);
+            GrantedTagCompiler.AddAll(TagCache, GetAffiliation());
             GrantedTagCompiler.AddAll(TagCache, EntityData.GrantedTags);
         }
         #endregion

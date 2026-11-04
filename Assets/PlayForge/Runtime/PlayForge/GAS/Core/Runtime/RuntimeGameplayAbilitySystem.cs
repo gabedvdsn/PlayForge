@@ -36,6 +36,10 @@ namespace FarEmerald.PlayForge
         private AbstractTargetingPacket _targetingPacket;
 
         protected LocalDataStructure localData;
+
+        // This entity's sides: the registration data's, or else a copy of its identity's. They were written onto the
+        // identity, which every entity of this kind shares, so one turncoat moved them all (GAS-47)
+        private List<Tag> affiliation;
         
         /// <summary>
         /// Callbacks for GAS-level events (frame completion, action queue, effects, etc.). Created with the
@@ -173,11 +177,10 @@ namespace FarEmerald.PlayForge
         {
             base.WhenInitialize();
 
-            // Attempt to find affiliation from registration data
-            if (regData.TryGet(Tags.AFFILIATION, EDataTarget.Primary, out List<Tag> affiliation))
-            {
-                EntityData.Affiliation = affiliation;
-            }
+            // The registration data's sides, or else the identity's, kept on this entity: two entities can share one
+            // runtime identity (GAS-47)
+            if (regData.TryGet(Tags.AFFILIATION, EDataTarget.Primary, out List<Tag> registered)) affiliation = registered;
+            else if (EntityData.Affiliation != null) affiliation = new List<Tag>(EntityData.Affiliation);
         }
 
         public override void WhenUpdate()
@@ -339,7 +342,7 @@ namespace FarEmerald.PlayForge
         
         public List<Tag> GetAffiliation()
         {
-            return EntityData.Affiliation;
+            return affiliation ?? EntityData?.Affiliation;
         }
         
         public List<Tag> GetAppliedTags()
