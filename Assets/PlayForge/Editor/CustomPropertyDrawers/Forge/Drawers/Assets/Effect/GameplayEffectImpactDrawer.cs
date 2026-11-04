@@ -47,8 +47,8 @@ namespace FarEmerald.PlayForge.Extended.Editor
             targetSection.Add(targetRow);
 
             // Multiply Behaviour — only meaningful when ImpactOperation = Multiply.
-            // Hidden otherwise to avoid clutter; refreshed on a 250ms tick to react to
-            // operation changes without rebuilding the whole drawer.
+            // Hidden otherwise to avoid clutter. It follows the operation as it changes, an Undo among them; it
+            // re-checked a stale copy of the operation every 250 ms, so it never saw an Undo (ED-11).
             var multBehaviourField = new PropertyField(property.FindPropertyRelative(nameof(GameplayEffectImpact.MultiplyBehaviour)), "Multiply Behaviour");
             multBehaviourField.tooltip =
                 "How this Multiply impacter composes with multiply impacters from OTHER carriers " +
@@ -67,7 +67,8 @@ namespace FarEmerald.PlayForge.Extended.Editor
                 multBehaviourField.style.display = isMultiply ? DisplayStyle.Flex : DisplayStyle.None;
             }
             RefreshMultiplyBehaviourVisibility();
-            targetSection.schedule.Execute(RefreshMultiplyBehaviourVisibility).Every(250);
+            multBehaviourField.TrackPropertyValue(property.FindPropertyRelative(nameof(GameplayEffectImpact.ImpactOperation)),
+                _ => RefreshMultiplyBehaviourVisibility());
 
             var affSection = CreateSubsection("Affiliation", "Affiliation", Colors.SectionRed);
             
@@ -128,7 +129,7 @@ namespace FarEmerald.PlayForge.Extended.Editor
 
             // Hide the Reverse field entirely when DurationPolicy is Instant — the flag has
             // no effect at runtime in that case (instant effects don't get a removal phase).
-            // Bound via a scheduled refresh so the visibility tracks live edits to duration.
+            // It follows the effect's duration policy as it changes; it re-checked every 250 ms (ED-11).
             void RefreshReverseFieldVisibility()
             {
                 if (property.serializedObject?.targetObject is not GameplayEffect ge ||
@@ -141,7 +142,9 @@ namespace FarEmerald.PlayForge.Extended.Editor
                 reverseField.style.display = isInstant ? DisplayStyle.None : DisplayStyle.Flex;
             }
             RefreshReverseFieldVisibility();
-            behaviorRow.schedule.Execute(RefreshReverseFieldVisibility).Every(250);
+            var durationPolicy = property.serializedObject.FindProperty(
+                $"{nameof(GameplayEffect.DurationSpecification)}.{nameof(GameplayEffectDuration.DurationPolicy)}");
+            if (durationPolicy != null) reverseField.TrackPropertyValue(durationPolicy, _ => RefreshReverseFieldVisibility());
             
             // ═══════════════════════════════════════════════════════════════════
             // Contained Effects Section

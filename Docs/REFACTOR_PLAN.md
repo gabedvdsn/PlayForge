@@ -520,7 +520,7 @@ had no letter in the review. TS-AA onward came from the test project.
 | ED-8 | H | 2 | Hard delete with no reference check | `TheForge.ViewTab.cs:2552`, `AssetBrowserWindow.cs:285` | verified |
 | ED-9 | M | 4 | The Visualizer is blank for items and sets, and after a domain reload | `TheForge.Utilities.cs:344, 407-412` | open |
 | ED-10 | M | 2 | Analysis exposes "Not Implemented" groups and truncates silently | `TheForge.AnalysisTab.cs:362, 716, 1461, 1979-1991` | verified |
-| ED-11 | M | 4 | The sticky-header workaround and drawer timers poll forever, among them two 250 ms timers in each impact drawer | `BasePlayForgeEditor.cs:524-611`, `GameplayEffectDrawer.cs:147-152`, `GameplayEffectImpactDrawer.cs:71, 145` | open |
+| ED-11 | M | 4 | The sticky-header workaround and drawer timers poll forever, among them two 250 ms timers in each impact drawer. Fixed so far: the drawer timers, which now follow the properties they show. Left: the sticky header, which Q17 makes scroll with the content, and the object picker's per-frame listener | `BasePlayForgeEditor.cs` (`OnAttachedToPanel`, `ConfigureScrollView`, `OnEditorUpdate`) | open |
 | ED-12 | H | 4 | No Undo, multi-edit or prefab overrides. The inspectors wrote 42 edits straight into their asset, and only the 5 renames recorded Undo; no inspector took a multiple selection; six drawers copy their SerializedObject for one target, and two write while drawing. Fixed so far: Phase 2's part (a rename stores the tag in the same undoable step, and showing never writes), the Attribute inspector (its fields bind, it takes a multiple selection, and every inspector's header follows Undo), the MonoProcess inspector's multiple selection, the Effect, Item and Attribute Set inspectors' Description and Link Mode, the Entity inspector's fields, the Ability inspector's Description, Activation Policy, Activate Immediately and Link Mode, Link, Unlink and template assignment in every inspector, the drawers that rebuilt on a one-target copy, the type drawers that wrote a default while drawing, and the Item and Ability inspectors' multiple selection. Left: a multiple selection in the Effect, Entity and Attribute Set inspectors. In the Effect, Entity and Attribute Set inspectors, whose assets hold scalers, that also waits for ScalerDrawer's one-target copy, which changes with Decision 28's scaler workflow (ED-32, ED-33) | `AbilityEditor.cs:155-189, 743`, `EntityIdentityEditor.cs:790-919`, `BasePlayForgeEditor.cs` (`ShowTemplatePicker`), `TagDrawer.cs:104-109`, `AbstractTypeRefDrawer.cs:123-128`, `ScalerDrawer.cs:169-177` | open |
 | ED-13 | M | 4 | Template propagation on save loads everything, opens a modal mid-save and records no Undo; the validator is empty | `ForgeTemplateProcessor.cs:45-52`, `ForgeTemplatePropagator.cs:201-229` | open |
 | ED-14 | H | 1 | The `GameplayEffectImpact` copy constructor drops affiliation and throws on null packets | `GameplayEffectImpact.cs:155-176` | verified |
@@ -643,6 +643,19 @@ GAS-4 with GAS-5, PC-6, and TS-I with PC-5.
 ## Log
 
 Record baselines, gate results and notable decisions here, newest first.
+
+- 2026-11-04, **ED-11, the drawer timers: a view follows the properties it shows.** Phase 4's second step, no
+  polling, starts with the drawers. The Impact drawer re-checked its operation and its effect's duration every
+  250 ms, and the Effect drawer rebuilt its link info every 500 ms, for as long as an inspector stayed open. Each now
+  follows the property it shows, through `TrackPropertyValue`; the Effect drawer also follows the effect its field
+  names, so a link made elsewhere shows. Its tests: `ED_11_No_editor_code_repeats_a_timer`, which scans the editor
+  code, and `The_impact_drawer_follows_its_operation`, written as a control, were both seen failing first. The second
+  failed for a reason of its own: the timer re-read a stale copy of the operation, so an Undo never hid Multiply
+  Behaviour again.
+  - **Tests:** PlayMode 945: 938 pass, 0 fail and 7 planted are skipped, in three orders. Planted 7 of 7; EditMode
+    59 of 59.
+  - **Left in ED-11:** the sticky header, which Q17 makes scroll with the content, and the object picker's per-frame
+    listener.
 
 - 2026-11-04, **ED-12: the Ability inspector edits a multiple selection.** As in the Item inspector, a field the
   abilities disagree on shows as mixed and an edit reaches every ability. Name, the asset tag, linking and a linked

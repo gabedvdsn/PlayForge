@@ -143,14 +143,29 @@ namespace FarEmerald.PlayForge.Extended.Editor
                 }
             });
             
-            // Refresh periodically
-            root.schedule.Execute(() =>
+            // The link info and the Go button follow the field, and the effect it names as that effect's link changes,
+            // an Undo among them; they rebuilt every 500 ms for as long as the inspector stayed open (ED-11)
+            VisualElement referencedWatch = null;
+            void Refresh()
             {
                 BuildLinkInfo(linkSection, prop, parentProvider);
                 BuildGoButton(prop, actionsContainer);
-                
-            }).Every(500);
-            
+            }
+            void WatchReferenced()
+            {
+                referencedWatch?.RemoveFromHierarchy();
+                referencedWatch = new VisualElement { name = "ReferencedEffectWatch" };
+                root.Add(referencedWatch);
+                if (GetCurrentValue(prop) is GameplayEffect referenced)
+                    referencedWatch.TrackSerializedObjectValue(new SerializedObject(referenced), _ => Refresh());
+            }
+            root.TrackPropertyValue(prop, _ =>
+            {
+                Refresh();
+                WatchReferenced();
+            });
+            WatchReferenced();
+
             return root;
         }
 
