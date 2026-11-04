@@ -113,13 +113,22 @@ namespace FarEmerald.PlayForge
             _execute = (data, token) => ExecuteSyncActionSafe(action, data as SequenceDataPacket ?? SequenceDataPacket.SceneRoot(), token);
         }
         
-        private static async UniTask ExecuteSyncActionSafe(Action<SequenceDataPacket> action, SequenceDataPacket data, CancellationToken token)
+        // Runs the action at once, in the frame its stage starts, as Do does. It yielded a frame first, "to ensure proper
+        // async context", which nothing needs, so a sequence of these took a frame apiece (TS-Z). A throw still comes
+        // back as the task's error, and a cancelled stage still doesn't run it
+        private static UniTask ExecuteSyncActionSafe(Action<SequenceDataPacket> action, SequenceDataPacket data, CancellationToken token)
         {
-            // Yield first to ensure proper async context
-            await UniTask.Yield(PlayerLoopTiming.Update, token);
-            
-            // Execute action - any exception will propagate through the async state machine
-            action(data);
+            if (token.IsCancellationRequested) return UniTask.FromCanceled(token);
+
+            try
+            {
+                action(data);
+                return UniTask.CompletedTask;
+            }
+            catch (Exception ex)
+            {
+                return UniTask.FromException(ex);
+            }
         }
         
         /// <summary>

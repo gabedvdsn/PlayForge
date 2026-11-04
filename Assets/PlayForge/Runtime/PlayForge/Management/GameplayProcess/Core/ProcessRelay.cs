@@ -1,4 +1,7 @@
-﻿namespace FarEmerald.PlayForge
+﻿using System.Threading;
+using Cysharp.Threading.Tasks;
+
+namespace FarEmerald.PlayForge
 {
     /// <summary>
     /// Provides external access to ProcessControlBlock data without exposing internal state management.
@@ -31,6 +34,17 @@
         public bool TryGetProcess<T>(out T process)
         {
             return _pcb.Wrapper.TryGetProcess(out process);
+        }
+
+        /// <summary>
+        /// Completes as the process terminates and is unregistered, in that frame, or at once if it has. Cancelling
+        /// <paramref name="token"/> stops the wait, not the process. Polling <see cref="State"/> found the end a frame
+        /// later, and each relay waited on that way added a frame (TS-Z).
+        /// </summary>
+        public UniTask WhenTerminated(CancellationToken token = default)
+        {
+            var terminated = _pcb.WhenTerminated();
+            return token.CanBeCanceled ? terminated.AttachExternalCancellation(token) : terminated;
         }
 
         /// <summary>

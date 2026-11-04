@@ -79,6 +79,21 @@ namespace FarEmerald.PlayForge
         // A pause left this run going, for the process to hold
         private bool RunIsHeld => _cts != null && !_cts.IsCancellationRequested;
 
+        // Done once the process has terminated and is unregistered, for whatever waits on it: made when something does.
+        // Waiting meant polling the state once a frame, which found the end a frame later, and each relay waited on
+        // added a frame (TS-Z)
+        private UniTaskCompletionSource _terminated;
+        private bool _terminationDone;
+
+        /// <summary>Completes once the process has terminated and is unregistered, or at once if it has.</summary>
+        internal UniTask WhenTerminated()
+        {
+            if (_terminationDone) return UniTask.CompletedTask;
+
+            _terminated ??= new UniTaskCompletionSource();
+            return _terminated.Task;
+        }
+
         private ProcessControlBlock(int cacheIndex, AbstractProcessWrapper wrapper)
         {
             CacheIndex = cacheIndex;
@@ -320,7 +335,16 @@ namespace FarEmerald.PlayForge
                 Debug.LogException(ex);
             }
 
-            return ProcessControl.Instance.Unregister(this);
+            try
+            {
+                return ProcessControl.Instance.Unregister(this);
+            }
+            finally
+            {
+                // Whatever waits on the process goes on now, in the frame it ended (TS-Z)
+                _terminationDone = true;
+                _terminated?.TrySetResult();
+            }
         }
 
         public void Interrupt()

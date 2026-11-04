@@ -206,9 +206,8 @@ namespace FarEmerald.PlayForge
 
             try
             {
-                await UniTask.WaitUntil(
-                    () => relay.State == EProcessState.Terminated,
-                    cancellationToken: token);
+                // Done in the frame targeting ends. Polling its relay found that a frame later (TS-Z)
+                await relay.WhenTerminated(token);
             }
             catch (OperationCanceledException)
             {
@@ -314,9 +313,8 @@ namespace FarEmerald.PlayForge
             {
                 // Wait for the process to terminate (SelfTerminating lifecycle).
                 // The relay state transitions: Created → Running → Terminated.
-                await UniTask.WaitUntil(
-                    () => relay.State == EProcessState.Terminated,
-                    cancellationToken: token);
+                // Done in the frame it does. Polling the relay found that a frame later (TS-Z)
+                await relay.WhenTerminated(token);
             }
             catch (OperationCanceledException)
             {

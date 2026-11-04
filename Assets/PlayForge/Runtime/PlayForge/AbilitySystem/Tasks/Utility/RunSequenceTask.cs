@@ -63,9 +63,10 @@ namespace FarEmerald.PlayForge
                     // NotifyCriticalSectionExit callback wired above). This ensures the outer
                     // ability's activation handle is only removed once the inner sequence has
                     // genuinely finished.
-                    await UniTask.WaitUntil(
-                        () => relay.State == EProcessState.Terminated,
-                        cancellationToken: token);
+                    //
+                    // Done in the frame it ends. Polling the relay found that a frame later, so each sequence nested
+                    // this way added a frame (TS-Z)
+                    await relay.WhenTerminated(token);
                 }
                 catch (System.OperationCanceledException)
                 {

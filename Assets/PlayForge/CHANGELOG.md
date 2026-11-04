@@ -64,6 +64,12 @@ tracks each fix below by its ID.
 - A stage under WhenAll or RepeatUntilSkipped hands its policy the stage's own token source and makes no second one,
   so a three-stage ability makes about 10 token sources, not 14. A stage under WhenAny, WhenN or a policy of your own
   still makes one, as its policy may cancel what it's handed.
+- Sequences and abilities end in the frame their last task does. A task made with `Task(Action)` runs its action at
+  once, as `Do` does, not a frame later. A run waits a frame for its maintained stages only when it has some, and
+  waiting on a process no longer polls: `ProcessRelay.WhenTerminated` completes in the frame the process ends, and
+  the ability proxy and `RunSequenceTask` wait on it. An instant ability ends in the frame it starts, and a nested
+  sequence adds no frame; so an instant sequence can end inside `ProcessControl.Register`, and an instant ability
+  inside `TryActivateAbility`. A repeating sequence that runs instantly still takes a frame per repeat.
 
 ### Fixed
 - Runtime correctness: 96 fixes across ProcessControl, TaskSequence and the GAS core, among them exception isolation,

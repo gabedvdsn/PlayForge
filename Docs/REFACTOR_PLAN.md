@@ -245,6 +245,11 @@ from. It lives outside `Assets/` so it never ships in the package.
   serialized with each tag, which would have meant migrating every asset.
 - Decision 23, 2026-11-03: `PooledMonoProcessInstantiator`, a stub nothing used, is removed rather than built into a
   pool (PC-24). Pooling Mono processes is left to an instantiator that extends `AbstractMonoProcessInstantiator`.
+- Decision 24, 2026-11-03: sequences and abilities end in the frame their last task does (TS-Z). `Task(Action)` runs
+  its action at once, a run waits a frame only for maintained stages it has, and waiting on a process ends in the
+  frame it ends, through `ProcessRelay.WhenTerminated`. An instant ability ends in the frame it starts, even inside
+  `TryActivateAbility`. A repeating sequence that takes no frame still takes one per repeat, as a stage does (TS-M).
+  The user chose all of it over fixing `Task(Action)` alone.
 
 **Open. Ask the user; do not assume:**
 1. ~~**Uncommitted changes**~~: decided, see above.
@@ -396,7 +401,7 @@ had no letter in the review. TS-AA onward came from the test project.
 | TS-W | M | 1 | `ElapsedTime` is unreliable | — | verified |
 | TS-X | M | 1 | Payload lists are aliased between packets | `AbilityDataPacket.cs:50` | verified |
 | TS-Y | M | 1 | Fake pause: `TryHandlePause` returns `processActive`, so a paused sequence keeps running | `TaskSequenceProcess.cs:225-228` | verified |
-| TS-Z | M | 3 | Frame drift: `Task(Action)` costs a frame, and relay polling adds a frame per nesting level | `AbilityProxy.cs:171, 282` | open |
+| TS-Z | M | 3 | Frame drift: `Task(Action)` costs a frame, and relay polling adds a frame per nesting level. Measured: four `Task(Action)` stages took 5 frames to four `Do` stages' 1; a run waited a frame at its end for maintained stages it didn't have; an instant ability ended 2 frames after it started, and a sequence nested by `RunSequenceTask` added 2 more. Now `Task(Action)` runs its action at once, a run waits only for maintained stages it has, and `ProcessRelay.WhenTerminated` completes in the frame its process ends, which the proxy and `RunSequenceTask` wait on instead of polling (Decision 24). An instant ability ends in the frame it starts. A repeating sequence that takes no frame still takes one per repeat | `AbilityProxy.cs:171, 282`, `RunSequenceTask.cs`, `TaskSequenceRuntime.cs` (`Run`), `SequenceCore.cs` (`DelegateSequenceTask`), `ProcessControlBlock.cs` (`TryTerminate`) | fixed |
 | TS-AA | H | 1 | A cancelled sequence cleans its tasks while they still run: `AttachExternalCancellation` throws the moment the token cancels, so `CleanStage` runs before `Execute` has unwound | `TaskSequenceRuntime.cs:286, 305` | verified |
 | TS-AC | H | 1 | An ability activated while ProcessControl refuses new processes (Closed, ClosedWaiting) falls back to legacy execution, outside ProcessControl, so it runs anyway and no pause can hold it | `AbilityProxy.cs` `ActivateViaSequence`, `ActivateTargetingViaSequence` | verified |
 | TS-AD | H | 1 | A stage's or sequence's timer outlives what it timed: its source is disposed and never cancelled, so the timer fires into the next round of a repeating sequence, or into a stage run again | `TaskSequenceRuntime.cs` stage end, `Cleanup` | verified |
@@ -588,6 +593,27 @@ GAS-4 with GAS-5, PC-6, and TS-I with PC-5.
 ## Log
 
 Record baselines, gate results and notable decisions here, newest first.
+
+- 2026-11-03, **TS-Z: sequences and abilities end in the frame their last task does.** A `Task(Action)` yielded a
+  frame before its action, a run waited a frame at its end for maintained stages it didn't have, and waiting on a
+  process polled its relay once a frame. Now the action runs at once, as `Do`'s does; a run waits only for
+  maintained stages it has; and `ProcessRelay.WhenTerminated` completes as the process ends, after it's unregistered,
+  so the ability proxy and `RunSequenceTask` wait on that instead of polling. Its tests,
+  `TS_Z_A_task_made_from_an_action_runs_it_in_the_frame_its_stage_starts`,
+  `TS_Z_An_instant_sequence_ends_in_the_frame_it_starts` and `TS_Z_An_instant_ability_ends_in_the_frame_it_starts`
+  (both hubs, flat and nested), were seen failing first. Their control, `An_instant_sequence_repeats_once_a_frame`,
+  passed before and after.
+  - **Measured:** four `Task(Action)` stages ran their actions in frames 1 to 4 after their sequence started; now all
+    four run in the frame it starts. An instant ability ended 2 frames after it started, and 4 with a sequence nested
+    by `RunSequenceTask`; now both end in the frame they start. An instant sequence was still running when
+    `ProcessControl.Register` returned; now it has ended.
+  - **Tests:** PlayMode 895: 888 pass, 0 fail and 7 planted are skipped, in three orders. Planted 7 of 7; EditMode
+    40 of 40. The 25 golden scenarios pass inside PlayMode; the custom runner can't run while the user's editor holds
+    PlayForge's lock.
+  - **Calls made:** Decision 24. An instant sequence can end inside `ProcessControl.Register`, and an instant ability
+    inside `TryActivateAbility`, so their end callbacks can fire before those calls return. A repeating sequence that
+    takes no frame still takes one per repeat. TS-8, how far `TryActivate` runs before it returns, is still the
+    user's call; with this, it runs an instant ability to its end.
 
 - 2026-11-03, **PC-24: the pooled instantiator stub is gone.** `PooledMonoProcessInstantiator` gave back no process
   and kept a process's object when it ended, so the GameObject leaked. Nothing used it, and it's removed rather than

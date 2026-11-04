@@ -230,6 +230,7 @@ namespace FarEmerald.PlayForge
                 
                 _sequenceCts = CancellationTokenSource.CreateLinkedTokenSource(externalToken);
                 var token = _sequenceCts.Token;
+                int runStartFrame = Time.frameCount;
 
                 // The run keeps its own time. The sequence's timers kept it, so a sequence without one read 0
                 // throughout, and one whose timer had fired stopped where it fired (TS-W)
@@ -254,9 +255,21 @@ namespace FarEmerald.PlayForge
                     
                     // Execute stages sequentially
                     await ExecuteStagesSequentially(token);
-                    
-                    // Wait for maintained stages to complete
-                    await UniTask.WaitUntil(() => _maintainedStages.Count == 0, cancellationToken: token);
+
+                    // Wait for maintained stages to complete, when there are some. The wait took a frame on every
+                    // run, so a sequence ended a frame after its last stage did (TS-Z)
+                    if (_maintainedStages.Count > 0)
+                    {
+                        await UniTask.WaitUntil(() => _maintainedStages.Count == 0, cancellationToken: token);
+                    }
+
+                    // A run that repeats takes a frame if it took none, or an instant sequence repeats for ever
+                    // inside a frame, as a stage would without TS-M. The wait above took that frame. Here, inside the
+                    // run, an interrupt in that frame still ends it, as it did (TS-Z)
+                    if ((Definition.Metadata?.Repeat ?? false) && Time.frameCount == runStartFrame)
+                    {
+                        await UniTask.Yield(PlayerLoopTiming.Update, token);
+                    }
 
                     CompletedSuccessfully = true;
                 }
