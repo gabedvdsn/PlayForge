@@ -214,6 +214,25 @@ namespace FarEmerald.PlayForge.Extended.Editor
         /// </summary>
         protected virtual void OnAssetChanged() { }
 
+        // The question a link or unlink asks before it changes assets, answered true to go ahead. Tests replace it, since
+        // a dialog would block their run (ED-12)
+        internal static Func<string, string, string, bool> ConfirmLinkChange = (title, message, ok) =>
+            EditorUtility.DisplayDialog(title, message, ok, "Cancel");
+
+        /// <summary>
+        /// Records the assets a link, an unlink or a template change is about to write, so one Undo takes the change back.
+        /// These wrote straight into the assets with no Undo (ED-12).
+        /// </summary>
+        protected static void RecordLinkChange(string undoName, IEnumerable<Object> touched)
+        {
+            var assets = touched.Where(asset => asset != null).Distinct().ToArray();
+            if (assets.Length > 0) Undo.RecordObjects(assets, undoName);
+        }
+
+        /// <inheritdoc cref="RecordLinkChange(string, IEnumerable{Object})"/>
+        protected static void RecordLinkChange(string undoName, params Object[] touched) =>
+            RecordLinkChange(undoName, (IEnumerable<Object>)touched);
+
         // A multiple selection shows its count in the header, and only the actions that act on every selected asset
         private bool IsMultiple => serializedObject.isEditingMultipleObjects;
         private string HeaderName() => IsMultiple ? $"{targets.Length} selected" : GetDisplayName();
@@ -296,24 +315,28 @@ namespace FarEmerald.PlayForge.Extended.Editor
                 })
                 .WithAction("Assign", so =>
                 {
-                    var bfo = target as BaseForgeAsset;
                     var sfo = so as BaseForgeAsset;
-                    bfo.SetTemplate(sfo);
-                    Repaint();
+                    AssignTemplate(sfo);
                     Debug.Log($"[ PlayForge ] Template \"{sfo.GetName()}\" assigned.");
                 }, closeOnClick: true)
                 .WithTypeBadges();
             if (target is BaseForgeAsset _bfo && _bfo.HasTemplate)
             {
                 string template = _bfo.Template.GetName();
-                windowConfig.WithFooterAction($"Unnasign Template \"{template}\"", () =>
-                {
-                    _bfo.SetTemplate(null);
-                    Repaint();
-                });
+                windowConfig.WithFooterAction($"Unnasign Template \"{template}\"", () => AssignTemplate(null));
             }
-            
+
             AssetBrowserWindow.Show(windowConfig);
+        }
+
+        /// <summary>Gives the asset a template, or takes it away with null. The template picker's two actions call it.</summary>
+        internal void AssignTemplate(BaseForgeAsset template)
+        {
+            if (target is not BaseForgeAsset asset) return;
+            RecordLinkChange(template != null ? "Assign Template" : "Unassign Template", asset);
+            asset.SetTemplate(template);
+            MarkDirty(asset);
+            Repaint();
         }
 
         private string GetTemplateDisplayName(AssetTemplate template, ScriptableObject asset)
@@ -1211,22 +1234,7 @@ namespace FarEmerald.PlayForge.Extended.Editor
                 _pickerType = typeof(T);
                 _pickerCallback = obj =>
                 {
-                    if (obj is T asset)
-                    {
-                        if (src.HasCircularDependency(asset, out var issue, out var chain))
-                        {
-                            Debug.LogError($"[PlayForge] Cannot link {src.GetProviderName()} to {asset.GetProviderName()} due to a circular dependency. " +
-                                           $"\nRoot Issue: {issue.GetProviderName()} is linked to {src.GetProviderName()}." +
-                                           $"\nLink Chain: {chain}." +
-                                           $"\n");
-                            return;
-                        }
-
-                        src.LinkToProvider(asset);
-                        MarkDirty(src);
-                        RebuildLevelSourceContent();
-                        RebuildLevelingContent();
-                    }
+                    if (obj is T asset) LinkTo(src, asset);
                 };
                 ShowProviderPicker<T>(src);
             });
@@ -1236,6 +1244,25 @@ namespace FarEmerald.PlayForge.Extended.Editor
             ApplyButtonHoverStyle(linkAssetButton);
             
             parent.Add(linkAssetButton);
+        }
+
+        /// <summary>Links an asset to the level provider the picker chose, unless the link would make a loop.</summary>
+        internal void LinkTo(BaseForgeLevelProvider src, BaseForgeLevelProvider provider)
+        {
+            if (src.HasCircularDependency(provider, out var issue, out var chain))
+            {
+                Debug.LogError($"[PlayForge] Cannot link {src.GetProviderName()} to {provider.GetProviderName()} due to a circular dependency. " +
+                               $"\nRoot Issue: {issue.GetProviderName()} is linked to {src.GetProviderName()}." +
+                               $"\nLink Chain: {chain}." +
+                               $"\n");
+                return;
+            }
+
+            RecordLinkChange($"Link to {provider.GetProviderName()}", src);
+            src.LinkToProvider(provider);
+            MarkDirty(src);
+            RebuildLevelSourceContent();
+            RebuildLevelingContent();
         }
         
         protected void ShowProviderPicker<T>(BaseForgeLevelProvider src) where T : BaseForgeLevelProvider

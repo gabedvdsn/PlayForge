@@ -227,11 +227,13 @@ namespace FarEmerald.PlayForge.Extended.Editor
                 
                 var unlinkBtn = new Button(() =>
                 {
-                    if (EditorUtility.DisplayDialog(
+                    if (ConfirmLinkChange(
                         "Unlink Ability",
                         $"Remove link to '{provider.GetProviderName()}'?\n\nThe ability will become standalone.",
-                        "Unlink", "Cancel"))
+                        "Unlink"))
                     {
+                        // Recorded first, so one Undo takes back everything it changes (ED-12)
+                        RecordLinkChange("Unlink Attribute Set", attributeSet);
                         attributeSet.Unlink();
                         serializedObject.Update();
                         MarkDirty(attributeSet);

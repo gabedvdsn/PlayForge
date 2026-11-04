@@ -245,12 +245,14 @@ namespace FarEmerald.PlayForge.Extended.Editor
             
             var linkAllBtn = new Button(() =>
             {
-                if (EditorUtility.DisplayDialog(
+                if (ConfirmLinkChange(
                         $"Confirm Link {linkFocus}",
                         $"Are you sure you want to link all contained effects?" +
                         $"\n\nThis will affect {effect.ImpactSpecification.Packets.Length} effects.",
-                        "Yes", "Cancel"))
+                        "Yes"))
                 {
+                    // Recorded first, so one Undo takes back everything it changes (ED-12)
+                    RecordLinkChange($"Link {linkFocus}", (effect.ImpactSpecification.Packets ?? new ContainedEffectPacket[0]).Select(packet => (UnityEngine.Object)packet.ContainedEffect).Append(effect));
                     effect.LinkAllChildren();
 
                     foreach (var packet in effect.ImpactSpecification.Packets)
@@ -270,13 +272,15 @@ namespace FarEmerald.PlayForge.Extended.Editor
             
             var unlinkAllBtn = new Button(() =>
             {
-                if (EditorUtility.DisplayDialog(
+                if (ConfirmLinkChange(
                         $"Confirm Unlink {linkFocus}",
                         $"Are you sure you want to unlink all contained effects?" +
                         $"\n\nThis will affect {effect.ImpactSpecification.Packets.Count(p => p.ContainedEffect.IsLinkedTo(this))} effects." +
                         $"\n\nThis change only applies to assets linked to this effect.",
-                        "Yes", "Cancel"))
+                        "Yes"))
                 {
+                    // Recorded first, so one Undo takes back everything it changes (ED-12)
+                    RecordLinkChange($"Unlink {linkFocus}", (effect.ImpactSpecification.Packets ?? new ContainedEffectPacket[0]).Select(packet => (UnityEngine.Object)packet.ContainedEffect).Append(effect));
                     effect.UnlinkAllChildren();
 
                     foreach (var packet in effect.ImpactSpecification.Packets)
@@ -366,11 +370,13 @@ namespace FarEmerald.PlayForge.Extended.Editor
                 
                 var unlinkBtn = new Button(() =>
                 {
-                    if (EditorUtility.DisplayDialog(
+                    if (ConfirmLinkChange(
                         "Unlink Effect",
                         $"Remove link to '{provider.GetProviderName()}'?\n\nThe effect will become standalone.",
-                        "Unlink", "Cancel"))
+                        "Unlink"))
                     {
+                        // Recorded first, so one Undo takes back everything it changes (ED-12)
+                        RecordLinkChange("Unlink Effect", effect);
                         effect.Unlink();
                         serializedObject.Update();
                         MarkDirty(effect);

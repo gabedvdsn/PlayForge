@@ -521,7 +521,7 @@ had no letter in the review. TS-AA onward came from the test project.
 | ED-9 | M | 4 | The Visualizer is blank for items and sets, and after a domain reload | `TheForge.Utilities.cs:344, 407-412` | open |
 | ED-10 | M | 2 | Analysis exposes "Not Implemented" groups and truncates silently | `TheForge.AnalysisTab.cs:362, 716, 1461, 1979-1991` | verified |
 | ED-11 | M | 4 | The sticky-header workaround and drawer timers poll forever, among them two 250 ms timers in each impact drawer | `BasePlayForgeEditor.cs:524-611`, `GameplayEffectDrawer.cs:147-152`, `GameplayEffectImpactDrawer.cs:71, 145` | open |
-| ED-12 | H | 4 | No Undo, multi-edit or prefab overrides. The inspectors wrote 42 edits straight into their asset, and only the 5 renames recorded Undo; no inspector took a multiple selection; six drawers copy their SerializedObject for one target, and two write while drawing. Fixed so far: Phase 2's part (a rename stores the tag in the same undoable step, and showing never writes), the Attribute inspector (its fields bind, it takes a multiple selection, and every inspector's header follows Undo), the MonoProcess inspector's multiple selection, the Effect, Item and Attribute Set inspectors' Description and Link Mode, the Entity inspector's fields, and the Ability inspector's Description, Activation Policy, Activate Immediately and Link Mode. Left: Link and Unlink in every inspector; template assignment; the drawers' one-target copies; and the writes while drawing. A multiple selection in the Effect, Entity and Attribute Set inspectors, whose assets hold scalers, also waits for ScalerDrawer, which edits a one-target copy and changes with the scaler workflow the user is deciding | `AbilityEditor.cs:155-189, 743`, `EntityIdentityEditor.cs:790-919`, `BasePlayForgeEditor.cs` (`ShowTemplatePicker`), `TagDrawer.cs:104-109`, `AbstractTypeRefDrawer.cs:123-128`, `ScalerDrawer.cs:169-177` | open |
+| ED-12 | H | 4 | No Undo, multi-edit or prefab overrides. The inspectors wrote 42 edits straight into their asset, and only the 5 renames recorded Undo; no inspector took a multiple selection; six drawers copy their SerializedObject for one target, and two write while drawing. Fixed so far: Phase 2's part (a rename stores the tag in the same undoable step, and showing never writes), the Attribute inspector (its fields bind, it takes a multiple selection, and every inspector's header follows Undo), the MonoProcess inspector's multiple selection, the Effect, Item and Attribute Set inspectors' Description and Link Mode, the Entity inspector's fields, the Ability inspector's Description, Activation Policy, Activate Immediately and Link Mode, and Link, Unlink and template assignment in every inspector. Left: the drawers' one-target copies and a write while drawing, and then a multiple selection in each asset inspector. In the Effect, Entity and Attribute Set inspectors, whose assets hold scalers, that also waits for ScalerDrawer's one-target copy, which changes with Decision 28's scaler workflow (ED-32, ED-33) | `AbilityEditor.cs:155-189, 743`, `EntityIdentityEditor.cs:790-919`, `BasePlayForgeEditor.cs` (`ShowTemplatePicker`), `TagDrawer.cs:104-109`, `AbstractTypeRefDrawer.cs:123-128`, `ScalerDrawer.cs:169-177` | open |
 | ED-13 | M | 4 | Template propagation on save loads everything, opens a modal mid-save and records no Undo; the validator is empty | `ForgeTemplateProcessor.cs:45-52`, `ForgeTemplatePropagator.cs:201-229` | open |
 | ED-14 | H | 1 | The `GameplayEffectImpact` copy constructor drops affiliation and throws on null packets | `GameplayEffectImpact.cs:155-176` | verified |
 | ED-15 | M | 4 | "Validate All" is noisy and capped at 15; "Find All References" is a dialog | `TheForge.SettingsTab.cs:1808-1832`, `AttributeEditor.cs:261-273` | open |
@@ -643,6 +643,18 @@ GAS-4 with GAS-5, PC-6, and TS-I with PC-5.
 ## Log
 
 Record baselines, gate results and notable decisions here, newest first.
+
+- 2026-11-04, **ED-12: Link, Unlink and template assignment undo.** Each asset inspector's Link and Unlink buttons,
+  for the asset's own provider and for its children (contained effects, cost and cooldown, granted effects and the
+  active ability, starting items and abilities), the provider picker's link, and the template picker's Assign and
+  Unassign all wrote into the assets with no Undo. Each now records every asset it changes first, through the base's
+  `RecordLinkChange`, so one Undo takes it back. Their 13 confirmations ask through a hook, `ConfirmLinkChange`, that a
+  test can answer, and the two pickers' steps are the methods `LinkTo` and `AssignTemplate`. Its test,
+  `ED_12_Linking_in_the_Effect_inspector_undoes`, was seen failing first, after the hook and the two methods were in
+  and before the recording was.
+  - **Tests:** PlayMode 941: 934 pass, 0 fail and 7 planted are skipped, in three orders. Planted 7 of 7; EditMode
+    51 of 51.
+  - **Still open:** ED-31, the unlink dialogs that count with the editor rather than the asset, so they say 0.
 
 - 2026-11-04, **ED-34: opening a scaler writes nothing.** The user chose to fix it now, ahead of the scaler workflow
   of Decision 28. Opening a scaler wrote to it while drawing. On an effect with no level link, Lock mode cut its

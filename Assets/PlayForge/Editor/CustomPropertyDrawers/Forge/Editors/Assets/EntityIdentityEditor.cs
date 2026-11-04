@@ -253,12 +253,14 @@ namespace FarEmerald.PlayForge.Extended.Editor
             
             var linkAllBtn = new Button(() =>
             {
-                if (EditorUtility.DisplayDialog(
+                if (ConfirmLinkChange(
                         $"Confirm Link {linkFocus}",
                         $"Are you sure you want to link starting items & abilities?" +
                         $"\n\nThis will affect {(entity.StartingItems?.Count ?? 0) + entity.StartingAbilities?.Count ?? 0} assets.",
-                        "Yes", "Cancel"))
+                        "Yes"))
                 {
+                    // Recorded first, so one Undo takes back everything it changes (ED-12)
+                    RecordLinkChange($"Link {linkFocus}", (entity.StartingItems?.Where(start => start is not null).Select(start => (UnityEngine.Object)start.Item) ?? Enumerable.Empty<UnityEngine.Object>()).Concat(entity.StartingAbilities?.Cast<UnityEngine.Object>() ?? Enumerable.Empty<UnityEngine.Object>()).Append(entity));
                     entity.LinkAllChildren();
                 
                     if (entity.StartingItems is not null)
@@ -292,13 +294,15 @@ namespace FarEmerald.PlayForge.Extended.Editor
             
             var unlinkAllBtn = new Button(() =>
             {
-                if (EditorUtility.DisplayDialog(
+                if (ConfirmLinkChange(
                         $"Confirm Unlink {linkFocus}",
                         $"Are you sure you want to unlink starting items & abilities?" +
                         $"\n\nThis will affect {(entity.StartingItems?.Where(e => e.Item.IsLinkedTo(this)).Count() ?? 0) + entity.StartingAbilities?.Where(e => e.IsLinkedTo(this)).Count() ?? 0} assets." +
                         $"\n\nThis change only applies to assets linked to this entity.",
-                        "Yes", "Cancel"))
+                        "Yes"))
                 {
+                    // Recorded first, so one Undo takes back everything it changes (ED-12)
+                    RecordLinkChange($"Unlink {linkFocus}", (entity.StartingItems?.Where(start => start is not null).Select(start => (UnityEngine.Object)start.Item) ?? Enumerable.Empty<UnityEngine.Object>()).Concat(entity.StartingAbilities?.Cast<UnityEngine.Object>() ?? Enumerable.Empty<UnityEngine.Object>()).Append(entity));
                     entity.UnlinkAllChildren();
                 
                     if (entity.StartingItems is not null)
@@ -400,11 +404,13 @@ namespace FarEmerald.PlayForge.Extended.Editor
                 
                 var unlinkBtn = new Button(() =>
                 {
-                    if (EditorUtility.DisplayDialog(
+                    if (ConfirmLinkChange(
                         "Unlink Ability",
                         $"Remove link to '{provider.GetProviderName()}'?\n\nThe entity will become standalone.",
-                        "Unlink", "Cancel"))
+                        "Unlink"))
                     {
+                        // Recorded first, so one Undo takes back everything it changes (ED-12)
+                        RecordLinkChange("Unlink Entity", entity);
                         entity.Unlink();
                         serializedObject.Update();
                         MarkDirty(entity);

@@ -804,12 +804,14 @@ namespace FarEmerald.PlayForge.Extended.Editor
             
             var linkAllBtn = new Button(() =>
             {
-                if (EditorUtility.DisplayDialog(
+                if (ConfirmLinkChange(
                         $"Confirm Link {linkFocus}",
                         $"Are you sure you want to link usage effects?" +
                         $"\n\nThis will affect {(ability.Cost ? 1 : 0) + (ability.Cooldown ? 1 : 0)} effects.",
-                        "Yes", "Cancel"))
+                        "Yes"))
                 {
+                    // Recorded first, so one Undo takes back everything it changes (ED-12)
+                    RecordLinkChange($"Link {linkFocus}", ability, ability.Cost, ability.Cooldown);
                     ability.LinkAllChildren();
                 
                     if (ability.Cost) MarkDirty(ability.Cost);
@@ -831,13 +833,15 @@ namespace FarEmerald.PlayForge.Extended.Editor
             
             var unlinkAllBtn = new Button(() =>
             {
-                if (EditorUtility.DisplayDialog(
+                if (ConfirmLinkChange(
                         $"Confirm Unlink {linkFocus}",
                         $"Are you sure you want to unlink usage effects?" +
                         $"\n\nThis will affect {(ability.Cost && ability.Cost.IsLinkedTo(this) ? 1 : 0) + (ability.Cooldown && ability.Cooldown.IsLinkedTo(this) ? 1 : 0)} effects." +
                         $"This change only applies to assets linked to this ability",
-                        "Yes", "Cancel"))
+                        "Yes"))
                 {
+                    // Recorded first, so one Undo takes back everything it changes (ED-12)
+                    RecordLinkChange($"Unlink {linkFocus}", ability, ability.Cost, ability.Cooldown);
                     ability.UnlinkAllChildren();
                 
                     if (ability.Cost) MarkDirty(ability.Cost);
@@ -925,11 +929,13 @@ namespace FarEmerald.PlayForge.Extended.Editor
                 
                 var unlinkBtn = new Button(() =>
                 {
-                    if (EditorUtility.DisplayDialog(
+                    if (ConfirmLinkChange(
                         "Unlink Ability",
                         $"Remove link to '{provider.GetProviderName()}'?\n\nThe ability will become standalone.",
-                        "Unlink", "Cancel"))
+                        "Unlink"))
                     {
+                        // Recorded first, so one Undo takes back everything it changes (ED-12)
+                        RecordLinkChange("Unlink Ability", ability);
                         ability.Unlink();
                         serializedObject.Update();
                         MarkDirty(ability);

@@ -273,11 +273,13 @@ namespace FarEmerald.PlayForge.Extended.Editor
             
             var linkAllBtn = new Button(() =>
             {
-                if (EditorUtility.DisplayDialog(
+                if (ConfirmLinkChange(
                         $"Confirm Link {linkFocus}",
                         $"Are you sure you want to link active ability and effects?\n\nThis will affect {1 + item.GrantedEffects.Count} assets.",
-                        "Yes", "Cancel"))
+                        "Yes"))
                 {
+                    // Recorded first, so one Undo takes back everything it changes (ED-12)
+                    RecordLinkChange($"Link {linkFocus}", (item.GrantedEffects?.Cast<UnityEngine.Object>() ?? Enumerable.Empty<UnityEngine.Object>()).Append(item).Append(item.ActiveAbility));
                     item.LinkAllChildren();
                 
                     // Mark all linked children dirty
@@ -302,13 +304,15 @@ namespace FarEmerald.PlayForge.Extended.Editor
             
             var unlinkAllBtn = new Button(() =>
             {
-                if (EditorUtility.DisplayDialog(
+                if (ConfirmLinkChange(
                         $"Confirm Unlink {linkFocus}",
                         $"Are you sure you want to unlink active ability and effects?" +
                         $"\n\nThis will affect {(item.ActiveAbility && item.ActiveAbility.IsLinkedTo(this) ? 1 : 0) + item.GrantedEffects?.Count(i => i.IsLinkedTo(this)) ?? 0} assets." +
                         $"\n\nThis change only applies to assets linked to this item.",
-                        "Yes", "Cancel"))
+                        "Yes"))
                 {
+                    // Recorded first, so one Undo takes back everything it changes (ED-12)
+                    RecordLinkChange($"Unlink {linkFocus}", (item.GrantedEffects?.Cast<UnityEngine.Object>() ?? Enumerable.Empty<UnityEngine.Object>()).Append(item).Append(item.ActiveAbility));
                     item.UnlinkAllChildren();
                 
                     // Mark all unlinked children dirty
@@ -402,11 +406,13 @@ namespace FarEmerald.PlayForge.Extended.Editor
                 
                 var unlinkBtn = new Button(() =>
                 {
-                    if (EditorUtility.DisplayDialog(
+                    if (ConfirmLinkChange(
                         "Unlink Ability",
                         $"Remove link to '{provider.GetProviderName()}'?\n\nThe ability will become standalone.",
-                        "Unlink", "Cancel"))
+                        "Unlink"))
                     {
+                        // Recorded first, so one Undo takes back everything it changes (ED-12)
+                        RecordLinkChange("Unlink Item", item);
                         item.Unlink();
                         serializedObject.Update();
                         MarkDirty(item);
