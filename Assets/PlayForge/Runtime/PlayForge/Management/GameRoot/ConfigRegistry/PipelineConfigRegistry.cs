@@ -14,6 +14,10 @@ namespace FarEmerald.PlayForge
         /// [Calling Source] : ( [Asset Tag] : [Pipeline] )
         /// </summary>
         private static readonly Dictionary<ISource, Dictionary<Tag, List<GameplayPipelineConfiguration>>> configs = new();
+
+        // Its keys are one session's sources, and statics outlive play mode when domain reload is off (SP-22)
+        [UnityEngine.RuntimeInitializeOnLoadMethod(UnityEngine.RuntimeInitializeLoadType.SubsystemRegistration)]
+        private static void Clear() => configs.Clear();
         
         public static void Register(ISource caller, Tag target, IEnumerable<GameplayPipelineConfiguration> pipeline)
         {

@@ -1,11 +1,17 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
+using UnityEngine;
 
 namespace FarEmerald.PlayForge
 {
     public static class AttributeRegistry
     {
         private static readonly Dictionary<string, IAttribute> Library = new();
+
+        // Statics outlive play mode when domain reload is off, and an attribute registered last session kept its name
+        // from this session's (SP-22). The systems that use attributes register them again as they start
+        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
+        private static void Clear() => Library.Clear();
 
         /// <summary>
         /// REFACTOR THIS TO REFLECT YOUR ATTRIBUTE NAMING CONVENTION

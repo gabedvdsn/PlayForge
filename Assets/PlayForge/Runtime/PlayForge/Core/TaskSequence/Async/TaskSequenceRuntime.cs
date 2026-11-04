@@ -54,6 +54,14 @@ namespace FarEmerald.PlayForge
         // helpers do, and it's enough to ask whether the run is paused
         private static readonly Dictionary<CancellationToken, TaskSequenceRuntime> RunsByToken = new();
 
+        // A run cut off when play mode ended could stay here into the next session, since statics outlive play mode
+        // when domain reload is off (SP-22)
+        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
+        private static void ClearRuns()
+        {
+            lock (RunsByToken) RunsByToken.Clear();
+        }
+
         // Cancellation management
         private CancellationTokenSource _sequenceCts;
         private readonly Dictionary<int, CancellationTokenSource> _stageSources = new();

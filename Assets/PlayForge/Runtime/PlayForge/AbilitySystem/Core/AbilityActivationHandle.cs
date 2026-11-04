@@ -1,4 +1,5 @@
 using System.Threading;
+using UnityEngine;
 
 namespace FarEmerald.PlayForge
 {
@@ -15,6 +16,10 @@ namespace FarEmerald.PlayForge
         public bool ClaimReleased;
 
         private static int _nextId;
+
+        // Each session numbers its activations from the start, as it did with a domain reload (SP-22)
+        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
+        private static void ResetIds() => _nextId = 0;
 
         public AbilityActivationHandle(AbilitySpecContainer container, AbilityDataPacket data, string abilityName = null)
             : this(container, data, container.Spec.Base.Behaviour.GenerateProxy(abilityName))

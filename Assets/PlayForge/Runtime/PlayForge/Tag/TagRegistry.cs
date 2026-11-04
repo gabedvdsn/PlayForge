@@ -20,6 +20,9 @@ namespace FarEmerald.PlayForge
         // Cache Storage
         // ═══════════════════════════════════════════════════════════════════════════
         
+        // Not cleared when play mode starts, even with domain reload off: static tag fields register as their types
+        // initialise, once per domain, and wouldn't register again (SP-22)
+
         // All registered tags by their full path
         private static readonly Dictionary<string, Tag> _tagsByPath = new();
         
