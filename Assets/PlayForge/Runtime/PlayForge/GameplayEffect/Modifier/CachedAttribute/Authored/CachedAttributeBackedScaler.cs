@@ -34,8 +34,9 @@ namespace FarEmerald.PlayForge
 
             float attrCapture = ProjectToBinaryTarget(useActive ? captured.ActiveValue : captured.RootValue);
 
-            float relativeLevel = blueprint.Derivation.GetOrigin().GetLevel().ClampedRatio;
-            float scalerValue = EvaluateScalingAtRelativeLevel(relativeLevel);
+            // At the level exactly, or stretched over its range (Decision 28)
+            var level = blueprint.Derivation.GetOrigin().GetLevel();
+            float scalerValue = EvaluateAtLevel(level.CurrentValue, level.ClampedRatio);
 
             float folded = ForgeHelper.PerformScalerRelativeOperation(attrCapture, scalerValue, RelativeOperation);
             folded = ApplyBehaviourEvaluation(blueprint.Derivation, folded);

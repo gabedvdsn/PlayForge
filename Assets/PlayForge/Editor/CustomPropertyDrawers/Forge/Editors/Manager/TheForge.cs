@@ -41,7 +41,7 @@ namespace FarEmerald.PlayForge.Extended.Editor
             { typeof(EntityIdentity), "Assets/Data/Entities" },
             { typeof(Ability), "Assets/Data/Abilities" },
             { typeof(Item), "Assets/Data/Items" },
-            { typeof(ScalerPipeline), "Assets/Data/Templates/Scalers" },
+            { typeof(ScalerAsset), "Assets/Data/Templates/Scalers" },
             { typeof(RequirementTemplate), "Assets/Data/Templates/Requirements" },
         };
         
@@ -54,7 +54,7 @@ namespace FarEmerald.PlayForge.Extended.Editor
             new AssetTypeInfo(typeof(Attribute), "Attribute", "", Colors.AssetAttribute, "Base stat definition", true, false),
             new AssetTypeInfo(typeof(AttributeSet), "Attribute Set", "", Colors.AssetAttributeSet, "Collection of attributes", true, true),
             new AssetTypeInfo(typeof(EntityIdentity), "Entity", "", Colors.AssetEntity, "Entity configuration", true, true),
-            new AssetTypeInfo(typeof(ScalerPipeline), "Scaler", "", Colors.AssetScaler, "Reusable scaler configuration", true, false),
+            new AssetTypeInfo(typeof(ScalerAsset), "Scaler", "", Colors.AssetScaler, "Reusable scaler configuration", true, false),
             new AssetTypeInfo(typeof(RequirementTemplate), "Requirement", "", Colors.AssetRequirements, "Reusable tag requirement configuration", true, false),
         };
         

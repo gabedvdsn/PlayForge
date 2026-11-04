@@ -7,6 +7,10 @@ tracks each fix below by its ID.
 ## [Unreleased]
 
 ### Added
+- Scaler assets: a scaler that many fields share. A field of the Shared kind reads its asset's scaler, so an edit to
+  the asset reaches every field that uses it, and the field's own number adjusts what it reads, as in Fire Duration
+  × 1.5. The Scaler Template asset is the Scaler asset now, without the sync settings nothing read. `SCALERS.md`
+  describes scalers (ED-33).
 - An effect can make more than one impact. Its Additional Impacts each change an attribute with an operation, magnitude
   and delivery of their own, so one effect can lower Armor while it lasts and burn Health on each tick. Add Impact adds
   one the duration can make, and the Cost rule checks each attribute a cost spends (ED-3).
@@ -14,6 +18,9 @@ tracks each fix below by its ID.
   page, through one table of links in the editor.
 
 ### Changed
+- A scaler you make maps levels exactly: level 4 reads its 4th value, and a level past the end reads the last. Its new
+  Stretch Over Levels spreads the values over a level range, as every scaler did, and the scalers saved before it keep
+  it on, so they read as they did (Decision 28).
 - One Import window serves every inspector section, a whole asset, a worker group and a requirement group: choose a
   source, then the fields that differ, each checked, and import them as one Undo step. A list can take the source's
   items after its own instead of being replaced. Clear resets a section at once, and Undo takes it back (ED-32).

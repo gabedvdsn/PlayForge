@@ -443,6 +443,8 @@ namespace FarEmerald.PlayForge.Extended.Editor
                 else
                 {
                     var newScaler = Activator.CreateInstance(scalerTypes[newIndex]) as AbstractScaler;
+                    // A scaler made here maps levels exactly; one saved before the option stretches (Decision 28, ED-33)
+                    if (newScaler != null) newScaler.StretchOverLevels = false;
                     freshProp.managedReferenceValue = newScaler;
                     
                     // Initialize LevelValues array after setting managed reference
@@ -498,6 +500,17 @@ namespace FarEmerald.PlayForge.Extended.Editor
 
             if (scaler.UseScalingOptions())
             {
+                // Off, level 4 reads the 4th value; on, the values spread over the level range below (Decision 28, ED-33)
+                var stretch = new Toggle("Stretch Over Levels")
+                {
+                    name = "StretchOverLevels",
+                    tooltip = "Off: level 4 reads the 4th value, and a level past the end reads the last. On: the values " +
+                              "spread over the level range, and a level between two reads between them",
+                };
+                stretch.AddToClassList(Toggle.alignedFieldUssClassName);
+                stretch.BindProperty(property.FindPropertyRelative(nameof(AbstractScaler.StretchOverLevels)));
+                content.Add(stretch);
+
                 // Level Mode
                 content.Add(CreateLevelModeRow(property, root, scaler));
             

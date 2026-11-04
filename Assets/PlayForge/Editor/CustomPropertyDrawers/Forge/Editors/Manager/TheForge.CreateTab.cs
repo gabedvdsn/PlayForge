@@ -876,7 +876,7 @@ namespace FarEmerald.PlayForge.Extended.Editor
                 case Attribute attr:
                     modified = ApplyAttributeSettings(so);
                     break;
-                case ScalerPipeline scalerTemplate:
+                case ScalerAsset scalerTemplate:
                     modified = ApplyScalerTemplateSettings(so);
                     break;
                 case RequirementTemplate reqTemplate:

@@ -21,15 +21,6 @@ namespace FarEmerald.PlayForge
         [Tooltip("Optional name for this scaler (helps identify when importing or viewing)")]
         public string Name;
         
-        [FormerlySerializedAs("SourceTemplate")]
-        [Header("Template Link")]
-        [Tooltip("Optional: Link to a shared ScalerTemplate. When linked, this scaler can sync its values from the template.")]
-        public ScalerPipeline sourcePipeline;
-        
-        [Tooltip("When enabled, this scaler's values will be kept in sync with the linked template.\n" +
-                 "Disable to make local modifications while keeping the template reference.")]
-        public bool SyncWithTemplate;
-        
         [Header("Configuration")]
         [Tooltip("How this scaler determines its level range.\n\n" +
                  "LockToSource: Uses the owning Ability/Entity's level range automatically.\n" +
@@ -52,58 +43,6 @@ namespace FarEmerald.PlayForge
         public string GetDisplayName() => HasName ? Name : "";
         
         // ═══════════════════════════════════════════════════════════════════════════
-        // Template Properties
-        // ═══════════════════════════════════════════════════════════════════════════
-        
-        /// <summary>
-        /// Returns true if this scaler is linked to a template.
-        /// </summary>
-        public bool IsLinkedToTemplate => sourcePipeline != null;
-        
-        /// <summary>
-        /// Returns true if this scaler should sync from its template.
-        /// </summary>
-        public bool ShouldSyncFromTemplate => IsLinkedToTemplate && SyncWithTemplate;
-        
-        // ═══════════════════════════════════════════════════════════════════════════
-        // Template Methods
-        // ═══════════════════════════════════════════════════════════════════════════
-        
-        /// <summary>
-        /// Syncs values from the linked template if SyncWithTemplate is enabled.
-        /// Call this in OnValidate or when needed.
-        /// </summary>
-        public void TrySyncFromTemplate()
-        {
-            if (ShouldSyncFromTemplate)
-            {
-                sourcePipeline.CopyTo(this);
-            }
-        }
-        
-        /// <summary>
-        /// Links this scaler to a template and optionally syncs immediately.
-        /// </summary>
-        public void LinkToTemplate(ScalerPipeline pipeline, bool syncImmediately = true)
-        {
-            sourcePipeline = pipeline;
-            SyncWithTemplate = true;
-            if (syncImmediately && pipeline != null)
-            {
-                pipeline.CopyTo(this);
-            }
-        }
-        
-        /// <summary>
-        /// Unlinks from the current template, keeping current values.
-        /// </summary>
-        public void UnlinkFromTemplate()
-        {
-            sourcePipeline = null;
-            SyncWithTemplate = false;
-        }
-        
-        // ═══════════════════════════════════════════════════════════════════════════
         // Scaler Fields
         // ═══════════════════════════════════════════════════════════════════════════
         
@@ -117,6 +56,16 @@ namespace FarEmerald.PlayForge
         
         [Tooltip("Interpolation between level values")]
         public EScalerInterpolation Interpolation = EScalerInterpolation.Linear;
+
+        /// <summary>
+        /// Off, levels map exactly: level 4 reads the 4th value, and a level past the end reads the last (Decision 28).
+        /// On, the values spread over the level range <see cref="Configuration"/> names, as every scaler's did. It is on
+        /// for the scalers saved before it existed, so they keep how they read; the inspector makes new scalers with it
+        /// off.
+        /// </summary>
+        [Tooltip("Off: level 4 reads the 4th value, and a level past the end reads the last. On: the values spread over " +
+                 "the level range, and a level between two reads between them")]
+        public bool StretchOverLevels = true;
         
         [Tooltip("Generated curve from level values (auto-updated)")]
         public AnimationCurve Scaling = AnimationCurve.Linear(0f, 1f, 1f, 1f);
@@ -436,12 +385,21 @@ namespace FarEmerald.PlayForge
         }
         
         /// <summary>
-        /// Evaluates using the spec's relative level.
+        /// The scaler's value at a level: the level's own value, and past the end the last, unless the scaler stretches
+        /// its values over the level range, where it reads its curve at the level's place in the range (Decision 28).
+        /// </summary>
+        protected float EvaluateAtLevel(int level, float relativeLevel) =>
+            StretchOverLevels ? EvaluateScalingAtRelativeLevel(relativeLevel) : GetValueAtLevel(level);
+
+        /// <summary>
+        /// Evaluates at the spec's level, exactly or stretched, then through the scaler's behaviours.
         /// </summary>
         protected float EvaluateFromSpec(IAttributeImpactCarrier spec)
         {
-            float relativeLevel = GetEffectiveRelativeLevel(spec);
-            return ApplyBehaviourEvaluation(spec, EvaluateScalingAtRelativeLevel(relativeLevel));
+            float value = StretchOverLevels
+                ? EvaluateScalingAtRelativeLevel(GetEffectiveRelativeLevel(spec))
+                : GetValueAtLevel(spec.GetOrigin().GetLevel().CurrentValue);
+            return ApplyBehaviourEvaluation(spec, value);
         }
 
         protected float ApplyBehaviourEvaluation(IAttributeImpactCarrier spec, float magnitude)
