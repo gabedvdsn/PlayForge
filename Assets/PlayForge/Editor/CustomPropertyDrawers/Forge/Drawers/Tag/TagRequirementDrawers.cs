@@ -55,6 +55,8 @@ namespace FarEmerald.PlayForge.Extended.Editor
         public override VisualElement CreatePropertyGUI(SerializedProperty property)
         {
             var root = new VisualElement { name = "TagRequirementsRoot" };
+            // The style sheet sizes and colors the kit's glyphs, wherever the drawer is drawn: in Unity's own inspector too (ED-20)
+            ForgeTheme.Apply(root);
             root.style.marginBottom = 4;
             BuildUI(root, property);
             return root;
@@ -201,7 +203,8 @@ namespace FarEmerald.PlayForge.Extended.Editor
             }
             
             // Import button
-            var importBtn = new Button { text = "⬇", tooltip = "Import requirements from another asset" };
+            var importBtn = new Button { tooltip = "Import requirements from another asset" };
+            importBtn.Add(new ForgeGlyph(ForgeGlyphShape.Import));
             importBtn.style.width = 22;
             importBtn.style.height = 20;
             importBtn.style.marginLeft = 8;
@@ -771,7 +774,6 @@ namespace FarEmerald.PlayForge.Extended.Editor
                 if (hasName) { item.style.borderLeftWidth = 2; item.style.borderLeftColor = Colors.AccentGreen; }
                 item.RegisterCallback<MouseEnterEvent>(_ => item.style.backgroundColor = Colors.ButtonHover);
                 item.RegisterCallback<MouseLeaveEvent>(_ => item.style.backgroundColor = Colors.ItemBackground);
-                item.Add(new Label("⚡") { style = { color = AbilityReqColor, fontSize = 12, marginRight = 6 } });
                 item.Add(new Label(label) { style = { flexGrow = 1, color = hasName ? Colors.LabelText : Colors.HintText, fontSize = 11 } });
                 item.Add(new Button(() => { _onImport?.Invoke(ability.Tags.TagRequirements); Close(); }) { text = "Import", style = { paddingLeft = 8, paddingRight = 8, height = 18, fontSize = 10 } });
                 sv.Add(item);
@@ -931,10 +933,6 @@ namespace FarEmerald.PlayForge.Extended.Editor
                     ? new Color(Colors.AccentCyan.r, Colors.AccentCyan.g, Colors.AccentCyan.b, 0.1f) 
                     : Colors.ItemBackground);
                 
-                string icon = isTemplate ? "📋" : (type == "Ability" ? "⚡" : "✦");
-                Color iconColor = isTemplate ? Colors.AccentCyan : (type == "Ability" ? new Color(0.4f, 0.7f, 1f) : new Color(0.6f, 0.4f, 0.9f));
-                item.Add(new Label(icon) { style = { color = iconColor, fontSize = 12, marginRight = 6 } });
-                
                 item.Add(new Label(label) { style = { flexGrow = 1, color = (hasName || isTemplate) ? Colors.LabelText : Colors.HintText, fontSize = 10 } });
                 
                 if (isTemplate)
@@ -971,6 +969,8 @@ namespace FarEmerald.PlayForge.Extended.Editor
         public override VisualElement CreatePropertyGUI(SerializedProperty property)
         {
             var root = new VisualElement { name = "AvoidRequireTagGroupRoot" };
+            // The style sheet sizes and colors the kit's glyphs, wherever the drawer is drawn: in Unity's own inspector too (ED-20)
+            ForgeTheme.Apply(root);
             root.style.marginBottom = 4;
             BuildUI(root, property);
             return root;
@@ -1074,7 +1074,8 @@ namespace FarEmerald.PlayForge.Extended.Editor
             if (reqCount == 0 && avoidCount == 0 && isCollapsed)
                 header.Add(new Label("Empty") { style = { fontSize = 9, color = Colors.HintText, unityFontStyleAndWeight = FontStyle.Italic } });
             
-            var importBtn = new Button { text = "⬇" };
+            var importBtn = new Button();
+            importBtn.Add(new ForgeGlyph(ForgeGlyphShape.Import));
             importBtn.style.width = 22;
             importBtn.style.height = 20;
             importBtn.style.marginLeft = 8;

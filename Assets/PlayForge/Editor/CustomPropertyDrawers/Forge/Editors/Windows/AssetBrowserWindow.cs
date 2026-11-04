@@ -247,20 +247,16 @@ namespace FarEmerald.PlayForge.Extended.Editor
         
         public static AssetAction Ping() => new()
         {
-            Icon = "📍",
-            Label = "",
+            Label = "Ping",
             Tooltip = "Ping in Project",
             Action = asset => EditorGUIUtility.PingObject(asset),
-            Width = 24
         };
         
         public static AssetAction Visualize(Action<ScriptableObject> visualizer = null) => new()
         {
-            Icon = "🔍",
-            Label = "",
+            Label = "Visualize",
             Tooltip = "Open in Visualizer",
             Action = visualizer ?? TheForge.OpenVisualizer,
-            Width = 24
         };
         
         public static AssetAction Import(Action<ScriptableObject> importAction, bool closeWindow = true) => new()
@@ -274,18 +270,15 @@ namespace FarEmerald.PlayForge.Extended.Editor
         
         public static AssetAction Delete(Action<ScriptableObject> deleteAction = null) => new()
         {
-            Icon = "🗑",
-            Label = "",
+            Label = "Trash",
             Tooltip = "Move this asset to the trash",
             Action = deleteAction ?? (asset => ForgeAssetDeletion.MoveToTrash(asset)),
             Color = Colors.AccentRed,
-            Width = 24
         };
         
         public static AssetAction Duplicate() => new()
         {
-            Icon = "📋",
-            Label = "",
+            Label = "Duplicate",
             Tooltip = "Duplicate this asset",
             Action = asset =>
             {
@@ -294,7 +287,6 @@ namespace FarEmerald.PlayForge.Extended.Editor
                 AssetDatabase.CopyAsset(path, newPath);
                 AssetDatabase.Refresh();
             },
-            Width = 24
         };
     }
     
@@ -412,6 +404,8 @@ namespace FarEmerald.PlayForge.Extended.Editor
             if (_config == null) return;
             
             var root = rootVisualElement;
+            // The style sheet sizes and colors the kit's glyphs (ED-20)
+            ForgeTheme.Apply(root);
             root.Clear();
             
             root.style.paddingLeft = 10;
@@ -478,10 +472,9 @@ namespace FarEmerald.PlayForge.Extended.Editor
             
             if (_config.ShowSearch)
             {
-                var searchIcon = new Label("🔍");
+                var searchIcon = new ForgeGlyph(ForgeGlyphShape.Search);
                 searchIcon.style.alignSelf = Align.Center;
                 searchIcon.style.marginRight = 4;
-                searchIcon.style.color = Colors.HintText;
                 searchRow.Add(searchIcon);
                 
                 var searchField = new TextField { value = _searchFilter };

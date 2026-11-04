@@ -30,6 +30,8 @@ namespace FarEmerald.PlayForge.Extended.Editor
         public override VisualElement CreatePropertyGUI(SerializedProperty property)
         {
             var root = new VisualElement { name = "WorkerGroupRoot" };
+            // The style sheet sizes and colors the kit's glyphs, wherever the drawer is drawn: in Unity's own inspector too (ED-20)
+            ForgeTheme.Apply(root);
             root.style.marginBottom = 4;
             BuildUI(root, property);
             return root;
@@ -140,7 +142,8 @@ namespace FarEmerald.PlayForge.Extended.Editor
             }
             
             // Import button
-            var importBtn = new Button { text = "⬇", tooltip = "Import workers from another asset" };
+            var importBtn = new Button { tooltip = "Import workers from another asset" };
+            importBtn.Add(new ForgeGlyph(ForgeGlyphShape.Import));
             importBtn.style.width = 22;
             importBtn.style.height = 20;
             importBtn.style.marginLeft = 8;
@@ -279,12 +282,6 @@ namespace FarEmerald.PlayForge.Extended.Editor
             container.style.borderLeftColor = color;
             container.style.borderRightColor = color;
             container.style.backgroundColor = new Color(0.18f, 0.20f, 0.22f, 0.8f);
-            
-            var icon = new Label("⚙");
-            icon.style.fontSize = 10;
-            icon.style.marginRight = 4;
-            icon.style.color = color;
-            container.Add(icon);
             
             var label = new Label(text);
             label.style.fontSize = 10;
@@ -574,7 +571,7 @@ namespace FarEmerald.PlayForge.Extended.Editor
                 string icon = type switch
                 {
                     "Entity" => "◆",
-                    "Ability" => "⚡",
+                    "Ability" => "▲",
                     "Item" => "◈",
                     "AttributeSet" => "◉",
                     _ => "●"

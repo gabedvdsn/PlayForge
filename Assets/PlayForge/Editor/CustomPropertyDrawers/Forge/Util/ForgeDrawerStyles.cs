@@ -109,21 +109,11 @@ namespace FarEmerald.PlayForge.Extended.Editor
         
         public static class Icons
         {
-            public const string Duration = "⏱";
-            public const string Impact = "⚡";
             public const string Target = "◎";
-            public const string Magnitude = "📊";
-            public const string Behavior = "⚙";
             public const string Effect = "✦";
-            public const string Tag = "🏷";
-            public const string Attribute = "📈";
-            public const string Policy = "📋";
-            public const string Tick = "🔄";
-            public const string Stack = "📚";
             public const string Arrow = "→";
             public const string Check = "✓";
             public const string Cross = "✗";
-            public const string Warning = "⚠";
             public const string Info = "ℹ";
             public const string Refresh = "\u27f3";
             public const string Search = "\u2315";

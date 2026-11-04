@@ -148,7 +148,7 @@ namespace FarEmerald.PlayForge.Extended.Editor
             // Critical section badge — iterate array elements, read managed reference
             if (tasksProp != null && HasCriticalTask(tasksProp))
             {
-                var critBadge = CreateBadge("⚠ Critical", Colors.AccentRed);
+                var critBadge = CreateBadge("Critical", Colors.AccentRed);
                 critBadge.style.marginRight = 2;
                 critBadge.tooltip = "This stage contains one or more critical section tasks";
                 critBadge.style.marginLeft = 4;
@@ -380,7 +380,7 @@ namespace FarEmerald.PlayForge.Extended.Editor
                 taskContainer.style.borderLeftWidth = 3;
                 taskContainer.style.borderLeftColor = Colors.AccentRed;
 
-                var critLabel = CreateBadge("⚠", Colors.AccentRed);
+                var critLabel = CreateBadge("Critical", Colors.AccentRed);
                 critLabel.tooltip = "This task is a critical section — blocks concurrent critical abilities";
                 critLabel.style.marginRight = 4;
                 critLabel.style.marginTop = 2;

@@ -185,7 +185,7 @@ namespace FarEmerald.PlayForge.Extended.Editor
                 headerRow.style.alignItems = Align.Center;
                 headerRow.style.marginBottom = 6;
                 
-                var linkIcon = new Label("🔗");
+                var linkIcon = new ForgeGlyph(ForgeGlyphShape.Link);
                 linkIcon.style.marginRight = 6;
                 headerRow.Add(linkIcon);
                 
@@ -261,8 +261,8 @@ namespace FarEmerald.PlayForge.Extended.Editor
                 warningRow.style.flexDirection = FlexDirection.Row;
                 warningRow.style.alignItems = Align.Center;
                 
-                var warningIcon = new Label("⚠");
-                warningIcon.style.color = Colors.AccentYellow;
+                var warningIcon = new ForgeGlyph(ForgeGlyphShape.Warning);
+                warningIcon.AddToClassList("pf-glyph--warning");
                 warningIcon.style.marginRight = 6;
                 warningRow.Add(warningIcon);
                 
@@ -417,7 +417,7 @@ namespace FarEmerald.PlayForge.Extended.Editor
             box.style.marginBottom = 8;
             levelingContent.Add(box);
 
-            var header = new Label($"🔗  Levels derived from {provider.GetProviderName()} ({GetProviderTypeName(provider.GetType())})");
+            var header = new Label($"Levels derived from {provider.GetProviderName()} ({GetProviderTypeName(provider.GetType())})");
             header.style.unityFontStyleAndWeight = FontStyle.Bold;
             header.style.color = Colors.AccentBlue;
             header.style.marginBottom = 6;

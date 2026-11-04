@@ -34,6 +34,8 @@ namespace FarEmerald.PlayForge.Extended.Editor
         public override VisualElement CreatePropertyGUI(SerializedProperty prop)
         {
             var root = new VisualElement();
+            // The style sheet sizes and colors the kit's glyphs, wherever the drawer is drawn: in Unity's own inspector too (ED-20)
+            ForgeTheme.Apply(root);
             
             // Try to find the parent ILevelProvider context
             var parentProvider = FindParentLevelProvider(prop);
@@ -68,8 +70,9 @@ namespace FarEmerald.PlayForge.Extended.Editor
             Button templateBtn = null;
             if (hasTemplate)
             {
-                templateBtn = CreateActionButton("📥", $"Import from {templateAttr.DisplayName} template", 
+                templateBtn = CreateActionButton("", $"Import from {templateAttr.DisplayName} template", 
                     new Color(0.4f, 0.5f, 0.6f));
+                templateBtn.Add(new ForgeGlyph(ForgeGlyphShape.Import));
                 templateBtn.name = "TemplateBtn";
                 templateBtn.clicked += () =>
                 {
@@ -83,13 +86,17 @@ namespace FarEmerald.PlayForge.Extended.Editor
             }
             
             // Filter toggle button
-            var filterBtn = CreateActionButton(_showOnlyUnlinked ? "🔓" : "📋", 
+            var filterBtn = CreateActionButton(_showOnlyUnlinked ? "Unlinked" : "All", 
                 _showOnlyUnlinked ? "Showing unlinked only - Click to show all" : "Showing all - Click to show unlinked only",
                 _showOnlyUnlinked ? new Color(0.4f, 0.5f, 0.3f) : Colors.ButtonBackground);
+            // A word, not an icon: it was a padlock or a clipboard emoji (ED-20)
+            filterBtn.style.width = StyleKeyword.Auto;
+            filterBtn.style.paddingLeft = 4;
+            filterBtn.style.paddingRight = 4;
             filterBtn.clicked += () =>
             {
                 _showOnlyUnlinked = !_showOnlyUnlinked;
-                filterBtn.text = _showOnlyUnlinked ? "🔓" : "📋";
+                filterBtn.text = _showOnlyUnlinked ? "Unlinked" : "All";
                 filterBtn.tooltip = _showOnlyUnlinked ? "Showing unlinked only - Click to show all" : "Showing all - Click to show unlinked only";
                 filterBtn.style.backgroundColor = _showOnlyUnlinked ? new Color(0.4f, 0.5f, 0.3f) : Colors.ButtonBackground;
             };
@@ -452,10 +459,8 @@ namespace FarEmerald.PlayForge.Extended.Editor
                 var linkedProvider = effect.LinkedProvider;
                 
                 // Link icon
-                var linkIcon = new Label("🔗");
-                linkIcon.style.fontSize = 10;
+                var linkIcon = new ForgeGlyph(ForgeGlyphShape.Link);
                 linkIcon.style.marginRight = 4;
-                linkIcon.style.color = Colors.AccentGreen;
                 infoRow.Add(linkIcon);
                 
                 // Provider info
@@ -500,10 +505,9 @@ namespace FarEmerald.PlayForge.Extended.Editor
             else
             {
                 // Not linked warning
-                var warningIcon = new Label("⚠");
-                warningIcon.style.fontSize = 10;
+                var warningIcon = new ForgeGlyph(ForgeGlyphShape.Warning);
+                warningIcon.AddToClassList("pf-glyph--warning");
                 warningIcon.style.marginRight = 4;
-                warningIcon.style.color = Colors.AccentYellow;
                 infoRow.Add(warningIcon);
                 
                 var warningLabel = new Label("Not linked");
@@ -616,7 +620,7 @@ namespace FarEmerald.PlayForge.Extended.Editor
             linkBox.style.borderLeftColor = Colors.AccentGreen;
             root.Add(linkBox);
             
-            var linkIcon = new Label("🔗");
+            var linkIcon = new ForgeGlyph(ForgeGlyphShape.Link);
             linkIcon.style.marginRight = 6;
             linkBox.Add(linkIcon);
             

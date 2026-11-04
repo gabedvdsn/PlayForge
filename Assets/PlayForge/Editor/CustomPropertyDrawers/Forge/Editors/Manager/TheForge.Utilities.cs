@@ -312,7 +312,7 @@ namespace FarEmerald.PlayForge.Extended.Editor
             foreach (var typeInfo in AssetTypes)
             {
                 var count = CountAssetsOfType(typeInfo.Type);
-                sb.AppendLine($"{typeInfo.Icon} {typeInfo.DisplayName}: {count}");
+                sb.AppendLine($"{typeInfo.DisplayName}: {count}");
             }
             
             sb.AppendLine($"\nTotal: {cachedAssets.Count} assets");
@@ -353,7 +353,7 @@ namespace FarEmerald.PlayForge.Extended.Editor
             if (asset != null)
             {
                 var typeInfo = TheForge.AssetTypes.FirstOrDefault(t => t.Type == asset.GetType());
-                titleContent = new GUIContent($"{typeInfo?.Icon ?? "?"} {TheForge.GetAssetDisplayName(asset)}");
+                titleContent = new GUIContent(TheForge.GetAssetDisplayName(asset));
                 minSize = new Vector2(420, 340);
             }
 
@@ -362,6 +362,8 @@ namespace FarEmerald.PlayForge.Extended.Editor
 
         private void CreateGUI()
         {
+            // The style sheet sizes and colors the kit's glyphs (ED-20)
+            ForgeTheme.Apply(rootVisualElement);
             Rebuild();
         }
 
@@ -425,10 +427,8 @@ namespace FarEmerald.PlayForge.Extended.Editor
             header.style.borderBottomColor = Colors.BorderDark;
             content.Add(header);
 
-            var icon = new Label(typeInfo?.Icon ?? "?");
-            icon.style.fontSize = 28;
+            var icon = new ForgeTypeIcon(typeInfo?.Type);
             icon.style.marginRight = 12;
-            icon.style.color = typeInfo?.Color ?? Colors.LabelText;
             header.Add(icon);
 
             var titleContainer = new VisualElement();

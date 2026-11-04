@@ -401,11 +401,11 @@ namespace FarEmerald.PlayForge.Extended.Editor
             viewBar.style.marginBottom = 6;
             contentContainer.Add(viewBar);
             
-            var btnDistribution = CreateViewModeButton("📊", "Dist", EAnalysisViewMode.Distribution);
+            var btnDistribution = CreateViewModeButton("", "Dist", EAnalysisViewMode.Distribution);
             viewBar.Add(btnDistribution);
-            var btnGrid = CreateViewModeButton("▤", "Grid", EAnalysisViewMode.Grid);
+            var btnGrid = CreateViewModeButton("", "Grid", EAnalysisViewMode.Grid);
             viewBar.Add(btnGrid);
-            var btnBreakdown = CreateViewModeButton("📋", "Detail", EAnalysisViewMode.Breakdown);
+            var btnBreakdown = CreateViewModeButton("", "Detail", EAnalysisViewMode.Breakdown);
             viewBar.Add(btnBreakdown);
             
             ConfigureViewModeButtons(new []
@@ -418,11 +418,9 @@ namespace FarEmerald.PlayForge.Extended.Editor
             viewBar.Add(CreateSpacer());
             
             // Search (compact)
-            var searchIcon = new Label("🔍");
+            var searchIcon = new ForgeGlyph(ForgeGlyphShape.Search);
             searchIcon.style.marginRight = 4;
-            searchIcon.style.color = Colors.HintText;
             searchIcon.style.alignSelf = Align.Center;
-            searchIcon.style.fontSize = 10;
             viewBar.Add(searchIcon);
             
             var searchField = new TextField();
@@ -667,7 +665,7 @@ namespace FarEmerald.PlayForge.Extended.Editor
                         EBalanceWarning.NoImpact => Colors.HintText,
                         _ => Colors.LabelText
                     };
-                    statsRow.Add(CreateStatCard($"⚠ {GetWarningShortName(kvp.Key)}", kvp.Value.ToString(), color));
+                    statsRow.Add(CreateStatCard(GetWarningShortName(kvp.Key), kvp.Value.ToString(), color));
                 }
             }
             
@@ -687,7 +685,7 @@ namespace FarEmerald.PlayForge.Extended.Editor
             topContainer.style.marginRight = 8;
             rankingsRow.Add(topContainer);
             
-            topContainer.Add(CreateSectionLabel("🔝 Highest Power", 0));
+            topContainer.Add(CreateSectionLabel("Highest Power", 0));
             foreach (var analysis in analyses.OrderByDescending(a => a.TotalPowerScore).Take(5))
             {
                 topContainer.Add(CreateRankingRow(analysis, GetPowerColor(analysis.Percentile)));
@@ -699,7 +697,7 @@ namespace FarEmerald.PlayForge.Extended.Editor
             bottomContainer.style.marginLeft = 8;
             rankingsRow.Add(bottomContainer);
             
-            bottomContainer.Add(CreateSectionLabel("🔻 Lowest Power", 0));
+            bottomContainer.Add(CreateSectionLabel("Lowest Power", 0));
             foreach (var analysis in analyses.OrderBy(a => a.TotalPowerScore).Take(5))
             {
                 bottomContainer.Add(CreateRankingRow(analysis, GetPowerColor(analysis.Percentile)));
@@ -709,7 +707,7 @@ namespace FarEmerald.PlayForge.Extended.Editor
             var warnings = analyses.Where(a => a.Warning != EBalanceWarning.None).ToList();
             if (warnings.Any())
             {
-                container.Add(CreateSectionLabel("⚠ Warnings", 12));
+                container.Add(CreateSectionLabel("Warnings", 12));
                 foreach (var analysis in warnings.Take(10))
                 {
                     container.Add(CreateWarningRow(analysis));
@@ -962,10 +960,9 @@ namespace FarEmerald.PlayForge.Extended.Editor
                 EditorGUIUtility.PingObject(analysis.Asset);
             });
             
-            var icon = new Label("⚠");
-            icon.style.color = warningColor;
+            var icon = new ForgeGlyph(ForgeGlyphShape.Warning);
+            icon.AddToClassList("pf-glyph--warning");
             icon.style.marginRight = 6;
-            icon.style.fontSize = 10;
             row.Add(icon);
             
             var nameLabel = new Label(GetAssetDisplayName(analysis.Asset));
@@ -1362,10 +1359,8 @@ namespace FarEmerald.PlayForge.Extended.Editor
             headerBox.Add(headerRow);
             
             var typeInfo = AssetTypes.FirstOrDefault(t => t.Type == analysis.Asset.GetType());
-            var icon = new Label(typeInfo?.Icon ?? "?");
-            icon.style.fontSize = 22;
+            var icon = new ForgeTypeIcon(analysis.Asset.GetType());
             icon.style.marginRight = 10;
-            icon.style.color = typeInfo?.Color ?? Colors.LabelText;
             headerRow.Add(icon);
             
             var titleContainer = new VisualElement();
@@ -1407,8 +1402,8 @@ namespace FarEmerald.PlayForge.Extended.Editor
                 warningRow.style.alignItems = Align.Center;
                 headerBox.Add(warningRow);
                 
-                var warningIcon = new Label("⚠");
-                warningIcon.style.color = Colors.AccentYellow;
+                var warningIcon = new ForgeGlyph(ForgeGlyphShape.Warning);
+                warningIcon.AddToClassList("pf-glyph--warning");
                 warningIcon.style.marginRight = 6;
                 warningRow.Add(warningIcon);
                 
@@ -2054,10 +2049,10 @@ namespace FarEmerald.PlayForge.Extended.Editor
         {
             return group switch
             {
-                EAnalysisGroup.Effects => ("✦", "Effects"),
-                EAnalysisGroup.Abilities => ("⚡", "Abilities"),
-                EAnalysisGroup.Items => ("🎁", "Items"),
-                EAnalysisGroup.Entities => ("👤", "Entities"),
+                EAnalysisGroup.Effects => ("", "Effects"),
+                EAnalysisGroup.Abilities => ("", "Abilities"),
+                EAnalysisGroup.Items => ("", "Items"),
+                EAnalysisGroup.Entities => ("", "Entities"),
                 _ => ("?", "Unknown")
             };
         }
@@ -2081,7 +2076,7 @@ namespace FarEmerald.PlayForge.Extended.Editor
                 InvalidateAnalysisCache();
                 ShowTab(2);
             });
-            btn.text = $"{icon} {name}";
+            btn.text = string.IsNullOrEmpty(icon) ? name : $"{icon} {name}";
             btn.style.paddingLeft = 10;
             btn.style.paddingRight = 10;
             btn.style.paddingTop = 5;
@@ -2111,7 +2106,7 @@ namespace FarEmerald.PlayForge.Extended.Editor
         {
             bool isSelected = analysisViewMode == mode;
             var btn = new Button();
-            btn.text = $"{icon} {name}";
+            btn.text = string.IsNullOrEmpty(icon) ? name : $"{icon} {name}";
             btn.style.paddingLeft = 8;
             btn.style.paddingRight = 8;
             btn.style.paddingTop = 3;

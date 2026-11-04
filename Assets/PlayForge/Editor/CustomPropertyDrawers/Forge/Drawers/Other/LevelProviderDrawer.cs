@@ -21,6 +21,8 @@ namespace FarEmerald.PlayForge.Extended.Editor
         public override VisualElement CreatePropertyGUI(SerializedProperty property)
         {
             var root = new VisualElement();
+            // The style sheet sizes and colors the kit's glyphs, wherever the drawer is drawn: in Unity's own inspector too (ED-20)
+            ForgeTheme.Apply(root);
             root.style.marginTop = 2;
             root.style.marginBottom = 4;
             
@@ -54,10 +56,8 @@ namespace FarEmerald.PlayForge.Extended.Editor
             container.style.borderLeftColor = isLinked ? Colors.AccentGreen : Colors.HintText;
             
             // Link icon
-            var linkIcon = new Label(isLinked ? "🔗" : "○");
-            linkIcon.style.fontSize = 12;
+            var linkIcon = new ForgeGlyph(isLinked ? ForgeGlyphShape.Link : ForgeGlyphShape.None);
             linkIcon.style.width = 20;
-            linkIcon.style.color = isLinked ? Colors.AccentGreen : Colors.HintText;
             linkIcon.tooltip = isLinked ? "Linked to level provider" : "No link (standalone effect)";
             container.Add(linkIcon);
             
@@ -276,13 +276,15 @@ namespace FarEmerald.PlayForge.Extended.Editor
         private void CreateGUI()
         {
             var root = rootVisualElement;
+            // The style sheet sizes and colors the kit's glyphs (ED-20)
+            ForgeTheme.Apply(root);
             root.style.paddingLeft = 12;
             root.style.paddingRight = 12;
             root.style.paddingTop = 12;
             root.style.paddingBottom = 12;
             
             // Header
-            var header = new Label("🔗 Select Level Provider");
+            var header = new Label("Select Level Provider");
             header.style.fontSize = 14;
             header.style.unityFontStyleAndWeight = FontStyle.Bold;
             header.style.color = Colors.HeaderText;
@@ -312,7 +314,7 @@ namespace FarEmerald.PlayForge.Extended.Editor
             tabBar.style.marginBottom = 8;
             root.Add(tabBar);
             
-            var tabs = new[] { "All", "⚔ Abilities", "👤 Entities" };
+            var tabs = new[] { "All", "Abilities", "Entities" };
             for (int i = 0; i < tabs.Length; i++)
             {
                 int tabIndex = i;
@@ -438,11 +440,8 @@ namespace FarEmerald.PlayForge.Extended.Editor
                 var providerInterface = provider as ILevelProvider;
                 
                 // Type icon
-                var icon = provider is Ability ? "⚔" : "👤";
-                var iconLabel = new Label(icon);
-                iconLabel.style.fontSize = 12;
-                iconLabel.style.width = 20;
-                iconLabel.style.color = provider is Ability ? Colors.AccentBlue : Colors.AccentOrange;
+                var iconLabel = new ForgeTypeIcon(provider.GetType());
+                iconLabel.style.marginRight = 4;
                 row.Add(iconLabel);
                 
                 // Name

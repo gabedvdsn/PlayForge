@@ -78,7 +78,7 @@ namespace FarEmerald.PlayForge.Extended.Editor
             root.style.paddingBottom = 12;
             
             // Header
-            var header = new Label("🧙 Quick Fill Wizard");
+            var header = new Label("Quick Fill Wizard");
             header.style.fontSize = 14;
             header.style.unityFontStyleAndWeight = FontStyle.Bold;
             header.style.color = Colors.AccentPurple;

@@ -230,8 +230,7 @@ namespace FarEmerald.PlayForge.Extended.Editor
             item.Add(labelElement);
             
             // Preview button (optional - shows what will be imported)
-            var previewBtn = new Button(() => PreviewImport(asset)) { text = "👁", tooltip = "Preview" };
-            previewBtn.style.width = 24;
+            var previewBtn = new Button(() => PreviewImport(asset)) { text = "Preview", tooltip = "Preview" };
             previewBtn.style.height = 20;
             previewBtn.style.marginRight = 4;
             previewBtn.style.fontSize = 10;

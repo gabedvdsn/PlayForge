@@ -186,7 +186,7 @@ namespace FarEmerald.PlayForge.Extended.Editor
             foreach (var typeInfo in AssetTypes)
             {
                 var count = CountAssetsOfType(typeInfo.Type);
-                var btn = CreateTypeFilterButton($"{typeInfo.Icon} {typeInfo.DisplayName}", typeInfo.Type, typeInfo.Color, count);
+                var btn = CreateTypeFilterButton(typeInfo.DisplayName, typeInfo.Type, typeInfo.Color, count);
                 typeBar.Add(btn);
                 typeFilterButtons.Add(btn);
             }
@@ -203,7 +203,7 @@ namespace FarEmerald.PlayForge.Extended.Editor
             
             // Tags button
             var tagCount = ForgeTagRegistry.GetAllTags().Count();
-            var tagsBtn = CreateSecondaryFilterButton("🏷 Tags", Colors.AccentCyan, showTagsView, tagCount);
+            var tagsBtn = CreateSecondaryFilterButton("Tags", Colors.AccentCyan, showTagsView, tagCount);
             tagsBtn.clicked += () =>
             {
                 showTagsView = !showTagsView;
@@ -228,7 +228,7 @@ namespace FarEmerald.PlayForge.Extended.Editor
             // Requirements button
             var reqRecords = GetRequirementsCache();
             var uniqueReqTags = reqRecords.Select(r => r.TagName).Distinct().Count();
-            var requirementsBtn = CreateSecondaryFilterButton("⚡ Requirements", RequirementColor, showRequirementsView, uniqueReqTags);
+            var requirementsBtn = CreateSecondaryFilterButton("Requirements", RequirementColor, showRequirementsView, uniqueReqTags);
             requirementsBtn.clicked += () =>
             {
                 showRequirementsView = !showRequirementsView;
@@ -276,9 +276,8 @@ namespace FarEmerald.PlayForge.Extended.Editor
             searchBar.style.marginBottom = 8;
             contentContainer.Add(searchBar);
             
-            var searchIcon = new Label("🔍");
+            var searchIcon = new ForgeGlyph(ForgeGlyphShape.Search);
             searchIcon.style.marginRight = 6;
-            searchIcon.style.color = Colors.HintText;
             searchBar.Add(searchIcon);
             
             var searchField = new TextField();
@@ -888,7 +887,7 @@ namespace FarEmerald.PlayForge.Extended.Editor
 
             // Named-groups-only toggle — surfaces explicitly-authored groups so designers can
             // audit naming conventions without hunting through anonymous defaults.
-            var namedBtn = new Button { text = requirementsNamedOnly ? "🏷 Named Only ✓" : "🏷 Named Only" };
+            var namedBtn = new Button { text = requirementsNamedOnly ? "Named Only ✓" : "Named Only" };
             StyleSmallFilterButton(namedBtn, requirementsNamedOnly, Colors.AccentCyan);
             namedBtn.tooltip = "Show only requirements that belong to a named AvoidRequireTagGroup";
             namedBtn.clicked += () => { requirementsNamedOnly = !requirementsNamedOnly; ShowTab(1); };
@@ -1098,7 +1097,7 @@ namespace FarEmerald.PlayForge.Extended.Editor
                     assetRow.RegisterCallback<MouseLeaveEvent>(_ => assetRow.style.backgroundColor = Color.clear);
                     assetRow.RegisterCallback<ClickEvent>(_ => { Selection.activeObject = record.Asset; EditorGUIUtility.PingObject(record.Asset); });
 
-                    assetRow.Add(CreateLabel(typeInfo?.Icon ?? "?", 20, 10, typeInfo?.Color ?? Colors.HintText));
+                    assetRow.Add(new ForgeTypeIcon(typeInfo?.Type));
 
                     if (!string.IsNullOrEmpty(record.GroupName))
                     {
@@ -1171,9 +1170,9 @@ namespace FarEmerald.PlayForge.Extended.Editor
             filterBar.Add(assetLabel);
             
             filterBar.Add(CreateScalerAssetTypeFilterButton("All", null));
-            filterBar.Add(CreateScalerAssetTypeFilterButton("⚡ Ability", typeof(Ability)));
-            filterBar.Add(CreateScalerAssetTypeFilterButton("✦ Effect", typeof(GameplayEffect)));
-            filterBar.Add(CreateScalerAssetTypeFilterButton("📦 Item", typeof(Item)));
+            filterBar.Add(CreateScalerAssetTypeFilterButton("Ability", typeof(Ability)));
+            filterBar.Add(CreateScalerAssetTypeFilterButton("Effect", typeof(GameplayEffect)));
+            filterBar.Add(CreateScalerAssetTypeFilterButton("Item", typeof(Item)));
 
             filterBar.Add(CreateFilterSeparator());
 
@@ -1473,7 +1472,7 @@ namespace FarEmerald.PlayForge.Extended.Editor
             row.RegisterCallback<ClickEvent>(_ => { Selection.activeObject = record.Asset; EditorGUIUtility.PingObject(record.Asset); });
             
             var typeInfo = AssetTypes.FirstOrDefault(t => t.Type == record.Asset.GetType());
-            row.Add(CreateLabel(typeInfo?.Icon ?? "?", 20, 10, typeInfo?.Color ?? Colors.HintText));
+            row.Add(new ForgeTypeIcon(typeInfo?.Type));
             
             // Show scaler name if available
             if (!string.IsNullOrEmpty(record.Scaler.Name))
@@ -1984,8 +1983,7 @@ namespace FarEmerald.PlayForge.Extended.Editor
 
             // Copy button — pinned to the right
             pathRow.Add(CreateSpacer());
-            var copyBtn = new Button { text = "📋", tooltip = "Copy full path to clipboard", focusable = false };
-            copyBtn.style.width = 24;
+            var copyBtn = new Button { text = "Copy", tooltip = "Copy full path to clipboard", focusable = false };
             copyBtn.style.height = 20;
             copyBtn.style.fontSize = 10;
             copyBtn.style.paddingLeft = 2;
@@ -2085,7 +2083,7 @@ namespace FarEmerald.PlayForge.Extended.Editor
                 assetRow.RegisterCallback<MouseLeaveEvent>(_ => assetRow.style.backgroundColor = Color.clear);
                 assetRow.RegisterCallback<ClickEvent>(_ => { Selection.activeObject = asset; EditorGUIUtility.PingObject(asset); });
 
-                assetRow.Add(CreateLabel(typeInfo?.Icon ?? "?", 20, 10, typeInfo?.Color ?? Colors.HintText));
+                assetRow.Add(new ForgeTypeIcon(typeInfo?.Type));
                 assetRow.Add(CreateLabel(GetAssetDisplayName(asset), 0, 10, Colors.LabelText, true));
                 assetRow.Add(CreateBadge(typeInfo?.DisplayName ?? "Asset", 0, typeInfo?.Color ?? Colors.HintText));
                 content.Add(assetRow);
@@ -2498,11 +2496,10 @@ namespace FarEmerald.PlayForge.Extended.Editor
             // Visualize button for supported types
             if (typeInfo != null && typeInfo.CanVisualize)
             {
-                var vizBtn = new Button { text = "👁", tooltip = "Open Visualizer" };
+                var vizBtn = new Button { text = "Visualize", tooltip = "Open Visualizer" };
                 vizBtn.style.fontSize = 10;
-                vizBtn.style.width = 22;
-                vizBtn.style.paddingLeft = 0;
-                vizBtn.style.paddingRight = 0;
+                vizBtn.style.paddingLeft = 4;
+                vizBtn.style.paddingRight = 4;
                 vizBtn.style.marginRight = 2;
                 vizBtn.style.borderTopLeftRadius = 3;
                 vizBtn.style.borderTopRightRadius = 3;
@@ -2562,7 +2559,7 @@ namespace FarEmerald.PlayForge.Extended.Editor
             foreach (var group in assets.GroupBy(a => a.GetType()).OrderBy(g => g.Key.Name))
             {
                 var typeInfo = AssetTypes.FirstOrDefault(t => t.Type == group.Key);
-                var header = CreateGroupHeader(typeInfo?.Icon ?? "?", typeInfo?.DisplayName ?? group.Key.Name, group.Count(), typeInfo?.Color ?? Colors.AccentGray);
+                var header = CreateGroupHeader("", typeInfo?.DisplayName ?? group.Key.Name, group.Count(), typeInfo?.Color ?? Colors.AccentGray);
                 header.RegisterCallback<ClickEvent>(_ => { showTagsView = false; showScalersView = false; showRequirementsView = false; selectedTypeFilter = group.Key; ShowTab(1); });
                 header.RegisterCallback<MouseEnterEvent>(_ => header.style.backgroundColor = new Color(0.25f, 0.25f, 0.25f, 0.9f));
                 header.RegisterCallback<MouseLeaveEvent>(_ => header.style.backgroundColor = new Color(0.18f, 0.18f, 0.18f, 0.8f));

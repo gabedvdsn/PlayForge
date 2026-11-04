@@ -48,14 +48,14 @@ namespace FarEmerald.PlayForge.Extended.Editor
         // Asset type metadata for UI
         public static readonly List<AssetTypeInfo> AssetTypes = new List<AssetTypeInfo>
         {
-            new AssetTypeInfo(typeof(Ability), "Ability", "⚡", Colors.AssetAbility, "Ability definition", true, true),
-            new AssetTypeInfo(typeof(GameplayEffect), "Effect", "✦", Colors.AssetEffect, "Gameplay effect definition", true, true),
-            new AssetTypeInfo(typeof(Item), "Item", "🎁", Colors.AssetItem, "Item with effects & abilities", true, true),
-            new AssetTypeInfo(typeof(Attribute), "Attribute", "📈", Colors.AssetAttribute, "Base stat definition", true, false),
-            new AssetTypeInfo(typeof(AttributeSet), "Attribute Set", "📊", Colors.AssetAttributeSet, "Collection of attributes", true, true),
-            new AssetTypeInfo(typeof(EntityIdentity), "Entity", "👤", Colors.AssetEntity, "Entity configuration", true, true),
-            new AssetTypeInfo(typeof(ScalerPipeline), "Scaler", "📋", Colors.AssetScaler, "Reusable scaler configuration", true, false),
-            new AssetTypeInfo(typeof(RequirementTemplate), "Requirement", "📋", Colors.AssetRequirements, "Reusable tag requirement configuration", true, false),
+            new AssetTypeInfo(typeof(Ability), "Ability", "", Colors.AssetAbility, "Ability definition", true, true),
+            new AssetTypeInfo(typeof(GameplayEffect), "Effect", "", Colors.AssetEffect, "Gameplay effect definition", true, true),
+            new AssetTypeInfo(typeof(Item), "Item", "", Colors.AssetItem, "Item with effects & abilities", true, true),
+            new AssetTypeInfo(typeof(Attribute), "Attribute", "", Colors.AssetAttribute, "Base stat definition", true, false),
+            new AssetTypeInfo(typeof(AttributeSet), "Attribute Set", "", Colors.AssetAttributeSet, "Collection of attributes", true, true),
+            new AssetTypeInfo(typeof(EntityIdentity), "Entity", "", Colors.AssetEntity, "Entity configuration", true, true),
+            new AssetTypeInfo(typeof(ScalerPipeline), "Scaler", "", Colors.AssetScaler, "Reusable scaler configuration", true, false),
+            new AssetTypeInfo(typeof(RequirementTemplate), "Requirement", "", Colors.AssetRequirements, "Reusable tag requirement configuration", true, false),
         };
         
         // ═══════════════════════════════════════════════════════════════════════════
@@ -230,7 +230,7 @@ namespace FarEmerald.PlayForge.Extended.Editor
             header.style.borderBottomColor = Colors.BorderDark;
             root.Add(header);
             
-            var titleLabel = new Label("⚒ PLAYFORGE");
+            var titleLabel = new Label("The Forge");
             titleLabel.style.fontSize = 16;
             titleLabel.style.unityFontStyleAndWeight = FontStyle.Bold;
             titleLabel.style.color = Colors.HeaderText;
@@ -249,13 +249,13 @@ namespace FarEmerald.PlayForge.Extended.Editor
             foreach (var typeInfo in AssetTypes.Take(5))
             {
                 var count = CountAssetsOfType(typeInfo.Type);
-                var stat = CreateCompactStat(typeInfo.Icon, count.ToString(), typeInfo.Color);
+                var stat = CreateCompactStat(typeInfo.DisplayName, count.ToString(), typeInfo.Color);
                 stat.tooltip = $"{count} {typeInfo.DisplayName}(s)";
                 statsContainer.Add(stat);
             }
             
             var tagCount = ForgeTagRegistry.GetAllTags().Count();
-            var tagStat = CreateCompactStat("🏷", tagCount.ToString(), Colors.AccentCyan);
+            var tagStat = CreateCompactStat("Tags", tagCount.ToString(), Colors.AccentCyan);
             tagStat.tooltip = $"{tagCount} unique tag(s)";
             statsContainer.Add(tagStat);
             

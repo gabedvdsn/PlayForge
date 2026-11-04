@@ -137,9 +137,7 @@ namespace FarEmerald.PlayForge.Extended.Editor
             card.RegisterCallback<MouseLeaveEvent>(_ => 
                 card.style.backgroundColor = new Color(0.18f, 0.18f, 0.18f, 1f));
             
-            var icon = new Label(typeInfo.Icon);
-            icon.style.fontSize = 24;
-            icon.style.unityTextAlign = TextAnchor.MiddleCenter;
+            var icon = new ForgeTypeIcon(typeInfo.Type);
             card.Add(icon);
             
             var name = new Label(typeInfo.DisplayName);
@@ -185,10 +183,8 @@ namespace FarEmerald.PlayForge.Extended.Editor
                 row.style.backgroundColor = new Color(0.18f, 0.18f, 0.18f, 0.5f));
             
             var typeInfo = AssetTypes.FirstOrDefault(t => t.Type == asset.GetType());
-            var icon = new Label(typeInfo?.Icon ?? "?");
-            icon.style.fontSize = 12;
-            icon.style.width = 20;
-            icon.style.color = typeInfo?.Color ?? Colors.HintText;
+            var icon = new ForgeTypeIcon(asset.GetType());
+            icon.style.marginRight = 4;
             row.Add(icon);
             
             var nameLabel = new Label(GetAssetDisplayName(asset));
@@ -580,7 +576,7 @@ namespace FarEmerald.PlayForge.Extended.Editor
             root.style.paddingTop = 16;
             root.style.paddingBottom = 16;
             
-            var header = new Label($"{typeInfo.Icon} New {typeInfo.DisplayName}");
+            var header = new Label($"New {typeInfo.DisplayName}");
             header.style.fontSize = 14;
             header.style.unityFontStyleAndWeight = FontStyle.Bold;
             header.style.color = typeInfo.Color;

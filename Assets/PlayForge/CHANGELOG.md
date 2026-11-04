@@ -15,6 +15,8 @@ tracks each fix below by its ID.
   theme. The header shows the type icon, the asset's name, its type and asset tag, then Open in The Forge, Help and a
   menu that holds import, the template and Visualize. It no longer shows the description or the asset's own icon. The
   Forge and the GAS Debugger take the editor's theme (ED-20).
+- The editor shows no emoji. Icons are vector glyphs in the theme's colors, The Forge shows each asset type's icon, and
+  a button that showed an emoji alone says what it does, such as Copy, Preview or Trash (ED-20).
 - PlayForge is licensed under the Unity Asset Store EULA.
 - The samples moved to `Samples~`, so Package Manager imports them on request: **Demos** and **Code Examples**. The
   TaskSequence and group process examples no longer compile into the runtime.

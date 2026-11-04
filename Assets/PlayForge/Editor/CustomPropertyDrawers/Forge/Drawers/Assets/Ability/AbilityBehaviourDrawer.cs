@@ -181,12 +181,7 @@ namespace FarEmerald.PlayForge.Extended.Editor
             });
             header.Add(collapseBtn);
 
-            // Icon and title
-            var iconLabel = new Label(Icons.Stack);
-            iconLabel.style.fontSize = 14;
-            iconLabel.style.marginRight = 6;
-            iconLabel.style.color = Colors.AccentOrange;
-            header.Add(iconLabel);
+            // Title
 
             var titleLabel = new Label("Asset Loaders");
             titleLabel.style.unityFontStyleAndWeight = FontStyle.Bold;
@@ -328,12 +323,7 @@ namespace FarEmerald.PlayForge.Extended.Editor
             });
             header.Add(collapseBtn);
             
-            // Icon and title
-            var iconLabel = new Label(Icons.Behavior);
-            iconLabel.style.fontSize = 14;
-            iconLabel.style.marginRight = 6;
-            iconLabel.style.color = Colors.AccentBlue;
-            header.Add(iconLabel);
+            // Title
             
             var titleLabel = new Label("Execution Stages");
             titleLabel.style.unityFontStyleAndWeight = FontStyle.Bold;

@@ -24,6 +24,7 @@ namespace FarEmerald.PlayForge.Extended.Editor
         Add,
         Remove,
         Check,
+        Link,
 
         // Messages
         Info,
@@ -131,6 +132,10 @@ namespace FarEmerald.PlayForge.Extended.Editor
                     break;
                 case ForgeGlyphShape.Check:
                     pen.Line(ink, 2.2f, 2.5f, 8.5f, 6, 12, 13.5f, 4);
+                    break;
+                case ForgeGlyphShape.Link:
+                    pen.Capsule(ink, 1.5f, 5.6f, 10.4f);
+                    pen.Capsule(ink, 1.5f, 10.4f, 5.6f);
                     break;
                 case ForgeGlyphShape.Info:
                     pen.Ring(ink, 1.3f, 8, 8, 6.4f);
@@ -276,6 +281,28 @@ namespace FarEmerald.PlayForge.Extended.Editor
                 painter.Arc(At(8.1f, 6.28f), 1.9f * scale, new Angle(179.4f, AngleUnit.Degree), new Angle(425f, AngleUnit.Degree));
                 painter.BezierCurveTo(At(8.3f, 8.3f), At(8f, 8.7f), At(8f, 9.3f));
                 painter.LineTo(At(8f, 9.7f));
+                painter.Stroke();
+            }
+
+            // One link of a chain: a capsule on the diagonal from the lower left to the upper right, centered at x, y
+            public void Capsule(Color color, float width, float x, float y)
+            {
+                const float half = 1.9f, radius = 2.3f;
+                var axis = new Vector2(0.7071f, -0.7071f);
+                var side = new Vector2(0.7071f, 0.7071f);
+                var center = new Vector2(x, y);
+                var upper = center + axis * half;
+                var lower = center - axis * half;
+                Pencil(color, width);
+                painter.BeginPath();
+                painter.MoveTo(At(lower.x + side.x * radius, lower.y + side.y * radius));
+                painter.LineTo(At(upper.x + side.x * radius, upper.y + side.y * radius));
+                painter.Arc(At(upper.x, upper.y), radius * scale, new Angle(45f, AngleUnit.Degree), new Angle(-135f, AngleUnit.Degree),
+                    ArcDirection.CounterClockwise);
+                painter.LineTo(At(lower.x - side.x * radius, lower.y - side.y * radius));
+                painter.Arc(At(lower.x, lower.y), radius * scale, new Angle(225f, AngleUnit.Degree), new Angle(45f, AngleUnit.Degree),
+                    ArcDirection.CounterClockwise);
+                painter.ClosePath();
                 painter.Stroke();
             }
 

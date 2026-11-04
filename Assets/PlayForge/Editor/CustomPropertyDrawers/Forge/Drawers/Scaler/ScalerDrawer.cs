@@ -236,6 +236,8 @@ namespace FarEmerald.PlayForge.Extended.Editor
         public override VisualElement CreatePropertyGUI(SerializedProperty property)
         {
             var root = new VisualElement { name = "ScalerRoot" };
+            // The style sheet sizes and colors the kit's glyphs, wherever the drawer is drawn: in Unity's own inspector too (ED-20)
+            ForgeTheme.Apply(root);
             root.style.marginBottom = 4;
             BuildScalerUI(root, property);
             return root;
@@ -384,7 +386,8 @@ namespace FarEmerald.PlayForge.Extended.Editor
             label.style.fontSize = 11;
             header.Add(label);
             
-            var importBtn = new Button { text = "⬇", tooltip = "Import scaler from another asset" };
+            var importBtn = new Button { tooltip = "Import scaler from another asset" };
+            importBtn.Add(new ForgeGlyph(ForgeGlyphShape.Import));
             importBtn.style.width = 22;
             importBtn.style.height = 20;
             importBtn.style.marginRight = 4;
@@ -615,8 +618,7 @@ namespace FarEmerald.PlayForge.Extended.Editor
             // Linked indicator
             if (isLinked)
             {
-                var linkIcon = new Label("🔗");
-                linkIcon.style.fontSize = 9;
+                var linkIcon = new ForgeGlyph(ForgeGlyphShape.Link);
                 linkIcon.style.marginRight = 4;
                 linkIcon.tooltip = "Using linked level provider";
                 summary.Add(linkIcon);
@@ -775,8 +777,7 @@ namespace FarEmerald.PlayForge.Extended.Editor
                 infoBox.style.borderLeftWidth = 2;
                 infoBox.style.borderLeftColor = Colors.AccentGreen;
                 
-                var linkIcon = new Label("🔗");
-                linkIcon.style.fontSize = 10;
+                var linkIcon = new ForgeGlyph(ForgeGlyphShape.Link);
                 linkIcon.style.marginRight = 4;
                 infoBox.Add(linkIcon);
                 
@@ -834,9 +835,8 @@ namespace FarEmerald.PlayForge.Extended.Editor
                 warningBox.style.borderLeftWidth = 2;
                 warningBox.style.borderLeftColor = Colors.AccentYellow;
                 
-                var warnIcon = new Label("⚠");
-                warnIcon.style.fontSize = 10;
-                warnIcon.style.color = Colors.AccentYellow;
+                var warnIcon = new ForgeGlyph(ForgeGlyphShape.Warning);
+                warnIcon.AddToClassList("pf-glyph--warning");
                 warnIcon.style.marginRight = 4;
                 warningBox.Add(warnIcon);
                 
@@ -1021,7 +1021,7 @@ namespace FarEmerald.PlayForge.Extended.Editor
             
             // Edit curve button
             var editCurveBtn = new Button(() => CurveEditorWindow.Show(property));
-            editCurveBtn.text = "📈 Edit Curve";
+            editCurveBtn.text = "Edit Curve";
             editCurveBtn.style.height = 18;
             editCurveBtn.style.fontSize = 9;
             editCurveBtn.style.paddingLeft = 4;
@@ -1031,7 +1031,7 @@ namespace FarEmerald.PlayForge.Extended.Editor
             
             // Advanced wizard button
             var wizardBtn = new Button(() => QuickFillWizard.Show(property, () => ScheduleRebuild(root, property)));
-            wizardBtn.text = "🧙 Advanced";
+            wizardBtn.text = "Advanced";
             wizardBtn.tooltip = "Open advanced wizard with more options";
             wizardBtn.style.height = 18;
             wizardBtn.style.fontSize = 9;

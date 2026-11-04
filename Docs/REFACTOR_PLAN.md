@@ -529,7 +529,7 @@ had no letter in the review. TS-AA onward came from the test project.
 | ED-17 | M | 2 | Stray `Debug.Log` calls | `GameplayEffectImpactDrawer.cs:33`, `AssetBrowserWindow.cs:348`, `AbstractRefDrawer.cs:81`, `TagDrawer.cs:745`, `TheForge.ViewTab.cs:2009` | verified |
 | ED-18 | M | 4 | Collapse state lives in static dictionaries keyed by property path, so every asset shares it and a domain reload loses it. Each drawer now keeps it per asset for the editor session, in SessionState; a [SerializeReference] field's state follows the object it holds, and deleting a stage moves the later stages' states up with them | `AbilityTaskBehaviourStageDrawer.cs:31`, `AbilityBehaviourDrawer.cs:18-20` | fixed |
 | ED-19 | M | 2 | Naming drift: The Forge or PlayForge Manager, and no window's title matches its menu item. The top-level `PlayForge/` menu is not among the placements the Asset Store's rule 2.5.1.a describes: an existing menu such as `Window/`, or else `Tools/`. The docs follow whatever wins | `TheForge.cs:16-28, 88`, `GASDebugger.cs:134`, `GETTING_STARTED.md` | verified |
-| ED-20 | H | 4 | No theming: inline styles, hard-coded dark backgrounds, emoji icons, dead UXML and USS. Fixed so far: one style sheet, `Editor/UI/PlayForge.uss`, holds every value `Docs/EDITOR_STYLE.md` lists, in a Dark and a Light set, and a kit of controls reads it: the asset header, the section, the glyphs and the type icons. Every asset inspector's header and sections use the kit; The Forge and the GAS Debugger take the theme; the dead style sheet and layouts are gone. Left: the emoji. Each surface's own inline styles go with its redesign, Phase 4's fifth step | `TheForge.cs:183`, `GASDebugger.cs:108`, `ForgeDrawerStyles.cs:111-131` | open |
+| ED-20 | H | 4 | No theming: inline styles, hard-coded dark backgrounds, emoji icons, dead UXML and USS. Now one style sheet, `Editor/UI/PlayForge.uss`, holds every value `Docs/EDITOR_STYLE.md` lists, in a Dark and a Light set, and a kit of controls reads it: the asset header, the section, the glyphs and the type icons. Every asset inspector's header and sections use the kit; The Forge and the GAS Debugger take the theme; no editor text shows an emoji; the dead style sheet and layouts are gone. Each surface's own inline styles go with its redesign, Phase 4's fifth step | `TheForge.cs:183`, `GASDebugger.cs:108`, `ForgeDrawerStyles.cs:111-131` | fixed |
 | ED-21 | M | 4 | Settings live in EditorPrefs and are machine-wide | `EffectTemplateRegistry.cs:12, 46`, `TemplateRegistry.cs:175` | open |
 | ED-22 | H | 2 | A second project wipes the first project's templates: `TemplateRegistry` keeps one EditorPrefs JSON for every project on the machine, and `Save()` drops each template whose GUID doesn't resolve in the current project | `TemplateRegistry.cs:110, 164-177` | verified |
 | ED-23 | M | 2 | An Item's Local Data can't be edited: Items inherit `LocalData` and the five other asset editors draw it, but `ItemEditor` builds no section for it | `ItemEditor.cs:71-80`, `BaseForgeAsset.cs:11` | verified |
@@ -644,6 +644,20 @@ GAS-4 with GAS-5, PC-6, and TS-I with PC-5.
 ## Log
 
 Record baselines, gate results and notable decisions here, newest first.
+
+- 2026-11-04, **ED-20, part 2: no emoji.** The editor showed 102 emoji, as icons and inside its text: pictographs
+  such as a link, a clipboard or a mage, and symbols with an emoji form, such as the warning sign, the lightning bolt
+  and the gear, which an emoji font draws in color. Each is now one of three things:
+  - **A kit glyph:** Link (new), Warning, Search and Import, and the type icons where The Forge showed an asset's type.
+  - **A word,** on a button that was an icon alone: Copy, Preview, Visualize, Ping, Trash, Duplicate, All and Unlinked.
+  - **Nothing,** where it only decorated a text, as in "Quick Fill Wizard".
+  - **Where a glyph shows:** each drawer that shows one takes the theme on its own root, so the glyph is sized and
+    colored in Unity's own inspector too. The windows that show one do the same.
+  - **Left for the redesign:** text symbols with no emoji form, such as a check mark or an arrow, go with each
+    surface's redesign. ED-20 is fixed.
+  - **Its test,** `ED_20_No_editor_text_shows_an_emoji`, which scans the editor code, was seen failing first.
+  - **Tests:** PlayMode 945: 938 pass, 0 fail and 7 planted are skipped, in three orders. Planted 7 of 7; EditMode
+    372 of 372.
 
 - 2026-11-04, **ED-20, part 1: one style sheet and a kit of controls.** Phase 4's fourth step, in the style
   `Docs/EDITOR_STYLE.md` records (Decision 20).

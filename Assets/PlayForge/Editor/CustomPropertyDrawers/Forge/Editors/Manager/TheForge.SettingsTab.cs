@@ -686,7 +686,7 @@ namespace FarEmerald.PlayForge.Extended.Editor
         
         private Button CreateAssetTypeTabButton(AssetTypeInfo typeInfo, Action onClick)
         {
-            var btn = CreateButton($"{typeInfo.Icon} {typeInfo.DisplayName}", onClick);
+            var btn = CreateButton(typeInfo.DisplayName, onClick);
             btn.style.paddingLeft = 10;
             btn.style.paddingRight = 10;
             btn.style.paddingTop = 5;
@@ -738,9 +738,7 @@ namespace FarEmerald.PlayForge.Extended.Editor
             headerRow.style.marginBottom = 12;
             assetTypeContentContainer.Add(headerRow);
             
-            var iconLabel = new Label(typeInfo.Icon);
-            iconLabel.style.fontSize = 20;
-            iconLabel.style.color = typeInfo.Color;
+            var iconLabel = new ForgeTypeIcon(typeInfo.Type);
             iconLabel.style.marginRight = 8;
             headerRow.Add(iconLabel);
             
@@ -1542,7 +1540,7 @@ namespace FarEmerald.PlayForge.Extended.Editor
             row.style.alignItems = Align.Center;
             container.Add(row);
             
-            var label = new Label($"{typeInfo.Icon} {typeInfo.DisplayName}");
+            var label = new Label(typeInfo.DisplayName);
             label.style.width = 120;
             label.style.fontSize = 11;
             label.style.color = Colors.LabelText;

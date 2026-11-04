@@ -49,12 +49,12 @@ namespace FarEmerald.PlayForge.Extended.Editor
             var records = new List<ScalerImportRecord>();
             var assetTypeInfo = new Dictionary<Type, (string icon, string name)>
             {
-                { typeof(Ability), ("⚡", "Ability") },
-                { typeof(GameplayEffect), ("✦", "Effect") },
-                { typeof(Attribute), ("📈", "Attribute") },
-                { typeof(AttributeSet), ("📊", "AttrSet") },
-                { typeof(EntityIdentity), ("👤", "Entity") },
-                { typeof(ScalerPipeline), ("📋", "Template") },
+                { typeof(Ability), ("", "Ability") },
+                { typeof(GameplayEffect), ("", "Effect") },
+                { typeof(Attribute), ("", "Attribute") },
+                { typeof(AttributeSet), ("", "AttrSet") },
+                { typeof(EntityIdentity), ("", "Entity") },
+                { typeof(ScalerPipeline), ("", "Template") },
             };
             
             // First, add ScalerTemplate assets (they appear first and are highlighted)
@@ -74,7 +74,7 @@ namespace FarEmerald.PlayForge.Extended.Editor
                     Asset = template,
                     AssetName = template.DisplayName,
                     AssetTypeName = "Template",
-                    AssetTypeIcon = "📋",
+                    AssetTypeIcon = "",
                     FieldPath = "Scaler",
                     Context = !string.IsNullOrEmpty(template.Category) ? template.Category : "Template",
                     Scaler = scaler,
@@ -253,7 +253,7 @@ namespace FarEmerald.PlayForge.Extended.Editor
                 GUI.backgroundColor = new Color(0.3f, 0.5f, 0.7f, 0.3f);
                 EditorGUILayout.BeginHorizontal(EditorStyles.helpBox);
                 GUI.backgroundColor = Color.white;
-                EditorGUILayout.LabelField("📋 Templates", EditorStyles.boldLabel);
+                EditorGUILayout.LabelField("Templates", EditorStyles.boldLabel);
                 EditorGUILayout.LabelField($"({templates.Count})", EditorStyles.miniLabel, GUILayout.Width(40));
                 EditorGUILayout.EndHorizontal();
                 

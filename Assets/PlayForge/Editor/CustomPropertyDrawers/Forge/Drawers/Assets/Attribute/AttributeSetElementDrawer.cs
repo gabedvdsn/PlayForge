@@ -235,7 +235,7 @@ namespace FarEmerald.PlayForge.Extended.Editor
             tabHeaderRow.Add(importMagnitudeButton);
             tabHeaderRow.Add(importButton);
 
-            var linkToggle = new Toggle("🔗 Link Current to Base") { tooltip = "When ON, Current always mirrors Base. The Current tab is disabled and runtime resolution forwards Current → Base." };
+            var linkToggle = new Toggle("Link Current to Base") { tooltip = "When ON, Current always mirrors Base. The Current tab is disabled and runtime resolution forwards Current → Base." };
             linkToggle.style.flexGrow = 0;
             linkToggle.style.marginRight = 8;
             linkToggle.BindProperty(linkProp);
