@@ -22,6 +22,7 @@ namespace FarEmerald.PlayForge
             private set => Spec.IsEquipped = value;
         }
 
+        // Always 0 until stacking is built in Phase 5 (FEAT-14, GAS-51)
         public int ItemStacks { get; private set; }
 
         // ═══════════════════════════════════════════════════════════════════════════

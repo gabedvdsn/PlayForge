@@ -21,6 +21,7 @@ namespace FarEmerald.PlayForge
         [Tooltip("Icons and textures for this item.")]
         public List<TextureItem> Textures = new();
 
+        // Nothing reads this yet: stacking is built in Phase 5 (FEAT-14, GAS-51)
         [Tooltip("Maximum stack size")]
         public int MaxStackSize;
     }
