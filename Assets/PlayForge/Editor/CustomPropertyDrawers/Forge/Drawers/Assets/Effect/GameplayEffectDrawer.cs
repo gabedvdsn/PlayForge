@@ -1,554 +1,235 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Reflection;
 using System.Text.RegularExpressions;
 using FarEmerald.PlayForge;
 using FarEmerald.PlayForge.Extended;
 using UnityEditor;
+using UnityEditor.IMGUI.Controls;
 using UnityEditor.UIElements;
 using UnityEngine;
 using UnityEngine.UIElements;
 using static FarEmerald.PlayForge.Extended.Editor.ForgeDrawerStyles;
+using Object = UnityEngine.Object;
 
 namespace FarEmerald.PlayForge.Extended.Editor
 {
+    /// <summary>
+    /// A reference to an effect: Unity's object field, with Open or New beside it, and under it a line that says how the
+    /// effect takes its levels, with Link to make it take them from the asset that holds the field (ED-38). Its
+    /// right-click menu holds the field's template, a pick of the effects nothing links, and New Linked Effect. Setting
+    /// the field asked in a dialog whether to link the effect, and the template, the link filter and a create button sat
+    /// beside the field as tinted buttons.
+    /// </summary>
     [CustomPropertyDrawer(typeof(GameplayEffect))]
     public class GameplayEffectDrawer : AbstractForgeObjectDrawer<GameplayEffect>
     {
-        // Filter state - persisted per drawer instance
-        private bool _showOnlyUnlinked = false;
-        
-        protected override GameplayEffect[] GetEntries()
-        {
-            var all = base.GetEntries();
-            
-            if (_showOnlyUnlinked)
-            {
-                return all.Where(e => !e.IsLinked).ToArray();
-            }
-            
-            return all;
-        }
-        
         public override VisualElement CreatePropertyGUI(SerializedProperty prop)
         {
-            var root = new VisualElement();
+            var root = new VisualElement { name = "EffectReference" };
             // The style sheet sizes and colors the kit's glyphs, wherever the drawer is drawn: in Unity's own inspector too (ED-20)
             ForgeTheme.Apply(root);
-            
-            // Try to find the parent ILevelProvider context
-            var parentProvider = FindParentLevelProvider(prop);
-            var parentAsset = GetParentProviderAsset(prop);
-            
-            // Check for template attribute
-            var templateAttr = GetTemplateAttribute(prop);
-            var templateKey = templateAttr?.TemplateKey;
-            var hasTemplate = !string.IsNullOrEmpty(templateKey) && EffectTemplateRegistry.HasTemplate(templateKey);
-            
-            // Main row with picker and action buttons
-            var mainRow = new VisualElement();
-            mainRow.style.flexDirection = FlexDirection.Row;
-            mainRow.style.alignItems = Align.Center;
-            root.Add(mainRow);
-            
-            // Add the base picker UI
-            var baseUI = base.CreatePropertyGUI(prop);
-            baseUI.style.flexGrow = 1;
-            mainRow.Add(baseUI);
-            
-            // Action buttons container (toolbar style)
-            var actionsContainer = new VisualElement();
-            actionsContainer.style.flexDirection = FlexDirection.Row;
-            actionsContainer.style.marginLeft = 4;
-            mainRow.Add(actionsContainer);
-            
-            // Get value button reference for updates
-            var valueBtn = baseUI.Q<Button>("ValueButton");
-            
-            // Template import button (only show if template exists and field is empty)
-            Button templateBtn = null;
-            if (hasTemplate)
-            {
-                templateBtn = CreateActionButton("", $"Import from {templateAttr.DisplayName} template", 
-                    new Color(0.4f, 0.5f, 0.6f));
-                templateBtn.Add(new ForgeGlyph(ForgeGlyphShape.Import));
-                templateBtn.name = "TemplateBtn";
-                templateBtn.clicked += () =>
-                {
-                    ImportFromTemplate(prop, templateKey, parentProvider, parentAsset, valueBtn, templateBtn);
-                };
-                actionsContainer.Add(templateBtn);
-                
-                // Hide if field already has value
-                var currentEffect = GetCurrentValue(prop);
-                templateBtn.style.display = currentEffect == null ? DisplayStyle.Flex : DisplayStyle.None;
-            }
-            
-            // Filter toggle button
-            var filterBtn = CreateActionButton(_showOnlyUnlinked ? "Unlinked" : "All", 
-                _showOnlyUnlinked ? "Showing unlinked only - Click to show all" : "Showing all - Click to show unlinked only",
-                _showOnlyUnlinked ? new Color(0.4f, 0.5f, 0.3f) : Colors.ButtonBackground);
-            // A word, not an icon: it was a padlock or a clipboard emoji (ED-20)
-            filterBtn.style.width = StyleKeyword.Auto;
-            filterBtn.style.paddingLeft = 4;
-            filterBtn.style.paddingRight = 4;
-            filterBtn.clicked += () =>
-            {
-                _showOnlyUnlinked = !_showOnlyUnlinked;
-                filterBtn.text = _showOnlyUnlinked ? "Unlinked" : "All";
-                filterBtn.tooltip = _showOnlyUnlinked ? "Showing unlinked only - Click to show all" : "Showing all - Click to show unlinked only";
-                filterBtn.style.backgroundColor = _showOnlyUnlinked ? new Color(0.4f, 0.5f, 0.3f) : Colors.ButtonBackground;
-            };
-            actionsContainer.Add(filterBtn);
-            
-            // Create new effect button (only show if we have a parent provider to link to)
-            if (parentProvider != null)
-            {
-                var createBtn = CreateActionButton("+", $"Create new effect linked to {parentProvider.GetProviderName()}",
-                    new Color(0.3f, 0.5f, 0.3f));
-                createBtn.style.unityFontStyleAndWeight = FontStyle.Bold;
-                createBtn.clicked += () =>
-                {
-                    ShowCreateEffectDialog(prop, parentAsset, parentProvider, templateKey);
-                };
-                actionsContainer.Add(createBtn);
-            }
-            
-            // BuildGoButton(prop, actionsContainer);
-            
-            // Add link info section
-            var linkSection = new VisualElement { name = "LinkSection" };
-            root.Add(linkSection);
-            
-            // Build initial link info
-            BuildLinkInfo(linkSection, prop, parentProvider);
-            
-            // Watch for changes
-            root.RegisterCallback<ChangeEvent<UnityEngine.Object>>(evt =>
-            {
-                if (evt.target == root || root.Contains(evt.target as VisualElement))
-                {
-                    var newEffect = evt.newValue as GameplayEffect;
-                    
-                    // Update template button visibility
-                    if (templateBtn != null)
-                    {
-                        templateBtn.style.display = newEffect == null ? DisplayStyle.Flex : DisplayStyle.None;
-                    }
-                    
-                    // Handle effect assignment with linking prompt
-                    if (newEffect != null && parentProvider != null)
-                    {
-                        HandleEffectAssignment(prop, newEffect, parentProvider, parentAsset);
-                    }
-                    root.schedule.Execute(() =>
-                    {
-                        BuildGoButton(prop, actionsContainer);
-                        BuildLinkInfo(linkSection, prop, parentProvider);
-                    });
-                }
-            });
-            
-            // The link info and the Go button follow the field, and the effect it names as that effect's link changes,
-            // an Undo among them; they rebuilt every 500 ms for as long as the inspector stayed open (ED-11)
-            VisualElement referencedWatch = null;
-            void Refresh()
-            {
-                BuildLinkInfo(linkSection, prop, parentProvider);
-                BuildGoButton(prop, actionsContainer);
-            }
-            void WatchReferenced()
-            {
-                referencedWatch?.RemoveFromHierarchy();
-                referencedWatch = new VisualElement { name = "ReferencedEffectWatch" };
-                root.Add(referencedWatch);
-                if (GetCurrentValue(prop) is GameplayEffect referenced)
-                    referencedWatch.TrackSerializedObjectValue(new SerializedObject(referenced), _ => Refresh());
-            }
-            root.TrackPropertyValue(prop, _ =>
-            {
-                Refresh();
-                WatchReferenced();
-            });
-            WatchReferenced();
+            root.Add(base.CreatePropertyGUI(prop));
+            var field = root.Q<ObjectField>("Reference");
+            var holder = prop.serializedObject.targetObject as BaseForgeLevelProvider;
 
+            var line = new VisualElement { name = "EffectLink" };
+            line.AddToClassList("pf-link-line");
+            root.Add(line);
+
+            // The line follows the field, and the effect it names as that effect's link changes, an Undo among them; it
+            // rebuilt every 500 ms for as long as the inspector stayed open (ED-11)
+            VisualElement watch = null;
+            GameplayEffect watched = null;
+            void Refresh(GameplayEffect effect)
+            {
+                ShowLink(line, effect, holder, () => Refresh(field.value as GameplayEffect));
+                if (effect == watched) return;
+                watched = effect;
+                watch?.RemoveFromHierarchy();
+                watch = null;
+                if (effect == null) return;
+                watch = new VisualElement { name = "ReferencedEffectWatch" };
+                root.Add(watch);
+                watch.TrackSerializedObjectValue(new SerializedObject(effect), _ => Refresh(field.value as GameplayEffect));
+            }
+            field.RegisterValueChangedCallback(change => Refresh(change.newValue as GameplayEffect));
+            root.TrackPropertyValue(prop, property => Refresh(property.objectReferenceValue as GameplayEffect));
+            Refresh(prop.objectReferenceValue as GameplayEffect);
             return root;
         }
 
-        // The "Go to" button is switched off for now; set this to bring it back. A readonly field rather
-        // than an early return, so the code below isn't unreachable (PF-009)
-        private static readonly bool ShowGoButton = false;
+        // ═══════════════════════════════════════════════════════════════════════════
+        // How the effect takes its levels
+        // ═══════════════════════════════════════════════════════════════════════════
 
-        void BuildGoButton(SerializedProperty prop, VisualElement container)
+        // On a line of its own: from the asset that holds the field, from another asset, or from none, with Link to make
+        // it take the holder's, as one Undo step. A dialog asked this as the field was set, and again when the effect was
+        // linked elsewhere (ED-38)
+        private static void ShowLink(VisualElement line, GameplayEffect effect, BaseForgeLevelProvider holder, Action refresh)
         {
-            if (!ShowGoButton) return;
-            
-            var btn = container.Q("GoBtn");
-            if (btn is not null) container.Remove(btn);
-            
-            var effect = GetCurrentValue(prop);
-            if (effect is not null)
+            line.Clear();
+            var shown = effect != null && holder != null && holder != effect;
+            line.style.display = shown ? DisplayStyle.Flex : DisplayStyle.None;
+            if (!shown) return;
+
+            if (effect.IsLinkedTo(holder))
             {
-                var goBtn = CreateActionButton(Icons.Arrow, $"Go to \"{effect.GetName()}\"", Colors.AccentBlue);
-                goBtn.name = "GoBtn";
-                goBtn.style.unityFontStyleAndWeight = FontStyle.Bold;
-                goBtn.clicked += () =>
+                line.Add(new ForgeGlyph(ForgeGlyphShape.Link));
+                line.Add(LineText($"Linked to {NameOf(holder)} · {Levels(holder)}"));
+                return;
+            }
+            if (effect.IsLinked)
+            {
+                line.Add(new ForgeGlyph(ForgeGlyphShape.Link));
+                line.Add(LineText($"Linked to {NameOf(effect.LinkedProvider)}"));
+                line.Add(LinkButton("Link Here", effect, holder, refresh));
+                return;
+            }
+            var warning = new ForgeGlyph(ForgeGlyphShape.Warning);
+            warning.AddToClassList("pf-glyph--warning");
+            line.Add(warning);
+            line.Add(LineText("Not linked"));
+            line.Add(LinkButton("Link", effect, holder, refresh));
+        }
+
+        private static Label LineText(string text)
+        {
+            var label = new Label(text);
+            label.AddToClassList("pf-link-line__text");
+            return label;
+        }
+
+        private static Button LinkButton(string text, GameplayEffect effect, BaseForgeLevelProvider holder, Action refresh)
+        {
+            var button = new Button(() =>
+            {
+                if (effect.HasCircularDependency(holder, out _, out var chain))
                 {
-                    Selection.activeObject = effect;
-                    EditorGUIUtility.PingObject(effect);
-                };
-                container.Add(goBtn);
-            }
-        }
-        
-        // ═══════════════════════════════════════════════════════════════════════════
-        // Action Button Helper
-        // ═══════════════════════════════════════════════════════════════════════════
-        
-        private Button CreateActionButton(string text, string tooltip, Color bgColor)
-        {
-            var btn = new Button();
-            btn.text = text;
-            btn.tooltip = tooltip;
-            btn.focusable = false;
-            btn.style.width = 22;
-            btn.style.height = 18;
-            btn.style.fontSize = 10;
-            btn.style.marginLeft = 2;
-            btn.style.paddingLeft = 0;
-            btn.style.paddingRight = 0;
-            btn.style.paddingTop = 0;
-            btn.style.paddingBottom = 0;
-            btn.style.unityTextAlign = TextAnchor.MiddleCenter;
-            btn.style.backgroundColor = bgColor;
-            btn.style.borderTopLeftRadius = 3;
-            btn.style.borderTopRightRadius = 3;
-            btn.style.borderBottomLeftRadius = 3;
-            btn.style.borderBottomRightRadius = 3;
-            
-            var normalColor = bgColor;
-            var hoverColor = new Color(
-                Mathf.Min(bgColor.r + 0.1f, 1f),
-                Mathf.Min(bgColor.g + 0.1f, 1f),
-                Mathf.Min(bgColor.b + 0.1f, 1f),
-                bgColor.a
-            );
-            
-            btn.RegisterCallback<MouseEnterEvent>(_ => btn.style.backgroundColor = hoverColor);
-            btn.RegisterCallback<MouseLeaveEvent>(_ => btn.style.backgroundColor = normalColor);
-            
-            return btn;
-        }
-        
-        // ═══════════════════════════════════════════════════════════════════════════
-        // Template Import
-        // ═══════════════════════════════════════════════════════════════════════════
-        
-        private void ImportFromTemplate(SerializedProperty prop, string templateKey, ILevelProvider parentProvider, 
-            BaseForgeLevelProvider parentAsset, Button valueBtn, Button templateBtn)
-        {
-            var template = EffectTemplateRegistry.GetTemplate(templateKey);
-            if (template == null)
+                    Debug.LogError($"[PlayForge] Cannot link {effect.GetProviderName()} to {holder.GetProviderName()} due to a circular dependency." +
+                                   $"\nLink Chain: {chain}.");
+                    return;
+                }
+                Undo.RecordObject(effect, $"Link {NameOf(effect)}");
+                effect.LinkToProvider(holder);
+                EditorUtility.SetDirty(effect);
+                refresh();
+            })
             {
-                EditorUtility.DisplayDialog("Template Not Found", 
-                    $"The {templateKey} template is not configured or the asset was deleted.\n\n" +
-                    "Configure it in The Forge > Settings > Assets > Effect Templates.", "OK");
-                return;
-            }
-            
-            var displayName = EffectTemplateRegistry.GetDisplayName(templateKey);
-            
-            // Ask user what to do
-            int choice = EditorUtility.DisplayDialogComplex(
-                $"Import {displayName}",
-                $"How would you like to use the template '{template.GetName()}'?",
-                $"Link to {parentProvider.GetProviderName()}",  // 0 - Create a copy and link it
-                "Cancel",            // 1
-                "Use Template Link"      // 2 - Just assign the template directly
-            );
-            
-            if (choice == 1) return; // Cancel
-            
-            if (choice == 2)
-            {
-                // Just assign the template directly
-                prop.objectReferenceValue = template;
-                prop.serializedObject.ApplyModifiedProperties();
-                
-                if (valueBtn != null)
-                    valueBtn.text = GetStringValue(prop, template);
-                if (templateBtn != null)
-                    templateBtn.style.display = DisplayStyle.None;
-                    
-                return;
-            }
-            
-            // choice == 0: Duplicate & Link
-            var providerName = parentProvider?.GetProviderName() ?? "Unknown";
-            var newName = $"{providerName}_{templateKey}";
-            
-            // Create duplicate
-            var duplicate = ScriptableObject.Instantiate(template);
-            
-            // Update the name
-            if (duplicate.Definition != null)
-            {
-                duplicate.Definition.Name = newName;
-            }
-            
-            // Link to provider if available
-            if (parentAsset != null)
-            {
-                duplicate.LinkToProvider(parentAsset);
-            }
-            
-            // Save the asset
-            var templatePath = AssetDatabase.GetAssetPath(template);
-            var directory = Path.GetDirectoryName(templatePath);
-            var sanitizedName = SanitizeFileName(newName);
-            var newPath = $"{directory}/{sanitizedName}.asset";
-            newPath = AssetDatabase.GenerateUniqueAssetPath(newPath);
-            
-            AssetDatabase.CreateAsset(duplicate, newPath);
-            AssetDatabase.SaveAssets();
-            
-            // Assign to property
-            prop.objectReferenceValue = duplicate;
-            prop.serializedObject.ApplyModifiedProperties();
-            
-            if (valueBtn != null)
-                valueBtn.text = GetStringValue(prop, duplicate);
-            if (templateBtn != null)
-                templateBtn.style.display = DisplayStyle.None;
-            
-            Debug.Log($"[PlayForge] Created {templateKey} effect '{newName}' from template at {newPath}");
-            
-            // Ping the new asset
-            EditorGUIUtility.PingObject(duplicate);
+                text = text,
+                tooltip = $"Make {NameOf(effect)} take its levels from {NameOf(holder)}",
+            };
+            button.AddToClassList("pf-link-line__button");
+            return button;
         }
-        
-        private string SanitizeFileName(string name)
+
+        private static string Levels(BaseForgeLevelProvider provider)
         {
-            if (string.IsNullOrEmpty(name)) return "Effect";
-            var sanitized = Regex.Replace(name, @"\s+", "_");
-            sanitized = Regex.Replace(sanitized, @"[<>:""/\\|?*]", "");
-            return sanitized;
+            int starting = provider.GetStartingLevel(), max = provider.GetMaxLevel();
+            return starting == max ? $"Level {starting}" : $"Levels {starting}–{max}";
         }
-        
+
         // ═══════════════════════════════════════════════════════════════════════════
-        // Template Attribute Detection
+        // New, and the right-click menu
         // ═══════════════════════════════════════════════════════════════════════════
-        
-        private ForgeEffectTemplateAttribute GetTemplateAttribute(SerializedProperty prop)
+
+        // An effect New makes takes its levels from the asset that holds the field, as the + button's did
+        protected override GameplayEffect New(Object host, string name)
         {
-            return GetFieldAttributes<ForgeEffectTemplateAttribute>(prop).FirstOrDefault();
+            var effect = base.New(host, name);
+            Link(effect, host as BaseForgeLevelProvider);
+            return effect;
         }
-        
-        // ═══════════════════════════════════════════════════════════════════════════
-        // Create Dialog
-        // ═══════════════════════════════════════════════════════════════════════════
-        
-        private void ShowCreateEffectDialog(SerializedProperty prop, BaseForgeLevelProvider parentAsset, 
-            ILevelProvider parentProvider, string templateKey)
+
+        // The field's template, a pick of the effects nothing links, and the named create, which sat beside the field as
+        // tinted buttons (Docs/EDITOR_STYLE.md: template import, the link filter and create-linked go in its right-click
+        // menu). The template asked in a dialog whether to copy it or use it, and told in another that it wasn't set
+        protected override void AddMenuItems(DropdownMenu menu, ObjectField field, Object host)
+        {
+            var holder = host as BaseForgeLevelProvider;
+            var template = GetFieldAttributes<ForgeEffectTemplateAttribute>().FirstOrDefault();
+            if (template != null)
+            {
+                var display = EffectTemplateRegistry.GetDisplayName(template.TemplateKey);
+                var asset = EffectTemplateRegistry.GetTemplate(template.TemplateKey);
+                var status = asset != null ? DropdownMenuAction.Status.Normal : DropdownMenuAction.Status.Disabled;
+                menu.AppendAction($"Copy the {display} Template", _ => field.value = CopyTemplate(asset, holder, display), status);
+                menu.AppendAction($"Use the {display} Template", _ => field.value = asset, status);
+                if (asset == null)
+                    menu.AppendAction($"No {display} Template Is Set in The Forge", _ => { }, DropdownMenuAction.Status.Disabled);
+                menu.AppendSeparator();
+            }
+            menu.AppendAction("Pick an Unlinked Effect...", _ => UnlinkedEffectPicker.Show(field));
+            if (holder != null)
+                menu.AppendAction("New Linked Effect...", _ => ShowCreateEffectDialog(field, holder, template?.TemplateKey));
+        }
+
+        // A copy of the template, named for the asset that holds the field, where The Forge makes effects, and linked to
+        // the holder. It went next to the template, named with an underscore
+        private static GameplayEffect CopyTemplate(GameplayEffect template, BaseForgeLevelProvider holder, string display)
+        {
+            if (template == null) return null;
+            var copy = ForgeAssetCreation.Save(Object.Instantiate(template), $"{NameOf(holder)} {display}");
+            Link(copy, holder);
+            EditorGUIUtility.PingObject(copy);
+            return copy;
+        }
+
+        private static void Link(GameplayEffect effect, BaseForgeLevelProvider holder)
+        {
+            if (effect == null || holder == null || holder == effect || effect.HasCircularDependency(holder, out _, out _)) return;
+            effect.LinkToProvider(holder);
+            EditorUtility.SetDirty(effect);
+        }
+
+        private static void ShowCreateEffectDialog(ObjectField field, BaseForgeLevelProvider holder, string templateKey)
         {
             var dialog = ScriptableObject.CreateInstance<CreateLinkedEffectDialog>();
-            dialog.Initialize(parentAsset, parentProvider, (newEffect) =>
-            {
-                // Assign the newly created effect to this property
-                prop.objectReferenceValue = newEffect;
-                prop.serializedObject.ApplyModifiedProperties();
-            }, templateKey);
+            dialog.Initialize(holder, holder, created => field.value = created, templateKey);
             dialog.ShowUtility();
         }
-        
-        private ILevelProvider FindParentLevelProvider(SerializedProperty prop)
+
+        // The effects nothing links, to pick from: the link filter that sat beside the field, in its right-click menu
+        // (ED-38)
+        private sealed class UnlinkedEffectPicker : AdvancedDropdown
         {
-            var targetObject = prop.serializedObject.targetObject;
-            return targetObject as ILevelProvider;
-        }
-        
-        private BaseForgeLevelProvider GetParentProviderAsset(SerializedProperty prop)
-        {
-            return prop.serializedObject.targetObject as BaseForgeLevelProvider;
-        }
-        
-        // ═══════════════════════════════════════════════════════════════════════════
-        // Effect Assignment & Linking
-        // ═══════════════════════════════════════════════════════════════════════════
-        
-        private void HandleEffectAssignment(SerializedProperty prop, GameplayEffect effect, ILevelProvider parentProvider, BaseForgeLevelProvider parentAsset)
-        {
-            if (parentAsset == null) return;
-            
-            if (effect.IsLinked)
+            private readonly ObjectField field;
+            private readonly List<GameplayEffect> effects;
+
+            private UnlinkedEffectPicker(ObjectField field, List<GameplayEffect> effects) : base(new AdvancedDropdownState())
             {
-                if (effect.IsLinkedTo(parentAsset))
-                {
-                    return; // Already linked to this provider
-                }
-                
-                var currentProviderName = effect.LinkedProvider?.GetProviderName() ?? "Unknown";
-                var newProviderName = parentProvider.GetProviderName();
-                
-                var choice = EditorUtility.DisplayDialogComplex(
-                    "Effect Already Linked",
-                    $"'{effect.GetName()}' is already linked to:\n\n" +
-                    $"  {currentProviderName}\n\n" +
-                    $"Would you like to re-link it to '{newProviderName}'?",
-                    "Re-link",
-                    "Keep Current",
-                    "Cancel"
-                );
-                
-                switch (choice)
-                {
-                    case 0: // Re-link
-                        effect.LinkToProvider(parentAsset);
-                        EditorUtility.SetDirty(effect);
-                        AssetDatabase.SaveAssets();
-                        break;
-                    case 2: // Cancel - clear the assignment
-                        prop.objectReferenceValue = null;
-                        prop.serializedObject.ApplyModifiedProperties();
-                        break;
-                    // case 1: Keep current - do nothing
-                }
+                this.field = field;
+                this.effects = effects;
+                minimumSize = new Vector2(240, 280);
             }
-            else
+
+            public static void Show(ObjectField field)
             {
-                // Offer to link unlinked effect
-                var choice = EditorUtility.DisplayDialog(
-                    "Link Effect?",
-                    $"Would you like to link '{effect.GetName()}' to '{parentProvider.GetProviderName()}'?\n\n" +
-                    $"This will set the effect's level source to this {(parentAsset is Ability ? "Ability" : "Entity")}.",
-                    "Link",
-                    "Don't Link"
-                );
-                
-                if (choice)
-                {
-                    effect.LinkToProvider(parentAsset);
-                    EditorUtility.SetDirty(effect);
-                    AssetDatabase.SaveAssets();
-                }
+                var effects = AssetDatabase.FindAssets($"t:{nameof(GameplayEffect)}")
+                    .Select(AssetDatabase.GUIDToAssetPath)
+                    .Select(AssetDatabase.LoadAssetAtPath<GameplayEffect>)
+                    .Where(effect => effect != null && !effect.IsLinked)
+                    .OrderBy(effect => NameOf(effect), StringComparer.OrdinalIgnoreCase)
+                    .ToList();
+                new UnlinkedEffectPicker(field, effects).Show(field.worldBound);
             }
-        }
-        
-        // ═══════════════════════════════════════════════════════════════════════════
-        // Link Info Display
-        // ═══════════════════════════════════════════════════════════════════════════
-        
-        private void BuildLinkInfo(VisualElement container, SerializedProperty prop, ILevelProvider parentProvider)
-        {
-            container.Clear();
-            
-            var effect = GetCurrentValue(prop);
-            if (effect == null) return;
-            
-            var infoRow = new VisualElement();
-            infoRow.style.flexDirection = FlexDirection.Row;
-            infoRow.style.alignItems = Align.Center;
-            infoRow.style.marginTop = 2;
-            infoRow.style.marginLeft = 124; // Align with field
-            infoRow.style.paddingLeft = 4;
-            container.Add(infoRow);
-            
-            if (effect.IsLinked)
+
+            protected override AdvancedDropdownItem BuildRoot()
             {
-                var linkedProvider = effect.LinkedProvider;
-                
-                // Link icon
-                var linkIcon = new ForgeGlyph(ForgeGlyphShape.Link);
-                linkIcon.style.marginRight = 4;
-                infoRow.Add(linkIcon);
-                
-                // Provider info
-                var providerLabel = new Label(linkedProvider?.GetProviderName() ?? "Unknown");
-                providerLabel.style.fontSize = 10;
-                providerLabel.style.color = Colors.AccentGreen;
-                providerLabel.style.marginRight = 4;
-                infoRow.Add(providerLabel);
-                
-                // Level info
-                var levelLabel = new Label($"(Lv {linkedProvider?.GetMaxLevel() ?? 1})");
-                levelLabel.style.fontSize = 9;
-                levelLabel.style.color = Colors.HintText;
-                levelLabel.style.marginRight = 8;
-                infoRow.Add(levelLabel);
-                
-                // Navigate button
-                if (linkedProvider != null)
-                {
-                    var navBtn = new Button(() =>
-                    {
-                        Selection.activeObject = linkedProvider;
-                        EditorGUIUtility.PingObject(linkedProvider);
-                    });
-                    navBtn.text = Icons.Arrow;
-                    navBtn.tooltip = "Go to linked provider";
-                    navBtn.style.width = 18;
-                    navBtn.style.height = 14;
-                    navBtn.style.fontSize = 9;
-                    navBtn.style.paddingLeft = 0;
-                    navBtn.style.paddingRight = 0;
-                    navBtn.style.paddingTop = 0;
-                    navBtn.style.paddingBottom = 0;
-                    navBtn.style.backgroundColor = Colors.ButtonBackground;
-                    navBtn.style.borderTopLeftRadius = 2;
-                    navBtn.style.borderTopRightRadius = 2;
-                    navBtn.style.borderBottomLeftRadius = 2;
-                    navBtn.style.borderBottomRightRadius = 2;
-                    infoRow.Add(navBtn);
-                }
+                var root = new AdvancedDropdownItem("Unlinked Effects");
+                for (int i = 0; i < effects.Count; i++) root.AddChild(new AdvancedDropdownItem(NameOf(effects[i])) { id = i });
+                if (effects.Count == 0) root.AddChild(new AdvancedDropdownItem("None") { enabled = false });
+                return root;
             }
-            else
+
+            protected override void ItemSelected(AdvancedDropdownItem item)
             {
-                // Not linked warning
-                var warningIcon = new ForgeGlyph(ForgeGlyphShape.Warning);
-                warningIcon.AddToClassList("pf-glyph--warning");
-                warningIcon.style.marginRight = 4;
-                infoRow.Add(warningIcon);
-                
-                var warningLabel = new Label("Not linked");
-                warningLabel.style.fontSize = 10;
-                warningLabel.style.color = Colors.AccentYellow;
-                warningLabel.style.marginRight = 8;
-                infoRow.Add(warningLabel);
-                
-                // Offer to link if parent provider exists
-                if (parentProvider != null)
-                {
-                    var linkBtn = new Button(() =>
-                    {
-                        var parentAsset = GetParentProviderAsset(prop);
-                        if (parentAsset != null)
-                        {
-                            effect.LinkToProvider(parentAsset);
-                            EditorUtility.SetDirty(effect);
-                            AssetDatabase.SaveAssets();
-                            BuildLinkInfo(container, prop, parentProvider);
-                        }
-                    });
-                    linkBtn.text = "Link";
-                    linkBtn.tooltip = $"Link to {parentProvider.GetProviderName()}";
-                    linkBtn.style.height = 14;
-                    linkBtn.style.fontSize = 9;
-                    linkBtn.style.paddingLeft = 4;
-                    linkBtn.style.paddingRight = 4;
-                    linkBtn.style.paddingTop = 0;
-                    linkBtn.style.paddingBottom = 0;
-                    linkBtn.style.backgroundColor = new Color(0.3f, 0.4f, 0.3f);
-                    linkBtn.style.borderTopLeftRadius = 2;
-                    linkBtn.style.borderTopRightRadius = 2;
-                    linkBtn.style.borderBottomLeftRadius = 2;
-                    linkBtn.style.borderBottomRightRadius = 2;
-                    infoRow.Add(linkBtn);
-                }
+                if (item.id >= 0 && item.id < effects.Count) field.value = effects[item.id];
             }
         }
     }
-    
+
     // ═══════════════════════════════════════════════════════════════════════════════
     // Create Linked Effect Dialog
     // ═══════════════════════════════════════════════════════════════════════════════

@@ -338,6 +338,54 @@
     text-overflow: ellipsis;
 }
 
+/* ─── References: Unity's object field, with Open or New beside it (ED-38) ───────────────────────────────────────── */
+
+.pf-root .pf-reference {
+    flex-direction: row;
+    align-items: center;
+}
+
+.pf-root .pf-reference > .unity-object-field {
+    flex-grow: 1;
+    flex-shrink: 1;
+    min-width: 0;
+}
+
+.pf-root .pf-reference__action {
+    flex-shrink: 0;
+    margin: 0 0 0 4px;
+}
+
+/* How an effect takes its levels, on a line under its field */
+.pf-root .pf-link-line {
+    flex-direction: row;
+    align-items: center;
+    min-height: 18px;
+    margin: 0 0 2px 0;
+}
+
+.pf-root .pf-link-line .pf-glyph {
+    width: 12px;
+    height: 12px;
+    margin-right: 4px;
+}
+
+.pf-root .pf-link-line__text {
+    flex-shrink: 1;
+    min-width: 0;
+    margin: 0;
+    padding: 0;
+    color: var(--pf-secondary-text);
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+}
+
+.pf-root .pf-link-line__button {
+    flex-shrink: 0;
+    margin: 0 0 0 6px;
+}
+
 /* A field that depends on another indents its label 14 px under it, as Equipped Too does under Allow Duplicates */
 .pf-root .pf-dependent > .unity-base-field__label {
     padding-left: 14px;

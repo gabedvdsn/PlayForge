@@ -71,8 +71,8 @@ Use Infinite effects for bonuses that last while the item is equipped. An Instan
 equipped, and unequipping doesn't undo it. A Durational effect ends when its time runs out, even while the item is still
 equipped.
 
-When you assign an effect, the field offers to link it to this item. Its **+** button creates a new effect that is
-already linked.
+A line under each effect says how it takes its levels, and **Link** makes it take this item's. **New**, beside an empty
+field, makes an effect linked to this item.
 
 ## Abilities
 

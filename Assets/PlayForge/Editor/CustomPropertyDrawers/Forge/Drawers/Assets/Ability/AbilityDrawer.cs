@@ -1,33 +1,13 @@
-﻿using System;
 using UnityEditor;
-using UnityEngine;
-using UnityEngine.UIElements;
 
 namespace FarEmerald.PlayForge.Extended.Editor
 {
+    /// <summary>
+    /// A reference to an ability: Unity's object field, with Open or New beside it (ED-38). It was a button that opened a
+    /// dropdown list of its own.
+    /// </summary>
     [CustomPropertyDrawer(typeof(Ability))]
     public class AbilityDrawer : AbstractForgeObjectDrawer<Ability>
     {
-        /*protected override Ability[] GetEntries()
-        {
-            return GetAllInstances<Ability>();
-        }
-        protected override bool CompareTo(Ability value, Ability other)
-        {
-            return value == other;
-        }
-        protected override void SetValue(SerializedProperty prop, Ability value)
-        {
-            prop.objectReferenceValue = value;
-        }
-        protected override Ability GetCurrentValue(SerializedProperty prop)
-        {
-            return prop.objectReferenceValue as Ability;
-        }
-        protected override Label GetLabel(SerializedProperty prop, Ability value)
-        {
-            if (prop.isArray) return null;
-            return new Label(prop.name);
-        }*/
     }
 }

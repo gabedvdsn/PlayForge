@@ -92,6 +92,10 @@ string perLevel = impact.FormatTotal();           // "20/30/40/50"
   (double-click a row), balance analysis, tag declaration (Create → Tags).
 - **GAS Debugger** (`Window → PlayForge → GAS Debugger`) — live entity
   state in play mode: attributes, active effects, abilities, frame impacts.
+- **Asset fields** — every reference to a PlayForge asset is Unity's object field. **Open** beside it shows the asset
+  in a window of its own; **New**, beside an empty one, makes the asset where The Forge's settings put its type, named
+  for the asset that holds the field. An effect field's right-click menu has its template, a pick of the effects
+  nothing links, and New Linked Effect.
 - **Golden tests** (the Test Runner's EditMode tab, `FarEmerald.PlayForge.Tests.Golden`) — the framework's behavioral
   contract; run after upgrading.
 - **Audit** (`Window → PlayForge → Audit Effect Impact Deliveries`) — reports every effect's

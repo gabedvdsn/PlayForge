@@ -11,6 +11,10 @@ tracks each fix below by its ID.
   page, through one table of links in the editor.
 
 ### Changed
+- Every reference to a PlayForge asset is Unity's object field, with Open, which shows the asset in a window of its own,
+  or New, which makes one where The Forge puts its type and uses it. An effect field says under it how the effect takes
+  its levels, with Link, and setting it no longer asks in a dialog; its template, a pick of unlinked effects and New
+  Linked Effect are in its right-click menu (ED-38).
 - The Attribute Set inspector's sections are Identity, Leveling, Attributes, Sub-Sets, Collision Settings, All
   Attributes, Workers, Local Data and Used By, as the Item and Entity inspectors' follow the style doc. All Attributes
   is a table of each attribute the set gives, its sub-sets' included, with the value it starts at and its range, settled

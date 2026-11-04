@@ -1,38 +1,13 @@
-﻿using System;
 using UnityEditor;
-using UnityEngine;
-using UnityEngine.UIElements;
 
 namespace FarEmerald.PlayForge.Extended.Editor
 {
+    /// <summary>
+    /// A reference to an entity: Unity's object field, with Open or New beside it (ED-38). It was a button that opened a
+    /// dropdown list of its own.
+    /// </summary>
     [CustomPropertyDrawer(typeof(EntityIdentity))]
     public class EntityDrawer : AbstractForgeObjectDrawer<EntityIdentity>
     {
-        /*protected override EntityIdentity[] GetEntries()
-        {
-            return GetAllInstances<EntityIdentity>();
-        }
-        protected override bool CompareTo(EntityIdentity value, EntityIdentity other)
-        {
-            return value == other;
-        }
-        protected override string GetStringValue(SerializedProperty prop, EntityIdentity value)
-        {
-            string l = value != null ? value.GetName() ?? "<None>" : "<None>";
-            return string.IsNullOrEmpty(l) ? "<Unnamed>" : l;
-        }
-        protected override void SetValue(SerializedProperty prop, EntityIdentity value)
-        {
-            prop.objectReferenceValue = value;
-        }
-        protected override EntityIdentity GetCurrentValue(SerializedProperty prop)
-        {
-            return prop.objectReferenceValue as EntityIdentity;
-        }
-        protected override Label GetLabel(SerializedProperty prop, EntityIdentity value)
-        {
-            if (prop.isArray) return null;
-            return new Label(prop.name);
-        }*/
     }
 }

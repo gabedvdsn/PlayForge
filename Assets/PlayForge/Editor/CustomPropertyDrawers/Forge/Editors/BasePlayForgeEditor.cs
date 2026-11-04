@@ -652,37 +652,9 @@ namespace FarEmerald.PlayForge.Extended.Editor
         protected const string UnnamedAssetTag = "Unnamed";
         protected const string UnknownAssetName = "Error";
         
-        protected (string result, string display, bool isUnknown) GenerateAssetTag(string assetName, string typeName)
-        {
-            if (string.IsNullOrEmpty(assetName))
-                return ($"{UnnamedAssetTag} {typeName}!", UnnamedAssetTag, true);
-            
-            // Remove special characters (keep only alphanumeric and spaces)
-            string cleaned = Regex.Replace(assetName, @"[^a-zA-Z0-9\s]", "");
-            
-            // Split by spaces and capitalize each word (PascalCase)
-            string[] words = cleaned.Split(new[] { ' ' }, System.StringSplitOptions.RemoveEmptyEntries);
-            
-            for (int i = 0; i < words.Length; i++)
-            {
-                if (words[i].Length > 0)
-                {
-                    words[i] = char.ToUpper(words[i][0]) + 
-                               (words[i].Length > 1 ? words[i].Substring(1) : "");
-                }
-            }
-            
-            string result = string.Join("", words);
-            result = $"{typeName}.{result}";
-            
-            // Ensure it starts with a letter
-            if (result.Length > 0 && char.IsDigit(result[0]))
-            {
-                result = $"{typeName}." + result;
-            }
-
-            return string.IsNullOrEmpty(result) ? ($"{UnnamedAssetTag} {typeName}!", UnnamedAssetTag, true) : (result, string.Join("", words), false);
-        }
+        // The tag a name gives, made by the one rule a reference field's New also uses (ED-38)
+        protected (string result, string display, bool isUnknown) GenerateAssetTag(string assetName, string typeName) =>
+            ForgeAssetCreation.AssetTagFor(assetName, typeName);
 
         private const string AssetTagUpdateName = "AssetTagUpdate";
 

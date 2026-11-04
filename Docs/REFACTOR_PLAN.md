@@ -552,7 +552,7 @@ had no letter in the review. TS-AA onward came from the test project.
 | ED-36 | M | 4 | The asset header scrolls away with the content. It stays at the top of the inspector while the content scrolls under it (Decision 29), following the Inspector's scroll view by its events, so nothing polls (ED-11) | `BasePlayForgeEditor.cs` (`CreateInspectorGUI`), `ForgeAssetHeader.cs` (`StickTo`) | fixed |
 | ED-35 | M | 4 | Whole-asset import copies the template and level-link fields (`_template`, `_linkedSource`) and doesn't skip the nested `Definition.Name` | `BasePlayForgeEditor.cs` (`ImportFromAsset`) | open |
 | ED-37 | M | 4 | The asset inspectors don't follow `Docs/EDITOR_STYLE.md`: their sections stray from its order, Level Source sits apart from Leveling, a collapsed section shows nothing, sentences explain the fields, the link state sits in tinted boxes with colored borders, and many sections' Import and Clear only log a warning. Each inspector is redone in Phase 4's fifth step. Fixed so far: the Attribute (`ed6295a`, with ED-15), Item (`cf70e8f`), Entity (`a06a4fb`) and Attribute Set inspectors: the style doc's order, Leveling with the level link and its provider in Unity's object field, the asset tag under the name, a summary on each section, Import and Clear on each, Used By, and no look set in code; and the Entity mockup's attribute table, in the Entity and Attribute Set inspectors. Left: the Ability and Effect inspectors | `AbilityEditor.cs`, `EffectEditor.cs` | open |
-| ED-38 | M | 4 | An asset reference isn't Unity's object field: `AbstractRefDrawer` draws a button that opens a dropdown list of its own, with hover colors and Clear and Open icon buttons set in C#. The style doc asks for Unity's object field, with New and Open as plain buttons beside it and the rest in its right-click menu (Q15, Q18). Every inspector shows it, for an entity's Attribute Set, Starting Abilities and Starting Items among others | `AbstractRefDrawer.cs:129`, `AbstractForgeObjectDrawer.cs` | open |
+| ED-38 | M | 4 | An asset reference isn't Unity's object field: `AbstractRefDrawer` draws a button that opens a dropdown list of its own, with hover colors and Clear and Open icon buttons set in C#, and setting an effect asks in a dialog whether to link it. Now every asset reference is Unity's object field with a plain button beside it: Open, which shows the asset in a window of its own, or New, which makes one where The Forge puts its type, named and tagged, and uses it (Q15). An effect field says on a line under it how the effect takes its levels, with Link; its template, a pick of unlinked effects and New Linked Effect are in its right-click menu (Q18) | `AbstractForgeObjectDrawer.cs`, `GameplayEffectDrawer.cs` | fixed |
 | ED-39 | M | 4 | Opening an attribute set element can change the set: 50 ms after it draws, and on every change to the set, `AttributeSetElementDrawer` clamps a Current or Base magnitude that sits outside the element's bounds and applies it to the asset, so looking at a set marks it modified. The runtime clamps the same values as the entity starts | `AttributeSetElementDrawer.cs:380-431` | open |
 
 The design questions behind Phase 4's rows, each with its evidence, are in the UI interview doc of 2026-11-03,
@@ -571,7 +571,7 @@ Phase 2 part, and set Phase 4's direction.
    ED-21, ED-27 and ED-31; one runtime debugger for the GAS, Process and Tag views (Q4), with ED-4 and ED-5; and the
    Visualizer, with ED-9.
    The asset inspectors go one at a time, each following the style doc (ED-37): the Attribute, Item, Entity and
-   Attribute Set inspectors first (done), then the reference fields (ED-38), the Ability inspector, then the Effect
+   Attribute Set inspectors first (done), then the reference fields (ED-38, done), the Ability inspector, then the Effect
    inspector with ED-2 and ED-3, then the Import window and shared scalers (ED-32, ED-33), which also free ED-12's
    last part.
 
@@ -657,6 +657,25 @@ GAS-4 with GAS-5, PC-6, and TS-I with PC-5.
 ## Log
 
 Record baselines, gate results and notable decisions here, newest first.
+
+- 2026-11-04, **ED-38: the reference fields.** Every reference to a PlayForge asset, in every inspector and drawer.
+  - **Unity's object field,** from the reworked `AbstractForgeObjectDrawer`, with a plain button beside it: Open,
+    which shows the asset in a window of its own (`EditorUtility.OpenPropertyEditor`), so the asset that holds the field
+    stays in the Inspector; or New, while the field is empty. It was a button that opened a dropdown list of its own,
+    with Clear and Open icon buttons and hover colors set in C#. `AbstractRefDrawer` stays for the type pickers.
+  - **New** makes the asset in the folder The Forge's settings name for its type, with their file prefix and suffix,
+    named for the asset that holds the field and the field, as in "Goblin Attribute Set", with the tag its name gives
+    (the new `ForgeAssetCreation`, whose tag rule the inspectors now share). One Undo takes back the field's value; the
+    asset stays. An effect New makes takes its levels from the holder, as the old + button's did.
+  - **An effect field** asks nothing when it's set. It asked in a dialog whether to link the effect, and again when the
+    effect was linked elsewhere. A line under it says how the effect takes its levels, with Link or Link Here, one Undo
+    step each. Its right-click menu holds the field's template (copy it or use it, which asked in a three-way dialog),
+    a searchable pick of the effects nothing links (the old All and Unlinked button), and New Linked Effect.
+  - **Docs:** `ABILITIES.md`, `ITEMS.md` and `GETTING_STARTED.md` describe the fields.
+  - **Its tests,** `ED_38_An_asset_reference_is_Unity_s_object_field`, `ED_38_New_makes_an_asset_and_uses_it` and
+    `ED_38_An_effect_reference_offers_its_link_in_place`, were seen failing first.
+  - **Tests:** PlayMode 949: 942 pass, 0 fail and 7 planted are skipped, in three orders. Planted 7 of 7; EditMode
+    390 of 390.
 
 - 2026-11-04, **GAS-54 and GAS-55: two attribute set bugs.** Found while building the attribute table; the user asked
   for bugs found along the way to be fixed as they appear.
