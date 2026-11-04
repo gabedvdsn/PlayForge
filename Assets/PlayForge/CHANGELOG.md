@@ -6,6 +6,10 @@ tracks each fix below by its ID.
 
 ## [Unreleased]
 
+### Added
+- Reference pages for the six asset types in `Documentation`. Each inspector section's help button opens its type's
+  page, through one table of links in the editor.
+
 ### Changed
 - PlayForge is licensed under the Unity Asset Store EULA.
 - The samples moved to `Samples~`, so Package Manager imports them on request: **Demos** and **Code Examples**. The
@@ -13,6 +17,10 @@ tracks each fix below by its ID.
 - UniTask is pinned to 2.5.11.
 - The menu moved under **Window → PlayForge**, and each window's title matches its menu item. The main window is
   **The Forge** everywhere. Run Golden Tests left the menu: the Test Runner runs the golden scenarios.
+- Deleting an asset from The Forge names the assets that use it, asks, and moves it to the trash.
+- Showing an asset never changes it. A rename stores the name and its asset tag in one undoable step, and a stale
+  tag offers Update.
+- The Demos render in URP as well as the Built-in pipeline.
 - Pausing a process holds it in place: it stops stepping at once, and on resume it picks up its run if it can hold
   one.
 - The process hierarchy follows transforms: a process spawned at `SceneRoot` is GameRoot's child.
@@ -30,6 +38,9 @@ tracks each fix below by its ID.
   script, reference or type.
 - BuildVerification builds an empty scene of its own when the build settings enable none, instead of the first scene
   the project lists.
+- PlayForge works with domain reloading off (Enter Play Mode Options): each play session starts clean.
+- The Forge: its settings save, reset and refresh as labelled; Analysis hides the groups it can't analyse yet and says
+  how much a list leaves out; the tag display settings apply everywhere.
 
 ### Removed
 - QuickOutline, replaced by the Demo's own outline.

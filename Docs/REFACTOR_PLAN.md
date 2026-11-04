@@ -32,11 +32,12 @@ from. It lives outside `Assets/` so it never ships in the package.
 - **Compile check:** MSBuild 17.14 from **VS 2022 Build Tools** (not Community); there is no dotnet SDK. Two
   builds cover everything, since MSBuild takes one project per call:
   ```
-  "C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\MSBuild\Current\Bin\MSBuild.exe" Assembly-CSharp.csproj -t:Rebuild -nologo -v:minimal
+  "C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\MSBuild\Current\Bin\MSBuild.exe" FarEmerald.PlayForge.Editor.csproj -t:Rebuild -nologo -v:minimal
   "C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\MSBuild\Current\Bin\MSBuild.exe" FarEmerald.PlayForge.Tests.csproj -t:Rebuild -nologo -v:minimal
   ```
-  - `Assembly-CSharp.csproj` builds Runtime, Editor and the samples; the Tests project references Runtime only.
-    Output goes to `Temp\Bin\Debug\`.
+  - `FarEmerald.PlayForge.Editor.csproj` builds Runtime and Editor; the Tests project references Runtime only.
+    Output goes to `Temp\Bin\Debug\`. `Assembly-CSharp.csproj` has had no sources since the samples moved to
+    `Samples~` (SP-20), so building it checks nothing.
   - Two `MSB3277` reference-conflict warnings come from the code-coverage and collab-proxy package DLLs. They
     are not ours; count only `CS` diagnostics.
   - Do not build `Assembly-CSharp-Editor.csproj`. It is stale (July 2026, from before the Editor asmdef) and
@@ -419,6 +420,8 @@ had no letter in the review. TS-AA onward came from the test project.
 | GAS-41 | L | 1 | On `RelativeOperationContextImpactWorker`, `InlineAndDeferred` does the work twice, once inline and once queued, so lifesteal heals double. Hide the option there, or document it | `RelativeOperationContextImpactWorker.cs:22` | verified |
 | GAS-42 | M | 1 | A runtime GAS's death dereferences `Relay`, so one stepped by hand, outside ProcessControl, throws at its end of frame | `RuntimeGameplayAbilitySystem_EndOfFrame.cs:127` | verified |
 | GAS-43 | M | 1 | `AutoTargetTask` sizes its collider buffer by `MaxTargets`, so 0, meaning every match, finds nothing, and at 1 the caster's own collider can fill the buffer and leave no target | `AutoTargetTask.cs:84-85` | verified |
+| GAS-44 | M | 3 | An attribute set that includes itself, directly or through another set, recurses without end: `GetGrantedTags` and the attribute builder have no guard, and `GetUnique` skips only a set that names itself. Found writing ED-16's docs, which warn of it | `AttributeSet.cs:66-90, 381` | open |
+| GAS-45 | L | 3 | Two settings nothing reads: an Item's `AllowDuplicates` (the entity's Allow Duplicate Items decides) and an entity's `CapAtMaxLevel`, which only the inspector shows. Found writing ED-16's docs, which say so | `ItemDefinition.cs:25`, `EntityIdentity.cs:25` | open |
 | GAS-P1 | M | 0 | `ActionQueue` LINQ allocations; snapshot built every frame (PF-006) | `ActionQueue.cs:41, 46, 156`, `FrameSummary.cs:340-351` | verified |
 | GAS-P2 | M | 0 | Tag and FrameSummary allocations (PF-007) | `TagCache.cs:60`, `TagQuery.cs:89-136`, `FrameSummary.cs:306-308` | verified |
 | GAS-P3 | M | 3 | Each application revalidates every container and rebuilds all tags (area application is quadratic) | `EffectSystemComponent.cs:312-348`, `GameplayAbilitySystem.cs:250-281` | open |
@@ -511,7 +514,9 @@ Phase 2 part, and set Phase 4's direction.
 ## Test project: PlayForge Proving Grounds
 
 A separate Unity project that consumes PlayForge as a local UPM package (Decision 2). The project and its shared
-harness exist, with the golden scenarios and the first framework tests; the other suites below don't yet. See
+harness exist, with the golden scenarios, the framework and planted suites, and the first editor tests (34
+EditMode tests in `Tests/Editor`, which its README explains how to write). The stress suite and the gameplay labs
+don't exist yet. See
 Environment for its location and commands. The full plan is in the
 review doc's section "The test project: PlayForge Proving Grounds". In short:
 
@@ -539,6 +544,35 @@ GAS-4 with GAS-5, PC-6, and TS-I with PC-5.
 ## Log
 
 Record baselines, gate results and notable decisions here, newest first.
+
+- 2026-11-03, **Phase 2, the last eight rows.** On `refactor/phase-2-release`, ED-6, ED-8, ED-10, ED-16, ED-19, ED-25,
+  SP-22 and SP-23 are `fixed`, one commit each, and ED-12's Phase 2 part is done; the row stays open for Phase 4.
+  Every Phase 2 row is now `fixed`.
+  - **Calls made:** the UI interview's answers (Decision 18) and Decision 17, the submission Editor.
+  - **Tests:** Proving Grounds' EditMode suite passes 34 of 34. Its 26 new tests were each seen failing first. The
+    PlayMode suite runs 838 tests: 831 pass, 0 fail and 7 planted are skipped, in three orders. Planted 7 of 7, and
+    the golden scenarios pass 25/25 in the custom runner.
+  - **The gate:** a clean import into a fresh Unity 6 project shows 0 compile errors or warnings, 0 uncompiled
+    scripts, 0 missing types, 0 exceptions and 0 asset warnings, plain and with `--samples`, which also finds 0
+    missing scripts or references and no shader message.
+  - **How the editor tests reach the UI:** a field sends its events only through a panel, and batch mode under
+    `-nographics` has no graphics device to give an editor window one. So the tests that need events (ED-6's delay
+    field, ED-12's rename and Update) add the element to a UIDocument's runtime panel. ED-19's title test opens each
+    window through its menu item and ignores the error batch mode logs about drawing it. ED-8's test answers the
+    delete question through `ForgeAssetDeletion.Confirm`, since a dialog would block the run.
+  - **SP-22:** the test plays two sessions in one editor with domain reloading off. `TagRegistry` is kept on purpose,
+    since static tag fields register as their types initialise, once per domain.
+  - **SP-23:** a render check draws each Demo material on a sphere, under URP and then the Built-in pipeline. It runs
+    in a throwaway project made from Unity 6's Universal 3D template (`AppData\Local\Temp\claude\urp`, in neither
+    repo). Before the fix, every Standard material drew magenta under URP. After it, each draws its own color under
+    both pipelines, and Built-in draws exactly what Standard drew. A first try drew black: Standard's borrowed passes
+    blend by `[_SrcBlend] [_DstBlend]`, which an undeclared property reads as 0. So the shader declares all of
+    Standard's properties, and the check fails a sphere left background black as well as a magenta one.
+  - **ED-16:** a subagent wrote the six reference pages from the inspector and runtime code, and they were checked.
+  - **The compile check** now builds `FarEmerald.PlayForge.Editor.csproj`. `Assembly-CSharp.csproj` has had no
+    sources since SP-20.
+  - **New rows:** writing ED-16's pages turned up GAS-44 and GAS-45, filed under Phase 3.
+  - **Not merged:** nothing is merged into `main` or pushed. Closing Phase 2 is the user's call.
 
 - 2026-11-03, **Phase 2, the first 28 rows.** On `refactor/phase-2-release`, SP-1 to SP-15, SP-17 to SP-21, PC-32,
   ED-7, ED-17, ED-22 to ED-24, ED-26 and ED-28 are `fixed`, one commit each. Eight Phase 2 rows are open.
