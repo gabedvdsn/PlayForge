@@ -1,7 +1,7 @@
 # PlayForge refactor: code tour
 
 This tour lists the places where the refactor changed code, so you can open each one in your IDE and read it. It
-covers `01258b8..6860c24` on `main`: 211 commits. Phase 0 ported Arcade Fighter's fixes, Phase 1 made the runtime
+covers `01258b8..3c99621` on `main`: 213 commits. Phase 0 ported Arcade Fighter's fixes, Phase 1 made the runtime
 correct, Phase 2 got the package ready to release, and Phase 3 has begun. Each entry says what behaves differently and
 why, names its tracker IDs and Decisions, and points at the two or three places to read. `Docs/REFACTOR_PLAN.md` has
 every tracker row, the numbered Decisions, and a Log of each batch's test results.
@@ -9,8 +9,8 @@ every tracker row, the numbered Decisions, and a Log of each batch's test result
 ## How to use this
 
 - Paths are relative to the repo root.
-- Line numbers are as of commit `6860c24`, the head of `main` on 2026-11-03. A later commit may move them, so each
-  entry also names the class and method to search for. `git show 6860c24:<path>` shows a file as it was then.
+- Line numbers are as of commit `3c99621`, the head of `main` on 2026-11-03. A later commit may move them, so each
+  entry also names the class and method to search for. `git show 3c99621:<path>` shows a file as it was then.
 - In Rider, Go to File accepts `path:line`. In Visual Studio, open the file, then Go To Line (Ctrl+G).
   A bare `:123` after a path means another line in the same file.
 - `git grep "<ID>"` finds the comment at each fix, and `git log --grep "<ID>"` finds its commit. Three exceptions:
@@ -30,8 +30,8 @@ every tracker row, the numbered Decisions, and a Log of each batch's test result
 
 Phase 3 began on `main` with the rows that writing the reference docs turned up, five runtime bugs and two settings
 nothing read, then gave the two GAS hubs one core (GAS-S1) and turned to cost (GAS-P3, GAS-P5, GAS-P4, GAS-P6,
-GAS-P8, GAS-P9). Each has a test in Proving Grounds named after its ID, seen failing first; the runtime tests run on
-both hubs. The plan's Log has the gate results.
+GAS-P8, GAS-P9, GAS-P7). Each has a test in Proving Grounds named after its ID, seen failing first; the runtime tests
+run on both hubs. The plan's Log has the gate results.
 
 ### An entity's affiliation is its own (GAS-47)
 
@@ -224,8 +224,8 @@ removed entries through a lambda and built new ones (288), and a same-root tag q
   - `Assets/PlayForge/Runtime/PlayForge/AttributeSystem/Attribute/CachedAttributeValue.cs:210` `RemoveCarrier`, one
     pass that keeps order and keeps the entries spare (`:65`) for `RegisterModifier` (`:181`). The recompute clears
     its kept list (`:69`) at `:403`.
-  - `Assets/PlayForge/Runtime/PlayForge/Tag/Tag.cs:264` `SharesAncestorWith`, which compares roots in place;
-    `IsChildOf` (`:213`) compares ordinally, and `IsDirectChildOf` (`:230`) cuts no substring.
+  - `Assets/PlayForge/Runtime/PlayForge/Tag/Tag.cs:274` `SharesAncestorWith`, which compares roots in place;
+    `IsChildOf` (`:223`) compares ordinally, and `IsDirectChildOf` (`:240`) cuts no substring.
   - `Assets/PlayForge/Runtime/PlayForge/Tag/Tags.cs:17`, the first of the 57 built-in tags, each made once.
 - **Watch for:** `GetImpactersFor`'s list is the spec's own: read it, don't change it. Walk these lists by index or with
   a `foreach` over the concrete type, since a `foreach` through an interface boxes.
@@ -308,11 +308,30 @@ frame in which an attribute rescaled with its Base allocated 500 bytes, one in w
   `GAS_P9_Taking_an_action_off_the_queue_allocates_nothing` with its control,
   `Actions_run_by_priority_and_in_the_order_queued`, in `ActionQueueTests`.
 
+### A tag lookup costs the same however long its name (GAS-P7)
+
+A tag was hashed and compared by its name on every lookup, and a built-in tag's name is 64 characters. 10,000 lookups
+in an entity's tag cache took 0.21 ms for a 3-character name and 7.1 ms for a 2,050-character one, and 58 ms when the
+long tag came from an asset, whose name, a string of its own, was compared in full. Each tag now has an ID, given at
+run time, and the same lookups take about 0.27 ms either way.
+
+- **IDs:** GAS-P7, commit `3c99621`, Decision 22. Moved from GAS-P4.
+- **Read:**
+  - `Assets/PlayForge/Runtime/PlayForge/Tag/Tag.cs:38`, the ID and the name it was given for, neither serialized. A tag
+    takes its ID as it's made (`:47`), or as an asset holding it loads, in `OnAfterDeserialize` (`:336`).
+  - `Assets/PlayForge/Runtime/PlayForge/Tag/Tag.cs:317` `Id`, which takes the ID for the tag's name if it has none yet
+    or its name was changed in place. `Equals` (`:309`) and `GetHashCode` (`:311`) use it.
+  - `Assets/PlayForge/Runtime/PlayForge/Tag/Tag.cs:356` `TagIds`, one ID for each name, safe across threads. `Of`
+    (`:369`) gives one the first time a name is seen.
+- **Watch for:** two tags are equal exactly when their names are, as before. `Tag.GetHashCode` is no longer the name's
+  hash and can differ between runs, so don't store it. `TagRegistry.Reset` leaves the IDs.
+- **Tests:** `GAS_P7_A_tag_lookup_costs_the_same_however_long_its_name` in `TagTests`, for a tag made in code and one
+  loaded with an asset, and its control, `A_tag_equals_another_of_its_name`.
+
 ### Still open in Phase 3
 
-Performance and structure work: GAS-P7 (tags hashed and compared as strings, which needs a design call), PC-24, TS-5,
-TS-8, TS-10 and TS-Z. GAS-51, item stacking that is declared but not built, moved to Phase 5 as FEAT-14, so an Item's
-`MaxStackSize` does nothing until then.
+Performance and structure work: PC-24, TS-5, TS-8, TS-10 and TS-Z. GAS-51, item stacking that is declared but not
+built, moved to Phase 5 as FEAT-14, so an Item's `MaxStackSize` does nothing until then.
 
 ## ProcessControl
 
@@ -1012,7 +1031,7 @@ the sources' lists instead of allocating iterators.
   - `Assets/PlayForge/Runtime/PlayForge/Tag/TagQuery.cs:98` `TagQuery.CountMatches(TagCache)`, and `Matches`
     (`:135`). The hubs call it from `QueryTags`
     (`Assets/PlayForge/Runtime/PlayForge/GAS/Core/GASCore.cs:226`).
-  - `Assets/PlayForge/Runtime/PlayForge/Tag/Tag.cs:84` `Tag.Child`, and the implicit conversion at `:308`.
+  - `Assets/PlayForge/Runtime/PlayForge/Tag/Tag.cs:94` `Tag.Child`, and the implicit conversion at `:348`.
   - `Assets/PlayForge/Runtime/PlayForge/Tag/GrantedTagCompiler.cs:14` `GrantedTagCompiler`.
 - **New:** `GrantedTagCompiler` (internal).
 - **Watch for:** code that matched the implicit conversion against `Tag.GenerateAsUnique` of the same name no longer
