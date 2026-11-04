@@ -18,6 +18,7 @@ namespace FarEmerald.PlayForge.Extended.Editor
         // View mode
         private EAnalysisViewMode analysisViewMode = EAnalysisViewMode.Distribution;
         private EAnalysisGroup analysisGroup = EAnalysisGroup.Effects;
+        private static readonly EAnalysisGroup[] AnalysableGroups = { EAnalysisGroup.Effects, EAnalysisGroup.Abilities };
         
         // Sorting
         private string analysisSortColumn = "Power";
@@ -359,7 +360,9 @@ namespace FarEmerald.PlayForge.Extended.Editor
             groupBar.style.marginBottom = 6;
             contentContainer.Add(groupBar);
             
-            foreach (EAnalysisGroup group in Enum.GetValues(typeof(EAnalysisGroup)))
+            // Items and Entities have no analyser yet, only a "Not Implemented" placeholder, so they aren't offered (ED-10)
+            if (!AnalysableGroups.Contains(analysisGroup)) analysisGroup = EAnalysisGroup.Effects;
+            foreach (var group in AnalysableGroups)
             {
                 var groupInfo = GetGroupInfo(group);
                 var btn = CreateAnalysisGroupButton(groupInfo.icon, groupInfo.name, group);
@@ -712,10 +715,7 @@ namespace FarEmerald.PlayForge.Extended.Editor
                     container.Add(CreateWarningRow(analysis));
                 }
                 if (warnings.Count > 10)
-                {
-                    // TODO
-                    // container.Add(CreateMoreLabel(warnings.Count - 10));
-                }
+                    container.Add(CreateMoreLabel(warnings.Count - 10));
             }
         }
         
@@ -731,6 +731,18 @@ namespace FarEmerald.PlayForge.Extended.Editor
             };
         }
         
+        /// <summary>Says how many rows a capped list leaves out. The lists used to drop them without a word (ED-10).</summary>
+        private static Label CreateMoreLabel(int hidden)
+        {
+            var label = new Label($"…and {hidden} more");
+            label.style.fontSize = 9;
+            label.style.color = Colors.HintText;
+            label.style.unityFontStyleAndWeight = FontStyle.Italic;
+            label.style.marginLeft = 8;
+            label.style.marginTop = 2;
+            return label;
+        }
+
         private VisualElement CreateStatCard(string label, string value, Color valueColor)
         {
             var card = new VisualElement();
@@ -1457,10 +1469,7 @@ namespace FarEmerald.PlayForge.Extended.Editor
                 }
                 
                 if (analysis.DiscoveredEffects.Count > 8)
-                {
-                    // TODO
-                    // effectsContainer.Add(CreateMoreLabel(analysis.DiscoveredEffects.Count - 8));
-                }
+                    effectsContainer.Add(CreateMoreLabel(analysis.DiscoveredEffects.Count - 8));
             }
             
             // Metric breakdown
