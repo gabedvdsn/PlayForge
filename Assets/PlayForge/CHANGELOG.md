@@ -94,6 +94,7 @@ tracks each fix below by its ID.
   asset; after a rebuild it edited only the first (ED-12).
 - The Impact and Effect drawers follow the properties they show instead of re-checking on a timer, and the Impact
   drawer's Multiply Behaviour hides again after an Undo (ED-11).
+- An asset inspector listens to the editor's update only while an object picker is open; it ran every frame (ED-11).
 - The Item inspector edits several selected items at once. Name, the asset tag and linking wait for one item (ED-12).
 - The Ability inspector edits several selected abilities at once. Name, the asset tag, linking, targeting, asset
   loaders, stages and activation rules wait for one ability (ED-12).

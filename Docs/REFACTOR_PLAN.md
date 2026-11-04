@@ -520,7 +520,7 @@ had no letter in the review. TS-AA onward came from the test project.
 | ED-8 | H | 2 | Hard delete with no reference check | `TheForge.ViewTab.cs:2552`, `AssetBrowserWindow.cs:285` | verified |
 | ED-9 | M | 4 | The Visualizer is blank for items and sets, and after a domain reload | `TheForge.Utilities.cs:344, 407-412` | open |
 | ED-10 | M | 2 | Analysis exposes "Not Implemented" groups and truncates silently | `TheForge.AnalysisTab.cs:362, 716, 1461, 1979-1991` | verified |
-| ED-11 | M | 4 | The sticky-header workaround and drawer timers poll forever, among them two 250 ms timers in each impact drawer. Fixed so far: the drawer timers, which now follow the properties they show. Left: the sticky header, which Q17 makes scroll with the content, and the object picker's per-frame listener | `BasePlayForgeEditor.cs` (`OnAttachedToPanel`, `ConfigureScrollView`, `OnEditorUpdate`) | open |
+| ED-11 | M | 4 | The sticky-header workaround and drawer timers poll forever, among them two 250 ms timers in each impact drawer. Fixed so far: the drawer timers, which now follow the properties they show, and the object picker's listener, which runs only while a picker is open. Left: the sticky header, which Q17 makes scroll with the content | `BasePlayForgeEditor.cs` (`OnAttachedToPanel`, `ConfigureScrollView`, `OnEditorUpdate`) | open |
 | ED-12 | H | 4 | No Undo, multi-edit or prefab overrides. The inspectors wrote 42 edits straight into their asset, and only the 5 renames recorded Undo; no inspector took a multiple selection; six drawers copy their SerializedObject for one target, and two write while drawing. Fixed so far: Phase 2's part (a rename stores the tag in the same undoable step, and showing never writes), the Attribute inspector (its fields bind, it takes a multiple selection, and every inspector's header follows Undo), the MonoProcess inspector's multiple selection, the Effect, Item and Attribute Set inspectors' Description and Link Mode, the Entity inspector's fields, the Ability inspector's Description, Activation Policy, Activate Immediately and Link Mode, Link, Unlink and template assignment in every inspector, the drawers that rebuilt on a one-target copy, the type drawers that wrote a default while drawing, and the Item and Ability inspectors' multiple selection. Left: a multiple selection in the Effect, Entity and Attribute Set inspectors. In the Effect, Entity and Attribute Set inspectors, whose assets hold scalers, that also waits for ScalerDrawer's one-target copy, which changes with Decision 28's scaler workflow (ED-32, ED-33) | `AbilityEditor.cs:155-189, 743`, `EntityIdentityEditor.cs:790-919`, `BasePlayForgeEditor.cs` (`ShowTemplatePicker`), `TagDrawer.cs:104-109`, `AbstractTypeRefDrawer.cs:123-128`, `ScalerDrawer.cs:169-177` | open |
 | ED-13 | M | 4 | Template propagation on save loads everything, opens a modal mid-save and records no Undo; the validator is empty | `ForgeTemplateProcessor.cs:45-52`, `ForgeTemplatePropagator.cs:201-229` | open |
 | ED-14 | H | 1 | The `GameplayEffectImpact` copy constructor drops affiliation and throws on null packets | `GameplayEffectImpact.cs:155-176` | verified |
@@ -643,6 +643,13 @@ GAS-4 with GAS-5, PC-6, and TS-I with PC-5.
 ## Log
 
 Record baselines, gate results and notable decisions here, newest first.
+
+- 2026-11-04, **ED-11, the object picker: an inspector listens only while a picker is open.** Every asset inspector
+  added itself to `EditorApplication.update` as it opened and ran every frame of its life, to catch an object
+  picker's choice. Now the two pickers, import and level provider, add it as they open, and it takes itself off when
+  the picker closes. Its test, `ED_11_An_idle_inspector_listens_to_no_update`, was seen failing first.
+  - **Tests:** PlayMode 945: 938 pass, 0 fail and 7 planted are skipped, in three orders. Planted 7 of 7; EditMode
+    60 of 60.
 
 - 2026-11-04, **ED-11, the drawer timers: a view follows the properties it shows.** Phase 4's second step, no
   polling, starts with the drawers. The Impact drawer re-checked its operation and its effect's duration every

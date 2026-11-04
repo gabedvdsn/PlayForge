@@ -97,24 +97,39 @@ namespace FarEmerald.PlayForge.Extended.Editor
 
         protected virtual void OnEnable()
         {
-            EditorApplication.update += OnEditorUpdate;
+            // Nothing listens to the editor's update here: an inspector listens only while an object picker is open,
+            // through WaitForPicker. It listened every frame of its life (ED-11)
         }
-        
+
         protected virtual void OnDisable()
         {
             EditorApplication.update -= OnEditorUpdate;
             _waitingForPicker = false;
         }
-        
+
+        // The object picker reports its choice only to code that asks, so the inspector asks each frame while one is open
+        // and stops when it closes (ED-11)
+        private void WaitForPicker()
+        {
+            _waitingForPicker = true;
+            EditorApplication.update -= OnEditorUpdate;
+            EditorApplication.update += OnEditorUpdate;
+        }
+
         private void OnEditorUpdate()
         {
-            if (!_waitingForPicker) return;
-            
+            if (!_waitingForPicker)
+            {
+                EditorApplication.update -= OnEditorUpdate;
+                return;
+            }
+
             var currentControlId = EditorGUIUtility.GetObjectPickerControlID();
 
             if (currentControlId == 0)
             {
                 _waitingForPicker = false;
+                EditorApplication.update -= OnEditorUpdate;
                 if (_lastPickedObject != null && _pickerCallback != null)
                 {
                     _pickerCallback(_lastPickedObject);
@@ -367,7 +382,7 @@ namespace FarEmerald.PlayForge.Extended.Editor
         private void OpenAssetPicker(Type assetType)
         {
             _pickerControlId = GUIUtility.GetControlID(FocusType.Passive) + 10000 + Random.Range(1, 1000);
-            _waitingForPicker = true;
+            WaitForPicker();
             _lastPickedObject = null;
             _pickerCallback = sourceAsset =>
             {
@@ -1270,7 +1285,7 @@ namespace FarEmerald.PlayForge.Extended.Editor
         {
             // Generate a unique control ID
             _pickerControlId = GUIUtility.GetControlID(FocusType.Passive) + 10000 + Random.Range(1, 1000);
-            _waitingForPicker = true;
+            WaitForPicker();
             _lastPickedObject = src.LinkedProvider; // Start with current value
             EditorGUIUtility.ShowObjectPicker<T>(src.LinkedProvider as T, false, "", _pickerControlId);
         }
