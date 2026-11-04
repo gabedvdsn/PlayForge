@@ -149,8 +149,9 @@ namespace FarEmerald.PlayForge
             // Actions queued by analysis workers
             totalExecuted += ActionQueue.ProcessAll(owner);
 
-            // The snapshot copies ten lists, so it's built only for someone listening (PF-006)
-            if (Callbacks != null && Callbacks.HasFrameCompleteListeners) Callbacks.FrameComplete(FrameSummary.CreateSnapshot(totalExecuted));
+            // The snapshot copies ten lists, so it's built only for someone listening (PF-006), and into lists it keeps:
+            // a new one each frame allocated them all again (GAS-P10)
+            if (Callbacks != null && Callbacks.HasFrameCompleteListeners) Callbacks.FrameComplete(FrameSummary.TakeSnapshot(totalExecuted));
 
             FrameSummary.Clear();
 

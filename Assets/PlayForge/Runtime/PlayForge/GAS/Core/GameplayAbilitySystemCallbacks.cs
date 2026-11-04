@@ -15,7 +15,8 @@ namespace FarEmerald.PlayForge
         
         /// <summary>
         /// Invoked at the end of each frame after all deferred actions are processed.
-        /// Provides a complete summary of all modifications that occurred.
+        /// Provides a complete summary of all modifications that occurred. The summary is the entity's own and is
+        /// refilled each frame, so read it during the call, or copy what you need (GAS-P10).
         /// </summary>
         public delegate void FrameCompleteDelegate(FrameSummarySnapshot summary);
         

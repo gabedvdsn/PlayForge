@@ -331,49 +331,87 @@ namespace FarEmerald.PlayForge
             AbilityInjections.Clear();
         }
 
-        /// <summary>Create a snapshot copy of the current state.</summary>
+        /// <summary>A snapshot copy of the current state, made for the caller to keep.</summary>
         public FrameSummarySnapshot CreateSnapshot(int executed)
         {
             return new FrameSummarySnapshot(this, executed);
         }
+
+        private FrameSummarySnapshot _listenersSnapshot;
+
+        /// <summary>
+        /// The snapshot this frame's listeners read: one per summary, refilled each frame, so it holds this frame only
+        /// during the call. A new one each frame copied ten lists, 504 bytes a frame for an entity anyone listened to
+        /// (GAS-P10).
+        /// </summary>
+        internal FrameSummarySnapshot TakeSnapshot(int executed)
+        {
+            _listenersSnapshot ??= new FrameSummarySnapshot();
+            _listenersSnapshot.Fill(this, executed);
+            return _listenersSnapshot;
+        }
     }
 
     /// <summary>
-    /// Immutable snapshot of a FrameSummary for passing to callbacks.
+    /// A frame's summary as its listeners read it. The one <see cref="GameplayAbilitySystemCallbacks.OnFrameComplete"/>
+    /// hands a listener is its entity's own and is refilled each frame, so it holds that frame only during the call
+    /// (GAS-P10). <see cref="FrameSummary.CreateSnapshot"/> makes one to keep.
     /// </summary>
     public class FrameSummarySnapshot
     {
-        public IReadOnlyList<ImpactData> Impacts { get; }
-        public IReadOnlyList<ImpactData> ImpactsDealt { get; }
-        public IReadOnlyList<ImpactData> ImpactsReceived { get; }
-        public IReadOnlyList<IRootAction> InvalidatedActions { get; }
-        public IReadOnlyList<AbstractTagWorker> ActivatedTagWorkers { get; }
-        public IReadOnlyList<AbstractTagWorker> ResolvedTagWorkers { get; }
-        public IReadOnlyList<GameplayEffectSpec> AppliedEffects { get; }
-        public IReadOnlyList<GameplayEffect> RemovedEffects { get; }
-        public IReadOnlyList<IGameplayAbilitySystem> Deaths { get; }
-        public IReadOnlyList<AbilityCallbackStatus> AbilityInjections { get; }
+        private readonly List<ImpactData> _impacts = new();
+        private readonly List<ImpactData> _impactsDealt = new();
+        private readonly List<ImpactData> _impactsReceived = new();
+        private readonly List<IRootAction> _invalidatedActions = new();
+        private readonly List<AbstractTagWorker> _activatedTagWorkers = new();
+        private readonly List<AbstractTagWorker> _resolvedTagWorkers = new();
+        private readonly List<GameplayEffectSpec> _appliedEffects = new();
+        private readonly List<GameplayEffect> _removedEffects = new();
+        private readonly List<IGameplayAbilitySystem> _deaths = new();
+        private readonly List<AbilityCallbackStatus> _abilityInjections = new();
 
-        public int Executed { get; }
-        public int Invalidated { get; }
+        public IReadOnlyList<ImpactData> Impacts => _impacts;
+        public IReadOnlyList<ImpactData> ImpactsDealt => _impactsDealt;
+        public IReadOnlyList<ImpactData> ImpactsReceived => _impactsReceived;
+        public IReadOnlyList<IRootAction> InvalidatedActions => _invalidatedActions;
+        public IReadOnlyList<AbstractTagWorker> ActivatedTagWorkers => _activatedTagWorkers;
+        public IReadOnlyList<AbstractTagWorker> ResolvedTagWorkers => _resolvedTagWorkers;
+        public IReadOnlyList<GameplayEffectSpec> AppliedEffects => _appliedEffects;
+        public IReadOnlyList<GameplayEffect> RemovedEffects => _removedEffects;
+        public IReadOnlyList<IGameplayAbilitySystem> Deaths => _deaths;
+        public IReadOnlyList<AbilityCallbackStatus> AbilityInjections => _abilityInjections;
 
-        public FrameSummarySnapshot(FrameSummary summary, int executed)
+        public int Executed { get; private set; }
+        public int Invalidated { get; private set; }
+
+        internal FrameSummarySnapshot() { }
+
+        public FrameSummarySnapshot(FrameSummary summary, int executed) => Fill(summary, executed);
+
+        /// <summary>Takes the summary's state as it is now, into lists this snapshot keeps from frame to frame.</summary>
+        internal void Fill(FrameSummary summary, int executed)
         {
-            Impacts = summary.Impacts.ToList();
-            ImpactsDealt = summary.ImpactsDealt.ToList();
-            ImpactsReceived = summary.ImpactsReceived.ToList();
-            InvalidatedActions = summary.InvalidatedActions.ToList();
-            ActivatedTagWorkers = summary.ActivatedTagWorkers.ToList();
-            ResolvedTagWorkers = summary.ResolvedTagWorkers.ToList();
+            Refill(_impacts, summary.Impacts);
+            Refill(_impactsDealt, summary.ImpactsDealt);
+            Refill(_impactsReceived, summary.ImpactsReceived);
+            Refill(_invalidatedActions, summary.InvalidatedActions);
+            Refill(_activatedTagWorkers, summary.ActivatedTagWorkers);
+            Refill(_resolvedTagWorkers, summary.ResolvedTagWorkers);
 
             // The rest of what the frame recorded, which FrameComplete listeners never saw (GAS-39)
-            AppliedEffects = summary.AppliedEffects.ToList();
-            RemovedEffects = summary.RemovedEffects.ToList();
-            Deaths = summary.Deaths.ToList();
-            AbilityInjections = summary.AbilityInjections.ToList();
+            Refill(_appliedEffects, summary.AppliedEffects);
+            Refill(_removedEffects, summary.RemovedEffects);
+            Refill(_deaths, summary.Deaths);
+            Refill(_abilityInjections, summary.AbilityInjections);
 
             Executed = executed;
             Invalidated = summary.InvalidatedActions.Count;
+        }
+
+        private static void Refill<T>(List<T> into, List<T> from)
+        {
+            into.Clear();
+            into.AddRange(from);
         }
     }
 }

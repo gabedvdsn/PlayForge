@@ -70,6 +70,9 @@ tracks each fix below by its ID.
   the ability proxy and `RunSequenceTask` wait on it. An instant ability ends in the frame it starts, and a nested
   sequence adds no frame; so an instant sequence can end inside `ProcessControl.Register`, and an instant ability
   inside `TryActivateAbility`. A repeating sequence that runs instantly still takes a frame per repeat.
+- A frame whose summary has a listener allocates nothing. The `FrameSummarySnapshot` that `OnFrameComplete` hands a
+  listener is its entity's own and is refilled each frame, so read it during the call, or copy what you need.
+  `FrameSummary.CreateSnapshot` still makes one to keep.
 
 ### Fixed
 - Runtime correctness: 96 fixes across ProcessControl, TaskSequence and the GAS core, among them exception isolation,
