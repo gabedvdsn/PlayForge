@@ -56,7 +56,7 @@ namespace FarEmerald.PlayForge.Extended.Editor
 
         protected override Color GetAssetTypeColor() => Colors.GetAssetColor(typeof(EntityIdentity));
         
-        protected override string GetDocumentationUrl() => "https://docs.playforge.dev/entities";
+        protected override string GetDocumentationTopic() => "entities";
         
         protected override bool ShowVisualizeButton => true;
         protected override bool ShowImportButton => true;
@@ -95,7 +95,7 @@ namespace FarEmerald.PlayForge.Extended.Editor
                 Name = "Definition",
                 Title = "Definition",
                 AccentColor = GetAssetTypeColor(),
-                HelpUrl = "https://docs.playforge.dev/entities/definition"
+                HelpTopic = "entities/definition"
             });
             parent.Add(section.Section);
             
@@ -157,7 +157,7 @@ namespace FarEmerald.PlayForge.Extended.Editor
                 Name = "Linking",
                 Title = "Level Source",
                 AccentColor = GetAssetTypeColor(),
-                HelpUrl = "https://docs.playforge.dev/items/linking"
+                HelpTopic = "entities/level-source"
             });
             parent.Add(section.Section);
             
@@ -482,7 +482,7 @@ namespace FarEmerald.PlayForge.Extended.Editor
                 Name = "Tags",
                 Title = "Tags",
                 AccentColor = GetAssetTypeColor(),
-                HelpUrl = "https://docs.playforge.dev/entities/tags"
+                HelpTopic = "entities/tags"
             });
             parent.Add(section.Section);
             
@@ -529,7 +529,7 @@ namespace FarEmerald.PlayForge.Extended.Editor
                 Name = "Level",
                 Title = "Level",
                 AccentColor = GetAssetTypeColor(),
-                HelpUrl = "https://docs.playforge.dev/entities/level"
+                HelpTopic = "entities/leveling"
             });
             parent.Add(section.Section);
 
@@ -827,7 +827,7 @@ namespace FarEmerald.PlayForge.Extended.Editor
                 Name = "Abilities",
                 Title = "Abilities",
                 AccentColor = GetAssetTypeColor(),
-                HelpUrl = "https://docs.playforge.dev/entities/abilities"
+                HelpTopic = "entities/abilities"
             });
             parent.Add(section.Section);
             
@@ -887,7 +887,7 @@ namespace FarEmerald.PlayForge.Extended.Editor
                 Name = "Items",
                 Title = "Items",
                 AccentColor = GetAssetTypeColor(),
-                HelpUrl = "https://docs.playforge.dev/entities/items"
+                HelpTopic = "entities/items"
             });
             parent.Add(section.Section);
             
@@ -945,7 +945,7 @@ namespace FarEmerald.PlayForge.Extended.Editor
                 Name = "Attributes",
                 Title = "Attributes",
                 AccentColor = GetAssetTypeColor(),
-                HelpUrl = "https://docs.playforge.dev/entities/attributes"
+                HelpTopic = "entities/attributes"
             });
             parent.Add(section.Section);
             
@@ -969,7 +969,7 @@ namespace FarEmerald.PlayForge.Extended.Editor
                 Name = "Workers",
                 Title = "Workers",
                 AccentColor = GetAssetTypeColor(),
-                HelpUrl = "https://docs.playforge.dev/entities/workers"
+                HelpTopic = "entities/workers"
             });
             parent.Add(section.Section);
             
@@ -997,7 +997,7 @@ namespace FarEmerald.PlayForge.Extended.Editor
                 Name = "LocalData",
                 Title = "Local Data",
                 AccentColor = GetAssetTypeColor(),
-                HelpUrl = "https://docs.playforge.dev/entities/localdata"
+                HelpTopic = "entities/localdata"
             });
             parent.Add(section.Section);
             

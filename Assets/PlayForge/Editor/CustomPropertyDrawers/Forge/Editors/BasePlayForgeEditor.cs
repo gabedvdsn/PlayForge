@@ -153,7 +153,8 @@ namespace FarEmerald.PlayForge.Extended.Editor
         protected abstract Color GetAssetTypeColor();
         
         /// <summary>Documentation URL for this asset type</summary>
-        protected abstract string GetDocumentationUrl();
+        /// <summary>The header help button's topic in ForgeDocs, such as "abilities". None by default.</summary>
+        protected virtual string GetDocumentationTopic() => null;
 
         protected string GetProviderTypeName(Type type)
         {
@@ -788,9 +789,9 @@ namespace FarEmerald.PlayForge.Extended.Editor
             
             var docBtn = CreateHeaderButton("?", "Open Documentation", new Color(0.4f, 0.4f, 0.4f), () =>
             {
-                var url = GetDocumentationUrl();
-                if (!string.IsNullOrEmpty(url))
-                    Application.OpenURL(url);
+                var topic = GetDocumentationTopic();
+                if (!string.IsNullOrEmpty(topic))
+                    ForgeDocs.Open(topic);
             });
             topButtonRow.Add(docBtn);
             buttonsContainer.Add(topButtonRow);

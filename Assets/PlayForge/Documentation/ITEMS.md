@@ -1,0 +1,105 @@
+# PlayForge — Items
+
+An **Item** asset describes something an entity can hold and equip, such as a sword or a ring. An entity is anything
+that runs a gameplay ability system (GAS), such as the player or an enemy. Giving an item puts it in the entity's
+inventory. Equipping it applies what it grants: its Granted Effects, its Active Ability, its Granted Tags and its
+workers. Unequipping the item, or removing it from the inventory, takes them away again.
+
+An entity gets items from its Entity asset's Starting Items, or from code through its `ItemSystemComponent`, with
+`GiveItem`, `EquipItem`, `UnequipItem` and `RemoveItem`. The entity's limits on items are set on its Entity asset.
+
+Tags are names, such as `State.Stunned`, that an entity carries and that requirements check. Each asset stores a tag
+made from its Name: Iron Sword gives `Item.IronSword`. The entity carries this tag while the item is in its inventory,
+equipped or not, and keeps the item's level under it. Each section below matches the inspector section of the same
+name.
+
+## Definition
+
+- **Name**: the item's display name. It also gives the asset tag, so renaming the item changes its tag. Update anything
+  that names the old tag.
+- **Description**: free text for your UI. The inspector header shows it.
+- **Visibility**: a tag your UI can read for filtering, such as `Always Visible` or `Not Visible`. The Forge lists it.
+  The runtime doesn't act on it.
+- **Textures**: icons, each paired with a tag. The texture tagged `Primary` is the item's icon. Without one, the first
+  texture is used.
+- **Allow Duplicates**: marks an item that an inventory may hold more than once. The runtime doesn't read this flag in
+  this version. The entity's **Allow Duplicate Items** setting decides instead.
+
+## Tags
+
+- The **asset tag** shows at the top, read-only. It is made from the Name: punctuation is dropped, and each word is
+  capitalised and joined. The tag is stored when you edit the Name. If the stored tag differs from the one the Name
+  gives, it shows in amber with an **Update** button that stores the new one.
+- **Context Tags** describe the item, such as `Weapon`. The changes made by effects this item applies carry them as
+  context, and workers can filter by them. They are not applied to the entity.
+- **Granted Tags** are applied to the entity while the item is equipped.
+
+## Level Source
+
+An item has its own level on each entity that holds it, kept under the item's asset tag. Its Granted Effects take this
+level, and its Active Ability is granted at it. A level provider is an asset whose level range another asset follows.
+
+- **Link Mode**: Standalone (default) uses the item's own Leveling values. Linked To Provider takes the range from the
+  provider instead.
+- **Level Provider**: the linked asset, or No Provider Linked.
+- **Link to**: pick a provider of one type: Entity, Ability, Effect, Item or Attribute Set. A link that would make a
+  loop is refused, with an error in the Console. The status box below shows the provider's type, name and range, with
+  **Go to Provider** and **Unlink** buttons.
+- **Child Assets**: **Link Ability & Effects** links the Granted Effects and the Active Ability to this item, so their
+  per-level values follow its range. **Unlink Ability & Effects** removes the links that point at this item.
+
+The link serves the inspector: the Leveling section, and the scalers of effects linked to this item, read the
+provider's range. At runtime, the item's level comes from its own Starting Level and Max Level, even while it is
+linked.
+
+## Leveling
+
+- **Level Range**: two numbers, the Starting Level (default 1) and the Max Level (default 4). Both are at least 1, and
+  the Starting Level is kept within the range.
+
+A given item starts at its Starting Level, unless code gives it at another level. Its level then stays between that
+level and the Max Level. Code changes it through the entity's GAS, with `SetLevel` or `ModifyLevel` and the item's asset
+tag. When Link Mode is Linked To Provider, this section shows the provider's range, read-only.
+
+## Granted Effects
+
+Effects applied to the entity while the item is equipped. Each is applied with the item as its origin, so it takes the
+item's level. Unequipping removes the effects this item applied. It leaves the same effect alone where something else
+applied it.
+
+Use Infinite effects for bonuses that last while the item is equipped. An Instant effect commits once, when the item is
+equipped, and unequipping doesn't undo it. A Durational effect ends when its time runs out, even while the item is still
+equipped.
+
+When you assign an effect, the field offers to link it to this item. Its **+** button creates a new effect that is
+already linked.
+
+## Abilities
+
+- **Active Ability**: an ability the entity learns while the item is equipped. It is granted at the item's level when
+  the item is equipped, and removed when the item is unequipped. If the entity can't take it, because of its Max
+  Abilities or Allow Duplicate Abilities settings, the item is still equipped, without the ability.
+
+To make the ability's levels follow the item's, use **Link Ability & Effects** in Level Source.
+
+## Workers
+
+Workers are reusable behaviours, picked from a list, that react to what happens to an entity. This group is subscribed
+to the entity when the item is equipped, and removed when it is unequipped. **Name** labels the group. It holds four
+lists:
+
+- **Attribute** workers run before or after an attribute changes, for example to reduce incoming damage.
+- **Impact** workers inspect the changes the entity deals.
+- **Tag** workers react when the entity's tags change.
+- **Analysis** workers examine the frame at its end, for example to detect death.
+
+The import button in the group's header copies a worker group from another asset.
+
+## Local Data
+
+Local Data is a list of named values stored on the asset. Each row has a **Key** (a tag), a **Type**, and a value of
+that type: String, Int, Float, Bool, Tag, Attribute, Effect, Ability, Entity, Object, ScriptableObject or MonoBehaviour.
+Object fields take project assets, not scene objects.
+
+PlayForge doesn't read an item's Local Data itself. Your code and workers can, with
+`item.TryGetLocalData(key, out var data)`. The first row with that key wins.

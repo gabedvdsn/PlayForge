@@ -49,7 +49,7 @@ namespace FarEmerald.PlayForge.Extended.Editor
         
         protected override Color GetAssetTypeColor() => Colors.GetAssetColor(typeof(Attribute));
         
-        protected override string GetDocumentationUrl() => "https://docs.playforge.dev/attributes";
+        protected override string GetDocumentationTopic() => "attributes";
         
         protected override bool ShowVisualizeButton => true;
         protected override bool ShowImportButton => true;
@@ -92,7 +92,7 @@ namespace FarEmerald.PlayForge.Extended.Editor
                 Name = "Definition",
                 Title = "Definition",
                 AccentColor = GetAssetTypeColor(),
-                HelpUrl = "https://docs.playforge.dev/attributes/definition",
+                HelpTopic = "attributes/definition",
                 
                 SerializedObject = serializedObject,
                 PropertyPaths = new []{nameof(Attribute.Name), nameof(Attribute.Abbreviation), nameof(Attribute.Description), nameof(Attribute.Textures)},
@@ -180,7 +180,7 @@ namespace FarEmerald.PlayForge.Extended.Editor
                 Name = "LocalData",
                 Title = "Local Data",
                 AccentColor = GetAssetTypeColor(),
-                HelpUrl = "https://docs.playforge.dev/effects/localdata",
+                HelpTopic = "attributes/localdata",
 
                 SerializedObject = serializedObject,
                 PropertyPaths = new[] { nameof(Attribute.LocalData) },
@@ -215,7 +215,7 @@ namespace FarEmerald.PlayForge.Extended.Editor
                 Name = "Usage",
                 Title = "Usage",
                 AccentColor = GetAssetTypeColor(),
-                HelpUrl = "https://docs.playforge.dev/attributes/usage",
+                HelpTopic = "attributes/usage",
                 IncludeButtons = new[] { false, false, false }
             });
             parent.Add(section.Section);

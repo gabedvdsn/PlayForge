@@ -64,7 +64,7 @@ namespace FarEmerald.PlayForge.Extended.Editor
         
         protected override Color GetAssetTypeColor() => Colors.GetAssetColor(typeof(AttributeSet));
         
-        protected override string GetDocumentationUrl() => "https://docs.playforge.dev/attributesets";
+        protected override string GetDocumentationTopic() => "attributesets";
         
         protected override bool ShowVisualizeButton => true;
         protected override bool ShowImportButton => true;
@@ -83,7 +83,7 @@ namespace FarEmerald.PlayForge.Extended.Editor
                 Name = "LevelSource",
                 Title = "Level Source",
                 AccentColor = GetAssetTypeColor(),
-                HelpUrl = "https://docs.playforge.dev/attributesets/levelsource",
+                HelpTopic = "attributesets/level-source",
             });
             parent.Add(section.Section);
 
@@ -298,7 +298,7 @@ namespace FarEmerald.PlayForge.Extended.Editor
                 Name = "Leveling",
                 Title = "Leveling",
                 AccentColor = GetAssetTypeColor(),
-                HelpUrl = "https://docs.playforge.dev/attributesets/leveling",
+                HelpTopic = "attributesets/leveling",
 
                 SerializedObject = serializedObject,
                 PropertyPaths = new[] { nameof(AttributeSet.StartingLevel), nameof(AttributeSet.MaxLevel) },
@@ -469,7 +469,7 @@ namespace FarEmerald.PlayForge.Extended.Editor
                 Name = "Definition",
                 Title = "Definition",
                 AccentColor = GetAssetTypeColor(),
-                HelpUrl = "https://docs.playforge.dev/attributesets/definition",
+                HelpTopic = "attributesets/definition",
                 
                 SerializedObject = serializedObject,
                 PropertyPaths = new []{nameof(AttributeSet.Name), nameof(AttributeSet.Description), nameof(AttributeSet.Textures)},
@@ -559,7 +559,7 @@ namespace FarEmerald.PlayForge.Extended.Editor
                 Name = "Attributes",
                 Title = "Attributes",
                 AccentColor = GetAssetTypeColor(),
-                HelpUrl = "https://docs.playforge.dev/attributesets/attributes",
+                HelpTopic = "attributesets/attributes",
                 
                 SerializedObject = serializedObject,
                 PropertyPaths = new []{nameof(AttributeSet.Attributes)},
@@ -613,7 +613,7 @@ namespace FarEmerald.PlayForge.Extended.Editor
                 Name = "Subsets",
                 Title = "Sub-Sets",
                 AccentColor = GetAssetTypeColor(),
-                HelpUrl = "https://docs.playforge.dev/attributesets/subsets",
+                HelpTopic = "attributesets/subsets",
                 
                 SerializedObject = serializedObject,
                 PropertyPaths = new []{nameof(AttributeSet.SubSets)},
@@ -669,7 +669,7 @@ namespace FarEmerald.PlayForge.Extended.Editor
                 Name = "Settings",
                 Title = "Collision Settings",
                 AccentColor = GetAssetTypeColor(),
-                HelpUrl = "https://docs.playforge.dev/attributesets/settings",
+                HelpTopic = "attributesets/settings",
                 
                 SerializedObject = serializedObject,
                 PropertyPaths = new []{nameof(AttributeSet.CollisionResolutionPolicy)},
@@ -726,7 +726,7 @@ namespace FarEmerald.PlayForge.Extended.Editor
                 Name = "Workers",
                 Title = "Workers",
                 AccentColor = GetAssetTypeColor(),
-                HelpUrl = "https://docs.playforge.dev/attributesets/workers",
+                HelpTopic = "attributesets/workers",
                 
                 SerializedObject = serializedObject,
                 PropertyPaths = new []{nameof(AttributeSet.WorkerGroup)},
@@ -807,7 +807,7 @@ namespace FarEmerald.PlayForge.Extended.Editor
                 Name = "LocalData",
                 Title = "Local Data",
                 AccentColor = GetAssetTypeColor(),
-                HelpUrl = "https://docs.playforge.dev/abilities/localdata",
+                HelpTopic = "attributesets/localdata",
 
                 SerializedObject = serializedObject,
                 PropertyPaths = new[] { nameof(AttributeSet.LocalData) },

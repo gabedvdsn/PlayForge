@@ -71,7 +71,7 @@ namespace FarEmerald.PlayForge.Extended.Editor
         
         protected override Color GetAssetTypeColor() => Colors.GetAssetColor(typeof(Ability));
         
-        protected override string GetDocumentationUrl() => "https://docs.playforge.dev/abilities";
+        protected override string GetDocumentationTopic() => "abilities";
         
         protected override bool ShowVisualizeButton => true;
         protected override bool ShowImportButton => true;
@@ -110,7 +110,7 @@ namespace FarEmerald.PlayForge.Extended.Editor
                 Name = Section_Definition,
                 Title = "Definition",
                 AccentColor = GetAssetTypeColor(),
-                HelpUrl = "https://docs.playforge.dev/abilities/definition",
+                HelpTopic = "abilities/definition",
                 
                 SerializedObject = serializedObject,
                 PropertyPaths = new []{nameof(Ability.Definition), nameof(Ability.Cost), nameof(Ability.Cooldown)},
@@ -234,7 +234,7 @@ namespace FarEmerald.PlayForge.Extended.Editor
                 Name = Section_Tags,
                 Title = "Tags",
                 AccentColor = GetAssetTypeColor(),
-                HelpUrl = "https://docs.playforge.dev/abilities/tags",
+                HelpTopic = "abilities/tags",
                 
                 SerializedObject = serializedObject,
                 PropertyPaths = new []{nameof(Ability.Tags)},
@@ -297,7 +297,7 @@ namespace FarEmerald.PlayForge.Extended.Editor
                 Name = Section_Runtime,
                 Title = "Runtime Behaviour",
                 AccentColor = GetAssetTypeColor(),
-                HelpUrl = "https://docs.playforge.dev/abilities/runtime",
+                HelpTopic = "abilities/runtime",
                 
                 SerializedObject = serializedObject,
                 PropertyPaths = new []{nameof(Ability.Behaviour)},
@@ -375,7 +375,7 @@ namespace FarEmerald.PlayForge.Extended.Editor
                 Name = Section_Leveling,
                 Title = "Leveling",
                 AccentColor = GetAssetTypeColor(),
-                HelpUrl = "https://docs.playforge.dev/abilities/leveling",
+                HelpTopic = "abilities/leveling",
                 
                 SerializedObject = serializedObject,
                 PropertyPaths = new []{nameof(Ability.StartingLevel), nameof(Ability.MaxLevel), nameof(Ability.IgnoreWhenLevelZero)},
@@ -716,7 +716,7 @@ namespace FarEmerald.PlayForge.Extended.Editor
                 Name = Section_Leveling,
                 Title = "Level Source",
                 AccentColor = GetAssetTypeColor(),
-                HelpUrl = "https://docs.playforge.dev/abilities/level-source",
+                HelpTopic = "abilities/level-source",
                 
                 HideClearButton = true,
                 HideImportButton = true
@@ -1017,7 +1017,7 @@ namespace FarEmerald.PlayForge.Extended.Editor
                 Name = Section_Validation,
                 Title = "Validation Rules",
                 AccentColor = GetAssetTypeColor(),
-                HelpUrl = "https://docs.playforge.dev/abilities/validation",
+                HelpTopic = "abilities/validation",
                 
                 SerializedObject = serializedObject,
                 PropertyPaths = new []{nameof(Ability.SourceActivationRules), nameof(Ability.TargetActivationRules)},
@@ -1079,7 +1079,7 @@ namespace FarEmerald.PlayForge.Extended.Editor
                 Name = Section_Workers,
                 Title = "Workers",
                 AccentColor = GetAssetTypeColor(),
-                HelpUrl = "https://docs.playforge.dev/abilities/workers",
+                HelpTopic = "abilities/workers",
                 
                 SerializedObject = serializedObject,
                 PropertyPaths = new []{nameof(Ability.WorkerGroup)},
@@ -1127,7 +1127,7 @@ namespace FarEmerald.PlayForge.Extended.Editor
                 Name = Section_LocalData,
                 Title = "Local Data",
                 AccentColor = GetAssetTypeColor(),
-                HelpUrl = "https://docs.playforge.dev/abilities/localdata",
+                HelpTopic = "abilities/localdata",
 
                 SerializedObject = serializedObject,
                 PropertyPaths = new[] { nameof(Ability.LocalData) },

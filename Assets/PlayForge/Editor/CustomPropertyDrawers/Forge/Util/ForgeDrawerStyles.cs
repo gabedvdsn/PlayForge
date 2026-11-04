@@ -456,7 +456,8 @@ namespace FarEmerald.PlayForge.Extended.Editor
             public bool StartExpanded = true;
             
             /// <summary>URL for the help button (if empty, no help button shown)</summary>
-            public string HelpUrl;
+            // The help button's topic in ForgeDocs, such as "abilities/leveling" (ED-16)
+            public string HelpTopic;
             
             /// <summary>
             /// Legacy button visibility control. 
@@ -618,7 +619,7 @@ namespace FarEmerald.PlayForge.Extended.Editor
             // Determine button visibility
             bool showImport = config.IncludeButtons?[0] ?? true;
             bool showClear = config.IncludeButtons?[1] ?? true;
-            bool showHelp = (config.IncludeButtons?[2] ?? true) && !string.IsNullOrEmpty(config.HelpUrl);
+            bool showHelp = (config.IncludeButtons?[2] ?? true) && !string.IsNullOrEmpty(config.HelpTopic);
             
             // Override with explicit hide flags
             if (config.HideImportButton) showImport = false;
@@ -678,7 +679,7 @@ namespace FarEmerald.PlayForge.Extended.Editor
                     $"{config.Name}Help",
                     Icons.Help,
                     Colors.PolicyPurple,
-                    () => Application.OpenURL(config.HelpUrl));
+                    () => ForgeDocs.Open(config.HelpTopic));
                 result.HelpButton.tooltip = "Open documentation";
                 result.HelpButton.style.display = DisplayStyle.None;
                 header.Add(result.HelpButton);
