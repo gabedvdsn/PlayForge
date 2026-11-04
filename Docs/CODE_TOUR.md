@@ -1,7 +1,7 @@
 # PlayForge refactor: code tour
 
 This tour lists the places where the refactor changed code, so you can open each one in your IDE and read it. It
-covers `01258b8..e1d1dd0` on `main`: 235 commits. Phase 0 ported Arcade Fighter's fixes, Phase 1 made the runtime
+covers `01258b8..097384f` on `main`: 247 commits. Phase 0 ported Arcade Fighter's fixes, Phase 1 made the runtime
 correct, Phase 2 got the package ready to release, Phase 3 made it cheaper to run and gave the two GAS hubs one core,
 and Phase 4 has begun. Each entry says what behaves differently and why, names its tracker IDs and Decisions, and
 points at the two or three places to read. `Docs/REFACTOR_PLAN.md` has every tracker row, the numbered Decisions,
@@ -10,8 +10,8 @@ and a Log of each batch's test results.
 ## How to use this
 
 - Paths are relative to the repo root.
-- Line numbers are as of commit `e1d1dd0`, the head of `main` on 2026-11-04. A later commit may move them, so each
-  entry also names the class and method to search for. `git show e1d1dd0:<path>` shows a file as it was then.
+- Line numbers are as of commit `097384f`, the head of `main` on 2026-11-04. A later commit may move them, so each
+  entry also names the class and method to search for. `git show 097384f:<path>` shows a file as it was then.
 - In Rider, Go to File accepts `path:line`. In Visual Studio, open the file, then Go To Line (Ctrl+G).
   A bare `:123` after a path means another line in the same file.
 - `git grep "<ID>"` finds the comment at each fix, and `git log --grep "<ID>"` finds its commit. Three exceptions:
@@ -45,16 +45,85 @@ asset; ED-12's row lists what is left.
 - **Read:**
   - `Assets/PlayForge/Editor/CustomPropertyDrawers/Forge/Editors/Assets/AttributeEditor.cs:135`, the three bound
     fields. The inspector turns on `SupportsMultipleObjects` at `:17` and carries `[CanEditMultipleObjects]` at `:9`.
-  - `Assets/PlayForge/Editor/CustomPropertyDrawers/Forge/Editors/BasePlayForgeEditor.cs:220` `CreateBoundTextField`,
+  - `Assets/PlayForge/Editor/CustomPropertyDrawers/Forge/Editors/BasePlayForgeEditor.cs:245` `CreateBoundTextField`,
     which binds a text field and writes when the edit is committed. `SupportsMultipleObjects` (`:209`) lets
-    `CreateInspectorGUI` take a multiple selection (`:473`), and `HeaderName` (`:213`) counts it in the header.
-  - `:496`, where every inspector's header follows the asset's changes, Undo and Redo among them, through
+    `CreateInspectorGUI` take a multiple selection (`:503`), and `HeaderName` (`:238`) counts it in the header.
+  - `:527`, where every inspector's header follows the asset's changes, Undo and Redo among them, through
     `TrackSerializedObjectValue`.
 - **Watch for:** with several assets selected, the header leaves out Template, Visualize and Open in The Forge
-  (`:845`), since they act on one asset.
+  (`:880`), since they act on one asset.
 - **Test:** `ED_12_An_edit_in_the_Attribute_inspector_undoes` and
   `ED_12_The_Attribute_inspector_edits_every_selected_attribute` in `InspectorUndoTests`. They build the whole
   inspector in a runtime panel, where its bindings run in batch mode.
+
+### The MonoProcess inspector edits a multiple selection (ED-12)
+
+The MonoProcess inspector bound every field already, but it lacked `[CanEditMultipleObjects]`, so the Inspector never
+gave it a multiple selection and showed "Multi-object editing not supported" instead. It is the only MonoBehaviour
+inspector, so it is also where a prefab instance's edits show as overrides.
+
+- **IDs:** ED-12, commit `d0941e6`.
+- **Read:** `Assets/PlayForge/Editor/CustomPropertyDrawers/Forge/Editors/AbstractMonoProcessEditor.cs:10`.
+- **Watch for:** a SerializedObject over several objects flagged DontSave writes only to the first of them, so the
+  test uses plain scene objects.
+- **Test:** `ED_12_The_MonoProcess_inspector_edits_every_selected_process` in `InspectorUndoTests`.
+
+### Every asset inspector's own fields undo (ED-12)
+
+The Effect, Item, Entity, Attribute Set and Ability inspectors wrote their fields straight into the asset, with no
+Undo: Description everywhere, Link Mode everywhere, and the Entity's levels, Activation Policy and Allow Duplicate
+toggles, and the Ability's Activation Policy and Activate Immediately. Each Level Source and Leveling section was also
+drawn from the link mode once, so after an Undo it showed a mode the asset no longer had. The fields now bind, and a
+section drawn from the asset's values redraws in the base's new `OnAssetChanged` hook, which runs after every change,
+Undo and Redo among them. Renames already undid in one step, since Phase 2.
+
+- **IDs:** ED-12, commits `2e75b13` (Effect), `2d211d4` (Item), `0cc8e9d` (Entity), `e111fac` (Attribute Set) and
+  `62ed48e` (Ability).
+- **Read:**
+  - `Assets/PlayForge/Editor/CustomPropertyDrawers/Forge/Editors/BasePlayForgeEditor.cs:215` `OnAssetChanged`, a
+    virtual no-op that the header's tracker at `:527` calls.
+  - `Assets/PlayForge/Editor/CustomPropertyDrawers/Forge/Editors/Assets/EffectEditor.cs:155`, the Effect's override,
+    which redraws Level Source when the mode it shows has changed, and `:172`, the bound Link Mode field. The other four
+    inspectors do the same.
+  - `Assets/PlayForge/Editor/CustomPropertyDrawers/Forge/Editors/Assets/EntityIdentityEditor.cs:792`, Starting Level
+    bound to its property, as the Entity's other fields are.
+- **Watch for:** a multiple selection waits for the drawers' one-target copies, and in the Effect, Entity and
+  Attribute Set inspectors also for ScalerDrawer, which changes with Decision 28.
+- **Test:** `ED_12_An_edit_in_the_Effect_inspector_undoes` and the matching Item, Entity, Attribute Set and Ability
+  tests in `InspectorUndoTests`.
+
+### Link, Unlink and template assignment undo (ED-12)
+
+Each inspector's Link and Unlink buttons, for the asset's own provider and for its children, the provider picker's
+link, and the template picker's Assign and Unassign wrote into the assets with no Undo. Each now records every asset
+it changes first, so one Undo takes it back.
+
+- **IDs:** ED-12, commit `097384f`.
+- **Read:**
+  - `Assets/PlayForge/Editor/CustomPropertyDrawers/Forge/Editors/BasePlayForgeEditor.cs:226` `RecordLinkChange`, and
+    `ConfirmLinkChange` (`:219`), the hook the 13 confirmations ask through, which a test can answer.
+  - `:1250` `LinkTo` and `:333` `AssignTemplate`, the two pickers' steps.
+  - `Assets/PlayForge/Editor/CustomPropertyDrawers/Forge/Editors/Assets/EffectEditor.cs:255`, Link Contained Effects
+    recording the effect and its contained effects before it links them.
+- **Still open:** ED-31, the unlink dialogs that count with the editor rather than the asset, so they say 0.
+- **Test:** `ED_12_Linking_in_the_Effect_inspector_undoes` in `InspectorUndoTests`.
+
+### Opening a scaler writes nothing (ED-34)
+
+Opening a scaler wrote to it while drawing. On an effect with no level link, Lock mode cut its per-level table to one
+value, since the unlinked effect counts as its own level provider, with a Max Level of 1. The other modes resized the
+table to Max Level, and a Max Level of 0 or less became 10. Building the drawer also cloned a scaler that another list
+element shared. Now drawing writes nothing: a table keeps its length until the user changes it, and a level past its
+end reads its last value, as `GetValueAtLevel` already did.
+
+- **IDs:** ED-34, commit `7cc83c0`, Decision 28.
+- **Read:**
+  - `Assets/PlayForge/Editor/CustomPropertyDrawers/Forge/Drawers/Scaler/ScalerDrawer.cs:494`, in `CreateContent`,
+    where the three resizing writes were.
+  - `:121` `FindSharedSibling`, which only reads, and the warning at `:300`, whose button calls `GiveOwnCopy` (`:168`)
+    as one undoable step.
+- **Test:** `ED_34_Opening_a_scaler_leaves_its_table_alone` and `ED_34_Opening_a_shared_scaler_leaves_it_shared` in
+  `ScalerDrawerTests`.
 
 ## Phase 3
 
@@ -1304,7 +1373,7 @@ Markdown, and only on a click (Asset Store rule 2.5.1.d). Six reference pages ar
   - `Assets/PlayForge/Editor/CustomPropertyDrawers/Forge/Util/ForgeDocs.cs:79` `ForgeDocs.Open`, with the `Topics`
     table at `:17` and `DocumentationFolder` at `:88`, which finds the folder in a package or under `Assets`.
   - `Assets/PlayForge/Editor/CustomPropertyDrawers/Forge/Editors/BasePlayForgeEditor.cs:157`
-    `BasePlayForgeEditor.GetDocumentationTopic`, read by `CreateEditorHeader` at `:821`.
+    `BasePlayForgeEditor.GetDocumentationTopic`, read by `CreateEditorHeader` at `:856`.
   - `Assets/PlayForge/Editor/CustomPropertyDrawers/Forge/Util/ForgeDrawerStyles.cs:460` `SectionConfig.HelpTopic`.
 - **New:** `ForgeDocs`; `Documentation/ABILITIES.md`, `EFFECTS.md`, `ITEMS.md`, `ENTITIES.md`, `ATTRIBUTES.md`,
   `ATTRIBUTE_SETS.md`.
@@ -1334,10 +1403,10 @@ records the name and the tag it gives in one undoable step. Item and Effect prev
 
 - **IDs:** ED-12 (its Phase 2 part; the row stays open for Phase 4's Undo, multi-editing and prefab overrides).
 - **Read:**
-  - `Assets/PlayForge/Editor/CustomPropertyDrawers/Forge/Editors/BasePlayForgeEditor.cs:1029`
-    `BasePlayForgeEditor.ShowAssetTag`, and `StoreAssetTag` (`:1056`).
-  - `Assets/PlayForge/Editor/CustomPropertyDrawers/Forge/Editors/Assets/AbilityEditor.cs:151`, the rename callback,
-    and `SyncAssetTag` (`:1164`). The other four editors follow the same shape.
+  - `Assets/PlayForge/Editor/CustomPropertyDrawers/Forge/Editors/BasePlayForgeEditor.cs:1064`
+    `BasePlayForgeEditor.ShowAssetTag`, and `StoreAssetTag` (`:1091`).
+  - `Assets/PlayForge/Editor/CustomPropertyDrawers/Forge/Editors/Assets/AbilityEditor.cs:152`, the rename callback,
+    and `SyncAssetTag` (`:1157`). The other four editors follow the same shape.
 - **New:** `BasePlayForgeEditor.ShowAssetTag` and `StoreAssetTag`, and a `SyncAssetTag` in each asset editor.
 
 ### One pair of tag display settings
@@ -1389,15 +1458,15 @@ Golden Tests left the menu; the Test Runner runs the scenarios (SP-18).
 ### Inspector fixes
 
 - **ED-23.** An Item's Local Data can be edited; `ItemEditor` drew no section for it.
-  `Assets/PlayForge/Editor/CustomPropertyDrawers/Forge/Editors/Assets/ItemEditor.cs:867` `BuildLocalDataSection`.
+  `Assets/PlayForge/Editor/CustomPropertyDrawers/Forge/Editors/Assets/ItemEditor.cs:871` `BuildLocalDataSection`.
 - **ED-24.** `ParticipateInSiblingCascade` is drawn; it was hidden and drawn nowhere, though ProcessControl reads it.
-  `Assets/PlayForge/Editor/CustomPropertyDrawers/Forge/Editors/AbstractMonoProcessEditor.cs:85`, in
+  `Assets/PlayForge/Editor/CustomPropertyDrawers/Forge/Editors/AbstractMonoProcessEditor.cs:87`, in
   `CreateInspectorGUI`.
 - **ED-26.** The GAS Debugger removes its frame-summary hooks when it closes. They kept sampling every entity and
   stacked when it reopened. `Assets/PlayForge/Editor/CustomPropertyDrawers/Forge/Editors/GASDebugger.cs:146`
   `OnDisable`, and `:313` `RemoveFrameSummaryHooks`.
 - **ED-29.** Allow Duplicate Equipped Items opens with its own value.
-  `Assets/PlayForge/Editor/CustomPropertyDrawers/Forge/Editors/Assets/EntityIdentityEditor.cs:915`, in
+  `Assets/PlayForge/Editor/CustomPropertyDrawers/Forge/Editors/Assets/EntityIdentityEditor.cs:903`, in
   `BuildItemsSection`.
 - **ED-30.** Local Data's ScriptableObject and MonoBehaviour rows each bind their own field.
   `Assets/PlayForge/Editor/CustomPropertyDrawers/Forge/Drawers/Other/DataWrapperDrawer.cs:128`, in `UpdateValueField`.
@@ -1527,6 +1596,9 @@ Newest first. Each row is a good place to start reading.
 
 | What | IDs | Where | Commit |
 |---|---|---|---|
+| Link, Unlink and template assignment undo | ED-12 | `Assets/PlayForge/Editor/CustomPropertyDrawers/Forge/Editors/BasePlayForgeEditor.cs:226` | `097384f` |
+| Opening a scaler writes nothing | ED-34, Decision 28 | `Assets/PlayForge/Editor/CustomPropertyDrawers/Forge/Drawers/Scaler/ScalerDrawer.cs:494` | `7cc83c0` |
+| Every asset inspector's own fields undo | ED-12 | `Assets/PlayForge/Editor/CustomPropertyDrawers/Forge/Editors/BasePlayForgeEditor.cs:215` | `62ed48e` |
 | The Attribute inspector undoes every edit and edits a multiple selection | ED-12 | `Assets/PlayForge/Editor/CustomPropertyDrawers/Forge/Editors/Assets/AttributeEditor.cs:135` | `e1d1dd0` |
 | A task waiting in a delay allocates nothing a frame | TS-11 | `Assets/PlayForge/Runtime/PlayForge/Core/TaskSequence/Async/TaskSequenceRuntime.cs:55` | `ec008f7` |
 | A frame whose summary has a listener allocates nothing | GAS-P10, Decision 26 | `Assets/PlayForge/Runtime/PlayForge/Workers/Core/FrameSummary.cs:347` | `11a0f66` |
@@ -1547,7 +1619,7 @@ Newest first. Each row is a good place to start reading.
 | Help buttons open the package's own docs through one table | ED-16, Decision 18 | `Assets/PlayForge/Editor/CustomPropertyDrawers/Forge/Util/ForgeDocs.cs:79` | `67db441` |
 | Demo Lit draws the Demos under URP and Built-in | SP-23, Decision 17 | `Assets/PlayForge/Samples~/Demos/Demo/Shaders/DemoLit.shader:42` | `954a11a` |
 | Statics clear at the start of a play session | SP-22, PC-26 | `Assets/PlayForge/Runtime/PlayForge/Utils/AttributeRegistry.cs:14` | `86e9e11` |
-| Showing an asset never writes its tag; a rename is one Undo | ED-12 | `Assets/PlayForge/Editor/CustomPropertyDrawers/Forge/Editors/BasePlayForgeEditor.cs:1029` | `4d71636` |
+| Showing an asset never writes its tag; a rename is one Undo | ED-12 | `Assets/PlayForge/Editor/CustomPropertyDrawers/Forge/Editors/BasePlayForgeEditor.cs:1064` | `4d71636` |
 | Delete names what uses the asset and moves it to the trash | ED-8 | `Assets/PlayForge/Editor/CustomPropertyDrawers/Forge/Util/ForgeAssetDeletion.cs:25` | `e89a9f7` |
 | The samples live in `Samples~` and import on request | SP-20, Decision 16 | `Assets/PlayForge/package.json:14` | `8d17bc0` |
 | A derived refresh runs the post-change pipeline | GAS-27, Decision 14 | `Assets/PlayForge/Runtime/PlayForge/AttributeSystem/Core/AttributeSystemComponent.cs:566` | `550d07b` |
