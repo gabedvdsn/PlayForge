@@ -1,7 +1,7 @@
 # PlayForge refactor: code tour
 
 This tour lists the places where the refactor changed code, so you can open each one in your IDE and read it. It
-covers `01258b8..5ccaa88` on `main`: 194 commits. Phase 0 ported Arcade Fighter's fixes, Phase 1 made the runtime
+covers `01258b8..835b75c` on `main`: 196 commits. Phase 0 ported Arcade Fighter's fixes, Phase 1 made the runtime
 correct, Phase 2 got the package ready to release, and Phase 3 has begun. Each entry says what behaves differently and
 why, names its tracker IDs and Decisions, and points at the two or three places to read. `Docs/REFACTOR_PLAN.md` has
 every tracker row, the numbered Decisions, and a Log of each batch's test results.
@@ -9,8 +9,8 @@ every tracker row, the numbered Decisions, and a Log of each batch's test result
 ## How to use this
 
 - Paths are relative to the repo root.
-- Line numbers are as of commit `5ccaa88`, the head of `main` on 2026-11-03. A later commit may move them, so each
-  entry also names the class and method to search for. `git show 5ccaa88:<path>` shows a file as it was then.
+- Line numbers are as of commit `835b75c`, the head of `main` on 2026-11-03. A later commit may move them, so each
+  entry also names the class and method to search for. `git show 835b75c:<path>` shows a file as it was then.
 - In Rider, Go to File accepts `path:line`. In Visual Studio, open the file, then Go To Line (Ctrl+G).
   A bare `:123` after a path means another line in the same file.
 - `git grep "<ID>"` finds the comment at each fix, and `git log --grep "<ID>"` finds its commit. Three exceptions:
@@ -56,8 +56,8 @@ took, and takes back that slot only if the slot still holds its ability.
 
 - **IDs:** GAS-48, commit `27c2325`.
 - **Read:**
-  - `Assets/PlayForge/Runtime/PlayForge/ItemSystem/Core/ItemSpecContainer.cs:182`, in
-    `ItemSpecContainer.RemoveActiveAbility`. `ApplyActiveAbility` notes the slot at `:166`, in `grantedAbilityIndex`
+  - `Assets/PlayForge/Runtime/PlayForge/ItemSystem/Core/ItemSpecContainer.cs:183`, in
+    `ItemSpecContainer.RemoveActiveAbility`. `ApplyActiveAbility` notes the slot at `:167`, in `grantedAbilityIndex`
     (`:18`).
   - `Assets/PlayForge/Runtime/PlayForge/AbilitySystem/Core/AbilitySystemComponent.cs:238`
     `AbilitySystemComponent.RemoveAbilityAt`, which removes one slot. `RemoveAbility` (`:228`) finds a slot and calls
@@ -131,8 +131,8 @@ the package's entity assets stored. Code that set either no longer compiles.
 
 ### Still open in Phase 3
 
-GAS-51 waits on the same kind of call: item stacking is declared but not built, so an Item's `MaxStackSize` does
-nothing. The rest are performance and structure work: GAS-S1, GAS-P3, GAS-P4, PC-24, TS-5, TS-8, TS-10 and TS-Z.
+Performance and structure work: GAS-S1, GAS-P3, GAS-P4, PC-24, TS-5, TS-8, TS-10 and TS-Z. GAS-51, item stacking that
+is declared but not built, moved to Phase 5 as FEAT-14, so an Item's `MaxStackSize` does nothing until then.
 
 ## ProcessControl
 
@@ -802,8 +802,8 @@ cleared, so they outlived the item.
 - **Read:**
   - `Assets/PlayForge/Runtime/PlayForge/ItemSystem/Core/ItemSystemComponent.cs:228`
     `ItemSystemComponent.ClearAllItems`. The shelf is created at `:11` (GAS-3).
-  - `Assets/PlayForge/Runtime/PlayForge/ItemSystem/Core/ItemSpecContainer.cs:83` `ItemSpecContainer.Unequip`, then
-    `RemoveGrantedEffects` (`:138`) and `ApplyActiveAbility` (`:157`).
+  - `Assets/PlayForge/Runtime/PlayForge/ItemSystem/Core/ItemSpecContainer.cs:84` `ItemSpecContainer.Unequip`, then
+    `RemoveGrantedEffects` (`:139`) and `ApplyActiveAbility` (`:158`).
   - `Assets/PlayForge/Runtime/PlayForge/GAS/Core/EffectSystemComponent.cs:357`
     `EffectSystemComponent.RemoveGameplayEffect(GameplayEffect, IEffectOrigin)`.
 - **New:** `ITarget.RemoveGameplayEffect(GameplayEffect, IEffectOrigin)`, a default method that falls back to the old
@@ -813,7 +813,7 @@ cleared, so they outlived the item.
   [Phase 3 so far](#phase-3-so-far).
 - **Fixed in Phase 3:** GAS-45, an Item's `AllowDuplicates` was never read, and it is gone. See
   [Phase 3 so far](#phase-3-so-far).
-- **Still open:** GAS-51, item stacking is declared but not built.
+- **Moved to Phase 5:** GAS-51, item stacking is declared but not built. FEAT-14 builds it.
 
 ### Tags
 
@@ -1118,7 +1118,7 @@ Newest first. Each row is a good place to start reading.
 | An attribute set reached twice counts once | GAS-44 | `Assets/PlayForge/Runtime/PlayForge/AttributeSystem/Attribute/AttributeSet.cs:63` | `57ea4ff` |
 | Tick On Application alone lands its change | GAS-50 | `Assets/PlayForge/Runtime/PlayForge/GAS/Core/EffectSystemComponent.cs:199` | `e40b3b6` |
 | Opening abilities wait for the entity's attributes | GAS-49 | `Assets/PlayForge/Runtime/PlayForge/AbilitySystem/Core/AbilitySystemComponent.cs:169` | `999e779` |
-| Unequipping takes back only the item's grant | GAS-48 | `Assets/PlayForge/Runtime/PlayForge/ItemSystem/Core/ItemSpecContainer.cs:182` | `27c2325` |
+| Unequipping takes back only the item's grant | GAS-48 | `Assets/PlayForge/Runtime/PlayForge/ItemSystem/Core/ItemSpecContainer.cs:183` | `27c2325` |
 | Each entity keeps its own affiliation | GAS-47 | `Assets/PlayForge/Runtime/PlayForge/GAS/Core/MonoBehaviour/GameplayAbilitySystem.cs:68` | `fdc1886` |
 | Targeting's packet resolves to the entity, so Apply Effects finds its target | GAS-46 | `Assets/PlayForge/Runtime/PlayForge/AbilitySystem/Ability/AbilityProxy/Core/AbilityDataPacket.cs:133` | `fe4271c` |
 | Help buttons open the package's own docs through one table | ED-16, Decision 18 | `Assets/PlayForge/Editor/CustomPropertyDrawers/Forge/Util/ForgeDocs.cs:79` | `67db441` |
