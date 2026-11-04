@@ -80,13 +80,23 @@ The only other colors:
   A section's content indents 18 px, past the foldout arrow.
 - Fields, buttons and outlines take Unity's 3 px radius, and checkboxes 2 px. Nothing else is rounded.
 
+## Text
+
+- **Values, not sentences.** A cost reads "Mana 20/25/30/35", not "Takes 20 Mana at level 1, 35 at level 4".
+- **Short, objective and exactly to the point.** A line of text states a fact the fields don't already show. It
+  never explains the UI, narrates, or recommends.
+- **Compact ranges and series:** "Levels 1–4", "1–12", "20/25/30/35". A unit follows a field in full, as in
+  "6 seconds", and is short in a summary or a table, as in "6 s".
+- **A message is one sentence:** the problem and what it causes, as in "Nothing grants Status.Wet, so this removal
+  never happens."
+
 ## Inspectors
 
 - **The asset header** holds the 32 px type icon, the asset's name, its type and asset tag, and its problem count.
   Then come Open in The Forge (Show in Project, inside The Forge), Help and the asset menu. It scrolls with the
   content (Q17).
 - **Sections are Unity foldout headers**: the arrow and the bold title, then Import, Clear and Help, always visible
-  (Q18). A collapsed header shows a one-line summary of its section, such as "Levels 1 to 5" or "Removed by
+  (Q18). A collapsed header shows a one-line summary of its section, such as "Levels 1–5" or "Removed by
   Status.Wet".
 - **Every asset type keeps one section order** (Q9): Identity, Leveling, Tags, the type's own sections, then
   Requirements, Workers and Local Data. An Effect's own sections are Duration and Impact, and an Ability's are
