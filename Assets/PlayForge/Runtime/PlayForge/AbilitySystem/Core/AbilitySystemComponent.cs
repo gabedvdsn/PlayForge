@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Buffers;
 using System.Collections.Generic;
 using System.Linq;
 using Cysharp.Threading.Tasks;
@@ -411,8 +412,8 @@ namespace FarEmerald.PlayForge
 
             foreach (var policy in ActiveCache.Keys)
             {
-                foreach (int index in ActiveCache[policy]) 
-                    AbilityCache[index].Inject(InterruptSequenceInjection.Instance);
+                // Through Inject, which walks a copy of the set its interrupt empties (GAS-53)
+                Inject(policy, InterruptSequenceInjection.Instance);
                 ActiveCache[policy].Clear();
             }
 
@@ -433,10 +434,24 @@ namespace FarEmerald.PlayForge
         
         public void Inject(EAbilityActivationPolicy policy, ISequenceInjection injection)
         {
-            foreach (int index in ActiveCache[policy])
+            var active = ActiveCache[policy];
+            int count = active.Count;
+            if (count == 0) return;
+
+            // From a copy: an interrupted ability ends inside the interrupt and takes itself off this set, so walking the
+            // set threw once the first had ended, and the rest ran on (GAS-53). Rented, as a stun may interrupt often
+            var indices = ArrayPool<int>.Shared.Rent(count);
+            try
             {
-                if (!AbilityCache[index].IsActive) continue;
-                AbilityCache[index].Inject(injection);
+                active.CopyTo(indices);
+                for (int i = 0; i < count; i++)
+                {
+                    if (AbilityCache.TryGetValue(indices[i], out var container) && container.IsActive) container.Inject(injection);
+                }
+            }
+            finally
+            {
+                ArrayPool<int>.Shared.Return(indices);
             }
         }
 

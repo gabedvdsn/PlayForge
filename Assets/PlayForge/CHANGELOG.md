@@ -103,6 +103,8 @@ tracks each fix below by its ID.
   Mono process does, so ending a runtime entity, however it's ended, ends its running abilities, critical or not.
   They ran on for as long as their stages lasted. An entity that has ended takes no more activations:
   `TryActivateAbility` returns false at once, where a destroyed Mono entity threw.
+- Interrupting every running ability at once ends each of them, whether through `InjectAll`, `Inject` with a policy,
+  or turning `Enabled` off. Once the first had ended, it threw, and the rest ran on.
 
 ### Removed
 - QuickOutline, replaced by the Demo's own outline.
