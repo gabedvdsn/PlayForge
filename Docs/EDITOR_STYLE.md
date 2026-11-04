@@ -118,6 +118,12 @@ The only other colors:
   header, shows as a glyph in The Forge's list, and counts in The Forge's toolbar and status bar (Q8).
 - **Destructive actions** say what they do, as in "Move to Trash", and send the asset to the trash (Q16). Only their
   icon takes the destructive color.
+- **Clear** empties its section at once, with no confirmation, and one Undo takes it back (Decision 28).
+- **Import** is one window for sections, scalers, requirements and workers: choose a source, then the fields that
+  differ, each pre-checked, then import as one Undo step. A list is replaced unless Add to the List is chosen
+  (Decision 28).
+- **Scalers** show their per-level table with a read-only curve preview beside it, wherever a scaler appears: in a
+  field, in a Scaler asset and in the Import window (Decision 28).
 
 ## The Forge
 
