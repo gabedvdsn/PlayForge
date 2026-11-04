@@ -255,23 +255,17 @@ namespace FarEmerald.PlayForge.Extended.Editor
                 return;
             }
 
-            if (item.LinkMode == EItemLinkMode.LinkedToProvider)
-            {
-                levelingContent.Add(CreateLevelProviderField(item));
-                if (!item.IsLinked)
-                    levelingContent.Add(new HelpBox("No level provider is set, so the item uses its own levels.", HelpBoxMessageType.Warning));
-                // The range in use: the provider's, or the item's own while it has none
-                levelingContent.Add(ShownLevel("StartingLevel", "Starting Level", item.GetStartingLevel()));
-                levelingContent.Add(ShownLevel("MaxLevel", "Max Level", item.GetMaxLevel()));
-            }
-            else
-            {
-                BuildOwnLevels();
-            }
+            // The range in use while linked: the provider's, or the item's own while it has none
+            if (IsLinkMode) AddLinkedLevels(levelingContent, item, "item", item.GetStartingLevel(), item.GetMaxLevel());
+            else BuildOwnLevels();
 
-            levelingContent.Add(BuildChildLinks());
+            // Links the item's active ability and granted effects to it, so they take its levels, or removes those links
+            levelingContent.Add(CreateChildLinks(item, "item", "Ability & Effects", "active ability and granted effects",
+                Children, item.LinkAllChildren, item.UnlinkAllChildren));
             levelingContent.Bind(serializedObject);
         }
+
+        private bool IsLinkMode => item.LinkMode == EItemLinkMode.LinkedToProvider;
 
         // The item's own range, which it keeps while standalone
         private void BuildOwnLevels()
@@ -280,84 +274,15 @@ namespace FarEmerald.PlayForge.Extended.Editor
             levelingContent.Add(CreatePropertyField(serializedObject.FindProperty(nameof(Item.MaxLevel)), "MaxLevel", "Max Level"));
         }
 
-        // A level the item uses but doesn't set here, shown in a disabled field
-        private static IntegerField ShownLevel(string name, string label, int value)
-        {
-            var field = new IntegerField(label) { name = name };
-            field.SetValueWithoutNotify(value);
-            field.AddToClassList(IntegerField.alignedFieldUssClassName);
-            field.SetEnabled(false);
-            return field;
-        }
-
-        // What Leveling is drawn from: the link mode, and while linked, the provider and the range it gives. A
-        // multiple selection's is whether every item keeps its own range
-        private string LevelingState()
-        {
-            if (IsMultiple) return Items.All(each => each.LinkMode == EItemLinkMode.Standalone) ? "own" : "linked";
-            if (item.LinkMode != EItemLinkMode.LinkedToProvider) return "own";
-            var provider = item.LinkedProvider ? item.LinkedProvider.GetInstanceID() : 0;
-            return $"linked {provider} {item.GetStartingLevel()} {item.GetMaxLevel()}";
-        }
+        // What Leveling is drawn from. A multiple selection's is whether every item keeps its own range
+        private string LevelingState() => IsMultiple
+            ? Items.All(each => each.LinkMode == EItemLinkMode.Standalone) ? "own" : "linked"
+            : LevelingState(item, IsLinkMode, item.GetStartingLevel(), item.GetMaxLevel());
 
         // The item's active ability and granted effects, which can take its levels
-        private IEnumerable<Object> Children() =>
-            (item.GrantedEffects ?? new List<GameplayEffect>()).Where(effect => effect != null).Cast<Object>()
-            .Concat(item.ActiveAbility != null ? new Object[] { item.ActiveAbility } : new Object[0]);
-
-        // Links the item's active ability and granted effects to it, so they take its levels, or removes those links. They
-        // sat under a divider and a small bold heading, with a sentence about them, and Unlink was tinted red (ED-37)
-        private VisualElement BuildChildLinks()
-        {
-            const string linkFocus = "Ability & Effects";
-            var row = new VisualElement { name = "ChildLinks" };
-            row.AddToClassList("pf-button-row");
-
-            row.Add(new Button(() =>
-            {
-                var count = Children().Count();
-                if (!ConfirmLinkChange($"Confirm Link {linkFocus}",
-                        $"Are you sure you want to link active ability and effects?\n\nThis will affect {count} {(count == 1 ? "asset" : "assets")}.",
-                        "Yes")) return;
-
-                // Recorded first, so one Undo takes back everything it changes (ED-12)
-                RecordLinkChange($"Link {linkFocus}", Children().Append(item));
-                item.LinkAllChildren();
-                foreach (var child in Children()) MarkDirty(child);
-                MarkDirty(item);
-                RebuildLevelingContent();
-                Repaint();
-            })
-            {
-                text = $"Link {linkFocus}",
-                tooltip = "Link the active ability and granted effects to this item, so they take its levels",
-            });
-
-            row.Add(new Button(() =>
-            {
-                // Counts the children the unlink would change; it asked IsLinkedTo(this), the editor, so it always said 0 (ED-31)
-                var linked = Children().OfType<BaseForgeLevelProvider>().Count(child => child.IsLinkedTo(item));
-                if (!ConfirmLinkChange($"Confirm Unlink {linkFocus}",
-                        "Are you sure you want to unlink active ability and effects?" +
-                        $"\n\nThis will affect {linked} {(linked == 1 ? "asset" : "assets")}." +
-                        "\n\nThis change only applies to assets linked to this item.",
-                        "Yes")) return;
-
-                // Recorded first, so one Undo takes back everything it changes (ED-12)
-                RecordLinkChange($"Unlink {linkFocus}", Children().Append(item));
-                item.UnlinkAllChildren();
-                foreach (var child in Children()) MarkDirty(child);
-                MarkDirty(item);
-                RebuildLevelingContent();
-                Repaint();
-            })
-            {
-                text = $"Unlink {linkFocus}",
-                tooltip = "Remove the links the active ability and granted effects have to this item",
-            });
-
-            return row;
-        }
+        private IEnumerable<BaseForgeLevelProvider> Children() =>
+            (item.GrantedEffects ?? new List<GameplayEffect>()).Where(effect => effect != null).Cast<BaseForgeLevelProvider>()
+            .Concat(item.ActiveAbility != null ? new BaseForgeLevelProvider[] { item.ActiveAbility } : new BaseForgeLevelProvider[0]);
 
         // ═══════════════════════════════════════════════════════════════════════════
         // Tags Section
@@ -529,39 +454,16 @@ namespace FarEmerald.PlayForge.Extended.Editor
             }
 
             if (identitySection != null) identitySection.Summary.text = item.Definition.Visibility.IsValid ? item.Definition.Visibility.Name : "";
-            if (levelingSection != null) levelingSection.Summary.text = LevelingSummary();
-            if (tagsSection != null) tagsSection.Summary.text = TagsSummary();
+            if (levelingSection != null)
+                levelingSection.Summary.text = LevelingSummary(item, IsLinkMode, item.GetStartingLevel(), item.GetMaxLevel());
+            if (tagsSection != null)
+                tagsSection.Summary.text = TagsSummary(item.Tags.ContextTags, "context tags", item.Tags.PassiveGrantedTags?.Count(tag => tag.IsValid) ?? 0);
             if (effectsSection != null) effectsSection.Summary.text = CountOf(item.GrantedEffects?.Count(effect => effect != null) ?? 0, "effect", "effects");
             if (abilitiesSection != null) abilitiesSection.Summary.text = item.ActiveAbility != null ? NameOf(item.ActiveAbility) : "None";
             if (workersSection != null) workersSection.Summary.text = CountOf(WorkerCount(item.WorkerGroup), "worker", "workers");
             if (localDataSection != null) localDataSection.Summary.text = CountOf(item.LocalData?.Count ?? 0, "entry", "entries");
             if (usedBySection != null) usedBySection.Summary.text = usedBy == null ? "" : CountOf(usedBy.Count, "asset", "assets");
         }
-
-        // The range in use, as in "Levels 1–4", and for a linked item where it comes from
-        private string LevelingSummary()
-        {
-            var range = LevelRange(item.GetStartingLevel(), item.GetMaxLevel());
-            if (item.LinkMode != EItemLinkMode.LinkedToProvider) return range;
-            return item.IsLinked ? $"{range} · from {NameOf(item.LinkedProvider)}" : $"{range} · no provider";
-        }
-
-        // The context tags, or how many, and how many tags the item grants, as in "Weapon.Sword · 1 granted"
-        private string TagsSummary()
-        {
-            var context = item.Tags.ContextTags?.Where(tag => tag.IsValid).Select(tag => tag.Name).ToList() ?? new List<string>();
-            var granted = item.Tags.PassiveGrantedTags?.Count(tag => tag.IsValid) ?? 0;
-            var parts = new List<string>();
-            if (context.Count is 1 or 2) parts.Add(string.Join(", ", context));
-            else if (context.Count > 2) parts.Add($"{context.Count} context tags");
-            if (granted > 0) parts.Add($"{granted} granted");
-            return parts.Count == 0 ? "None" : string.Join(" · ", parts);
-        }
-
-        private static int WorkerCount(StandardWorkerGroup group) => group == null
-            ? 0
-            : (group.AttributeWorkers?.Count(worker => worker != null) ?? 0) + (group.ImpactWorkers?.Count(worker => worker != null) ?? 0) +
-              (group.TagWorkers?.Count(worker => worker != null) ?? 0) + (group.AnalysisWorkers?.Count(worker => worker != null) ?? 0);
 
         // ═══════════════════════════════════════════════════════════════════════════
         // Helper Methods

@@ -328,9 +328,58 @@
     margin-top: 4px;
 }
 
+/* Each clips its text with an ellipsis when the row is short of room */
 .pf-root .pf-button-row > .unity-button {
     flex-grow: 1;
     flex-basis: 0;
+    min-width: 0;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+}
+
+/* A field that depends on another indents its label 14 px under it, as Equipped Too does under Allow Duplicates */
+.pf-root .pf-dependent > .unity-base-field__label {
+    padding-left: 14px;
+}
+
+/* A field on a line with a note after it, such as why the field waits */
+.pf-root .pf-field-row {
+    flex-direction: row;
+    align-items: center;
+}
+
+.pf-root .pf-field-row > .unity-base-field {
+    flex-grow: 0;
+    flex-shrink: 0;
+}
+
+.pf-root .pf-field-note {
+    flex-shrink: 1;
+    min-width: 0;
+    margin: 0;
+    padding: 0 0 0 8px;
+    color: var(--pf-secondary-text);
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+}
+
+/* A starting item: the item, then its Equip checkbox, on one row */
+.pf-root .pf-starting-item {
+    flex-direction: row;
+    align-items: center;
+}
+
+.pf-root .pf-starting-item__item {
+    flex-grow: 1;
+    flex-shrink: 1;
+    min-width: 0;
+}
+
+.pf-root .pf-starting-item__equip {
+    flex-shrink: 0;
+    margin: 0 0 0 6px;
 }
 
 /* A message is a Unity help box, in the flow under the field it is about */

@@ -11,6 +11,10 @@ tracks each fix below by its ID.
   page, through one table of links in the editor.
 
 ### Changed
+- The Entity inspector's sections are Identity, Leveling, Tags, Attributes, Abilities, Items, Workers, Local Data and
+  Used By, as the Item inspector's follow the style doc. The Attribute Set has an Attributes section of its own. A
+  starting item takes one row with its Equip checkbox, and Equipped Too (Allow Duplicate Equipped Items) waits for
+  Allow Duplicates, which it needs (ED-37).
 - The Item inspector's sections are Identity, Leveling, Tags, Effects, Abilities, Workers, Local Data and Used By, in
   the style doc's order. Identity holds the asset tag. Leveling holds the level link that Level Source did, with the
   provider in Unity's object field, whose right-click menu picks one type; a help box says when none is set. Each

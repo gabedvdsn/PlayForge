@@ -748,6 +748,122 @@ namespace FarEmerald.PlayForge.Extended.Editor
             asset == null ? "None" : string.IsNullOrEmpty(asset.GetName()) ? asset.name : asset.GetName();
 
         /// <summary>
+        /// Tags' summary: up to two tags by name, or how many there are, then how many tags the asset grants, as in
+        /// "Weapon.Sword · 1 granted".
+        /// </summary>
+        protected static string TagsSummary(IEnumerable<Tag> named, string kind, int granted)
+        {
+            var names = named?.Where(tag => tag.IsValid).Select(tag => tag.Name).ToList() ?? new List<string>();
+            var parts = new List<string>();
+            if (names.Count is 1 or 2) parts.Add(string.Join(", ", names));
+            else if (names.Count > 2) parts.Add($"{names.Count} {kind}");
+            if (granted > 0) parts.Add($"{granted} granted");
+            return parts.Count == 0 ? "None" : string.Join(" · ", parts);
+        }
+
+        /// <summary>How many workers a group holds, across its four lists.</summary>
+        protected static int WorkerCount(StandardWorkerGroup group) => group == null
+            ? 0
+            : (group.AttributeWorkers?.Count(worker => worker != null) ?? 0) + (group.ImpactWorkers?.Count(worker => worker != null) ?? 0) +
+              (group.TagWorkers?.Count(worker => worker != null) ?? 0) + (group.AnalysisWorkers?.Count(worker => worker != null) ?? 0);
+
+        // ═══════════════════════════════════════════════════════════════════════════
+        // Leveling, in the redesigned inspectors: Level Source's link, in Leveling (ED-37)
+        // ═══════════════════════════════════════════════════════════════════════════
+
+        /// <summary>
+        /// Leveling while Link Mode is Linked To Provider: the provider in an object field, a warning when none is set,
+        /// then the range in use, in disabled fields. Level Source drew this in tinted boxes with colored borders.
+        /// </summary>
+        protected void AddLinkedLevels(VisualElement parent, BaseForgeLevelProvider src, string kind, int starting, int max)
+        {
+            parent.Add(CreateLevelProviderField(src));
+            if (!src.IsLinked)
+                parent.Add(new HelpBox($"No level provider is set, so the {kind} uses its own levels.", HelpBoxMessageType.Warning));
+            parent.Add(ShownLevel("StartingLevel", "Starting Level", starting));
+            parent.Add(ShownLevel("MaxLevel", "Max Level", max));
+        }
+
+        // A level the asset uses but doesn't set here, in a disabled field
+        private static IntegerField ShownLevel(string name, string label, int value)
+        {
+            var field = new IntegerField(label) { name = name };
+            field.SetValueWithoutNotify(value);
+            field.AddToClassList(IntegerField.alignedFieldUssClassName);
+            field.SetEnabled(false);
+            return field;
+        }
+
+        /// <summary>Leveling's summary: the range in use, as in "Levels 1–4", and for a linked asset where it comes from.</summary>
+        protected static string LevelingSummary(BaseForgeLevelProvider src, bool linkedMode, int starting, int max)
+        {
+            var range = LevelRange(starting, max);
+            if (!linkedMode) return range;
+            return src.IsLinked ? $"{range} · from {NameOf(src.LinkedProvider)}" : $"{range} · no provider";
+        }
+
+        /// <summary>
+        /// What Leveling is drawn from: the link mode, and while linked, the provider and the range it gives. Leveling
+        /// redraws when this changes, but not when the asset's own range does, which its bound fields follow.
+        /// </summary>
+        protected static string LevelingState(BaseForgeLevelProvider src, bool linkedMode, int starting, int max) =>
+            !linkedMode ? "own" : $"linked {(src.LinkedProvider != null ? src.LinkedProvider.GetInstanceID() : 0)} {starting} {max}";
+
+        /// <summary>
+        /// Link and Unlink for the assets that can take this one's levels, such as an item's active ability and granted
+        /// effects: plain buttons sharing a row. Each asks first, counting what it changes, and is one Undo step. They sat
+        /// under a divider and a small bold heading, with a sentence about them, and Unlink was tinted red (ED-37).
+        /// </summary>
+        protected VisualElement CreateChildLinks(BaseForgeLevelProvider src, string kind, string linkFocus, string children,
+            Func<IEnumerable<BaseForgeLevelProvider>> childAssets, Action linkAll, Action unlinkAll)
+        {
+            var row = new VisualElement { name = "ChildLinks" };
+            row.AddToClassList("pf-button-row");
+
+            row.Add(new Button(() =>
+            {
+                var count = childAssets().Count();
+                if (!ConfirmLinkChange($"Confirm Link {linkFocus}",
+                        $"Are you sure you want to link {children}?\n\nThis will affect {count} {(count == 1 ? "asset" : "assets")}.",
+                        "Yes")) return;
+                ChangeChildLinks($"Link {linkFocus}", src, childAssets, linkAll);
+            })
+            {
+                text = $"Link {linkFocus}",
+                tooltip = $"Link the {children} to this {kind}, so they take its levels",
+            });
+
+            row.Add(new Button(() =>
+            {
+                // Counts the children the unlink would change; it asked IsLinkedTo(this), the editor, so it always said 0 (ED-31)
+                var linked = childAssets().Count(child => child.IsLinkedTo(src));
+                if (!ConfirmLinkChange($"Confirm Unlink {linkFocus}",
+                        $"Are you sure you want to unlink {children}?\n\nThis will affect {linked} {(linked == 1 ? "asset" : "assets")}." +
+                        $"\n\nThis change only applies to assets linked to this {kind}.",
+                        "Yes")) return;
+                ChangeChildLinks($"Unlink {linkFocus}", src, childAssets, unlinkAll);
+            })
+            {
+                text = $"Unlink {linkFocus}",
+                tooltip = $"Remove the links the {children} have to this {kind}",
+            });
+
+            return row;
+        }
+
+        // Records every asset a link change writes, so one Undo takes it back (ED-12), then makes the change
+        private void ChangeChildLinks(string undoName, BaseForgeLevelProvider src, Func<IEnumerable<BaseForgeLevelProvider>> childAssets,
+            Action change)
+        {
+            RecordLinkChange(undoName, childAssets().Cast<Object>().Append(src));
+            change();
+            foreach (var child in childAssets()) MarkDirty(child);
+            MarkDirty(src);
+            RebuildLevelingContent();
+            Repaint();
+        }
+
+        /// <summary>
         /// Stores the tag a name gives, recorded for Undo and marked modified. A rename calls it in the same step as the
         /// name's own change, so one Undo takes back both (ED-12).
         /// </summary>

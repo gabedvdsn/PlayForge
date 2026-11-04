@@ -44,8 +44,8 @@ namespace FarEmerald.PlayForge.Extended.Editor
             ["items/workers"]              = ("ITEMS.md", "Workers"),
             ["items/localdata"]            = ("ITEMS.md", "Local Data"),
             ["entities"]                   = ("ENTITIES.md", null),
-            ["entities/definition"]        = ("ENTITIES.md", "Definition"),
-            ["entities/level-source"]      = ("ENTITIES.md", "Level Source"),
+            // The Identity section keeps its first topic name, from when it was Definition
+            ["entities/definition"]        = ("ENTITIES.md", "Identity"),
             ["entities/tags"]              = ("ENTITIES.md", "Tags"),
             ["entities/leveling"]          = ("ENTITIES.md", "Leveling"),
             ["entities/abilities"]         = ("ENTITIES.md", "Abilities"),
