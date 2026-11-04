@@ -21,6 +21,7 @@ namespace FarEmerald.PlayForge.Extended.Editor
         // UI References for updates
         private Label assetTagValueLabel;
         private VisualElement levelSourceContent;
+        private EAbilityLinkMode shownLinkMode;
         private VisualElement levelingContent;
 
         private const string Section_Definition = "Section_Definition";
@@ -160,35 +161,18 @@ namespace FarEmerald.PlayForge.Extended.Editor
             });
             content.Add(nameField);
             
-            // Description field
-            var descField = CreateTextField("Description", "Description", multiline: true, minHeight: 18);
-            descField.value = ability.Definition.Description;
-            descField.RegisterCallback<FocusOutEvent>(_ =>
-            {
-                ability.Definition.Description = descField.value;
-                UpdateHeader();
-                MarkDirty(ability);
-                Repaint(); // Refresh IMGUI header
-            });
-            content.Add(descField);
-            
-            // Activation Policy
+            // Description, Activation Policy and Activate Immediately bind to their properties, so an edit undoes. They
+            // wrote straight into the asset, with no Undo (ED-12).
+            content.Add(CreateBoundTextField($"{nameof(Ability.Definition)}.{nameof(AbilityDefinition.Description)}",
+                "Description", multiline: true, minHeight: 18, name: "Description"));
+
             var activationPolicy = CreateEnumField("ActivationPolicy", "Activation Policy", ability.Definition.ActivationPolicy);
-            activationPolicy.RegisterValueChangedCallback(evt =>
-            {
-                ability.Definition.ActivationPolicy = (EAbilityActivationPolicyExtended)evt.newValue;
-                MarkDirty(ability);
-            });
+            activationPolicy.bindingPath = $"{nameof(Ability.Definition)}.{nameof(AbilityDefinition.ActivationPolicy)}";
             content.Add(activationPolicy);
-            
-            // Activate Immediately
+
             var activateImmediately = CreateToggle("ActivateImmediately", "Activate Immediately");
             activateImmediately.value = ability.Definition.ActivateImmediately;
-            activateImmediately.RegisterValueChangedCallback(evt =>
-            {
-                ability.Definition.ActivateImmediately = evt.newValue;
-                MarkDirty(ability);
-            });
+            activateImmediately.bindingPath = $"{nameof(Ability.Definition)}.{nameof(AbilityDefinition.ActivateImmediately)}";
             content.Add(activateImmediately);
             
             var defProp = serializedObject.FindProperty(nameof(Ability.Definition));
@@ -727,26 +711,29 @@ namespace FarEmerald.PlayForge.Extended.Editor
             RebuildLevelSourceContent();
         }
         
+        // Level Source and Leveling are drawn from the link mode, so they redraw when the mode changes, an Undo among
+        // them (ED-12)
+        protected override void OnAssetChanged()
+        {
+            if (levelSourceContent == null || ability.LinkMode == shownLinkMode) return;
+            RebuildLevelSourceContent();
+            RebuildLevelingContent();
+        }
+
         protected override void RebuildLevelSourceContent()
         {
             levelSourceContent.Clear();
-            
+            shownLinkMode = ability.LinkMode;
+
             var infoLabel = CreateHintLabel(
                 "Link this ability to another asset to inherit its level range.");
             infoLabel.style.marginBottom = 8;
             levelSourceContent.Add(infoLabel);
             
-            var linkModeField = new EnumField("Link Mode", ability.LinkMode);
+            // Link Mode binds to its property, so a change undoes, and OnAssetChanged redraws from it. It wrote the mode
+            // straight into the asset, with no Undo, and redrew only then (ED-12).
+            var linkModeField = new EnumField("Link Mode", ability.LinkMode) { bindingPath = nameof(Ability.LinkMode) };
             linkModeField.style.marginBottom = 6;
-            linkModeField.RegisterValueChangedCallback(evt =>
-            {
-                ability.LinkMode = (EAbilityLinkMode)evt.newValue;
-                serializedObject.Update();
-                MarkDirty(ability);
-                RebuildLevelSourceContent();
-                RebuildLevelingContent();
-                Repaint();
-            });
             levelSourceContent.Add(linkModeField);
             
             if (ability.LinkMode == EAbilityLinkMode.LinkedToProvider)
