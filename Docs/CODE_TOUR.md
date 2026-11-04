@@ -1,7 +1,7 @@
 # PlayForge refactor: code tour
 
 This tour lists the places where the refactor changed code, so you can open each one in your IDE and read it. It
-covers `01258b8..3c99621` on `main`: 213 commits. Phase 0 ported Arcade Fighter's fixes, Phase 1 made the runtime
+covers `01258b8..2096552` on `main`: 215 commits. Phase 0 ported Arcade Fighter's fixes, Phase 1 made the runtime
 correct, Phase 2 got the package ready to release, and Phase 3 has begun. Each entry says what behaves differently and
 why, names its tracker IDs and Decisions, and points at the two or three places to read. `Docs/REFACTOR_PLAN.md` has
 every tracker row, the numbered Decisions, and a Log of each batch's test results.
@@ -9,8 +9,8 @@ every tracker row, the numbered Decisions, and a Log of each batch's test result
 ## How to use this
 
 - Paths are relative to the repo root.
-- Line numbers are as of commit `3c99621`, the head of `main` on 2026-11-03. A later commit may move them, so each
-  entry also names the class and method to search for. `git show 3c99621:<path>` shows a file as it was then.
+- Line numbers are as of commit `2096552`, the head of `main` on 2026-11-03. A later commit may move them, so each
+  entry also names the class and method to search for. `git show 2096552:<path>` shows a file as it was then.
 - In Rider, Go to File accepts `path:line`. In Visual Studio, open the file, then Go To Line (Ctrl+G).
   A bare `:123` after a path means another line in the same file.
 - `git grep "<ID>"` finds the comment at each fix, and `git log --grep "<ID>"` finds its commit. Three exceptions:
@@ -30,8 +30,8 @@ every tracker row, the numbered Decisions, and a Log of each batch's test result
 
 Phase 3 began on `main` with the rows that writing the reference docs turned up, five runtime bugs and two settings
 nothing read, then gave the two GAS hubs one core (GAS-S1) and turned to cost (GAS-P3, GAS-P5, GAS-P4, GAS-P6,
-GAS-P8, GAS-P9, GAS-P7). Each has a test in Proving Grounds named after its ID, seen failing first; the runtime tests
-run on both hubs. The plan's Log has the gate results.
+GAS-P8, GAS-P9, GAS-P7, TS-5). Each has a test in Proving Grounds named after its ID, seen failing first; the runtime
+tests run on both hubs. The plan's Log has the gate results.
 
 ### An entity's affiliation is its own (GAS-47)
 
@@ -328,10 +328,36 @@ run time, and the same lookups take about 0.27 ms either way.
 - **Tests:** `GAS_P7_A_tag_lookup_costs_the_same_however_long_its_name` in `TagTests`, for a tag made in code and one
   loaded with an asset, and its control, `A_tag_equals_another_of_its_name`.
 
+### A repeating sequence keeps its path the same (TS-5)
+
+Each part a run or a stage added to its packet's path stayed there, so a sequence that repeated added its stages'
+parts every time round: its twentieth run had a 272-character path to its first's 25. Each part now comes off as what
+added it ends, and every repeat finds the path as the first did. PF-007 had already taken out the LINQ and the string
+joins the review found; the parts are now formatted once, and the LINQ left on an ability's activation is loops.
+
+- **IDs:** TS-5, commit `2096552`.
+- **Read:**
+  - `Assets/PlayForge/Runtime/PlayForge/Management/GameplayProcess/ProcessDataPacket.cs:74` `TrimPath`, which takes
+    the path back to a depth (`:67`).
+  - `Assets/PlayForge/Runtime/PlayForge/Core/TaskSequence/Async/TaskSequenceRuntime.cs:216`, in `Run`, which takes
+    its part off as it ends (`:336`) and starts each time round from it (`:224`). Its failure log reads the path where
+    the run failed (`:297`).
+  - `Assets/PlayForge/Runtime/PlayForge/Core/TaskSequence/Async/TaskSequenceRuntime.cs:501`, in `RunStage`, which
+    notes where its iterations start (`:507`) and keeps the path where it failed (`:564`). `RestartStage` (`:649`)
+    takes off what the last iteration added, for both kinds of stage repeat.
+  - `Assets/PlayForge/Runtime/PlayForge/Core/TaskSequence/Async/SequenceStage.cs:176` `SequenceStage.PathPart`, and
+    `:398` for a sequence, each formatted once for its name.
+  - `Assets/PlayForge/Runtime/PlayForge/AbilitySystem/Ability/AbilityProxy/Core/AbilityProxy.cs:72` `HasCriticalTask`,
+    the loop that replaced the activation's LINQ.
+- **Watch for:** the path is where a packet is now, not everywhere it has been. A run or a stage that has ended is off
+  it, so read it during the run, or from the failure log.
+- **Tests:** `TS_5_A_repeating_sequence_keeps_its_path_the_same` in `SequencePathTests`, and its control,
+  `A_failed_run_logs_the_path_where_it_failed`.
+
 ### Still open in Phase 3
 
-Performance and structure work: PC-24, TS-5, TS-8, TS-10 and TS-Z. GAS-51, item stacking that is declared but not
-built, moved to Phase 5 as FEAT-14, so an Item's `MaxStackSize` does nothing until then.
+Performance and structure work: PC-24, TS-8, TS-10 and TS-Z. GAS-51, item stacking that is declared but not built,
+moved to Phase 5 as FEAT-14, so an Item's `MaxStackSize` does nothing until then.
 
 ## ProcessControl
 
@@ -531,12 +557,12 @@ shared definition. A second run left the first out of reach, and runs broke each
 
 - **IDs:** TS-I, TS-W.
 - **Read:**
-  - `Assets/PlayForge/Runtime/PlayForge/Core/TaskSequence/Async/TaskSequence.cs:25` `TaskSequence._runs`, then
-    `CreateRuntime` (`:60`) and `Run(TaskSequenceRuntime, ProcessDataPacket, CancellationToken)` (`:76`).
+  - `Assets/PlayForge/Runtime/PlayForge/Core/TaskSequence/Async/TaskSequence.cs:24` `TaskSequence._runs`, then
+    `CreateRuntime` (`:59`) and `Run(TaskSequenceRuntime, ProcessDataPacket, CancellationToken)` (`:75`).
   - `Assets/PlayForge/Runtime/PlayForge/Core/TaskSequence/Async/TaskSequenceRuntime.cs:79`, the per-run record of
-    fired conditions, broken repeats and repeat counts, read through `IsRepeatBroken` (`:1037`) and `GetRepeatCount`
-    (`:1040`).
-  - `Assets/PlayForge/Runtime/PlayForge/Core/TaskSequence/Async/TaskSequenceRuntime.cs:892`
+    fired conditions, broken repeats and repeat counts, read through `IsRepeatBroken` (`:1064`) and `GetRepeatCount`
+    (`:1067`).
+  - `Assets/PlayForge/Runtime/PlayForge/Core/TaskSequence/Async/TaskSequenceRuntime.cs:919`
     `TaskSequenceRuntime.RunClock` (TS-W).
 - **New:** `TaskSequence.CreateRuntime`, the `Run` overload that takes a runtime, `TaskSequenceRuntime.IsRepeatBroken`
   and `GetRepeatCount`.
@@ -554,12 +580,12 @@ the stages after it. The stop-maintained requests choose among maintained stages
 
 - **IDs:** TS-N, TS-K, TS-J, TS-L.
 - **Read:**
-  - `Assets/PlayForge/Runtime/PlayForge/Core/TaskSequence/Async/TaskSequenceRuntime.cs:469`
-    `TaskSequenceRuntime.RunStage`, and `ExecuteSubStage` (`:455`).
-  - `Assets/PlayForge/Runtime/PlayForge/Core/TaskSequence/Async/TaskSequenceRuntime.cs:1211`
-    `RequestSkipCurrentStage`, which acts on `_injectionSource` (`:113`), the stage applying the injection. Then
-    `RequestSkipAndMaintain` (`:1217`) and the stop-maintained requests from `:1229`.
-  - `Assets/PlayForge/Runtime/PlayForge/Core/TaskSequence/Async/TaskSequenceRuntime.cs:346`
+  - `Assets/PlayForge/Runtime/PlayForge/Core/TaskSequence/Async/TaskSequenceRuntime.cs:483`
+    `TaskSequenceRuntime.RunStage`, and `ExecuteSubStage` (`:469`).
+  - `Assets/PlayForge/Runtime/PlayForge/Core/TaskSequence/Async/TaskSequenceRuntime.cs:1238`
+    `RequestSkipCurrentStage`, which acts on `_injectionSource` (`:119`), the stage applying the injection. Then
+    `RequestSkipAndMaintain` (`:1244`) and the stop-maintained requests from `:1256`.
+  - `Assets/PlayForge/Runtime/PlayForge/Core/TaskSequence/Async/TaskSequenceRuntime.cs:360`
     `TaskSequenceRuntime.StopMaintainedStages`.
 
 ### Cancellation and cleanup
@@ -573,12 +599,12 @@ of a repeating sequence.
 
 - **IDs:** TS-AA, TS-A, TS-E, TS-AD.
 - **Read:**
-  - `Assets/PlayForge/Runtime/PlayForge/Core/TaskSequence/Async/TaskSequenceRuntime.cs:354`
-    `TaskSequenceRuntime.ExecuteStagesSequentially`. The wait on the stage signal is at `:393` (TS-AA).
+  - `Assets/PlayForge/Runtime/PlayForge/Core/TaskSequence/Async/TaskSequenceRuntime.cs:368`
+    `TaskSequenceRuntime.ExecuteStagesSequentially`. The wait on the stage signal is at `:407` (TS-AA).
   - `Assets/PlayForge/Runtime/PlayForge/Core/TaskSequence/Async/SequenceCore.cs:259`
     `WhenAnyStagePolicy.AwaitCompletion` (the fix at `:294`), and `:323` `WhenNStagePolicy.AwaitCompletion` (`:370`).
-  - `Assets/PlayForge/Runtime/PlayForge/Core/TaskSequence/Async/TaskSequenceRuntime.cs:545`, the `finally` of
-    `RunStage` (TS-E, TS-AD), and `:1362` `Cleanup` (TS-AD).
+  - `Assets/PlayForge/Runtime/PlayForge/Core/TaskSequence/Async/TaskSequenceRuntime.cs:566`, the `finally` of
+    `RunStage` (TS-E, TS-AD), and `:1389` `Cleanup` (TS-AD).
 
 ### Repeats
 
@@ -587,8 +613,8 @@ task that resets in `Prepare`, such as `SyncDelay`, finished at once from the se
 finished without yielding repeated forever inside one frame.
 
 - **IDs:** TS-M.
-- **Read:** `Assets/PlayForge/Runtime/PlayForge/Core/TaskSequence/Async/TaskSequenceRuntime.cs:576`
-  `TaskSequenceRuntime.ExecuteStageWithRepeat`, and `:622` `RestartStage`.
+- **Read:** `Assets/PlayForge/Runtime/PlayForge/Core/TaskSequence/Async/TaskSequenceRuntime.cs:600`
+  `TaskSequenceRuntime.ExecuteStageWithRepeat`, and `:646` `RestartStage`.
 - **Watch for:** tasks in a repeating stage get `Prepare` and `Clean` on every iteration, not once.
 
 ### Pause inside a sequence (Decision 5)
@@ -602,10 +628,10 @@ helpers kept their signatures. `ChannelAbilityTask` yielded twice a loop, so a c
 
 - **IDs:** TS-Y, TS-AB, Decision 5.
 - **Read:**
-  - `Assets/PlayForge/Runtime/PlayForge/Core/TaskSequence/Async/TaskSequenceRuntime.cs:133`
-    `TaskSequenceRuntime.Pause`, then `IsPausedRun` (`:145`), `Delay` (`:154`) and `HoldWhilePaused` (`:165`). The
-    token map is at `:55`; `ExecuteStageInternal` adds each stage's token at `:664` and holds a finished stage at
-    `:685`.
+  - `Assets/PlayForge/Runtime/PlayForge/Core/TaskSequence/Async/TaskSequenceRuntime.cs:139`
+    `TaskSequenceRuntime.Pause`, then `IsPausedRun` (`:151`), `Delay` (`:160`) and `HoldWhilePaused` (`:171`). The
+    token map is at `:55`; `ExecuteStageInternal` adds each stage's token at `:691` and holds a finished stage at
+    `:712`.
   - `Assets/PlayForge/Runtime/PlayForge/Core/TaskSequence/Async/TaskSequenceProcess.cs:263`
     `TaskSequenceProcess.TryHandlePause`, and `TryHandleResume` (`:273`).
   - `Assets/PlayForge/Runtime/PlayForge/Core/TaskSequence/Async/SequenceTaskLibrary.cs:847`
@@ -627,12 +653,12 @@ between two sequences is false rather than a throw.
 
 - **IDs:** TS-F, TS-G, TS-O.
 - **Read:**
-  - `Assets/PlayForge/Runtime/PlayForge/Core/TaskSequence/Async/TaskSequenceRuntime.cs:193`
-    `TaskSequenceRuntime.Run`. The outer runtime is kept at `:206` and given back at `:322`.
+  - `Assets/PlayForge/Runtime/PlayForge/Core/TaskSequence/Async/TaskSequenceRuntime.cs:199`
+    `TaskSequenceRuntime.Run`. The outer runtime is kept at `:212` and given back at `:335`.
   - `Assets/PlayForge/Runtime/PlayForge/AbilitySystem/Tasks/Utility/RunSequenceTask.cs:23`
     `RunSequenceTask.Activate`. The relay ends the inner sequence at `:76`.
-  - `Assets/PlayForge/Runtime/PlayForge/Core/TaskSequence/Async/TaskSequence.cs:359` `TaskSequenceChain.Run`, and
-    `IsCriticalSection` at `:510`.
+  - `Assets/PlayForge/Runtime/PlayForge/Core/TaskSequence/Async/TaskSequence.cs:364` `TaskSequenceChain.Run`, and
+    `IsCriticalSection` at `:515`.
 
 ### Sync sequences and step timings
 
@@ -649,7 +675,7 @@ sequence on at one timing only.
   - `Assets/PlayForge/Runtime/PlayForge/Core/TaskSequence/Async/TaskSequenceProcess.cs:151`
     `TaskSequenceProcess.StepAt` (TS-H), with `AdvancingTiming` at `:344`. `WhenInitialize` (`:132`) and `Interrupt`
     (`:321`) are TS-P.
-  - `Assets/PlayForge/Runtime/PlayForge/Core/TaskSequence/Async/SequenceStage.cs:445`
+  - `Assets/PlayForge/Runtime/PlayForge/Core/TaskSequence/Async/SequenceStage.cs:480`
     `TaskSequenceDefinition.BuildSyncRunner` (TS-Q). `TaskSequenceBuilder.BuildSyncRunner` now calls it.
   - `Assets/PlayForge/Runtime/PlayForge/Core/TaskSequence/Synced/SyncSequenceCore.cs:240`
     `SyncedTaskSequence.Interrupt`, which also stops a runner that hasn't stepped yet.
@@ -667,9 +693,9 @@ targeting is logged and cleans the activation; it used to leak the handle.
 - **Read:**
   - `Assets/PlayForge/Runtime/PlayForge/AbilitySystem/Core/AbilitySystemComponent.cs:312`
     `AbilitySystemComponent.CanActivateAbility` (TS-AC at `:317`).
-  - `Assets/PlayForge/Runtime/PlayForge/AbilitySystem/Ability/AbilityProxy/Core/AbilityProxy.cs:143`
-    `AbilityProxy.ActivateTargetingTask` (TS-C at `:161`, TS-V at `:168`), then `ActivateTargetingViaSequence`
-    (`:177`) and `ActivateViaSequence` (`:277`) for TS-AC.
+  - `Assets/PlayForge/Runtime/PlayForge/AbilitySystem/Ability/AbilityProxy/Core/AbilityProxy.cs:161`
+    `AbilityProxy.ActivateTargetingTask` (TS-C at `:179`, TS-V at `:186`), then `ActivateTargetingViaSequence`
+    (`:195`) and `ActivateViaSequence` (`:295`) for TS-AC.
   - `Assets/PlayForge/Runtime/PlayForge/AbilitySystem/Core/AbilitySpecContainer.cs:80`
     `AbilitySpecContainer.AwaitAbility`. The catch at `:92` is TS-V.
 - **New:** `AbilityDataPacket.TargetingFinished`, set by the targeting adapter
@@ -691,7 +717,7 @@ released, which for an ability with no critical stage is as it starts. The relea
     `AbilitySequenceCompiler.WireStageCallbacks`.
   - `Assets/PlayForge/Runtime/PlayForge/AbilitySystem/Core/AbilitySystemCallbacks.cs:39` `OnAbilityEnd`, and `:50`
     `OnAbilityClaimReleased`.
-  - `Assets/PlayForge/Runtime/PlayForge/AbilitySystem/Ability/AbilityProxy/Core/AbilityTaskAdapter.cs:39`
+  - `Assets/PlayForge/Runtime/PlayForge/AbilitySystem/Ability/AbilityProxy/Core/AbilityTaskAdapter.cs:43`
     `AbilityTaskAdapter.Execute`.
 - **New:** `AbilitySystemCallbacks.OnAbilityClaimReleased`. **Removed:** the compiler's private `StageCallbackTask`.
 - **Watch for:** `AbilityStageEnded` moves to the stage's end, and `OnAbilityEnd` to the activation's end.
@@ -712,7 +738,7 @@ swallowed by a bare `catch`, and resuming a sequence no longer sets `Time.timeSc
     constructor, at `Assets/PlayForge/Runtime/PlayForge/AbilitySystem/Ability/AbilityProxy/Core/AbilityDataPacket.cs:72`.
   - `Assets/PlayForge/Runtime/PlayForge/AbilitySystem/Core/AbilitySpecContainer.cs:195`
     `AbilitySpecContainer.TakeProxy`, with `AbilityProxy.IsIdle`
-    (`Assets/PlayForge/Runtime/PlayForge/AbilitySystem/Ability/AbilityProxy/Core/AbilityProxy.cs:90`).
+    (`Assets/PlayForge/Runtime/PlayForge/AbilitySystem/Ability/AbilityProxy/Core/AbilityProxy.cs:109`).
   - `Assets/PlayForge/Runtime/PlayForge/Core/TaskSequence/Async/TaskSequenceProcess.cs:273`
     `TaskSequenceProcess.TryHandleResume` (TS-1).
 - **New:** `AbilityDataPacket.GetTaskState<T>`, `AbilitySpecContainer.CompiledProxies` (a diagnostic count).
