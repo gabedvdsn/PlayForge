@@ -791,29 +791,16 @@ namespace FarEmerald.PlayForge.Extended.Editor
                 MarkDirty(entity);
             });
             levelingContent.Add(startlevelField);
-            
-            var row = CreateRow(4);
-            levelingContent.Add(row);
-            
+
+            // On a line of its own: the Cap At Max toggle that shared its row set a value nothing read (GAS-45)
             var maxLevelField = CreateIntegerField("MaxLevel", "Max Level", entity.MaxLevel);
             maxLevelField.style.flexGrow = 1;
-            maxLevelField.style.marginRight = 8;
             maxLevelField.RegisterValueChangedCallback(evt =>
             {
                 entity.MaxLevel = evt.newValue;
                 MarkDirty(entity);
             });
-            row.Add(maxLevelField);
-            
-            var capToggle = CreateToggle("CapAtMaxLevel", "Cap At Max");
-            capToggle.value = entity.CapAtMaxLevel;
-            capToggle.style.minWidth = 100;
-            capToggle.RegisterValueChangedCallback(evt =>
-            {
-                entity.CapAtMaxLevel = evt.newValue;
-                MarkDirty(entity);
-            });
-            row.Add(capToggle);
+            levelingContent.Add(maxLevelField);
         }
 
         // ═══════════════════════════════════════════════════════════════════════════

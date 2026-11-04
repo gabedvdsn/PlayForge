@@ -54,9 +54,7 @@ At runtime, the entity's level range comes from its own Starting Level and Max L
 ## Leveling
 
 - **Starting Level** (default 1): the entity's level when its GAS initializes, and its lowest level.
-- **Max Level** (default 99): its highest level.
-- **Cap At Max** (default on): stored with the entity. The runtime doesn't read it in this version. The level always
-  stays within the range.
+- **Max Level** (default 99): its highest level. The level always stays within this range.
 
 The entity's level feeds per-level values: the effects it applies as an origin, its Max Abilities and item limits, and
 the cached scalers in its attribute set. Code changes the level through the GAS, with `SetLevel` or `ModifyLevel` and

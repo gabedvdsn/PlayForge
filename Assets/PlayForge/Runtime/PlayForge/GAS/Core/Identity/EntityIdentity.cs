@@ -21,8 +21,8 @@ namespace FarEmerald.PlayForge
         [ForgeTagContext(ForgeContext.Granted)] public List<Tag> GrantedTags;
         [ForgeTagContext(ForgeContext.ContextIdentifier)] public List<Tag> ContextTags;
 
+        // The level always stays between these two; Cap At Max, which nothing read, is gone (GAS-45)
         public int StartingLevel = 1;
-        public bool CapAtMaxLevel = true;
         public int MaxLevel = 99;
         
         public EAbilityActivationPolicy ActivationPolicy = EAbilityActivationPolicy.QueueActivationIfBusy;

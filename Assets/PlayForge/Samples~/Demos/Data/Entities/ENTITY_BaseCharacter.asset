@@ -29,7 +29,6 @@ MonoBehaviour:
   - Name: Hero
     DisplayName: Hero
   StartingLevel: 1
-  CapAtMaxLevel: 1
   MaxLevel: 25
   ActivationPolicy: 2
   MaxAbilitiesOperation:

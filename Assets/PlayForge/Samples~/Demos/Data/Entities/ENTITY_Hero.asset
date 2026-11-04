@@ -30,7 +30,6 @@ MonoBehaviour:
   GrantedTags: []
   ContextTags: []
   StartingLevel: 1
-  CapAtMaxLevel: 1
   MaxLevel: 25
   ActivationPolicy: 2
   MaxAbilitiesOperation:

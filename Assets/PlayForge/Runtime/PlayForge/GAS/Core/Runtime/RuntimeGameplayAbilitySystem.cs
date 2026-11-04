@@ -437,7 +437,6 @@ namespace FarEmerald.PlayForge
         public List<Tag> ContextTags;
 
         public int StartingLevel = 1;
-        public bool CapAtMaxLevel = true;
         public int MaxLevel = 99;
         
         public EAbilityActivationPolicy ActivationPolicy = EAbilityActivationPolicy.QueueActivationIfBusy;
@@ -471,7 +470,6 @@ namespace FarEmerald.PlayForge
             GrantedTags = data.GrantedTags;
             ContextTags = data.ContextTags;
             StartingLevel = data.StartingLevel;
-            CapAtMaxLevel = data.CapAtMaxLevel;
             MaxLevel = data.MaxLevel;
             ActivationPolicy = data.ActivationPolicy;
             MaxAbilitiesOperation = data.MaxAbilitiesOperation;

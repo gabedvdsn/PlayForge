@@ -53,6 +53,9 @@ tracks each fix below by its ID.
 ### Removed
 - QuickOutline, replaced by the Demo's own outline.
 - The test processes `TestAOEMonoProcess` and `TestMultiProcess`, and the unused `BootstrapperEditor`.
+- Two settings nothing read: an entity's **Cap At Max**, since its level always stays between Starting Level and Max
+  Level, and an item's **Allow Duplicates**, since the entity's **Allow Duplicate Items** decides. Code that set
+  either field no longer compiles; delete the assignment.
 
 ## [0.1.0] - 2026-10-30
 

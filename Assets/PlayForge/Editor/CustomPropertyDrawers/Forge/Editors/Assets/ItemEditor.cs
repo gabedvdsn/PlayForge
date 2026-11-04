@@ -134,19 +134,8 @@ namespace FarEmerald.PlayForge.Extended.Editor
                 Repaint();
             });
             content.Add(texturesField);
-            
-            // Allow duplicates toggle
-            var duplicatesRow = CreateRow(4);
-            var duplicatesToggle = new Toggle("Allow Duplicates");
-            duplicatesToggle.value = item.Definition.AllowDuplicates;
-            duplicatesToggle.RegisterValueChangedCallback(evt =>
-            {
-                item.Definition.AllowDuplicates = evt.newValue;
-                MarkDirty(item);
-            });
-            duplicatesToggle.tooltip = "If enabled, multiple instances of this item can exist in the same inventory.";
-            duplicatesRow.Add(duplicatesToggle);
-            content.Add(duplicatesRow);
+
+            // No Allow Duplicates toggle: the entity's Allow Duplicate Items decides, and nothing read the item's (GAS-45)
         }
 
         // ═══════════════════════════════════════════════════════════════════════════

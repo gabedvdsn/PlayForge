@@ -20,9 +20,6 @@ namespace FarEmerald.PlayForge
         
         [Tooltip("Icons and textures for this item.")]
         public List<TextureItem> Textures = new();
-        
-        [Tooltip("If true, multiple instances of this item can exist in the same inventory.")]
-        public bool AllowDuplicates;
 
         [Tooltip("Maximum stack size")]
         public int MaxStackSize;
