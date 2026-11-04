@@ -99,6 +99,10 @@ tracks each fix below by its ID.
   started, starts in the next frame. It started inside the call, so a loop of instant activations nested until the
   stack overflowed. `TryActivateAbility` returns true for such a request. Activation is otherwise as before: the
   ability runs inside the call until one of its tasks waits.
+- A runtime entity's abilities end when it does. A runtime process now ends the processes it handles as it ends, as a
+  Mono process does, so ending a runtime entity, however it's ended, ends its running abilities, critical or not.
+  They ran on for as long as their stages lasted. An entity that has ended takes no more activations:
+  `TryActivateAbility` returns false at once, where a destroyed Mono entity threw.
 
 ### Removed
 - QuickOutline, replaced by the Demo's own outline.

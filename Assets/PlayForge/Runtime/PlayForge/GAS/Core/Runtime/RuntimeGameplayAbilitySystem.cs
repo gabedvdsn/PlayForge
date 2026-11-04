@@ -116,6 +116,14 @@ namespace FarEmerald.PlayForge
 
         public override void WhenLateUpdate() => EndOfFrame();
 
+        // Nothing starts on it from now on, and the base ends what it handles, its abilities among them. They ran on
+        // after it ended (GAS-52)
+        public override void WhenTerminate()
+        {
+            core.WhenTerminate();
+            base.WhenTerminate();
+        }
+
         // ═══════════════════════════════════════════════════════════════════════════
         // SOURCE / TARGET PARAMETERS
         // ═══════════════════════════════════════════════════════════════════════════

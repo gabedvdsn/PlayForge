@@ -119,8 +119,15 @@ namespace FarEmerald.PlayForge
         public virtual void WhenTerminate()
         {
             processActive = false;
+
+            // What this process handles ends with it, as a Mono process's does. A runtime GAS's abilities ran on after it
+            // ended, for as long as their stages lasted (GAS-52)
+            foreach (var relay in HandlerRelays.Values.ToArray())
+            {
+                ProcessControl.Instance.TerminateImmediate(relay.CacheIndex);
+            }
         }
-        
+
         public virtual void WhenTerminateQueued()
         {
             processActive = false;

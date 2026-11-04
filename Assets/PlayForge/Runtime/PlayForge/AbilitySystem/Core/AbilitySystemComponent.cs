@@ -109,6 +109,16 @@ namespace FarEmerald.PlayForge
             }
         }
 
+        /// <summary>
+        /// The entity is ending: no activation from now on, nothing left queued, and the abilities still running end
+        /// with the entity's process (GAS-52). Unlike turning <see cref="Enabled"/> off, it sends them no interrupt.
+        /// </summary>
+        internal void ShutDown()
+        {
+            activationQueue.Clear();
+            _enabled = false;
+        }
+
         private bool _locked;
 
         public bool Locked
@@ -330,6 +340,9 @@ namespace FarEmerald.PlayForge
         /// <returns>True if the ability activated, was queued behind a busy one, or was put off to the next frame.</returns>
         public bool TryActivateAbility(AbilityActivationRequest req)
         {
+            // Before the packet, which reads the entity: an ended entity's system is off, and a Mono entity may be
+            // destroyed by then (GAS-52)
+            if (!Enabled) return false;
             if (!AbilityCache.TryGetValue(req.Index, out var container)) return false;
             var data = AbilityDataPacket.GenerateFrom(container.Spec,
                 req, container.Spec.Base.Behaviour.UseImplicitTargeting, container.Spec.Base.Behaviour.ImplicitTag);

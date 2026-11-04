@@ -469,6 +469,7 @@ had no letter in the review. TS-AA onward came from the test project.
 | GAS-49 | M | 3 | Both hubs give their Starting Abilities, and try Activate Immediately ones, before they build their attributes, so the default Cost rule refuses such an ability if it has a cost | `GameplayAbilitySystem.cs:82-84`, `RuntimeGameplayAbilitySystem.cs:153-155`, `AbilitySystemComponent.cs:270-275` | fixed |
 | GAS-50 | M | 3 | A Durational or Infinite effect with Tick On Application but no periodic ticks derives OnApply for Add and Flat Bonus, and only the Instant path commits OnApply, so its change never lands. The Audit flags the shape | `GameplayEffectImpact.cs:92-104`, `EffectSystemComponent.cs:141-147, 214-225` | fixed |
 | GAS-51 | L | 3 | Item stacking is declared but not built: an Item's `MaxStackSize` is never read, and the inspector doesn't draw it; `ItemSpecContainer.ItemStacks` is never set. Remove both, or build stacking as a Phase 5 feature. Found removing GAS-45. The user's call: keep both and build stacking in Phase 5, as FEAT-14 | `ItemDefinition.cs:25`, `ItemSpecContainer.cs:25` | moved |
+| GAS-52 | H | 3 | A runtime entity's abilities outlive it. A Mono process ends the processes it handles as it ends, and a runtime process didn't, so an ability running on a runtime entity ran on, however the entity ended: a 10-minute delay was still running 5 frames after. An entity of either kind also took activations once ended, and a destroyed Mono entity threw on one. Found measuring Phase 3's exit gate. A runtime process now ends what it handles, as a Mono process does, and an ending entity's ability system shuts first, refusing activation before it reads the entity | `AbstractRuntimeProcess.cs` (`WhenTerminate`), `GASCore.cs` (`WhenTerminate`), `AbilitySystemComponent.cs` (`ShutDown`, `TryActivateAbility`), both hubs' `WhenTerminate` | fixed |
 | GAS-P1 | M | 0 | `ActionQueue` LINQ allocations; snapshot built every frame (PF-006) | `ActionQueue.cs:41, 46, 156`, `FrameSummary.cs:340-351` | verified |
 | GAS-P2 | M | 0 | Tag and FrameSummary allocations (PF-007) | `TagCache.cs:60`, `TagQuery.cs:89-136`, `FrameSummary.cs:306-308` | verified |
 | GAS-P3 | M | 3 | Each application revalidates every container and rebuilds all tags (area application is quadratic). Measured: an instant application on an entity carrying 1,000 effects took 0.49 ms, 135 times one on an entity carrying 2. Now the requirements wait for one pass at the next tick, a shelved container's tags are counted as it lands, and re-application and removal find containers in an index by asset tag | `EffectSystemComponent.cs:312-348`, `GameplayAbilitySystem.cs:250-281` | fixed |
@@ -600,6 +601,35 @@ GAS-4 with GAS-5, PC-6, and TS-I with PC-5.
 ## Log
 
 Record baselines, gate results and notable decisions here, newest first.
+
+- 2026-11-04, **GAS-52: a runtime entity's abilities end when it does.** Measuring Phase 3's exit gate turned this
+  up. A Mono process ends the processes it handles as it ends, and a runtime process didn't, so an ability running on
+  a runtime entity ran on, however the entity was ended, for as long as its stages lasted. An entity of either kind
+  also took activations once it had ended, and a destroyed Mono entity threw on one. A runtime process now ends what
+  it handles, as a Mono process does, and an ending entity's ability system shuts first. Its test,
+  `GAS_52_Ending_an_entity_ends_its_abilities`, on both hubs, ended queued, at once and without cascading, in
+  targeting, a stage and a critical stage, was seen failing first: the runtime entity's ability never ended, and the
+  Mono entity threw `MissingReferenceException` when asked for an activation after it ended.
+  - **Measured:** a 10-minute delay on a runtime entity was still running 5 frames after the entity ended, whichever
+    way; now it ends with the entity.
+  - **Tests:** PlayMode 927: 920 pass, 0 fail and 7 planted are skipped, in three orders. Planted 7 of 7; EditMode
+    40 of 40. The 25 golden scenarios pass inside PlayMode; the custom runner can't run while the user's editor holds
+    PlayForge's lock.
+  - **Calls made:** the fix is in the runtime process base, so any runtime process that handles others now ends them
+    as it ends, as a Mono process does, not a GAS alone. Shutting the ability system sends its abilities no interrupt,
+    unlike turning `Enabled` off: their processes end with the entity's.
+
+- 2026-11-04, **Phase 3's exit gate, measured.** In frames where nothing starts or ends, over 300 frames on both
+  hubs, these allocate nothing: 20 class or 20 Mono processes stepping in all three phases, one entity carrying 10
+  durational buffs and 3 effects that tick every frame, 50 entities each with one, and an ability waiting in a task
+  that yields each frame. Two allocate. An ability waiting in `DelayTask` or `ChannelAbilityTask` takes 24 bytes a
+  frame: the dictionary that finds a task's run by its token boxes the token on every lookup under Unity's Mono. An
+  entity whose frame summary has a listener takes 504 bytes a frame, or 824 with an effect ticking: each snapshot
+  copies ten lists.
+  - **Per event, for scale:** an instant ability's activation about 7 KB (6.8 KB on the Mono hub), an instant
+    effect's application 2.7 KB, an instant sequence's run 4 KB, and a repeating sequence about 1.3 KB per repeat.
+  - **Not met yet:** the two above, and the gate's "enforced in CI". The repo has no CI, and the allocation tests live
+    in Proving Grounds, which has no remote. The measuring also turned up GAS-52.
 
 - 2026-11-03, **TS-8: activation stays synchronous, and a loop of activations goes round once a frame.**
   `TryActivateAbility` runs an ability until one of its tasks waits: an instant one to its end, a slower one to its

@@ -160,6 +160,12 @@ namespace FarEmerald.PlayForge
             return true;
         }
 
+        /// <summary>
+        /// The entity's process is ending. Its ability system takes no more activations, so none starts as the abilities
+        /// still running end with the process, nor after it (GAS-52).
+        /// </summary>
+        public void WhenTerminate() => AbilitySystem.ShutDown();
+
         public void QueueAction(IRootAction action) => ActionQueue?.Enqueue(action);
 
         public void QueueActions(IEnumerable<IRootAction> actions) => ActionQueue?.EnqueueRange(actions);

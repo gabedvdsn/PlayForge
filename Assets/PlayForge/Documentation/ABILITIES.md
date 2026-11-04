@@ -70,7 +70,8 @@ This section is what the ability does when it runs. One activation goes through 
 These steps start inside the call that asks for the ability, `AbilitySystemComponent.TryActivateAbility`, and run until
 a task waits. So an ability whose tasks all finish at once has ended, and its callbacks have fired, by the time the call
 returns. An ability asked for again while that call still runs, from its own callbacks or from another ability's that
-it started, starts in the next frame instead.
+it started, starts in the next frame instead. When the entity ends, its running abilities end with it, critical or not,
+and it takes no more activations.
 
 - **Targeting**: the task that picks what the ability acts on, such as an entity the player clicks, or the caster
   itself. Targeting holds the activation's claim. If the task fails while its **Break Runtime On Invalid** is on, or it
