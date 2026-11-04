@@ -465,7 +465,7 @@ had no letter in the review. TS-AA onward came from the test project.
 | ED-26 | M | 2 | The GAS Debugger never removes its three frame-summary hooks, so a window closed in play mode keeps sampling every entity, and reopening it adds another set | `GASDebugger.cs:149-152, 269-305` | fixed |
 | ED-27 | M | 4 | The View tab has two click models: one click selects and pings a row in the grouped list, but a typed table acts only on a double-click | `TheForge.ViewTab.cs:2221-2233, 2598-2607` | open |
 | ED-28 | L | 2 | Dead UI: `QuickFillWindow` is never opened, `m_AbilityIcon` is never assigned, and four editor `.cs.meta` files name UXML GUIDs that exist nowhere | `ScalerDrawerWindows.cs:356-372`, `AbilityEditor.cs:19-20, 70`, `AbilityEditor.cs.meta:7` | fixed |
-| ED-29 | L | 2 | The Entity inspector's Allow Duplicate Equipped Items toggle opens showing Allow Duplicate Items' value | `EntityIdentityEditor.cs:927` | open |
+| ED-29 | L | 2 | The Entity inspector's Allow Duplicate Equipped Items toggle opens showing Allow Duplicate Items' value | `EntityIdentityEditor.cs:927` | fixed |
 | ED-30 | M | 2 | Local Data's object rows edit each other's value: a ScriptableObject row binds the MonoBehaviour field and the other way round, so neither keeps what's assigned | `DataWrapperDrawer.cs:127-128` | open |
 | ED-31 | L | 4 | The four unlink dialogs count with `IsLinkedTo(this)`, the editor rather than the asset, so they always say 0 | `AbilityEditor.cs:850`, `EffectEditor.cs:280`, `EntityIdentityEditor.cs:301`, `ItemEditor.cs:321` | open |
 

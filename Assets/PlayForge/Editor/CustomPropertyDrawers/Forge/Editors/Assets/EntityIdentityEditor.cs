@@ -924,7 +924,8 @@ namespace FarEmerald.PlayForge.Extended.Editor
             content.Add(maxEquippedItemsField);
             
             var allowEquippedDupsToggle = CreateToggle("AllowDuplicateEquippedItems", "Allow Duplicate Equipped Items");
-            allowEquippedDupsToggle.value = entity.AllowDuplicateItems;
+            // It opened showing Allow Duplicate Items' value (ED-29)
+            allowEquippedDupsToggle.value = entity.AllowDuplicateEquippedItems;
             allowEquippedDupsToggle.style.minWidth = 120;
             allowEquippedDupsToggle.RegisterValueChangedCallback(evt =>
             {
