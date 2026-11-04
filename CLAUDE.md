@@ -38,8 +38,8 @@ The full review behind it is https://claude.ai/artifact/1GsrCxW3Wff2KvXM6fnai9.
 
 - **Write a failing test first,** named after the tracker ID, then fix. Update the ID's status in
   `Docs/REFACTOR_PLAN.md` in the same commit.
-- **Use one branch per roadmap phase.** Cite tracker IDs in commit messages. Commit and push only when the user
-  asks.
+- **Work on `main`** (the plan's Decision 19); open no new phase branches. Cite tracker IDs in commit messages.
+  Push only when the user has said so.
 - **Never read or edit `.claude/worktrees/`.** It holds stale copies, at the repo root and under
   `Assets/PlayForge/.claude/`.
 - **Arcade Fighter** (`C:\Users\17074\Documents\GitHub\Arcade Fighter`) carries a patched copy in

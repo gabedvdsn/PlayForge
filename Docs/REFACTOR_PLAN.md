@@ -18,7 +18,8 @@ from. It lives outside `Assets/` so it never ships in the package.
 - **Update the Status column in the same commit as the fix:** `open` → `red` (test written) → `fixed`
   (test green) → `verified` (gate passed). Use `wontfix` or `moved` with a note when needed.
 - **Commit messages cite IDs**, for example `Fix GAS-07: cost validation compares magnitude`.
-- **One branch per phase:** `refactor/phase-0-upstream`, `refactor/phase-1-correctness`, and so on.
+- **Work on `main`** (Decision 19). Phases 0 to 2 each had a branch of their own: `refactor/phase-0-upstream`,
+  `refactor/phase-1-correctness` and `refactor/phase-2-release`.
 - `file:line` references were verified on 2026-10-29 against commit `01258b8`. Re-check before editing.
 
 ## Environment
@@ -216,6 +217,9 @@ from. It lives outside `Assets/` so it never ships in the package.
     from a kit of C# controls styled in USS (Q13). Undo through SerializedObject, multi-editing and no polling come
     first (Q35). The editor code becomes internal before 1.0 (Q37). The smoke suite proves, in each theme, that every
     window opens without an exception and scripted edits undo (Q36).
+- Decision 19, 2026-11-03: work goes on `main`, with no new phase branches. The user switched the checkout to it, and
+  `main` holds Phases 0 to 2; `refactor/phase-2-release` stays at `901c974`. Another session has pushed `main` to
+  GitHub on the user's word. Whether this one pushes as it goes is the user's call.
 
 **Open. Ask the user; do not assume:**
 1. ~~**Uncommitted changes**~~: decided, see above.
@@ -557,9 +561,9 @@ Record baselines, gate results and notable decisions here, newest first.
   SP-22 and SP-23 are `fixed`, one commit each, and ED-12's Phase 2 part is done; the row stays open for Phase 4.
   Every Phase 2 row is now `fixed`.
   - **Calls made:** the UI interview's answers (Decision 18) and Decision 17, the submission Editor.
-  - **Tests:** Proving Grounds' EditMode suite passes 34 of 34. Its 26 new tests were each seen failing first. The
-    PlayMode suite runs 838 tests: 831 pass, 0 fail and 7 planted are skipped, in three orders. Planted 7 of 7, and
-    the golden scenarios pass 25/25 in the custom runner.
+  - **Tests:** Proving Grounds' EditMode suite passes 37 of 37. Its 29 new tests were each seen failing first. The
+    PlayMode suite runs 842 tests, GAS-46's 4 among them: 835 pass, 0 fail and 7 planted are skipped, in three
+    orders. Planted 7 of 7, and the golden scenarios pass 25/25 in the custom runner.
   - **The gate:** a clean import into a fresh Unity 6 project shows 0 compile errors or warnings, 0 uncompiled
     scripts, 0 missing types, 0 exceptions and 0 asset warnings, plain and with `--samples`, which also finds 0
     missing scripts or references and no shader message.
