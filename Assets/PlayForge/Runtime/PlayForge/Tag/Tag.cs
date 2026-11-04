@@ -215,9 +215,10 @@ namespace FarEmerald.PlayForge
             if (string.IsNullOrEmpty(parent.Name) || string.IsNullOrEmpty(Name))
                 return false;
             
-            // Must be longer than parent and start with parent name followed by dot
-            return Name.Length > parent.Name.Length 
-                   && Name.StartsWith(parent.Name) 
+            // Must be longer than parent and start with parent name followed by dot. Ordinal: names are identifiers, and
+            // a culture-aware StartsWith was slower and could match by the current culture's rules (GAS-P4)
+            return Name.Length > parent.Name.Length
+                   && Name.StartsWith(parent.Name, StringComparison.Ordinal)
                    && Name[parent.Name.Length] == '.';
         }
         
@@ -229,10 +230,9 @@ namespace FarEmerald.PlayForge
         public bool IsDirectChildOf(Tag parent)
         {
             if (!IsChildOf(parent)) return false;
-            
-            // Check there are no more dots after the parent path
-            string remainder = Name.Substring(parent.Name.Length + 1);
-            return !remainder.Contains('.');
+
+            // No more dots after the parent path, looked for in place: the rest was cut out as a new string (GAS-P4)
+            return Name.IndexOf('.', parent.Name.Length + 1) < 0;
         }
         
         /// <summary>
@@ -265,8 +265,17 @@ namespace FarEmerald.PlayForge
         {
             if (string.IsNullOrEmpty(Name) || string.IsNullOrEmpty(other.Name))
                 return false;
-            
-            return GetRoot().Equals(other.GetRoot());
+
+            // The first segments compared in place. Each side's root was cut out as a new string and registered as a
+            // tag, for every tag a same-root query compared (GAS-P4)
+            int length = RootLength(Name);
+            return length == RootLength(other.Name) && string.CompareOrdinal(Name, 0, other.Name, 0, length) == 0;
+        }
+
+        private static int RootLength(string name)
+        {
+            int firstDot = name.IndexOf('.');
+            return firstDot < 0 ? name.Length : firstDot;
         }
 
         // ═══════════════════════════════════════════════════════════════════════════

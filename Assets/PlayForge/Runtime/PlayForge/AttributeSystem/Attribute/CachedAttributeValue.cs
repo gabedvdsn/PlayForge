@@ -61,6 +61,13 @@ namespace FarEmerald.PlayForge
 
         private readonly List<ModifierEntry> modifiers = new();
 
+        // Entries a carrier's removal let go, for the next registration to reuse; a refresh built new ones (GAS-P4)
+        private readonly Stack<ModifierEntry> spareEntries = new();
+
+        // Recompute's multipliers that pool their bonus, kept between recomputes: a new list each time allocated on
+        // every recompute, and every tick that commits recomputes (GAS-P4)
+        private readonly List<(ModifierEntry entry, float curBonus, float baseBonus)> pooled = new();
+
         // ─── Committed history (permanent), attributed per retention group ───────
         private readonly Dictionary<Tag, AttributeValue> committedByGroup = new();
         private readonly List<Tag> committedOrder = new();
@@ -175,23 +182,50 @@ namespace FarEmerald.PlayForge
         {
             if (carrier is null) return;
 
-            modifiers.RemoveAll(m => ReferenceEquals(m.Carrier, carrier));
+            RemoveCarrier(carrier);
 
             if (impacters != null)
             {
-                foreach (var imp in impacters)
+                // By index: a foreach through the interface boxed the list's enumerator
+                for (int i = 0; i < impacters.Count; i++)
                 {
+                    var imp = impacters[i];
                     if (imp == null) continue;
-                    modifiers.Add(new ModifierEntry
-                    {
-                        Carrier = carrier,
-                        Impacter = imp,
-                        Group = imp.Group.IsValid ? imp.Group : Tags.IgnoreRetention,
-                    });
+
+                    var entry = spareEntries.Count > 0 ? spareEntries.Pop() : new ModifierEntry();
+                    entry.Carrier = carrier;
+                    entry.Impacter = imp;
+                    entry.Group = imp.Group.IsValid ? imp.Group : Tags.IgnoreRetention;
+                    modifiers.Add(entry);
                 }
             }
 
             Recompute(cache);
+        }
+
+        /// <summary>
+        /// Takes a carrier's entries off, in one pass that keeps the rest in order, and keeps them spare. A RemoveAll
+        /// lambda captured the carrier, allocating on every call (GAS-P4).
+        /// </summary>
+        private int RemoveCarrier(IAttributeImpactCarrier carrier)
+        {
+            int kept = 0;
+            for (int i = 0; i < modifiers.Count; i++)
+            {
+                var m = modifiers[i];
+                if (ReferenceEquals(m.Carrier, carrier))
+                {
+                    m.Carrier = null;
+                    m.Impacter = null;
+                    spareEntries.Push(m);
+                    continue;
+                }
+                modifiers[kept++] = m;
+            }
+
+            int removed = modifiers.Count - kept;
+            if (removed > 0) modifiers.RemoveRange(kept, removed);
+            return removed;
         }
 
         /// <summary>
@@ -203,7 +237,7 @@ namespace FarEmerald.PlayForge
         {
             if (carrier is null) return false;
 
-            int removed = modifiers.RemoveAll(m => ReferenceEquals(m.Carrier, carrier));
+            int removed = RemoveCarrier(carrier);
             Recompute(cache);
             return removed > 0;
         }
@@ -242,8 +276,9 @@ namespace FarEmerald.PlayForge
             }
 
             var working = ActiveValue;
-            foreach (var imp in impacters)
+            for (int i = 0; i < impacters.Count; i++)
             {
+                var imp = impacters[i];
                 if (imp == null) continue;
 
                 // Record the POST-CONSTRAINT delta this step actually produced — a +50
@@ -273,8 +308,9 @@ namespace FarEmerald.PlayForge
             if (carrier is null || impacters == null) return default;
 
             var working = ActiveValue;
-            foreach (var imp in impacters)
+            for (int i = 0; i < impacters.Count; i++)
             {
+                var imp = impacters[i];
                 if (imp == null) continue;
                 working = ApplyCommitStep(working, imp, imp.Evaluate(carrier));
             }
@@ -364,7 +400,7 @@ namespace FarEmerald.PlayForge
             // value swing its own factor produced); AdditiveBonus impacters pool their
             // (eval − 1) bonuses into ONE final ×(1 + Σ), credited proportionally.
             float curBonusSum = 0f, baseBonusSum = 0f;
-            var pooled = new List<(ModifierEntry entry, float curBonus, float baseBonus)>();
+            pooled.Clear();
 
             foreach (var m in modifiers)
             {

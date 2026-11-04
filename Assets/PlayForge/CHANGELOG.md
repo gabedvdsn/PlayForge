@@ -40,6 +40,10 @@ tracks each fix below by its ID.
 - Ending an effect costs the same however many end with it, so a cleanse or a mass expiry costs as many as it ends,
   not their square. Effects ending in the same update leave the entity together before any of their removals run, so
   a removal worker no longer finds another effect that is ending with its own.
+- A tick allocates nothing on its way to its commit, and a recompute, a modifier refresh and a same-root tag query
+  allocate nothing. The built-in `Tags` are made once, not on every read. `GameplayEffectSpec.GetImpactedAttributes`
+  returns a `ReadOnlyListView` and `GameplayEffectImpact.GetContainedEffects` a `ContainedEffects`, which `foreach`
+  walks without allocating and which still enumerate as before. `Tag.IsChildOf` compares ordinally.
 
 ### Fixed
 - Runtime correctness: 96 fixes across ProcessControl, TaskSequence and the GAS core, among them exception isolation,

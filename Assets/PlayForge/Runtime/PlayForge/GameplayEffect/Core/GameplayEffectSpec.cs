@@ -145,10 +145,24 @@ namespace FarEmerald.PlayForge
 
         private List<(AttributeImpactEntry entry, IAttributeImpacter impacter)> entryImpacters;
 
+        // Per delivery, the attributes impacted and each one's impacters, in entry order, built with the entries: the
+        // spec is immutable for its life. Each lookup built a new list or set, on every tick (GAS-P4)
+        private static readonly int Deliveries = Enum.GetValues(typeof(EImpactDelivery)).Length;
+        private static readonly IReadOnlyList<IAttributeImpacter> NoImpacters = Array.Empty<IAttributeImpacter>();
+        private List<IAttribute>[] attributesByDelivery;
+        private List<(IAttribute attribute, List<IAttributeImpacter> impacters)>[] impactersByDelivery;
+
         private void BuildEntryImpacters()
         {
             if (entryImpacters != null) return;
             entryImpacters = new List<(AttributeImpactEntry, IAttributeImpacter)>();
+            attributesByDelivery = new List<IAttribute>[Deliveries];
+            impactersByDelivery = new List<(IAttribute, List<IAttributeImpacter>)>[Deliveries];
+            for (int d = 0; d < Deliveries; d++)
+            {
+                attributesByDelivery[d] = new List<IAttribute>();
+                impactersByDelivery[d] = new List<(IAttribute, List<IAttributeImpacter>)>();
+            }
 
             var impact = Base.ImpactSpecification;
             if (impact?.Entries == null) return;
@@ -157,51 +171,61 @@ namespace FarEmerald.PlayForge
             foreach (var entry in impact.Entries)
             {
                 if (entry == null) continue;
-                entryImpacters.Add((entry, new ScalerImpacter(
+                var impacter = new ScalerImpacter(
                     entry.Magnitude,
                     entry.Operation,
                     entry.TargetSlot,
                     entry.SortOrder,
                     entry.MultiplyBehaviour,
-                    entry.ResolveGroup(defaultGroup))));
+                    entry.ResolveGroup(defaultGroup));
+                entryImpacters.Add((entry, impacter));
+                IndexImpacter(entry.Delivery, entry.AttributeTarget, impacter);
             }
         }
 
-        /// <summary>All impacters whose entry targets <paramref name="attribute"/> with the given delivery.</summary>
+        private void IndexImpacter(EImpactDelivery delivery, IAttribute attribute, IAttributeImpacter impacter)
+        {
+            var buckets = impactersByDelivery[(int)delivery];
+            for (int i = 0; i < buckets.Count; i++)
+            {
+                if (!AttributeMatches(buckets[i].attribute, attribute)) continue;
+                buckets[i].impacters.Add(impacter);
+                return;
+            }
+
+            buckets.Add((attribute, new List<IAttributeImpacter> { impacter }));
+            if (attribute != null) attributesByDelivery[(int)delivery].Add(attribute);
+        }
+
+        /// <summary>
+        /// All impacters whose entry targets <paramref name="attribute"/> with the given delivery. The list is the
+        /// spec's own, built once: read it, don't change it.
+        /// </summary>
         public IReadOnlyList<IAttributeImpacter> GetImpactersFor(IAttribute attribute, EImpactDelivery delivery)
         {
             BuildEntryImpacters();
-            var list = new List<IAttributeImpacter>();
-            foreach (var (entry, impacter) in entryImpacters)
+            var buckets = impactersByDelivery[(int)delivery];
+            for (int i = 0; i < buckets.Count; i++)
             {
-                if (entry.Delivery != delivery) continue;
-                if (!AttributeMatches(entry.AttributeTarget, attribute)) continue;
-                list.Add(impacter);
+                if (AttributeMatches(buckets[i].attribute, attribute)) return buckets[i].impacters;
             }
-            return list;
+            return NoImpacters;
         }
 
-        /// <summary>Distinct attributes impacted at the given delivery (null target entries are skipped).</summary>
-        public IEnumerable<IAttribute> GetImpactedAttributes(EImpactDelivery delivery)
+        /// <summary>
+        /// Distinct attributes impacted at the given delivery, in entry order (null target entries are skipped). A
+        /// <c>foreach</c> over the result allocates nothing.
+        /// </summary>
+        public ReadOnlyListView<IAttribute> GetImpactedAttributes(EImpactDelivery delivery)
         {
             BuildEntryImpacters();
-            var seen = new HashSet<IAttribute>();
-            foreach (var (entry, _) in entryImpacters)
-            {
-                if (entry.Delivery != delivery) continue;
-                if (entry.AttributeTarget == null) continue;
-                if (seen.Add(entry.AttributeTarget)) yield return entry.AttributeTarget;
-            }
+            return new ReadOnlyListView<IAttribute>(attributesByDelivery[(int)delivery]);
         }
 
         public bool HasImpacters(EImpactDelivery delivery)
         {
             BuildEntryImpacters();
-            foreach (var (entry, _) in entryImpacters)
-            {
-                if (entry.Delivery == delivery) return true;
-            }
-            return false;
+            return impactersByDelivery[(int)delivery].Count > 0;
         }
 
         private static bool AttributeMatches(IAttribute a, IAttribute b)

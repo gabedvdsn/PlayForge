@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
@@ -209,9 +210,61 @@ namespace FarEmerald.PlayForge
             };
         }
 
-        public IEnumerable<GameplayEffect> GetContainedEffects(EApplyTickRemove policy)
+        /// <summary>
+        /// The effects contained for <paramref name="policy"/>, which <c>foreach</c> walks in place without allocating.
+        /// A LINQ chain built them on every call, and a periodic effect asked on every tick (GAS-P4).
+        /// </summary>
+        public ContainedEffects GetContainedEffects(EApplyTickRemove policy) => new ContainedEffects(Packets, policy);
+    }
+
+    /// <summary>The contained effects of one policy, read from the packets as they are walked.</summary>
+    public readonly struct ContainedEffects : IEnumerable<GameplayEffect>
+    {
+        private readonly ContainedEffectPacket[] packets;
+        private readonly EApplyTickRemove policy;
+
+        public ContainedEffects(ContainedEffectPacket[] packets, EApplyTickRemove policy)
         {
-            return Packets.Where(packet => packet.Policy == policy).Select(p => p.ContainedEffect);
+            this.packets = packets;
+            this.policy = policy;
+        }
+
+        public Enumerator GetEnumerator() => new Enumerator(packets, policy);
+
+        IEnumerator<GameplayEffect> IEnumerable<GameplayEffect>.GetEnumerator() => GetEnumerator();
+
+        IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
+
+        public struct Enumerator : IEnumerator<GameplayEffect>
+        {
+            private readonly ContainedEffectPacket[] packets;
+            private readonly EApplyTickRemove policy;
+            private int index;
+
+            public Enumerator(ContainedEffectPacket[] packets, EApplyTickRemove policy)
+            {
+                this.packets = packets;
+                this.policy = policy;
+                index = -1;
+            }
+
+            public GameplayEffect Current => packets[index].ContainedEffect;
+
+            object IEnumerator.Current => Current;
+
+            public bool MoveNext()
+            {
+                if (packets == null) return false;
+                while (++index < packets.Length)
+                {
+                    if (packets[index].Policy == policy) return true;
+                }
+                return false;
+            }
+
+            public void Reset() => index = -1;
+
+            public void Dispose() { }
         }
     }
     

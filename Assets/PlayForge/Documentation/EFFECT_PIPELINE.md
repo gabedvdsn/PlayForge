@@ -53,7 +53,8 @@ ActiveValue = ConstrainValue(                         ← element clamp + roundi
 State:
 - `modifiers` — ordered `(carrier, impacter, group)` entries. Presence == contribution; no
   alive-flags, no zombie state. Re-registering a carrier **replaces** its entries (idempotent
-  refresh — the stacking path relies on this).
+  refresh — the stacking path relies on this). Removed entries are kept spare and reused, so a
+  refresh allocates nothing (GAS-P4).
 - `committedByGroup` — permanent history per retention group. Written only by `CommitImpact`.
 - Attribution — rebuilt on every `Recompute`; per-group slices that sum exactly to `ActiveValue`.
 
@@ -186,6 +187,10 @@ absorbed** — the append path would double-tick otherwise.
 - `ClearFinishedEffects` snapshots-and-clears, then takes the whole pass off the shelf and out of the
   index, in one walk of each, **before** any `OnRemove`. Taken off one at a time, each a linear
   remove, ending n containers cost n² (GAS-P5).
+- A spec builds its impacters once, with each delivery's attributes and each attribute's
+  impacters. `GetImpactersFor` returns the spec's own list: read it, don't change it. A tick's
+  lookups, its contained effects and a recompute allocate nothing; walk the lists by index or
+  with a `foreach` over the concrete type, since one through an interface boxes (GAS-P4).
 - Scaler-driven execute-tick counts are evaluated once per batch, never per loop iteration.
 - An effect asked for again on an entity before its own application there is over is refused, with one
   warning per entity and effect. An effect that contains itself, directly or through other contained

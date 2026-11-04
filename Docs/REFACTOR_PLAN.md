@@ -447,8 +447,10 @@ had no letter in the review. TS-AA onward came from the test project.
 | GAS-P1 | M | 0 | `ActionQueue` LINQ allocations; snapshot built every frame (PF-006) | `ActionQueue.cs:41, 46, 156`, `FrameSummary.cs:340-351` | verified |
 | GAS-P2 | M | 0 | Tag and FrameSummary allocations (PF-007) | `TagCache.cs:60`, `TagQuery.cs:89-136`, `FrameSummary.cs:306-308` | verified |
 | GAS-P3 | M | 3 | Each application revalidates every container and rebuilds all tags (area application is quadratic). Measured: an instant application on an entity carrying 1,000 effects took 0.49 ms, 135 times one on an entity carrying 2. Now the requirements wait for one pass at the next tick, a shelved container's tags are counted as it lands, and re-application and removal find containers in an index by asset tag | `EffectSystemComponent.cs:312-348`, `GameplayAbilitySystem.cs:250-281` | fixed |
-| GAS-P4 | M | 3 | Recompute allocations; impacter lookups allocate every tick; string tags with no interning | `CachedAttributeValue.cs:175, 203, 348`, `GameplayEffectSpec.cs:174, 188`, `Tag.cs:266, 286-288` | open |
+| GAS-P4 | M | 3 | Recompute allocations; impacter lookups allocate every tick; string tags with no interning. Measured: a tick allocated 528 bytes before its commit, a recompute 136, a modifier refresh 288 and a same-root tag query 60. Now each is 0: a spec builds its lookups once, contained effects are walked in place, a recompute keeps its list, modifier entries are reused, and roots are compared in place. The built-in `Tags` are made once, not with two locks on every read. Tags hashed and compared as strings, with no interned ID, moved to GAS-P7 | `CachedAttributeValue.cs:175, 203, 348`, `GameplayEffectSpec.cs:174, 188`, `Tag.cs:266, 286-288` | fixed |
 | GAS-P5 | M | 3 | Ending effects is quadratic. `FinishedEffects` is a list, so marking a container finished searches it, the shelf's tick and the requirement pass search it for every container, and clearing takes each off the shelf with a linear remove. A cleanse or a mass expiry of n containers costs n². Found fixing GAS-P3. Measured: ending 3,000 at once cost 0.0057 ms each, five to nine times as much as ending 50. Now a set mirrors the finished list, and a cleaning pass takes its containers off the shelf and out of the index together, in one walk of each | `EffectSystemComponent.cs` (`MarkFinished`, `TickEffectShelf`, `HandleGameplayEffects`, `ClearFinishedEffects`) | fixed |
+| GAS-P6 | M | 3 | A commit allocates, so a tick that commits still costs about 1.4 KB (measured within one frame, after GAS-P4). `CommitWithCarrier` makes a `ChangeValue` (a class), and `FreezeImpacters` a list and a constant impacter for each impacter; `WrapDelta` and `EnforceScaling` allocate when they run. Deferred impact workers keep the context they're handed, so pooling it needs care. Found fixing GAS-P4 | `AttributeSystemComponent.cs` (`CommitWithCarrier`, `FreezeImpacters`, `WrapDelta`), `CachedAttributeValue.cs` (`EnforceScaling`) | open |
+| GAS-P7 | L | 3 | Tags are hashed and compared as strings on every lookup, with no interned ID. A built-in tag's name is 64 characters. Needs a call first: an ID serialized with each tag, or resolved as an asset loads. Moved from GAS-P4 | `Tag.cs` (`Equals`, `GetHashCode`) | open |
 | GAS-S1 | M | 3 | The GAS twins duplicate about 400 lines and have drifted; `ToGASObject()` returns null on Runtime. Both now forward to one `GASCore`. The drift found: a runtime GAS applied no affiliation tags and lost its Entity asset's Local Data, and the GAS Debugger, asking `ToGASObject()`, named every runtime entity "unknown". `ToGASObject()` stays null on Runtime, which has no MonoBehaviour. What a hub keeps on purpose: the Mono hub builds at registration and a runtime GAS in its constructor, and on death the Mono hub ends at once while a runtime GAS queues its end | `GameplayAbilitySystem*.cs`, `RuntimeGameplayAbilitySystem*.cs`, `GASCore.cs` | fixed |
 
 ### Editor and UI
@@ -571,6 +573,18 @@ GAS-4 with GAS-5, PC-6, and TS-I with PC-5.
 ## Log
 
 Record baselines, gate results and notable decisions here, newest first.
+
+- 2026-11-03, **GAS-P4: a tick, a recompute and a tag query allocate nothing.** A spec builds its impacted attributes
+  and their impacters once per delivery, contained effects are walked in place, a recompute keeps its list, modifier
+  entries are reused, and a same-root query compares roots in place. The 57 built-in `Tags` are made once. Its seven
+  test cases were seen failing first.
+  - **Measured,** in bytes: a tick up to its commit 528 → 0, a recompute 136 → 0, a modifier refresh 288 → 0, a
+    same-root query 60 → 0. A tick that commits fell from about 2.0 KB to 1.4 KB; the rest is the commit, filed as
+    GAS-P6.
+  - **Tests:** PlayMode 869: 862 pass, 0 fail and 7 planted are skipped, in three orders. Planted 7 of 7; EditMode
+    39 of 39. The 25 golden scenarios pass inside PlayMode; the custom runner can't run while the user's editor holds
+    PlayForge's lock.
+  - **Split out:** GAS-P7, tags hashed and compared as strings with no interned ID, which needs a design call first.
 
 - 2026-11-03, **GAS-P5: ending an effect costs the same however many end with it.** A set mirrors the finished list,
   so marking a container and skipping a finished one no longer walk it, and a cleaning pass takes its containers off
