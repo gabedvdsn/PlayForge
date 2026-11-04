@@ -200,6 +200,49 @@ namespace FarEmerald.PlayForge
             => Impacters ?? Array.Empty<IAttributeImpacter>();
     }
 
+    /// <summary>
+    /// Carriers kept for the changes the system makes on someone's behalf, such as a rescale or a lifesteal's heal, one
+    /// for each source and attribute. Each change made a new one (GAS-P9). They're kept in a table keyed weakly by
+    /// source, so a source that's gone isn't held. A kept carrier is what a new one would be in all but identity.
+    /// </summary>
+    internal sealed class SourceCarriers
+    {
+        private struct Kept
+        {
+            public SourceAttributeImpact Carrier;
+            public List<Tag> ImpactTypes;
+            public Tag RetentionGroup;
+        }
+
+        private readonly System.Runtime.CompilerServices.ConditionalWeakTable<ISource, Dictionary<IAttribute, Kept>> bySource = new();
+
+        /// <summary>
+        /// The carrier <see cref="IAttributeImpactCarrier.GenerateSourceDerivation(ISource, IAttribute, Tag, List{Tag}, IAttributeImpactCarrier, bool)"/>
+        /// makes for these, kept for the next change. It's made again when the impact types or the group differ from
+        /// the ones it was made with, as a worker's can between changes.
+        /// </summary>
+        public SourceAttributeImpact For(ISource source, IAttribute attribute, Tag retentionGroup, List<Tag> impactTypes)
+        {
+            // Nothing to key by: a new one, as every change made
+            if (source == null || attribute == null)
+                return IAttributeImpactCarrier.GenerateSourceDerivation(source, attribute, retentionGroup, impactTypes);
+
+            if (!bySource.TryGetValue(source, out var byAttribute))
+            {
+                byAttribute = new Dictionary<IAttribute, Kept>();
+                bySource.Add(source, byAttribute);
+            }
+
+            if (byAttribute.TryGetValue(attribute, out var kept)
+                && ReferenceEquals(kept.ImpactTypes, impactTypes) && kept.RetentionGroup == retentionGroup)
+                return kept.Carrier;
+
+            var carrier = IAttributeImpactCarrier.GenerateSourceDerivation(source, attribute, retentionGroup, impactTypes);
+            byAttribute[attribute] = new Kept { Carrier = carrier, ImpactTypes = impactTypes, RetentionGroup = retentionGroup };
+            return carrier;
+        }
+    }
+
     // NullifiedImpactDerivation removed — see comment on the (also removed)
     // GenerateNullifiedDerivation factory above. The recompute model has no zombie state.
 

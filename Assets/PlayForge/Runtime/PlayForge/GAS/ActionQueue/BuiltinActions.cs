@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using UnityEngine;
 
 namespace FarEmerald.PlayForge
@@ -8,20 +9,25 @@ namespace FarEmerald.PlayForge
     // ═══════════════════════════════════════════════════════════════════════════
     
     /// <summary>
-    /// Deferred action to modify an attribute.
+    /// Deferred action to modify an attribute. One the system makes for itself, such as a rescale or a lifesteal's heal,
+    /// is used again once the queue has run it, so a listener handed one reads it during the call (GAS-P9).
     /// </summary>
-    public class ModifyAttributeAction : IRootAction
+    public class ModifyAttributeAction : IRootAction, IReusableAction
     {
         public int Priority { get; set; } = ActionPriority.Normal;
         public bool IsValid => _target != null;
-        
+
         public string Description => $"ModifyAttribute({_attribute?.GetName() ?? "null"}, {_value.CurrentValue:F2}/{_value.BaseValue:F2})";
-        
-        private readonly ITarget _target;
-        private readonly IAttribute _attribute;
-        private readonly SourcedModifiedAttributeValue _value;
-        private readonly bool _runEvents;
-        
+
+        // Set again each time the system rents one. They were readonly, as each change made a new action (GAS-P9)
+        private ITarget _target;
+        private IAttribute _attribute;
+        private SourcedModifiedAttributeValue _value;
+        private bool _runEvents;
+
+        // The spares it goes back to once the queue has run it, when the system rented it from them
+        private Stack<ModifyAttributeAction> _spares;
+
         public ModifyAttributeAction(
             ITarget target,
             IAttribute attribute,
@@ -39,6 +45,36 @@ namespace FarEmerald.PlayForge
         public void Execute(ISource system)
         {
             _target.TryModifyAttribute(_attribute, _value, _runEvents);
+        }
+
+        /// <summary>
+        /// An action from <paramref name="spares"/>, or a new one when there are none, set to make this change at the
+        /// default priority. It goes back to them once the queue has run it (GAS-P9).
+        /// </summary>
+        internal static ModifyAttributeAction Rent(Stack<ModifyAttributeAction> spares, ITarget target, IAttribute attribute,
+            SourcedModifiedAttributeValue value, bool runEvents)
+        {
+            var action = spares.Count > 0 ? spares.Pop() : new ModifyAttributeAction(target, attribute, value, runEvents);
+            action._target = target;
+            action._attribute = attribute;
+            action._value = value;
+            action._runEvents = runEvents;
+            action.Priority = ActionPriority.Normal;
+            action._spares = spares;
+            return action;
+        }
+
+        void IReusableAction.Release()
+        {
+            var spares = _spares;
+            if (spares == null) return;
+
+            // What it held is let go, so a spare keeps nothing alive
+            _target = null;
+            _attribute = null;
+            _value = default;
+            _spares = null;
+            spares.Push(this);
         }
     }
     

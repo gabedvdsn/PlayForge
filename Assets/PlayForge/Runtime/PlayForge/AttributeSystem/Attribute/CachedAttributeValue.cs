@@ -606,13 +606,23 @@ namespace FarEmerald.PlayForge
 
             // The system's own change, so typed DisallowImpact, as the pulse each attribute starts with is. Typed
             // AllowImpact, it passed every type filter, and a worker taking unworkable impacts acted on it (GAS-35, Decision 9)
-            var derivation = IAttributeImpactCarrier.GenerateSourceDerivation(
-                ctx.Change.Value, Tags.IgnoreRetention, new List<Tag>() { Tags.DisallowImpact });
+            //
+            // Carried for whoever changed Base, by a carrier kept for them, and queued in an action this attribute keeps.
+            // Each rescale made a new carrier, its list and a new action (GAS-P9)
+            var changed = ctx.Change.Value.Carrier;
+            var derivation = RescaleCarriers.For(changed.GetOrigin().GetSource(), changed.GetAttribute(),
+                Tags.IgnoreRetention, RescaleImpactTypes);
             var scaleAmount = new SourcedModifiedAttributeValue(derivation, delta, 0f, false);
-            ctx.ActionQueue.Enqueue(new ModifyAttributeAction(
-                ctx.System, ctx.Change.Value.Carrier.GetAttribute(), scaleAmount, false)
-            );
+            ctx.ActionQueue.Enqueue(ModifyAttributeAction.Rent(spareRescales ??= new Stack<ModifyAttributeAction>(),
+                ctx.System, changed.GetAttribute(), scaleAmount, false));
         }
+
+        // The carriers rescales are carried by, one table for every attribute, and the impact types each is made with
+        private static readonly SourceCarriers RescaleCarriers = new();
+        private static readonly List<Tag> RescaleImpactTypes = new() { Tags.DisallowImpact };
+
+        // The actions this attribute's rescales are queued in, back here once the queue has run them
+        private Stack<ModifyAttributeAction> spareRescales;
     }
 
     /// <summary>One group's slice of an attribute's ActiveValue (see <see cref="CachedAttributeValue.GetBreakdown"/>).</summary>

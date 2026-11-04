@@ -36,7 +36,8 @@ namespace FarEmerald.PlayForge
         // ═══════════════════════════════════════════════════════════════════════════
         
         /// <summary>
-        /// Invoked when an action is queued for deferred execution.
+        /// Invoked when an action is queued for deferred execution. An action the system makes for itself, such as a
+        /// rescale or a lifesteal's heal, is used again once the queue has run it, so read it during the call (GAS-P9).
         /// </summary>
         public delegate void ActionQueuedDelegate(IRootAction action);
         
@@ -50,7 +51,8 @@ namespace FarEmerald.PlayForge
         public void ActionQueued(IRootAction action) => _onActionQueued?.Invoke(action);
         
         /// <summary>
-        /// Invoked when an action is executed from the queue.
+        /// Invoked when an action is executed from the queue. One the system makes for itself is used again once this
+        /// returns, so read it during the call (GAS-P9).
         /// </summary>
         private ActionQueuedDelegate _onActionExecuted;
         public event ActionQueuedDelegate OnActionExecuted

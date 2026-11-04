@@ -138,9 +138,17 @@ impacters. So:
 A raw delta allocates nothing on its way through either: its delta's Adds are frozen in the same
 impacters, and a `SourceAttributeImpact` keeps the origin it makes (GAS-P8). `GenerateSimple` makes a
 new carrier on every call, so a raw delta made every frame keeps its carrier, made once with
-`IAttributeImpactCarrier.GenerateSourceDerivation(source, attribute)`. The changes the system makes
-on someone's behalf, `EnforceScaling`'s rescale and the lifesteal worker's, still make a carrier
-and an action each (GAS-P9).
+`IAttributeImpactCarrier.GenerateSourceDerivation(source, attribute)`.
+
+The changes the system makes on someone's behalf, `EnforceScaling`'s rescale and the lifesteal
+worker's heal, allocate nothing either (GAS-P9, Decision 21):
+- each is carried by a carrier kept for its source and attribute, in a table keyed weakly by
+  source, so a source that's gone isn't held;
+- each deferred one is queued in a `ModifyAttributeAction` the system takes back once the queue
+  has run it, so a listener of `OnActionQueued` or `OnActionExecuted` reads an action during the
+  call. One the queue invalidates isn't taken back;
+- the queue walks its priority buckets by index, and `EnqueueRange` reads a list or an array by
+  index, so taking an action off allocates nothing.
 
 Null / undefined attribute targets early-out safely (pure tag-grant effects are legal).
 
@@ -244,8 +252,8 @@ blueprint scalers create live dependencies.
   → zero-delta `ModifyAttribute` pulse per attribute (workers/callbacks observe initial values;
   commits nothing).
 - `EnforceScaling` (`AutoScaleWithBase`): Base changes, a dependent's refresh included, enqueue a
-  deferred proportional Current adjustment through a synthetic carrier — lands as ordinary committed
-  history. The carrier is typed `DisallowImpact` and unworkable, as the pulse is, so no worker that
+  deferred proportional Current adjustment through a synthetic carrier, kept for whoever changed Base
+  (GAS-P9) — lands as ordinary committed history. The carrier is typed `DisallowImpact` and unworkable, as the pulse is, so no worker that
   checks impact types sees it (GAS-35). The adjustment is a share of Current before the bounds, where
   it lands, so the bounds clamp the result once: under ZeroToBase an 80/100 attribute that loses half
   its Base ends at 40/50 (GAS-37).

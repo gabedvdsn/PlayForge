@@ -52,6 +52,11 @@ tracks each fix below by its ID.
 - A raw delta allocates nothing on its way through the GAS. `GenerateSimple` still makes a new carrier on every call,
   so a raw delta made every frame keeps one, made once with `IAttributeImpactCarrier.GenerateSourceDerivation`. A
   `SourceAttributeImpact` with no root carrier gives the same origin each time it's asked for one.
+- A rescale with Base and a lifesteal's heal allocate nothing, and neither does taking an action off an entity's queue.
+  The system uses its own `ModifyAttributeAction`s again once the queue has run them, so a listener of
+  `OnActionQueued` or `OnActionExecuted` reads an action during the call. `ActionQueue.EnqueueRange` reads a list or
+  an array by index, and `RelativeOperationContextImpactWorker.CreateDeferredActions` returns a list the worker
+  reuses for its next action, so what it returns is queued at once.
 
 ### Fixed
 - Runtime correctness: 96 fixes across ProcessControl, TaskSequence and the GAS core, among them exception isolation,

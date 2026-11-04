@@ -232,6 +232,12 @@ from. It lives outside `Assets/` so it never ships in the package.
   - Every column clips its own text, so the columns on the right always show in full.
   - Problems show in place, under what they are about.
   - The type icons are placeholders, to revisit.
+- Decision 21, 2026-11-03: the system keeps the carriers and reuses the actions it makes for the changes it makes on
+  someone's behalf (GAS-P9). A carrier is kept for each source and attribute, in a table keyed weakly by source so a
+  source that's gone isn't held. A `ModifyAttributeAction` the system makes goes back to it once the queue has run
+  it, so a listener of `OnActionQueued` or `OnActionExecuted` reads an action during the call; one the queue
+  invalidates stays with the frame summary. The user chose this when asked whether to keep carriers per source and
+  reuse actions on those terms.
 
 **Open. Ask the user; do not assume:**
 1. ~~**Uncommitted changes**~~: decided, see above.
@@ -452,7 +458,7 @@ had no letter in the review. TS-AA onward came from the test project.
 | GAS-P6 | M | 3 | A commit allocates. Measured: a frame in which an effect ticked and committed allocated 328 bytes. A commit made a `ChangeValue` (a class), and a list of frozen impacters with a constant impacter for each; `TrackedImpact` kept a node for every impact; and `ForgeHelper.SignPolicy` built a params array and summed it through LINQ. A worker that adjusted the commit, as armor does, added a carrier to wrap the new delta in, and a sign check of its own. Found fixing GAS-P4, whose figure of about 1.4 KB was taken within one frame and counted the frame summary's lists growing. Now a commit rents its change and its frozen impacters and gives them back, `TrackedImpact` keeps totals, and a sign check takes one or two values: 0 bytes a frame, with armor or without. What a raw delta and `EnforceScaling` allocate moved to GAS-P8 | `AttributeSystemComponent.cs` (`CommitWithCarrier`, `FreezeImpacters`, `WrapDelta`), `TrackedImpact.cs`, `ForgeHelper.cs` (`SignPolicy`) | fixed |
 | GAS-P7 | L | 3 | Tags are hashed and compared as strings on every lookup, with no interned ID. A built-in tag's name is 64 characters. Needs a call first: an ID serialized with each tag, or resolved as an asset loads. Moved from GAS-P4 | `Tag.cs` (`Equals`, `GetHashCode`) | open |
 | GAS-P8 | L | 3 | A raw delta allocates. Measured: a frame in which a raw delta landed, its carrier kept, allocated 356 bytes. Its commit wrapped the delta in a new `SourceAttributeImpact` with a list and a constant impacter, and the carrier made a new origin each time it was asked for one, three times a commit. `GenerateSimple` makes a carrier on every call. Found fixing GAS-P6. Now the delta's Adds are frozen in the commit's own impacters and a carrier keeps the origin it makes: 0 bytes a frame. `GenerateSimple` still makes a carrier per call, so a raw delta made every frame keeps one. What `EnforceScaling` and the lifesteal worker allocate moved to GAS-P9 | `AttributeSystemComponent.cs` (`CommitWithCarrier`, `WrapDelta`), `IAttributeImpactCarrier.cs` (`SourceAttributeImpact.GetOrigin`), `SourcedModifiedAttributeValue.cs` (`GenerateSimple`) | fixed |
-| GAS-P9 | L | 3 | The changes the system makes on someone's behalf allocate, once per change. `EnforceScaling`'s rescale and `RelativeOperationContextImpactWorker`'s (lifesteal) each make a carrier attributed to the source, and a `ModifyAttributeAction` when deferred; the rescale makes its impact-type list, and the worker's deferred half an iterator. Making them free needs a call: a carrier kept per source, in a weak table so a source that's gone isn't held, and actions reused, which callback listeners may keep. Split from GAS-P8 | `CachedAttributeValue.cs` (`EnforceScaling`), `RelativeOperationContextImpactWorker.cs` (`CreateDeferredActions`, `PerformWork`) | open |
+| GAS-P9 | L | 3 | The changes the system makes on someone's behalf allocate, once per change. Measured: a frame in which an attribute rescaled with its Base allocated 500 bytes, and one in which lifesteal healed 164 inline and 532 deferred. `EnforceScaling`'s rescale and `RelativeOperationContextImpactWorker`'s heal each made a carrier for the source, and a `ModifyAttributeAction` when deferred; the rescale made its impact-type list, and the worker's deferred half an iterator. Taking any action off the queue allocated 104 bytes, as the queue walked a SortedDictionary to find it. Split from GAS-P8. Now each carrier is kept for its source and attribute, in a table keyed weakly by source; the system's `ModifyAttributeAction`s go back to it once the queue has run them (Decision 21); the queue walks its buckets by index, and `EnqueueRange` reads a list by index: 0 bytes each | `CachedAttributeValue.cs` (`EnforceScaling`), `RelativeOperationContextImpactWorker.cs` (`CreateDeferredActions`, `PerformWork`), `ActionQueue.cs` (`DequeueNext`, `EnqueueRange`) | fixed |
 | GAS-S1 | M | 3 | The GAS twins duplicate about 400 lines and have drifted; `ToGASObject()` returns null on Runtime. Both now forward to one `GASCore`. The drift found: a runtime GAS applied no affiliation tags and lost its Entity asset's Local Data, and the GAS Debugger, asking `ToGASObject()`, named every runtime entity "unknown". `ToGASObject()` stays null on Runtime, which has no MonoBehaviour. What a hub keeps on purpose: the Mono hub builds at registration and a runtime GAS in its constructor, and on death the Mono hub ends at once while a runtime GAS queues its end | `GameplayAbilitySystem*.cs`, `RuntimeGameplayAbilitySystem*.cs`, `GASCore.cs` | fixed |
 
 ### Editor and UI
@@ -575,6 +581,20 @@ GAS-4 with GAS-5, PC-6, and TS-I with PC-5.
 ## Log
 
 Record baselines, gate results and notable decisions here, newest first.
+
+- 2026-11-03, **GAS-P9: rescales, lifesteal and the action queue allocate nothing.** The carriers for the changes
+  the system makes on someone's behalf are kept per source and attribute, in a table keyed weakly by source. The
+  system's `ModifyAttributeAction`s go back to it once the queue has run them. The queue walks its priority buckets
+  by index, and `EnqueueRange` reads a list or an array by index. Its four tests were seen failing first; the
+  queue's ordering has a control test, which passed before and after.
+  - **Measured,** in bytes: a frame in which an attribute rescales with its Base 500 → 0, one in which lifesteal
+    heals 164 → 0 inline and 532 → 0 deferred, and an action queued and run 104 → 0.
+  - **Tests:** PlayMode 883: 876 pass, 0 fail and 7 planted are skipped, in three orders. Planted 7 of 7; EditMode
+    39 of 39. The 25 golden scenarios pass inside PlayMode; the custom runner can't run while the user's editor holds
+    PlayForge's lock.
+  - **Calls made:** Decision 21. A listener of `OnActionQueued` or `OnActionExecuted` reads an action during the
+    call, since one the system made is used again. The lifesteal worker's `CreateDeferredActions` returns a list it
+    reuses.
 
 - 2026-11-03, **GAS-P8: a raw delta allocates nothing on its way through.** A carrier with no impacters has its
   delta's Adds frozen in the commit's own impacters, not wrapped in a new carrier, and a `SourceAttributeImpact` keeps
