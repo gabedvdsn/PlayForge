@@ -579,6 +579,7 @@ Phase 2 part, and set Phase 4's direction.
 | FEAT-12 | Ability graph and timeline, effect recorder | Editor |
 | FEAT-13 | Networking | Prediction and replication; not planned yet |
 | FEAT-14 | Item stacking | An inventory holds an item as a count, up to the Item's `MaxStackSize`. The field and `ItemSpecContainer.ItemStacks` exist, but nothing reads or sets them (GAS-51). Decide how giving and removing count, how a stack's effects and abilities scale, and how Allow Duplicate Items meets it |
+| FEAT-15 | Register builder | One builder or options struct in place of `ProcessControl`'s 28 static `Register` overloads, from the review's API changes. The roadmap gave it to Phase 3, but no row tracked it, so it moved here when Phase 3 closed. Today the argument's static type picks the overload, and a failed call returns false with a null relay. The review paired it with a `Run` on the relay, which doesn't exist yet, and an awaitable completion, which `ProcessRelay.WhenTerminated` now is (TS-Z) |
 
 ## Test project: PlayForge Proving Grounds
 
@@ -624,7 +625,8 @@ Record baselines, gate results and notable decisions here, newest first.
     lock.
   - **Filed:** SP-24, CI, which waits on two things only the user can provide (Decision 27).
   - **Scope not built:** the roadmap gave Phase 3 pooling and a Register builder. Decision 23 settled pooling:
-    PC-24 removed the stub instead of building a pool. No row asked for a Register builder, so none was built.
+    PC-24 removed the stub instead of building a pool. No row asked for a Register builder, so none was built; it
+    is now FEAT-15, in Phase 5.
   - **Next:** Phase 4 on `main`, the editor redesign, in the style `Docs/EDITOR_STYLE.md` records (Decision 20).
 
 - 2026-11-04, **TS-11: a task waiting in a delay allocates nothing a frame.** A task asks whether its sequence is
