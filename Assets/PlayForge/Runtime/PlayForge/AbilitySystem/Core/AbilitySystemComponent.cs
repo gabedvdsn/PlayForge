@@ -159,7 +159,16 @@ namespace FarEmerald.PlayForge
                 // Debug.Log($"[{Root.GetName()}] Ability {ability.GetName()} given ({result}) at level {ability.StartingLevel}");
             }
 
-            foreach (var idx in AbilityCache)
+        }
+
+        /// <summary>
+        /// Tries each Starting Ability set to Activate Immediately. The hub calls this once its attributes, items and
+        /// tags are in place. Tried as the abilities were given, before any attribute existed, the Cost rule refused
+        /// every one with a cost (GAS-49).
+        /// </summary>
+        public void ActivateImmediateAbilities()
+        {
+            foreach (var idx in AbilityCache.ToList())
             {
                 InitializeNewAbility(idx.Key, idx.Value.Spec);
             }

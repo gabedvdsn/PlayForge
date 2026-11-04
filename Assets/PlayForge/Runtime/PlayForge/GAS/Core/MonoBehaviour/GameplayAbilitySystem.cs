@@ -84,8 +84,11 @@ namespace FarEmerald.PlayForge
             AbilitySystem.Initialize(EntityData.StartingAbilities);
             AttributeSystem.Initialize();
             ItemSystem.Initialize(EntityData.StartingItems);
-            
+
             CompileGrantedTags();
+
+            // Once attributes, items and tags exist, so the rules can check them (GAS-49)
+            AbilitySystem.ActivateImmediateAbilities();
             
             Callbacks?.SystemInitialized();
         }
