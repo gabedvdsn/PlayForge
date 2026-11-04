@@ -95,15 +95,14 @@ namespace FarEmerald.PlayForge.Extended.Editor
 
         protected override void BuildInspectorContent(VisualElement parent)
         {
-            // Build all sections inside ScrollView
-            BuildDefinitionSection(contentScrollView);
-            BuildLevelSourceSection(contentScrollView);
-            BuildLevelingSection(contentScrollView);
-            BuildRuntimeSection(contentScrollView);
-            BuildTagsSection(contentScrollView);
-            BuildValidationSection(contentScrollView);
-            BuildWorkersSection(contentScrollView);
-            BuildLocalDataSection(contentScrollView);
+            BuildDefinitionSection(parent);
+            BuildLevelSourceSection(parent);
+            BuildLevelingSection(parent);
+            BuildRuntimeSection(parent);
+            BuildTagsSection(parent);
+            BuildValidationSection(parent);
+            BuildWorkersSection(parent);
+            BuildLocalDataSection(parent);
         }
         
         // ═══════════════════════════════════════════════════════════════════════════

@@ -95,6 +95,8 @@ tracks each fix below by its ID.
 - The Impact and Effect drawers follow the properties they show instead of re-checking on a timer, and the Impact
   drawer's Multiply Behaviour hides again after an Undo (ED-11).
 - An asset inspector listens to the editor's update only while an object picker is open; it ran every frame (ED-11).
+- An asset inspector measures nothing on a timer. Its header scrolls with the content, in the Inspector's own scroll
+  view; it stayed put by measuring the window every 200 to 300 ms for as long as the inspector was open (ED-11).
 - The Item inspector edits several selected items at once. Name, the asset tag and linking wait for one item (ED-12).
 - The Ability inspector edits several selected abilities at once. Name, the asset tag, linking, targeting, asset
   loaders, stages and activation rules wait for one ability (ED-12).
@@ -147,6 +149,9 @@ tracks each fix below by its ID.
   hook, and each hub's protected `localData` field. A subclass reads Local Data through `GetLocalDataStructure()`.
 - `PooledMonoProcessInstantiator`, a stub that gave back no process and kept a process's object when it ended, so it
   leaked. Nothing used it. To pool processes, extend `AbstractMonoProcessInstantiator`.
+- The Forge's Inspector settings, two delays for the asset inspector's sticky header, which is gone (ED-11). With it
+  went `BasePlayForgeEditor.contentScrollView` and `ForgeDrawerStyles.CreateScrollView`: an inspector builds into the
+  container `BuildInspectorContent` is handed.
 
 ## [0.1.0] - 2026-10-30
 

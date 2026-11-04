@@ -135,20 +135,14 @@ namespace FarEmerald.PlayForge.Extended.Editor
         }
         
         // ═══════════════════════════════════════════════════════════════════════════
-        // SECTION 3: Root & ScrollView
+        // SECTION 3: Root
         // ═══════════════════════════════════════════════════════════════════════════
-        
+
         internal const int InspectorMarginPadding = 15;
         internal const int InspectorMarginInset = 8;
         internal const int InspectorMarginInsetFix = 1;
         internal const int InspectorMarginRightBuffer = 5;
-        
-        internal const int DefaultConfigureDelayMsMin = 199;
-        internal const int DefaultConfigureDelayMsMax = 2503;
-        
-        internal const int DefaultForceConfigureDelayMsMin = 297;
-        internal const int DefaultForceConfigureDelayMsMax = 7499;
-        
+
         /// <summary>
         /// Creates the root container for an inspector.
         /// </summary>
@@ -166,31 +160,6 @@ namespace FarEmerald.PlayForge.Extended.Editor
             root.style.paddingRight = 0;
 
             return root;
-        }
-        
-        /// <summary>
-        /// Creates a configured ScrollView for inspector content.
-        /// Fills all available space in the inspector body.
-        /// </summary>
-        public static ScrollView CreateScrollView(int minHeight = 100)
-        {
-            var scrollView = new ScrollView
-            {
-                name = "ContentScrollView",
-                horizontalScrollerVisibility = ScrollerVisibility.Hidden,
-                verticalScrollerVisibility = ScrollerVisibility.Hidden
-            };
-            scrollView.style.flexGrow = 1;
-            scrollView.style.flexShrink = 1;
-            scrollView.style.minHeight = minHeight;
-            scrollView.style.marginRight = 4;
-            //scrollView.style.maxHeight = 
-            // No maxHeight - let it fill available space
-            
-            // Ensure content container also grows
-            scrollView.contentContainer.style.flexGrow = 1;
-            
-            return scrollView;
         }
         
         /// <summary>
@@ -260,7 +229,7 @@ namespace FarEmerald.PlayForge.Extended.Editor
         }
         
         /// <summary>
-        /// Creates the main sticky header for an inspector.
+        /// Creates the main header for an inspector.
         /// </summary>
         public static HeaderResult CreateMainHeader(HeaderConfig config)
         {

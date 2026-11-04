@@ -246,21 +246,10 @@ namespace FarEmerald.PlayForge.Extended.Editor
             notifyToggle.style.marginTop = 4;
             notifyToggleRow.Add(notifyToggle);
             generalSection.Add(notifyToggleRow);
-            
-            // Editor Settings
-            var editorSection = CreateSettingsSection("Inspector", "Asset inspector timing", Colors.AccentCyan);
-            scrollView.Add(editorSection);
-            
-            // Each delay is a number field and a slider, saved through one method. The number field's range check was
-            // inverted, so it saved values out of range and turned valid ones away (ED-6)
-            var editorRefreshMsRow = CreateSettingRow("Inspector Refresh Delay Ms");
-            AddDelaySetting(editorRefreshMsRow, PREFS_PREFIX + "EditorRefreshDelayMs", DefaultConfigureDelayMsMin, DefaultConfigureDelayMsMax);
-            editorSection.Add(editorRefreshMsRow);
 
-            var editorForceRefreshMsRow = CreateSettingRow("Inspector Force Refresh Delay Ms");
-            AddDelaySetting(editorForceRefreshMsRow, PREFS_PREFIX + "EditorForceRefreshDelayMs", DefaultForceConfigureDelayMsMin, DefaultForceConfigureDelayMsMax);
-            editorSection.Add(editorForceRefreshMsRow);
-            
+            // The Inspector section's two delays went with the asset inspector's sticky header, whose timers they set
+            // (ED-11)
+
             // Danger Zone
             var dangerSection = CreateSettingsSection("Danger Zone", "Destructive operations", Colors.AccentRed);
             scrollView.Add(dangerSection);
@@ -1716,8 +1705,8 @@ namespace FarEmerald.PlayForge.Extended.Editor
         private static readonly string[] SettingKeys =
         {
             "RememberTypeFilter", "LastTypeFilter", "DoubleClickVisualize", "ShowFileNames", "AutoRefresh",
-            "ShowNotifications", "RecentlyCreatedRows", "ShowFullTagPath", "GroupTagsByRoot", "EditorRefreshDelayMs",
-            "EditorForceRefreshDelayMs", "Ability_AutoLevel", "Effect_DurationPolicy", "Effect_StackingPolicy",
+            "ShowNotifications", "RecentlyCreatedRows", "ShowFullTagPath", "GroupTagsByRoot", "Ability_AutoLevel",
+            "Effect_DurationPolicy", "Effect_StackingPolicy",
             "Attribute_AutoBaseValue", "Attribute_DefaultBaseValue", "Entity_AutoLevel", "Item_AutoMaxStack",
             "Item_DefaultMaxStack", "ScalerTemplate_DefaultCategory", "RequirementTemplate_DefaultCategory",
         };
@@ -1738,34 +1727,6 @@ namespace FarEmerald.PlayForge.Extended.Editor
             if (contentContainer != null) ShowTab(currentTab);
         }
 
-        /// <summary>
-        /// Adds a number field and a slider for one inspector delay. Either one saves the value, clamped to its range,
-        /// and moves the other. Unset, the delay is its minimum, as BasePlayForgeEditor reads it.
-        /// </summary>
-        private static void AddDelaySetting(VisualElement row, string key, int min, int max)
-        {
-            var current = Mathf.Clamp(EditorPrefs.GetInt(key, min), min, max);
-            var number = new IntegerField { value = current };
-            number.style.width = 45;
-            number.style.marginTop = 8;
-            var slider = new SliderInt(min, max) { value = current };
-            slider.style.width = 140;
-            slider.style.marginTop = 8;
-
-            void Save(int value)
-            {
-                var clamped = Mathf.Clamp(value, min, max);
-                EditorPrefs.SetInt(key, clamped);
-                number.SetValueWithoutNotify(clamped);
-                slider.SetValueWithoutNotify(clamped);
-            }
-            number.RegisterValueChangedCallback(evt => Save(evt.newValue));
-            slider.RegisterValueChangedCallback(evt => Save(evt.newValue));
-
-            row.Add(number);
-            row.Add(slider);
-        }
-        
         private void RunValidation()
         {
             var issues = new List<string>();

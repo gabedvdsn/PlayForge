@@ -13,16 +13,14 @@ using Random = UnityEngine.Random;
 namespace FarEmerald.PlayForge.Extended.Editor
 {
     /// <summary>
-    /// Base class for all PlayForge custom editors.
-    /// Features a sticky UIElements header that stays at the top of the inspector
-    /// and scrollable content below.
+    /// Base class for all PlayForge asset inspectors: a header with the asset's name and type, and the content below it.
+    /// Both scroll together in the Inspector's own scroll view (Q17).
     /// </summary>
     public abstract class BasePlayForgeEditor : UnityEditor.Editor
     {
         protected VisualElement root;
         protected VisualElement headerContainer;
-        protected ScrollView contentScrollView;
-        
+
         // Header element references for live updates
         private Label _headerNameLabel;
         private Label _headerDescLabel;
@@ -497,9 +495,9 @@ namespace FarEmerald.PlayForge.Extended.Editor
         }
 
         // ═══════════════════════════════════════════════════════════════════════════
-        // UIElements Header - Creates a sticky header that doesn't scroll
+        // UIElements Header
         // ═══════════════════════════════════════════════════════════════════════════
-        
+
         /// <summary>
         /// Override Unity's default header to hide it - we'll use UIElements instead.
         /// </summary>
@@ -507,35 +505,35 @@ namespace FarEmerald.PlayForge.Extended.Editor
         {
             // Empty - we use UIElements header instead
         }
-        
+
         /// <summary>
-        /// Creates the root inspector GUI with sticky header.
+        /// Creates the inspector: the header, then the content.
         /// Derived classes should override BuildInspectorContent instead of this.
         /// </summary>
         public override VisualElement CreateInspectorGUI()
         {
             root = CreateRoot();
-            
+
             if (IsMultiple && !SupportsMultipleObjects)
                 return CreateIneligibleGUI("Cannot edit multiple assets at once.");
-            if (!AssignLocalAsset()) 
+            if (!AssignLocalAsset())
                 return CreateIneligibleGUI("Critical error: Could not assign local asset.");
-            
-            // Create sticky header container (outside ScrollView)
+
+            // The header scrolls with the content, in the Inspector's own scroll view (Q17). It stayed put over a scroll
+            // view of the inspector's own, which hid the Inspector's and was sized by measuring the window on timers that
+            // ran for as long as the inspector was open (ED-11)
             headerContainer = CreateEditorHeader();
             root.Add(headerContainer);
-            
-            // Create scrollable content area
-            contentScrollView = CreateScrollView();
-            root.Add(contentScrollView);
 
-            //contentScrollView.style.backgroundColor = new StyleColor(new Color(.3f, .5f, .7f, .6f));
-            
+            var content = new VisualElement { name = "Content" };
+            content.style.marginRight = 4;
+            root.Add(content);
+
             // Let derived classes build their content
-            BuildInspectorContent(contentScrollView);
-            
-            contentScrollView.Add(CreateBottomPadding());
-            
+            BuildInspectorContent(content);
+
+            content.Add(CreateBottomPadding());
+
             root.Bind(serializedObject);
 
             // The header, and any section drawn from the asset's values rather than bound, follow every change to the
@@ -546,182 +544,9 @@ namespace FarEmerald.PlayForge.Extended.Editor
                 OnAssetChanged();
             });
 
-            // Hook into panel attachment to disable Inspector's native ScrollView
-            root.RegisterCallback<AttachToPanelEvent>(OnAttachedToPanel);
-            root.RegisterCallback<DetachFromPanelEvent>(OnDetachedFromPanel);
-
-            // Debug.Log($"[ Created ] {GetType().Name}");
-            
-            configureDelayMs = EditorPrefs.GetInt(TheForge.PREFS_PREFIX + "EditorRefreshDelayMs", DefaultConfigureDelayMsMin);
-            forceConfigureDelayMs = EditorPrefs.GetInt(TheForge.PREFS_PREFIX + "EditorForceRefreshDelayMs", DefaultForceConfigureDelayMsMin);
-            
             return root;
         }
         
-        /// <summary>
-        /// Called when our root is attached to the Inspector panel.
-        /// We disable the native Inspector ScrollView to make our header sticky.
-        /// </summary>
-        private void OnAttachedToPanel(AttachToPanelEvent evt)
-        {
-            // Debug.Log($"\t[ Attached ] {GetType().Name}");
-            // Only run once after layout is ready
-            root.schedule.Execute(() =>
-            {
-                DisableInspectorScrollView();
-
-                configure = true;
-                ConfigureScrollView();
-                ForceConfigureScrollView();
-                
-                root.RegisterCallback<GeometryChangedEvent>(OnGeometryChanged);
-            }).ExecuteLater(50); // Slight delay to ensure layout is complete
-        }
-        
-        private void OnDetachedFromPanel(DetachFromPanelEvent evt)
-        {
-            // Debug.Log($"\t[ Detached ] {GetType().Name}");
-            root.UnregisterCallback<AttachToPanelEvent>(OnAttachedToPanel);
-            root.UnregisterCallback<DetachFromPanelEvent>(OnDetachedFromPanel);
-            root.UnregisterCallback<GeometryChangedEvent>(OnGeometryChanged);
-        }
-
-        // Remove the GeometryChangedEvent entirely - it causes the recursive loop
-
-        private bool configure = false;
-        private int configureDelayMs = 251;
-        private int forceConfigureDelayMs = 297;
-        
-        private void OnGeometryChanged(GeometryChangedEvent evt)
-        {
-            // Debug.Log($"[ {Mathf.Max(0f, evt.newRect.size.y - evt.oldRect.size.y) > 0f} ] Geom change: {evt.newRect.size.y} - {evt.oldRect.size.y} = {Mathf.Max(0f, evt.newRect.size.y - evt.oldRect.size.y)} ({evt.newRect.size.y - Mathf.Max(0f, evt.newRect.size.y - evt.oldRect.size.y)})");
-            // Only reconfigure if the size actually changed
-            if (Mathf.Max(0f, evt.newRect.size.y - evt.oldRect.size.y) > 0f)
-            {
-                configure = true;
-            }
-        }
-
-        private void ForceConfigureScrollView()
-        {
-            root.schedule.Execute(() =>
-            {
-                configure = true;
-                ConfigureScrollView(false);
-                
-                ForceConfigureScrollView();
-            }).ExecuteLater(forceConfigureDelayMs); // Slight delay to ensure layout is complete
-        }
-        
-        private void ConfigureScrollView(bool configureLater = true)
-        {
-           // Debug.Log($"\t\t[ Configure ] {configure}");
-            
-            if (root.panel == null || !configure)
-            {
-                if (configureLater)
-                {
-                    root.schedule.Execute(() =>
-                    {
-                        ConfigureScrollView();
-                    }).ExecuteLater(configureDelayMs);
-                }
-                configure = false;
-                return;
-            } 
-            
-            configure = false;
-    
-            // Find the inspector's root container to get available height
-            VisualElement inspectorRoot = root.parent;
-            ScrollView scrollView = null;
-
-            
-            while (inspectorRoot?.parent != null)
-            {
-                if (!(inspectorRoot.parent is ScrollView sc))
-                {
-                    inspectorRoot = inspectorRoot.parent;
-                }
-                else
-                {
-                    scrollView = sc;
-                    break;
-                }
-            }
-           // Debug.Log($"[ Unity Scroll ] {(scrollView is null ? "Null" : $"Found: {scrollView.name}")}");
-            inspectorRoot = inspectorRoot?.parent;
-    
-            // Use resolvedStyle to get actual rendered dimensions
-            float availableHeight = inspectorRoot?.resolvedStyle.height ?? 0;
-
-           // Debug.Log($"\t\tA) Available height: {availableHeight}");
-    
-            // If we can't get the inspector height, try getting it from panel
-            if (availableHeight <= 0)
-            {
-                availableHeight = root.panel.visualTree.resolvedStyle.height;
-            }
-            
-           // Debug.Log($"\t\tB) Available height: {availableHeight}");
-    
-            // Subtract header height and some padding
-            float scrollHeight = availableHeight - HeaderHeight - 20f; // 20f for margins/padding
-            
-           // Debug.Log($"\t\tA) Scroll height: {scrollHeight}");
-
-            scrollHeight = scrollHeight - 318 + 154 - 20;
-
-            scrollHeight = scrollView?.resolvedStyle.height - HeaderHeight - 20 ?? scrollHeight;
-            
-           // Debug.Log($"\t\tB) Scroll height: {scrollHeight}");
-            
-            if (scrollHeight > 100) // Sanity check
-            {
-                contentScrollView.style.height = scrollHeight;
-                contentScrollView.style.minHeight = scrollHeight;
-                contentScrollView.style.maxHeight = scrollHeight;
-            }
-
-            if (configureLater)
-            {
-                root.schedule.Execute(() =>
-                {
-                    ConfigureScrollView();
-                }).ExecuteLater(configureDelayMs);
-            }
-        }
-
-        private void DisableInspectorScrollView()
-        {
-            if (root?.panel == null) return;
-            
-            VisualElement current = root.parent;
-            while (current != null)
-            {
-                if (current is ScrollView inspectorScrollView)
-                {
-                    // Completely disable the inspector's scroll
-                    inspectorScrollView.verticalScrollerVisibility = ScrollerVisibility.Hidden;
-                    inspectorScrollView.horizontalScrollerVisibility = ScrollerVisibility.Hidden;
-                    
-                    // Critical: make it not affect layout
-                    inspectorScrollView.style.overflow = Overflow.Visible;
-                    
-                    // Let content determine its own size
-                    var contentContainer = inspectorScrollView.contentContainer;
-                    if (contentContainer != null)
-                    {
-                        contentContainer.style.flexGrow = 1;
-                        contentContainer.style.overflow = Overflow.Visible;
-                    }
-                    
-                    break;
-                }
-                current = current.parent;
-            }
-        }
-
         protected abstract bool AssignLocalAsset();
         
         protected abstract void BuildInspectorContent(VisualElement parent);
@@ -741,15 +566,15 @@ namespace FarEmerald.PlayForge.Extended.Editor
         }
         
         /// <summary>
-        /// Creates the UIElements-based sticky header.
+        /// Creates the header: the asset's icon, name, type and description, and its buttons.
         /// </summary>
         private VisualElement CreateEditorHeader()
         {
             var header = new VisualElement();
-            header.name = "StickyHeader";
+            header.name = "AssetHeader";
             header.style.height = HeaderHeight;
-            header.style.flexShrink = 0; // Don't shrink - critical for sticky behavior
-            header.style.flexGrow = 0;   // Don't grow
+            header.style.flexShrink = 0;
+            header.style.flexGrow = 0;
             header.style.backgroundColor = new Color(0.16f, 0.16f, 0.16f);
             header.style.borderBottomWidth = 3.5f;
             header.style.borderBottomColor = GetAssetTypeColor().Fade(.8f).Amplify(1f);
