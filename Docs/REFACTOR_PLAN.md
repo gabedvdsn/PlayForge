@@ -21,6 +21,8 @@ from. It lives outside `Assets/` so it never ships in the package.
 - **Work on `main`** (Decision 19). Phases 0 to 2 each had a branch of their own: `refactor/phase-0-upstream`,
   `refactor/phase-1-correctness` and `refactor/phase-2-release`.
 - `file:line` references were verified on 2026-10-29 against commit `01258b8`. Re-check before editing.
+- `Docs/CODE_TOUR.md` walks the code the refactor changed, by subsystem, with a `path:line` for each place to read.
+  Add each new phase's high-impact fixes to it.
 
 ## Environment
 
