@@ -13,6 +13,9 @@ namespace FarEmerald.PlayForge
     {
         public ItemSpec Spec { get; private set; }
         public int Index;
+
+        // The slot this item's grant took, or -1 when it granted nothing; unequipping takes back only that (GAS-48)
+        private int grantedAbilityIndex = -1;
         public bool IsEquipped
         {
             get => Spec.IsEquipped;
@@ -158,8 +161,9 @@ namespace FarEmerald.PlayForge
 
             if (Spec.Source.FindAbilitySystem(out var abilitySystem))
             {
-                // Grant the ability at the item's level
-                var success = abilitySystem.GiveAbility(Spec.Base.ActiveAbility, Spec.GetLevel().CurrentValue, out _);
+                // Grant the ability at the item's level, and note the slot it took
+                var success = abilitySystem.GiveAbility(Spec.Base.ActiveAbility, Spec.GetLevel().CurrentValue, out int index);
+                grantedAbilityIndex = success ? index : -1;
                 if (Spec.Source.FindItemSystem(out var isc))
                 {
                     isc.Callbacks.ItemAbilityGranted(ItemCallbackStatus.Generate(this, isc, success));
@@ -173,7 +177,11 @@ namespace FarEmerald.PlayForge
 
             if (Spec.Source.FindAbilitySystem(out var abilitySystem))
             {
-                var success = abilitySystem.RemoveAbility(Spec.Base.ActiveAbility);
+                // Only the copy this item granted. A failed grant took nothing, and the entity keeps a copy it had
+                // already; it lost that copy when the item came off (GAS-48)
+                var success = grantedAbilityIndex >= 0
+                              && abilitySystem.RemoveAbilityAt(grantedAbilityIndex, Spec.Base.ActiveAbility);
+                grantedAbilityIndex = -1;
                 if (Spec.Source.FindItemSystem(out var isc))
                 {
                     isc.Callbacks.ItemAbilityRevoked(ItemCallbackStatus.Generate(this, isc, success));

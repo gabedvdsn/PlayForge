@@ -218,9 +218,21 @@ namespace FarEmerald.PlayForge
 
         public bool RemoveAbility(Ability ability)
         {
-            if (!TryGetCacheIndexOf(ability, out int index)) return false;
+            return TryGetCacheIndexOf(ability, out int index) && RemoveAbilityAt(index);
+        }
 
-            if (AbilityCache[index].IsActive)
+        /// <summary>
+        /// Removes the ability in one slot, if the slot holds <paramref name="expected"/> when one is given. Where an
+        /// entity holds the same ability more than once, this takes the copy meant, as an item taking back its grant
+        /// does (GAS-48).
+        /// </summary>
+        public bool RemoveAbilityAt(int index, Ability expected = null)
+        {
+            if (!AbilityCache.TryGetValue(index, out var container)) return false;
+            var ability = container.Spec.Base;
+            if (expected != null && ability != expected) return false;
+
+            if (container.IsActive)
                 Inject(index, InterruptSequenceInjection.Instance);
 
             ability.RemoveWorkers(Self);
