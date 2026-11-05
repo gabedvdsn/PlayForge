@@ -154,7 +154,7 @@ namespace FarEmerald.PlayForge
                     .ToList(),
 
                 EAutoTargetMode.Random => candidates
-                    .OrderBy(_ => UnityEngine.Random.value)
+                    .OrderBy(_ => ForgeRandom.Value)
                     .ToList(),
 
                 // All — no sorting needed

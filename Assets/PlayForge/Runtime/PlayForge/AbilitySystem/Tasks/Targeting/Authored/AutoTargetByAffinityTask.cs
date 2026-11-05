@@ -150,7 +150,7 @@ namespace FarEmerald.PlayForge
             {
                 EAutoTargetMode.Nearest => candidates.OrderBy(t => DistanceTo(t, originPos)).ToList(),
                 EAutoTargetMode.Farthest => candidates.OrderByDescending(t => DistanceTo(t, originPos)).ToList(),
-                EAutoTargetMode.Random => candidates.OrderBy(_ => UnityEngine.Random.value).ToList(),
+                EAutoTargetMode.Random => candidates.OrderBy(_ => ForgeRandom.Value).ToList(),
                 _ => candidates
             };
         }

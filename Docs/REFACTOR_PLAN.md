@@ -672,7 +672,7 @@ Phase 2 part, and set Phase 4's direction.
 | FEAT-10 | Headless mode | Abilities run without a scene ProcessControl |
 | FEAT-11 | Input binding | Targeting without legacy `Input` and `Camera.main` |
 | FEAT-12 | Ability graph and timeline, effect recorder | Editor |
-| FEAT-13 | Networking | Prediction and replication; not planned. Only its two cheap changes are in Phase 5 (Decision 30): one injectable clock and one seedable random source, and IDs scoped to an entity |
+| FEAT-13 | Networking | Prediction and replication; not planned. Only its two cheap changes are in Phase 5 (Decision 30): one injectable clock and one seedable random source, and IDs scoped to an entity. Both done: `ForgeTime` and `ForgeRandom`, which a source-scanning test keeps the runtime reading; `HandleId` per ability system; `GameplayEffectSpec.ApplicationId` per target; `Tag.Id` was never serialized (Decision 22) |
 | FEAT-14 | Item stacking | An inventory holds an item as a count, up to the Item's `MaxStackSize`. The field and `ItemSpecContainer.ItemStacks` exist, but nothing reads or sets them (GAS-51). Decide how giving and removing count, how a stack's effects and abilities scale, and how Allow Duplicate Items meets it |
 | FEAT-15 | Register builder | One builder or options struct in place of `ProcessControl`'s 28 static `Register` overloads, from the review's API changes. The roadmap gave it to Phase 3, but no row tracked it, so it moved here when Phase 3 closed. Today the argument's static type picks the overload, and a failed call returns false with a null relay. The review paired it with a `Run` on the relay, which doesn't exist yet, and an awaitable completion, which `ProcessRelay.WhenTerminated` now is (TS-Z). Done (Decision 30): `ProcessControl.Register(process)` starts a registration that `HandledBy`, `With` and `In` shape and `Run` makes, returning the relay or why it was refused; the handler follows the packet's run-time type; `ProcessRelay.Run` starts a waiting process; the 28 overloads are `[Obsolete]` wrappers until the first Asset Store submission |
 | FEAT-16 | Loose tags | Done with ED-40, ahead of the phase. A tag granted with no effect, ability or item behind it, as Unreal's loose gameplay tags are: `AddLooseTag`, `RemoveLooseTag` and `GetLooseTags` on each hub, each grant counted, and the tag compile includes them. A tag added straight to the tag cache went at its next compile |
@@ -740,6 +740,26 @@ GAS-4 with GAS-5, PC-6, and TS-I with PC-5.
 ## Log
 
 Record baselines, gate results and notable decisions here, newest first.
+
+- 2026-11-04, **FEAT-13's two cheap changes: one clock, one random source, and IDs per entity.** The third of Phase
+  5's foundations (Decision 30), which keeps networking possible without building it.
+  - **The clock:** `ForgeTime` reads an `IForgeClock`, Unity's (`UnityClock`) unless `ForgeTime.Use` puts another in.
+    The runtime read Unity's `Time` in a dozen files, process bookkeeping among them; every read goes through
+    `ForgeTime` now, comments aside.
+  - **The random source:** `ForgeRandom` draws from an `IForgeRandom`, Unity's (`UnityRandom`) unless `Use` puts
+    another in, as `SeededRandom`, whose rolls repeat from their seed whatever else draws from Unity's. Unity's stays
+    the default, so a test that seeds it with `Random.InitState` still repeats its roll.
+  - **The rule:** `FEAT_13_The_runtime_reads_time_and_random_numbers_only_through_ForgeTime`, an EditMode test in the
+    new `RuntimeSourceTests`, scans the runtime's source, comments and strings aside, for Unity's `Time` and `Random`.
+  - **IDs per entity:** an activation's `HandleId` counts from 0 per ability system, where one static count numbered
+    every entity's activations in turn; `GameplayEffectSpec.ApplicationId` numbers each application on its target,
+    from 1. `Tag.Id` is never serialized already (Decision 22).
+  - **Docs:** `GETTING_STARTED.md`'s "Time and random numbers", and the CHANGELOG.
+  - **Its tests,** seen failing first: the scan, which found every read, and the four `FEAT_13_*` tests in the new
+    PlayMode `ForgeTimeTests`, which didn't compile against `3dc3129`.
+  - **Next:** FEAT-7 with TS-6, a clock for each entity and the fixed-rate tick.
+  - **Tests:** PlayMode 1004: 997 pass, 0 fail and 7 planted are skipped, in three orders. Planted 7 of 7; EditMode
+    431 of 431.
 
 - 2026-11-04, **FEAT-3 and GAS-56: tag-change events.** The second of Phase 5's foundations (Decision 30).
   - **Listeners:** `TagCache.Listen(tag, onChange, kind)` hears the tag and every tag under it, as a listener on

@@ -13,6 +13,11 @@ namespace FarEmerald.PlayForge
     /// </summary>
     public class AbilitySystemComponent : DeferredContextSystem
     {
+        // The number of this system's next activation: activations are numbered per entity (FEAT-13)
+        private int nextHandleId;
+
+        internal int NextHandleId() => nextHandleId++;
+
         private EAbilityActivationPolicy activationPolicy;
         public EAbilityActivationPolicy DefaultActivationPolicy => activationPolicy;
         private bool allowDuplicateAbilities;

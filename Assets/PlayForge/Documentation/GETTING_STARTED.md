@@ -86,6 +86,14 @@ if (!result) Debug.LogWarning($"Not registered: {result.Refusal}");
 A process that requires control waits after it registers; `relay.Run()` starts it. The `Register` overloads that take
 an `out` relay still work, marked obsolete, and go before the first Asset Store release.
 
+### Time and random numbers
+
+PlayForge reads time through `ForgeTime` and draws random numbers through `ForgeRandom`, which read Unity's `Time` and
+`Random` unless you put in your own: `ForgeTime.Use(clock)` with an `IForgeClock`, and `ForgeRandom.Use(new
+SeededRandom(seed))`, whose rolls repeat from their seed whatever else draws from Unity's. Each `Use` returns what it
+replaced, to put back. Each entity numbers its effects' applications (`GameplayEffectSpec.ApplicationId`) and its
+abilities' activations.
+
 ### Tooltips: what does this ability do?
 
 `AbilityInspector.Build(ability)` returns a full static breakdown — every effect, its

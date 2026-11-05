@@ -389,7 +389,7 @@ namespace FarEmerald.PlayForge
                 // round (TS-O)
                 while (true)
                 {
-                    int startFrame = Time.frameCount;
+                    int startFrame = ForgeTime.FrameCount;
 
                     bool completedAllSequences = await RunSequences(chainToken);
 
@@ -404,7 +404,7 @@ namespace FarEmerald.PlayForge
 
                     // Every sequence can fail at once, and a round that took no frame would go round for ever
                     // inside one
-                    if (Time.frameCount == startFrame) await UniTask.Yield(PlayerLoopTiming.Update, chainToken);
+                    if (ForgeTime.FrameCount == startFrame) await UniTask.Yield(PlayerLoopTiming.Update, chainToken);
                 }
             }
             catch (OperationCanceledException)

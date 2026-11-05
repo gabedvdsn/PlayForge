@@ -7,6 +7,10 @@ tracks each fix below by its ID.
 ## [Unreleased]
 
 ### Added
+- `ForgeTime` and `ForgeRandom`, which the runtime reads instead of Unity's `Time` and `Random`: `Use` puts in a clock
+  of your own (`IForgeClock`) or a random source (`IForgeRandom`, such as `SeededRandom`), for a replay, a server or a
+  test. By default they read Unity's, so `Random.InitState` still seeds a roll. `GameplayEffectSpec.ApplicationId`
+  numbers each effect application on its target (FEAT-13).
 - Tag-change events. `TagCache.Listen(tag, onChange)` hears a tag, and every tag under it, come and go as it
   happens, or every change to its weight with `ETagChangeKind.AnyCount`; `TagCache.TagChanged` hears every change.
   A rebuild of the tags from their sources tells only what it changed (`BeginRebuild`, `EndRebuild`). Nothing told
@@ -44,6 +48,8 @@ tracks each fix below by its ID.
   page, through one table of links in the editor.
 
 ### Changed
+- An ability activation's `HandleId` counts from 0 per ability system, where one count numbered every entity's
+  activations in turn (FEAT-13).
 - A tag worker is evaluated at the end of a frame in which the tags changed, a worker came or went, or the last
   evaluation queued an action, where every worker was evaluated every frame. A worker that reads more than the tags
   overrides `EvaluateEveryFrame` (FEAT-3).

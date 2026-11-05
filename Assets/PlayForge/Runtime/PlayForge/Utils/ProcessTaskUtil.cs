@@ -108,11 +108,11 @@ namespace FarEmerald.PlayForge
             {
                 token.ThrowIfCancellationRequested();
 
-                float time = useUnscaledTime ? Time.unscaledTime : Time.time;
+                float time = useUnscaledTime ? ForgeTime.UnscaledTime : ForgeTime.Time;
                 await body();
                 await UniTask.Yield(timing, token);
                 // Now less then, not the other way round, which made it negative so the loop never ended (PC-25)
-                float elapsed = (useUnscaledTime ? Time.unscaledTime : Time.time) - time;
+                float elapsed = (useUnscaledTime ? ForgeTime.UnscaledTime : ForgeTime.Time) - time;
                 elapsedDuration += elapsed;
 
             } while (elapsedDuration < duration);

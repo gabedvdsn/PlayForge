@@ -53,7 +53,7 @@ namespace FarEmerald.PlayForge
         /// </summary>
         public async UniTask Execute(SequenceDataPacket data, System.Threading.CancellationToken token)
         {
-            while (!Step(data, UnityEngine.Time.deltaTime))
+            while (!Step(data, ForgeTime.DeltaTime))
             {
                 await UniTask.Yield(PlayerLoopTiming.Update, token);
             }

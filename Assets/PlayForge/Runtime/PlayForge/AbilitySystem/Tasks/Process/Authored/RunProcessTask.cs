@@ -38,7 +38,7 @@ namespace FarEmerald.PlayForge
                 {
                     if (SequenceTaskLibrary.IsPaused(token)) return UniTask.CompletedTask;
 
-                    elapsedDuration += UseUnscaledDeltaTime ? Time.unscaledDeltaTime : Time.deltaTime;
+                    elapsedDuration += UseUnscaledDeltaTime ? ForgeTime.UnscaledDeltaTime : ForgeTime.DeltaTime;
                     return UniTask.CompletedTask;
                 },
                 condition: () => 

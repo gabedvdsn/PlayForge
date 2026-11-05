@@ -32,7 +32,7 @@ namespace FarEmerald.PlayForge
             var captured = deriv?.GetSourcedCapturedAttributes();
             if (!RollOncePerSpec || captured is null || captured.ContainsKey(this)) return;
 
-            float roll = Random.value;
+            float roll = ForgeRandom.Value;
             captured[this] = new AttributeValue(roll, roll);
         }
 
@@ -45,7 +45,7 @@ namespace FarEmerald.PlayForge
                 return kept.Value.CurrentValue;
             }
 
-            return Random.value;
+            return ForgeRandom.Value;
         }
 
         public override float Evaluate(IAttributeImpactCarrier deriv)

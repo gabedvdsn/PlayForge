@@ -553,7 +553,7 @@ namespace FarEmerald.PlayForge
                 while (elapsed < duration)
                 {
                     await UniTask.Yield(PlayerLoopTiming.FixedUpdate, token);
-                    elapsed += Time.fixedDeltaTime;
+                    elapsed += ForgeTime.FixedDeltaTime;
 
                     if (!rb) break;
                     // Apply custom gravity as acceleration (ForceMode.Acceleration ignores mass)
@@ -855,7 +855,7 @@ namespace FarEmerald.PlayForge
         /// </summary>
         public static float DeltaTime(CancellationToken token)
         {
-            return IsPaused(token) ? 0f : Time.deltaTime;
+            return IsPaused(token) ? 0f : ForgeTime.DeltaTime;
         }
 
         /// <summary>

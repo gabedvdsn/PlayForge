@@ -116,6 +116,9 @@ namespace FarEmerald.PlayForge
                 return false;
             }
 
+            // Numbered as it lands, by the entity it lands on (FEAT-13)
+            spec.ApplicationId = ++applications;
+
             try
             {
                 switch (spec.Base.DurationSpecification.DurationPolicy)
@@ -153,6 +156,9 @@ namespace FarEmerald.PlayForge
 
             return true;
         }
+
+        // The number of the entity's last effect application (FEAT-13)
+        private int applications;
 
         // The shelf's immunities, the containers whose effects block others, so an application checks them alone and costs
         // the same however much the entity carries (GAS-P3)

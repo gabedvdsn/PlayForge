@@ -174,7 +174,7 @@ namespace FarEmerald.PlayForge
             do
             {
                 await UniTask.Yield(PlayerLoopTiming.Update, token);
-                if (!IsPaused) elapsed += Time.deltaTime;
+                if (!IsPaused) elapsed += ForgeTime.DeltaTime;
             } while (elapsed < seconds);
         }
 
@@ -241,7 +241,7 @@ namespace FarEmerald.PlayForge
                 
                 _sequenceCts = CancellationTokenSource.CreateLinkedTokenSource(externalToken);
                 var token = _sequenceCts.Token;
-                int runStartFrame = Time.frameCount;
+                int runStartFrame = ForgeTime.FrameCount;
 
                 // The run keeps its own time. The sequence's timers kept it, so a sequence without one read 0
                 // throughout, and one whose timer had fired stopped where it fired (TS-W)
@@ -277,7 +277,7 @@ namespace FarEmerald.PlayForge
                     // A run that repeats takes a frame if it took none, or an instant sequence repeats for ever
                     // inside a frame, as a stage would without TS-M. The wait above took that frame. Here, inside the
                     // run, an interrupt in that frame still ends it, as it did (TS-Z)
-                    if ((Definition.Metadata?.Repeat ?? false) && Time.frameCount == runStartFrame)
+                    if ((Definition.Metadata?.Repeat ?? false) && ForgeTime.FrameCount == runStartFrame)
                     {
                         await UniTask.Yield(PlayerLoopTiming.Update, token);
                     }
@@ -630,7 +630,7 @@ namespace FarEmerald.PlayForge
             {
                 while (!token.IsCancellationRequested && !IsRepeatBroken(stage))
                 {
-                    int startFrame = Time.frameCount;
+                    int startFrame = ForgeTime.FrameCount;
 
                     await ExecuteStageInternal(stage, Data, token, stageSource);
                     
@@ -674,7 +674,7 @@ namespace FarEmerald.PlayForge
             // What the last iteration added to the path comes off, so each one finds it as the first did (TS-5)
             if (_iterationPathDepths.TryGetValue(stage, out int pathDepth)) Data.TrimPath(pathDepth);
 
-            if (Time.frameCount == startFrame) await UniTask.Yield(PlayerLoopTiming.Update, token);
+            if (ForgeTime.FrameCount == startFrame) await UniTask.Yield(PlayerLoopTiming.Update, token);
 
             CleanStage(stage);
             PrepareStage(stage);
@@ -970,7 +970,7 @@ namespace FarEmerald.PlayForge
                 while (true)
                 {
                     await UniTask.Yield(PlayerLoopTiming.Update, token);
-                    if (!IsPaused) ElapsedTime += Time.deltaTime;
+                    if (!IsPaused) ElapsedTime += ForgeTime.DeltaTime;
                 }
             }
             catch (OperationCanceledException) { }
@@ -986,7 +986,7 @@ namespace FarEmerald.PlayForge
                     await UniTask.Yield(PlayerLoopTiming.Update, token);
                     if (IsPaused) continue;
 
-                    elapsed += Time.deltaTime;
+                    elapsed += ForgeTime.DeltaTime;
                     if (elapsed >= Definition.MaxDurationSeconds.Value)
                     {
                         // Invoke callback before injection
@@ -1019,7 +1019,7 @@ namespace FarEmerald.PlayForge
                     await UniTask.Yield(PlayerLoopTiming.Update, token);
                     if (IsPaused) continue;
 
-                    elapsed += Time.deltaTime;
+                    elapsed += ForgeTime.DeltaTime;
                     if (elapsed >= timeout.Seconds)
                     {
                         // Invoke callback before injection

@@ -32,8 +32,8 @@ namespace FarEmerald.PlayForge
         public EProcessState QueuedState { get; private set; }
 
         // Timing
-        public float UnscaledLifetime => Time.unscaledTime - _unscaledInitializeTime;
-        public float Lifetime => Time.time - _initializeTime;
+        public float UnscaledLifetime => ForgeTime.UnscaledTime - _unscaledInitializeTime;
+        public float Lifetime => ForgeTime.Time - _initializeTime;
         public float UnscaledInitializeTime => _unscaledInitializeTime;
         public float InitializeTime => _initializeTime;
 
@@ -67,8 +67,8 @@ namespace FarEmerald.PlayForge
         {
             get
             {
-                var _use = Time.time - _lastCheckEnd;
-                _lastCheckEnd = Time.time;
+                var _use = ForgeTime.Time - _lastCheckEnd;
+                _lastCheckEnd = ForgeTime.Time;
                 return _use;
             }
         }
@@ -283,12 +283,12 @@ namespace FarEmerald.PlayForge
         {
             if (_isInitialized) return;
 
-            _unscaledInitializeTime = Time.unscaledTime;
-            _initializeTime = Time.time;
+            _unscaledInitializeTime = ForgeTime.UnscaledTime;
+            _initializeTime = ForgeTime.Time;
             _isInitialized = true;
 
-            _lastCheckEnd = Time.time;
-            _lastStepEnd = Time.unscaledTime;
+            _lastCheckEnd = ForgeTime.Time;
+            _lastStepEnd = ForgeTime.UnscaledTime;
 
             Wrapper.WhenInitialize(Wrapper.Relay);
         }
@@ -441,8 +441,8 @@ namespace FarEmerald.PlayForge
                 return;
             }
 
-            _totalUpdateTime += Time.unscaledTime - _lastStepEnd;
-            _lastStepEnd = Time.unscaledTime;
+            _totalUpdateTime += ForgeTime.UnscaledTime - _lastStepEnd;
+            _lastStepEnd = ForgeTime.UnscaledTime;
         }
 
         #endregion

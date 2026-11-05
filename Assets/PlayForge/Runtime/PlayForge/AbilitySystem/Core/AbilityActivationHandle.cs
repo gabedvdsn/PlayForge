@@ -15,6 +15,7 @@ namespace FarEmerald.PlayForge
         public bool IsExecuting;
         public bool ClaimReleased;
 
+        // An activation with no ability system to number it, which none has in practice
         private static int _nextId;
 
         // Each session numbers its activations from the start, as it did with a domain reload (SP-22)
@@ -30,7 +31,10 @@ namespace FarEmerald.PlayForge
         public AbilityActivationHandle(AbilitySpecContainer container, AbilityDataPacket data, AbilityProxy proxy)
         {
             Container = container;
-            HandleId = _nextId++;
+            // Numbered by its ability system, so an entity's activations count from 0 whatever else runs. One count for
+            // the whole game numbered them in the order of every entity's activations, which two machines can't share
+            // (FEAT-13)
+            HandleId = data?.System != null ? data.System.NextHandleId() : _nextId++;
             Data = data;
             Cts = new CancellationTokenSource();
             TargetingCts = new CancellationTokenSource();

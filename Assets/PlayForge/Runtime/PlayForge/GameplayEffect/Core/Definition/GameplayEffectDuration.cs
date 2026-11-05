@@ -180,7 +180,7 @@ namespace FarEmerald.PlayForge
 
         public float GetDeltaTime(IAttributeImpactCarrier spec)
         {
-            float dt = Time.deltaTime;
+            float dt = ForgeTime.DeltaTime;
             return DeltaTimeScaler is null 
                 ? dt 
                 : ForgeHelper.MagnitudeAndScalerOperation(dt, DeltaTimeScaler.Evaluate(spec), RealDeltaTime);

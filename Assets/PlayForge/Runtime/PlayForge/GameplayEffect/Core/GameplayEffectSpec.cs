@@ -9,6 +9,13 @@ namespace FarEmerald.PlayForge
         public GameplayEffect Base;
 
         public IEffectOrigin Origin;
+
+        /// <summary>
+        /// The application's number on its target, counted from 1 as the target's effects land, or 0 until it lands. An
+        /// application had no ID, so nothing could tell two of one effect apart, as a looping cue or a replay needs
+        /// (FEAT-13).
+        /// </summary>
+        public int ApplicationId { get; internal set; }
         public ISource Source;
         public ITarget Target;
 

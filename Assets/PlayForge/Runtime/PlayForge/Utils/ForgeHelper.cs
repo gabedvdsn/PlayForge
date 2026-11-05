@@ -978,7 +978,7 @@ namespace FarEmerald.PlayForge
         
         #region Collection Utils
         
-        public static T RandomChoice<T>(this List<T> list) => list is null ? default : list[Mathf.FloorToInt(Random.value * list.Count)];
+        public static T RandomChoice<T>(this List<T> list) => list is null ? default : list[Mathf.FloorToInt(ForgeRandom.Value * list.Count)];
 
         public static void SafeAdd<K, V>(this Dictionary<K, V> dict, K key, V value, bool overrideValue)
         {
@@ -1020,7 +1020,7 @@ namespace FarEmerald.PlayForge
             while (n > 1)
             {
                 n--;
-                int k = Mathf.FloorToInt(Random.value * (n + 1));
+                int k = Mathf.FloorToInt(ForgeRandom.Value * (n + 1));
                 (list[k], list[n]) = (list[n], list[k]);
             }
         }
@@ -1033,7 +1033,7 @@ namespace FarEmerald.PlayForge
 
             for (int _ = 0; _ < N; _++)
             {
-                float randomValue = Random.value;
+                float randomValue = ForgeRandom.Value;
                 float cumulative = 0f;
 
                 for (int i = 0; i < list.Count; i++)
@@ -1143,7 +1143,7 @@ namespace FarEmerald.PlayForge
 
         public static Vector3 RandomPointWithinCircle(float radius, float minRadius = 0f)
         {
-            var p = Random.insideUnitCircle * radius;
+            var p = ForgeRandom.InsideUnitCircle * radius;
             if (p.magnitude > minRadius) return p;
 
             return p.normalized * minRadius;
@@ -1151,7 +1151,7 @@ namespace FarEmerald.PlayForge
         
         public static Vector3 RandomPointWithinSphere(float radius, float minRadius = 0f)
         {
-            var p = Random.insideUnitSphere * radius;
+            var p = ForgeRandom.InsideUnitSphere * radius;
             if (p.normalized.magnitude > minRadius) return p;
 
             return p.normalized * minRadius;

@@ -70,7 +70,7 @@ namespace FarEmerald.PlayForge
         /// </summary>
         public virtual async UniTask Execute(SequenceDataPacket data, CancellationToken token)
         {
-            while (!Step(data, UnityEngine.Time.deltaTime))
+            while (!Step(data, ForgeTime.DeltaTime))
             {
                 await UniTask.Yield(PlayerLoopTiming.Update, token);
             }
@@ -417,7 +417,7 @@ namespace FarEmerald.PlayForge
             
             while (!token.IsCancellationRequested && !runtime.IsRepeatBroken(stage))
             {
-                int startFrame = Time.frameCount;
+                int startFrame = ForgeTime.FrameCount;
 
                 // Wait for all tasks to complete using safe pattern
                 await WaitAllTasksSafe(taskUnits);
