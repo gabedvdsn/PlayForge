@@ -344,9 +344,10 @@ namespace FarEmerald.PlayForge.Extended.Editor
                 Title = "Impact",
                 HelpTopic = "effects/impact",
 
-                // Impact's Import only logged a warning (ED-32)
+                // Impact's Import only logged a warning (ED-32). Its own fields, but the chance to apply, which
+                // Requirements shows and imports and clears (FEAT-8)
                 SerializedObject = serializedObject,
-                PropertyPaths = new[] { nameof(GameplayEffect.ImpactSpecification), DefinitionPath(nameof(GameplayEffectDefinition.RetentionGroup)) },
+                PropertyPaths = ImpactPaths(),
                 OnImportComplete = OnSectionReplaced,
                 OnClearComplete = OnSectionReplaced,
             });
@@ -367,6 +368,31 @@ namespace FarEmerald.PlayForge.Extended.Editor
 
         // The target's table, then the source's, on a two-button switch, as the mockup's On the Target and On the Source.
         // Both sides sat one after the other, each in a tinted box (ED-37)
+        // The impact's chance to apply, which the Requirements section shows (FEAT-8)
+        private static readonly string ChancePath = $"{nameof(GameplayEffect.ImpactSpecification)}.{nameof(GameplayEffectImpact.ChanceToApply)}";
+
+        // The impact's own fields, as the section's Import and Clear take them, and its retention group
+        private string[] ImpactPaths()
+        {
+            var paths = new List<string>();
+            var impact = serializedObject.FindProperty(nameof(GameplayEffect.ImpactSpecification));
+            if (impact != null)
+            {
+                var child = impact.Copy();
+                var end = impact.GetEndProperty();
+                if (child.NextVisible(true))
+                {
+                    do
+                    {
+                        if (SerializedProperty.EqualContents(child, end)) break;
+                        if (child.propertyPath != ChancePath) paths.Add(child.propertyPath);
+                    } while (child.NextVisible(false));
+                }
+            }
+            paths.Add(DefinitionPath(nameof(GameplayEffectDefinition.RetentionGroup)));
+            return paths.ToArray();
+        }
+
         private void BuildRequirementsSection(VisualElement parent)
         {
             requirementsSection = CreateSection(new SectionConfig
@@ -376,12 +402,18 @@ namespace FarEmerald.PlayForge.Extended.Editor
                 HelpTopic = "effects/requirements",
 
                 SerializedObject = serializedObject,
-                PropertyPaths = new[] { nameof(GameplayEffect.TargetRequirements), nameof(GameplayEffect.SourceRequirements) },
+                PropertyPaths = new[] { ChancePath, nameof(GameplayEffect.TargetRequirements), nameof(GameplayEffect.SourceRequirements) },
                 OnImportComplete = OnSectionReplaced,
                 OnClearComplete = OnSectionReplaced,
             });
             parent.Add(requirementsSection.Section);
             var content = requirementsSection.Content;
+
+            // The chance it lands, above the requirements, since it gates the whole application as they do: its
+            // duration, tags and every impact. Under Impact it read as one impact's chance (FEAT-8)
+            var chance = CreatePropertyField(serializedObject.FindProperty(ChancePath), "ChanceToApply", "Chance to Apply");
+            chance.tooltip = "How likely the effect is to land, from 0 to 1, drawn each time it's applied. 1 always lands";
+            content.Add(chance);
 
             var sides = new VisualElement { name = "Sides" };
             sides.AddToClassList("pf-segmented");
@@ -519,16 +551,20 @@ namespace FarEmerald.PlayForge.Extended.Editor
         private static bool IsFocused(VisualElement field) =>
             field.panel?.focusController?.focusedElement is VisualElement focused && (focused == field || field.Contains(focused));
 
-        // The context tags and how many tags the effect grants, then the abilities it lends, as "Grants Smite", and what
-        // it removes and blocks, as "Removes Status.Debuff"
+        // The context tags, then what the effect grants while it's on, its tags by name and its abilities counted, as
+        // "Grants Status.Burning, 1 ability", then what it removes and blocks, as "Removes Status.Debuff" (FEAT-8)
         private string TagsSectionSummary()
         {
             var parts = new List<string>();
-            var named = TagsSummary(effect.Tags.ContextTags, "context tags", effect.Tags.GrantedTags?.Count(tag => tag.IsValid) ?? 0);
+            var named = TagsSummary(effect.Tags.ContextTags, "context tags", 0);
             if (named != "None") parts.Add(named);
-            var lent = effect.GrantedAbilities?.Where(ability => ability != null).ToList() ?? new List<Ability>();
-            if (lent.Count == 1) parts.Add($"Grants {NameOf(lent[0])}");
-            else if (lent.Count > 1) parts.Add($"Grants {lent.Count} abilities");
+            var grants = new List<string>();
+            var granted = effect.Tags.GrantedTags?.Where(tag => tag.IsValid).Select(tag => tag.Name).ToList() ?? new List<string>();
+            if (granted.Count is 1 or 2) grants.Add(string.Join(", ", granted));
+            else if (granted.Count > 2) grants.Add($"{granted.Count} tags");
+            int lent = effect.GrantedAbilities?.Count(ability => ability != null) ?? 0;
+            if (lent > 0) grants.Add(CountOf(lent, "ability", "abilities"));
+            if (grants.Count > 0) parts.Add($"Grants {string.Join(", ", grants)}");
             AddNamed("Removes", effect.Tags.RemovesEffectsTagged);
             AddNamed("Blocks", effect.Tags.BlocksEffectsTagged);
             return parts.Count == 0 ? "None" : string.Join(" · ", parts);
@@ -555,9 +591,7 @@ namespace FarEmerald.PlayForge.Extended.Editor
             if (tagsSection != null) tagsSection.Summary.text = TagsSectionSummary();
             if (durationSection != null) durationSection.Summary.text = DurationSummary();
             if (impactSection != null) impactSection.Summary.text = ImpactSummary();
-            if (requirementsSection != null)
-                requirementsSection.Summary.text = CountOf(RequirementCount(effect.TargetRequirements) + RequirementCount(effect.SourceRequirements),
-                    "requirement", "requirements");
+            if (requirementsSection != null) requirementsSection.Summary.text = RequirementsSummary();
             if (workersSection != null) workersSection.Summary.text = CountOf(effect.Workers?.Count(worker => worker != null) ?? 0, "worker", "workers");
             if (cuesSection != null) cuesSection.Summary.text = CountOf(effect.Cues?.Count(cue => cue != null) ?? 0, "cue", "cues");
             if (localDataSection != null) localDataSection.Summary.text = CountOf(effect.LocalData?.Count ?? 0, "entry", "entries");
@@ -592,15 +626,21 @@ namespace FarEmerald.PlayForge.Extended.Editor
             return string.Join(" · ", parts);
         }
 
-        // The first impact, as in "Health −8 · Periodic", then how many more, then a chance to apply short of 1, as in
-        // "30% chance"; None when it changes nothing
+        // The first impact, as in "Health −8 · Periodic", then how many more; None when it changes nothing
         private string ImpactSummary()
         {
             var impact = effect.ImpactSpecification;
-            if (impact == null) return "None";
-            var chance = ChanceSummary(impact.ChanceToApply);
-            var impacts = ImpactsSummary(impact);
-            return chance == null ? impacts : impacts == "None" ? chance : $"{impacts} · {chance}";
+            return impact == null ? "None" : ImpactsSummary(impact);
+        }
+
+        // How many tags the two sides require or forbid, then a chance to apply short of 1, as in "2 requirements ·
+        // 30% chance" (FEAT-8)
+        private string RequirementsSummary()
+        {
+            var count = CountOf(RequirementCount(effect.TargetRequirements) + RequirementCount(effect.SourceRequirements),
+                "requirement", "requirements");
+            var chance = ChanceSummary(effect.ImpactSpecification?.ChanceToApply);
+            return chance == null ? count : count == "None" ? chance : $"{count} · {chance}";
         }
 
         private string ImpactsSummary(GameplayEffectImpact impact)

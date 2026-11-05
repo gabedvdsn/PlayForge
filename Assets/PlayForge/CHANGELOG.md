@@ -65,7 +65,8 @@ tracks each fix below by its ID.
   what applied it, and taken back, interrupted if running, as it comes off; only what it gave is taken back
   (FEAT-8).
 - Chance to Apply. An effect lands by its chance, from 0 to 1 and scalable by level, drawn once each application
-  from `ForgeRandom`; a miss is refused. The default, 1, always lands and draws nothing (FEAT-8).
+  from `ForgeRandom`; a miss is refused. The default, 1, always lands and draws nothing. The Effect inspector sets
+  it in Requirements, above the tables, since it gates the whole application (FEAT-8).
 - Overflow at max stacks. A Stack Bounds Config's Overflow Effects land, from the application's origin, as a stack
   would take the effect past its Max; Deny Refresh On Overflow keeps that application from refreshing or extending
   the effect; Clear Stacks On Overflow takes its stacks off. A stack past the max did nothing (FEAT-8).
@@ -291,6 +292,9 @@ tracks each fix below by its ID.
   Asking whether its sequence was paused took 24 bytes a frame.
 
 ### Fixed
+- A section's Clear set each field to 0 or its first choice, not its own default, so clearing an effect's Impact
+  allowed no target and left no chance to apply: the effect never landed. A cleared field takes a new asset's value,
+  and a cleared list still empties (ED-42).
 - Click targeting in a scene with no main camera threw at the press. The press now aims nowhere, and a warning says
   so (FEAT-11).
 - A level and its max set at once, or raised at once, applied the level first, so a level past the old max was

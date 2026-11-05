@@ -159,11 +159,6 @@ duration gives it. Additional Impacts change more attributes, or the same one ag
   target. Affiliated allows targets that share the origin's affiliation, and Unaffiliated allows those that don't. Use
   Affiliation List compares the target with the **Affiliations** list instead.
   - **Comparison** (all but Always Allow): Any (default) needs one tag to match. All needs every tag to match.
-- **Chance to Apply**: how likely the effect is to land, from 0 to 1, which can scale by level. Each application
-  draws once from PlayForge's random source (`ForgeRandom`), and a miss is refused, so applying returns false, as
-  an immunity's refusal does. 1, the default, always lands, and 0 never does; neither draws, so an effect without a
-  chance leaves the numbers others draw as they were. A contained effect draws its own: a strike with a bleed at 0.3
-  lands every time, and its bleed about one time in three.
 
 The inspector no longer shows Reverse On Removal. A Continuous modifier always reverses when the effect ends, and a
 commit never does, so the flag changes nothing. The Problems view still flags a periodic effect that sets it.
@@ -217,9 +212,16 @@ Write a cue of your own by deriving from `AbstractCueHandler` and overriding the
 
 ## Requirements
 
-Tag checks against the effect's target, and against its source, the entity behind its origin. The switch at the top
-shows one side's table at a time: **On the target** first, then **On the source**. Each table has a row for each
-group:
+**Chance to Apply** comes first: how likely the effect is to land, from 0 to 1, which can scale by level. It gates
+the whole application, as the Applying rows do. Each application draws once from PlayForge's random source
+(`ForgeRandom`), and a miss is refused, so applying returns false, as an immunity's refusal does. 1, the default,
+always lands, and 0 never does; neither draws, so an effect without a chance leaves the numbers others draw as they
+were. A contained effect draws its own: a strike with a bleed at 0.3 lands every time, and its bleed about one time
+in three. The section's summary shows a chance short of 1.
+
+Under it are tag checks against the effect's target, and against its source, the entity behind its origin. The
+switch shows one side's table at a time: **On the target** first, then **On the source**. Each table has a row for
+each group:
 
 - **Applying**: must pass for the effect to be applied. The effect is also refused if its Removed By row is already
   met.
