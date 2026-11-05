@@ -277,10 +277,24 @@ namespace FarEmerald.PlayForge
                 value = cast;
                 return true;
             }
-            
+
             return false;
         }
-        
+
+        /// <summary>
+        /// The entry at <paramref name="index"/> under a key, if it's a <typeparamref name="T"/>. With <see cref="Count"/>,
+        /// a way through every entry that builds no list, as an ability's tasks go through its targets (GAS-62).
+        /// </summary>
+        public bool TryGetAt<T>(Tag key, int index, out T value)
+        {
+            value = default;
+            if (!_payload.TryGetValue(key, out var list) || index < 0 || index >= list.Count) return false;
+            if (list[index] is not T cast) return false;
+
+            value = cast;
+            return true;
+        }
+
         public bool TryGetAll<T>(Tag key, out DataValue<T> dataValue)
         {
             if (!_payload.ContainsKey(key))

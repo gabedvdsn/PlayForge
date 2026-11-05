@@ -11,17 +11,19 @@ namespace FarEmerald.PlayForge
 
         public override void Prepare(AbilityDataPacket data)
         {
-            if (!data.TryGetFirst(Tags.TARGET_REAL, out ITarget target))
+            // On each target, as an area ability has several. Only the first took them (GAS-62)
+            int targets = data.Count(Tags.TARGET_REAL);
+            for (int i = 0; i < targets; i++)
             {
-                return;
-            }
-            
-            // With the magnitudes the caller set on the activation's data (FEAT-2)
-            foreach (GameplayEffect effect in Effects)
-            {
-                var spec = target.GenerateEffectSpec(data.EffectOrigin, effect);
-                spec?.TakeSetByCaller(data.SetByCallerMagnitudes);
-                target.ApplyCarrier(spec);
+                if (!data.TryGetAt(Tags.TARGET_REAL, i, out ITarget target) || target is null) continue;
+
+                // With the magnitudes the caller set on the activation's data (FEAT-2)
+                foreach (GameplayEffect effect in Effects)
+                {
+                    var spec = target.GenerateEffectSpec(data.EffectOrigin, effect);
+                    spec?.TakeSetByCaller(data.SetByCallerMagnitudes);
+                    target.ApplyCarrier(spec);
+                }
             }
         }
 
@@ -32,12 +34,15 @@ namespace FarEmerald.PlayForge
         
         public override void Clean(AbilityDataPacket data)
         {
-            if (!data.TryGet(Tags.TARGET_REAL, EDataTarget.Primary, out ITarget target))
+            // Off each target it put them on
+            int targets = data.Count(Tags.TARGET_REAL);
+            for (int i = 0; i < targets; i++)
             {
-                return;
+                if (!data.TryGetAt(Tags.TARGET_REAL, i, out ITarget target) || target is null) continue;
+
+                var gas = target.ToGAS();
+                foreach (GameplayEffect effect in Effects) gas.RemoveGameplayEffect(effect);
             }
-            var gas = target.ToGAS();
-            foreach (GameplayEffect effect in Effects) gas.RemoveGameplayEffect(effect);
         }
         public override bool IsCriticalSection => false;
     }

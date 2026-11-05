@@ -129,15 +129,22 @@ namespace FarEmerald.PlayForge
         public bool TryGetFirstTarget(out ITarget target) => TryGetFirst(Tags.TARGET_REAL, out target);
 
         /// <summary>
-        /// Files the entity a targeting packet points at under Target Real, where tasks, rules and spawned processes
-        /// look for it, unless a target is there already. Targeting leaves only the packet, under Target or the
-        /// implicit tag, and nothing filed the entity, so Apply Effects never found its target (GAS-46).
+        /// Files the entity each targeting packet points at under Target Real, in the packets' order, where tasks, rules
+        /// and spawned processes look for it, unless a target is there already. Targeting leaves only the packets, under
+        /// Target or the implicit tag, and nothing filed the entity, so Apply Effects never found its target (GAS-46).
+        /// Then only the first was filed, so an ability that targeted several reached one of them (GAS-62).
         /// </summary>
         public void ResolveTarget(Tag implicitTag)
         {
             if (TryGetFirst(Tags.TARGET_REAL, out ITarget _)) return;
-            if (!TryGetFirst(Tags.TARGET, out AbstractTargetingPacket packet) && !TryGetFirst(implicitTag, out packet)) return;
-            if (packet.target is not null) SetPrimary(Tags.TARGET_REAL, packet.target);
+
+            var key = TryGetFirst(Tags.TARGET, out AbstractTargetingPacket _) ? Tags.TARGET : implicitTag;
+            int count = Count(key);
+            for (int i = 0; i < count; i++)
+            {
+                if (!TryGetAt(key, i, out AbstractTargetingPacket packet) || packet.target is null) continue;
+                if (!Contains(packet.target, Tags.TARGET_REAL)) AddPayload(Tags.TARGET_REAL, packet.target);
+            }
         }
 
         #endregion

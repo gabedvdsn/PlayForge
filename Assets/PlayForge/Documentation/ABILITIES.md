@@ -126,6 +126,11 @@ passes it in, and one effect serves every strength.
     through `Camera.main`. With no camera, a press aims nowhere. For a camera of your own, give the default one
     (`new LegacyPointerInput { Camera = camera }`, or `InputSystemPointerInput`), and for a gamepad's reticle or a
     controller's ray, write an `IForgeInput`. Put either in with `ForgeInput.Use(input)`.
+  - **Auto targeting** (Auto Target, Auto Target By Affinity) takes the entities within its **Range**, sorted by its
+    **Mode**, up to **Max Targets**, or every one at 0. Each is a target of the activation, and the first, the nearest
+    for Nearest, is its primary. Apply Effects and Apply/Remove Effects reach each target, so an area ability is Auto
+    Target and then Apply Effects. A Target row and the Target Checks check the primary. **Auto Target From Data**
+    with **Primary Only** off takes each target its key holds.
 - **Use Implicit Targeting** (default on): before targeting, record the caster as the activation's target, under
   **Implicit Tag** (default `Target`), which shows while this is on. A targeting task that sets a target replaces it.
 
@@ -152,7 +157,7 @@ This section is what the ability does once it has started.
     makes, or, for an ability built in code, a fresh run of the sequence its `Definition` describes, which
     `TaskSequenceBuilder` makes. A stage that holds a critical task is critical.
     The activation keeps its claim until its last critical stage ends. With no critical stage, it lets the claim go
-    as the stages start. Apply Effects' **Record Landed As** tags the activation's data as an effect lands on the
+    as the stages start. Apply Effects' **Record Landed As** tags the activation's data as an effect lands on a
     target, for a later stage's Condition.
   - **Condition**: when the stage runs. With no **Tag**, always. Otherwise only while the tag is there, or, with
     **When Missing**, only while it isn't: **On** The Activation looks in the activation's data, as Record Landed As

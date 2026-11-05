@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Diagnostics.Tracing;
 using System.Threading;
 using Cysharp.Threading.Tasks;
@@ -42,6 +43,22 @@ namespace FarEmerald.PlayForge
         public static void SetTargetingPacket(this ProcessDataPacket data, Tag query, AbstractTargetingPacket targeting)
         {
             data.SetPrimary(query, targeting);
+        }
+
+        /// <summary>
+        /// Files the packets of the targets a targeting task selected under <paramref name="query"/>, in their order and in
+        /// place of what was there, so the first is the primary. Each was set as the primary, so each replaced the last,
+        /// and a task that selected several kept only the last of them: an Auto Target of every match kept the farthest
+        /// (GAS-62).
+        /// </summary>
+        public static void SetTargetingPackets(this ProcessDataPacket data, Tag query, IEnumerable<ITarget> targets)
+        {
+            data.Remove(query);
+            foreach (var target in targets)
+            {
+                var packet = target?.GetTargetingPacket();
+                if (packet is not null) data.AddPayload(query, packet);
+            }
         }
 
         public static bool TryApplyEffects(this ProcessDataPacket data, GameObject obj, Tag query)

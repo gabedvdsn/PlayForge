@@ -62,11 +62,9 @@ namespace FarEmerald.PlayForge
                 return UniTask.CompletedTask;
             }
 
-            // Add all selected targets to data
-            foreach (var target in selected)
-            {
-                data.SetTargetingPacket(Tags.TARGET, target.GetTargetingPacket());
-            }
+            // Every target selected, in order, the first as the primary. Each was set as the primary, so each replaced the
+            // last, and the last alone was kept (GAS-62)
+            data.SetTargetingPackets(Tags.TARGET, selected);
 
             return UniTask.CompletedTask;
         }

@@ -7,6 +7,8 @@ tracks each fix below by its ID.
 ## [Unreleased]
 
 ### Added
+- `ProcessDataPacket.TryGetAt` reads the entry at an index under a key, building no list, and
+  `SetTargetingPackets` files a targeting task's targets in order, the first as the primary (GAS-62).
 - Moving an effect to another entity. `EffectSystemComponent.MoveTo(effect, onto)` moves each of an effect's
   containers with its stacks, its time left and what applied it; its lasting changes, granted tags, lent abilities
   and lasting cues go with it, and nothing of a removal or an application runs (FEAT-23).
@@ -334,6 +336,9 @@ tracks each fix below by its ID.
   Asking whether its sequence was paused took 24 bytes a frame.
 
 ### Fixed
+- An area ability struck one entity. A targeting task kept only the last target it selected, the farthest of every
+  match, and Target Real and the apply tasks took only the first. Auto targeting keeps every target it selects, in
+  order, and Apply Effects and Apply/Remove Effects reach each of them (GAS-62).
 - A restore gave each ability back as a new one, so another entity's effect that one of them applied lost track of
   it, and its next save named no slot for it. A restore keeps each ability in the slot its save gives it (GAS-60).
 - A save kept an effect's timers as floats, so a restored effect ran on a hair apart from one never restored. It keeps

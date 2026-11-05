@@ -20,18 +20,22 @@ namespace FarEmerald.PlayForge
         
         public override async UniTask Activate(AbilityDataPacket data, CancellationToken token)
         {
-            if (!data.TryGetFirstTarget(out var target))
-            {
-                return;
-            }
-            
+            // Each target, as an area ability has several. Only the first was struck (GAS-62)
+            int targets = data.Count(Tags.TARGET_REAL);
+            if (targets == 0) return;
+
             foreach (GameplayEffect effect in Effects)
             {
-                // With the magnitudes the caller set on the activation's data (FEAT-2)
-                var spec = target.GenerateEffectSpec(data.EffectOrigin, effect);
-                spec?.TakeSetByCaller(data.SetByCallerMagnitudes);
-                bool landed = target.ApplyCarrier(spec);
-                if (landed && RecordLandedAs.IsValid) data.SetPrimary(RecordLandedAs, effect);
+                for (int i = 0; i < targets; i++)
+                {
+                    if (!data.TryGetAt(Tags.TARGET_REAL, i, out ITarget target) || target is null) continue;
+
+                    // With the magnitudes the caller set on the activation's data (FEAT-2)
+                    var spec = target.GenerateEffectSpec(data.EffectOrigin, effect);
+                    spec?.TakeSetByCaller(data.SetByCallerMagnitudes);
+                    bool landed = target.ApplyCarrier(spec);
+                    if (landed && RecordLandedAs.IsValid) data.SetPrimary(RecordLandedAs, effect);
+                }
                 await SequenceTaskLibrary.Delay(DelayBetweenApplicationMs / 1000f, token);
             }
         }

@@ -587,6 +587,7 @@ had no letter in the review. TS-AA onward came from the test project.
 | GAS-59 | M | 5 | `SystemLevelsComponent.TrySetLevel` and `TryModifyLevel` set the level before the max, so a level raised past the old max at once was held at it, and only the max moved. Found by the mirror clones scenario. Fixed: the max goes first | `LevelComponent/SystemLevelsComponent.cs` | verified |
 | GAS-60 | M | 5 | A restore let go of every ability the entity had and gave each back as a new one, so another entity's effect that one of them applied kept hold of the old, and that entity's next save named no slot for it, and a load after that took the effect as its source's own. Two entities that bled each other could load in no order that kept both. Found by the rollback scenario. Fixed: a restore keeps each ability the entity holds in the slot its save gives it, its level from the save's levels, and lets go of and gives back the rest | `Save/ForgeSave.cs` (`Put`), `AbilitySystem/Core/AbilitySystemComponent.cs` (`ClearForRestore`) | verified |
 | GAS-61 | M | 5 | A save kept an effect's time left and its time to its next tick as floats, which its timers, doubles since GAS-33, rounded, so a restored effect ran on from a time a hair off, and came to differ from one never restored in the last digit. Found by the rollback scenario. Fixed: the clock's capture and restore carry doubles (`ExactDurationRemaining` and `ExactTimeUntilPeriodTick` on the containers), and `EffectSave` keeps them; a save written with floats still loads | `GameplayEffect/Core/GameplayShelfContainer/*`, `Save/ForgeSnapshot.cs` | verified |
+| GAS-62 | H | 5 | A targeting task filed each target it selected by setting the primary, so each one replaced the last: an Auto Target of every match kept only the farthest, and one of two kept the second nearest. Then Target Real took only the first packet's entity, and Apply Effects and Apply/Remove Effects only the first target. So an area ability, Auto Target and then Apply Effects, struck one entity, and Auto Target From Data with Primary Only off kept one of the targets it says it adds. Found by the stress suite's area run. Fixed: the auto-targeting tasks file every target they select, in order (`SetTargetingPackets`), a resolve files each one's entity under Target Real, and both apply tasks reach each target, through `TryGetAt`, which builds no list | `AbilitySystem/Tasks/Targeting/Authored/AutoTarget*.cs`, `Utils/ProcessTaskUtil.cs`, `AbilitySystem/Ability/AbilityProxy/Core/AbilityDataPacket.cs` (`ResolveTarget`), `AbilitySystem/Tasks/Gameplay/Apply*EffectsAbilityTask.cs` | fixed |
 | GAS-P1 | M | 0 | `ActionQueue` LINQ allocations; snapshot built every frame (PF-006) | `ActionQueue.cs:41, 46, 156`, `FrameSummary.cs:340-351` | verified |
 | GAS-P2 | M | 0 | Tag and FrameSummary allocations (PF-007) | `TagCache.cs:60`, `TagQuery.cs:89-136`, `FrameSummary.cs:306-308` | verified |
 | GAS-P3 | M | 3 | Each application revalidates every container and rebuilds all tags (area application is quadratic). Measured: an instant application on an entity carrying 1,000 effects took 0.49 ms, 135 times one on an entity carrying 2. Now the requirements wait for one pass at the next tick, a shelved container's tags are counted as it lands, and re-application and removal find containers in an index by asset tag | `EffectSystemComponent.cs:312-348`, `GameplayAbilitySystem.cs:250-281` | verified |
@@ -643,7 +644,7 @@ had no letter in the review. TS-AA onward came from the test project.
 | ED-38 | M | 4 | An asset reference isn't Unity's object field: `AbstractRefDrawer` draws a button that opens a dropdown list of its own, with hover colors and Clear and Open icon buttons set in C#, and setting an effect asks in a dialog whether to link it. Now every asset reference is Unity's object field with a plain button beside it: Open, which shows the asset in a window of its own, or New, which makes one where The Forge puts its type, named and tagged, and uses it (Q15). An effect field says on a line under it how the effect takes its levels, with Link; its template, a pick of unlinked effects and New Linked Effect are in its right-click menu (Q18) | `AbstractForgeObjectDrawer.cs`, `GameplayEffectDrawer.cs` | verified |
 | ED-39 | M | 4 | Opening an attribute set element can change the set: 50 ms after it draws, and on every change to the set, `AttributeSetElementDrawer` clamps a Current or Base magnitude that sits outside the element's bounds and applies it to the asset, so looking at a set marks it modified. The runtime clamps the same values as the entity starts. Now the drawer writes nothing as it draws: a help box says how the runtime clamps such a magnitude, and only a value typed into a Magnitude field is kept within the bounds, as part of the same edit. The drawer follows the style sheet | `AttributeSetElementDrawer.cs` | verified |
 | ED-40 | M | 4 | The debugger only watches: it can't change an attribute or a tag, apply an effect or grant an ability, so trying a change means writing code for it. Q27: editing attributes and tags first, then applying effects and granting abilities. Fixed: each section of the Debugger's Entities view ends in a foot row (Decision 31): the selected attribute's Base and Current fields, which the entity takes as they are; Remove for the selected effect, and an effect picked there lands from the entity itself; Activate and Interrupt for the selected ability, and one picked there is granted at a level; Remove for the selected loose tag, and a tag typed or picked from the project's is granted as a loose tag (FEAT-16). The status bar says what each did | `Editor/Debugger/RuntimeDebugger.Entities.cs` | verified |
-| ED-41 | S | 5 | An ability's cost and cooldown apply only from a stage set to Apply Usage Effects, and nothing said so when no stage was: the Tactics lab's Slash had a cooldown that never came on. Fixed: the Ability inspector warns under Cooldown while the ability has a cost or a cooldown and no stage applies them, and the Problems view lists it (`UsageEffectsRule`) | `Editor/CustomPropertyDrawers/Forge/Editors/Assets/AbilityEditor.cs`, `Editor/Problems/ForgeRules.cs` | verified |
+| ED-41 | M | 5 | An ability's cost and cooldown apply only from a stage set to Apply Usage Effects, and nothing said so when no stage was: the Tactics lab's Slash had a cooldown that never came on. Fixed: the Ability inspector warns under Cooldown while the ability has a cost or a cooldown and no stage applies them, and the Problems view lists it (`UsageEffectsRule`) | `Editor/CustomPropertyDrawers/Forge/Editors/Assets/AbilityEditor.cs`, `Editor/Problems/ForgeRules.cs` | verified |
 | ED-42 | M | 5 | A section's Clear set each field to its type's default, 0 or the first choice, not the field's own (`SectionClearUtility.ResetPropertyToDefault`). Clearing an effect's Impact set its affiliation to Use Affiliation List with none listed and its Chance to Apply to 0, so the effect never landed. Fixed: a cleared field takes a new asset's value, read from a new asset of the target's kind that no one sees, and a cleared list still empties. Impact's Import and Clear take the impact's own fields but its chance, which Requirements shows, imports and clears (FEAT-8) | `Editor/CustomPropertyDrawers/Forge/Editors/Windows/SectionClearUtility.cs` (`FreshOf`, `TakeFresh`), `Editor/CustomPropertyDrawers/Forge/Editors/Assets/EffectEditor.cs` | verified |
 | ED-43 | M | 5 | The Debugger kept its wide layout at any width, so docked in a column its lists and details squeezed side by side and its tables clipped, against the user's rule that it read as clearly at 360 px as in a full window (EDITOR_STYLE's Debugger section, the canvas's three narrow boards). Found starting FEAT-12, whose Timeline view follows the rule too. Fixed: below 720 px each view's list sits above its detail, the toolbar's views take a row of their own with the search and the view's menus under them, the frame count moves to the status bar, whose counts drop their parts, the Processes list keeps ID, Process, State and Step, Held By drops Source, and Follow Selection keeps its icon | `Editor/Debugger/RuntimeDebugger.cs` (`Fit`), `Editor/Debugger/RuntimeDebugger.Tags.cs`, `Editor/UI/PlayForge.uss` | verified |
 
@@ -759,7 +760,7 @@ A separate Unity project that consumes PlayForge as a local UPM package (Decisio
 harness exist, with the golden scenarios, the framework and planted suites, and the editor tests (360 EditMode
 tests in `Tests/Editor`, among them the editor smoke suite, which its README explains). The gameplay labs exist, all eight
 green (Decision 30), each with a scene that plays its bot (Decision 33), and a ninth, the Battle lab, at the user's
-asking; the stress suite doesn't yet. See
+asking; so does the stress suite's scale half (`Tests/Stress`), and its soaks don't yet. See
 Environment for its location and commands. The full plan is in the
 review doc's section "The test project: PlayForge Proving Grounds". In short:
 
@@ -787,6 +788,33 @@ GAS-4 with GAS-5, PC-6, and TS-I with PC-5.
 ## Log
 
 Record baselines, gate results and notable decisions here, newest first.
+
+- 2026-11-05, **The stress suite begins: scale, and GAS-62.** The test project's one suite not yet built (the
+  review's Module 3), in Proving Grounds' new `Tests/Stress`, category Stress.
+  - **Scale** (`ScaleTests`, on each hub): 500 entities with 20 effects each, ticking every quarter second, tick on
+    time and allocate nothing in a steady frame. An entity's frame costs about as much among 500 as among 50: about
+    6.8 µs against 5.7 in PlayForge's step loops, within the three times the cost tests allow. And an area ability,
+    every match within 10 m and then Apply Effects, strikes each of 200 entities once.
+  - **GAS-62,** which the area run found: a targeting task set each target it selected as the primary, so each
+    replaced the last, and an Auto Target of every match kept only the farthest. Target Real and both apply tasks
+    took only the first target. So an area ability struck one entity. The auto-targeting tasks file every target
+    they select, in order, and each one reaches Target Real and both apply tasks. ABILITIES.md says how an area
+    ability is made.
+  - **The allocation probe's bursts:** the 500-entity run failed its allocation check on the runtime hub, 4,310
+    bytes in one frame in each attempt. The Profiler traced them to the editor's Build Report REST service, not
+    PlayForge: where another editor holds its port, as the user's does beside a batch run, it tries to listen again
+    about once a second, on a thread of its own, and each try allocates about 4 KB, which "GC Allocated In Frame"
+    takes as the frame's. These were the bursts the probe's notes gave no source for. A frame among 500 entities
+    fills most of a second, so nearly every measure took one. The probe cancels those tries where the service
+    isn't listening, and leaves a listening one, as in the user's editor, alone.
+  - **ED-41's severity** was S, which the scale doesn't have. It's M.
+  - **Its tests,** seen failing first: `GAS_62_An_auto_target_of_every_match_strikes_each`,
+    `GAS_62_Auto_targeting_two_strikes_the_two_nearest` and `GAS_62_Apply_and_remove_reaches_every_target`, each
+    for each hub, in `AbilityActivationTests`; and the six in `ScaleTests`.
+  - **Tests:** PlayMode 1303: 1296 pass, 0 fail and 7 planted are skipped, in three orders. Planted 7 of 7;
+    EditMode 447 of 447.
+  - **Next:** the stress suite's other half: register and unregister churn up to 10,000 processes, and the soaks:
+    10,000 repeats of a sequence, 100 scene loads, and a long run of bullet heaven.
 
 - 2026-11-05, **Phases 4 and 5 closed.** Phase 4's exit gate, the editor smoke suite in both themes, has passed
   in every gates run since 2026-11-04 (`4fd6a53`). Phase 5's, every test-project lab green, holds: all eight labs

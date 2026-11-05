@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Threading;
 using Cysharp.Threading.Tasks;
 using FarEmerald.PlayForge.Extended;
@@ -44,18 +45,20 @@ namespace FarEmerald.PlayForge
             }
             else
             {
-                bool found = false;
+                // Each valid target, in order, the first as the primary. Each was set as the primary, so each replaced the
+                // last, and the last alone was kept (GAS-62)
+                var found = new List<ITarget>();
                 if (data.TryGetAll<ITarget>(key, out var targets))
                 {
                     foreach (var target in targets)
                     {
                         if (target == null || !TargetIsValid(target)) continue;
-                        data.SetTargetingPacket(Tags.TARGET, target.GetTargetingPacket());
-                        found = true;
+                        found.Add(target);
                     }
                 }
 
-                if (!found) WhenTargetingInvalid(data);
+                if (found.Count > 0) data.SetTargetingPackets(Tags.TARGET, found);
+                else WhenTargetingInvalid(data);
             }
 
             return UniTask.CompletedTask;
