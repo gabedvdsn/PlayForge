@@ -120,6 +120,12 @@ passes it in, and one effect serves every strength.
 - **Targeting**: the task that picks what the ability acts on, such as an entity the player clicks, or the caster
   itself. Targeting holds the activation's claim. If the task fails while its **Break Runtime On Invalid** is on, or it
   doesn't finish, the activation ends. Leave Targeting empty to skip this step.
+  - **Click targeting** (the Select tasks: Position, Direction, GAS Target, GAS Or Position, GAS Target In Range)
+    waits for a press and aims along the game's input, `ForgeInput.Current`. By default that's the Input System's
+    pointer, a mouse, a pen or a touch, where its package is in and on, or else the Input Manager's mouse, each aimed
+    through `Camera.main`. With no camera, a press aims nowhere. For a camera of your own, give the default one
+    (`new LegacyPointerInput { Camera = camera }`, or `InputSystemPointerInput`), and for a gamepad's reticle or a
+    controller's ray, write an `IForgeInput`. Put either in with `ForgeInput.Use(input)`.
 - **Use Implicit Targeting** (default on): before targeting, record the caster as the activation's target, under
   **Implicit Tag** (default `Target`), which shows while this is on. A targeting task that sets a target replaces it.
 

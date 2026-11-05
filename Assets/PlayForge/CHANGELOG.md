@@ -7,6 +7,11 @@ tracks each fix below by its ID.
 ## [Unreleased]
 
 ### Added
+- Targeting input. The click-targeting tasks read the game's input, `ForgeInput.Current`, in place of the Input
+  Manager's mouse and `Camera.main`. By default it's the Input System's pointer, a mouse, a pen or a touch, where
+  that package is in and on, or else the Input Manager's mouse, each aimed through `Camera.main` or a camera you
+  give it. Put an `IForgeInput` of your own in with `ForgeInput.Use`, for a gamepad's reticle or a controller's ray
+  (FEAT-11).
 - Gameplay cues. An effect's new Cues section lists what it shows and sounds, as its workers are listed: a camera
   shake through the shaker the game gives `ForgeCues.Shaker`, a sound, or a prefab, as a burst or for as long as
   the effect lasts. Derive from `AbstractCueHandler` for a cue of your own. A save's load ends and begins lasting
@@ -286,6 +291,8 @@ tracks each fix below by its ID.
   Asking whether its sequence was paused took 24 bytes a frame.
 
 ### Fixed
+- Click targeting in a scene with no main camera threw at the press. The press now aims nowhere, and a warning says
+  so (FEAT-11).
 - A level and its max set at once, or raised at once, applied the level first, so a level past the old max was
   held at it (GAS-59).
 - A lasting effect whose magnitude reads a level follows the level as it changes. Its magnitude was read as its

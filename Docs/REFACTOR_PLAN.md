@@ -675,7 +675,7 @@ Phase 2 part, and set Phase 4's direction.
 | FEAT-8 | Effect conveniences | Cleanse by tag query, immunity, overflow at max stacks, abilities granted by effects, chance to apply. Done. Cleanse and immunity (Removes Effects Tagged, Blocks Effects Tagged) match an effect's asset, context and granted tags (Decision 30); overflow at max stacks is on Stack Bounds (Overflow Effects, Deny Refresh On Overflow, Clear Stacks On Overflow); an effect's Granted Abilities are lent at its origin's level while it's on; an effect lands by its Chance to Apply, drawn from `ForgeRandom` |
 | FEAT-9 | Save and load | Snapshots of attributes, effects, tags and cooldowns. Done (Decision 30): `ForgeSave.Capture` takes an entity at rest into a `ForgeSnapshot` of plain serializable types: each attribute's permanent commits by retention group, its levels, the abilities it knows of its own by slot, its items with their stacks, worn or not, its effects with their origin, stacks and clock, its loose tags and time scale. A `ForgeAssetCatalog` names the assets by IDs that last, by GUID from its editor command. `ForgeSave.Restore` interrupts running abilities, lets go of what the entity has with nothing told, puts back the save's, compiles the tags once and fires `OnRestored`. An `IForgeEntityIds` names the other entities whose effects are on it |
 | FEAT-10 | Headless mode | Abilities run without a scene ProcessControl |
-| FEAT-11 | Input binding | Targeting without legacy `Input` and `Camera.main` |
+| FEAT-11 | Input binding | Targeting without legacy `Input` and `Camera.main`. Done (Decision 30): the five click-targeting tasks read `ForgeInput.Current`, an `IForgeInput` of whether a pointer button went down this frame and the ray the pointer aims along, through `AbstractTargetingAbilityTask.WaitForPointerPress`; a game puts its own in with `ForgeInput.Use`; the default is the Input System's pointer (`InputSystemPointerInput`) where its package is in and on, through an optional reference and a version define, or else the Input Manager's mouse (`LegacyPointerInput`), each aimed through a camera given or `Camera.main`; with no camera a press aims nowhere, where it threw; a source-scanning test keeps Unity's input out of the rest of the runtime |
 | FEAT-12 | Ability graph and timeline, effect recorder | Editor |
 | FEAT-13 | Networking | Prediction and replication; not planned. Only its two cheap changes are in Phase 5 (Decision 30): one injectable clock and one seedable random source, and IDs scoped to an entity. Both done: `ForgeTime` and `ForgeRandom`, which a source-scanning test keeps the runtime reading; `HandleId` per ability system; `GameplayEffectSpec.ApplicationId` per target; `Tag.Id` was never serialized (Decision 22) |
 | FEAT-14 | Item stacking | An inventory holds an item as a count, up to the Item's `MaxStackSize`. The field and `ItemSpecContainer.ItemStacks` exist, but nothing reads or sets them (GAS-51). Decide how giving and removing count, how a stack's effects and abilities scale, and how Allow Duplicate Items meets it. Done (Decision 30): a give fills the item's stack first, up to `ItemDefinition.MaxStackSize`; a full stack opens another only with Allow Duplicate Items; `GiveItem(item, count)` takes what fits and returns how many, and `RemoveItem(item, count)` takes stacks off; a stack applies its effects and ability once, and `ItemStacksScaler` reads its count, which an equipped item's effects read again as it changes |
@@ -748,6 +748,31 @@ GAS-4 with GAS-5, PC-6, and TS-I with PC-5.
 ## Log
 
 Record baselines, gate results and notable decisions here, newest first.
+
+- 2026-11-05, **FEAT-11: targeting input.** Decision 30's default: targeting reads an input interface, with legacy
+  and Input System defaults.
+  - **The problem:** the five click-targeting tasks (Select Position, Direction, GAS Target, GAS Or Position, GAS
+    Target In Range) read the Input Manager's mouse and `Camera.main` themselves. A game on the Input System alone,
+    with a camera, a reticle or a controller's ray of its own, or a test couldn't stand in, and a scene with no main
+    camera threw at the press.
+  - **The change:** they read `ForgeInput.Current`, an `IForgeInput` of whether a pointer button went down this
+    frame and the ray the pointer aims along, through `AbstractTargetingAbilityTask.WaitForPointerPress`. A game puts
+    its own in with `ForgeInput.Use`. The default is the Input System's pointer (`InputSystemPointerInput`, a mouse,
+    a pen or a touch) where its package is in and its input handling on, or else the Input Manager's mouse
+    (`LegacyPointerInput`), each aimed through the camera it's given or `Camera.main`. With no camera a press aims
+    nowhere, and a warning says so.
+  - **The Input System, optionally:** the runtime's asmdef references `Unity.InputSystem` by name, with a version
+    define, `PLAYFORGE_INPUT_SYSTEM`, as the Demos sample does. Proving Grounds, which has no Input System, compiles
+    without it, and the Input System default was compile-checked against the PlayForge repo's own copy of the
+    package. No test runs it: Proving Grounds would need the package.
+  - **Its tests,** seen failing first: EditMode's `FEAT_11_The_runtime_reads_input_only_through_ForgeInput`, a
+    source scan beside FEAT-13's that found the tasks' 15 reads, and PlayMode's
+    `FEAT_11_Click_targeting_reads_the_games_input` in the new `TargetingInputTests` (10 of 10: each task, from
+    either hub, waits for the game's press and targets along its aim). A third test,
+    `FEAT_11_The_Input_Managers_mouse_aims_through_a_camera`, covers the default.
+  - **Next:** FEAT-10's headless run, then the headless simulation.
+  - **Tests:** PlayMode 1255: 1248 pass, 0 fail and 7 planted are skipped, in three orders. Planted 7 of 7;
+    EditMode 442 of 442.
 
 - 2026-11-05, **FEAT-1: gameplay cues, and the sequence-driven boss.** The fifth stretch scenario (Decision 30).
   - **FEAT-1:** `GameplayEffect.Cues`, a list of `AbstractCueHandler`, as an effect lists its workers. Its virtual

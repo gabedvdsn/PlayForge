@@ -102,6 +102,18 @@ namespace FarEmerald.PlayForge
         }
 
         /// <summary>
+        /// Waits for the targeting input to press the button, and gives the ray it aims along as it does: by default,
+        /// from the camera through the pointer. Null is a press with nothing to aim through, as with no camera. The
+        /// click-targeting tasks read the Input Manager's mouse and Camera.main themselves, and threw with no camera
+        /// (FEAT-11).
+        /// </summary>
+        protected static async UniTask<Ray?> WaitForPointerPress(int button, CancellationToken token)
+        {
+            await UniTask.WaitUntil(() => ForgeInput.Current.PointerPressed(button), cancellationToken: token);
+            return ForgeInput.Current.TryGetPointerRay(out var ray) ? ray : null;
+        }
+
+        /// <summary>
         /// Input handler can use data to derive visualization and validity.
         /// Return true if input handler connected successfully.
         /// Return false if connection failed (targeting will be marked invalid).

@@ -24,22 +24,20 @@ namespace FarEmerald.PlayForge
         [Tooltip("When true, an invalid click re-prompts for another click instead of failing")]
         public bool RetryOnInvalid;
 
-        [Tooltip("Mouse button index to use for selection (0=Left, 1=Right, 2=Middle)")]
+        [Tooltip("The pointer button that selects, as the game's input reads it: 0 the primary (left, or a touch), "
+                 + "1 the secondary (right), 2 the middle")]
         public int MouseButton;
 
         public override string Description => "Raycast to select a ground/position target";
 
         public override async UniTask Activate(AbilityDataPacket data, CancellationToken token)
         {
-            var cam = Camera.main;
             var maxDist = MaxDistance > 0 ? MaxDistance : Mathf.Infinity;
 
             while (!token.IsCancellationRequested)
             {
-                await UniTask.WaitUntil(() => Input.GetMouseButtonDown(MouseButton), cancellationToken: token);
-
-                var ray = cam.ScreenPointToRay(Input.mousePosition);
-                if (!Physics.Raycast(ray, out var hit, maxDist, RaycastLayers))
+                var ray = await WaitForPointerPress(MouseButton, token);
+                if (ray == null || !Physics.Raycast(ray.Value, out var hit, maxDist, RaycastLayers))
                 {
                     if (RetryOnInvalid) continue;
                     WhenTargetingInvalid(data);
