@@ -84,6 +84,36 @@ namespace FarEmerald.PlayForge
         public abstract void Refresh();
         public abstract void Extend(float duration);
 
+        /// <summary>
+        /// The time each stack has left and to its next tick, as a save keeps them: one of each, for a clock that counts one
+        /// stack at a time. A container whose clock is more than that overrides this and <see cref="RestoreClock"/> (FEAT-9).
+        /// </summary>
+        protected internal virtual void CaptureClock(List<float> remaining, List<float> untilTick)
+        {
+            remaining.Add(NextDurationRemaining);
+            untilTick.Add(TimeUntilPeriodTick);
+        }
+
+        /// <summary>
+        /// Sets the clock as a save left it: the duration and the time left, then the period and the time to the next tick.
+        /// An infinite effect's duration, and the period of one that doesn't tick, stay the float.MaxValue its spec gave
+        /// it as it was made (FEAT-9).
+        /// </summary>
+        protected internal virtual void RestoreClock(float total, float period, int stacks, IReadOnlyList<float> remaining, IReadOnlyList<float> untilTick)
+        {
+            var duration = Spec.Base.DurationSpecification;
+            if (duration.DurationPolicy == EEffectDurationPolicy.Durational)
+            {
+                totalDuration = total;
+                if (remaining.Count > 0) SetDurationRemaining(remaining[0]);
+            }
+            if (duration.EnablePeriodicTicks)
+            {
+                periodDuration = period;
+                if (untilTick.Count > 0) SetTimeUntilPeriodTick(untilTick[0]);
+            }
+        }
+
         public virtual void OnRemove()
         {
             ContainerIsActive = false;

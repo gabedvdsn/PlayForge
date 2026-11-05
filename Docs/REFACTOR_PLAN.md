@@ -671,7 +671,7 @@ Phase 2 part, and set Phase 4's direction.
 | FEAT-6 | Input buffer | Expiry and latest-wins for queued activations (C06). Done (Decision 30): the Queue policy is the input buffer, one slot per ability that a new press refreshes; a request waits out its ability's Buffer Window (0.3 s by default, or its own) in the caster's time, for the claim to go or a block to lift; the highest Buffer Priority fires first, then the newest |
 | FEAT-7 | Time source | Per-entity time scale and deterministic fixed tick (C02). The clock per entity is done (Decision 30): `GetClock()`, the game's time by `ForgeTime` times the entity's `TimeScale`, which its effects, cooldowns, sequences, waits and projectiles run by. The fixed-rate tick is done too: with ProcessControl's Fixed Tick Rate set, each frame runs as many ticks as its time holds, each stepping every process and its end of frame by a fixed step, and each sequence's wait goes on by the tick (`ForgeTick.Next`) |
 | FEAT-8 | Effect conveniences | Cleanse by tag query, immunity, overflow at max stacks, abilities granted by effects, chance to apply. Done. Cleanse and immunity (Removes Effects Tagged, Blocks Effects Tagged) match an effect's asset, context and granted tags (Decision 30); overflow at max stacks is on Stack Bounds (Overflow Effects, Deny Refresh On Overflow, Clear Stacks On Overflow); an effect's Granted Abilities are lent at its origin's level while it's on; an effect lands by its Chance to Apply, drawn from `ForgeRandom` |
-| FEAT-9 | Save and load | Snapshots of attributes, effects, tags and cooldowns |
+| FEAT-9 | Save and load | Snapshots of attributes, effects, tags and cooldowns. Done (Decision 30): `ForgeSave.Capture` takes an entity at rest into a `ForgeSnapshot` of plain serializable types: each attribute's permanent commits by retention group, its levels, the abilities it knows of its own by slot, its items with their stacks, worn or not, its effects with their origin, stacks and clock, its loose tags and time scale. A `ForgeAssetCatalog` names the assets by IDs that last, by GUID from its editor command. `ForgeSave.Restore` interrupts running abilities, lets go of what the entity has with nothing told, puts back the save's, compiles the tags once and fires `OnRestored`. An `IForgeEntityIds` names the other entities whose effects are on it |
 | FEAT-10 | Headless mode | Abilities run without a scene ProcessControl |
 | FEAT-11 | Input binding | Targeting without legacy `Input` and `Camera.main` |
 | FEAT-12 | Ability graph and timeline, effect recorder | Editor |
@@ -743,6 +743,27 @@ GAS-4 with GAS-5, PC-6, and TS-I with PC-5.
 ## Log
 
 Record baselines, gate results and notable decisions here, newest first.
+
+- 2026-11-04, **FEAT-9, save and load.** For the Tactics lab (Decision 30).
+  - **The API:** `ForgeSave.Capture(gas, catalog, ids)` takes an entity at rest into a `ForgeSnapshot` of plain
+    serializable types: each attribute's permanent commits by retention group (`CachedAttributeValue.GetCommits`), its
+    levels, the abilities it knows of its own by slot, its items with their stacks, worn or not, its effects with their
+    origin, stacks and clock (`AbstractEffectContainer.CaptureClock`, each stack's own for independent durations), and
+    its loose tags and time scale. `ForgeSave.Restore(gas, snapshot, catalog, ids)` interrupts running abilities, lets
+    go of what the entity has with nothing told, and puts back the save's: abilities in their slots, items, effects,
+    levels and commits. A worn item's effects come from the save, so wearing it applies none, and an ability an effect
+    or item lends comes back with it. Then every attribute recomputes, the tags compile once, and the new `OnRestored`
+    fires. A load inside the entity's step is refused (`GASCore.Stepping`).
+  - **The catalog:** a `ForgeAssetCatalog` names a save's assets by IDs that last; its Add Every PlayForge Asset names
+    each by its GUID. An `IForgeEntityIds` names the other entities whose effects are on the entity; without one, such
+    an effect comes back as the entity's own.
+  - **Not saved:** Local Data, sides, and what an effect captured as it landed (`Documentation/SAVING.md`).
+  - **Their tests,** seen failing first: the five `FEAT_9_*` tests in PlayMode's new `SaveLoadTests` (10 of 10). Four
+    more there, and EditMode's `FEAT_9_Add_Every_PlayForge_Asset_names_each_by_its_GUID`, cover stacks with their own
+    times, lent abilities with loose tags and time scale, an effect from another entity, and a load inside a step.
+  - **Next:** the Tactics lab.
+  - **Tests:** PlayMode 1170: 1163 pass, 0 fail and 7 planted are skipped, in three orders (SaveLoadTests' 18 among
+    them). Planted 7 of 7; EditMode 437 of 437.
 
 - 2026-11-04, **The Summoner lab.** The sixth lab (Decision 30).
   - **The lab** (`Tests/Labs/SummonerLab.cs`, category Lab): a summoner calls imps, each a runtime entity it handles

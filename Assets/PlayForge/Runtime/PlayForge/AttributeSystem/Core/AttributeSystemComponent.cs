@@ -634,7 +634,49 @@ namespace FarEmerald.PlayForge
             // attributes derived from this one keep their stale value.
             UnregisterModifier(attribute, new SourcedModifiedAttributeValue(carrier, 0f, 0f));
         }
-        
+
+        // ═══════════════════════════════════════════════════════════════════════════
+        // RESTORE — a load's quiet paths (FEAT-9)
+        // ═══════════════════════════════════════════════════════════════════════════
+
+        /// <summary>
+        /// Registers a carrier's modifiers with nothing told: no workers, callbacks or frame impacts. A restore puts back
+        /// what a save had, and tells once as it ends.
+        /// </summary>
+        internal void RegisterQuietly(IAttribute attribute, IAttributeImpactCarrier carrier, IReadOnlyList<IAttributeImpacter> impacters)
+        {
+            if (attribute is null || AttributeCache == null || !AttributeCache.TryGetValue(attribute, out var cached)) return;
+            cached.RegisterModifier(carrier, impacters ?? carrier.GetImpacters(), AttributeCache);
+        }
+
+        /// <summary>Takes a carrier's modifiers off with nothing told, as a restore lets go of what the entity had.</summary>
+        internal void UnregisterQuietly(IAttribute attribute, IAttributeImpactCarrier carrier)
+        {
+            if (attribute is null || AttributeCache == null || !AttributeCache.TryGetValue(attribute, out var cached)) return;
+            cached.UnregisterModifier(carrier, AttributeCache);
+        }
+
+        /// <summary>
+        /// Recomputes every attribute until none changes, so one derived from another reads it as it now is, and each
+        /// modifier the level it reads. A restore's last step, which nothing hears.
+        /// </summary>
+        internal void RecomputeAll()
+        {
+            if (AttributeCache == null) return;
+
+            // A pass for each attribute at most: one derived from another settles a pass after it
+            for (int pass = 0; pass <= AttributeCache.Count; pass++)
+            {
+                bool changed = false;
+                foreach (var cached in AttributeCache.Values)
+                {
+                    var before = cached.ActiveValue;
+                    if (cached.Recompute(AttributeCache) != before) changed = true;
+                }
+                if (!changed) return;
+            }
+        }
+
         // ═══════════════════════════════════════════════════════════════════════════
         // HELPERS
         // ═══════════════════════════════════════════════════════════════════════════

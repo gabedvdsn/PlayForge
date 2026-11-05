@@ -265,9 +265,10 @@ namespace FarEmerald.PlayForge
 
         /// <summary>
         /// Puts a container on the shelf and in the index, and counts its tags now, as a rebuild would. Counted as it is
-        /// shelved, nothing counts them twice: any rebuild after this counts the shelf afresh (GAS-P3).
+        /// shelved, nothing counts them twice: any rebuild after this counts the shelf afresh (GAS-P3). A restore counts
+        /// them once, in its own compile as it ends (FEAT-9).
         /// </summary>
-        private void Shelve(AbstractEffectContainer container)
+        private void Shelve(AbstractEffectContainer container, bool countTags = true)
         {
             EffectShelf.Add(container);
 
@@ -278,7 +279,7 @@ namespace FarEmerald.PlayForge
             var blocks = container.Spec.Base.Tags.BlocksEffectsTagged;
             if (blocks != null && blocks.Count > 0) immunities.Add(container);
 
-            GrantedTagCompiler.AddEffect(Self.GetTagCache(), container.Spec);
+            if (countTags) GrantedTagCompiler.AddEffect(Self.GetTagCache(), container.Spec);
         }
 
         /// <summary>
@@ -332,8 +333,9 @@ namespace FarEmerald.PlayForge
 
         // Gives the target each ability the container's effect grants, at the level of what applied it, and notes the slot
         // each took. One the target can't take, as one it knows already, isn't lent, so it isn't taken back either, as an
-        // item's isn't (GAS-48). An effect couldn't lend an ability (FEAT-8)
-        private void LendAbilities(AbstractEffectContainer container)
+        // item's isn't (GAS-48). An effect couldn't lend an ability (FEAT-8). A restore lends them quietly, and compiles the
+        // tags once as it ends (FEAT-9)
+        private void LendAbilities(AbstractEffectContainer container, bool quietly = false)
         {
             var abilities = container.Spec.Base.GrantedAbilities;
             if (abilities == null || abilities.Count == 0) return;
@@ -344,7 +346,10 @@ namespace FarEmerald.PlayForge
             List<(Ability, int)> slots = null;
             foreach (var ability in abilities)
             {
-                if (ability == null || !abilitySystem.GiveAbility(ability, level, out int slot)) continue;
+                if (ability == null) continue;
+                int slot;
+                bool given = quietly ? abilitySystem.GiveQuietly(ability, level, out slot) : abilitySystem.GiveAbility(ability, level, out slot);
+                if (!given) continue;
                 (slots ??= new List<(Ability, int)>(abilities.Count)).Add((ability, slot));
             }
             if (slots != null) lent[container] = slots;
@@ -723,6 +728,71 @@ namespace FarEmerald.PlayForge
 
             HandleGameplayEffects();
         }
+
+        // ═══════════════════════════════════════════════════════════════════════════
+        // RESTORE — a load's quiet paths (FEAT-9)
+        // ═══════════════════════════════════════════════════════════════════════════
+
+        /// <summary>
+        /// Takes every effect off the shelf at once with nothing told and nothing run: no removal effects, workers or
+        /// callbacks. Nor does it take back the abilities effects lent, which the ability system lets go of with the rest. A
+        /// restore puts back what the save had.
+        /// </summary>
+        internal void ClearForRestore()
+        {
+            foreach (var container in EffectShelf)
+            {
+                container.ContainerIsActive = false;
+                foreach (var attribute in container.Spec.GetImpactedAttributes(EImpactDelivery.Continuous))
+                    AttributeSystem.UnregisterQuietly(attribute, container.Spec);
+            }
+
+            EffectShelf.Clear();
+            FinishedEffects.Clear();
+            finishedSet.Clear();
+            needsCleaning = false;
+            byTag.Clear();
+            immunities.Clear();
+            lent.Clear();
+            requirementsDirty = true;
+        }
+
+        /// <summary>
+        /// Puts an effect back on the shelf as a save left it: its stacks and clock, its modifiers, and the abilities it
+        /// lends. Nothing of its application runs again, its workers, its commits on application or its contained
+        /// effects, and nothing is told. The next tick asks its requirements, once the restore has compiled the tags.
+        /// </summary>
+        internal void Restore(GameplayEffectSpec spec, EffectSave save)
+        {
+            if (spec == null || save == null) return;
+            if (spec.Base.DurationSpecification.DurationPolicy == EEffectDurationPolicy.Instant) return;
+
+            spec.ApplicationId = ++applications;
+            var container = spec.Base.DurationSpecification.GenerateContainer(spec, save.Ongoing);
+            container.RestoreClock(save.TotalDuration, save.PeriodDuration, save.Stacks,
+                save.Remaining ?? (IReadOnlyList<float>)Array.Empty<float>(), save.UntilTick ?? (IReadOnlyList<float>)Array.Empty<float>());
+
+            Shelve(container, countTags: false);
+            LendAbilities(container, quietly: true);
+            foreach (var attribute in spec.GetImpactedAttributes(EImpactDelivery.Continuous))
+                AttributeSystem.RegisterQuietly(attribute, spec, spec.GetImpactersFor(attribute, EImpactDelivery.Continuous));
+
+            requirementsDirty = true;
+        }
+
+        /// <summary>Whether an effect on the shelf lent the ability in the slot, which comes back with the effect (FEAT-9).</summary>
+        internal bool Lends(int slot)
+        {
+            foreach (var slots in lent.Values)
+            {
+                foreach (var (_, taken) in slots)
+                    if (taken == slot) return true;
+            }
+            return false;
+        }
+
+        /// <summary>Whether the container leaves the shelf at the next tick, as a save asks (FEAT-9).</summary>
+        internal bool IsLeaving(AbstractEffectContainer container) => finishedSet.Contains(container);
 
         // ═══════════════════════════════════════════════════════════════════════════
         // QUERIES

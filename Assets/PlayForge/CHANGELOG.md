@@ -7,6 +7,12 @@ tracks each fix below by its ID.
 ## [Unreleased]
 
 ### Added
+- Save and load. `ForgeSave.Capture` takes an entity at rest into a `ForgeSnapshot`, plain serializable types a game
+  writes where it likes: each attribute's permanent commits, its levels, the abilities it knows, its items with their
+  stacks, worn or not, and its effects with their time left, with its loose tags and time scale. `ForgeSave.Restore`
+  puts it back on the same entity or a fresh one of its kind. Running abilities end, nothing is told as it goes, and
+  `OnRestored` fires once. A new Asset Catalog names the assets a save refers to; Add Every PlayForge Asset, in its
+  menu, names each by its GUID. See `Documentation/SAVING.md` (FEAT-9).
 - Item stacking. A give fills an item's stack first, up to its Max Stack Size, which the Item inspector now draws;
   a full stack opens another only with Allow Duplicate Items. `GiveItem(item, count)` takes what fits and says how
   many, and `RemoveItem(item, count)` takes stacks off. A stack applies its effects once, and the new Item Stacks

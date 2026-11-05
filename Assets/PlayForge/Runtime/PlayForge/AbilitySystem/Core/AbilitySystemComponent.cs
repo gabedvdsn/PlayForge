@@ -263,11 +263,24 @@ namespace FarEmerald.PlayForge
         
         public bool GiveAbility(Ability ability, int level, out int abilityIndex)
         {
+            if (!GiveQuietly(ability, level, out abilityIndex)) return false;
+
+            Self.CompileGrantedTags();
+
+            return true;
+        }
+
+        /// <summary>
+        /// Gives an ability without compiling the tags: into <paramref name="slot"/> where that's free, as a restore puts one
+        /// back where it was, or else the first free slot. The restore compiles once as it ends (FEAT-9).
+        /// </summary>
+        internal bool GiveQuietly(Ability ability, int level, out int abilityIndex, int slot = -1)
+        {
             abilityIndex = -1;
 
             if (!CanGiveAbility(ability)) return false;
-            
-            abilityIndex = GetFirstAvailableCacheIndex();
+
+            abilityIndex = slot >= 0 && !AbilityCache.ContainsKey(slot) ? slot : GetFirstAvailableCacheIndex();
             if (abilityIndex < 0) return false;
 
             var container = new AbilitySpecContainer(ability.Generate(Self, level), abilityIndex);
@@ -275,10 +288,24 @@ namespace FarEmerald.PlayForge
 
             ability.InitWorkers(Self);
             // ability.WorkerGroup?.ProvideWorkersTo(Self);
-            
-            Self.CompileGrantedTags();
 
             return true;
+        }
+
+        /// <summary>
+        /// Ends what's running and lets go of every ability, lent ones too, with nothing left buffered and no tag compile.
+        /// A restore gives back what the save had, and compiles once as it ends (FEAT-9).
+        /// </summary>
+        internal void ClearForRestore()
+        {
+            if (AbilityCache == null) return;
+
+            buffer.Clear();
+            InjectAll(InterruptSequenceInjection.Instance);
+
+            foreach (var container in AbilityCache.Values) container.Spec.Base.RemoveWorkers(Self);
+            foreach (var active in ActiveCache.Values) active.Clear();
+            AbilityCache.Clear();
         }
 
         public bool RemoveAbility(Ability ability)

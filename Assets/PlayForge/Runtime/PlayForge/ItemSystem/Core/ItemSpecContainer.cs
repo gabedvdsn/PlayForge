@@ -207,6 +207,41 @@ namespace FarEmerald.PlayForge
         }
 
         // ═══════════════════════════════════════════════════════════════════════════
+        // Restore (FEAT-9)
+        // ═══════════════════════════════════════════════════════════════════════════
+
+        /// <summary>The slot the item's ability took, or -1 where it granted none, which a save leaves to the item.</summary>
+        internal int GrantedAbilitySlot => grantedAbilityIndex;
+
+        /// <summary>
+        /// Worn again as a save left it: its ability and workers back, and its tags counted in the restore's compile. Its
+        /// effects come back from the save with their time left, so this applies none, and nothing is told.
+        /// </summary>
+        internal void RestoreEquipped()
+        {
+            if (IsEquipped) return;
+
+            IsEquipped = true;
+            if (Spec.Base.ActiveAbility != null && Spec.Source.FindAbilitySystem(out var abilitySystem))
+            {
+                grantedAbilityIndex = abilitySystem.GiveQuietly(Spec.Base.ActiveAbility, Spec.GetLevel().CurrentValue, out int index)
+                    ? index
+                    : -1;
+            }
+            Spec.Base.InitWorkers(Spec.Source);
+        }
+
+        /// <summary>Taken off by a restore, with nothing told. Its effects and its ability went with the rest.</summary>
+        internal void ForgetForRestore()
+        {
+            if (!IsEquipped) return;
+
+            Spec.Base.RemoveWorkers(Spec.Source);
+            grantedAbilityIndex = -1;
+            IsEquipped = false;
+        }
+
+        // ═══════════════════════════════════════════════════════════════════════════
         // Tag Enumeration (for CompileGrantedTags)
         // ═══════════════════════════════════════════════════════════════════════════
 

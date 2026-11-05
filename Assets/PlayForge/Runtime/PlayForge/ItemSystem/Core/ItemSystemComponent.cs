@@ -277,6 +277,42 @@ namespace FarEmerald.PlayForge
             return toRemove.Count;
         }
 
+        /// <summary>Whether a worn item lent the ability in the slot, which comes back with the item (FEAT-9).</summary>
+        internal bool Lends(int slot)
+        {
+            if (ItemShelf == null) return false;
+            foreach (var container in ItemShelf)
+                if (container.IsEquipped && container.GrantedAbilitySlot == slot) return true;
+            return false;
+        }
+
+        /// <summary>
+        /// Lets go of every item at once, with nothing told. Their effects went with the shelf's, and their abilities with
+        /// the ability system's, as a restore clears them (FEAT-9).
+        /// </summary>
+        internal void ClearForRestore()
+        {
+            if (ItemShelf == null) return;
+            foreach (var container in ItemShelf) container.ForgetForRestore();
+            ItemShelf.Clear();
+        }
+
+        /// <summary>
+        /// Puts an item back as a save left it, in the next slot: its level and stacks, and worn where it was, with its
+        /// ability and workers. Its effects come back from the save with the rest, so wearing it applies none, and nothing
+        /// is told (FEAT-9).
+        /// </summary>
+        internal ItemSpecContainer Restore(Item item, int level, int stacks, bool equipped)
+        {
+            if (ItemShelf == null || item == null) return null;
+
+            var container = new ItemSpecContainer(item.Generate(Self, level), ItemShelf.Count);
+            container.Spec.Stacks = System.Math.Clamp(stacks, 1, System.Math.Max(1, item.Definition.StackSize));
+            ItemShelf.Add(container);
+            if (equipped) container.RestoreEquipped();
+            return container;
+        }
+
         /// <summary>
         /// Clears all items from inventory. Unequips all equipped items first.
         /// </summary>

@@ -360,6 +360,31 @@ namespace FarEmerald.PlayForge
                 existing.BaseValue + delta.BaseValue);
         }
 
+        /// <summary>
+        /// The permanent commits: each retention group's total, in the order the groups first committed, as a save keeps
+        /// them (FEAT-9).
+        /// </summary>
+        public void GetCommits(List<GroupContribution> into)
+        {
+            foreach (var group in committedOrder) into.Add(new GroupContribution(group, committedByGroup[group]));
+        }
+
+        /// <summary>
+        /// Puts back the commits a save kept, in place of these, and recomputes. A restore's, so nothing hears: it tells once
+        /// as it ends (FEAT-9).
+        /// </summary>
+        internal void RestoreCommits(IReadOnlyList<GroupContribution> commits, IReadOnlyDictionary<IAttribute, CachedAttributeValue> cache)
+        {
+            committedByGroup.Clear();
+            committedOrder.Clear();
+            if (commits != null)
+            {
+                for (int i = 0; i < commits.Count; i++)
+                    AccumulateCommitted(commits[i].Group.IsValid ? commits[i].Group : Tags.IgnoreRetention, commits[i].Value);
+            }
+            Recompute(cache);
+        }
+
         // ═══════════════════════════════════════════════════════════════════════════
         // RECOMPUTE — the single source of truth for ActiveValue
         // ═══════════════════════════════════════════════════════════════════════════

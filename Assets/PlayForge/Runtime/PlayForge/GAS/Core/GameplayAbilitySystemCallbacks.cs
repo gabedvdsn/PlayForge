@@ -182,7 +182,20 @@ namespace FarEmerald.PlayForge
         }
         
         public void SystemDisabled() => _onSystemDisabled?.Invoke();
-        
+
+        /// <summary>
+        /// Invoked once a save has loaded onto the system, as <see cref="ForgeSave.Restore"/> ends. A restore tells nothing
+        /// as it goes, effect by effect, so a listener reads the entity afresh here (FEAT-9).
+        /// </summary>
+        private SystemDelegate _onRestored;
+        public event SystemDelegate OnRestored
+        {
+            add => _onRestored += value;
+            remove => _onRestored -= value;
+        }
+
+        public void Restored() => _onRestored?.Invoke();
+
         // ═══════════════════════════════════════════════════════════════════════════
         // IMPACT TRACKING (for observer systems)
         //

@@ -128,19 +128,33 @@ namespace FarEmerald.PlayForge
 
         private void LevelChanged(LevelCallbackStatus status) => EffectSystem.RefreshEffectsLevelledBy(status.LevelKey);
 
+        /// <summary>
+        /// Whether the entity is part way through its step or its end of frame, whose loops a load would pull the effects
+        /// and actions out from under. A load waits for the step to end (FEAT-9).
+        /// </summary>
+        internal bool Stepping { get; private set; }
+
         public void Tick()
         {
-            Clock.Step();
-            EffectSystem.Tick();
+            Stepping = true;
+            try
+            {
+                Clock.Step();
+                EffectSystem.Tick();
 
-            // Heard as the tags change; checked here too, after the effects, for a change heard while a check ran (FEAT-5)
-            AbilitySystem.CheckWhileActive();
+                // Heard as the tags change; checked here too, after the effects, for a change heard while a check ran (FEAT-5)
+                AbilitySystem.CheckWhileActive();
 
-            // The input buffer's windows count down by the entity's own time (FEAT-6)
-            AbilitySystem.StepBuffer(Clock.DeltaTime);
+                // The input buffer's windows count down by the entity's own time (FEAT-6)
+                AbilitySystem.StepBuffer(Clock.DeltaTime);
 
-            // Tag workers tick once a frame, at its end, once their activations are settled. Ticked here as well,
-            // they ran at twice their rate (GAS-19)
+                // Tag workers tick once a frame, at its end, once their activations are settled. Ticked here as well,
+                // they ran at twice their rate (GAS-19)
+            }
+            finally
+            {
+                Stepping = false;
+            }
         }
 
         /// <summary>
@@ -151,6 +165,19 @@ namespace FarEmerald.PlayForge
         {
             if (ActionQueue == null) return false;
 
+            Stepping = true;
+            try
+            {
+                return RunEndOfFrame();
+            }
+            finally
+            {
+                Stepping = false;
+            }
+        }
+
+        private bool RunEndOfFrame()
+        {
             int totalExecuted = ActionQueue.ProcessAll(owner);
 
             TagCache.EvaluateTagWorkers();
@@ -276,6 +303,13 @@ namespace FarEmerald.PlayForge
             if (!looseTags.Remove(tag)) return false;
             CompileGrantedTags();
             return true;
+        }
+
+        /// <summary>The loose tags a save left, in place of these, which the restore's one compile counts (FEAT-9).</summary>
+        internal void RestoreLooseTags(IEnumerable<Tag> tags)
+        {
+            looseTags.Clear();
+            looseTags.AddRange(tags);
         }
 
         public bool QueryTags(TagQuery query)

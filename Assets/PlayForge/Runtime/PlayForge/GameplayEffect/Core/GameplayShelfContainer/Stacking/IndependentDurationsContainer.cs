@@ -136,5 +136,35 @@ namespace FarEmerald.PlayForge
                 Stacks += 1;
             }
         }
+
+        /// <summary>Each stack's own time left and to its tick (FEAT-9).</summary>
+        protected internal override void CaptureClock(List<float> remaining, List<float> untilTick)
+        {
+            foreach (var packet in Packets)
+            {
+                remaining.Add((float)packet.DurationRemaining);
+                untilTick.Add((float)packet.TimeUntilPeriodTick);
+            }
+        }
+
+        /// <summary>A stack for each time a save kept, each with its own (FEAT-9).</summary>
+        protected internal override void RestoreClock(float total, float period, int stacks, IReadOnlyList<float> remaining, IReadOnlyList<float> untilTick)
+        {
+            base.RestoreClock(total, period, stacks, remaining, untilTick);
+
+            // As RestoreClock keeps them, an infinite effect's time and a period that never ticks are the spec's
+            var duration = Spec.Base.DurationSpecification;
+            bool durational = duration.DurationPolicy == EEffectDurationPolicy.Durational;
+            bool ticks = duration.EnablePeriodicTicks;
+
+            Packets.Clear();
+            for (int i = 0; i < remaining.Count; i++)
+            {
+                float left = durational ? remaining[i] : totalDuration;
+                float toTick = ticks && i < untilTick.Count ? untilTick[i] : periodDuration;
+                Packets.Add(new StackableContainerPacket(left, toTick));
+            }
+            Stacks = Packets.Count;
+        }
     }
 }

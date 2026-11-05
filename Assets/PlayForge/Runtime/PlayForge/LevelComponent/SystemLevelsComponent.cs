@@ -12,16 +12,22 @@ namespace FarEmerald.PlayForge
         public readonly LevelSystemCallbacks Callbacks = new();
         
         public int LevelCount => Levels.Count;
-        
+
+        // A restore registers levels as it gives abilities and items back, and tells nothing as it goes (FEAT-9)
+        internal bool Quiet;
+
         public LevelCallbackStatus Register(Tag assetTag, IntValuePairClamped levelBounds)
         {
             Levels[assetTag] = levelBounds;
 
             var status = LevelCallbackStatus.GenerateForRegistration(levelBounds, assetTag, true);
-            Callbacks.LevelRegistered(status);
-            
+            if (!Quiet) Callbacks.LevelRegistered(status);
+
             return status;
         }
+
+        /// <summary>Sets a level as a save left it, with nothing told: a restore tells once as it ends (FEAT-9).</summary>
+        internal void Restore(Tag key, IntValuePairClamped level) => Levels[key] = level;
 
         public bool Unregister(Tag key)
         {

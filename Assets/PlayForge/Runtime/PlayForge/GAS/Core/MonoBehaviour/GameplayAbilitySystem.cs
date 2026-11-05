@@ -14,6 +14,9 @@ namespace FarEmerald.PlayForge
         // Built as this initializes, so null before then
         private GASCore core;
 
+        // What a save reads and writes past the hub's public face (FEAT-9)
+        internal GASCore Core => core;
+
         // Subsystems
         public AttributeSystemComponent AttributeSystem => core?.AttributeSystem;
         public AbilitySystemComponent AbilitySystem => core?.AbilitySystem;
