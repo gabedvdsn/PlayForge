@@ -240,6 +240,33 @@ namespace FarEmerald.PlayForge
         
         [ForgeTagContext(ForgeContext.ContextIdentifier)] public List<Tag> ContextTags;
         [ForgeTagContext(ForgeContext.Granted)] public List<Tag> GrantedTags;
+
+        /// <summary>
+        /// A cleanse: effects on the target tagged with one of these, by their asset tag or a context tag, or a child of
+        /// one, come off as this effect lands (FEAT-8).
+        /// </summary>
+        [ForgeTagContext(ForgeContext.ContextIdentifier)] public List<Tag> RemovesEffectsTagged;
+
+        /// <summary>
+        /// An immunity: while this effect is on the target, an effect tagged with one of these, or a child of one, can't
+        /// land on it (FEAT-8).
+        /// </summary>
+        [ForgeTagContext(ForgeContext.ContextIdentifier)] public List<Tag> BlocksEffectsTagged;
+
+        /// <summary>Whether an effect is tagged with one of the tags, or a child of one, by its asset tag or a context tag.</summary>
+        public static bool Names(List<Tag> tags, GameplayEffect effect)
+        {
+            if (tags == null || tags.Count == 0 || effect == null) return false;
+            foreach (var tag in tags)
+            {
+                if (!tag.IsValid) continue;
+                if (effect.Tags.AssetTag.MatchesOrIsChildOf(tag)) return true;
+                if (effect.Tags.ContextTags == null) continue;
+                foreach (var context in effect.Tags.ContextTags)
+                    if (context.MatchesOrIsChildOf(tag)) return true;
+            }
+            return false;
+        }
     }
     
     // The names the inspector shows say the choice, as the Effect mockup's Stack Existing and Refresh Duration do (ED-37)

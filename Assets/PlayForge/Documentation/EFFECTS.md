@@ -65,6 +65,12 @@ links the effect to that asset.
   moment it applies.
 - **Context Tags** describe the effect, such as `Fire`. Each change the effect makes carries these and its origin's
   context tags, and workers can filter by them. They are not applied to the entity.
+- **Removes Effects Tagged** makes the effect a cleanse. As it lands, every other effect on the target tagged with one
+  of these, by its asset tag or a context tag, or a child of one, comes off, at the next tick, as a removed effect
+  does. `Status.Debuff` takes off `Status.Debuff.Poison` and `Status.Debuff.Burn`.
+- **Blocks Effects Tagged** makes the effect an immunity. While it's on the target and its ongoing requirements hold,
+  an effect tagged with one of these, or a child of one, can't land, and applying it returns false. It leaves the
+  effects already on the target; add the same tags to Removes Effects Tagged to clear them as it lands.
 
 ## Duration
 

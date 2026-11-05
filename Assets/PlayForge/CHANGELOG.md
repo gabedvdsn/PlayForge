@@ -7,6 +7,9 @@ tracks each fix below by its ID.
 ## [Unreleased]
 
 ### Added
+- Cleanse and immunity. An effect's Removes Effects Tagged takes off, as it lands, every effect on its target tagged
+  with one of those tags or a child of one; its Blocks Effects Tagged refuses such an effect while it's on. A cleanse
+  or an immunity took a requirement on each effect it meant to clear or block (FEAT-8).
 - Loose tags: `AddLooseTag`, `RemoveLooseTag` and `GetLooseTags` on each hub grant a tag with no effect, ability or
   item behind it, as Unreal's loose gameplay tags do. Each grant counts until it's taken back. A tag added straight to
   the tag cache went at its next compile (FEAT-16).

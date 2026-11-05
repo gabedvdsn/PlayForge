@@ -282,16 +282,29 @@ namespace FarEmerald.PlayForge.Extended.Editor
 
                 // Import and Clear leave the asset tag, which the name gives
                 SerializedObject = serializedObject,
-                PropertyPaths = new[] { TagsPath(nameof(GameplayEffectTags.GrantedTags)), TagsPath(nameof(GameplayEffectTags.ContextTags)) },
+                PropertyPaths = new[]
+                {
+                    TagsPath(nameof(GameplayEffectTags.GrantedTags)), TagsPath(nameof(GameplayEffectTags.ContextTags)),
+                    TagsPath(nameof(GameplayEffectTags.RemovesEffectsTagged)), TagsPath(nameof(GameplayEffectTags.BlocksEffectsTagged)),
+                },
                 OnImportComplete = OnSectionReplaced,
                 OnClearComplete = OnSectionReplaced,
             });
             parent.Add(tagsSection.Section);
 
-            // Granted Tags first, as the mockup has them
+            // Granted Tags first, as the mockup has them. Then the effects this one takes off as it lands, a cleanse, and
+            // those it refuses while it's on, an immunity (FEAT-8)
             var content = tagsSection.Content;
             content.Add(CreatePropertyField(serializedObject.FindProperty(TagsPath(nameof(GameplayEffectTags.GrantedTags))), "GrantedTags", "Granted Tags"));
             content.Add(CreatePropertyField(serializedObject.FindProperty(TagsPath(nameof(GameplayEffectTags.ContextTags))), "ContextTags", "Context Tags"));
+            var removes = CreatePropertyField(serializedObject.FindProperty(TagsPath(nameof(GameplayEffectTags.RemovesEffectsTagged))),
+                "RemovesEffectsTagged", "Removes Effects Tagged");
+            removes.tooltip = "Effects on the target tagged with one of these, or a child of one, come off as this lands";
+            content.Add(removes);
+            var blocks = CreatePropertyField(serializedObject.FindProperty(TagsPath(nameof(GameplayEffectTags.BlocksEffectsTagged))),
+                "BlocksEffectsTagged", "Blocks Effects Tagged");
+            blocks.tooltip = "While this is on the target, an effect tagged with one of these, or a child of one, can't land";
+            content.Add(blocks);
         }
 
         // ═══════════════════════════════════════════════════════════════════════════
@@ -475,6 +488,24 @@ namespace FarEmerald.PlayForge.Extended.Editor
         private static bool IsFocused(VisualElement field) =>
             field.panel?.focusController?.focusedElement is VisualElement focused && (focused == field || field.Contains(focused));
 
+        // The context tags and how many tags the effect grants, then what it removes and blocks, as "Removes Status.Debuff"
+        private string TagsSectionSummary()
+        {
+            var parts = new List<string>();
+            var named = TagsSummary(effect.Tags.ContextTags, "context tags", effect.Tags.GrantedTags?.Count(tag => tag.IsValid) ?? 0);
+            if (named != "None") parts.Add(named);
+            AddNamed("Removes", effect.Tags.RemovesEffectsTagged);
+            AddNamed("Blocks", effect.Tags.BlocksEffectsTagged);
+            return parts.Count == 0 ? "None" : string.Join(" · ", parts);
+
+            void AddNamed(string verb, List<Tag> tags)
+            {
+                var valid = tags?.Where(tag => tag.IsValid).ToList() ?? new List<Tag>();
+                if (valid.Count == 1) parts.Add($"{verb} {valid[0].Name}");
+                else if (valid.Count > 1) parts.Add($"{verb} {valid.Count} tags");
+            }
+        }
+
         private void UpdateSummaries()
         {
             // A multiple selection's effects differ, so one line would describe only the first
@@ -486,8 +517,7 @@ namespace FarEmerald.PlayForge.Extended.Editor
             }
 
             if (levelingSection != null) levelingSection.Summary.text = LevelingSummaryText();
-            if (tagsSection != null)
-                tagsSection.Summary.text = TagsSummary(effect.Tags.ContextTags, "context tags", effect.Tags.GrantedTags?.Count(tag => tag.IsValid) ?? 0);
+            if (tagsSection != null) tagsSection.Summary.text = TagsSectionSummary();
             if (durationSection != null) durationSection.Summary.text = DurationSummary();
             if (impactSection != null) impactSection.Summary.text = ImpactSummary();
             if (requirementsSection != null)

@@ -274,6 +274,8 @@ from. It lives outside `Assets/` so it never ships in the package.
     Quick Fill is one step that fills the table.
   - Levels map exactly: level 4 reads the 4th value, and past the end the last value holds. Stretching over an
     asset's levels is an option on each scaler. Nothing resizes a table while it is drawn (ED-34).
+  - Scalers saved before this decision keep Stretch Over Levels on, as the code already does, so saved projects read
+    as they did (the user's answer, "Keep it on", 2026-11-04).
   - All eight kinds stay, grouped in the Kind menu.
   - One Import window serves sections, scalers, requirements and workers (ED-32). It lists the fields that differ,
     each with a checkbox, pre-checked. A list is replaced by default, and each list can choose Add to the List. One
@@ -301,6 +303,10 @@ from. It lives outside `Assets/` so it never ships in the package.
 15. ~~**QuickOutline (SP-5)**~~: decided, see above.
 16. ~~**Sample layout (SP-20)**~~: decided, see above.
 17. ~~**The submission Editor (SP-22, SP-23)**~~: decided, see above.
+18. **The labs' scenes.** The review asks for each lab as a small playable scene that doubles as a sample and as store
+    screenshot material. Working assumption until the user answers: a lab is test-only in Proving Grounds at first,
+    its assets built in code and played by its bot; its scene, and whether it ships in the package's Samples, come
+    once its bot is green.
 
 ## Roadmap
 
@@ -617,7 +623,7 @@ Phase 2 part, and set Phase 4's direction.
 | FEAT-5 | Cancel and block abilities by tag | C11 |
 | FEAT-6 | Input buffer | Expiry and latest-wins for queued activations (C06) |
 | FEAT-7 | Time source | Per-entity time scale and deterministic fixed tick (C02) |
-| FEAT-8 | Effect conveniences | Cleanse by tag query, immunity, overflow at max stacks, abilities granted by effects, chance to apply |
+| FEAT-8 | Effect conveniences | Cleanse by tag query, immunity, overflow at max stacks, abilities granted by effects, chance to apply. Cleanse and immunity done (Removes Effects Tagged, Blocks Effects Tagged); overflow at max stacks, abilities granted by effects and the chance to apply are next |
 | FEAT-9 | Save and load | Snapshots of attributes, effects, tags and cooldowns |
 | FEAT-10 | Headless mode | Abilities run without a scene ProcessControl |
 | FEAT-11 | Input binding | Targeting without legacy `Input` and `Camera.main` |
@@ -626,6 +632,29 @@ Phase 2 part, and set Phase 4's direction.
 | FEAT-14 | Item stacking | An inventory holds an item as a count, up to the Item's `MaxStackSize`. The field and `ItemSpecContainer.ItemStacks` exist, but nothing reads or sets them (GAS-51). Decide how giving and removing count, how a stack's effects and abilities scale, and how Allow Duplicate Items meets it |
 | FEAT-15 | Register builder | One builder or options struct in place of `ProcessControl`'s 28 static `Register` overloads, from the review's API changes. The roadmap gave it to Phase 3, but no row tracked it, so it moved here when Phase 3 closed. Today the argument's static type picks the overload, and a failed call returns false with a null relay. The review paired it with a `Run` on the relay, which doesn't exist yet, and an awaitable completion, which `ProcessRelay.WhenTerminated` now is (TS-Z) |
 | FEAT-16 | Loose tags | Done with ED-40, ahead of the phase. A tag granted with no effect, ability or item behind it, as Unreal's loose gameplay tags are: `AddLooseTag`, `RemoveLooseTag` and `GetLooseTags` on each hub, each grant counted, and the tag compile includes them. A tag added straight to the tag cache went at its next compile |
+
+**Phase 5's order,** from the review's plan for the test project (its labs, one at a time) and the table above. A lab
+is a small game: assets the lab builds in code, and a bot that plays it in PlayMode tests under a live ProcessControl,
+as the harness's World runs one. Each lab brings the features it finds missing, test-first.
+1. **The Status-effect lab:** poison, burn and bleed under each stacking policy; cleanse, immunity, and shields that
+   absorb damage before health. With FEAT-8: cleanse and immunity first, then overflow at max stacks, abilities
+   granted by effects and the chance to apply.
+2. **The MOBA hero kit:** four heroes of four abilities, with mana, cooldown reduction, armor and magic resist,
+   lifesteal, silence, and channels a stun cancels. With FEAT-5, cancel and block abilities by tag.
+3. **The Duel lab:** two fighters with frame data, hit-stop, an input buffer and cancel windows. With FEAT-6 (the
+   input buffer), FEAT-7 and TS-6 (a time source per entity), and TS-7 (critical sections that branch).
+4. **Bullet heaven:** 10,000 projectiles and 500 enemies, area auras, pooled spawns and death cascades.
+5. **Roguelite builds:** relics and items, set bonuses, tomes under auras and level-up rescaling. With FEAT-3
+   (tag-change events) and FEAT-14 (item stacking).
+6. **Summoner:** summons as runtime hubs with lifetimes, auras through ongoing requirements, and despawn on the
+   owner's death.
+7. **Tactics:** turn-based abilities stepped from a manual time source, with save and load between turns. With
+   FEAT-9.
+8. **The Combat lab:** every delivery, stacking and interaction policy in one scene, with a health bar from
+   `GetBreakdown`.
+
+Then the stretch scenarios, which drive FEAT-1, FEAT-2, FEAT-4, FEAT-10, FEAT-11, FEAT-12 and FEAT-15. FEAT-13,
+networking, isn't planned. FEAT-16 is done.
 
 ## Test project: PlayForge Proving Grounds
 
@@ -660,6 +689,27 @@ GAS-4 with GAS-5, PC-6, and TS-I with PC-5.
 ## Log
 
 Record baselines, gate results and notable decisions here, newest first.
+
+- 2026-11-04, **Phase 5 begins; FEAT-8's cleanse and immunity.** Phase 4's exit gate holds: the editor smoke suite
+  passes in both themes in every gates run. Phase 5's order is above the test project's section: the labs one at a
+  time, each bringing the features it finds missing. Open decision 18 asks how the labs' scenes ship.
+  - **Cleanse:** an effect's `Tags.RemovesEffectsTagged` takes off, as it lands, every other effect on the target
+    tagged with one of those tags or a child of one, by its asset tag or a context tag. They leave at the next tick,
+    as a removed effect does, before the cleanse's own contained effects land.
+  - **Immunity:** `Tags.BlocksEffectsTagged` refuses such an effect while the immunity is on the target and its
+    ongoing requirements hold; applying it returns false. It leaves effects already on; a cleanse clears them.
+  - **Found by the gates:** the first immunity check walked the whole shelf on every application, so
+    `GAS_P3_An_application_costs_the_same_however_much_the_entity_carries` failed on both hubs in every order (about
+    0.013 ms against 0.0035). The shelf now keeps its immunities in a list of their own, and an application checks
+    those alone.
+  - `GameplayEffectTags.Names` decides what a list names, for both. The Effect inspector's Tags section edits both
+    lists, Import and Clear cover them, and its summary says "Removes Status.Debuff". `EFFECTS.md` describes them.
+  - **Its tests,** seen failing first: `FEAT_8_A_cleanse_takes_off_the_effects_it_names` and
+    `FEAT_8_An_immunity_refuses_the_effects_it_names` on each hub in the new PlayMode `CleanseAndImmunityTests`, and
+    `FEAT_8_The_Effect_inspector_edits_what_an_effect_removes_and_blocks` in `InspectorUndoTests`.
+  - **Next:** the Status-effect lab, with FEAT-8's overflow at max stacks.
+  - **Tests:** PlayMode 968: 961 pass, 0 fail and 7 planted are skipped, in three orders. Planted 7 of 7; EditMode
+    426 of 426.
 
 - 2026-11-04, **ED-40 and FEAT-16: the debugger acts.** From Q27's answer, editing attributes and tags first, then
   applying effects and granting abilities. ED-40 is fixed, and the debugger's part of step 5 is done.
@@ -936,8 +986,8 @@ Record baselines, gate results and notable decisions here, newest first.
     values over a level range, so three values on an ability of five levels read 15 at level 2. The new
     `StretchOverLevels` keeps that, and it is on for the scalers saved before it existed, since a missing field takes
     its initializer, so saved assets and scalers built in code read as they did. The drawer makes new scalers with it
-    off and shows it as Stretch Over Levels. This keeps every saved project's numbers; turning it off on old scalers is
-    the user's call.
+    off and shows it as Stretch Over Levels. This keeps every saved project's numbers. The user chose to keep it on
+    for old scalers (Decision 28).
   - **The cached kinds,** an attribute set's, can't share yet: `SharedScaler` is a plain scaler.
   - **Docs:** the new `SCALERS.md`.
   - **Its tests,** `ED_33_A_shared_scaler_reads_its_asset` and `ED_33_Levels_map_exactly_unless_the_scaler_stretches`,

@@ -91,6 +91,9 @@ namespace FarEmerald.PlayForge
                 return false;
             }
 
+            // An immunity on the target refuses an effect it names (FEAT-8)
+            if (IsImmuneTo(spec.Base)) return false;
+
             // Asked for again before its own application is over, an effect contains itself, through its contained
             // effects or what applying it sets off. It recursed until the stack overflowed, which nothing catches (GAS-28)
             if (!applying.Add(spec.Base))
@@ -121,6 +124,9 @@ namespace FarEmerald.PlayForge
 
                 requirementsDirty = true;
 
+                // A cleanse takes off the effects it names as it lands, before its own contained effects do (FEAT-8)
+                RemoveEffectsNamedBy(spec);
+
                 // Recorded where the callback fires, for analysis workers. Nothing recorded it (GAS-28)
                 Self.GetFrameSummary()?.RecordEffectApplied(spec);
                 Self.GetCallbacks()?.EffectApplied(spec);
@@ -137,6 +143,37 @@ namespace FarEmerald.PlayForge
             }
 
             return true;
+        }
+
+        // The shelf's immunities, the containers whose effects block others, so an application checks them alone and costs
+        // the same however much the entity carries (GAS-P3)
+        private readonly List<AbstractEffectContainer> immunities = new();
+
+        // Whether an effect on the shelf, while it holds, blocks the effect: an immunity. Nothing made an entity immune
+        // to a kind of effect but a requirement on each effect of the kind (FEAT-8)
+        private bool IsImmuneTo(GameplayEffect effect)
+        {
+            if (immunities.Count == 0) return false;
+            foreach (var container in immunities)
+            {
+                if (!container.Ongoing || finishedSet.Contains(container)) continue;
+                if (GameplayEffectTags.Names(container.Spec.Base.Tags.BlocksEffectsTagged, effect)) return true;
+            }
+            return false;
+        }
+
+        // Takes off each other effect on the shelf that the landing effect names: a cleanse. Each leaves at the next tick,
+        // as a removed effect does. A cleanse took a removal requirement on each effect it meant to clear (FEAT-8)
+        private void RemoveEffectsNamedBy(GameplayEffectSpec spec)
+        {
+            var named = spec.Base.Tags.RemovesEffectsTagged;
+            if (named == null || named.Count == 0) return;
+            foreach (var container in EffectShelf)
+            {
+                // Never the cleanse itself, where it's tagged as a kind it removes
+                if (container.Spec.Base == spec.Base || finishedSet.Contains(container)) continue;
+                if (GameplayEffectTags.Names(named, container.Spec.Base)) MarkFinished(container);
+            }
         }
 
         private bool ApplyGameplayEffect(IEffectOrigin origin, GameplayEffect effect)
@@ -208,6 +245,9 @@ namespace FarEmerald.PlayForge
             if (!byTag.TryGetValue(tag, out var same)) byTag[tag] = same = new List<AbstractEffectContainer>();
             same.Add(container);
 
+            var blocks = container.Spec.Base.Tags.BlocksEffectsTagged;
+            if (blocks != null && blocks.Count > 0) immunities.Add(container);
+
             GrantedTagCompiler.AddEffect(Self.GetTagCache(), container.Spec);
         }
 
@@ -223,6 +263,7 @@ namespace FarEmerald.PlayForge
 
             // Every list, not only the one under each container's tag, which may have changed since it was shelved
             foreach (var list in byTag.Values) list.RemoveAll(isLeaving);
+            if (immunities.Count > 0) immunities.RemoveAll(isLeaving);
 
             leaving.Clear();
         }
