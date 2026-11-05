@@ -1,7 +1,7 @@
 # PlayForge refactor: code tour
 
 This tour lists the places where the refactor changed code, so you can open each one in your IDE and read it. It
-covers `01258b8..520c433` on `main`: 300 commits. Phase 0 ported Arcade Fighter's fixes, Phase 1 made the runtime
+covers `01258b8..6586536` on `main`: 302 commits. Phase 0 ported Arcade Fighter's fixes, Phase 1 made the runtime
 correct, Phase 2 got the package ready to release, Phase 3 made it cheaper to run and gave the two GAS hubs one core,
 Phase 4 rebuilt the editor, and Phase 5 has begun. Each entry says what behaves differently and why, names its tracker IDs and Decisions, and
 points at the two or three places to read. `Docs/REFACTOR_PLAN.md` has every tracker row, the numbered Decisions,
@@ -10,8 +10,8 @@ and a Log of each batch's test results.
 ## How to use this
 
 - Paths are relative to the repo root.
-- Line numbers are as of commit `520c433`, the head of `main` on 2026-11-04. A later commit may move them, so each
-  entry also names the class and method to search for. `git show 520c433:<path>` shows a file as it was then.
+- Line numbers are as of commit `6586536`, the head of `main` on 2026-11-04. A later commit may move them, so each
+  entry also names the class and method to search for. `git show 6586536:<path>` shows a file as it was then.
 - In Rider, Go to File accepts `path:line`. In Visual Studio, open the file, then Go To Line (Ctrl+G).
   A bare `:123` after a path means another line in the same file.
 - `git grep "<ID>"` finds the comment at each fix, and `git log --grep "<ID>"` finds its commit. Three exceptions:
@@ -65,6 +65,28 @@ Decision 30's default: a cleanse and an immunity name an effect by a tag it gran
   `GameplayEffectTags.Names`, which walks the lists by index, so a check allocates nothing.
 - **Tests:** `FEAT_8_A_cleanse_and_an_immunity_name_an_effect_by_a_tag_it_grants` on each hub in PlayMode's
   `CleanseAndImmunityTests`.
+
+### The Register builder (FEAT-15)
+
+The first of the foundations (Decision 30). `ProcessControl.Register(process)` starts a registration, which
+`HandledBy`, `With` and `In` shape and `Run` makes: it registers the process and starts it, and returns the relay or
+why ProcessControl refused it. Left out, the handler follows the packet's run-time type, so an ability's packet hands
+its process to its source however it's typed; through the 28 overloads, an ability's packet passed as a plainer one
+put its process under GameRoot, so it didn't end with its entity, and `TaskSequence.RegisterAndRun` did that with
+every ability's packet. The overloads are `[Obsolete]` wrappers of the builder until the first Asset Store submission.
+`ProcessRelay.Run` starts a process that waits.
+
+- **IDs:** FEAT-15, commit `6586536`; Decision 30.
+- **Read:**
+  - `Assets/PlayForge/Runtime/PlayForge/Management/GameplayProcess/Core/ProcessRegistration.cs:107`
+    `ProcessRegistration.Run`, and `:145` `DefaultHandler`, by the packet's run-time type; `:4`, the refusals.
+  - `Assets/PlayForge/Runtime/PlayForge/Management/GameplayProcess/Core/ProcessControl.cs:524`, the entry points,
+    `:541`, the overloads' one message, and `:564` `RegisterMono` and `:608` `RegisterRuntime`, which say why.
+  - `Assets/PlayForge/Runtime/PlayForge/Management/GameplayProcess/Core/ProcessRelay.cs:87` `ProcessRelay.Run`.
+- **Watch for:** nothing compiles `Samples~`, so the samples' calls were built against the package's source in a
+  throwaway project. Proving Grounds' tests still call the overloads, so the gates cover the wrappers.
+- **Tests:** the six `FEAT_15_*` tests in PlayMode's `RegisterBuilderTests`, among them
+  `FEAT_15_The_handler_follows_the_packets_run_time_type` on each hub.
 
 ## Phase 4
 
@@ -1277,9 +1299,9 @@ Now each ends in the frame its last task does, and an instant ability in the fra
     completed in `TryTerminate` (`:375`) once the process is unregistered, and
     `Assets/PlayForge/Runtime/PlayForge/Management/GameplayProcess/Core/ProcessRelay.cs:44`
     `ProcessRelay.WhenTerminated`, which the proxy waits on for targeting and execution
-    (`Assets/PlayForge/Runtime/PlayForge/AbilitySystem/Ability/AbilityProxy/Core/AbilityProxy.cs:210`, `:317`) and
+    (`Assets/PlayForge/Runtime/PlayForge/AbilitySystem/Ability/AbilityProxy/Core/AbilityProxy.cs:210`, `:320`) and
     `RunSequenceTask` for its sequence
-    (`Assets/PlayForge/Runtime/PlayForge/AbilitySystem/Tasks/Utility/RunSequenceTask.cs:69`).
+    (`Assets/PlayForge/Runtime/PlayForge/AbilitySystem/Tasks/Utility/RunSequenceTask.cs:71`).
   - `Assets/PlayForge/Runtime/PlayForge/Core/TaskSequence/Async/TaskSequenceRuntime.cs:272`, in `Run`, which waits only
     for maintained stages it has, and `:280`, where a repeating run that took no frame takes one.
 - **Watch for:** an instant sequence can end inside `ProcessControl.Register`, and an instant ability inside
@@ -1403,7 +1425,7 @@ unregisters, and a throwing `WhenInitialize` refuses the process, so `Register` 
     `ProcessControlBlock.RunProcessAsync`. The catch at `:501` ends a throwing run as a returning one ends.
   - `Assets/PlayForge/Runtime/PlayForge/Management/GameplayProcess/Core/ProcessControlBlock.cs:349`
     `ProcessControlBlock.TryTerminate`. `Unregister` runs whatever `WhenTerminate` did.
-  - `Assets/PlayForge/Runtime/PlayForge/Management/GameplayProcess/Core/ProcessControl.cs:1061`, in
+  - `Assets/PlayForge/Runtime/PlayForge/Management/GameplayProcess/Core/ProcessControl.cs:1068`, in
     `ProcessControl.PrepareCreatedProcess`. A throw in `WhenInitialize` force-terminates the half-made block.
 - Watcher callbacks and state-change callbacks are guarded the same way (`ProcessControl.ReportStateChange`,
   `ProcessControl.CheckWatcherOnUnregister`).
@@ -1442,7 +1464,7 @@ waited for the run to end, replaced a pending Terminate, and restarted the run o
 - **IDs:** Decision 5. PC-7 (control changes), PC-11 (pause at once, held runs), PC-12 (a token source per run),
   PC-27 (no Unpause during ProcessControl's pause). TS-Y and TS-AB are the sequence side, under TaskSequence.
 - **Read:**
-  - `Assets/PlayForge/Runtime/PlayForge/Management/GameplayProcess/Core/ProcessControl.cs:1091`
+  - `Assets/PlayForge/Runtime/PlayForge/Management/GameplayProcess/Core/ProcessControl.cs:1098`
     `ProcessControl.SetAllProcessesUponStateChange`. Only a pause, or its end, moves a process.
   - `Assets/PlayForge/Runtime/PlayForge/Management/GameplayProcess/Core/ProcessControlBlock.cs:224`
     `ProcessControlBlock.ForceIntoState` holds or cancels the run. `HoldForControl` (`:243`) marks what ProcessControl
@@ -1450,16 +1472,16 @@ waited for the run to end, replaced a pending Terminate, and restarted the run o
   - `Assets/PlayForge/Runtime/PlayForge/Management/GameplayProcess/Core/ProcessControlBlock.cs:296`
     `ProcessControlBlock.TryRun`. On resume a held run carries on. A run that finished during the pause, or one a
     pending Terminate was waiting for, moves on instead of running again.
-  - `Assets/PlayForge/Runtime/PlayForge/Management/GameplayProcess/Core/ProcessControl.cs:1436`
+  - `Assets/PlayForge/Runtime/PlayForge/Management/GameplayProcess/Core/ProcessControl.cs:1443`
     `ProcessControl.ValidateStateTransition`. A resume follows the transition table (PC-27), and a pending Terminate
     refuses a pause.
 - **Rules worth knowing:**
   - A requested Terminate outranks a pause and survives ProcessControl's.
   - A process registered during ProcessControl's pause waits with the rest, unless it is RequiresControl:
-    `Assets/PlayForge/Runtime/PlayForge/Management/GameplayProcess/Core/ProcessControl.cs:1017`
+    `Assets/PlayForge/Runtime/PlayForge/Management/GameplayProcess/Core/ProcessControl.cs:1024`
     `ProcessControl.SetProcess`.
   - Pausing a process that ProcessControl already holds makes the pause its own:
-    `Assets/PlayForge/Runtime/PlayForge/Management/GameplayProcess/Core/ProcessControl.cs:867` `ProcessControl.Wait`.
+    `Assets/PlayForge/Runtime/PlayForge/Management/GameplayProcess/Core/ProcessControl.cs:874` `ProcessControl.Wait`.
   - A run's token source is its own, so an old run still unwinding can't cancel the new one:
     `Assets/PlayForge/Runtime/PlayForge/Management/GameplayProcess/Core/ProcessControlBlock.cs:483`, in
     `RunProcessAsync`.
@@ -1480,12 +1502,12 @@ processes now register with a default packet, not SceneRoot's, which reparented 
 
 - **IDs:** PC-3, PC-28, PC-20, Decision 11.
 - **Read:**
-  - `Assets/PlayForge/Runtime/PlayForge/Management/GameplayProcess/Core/ProcessControl.cs:1030`
-    `ProcessControl.PrepareCreatedProcess`. It files the clone at `:1036` and files it again after initializing at
-    `:1076`.
+  - `Assets/PlayForge/Runtime/PlayForge/Management/GameplayProcess/Core/ProcessControl.cs:1037`
+    `ProcessControl.PrepareCreatedProcess`. It files the clone at `:1043` and files it again after initializing at
+    `:1083`.
   - `Assets/PlayForge/Runtime/PlayForge/Management/GameplayProcess/Wrappers/MonoWrapper/Core/AbstractMonoProcess.cs:161`
     `AbstractMonoProcess.OnTransformParentChanged`, which calls `ProcessControl.ProcessReparented`
-    (`Assets/PlayForge/Runtime/PlayForge/Management/GameplayProcess/Core/ProcessControl.cs:1477`) and then
+    (`Assets/PlayForge/Runtime/PlayForge/Management/GameplayProcess/Core/ProcessControl.cs:1484`) and then
     `ProcessHierarchy.Reparent` (`Assets/PlayForge/Runtime/PlayForge/Management/GameplayProcess/ProcessHierarchy.cs:147`).
   - `Assets/PlayForge/Runtime/PlayForge/Management/GameplayProcess/Core/ProcessControl.cs:408`
     `ProcessControl.CollectSceneProcesses`. The default packet is at `:442` (PC-20).
@@ -1505,7 +1527,7 @@ used as it is. Outside play mode the object is destroyed with `DestroyImmediate`
 - **Read:**
   - `Assets/PlayForge/Runtime/PlayForge/Management/GameplayProcess/Wrappers/MonoWrapper/Core/AbstractMonoProcess.cs:151`
     `AbstractMonoProcess.OnDestroy`, which calls `ProcessControl.EndDestroyedProcess`
-    (`Assets/PlayForge/Runtime/PlayForge/Management/GameplayProcess/Core/ProcessControl.cs:941`).
+    (`Assets/PlayForge/Runtime/PlayForge/Management/GameplayProcess/Core/ProcessControl.cs:948`).
   - `Assets/PlayForge/Runtime/PlayForge/Management/GameplayProcess/Core/ProcessControl.cs:309`
     `ProcessControl.Sweep`, run each Update over `_dormant` (`:52`) and `_unheard` (`:56`). `HidesOnDestroy` (`:333`)
     picks the list.
@@ -1543,17 +1565,17 @@ scene loads, behind an inspector toggle like ProcessControl's, since it is every
 
 - **PC-6.** The runtime `Register` overloads without a packet passed null, then threw after spending a cache index.
   An empty packet stands in, which also unblocked `RunProcessTask`.
-  `Assets/PlayForge/Runtime/PlayForge/Management/GameplayProcess/Core/ProcessControl.cs:597`, in
-  `Internal_RegisterRuntimeProcess`.
+  `Assets/PlayForge/Runtime/PlayForge/Management/GameplayProcess/Core/ProcessRegistration.cs:119`, in
+  `ProcessRegistration.Run`, since FEAT-15's builder took the overloads' work.
 - **PC-13.** A state change is reported before ProcessControl acts on it, with the real old state, while watchers are
   still attached. `OnProcessUnregistered` fires before the removal.
-  `Assets/PlayForge/Runtime/PlayForge/Management/GameplayProcess/Core/ProcessControl.cs:1230`
-  `ProcessControl.ProcessWillChangeState`, and `:795` in `Unregister`.
+  `Assets/PlayForge/Runtime/PlayForge/Management/GameplayProcess/Core/ProcessControl.cs:1237`
+  `ProcessControl.ProcessWillChangeState`, and `:802` in `Unregister`.
 - **PC-14.** The first watcher gets `onStartWatching`, a second subscription is written back into its struct, and a
   callback can stop watching. `Assets/PlayForge/Runtime/PlayForge/Management/GameplayProcess/Core/ProcessControl.cs:186`
   `ProcessControl.WatchProcess`.
 - **PC-16.** A data packet lets go of a process that ends.
-  `Assets/PlayForge/Runtime/PlayForge/Management/GameplayProcess/Core/ProcessControl.cs:776`, in `Unregister`.
+  `Assets/PlayForge/Runtime/PlayForge/Management/GameplayProcess/Core/ProcessControl.cs:783`, in `Unregister`.
 - **PC-17.** `GroupProcess.DetachMember` removes only the group's own watcher.
   `Assets/PlayForge/Runtime/PlayForge/Management/GameplayProcess/Wrappers/ClassWrapper/GroupProcess.cs:176`.
 - **PC-18.** One runtime process instance can't be registered twice at once, and one that has ended can be registered
@@ -1570,7 +1592,7 @@ scene loads, behind an inspector toggle like ProcessControl's, since it is every
   truncating: `Assets/PlayForge/Runtime/PlayForge/Management/GameplayProcess/Core/ProcessRelay.cs:57`.
 - **PC-26.** A block leaves its step groups by the timing it joined under, so changing a running process's timing no
   longer strands it. The hierarchy skips a root whose object is gone.
-  `Assets/PlayForge/Runtime/PlayForge/Management/GameplayProcess/Core/ProcessControl.cs:1165` `RemoveFromStepping`.
+  `Assets/PlayForge/Runtime/PlayForge/Management/GameplayProcess/Core/ProcessControl.cs:1172` `RemoveFromStepping`.
 
 ## TaskSequence
 
@@ -1585,7 +1607,7 @@ shared definition. A second run left the first out of reach, and runs broke each
 - **IDs:** TS-I, TS-W.
 - **Read:**
   - `Assets/PlayForge/Runtime/PlayForge/Core/TaskSequence/Async/TaskSequence.cs:24` `TaskSequence._runs`, then
-    `CreateRuntime` (`:59`) and `Run(TaskSequenceRuntime, ProcessDataPacket, CancellationToken)` (`:75`).
+    `CreateRuntime` (`:60`) and `Run(TaskSequenceRuntime, ProcessDataPacket, CancellationToken)` (`:76`).
   - `Assets/PlayForge/Runtime/PlayForge/Core/TaskSequence/Async/TaskSequenceRuntime.cs:90`, the per-run record of
     fired conditions, broken repeats and repeat counts, read through `IsRepeatBroken` (`:1111`) and `GetRepeatCount`
     (`:1114`).
@@ -1683,9 +1705,9 @@ between two sequences is false rather than a throw.
   - `Assets/PlayForge/Runtime/PlayForge/Core/TaskSequence/Async/TaskSequenceRuntime.cs:210`
     `TaskSequenceRuntime.Run`. The outer runtime is kept at `:223` and given back at `:359`.
   - `Assets/PlayForge/Runtime/PlayForge/AbilitySystem/Tasks/Utility/RunSequenceTask.cs:23`
-    `RunSequenceTask.Activate`. The relay ends the inner sequence at `:77`.
-  - `Assets/PlayForge/Runtime/PlayForge/Core/TaskSequence/Async/TaskSequence.cs:364` `TaskSequenceChain.Run`, and
-    `IsCriticalSection` at `:515`.
+    `RunSequenceTask.Activate`. The relay ends the inner sequence at `:79`.
+  - `Assets/PlayForge/Runtime/PlayForge/Core/TaskSequence/Async/TaskSequence.cs:365` `TaskSequenceChain.Run`, and
+    `IsCriticalSection` at `:516`.
 
 ### Sync sequences and step timings
 
@@ -2373,6 +2395,7 @@ Newest first. Each row is a good place to start reading.
 
 | What | IDs | Where | Commit |
 |---|---|---|---|
+| The Register builder | FEAT-15 | `Assets/PlayForge/Runtime/PlayForge/Management/GameplayProcess/Core/ProcessRegistration.cs:107` | `6586536` |
 | The Debugger's foot rows | ED-40 | `Assets/PlayForge/Editor/Debugger/RuntimeDebugger.Entities.cs:254` | `520c433` |
 | Cleanse and immunity name granted tags | FEAT-8 | `Assets/PlayForge/Runtime/PlayForge/GameplayEffect/Core/GameplayEffect.cs:261` | `520c433` |
 | The Debugger, as the boards draw it | ED-4, ED-5 | `Assets/PlayForge/Editor/Debugger/RuntimeDebugger.Tags.cs:159` | `c934980` |
@@ -2436,6 +2459,6 @@ Newest first. Each row is a good place to start reading.
 | The samples live in `Samples~` and import on request | SP-20, Decision 16 | `Assets/PlayForge/package.json:14` | `8d17bc0` |
 | A derived refresh runs the post-change pipeline | GAS-27, Decision 14 | `Assets/PlayForge/Runtime/PlayForge/AttributeSystem/Core/AttributeSystemComponent.cs:566` | `550d07b` |
 | Combined elements add up | GAS-27, Decision 13 | `Assets/PlayForge/Runtime/PlayForge/AttributeSystem/Attribute/AttributeBlueprint.cs:85` | `5244d99` |
-| The hierarchy follows transforms; SceneRoot spawns are GameRoot's children | PC-28, Decision 11 | `Assets/PlayForge/Runtime/PlayForge/Management/GameplayProcess/Core/ProcessControl.cs:1477` | `5f6c0eb` |
+| The hierarchy follows transforms; SceneRoot spawns are GameRoot's children | PC-28, Decision 11 | `Assets/PlayForge/Runtime/PlayForge/Management/GameplayProcess/Core/ProcessControl.cs:1484` | `5f6c0eb` |
 | Commits land after the modifiers | GAS-15, Decision 4 | `Assets/PlayForge/Runtime/PlayForge/AttributeSystem/Attribute/CachedAttributeValue.cs:458` | `66b33ad` |
 | Pause holds a process in place | PC-7, PC-11, PC-12, PC-27, Decision 5 | `Assets/PlayForge/Runtime/PlayForge/Management/GameplayProcess/Core/ProcessControlBlock.cs:224` | `23f52aa`, `666beda` |
