@@ -54,6 +54,20 @@ it is linked.
   context, and workers can filter by them.
 - **Granted Tags** are always applied to the entity.
 
+Code hears an entity's tags change through its tag cache. `gas.GetTagCache().Listen(tag, onChange)` hears the tag,
+and every tag under it, come and go, as it happens; pass `ETagChangeKind.AnyCount` to hear every change to a tag's
+weight. Each change says the tag and its weight before and after. When the entity rebuilds its tags from their
+sources, as it does when an ability starts or ends, an item changes or a loose tag is granted, it tells only what the
+rebuild changed. Dispose the listener to stop it. `TagChanged` hears every change to any tag.
+
+```csharp
+var listener = gas.GetTagCache().Listen(stunned, change => animator.SetBool("Stunned", change.Added));
+listener.Dispose();
+```
+
+A tag worker is evaluated at the end of a frame in which the entity's tags changed. One whose `ValidateWorkFor`
+reads more than the tags overrides `EvaluateEveryFrame` to be evaluated every frame.
+
 ## Attributes
 
 The entity's attributes come from its **Attribute Set**. Under the field, a table lists each attribute the set gives,

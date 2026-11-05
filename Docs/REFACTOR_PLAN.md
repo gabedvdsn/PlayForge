@@ -548,7 +548,7 @@ had no letter in the review. TS-AA onward came from the test project.
 | GAS-53 | H | 3 | Interrupting every running ability under a policy, all at once or by turning the ability system off walked the live set of them. TS-Z made an interrupted ability end inside the interrupt, taking itself off that set, so the walk threw "Collection was modified" once the first had ended, and the rest ran on: 1 of 2 ended, on both hubs. It now walks a copy | `AbilitySystemComponent.cs` (`Inject`, `ClearAbilityCache`) | verified |
 | GAS-54 | M | 4 | An attribute set element with no Attribute, as a list's "+" leaves one, throws as the entity starts: `AttributeSetMeta` files the set's elements in a dictionary by their attribute, and a null key throws, so the entity gets none of its attributes. Such an element now gives nothing, and the set's unique count leaves it out | `AttributeSet.cs:92, 369-373` | fixed |
 | GAS-55 | M | 4 | Use Minimum takes the first colliding element: `ForgeUtils.IndexMin` started its search from `float.MinValue`, so no value was ever below it. It starts from `float.MaxValue` | `ForgeUtils.cs:23-38` | fixed |
-| GAS-56 | M | 5 | An effect's While-on and Removal requirements are checked again only when an effect is applied or removed (`requirementsDirty`, set in `EffectSystemComponent.ApplyGameplayEffect` and where effects leave the shelf). `CompileGrantedTags` doesn't mark them, so a tag granted or taken back by an ability, an item or a loose tag (FEAT-16) doesn't end an effect until another effect comes or goes. FEAT-3's events should mark them. Found in the Phase 5 survey; no test yet | `EffectSystemComponent.cs`, `GASCore.cs` (`CompileGrantedTags`, `AddLooseTag`) | open |
+| GAS-56 | M | 5 | An effect's While-on and Removal requirements are checked again only when an effect is applied or removed (`requirementsDirty`, set in `EffectSystemComponent.ApplyGameplayEffect` and where effects leave the shelf). `CompileGrantedTags` doesn't mark them, so a tag granted or taken back by an ability, an item or a loose tag (FEAT-16) doesn't end an effect until another effect comes or goes. FEAT-3's events should mark them. Found in the Phase 5 survey. Fixed with FEAT-3: a rebuild of the tags that changes one marks the tag cache, and the effect system's next tick runs its requirement pass when an effect is on the shelf. An effect that comes or goes runs the pass itself, and a tag added straight to the cache asks for nothing, as the next rebuild drops it | `EffectSystemComponent.cs`, `TagCache.cs`, `GASCore.cs` (`CompileGrantedTags`) | fixed |
 | GAS-P1 | M | 0 | `ActionQueue` LINQ allocations; snapshot built every frame (PF-006) | `ActionQueue.cs:41, 46, 156`, `FrameSummary.cs:340-351` | verified |
 | GAS-P2 | M | 0 | Tag and FrameSummary allocations (PF-007) | `TagCache.cs:60`, `TagQuery.cs:89-136`, `FrameSummary.cs:306-308` | verified |
 | GAS-P3 | M | 3 | Each application revalidates every container and rebuilds all tags (area application is quadratic). Measured: an instant application on an entity carrying 1,000 effects took 0.49 ms, 135 times one on an entity carrying 2. Now the requirements wait for one pass at the next tick, a shelved container's tags are counted as it lands, and re-application and removal find containers in an index by asset tag | `EffectSystemComponent.cs:312-348`, `GameplayAbilitySystem.cs:250-281` | verified |
@@ -662,7 +662,7 @@ Phase 2 part, and set Phase 4's direction.
 |---|---|---|
 | FEAT-1 | Gameplay cues | Hooks for effects, sounds and camera on apply, tick and remove |
 | FEAT-2 | SetByCaller magnitudes | Scalers read the data packet (C01) |
-| FEAT-3 | Tag-change events | Replace tag-worker polling |
+| FEAT-3 | Tag-change events | Replace tag-worker polling. Done (Decision 30): `TagCache.Listen` hears a tag and the tags under it come and go, at once, or every weight change; `TagChanged` hears every change; a rebuild tells only what it changed; a tag worker is evaluated when the tags change, unless it asks for every frame (`EvaluateEveryFrame`) |
 | FEAT-4 | Ability triggers | Activate on a gameplay event or when a tag is added |
 | FEAT-5 | Cancel and block abilities by tag | C11 |
 | FEAT-6 | Input buffer | Expiry and latest-wins for queued activations (C06) |
@@ -740,6 +740,31 @@ GAS-4 with GAS-5, PC-6, and TS-I with PC-5.
 ## Log
 
 Record baselines, gate results and notable decisions here, newest first.
+
+- 2026-11-04, **FEAT-3 and GAS-56: tag-change events.** The second of Phase 5's foundations (Decision 30).
+  - **Listeners:** `TagCache.Listen(tag, onChange, kind)` hears the tag and every tag under it, as a listener on
+    `Status` hears `Status.Burning`: as each comes or goes, or, with `ETagChangeKind.AnyCount`, at every weight change.
+    A `TagChange` says the tag and its weight before and after. Changes are told as they happen, inside the call that
+    makes them, as Unreal's are. `TagChanged` hears every change to any tag. A listener's `Dispose` stops it, even
+    while it hears a change; one that throws stops neither the change nor the other listeners.
+  - **A rebuild tells only what it changed:** `CompileGrantedTags` clears the tags and adds them back from their
+    sources, so telling each step would report every tag going and coming. It's a rebuild now
+    (`BeginRebuild`/`EndRebuild`): the old weights are kept aside, by a swap that copies nothing, and the end tells the
+    difference. A listener that rebuilds the tags while it hears a change has its own rebuild told in turn.
+  - **Tag workers** are evaluated at the end of a frame in which the tags changed, a worker came or went, or the last
+    evaluation queued an action; they were evaluated every frame, a poll for the tags they name. A worker whose
+    validity reads more than the tags overrides `EvaluateEveryFrame`.
+  - **GAS-56:** a rebuild that changes a tag marks the cache, and the effect system's next tick runs its requirement
+    pass if an effect is on the shelf, so a loose tag, an ability's or an item's tag meets or breaks an effect's
+    requirements a frame later. A tag added straight to the cache doesn't ask: the pass's own compile would drop it,
+    as `GAS_P7_A_tag_lookup_costs_the_same_however_long_its_name` showed the first version doing.
+  - **Docs:** `ENTITIES.md`'s Tags section, and the CHANGELOG.
+  - **Its tests,** seen failing first: `GAS_56_A_loose_tag_ends_an_effect_that_names_it` and
+    `GAS_56_A_tag_an_ability_grants_ends_an_effect_that_names_it` on each hub in `EffectRequirementTests` (4 of 4
+    failed), and the seven `FEAT_3_*` tests in the new `TagEventTests`, which didn't compile against `6586536`.
+  - **Next:** FEAT-7 with TS-6, the time source and the fixed-rate tick.
+  - **Tests:** PlayMode 996: 989 pass, 0 fail and 7 planted are skipped, in three orders. Planted 7 of 7; EditMode
+    430 of 430.
 
 - 2026-11-04, **FEAT-15: the Register builder.** The first of Phase 5's foundations (Decision 30).
   - **The builder:** `ProcessControl.Register(process)`, for a MonoBehaviour or runtime process, a task sequence or a

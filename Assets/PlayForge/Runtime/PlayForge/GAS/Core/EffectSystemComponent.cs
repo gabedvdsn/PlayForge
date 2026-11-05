@@ -70,8 +70,17 @@ namespace FarEmerald.PlayForge
         /// <summary>Per-frame entry point — called from the owning GAS's update.</summary>
         public void Tick()
         {
-            // Before the shelf ticks, so a container a requirement ends is skipped, as it was when applying checked
-            if (requirementsDirty) HandleGameplayEffects();
+            // Before the shelf ticks, so a container a requirement ends is skipped, as it was when applying checked. A
+            // tag that came or went asks too, whatever granted it: a loose tag's, an ability's or an item's ended no
+            // effect until another effect came or went (GAS-56). With nothing on the shelf, there's nothing to ask
+            var tags = Self.GetTagCache();
+            bool tagsChanged = tags != null && tags.TagsChangedSinceChecked;
+            if (tagsChanged && EffectShelf.Count == 0)
+            {
+                tags.MarkTagsChecked();
+                tagsChanged = false;
+            }
+            if (requirementsDirty || tagsChanged) HandleGameplayEffects();
 
             TickEffectShelf();
 
@@ -490,6 +499,9 @@ namespace FarEmerald.PlayForge
             // Requirements read the applied tags, so compile first: a container that just landed on
             // the shelf must have its granted tags count toward everyone else's ongoing state.
             Self.CompileGrantedTags();
+
+            // The pass reads the tags as they are now (GAS-56)
+            Self.GetTagCache()?.MarkTagsChecked();
 
             foreach (var container in EffectShelf)
             {

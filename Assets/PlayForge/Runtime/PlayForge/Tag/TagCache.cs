@@ -14,7 +14,8 @@ namespace FarEmerald.PlayForge
     {
         private readonly ITagHandler _handler;
         private readonly List<AbstractTagWorker> _tagWorkers;
-        private readonly Dictionary<Tag, int> _tagWeights;
+        // Not readonly: a rebuild swaps it with the weights it had before (FEAT-3)
+        private Dictionary<Tag, int> _tagWeights;
 
         // The applied tags as a list, rebuilt only when a tag is added or removed: requirement checks
         // ask for it every time an effect is applied, removed or re-validated (PF-007)
@@ -25,6 +26,36 @@ namespace FarEmerald.PlayForge
         private readonly HashSet<AbstractTagWorker> _activeWorkers;
         private readonly Dictionary<AbstractTagWorker, int> _tickCounters;
         
+        // ═══ Tag-change events (FEAT-3) ═══
+
+        /// <summary>
+        /// Each change to a tag's weight, as it happens, or a rebuild's, as it ends. Nothing told anyone a tag came or
+        /// went: a tag worker polled for it every frame (FEAT-3).
+        /// </summary>
+        public event Action<TagChange> TagChanged;
+
+        private readonly Dictionary<Tag, List<TagListener>> _listeners = new();
+        private int _listenerCount;
+
+        // A listener stopped while a change is told is taken off once the telling is over, so no list changes under it
+        private int _dispatching;
+        private readonly List<TagListener> _stopped = new();
+
+        // A rebuild's weights before it, which its end compares with the weights after it, and the changes it tells.
+        // The changes are a stack, so a listener that rebuilds the tags while it hears one has its rebuild told in turn
+        private Dictionary<Tag, int> _rebuildBefore = new();
+        private bool _rebuilding;
+        private readonly List<TagChange> _rebuildChanges = new();
+
+        // Whether a tag changed since the effect system last checked its effects' requirements (GAS-56), and whether
+        // the workers need evaluating: the tags changed, a worker came or went, or the last evaluation queued something
+        private bool _changedSinceChecked;
+        private bool _workersDirty = true;
+        private int _everyFrameWorkers;
+
+        // Each tag's ancestors, for the listeners on a parent, made once a tag
+        private static readonly Dictionary<Tag, Tag[]> ancestors = new();
+
         // Deferred execution context
         private ActionQueue _actionQueue;
         private FrameSummary _frameSummary;
@@ -43,6 +74,7 @@ namespace FarEmerald.PlayForge
         {
             if (workers != null)
                 _tagWorkers.AddRange(workers);
+            CountEveryFrameWorkers();
         }
         
         /// <summary>
@@ -227,14 +259,17 @@ namespace FarEmerald.PlayForge
         {
             if (string.IsNullOrEmpty(tag.Name)) return;
             
-            if (_tagWeights.ContainsKey(tag))
+            if (_tagWeights.TryGetValue(tag, out int before))
             {
-                if (!noDuplicates) _tagWeights[tag]++;
+                if (noDuplicates) return;
+                _tagWeights[tag] = before + 1;
+                Changed(tag, before, before + 1);
             }
             else
             {
                 _tagWeights[tag] = 1;
                 _appliedTagsDirty = true;
+                Changed(tag, 0, 1);
             }
         }
         
@@ -253,14 +288,17 @@ namespace FarEmerald.PlayForge
         /// </summary>
         public void RemoveTag(Tag tag)
         {
-            if (string.IsNullOrEmpty(tag.Name) || !_tagWeights.ContainsKey(tag)) return;
+            if (string.IsNullOrEmpty(tag.Name) || !_tagWeights.TryGetValue(tag, out int before)) return;
             
-            _tagWeights[tag]--;
-            if (_tagWeights[tag] <= 0)
+            int after = before - 1;
+            if (after <= 0)
             {
                 _tagWeights.Remove(tag);
                 _appliedTagsDirty = true;
+                after = 0;
             }
+            else _tagWeights[tag] = after;
+            Changed(tag, before, after);
         }
         
         /// <summary>
@@ -278,7 +316,10 @@ namespace FarEmerald.PlayForge
         /// </summary>
         public void RemoveTagCompletely(Tag tag)
         {
-            if (_tagWeights.Remove(tag)) _appliedTagsDirty = true;
+            if (!_tagWeights.TryGetValue(tag, out int before)) return;
+            _tagWeights.Remove(tag);
+            _appliedTagsDirty = true;
+            Changed(tag, before, 0);
         }
         
         /// <summary>
@@ -289,9 +330,11 @@ namespace FarEmerald.PlayForge
             var toRemove = GetMatchingTags(query, matchMode).ToList();
             foreach (var tag in toRemove)
             {
+                int before = _tagWeights[tag];
                 _tagWeights.Remove(tag);
+                _appliedTagsDirty = true;
+                Changed(tag, before, 0);
             }
-            if (toRemove.Count > 0) _appliedTagsDirty = true;
             return toRemove.Count;
         }
         
@@ -301,15 +344,21 @@ namespace FarEmerald.PlayForge
         
         public void ProvideWorker(AbstractTagWorker worker)
         {
-            if (worker != null && !_tagWorkers.Contains(worker))
-                _tagWorkers.Add(worker);
+            if (worker == null || _tagWorkers.Contains(worker)) return;
+            _tagWorkers.Add(worker);
+            _workersDirty = true;
+            CountEveryFrameWorkers();
         }
         
         public void RemoveWorker(AbstractTagWorker worker)
         {
             if (worker == null) return;
             
-            _tagWorkers.Remove(worker);
+            if (_tagWorkers.Remove(worker))
+            {
+                _workersDirty = true;
+                CountEveryFrameWorkers();
+            }
             
             // If it was active, resolve it
             if (_activeWorkers.Contains(worker))
@@ -339,14 +388,24 @@ namespace FarEmerald.PlayForge
         /// Evaluate tag worker states and queue activate/resolve actions.
         /// Called during end-of-frame processing.
         /// </summary>
+        /// <remarks>
+        /// It evaluates them only when the tags changed, a worker came or went, or the last evaluation queued an action,
+        /// which it then sees land: in any other frame, every worker would come out as it was. The workers were evaluated
+        /// at the end of every frame, a poll for the tags they name (FEAT-3). A worker whose validity reads more than the
+        /// tags asks for every frame with <see cref="AbstractTagWorker.EvaluateEveryFrame"/>.
+        /// </remarks>
         public void EvaluateTagWorkers()
         {
+            if (!_workersDirty && _everyFrameWorkers == 0) return;
+
             if (_system == null)
             {
                 Debug.LogWarning("[TagCache] System not set - cannot evaluate tag workers");
                 return;
             }
             
+            bool queued = false;
+
             // Check workers that should resolve (no longer valid). Resolving is queued, not done here, so
             // the set isn't changed while it's walked and needs no copy: copying it allocated every frame
             // for every GAS, workers or not (PF-007)
@@ -356,6 +415,7 @@ namespace FarEmerald.PlayForge
                 
                 // Worker conditions no longer met - queue resolve
                 _actionQueue?.Enqueue(new TagWorkerResolveAction(worker, _system, _frameSummary));
+                queued = true;
             }
             
             // Check workers that should activate (now valid)
@@ -366,7 +426,10 @@ namespace FarEmerald.PlayForge
                 
                 // Worker conditions now met - queue activate
                 _actionQueue?.Enqueue(new TagWorkerActivateAction(worker, _system, _frameSummary));
+                queued = true;
             }
+
+            _workersDirty = queued;
         }
         
         /// <summary>
@@ -427,8 +490,7 @@ namespace FarEmerald.PlayForge
         /// </summary>
         public void ResetWeights()
         {
-            _tagWeights.Clear();
-            _appliedTagsDirty = true;
+            ClearAndTell();
         }
 
         public void ResetCache()
@@ -441,10 +503,190 @@ namespace FarEmerald.PlayForge
             
             _activeWorkers.Clear();
             _tickCounters.Clear();
-            _tagWeights.Clear();
-            _appliedTagsDirty = true;
+            ClearAndTell();
+            _workersDirty = true;
         }
         
+        // ═══════════════════════════════════════════════════════════════════════════
+        // TAG-CHANGE EVENTS (FEAT-3)
+        // ═══════════════════════════════════════════════════════════════════════════
+
+        /// <summary>
+        /// Listens to a tag and the tags under it, as a listener on <c>Status</c> hears <c>Status.Burning</c>: as each
+        /// comes or goes, or, with <see cref="ETagChangeKind.AnyCount"/>, as its weight changes at all. A change is told
+        /// as it happens, and a rebuild's, as a compile is, as it ends, with only what it changed. Dispose the listener to
+        /// stop it (FEAT-3, Decision 30).
+        /// </summary>
+        public TagListener Listen(Tag tag, Action<TagChange> onChange, ETagChangeKind kind = ETagChangeKind.AddedOrRemoved)
+        {
+            if (onChange == null) throw new ArgumentNullException(nameof(onChange));
+            var listener = new TagListener(this, tag, onChange, kind);
+            if (!_listeners.TryGetValue(tag, out var list)) _listeners[tag] = list = new List<TagListener>();
+            list.Add(listener);
+            _listenerCount++;
+            return listener;
+        }
+
+        internal void StopListening(TagListener listener)
+        {
+            if (_dispatching > 0) _stopped.Add(listener);
+            else TakeOff(listener);
+        }
+
+        private void TakeOff(TagListener listener)
+        {
+            if (!_listeners.TryGetValue(listener.Tag, out var list) || !list.Remove(listener)) return;
+            _listenerCount--;
+            if (list.Count == 0) _listeners.Remove(listener.Tag);
+        }
+
+        /// <summary>
+        /// Starts a rebuild of the weights from their sources, as a compile is: the weights empty, and the changes wait
+        /// for <see cref="EndRebuild"/>, which tells what the rebuild changed. Each of its steps told, every tag would go
+        /// and come back (FEAT-3).
+        /// </summary>
+        public void BeginRebuild()
+        {
+            if (_rebuilding) return;
+            (_rebuildBefore, _tagWeights) = (_tagWeights, _rebuildBefore);
+            _tagWeights.Clear();
+            _appliedTagsDirty = true;
+            _rebuilding = true;
+        }
+
+        /// <summary>Ends a rebuild, and tells each tag whose weight it changed.</summary>
+        public void EndRebuild()
+        {
+            if (!_rebuilding) return;
+            _rebuilding = false;
+            int start = _rebuildChanges.Count;
+            foreach (var pair in _tagWeights)
+            {
+                _rebuildBefore.TryGetValue(pair.Key, out int before);
+                if (before != pair.Value) _rebuildChanges.Add(new TagChange(pair.Key, before, pair.Value));
+            }
+            foreach (var pair in _rebuildBefore)
+                if (!_tagWeights.ContainsKey(pair.Key)) _rebuildChanges.Add(new TagChange(pair.Key, pair.Value, 0));
+            _rebuildBefore.Clear();
+
+            int end = _rebuildChanges.Count;
+            if (end == start) return;
+            _changedSinceChecked = true;
+            _workersDirty = true;
+            try
+            {
+                for (int i = start; i < end; i++) Tell(_rebuildChanges[i]);
+            }
+            finally
+            {
+                _rebuildChanges.RemoveRange(start, _rebuildChanges.Count - start);
+            }
+        }
+
+        /// <summary>
+        /// Whether a rebuild changed a tag since <see cref="MarkTagsChecked"/>, as an effect's requirements ask: a tag an
+        /// ability, an item or a loose grant gives or takes back comes through a rebuild, and ended no effect until another
+        /// effect came or went (GAS-56). An effect that comes or goes checks the requirements itself, and a tag added
+        /// straight to the cache, which the next rebuild drops, asks for nothing.
+        /// </summary>
+        internal bool TagsChangedSinceChecked => _changedSinceChecked;
+
+        internal void MarkTagsChecked() => _changedSinceChecked = false;
+
+        // A weight that changed, told now, or at a rebuild's end with the rest of what it changed
+        private void Changed(Tag tag, int before, int after)
+        {
+            if (_rebuilding) return;
+            _workersDirty = true;
+            Tell(new TagChange(tag, before, after));
+        }
+
+        private void Tell(TagChange change)
+        {
+            TagChanged?.Invoke(change);
+            if (_listenerCount == 0) return;
+
+            _dispatching++;
+            try
+            {
+                TellListenersOf(change.Tag, change);
+                var above = AncestorsOf(change.Tag);
+                for (int i = 0; i < above.Length; i++) TellListenersOf(above[i], change);
+            }
+            finally
+            {
+                if (--_dispatching == 0 && _stopped.Count > 0)
+                {
+                    for (int i = 0; i < _stopped.Count; i++) TakeOff(_stopped[i]);
+                    _stopped.Clear();
+                }
+            }
+        }
+
+        // By index over the listeners there were as the telling began; one added meanwhile hears the next change
+        private void TellListenersOf(Tag tag, TagChange change)
+        {
+            if (!_listeners.TryGetValue(tag, out var list)) return;
+            int count = list.Count;
+            for (int i = 0; i < count && i < list.Count; i++)
+            {
+                var listener = list[i];
+                if (!listener.Listening || !listener.Hears(change)) continue;
+                try
+                {
+                    listener.OnChange(change);
+                }
+                catch (Exception ex)
+                {
+                    // One listener's throw stops neither the change nor the others
+                    Debug.LogException(ex);
+                }
+            }
+        }
+
+        // Empties the weights, then tells each tag's going, so a listener reads the cache as it is now
+        private void ClearAndTell()
+        {
+            if (_rebuilding || _tagWeights.Count == 0)
+            {
+                _tagWeights.Clear();
+                _appliedTagsDirty = true;
+                return;
+            }
+            int start = _rebuildChanges.Count;
+            foreach (var pair in _tagWeights) _rebuildChanges.Add(new TagChange(pair.Key, pair.Value, 0));
+            _tagWeights.Clear();
+            _appliedTagsDirty = true;
+            _changedSinceChecked = true;
+            _workersDirty = true;
+            int end = _rebuildChanges.Count;
+            try
+            {
+                for (int i = start; i < end; i++) Tell(_rebuildChanges[i]);
+            }
+            finally
+            {
+                _rebuildChanges.RemoveRange(start, _rebuildChanges.Count - start);
+            }
+        }
+
+        private static Tag[] AncestorsOf(Tag tag)
+        {
+            if (ancestors.TryGetValue(tag, out var found)) return found;
+            var list = new List<Tag>();
+            foreach (var each in tag.GetAncestors()) list.Add(each);
+            found = list.ToArray();
+            ancestors[tag] = found;
+            return found;
+        }
+
+        private void CountEveryFrameWorkers()
+        {
+            _everyFrameWorkers = 0;
+            for (int i = 0; i < _tagWorkers.Count; i++)
+                if (_tagWorkers[i] != null && _tagWorkers[i].EvaluateEveryFrame) _everyFrameWorkers++;
+        }
+
         // ═══════════════════════════════════════════════════════════════════════════
         // DEBUG
         // ═══════════════════════════════════════════════════════════════════════════

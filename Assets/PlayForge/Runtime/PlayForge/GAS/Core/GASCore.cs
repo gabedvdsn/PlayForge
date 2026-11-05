@@ -218,17 +218,25 @@ namespace FarEmerald.PlayForge
             if (Identity != null) CompileGrantedTags();
         }
 
+        // A rebuild of the tags from their sources, which tells, as it ends, only what it changed (FEAT-3)
         public void CompileGrantedTags()
         {
-            TagCache.ResetWeights();
-            GrantedTagCompiler.Compile(TagCache, Identity.AttributeSet, EffectSystem, AbilitySystem, ItemSystem);
+            TagCache.BeginRebuild();
+            try
+            {
+                GrantedTagCompiler.Compile(TagCache, Identity.AttributeSet, EffectSystem, AbilitySystem, ItemSystem);
 
-            // The identity's own, as EntityIdentity.GetGrantedTags yields them. The runtime hub left out the
-            // affiliation (GAS-S1)
-            TagCache.AddTag(Identity.AssetTag);
-            GrantedTagCompiler.AddAll(TagCache, GetAffiliation());
-            GrantedTagCompiler.AddAll(TagCache, Identity.GrantedTags);
-            GrantedTagCompiler.AddAll(TagCache, looseTags);
+                // The identity's own, as EntityIdentity.GetGrantedTags yields them. The runtime hub left out the
+                // affiliation (GAS-S1)
+                TagCache.AddTag(Identity.AssetTag);
+                GrantedTagCompiler.AddAll(TagCache, GetAffiliation());
+                GrantedTagCompiler.AddAll(TagCache, Identity.GrantedTags);
+                GrantedTagCompiler.AddAll(TagCache, looseTags);
+            }
+            finally
+            {
+                TagCache.EndRebuild();
+            }
         }
 
         // Tags granted to the entity directly, by its game's code or the Debugger, with no effect, ability or item

@@ -7,6 +7,10 @@ tracks each fix below by its ID.
 ## [Unreleased]
 
 ### Added
+- Tag-change events. `TagCache.Listen(tag, onChange)` hears a tag, and every tag under it, come and go as it
+  happens, or every change to its weight with `ETagChangeKind.AnyCount`; `TagCache.TagChanged` hears every change.
+  A rebuild of the tags from their sources tells only what it changed (`BeginRebuild`, `EndRebuild`). Nothing told
+  anyone a tag came or went: a tag worker polled for it every frame (FEAT-3).
 - `ProcessControl.Register(process)` starts a registration, which `HandledBy`, `With` and `In` shape and `Run` makes:
   it registers the process and starts it, and says why when ProcessControl refuses it (`ProcessRegistrationResult`,
   `EProcessRegistrationRefusal`). Left out, the handler follows the packet's run-time type, so an ability's packet
@@ -40,6 +44,9 @@ tracks each fix below by its ID.
   page, through one table of links in the editor.
 
 ### Changed
+- A tag worker is evaluated at the end of a frame in which the tags changed, a worker came or went, or the last
+  evaluation queued an action, where every worker was evaluated every frame. A worker that reads more than the tags
+  overrides `EvaluateEveryFrame` (FEAT-3).
 - ProcessControl's 28 static `Register` overloads that take an `out` relay are obsolete wrappers of the builder, and go
   before the first Asset Store submission. Through them too, an ability's packet passed as a `SequenceDataPacket` or
   a `ProcessDataPacket` hands its process to its source; it went to GameRoot, so the process didn't end with its
@@ -203,6 +210,8 @@ tracks each fix below by its ID.
   Asking whether its sequence was paused took 24 bytes a frame.
 
 ### Fixed
+- A tag that an ability, an item or a loose grant gives or takes back meets or breaks an effect's requirements at the
+  next frame. An effect's requirements were checked only when an effect came or went (GAS-56).
 - Importing a whole asset no longer copies its name, asset tag, template or level link (ED-35).
 - Opening an attribute set no longer changes it: its element drawer clamped a magnitude outside the bounds into the
   asset as it drew, and again on every change to the set. A help box says the runtime clamps it, and a typed magnitude

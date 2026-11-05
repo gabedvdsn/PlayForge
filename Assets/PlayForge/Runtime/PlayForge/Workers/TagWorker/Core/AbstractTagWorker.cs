@@ -30,6 +30,13 @@ namespace FarEmerald.PlayForge
         public int TickPause = -1;
         
         /// <summary>
+        /// Whether the worker is evaluated at the end of every frame, as every worker was. Off, as it is by default, it's
+        /// evaluated at the end of a frame in which the entity's tags changed, since <see cref="ValidateWorkFor"/> reads
+        /// them. A worker whose validity reads more than the tags turns it on. Read as the worker is provided (FEAT-3).
+        /// </summary>
+        public virtual bool EvaluateEveryFrame => false;
+
+        /// <summary>
         /// Validate if this worker should be active based on current tag state.
         /// </summary>
         public virtual bool ValidateWorkFor(ITagHandler handler)
