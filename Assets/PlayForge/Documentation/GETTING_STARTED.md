@@ -94,7 +94,9 @@ string perLevel = impact.FormatTotal();           // "20/30/40/50"
   uses each; declare tags in a Tag Library asset (`Create → PlayForge → Tag Library`).
 - **Runtime Debugger** (`Window → PlayForge → Runtime Debugger`) — the game as it plays. **Entities** lists every
   entity, of either kind, beside the one selected: its attributes, tags, effects with the time each has left,
-  abilities with their cooldowns, and the last impact it dealt and took. **Processes** lists every process with its
+  abilities with their cooldowns, and the last impact it dealt and took. It acts on the entity too: type an
+  attribute's value, add a tag by name or from the project's tags (a loose tag, which Remove takes back), apply an
+  effect, or grant an ability, then Activate or Remove it. **Processes** lists every process with its
   state and how long its steps take, and pauses, resumes or terminates the one selected. The toolbar sets how often
   it reads the game, and holds ProcessControl's state.
 - **Asset fields** — every reference to a PlayForge asset is Unity's object field. **Open** beside it shows the asset

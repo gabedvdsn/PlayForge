@@ -7,6 +7,9 @@ tracks each fix below by its ID.
 ## [Unreleased]
 
 ### Added
+- Loose tags: `AddLooseTag`, `RemoveLooseTag` and `GetLooseTags` on each hub grant a tag with no effect, ability or
+  item behind it, as Unreal's loose gameplay tags do. Each grant counts until it's taken back. A tag added straight to
+  the tag cache went at its next compile (FEAT-16).
 - One validator and a Problems view (`Window → PlayForge → Problems`). The validator checks each PlayForge asset for
   what its inspector warns about in place: a link with no provider, an impact that never applies, a field that reads a
   scaler it hasn't got, a Shared scaler with no asset, two fields that hold one scaler, a set element with no attribute
@@ -28,11 +31,13 @@ tracks each fix below by its ID.
 - One Runtime Debugger (`Window → PlayForge → Runtime Debugger`) replaces the GAS Debugger, Process Control and the
   Tag Debugger. Its Entities view lists every hub ProcessControl registers, runtime hubs among them, beside the one
   selected: its attributes, tags, effects with the time each has left, abilities with their cooldowns, and the last
-  impact it dealt and took. Its Processes view lists every process with its state and the time its steps take, and
+  impact it dealt and took, and it acts on that entity: its attribute fields take a value, a tag typed or picked from
+  the project's is granted until its Remove, an effect picked lands, and an ability picked is granted, activated or
+  removed. Its Processes view lists every process with its state and the time its steps take, and
   pauses, resumes and terminates the one selected, with the processes it handles. The views follow ProcessControl as
   processes join and leave, change their values in place at the rate the toolbar sets, and in edit mode offer Play
   Mode. The GAS Debugger scanned the scene for MonoBehaviour hubs and rebuilt its details every 0.25 s, and Process
-  Control's usage was the time between a process's steps, not what they cost (ED-4, ED-5).
+  Control's usage was the time between a process's steps, not what they cost (ED-4, ED-5, ED-40).
 - Templates work as prefabs do. A template reaches its children when it's pushed, with its asset menu's Push to Its
   Children, as one Undo step, and each child, and each of theirs, keeps the fields it overrides. An edit to a child's
   field makes it the child's own, which its inspector marks as Unity marks a prefab instance's override, and one Undo

@@ -554,7 +554,7 @@ had no letter in the review. TS-AA onward came from the test project.
 | ED-37 | M | 4 | The asset inspectors don't follow `Docs/EDITOR_STYLE.md`: their sections stray from its order, Level Source sits apart from Leveling, a collapsed section shows nothing, sentences explain the fields, the link state sits in tinted boxes with colored borders, and many sections' Import and Clear only log a warning. Each inspector is redone in Phase 4's fifth step. Fixed: the Attribute (`ed6295a`, with ED-15), Item (`cf70e8f`), Entity (`a06a4fb`), Attribute Set (`86ead05`), Ability (`031c2d4`) and Effect inspectors: the style doc's order, Leveling with the level link and its provider in Unity's object field, the asset tag under the name, a summary on each section, Import and Clear on each, Used By, and no look set in code; the Entity mockup's attribute table, in the Entity and Attribute Set inspectors; the mockups' When Busy, in the Ability and Entity inspectors; and the Effect mockup's requirements table, in the Effect and Ability inspectors | `EffectEditor.cs`, `AbilityEditor.cs`, `ForgeRequirementsTable.cs` | fixed |
 | ED-38 | M | 4 | An asset reference isn't Unity's object field: `AbstractRefDrawer` draws a button that opens a dropdown list of its own, with hover colors and Clear and Open icon buttons set in C#, and setting an effect asks in a dialog whether to link it. Now every asset reference is Unity's object field with a plain button beside it: Open, which shows the asset in a window of its own, or New, which makes one where The Forge puts its type, named and tagged, and uses it (Q15). An effect field says on a line under it how the effect takes its levels, with Link; its template, a pick of unlinked effects and New Linked Effect are in its right-click menu (Q18) | `AbstractForgeObjectDrawer.cs`, `GameplayEffectDrawer.cs` | fixed |
 | ED-39 | M | 4 | Opening an attribute set element can change the set: 50 ms after it draws, and on every change to the set, `AttributeSetElementDrawer` clamps a Current or Base magnitude that sits outside the element's bounds and applies it to the asset, so looking at a set marks it modified. The runtime clamps the same values as the entity starts. Now the drawer writes nothing as it draws: a help box says how the runtime clamps such a magnitude, and only a value typed into a Magnitude field is kept within the bounds, as part of the same edit. The drawer follows the style sheet | `AttributeSetElementDrawer.cs` | fixed |
-| ED-40 | M | 4 | The debugger only watches: it can't change an attribute or a tag, apply an effect or grant an ability, so trying a change means writing code for it. Q27: editing attributes and tags first, then applying effects and granting abilities | `Editor/Debugger/RuntimeDebugger.Entities.cs` | open |
+| ED-40 | M | 4 | The debugger only watches: it can't change an attribute or a tag, apply an effect or grant an ability, so trying a change means writing code for it. Q27: editing attributes and tags first, then applying effects and granting abilities. Fixed: the Runtime Debugger's attribute fields take a value, which the entity takes as it is; a tag typed or picked from the project's is granted as a loose tag (FEAT-16), which its row's Remove takes back; an effect picked in Effects lands from the entity itself, and its row's Remove takes it off; an ability picked in Abilities is granted at a level, and its row activates or removes it | `Editor/Debugger/RuntimeDebugger.Entities.cs` | fixed |
 
 The design questions behind Phase 4's rows, each with its evidence, are in the UI interview doc of 2026-11-03,
 https://claude.ai/artifact/BbnGybqgX3spJsT6HoTafp. Its answers (Decision 18) settle ED-8, ED-16, ED-19 and ED-12's
@@ -569,8 +569,8 @@ Phase 2 part, and set Phase 4's direction.
 4. ED-20: one style sheet and a kit of controls, in the style `Docs/EDITOR_STYLE.md` records (Decision 20).
 5. The redesign, one surface at a time: the asset inspectors, with ED-2, ED-3, and the Import window and shared
    scalers of Decision 28 (ED-32, ED-33); The Forge, with ED-13, ED-15,
-   ED-21, ED-27 and ED-31 (done); one runtime debugger for the GAS, Process and Tag views (Q4), with ED-4 and ED-5
-   (done), then its edits (Q27, ED-40); and
+   ED-21, ED-27 and ED-31 (done); one runtime debugger for the GAS, Process and Tag views (Q4), with ED-4 and ED-5,
+   then its edits (Q27, ED-40) (done); and
    the Visualizer, with ED-9 (done: The Forge's detail pane summarizes each asset, Q6).
    The asset inspectors go one at a time, each following the style doc (ED-37): the Attribute, Item, Entity and
    Attribute Set inspectors first (done), then the reference fields (ED-38, done), the Ability inspector (done), then
@@ -625,6 +625,7 @@ Phase 2 part, and set Phase 4's direction.
 | FEAT-13 | Networking | Prediction and replication; not planned yet |
 | FEAT-14 | Item stacking | An inventory holds an item as a count, up to the Item's `MaxStackSize`. The field and `ItemSpecContainer.ItemStacks` exist, but nothing reads or sets them (GAS-51). Decide how giving and removing count, how a stack's effects and abilities scale, and how Allow Duplicate Items meets it |
 | FEAT-15 | Register builder | One builder or options struct in place of `ProcessControl`'s 28 static `Register` overloads, from the review's API changes. The roadmap gave it to Phase 3, but no row tracked it, so it moved here when Phase 3 closed. Today the argument's static type picks the overload, and a failed call returns false with a null relay. The review paired it with a `Run` on the relay, which doesn't exist yet, and an awaitable completion, which `ProcessRelay.WhenTerminated` now is (TS-Z) |
+| FEAT-16 | Loose tags | Done with ED-40, ahead of the phase. A tag granted with no effect, ability or item behind it, as Unreal's loose gameplay tags are: `AddLooseTag`, `RemoveLooseTag` and `GetLooseTags` on each hub, each grant counted, and the tag compile includes them. A tag added straight to the tag cache went at its next compile |
 
 ## Test project: PlayForge Proving Grounds
 
@@ -659,6 +660,31 @@ GAS-4 with GAS-5, PC-6, and TS-I with PC-5.
 ## Log
 
 Record baselines, gate results and notable decisions here, newest first.
+
+- 2026-11-04, **ED-40 and FEAT-16: the debugger acts.** From Q27's answer, editing attributes and tags first, then
+  applying effects and granting abilities. ED-40 is fixed, and the debugger's part of step 5 is done.
+  - **Attributes:** the Entities view's current and base fields take a value. The entity takes it as it is: the change
+    goes in directly, as a delta no worker sees (`GenerateUnworkable`), and the next sample shows what the entity holds.
+    A field being typed in keeps what's typed while samples come.
+  - **Tags:** a tag's name, typed (Enter or Add Tag) or picked from the project's tags under their roots, is granted
+    as a loose tag, and a loose tag's row has Remove. A tag added straight to the tag cache went at its next compile,
+    when an ability starts or ends, an item changes or an effect lands.
+  - **Loose tags, in the runtime (FEAT-16):** `AddLooseTag`, `RemoveLooseTag` and `GetLooseTags` on
+    `IGameplayAbilitySystem`, forwarded by both hubs to `GASCore`, which counts each grant and has
+    `CompileGrantedTags` include them, as Unreal's loose gameplay tags. Done ahead of Phase 5, as the debugger needs
+    it. Both hubs are the interface's only implementations.
+  - **Effects:** an effect picked in the Effects section lands from the entity itself, and the section says Applied
+    or Refused; each effect's row has Remove, which takes it off where its source applied it.
+  - **Abilities:** an ability picked in the Abilities section is granted at the level given (Granted or Refused);
+    each ability's row has Activate, which says Activated or Refused, and Remove, which takes that copy away.
+  - **Its tests,** seen failing first: `ED_40_An_attribute_takes_the_value_typed_into_the_debugger`,
+    `ED_40_A_tag_added_in_the_debugger_lasts_until_its_removed`,
+    `ED_40_An_effect_applied_in_the_debugger_lands_and_its_row_removes_it` and
+    `ED_40_An_ability_granted_in_the_debugger_activates_and_goes` in `RuntimeDebuggerTests`, and
+    `FEAT_16_A_loose_tag_lasts_until_its_removed` on each hub in PlayMode's `TagTests`.
+  - **Next:** step 5 is done. Phase 5 (FEAT-n) begins.
+  - **Tests:** PlayMode 964: 957 pass, 0 fail and 7 planted are skipped, in three orders. Planted 7 of 7; EditMode
+    425 of 425.
 
 - 2026-11-04, **ED-4 and ED-5: one Runtime Debugger.** From Q4, Q28 and Q30: one window in place of the GAS Debugger,
   Process Control and the Tag Debugger. ED-4 and ED-5 are fixed; the debugger's edits (Q27) are the new ED-40.

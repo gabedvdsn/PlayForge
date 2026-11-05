@@ -23,6 +23,19 @@ namespace FarEmerald.PlayForge
         public GameplayAbilitySystemCallbacks GetCallbacks();
 
         /// <summary>
+        /// Grants a tag directly, with no effect, ability or item behind it, as Unreal's loose gameplay tags are. Each
+        /// grant counts, and lasts until <see cref="RemoveLooseTag"/> takes it back. A tag added straight to the tag cache
+        /// went at its next compile, when an ability starts or ends, an item changes or an effect lands (FEAT-16).
+        /// </summary>
+        public void AddLooseTag(Tag tag);
+
+        /// <summary>Takes back one grant of a loose tag. False when the entity has none.</summary>
+        public bool RemoveLooseTag(Tag tag);
+
+        /// <summary>The entity's loose tags, a tag once for each grant.</summary>
+        public System.Collections.Generic.IReadOnlyList<Tag> GetLooseTags();
+
+        /// <summary>
         /// Record an impact this GAS DEALT (this GAS is ISource).
         /// </summary>
         public void RecordFrameImpactDealt(ImpactData impact);

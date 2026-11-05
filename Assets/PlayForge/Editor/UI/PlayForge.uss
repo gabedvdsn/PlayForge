@@ -1665,6 +1665,32 @@
     margin: 0 0 0 8px;
 }
 
+/* A row's own actions, as a tag's Remove, keep their width */
+.pf-root .pf-debugger__row-button {
+    flex-shrink: 0;
+    margin: 0 0 0 4px;
+}
+
+.pf-root .pf-debugger__pick {
+    flex-grow: 1;
+    flex-shrink: 1;
+    min-width: 60px;
+    margin: 0;
+}
+
+.pf-root .pf-debugger__level {
+    flex-shrink: 0;
+    width: 44px;
+    margin: 0 0 0 4px;
+}
+
+.pf-root .pf-debugger__new-tag {
+    flex-grow: 1;
+    flex-shrink: 1;
+    min-width: 60px;
+    margin: 0;
+}
+
 .pf-root .pf-debugger__actions {
     margin: 6px 8px;
 }

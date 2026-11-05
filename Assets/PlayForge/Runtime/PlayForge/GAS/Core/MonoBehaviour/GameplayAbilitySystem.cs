@@ -158,6 +158,9 @@ namespace FarEmerald.PlayForge
         public int GetTagWeight(Tag _tag) => core.TagCache.GetWeight(_tag);
         public bool QueryTags(TagQuery query) => core.QueryTags(query);
         public void CompileGrantedTags() => core.CompileGrantedTags();
+        public void AddLooseTag(Tag tag) => core.AddLooseTag(tag);
+        public bool RemoveLooseTag(Tag tag) => core.RemoveLooseTag(tag);
+        public System.Collections.Generic.IReadOnlyList<Tag> GetLooseTags() => core.LooseTags;
         #endregion
 
         #region IGameplaySystem
