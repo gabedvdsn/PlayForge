@@ -78,7 +78,6 @@ namespace FarEmerald.PlayForge.Extended.Editor
 
         protected override string GetDocumentationTopic() => "items";
 
-        protected override bool ShowVisualizeButton => true;
         protected override bool ShowImportButton => true;
 
         // ═══════════════════════════════════════════════════════════════════════════

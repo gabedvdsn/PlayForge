@@ -255,8 +255,8 @@ namespace FarEmerald.PlayForge.Extended.Editor
         public static AssetAction Visualize(Action<ScriptableObject> visualizer = null) => new()
         {
             Label = "Visualize",
-            Tooltip = "Open in Visualizer",
-            Action = visualizer ?? TheForge.OpenVisualizer,
+            Tooltip = "Show in The Forge, whose detail pane summarizes the asset",
+            Action = visualizer ?? TheForge.OpenToAsset,
         };
         
         public static AssetAction Import(Action<ScriptableObject> importAction, bool closeWindow = true) => new()

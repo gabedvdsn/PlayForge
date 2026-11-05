@@ -227,20 +227,6 @@ namespace FarEmerald.PlayForge.Extended.Editor
 
             Heading(page, "The Forge");
             foreach (var each in PlayForgePreferences.ForgeSwitches) switches.Add((each, Switch(page, each)));
-            var rows = new IntegerField("Recently Created Rows")
-            {
-                name = PlayForgePreferences.RecentlyCreatedRowsKey,
-                isDelayed = true,
-                tooltip = "How many recently created assets the Create tab lists, from 0 to 50",
-            };
-            rows.AddToClassList(IntegerField.alignedFieldUssClassName);
-            rows.SetValueWithoutNotify(PlayForgePreferences.RecentlyCreatedRows);
-            rows.RegisterValueChangedCallback(change =>
-            {
-                PlayForgePreferences.RecentlyCreatedRows = change.newValue;
-                rows.SetValueWithoutNotify(PlayForgePreferences.RecentlyCreatedRows);
-            });
-            page.Add(rows);
 
             Heading(page, "Logging");
             var level = new EnumField("Minimum Log Level", ForgeLogSettingsBridge.CurrentLevel)
@@ -259,7 +245,6 @@ namespace FarEmerald.PlayForge.Extended.Editor
             {
                 PlayForgePreferences.UseDefaults();
                 foreach (var (preference, toggle) in switches) toggle.SetValueWithoutNotify(preference.Value);
-                rows.SetValueWithoutNotify(PlayForgePreferences.RecentlyCreatedRows);
                 level.SetValueWithoutNotify(ForgeLogSettingsBridge.CurrentLevel);
             })
             {

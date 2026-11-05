@@ -490,6 +490,8 @@ namespace FarEmerald.PlayForge.Extended.Editor
             public VisualElement Header;
             public Button Arrow;
             public VisualElement Content;
+            /// <summary>The section's title, as "Leveling".</summary>
+            public string Title;
             /// <summary>The one line the header shows while the section is collapsed, such as "Levels 1–5".</summary>
             public Label Summary;
             public Button HelpButton;
@@ -522,6 +524,7 @@ namespace FarEmerald.PlayForge.Extended.Editor
                 Header = section.Header,
                 Arrow = section.Arrow,
                 Content = section.Content,
+                Title = config.Title,
                 Summary = section.Summary,
             };
 

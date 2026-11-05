@@ -41,6 +41,61 @@ namespace FarEmerald.PlayForge.Extended.Editor
         public static string FolderFor(Type type) => PlayForgeSettings.FolderFor(type);
 
         /// <summary>
+        /// Makes a new asset of any type The Forge lists, as its Create does: a copy of the type's New Asset default when
+        /// Project Settings names one, named, with the tag its name gives, in the folder given or the type's, with its file
+        /// prefix and suffix. One factory makes every new asset (Q20); the copy is the default's values, not a link to it
+        /// (Q22).
+        /// </summary>
+        public static ScriptableObject CreateNew(Type type, string name, string folder = null)
+        {
+            var asset = ScriptableObject.CreateInstance(type);
+            var copied = PlayForgeSettings.NewAssetDefault(type);
+            if (copied != null) EditorUtility.CopySerialized(copied, asset);
+            NameAny(asset, name);
+            folder = string.IsNullOrWhiteSpace(folder) ? FolderFor(type) : folder.Trim().TrimEnd('/');
+            EnsureFolder(folder);
+            var path = AssetDatabase.GenerateUniqueAssetPath(
+                $"{folder}/{PlayForgeSettings.PrefixFor(type)}{FileNameOf(name)}{PlayForgeSettings.SuffixFor(type)}.asset");
+            AssetDatabase.CreateAsset(asset, path);
+            return asset;
+        }
+
+        /// <summary>A copy of an asset beside it, named as a copy, with the tag that name gives. The Forge's Duplicate kept the name and tag.</summary>
+        public static ScriptableObject Duplicate(ScriptableObject asset)
+        {
+            var path = AssetDatabase.GetAssetPath(asset);
+            if (string.IsNullOrEmpty(path)) return null;
+            var copyPath = AssetDatabase.GenerateUniqueAssetPath(path);
+            if (!AssetDatabase.CopyAsset(path, copyPath)) return null;
+            var copy = AssetDatabase.LoadAssetAtPath<ScriptableObject>(copyPath);
+            if (copy == null) return null;
+            NameAny(copy, $"{TheForge.NameOf(asset)} Copy");
+            EditorUtility.SetDirty(copy);
+            AssetDatabase.SaveAssetIfDirty(copy);
+            return copy;
+        }
+
+        // Names any asset The Forge lists: a PlayForge asset as its inspector does, a Scaler asset by its scaler, and a
+        // requirement template by its group
+        private static void NameAny(ScriptableObject asset, string name)
+        {
+            switch (asset)
+            {
+                case BaseForgeAsset forge:
+                    Name(forge, name);
+                    break;
+                case ScalerAsset scaler:
+                    scaler.Scaler ??= ScalerFields.Make(typeof(SimpleScaler), 1f);
+                    scaler.Scaler.Name = name;
+                    break;
+                case RequirementTemplate requirement:
+                    requirement.Requirements ??= new AvoidRequireTagGroup();
+                    requirement.Requirements.Name = name;
+                    break;
+            }
+        }
+
+        /// <summary>
         /// The asset tag a name gives: its words, without punctuation, capitalised and joined, after the type's name, as
         /// in "Item.IronSword". A name with no words gives none.
         /// </summary>

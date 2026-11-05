@@ -54,7 +54,6 @@ namespace FarEmerald.PlayForge.Extended.Editor
         
         protected override string GetDocumentationTopic() => "attributes";
         
-        protected override bool ShowVisualizeButton => true;
         protected override bool ShowImportButton => true;
         protected override void RebuildLevelSourceContent()
         {

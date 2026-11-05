@@ -51,6 +51,7 @@ namespace FarEmerald.PlayForge.Extended.Editor
                 SetSectionState(editorType.FullName + '.' + config.Name, expanded);
             });
 
+            sections.Add(result);
             return result;
 
             bool GetOrInitSectionState(string key, bool initValue)
@@ -169,22 +170,27 @@ namespace FarEmerald.PlayForge.Extended.Editor
         // Virtual Methods - Optional Overrides
         // ═══════════════════════════════════════════════════════════════════════════
         
-        /// <summary>Called when Visualize button is clicked. Opens PlayForgeVisualizer by default.</summary>
-        protected void OnVisualize()
-        {
-            var window = EditorWindow.GetWindow<PlayForgeVisualizer>("Visualizer");
-            window.SetAsset(target as ScriptableObject);
-            window.Show();
-        }
-        
         /// <summary>Called when Open button is clicked. Opens PlayForge Manager to this asset.</summary>
         protected virtual void OnOpenInManager()
         {
             TheForge.OpenToAsset(target);
         }
-        
-        /// <summary>Whether to show the Visualize button</summary>
-        protected virtual bool ShowVisualizeButton => false;
+
+        // Whether an element is in The Forge's detail pane, which holds an asset's inspector
+        private static bool InForgeDetail(VisualElement element)
+        {
+            for (var each = element.parent; each != null; each = each.parent)
+            {
+                if (each.ClassListContains("pf-forge__detail")) return true;
+            }
+            return false;
+        }
+
+        // The inspector's sections, in order, whose titles and one-line summaries The Forge's detail pane reads (Q6)
+        private readonly List<SectionResult> sections = new();
+
+        /// <summary>The inspector's sections, in the order it shows them.</summary>
+        internal IReadOnlyList<SectionResult> Sections => sections;
         
         /// <summary>Whether to show the Import button</summary>
         protected virtual bool ShowImportButton => false;
@@ -315,6 +321,7 @@ namespace FarEmerald.PlayForge.Extended.Editor
         /// </summary>
         public override VisualElement CreateInspectorGUI()
         {
+            sections.Clear();
             root = CreateRoot();
             // PlayForge's style sheet, in the editor's theme (ED-20)
             ForgeTheme.Apply(root);
@@ -400,8 +407,24 @@ namespace FarEmerald.PlayForge.Extended.Editor
             });
             problems.RegisterCallback<DetachFromPanelEvent>(_ => ForgeValidator.Changed -= ShowProblems);
 
-            // Open in The Forge and the template act on one asset, so a multiple selection leaves them out (ED-12)
-            if (!IsMultiple) header.AddButton("Open in The Forge", "Show this asset in The Forge", OnOpenInManager);
+            // Open in The Forge and the template act on one asset, so a multiple selection leaves them out (ED-12). In The
+            // Forge's own detail pane, the button shows the asset in the Project window instead (Docs/EDITOR_STYLE.md)
+            if (!IsMultiple)
+            {
+                var open = header.AddButton("Open in The Forge", "Show this asset in The Forge", OnOpenInManager);
+                open.name = "OpenInForge";
+                open.RegisterCallback<AttachToPanelEvent>(_ =>
+                {
+                    if (!InForgeDetail(open)) return;
+                    open.text = "Show in Project";
+                    open.tooltip = "Show this asset in the Project window";
+                    open.clickable = new Clickable(() =>
+                    {
+                        Selection.activeObject = target;
+                        EditorGUIUtility.PingObject(target);
+                    });
+                });
+            }
 
             var topic = GetDocumentationTopic();
             if (!string.IsNullOrEmpty(topic)) header.AddIconButton(ForgeGlyphShape.Help, "Open the documentation", () => ForgeDocs.Open(topic));
@@ -422,7 +445,6 @@ namespace FarEmerald.PlayForge.Extended.Editor
                 if (target is BaseForgeAsset asset && asset.HasTemplate)
                     menu.AddItem(new GUIContent($"Unassign Template \"{asset.Template.GetName()}\""), false, () => AssignTemplate(null));
             }
-            if (ShowVisualizeButton && !IsMultiple) menu.AddItem(new GUIContent("Visualize"), false, OnVisualize);
             if (menu.GetItemCount() == 0) menu.AddDisabledItem(new GUIContent("No Actions"));
             menu.DropDown(under.worldBound);
         }

@@ -523,7 +523,7 @@ had no letter in the review. TS-AA onward came from the test project.
 | ED-6 | M | 2 | Settings: an inverted range check; Reset All goes to the wrong tab and is partial; Auto Refresh is never read | `TheForge.SettingsTab.cs:233-236, 264, 346, 1770-1785` | verified |
 | ED-7 | M | 2 | Numeric columns sort as strings | `TheForge.ViewTab.cs:656` | verified |
 | ED-8 | H | 2 | Hard delete with no reference check | `TheForge.ViewTab.cs:2552`, `AssetBrowserWindow.cs:285` | verified |
-| ED-9 | M | 4 | The Visualizer is blank for items and sets, and after a domain reload | `TheForge.Utilities.cs:344, 407-412` | open |
+| ED-9 | M | 4 | The Visualizer is blank for items and sets, and after a domain reload. Fixed: the Visualizer is gone; The Forge's detail pane summarizes every type, from its inspector's section summaries, and the window keeps its selection across a reload (Q6) | `TheForge.cs` (`FillSummary`) | fixed |
 | ED-10 | M | 2 | Analysis exposes "Not Implemented" groups and truncates silently | `TheForge.AnalysisTab.cs:362, 716, 1461, 1979-1991` | verified |
 | ED-11 | M | 4 | The sticky-header workaround and drawer timers poll forever, among them two 250 ms timers in each impact drawer. Now nothing polls: the drawers follow the properties they show, the object picker's listener runs only while a picker is open, and the inspector keeps no scroll view of its own, so nothing measures the window; the header follows the Inspector's scroll events (ED-36) | `BasePlayForgeEditor.cs` (`OnAttachedToPanel`, `ConfigureScrollView`, `OnEditorUpdate`) | fixed |
 | ED-12 | H | 4 | No Undo, multi-edit or prefab overrides. The inspectors wrote 42 edits straight into their asset, and only the 5 renames recorded Undo; no inspector took a multiple selection; six drawers copy their SerializedObject for one target, and two write while drawing. Fixed: Phase 2's part (a rename stores the tag in the same undoable step, and showing never writes), the Attribute inspector (its fields bind, it takes a multiple selection, and every inspector's header follows Undo), the MonoProcess inspector's multiple selection, the Effect, Item and Attribute Set inspectors' Description and Link Mode, the Entity inspector's fields, the Ability inspector's Description, Activation Policy, Activate Immediately and Link Mode, Link, Unlink and template assignment in every inspector, the drawers that rebuilt on a one-target copy, the type drawers that wrote a default while drawing, and every asset inspector's multiple selection; the magnitude field and the scaler drawer change each selected asset's own values | `EachAsset.cs`, `MagnitudeField.cs`, `ScalerFields.cs`, `EffectEditor.cs`, `EntityIdentityEditor.cs`, `AttributeSetEditor.cs`, `BasePlayForgeEditor.cs` (`IsMultiple`) | fixed |
@@ -541,7 +541,7 @@ had no letter in the review. TS-AA onward came from the test project.
 | ED-24 | M | 2 | `ParticipateInSiblingCascade` can't be set: it is `[HideInInspector]` and `AbstractMonoProcessEditor` never draws it, yet ProcessControl reads it | `AbstractMonoProcess.cs:24-26`, `ProcessControl.cs:926, 986` | verified |
 | ED-25 | M | 2 | The tag display settings barely work: "Display full tag path" changes nothing, since `GetDisplayText` returns before the code that reads it; "Group tags by root" shows off in Settings but defaults to on in `TagDrawer`; and the View tab reads neither | `TagDrawer.cs:178, 181-198`, `TheForge.SettingsTab.cs:201` | verified |
 | ED-26 | M | 2 | The GAS Debugger never removes its three frame-summary hooks, so a window closed in play mode keeps sampling every entity, and reopening it adds another set | `GASDebugger.cs:149-152, 269-305` | verified |
-| ED-27 | M | 4 | The View tab has two click models: one click selects and pings a row in the grouped list, but a typed table acts only on a double-click | `TheForge.ViewTab.cs:2221-2233, 2598-2607` | open |
+| ED-27 | M | 4 | The View tab has two click models: one click selects and pings a row in the grouped list, but a typed table acts only on a double-click. Fixed: The Forge is one list and detail (Q5), where a click selects a row and shows its asset, and a double click shows it in the Project window | `TheForge.cs` | fixed |
 | ED-28 | L | 2 | Dead UI: `QuickFillWindow` is never opened, `m_AbilityIcon` is never assigned, and four editor `.cs.meta` files name UXML GUIDs that exist nowhere | `ScalerDrawerWindows.cs:356-372`, `AbilityEditor.cs:19-20, 70`, `AbilityEditor.cs.meta:7` | verified |
 | ED-29 | L | 2 | The Entity inspector's Allow Duplicate Equipped Items toggle opens showing Allow Duplicate Items' value | `EntityIdentityEditor.cs:927` | verified |
 | ED-30 | M | 2 | Local Data's object rows edit each other's value: a ScriptableObject row binds the MonoBehaviour field and the other way round, so neither keeps what's assigned | `DataWrapperDrawer.cs:127-128` | verified |
@@ -657,6 +657,44 @@ GAS-4 with GAS-5, PC-6, and TS-I with PC-5.
 ## Log
 
 Record baselines, gate results and notable decisions here, newest first.
+
+- 2026-11-04, **ED-27 and ED-9: The Forge is a list and a detail.** The third of The Forge's redesign, from Q5, Q6,
+  Q7, Q24, Q29 and Q30. ED-27 and ED-9 are fixed.
+  - **The window,** `TheForge`, one file in place of six: a toolbar with Create, a filter for each of the eight types
+    (its type icon, or its name for Scaler and Requirement, which have none), Tags, the search and the problem count; a
+    `MultiColumnListView` of the project's PlayForge assets beside a detail pane, in a `TwoPaneSplitView`; and a status
+    bar with the counts. The list virtualizes, for thousands of assets (Q24). Its columns, the name with its type icon
+    and the file name when it differs, the type, the asset tag, the levels and the problem glyph, sort in natural order
+    (ED-7). A click selects a row and shows the asset (ED-27); a double click shows it in the Project window; the
+    right-click menu has Show in Project, Open in a Window, Duplicate and Move to Trash.
+  - **The detail pane** holds the asset's own inspector, through an `InspectorElement` over its editor, under a
+    summary (Q6): the description, then each section's title and one-line summary, which `BasePlayForgeEditor` now
+    lists (`Sections`), then its problems. It covers every type, where the Visualizer was blank for items and sets
+    (ED-9). The window serializes its filter, search, sort and selection, so a domain reload keeps them. Inside it, the
+    inspector's Open in The Forge reads Show in Project.
+  - **Tags** lists the project's tags, from the tag registry, by full path or leaf as the tag preferences say (ED-25),
+    with what each is for and how many assets use it; the detail lists each asset that uses it, as a row that shows it.
+  - **It follows the project,** with no Refresh and no timer (Q30): `projectChanged` reads it again once the change
+    settles, an edit redraws the rows, and the validator's `Changed` redraws the glyphs and counts.
+  - **Create** opens a small New Asset window, a name and a folder, which makes the asset through
+    `ForgeAssetCreation.CreateNew`: a copy of the type's New Asset default (its values, not a link, Q22), named, with the
+    tag its name gives, where Project Settings puts its type (Q20). Duplicate names the copy as a copy, with its own
+    tag. The Project window's own Create menu still makes a blank asset; routing it through the factory is left.
+  - **The shortcut** `PlayForge/The Forge`, Ctrl+Alt+Shift+F by default and rebindable, opens it with the search
+    focused (Q29).
+  - **Gone:** the Create, View and Analysis tabs and the Visualizer window. The power scores stay hidden until items
+    and entities score too (Q7); the code is in git history before this commit, for the tunable presets that come later.
+    The Create tab's recently created list and statistics, the View tab's embedded-scaler and requirement browsers,
+    the Visualize menu item, and the five preferences they used, which Use Defaults now clears.
+  - **Its tests,** seen failing against the old window first: `ED_27_One_click_selects_a_row_and_shows_its_asset`,
+    `ED_27_The_list_follows_the_project`, `ED_27_The_type_filter_and_the_search_narrow_the_list`,
+    `ED_27_A_shortcut_opens_The_Forge`, `ED_15_The_Forge_counts_the_projects_problems`,
+    `ED_9_The_summary_shows_each_type_and_the_selection_is_kept`, `ED_7_A_numeric_column_sorts_by_number` and
+    `ED_25_The_tag_list_follows_the_tag_preferences` in the new `TheForgeTests`, which replace the View, Analysis and
+    Settings tabs' tests. The smoke suite opens The Forge and each type's New Asset window.
+  - **Next:** template propagation as an explicit push (ED-13).
+  - **Tests:** PlayMode 961: 954 pass, 0 fail and 7 planted are skipped, in three orders. Planted 7 of 7; EditMode
+    417 of 417.
 
 - 2026-11-04, **ED-15: one validator, the Problems view and the header's count.** The second of The Forge's redesign,
   from Q8's answer: a Problems view and badges, both fed by one validator. ED-15 is fixed.

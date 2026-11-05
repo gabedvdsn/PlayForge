@@ -1285,3 +1285,221 @@
     border-top-color: var(--pf-line);
     background-color: var(--pf-toolbar);
 }
+
+/* ─── The Forge: a toolbar, a list beside a detail pane, then a status bar (Q5, Docs/EDITOR_STYLE.md) ──────────────── */
+
+.pf-root.pf-forge {
+    flex-grow: 1;
+}
+
+.pf-root .pf-forge__hidden {
+    display: none;
+}
+
+.pf-root .pf-forge__filter {
+    flex-shrink: 0;
+    min-width: 24px;
+    justify-content: center;
+    align-items: center;
+}
+
+.pf-root .pf-forge__filter .pf-glyph {
+    width: 14px;
+    height: 14px;
+}
+
+.pf-root .pf-forge__search {
+    width: 200px;
+    flex-shrink: 1;
+    min-width: 80px;
+}
+
+.pf-root .pf-forge__problems {
+    flex-shrink: 0;
+    color: var(--pf-secondary-text);
+}
+
+.pf-root .pf-forge__problems--some {
+    color: var(--pf-warning-text);
+}
+
+.pf-root .pf-forge__problems--error {
+    color: var(--pf-destructive);
+}
+
+.pf-root .pf-forge__split {
+    flex-grow: 1;
+}
+
+.pf-root .pf-forge__lists {
+    flex-grow: 1;
+    min-width: 200px;
+}
+
+.pf-root .pf-forge__list {
+    flex-grow: 1;
+}
+
+/* A row's name, with its type icon, can shrink to nothing and ends in an ellipsis; the file name gives way first */
+.pf-root .pf-forge__name-cell {
+    flex-direction: row;
+    align-items: center;
+    overflow: hidden;
+    padding-left: 4px;
+}
+
+.pf-root .pf-forge__name-cell .pf-glyph {
+    width: 14px;
+    height: 14px;
+    margin-right: 6px;
+    flex-shrink: 0;
+}
+
+.pf-root .pf-forge__name,
+.pf-root .pf-forge__file,
+.pf-root .pf-forge__cell {
+    flex-shrink: 1;
+    min-width: 0;
+    margin: 0;
+    padding: 0 4px 0 0;
+    -unity-text-align: middle-left;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+}
+
+.pf-root .pf-forge__name {
+    flex-shrink: 0;
+    max-width: 100%;
+    color: var(--pf-strong-text);
+}
+
+.pf-root .pf-forge__file {
+    color: var(--pf-secondary-text);
+}
+
+.pf-root .pf-forge__list .pf-glyph--warning,
+.pf-root .pf-forge__list .pf-glyph--destructive {
+    width: 14px;
+    height: 14px;
+    align-self: center;
+    margin-left: 4px;
+}
+
+.pf-root .pf-forge__detail-scroll {
+    flex-grow: 1;
+    min-width: 280px;
+}
+
+.pf-root .pf-forge__detail {
+    padding: 0 0 8px 0;
+}
+
+.pf-root .pf-forge__detail > .pf-note {
+    margin: 8px;
+}
+
+/* The summary: what the asset does, by its description and its sections' one-line summaries (Q6) */
+.pf-root .pf-forge__summary {
+    padding: 6px 8px;
+    border-bottom-width: 1px;
+    border-bottom-color: var(--pf-line);
+}
+
+.pf-root .pf-forge__summary-title {
+    margin: 0 0 4px 0;
+    padding: 0;
+    -unity-font-style: bold;
+    color: var(--pf-strong-text);
+}
+
+.pf-root .pf-forge__summary-description {
+    margin: 0 0 4px 0;
+    padding: 0;
+    white-space: normal;
+    color: var(--pf-text);
+}
+
+.pf-root .pf-forge__summary-row {
+    flex-direction: row;
+    height: 18px;
+    align-items: center;
+}
+
+.pf-root .pf-forge__summary-label {
+    width: 120px;
+    flex-shrink: 0;
+    margin: 0;
+    padding: 0;
+    color: var(--pf-secondary-text);
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+}
+
+.pf-root .pf-forge__summary-value {
+    flex-grow: 1;
+    flex-shrink: 1;
+    min-width: 0;
+    margin: 0;
+    padding: 0;
+    color: var(--pf-text);
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+}
+
+/* A tag's users: each asset, by its type icon and name, and the fields it uses the tag in */
+.pf-root .pf-forge__users {
+    padding: 4px 8px;
+}
+
+.pf-root .pf-forge__user {
+    flex-direction: row;
+    align-items: center;
+    height: 20px;
+    margin: 0;
+    padding: 0 4px;
+    border-width: 0;
+    background-color: rgba(0, 0, 0, 0);
+}
+
+.pf-root .pf-forge__user:hover {
+    background-color: var(--pf-alternate-row);
+}
+
+.pf-root .pf-forge__user .pf-glyph {
+    width: 14px;
+    height: 14px;
+    margin-right: 6px;
+    flex-shrink: 0;
+}
+
+.pf-root .pf-forge__user-name {
+    flex-shrink: 0;
+    margin: 0 8px 0 0;
+    padding: 0;
+    color: var(--pf-link);
+}
+
+.pf-root .pf-forge__user-field {
+    flex-shrink: 1;
+    min-width: 0;
+    margin: 0;
+    padding: 0;
+    color: var(--pf-secondary-text);
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+}
+
+.pf-root .pf-forge__status {
+    flex-shrink: 0;
+    height: 20px;
+    padding: 0 6px;
+    -unity-text-align: middle-left;
+    color: var(--pf-secondary-text);
+    border-top-width: 1px;
+    border-top-color: var(--pf-line);
+    background-color: var(--pf-toolbar);
+}

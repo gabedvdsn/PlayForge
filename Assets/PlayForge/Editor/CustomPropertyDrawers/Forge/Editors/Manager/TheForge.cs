@@ -1,390 +1,676 @@
 using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
 using UnityEditor;
+using UnityEditor.ShortcutManagement;
 using UnityEditor.UIElements;
 using UnityEngine;
 using UnityEngine.UIElements;
-using static FarEmerald.PlayForge.Extended.Editor.ForgeDrawerStyles;
+using Object = UnityEngine.Object;
 
 namespace FarEmerald.PlayForge.Extended.Editor
 {
     /// <summary>
-    /// The Forge - Central hub for managing PlayForge assets.
-    /// Split into partial classes for maintainability:
-    /// - TheForge.cs (this file) - Core window, header, tab navigation
-    /// - TheForge.CreateTab.cs - Create tab with statistics
-    /// - TheForge.ViewTab.cs - View tab with spreadsheet/tags
-    /// - TheForge.AnalysisTab.cs - Analysis tab with power scores
-    /// - TheForge.Utilities.cs - Shared helper methods
-    /// Its settings are on Project Settings → PlayForge and Preferences → PlayForge, which its window menu opens. A
-    /// Settings tab held them, all in EditorPrefs (ED-21).
+    /// The Forge, PlayForge's main window, in Docs/EDITOR_STYLE.md's terms (Q5): a list of the project's PlayForge assets
+    /// beside a detail pane that holds the selected asset's inspector, under a summary of what it does and what uses it
+    /// (Q6). The toolbar holds Create, the type filters, Tags, the search and the problem count; the status bar holds the
+    /// counts. It follows the project, with no Refresh and no timer (Q30), and the validator's problems with it (Q8,
+    /// ED-15). One click selects a row and shows its asset (ED-27). It had Create, View, Analysis and Settings tabs: the
+    /// Analysis tab's power scores stay hidden until Items and Entities score too (Q7), and the Settings tab's settings
+    /// are on the two settings pages (ED-21).
     /// </summary>
-    public partial class TheForge : EditorWindow, IHasCustomMenu
+    public sealed class TheForge : EditorWindow, IHasCustomMenu
     {
-        // ═══════════════════════════════════════════════════════════════════════════
-        // Constants & Static Data
-        // ═══════════════════════════════════════════════════════════════════════════
-        
         // The title is the menu item's name. It said "PlayForge Manager" (ED-19)
-        private const string WINDOW_TITLE = "The Forge";
+        private const string WindowTitle = "The Forge";
         internal const string PREFS_PREFIX = PlayForgePreferences.Prefix;
-        internal const int COLOR_INDICATOR_WIDTH = 3;
-        internal const string TAGS_VIEW_MARKER = "__TAGS__";
+        private const string HiddenClass = "pf-forge__hidden";
 
-        // Asset type metadata for UI
-        public static readonly List<AssetTypeInfo> AssetTypes = new List<AssetTypeInfo>
-        {
-            new AssetTypeInfo(typeof(Ability), "Ability", "", Colors.AssetAbility, "Ability definition", true, true),
-            new AssetTypeInfo(typeof(GameplayEffect), "Effect", "", Colors.AssetEffect, "Gameplay effect definition", true, true),
-            new AssetTypeInfo(typeof(Item), "Item", "", Colors.AssetItem, "Item with effects & abilities", true, true),
-            new AssetTypeInfo(typeof(Attribute), "Attribute", "", Colors.AssetAttribute, "Base stat definition", true, false),
-            new AssetTypeInfo(typeof(AttributeSet), "Attribute Set", "", Colors.AssetAttributeSet, "Collection of attributes", true, true),
-            new AssetTypeInfo(typeof(EntityIdentity), "Entity", "", Colors.AssetEntity, "Entity configuration", true, true),
-            new AssetTypeInfo(typeof(ScalerAsset), "Scaler", "", Colors.AssetScaler, "Reusable scaler configuration", true, false),
-            new AssetTypeInfo(typeof(RequirementTemplate), "Requirement", "", Colors.AssetRequirements, "Reusable tag requirement configuration", true, false),
-        };
-        
+        /// <summary>The asset types The Forge lists, in its order.</summary>
+        internal static readonly Type[] Types = PlayForgeSettings.Kinds.Select(kind => kind.type).ToArray();
+
+        // What the window shows, which a domain reload keeps
+        [SerializeField] private string search = "";
+        [SerializeField] private string typeFilter = "";
+        [SerializeField] private bool tagsShown;
+        [SerializeField] private Object selected;
+        [SerializeField] private string selectedTag = "";
+        [SerializeField] private string sortColumn = "Name";
+        [SerializeField] private bool sortAscending = true;
+
+        private MultiColumnListView assetList;
+        private MultiColumnListView tagList;
+        private VisualElement detail;
+        private Label status;
+        private ToolbarButton problemCount;
+        private ToolbarSearchField searchField;
+        private ToolbarToggle tagsToggle;
+        private readonly Dictionary<string, ToolbarToggle> typeToggles = new();
+        private List<ScriptableObject> allAssets = new();
+        private List<ScriptableObject> shownAssets = new();
+        private List<ForgeTagRegistry.TagUsageRecord> shownTags = new();
+        private UnityEditor.Editor detailEditor;
+        private Object shownInDetail;
+        private bool reloadQueued;
+
+        /// <summary>The asset the detail pane shows.</summary>
+        internal Object Selected => selected;
+
         // ═══════════════════════════════════════════════════════════════════════════
-        // State
+        // Opening
         // ═══════════════════════════════════════════════════════════════════════════
-        
-        private int currentTab = 0;
-        private readonly string[] tabNames = { "Create", "View", "Analysis" };
-        
-        // View tab state
-        internal string searchFilter = "";
-        internal Type selectedTypeFilter = null;
-        internal bool showTagsView = false;
-        internal string selectedTagContextFilter = null;
-        internal List<ScriptableObject> cachedAssets = new List<ScriptableObject>();
-        
-        // UI References
-        private VisualElement root;
-        internal VisualElement contentContainer;
-        private List<Button> tabButtons = new List<Button>();
-        
-// ═══════════════════════════════════════════════════════════════════════════
-        // Window Management
-        // ═══════════════════════════════════════════════════════════════════════════
-        
+
         // Under Window, where the Asset Store expects a package's menu (rule 2.5.1.a, ED-19)
-        [MenuItem("Window/PlayForge/" + WINDOW_TITLE, false, 0)]
-        public static void ShowWindow()
+        [MenuItem("Window/PlayForge/" + WindowTitle, false, 0)]
+        public static void ShowWindow() => Open();
+
+        // A shortcut, rebindable in Edit → Shortcuts, opens The Forge with its search focused (Q29)
+        [Shortcut("PlayForge/The Forge", KeyCode.F, ShortcutModifiers.Action | ShortcutModifiers.Alt | ShortcutModifiers.Shift)]
+        private static void OpenToSearch()
+        {
+            var forge = Open();
+            forge.Focus();
+            forge.searchField?.Q<TextField>()?.Focus();
+        }
+
+        internal static TheForge Open()
         {
             var window = GetWindow<TheForge>();
-            window.titleContent = new GUIContent(WINDOW_TITLE, EditorGUIUtility.IconContent("d_ScriptableObject Icon").image);
-            window.minSize = new Vector2(700, 450);
-        }
-        
-        public static void OpenVisualizer(ScriptableObject asset)
-        {
-            if (asset == null) return;
-            
-            var window = GetWindow<PlayForgeVisualizer>();
-            window.SetAsset(asset);
+            window.titleContent = new GUIContent(WindowTitle, EditorGUIUtility.IconContent("d_ScriptableObject Icon").image);
+            window.minSize = new Vector2(720, 400);
             window.Show();
+            return window;
         }
-        
-        public static string GetAssetDisplayName(ScriptableObject asset)
-        {
-            return asset switch
-            {
-                Ability a => !string.IsNullOrEmpty(a.GetName()) ? a.GetName() : a.name,
-                GameplayEffect e => !string.IsNullOrEmpty(e.GetName()) ? e.GetName() : e.name,
-                Attribute attr => !string.IsNullOrEmpty(attr.Name) ? attr.Name : attr.name,
-                EntityIdentity ent => !string.IsNullOrEmpty(ent.GetName()) ? ent.GetName() : ent.name,
-                AttributeSet attrSet => !string.IsNullOrEmpty(attrSet.GetName()) ? attrSet.GetName() : attrSet.Name,
-                Item item => !string.IsNullOrEmpty(item.GetName()) ? item.GetName() : item.name,
-                _ => asset.name
-            };
-        }
-        
+
         /// <summary>
-        /// Opens the PlayForge Manager and navigates to a specific asset.
-        /// Called from asset editor headers via the "Open" button.
+        /// Opens The Forge on an asset, its type's filter on, with the asset selected, as an inspector's Open in The Forge
+        /// does. It filtered by the asset's name, and showed the tab as it was (ED-27).
         /// </summary>
-        public static void OpenToAsset(UnityEngine.Object asset)
+        public static void OpenToAsset(Object asset)
         {
             if (asset == null) return;
-            
-            var window = GetWindow<TheForge>();
-            window.titleContent = new GUIContent(WINDOW_TITLE, EditorGUIUtility.IconContent("d_ScriptableObject Icon").image);
-            window.minSize = new Vector2(700, 450);
-            window.Show();
-            window.Focus();
-            
-            // Navigate to View tab
-            window.ShowTab(1);
-            
-            // Set type filter to match asset type
-            var assetType = asset.GetType();
-            var typeInfo = AssetTypes.FirstOrDefault(t => t.Type == assetType);
-            if (typeInfo != null)
-            {
-                window.selectedTypeFilter = assetType;
-                window.showTagsView = false;
-            }
-            
-            // Set search filter to asset name to highlight it
-            if (asset is ScriptableObject so)
-            {
-                var displayName = GetAssetDisplayName(so);
-                window.searchFilter = displayName;
-            }
-            
-            // Refresh the view
-            window.RefreshAssetCache();
-            
-            // Select the asset in Unity's selection
-            Selection.activeObject = asset;
-            EditorGUIUtility.PingObject(asset);
-        }
-        
-        private void OnEnable()
-        {
-            EditorApplication.projectChanged += OnProjectChanged;
-            RefreshAssetCache();
-            
-            if (PlayForgePreferences.RememberTypeFilter.Value)
-            {
-                var lastType = EditorPrefs.GetString(PREFS_PREFIX + PlayForgePreferences.LastTypeFilterKey, "");
-                if (lastType == TAGS_VIEW_MARKER)
-                {
-                    showTagsView = true;
-                    selectedTypeFilter = null;
-                }
-                else if (!string.IsNullOrEmpty(lastType))
-                {
-                    selectedTypeFilter = AssetTypes.FirstOrDefault(t => t.Type.Name == lastType)?.Type;
-                }
-            }
-        }
-        
-        private void OnDisable()
-        {
-            EditorApplication.projectChanged -= OnProjectChanged;
+            var forge = Open();
+            forge.Focus();
+            forge.tagsShown = false;
+            forge.search = "";
+            forge.typeFilter = Types.FirstOrDefault(type => type.IsInstanceOfType(asset))?.Name ?? "";
+            forge.selected = asset;
+            forge.Refill();
         }
 
-        // "Auto-refresh on window focus" was saved but never read (ED-6). Focus refreshes only after the project has
-        // changed, so clicking into the window doesn't rebuild what's under the pointer for nothing
-        private bool projectChangedSinceRefresh;
-
-        private void OnProjectChanged() => projectChangedSinceRefresh = true;
-
-        private void OnFocus()
-        {
-            if (!projectChangedSinceRefresh || contentContainer == null) return;
-            if (PlayForgePreferences.AutoRefresh.Value) RefreshAll();
-        }
-
-        // The window menu opens the settings pages, which hold what the Settings tab did (ED-21)
         public void AddItemsToMenu(GenericMenu menu)
         {
+            menu.AddItem(new GUIContent("Problems…"), false, () => ForgeProblemsWindow.ShowWindow());
             menu.AddItem(new GUIContent("Project Settings…"), false, PlayForgeSettingsPages.OpenProjectSettings);
             menu.AddItem(new GUIContent("Preferences…"), false, PlayForgeSettingsPages.OpenPreferences);
         }
 
+        // ═══════════════════════════════════════════════════════════════════════════
+        // Following the project
+        // ═══════════════════════════════════════════════════════════════════════════
+
+        private void OnEnable()
+        {
+            EditorApplication.projectChanged += QueueReload;
+            ForgeValidator.Changed += OnProblemsChanged;
+            ObjectChangeEvents.changesPublished += OnObjectChanges;
+        }
+
+        private void OnDisable()
+        {
+            EditorApplication.projectChanged -= QueueReload;
+            ForgeValidator.Changed -= OnProblemsChanged;
+            ObjectChangeEvents.changesPublished -= OnObjectChanges;
+            DestroyDetailEditor();
+        }
+
+        // A change to the project reads it again, once, after the change settles
+        private void QueueReload()
+        {
+            if (reloadQueued) return;
+            reloadQueued = true;
+            EditorApplication.delayCall += () =>
+            {
+                reloadQueued = false;
+                if (this != null) Reload();
+            };
+        }
+
+        // An edit to a listed asset, as a rename in its inspector, redraws the rows
+        private void OnObjectChanges(ref ObjectChangeEventStream stream)
+        {
+            for (int i = 0; i < stream.length; i++)
+            {
+                if (stream.GetEventType(i) != ObjectChangeKind.ChangeAssetObjectProperties) continue;
+                stream.GetChangeAssetObjectPropertiesEvent(i, out var edited);
+                if (EditorUtility.InstanceIDToObject(edited.instanceId) is ScriptableObject asset && allAssets.Contains(asset))
+                {
+                    assetList?.RefreshItems();
+                    return;
+                }
+            }
+        }
+
+        private void OnProblemsChanged()
+        {
+            assetList?.RefreshItems();
+            ShowCounts();
+        }
+
+        // ═══════════════════════════════════════════════════════════════════════════
+        // Building
+        // ═══════════════════════════════════════════════════════════════════════════
+
         private void CreateGUI()
         {
-            root = rootVisualElement;
-            root.style.flexGrow = 1;
-            // PlayForge's style sheet, in the editor's theme, over the window's own background. It painted the window a
-            // hard-coded dark gray, whatever the theme (ED-20)
+            var root = rootVisualElement;
+            // PlayForge's style sheet, in the editor's theme. It painted the window a hard-coded dark gray (ED-20)
             ForgeTheme.Apply(root);
-            
-            BuildHeader();
-            BuildMainTabBar();
-            BuildContentArea();
-            
-            ShowTab(currentTab);
+            root.AddToClassList("pf-forge");
+            root.Add(BuildToolbar());
+
+            var split = new TwoPaneSplitView(0, 360, TwoPaneSplitViewOrientation.Horizontal) { name = "Split" };
+            split.AddToClassList("pf-forge__split");
+            var lists = new VisualElement { name = "Lists" };
+            lists.AddToClassList("pf-forge__lists");
+            assetList = BuildAssetList();
+            tagList = BuildTagList();
+            lists.Add(assetList);
+            lists.Add(tagList);
+            split.Add(lists);
+            var scroll = new ScrollView { name = "DetailScroll" };
+            scroll.AddToClassList("pf-forge__detail-scroll");
+            detail = new VisualElement { name = "Detail" };
+            detail.AddToClassList("pf-forge__detail");
+            scroll.Add(detail);
+            split.Add(scroll);
+            root.Add(split);
+
+            status = new Label { name = "ForgeStatus" };
+            status.AddToClassList("pf-forge__status");
+            root.Add(status);
+            Reload();
         }
-        
-        // ═══════════════════════════════════════════════════════════════════════════
-        // Header
-        // ═══════════════════════════════════════════════════════════════════════════
-        
-        private void BuildHeader()
+
+        // Create, the type filters, each with its type icon, Tags, the search and the problem count
+        private Toolbar BuildToolbar()
         {
-            var header = new VisualElement();
-            header.style.flexDirection = FlexDirection.Row;
-            header.style.alignItems = Align.Center;
-            header.style.paddingLeft = 12;
-            header.style.paddingRight = 12;
-            header.style.paddingTop = 8;
-            header.style.paddingBottom = 8;
-            header.style.backgroundColor = Colors.HeaderBackground;
-            header.style.borderBottomWidth = 1;
-            header.style.borderBottomColor = Colors.BorderDark;
-            root.Add(header);
-            
-            var titleLabel = new Label("The Forge");
-            titleLabel.style.fontSize = 16;
-            titleLabel.style.unityFontStyleAndWeight = FontStyle.Bold;
-            titleLabel.style.color = Colors.HeaderText;
-            titleLabel.style.letterSpacing = 2;
-            header.Add(titleLabel);
-            
-            var spacer = new VisualElement();
-            spacer.style.flexGrow = 1;
-            header.Add(spacer);
-            
-            var statsContainer = new VisualElement();
-            statsContainer.style.flexDirection = FlexDirection.Row;
-            statsContainer.style.alignItems = Align.Center;
-            header.Add(statsContainer);
-            
-            foreach (var typeInfo in AssetTypes.Take(5))
+            var toolbar = new Toolbar { name = "ForgeToolbar" };
+            var create = new ToolbarMenu { name = "Create", text = "Create", tooltip = "Make a new asset where Project Settings puts its type" };
+            foreach (var type in Types)
+                create.menu.AppendAction(ForgeAssetTypes.NameOf(type), _ => ForgeNewAssetWindow.Show(type, OpenToAsset));
+            toolbar.Add(create);
+
+            foreach (var type in Types)
             {
-                var count = CountAssetsOfType(typeInfo.Type);
-                var stat = CreateCompactStat(typeInfo.DisplayName, count.ToString(), typeInfo.Color);
-                stat.tooltip = $"{count} {typeInfo.DisplayName}(s)";
-                statsContainer.Add(stat);
+                var name = ForgeAssetTypes.NameOf(type);
+                var toggle = new ToolbarToggle { name = type.Name, tooltip = $"Show only {name} assets" };
+                toggle.AddToClassList("pf-forge__filter");
+                var glyph = ForgeAssetTypes.GlyphOf(type);
+                if (glyph != ForgeGlyphShape.None) toggle.Add(new ForgeTypeIcon(type));
+                else toggle.text = name;
+                toggle.RegisterValueChangedCallback(change =>
+                {
+                    typeFilter = change.newValue ? type.Name : typeFilter == type.Name ? "" : typeFilter;
+                    if (change.newValue) tagsShown = false;
+                    Refill();
+                });
+                typeToggles[type.Name] = toggle;
+                toolbar.Add(toggle);
             }
-            
-            var tagCount = ForgeTagRegistry.GetAllTags().Count();
-            var tagStat = CreateCompactStat("Tags", tagCount.ToString(), Colors.AccentCyan);
-            tagStat.tooltip = $"{tagCount} unique tag(s)";
-            statsContainer.Add(tagStat);
-            
-            var refreshBtn = CreateButton("↻", RefreshAll, "Refresh asset cache & tag registry");
-            refreshBtn.style.marginLeft = 12;
-            refreshBtn.style.width = 28;
-            refreshBtn.style.height = 28;
-            ApplyButtonStyle(refreshBtn);
-            header.Add(refreshBtn);
-        }
-        
-        private VisualElement CreateCompactStat(string icon, string value, Color color)
-        {
-            var stat = new VisualElement();
-            stat.style.flexDirection = FlexDirection.Row;
-            stat.style.alignItems = Align.Center;
-            stat.style.marginLeft = 8;
-            stat.style.paddingLeft = 6;
-            stat.style.paddingRight = 6;
-            stat.style.paddingTop = 2;
-            stat.style.paddingBottom = 2;
-            stat.style.backgroundColor = new Color(color.r, color.g, color.b, 0.2f);
-            stat.style.borderTopLeftRadius = 4;
-            stat.style.borderTopRightRadius = 4;
-            stat.style.borderBottomLeftRadius = 4;
-            stat.style.borderBottomRightRadius = 4;
-            
-            var iconLabel = new Label(icon);
-            iconLabel.style.fontSize = 10;
-            iconLabel.style.marginRight = 4;
-            stat.Add(iconLabel);
-            
-            var valueLabel = new Label(value);
-            valueLabel.style.fontSize = 11;
-            valueLabel.style.color = color;
-            valueLabel.style.unityFontStyleAndWeight = FontStyle.Bold;
-            stat.Add(valueLabel);
-            
-            return stat;
-        }
-        
-        // ═══════════════════════════════════════════════════════════════════════════
-        // Main Tab Bar
-        // ═══════════════════════════════════════════════════════════════════════════
-        
-        private void BuildMainTabBar()
-        {
-            var tabBar = new VisualElement();
-            tabBar.style.flexDirection = FlexDirection.Row;
-            tabBar.style.backgroundColor = new Color(0.18f, 0.18f, 0.18f, 1f);
-            tabBar.style.paddingLeft = 8;
-            tabBar.style.paddingTop = 4;
-            tabBar.style.paddingBottom = 0;
-            root.Add(tabBar);
-            
-            tabButtons.Clear();
-            
-            for (int i = 0; i < tabNames.Length; i++)
+            tagsToggle = new ToolbarToggle { name = "Tags", text = "Tags", tooltip = "Show the project's tags and what uses each" };
+            tagsToggle.RegisterValueChangedCallback(change =>
             {
-                int tabIndex = i;
-                var btn = CreateButton(tabNames[i], () => ShowTab(tabIndex));
-                btn.style.paddingLeft = 16;
-                btn.style.paddingRight = 16;
-                btn.style.paddingTop = 8;
-                btn.style.paddingBottom = 8;
-                btn.style.marginRight = 2;
-                btn.style.borderTopLeftRadius = 4;
-                btn.style.borderTopRightRadius = 4;
-                btn.style.borderBottomLeftRadius = 0;
-                btn.style.borderBottomRightRadius = 0;
-                btn.style.borderBottomWidth = 0;
-                btn.style.unityFontStyleAndWeight = FontStyle.Bold;
-                btn.style.fontSize = 12;
-                
-                tabButtons.Add(btn);
-                tabBar.Add(btn);
-            }
-        }
-        
-        internal void ShowTab(int index)
-        {
-            currentTab = index;
-            
-            for (int i = 0; i < tabButtons.Count; i++)
+                tagsShown = change.newValue;
+                if (tagsShown) typeFilter = "";
+                Refill();
+            });
+            toolbar.Add(tagsToggle);
+
+            toolbar.Add(new ToolbarSpacer { flex = true });
+            searchField = new ToolbarSearchField { name = "Search", tooltip = "Show what has this text in its name, file name or tag" };
+            searchField.AddToClassList("pf-forge__search");
+            searchField.SetValueWithoutNotify(search);
+            searchField.RegisterValueChangedCallback(change =>
             {
-                bool isActive = i == currentTab;
-                tabButtons[i].style.backgroundColor = isActive 
-                    ? new Color(0.25f, 0.25f, 0.25f, 1f) 
-                    : new Color(0.15f, 0.15f, 0.15f, 1f);
-                tabButtons[i].style.color = isActive 
-                    ? Colors.HeaderText 
-                    : Colors.HintText;
-            }
-            
-            contentContainer.Clear();
-            
-            switch (currentTab)
-            {
-                case 0: BuildCreateTab(); break;
-                case 1: BuildViewTab(); break;
-                case 2: BuildAnalysisTab(); break;
-            }
+                search = change.newValue ?? "";
+                Refill();
+            });
+            toolbar.Add(searchField);
+            problemCount = new ToolbarButton(() => ForgeProblemsWindow.ShowWindow()) { name = "ProblemCount", tooltip = "Open the Problems view" };
+            problemCount.AddToClassList("pf-forge__problems");
+            toolbar.Add(problemCount);
+            return toolbar;
         }
-        
-        private void BuildContentArea()
+
+        // The assets: a sortable column for the name with its type icon, the type, the asset tag and the levels, then the
+        // problem glyph. A click selects a row and a double click shows the asset in the Project window
+        private MultiColumnListView BuildAssetList()
         {
-            contentContainer = new VisualElement();
-            contentContainer.style.flexGrow = 1;
-            contentContainer.style.backgroundColor = new Color(0.22f, 0.22f, 0.22f, 1f);
-            contentContainer.style.paddingLeft = 12;
-            contentContainer.style.paddingRight = 12;
-            contentContainer.style.paddingTop = 12;
-            contentContainer.style.paddingBottom = 12;
-            root.Add(contentContainer);
+            var list = new MultiColumnListView
+            {
+                name = "Assets",
+                fixedItemHeight = 20,
+                selectionType = SelectionType.Single,
+                showAlternatingRowBackgrounds = AlternatingRowBackground.ContentOnly,
+                sortingMode = ColumnSortingMode.Custom,
+            };
+            list.AddToClassList("pf-forge__list");
+            list.columns.Add(new Column
+            {
+                name = "Name", title = "Name", width = 160, stretchable = true, sortable = true,
+                makeCell = () =>
+                {
+                    var cell = new VisualElement();
+                    cell.AddToClassList("pf-forge__name-cell");
+                    cell.Add(new ForgeTypeIcon(typeof(Ability)) { name = "Icon" });
+                    var name = new Label { name = "Name" };
+                    name.AddToClassList("pf-forge__name");
+                    cell.Add(name);
+                    var file = new Label { name = "File" };
+                    file.AddToClassList("pf-forge__file");
+                    cell.Add(file);
+                    return cell;
+                },
+                bindCell = (cell, index) =>
+                {
+                    var asset = shownAssets[index];
+                    ShowTypeIcon(cell.Q<ForgeGlyph>("Icon"), asset.GetType());
+                    cell.Q<Label>("Name").text = NameOf(asset);
+                    var file = cell.Q<Label>("File");
+                    bool showFile = PlayForgePreferences.ShowFileNames.Value && asset.name != NameOf(asset);
+                    file.text = showFile ? asset.name : "";
+                    file.EnableInClassList(HiddenClass, !showFile);
+                    cell.tooltip = AssetDatabase.GetAssetPath(asset);
+                },
+            });
+            list.columns.Add(TextColumn("Type", "Type", 100, asset => ForgeAssetTypes.NameOf(asset.GetType())));
+            list.columns.Add(TextColumn("AssetTag", "Asset Tag", 130, AssetTagOf));
+            list.columns.Add(TextColumn("Levels", "Levels", 56, LevelsOf));
+            list.columns.Add(new Column
+            {
+                name = "Problems", title = "", width = 24, resizable = false, sortable = true,
+                makeCell = () => new ForgeGlyph(ForgeGlyphShape.Warning),
+                bindCell = (cell, index) =>
+                {
+                    var problems = ForgeValidator.ProblemsOf(shownAssets[index]);
+                    cell.EnableInClassList(HiddenClass, problems.Count == 0);
+                    cell.EnableInClassList("pf-glyph--warning", problems.Count > 0 && problems.All(problem => problem.Severity == ForgeProblemSeverity.Warning));
+                    cell.EnableInClassList("pf-glyph--destructive", problems.Any(problem => problem.Severity == ForgeProblemSeverity.Error));
+                    cell.tooltip = string.Join("\n", problems.Select(problem => problem.Message));
+                },
+            });
+            list.columnSortingChanged += () =>
+            {
+                var sort = list.sortedColumns.FirstOrDefault();
+                sortColumn = sort?.columnName ?? "Name";
+                sortAscending = sort == null || sort.direction == SortDirection.Ascending;
+                Refill();
+            };
+            list.selectionChanged += chosen =>
+            {
+                var asset = chosen.OfType<ScriptableObject>().FirstOrDefault();
+                if (asset == null) return;
+                selected = asset;
+                ShowDetail();
+            };
+            list.itemsChosen += chosen => ShowInProject(chosen.OfType<Object>().FirstOrDefault());
+            list.AddManipulator(new ContextualMenuManipulator(AssetMenu));
+            return list;
         }
-        
+
+        private Column TextColumn(string name, string title, float width, Func<ScriptableObject, string> text) => new()
+        {
+            name = name, title = title, width = width, sortable = true,
+            makeCell = () =>
+            {
+                var label = new Label();
+                label.AddToClassList("pf-forge__cell");
+                return label;
+            },
+            bindCell = (cell, index) => ((Label)cell).text = text(shownAssets[index]),
+        };
+
+        // The tags: each one, by its full path or its leaf as the tag preferences say, what it's for, and how many assets
+        // use it
+        private MultiColumnListView BuildTagList()
+        {
+            var list = new MultiColumnListView
+            {
+                name = "TagList",
+                fixedItemHeight = 20,
+                selectionType = SelectionType.Single,
+                showAlternatingRowBackgrounds = AlternatingRowBackground.ContentOnly,
+            };
+            list.AddToClassList("pf-forge__list");
+            list.columns.Add(TagColumn("Tag", "Tag", 180, record => TagText(record.Tag), true));
+            list.columns.Add(TagColumn("Contexts", "For", 120, record => string.Join(", ", record.UsageByContext.Keys.OrderBy(key => key)), false));
+            list.columns.Add(TagColumn("Uses", "Uses", 50, record => record.TotalAssetCount.ToString(), false));
+            list.selectionChanged += chosen =>
+            {
+                var record = chosen.OfType<ForgeTagRegistry.TagUsageRecord>().FirstOrDefault();
+                if (record == null) return;
+                selectedTag = record.Tag.Name;
+                ShowDetail();
+            };
+            return list;
+        }
+
+        private Column TagColumn(string name, string title, float width, Func<ForgeTagRegistry.TagUsageRecord, string> text, bool stretch) => new()
+        {
+            name = name, title = title, width = width, stretchable = stretch,
+            makeCell = () =>
+            {
+                var label = new Label();
+                label.AddToClassList("pf-forge__cell");
+                return label;
+            },
+            bindCell = (cell, index) => ((Label)cell).text = text(shownTags[index]),
+        };
+
         // ═══════════════════════════════════════════════════════════════════════════
-        // Asset Type Info
+        // Showing
         // ═══════════════════════════════════════════════════════════════════════════
-        
-        public class AssetTypeInfo
+
+        // Reads the project's assets again, then shows what the filters let through
+        private void Reload()
         {
-            public Type Type { get; }
-            public string DisplayName { get; }
-            public string Icon { get; }
-            public Color Color { get; }
-            public string Description { get; }
-            public bool CanCreate { get; }
-            public bool CanVisualize { get; }
-            
-            public AssetTypeInfo(Type type, string displayName, string icon, Color color, string description, bool canCreate = true, bool canVisualize = true)
-            {
-                Type = type;
-                DisplayName = displayName;
-                Icon = icon;
-                Color = color;
-                Description = description;
-                CanCreate = canCreate;
-                CanVisualize = canVisualize;
-            }
+            allAssets = ForgeValidator.ProjectAssets().ToList();
+            if (selected == null) selected = null;
+            Refill();
         }
+
+        private void Refill()
+        {
+            if (assetList == null) return;
+            foreach (var (name, toggle) in typeToggles) toggle.SetValueWithoutNotify(!tagsShown && typeFilter == name);
+            tagsToggle.SetValueWithoutNotify(tagsShown);
+            searchField.SetValueWithoutNotify(search);
+            assetList.EnableInClassList(HiddenClass, tagsShown);
+            tagList.EnableInClassList(HiddenClass, !tagsShown);
+
+            if (tagsShown)
+            {
+                shownTags = ForgeTagRegistry.GetAllTagRecords()
+                    .Where(record => Matches(TagText(record.Tag)) || Matches(record.Tag.Name))
+                    .OrderBy(record => TagText(record.Tag), Comparer<string>.Create(EditorUtility.NaturalCompare))
+                    .ToList();
+                tagList.itemsSource = shownTags;
+                tagList.RefreshItems();
+                int at = shownTags.FindIndex(record => record.Tag.Name == selectedTag);
+                if (at >= 0) tagList.SetSelectionWithoutNotify(new[] { at });
+                else tagList.ClearSelection();
+            }
+            else
+            {
+                shownAssets = Sorted(allAssets.Where(Shows), sortColumn, sortAscending);
+                assetList.itemsSource = shownAssets;
+                assetList.RefreshItems();
+                int at = selected != null ? shownAssets.IndexOf(selected as ScriptableObject) : -1;
+                if (at >= 0)
+                {
+                    assetList.SetSelectionWithoutNotify(new[] { at });
+                    assetList.ScrollToItem(at);
+                }
+                else assetList.ClearSelection();
+            }
+            ShowDetail();
+            ShowCounts();
+        }
+
+        // Whether the filters and the search let an asset through
+        private bool Shows(ScriptableObject asset)
+        {
+            if (asset == null) return false;
+            if (!string.IsNullOrEmpty(typeFilter) && Types.FirstOrDefault(type => type.Name == typeFilter)?.IsInstanceOfType(asset) != true)
+                return false;
+            return Matches(NameOf(asset)) || Matches(asset.name) || Matches(AssetTagOf(asset));
+        }
+
+        private bool Matches(string text) =>
+            string.IsNullOrWhiteSpace(search) || (text ?? "").IndexOf(search.Trim(), StringComparison.OrdinalIgnoreCase) >= 0;
+
+        private void ShowCounts()
+        {
+            if (status == null) return;
+            var problems = ForgeValidator.All;
+            int errors = problems.Count(problem => problem.Severity == ForgeProblemSeverity.Error);
+            problemCount.text = problems.Count == 0 ? "No problems" : CountOf(problems.Count, "problem", "problems");
+            problemCount.EnableInClassList("pf-forge__problems--some", problems.Count > 0);
+            problemCount.EnableInClassList("pf-forge__problems--error", errors > 0);
+            var listed = tagsShown
+                ? (shownTags.Count == ForgeTagRegistry.GetAllTagRecords().Count() ? CountOf(shownTags.Count, "tag", "tags") : $"{shownTags.Count} of {CountOf(ForgeTagRegistry.GetAllTagRecords().Count(), "tag", "tags")}")
+                : (shownAssets.Count == allAssets.Count ? CountOf(allAssets.Count, "asset", "assets") : $"{shownAssets.Count} of {CountOf(allAssets.Count, "asset", "assets")}");
+            status.text = $"{listed} · {(problems.Count == 0 ? "no problems" : CountOf(problems.Count, "problem", "problems"))}";
+        }
+
+        // The detail pane: the selected asset's summary and inspector, or the selected tag and what uses it
+        private void ShowDetail()
+        {
+            if (detail == null) return;
+            if (tagsShown)
+            {
+                shownInDetail = null;
+                DestroyDetailEditor();
+                detail.Clear();
+                ShowTagDetail();
+                return;
+            }
+            if (selected != null && selected == shownInDetail && detailEditor != null) return;
+            DestroyDetailEditor();
+            detail.Clear();
+            shownInDetail = selected;
+            if (selected == null)
+            {
+                detail.Add(Note("Select an asset to see it here."));
+                return;
+            }
+
+            var summary = new VisualElement { name = "Summary" };
+            summary.AddToClassList("pf-forge__summary");
+            detail.Add(summary);
+            detailEditor = UnityEditor.Editor.CreateEditor(selected);
+            var inspector = new InspectorElement(detailEditor) { name = "Inspector" };
+            detail.Add(inspector);
+            var asset = selected;
+            FillSummary(summary, asset);
+            // Once the inspector is built, and again as the asset changes, the summary reads its sections' lines
+            summary.schedule.Execute(() => FillSummary(summary, asset));
+            summary.TrackSerializedObjectValue(detailEditor.serializedObject, _ => summary.schedule.Execute(() => FillSummary(summary, asset)));
+        }
+
+        // What the asset does, by its description and its sections' one-line summaries, and what's wrong with it
+        private void FillSummary(VisualElement summary, Object asset)
+        {
+            if (asset == null || detailEditor == null) return;
+            summary.Clear();
+            var title = new Label("Summary");
+            title.AddToClassList("pf-forge__summary-title");
+            summary.Add(title);
+            var description = asset is BaseForgeAsset forge ? forge.GetDescription() : null;
+            if (!string.IsNullOrWhiteSpace(description))
+            {
+                var text = new Label(description);
+                text.AddToClassList("pf-forge__summary-description");
+                summary.Add(text);
+            }
+            if (detailEditor is BasePlayForgeEditor editor)
+            {
+                foreach (var section in editor.Sections)
+                {
+                    var line = section.Summary?.text;
+                    if (string.IsNullOrWhiteSpace(line) || string.IsNullOrWhiteSpace(section.Title)) continue;
+                    summary.Add(Row(section.Title, line));
+                }
+            }
+            var problems = ForgeValidator.ProblemsOf(asset);
+            if (problems.Count > 0) summary.Add(Row("Problems", string.Join(" ", problems.Select(problem => problem.Message))));
+        }
+
+        private static VisualElement Row(string label, string value)
+        {
+            var row = new VisualElement();
+            row.AddToClassList("pf-forge__summary-row");
+            var name = new Label(label);
+            name.AddToClassList("pf-forge__summary-label");
+            row.Add(name);
+            var text = new Label(value);
+            text.AddToClassList("pf-forge__summary-value");
+            text.tooltip = value;
+            row.Add(text);
+            return row;
+        }
+
+        // A tag: its path, what it's for, and each asset that uses it, as a row that shows the asset
+        private void ShowTagDetail()
+        {
+            var record = shownTags.FirstOrDefault(each => each.Tag.Name == selectedTag);
+            if (record == null)
+            {
+                detail.Add(Note("Select a tag to see what uses it."));
+                return;
+            }
+            var summary = new VisualElement { name = "Summary" };
+            summary.AddToClassList("pf-forge__summary");
+            var title = new Label(record.Tag.Name);
+            title.AddToClassList("pf-forge__summary-title");
+            summary.Add(title);
+            summary.Add(Row("For", string.Join(", ", record.UsageByContext.Keys.OrderBy(key => key))));
+            summary.Add(Row("Uses", CountOf(record.TotalAssetCount, "asset", "assets")));
+            detail.Add(summary);
+
+            var users = new VisualElement { name = "TagUsers" };
+            users.AddToClassList("pf-forge__users");
+            var usages = record.UsageByContext.Values.SelectMany(usage => usage.Usages)
+                .Where(usage => usage.Asset != null)
+                .GroupBy(usage => usage.Asset)
+                .OrderBy(group => NameOf(group.Key), StringComparer.OrdinalIgnoreCase);
+            foreach (var group in usages)
+            {
+                var asset = group.Key;
+                var row = new Button(() => OpenToAsset(asset)) { tooltip = "Show this asset in The Forge" };
+                row.AddToClassList("pf-forge__user");
+                var icon = new ForgeTypeIcon(asset.GetType());
+                row.Add(icon);
+                var name = new Label(NameOf(asset));
+                name.AddToClassList("pf-forge__user-name");
+                row.Add(name);
+                var fields = new Label(string.Join(", ", group.Select(usage => usage.FriendlyFieldName).Where(field => field.Length > 0).Distinct()));
+                fields.AddToClassList("pf-forge__user-field");
+                row.Add(fields);
+                users.Add(row);
+            }
+            if (users.childCount == 0) users.Add(Note("No asset uses it: it's declared, or a default."));
+            detail.Add(users);
+        }
+
+        private void DestroyDetailEditor()
+        {
+            if (detailEditor != null) DestroyImmediate(detailEditor);
+            detailEditor = null;
+        }
+
+        // ═══════════════════════════════════════════════════════════════════════════
+        // Acting on an asset
+        // ═══════════════════════════════════════════════════════════════════════════
+
+        // The selected asset's actions, in its right-click menu
+        private void AssetMenu(ContextualMenuPopulateEvent menu)
+        {
+            var asset = selected as ScriptableObject;
+            var status = asset != null && !tagsShown ? DropdownMenuAction.Status.Normal : DropdownMenuAction.Status.Disabled;
+            menu.menu.AppendAction("Show in Project", _ => ShowInProject(asset), status);
+            menu.menu.AppendAction("Open in a Window", _ => EditorUtility.OpenPropertyEditor(asset), status);
+            menu.menu.AppendSeparator();
+            menu.menu.AppendAction("Duplicate", _ =>
+            {
+                var copy = ForgeAssetCreation.Duplicate(asset);
+                if (copy != null) OpenToAsset(copy);
+            }, status);
+            menu.menu.AppendAction("Move to Trash", _ => ForgeAssetDeletion.MoveToTrash(asset), status);
+        }
+
+        private static void ShowInProject(Object asset)
+        {
+            if (asset == null) return;
+            Selection.activeObject = asset;
+            EditorGUIUtility.PingObject(asset);
+        }
+
+        // ═══════════════════════════════════════════════════════════════════════════
+        // What a row shows
+        // ═══════════════════════════════════════════════════════════════════════════
+
+        /// <summary>An asset's name: its own, or its file's when it has none.</summary>
+        internal static string NameOf(Object asset) => asset switch
+        {
+            null => "",
+            BaseForgeAsset forge when !string.IsNullOrWhiteSpace(forge.GetName()) => forge.GetName(),
+            _ => asset.name,
+        };
+
+        private static string AssetTagOf(ScriptableObject asset)
+        {
+            if (asset is not BaseForgeLevelProvider provider) return "";
+            var tag = provider.GetAssetTag();
+            return tag.IsValid ? tag.Name : "";
+        }
+
+        // The levels an asset uses, as "1–5", or nothing for an asset without levels of its own
+        private static string LevelsOf(ScriptableObject asset)
+        {
+            if (asset is not BaseForgeLevelProvider provider || asset is GameplayEffect) return "";
+            int max = provider.GetMaxLevel();
+            return max <= 0 ? "" : $"{provider.GetStartingLevel()}–{max}";
+        }
+
+        /// <summary>A tag, by its full path or by its leaf, as the tag preferences say (ED-25).</summary>
+        internal static string TagText(Tag tag)
+        {
+            var name = tag.Name ?? "";
+            if (TagDisplaySettings.ShowFullPath) return name;
+            int dot = name.LastIndexOf('.');
+            return dot >= 0 ? name.Substring(dot + 1) : name;
+        }
+
+        /// <summary>
+        /// The assets in a column's order: each column's text, compared in natural order, so 9 comes before 10, then by
+        /// name (ED-7).
+        /// </summary>
+        internal static List<ScriptableObject> Sorted(IEnumerable<ScriptableObject> assets, string column, bool ascending)
+        {
+            Func<ScriptableObject, string> key = column switch
+            {
+                "Type" => asset => ForgeAssetTypes.NameOf(asset.GetType()),
+                "AssetTag" => AssetTagOf,
+                "Levels" => LevelsOf,
+                "Problems" => asset => ForgeValidator.ProblemsOf(asset).Count.ToString(),
+                _ => NameOf,
+            };
+            var natural = Comparer<string>.Create(EditorUtility.NaturalCompare);
+            var ordered = ascending ? assets.OrderBy(key, natural) : assets.OrderByDescending(key, natural);
+            return ordered.ThenBy(NameOf, natural).ToList();
+        }
+
+        private static readonly string[] Modifiers = { "ability", "effect", "entity", "item", "attribute", "attribute-set" };
+
+        // A reused cell's type icon, set to another type
+        private static void ShowTypeIcon(ForgeGlyph icon, Type type)
+        {
+            if (icon == null) return;
+            icon.Shape = ForgeAssetTypes.GlyphOf(type);
+            var modifier = ForgeAssetTypes.ModifierOf(type);
+            foreach (var each in Modifiers) icon.EnableInClassList($"{ForgeTypeIcon.TypeIconClass}--{each}", each == modifier);
+            icon.EnableInClassList(HiddenClass, icon.Shape == ForgeGlyphShape.None);
+        }
+
+        private static Label Note(string text)
+        {
+            var note = new Label(text);
+            note.AddToClassList("pf-note");
+            return note;
+        }
+
+        private static string CountOf(int count, string one, string many) => $"{count} {(count == 1 ? one : many)}";
     }
 }

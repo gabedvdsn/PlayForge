@@ -39,41 +39,28 @@ namespace FarEmerald.PlayForge.Extended.Editor
             "Show a tag's whole path, rather than its leaf after an ellipsis", false);
         internal static readonly Switch GroupTagsByRoot = new("GroupTagsByRoot", "Group Tags by Root",
             "Group the tag picker's tags under their root", true);
-        internal static readonly Switch RememberTypeFilter = new("RememberTypeFilter", "Remember the Type Filter",
-            "The Forge opens on the type you last chose", true);
         internal static readonly Switch ShowFileNames = new("ShowFileNames", "Show File Names",
-            "The Forge's list shows each asset's file name beside its name", true);
-        internal static readonly Switch DoubleClickVisualize = new("DoubleClickVisualize", "Double-Click Opens the Visualizer",
-            "A double click on a row in The Forge opens the Visualizer, rather than selecting the asset", true);
-        internal static readonly Switch AutoRefresh = new("AutoRefresh", "Refresh When Focused",
-            "The Forge reads the project again when it gets the focus after the project changed", true);
-        internal static readonly Switch ShowNotifications = new("ShowNotifications", "Log Each New Asset",
-            "Write a line to the Console for each asset The Forge creates", true);
+            "The Forge's list shows each asset's file name beside its name, when they differ", true);
 
         /// <summary>The Forge's switches, in the order the page shows them.</summary>
-        internal static readonly Switch[] ForgeSwitches = { RememberTypeFilter, ShowFileNames, DoubleClickVisualize, AutoRefresh, ShowNotifications };
+        internal static readonly Switch[] ForgeSwitches = { ShowFileNames };
+
+        // The preferences The Forge's redesign left behind: its window keeps its filter, follows the project and selects
+        // what it makes, and its Create tab and Visualizer are gone (ED-27). Use Defaults clears them too
+        private static readonly string[] Retired =
+        {
+            "RememberTypeFilter", "DoubleClickVisualize", "AutoRefresh", "ShowNotifications", "RecentlyCreatedRows", "LastTypeFilter",
+        };
 
         /// <summary>The tag fields' switches, in the order the page shows them.</summary>
         internal static readonly Switch[] TagSwitches = { ShowFullTagPath, GroupTagsByRoot };
 
-        internal const string RecentlyCreatedRowsKey = "RecentlyCreatedRows";
-        internal const int RecentlyCreatedRowsDefault = 10;
-        internal const string LastTypeFilterKey = "LastTypeFilter";
-
-        /// <summary>How many recently created assets The Forge's Create tab lists, from 0 to 50.</summary>
-        public static int RecentlyCreatedRows
-        {
-            get => EditorPrefs.GetInt(Prefix + RecentlyCreatedRowsKey, RecentlyCreatedRowsDefault);
-            set => EditorPrefs.SetInt(Prefix + RecentlyCreatedRowsKey, UnityEngine.Mathf.Clamp(value, 0, 50));
-        }
-
-        /// <summary>The keys every preference here is kept under.</summary>
+        /// <summary>The keys every preference here is kept under, and the retired ones'.</summary>
         internal static IEnumerable<string> Keys()
         {
             foreach (var each in ForgeSwitches) yield return Prefix + each.Key;
             foreach (var each in TagSwitches) yield return Prefix + each.Key;
-            yield return Prefix + RecentlyCreatedRowsKey;
-            yield return Prefix + LastTypeFilterKey;
+            foreach (var each in Retired) yield return Prefix + each;
             yield return ForgeLogSettingsBridge.PrefsKey;
         }
 

@@ -36,7 +36,7 @@ sequences), with cost and cooldown expressed as effects. Full pipeline reference
 
 ## Quickstart: a damage ability in ~10 minutes
 
-Everything below can be done from **Window → PlayForge → The Forge** (Create tab), or via
+Everything below can be done from **Window → PlayForge → The Forge** (its Create menu), or via
 the `Create → PlayForge` asset menu.
 
 1. **Attribute** — create `Attribute` asset "Health".
@@ -87,9 +87,11 @@ string perLevel = impact.FormatTotal();           // "20/30/40/50"
 
 ## Tooling tour
 
-- **The Forge** (`Window → PlayForge → The Forge`) — create/browse/analyze every asset:
-  level-range columns, ability description dropdowns, per-asset visualizers
-  (double-click a row), balance analysis, tag declaration (Create → Tags).
+- **The Forge** (`Window → PlayForge → The Forge`, or Ctrl+Alt+Shift+F, which focuses its search) — every
+  PlayForge asset in one list beside a detail pane. The toolbar holds Create, a filter for each type, Tags, the search
+  and the problem count. The list's columns sort; a click shows the asset's inspector in the detail pane, under a
+  summary of its sections, and a double click shows it in the Project window. Tags lists the project's tags and what
+  uses each; declare tags in a Tag Library asset (`Create → PlayForge → Tag Library`).
 - **GAS Debugger** (`Window → PlayForge → GAS Debugger`) — live entity
   state in play mode: attributes, active effects, abilities, frame impacts.
 - **Asset fields** — every reference to a PlayForge asset is Unity's object field. **Open** beside it shows the asset

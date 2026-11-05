@@ -25,7 +25,18 @@ tracks each fix below by its ID.
   page, through one table of links in the editor.
 
 ### Changed
-- PlayForge's settings belong to the project. **Project Settings → PlayForge** holds where each type's new assets go
+- The Forge is a list beside a detail pane. Its toolbar holds Create, a filter for each type with its type icon, Tags,
+  the search and the problem count, and its status bar the counts. The list's columns, the name with its type icon, the
+  type, the asset tag, the levels and a problem glyph, sort in natural order, and it scrolls through thousands of
+  assets. A click selects a row and shows the asset's inspector in the detail pane, under a summary of its sections; a
+  double click shows it in the Project window, and its right-click menu shows, opens, duplicates or trashes it. Tags
+  lists the project's tags and what uses each. The Forge follows the project with no Refresh, keeps its filter, search
+  and selection across a domain reload, and Ctrl+Alt+Shift+F opens it with the search focused. Inside it, an
+  inspector's Open in The Forge reads Show in Project (ED-27, ED-9).
+- The Forge's Create makes an asset through the one factory a field's New uses: a copy of the type's New Asset
+  default, named, with the tag its name gives, where Project Settings puts its type. A duplicate is named as a copy,
+  with its own tag; it kept the original's name and tag.
+- PlayForge's settings belong to the project.**Project Settings → PlayForge** holds where each type's new assets go
   and how their files are named, each type's defaults (the asset a new one starts as a copy of, and the assets Import
   lists first) and the Cost and Cooldown effects, in `ProjectSettings/PlayForgeSettings.asset`, under version control.
   **Preferences → PlayForge** holds each user's view toggles and the log level. They lived in EditorPrefs, which every
@@ -231,7 +242,12 @@ tracks each fix below by its ID.
   or turning `Enabled` off. Once the first had ended, it threw, and the rest ran on.
 
 ### Removed
-- Validate All, which flagged every effect with no workers and showed 15 problems in a dialog, and the Audit Effect
+- The Forge's Create, View and Analysis tabs, and the Visualizer window. The detail pane's summary replaces the
+  Visualizer, which was blank for items and sets; the Analysis tab's power scores stay hidden until items and entities
+  score too. The Create tab's recently created list and statistics, the View tab's browsers of embedded scalers and of
+  requirements (Scaler assets and requirement templates are in the list now), and the preferences they used are gone
+  too (ED-27, ED-9).
+- Validate All,which flagged every effect with no workers and showed 15 problems in a dialog, and the Audit Effect
   Impact Deliveries menu item, which wrote to the Console. The Problems view has their checks (ED-15).
 - The Forge's Settings tab,whose settings are on the two settings pages; template tags, which only labelled templates
   on that tab; and the Create dialog's type settings, of which all but the Requirement's category named fields the types
