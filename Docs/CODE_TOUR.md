@@ -1,7 +1,7 @@
 # PlayForge refactor: code tour
 
 This tour lists the places where the refactor changed code, so you can open each one in your IDE and read it. It
-covers `01258b8..6733220` on `main`: 292 commits. Phase 0 ported Arcade Fighter's fixes, Phase 1 made the runtime
+covers `01258b8..5dd7332` on `main`: 295 commits. Phase 0 ported Arcade Fighter's fixes, Phase 1 made the runtime
 correct, Phase 2 got the package ready to release, Phase 3 made it cheaper to run and gave the two GAS hubs one core,
 and Phase 4 has begun. Each entry says what behaves differently and why, names its tracker IDs and Decisions, and
 points at the two or three places to read. `Docs/REFACTOR_PLAN.md` has every tracker row, the numbered Decisions,
@@ -10,8 +10,8 @@ and a Log of each batch's test results.
 ## How to use this
 
 - Paths are relative to the repo root.
-- Line numbers are as of commit `6733220`, the head of `main` on 2026-11-04. A later commit may move them, so each
-  entry also names the class and method to search for. `git show 6733220:<path>` shows a file as it was then.
+- Line numbers are as of commit `5dd7332`, the head of `main` on 2026-11-04. A later commit may move them, so each
+  entry also names the class and method to search for. `git show 5dd7332:<path>` shows a file as it was then.
 - In Rider, Go to File accepts `path:line`. In Visual Studio, open the file, then Go To Line (Ctrl+G).
   A bare `:123` after a path means another line in the same file.
 - `git grep "<ID>"` finds the comment at each fix, and `git log --grep "<ID>"` finds its commit. Three exceptions:
@@ -756,6 +756,56 @@ a dialog mid-save, loaded every asset of its type and changed the children with 
   `TemplatePushTests`; and the smoke suite's `Every_edit_in_an_inspector_undoes`, which sweeps the Demo assets that
   are template children.
 
+### One Runtime Debugger (ED-4, ED-5)
+
+From Q4, Q28 and Q30. One window in place of the GAS Debugger, Process Control and the Tag Debugger: an Entities view
+and a Processes view, each a list beside a detail. The hubs are ProcessControl's processes whose wrapper holds an
+`IGameplayAbilitySystem`, so runtime hubs show too, and the lists follow ProcessControl's join and leave callbacks.
+While the game plays, the window samples it at the rate the toolbar sets and changes values in place; in edit mode it
+offers Play Mode. The GAS Debugger scanned the scene for MonoBehaviour hubs and rebuilt its details every 0.25 s, and
+Process Control's usage was the time between a process's steps. ProcessControl now times its steps while asked.
+
+- **IDs:** ED-4 and ED-5, commit `d220ff4`.
+- **Read:**
+  - `Assets/PlayForge/Editor/Debugger/RuntimeDebugger.cs:139` `SampleNow`, `:158` `Follow`, which hooks the
+    registry, and `:185` `ReadLists`, which finds the hubs among the processes.
+  - `Assets/PlayForge/Editor/Debugger/RuntimeDebugger.Entities.cs:118` `ShowEntity`, which builds the detail once
+    and hooks the shown entity's frame summaries alone (ED-26), and `:551` `StateOf`, the cooldown's time left.
+  - `Assets/PlayForge/Editor/Debugger/RuntimeDebugger.Processes.cs:95` `SampleSteps` and `:135` `ShowProcess`, whose
+    Pause and Resume take the processes it handles alike.
+  - `Assets/PlayForge/Runtime/PlayForge/Management/GameplayProcess/Core/ProcessControlBlock.cs:51` `MeasureSteps`, and
+    `:381` `Step`, which times a step while it's on.
+- **Watch for:** `Live` (`RuntimeDebugger.cs:30`) is the tests' way in: they drive the window in edit mode, over a
+  ProcessControl bootstrapped there. `.Every(` stays banned; the window samples on the editor's update, and only while
+  the game plays.
+- **Tests:** `ED_4_The_debugger_lists_each_hub_from_the_registry`, `ED_4_A_sample_changes_the_detail_in_place`,
+  `ED_4_A_cooldown_shows_the_time_it_has_left`, `ED_4_In_edit_mode_the_debugger_offers_Play_Mode`,
+  `ED_5_A_process_shows_how_long_its_steps_take`, `ED_5_A_running_process_pauses_and_resumes`,
+  `ED_26_Closing_the_debugger_removes_its_hooks` and `GAS_S1_The_debugger_names_a_runtime_entity` in
+  `RuntimeDebuggerTests`; `ED_5_A_process_times_its_steps_while_asked` in PlayMode's `ProcessUtilityTests`.
+
+### The debugger acts, and loose tags (ED-40, FEAT-16)
+
+From Q27: editing attributes and tags first, then applying effects and granting abilities. An attribute's current and
+base fields take a value, which the entity takes as it is. A tag typed or picked from the project's is granted as a
+loose tag, which its row removes. An effect picked lands from the entity itself, and an ability picked is granted at a
+level, then activated or removed from its row. Loose tags are new in the runtime: a tag added straight to the tag cache
+went at its next compile, so a tag could be granted only through an effect.
+
+- **IDs:** ED-40 and FEAT-16, commit `5dd7332`.
+- **Read:**
+  - `Assets/PlayForge/Editor/Debugger/RuntimeDebugger.Entities.cs:268` `SetAttribute`, a delta no worker sees, `:361`
+    `GrantTag`, `:564` `ApplyEffect` and `:589` `ActivateAbility`.
+  - `Assets/PlayForge/Runtime/PlayForge/GAS/Core/GASCore.cs:237` the loose tags and `:241` `AddLooseTag`, which
+    `CompileGrantedTags` (`:221`) includes, and `Assets/PlayForge/Runtime/PlayForge/GAS/Interfaces/IGameplayAbilitySystem.cs:30`.
+- **Watch for:** a removed effect stays on the shelf until the entity's next tick, which clears it, so its row goes a
+  sample later. A field being typed in keeps what's typed while samples come.
+- **Tests:** `ED_40_An_attribute_takes_the_value_typed_into_the_debugger`,
+  `ED_40_A_tag_added_in_the_debugger_lasts_until_its_removed`,
+  `ED_40_An_effect_applied_in_the_debugger_lands_and_its_row_removes_it` and
+  `ED_40_An_ability_granted_in_the_debugger_activates_and_goes` in `RuntimeDebuggerTests`;
+  `FEAT_16_A_loose_tag_lasts_until_its_removed` in PlayMode's `TagTests`.
+
 ## Phase 3
 
 Phase 3 began on `main` with the rows that writing the reference docs turned up, five runtime bugs and two settings
@@ -885,8 +935,8 @@ away.
   - How each goes away: `Assets/PlayForge/Runtime/PlayForge/GAS/Core/MonoBehaviour/GameplayAbilitySystem.EndOfFrame.cs:44`
     ends at once, and `Assets/PlayForge/Runtime/PlayForge/GAS/Core/Runtime/RuntimeGameplayAbilitySystem_EndOfFrame.cs:52`
     queues a Terminate. Both predate the refactor, and each hub's tests pass on its own.
-  - `Assets/PlayForge/Editor/CustomPropertyDrawers/Forge/Editors/GASDebugger.cs:1253`
-    `GASDebugger.ResolveDisplayNameFor`, which asks the entity's own name.
+  - `Assets/PlayForge/Editor/Debugger/RuntimeDebugger.cs:359`
+    `RuntimeDebugger.NameOf`, which asks the entity's own name, as the GAS Debugger's `ResolveDisplayNameFor` did.
 - **New:** `GASCore` (internal). `RuntimeEntityIdentity.LocalData`. Each hub gains what only the other had:
   `ApplyGameplayEffect(IEffectOrigin, GameplayEffect)` and `GetRelativeLevel()`.
 - **Removed:** `GameplayAbilitySystem.Relays` and `HandleDestructionInternally`, which nothing used, and each hub's
@@ -956,9 +1006,9 @@ removed entries through a lambda and built new ones (288), and a same-root tag q
     (`Assets/PlayForge/Runtime/PlayForge/Utils/ReadOnlyListView.cs:10`).
   - `Assets/PlayForge/Runtime/PlayForge/GameplayEffect/Core/Definition/GameplayEffectImpact.cs:235`
     `GetContainedEffects`, now a `ContainedEffects` struct (`:239`) over the packets.
-  - `Assets/PlayForge/Runtime/PlayForge/AttributeSystem/Attribute/CachedAttributeValue.cs:210` `RemoveCarrier`, one
-    pass that keeps order and keeps the entries spare (`:65`) for `RegisterModifier` (`:181`). The recompute clears
-    its kept list (`:69`) at `:403`.
+  - `Assets/PlayForge/Runtime/PlayForge/AttributeSystem/Attribute/CachedAttributeValue.cs:211` `RemoveCarrier`, one
+    pass that keeps order and keeps the entries spare (`:65`) for `RegisterModifier` (`:182`). The recompute clears
+    its kept list (`:69`) at `:404`.
   - `Assets/PlayForge/Runtime/PlayForge/Tag/Tag.cs:274` `SharesAncestorWith`, which compares roots in place;
     `IsChildOf` (`:223`) compares ordinally, and `IsDirectChildOf` (`:240`) cuts no substring.
   - `Assets/PlayForge/Runtime/PlayForge/Tag/Tags.cs:17`, the first of the 57 built-in tags, each made once.
@@ -1024,8 +1074,8 @@ frame in which an attribute rescaled with its Base allocated 500 bytes, one in w
 - **Read:**
   - `Assets/PlayForge/Runtime/PlayForge/GameplayEffect/Core/IAttributeImpactCarrier.cs:208` `SourceCarriers`, the
     table keyed weakly by source. `For` (`:224`) makes a carrier again only when its impact types or group change.
-  - `Assets/PlayForge/Runtime/PlayForge/AttributeSystem/Attribute/CachedAttributeValue.cs:593` `EnforceScaling`, which
-    takes its carrier from one table for every attribute (`:621`) and its action from the attribute's spares (`:616`).
+  - `Assets/PlayForge/Runtime/PlayForge/AttributeSystem/Attribute/CachedAttributeValue.cs:594` `EnforceScaling`, which
+    takes its carrier from one table for every attribute (`:622`) and its action from the attribute's spares (`:617`).
   - `Assets/PlayForge/Runtime/PlayForge/Workers/ImpactWorker/Authored/RelativeOperationContextImpactWorker.cs:69`
     `TryWork`, the change both halves make, and `CreateDeferredActions` (`:51`), which hands its action back in a
     list it reuses.
@@ -1132,8 +1182,8 @@ Now each ends in the frame its last task does, and an instant ability in the fra
 - **Read:**
   - `Assets/PlayForge/Runtime/PlayForge/Core/TaskSequence/Async/SequenceCore.cs:119`
     `DelegateSequenceTask.ExecuteSyncActionSafe`, which runs the action at once.
-  - `Assets/PlayForge/Runtime/PlayForge/Management/GameplayProcess/Core/ProcessControlBlock.cs:89` `WhenTerminated`,
-    completed in `TryTerminate` (`:346`) once the process is unregistered, and
+  - `Assets/PlayForge/Runtime/PlayForge/Management/GameplayProcess/Core/ProcessControlBlock.cs:110` `WhenTerminated`,
+    completed in `TryTerminate` (`:367`) once the process is unregistered, and
     `Assets/PlayForge/Runtime/PlayForge/Management/GameplayProcess/Core/ProcessRelay.cs:44`
     `ProcessRelay.WhenTerminated`, which the proxy waits on for targeting and execution
     (`Assets/PlayForge/Runtime/PlayForge/AbilitySystem/Ability/AbilityProxy/Core/AbilityProxy.cs:210`, `:317`) and
@@ -1256,11 +1306,11 @@ unregisters, and a throwing `WhenInitialize` refuses the process, so `Register` 
 
 - **IDs:** PC-1 (its comment says PF-011), PC-2, PC-8, PC-15.
 - **Read:**
-  - `Assets/PlayForge/Runtime/PlayForge/Management/GameplayProcess/Core/ProcessControlBlock.cs:360`
+  - `Assets/PlayForge/Runtime/PlayForge/Management/GameplayProcess/Core/ProcessControlBlock.cs:381`
     `ProcessControlBlock.Step`. A state queued during the step still applies after a throw.
-  - `Assets/PlayForge/Runtime/PlayForge/Management/GameplayProcess/Core/ProcessControlBlock.cs:439`
-    `ProcessControlBlock.RunProcessAsync`. The catch at `:461` ends a throwing run as a returning one ends.
-  - `Assets/PlayForge/Runtime/PlayForge/Management/GameplayProcess/Core/ProcessControlBlock.cs:320`
+  - `Assets/PlayForge/Runtime/PlayForge/Management/GameplayProcess/Core/ProcessControlBlock.cs:469`
+    `ProcessControlBlock.RunProcessAsync`. The catch at `:491` ends a throwing run as a returning one ends.
+  - `Assets/PlayForge/Runtime/PlayForge/Management/GameplayProcess/Core/ProcessControlBlock.cs:341`
     `ProcessControlBlock.TryTerminate`. `Unregister` runs whatever `WhenTerminate` did.
   - `Assets/PlayForge/Runtime/PlayForge/Management/GameplayProcess/Core/ProcessControl.cs:1061`, in
     `ProcessControl.PrepareCreatedProcess`. A throw in `WhenInitialize` force-terminates the half-made block.
@@ -1278,9 +1328,9 @@ no longer runs `WhenTerminate` or `WhenWait` a second time when the cancelled ru
 - **IDs:** PC-5, PC-4. PC-17: a Synchronous process with no step timing, such as `GroupProcess`, terminates at once,
   since no run or step would ever apply the queued state.
 - **Read:**
-  - `Assets/PlayForge/Runtime/PlayForge/Management/GameplayProcess/Core/ProcessControlBlock.cs:163`
+  - `Assets/PlayForge/Runtime/PlayForge/Management/GameplayProcess/Core/ProcessControlBlock.cs:184`
     `ProcessControlBlock.QueueTerminate`.
-  - `Assets/PlayForge/Runtime/PlayForge/Management/GameplayProcess/Core/ProcessControlBlock.cs:483`, the end of
+  - `Assets/PlayForge/Runtime/PlayForge/Management/GameplayProcess/Core/ProcessControlBlock.cs:513`, the end of
     `RunProcessAsync`. It applies the queued state only while the process is still Running (PC-4).
   - `Assets/PlayForge/Runtime/PlayForge/Core/TaskSequence/Async/TaskSequenceProcess.cs:248`
     `TaskSequenceProcess.WhenTerminateQueued`, which interrupts the sequence.
@@ -1303,10 +1353,10 @@ waited for the run to end, replaced a pending Terminate, and restarted the run o
 - **Read:**
   - `Assets/PlayForge/Runtime/PlayForge/Management/GameplayProcess/Core/ProcessControl.cs:1091`
     `ProcessControl.SetAllProcessesUponStateChange`. Only a pause, or its end, moves a process.
-  - `Assets/PlayForge/Runtime/PlayForge/Management/GameplayProcess/Core/ProcessControlBlock.cs:195`
-    `ProcessControlBlock.ForceIntoState` holds or cancels the run. `HoldForControl` (`:214`) marks what ProcessControl
-    stops, and `ReleaseFromControl` (`:241`) sends it back.
-  - `Assets/PlayForge/Runtime/PlayForge/Management/GameplayProcess/Core/ProcessControlBlock.cs:267`
+  - `Assets/PlayForge/Runtime/PlayForge/Management/GameplayProcess/Core/ProcessControlBlock.cs:216`
+    `ProcessControlBlock.ForceIntoState` holds or cancels the run. `HoldForControl` (`:235`) marks what ProcessControl
+    stops, and `ReleaseFromControl` (`:262`) sends it back.
+  - `Assets/PlayForge/Runtime/PlayForge/Management/GameplayProcess/Core/ProcessControlBlock.cs:288`
     `ProcessControlBlock.TryRun`. On resume a held run carries on. A run that finished during the pause, or one a
     pending Terminate was waiting for, moves on instead of running again.
   - `Assets/PlayForge/Runtime/PlayForge/Management/GameplayProcess/Core/ProcessControl.cs:1436`
@@ -1320,7 +1370,7 @@ waited for the run to end, replaced a pending Terminate, and restarted the run o
   - Pausing a process that ProcessControl already holds makes the pause its own:
     `Assets/PlayForge/Runtime/PlayForge/Management/GameplayProcess/Core/ProcessControl.cs:867` `ProcessControl.Wait`.
   - A run's token source is its own, so an old run still unwinding can't cancel the new one:
-    `Assets/PlayForge/Runtime/PlayForge/Management/GameplayProcess/Core/ProcessControlBlock.cs:443`, in
+    `Assets/PlayForge/Runtime/PlayForge/Management/GameplayProcess/Core/ProcessControlBlock.cs:473`, in
     `RunProcessAsync`.
 - **New:** `ProcessControlBlock.HeldByControl`, `TerminateRequested`, `HoldForControl`, `WaitForControl`,
   `KeepPaused`, `ReleaseFromControl`; `ProcessControl.IsPaused`. `AbstractMonoProcess.TryHandlePause` and
@@ -1644,8 +1694,8 @@ a hit takes what it says and an override still pins the value.
 
 - **IDs:** GAS-15, Decision 4. Golden S6 now expects 85, not 90.
 - **Read:**
-  - `Assets/PlayForge/Runtime/PlayForge/AttributeSystem/Attribute/CachedAttributeValue.cs:372`
-    `CachedAttributeValue.Recompute`. Committed history is at `:457`.
+  - `Assets/PlayForge/Runtime/PlayForge/AttributeSystem/Attribute/CachedAttributeValue.cs:373`
+    `CachedAttributeValue.Recompute`. Committed history is at `:458`.
   - `Assets/PlayForge/Runtime/PlayForge/GameplayEffect/Core/Definition/GameplayEffectImpact.cs:84`
     `GameplayEffectImpact.ResolveDelivery`, unchanged: how each authored shape maps to a delivery.
   - `Assets/PlayForge/Runtime/PlayForge/GAS/Core/EffectSystemComponent.cs:148`
@@ -1672,7 +1722,7 @@ system's changes to itself, such as each attribute's startup pulse, stay `Disall
   - `Assets/PlayForge/Runtime/PlayForge/AttributeSystem/Core/AttributeSystemComponent.cs:274`
     `AttributeSystemComponent.CommitWithCarrier`. Phase 0 (freeze and preview) runs from `:285`, using
     `CachedAttributeValue.PreviewCommit`
-    (`Assets/PlayForge/Runtime/PlayForge/AttributeSystem/Attribute/CachedAttributeValue.cs:306`). It froze through
+    (`Assets/PlayForge/Runtime/PlayForge/AttributeSystem/Attribute/CachedAttributeValue.cs:307`). It froze through
     `ConstantImpacter.Snapshot`; since GAS-P6 it freezes the same way in impacters it reuses.
   - `Assets/PlayForge/Runtime/PlayForge/GameplayEffect/Core/IAttributeImpactCarrier.cs:131`
     `SourceAttributeImpact.FromAdditiveDelta` (GAS-12). Since GAS-P8 a raw delta's commit orders its Adds the same
@@ -1692,7 +1742,7 @@ rescale is typed `DisallowImpact`, as the startup pulse is, so a worker that che
 changed Base had dealt it.
 
 - **IDs:** GAS-37, GAS-35, Decision 9.
-- **Read:** `Assets/PlayForge/Runtime/PlayForge/AttributeSystem/Attribute/CachedAttributeValue.cs:593`
+- **Read:** `Assets/PlayForge/Runtime/PlayForge/AttributeSystem/Attribute/CachedAttributeValue.cs:594`
   `CachedAttributeValue.EnforceScaling`, and the `unconstrained` value it reads (`:35`). The
   `AcceptUnworkableImpact` tooltip says what it covers:
   `Assets/PlayForge/Runtime/PlayForge/Workers/ImpactWorker/Core/AbstractImpactWorker.cs:19`.
@@ -1942,7 +1992,7 @@ the sources' lists instead of allocating iterators.
 - **Read:**
   - `Assets/PlayForge/Runtime/PlayForge/Tag/TagQuery.cs:98` `TagQuery.CountMatches(TagCache)`, and `Matches`
     (`:135`). The hubs call it from `QueryTags`
-    (`Assets/PlayForge/Runtime/PlayForge/GAS/Core/GASCore.cs:233`).
+    (`Assets/PlayForge/Runtime/PlayForge/GAS/Core/GASCore.cs:254`).
   - `Assets/PlayForge/Runtime/PlayForge/Tag/Tag.cs:94` `Tag.Child`, and the implicit conversion at `:348`.
   - `Assets/PlayForge/Runtime/PlayForge/Tag/GrantedTagCompiler.cs:14` `GrantedTagCompiler`.
 - **New:** `GrantedTagCompiler` (internal).
@@ -1983,7 +2033,7 @@ runtime identity's were null and threw. A hub stepped by hand, outside ProcessCo
   above.
 - **Read:**
   - `Assets/PlayForge/Runtime/PlayForge/GAS/Core/Runtime/RuntimeGameplayAbilitySystem.cs:64`, the constructor
-    (`UpdateAndLate` at `:72`), and `RuntimeEntityIdentity(EntityIdentity)` at `:301` (GAS-9).
+    (`UpdateAndLate` at `:72`), and `RuntimeEntityIdentity(EntityIdentity)` at `:304` (GAS-9).
   - `Assets/PlayForge/Runtime/PlayForge/GAS/Core/Runtime/RuntimeGameplayAbilitySystem_EndOfFrame.cs:52` and
     `Assets/PlayForge/Runtime/PlayForge/GAS/Core/MonoBehaviour/GameplayAbilitySystem.EndOfFrame.cs:44`, each hub's
     `HandleDestruction` (GAS-42).
@@ -2063,9 +2113,9 @@ Golden Tests left the menu; the Test Runner runs the scenarios (SP-18).
 
 - **IDs:** ED-19, Decision 18 (Q31, Q32).
 - **Read:** `Assets/PlayForge/Editor/CustomPropertyDrawers/Forge/Editors/Manager/TheForge.cs:64`
-  `TheForge.ShowWindow`, with `WindowTitle` at `:25`. The other menu items are
-  `Assets/PlayForge/Editor/CustomPropertyDrawers/Forge/Editors/GASDebugger.cs:131`,
-  `Assets/PlayForge/Editor/Tools/ProcessControlDebugger.cs:52` and `Assets/PlayForge/Editor/Tools/RuntimeTagViewer.cs:20`.
+  `TheForge.ShowWindow`, with `WindowTitle` at `:25`. The Runtime Debugger, which replaced the three debuggers
+  (ED-4), has its menu item at
+  `Assets/PlayForge/Editor/Debugger/RuntimeDebugger.cs:64`.
 
 ### The Forge: settings, sorting, analysis and templates
 
@@ -2097,8 +2147,8 @@ Golden Tests left the menu; the Test Runner runs the scenarios (SP-18).
   `Assets/PlayForge/Editor/CustomPropertyDrawers/Forge/Editors/AbstractMonoProcessEditor.cs:87`, in
   `CreateInspectorGUI`.
 - **ED-26.** The GAS Debugger removes its frame-summary hooks when it closes. They kept sampling every entity and
-  stacked when it reopened. `Assets/PlayForge/Editor/CustomPropertyDrawers/Forge/Editors/GASDebugger.cs:146`
-  `OnDisable`, and `:315` `RemoveFrameSummaryHooks`.
+  stacked when it reopened. The Runtime Debugger listens to the entity it shows alone (ED-4):
+  `Assets/PlayForge/Editor/Debugger/RuntimeDebugger.Entities.cs:118` `ShowEntity`, and `:143` `ForgetShownEntity`.
 - **ED-29.** Allow Duplicate Equipped Items opens with its own value.
   `Assets/PlayForge/Editor/CustomPropertyDrawers/Forge/Editors/Assets/EntityIdentityEditor.cs:437`, in
   `BuildItemsSection`.
@@ -2232,6 +2282,8 @@ Newest first. Each row is a good place to start reading.
 
 | What | IDs | Where | Commit |
 |---|---|---|---|
+| The debugger acts, and loose tags | ED-40, FEAT-16 | `Assets/PlayForge/Editor/Debugger/RuntimeDebugger.Entities.cs:268` | `5dd7332` |
+| One Runtime Debugger | ED-4, ED-5 | `Assets/PlayForge/Editor/Debugger/RuntimeDebugger.cs:139` | `d220ff4` |
 | Templates work as prefabs do | ED-13 | `Assets/PlayForge/Editor/Tools/ForgeTemplatePropogation/ForgeTemplatePush.cs:37` | `6733220` |
 | The Forge is a list and a detail | ED-27, ED-9 | `Assets/PlayForge/Editor/CustomPropertyDrawers/Forge/Editors/Manager/TheForge.cs:403` | `59f5ae9` |
 | One validator and the Problems view | ED-15 | `Assets/PlayForge/Editor/Problems/ForgeValidator.cs:41` | `4dffd79` |
@@ -2290,5 +2342,5 @@ Newest first. Each row is a good place to start reading.
 | A derived refresh runs the post-change pipeline | GAS-27, Decision 14 | `Assets/PlayForge/Runtime/PlayForge/AttributeSystem/Core/AttributeSystemComponent.cs:566` | `550d07b` |
 | Combined elements add up | GAS-27, Decision 13 | `Assets/PlayForge/Runtime/PlayForge/AttributeSystem/Attribute/AttributeBlueprint.cs:85` | `5244d99` |
 | The hierarchy follows transforms; SceneRoot spawns are GameRoot's children | PC-28, Decision 11 | `Assets/PlayForge/Runtime/PlayForge/Management/GameplayProcess/Core/ProcessControl.cs:1477` | `5f6c0eb` |
-| Commits land after the modifiers | GAS-15, Decision 4 | `Assets/PlayForge/Runtime/PlayForge/AttributeSystem/Attribute/CachedAttributeValue.cs:457` | `66b33ad` |
-| Pause holds a process in place | PC-7, PC-11, PC-12, PC-27, Decision 5 | `Assets/PlayForge/Runtime/PlayForge/Management/GameplayProcess/Core/ProcessControlBlock.cs:195` | `23f52aa`, `666beda` |
+| Commits land after the modifiers | GAS-15, Decision 4 | `Assets/PlayForge/Runtime/PlayForge/AttributeSystem/Attribute/CachedAttributeValue.cs:458` | `66b33ad` |
+| Pause holds a process in place | PC-7, PC-11, PC-12, PC-27, Decision 5 | `Assets/PlayForge/Runtime/PlayForge/Management/GameplayProcess/Core/ProcessControlBlock.cs:216` | `23f52aa`, `666beda` |
