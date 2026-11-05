@@ -14,6 +14,9 @@ namespace FarEmerald.PlayForge
     internal sealed class GASCore
     {
         private readonly IGameplayAbilitySystem owner;
+
+        /// <summary>The hub this core is, which a save reads it through (FEAT-20).</summary>
+        internal IGameplayAbilitySystem Owner => owner;
         private readonly LocalDataStructure localData = new();
         private List<Tag> affiliation;
         private bool pendingDestruction;

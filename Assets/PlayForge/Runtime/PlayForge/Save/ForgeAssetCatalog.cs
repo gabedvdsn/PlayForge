@@ -12,7 +12,7 @@ namespace FarEmerald.PlayForge
     /// its GUID, which lasts as the asset is renamed or moved. A game can add its own as it runs.</para>
     /// </summary>
     [CreateAssetMenu(menuName = "PlayForge/Asset Catalog", fileName = "AssetCatalog_")]
-    public class ForgeAssetCatalog : ScriptableObject
+    public class ForgeAssetCatalog : ScriptableObject, IAssetNames
     {
         [Serializable]
         public struct Entry
@@ -28,6 +28,10 @@ namespace FarEmerald.PlayForge
         [NonSerialized] private Dictionary<ScriptableObject, string> idOf;
 
         public IReadOnlyList<Entry> Entries => entries;
+
+        string IAssetNames.Label => $"the asset catalog {name}";
+
+        UnityEngine.Object IAssetNames.Context => this;
 
         public int Count => entries.Count;
 

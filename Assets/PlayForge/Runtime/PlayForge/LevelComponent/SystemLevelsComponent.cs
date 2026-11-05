@@ -52,8 +52,10 @@ namespace FarEmerald.PlayForge
             int prevLevel = level.CurrentValue;
             int prevMax = level.MaxValue;
             
-            level.CurrentValue = value.CurrentValue;
+            // The max first, so a level raised past the old max at once takes it. Set first, the level was held at the
+            // old max, and only the max moved (GAS-59)
             level.MaxValue = value.MaxValue;
+            level.CurrentValue = value.CurrentValue;
 
             Internal_SetLevel(key, level);
 
@@ -76,8 +78,9 @@ namespace FarEmerald.PlayForge
             int prevLevel = level.CurrentValue;
             int prevMax = level.MaxValue;
             
-            level.CurrentValue += value.CurrentValue;
+            // The max first, as a set's is (GAS-59)
             level.MaxValue += value.MaxValue;
+            level.CurrentValue += value.CurrentValue;
             
             Internal_SetLevel(key, level);
 

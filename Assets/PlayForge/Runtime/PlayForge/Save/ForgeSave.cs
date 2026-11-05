@@ -18,6 +18,23 @@ namespace FarEmerald.PlayForge
     }
 
     /// <summary>
+    /// Names a save's assets and finds them again: an asset catalog, or, for a copy within one session, the assets
+    /// themselves (FEAT-20).
+    /// </summary>
+    internal interface IAssetNames
+    {
+        /// <summary>What names the assets, as a warning says it.</summary>
+        string Label { get; }
+
+        /// <summary>The object a warning points at, or null.</summary>
+        UnityEngine.Object Context { get; }
+
+        bool TryGetId(ScriptableObject asset, out string id);
+
+        bool TryFind<T>(string id, out T asset) where T : ScriptableObject;
+    }
+
+    /// <summary>
     /// Saves an entity at rest and loads it back (FEAT-9, Decision 30). Nothing captured an entity's state, so a game
     /// couldn't keep a battle between sessions.
     ///
@@ -61,16 +78,27 @@ namespace FarEmerald.PlayForge
                 return null;
             }
 
+            return Take(core, catalog, ids);
+        }
+
+        // What Capture and Copy take: the entity at rest, its assets named by a catalog or by the session (FEAT-20)
+        private static ForgeSnapshot Take(GASCore core, IAssetNames assets, IForgeEntityIds ids)
+        {
+            var gas = core.Owner;
             var snapshot = new ForgeSnapshot { TimeScale = core.Clock.TimeScale };
-            var names = new Names(catalog);
+            var names = new Names(assets);
 
             CaptureCommits(core, snapshot, names);
             foreach (var pair in core.LevelSystem.GetAllLevels())
             {
                 if (!pair.Key.IsValid) continue;
+
+                // The entity's own under no key, so a save of one kind loads onto another as its own. Under its kind's
+                // tag, it stayed behind on a clone of another kind (FEAT-20)
                 snapshot.Levels.Add(new LevelSave
                 {
-                    Key = pair.Key.Name, Level = pair.Value.CurrentValue, Min = pair.Value.MinValue, Max = pair.Value.MaxValue,
+                    Key = pair.Key == core.Identity.AssetTag ? "" : pair.Key.Name,
+                    Level = pair.Value.CurrentValue, Min = pair.Value.MinValue, Max = pair.Value.MaxValue,
                 });
             }
             CaptureAbilities(core, snapshot, names);
@@ -236,6 +264,12 @@ namespace FarEmerald.PlayForge
             if (gas == null || snapshot == null || catalog == null) return false;
 
             var core = CoreOf(gas);
+            return CanLoad(core, snapshot) && Put(core, snapshot, catalog, ids);
+        }
+
+        // Whether a save can load onto the entity now, and why not where it can't
+        private static bool CanLoad(GASCore core, ForgeSnapshot snapshot)
+        {
             if (core?.Identity == null)
             {
                 ForgeLog.Warning("A save loads only onto a GAS hub built from an entity.");
@@ -254,8 +288,14 @@ namespace FarEmerald.PlayForge
                                  "outside the entity's callbacks, or on the next frame.");
                 return false;
             }
+            return true;
+        }
 
-            var finds = new Finds(catalog);
+        // What Restore and Copy put back (FEAT-20)
+        private static bool Put(GASCore core, ForgeSnapshot snapshot, IAssetNames assets, IForgeEntityIds ids)
+        {
+            var gas = core.Owner;
+            var finds = new Finds(assets);
 
             // What's running ends and what the entity has goes, with nothing told. So do the frame's queued actions,
             // which were for the entity as it was
@@ -289,10 +329,11 @@ namespace FarEmerald.PlayForge
                     core.EffectSystem.Restore(effect.Generate(origin, gas), save);
                 }
 
+                // The entity's own, under no key, onto this entity's own (FEAT-20)
                 foreach (var save in Each(snapshot.Levels))
                 {
-                    if (string.IsNullOrEmpty(save.Key)) continue;
-                    core.LevelSystem.Restore(Tag.Generate(save.Key), new IntValuePairClamped(save.Level, save.Min, save.Max));
+                    var key = string.IsNullOrEmpty(save.Key) ? core.Identity.AssetTag : Tag.Generate(save.Key);
+                    core.LevelSystem.Restore(key, new IntValuePairClamped(save.Level, save.Min, save.Max));
                 }
             }
             finally
@@ -398,6 +439,84 @@ namespace FarEmerald.PlayForge
         }
 
         // ═══════════════════════════════════════════════════════════════════════════
+        // Copy
+        // ═══════════════════════════════════════════════════════════════════════════
+
+        /// <summary>
+        /// Copies what lasts on one entity onto another, as a mirror clone takes its original's state: what
+        /// <see cref="Capture"/> takes, put back as <see cref="Restore"/> puts it, with no catalog and no IDs, as both
+        /// entities are in this session. An effect another entity applied stays that entity's, and the entity's own level
+        /// goes onto the other's own. A copy took a catalog naming every asset, which an asset made as the game runs
+        /// never has (FEAT-20).
+        /// </summary>
+        public static bool Copy(IGameplayAbilitySystem from, IGameplayAbilitySystem onto)
+        {
+            if (from == null || onto == null || ReferenceEquals(from, onto)) return false;
+
+            var source = CoreOf(from);
+            if (source?.Identity == null)
+            {
+                ForgeLog.Warning("Only a GAS hub built from an entity can be copied.");
+                return false;
+            }
+
+            var assets = new SessionNames();
+            var ids = new SessionIds();
+            var snapshot = Take(source, assets, ids);
+            var target = CoreOf(onto);
+            return CanLoad(target, snapshot) && Put(target, snapshot, assets, ids);
+        }
+
+        // Names each asset as it's asked for, and finds it again, within one session: a copy's catalog
+        private sealed class SessionNames : IAssetNames
+        {
+            private readonly Dictionary<ScriptableObject, string> idOf = new();
+            private readonly Dictionary<string, ScriptableObject> byId = new();
+
+            public string Label => "the copy";
+
+            public UnityEngine.Object Context => null;
+
+            public bool TryGetId(ScriptableObject asset, out string id)
+            {
+                id = null;
+                if (asset == null) return false;
+                if (idOf.TryGetValue(asset, out id)) return true;
+                id = "#" + idOf.Count;
+                idOf[asset] = id;
+                byId[id] = asset;
+                return true;
+            }
+
+            public bool TryFind<T>(string id, out T asset) where T : ScriptableObject
+            {
+                asset = null;
+                if (id == null || !byId.TryGetValue(id, out var found)) return false;
+                asset = found as T;
+                return asset != null;
+            }
+        }
+
+        // Names each entity as it's asked for, and finds it again, within one session: a copy's IDs
+        private sealed class SessionIds : IForgeEntityIds
+        {
+            private readonly Dictionary<IGameplayAbilitySystem, string> idOf = new();
+            private readonly Dictionary<string, IGameplayAbilitySystem> byId = new();
+
+            public string IdOf(IGameplayAbilitySystem entity)
+            {
+                if (entity == null) return null;
+                if (idOf.TryGetValue(entity, out string id)) return id;
+                id = "#" + idOf.Count;
+                idOf[entity] = id;
+                byId[id] = entity;
+                return id;
+            }
+
+            public IGameplayAbilitySystem Find(string id) => id != null && byId.TryGetValue(id, out var entity) ? entity : null;
+        }
+
+        // ═══════════════════════════════════════════════════════════════════════════
         // Helpers
         // ═══════════════════════════════════════════════════════════════════════════
 
@@ -412,43 +531,43 @@ namespace FarEmerald.PlayForge
         // A list a hand-made or older save left null reads as empty
         private static IEnumerable<T> Each<T>(List<T> list) => list ?? (IEnumerable<T>)Array.Empty<T>();
 
-        // Names assets by their IDs in the catalog, and warns once of each it doesn't name, which the save leaves out
+        // Names assets by their IDs, and warns once of each it doesn't name, which the save leaves out
         private sealed class Names
         {
-            private readonly ForgeAssetCatalog catalog;
+            private readonly IAssetNames assets;
             private readonly HashSet<ScriptableObject> warned = new();
 
-            public Names(ForgeAssetCatalog catalog) => this.catalog = catalog;
+            public Names(IAssetNames assets) => this.assets = assets;
 
             public bool TryName(ScriptableObject asset, out string id)
             {
-                if (catalog.TryGetId(asset, out id)) return true;
+                if (assets.TryGetId(asset, out id)) return true;
                 if (asset != null && warned.Add(asset))
                 {
-                    ForgeLog.Warning($"{asset.name} isn't in the asset catalog {catalog.name}, so the save leaves it out. " +
+                    ForgeLog.Warning($"{asset.name} isn't in {assets.Label}, so the save leaves it out. " +
                                      "Add Every PlayForge Asset, in the catalog's menu, names it.", asset);
                 }
                 return false;
             }
         }
 
-        // Finds what a save names in the catalog, and warns once of each ID it can't find, which the load leaves out
+        // Finds what a save names, and warns once of each ID it can't find, which the load leaves out
         private sealed class Finds
         {
-            private readonly ForgeAssetCatalog catalog;
+            private readonly IAssetNames assets;
             private readonly HashSet<string> warned = new();
 
-            public Finds(ForgeAssetCatalog catalog) => this.catalog = catalog;
+            public Finds(IAssetNames assets) => this.assets = assets;
 
-            public bool Names(ScriptableObject asset) => catalog.TryGetId(asset, out _);
+            public bool Names(ScriptableObject asset) => assets.TryGetId(asset, out _);
 
             public bool TryFind<T>(string id, out T asset) where T : ScriptableObject
             {
-                if (catalog.TryFind(id, out asset)) return true;
+                if (assets.TryFind(id, out asset)) return true;
                 if (!string.IsNullOrEmpty(id) && warned.Add(id))
                 {
-                    ForgeLog.Warning($"The save names {id}, which the asset catalog {catalog.name} has no {typeof(T).Name} for, " +
-                                     "so the load leaves it out.", catalog);
+                    ForgeLog.Warning($"The save names {id}, which {assets.Label} has no {typeof(T).Name} for, " +
+                                     "so the load leaves it out.", assets.Context);
                 }
                 return false;
             }

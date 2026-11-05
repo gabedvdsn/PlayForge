@@ -552,6 +552,7 @@ had no letter in the review. TS-AA onward came from the test project.
 | GAS-56 | M | 5 | An effect's While-on and Removal requirements are checked again only when an effect is applied or removed (`requirementsDirty`, set in `EffectSystemComponent.ApplyGameplayEffect` and where effects leave the shelf). `CompileGrantedTags` doesn't mark them, so a tag granted or taken back by an ability, an item or a loose tag (FEAT-16) doesn't end an effect until another effect comes or goes. FEAT-3's events should mark them. Found in the Phase 5 survey. Fixed with FEAT-3: a rebuild of the tags that changes one marks the tag cache, and the effect system's next tick runs its requirement pass when an effect is on the shelf. An effect that comes or goes runs the pass itself, and a tag added straight to the cache asks for nothing, as the next rebuild drops it | `EffectSystemComponent.cs`, `TagCache.cs`, `GASCore.cs` (`CompileGrantedTags`) | fixed |
 | GAS-57 | H | 5 | A relative-operation impact worker, the framework's lifesteal, read the impacted attribute's value, never its Relative Attribute, though it checked the Relative Attribute was there: so lifesteal by a Lifesteal share healed the attacker by its own health times the blow, a full heal. Found by the MOBA lab. It reads the Relative Attribute, and one with none set reads the impacted attribute still, as GAS-41's test does | `RelativeOperationContextImpactWorker.cs` (`GetWrtTarget`) | fixed |
 | GAS-58 | M | 5 | A lasting effect's magnitude was read as its modifier registered, and nothing read it again as its origin's level changed, so an item, an ability or an entity that levelled up kept its effects' first-level values, as GAS-34's stacks did. Found by the Roguelite lab. The GAS core hears its level system's changes, and the shelf re-reads each effect whose origin's level is the one that changed. Effects the entity's items put on other entities aren't on its shelf, and wait for their next read | `EffectSystemComponent.cs` (`RefreshEffectsLevelledBy`), `GASCore.cs` | fixed |
+| GAS-59 | M | 5 | `SystemLevelsComponent.TrySetLevel` and `TryModifyLevel` set the level before the max, so a level raised past the old max at once was held at it, and only the max moved. Found by the mirror clones scenario. Fixed: the max goes first | `LevelComponent/SystemLevelsComponent.cs` | fixed |
 | GAS-P1 | M | 0 | `ActionQueue` LINQ allocations; snapshot built every frame (PF-006) | `ActionQueue.cs:41, 46, 156`, `FrameSummary.cs:340-351` | verified |
 | GAS-P2 | M | 0 | Tag and FrameSummary allocations (PF-007) | `TagCache.cs:60`, `TagQuery.cs:89-136`, `FrameSummary.cs:306-308` | verified |
 | GAS-P3 | M | 3 | Each application revalidates every container and rebuilds all tags (area application is quadratic). Measured: an instant application on an entity carrying 1,000 effects took 0.49 ms, 135 times one on an entity carrying 2. Now the requirements wait for one pass at the next tick, a shelved container's tags are counted as it lands, and re-application and removal find containers in an index by asset tag | `EffectSystemComponent.cs:312-348`, `GameplayAbilitySystem.cs:250-281` | verified |
@@ -683,6 +684,7 @@ Phase 2 part, and set Phase 4's direction.
 | FEAT-17 | Activation by asset or tag, with a reason | From the review's API changes: activate by ability asset or tag, and say why a refused activation was refused, with a matching callback. `TryActivateAbility` returns only true or false (`AbilitySystemComponent.TryActivateAbility`). Done (Decision 30): `TryActivateAbility(ability)` activates by asset, in the first slot that holds it, and `TryActivateAbility(tag)` the first ability by slot whose asset or context tag is the tag or under it; each form, and the request's, can give an `out ActivationRefusal` (`EActivationRefusal`: Not Known, Disabled, Locked, No New Processes, Level Zero, Requirements, Cooldown, Cost, Dead, Rule with its name, Blocked, Busy, Critical), and `AbilitySystemCallbacks.OnAbilityRefused` tells each refusal; a request the buffer retries isn't told again |
 | FEAT-18 | Profiler markers | From the review's Profiling gap: Runtime has no `ProfilerMarker`, so the cost of a process step, an effect application or an ability activation can't be seen in Unity's Profiler. Done (Decision 30): `ForgeProfiler`'s markers, in the Scripts category: `PlayForge.ProcessStep`, `PlayForge.GASStep`, `PlayForge.EndOfFrame`, `PlayForge.ApplyEffect` and `PlayForge.ActivateAbility` |
 | FEAT-19 | Effect stacks scaler | Nothing built in read an effect's stack count, so a change by the stack, as a sunder's −5 armor a stack, took a scaler written for it: Proving Grounds wrote its own twice (`StackCountScaler` in `EffectStackingTests` and `GoldenImpactTests`). Found by the Combat lab. Done (Decision 30): `EffectStacksScaler` reads the stack count of the effect's own container, 1 for one that doesn't stack, as `ItemStacksScaler` reads an item's (FEAT-14) |
+| FEAT-20 | Copy an entity | The review's mirror clones: copying a GAS's state into a new runtime GAS took FEAT-9's capture and restore, which need a catalog naming every asset and IDs for every entity, which assets made as the game runs never have; and the entity's own level stayed behind on a clone of another kind, saved under its kind's tag. Found by the mirror clones scenario. Done (Decision 30): `ForgeSave.Copy(from, onto)` captures and restores with names for assets and entities that last the session, and a save keeps the entity's own level under no key, which loads onto the target's own |
 
 **Phase 5's order,** from the review's plan for the test project (its labs, one at a time) and the table above. A lab
 is a small game: assets the lab builds in code, and a bot that plays it in PlayMode tests under a live ProcessControl,
@@ -745,6 +747,26 @@ GAS-4 with GAS-5, PC-6, and TS-I with PC-5.
 ## Log
 
 Record baselines, gate results and notable decisions here, newest first.
+
+- 2026-11-05, **FEAT-20 and GAS-59: mirror clones and chain reactions.** The first two of the review's stretch
+  scenarios (Decision 30), in Proving Grounds' new `Tests/Stretch`, category Stretch.
+  - **Mirror clones** copy a mage's state onto a new runtime GAS of another kind: its hurt, its haste with its time
+    left, a witch's curse, Fireball at level 2, a staff, a loose tag and its level, after which the two go their own
+    ways. It found FEAT-20 and GAS-59.
+  - **FEAT-20:** a copy took FEAT-9's capture and restore, which need a catalog naming every asset and IDs for every
+    entity. `ForgeSave.Copy(from, onto)` names assets and entities for the session (`SessionNames`, `SessionIds`,
+    through an internal `IAssetNames` that the catalog implements too), and a save keeps the entity's own level under
+    no key, which loads onto the target's own, where it stayed behind under its kind's tag.
+  - **GAS-59:** `TrySetLevel` and `TryModifyLevel` set the level before the max, so a level raised past the old max at
+    once was held at it. The max goes first.
+  - **Chain reactions** run a five-deep chain of contained effects in order, cut a loop of two where it comes back,
+    and send an arc round a ring of four entities once: each entity's guard refuses the shock coming back while its
+    own still applies (GAS-28). They held at their first run.
+  - **Their tests,** seen failing first: `Stretch_A_mirror_clone_takes_its_originals_state` and
+    `GAS_59_A_level_raised_past_its_old_max_at_once_takes_it` (4 of 4).
+  - **Next:** ability crafting, with FEAT-2.
+  - **Tests:** PlayMode 1210: 1203 pass, 0 fail and 7 planted are skipped, in three orders. Planted 7 of 7; EditMode
+    439 of 439.
 
 - 2026-11-05, **FEAT-18 and FEAT-17: profiler markers, and activation by asset or tag with a reason.** The first of the
   stretch work (Decision 30).

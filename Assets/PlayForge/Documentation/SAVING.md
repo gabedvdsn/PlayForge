@@ -39,7 +39,8 @@ catalog can't find.
 
 - Each attribute's permanent commits, as a total per retention group. Modifiers aren't saved: they come back with the
   effects that carry them.
-- The levels the entity keeps: its own, and its abilities' and items'.
+- The levels the entity keeps: its own, and its abilities' and items'. Its own is saved as the entity's own, so a save
+  of one kind loads onto another kind as that one's level.
 - The abilities it knows of its own, in their slots, at their levels.
 - Its items in order, each with its level and stacks, worn or not.
 - Its effects, each with what applied it, its stacks, its time left and the time to its next tick. Stacks with
@@ -99,6 +100,19 @@ ForgeSave.Restore(hero, save, catalog, roster);
 
 Without IDs, or when the other entity is gone, the effect comes back as the entity's own. When several entities load
 together, restore the ones whose abilities and items applied effects first, so the others find them.
+
+## Copying an entity
+
+`ForgeSave.Copy(from, onto)` copies what lasts on one entity onto another, as a mirror clone takes its original's
+state. It's a capture and a restore with no catalog and no IDs, since both entities are in the same session, so it
+copies assets made as the game runs too. An effect another entity applied stays that entity's, and the entity's own
+level goes onto the other's own.
+
+```csharp
+var clone = new RuntimeGameplayAbilitySystem(identity);
+ProcessControl.Register(clone).Run();
+ForgeSave.Copy(original, clone);
+```
 
 ## Versions
 

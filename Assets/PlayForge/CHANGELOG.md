@@ -7,6 +7,9 @@ tracks each fix below by its ID.
 ## [Unreleased]
 
 ### Added
+- Copying an entity. `ForgeSave.Copy(from, onto)` copies what lasts on one entity onto another, as a mirror
+  clone takes its original's state, with no catalog and no IDs. A save now keeps the entity's own level as its
+  own, so it loads onto an entity of another kind as that one's level (FEAT-20).
 - Activation by asset or tag, with a reason. `TryActivateAbility(ability)` activates an ability by its asset, and
   `TryActivateAbility(tag)` the first whose asset or context tag is the tag or under it. Each form can give an
   `ActivationRefusal` that says why it was refused, and the ability system's `OnAbilityRefused` tells each refusal
@@ -270,6 +273,8 @@ tracks each fix below by its ID.
   Asking whether its sequence was paused took 24 bytes a frame.
 
 ### Fixed
+- A level and its max set at once, or raised at once, applied the level first, so a level past the old max was
+  held at it (GAS-59).
 - A lasting effect whose magnitude reads a level follows the level as it changes. Its magnitude was read as its
   modifier registered, so an item that levelled up kept its first level's bonus (GAS-58).
 - A Mono process's object goes back to the instantiator that made it as the process ends. The wrapper asked the
