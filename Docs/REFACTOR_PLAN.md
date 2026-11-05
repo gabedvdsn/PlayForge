@@ -329,6 +329,31 @@ from. It lives outside `Assets/` so it never ships in the package.
   Tag. An action that doesn't apply stays in place, disabled, so nothing shifts, and a section's selected row takes
   Unity's unfocused selection grey, so the entity list keeps the blue. Double-click alone wasn't enough: the style
   doc keeps every control visible.
+- Decision 32, 2026-11-04: performance tools. The user asked that users can record and analyze ProcessControl's
+  performance over time, and chose markers, counters and modules of three options. Unity's Profiler records frames,
+  saves captures and, with Profile Analyzer, compares them, so PlayForge adds only what Unity can't know.
+  - **Markers** on the step loop for each timing, each process's step (named by its type, with its process ID as
+    metadata), the GAS's end of frame, effect application, ability activation, the tag compile, attribute recomputes
+    and sequence stages. The Profiler's CPU view and Profile Analyzer then show each one's time and allocations over
+    frames.
+  - **Counters,** from `com.unity.profiling.core`:
+    - ProcessControl: processes running, waiting and created; registrations, terminations, steps and state changes
+      per frame; the step loop's time.
+    - GAS: entities by hub; effects active, applied and removed per frame; impacts, activations, refused activations,
+      tag compiles and recomputes per frame.
+    - TaskSequence: sequences running, and stages started per frame.
+  - **Two Profiler modules,** PlayForge Processes and PlayForge GAS, chart the counters, ten at most each. The
+    Processes module's detail panel lists each frame's costliest processes, from frame metadata
+    (`Profiler.EmitFrameMetaData`, into a reused array) emitted only while the Profiler records.
+  - Unity compiles markers and counters out of release builds, so the tools work in the editor and development builds.
+    A stats API for release builds was offered and not chosen.
+  - The Debugger keeps its live Step and Peak step for each process.
+  - **Notes for the build:** zero steady-state allocation holds (Phase 3): markers and counters are static, made
+    once, a marker per process type is cached the first time that type steps, and the metadata array is reused. The
+    Debugger's per-process timing and the step markers measure the same span, so one place can feed both. An
+    EditMode test can read the counters back through `ProfilerRecorder`, as Proving Grounds' AllocationProbe reads
+    allocations. Unity's docs: profiler-creating-custom-counters, profiler-add-counters-code and
+    profiler-create-modules in the 6000 Manual, and `ProfilerCounterValue` in com.unity.profiling.core 1.0.
 
 **Open. Ask the user; do not assume:**
 1. ~~**Uncommitted changes**~~: decided, see above.
@@ -682,7 +707,7 @@ Phase 2 part, and set Phase 4's direction.
 | FEAT-15 | Register builder | One builder or options struct in place of `ProcessControl`'s 28 static `Register` overloads, from the review's API changes. The roadmap gave it to Phase 3, but no row tracked it, so it moved here when Phase 3 closed. Today the argument's static type picks the overload, and a failed call returns false with a null relay. The review paired it with a `Run` on the relay, which doesn't exist yet, and an awaitable completion, which `ProcessRelay.WhenTerminated` now is (TS-Z). Done (Decision 30): `ProcessControl.Register(process)` starts a registration that `HandledBy`, `With` and `In` shape and `Run` makes, returning the relay or why it was refused; the handler follows the packet's run-time type; `ProcessRelay.Run` starts a waiting process; the 28 overloads are `[Obsolete]` wrappers until the first Asset Store submission |
 | FEAT-16 | Loose tags | Done with ED-40, ahead of the phase. A tag granted with no effect, ability or item behind it, as Unreal's loose gameplay tags are: `AddLooseTag`, `RemoveLooseTag` and `GetLooseTags` on each hub, each grant counted, and the tag compile includes them. A tag added straight to the tag cache went at its next compile |
 | FEAT-17 | Activation by asset or tag, with a reason | From the review's API changes: activate by ability asset or tag, and say why a refused activation was refused, with a matching callback. `TryActivateAbility` returns only true or false (`AbilitySystemComponent.TryActivateAbility`). Done (Decision 30): `TryActivateAbility(ability)` activates by asset, in the first slot that holds it, and `TryActivateAbility(tag)` the first ability by slot whose asset or context tag is the tag or under it; each form, and the request's, can give an `out ActivationRefusal` (`EActivationRefusal`: Not Known, Disabled, Locked, No New Processes, Level Zero, Requirements, Cooldown, Cost, Dead, Rule with its name, Blocked, Busy, Critical), and `AbilitySystemCallbacks.OnAbilityRefused` tells each refusal; a request the buffer retries isn't told again |
-| FEAT-18 | Profiler markers | From the review's Profiling gap: Runtime has no `ProfilerMarker`, so the cost of a process step, an effect application or an ability activation can't be seen in Unity's Profiler. Done (Decision 30): `ForgeProfiler`'s markers, in the Scripts category: `PlayForge.ProcessStep`, `PlayForge.GASStep`, `PlayForge.EndOfFrame`, `PlayForge.ApplyEffect` and `PlayForge.ActivateAbility` |
+| FEAT-18 | Performance tools | From the review's Profiling gap: Runtime had no `ProfilerMarker`, so the cost of a process step, an effect application or an ability activation couldn't be seen in Unity's Profiler. Decision 32 widens it: markers on process steps and the GAS's work, counters for ProcessControl, the GAS and TaskSequence, and two Profiler modules that chart them, one listing each frame's costliest processes. Adds the `com.unity.profiling.core` dependency. Editor and development builds only. In part (Decision 30): `ForgeProfiler`'s markers, in the Scripts category: `PlayForge.ProcessStep`, `PlayForge.GASStep`, `PlayForge.EndOfFrame`, `PlayForge.ApplyEffect` and `PlayForge.ActivateAbility`. Open: a step marker per process type with its ID as metadata, the step loop's, tag compile, recompute and stage markers, the counters and the two modules |
 | FEAT-19 | Effect stacks scaler | Nothing built in read an effect's stack count, so a change by the stack, as a sunder's −5 armor a stack, took a scaler written for it: Proving Grounds wrote its own twice (`StackCountScaler` in `EffectStackingTests` and `GoldenImpactTests`). Found by the Combat lab. Done (Decision 30): `EffectStacksScaler` reads the stack count of the effect's own container, 1 for one that doesn't stack, as `ItemStacksScaler` reads an item's (FEAT-14) |
 | FEAT-20 | Copy an entity | The review's mirror clones: copying a GAS's state into a new runtime GAS took FEAT-9's capture and restore, which need a catalog naming every asset and IDs for every entity, which assets made as the game runs never have; and the entity's own level stayed behind on a clone of another kind, saved under its kind's tag. Found by the mirror clones scenario. Done (Decision 30): `ForgeSave.Copy(from, onto)` captures and restores with names for assets and entities that last the session, and a save keeps the entity's own level under no key, which loads onto the target's own |
 | FEAT-21 | Run a sequence made in code | Run Sequence ran only a sequence a static method made, by name (`TaskSequenceReference`), so a sequence made in code, as an ability built as the game runs makes one with `TaskSequenceBuilder`, couldn't run in an ability; Proving Grounds' nested-sequence tests handed theirs over in a static field. Found by the ability crafting scenario. Done (Decision 30): `RunSequenceTask.Definition`, a `TaskSequenceDefinition` made in code, of which each activation runs a fresh sequence |

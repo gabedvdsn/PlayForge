@@ -140,6 +140,23 @@ The only other colors:
   (Q6).
 - **The status bar** holds the asset count and the problem count.
 
+## The Debugger
+
+- One window with three views, Entities, Processes and Tags, switched in its toolbar (Q4).
+- **It reads as clearly in a docked column as in a full window** (the user, 2026-11-04). The mockups draw it at
+  1280 px and at 360 px.
+  - Below 720 px, the list sits above the detail, with a splitter between them, and the toolbar takes two rows: the
+    views across the first, the search and filters on the second. The frame count moves to the status bar.
+  - The detail's sections stand in one column, as an inspector's do, and sit two abreast only when the detail is at
+    least 720 px wide.
+  - A table short of room hides its lowest-priority columns before any column clips to nothing, and the detail shows
+    what the list hides. The Processes list keeps ID, Process, State and Step; Held By drops Source.
+  - Header buttons that don't fit move to a row under the header. A section's foot row keeps its actions, and its
+    picker shrinks before a button does.
+- **Each section's foot row** acts on the section's selected row, which takes the unfocused selection while the list
+  keeps the blue. Attributes edits Base and Current; Effects removes or applies; Abilities activates, interrupts or
+  grants; Tags adds a tag or removes a loose one. An action that doesn't apply stays in place, disabled (Q27).
+
 ## Columns and overflow
 
 - A column clips its own text with an ellipsis. Nothing draws across a column's edge.
