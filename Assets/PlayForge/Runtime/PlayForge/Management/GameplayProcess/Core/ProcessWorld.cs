@@ -25,6 +25,25 @@ namespace FarEmerald.PlayForge
         // A scene's world, which its ProcessControl readies as it bootstraps
         internal ProcessWorld(ProcessControl control) => Control = control;
 
+        /// <summary>
+        /// The world that holds a process, by its relay: an entity's, a runtime process's or a Mono process's. One that no
+        /// world holds takes the scene's. An ability's processes run in their caster's world; they ran in the scene's,
+        /// wherever the caster was (FEAT-10).
+        /// </summary>
+        public static ProcessWorld Of(object process)
+        {
+            var relay = process switch
+            {
+                AbstractRuntimeProcess runtime => runtime.Relay,
+                AbstractMonoProcess mono => mono.ProcessRelay,
+                _ => null,
+            };
+            var world = relay?.World;
+            if (world != null) return world;
+            var scene = ProcessControl.Instance;
+            return scene != null ? scene.World : null;
+        }
+
         // The settings. A scene's world reads its ProcessControl's inspector, so a change there holds at once; a world of
         // its own keeps its own
         private EProcessControlState startState = EProcessControlState.Ready;

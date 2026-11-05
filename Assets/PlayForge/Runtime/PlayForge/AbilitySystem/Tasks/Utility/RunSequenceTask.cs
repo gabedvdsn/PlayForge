@@ -60,7 +60,8 @@ namespace FarEmerald.PlayForge
                 // the runtime is always visible and manageable. Previously the async+critical path
                 // started the sequence via .Forget() outside ProcessControl, producing an orphaned
                 // runtime that kept running after the outer ability tore down.
-                var registration = ProcessControl.Register(taskSeq).With(data).Run();
+                // In the caster's world, as its ability's own sequence is (FEAT-10)
+                var registration = ProcessControl.Register(taskSeq).With(data).In(ProcessWorld.Of(data.EffectOrigin?.GetSource())).Run();
                 var relay = registration.Relay;
                 if (!registration)
                 {

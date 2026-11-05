@@ -44,7 +44,8 @@ namespace FarEmerald.PlayForge
         private void HandleDestruction()
         {
             // As the runtime hub's: one with no process to end is destroyed outright (GAS-42)
-            if (Relay != null && ProcessControl.Instance && ProcessControl.Instance.TerminateImmediate(Relay.CacheIndex)) return;
+            // Through its relay, where it's held (FEAT-10)
+            if (Relay != null && Relay.TerminateImmediate()) return;
 
             Destroy(gameObject);
         }

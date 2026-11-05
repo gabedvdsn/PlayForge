@@ -51,8 +51,10 @@ namespace FarEmerald.PlayForge
         /// </summary>
         protected virtual void HandleDestruction()
         {
-            // One stepped by hand, outside ProcessControl, has no process to end. It threw (GAS-42)
-            if (Relay != null && ProcessControl.Instance) ProcessControl.Instance.Terminate(Relay.CacheIndex);
+            // One stepped by hand, outside ProcessControl, has no process to end. It threw (GAS-42). Through its relay, it
+            // ends where it's held: through the scene's control by its cache index, one in a world of its own ended
+            // whatever the scene held under that index, and ran on itself (FEAT-10)
+            Relay?.Terminate();
         }
 
         // ═══════════════════════════════════════════════════════════════════════════

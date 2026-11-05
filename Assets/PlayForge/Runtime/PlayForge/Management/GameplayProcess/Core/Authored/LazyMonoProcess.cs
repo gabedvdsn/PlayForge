@@ -20,7 +20,8 @@ namespace FarEmerald.PlayForge
         public override async UniTask RunProcess(CancellationToken token)
         {
             processActive = true;
-            await UniTask.WaitWhile(() => processActive, cancellationToken: token);
+            // Kept alive tick by tick: in a world of its own, its steps; elsewhere, Unity's frames, as the wait was (FEAT-10)
+            while (processActive) await ForgeTick.Next(token);
         }
     }
 }

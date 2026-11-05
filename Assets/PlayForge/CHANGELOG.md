@@ -15,6 +15,9 @@ tracks each fix below by its ID.
   that time, and its own tick goes on, so its sequences' waits go on by its steps, and a loop of steps runs it
   through its time within one frame. `ForgeTickSource` is a tick; `ForgeTick.Scene` is the scene's, and
   `ForgeTick.Current` the one in force (FEAT-10).
+- Abilities in a world of their own. An ability's processes register in their caster's world, which
+  `ProcessWorld.Of(process)` finds, so a battle of runtime entities in a world of its own plays out as its owner
+  steps it (FEAT-10).
 - Targeting input. The click-targeting tasks read the game's input, `ForgeInput.Current`, in place of the Input
   Manager's mouse and `Camera.main`. By default it's the Input System's pointer, a mouse, a pen or a touch, where
   that package is in and on, or else the Input Manager's mouse, each aimed through `Camera.main` or a camera you
@@ -300,6 +303,8 @@ tracks each fix below by its ID.
   Asking whether its sequence was paused took 24 bytes a frame.
 
 ### Fixed
+- A runtime entity that fell ended whatever process ProcessControl held under its cache index, and not its own, when
+  another world held it. It ends through its own relay (FEAT-10).
 - A process's relay, its state changes, a watch on it and what a runtime process handles reached
   `ProcessControl.Instance`, whichever control held the process, so once another control was Instance they reached
   the wrong one. Each goes to the control that holds the process, which `ProcessRelay.Control` and

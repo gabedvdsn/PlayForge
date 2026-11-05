@@ -25,7 +25,8 @@ namespace FarEmerald.PlayForge
 
             foreach (var p in Processes)
             {
-                if (!ProcessControl.Register(p).HandledBy(data.EffectOrigin.GetSource()).Run(out var relay)) continue;
+                var caster = data.EffectOrigin.GetSource();
+                if (!ProcessControl.Register(p).HandledBy(caster).In(ProcessWorld.Of(caster)).Run(out var relay)) continue;
                 relays.Add(relay);
             }
         }

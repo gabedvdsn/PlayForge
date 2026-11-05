@@ -406,8 +406,9 @@ namespace FarEmerald.PlayForge
             if (!Enabled) return EActivationRefusal.Disabled;
             if (Locked) return EActivationRefusal.Locked;
 
-            // An ability runs as a process, so it can't start while ProcessControl refuses new ones (TS-AC)
-            if (ProcessControl.Instance is { AcceptsNewProcesses: false }) return EActivationRefusal.NoNewProcesses;
+            // An ability runs as a process, so it can't start while its caster's world refuses new ones (TS-AC). It asked
+            // the scene's, wherever the caster was (FEAT-10)
+            if (ProcessWorld.Of(data?.EffectOrigin?.GetSource()) is { AcceptsNewProcesses: false }) return EActivationRefusal.NoNewProcesses;
 
             var source = container.Spec.SourceRefusal(data, out rule);
             if (source != EActivationRefusal.None) return source;

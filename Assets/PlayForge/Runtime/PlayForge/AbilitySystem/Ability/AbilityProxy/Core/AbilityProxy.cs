@@ -197,7 +197,8 @@ namespace FarEmerald.PlayForge
             var handler = implicitData.EffectOrigin.GetSource();
             // Refused, targeting ends here, and the ability with it. It used to run outside ProcessControl, where no
             // pause or terminate could reach it (TS-AC)
-            if (!ProcessControl.Register(CompiledTargeting).HandledBy(handler).With(implicitData).Run(out var relay))
+            // In the caster's world, so its waits are the world's (FEAT-10)
+            if (!ProcessControl.Register(CompiledTargeting).HandledBy(handler).With(implicitData).In(ProcessWorld.Of(handler)).Run(out var relay))
             {
                 throw new OperationCanceledException();
             }
@@ -301,7 +302,8 @@ namespace FarEmerald.PlayForge
             var handler = implicitData.EffectOrigin.GetSource();
             // Refused, the ability ends here. It used to run its stages outside ProcessControl instead, where no
             // pause or terminate could reach them (TS-AC)
-            var registration = ProcessControl.Register(CompiledSequence).HandledBy(handler).With(implicitData).Run();
+            // In the caster's world, so its waits are the world's (FEAT-10)
+            var registration = ProcessControl.Register(CompiledSequence).HandledBy(handler).With(implicitData).In(ProcessWorld.Of(handler)).Run();
             var relay = registration.Relay;
             if (!registration)
             {
