@@ -1,7 +1,7 @@
 # PlayForge refactor: code tour
 
 This tour lists the places where the refactor changed code, so you can open each one in your IDE and read it. It
-covers `01258b8..13eac5b` on `main`: 312 commits. Phase 0 ported Arcade Fighter's fixes, Phase 1 made the runtime
+covers `01258b8..60683cd` on `main`: 314 commits. Phase 0 ported Arcade Fighter's fixes, Phase 1 made the runtime
 correct, Phase 2 got the package ready to release, Phase 3 made it cheaper to run and gave the two GAS hubs one core,
 Phase 4 rebuilt the editor, and Phase 5 has begun. Each entry says what behaves differently and why, names its tracker IDs and Decisions, and
 points at the two or three places to read. `Docs/REFACTOR_PLAN.md` has every tracker row, the numbered Decisions,
@@ -10,8 +10,8 @@ and a Log of each batch's test results.
 ## How to use this
 
 - Paths are relative to the repo root.
-- Line numbers are as of commit `13eac5b`, the head of `main` on 2026-11-04. A later commit may move them, so each
-  entry also names the class and method to search for. `git show 13eac5b:<path>` shows a file as it was then.
+- Line numbers are as of commit `60683cd`, the head of `main` on 2026-11-04. A later commit may move them, so each
+  entry also names the class and method to search for. `git show 60683cd:<path>` shows a file as it was then.
 - In Rider, Go to File accepts `path:line`. In Visual Studio, open the file, then Go To Line (Ctrl+G).
   A bare `:123` after a path means another line in the same file.
 - `git grep "<ID>"` finds the comment at each fix, and `git log --grep "<ID>"` finds its commit. Three exceptions:
@@ -44,10 +44,10 @@ own: the first version walked the shelf on every application, and GAS-P3's cost 
 
 - **IDs:** FEAT-8, commit `04d0742`.
 - **Read:**
-  - `Assets/PlayForge/Runtime/PlayForge/GAS/Core/EffectSystemComponent.cs:169` `IsImmuneTo`, over `:165`
-    `immunities`, and `:182` `RemoveEffectsNamedBy`, which `ApplyGameplayEffect` calls (`:140`).
-  - `Assets/PlayForge/Runtime/PlayForge/GameplayEffect/Core/GameplayEffect.cs:248` and `:254`, the two lists, and
-    `:261` `GameplayEffectTags.Names`, what a list names.
+  - `Assets/PlayForge/Runtime/PlayForge/GAS/Core/EffectSystemComponent.cs:183` `IsImmuneTo`, over `:179`
+    `immunities`, and `:196` `RemoveEffectsNamedBy`, which `ApplyGameplayEffect` calls (`:141`).
+  - `Assets/PlayForge/Runtime/PlayForge/GameplayEffect/Core/GameplayEffect.cs:255` and `:261`, the two lists, and
+    `:268` `GameplayEffectTags.Names`, what a list names.
 - **Watch for:** `GameplayEffectTags` is a struct, so a test that sets a list through reflection boxes it, sets the
   field, then assigns it back.
 - **Tests:** `FEAT_8_A_cleanse_takes_off_the_effects_it_names` and `FEAT_8_An_immunity_refuses_the_effects_it_names`
@@ -61,7 +61,7 @@ Decision 30's default: a cleanse and an immunity name an effect by a tag it gran
 "whatever makes you Burning" needed a context tag on every effect that burns.
 
 - **IDs:** FEAT-8, commit `520c433`; Decision 30.
-- **Read:** `Assets/PlayForge/Runtime/PlayForge/GameplayEffect/Core/GameplayEffect.cs:261`
+- **Read:** `Assets/PlayForge/Runtime/PlayForge/GameplayEffect/Core/GameplayEffect.cs:268`
   `GameplayEffectTags.Names`, which walks the lists by index, so a check allocates nothing.
 - **Tests:** `FEAT_8_A_cleanse_and_an_immunity_name_an_effect_by_a_tag_it_grants` on each hub in PlayMode's
   `CleanseAndImmunityTests`.
@@ -127,7 +127,7 @@ where one static count numbered every entity's activations in turn, and each eff
   - `Assets/PlayForge/Runtime/PlayForge/Utils/ForgeTime.cs:48` `ForgeTime`, `:56` `Use`, `:151` `ForgeRandom`, and
     `:112` `SeededRandom`.
   - `Assets/PlayForge/Runtime/PlayForge/AbilitySystem/Core/AbilityActivationHandle.cs:37`, the ID from its ability system,
-    and `Assets/PlayForge/Runtime/PlayForge/GAS/Core/EffectSystemComponent.cs:120`, an application's.
+    and `Assets/PlayForge/Runtime/PlayForge/GAS/Core/EffectSystemComponent.cs:121`, an application's.
 - **Watch for:** Unity's random stays the default, so a test that seeds it with `Random.InitState` still repeats its roll.
 - **Tests:** `FEAT_13_The_runtime_reads_time_and_random_numbers_only_through_ForgeTime` in EditMode's new
   `RuntimeSourceTests`, and the four `FEAT_13_*` tests in PlayMode's new `ForgeTimeTests`.
@@ -185,13 +185,39 @@ refreshing the duration, and Clear Stacks On Overflow takes the stacks off.
     `OverflowEffects`, the bound's first of three fields, and `:271` `Overflows`.
   - `Assets/PlayForge/Runtime/PlayForge/GameplayEffect/Core/Definition/GameplayEffectDuration.cs:274`
     `GetStackAmount`, which records the first bound an amount would take past its max.
-  - `Assets/PlayForge/Runtime/PlayForge/GAS/Core/EffectSystemComponent.cs:402`, where a stack finds it overflows,
-    `:422`, where Deny Refresh skips the interaction, and `:464` `Overflow`.
+  - `Assets/PlayForge/Runtime/PlayForge/GAS/Core/EffectSystemComponent.cs:456`, where a stack finds it overflows,
+    `:476`, where Deny Refresh skips the interaction, and `:518` `Overflow`.
 - **Watch for:** the lab's shield worker reads `ForgeTime.FrameCount`, PlayForge's frame, so two blows in one tick
   share what the shield has left.
 - **Tests:** `FEAT_8_An_effect_at_its_max_stacks_overflows` and
   `FEAT_8_Deny_Refresh_keeps_an_overflowing_application_from_refreshing` on each hub in PlayMode's
   `CleanseAndImmunityTests`, and the lab's 16 in `StatusEffectLabTests` (category Lab).
+
+### Abilities granted by effects, and the chance to apply (FEAT-8)
+
+FEAT-8's last two parts, which finish it. An effect's Granted Abilities are given to its target as a lasting effect
+lands, at the level of what applied it, as an item gives its ability at the item's level. The shelf notes the slot
+each took and takes it back as the effect comes off, interrupting it if it runs. An ability the target can't take
+isn't lent, so the target keeps its own (GAS-48). An effect's Chance to Apply, a scaler magnitude on its impact and 1
+by default, is drawn once each application from `ForgeRandom`, after the requirements and immunities pass. A miss is
+refused, and a chance of 1 or of 0 draws nothing, so effects without one leave the random numbers as they were. The
+lab gains a jagged strike that lacerates on a seeded roll and a blessing that lends the caster Smite.
+
+- **IDs:** FEAT-8, commit `60683cd`; Decision 30.
+- **Read:**
+  - `Assets/PlayForge/Runtime/PlayForge/GAS/Core/EffectSystemComponent.cs:167` `RollsToApply`, which
+    `ApplyGameplayEffect` asks (`:105`); `:308` `LendAbilities`, after `Shelve` (`:251`), and `:326`
+    `TakeBackAbilities`, as the cleaning pass ends a container (`:684`) and as a replace swaps effects (`:437`).
+  - `Assets/PlayForge/Runtime/PlayForge/GameplayEffect/Core/GameplayEffect.cs:22` `GrantedAbilities`, and
+    `Assets/PlayForge/Runtime/PlayForge/GameplayEffect/Core/Definition/GameplayEffectImpact.cs:141` `ChanceToApply`.
+  - `Assets/PlayForge/Editor/CustomPropertyDrawers/Forge/Editors/Assets/EffectEditor.cs:300`, the Tags section's
+    Granted Abilities, and `:593` `ChanceSummary`; the drawer's field is
+    `Assets/PlayForge/Editor/CustomPropertyDrawers/Forge/Drawers/Assets/Effect/GameplayEffectImpactDrawer.cs:89`.
+- **Watch for:** a new field's initializer gives an existing asset its default, so every effect saved before this has
+  a chance of 1. An instant effect lends nothing, as it's never on its target.
+- **Tests:** the five `FEAT_8_*` tests on each hub in PlayMode's new `GrantedAbilityAndChanceTests`,
+  `FEAT_8_The_Effect_inspector_edits_the_chance_to_apply_and_granted_abilities` in `InspectorUndoTests`, and the
+  lab's `Lab_A_jagged_strike_lacerates_on_a_roll` and `Lab_The_blessing_lends_the_caster_an_ability`.
 
 ## Phase 4
 
@@ -250,7 +276,7 @@ Undo and Redo among them. Renames already undid in one step, since Phase 2.
 - **Read:**
   - `Assets/PlayForge/Editor/CustomPropertyDrawers/Forge/Editors/BasePlayForgeEditor.cs:228` `OnAssetChanged`, a
     virtual no-op that the header's tracker at `:377` calls.
-  - `Assets/PlayForge/Editor/CustomPropertyDrawers/Forge/Editors/Assets/EffectEditor.cs:476`, the Effect's override,
+  - `Assets/PlayForge/Editor/CustomPropertyDrawers/Forge/Editors/Assets/EffectEditor.cs:480`, the Effect's override,
     which redraws Leveling when what it's drawn from has changed, and `:232`, the bound Link Mode field. The other four
     inspectors do the same.
   - `Assets/PlayForge/Editor/CustomPropertyDrawers/Forge/Editors/Assets/EntityIdentityEditor.cs:274`, Starting Level
@@ -372,7 +398,7 @@ Behaviour again; now it does.
 
 - **IDs:** ED-11, commit `c5d5480`.
 - **Read:**
-  - `Assets/PlayForge/Editor/CustomPropertyDrawers/Forge/Drawers/Assets/Effect/GameplayEffectImpactDrawer.cs:144`,
+  - `Assets/PlayForge/Editor/CustomPropertyDrawers/Forge/Drawers/Assets/Effect/GameplayEffectImpactDrawer.cs:150`,
     where Multiply Behaviour follows the operation; the drawer follows the asset whole since ED-2, which removed Reverse On Removal.
   - `Assets/PlayForge/Editor/CustomPropertyDrawers/Forge/Drawers/Assets/Effect/GameplayEffectDrawer.cs:53`, the
     `ReferencedEffectWatch` element that follows the referenced effect.
@@ -684,12 +710,12 @@ longer draws Reverse On Removal. The Cost check reads each impact a cost makes; 
 - **IDs:** ED-2 and ED-3, commit `ccb4981`.
 - **Read:**
   - `Assets/PlayForge/Runtime/PlayForge/GameplayEffect/Core/Definition/GameplayEffectImpact.cs:46` `RebuildEntries`,
-    and `:162` `AdditionalImpacts`.
+    and `:169` `AdditionalImpacts`.
   - `Assets/PlayForge/Editor/CustomPropertyDrawers/Forge/Drawers/Assets/Effect/AttributeImpactEntryDrawer.cs:26`
     `CreatePropertyGUI`, with the Delivery popup at `:82`, and `:162` `Remove`, which lets go of the entries before it
     deletes one.
-  - `Assets/PlayForge/Editor/CustomPropertyDrawers/Forge/Drawers/Assets/Effect/GameplayEffectImpactDrawer.cs:161`
-    `ShowDelivery` and `:210` `AddImpact`.
+  - `Assets/PlayForge/Editor/CustomPropertyDrawers/Forge/Drawers/Assets/Effect/GameplayEffectImpactDrawer.cs:167`
+    `ShowDelivery` and `:216` `AddImpact`.
   - `Assets/PlayForge/Editor/CustomPropertyDrawers/Forge/Drawers/Assets/Effect/ImpactFields.cs:28` `OperationField`,
     the mockup's one choice for the operation and the value it changes; `:97` `DeliveriesFor`; `:124` `CommitsText`.
   - `Assets/PlayForge/Runtime/PlayForge/Utils/Validation/CommonValidations.cs:11` `CostValidation.Validate`.
@@ -713,7 +739,7 @@ inspector's tag requirements use the same table, with a Caster and a Target row.
 - **IDs:** ED-37, commit `6090980`.
 - **Read:**
   - `Assets/PlayForge/Editor/CustomPropertyDrawers/Forge/Editors/Assets/EffectEditor.cs:93`, the sections in order;
-    `:225` `RebuildLevelingContent`; `:364` `BuildRequirementsSection`; `:540` `DurationSummary` and `:560`
+    `:225` `RebuildLevelingContent`; `:368` `BuildRequirementsSection`; `:548` `DurationSummary` and `:569`
     `ImpactSummary`.
   - `Assets/PlayForge/Editor/UI/Kit/ForgeRequirementsTable.cs:48`, the table, and `:142` `Toggle`, which opens a
     cell's list.
@@ -826,9 +852,9 @@ field's own values. A kind, count, range, Combine, operation or delivery the ass
   - `Assets/PlayForge/Editor/CustomPropertyDrawers/Forge/Drawers/Scaler/ScalerFields.cs:310` `Resize`, each table from
     its own last value, and `:127` `KeepCurve`.
   - `Assets/PlayForge/Editor/CustomPropertyDrawers/Forge/Editors/Assets/EffectEditor.cs:27`, where the Effect inspector
-    turns on `SupportsMultipleObjects`, and `:427`, the note in place of its workers.
-  - `Assets/PlayForge/Editor/CustomPropertyDrawers/Forge/Drawers/Assets/Effect/GameplayEffectImpactDrawer.cs:161`
-    `ShowDelivery`, a mixed delivery, and `:95`, the note in place of the additional impacts.
+    turns on `SupportsMultipleObjects`, and `:431`, the note in place of its workers.
+  - `Assets/PlayForge/Editor/CustomPropertyDrawers/Forge/Drawers/Assets/Effect/GameplayEffectImpactDrawer.cs:167`
+    `ShowDelivery`, a mixed delivery, and `:101`, the note in place of the additional impacts.
 - **Watch for:** UI Toolkit sends a change event when a field that shows a mixed value is set to the value it holds,
   so a mixed kind takes even the first asset's kind; the kind callbacks skip a same-value change only when the kind
   isn't mixed.
@@ -1093,8 +1119,8 @@ Instant path committed OnApply entries, so the change never landed. Applying suc
 entries before its ticks run.
 
 - **IDs:** GAS-50, commit `e40b3b6`.
-- **Read:** `Assets/PlayForge/Runtime/PlayForge/GAS/Core/EffectSystemComponent.cs:305`
-  `EffectSystemComponent.ApplyTickOnApplication`. The Instant path, `ApplyInstantGameplayEffect`, is at `:200`.
+- **Read:** `Assets/PlayForge/Runtime/PlayForge/GAS/Core/EffectSystemComponent.cs:353`
+  `EffectSystemComponent.ApplyTickOnApplication`. The Instant path, `ApplyInstantGameplayEffect`, is at `:214`.
 - **Test:** `GAS_50_Tick_On_Application_alone_lands_its_change` in `EffectTickTests`.
 
 ### A set reached twice counts once (GAS-44)
@@ -1173,14 +1199,14 @@ shelf, and takes about 0.001 ms either way.
 - **Read:**
   - `Assets/PlayForge/Runtime/PlayForge/GAS/Core/EffectSystemComponent.cs:71` `EffectSystemComponent.Tick`. The
     requirements an application leaves wait for one pass here (`:83`), before the shelf ticks; the application only
-    marks them due (`:137`).
-  - `Assets/PlayForge/Runtime/PlayForge/GAS/Core/EffectSystemComponent.cs:255` `Shelve`, which counts a container's
-    tags as it lands, and `Unshelve` (`:273`), which since GAS-P5 takes a whole cleaning pass off at once. They keep
+    marks them due (`:138`).
+  - `Assets/PlayForge/Runtime/PlayForge/GAS/Core/EffectSystemComponent.cs:270` `Shelve`, which counts a container's
+    tags as it lands, and `Unshelve` (`:288`), which since GAS-P5 takes a whole cleaning pass off at once. They keep
     the index by asset tag (`:44`).
-  - `Assets/PlayForge/Runtime/PlayForge/GAS/Core/EffectSystemComponent.cs:356`, in
+  - `Assets/PlayForge/Runtime/PlayForge/GAS/Core/EffectSystemComponent.cs:404`, in
     `TryHandleExistingDurationalGameplayEffect`, where a re-application finds its containers in the index.
-  - `Assets/PlayForge/Runtime/PlayForge/GAS/Core/EffectSystemComponent.cs:518` `HandleGameplayEffects`, which
-    compiles the tags once (`:524`), not twice.
+  - `Assets/PlayForge/Runtime/PlayForge/GAS/Core/EffectSystemComponent.cs:572` `HandleGameplayEffects`, which
+    compiles the tags once (`:578`), not twice.
   - `Assets/PlayForge/Runtime/PlayForge/Tag/GrantedTagCompiler.cs:45` `GrantedTagCompiler.AddEffect`, one effect's
     tags, counted the same way by a rebuild and by shelving.
 - **Watch for:** a removal or ongoing requirement an application meets now takes effect at the next tick. The container
@@ -1197,11 +1223,11 @@ ending 50. Ending one now costs 0.0005 ms either way.
 
 - **IDs:** GAS-P5, commit `7ce68aa`. Found fixing GAS-P3.
 - **Read:**
-  - `Assets/PlayForge/Runtime/PlayForge/GAS/Core/EffectSystemComponent.cs:510` `MarkFinished`, which adds to the set
-    that mirrors the list (`:36`). The tick and the requirement pass skip a finished container through it (`:557`,
-    `:531`).
-  - `Assets/PlayForge/Runtime/PlayForge/GAS/Core/EffectSystemComponent.cs:612` `ClearFinishedEffects`, which takes the
-    pass off together (`:625`) before any `OnRemove`, through `Unshelve` (`:273`): one walk of the shelf and one of
+  - `Assets/PlayForge/Runtime/PlayForge/GAS/Core/EffectSystemComponent.cs:564` `MarkFinished`, which adds to the set
+    that mirrors the list (`:36`). The tick and the requirement pass skip a finished container through it (`:611`,
+    `:585`).
+  - `Assets/PlayForge/Runtime/PlayForge/GAS/Core/EffectSystemComponent.cs:666` `ClearFinishedEffects`, which takes the
+    pass off together (`:679`) before any `OnRemove`, through `Unshelve` (`:288`): one walk of the shelf and one of
     the index.
 - **Watch for:** effects ending in the same update leave the shelf together, so one's removal workers no longer find
   another that is ending with it.
@@ -1222,8 +1248,8 @@ removed entries through a lambda and built new ones (288), and a same-root tag q
     indexes each delivery's attributes and impacters once (`IndexImpacter`, `:193`). `GetImpactersFor` (`:211`)
     returns the spec's own list, and `GetImpactedAttributes` (`:226`) a view that `foreach` walks without allocating
     (`Assets/PlayForge/Runtime/PlayForge/Utils/ReadOnlyListView.cs:10`).
-  - `Assets/PlayForge/Runtime/PlayForge/GameplayEffect/Core/Definition/GameplayEffectImpact.cs:235`
-    `GetContainedEffects`, now a `ContainedEffects` struct (`:239`) over the packets.
+  - `Assets/PlayForge/Runtime/PlayForge/GameplayEffect/Core/Definition/GameplayEffectImpact.cs:244`
+    `GetContainedEffects`, now a `ContainedEffects` struct (`:248`) over the packets.
   - `Assets/PlayForge/Runtime/PlayForge/AttributeSystem/Attribute/CachedAttributeValue.cs:211` `RemoveCarrier`, one
     pass that keeps order and keeps the entries spare (`:65`) for `RegisterModifier` (`:182`). The recompute clears
     its kept list (`:69`) at `:404`.
@@ -1916,8 +1942,8 @@ a hit takes what it says and an override still pins the value.
     `CachedAttributeValue.Recompute`. Committed history is at `:458`.
   - `Assets/PlayForge/Runtime/PlayForge/GameplayEffect/Core/Definition/GameplayEffectImpact.cs:84`
     `GameplayEffectImpact.ResolveDelivery`, unchanged: how each authored shape maps to a delivery.
-  - `Assets/PlayForge/Runtime/PlayForge/GAS/Core/EffectSystemComponent.cs:200`
-    `EffectSystemComponent.ApplyInstantGameplayEffect` (OnApply commits) and `:332`
+  - `Assets/PlayForge/Runtime/PlayForge/GAS/Core/EffectSystemComponent.cs:214`
+    `EffectSystemComponent.ApplyInstantGameplayEffect` (OnApply commits) and `:380`
     `ApplyDurationGameplayEffectAsInstant` (Periodic commits).
 - `Assets/PlayForge/Documentation/EFFECT_PIPELINE.md` section 2.1 has the new order, and `IMPACT_MODEL_REFACTOR.md`
   has a dated amendment.
@@ -1983,8 +2009,8 @@ Continuous entries, so a per-stack magnitude updates at once rather than at the 
     `ConfigsByPriority` (`:310`). The
     bound is `StackBoundsConfig.GetStacks`
     (`Assets/PlayForge/Runtime/PlayForge/GameplayEffect/Core/GameplayShelfContainer/Settings/AbstractEffectConfig.cs:280`).
-  - `Assets/PlayForge/Runtime/PlayForge/GAS/Core/EffectSystemComponent.cs:546` `EffectSystemComponent.TickEffectShelf`
-    (a lost stack at `:604`) and `:354` `TryHandleExistingDurationalGameplayEffect` (`Extend` at `:444`).
+  - `Assets/PlayForge/Runtime/PlayForge/GAS/Core/EffectSystemComponent.cs:600` `EffectSystemComponent.TickEffectShelf`
+    (a lost stack at `:658`) and `:402` `TryHandleExistingDurationalGameplayEffect` (`Extend` at `:498`).
 
 #### Durations and ticks
 
@@ -2014,10 +2040,10 @@ next tick since GAS-P3, and again when a tick is due, since tags change without 
 - **Read:**
   - `Assets/PlayForge/Runtime/PlayForge/GameplayEffect/Core/Definition/EffectTagRequirements.cs:63`
     `EffectTagRequirements.CheckRemovalRequirements`.
-  - `Assets/PlayForge/Runtime/PlayForge/GameplayEffect/Core/GameplayEffect.cs:175`
-    `GameplayEffect.ValidateRemovalRequirements`, and `ValidateApplicationRequirements` (`:164`).
-  - `Assets/PlayForge/Runtime/PlayForge/GAS/Core/EffectSystemComponent.cs:518`
-    `EffectSystemComponent.HandleGameplayEffects`, and the re-check in `TickEffectShelf` at `:577`.
+  - `Assets/PlayForge/Runtime/PlayForge/GameplayEffect/Core/GameplayEffect.cs:182`
+    `GameplayEffect.ValidateRemovalRequirements`, and `ValidateApplicationRequirements` (`:171`).
+  - `Assets/PlayForge/Runtime/PlayForge/GAS/Core/EffectSystemComponent.cs:572`
+    `EffectSystemComponent.HandleGameplayEffects`, and the re-check in `TickEffectShelf` at `:631`.
 
 #### Contained effects, records and the cycle guard
 
@@ -2031,11 +2057,11 @@ The `GameplayEffectImpact` copy constructor keeps the affiliation and accepts an
 - **IDs:** GAS-8, GAS-28, GAS-14, ED-14.
 - **Read:**
   - `Assets/PlayForge/Runtime/PlayForge/GAS/Core/EffectSystemComponent.cs:94`
-    `EffectSystemComponent.ApplyGameplayEffect`. The guard is at `:108`, the record at `:143`.
+    `EffectSystemComponent.ApplyGameplayEffect`. The guard is at `:109`, the record at `:144`.
   - `Assets/PlayForge/Runtime/PlayForge/GameplayEffect/Core/GameplayShelfContainer/AbstractEffectContainer.cs:87`
     `AbstractEffectContainer.OnRemove` (GAS-8), and `GetGrantedTags` (`:123`, GAS-14).
   - `Assets/PlayForge/Runtime/PlayForge/Workers/Core/WorkerContext.cs:110` `EffectWorkerContext.Impacts`, filled by
-    `ApplyInstantGameplayEffect` (`Assets/PlayForge/Runtime/PlayForge/GAS/Core/EffectSystemComponent.cs:213`).
+    `ApplyInstantGameplayEffect` (`Assets/PlayForge/Runtime/PlayForge/GAS/Core/EffectSystemComponent.cs:227`).
 - **New:** `EffectWorkerContext.Impacts`.
 - **Watch for:** an effect can no longer apply itself inside its own application.
 
@@ -2186,7 +2212,7 @@ cleared, so they outlived the item.
     `ItemSystemComponent.ClearAllItems`. The shelf is created at `:11` (GAS-3).
   - `Assets/PlayForge/Runtime/PlayForge/ItemSystem/Core/ItemSpecContainer.cs:84` `ItemSpecContainer.Unequip`, then
     `RemoveGrantedEffects` (`:139`) and `ApplyActiveAbility` (`:158`).
-  - `Assets/PlayForge/Runtime/PlayForge/GAS/Core/EffectSystemComponent.cs:490`
+  - `Assets/PlayForge/Runtime/PlayForge/GAS/Core/EffectSystemComponent.cs:544`
     `EffectSystemComponent.RemoveGameplayEffect(GameplayEffect, IEffectOrigin)`.
 - **New:** `ITarget.RemoveGameplayEffect(GameplayEffect, IEffectOrigin)`, a default method that falls back to the old
   overload so other implementers still compile (`Assets/PlayForge/Runtime/PlayForge/GAS/Interfaces/ITarget.cs:30`).
@@ -2501,16 +2527,17 @@ Newest first. Each row is a good place to start reading.
 
 | What | IDs | Where | Commit |
 |---|---|---|---|
-| The Status-effect lab, and overflow at max stacks | FEAT-8 | `Assets/PlayForge/Runtime/PlayForge/GAS/Core/EffectSystemComponent.cs:464` | `13eac5b` |
+| Abilities granted by effects, and the chance to apply | FEAT-8 | `Assets/PlayForge/Runtime/PlayForge/GAS/Core/EffectSystemComponent.cs:308` | `60683cd` |
+| The Status-effect lab, and overflow at max stacks | FEAT-8 | `Assets/PlayForge/Runtime/PlayForge/GAS/Core/EffectSystemComponent.cs:518` | `13eac5b` |
 | The fixed-rate tick | FEAT-7 | `Assets/PlayForge/Runtime/PlayForge/Management/GameplayProcess/Core/ProcessControl.cs:334` | `4058098` |
 | A clock for each entity | FEAT-7, TS-6 | `Assets/PlayForge/Runtime/PlayForge/GAS/Core/EntityClock.cs:12` | `48c2c8e` |
 | One clock and one random source | FEAT-13 | `Assets/PlayForge/Runtime/PlayForge/Utils/ForgeTime.cs:48` | `c500d5e` |
 | Tag-change events | FEAT-3, GAS-56 | `Assets/PlayForge/Runtime/PlayForge/Tag/TagCache.cs:558` | `3dc3129` |
 | The Register builder | FEAT-15 | `Assets/PlayForge/Runtime/PlayForge/Management/GameplayProcess/Core/ProcessRegistration.cs:107` | `6586536` |
 | The Debugger's foot rows | ED-40 | `Assets/PlayForge/Editor/Debugger/RuntimeDebugger.Entities.cs:254` | `520c433` |
-| Cleanse and immunity name granted tags | FEAT-8 | `Assets/PlayForge/Runtime/PlayForge/GameplayEffect/Core/GameplayEffect.cs:261` | `520c433` |
+| Cleanse and immunity name granted tags | FEAT-8 | `Assets/PlayForge/Runtime/PlayForge/GameplayEffect/Core/GameplayEffect.cs:268` | `520c433` |
 | The Debugger, as the boards draw it | ED-4, ED-5 | `Assets/PlayForge/Editor/Debugger/RuntimeDebugger.Tags.cs:159` | `c934980` |
-| Cleanse and immunity | FEAT-8 | `Assets/PlayForge/Runtime/PlayForge/GAS/Core/EffectSystemComponent.cs:169` | `04d0742` |
+| Cleanse and immunity | FEAT-8 | `Assets/PlayForge/Runtime/PlayForge/GAS/Core/EffectSystemComponent.cs:183` | `04d0742` |
 | The debugger acts, and loose tags | ED-40, FEAT-16 | `Assets/PlayForge/Editor/Debugger/RuntimeDebugger.Entities.cs:446` | `5dd7332` |
 | One Runtime Debugger | ED-4, ED-5 | `Assets/PlayForge/Editor/Debugger/RuntimeDebugger.cs:180` | `d220ff4` |
 | Templates work as prefabs do | ED-13 | `Assets/PlayForge/Editor/Tools/ForgeTemplatePropogation/ForgeTemplatePush.cs:37` | `6733220` |
@@ -2537,7 +2564,7 @@ Newest first. Each row is a good place to start reading.
 | A drawer keeps its collapse state per asset | ED-18 | `Assets/PlayForge/Editor/CustomPropertyDrawers/Forge/Util/DrawerCollapseState.cs:48` | `1ae0833` |
 | The inspector keeps no scroll view of its own | ED-11 | `Assets/PlayForge/Editor/CustomPropertyDrawers/Forge/Editors/BasePlayForgeEditor.cs:355` | `88d0f3f` |
 | An inspector listens to the editor only while a picker is open | ED-11 | `Assets/PlayForge/Editor/CustomPropertyDrawers/Forge/Editors/BasePlayForgeEditor.cs:88` | `850f8fb` |
-| The Impact and Effect drawers follow what they show | ED-11 | `Assets/PlayForge/Editor/CustomPropertyDrawers/Forge/Drawers/Assets/Effect/GameplayEffectImpactDrawer.cs:144` | `c5d5480` |
+| The Impact and Effect drawers follow what they show | ED-11 | `Assets/PlayForge/Editor/CustomPropertyDrawers/Forge/Drawers/Assets/Effect/GameplayEffectImpactDrawer.cs:150` | `c5d5480` |
 | The Item and Ability inspectors edit a multiple selection | ED-12 | `Assets/PlayForge/Editor/CustomPropertyDrawers/Forge/Editors/BasePlayForgeEditor.cs:251` | `1a203c1` |
 | A type field's drawer writes nothing while drawing | ED-12 | `Assets/PlayForge/Editor/CustomPropertyDrawers/Forge/Drawers/Base/AbstractTypeRefDrawer.cs:123` | `5134867` |
 | A rebuilt drawer edits every selected asset | ED-12 | `Assets/PlayForge/Editor/CustomPropertyDrawers/Forge/Drawers/Tag/TagRequirementDrawers.cs:88` | `96b4ba6` |
@@ -2553,11 +2580,11 @@ Newest first. Each row is a good place to start reading.
 | An ability asked for inside its own activation starts next frame | TS-8, Decision 25 | `Assets/PlayForge/Runtime/PlayForge/AbilitySystem/Core/AbilitySystemComponent.cs:347` | `c45f4f1` |
 | Sequences and abilities end the frame their last task does | TS-Z, Decision 24 | `Assets/PlayForge/Runtime/PlayForge/Management/GameplayProcess/Core/ProcessRelay.cs:44` | `04c3db1` |
 | A tick, a recompute and a tag query allocate nothing | GAS-P4 | `Assets/PlayForge/Runtime/PlayForge/GameplayEffect/Core/GameplayEffectSpec.cs:162` | `b50a80b` |
-| Ending an effect costs the same however many end with it | GAS-P5 | `Assets/PlayForge/Runtime/PlayForge/GAS/Core/EffectSystemComponent.cs:612` | `7ce68aa` |
+| Ending an effect costs the same however many end with it | GAS-P5 | `Assets/PlayForge/Runtime/PlayForge/GAS/Core/EffectSystemComponent.cs:666` | `7ce68aa` |
 | An application costs the same however much the entity carries | GAS-P3 | `Assets/PlayForge/Runtime/PlayForge/GAS/Core/EffectSystemComponent.cs:71` | `1242251` |
 | Both GAS hubs forward to one core | GAS-S1 | `Assets/PlayForge/Runtime/PlayForge/GAS/Core/GASCore.cs:62` | `5e7f077` |
 | An attribute set reached twice counts once | GAS-44 | `Assets/PlayForge/Runtime/PlayForge/AttributeSystem/Attribute/AttributeSet.cs:63` | `57ea4ff` |
-| Tick On Application alone lands its change | GAS-50 | `Assets/PlayForge/Runtime/PlayForge/GAS/Core/EffectSystemComponent.cs:305` | `e40b3b6` |
+| Tick On Application alone lands its change | GAS-50 | `Assets/PlayForge/Runtime/PlayForge/GAS/Core/EffectSystemComponent.cs:353` | `e40b3b6` |
 | Opening abilities wait for the entity's attributes | GAS-49 | `Assets/PlayForge/Runtime/PlayForge/AbilitySystem/Core/AbilitySystemComponent.cs:186` | `999e779` |
 | Unequipping takes back only the item's grant | GAS-48 | `Assets/PlayForge/Runtime/PlayForge/ItemSystem/Core/ItemSpecContainer.cs:183` | `27c2325` |
 | Each entity keeps its own affiliation | GAS-47 | `Assets/PlayForge/Runtime/PlayForge/GAS/Core/GASCore.cs:71` | `fdc1886` |
