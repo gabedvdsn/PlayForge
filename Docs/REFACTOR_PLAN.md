@@ -744,6 +744,16 @@ GAS-4 with GAS-5, PC-6, and TS-I with PC-5.
 
 Record baselines, gate results and notable decisions here, newest first.
 
+- 2026-11-04, **The Summoner lab.** The sixth lab (Decision 30).
+  - **The lab** (`Tests/Labs/SummonerLab.cs`, category Lab): a summoner calls imps, each a runtime entity it handles
+    (`Register(imp).HandledBy(summoner)`), so each ends as the summoner does. An imp lasts its lifetime, an effect
+    whose removal marks the imp dead; the summoner's bond heals each imp a tick a second, with an ongoing requirement
+    on its source, the summoner's Standing tag, which each tick asks as it comes due. Four rounds, a ritual among
+    them. Its bot passed at its first run: nothing in the framework was missing.
+  - **Next:** FEAT-9, save and load, for the Tactics lab.
+  - **Tests:** PlayMode 1152: 1145 pass, 0 fail and 7 planted are skipped, in three orders (the Summoner lab's 8 among
+    them). Planted 7 of 7; EditMode 436 of 436.
+
 - 2026-11-04, **FEAT-14, GAS-58 and the Roguelite lab.** The fifth lab (Decision 30).
   - **FEAT-14, item stacking:** a give fills the item's stack first, up to `MaxStackSize` (`ItemDefinition.StackSize`
     is it or 1), and a full stack opens another only with Allow Duplicate Items. `GiveItem(item, count)` gives one at
