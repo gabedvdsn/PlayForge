@@ -117,10 +117,12 @@ namespace FarEmerald.PlayForge
         public virtual void WhenTerminate()
         {
             processActive = false;
-            
+
+            // What this process handles ends with it, each where it's held. Through the scene's ProcessControl by its
+            // cache index, one in a world of its own ran on, and the scene's process under that index ended (FEAT-10)
             foreach (var _relay in HandlerRelays.Values.ToArray())
             {
-                ProcessControl.Instance.TerminateImmediate(_relay.CacheIndex);
+                _relay.TerminateImmediate();
             }
         }
         

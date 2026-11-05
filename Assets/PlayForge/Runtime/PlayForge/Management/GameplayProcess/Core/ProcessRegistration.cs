@@ -60,7 +60,8 @@ namespace FarEmerald.PlayForge
     /// if (!result) Debug.Log(result.Refusal);
     /// </code>
     /// What isn't given takes its default. The handler follows the packet's run-time type: an ability's packet hands the
-    /// process to its source, and any other to GameRoot. ProcessControl had 28 static Register overloads, and the
+    /// process to its source, and any other to GameRoot, or to none in a world of its own, which reaches for nothing of
+    /// the scene's (FEAT-10). ProcessControl had 28 static Register overloads, and the
     /// argument's static type picked the handler, so an ability's packet passed as a SequenceDataPacket filed its
     /// sequence under GameRoot, and the sequence didn't end with its entity (FEAT-15, GAS-52). Those overloads are
     /// wrappers of this now, marked obsolete, and go before the first Asset Store submission (Decision 30).
@@ -96,7 +97,8 @@ namespace FarEmerald.PlayForge
         /// <summary>
         /// The packet the process carries. A sequence's is a <see cref="SequenceDataPacket"/>. Left out, a MonoBehaviour
         /// process takes the scene root's, which parents it under GameRoot, a runtime process the default, and a
-        /// sequence the scene root's sequence packet.
+        /// sequence the scene root's sequence packet. In a world of its own, each takes the default, parented nowhere
+        /// (FEAT-10).
         /// </summary>
         public ProcessRegistration With(ProcessDataPacket packet) => new(process, handler, handlerGiven, packet, world);
 
@@ -113,17 +115,21 @@ namespace FarEmerald.PlayForge
             var taker = world ?? (ProcessControl.Instance != null ? ProcessControl.Instance.World : null);
             if (taker == null) return new ProcessRegistrationResult(null, EProcessRegistrationRefusal.NoProcessControl);
 
-            var by = handlerGiven ? handler : DefaultHandler(data);
+            // A world of its own reaches for nothing of the scene's. GameRoot took what it held with no handler given, and
+            // kept it for as long as the scene lasted, its world gone or not, and the scene root's packet needed a
+            // GameRoot, so with none a sequence's registration threw (FEAT-10)
+            bool ownWorld = taker.Control is null;
+            var by = handlerGiven ? handler : DefaultHandler(data, ownWorld);
             switch (process)
             {
                 case AbstractMonoProcess mono:
-                    return taker.RegisterMono(mono, by, data ?? ProcessDataPacket.SceneRoot());
+                    return taker.RegisterMono(mono, by, data ?? (ownWorld ? ProcessDataPacket.Default() : ProcessDataPacket.SceneRoot()));
                 case AbstractRuntimeProcess runtime:
                     return taker.RegisterRuntime(runtime, by, data ?? ProcessDataPacket.Default());
                 case TaskSequence sequence:
-                    return RegisterSequence(taker, new TaskSequenceProcess(sequence), by);
+                    return RegisterSequence(taker, new TaskSequenceProcess(sequence), by, ownWorld);
                 case TaskSequenceChain chain:
-                    return RegisterSequence(taker, new TaskSequenceProcess(chain), by);
+                    return RegisterSequence(taker, new TaskSequenceProcess(chain), by, ownWorld);
                 default:
                     return new ProcessRegistrationResult(null, EProcessRegistrationRefusal.NoProcess);
             }
@@ -137,18 +143,21 @@ namespace FarEmerald.PlayForge
             return result.Registered;
         }
 
-        private ProcessRegistrationResult RegisterSequence(ProcessWorld taker, TaskSequenceProcess sequence, IGameplayProcessHandler by)
+        private ProcessRegistrationResult RegisterSequence(ProcessWorld taker, TaskSequenceProcess sequence, IGameplayProcessHandler by,
+            bool ownWorld)
         {
             if (data != null && data is not SequenceDataPacket)
                 return new ProcessRegistrationResult(null, EProcessRegistrationRefusal.NotASequencePacket);
-            return taker.RegisterRuntime(sequence, by, (SequenceDataPacket)data ?? SequenceDataPacket.SceneRoot());
+            return taker.RegisterRuntime(sequence, by,
+                (SequenceDataPacket)data ?? (ownWorld ? SequenceDataPacket.Default() : SequenceDataPacket.SceneRoot()));
         }
 
-        // An ability's packet hands its process to the packet's source; any other packet, or none, to GameRoot
-        private static IGameplayProcessHandler DefaultHandler(ProcessDataPacket packet)
+        // An ability's packet hands its process to the packet's source; any other packet, or none, to GameRoot, or in a
+        // world of its own to no handler, as its owner ends what it holds
+        private static IGameplayProcessHandler DefaultHandler(ProcessDataPacket packet, bool ownWorld)
         {
             if (packet is AbilityDataPacket ability && ability.EffectOrigin?.GetSource() is { } source) return source;
-            return GameRoot.Instance;
+            return ownWorld ? null : GameRoot.Instance;
         }
     }
 }

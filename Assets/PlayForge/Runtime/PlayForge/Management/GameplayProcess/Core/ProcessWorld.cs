@@ -160,8 +160,22 @@ namespace FarEmerald.PlayForge
         // Hierarchy management for MonoProcesses
         private ProcessHierarchy _hierarchy = new();
 
-        private int _cacheCounter;
-        private int NextCacheIndex => _cacheCounter++;
+        // The processes this world has taken
+        private int _created;
+
+        // The cache indices, which every world draws from, so a process's is its own among all worlds'. Each world
+        // counted its own from 0, so a handler with processes in two worlds, as GameRoot is by default, refused the
+        // second under the first's index (FEAT-10)
+        private static int s_cacheCounter;
+
+        private int NextCacheIndex
+        {
+            get
+            {
+                _created++;
+                return System.Threading.Interlocked.Increment(ref s_cacheCounter) - 1;
+            }
+        }
 
         private Dictionary<int, ProcessWatcher> _watchers = new();
 
@@ -179,7 +193,8 @@ namespace FarEmerald.PlayForge
         /// </summary>
         public ProcessControlCallbacks Callbacks { get; private set; } = new();
 
-        public int Created => _cacheCounter;
+        /// <summary>The processes the world has taken.</summary>
+        public int Created => _created;
         public int Active => _active.Count;
         public int Running => _active.Count - _waiting.Count;
 

@@ -22,6 +22,9 @@ tracks each fix below by its ID.
   and are UniTask's own waits where it doesn't. A sequence's conditional waits, the builder's Delay Until, Wait Until
   and Wait While among them, go through them, so a world of its own sees what they wait for change between its
   steps (FEAT-10).
+- Worlds side by side, and with no scene. Several worlds of their own run at once, each with its own processes and
+  time, and one runs outside play mode with no scene at all, as a balance tool in the editor might step it
+  (FEAT-10).
 - Targeting input. The click-targeting tasks read the game's input, `ForgeInput.Current`, in place of the Input
   Manager's mouse and `Camera.main`. By default it's the Input System's pointer, a mouse, a pen or a touch, where
   that package is in and on, or else the Input Manager's mouse, each aimed through `Camera.main` or a camera you
@@ -133,6 +136,9 @@ tracks each fix below by its ID.
   page, through one table of links in the editor.
 
 ### Changed
+- A world of its own reaches for nothing of the scene's. What's registered there with no handler has none, where
+  GameRoot took it and kept it for as long as the scene lasted, and with no packet it takes the default, parented
+  nowhere, where a MonoBehaviour process's and a sequence's took the scene root's (FEAT-10).
 - The Queue policy's requests wait out a window, 0.3 s by default, where they waited for good, and fire by priority
   and then the newest, where they fired in the order asked. A press again replaces the first, where it queued a second
   (FEAT-6).
@@ -307,6 +313,14 @@ tracks each fix below by its ID.
   Asking whether its sequence was paused took 24 bytes a frame.
 
 ### Fixed
+- A second world of its own refused its first process where GameRoot handled it, as it did by default: each world
+  numbered its processes from 0, and a handler keeps what it handles by that number. Every world draws its
+  processes' cache indices from one counter, so each is a process's own among all worlds' (FEAT-10).
+- A MonoBehaviour process ended what it handled through the scene's ProcessControl, by cache index, so one in a
+  world of its own ran on, and the scene's process under that index ended in its place. It ends each through its
+  relay (FEAT-10).
+- A sequence registered in a world of its own with no packet threw where there was no GameRoot, as outside play
+  mode (FEAT-10).
 - A runtime entity that fell ended whatever process ProcessControl held under its cache index, and not its own, when
   another world held it. It ends through its own relay (FEAT-10).
 - A process's relay, its state changes, a watch on it and what a runtime process handles reached
