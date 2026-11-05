@@ -74,6 +74,9 @@ namespace FarEmerald.PlayForge
                 {
                     _payload[d.Key] = new List<object>(d.Value);
                 }
+
+                // And the magnitudes the caller set, for the effects the ability applies (FEAT-2)
+                TakeSetByCaller(request.Data.SetByCallerMagnitudes);
             }
             
             AddPayload(

@@ -37,6 +37,36 @@ namespace FarEmerald.PlayForge
 
         private Dictionary<IScaler, AttributeValue?> SourceCapturedAttributes;
 
+        // Magnitudes the caller set under a tag, which a Set By Caller scaler reads (FEAT-2)
+        private Dictionary<Tag, float> setByCaller;
+        private static readonly Dictionary<Tag, float> NoMagnitudes = new();
+
+        /// <summary>The magnitudes the caller set, by tag, which a Set By Caller scaler reads (FEAT-2).</summary>
+        public IReadOnlyDictionary<Tag, float> SetByCallerMagnitudes => setByCaller ?? NoMagnitudes;
+
+        /// <summary>
+        /// Sets a magnitude under a tag, as Unreal's SetByCaller does, for a Set By Caller scaler to read: code that knows
+        /// the amount as it applies the effect passes it in. Set it before the spec is applied (FEAT-2).
+        /// </summary>
+        public void SetByCaller(Tag key, float magnitude) => (setByCaller ??= new Dictionary<Tag, float>())[key] = magnitude;
+
+        /// <summary>The magnitude the caller set under the tag (FEAT-2).</summary>
+        public bool TryGetSetByCaller(Tag key, out float magnitude)
+        {
+            magnitude = 0f;
+            return setByCaller != null && setByCaller.TryGetValue(key, out magnitude);
+        }
+
+        /// <summary>
+        /// Takes each magnitude another set, as an effect is made from it: its container's, or an activation's data. One
+        /// set on this spec already gives way (FEAT-2).
+        /// </summary>
+        public void TakeSetByCaller(IReadOnlyDictionary<Tag, float> magnitudes)
+        {
+            if (magnitudes == null || magnitudes.Count == 0) return;
+            foreach (var pair in magnitudes) SetByCaller(pair.Key, pair.Value);
+        }
+
         // Cached impacter list — built lazily on first GetImpacters() call so we don't
         // re-allocate every time the cached attribute aggregator recomputes. Rebuilds
         // automatically would require change-tracking on Base.ImpactSpecification; for
@@ -281,7 +311,11 @@ namespace FarEmerald.PlayForge
             foreach (var contained in Base.ImpactSpecification.GetContainedEffects(phase))
             {
                 if (contained == null) continue;
-                yield return Target.GenerateEffectSpec(Origin, contained);
+
+                // With this one's magnitudes, as a contained effect takes them (FEAT-2)
+                var made = Target.GenerateEffectSpec(Origin, contained);
+                made?.TakeSetByCaller(setByCaller);
+                yield return made;
             }
         }
 

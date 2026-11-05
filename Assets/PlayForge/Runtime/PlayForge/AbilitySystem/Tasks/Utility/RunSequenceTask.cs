@@ -11,18 +11,28 @@ namespace FarEmerald.PlayForge
         [FormerlySerializedAs("SequenceReference")] public TaskSequenceReference Sequence;
 
         /// <summary>
+        /// A sequence made in code, as an ability a game builds as it runs makes one with <see cref="TaskSequenceBuilder"/>.
+        /// Set, each activation runs a fresh sequence from it, in place of the one <see cref="Sequence"/>'s method makes.
+        /// Run Sequence ran only a sequence a static method made, by name (FEAT-21).
+        /// </summary>
+        [System.NonSerialized] public TaskSequenceDefinition Definition;
+
+        /// <summary>
         /// True if the referenced sequence has any critical sections — either the whole sequence
         /// is marked critical via builder-level WithCriticalFlag, or any individual stage is.
         /// This drives the outer compiled ability stage's critical flag.
         /// </summary>
-        public override bool IsCriticalSection =>
-            Sequence.GetActiveSequence() is TaskSequence ts &&
-            ((ts.Definition.Metadata?.IsCritical ?? false) ||
-             ts.Definition.Stages.Any(s => s.Metadata?.IsCritical ?? false));
+        public override bool IsCriticalSection => Definition != null
+            ? IsCritical(Definition)
+            : Sequence.GetActiveSequence() is TaskSequence ts && IsCritical(ts.Definition);
+
+        private static bool IsCritical(TaskSequenceDefinition definition) =>
+            (definition.Metadata?.IsCritical ?? false) || definition.Stages.Any(s => s.Metadata?.IsCritical ?? false);
 
         public override async UniTask Activate(AbilityDataPacket data, CancellationToken token)
         {
-            var seq = Sequence.GetActiveSequence();
+            // A fresh one from the definition made in code, or the one the method makes (FEAT-21)
+            var seq = Definition != null ? new TaskSequence(Definition) : Sequence.GetActiveSequence();
             if (seq is null) return;
 
             if (seq is TaskSequence taskSeq)

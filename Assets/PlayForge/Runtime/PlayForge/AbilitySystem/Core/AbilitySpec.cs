@@ -14,14 +14,23 @@ namespace FarEmerald.PlayForge
             Base = ability;
         }
 
-        public void ApplyUsageEffects()
+        /// <summary>
+        /// Applies the ability's cooldown and cost to its caster, each with the magnitudes the caller set on the
+        /// activation's data, so a caller can size them as it sizes the ability's other effects (FEAT-2).
+        /// </summary>
+        public void ApplyUsageEffects(ProcessDataPacket data = null)
         {
             // Apply cost and cooldown effects
-            if (Base.Cooldown is not null)
-                Source.ApplyCarrier(Source.GenerateEffectSpec(this, Base.Cooldown));
+            if (Base.Cooldown is not null) Source.ApplyCarrier(Usage(Base.Cooldown, data));
 
-            if (Base.Cost is not null)
-                Source.ApplyCarrier(Source.GenerateEffectSpec(this, Base.Cost));
+            if (Base.Cost is not null) Source.ApplyCarrier(Usage(Base.Cost, data));
+        }
+
+        private GameplayEffectSpec Usage(GameplayEffect effect, ProcessDataPacket data)
+        {
+            var spec = Source.GenerateEffectSpec(this, effect);
+            if (data != null) spec?.TakeSetByCaller(data.SetByCallerMagnitudes);
+            return spec;
         }
             
         public bool ValidateSourceActivationRequirements(AbilityDataPacket data) => SourceRefusal(data, out _) == EActivationRefusal.None;

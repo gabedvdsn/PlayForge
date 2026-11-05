@@ -115,6 +115,19 @@ namespace FarEmerald.PlayForge
         public float PeriodDuration;
         public List<float> Remaining = new();
         public List<float> UntilTick = new();
+
+        /// <summary>The magnitudes its caller set, by tag, which a Set By Caller scaler on it reads (FEAT-2).</summary>
+        public List<MagnitudeSave> SetByCaller = new();
+    }
+
+    /// <summary>A magnitude a caller set under a tag (FEAT-2).</summary>
+    [Serializable]
+    public class MagnitudeSave
+    {
+        /// <summary>The tag, by name.</summary>
+        public string Key;
+
+        public float Magnitude;
     }
 
     /// <summary>

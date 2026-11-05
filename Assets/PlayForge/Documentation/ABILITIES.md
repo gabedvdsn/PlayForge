@@ -82,6 +82,10 @@ check, that check's name in `Rule`. The ability system's `OnAbilityRefused` call
 A request that waits in the input buffer isn't refused, and isn't told again as the buffer retries it. A check on the
 target comes after targeting, and ends the activation instead.
 
+The request's data can carry magnitudes for the effects the ability applies: `data.SetByCaller(tag, magnitude)`, which a
+Set By Caller scaler on each effect reads (see [EFFECTS.md](EFFECTS.md)). So a caller that knows the damage as it casts
+passes it in, and one effect serves every strength.
+
 - **When Busy**: what happens when the ability is asked to activate while another ability is busy. An activation is
   busy, or holds its *claim*, while its targeting and its critical tasks run. A critical task is one that must not
   overlap another ability's critical work, such as an attack animation. The inspector marks critical tasks and stages
@@ -133,7 +137,9 @@ This section is what the ability does once it has started.
     the first stage that does this. If no stage does, they are never applied, and a warning under Cooldown says so,
     as the Problems view does.
   - **Apply Usage At Start**: on, apply them as the stage starts. Off, apply them as it ends, and only if it succeeded.
-  - **Tasks**: the work, such as Apply Effects, Delay or Run Sequence. A stage that holds a critical task is critical.
+  - **Tasks**: the work, such as Apply Effects, Delay or Run Sequence. Run Sequence runs the sequence a static method
+    makes, or, for an ability built in code, a fresh run of the sequence its `Definition` describes, which
+    `TaskSequenceBuilder` makes. A stage that holds a critical task is critical.
     The activation keeps its claim until its last critical stage ends. With no critical stage, it lets the claim go
     as the stages start. Apply Effects' **Record Landed As** tags the activation's data as an effect lands on the
     target, for a later stage's Condition.

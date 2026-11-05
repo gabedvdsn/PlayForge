@@ -18,7 +18,9 @@ then its field menu:
   **Clamped** keeps a value within bounds, **Conditional** chooses between two scalers, **Randomized** rolls a random
   value, **Group** combines scalers, **Threshold** steps at thresholds, and **Fixed Value** is one number. **Effect
   Stacks** reads the stack count of the effect's own container, and **Item Stacks** that of the item that applied it
-  ([ITEMS.md](ITEMS.md)); each reads 1 where there's nothing stacked. An attribute set's values use the cached kinds,
+  ([ITEMS.md](ITEMS.md)); each reads 1 where there's nothing stacked. **Set By Caller** reads the magnitude the
+  code set under its **Key** as the effect was applied ([EFFECTS.md](EFFECTS.md)), or its **Default** where none was
+  set. An attribute set's values use the cached kinds,
   which read other attributes as the entity's values change.
 
 Choosing a kind is one Undo step. A constant made By Level keeps its number as its first level's value.

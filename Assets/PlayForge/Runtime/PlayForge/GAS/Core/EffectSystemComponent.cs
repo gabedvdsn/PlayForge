@@ -149,7 +149,7 @@ namespace FarEmerald.PlayForge
 
                 foreach (var containedEffect in spec.Base.ImpactSpecification.GetContainedEffects(EApplyTickRemove.OnApply))
                 {
-                    ApplyGameplayEffect(spec.GetOrigin(), containedEffect);
+                    ApplyMadeFrom(spec, containedEffect);
                 }
             }
             finally
@@ -208,9 +208,12 @@ namespace FarEmerald.PlayForge
             }
         }
 
-        private bool ApplyGameplayEffect(IEffectOrigin origin, GameplayEffect effect)
+        // An effect another lands, from its origin and with the magnitudes its caller set: a contained effect, or an
+        // overflow's (FEAT-2)
+        private bool ApplyMadeFrom(GameplayEffectSpec from, GameplayEffect effect)
         {
-            var spec = Self.GenerateEffectSpec(origin, effect);
+            var spec = Self.GenerateEffectSpec(from.GetOrigin(), effect);
+            spec?.TakeSetByCaller(from.SetByCallerMagnitudes);
             return ApplyGameplayEffect(spec);
         }
 
@@ -427,7 +430,7 @@ namespace FarEmerald.PlayForge
 
             foreach (var containedEffect in spec.Base.ImpactSpecification.GetContainedEffects(EApplyTickRemove.OnTick))
             {
-                ApplyGameplayEffect(spec.Origin, containedEffect);
+                ApplyMadeFrom(spec, containedEffect);
             }
         }
 
@@ -556,7 +559,7 @@ namespace FarEmerald.PlayForge
             if (bound.ClearStacksOnOverflow && !finishedSet.Contains(container)) MarkFinished(container);
             if (bound.OverflowEffects == null) return;
             for (int i = 0; i < bound.OverflowEffects.Count; i++)
-                if (bound.OverflowEffects[i] != null) ApplyGameplayEffect(spec.GetOrigin(), bound.OverflowEffects[i]);
+                if (bound.OverflowEffects[i] != null) ApplyMadeFrom(spec, bound.OverflowEffects[i]);
         }
 
         // ═══════════════════════════════════════════════════════════════════════════

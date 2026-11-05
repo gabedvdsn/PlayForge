@@ -7,6 +7,12 @@ tracks each fix below by its ID.
 ## [Unreleased]
 
 ### Added
+- SetByCaller magnitudes. `SetByCaller(tag, magnitude)` on an effect's spec, or on an ability activation's data,
+  sets an amount the code knows as it applies the effect, and the new Set By Caller scaler reads it. Each effect an
+  ability applies takes its data's magnitudes as it's made, its cost, cooldown and contained effects among them, and
+  a save keeps them (FEAT-2).
+- Run Sequence runs a sequence made in code: its `Definition`, which `TaskSequenceBuilder` makes, a fresh run each
+  activation, so an ability built as the game runs can run one (FEAT-21).
 - Copying an entity. `ForgeSave.Copy(from, onto)` copies what lasts on one entity onto another, as a mirror
   clone takes its original's state, with no catalog and no IDs. A save now keeps the entity's own level as its
   own, so it loads onto an entity of another kind as that one's level (FEAT-20).

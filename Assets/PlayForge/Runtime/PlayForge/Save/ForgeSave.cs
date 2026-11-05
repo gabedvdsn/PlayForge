@@ -180,6 +180,8 @@ namespace FarEmerald.PlayForge
                     PeriodDuration = container.PeriodDuration,
                 };
                 container.CaptureClock(save.Remaining, save.UntilTick);
+                foreach (var pair in container.Spec.SetByCallerMagnitudes)
+                    save.SetByCaller.Add(new MagnitudeSave { Key = pair.Key.Name, Magnitude = pair.Value });
                 snapshot.Effects.Add(save);
             }
         }
@@ -326,7 +328,12 @@ namespace FarEmerald.PlayForge
                 {
                     if (!finds.TryFind(save.Effect, out GameplayEffect effect)) continue;
                     var origin = OriginOf(gas, save.Origin, finds, ids, items);
-                    core.EffectSystem.Restore(effect.Generate(origin, gas), save);
+                    var spec = effect.Generate(origin, gas);
+
+                    // With the magnitudes its caller set, before its modifiers read them (FEAT-2)
+                    foreach (var magnitude in Each(save.SetByCaller))
+                        if (!string.IsNullOrEmpty(magnitude.Key)) spec.SetByCaller(Tag.Generate(magnitude.Key), magnitude.Magnitude);
+                    core.EffectSystem.Restore(spec, save);
                 }
 
                 // The entity's own, under no key, onto this entity's own (FEAT-20)

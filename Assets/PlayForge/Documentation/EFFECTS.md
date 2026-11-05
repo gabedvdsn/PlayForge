@@ -144,7 +144,9 @@ duration gives it. Additional Impacts change more attributes, or the same one ag
 - **Magnitude**: the amount: a Constant number, or by its kind a scaler's value at the origin's level, such as a By
   Level table of values per level, with Combine joining the scaler and the number ([SCALERS.md](SCALERS.md)). A
   Continuous modifier works its magnitude out again whenever the attribute is recalculated. A commit works it out
-  once.
+  once. A **Set By Caller** scaler reads a magnitude the code sets as it applies the effect, under a tag: on the spec
+  with `SetByCaller(tag, magnitude)`, or on an ability activation's data, which each effect the ability applies takes
+  as it's made, its cost, cooldown and contained effects among them.
 - **Delivery**, read-only: when the impact lands, which the duration gives it (see the table above). On applying,
   While the effect lasts, or Each tick, which adds ", and on applying" when Tick On Application is on. A note says when
   Tick On Application alone keeps a multiply or override as a modifier, so it reverses as the effect ends.

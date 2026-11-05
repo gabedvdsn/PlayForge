@@ -16,7 +16,13 @@ namespace FarEmerald.PlayForge
                 return;
             }
             
-            foreach (GameplayEffect effect in Effects) target.ApplyCarrier(target.GenerateEffectSpec(data.EffectOrigin, effect));
+            // With the magnitudes the caller set on the activation's data (FEAT-2)
+            foreach (GameplayEffect effect in Effects)
+            {
+                var spec = target.GenerateEffectSpec(data.EffectOrigin, effect);
+                spec?.TakeSetByCaller(data.SetByCallerMagnitudes);
+                target.ApplyCarrier(spec);
+            }
         }
 
         public override UniTask Activate(AbilityDataPacket data, CancellationToken token)

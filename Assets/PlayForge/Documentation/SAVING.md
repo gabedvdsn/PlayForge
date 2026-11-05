@@ -43,8 +43,8 @@ catalog can't find.
   of one kind loads onto another kind as that one's level.
 - The abilities it knows of its own, in their slots, at their levels.
 - Its items in order, each with its level and stacks, worn or not.
-- Its effects, each with what applied it, its stacks, its time left and the time to its next tick. Stacks with
-  durations of their own keep their own times.
+- Its effects, each with what applied it, its stacks, its time left and the time to its next tick, and the magnitudes
+  its caller set. Stacks with durations of their own keep their own times.
 - Its loose tags and its time scale.
 
 An ability that an effect or a worn item lends isn't saved on its own. It comes back with the effect or the item.

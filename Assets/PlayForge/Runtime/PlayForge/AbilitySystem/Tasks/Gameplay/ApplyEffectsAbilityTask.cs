@@ -27,7 +27,10 @@ namespace FarEmerald.PlayForge
             
             foreach (GameplayEffect effect in Effects)
             {
-                bool landed = target.ApplyCarrier(target.GenerateEffectSpec(data.EffectOrigin, effect));
+                // With the magnitudes the caller set on the activation's data (FEAT-2)
+                var spec = target.GenerateEffectSpec(data.EffectOrigin, effect);
+                spec?.TakeSetByCaller(data.SetByCallerMagnitudes);
+                bool landed = target.ApplyCarrier(spec);
                 if (landed && RecordLandedAs.IsValid) data.SetPrimary(RecordLandedAs, effect);
                 await SequenceTaskLibrary.Delay(DelayBetweenApplicationMs / 1000f, token);
             }

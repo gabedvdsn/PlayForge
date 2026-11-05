@@ -254,7 +254,7 @@ namespace FarEmerald.PlayForge
         {
             if (abilityData.UsageEffectsApplied || abilityData.EffectOrigin is not AbilitySpec spec) return;
 
-            spec.ApplyUsageEffects();
+            spec.ApplyUsageEffects(abilityData);
             abilityData.UsageEffectsApplied = true;
         }
     }

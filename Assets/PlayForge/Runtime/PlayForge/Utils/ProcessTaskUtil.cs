@@ -55,7 +55,7 @@ namespace FarEmerald.PlayForge
             if (!data.TryGetLoadedAssets<GameplayEffect>(query, out var effects)) return false;
             if (data is not AbilityDataPacket adp) return false;
 
-            foreach (var effect in effects) target.ApplyCarrier(target.GenerateEffectSpec(adp.EffectOrigin, effect));
+            foreach (var effect in effects) target.ApplyCarrier(Made(target, adp, effect));
             return true;
         }
         
@@ -64,8 +64,16 @@ namespace FarEmerald.PlayForge
             if (target is null) return false;
             if (!data.TryGetLoadedAssets<GameplayEffect>(query, out var effects)) return false;
 
-            foreach (var effect in effects) target.ApplyCarrier(target.GenerateEffectSpec(data.EffectOrigin, effect));
+            foreach (var effect in effects) target.ApplyCarrier(Made(target, data, effect));
             return true;
+        }
+
+        // An effect made from an ability's data, with the magnitudes the caller set on it (FEAT-2)
+        private static GameplayEffectSpec Made(ITarget target, AbilityDataPacket data, GameplayEffect effect)
+        {
+            var spec = target.GenerateEffectSpec(data.EffectOrigin, effect);
+            spec?.TakeSetByCaller(data.SetByCallerMagnitudes);
+            return spec;
         }
 
         public static DataValue<T> GetLoadedAssets<T>(this ProcessDataPacket data, Tag query)

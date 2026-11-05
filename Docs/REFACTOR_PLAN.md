@@ -666,7 +666,7 @@ Phase 2 part, and set Phase 4's direction.
 | ID | Feature | Notes |
 |---|---|---|
 | FEAT-1 | Gameplay cues | Hooks for effects, sounds and camera on apply, tick and remove |
-| FEAT-2 | SetByCaller magnitudes | Scalers read the data packet (C01) |
+| FEAT-2 | SetByCaller magnitudes | Scalers read the data packet (C01). Done (Decision 30): `SetByCaller(tag, magnitude)` on a `GameplayEffectSpec` or a `ProcessDataPacket`; `SetByCallerScaler` reads it, or its Default; each spec an ability's data makes takes its magnitudes as it's made (Apply Effects, Apply Remove Effects, the task helpers, the cost and cooldown), a contained or overflow effect takes its container's, and a save keeps them. Found and driven by the ability crafting scenario |
 | FEAT-3 | Tag-change events | Replace tag-worker polling. Done (Decision 30): `TagCache.Listen` hears a tag and the tags under it come and go, at once, or every weight change; `TagChanged` hears every change; a rebuild tells only what it changed; a tag worker is evaluated when the tags change, unless it asks for every frame (`EvaluateEveryFrame`) |
 | FEAT-4 | Ability triggers | Activate on a gameplay event or when a tag is added |
 | FEAT-5 | Cancel and block abilities by tag | C11. Done (Decision 30): an ability's Cancelled By names the abilities that cancel it as they activate, and its Blocks those that can't activate while it runs, by asset or context tag; each stage can name its own, and one that names none takes the ability's; a critical stage can't be cancelled; the While active row of its tag requirements interrupts it as soon as its caster's tags fail it |
@@ -685,6 +685,7 @@ Phase 2 part, and set Phase 4's direction.
 | FEAT-18 | Profiler markers | From the review's Profiling gap: Runtime has no `ProfilerMarker`, so the cost of a process step, an effect application or an ability activation can't be seen in Unity's Profiler. Done (Decision 30): `ForgeProfiler`'s markers, in the Scripts category: `PlayForge.ProcessStep`, `PlayForge.GASStep`, `PlayForge.EndOfFrame`, `PlayForge.ApplyEffect` and `PlayForge.ActivateAbility` |
 | FEAT-19 | Effect stacks scaler | Nothing built in read an effect's stack count, so a change by the stack, as a sunder's −5 armor a stack, took a scaler written for it: Proving Grounds wrote its own twice (`StackCountScaler` in `EffectStackingTests` and `GoldenImpactTests`). Found by the Combat lab. Done (Decision 30): `EffectStacksScaler` reads the stack count of the effect's own container, 1 for one that doesn't stack, as `ItemStacksScaler` reads an item's (FEAT-14) |
 | FEAT-20 | Copy an entity | The review's mirror clones: copying a GAS's state into a new runtime GAS took FEAT-9's capture and restore, which need a catalog naming every asset and IDs for every entity, which assets made as the game runs never have; and the entity's own level stayed behind on a clone of another kind, saved under its kind's tag. Found by the mirror clones scenario. Done (Decision 30): `ForgeSave.Copy(from, onto)` captures and restores with names for assets and entities that last the session, and a save keeps the entity's own level under no key, which loads onto the target's own |
+| FEAT-21 | Run a sequence made in code | Run Sequence ran only a sequence a static method made, by name (`TaskSequenceReference`), so a sequence made in code, as an ability built as the game runs makes one with `TaskSequenceBuilder`, couldn't run in an ability; Proving Grounds' nested-sequence tests handed theirs over in a static field. Found by the ability crafting scenario. Done (Decision 30): `RunSequenceTask.Definition`, a `TaskSequenceDefinition` made in code, of which each activation runs a fresh sequence |
 
 **Phase 5's order,** from the review's plan for the test project (its labs, one at a time) and the table above. A lab
 is a small game: assets the lab builds in code, and a bot that plays it in PlayMode tests under a live ProcessControl,
@@ -747,6 +748,23 @@ GAS-4 with GAS-5, PC-6, and TS-I with PC-5.
 ## Log
 
 Record baselines, gate results and notable decisions here, newest first.
+
+- 2026-11-05, **FEAT-2 and FEAT-21: SetByCaller magnitudes, and the ability crafting scenario.** The third stretch
+  scenario (Decision 30).
+  - **Ability crafting** builds spells as the game runs from runes, their casts made with `TaskSequenceBuilder`, caches
+    each recipe whatever its runes' order, and casts them through one spell effect whose damage the caster sets.
+  - **FEAT-2:** `SetByCaller(tag, magnitude)` on a `GameplayEffectSpec` or a `ProcessDataPacket`, which the new
+    `SetByCallerScaler` reads, or its Default. Each spec an ability's data makes takes its magnitudes as it's made:
+    Apply Effects, Apply Remove Effects, the task helpers, and the cost and cooldown (`ApplyUsageEffects(data)`). A
+    contained or overflow effect takes its container's, and a save keeps them (`EffectSave.SetByCaller`).
+  - **FEAT-21,** which the scenario found: Run Sequence ran only a sequence a static method made, by name, so a cast
+    built in code couldn't run in an ability. `RunSequenceTask.Definition`, a definition made in code, runs a fresh
+    sequence each activation, with the activation's own data.
+  - **Their tests,** seen failing first: the three `FEAT_2_*` tests in PlayMode's new `SetByCallerTests` (6 of 6), and
+    `FEAT_21_Run_Sequence_runs_a_sequence_made_in_code` (2 of 2).
+  - **Next:** beyond combat, with FEAT-4's triggers.
+  - **Tests:** PlayMode 1222: 1215 pass, 0 fail and 7 planted are skipped, in three orders. Planted 7 of 7; EditMode
+    439 of 439.
 
 - 2026-11-05, **FEAT-20 and GAS-59: mirror clones and chain reactions.** The first two of the review's stretch
   scenarios (Decision 30), in Proving Grounds' new `Tests/Stretch`, category Stretch.

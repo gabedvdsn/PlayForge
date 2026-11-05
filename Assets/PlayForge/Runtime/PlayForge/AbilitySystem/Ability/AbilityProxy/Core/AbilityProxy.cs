@@ -436,7 +436,7 @@ namespace FarEmerald.PlayForge
                     foreach (var task in Behaviour.Stages[StageIndex].Tasks) task.Clean(data);
                     if (Behaviour.Stages[StageIndex].ApplyUsageEffects && !usageEffectsApplied && data.EffectOrigin is AbilitySpec spec)
                     {
-                        spec.ApplyUsageEffects();
+                        spec.ApplyUsageEffects(data);
                         usageEffectsApplied = true;
                     }
 

@@ -98,6 +98,35 @@ namespace FarEmerald.PlayForge
             }
             
             InUse = other.InUse;
+            TakeSetByCaller(other.SetByCallerMagnitudes);
+        }
+
+        // Magnitudes the caller sets for the effects an ability applies, which each effect made from this data takes as
+        // it's made (FEAT-2)
+        private Dictionary<Tag, float> _setByCaller;
+        private static readonly Dictionary<Tag, float> NoMagnitudes = new();
+
+        /// <summary>The magnitudes set for the effects made from this data, by tag (FEAT-2).</summary>
+        public IReadOnlyDictionary<Tag, float> SetByCallerMagnitudes => _setByCaller ?? NoMagnitudes;
+
+        /// <summary>
+        /// Sets a magnitude under a tag for each effect an ability applies with this data, which a Set By Caller scaler
+        /// reads: the damage a caller knows as it casts. Each effect takes it as it's made (FEAT-2).
+        /// </summary>
+        public void SetByCaller(Tag key, float magnitude) => (_setByCaller ??= new Dictionary<Tag, float>())[key] = magnitude;
+
+        /// <summary>The magnitude set under the tag (FEAT-2).</summary>
+        public bool TryGetSetByCaller(Tag key, out float magnitude)
+        {
+            magnitude = 0f;
+            return _setByCaller != null && _setByCaller.TryGetValue(key, out magnitude);
+        }
+
+        /// <summary>Takes each magnitude another set (FEAT-2).</summary>
+        public void TakeSetByCaller(IReadOnlyDictionary<Tag, float> magnitudes)
+        {
+            if (magnitudes == null || magnitudes.Count == 0) return;
+            foreach (var pair in magnitudes) SetByCaller(pair.Key, pair.Value);
         }
         
         #region Construction
