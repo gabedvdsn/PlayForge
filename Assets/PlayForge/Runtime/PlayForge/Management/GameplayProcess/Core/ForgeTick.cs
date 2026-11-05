@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Threading;
 using Cysharp.Threading.Tasks;
@@ -51,6 +52,26 @@ namespace FarEmerald.PlayForge
 
         /// <summary>Waits for the next tick, or, with ticks off, Unity's next frame as UniTask.NextFrame does.</summary>
         public static UniTask NextFrame(CancellationToken token = default) => current.NextFrame(token);
+
+        /// <summary>
+        /// Waits while the condition holds, asking once a tick where the tick in force ticks, and once a frame, as
+        /// UniTask.WaitWhile does, where it doesn't. A wait that asked Unity's loop never saw a world of its own change
+        /// between its steps (FEAT-10).
+        /// </summary>
+        public static UniTask WaitWhile(Func<bool> condition, CancellationToken token = default) =>
+            current.WaitWhile(condition, PlayerLoopTiming.Update, token);
+
+        /// <summary>Waits while the condition holds, at a frame's timing: the Update family asks once a tick.</summary>
+        public static UniTask WaitWhile(Func<bool> condition, PlayerLoopTiming timing, CancellationToken token = default) =>
+            current.WaitWhile(condition, timing, token);
+
+        /// <summary>Waits until the condition holds, as <see cref="WaitWhile(Func{bool}, CancellationToken)"/> waits while it does.</summary>
+        public static UniTask WaitUntil(Func<bool> condition, CancellationToken token = default) =>
+            current.WaitUntil(condition, PlayerLoopTiming.Update, token);
+
+        /// <summary>Waits until the condition holds, at a frame's timing: the Update family asks once a tick.</summary>
+        public static UniTask WaitUntil(Func<bool> condition, PlayerLoopTiming timing, CancellationToken token = default) =>
+            current.WaitUntil(condition, timing, token);
 
         // One tick of the tick in force
         internal static void Advance() => current.Advance();
@@ -111,6 +132,28 @@ namespace FarEmerald.PlayForge
         public UniTask NextFrame(CancellationToken token = default)
         {
             return Ticking ? Next(token) : UniTask.NextFrame(token);
+        }
+
+        /// <summary>
+        /// Waits while the condition holds, asking once a tick while this ticks, or as UniTask.WaitWhile does at the
+        /// timing while it doesn't, and at the physics step's timings, which are Unity's.
+        /// </summary>
+        public UniTask WaitWhile(Func<bool> condition, PlayerLoopTiming timing = PlayerLoopTiming.Update, CancellationToken token = default) =>
+            TicksAt(timing) ? Asked(condition, whileSo: true, token) : UniTask.WaitWhile(condition, timing, token);
+
+        /// <summary>Waits until the condition holds, as <see cref="WaitWhile"/> waits while it does.</summary>
+        public UniTask WaitUntil(Func<bool> condition, PlayerLoopTiming timing = PlayerLoopTiming.Update, CancellationToken token = default) =>
+            TicksAt(timing) ? Asked(condition, whileSo: false, token) : UniTask.WaitUntil(condition, timing, token);
+
+        // Whether a wait at the timing waits on this tick: the Update family does while it ticks
+        private bool TicksAt(PlayerLoopTiming timing) =>
+            Ticking && timing is not (PlayerLoopTiming.FixedUpdate or PlayerLoopTiming.LastFixedUpdate or PlayerLoopTiming.EarlyUpdate
+                or PlayerLoopTiming.LastEarlyUpdate or PlayerLoopTiming.Initialization or PlayerLoopTiming.LastInitialization);
+
+        // Asks once a tick, on this tick, until the condition is otherwise
+        private async UniTask Asked(Func<bool> condition, bool whileSo, CancellationToken token)
+        {
+            while (condition() == whileSo) await Next(token);
         }
 
         // One tick: the waits made before it go on, and the ones they make wait for the next

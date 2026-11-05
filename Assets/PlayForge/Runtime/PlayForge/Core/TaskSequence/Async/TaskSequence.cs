@@ -446,7 +446,7 @@ namespace FarEmerald.PlayForge
                 _currentIndex = i;
                 _currentSequence = _sequences[i];
                 
-                if (_paused) await UniTask.WaitWhile(() => _paused, cancellationToken: chainToken);
+                if (_paused) await ForgeTick.WaitWhile(() => _paused, chainToken);
 
                 // Check if chain was interrupted before starting sequence
                 if (chainToken.IsCancellationRequested || _interrupted)

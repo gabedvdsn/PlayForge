@@ -18,6 +18,10 @@ tracks each fix below by its ID.
 - Abilities in a world of their own. An ability's processes register in their caster's world, which
   `ProcessWorld.Of(process)` finds, so a battle of runtime entities in a world of its own plays out as its owner
   steps it (FEAT-10).
+- Waits that ask once a tick. `ForgeTick.WaitWhile` and `WaitUntil` ask once a tick where the tick in force ticks,
+  and are UniTask's own waits where it doesn't. A sequence's conditional waits, the builder's Delay Until, Wait Until
+  and Wait While among them, go through them, so a world of its own sees what they wait for change between its
+  steps (FEAT-10).
 - Targeting input. The click-targeting tasks read the game's input, `ForgeInput.Current`, in place of the Input
   Manager's mouse and `Camera.main`. By default it's the Input System's pointer, a mouse, a pen or a touch, where
   that package is in and on, or else the Input Manager's mouse, each aimed through `Camera.main` or a camera you

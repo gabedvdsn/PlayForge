@@ -190,7 +190,7 @@ namespace FarEmerald.PlayForge
         // Not awaited unless it has to be, so that a run that isn't paused doesn't lose a frame here
         private UniTask HoldWhilePaused(CancellationToken token)
         {
-            return IsPaused ? UniTask.WaitWhile(() => IsPaused, cancellationToken: token) : UniTask.CompletedTask;
+            return IsPaused ? ForgeTick.WaitWhile(() => IsPaused, token) : UniTask.CompletedTask;
         }
 
         // ═══════════════════════════════════════════════════════════════════════════
@@ -280,7 +280,7 @@ namespace FarEmerald.PlayForge
                     // run, so a sequence ended a frame after its last stage did (TS-Z)
                     if (_maintainedStages.Count > 0)
                     {
-                        await UniTask.WaitUntil(() => _maintainedStages.Count == 0, cancellationToken: token);
+                        await ForgeTick.WaitUntil(() => _maintainedStages.Count == 0, token);
                     }
 
                     // A run that repeats takes a frame if it took none, or an instant sequence repeats for ever
@@ -395,7 +395,7 @@ namespace FarEmerald.PlayForge
             if (_maintainedStages.Count == 0) return;
 
             _sequenceCts?.Cancel();
-            await UniTask.WaitUntil(() => _maintainedStages.Count == 0);
+            await ForgeTick.WaitUntil(() => _maintainedStages.Count == 0);
         }
 
         private async UniTask ExecuteStagesSequentially(CancellationToken token)

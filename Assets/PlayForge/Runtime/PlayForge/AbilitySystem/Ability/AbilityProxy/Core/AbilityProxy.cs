@@ -410,7 +410,7 @@ namespace FarEmerald.PlayForge
         {
             await ActivateNextStageLegacy(implicitData, token);
 
-            await UniTask.WaitUntil(() => maintainedStages <= 0, cancellationToken: token);
+            await ForgeTick.WaitUntil(() => maintainedStages <= 0, token);
 
             implicitData.InUse = false;
         }

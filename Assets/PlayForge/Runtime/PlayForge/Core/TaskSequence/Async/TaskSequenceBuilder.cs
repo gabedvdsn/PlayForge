@@ -319,7 +319,7 @@ namespace FarEmerald.PlayForge
             var stage = new SequenceStage();
             stage.Tasks.Add(new DelegateSequenceTask(async (SequenceDataPacket data, CancellationToken token) =>
             {
-                await UniTask.WaitUntil(() => predicate(data), timing, cancellationToken: token);
+                await ForgeTick.WaitUntil(() => predicate(data), timing, token);
             }));
             _stages.Add(stage);
             return this;
@@ -335,7 +335,7 @@ namespace FarEmerald.PlayForge
             var stage = new SequenceStage();
             stage.Tasks.Add(new DelegateSequenceTask(async (CancellationToken token) =>
             {
-                await UniTask.WaitUntil(predicate, timing, cancellationToken: token);
+                await ForgeTick.WaitUntil(predicate, timing, token);
             }));
             _stages.Add(stage);
             return this;
@@ -351,7 +351,7 @@ namespace FarEmerald.PlayForge
             var stage = new SequenceStage();
             stage.Tasks.Add(new DelegateSequenceTask(async (SequenceDataPacket data, CancellationToken token) =>
             {
-                await UniTask.WaitWhile(() => predicate(data), timing, cancellationToken: token);
+                await ForgeTick.WaitWhile(() => predicate(data), timing, token);
             }));
             _stages.Add(stage);
             return this;
@@ -367,7 +367,7 @@ namespace FarEmerald.PlayForge
             var stage = new SequenceStage();
             stage.Tasks.Add(new DelegateSequenceTask(async (CancellationToken token) =>
             {
-                await UniTask.WaitWhile(predicate, timing, cancellationToken: token);
+                await ForgeTick.WaitWhile(predicate, timing, token);
             }));
             _stages.Add(stage);
             return this;
@@ -784,7 +784,7 @@ namespace FarEmerald.PlayForge
         {
             _stage.Tasks.Add(new DelegateSequenceTask(async (SequenceDataPacket data, CancellationToken token) =>
             {
-                await UniTask.WaitUntil(() => predicate(data), timing, cancellationToken: token);
+                await ForgeTick.WaitUntil(() => predicate(data), timing, token);
             }));
             return this;
         }
@@ -798,7 +798,7 @@ namespace FarEmerald.PlayForge
         {
             _stage.Tasks.Add(new DelegateSequenceTask(async (CancellationToken token) =>
             {
-                await UniTask.WaitUntil(predicate, timing, cancellationToken: token);
+                await ForgeTick.WaitUntil(predicate, timing, token);
             }));
             return this;
         }
@@ -812,7 +812,7 @@ namespace FarEmerald.PlayForge
         {
             _stage.Tasks.Add(new DelegateSequenceTask(async (SequenceDataPacket data, CancellationToken token) =>
             {
-                await UniTask.WaitWhile(() => predicate(data), timing, cancellationToken: token);
+                await ForgeTick.WaitWhile(() => predicate(data), timing, token);
             }));
             return this;
         }
@@ -826,7 +826,7 @@ namespace FarEmerald.PlayForge
         {
             _stage.Tasks.Add(new DelegateSequenceTask(async (CancellationToken token) =>
             {
-                await UniTask.WaitWhile(predicate, timing, cancellationToken: token);
+                await ForgeTick.WaitWhile(predicate, timing, token);
             }));
             return this;
         }
