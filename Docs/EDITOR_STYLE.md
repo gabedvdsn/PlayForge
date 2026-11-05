@@ -142,7 +142,7 @@ The only other colors:
 
 ## The Debugger
 
-- One window with three views, Entities, Processes and Tags, switched in its toolbar (Q4).
+- One window with four views, Entities, Processes, Tags and Timeline, switched in its toolbar (Q4, FEAT-12).
 - **It reads as clearly in a docked column as in a full window** (the user, 2026-11-04). The mockups draw it at
   1280 px and at 360 px.
   - Below 720 px, the list sits above the detail, with a splitter between them, and the toolbar takes two rows: the

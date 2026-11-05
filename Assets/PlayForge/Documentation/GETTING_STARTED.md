@@ -124,7 +124,7 @@ string perLevel = impact.FormatTotal();           // "20/30/40/50"
   and the problem count. The list's columns sort; a click shows the asset's inspector in the detail pane, under a
   summary of its sections, and a double click shows it in the Project window. Tags lists the project's tags and what
   uses each; declare tags in a Tag Library asset (`Create → PlayForge → Tag Library`).
-- **Debugger** (`Window → PlayForge → Debugger`) — the game as it plays, in three views the toolbar switches
+- **Debugger** (`Window → PlayForge → Debugger`) — the game as it plays, in four views the toolbar switches
   between. **Entities** lists every entity, of either kind, beside the one selected: its attributes with what changed
   them, its effects with the time each has left and where it came from, its abilities with their state and cooldown,
   and its tags with what grants them. It acts on the entity too: select a row, and the foot row under its table acts
@@ -133,7 +133,11 @@ string perLevel = impact.FormatTotal();           // "20/30/40/50"
   loose tag, which Remove takes back). With Follow Selection on, it shows the entity
   you select in the scene. **Processes** lists every process with its state and how long its steps take, and
   pauses, resumes or terminates the one selected. **Tags** shows every tag the entities hold, as a tree, and who
-  holds the one selected. The window menu sets how often it reads the game.
+  holds the one selected. **Timeline** records, as the game plays, each run of an ability, stage by stage, each
+  refused activation, and each effect's time on the shelf, and draws them over the last seconds, a track for each
+  entity's ability or effect. Select a track to see an ability's stages and their tasks, with when the selected run
+  reached each, beside its runs, or an effect's applications. Record pauses it, and Clear forgets it. Docked in a
+  narrow column, each view's list sits above its detail. The window menu sets how often it reads the game.
 - **Asset fields** — every reference to a PlayForge asset is Unity's object field. **Open** beside it shows the asset
   in a window of its own; **New**, beside an empty one, makes the asset where Project Settings → PlayForge puts its type, named
   for the asset that holds the field. An effect field's right-click menu has its template, a pick of the effects

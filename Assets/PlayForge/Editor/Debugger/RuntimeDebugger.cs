@@ -15,7 +15,8 @@ namespace FarEmerald.PlayForge.Extended.Editor
     /// Debugger (Q4), drawn as the design canvas's boards have it (version 21). Its Entities view lists the hubs
     /// ProcessControl registers, of either kind (Q28), beside one hub's attributes, effects, abilities and tags, which it
     /// can change (Q27, ED-40). Its Processes view lists every process, with what it's doing and how long its steps take
-    /// (ED-5), and its Tags view every tag the entities hold, as a tree, beside who holds the one selected. The lists follow
+    /// (ED-5), and its Tags view every tag the entities hold, as a tree, beside who holds the one selected. Its Timeline
+    /// view shows what the entities' abilities and effects did over time, as a recorder heard it (FEAT-12). The lists follow
     /// ProcessControl as processes join and leave, and the values change in place, at the rate the window menu sets,
     /// while the game plays (Q30). Outside Play mode it offers Play Mode. The GAS Debugger scanned the scene for
     /// MonoBehaviour hubs and rebuilt its details every 0.25 s (ED-4); Process Control and the Tag Debugger were IMGUI
@@ -41,6 +42,7 @@ namespace FarEmerald.PlayForge.Extended.Editor
             Entities,
             Processes,
             Tags,
+            Timeline,
         }
 
         private enum HubKind
@@ -96,6 +98,7 @@ namespace FarEmerald.PlayForge.Extended.Editor
         private TwoPaneSplitView entitySplit;
         private TwoPaneSplitView processSplit;
         private TwoPaneSplitView tagSplit;
+        private bool timelineLive;
 
         // ═══════════════════════════════════════════════════════════════════════════
         // Opening
@@ -138,6 +141,7 @@ namespace FarEmerald.PlayForge.Extended.Editor
             StopSampling();
             Unfollow();
             ForgetShownEntity();
+            recorder?.Dispose();
         }
 
         private void OnPlayModeChanged(PlayModeStateChange change) => ShowState();
@@ -151,6 +155,10 @@ namespace FarEmerald.PlayForge.Extended.Editor
             views.EnableInClassList(HiddenClass, !live);
             statusBar.EnableInClassList(HiddenClass, !live);
             searchField.SetEnabled(live);
+            // The Timeline records afresh each time the game starts playing, and stops hearing as it ends (FEAT-12)
+            if (live && !timelineLive) StartTimeline();
+            if (!live) StopTimeline();
+            timelineLive = live;
             if (live)
             {
                 StartSampling();
@@ -207,6 +215,7 @@ namespace FarEmerald.PlayForge.Extended.Editor
             SampleEntity();
             SampleProcess();
             SampleTag();
+            SampleTimeline();
             ShowStatus();
         }
 
@@ -294,6 +303,7 @@ namespace FarEmerald.PlayForge.Extended.Editor
             views.Add(entitiesView);
             views.Add(processesView);
             views.Add(tagsView);
+            views.Add(BuildTimelineView());
             root.Add(views);
 
             statusBar = new VisualElement { name = "DebuggerStatus" };
@@ -329,6 +339,7 @@ namespace FarEmerald.PlayForge.Extended.Editor
                          (View.Entities, "Entities", "Each entity, with its attributes, effects, abilities and tags"),
                          (View.Processes, "Processes", "Each process ProcessControl runs"),
                          (View.Tags, "Tags", "Each tag the entities hold, and who holds it"),
+                         (View.Timeline, "Timeline", "What the entities' abilities and effects did, over time"),
                      })
             {
                 var toggle = new ToolbarToggle { name = $"Show{text}", text = text, tooltip = tip };
@@ -354,6 +365,7 @@ namespace FarEmerald.PlayForge.Extended.Editor
                 RefillEntities();
                 RefillProcesses();
                 RefillTags();
+                RefillTracks();
             });
             toolbar.Add(searchField);
 
@@ -377,6 +389,7 @@ namespace FarEmerald.PlayForge.Extended.Editor
                     RefillProcesses();
                 }, _ => processFilter == each ? DropdownMenuAction.Status.Checked : DropdownMenuAction.Status.Normal);
             toolbar.Add(filterMenu);
+            BuildTimelineTools(toolbar);
 
             toolbarSpacer = new ToolbarSpacer { flex = true };
             toolbar.Add(toolbarSpacer);
@@ -457,7 +470,9 @@ namespace FarEmerald.PlayForge.Extended.Editor
             entitiesView.EnableInClassList(HiddenClass, view != View.Entities);
             processesView.EnableInClassList(HiddenClass, view != View.Processes);
             tagsView.EnableInClassList(HiddenClass, view != View.Tags);
-            hubMenu.EnableInClassList(HiddenClass, !live || view == View.Processes);
+            timelineView.EnableInClassList(HiddenClass, view != View.Timeline);
+            hubMenu.EnableInClassList(HiddenClass, !live || view == View.Processes || view == View.Timeline);
+            ShowTimelineTools(live);
             filterMenu.EnableInClassList(HiddenClass, !live || view != View.Processes);
             followToggle.EnableInClassList(HiddenClass, !live || view != View.Entities);
             controlLabel.EnableInClassList(HiddenClass, !live || view != View.Processes || narrow);
@@ -470,6 +485,7 @@ namespace FarEmerald.PlayForge.Extended.Editor
             {
                 View.Processes => "Search processes",
                 View.Tags => "Search tags",
+                View.Timeline => "Search tracks",
                 _ => "Search entities",
             };
             searchField.tooltip = placeholder;
@@ -527,6 +543,7 @@ namespace FarEmerald.PlayForge.Extended.Editor
             Lay(entitySplit, 0, 440);
             Lay(processSplit, 1, 380);
             Lay(tagSplit, 0, 440);
+            Lay(timelineSplit, 1, 380);
             if (processList != null)
                 foreach (var name in NarrowHiddenColumns) processList.columns[name].visible = !narrow;
             rootVisualElement.Query(className: SourceColumnClass).ForEach(cell => cell.EnableInClassList(HiddenClass, narrow));

@@ -7,6 +7,10 @@ tracks each fix below by its ID.
 ## [Unreleased]
 
 ### Added
+- The Debugger's Timeline view. It records, as the game plays, each run of an ability, stage by stage, each refused
+  activation, and each effect's time on the shelf, and draws them over the last seconds, a track for each entity's
+  ability or effect. A track selected shows an ability's stages and their tasks, with when the selected run reached
+  each, beside its runs, or an effect's applications (FEAT-12).
 - A world of processes of its own. `ProcessWorld` holds what ProcessControl's bookkeeping held, and ProcessControl
   wraps one (`ProcessControl.World`) and steps it from Unity's loop, with its API as it was. `new ProcessWorld()` makes
   one with no scene, `ProcessControl.Register(process).In(world)` registers into it, and `world.Step()` steps it, the

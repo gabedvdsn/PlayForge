@@ -1608,6 +1608,93 @@
     margin-right: 0;
 }
 
+/* The Timeline (FEAT-12): each track's spans over the last seconds in its row, a run or an effect's time on the shelf
+   a bar, the run selected in the selection's color, and an instant a tick; a track's graph, a stage to a block */
+.pf-root .pf-debugger__strip {
+    flex-grow: 1;
+    height: 20px;
+    overflow: hidden;
+}
+
+.pf-root .pf-debugger__span {
+    position: absolute;
+    top: 6px;
+    height: 8px;
+    border-radius: 2px;
+    background-color: var(--pf-secondary-text);
+}
+
+.pf-root .pf-debugger__span--open {
+    opacity: 0.7;
+}
+
+.pf-root .pf-debugger__span--instant {
+    width: 2px;
+    top: 4px;
+    height: 12px;
+    border-radius: 0;
+}
+
+.pf-root .pf-debugger__span--refused {
+    background-color: var(--pf-destructive);
+}
+
+.pf-root .pf-debugger__span--selected {
+    background-color: var(--pf-selection);
+    opacity: 1;
+}
+
+.pf-root .pf-debugger__graph {
+    padding: 2px 8px 6px 20px;
+}
+
+.pf-root .pf-debugger__stage {
+    padding: 2px 0 4px 0;
+    border-bottom-width: 1px;
+    border-bottom-color: var(--pf-inner-line);
+}
+
+.pf-root .pf-debugger__stage-head {
+    flex-direction: row;
+    align-items: center;
+    height: 18px;
+}
+
+.pf-root .pf-debugger__stage-name {
+    flex-shrink: 0;
+    margin: 0 8px 0 0;
+    padding: 0;
+    color: var(--pf-strong-text);
+    -unity-font-style: bold;
+}
+
+.pf-root .pf-debugger__stage-policy,
+.pf-root .pf-debugger__stage-timing {
+    flex-shrink: 1;
+    min-width: 0;
+    margin: 0;
+    padding: 0;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+}
+
+.pf-root .pf-debugger__stage-timing {
+    flex-shrink: 0;
+    margin-left: auto;
+    color: var(--pf-secondary-text);
+}
+
+.pf-root .pf-debugger__stage-task {
+    margin: 0;
+    padding: 0 0 0 12px;
+    height: 18px;
+    -unity-text-align: middle-left;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+}
+
 /* Outside Play mode: the line, and Enter Play Mode under it */
 .pf-root .pf-debugger__prompt {
     flex-grow: 1;
