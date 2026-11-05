@@ -753,7 +753,8 @@ foundation, and FEAT-16 is done.
 A separate Unity project that consumes PlayForge as a local UPM package (Decision 2). The project and its shared
 harness exist, with the golden scenarios, the framework and planted suites, and the editor tests (360 EditMode
 tests in `Tests/Editor`, among them the editor smoke suite, which its README explains). The gameplay labs exist, all eight
-green (Decision 30), each with a scene that plays its bot (Decision 33); the stress suite doesn't yet. See
+green (Decision 30), each with a scene that plays its bot (Decision 33), and a ninth, the Battle lab, at the user's
+asking; the stress suite doesn't yet. See
 Environment for its location and commands. The full plan is in the
 review doc's section "The test project: PlayForge Proving Grounds". In short:
 
@@ -781,6 +782,28 @@ GAS-4 with GAS-5, PC-6, and TS-I with PC-5.
 ## Log
 
 Record baselines, gate results and notable decisions here, newest first.
+
+- 2026-11-05, **The Battle lab,** at the user's asking: a full battle to watch, two sides of many fighters with
+  projectiles, spells, area effects, summons, knockback and stuns, lasting well past 15 seconds, with a health bar over
+  each fighter and boxes over it for its good and bad effects.
+  - **Proving Grounds 8d66006:** `Tests/Labs/BattleLab.cs` sets Blue and Red against each other, eight a side: two
+    knights (Cleave, whose knockback is a cue, and a stunning Shield Bash), two archers (arrows and poison darts), two
+    mages (a fireball that bursts over an area and burns, and a frost nova that chills), a cleric (Mend, and a Blessing
+    that regenerates and fortifies) and a summoner (imps with a lifetime, and shadow bolts). It's built from
+    PlayForge's parts: abilities with mana costs and cooldowns that a stun refuses, armor as a worker, the projectile
+    process from a pool, deaths through the death watcher. Each fighter takes the nearest foe, closes to its range and
+    casts what's ready, and the sides take turns to act first, frame by frame. `BattleView.cs` draws each health bar,
+    the effect boxes (good from the bar's left, bad from its right), a scoreboard, a legend, and rings for bursts,
+    novas, heals, summons and falls. Its scene, `Battle Lab.unity`, plays it at 60 frames a second through the lab
+    runner, which gains Show Bodies, Show Cards and Framing for a lab that draws its own. Watched there, each battle
+    takes a new seed, so either side can win.
+  - **Its round,** `BattleLabTests.Lab_A_battle`, plays a battle to its end and checks it lasts at least 15 s, one side
+    wins, and every kind of blow lands. Its seed's battle: Blue won after 32 s with 3 of 8 standing, after about 216
+    shots, 50 area hits, 23 knockbacks, 5 stuns, 12 imps, 13 heals and 6 blessings. Blue, enlisted first, had acted
+    first every frame, an edge the alternating order took away.
+  - **Tests:** PlayMode 1268: 1261 pass, 0 fail and 7 planted are skipped, in three orders. Planted 7 of 7;
+    EditMode 443 of 443.
+  - **Next:** FEAT-10's step 2, the plain world.
 
 - 2026-11-05, **FEAT-10, step 1 of 6: a process reaches the control that holds it.** The headless split (Decision
   30) goes in six steps, each with its red test and the gates:
