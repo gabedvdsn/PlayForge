@@ -1,7 +1,7 @@
 # PlayForge refactor: code tour
 
 This tour lists the places where the refactor changed code, so you can open each one in your IDE and read it. It
-covers `01258b8..c7f7ef1` on `main`: 334 commits. Phase 0 ported Arcade Fighter's fixes, Phase 1 made the runtime
+covers `01258b8..7e6dae3` on `main`: 336 commits. Phase 0 ported Arcade Fighter's fixes, Phase 1 made the runtime
 correct, Phase 2 got the package ready to release, Phase 3 made it cheaper to run and gave the two GAS hubs one core,
 Phase 4 rebuilt the editor, and Phase 5 has begun. Each entry says what behaves differently and why, names its tracker IDs and Decisions, and
 points at the two or three places to read. `Docs/REFACTOR_PLAN.md` has every tracker row, the numbered Decisions,
@@ -10,8 +10,8 @@ and a Log of each batch's test results.
 ## How to use this
 
 - Paths are relative to the repo root.
-- Line numbers are as of commit `c7f7ef1`, the head of `main` on 2026-11-05. A later commit may move them, so each
-  entry also names the class and method to search for. `git show c7f7ef1:<path>` shows a file as it was then.
+- Line numbers are as of commit `7e6dae3`, the head of `main` on 2026-11-05. A later commit may move them, so each
+  entry also names the class and method to search for. `git show 7e6dae3:<path>` shows a file as it was then.
 - In Rider, Go to File accepts `path:line`. In Visual Studio, open the file, then Go To Line (Ctrl+G).
   A bare `:123` after a path means another line in the same file.
 - `git grep "<ID>"` finds the comment at each fix, and `git log --grep "<ID>"` finds its commit. Three exceptions:
@@ -105,7 +105,7 @@ requirement pass when an effect is on the shelf, so a loose tag, an ability's or
     or stopped while it hears changes nothing under it.
   - `Assets/PlayForge/Runtime/PlayForge/Tag/TagCache.cs:397` `EvaluateTagWorkers`, and
     `Assets/PlayForge/Runtime/PlayForge/Workers/TagWorker/Core/AbstractTagWorker.cs:37` `EvaluateEveryFrame`.
-  - `Assets/PlayForge/Runtime/PlayForge/GAS/Core/GASCore.cs:270` `CompileGrantedTags`, a rebuild, and
+  - `Assets/PlayForge/Runtime/PlayForge/GAS/Core/GASCore.cs:273` `CompileGrantedTags`, a rebuild, and
     `Assets/PlayForge/Runtime/PlayForge/GAS/Core/EffectSystemComponent.cs:71` `Tick`, GAS-56's check.
 - **Watch for:** a tag added straight to the cache asks for no requirement pass, whose compile would drop it, as
   `GAS_P7_A_tag_lookup_costs_the_same_however_long_its_name` showed the first version doing.
@@ -144,7 +144,7 @@ which finds its run by the token; a projectile by its handler's. TS-6 rides alon
 - **IDs:** FEAT-7 and TS-6, commit `48c2c8e`; Decision 30.
 - **Read:**
   - `Assets/PlayForge/Runtime/PlayForge/GAS/Core/EntityClock.cs:12` `EntityClock`, which
-    `Assets/PlayForge/Runtime/PlayForge/GAS/Core/GASCore.cs:143` steps once a frame.
+    `Assets/PlayForge/Runtime/PlayForge/GAS/Core/GASCore.cs:146` steps once a frame.
   - `Assets/PlayForge/Runtime/PlayForge/Utils/ForgeTime.cs:69` `DeltaTimeFor`, by an owner, and `:73` by a packet.
   - `Assets/PlayForge/Runtime/PlayForge/GameplayEffect/Core/Definition/GameplayEffectDuration.cs:181` `GetDeltaTime`,
     the target's clock, and `Assets/PlayForge/Runtime/PlayForge/Core/TaskSequence/Async/TaskSequenceRuntime.cs:163`
@@ -241,8 +241,8 @@ once an ability ran.
   - `Assets/PlayForge/Runtime/PlayForge/AbilitySystem/Ability/AbilityProxy/Core/AbilityBehaviour.cs:35`, the ability's
     lists, `:77` a stage's, `:86` `CancelledByOr` and `:92` `IsCritical`; `AbilityTags.Names` is
     `Assets/PlayForge/Runtime/PlayForge/AbilitySystem/Ability/Core/AbilityTags.cs:44`.
-  - `Assets/PlayForge/Runtime/PlayForge/GAS/Core/GASCore.cs:56`, which wires the tag changes to the ability system, and
-    `:147`, where each step checks.
+  - `Assets/PlayForge/Runtime/PlayForge/GAS/Core/GASCore.cs:59`, which wires the tag changes to the ability system, and
+    `:150`, where each step checks.
 - **Watch for:** an interrupt from While active ends a critical stage too, as an interrupt by slot does. A stage reads
   as critical when any of its tasks is a critical section.
 - **Tests:** the five `FEAT_5_*` tests on each hub in PlayMode's new `CancelAndBlockTests`,
@@ -289,7 +289,7 @@ recovery it cancels. TS-7's shape is a design the plan's Log records for the use
 - **Read:**
   - `Assets/PlayForge/Runtime/PlayForge/AbilitySystem/Core/AbilitySystemComponent.cs:621` `TryActivate`, where a block
     or a busy claim sends a Queue request to `BufferActivation` (`:716`); `:738` `FireBuffered` and `:765`
-    `StepBuffer`, which `GASCore.Tick` calls (`Assets/PlayForge/Runtime/PlayForge/GAS/Core/GASCore.cs:150`).
+    `StepBuffer`, which `GASCore.Tick` calls (`Assets/PlayForge/Runtime/PlayForge/GAS/Core/GASCore.cs:153`).
   - `Assets/PlayForge/Runtime/PlayForge/AbilitySystem/Ability/AbilityProxy/Core/AbilityBehaviour.cs:110`
     `AbilityStageCondition` and its `Holds` (`:125`); the compiler's branch is
     `Assets/PlayForge/Runtime/PlayForge/AbilitySystem/Ability/AbilityProxy/Core/AbilitySequenceCompiler.cs:52`.
@@ -338,7 +338,7 @@ whose origin's level changed.
   - `Assets/PlayForge/Runtime/PlayForge/ItemSystem/Core/ItemSpecContainer.cs:35` `ChangeStacks`, and
     `Assets/PlayForge/Runtime/PlayForge/GameplayEffect/Modifier/Default/Authored/ItemStacksScaler.cs:12` `ItemStacksScaler`.
   - `Assets/PlayForge/Runtime/PlayForge/GAS/Core/EffectSystemComponent.cs:309` `RefreshEffectsFrom` and `:323` `RefreshEffectsLevelledBy`, which
-    `Assets/PlayForge/Runtime/PlayForge/GAS/Core/GASCore.cs:129` `LevelChanged` calls (wired at `:59`).
+    `Assets/PlayForge/Runtime/PlayForge/GAS/Core/GASCore.cs:132` `LevelChanged` calls (wired at `:62`).
 - **Watch for:** `RemoveItem(item)` still takes the whole slot. An effect an entity's item put on another entity isn't
   on its shelf, so it waits for its next read as the item levels.
 - **Tests:** the five `FEAT_14_*` tests in PlayMode's new `ItemStackingTests`, `FEAT_14_The_Item_inspector_edits_its_stack_size`,
@@ -357,15 +357,15 @@ of an effect's application runs again, and nothing is told until one tag compile
 
 - **IDs:** FEAT-9, commit `eee91a6`; Decision 30.
 - **Read:**
-  - `Assets/PlayForge/Runtime/PlayForge/Save/ForgeSave.cs:52` `Capture`, and `:234` `Restore`, whose order is the design; `:160` `SaveOrigin` and
-    `:352` `OriginOf`, which name what applied an effect and find it again.
+  - `Assets/PlayForge/Runtime/PlayForge/Save/ForgeSave.cs:69` `Capture`, and `:262` `Restore`, whose order is the design; `:188` `SaveOrigin` and
+    `:393` `OriginOf`, which name what applied an effect and find it again.
   - `Assets/PlayForge/Runtime/PlayForge/GAS/Core/EffectSystemComponent.cs:744` `ClearForRestore` and `:768` `Restore`, the shelf's quiet paths, and
     `Assets/PlayForge/Runtime/PlayForge/GameplayEffect/Core/GameplayShelfContainer/AbstractEffectContainer.cs:91` `CaptureClock` and `:102`
     `RestoreClock`, which `IndependentDurationsContainer` overrides for its stacks' own times.
   - `Assets/PlayForge/Runtime/PlayForge/AttributeSystem/Attribute/CachedAttributeValue.cs:367` `GetCommits` and `:376` `RestoreCommits`.
   - `Assets/PlayForge/Runtime/PlayForge/ItemSystem/Core/ItemSpecContainer.cs:220` `RestoreEquipped`, and
     `Assets/PlayForge/Runtime/PlayForge/AbilitySystem/Core/AbilitySystemComponent.cs:277` `GiveQuietly`, which `GiveAbility` now wraps.
-  - `Assets/PlayForge/Runtime/PlayForge/Save/ForgeAssetCatalog.cs:99` `AddProjectAssets`, and `Assets/PlayForge/Runtime/PlayForge/GAS/Core/GASCore.cs:135` `Stepping`, which
+  - `Assets/PlayForge/Runtime/PlayForge/Save/ForgeAssetCatalog.cs:103` `AddProjectAssets`, and `Assets/PlayForge/Runtime/PlayForge/GAS/Core/GASCore.cs:138` `Stepping`, which
     refuses a load inside the entity's step.
 - **Watch for:** a restore lets go of everything before it puts anything back, so an effect whose source is another
   entity finds that entity's abilities only once that entity is restored; restore the sources first. The effect's
@@ -424,6 +424,24 @@ or a tag it carries, and a refusal says why, as a callback tells it.
   targeting, so it ends the activation instead of refusing it.
 - **Tests:** `FEAT_18_PlayForge_shows_in_the_Profiler` in PlayMode's new `ProfilerMarkerTests`, and the two `FEAT_17_*`
   tests in its new `ActivationRefusalTests`.
+
+### Copying an entity, and a level's max before its level (FEAT-20, GAS-59)
+
+The review's mirror clones, a stretch scenario (Decision 30), copy a GAS's state onto a new runtime GAS. A copy took
+FEAT-9's capture and restore, which need a catalog naming every asset and IDs for every entity; `ForgeSave.Copy` names
+both for the session. A save keeps the entity's own level under no key, so it loads onto another kind's own. The
+scenario found GAS-59 too: a level and its max set at once applied the level first, so a raise past the old max was
+held at it.
+
+- **IDs:** FEAT-20, GAS-59, commit `7e6dae3`; Decision 30.
+- **Read:**
+  - `Assets/PlayForge/Runtime/PlayForge/Save/ForgeSave.cs:452` `Copy`, with `:471` `SessionNames` and `:501` `SessionIds`; `:85` `Take` and `:295`
+    `Put`, which Capture, Restore and Copy share, through `:24` `IAssetNames`, which the catalog implements too.
+  - `Assets/PlayForge/Runtime/PlayForge/Save/ForgeSave.cs:100`, the entity's own level under no key.
+  - `Assets/PlayForge/Runtime/PlayForge/LevelComponent/SystemLevelsComponent.cs:57` and `:82`, the max before the level.
+- **Tests:** `Stretch_A_mirror_clone_takes_its_originals_state` in Proving Grounds' new `Tests/Stretch` (category
+  Stretch), with the chain reactions beside it, and `GAS_59_A_level_raised_past_its_old_max_at_once_takes_it` in
+  `LevelRescalingTests`.
 
 ## Phase 4
 
@@ -1194,8 +1212,8 @@ went at its next compile, so a tag could be granted only through an effect.
 - **Read:**
   - `Assets/PlayForge/Editor/Debugger/RuntimeDebugger.Entities.cs:446` `SetAttribute`, a delta no worker sees, `:881`
     `GrantTag`, `:589` `ApplyEffect` and `:742` `ActivateAbility`.
-  - `Assets/PlayForge/Runtime/PlayForge/GAS/Core/GASCore.cs:293` the loose tags and `:297` `AddLooseTag`, which
-    `CompileGrantedTags` (`:270`) includes, and `Assets/PlayForge/Runtime/PlayForge/GAS/Interfaces/IGameplayAbilitySystem.cs:30`.
+  - `Assets/PlayForge/Runtime/PlayForge/GAS/Core/GASCore.cs:296` the loose tags and `:300` `AddLooseTag`, which
+    `CompileGrantedTags` (`:273`) includes, and `Assets/PlayForge/Runtime/PlayForge/GAS/Interfaces/IGameplayAbilitySystem.cs:30`.
 - **Watch for:** a removed effect stays on the shelf until the entity's next tick, which clears it, so its row goes a
   sample later. A field being typed in keeps what's typed while samples come.
 - **Tests:** `ED_40_An_attribute_takes_the_value_typed_into_the_debugger`,
@@ -1276,8 +1294,8 @@ own: the registration data's, or else a copy of the asset's.
 
 - **IDs:** GAS-47, commit `fdc1886`.
 - **Read:**
-  - `Assets/PlayForge/Runtime/PlayForge/GAS/Core/GASCore.cs:78`, in `GASCore.Initialize`. The field is at `:18`,
-    `GetAffiliation` at `:257` reads it, and the tag compile at `:280` adds it. The fix went into each hub's copy;
+  - `Assets/PlayForge/Runtime/PlayForge/GAS/Core/GASCore.cs:81`, in `GASCore.Initialize`. The field is at `:21`,
+    `GetAffiliation` at `:260` reads it, and the tag compile at `:283` adds it. The fix went into each hub's copy;
     GAS-S1 later moved it into the core both share.
   - `Assets/PlayForge/Runtime/PlayForge/GAS/Core/MonoBehaviour/GameplayAbilitySystem.cs:44`, where the Mono hub reads
     the registration data's sides as it initializes, and
@@ -1313,7 +1331,7 @@ only then try the immediate ones.
 - **Read:**
   - `Assets/PlayForge/Runtime/PlayForge/AbilitySystem/Core/AbilitySystemComponent.cs:225`
     `AbilitySystemComponent.ActivateImmediateAbilities`, taken out of `Initialize`.
-  - `Assets/PlayForge/Runtime/PlayForge/GAS/Core/GASCore.cs:98`, the call in `GASCore.Initialize`, after
+  - `Assets/PlayForge/Runtime/PlayForge/GAS/Core/GASCore.cs:101`, the call in `GASCore.Initialize`, after
     `CompileGrantedTags`. Each hub made it until GAS-S1 gave them one core.
 - **New:** `AbilitySystemComponent.ActivateImmediateAbilities`.
 - **Test:** `GAS_49_An_opening_ability_with_a_cost_activates` in `AbilityLifecycleTests`.
@@ -1358,7 +1376,7 @@ the package's entity assets stored. Code that set either no longer compiles.
 
 - **IDs:** GAS-45, commit `5ccaa88`. Removing them, not building them, was the user's call.
 - **Read:** what decides instead.
-  - `Assets/PlayForge/Runtime/PlayForge/GAS/Core/GASCore.cs:89`, in `GASCore.Initialize`, where the GAS registers its
+  - `Assets/PlayForge/Runtime/PlayForge/GAS/Core/GASCore.cs:92`, in `GASCore.Initialize`, where the GAS registers its
     level clamped to its range.
   - `Assets/PlayForge/Runtime/PlayForge/ItemSystem/Core/ItemSystemComponent.cs:58`, in
     `ItemSystemComponent.CanGiveItem`, where the entity's setting refuses a second copy.
@@ -1376,8 +1394,8 @@ away.
 
 - **IDs:** GAS-S1, commit `5e7f077`.
 - **Read:**
-  - `Assets/PlayForge/Runtime/PlayForge/GAS/Core/GASCore.cs:69` `GASCore.Initialize`, the one build order, then
-    `EndOfFrame` (`:165`), `MarkDead` (`:230`) and `CompileGrantedTags` (`:270`).
+  - `Assets/PlayForge/Runtime/PlayForge/GAS/Core/GASCore.cs:72` `GASCore.Initialize`, the one build order, then
+    `EndOfFrame` (`:168`), `MarkDead` (`:233`) and `CompileGrantedTags` (`:273`).
   - `Assets/PlayForge/Runtime/PlayForge/GAS/Core/MonoBehaviour/GameplayAbilitySystem.cs:39`
     `GameplayAbilitySystem.WhenInitialize`. The Mono hub builds its core as it registers, from a copy of its asset.
   - `Assets/PlayForge/Runtime/PlayForge/GAS/Core/Runtime/RuntimeGameplayAbilitySystem.cs:67`, the constructor, where
@@ -1684,7 +1702,7 @@ too, and an ending entity's ability system shuts before its abilities end.
     `WhenTerminate`, which ends what the process handles, as
     `Assets/PlayForge/Runtime/PlayForge/Management/GameplayProcess/Wrappers/MonoWrapper/Core/AbstractMonoProcess.cs:117`
     does.
-  - `Assets/PlayForge/Runtime/PlayForge/GAS/Core/GASCore.cs:216` `WhenTerminate`, which each hub's `WhenTerminate`
+  - `Assets/PlayForge/Runtime/PlayForge/GAS/Core/GASCore.cs:219` `WhenTerminate`, which each hub's `WhenTerminate`
     calls before its base's, and `ShutDown` in
     `Assets/PlayForge/Runtime/PlayForge/AbilitySystem/Core/AbilitySystemComponent.cs:161`, with the check
     `TryActivateAbility` now makes first (`:628`).
@@ -1719,7 +1737,7 @@ own, refilled each frame, so a listener reads it during the call.
   - `Assets/PlayForge/Runtime/PlayForge/Workers/Core/FrameSummary.cs:347` `TakeSnapshot`, which refills the summary's
     one snapshot, and `FrameSummarySnapshot` (`:360`), whose lists it keeps from frame to frame (`Fill`, `:392`).
     `CreateSnapshot` (`:335`) still makes a copy to keep.
-  - `Assets/PlayForge/Runtime/PlayForge/GAS/Core/GASCore.cs:202`, in `EndOfFrame`, which hands the listeners the
+  - `Assets/PlayForge/Runtime/PlayForge/GAS/Core/GASCore.cs:205`, in `EndOfFrame`, which hands the listeners the
     refilled snapshot, only when there are some.
 - **Watch for:** a listener that keeps the snapshot sees it change next frame. Copy what you need during the call.
 - **Test:** `GAS_P10_A_frame_whose_summary_has_a_listener_allocates_nothing` in `EffectCostTests`, idle and with an
@@ -2443,7 +2461,7 @@ the sources' lists instead of allocating iterators.
 - **Read:**
   - `Assets/PlayForge/Runtime/PlayForge/Tag/TagQuery.cs:98` `TagQuery.CountMatches(TagCache)`, and `Matches`
     (`:135`). The hubs call it from `QueryTags`
-    (`Assets/PlayForge/Runtime/PlayForge/GAS/Core/GASCore.cs:317`).
+    (`Assets/PlayForge/Runtime/PlayForge/GAS/Core/GASCore.cs:320`).
   - `Assets/PlayForge/Runtime/PlayForge/Tag/Tag.cs:94` `Tag.Child`, and the implicit conversion at `:348`.
   - `Assets/PlayForge/Runtime/PlayForge/Tag/GrantedTagCompiler.cs:14` `GrantedTagCompiler`.
 - **New:** `GrantedTagCompiler` (internal).
@@ -2733,10 +2751,11 @@ Newest first. Each row is a good place to start reading.
 
 | What | IDs | Where | Commit |
 |---|---|---|---|
+| Copying an entity, and a level's max before its level | FEAT-20, GAS-59 | `Assets/PlayForge/Runtime/PlayForge/Save/ForgeSave.cs:452` | `7e6dae3` |
 | Profiler markers, and activation by asset or tag with a reason | FEAT-18, FEAT-17 | `Assets/PlayForge/Runtime/PlayForge/AbilitySystem/Core/AbilitySystemComponent.cs:621` | `c7f7ef1` |
 | An Effect Stacks scaler, and the Combat lab | FEAT-19 | `Assets/PlayForge/Runtime/PlayForge/GameplayEffect/Modifier/Default/Authored/EffectStacksScaler.cs:11` | `2944804` |
 | A warning for usage effects no stage applies, and the Tactics lab | ED-41 | `Assets/PlayForge/Editor/Problems/ForgeRules.cs:217` | `6129b13` |
-| Save and load | FEAT-9 | `Assets/PlayForge/Runtime/PlayForge/Save/ForgeSave.cs:234` | `eee91a6` |
+| Save and load | FEAT-9 | `Assets/PlayForge/Runtime/PlayForge/Save/ForgeSave.cs:262` | `eee91a6` |
 | Item stacking, level-up rescaling, and the Roguelite lab | FEAT-14, GAS-58 | `Assets/PlayForge/Runtime/PlayForge/ItemSystem/Core/ItemSystemComponent.cs:120` | `643f5c0` |
 | A pool's object goes back to its pool, and the Bullet heaven lab | PC-33 | `Assets/PlayForge/Runtime/PlayForge/Management/GameplayProcess/Wrappers/MonoWrapper/Core/MonoWrapperProcess.cs:108` | `f66e04d` |
 | The input buffer, stages that branch, and the Duel lab | FEAT-6, TS-7 | `Assets/PlayForge/Runtime/PlayForge/AbilitySystem/Core/AbilitySystemComponent.cs:738` | `b0d6492` |
@@ -2797,12 +2816,12 @@ Newest first. Each row is a good place to start reading.
 | A tick, a recompute and a tag query allocate nothing | GAS-P4 | `Assets/PlayForge/Runtime/PlayForge/GameplayEffect/Core/GameplayEffectSpec.cs:162` | `b50a80b` |
 | Ending an effect costs the same however many end with it | GAS-P5 | `Assets/PlayForge/Runtime/PlayForge/GAS/Core/EffectSystemComponent.cs:702` | `7ce68aa` |
 | An application costs the same however much the entity carries | GAS-P3 | `Assets/PlayForge/Runtime/PlayForge/GAS/Core/EffectSystemComponent.cs:71` | `1242251` |
-| Both GAS hubs forward to one core | GAS-S1 | `Assets/PlayForge/Runtime/PlayForge/GAS/Core/GASCore.cs:69` | `5e7f077` |
+| Both GAS hubs forward to one core | GAS-S1 | `Assets/PlayForge/Runtime/PlayForge/GAS/Core/GASCore.cs:72` | `5e7f077` |
 | An attribute set reached twice counts once | GAS-44 | `Assets/PlayForge/Runtime/PlayForge/AttributeSystem/Attribute/AttributeSet.cs:63` | `57ea4ff` |
 | Tick On Application alone lands its change | GAS-50 | `Assets/PlayForge/Runtime/PlayForge/GAS/Core/EffectSystemComponent.cs:389` | `e40b3b6` |
 | Opening abilities wait for the entity's attributes | GAS-49 | `Assets/PlayForge/Runtime/PlayForge/AbilitySystem/Core/AbilitySystemComponent.cs:225` | `999e779` |
 | Unequipping takes back only the item's grant | GAS-48 | `Assets/PlayForge/Runtime/PlayForge/ItemSystem/Core/ItemSpecContainer.cs:199` | `27c2325` |
-| Each entity keeps its own affiliation | GAS-47 | `Assets/PlayForge/Runtime/PlayForge/GAS/Core/GASCore.cs:78` | `fdc1886` |
+| Each entity keeps its own affiliation | GAS-47 | `Assets/PlayForge/Runtime/PlayForge/GAS/Core/GASCore.cs:81` | `fdc1886` |
 | Targeting's packet resolves to the entity, so Apply Effects finds its target | GAS-46 | `Assets/PlayForge/Runtime/PlayForge/AbilitySystem/Ability/AbilityProxy/Core/AbilityDataPacket.cs:133` | `fe4271c` |
 | Help buttons open the package's own docs through one table | ED-16, Decision 18 | `Assets/PlayForge/Editor/CustomPropertyDrawers/Forge/Util/ForgeDocs.cs:82` | `67db441` |
 | Demo Lit draws the Demos under URP and Built-in | SP-23, Decision 17 | `Assets/PlayForge/Samples~/Demos/Demo/Shaders/DemoLit.shader:42` | `954a11a` |
