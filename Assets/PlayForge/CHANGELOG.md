@@ -25,6 +25,11 @@ tracks each fix below by its ID.
   page, through one table of links in the editor.
 
 ### Changed
+- Templates work as prefabs do. A template reaches its children when it's pushed, with its asset menu's Push to Its
+  Children, as one Undo step, and each child, and each of theirs, keeps the fields it overrides. An edit to a child's
+  field makes it the child's own, which its inspector marks as Unity marks a prefab instance's override, and one Undo
+  takes back both. The field's right-click menu has Revert to Template. Saving a template no longer opens a dialog in
+  the middle of the save, loads every asset of its type, or changes the children with no Undo (ED-13).
 - The Forge is a list beside a detail pane. Its toolbar holds Create, a filter for each type with its type icon, Tags,
   the search and the problem count, and its status bar the counts. The list's columns, the name with its type icon, the
   type, the asset tag, the levels and a problem glyph, sort in natural order, and it scrolls through thousands of

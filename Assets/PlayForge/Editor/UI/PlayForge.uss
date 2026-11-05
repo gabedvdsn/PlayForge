@@ -28,6 +28,7 @@
     --pf-secondary-text: #B0B0B0;
     --pf-button-text: #EEEEEE;
     --pf-link: #81B4FF;
+    --pf-override: #0F81BE;
 
     --pf-type-ability: #80ADE1;
     --pf-type-effect: #A979E0;
@@ -66,6 +67,7 @@
     --pf-secondary-text: #4A4A4A;
     --pf-button-text: #090909;
     --pf-link: #0A4FA8;
+    --pf-override: #0F81BE;
 
     --pf-type-ability: #1757A0;
     --pf-type-effect: #4F277E;
@@ -1502,4 +1504,17 @@
     border-top-width: 1px;
     border-top-color: var(--pf-line);
     background-color: var(--pf-toolbar);
+}
+
+/* ─── Overrides: a field a child asset overrides of its template, marked as Unity marks a prefab instance's (Q23) ─── */
+
+.pf-root .pf-override {
+    border-left-width: 2px;
+    border-left-color: var(--pf-override);
+    padding-left: 1px;
+}
+
+.pf-root .pf-override .unity-base-field__label,
+.pf-root .pf-override.unity-base-field > .unity-base-field__label {
+    -unity-font-style: bold;
 }

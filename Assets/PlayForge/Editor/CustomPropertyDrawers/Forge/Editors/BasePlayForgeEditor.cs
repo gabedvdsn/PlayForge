@@ -176,6 +176,23 @@ namespace FarEmerald.PlayForge.Extended.Editor
             TheForge.OpenToAsset(target);
         }
 
+        // Marks each field the asset overrides of its template, as a prefab instance's are: a field bound to an overridden
+        // path, or to one with an overridden field inside it, outside the drawers that draw it (Q23, ED-13)
+        private void ShowOverrides()
+        {
+            if (root == null) return;
+            var overridden = !IsMultiple && target is BaseForgeAsset { HasTemplate: true } child
+                ? child.GetOverriddenPaths()
+                : (IReadOnlyList<string>)Array.Empty<string>();
+            root.Query<VisualElement>().ForEach(element =>
+            {
+                if (element is not IBindable bindable || string.IsNullOrEmpty(bindable.bindingPath)) return;
+                if (element is not PropertyField && element.GetFirstAncestorOfType<PropertyField>() != null) return;
+                var path = bindable.bindingPath;
+                element.EnableInClassList("pf-override", overridden.Any(each => each == path || each.StartsWith(path + ".")));
+            });
+        }
+
         // Whether an element is in The Forge's detail pane, which holds an asset's inspector
         private static bool InForgeDetail(VisualElement element)
         {
@@ -356,12 +373,14 @@ namespace FarEmerald.PlayForge.Extended.Editor
             root.Bind(serializedObject);
 
             // The header, and any section drawn from the asset's values rather than bound, follow every change to the
-            // asset, an Undo or a Redo among them (ED-12)
+            // asset, an Undo or a Redo among them (ED-12), and so do the marks on the fields it overrides of its template
             root.TrackSerializedObjectValue(serializedObject, _ =>
             {
                 UpdateHeader();
                 OnAssetChanged();
+                ShowOverrides();
             });
+            root.schedule.Execute(ShowOverrides);
 
             return root;
         }
@@ -444,6 +463,16 @@ namespace FarEmerald.PlayForge.Extended.Editor
                 menu.AddItem(new GUIContent("Set Template..."), false, ShowTemplatePicker);
                 if (target is BaseForgeAsset asset && asset.HasTemplate)
                     menu.AddItem(new GUIContent($"Unassign Template \"{asset.Template.GetName()}\""), false, () => AssignTemplate(null));
+                // A template's changes reach its children when it's pushed, as one Undo step. Saving it asked in a dialog,
+                // mid-save, and changed them with no Undo (Q23, ED-13)
+                if (target is BaseForgeAsset template)
+                {
+                    var children = ForgeTemplatePush.ChildrenOf(template);
+                    if (children.Count > 0)
+                        menu.AddItem(new GUIContent(children.Count == 1 ? "Push to Its Child" : $"Push to Its {children.Count} Children"), false,
+                            () => ForgeTemplatePush.PushToChildren(template));
+                    else menu.AddDisabledItem(new GUIContent("Push to Children"));
+                }
             }
             if (menu.GetItemCount() == 0) menu.AddDisabledItem(new GUIContent("No Actions"));
             menu.DropDown(under.worldBound);

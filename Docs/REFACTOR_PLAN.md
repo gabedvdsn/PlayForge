@@ -527,7 +527,7 @@ had no letter in the review. TS-AA onward came from the test project.
 | ED-10 | M | 2 | Analysis exposes "Not Implemented" groups and truncates silently | `TheForge.AnalysisTab.cs:362, 716, 1461, 1979-1991` | verified |
 | ED-11 | M | 4 | The sticky-header workaround and drawer timers poll forever, among them two 250 ms timers in each impact drawer. Now nothing polls: the drawers follow the properties they show, the object picker's listener runs only while a picker is open, and the inspector keeps no scroll view of its own, so nothing measures the window; the header follows the Inspector's scroll events (ED-36) | `BasePlayForgeEditor.cs` (`OnAttachedToPanel`, `ConfigureScrollView`, `OnEditorUpdate`) | fixed |
 | ED-12 | H | 4 | No Undo, multi-edit or prefab overrides. The inspectors wrote 42 edits straight into their asset, and only the 5 renames recorded Undo; no inspector took a multiple selection; six drawers copy their SerializedObject for one target, and two write while drawing. Fixed: Phase 2's part (a rename stores the tag in the same undoable step, and showing never writes), the Attribute inspector (its fields bind, it takes a multiple selection, and every inspector's header follows Undo), the MonoProcess inspector's multiple selection, the Effect, Item and Attribute Set inspectors' Description and Link Mode, the Entity inspector's fields, the Ability inspector's Description, Activation Policy, Activate Immediately and Link Mode, Link, Unlink and template assignment in every inspector, the drawers that rebuilt on a one-target copy, the type drawers that wrote a default while drawing, and every asset inspector's multiple selection; the magnitude field and the scaler drawer change each selected asset's own values | `EachAsset.cs`, `MagnitudeField.cs`, `ScalerFields.cs`, `EffectEditor.cs`, `EntityIdentityEditor.cs`, `AttributeSetEditor.cs`, `BasePlayForgeEditor.cs` (`IsMultiple`) | fixed |
-| ED-13 | M | 4 | Template propagation on save loads everything, opens a modal mid-save and records no Undo; the validator is empty | `ForgeTemplateProcessor.cs:45-52`, `ForgeTemplatePropagator.cs:201-229` | open |
+| ED-13 | M | 4 | Template propagation on save loads everything, opens a modal mid-save and records no Undo; the validator is empty. Fixed: templates work as prefabs do (Q23): an explicit Push to Its Children, as one Undo step, which keeps each child's overrides; an edit to a child's field records the override, which the inspector marks, and one Undo takes back both; Revert to Template. The save hook and its empty validator are gone | `ForgeTemplatePush.cs`, `BasePlayForgeEditor.cs` (`ShowOverrides`) | fixed |
 | ED-14 | H | 1 | The `GameplayEffectImpact` copy constructor drops affiliation and throws on null packets | `GameplayEffectImpact.cs:155-176` | verified |
 | ED-15 | M | 4 | "Validate All" is noisy and capped at 15; "Find All References" is a dialog. Fixed: the Used By sections replace Find All References, and one validator (`ForgeValidator`, with a `ForgeValidationRule` per check) feeds the Problems view and each inspector header's count, in place of Validate All and the Audit (Q8). The Forge's problem glyph and counts come with its window (ED-27) | `ForgeValidator.cs`, `ForgeRules.cs`, `ForgeProblemsWindow.cs`, `ForgeAssetHeader.cs` | fixed |
 | ED-16 | M | 2 | 49 placeholder `docs.playforge.dev` links in six editors, some pointing at the wrong page, with slugs that vary (`level-source`, `levelsource`). The Asset Store strongly recommends offline docs (rule 2.3.a) | `AbilityEditor.cs:77, 116`, `AttributeSetEditor.cs:818`, `AttributeEditor.cs:183`, `EntityIdentityEditor.cs:158` | verified |
@@ -568,8 +568,8 @@ Phase 2 part, and set Phase 4's direction.
 4. ED-20: one style sheet and a kit of controls, in the style `Docs/EDITOR_STYLE.md` records (Decision 20).
 5. The redesign, one surface at a time: the asset inspectors, with ED-2, ED-3, and the Import window and shared
    scalers of Decision 28 (ED-32, ED-33); The Forge, with ED-13, ED-15,
-   ED-21, ED-27 and ED-31; one runtime debugger for the GAS, Process and Tag views (Q4), with ED-4 and ED-5; and the
-   Visualizer, with ED-9.
+   ED-21, ED-27 and ED-31 (done); one runtime debugger for the GAS, Process and Tag views (Q4), with ED-4 and ED-5; and
+   the Visualizer, with ED-9 (done: The Forge's detail pane summarizes each asset, Q6).
    The asset inspectors go one at a time, each following the style doc (ED-37): the Attribute, Item, Entity and
    Attribute Set inspectors first (done), then the reference fields (ED-38, done), the Ability inspector (done), then
    the Effect inspector with ED-2 and ED-3 (done), then the Import window and shared scalers (ED-32, ED-33, done),
@@ -657,6 +657,45 @@ GAS-4 with GAS-5, PC-6, and TS-I with PC-5.
 ## Log
 
 Record baselines, gate results and notable decisions here, newest first.
+
+- 2026-11-04, **ED-13: templates work as prefabs do.** The last of The Forge's redesign, from Q23's answer: an explicit
+  push to children, with a mark on each overridden field. ED-13 is fixed, and The Forge's part of step 5 is done.
+  - **The push,** `ForgeTemplatePush.PushToChildren`, from a template's asset menu (Push to Its N Children): each child,
+    and each of theirs, takes the template's fields but those it overrides, through the propagator, under one
+    `RegisterCompleteObjectUndo` per child in one Undo group. It flushes pending undo records first, so an edit made just
+    before it, as by a script, has marked its override. A loop of templates stops where it comes back.
+  - **Overrides** are recorded as they're made, as a prefab instance's are: `Undo.postprocessModifications` hands over
+    each edit to a child's field, an inspector's, an Import's or a script's through a SerializedObject, and the field
+    becomes the child's own, at the granularity the push keeps (a plain field's path, or the outermost
+    `[SerializeReference]` field it's in; an edit inside a list, which the push merges, or to an excluded field, such as
+    the name, overrides nothing). They were worked out on each save against the template as it was then, so a template
+    changed and not yet pushed would have marked its own changes as the children's.
+  - **One Undo takes back an edit and its mark,** and Redo makes both again. A probe of each way showed that Unity's
+    Undo takes back what a `postprocessModifications` hook adds to an edit but never makes it again on Redo, drops a
+    record the hook starts, and puts a whole-object record ahead of the edit's own, where Undo would make the edit
+    again. So each mark is remembered with the Undo step it was made in, in `SessionState`, as Undo outlives a domain
+    reload: `OnUndoRedo`, on `Undo.undoRedoEvent`, takes it back with that step, or any step collapsed into it, and
+    makes it again on its Redo.
+  - **Found by the gates:**
+    - The inspector sweep, `Every_edit_in_an_inspector_undoes`, failed for the five Demo assets that are template
+      children, as one Undo left each edit's mark. The sweep now says where the asset's JSON differs.
+    - `ED_27_The_list_follows_the_project` failed in the full suite: The Forge's reload waited on a `delayCall`, which
+      batch mode ran late or not at all. The Forge now reloads on the editor's next update, queued from the import
+      itself (`TheForgeImports`), from an asset made or destroyed, and from `projectChanged`.
+  - **The marks:** an inspector marks each field its asset overrides with Unity's prefab override bar and a bold
+    label (`ShowOverrides`, classes only), following every change. A marked field's right-click menu has Revert to
+    Template, which copies the template's value back and makes the field the template's again, as one Undo step
+    (`RevertToTemplate`, which writes without a modification of its own, so it marks nothing again).
+  - **Gone:** `ForgeTemplateProcessor`, the save hook, with its modal, its load of every asset of the type and its
+    unwired switches, and `ForgeTemplateValidator`, which did nothing.
+  - **Docs:** `GETTING_STARTED.md` has a Templates entry.
+  - **Its tests,** seen failing against the save hook first (the third showed its dialog cancelled mid-save):
+    `ED_13_Saving_a_template_changes_no_child`, `ED_13_Push_to_Children_keeps_each_childs_overrides` and
+    `ED_13_A_childs_inspector_marks_its_overrides` in the new `TemplatePushTests`. With them,
+    `ED_13_One_Undo_takes_back_an_edit_and_its_override`, seen failing against a mark made outside Undo.
+  - **Next:** one runtime debugger for the GAS, Process and Tag views (ED-4, ED-5).
+  - **Tests:** PlayMode 961: 954 pass, 0 fail and 7 planted are skipped, in three orders. Planted 7 of 7; EditMode
+    421 of 421.
 
 - 2026-11-04, **ED-27 and ED-9: The Forge is a list and a detail.** The third of The Forge's redesign, from Q5, Q6,
   Q7, Q24, Q29 and Q30. ED-27 and ED-9 are fixed.

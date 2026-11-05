@@ -51,7 +51,6 @@ namespace FarEmerald.PlayForge.Extended.Editor
         private List<ForgeTagRegistry.TagUsageRecord> shownTags = new();
         private UnityEditor.Editor detailEditor;
         private Object shownInDetail;
-        private bool reloadQueued;
 
         /// <summary>The asset the detail pane shows.</summary>
         internal Object Selected => selected;
@@ -111,6 +110,7 @@ namespace FarEmerald.PlayForge.Extended.Editor
 
         private void OnEnable()
         {
+            open.Add(this);
             EditorApplication.projectChanged += QueueReload;
             ForgeValidator.Changed += OnProblemsChanged;
             ObjectChangeEvents.changesPublished += OnObjectChanges;
@@ -118,37 +118,57 @@ namespace FarEmerald.PlayForge.Extended.Editor
 
         private void OnDisable()
         {
+            open.Remove(this);
             EditorApplication.projectChanged -= QueueReload;
+            EditorApplication.update -= ReloadQueued;
             ForgeValidator.Changed -= OnProblemsChanged;
             ObjectChangeEvents.changesPublished -= OnObjectChanges;
             DestroyDetailEditor();
         }
 
-        // A change to the project reads it again, once, after the change settles
-        private void QueueReload()
+        // Each open Forge, which an import tells
+        private static readonly HashSet<TheForge> open = new();
+
+        // An import, of an asset made, deleted, moved or changed on disk, reads the project again in each open Forge
+        internal static void ReloadOpenWindows()
         {
-            if (reloadQueued) return;
-            reloadQueued = true;
-            EditorApplication.delayCall += () =>
-            {
-                reloadQueued = false;
-                if (this != null) Reload();
-            };
+            foreach (var forge in open) forge.QueueReload();
         }
 
-        // An edit to a listed asset, as a rename in its inspector, redraws the rows
+        // A change to the project reads it again, once, on the editor's next update. A delayCall, which waits for the
+        // inspectors to update, ran late or not at all in batch mode
+        private void QueueReload()
+        {
+            EditorApplication.update -= ReloadQueued;
+            EditorApplication.update += ReloadQueued;
+        }
+
+        private void ReloadQueued()
+        {
+            EditorApplication.update -= ReloadQueued;
+            if (this != null) Reload();
+        }
+
+        // An edit to a listed asset, as a rename in its inspector, redraws the rows; an asset made or destroyed reads the
+        // project again
         private void OnObjectChanges(ref ObjectChangeEventStream stream)
         {
+            bool redraw = false;
             for (int i = 0; i < stream.length; i++)
             {
-                if (stream.GetEventType(i) != ObjectChangeKind.ChangeAssetObjectProperties) continue;
-                stream.GetChangeAssetObjectPropertiesEvent(i, out var edited);
-                if (EditorUtility.InstanceIDToObject(edited.instanceId) is ScriptableObject asset && allAssets.Contains(asset))
+                switch (stream.GetEventType(i))
                 {
-                    assetList?.RefreshItems();
-                    return;
+                    case ObjectChangeKind.CreateAssetObject:
+                    case ObjectChangeKind.DestroyAssetObject:
+                        QueueReload();
+                        return;
+                    case ObjectChangeKind.ChangeAssetObjectProperties:
+                        stream.GetChangeAssetObjectPropertiesEvent(i, out var edited);
+                        redraw |= EditorUtility.InstanceIDToObject(edited.instanceId) is ScriptableObject asset && allAssets.Contains(asset);
+                        break;
                 }
             }
+            if (redraw) assetList?.RefreshItems();
         }
 
         private void OnProblemsChanged()
@@ -672,5 +692,14 @@ namespace FarEmerald.PlayForge.Extended.Editor
         }
 
         private static string CountOf(int count, string one, string many) => $"{count} {(count == 1 ? one : many)}";
+    }
+
+    // Tells each open Forge what an import brought, as it happens, so it doesn't wait on the project's change event
+    internal sealed class TheForgeImports : AssetPostprocessor
+    {
+        private static void OnPostprocessAllAssets(string[] imported, string[] deleted, string[] moved, string[] movedFrom)
+        {
+            if (imported.Length + deleted.Length + moved.Length > 0) TheForge.ReloadOpenWindows();
+        }
     }
 }
