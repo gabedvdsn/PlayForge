@@ -11,6 +11,10 @@ tracks each fix below by its ID.
   wraps one (`ProcessControl.World`) and steps it from Unity's loop, with its API as it was. `new ProcessWorld()` makes
   one with no scene, `ProcessControl.Register(process).In(world)` registers into it, and `world.Step()` steps it, the
   headless split's second step (FEAT-10).
+- A world of its own keeps its own time. `world.Step(deltaTime)` steps it by a time its owner gives: its clock reads
+  that time, and its own tick goes on, so its sequences' waits go on by its steps, and a loop of steps runs it
+  through its time within one frame. `ForgeTickSource` is a tick; `ForgeTick.Scene` is the scene's, and
+  `ForgeTick.Current` the one in force (FEAT-10).
 - Targeting input. The click-targeting tasks read the game's input, `ForgeInput.Current`, in place of the Input
   Manager's mouse and `Camera.main`. By default it's the Input System's pointer, a mouse, a pen or a touch, where
   that package is in and on, or else the Input Manager's mouse, each aimed through `Camera.main` or a camera you

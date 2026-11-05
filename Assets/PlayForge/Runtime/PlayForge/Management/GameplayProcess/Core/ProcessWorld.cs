@@ -348,7 +348,7 @@ namespace FarEmerald.PlayForge
                 var frame = ForgeTime.Use(tickClock);
                 try
                 {
-                    ForgeTick.Advance();
+                    Tick.Advance();
                     StepProcesses(EProcessStepTiming.Update);
                     StepProcesses(EProcessStepTiming.LateUpdate);
                 }
@@ -362,15 +362,78 @@ namespace FarEmerald.PlayForge
             if (ran >= most && tickAccumulator >= step) tickAccumulator = 0;
         }
 
+        // A world of its own's tick and clock: it ticks once each time its owner steps it, so a sequence in it waits on its
+        // steps, and its clock reads each step's time. A scene's world has the scene's tick and Unity's clock (FEAT-10)
+        private readonly ForgeTickSource ownTick = new() { Ticking = true };
+        private WorldClock ownClock;
+
+        /// <summary>The world's tick: its own for a world of its own, the scene's for a scene's.</summary>
+        public ForgeTickSource Tick => Control is null ? ownTick : ForgeTick.Scene;
+
+        /// <summary>The game time a world of its own has been stepped through.</summary>
+        public float Elapsed => ownClock?.Elapsed ?? 0f;
+
+        // A world of its own's clock: the step's time, and the steps and their time so far
+        private sealed class WorldClock : IForgeClock
+        {
+            public ForgeTickSource Tick;
+            public float Step, Elapsed;
+            public float DeltaTime => Step;
+            public float UnscaledDeltaTime => Step;
+            public float FixedDeltaTime => Step;
+            public float Time => Elapsed;
+            public float UnscaledTime => Elapsed;
+            public int FrameCount => Tick.Ticks;
+        }
+
         /// <summary>
-        /// Steps every process the world holds once, as a frame does: Update, then LateUpdate, by the clock read now. A
-        /// scene's ProcessControl steps its world from Unity's loop; a world of its own is stepped by its owner (FEAT-10).
+        /// Steps every process the world holds once, as a frame does: Update, then LateUpdate. A world of its own steps by
+        /// Unity's frame time; a scene's, by the clock read now, as its ProcessControl steps it from Unity's loop (FEAT-10).
         /// </summary>
         public void Step()
         {
+            if (Control is null)
+            {
+                Step(ForgeTime.DeltaTime);
+                return;
+            }
+
             SweepDestroyed();
             StepProcesses(EProcessStepTiming.Update);
             StepProcesses(EProcessStepTiming.LateUpdate);
+        }
+
+        /// <summary>
+        /// Steps a world of its own by a time its owner gives: its clock reads that time, its tick goes on, so what waits on
+        /// it goes on, and every process steps once, Update and then LateUpdate. A loop of steps runs the world through its
+        /// time within one frame, as a headless run does; its waits were Unity's next frame (FEAT-10). A scene's world
+        /// steps with Unity's loop, so this steps it once by the clock read now.
+        /// </summary>
+        public void Step(float deltaTime)
+        {
+            if (Control is not null)
+            {
+                Step();
+                return;
+            }
+
+            ownClock ??= new WorldClock { Tick = ownTick };
+            ownClock.Step = deltaTime;
+            ownClock.Elapsed += deltaTime;
+            var clock = ForgeTime.Use(ownClock);
+            var tick = ForgeTick.Enter(ownTick);
+            try
+            {
+                ownTick.Advance();
+                SweepDestroyed();
+                StepProcesses(EProcessStepTiming.Update);
+                StepProcesses(EProcessStepTiming.LateUpdate);
+            }
+            finally
+            {
+                ForgeTick.Enter(tick);
+                ForgeTime.Use(clock);
+            }
         }
 
         /// <summary>Steps the processes that step at the fixed rate, as a physics step does.</summary>
@@ -1064,6 +1127,22 @@ namespace FarEmerald.PlayForge
         public void ProcessWillChangeState(ProcessControlBlock pcb, EProcessState state)
         {
             if (state == EProcessState.Created) return;
+
+            // A world of its own's tick is in force as a process moves, between its steps as at them: a run that starts
+            // now waits on it (FEAT-10)
+            var tick = Control is null ? ForgeTick.Enter(ownTick) : null;
+            try
+            {
+                ChangeState(pcb, state);
+            }
+            finally
+            {
+                if (tick != null) ForgeTick.Enter(tick);
+            }
+        }
+
+        private void ChangeState(ProcessControlBlock pcb, EProcessState state)
+        {
 
             // Reported ahead of acting on it: terminating takes the watchers away, and a run that ends at
             // once moves the state on again, so afterwards was too late to say this (PC-13)

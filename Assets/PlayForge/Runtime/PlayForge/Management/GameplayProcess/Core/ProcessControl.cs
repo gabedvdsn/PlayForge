@@ -140,8 +140,8 @@ namespace FarEmerald.PlayForge
         {
             World.ResetTickTime();
             if (Instance != this) return;
-            if (fixedTickRate > 0) ForgeTick.Ticking = true;
-            else if (ForgeTick.Ticking) ForgeTick.Stop();
+            if (fixedTickRate > 0) ForgeTick.Scene.Ticking = true;
+            else if (ForgeTick.Scene.Ticking) ForgeTick.Scene.Stop();
         }
 
         /// <summary>Enters the StartState set in the inspector, after a Bootstrap that deferred it (PC-29).</summary>
@@ -189,7 +189,7 @@ namespace FarEmerald.PlayForge
         {
             World.TerminateAllImmediately();
             // What waits for a tick goes on, as a frame's wait, once the ticks are gone
-            if (Instance == this && ForgeTick.Ticking) ForgeTick.Stop();
+            if (Instance == this && ForgeTick.Scene.Ticking) ForgeTick.Scene.Stop();
         }
 
         #endregion
