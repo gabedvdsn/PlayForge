@@ -174,10 +174,31 @@ process lifecycle logs.
 
 PlayForge's work shows in Unity's Profiler under its own markers, in the Scripts category (`ForgeProfiler`):
 
-- `PlayForge.ProcessStep`: one process's step.
+- `PlayForge.Update`, `PlayForge.LateUpdate` and `PlayForge.FixedUpdate`: the step loop at each timing.
+- `PlayForge.ProcessStep`: one process's step. Inside it, `PlayForge.Step.` and the process's type's name, with the
+  process's ID as the marker's metadata.
 - `PlayForge.GASStep` and `PlayForge.EndOfFrame`: a GAS's step, where its effects tick, and its end of frame, where
   its queued actions and its tag and analysis workers run.
 - `PlayForge.ApplyEffect`: an effect's application, with its contained effects' inside it.
 - `PlayForge.ActivateAbility`: an ability's activation, up to the first of its tasks that waits.
+- `PlayForge.TagCompile` and `PlayForge.Recompute`: a GAS's tag compile and an attribute's recompute.
+- `PlayForge.Stage`: a sequence stage's start, an ability's among them: its tasks, up to the first that waits.
 
-A `ProfilerRecorder` reads them by name, in the editor or in a development build.
+The markers time the work. The counters, in the Profiler's PlayForge category (`ForgeCounters`), say how much of it
+there is:
+
+- ProcessControl's processes running, waiting and created, and each frame's registrations, terminations, steps, state
+  changes and step time.
+- The entities by hub and the effects active, and each frame's effects applied and removed, impacts, activations,
+  refused activations, tag compiles and recomputes.
+- The sequences running, and each frame's stages started.
+
+Two Profiler modules chart the counters. Turn them on in the Profiler window's list of modules:
+
+- **PlayForge Processes** charts ProcessControl's and TaskSequence's counters. Its details list the selected frame's
+  costliest processes, by their steps' time. PlayForge puts them into the capture while the Profiler records, so a
+  saved capture shows them too.
+- **PlayForge GAS** charts the GAS's counters.
+
+A `ProfilerRecorder` reads a marker or a counter by its name, in the editor or in a development build. Unity compiles
+them out of release builds.

@@ -12,8 +12,11 @@ namespace FarEmerald.PlayForge
     /// </summary>
     public static class ForgeCounters
     {
+        /// <summary>The name of the Profiler category PlayForge's counters are in.</summary>
+        public const string CategoryName = "PlayForge";
+
         /// <summary>The Profiler category PlayForge's counters are in.</summary>
-        public static readonly ProfilerCategory Category = new("PlayForge");
+        public static readonly ProfilerCategory Category = new(CategoryName);
 
         private const ProfilerCounterOptions Level = ProfilerCounterOptions.FlushOnEndOfFrame;
         private const ProfilerCounterOptions PerFrame = ProfilerCounterOptions.FlushOnEndOfFrame | ProfilerCounterOptions.ResetToZeroOnFlush;

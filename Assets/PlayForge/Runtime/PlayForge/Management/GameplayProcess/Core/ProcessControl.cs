@@ -173,8 +173,10 @@ namespace FarEmerald.PlayForge
         private void LateUpdate()
         {
             // Each tick stepped its own end of frame
-            if (fixedTickRate > 0 && Instance == this) return;
-            World.StepProcesses(EProcessStepTiming.LateUpdate);
+            if (fixedTickRate <= 0 || Instance != this) World.StepProcesses(EProcessStepTiming.LateUpdate);
+
+            // The frame's costliest processes go into the Profiler's capture while it records (FEAT-18)
+            if (Instance == this) ForgeFrameCosts.EndFrame();
         }
 
         private void FixedUpdate()

@@ -68,6 +68,13 @@ namespace FarEmerald.PlayForge
         private ProfilerMarker<int> _stepMarker;
         private bool _stepMarked;
 
+        /// <summary>The type of the process the block holds, which its first step finds.</summary>
+        internal Type ProcessType { get; private set; }
+
+        // The time its steps took in the frame the Profiler records, and which frame that is (FEAT-18)
+        internal long FrameTicks;
+        internal int CostFrame = -1;
+
         public float UseSinceLastCheck
         {
             get
@@ -412,7 +419,8 @@ namespace FarEmerald.PlayForge
         public void Step(EProcessStepTiming timing)
         {
             ForgeCounters.Steps.Value++;
-            bool timed = MeasureSteps;
+            bool recording = ForgeFrameCosts.Recording;
+            bool timed = MeasureSteps || recording;
             long started = timed ? System.Diagnostics.Stopwatch.GetTimestamp() : 0L;
 
             // A step that throws is reported and goes no further, as a MonoBehaviour's Update would: the
@@ -423,9 +431,10 @@ namespace FarEmerald.PlayForge
             // Under its own marker in the Profiler, and its type's, with its ID (FEAT-18)
             if (!_stepMarked)
             {
-                _stepMarker = ForgeProfiler.StepOf(Wrapper.TryGetProcess<object>(out var process) && process != null
+                ProcessType = Wrapper.TryGetProcess<object>(out var process) && process != null
                     ? process.GetType()
-                    : Wrapper.GetType());
+                    : Wrapper.GetType();
+                _stepMarker = ForgeProfiler.StepOf(ProcessType);
                 _stepMarked = true;
             }
 
@@ -463,9 +472,15 @@ namespace FarEmerald.PlayForge
             if (timed)
             {
                 long took = System.Diagnostics.Stopwatch.GetTimestamp() - started;
-                _stepTicks += took;
-                if (took > _peakStepTicks) _peakStepTicks = took;
-                _steps++;
+                if (MeasureSteps)
+                {
+                    _stepTicks += took;
+                    if (took > _peakStepTicks) _peakStepTicks = took;
+                    _steps++;
+                }
+
+                // For the frame's costliest processes in the Profiler's capture (FEAT-18)
+                if (recording) ForgeFrameCosts.Stepped(this, took);
             }
 
             // Synchronous processes have no async completion to flush queued state.

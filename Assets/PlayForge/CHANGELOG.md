@@ -60,6 +60,9 @@ tracks each fix below by its ID.
   frame's registrations, terminations, steps, state changes and step time, the entities by hub, the effects active,
   a frame's effects applied and removed, impacts, activations, refusals, tag compiles and recomputes, the sequences
   running and a frame's stages started. They count in the editor and development builds (FEAT-18).
+- Two Profiler modules. PlayForge Processes charts ProcessControl's and TaskSequence's counters, and its details list
+  the selected frame's costliest processes, which PlayForge puts into the capture while the Profiler records
+  (`ForgeFrameCosts`). PlayForge GAS charts the GAS's counters (FEAT-18).
 - An Effect Stacks scaler, which reads the stack count of the effect's own container, 1 for one that doesn't stack.
   With Multiply With Scaler, a sunder of −5 armor takes 5 a stack, and a Continuous change follows the count as it
   changes (FEAT-19).
