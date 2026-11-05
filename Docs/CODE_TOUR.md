@@ -1,7 +1,7 @@
 # PlayForge refactor: code tour
 
 This tour lists the places where the refactor changed code, so you can open each one in your IDE and read it. It
-covers `01258b8..6129b13` on `main`: 330 commits. Phase 0 ported Arcade Fighter's fixes, Phase 1 made the runtime
+covers `01258b8..2944804` on `main`: 332 commits. Phase 0 ported Arcade Fighter's fixes, Phase 1 made the runtime
 correct, Phase 2 got the package ready to release, Phase 3 made it cheaper to run and gave the two GAS hubs one core,
 Phase 4 rebuilt the editor, and Phase 5 has begun. Each entry says what behaves differently and why, names its tracker IDs and Decisions, and
 points at the two or three places to read. `Docs/REFACTOR_PLAN.md` has every tracker row, the numbered Decisions,
@@ -10,8 +10,8 @@ and a Log of each batch's test results.
 ## How to use this
 
 - Paths are relative to the repo root.
-- Line numbers are as of commit `6129b13`, the head of `main` on 2026-11-05. A later commit may move them, so each
-  entry also names the class and method to search for. `git show 6129b13:<path>` shows a file as it was then.
+- Line numbers are as of commit `2944804`, the head of `main` on 2026-11-05. A later commit may move them, so each
+  entry also names the class and method to search for. `git show 2944804:<path>` shows a file as it was then.
 - In Rider, Go to File accepts `path:line`. In Visual Studio, open the file, then Go To Line (Ctrl+G).
   A bare `:123` after a path means another line in the same file.
 - `git grep "<ID>"` finds the comment at each fix, and `git log --grep "<ID>"` finds its commit. Three exceptions:
@@ -388,6 +388,22 @@ Ability inspector warns under Cooldown, and the Problems view lists it, from one
 - **Tests:** `ED_41_The_Ability_inspector_warns_of_usage_no_stage_applies` in EditMode's `InspectorUndoTests`,
   `ED_41_A_cost_or_cooldown_no_stage_applies_is_a_problem` in `ProblemsTests`, and the lab's six rounds in
   `TacticsLabTests` (category Lab).
+
+### An Effect Stacks scaler, and the Combat lab (FEAT-19)
+
+The Combat lab, the eighth and last (Decision 30), puts every delivery, re-application and stacking policy on one
+training dummy, with a health bar read from its Health breakdown by retention group; every claim it tests from
+EFFECTS.md held. It found FEAT-19 missing: nothing built in read an effect's stack count, so a change by the stack took
+a scaler written for it. `EffectStacksScaler` reads it, as `ItemStacksScaler` reads an item's (FEAT-14).
+
+- **IDs:** FEAT-19, commit `2944804`; Decision 30.
+- **Read:**
+  - `Assets/PlayForge/Runtime/PlayForge/GameplayEffect/Modifier/Default/Authored/EffectStacksScaler.cs:11` `EffectStacksScaler`: `:20` reads a
+    stacking container, and `:17` a spec, through its container, or 1.
+  - `Assets/PlayForge/Runtime/PlayForge/GameplayEffect/Core/ScalerImpacter.cs:49`, where an impact on a stacking effect evaluates against its
+    container, which is how the scaler sees the count.
+- **Tests:** `FEAT_19_The_Effect_Stacks_scaler_reads_the_effects_stack_count` in PlayMode's `EffectStackingTests`, and the
+  lab's five rounds in `CombatLabTests` (category Lab).
 
 ## Phase 4
 
@@ -2697,6 +2713,7 @@ Newest first. Each row is a good place to start reading.
 
 | What | IDs | Where | Commit |
 |---|---|---|---|
+| An Effect Stacks scaler, and the Combat lab | FEAT-19 | `Assets/PlayForge/Runtime/PlayForge/GameplayEffect/Modifier/Default/Authored/EffectStacksScaler.cs:11` | `2944804` |
 | A warning for usage effects no stage applies, and the Tactics lab | ED-41 | `Assets/PlayForge/Editor/Problems/ForgeRules.cs:217` | `6129b13` |
 | Save and load | FEAT-9 | `Assets/PlayForge/Runtime/PlayForge/Save/ForgeSave.cs:234` | `eee91a6` |
 | Item stacking, level-up rescaling, and the Roguelite lab | FEAT-14, GAS-58 | `Assets/PlayForge/Runtime/PlayForge/ItemSystem/Core/ItemSystemComponent.cs:120` | `643f5c0` |
