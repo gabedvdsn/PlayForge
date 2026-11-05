@@ -1,7 +1,7 @@
 # PlayForge refactor: code tour
 
 This tour lists the places where the refactor changed code, so you can open each one in your IDE and read it. It
-covers `01258b8..b0d6492` on `main`: 321 commits. Phase 0 ported Arcade Fighter's fixes, Phase 1 made the runtime
+covers `01258b8..f66e04d` on `main`: 323 commits. Phase 0 ported Arcade Fighter's fixes, Phase 1 made the runtime
 correct, Phase 2 got the package ready to release, Phase 3 made it cheaper to run and gave the two GAS hubs one core,
 Phase 4 rebuilt the editor, and Phase 5 has begun. Each entry says what behaves differently and why, names its tracker IDs and Decisions, and
 points at the two or three places to read. `Docs/REFACTOR_PLAN.md` has every tracker row, the numbered Decisions,
@@ -10,8 +10,8 @@ and a Log of each batch's test results.
 ## How to use this
 
 - Paths are relative to the repo root.
-- Line numbers are as of commit `b0d6492`, the head of `main` on 2026-11-04. A later commit may move them, so each
-  entry also names the class and method to search for. `git show b0d6492:<path>` shows a file as it was then.
+- Line numbers are as of commit `f66e04d`, the head of `main` on 2026-11-04. A later commit may move them, so each
+  entry also names the class and method to search for. `git show f66e04d:<path>` shows a file as it was then.
 - In Rider, Go to File accepts `path:line`. In Visual Studio, open the file, then Go To Line (Ctrl+G).
   A bare `:123` after a path means another line in the same file.
 - `git grep "<ID>"` finds the comment at each fix, and `git log --grep "<ID>"` finds its commit. Three exceptions:
@@ -301,6 +301,24 @@ recovery it cancels. TS-7's shape is a design the plan's Log records for the use
 - **Tests:** the five `FEAT_6_*` tests on each hub in PlayMode's new `InputBufferTests`, the three `TS_7_*` in
   `BranchingStageTests`, `FEAT_6_The_Ability_inspector_edits_the_buffer`, `TS_7_A_stage_edits_its_condition`, and the
   Duel lab's seven rounds in `DuelLabTests` (category Lab).
+
+### A pool's object goes back to its pool, and the Bullet heaven lab (PC-33)
+
+The fourth lab (Decision 30). A wizard fires the framework's `ProjectileMonoProcess` at a horde of 500 runtime enemies,
+drawn from a pool the lab writes as a game would (Decision 23); its aura burns what's in reach, and a death blasts the
+neighbours, which cascades. Its first round found PC-33: the Mono wrapper handed a finished object back through the
+object's own `Instantiator`, which a clone never has, as the field isn't serialized, so a pool's object was destroyed as
+its process ended. The wrapper now keeps the instantiator that made the object, a template's or the handler's, and
+hands it back to that one. The 10,000-bolt round takes about half a second of batch time, so the review's O(n)
+unregister doesn't show at this scale.
+
+- **IDs:** PC-33, commit `f66e04d`; Decision 23, Decision 30.
+- **Read:**
+  - `Assets/PlayForge/Runtime/PlayForge/Management/GameplayProcess/Wrappers/MonoWrapper/Core/MonoWrapperProcess.cs:22` `madeBy`, set as `ConfigureWrapper` asks an instantiator (`:42`), and read in `WhenTerminate` (`:108`).
+- **Watch for:** Replace Existing leaves an effect's time alone; an aura that refreshes needs Refresh Duration, as
+  EFFECTS.md says. The lab's entities are unobserved, as 500 frame-summary listeners would cost more than the lab.
+- **Tests:** `PC_33_A_pooled_object_goes_back_to_its_pool` in PlayMode's new `PoolingTests`, and the lab's four rounds
+  in `BulletHeavenLabTests` (category Lab).
 
 ## Phase 4
 
@@ -1491,7 +1509,7 @@ made through it kept its GameObject when it ended. Nothing used it. It's removed
 
 - **IDs:** PC-24, commit `70c2b77`, Decision 23.
 - **Read:**
-  - `Assets/PlayForge/Runtime/PlayForge/Management/GameplayProcess/Wrappers/MonoWrapper/Core/MonoWrapperProcess.cs:101`,
+  - `Assets/PlayForge/Runtime/PlayForge/Management/GameplayProcess/Wrappers/MonoWrapper/Core/MonoWrapperProcess.cs:108`,
     in `WhenTerminate`, where a process's wrapper hands its object to an instantiator to clean, or destroys it itself.
   - `Assets/PlayForge/Runtime/PlayForge/Management/GameplayProcess/Wrappers/MonoWrapper/Instantiator/AbstractMonoProcessInstantiator.cs:5`
     `AbstractMonoProcessInstantiator`, which a pool extends. Its `CleanProcess` (`:35`) owns the object from then on.
@@ -1745,8 +1763,8 @@ used as it is. Outside play mode the object is destroyed with `DestroyImmediate`
   - `Assets/PlayForge/Runtime/PlayForge/Management/GameplayProcess/Core/ProcessControl.cs:394`
     `ProcessControl.Sweep`, run each Update over `_dormant` (`:61`) and `_unheard` (`:65`). `HidesOnDestroy` (`:418`)
     picks the list.
-  - `Assets/PlayForge/Runtime/PlayForge/Management/GameplayProcess/Wrappers/MonoWrapper/Core/MonoWrapperProcess.cs:51`
-    `MonoWrapperProcess.IsPrefab` (PC-9), and `:93` `WhenTerminate` (PC-32; the object also goes whatever
+  - `Assets/PlayForge/Runtime/PlayForge/Management/GameplayProcess/Wrappers/MonoWrapper/Core/MonoWrapperProcess.cs:57`
+    `MonoWrapperProcess.IsPrefab` (PC-9), and `:99` `WhenTerminate` (PC-32; the object also goes whatever
     `WhenTerminate` threw, PC-8).
 - **New:** `ProcessControl.EndDestroyedProcess`. To act on destruction, override `AbstractMonoProcess.WhenDestroy`
   rather than declaring `OnDestroy`.
@@ -2610,6 +2628,7 @@ Newest first. Each row is a good place to start reading.
 
 | What | IDs | Where | Commit |
 |---|---|---|---|
+| A pool's object goes back to its pool, and the Bullet heaven lab | PC-33 | `Assets/PlayForge/Runtime/PlayForge/Management/GameplayProcess/Wrappers/MonoWrapper/Core/MonoWrapperProcess.cs:108` | `f66e04d` |
 | The input buffer, stages that branch, and the Duel lab | FEAT-6, TS-7 | `Assets/PlayForge/Runtime/PlayForge/AbilitySystem/Core/AbilitySystemComponent.cs:604` | `b0d6492` |
 | The MOBA hero kit lab, GAS-57, and While active heard at once | GAS-57, FEAT-5 | `Assets/PlayForge/Runtime/PlayForge/Workers/ImpactWorker/Authored/RelativeOperationContextImpactWorker.cs:100` | `26aa233` |
 | Cancel and block abilities by tag, and While active | FEAT-5 | `Assets/PlayForge/Runtime/PlayForge/AbilitySystem/Core/AbilitySystemComponent.cs:417` | `cfab32a` |
