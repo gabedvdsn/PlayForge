@@ -1,7 +1,7 @@
 # PlayForge refactor: code tour
 
 This tour lists the places where the refactor changed code, so you can open each one in your IDE and read it. It
-covers `01258b8..f2341a2` on `main`: 368 commits. Phase 0 ported Arcade Fighter's fixes, Phase 1 made the runtime
+covers `01258b8..73c4208` on `main`: 370 commits. Phase 0 ported Arcade Fighter's fixes, Phase 1 made the runtime
 correct, Phase 2 got the package ready to release, Phase 3 made it cheaper to run and gave the two GAS hubs one core,
 Phase 4 rebuilt the editor, and Phase 5 has begun. Each entry says what behaves differently and why, names its tracker IDs and Decisions, and
 points at the two or three places to read. `Docs/REFACTOR_PLAN.md` has every tracker row, the numbered Decisions,
@@ -10,8 +10,8 @@ and a Log of each batch's test results.
 ## How to use this
 
 - Paths are relative to the repo root.
-- Line numbers are as of commit `f2341a2`, the head of `main` on 2026-11-05. A later commit may move them, so each
-  entry also names the class and method to search for. `git show f2341a2:<path>` shows a file as it was then.
+- Line numbers are as of commit `73c4208`, the head of `main` on 2026-11-05. A later commit may move them, so each
+  entry also names the class and method to search for. `git show 73c4208:<path>` shows a file as it was then.
 - In Rider, Go to File accepts `path:line`. In Visual Studio, open the file, then Go To Line (Ctrl+G).
   A bare `:123` after a path means another line in the same file.
 - `git grep "<ID>"` finds the comment at each fix, and `git log --grep "<ID>"` finds its commit. Three exceptions:
@@ -711,6 +711,20 @@ frame metadata while the Profiler records.
   takes both.
 - **Tests:** EditMode's `FEAT_18_The_Profiler_modules_chart_PlayForges_counters` and PlayMode's
   `FEAT_18_A_frames_costliest_processes_go_into_the_Profilers_capture`.
+
+### The Debugger in a narrow column (ED-43)
+
+The Debugger kept its wide layout at any width, so docked in a column it squeezed its lists and details side by side.
+It lays itself out by its width now, as EDITOR_STYLE's Debugger section and the canvas's narrow boards have it.
+
+- **IDs:** ED-43, commit `73c4208`.
+- **Read:**
+  - `Assets/PlayForge/Editor/Debugger/RuntimeDebugger.cs:519` `Fit`, which the window's geometry calls: below 720 px it turns each view's
+    split, hides the low-priority columns and moves the frame count; `:538` `Lay`, a split's orientation and its fixed
+    pane.
+  - `Assets/PlayForge/Editor/UI/PlayForge.uss`, the `pf-debugger--narrow` rules: the toolbar's views on a row of their own.
+- **Watch for:** a view added to the Debugger lays its split out in `Fit` too, and a column that gives way hides there.
+- **Tests:** `ED_43_The_Debugger_fits_a_narrow_column` in EditMode's `RuntimeDebuggerTests`.
 
 ## Phase 4
 
@@ -1452,11 +1466,11 @@ Process Control's usage was the time between a process's steps. ProcessControl n
 
 - **IDs:** ED-4 and ED-5, commit `d220ff4`.
 - **Read:**
-  - `Assets/PlayForge/Editor/Debugger/RuntimeDebugger.cs:180` `SampleNow`, `:201` `Follow`, which hooks the
-    registry, and `:228` `ReadLists`, which finds the hubs among the processes.
-  - `Assets/PlayForge/Editor/Debugger/RuntimeDebugger.Entities.cs:151` `ShowEntity`, which builds the detail once
-    and hooks the shown entity's frame summaries alone (ED-26), and `:725` `CooldownOf`, the cooldown's time left.
-  - `Assets/PlayForge/Editor/Debugger/RuntimeDebugger.Processes.cs:136` `SampleSteps` and `:218` `ShowProcess`, whose
+  - `Assets/PlayForge/Editor/Debugger/RuntimeDebugger.cs:194` `SampleNow`, `:215` `Follow`, which hooks the
+    registry, and `:242` `ReadLists`, which finds the hubs among the processes.
+  - `Assets/PlayForge/Editor/Debugger/RuntimeDebugger.Entities.cs:152` `ShowEntity`, which builds the detail once
+    and hooks the shown entity's frame summaries alone (ED-26), and `:726` `CooldownOf`, the cooldown's time left.
+  - `Assets/PlayForge/Editor/Debugger/RuntimeDebugger.Processes.cs:137` `SampleSteps` and `:219` `ShowProcess`, whose
     Pause and Resume take the processes it handles alike.
   - `Assets/PlayForge/Runtime/PlayForge/Management/GameplayProcess/Core/ProcessControlBlock.cs:52` `MeasureSteps`, and
     `:419` `Step`, which times a step while it's on.
@@ -1479,8 +1493,8 @@ went at its next compile, so a tag could be granted only through an effect.
 
 - **IDs:** ED-40 and FEAT-16, commit `5dd7332`.
 - **Read:**
-  - `Assets/PlayForge/Editor/Debugger/RuntimeDebugger.Entities.cs:446` `SetAttribute`, a delta no worker sees, `:881`
-    `GrantTag`, `:589` `ApplyEffect` and `:742` `ActivateAbility`.
+  - `Assets/PlayForge/Editor/Debugger/RuntimeDebugger.Entities.cs:447` `SetAttribute`, a delta no worker sees, `:882`
+    `GrantTag`, `:590` `ApplyEffect` and `:743` `ActivateAbility`.
   - `Assets/PlayForge/Runtime/PlayForge/GAS/Core/GASCore.cs:320` the loose tags and `:324` `AddLooseTag`, which
     `CompileGrantedTags` (`:295`) includes, and `Assets/PlayForge/Runtime/PlayForge/GAS/Interfaces/IGameplayAbilitySystem.cs:36`.
 - **Watch for:** a removed effect stays on the shelf until the entity's next tick, which clears it, so its row goes a
@@ -1505,13 +1519,13 @@ double-click sets Base or Current, and a click selects a row whose table's butto
 
 - **IDs:** ED-4 and ED-5, commit `c934980`; open decision 19, which Decision 31 settles.
 - **Read:**
-  - `Assets/PlayForge/Editor/Debugger/RuntimeDebugger.cs:304` `BuildToolbar` and `:461` `ShowStatus`; `:606`, the
+  - `Assets/PlayForge/Editor/Debugger/RuntimeDebugger.cs:321` `BuildToolbar` and `:481` `ShowStatus`; `:668`, the
     first-cell class, as USS has no `:first-child`.
-  - `Assets/PlayForge/Editor/Debugger/RuntimeDebugger.Entities.cs:416` `ChangedBy` and `:713` `StateOf`, which
+  - `Assets/PlayForge/Editor/Debugger/RuntimeDebugger.Entities.cs:417` `ChangedBy` and `:714` `StateOf`, which
     reads `AbilitySpecContainer.ActiveStageIndex`.
-  - `Assets/PlayForge/Editor/Debugger/RuntimeDebugger.Processes.cs:136` `SampleSteps` and `:189` `StepSecondsOf`, the
-    last second's average; `:318` `RunOf`, from `ProcessControlBlock.RunIsHeld`.
-  - `Assets/PlayForge/Editor/Debugger/RuntimeDebugger.Tags.cs:159` `TagRoots`, the tree, and `:330` `SourcesOf`, which
+  - `Assets/PlayForge/Editor/Debugger/RuntimeDebugger.Processes.cs:137` `SampleSteps` and `:190` `StepSecondsOf`, the
+    last second's average; `:319` `RunOf`, from `ProcessControlBlock.RunIsHeld`.
+  - `Assets/PlayForge/Editor/Debugger/RuntimeDebugger.Tags.cs:160` `TagRoots`, the tree, and `:339` `SourcesOf`, which
     walks a tag's sources as the tag compile does.
   - `Assets/PlayForge/Runtime/PlayForge/Management/GameplayProcess/Core/ProcessControlBlock.cs:61` `PeakStepSeconds`
     and `:121` `RunIsHeld`, now public.
@@ -1533,11 +1547,11 @@ selected row takes Unity's unfocused selection grey, so the entity list keeps th
 
 - **IDs:** ED-40, commit `520c433`; Decision 31.
 - **Read:**
-  - `Assets/PlayForge/Editor/Debugger/RuntimeDebugger.Entities.cs:254` `Foot`, `:294` `AttributesSection`, whose
-    fields leave alone what's typed in them while samples come, and `:402` `GoesToField`, the double-click.
-  - `Assets/PlayForge/Editor/Debugger/RuntimeDebugger.Entities.cs:752` `InterruptAbility` and `:899` `PickTag`, which
+  - `Assets/PlayForge/Editor/Debugger/RuntimeDebugger.Entities.cs:255` `Foot`, `:295` `AttributesSection`, whose
+    fields leave alone what's typed in them while samples come, and `:403` `GoesToField`, the double-click.
+  - `Assets/PlayForge/Editor/Debugger/RuntimeDebugger.Entities.cs:753` `InterruptAbility` and `:900` `PickTag`, which
     fills the tag field for Add Tag to grant.
-  - `Assets/PlayForge/Editor/Debugger/RuntimeDebugger.cs:486` `ShowAction`, the status bar's word on the last action.
+  - `Assets/PlayForge/Editor/Debugger/RuntimeDebugger.cs:548` `ShowAction`, the status bar's word on the last action.
 - **Watch for:** `Docs/EDITOR_STYLE.md` has the unfocused grey now, as `--pf-selection-unfocused`.
 - **Tests:** the four `ED_40_*` tests in `RuntimeDebuggerTests`, among them
   `ED_40_An_ability_granted_in_the_debugger_activates_and_is_interrupted`, whose ability waits in a `DelayTask` so it
@@ -1672,7 +1686,7 @@ away.
   - How each goes away: `Assets/PlayForge/Runtime/PlayForge/GAS/Core/MonoBehaviour/GameplayAbilitySystem.EndOfFrame.cs:44`
     ends at once, and `Assets/PlayForge/Runtime/PlayForge/GAS/Core/Runtime/RuntimeGameplayAbilitySystem_EndOfFrame.cs:52`
     queues a Terminate. Both predate the refactor, and each hub's tests pass on its own.
-  - `Assets/PlayForge/Editor/Debugger/RuntimeDebugger.cs:508`
+  - `Assets/PlayForge/Editor/Debugger/RuntimeDebugger.cs:570`
     `RuntimeDebugger.NameOf`, which asks the entity's own name, as the GAS Debugger's `ResolveDisplayNameFor` did.
 - **New:** `GASCore` (internal). `RuntimeEntityIdentity.LocalData`. Each hub gains what only the other had:
   `ApplyGameplayEffect(IEffectOrigin, GameplayEffect)` and `GetRelativeLevel()`.
@@ -2853,7 +2867,7 @@ Golden Tests left the menu; the Test Runner runs the scenarios (SP-18).
 - **Read:** `Assets/PlayForge/Editor/CustomPropertyDrawers/Forge/Editors/Manager/TheForge.cs:64`
   `TheForge.ShowWindow`, with `WindowTitle` at `:25`. The Runtime Debugger, which replaced the three debuggers
   (ED-4), has its menu item at
-  `Assets/PlayForge/Editor/Debugger/RuntimeDebugger.cs:92`.
+  `Assets/PlayForge/Editor/Debugger/RuntimeDebugger.cs:106`.
 
 ### The Forge: settings, sorting, analysis and templates
 
@@ -2886,7 +2900,7 @@ Golden Tests left the menu; the Test Runner runs the scenarios (SP-18).
   `CreateInspectorGUI`.
 - **ED-26.** The GAS Debugger removes its frame-summary hooks when it closes. They kept sampling every entity and
   stacked when it reopened. The Runtime Debugger listens to the entity it shows alone (ED-4):
-  `Assets/PlayForge/Editor/Debugger/RuntimeDebugger.Entities.cs:151` `ShowEntity`, and `:183` `ForgetShownEntity`.
+  `Assets/PlayForge/Editor/Debugger/RuntimeDebugger.Entities.cs:152` `ShowEntity`, and `:184` `ForgetShownEntity`.
 - **ED-29.** Allow Duplicate Equipped Items opens with its own value.
   `Assets/PlayForge/Editor/CustomPropertyDrawers/Forge/Editors/Assets/EntityIdentityEditor.cs:437`, in
   `BuildItemsSection`.
@@ -3020,6 +3034,7 @@ Newest first. Each row is a good place to start reading.
 
 | What | IDs | Where | Commit |
 |---|---|---|---|
+| The Debugger in a narrow column | ED-43 | `Assets/PlayForge/Editor/Debugger/RuntimeDebugger.cs:519` | `73c4208` |
 | The Profiler modules, and a frame's costliest processes | FEAT-18 | `Assets/PlayForge/Editor/Debugger/ForgeProfilerModules.cs:18` | `f2341a2` |
 | Profiler counters | FEAT-18 | `Assets/PlayForge/Runtime/PlayForge/Utils/ForgeCounters.cs:13` | `67bc9d0` |
 | The step loop's, tags', recomputes', stages' and each type's markers | FEAT-18 | `Assets/PlayForge/Runtime/PlayForge/Utils/ForgeProfiler.cs:65` | `d2de8ec` |
@@ -3051,12 +3066,12 @@ Newest first. Each row is a good place to start reading.
 | One clock and one random source | FEAT-13 | `Assets/PlayForge/Runtime/PlayForge/Utils/ForgeTime.cs:48` | `c500d5e` |
 | Tag-change events | FEAT-3, GAS-56 | `Assets/PlayForge/Runtime/PlayForge/Tag/TagCache.cs:558` | `3dc3129` |
 | The Register builder | FEAT-15 | `Assets/PlayForge/Runtime/PlayForge/Management/GameplayProcess/Core/ProcessRegistration.cs:112` | `6586536` |
-| The Debugger's foot rows | ED-40 | `Assets/PlayForge/Editor/Debugger/RuntimeDebugger.Entities.cs:254` | `520c433` |
+| The Debugger's foot rows | ED-40 | `Assets/PlayForge/Editor/Debugger/RuntimeDebugger.Entities.cs:255` | `520c433` |
 | Cleanse and immunity name granted tags | FEAT-8 | `Assets/PlayForge/Runtime/PlayForge/GameplayEffect/Core/GameplayEffect.cs:275` | `520c433` |
-| The Debugger, as the boards draw it | ED-4, ED-5 | `Assets/PlayForge/Editor/Debugger/RuntimeDebugger.Tags.cs:159` | `c934980` |
+| The Debugger, as the boards draw it | ED-4, ED-5 | `Assets/PlayForge/Editor/Debugger/RuntimeDebugger.Tags.cs:160` | `c934980` |
 | Cleanse and immunity | FEAT-8 | `Assets/PlayForge/Runtime/PlayForge/GAS/Core/EffectSystemComponent.cs:187` | `04d0742` |
-| The debugger acts, and loose tags | ED-40, FEAT-16 | `Assets/PlayForge/Editor/Debugger/RuntimeDebugger.Entities.cs:446` | `5dd7332` |
-| One Runtime Debugger | ED-4, ED-5 | `Assets/PlayForge/Editor/Debugger/RuntimeDebugger.cs:180` | `d220ff4` |
+| The debugger acts, and loose tags | ED-40, FEAT-16 | `Assets/PlayForge/Editor/Debugger/RuntimeDebugger.Entities.cs:447` | `5dd7332` |
+| One Runtime Debugger | ED-4, ED-5 | `Assets/PlayForge/Editor/Debugger/RuntimeDebugger.cs:194` | `d220ff4` |
 | Templates work as prefabs do | ED-13 | `Assets/PlayForge/Editor/Tools/ForgeTemplatePropogation/ForgeTemplatePush.cs:37` | `6733220` |
 | The Forge is a list and a detail | ED-27, ED-9 | `Assets/PlayForge/Editor/CustomPropertyDrawers/Forge/Editors/Manager/TheForge.cs:403` | `59f5ae9` |
 | One validator and the Problems view | ED-15 | `Assets/PlayForge/Editor/Problems/ForgeValidator.cs:41` | `4dffd79` |
