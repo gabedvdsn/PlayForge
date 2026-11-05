@@ -62,32 +62,23 @@ namespace FarEmerald.PlayForge.Extended.Editor
         }
 
         /// <summary>
-        /// Gives the field a new scaler of a kind, one per selected asset, which maps levels exactly and starts with one
-        /// value. Null takes the scaler away.
+        /// Gives the field a new scaler of a kind, which maps levels exactly and starts with one value: for each selected
+        /// asset, the value firstValue reads from that asset's own field. Each asset gets an object of its own, since one
+        /// shared between assets would be one scaler in two places, and a field of that kind keeps its scaler (ED-12).
+        /// Null takes the scaler away.
         /// </summary>
-        internal static void SetKind(SerializedProperty scaler, Type type, float firstValue)
-        {
-            var path = scaler.propertyPath;
-            var serialized = scaler.serializedObject;
-            if (serialized.isEditingMultipleObjects)
+        internal static void SetKind(SerializedProperty scaler, Type type, Func<SerializedProperty, float> firstValue) =>
+            EachAsset.Write(scaler, own =>
             {
-                // Each asset gets an object of its own: one shared between assets would be one scaler in two places
-                foreach (var target in serialized.targetObjects)
-                {
-                    var own = new SerializedObject(target);
-                    var property = own.FindProperty(path);
-                    if (property == null) continue;
-                    property.managedReferenceValue = Make(type, firstValue);
-                    own.ApplyModifiedProperties();
-                }
-                serialized.Update();
-                return;
-            }
-            scaler.managedReferenceValue = Make(type, firstValue);
-            serialized.ApplyModifiedProperties();
-        }
+                if (type != null && KindOf(own) == type) return;
+                own.managedReferenceValue = Make(type, firstValue(own));
+            });
 
-        private static AbstractScaler Make(Type type, float firstValue)
+        /// <summary>A field's kind: its scaler's type, or null for a field with none.</summary>
+        internal static Type KindOf(SerializedProperty scaler) => scaler?.managedReferenceValue?.GetType();
+
+        /// <summary>A new scaler of a kind, which maps levels exactly and starts with one value.</summary>
+        internal static AbstractScaler Make(Type type, float firstValue)
         {
             if (type == null) return null;
             var made = (AbstractScaler)Activator.CreateInstance(type);
@@ -130,19 +121,20 @@ namespace FarEmerald.PlayForge.Extended.Editor
         internal static string Number(float value) => value.ToString("0.##", CultureInfo.CurrentCulture);
 
         /// <summary>
-        /// Writes the curve a stretched scaler reads, from its values, through the field's SerializedObject, so it joins the
-        /// edit that changed them in one Undo step. Called after an edit, never while drawing.
+        /// Writes the curve a stretched scaler reads, from its values, in the edit that changed them, so they undo as one
+        /// step. Each selected asset's curve comes from its own values (ED-12). Called after an edit, never while drawing.
         /// </summary>
         internal static void KeepCurve(SerializedProperty scaler)
         {
             if (!Alive(scaler)) return;
-            var curve = scaler.FindPropertyRelative(nameof(AbstractScaler.Scaling));
-            var interpolation = scaler.FindPropertyRelative(nameof(AbstractScaler.Interpolation));
-            if (curve == null || interpolation == null) return;
-            var wanted = AbstractScaler.CurveFor(ValuesOf(scaler), (EScalerInterpolation)interpolation.intValue);
-            if (SameCurve(curve.animationCurveValue, wanted)) return;
-            curve.animationCurveValue = wanted;
-            scaler.serializedObject.ApplyModifiedProperties();
+            EachAsset.Write(scaler, own =>
+            {
+                var curve = own.FindPropertyRelative(nameof(AbstractScaler.Scaling));
+                var interpolation = own.FindPropertyRelative(nameof(AbstractScaler.Interpolation));
+                if (curve == null || interpolation == null) return;
+                var wanted = AbstractScaler.CurveFor(ValuesOf(own), (EScalerInterpolation)interpolation.intValue);
+                if (!SameCurve(curve.animationCurveValue, wanted)) curve.animationCurveValue = wanted;
+            });
         }
 
         private static bool SameCurve(AnimationCurve a, AnimationCurve b)
@@ -263,7 +255,12 @@ namespace FarEmerald.PlayForge.Extended.Editor
             void ShowGrid()
             {
                 count.SetValueWithoutNotify(values.arraySize);
-                preview.Show(ValuesOf(scaler));
+                // Selected tables of different lengths show their count as mixed, and the curve only while they agree;
+                // the table shows the levels every one of them has (ED-12)
+                count.showMixedValue = EachAsset.Differ(values, each => each.arraySize);
+                bool same = !EachAsset.Differ(scaler, each => string.Join(",", ValuesOf(each)));
+                preview.style.display = same ? DisplayStyle.Flex : DisplayStyle.None;
+                if (same) preview.Show(ValuesOf(scaler));
                 if (values.arraySize == shown) return;
                 shown = values.arraySize;
                 grid.Clear();
@@ -308,17 +305,20 @@ namespace FarEmerald.PlayForge.Extended.Editor
             return root;
         }
 
-        // Sets how many levels have a value: a new level takes the last value, as a level past the end reads it
+        // Sets how many levels have a value: a new level takes the last value, as a level past the end reads it. Each
+        // selected table takes its own last value, and keeps the values it has (ED-12)
         private static void Resize(SerializedProperty scaler, SerializedProperty values, int levels)
         {
             if (!Alive(values)) return;
             levels = Mathf.Clamp(levels, 1, 100);
-            int was = values.arraySize;
-            if (levels == was) return;
-            float last = was > 0 ? values.GetArrayElementAtIndex(was - 1).floatValue : 1f;
-            values.arraySize = levels;
-            for (int i = was; i < levels; i++) values.GetArrayElementAtIndex(i).floatValue = last;
-            scaler.serializedObject.ApplyModifiedProperties();
+            EachAsset.Write(values, own =>
+            {
+                int was = own.arraySize;
+                if (levels == was) return;
+                float last = was > 0 ? own.GetArrayElementAtIndex(was - 1).floatValue : 1f;
+                own.arraySize = levels;
+                for (int i = was; i < levels; i++) own.GetArrayElementAtIndex(i).floatValue = last;
+            });
             KeepCurve(scaler);
         }
 
@@ -365,12 +365,16 @@ namespace FarEmerald.PlayForge.Extended.Editor
             });
             root.Add(between);
 
+            // A multiple selection shows what any selected scaler uses (ED-12)
             void Show()
             {
-                bool on = stretchProp.boolValue;
+                var each = EachAsset.Of(scaler).ToList();
+                bool on = each.Any(own => own.FindPropertyRelative(nameof(AbstractScaler.StretchOverLevels))?.boolValue == true);
+                bool ownMax = each.Any(own => own.FindPropertyRelative(nameof(AbstractScaler.StretchOverLevels))?.boolValue == true &&
+                    (ELevelConfig)own.FindPropertyRelative(nameof(AbstractScaler.Configuration)).intValue != ELevelConfig.LockToLevelProvider);
                 range.style.display = on ? DisplayStyle.Flex : DisplayStyle.None;
                 between.style.display = on ? DisplayStyle.Flex : DisplayStyle.None;
-                max.style.display = on && (ELevelConfig)rangeProp.intValue != ELevelConfig.LockToLevelProvider ? DisplayStyle.Flex : DisplayStyle.None;
+                max.style.display = ownMax ? DisplayStyle.Flex : DisplayStyle.None;
             }
             root.TrackSerializedObjectValue(scaler.serializedObject, _ =>
             {
@@ -430,7 +434,8 @@ namespace FarEmerald.PlayForge.Extended.Editor
 
             void Show()
             {
-                var shared = assetProp.objectReferenceValue as ScalerAsset;
+                // Selected fields that share different assets show the asset as mixed, and no one curve or count (ED-12)
+                var shared = assetProp.hasMultipleDifferentValues ? null : assetProp.objectReferenceValue as ScalerAsset;
                 open.SetEnabled(shared != null);
                 about.style.display = shared != null ? DisplayStyle.Flex : DisplayStyle.None;
                 if (shared == null) return;

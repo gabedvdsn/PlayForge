@@ -14,12 +14,19 @@ namespace FarEmerald.PlayForge.Extended.Editor
     /// inspector takes its look from the style sheet. Requirements shows the target's table, then the source's, on a
     /// two-button switch.
     /// </summary>
-    [CustomEditor(typeof(GameplayEffect))]
+    [CustomEditor(typeof(GameplayEffect)), CanEditMultipleObjects]
     public class GameplayEffectEditor : BasePlayForgeEditor
     {
         [SerializeField] private Texture2D m_EffectIcon;
 
         private GameplayEffect effect;
+
+        // Its fields write through the SerializedObject, and its scalers through each asset's own, so it edits a multiple
+        // selection; what acts on one effect steps aside: the name, the asset tag, linking, the lists each effect keeps
+        // of its own, and Used By (ED-12)
+        protected override bool SupportsMultipleObjects => true;
+
+        private IEnumerable<GameplayEffect> Effects => targets.Cast<GameplayEffect>();
 
         private TextField nameField;
         private ForgeAssetTagField assetTagField;
@@ -146,7 +153,7 @@ namespace FarEmerald.PlayForge.Extended.Editor
             nameField.RegisterValueChangedCallback(evt => UpdateAssetTagDisplay(evt.newValue));
             nameField.RegisterCallback<FocusOutEvent>(_ =>
             {
-                if (nameField.value == (effect.Definition.Name ?? "")) return;
+                if (IsMultiple || nameField.value == (effect.Definition.Name ?? "")) return;
                 Undo.RecordObject(effect, "Rename Effect");
                 effect.Definition.Name = nameField.value;
                 SyncAssetTag();
@@ -154,16 +161,27 @@ namespace FarEmerald.PlayForge.Extended.Editor
                 MarkDirty(effect);
                 Repaint();
             });
+            // Each effect's tag comes from its own name, so a multiple selection shows the names and can't rename (ED-12)
+            if (IsMultiple)
+            {
+                nameField.SetEnabled(false);
+                nameField.showMixedValue = Effects.Select(each => each.Definition.Name).Distinct().Count() > 1;
+                nameField.tooltip = "Rename one effect at a time: each effect's tag comes from its own name.";
+            }
             content.Add(nameField);
 
             // Description binds to its property, so an edit undoes. It wrote straight into the asset, with no Undo (ED-12)
             content.Add(CreateBoundTextField(DefinitionPath(nameof(GameplayEffectDefinition.Description)),
                 "Description", multiline: true, minHeight: 18, name: "Description"));
 
-            // The tag the name gives, under the name, as the mockup places it. It sat at the top of Tags (ED-37)
-            assetTagField = new ForgeAssetTagField();
-            content.Add(assetTagField);
-            UpdateAssetTagDisplay();
+            // The tag the name gives, under the name, as the mockup places it. It sat at the top of Tags (ED-37). Each effect
+            // has its own, so a multiple selection doesn't show one (ED-12)
+            if (!IsMultiple)
+            {
+                assetTagField = new ForgeAssetTagField();
+                content.Add(assetTagField);
+                UpdateAssetTagDisplay();
+            }
 
             content.Add(CreatePropertyField(serializedObject.FindProperty(DefinitionPath(nameof(GameplayEffectDefinition.Visibility))), "Visibility", "Visibility"));
             var texturesField = CreatePropertyField(serializedObject.FindProperty(DefinitionPath(nameof(GameplayEffectDefinition.Textures))), "Textures", "Textures");
@@ -216,6 +234,16 @@ namespace FarEmerald.PlayForge.Extended.Editor
             linkModeField.AddToClassList(BaseField<System.Enum>.alignedFieldUssClassName);
             levelingContent.Add(linkModeField);
 
+            // A provider and a child's link belong to one effect, so a multiple selection sets the mode alone (ED-12)
+            if (IsMultiple)
+            {
+                levelingContent.Add(CreateNote(Effects.All(each => each.LinkMode != EEffectLinkMode.LinkedToProvider)
+                    ? "The effects take the level of what applies them, such as the ability that casts them."
+                    : "Each linked effect takes its levels from its own provider."));
+                levelingContent.Bind(serializedObject);
+                return;
+            }
+
             if (IsLinkMode)
                 AddLinkedLevels(levelingContent, effect, "effect", effect.GetLinkedStartingLevel(), effect.GetLinkedMaxLevel(),
                     "No level provider is set, so the effect takes the level of what applies it.");
@@ -231,7 +259,10 @@ namespace FarEmerald.PlayForge.Extended.Editor
 
         private bool IsLinkMode => effect.LinkMode == EEffectLinkMode.LinkedToProvider;
 
-        private string LevelingState() => LevelingState(effect, IsLinkMode, effect.GetLinkedStartingLevel(), effect.GetLinkedMaxLevel());
+        // What Leveling is drawn from. A multiple selection's is whether every effect is standalone
+        private string LevelingState() => IsMultiple
+            ? Effects.All(each => each.LinkMode != EEffectLinkMode.LinkedToProvider) ? "own" : "linked"
+            : LevelingState(effect, IsLinkMode, effect.GetLinkedStartingLevel(), effect.GetLinkedMaxLevel());
 
         // The effects it contains, which can take its provider's levels
         private IEnumerable<BaseForgeLevelProvider> Children() =>
@@ -378,6 +409,12 @@ namespace FarEmerald.PlayForge.Extended.Editor
             });
             parent.Add(workersSection.Section);
 
+            // Each effect keeps its own workers, objects a multiple selection can't edit safely (ED-12)
+            if (IsMultiple)
+            {
+                workersSection.Content.Add(CreateNote("Select one effect to edit its workers."));
+                return;
+            }
             workersSection.Content.Add(CreatePropertyField(serializedObject.FindProperty(nameof(GameplayEffect.Workers)), "Workers", ""));
         }
 
@@ -410,6 +447,11 @@ namespace FarEmerald.PlayForge.Extended.Editor
             });
             parent.Add(usedBySection.Section);
 
+            if (IsMultiple)
+            {
+                usedBySection.Content.Add(CreateNote("Select one effect to see what uses it."));
+                return;
+            }
             usedBy = new ForgeUsedBy(effect);
             usedBy.Changed += UpdateSummaries;
             usedBySection.Content.Add(usedBy);
@@ -425,7 +467,7 @@ namespace FarEmerald.PlayForge.Extended.Editor
             // them (ED-12)
             if (levelingContent != null && LevelingState() != shownLeveling) RebuildLevelingContent();
             // The name field isn't bound, so it follows an Undo here, unless it's being typed in
-            if (nameField != null && !IsFocused(nameField) && nameField.value != (effect.Definition.Name ?? ""))
+            if (!IsMultiple && nameField != null && !IsFocused(nameField) && nameField.value != (effect.Definition.Name ?? ""))
                 nameField.SetValueWithoutNotify(effect.Definition.Name ?? "");
             UpdateAssetTagDisplay();
             UpdateSummaries();
@@ -436,6 +478,14 @@ namespace FarEmerald.PlayForge.Extended.Editor
 
         private void UpdateSummaries()
         {
+            // A multiple selection's effects differ, so one line would describe only the first
+            if (IsMultiple)
+            {
+                var sections = new[] { levelingSection, tagsSection, durationSection, impactSection, requirementsSection, workersSection, localDataSection, usedBySection };
+                foreach (var section in sections.Where(section => section != null)) section.Summary.text = "";
+                return;
+            }
+
             if (levelingSection != null) levelingSection.Summary.text = LevelingSummaryText();
             if (tagsSection != null)
                 tagsSection.Summary.text = TagsSummary(effect.Tags.ContextTags, "context tags", effect.Tags.GrantedTags?.Count(tag => tag.IsValid) ?? 0);

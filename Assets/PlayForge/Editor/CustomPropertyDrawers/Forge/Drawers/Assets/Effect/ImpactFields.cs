@@ -52,6 +52,8 @@ namespace FarEmerald.PlayForge.Extended.Editor
                 int op = Array.IndexOf(Operations, (ECalculationOperation)operation.intValue);
                 int at = Array.IndexOf(Slots, (EAttributeTarget)slot.intValue);
                 SetValueWithoutNotify(Mathf.Max(0, op) * Slots.Length + Mathf.Max(0, at));
+                // Selected impacts whose operations differ show a mixed value (ED-12)
+                showMixedValue = operation.hasMultipleDifferentValues || slot.hasMultipleDifferentValues;
             }
 
             private static string NameOf(int choice) => OperationName(Operations[choice / Slots.Length], Slots[choice % Slots.Length]);

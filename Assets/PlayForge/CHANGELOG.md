@@ -173,6 +173,12 @@ tracks each fix below by its ID.
 - The Item inspector edits several selected items at once. Name, the asset tag and linking wait for one item (ED-12).
 - The Ability inspector edits several selected abilities at once. Name, the asset tag, linking, targeting, asset
   loaders, stages and activation rules wait for one ability (ED-12).
+- The Effect, Entity and Attribute Set inspectors edit several selected assets at once. Name, the asset tag, linking
+  and Used By wait for one asset, and so do an effect's additional impacts, workers and stack behaviours, a set's
+  attributes, and the attribute tables (ED-12).
+- A magnitude field, and a scaler drawn on its own, edit each selected asset's own values. Kinds that differ show as
+  mixed, and choosing one gives it to each field from that field's own value; a field of that kind keeps its scaler.
+  Levels and Make Constant work on each field's own values, where they gave every field the first one's (ED-12).
 - Drawing an empty type field no longer writes its default type into it (ED-12). An empty activation rule or scaler
   behaviour is now skipped; both threw. A new Inject task starts with Interrupt.
 - Opening a scaler no longer changes it. On an effect with no level link, Lock mode cut its per-level table to one

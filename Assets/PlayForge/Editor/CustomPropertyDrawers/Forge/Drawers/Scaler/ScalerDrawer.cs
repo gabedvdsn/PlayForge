@@ -31,6 +31,7 @@ namespace FarEmerald.PlayForge.Extended.Editor
             var kinds = ScalerFields.KindsFor(property);
 
             Type shownType = null;
+            bool mixedKinds = false;
             bool built = false;
             Label range = null;
 
@@ -38,7 +39,9 @@ namespace FarEmerald.PlayForge.Extended.Editor
             {
                 if (!ScalerFields.Alive(property)) return;
                 root.Clear();
-                shownType = property.managedReferenceValue?.GetType();
+                // Selected scalers whose kinds differ show a mixed kind, and neither scaler's content as both's (ED-12)
+                mixedKinds = EachAsset.Differ(property, ScalerFields.KindOf);
+                shownType = ScalerFields.KindOf(property);
                 built = true;
 
                 var choices = new List<string> { NoKind };
@@ -51,6 +54,7 @@ namespace FarEmerald.PlayForge.Extended.Editor
                 var kind = new PopupField<string>(label, choices, shownName) { name = "Kind", tooltip = "The scaler's kind, or none" };
                 kind.AddToClassList(BaseField<string>.alignedFieldUssClassName);
                 kind.AddToClassList("pf-magnitude__kind-labelled");
+                kind.showMixedValue = mixedKinds;
                 row.Add(kind);
                 range = new Label { name = "Range" };
                 range.AddToClassList("pf-magnitude__range");
@@ -59,7 +63,8 @@ namespace FarEmerald.PlayForge.Extended.Editor
 
                 // A scaler another list element shares, after Unity's array "+" copied its reference id, says so, with a
                 // button that gives this element its own copy. Building the drawer cloned it, so drawing changed it (ED-34)
-                int sharedWith = FindSharedSibling(property);
+                // In a multiple selection, the first selected asset whose element shares one
+                int sharedWith = EachAsset.Of(property).Select(FindSharedSibling).Where(index => index >= 0).DefaultIfEmpty(-1).First();
                 if (sharedWith >= 0)
                 {
                     var note = new HelpBox($"Element {sharedWith} holds the same scaler, so an edit here changes it too.",
@@ -68,7 +73,13 @@ namespace FarEmerald.PlayForge.Extended.Editor
                     root.Add(note);
                 }
 
-                if (shownType != null)
+                if (mixedKinds)
+                {
+                    var note = new Label("The selected scalers' kinds differ. Choose one to give it to each.") { name = "MixedKinds" };
+                    note.AddToClassList("pf-note");
+                    root.Add(note);
+                }
+                else if (shownType != null)
                 {
                     var content = ScalerFields.Content(property);
                     content.AddToClassList("pf-scaler-field__content");
@@ -77,10 +88,15 @@ namespace FarEmerald.PlayForge.Extended.Editor
 
                 kind.RegisterValueChangedCallback(change =>
                 {
-                    if (change.newValue == change.previousValue) return;
+                    // A mixed kind takes the one chosen, even the first scaler's
+                    if (!mixedKinds && change.newValue == change.previousValue) return;
                     var type = change.newValue == NoKind ? null : kinds.FirstOrDefault(each => ScalerFields.KindName(each) == change.newValue);
-                    var values = ScalerFields.ValuesOf(property);
-                    ScalerFields.SetKind(property, type, values.Length > 0 ? values[0] : 1f);
+                    // Each selected asset's scaler starts from its own first value (ED-12)
+                    ScalerFields.SetKind(property, type, own =>
+                    {
+                        var values = ScalerFields.ValuesOf(own);
+                        return values.Length > 0 ? values[0] : 1f;
+                    });
                     Draw();
                 });
                 Show();
@@ -88,13 +104,16 @@ namespace FarEmerald.PlayForge.Extended.Editor
 
             void Show()
             {
-                if (range != null) range.text = ScalerFields.RangeText(ScalerFields.ValuesOf(property), null);
+                if (range == null) return;
+                bool differ = EachAsset.Differ(property, each => ScalerFields.RangeText(ScalerFields.ValuesOf(each), null));
+                range.text = differ ? MagnitudeField.MixedRange : ScalerFields.RangeText(ScalerFields.ValuesOf(property), null);
             }
 
             root.TrackSerializedObjectValue(property.serializedObject, _ =>
             {
                 if (!ScalerFields.Alive(property)) return;
-                if (!built || property.managedReferenceValue?.GetType() != shownType) Draw();
+                bool mixed = EachAsset.Differ(property, ScalerFields.KindOf);
+                if (!built || mixed != mixedKinds || ScalerFields.KindOf(property) != shownType) Draw();
                 else Show();
             });
             Draw();
@@ -140,15 +159,17 @@ namespace FarEmerald.PlayForge.Extended.Editor
             return -1;
         }
 
-        // Gives this element a scaler of its own, a copy of the one it shares, as one undoable step
-        private static void GiveOwnCopy(SerializedProperty property)
-        {
-            var current = property.managedReferenceValue;
-            if (current == null) return;
-            var clone = Activator.CreateInstance(current.GetType());
-            EditorJsonUtility.FromJsonOverwrite(EditorJsonUtility.ToJson(current), clone);
-            property.managedReferenceValue = clone;
-            property.serializedObject.ApplyModifiedProperties();
-        }
+        // Gives this element a scaler of its own, a copy of the one it shares, as one undoable step: in each selected asset
+        // whose element shares one (ED-12)
+        private static void GiveOwnCopy(SerializedProperty property) =>
+            EachAsset.Write(property, own =>
+            {
+                if (FindSharedSibling(own) < 0) return;
+                var current = own.managedReferenceValue;
+                if (current == null) return;
+                var clone = Activator.CreateInstance(current.GetType());
+                EditorJsonUtility.FromJsonOverwrite(EditorJsonUtility.ToJson(current), clone);
+                own.managedReferenceValue = clone;
+            });
     }
 }

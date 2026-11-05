@@ -13,12 +13,19 @@ namespace FarEmerald.PlayForge.Extended.Editor
     /// entity's Attributes, Abilities and Items, Workers and Local Data, then Used By. A collapsed section shows one line,
     /// and the inspector takes its look from the style sheet.
     /// </summary>
-    [CustomEditor(typeof(EntityIdentity))]
+    [CustomEditor(typeof(EntityIdentity)), CanEditMultipleObjects]
     public class EntityIdentityEditor : BasePlayForgeEditor
     {
         [SerializeField] private Texture2D m_EntityIcon;
 
         private EntityIdentity entity;
+
+        // Its fields write through the SerializedObject, and its Max fields' scalers through each asset's own, so it edits
+        // a multiple selection; what acts on one entity steps aside: the name, the asset tag, linking, the attribute table,
+        // and Used By (ED-12)
+        protected override bool SupportsMultipleObjects => true;
+
+        private IEnumerable<EntityIdentity> Entities => targets.Cast<EntityIdentity>();
 
         private TextField nameField;
         private ForgeAssetTagField assetTagField;
@@ -150,7 +157,7 @@ namespace FarEmerald.PlayForge.Extended.Editor
             nameField.RegisterValueChangedCallback(evt => UpdateAssetTagDisplay(evt.newValue));
             nameField.RegisterCallback<FocusOutEvent>(_ =>
             {
-                if (nameField.value == (entity.Name ?? "")) return;
+                if (IsMultiple || nameField.value == (entity.Name ?? "")) return;
                 Undo.RecordObject(entity, "Rename Entity");
                 entity.Name = nameField.value;
                 MarkDirty(entity);
@@ -158,6 +165,13 @@ namespace FarEmerald.PlayForge.Extended.Editor
                 UpdateHeader();
                 Repaint();
             });
+            // Each entity's tag comes from its own name, so a multiple selection shows the names and can't rename (ED-12)
+            if (IsMultiple)
+            {
+                nameField.SetEnabled(false);
+                nameField.showMixedValue = Entities.Select(each => each.Name).Distinct().Count() > 1;
+                nameField.tooltip = "Rename one entity at a time: each entity's tag comes from its own name.";
+            }
             content.Add(nameField);
 
             // Description binds to its property, so an edit undoes. It wrote straight into the asset when it lost focus,
@@ -165,10 +179,13 @@ namespace FarEmerald.PlayForge.Extended.Editor
             content.Add(CreateBoundTextField(nameof(EntityIdentity.Description), "Description", multiline: true, minHeight: 18));
 
             // The tag the name gives, under the name, as the mockup places it. It sat at the top of Tags, in a tinted box
-            // (ED-37)
-            assetTagField = new ForgeAssetTagField();
-            content.Add(assetTagField);
-            UpdateAssetTagDisplay();
+            // (ED-37). Each entity has its own, so a multiple selection doesn't show one (ED-12)
+            if (!IsMultiple)
+            {
+                assetTagField = new ForgeAssetTagField();
+                content.Add(assetTagField);
+                UpdateAssetTagDisplay();
+            }
 
             var texturesField = CreatePropertyField(serializedObject.FindProperty(nameof(EntityIdentity.Textures)), "Textures", "Textures");
             texturesField.RegisterCallback<SerializedPropertyChangeEvent>(_ =>
@@ -228,6 +245,16 @@ namespace FarEmerald.PlayForge.Extended.Editor
             linkModeField.AddToClassList(BaseField<System.Enum>.alignedFieldUssClassName);
             levelingContent.Add(linkModeField);
 
+            // A provider and a child's link belong to one entity, so a multiple selection sets the mode, and edits the
+            // range when every entity keeps its own; a linked entity's range comes from its provider (ED-12)
+            if (IsMultiple)
+            {
+                if (Entities.All(each => each.LinkMode != EItemLinkMode.LinkedToProvider)) BuildOwnLevels();
+                else levelingContent.Add(CreateNote("Each linked entity takes its levels from its own provider."));
+                levelingContent.Bind(serializedObject);
+                return;
+            }
+
             // The range in use while linked: the provider's, or the entity's own while it has none
             if (IsLinkMode) AddLinkedLevels(levelingContent, entity, "entity", entity.GetLinkedStartingLevel(), entity.GetLinkedMaxLevel());
             else BuildOwnLevels();
@@ -257,8 +284,10 @@ namespace FarEmerald.PlayForge.Extended.Editor
             return field;
         }
 
-        private string LevelingState() =>
-            LevelingState(entity, IsLinkMode, entity.GetLinkedStartingLevel(), entity.GetLinkedMaxLevel());
+        // What Leveling is drawn from. A multiple selection's is whether every entity keeps its own range
+        private string LevelingState() => IsMultiple
+            ? Entities.All(each => each.LinkMode != EItemLinkMode.LinkedToProvider) ? "own" : "linked"
+            : LevelingState(entity, IsLinkMode, entity.GetLinkedStartingLevel(), entity.GetLinkedMaxLevel());
 
         // The entity's starting items and abilities, which can take its levels
         private IEnumerable<BaseForgeLevelProvider> Children() =>
@@ -316,6 +345,12 @@ namespace FarEmerald.PlayForge.Extended.Editor
 
             attributesSection.Content.Add(CreatePropertyField(serializedObject.FindProperty(nameof(EntityIdentity.AttributeSet)), "AttributeSet", "Attribute Set"));
 
+            // The table shows one entity's set (ED-12)
+            if (IsMultiple)
+            {
+                attributesSection.Content.Add(CreateNote("Select one entity to see what its set gives."));
+                return;
+            }
             attributeTable = new ForgeAttributeTable();
             attributeTable.Changed += UpdateSummaries;
             attributesSection.Content.Add(attributeTable);
@@ -421,11 +456,13 @@ namespace FarEmerald.PlayForge.Extended.Editor
             return toggle;
         }
 
+        // Equipped Too waits for Allow Duplicates: in a multiple selection, on every entity (ED-12)
         private void UpdateEquippedToo()
         {
             if (equippedTooField == null) return;
-            equippedTooField.SetEnabled(entity.AllowDuplicateItems);
-            equippedTooNote.style.display = entity.AllowDuplicateItems ? DisplayStyle.None : DisplayStyle.Flex;
+            bool allowed = Entities.All(each => each.AllowDuplicateItems);
+            equippedTooField.SetEnabled(allowed);
+            equippedTooNote.style.display = allowed ? DisplayStyle.None : DisplayStyle.Flex;
         }
 
         // ═══════════════════════════════════════════════════════════════════════════
@@ -487,6 +524,11 @@ namespace FarEmerald.PlayForge.Extended.Editor
             });
             parent.Add(usedBySection.Section);
 
+            if (IsMultiple)
+            {
+                usedBySection.Content.Add(CreateNote("Select one entity to see what uses it."));
+                return;
+            }
             usedBy = new ForgeUsedBy(entity);
             usedBy.Changed += UpdateSummaries;
             usedBySection.Content.Add(usedBy);
@@ -502,7 +544,7 @@ namespace FarEmerald.PlayForge.Extended.Editor
             // them (ED-12)
             if (levelingContent != null && LevelingState() != shownLeveling) RebuildLevelingContent();
             // The name field isn't bound, so it follows an Undo here, unless it's being typed in
-            if (nameField != null && !IsFocused(nameField) && nameField.value != (entity.Name ?? ""))
+            if (!IsMultiple && nameField != null && !IsFocused(nameField) && nameField.value != (entity.Name ?? ""))
                 nameField.SetValueWithoutNotify(entity.Name ?? "");
             UpdateAssetTagDisplay();
             UpdateEquippedToo();
@@ -516,6 +558,14 @@ namespace FarEmerald.PlayForge.Extended.Editor
 
         private void UpdateSummaries()
         {
+            // A multiple selection's entities differ, so one line would describe only the first
+            if (IsMultiple)
+            {
+                var sections = new[] { identitySection, levelingSection, tagsSection, attributesSection, abilitiesSection, itemsSection, workersSection, localDataSection, usedBySection };
+                foreach (var section in sections.Where(section => section != null)) section.Summary.text = "";
+                return;
+            }
+
             if (levelingSection != null)
                 levelingSection.Summary.text = LevelingSummary(entity, IsLinkMode, entity.GetLinkedStartingLevel(), entity.GetLinkedMaxLevel());
             if (tagsSection != null) tagsSection.Summary.text = TagsSummaryOf();

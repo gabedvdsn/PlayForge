@@ -45,6 +45,9 @@ namespace FarEmerald.PlayForge.Extended.Editor
 
         internal static string UnitOf(FieldInfo field) => field?.GetCustomAttribute<ScalerOperationKeyword>()?.Unit;
 
+        // The range a multiple selection shows when its fields give different values, as a mixed field shows
+        internal const string MixedRange = "—";
+
         internal static VisualElement Build(SerializedProperty operation, string label, string unit, bool integer)
         {
             var root = new VisualElement { name = "MagnitudeField" };
@@ -66,8 +69,10 @@ namespace FarEmerald.PlayForge.Extended.Editor
             root.Add(body);
 
             Type shownType = null;
+            bool mixedKinds = false;
             bool built = false;
             Label range = null;
+            PopupField<string> combine = null;
             VisualElement combineNumber = null;
             HelpBox noScaler = null;
 
@@ -77,9 +82,12 @@ namespace FarEmerald.PlayForge.Extended.Editor
                 row.Clear();
                 body.Clear();
                 range = null;
+                combine = null;
                 combineNumber = null;
                 noScaler = null;
-                shownType = scalerProp.managedReferenceValue?.GetType();
+                // Selected fields whose kinds differ show a mixed kind, and neither field's content as both's (ED-12)
+                mixedKinds = EachAsset.Differ(scalerProp, ScalerFields.KindOf);
+                shownType = ScalerFields.KindOf(scalerProp);
                 built = true;
 
                 var choices = new List<string> { ConstantKind };
@@ -88,7 +96,18 @@ namespace FarEmerald.PlayForge.Extended.Editor
                 if (!choices.Contains(shownName)) choices.Add(shownName);
 
                 PopupField<string> kind;
-                if (shownType == null)
+                if (mixedKinds)
+                {
+                    kind = new PopupField<string>(label, choices, shownName) { name = "Kind", tooltip = "The field's kind: Constant, or a scaler's" };
+                    kind.AddToClassList(BaseField<string>.alignedFieldUssClassName);
+                    kind.AddToClassList("pf-magnitude__kind-labelled");
+                    kind.showMixedValue = true;
+                    row.Add(kind);
+                    var note = new Label("The selected fields' kinds differ. Choose one to give it to each.") { name = "MixedKinds" };
+                    note.AddToClassList("pf-note");
+                    body.Add(note);
+                }
+                else if (shownType == null)
                 {
                     // Constant: the number, its unit, then the kind
                     VisualElement number = integer
@@ -129,8 +148,7 @@ namespace FarEmerald.PlayForge.Extended.Editor
                     // How the number joins the scaler
                     var combineRow = new VisualElement { name = "CombineRow" };
                     combineRow.AddToClassList("pf-magnitude__combine");
-                    var combine = new PopupField<string>("Combine", Combines.Select(each => each.name).ToList(),
-                        Mathf.Max(0, Array.FindIndex(Combines, each => (int)each.real == realProp.intValue)))
+                    combine = new PopupField<string>("Combine", Combines.Select(each => each.name).ToList(), CombineIndex())
                     {
                         name = "Combine",
                         tooltip = "What the field reads: the scaler's value, that plus or times the field's number, or the number alone",
@@ -139,7 +157,7 @@ namespace FarEmerald.PlayForge.Extended.Editor
                     combine.RegisterValueChangedCallback(change =>
                     {
                         var chosen = Combines.First(each => each.name == change.newValue).real;
-                        if (realProp.intValue == (int)chosen) return;
+                        if (!realProp.hasMultipleDifferentValues && realProp.intValue == (int)chosen) return;
                         realProp.intValue = (int)chosen;
                         operation.serializedObject.ApplyModifiedProperties();
                     });
@@ -165,7 +183,8 @@ namespace FarEmerald.PlayForge.Extended.Editor
 
                 kind.RegisterValueChangedCallback(change =>
                 {
-                    if (change.newValue == change.previousValue) return;
+                    // A mixed kind takes the one chosen, even the first field's
+                    if (!mixedKinds && change.newValue == change.previousValue) return;
                     if (change.newValue == ConstantKind) ScalerActions.MakeConstant(operation);
                     else
                     {
@@ -182,16 +201,29 @@ namespace FarEmerald.PlayForge.Extended.Editor
                 Show();
             }
 
-            // The range, the number's place in Combine, and whether a scaler is missing, which follow the asset
+            int CombineIndex() => Mathf.Max(0, Array.FindIndex(Combines, each => (int)each.real == realProp.intValue));
+
+            // The range, Combine and the number's place in it, and whether a scaler is missing, which follow the asset. A
+            // multiple selection shows a mixed value where the fields differ, and a part any of them uses (ED-12)
             void Show()
             {
                 if (!ScalerFields.Alive(scalerProp)) return;
-                var real = (EMagnitudeOperation)realProp.intValue;
-                if (range != null) range.text = RangeOf(operation, unit);
+                var reals = EachAsset.Of(realProp).Select(each => (EMagnitudeOperation)each.intValue).ToList();
+                if (range != null)
+                {
+                    bool differ = EachAsset.Differ(operation, each => RangeOf(each, unit));
+                    range.text = differ ? MixedRange : RangeOf(operation, unit);
+                    range.tooltip = differ ? "The selected fields give different values" : "";
+                }
+                if (combine != null)
+                {
+                    combine.SetValueWithoutNotify(Combines[CombineIndex()].name);
+                    combine.showMixedValue = realProp.hasMultipleDifferentValues;
+                }
                 if (combineNumber != null)
-                    combineNumber.style.display = real == EMagnitudeOperation.UseScaler ? DisplayStyle.None : DisplayStyle.Flex;
+                    combineNumber.style.display = reals.Any(real => real != EMagnitudeOperation.UseScaler) ? DisplayStyle.Flex : DisplayStyle.None;
                 if (noScaler != null)
-                    noScaler.style.display = real is EMagnitudeOperation.UseScaler or EMagnitudeOperation.MultiplyWithScaler
+                    noScaler.style.display = reals.Any(real => real is EMagnitudeOperation.UseScaler or EMagnitudeOperation.MultiplyWithScaler)
                         ? DisplayStyle.Flex : DisplayStyle.None;
             }
 
@@ -199,7 +231,8 @@ namespace FarEmerald.PlayForge.Extended.Editor
             {
                 if (!ScalerFields.Alive(scalerProp)) return;
                 // A kind changed elsewhere, as by an Undo, redraws the field; otherwise it only updates what it reads
-                if (!built || scalerProp.managedReferenceValue?.GetType() != shownType) Draw();
+                bool mixed = EachAsset.Differ(scalerProp, ScalerFields.KindOf);
+                if (!built || mixed != mixedKinds || ScalerFields.KindOf(scalerProp) != shownType) Draw();
                 else Show();
             });
             Draw();
@@ -233,11 +266,14 @@ namespace FarEmerald.PlayForge.Extended.Editor
         private static void ShowMenu(SerializedProperty operation, VisualElement anchor, string label)
         {
             var scalerProp = operation.FindPropertyRelative(nameof(ScalerMagnitudeOperation.Scaler));
-            var scaler = scalerProp.managedReferenceValue as AbstractScaler;
+            // Fields whose kinds differ have no one table to fill (ED-12)
+            bool mixedKinds = EachAsset.Differ(scalerProp, ScalerFields.KindOf);
+            var scaler = mixedKinds ? null : scalerProp.managedReferenceValue as AbstractScaler;
             bool ownValues = scaler != null && !ScalerFields.IsShared(scaler.GetType()) && scaler.UseScalingOptions();
             var menu = new GenericDropdownMenu();
 
-            if (ownValues)
+            // Saving keeps one field's values, so it waits for one selected asset (ED-12)
+            if (ownValues && !operation.serializedObject.isEditingMultipleObjects)
                 menu.AddItem("Save as Scaler Asset…", false, () => SaveScalerAssetWindow.Show(operation, DefaultName(operation, label)));
             else menu.AddDisabledItem("Save as Scaler Asset…", false);
 
@@ -271,7 +307,8 @@ namespace FarEmerald.PlayForge.Extended.Editor
             }
 
             menu.AddSeparator("");
-            if (scaler != null) menu.AddItem("Make Constant", false, () => ScalerActions.MakeConstant(operation));
+            if (EachAsset.Of(scalerProp).Any(each => each.managedReferenceValue != null))
+                menu.AddItem("Make Constant", false, () => ScalerActions.MakeConstant(operation));
             else menu.AddDisabledItem("Make Constant", false);
             menu.DropDown(anchor.worldBound, anchor, true);
         }
@@ -285,8 +322,8 @@ namespace FarEmerald.PlayForge.Extended.Editor
     }
 
     /// <summary>
-    /// What a magnitude field's kind menu and field menu do, each as one Undo step through the field's SerializedObject,
-    /// so it reaches every selected asset (ED-33, Decision 28).
+    /// What a magnitude field's kind menu and field menu do, each as one Undo step that reaches every selected asset. Each
+    /// asset's field changes from its own values, through a SerializedObject of its own (ED-12, ED-33, Decision 28).
     /// </summary>
     public static class ScalerActions
     {
@@ -295,7 +332,8 @@ namespace FarEmerald.PlayForge.Extended.Editor
 
         /// <summary>
         /// Gives the field a scaler of a kind, which maps levels exactly. A level-based one starts with the value the
-        /// field read at level 1, and reads its scaler; a Shared one reads its asset times the field's number, 1.
+        /// field read at level 1, and reads its scaler; a Shared one reads its asset times the field's number, 1. A field
+        /// that has the kind keeps its scaler.
         /// </summary>
         public static void SetKind(SerializedProperty operation, Type type)
         {
@@ -304,30 +342,33 @@ namespace FarEmerald.PlayForge.Extended.Editor
                 MakeConstant(operation);
                 return;
             }
-            float first = ValueAtFirstLevel(operation);
-            ScalerFields.SetKind(ScalerOf(operation), type, first);
-            operation.serializedObject.Update();
-            var real = operation.FindPropertyRelative(nameof(ScalerMagnitudeOperation.RealMagnitude));
-            var magnitude = operation.FindPropertyRelative(nameof(ScalerMagnitudeOperation.Magnitude));
-            if (ScalerFields.IsShared(type))
+            EachAsset.Write(operation, own =>
             {
-                real.intValue = (int)EMagnitudeOperation.MultiplyWithScaler;
-                SetNumber(magnitude, 1f);
-            }
-            else real.intValue = (int)EMagnitudeOperation.UseScaler;
-            operation.serializedObject.ApplyModifiedProperties();
+                var scaler = ScalerOf(own);
+                if (ScalerFields.KindOf(scaler) == type) return;
+                float first = ValueAtFirstLevel(own);
+                scaler.managedReferenceValue = ScalerFields.Make(type, first);
+                var real = own.FindPropertyRelative(nameof(ScalerMagnitudeOperation.RealMagnitude));
+                if (ScalerFields.IsShared(type))
+                {
+                    real.intValue = (int)EMagnitudeOperation.MultiplyWithScaler;
+                    SetNumber(own.FindPropertyRelative(nameof(ScalerMagnitudeOperation.Magnitude)), 1f);
+                }
+                else real.intValue = (int)EMagnitudeOperation.UseScaler;
+            });
             ScalerFields.ForgetUses();
         }
 
         /// <summary>The field reads its number again: no scaler, and the number the field read at level 1.</summary>
         public static void MakeConstant(SerializedProperty operation)
         {
-            float value = ValueAtFirstLevel(operation);
-            var scaler = ScalerOf(operation);
-            scaler.managedReferenceValue = null;
-            operation.FindPropertyRelative(nameof(ScalerMagnitudeOperation.RealMagnitude)).intValue = (int)EMagnitudeOperation.UseMagnitude;
-            SetNumber(operation.FindPropertyRelative(nameof(ScalerMagnitudeOperation.Magnitude)), value);
-            operation.serializedObject.ApplyModifiedProperties();
+            EachAsset.Write(operation, own =>
+            {
+                float value = ValueAtFirstLevel(own);
+                ScalerOf(own).managedReferenceValue = null;
+                own.FindPropertyRelative(nameof(ScalerMagnitudeOperation.RealMagnitude)).intValue = (int)EMagnitudeOperation.UseMagnitude;
+                SetNumber(own.FindPropertyRelative(nameof(ScalerMagnitudeOperation.Magnitude)), value);
+            });
             ScalerFields.ForgetUses();
         }
 
@@ -337,21 +378,28 @@ namespace FarEmerald.PlayForge.Extended.Editor
         /// </summary>
         public static void UseScalerAsset(SerializedProperty operation, ScalerAsset asset)
         {
-            var real = operation.FindPropertyRelative(nameof(ScalerMagnitudeOperation.RealMagnitude));
-            var keep = (EMagnitudeOperation)real.intValue;
             // The cached Shared for a field that takes the cached kinds, as an attribute set's elements do
             var shared = ScalerFields.KindsFor(ScalerOf(operation)).Contains(typeof(SharedCachedScaler)) ? typeof(SharedCachedScaler) : typeof(SharedScaler);
-            ScalerFields.SetKind(ScalerOf(operation), shared, 0f);
-            operation.serializedObject.Update();
-            ScalerOf(operation).FindPropertyRelative(nameof(SharedScaler.Asset)).objectReferenceValue = asset;
-            real.intValue = (int)(keep == EMagnitudeOperation.UseMagnitude ? EMagnitudeOperation.UseScaler : keep);
-            operation.serializedObject.ApplyModifiedProperties();
+            EachAsset.Write(operation, own =>
+            {
+                var real = own.FindPropertyRelative(nameof(ScalerMagnitudeOperation.RealMagnitude));
+                var keep = (EMagnitudeOperation)real.intValue;
+                var made = ScalerFields.Make(shared, 0f);
+                switch (made)
+                {
+                    case SharedScaler each: each.Asset = asset; break;
+                    case SharedCachedScaler each: each.Asset = asset; break;
+                }
+                ScalerOf(own).managedReferenceValue = made;
+                real.intValue = (int)(keep == EMagnitudeOperation.UseMagnitude ? EMagnitudeOperation.UseScaler : keep);
+            });
             ScalerFields.ForgetUses();
         }
 
         /// <summary>
         /// Saves the field's scaler as a Scaler asset in the folder, named, and makes the field share it, as the scaler
-        /// board's Save and Use does. Returns the asset, or null when the field's scaler has no values of its own.
+        /// board's Save and Use does; for a multiple selection, the first asset's scaler, which every selected field then
+        /// shares. Returns the asset, or null when the field's scaler has no values of its own.
         /// </summary>
         public static ScalerAsset SaveAsScalerAsset(SerializedProperty operation, string name, string folder)
         {
@@ -372,11 +420,14 @@ namespace FarEmerald.PlayForge.Extended.Editor
         /// <summary>Copies values per level into a scaler, as Import Values does, with the curve a stretched one reads.</summary>
         public static void CopyValues(SerializedProperty scaler, float[] values)
         {
-            var levelValues = scaler.FindPropertyRelative(nameof(AbstractScaler.LevelValues));
-            if (levelValues == null || values == null) return;
-            levelValues.arraySize = values.Length;
-            for (int i = 0; i < values.Length; i++) levelValues.GetArrayElementAtIndex(i).floatValue = values[i];
-            scaler.serializedObject.ApplyModifiedProperties();
+            if (values == null || scaler.FindPropertyRelative(nameof(AbstractScaler.LevelValues)) == null) return;
+            EachAsset.Write(scaler, own =>
+            {
+                var levelValues = own.FindPropertyRelative(nameof(AbstractScaler.LevelValues));
+                if (levelValues == null) return;
+                levelValues.arraySize = values.Length;
+                for (int i = 0; i < values.Length; i++) levelValues.GetArrayElementAtIndex(i).floatValue = values[i];
+            });
             ScalerFields.KeepCurve(scaler);
         }
 

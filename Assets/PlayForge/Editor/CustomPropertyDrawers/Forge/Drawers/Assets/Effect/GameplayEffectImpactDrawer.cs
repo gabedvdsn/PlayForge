@@ -36,6 +36,7 @@ namespace FarEmerald.PlayForge.Extended.Editor
             var affiliationsProp = property.FindPropertyRelative(nameof(GameplayEffectImpact.Affiliations));
             var additionalProp   = property.FindPropertyRelative(nameof(GameplayEffectImpact.AdditionalImpacts));
             var packetsProp      = property.FindPropertyRelative(nameof(GameplayEffectImpact.Packets));
+            bool multiple = property.serializedObject.isEditingMultipleObjects;
 
             // ─── The first impact ──────────────────────────────────────────────
             root.Add(new PropertyField(attributeProp, "Attribute"));
@@ -86,17 +87,28 @@ namespace FarEmerald.PlayForge.Extended.Editor
             root.Add(affiliations);
 
             // ─── Additional impacts, each its own entry, then Add Impact ─────────
+            // Each effect keeps its own, a list a multiple selection can't edit safely: one of another length would be
+            // cut (ED-12)
             var entries = new VisualElement { name = EntriesName };
-            root.Add(entries);
-            var addRow = new VisualElement { name = "AddImpactRow" };
-            addRow.AddToClassList("pf-button-row");
-            addRow.Add(new Button(() => AddImpact(property))
+            if (multiple)
             {
-                name = "AddImpact",
-                text = "Add Impact",
-                tooltip = "Adds an impact on another attribute, or the same one, with a delivery of its own",
-            });
-            root.Add(addRow);
+                var note = new Label("Select one effect to edit its additional impacts.") { name = "AdditionalImpactsNote" };
+                note.AddToClassList("pf-note");
+                root.Add(note);
+            }
+            else
+            {
+                root.Add(entries);
+                var addRow = new VisualElement { name = "AddImpactRow" };
+                addRow.AddToClassList("pf-button-row");
+                addRow.Add(new Button(() => AddImpact(property))
+                {
+                    name = "AddImpact",
+                    text = "Add Impact",
+                    tooltip = "Adds an impact on another attribute, or the same one, with a delivery of its own",
+                });
+                root.Add(addRow);
+            }
 
             root.Add(new PropertyField(packetsProp, "Contained Effects")
             {
@@ -107,6 +119,7 @@ namespace FarEmerald.PlayForge.Extended.Editor
             int shownEntries = -1;
             void ShowEntries(bool bind)
             {
+                if (multiple) return;
                 int count = additionalProp.arraySize;
                 if (count == shownEntries && entries.childCount == count) return;
                 shownEntries = count;
@@ -120,15 +133,17 @@ namespace FarEmerald.PlayForge.Extended.Editor
                 }
             }
 
+            // A multiple selection shows what any selected impact uses (ED-12)
             void Show(bool bind)
             {
                 operation.Refresh();
-                var kind = (ECalculationOperation)operationProp.intValue;
-                multiply.style.display = kind == ECalculationOperation.Multiply ? DisplayStyle.Flex : DisplayStyle.None;
-
-                var policy = (EAffiliationPolicy)affiliationProp.intValue;
-                comparison.style.display = policy != EAffiliationPolicy.AlwaysAllow ? DisplayStyle.Flex : DisplayStyle.None;
-                affiliations.style.display = policy == EAffiliationPolicy.UseAffiliationList ? DisplayStyle.Flex : DisplayStyle.None;
+                var each = EachAsset.Of(property).Select(own => (
+                    kind: (ECalculationOperation)own.FindPropertyRelative(nameof(GameplayEffectImpact.ImpactOperation)).intValue,
+                    policy: (EAffiliationPolicy)own.FindPropertyRelative(nameof(GameplayEffectImpact.AffiliationPolicy)).intValue))
+                    .ToList();
+                multiply.style.display = each.Any(e => e.kind == ECalculationOperation.Multiply) ? DisplayStyle.Flex : DisplayStyle.None;
+                comparison.style.display = each.Any(e => e.policy != EAffiliationPolicy.AlwaysAllow) ? DisplayStyle.Flex : DisplayStyle.None;
+                affiliations.style.display = each.Any(e => e.policy == EAffiliationPolicy.UseAffiliationList) ? DisplayStyle.Flex : DisplayStyle.None;
 
                 ShowDelivery(property, delivery, commits, deliveryNote);
                 ShowEntries(bind);
@@ -141,15 +156,12 @@ namespace FarEmerald.PlayForge.Extended.Editor
         }
 
         // The first impact's delivery, and how often it lands when it's periodic. Hidden when the first impact changes
-        // nothing, as in an effect that only grants tags
+        // nothing, as in an effect that only grants tags. A multiple selection shows a mixed value where the selected
+        // effects differ (ED-12)
         private static void ShowDelivery(SerializedProperty property, TextField delivery, TextField commits, HelpBox note)
         {
-            var effect = property.serializedObject.targetObject as GameplayEffect;
-            var impact = effect != null ? effect.ImpactSpecification : null;
-            var duration = effect != null ? effect.DurationSpecification : null;
-            bool authored = impact != null && (impact.AttributeTarget != null ||
-                impact.MagnitudeOperation != null && (impact.MagnitudeOperation.Scaler != null || impact.MagnitudeOperation.Magnitude != 0f));
-
+            var each = property.serializedObject.targetObjects.OfType<GameplayEffect>().Select(DeliveryOf).ToList();
+            bool authored = each.Any(e => e.delivery != null);
             delivery.style.display = authored ? DisplayStyle.Flex : DisplayStyle.None;
             if (!authored)
             {
@@ -158,19 +170,40 @@ namespace FarEmerald.PlayForge.Extended.Editor
                 return;
             }
 
-            var kind = impact.ResolveDelivery(duration, out _);
-            delivery.SetValueWithoutNotify(ImpactFields.DeliveryText(kind, duration));
-            var times = kind == EImpactDelivery.Periodic ? ImpactFields.CommitsText(effect) : null;
-            commits.SetValueWithoutNotify(times ?? "");
-            commits.style.display = times != null ? DisplayStyle.Flex : DisplayStyle.None;
+            Shown(delivery, each.Select(e => e.delivery));
+            Shown(commits, each.Select(e => e.commits));
+            commits.style.display = each.Any(e => e.commits != null) ? DisplayStyle.Flex : DisplayStyle.None;
 
-            // Tick On Application alone on a lasting multiply or override: the runtime keeps it as a modifier, so it
-            // reverses as the effect ends, though the setting reads as a single tick
-            bool trap = kind == EImpactDelivery.Continuous && duration is { TickOnApplication: true, EnablePeriodicTicks: false };
+            bool trap = each.Any(e => e.trap);
             note.text = trap
                 ? "With Tick On Application and no periodic ticks, a multiply or override lasts while the effect does, then reverses. Turn Tick On Application off to say so."
                 : "";
             note.style.display = trap ? DisplayStyle.Flex : DisplayStyle.None;
+        }
+
+        // A read-only row's text, or a mixed value when the selected effects' differ
+        private static void Shown(TextField row, IEnumerable<string> texts)
+        {
+            var distinct = texts.Distinct().ToList();
+            row.SetValueWithoutNotify(distinct.Count == 1 ? distinct[0] ?? "" : "");
+            row.showMixedValue = distinct.Count > 1;
+        }
+
+        // An effect's first impact: when it lands, how often a periodic one does, and whether Tick On Application alone
+        // makes a lasting multiply or override, which the runtime keeps as a modifier, so it reverses as the effect ends,
+        // though the setting reads as a single tick. No delivery when the first impact changes nothing
+        private static (string delivery, string commits, bool trap) DeliveryOf(GameplayEffect effect)
+        {
+            var impact = effect.ImpactSpecification;
+            var duration = effect.DurationSpecification;
+            bool authored = impact != null && (impact.AttributeTarget != null ||
+                impact.MagnitudeOperation != null && (impact.MagnitudeOperation.Scaler != null || impact.MagnitudeOperation.Magnitude != 0f));
+            if (!authored) return (null, null, false);
+
+            var kind = impact.ResolveDelivery(duration, out _);
+            var times = kind == EImpactDelivery.Periodic ? ImpactFields.CommitsText(effect) : null;
+            bool trap = kind == EImpactDelivery.Continuous && duration is { TickOnApplication: true, EnablePeriodicTicks: false };
+            return (ImpactFields.DeliveryText(kind, duration), times, trap);
         }
 
         // Adds an impact the effect's duration can make, which uses its own magnitude, in one undoable step

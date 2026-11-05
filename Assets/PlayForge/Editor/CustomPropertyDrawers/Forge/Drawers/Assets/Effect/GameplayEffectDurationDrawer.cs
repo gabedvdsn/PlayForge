@@ -1,4 +1,5 @@
-﻿using UnityEditor;
+﻿using System.Linq;
+using UnityEditor;
 using UnityEditor.UIElements;
 using UnityEngine.UIElements;
 
@@ -20,10 +21,8 @@ namespace FarEmerald.PlayForge.Extended.Editor
             ForgeTheme.Apply(root);
 
             SerializedProperty Prop(string field) => property.FindPropertyRelative(field);
-            var policyProp = Prop(nameof(GameplayEffectDuration.DurationPolicy));
             var periodicProp = Prop(nameof(GameplayEffectDuration.EnablePeriodicTicks));
             var onApplyProp = Prop(nameof(GameplayEffectDuration.TickOnApplication));
-            var reapplyProp = Prop(nameof(GameplayEffectDuration.ReApplicationPolicy));
 
             PropertyField Field(string field, string label, string name, string tooltip)
             {
@@ -67,34 +66,49 @@ namespace FarEmerald.PlayForge.Extended.Editor
             then.AddToClassList("pf-dependent");
             var stacking = Field(nameof(GameplayEffectDuration.StackPolicy), "Stacking", "Stacking",
                 "How the stacks keep their time");
-            var behaviours = Field(nameof(GameplayEffectDuration.StackingConfigs), "Stack Behaviours", "StackBehaviours",
-                "Rules the stacks follow, such as bounds on their count");
+            // Each effect keeps its own stack behaviours, objects a multiple selection can't edit safely (ED-12)
+            VisualElement behaviours;
+            if (property.serializedObject.isEditingMultipleObjects)
+            {
+                var note = new Label("Select one effect to edit its stack behaviours.") { name = "StackBehaviours" };
+                note.AddToClassList("pf-note");
+                root.Add(note);
+                behaviours = note;
+            }
+            else
+            {
+                behaviours = Field(nameof(GameplayEffectDuration.StackingConfigs), "Stack Behaviours", "StackBehaviours",
+                    "Rules the stacks follow, such as bounds on their count");
+            }
             var amount = Field(nameof(GameplayEffectDuration.StackAmountOperation), "Stack Amount", "StackAmount",
                 "How many stacks each application adds");
 
             void Show(VisualElement element, bool shown) =>
                 element.style.display = shown ? DisplayStyle.Flex : DisplayStyle.None;
 
+            // Each part shows while the policy uses it; a multiple selection shows what any selected effect's uses (ED-12)
             void ShowPolicy()
             {
-                var policy = (EEffectDurationPolicy)policyProp.intValue;
-                bool lasting = policy != EEffectDurationPolicy.Instant;
-                bool durational = policy == EEffectDurationPolicy.Durational;
-                bool ticking = periodicProp.boolValue;
-                var reapplication = (EEffectReApplicationPolicy)reapplyProp.intValue;
+                var each = EachAsset.Of(property).Select(own => (
+                    policy: (EEffectDurationPolicy)own.FindPropertyRelative(nameof(GameplayEffectDuration.DurationPolicy)).intValue,
+                    ticking: own.FindPropertyRelative(nameof(GameplayEffectDuration.EnablePeriodicTicks)).boolValue,
+                    onApply: own.FindPropertyRelative(nameof(GameplayEffectDuration.TickOnApplication)).boolValue,
+                    reapplication: (EEffectReApplicationPolicy)own.FindPropertyRelative(nameof(GameplayEffectDuration.ReApplicationPolicy)).intValue))
+                    .ToList();
+                bool Lasting(EEffectDurationPolicy policy) => policy != EEffectDurationPolicy.Instant;
 
-                Show(duration, durational);
-                Show(periodic, lasting);
-                Show(ticks, durational && ticking);
-                Show(tickEvery, policy == EEffectDurationPolicy.Infinite && ticking);
-                Show(onApply, lasting);
-                Show(executions, lasting && (ticking || onApplyProp.boolValue));
-                Show(realDelta, durational);
-                Show(deltaScaler, durational);
-                Show(reapply, lasting);
+                Show(duration, each.Any(e => e.policy == EEffectDurationPolicy.Durational));
+                Show(periodic, each.Any(e => Lasting(e.policy)));
+                Show(ticks, each.Any(e => e.policy == EEffectDurationPolicy.Durational && e.ticking));
+                Show(tickEvery, each.Any(e => e.policy == EEffectDurationPolicy.Infinite && e.ticking));
+                Show(onApply, each.Any(e => Lasting(e.policy)));
+                Show(executions, each.Any(e => Lasting(e.policy) && (e.ticking || e.onApply)));
+                Show(realDelta, each.Any(e => e.policy == EEffectDurationPolicy.Durational));
+                Show(deltaScaler, each.Any(e => e.policy == EEffectDurationPolicy.Durational));
+                Show(reapply, each.Any(e => Lasting(e.policy)));
                 // Then applies as the effect there takes the application in, so with every choice but Add Another
-                Show(then, lasting && reapplication != EEffectReApplicationPolicy.AppendNewContainer);
-                bool stacks = lasting && reapplication == EEffectReApplicationPolicy.StackExistingContainers;
+                Show(then, each.Any(e => Lasting(e.policy) && e.reapplication != EEffectReApplicationPolicy.AppendNewContainer));
+                bool stacks = each.Any(e => Lasting(e.policy) && e.reapplication == EEffectReApplicationPolicy.StackExistingContainers);
                 Show(stacking, stacks);
                 Show(behaviours, stacks);
                 Show(amount, stacks);

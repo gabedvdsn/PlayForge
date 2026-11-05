@@ -526,7 +526,7 @@ had no letter in the review. TS-AA onward came from the test project.
 | ED-9 | M | 4 | The Visualizer is blank for items and sets, and after a domain reload | `TheForge.Utilities.cs:344, 407-412` | open |
 | ED-10 | M | 2 | Analysis exposes "Not Implemented" groups and truncates silently | `TheForge.AnalysisTab.cs:362, 716, 1461, 1979-1991` | verified |
 | ED-11 | M | 4 | The sticky-header workaround and drawer timers poll forever, among them two 250 ms timers in each impact drawer. Now nothing polls: the drawers follow the properties they show, the object picker's listener runs only while a picker is open, and the inspector keeps no scroll view of its own, so nothing measures the window; the header follows the Inspector's scroll events (ED-36) | `BasePlayForgeEditor.cs` (`OnAttachedToPanel`, `ConfigureScrollView`, `OnEditorUpdate`) | fixed |
-| ED-12 | H | 4 | No Undo, multi-edit or prefab overrides. The inspectors wrote 42 edits straight into their asset, and only the 5 renames recorded Undo; no inspector took a multiple selection; six drawers copy their SerializedObject for one target, and two write while drawing. Fixed so far: Phase 2's part (a rename stores the tag in the same undoable step, and showing never writes), the Attribute inspector (its fields bind, it takes a multiple selection, and every inspector's header follows Undo), the MonoProcess inspector's multiple selection, the Effect, Item and Attribute Set inspectors' Description and Link Mode, the Entity inspector's fields, the Ability inspector's Description, Activation Policy, Activate Immediately and Link Mode, Link, Unlink and template assignment in every inspector, the drawers that rebuilt on a one-target copy, the type drawers that wrote a default while drawing, and the Item and Ability inspectors' multiple selection. Left: a multiple selection in the Effect, Entity and Attribute Set inspectors. In the Effect, Entity and Attribute Set inspectors, whose assets hold scalers, that also waits for ScalerDrawer's one-target copy, which changes with Decision 28's scaler workflow (ED-32, ED-33) | `AbilityEditor.cs:155-189, 743`, `EntityIdentityEditor.cs:790-919`, `BasePlayForgeEditor.cs` (`ShowTemplatePicker`), `TagDrawer.cs:104-109`, `AbstractTypeRefDrawer.cs:123-128`, `ScalerDrawer.cs:169-177` | open |
+| ED-12 | H | 4 | No Undo, multi-edit or prefab overrides. The inspectors wrote 42 edits straight into their asset, and only the 5 renames recorded Undo; no inspector took a multiple selection; six drawers copy their SerializedObject for one target, and two write while drawing. Fixed: Phase 2's part (a rename stores the tag in the same undoable step, and showing never writes), the Attribute inspector (its fields bind, it takes a multiple selection, and every inspector's header follows Undo), the MonoProcess inspector's multiple selection, the Effect, Item and Attribute Set inspectors' Description and Link Mode, the Entity inspector's fields, the Ability inspector's Description, Activation Policy, Activate Immediately and Link Mode, Link, Unlink and template assignment in every inspector, the drawers that rebuilt on a one-target copy, the type drawers that wrote a default while drawing, and every asset inspector's multiple selection; the magnitude field and the scaler drawer change each selected asset's own values | `EachAsset.cs`, `MagnitudeField.cs`, `ScalerFields.cs`, `EffectEditor.cs`, `EntityIdentityEditor.cs`, `AttributeSetEditor.cs`, `BasePlayForgeEditor.cs` (`IsMultiple`) | fixed |
 | ED-13 | M | 4 | Template propagation on save loads everything, opens a modal mid-save and records no Undo; the validator is empty | `ForgeTemplateProcessor.cs:45-52`, `ForgeTemplatePropagator.cs:201-229` | open |
 | ED-14 | H | 1 | The `GameplayEffectImpact` copy constructor drops affiliation and throws on null packets | `GameplayEffectImpact.cs:155-176` | verified |
 | ED-15 | M | 4 | "Validate All" is noisy and capped at 15; "Find All References" is a dialog. Fixed so far: the Attribute inspector's Find All References, which a Used By section replaces: the assets that use the attribute, each a row that selects it. Left: Validate All, with The Forge's redesign | `TheForge.SettingsTab.cs:1808-1832`, `AttributeEditor.cs:261-273` | open |
@@ -561,7 +561,7 @@ Phase 2 part, and set Phase 4's direction.
 
 **Phase 4's order,** from Q35, Q36 and Q3:
 1. ED-12, Undo and multi-editing, one inspector at a time; with its drawer part, ED-34, so opening a scaler writes
-   nothing.
+   nothing (done).
 2. No polling: ED-11 and ED-18.
 3. The smoke suite, the phase's gate: in each theme, every window opens without an exception and scripted edits undo.
    Done: `EditorSmokeTests` in Proving Grounds, which its README describes. It runs in the EditMode gate.
@@ -573,7 +573,7 @@ Phase 2 part, and set Phase 4's direction.
    The asset inspectors go one at a time, each following the style doc (ED-37): the Attribute, Item, Entity and
    Attribute Set inspectors first (done), then the reference fields (ED-38, done), the Ability inspector (done), then
    the Effect inspector with ED-2 and ED-3 (done), then the Import window and shared scalers (ED-32, ED-33, done),
-   which also free ED-12's last part.
+   which freed ED-12's last part (done).
 
 ### Samples and packaging
 
@@ -657,6 +657,32 @@ GAS-4 with GAS-5, PC-6, and TS-I with PC-5.
 ## Log
 
 Record baselines, gate results and notable decisions here, newest first.
+
+- 2026-11-04, **ED-12, the last part: the Effect, Entity and Attribute Set inspectors edit a multiple selection.** ED-12
+  is fixed with it.
+  - **The three inspectors** take a multiple selection, as the Item and Ability inspectors do: a field the assets
+    disagree on shows as mixed, and an edit reaches each. Name, the asset tag, linking and Used By wait for one asset.
+    So do the lists each asset keeps of its own, whose elements at one index are different things and which a list of
+    another length would cut: an effect's additional impacts, workers and stack behaviours, and a set's attributes. The
+    attribute tables wait too. Leveling sets Link Mode, and the range while every asset keeps its own. The summaries
+    are blank, and Equipped Too waits until every entity allows duplicates.
+  - **Each asset's own values:** a property of a multiple selection reads the first asset, and a write through it gives
+    every asset the same value. The new `EachAsset` reads and writes each selected asset through a SerializedObject of
+    its own, so the magnitude field and the scaler drawer work per asset. A kind change gives each field the kind from
+    its own first value, and a field of that kind keeps its scaler. Levels keeps each table's own values. Make
+    Constant, Use a Scaler Asset, Import Values and the curve a stretched scaler reads work per asset too. A kind,
+    count, range, Combine, operation or delivery the assets disagree on shows as mixed, and the duration and impact
+    drawers show the parts any selected effect uses. Save as Scaler Asset waits for one asset.
+  - **In passing:** the magnitude field's Combine follows an Undo now; it kept the value it was drawn with. No test
+    covers it.
+  - **Docs:** `SCALERS.md` says how the field edits a multiple selection.
+  - **Its tests,** seen failing first: `ED_12_The_Effect_inspector_edits_every_selected_effect`,
+    `ED_12_The_Entity_inspector_edits_every_selected_entity` and `ED_12_The_Attribute_Set_inspector_edits_every_selected_set`
+    in `InspectorUndoTests`, and `ED_12_A_magnitude_field_edits_every_selected_asset` and
+    `ED_12_A_scaler_drawn_on_its_own_edits_every_selected_asset` in `ScalerDrawerTests`.
+  - **Next:** The Forge (ED-13, ED-15's Validate All, ED-21, ED-27).
+  - **Tests:** PlayMode 961: 954 pass, 0 fail and 7 planted are skipped, in three orders. Planted 7 of 7; EditMode
+    412 of 412.
 
 - 2026-11-04, **ED-33, part 2, and the last of ED-32: the scaler field.** The canvas's scaler board, in the editor.
   ED-32 and ED-33 are fixed with it.

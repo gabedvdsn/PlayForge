@@ -21,6 +21,11 @@ then its field menu:
 
 Choosing a kind is one Undo step. A constant made By Level keeps its number as its first level's value.
 
+With more than one asset selected, the field edits each asset's own field. Kinds that differ show as mixed, and choosing
+one gives it to each field, from that field's own value; a field of that kind keeps its scaler. Levels and Make Constant
+work on each field's own values, and a count, range or curve the fields disagree on shows as mixed. Save as Scaler Asset
+waits for one asset.
+
 A kind other than Constant shows **Combine**, how the field joins its number with the scaler: **Scaler** reads the
 scaler's value, **Scaler + Number** and **Scaler × Number** add or multiply the field's number, and **Number Only**
 reads the number. A whole-number field, such as Ticks, also shows its **Rounding**.
