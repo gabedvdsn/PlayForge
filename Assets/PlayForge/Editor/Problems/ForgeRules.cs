@@ -208,4 +208,30 @@ namespace FarEmerald.PlayForge.Extended.Editor
             }
         }
     }
+
+    /// <summary>
+    /// An ability's cost or cooldown that no stage applies, as the Ability inspector warns under its cooldown. They apply
+    /// only from a stage set to Apply Usage Effects, so with none, they never apply. Nothing said so, and the Tactics lab's
+    /// Slash had a cooldown that never applied (ED-41).
+    /// </summary>
+    internal sealed class UsageEffectsRule : ForgeValidationRule
+    {
+        public override void Check(Object asset, List<ForgeProblem> problems)
+        {
+            if (asset is not Ability ability) return;
+            var message = Unapplied(ability);
+            if (message != null) problems.Add(new ForgeProblem(asset, ForgeProblemSeverity.Warning, message, nameof(Ability.Cooldown)));
+        }
+
+        /// <summary>What no stage of the ability applies, said as the inspector says it, or null where a stage applies its usage effects or it has none.</summary>
+        internal static string Unapplied(Ability ability)
+        {
+            bool cost = ability.Cost != null, cooldown = ability.Cooldown != null;
+            if (!cost && !cooldown) return null;
+            if (ability.Behaviour?.Stages != null && ability.Behaviour.Stages.Any(stage => stage != null && stage.ApplyUsageEffects)) return null;
+
+            string what = cost && cooldown ? "the cost and the cooldown never apply" : cost ? "the cost never applies" : "the cooldown never applies";
+            return $"No stage applies usage effects, so {what}. Turn on Apply Usage Effects in the stage that should apply them.";
+        }
+    }
 }

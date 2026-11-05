@@ -31,6 +31,9 @@ namespace FarEmerald.PlayForge.Extended.Editor
         private string shownLeveling;
         private PropertyField implicitTagField;
 
+        // Under the cooldown, while no stage applies the usage effects (ED-41)
+        private HelpBox unappliedUsageNote;
+
         private SectionResult levelingSection;
         private SectionResult tagsSection;
         private SectionResult activationSection;
@@ -380,6 +383,11 @@ namespace FarEmerald.PlayForge.Extended.Editor
             content.Add(CreatePropertyField(serializedObject.FindProperty(nameof(Ability.Cost)), "Cost", "Cost"));
             content.Add(CreatePropertyField(serializedObject.FindProperty(nameof(Ability.Cooldown)), "Cooldown", "Cooldown"));
 
+            // They apply only from a stage set to Apply Usage Effects, which nothing said when none was (ED-41)
+            unappliedUsageNote = new HelpBox("", HelpBoxMessageType.Warning) { name = "UnappliedUsage" };
+            content.Add(unappliedUsageNote);
+            ShowUnappliedUsage();
+
             // The targeting is an object each ability keeps of its own, which a multiple selection can't edit safely (ED-12)
             if (IsMultiple) content.Add(CreateNote("Select one ability to edit its targeting."));
             else content.Add(CreatePropertyField(serializedObject.FindProperty(BehaviourPath(nameof(AbilityBehaviour.Targeting))), "Targeting", "Targeting"));
@@ -404,6 +412,15 @@ namespace FarEmerald.PlayForge.Extended.Editor
         private void ShowImplicitTag(bool shown)
         {
             if (implicitTagField != null) implicitTagField.style.display = shown ? DisplayStyle.Flex : DisplayStyle.None;
+        }
+
+        // Shown while the ability has a cost or a cooldown and no stage applies them, in the Problems view's words
+        private void ShowUnappliedUsage()
+        {
+            if (unappliedUsageNote == null) return;
+            var message = IsMultiple ? null : UsageEffectsRule.Unapplied(ability);
+            unappliedUsageNote.text = message ?? "";
+            unappliedUsageNote.style.display = message != null ? DisplayStyle.Flex : DisplayStyle.None;
         }
 
         // The asset loaders and the stages: what the ability does as it runs. They sat in Runtime Behaviour, between
@@ -565,6 +582,7 @@ namespace FarEmerald.PlayForge.Extended.Editor
             if (!IsMultiple && nameField != null && !IsFocused(nameField) && nameField.value != (ability.Definition.Name ?? ""))
                 nameField.SetValueWithoutNotify(ability.Definition.Name ?? "");
             ShowImplicitTag(ability.Behaviour.UseImplicitTargeting);
+            ShowUnappliedUsage();
             UpdateAssetTagDisplay();
             UpdateSummaries();
         }

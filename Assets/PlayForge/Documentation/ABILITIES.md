@@ -122,7 +122,8 @@ This section is what the ability does once it has started.
   - **Completion Policy**: All ends the stage when every task has finished. Any ends it when the first task finishes,
     and cancels the rest. A stage with no policy set behaves as All.
   - **Apply Usage Effects**: apply the ability's cost and cooldown in this stage. They apply once per activation, in
-    the first stage that does this. If no stage does, they are never applied.
+    the first stage that does this. If no stage does, they are never applied, and a warning under Cooldown says so,
+    as the Problems view does.
   - **Apply Usage At Start**: on, apply them as the stage starts. Off, apply them as it ends, and only if it succeeded.
   - **Tasks**: the work, such as Apply Effects, Delay or Run Sequence. A stage that holds a critical task is critical.
     The activation keeps its claim until its last critical stage ends. With no critical stage, it lets the claim go

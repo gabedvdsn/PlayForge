@@ -608,6 +608,7 @@ had no letter in the review. TS-AA onward came from the test project.
 | ED-38 | M | 4 | An asset reference isn't Unity's object field: `AbstractRefDrawer` draws a button that opens a dropdown list of its own, with hover colors and Clear and Open icon buttons set in C#, and setting an effect asks in a dialog whether to link it. Now every asset reference is Unity's object field with a plain button beside it: Open, which shows the asset in a window of its own, or New, which makes one where The Forge puts its type, named and tagged, and uses it (Q15). An effect field says on a line under it how the effect takes its levels, with Link; its template, a pick of unlinked effects and New Linked Effect are in its right-click menu (Q18) | `AbstractForgeObjectDrawer.cs`, `GameplayEffectDrawer.cs` | fixed |
 | ED-39 | M | 4 | Opening an attribute set element can change the set: 50 ms after it draws, and on every change to the set, `AttributeSetElementDrawer` clamps a Current or Base magnitude that sits outside the element's bounds and applies it to the asset, so looking at a set marks it modified. The runtime clamps the same values as the entity starts. Now the drawer writes nothing as it draws: a help box says how the runtime clamps such a magnitude, and only a value typed into a Magnitude field is kept within the bounds, as part of the same edit. The drawer follows the style sheet | `AttributeSetElementDrawer.cs` | fixed |
 | ED-40 | M | 4 | The debugger only watches: it can't change an attribute or a tag, apply an effect or grant an ability, so trying a change means writing code for it. Q27: editing attributes and tags first, then applying effects and granting abilities. Fixed: each section of the Debugger's Entities view ends in a foot row (Decision 31): the selected attribute's Base and Current fields, which the entity takes as they are; Remove for the selected effect, and an effect picked there lands from the entity itself; Activate and Interrupt for the selected ability, and one picked there is granted at a level; Remove for the selected loose tag, and a tag typed or picked from the project's is granted as a loose tag (FEAT-16). The status bar says what each did | `Editor/Debugger/RuntimeDebugger.Entities.cs` | fixed |
+| ED-41 | S | 5 | An ability's cost and cooldown apply only from a stage set to Apply Usage Effects, and nothing said so when no stage was: the Tactics lab's Slash had a cooldown that never came on. Fixed: the Ability inspector warns under Cooldown while the ability has a cost or a cooldown and no stage applies them, and the Problems view lists it (`UsageEffectsRule`) | `Editor/CustomPropertyDrawers/Forge/Editors/Assets/AbilityEditor.cs`, `Editor/Problems/ForgeRules.cs` | fixed |
 
 The design questions behind Phase 4's rows, each with its evidence, are in the UI interview doc of 2026-11-03,
 https://claude.ai/artifact/BbnGybqgX3spJsT6HoTafp. Its answers (Decision 18) settle ED-8, ED-16, ED-19 and ED-12's
@@ -743,6 +744,24 @@ GAS-4 with GAS-5, PC-6, and TS-I with PC-5.
 ## Log
 
 Record baselines, gate results and notable decisions here, newest first.
+
+- 2026-11-05, **The Tactics lab, and ED-41.** The seventh lab (Decision 30).
+  - **The lab** (`Tests/Labs/TacticsLab.cs`, category Lab): a knight and an archer against two goblins, a turn at a
+    time, on a clock that stands still until a turn ends and then moves a whole turn in one frame. Slash has a
+    two-turn cooldown, Poison Arrow bites as each of three turns ends, Guard turns a slash aside for the turn (FEAT-8's
+    immunity), and Mend heals. Between turns a squad is saved, each unit to JSON through `ForgeSave` (FEAT-9); a
+    `Squad` is the game's IDs for its units, so a goblin's poison finds its archer again. Six rounds: a poison's
+    turns, a cooldown's, a guard's, a load that takes the battle back a turn and replays it alike, a save carried on
+    by a fresh squad as a new session, and a battle saved and loaded every turn, which goes as one played straight
+    through.
+  - **ED-41,** which the lab found: an ability's cost and cooldown apply only from a stage set to Apply Usage Effects,
+    and nothing said so when none was, so the lab's Slash had a cooldown that never came on. The Ability inspector
+    warns under Cooldown while no stage applies them, and the Problems view lists it (`UsageEffectsRule`). Seen
+    failing first: `ED_41_The_Ability_inspector_warns_of_usage_no_stage_applies` and
+    `ED_41_A_cost_or_cooldown_no_stage_applies_is_a_problem`.
+  - **Next:** the Combat lab.
+  - **Tests:** PlayMode 1182: 1175 pass, 0 fail and 7 planted are skipped, in three orders (the Tactics lab's 12
+    among them). Planted 7 of 7; EditMode 439 of 439.
 
 - 2026-11-04, **FEAT-9, save and load.** For the Tactics lab (Decision 30).
   - **The API:** `ForgeSave.Capture(gas, catalog, ids)` takes an entity at rest into a `ForgeSnapshot` of plain

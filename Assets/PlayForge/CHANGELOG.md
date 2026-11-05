@@ -7,6 +7,8 @@ tracks each fix below by its ID.
 ## [Unreleased]
 
 ### Added
+- A warning in the Ability inspector, under Cooldown, while the ability has a cost or a cooldown and no stage applies
+  usage effects, so neither is ever applied. The Problems view lists it too (ED-41).
 - Save and load. `ForgeSave.Capture` takes an entity at rest into a `ForgeSnapshot`, plain serializable types a game
   writes where it likes: each attribute's permanent commits, its levels, the abilities it knows, its items with their
   stacks, worn or not, and its effects with their time left, with its loose tags and time scale. `ForgeSave.Restore`
