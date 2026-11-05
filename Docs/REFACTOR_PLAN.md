@@ -549,6 +549,7 @@ had no letter in the review. TS-AA onward came from the test project.
 | GAS-54 | M | 4 | An attribute set element with no Attribute, as a list's "+" leaves one, throws as the entity starts: `AttributeSetMeta` files the set's elements in a dictionary by their attribute, and a null key throws, so the entity gets none of its attributes. Such an element now gives nothing, and the set's unique count leaves it out | `AttributeSet.cs:92, 369-373` | fixed |
 | GAS-55 | M | 4 | Use Minimum takes the first colliding element: `ForgeUtils.IndexMin` started its search from `float.MinValue`, so no value was ever below it. It starts from `float.MaxValue` | `ForgeUtils.cs:23-38` | fixed |
 | GAS-56 | M | 5 | An effect's While-on and Removal requirements are checked again only when an effect is applied or removed (`requirementsDirty`, set in `EffectSystemComponent.ApplyGameplayEffect` and where effects leave the shelf). `CompileGrantedTags` doesn't mark them, so a tag granted or taken back by an ability, an item or a loose tag (FEAT-16) doesn't end an effect until another effect comes or goes. FEAT-3's events should mark them. Found in the Phase 5 survey. Fixed with FEAT-3: a rebuild of the tags that changes one marks the tag cache, and the effect system's next tick runs its requirement pass when an effect is on the shelf. An effect that comes or goes runs the pass itself, and a tag added straight to the cache asks for nothing, as the next rebuild drops it | `EffectSystemComponent.cs`, `TagCache.cs`, `GASCore.cs` (`CompileGrantedTags`) | fixed |
+| GAS-57 | H | 5 | A relative-operation impact worker, the framework's lifesteal, read the impacted attribute's value, never its Relative Attribute, though it checked the Relative Attribute was there: so lifesteal by a Lifesteal share healed the attacker by its own health times the blow, a full heal. Found by the MOBA lab. It reads the Relative Attribute, and one with none set reads the impacted attribute still, as GAS-41's test does | `RelativeOperationContextImpactWorker.cs` (`GetWrtTarget`) | fixed |
 | GAS-P1 | M | 0 | `ActionQueue` LINQ allocations; snapshot built every frame (PF-006) | `ActionQueue.cs:41, 46, 156`, `FrameSummary.cs:340-351` | verified |
 | GAS-P2 | M | 0 | Tag and FrameSummary allocations (PF-007) | `TagCache.cs:60`, `TagQuery.cs:89-136`, `FrameSummary.cs:306-308` | verified |
 | GAS-P3 | M | 3 | Each application revalidates every container and rebuilds all tags (area application is quadratic). Measured: an instant application on an entity carrying 1,000 effects took 0.49 ms, 135 times one on an entity carrying 2. Now the requirements wait for one pass at the next tick, a shelved container's tags are counted as it lands, and re-application and removal find containers in an index by asset tag | `EffectSystemComponent.cs:312-348`, `GameplayAbilitySystem.cs:250-281` | verified |
@@ -664,7 +665,7 @@ Phase 2 part, and set Phase 4's direction.
 | FEAT-2 | SetByCaller magnitudes | Scalers read the data packet (C01) |
 | FEAT-3 | Tag-change events | Replace tag-worker polling. Done (Decision 30): `TagCache.Listen` hears a tag and the tags under it come and go, at once, or every weight change; `TagChanged` hears every change; a rebuild tells only what it changed; a tag worker is evaluated when the tags change, unless it asks for every frame (`EvaluateEveryFrame`) |
 | FEAT-4 | Ability triggers | Activate on a gameplay event or when a tag is added |
-| FEAT-5 | Cancel and block abilities by tag | C11. Done (Decision 30): an ability's Cancelled By names the abilities that cancel it as they activate, and its Blocks those that can't activate while it runs, by asset or context tag; each stage can name its own, and one that names none takes the ability's; a critical stage can't be cancelled; the While active row of its tag requirements interrupts it when its caster fails it |
+| FEAT-5 | Cancel and block abilities by tag | C11. Done (Decision 30): an ability's Cancelled By names the abilities that cancel it as they activate, and its Blocks those that can't activate while it runs, by asset or context tag; each stage can name its own, and one that names none takes the ability's; a critical stage can't be cancelled; the While active row of its tag requirements interrupts it as soon as its caster's tags fail it |
 | FEAT-6 | Input buffer | Expiry and latest-wins for queued activations (C06) |
 | FEAT-7 | Time source | Per-entity time scale and deterministic fixed tick (C02). The clock per entity is done (Decision 30): `GetClock()`, the game's time by `ForgeTime` times the entity's `TimeScale`, which its effects, cooldowns, sequences, waits and projectiles run by. The fixed-rate tick is done too: with ProcessControl's Fixed Tick Rate set, each frame runs as many ticks as its time holds, each stepping every process and its end of frame by a fixed step, and each sequence's wait goes on by the tick (`ForgeTick.Next`) |
 | FEAT-8 | Effect conveniences | Cleanse by tag query, immunity, overflow at max stacks, abilities granted by effects, chance to apply. Done. Cleanse and immunity (Removes Effects Tagged, Blocks Effects Tagged) match an effect's asset, context and granted tags (Decision 30); overflow at max stacks is on Stack Bounds (Overflow Effects, Deny Refresh On Overflow, Clear Stacks On Overflow); an effect's Granted Abilities are lent at its origin's level while it's on; an effect lands by its Chance to Apply, drawn from `ForgeRandom` |
@@ -740,6 +741,25 @@ GAS-4 with GAS-5, PC-6, and TS-I with PC-5.
 ## Log
 
 Record baselines, gate results and notable decisions here, newest first.
+
+- 2026-11-05, **The MOBA hero kit lab, GAS-57, and While active heard at once.** The second lab (Decision 30).
+  - **The lab** (`Tests/Labs/MobaLab.cs` in Proving Grounds, category Lab): four heroes of four abilities, on a clock
+    of half a second a frame. Mana pays for each cast; a hero's Cooldown Reduction shortens its cooldowns (a game's
+    scaler on the cooldown's duration); armor and magic resist each let through 100 / (100 + resist) of a blow of
+    their kind (a game's inline worker, by impact type); lifesteal is the framework's relative-operation worker. A
+    silence, a stun, a cleanse (FEAT-8), and a channel that a stun ends (While active), a blink cancels (Cancelled
+    By) and that blocks the caster's other spells (Blocks). Its bot plays nine rounds, the last two on two for eight
+    seconds.
+  - **GAS-57,** which the lab found: the relative-operation worker read the impacted attribute's value, never its
+    Relative Attribute, so lifesteal healed the attacker by its own health times the blow. Seen failing first:
+    `GAS_57_A_relative_worker_reads_its_relative_attribute`.
+  - **While active, heard at once** (FEAT-5), which the lab found too: checked at the stunned entity's next step, a
+    stun let a channel's tick that came due earlier in the frame land. The ability system checks as it hears a tag
+    change, as tag events are heard, guarded so a change its own interrupt sets off waits for the check under way,
+    and at each step as before. Seen failing first: `FEAT_5_A_stun_ends_a_channel_before_its_next_tick`.
+  - **Next:** the Duel lab, with FEAT-6 (the input buffer) and TS-7 (critical sections that branch).
+  - **Tests:** PlayMode 1083: 1076 pass, 0 fail and 7 planted are skipped, in three orders (the MOBA lab's 18 among
+    them). Planted 7 of 7; EditMode 433 of 433.
 
 - 2026-11-04, **FEAT-5: cancel and block abilities by tag, and While active.** The MOBA hero kit's feature, ahead of
   the lab (Decision 30).

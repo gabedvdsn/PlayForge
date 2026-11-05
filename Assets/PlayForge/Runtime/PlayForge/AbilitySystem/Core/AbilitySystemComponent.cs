@@ -393,22 +393,48 @@ namespace FarEmerald.PlayForge
         private static bool PassesWhileActive(AbilitySpecContainer container, TagCache tags) =>
             container.Spec.Base.Tags?.TagRequirements?.CheckWhileActiveRequirements(tags) ?? true;
 
-        // Whether the caster's tags changed since the running abilities' While active groups were checked
+        // Whether the caster's tags changed since the running abilities' While active groups were checked, and whether a
+        // check is under way, which a change it sets off waits for
         private bool tagsChangedWhileActive;
+        private bool checkingWhileActive;
 
-        /// <summary>Hears each change to the caster's tags, which a running ability's While active group may fail on (FEAT-5).</summary>
-        internal void HearTagChange(TagChange change) => tagsChangedWhileActive = true;
+        /// <summary>
+        /// Hears each change to the caster's tags, which a running ability's While active group may fail on, and checks
+        /// at once, as tag events are heard. Checked at the next step, a stun let a channel's tick that came due first
+        /// land (FEAT-5).
+        /// </summary>
+        internal void HearTagChange(TagChange change)
+        {
+            tagsChangedWhileActive = true;
+            if (!checkingWhileActive) CheckWhileActive();
+        }
 
         /// <summary>
         /// Interrupts each running ability whose While active group its caster no longer passes, once the tags have
-        /// changed: a stun ends a channel. Called each step, after the effects tick, so a stun an effect grants ends it
-        /// in the frame it lands. Requirements weren't checked once an ability ran (FEAT-5).
+        /// changed: a stun ends a channel. Called as the tags change, and each step as well, after the effects tick.
+        /// Requirements weren't checked once an ability ran (FEAT-5).
         /// </summary>
         internal void CheckWhileActive()
         {
-            if (!tagsChangedWhileActive) return;
-            tagsChangedWhileActive = false;
+            if (checkingWhileActive) return;
+            checkingWhileActive = true;
+            try
+            {
+                // Again while an interrupt's own changes ask, each of which ends a running ability, so it stops
+                while (tagsChangedWhileActive)
+                {
+                    tagsChangedWhileActive = false;
+                    InterruptFailingWhileActive();
+                }
+            }
+            finally
+            {
+                checkingWhileActive = false;
+            }
+        }
 
+        private void InterruptFailingWhileActive()
+        {
             int count = RunningCount();
             if (count == 0) return;
             var tags = Self.GetTagCache();

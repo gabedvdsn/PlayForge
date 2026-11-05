@@ -127,7 +127,7 @@ namespace FarEmerald.PlayForge
             Clock.Step();
             EffectSystem.Tick();
 
-            // After the effects, so a stun one grants this step ends a channel in it (FEAT-5)
+            // Heard as the tags change; checked here too, after the effects, for a change heard while a check ran (FEAT-5)
             AbilitySystem.CheckWhileActive();
 
             // Tag workers tick once a frame, at its end, once their activations are settled. Ticked here as well,

@@ -94,13 +94,17 @@ namespace FarEmerald.PlayForge
             return true;
         }
         
+        // The value the work is relative to: the Relative Attribute's, on the side With Respect To names. It read the
+        // impacted attribute's even with one set, so lifesteal by a Lifesteal share healed the attacker by its own health
+        // times the blow (GAS-57). A worker with none set reads the impacted attribute still, as it did
         private bool GetWrtTarget(ImpactData impactData, out AttributeValue value)
         {
             value = default;
+            IAttribute relative = RelativeAttribute != null ? RelativeAttribute : impactData.Attribute;
             return WithRespectTo switch
             {
-                ESourceTarget.Source => impactData.SourcedModifier.Source.TryGetAttributeValue(impactData.Attribute, out value),
-                ESourceTarget.Target => impactData.Target.TryGetAttributeValue(impactData.Attribute, out value),
+                ESourceTarget.Source => impactData.SourcedModifier.Source.TryGetAttributeValue(relative, out value),
+                ESourceTarget.Target => impactData.Target.TryGetAttributeValue(relative, out value),
                 _ => false
             };
         }

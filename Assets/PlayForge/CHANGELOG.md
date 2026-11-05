@@ -239,6 +239,9 @@ tracks each fix below by its ID.
   Asking whether its sequence was paused took 24 bytes a frame.
 
 ### Fixed
+- A relative-operation impact worker reads its Relative Attribute. It read the impacted attribute's value even with
+  one set, so lifesteal by a Lifesteal share healed the attacker by its own health times the blow; one with none set
+  reads the impacted attribute still (GAS-57).
 - A tag that an ability, an item or a loose grant gives or takes back meets or breaks an effect's requirements at the
   next frame. An effect's requirements were checked only when an effect came or went (GAS-56).
 - Importing a whole asset no longer copies its name, asset tag, template or level link (ED-35).
