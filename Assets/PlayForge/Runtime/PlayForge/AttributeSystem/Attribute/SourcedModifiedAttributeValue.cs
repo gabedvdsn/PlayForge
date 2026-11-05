@@ -16,6 +16,12 @@ namespace FarEmerald.PlayForge
         public ISource Source => Carrier.GetOrigin().GetSource();
         public ITarget Target => Carrier.GetTarget();
 
+        /// <summary>
+        /// A value over another's carrier. Where that carrier has impacters of its own, as an effect's spec has, the
+        /// attribute system commits them as authored, and these values only travel with them: deriving from a hit and
+        /// giving it +10 lands the hit again. A change of a value of its own takes <see cref="GenerateSimple"/> or
+        /// <see cref="GenerateUnworkable"/>, whose carriers have none (found by the time magic scenario, FEAT-22).
+        /// </summary>
         public SourcedModifiedAttributeValue(SourcedModifiedAttributeValue derivation, float currentValue, float baseValue, bool impactIsWorkable = true)
         {
             Carrier = derivation.Carrier;

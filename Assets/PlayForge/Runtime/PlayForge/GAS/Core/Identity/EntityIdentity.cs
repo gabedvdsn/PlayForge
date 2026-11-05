@@ -43,6 +43,14 @@ namespace FarEmerald.PlayForge
         
         public AttributeSet AttributeSet;
 
+        /// <summary>
+        /// The attribute its time runs at, 1 as the game's: an effect that lowers it slows the entity, its effects,
+        /// cooldowns, sequences and waits with it, and one that raises it hastes it (FEAT-22). None, its time scale is
+        /// its game's code's to set, through its clock.
+        /// </summary>
+        [Tooltip("The attribute its time runs at, 1 as the game's: an effect that lowers it slows the entity, and one that raises it hastes it. None, the game's code sets its time scale")]
+        public Attribute TimeScaleAttribute;
+
         public StandardWorkerGroup WorkerGroup;
         
         public override string GetName()

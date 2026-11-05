@@ -7,6 +7,9 @@ tracks each fix below by its ID.
 ## [Unreleased]
 
 ### Added
+- An entity's time scale from an attribute. An entity's Time Scale names the attribute its time runs at, so an
+  effect that lowers it slows the entity, its effects, cooldowns, sequences and waits with it, and one that raises
+  it hastes it (FEAT-22).
 - The Debugger's Timeline view. It records, as the game plays, each run of an ability, stage by stage, each refused
   activation, and each effect's time on the shelf, and draws them over the last seconds, a track for each entity's
   ability or effect. A track selected shows an ability's stages and their tasks, with when the selected run reached

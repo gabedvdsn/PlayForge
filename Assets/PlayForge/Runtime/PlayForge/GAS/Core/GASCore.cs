@@ -93,6 +93,7 @@ namespace FarEmerald.PlayForge
 
             AbilitySystem.Initialize(identity.StartingAbilities);
             AttributeSystem.Initialize();
+            FollowTimeScale();
             ItemSystem.Initialize(identity.StartingItems);
 
             CompileGrantedTags();
@@ -143,6 +144,7 @@ namespace FarEmerald.PlayForge
             Stepping = true;
             try
             {
+                FollowTimeScale();
                 Clock.Step();
                 EffectSystem.Tick();
 
@@ -168,6 +170,14 @@ namespace FarEmerald.PlayForge
         /// The frame's deferred work: the queued actions, then the tag workers' and the analysis workers', each with what
         /// it queued in turn, then the frame's summary. True once the entity has died, for its hub to end it.
         /// </summary>
+        // The entity's time runs at its time-scale attribute's current value, read as each step begins, where its identity
+        // names one, so an effect on that attribute slows or hastes it. Only its game's code could set it (FEAT-22)
+        private void FollowTimeScale()
+        {
+            var attribute = Identity?.TimeScaleAttribute;
+            if (attribute != null && AttributeSystem.TryGetValue(attribute, out var value)) Clock.TimeScale = value.CurrentValue;
+        }
+
         public bool EndOfFrame()
         {
             if (ActionQueue == null) return false;

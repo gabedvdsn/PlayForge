@@ -336,13 +336,16 @@ namespace FarEmerald.PlayForge.Extended.Editor
                 HelpTopic = "entities/attributes",
 
                 SerializedObject = serializedObject,
-                PropertyPaths = new[] { nameof(EntityIdentity.AttributeSet) },
+                PropertyPaths = new[] { nameof(EntityIdentity.AttributeSet), nameof(EntityIdentity.TimeScaleAttribute) },
                 OnImportComplete = OnSectionReplaced,
                 OnClearComplete = OnSectionReplaced,
             });
             parent.Add(attributesSection.Section);
 
             attributesSection.Content.Add(CreatePropertyField(serializedObject.FindProperty(nameof(EntityIdentity.AttributeSet)), "AttributeSet", "Attribute Set"));
+
+            // The attribute its time runs at, which a slow or a haste changes (FEAT-22)
+            attributesSection.Content.Add(CreatePropertyField(serializedObject.FindProperty(nameof(EntityIdentity.TimeScaleAttribute)), "TimeScaleAttribute", "Time Scale"));
 
             // The table shows one entity's set (ED-12)
             if (IsMultiple)

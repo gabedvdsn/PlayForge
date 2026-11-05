@@ -720,6 +720,7 @@ Phase 2 part, and set Phase 4's direction.
 | FEAT-19 | Effect stacks scaler | Nothing built in read an effect's stack count, so a change by the stack, as a sunder's −5 armor a stack, took a scaler written for it: Proving Grounds wrote its own twice (`StackCountScaler` in `EffectStackingTests` and `GoldenImpactTests`). Found by the Combat lab. Done (Decision 30): `EffectStacksScaler` reads the stack count of the effect's own container, 1 for one that doesn't stack, as `ItemStacksScaler` reads an item's (FEAT-14) |
 | FEAT-20 | Copy an entity | The review's mirror clones: copying a GAS's state into a new runtime GAS took FEAT-9's capture and restore, which need a catalog naming every asset and IDs for every entity, which assets made as the game runs never have; and the entity's own level stayed behind on a clone of another kind, saved under its kind's tag. Found by the mirror clones scenario. Done (Decision 30): `ForgeSave.Copy(from, onto)` captures and restores with names for assets and entities that last the session, and a save keeps the entity's own level under no key, which loads onto the target's own |
 | FEAT-21 | Run a sequence made in code | Run Sequence ran only a sequence a static method made, by name (`TaskSequenceReference`), so a sequence made in code, as an ability built as the game runs makes one with `TaskSequenceBuilder`, couldn't run in an ability; Proving Grounds' nested-sequence tests handed theirs over in a static field. Found by the ability crafting scenario. Done (Decision 30): `RunSequenceTask.Definition`, a `TaskSequenceDefinition` made in code, of which each activation runs a fresh sequence |
+| FEAT-22 | Time scale from an attribute | The review's time magic: an entity's time (FEAT-7) could be set only by its game's code, through its clock, so no effect could slow or haste one, and two that tried would each need code to undo the other. Found by the time magic scenario. Done (Decision 30): an identity's Time Scale (`EntityIdentity.TimeScaleAttribute`, and the runtime identity's) names the attribute its time runs at, read as each step begins, so an effect on it slows or hastes the entity, stacks with others as modifiers do, and ends with its effect. The Entity inspector's Attributes section edits it |
 
 **Phase 5's order,** from the review's plan for the test project (its labs, one at a time) and the table above. A lab
 is a small game: assets the lab builds in code, and a bot that plays it in PlayMode tests under a live ProcessControl,
@@ -783,6 +784,29 @@ GAS-4 with GAS-5, PC-6, and TS-I with PC-5.
 ## Log
 
 Record baselines, gate results and notable decisions here, newest first.
+
+- 2026-11-05, **FEAT-22, and the time magic scenario.** The seventh stretch scenario (Decision 30), the first of
+  the three left: time magic, possession and rollback.
+  - **FEAT-22:** an identity's Time Scale names the attribute its time runs at. `GASCore.FollowTimeScale` reads its
+    current value as each step begins, and as the entity initializes, so an effect that lowers it slows the entity,
+    its effects, cooldowns, sequences and waits with it, one that raises it hastes it, and two add as modifiers do.
+    Only the game's code could set an entity's time. The Entity inspector's Attributes section edits it, under the
+    Attribute Set, and ENTITIES.md says so.
+  - **Time magic** (Proving Grounds' `Tests/Stretch`): a slow field takes the entities within 5 m to half time for
+    3 seconds of their own time, so 6 of the game's, while one outside runs on: a 2 s mark lasts 4 game seconds
+    inside and 2 outside. Haste runs an entity at half again as fast, so its 3 s mark lasts 2. And Rewind, an
+    ability whose task reads the caster's history, undoes what the last 3 seconds of its time did to its
+    attributes, rebuilt from its frames' summaries (`OnFrameComplete`), so of four hits only the first stays.
+  - **A trap it found:** the first rewind derived each undo from the hit's own sourced modifier, and the attribute
+    system committed the hit again, as an effect's carrier commits its impacters as authored, the values only
+    travelling with them. Not a bug, but nothing said so: the derivation constructor's comment does now, and points
+    to `GenerateSimple` and `GenerateUnworkable`, whose carriers have none. The rewind's undo is unworkable, the
+    entity's own change, which no worker sees.
+  - **Its tests:** `FEAT_22_An_effect_on_the_time_scale_attribute_slows_or_hastes_its_entity`, seen failing first
+    (no identity had a time-scale attribute, so it didn't compile), and `Stretch_Time_magic_slows_hastes_and_rewinds`.
+  - **Tests:** PlayMode 1284: 1277 pass, 0 fail and 7 planted are skipped, in three orders. Planted 7 of 7;
+    EditMode 447 of 447.
+  - **Next:** the possession scenario: abilities and effects moved between entities mid-cast.
 
 - 2026-11-05, **FEAT-12: the ability graph and timeline, and the effect recorder** (Decision 30).
   - **The recorder** (`TimelineRecorder`, editor-only): while the Debugger reads the game in Play mode, it hears each

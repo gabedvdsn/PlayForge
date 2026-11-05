@@ -311,6 +311,9 @@ namespace FarEmerald.PlayForge
 
         public AttributeSet AttributeSet;
 
+        /// <summary>The attribute its time runs at, as <see cref="EntityIdentity.TimeScaleAttribute"/> (FEAT-22).</summary>
+        public Attribute TimeScaleAttribute;
+
         public StandardWorkerGroup WorkerGroup;
 
         // An asset's Local Data. The copy left it out, so a runtime GAS made from an asset had none (GAS-S1)
@@ -341,6 +344,7 @@ namespace FarEmerald.PlayForge
             AllowDuplicateItems = data.AllowDuplicateItems;
             AllowDuplicateEquippedItems = data.AllowDuplicateEquippedItems;
             AttributeSet = data.AttributeSet;
+            TimeScaleAttribute = data.TimeScaleAttribute;
             WorkerGroup = data.WorkerGroup;
             LocalData = data.LocalData;
         }
