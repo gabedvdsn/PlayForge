@@ -13,7 +13,7 @@ Amendment (2026-07-14): entries are **derived on every `Generate()`, never seria
 half-authored inspector state into assets; the single quad remains the authored surface
 until a multi-entry drawer ships, at which point an explicitly-authored entry list can take
 precedence over derivation. The migration tool became the read-only
-**Window → PlayForge → Audit Effect Impact Deliveries**.
+**Window → PlayForge → Audit Effect Impact Deliveries**, whose flags are the Problems view's since ED-15.
 
 Amendment (2026-11-04, ED-3): the multi-entry drawer has shipped. The quad stays the effect's
 first impact, derived as before; `GameplayEffectImpact.AdditionalImpacts` holds authored entries,

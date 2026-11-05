@@ -1,4 +1,6 @@
 using System;
+using System.Collections.Generic;
+using System.Linq;
 using UnityEngine;
 using UnityEngine.UIElements;
 
@@ -38,6 +40,32 @@ namespace FarEmerald.PlayForge.Extended.Editor
 
         /// <summary>The line under the name: the asset's type and asset tag, as in "Gameplay Effect · Effect.Burning".</summary>
         public Label Subtitle { get; }
+
+        /// <summary>The asset's problem count, which shows while the validator finds any (Q8, ED-15).</summary>
+        public Button ProblemCount { get; private set; }
+
+        /// <summary>Adds the problem count, which opens the Problems view on the asset, hidden until it has problems.</summary>
+        public Button AddProblemCount(Action onClick)
+        {
+            ProblemCount = new Button(onClick) { name = "ProblemCount" };
+            ProblemCount.AddToClassList("pf-asset-header__problems");
+            // Hidden by its class, as the header takes its whole look from the style sheet (ED-20)
+            ProblemCount.AddToClassList("pf-asset-header__problems--none");
+            Add(ProblemCount);
+            return ProblemCount;
+        }
+
+        /// <summary>Shows how many problems the asset has, as "2 problems", each one's message in the tooltip.</summary>
+        public void ShowProblems(IReadOnlyList<ForgeProblem> problems)
+        {
+            if (ProblemCount == null) return;
+            int count = problems?.Count ?? 0;
+            ProblemCount.EnableInClassList("pf-asset-header__problems--none", count == 0);
+            ProblemCount.text = count == 1 ? "1 problem" : $"{count} problems";
+            ProblemCount.EnableInClassList("pf-asset-header__problems--error",
+                count > 0 && problems.Any(problem => problem.Severity == ForgeProblemSeverity.Error));
+            ProblemCount.tooltip = count > 0 ? string.Join("\n", problems.Select(problem => problem.Message)) + "\n\nOpen them in the Problems view" : "";
+        }
 
         /// <summary>Adds an action as a plain button with its name, as Open in The Forge is.</summary>
         public Button AddButton(string text, string tooltip, Action onClick)

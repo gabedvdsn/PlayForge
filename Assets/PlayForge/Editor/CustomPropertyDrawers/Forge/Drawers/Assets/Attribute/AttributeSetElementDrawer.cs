@@ -182,19 +182,7 @@ namespace FarEmerald.PlayForge.Extended.Editor
                 var currentText = linkProp.boolValue ? "Current takes Base's" : $"Current {SideText(curMagProp, curScalingProp, curRealMagProp)}";
                 summary.text = $"{currentText} · Base {SideText(baseMagProp, baseScalingProp, baseRealMagProp)} · {ForgeAttributeTable.RangeOf(overflow, clamped).text}";
 
-                var messages = new List<string>();
-                if (clamped)
-                {
-                    float storedBase = baseMagProp.floatValue, keptBase = overflow.ClampBase(storedBase);
-                    if (!Mathf.Approximately(storedBase, keptBase))
-                        messages.Add($"Base {Number(storedBase)} is outside its bounds, so the runtime clamps it to {Number(keptBase)}.");
-                    if (!linkProp.boolValue)
-                    {
-                        float storedCurrent = curMagProp.floatValue, keptCurrent = overflow.ClampCurrent(storedCurrent, keptBase);
-                        if (!Mathf.Approximately(storedCurrent, keptCurrent))
-                            messages.Add($"Current {Number(storedCurrent)} is outside its bounds, so the runtime clamps it to {Number(keptCurrent)}.");
-                    }
-                }
+                var messages = BoundsMessages(overflow, clamped, baseMagProp.floatValue, linkProp.boolValue, curMagProp.floatValue);
                 outOfBounds.text = string.Join(" ", messages);
                 outOfBounds.style.display = messages.Count > 0 ? DisplayStyle.Flex : DisplayStyle.None;
             }
@@ -294,5 +282,23 @@ namespace FarEmerald.PlayForge.Extended.Editor
         }
 
         private static string Number(float value) => value.ToString("0.##", CultureInfo.CurrentCulture);
+
+        /// <summary>
+        /// What the help box says of an element whose magnitudes are outside its bounds: that the runtime clamps them. The
+        /// validator says the same, so the Problems view and the element agree (ED-15).
+        /// </summary>
+        internal static List<string> BoundsMessages(AttributeOverflowData overflow, bool clamped, float storedBase, bool linked, float storedCurrent)
+        {
+            var messages = new List<string>();
+            if (!clamped) return messages;
+            float keptBase = overflow.ClampBase(storedBase);
+            if (!Mathf.Approximately(storedBase, keptBase))
+                messages.Add($"Base {Number(storedBase)} is outside its bounds, so the runtime clamps it to {Number(keptBase)}.");
+            if (linked) return messages;
+            float keptCurrent = overflow.ClampCurrent(storedCurrent, keptBase);
+            if (!Mathf.Approximately(storedCurrent, keptCurrent))
+                messages.Add($"Current {Number(storedCurrent)} is outside its bounds, so the runtime clamps it to {Number(keptCurrent)}.");
+            return messages;
+        }
     }
 }

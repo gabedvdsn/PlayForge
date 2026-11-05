@@ -79,7 +79,7 @@ The fields show as the Policy uses them.
   - **Tick Every** (Infinite): the seconds between ticks.
 - **Tick On Application**: run one tick as soon as the effect is applied, before the first periodic tick. It runs
   again when re-application refreshes or extends the effect. Use it with Periodic Ticks. On its own, it is a shape that
-  the Audit Effect Impact Deliveries menu item flags.
+  the Problems view flags.
 - **Additional Executions** (while it ticks): each tick executes the change a number of times, N plus this, combined
   with its scaler. N comes from the effect's container and is normally 1. A stacking container that shares one
   duration, or takes it from one stack, uses its stack count.
@@ -145,8 +145,7 @@ duration gives it. Additional Impacts change more attributes, or the same one ag
   - **Comparison** (all but Always Allow): Any (default) needs one tag to match. All needs every tag to match.
 
 The inspector no longer shows Reverse On Removal. A Continuous modifier always reverses when the effect ends, and a
-commit never does, so the flag changes nothing. The Audit Effect Impact Deliveries menu item still flags a periodic
-effect that sets it.
+commit never does, so the flag changes nothing. The Problems view still flags a periodic effect that sets it.
 
 ### Additional Impacts
 

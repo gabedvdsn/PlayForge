@@ -1212,3 +1212,76 @@
 .pf-root .pf-settings__defaults {
     margin-top: 2px;
 }
+
+/* ─── Problems: the Problems view's list, and an asset header's count (Q8, ED-15) ────────────────────────────────── */
+
+.pf-root .pf-asset-header__problems {
+    height: 20px;
+    flex-shrink: 0;
+    margin: 0 0 0 8px;
+    color: var(--pf-warning-text);
+}
+
+.pf-root .pf-asset-header__problems--error {
+    color: var(--pf-destructive);
+}
+
+.pf-root .pf-asset-header__problems--none {
+    display: none;
+}
+
+.pf-root.pf-problems {
+    flex-grow: 1;
+}
+
+.pf-root .pf-problems__search {
+    width: 220px;
+    flex-shrink: 1;
+    min-width: 80px;
+}
+
+.pf-root .pf-problems__list {
+    flex-grow: 1;
+}
+
+.pf-root .pf-problems__list .pf-glyph {
+    width: 14px;
+    height: 14px;
+    align-self: center;
+    margin-left: 4px;
+}
+
+.pf-root .pf-problems__asset {
+    flex-direction: row;
+    align-items: center;
+    overflow: hidden;
+    padding-left: 4px;
+}
+
+.pf-root .pf-problems__asset .pf-glyph {
+    margin: 0 6px 0 0;
+    flex-shrink: 0;
+}
+
+.pf-root .pf-problems__name,
+.pf-root .pf-problems__message {
+    flex-shrink: 1;
+    min-width: 0;
+    margin: 0;
+    padding: 0 4px 0 0;
+    -unity-text-align: middle-left;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+}
+
+.pf-root .pf-problems__status {
+    flex-shrink: 0;
+    height: 20px;
+    padding: 0 6px;
+    -unity-text-align: middle-left;
+    color: var(--pf-secondary-text);
+    border-top-width: 1px;
+    border-top-color: var(--pf-line);
+    background-color: var(--pf-toolbar);
+}

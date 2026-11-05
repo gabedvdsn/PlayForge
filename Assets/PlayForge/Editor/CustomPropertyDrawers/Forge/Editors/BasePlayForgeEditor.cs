@@ -389,6 +389,17 @@ namespace FarEmerald.PlayForge.Extended.Editor
             _headerSubtitleLabel = header.Subtitle;
             UpdateHeader();
 
+            // How many problems the validator finds in the selection, which follows it and opens the Problems view on the
+            // asset (Q8, ED-15)
+            var problems = header.AddProblemCount(() => ForgeProblemsWindow.ShowFor(target));
+            void ShowProblems() => header.ShowProblems(targets.Where(each => each != null).SelectMany(each => ForgeValidator.ProblemsOf(each)).ToList());
+            problems.RegisterCallback<AttachToPanelEvent>(_ =>
+            {
+                ForgeValidator.Changed += ShowProblems;
+                ShowProblems();
+            });
+            problems.RegisterCallback<DetachFromPanelEvent>(_ => ForgeValidator.Changed -= ShowProblems);
+
             // Open in The Forge and the template act on one asset, so a multiple selection leaves them out (ED-12)
             if (!IsMultiple) header.AddButton("Open in The Forge", "Show this asset in The Forge", OnOpenInManager);
 

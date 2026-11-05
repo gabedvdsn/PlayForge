@@ -110,8 +110,11 @@ string perLevel = impact.FormatTotal();           // "20/30/40/50"
   Forge's window menu opens both.
 - **Golden tests** (the Test Runner's EditMode tab, `FarEmerald.PlayForge.Tests.Golden`) — the framework's behavioral
   contract; run after upgrading.
-- **Audit** (`Window → PlayForge → Audit Effect Impact Deliveries`) — reports every effect's
-  derived delivery and flags review-worthy authoring shapes.
+- **Problems** (`Window → PlayForge → Problems`) — every problem the validator finds in the project's PlayForge
+  assets, such as a link with no provider, an impact that never applies or a field that reads a scaler it hasn't got,
+  with its severity and its asset; a click selects the asset. An inspector's header counts its asset's problems. In
+  batch mode, `ForgeValidator.LogAll` writes them to the Console. Add a check of your own by deriving from
+  `ForgeValidationRule`.
 
 ## Logging
 

@@ -7,6 +7,13 @@ tracks each fix below by its ID.
 ## [Unreleased]
 
 ### Added
+- One validator and a Problems view (`Window → PlayForge → Problems`). The validator checks each PlayForge asset for
+  what its inspector warns about in place: a link with no provider, an impact that never applies, a field that reads a
+  scaler it hasn't got, a Shared scaler with no asset, two fields that hold one scaler, a set element with no attribute
+  or a magnitude outside its bounds, a stale asset tag, a missing name, and data whose class is missing. The view lists
+  each problem with its severity and asset, and a click selects the asset; an inspector's header counts its asset's
+  problems. Both follow the project, with no Refresh. `ForgeValidator.LogAll` writes the problems to the Console in
+  batch mode, and a `ForgeValidationRule` of your own adds a check (ED-15).
 - Scaler assets: a scaler that many fields share. A field of the Shared kind reads its asset's scaler, so an edit to
   the asset reaches every field that uses it, and the field's own number adjusts what it reads, as in Fire Duration
   × 1.5. The Scaler Template asset is the Scaler asset now, without the sync settings nothing read. An attribute set's
@@ -224,7 +231,9 @@ tracks each fix below by its ID.
   or turning `Enabled` off. Once the first had ended, it threw, and the rest ran on.
 
 ### Removed
-- The Forge's Settings tab, whose settings are on the two settings pages; template tags, which only labelled templates
+- Validate All, which flagged every effect with no workers and showed 15 problems in a dialog, and the Audit Effect
+  Impact Deliveries menu item, which wrote to the Console. The Problems view has their checks (ED-15).
+- The Forge's Settings tab,whose settings are on the two settings pages; template tags, which only labelled templates
   on that tab; and the Create dialog's type settings, of which all but the Requirement's category named fields the types
   don't have, so they did nothing. A type's New Asset default sets such values now (ED-21).
 - QuickOutline, replaced by the Demo's own outline.

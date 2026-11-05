@@ -529,7 +529,7 @@ had no letter in the review. TS-AA onward came from the test project.
 | ED-12 | H | 4 | No Undo, multi-edit or prefab overrides. The inspectors wrote 42 edits straight into their asset, and only the 5 renames recorded Undo; no inspector took a multiple selection; six drawers copy their SerializedObject for one target, and two write while drawing. Fixed: Phase 2's part (a rename stores the tag in the same undoable step, and showing never writes), the Attribute inspector (its fields bind, it takes a multiple selection, and every inspector's header follows Undo), the MonoProcess inspector's multiple selection, the Effect, Item and Attribute Set inspectors' Description and Link Mode, the Entity inspector's fields, the Ability inspector's Description, Activation Policy, Activate Immediately and Link Mode, Link, Unlink and template assignment in every inspector, the drawers that rebuilt on a one-target copy, the type drawers that wrote a default while drawing, and every asset inspector's multiple selection; the magnitude field and the scaler drawer change each selected asset's own values | `EachAsset.cs`, `MagnitudeField.cs`, `ScalerFields.cs`, `EffectEditor.cs`, `EntityIdentityEditor.cs`, `AttributeSetEditor.cs`, `BasePlayForgeEditor.cs` (`IsMultiple`) | fixed |
 | ED-13 | M | 4 | Template propagation on save loads everything, opens a modal mid-save and records no Undo; the validator is empty | `ForgeTemplateProcessor.cs:45-52`, `ForgeTemplatePropagator.cs:201-229` | open |
 | ED-14 | H | 1 | The `GameplayEffectImpact` copy constructor drops affiliation and throws on null packets | `GameplayEffectImpact.cs:155-176` | verified |
-| ED-15 | M | 4 | "Validate All" is noisy and capped at 15; "Find All References" is a dialog. Fixed so far: the Attribute inspector's Find All References, which a Used By section replaces: the assets that use the attribute, each a row that selects it. Left: Validate All, with The Forge's redesign | `TheForge.SettingsTab.cs:1808-1832`, `AttributeEditor.cs:261-273` | open |
+| ED-15 | M | 4 | "Validate All" is noisy and capped at 15; "Find All References" is a dialog. Fixed: the Used By sections replace Find All References, and one validator (`ForgeValidator`, with a `ForgeValidationRule` per check) feeds the Problems view and each inspector header's count, in place of Validate All and the Audit (Q8). The Forge's problem glyph and counts come with its window (ED-27) | `ForgeValidator.cs`, `ForgeRules.cs`, `ForgeProblemsWindow.cs`, `ForgeAssetHeader.cs` | fixed |
 | ED-16 | M | 2 | 49 placeholder `docs.playforge.dev` links in six editors, some pointing at the wrong page, with slugs that vary (`level-source`, `levelsource`). The Asset Store strongly recommends offline docs (rule 2.3.a) | `AbilityEditor.cs:77, 116`, `AttributeSetEditor.cs:818`, `AttributeEditor.cs:183`, `EntityIdentityEditor.cs:158` | verified |
 | ED-17 | M | 2 | Stray `Debug.Log` calls | `GameplayEffectImpactDrawer.cs:33`, `AssetBrowserWindow.cs:348`, `AbstractRefDrawer.cs:81`, `TagDrawer.cs:745`, `TheForge.ViewTab.cs:2009` | verified |
 | ED-18 | M | 4 | Collapse state lives in static dictionaries keyed by property path, so every asset shares it and a domain reload loses it. Each drawer now keeps it per asset for the editor session, in SessionState; a [SerializeReference] field's state follows the object it holds, and deleting a stage moves the later stages' states up with them | `AbilityTaskBehaviourStageDrawer.cs:31`, `AbilityBehaviourDrawer.cs:18-20` | fixed |
@@ -657,6 +657,36 @@ GAS-4 with GAS-5, PC-6, and TS-I with PC-5.
 ## Log
 
 Record baselines, gate results and notable decisions here, newest first.
+
+- 2026-11-04, **ED-15: one validator, the Problems view and the header's count.** The second of The Forge's redesign,
+  from Q8's answer: a Problems view and badges, both fed by one validator. ED-15 is fixed.
+  - **The validator,** `ForgeValidator`, runs each `ForgeValidationRule` it finds (PlayForge's, and any a project adds)
+    on every PlayForge asset, Scaler asset and requirement template, and keeps what they find. It follows the project
+    with no polling: an edit, an Inspector's or an Undo's, checks its asset again through `ObjectChangeEvents`; an
+    import checks what it brought; a delete or a move has every asset checked again the next time someone asks.
+    `LogAll` writes each problem to the Console, for batch mode.
+  - **Its rules,** each in the inspector's words where it has some, so the three agree: a link with no provider
+    (Leveling's warning), the first impact's delivery note (the Audit's flag) and an additional impact its duration can't
+    make (the entry's), a magnitude field that reads a scaler it hasn't got and a Shared scaler with no asset, two fields
+    that hold one scaler (the scaler drawer's; an element's Current and Base, which Copy shares, are left), a set that
+    gives nothing, an element with no attribute (GAS-54) or a magnitude outside its bounds (the element's help box,
+    whose sentences `AttributeSetElementDrawer.BoundsMessages` now gives both), a stale asset tag, a missing name, and
+    data whose class Unity can't find, the one Error. Validate All's other checks are gone: an effect with no workers,
+    or an ability with no cost or cooldown, is fine.
+  - **The Problems view,** `ForgeProblemsWindow` (`Window/PlayForge/Problems`): a toolbar with the Errors and Warnings
+    filters, each with its count, and a search; a list of severity, asset and problem, sortable by each; a click
+    selects the asset and a double click opens it; a status line with the counts.
+  - **The header's count:** an inspector's header shows "2 problems" while the selection has any, in the warning color
+    (an error's in the destructive one), with each message in its tooltip, and a click opens the view on the asset.
+  - **Gone:** the Audit Effect Impact Deliveries menu item (`ImpactModelMigrationTool`), whose flag is a rule now;
+    Validate All went with the Settings tab (ED-21). The docs name the Problems view where they named the Audit.
+  - **Its tests,** seen failing against stubs first: `ED_15_The_validator_finds_what_the_inspectors_warn_about`,
+    `ED_15_An_edit_checks_its_asset_again`, `ED_15_The_Problems_view_lists_each_problem_and_selects_its_asset`,
+    `ED_15_An_inspectors_header_counts_its_problems` and `ED_15_The_validator_writes_each_problem_to_the_Console` in
+    the new `ProblemsTests`. The smoke suite opens the view.
+  - **Next:** The Forge's list and detail (ED-27, ED-9), with the problem glyph and counts.
+  - **Tests:** PlayMode 961: 954 pass, 0 fail and 7 planted are skipped, in three orders. Planted 7 of 7; EditMode
+    418 of 418.
 
 - 2026-11-04, **ED-21: settings belong to the project.** The first of The Forge's redesign (step 5), from Q21's answer.
   ED-21 is fixed.

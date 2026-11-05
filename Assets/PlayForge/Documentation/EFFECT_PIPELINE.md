@@ -289,8 +289,8 @@ Delivery derivation (`ResolveDelivery`):
 | + periodic ticks | `Periodic` (`ReverseImpactOnRemoval` flagged: rollback no longer exists) |
 | TickOnApplication-only trap | `Continuous` for Multiply/Override (flagged), else `OnApply` |
 
-**Window → PlayForge → Audit Effect Impact Deliveries** reports every asset's derived delivery and
-flags the shapes above — read-only, nothing is written.
+**Window → PlayForge → Problems** lists each effect that has one of the shapes above, among the validator's other
+problems — read-only, nothing is written.
 
 Deleted outright: `IsSustainedModifier()`, the Mode A/B inference, `TickAttribute`,
 `RollbackCommittedDelta`, tick-rollback via `TrackedImpact` (which is analytics-only now).
