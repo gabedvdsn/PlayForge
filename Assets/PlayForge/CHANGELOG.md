@@ -7,6 +7,10 @@ tracks each fix below by its ID.
 ## [Unreleased]
 
 ### Added
+- Item stacking. A give fills an item's stack first, up to its Max Stack Size, which the Item inspector now draws;
+  a full stack opens another only with Allow Duplicate Items. `GiveItem(item, count)` takes what fits and says how
+  many, and `RemoveItem(item, count)` takes stacks off. A stack applies its effects once, and the new Item Stacks
+  scaler reads its count (FEAT-14, GAS-51).
 - Stages that branch. An ability's stage has a Condition: a tag in the activation's data, on the caster or on the
   target, and whether it must be there or missing; a stage whose condition fails is skipped. Apply Effects' Record
   Landed As tags the data as an effect lands, so a move can recover one way on a hit and another on a miss (TS-7).
@@ -249,6 +253,8 @@ tracks each fix below by its ID.
   Asking whether its sequence was paused took 24 bytes a frame.
 
 ### Fixed
+- A lasting effect whose magnitude reads a level follows the level as it changes. Its magnitude was read as its
+  modifier registered, so an item that levelled up kept its first level's bonus (GAS-58).
 - A Mono process's object goes back to the instantiator that made it as the process ends. The wrapper asked the
   object's own instantiator, which a clone never has, so a pool's object was destroyed and never reused (PC-33).
 - A task sequence's critical section ends as the run starts a stage past its last critical stage, if a branch skipped

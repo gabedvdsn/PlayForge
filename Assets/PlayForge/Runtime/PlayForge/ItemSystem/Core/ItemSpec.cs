@@ -14,6 +14,9 @@ namespace FarEmerald.PlayForge
         /// <summary>True while the item is equipped, which is when what it grants is on the entity.</summary>
         public bool IsEquipped { get; internal set; }
 
+        /// <summary>How many of the item its slot holds, which an <see cref="ItemStacksScaler"/> reads (FEAT-14).</summary>
+        public int Stacks { get; internal set; } = 1;
+
         // ═══════════════════════════════════════════════════════════════════════════
         // Constructor
         // ═══════════════════════════════════════════════════════════════════════════

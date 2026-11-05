@@ -298,6 +298,34 @@ namespace FarEmerald.PlayForge
             leaving.Clear();
         }
 
+        /// <summary>
+        /// Reads every effect on the shelf that <paramref name="origin"/> applied again, re-registering its modifiers, as
+        /// something a scaler on it reads has changed: an item's stack count (FEAT-14).
+        /// </summary>
+        public void RefreshEffectsFrom(IEffectOrigin origin)
+        {
+            for (int i = 0; i < EffectShelf.Count; i++)
+            {
+                var container = EffectShelf[i];
+                if (container.Spec.Origin == origin && !finishedSet.Contains(container)) RegisterContinuousEntries(container.Spec);
+            }
+        }
+
+        /// <summary>
+        /// Reads every effect on the shelf whose origin's level is kept under <paramref name="levelKey"/> again, as that
+        /// level has changed: an item's, an ability's or the entity's own. A lasting effect's magnitude was read as its
+        /// modifier registered, so an item that levelled up kept its first level's bonus (GAS-58).
+        /// </summary>
+        public void RefreshEffectsLevelledBy(Tag levelKey)
+        {
+            for (int i = 0; i < EffectShelf.Count; i++)
+            {
+                var container = EffectShelf[i];
+                if (finishedSet.Contains(container) || container.Spec.Origin?.GetAssetTag() != levelKey) continue;
+                RegisterContinuousEntries(container.Spec);
+            }
+        }
+
         // The abilities each container lent its target, with the slot each took, to take back as it comes off. Only a
         // container whose effect grants abilities is here (FEAT-8)
         private readonly Dictionary<AbstractEffectContainer, List<(Ability Ability, int Slot)>> lent = new();

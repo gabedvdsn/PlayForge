@@ -22,8 +22,24 @@ namespace FarEmerald.PlayForge
             private set => Spec.IsEquipped = value;
         }
 
-        // Always 0 until stacking is built in Phase 5 (FEAT-14, GAS-51)
-        public int ItemStacks { get; private set; }
+        /// <summary>How many of the item the slot holds, up to its Max Stack Size. It was never set (FEAT-14, GAS-51).</summary>
+        public int ItemStacks => Spec.Stacks;
+
+        /// <summary>Whether the slot has room for another of its item (FEAT-14).</summary>
+        public bool HasRoom => Spec.Stacks < Spec.Base.Definition.StackSize;
+
+        /// <summary>
+        /// Adds or takes off stacks, within 1 and the item's Max Stack Size, and how many it changed by. An equipped item's
+        /// effects stay applied once, and their modifiers read the count again, so a scaler on it takes the new one.
+        /// </summary>
+        internal int ChangeStacks(int by)
+        {
+            int before = Spec.Stacks;
+            Spec.Stacks = System.Math.Clamp(before + by, 1, Spec.Base.Definition.StackSize);
+            int changed = Spec.Stacks - before;
+            if (changed != 0 && IsEquipped) Spec.Source.ToGAS()?.GetEffectSystem()?.RefreshEffectsFrom(Spec);
+            return changed;
+        }
 
         // ═══════════════════════════════════════════════════════════════════════════
         // Constructor

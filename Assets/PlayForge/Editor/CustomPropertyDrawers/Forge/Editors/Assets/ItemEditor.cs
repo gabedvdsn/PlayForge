@@ -132,7 +132,7 @@ namespace FarEmerald.PlayForge.Extended.Editor
                 PropertyPaths = new[]
                 {
                     DefinitionPath(nameof(ItemDefinition.Description)), DefinitionPath(nameof(ItemDefinition.Visibility)),
-                    DefinitionPath(nameof(ItemDefinition.Textures)),
+                    DefinitionPath(nameof(ItemDefinition.MaxStackSize)), DefinitionPath(nameof(ItemDefinition.Textures)),
                 },
                 OnImportComplete = OnSectionReplaced,
                 OnClearComplete = OnSectionReplaced,
@@ -181,6 +181,11 @@ namespace FarEmerald.PlayForge.Extended.Editor
             }
 
             content.Add(CreatePropertyField(definition.FindPropertyRelative(nameof(ItemDefinition.Visibility)), "Visibility", "Visibility"));
+
+            // How many one slot holds, which nothing read and the inspector didn't draw (FEAT-14, GAS-51)
+            var stackSize = CreatePropertyField(definition.FindPropertyRelative(nameof(ItemDefinition.MaxStackSize)), "MaxStackSize", "Max Stack Size");
+            stackSize.tooltip = "How many of the item one slot holds. 1 or less, and each is a slot of its own";
+            content.Add(stackSize);
 
             var texturesField = CreatePropertyField(definition.FindPropertyRelative(nameof(ItemDefinition.Textures)), "Textures", "Textures");
             texturesField.RegisterCallback<SerializedPropertyChangeEvent>(_ =>

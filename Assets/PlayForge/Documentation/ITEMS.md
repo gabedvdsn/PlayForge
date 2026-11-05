@@ -26,9 +26,22 @@ grants.
   The runtime doesn't act on it.
 - **Textures**: icons, each paired with a tag. The texture tagged `Primary` is the item's icon. Without one, the first
   texture is used.
+- **Max Stack Size**: how many of the item one inventory slot holds. 1 or less, and each is a slot of its own.
 
 Whether an inventory may hold an item more than once is the entity's choice, through its **Allow Duplicate Items**
 setting (see [ENTITIES.md](ENTITIES.md)).
+
+### Stacking
+
+A give fills the item's stack first, up to its Max Stack Size, and takes no new slot. A full stack opens another
+only with Allow Duplicate Items on; without it, what doesn't fit isn't taken. `ItemSystemComponent.GiveItem(item,
+count)` takes what fits and returns how many it took, and `GiveItem(item, out index)` gives one, into the stack if
+there's room. `RemoveItem(item, count)` takes stacks off, from the last slot first, and a slot whose last stack comes
+off goes; `RemoveItem(item)` still takes the whole slot. A slot's count is its container's `ItemStacks`.
+
+A stack applies its effects and its ability once. An **Item Stacks** scaler reads the count of the item that applied
+the effect, so a magnitude of 5 with Multiply With Scaler grants +5 a stack. As the count changes, an equipped
+item's effects read it again.
 
 ## Leveling
 

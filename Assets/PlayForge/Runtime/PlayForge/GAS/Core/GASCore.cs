@@ -54,6 +54,10 @@ namespace FarEmerald.PlayForge
 
             // A running ability's While active group is checked again once the tags change (FEAT-5)
             TagCache.TagChanged += AbilitySystem.HearTagChange;
+
+            // An effect that reads a level reads it again as it changes (GAS-58)
+            LevelSystem.Callbacks.OnLevelChanged += LevelChanged;
+            LevelSystem.Callbacks.OnMaxLevelChanged += LevelChanged;
         }
 
         /// <summary>
@@ -121,6 +125,8 @@ namespace FarEmerald.PlayForge
         // ═══════════════════════════════════════════════════════════════════════════
         // Frame
         // ═══════════════════════════════════════════════════════════════════════════
+
+        private void LevelChanged(LevelCallbackStatus status) => EffectSystem.RefreshEffectsLevelledBy(status.LevelKey);
 
         public void Tick()
         {

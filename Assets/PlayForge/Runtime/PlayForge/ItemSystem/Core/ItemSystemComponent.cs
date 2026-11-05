@@ -77,6 +77,15 @@ namespace FarEmerald.PlayForge
         public bool GiveItem(Item item, int level, out int itemIndex)
         {
             itemIndex = -1;
+
+            // Into a stack of it with room first, which takes no new slot (FEAT-14)
+            if (item != null && TryStack(item, out var stack))
+            {
+                itemIndex = stack.Index;
+                Callbacks.ItemGiven(ItemCallbackStatus.Generate(stack, this, true));
+                return true;
+            }
+
             if (!CanGiveItem(item)) return false;
 
             itemIndex = ItemShelf.Count;
@@ -89,6 +98,52 @@ namespace FarEmerald.PlayForge
             return true;
         }
         
+        // Adds one to the first stack of the item with room, if it stacks
+        private bool TryStack(Item item, out ItemSpecContainer stack)
+        {
+            stack = null;
+            if (item.Definition.StackSize <= 1) return false;
+            foreach (var container in ItemShelf)
+            {
+                if (container.Spec.Base != item || !container.HasRoom) continue;
+                container.ChangeStacks(1);
+                stack = container;
+                return true;
+            }
+            return false;
+        }
+
+        /// <summary>
+        /// Gives up to <paramref name="count"/> of the item: into its stacks first, up to its Max Stack Size, then, as
+        /// Allow Duplicate Items lets it, into new slots. How many it took (FEAT-14, Decision 30).
+        /// </summary>
+        public int GiveItem(Item item, int count)
+        {
+            if (item == null) return 0;
+            int taken = 0;
+            while (taken < count && GiveItem(item, item.StartingLevel, out _)) taken++;
+            return taken;
+        }
+
+        /// <summary>
+        /// Takes up to <paramref name="count"/> of the item off, from its last slot first; a slot whose last stack comes
+        /// off goes, as <see cref="RemoveItem(int)"/> takes it. How many came off (FEAT-14).
+        /// </summary>
+        public int RemoveItem(Item item, int count)
+        {
+            int removed = 0;
+            for (int i = ItemShelf.Count - 1; i >= 0 && removed < count; i--)
+            {
+                var container = ItemShelf[i];
+                if (container.Spec.Base != item) continue;
+                int off = System.Math.Min(container.ItemStacks, count - removed);
+                if (off >= container.ItemStacks) RemoveItem(i);
+                else container.ChangeStacks(-off);
+                removed += off;
+            }
+            return removed;
+        }
+
         public bool GiveAndEquipItem(Item item, out int itemIndex)
         {
             return GiveAndEquipItem(item, item.StartingLevel, out itemIndex);
