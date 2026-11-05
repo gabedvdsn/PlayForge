@@ -680,8 +680,8 @@ Phase 2 part, and set Phase 4's direction.
 | FEAT-14 | Item stacking | An inventory holds an item as a count, up to the Item's `MaxStackSize`. The field and `ItemSpecContainer.ItemStacks` exist, but nothing reads or sets them (GAS-51). Decide how giving and removing count, how a stack's effects and abilities scale, and how Allow Duplicate Items meets it. Done (Decision 30): a give fills the item's stack first, up to `ItemDefinition.MaxStackSize`; a full stack opens another only with Allow Duplicate Items; `GiveItem(item, count)` takes what fits and returns how many, and `RemoveItem(item, count)` takes stacks off; a stack applies its effects and ability once, and `ItemStacksScaler` reads its count, which an equipped item's effects read again as it changes |
 | FEAT-15 | Register builder | One builder or options struct in place of `ProcessControl`'s 28 static `Register` overloads, from the review's API changes. The roadmap gave it to Phase 3, but no row tracked it, so it moved here when Phase 3 closed. Today the argument's static type picks the overload, and a failed call returns false with a null relay. The review paired it with a `Run` on the relay, which doesn't exist yet, and an awaitable completion, which `ProcessRelay.WhenTerminated` now is (TS-Z). Done (Decision 30): `ProcessControl.Register(process)` starts a registration that `HandledBy`, `With` and `In` shape and `Run` makes, returning the relay or why it was refused; the handler follows the packet's run-time type; `ProcessRelay.Run` starts a waiting process; the 28 overloads are `[Obsolete]` wrappers until the first Asset Store submission |
 | FEAT-16 | Loose tags | Done with ED-40, ahead of the phase. A tag granted with no effect, ability or item behind it, as Unreal's loose gameplay tags are: `AddLooseTag`, `RemoveLooseTag` and `GetLooseTags` on each hub, each grant counted, and the tag compile includes them. A tag added straight to the tag cache went at its next compile |
-| FEAT-17 | Activation by asset or tag, with a reason | From the review's API changes: activate by ability asset or tag, and say why a refused activation was refused, with a matching callback. `TryActivateAbility` returns only true or false (`AbilitySystemComponent.TryActivateAbility`) |
-| FEAT-18 | Profiler markers | From the review's Profiling gap: Runtime has no `ProfilerMarker`, so the cost of a process step, an effect application or an ability activation can't be seen in Unity's Profiler |
+| FEAT-17 | Activation by asset or tag, with a reason | From the review's API changes: activate by ability asset or tag, and say why a refused activation was refused, with a matching callback. `TryActivateAbility` returns only true or false (`AbilitySystemComponent.TryActivateAbility`). Done (Decision 30): `TryActivateAbility(ability)` activates by asset, in the first slot that holds it, and `TryActivateAbility(tag)` the first ability by slot whose asset or context tag is the tag or under it; each form, and the request's, can give an `out ActivationRefusal` (`EActivationRefusal`: Not Known, Disabled, Locked, No New Processes, Level Zero, Requirements, Cooldown, Cost, Dead, Rule with its name, Blocked, Busy, Critical), and `AbilitySystemCallbacks.OnAbilityRefused` tells each refusal; a request the buffer retries isn't told again |
+| FEAT-18 | Profiler markers | From the review's Profiling gap: Runtime has no `ProfilerMarker`, so the cost of a process step, an effect application or an ability activation can't be seen in Unity's Profiler. Done (Decision 30): `ForgeProfiler`'s markers, in the Scripts category: `PlayForge.ProcessStep`, `PlayForge.GASStep`, `PlayForge.EndOfFrame`, `PlayForge.ApplyEffect` and `PlayForge.ActivateAbility` |
 | FEAT-19 | Effect stacks scaler | Nothing built in read an effect's stack count, so a change by the stack, as a sunder's −5 armor a stack, took a scaler written for it: Proving Grounds wrote its own twice (`StackCountScaler` in `EffectStackingTests` and `GoldenImpactTests`). Found by the Combat lab. Done (Decision 30): `EffectStacksScaler` reads the stack count of the effect's own container, 1 for one that doesn't stack, as `ItemStacksScaler` reads an item's (FEAT-14) |
 
 **Phase 5's order,** from the review's plan for the test project (its labs, one at a time) and the table above. A lab
@@ -745,6 +745,23 @@ GAS-4 with GAS-5, PC-6, and TS-I with PC-5.
 ## Log
 
 Record baselines, gate results and notable decisions here, newest first.
+
+- 2026-11-05, **FEAT-18 and FEAT-17: profiler markers, and activation by asset or tag with a reason.** The first of the
+  stretch work (Decision 30).
+  - **FEAT-18:** `ForgeProfiler`'s five markers, in the Scripts category: `PlayForge.ProcessStep` around a process's
+    step in `ProcessControlBlock.Step`, `PlayForge.GASStep` and `PlayForge.EndOfFrame` around `GASCore.Tick` and
+    `EndOfFrame`, `PlayForge.ApplyEffect` around `EffectSystemComponent.ApplyGameplayEffect`, and
+    `PlayForge.ActivateAbility` around the ability system's activation. GETTING_STARTED.md lists them.
+  - **FEAT-17:** `TryActivateAbility(ability)` and `TryActivateAbility(tag)`, the first ability by slot whose asset or
+    context tag is the tag or under it, and each form, the request's among them, can give an `out ActivationRefusal`:
+    its `EActivationRefusal` reason, and a caster check's name for `Rule`. `AbilitySpec.SourceRefusal` names a source
+    requirement, a cooldown, a cost or a death; the activation names the rest. `OnAbilityRefused` tells each refusal; a
+    request the buffer retries isn't told again. ABILITIES.md says so.
+  - **Their tests,** seen failing first: `FEAT_18_PlayForge_shows_in_the_Profiler` (2 of 2), and
+    `FEAT_17_An_ability_activates_by_its_asset_or_its_tag` and `FEAT_17_A_refused_activation_says_why` (4 of 4).
+  - **Next:** the stretch scenarios, starting with mirror clones.
+  - **Tests:** PlayMode 1200: 1193 pass, 0 fail and 7 planted are skipped, in three orders. Planted 7 of 7; EditMode
+    439 of 439.
 
 - 2026-11-05, **The Combat lab, and FEAT-19.** The eighth and last lab, so Phase 5's labs are all green (Decision 30).
   - **The lab** (`Tests/Labs/CombatLab.cs`, category Lab): a training dummy, and every way an effect lands on it, from

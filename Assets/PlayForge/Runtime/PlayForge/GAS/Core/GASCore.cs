@@ -136,6 +136,7 @@ namespace FarEmerald.PlayForge
 
         public void Tick()
         {
+            using var sample = ForgeProfiler.GASStep.Auto();
             Stepping = true;
             try
             {
@@ -165,6 +166,7 @@ namespace FarEmerald.PlayForge
         {
             if (ActionQueue == null) return false;
 
+            using var sample = ForgeProfiler.EndOfFrame.Auto();
             Stepping = true;
             try
             {

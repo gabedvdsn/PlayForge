@@ -74,6 +74,14 @@ returns. An ability asked for again while that call still runs, from its own cal
 it started, starts in the next frame instead. When the entity ends, its running abilities end with it, critical or not,
 and it takes no more activations.
 
+Code asks for an ability by its slot, with a request from `CreateActivationRequest`, by its asset
+(`TryActivateAbility(ability)`), or by a tag (`TryActivateAbility(tag)`). A tag activates the first ability, by slot,
+whose asset tag or one of whose context tags is that tag or under it. Each form can say why it was refused, through an
+`out ActivationRefusal`: its `Reason`, such as Cooldown, Cost, Requirements, Blocked or Busy, and for another caster
+check, that check's name in `Rule`. The ability system's `OnAbilityRefused` callback tells each refusal as it happens.
+A request that waits in the input buffer isn't refused, and isn't told again as the buffer retries it. A check on the
+target comes after targeting, and ends the activation instead.
+
 - **When Busy**: what happens when the ability is asked to activate while another ability is busy. An activation is
   busy, or holds its *claim*, while its targeting and its critical tasks run. A critical task is one that must not
   overlap another ability's critical work, such as an attack animation. The inspector marks critical tasks and stages

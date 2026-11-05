@@ -396,16 +396,25 @@ namespace FarEmerald.PlayForge
             CanActivateUnblocked(container, data) && !IsBlocked(container.Spec.Base);
 
         // Everything but a running stage's block, which a Queue request waits out in the buffer (FEAT-6)
-        private bool CanActivateUnblocked(AbilitySpecContainer container, AbilityDataPacket data)
+        private bool CanActivateUnblocked(AbilitySpecContainer container, AbilityDataPacket data) =>
+            UnblockedRefusal(container, data, out _) == EActivationRefusal.None;
+
+        // What refuses it, but a running stage's block, as a refusal says it (FEAT-17)
+        private EActivationRefusal UnblockedRefusal(AbilitySpecContainer container, AbilityDataPacket data, out string rule)
         {
+            rule = null;
+            if (!Enabled) return EActivationRefusal.Disabled;
+            if (Locked) return EActivationRefusal.Locked;
+
             // An ability runs as a process, so it can't start while ProcessControl refuses new ones (TS-AC)
-            return Enabled
-                   && !Locked
-                   && ProcessControl.Instance is not { AcceptsNewProcesses: false }
-                   && container.Spec.ValidateSourceActivationRequirements(data)
-                   && (!container.Spec.Base.IgnoreWhenLevelZero || container.Spec.GetLevel().CurrentValue > 0)
-                   // Its caster must pass its While active group, as it will for as long as it runs (FEAT-5)
-                   && PassesWhileActive(container, Self.GetTagCache());
+            if (ProcessControl.Instance is { AcceptsNewProcesses: false }) return EActivationRefusal.NoNewProcesses;
+
+            var source = container.Spec.SourceRefusal(data, out rule);
+            if (source != EActivationRefusal.None) return source;
+            if (container.Spec.Base.IgnoreWhenLevelZero && container.Spec.GetLevel().CurrentValue <= 0) return EActivationRefusal.LevelZero;
+
+            // Its caster must pass its While active group, as it will for as long as it runs (FEAT-5)
+            return PassesWhileActive(container, Self.GetTagCache()) ? EActivationRefusal.None : EActivationRefusal.Requirements;
         }
 
         // ═══════════════════════════════════════════════════════════════════════════
@@ -530,22 +539,109 @@ namespace FarEmerald.PlayForge
         /// a loop of instant activations goes round once a frame (TS-8).
         /// </summary>
         /// <returns>True if the ability activated, waits in the input buffer, or was put off to the next frame.</returns>
-        public bool TryActivateAbility(AbilityActivationRequest req) => TryActivate(req, fromBuffer: false);
+        public bool TryActivateAbility(AbilityActivationRequest req) => TryActivateAbility(req, out _);
+
+        /// <summary>
+        /// Activates the ability the request names, as <see cref="TryActivateAbility(AbilityActivationRequest)"/> does, and
+        /// says why where it's refused, as the callbacks' <see cref="AbilitySystemCallbacks.OnAbilityRefused"/> tells it. A
+        /// refused activation said only false (FEAT-17).
+        /// </summary>
+        public bool TryActivateAbility(AbilityActivationRequest req, out ActivationRefusal refusal)
+        {
+            if (TryActivate(req, fromBuffer: false, out refusal)) return true;
+            Callbacks.AbilityRefused(refusal);
+            return false;
+        }
+
+        /// <summary>
+        /// Activates the ability by its asset, in the first slot that holds it, and says why where it's refused. An
+        /// ability activated only by its slot (FEAT-17).
+        /// </summary>
+        public bool TryActivateAbility(Ability ability, out ActivationRefusal refusal, ProcessDataPacket data = null,
+            EAbilityActivationPolicyExtended? policy = null)
+        {
+            if (ability != null && TryGetCacheIndexOf(ability, out int index))
+                return TryActivateAbility(CreateActivationRequest(index, data, policy), out refusal);
+
+            refusal = new ActivationRefusal(ability, -1, EActivationRefusal.NotKnown);
+            Callbacks.AbilityRefused(refusal);
+            return false;
+        }
+
+        /// <inheritdoc cref="TryActivateAbility(Ability, out ActivationRefusal, ProcessDataPacket, EAbilityActivationPolicyExtended?)"/>
+        public bool TryActivateAbility(Ability ability, ProcessDataPacket data = null, EAbilityActivationPolicyExtended? policy = null) =>
+            TryActivateAbility(ability, out _, data, policy);
+
+        /// <summary>
+        /// Activates the first ability, by slot, whose asset tag or a context tag is <paramref name="tag"/> or under it, and
+        /// says why where none activates: the first one's refusal, or not known where none carries the tag. One call
+        /// activates one ability (FEAT-17).
+        /// </summary>
+        public bool TryActivateAbility(Tag tag, out ActivationRefusal refusal, ProcessDataPacket data = null,
+            EAbilityActivationPolicyExtended? policy = null)
+        {
+            refusal = new ActivationRefusal(null, -1, EActivationRefusal.NotKnown);
+            bool found = false;
+            if (AbilityCache != null && tag.IsValid)
+            {
+                foreach (int index in AbilityCache.Keys.OrderBy(slot => slot).ToList())
+                {
+                    if (!AbilityCache.TryGetValue(index, out var container) || !Carries(container.Spec.Base, tag)) continue;
+                    if (TryActivate(CreateActivationRequest(index, data, policy), fromBuffer: false, out var tried))
+                    {
+                        refusal = tried;
+                        return true;
+                    }
+                    if (!found) refusal = tried;
+                    found = true;
+                }
+            }
+            Callbacks.AbilityRefused(refusal);
+            return false;
+        }
+
+        /// <inheritdoc cref="TryActivateAbility(Tag, out ActivationRefusal, ProcessDataPacket, EAbilityActivationPolicyExtended?)"/>
+        public bool TryActivateAbility(Tag tag, ProcessDataPacket data = null, EAbilityActivationPolicyExtended? policy = null) =>
+            TryActivateAbility(tag, out _, data, policy);
+
+        // Whether the ability's asset tag, or one of its context tags, is the tag or under it
+        private static bool Carries(Ability ability, Tag tag)
+        {
+            if (ability?.Tags == null) return false;
+            if (ability.Tags.AssetTag.MatchesOrIsChildOf(tag)) return true;
+            if (ability.Tags.ContextTags == null) return false;
+            foreach (var context in ability.Tags.ContextTags)
+                if (context.MatchesOrIsChildOf(tag)) return true;
+            return false;
+        }
 
         // A request from the buffer doesn't go back in it: it waits on in its own slot, with the time it has left
-        private bool TryActivate(AbilityActivationRequest req, bool fromBuffer)
+        private bool TryActivate(AbilityActivationRequest req, bool fromBuffer) => TryActivate(req, fromBuffer, out _);
+
+        private bool TryActivate(AbilityActivationRequest req, bool fromBuffer, out ActivationRefusal refusal)
         {
+            // Under its own marker in the Profiler (FEAT-18)
+            using var sample = ForgeProfiler.ActivateAbility.Auto();
+
             // Before the packet, which reads the entity: an ended entity's system is off, and a Mono entity may be
             // destroyed by then (GAS-52)
-            if (!Enabled) return false;
-            if (!AbilityCache.TryGetValue(req.Index, out var container)) return false;
+            if (!Enabled) return Refuse(out refusal, null, req.Index, EActivationRefusal.Disabled);
+            if (!AbilityCache.TryGetValue(req.Index, out var container)) return Refuse(out refusal, null, req.Index, EActivationRefusal.NotKnown);
+            var ability = container.Spec.Base;
             var data = AbilityDataPacket.GenerateFrom(container.Spec,
-                req, container.Spec.Base.Behaviour.UseImplicitTargeting, container.Spec.Base.Behaviour.ImplicitTag);
-            if (!CanActivateUnblocked(container, data)) return false;
+                req, ability.Behaviour.UseImplicitTargeting, ability.Behaviour.ImplicitTag);
+            var why = UnblockedRefusal(container, data, out string rule);
+            if (why != EActivationRefusal.None) return Refuse(out refusal, ability, req.Index, why, rule);
+
+            // Not refused, the request activated, waits in the buffer, or starts next frame
+            refusal = new ActivationRefusal(ability, req.Index, EActivationRefusal.None);
 
             // A running stage's block refuses it, unless, under the Queue policy, it may wait for the block to lift (FEAT-6)
-            if (IsBlocked(container.Spec.Base))
-                return !fromBuffer && req.Policy == EAbilityActivationPolicy.QueueActivationIfBusy && BufferActivation(req);
+            if (IsBlocked(ability))
+            {
+                if (!fromBuffer && req.Policy == EAbilityActivationPolicy.QueueActivationIfBusy && BufferActivation(req)) return true;
+                return Refuse(out refusal, ability, req.Index, EActivationRefusal.Blocked);
+            }
 
             // Run at once, it nested inside its own activation, and a loop of instant activations nested until the
             // stack overflowed (TS-8)
@@ -556,12 +652,20 @@ namespace FarEmerald.PlayForge
             }
 
             // Busy, a request from the buffer waits on in its slot
-            if (fromBuffer && IsClaimingPolicy(req.Policy)) return false;
+            if (fromBuffer && IsClaimingPolicy(req.Policy)) return Refuse(out refusal, ability, req.Index, EActivationRefusal.Busy);
 
             // Each running ability in a stage this one cancels ends first, so this one starts clear of it (FEAT-5)
-            CancelAbilitiesCancelledBy(container.Spec.Base);
+            CancelAbilitiesCancelledBy(ability);
 
-            return ProcessActivationRequest(data);
+            why = ProcessActivationRequest(data);
+            if (why != EActivationRefusal.None) return Refuse(out refusal, ability, req.Index, why);
+            return true;
+        }
+
+        private static bool Refuse(out ActivationRefusal refusal, Ability ability, int index, EActivationRefusal why, string rule = null)
+        {
+            refusal = new ActivationRefusal(ability, index, why, rule);
+            return false;
         }
 
         // Asked for again next frame, as long as its slot still holds it
@@ -572,25 +676,28 @@ namespace FarEmerald.PlayForge
             if (AbilityCache.TryGetValue(req.Index, out var cached) && cached == container) TryActivateAbility(req);
         }
         
-        private bool ProcessActivationRequest(AbilityDataPacket data)
+        // What the policy refuses, or None where the ability activated or waits in the buffer (FEAT-17)
+        private EActivationRefusal ProcessActivationRequest(AbilityDataPacket data)
         {
-            return data.Request.Policy switch
+            var container = AbilityCache[data.Request.Index];
+            switch (data.Request.Policy)
             {
-                EAbilityActivationPolicy.AlwaysActivate => 
-                    AlwaysActivateTargetingValidation(data.Request.Index) && 
-                    ActivateAbility(AbilityCache[data.Request.Index], data),
-                    
-                EAbilityActivationPolicy.ActivateIfIdle =>
-                    !IsClaimingPolicy(EAbilityActivationPolicy.ActivateIfIdle) &&
-                    ActivateAbility(AbilityCache[data.Request.Index], data),
+                case EAbilityActivationPolicy.AlwaysActivate:
+                    if (!AlwaysActivateTargetingValidation(data.Request.Index)) return EActivationRefusal.Critical;
+                    return ActivateAbility(container, data) ? EActivationRefusal.None : EActivationRefusal.Busy;
 
-                EAbilityActivationPolicy.QueueActivationIfBusy =>
-                    !IsClaimingPolicy(EAbilityActivationPolicy.QueueActivationIfBusy)
-                        ? ActivateAbility(AbilityCache[data.Request.Index], data)
-                        : BufferActivation(data.Request),
-                        
-                _ => throw new ArgumentOutOfRangeException()
-            };
+                case EAbilityActivationPolicy.ActivateIfIdle:
+                    if (IsClaimingPolicy(EAbilityActivationPolicy.ActivateIfIdle)) return EActivationRefusal.Busy;
+                    return ActivateAbility(container, data) ? EActivationRefusal.None : EActivationRefusal.Busy;
+
+                case EAbilityActivationPolicy.QueueActivationIfBusy:
+                    if (!IsClaimingPolicy(EAbilityActivationPolicy.QueueActivationIfBusy))
+                        return ActivateAbility(container, data) ? EActivationRefusal.None : EActivationRefusal.Busy;
+                    return BufferActivation(data.Request) ? EActivationRefusal.None : EActivationRefusal.Busy;
+
+                default:
+                    throw new ArgumentOutOfRangeException();
+            }
         }
         
         private bool AlwaysActivateTargetingValidation(int abilityIndex)

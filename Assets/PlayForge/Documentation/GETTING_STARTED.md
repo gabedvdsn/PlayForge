@@ -169,3 +169,15 @@ Framework diagnostics route through `ForgeLog`, controlled in **Preferences → 
 Logging** (Verbose / Info / Warning / Error / None).In builds, set
 `ForgeLog.MinimumLevel` from code. `ProcessControl` has its own inspector toggles for
 process lifecycle logs.
+
+## Profiling
+
+PlayForge's work shows in Unity's Profiler under its own markers, in the Scripts category (`ForgeProfiler`):
+
+- `PlayForge.ProcessStep`: one process's step.
+- `PlayForge.GASStep` and `PlayForge.EndOfFrame`: a GAS's step, where its effects tick, and its end of frame, where
+  its queued actions and its tag and analysis workers run.
+- `PlayForge.ApplyEffect`: an effect's application, with its contained effects' inside it.
+- `PlayForge.ActivateAbility`: an ability's activation, up to the first of its tasks that waits.
+
+A `ProfilerRecorder` reads them by name, in the editor or in a development build.

@@ -54,7 +54,24 @@ namespace FarEmerald.PlayForge
         }
         public void AbilityClaimReleased(AbilityCallbackStatus status) => _onAbilityClaimReleased?.Invoke(status);
         #endregion
-        
+
+        #region On Ability Refused
+        /// <summary>A refused activation, with why it was refused (FEAT-17).</summary>
+        public delegate void AbilityRefusedDelegate(ActivationRefusal refusal);
+
+        // A request refused as it was asked for. A request waiting in the input buffer isn't told again as it's retried
+        private AbilityRefusedDelegate _onAbilityRefused;
+        public event AbilityRefusedDelegate OnAbilityRefused
+        {
+            add
+            {
+                if (_onAbilityRefused == null || Array.IndexOf(_onAbilityRefused.GetInvocationList(), value) == -1) _onAbilityRefused += value;
+            }
+            remove => _onAbilityRefused -= value;
+        }
+        public void AbilityRefused(ActivationRefusal refusal) => _onAbilityRefused?.Invoke(refusal);
+        #endregion
+
         // ═══════════════════════════════════════════════════════════════
         // ABILITY INJECTION
         // ═══════════════════════════════════════════════════════════════

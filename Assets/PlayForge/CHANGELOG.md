@@ -7,6 +7,12 @@ tracks each fix below by its ID.
 ## [Unreleased]
 
 ### Added
+- Activation by asset or tag, with a reason. `TryActivateAbility(ability)` activates an ability by its asset, and
+  `TryActivateAbility(tag)` the first whose asset or context tag is the tag or under it. Each form can give an
+  `ActivationRefusal` that says why it was refused, and the ability system's `OnAbilityRefused` tells each refusal
+  (FEAT-17).
+- Profiler markers. PlayForge's work shows in Unity's Profiler under its own names: a process's step, a GAS's step
+  and its end of frame, an effect's application and an ability's activation (`ForgeProfiler`, FEAT-18).
 - An Effect Stacks scaler, which reads the stack count of the effect's own container, 1 for one that doesn't stack.
   With Multiply With Scaler, a sunder of −5 armor takes 5 a stack, and a Continuous change follows the count as it
   changes (FEAT-19).

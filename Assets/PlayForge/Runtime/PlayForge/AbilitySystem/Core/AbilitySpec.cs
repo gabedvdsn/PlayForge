@@ -24,16 +24,36 @@ namespace FarEmerald.PlayForge
                 Source.ApplyCarrier(Source.GenerateEffectSpec(this, Base.Cost));
         }
             
-        public bool ValidateSourceActivationRequirements(AbilityDataPacket data)
+        public bool ValidateSourceActivationRequirements(AbilityDataPacket data) => SourceRefusal(data, out _) == EActivationRefusal.None;
+
+        /// <summary>
+        /// What of the caster refuses the activation, or None: its tags against the ability's source requirements, then
+        /// each caster check, which a cooldown, a cost or a death names, and any other by its name (FEAT-17).
+        /// </summary>
+        internal EActivationRefusal SourceRefusal(AbilityDataPacket data, out string rule)
         {
+            rule = null;
             var owner = data.EffectOrigin.GetSource();
 
             // The ability's own source tag requirements ("can't use while stunned") are part of
             // activation, alongside the validation rules. Missing groups mean no requirement.
-            if (!(Base.Tags?.TagRequirements?.CheckSourceRequirements(owner.GetAppliedTags()) ?? true)) return false;
+            if (!(Base.Tags?.TagRequirements?.CheckSourceRequirements(owner.GetAppliedTags()) ?? true)) return EActivationRefusal.Requirements;
 
             // An empty rule slot, which a list's "+" can leave, asks nothing; it threw (ED-12)
-            return Base.SourceActivationRules.All(rule => rule == null || rule.Validate(data, () => owner, out _));
+            foreach (var check in Base.SourceActivationRules)
+            {
+                if (check == null || check.Validate(data, () => owner, out _)) continue;
+                switch (check)
+                {
+                    case CooldownValidation: return EActivationRefusal.Cooldown;
+                    case CostValidation: return EActivationRefusal.Cost;
+                    case IsAliveValidation: return EActivationRefusal.Dead;
+                    default:
+                        rule = check.GetName();
+                        return EActivationRefusal.Rule;
+                }
+            }
+            return EActivationRefusal.None;
         }
 
         public bool ValidateAllActivationRequirements(ITarget target, AbilityDataPacket data)

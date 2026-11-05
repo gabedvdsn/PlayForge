@@ -95,6 +95,9 @@ namespace FarEmerald.PlayForge
         {
             if (spec is null) return false;
 
+            // Under its own marker in the Profiler, a contained effect's within its container's (FEAT-18)
+            using var sample = ForgeProfiler.ApplyEffect.Auto();
+
             if (!ForgeHelper.ValidateEffectApplicationRequirements(spec, Self.GetAffiliation()))
             {
                 return false;

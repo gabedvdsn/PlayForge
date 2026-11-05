@@ -395,6 +395,9 @@ namespace FarEmerald.PlayForge
             // rest of the frame's processes still step, and a state queued for this one still applies
             // below. Escaping, it ended the whole frame's stepping and skipped the flush, so a process
             // terminated while its step kept throwing never left Running (PF-011).
+            //
+            // Under its own marker in the Profiler (FEAT-18)
+            using (ForgeProfiler.ProcessStep.Auto())
             try
             {
                 switch (timing)
