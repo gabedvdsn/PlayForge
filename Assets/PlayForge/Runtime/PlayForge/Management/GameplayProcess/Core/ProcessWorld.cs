@@ -203,11 +203,21 @@ namespace FarEmerald.PlayForge
         /// The processes stepped at one timing, in step order: by priority, lowest first, and within a
         /// priority in the order they arrived. Stepping reads this every frame, so it's kept in order as
         /// processes come and go. The priority used to be stored and never applied (PC-22).
+        ///
+        /// A process that goes leaves a <see cref="Hole"/>, found at once by its position, which stepping
+        /// passes over as over any index no longer active. Its removal searched the list from the front and
+        /// shifted what came after, so ending the newest of 10,000 cost several times what ending the newest of
+        /// 1,000 did, and ending every one of them cost the square of how many there were (PC-34). The holes
+        /// are swept out, in place, once they outnumber the processes.
         /// </summary>
         private class StepGroup
         {
+            public const int Hole = -1;
+
             private readonly List<int> _indices = new();
             private readonly List<int> _priorities = new();
+            private readonly Dictionary<int, int> _positions = new();
+            private int _holes;
 
             public void Add(int cacheIndex, int priority)
             {
@@ -216,21 +226,46 @@ namespace FarEmerald.PlayForge
 
                 _indices.Insert(position, cacheIndex);
                 _priorities.Insert(position, priority);
+
+                // It and whatever the insert moved along, where they are now: only it, unless it came before others
+                for (int i = position; i < _indices.Count; i++)
+                {
+                    if (_indices[i] != Hole) _positions[_indices[i]] = i;
+                }
             }
 
             public bool Remove(int cacheIndex)
             {
-                int position = _indices.IndexOf(cacheIndex);
-                if (position < 0) return false;
+                if (!_positions.Remove(cacheIndex, out int position)) return false;
 
-                _indices.RemoveAt(position);
-                _priorities.RemoveAt(position);
+                _indices[position] = Hole;
+                _holes++;
+                if (_holes > 16 && _holes * 2 > _indices.Count) Sweep();
                 return true;
             }
 
+            // The holes out, in place, the order kept
+            private void Sweep()
+            {
+                int kept = 0;
+                for (int i = 0; i < _indices.Count; i++)
+                {
+                    if (_indices[i] == Hole) continue;
+
+                    _indices[kept] = _indices[i];
+                    _priorities[kept] = _priorities[i];
+                    _positions[_indices[kept]] = kept;
+                    kept++;
+                }
+                _indices.RemoveRange(kept, _indices.Count - kept);
+                _priorities.RemoveRange(kept, _priorities.Count - kept);
+                _holes = 0;
+            }
+
+            /// <summary>The step order, holes among it: stepping passes over a hole as over a process no longer active.</summary>
             public List<int> GetIndices() => _indices;
 
-            public int Count => _indices.Count;
+            public int Count => _indices.Count - _holes;
         }
 
 

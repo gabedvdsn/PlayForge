@@ -472,6 +472,7 @@ Severity: **C** critical, **H** high, **M** medium or low. The phase is the road
 | PC-31 | M | 1 | A Mono process class that declares its own `OnDestroy` hides the base's, which Unity then never calls, so the process outlives its object. PC-30's watch covers only objects that never woke. A warning once per such class at registration, and watching its processes as PC-30 does, would close it | `AbstractMonoProcess.cs:151`, `ProcessControl.cs` `SweepDormant` | verified |
 | PC-32 | M | 2 | A Mono process terminated outside play mode keeps its object: `MonoWrapperProcess.WhenTerminate` calls `Object.Destroy`, which Unity refuses in edit mode, logging an error. Editor tools and edit-mode tests reach it; the Test Runner's golden S22 did (SP-18), as it fails a test on any logged error | `MonoWrapperProcess.cs:104` | verified |
 | PC-33 | H | 5 | A pool's object was destroyed as its process ended. The Mono wrapper handed a finished object back through the object's own `Instantiator`, which a clone never has, as the field isn't serialized, so an instantiator that made it, through a template's `Instantiator` or the handler's, never saw it again and pooling couldn't work (Decision 23 leaves pools to games). Found by the Bullet heaven lab. The wrapper keeps the instantiator that made the object and hands it back to that one | `MonoWrapperProcess.cs` (`ConfigureWrapper`, `WhenTerminate`) | verified |
+| PC-34 | M | 5 | Ending a process searched its step group's list for it from the front and shifted what came after, so ending one cost as much as the processes stepped with it: ending the newest of 10,000 took about 4.4 µs against 0.7 among 1,000, and ending every one of them cost the square of how many there were. The review's O(n) unregister, which Bullet heaven's 10,000 bolts didn't show, as they end oldest first. Found by the stress suite's churn. Fixed: a step group knows each process's position, so an ending leaves a hole there at once, which stepping passes over, and the holes are swept out in place once they outnumber the processes, the order kept | `Management/GameplayProcess/Core/ProcessWorld.cs` (`StepGroup`) | fixed |
 
 ### TaskSequence
 
@@ -760,7 +761,7 @@ A separate Unity project that consumes PlayForge as a local UPM package (Decisio
 harness exist, with the golden scenarios, the framework and planted suites, and the editor tests (360 EditMode
 tests in `Tests/Editor`, among them the editor smoke suite, which its README explains). The gameplay labs exist, all eight
 green (Decision 30), each with a scene that plays its bot (Decision 33), and a ninth, the Battle lab, at the user's
-asking; so does the stress suite's scale half (`Tests/Stress`), and its soaks don't yet. See
+asking, and so does the stress suite (`Tests/Stress`). See
 Environment for its location and commands. The full plan is in the
 review doc's section "The test project: PlayForge Proving Grounds". In short:
 
@@ -788,6 +789,38 @@ GAS-4 with GAS-5, PC-6, and TS-I with PC-5.
 ## Log
 
 Record baselines, gate results and notable decisions here, newest first.
+
+- 2026-11-05, **The stress suite's other half: churn and soaks, with PC-34.** So the test project's four suites are
+  all built.
+  - **Churn** (`ChurnTests`): registering a process and ending it cost about as much among 10,000 as among 1,000,
+    ended oldest first or newest first: 0.96 → 1.20 µs to register, 0.30 → 0.35 µs to end. A process's step costs
+    87 ns among 1,000 and 90 among 10,000. They're the review's budgets, churn linear to 10,000 and the step cost per
+    process, and each run measures them; a run's output has the numbers.
+  - **PC-34,** which the churn found: ending the newest of 10,000 took 4.4 µs against 0.7 among 1,000, as a step
+    group searched its list from the front. It keeps each process's position now, and leaves a hole it sweeps out
+    later.
+  - **Soaks** (`SoakTests`): 100 casters each run an ability 100 times, 10,000 runs of its sequence. Each run counts
+    once and its last stage is cleaned up, ProcessControl ends with what it began with, and the last thousand runs
+    take about as long as the second thousand: 57 ms against 48 to 52. And a level of 10 entities, each burning and
+    channelling, loaded over 100 times: each load takes the level and every process of it, and each cast's task is
+    cleaned up as its entity goes.
+  - **Half an hour of bullet heaven** (`Soak_Half_an_hour_of_bullet_heaven`, Explicit, category Soak, so the gates
+    skip it; run it with `-testCategory Soak`):
+    2,304,000 bolts over 30 minutes of the lab's time took 3 minutes of the machine's. The pool made 46 bolts; the
+    step loops took 825 µs a frame in the second minute and 820 in the last; and the heap, 26.1 MB at the start, was
+    27.6 MB two minutes in, once warmed up, and 27.6 MB at the end, after 2.15 million more bolts. Its first run met
+    the Test Framework's three-minute timeout, so it has a Timeout of its own.
+  - **Play-mode re-entry with domain reloading off,** the review's last soak, is SP-22's `DomainReloadTests`.
+  - **The soaks' own two mistakes,** for the record: casters that shared one ability shared its probe task, which the
+    ledger pairs by name, so their runs looked like one task prepared twice; each has its own now. And the soak's
+    bolt index, the count of bolts times a prime, overflowed an int some 270,000 bolts in.
+  - **Its tests,** seen failing first: `PC_34_Ending_a_process_costs_as_much_among_10000_as_among_1000`, in
+    `ProcessRegistrationTests`; and the churn and soaks.
+  - **Tests:** PlayMode 1311: 1303 pass, 0 fail, and 8 are skipped, the 7 planted and the soak, in
+    three orders. Planted 7 of 7; EditMode 447 of 447.
+  - **Next:** the review's editor stress (Module 4): The Forge over 2,000 effects and 500 abilities, a template pushed
+    to 2,000 children, and the Debugger over 200 entities. What's left after it is the user's: CI (SP-24), and whether
+    the labs ship in Samples (Decision 33).
 
 - 2026-11-05, **The stress suite begins: scale, and GAS-62.** The test project's one suite not yet built (the
   review's Module 3), in Proving Grounds' new `Tests/Stress`, category Stress.

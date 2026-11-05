@@ -336,6 +336,9 @@ tracks each fix below by its ID.
   Asking whether its sequence was paused took 24 bytes a frame.
 
 ### Fixed
+- Ending a process searched its step group from the front, so ending the newest of many cost as much as every
+  process stepped with it, and ending 10,000 cost the square of that. A step group keeps each process's position,
+  so an ending costs the same however many there are (PC-34).
 - An area ability struck one entity. A targeting task kept only the last target it selected, the farthest of every
   match, and Target Real and the apply tasks took only the first. Auto targeting keeps every target it selects, in
   order, and Apply Effects and Apply/Remove Effects reach each of them (GAS-62).
