@@ -664,7 +664,7 @@ Phase 2 part, and set Phase 4's direction.
 | FEAT-2 | SetByCaller magnitudes | Scalers read the data packet (C01) |
 | FEAT-3 | Tag-change events | Replace tag-worker polling. Done (Decision 30): `TagCache.Listen` hears a tag and the tags under it come and go, at once, or every weight change; `TagChanged` hears every change; a rebuild tells only what it changed; a tag worker is evaluated when the tags change, unless it asks for every frame (`EvaluateEveryFrame`) |
 | FEAT-4 | Ability triggers | Activate on a gameplay event or when a tag is added |
-| FEAT-5 | Cancel and block abilities by tag | C11 |
+| FEAT-5 | Cancel and block abilities by tag | C11. Done (Decision 30): an ability's Cancelled By names the abilities that cancel it as they activate, and its Blocks those that can't activate while it runs, by asset or context tag; each stage can name its own, and one that names none takes the ability's; a critical stage can't be cancelled; the While active row of its tag requirements interrupts it when its caster fails it |
 | FEAT-6 | Input buffer | Expiry and latest-wins for queued activations (C06) |
 | FEAT-7 | Time source | Per-entity time scale and deterministic fixed tick (C02). The clock per entity is done (Decision 30): `GetClock()`, the game's time by `ForgeTime` times the entity's `TimeScale`, which its effects, cooldowns, sequences, waits and projectiles run by. The fixed-rate tick is done too: with ProcessControl's Fixed Tick Rate set, each frame runs as many ticks as its time holds, each stepping every process and its end of frame by a fixed step, and each sequence's wait goes on by the tick (`ForgeTick.Next`) |
 | FEAT-8 | Effect conveniences | Cleanse by tag query, immunity, overflow at max stacks, abilities granted by effects, chance to apply. Done. Cleanse and immunity (Removes Effects Tagged, Blocks Effects Tagged) match an effect's asset, context and granted tags (Decision 30); overflow at max stacks is on Stack Bounds (Overflow Effects, Deny Refresh On Overflow, Clear Stacks On Overflow); an effect's Granted Abilities are lent at its origin's level while it's on; an effect lands by its Chance to Apply, drawn from `ForgeRandom` |
@@ -740,6 +740,27 @@ GAS-4 with GAS-5, PC-6, and TS-I with PC-5.
 ## Log
 
 Record baselines, gate results and notable decisions here, newest first.
+
+- 2026-11-04, **FEAT-5: cancel and block abilities by tag, and While active.** The MOBA hero kit's feature, ahead of
+  the lab (Decision 30).
+  - **Cancelled By and Blocks** (`AbilityBehaviour` for the ability, `AbilityTaskBehaviourStage` for a stage): tags
+    that name abilities by asset or context tag, or a child of one (`AbilityTags.Names`). A stage that names none
+    takes the ability's, and so does targeting, before the first stage. As an ability activates, each running one in
+    a stage it cancels is interrupted first; a critical stage is committed, so it's skipped. While a running stage
+    blocks an ability, `CanActivateAbility` says no and the activation is refused under every policy: retrying a
+    blocked request waits for FEAT-6's input buffer.
+  - **While active** (`AbilityTagRequirements.WhileActiveRequirements`): the caster's tags while the ability runs.
+    The ability system hears every tag change (`TagCache.TagChanged`) and, each step after the effects tick, checks
+    the running abilities again, interrupting one that fails; it's checked as the ability is asked to activate too.
+    An interrupt this way ends a critical stage as well, as an interrupt by slot does.
+  - **The Ability inspector:** Cancelled By and Blocks in Stages, before the stage list, and each stage's own in its
+    drawer; a While active row in the tag requirements table, between Caster and Target.
+  - **Its tests,** seen failing first (10 of 10 PlayMode, 2 of 2 EditMode): five `FEAT_5_*` tests on each hub in
+    PlayMode's new `CancelAndBlockTests`, `FEAT_5_The_Ability_inspector_edits_cancel_block_and_While_active`, and
+    `ED_37_The_requirements_table_opens_a_cell_to_edit_it`, which now expects the While active row.
+  - **Next:** the MOBA hero kit lab.
+  - **Tests:** PlayMode 1061: 1054 pass, 0 fail and 7 planted are skipped, in three orders. Planted 7 of 7; EditMode
+    433 of 433.
 
 - 2026-11-04, **FEAT-8 done: abilities granted by effects, and the chance to apply.**
   - **Granted Abilities** (`GameplayEffect.GrantedAbilities`): a lasting effect gives its target each ability as it

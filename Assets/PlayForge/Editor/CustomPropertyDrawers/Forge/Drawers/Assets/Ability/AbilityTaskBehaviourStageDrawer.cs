@@ -259,6 +259,23 @@ namespace FarEmerald.PlayForge.Extended.Editor
             }
             settings.Add(applyUsageContainer);
             settings.Add(applyUsageOnStartContainer);
+
+            // What cancels the ability and what it blocks while this stage runs; a stage that names none takes the
+            // ability's (FEAT-5)
+            var cancelledBy = new PropertyField(property.FindPropertyRelative(nameof(AbilityTaskBehaviourStage.CancelledBy)), "Cancelled By")
+            {
+                name = "CancelledBy",
+                tooltip = "Abilities, by tag, that cancel this one as they activate in this stage. None takes the ability's",
+            };
+            cancelledBy.style.marginLeft = 8;
+            settings.Add(cancelledBy);
+            var blocks = new PropertyField(property.FindPropertyRelative(nameof(AbilityTaskBehaviourStage.Blocks)), "Blocks")
+            {
+                name = "Blocks",
+                tooltip = "Abilities, by tag, that can't activate during this stage. None takes the ability's",
+            };
+            blocks.style.marginLeft = 8;
+            settings.Add(blocks);
             
             content.Add(settings);
             

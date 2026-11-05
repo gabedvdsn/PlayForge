@@ -7,6 +7,11 @@ tracks each fix below by its ID.
 ## [Unreleased]
 
 ### Added
+- Cancel and block abilities by tag. An ability's Cancelled By names the abilities that cancel it as they activate,
+  and its Blocks those that can't activate while it runs; each stage can name its own, and one that names none takes
+  the ability's. A critical stage can't be cancelled (FEAT-5).
+- A While active row in an ability's tag requirements: the caster's tags for as long as the ability runs. When they
+  fail, the ability is interrupted, so a stun ends a channel (FEAT-5).
 - Abilities granted by effects. An effect's Granted Abilities are given to its target as it lands, at the level of
   what applied it, and taken back, interrupted if running, as it comes off; only what it gave is taken back
   (FEAT-8).

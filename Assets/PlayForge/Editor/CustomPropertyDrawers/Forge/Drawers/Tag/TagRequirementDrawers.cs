@@ -38,8 +38,8 @@ namespace FarEmerald.PlayForge.Extended.Editor
     }
 
     /// <summary>
-    /// An ability's tag requirements, as the same table: the caster's and the target's, each with what it requires and
-    /// what it must not have (ED-37).
+    /// An ability's tag requirements, as the same table: the caster's, the caster's while the ability runs (FEAT-5), and
+    /// the target's, each with what it requires and what it must not have (ED-37).
     /// </summary>
     [CustomPropertyDrawer(typeof(AbilityTagRequirements))]
     public class AbilityTagRequirementsDrawer : PropertyDrawer
@@ -49,6 +49,8 @@ namespace FarEmerald.PlayForge.Extended.Editor
             var table = new ForgeRequirementsTable(property, "Who",
                 new ForgeRequirementsTable.Group("Caster", nameof(AbilityTagRequirements.SourceRequirements),
                     "Checked as the ability is asked to activate, and again after targeting"),
+                new ForgeRequirementsTable.Group("While active", nameof(AbilityTagRequirements.WhileActiveRequirements),
+                    "The caster's, for as long as the ability runs: when it fails, the ability is interrupted"),
                 new ForgeRequirementsTable.Group("Target", nameof(AbilityTagRequirements.TargetRequirements),
                     "Checked after targeting, when there's a target"));
             ForgeTheme.Apply(table);

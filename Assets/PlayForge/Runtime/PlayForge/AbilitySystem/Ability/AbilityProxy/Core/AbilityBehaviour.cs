@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
+using FarEmerald.PlayForge.Extended;
 using UnityEngine;
 using UnityEngine.Serialization;
 
@@ -26,6 +27,19 @@ namespace FarEmerald.PlayForge
         
         public List<AbilityTaskBehaviourStage> Stages;
 
+        /// <summary>
+        /// The abilities, by asset tag or a context tag, or a child of one, that cancel this one as they activate, in
+        /// each stage that names none of its own. A critical stage is committed, so nothing cancels it. Nothing
+        /// cancelled an ability but an interrupt by slot (FEAT-5).
+        /// </summary>
+        [ForgeTagContext(ForgeContext.ContextIdentifier)] public List<Tag> CancelledBy = new();
+
+        /// <summary>
+        /// The abilities, by asset tag or a context tag, or a child of one, that can't activate while this one runs, in
+        /// each stage that names none of its own. Blocking was the claim alone, per activation policy (FEAT-5).
+        /// </summary>
+        [ForgeTagContext(ForgeContext.ContextIdentifier)] public List<Tag> Blocks = new();
+
         public AbilityProxy GenerateProxy(string abilityName = null)
         {
             return new AbilityProxy(this, abilityName);
@@ -49,6 +63,36 @@ namespace FarEmerald.PlayForge
         [Tooltip("At the beginning of this stage, should the ability usage effects be applied?")]
         public bool ApplyUsageEffects;
         public bool ApplyUsageAtStageStart = true;
+
+        /// <summary>
+        /// The abilities that cancel the ability as they activate while this stage runs, as the ability's Cancelled By
+        /// says; a stage that names none takes the ability's. A critical stage can't be cancelled (FEAT-5).
+        /// </summary>
+        [ForgeTagContext(ForgeContext.ContextIdentifier)] public List<Tag> CancelledBy = new();
+
+        /// <summary>
+        /// The abilities that can't activate while this stage runs, as the ability's Blocks says; a stage that names none
+        /// takes the ability's (FEAT-5).
+        /// </summary>
+        [ForgeTagContext(ForgeContext.ContextIdentifier)] public List<Tag> Blocks = new();
+
+        /// <summary>The stage's own Cancelled By, or <paramref name="ability"/>'s when it names none (FEAT-5).</summary>
+        public List<Tag> CancelledByOr(List<Tag> ability) => CancelledBy is { Count: > 0 } ? CancelledBy : ability;
+
+        /// <summary>The stage's own Blocks, or <paramref name="ability"/>'s when it names none (FEAT-5).</summary>
+        public List<Tag> BlocksOr(List<Tag> ability) => Blocks is { Count: > 0 } ? Blocks : ability;
+
+        /// <summary>Whether a task in the stage is a critical section, which commits the ability to the stage.</summary>
+        public bool IsCritical
+        {
+            get
+            {
+                if (Tasks == null) return false;
+                for (int i = 0; i < Tasks.Count; i++)
+                    if (Tasks[i] != null && Tasks[i].IsCriticalSection) return true;
+                return false;
+            }
+        }
     }
 
     public enum EAnyAllPolicy

@@ -333,7 +333,99 @@ namespace FarEmerald.PlayForge
                    && !Locked
                    && ProcessControl.Instance is not { AcceptsNewProcesses: false }
                    && container.Spec.ValidateSourceActivationRequirements(data)
-                   && (!container.Spec.Base.IgnoreWhenLevelZero || container.Spec.GetLevel().CurrentValue > 0);
+                   && (!container.Spec.Base.IgnoreWhenLevelZero || container.Spec.GetLevel().CurrentValue > 0)
+                   // A running ability's stage that blocks it refuses it, and its caster must pass its While active
+                   // group, as it will for as long as it runs (FEAT-5)
+                   && !IsBlocked(container.Spec.Base)
+                   && PassesWhileActive(container, Self.GetTagCache());
+        }
+
+        // ═══════════════════════════════════════════════════════════════════════════
+        // Cancel and block by tag, and While active (FEAT-5)
+        // ═══════════════════════════════════════════════════════════════════════════
+
+        // How many abilities run, over every policy, for a copy of their slots
+        private int RunningCount()
+        {
+            int count = 0;
+            foreach (var active in ActiveCache.Values) count += active.Count;
+            return count;
+        }
+
+        // The running abilities' slots, each once, into a rented array; how many there are
+        private int CopyRunning(int[] slots)
+        {
+            int found = 0;
+            foreach (var active in ActiveCache.Values)
+                foreach (int index in active)
+                    if (Array.IndexOf(slots, index, 0, found) < 0) slots[found++] = index;
+            return found;
+        }
+
+        // Whether a running ability is in a stage that blocks the one asked for
+        private bool IsBlocked(Ability incoming)
+        {
+            foreach (var active in ActiveCache.Values)
+                foreach (int index in active)
+                    if (AbilityCache.TryGetValue(index, out var running) && running.IsActive && running.Blocks(incoming)) return true;
+            return false;
+        }
+
+        // Interrupts each running ability in a stage the activating one cancels, from a copy of their slots, as an
+        // interrupted ability can end inside the interrupt, and what its end sets off can change the cache
+        private void CancelAbilitiesCancelledBy(Ability incoming)
+        {
+            int count = RunningCount();
+            if (count == 0) return;
+            var slots = ArrayPool<int>.Shared.Rent(count);
+            try
+            {
+                int found = CopyRunning(slots);
+                for (int i = 0; i < found; i++)
+                    if (AbilityCache.TryGetValue(slots[i], out var running) && running.IsActive) running.CancelFor(incoming);
+            }
+            finally
+            {
+                ArrayPool<int>.Shared.Return(slots);
+            }
+        }
+
+        private static bool PassesWhileActive(AbilitySpecContainer container, TagCache tags) =>
+            container.Spec.Base.Tags?.TagRequirements?.CheckWhileActiveRequirements(tags) ?? true;
+
+        // Whether the caster's tags changed since the running abilities' While active groups were checked
+        private bool tagsChangedWhileActive;
+
+        /// <summary>Hears each change to the caster's tags, which a running ability's While active group may fail on (FEAT-5).</summary>
+        internal void HearTagChange(TagChange change) => tagsChangedWhileActive = true;
+
+        /// <summary>
+        /// Interrupts each running ability whose While active group its caster no longer passes, once the tags have
+        /// changed: a stun ends a channel. Called each step, after the effects tick, so a stun an effect grants ends it
+        /// in the frame it lands. Requirements weren't checked once an ability ran (FEAT-5).
+        /// </summary>
+        internal void CheckWhileActive()
+        {
+            if (!tagsChangedWhileActive) return;
+            tagsChangedWhileActive = false;
+
+            int count = RunningCount();
+            if (count == 0) return;
+            var tags = Self.GetTagCache();
+            var slots = ArrayPool<int>.Shared.Rent(count);
+            try
+            {
+                int found = CopyRunning(slots);
+                for (int i = 0; i < found; i++)
+                {
+                    if (!AbilityCache.TryGetValue(slots[i], out var running) || !running.IsActive) continue;
+                    if (!PassesWhileActive(running, tags)) running.Inject(InterruptSequenceInjection.Instance);
+                }
+            }
+            finally
+            {
+                ArrayPool<int>.Shared.Return(slots);
+            }
         }
         
         /// <summary>
@@ -361,6 +453,9 @@ namespace FarEmerald.PlayForge
                 ActivateNextFrame(container, req).Forget();
                 return true;
             }
+
+            // Each running ability in a stage this one cancels ends first, so this one starts clear of it (FEAT-5)
+            CancelAbilitiesCancelledBy(container.Spec.Base);
 
             return ProcessActivationRequest(data);
         }

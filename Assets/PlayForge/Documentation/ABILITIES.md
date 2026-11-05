@@ -106,6 +106,11 @@ This section is what the ability does once it has started.
 
 - **Asset Loaders**: run once per activation, after targeting. Each loader adds assets to the activation's data under
   a tag. A Set Effects loader, for example, adds effects under `Effects`. Code-driven tasks read them from there.
+- **Cancelled By**: abilities, by asset tag or a context tag, or a child of one, that cancel this one as they
+  activate. The ability is interrupted, then the other starts. Each stage that names none of its own takes this list,
+  and so does targeting. A critical stage is committed, so nothing cancels it.
+- **Blocks**: abilities, named the same way, that can't activate while this one runs. Each stage that names none
+  takes this list. A blocked activation is refused, whatever its When Busy says.
 - **Stages**: each stage starts all its tasks together. The next stage starts when it ends.
   - **Completion Policy**: All ends the stage when every task has finished. Any ends it when the first task finishes,
     and cancels the rest. A stage with no policy set behaves as All.
@@ -115,13 +120,17 @@ This section is what the ability does once it has started.
   - **Tasks**: the work, such as Apply Effects, Delay or Run Sequence. A stage that holds a critical task is critical.
     The activation keeps its claim until its last critical stage ends. With no critical stage, it lets the claim go
     as the stages start.
+  - **Cancelled By** and **Blocks**: the stage's own lists, as above, which hold while it runs. A heavy attack's
+    recovery can name the specials that cut it short, and its windup none.
 
 ## Requirements
 
 Requirements are what an activation must pass. If one fails, the ability doesn't run.
 
 - The **tag requirements** table holds tag checks, a row for each side. **Caster** checks the caster, with the Caster
-  Checks. **Target** checks the target the same way, after targeting. Each row's **Requires** cell lists the tags the
+  Checks. **While active** checks the caster for as long as the ability runs: when it fails, the ability is
+  interrupted, so a channel that must not have `State.Stunned` ends as a stun lands, and while it fails, the ability
+  can't activate. **Target** checks the target the same way, after targeting. Each row's **Requires** cell lists the tags the
   entity must have, and its **Must not have** cell the tags it must not have, such as `State.Stunned`, or says None. A
   row passes when the entity has every tag it requires and none it must not have, so an empty row always passes. Click
   a cell to edit its list under the table, with the row's **Template** and **Sync With Template** (see

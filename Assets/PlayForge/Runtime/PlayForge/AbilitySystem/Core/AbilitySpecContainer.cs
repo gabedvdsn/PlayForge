@@ -196,16 +196,64 @@ namespace FarEmerald.PlayForge
 
             // Take a snapshot since injection may modify the list
             var handles = _activeHandles.ToArray();
-            foreach (var handle in handles)
-            {
-                handle.Proxy.Inject(injection, handle.Data);
+            foreach (var handle in handles) Inject(handle, injection);
+        }
 
-                // For interrupt injections, cancel the appropriate tokens
-                if (injection is InterruptSequenceInjection)
-                {
-                    if (handle.IsTargeting) handle.TargetingCts?.Cancel();
-                    if (handle.IsExecuting) handle.Cts?.Cancel();
-                }
+        private static void Inject(AbilityActivationHandle handle, ISequenceInjection injection)
+        {
+            handle.Proxy.Inject(injection, handle.Data);
+
+            // For interrupt injections, cancel the appropriate tokens
+            if (injection is InterruptSequenceInjection)
+            {
+                if (handle.IsTargeting) handle.TargetingCts?.Cancel();
+                if (handle.IsExecuting) handle.Cts?.Cancel();
+            }
+        }
+
+        // The stage a run is in, or null while it targets, before its first stage starts (FEAT-5)
+        private AbilityTaskBehaviourStage StageOf(AbilityActivationHandle handle)
+        {
+            var stages = Spec.Base.Behaviour?.Stages;
+            int index = handle.Data?.StageIndex ?? -1;
+            return stages != null && index >= 0 && index < stages.Count ? stages[index] : null;
+        }
+
+        /// <summary>
+        /// Whether a run of this ability is in a stage that keeps <paramref name="incoming"/> from activating: one whose
+        /// Blocks names it, or, naming none, whose ability's Blocks does. Blocking was the claim alone (FEAT-5).
+        /// </summary>
+        internal bool Blocks(Ability incoming)
+        {
+            var behaviour = Spec.Base.Behaviour;
+            if (behaviour == null) return false;
+            for (int i = 0; i < _activeHandles.Count; i++)
+            {
+                var stage = StageOf(_activeHandles[i]);
+                if (AbilityTags.Names(stage != null ? stage.BlocksOr(behaviour.Blocks) : behaviour.Blocks, incoming)) return true;
+            }
+            return false;
+        }
+
+        /// <summary>
+        /// Interrupts each run of this ability in a stage that <paramref name="incoming"/> cancels as it activates: one
+        /// whose Cancelled By names it, or, naming none, whose ability's does. A critical stage is committed, so nothing
+        /// cancels it (Decision 30). Nothing cancelled an ability but an interrupt by slot (FEAT-5).
+        /// </summary>
+        internal void CancelFor(Ability incoming)
+        {
+            var behaviour = Spec.Base.Behaviour;
+            if (behaviour == null) return;
+
+            // Backwards, as an interrupted run can end inside the interrupt and leave the list
+            for (int i = _activeHandles.Count - 1; i >= 0; i--)
+            {
+                if (i >= _activeHandles.Count) continue;
+                var handle = _activeHandles[i];
+                var stage = StageOf(handle);
+                if (stage != null && stage.IsCritical) continue;
+                if (!AbilityTags.Names(stage != null ? stage.CancelledByOr(behaviour.CancelledBy) : behaviour.CancelledBy, incoming)) continue;
+                Inject(handle, InterruptSequenceInjection.Instance);
             }
         }
 

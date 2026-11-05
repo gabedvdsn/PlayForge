@@ -408,7 +408,11 @@ namespace FarEmerald.PlayForge.Extended.Editor
                 HelpTopic = "abilities/stages",
 
                 SerializedObject = serializedObject,
-                PropertyPaths = new[] { BehaviourPath(nameof(AbilityBehaviour.AssetLoaders)), BehaviourPath(nameof(AbilityBehaviour.Stages)) },
+                PropertyPaths = new[]
+                {
+                    BehaviourPath(nameof(AbilityBehaviour.AssetLoaders)), BehaviourPath(nameof(AbilityBehaviour.CancelledBy)),
+                    BehaviourPath(nameof(AbilityBehaviour.Blocks)), BehaviourPath(nameof(AbilityBehaviour.Stages)),
+                },
                 OnImportComplete = OnSectionReplaced,
                 OnClearComplete = OnSectionReplaced,
             });
@@ -422,6 +426,13 @@ namespace FarEmerald.PlayForge.Extended.Editor
                 return;
             }
             stagesSection.Content.Add(CreatePropertyField(serializedObject.FindProperty(BehaviourPath(nameof(AbilityBehaviour.AssetLoaders))), "AssetLoaders", "Asset Loaders"));
+            // What cancels the ability and what it blocks, in each stage that names none of its own (FEAT-5)
+            var cancelledBy = CreatePropertyField(serializedObject.FindProperty(BehaviourPath(nameof(AbilityBehaviour.CancelledBy))), "DefaultCancelledBy", "Cancelled By");
+            cancelledBy.tooltip = "Abilities, by tag, that cancel this one as they activate, in each stage that names none";
+            stagesSection.Content.Add(cancelledBy);
+            var blocks = CreatePropertyField(serializedObject.FindProperty(BehaviourPath(nameof(AbilityBehaviour.Blocks))), "DefaultBlocks", "Blocks");
+            blocks.tooltip = "Abilities, by tag, that can't activate while this one runs, in each stage that names none";
+            stagesSection.Content.Add(blocks);
             stagesSection.Content.Add(CreatePropertyField(serializedObject.FindProperty(BehaviourPath(nameof(AbilityBehaviour.Stages))), "Stages", "Stages"));
         }
 

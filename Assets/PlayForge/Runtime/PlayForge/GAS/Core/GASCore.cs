@@ -51,6 +51,9 @@ namespace FarEmerald.PlayForge
             EffectSystem = new EffectSystemComponent(owner);
             LevelSystem = new SystemLevelsComponent();
             TagCache = new TagCache(owner);
+
+            // A running ability's While active group is checked again once the tags change (FEAT-5)
+            TagCache.TagChanged += AbilitySystem.HearTagChange;
         }
 
         /// <summary>
@@ -123,6 +126,9 @@ namespace FarEmerald.PlayForge
         {
             Clock.Step();
             EffectSystem.Tick();
+
+            // After the effects, so a stun one grants this step ends a channel in it (FEAT-5)
+            AbilitySystem.CheckWhileActive();
 
             // Tag workers tick once a frame, at its end, once their activations are settled. Ticked here as well,
             // they ran at twice their rate (GAS-19)
