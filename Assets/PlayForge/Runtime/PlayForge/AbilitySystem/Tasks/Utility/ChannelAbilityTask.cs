@@ -40,7 +40,7 @@ namespace FarEmerald.PlayForge
                 elapsedDuration += ForgeTime.DeltaTime;
                 SliderManager.Instance.SetValue(elapsedDuration / ChannelDuration);
 
-                await UniTask.NextFrame(token);
+                await ForgeTick.NextFrame(token);
             }*/
         }
     }

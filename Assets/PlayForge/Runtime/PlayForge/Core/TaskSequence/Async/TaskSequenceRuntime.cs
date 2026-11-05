@@ -182,7 +182,7 @@ namespace FarEmerald.PlayForge
             float elapsed = 0f;
             do
             {
-                await UniTask.Yield(PlayerLoopTiming.Update, token);
+                await ForgeTick.Next(token);
                 if (!IsPaused) elapsed += ForgeTime.DeltaTimeFor(Data);
             } while (elapsed < seconds);
         }
@@ -288,7 +288,7 @@ namespace FarEmerald.PlayForge
                     // run, an interrupt in that frame still ends it, as it did (TS-Z)
                     if ((Definition.Metadata?.Repeat ?? false) && ForgeTime.FrameCount == runStartFrame)
                     {
-                        await UniTask.Yield(PlayerLoopTiming.Update, token);
+                        await ForgeTick.Next(token);
                     }
 
                     CompletedSuccessfully = true;
@@ -683,7 +683,7 @@ namespace FarEmerald.PlayForge
             // What the last iteration added to the path comes off, so each one finds it as the first did (TS-5)
             if (_iterationPathDepths.TryGetValue(stage, out int pathDepth)) Data.TrimPath(pathDepth);
 
-            if (ForgeTime.FrameCount == startFrame) await UniTask.Yield(PlayerLoopTiming.Update, token);
+            if (ForgeTime.FrameCount == startFrame) await ForgeTick.Next(token);
 
             CleanStage(stage);
             PrepareStage(stage);
@@ -978,7 +978,7 @@ namespace FarEmerald.PlayForge
             {
                 while (true)
                 {
-                    await UniTask.Yield(PlayerLoopTiming.Update, token);
+                    await ForgeTick.Next(token);
                     if (!IsPaused) ElapsedTime += ForgeTime.DeltaTimeFor(Data);
                 }
             }
@@ -992,7 +992,7 @@ namespace FarEmerald.PlayForge
                 float elapsed = 0f;
                 while (true)
                 {
-                    await UniTask.Yield(PlayerLoopTiming.Update, token);
+                    await ForgeTick.Next(token);
                     if (IsPaused) continue;
 
                     elapsed += ForgeTime.DeltaTimeFor(Data);
@@ -1025,7 +1025,7 @@ namespace FarEmerald.PlayForge
                 float elapsed = 0f;
                 while (true)
                 {
-                    await UniTask.Yield(PlayerLoopTiming.Update, token);
+                    await ForgeTick.Next(token);
                     if (IsPaused) continue;
 
                     elapsed += ForgeTime.DeltaTimeFor(Data);

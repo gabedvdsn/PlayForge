@@ -98,6 +98,11 @@ Each entity also has a clock of its own, `gas.GetClock()`: the game's time scale
 by it, its cooldowns among them, and so do its abilities' waits and sequences, so `TimeScale = 0.5f` slows one entity
 and no other. A scale of 0 holds the entity's time still; it isn't a pause.
 
+For a run that comes out the same at any frame rate, set ProcessControl's Fixed Tick Rate, as 60. The game then steps
+in ticks, each a fixed step of its time, as many a frame as the frame's time holds: every process steps once a tick,
+its end of frame with it, and each sequence's wait goes on by the tick. Code of your own that waits for a sequence's
+next frame awaits `ForgeTick.Next(token)`. 0, the default, steps once a frame.
+
 ### Tooltips: what does this ability do?
 
 `AbilityInspector.Build(ability)` returns a full static breakdown — every effect, its

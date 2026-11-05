@@ -55,7 +55,7 @@ namespace FarEmerald.PlayForge
         {
             while (!Step(data, ForgeTime.DeltaTimeFor(data)))
             {
-                await UniTask.Yield(PlayerLoopTiming.Update, token);
+                await ForgeTick.Next(token);
             }
         }
 

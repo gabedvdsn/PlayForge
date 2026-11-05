@@ -14,7 +14,7 @@ namespace FarEmerald.PlayForge
                 
                 transform.position = Vector3.MoveTowards(transform.position, targeting.position, GetProjectileSpeed() * ForgeTime.DeltaTimeFor(ProcessRelay?.Handler));
                 
-                await UniTask.NextFrame(token);
+                await ForgeTick.NextFrame(token);
             }
         }
         

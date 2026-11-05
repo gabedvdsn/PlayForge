@@ -368,7 +368,7 @@ namespace FarEmerald.PlayForge
         // Asked for again next frame, as long as its slot still holds it
         private async UniTaskVoid ActivateNextFrame(AbilitySpecContainer container, AbilityActivationRequest req)
         {
-            await UniTask.NextFrame();
+            await ForgeTick.NextFrame();
 
             if (AbilityCache.TryGetValue(req.Index, out var cached) && cached == container) TryActivateAbility(req);
         }

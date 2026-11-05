@@ -137,7 +137,7 @@ namespace FarEmerald.PlayForge
         {
             while (mover && target && Vector3.Distance(mover.position, target.position) > stoppingDistance)
             {
-                await UniTask.Yield(PlayerLoopTiming.Update, token);
+                await ForgeTick.Next(token);
                 if (!target || !mover) break;
                 mover.position = Vector3.MoveTowards(mover.position, target.position, speed * DeltaTime(token));
             }
@@ -154,7 +154,7 @@ namespace FarEmerald.PlayForge
 
             while (mover && target)
             {
-                await UniTask.Yield(PlayerLoopTiming.Update, token);
+                await ForgeTick.Next(token);
                 if (!target || !mover) break;
 
                 Vector3 dest = target.position;
@@ -180,7 +180,7 @@ namespace FarEmerald.PlayForge
             float angle = 0f;
             while (mover && center)
             {
-                await UniTask.Yield(PlayerLoopTiming.Update, token);
+                await ForgeTick.Next(token);
                 if (!center || !mover) break;
                 angle += degreesPerSecond * DeltaTime(token);
                 Vector3 offset = Quaternion.AngleAxis(angle, axis) * (Vector3.forward * radius);
@@ -209,7 +209,7 @@ namespace FarEmerald.PlayForge
             {
                 while (Vector3.Distance(mover.position, wp) > stoppingDistance)
                 {
-                    await UniTask.Yield(PlayerLoopTiming.Update, token);
+                    await ForgeTick.Next(token);
                     if (!mover) break;
                     mover.position = Vector3.MoveTowards(mover.position, wp, speed * DeltaTime(token));
                 }
@@ -284,7 +284,7 @@ namespace FarEmerald.PlayForge
         {
             while (mover && target)
             {
-                await UniTask.Yield(PlayerLoopTiming.Update, token);
+                await ForgeTick.Next(token);
                 if (!target || !mover) break;
                 var dir = (target.position - mover.position).normalized;
                 if (dir == Vector3.zero) continue;
@@ -464,7 +464,7 @@ namespace FarEmerald.PlayForge
             CancellationToken token, int layer = 0)
         {
             animator.SetTrigger(triggerParam);
-            await UniTask.Yield(PlayerLoopTiming.Update, token);
+            await ForgeTick.Next(token);
             await UniTask.WaitWhile(() =>
             {
                 var info = animator.GetCurrentAnimatorStateInfo(layer);
@@ -718,7 +718,7 @@ namespace FarEmerald.PlayForge
             label.text = "";
     
             // Wait one frame so any input from the previous interaction clears
-            await UniTask.Yield(PlayerLoopTiming.Update, token);
+            await ForgeTick.Next(token);
     
             bool skipped = false;
     
@@ -743,7 +743,7 @@ namespace FarEmerald.PlayForge
                 float elapsed = 0f;
                 while (elapsed < delay)
                 {
-                    await UniTask.Yield(PlayerLoopTiming.Update, token);
+                    await ForgeTick.Next(token);
                     elapsed += DeltaTime(token);
             
                     if (skipCondition())
@@ -867,7 +867,7 @@ namespace FarEmerald.PlayForge
             float elapsed = 0f;
             do
             {
-                await UniTask.Yield(PlayerLoopTiming.Update, token);
+                await ForgeTick.Next(token);
                 elapsed += DeltaTime(token);
             } while (elapsed < seconds);
         }
@@ -878,7 +878,7 @@ namespace FarEmerald.PlayForge
         public static async UniTask Yield(CancellationToken token,
             PlayerLoopTiming timing = PlayerLoopTiming.Update)
         {
-            await UniTask.Yield(timing, token);
+            await ForgeTick.Next(timing, token);
         }
         
         /// <summary>
@@ -889,7 +889,7 @@ namespace FarEmerald.PlayForge
         {
             for (int frames = 0; frames < frameCount;)
             {
-                await UniTask.Yield(timing, token);
+                await ForgeTick.Next(timing, token);
                 if (!IsPaused(token)) frames++;
             }
         }
@@ -913,7 +913,7 @@ namespace FarEmerald.PlayForge
             float elapsed = 0f;
             while (elapsed < duration)
             {
-                await UniTask.Yield(PlayerLoopTiming.Update, token);
+                await ForgeTick.Next(token);
                 elapsed += DeltaTime(token);
                 
                 float t = Mathf.Clamp01(elapsed / duration);

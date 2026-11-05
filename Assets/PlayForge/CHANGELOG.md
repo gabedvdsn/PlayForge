@@ -7,6 +7,10 @@ tracks each fix below by its ID.
 ## [Unreleased]
 
 ### Added
+- A fixed-rate tick: with ProcessControl's Fixed Tick Rate set, the game steps in ticks of a fixed step of its time,
+  as many a frame as the frame's time holds, up to Max Ticks Per Frame. Every process steps once a tick, its end of
+  frame with it, and each sequence's wait goes on by the tick (`ForgeTick.Next`), so a run comes out the same at any
+  frame rate. 0, the default, steps once a frame, as before (FEAT-7).
 - A clock for each entity, `IGameplayAbilitySystem.GetClock()`: the game's time scaled by its `TimeScale`. The
   entity's effects, its cooldowns among them, and its abilities' waits, sequences and projectiles run by it, so one
   entity can be slowed, hasted or held still while the rest run on (FEAT-7).

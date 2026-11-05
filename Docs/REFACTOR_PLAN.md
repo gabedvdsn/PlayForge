@@ -666,7 +666,7 @@ Phase 2 part, and set Phase 4's direction.
 | FEAT-4 | Ability triggers | Activate on a gameplay event or when a tag is added |
 | FEAT-5 | Cancel and block abilities by tag | C11 |
 | FEAT-6 | Input buffer | Expiry and latest-wins for queued activations (C06) |
-| FEAT-7 | Time source | Per-entity time scale and deterministic fixed tick (C02). The clock per entity is done (Decision 30): `GetClock()`, the game's time by `ForgeTime` times the entity's `TimeScale`, which its effects, cooldowns, sequences, waits and projectiles run by. The fixed-rate tick, which steps every GAS and sequence a fixed number of times a frame, is next |
+| FEAT-7 | Time source | Per-entity time scale and deterministic fixed tick (C02). The clock per entity is done (Decision 30): `GetClock()`, the game's time by `ForgeTime` times the entity's `TimeScale`, which its effects, cooldowns, sequences, waits and projectiles run by. The fixed-rate tick is done too: with ProcessControl's Fixed Tick Rate set, each frame runs as many ticks as its time holds, each stepping every process and its end of frame by a fixed step, and each sequence's wait goes on by the tick (`ForgeTick.Next`) |
 | FEAT-8 | Effect conveniences | Cleanse by tag query, immunity, overflow at max stacks, abilities granted by effects, chance to apply. Cleanse and immunity done (Removes Effects Tagged, Blocks Effects Tagged), matching an effect's asset, context and granted tags (Decision 30); overflow at max stacks (Overflow Effects, Deny Refresh and Clear Stacks), abilities granted by effects and the chance to apply come with the Status-effect lab |
 | FEAT-9 | Save and load | Snapshots of attributes, effects, tags and cooldowns |
 | FEAT-10 | Headless mode | Abilities run without a scene ProcessControl |
@@ -740,6 +740,22 @@ GAS-4 with GAS-5, PC-6, and TS-I with PC-5.
 ## Log
 
 Record baselines, gate results and notable decisions here, newest first.
+
+- 2026-11-04, **FEAT-7's fixed-rate tick.** The time source's second part, which closes Phase 5's foundations
+  (Decision 30). FEAT-7 is done.
+  - **The tick:** ProcessControl's Fixed Tick Rate, 0 by default, which keeps one step a frame. Set, as 60, each frame
+    adds its time to an accumulator and runs as many ticks as it holds, up to Max Ticks Per Frame, dropping the rest
+    of a frame too long for them. A tick reads a clock of its own, the fixed step as its time step and its number as
+    its frame; in it, what waits for a tick goes on, every process steps, and every process steps its end of frame, so
+    an entity's actions land within the tick that queued them.
+  - **Sequences:** the runtime's 28 frame waits, in the sequence runtime and library, the sync cores, the ability
+    tasks and `ProcessTaskUtil`, await `ForgeTick.Next` (or `NextFrame`), which is Unity's next frame with ticks off
+    and the next tick with them on, through pooled completion sources. A wait for the physics step stays on Unity's.
+  - **Its tests,** which didn't compile against `48c2c8e`, `FixedTickRate` being new: the four `FEAT_7_*` tests in
+    the new PlayMode `FixedTickTests`, among them `FEAT_7_A_fixed_tick_runs_the_same_at_any_frame_rate` on each hub.
+  - **Next:** the labs, the Status-effect lab first.
+  - **Tests:** PlayMode 1017: 1010 pass, 0 fail and 7 planted are skipped, in three orders. Planted 7 of 7; EditMode
+    431 of 431.
 
 - 2026-11-04, **FEAT-7's clocks, with TS-6.** The first part of the time source, the last foundation (Decision 30).
   - **A clock for each entity:** `EntityClock`, from `IGameplayAbilitySystem.GetClock()`, both hubs forwarding to

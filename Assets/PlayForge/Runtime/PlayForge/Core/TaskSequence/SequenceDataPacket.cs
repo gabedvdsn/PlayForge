@@ -162,7 +162,7 @@ namespace FarEmerald.PlayForge
         {
             if (!(condition?.Invoke() ?? false)) return false;
 
-            await UniTask.NextFrame(t);
+            await ForgeTick.NextFrame(t);
             Inject(injection);
             return true;
         }

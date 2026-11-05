@@ -26,6 +26,15 @@ namespace FarEmerald.PlayForge
         [Tooltip("When true, processes on the same GameObject are treated as a group")]
         [SerializeField] private bool CascadeToSiblings = true;
         
+        [Header("Fixed Tick")]
+        [Tooltip("Ticks a second of game time. Each steps every process, its end of frame with it, and lets each " +
+                 "sequence's wait go on, a fixed step of time, and a frame runs as many as its time holds, so a run " +
+                 "comes out the same at any frame rate. 0 steps once a frame (FEAT-7)")]
+        [SerializeField] private int fixedTickRate;
+        [Tooltip("The most ticks a frame runs, so a long frame doesn't fall further behind: the rest of its time is " +
+                 "dropped")]
+        [SerializeField] private int maxTicksPerFrame = 8;
+
         [Space]
         public bool OutputLogs;
         public bool DetailedLogs = true;
@@ -274,6 +283,81 @@ namespace FarEmerald.PlayForge
             if (DontDestroyOnLoad) DontDestroyOnLoad(gameObject);
 
             ResetProcessControl(deferStartState ? EProcessControlState.Ready : StartState);
+            ApplyTickRate();
+        }
+
+        /// <summary>
+        /// Ticks a second of game time, each a fixed step that steps every process once, its end of frame with it, and
+        /// lets each sequence's wait go on; a frame runs as many as its time holds, up to the inspector's most a frame.
+        /// 0, the default, steps once a frame. Each process stepped once a frame, by the frame's time, so a run at
+        /// another frame rate came out otherwise (FEAT-7, Decision 30).
+        /// </summary>
+        public int FixedTickRate
+        {
+            get => fixedTickRate;
+            set
+            {
+                fixedTickRate = Mathf.Max(0, value);
+                ApplyTickRate();
+            }
+        }
+
+        // The ProcessControl's rate, in force: the tick's waits follow it
+        private void ApplyTickRate()
+        {
+            tickAccumulator = 0;
+            if (Instance != this) return;
+            if (fixedTickRate > 0) ForgeTick.Ticking = true;
+            else if (ForgeTick.Ticking) ForgeTick.Stop();
+        }
+
+        // The frame's time a tick hasn't stepped yet
+        private double tickAccumulator;
+
+        // A tick's clock: the tick's fixed step, and the tick's number as its frame
+        private sealed class TickClock : IForgeClock
+        {
+            public IForgeClock Frame;
+            public float Step;
+            public float DeltaTime => Step;
+            public float UnscaledDeltaTime => Step;
+            public float FixedDeltaTime => Frame.FixedDeltaTime;
+            public float Time => Frame.Time;
+            public float UnscaledTime => Frame.UnscaledTime;
+            public int FrameCount => ForgeTick.Ticks;
+        }
+
+        private readonly TickClock tickClock = new();
+
+        // As many ticks as the frame's time holds: in each, what waits for a tick goes on, every process steps, and
+        // then steps its end of frame, all by the tick's clock
+        private void RunTicks()
+        {
+            double step = 1.0 / fixedTickRate;
+            tickAccumulator += ForgeTime.DeltaTime;
+            int most = Mathf.Max(1, maxTicksPerFrame);
+            int ran = 0;
+            while (tickAccumulator + 1e-6 >= step && ran < most)
+            {
+                tickAccumulator -= step;
+                ran++;
+                tickClock.Frame = ForgeTime.Clock;
+                tickClock.Step = (float)step;
+                var frame = ForgeTime.Use(tickClock);
+                try
+                {
+                    ForgeTick.Advance();
+                    StepProcesses(EProcessStepTiming.Update);
+                    StepProcesses(EProcessStepTiming.LateUpdate);
+                }
+                finally
+                {
+                    ForgeTime.Use(frame);
+                }
+            }
+
+            // A frame too long for its ticks drops the rest, so the game doesn't fall further behind each frame
+            if (ran >= most && tickAccumulator >= step) tickAccumulator = 0;
         }
 
         /// <summary>Enters the StartState set in the inspector, after a Bootstrap that deferred it (PC-29).</summary>
@@ -299,7 +383,8 @@ namespace FarEmerald.PlayForge
         {
             Sweep(_dormant, untilAwake: true);
             Sweep(_unheard, untilAwake: false);
-            StepProcesses(EProcessStepTiming.Update);
+            if (fixedTickRate > 0 && Instance == this) RunTicks();
+            else StepProcesses(EProcessStepTiming.Update);
         }
 
         /// <summary>
@@ -355,6 +440,8 @@ namespace FarEmerald.PlayForge
 
         private void LateUpdate()
         {
+            // Each tick stepped its own end of frame
+            if (fixedTickRate > 0 && Instance == this) return;
             StepProcesses(EProcessStepTiming.LateUpdate);
         }
 
@@ -396,6 +483,8 @@ namespace FarEmerald.PlayForge
         private void OnDestroy()
         {
             TerminateAllImmediately();
+            // What waits for a tick goes on, as a frame's wait, once the ticks are gone
+            if (Instance == this && ForgeTick.Ticking) ForgeTick.Stop();
         }
         
         #endregion

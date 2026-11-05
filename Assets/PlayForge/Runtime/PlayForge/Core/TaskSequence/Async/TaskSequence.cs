@@ -404,7 +404,7 @@ namespace FarEmerald.PlayForge
 
                     // Every sequence can fail at once, and a round that took no frame would go round for ever
                     // inside one
-                    if (ForgeTime.FrameCount == startFrame) await UniTask.Yield(PlayerLoopTiming.Update, chainToken);
+                    if (ForgeTime.FrameCount == startFrame) await ForgeTick.Next(chainToken);
                 }
             }
             catch (OperationCanceledException)
