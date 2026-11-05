@@ -180,7 +180,8 @@ namespace FarEmerald.PlayForge
 
         public float GetDeltaTime(IAttributeImpactCarrier spec)
         {
-            float dt = ForgeTime.DeltaTime;
+            // The target's own time: a slowed entity's effects, its cooldowns among them, last longer (FEAT-7)
+            float dt = ForgeTime.DeltaTimeFor(spec?.GetTarget());
             return DeltaTimeScaler is null 
                 ? dt 
                 : ForgeHelper.MagnitudeAndScalerOperation(dt, DeltaTimeScaler.Evaluate(spec), RealDeltaTime);

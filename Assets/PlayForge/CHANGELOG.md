@@ -7,6 +7,9 @@ tracks each fix below by its ID.
 ## [Unreleased]
 
 ### Added
+- A clock for each entity, `IGameplayAbilitySystem.GetClock()`: the game's time scaled by its `TimeScale`. The
+  entity's effects, its cooldowns among them, and its abilities' waits, sequences and projectiles run by it, so one
+  entity can be slowed, hasted or held still while the rest run on (FEAT-7).
 - `ForgeTime` and `ForgeRandom`, which the runtime reads instead of Unity's `Time` and `Random`: `Use` puts in a clock
   of your own (`IForgeClock`) or a random source (`IForgeRandom`, such as `SeededRandom`), for a replay, a server or a
   test. By default they read Unity's, so `Random.InitState` still seeds a roll. `GameplayEffectSpec.ApplicationId`
@@ -48,6 +51,9 @@ tracks each fix below by its ID.
   page, through one table of links in the editor.
 
 ### Changed
+- `RunProcessTask` runs on scaled time by default, and `ProcessRelay.RemainingRuntime` reads scaled time unless asked
+  for unscaled; both read unscaled time by default, apart from the game's time scale (TS-6). A `RunProcessTask` saved
+  with Use Unscaled Delta Time on keeps it.
 - An ability activation's `HandleId` counts from 0 per ability system, where one count numbered every entity's
   activations in turn (FEAT-13).
 - A tag worker is evaluated at the end of a frame in which the tags changed, a worker came or went, or the last

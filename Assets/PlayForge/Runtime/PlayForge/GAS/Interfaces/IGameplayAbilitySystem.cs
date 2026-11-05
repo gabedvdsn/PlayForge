@@ -36,6 +36,12 @@ namespace FarEmerald.PlayForge
         public System.Collections.Generic.IReadOnlyList<Tag> GetLooseTags();
 
         /// <summary>
+        /// The entity's own time, which its effects, cooldowns and abilities' waits run by: the game's, scaled by its
+        /// time scale (FEAT-7).
+        /// </summary>
+        public EntityClock GetClock();
+
+        /// <summary>
         /// Record an impact this GAS DEALT (this GAS is ISource).
         /// </summary>
         public void RecordFrameImpactDealt(ImpactData impact);

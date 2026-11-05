@@ -61,6 +61,17 @@ namespace FarEmerald.PlayForge
         }
 
         public static float DeltaTime => clock.DeltaTime;
+
+        /// <summary>
+        /// The frame's step of an owner's time: an entity's own clock's, its time scale times the game's, or the game's
+        /// for anything else (FEAT-7).
+        /// </summary>
+        public static float DeltaTimeFor(object owner) =>
+            owner is IGameplayAbilitySystem gas && gas.GetClock() is { } entity ? entity.DeltaTime : clock.DeltaTime;
+
+        /// <summary>The frame's step of a packet's owner's time: an ability's packet's source's clock, or the game's.</summary>
+        public static float DeltaTimeFor(ProcessDataPacket data) =>
+            DeltaTimeFor(data is AbilityDataPacket ability ? ability.EffectOrigin?.GetSource() : (object)null);
         public static float UnscaledDeltaTime => clock.UnscaledDeltaTime;
         public static float FixedDeltaTime => clock.FixedDeltaTime;
         public static float Time => clock.Time;

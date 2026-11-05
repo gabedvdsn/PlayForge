@@ -94,6 +94,10 @@ SeededRandom(seed))`, whose rolls repeat from their seed whatever else draws fro
 replaced, to put back. Each entity numbers its effects' applications (`GameplayEffectSpec.ApplicationId`) and its
 abilities' activations.
 
+Each entity also has a clock of its own, `gas.GetClock()`: the game's time scaled by its `TimeScale`. Its effects run
+by it, its cooldowns among them, and so do its abilities' waits and sequences, so `TimeScale = 0.5f` slows one entity
+and no other. A scale of 0 holds the entity's time still; it isn't a pause.
+
 ### Tooltips: what does this ability do?
 
 `AbilityInspector.Build(ability)` returns a full static breakdown — every effect, its

@@ -11,7 +11,8 @@ namespace FarEmerald.PlayForge
         [SerializeReference] public List<AbstractRuntimeProcess> Processes;
         public PlayerLoopTiming UpdateTiming = PlayerLoopTiming.Update;
         public float MaxDuration = 999f;
-        public bool UseUnscaledDeltaTime = true;
+        // Scaled by default: unscaled, a process ran on apart from the game's time scale and its caster's (TS-6)
+        public bool UseUnscaledDeltaTime;
         
         public override bool IsCriticalSection => false;
 
@@ -38,7 +39,7 @@ namespace FarEmerald.PlayForge
                 {
                     if (SequenceTaskLibrary.IsPaused(token)) return UniTask.CompletedTask;
 
-                    elapsedDuration += UseUnscaledDeltaTime ? ForgeTime.UnscaledDeltaTime : ForgeTime.DeltaTime;
+                    elapsedDuration += UseUnscaledDeltaTime ? ForgeTime.UnscaledDeltaTime : ForgeTime.DeltaTimeFor(data);
                     return UniTask.CompletedTask;
                 },
                 condition: () => 

@@ -153,13 +153,13 @@ namespace FarEmerald.PlayForge
             if (IsSynchronous && _syncRunner != null)
             {
                 var onStep = _sequence?.Definition.Metadata?.OnStepCallbacks;
-                if (onStep != null && onStep.TryGetValue(timing, out var callback)) callback?.Invoke(SeqData, ForgeTime.DeltaTime);
+                if (onStep != null && onStep.TryGetValue(timing, out var callback)) callback?.Invoke(SeqData, ForgeTime.DeltaTimeFor(SeqData));
 
                 // A composite timing steps this more than once a frame, and a sequence that moved on at each would
                 // run that many times too fast
                 if (timing != AdvancingTiming(StepTiming)) return;
 
-                if (_syncRunner.Step(SeqData, ForgeTime.DeltaTime))
+                if (_syncRunner.Step(SeqData, ForgeTime.DeltaTimeFor(SeqData)))
                 {
                     Relay.TerminateImmediate();
                 }

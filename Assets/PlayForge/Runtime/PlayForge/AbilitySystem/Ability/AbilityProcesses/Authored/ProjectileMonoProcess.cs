@@ -12,7 +12,7 @@ namespace FarEmerald.PlayForge
             {
                 token.ThrowIfCancellationRequested();
                 
-                transform.position = Vector3.MoveTowards(transform.position, targeting.position, GetProjectileSpeed() * ForgeTime.DeltaTime);
+                transform.position = Vector3.MoveTowards(transform.position, targeting.position, GetProjectileSpeed() * ForgeTime.DeltaTimeFor(ProcessRelay?.Handler));
                 
                 await UniTask.NextFrame(token);
             }

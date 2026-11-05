@@ -29,6 +29,9 @@ namespace FarEmerald.PlayForge
         /// <summary>The entity's settings as this GAS uses them, or null for a hub given none.</summary>
         public RuntimeEntityIdentity Identity { get; private set; }
 
+        /// <summary>The entity's own time, its time scale times the game's (FEAT-7).</summary>
+        public EntityClock Clock { get; } = new();
+
         public ActionQueue ActionQueue { get; private set; }
         public FrameSummary FrameSummary { get; private set; }
         public AnalysisWorkerCache AnalysisCache { get; private set; }
@@ -118,6 +121,7 @@ namespace FarEmerald.PlayForge
 
         public void Tick()
         {
+            Clock.Step();
             EffectSystem.Tick();
 
             // Tag workers tick once a frame, at its end, once their activations are settled. Ticked here as well,

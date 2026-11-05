@@ -54,7 +54,7 @@ namespace FarEmerald.PlayForge
         /// <param name="multiplier">Conversion multiplier (default 1000 for ms)</param>
         /// <param name="unscaled"></param>
         // Converted, then cut to whole units. Cut first, it lost up to a second (PC-25)
-        public int RemainingRuntime(int runtime, int multiplier = 1000, bool unscaled = true)
+        public int RemainingRuntime(int runtime, int multiplier = 1000, bool unscaled = false)
             => runtime - (int)((unscaled ? UnscaledLifetime : Lifetime) * multiplier);
         
         /// <summary>
@@ -62,7 +62,7 @@ namespace FarEmerald.PlayForge
         /// </summary>
         /// <param name="runtime">Total runtime in milliseconds</param>
         /// <param name="unscaled"></param>
-        public float RemainingRuntime(float runtime, bool unscaled = true) 
+        public float RemainingRuntime(float runtime, bool unscaled = false) 
             => runtime - (unscaled ? UnscaledLifetime : Lifetime);
 
         /// <summary>

@@ -159,6 +159,15 @@ namespace FarEmerald.PlayForge
         }
 
         /// <summary>True if the token is one a stage gave its tasks, and that stage's run is paused.</summary>
+        /// <summary>The packet of the run a token belongs to, or null, whose owner's clock its waits run by (FEAT-7).</summary>
+        public static SequenceDataPacket DataOfRun(CancellationToken token)
+        {
+            lock (RunsByToken)
+            {
+                return RunsByToken.TryGetValue(token, out var run) ? run.Data : null;
+            }
+        }
+
         public static bool IsPausedRun(CancellationToken token)
         {
             lock (RunsByToken)
@@ -174,7 +183,7 @@ namespace FarEmerald.PlayForge
             do
             {
                 await UniTask.Yield(PlayerLoopTiming.Update, token);
-                if (!IsPaused) elapsed += ForgeTime.DeltaTime;
+                if (!IsPaused) elapsed += ForgeTime.DeltaTimeFor(Data);
             } while (elapsed < seconds);
         }
 
@@ -970,7 +979,7 @@ namespace FarEmerald.PlayForge
                 while (true)
                 {
                     await UniTask.Yield(PlayerLoopTiming.Update, token);
-                    if (!IsPaused) ElapsedTime += ForgeTime.DeltaTime;
+                    if (!IsPaused) ElapsedTime += ForgeTime.DeltaTimeFor(Data);
                 }
             }
             catch (OperationCanceledException) { }
@@ -986,7 +995,7 @@ namespace FarEmerald.PlayForge
                     await UniTask.Yield(PlayerLoopTiming.Update, token);
                     if (IsPaused) continue;
 
-                    elapsed += ForgeTime.DeltaTime;
+                    elapsed += ForgeTime.DeltaTimeFor(Data);
                     if (elapsed >= Definition.MaxDurationSeconds.Value)
                     {
                         // Invoke callback before injection
@@ -1019,7 +1028,7 @@ namespace FarEmerald.PlayForge
                     await UniTask.Yield(PlayerLoopTiming.Update, token);
                     if (IsPaused) continue;
 
-                    elapsed += ForgeTime.DeltaTime;
+                    elapsed += ForgeTime.DeltaTimeFor(Data);
                     if (elapsed >= timeout.Seconds)
                     {
                         // Invoke callback before injection

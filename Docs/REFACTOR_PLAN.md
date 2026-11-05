@@ -452,7 +452,7 @@ had no letter in the review. TS-AA onward came from the test project.
 | TS-3 | H | 0 | The proxy and sequences are recompiled on every activation; `IsCriticalSection` builds the inner sequence 4–5 times (PF-012) | `AbilityProxy.cs:62`, `AbilitySequenceCompiler.cs:30-80`, `RunSequenceTask.cs:18-21` | verified |
 | TS-4 | H | 0 | A bare `catch { }` swallows ability errors (PF-008) | `AbilitySpecContainer.cs:113-116` | verified |
 | TS-5 | M | 3 | LINQ on a hot path; `AppendPath` concatenates strings and grows without bound on repeat. PF-007 (Phase 0) took the LINQ out of `HasAnyStageConditions` and made the path's parts join only when read, which left them to grow: a sequence that repeated added its stages' parts every time round, and its twentieth run had a 272-character path to its first's 25. Now each part a run or a stage adds comes off as it ends, each repeat starts where its iteration began, and a failed run keeps the path to where it failed for its log. The parts are formatted once, and the LINQ left on an ability's activation, in `AbilityProxy`, and in a chain's `HasConditions` is loops | `TaskSequenceRuntime.cs` (`Run`, `RunStage`, `RestartStage`), `ProcessDataPacket.cs` (`TrimPath`), `AbilityProxy.cs`, `AbilityTaskAdapter.cs`, `AbilitySequenceCompiler.cs` | verified |
-| TS-6 | M | 5 | Global time only; `RunProcessTask` defaults to unscaled time (C02) → FEAT-7, in Phase 5's foundations (Decision 30) | `RunProcessTask.cs:14` | open |
+| TS-6 | M | 5 | Global time only; `RunProcessTask` defaults to unscaled time (C02) → FEAT-7, in Phase 5's foundations (Decision 30). Fixed with FEAT-7's clocks: `RunProcessTask` and `ProcessRelay.RemainingRuntime` default to scaled time, and an entity's sequences and waits run by its own clock | `RunProcessTask.cs:14`, `ProcessRelay.cs` | fixed |
 | TS-7 | M | 5 | Critical sections are static; the compiler never emits a `BranchStage` (C12) | `AbilitySequenceCompiler.cs` | open |
 | TS-8 | M | 3 | `TryActivate` runs synchronously deep into the first stages (C16). Measured: it runs an instant ability to its end, and a slower one to its first wait, before it returns. An ability asked for again from its own end or claim-released callback nested inside the call: 40 activations, 40 deep, in one frame before a cap, so an uncapped loop overflowed the stack. Activation stays synchronous (Decision 25); an ability asked for again while its own activation call still runs starts next frame | `AbilitySystemComponent.cs` (`TryActivateAbility`), `AbilitySpecContainer.cs` (`ActivateAbility`) | verified |
 | TS-9 | H | 1 | `OnAbilityEnd` means claim released; task callbacks fire only on the legacy path (C07) | `AbilityProxy.cs` | verified |
@@ -666,7 +666,7 @@ Phase 2 part, and set Phase 4's direction.
 | FEAT-4 | Ability triggers | Activate on a gameplay event or when a tag is added |
 | FEAT-5 | Cancel and block abilities by tag | C11 |
 | FEAT-6 | Input buffer | Expiry and latest-wins for queued activations (C06) |
-| FEAT-7 | Time source | Per-entity time scale and deterministic fixed tick (C02) |
+| FEAT-7 | Time source | Per-entity time scale and deterministic fixed tick (C02). The clock per entity is done (Decision 30): `GetClock()`, the game's time by `ForgeTime` times the entity's `TimeScale`, which its effects, cooldowns, sequences, waits and projectiles run by. The fixed-rate tick, which steps every GAS and sequence a fixed number of times a frame, is next |
 | FEAT-8 | Effect conveniences | Cleanse by tag query, immunity, overflow at max stacks, abilities granted by effects, chance to apply. Cleanse and immunity done (Removes Effects Tagged, Blocks Effects Tagged), matching an effect's asset, context and granted tags (Decision 30); overflow at max stacks (Overflow Effects, Deny Refresh and Clear Stacks), abilities granted by effects and the chance to apply come with the Status-effect lab |
 | FEAT-9 | Save and load | Snapshots of attributes, effects, tags and cooldowns |
 | FEAT-10 | Headless mode | Abilities run without a scene ProcessControl |
@@ -740,6 +740,24 @@ GAS-4 with GAS-5, PC-6, and TS-I with PC-5.
 ## Log
 
 Record baselines, gate results and notable decisions here, newest first.
+
+- 2026-11-04, **FEAT-7's clocks, with TS-6.** The first part of the time source, the last foundation (Decision 30).
+  - **A clock for each entity:** `EntityClock`, from `IGameplayAbilitySystem.GetClock()`, both hubs forwarding to
+    `GASCore.Clock`: the game's time, as `ForgeTime` reads it, times the entity's `TimeScale`. Its `Time` adds up the
+    entity's steps, once a frame as the entity ticks. A scale of 0 holds the entity still; it isn't a pause.
+  - **What runs by it:** an effect by its target's clock (`GameplayEffectDuration.GetDeltaTime`), so a cooldown, which
+    is on its caster, by the caster's; a sequence by its packet's owner, an ability's source
+    (`ForgeTime.DeltaTimeFor`), its delays, clock and timeouts among them, and a task's waits through
+    `SequenceTaskLibrary.DeltaTime`, which finds its run's packet by the token (`TaskSequenceRuntime.DataOfRun`); a
+    projectile by its handler's. Process bookkeeping stays on the game's clock, and a physics wait on the fixed step.
+  - **TS-6:** `RunProcessTask.UseUnscaledDeltaTime` is off for a new task, and `ProcessRelay.RemainingRuntime` reads
+    scaled time unless asked. A task saved with it on keeps it.
+  - **Docs:** `GETTING_STARTED.md`, and the CHANGELOG.
+  - **Its tests,** which didn't compile against FEAT-13's commit, `GetClock` being new: the three `FEAT_7_*` and two
+    `TS_6_*` tests in the new PlayMode `EntityClockTests`.
+  - **Next:** FEAT-7's fixed-rate tick.
+  - **Tests:** PlayMode 1012: 1005 pass, 0 fail and 7 planted are skipped, in three orders. Planted 7 of 7; EditMode
+    431 of 431.
 
 - 2026-11-04, **FEAT-13's two cheap changes: one clock, one random source, and IDs per entity.** The third of Phase
   5's foundations (Decision 30), which keeps networking possible without building it.

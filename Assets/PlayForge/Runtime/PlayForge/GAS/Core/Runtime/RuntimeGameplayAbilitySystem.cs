@@ -241,6 +241,7 @@ namespace FarEmerald.PlayForge
         public void AddLooseTag(Tag tag) => core.AddLooseTag(tag);
         public bool RemoveLooseTag(Tag tag) => core.RemoveLooseTag(tag);
         public System.Collections.Generic.IReadOnlyList<Tag> GetLooseTags() => core.LooseTags;
+        public EntityClock GetClock() => core.Clock;
 
         // ═══════════════════════════════════════════════════════════════════════════
         // IGAMEPLAYABILITYSYSTEM
