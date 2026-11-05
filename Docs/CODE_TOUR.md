@@ -1,7 +1,7 @@
 # PlayForge refactor: code tour
 
 This tour lists the places where the refactor changed code, so you can open each one in your IDE and read it. It
-covers `01258b8..e44d1ed` on `main`: 283 commits. Phase 0 ported Arcade Fighter's fixes, Phase 1 made the runtime
+covers `01258b8..4cc9be9` on `main`: 285 commits. Phase 0 ported Arcade Fighter's fixes, Phase 1 made the runtime
 correct, Phase 2 got the package ready to release, Phase 3 made it cheaper to run and gave the two GAS hubs one core,
 and Phase 4 has begun. Each entry says what behaves differently and why, names its tracker IDs and Decisions, and
 points at the two or three places to read. `Docs/REFACTOR_PLAN.md` has every tracker row, the numbered Decisions,
@@ -10,8 +10,8 @@ and a Log of each batch's test results.
 ## How to use this
 
 - Paths are relative to the repo root.
-- Line numbers are as of commit `e44d1ed`, the head of `main` on 2026-11-04. A later commit may move them, so each
-  entry also names the class and method to search for. `git show e44d1ed:<path>` shows a file as it was then.
+- Line numbers are as of commit `4cc9be9`, the head of `main` on 2026-11-04. A later commit may move them, so each
+  entry also names the class and method to search for. `git show 4cc9be9:<path>` shows a file as it was then.
 - In Rider, Go to File accepts `path:line`. In Visual Studio, open the file, then Go To Line (Ctrl+G).
   A bare `:123` after a path means another line in the same file.
 - `git grep "<ID>"` finds the comment at each fix, and `git log --grep "<ID>"` finds its commit. Three exceptions:
@@ -89,8 +89,8 @@ Undo and Redo among them. Renames already undid in one step, since Phase 2.
     inspectors do the same.
   - `Assets/PlayForge/Editor/CustomPropertyDrawers/Forge/Editors/Assets/EntityIdentityEditor.cs:248`, Starting Level
     bound to its property, as the Entity's other fields are.
-- **Watch for:** a multiple selection waits for the drawers' one-target copies, and in the Effect, Entity and
-  Attribute Set inspectors also for ScalerDrawer, which changes with Decision 28.
+- **Watch for:** a multiple selection waited for the drawers' one-target copies. ScalerDrawer's, the last, went with
+  ED-33's scaler field (`4cc9be9`).
 - **Test:** `ED_12_An_edit_in_the_Effect_inspector_undoes` and the matching Item, Entity, Attribute Set and Ability
   tests in `InspectorUndoTests`.
 
@@ -120,10 +120,11 @@ end reads its last value, as `GetValueAtLevel` already did.
 
 - **IDs:** ED-34, commit `7cc83c0`, Decision 28.
 - **Read:**
-  - `Assets/PlayForge/Editor/CustomPropertyDrawers/Forge/Drawers/Scaler/ScalerDrawer.cs:491`, in `CreateContent`,
-    where the three resizing writes were.
-  - `:113` `FindSharedSibling`, which only reads, and the warning at `:294`, whose button calls `GiveOwnCopy` (`:160`)
-    as one undoable step.
+  - `Assets/PlayForge/Editor/CustomPropertyDrawers/Forge/Drawers/Scaler/ScalerFields.cs:240` `LevelTable`, which draws
+    a table as it is, and `:312` `Resize`, which changes its length only when the user changes Levels. The three
+    resizing writes were in the old drawer's `CreateContent`, which ED-33 rewrote.
+  - `Assets/PlayForge/Editor/CustomPropertyDrawers/Forge/Drawers/Scaler/ScalerDrawer.cs:109` `FindSharedSibling`,
+    which only reads, and the warning at `:65`, whose button calls `GiveOwnCopy` (`:144`) as one undoable step.
 - **Test:** `ED_34_Opening_a_scaler_leaves_its_table_alone` and `ED_34_Opening_a_shared_scaler_leaves_it_shared` in
   `ScalerDrawerTests`.
 
@@ -151,7 +152,8 @@ through its own SerializedObject, refreshed first.
   - `Assets/PlayForge/Editor/CustomPropertyDrawers/Forge/Drawers/Tag/TagRequirementDrawers.cs:88`, in the group drawer's
     `ScheduleRebuild`; the other four rebuilds read the same.
   - `Assets/PlayForge/Editor/CustomPropertyDrawers/Forge/Drawers/Tag/TagDrawer.cs:111`, in `GetFreshProperty`.
-- **Watch for:** ScalerDrawer still rebuilds on a one-target copy, until Decision 28's scaler work (ED-32, ED-33).
+- **Watch for:** ScalerDrawer rebuilt on a one-target copy until ED-33's scaler field (`4cc9be9`), which writes
+  through the field's own SerializedObject.
 - **Test:** `ED_12_A_rebuilt_drawer_edits_every_selected_asset` in `InspectorUndoTests`.
 
 ### A type field's drawer writes nothing while drawing (ED-12)
@@ -166,7 +168,7 @@ Inject task gets its default from its field initializer.
   - `Assets/PlayForge/Editor/CustomPropertyDrawers/Forge/Drawers/Base/AbstractTypeRefDrawer.cs:123`, in
     `GetCurrentValue`.
   - `Assets/PlayForge/Runtime/PlayForge/AbilitySystem/Core/AbilitySpec.cs:36`, an empty activation rule, and
-    `Assets/PlayForge/Runtime/PlayForge/GameplayEffect/Modifier/Default/AbstractScaler.cs:412`, an empty scaler
+    `Assets/PlayForge/Runtime/PlayForge/GameplayEffect/Modifier/Default/AbstractScaler.cs:418`, an empty scaler
     behaviour.
   - `Assets/PlayForge/Runtime/PlayForge/AbilitySystem/Tasks/Utility/InjectAbilityTask.cs:11`, the initializer.
 - **Test:** `ED_12_Drawing_an_empty_type_field_leaves_it_empty` and `ED_12_A_new_inject_task_interrupts` in
@@ -189,8 +191,8 @@ ability, since the stage drawers resize lists directly and could cut a longer on
     in for the Ability's own lists.
   - `Assets/PlayForge/Editor/CustomPropertyDrawers/Forge/Editors/BasePlayForgeEditor.cs:228` `IsMultiple`, which the
     inspectors check.
-- **Watch for:** the Effect, Entity and Attribute Set inspectors still refuse a multiple selection, until
-  ScalerDrawer's rework with Decision 28.
+- **Watch for:** the Effect, Entity and Attribute Set inspectors still refuse a multiple selection. ScalerDrawer's
+  rework with ED-33 (`4cc9be9`) frees them.
 - **Test:** `ED_12_The_Item_inspector_edits_every_selected_item` and
   `ED_12_The_Ability_inspector_edits_every_selected_ability` in `InspectorUndoTests`.
 
@@ -307,9 +309,9 @@ the glyph is sized and colored in Unity's own inspector too.
 - **IDs:** ED-20, commit `6c0c3fe`.
 - **Read:**
   - `Assets/PlayForge/Editor/UI/Kit/ForgeGlyph.cs:136`, the new Link glyph.
-  - `Assets/PlayForge/Editor/CustomPropertyDrawers/Forge/Drawers/Scaler/ScalerDrawer.cs:851`, a warning icon as a
-    glyph, as the other surfaces' are.
-  - `Assets/PlayForge/Editor/CustomPropertyDrawers/Forge/Drawers/Scaler/ScalerDrawer.cs:240`, a drawer taking the theme.
+  - `Assets/PlayForge/Editor/CustomPropertyDrawers/Forge/Drawers/Assets/Effect/GameplayEffectDrawer.cs:90`, a warning
+    icon as a glyph, as the other surfaces' are.
+  - `Assets/PlayForge/Editor/CustomPropertyDrawers/Forge/Drawers/Scaler/ScalerDrawer.cs:28`, a drawer taking the theme.
   - `Assets/PlayForge/Editor/CustomPropertyDrawers/Forge/Editors/Windows/AssetBrowserWindow.cs:273`, a button that says
     what it does.
 - **Still open:** text symbols with no emoji form, such as a check mark or an arrow, go with each surface's redesign.
@@ -599,11 +601,44 @@ new scalers with it off.
   - `Assets/PlayForge/Runtime/PlayForge/GameplayEffect/Modifier/Default/Authored/SharedScaler.cs:33` `Evaluate`, with
     its depth guard.
   - `Assets/PlayForge/Runtime/PlayForge/GameplayEffect/Modifier/Default/AbstractScaler.cs:68` `StretchOverLevels`, and
-    `:397` `EvaluateFromSpec`.
-  - `Assets/PlayForge/Editor/CustomPropertyDrawers/Forge/Drawers/Scaler/ScalerDrawer.cs:447`, a new scaler made exact.
-- **Still open:** the drawer's field menu, per-level table and preview, and the asset's own inspector.
+    `:403` `EvaluateFromSpec`.
+  - `Assets/PlayForge/Editor/CustomPropertyDrawers/Forge/Drawers/Scaler/ScalerFields.cs:90` `Make`, a new scaler made
+    exact.
+- **Still open:** the drawer's field menu, per-level table and preview, and the asset's own inspector, which part 2
+  added (below).
 - **Tests:** `ED_33_A_shared_scaler_reads_its_asset` and `ED_33_Levels_map_exactly_unless_the_scaler_stretches` in
   `ScalerTests`; `ED_33_A_new_scaler_maps_levels_exactly` in `ScalerDrawerTests`.
+
+### The scaler field reads as the scaler board (ED-32, ED-33)
+
+Decision 28's scaler board, in the inspector. A magnitude field shows its name, its kind (Constant, By Level, Shared or
+another), the range it gives, as "6–8 s", and a field menu: Save as Scaler Asset, Use a Scaler Asset, Import Values,
+Quick Fill and Make Constant. A Constant shows its number and its unit. A By Level field's values sit in a table, ten
+levels to a row, beside a read-only curve, and Combine says how the field joins its number with its scaler. Import
+Values compares a Scaler asset's or another field's values with the field's, level by level, before it copies them; it
+replaces the scaler import window and the curve editor. A Scaler asset's own inspector lists the fields that share it,
+and an attribute set's element shares one through the cached Shared kind. The scaler drawer writes through the field's
+own SerializedObject, so it no longer rebuilds on a copy of the first selected asset.
+
+- **IDs:** ED-33 (part 2) and the last of ED-32, commit `4cc9be9`.
+- **Read:**
+  - `Assets/PlayForge/Editor/CustomPropertyDrawers/Forge/Drawers/Scaler/MagnitudeField.cs:48` `Build`, the field's row,
+    and `:233` `ShowMenu`; `:291` `ScalerActions`, the menu's public side, with `:300` `SetKind` and `:356`
+    `SaveAsScalerAsset`.
+  - `Assets/PlayForge/Editor/CustomPropertyDrawers/Forge/Drawers/Scaler/ScalerFields.cs:68` `SetKind`, which gives each
+    selected asset its own scaler; `:184` `Content`; and `:136` `KeepCurve`, which writes the curve a stretched scaler
+    reads after an edit, never while drawing.
+  - `Assets/PlayForge/Editor/CustomPropertyDrawers/Forge/Drawers/Scaler/ScalerWindows.cs:102` `ScalerValuesWindow`,
+    with `:199` `CopyValues`, and `:379` `ScalerAssetEditor`.
+  - `Assets/PlayForge/Runtime/PlayForge/GameplayEffect/Modifier/CachedAttribute/Authored/SharedCachedScaler.cs:22`,
+    the cached Shared kind's read, with its depth guard.
+  - `Assets/PlayForge/Runtime/PlayForge/GameplayEffect/Modifier/Default/AbstractScaler.cs:162` `CurveFor`, and
+    `Assets/PlayForge/Runtime/PlayForge/Utils/ScalerOperationKeyword.cs:33` `Unit`.
+- **Watch for:** binding sends change events of its own as it draws, so a value field writes the curve only when it
+  was typed into (`IsTypedInto`).
+- **Tests:** `ED_33_A_magnitude_field_reads_as_the_scaler_board`, `ED_33_A_fields_kind_changes_as_one_undo_step`,
+  `ED_33_Save_as_Scaler_Asset_shares_the_fields_values` and `ED_33_Import_Values_copies_a_scalers_values` in
+  `ScalerDrawerTests`; `ED_33_An_attribute_set_element_shares_a_scaler` in `ScalerTests`.
 
 ## Phase 3
 
@@ -2079,6 +2114,7 @@ Newest first. Each row is a good place to start reading.
 
 | What | IDs | Where | Commit |
 |---|---|---|---|
+| The scaler field reads as the scaler board | ED-32, ED-33 | `Assets/PlayForge/Editor/CustomPropertyDrawers/Forge/Drawers/Scaler/MagnitudeField.cs:48` | `4cc9be9` |
 | Scaler assets, and levels that map exactly | ED-33 | `Assets/PlayForge/Runtime/PlayForge/GameplayEffect/Modifier/Default/Authored/SharedScaler.cs:33` | `e44d1ed` |
 | One Import window | ED-32, ED-35 | `Assets/PlayForge/Editor/CustomPropertyDrawers/Forge/Editors/Windows/ForgeImportWindow.cs:60` | `c300449` |
 | The Effect inspector follows the style doc, with the requirements table | ED-37 | `Assets/PlayForge/Editor/CustomPropertyDrawers/Forge/Editors/Assets/EffectEditor.cs:87` | `6090980` |
@@ -2103,7 +2139,7 @@ Newest first. Each row is a good place to start reading.
 | A rebuilt drawer edits every selected asset | ED-12 | `Assets/PlayForge/Editor/CustomPropertyDrawers/Forge/Drawers/Tag/TagRequirementDrawers.cs:88` | `96b4ba6` |
 | Each unlink question counts the children it would change | ED-31 | `Assets/PlayForge/Editor/CustomPropertyDrawers/Forge/Editors/Assets/EffectEditor.cs:237` | `523f57d` |
 | Link, Unlink and template assignment undo | ED-12 | `Assets/PlayForge/Editor/CustomPropertyDrawers/Forge/Editors/BasePlayForgeEditor.cs:216` | `097384f` |
-| Opening a scaler writes nothing | ED-34, Decision 28 | `Assets/PlayForge/Editor/CustomPropertyDrawers/Forge/Drawers/Scaler/ScalerDrawer.cs:491` | `7cc83c0` |
+| Opening a scaler writes nothing | ED-34, Decision 28 | `Assets/PlayForge/Editor/CustomPropertyDrawers/Forge/Drawers/Scaler/ScalerFields.cs:240` | `7cc83c0` |
 | Every asset inspector's own fields undo | ED-12 | `Assets/PlayForge/Editor/CustomPropertyDrawers/Forge/Editors/BasePlayForgeEditor.cs:205` | `62ed48e` |
 | The Attribute inspector undoes every edit and edits a multiple selection | ED-12 | `Assets/PlayForge/Editor/CustomPropertyDrawers/Forge/Editors/Assets/AttributeEditor.cs:140` | `e1d1dd0` |
 | A task waiting in a delay allocates nothing a frame | TS-11 | `Assets/PlayForge/Runtime/PlayForge/Core/TaskSequence/Async/TaskSequenceRuntime.cs:55` | `ec008f7` |
