@@ -6,6 +6,12 @@ namespace FarEmerald.PlayForge
     {
         public AttributeSystemComponent GetAttributeSystem();
         public AbilitySystemComponent GetAbilitySystem();
+
+        /// <summary>
+        /// Sends a gameplay event to the entity: each ability it knows that the event triggers activates, with the event's
+        /// data. How many activated (FEAT-4).
+        /// </summary>
+        public int SendGameplayEvent(Tag eventTag, ProcessDataPacket data = null) => GetAbilitySystem()?.SendGameplayEvent(eventTag, data) ?? 0;
         public ItemSystemComponent GetItemSystem();
         public EffectSystemComponent GetEffectSystem();
         

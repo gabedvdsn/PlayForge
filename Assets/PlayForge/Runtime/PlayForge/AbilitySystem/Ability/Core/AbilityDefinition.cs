@@ -28,6 +28,13 @@ namespace FarEmerald.PlayForge
         public int BufferPriority;
 
         public bool ActivateImmediately;
+
+        /// <summary>
+        /// What activates the ability on its own: a gameplay event sent to its entity, or a tag its entity gains, under the
+        /// trigger's tag or one under it. Each tries the ability as a request would, so its checks and its When Busy still
+        /// hold. An ability activated only when code asked for it (FEAT-4).
+        /// </summary>
+        public List<AbilityTrigger> Triggers = new();
         
         public List<TextureItem> Textures;
     }

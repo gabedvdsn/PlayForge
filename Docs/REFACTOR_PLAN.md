@@ -668,7 +668,7 @@ Phase 2 part, and set Phase 4's direction.
 | FEAT-1 | Gameplay cues | Hooks for effects, sounds and camera on apply, tick and remove |
 | FEAT-2 | SetByCaller magnitudes | Scalers read the data packet (C01). Done (Decision 30): `SetByCaller(tag, magnitude)` on a `GameplayEffectSpec` or a `ProcessDataPacket`; `SetByCallerScaler` reads it, or its Default; each spec an ability's data makes takes its magnitudes as it's made (Apply Effects, Apply Remove Effects, the task helpers, the cost and cooldown), a contained or overflow effect takes its container's, and a save keeps them. Found and driven by the ability crafting scenario |
 | FEAT-3 | Tag-change events | Replace tag-worker polling. Done (Decision 30): `TagCache.Listen` hears a tag and the tags under it come and go, at once, or every weight change; `TagChanged` hears every change; a rebuild tells only what it changed; a tag worker is evaluated when the tags change, unless it asks for every frame (`EvaluateEveryFrame`) |
-| FEAT-4 | Ability triggers | Activate on a gameplay event or when a tag is added |
+| FEAT-4 | Ability triggers | Activate on a gameplay event or when a tag is added. Done (Decision 30): `AbilityDefinition.Triggers`, each an `AbilityTrigger` of a source (Gameplay Event, Tag Added) and a tag; `SendGameplayEvent(tag, data)` on the ability system and the hubs activates each known ability an event under the trigger's tag sets off, with the event's data; the ability system hears a tag gained and fires its triggers at once, one at a time, so a triggered ability that grants tags doesn't nest; `OnGameplayEvent` hears each event; the Ability inspector edits them. Driven by the beyond combat scenario |
 | FEAT-5 | Cancel and block abilities by tag | C11. Done (Decision 30): an ability's Cancelled By names the abilities that cancel it as they activate, and its Blocks those that can't activate while it runs, by asset or context tag; each stage can name its own, and one that names none takes the ability's; a critical stage can't be cancelled; the While active row of its tag requirements interrupts it as soon as its caster's tags fail it |
 | FEAT-6 | Input buffer | Expiry and latest-wins for queued activations (C06). Done (Decision 30): the Queue policy is the input buffer, one slot per ability that a new press refreshes; a request waits out its ability's Buffer Window (0.3 s by default, or its own) in the caster's time, for the claim to go or a block to lift; the highest Buffer Priority fires first, then the newest |
 | FEAT-7 | Time source | Per-entity time scale and deterministic fixed tick (C02). The clock per entity is done (Decision 30): `GetClock()`, the game's time by `ForgeTime` times the entity's `TimeScale`, which its effects, cooldowns, sequences, waits and projectiles run by. The fixed-rate tick is done too: with ProcessControl's Fixed Tick Rate set, each frame runs as many ticks as its time holds, each stepping every process and its end of frame by a fixed step, and each sequence's wait goes on by the tick (`ForgeTick.Next`) |
@@ -748,6 +748,22 @@ GAS-4 with GAS-5, PC-6, and TS-I with PC-5.
 ## Log
 
 Record baselines, gate results and notable decisions here, newest first.
+
+- 2026-11-05, **FEAT-4: ability triggers, and the beyond combat scenario.** The fourth stretch scenario (Decision 30).
+  - **FEAT-4:** `AbilityDefinition.Triggers`, each an `AbilityTrigger` of a source (Gameplay Event, Tag Added) and a
+    tag. `SendGameplayEvent(tag, data)`, on the ability system and on the hubs through the interface, activates each
+    known ability an event under its trigger's tag sets off, with the event's data, and `OnGameplayEvent` hears it. The
+    ability system hears a tag gained (FEAT-3) and fires its triggers at once, one at a time, so a triggered ability
+    that grants tags doesn't nest. The Ability inspector's Activation section edits them.
+  - **Beyond combat** grows crops through their stages, faster when watered (FEAT-7), blooming as they ripen through a
+    Tag Added trigger; a smelter makes an ingot each tick of its timer and takes another order by extending it; and a
+    dialogue gate opens as a greeting event sets off the keeper's reply and the player reads the letter, refused for its
+    requirements until then (FEAT-17). It held at its first run: nothing past FEAT-4 was missing.
+  - **Their tests,** seen failing first: the two `FEAT_4_*` tests in PlayMode's new `AbilityTriggerTests` (4 of 4) and
+    EditMode's `FEAT_4_The_Ability_inspector_edits_its_triggers`.
+  - **Next:** the sequence-driven boss, with FEAT-1's cues.
+  - **Tests:** PlayMode 1232: 1225 pass, 0 fail and 7 planted are skipped, in three orders. Planted 7 of 7; EditMode
+    440 of 440.
 
 - 2026-11-05, **FEAT-2 and FEAT-21: SetByCaller magnitudes, and the ability crafting scenario.** The third stretch
   scenario (Decision 30).

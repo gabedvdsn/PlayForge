@@ -106,6 +106,11 @@ passes it in, and one effect serves every strength.
   window of 0 doesn't wait, so the request is refused.
 - **Activate At Start**: when the ability is one of the entity's Starting Abilities, it tries to activate once, as the
   entity's GAS starts. An ability that an item or code grants later doesn't try it.
+- **Triggers**: what sets the ability off on its own. A **Gameplay Event** trigger activates it when code sends the
+  entity an event under the trigger's tag, or a tag under it, with `SendGameplayEvent(tag, data)`, and the ability gets
+  the event's data, its target among it. A **Tag Added** trigger activates it as the entity gains the tag, or one under
+  it, that it didn't have; more of a tag it holds sets off nothing. Each trigger tries the ability as a request would,
+  so its checks and its When Busy still hold.
 - **Cost** and **Cooldown**: gameplay effects ([EFFECTS.md](EFFECTS.md)) applied to the caster when a stage applies
   usage effects (see Stages). A cost is usually an Instant effect that lowers a resource such as Mana. A cooldown is
   usually a Durational effect: while it is active, the caster carries its asset tag, and the Cooldown check refuses the

@@ -7,6 +7,9 @@ tracks each fix below by its ID.
 ## [Unreleased]
 
 ### Added
+- Ability triggers. An ability's Triggers set it off on its own: a gameplay event sent to its entity with
+  `SendGameplayEvent(tag, data)`, or a tag its entity gains, under the trigger's tag or one under it. The ability
+  inspector edits them, and the callbacks' `OnGameplayEvent` hears each event (FEAT-4).
 - SetByCaller magnitudes. `SetByCaller(tag, magnitude)` on an effect's spec, or on an ability activation's data,
   sets an amount the code knows as it applies the effect, and the new Set By Caller scaler reads it. Each effect an
   ability applies takes its data's magnitudes as it's made, its cost, cooldown and contained effects among them, and

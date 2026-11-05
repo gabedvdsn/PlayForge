@@ -380,6 +380,11 @@ namespace FarEmerald.PlayForge.Extended.Editor
             immediately.AddToClassList(Toggle.alignedFieldUssClassName);
             content.Add(immediately);
 
+            // What sets it off on its own: a gameplay event, or a tag gained (FEAT-4)
+            var triggers = CreatePropertyField(serializedObject.FindProperty(DefinitionPath(nameof(AbilityDefinition.Triggers))), "Triggers", "Triggers");
+            triggers.tooltip = "Gameplay events sent to the entity, and tags it gains, that activate the ability on their own";
+            content.Add(triggers);
+
             content.Add(CreatePropertyField(serializedObject.FindProperty(nameof(Ability.Cost)), "Cost", "Cost"));
             content.Add(CreatePropertyField(serializedObject.FindProperty(nameof(Ability.Cooldown)), "Cooldown", "Cooldown"));
 

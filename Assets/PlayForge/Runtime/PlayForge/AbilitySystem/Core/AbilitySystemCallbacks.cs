@@ -55,6 +55,23 @@ namespace FarEmerald.PlayForge
         public void AbilityClaimReleased(AbilityCallbackStatus status) => _onAbilityClaimReleased?.Invoke(status);
         #endregion
 
+        #region On Gameplay Event
+        /// <summary>A gameplay event the entity was sent, with its data (FEAT-4).</summary>
+        public delegate void GameplayEventDelegate(Tag eventTag, ProcessDataPacket data);
+
+        // Before the abilities it triggers try to activate
+        private GameplayEventDelegate _onGameplayEvent;
+        public event GameplayEventDelegate OnGameplayEvent
+        {
+            add
+            {
+                if (_onGameplayEvent == null || Array.IndexOf(_onGameplayEvent.GetInvocationList(), value) == -1) _onGameplayEvent += value;
+            }
+            remove => _onGameplayEvent -= value;
+        }
+        public void GameplayEventReceived(Tag eventTag, ProcessDataPacket data) => _onGameplayEvent?.Invoke(eventTag, data);
+        #endregion
+
         #region On Ability Refused
         /// <summary>A refused activation, with why it was refused (FEAT-17).</summary>
         public delegate void AbilityRefusedDelegate(ActivationRefusal refusal);

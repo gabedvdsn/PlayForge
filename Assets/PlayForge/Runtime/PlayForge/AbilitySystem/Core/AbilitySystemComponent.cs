@@ -484,6 +484,70 @@ namespace FarEmerald.PlayForge
         {
             tagsChangedWhileActive = true;
             if (!checkingWhileActive) CheckWhileActive();
+
+            // A tag gained sets off the abilities it triggers (FEAT-4)
+            if (change.Added && AbilityCache is { Count: > 0 })
+            {
+                gainedTags.Add(change.Tag);
+                FireTagTriggers();
+            }
+        }
+
+        // ═══════════════════════════════════════════════════════════════════════════
+        // Triggers (FEAT-4)
+        // ═══════════════════════════════════════════════════════════════════════════
+
+        /// <summary>
+        /// Sends a gameplay event to the entity: each ability it knows whose trigger is a gameplay event under the event's
+        /// tag, or a tag above it, activates, in slot order, with the event's data, its target among it. The callbacks
+        /// hear the event. How many activated. An ability activated only when code asked for it (FEAT-4).
+        /// </summary>
+        public int SendGameplayEvent(Tag eventTag, ProcessDataPacket data = null)
+        {
+            if (!eventTag.IsValid) return 0;
+            Callbacks.GameplayEventReceived(eventTag, data);
+            return FireTriggers(EAbilityTriggerSource.GameplayEvent, eventTag, data);
+        }
+
+        // The tags gained, whose triggers fire one at a time: an ability a tag sets off can grant tags in its turn
+        private readonly List<Tag> gainedTags = new();
+        private bool firingTagTriggers;
+
+        private void FireTagTriggers()
+        {
+            if (firingTagTriggers) return;
+            firingTagTriggers = true;
+            try
+            {
+                for (int i = 0; i < gainedTags.Count; i++) FireTriggers(EAbilityTriggerSource.TagAdded, gainedTags[i], null);
+            }
+            finally
+            {
+                gainedTags.Clear();
+                firingTagTriggers = false;
+            }
+        }
+
+        // Each ability the tag triggers tries to activate, as a request would, with the data
+        private int FireTriggers(EAbilityTriggerSource source, Tag tag, ProcessDataPacket data)
+        {
+            if (AbilityCache == null || AbilityCache.Count == 0 || !Enabled) return 0;
+            int fired = 0;
+            foreach (int slot in AbilityCache.Keys.OrderBy(index => index).ToList())
+            {
+                if (!AbilityCache.TryGetValue(slot, out var container) || !IsTriggeredBy(container.Spec.Base, source, tag)) continue;
+                if (TryActivateAbility(CreateActivationRequest(slot, data), out _)) fired++;
+            }
+            return fired;
+        }
+
+        private static bool IsTriggeredBy(Ability ability, EAbilityTriggerSource source, Tag tag)
+        {
+            var triggers = ability?.Definition?.Triggers;
+            if (triggers == null) return false;
+            foreach (var trigger in triggers)
+                if (trigger != null && trigger.Source == source && trigger.Tag.IsValid && tag.MatchesOrIsChildOf(trigger.Tag)) return true;
+            return false;
         }
 
         /// <summary>
