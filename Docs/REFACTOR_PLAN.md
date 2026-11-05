@@ -589,6 +589,7 @@ had no letter in the review. TS-AA onward came from the test project.
 | GAS-60 | M | 5 | A restore let go of every ability the entity had and gave each back as a new one, so another entity's effect that one of them applied kept hold of the old, and that entity's next save named no slot for it, and a load after that took the effect as its source's own. Two entities that bled each other could load in no order that kept both. Found by the rollback scenario. Fixed: a restore keeps each ability the entity holds in the slot its save gives it, its level from the save's levels, and lets go of and gives back the rest | `Save/ForgeSave.cs` (`Put`), `AbilitySystem/Core/AbilitySystemComponent.cs` (`ClearForRestore`) | verified |
 | GAS-61 | M | 5 | A save kept an effect's time left and its time to its next tick as floats, which its timers, doubles since GAS-33, rounded, so a restored effect ran on from a time a hair off, and came to differ from one never restored in the last digit. Found by the rollback scenario. Fixed: the clock's capture and restore carry doubles (`ExactDurationRemaining` and `ExactTimeUntilPeriodTick` on the containers), and `EffectSave` keeps them; a save written with floats still loads | `GameplayEffect/Core/GameplayShelfContainer/*`, `Save/ForgeSnapshot.cs` | verified |
 | GAS-62 | H | 5 | A targeting task filed each target it selected by setting the primary, so each one replaced the last: an Auto Target of every match kept only the farthest, and one of two kept the second nearest. Then Target Real took only the first packet's entity, and Apply Effects and Apply/Remove Effects only the first target. So an area ability, Auto Target and then Apply Effects, struck one entity, and Auto Target From Data with Primary Only off kept one of the targets it says it adds. Found by the stress suite's area run. Fixed: the auto-targeting tasks file every target they select, in order (`SetTargetingPackets`), a resolve files each one's entity under Target Real, and both apply tasks reach each target, through `TryGetAt`, which builds no list | `AbilitySystem/Tasks/Targeting/Authored/AutoTarget*.cs`, `Utils/ProcessTaskUtil.cs`, `AbilitySystem/Ability/AbilityProxy/Core/AbilityDataPacket.cs` (`ResolveTarget`), `AbilitySystem/Tasks/Gameplay/Apply*EffectsAbilityTask.cs` | fixed |
+| GAS-63 | M | 5 | An ability's stage list had no initializer, so an ability whose behaviour was made in code had none until it was saved and loaded, and adding a stage to it threw. Found by the authoring round trip, filling an ability The Forge made. Fixed: the list starts empty, as a load leaves it; an ability with no stage still activates and ends | `AbilitySystem/Ability/AbilityProxy/Core/AbilityBehaviour.cs` | fixed |
 | GAS-P1 | M | 0 | `ActionQueue` LINQ allocations; snapshot built every frame (PF-006) | `ActionQueue.cs:41, 46, 156`, `FrameSummary.cs:340-351` | verified |
 | GAS-P2 | M | 0 | Tag and FrameSummary allocations (PF-007) | `TagCache.cs:60`, `TagQuery.cs:89-136`, `FrameSummary.cs:306-308` | verified |
 | GAS-P3 | M | 3 | Each application revalidates every container and rebuilds all tags (area application is quadratic). Measured: an instant application on an entity carrying 1,000 effects took 0.49 ms, 135 times one on an entity carrying 2. Now the requirements wait for one pass at the next tick, a shelved container's tags are counted as it lands, and re-application and removal find containers in an index by asset tag | `EffectSystemComponent.cs:312-348`, `GameplayAbilitySystem.cs:250-281` | verified |
@@ -790,6 +791,23 @@ GAS-4 with GAS-5, PC-6, and TS-I with PC-5.
 ## Log
 
 Record baselines, gate results and notable decisions here, newest first.
+
+- 2026-11-05, **The authoring round trip, and GAS-63.** The review's last editor check (Module 4), in Proving
+  Grounds' `Tests/Editor/AuthoringRoundTripTests`, EditMode.
+  - **The round trip:** an attribute, a set, an entity, an effect, an ability and an item, each made by The Forge's
+    Create, saves as the same text when written again. Each of their simple fields, 120 of them, edited through a
+    SerializedObject as an inspector edits, undoes to the byte and redoes. So do 132 more in assets filled in: an
+    ability with a stage of two tasks and an effect with a worker, each held as a reference to its own type, and a
+    set of two attributes. An edit across three abilities at once reaches each, and one undo takes it back from
+    each. A push down a chain of templates, A → B → C, changes only the lines it pushes, and one undo takes it back.
+  - **GAS-63,** which filling the ability found: an ability's stage list had no initializer, so one made in code
+    had none until it was saved and loaded, and adding a stage threw. It starts empty now.
+  - **Its tests,** seen failing first: `GAS_63_An_ability_made_in_code_has_a_stage_list`, for each hub, in
+    `AbilityActivationTests`; and the seventeen in `AuthoringRoundTripTests`.
+  - **Tests:** PlayMode 1313: 1305 pass, 0 fail, and 8 are skipped, the 7 planted and the soak, in
+    three orders. Planted 7 of 7; EditMode 468 of 468.
+  - **What's left** of the review's test project is the runtime UI kit, a design question. And the user's: CI
+    (SP-24), and whether the labs ship in Samples (Decision 33).
 
 - 2026-11-05, **The editor's stress runs, and ED-44.** The review's editor stress (Module 4), in Proving Grounds'
   `Tests/Editor/EditorStressTests`, EditMode, category Stress. Each cost is per asset or entity, against a tenth.

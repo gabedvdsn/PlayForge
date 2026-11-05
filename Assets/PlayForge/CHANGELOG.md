@@ -336,6 +336,8 @@ tracks each fix below by its ID.
   Asking whether its sequence was paused took 24 bytes a frame.
 
 ### Fixed
+- An ability made in code had no stage list until it was saved and loaded, so adding a stage to one threw. It starts
+  with an empty one (GAS-63).
 - A template's push searched the project again for each child's own children, so a push to 2,000 children took 28 s.
   It finds the family in one search, and a push costs the same a child however big the family (ED-44).
 - Ending a process searched its step group from the front, so ending the newest of many cost as much as every

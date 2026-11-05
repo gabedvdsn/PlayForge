@@ -25,7 +25,8 @@ namespace FarEmerald.PlayForge
         [SerializeReference] 
         public List<AbstractSetAssetsTask> AssetLoaders = new();
         
-        public List<AbilityTaskBehaviourStage> Stages;
+        // Empty, not null: an ability made in code had no list until it was saved and loaded, so adding a stage threw (GAS-63)
+        public List<AbilityTaskBehaviourStage> Stages = new();
 
         /// <summary>
         /// The abilities, by asset tag or a context tag, or a child of one, that cancel this one as they activate, in
