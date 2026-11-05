@@ -1,7 +1,7 @@
 # PlayForge refactor: code tour
 
 This tour lists the places where the refactor changed code, so you can open each one in your IDE and read it. It
-covers `01258b8..fc92e9d` on `main`: 287 commits. Phase 0 ported Arcade Fighter's fixes, Phase 1 made the runtime
+covers `01258b8..6733220` on `main`: 292 commits. Phase 0 ported Arcade Fighter's fixes, Phase 1 made the runtime
 correct, Phase 2 got the package ready to release, Phase 3 made it cheaper to run and gave the two GAS hubs one core,
 and Phase 4 has begun. Each entry says what behaves differently and why, names its tracker IDs and Decisions, and
 points at the two or three places to read. `Docs/REFACTOR_PLAN.md` has every tracker row, the numbered Decisions,
@@ -10,8 +10,8 @@ and a Log of each batch's test results.
 ## How to use this
 
 - Paths are relative to the repo root.
-- Line numbers are as of commit `fc92e9d`, the head of `main` on 2026-11-04. A later commit may move them, so each
-  entry also names the class and method to search for. `git show fc92e9d:<path>` shows a file as it was then.
+- Line numbers are as of commit `6733220`, the head of `main` on 2026-11-04. A later commit may move them, so each
+  entry also names the class and method to search for. `git show 6733220:<path>` shows a file as it was then.
 - In Rider, Go to File accepts `path:line`. In Visual Studio, open the file, then Go To Line (Ctrl+G).
   A bare `:123` after a path means another line in the same file.
 - `git grep "<ID>"` finds the comment at each fix, and `git log --grep "<ID>"` finds its commit. Three exceptions:
@@ -45,15 +45,15 @@ asset; ED-12's row lists what is left.
 
 - **IDs:** ED-12, commit `e1d1dd0`.
 - **Read:**
-  - `Assets/PlayForge/Editor/CustomPropertyDrawers/Forge/Editors/Assets/AttributeEditor.cs:140`, the three bound
+  - `Assets/PlayForge/Editor/CustomPropertyDrawers/Forge/Editors/Assets/AttributeEditor.cs:139`, the three bound
     fields. The inspector turns on `SupportsMultipleObjects` at `:17` and carries `[CanEditMultipleObjects]` at `:9`.
-  - `Assets/PlayForge/Editor/CustomPropertyDrawers/Forge/Editors/BasePlayForgeEditor.cs:236` `CreateBoundTextField`,
-    which binds a text field and writes when the edit is committed. `SupportsMultipleObjects` (`:199`) lets
-    `CreateInspectorGUI` take a multiple selection (`:322`), and `HeaderName` (`:229`) counts it in the header.
-  - `:353`, where every inspector's header follows the asset's changes, Undo and Redo among them, through
+  - `Assets/PlayForge/Editor/CustomPropertyDrawers/Forge/Editors/BasePlayForgeEditor.cs:259` `CreateBoundTextField`,
+    which binds a text field and writes when the edit is committed. `SupportsMultipleObjects` (`:222`) lets
+    `CreateInspectorGUI` take a multiple selection (`:346`), and `HeaderName` (`:252`) counts it in the header.
+  - `:377`, where every inspector's header follows the asset's changes, Undo and Redo among them, through
     `TrackSerializedObjectValue`.
-- **Watch for:** with several assets selected, the header leaves out Open in The Forge (`:393`), and its menu leaves
-  out Template and Visualize (`:408`), since they act on one asset.
+- **Watch for:** with several assets selected, the header leaves out Open in The Forge (`:431`), and its menu leaves
+  out the template's items (`:461`), since they act on one asset.
 - **Test:** `ED_12_An_edit_in_the_Attribute_inspector_undoes` and
   `ED_12_The_Attribute_inspector_edits_every_selected_attribute` in `InspectorUndoTests`. They build the whole
   inspector in a runtime panel, where its bindings run in batch mode.
@@ -82,12 +82,12 @@ Undo and Redo among them. Renames already undid in one step, since Phase 2.
 - **IDs:** ED-12, commits `2e75b13` (Effect), `2d211d4` (Item), `0cc8e9d` (Entity), `e111fac` (Attribute Set) and
   `62ed48e` (Ability).
 - **Read:**
-  - `Assets/PlayForge/Editor/CustomPropertyDrawers/Forge/Editors/BasePlayForgeEditor.cs:205` `OnAssetChanged`, a
-    virtual no-op that the header's tracker at `:353` calls.
-  - `Assets/PlayForge/Editor/CustomPropertyDrawers/Forge/Editors/Assets/EffectEditor.cs:464`, the Effect's override,
-    which redraws Leveling when what it's drawn from has changed, and `:233`, the bound Link Mode field. The other four
+  - `Assets/PlayForge/Editor/CustomPropertyDrawers/Forge/Editors/BasePlayForgeEditor.cs:228` `OnAssetChanged`, a
+    virtual no-op that the header's tracker at `:377` calls.
+  - `Assets/PlayForge/Editor/CustomPropertyDrawers/Forge/Editors/Assets/EffectEditor.cs:463`, the Effect's override,
+    which redraws Leveling when what it's drawn from has changed, and `:232`, the bound Link Mode field. The other four
     inspectors do the same.
-  - `Assets/PlayForge/Editor/CustomPropertyDrawers/Forge/Editors/Assets/EntityIdentityEditor.cs:275`, Starting Level
+  - `Assets/PlayForge/Editor/CustomPropertyDrawers/Forge/Editors/Assets/EntityIdentityEditor.cs:274`, Starting Level
     bound to its property, as the Entity's other fields are.
 - **Watch for:** a multiple selection waited for the drawers' one-target copies. ScalerDrawer's, the last, went with
   ED-33's scaler field (`4cc9be9`).
@@ -102,10 +102,10 @@ it changes first, so one Undo takes it back.
 
 - **IDs:** ED-12, commit `097384f`.
 - **Read:**
-  - `Assets/PlayForge/Editor/CustomPropertyDrawers/Forge/Editors/BasePlayForgeEditor.cs:216` `RecordLinkChange`, and
-    `ConfirmLinkChange` (`:209`), the hook the 13 confirmations ask through, which a test can answer.
-  - `:844` `LinkTo` and `:291` `AssignTemplate`, the two pickers' steps.
-  - `Assets/PlayForge/Editor/CustomPropertyDrawers/Forge/Editors/Assets/EffectEditor.cs:255`, Link Contained Effects, which the base editor's `CreateChildLinks`
+  - `Assets/PlayForge/Editor/CustomPropertyDrawers/Forge/Editors/BasePlayForgeEditor.cs:239` `RecordLinkChange`, and
+    `ConfirmLinkChange` (`:232`), the hook the 13 confirmations ask through, which a test can answer.
+  - `:906` `LinkTo` and `:314` `AssignTemplate`, the two pickers' steps.
+  - `Assets/PlayForge/Editor/CustomPropertyDrawers/Forge/Editors/Assets/EffectEditor.cs:254`, Link Contained Effects, which the base editor's `CreateChildLinks`
     records with the contained effects before it links them.
 - **Still open:** ED-31, the unlink dialogs that count with the editor rather than the asset, so they say 0.
 - **Test:** `ED_12_Linking_in_the_Effect_inspector_undoes` in `InspectorUndoTests`.
@@ -134,9 +134,9 @@ The Effect, Ability, Item and Entity inspectors' Unlink All questions counted ch
 which no asset links to, so they always said 0. Each now counts as its asset's `UnlinkAllChildren` decides.
 
 - **IDs:** ED-31, commit `523f57d`.
-- **Read:** `Assets/PlayForge/Editor/CustomPropertyDrawers/Forge/Editors/Assets/EffectEditor.cs:268` `Children`, an
+- **Read:** `Assets/PlayForge/Editor/CustomPropertyDrawers/Forge/Editors/Assets/EffectEditor.cs:267` `Children`, an
   effect's contained effects, which `CreateChildLinks` counts by their link to the effect's provider, and
-  `Assets/PlayForge/Editor/CustomPropertyDrawers/Forge/Editors/Assets/AbilityEditor.cs:288` `Children`, an ability's
+  `Assets/PlayForge/Editor/CustomPropertyDrawers/Forge/Editors/Assets/AbilityEditor.cs:287` `Children`, an ability's
   cost and cooldown, of which the base editor's `CreateChildLinks` counts those linked to the ability.
 - **Test:** `ED_31_The_unlink_question_counts_the_linked_children` in `InspectorUndoTests`, for all four.
 
@@ -186,10 +186,10 @@ ability, since the stage drawers resize lists directly and could cut a longer on
 - **IDs:** ED-12, commits `0054b7d` (Item) and `1a203c1` (Ability).
 - **Read:**
   - `Assets/PlayForge/Editor/CustomPropertyDrawers/Forge/Editors/Assets/ItemEditor.cs:25`, where the Item inspector
-    turns on `SupportsMultipleObjects`, and `:253`, Leveling's note for a multiple selection.
-  - `Assets/PlayForge/Editor/CustomPropertyDrawers/Forge/Editors/Assets/AbilityEditor.cs:422`, the note that stands
+    turns on `SupportsMultipleObjects`, and `:252`, Leveling's note for a multiple selection.
+  - `Assets/PlayForge/Editor/CustomPropertyDrawers/Forge/Editors/Assets/AbilityEditor.cs:421`, the note that stands
     in for the Ability's own lists.
-  - `Assets/PlayForge/Editor/CustomPropertyDrawers/Forge/Editors/BasePlayForgeEditor.cs:228` `IsMultiple`, which the
+  - `Assets/PlayForge/Editor/CustomPropertyDrawers/Forge/Editors/BasePlayForgeEditor.cs:251` `IsMultiple`, which the
     inspectors check.
 - **Then:** the Effect, Entity and Attribute Set inspectors took one too (`fc92e9d`), once ScalerDrawer's
   rework with ED-33 (`4cc9be9`) freed them.
@@ -220,8 +220,8 @@ ran every frame of its life. The two pickers, import and level provider, now add
 off when the picker closes.
 
 - **IDs:** ED-11, commit `850f8fb`.
-- **Read:** `Assets/PlayForge/Editor/CustomPropertyDrawers/Forge/Editors/BasePlayForgeEditor.cs:87` `WaitForPicker`,
-  and `:94` `OnEditorUpdate`.
+- **Read:** `Assets/PlayForge/Editor/CustomPropertyDrawers/Forge/Editors/BasePlayForgeEditor.cs:88` `WaitForPicker`,
+  and `:95` `OnEditorUpdate`.
 - **Test:** `ED_11_An_idle_inspector_listens_to_no_update` in `EditorPollingTests`.
 
 ### The inspector keeps no scroll view of its own (ED-11)
@@ -234,7 +234,7 @@ are gone. Later the user asked for the header to stay at the top again (Decision
 Inspector's scroll events, still measuring nothing on a timer.
 
 - **IDs:** ED-11, commit `88d0f3f`, Q17.
-- **Read:** `Assets/PlayForge/Editor/CustomPropertyDrawers/Forge/Editors/BasePlayForgeEditor.cs:331`, in
+- **Read:** `Assets/PlayForge/Editor/CustomPropertyDrawers/Forge/Editors/BasePlayForgeEditor.cs:355`, in
   `CreateInspectorGUI`, where the header, a space and a plain content element go into the root.
 - **Watch for:** `BasePlayForgeEditor.contentScrollView` and `ForgeDrawerStyles.CreateScrollView` are gone. An
   inspector builds into the container `BuildInspectorContent` is handed.
@@ -283,15 +283,15 @@ GAS Debugger take the theme instead of painting their windows dark gray.
 
 - **IDs:** ED-20, commit `f5832df`, Decision 20, Q13, Q18.
 - **Read:**
-  - `Assets/PlayForge/Editor/UI/PlayForge.uss:8`, the Dark set, and `:46`, the Light set. The kit's rules follow:
-    the type icons' colors at `:119`, the asset header at `:156` and the section header at `:235`.
+  - `Assets/PlayForge/Editor/UI/PlayForge.uss:8`, the Dark set, and `:47`, the Light set. The kit's rules follow:
+    the type icons' colors at `:121`, the asset header at `:158` and the section header at `:237`.
   - `Assets/PlayForge/Editor/UI/ForgeTheme.cs:35` `Apply`, which gives a root the sheet and the theme's class. The
     sheet loads by its GUID (`:15`), so it's found whether the package is in `Packages` or in `Assets`.
   - `Assets/PlayForge/Editor/UI/Kit/ForgeGlyph.cs:79` `Draw`, the mockups' vector glyphs drawn with `Painter2D` in
     the color the sheet gives, and `:324` `ForgeTypeIcon`.
-  - `Assets/PlayForge/Editor/CustomPropertyDrawers/Forge/Editors/BasePlayForgeEditor.cs:385` `CreateEditorHeader`, and
-    `:404` `ShowAssetMenu`, which holds import, the template and Visualize.
-  - `Assets/PlayForge/Editor/CustomPropertyDrawers/Forge/Util/ForgeDrawerStyles.cs:516` `CreateCollapsibleSection`,
+  - `Assets/PlayForge/Editor/CustomPropertyDrawers/Forge/Editors/BasePlayForgeEditor.cs:411` `CreateEditorHeader`, and
+    `:457` `ShowAssetMenu`, which holds import, the template and Visualize.
+  - `Assets/PlayForge/Editor/CustomPropertyDrawers/Forge/Util/ForgeDrawerStyles.cs:518` `CreateCollapsibleSection`,
     which builds the kit's `ForgeSection` behind the same signature.
 - **Watch for:** a control in the kit sets no style in C#; a test checks the header and section headers.
 - **Test:** in `EditorSmokeTests`, run in both themes: `ED_20_An_inspector_takes_each_color_from_the_style_sheet`,
@@ -327,9 +327,9 @@ scroll view and measuring the window on timers; nothing polls now.
 
 - **IDs:** ED-36, commit `d851e30`, Decision 29.
 - **Read:**
-  - `Assets/PlayForge/Editor/UI/Kit/ForgeAssetHeader.cs:72` `StickTo`, and `:104` `Place`, which puts the header at
+  - `Assets/PlayForge/Editor/UI/Kit/ForgeAssetHeader.cs:100` `StickTo`, and `:132` `Place`, which puts the header at
     the view's top, no higher than its inspector's top and no lower than its end.
-  - `Assets/PlayForge/Editor/CustomPropertyDrawers/Forge/Editors/BasePlayForgeEditor.cs:333`, the space, and `:347`,
+  - `Assets/PlayForge/Editor/CustomPropertyDrawers/Forge/Editors/BasePlayForgeEditor.cs:357`, the space, and `:371`,
     where the header goes in after the content.
 - **Test:** `ED_36_The_asset_header_stays_at_the_top_as_the_content_scrolls` in `EditorPollingTests`.
 
@@ -344,9 +344,9 @@ takes the Inspector's one label column in every inspector.
 - **IDs:** ED-15 (its first part), commit `ed6295a`.
 - **Read:**
   - `Assets/PlayForge/Editor/UI/Kit/ForgeUsedBy.cs:38` `UsersOf`, and `:55` `Rebuild`, which draws the rows.
-  - `Assets/PlayForge/Editor/CustomPropertyDrawers/Forge/Editors/Assets/AttributeEditor.cs:83`, the sections in
-    order; `:191` `BuildUsedBySection`; and `:218` `UpdateSummaries`, the line each collapsed section shows.
-  - `Assets/PlayForge/Editor/CustomPropertyDrawers/Forge/Editors/BasePlayForgeEditor.cs:243`, the label column.
+  - `Assets/PlayForge/Editor/CustomPropertyDrawers/Forge/Editors/Assets/AttributeEditor.cs:82`, the sections in
+    order; `:190` `BuildUsedBySection`; and `:217` `UpdateSummaries`, the line each collapsed section shows.
+  - `Assets/PlayForge/Editor/CustomPropertyDrawers/Forge/Editors/BasePlayForgeEditor.cs:266`, the label column.
 - **Still open:** ED-15's Validate All, with The Forge's redesign.
 - **Test:** `ED_15_The_Attribute_inspector_lists_what_uses_it` in `ForgeInspectorTests`.
 
@@ -362,12 +362,12 @@ are gone.
 
 - **IDs:** ED-37 (new: how the asset inspectors stray from the style doc), commit `cf70e8f`.
 - **Read:**
-  - `Assets/PlayForge/Editor/CustomPropertyDrawers/Forge/Editors/Assets/ItemEditor.cs:94`, the sections in order;
-    `:235` `RebuildLevelingContent`; and `:446` `UpdateSummaries`, the line each collapsed section shows.
-  - `Assets/PlayForge/Editor/CustomPropertyDrawers/Forge/Editors/BasePlayForgeEditor.cs:870`
-    `CreateLevelProviderField`, which links through `LinkTo` (`:844`), so a link that would make a loop is refused.
+  - `Assets/PlayForge/Editor/CustomPropertyDrawers/Forge/Editors/Assets/ItemEditor.cs:93`, the sections in order;
+    `:234` `RebuildLevelingContent`; and `:445` `UpdateSummaries`, the line each collapsed section shows.
+  - `Assets/PlayForge/Editor/CustomPropertyDrawers/Forge/Editors/BasePlayForgeEditor.cs:932`
+    `CreateLevelProviderField`, which links through `LinkTo` (`:906`), so a link that would make a loop is refused.
   - `Assets/PlayForge/Editor/UI/Kit/ForgeAssetTagField.cs:35` `Show`, and the style sheet's new rules for value
-    fields, rows of buttons, help boxes and notes (`Assets/PlayForge/Editor/UI/PlayForge.uss:299`).
+    fields, rows of buttons, help boxes and notes (`Assets/PlayForge/Editor/UI/PlayForge.uss:301`).
 - **Watch for:** the Entity, Attribute Set, Ability and Effect inspectors still draw Level Source with
   `BuildProviderSelector` and its Link to buttons, until their turn.
 - **Tests:** `ED_37_The_Item_inspector_keeps_the_style_docs_sections`, `ED_37_The_Item_inspector_sets_no_look_in_code`
@@ -386,10 +386,10 @@ moved into the base editor.
 - **IDs:** ED-37, commit `a06a4fb`. New row ED-38 tracks the reference fields, which every inspector still draws
   with `AbstractRefDrawer`.
 - **Read:**
-  - `Assets/PlayForge/Editor/CustomPropertyDrawers/Forge/Editors/Assets/EntityIdentityEditor.cs:104`, the sections in
-    order; `:235` `RebuildLevelingContent`; `:438`, Equipped Too, and `:460` `UpdateEquippedToo`.
-  - `Assets/PlayForge/Editor/CustomPropertyDrawers/Forge/Editors/BasePlayForgeEditor.cs:583` `AddLinkedLevels` and
-    `:625` `CreateChildLinks`, which the Item and Entity inspectors share.
+  - `Assets/PlayForge/Editor/CustomPropertyDrawers/Forge/Editors/Assets/EntityIdentityEditor.cs:103`, the sections in
+    order; `:234` `RebuildLevelingContent`; `:437`, Equipped Too, and `:459` `UpdateEquippedToo`.
+  - `Assets/PlayForge/Editor/CustomPropertyDrawers/Forge/Editors/BasePlayForgeEditor.cs:645` `AddLinkedLevels` and
+    `:687` `CreateChildLinks`, which the Item and Entity inspectors share.
   - `Assets/PlayForge/Editor/CustomPropertyDrawers/Forge/Drawers/Assets/Entity/StartingItemDrawer.cs:14`, the one-row
     starting item.
 - **Still open:** the mockup's attribute table, with the Attribute Set inspector, and its "When Busy" label for
@@ -413,9 +413,9 @@ The Entity inspector shows the same table under its Attribute Set.
 - **Read:**
   - `Assets/PlayForge/Editor/UI/Kit/ForgeAttributeTable.cs:43` `Show`; `:176` `RowOf`, the runtime's order of
     collision groups; and `:231` `RangeOf`, a range as in "0–max".
-  - `Assets/PlayForge/Editor/CustomPropertyDrawers/Forge/Editors/Assets/AttributeSetEditor.cs:102`, the sections in
-    order, and `:343` `BuildAllAttributesSection`.
-  - `Assets/PlayForge/Editor/CustomPropertyDrawers/Forge/Editors/Assets/EntityIdentityEditor.cs:354`, the table under
+  - `Assets/PlayForge/Editor/CustomPropertyDrawers/Forge/Editors/Assets/AttributeSetEditor.cs:101`, the sections in
+    order, and `:342` `BuildAllAttributesSection`.
+  - `Assets/PlayForge/Editor/CustomPropertyDrawers/Forge/Editors/Assets/EntityIdentityEditor.cs:353`, the table under
     the entity's Attribute Set.
 - **Fixed since:** Use Minimum took the first element, in the runtime and so in the table, since
   `ForgeUtils.IndexMin` started from `float.MinValue`. GAS-55, the next entry, fixed it.
@@ -453,8 +453,8 @@ dropdown list of their own, with hover colors and icon buttons set in C#.
 - **Read:**
   - `Assets/PlayForge/Editor/CustomPropertyDrawers/Forge/Drawers/Base/AbstractForgeObjectDrawer.cs:20`
     `CreatePropertyGUI`, the field and its button; `:68` `Open`; and `:74` `New`.
-  - `Assets/PlayForge/Editor/CustomPropertyDrawers/Forge/Util/ForgeAssetCreation.cs:26` `Save`, the folder, file name,
-    name and tag of a new asset, and `:51` `AssetTagFor`, the tag rule the inspectors now share.
+  - `Assets/PlayForge/Editor/CustomPropertyDrawers/Forge/Util/ForgeAssetCreation.cs:27` `Save`, the folder, file name,
+    name and tag of a new asset, and `:102` `AssetTagFor`, the tag rule the inspectors now share.
   - `Assets/PlayForge/Editor/CustomPropertyDrawers/Forge/Drawers/Assets/Effect/GameplayEffectDrawer.cs:70`
     `ShowLink`, the line under an effect field, and `:148` `AddMenuItems`.
 - **Watch for:** `AbstractRefDrawer` still draws the type pickers, which choose a class, not an asset.
@@ -474,7 +474,7 @@ Its look comes from the style sheet: a foldout row with the attribute and, while
 - **IDs:** ED-39, commit `22824ac`.
 - **Read:**
   - `Assets/PlayForge/Editor/CustomPropertyDrawers/Forge/Drawers/Assets/Attribute/AttributeSetElementDrawer.cs:159`
-    `KeepTypedInBounds`, the drawer's one write; `:178` `Show`, the line and the help box; and `:237` `IsTypedInto`.
+    `KeepTypedInBounds`, the drawer's one write; `:178` `Show`, the line and the help box; and `:225` `IsTypedInto`.
 - **Watch for:** the old drawer's 50 ms clamp doesn't land in batch mode, so the first test fails on it only once the
   set changes elsewhere.
 - **Tests:** `ED_39_Opening_an_attribute_set_writes_nothing` and `ED_39_A_typed_magnitude_stays_in_bounds` in
@@ -492,10 +492,10 @@ Granted reads Activate At Start, since the runtime tries it only for an entity's
 
 - **IDs:** ED-37, commit `031c2d4`.
 - **Read:**
-  - `Assets/PlayForge/Editor/CustomPropertyDrawers/Forge/Editors/Assets/AbilityEditor.cs:100`, the sections in order;
-    `:328` `BuildActivationSection`; `:435` `BuildRequirementsSection`, whose Clear leaves the checks; and `:583`
+  - `Assets/PlayForge/Editor/CustomPropertyDrawers/Forge/Editors/Assets/AbilityEditor.cs:99`, the sections in order;
+    `:327` `BuildActivationSection`; `:434` `BuildRequirementsSection`, whose Clear leaves the checks; and `:582`
     `ActivationSummary`.
-  - `Assets/PlayForge/Editor/CustomPropertyDrawers/Forge/Editors/BasePlayForgeEditor.cs:543` `EnumName`, the name an
+  - `Assets/PlayForge/Editor/CustomPropertyDrawers/Forge/Editors/BasePlayForgeEditor.cs:605` `EnumName`, the name an
     enum field shows.
   - `Assets/PlayForge/Runtime/PlayForge/AbilitySystem/Core/AbilitySystemComponent.cs:577`, the enums' shown names.
 - **Watch for:** the tag requirements and the checks still draw in their drawers' own look. The requirements table the
@@ -546,8 +546,8 @@ inspector's tag requirements use the same table, with a Caster and a Target row.
 
 - **IDs:** ED-37, commit `6090980`.
 - **Read:**
-  - `Assets/PlayForge/Editor/CustomPropertyDrawers/Forge/Editors/Assets/EffectEditor.cs:94`, the sections in order;
-    `:226` `RebuildLevelingContent`; `:352` `BuildRequirementsSection`; `:511` `DurationSummary` and `:531`
+  - `Assets/PlayForge/Editor/CustomPropertyDrawers/Forge/Editors/Assets/EffectEditor.cs:93`, the sections in order;
+    `:225` `RebuildLevelingContent`; `:351` `BuildRequirementsSection`; `:510` `DurationSummary` and `:530`
     `ImpactSummary`.
   - `Assets/PlayForge/Editor/UI/Kit/ForgeRequirementsTable.cs:48`, the table, and `:142` `Toggle`, which opens a
     cell's list.
@@ -555,8 +555,8 @@ inspector's tag requirements use the same table, with a Caster and a Target row.
     the ability's tables.
   - `Assets/PlayForge/Editor/CustomPropertyDrawers/Forge/Drawers/Assets/Effect/GameplayEffectDurationDrawer.cs:90`
     `ShowPolicy`.
-  - `Assets/PlayForge/Editor/CustomPropertyDrawers/Forge/Editors/BasePlayForgeEditor.cs:583` `AddLinkedLevels` and
-    `:625` `CreateChildLinks`, which take what an asset with no levels of its own needs.
+  - `Assets/PlayForge/Editor/CustomPropertyDrawers/Forge/Editors/BasePlayForgeEditor.cs:645` `AddLinkedLevels` and
+    `:687` `CreateChildLinks`, which take what an asset with no levels of its own needs.
 - **Still open:** the mockup's problems in place and the header's problem count, with the Problems view (ED-15); the
   units and "scaled by" beside Duration and Magnitude, with the scaler workflow (ED-33).
 - **Tests:** `ED_37_The_Effect_inspector_keeps_the_style_docs_sections`,
@@ -577,9 +577,9 @@ tag, template and level link came along (ED-35); it keeps them now. Clear resets
 - **IDs:** ED-35, and ED-32 but for the scaler's import; commit `c300449`.
 - **Read:**
   - `Assets/PlayForge/Editor/CustomPropertyDrawers/Forge/Editors/Windows/ForgeImportWindow.cs:60` `ShowFor`, `:73`
-    `ShowForAsset` and `:94` `KeepsOwn`, what a whole asset keeps; `:139` `Expand`, the rows a path gives; `:239`
-    `Compare` and `:264` `Import`.
-  - `Assets/PlayForge/Editor/CustomPropertyDrawers/Forge/Util/ForgeDrawerStyles.cs:541`, a section's Import.
+    `ShowForAsset` and `:94` `KeepsOwn`, what a whole asset keeps; `:139` `Expand`, the rows a path gives; `:240`
+    `Compare` and `:265` `Import`.
+  - `Assets/PlayForge/Editor/CustomPropertyDrawers/Forge/Util/ForgeDrawerStyles.cs:544`, a section's Import.
   - `Assets/PlayForge/Editor/CustomPropertyDrawers/Forge/Editors/Windows/SectionClearUtility.cs:20` `Clear`.
 - **Watch for:** the windows log "No graphic device" as they open in batch mode, so their tests use the smoke suite's
   guard.
@@ -660,7 +660,7 @@ field's own values. A kind, count, range, Combine, operation or delivery the ass
   - `Assets/PlayForge/Editor/CustomPropertyDrawers/Forge/Drawers/Scaler/ScalerFields.cs:310` `Resize`, each table from
     its own last value, and `:127` `KeepCurve`.
   - `Assets/PlayForge/Editor/CustomPropertyDrawers/Forge/Editors/Assets/EffectEditor.cs:27`, where the Effect inspector
-    turns on `SupportsMultipleObjects`, and `:415`, the note in place of its workers.
+    turns on `SupportsMultipleObjects`, and `:414`, the note in place of its workers.
   - `Assets/PlayForge/Editor/CustomPropertyDrawers/Forge/Drawers/Assets/Effect/GameplayEffectImpactDrawer.cs:161`
     `ShowDelivery`, a mixed delivery, and `:95`, the note in place of the additional impacts.
 - **Watch for:** UI Toolkit sends a change event when a field that shows a mixed value is set to the value it holds,
@@ -670,6 +670,91 @@ field's own values. A kind, count, range, Combine, operation or delivery the ass
   `ED_12_The_Entity_inspector_edits_every_selected_entity` and `ED_12_The_Attribute_Set_inspector_edits_every_selected_set`
   in `InspectorUndoTests`; `ED_12_A_magnitude_field_edits_every_selected_asset` and
   `ED_12_A_scaler_drawn_on_its_own_edits_every_selected_asset` in `ScalerDrawerTests`.
+
+### Settings belong to the project (ED-21)
+
+The first of The Forge's redesign, from the interview's Q21. The settings the project shares, where each type's new
+assets go and how their files are named, each type's defaults and the Cost and Cooldown effects, live in
+`ProjectSettings/PlayForgeSettings.asset`, a `ScriptableSingleton` that travels with the project, and Project Settings →
+PlayForge edits them, bound, so an edit undoes. Each user's view toggles and the log level stay in EditorPrefs, on
+Preferences → PlayForge. Every setting was an EditorPref, shared by every project on the machine; a project takes its
+values from there once. The Forge's Settings tab and `TemplateRegistry` are gone.
+
+- **IDs:** ED-21, commit `90a711b`.
+- **Read:**
+  - `Assets/PlayForge/Editor/Settings/PlayForgeSettings.cs:96` `Ready`, the first use's migration, `:279`
+    `TakeMachineSettings`, and `:333` `Serialized`, which makes the singleton editable for the page.
+  - `Assets/PlayForge/Editor/Settings/PlayForgeSettingsPages.cs:53` `BuildProjectPage` and `:220`
+    `BuildPreferencesPage`.
+  - `Assets/PlayForge/Editor/Settings/PlayForgePreferences.cs:68` `UseDefaults`.
+- **Watch for:** a `ScriptableSingleton` saves only when told to, so the page saves after each edit and an Undo handler
+  saves after each Undo.
+- **Tests:** `ED_21_A_shared_setting_belongs_to_the_project`, `ED_21_A_project_takes_the_settings_it_kept_in_EditorPrefs`,
+  `ED_21_The_Project_Settings_page_edits_the_shared_settings` and `ED_21_The_Preferences_page_edits_each_users_toggles` in
+  `PlayForgeSettingsTests`.
+
+### One validator, the Problems view and the header's count (ED-15)
+
+From Q8: one validator feeds a Problems view and the badges. `ForgeValidator` runs each `ForgeValidationRule` it finds,
+PlayForge's and a project's own, on every PlayForge asset, in the inspector's own words, so the view, the header's
+count and the inspector agree. It follows the project with no polling, and `LogAll` writes the problems to the Console
+in batch mode. Validate All checked four things and showed 15 problems in a dialog; the Audit wrote to the Console.
+
+- **IDs:** ED-15, commit `4dffd79`.
+- **Read:**
+  - `Assets/PlayForge/Editor/Problems/ForgeValidator.cs:22`, the rules from `TypeCache`, `:41` `Check`, and `:136`
+    `OnChanges`, which checks an edited asset again.
+  - `Assets/PlayForge/Editor/Problems/ForgeRules.cs:118` `MagnitudeRule` and `:185` `AttributeSetRule`, which shares its
+    sentences with the element drawer's help box.
+  - `Assets/PlayForge/Editor/UI/Kit/ForgeAssetHeader.cs:59` `ShowProblems`, the header's count.
+- **Tests:** `ED_15_The_validator_finds_what_the_inspectors_warn_about`, `ED_15_An_edit_checks_its_asset_again`,
+  `ED_15_The_Problems_view_lists_each_problem_and_selects_its_asset` and `ED_15_An_inspectors_header_counts_its_problems`
+  in `ProblemsTests`.
+
+### The Forge is a list and a detail (ED-27, ED-9)
+
+From Q5, Q6, Q7, Q24, Q29 and Q30. One window in place of four tabs and the Visualizer: a toolbar with Create, a filter
+for each type, Tags, the search and the problem count; a virtualized list of the project's PlayForge assets beside a
+detail pane that holds the asset's own inspector under a summary of its sections; and a status bar. A click selects a
+row and shows its asset, where a typed table acted only on a double click (ED-27); the summary covers every type, where
+the Visualizer was blank for items and sets, and the window keeps its selection across a reload (ED-9). It follows the
+project with no Refresh. Create makes an asset through the one factory a field's New uses (Q20).
+
+- **IDs:** ED-27 and ED-9, commit `59f5ae9`.
+- **Read:**
+  - `Assets/PlayForge/Editor/CustomPropertyDrawers/Forge/Editors/Manager/TheForge.cs:184` `CreateGUI`, `:403` `Refill`,
+    `:468` `ShowDetail` and `:503` `FillSummary`, which reads the inspector's `Sections`.
+  - `:660` `Sorted`, the natural order (ED-7), and `:140` `QueueReload`, which follows the project on the editor's next
+    update, as an import (`TheForgeImports`, `:698`), an asset made or destroyed, or `projectChanged` asks.
+  - `Assets/PlayForge/Editor/CustomPropertyDrawers/Forge/Util/ForgeAssetCreation.cs:49` `CreateNew`.
+- **Watch for:** the power scores stay hidden until items and entities score too (Q7); their code is in git history
+  before `59f5ae9`.
+- **Tests:** `ED_27_One_click_selects_a_row_and_shows_its_asset`, `ED_27_The_list_follows_the_project` and
+  `ED_9_The_summary_shows_each_type_and_the_selection_is_kept` in `TheForgeTests`.
+
+### Templates work as prefabs do (ED-13)
+
+From Q23. A template's changes reach its children when it's pushed, with its asset menu's Push to Its Children, as
+one Undo step; each child keeps the fields it overrides. An edit to a child's field records the override as it's made,
+and the inspector marks it with Unity's prefab override bar; Revert to Template takes it back. Saving a template opened
+a dialog mid-save, loaded every asset of its type and changed the children with no Undo.
+
+- **IDs:** ED-13, commit `6733220`.
+- **Read:**
+  - `Assets/PlayForge/Editor/Tools/ForgeTemplatePropogation/ForgeTemplatePush.cs:37` `PushToChildren`, `:117`
+    `MarkOverrides` and `:230` `OverridePathOf`.
+  - `:193` `OnUndoRedo`, which takes a mark back with the Undo of the step it was made in, and makes it again on Redo.
+  - `Assets/PlayForge/Editor/CustomPropertyDrawers/Forge/Editors/BasePlayForgeEditor.cs:181` `ShowOverrides`.
+- **Watch for:**
+  - Unity hands over an edit's modifications as it flushes undo records, at the end of a frame, so a push flushes first,
+    and a revert writes without a modification of its own.
+  - The mark can't join the edit's own Undo record. Unity's Undo takes back what a `postprocessModifications` hook adds
+    but never makes it again on Redo, and drops a record the hook starts. So the marks are remembered by Undo step, in
+    `SessionState`.
+- **Tests:** `ED_13_Saving_a_template_changes_no_child`, `ED_13_Push_to_Children_keeps_each_childs_overrides`,
+  `ED_13_One_Undo_takes_back_an_edit_and_its_override` and `ED_13_A_childs_inspector_marks_its_overrides` in
+  `TemplatePushTests`; and the smoke suite's `Every_edit_in_an_inspector_undoes`, which sweeps the Demo assets that
+  are template children.
 
 ## Phase 3
 
@@ -1918,8 +2003,8 @@ Markdown, and only on a click (Asset Store rule 2.5.1.d). Six reference pages ar
 - **Read:**
   - `Assets/PlayForge/Editor/CustomPropertyDrawers/Forge/Util/ForgeDocs.cs:82` `ForgeDocs.Open`, with the `Topics`
     table at `:17` and `DocumentationFolder` at `:91`, which finds the folder in a package or under `Assets`.
-  - `Assets/PlayForge/Editor/CustomPropertyDrawers/Forge/Editors/BasePlayForgeEditor.cs:147`
-    `BasePlayForgeEditor.GetDocumentationTopic`, read by `CreateEditorHeader` at `:395`.
+  - `Assets/PlayForge/Editor/CustomPropertyDrawers/Forge/Editors/BasePlayForgeEditor.cs:148`
+    `BasePlayForgeEditor.GetDocumentationTopic`, read by `CreateEditorHeader` at `:448`.
   - `Assets/PlayForge/Editor/CustomPropertyDrawers/Forge/Util/ForgeDrawerStyles.cs:419` `SectionConfig.HelpTopic`.
 - **New:** `ForgeDocs`; `Documentation/ABILITIES.md`, `EFFECTS.md`, `ITEMS.md`, `ENTITIES.md`, `ATTRIBUTES.md`,
   `ATTRIBUTE_SETS.md`.
@@ -1936,7 +2021,7 @@ deleted for good, without looking.
 - **Read:**
   - `Assets/PlayForge/Editor/CustomPropertyDrawers/Forge/Util/ForgeAssetDeletion.cs:25`
     `ForgeAssetDeletion.MoveToTrash`, and `FindUsers` (`:43`). Tests answer the question through `Confirm` (`:21`).
-  - Callers: `Assets/PlayForge/Editor/CustomPropertyDrawers/Forge/Editors/Manager/TheForge.ViewTab.cs:2541` and
+  - Callers: The Forge's Move to Trash, `Assets/PlayForge/Editor/CustomPropertyDrawers/Forge/Editors/Manager/TheForge.cs:610`, and
     `Assets/PlayForge/Editor/CustomPropertyDrawers/Forge/Editors/Windows/AssetBrowserWindow.cs:275`
     `AssetAction.Delete`.
 - **New:** `ForgeAssetDeletion`.
@@ -1949,10 +2034,10 @@ records the name and the tag it gives in one undoable step. Item and Effect prev
 
 - **IDs:** ED-12 (its Phase 2 part; the row stays open for Phase 4's Undo, multi-editing and prefab overrides).
 - **Read:**
-  - `Assets/PlayForge/Editor/CustomPropertyDrawers/Forge/Editors/BasePlayForgeEditor.cs:490`
-    `BasePlayForgeEditor.ShowAssetTag`, and `StoreAssetTag` (`:679`).
-  - `Assets/PlayForge/Editor/CustomPropertyDrawers/Forge/Editors/Assets/AbilityEditor.cs:158`, the rename callback,
-    and `SyncAssetTag` (`:610`). The other four editors follow the same shape.
+  - `Assets/PlayForge/Editor/CustomPropertyDrawers/Forge/Editors/BasePlayForgeEditor.cs:552`
+    `BasePlayForgeEditor.ShowAssetTag`, and `StoreAssetTag` (`:741`).
+  - `Assets/PlayForge/Editor/CustomPropertyDrawers/Forge/Editors/Assets/AbilityEditor.cs:157`, the rename callback,
+    and `SyncAssetTag` (`:609`). The other four editors follow the same shape.
 - **New:** `BasePlayForgeEditor.ShowAssetTag` and `StoreAssetTag`, and a `SyncAssetTag` in each asset editor.
 
 ### One pair of tag display settings
@@ -1963,12 +2048,12 @@ showed grouping off while the field defaulted it on, and the View tab had switch
 
 - **IDs:** ED-25.
 - **Read:**
-  - `Assets/PlayForge/Editor/CustomPropertyDrawers/Forge/Editors/Manager/TheForge.SettingsTab.cs:1883`
+  - `Assets/PlayForge/Editor/Settings/PlayForgePreferences.cs:79`
     `TagDisplaySettings`.
   - `Assets/PlayForge/Editor/CustomPropertyDrawers/Forge/Drawers/Tag/TagDrawer.cs:179` `TagDrawer.GetDisplayText`.
-  - `Assets/PlayForge/Editor/CustomPropertyDrawers/Forge/Editors/Manager/TheForge.ViewTab.cs:1625`, the View tab's
-    chips.
-- **New:** `TagDisplaySettings` (internal, in `TheForge.SettingsTab.cs`).
+  - `Assets/PlayForge/Editor/CustomPropertyDrawers/Forge/Editors/Manager/TheForge.cs:648` `TagText`, which The Forge's
+    tag list reads.
+- **New:** `TagDisplaySettings` (internal, now in `PlayForgePreferences.cs`).
 
 ### Menu and window titles (Decision 18)
 
@@ -1977,8 +2062,8 @@ title matches its menu item: The Forge (it said "PlayForge Manager"), GAS Debugg
 Golden Tests left the menu; the Test Runner runs the scenarios (SP-18).
 
 - **IDs:** ED-19, Decision 18 (Q31, Q32).
-- **Read:** `Assets/PlayForge/Editor/CustomPropertyDrawers/Forge/Editors/Manager/TheForge.cs:91`
-  `TheForge.ShowWindow`, with `WINDOW_TITLE` at `:30`. The other menu items are
+- **Read:** `Assets/PlayForge/Editor/CustomPropertyDrawers/Forge/Editors/Manager/TheForge.cs:64`
+  `TheForge.ShowWindow`, with `WindowTitle` at `:25`. The other menu items are
   `Assets/PlayForge/Editor/CustomPropertyDrawers/Forge/Editors/GASDebugger.cs:131`,
   `Assets/PlayForge/Editor/Tools/ProcessControlDebugger.cs:52` and `Assets/PlayForge/Editor/Tools/RuntimeTagViewer.cs:20`.
 
@@ -1988,24 +2073,26 @@ Golden Tests left the menu; the Test Runner runs the scenarios (SP-18).
   inverted. Phase 4 removed both delays, with the sticky header they timed (ED-11). Reset All resets every setting The
   Forge writes, keeps templates, and rebuilds the tab it was pressed on; it went to Analysis. "Auto-refresh on window
   focus" works: focus refreshes after the project has changed. Nothing read it.
-  `Assets/PlayForge/Editor/CustomPropertyDrawers/Forge/Editors/Manager/TheForge.SettingsTab.cs:1712`
-  `ResetAllSettings`, and `Assets/PlayForge/Editor/CustomPropertyDrawers/Forge/Editors/Manager/TheForge.cs:194`
-  `TheForge.OnFocus`.
+  Phase 4 replaced Reset All with Use Defaults on the Preferences page,
+  `Assets/PlayForge/Editor/Settings/PlayForgePreferences.cs:68` `UseDefaults` (ED-21), and the focus refresh with a
+  window that follows the project, `Assets/PlayForge/Editor/CustomPropertyDrawers/Forge/Editors/Manager/TheForge.cs:140`
+  `QueueReload` (ED-27).
 - **ED-7.** Columns sort in natural order, so 9 comes before 10.
-  `Assets/PlayForge/Editor/CustomPropertyDrawers/Forge/Editors/Manager/TheForge.ViewTab.cs:647` `SortAssets`.
+  `Assets/PlayForge/Editor/CustomPropertyDrawers/Forge/Editors/Manager/TheForge.cs:660` `Sorted`, which The Forge's list
+  uses.
 - **ED-10.** Analysis offers only the groups that have an analyser (Effects and Abilities), and a capped list ends with
-  "…and N more". `Assets/PlayForge/Editor/CustomPropertyDrawers/Forge/Editors/Manager/TheForge.AnalysisTab.cs:355`
-  `BuildAnalysisTab`, and `:733` `CreateMoreLabel`.
+  "…and N more". ED-27 took the Analysis tab out until items and entities score too (Q7); its `BuildAnalysisTab` and
+  `CreateMoreLabel` are in `TheForge.AnalysisTab.cs` as of `4dffd79`.
 - **ED-22.** `TemplateRegistry` kept one EditorPrefs entry for every project on the machine, and `Save` drops the
   templates whose assets the current project lacks, so saving in one project wiped every other's. Each project now
   has its own key, from `PlayerSettings.productGUID`. The first load migrates from the shared key and leaves it alone.
-  `Assets/PlayForge/Editor/CustomPropertyDrawers/Forge/Editors/Manager/TemplateRegistry.cs:114` `PrefsKey`, and
-  `:139` `Load`.
+  ED-21 moved the templates into the project's settings, which take a project's EditorPrefs entry once:
+  `Assets/PlayForge/Editor/Settings/PlayForgeSettings.cs:279` `TakeMachineSettings`.
 
 ### Inspector fixes
 
 - **ED-23.** An Item's Local Data can be edited; `ItemEditor` drew no section for it.
-  `Assets/PlayForge/Editor/CustomPropertyDrawers/Forge/Editors/Assets/ItemEditor.cs:383` `BuildLocalDataSection`.
+  `Assets/PlayForge/Editor/CustomPropertyDrawers/Forge/Editors/Assets/ItemEditor.cs:382` `BuildLocalDataSection`.
 - **ED-24.** `ParticipateInSiblingCascade` is drawn; it was hidden and drawn nowhere, though ProcessControl reads it.
   `Assets/PlayForge/Editor/CustomPropertyDrawers/Forge/Editors/AbstractMonoProcessEditor.cs:87`, in
   `CreateInspectorGUI`.
@@ -2013,7 +2100,7 @@ Golden Tests left the menu; the Test Runner runs the scenarios (SP-18).
   stacked when it reopened. `Assets/PlayForge/Editor/CustomPropertyDrawers/Forge/Editors/GASDebugger.cs:146`
   `OnDisable`, and `:315` `RemoveFrameSummaryHooks`.
 - **ED-29.** Allow Duplicate Equipped Items opens with its own value.
-  `Assets/PlayForge/Editor/CustomPropertyDrawers/Forge/Editors/Assets/EntityIdentityEditor.cs:438`, in
+  `Assets/PlayForge/Editor/CustomPropertyDrawers/Forge/Editors/Assets/EntityIdentityEditor.cs:437`, in
   `BuildItemsSection`.
 - **ED-30.** Local Data's ScriptableObject and MonoBehaviour rows each bind their own field.
   `Assets/PlayForge/Editor/CustomPropertyDrawers/Forge/Drawers/Other/DataWrapperDrawer.cs:128`, in `UpdateValueField`.
@@ -2145,35 +2232,39 @@ Newest first. Each row is a good place to start reading.
 
 | What | IDs | Where | Commit |
 |---|---|---|---|
+| Templates work as prefabs do | ED-13 | `Assets/PlayForge/Editor/Tools/ForgeTemplatePropogation/ForgeTemplatePush.cs:37` | `6733220` |
+| The Forge is a list and a detail | ED-27, ED-9 | `Assets/PlayForge/Editor/CustomPropertyDrawers/Forge/Editors/Manager/TheForge.cs:403` | `59f5ae9` |
+| One validator and the Problems view | ED-15 | `Assets/PlayForge/Editor/Problems/ForgeValidator.cs:41` | `4dffd79` |
+| Settings belong to the project | ED-21 | `Assets/PlayForge/Editor/Settings/PlayForgeSettings.cs:96` | `90a711b` |
 | Every asset inspector edits a multiple selection | ED-12 | `Assets/PlayForge/Editor/CustomPropertyDrawers/Forge/Util/EachAsset.cs:17` | `fc92e9d` |
 | The scaler field reads as the scaler board | ED-32, ED-33 | `Assets/PlayForge/Editor/CustomPropertyDrawers/Forge/Drawers/Scaler/MagnitudeField.cs:51` | `4cc9be9` |
 | Scaler assets, and levels that map exactly | ED-33 | `Assets/PlayForge/Runtime/PlayForge/GameplayEffect/Modifier/Default/Authored/SharedScaler.cs:33` | `e44d1ed` |
 | One Import window | ED-32, ED-35 | `Assets/PlayForge/Editor/CustomPropertyDrawers/Forge/Editors/Windows/ForgeImportWindow.cs:60` | `c300449` |
-| The Effect inspector follows the style doc, with the requirements table | ED-37 | `Assets/PlayForge/Editor/CustomPropertyDrawers/Forge/Editors/Assets/EffectEditor.cs:94` | `6090980` |
+| The Effect inspector follows the style doc, with the requirements table | ED-37 | `Assets/PlayForge/Editor/CustomPropertyDrawers/Forge/Editors/Assets/EffectEditor.cs:93` | `6090980` |
 | An effect makes more than one impact, each with its own delivery | ED-2, ED-3 | `Assets/PlayForge/Runtime/PlayForge/GameplayEffect/Core/Definition/GameplayEffectImpact.cs:46` | `ccb4981` |
-| The Ability inspector follows the style doc | ED-37 | `Assets/PlayForge/Editor/CustomPropertyDrawers/Forge/Editors/Assets/AbilityEditor.cs:328` | `031c2d4` |
+| The Ability inspector follows the style doc | ED-37 | `Assets/PlayForge/Editor/CustomPropertyDrawers/Forge/Editors/Assets/AbilityEditor.cs:327` | `031c2d4` |
 | Opening an attribute set writes nothing | ED-39 | `Assets/PlayForge/Editor/CustomPropertyDrawers/Forge/Drawers/Assets/Attribute/AttributeSetElementDrawer.cs:159` | `22824ac` |
 | Every asset reference is Unity's object field | ED-38 | `Assets/PlayForge/Editor/CustomPropertyDrawers/Forge/Drawers/Base/AbstractForgeObjectDrawer.cs:20` | `3cfa570` |
 | An empty set element gives nothing; Use Minimum takes the lowest | GAS-54, GAS-55 | `Assets/PlayForge/Runtime/PlayForge/AttributeSystem/Attribute/AttributeSet.cs:374` | `c59f86a` |
 | The Attribute Set inspector shows what it gives | ED-37 | `Assets/PlayForge/Editor/UI/Kit/ForgeAttributeTable.cs:43` | `86ead05` |
-| The Entity inspector follows the style doc | ED-37 | `Assets/PlayForge/Editor/CustomPropertyDrawers/Forge/Editors/Assets/EntityIdentityEditor.cs:104` | `a06a4fb` |
-| The Item inspector follows the style doc | ED-37 | `Assets/PlayForge/Editor/CustomPropertyDrawers/Forge/Editors/Assets/ItemEditor.cs:94` | `cf70e8f` |
+| The Entity inspector follows the style doc | ED-37 | `Assets/PlayForge/Editor/CustomPropertyDrawers/Forge/Editors/Assets/EntityIdentityEditor.cs:103` | `a06a4fb` |
+| The Item inspector follows the style doc | ED-37 | `Assets/PlayForge/Editor/CustomPropertyDrawers/Forge/Editors/Assets/ItemEditor.cs:93` | `cf70e8f` |
 | The Attribute inspector lists what uses it | ED-15 | `Assets/PlayForge/Editor/UI/Kit/ForgeUsedBy.cs:38` | `ed6295a` |
-| The asset header stays at the top | ED-36, Decision 29 | `Assets/PlayForge/Editor/UI/Kit/ForgeAssetHeader.cs:104` | `d851e30` |
+| The asset header stays at the top | ED-36, Decision 29 | `Assets/PlayForge/Editor/UI/Kit/ForgeAssetHeader.cs:132` | `d851e30` |
 | The editor shows no emoji | ED-20 | `Assets/PlayForge/Editor/UI/Kit/ForgeGlyph.cs:136` | `6c0c3fe` |
 | One style sheet and a kit of controls | ED-20, Decision 20 | `Assets/PlayForge/Editor/UI/PlayForge.uss:8` | `f5832df` |
 | A drawer keeps its collapse state per asset | ED-18 | `Assets/PlayForge/Editor/CustomPropertyDrawers/Forge/Util/DrawerCollapseState.cs:48` | `1ae0833` |
-| The inspector keeps no scroll view of its own | ED-11 | `Assets/PlayForge/Editor/CustomPropertyDrawers/Forge/Editors/BasePlayForgeEditor.cs:331` | `88d0f3f` |
-| An inspector listens to the editor only while a picker is open | ED-11 | `Assets/PlayForge/Editor/CustomPropertyDrawers/Forge/Editors/BasePlayForgeEditor.cs:87` | `850f8fb` |
+| The inspector keeps no scroll view of its own | ED-11 | `Assets/PlayForge/Editor/CustomPropertyDrawers/Forge/Editors/BasePlayForgeEditor.cs:355` | `88d0f3f` |
+| An inspector listens to the editor only while a picker is open | ED-11 | `Assets/PlayForge/Editor/CustomPropertyDrawers/Forge/Editors/BasePlayForgeEditor.cs:88` | `850f8fb` |
 | The Impact and Effect drawers follow what they show | ED-11 | `Assets/PlayForge/Editor/CustomPropertyDrawers/Forge/Drawers/Assets/Effect/GameplayEffectImpactDrawer.cs:144` | `c5d5480` |
-| The Item and Ability inspectors edit a multiple selection | ED-12 | `Assets/PlayForge/Editor/CustomPropertyDrawers/Forge/Editors/BasePlayForgeEditor.cs:228` | `1a203c1` |
+| The Item and Ability inspectors edit a multiple selection | ED-12 | `Assets/PlayForge/Editor/CustomPropertyDrawers/Forge/Editors/BasePlayForgeEditor.cs:251` | `1a203c1` |
 | A type field's drawer writes nothing while drawing | ED-12 | `Assets/PlayForge/Editor/CustomPropertyDrawers/Forge/Drawers/Base/AbstractTypeRefDrawer.cs:123` | `5134867` |
 | A rebuilt drawer edits every selected asset | ED-12 | `Assets/PlayForge/Editor/CustomPropertyDrawers/Forge/Drawers/Tag/TagRequirementDrawers.cs:88` | `96b4ba6` |
-| Each unlink question counts the children it would change | ED-31 | `Assets/PlayForge/Editor/CustomPropertyDrawers/Forge/Editors/Assets/EffectEditor.cs:268` | `523f57d` |
-| Link, Unlink and template assignment undo | ED-12 | `Assets/PlayForge/Editor/CustomPropertyDrawers/Forge/Editors/BasePlayForgeEditor.cs:216` | `097384f` |
+| Each unlink question counts the children it would change | ED-31 | `Assets/PlayForge/Editor/CustomPropertyDrawers/Forge/Editors/Assets/EffectEditor.cs:267` | `523f57d` |
+| Link, Unlink and template assignment undo | ED-12 | `Assets/PlayForge/Editor/CustomPropertyDrawers/Forge/Editors/BasePlayForgeEditor.cs:239` | `097384f` |
 | Opening a scaler writes nothing | ED-34, Decision 28 | `Assets/PlayForge/Editor/CustomPropertyDrawers/Forge/Drawers/Scaler/ScalerFields.cs:232` | `7cc83c0` |
-| Every asset inspector's own fields undo | ED-12 | `Assets/PlayForge/Editor/CustomPropertyDrawers/Forge/Editors/BasePlayForgeEditor.cs:205` | `62ed48e` |
-| The Attribute inspector undoes every edit and edits a multiple selection | ED-12 | `Assets/PlayForge/Editor/CustomPropertyDrawers/Forge/Editors/Assets/AttributeEditor.cs:140` | `e1d1dd0` |
+| Every asset inspector's own fields undo | ED-12 | `Assets/PlayForge/Editor/CustomPropertyDrawers/Forge/Editors/BasePlayForgeEditor.cs:228` | `62ed48e` |
+| The Attribute inspector undoes every edit and edits a multiple selection | ED-12 | `Assets/PlayForge/Editor/CustomPropertyDrawers/Forge/Editors/Assets/AttributeEditor.cs:139` | `e1d1dd0` |
 | A task waiting in a delay allocates nothing a frame | TS-11 | `Assets/PlayForge/Runtime/PlayForge/Core/TaskSequence/Async/TaskSequenceRuntime.cs:55` | `ec008f7` |
 | A frame whose summary has a listener allocates nothing | GAS-P10, Decision 26 | `Assets/PlayForge/Runtime/PlayForge/Workers/Core/FrameSummary.cs:347` | `11a0f66` |
 | Interrupting every running ability ends each | GAS-53 | `Assets/PlayForge/Runtime/PlayForge/AbilitySystem/Core/AbilitySystemComponent.cs:435` | `473ea8e` |
@@ -2193,7 +2284,7 @@ Newest first. Each row is a good place to start reading.
 | Help buttons open the package's own docs through one table | ED-16, Decision 18 | `Assets/PlayForge/Editor/CustomPropertyDrawers/Forge/Util/ForgeDocs.cs:82` | `67db441` |
 | Demo Lit draws the Demos under URP and Built-in | SP-23, Decision 17 | `Assets/PlayForge/Samples~/Demos/Demo/Shaders/DemoLit.shader:42` | `954a11a` |
 | Statics clear at the start of a play session | SP-22, PC-26 | `Assets/PlayForge/Runtime/PlayForge/Utils/AttributeRegistry.cs:14` | `86e9e11` |
-| Showing an asset never writes its tag; a rename is one Undo | ED-12 | `Assets/PlayForge/Editor/CustomPropertyDrawers/Forge/Editors/BasePlayForgeEditor.cs:490` | `4d71636` |
+| Showing an asset never writes its tag; a rename is one Undo | ED-12 | `Assets/PlayForge/Editor/CustomPropertyDrawers/Forge/Editors/BasePlayForgeEditor.cs:552` | `4d71636` |
 | Delete names what uses the asset and moves it to the trash | ED-8 | `Assets/PlayForge/Editor/CustomPropertyDrawers/Forge/Util/ForgeAssetDeletion.cs:25` | `e89a9f7` |
 | The samples live in `Samples~` and import on request | SP-20, Decision 16 | `Assets/PlayForge/package.json:14` | `8d17bc0` |
 | A derived refresh runs the post-change pipeline | GAS-27, Decision 14 | `Assets/PlayForge/Runtime/PlayForge/AttributeSystem/Core/AttributeSystemComponent.cs:566` | `550d07b` |
