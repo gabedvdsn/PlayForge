@@ -1,7 +1,7 @@
 # PlayForge refactor: code tour
 
 This tour lists the places where the refactor changed code, so you can open each one in your IDE and read it. It
-covers `01258b8..c5e9cb8` on `main`: 358 commits. Phase 0 ported Arcade Fighter's fixes, Phase 1 made the runtime
+covers `01258b8..d88583a` on `main`: 360 commits. Phase 0 ported Arcade Fighter's fixes, Phase 1 made the runtime
 correct, Phase 2 got the package ready to release, Phase 3 made it cheaper to run and gave the two GAS hubs one core,
 Phase 4 rebuilt the editor, and Phase 5 has begun. Each entry says what behaves differently and why, names its tracker IDs and Decisions, and
 points at the two or three places to read. `Docs/REFACTOR_PLAN.md` has every tracker row, the numbered Decisions,
@@ -10,8 +10,8 @@ and a Log of each batch's test results.
 ## How to use this
 
 - Paths are relative to the repo root.
-- Line numbers are as of commit `c5e9cb8`, the head of `main` on 2026-11-05. A later commit may move them, so each
-  entry also names the class and method to search for. `git show c5e9cb8:<path>` shows a file as it was then.
+- Line numbers are as of commit `d88583a`, the head of `main` on 2026-11-05. A later commit may move them, so each
+  entry also names the class and method to search for. `git show d88583a:<path>` shows a file as it was then.
 - In Rider, Go to File accepts `path:line`. In Visual Studio, open the file, then Go To Line (Ctrl+G).
   A bare `:123` after a path means another line in the same file.
 - `git grep "<ID>"` finds the comment at each fix, and `git log --grep "<ID>"` finds its commit. Three exceptions:
@@ -162,8 +162,8 @@ so nothing changes by default, and the next tick with them on. A run comes out t
 
 - **IDs:** FEAT-7, commit `4058098`; Decision 30.
 - **Read:**
-  - `Assets/PlayForge/Runtime/PlayForge/Management/GameplayProcess/Core/ForgeTick.cs:89` `Next`, through pooled
-    completion sources, and `:117` `Advance`, which lets go the waits made before the tick.
+  - `Assets/PlayForge/Runtime/PlayForge/Management/GameplayProcess/Core/ForgeTick.cs:110` `Next`, through pooled
+    completion sources, and `:160` `Advance`, which lets go the waits made before the tick.
   - `Assets/PlayForge/Runtime/PlayForge/Management/GameplayProcess/Core/ProcessControl.cs:128` `FixedTickRate`, and
     `Assets/PlayForge/Runtime/PlayForge/Management/GameplayProcess/Core/ProcessWorld.cs:355` `RunTicks`, which
     `Assets/PlayForge/Runtime/PlayForge/Management/GameplayProcess/Core/ProcessControl.cs:166` `Update` runs, and `Assets/PlayForge/Runtime/PlayForge/Management/GameplayProcess/Core/ProcessWorld.cs:339` `TickClock`.
@@ -600,8 +600,8 @@ while it steps or moves a process, so a loop of its steps runs it through its ti
 
 - **IDs:** FEAT-10, commit `4a603ae`; Decision 30. The six steps are in the plan's Log.
 - **Read:**
-  - `Assets/PlayForge/Runtime/PlayForge/Management/GameplayProcess/Core/ForgeTick.cs:75` `ForgeTickSource`, a tick, and its `:117` `Advance`; `ForgeTick`'s `:28` `Scene` and `:31`
-    `Current`, which its statics read, and `:62` `Enter`, which puts a tick in force.
+  - `Assets/PlayForge/Runtime/PlayForge/Management/GameplayProcess/Core/ForgeTick.cs:96` `ForgeTickSource`, a tick, and its `:160` `Advance`; `ForgeTick`'s `:29` `Scene` and `:32`
+    `Current`, which its statics read, and `:83` `Enter`, which puts a tick in force.
   - `Assets/PlayForge/Runtime/PlayForge/Management/GameplayProcess/Core/ProcessWorld.cs:386` `ownTick`, `:390` `Tick`, `:396` `WorldClock` and `:431` `Step`, by a time its owner
     gives; `:1146` `ProcessWillChangeState`, which puts the world's tick in force as a process moves.
 - **Watch for:** a wait at FixedUpdate's timing is still Unity's. An ability activated between steps starts its
@@ -625,6 +625,21 @@ its own plays out within one frame of its owner's steps.
 - **Watch for:** a blow lands at its target's end of frame, so two lethal blows in one step both land. A process no world
   holds takes the scene's.
 - **Tests:** `FEAT_10_A_duel_in_a_world_of_its_own_ends_within_one_frame` in PlayMode's `ProcessWorldTests`.
+
+### Waits that ask once a tick (FEAT-10, step 5)
+
+A sequence's conditional waits asked Unity's loop once a frame, so a world of its own stepped in a loop never saw what
+they waited for change. They ask once a tick where the tick in force ticks, and are UniTask's own waits where it
+doesn't, so a scene without ticks waits as it did.
+
+- **IDs:** FEAT-10, commit `d88583a`; Decision 30. The six steps are in the plan's Log.
+- **Read:**
+  - `Assets/PlayForge/Runtime/PlayForge/Management/GameplayProcess/Core/ForgeTick.cs:61` `WaitWhile`, the facade's, and the tick's own at `:141` `WaitWhile`, with `:149`
+    `TicksAt` and `:154` `Asked`, which asks once a tick on the tick in force as the wait began.
+  - `Assets/PlayForge/Runtime/PlayForge/Core/TaskSequence/Async/TaskSequenceRuntime.cs:193`, the pause hold, and
+    `Assets/PlayForge/Runtime/PlayForge/Core/TaskSequence/Async/TaskSequenceBuilder.cs:332` `DelayUntil`, among the waits that go through it.
+- **Watch for:** the physics step's timings and the animator wait stay on Unity's loop.
+- **Tests:** the two step-5 `FEAT_10_*` tests in PlayMode's `ProcessWorldTests`.
 
 ## Phase 4
 
@@ -2934,8 +2949,9 @@ Newest first. Each row is a good place to start reading.
 
 | What | IDs | Where | Commit |
 |---|---|---|---|
+| Waits that ask once a tick | FEAT-10 | `Assets/PlayForge/Runtime/PlayForge/Management/GameplayProcess/Core/ForgeTick.cs:141` | `d88583a` |
 | Abilities in their caster's world | FEAT-10 | `Assets/PlayForge/Runtime/PlayForge/Management/GameplayProcess/Core/ProcessWorld.cs:33` | `c5e9cb8` |
-| A world's own time | FEAT-10 | `Assets/PlayForge/Runtime/PlayForge/Management/GameplayProcess/Core/ForgeTick.cs:75` | `4a603ae` |
+| A world's own time | FEAT-10 | `Assets/PlayForge/Runtime/PlayForge/Management/GameplayProcess/Core/ForgeTick.cs:96` | `4a603ae` |
 | The plain world | FEAT-10 | `Assets/PlayForge/Runtime/PlayForge/Management/GameplayProcess/Core/ProcessWorld.cs:14` | `1eb436a` |
 | A process's own control | FEAT-10 | `Assets/PlayForge/Runtime/PlayForge/Management/GameplayProcess/Core/ProcessControlBlock.cs:133` | `40f257e` |
 | Clear's defaults | ED-42 | `Assets/PlayForge/Editor/CustomPropertyDrawers/Forge/Editors/Windows/SectionClearUtility.cs:22` | `4d110da` |
