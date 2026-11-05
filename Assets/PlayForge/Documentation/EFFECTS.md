@@ -127,11 +127,10 @@ duration gives it. Additional Impacts change more attributes, or the same one ag
   after the attribute's multipliers, so they don't scale it.
 - **Multiply Behaviour** (Multiply only): Multiplicative (default) compounds with other multipliers, so ×1.5 and ×1.5
   give ×2.25. Additive Bonus adds the bonuses first, so +50% and +50% give ×2.0.
-- **Magnitude**: the amount, with **Real Magnitude**, how Magnitude and the scaler combine, and an optional
-  **Scaler**, such as a per-level table read at the origin's level. Add Scaler (default) adds them, Multiply With
-  Scaler multiplies them, Use Magnitude ignores the scaler, and Use Scaler ignores Magnitude. With no scaler, the
-  scaler counts as 0. A Continuous modifier works its magnitude out again whenever the attribute is recalculated. A
-  commit works it out once.
+- **Magnitude**: the amount: a Constant number, or by its kind a scaler's value at the origin's level, such as a By
+  Level table of values per level, with Combine joining the scaler and the number ([SCALERS.md](SCALERS.md)). A
+  Continuous modifier works its magnitude out again whenever the attribute is recalculated. A commit works it out
+  once.
 - **Delivery**, read-only: when the impact lands, which the duration gives it (see the table above). On applying,
   While the effect lasts, or Each tick, which adds ", and on applying" when Tick On Application is on. A note says when
   Tick On Application alone keeps a multiply or override as a modifier, so it reverses as the effect ends.

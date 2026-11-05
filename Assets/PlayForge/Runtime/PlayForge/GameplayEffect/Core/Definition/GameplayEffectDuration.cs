@@ -20,7 +20,7 @@ namespace FarEmerald.PlayForge
         // Duration
         // ═══════════════════════════════════════════════════════════════════════════
 
-        [ScalerOperationKeyword("Duration")]
+        [ScalerOperationKeyword("Duration", Unit = "s")]
         public ScalerMagnitudeOperation DurationOperation;
 
         public EMagnitudeOperation RealDeltaTime = EMagnitudeOperation.AddScaler;
@@ -42,7 +42,7 @@ namespace FarEmerald.PlayForge
         [ScalerOperationKeyword("Ticks")]
         public ScalerIntegerMagnitudeOperation TicksOperation;
         
-        [ScalerOperationKeyword("Tick Interval")]
+        [ScalerOperationKeyword("Tick Interval", Unit = "s")]
         public ScalerMagnitudeOperation TickIntervalOperation;
 
         // ═══════════════════════════════════════════════════════════════════════════

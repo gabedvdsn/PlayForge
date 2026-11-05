@@ -9,8 +9,8 @@ tracks each fix below by its ID.
 ### Added
 - Scaler assets: a scaler that many fields share. A field of the Shared kind reads its asset's scaler, so an edit to
   the asset reaches every field that uses it, and the field's own number adjusts what it reads, as in Fire Duration
-  × 1.5. The Scaler Template asset is the Scaler asset now, without the sync settings nothing read. `SCALERS.md`
-  describes scalers (ED-33).
+  × 1.5. The Scaler Template asset is the Scaler asset now, without the sync settings nothing read. An attribute set's
+  elements share one through the cached Shared kind. `SCALERS.md` describes scalers (ED-33).
 - An effect can make more than one impact. Its Additional Impacts each change an attribute with an operation, magnitude
   and delivery of their own, so one effect can lower Armor while it lasts and burn Health on each tick. Add Impact adds
   one the duration can make, and the Cost rule checks each attribute a cost spends (ED-3).
@@ -18,6 +18,13 @@ tracks each fix below by its ID.
   page, through one table of links in the editor.
 
 ### Changed
+- A magnitude field reads as the canvas's scaler board draws it: its name and kind (Constant, By Level, Shared or
+  another), the range it gives, as "6–8 s", and a field menu with Save as Scaler Asset, Use a Scaler Asset, Import
+  Values, Quick Fill and Make Constant. A By Level field's values sit in a table, ten levels to a row, with a read-only
+  curve beside them, and Combine says how the field joins its number with its scaler. A Scaler asset's inspector lists
+  the fields that share it (ED-33).
+- Import Values compares a Scaler asset's or another field's values with a field's, level by level, before it copies
+  them. It replaces the scaler import window and the curve editor (ED-32).
 - A scaler you make maps levels exactly: level 4 reads its 4th value, and a level past the end reads the last. Its new
   Stretch Over Levels spreads the values over a level range, as every scaler did, and the scalers saved before it keep
   it on, so they read as they did (Decision 28).

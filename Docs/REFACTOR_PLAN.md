@@ -546,8 +546,8 @@ had no letter in the review. TS-AA onward came from the test project.
 | ED-29 | L | 2 | The Entity inspector's Allow Duplicate Equipped Items toggle opens showing Allow Duplicate Items' value | `EntityIdentityEditor.cs:927` | verified |
 | ED-30 | M | 2 | Local Data's object rows edit each other's value: a ScriptableObject row binds the MonoBehaviour field and the other way round, so neither keeps what's assigned | `DataWrapperDrawer.cs:127-128` | verified |
 | ED-31 | L | 4 | The four unlink dialogs count with `IsLinkedTo(this)`, the editor rather than the asset, so they always say 0. Each now counts the children its unlink would change | `AbilityEditor.cs:840`, `EffectEditor.cs:279`, `EntityIdentityEditor.cs:301`, `ItemEditor.cs:311` | fixed |
-| ED-32 | H | 4 | Six import windows behave differently. Section import copies every field with no choice and Clear asks in a modal; the Effect's Duration and Impact sections couldn't import at all, since their Import button only logged a warning (they open the section window since ED-37); scaler import ignores the kinds a field allows and caches its list for 120 s. One Import window replaces them (Decision 28): choose a source, choose the fields, import as one Undo step. Fixed so far: `ForgeImportWindow` serves every section, a whole asset, worker groups and requirement groups, in place of five windows, and Clear asks nothing. Left: the scaler's import, with ED-33's Import Values | `ScalerDrawerWindows.cs:17-350` | open |
-| ED-33 | M | 4 | Scalers can't be shared. Every scaler is copied into its field, and the Scaler Template asset's link code has no callers, so reuse means copying and then propagating. Shared Scaler assets that fields reference replace it (Decision 28). Fixed so far: the Scaler Template is the Scaler asset, a field of the new Shared kind reads one, its link code is gone, and levels map exactly unless a scaler stretches. Left: the drawer's field menu (Save as Scaler Asset, Use a Scaler Asset, Import Values, Make Constant), its per-level table and curve preview, the asset's own inspector with Used By, and sharing for the cached kinds | `ScalerDrawer.cs`, `ScalerAsset.cs` | open |
+| ED-32 | H | 4 | Six import windows behave differently. Section import copies every field with no choice and Clear asks in a modal; the Effect's Duration and Impact sections couldn't import at all, since their Import button only logged a warning (they open the section window since ED-37); scaler import ignores the kinds a field allows and caches its list for 120 s. One Import window replaces them (Decision 28): choose a source, choose the fields, import as one Undo step. Fixed: `ForgeImportWindow` serves every section, a whole asset, worker groups and requirement groups, in place of five windows, and Clear asks nothing; a scaler's Import Values compares a Scaler asset's or another field's values with the field's before it copies them | `ForgeImportWindow.cs`, `ScalerWindows.cs` (`ScalerValuesWindow`) | fixed |
+| ED-33 | M | 4 | Scalers can't be shared. Every scaler is copied into its field, and the Scaler Template asset's link code has no callers, so reuse means copying and then propagating. Shared Scaler assets that fields reference replace it (Decision 28). Fixed: the Scaler Template is the Scaler asset, a field of the new Shared kind reads one (an attribute set's element through the cached Shared), its link code is gone, and levels map exactly unless a scaler stretches; a magnitude field reads as the canvas's scaler board draws it, with its field menu (Save as Scaler Asset, Use a Scaler Asset, Import Values, Quick Fill, Make Constant), its per-level table and curve, and the asset's own inspector lists the fields that share it | `MagnitudeField.cs`, `ScalerFields.cs`, `ScalerWindows.cs`, `ScalerAsset.cs` | fixed |
 | ED-34 | H | 4 | Opening a scaler writes to it while drawing. On an effect with no level link, Lock mode cuts its per-level table to one value; the other modes resize the table to Max Level, a Max Level of 0 or less becomes 10, and building the drawer clones a scaler that shares its reference id. Now nothing is written while drawing: a table keeps its length until the user changes it, and a shared scaler shows a warning with a button that makes a separate copy | `ScalerDrawer.cs:125-180, 285, 489-529` | fixed |
 | ED-36 | M | 4 | The asset header scrolls away with the content. It stays at the top of the inspector while the content scrolls under it (Decision 29), following the Inspector's scroll view by its events, so nothing polls (ED-11) | `BasePlayForgeEditor.cs` (`CreateInspectorGUI`), `ForgeAssetHeader.cs` (`StickTo`) | fixed |
 | ED-35 | M | 4 | Whole-asset import copies the template and level-link fields (`_template`, `_linkedSource`) and doesn't skip the nested `Definition.Name`. It copied each top-level field whole, so the asset tag came along in Tags too. The Import window's whole-asset import keeps the name, description, icons, asset tag, template and level link | `ForgeImportWindow.cs` (`KeepsOwn`) | fixed |
@@ -572,8 +572,8 @@ Phase 2 part, and set Phase 4's direction.
    Visualizer, with ED-9.
    The asset inspectors go one at a time, each following the style doc (ED-37): the Attribute, Item, Entity and
    Attribute Set inspectors first (done), then the reference fields (ED-38, done), the Ability inspector (done), then
-   the Effect inspector with ED-2 and ED-3 (done), then the Import window and shared scalers (ED-32, ED-33), which also
-   free ED-12's last part.
+   the Effect inspector with ED-2 and ED-3 (done), then the Import window and shared scalers (ED-32, ED-33, done),
+   which also free ED-12's last part.
 
 ### Samples and packaging
 
@@ -657,6 +657,46 @@ GAS-4 with GAS-5, PC-6, and TS-I with PC-5.
 ## Log
 
 Record baselines, gate results and notable decisions here, newest first.
+
+- 2026-11-04, **ED-33, part 2, and the last of ED-32: the scaler field.** The canvas's scaler board, in the editor.
+  ED-32 and ED-33 are fixed with it.
+  - **The magnitude field,** `MagnitudeField`, draws both magnitude operations: its name, its kind, its number or its
+    range, and its field menu. A Constant shows its number and unit, from `ScalerOperationKeyword`'s new `Unit` ("s" for
+    durations and tick intervals), and warns when it reads a scaler it hasn't got. A scaler's kind adds Combine (Real
+    Magnitude by what it does: Scaler, Scaler + Number, Scaler × Number, Number Only), Rounding for a whole-number
+    field, then the scaler's content. A kind change is one Undo step: a constant made By Level keeps its number as level
+    1's value, and a Shared field reads its asset times 1.
+  - **The scaler's content,** in `ScalerFields`: the values per level, ten to a row, with Levels; a read-only curve, the
+    kit's new `ForgeCurvePreview`, drawn in the style sheet's colors; Stretch Over Levels, with Level Range and Between
+    Levels while it's on (their choices are named Provider's Levels, Own Max Level and Clamped to Provider; Steps,
+    Straight Line and Smooth Curve); the kind's own fields; and its behaviours. A typed value writes the curve a
+    stretched scaler reads in the same Undo step, through `AbstractScaler`'s new `CurveFor`; binding's own change
+    events write nothing, as ED-39 found.
+  - **The field menu:** Save as Scaler Asset (a small window: a name, a folder, Save and Use), Use a Scaler Asset (the
+    project's Scaler assets that fit the field), Import Values, Quick Fill (the old wizard) and Make Constant, through the
+    new public `ScalerActions`.
+  - **Import Values,** `ScalerValuesWindow`: the Scaler assets and the other assets' fields with values per level; the
+    values level by level, with both curves, and which levels a shorter table's last value holds for; Copy Values as
+    one Undo step. With the field menu, it replaces `ScalerImportWindow` and the curve editor.
+  - **The Scaler asset's inspector,** `ScalerAssetEditor`: its name, kind and uses, its Description, its Values, and
+    Used By, a row for each field that shares it. A shared field says how many fields share its asset.
+  - **Attribute sets share too:** the new `SharedCachedScaler` reads a Scaler asset whose scaler is a cached kind.
+  - **The scaler drawer,** for a scaler drawn on its own, as an element's Scaling, takes the same kind and content. It
+    rebuilt itself on a copy of the first selected asset, one of ED-12's two left copies; it writes through the field's
+    own SerializedObject now, and a kind change gives each selected asset its own scaler. It keeps ED-34's note for a
+    scaler two list elements share. Its partial files, the import cache, the curve editor and the Quick Fill tabs are
+    gone.
+  - **Next:** ED-12's multi-edit in the Effect, Entity and Attribute Set inspectors, which this frees.
+  - **Docs:** `SCALERS.md` describes the field, its menu, the values and Scaler assets; `EFFECTS.md` and `ENTITIES.md`
+    point at it.
+  - **Its tests** were written with the redesign: `ED_33_A_magnitude_field_reads_as_the_scaler_board`,
+    `ED_33_A_fields_kind_changes_as_one_undo_step`, `ED_33_Save_as_Scaler_Asset_shares_the_fields_values` and
+    `ED_33_Import_Values_copies_a_scalers_values` in `ScalerDrawerTests`, and
+    `ED_33_An_attribute_set_element_shares_a_scaler` in `ScalerTests`. The ED-34 test finds the drawn tables, since a
+    scaler no longer folds, and the smoke suite opens Import Values and Save as Scaler Asset in place of the two old
+    windows.
+  - **Tests:** PlayMode 961: 954 pass, 0 fail and 7 planted are skipped, in three orders. Planted 7 of 7; EditMode
+    407 of 407.
 
 - 2026-11-04, **ED-33, part 1: Scaler assets, and exact levels.** Decision 28's scaler model, in the runtime first.
   - **Scaler assets:** `ScalerPipeline`, the Scaler Template, is `ScalerAsset` now (the file and its meta moved, so

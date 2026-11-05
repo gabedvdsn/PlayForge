@@ -73,8 +73,8 @@ unchanged.
   explains each.
 - **Starting Abilities**: abilities the entity learns when its GAS initializes, each at its own Starting Level. Those
   set to Activate At Start then try to activate.
-- **Max Abilities** (default 99), with **Real Max Abilities**, rounding and a scaler: the most abilities the entity can
-  hold. A scaler can change the limit with the entity's level.
+- **Max Abilities** (default 99): the most abilities the entity can hold. Its kind can make it a scaler, which changes
+  the limit with the entity's level ([SCALERS.md](SCALERS.md)).
 - **Allow Duplicates** (default off): let the entity hold the same ability more than once.
 
 ## Items
@@ -87,8 +87,8 @@ unchanged.
 - **Equipped Too** (default off): let more than one copy of the same item be equipped at once. It needs Allow
   Duplicates, since an inventory that holds one of each item has no second copy to equip.
 
-Each Max field has a **Real** field, rounding and a scaler, which can change the limit with the entity's level. A give
-or equip that breaks a limit fails.
+Each Max field is a number, or, by its kind, a scaler that changes the limit with the entity's level, with its rounding
+([SCALERS.md](SCALERS.md)). A give or equip that breaks a limit fails.
 
 ## Workers
 

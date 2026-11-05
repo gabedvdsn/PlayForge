@@ -117,14 +117,14 @@ namespace FarEmerald.PlayForge.Extended.Editor
         }
 
         // A file name from a display name: its letters and digits, the spaces dropped, as The Forge's Create does
-        private static string FileNameOf(string name)
+        internal static string FileNameOf(string name)
         {
             var file = Regex.Replace(name ?? "", @"\s+", "");
             foreach (var invalid in Path.GetInvalidFileNameChars()) file = file.Replace(invalid.ToString(), "");
             return string.IsNullOrEmpty(file) ? "Asset" : file;
         }
 
-        private static void EnsureFolder(string folder)
+        internal static void EnsureFolder(string folder)
         {
             if (AssetDatabase.IsValidFolder(folder)) return;
             var parent = Path.GetDirectoryName(folder)?.Replace('\\', '/');

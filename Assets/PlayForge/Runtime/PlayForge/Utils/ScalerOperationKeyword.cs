@@ -28,6 +28,9 @@ namespace FarEmerald.PlayForge
     public class ScalerOperationKeyword : System.Attribute
     {
         public string Keyword { get; }
+
+        /// <summary>The field's unit, as its range reads it, such as "s" in "6–8 s"; none when it has none.</summary>
+        public string Unit { get; set; }
         
         public ScalerOperationKeyword(string keyword)
         {

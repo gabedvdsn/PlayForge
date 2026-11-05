@@ -153,26 +153,31 @@ namespace FarEmerald.PlayForge
         /// <summary>
         /// Regenerates the AnimationCurve from LevelValues array.
         /// </summary>
-        public void RegenerateCurve()
+        public void RegenerateCurve() => Scaling = CurveFor(LevelValues, Interpolation);
+
+        /// <summary>
+        /// The curve a stretched scaler reads: its values spread from 0 to 1, joined as the interpolation says. The
+        /// drawer writes it through the asset's SerializedObject, so an edit and its curve are one Undo step.
+        /// </summary>
+        public static AnimationCurve CurveFor(float[] levelValues, EScalerInterpolation interpolation)
         {
-            if (LevelValues == null || LevelValues.Length == 0)
+            if (levelValues == null || levelValues.Length == 0)
             {
-                Scaling = AnimationCurve.Linear(0f, 1f, 1f, 1f);
-                return;
+                return AnimationCurve.Linear(0f, 1f, 1f, 1f);
             }
             
-            Scaling = new AnimationCurve();
+            var curve = new AnimationCurve();
             
-            for (int i = 0; i < LevelValues.Length; i++)
+            for (int i = 0; i < levelValues.Length; i++)
             {
                 // Convert level index to relative level (0 to 1)
-                float t = LevelValues.Length > 1 ? (float)i / (LevelValues.Length - 1) : 0f;
-                float value = LevelValues[i];
+                float t = levelValues.Length > 1 ? (float)i / (levelValues.Length - 1) : 0f;
+                float value = levelValues[i];
                 
                 Keyframe keyframe = new Keyframe(t, value);
                 
                 // Set tangent mode based on interpolation
-                switch (Interpolation)
+                switch (interpolation)
                 {
                     case EScalerInterpolation.Constant:
                         keyframe.inTangent = 0f;
@@ -188,28 +193,29 @@ namespace FarEmerald.PlayForge
                         break;
                 }
                 
-                Scaling.AddKey(keyframe);
+                curve.AddKey(keyframe);
             }
             
             // Apply tangent modes
-            for (int i = 0; i < Scaling.length; i++)
+            for (int i = 0; i < curve.length; i++)
             {
-                switch (Interpolation)
+                switch (interpolation)
                 {
                     case EScalerInterpolation.Constant:
-                        AnimationUtility.SetKeyLeftTangentMode(Scaling, i, ECurveTangentMode.Constant);
-                        AnimationUtility.SetKeyRightTangentMode(Scaling, i, ECurveTangentMode.Constant);
+                        AnimationUtility.SetKeyLeftTangentMode(curve, i, ECurveTangentMode.Constant);
+                        AnimationUtility.SetKeyRightTangentMode(curve, i, ECurveTangentMode.Constant);
                         break;
                     case EScalerInterpolation.Linear:
-                        AnimationUtility.SetKeyLeftTangentMode(Scaling, i, ECurveTangentMode.Linear);
-                        AnimationUtility.SetKeyRightTangentMode(Scaling, i, ECurveTangentMode.Linear);
+                        AnimationUtility.SetKeyLeftTangentMode(curve, i, ECurveTangentMode.Linear);
+                        AnimationUtility.SetKeyRightTangentMode(curve, i, ECurveTangentMode.Linear);
                         break;
                     case EScalerInterpolation.Smooth:
-                        AnimationUtility.SetKeyLeftTangentMode(Scaling, i, ECurveTangentMode.ClampedAuto);
-                        AnimationUtility.SetKeyRightTangentMode(Scaling, i, ECurveTangentMode.ClampedAuto);
+                        AnimationUtility.SetKeyLeftTangentMode(curve, i, ECurveTangentMode.ClampedAuto);
+                        AnimationUtility.SetKeyRightTangentMode(curve, i, ECurveTangentMode.ClampedAuto);
                         break;
                 }
             }
+            return curve;
         }
         
         /// <summary>
@@ -443,29 +449,29 @@ namespace FarEmerald.PlayForge
         [Tooltip("Uses the provider's level range automatically.\n" +
                  "Level values array should match the source's max level.\n" +
                  "The provider is determined at runtime from the effect's derivation context.")]
-        LockToLevelProvider,
+        [InspectorName("Provider's Levels")] LockToLevelProvider,
         
         [Tooltip("Uses its own MaxLevel setting, independent of the source.\n" +
                  "Useful for Scalers that need a fixed level range.")]
-        Unlocked,
+        [InspectorName("Own Max Level")] Unlocked,
         
         [Tooltip("Uses min(MaxLevel, provider's current level).\n" +
                  "Useful for effects that scale up to the provider's current level,\n" +
                  "but cap at a maximum even if provider exceeds it.\n" +
                  "Useful for scalers that need a fixed level range.")]
-        Clamped
+        [InspectorName("Clamped to Provider")] Clamped
     }
     
     public enum EScalerInterpolation
     {
         [Tooltip("No interpolation - jumps between values")]
-        Constant,
+        [InspectorName("Steps")] Constant,
         
         [Tooltip("Linear interpolation between values")]
-        Linear,
+        [InspectorName("Straight Line")] Linear,
         
         [Tooltip("Smooth curve through values")]
-        Smooth
+        [InspectorName("Smooth Curve")] Smooth
     }
     
     // ═══════════════════════════════════════════════════════════════════════════

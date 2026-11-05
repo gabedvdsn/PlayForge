@@ -884,6 +884,217 @@
     text-overflow: ellipsis;
 }
 
+/* ─── A magnitude or scaler field: its name and kind, its number or range, its menu, then its scaler (ED-33) ───────── */
+
+.pf-root .pf-magnitude__row {
+    flex-direction: row;
+    align-items: center;
+}
+
+.pf-root .pf-magnitude__number,
+.pf-root .pf-magnitude__kind-labelled {
+    flex-grow: 1;
+    flex-shrink: 1;
+    min-width: 0;
+}
+
+.pf-root .pf-magnitude__unit {
+    flex-shrink: 0;
+    margin: 0 4px 0 2px;
+    padding: 0;
+    color: var(--pf-secondary-text);
+}
+
+.pf-root .pf-magnitude__kind {
+    width: 96px;
+    flex-shrink: 0;
+    margin-left: 4px;
+}
+
+/* The range a scaler gives, as "6–8 s", which clips before the kind does */
+.pf-root .pf-magnitude__range {
+    flex-shrink: 1;
+    min-width: 0;
+    max-width: 40%;
+    margin: 0 0 0 6px;
+    padding: 0;
+    color: var(--pf-secondary-text);
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+}
+
+.pf-root .pf-magnitude__menu {
+    flex-shrink: 0;
+    margin-left: 4px;
+}
+
+/* A scaler's content indents past the label column's start, under the field it belongs to */
+.pf-root .pf-magnitude__body,
+.pf-root .pf-scaler-field__content {
+    padding-left: 14px;
+}
+
+.pf-root .pf-magnitude__combine {
+    flex-direction: row;
+    align-items: center;
+}
+
+.pf-root .pf-magnitude__combine > .unity-base-field {
+    flex-grow: 1;
+    flex-shrink: 1;
+    min-width: 0;
+}
+
+.pf-root .pf-magnitude__combine > .pf-magnitude__combine-number {
+    flex-grow: 0;
+    width: 64px;
+    flex-shrink: 0;
+    margin-left: 4px;
+}
+
+/* The values per level: a row of levels over a row of values, ten to a row, inside an outline */
+.pf-root .pf-scaler-table {
+    margin: 2px 0;
+}
+
+.pf-root .pf-scaler-table > #Grid {
+    border-width: 1px;
+    border-color: var(--pf-line);
+    border-radius: 3px;
+    overflow: hidden;
+    margin-bottom: 2px;
+}
+
+.pf-root .pf-scaler-table__levels,
+.pf-root .pf-scaler-table__values {
+    flex-direction: row;
+    align-items: center;
+    height: 20px;
+}
+
+.pf-root .pf-scaler-table__levels {
+    background-color: var(--pf-header);
+    border-bottom-width: 1px;
+    border-bottom-color: var(--pf-line);
+}
+
+.pf-root .pf-scaler-table__head {
+    width: 44px;
+    flex-shrink: 0;
+    margin: 0;
+    padding: 0 6px;
+    color: var(--pf-secondary-text);
+}
+
+.pf-root .pf-scaler-table__cell {
+    flex-grow: 1;
+    flex-basis: 0;
+    min-width: 0;
+    margin: 0;
+    padding: 0 2px;
+    overflow: hidden;
+}
+
+.pf-root .pf-scaler-table__levels > .pf-scaler-table__cell {
+    -unity-text-align: middle-center;
+    color: var(--pf-secondary-text);
+}
+
+/* A read-only curve: the line takes the color, the guides the border color, and a second series its own color */
+.pf-root .pf-curve {
+    height: 48px;
+    margin: 2px 0 4px 0;
+    color: var(--pf-link);
+    border-bottom-color: var(--pf-line);
+}
+
+.pf-root .pf-curve__second {
+    position: absolute;
+    width: 0;
+    height: 0;
+    color: var(--pf-secondary-text);
+}
+
+/* A shared scaler's curve, with its range and how many fields share it beside it */
+.pf-root .pf-scaler-shared {
+    flex-direction: row;
+    align-items: center;
+}
+
+.pf-root .pf-scaler-shared > .pf-curve {
+    width: 96px;
+    height: 32px;
+    flex-shrink: 0;
+    margin-right: 8px;
+}
+
+.pf-root .pf-scaler-shared__text {
+    flex-grow: 1;
+    min-width: 0;
+}
+
+.pf-root .pf-scaler-shared__range,
+.pf-root .pf-scaler-shared__uses {
+    margin: 0;
+    padding: 0;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+}
+
+.pf-root .pf-scaler-shared__uses {
+    color: var(--pf-secondary-text);
+}
+
+/* A Scaler asset's inspector: its name, then its kind and uses */
+.pf-root .pf-scaler-asset__header {
+    padding: 6px 0;
+}
+
+.pf-root .pf-scaler-asset__name {
+    -unity-font-style: bold;
+    color: var(--pf-strong-text);
+}
+
+.pf-root .pf-scaler-asset__about {
+    color: var(--pf-secondary-text);
+}
+
+.pf-root .pf-used-by__field {
+    flex-shrink: 1;
+    min-width: 0;
+    margin: 0 0 0 8px;
+    padding: 0;
+    color: var(--pf-secondary-text);
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+}
+
+/* A small dialog, as Save as Scaler Asset: its fields, then its buttons at the end */
+.pf-root.pf-dialog {
+    padding: 8px 10px;
+    background-color: var(--pf-panel);
+}
+
+.pf-root .pf-dialog__row {
+    flex-direction: row;
+    align-items: center;
+}
+
+.pf-root .pf-dialog__grow {
+    flex-grow: 1;
+    flex-shrink: 1;
+    min-width: 0;
+}
+
+.pf-root .pf-dialog__footer {
+    flex-direction: row;
+    justify-content: flex-end;
+    margin-top: 8px;
+}
+
 /* A message is a Unity help box, in the flow under the field it is about */
 .pf-root .unity-help-box {
     background-color: var(--pf-help-box);
