@@ -635,6 +635,7 @@ had no letter in the review. TS-AA onward came from the test project.
 | ED-39 | M | 4 | Opening an attribute set element can change the set: 50 ms after it draws, and on every change to the set, `AttributeSetElementDrawer` clamps a Current or Base magnitude that sits outside the element's bounds and applies it to the asset, so looking at a set marks it modified. The runtime clamps the same values as the entity starts. Now the drawer writes nothing as it draws: a help box says how the runtime clamps such a magnitude, and only a value typed into a Magnitude field is kept within the bounds, as part of the same edit. The drawer follows the style sheet | `AttributeSetElementDrawer.cs` | fixed |
 | ED-40 | M | 4 | The debugger only watches: it can't change an attribute or a tag, apply an effect or grant an ability, so trying a change means writing code for it. Q27: editing attributes and tags first, then applying effects and granting abilities. Fixed: each section of the Debugger's Entities view ends in a foot row (Decision 31): the selected attribute's Base and Current fields, which the entity takes as they are; Remove for the selected effect, and an effect picked there lands from the entity itself; Activate and Interrupt for the selected ability, and one picked there is granted at a level; Remove for the selected loose tag, and a tag typed or picked from the project's is granted as a loose tag (FEAT-16). The status bar says what each did | `Editor/Debugger/RuntimeDebugger.Entities.cs` | fixed |
 | ED-41 | S | 5 | An ability's cost and cooldown apply only from a stage set to Apply Usage Effects, and nothing said so when no stage was: the Tactics lab's Slash had a cooldown that never came on. Fixed: the Ability inspector warns under Cooldown while the ability has a cost or a cooldown and no stage applies them, and the Problems view lists it (`UsageEffectsRule`) | `Editor/CustomPropertyDrawers/Forge/Editors/Assets/AbilityEditor.cs`, `Editor/Problems/ForgeRules.cs` | fixed |
+| ED-42 | Clear gives a new asset's values | A section's Clear set each field to its type's default, 0 or the first choice, not the field's own (`SectionClearUtility.ResetPropertyToDefault`). Clearing an effect's Impact set its affiliation to Use Affiliation List with none listed and its Chance to Apply to 0, so the effect never landed. Open: the fix (a cleared field takes a new asset's value, a cleared list still empties) and FEAT-8's placement (Chance to Apply moves to Requirements, above its table, and the Tags summary counts abilities, as in "Grants Status.Burning, 1 ability") are parked with their red tests, seen failing, in the shared notes' `ed42-feat8-red-tests.patch` and `ed42-feat8-impl.py` |
 
 The design questions behind Phase 4's rows, each with its evidence, are in the UI interview doc of 2026-11-03,
 https://claude.ai/artifact/BbnGybqgX3spJsT6HoTafp. Its answers (Decision 18) settle ED-8, ED-16, ED-19 and ED-12's
@@ -773,6 +774,16 @@ GAS-4 with GAS-5, PC-6, and TS-I with PC-5.
 ## Log
 
 Record baselines, gate results and notable decisions here, newest first.
+
+- 2026-11-05, **Stopped here, at the user's word.** FEAT-11 is in (ed60c62, tour f09d9f9), and the docs commit
+  664a9ab adds EDITOR_STYLE's Debugger section (its narrow column) and Decision 32 with FEAT-18's widened row.
+  - **Parked:** ED-42, found while moving FEAT-8's Chance to Apply to Requirements as the design asks. Its two
+    EditMode tests, `ED_42_Clearing_a_section_gives_its_fields_a_new_assets_values` and the updated
+    `FEAT_8_The_Effect_inspector_edits_the_chance_to_apply_and_granted_abilities`, were seen failing (Use Affiliation
+    List for Always Allow; no chance field in Requirements). Proving Grounds is back as committed; the tests and the
+    fix wait in the shared notes as a patch and a script.
+  - **Next:** apply the two, run them green and the EditMode suite, then FEAT-10 (a map of ProcessControl's
+    couplings is in the shared notes' `feat10-processcontrol-map.md`), FEAT-18's counters and modules, and FEAT-12.
 
 - 2026-11-05, **FEAT-11: targeting input.** Decision 30's default: targeting reads an input interface, with legacy
   and Input System defaults.
