@@ -1,7 +1,7 @@
 # PlayForge refactor: code tour
 
 This tour lists the places where the refactor changed code, so you can open each one in your IDE and read it. It
-covers `01258b8..024cf09` on `main`: 385 commits. Phase 0 ported Arcade Fighter's fixes, Phase 1 made the runtime
+covers `01258b8..e91fe34` on `main`: 387 commits. Phase 0 ported Arcade Fighter's fixes, Phase 1 made the runtime
 correct, Phase 2 got the package ready to release, Phase 3 made it cheaper to run and gave the two GAS hubs one core,
 Phase 4 rebuilt the editor, and Phase 5 built the missing features. Each entry says what behaves differently and why, names its tracker IDs and Decisions, and
 points at the two or three places to read. `Docs/REFACTOR_PLAN.md` has every tracker row, the numbered Decisions,
@@ -10,8 +10,8 @@ and a Log of each batch's test results.
 ## How to use this
 
 - Paths are relative to the repo root.
-- Line numbers are as of commit `024cf09`, the head of `main` on 2026-11-05. A later commit may move them, so each
-  entry also names the class and method to search for. `git show 024cf09:<path>` shows a file as it was then.
+- Line numbers are as of commit `e91fe34`, the head of `main` on 2026-11-05. A later commit may move them, so each
+  entry also names the class and method to search for. `git show e91fe34:<path>` shows a file as it was then.
 - In Rider, Go to File accepts `path:line`. In Visual Studio, open the file, then Go To Line (Ctrl+G).
   A bare `:123` after a path means another line in the same file.
 - `git grep "<ID>"` finds the comment at each fix, and `git log --grep "<ID>"` finds its commit. Three exceptions:
@@ -241,8 +241,8 @@ once an ability ran.
     `TryActivate` calls `CancelAbilitiesCancelledBy` (`:466`); and `:571` `CheckWhileActive`.
   - `Assets/PlayForge/Runtime/PlayForge/AbilitySystem/Core/AbilitySpecContainer.cs:226` `Blocks` and `:243`
     `CancelFor`, which read each run's stage.
-  - `Assets/PlayForge/Runtime/PlayForge/AbilitySystem/Ability/AbilityProxy/Core/AbilityBehaviour.cs:35`, the ability's
-    lists, `:77` a stage's, `:86` `CancelledByOr` and `:92` `IsCritical`; `AbilityTags.Names` is
+  - `Assets/PlayForge/Runtime/PlayForge/AbilitySystem/Ability/AbilityProxy/Core/AbilityBehaviour.cs:36`, the ability's
+    lists, `:78` a stage's, `:87` `CancelledByOr` and `:93` `IsCritical`; `AbilityTags.Names` is
     `Assets/PlayForge/Runtime/PlayForge/AbilitySystem/Ability/Core/AbilityTags.cs:44`.
   - `Assets/PlayForge/Runtime/PlayForge/GAS/Core/GASCore.cs:59`, which wires the tag changes to the ability system, and
     `:152`, where each step checks.
@@ -293,8 +293,8 @@ recovery it cancels. TS-7's shape is a design the plan's Log records for the use
   - `Assets/PlayForge/Runtime/PlayForge/AbilitySystem/Core/AbilitySystemComponent.cs:698` `TryActivate`, where a block
     or a busy claim sends a Queue request to `BufferActivation` (`:793`); `:815` `FireBuffered` and `:842`
     `StepBuffer`, which `GASCore.Tick` calls (`Assets/PlayForge/Runtime/PlayForge/GAS/Core/GASCore.cs:155`).
-  - `Assets/PlayForge/Runtime/PlayForge/AbilitySystem/Ability/AbilityProxy/Core/AbilityBehaviour.cs:110`
-    `AbilityStageCondition` and its `Holds` (`:125`); the compiler's branch is
+  - `Assets/PlayForge/Runtime/PlayForge/AbilitySystem/Ability/AbilityProxy/Core/AbilityBehaviour.cs:111`
+    `AbilityStageCondition` and its `Holds` (`:126`); the compiler's branch is
     `Assets/PlayForge/Runtime/PlayForge/AbilitySystem/Ability/AbilityProxy/Core/AbilitySequenceCompiler.cs:52`.
   - `Assets/PlayForge/Runtime/PlayForge/Core/TaskSequence/Async/TaskSequenceRuntime.cs:431`, where each stage's start
     calls `ExitCriticalSectionIfPassed` (`:843`).
@@ -838,6 +838,19 @@ for that child's own children and loaded every asset of its type again.
 - **Tests:** `ED_44_A_push_searches_the_project_once_however_big_the_family` in EditMode's `TemplatePushTests`, and
   Proving Grounds' `Tests/Editor/EditorStressTests`: The Forge over 2,586 assets, the push to 2,000 children, and the
   Debugger over 200 entities.
+
+### An ability made in code has a stage list (GAS-63)
+
+The authoring round trip makes each kind of asset with The Forge's Create, edits every simple field of it through a
+SerializedObject, and compares each save, undone and redone, to the byte: 252 fields, all of which came back. Filling an
+ability's stage for it found that a new ability had no stage list until it was saved and loaded.
+
+- **IDs:** GAS-63, commit `e91fe34`; Decision 30.
+- **Read:** `Assets/PlayForge/Runtime/PlayForge/AbilitySystem/Ability/AbilityProxy/Core/AbilityBehaviour.cs:29` `Stages`, which starts empty, as a
+  load leaves it.
+- **Watch for:** a behaviour built with its list set to none still has none; the proxy's reads guard against it.
+- **Tests:** `GAS_63_An_ability_made_in_code_has_a_stage_list` in PlayMode's `AbilityActivationTests`, and
+  `AuthoringRoundTripTests` in Proving Grounds' `Tests/Editor`.
 
 ## Phase 4
 
@@ -3148,6 +3161,7 @@ Newest first. Each row is a good place to start reading.
 
 | What | IDs | Where | Commit |
 |---|---|---|---|
+| An ability made in code has a stage list | GAS-63 | `Assets/PlayForge/Runtime/PlayForge/AbilitySystem/Ability/AbilityProxy/Core/AbilityBehaviour.cs:29` | `e91fe34` |
 | A template's push searches the project once | ED-44 | `Assets/PlayForge/Editor/Tools/ForgeTemplatePropogation/ForgeTemplatePropagator.cs:216` | `024cf09` |
 | Ending a process costs the same however many there are | PC-34 | `Assets/PlayForge/Runtime/PlayForge/Management/GameplayProcess/Core/ProcessWorld.cs:237` | `4a226e6` |
 | An area ability strikes every target | GAS-62 | `Assets/PlayForge/Runtime/PlayForge/Utils/ProcessTaskUtil.cs:54` | `fff120f` |
