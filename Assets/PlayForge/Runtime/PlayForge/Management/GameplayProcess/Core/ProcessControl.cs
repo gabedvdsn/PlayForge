@@ -195,9 +195,10 @@ namespace FarEmerald.PlayForge
         public void WatchProcess(ProcessRelay toWatch, object caller, Action<ProcessDataPacket> onStartWatching = null, Action<EProcessState, EProcessState, ProcessDataPacket> onStateChange = null,
             Action<ProcessDataPacket> onUnregister = null)
         {
-            if (!Instance._watchers.TryGetValue(toWatch.CacheIndex, out var watcher))
+            // In this control's watchers: it went in Instance's, whichever control held the process (FEAT-10)
+            if (!_watchers.TryGetValue(toWatch.CacheIndex, out var watcher))
             {
-                Instance._watchers[toWatch.CacheIndex] = new ProcessWatcher(toWatch, caller, onStateChange, onUnregister);
+                _watchers[toWatch.CacheIndex] = new ProcessWatcher(toWatch, caller, onStateChange, onUnregister);
             }
             else
             {
@@ -657,7 +658,7 @@ namespace FarEmerald.PlayForge
             if (!CanAcceptNewProcesses()) return new ProcessRegistrationResult(null, EProcessRegistrationRefusal.ProcessControlClosed);
 
             var wrapper = new MonoWrapperProcess(process, data, handler);
-            var pcb = ProcessControlBlock.Generate(NextCacheIndex, wrapper);
+            var pcb = ProcessControlBlock.Generate(NextCacheIndex, wrapper, this);
             pcb.isMono = true;
 
             var relay = pcb.Relay;
@@ -701,7 +702,7 @@ namespace FarEmerald.PlayForge
             if (!CanAcceptNewProcesses()) return new ProcessRegistrationResult(null, EProcessRegistrationRefusal.ProcessControlClosed);
 
             var wrapper = new RuntimeWrapperProcess(process, data, handler);
-            var pcb = ProcessControlBlock.Generate(NextCacheIndex, wrapper);
+            var pcb = ProcessControlBlock.Generate(NextCacheIndex, wrapper, this);
 
             var relay = pcb.Relay;
             handler?.HandlerSubscribeProcess(relay);

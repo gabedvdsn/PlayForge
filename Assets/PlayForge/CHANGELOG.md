@@ -292,6 +292,10 @@ tracks each fix below by its ID.
   Asking whether its sequence was paused took 24 bytes a frame.
 
 ### Fixed
+- A process's relay, its state changes, a watch on it and what a runtime process handles reached
+  `ProcessControl.Instance`, whichever control held the process, so once another control was Instance they reached
+  the wrong one. Each goes to the control that holds the process, which `ProcessRelay.Control` and
+  `ProcessControlBlock.Control` name (FEAT-10).
 - A section's Clear set each field to 0 or its first choice, not its own default, so clearing an effect's Impact
   allowed no target and left no chance to apply: the effect never landed. A cleared field takes a new asset's value,
   and a cleared list still empties (ED-42).

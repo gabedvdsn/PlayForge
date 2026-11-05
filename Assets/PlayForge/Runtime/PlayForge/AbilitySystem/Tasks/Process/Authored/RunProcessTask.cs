@@ -44,7 +44,7 @@ namespace FarEmerald.PlayForge
                 },
                 condition: () => 
                     elapsedDuration < MaxDuration 
-                    && relays.TrueForAny(relay => ProcessControl.Instance.IsRegistered(relay.CacheIndex)),
+                    && relays.TrueForAny(relay => relay.ProcessActive),
                 token: token,
                 timing: UpdateTiming
             );
@@ -56,8 +56,8 @@ namespace FarEmerald.PlayForge
 
             foreach (var relay in relays)
             {
-                if (!ProcessControl.Instance.IsRegistered(relay.CacheIndex)) continue;
-                if (!ProcessControl.Instance.TerminateImmediate(relay.CacheIndex)) continue;
+                // Through the relay, to the control that holds the process (FEAT-10)
+                if (relay.ProcessActive) relay.TerminateImmediate();
             }
 
             relays.Clear();

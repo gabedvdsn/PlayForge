@@ -121,10 +121,11 @@ namespace FarEmerald.PlayForge
             processActive = false;
 
             // What this process handles ends with it, as a Mono process's does. A runtime GAS's abilities ran on after it
-            // ended, for as long as their stages lasted (GAS-52)
+            // ended, for as long as their stages lasted (GAS-52). Each ends where it's held: through Instance, a
+            // process held by another control didn't (FEAT-10)
             foreach (var relay in HandlerRelays.Values.ToArray())
             {
-                ProcessControl.Instance.TerminateImmediate(relay.CacheIndex);
+                relay.TerminateImmediate();
             }
         }
 
