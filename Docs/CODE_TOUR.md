@@ -3,7 +3,7 @@
 This tour lists the places where the refactor changed code, so you can open each one in your IDE and read it. It
 covers `01258b8..2c8dff3` on `main`: 378 commits. Phase 0 ported Arcade Fighter's fixes, Phase 1 made the runtime
 correct, Phase 2 got the package ready to release, Phase 3 made it cheaper to run and gave the two GAS hubs one core,
-Phase 4 rebuilt the editor, and Phase 5 has begun. Each entry says what behaves differently and why, names its tracker IDs and Decisions, and
+Phase 4 rebuilt the editor, and Phase 5 built the missing features. Each entry says what behaves differently and why, names its tracker IDs and Decisions, and
 points at the two or three places to read. `Docs/REFACTOR_PLAN.md` has every tracker row, the numbered Decisions,
 and a Log of each batch's test results.
 
@@ -27,11 +27,12 @@ and a Log of each batch's test results.
   [Phase 3](#phase-3). The plan's tracker has each row's current status.
 - Most fixed code carries a comment that says what it used to do, so the old behaviour is readable in place.
 
-## Phase 5 so far
+## Phase 5
 
 Phase 5 builds the missing features (FEAT-n): the foundations first, then one lab at a time (Decision 30). Each lab
 is a small game, built in code and played by a bot in Proving Grounds, and it brings the features it finds missing.
-The plan's Phase 5 section has the order.
+The plan's Phase 5 section has the order. The phase closed on 2026-11-05, with every lab green and every stretch
+scenario in.
 
 ### Cleanse and immunity (FEAT-8)
 
@@ -795,7 +796,8 @@ Phase 4 redesigns the editor one surface at a time, and it starts where the UI i
 multi-editing, one inspector at a time, then no polling, then the smoke suite that gates the phase, then one style
 sheet and a kit of controls, then the redesign, one surface at a time. The plan's Editor and UI section lists the
 phase's order. Each fix has a test in
-Proving Grounds named after its ID, seen failing first.
+Proving Grounds named after its ID, seen failing first. The phase closed on 2026-11-05: its gate,
+the editor smoke suite in both themes, has passed since 2026-11-04.
 
 ### The Attribute inspector undoes every edit and edits a multiple selection (ED-12)
 
