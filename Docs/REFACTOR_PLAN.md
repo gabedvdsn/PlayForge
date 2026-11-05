@@ -354,6 +354,13 @@ from. It lives outside `Assets/` so it never ships in the package.
     EditMode test can read the counters back through `ProfilerRecorder`, as Proving Grounds' AllocationProbe reads
     allocations. Unity's docs: profiler-creating-custom-counters, profiler-add-counters-code and
     profiler-create-modules in the 6000 Manual, and `ProfilerCounterValue` in com.unity.profiling.core 1.0.
+- Decision 33, 2026-11-05: the labs' scenes. The user asked to see the labs in a scene, and all eight bots were green,
+  so each lab has one in Proving Grounds, `Assets/ProvingGrounds/Scenes/Labs/<Lab> Lab.unity`. Its `LabScene` runner
+  plays the lab's bot, the rounds its tests play, slowly enough to watch (12 frames a second, with Slower and
+  Faster), each round in a world of its own as its test runs it. Each round shows as passed, failed with the reason,
+  or skipped. Each entity in the scene gets a capsule and a label, and every entity, of either hub, a card of its
+  attributes, effects and tags. The scenes are editor-only, since the runner lives in the test assembly beside the
+  labs. Whether the labs ship in Samples stays open.
 
 **Open. Ask the user; do not assume:**
 1. ~~**Uncommitted changes**~~: decided, see above.
@@ -746,7 +753,7 @@ foundation, and FEAT-16 is done.
 A separate Unity project that consumes PlayForge as a local UPM package (Decision 2). The project and its shared
 harness exist, with the golden scenarios, the framework and planted suites, and the editor tests (360 EditMode
 tests in `Tests/Editor`, among them the editor smoke suite, which its README explains). The gameplay labs exist, all eight
-green (Decision 30); the stress suite doesn't yet. See
+green (Decision 30), each with a scene that plays its bot (Decision 33); the stress suite doesn't yet. See
 Environment for its location and commands. The full plan is in the
 review doc's section "The test project: PlayForge Proving Grounds". In short:
 
@@ -774,6 +781,19 @@ GAS-4 with GAS-5, PC-6, and TS-I with PC-5.
 ## Log
 
 Record baselines, gate results and notable decisions here, newest first.
+
+- 2026-11-05, **The labs' scenes (Decision 33).** Each of the eight labs has a scene in Proving Grounds that plays
+  its bot's rounds to watch.
+  - **Proving Grounds fa650f8:** `Tests/Labs/LabScene.cs`, the runner: it finds the bot's `[UnityTest]` rounds,
+    builds each one's world through the test's own setup, steps its body, and ends the world with the harness's new
+    `EndWorldOutsideTests` (the test's teardown reads the runner's result). `Tests/Editor/LabSceneBuilder.cs` makes the
+    scenes, by `-executeMethod`, with no menu item, as ED-19 keeps menu items under Window/PlayForge. A round that
+    takes a hub plays on the Mono one, so its entities have a place in the scene.
+  - **Its test:** `LabScenesTests.Lab_Each_scene_plays_its_bots_rounds`, for each lab, loads the scene, plays it as
+    fast as it can, and checks every round passes there as in the lab's tests.
+  - **Tests:** PlayMode 1263: 1256 pass, 0 fail and 7 planted are skipped, in three orders. Planted 7 of 7;
+    EditMode 443 of 443.
+  - **Next:** FEAT-10's headless run.
 
 - 2026-11-05, **ED-42 and FEAT-8's placement: Clear gives a new asset's values, and Chance to Apply moves to
   Requirements.** The work parked at the stop below, picked up at the user's word.
