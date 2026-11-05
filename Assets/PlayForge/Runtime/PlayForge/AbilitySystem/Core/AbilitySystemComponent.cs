@@ -292,20 +292,32 @@ namespace FarEmerald.PlayForge
             return true;
         }
 
+        // The slots a restore lets go of, gathered first, as letting go changes the cache
+        private readonly List<int> restoreLeaving = new();
+
         /// <summary>
-        /// Ends what's running and lets go of every ability, lent ones too, with nothing left buffered and no tag compile.
-        /// A restore gives back what the save had, and compiles once as it ends (FEAT-9).
+        /// Ends what's running and lets go of every ability, lent ones too, with nothing left buffered and no tag compile,
+        /// but each that <paramref name="keep"/> names in the slot it holds, which stays as it is. A restore gives back
+        /// the rest of what the save had, and compiles once as it ends (FEAT-9). It let go of every one and gave each back
+        /// as a new one, so another entity's effect that one of them applied kept the old, which no slot held (GAS-60).
         /// </summary>
-        internal void ClearForRestore()
+        internal void ClearForRestore(IReadOnlyDictionary<int, Ability> keep = null)
         {
             if (AbilityCache == null) return;
 
             buffer.Clear();
             InjectAll(InterruptSequenceInjection.Instance);
-
-            foreach (var container in AbilityCache.Values) container.Spec.Base.RemoveWorkers(Self);
             foreach (var active in ActiveCache.Values) active.Clear();
-            AbilityCache.Clear();
+
+            restoreLeaving.Clear();
+            foreach (var pair in AbilityCache)
+            {
+                if (keep != null && keep.TryGetValue(pair.Key, out var kept) && pair.Value.Spec.Base == kept) continue;
+                pair.Value.Spec.Base.RemoveWorkers(Self);
+                restoreLeaving.Add(pair.Key);
+            }
+            foreach (int slot in restoreLeaving) AbilityCache.Remove(slot);
+            restoreLeaving.Clear();
         }
 
         public bool RemoveAbility(Ability ability)

@@ -585,6 +585,8 @@ had no letter in the review. TS-AA onward came from the test project.
 | GAS-57 | H | 5 | A relative-operation impact worker, the framework's lifesteal, read the impacted attribute's value, never its Relative Attribute, though it checked the Relative Attribute was there: so lifesteal by a Lifesteal share healed the attacker by its own health times the blow, a full heal. Found by the MOBA lab. It reads the Relative Attribute, and one with none set reads the impacted attribute still, as GAS-41's test does | `RelativeOperationContextImpactWorker.cs` (`GetWrtTarget`) | fixed |
 | GAS-58 | M | 5 | A lasting effect's magnitude was read as its modifier registered, and nothing read it again as its origin's level changed, so an item, an ability or an entity that levelled up kept its effects' first-level values, as GAS-34's stacks did. Found by the Roguelite lab. The GAS core hears its level system's changes, and the shelf re-reads each effect whose origin's level is the one that changed. Effects the entity's items put on other entities aren't on its shelf, and wait for their next read | `EffectSystemComponent.cs` (`RefreshEffectsLevelledBy`), `GASCore.cs` | fixed |
 | GAS-59 | M | 5 | `SystemLevelsComponent.TrySetLevel` and `TryModifyLevel` set the level before the max, so a level raised past the old max at once was held at it, and only the max moved. Found by the mirror clones scenario. Fixed: the max goes first | `LevelComponent/SystemLevelsComponent.cs` | fixed |
+| GAS-60 | M | 5 | A restore let go of every ability the entity had and gave each back as a new one, so another entity's effect that one of them applied kept hold of the old, and that entity's next save named no slot for it, and a load after that took the effect as its source's own. Two entities that bled each other could load in no order that kept both. Found by the rollback scenario. Fixed: a restore keeps each ability the entity holds in the slot its save gives it, its level from the save's levels, and lets go of and gives back the rest | `Save/ForgeSave.cs` (`Put`), `AbilitySystem/Core/AbilitySystemComponent.cs` (`ClearForRestore`) | fixed |
+| GAS-61 | M | 5 | A save kept an effect's time left and its time to its next tick as floats, which its timers, doubles since GAS-33, rounded, so a restored effect ran on from a time a hair off, and came to differ from one never restored in the last digit. Found by the rollback scenario. Fixed: the clock's capture and restore carry doubles (`ExactDurationRemaining` and `ExactTimeUntilPeriodTick` on the containers), and `EffectSave` keeps them; a save written with floats still loads | `GameplayEffect/Core/GameplayShelfContainer/*`, `Save/ForgeSnapshot.cs` | fixed |
 | GAS-P1 | M | 0 | `ActionQueue` LINQ allocations; snapshot built every frame (PF-006) | `ActionQueue.cs:41, 46, 156`, `FrameSummary.cs:340-351` | verified |
 | GAS-P2 | M | 0 | Tag and FrameSummary allocations (PF-007) | `TagCache.cs:60`, `TagQuery.cs:89-136`, `FrameSummary.cs:306-308` | verified |
 | GAS-P3 | M | 3 | Each application revalidates every container and rebuilds all tags (area application is quadratic). Measured: an instant application on an entity carrying 1,000 effects took 0.49 ms, 135 times one on an entity carrying 2. Now the requirements wait for one pass at the next tick, a shelved container's tags are counted as it lands, and re-application and removal find containers in an index by asset tag | `EffectSystemComponent.cs:312-348`, `GameplayAbilitySystem.cs:250-281` | verified |
@@ -785,6 +787,30 @@ GAS-4 with GAS-5, PC-6, and TS-I with PC-5.
 ## Log
 
 Record baselines, gate results and notable decisions here, newest first.
+
+- 2026-11-05, **The rollback scenario, with GAS-60 and GAS-61.** The ninth and last stretch scenario (Decision 30),
+  so all of the review's stretch scenarios are in.
+  - **Rollback** (Proving Grounds' `Tests/Stretch`): two duelists in a world of their own slash each other by a log
+    of presses, at a fixed step, each tick's draws seeded, each slash's critical a chance and its bleed a lasting
+    effect from the other, both saved after every tick. Rolled back eight ticks and run again on the same presses,
+    the duel ends in the same state, to the byte of its save; with a press of Right's that came five ticks late, it
+    ends elsewhere, and there each time.
+  - **GAS-60:** the first run failed at a bleed's origin: a restore gave each ability back as a new one, so the
+    other's bleed kept the old one, which no slot held. A restore keeps each ability in the slot its save gives it.
+  - **GAS-61:** then at a bleed's time left, a float's last bit apart: a save kept the double timers as floats. The
+    capture and restore carry doubles now.
+  - **And JsonUtility:** then at a time to the next tick, a double's last bit apart, which was the save's own text:
+    loaded from its JSON and saved again, a double came back one bit off. JsonUtility doesn't round-trip a double
+    exactly, which PlayForge can't fix. A rollback keeps its saves in memory, as the test now does, where a load
+    saved again is the same save. SAVING.md says so, with how to roll back, and that a load ends running abilities,
+    so one that runs over several steps isn't replayed from its middle.
+  - **Its tests,** seen failing first: `GAS_60_A_restore_keeps_the_ability_another_entitys_effect_came_from`, for
+    each hub, and `GAS_61_A_restored_effect_keeps_time_with_its_twin_to_the_last_digit`, in PlayMode's
+    `SaveLoadTests`; and `Stretch_Rollback_restores_eight_ticks_back_and_lands_where_it_did`.
+  - **Tests:** PlayMode 1291: 1284 pass, 0 fail and 7 planted are skipped, in three orders. Planted 7 of 7;
+    EditMode 447 of 447.
+  - **Phase 5:** every FEAT row but networking is done, all eight labs are green, and so is every stretch scenario.
+    The roadmap has no Phase 6; whether the labs ship in Samples (Decision 33) and CI (SP-24) are the user's.
 
 - 2026-11-05, **FEAT-23, and the possession scenario.** The eighth stretch scenario (Decision 30).
   - **FEAT-23:** `EffectSystemComponent.MoveTo(effect, onto)`. Each of the effect's containers on the shelf takes its

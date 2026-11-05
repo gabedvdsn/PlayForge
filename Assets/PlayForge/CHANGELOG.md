@@ -334,6 +334,10 @@ tracks each fix below by its ID.
   Asking whether its sequence was paused took 24 bytes a frame.
 
 ### Fixed
+- A restore gave each ability back as a new one, so another entity's effect that one of them applied lost track of
+  it, and its next save named no slot for it. A restore keeps each ability in the slot its save gives it (GAS-60).
+- A save kept an effect's timers as floats, so a restored effect ran on a hair apart from one never restored. It keeps
+  them in full; a save written with floats still loads (GAS-61).
 - The Debugger kept its wide layout docked in a narrow column, squeezing its lists and details side by side. Below
   720 px each view's list sits above its detail, the toolbar's views take a row of their own, the frame count moves
   to the status bar, and the tables hide their lowest-priority columns (ED-43).

@@ -88,29 +88,36 @@ namespace FarEmerald.PlayForge
         /// The time each stack has left and to its next tick, as a save keeps them: one of each, for a clock that counts one
         /// stack at a time. A container whose clock is more than that overrides this and <see cref="RestoreClock"/> (FEAT-9).
         /// </summary>
-        protected internal virtual void CaptureClock(List<float> remaining, List<float> untilTick)
+        protected internal virtual void CaptureClock(List<double> remaining, List<double> untilTick)
         {
-            remaining.Add(NextDurationRemaining);
-            untilTick.Add(TimeUntilPeriodTick);
+            remaining.Add(ExactDurationRemaining);
+            untilTick.Add(ExactTimeUntilPeriodTick);
         }
+
+        // The clock as it is, which a container that keeps doubles gives in full, so a save keeps it to the last digit.
+        // A save took the floats the clock shows, so a restored effect ran on from a time a hair off (GAS-61)
+        protected internal virtual double ExactDurationRemaining => NextDurationRemaining;
+        protected internal virtual double ExactTimeUntilPeriodTick => TimeUntilPeriodTick;
+        protected internal virtual void SetExactDurationRemaining(double duration) => SetDurationRemaining((float)duration);
+        protected internal virtual void SetExactTimeUntilPeriodTick(double duration) => SetTimeUntilPeriodTick((float)duration);
 
         /// <summary>
         /// Sets the clock as a save left it: the duration and the time left, then the period and the time to the next tick.
         /// An infinite effect's duration, and the period of one that doesn't tick, stay the float.MaxValue its spec gave
         /// it as it was made (FEAT-9).
         /// </summary>
-        protected internal virtual void RestoreClock(float total, float period, int stacks, IReadOnlyList<float> remaining, IReadOnlyList<float> untilTick)
+        protected internal virtual void RestoreClock(float total, float period, int stacks, IReadOnlyList<double> remaining, IReadOnlyList<double> untilTick)
         {
             var duration = Spec.Base.DurationSpecification;
             if (duration.DurationPolicy == EEffectDurationPolicy.Durational)
             {
                 totalDuration = total;
-                if (remaining.Count > 0) SetDurationRemaining(remaining[0]);
+                if (remaining.Count > 0) SetExactDurationRemaining(remaining[0]);
             }
             if (duration.EnablePeriodicTicks)
             {
                 periodDuration = period;
-                if (untilTick.Count > 0) SetTimeUntilPeriodTick(untilTick[0]);
+                if (untilTick.Count > 0) SetExactTimeUntilPeriodTick(untilTick[0]);
             }
         }
 

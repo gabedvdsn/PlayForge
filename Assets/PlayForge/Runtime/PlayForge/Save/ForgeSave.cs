@@ -299,9 +299,15 @@ namespace FarEmerald.PlayForge
             var gas = core.Owner;
             var finds = new Finds(assets);
 
-            // What's running ends and what the entity has goes, with nothing told. So do the frame's queued actions,
-            // which were for the entity as it was
-            core.AbilitySystem.ClearForRestore();
+            // An ability the entity holds in the slot its save gives it stays as it is, so another entity's effect that
+            // it applied still finds it there (GAS-60)
+            var keep = new Dictionary<int, Ability>();
+            foreach (var save in Each(snapshot.Abilities))
+                if (save.Slot >= 0 && finds.TryFind(save.Ability, out Ability held)) keep[save.Slot] = held;
+
+            // What's running ends and the rest of what the entity has goes, with nothing told. So do the frame's queued
+            // actions, which were for the entity as it was
+            core.AbilitySystem.ClearForRestore(keep);
             core.EffectSystem.ClearForRestore();
             core.ItemSystem.ClearForRestore();
             core.ActionQueue?.Clear();
@@ -312,7 +318,11 @@ namespace FarEmerald.PlayForge
             {
                 foreach (var save in Each(snapshot.Abilities))
                 {
-                    if (finds.TryFind(save.Ability, out Ability ability)) core.AbilitySystem.GiveQuietly(ability, save.Level, out _, save.Slot);
+                    if (!finds.TryFind(save.Ability, out Ability ability)) continue;
+
+                    // One kept in its slot is there already, its level from the save's levels below
+                    if (core.AbilitySystem.TryGetAbilityContainer(save.Slot, out var kept) && kept.Spec.Base == ability) continue;
+                    core.AbilitySystem.GiveQuietly(ability, save.Level, out _, save.Slot);
                 }
 
                 // In the save's order, null where one isn't found, so an effect from an item finds it by its place

@@ -113,8 +113,10 @@ namespace FarEmerald.PlayForge
         public int Stacks;
         public float TotalDuration;
         public float PeriodDuration;
-        public List<float> Remaining = new();
-        public List<float> UntilTick = new();
+        // Each stack's time left and time to its tick, in full, as the effect's timers keep them: a float a hair off
+        // ran a restored effect on apart from one never restored (GAS-61). A save written with floats still loads
+        public List<double> Remaining = new();
+        public List<double> UntilTick = new();
 
         /// <summary>The magnitudes its caller set, by tag, which a Set By Caller scaler on it reads (FEAT-2).</summary>
         public List<MagnitudeSave> SetByCaller = new();

@@ -20,6 +20,12 @@ namespace FarEmerald.PlayForge
         public override float DurationRemaining => (float)durationRemaining;
         public override float NextDurationRemaining => (float)durationRemaining;
         public override float TimeUntilPeriodTick => (float)timeUntilPeriodTick;
+        // Its timers in full, for a save (GAS-61)
+        protected internal override double ExactDurationRemaining => durationRemaining;
+        protected internal override double ExactTimeUntilPeriodTick => timeUntilPeriodTick;
+        protected internal override void SetExactDurationRemaining(double duration) => durationRemaining = duration;
+        protected internal override void SetExactTimeUntilPeriodTick(double duration) => timeUntilPeriodTick = duration;
+
         public override void SetDurationRemaining(float duration)
         {
             durationRemaining = duration;

@@ -138,17 +138,18 @@ namespace FarEmerald.PlayForge
         }
 
         /// <summary>Each stack's own time left and to its tick (FEAT-9).</summary>
-        protected internal override void CaptureClock(List<float> remaining, List<float> untilTick)
+        protected internal override void CaptureClock(List<double> remaining, List<double> untilTick)
         {
+            // In full, as the stacks keep them (GAS-61)
             foreach (var packet in Packets)
             {
-                remaining.Add((float)packet.DurationRemaining);
-                untilTick.Add((float)packet.TimeUntilPeriodTick);
+                remaining.Add(packet.DurationRemaining);
+                untilTick.Add(packet.TimeUntilPeriodTick);
             }
         }
 
         /// <summary>A stack for each time a save kept, each with its own (FEAT-9).</summary>
-        protected internal override void RestoreClock(float total, float period, int stacks, IReadOnlyList<float> remaining, IReadOnlyList<float> untilTick)
+        protected internal override void RestoreClock(float total, float period, int stacks, IReadOnlyList<double> remaining, IReadOnlyList<double> untilTick)
         {
             base.RestoreClock(total, period, stacks, remaining, untilTick);
 
@@ -160,9 +161,10 @@ namespace FarEmerald.PlayForge
             Packets.Clear();
             for (int i = 0; i < remaining.Count; i++)
             {
-                float left = durational ? remaining[i] : totalDuration;
-                float toTick = ticks && i < untilTick.Count ? untilTick[i] : periodDuration;
-                Packets.Add(new StackableContainerPacket(left, toTick));
+                var packet = new StackableContainerPacket(totalDuration, periodDuration);
+                if (durational) packet.DurationRemaining = remaining[i];
+                if (ticks && i < untilTick.Count) packet.TimeUntilPeriodTick = untilTick[i];
+                Packets.Add(packet);
             }
             Stacks = Packets.Count;
         }

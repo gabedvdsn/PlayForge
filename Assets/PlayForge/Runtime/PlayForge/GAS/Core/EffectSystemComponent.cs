@@ -833,7 +833,7 @@ namespace FarEmerald.PlayForge
             spec.ApplicationId = ++applications;
             var container = spec.Base.DurationSpecification.GenerateContainer(spec, save.Ongoing);
             container.RestoreClock(save.TotalDuration, save.PeriodDuration, save.Stacks,
-                save.Remaining ?? (IReadOnlyList<float>)Array.Empty<float>(), save.UntilTick ?? (IReadOnlyList<float>)Array.Empty<float>());
+                save.Remaining ?? (IReadOnlyList<double>)Array.Empty<double>(), save.UntilTick ?? (IReadOnlyList<double>)Array.Empty<double>());
 
             Shelve(container, countTags: false);
             LendAbilities(container, quietly: true);

@@ -44,7 +44,8 @@ catalog can't find.
 - The abilities it knows of its own, in their slots, at their levels.
 - Its items in order, each with its level and stacks, worn or not.
 - Its effects, each with what applied it, its stacks, its time left and the time to its next tick, and the magnitudes
-  its caller set. Stacks with durations of their own keep their own times.
+  its caller set. Stacks with durations of their own keep their own times. The times are kept in full, as the effect's
+  timers keep them, so a restored effect keeps time with one that never was, to the last digit.
 - Its loose tags and its time scale.
 
 An ability that an effect or a worn item lends isn't saved on its own. It comes back with the effect or the item.
@@ -59,7 +60,8 @@ A save leaves out:
 ## What a load does
 
 1. Running abilities are interrupted, and the input buffer empties.
-2. The entity lets go of its effects, items and abilities, and the actions queued this frame are dropped.
+2. The entity lets go of its effects, items and abilities, and the actions queued this frame are dropped. An ability
+   it holds in the slot the save gives it stays as it is, so another entity's effect that it applied still names it.
 3. The save's abilities, items, effects, levels and commits come back.
 4. The tags compile once, and `OnRestored` fires.
 
@@ -98,8 +100,19 @@ var save = ForgeSave.Capture(hero, catalog, roster);
 ForgeSave.Restore(hero, save, catalog, roster);
 ```
 
-Without IDs, or when the other entity is gone, the effect comes back as the entity's own. When several entities load
-together, restore the ones whose abilities and items applied effects first, so the others find them.
+Without IDs, or when the other entity is gone, the effect comes back as the entity's own. An entity whose abilities are
+in their saved slots keeps them through its load, so several entities can load in any order and their effects on each
+other still name the abilities that applied them. Items aren't kept that way: when several entities load together,
+restore those whose items applied effects first, so the others find them.
+
+## Rolling back
+
+A rollback saves each step, and on a late input loads a step back and runs again. With a fixed tick (ProcessControl's
+Fixed Tick Rate, or a world of its own stepped by a fixed time) and the random source seeded for each step
+(`ForgeRandom.Use`), the run again lands where the first did, to the last digit of every save. Keep the saves in
+memory, as `ForgeSnapshot`s: `JsonUtility` can move the last digit of a double as it reads one back. A load ends the
+abilities running, so an ability that runs over several steps isn't replayed by a load into its middle; one that
+ends as it activates is.
 
 ## Copying an entity
 

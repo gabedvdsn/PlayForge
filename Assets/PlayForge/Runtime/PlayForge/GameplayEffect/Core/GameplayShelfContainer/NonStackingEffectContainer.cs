@@ -25,6 +25,12 @@ namespace FarEmerald.PlayForge
             return new NonStackingEffectContainer(spec, ongoing);
         }
 
+        // Its timers in full, for a save (GAS-61)
+        protected internal override double ExactDurationRemaining => durationRemaining;
+        protected internal override double ExactTimeUntilPeriodTick => timeUntilPeriodTick;
+        protected internal override void SetExactDurationRemaining(double duration) => durationRemaining = duration;
+        protected internal override void SetExactTimeUntilPeriodTick(double duration) => timeUntilPeriodTick = duration;
+
         public override void SetDurationRemaining(float duration) => durationRemaining = duration;
         public override void SetTimeUntilPeriodTick(float duration) => timeUntilPeriodTick = duration;
 

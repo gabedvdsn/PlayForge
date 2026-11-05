@@ -16,7 +16,7 @@ namespace FarEmerald.PlayForge
         public abstract void Stack(int amount);
 
         /// <summary>The stacks a save kept, then the clock (FEAT-9).</summary>
-        protected internal override void RestoreClock(float total, float period, int stacks, IReadOnlyList<float> remaining, IReadOnlyList<float> untilTick)
+        protected internal override void RestoreClock(float total, float period, int stacks, IReadOnlyList<double> remaining, IReadOnlyList<double> untilTick)
         {
             Stacks = stacks;
             base.RestoreClock(total, period, stacks, remaining, untilTick);
