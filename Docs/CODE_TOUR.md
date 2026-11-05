@@ -1,7 +1,7 @@
 # PlayForge refactor: code tour
 
 This tour lists the places where the refactor changed code, so you can open each one in your IDE and read it. It
-covers `01258b8..c934980` on `main`: 298 commits. Phase 0 ported Arcade Fighter's fixes, Phase 1 made the runtime
+covers `01258b8..520c433` on `main`: 300 commits. Phase 0 ported Arcade Fighter's fixes, Phase 1 made the runtime
 correct, Phase 2 got the package ready to release, Phase 3 made it cheaper to run and gave the two GAS hubs one core,
 Phase 4 rebuilt the editor, and Phase 5 has begun. Each entry says what behaves differently and why, names its tracker IDs and Decisions, and
 points at the two or three places to read. `Docs/REFACTOR_PLAN.md` has every tracker row, the numbered Decisions,
@@ -10,8 +10,8 @@ and a Log of each batch's test results.
 ## How to use this
 
 - Paths are relative to the repo root.
-- Line numbers are as of commit `c934980`, the head of `main` on 2026-11-04. A later commit may move them, so each
-  entry also names the class and method to search for. `git show c934980:<path>` shows a file as it was then.
+- Line numbers are as of commit `520c433`, the head of `main` on 2026-11-04. A later commit may move them, so each
+  entry also names the class and method to search for. `git show 520c433:<path>` shows a file as it was then.
 - In Rider, Go to File accepts `path:line`. In Visual Studio, open the file, then Go To Line (Ctrl+G).
   A bare `:123` after a path means another line in the same file.
 - `git grep "<ID>"` finds the comment at each fix, and `git log --grep "<ID>"` finds its commit. Three exceptions:
@@ -29,9 +29,9 @@ and a Log of each batch's test results.
 
 ## Phase 5 so far
 
-Phase 5 builds the missing features (FEAT-n), one lab at a time: each lab is a small game, built in code and played by
-a bot in Proving Grounds, and it brings the features it finds missing. The plan's Phase 5 section has the order, and
-open decision 18 asks how the labs' scenes ship.
+Phase 5 builds the missing features (FEAT-n): the foundations first, then one lab at a time (Decision 30). Each lab
+is a small game, built in code and played by a bot in Proving Grounds, and it brings the features it finds missing.
+The plan's Phase 5 section has the order.
 
 ### Cleanse and immunity (FEAT-8)
 
@@ -47,12 +47,24 @@ own: the first version walked the shelf on every application, and GAS-P3's cost 
   - `Assets/PlayForge/Runtime/PlayForge/GAS/Core/EffectSystemComponent.cs:154` `IsImmuneTo`, over `:150`
     `immunities`, and `:167` `RemoveEffectsNamedBy`, which `ApplyGameplayEffect` calls (`:128`).
   - `Assets/PlayForge/Runtime/PlayForge/GameplayEffect/Core/GameplayEffect.cs:248` and `:254`, the two lists, and
-    `:257` `GameplayEffectTags.Names`, what a list names.
+    `:261` `GameplayEffectTags.Names`, what a list names.
 - **Watch for:** `GameplayEffectTags` is a struct, so a test that sets a list through reflection boxes it, sets the
   field, then assigns it back.
 - **Tests:** `FEAT_8_A_cleanse_takes_off_the_effects_it_names` and `FEAT_8_An_immunity_refuses_the_effects_it_names`
   on each hub in PlayMode's `CleanseAndImmunityTests`, and
   `FEAT_8_The_Effect_inspector_edits_what_an_effect_removes_and_blocks` in `InspectorUndoTests`.
+
+### Cleanse and immunity name granted tags (FEAT-8)
+
+Decision 30's default: a cleanse and an immunity name an effect by a tag it grants too, as Unreal's queries match, so
+`State.Burning` takes off whatever grants it. They named an effect by its asset tag or a context tag only, so
+"whatever makes you Burning" needed a context tag on every effect that burns.
+
+- **IDs:** FEAT-8, commit `520c433`; Decision 30.
+- **Read:** `Assets/PlayForge/Runtime/PlayForge/GameplayEffect/Core/GameplayEffect.cs:261`
+  `GameplayEffectTags.Names`, which walks the lists by index, so a check allocates nothing.
+- **Tests:** `FEAT_8_A_cleanse_and_an_immunity_name_an_effect_by_a_tag_it_grants` on each hub in PlayMode's
+  `CleanseAndImmunityTests`.
 
 ## Phase 4
 
@@ -794,10 +806,10 @@ Process Control's usage was the time between a process's steps. ProcessControl n
 
 - **IDs:** ED-4 and ED-5, commit `d220ff4`.
 - **Read:**
-  - `Assets/PlayForge/Editor/Debugger/RuntimeDebugger.cs:179` `SampleNow`, `:200` `Follow`, which hooks the
-    registry, and `:227` `ReadLists`, which finds the hubs among the processes.
+  - `Assets/PlayForge/Editor/Debugger/RuntimeDebugger.cs:180` `SampleNow`, `:201` `Follow`, which hooks the
+    registry, and `:228` `ReadLists`, which finds the hubs among the processes.
   - `Assets/PlayForge/Editor/Debugger/RuntimeDebugger.Entities.cs:151` `ShowEntity`, which builds the detail once
-    and hooks the shown entity's frame summaries alone (ED-26), and `:679` `CooldownOf`, the cooldown's time left.
+    and hooks the shown entity's frame summaries alone (ED-26), and `:725` `CooldownOf`, the cooldown's time left.
   - `Assets/PlayForge/Editor/Debugger/RuntimeDebugger.Processes.cs:136` `SampleSteps` and `:218` `ShowProcess`, whose
     Pause and Resume take the processes it handles alike.
   - `Assets/PlayForge/Runtime/PlayForge/Management/GameplayProcess/Core/ProcessControlBlock.cs:51` `MeasureSteps`, and
@@ -821,8 +833,8 @@ went at its next compile, so a tag could be granted only through an effect.
 
 - **IDs:** ED-40 and FEAT-16, commit `5dd7332`.
 - **Read:**
-  - `Assets/PlayForge/Editor/Debugger/RuntimeDebugger.Entities.cs:397` `SetAttribute`, a delta no worker sees, `:829`
-    `GrantTag`, `:536` `ApplyEffect` and `:695` `ActivateAbility`.
+  - `Assets/PlayForge/Editor/Debugger/RuntimeDebugger.Entities.cs:446` `SetAttribute`, a delta no worker sees, `:881`
+    `GrantTag`, `:589` `ApplyEffect` and `:742` `ActivateAbility`.
   - `Assets/PlayForge/Runtime/PlayForge/GAS/Core/GASCore.cs:237` the loose tags and `:241` `AddLooseTag`, which
     `CompileGrantedTags` (`:221`) includes, and `Assets/PlayForge/Runtime/PlayForge/GAS/Interfaces/IGameplayAbilitySystem.cs:30`.
 - **Watch for:** a removed effect stays on the shelf until the entity's next tick, which clears it, so its row goes a
@@ -845,12 +857,12 @@ and its detail says whether a paused run is held. The Tags view is new: every ta
 the one selected. ED-40's edits, which the boards don't draw, follow open decision 19's working assumption: a
 double-click sets Base or Current, and a click selects a row whose table's buttons act on it.
 
-- **IDs:** ED-4 and ED-5, commit `c934980`; open decision 19.
+- **IDs:** ED-4 and ED-5, commit `c934980`; open decision 19, which Decision 31 settles.
 - **Read:**
-  - `Assets/PlayForge/Editor/Debugger/RuntimeDebugger.cs:301` `BuildToolbar` and `:458` `ShowStatus`; `:596`, the
+  - `Assets/PlayForge/Editor/Debugger/RuntimeDebugger.cs:304` `BuildToolbar` and `:461` `ShowStatus`; `:606`, the
     first-cell class, as USS has no `:first-child`.
-  - `Assets/PlayForge/Editor/Debugger/RuntimeDebugger.Entities.cs:318` `ChangedBy`, `:347` `Editable`, the
-    double-click, and `:667` `StateOf`, which reads `AbilitySpecContainer.ActiveStageIndex`.
+  - `Assets/PlayForge/Editor/Debugger/RuntimeDebugger.Entities.cs:416` `ChangedBy` and `:713` `StateOf`, which
+    reads `AbilitySpecContainer.ActiveStageIndex`.
   - `Assets/PlayForge/Editor/Debugger/RuntimeDebugger.Processes.cs:136` `SampleSteps` and `:189` `StepSecondsOf`, the
     last second's average; `:318` `RunOf`, from `ProcessControlBlock.RunIsHeld`.
   - `Assets/PlayForge/Editor/Debugger/RuntimeDebugger.Tags.cs:159` `TagRoots`, the tree, and `:330` `SourcesOf`, which
@@ -862,6 +874,28 @@ double-click sets Base or Current, and a click selects a row whose table's butto
 - **Tests:** the updated `ED_4_*`, `ED_5_*` and `ED_40_*` tests in `RuntimeDebuggerTests`, and the new
   `ED_4_The_Tags_view_shows_each_tag_and_who_holds_it`, `ED_4_The_status_bar_counts_the_processes_and_entities`,
   `ED_4_Follow_Selection_shows_the_selected_hub` and `ED_5_The_Run_field_says_whether_a_paused_run_is_held`.
+
+### The Debugger's foot rows (ED-40)
+
+Decision 31, drawn on the canvas's Entities board (version 22): each section of the Entities view ends in a foot row
+under a thin rule, so every control shows, as the style doc asks; a double-click alone set an attribute. Attributes:
+the selected attribute's name, then Base and Current fields that set it on Enter, and a double-click on a value goes to
+its field. Effects: Remove, a picker and Apply. Abilities: Activate and Interrupt, then a picker, Level and Grant.
+Tags: Remove, for a loose tag only, a tag field with the project's tags under its arrow, and Add Tag. An action that
+doesn't apply stays in place, disabled, and what one did is on the status bar's right, so nothing shifts. A section's
+selected row takes Unity's unfocused selection grey, so the entity list keeps the blue.
+
+- **IDs:** ED-40, commit `520c433`; Decision 31.
+- **Read:**
+  - `Assets/PlayForge/Editor/Debugger/RuntimeDebugger.Entities.cs:254` `Foot`, `:294` `AttributesSection`, whose
+    fields leave alone what's typed in them while samples come, and `:402` `GoesToField`, the double-click.
+  - `Assets/PlayForge/Editor/Debugger/RuntimeDebugger.Entities.cs:752` `InterruptAbility` and `:899` `PickTag`, which
+    fills the tag field for Add Tag to grant.
+  - `Assets/PlayForge/Editor/Debugger/RuntimeDebugger.cs:486` `ShowAction`, the status bar's word on the last action.
+- **Watch for:** `Docs/EDITOR_STYLE.md` has the unfocused grey now, as `--pf-selection-unfocused`.
+- **Tests:** the four `ED_40_*` tests in `RuntimeDebuggerTests`, among them
+  `ED_40_An_ability_granted_in_the_debugger_activates_and_is_interrupted`, whose ability waits in a `DelayTask` so it
+  can be interrupted.
 
 ## Phase 3
 
@@ -992,7 +1026,7 @@ away.
   - How each goes away: `Assets/PlayForge/Runtime/PlayForge/GAS/Core/MonoBehaviour/GameplayAbilitySystem.EndOfFrame.cs:44`
     ends at once, and `Assets/PlayForge/Runtime/PlayForge/GAS/Core/Runtime/RuntimeGameplayAbilitySystem_EndOfFrame.cs:52`
     queues a Terminate. Both predate the refactor, and each hub's tests pass on its own.
-  - `Assets/PlayForge/Editor/Debugger/RuntimeDebugger.cs:498`
+  - `Assets/PlayForge/Editor/Debugger/RuntimeDebugger.cs:508`
     `RuntimeDebugger.NameOf`, which asks the entity's own name, as the GAS Debugger's `ResolveDisplayNameFor` did.
 - **New:** `GASCore` (internal). `RuntimeEntityIdentity.LocalData`. Each hub gains what only the other had:
   `ApplyGameplayEffect(IEffectOrigin, GameplayEffect)` and `GetRelativeLevel()`.
@@ -2172,7 +2206,7 @@ Golden Tests left the menu; the Test Runner runs the scenarios (SP-18).
 - **Read:** `Assets/PlayForge/Editor/CustomPropertyDrawers/Forge/Editors/Manager/TheForge.cs:64`
   `TheForge.ShowWindow`, with `WindowTitle` at `:25`. The Runtime Debugger, which replaced the three debuggers
   (ED-4), has its menu item at
-  `Assets/PlayForge/Editor/Debugger/RuntimeDebugger.cs:91`.
+  `Assets/PlayForge/Editor/Debugger/RuntimeDebugger.cs:92`.
 
 ### The Forge: settings, sorting, analysis and templates
 
@@ -2339,10 +2373,12 @@ Newest first. Each row is a good place to start reading.
 
 | What | IDs | Where | Commit |
 |---|---|---|---|
+| The Debugger's foot rows | ED-40 | `Assets/PlayForge/Editor/Debugger/RuntimeDebugger.Entities.cs:254` | `520c433` |
+| Cleanse and immunity name granted tags | FEAT-8 | `Assets/PlayForge/Runtime/PlayForge/GameplayEffect/Core/GameplayEffect.cs:261` | `520c433` |
 | The Debugger, as the boards draw it | ED-4, ED-5 | `Assets/PlayForge/Editor/Debugger/RuntimeDebugger.Tags.cs:159` | `c934980` |
 | Cleanse and immunity | FEAT-8 | `Assets/PlayForge/Runtime/PlayForge/GAS/Core/EffectSystemComponent.cs:154` | `04d0742` |
-| The debugger acts, and loose tags | ED-40, FEAT-16 | `Assets/PlayForge/Editor/Debugger/RuntimeDebugger.Entities.cs:397` | `5dd7332` |
-| One Runtime Debugger | ED-4, ED-5 | `Assets/PlayForge/Editor/Debugger/RuntimeDebugger.cs:179` | `d220ff4` |
+| The debugger acts, and loose tags | ED-40, FEAT-16 | `Assets/PlayForge/Editor/Debugger/RuntimeDebugger.Entities.cs:446` | `5dd7332` |
+| One Runtime Debugger | ED-4, ED-5 | `Assets/PlayForge/Editor/Debugger/RuntimeDebugger.cs:180` | `d220ff4` |
 | Templates work as prefabs do | ED-13 | `Assets/PlayForge/Editor/Tools/ForgeTemplatePropogation/ForgeTemplatePush.cs:37` | `6733220` |
 | The Forge is a list and a detail | ED-27, ED-9 | `Assets/PlayForge/Editor/CustomPropertyDrawers/Forge/Editors/Manager/TheForge.cs:403` | `59f5ae9` |
 | One validator and the Problems view | ED-15 | `Assets/PlayForge/Editor/Problems/ForgeValidator.cs:41` | `4dffd79` |
