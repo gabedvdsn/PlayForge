@@ -127,6 +127,13 @@ What happens when the effect is applied to a target that already has it. Each ap
 A change reads the stack count through an **Effect Stacks** scaler ([SCALERS.md](SCALERS.md)): a magnitude of −5 with
 Multiply With Scaler takes 5 a stack. A Continuous one updates whenever the count changes.
 
+### Moving an effect to another entity
+
+`gas.GetEffectSystem().MoveTo(effect, other)` moves each of the effect's containers on the entity onto another, as a
+possession hands a body's effects over. Each keeps its stacks, its time left and what applied it. A move is neither
+a removal nor an application: none of either's workers, commits or contained effects run, and neither is told. Its
+lasting changes, its granted tags, the abilities it lends and its lasting cues go with it.
+
 ## Impact
 
 The impact is the change the effect makes to an attribute. The first fields are its first impact, whose delivery the

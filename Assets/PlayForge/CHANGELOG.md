@@ -7,6 +7,9 @@ tracks each fix below by its ID.
 ## [Unreleased]
 
 ### Added
+- Moving an effect to another entity. `EffectSystemComponent.MoveTo(effect, onto)` moves each of an effect's
+  containers with its stacks, its time left and what applied it; its lasting changes, granted tags, lent abilities
+  and lasting cues go with it, and nothing of a removal or an application runs (FEAT-23).
 - An entity's time scale from an attribute. An entity's Time Scale names the attribute its time runs at, so an
   effect that lowers it slows the entity, its effects, cooldowns, sequences and waits with it, and one that raises
   it hastes it (FEAT-22).

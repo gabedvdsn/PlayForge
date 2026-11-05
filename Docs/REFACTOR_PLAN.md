@@ -721,6 +721,7 @@ Phase 2 part, and set Phase 4's direction.
 | FEAT-20 | Copy an entity | The review's mirror clones: copying a GAS's state into a new runtime GAS took FEAT-9's capture and restore, which need a catalog naming every asset and IDs for every entity, which assets made as the game runs never have; and the entity's own level stayed behind on a clone of another kind, saved under its kind's tag. Found by the mirror clones scenario. Done (Decision 30): `ForgeSave.Copy(from, onto)` captures and restores with names for assets and entities that last the session, and a save keeps the entity's own level under no key, which loads onto the target's own |
 | FEAT-21 | Run a sequence made in code | Run Sequence ran only a sequence a static method made, by name (`TaskSequenceReference`), so a sequence made in code, as an ability built as the game runs makes one with `TaskSequenceBuilder`, couldn't run in an ability; Proving Grounds' nested-sequence tests handed theirs over in a static field. Found by the ability crafting scenario. Done (Decision 30): `RunSequenceTask.Definition`, a `TaskSequenceDefinition` made in code, of which each activation runs a fresh sequence |
 | FEAT-22 | Time scale from an attribute | The review's time magic: an entity's time (FEAT-7) could be set only by its game's code, through its clock, so no effect could slow or haste one, and two that tried would each need code to undo the other. Found by the time magic scenario. Done (Decision 30): an identity's Time Scale (`EntityIdentity.TimeScaleAttribute`, and the runtime identity's) names the attribute its time runs at, read as each step begins, so an effect on it slows or hastes the entity, stacks with others as modifiers do, and ends with its effect. The Entity inspector's Attributes section edits it |
+| FEAT-23 | Move an effect between entities | The review's possession: an effect could only be taken off one entity and applied to another, which started its time again, ran its application's workers, commits and contained effects a second time, and told both. Found by the possession scenario. Done (Decision 30): `EffectSystemComponent.MoveTo(effect, onto)` moves each of the effect's containers with its stacks, its time left and what applied it, as a restore puts one back (FEAT-9); its lasting modifiers, granted tags, lent abilities and lasting cues go with it, and nothing of a removal or an application runs |
 
 **Phase 5's order,** from the review's plan for the test project (its labs, one at a time) and the table above. A lab
 is a small game: assets the lab builds in code, and a bot that plays it in PlayMode tests under a live ProcessControl,
@@ -784,6 +785,24 @@ GAS-4 with GAS-5, PC-6, and TS-I with PC-5.
 ## Log
 
 Record baselines, gate results and notable decisions here, newest first.
+
+- 2026-11-05, **FEAT-23, and the possession scenario.** The eighth stretch scenario (Decision 30).
+  - **FEAT-23:** `EffectSystemComponent.MoveTo(effect, onto)`. Each of the effect's containers on the shelf takes its
+    clock as a save does, leaves quietly (its lasting modifiers unregistered, its lasting cues ended, its lent
+    abilities taken back), and is put back on the other entity as FEAT-9's restore puts one back, by what applied
+    it, with its Set By Caller magnitudes. Both entities' tags are compiled again. EFFECTS.md says how.
+  - **Possession** (Proving Grounds' `Tests/Stretch`): a ghost possesses a knight as the knight prays. The prayer,
+    cut off mid-cast by `RemoveAbility`, ends and goes to the ghost; the ghost's Haunt, its Ethereal and its Curse
+    go into the knight, the Curse with the time it had left; the possessed knight haunts; and as the ghost leaves,
+    each goes back, and the knight prays again. Nothing past FEAT-23 was missing: removing a running ability
+    interrupts it cleanly, and its new owner casts it anew.
+  - **Its tests,** seen failing first (no `MoveTo`, so they didn't compile):
+    `FEAT_23_An_effect_moves_to_another_entity_with_its_time_left`, for each hub, and
+    `Stretch_Possession_moves_abilities_and_effects_mid_cast`.
+  - **Tests:** PlayMode 1287: 1280 pass, 0 fail and 7 planted are skipped, in three orders. Planted 7 of 7;
+    EditMode 447 of 447.
+  - **Next:** the rollback scenario: a deterministic fixed tick, a snapshot, a restore eight ticks back and a
+    re-simulation.
 
 - 2026-11-05, **FEAT-22, and the time magic scenario.** The seventh stretch scenario (Decision 30), the first of
   the three left: time magic, possession and rollback.

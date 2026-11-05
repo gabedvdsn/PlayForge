@@ -846,6 +846,63 @@ namespace FarEmerald.PlayForge
             requirementsDirty = true;
         }
 
+        // The containers a move takes, gathered first, as moving one changes the shelf
+        private readonly List<AbstractEffectContainer> moving = new();
+
+        /// <summary>
+        /// Moves each of an effect's containers on this shelf onto another entity's, with its stacks and its time left,
+        /// as a possession hands a body's effects over (FEAT-23). A move is neither a removal nor an application: nothing
+        /// of either runs, its workers, its commits or its contained effects, and neither is told. Its lasting modifiers
+        /// leave this entity and hold on the other, its lasting cues end here and begin there, the abilities it lends go
+        /// with it, and both entities' tags are compiled again. Each keeps what applied it. Taking an effect off and
+        /// applying it to the other started its time again and ran its application twice. Returns how many moved.
+        /// </summary>
+        public int MoveTo(GameplayEffect effect, IGameplayAbilitySystem onto)
+        {
+            if (effect == null || onto == null || ReferenceEquals(onto, Self)) return 0;
+            var target = onto.GetEffectSystem();
+            if (target == null || ReferenceEquals(target, this)) return 0;
+
+            moving.Clear();
+            foreach (var container in EffectShelf)
+                if (container.Spec.Base == effect && !IsLeaving(container)) moving.Add(container);
+            if (moving.Count == 0) return 0;
+
+            foreach (var container in moving)
+            {
+                // Its clock, as a save takes it
+                var save = new EffectSave
+                {
+                    Ongoing = container.Ongoing,
+                    Stacks = (container as AbstractStackingEffectContainer)?.Stacks ?? 0,
+                    TotalDuration = container.TotalDuration,
+                    PeriodDuration = container.PeriodDuration,
+                };
+                container.CaptureClock(save.Remaining, save.UntilTick);
+
+                // Off this entity, with nothing told
+                container.ContainerIsActive = false;
+                foreach (var attribute in container.Spec.GetImpactedAttributes(EImpactDelivery.Continuous))
+                    AttributeSystem.UnregisterQuietly(attribute, container.Spec);
+                Cue(container.Spec, ECueMoment.End);
+                TakeBackAbilities(container);
+
+                // Onto the other, as a restore puts one back, by what applied it
+                var spec = onto.GenerateEffectSpec(container.Spec.Origin, effect);
+                if (spec == null) continue;
+                spec.TakeSetByCaller(container.Spec.SetByCallerMagnitudes);
+                target.Restore(spec, save);
+            }
+
+            int moved = moving.Count;
+            Unshelve(moving.ToArray());
+            moving.Clear();
+            requirementsDirty = true;
+            Self.CompileGrantedTags();
+            onto.CompileGrantedTags();
+            return moved;
+        }
+
         /// <summary>Whether an effect on the shelf lent the ability in the slot, which comes back with the effect (FEAT-9).</summary>
         internal bool Lends(int slot)
         {
