@@ -1,7 +1,7 @@
 # PlayForge refactor: code tour
 
 This tour lists the places where the refactor changed code, so you can open each one in your IDE and read it. It
-covers `01258b8..4a226e6` on `main`: 383 commits. Phase 0 ported Arcade Fighter's fixes, Phase 1 made the runtime
+covers `01258b8..024cf09` on `main`: 385 commits. Phase 0 ported Arcade Fighter's fixes, Phase 1 made the runtime
 correct, Phase 2 got the package ready to release, Phase 3 made it cheaper to run and gave the two GAS hubs one core,
 Phase 4 rebuilt the editor, and Phase 5 built the missing features. Each entry says what behaves differently and why, names its tracker IDs and Decisions, and
 points at the two or three places to read. `Docs/REFACTOR_PLAN.md` has every tracker row, the numbered Decisions,
@@ -10,8 +10,8 @@ and a Log of each batch's test results.
 ## How to use this
 
 - Paths are relative to the repo root.
-- Line numbers are as of commit `4a226e6`, the head of `main` on 2026-11-05. A later commit may move them, so each
-  entry also names the class and method to search for. `git show 4a226e6:<path>` shows a file as it was then.
+- Line numbers are as of commit `024cf09`, the head of `main` on 2026-11-05. A later commit may move them, so each
+  entry also names the class and method to search for. `git show 024cf09:<path>` shows a file as it was then.
 - In Rider, Go to File accepts `path:line`. In Visual Studio, open the file, then Go To Line (Ctrl+G).
   A bare `:123` after a path means another line in the same file.
 - `git grep "<ID>"` finds the comment at each fix, and `git log --grep "<ID>"` finds its commit. Three exceptions:
@@ -824,6 +824,21 @@ O(n) unregister.
 - **Tests:** `PC_34_Ending_a_process_costs_as_much_among_10000_as_among_1000` in PlayMode's `ProcessRegistrationTests`,
   and `ChurnTests` and `SoakTests` in Proving Grounds' `Tests/Stress`.
 
+### A template's push searches the project once (ED-44)
+
+The editor stress runs push a template to 2,000 children. It took 28 s: for each child, the push searched the project
+for that child's own children and loaded every asset of its type again.
+
+- **IDs:** ED-44, commit `024cf09`; Decision 30.
+- **Read:**
+  - `Assets/PlayForge/Editor/Tools/ForgeTemplatePropogation/ForgeTemplatePropagator.cs:216` `ChildrenByTemplate`, a type's assets by the template they name, in one search.
+  - `Assets/PlayForge/Editor/Tools/ForgeTemplatePropogation/ForgeTemplatePush.cs:37` `PushToChildren`, which walks that family from `:62` `Push`, and
+    `Assets/PlayForge/Editor/Tools/ForgeTemplatePropogation/ForgeTemplatePropagator.cs:99` `PropagateToAllChildren`, which does the same through `:112` `Cascade`.
+- **Watch for:** a push still costs about 2.9 ms a child, the child's own propagation and its Undo record.
+- **Tests:** `ED_44_A_push_searches_the_project_once_however_big_the_family` in EditMode's `TemplatePushTests`, and
+  Proving Grounds' `Tests/Editor/EditorStressTests`: The Forge over 2,586 assets, the push to 2,000 children, and the
+  Debugger over 200 entities.
+
 ## Phase 4
 
 Phase 4 redesigns the editor one surface at a time, and it starts where the UI interview's Q35 asks: with Undo and
@@ -1539,9 +1554,9 @@ a dialog mid-save, loaded every asset of its type and changed the children with 
 
 - **IDs:** ED-13, commit `6733220`.
 - **Read:**
-  - `Assets/PlayForge/Editor/Tools/ForgeTemplatePropogation/ForgeTemplatePush.cs:37` `PushToChildren`, `:117`
-    `MarkOverrides` and `:230` `OverridePathOf`.
-  - `:193` `OnUndoRedo`, which takes a mark back with the Undo of the step it was made in, and makes it again on Redo.
+  - `Assets/PlayForge/Editor/Tools/ForgeTemplatePropogation/ForgeTemplatePush.cs:37` `PushToChildren`, `:121`
+    `MarkOverrides` and `:234` `OverridePathOf`.
+  - `:197` `OnUndoRedo`, which takes a mark back with the Undo of the step it was made in, and makes it again on Redo.
   - `Assets/PlayForge/Editor/CustomPropertyDrawers/Forge/Editors/BasePlayForgeEditor.cs:181` `ShowOverrides`.
 - **Watch for:**
   - Unity hands over an edit's modifications as it flushes undo records, at the end of a frame, so a push flushes first,
@@ -3133,6 +3148,7 @@ Newest first. Each row is a good place to start reading.
 
 | What | IDs | Where | Commit |
 |---|---|---|---|
+| A template's push searches the project once | ED-44 | `Assets/PlayForge/Editor/Tools/ForgeTemplatePropogation/ForgeTemplatePropagator.cs:216` | `024cf09` |
 | Ending a process costs the same however many there are | PC-34 | `Assets/PlayForge/Runtime/PlayForge/Management/GameplayProcess/Core/ProcessWorld.cs:237` | `4a226e6` |
 | An area ability strikes every target | GAS-62 | `Assets/PlayForge/Runtime/PlayForge/Utils/ProcessTaskUtil.cs:54` | `fff120f` |
 | Rollback: abilities kept through a load, timers saved in full | GAS-60, GAS-61 | `Assets/PlayForge/Runtime/PlayForge/Save/ForgeSave.cs:304` | `2c8dff3` |
