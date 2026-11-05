@@ -1,7 +1,7 @@
 # PlayForge refactor: code tour
 
 This tour lists the places where the refactor changed code, so you can open each one in your IDE and read it. It
-covers `01258b8..cfab32a` on `main`: 316 commits. Phase 0 ported Arcade Fighter's fixes, Phase 1 made the runtime
+covers `01258b8..26aa233` on `main`: 318 commits. Phase 0 ported Arcade Fighter's fixes, Phase 1 made the runtime
 correct, Phase 2 got the package ready to release, Phase 3 made it cheaper to run and gave the two GAS hubs one core,
 Phase 4 rebuilt the editor, and Phase 5 has begun. Each entry says what behaves differently and why, names its tracker IDs and Decisions, and
 points at the two or three places to read. `Docs/REFACTOR_PLAN.md` has every tracker row, the numbered Decisions,
@@ -10,8 +10,8 @@ and a Log of each batch's test results.
 ## How to use this
 
 - Paths are relative to the repo root.
-- Line numbers are as of commit `cfab32a`, the head of `main` on 2026-11-04. A later commit may move them, so each
-  entry also names the class and method to search for. `git show cfab32a:<path>` shows a file as it was then.
+- Line numbers are as of commit `26aa233`, the head of `main` on 2026-11-05. A later commit may move them, so each
+  entry also names the class and method to search for. `git show 26aa233:<path>` shows a file as it was then.
 - In Rider, Go to File accepts `path:line`. In Visual Studio, open the file, then Go To Line (Ctrl+G).
   A bare `:123` after a path means another line in the same file.
 - `git grep "<ID>"` finds the comment at each fix, and `git log --grep "<ID>"` finds its commit. Three exceptions:
@@ -234,8 +234,8 @@ once an ability ran.
 - **IDs:** FEAT-5, commit `cfab32a`; Decision 30.
 - **Read:**
   - `Assets/PlayForge/Runtime/PlayForge/AbilitySystem/Core/AbilitySystemComponent.cs:339`, where `CanActivateAbility`
-    asks `IsBlocked` (`:366`) and the While active group; `:458`, where `TryActivateAbility` calls
-    `CancelAbilitiesCancelledBy` (`:376`); and `:407` `CheckWhileActive`.
+    asks `IsBlocked` (`:366`) and the While active group; `:484`, where `TryActivateAbility` calls
+    `CancelAbilitiesCancelledBy` (`:376`); and `:417` `CheckWhileActive`.
   - `Assets/PlayForge/Runtime/PlayForge/AbilitySystem/Core/AbilitySpecContainer.cs:226` `Blocks` and `:243`
     `CancelFor`, which read each run's stage.
   - `Assets/PlayForge/Runtime/PlayForge/AbilitySystem/Ability/AbilityProxy/Core/AbilityBehaviour.cs:35`, the ability's
@@ -248,6 +248,29 @@ once an ability ran.
 - **Tests:** the five `FEAT_5_*` tests on each hub in PlayMode's new `CancelAndBlockTests`,
   `FEAT_5_The_Ability_inspector_edits_cancel_block_and_While_active`, and `ED_37_The_requirements_table_opens_a_cell_to_edit_it`,
   which now expects the While active row.
+
+### The MOBA hero kit lab, GAS-57, and While active heard at once (FEAT-5)
+
+The second lab (Decision 30). In Proving Grounds' `Tests/Labs/MobaLab.cs`, four heroes of four abilities play on a
+clock of half a second a frame: mana costs, cooldowns that a hero's Cooldown Reduction shortens, armor and magic
+resist, lifesteal, a silence, a stun, a cleanse, and a channel that a stun ends, a blink cancels and that blocks the
+caster's other spells. Its bot found two bugs. The framework's lifesteal, the relative-operation impact worker, read
+the impacted attribute's value, never its Relative Attribute, so it healed the attacker by its own health times the
+blow (GAS-57). And a While active group checked at the stunned entity's next step let a channel's tick that came due
+earlier in the frame land: the ability system now checks as it hears the tag change.
+
+- **IDs:** GAS-57, FEAT-5, commit `26aa233`; Decision 30.
+- **Read:**
+  - `Assets/PlayForge/Runtime/PlayForge/Workers/ImpactWorker/Authored/RelativeOperationContextImpactWorker.cs:100`
+    `GetWrtTarget`, which reads the Relative Attribute (`:103`), or the impacted attribute when none is set.
+  - `Assets/PlayForge/Runtime/PlayForge/AbilitySystem/Core/AbilitySystemComponent.cs:406` `HearTagChange`, which
+    checks at once, `:417` `CheckWhileActive`, guarded against a change its own interrupt sets off, and `:436`
+    `InterruptFailingWhileActive`.
+- **Watch for:** GAS-41's test leaves Relative Attribute unset and expects the impacted attribute's value, so a worker
+  with none set keeps the old reading. The lab's armor and lifesteal are a game's code, written the way a game would.
+- **Tests:** `GAS_57_A_relative_worker_reads_its_relative_attribute` in `WorkerTests`,
+  `FEAT_5_A_stun_ends_a_channel_before_its_next_tick` in `CancelAndBlockTests`, and the lab's nine rounds in
+  `MobaLabTests` (category Lab).
 
 ## Phase 4
 
@@ -719,7 +742,7 @@ Granted reads Activate At Start, since the runtime tries it only for an entity's
     `ActivationSummary`.
   - `Assets/PlayForge/Editor/CustomPropertyDrawers/Forge/Editors/BasePlayForgeEditor.cs:605` `EnumName`, the name an
     enum field shows.
-  - `Assets/PlayForge/Runtime/PlayForge/AbilitySystem/Core/AbilitySystemComponent.cs:677`, the enums' shown names.
+  - `Assets/PlayForge/Runtime/PlayForge/AbilitySystem/Core/AbilitySystemComponent.cs:703`, the enums' shown names.
 - **Watch for:** the tag requirements and the checks still draw in their drawers' own look. The requirements table the
   Effect inspector shares comes with the Effect step.
 - **Tests:** `ED_37_The_Ability_inspector_keeps_the_style_docs_sections`,
@@ -1482,9 +1505,9 @@ nested until the stack overflowed. Such a request now starts next frame.
 
 - **IDs:** TS-8, commit `c45f4f1`, Decision 25.
 - **Read:**
-  - `Assets/PlayForge/Runtime/PlayForge/AbilitySystem/Core/AbilitySystemComponent.cs:439` `TryActivateAbility`,
-    which puts the request off (`:451`) while the ability's activation call still runs, and `ActivateNextFrame`
-    (`:464`), which tries it again next frame.
+  - `Assets/PlayForge/Runtime/PlayForge/AbilitySystem/Core/AbilitySystemComponent.cs:465` `TryActivateAbility`,
+    which puts the request off (`:477`) while the ability's activation call still runs, and `ActivateNextFrame`
+    (`:490`), which tries it again next frame.
   - `Assets/PlayForge/Runtime/PlayForge/AbilitySystem/Core/AbilitySpecContainer.cs:36` `IsActivating`, open from the
     claim to the end of `ActivateAbility` (`:94`).
 - **Watch for:** `TryActivateAbility` returns true for a request it puts off. Next frame it's tried in full, and dropped
@@ -1511,7 +1534,7 @@ too, and an ending entity's ability system shuts before its abilities end.
   - `Assets/PlayForge/Runtime/PlayForge/GAS/Core/GASCore.cs:178` `WhenTerminate`, which each hub's `WhenTerminate`
     calls before its base's, and `ShutDown` in
     `Assets/PlayForge/Runtime/PlayForge/AbilitySystem/Core/AbilitySystemComponent.cs:122`, with the check
-    `TryActivateAbility` now makes first (`:443`).
+    `TryActivateAbility` now makes first (`:469`).
 - **Watch for:** any runtime process that handles others now ends them as it ends. A process registered with
   ProcessControl as its handler, as a group's members are, isn't one of them. A runtime GAS registered again after it
   ended keeps its ability system shut.
@@ -1525,9 +1548,9 @@ policy. TS-Z made an interrupted ability end inside the interrupt, where it take
 threw once the first had ended, and the rest ran on. It now walks a copy.
 
 - **IDs:** GAS-53, commit `473ea8e`.
-- **Read:** `Assets/PlayForge/Runtime/PlayForge/AbilitySystem/Core/AbilitySystemComponent.cs:535` `Inject`, which
-  copies the set into a rented array (`:543`) before it interrupts anything. `InjectAll` (`:558`) and the private
-  `ClearAbilityCache` (`:509`) go through it.
+- **Read:** `Assets/PlayForge/Runtime/PlayForge/AbilitySystem/Core/AbilitySystemComponent.cs:561` `Inject`, which
+  copies the set into a rented array (`:569`) before it interrupts anything. `InjectAll` (`:584`) and the private
+  `ClearAbilityCache` (`:535`) go through it.
 - **Watch for:** an ability that ends inside the interrupt fires `OnAbilityEnd` before `Inject` returns.
 - **Test:** `GAS_53_Interrupting_every_running_ability_ends_each` in `AbilityLifecycleTests`, on both hubs and each
   way of interrupting.
@@ -2171,8 +2194,8 @@ Removing an ability takes it off the active list before tags compile, and still 
 
 - **IDs:** GAS-21, TS-T, GAS-20.
 - **Read:**
-  - `Assets/PlayForge/Runtime/PlayForge/AbilitySystem/Core/AbilitySystemComponent.cs:566`
-    `AbilitySystemComponent.ClaimActive`, then `ReleaseClaim` (`:584`) and `EndActivation` (`:601`).
+  - `Assets/PlayForge/Runtime/PlayForge/AbilitySystem/Core/AbilitySystemComponent.cs:592`
+    `AbilitySystemComponent.ClaimActive`, then `ReleaseClaim` (`:610`) and `EndActivation` (`:627`).
   - `Assets/PlayForge/Runtime/PlayForge/AbilitySystem/Core/AbilitySystemComponent.cs:245`
     `AbilitySystemComponent.RemoveAbility`.
 - **New:** `AbilitySpecContainer.IsActiveUnder(EAbilityActivationPolicy)`.
@@ -2557,6 +2580,7 @@ Newest first. Each row is a good place to start reading.
 
 | What | IDs | Where | Commit |
 |---|---|---|---|
+| The MOBA hero kit lab, GAS-57, and While active heard at once | GAS-57, FEAT-5 | `Assets/PlayForge/Runtime/PlayForge/Workers/ImpactWorker/Authored/RelativeOperationContextImpactWorker.cs:100` | `26aa233` |
 | Cancel and block abilities by tag, and While active | FEAT-5 | `Assets/PlayForge/Runtime/PlayForge/AbilitySystem/Core/AbilitySystemComponent.cs:376` | `cfab32a` |
 | Abilities granted by effects, and the chance to apply | FEAT-8 | `Assets/PlayForge/Runtime/PlayForge/GAS/Core/EffectSystemComponent.cs:308` | `60683cd` |
 | The Status-effect lab, and overflow at max stacks | FEAT-8 | `Assets/PlayForge/Runtime/PlayForge/GAS/Core/EffectSystemComponent.cs:518` | `13eac5b` |
@@ -2606,9 +2630,9 @@ Newest first. Each row is a good place to start reading.
 | The Attribute inspector undoes every edit and edits a multiple selection | ED-12 | `Assets/PlayForge/Editor/CustomPropertyDrawers/Forge/Editors/Assets/AttributeEditor.cs:139` | `e1d1dd0` |
 | A task waiting in a delay allocates nothing a frame | TS-11 | `Assets/PlayForge/Runtime/PlayForge/Core/TaskSequence/Async/TaskSequenceRuntime.cs:55` | `ec008f7` |
 | A frame whose summary has a listener allocates nothing | GAS-P10, Decision 26 | `Assets/PlayForge/Runtime/PlayForge/Workers/Core/FrameSummary.cs:347` | `11a0f66` |
-| Interrupting every running ability ends each | GAS-53 | `Assets/PlayForge/Runtime/PlayForge/AbilitySystem/Core/AbilitySystemComponent.cs:535` | `473ea8e` |
+| Interrupting every running ability ends each | GAS-53 | `Assets/PlayForge/Runtime/PlayForge/AbilitySystem/Core/AbilitySystemComponent.cs:561` | `473ea8e` |
 | A runtime entity's abilities end when it does | GAS-52 | `Assets/PlayForge/Runtime/PlayForge/Management/GameplayProcess/Wrappers/ClassWrapper/AbstractRuntimeProcess.cs:119` | `3102975` |
-| An ability asked for inside its own activation starts next frame | TS-8, Decision 25 | `Assets/PlayForge/Runtime/PlayForge/AbilitySystem/Core/AbilitySystemComponent.cs:439` | `c45f4f1` |
+| An ability asked for inside its own activation starts next frame | TS-8, Decision 25 | `Assets/PlayForge/Runtime/PlayForge/AbilitySystem/Core/AbilitySystemComponent.cs:465` | `c45f4f1` |
 | Sequences and abilities end the frame their last task does | TS-Z, Decision 24 | `Assets/PlayForge/Runtime/PlayForge/Management/GameplayProcess/Core/ProcessRelay.cs:44` | `04c3db1` |
 | A tick, a recompute and a tag query allocate nothing | GAS-P4 | `Assets/PlayForge/Runtime/PlayForge/GameplayEffect/Core/GameplayEffectSpec.cs:162` | `b50a80b` |
 | Ending an effect costs the same however many end with it | GAS-P5 | `Assets/PlayForge/Runtime/PlayForge/GAS/Core/EffectSystemComponent.cs:666` | `7ce68aa` |
