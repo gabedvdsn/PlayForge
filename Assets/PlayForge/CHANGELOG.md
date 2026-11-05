@@ -324,6 +324,9 @@ tracks each fix below by its ID.
   Asking whether its sequence was paused took 24 bytes a frame.
 
 ### Fixed
+- The Debugger kept its wide layout docked in a narrow column, squeezing its lists and details side by side. Below
+  720 px each view's list sits above its detail, the toolbar's views take a row of their own, the frame count moves
+  to the status bar, and the tables hide their lowest-priority columns (ED-43).
 - A second world of its own refused its first process where GameRoot handled it, as it did by default: each world
   numbered its processes from 0, and a handler keeps what it handles by that number. Every world draws its
   processes' cache indices from one counter, so each is a process's own among all worlds' (FEAT-10).

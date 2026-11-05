@@ -40,6 +40,7 @@ namespace FarEmerald.PlayForge.Extended.Editor
             var view = new VisualElement { name = "EntitiesView" };
             view.AddToClassList("pf-debugger__view");
             var split = new TwoPaneSplitView(0, 440, TwoPaneSplitViewOrientation.Horizontal) { name = "EntitySplit" };
+            entitySplit = split;
             split.AddToClassList("pf-debugger__split");
 
             entityList = new MultiColumnListView

@@ -82,6 +82,20 @@ namespace FarEmerald.PlayForge.Extended.Editor
         private Label processStatus;
         private Label entityStatus;
         private Label actionStatus;
+        private Label frameStatus;
+        private ToolbarSpacer toolbarSpacer;
+
+        // A narrow window, as a docked column, and the views' splits it lays out (ED-43)
+        private const float NarrowWidth = 720f;
+        private const float NarrowListHeight = 240f;
+        private const string NarrowClass = "pf-debugger--narrow";
+        private const string SourceColumnClass = "pf-debugger__col-source";
+        private static readonly string[] NarrowHiddenColumns = { "Handler", "Lifecycle", "Timing", "Lifetime" };
+        private bool narrow;
+        private bool fitted;
+        private TwoPaneSplitView entitySplit;
+        private TwoPaneSplitView processSplit;
+        private TwoPaneSplitView tagSplit;
 
         // ═══════════════════════════════════════════════════════════════════════════
         // Opening
@@ -266,6 +280,7 @@ namespace FarEmerald.PlayForge.Extended.Editor
             var root = rootVisualElement;
             ForgeTheme.Apply(root);
             root.AddToClassList("pf-debugger");
+            root.RegisterCallback<GeometryChangedEvent>(changed => Fit(changed.newRect.width));
             root.Add(BuildToolbar());
 
             prompt = BuildPrompt();
@@ -288,6 +303,8 @@ namespace FarEmerald.PlayForge.Extended.Editor
             entityStatus = StatusPart("EntityStatus");
             actionStatus = StatusPart("ActionStatus");
             actionStatus.AddToClassList("pf-debugger__status-action");
+            frameStatus = StatusPart("FrameStatus");
+            frameStatus.AddToClassList(HiddenClass);
             root.Add(statusBar);
             ShowState();
         }
@@ -304,6 +321,7 @@ namespace FarEmerald.PlayForge.Extended.Editor
         private Toolbar BuildToolbar()
         {
             var toolbar = new Toolbar { name = "DebuggerToolbar" };
+            toolbar.AddToClassList("pf-debugger__toolbar");
             var segments = new VisualElement { name = "ViewToggles" };
             segments.AddToClassList("pf-debugger__views-toggles");
             foreach (var (each, text, tip) in new[]
@@ -360,7 +378,8 @@ namespace FarEmerald.PlayForge.Extended.Editor
                 }, _ => processFilter == each ? DropdownMenuAction.Status.Checked : DropdownMenuAction.Status.Normal);
             toolbar.Add(filterMenu);
 
-            toolbar.Add(new ToolbarSpacer { flex = true });
+            toolbarSpacer = new ToolbarSpacer { flex = true };
+            toolbar.Add(toolbarSpacer);
 
             followToggle = new ToolbarToggle { name = "FollowSelection", tooltip = "Show the entity whose GameObject is selected in the scene" };
             followToggle.AddToClassList("pf-debugger__follow");
@@ -441,9 +460,10 @@ namespace FarEmerald.PlayForge.Extended.Editor
             hubMenu.EnableInClassList(HiddenClass, !live || view == View.Processes);
             filterMenu.EnableInClassList(HiddenClass, !live || view != View.Processes);
             followToggle.EnableInClassList(HiddenClass, !live || view != View.Entities);
-            controlLabel.EnableInClassList(HiddenClass, !live || view != View.Processes);
+            controlLabel.EnableInClassList(HiddenClass, !live || view != View.Processes || narrow);
             controlMenu.EnableInClassList(HiddenClass, !live || view != View.Processes);
-            frameLabel.EnableInClassList(HiddenClass, !live);
+            frameLabel.EnableInClassList(HiddenClass, !live || narrow);
+            toolbarSpacer.EnableInClassList(HiddenClass, narrow);
             hubMenu.text = HubFilters.First(each => each.Kind == hubFilter).Text;
             filterMenu.text = processFilter;
             var placeholder = view switch
@@ -462,6 +482,11 @@ namespace FarEmerald.PlayForge.Extended.Editor
         {
             if (statusBar == null) return;
             frameLabel.text = $"Frame {Grouped(Time.frameCount)}";
+
+            // A narrow window's status bar holds the frame count, and counts without their parts (ED-43)
+            frameStatus.text = frameLabel.text;
+            frameStatus.EnableInClassList(HiddenClass, !narrow);
+            controlStatus.EnableInClassList(HiddenClass, narrow);
             controlMenu.text = followed != null ? ControlStates.First(each => each.State == followed.State).Text : "None";
             if (followed == null)
             {
@@ -476,9 +501,46 @@ namespace FarEmerald.PlayForge.Extended.Editor
             int created = processes.Count(pcb => pcb.State == EProcessState.Created);
             var parts = new List<string> { $"{running} running", $"{waiting} waiting" };
             if (created > 0) parts.Add($"{created} created");
-            processStatus.text = $"{CountOf(processes.Count, "process", "processes")}: {string.Join(", ", parts)}";
+            processStatus.text = narrow
+                ? CountOf(processes.Count, "process", "processes")
+                : $"{CountOf(processes.Count, "process", "processes")}: {string.Join(", ", parts)}";
             int mono = hubs.Count(gas => gas.ToGASObject() != null);
-            entityStatus.text = $"{CountOf(hubs.Count, "entity", "entities")}: {mono} Mono, {hubs.Count - mono} runtime";
+            entityStatus.text = narrow
+                ? CountOf(hubs.Count, "entity", "entities")
+                : $"{CountOf(hubs.Count, "entity", "entities")}: {mono} Mono, {hubs.Count - mono} runtime";
+        }
+
+        /// <summary>
+        /// Lays the window out for its width, as EDITOR_STYLE's Debugger section has it. Below 720 px, as a docked column,
+        /// each view's list sits above its detail, the toolbar's views take a row of their own, the frame count moves to
+        /// the status bar, the Processes list keeps ID, Process, State and Step, and Held By drops Source. The window kept
+        /// its wide layout at any width, so a docked one squeezed its lists and details side by side (ED-43).
+        /// </summary>
+        internal void Fit(float width)
+        {
+            if (views == null || float.IsNaN(width) || width <= 0f) return;
+            bool now = width < NarrowWidth;
+            if (fitted && now == narrow) return;
+            fitted = true;
+            narrow = now;
+            rootVisualElement.EnableInClassList(NarrowClass, narrow);
+            Lay(entitySplit, 0, 440);
+            Lay(processSplit, 1, 380);
+            Lay(tagSplit, 0, 440);
+            if (processList != null)
+                foreach (var name in NarrowHiddenColumns) processList.columns[name].visible = !narrow;
+            rootVisualElement.Query(className: SourceColumnClass).ForEach(cell => cell.EnableInClassList(HiddenClass, narrow));
+            ShowView();
+            ShowStatus();
+        }
+
+        // A view's list beside its detail, the pane given keeping its width, or in a narrow window above it
+        private void Lay(TwoPaneSplitView split, int widePane, float wideDimension)
+        {
+            if (split == null) return;
+            split.orientation = narrow ? TwoPaneSplitViewOrientation.Vertical : TwoPaneSplitViewOrientation.Horizontal;
+            split.fixedPaneIndex = narrow ? 0 : widePane;
+            split.fixedPaneInitialDimension = narrow ? NarrowListHeight : wideDimension;
         }
 
         // What the last action in the window did, as "Applied Burning" or "Burning was refused", on the status bar's

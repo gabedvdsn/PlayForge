@@ -643,6 +643,7 @@ had no letter in the review. TS-AA onward came from the test project.
 | ED-40 | M | 4 | The debugger only watches: it can't change an attribute or a tag, apply an effect or grant an ability, so trying a change means writing code for it. Q27: editing attributes and tags first, then applying effects and granting abilities. Fixed: each section of the Debugger's Entities view ends in a foot row (Decision 31): the selected attribute's Base and Current fields, which the entity takes as they are; Remove for the selected effect, and an effect picked there lands from the entity itself; Activate and Interrupt for the selected ability, and one picked there is granted at a level; Remove for the selected loose tag, and a tag typed or picked from the project's is granted as a loose tag (FEAT-16). The status bar says what each did | `Editor/Debugger/RuntimeDebugger.Entities.cs` | fixed |
 | ED-41 | S | 5 | An ability's cost and cooldown apply only from a stage set to Apply Usage Effects, and nothing said so when no stage was: the Tactics lab's Slash had a cooldown that never came on. Fixed: the Ability inspector warns under Cooldown while the ability has a cost or a cooldown and no stage applies them, and the Problems view lists it (`UsageEffectsRule`) | `Editor/CustomPropertyDrawers/Forge/Editors/Assets/AbilityEditor.cs`, `Editor/Problems/ForgeRules.cs` | fixed |
 | ED-42 | Clear gives a new asset's values | A section's Clear set each field to its type's default, 0 or the first choice, not the field's own (`SectionClearUtility.ResetPropertyToDefault`). Clearing an effect's Impact set its affiliation to Use Affiliation List with none listed and its Chance to Apply to 0, so the effect never landed. Done: a cleared field takes a new asset's value, read from a new asset of the target's kind that no one sees (`FreshOf`, `TakeFresh`), and a cleared list still empties. Impact's Import and Clear take the impact's own fields but its chance, which Requirements shows, imports and clears (FEAT-8) |
+| ED-43 | M | 5 | The Debugger kept its wide layout at any width, so docked in a column its lists and details squeezed side by side and its tables clipped, against the user's rule that it read as clearly at 360 px as in a full window (EDITOR_STYLE's Debugger section, the canvas's three narrow boards). Found starting FEAT-12, whose Timeline view follows the rule too. Fixed: below 720 px each view's list sits above its detail, the toolbar's views take a row of their own with the search and the view's menus under them, the frame count moves to the status bar, whose counts drop their parts, the Processes list keeps ID, Process, State and Step, Held By drops Source, and Follow Selection keeps its icon | `Editor/Debugger/RuntimeDebugger.cs` (`Fit`), `Editor/Debugger/RuntimeDebugger.Tags.cs`, `Editor/UI/PlayForge.uss` | fixed |
 
 The design questions behind Phase 4's rows, each with its evidence, are in the UI interview doc of 2026-11-03,
 https://claude.ai/artifact/BbnGybqgX3spJsT6HoTafp. Its answers (Decision 18) settle ED-8, ED-16, ED-19 and ED-12's
@@ -782,6 +783,18 @@ GAS-4 with GAS-5, PC-6, and TS-I with PC-5.
 ## Log
 
 Record baselines, gate results and notable decisions here, newest first.
+
+- 2026-11-05, **ED-43: the Debugger fits a narrow column.** Found as FEAT-12 began: EDITOR_STYLE's Debugger
+  section and the canvas's three narrow boards say how the Debugger reads at 360 px, and nothing did it.
+  - **The fix:** `RuntimeDebugger.Fit(width)`, which the window's geometry calls, lays it out by its width. Below
+    720 px each view's split turns its list above its detail, 240 px tall, the toolbar wraps its views onto a row
+    of their own across it, the frame count moves to the status bar, whose counts drop their parts, the Processes
+    list hides Handler, Lifecycle, Timing and Lifetime, which its detail shows, Held By hides Source, and Follow
+    Selection keeps its icon. At 720 px and up, it's as it was.
+  - **Its test,** seen failing first: `ED_43_The_Debugger_fits_a_narrow_column` in EditMode's
+    `RuntimeDebuggerTests` (there was no fit), which fits the window to 360 px and then to 1280 px.
+  - **Tests:** EditMode 446 of 446. An editor change, so PlayMode didn't run: it stands at 1282 from FEAT-18.
+  - **Next:** FEAT-12, the Debugger's Timeline view.
 
 - 2026-11-05, **FEAT-18's two Profiler modules** (Decision 32), the last of three parts. FEAT-18 is done.
   - **The modules:** PlayForge Processes charts ProcessControl's and TaskSequence's ten counters, and PlayForge GAS

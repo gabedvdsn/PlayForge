@@ -54,6 +54,7 @@ namespace FarEmerald.PlayForge.Extended.Editor
             var view = new VisualElement { name = "TagsView" };
             view.AddToClassList("pf-debugger__view");
             var split = new TwoPaneSplitView(0, 440, TwoPaneSplitViewOrientation.Horizontal) { name = "TagSplit" };
+            tagSplit = split;
             split.AddToClassList("pf-debugger__split");
 
             tagTree = new MultiColumnTreeView
@@ -231,8 +232,14 @@ namespace FarEmerald.PlayForge.Extended.Editor
             tagDetail.Add(header);
 
             var section = Section("HeldBy", "Held By");
-            section.Content.Add(TableHead(("Entity", "pf-debugger__col-grow"), ("Weight", "pf-debugger__col-60"),
-                ("Granted by", "pf-debugger__col-grow"), ("Source", "pf-debugger__col-grow")));
+            var head = TableHead(("Entity", "pf-debugger__col-grow"), ("Weight", "pf-debugger__col-60"),
+                ("Granted by", "pf-debugger__col-grow"), ("Source", "pf-debugger__col-grow"));
+
+            // Source is the column a narrow window drops (ED-43)
+            var sourceHead = head[head.childCount - 1];
+            sourceHead.AddToClassList(SourceColumnClass);
+            sourceHead.EnableInClassList(HiddenClass, narrow);
+            section.Content.Add(head);
             var rows = new VisualElement { name = "HolderRows" };
             section.Content.Add(rows);
             tagDetail.Add(section);
@@ -276,6 +283,8 @@ namespace FarEmerald.PlayForge.Extended.Editor
             source.AddToClassList("pf-debugger__cell");
             source.AddToClassList("pf-debugger__col-grow");
             source.AddToClassList("pf-debugger__cell--secondary");
+            source.AddToClassList(SourceColumnClass);
+            source.EnableInClassList(HiddenClass, narrow);
             row.Add(source);
 
             Type shownKind = null;

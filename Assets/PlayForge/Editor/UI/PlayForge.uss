@@ -1577,6 +1577,37 @@
     white-space: nowrap;
 }
 
+/* A narrow window, as a docked column (ED-43): the toolbar's views on a row of their own, across it, and the search
+   and the view's menus under them. The splits lay each list above its detail */
+.pf-root.pf-debugger--narrow .pf-debugger__toolbar {
+    flex-wrap: wrap;
+    height: auto;
+}
+
+.pf-root.pf-debugger--narrow .pf-debugger__views-toggles {
+    width: 100%;
+    margin-right: 0;
+}
+
+.pf-root.pf-debugger--narrow .pf-debugger__view-toggle {
+    flex-grow: 1;
+    flex-basis: 0;
+}
+
+.pf-root.pf-debugger--narrow .pf-debugger__search {
+    flex-grow: 1;
+    width: auto;
+}
+
+/* Follow Selection keeps its icon */
+.pf-root.pf-debugger--narrow .pf-debugger__follow > Label {
+    display: none;
+}
+
+.pf-root.pf-debugger--narrow .pf-debugger__follow .pf-glyph {
+    margin-right: 0;
+}
+
 /* Outside Play mode: the line, and Enter Play Mode under it */
 .pf-root .pf-debugger__prompt {
     flex-grow: 1;

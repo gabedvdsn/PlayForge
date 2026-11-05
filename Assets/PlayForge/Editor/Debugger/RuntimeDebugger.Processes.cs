@@ -45,6 +45,7 @@ namespace FarEmerald.PlayForge.Extended.Editor
             var view = new VisualElement { name = "ProcessesView" };
             view.AddToClassList("pf-debugger__view");
             var split = new TwoPaneSplitView(1, 380, TwoPaneSplitViewOrientation.Horizontal) { name = "ProcessSplit" };
+            processSplit = split;
             split.AddToClassList("pf-debugger__split");
 
             processList = new MultiColumnListView
