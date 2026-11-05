@@ -1,7 +1,7 @@
 # PlayForge refactor: code tour
 
 This tour lists the places where the refactor changed code, so you can open each one in your IDE and read it. It
-covers `01258b8..ed60c62` on `main`: 344 commits. Phase 0 ported Arcade Fighter's fixes, Phase 1 made the runtime
+covers `01258b8..4d110da` on `main`: 348 commits. Phase 0 ported Arcade Fighter's fixes, Phase 1 made the runtime
 correct, Phase 2 got the package ready to release, Phase 3 made it cheaper to run and gave the two GAS hubs one core,
 Phase 4 rebuilt the editor, and Phase 5 has begun. Each entry says what behaves differently and why, names its tracker IDs and Decisions, and
 points at the two or three places to read. `Docs/REFACTOR_PLAN.md` has every tracker row, the numbered Decisions,
@@ -10,8 +10,8 @@ and a Log of each batch's test results.
 ## How to use this
 
 - Paths are relative to the repo root.
-- Line numbers are as of commit `ed60c62`, the head of `main` on 2026-11-05. A later commit may move them, so each
-  entry also names the class and method to search for. `git show ed60c62:<path>` shows a file as it was then.
+- Line numbers are as of commit `4d110da`, the head of `main` on 2026-11-05. A later commit may move them, so each
+  entry also names the class and method to search for. `git show 4d110da:<path>` shows a file as it was then.
 - In Rider, Go to File accepts `path:line`. In Visual Studio, open the file, then Go To Line (Ctrl+G).
   A bare `:123` after a path means another line in the same file.
 - `git grep "<ID>"` finds the comment at each fix, and `git log --grep "<ID>"` finds its commit. Three exceptions:
@@ -211,8 +211,8 @@ lab gains a jagged strike that lacerates on a seeded roll and a blessing that le
   - `Assets/PlayForge/Runtime/PlayForge/GameplayEffect/Core/GameplayEffect.cs:22` `GrantedAbilities`, and
     `Assets/PlayForge/Runtime/PlayForge/GameplayEffect/Core/Definition/GameplayEffectImpact.cs:141` `ChanceToApply`.
   - `Assets/PlayForge/Editor/CustomPropertyDrawers/Forge/Editors/Assets/EffectEditor.cs:302`, the Tags section's
-    Granted Abilities, and `:621` `ChanceSummary`; the drawer's field is
-    `Assets/PlayForge/Editor/CustomPropertyDrawers/Forge/Drawers/Assets/Effect/GameplayEffectImpactDrawer.cs:89`.
+    Granted Abilities, and `:661` `ChanceSummary`. The Requirements section draws the chance, at `:414`,
+    above its tables; it sat in the impact drawer until ED-42's commit.
 - **Watch for:** a new field's initializer gives an existing asset its default, so every effect saved before this has
   a chance of 1. An instant effect lends nothing, as it's never on its target.
 - **Tests:** the five `FEAT_8_*` tests on each hub in PlayMode's new `GrantedAbilityAndChanceTests`,
@@ -499,7 +499,7 @@ blows shake the camera, drove it and held at its first run.
   - `Assets/PlayForge/Runtime/PlayForge/GameplayEffect/Cues/ForgeCues.cs:4` `ICameraShaker` and `:14` `Shaker`, which
     `Assets/PlayForge/Runtime/PlayForge/GameplayEffect/Cues/CameraShakeCue.cs:11` `CameraShakeCue` goes through. Beside it are
     `Assets/PlayForge/Runtime/PlayForge/GameplayEffect/Cues/PrefabCue.cs:13` `PrefabCue` and `Assets/PlayForge/Runtime/PlayForge/GameplayEffect/Cues/SoundCue.cs:8` `SoundCue`.
-  - `Assets/PlayForge/Editor/CustomPropertyDrawers/Forge/Editors/Assets/EffectEditor.cs:416` `BuildCuesSection`, and `Assets/PlayForge/Editor/CustomPropertyDrawers/Forge/Drawers/Other/CueDrawers.cs:7`
+  - `Assets/PlayForge/Editor/CustomPropertyDrawers/Forge/Editors/Assets/EffectEditor.cs:448` `BuildCuesSection`, and `Assets/PlayForge/Editor/CustomPropertyDrawers/Forge/Drawers/Other/CueDrawers.cs:7`
     `CueHandlerDrawer`.
 - **Watch for:** one handler serves every entity its effect is on, so a lasting cue keeps what it placed by spec, as
   `PrefabCue` does. A cue that throws is reported, and its effect goes on. An effect absorbed into one already on plays
@@ -529,6 +529,27 @@ threw at the press. They read the game's input now, with the project's own as th
   camera aims nowhere: a task that retries on a miss waits for the next.
 - **Tests:** EditMode's `FEAT_11_The_runtime_reads_input_only_through_ForgeInput`, and PlayMode's new
   `TargetingInputTests`.
+
+### Clear gives a new asset's values (ED-42), and Chance to Apply in Requirements (FEAT-8)
+
+A section's Clear set each field to its type's default, 0 or the first choice. Clearing an effect's Impact set its
+affiliation to Use Affiliation List with none listed and its Chance to Apply to 0, so the effect never landed. It came
+to light as the chance moved to Requirements, where the design puts it, since it gates the whole application.
+
+- **IDs:** ED-42 and FEAT-8, commit `4d110da`.
+- **Read:**
+  - `Assets/PlayForge/Editor/CustomPropertyDrawers/Forge/Editors/Windows/SectionClearUtility.cs:22` `Clear`, which makes `:99` `FreshOf`, a new asset of the target's
+    kind that no one sees, and `:154` `ResetPropertyToDefault`, where `:109` `TakeFresh` gives each field the new
+    asset's value. A list still empties.
+  - `Assets/PlayForge/Editor/CustomPropertyDrawers/Forge/Editors/Assets/EffectEditor.cs:375` `ImpactPaths`, the impact's own fields but `:372` `ChancePath`, so
+    Impact's Import and Clear leave the chance. `:396` `BuildRequirementsSection` draws the chance above the tables
+    (`:414`), and `:638` `RequirementsSummary` says a chance short of 1.
+  - `Assets/PlayForge/Editor/CustomPropertyDrawers/Forge/Editors/Assets/EffectEditor.cs:556` `TagsSectionSummary`, which counts the abilities granted, as in "Grants
+    Status.Burning, 1 ability".
+- **Watch for:** `FreshOf` makes a ScriptableObject of the target's type, so its `OnEnable` runs; a target that isn't
+  an asset keeps the old type defaults. A path a new asset doesn't have, as inside a list, does too.
+- **Tests:** EditMode's `ED_42_Clearing_a_section_gives_its_fields_a_new_assets_values` and
+  `FEAT_8_The_Effect_inspector_edits_the_chance_to_apply_and_granted_abilities`, in `InspectorUndoTests`.
 
 ## Phase 4
 
@@ -587,7 +608,7 @@ Undo and Redo among them. Renames already undid in one step, since Phase 2.
 - **Read:**
   - `Assets/PlayForge/Editor/CustomPropertyDrawers/Forge/Editors/BasePlayForgeEditor.cs:228` `OnAssetChanged`, a
     virtual no-op that the header's tracker at `:377` calls.
-  - `Assets/PlayForge/Editor/CustomPropertyDrawers/Forge/Editors/Assets/EffectEditor.cs:507`, the Effect's override,
+  - `Assets/PlayForge/Editor/CustomPropertyDrawers/Forge/Editors/Assets/EffectEditor.cs:539`, the Effect's override,
     which redraws Leveling when what it's drawn from has changed, and `:234`, the bound Link Mode field. The other four
     inspectors do the same.
   - `Assets/PlayForge/Editor/CustomPropertyDrawers/Forge/Editors/Assets/EntityIdentityEditor.cs:274`, Starting Level
@@ -709,7 +730,7 @@ Behaviour again; now it does.
 
 - **IDs:** ED-11, commit `c5d5480`.
 - **Read:**
-  - `Assets/PlayForge/Editor/CustomPropertyDrawers/Forge/Drawers/Assets/Effect/GameplayEffectImpactDrawer.cs:150`,
+  - `Assets/PlayForge/Editor/CustomPropertyDrawers/Forge/Drawers/Assets/Effect/GameplayEffectImpactDrawer.cs:143`,
     where Multiply Behaviour follows the operation; the drawer follows the asset whole since ED-2, which removed Reverse On Removal.
   - `Assets/PlayForge/Editor/CustomPropertyDrawers/Forge/Drawers/Assets/Effect/GameplayEffectDrawer.cs:53`, the
     `ReferencedEffectWatch` element that follows the referenced effect.
@@ -1025,8 +1046,8 @@ longer draws Reverse On Removal. The Cost check reads each impact a cost makes; 
   - `Assets/PlayForge/Editor/CustomPropertyDrawers/Forge/Drawers/Assets/Effect/AttributeImpactEntryDrawer.cs:26`
     `CreatePropertyGUI`, with the Delivery popup at `:82`, and `:162` `Remove`, which lets go of the entries before it
     deletes one.
-  - `Assets/PlayForge/Editor/CustomPropertyDrawers/Forge/Drawers/Assets/Effect/GameplayEffectImpactDrawer.cs:167`
-    `ShowDelivery` and `:216` `AddImpact`.
+  - `Assets/PlayForge/Editor/CustomPropertyDrawers/Forge/Drawers/Assets/Effect/GameplayEffectImpactDrawer.cs:160`
+    `ShowDelivery` and `:209` `AddImpact`.
   - `Assets/PlayForge/Editor/CustomPropertyDrawers/Forge/Drawers/Assets/Effect/ImpactFields.cs:28` `OperationField`,
     the mockup's one choice for the operation and the value it changes; `:97` `DeliveriesFor`; `:124` `CommitsText`.
   - `Assets/PlayForge/Runtime/PlayForge/Utils/Validation/CommonValidations.cs:11` `CostValidation.Validate`.
@@ -1050,7 +1071,7 @@ inspector's tag requirements use the same table, with a Caster and a Target row.
 - **IDs:** ED-37, commit `6090980`.
 - **Read:**
   - `Assets/PlayForge/Editor/CustomPropertyDrawers/Forge/Editors/Assets/EffectEditor.cs:94`, the sections in order;
-    `:227` `RebuildLevelingContent`; `:370` `BuildRequirementsSection`; `:576` `DurationSummary` and `:597`
+    `:227` `RebuildLevelingContent`; `:396` `BuildRequirementsSection`; `:610` `DurationSummary` and `:630`
     `ImpactSummary`.
   - `Assets/PlayForge/Editor/UI/Kit/ForgeRequirementsTable.cs:48`, the table, and `:142` `Toggle`, which opens a
     cell's list.
@@ -1083,7 +1104,7 @@ tag, template and level link came along (ED-35); it keeps them now. Clear resets
     `ShowForAsset` and `:94` `KeepsOwn`, what a whole asset keeps; `:139` `Expand`, the rows a path gives; `:240`
     `Compare` and `:265` `Import`.
   - `Assets/PlayForge/Editor/CustomPropertyDrawers/Forge/Util/ForgeDrawerStyles.cs:544`, a section's Import.
-  - `Assets/PlayForge/Editor/CustomPropertyDrawers/Forge/Editors/Windows/SectionClearUtility.cs:20` `Clear`.
+  - `Assets/PlayForge/Editor/CustomPropertyDrawers/Forge/Editors/Windows/SectionClearUtility.cs:22` `Clear`.
 - **Watch for:** the windows log "No graphic device" as they open in batch mode, so their tests use the smoke suite's
   guard.
 - **Tests:** `ED_32_The_import_window_lists_the_fields_that_differ`,
@@ -1163,9 +1184,9 @@ field's own values. A kind, count, range, Combine, operation or delivery the ass
   - `Assets/PlayForge/Editor/CustomPropertyDrawers/Forge/Drawers/Scaler/ScalerFields.cs:310` `Resize`, each table from
     its own last value, and `:127` `KeepCurve`.
   - `Assets/PlayForge/Editor/CustomPropertyDrawers/Forge/Editors/Assets/EffectEditor.cs:27`, where the Effect inspector
-    turns on `SupportsMultipleObjects`, and `:458`, the note in place of its workers.
-  - `Assets/PlayForge/Editor/CustomPropertyDrawers/Forge/Drawers/Assets/Effect/GameplayEffectImpactDrawer.cs:167`
-    `ShowDelivery`, a mixed delivery, and `:101`, the note in place of the additional impacts.
+    turns on `SupportsMultipleObjects`, and `:490`, the note in place of its workers.
+  - `Assets/PlayForge/Editor/CustomPropertyDrawers/Forge/Drawers/Assets/Effect/GameplayEffectImpactDrawer.cs:160`
+    `ShowDelivery`, a mixed delivery, and `:94`, the note in place of the additional impacts.
 - **Watch for:** UI Toolkit sends a change event when a field that shows a mixed value is set to the value it holds,
   so a mixed kind takes even the first asset's kind; the kind callbacks skip a same-value change only when the kind
   isn't mixed.
@@ -2838,6 +2859,7 @@ Newest first. Each row is a good place to start reading.
 
 | What | IDs | Where | Commit |
 |---|---|---|---|
+| Clear's defaults | ED-42 | `Assets/PlayForge/Editor/CustomPropertyDrawers/Forge/Editors/Windows/SectionClearUtility.cs:22` | `4d110da` |
 | Targeting input | FEAT-11 | `Assets/PlayForge/Runtime/PlayForge/Utils/ForgeInput.cs:31` | `ed60c62` |
 | Gameplay cues | FEAT-1 | `Assets/PlayForge/Runtime/PlayForge/GAS/Core/EffectSystemComponent.cs:763` | `2b623ed` |
 | Ability triggers | FEAT-4 | `Assets/PlayForge/Runtime/PlayForge/AbilitySystem/Core/AbilitySystemComponent.cs:505` | `b4e0cbd` |
@@ -2889,7 +2911,7 @@ Newest first. Each row is a good place to start reading.
 | A drawer keeps its collapse state per asset | ED-18 | `Assets/PlayForge/Editor/CustomPropertyDrawers/Forge/Util/DrawerCollapseState.cs:48` | `1ae0833` |
 | The inspector keeps no scroll view of its own | ED-11 | `Assets/PlayForge/Editor/CustomPropertyDrawers/Forge/Editors/BasePlayForgeEditor.cs:355` | `88d0f3f` |
 | An inspector listens to the editor only while a picker is open | ED-11 | `Assets/PlayForge/Editor/CustomPropertyDrawers/Forge/Editors/BasePlayForgeEditor.cs:88` | `850f8fb` |
-| The Impact and Effect drawers follow what they show | ED-11 | `Assets/PlayForge/Editor/CustomPropertyDrawers/Forge/Drawers/Assets/Effect/GameplayEffectImpactDrawer.cs:150` | `c5d5480` |
+| The Impact and Effect drawers follow what they show | ED-11 | `Assets/PlayForge/Editor/CustomPropertyDrawers/Forge/Drawers/Assets/Effect/GameplayEffectImpactDrawer.cs:143` | `c5d5480` |
 | The Item and Ability inspectors edit a multiple selection | ED-12 | `Assets/PlayForge/Editor/CustomPropertyDrawers/Forge/Editors/BasePlayForgeEditor.cs:251` | `1a203c1` |
 | A type field's drawer writes nothing while drawing | ED-12 | `Assets/PlayForge/Editor/CustomPropertyDrawers/Forge/Drawers/Base/AbstractTypeRefDrawer.cs:123` | `5134867` |
 | A rebuilt drawer edits every selected asset | ED-12 | `Assets/PlayForge/Editor/CustomPropertyDrawers/Forge/Drawers/Tag/TagRequirementDrawers.cs:90` | `96b4ba6` |
