@@ -335,7 +335,8 @@ namespace FarEmerald.PlayForge.Extended.Editor
                 SerializedObject = serializedObject,
                 PropertyPaths = new[]
                 {
-                    DefinitionPath(nameof(AbilityDefinition.ActivationPolicy)), DefinitionPath(nameof(AbilityDefinition.ActivateImmediately)),
+                    DefinitionPath(nameof(AbilityDefinition.ActivationPolicy)), DefinitionPath(nameof(AbilityDefinition.BufferWindow)),
+                    DefinitionPath(nameof(AbilityDefinition.BufferPriority)), DefinitionPath(nameof(AbilityDefinition.ActivateImmediately)),
                     nameof(Ability.Cost), nameof(Ability.Cooldown), BehaviourPath(nameof(AbilityBehaviour.Targeting)),
                     BehaviourPath(nameof(AbilityBehaviour.UseImplicitTargeting)), BehaviourPath(nameof(AbilityBehaviour.ImplicitTag)),
                 },
@@ -355,6 +356,14 @@ namespace FarEmerald.PlayForge.Extended.Editor
             };
             policy.AddToClassList(BaseField<System.Enum>.alignedFieldUssClassName);
             content.Add(policy);
+
+            // The input buffer, which is what When Busy's Queue does: how long a press waits, and which goes first (FEAT-6)
+            var window = CreatePropertyField(serializedObject.FindProperty(DefinitionPath(nameof(AbilityDefinition.BufferWindow))), "BufferWindow", "Buffer Window");
+            window.tooltip = "Under Queue, how long a press that can't start yet waits, in seconds, for the ability to be free";
+            content.Add(window);
+            var priority = CreatePropertyField(serializedObject.FindProperty(DefinitionPath(nameof(AbilityDefinition.BufferPriority))), "BufferPriority", "Buffer Priority");
+            priority.tooltip = "Which waiting press fires first: the highest, then the newest of equals";
+            content.Add(priority);
 
             // The mockup's Activate When Granted. The runtime tries it only for an entity's Starting Abilities, as its GAS
             // starts, so the label says so: an ability an item or code grants later doesn't try it

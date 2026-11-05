@@ -7,6 +7,13 @@ tracks each fix below by its ID.
 ## [Unreleased]
 
 ### Added
+- Stages that branch. An ability's stage has a Condition: a tag in the activation's data, on the caster or on the
+  target, and whether it must be there or missing; a stage whose condition fails is skipped. Apply Effects' Record
+  Landed As tags the data as an effect lands, so a move can recover one way on a hit and another on a miss (TS-7).
+- The input buffer. Under the Queue policy, a request that can't start yet, as while another ability holds the claim
+  or a running stage blocks it, waits for up to its ability's Buffer Window (default 0.3 s, in the caster's time),
+  then lets go. Each ability holds one slot, which a new press refreshes; the highest Buffer Priority fires first,
+  then the newest. A request can name a window of its own (FEAT-6).
 - Cancel and block abilities by tag. An ability's Cancelled By names the abilities that cancel it as they activate,
   and its Blocks those that can't activate while it runs; each stage can name its own, and one that names none takes
   the ability's. A critical stage can't be cancelled (FEAT-5).
@@ -68,6 +75,9 @@ tracks each fix below by its ID.
   page, through one table of links in the editor.
 
 ### Changed
+- The Queue policy's requests wait out a window, 0.3 s by default, where they waited for good, and fire by priority
+  and then the newest, where they fired in the order asked. A press again replaces the first, where it queued a second
+  (FEAT-6).
 - `RunProcessTask` runs on scaled time by default, and `ProcessRelay.RemainingRuntime` reads scaled time unless asked
   for unscaled; both read unscaled time by default, apart from the game's time scale (TS-6). A `RunProcessTask` saved
   with Use Unscaled Delta Time on keeps it.
@@ -239,6 +249,8 @@ tracks each fix below by its ID.
   Asking whether its sequence was paused took 24 bytes a frame.
 
 ### Fixed
+- A task sequence's critical section ends as the run starts a stage past its last critical stage, if a branch skipped
+  that stage; it ended only as a critical stage ended, so a skipped one held the ability's claim to the end (TS-7).
 - A relative-operation impact worker reads its Relative Attribute. It read the impacted attribute's value even with
   one set, so lifesteal by a Lifesteal share healed the attacker by its own health times the blow; one with none set
   reads the impacted attribute still (GAS-57).

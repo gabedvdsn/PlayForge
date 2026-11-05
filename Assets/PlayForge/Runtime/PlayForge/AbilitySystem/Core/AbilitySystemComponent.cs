@@ -70,16 +70,51 @@ namespace FarEmerald.PlayForge
         
         public int AbilityCount => AbilityCache.Count;
         
-        private Queue<AbilityActivationRequest> activationQueue = new();
+        // The input buffer: one slot per ability, each its latest press and how long it may wait yet. The Queue policy was
+        // a plain queue: a request carried no time, a press again queued again, and they fired in the order pressed (FEAT-6)
+        private readonly List<BufferedRequest> buffer = new();
+        private int presses;
+        private bool firingBuffer;
 
-        public AbilityActivationRequest CreateActivationRequest(int index, ProcessDataPacket _data = null, EAbilityActivationPolicyExtended? policy = null)
+        private struct BufferedRequest
+        {
+            public AbilityActivationRequest Request;
+            public float Left;
+            public int Priority;
+            public int Order;
+        }
+
+        // The highest priority first, then the newest
+        private sealed class BestFirst : IComparer<BufferedRequest>
+        {
+            public static readonly BestFirst Instance = new();
+
+            public int Compare(BufferedRequest a, BufferedRequest b) =>
+                a.Priority != b.Priority ? b.Priority.CompareTo(a.Priority) : b.Order.CompareTo(a.Order);
+        }
+
+        /// <summary>How many requests wait in the input buffer (FEAT-6).</summary>
+        public int BufferedCount => buffer.Count;
+
+        /// <summary>Whether a request for the ability in this slot waits in the input buffer (FEAT-6).</summary>
+        public bool IsBuffered(int index)
+        {
+            for (int i = 0; i < buffer.Count; i++)
+                if (buffer[i].Request.Index == index) return true;
+            return false;
+        }
+
+        /// <param name="bufferWindow">How long the request may wait in the input buffer, in seconds of the caster's time,
+        /// or below 0 for its ability's Buffer Window (FEAT-6).</param>
+        public AbilityActivationRequest CreateActivationRequest(int index, ProcessDataPacket _data = null, EAbilityActivationPolicyExtended? policy = null,
+            float bufferWindow = -1f)
         {
             var _policy = policy?.Translate(this) 
                          ?? (AbilityCache.TryGetValue(index, out var container) 
                              ? container.Spec.Base.Definition.ActivationPolicy.Translate(this) 
                              : DefaultActivationPolicy);
             
-            return new AbilityActivationRequest(index, this, _policy, _data);
+            return new AbilityActivationRequest(index, this, _policy, _data) { BufferWindow = bufferWindow };
         }
         
         public struct AbilityActivationRequest
@@ -88,6 +123,9 @@ namespace FarEmerald.PlayForge
             public EAbilityActivationPolicy Policy;
             public ProcessDataPacket Data;
             public AbilitySystemComponent System;
+
+            /// <summary>How long the request may wait in the input buffer, or below 0 for its ability's window (FEAT-6).</summary>
+            public float BufferWindow;
             
             public AbilityActivationRequest(int index, AbilitySystemComponent asc, EAbilityActivationPolicy policy, ProcessDataPacket data)
             {
@@ -95,6 +133,7 @@ namespace FarEmerald.PlayForge
                 System = asc;
                 Policy = policy;
                 Data = data;
+                BufferWindow = -1f;
             }
         }
 
@@ -107,7 +146,7 @@ namespace FarEmerald.PlayForge
                 if (value == _enabled) return;
                 if (!value)
                 {
-                    activationQueue.Clear();
+                    buffer.Clear();
                     InjectAll(InterruptSequenceInjection.Instance);
                 }
 
@@ -121,7 +160,7 @@ namespace FarEmerald.PlayForge
         /// </summary>
         internal void ShutDown()
         {
-            activationQueue.Clear();
+            buffer.Clear();
             _enabled = false;
         }
 
@@ -326,7 +365,11 @@ namespace FarEmerald.PlayForge
                    && (!container.Spec.Base.IgnoreWhenLevelZero || container.Spec.GetLevel() > 0); */
         }
         
-        private bool CanActivateAbility(AbilitySpecContainer container, AbilityDataPacket data)
+        private bool CanActivateAbility(AbilitySpecContainer container, AbilityDataPacket data) =>
+            CanActivateUnblocked(container, data) && !IsBlocked(container.Spec.Base);
+
+        // Everything but a running stage's block, which a Queue request waits out in the buffer (FEAT-6)
+        private bool CanActivateUnblocked(AbilitySpecContainer container, AbilityDataPacket data)
         {
             // An ability runs as a process, so it can't start while ProcessControl refuses new ones (TS-AC)
             return Enabled
@@ -334,9 +377,7 @@ namespace FarEmerald.PlayForge
                    && ProcessControl.Instance is not { AcceptsNewProcesses: false }
                    && container.Spec.ValidateSourceActivationRequirements(data)
                    && (!container.Spec.Base.IgnoreWhenLevelZero || container.Spec.GetLevel().CurrentValue > 0)
-                   // A running ability's stage that blocks it refuses it, and its caster must pass its While active
-                   // group, as it will for as long as it runs (FEAT-5)
-                   && !IsBlocked(container.Spec.Base)
+                   // Its caster must pass its While active group, as it will for as long as it runs (FEAT-5)
                    && PassesWhileActive(container, Self.GetTagCache());
         }
 
@@ -461,8 +502,11 @@ namespace FarEmerald.PlayForge
         /// still runs, from its own callbacks or from another ability's that it started, starts next frame instead, so
         /// a loop of instant activations goes round once a frame (TS-8).
         /// </summary>
-        /// <returns>True if the ability activated, was queued behind a busy one, or was put off to the next frame.</returns>
-        public bool TryActivateAbility(AbilityActivationRequest req)
+        /// <returns>True if the ability activated, waits in the input buffer, or was put off to the next frame.</returns>
+        public bool TryActivateAbility(AbilityActivationRequest req) => TryActivate(req, fromBuffer: false);
+
+        // A request from the buffer doesn't go back in it: it waits on in its own slot, with the time it has left
+        private bool TryActivate(AbilityActivationRequest req, bool fromBuffer)
         {
             // Before the packet, which reads the entity: an ended entity's system is off, and a Mono entity may be
             // destroyed by then (GAS-52)
@@ -470,7 +514,11 @@ namespace FarEmerald.PlayForge
             if (!AbilityCache.TryGetValue(req.Index, out var container)) return false;
             var data = AbilityDataPacket.GenerateFrom(container.Spec,
                 req, container.Spec.Base.Behaviour.UseImplicitTargeting, container.Spec.Base.Behaviour.ImplicitTag);
-            if (!CanActivateAbility(container, data)) return false;
+            if (!CanActivateUnblocked(container, data)) return false;
+
+            // A running stage's block refuses it, unless, under the Queue policy, it may wait for the block to lift (FEAT-6)
+            if (IsBlocked(container.Spec.Base))
+                return !fromBuffer && req.Policy == EAbilityActivationPolicy.QueueActivationIfBusy && BufferActivation(req);
 
             // Run at once, it nested inside its own activation, and a loop of instant activations nested until the
             // stack overflowed (TS-8)
@@ -479,6 +527,9 @@ namespace FarEmerald.PlayForge
                 ActivateNextFrame(container, req).Forget();
                 return true;
             }
+
+            // Busy, a request from the buffer waits on in its slot
+            if (fromBuffer && IsClaimingPolicy(req.Policy)) return false;
 
             // Each running ability in a stage this one cancels ends first, so this one starts clear of it (FEAT-5)
             CancelAbilitiesCancelledBy(container.Spec.Base);
@@ -509,7 +560,7 @@ namespace FarEmerald.PlayForge
                 EAbilityActivationPolicy.QueueActivationIfBusy =>
                     !IsClaimingPolicy(EAbilityActivationPolicy.QueueActivationIfBusy)
                         ? ActivateAbility(AbilityCache[data.Request.Index], data)
-                        : QueueAbilityActivation(data.Request),
+                        : BufferActivation(data.Request),
                         
                 _ => throw new ArgumentOutOfRangeException()
             };
@@ -526,10 +577,68 @@ namespace FarEmerald.PlayForge
             return container.ActivateAbility(data);
         }
 
-        private bool QueueAbilityActivation(AbilityActivationRequest req)
+        // Puts a request in its ability's slot in the buffer, which a new press refreshes, with its window. A window of 0
+        // doesn't wait, so the request is refused (FEAT-6)
+        private bool BufferActivation(AbilityActivationRequest req)
         {
-            activationQueue.Enqueue(req);
+            if (!AbilityCache.TryGetValue(req.Index, out var container)) return false;
+            var definition = container.Spec.Base.Definition;
+            float window = req.BufferWindow >= 0f ? req.BufferWindow : definition.BufferWindow;
+            if (window <= 0f) return false;
+
+            var entry = new BufferedRequest { Request = req, Left = window, Priority = definition.BufferPriority, Order = ++presses };
+            for (int i = 0; i < buffer.Count; i++)
+            {
+                if (buffer[i].Request.Index != req.Index) continue;
+                buffer[i] = entry;
+                return true;
+            }
+            buffer.Add(entry);
             return true;
+        }
+
+        /// <summary>
+        /// Fires the buffered request that should go first and can start now: the highest priority, then the newest.
+        /// One that can't yet, as while a claim or a block holds, waits on in its slot. One fires each time (FEAT-6).
+        /// </summary>
+        private void FireBuffered()
+        {
+            if (buffer.Count == 0 || firingBuffer) return;
+            firingBuffer = true;
+            try
+            {
+                buffer.Sort(BestFirst.Instance);
+                for (int i = 0; i < buffer.Count; i++)
+                {
+                    // Out of its slot as it fires, so a press it sets off takes the slot afresh
+                    var entry = buffer[i];
+                    buffer.RemoveAt(i);
+                    if (TryActivate(entry.Request, fromBuffer: true)) return;
+                    buffer.Insert(i, entry);
+                }
+            }
+            finally
+            {
+                firingBuffer = false;
+            }
+        }
+
+        /// <summary>
+        /// Tries the buffer, then counts its requests' windows down by the caster's time and lets go of those that ran out.
+        /// Each step, after the effects tick, so a press waits out a block's end or a cooldown's in time; paused, the
+        /// entity doesn't step, and the windows wait too (FEAT-6).
+        /// </summary>
+        internal void StepBuffer(float deltaTime)
+        {
+            if (buffer.Count == 0) return;
+            FireBuffered();
+            for (int i = buffer.Count - 1; i >= 0; i--)
+            {
+                var entry = buffer[i];
+                entry.Left -= deltaTime;
+                if (entry.Left <= 0f) buffer.RemoveAt(i);
+                else buffer[i] = entry;
+            }
         }
 
         private void ClearAbilityCache()
@@ -615,9 +724,8 @@ namespace FarEmerald.PlayForge
                 Callbacks.AbilityClaimReleased(AbilityCallbackStatus.GenerateForAbilityEvent(data));
             }
 
-            // Dequeue waiting activations now that the claim is released
-            if (activationQueue.Count > 0)
-                TryActivateAbility(activationQueue.Dequeue());
+            // The buffer's best request fires now that the claim is released (FEAT-6)
+            FireBuffered();
         }
 
         /// <summary>

@@ -276,6 +276,15 @@ namespace FarEmerald.PlayForge.Extended.Editor
             };
             blocks.style.marginLeft = 8;
             settings.Add(blocks);
+
+            // When the stage runs: always, or only while a tag is there or missing, which is how two stages branch (TS-7)
+            var condition = new PropertyField(property.FindPropertyRelative(nameof(AbilityTaskBehaviourStage.Condition)), "Condition")
+            {
+                name = "Condition",
+                tooltip = "When the stage runs: always, or only while a tag is there, or missing. Two stages that name one tag branch",
+            };
+            condition.style.marginLeft = 8;
+            settings.Add(condition);
             
             content.Add(settings);
             

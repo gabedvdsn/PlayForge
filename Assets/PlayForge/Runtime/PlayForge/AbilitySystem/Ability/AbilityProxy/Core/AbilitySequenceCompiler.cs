@@ -43,6 +43,18 @@ namespace FarEmerald.PlayForge
                 var abilityStage = behaviour.Stages[i];
                 int stageIndex = i;
 
+                // A stage that asks for a tag is a branch, taken while its condition holds and skipped otherwise, with
+                // its own settings, a critical flag among them. The compiler emitted none, so there was no on-hit or
+                // on-miss stage (TS-7)
+                var condition = abilityStage.Condition;
+                if (condition != null && condition.IsSet)
+                {
+                    builder.Branch(branch => branch.If(
+                        data => condition.Holds(data as AbilityDataPacket),
+                        stage => ConfigureStage(stage, abilityStage, stageIndex)));
+                    continue;
+                }
+
                 builder.Stage(stage =>
                 {
                     ConfigureStage(stage, abilityStage, stageIndex);

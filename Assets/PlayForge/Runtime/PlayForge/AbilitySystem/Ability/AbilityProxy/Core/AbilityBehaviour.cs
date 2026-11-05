@@ -65,6 +65,12 @@ namespace FarEmerald.PlayForge
         public bool ApplyUsageAtStageStart = true;
 
         /// <summary>
+        /// When the stage runs: always, or only while a tag is there, or only while it's missing. Two stages that name one
+        /// tag, one wanting it and one wanting it missing, branch: an attack's recovery on a hit and on a miss (TS-7).
+        /// </summary>
+        public AbilityStageCondition Condition = new();
+
+        /// <summary>
         /// The abilities that cancel the ability as they activate while this stage runs, as the ability's Cancelled By
         /// says; a stage that names none takes the ability's. A critical stage can't be cancelled (FEAT-5).
         /// </summary>
@@ -93,6 +99,49 @@ namespace FarEmerald.PlayForge
                 return false;
             }
         }
+    }
+
+    /// <summary>
+    /// When an ability's stage runs: always, or only while a tag is there, or only while it's missing, in the
+    /// activation's data, on the caster or on the target. The compiler emitted no branch, so there was no on-hit or
+    /// on-miss stage (TS-7, C12).
+    /// </summary>
+    [Serializable]
+    public class AbilityStageCondition
+    {
+        [Tooltip("Where the tag is looked for: the activation's data, where an Apply Effects task records a landing, or the caster's or target's tags")]
+        public EAbilityStageConditionSubject On = EAbilityStageConditionSubject.Activation;
+
+        [Tooltip("The tag the stage asks for. With none, the stage always runs")]
+        public Tag Tag;
+
+        [Tooltip("Run the stage while the tag is missing instead, as a miss's recovery does")]
+        public bool WhenMissing;
+
+        /// <summary>Whether the stage asks anything; one that doesn't always runs.</summary>
+        public bool IsSet => Tag.IsValid;
+
+        /// <summary>Whether the stage runs in this activation.</summary>
+        public bool Holds(AbilityDataPacket data)
+        {
+            if (!IsSet || data == null) return true;
+            bool there = On switch
+            {
+                EAbilityStageConditionSubject.Activation => data.ContainsKey(Tag),
+                EAbilityStageConditionSubject.Caster => data.EffectOrigin?.GetSource() is { } caster && caster.GetTagWeight(Tag) > 0,
+                EAbilityStageConditionSubject.Target => data.TryGetFirstTarget(out var target) && target != null && target.GetTagWeight(Tag) > 0,
+                _ => true,
+            };
+            return there != WhenMissing;
+        }
+    }
+
+    /// <summary>Where a stage's condition looks for its tag (TS-7).</summary>
+    public enum EAbilityStageConditionSubject
+    {
+        [InspectorName("The Activation")] Activation,
+        Caster,
+        Target,
     }
 
     public enum EAnyAllPolicy

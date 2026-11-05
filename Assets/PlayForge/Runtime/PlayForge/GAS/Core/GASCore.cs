@@ -130,6 +130,9 @@ namespace FarEmerald.PlayForge
             // Heard as the tags change; checked here too, after the effects, for a change heard while a check ran (FEAT-5)
             AbilitySystem.CheckWhileActive();
 
+            // The input buffer's windows count down by the entity's own time (FEAT-6)
+            AbilitySystem.StepBuffer(Clock.DeltaTime);
+
             // Tag workers tick once a frame, at its end, once their activations are settled. Ticked here as well,
             // they ran at twice their rate (GAS-19)
         }

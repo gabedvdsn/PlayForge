@@ -453,7 +453,7 @@ had no letter in the review. TS-AA onward came from the test project.
 | TS-4 | H | 0 | A bare `catch { }` swallows ability errors (PF-008) | `AbilitySpecContainer.cs:113-116` | verified |
 | TS-5 | M | 3 | LINQ on a hot path; `AppendPath` concatenates strings and grows without bound on repeat. PF-007 (Phase 0) took the LINQ out of `HasAnyStageConditions` and made the path's parts join only when read, which left them to grow: a sequence that repeated added its stages' parts every time round, and its twentieth run had a 272-character path to its first's 25. Now each part a run or a stage adds comes off as it ends, each repeat starts where its iteration began, and a failed run keeps the path to where it failed for its log. The parts are formatted once, and the LINQ left on an ability's activation, in `AbilityProxy`, and in a chain's `HasConditions` is loops | `TaskSequenceRuntime.cs` (`Run`, `RunStage`, `RestartStage`), `ProcessDataPacket.cs` (`TrimPath`), `AbilityProxy.cs`, `AbilityTaskAdapter.cs`, `AbilitySequenceCompiler.cs` | verified |
 | TS-6 | M | 5 | Global time only; `RunProcessTask` defaults to unscaled time (C02) → FEAT-7, in Phase 5's foundations (Decision 30). Fixed with FEAT-7's clocks: `RunProcessTask` and `ProcessRelay.RemainingRuntime` default to scaled time, and an entity's sequences and waits run by its own clock | `RunProcessTask.cs:14`, `ProcessRelay.cs` | fixed |
-| TS-7 | M | 5 | Critical sections are static; the compiler never emits a `BranchStage` (C12) | `AbilitySequenceCompiler.cs` | open |
+| TS-7 | M | 5 | Critical sections are static; the compiler never emits a `BranchStage` (C12). Fixed: an ability's stage has a Condition (a tag in the activation's data, on the caster or the target, there or missing), which the compiler emits as a branch; Apply Effects' Record Landed As tags the data as an effect lands; and a critical section ends as the run starts a stage past its last critical stage, so one a branch skipped lets the claim go | `AbilitySequenceCompiler.cs`, `AbilityBehaviour.cs`, `ApplyEffectsAbilityTask.cs`, `TaskSequenceRuntime.cs` | fixed |
 | TS-8 | M | 3 | `TryActivate` runs synchronously deep into the first stages (C16). Measured: it runs an instant ability to its end, and a slower one to its first wait, before it returns. An ability asked for again from its own end or claim-released callback nested inside the call: 40 activations, 40 deep, in one frame before a cap, so an uncapped loop overflowed the stack. Activation stays synchronous (Decision 25); an ability asked for again while its own activation call still runs starts next frame | `AbilitySystemComponent.cs` (`TryActivateAbility`), `AbilitySpecContainer.cs` (`ActivateAbility`) | verified |
 | TS-9 | H | 1 | `OnAbilityEnd` means claim released; task callbacks fire only on the legacy path (C07) | `AbilityProxy.cs` | verified |
 | TS-10 | M | 3 | About 14 CancellationTokenSources per three-stage ability (C08, B11). Every stage made a second source for its policy, linked to its own, though only WhenAny and WhenN cancel one. Measured: a frame that runs one stage of one instant task allocated 1,912 bytes under WhenAll, the same as under a policy the runtime doesn't know. Now a stage under WhenAll or RepeatUntilSkipped hands its policy its own source: 1,464 bytes, 448 less a stage, and about 10 sources to a three-stage ability. The rest are one each for an activation phase, a run of a process, a sequence run and a stage | `TaskSequenceRuntime.cs` (`ExecuteStageInternal`) | verified |
@@ -666,7 +666,7 @@ Phase 2 part, and set Phase 4's direction.
 | FEAT-3 | Tag-change events | Replace tag-worker polling. Done (Decision 30): `TagCache.Listen` hears a tag and the tags under it come and go, at once, or every weight change; `TagChanged` hears every change; a rebuild tells only what it changed; a tag worker is evaluated when the tags change, unless it asks for every frame (`EvaluateEveryFrame`) |
 | FEAT-4 | Ability triggers | Activate on a gameplay event or when a tag is added |
 | FEAT-5 | Cancel and block abilities by tag | C11. Done (Decision 30): an ability's Cancelled By names the abilities that cancel it as they activate, and its Blocks those that can't activate while it runs, by asset or context tag; each stage can name its own, and one that names none takes the ability's; a critical stage can't be cancelled; the While active row of its tag requirements interrupts it as soon as its caster's tags fail it |
-| FEAT-6 | Input buffer | Expiry and latest-wins for queued activations (C06) |
+| FEAT-6 | Input buffer | Expiry and latest-wins for queued activations (C06). Done (Decision 30): the Queue policy is the input buffer, one slot per ability that a new press refreshes; a request waits out its ability's Buffer Window (0.3 s by default, or its own) in the caster's time, for the claim to go or a block to lift; the highest Buffer Priority fires first, then the newest |
 | FEAT-7 | Time source | Per-entity time scale and deterministic fixed tick (C02). The clock per entity is done (Decision 30): `GetClock()`, the game's time by `ForgeTime` times the entity's `TimeScale`, which its effects, cooldowns, sequences, waits and projectiles run by. The fixed-rate tick is done too: with ProcessControl's Fixed Tick Rate set, each frame runs as many ticks as its time holds, each stepping every process and its end of frame by a fixed step, and each sequence's wait goes on by the tick (`ForgeTick.Next`) |
 | FEAT-8 | Effect conveniences | Cleanse by tag query, immunity, overflow at max stacks, abilities granted by effects, chance to apply. Done. Cleanse and immunity (Removes Effects Tagged, Blocks Effects Tagged) match an effect's asset, context and granted tags (Decision 30); overflow at max stacks is on Stack Bounds (Overflow Effects, Deny Refresh On Overflow, Clear Stacks On Overflow); an effect's Granted Abilities are lent at its origin's level while it's on; an effect lands by its Chance to Apply, drawn from `ForgeRandom` |
 | FEAT-9 | Save and load | Snapshots of attributes, effects, tags and cooldowns |
@@ -741,6 +741,47 @@ GAS-4 with GAS-5, PC-6, and TS-I with PC-5.
 ## Log
 
 Record baselines, gate results and notable decisions here, newest first.
+
+- 2026-11-04, **TS-7, stages that branch, and the Duel lab.** The third lab (Decision 30).
+  - **TS-7's shape is my call, not the user's:** Decision 30 doesn't cover it, and the review says only that there's
+    no on-hit or on-miss stage. A stage's `Condition` (`AbilityStageCondition`: On, Tag, When Missing) looks in the
+    activation's data or the caster's or target's tags; the compiler emits a stage with one as a `BranchStage` of one
+    case, so it runs or is skipped with its own settings. Two stages that name one tag branch. `ApplyEffectsAbilityTask.
+    RecordLandedAs` tags the data as an effect lands (the review's packet as a blackboard). Flat, as nested stages would
+    be a recursive serialized type.
+  - **The claim follows the branch:** the runtime counted a branch as critical if any case was (`HoldsCriticalStage`),
+    but its critical section ended only as a critical stage ended, so a skipped critical stage held the claim to the
+    end. It ends too as the run starts a stage past its last critical one. At the skip itself the run still stood on
+    the skipped stage, and the Duel lab found that a buffered special fired then didn't see the jab's hit recovery to
+    cancel. So a committed whiff goes before the hit's recovery.
+  - **The lab** (`Tests/Labs/DuelLab.cs`, category Lab): two fighters on a clock of 1/64 s a frame, exact in floats. A
+    jab and a fireball, each a critical startup and active frames, a hit-stop on a hit that stops both fighters'
+    clocks (FEAT-7), a committed whiff on a miss, and a hit recovery that a special cancels and that blocks normals
+    (FEAT-5). A guard is FEAT-8's immunity. A press while busy waits 12 frames in the buffer (FEAT-6), and the window
+    waits out a hit-stop. Its bot plays seven rounds, a hit-confirm among them.
+  - **The MOBA lab** casts under Refuse now: under its heroes' Queue, FEAT-6 buffered a spell its channel blocked.
+  - **Its tests,** seen failing first (10 of 10 PlayMode, 1 of 1 EditMode, in FEAT-6's gate run): three `TS_7_*` tests
+    in PlayMode's new `BranchingStageTests`, two over hit and miss, and `TS_7_A_stage_edits_its_condition`.
+  - **Next:** Bullet heaven, the fourth lab.
+  - **Tests:** PlayMode 1117: 1110 pass, 0 fail and 7 planted are skipped, in three orders (the Duel lab's 14
+    among them). Planted 7 of 7; EditMode 435 of 435.
+
+- 2026-11-04, **FEAT-6: the input buffer.** The Duel lab's first feature (Decision 30).
+  - **The buffer** (`AbilitySystemComponent`): the Queue policy's plain queue becomes a list of one slot per ability.
+    A press that can't start, as while another Queue ability holds the claim or a running stage blocks it (FEAT-5),
+    takes its ability's slot, replacing an earlier press, with its window. As a claim is released, and each step
+    after the effects tick, the buffer sorts best first (`BufferPriority`, then the newest) and fires the first that
+    can start; each step then counts the windows down by the entity's clock, so a paused entity or a hit-stop holds
+    them. `AbilityDefinition.BufferWindow` (0.3 s by default, Arcade Fighter's attack buffer) and `BufferPriority`;
+    `CreateActivationRequest`'s `bufferWindow` names a request's own. A window of 0 refuses.
+  - **What changed:** a Queue request waited for good and fired in the order asked; a press again queued again.
+    `FEAT_5_A_stage_blocks_the_abilities_it_names` asks under Refuse now, as under Queue a blocked request waits.
+  - **The Ability inspector:** Buffer Window and Buffer Priority in Activation, after When Busy.
+  - **Its tests,** seen failing first (10 of 10 PlayMode, 1 of 1 EditMode): five `FEAT_6_*` tests on each hub in
+    PlayMode's new `InputBufferTests`, and `FEAT_6_The_Ability_inspector_edits_the_buffer`.
+  - **Next:** TS-7, then the Duel lab.
+  - **Tests:** PlayMode 1117: 1110 pass, 0 fail and 7 planted are skipped, in three orders (the Duel lab's 14
+    among them). Planted 7 of 7; EditMode 435 of 435.
 
 - 2026-11-04, **The MOBA hero kit lab, GAS-57, and While active heard at once.** The second lab (Decision 30).
   - **The lab** (`Tests/Labs/MobaLab.cs` in Proving Grounds, category Lab): four heroes of four abilities, on a clock

@@ -82,10 +82,16 @@ and it takes no more activations.
   - **Activate Anyway**: start at once. It is refused only when it has critical tasks and another Activate Anyway
     ability with critical tasks holds its claim.
   - **Refuse**: start only when no Refuse ability holds its claim. Otherwise the request is refused.
-  - **Queue**: when a Queue ability holds its claim, wait in a queue. A queued request is tried again when a claim is
-    released.
+  - **Queue**: when a Queue ability holds its claim, or a running stage blocks this ability (see Stages), wait in the
+    input buffer for up to **Buffer Window** seconds of the caster's time, then let go. The buffer holds one request
+    for each ability, and a new press replaces it, with its window afresh. As a claim is released, and each frame, the
+    request with the highest **Buffer Priority** that can start does, and of equals, the newest. While the entity is
+    paused or its time is stopped, as in a hit-stop, the windows wait too. A request can name a window of its own
+    (`CreateActivationRequest`'s `bufferWindow`).
 
   Whatever the choice, an ability can't start again while its own activation holds its claim.
+- **Buffer Window** (default 0.3 s) and **Buffer Priority** (default 0): the input buffer's, under Queue, as above. A
+  window of 0 doesn't wait, so the request is refused.
 - **Activate At Start**: when the ability is one of the entity's Starting Abilities, it tries to activate once, as the
   entity's GAS starts. An ability that an item or code grants later doesn't try it.
 - **Cost** and **Cooldown**: gameplay effects ([EFFECTS.md](EFFECTS.md)) applied to the caster when a stage applies
@@ -110,7 +116,8 @@ This section is what the ability does once it has started.
   activate. The ability is interrupted, then the other starts. Each stage that names none of its own takes this list,
   and so does targeting. A critical stage is committed, so nothing cancels it.
 - **Blocks**: abilities, named the same way, that can't activate while this one runs. Each stage that names none
-  takes this list. A blocked activation is refused, whatever its When Busy says.
+  takes this list. A blocked activation is refused, unless When Busy is Queue: then it waits in the input buffer for
+  the block to lift.
 - **Stages**: each stage starts all its tasks together. The next stage starts when it ends.
   - **Completion Policy**: All ends the stage when every task has finished. Any ends it when the first task finishes,
     and cancels the rest. A stage with no policy set behaves as All.
@@ -119,7 +126,14 @@ This section is what the ability does once it has started.
   - **Apply Usage At Start**: on, apply them as the stage starts. Off, apply them as it ends, and only if it succeeded.
   - **Tasks**: the work, such as Apply Effects, Delay or Run Sequence. A stage that holds a critical task is critical.
     The activation keeps its claim until its last critical stage ends. With no critical stage, it lets the claim go
-    as the stages start.
+    as the stages start. Apply Effects' **Record Landed As** tags the activation's data as an effect lands on the
+    target, for a later stage's Condition.
+  - **Condition**: when the stage runs. With no **Tag**, always. Otherwise only while the tag is there, or, with
+    **When Missing**, only while it isn't: **On** The Activation looks in the activation's data, as Record Landed As
+    fills it, and Caster or Target in that entity's tags. A stage whose condition fails is skipped. Two stages that
+    name one tag, one wanting it and one wanting it missing, branch: a jab's hit recovery and its whiff. A critical
+    stage that's skipped lets the claim go as the next stage starts, so put a committed whiff before the hit's
+    recovery, and the claim goes as that recovery starts.
   - **Cancelled By** and **Blocks**: the stage's own lists, as above, which hold while it runs. A heavy attack's
     recovery can name the specials that cut it short, and its windup none.
 

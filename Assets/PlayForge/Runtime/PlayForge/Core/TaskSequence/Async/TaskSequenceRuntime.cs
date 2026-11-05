@@ -422,6 +422,11 @@ namespace FarEmerald.PlayForge
                 
                 var stage = Definition.Stages[StageIndex];
                 CurrentStage = stage;
+
+                // Past the last critical stage with nothing critical running, the critical section ends as this stage
+                // starts. A critical stage that a branch skipped held it to the end of the run, as the end came only as a
+                // critical stage ended (TS-7)
+                ExitCriticalSectionIfPassed();
                 
                 try
                 {
@@ -821,6 +826,20 @@ namespace FarEmerald.PlayForge
             }
         }
         
+        // Fires the critical section's end once, as the run starts a stage past its last critical one with nothing
+        // critical running: there, a critical stage that a branch skipped is behind it (TS-7). At the skip itself the run
+        // still stands on the skipped stage, so what starts as the claim goes would find it there
+        private void ExitCriticalSectionIfPassed()
+        {
+            lock (_activeStages)
+            {
+                if (_criticalExitFired || _criticalFlagLocks != 0 || _lastCriticalStageIndex < 0 ||
+                    StageIndex <= _lastCriticalStageIndex) return;
+                _criticalExitFired = true;
+                NotifyCriticalSectionExited();
+            }
+        }
+
         /// <summary>
         /// Both places this fires are in cleanup that has to finish, and a listener's throw is its own (TS-E).
         /// </summary>

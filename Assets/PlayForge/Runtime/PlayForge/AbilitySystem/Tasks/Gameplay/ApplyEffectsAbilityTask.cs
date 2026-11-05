@@ -10,6 +10,13 @@ namespace FarEmerald.PlayForge
     {
         public List<GameplayEffect> Effects;
         public int DelayBetweenApplicationMs;
+
+        /// <summary>
+        /// As an effect lands on the target, the activation's data takes this tag, so a later stage can run on a hit and
+        /// another on a miss. None records nothing (TS-7).
+        /// </summary>
+        [Tooltip("As an effect lands, the activation's data takes this tag, for a later stage's condition")]
+        public Tag RecordLandedAs;
         
         public override async UniTask Activate(AbilityDataPacket data, CancellationToken token)
         {
@@ -20,7 +27,8 @@ namespace FarEmerald.PlayForge
             
             foreach (GameplayEffect effect in Effects)
             {
-                target.ApplyCarrier(target.GenerateEffectSpec(data.EffectOrigin, effect));
+                bool landed = target.ApplyCarrier(target.GenerateEffectSpec(data.EffectOrigin, effect));
+                if (landed && RecordLandedAs.IsValid) data.SetPrimary(RecordLandedAs, effect);
                 await SequenceTaskLibrary.Delay(DelayBetweenApplicationMs / 1000f, token);
             }
         }
