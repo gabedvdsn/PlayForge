@@ -124,16 +124,19 @@ namespace FarEmerald.PlayForge
         }
 
         /// <summary>
-        /// The control that holds the process. Its state changes, its relay and its unregistering go there; they went
-        /// to ProcessControl.Instance, whichever control held the process (FEAT-10).
+        /// The world that holds the process. Its state changes, its relay and its unregistering go there; they went to
+        /// ProcessControl.Instance, whichever control held the process (FEAT-10).
         /// </summary>
-        public ProcessControl Control { get; }
+        public ProcessWorld World { get; }
 
-        private ProcessControlBlock(int cacheIndex, AbstractProcessWrapper wrapper, ProcessControl control)
+        /// <summary>The ProcessControl that steps the process's world in a scene, or null for a world its owner steps.</summary>
+        public ProcessControl Control => World?.Control;
+
+        private ProcessControlBlock(int cacheIndex, AbstractProcessWrapper wrapper, ProcessWorld world)
         {
             CacheIndex = cacheIndex;
             Wrapper = wrapper;
-            Control = control;
+            World = world;
 
             LastState = EProcessState.Created;
             _state = EProcessState.Created;
@@ -159,12 +162,16 @@ namespace FarEmerald.PlayForge
         #region Construction
 
         public static ProcessControlBlock Generate(int cacheIndex, AbstractProcessWrapper process) =>
-            Generate(cacheIndex, process, ProcessControl.Instance);
+            Generate(cacheIndex, process, ProcessControl.Instance != null ? ProcessControl.Instance.World : null);
 
-        /// <summary>A block for a process the control holds.</summary>
-        public static ProcessControlBlock Generate(int cacheIndex, AbstractProcessWrapper process, ProcessControl control)
+        /// <summary>A block for a process a ProcessControl's world holds.</summary>
+        public static ProcessControlBlock Generate(int cacheIndex, AbstractProcessWrapper process, ProcessControl control) =>
+            Generate(cacheIndex, process, control != null ? control.World : null);
+
+        /// <summary>A block for a process the world holds.</summary>
+        public static ProcessControlBlock Generate(int cacheIndex, AbstractProcessWrapper process, ProcessWorld world)
         {
-            return new ProcessControlBlock(cacheIndex, process, control);
+            return new ProcessControlBlock(cacheIndex, process, world);
         }
 
         #endregion
@@ -175,7 +182,7 @@ namespace FarEmerald.PlayForge
         {
             if (state == State) return;
 
-            if (Control.OutputLogs && Control.DetailedLogs) Debug.Log($"\t[ {Wrapper.ProcessName} ] Queue {state}");
+            if (World.OutputLogs && World.DetailedLogs) Debug.Log($"\t[ {Wrapper.ProcessName} ] Queue {state}");
 
             switch (state)
             {
@@ -225,18 +232,18 @@ namespace FarEmerald.PlayForge
 
         private void SetQueuedState()
         {
-            if (Control.OutputLogs && Control.DetailedLogs) Debug.Log($"\t\t[{Wrapper.ProcessName}] Setting queued state: {State} -> {QueuedState}");
+            if (World.OutputLogs && World.DetailedLogs) Debug.Log($"\t\t[{Wrapper.ProcessName}] Setting queued state: {State} -> {QueuedState}");
 
             State = QueuedState;
 
-            Control.ProcessWillChangeState(this, State);
+            World.ProcessWillChangeState(this, State);
         }
 
         public void ForceIntoState(EProcessState state)
         {
             if (state == State) return;
 
-            if (Control.OutputLogs && Control.DetailedLogs) Debug.Log($"\t[ {Wrapper.ProcessName} ] Force {state}");
+            if (World.OutputLogs && World.DetailedLogs) Debug.Log($"\t[ {Wrapper.ProcessName} ] Force {state}");
 
             if (State == EProcessState.Running && state != EProcessState.Running)
             {
@@ -314,7 +321,7 @@ namespace FarEmerald.PlayForge
             // out of Running (e.g. into Waiting) on the very first frame.
             if (Wrapper.Lifecycle != EProcessLifecycle.Synchronous)
             {
-                QueuedState = Control.GetDefaultTransitionState(this);
+                QueuedState = World.GetDefaultTransitionState(this);
             }
 
             if (_terminateRequested) QueuedState = EProcessState.Terminated;
@@ -377,7 +384,7 @@ namespace FarEmerald.PlayForge
 
             try
             {
-                return Control.Unregister(this);
+                return World.Unregister(this);
             }
             finally
             {

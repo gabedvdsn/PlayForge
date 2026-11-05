@@ -12,13 +12,16 @@ namespace FarEmerald.PlayForge
         private IGameplayProcessHandler handler;
         
         /// <summary>Whether the control that holds the process still does.</summary>
-        public bool ProcessActive => _pcb.Control != null && _pcb.Control.IsRegistered(_pcb.CacheIndex);
+        public bool ProcessActive => _pcb.World != null && _pcb.World.IsRegistered(_pcb.CacheIndex);
 
         /// <summary>
         /// The control that holds the process. The relay's calls go there; they went to ProcessControl.Instance,
         /// whichever control held the process (FEAT-10).
         /// </summary>
         public ProcessControl Control => _pcb.Control;
+
+        /// <summary>The world that holds the process, which the relay's calls go to (FEAT-10).</summary>
+        public ProcessWorld World => _pcb.World;
         
         public ProcessRelay(ProcessControlBlock pcb)
         {
@@ -77,14 +80,14 @@ namespace FarEmerald.PlayForge
         /// told to terminate, or one that's already paused.
         /// </summary>
         public bool Pause(bool cascade = true) 
-            => _pcb.Control != null && _pcb.Control.Pause(CacheIndex, cascade);
+            => _pcb.World != null && _pcb.World.Pause(CacheIndex, cascade);
 
         /// <summary>
         /// Resumes this process and optionally its children. A process that held its run carries on, and one
         /// that didn't starts a new run. Returns false while ProcessControl itself is paused.
         /// </summary>
         public bool Unpause(bool cascade = true) 
-            => _pcb.Control != null && _pcb.Control.Unpause(CacheIndex, cascade);
+            => _pcb.World != null && _pcb.World.Unpause(CacheIndex, cascade);
 
         /// <summary>
         /// Runs this process, and optionally its children, where it waits, as one that requires control does until
@@ -92,18 +95,18 @@ namespace FarEmerald.PlayForge
         /// Returns false for a process that can't run from where it is.
         /// </summary>
         public bool Run(bool cascade = false)
-            => _pcb.Control != null && _pcb.Control.Run(CacheIndex, cascade);
+            => _pcb.World != null && _pcb.World.Run(CacheIndex, cascade);
 
         /// <summary>
         /// Terminates this process and optionally its children.
         /// </summary>
         public bool Terminate(bool cascade = true) 
-            => _pcb.Control != null && _pcb.Control.Terminate(CacheIndex, cascade);
+            => _pcb.World != null && _pcb.World.Terminate(CacheIndex, cascade);
         
         /// <summary>
         /// Immediately terminates this process and optionally its children.
         /// </summary>
         public bool TerminateImmediate(bool cascade = true) 
-            => _pcb.Control != null && _pcb.Control.TerminateImmediate(CacheIndex, cascade);
+            => _pcb.World != null && _pcb.World.TerminateImmediate(CacheIndex, cascade);
     }
 }

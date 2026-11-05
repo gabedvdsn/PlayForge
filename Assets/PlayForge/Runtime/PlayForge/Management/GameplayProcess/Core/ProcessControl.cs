@@ -41,211 +41,43 @@ namespace FarEmerald.PlayForge
 
         public AbstractMonoProcessInstantiator CustomInstantiator;
         
-        public EProcessControlState State { get; private set; }
+        /// <summary>
+        /// The world of processes this ProcessControl steps from Unity's loop (FEAT-10). Its bookkeeping was this class's own,
+        /// so no process ran without a ProcessControl in a scene; it's a plain class now, which code can own and step too.
+        /// </summary>
+        public ProcessWorld World => world ??= new ProcessWorld(this);
 
-        // Core process storage
-        private Dictionary<int, ProcessControlBlock> _active = new();
-        private HashSet<int> _waiting = new();
-        
-        // Optimized stepping - flat lists per timing type for cache-friendly iteration
-        // Empty until Bootstrap fills it, so a ProcessControl nothing bootstrapped steps nothing. Null, it threw in
-        // every Update, LateUpdate and FixedUpdate (PC-23)
-        private Dictionary<EProcessStepTiming, StepGroup> _stepping = new();
+        private ProcessWorld world;
 
-        // The timing each block joined its step groups by, which is the one it leaves them by. A process's own can
-        // change while it runs, and leaving by that left the block stepping where it had joined (PC-26)
-        private Dictionary<int, EProcessStepTiming> _steppedAs = new();
+        // The inspector's settings, which its world reads
+        internal EProcessControlState InspectorStartState { get => StartState; set => StartState = value; }
+        internal bool InspectorCascadeToChildren { get => CascadeToChildren; set => CascadeToChildren = value; }
+        internal bool InspectorCascadeToSiblings { get => CascadeToSiblings; set => CascadeToSiblings = value; }
+        internal int InspectorMaxTicksPerFrame { get => maxTicksPerFrame; set => maxTicksPerFrame = value; }
 
-        // Blocks whose object wasn't active when they registered. Unity sends no OnDestroy to an object that was never
-        // active, so one destroyed before it woke left its block stepping with nothing behind it (PC-30)
-        private readonly List<int> _dormant = new();
-
-        // Blocks whose process's class declares its own OnDestroy, which hides the base's, so Unity never says when
-        // their object goes. Watched for as long as they run (PC-31)
-        private readonly List<int> _unheard = new();
-
-        // Per class, whether it hides AbstractMonoProcess's OnDestroy, so each is looked up, and warned of, once (PC-31)
-        private readonly Dictionary<Type, bool> _hidesOnDestroy = new();
-        
-        // Hierarchy management for MonoProcesses
-        private ProcessHierarchy _hierarchy = new();
-
-        private int _cacheCounter;
-        private int NextCacheIndex => _cacheCounter++;
-
-        private Dictionary<int, ProcessWatcher> _watchers = new();
-
-        // Group process registry — maps user-facing Tag to the GroupProcess instance
-        private Dictionary<Tag, GroupProcess> _groups = new();
-
-        // GAS-owned process registry — maps the registering IGameplayAbilitySystem to
-        // the set of process cache indices it owns. A process is associated with a GAS
-        // when its handler is an IGameplayAbilitySystem (either directly passed as the
-        // handler or derived from an AbilityDataPacket's EffectOrigin.GetOwner()).
-        private Dictionary<IGameplayAbilitySystem, HashSet<int>> _gasProcesses = new();
+        public EProcessControlState State => World.State;
 
         /// <summary>
         /// High-level lifecycle callbacks for observers (debuggers, recorders, etc.).
         /// </summary>
-        public ProcessControlCallbacks Callbacks { get; private set; } = new();
+        public ProcessControlCallbacks Callbacks => World.Callbacks;
 
-        public int Created => _cacheCounter;
-        public int Active => _active.Count;
-        public int Running => _active.Count - _waiting.Count;
-
-        #region Stepping Optimization
-        
-        /// <summary>
-        /// The processes stepped at one timing, in step order: by priority, lowest first, and within a
-        /// priority in the order they arrived. Stepping reads this every frame, so it's kept in order as
-        /// processes come and go. The priority used to be stored and never applied (PC-22).
-        /// </summary>
-        private class StepGroup
-        {
-            private readonly List<int> _indices = new();
-            private readonly List<int> _priorities = new();
-
-            public void Add(int cacheIndex, int priority)
-            {
-                int position = _priorities.Count;
-                while (position > 0 && _priorities[position - 1] > priority) position--;
-
-                _indices.Insert(position, cacheIndex);
-                _priorities.Insert(position, priority);
-            }
-
-            public bool Remove(int cacheIndex)
-            {
-                int position = _indices.IndexOf(cacheIndex);
-                if (position < 0) return false;
-
-                _indices.RemoveAt(position);
-                _priorities.RemoveAt(position);
-                return true;
-            }
-
-            public List<int> GetIndices() => _indices;
-
-            public int Count => _indices.Count;
-        }
-
-        #endregion
+        public int Created => World.Created;
+        public int Active => World.Active;
+        public int Running => World.Running;
 
         #region Process Watching
-        
-        private struct ProcessWatcher
-        {
-            public struct WatcherActions
-            {
-                public Action<EProcessState, EProcessState, ProcessDataPacket> onStateChange;
-                public Action<ProcessDataPacket> onUnregister;
-            }
 
-            private Dictionary<object, WatcherActions> actions;
+        public void WatchProcess(ProcessRelay toWatch, object caller, Action<ProcessDataPacket> onStartWatching = null,
+            Action<EProcessState, EProcessState, ProcessDataPacket> onStateChange = null, Action<ProcessDataPacket> onUnregister = null) =>
+            World.WatchProcess(toWatch, caller, onStartWatching, onStateChange, onUnregister);
 
-            public int ActionCount => actions.Count;
+        public void StopWatchingProcess(ProcessRelay toWatch) => World.StopWatchingProcess(toWatch);
 
-            public readonly ProcessRelay watching;
+        public void StopWatchingProcess(ProcessRelay toWatch, object caller) => World.StopWatchingProcess(toWatch, caller);
 
-            public ProcessWatcher(ProcessRelay toWatch, object caller, Action<EProcessState, EProcessState, ProcessDataPacket> onStateChange = null, Action<ProcessDataPacket> onUnregister = null)
-            {
-                actions = new Dictionary<object, WatcherActions>();
-                actions[caller] = new WatcherActions()
-                {
-                    onStateChange = onStateChange,
-                    onUnregister = onUnregister
-                };
-
-                watching = toWatch;
-            }
-
-            public void AddActions(object caller, Action<EProcessState, EProcessState, ProcessDataPacket> onStateChange, Action<ProcessDataPacket> onUnregister)
-            {
-                // Written back, as WatcherActions is a struct: changing the copy read out changes nothing
-                actions.TryGetValue(caller, out var _actions);
-                actions[caller] = new WatcherActions()
-                {
-                    onStateChange = _actions.onStateChange + onStateChange,
-                    onUnregister = _actions.onUnregister + onUnregister
-                };
-            }
-
-            public WatcherActions GetActions(object caller)
-            {
-                return actions.TryGetValue(caller, out var _actions) ? _actions : default;
-            }
-
-            public bool RemoveActions(object caller)
-            {
-                return actions.Remove(caller);
-            }
-
-            public void RunOnStateChange(EProcessState oldState, EProcessState newState, ProcessDataPacket data)
-            {
-                // A snapshot, as a callback can stop watching, which changes what's being walked
-                foreach (var _actions in actions.Values.ToArray()) _actions.onStateChange?.Invoke(oldState, newState, data);
-            }
-            
-            public void RunOnUnregister(ProcessDataPacket data)
-            {
-                foreach (var _actions in actions.Values.ToArray()) _actions.onUnregister?.Invoke(data);
-            }
-        }
-
-        public void WatchProcess(ProcessRelay toWatch, object caller, Action<ProcessDataPacket> onStartWatching = null, Action<EProcessState, EProcessState, ProcessDataPacket> onStateChange = null,
-            Action<ProcessDataPacket> onUnregister = null)
-        {
-            // In this control's watchers: it went in Instance's, whichever control held the process (FEAT-10)
-            if (!_watchers.TryGetValue(toWatch.CacheIndex, out var watcher))
-            {
-                _watchers[toWatch.CacheIndex] = new ProcessWatcher(toWatch, caller, onStateChange, onUnregister);
-            }
-            else
-            {
-                watcher.AddActions(caller, onStateChange, onUnregister);
-            }
-
-            onStartWatching?.Invoke(toWatch.Wrapper.Data);
-        }
-
-        public void StopWatchingProcess(ProcessRelay toWatch)
-        {
-            if (!_watchers.ContainsKey(toWatch.CacheIndex)) return;
-            _watchers.Remove(toWatch.CacheIndex);
-        }
-        
-        public void StopWatchingProcess(ProcessRelay toWatch, object caller)
-        {
-            if (!_watchers.ContainsKey(toWatch.CacheIndex)) return;
-            _watchers[toWatch.CacheIndex].RemoveActions(caller);
-            if (_watchers[toWatch.CacheIndex].ActionCount <= 0) _watchers.Remove(toWatch.CacheIndex);
-        }
-
-        private void CheckWatcherOnStateChange(ProcessControlBlock pcb)
-        {
-            if (!_watchers.ContainsKey(pcb.CacheIndex)) return;
-            _watchers[pcb.CacheIndex].RunOnStateChange(pcb.LastState, pcb.State, pcb.Wrapper.Data);
-        }
-
-        private void CheckWatcherOnUnregister(ProcessControlBlock pcb)
-        {
-            if (!_watchers.ContainsKey(pcb.CacheIndex)) return;
-
-            // A callback's throw can't be let past here: the unregister still has to finish
-            try
-            {
-                _watchers[pcb.CacheIndex].RunOnUnregister(pcb.Wrapper.Data);
-            }
-            catch (Exception ex)
-            {
-                Debug.LogException(ex);
-            }
-
-            StopWatchingProcess(pcb.Relay);
-        }
-        
         #endregion
-        
+
         #region Readable Definition
         
         public string GetName()
@@ -283,7 +115,7 @@ namespace FarEmerald.PlayForge
             Instance = this;
             if (DontDestroyOnLoad) DontDestroyOnLoad(gameObject);
 
-            ResetProcessControl(deferStartState ? EProcessControlState.Ready : StartState);
+            World.ResetProcessControl(deferStartState ? EProcessControlState.Ready : StartState);
             ApplyTickRate();
         }
 
@@ -306,70 +138,21 @@ namespace FarEmerald.PlayForge
         // The ProcessControl's rate, in force: the tick's waits follow it
         private void ApplyTickRate()
         {
-            tickAccumulator = 0;
+            World.ResetTickTime();
             if (Instance != this) return;
             if (fixedTickRate > 0) ForgeTick.Ticking = true;
             else if (ForgeTick.Ticking) ForgeTick.Stop();
         }
 
-        // The frame's time a tick hasn't stepped yet
-        private double tickAccumulator;
-
-        // A tick's clock: the tick's fixed step, and the tick's number as its frame
-        private sealed class TickClock : IForgeClock
-        {
-            public IForgeClock Frame;
-            public float Step;
-            public float DeltaTime => Step;
-            public float UnscaledDeltaTime => Step;
-            public float FixedDeltaTime => Frame.FixedDeltaTime;
-            public float Time => Frame.Time;
-            public float UnscaledTime => Frame.UnscaledTime;
-            public int FrameCount => ForgeTick.Ticks;
-        }
-
-        private readonly TickClock tickClock = new();
-
-        // As many ticks as the frame's time holds: in each, what waits for a tick goes on, every process steps, and
-        // then steps its end of frame, all by the tick's clock
-        private void RunTicks()
-        {
-            double step = 1.0 / fixedTickRate;
-            tickAccumulator += ForgeTime.DeltaTime;
-            int most = Mathf.Max(1, maxTicksPerFrame);
-            int ran = 0;
-            while (tickAccumulator + 1e-6 >= step && ran < most)
-            {
-                tickAccumulator -= step;
-                ran++;
-                tickClock.Frame = ForgeTime.Clock;
-                tickClock.Step = (float)step;
-                var frame = ForgeTime.Use(tickClock);
-                try
-                {
-                    ForgeTick.Advance();
-                    StepProcesses(EProcessStepTiming.Update);
-                    StepProcesses(EProcessStepTiming.LateUpdate);
-                }
-                finally
-                {
-                    ForgeTime.Use(frame);
-                }
-            }
-
-            // A frame too long for its ticks drops the rest, so the game doesn't fall further behind each frame
-            if (ran >= most && tickAccumulator >= step) tickAccumulator = 0;
-        }
-
         /// <summary>Enters the StartState set in the inspector, after a Bootstrap that deferred it (PC-29).</summary>
-        public void EnterStartState() => SetControlState(StartState);
+        public void EnterStartState() => World.EnterStartState();
 
         public void DeferredInit()
         {
             if (!CollectOnAwake) return;
             CollectSceneProcesses();
         }
-        
+
         // Start, not Awake: a Bootstrapper bootstraps the ProcessControl it makes after that one's Awake (PC-23)
         private void Start()
         {
@@ -382,112 +165,33 @@ namespace FarEmerald.PlayForge
 
         private void Update()
         {
-            Sweep(_dormant, untilAwake: true);
-            Sweep(_unheard, untilAwake: false);
-            if (fixedTickRate > 0 && Instance == this) RunTicks();
-            else StepProcesses(EProcessStepTiming.Update);
-        }
-
-        /// <summary>
-        /// Ends the block of each watched process whose object has been destroyed. A dormant one stops being watched once
-        /// it wakes, as its OnDestroy will come then (PC-30); one whose class hides OnDestroy never does (PC-31).
-        /// </summary>
-        private void Sweep(List<int> watched, bool untilAwake)
-        {
-            for (int i = watched.Count - 1; i >= 0; i--)
-            {
-                if (!_active.TryGetValue(watched[i], out var pcb) || !pcb.Wrapper.TryGetProcess<AbstractMonoProcess>(out var mono))
-                {
-                    watched.RemoveAt(i);
-                }
-                else if (!mono)
-                {
-                    watched.RemoveAt(i);
-                    EndDestroyedProcess(pcb.Relay);
-                }
-                else if (untilAwake && mono.gameObject.activeInHierarchy)
-                {
-                    watched.RemoveAt(i);
-                }
-            }
-        }
-
-        /// <summary>
-        /// Whether the process's class, or one between it and AbstractMonoProcess, declares its own OnDestroy. Unity calls
-        /// only that one, so AbstractMonoProcess's, which ends the process, never runs (PC-31).
-        /// </summary>
-        private bool HidesOnDestroy(AbstractMonoProcess mono)
-        {
-            var type = mono.GetType();
-            if (_hidesOnDestroy.TryGetValue(type, out bool hides)) return hides;
-
-            const System.Reflection.BindingFlags declared = System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.Public
-                | System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.DeclaredOnly;
-            for (var t = type; t != null && t != typeof(AbstractMonoProcess) && !hides; t = t.BaseType)
-            {
-                hides = t.GetMethod("OnDestroy", declared, null, Type.EmptyTypes, null) != null;
-            }
-
-            _hidesOnDestroy[type] = hides;
-            if (hides)
-            {
-                ForgeLog.Warning($"{type.Name} declares its own OnDestroy, which hides {nameof(AbstractMonoProcess)}'s, so " +
-                                 "Unity never says when its object goes. ProcessControl watches its processes instead; " +
-                                 $"override {nameof(AbstractMonoProcess.WhenDestroy)} to act on it.", mono);
-            }
-
-            return hides;
+            World.SweepDestroyed();
+            if (fixedTickRate > 0 && Instance == this) World.RunTicks();
+            else World.StepProcesses(EProcessStepTiming.Update);
         }
 
         private void LateUpdate()
         {
             // Each tick stepped its own end of frame
             if (fixedTickRate > 0 && Instance == this) return;
-            StepProcesses(EProcessStepTiming.LateUpdate);
+            World.StepProcesses(EProcessStepTiming.LateUpdate);
         }
 
         private void FixedUpdate()
         {
-            StepProcesses(EProcessStepTiming.FixedUpdate);
+            World.StepProcesses(EProcessStepTiming.FixedUpdate);
         }
 
-        // Reusable snapshot buffer to avoid allocation during stepping.
-        // A step callback (e.g. a Synchronous process self-terminating) can mutate the
-        // live indices list, so we iterate a snapshot instead.
-        private readonly List<int> _stepSnapshot = new();
+        // By this name the golden tests step a ProcessControl of their own
+        private void StepProcesses(EProcessStepTiming timing) => World.StepProcesses(timing);
 
-        private void StepProcesses(EProcessStepTiming timing)
-        {
-            if (State is EProcessControlState.Waiting or EProcessControlState.TerminatedImmediately)
-                return;
-
-            if (!_stepping.TryGetValue(timing, out var group))
-                return;
-
-            // Snapshot the indices before iterating.
-            // A Synchronous process may self-terminate during Step(), which modifies the
-            // live list via RemoveFromStepping. Iterating a snapshot keeps the loop safe.
-            _stepSnapshot.Clear();
-            _stepSnapshot.AddRange(group.GetIndices());
-
-            int count = _stepSnapshot.Count;
-            for (int i = 0; i < count; i++)
-            {
-                int cacheIndex = _stepSnapshot[i];
-                if (_active.TryGetValue(cacheIndex, out var pcb))
-                {
-                    pcb.Step(timing);
-                }
-            }
-        }
-        
         private void OnDestroy()
         {
-            TerminateAllImmediately();
+            World.TerminateAllImmediately();
             // What waits for a tick goes on, as a frame's wait, once the ticks are gone
             if (Instance == this && ForgeTick.Ticking) ForgeTick.Stop();
         }
-        
+
         #endregion
 
         #region Scene Collection
@@ -529,10 +233,10 @@ namespace FarEmerald.PlayForge
         
                 // Not SceneRoot's packet, which reparents what it's handed: a scene's processes stay where the
                 // scene put them (PC-20)
-                Register(process).With(ProcessDataPacket.Default()).Run();
+                Register(process).With(ProcessDataPacket.Default()).In(this).Run();
             }
     
-            if (OutputLogs) Debug.Log($"[ProcessControl] {_hierarchy.GetDebugInfo()}");
+            if (OutputLogs) Debug.Log($"[ProcessControl] {World.HierarchyDebugInfo()}");
         }
 
         private static int GetEffectivePriority(AbstractMonoProcess process)
@@ -561,49 +265,6 @@ namespace FarEmerald.PlayForge
 
         #region Core Registration
 
-        private void ResetProcessControl(EProcessControlState nextState)
-        {
-            TerminateAllImmediately();
-
-            _active = new Dictionary<int, ProcessControlBlock>();
-            _waiting = new HashSet<int>();
-            _hierarchy.Clear();
-            _groups = new Dictionary<Tag, GroupProcess>();
-            _gasProcesses = new Dictionary<IGameplayAbilitySystem, HashSet<int>>();
-
-            _steppedAs = new Dictionary<int, EProcessStepTiming>();
-            _dormant.Clear();
-            _unheard.Clear();
-
-            // Initialize stepping groups for each timing type
-            _stepping = new Dictionary<EProcessStepTiming, StepGroup>
-            {
-                [EProcessStepTiming.None] = new StepGroup(),
-                [EProcessStepTiming.Update] = new StepGroup(),
-                [EProcessStepTiming.LateUpdate] = new StepGroup(),
-                [EProcessStepTiming.FixedUpdate] = new StepGroup()
-            };
-
-            var oldState = State;
-            State = nextState;
-            if (oldState != nextState) Callbacks?.ControlStateChanged(oldState, nextState);
-        }
-
-        /// <summary>
-        /// Resolves the owning IGameplayAbilitySystem (if any) for a registration.
-        /// Checks the handler first, then falls back to data.EffectOrigin.GetOwner().
-        /// </summary>
-        private static IGameplayAbilitySystem ResolveOwningGAS(IGameplayProcessHandler handler, ProcessDataPacket data)
-        {
-            if (handler is IGameplayAbilitySystem handlerGas) return handlerGas;
-            if (data is AbilityDataPacket ability)
-            {
-                var owner = ability.EffectOrigin?.GetSource();
-                if (owner is IGameplayAbilitySystem ownerGas) return ownerGas;
-            }
-            return null;
-        }
-        
         #region Registering (FEAT-15)
 
         /// <summary>
@@ -650,28 +311,12 @@ namespace FarEmerald.PlayForge
         public static bool Register(AbstractMonoProcess process, IGameplayProcessHandler handler, ProcessDataPacket data, out ProcessRelay relay) =>
             Register(process).HandledBy(handler).With(data).Run(out relay);
 
-        // A MonoBehaviour process's registration, as the builder makes it, and why it's refused when it is
-        internal ProcessRegistrationResult RegisterMono(AbstractMonoProcess process, IGameplayProcessHandler handler, ProcessDataPacket data)
-        {
-            if (process == null) return new ProcessRegistrationResult(null, EProcessRegistrationRefusal.NoProcess);
-            if (process.IsInitialized) return new ProcessRegistrationResult(null, EProcessRegistrationRefusal.AlreadyRegistered);
-            if (!CanAcceptNewProcesses()) return new ProcessRegistrationResult(null, EProcessRegistrationRefusal.ProcessControlClosed);
-
-            var wrapper = new MonoWrapperProcess(process, data, handler);
-            var pcb = ProcessControlBlock.Generate(NextCacheIndex, wrapper, this);
-            pcb.isMono = true;
-
-            var relay = pcb.Relay;
-            handler?.HandlerSubscribeProcess(relay);
-            data.HandlerSubscribeProcess(relay);
-
-            return SetProcess(pcb)
-                ? new ProcessRegistrationResult(relay, EProcessRegistrationRefusal.None)
-                : new ProcessRegistrationResult(null, EProcessRegistrationRefusal.InitializeThrew);
-        }
+        // A MonoBehaviour process's registration, in this ProcessControl's world
+        internal ProcessRegistrationResult RegisterMono(AbstractMonoProcess process, IGameplayProcessHandler handler, ProcessDataPacket data) =>
+            World.RegisterMono(process, handler, data);
 
         #endregion
-        
+
         #region Runtime Process
 
         [Obsolete(UseTheBuilder)]
@@ -693,28 +338,12 @@ namespace FarEmerald.PlayForge
         public static bool Register(AbstractRuntimeProcess process, IGameplayProcessHandler handler, ProcessDataPacket data, out ProcessRelay relay) =>
             Register(process).HandledBy(handler).With(data).Run(out relay);
 
-        // A runtime process's registration, a task sequence's among them, as the builder makes it, and why it's refused
-        // when it is
-        internal ProcessRegistrationResult RegisterRuntime(AbstractRuntimeProcess process, IGameplayProcessHandler handler, ProcessDataPacket data)
-        {
-            if (process == null) return new ProcessRegistrationResult(null, EProcessRegistrationRefusal.NoProcess);
-            if (process.IsInitialized) return new ProcessRegistrationResult(null, EProcessRegistrationRefusal.AlreadyRegistered);
-            if (!CanAcceptNewProcesses()) return new ProcessRegistrationResult(null, EProcessRegistrationRefusal.ProcessControlClosed);
-
-            var wrapper = new RuntimeWrapperProcess(process, data, handler);
-            var pcb = ProcessControlBlock.Generate(NextCacheIndex, wrapper, this);
-
-            var relay = pcb.Relay;
-            handler?.HandlerSubscribeProcess(relay);
-            data.HandlerSubscribeProcess(relay);
-
-            return SetProcess(pcb)
-                ? new ProcessRegistrationResult(relay, EProcessRegistrationRefusal.None)
-                : new ProcessRegistrationResult(null, EProcessRegistrationRefusal.InitializeThrew);
-        }
+        // A runtime process's registration, a task sequence's among them, in this ProcessControl's world
+        internal ProcessRegistrationResult RegisterRuntime(AbstractRuntimeProcess process, IGameplayProcessHandler handler, ProcessDataPacket data) =>
+            World.RegisterRuntime(process, handler, data);
 
         #endregion
-        
+
         #region Task Sequences (Async)
 
         [Obsolete(UseTheBuilder)]
@@ -764,805 +393,102 @@ namespace FarEmerald.PlayForge
         /// Use this when you need to set MaxMembers, OverflowPolicy, callbacks, etc.
         /// before any members are added.
         /// </summary>
-        public static bool RegisterGroup(Tag groupTag, GroupProcess group, out ProcessRelay relay)
-        {
-            return Instance.Internal_RegisterGroup(groupTag, group, ProcessDataPacket.Default(), out relay);
-        }
+        public static bool RegisterGroup(Tag groupTag, GroupProcess group, out ProcessRelay relay) =>
+            Instance.World.RegisterGroup(groupTag, group, ProcessDataPacket.Default(), out relay);
 
-        public static bool RegisterGroup(Tag groupTag, GroupProcess group, ProcessDataPacket data, out ProcessRelay relay)
-        {
-            return Instance.Internal_RegisterGroup(groupTag, group, data, out relay);
-        }
-
-        private bool Internal_RegisterGroup(Tag groupTag, GroupProcess group, ProcessDataPacket data, out ProcessRelay relay)
-        {
-            relay = default;
-            if (group == null || _groups.ContainsKey(groupTag)) return false;
-
-            if (!Register(group).With(data).Run(out relay)) return false;
-
-            _groups[groupTag] = group;
-
-            // When the group terminates, remove it from the registry
-            WatchProcess(relay, group, onUnregister: _ => _groups.Remove(groupTag));
-
-            return true;
-        }
+        public static bool RegisterGroup(Tag groupTag, GroupProcess group, ProcessDataPacket data, out ProcessRelay relay) =>
+            Instance.World.RegisterGroup(groupTag, group, data, out relay);
 
         /// <summary>
         /// Registers a runtime process as a member of the group identified by groupTag.
         /// If the group doesn't exist yet, it is auto-created with default settings.
         /// The member uses the group's shared data packet by default.
         /// </summary>
-        public static bool RegisterWithGroup(Tag groupTag, AbstractRuntimeProcess process, out ProcessRelay relay, bool useSharedData = true)
-        {
-            return Instance.Internal_RegisterWithGroup(groupTag, process, null, useSharedData, out relay);
-        }
+        public static bool RegisterWithGroup(Tag groupTag, AbstractRuntimeProcess process, out ProcessRelay relay, bool useSharedData = true) =>
+            Instance.World.RegisterWithGroup(groupTag, process, null, useSharedData, out relay);
 
         /// <summary>
         /// Registers a runtime process as a member with an explicit standalone data packet.
         /// </summary>
-        public static bool RegisterWithGroup(Tag groupTag, AbstractRuntimeProcess process, ProcessDataPacket data, out ProcessRelay relay)
-        {
-            return Instance.Internal_RegisterWithGroup(groupTag, process, data, false, out relay);
-        }
-
-        private bool Internal_RegisterWithGroup(Tag groupTag, AbstractRuntimeProcess process, ProcessDataPacket explicitData, bool useSharedData, out ProcessRelay relay)
-        {
-            relay = default;
-            if (process == null) return false;
-
-            // Auto-create the group if it doesn't exist
-            if (!_groups.TryGetValue(groupTag, out var group))
-            {
-                group = new GroupProcess(groupTag.GetName());
-                if (!Internal_RegisterGroup(groupTag, group, ProcessDataPacket.Default(), out _))
-                    return false;
-            }
-
-            // Determine which data packet the member should use
-            var data = useSharedData && explicitData == null
-                ? group.Data   // Share the group's data packet
-                : explicitData ?? ProcessDataPacket.Default();
-
-            // Register the process normally through ProcessControl
-            if (!Register(process).With(data).Run(out relay))
-                return false;
-
-            // Add as a group member
-            if (!group.AddMember(relay))
-            {
-                // Registration succeeded but group rejected the member (full + Reject policy).
-                // Terminate the process since it was registered but can't join the group.
-                relay.Terminate();
-                relay = default;
-                return false;
-            }
-
-            return true;
-        }
+        public static bool RegisterWithGroup(Tag groupTag, AbstractRuntimeProcess process, ProcessDataPacket data, out ProcessRelay relay) =>
+            Instance.World.RegisterWithGroup(groupTag, process, data, false, out relay);
 
         /// <summary>
         /// Tries to get the GroupProcess associated with a tag.
         /// </summary>
-        public static bool TryGetGroup(Tag groupTag, out GroupProcess group)
-        {
-            return Instance._groups.TryGetValue(groupTag, out group);
-        }
+        public static bool TryGetGroup(Tag groupTag, out GroupProcess group) => Instance.World.TryGetGroup(groupTag, out group);
 
         /// <summary>
         /// Checks whether a group with the given tag exists and is active.
         /// </summary>
-        public static bool HasGroup(Tag groupTag)
-        {
-            return Instance._groups.ContainsKey(groupTag);
-        }
+        public static bool HasGroup(Tag groupTag) => Instance.World.HasGroup(groupTag);
 
         #endregion
 
-        public bool Unregister(ProcessControlBlock pcb)
-        {
-            if (pcb.Relay is null) return false;
+        public bool Unregister(ProcessControlBlock pcb) => World.Unregister(pcb);
 
-            if (_waiting.Contains(pcb.CacheIndex)) _waiting.Remove(pcb.CacheIndex);
-            else RemoveFromStepping(pcb);
+        public Dictionary<int, ProcessControlBlock> FetchActiveProcesses() => World.FetchActiveProcesses();
 
-            CheckWatcherOnUnregister(pcb);
-
-            pcb.Handler?.HandlerVoidProcess(pcb.Relay);
-            pcb.Wrapper.Data?.HandlerVoidProcess(pcb.Relay);
-
-            // Remove from hierarchy
-            _hierarchy.Unregister(pcb.CacheIndex);
-
-            // Clear GAS association
-            var gas = ResolveOwningGAS(pcb.Handler, pcb.Wrapper.Data);
-            if (gas != null && _gasProcesses.TryGetValue(gas, out var set))
-            {
-                set.Remove(pcb.CacheIndex);
-                if (set.Count == 0) _gasProcesses.Remove(gas);
-            }
-
-            if (OutputLogs)
-            {
-                if (DetailedLogs) Debug.Log($"[Process Control] Unregister process: {pcb.Wrapper.ProcessName} ({pcb.Handler?.GetName() ?? "No handler"})");
-                else Debug.Log($"[Process Control] Unregister process: {pcb.Wrapper.ProcessName}");
-            }
-
-            // Fired ahead of the removal, as the callback says, and guarded so a throw can't stop it
-            if (_active.ContainsKey(pcb.CacheIndex))
-            {
-                try
-                {
-                    Callbacks?.ProcessUnregistered(pcb.Relay, pcb.Wrapper.Data);
-                    if (gas != null) Callbacks?.GASProcessUnregistered(gas, pcb.Relay, pcb.Wrapper.Data);
-                }
-                catch (Exception ex)
-                {
-                    Debug.LogException(ex);
-                }
-            }
-
-            return _active.Remove(pcb.CacheIndex);
-        }
-        
-        public Dictionary<int, ProcessControlBlock> FetchActiveProcesses() => _active;
-        
         /// <summary>True while ProcessControl itself is paused.</summary>
-        public bool IsPaused => State is EProcessControlState.Waiting or EProcessControlState.ClosedWaiting;
+        public bool IsPaused => World.IsPaused;
 
         /// <summary>True while ProcessControl takes new processes, which it stops doing once closed or terminated.</summary>
-        public bool AcceptsNewProcesses => CanAcceptNewProcesses();
+        public bool AcceptsNewProcesses => World.AcceptsNewProcesses;
 
-        private bool CanAcceptNewProcesses()
-        {
-            return State is not (EProcessControlState.Closed 
-                or EProcessControlState.ClosedWaiting 
-                or EProcessControlState.Terminated 
-                or EProcessControlState.TerminatedImmediately);
-        }
-        
         #endregion
 
         #region Process State Control
 
-        public void SetControlState(EProcessControlState state)
-        {
-            if (state == State) return;
-
-            var oldState = State;
-            State = state;
-            SetAllProcessesUponStateChange();
-            Callbacks?.ControlStateChanged(oldState, state);
-        }
+        public void SetControlState(EProcessControlState state) => World.SetControlState(state);
 
         /// <summary>
         /// Runs the process. If cascading is enabled, also runs children.
         /// </summary>
-        public bool Run(int cacheIndex, bool cascade = false)
-        {
-            if (!_active.TryGetValue(cacheIndex, out var pcb)) 
-                return false;
-            if (!ValidateStateTransition(pcb, EProcessState.Running)) 
-                return false;
+        public bool Run(int cacheIndex, bool cascade = false) => World.Run(cacheIndex, cascade);
 
-            pcb.QueueNextState(EProcessState.Running);
-            
-            if (cascade && CascadeToChildren)
-            {
-                CascadeStateToChildren(cacheIndex, EProcessState.Running);
-            }
-            
-            return true;
-        }
-        
         /// <summary>
-        /// Pauses/waits the process. If cascading is enabled, also pauses children. It takes effect at once:
-        /// a process that can hold its run keeps it, and one that can't has it cancelled, to start again on
-        /// resume. Refused for a process that's been told to terminate.
+        /// Pauses/waits the process. If cascading is enabled, also pauses children. It takes effect at once.
         /// </summary>
-        public bool Wait(int cacheIndex, bool cascade = true)
-        {
-            if (!_active.TryGetValue(cacheIndex, out var pcb)) 
-                return false;
-            // Already stopped by ProcessControl, asking makes the pause its own, so it outlasts ProcessControl's
-            if (pcb.HeldByControl) pcb.KeepPaused();
-            else if (ValidateStateTransition(pcb, EProcessState.Waiting)) pcb.ForceIntoState(EProcessState.Waiting);
-            else return false;
+        public bool Wait(int cacheIndex, bool cascade = true) => World.Wait(cacheIndex, cascade);
 
-            if (cascade && CascadeToChildren)
-            {
-                CascadeStateToChildren(cacheIndex, EProcessState.Waiting);
-            }
-            
-            return true;
-        }
-        
         /// <summary>
         /// Alias for Wait - pauses the process.
         /// </summary>
-        public bool Pause(int cacheIndex, bool cascade = true) => Wait(cacheIndex, cascade);
-        
+        public bool Pause(int cacheIndex, bool cascade = true) => World.Pause(cacheIndex, cascade);
+
         /// <summary>
         /// Alias for Run - unpauses/resumes the process.
         /// </summary>
-        public bool Unpause(int cacheIndex, bool cascade = true) => Run(cacheIndex, cascade);
-        
+        public bool Unpause(int cacheIndex, bool cascade = true) => World.Unpause(cacheIndex, cascade);
+
         /// <summary>
         /// Terminates the process. Always cascades to children.
         /// </summary>
-        public bool Terminate(int cacheIndex, bool cascade = true)
-        {
-            if (!_active.ContainsKey(cacheIndex)) 
-                return false;
+        public bool Terminate(int cacheIndex, bool cascade = true) => World.Terminate(cacheIndex, cascade);
 
-            // Always terminate children when terminating parent
-            if (cascade)
-            {
-                CascadeStateToChildren(cacheIndex, EProcessState.Terminated);
-            }
-            
-            _active[cacheIndex].QueueTerminate();
-            return true;
-        }
-        
-        public bool TerminateImmediate(int cacheIndex, bool cascade = true)
-        {
-            if (!_active.ContainsKey(cacheIndex)) return false;
+        public bool TerminateImmediate(int cacheIndex, bool cascade = true) => World.TerminateImmediate(cacheIndex, cascade);
 
-            // Always terminate children when terminating parent
-            if (cascade)
-            {
-                var siblings = _hierarchy.GetSiblingProcessIds(cacheIndex);
-                var children = _hierarchy.GetCascadeTargets(cacheIndex, CascadeToSiblings, includeSelf: false, reverseList: true);
-                foreach (int childIndex in children)
-                {
-                    if (!_active.TryGetValue(childIndex, out var childPcb)) continue;
-
-                    // Skip siblings that opted out of cascade
-                    if (siblings.Contains(childIndex) && !childPcb.Wrapper.ParticipateInSiblingCascade)
-                        continue;
-
-                    childPcb.ForceIntoState(EProcessState.Terminated);
-                }
-            }
-
-            _active[cacheIndex].ForceIntoState(EProcessState.Terminated);
-
-            return true;
-        }
-        
         /// <summary>
         /// Ends the process of an object that has been destroyed, which nothing else tells ProcessControl about.
         /// </summary>
-        public void EndDestroyedProcess(ProcessRelay relay)
-        {
-            if (_active.TryGetValue(relay.CacheIndex, out var pcb) && pcb.Relay == relay)
-            {
-                TerminateImmediate(relay.CacheIndex);
-            }
-        }
+        public void EndDestroyedProcess(ProcessRelay relay) => World.EndDestroyedProcess(relay);
 
-        public void TerminateAll()
-        {
-            // Create copy to avoid modification during iteration
-            var indices = new List<int>(_active.Keys);
-            foreach (int cacheIndex in indices) Terminate(cacheIndex, false); // Don't cascade since we're terminating all anyway
-        }
+        public void TerminateAll() => World.TerminateAll();
 
-        public void TerminateAllImmediately()
-        {
-            if (_active == null || _active.Count == 0)
-                return;
-            
-            try
-            {
-                var pcbs = _active.Values.ToArray();
-                foreach (var task in pcbs)
-                {
-                    TerminateImmediate(task.CacheIndex, false);
-                }
-            }
-            catch (InvalidOperationException)
-            {
-                
-            }
-        }
+        public void TerminateAllImmediately() => World.TerminateAllImmediately();
 
-        private void CascadeStateToChildren(int sourceIndex, EProcessState state)
-        {
-            var siblings = _hierarchy.GetSiblingProcessIds(sourceIndex);
-            var targets = _hierarchy.GetCascadeTargets(sourceIndex, CascadeToSiblings, includeSelf: false);
-
-            foreach (int targetIndex in targets)
-            {
-                if (!_active.TryGetValue(targetIndex, out var targetPcb))
-                    continue;
-
-                // Skip siblings that opted out of cascade
-                if (siblings.Contains(targetIndex) && !targetPcb.Wrapper.ParticipateInSiblingCascade)
-                    continue;
-
-                // Skip if already in target state
-                if (targetPcb.State == state)
-                {
-                    if (state == EProcessState.Waiting) targetPcb.KeepPaused();
-                    continue;
-                }
-
-                switch (state)
-                {
-                    case EProcessState.Running:
-                        if (ValidateStateTransition(targetPcb, EProcessState.Running))
-                            targetPcb.QueueNextState(EProcessState.Running);
-                        break;
-                    case EProcessState.Waiting:
-                        if (ValidateStateTransition(targetPcb, EProcessState.Waiting))
-                            targetPcb.ForceIntoState(EProcessState.Waiting);
-                        break;
-                    case EProcessState.Terminated:
-                        targetPcb.QueueTerminate();
-                        break;
-                }
-            }
-        }
-        
-        #endregion
-
-        #region Process Setup
-
-        private bool SetProcess(ProcessControlBlock pcb)
-        {
-            if (pcb.State == EProcessState.Created && !PrepareCreatedProcess(pcb)) return false;
-            
-            var state = GetDefaultTransitionState(pcb);
-            pcb.QueueNextState(state);
-
-            // Registered during a pause, it waits with the rest and goes when they do, unless it waits to be told
-            if (IsPaused && pcb.Wrapper.Lifecycle != EProcessLifecycle.RequiresControl) pcb.WaitForControl();
-
-            return true;
-        }
-
-        private bool PrepareCreatedProcess(ProcessControlBlock pcb)
-        {
-            pcb.Wrapper.ConfigureWrapper();
-
-            // By the live object, which for a prefab is its clone. The prefab is shared, so every clone of it
-            // landed on one node and ending any of them cascaded to the rest (PC-3)
-            if (pcb.Wrapper.TryGetProcess<AbstractMonoProcess>(out var mono)) _hierarchy.Register(mono, pcb.CacheIndex);
-
-            _waiting.Add(pcb.CacheIndex);
-            _active[pcb.CacheIndex] = pcb;
-
-            // Track GAS-owned processes so observers can query "what processes does this GAS own?"
-            var gas = ResolveOwningGAS(pcb.Handler, pcb.Wrapper.Data);
-            if (gas != null)
-            {
-                if (!_gasProcesses.TryGetValue(gas, out var set))
-                {
-                    set = new HashSet<int>();
-                    _gasProcesses[gas] = set;
-                }
-                set.Add(pcb.CacheIndex);
-            }
-
-            if (OutputLogs)
-            {
-                string msg = DetailedLogs
-                    ? $"[Process Control] Registered Process \"{pcb.Wrapper.ProcessName}\" ({pcb.Handler})"
-                    : $"[Process Control] Registered Process: {pcb.Wrapper.ProcessName}";
-                Debug.Log(msg);
-            }
-
-            // The process's own code, with the block already in place. A throw goes through the usual
-            // teardown and refuses the process, rather than leaving it half registered (PC-15)
-            try
-            {
-                pcb.Initialize();
-            }
-            catch (Exception ex)
-            {
-                Debug.LogException(ex);
-                pcb.ForceIntoState(EProcessState.Terminated);
-                return false;
-            }
-
-            // WhenInitialize applies the parent the process's data asks for after the hierarchy filed it, so it's filed
-            // again where its transform now is. It stayed no one's child (PC-28)
-            if (mono) _hierarchy.Reparent(mono.gameObject);
-            if (mono)
-            {
-                // A class that hides OnDestroy is watched for as long as it runs, one asleep only until it wakes (PC-31)
-                if (HidesOnDestroy(mono)) _unheard.Add(pcb.CacheIndex);
-                else if (!mono.gameObject.activeInHierarchy) _dormant.Add(pcb.CacheIndex);
-            }
-
-            // Fire callbacks AFTER pcb.Initialize so state is fully consistent
-            Callbacks?.ProcessRegistered(pcb.Relay, pcb.Wrapper.Data);
-            if (gas != null) Callbacks?.GASProcessRegistered(gas, pcb.Relay, pcb.Wrapper.Data);
-
-            return true;
-        }
-        
-        private void SetAllProcessesUponStateChange()
-        {
-            if (State == EProcessControlState.TerminatedImmediately)
-            {
-                TerminateAllImmediately();
-            }
-            else if (State == EProcessControlState.Terminated)
-            {
-                TerminateAll();
-            }
-            // If ready, closed, waiting, closedwaiting
-            else
-            {
-                // Only a pause or the end of one moves anything. Giving every process its default transition
-                // here parked Synchronous processes, started RequiresControl ones and re-ran finished ones,
-                // and closing ended GameRoot and everything it handled (PC-7)
-                var pcbs = _active.Values.ToArray();
-                foreach (var pcb in pcbs)
-                {
-                    if (pcb.State == EProcessState.Created) SetProcess(pcb);
-                    else if (IsPaused) pcb.HoldForControl();
-                    else pcb.ReleaseFromControl();
-                }
-            }
-        }
-        
-        #endregion
-
-        #region Stepping Management
-
-        private void MoveToStepping(ProcessControlBlock pcb)
-        {
-            var timing = pcb.Wrapper.StepTiming;
-            int priority = GetEffectivePriority(pcb);
-
-            _steppedAs[pcb.CacheIndex] = timing;
-            AddToStepGroup(pcb.CacheIndex, priority, timing);
-        }
-
-        private void AddToStepGroup(int cacheIndex, int priority, EProcessStepTiming timing)
-        {
-            switch (timing)
-            {
-                case EProcessStepTiming.None:
-                    break;
-                case EProcessStepTiming.Update:
-                    _stepping[EProcessStepTiming.Update].Add(cacheIndex, priority);
-                    break;
-                case EProcessStepTiming.LateUpdate:
-                    _stepping[EProcessStepTiming.LateUpdate].Add(cacheIndex, priority);
-                    break;
-                case EProcessStepTiming.FixedUpdate:
-                    _stepping[EProcessStepTiming.FixedUpdate].Add(cacheIndex, priority);
-                    break;
-                case EProcessStepTiming.UpdateAndLate:
-                    _stepping[EProcessStepTiming.Update].Add(cacheIndex, priority);
-                    _stepping[EProcessStepTiming.LateUpdate].Add(cacheIndex, priority);
-                    break;
-                case EProcessStepTiming.UpdateAndFixed:
-                    _stepping[EProcessStepTiming.Update].Add(cacheIndex, priority);
-                    _stepping[EProcessStepTiming.FixedUpdate].Add(cacheIndex, priority);
-                    break;
-                case EProcessStepTiming.LateAndFixed:
-                    _stepping[EProcessStepTiming.LateUpdate].Add(cacheIndex, priority);
-                    _stepping[EProcessStepTiming.FixedUpdate].Add(cacheIndex, priority);
-                    break;
-                case EProcessStepTiming.UpdateFixedAndLate:
-                    _stepping[EProcessStepTiming.Update].Add(cacheIndex, priority);
-                    _stepping[EProcessStepTiming.LateUpdate].Add(cacheIndex, priority);
-                    _stepping[EProcessStepTiming.FixedUpdate].Add(cacheIndex, priority);
-                    break;
-            }
-        }
-        
-        private void RemoveFromStepping(ProcessControlBlock pcb)
-        {
-            if (!_steppedAs.TryGetValue(pcb.CacheIndex, out var timing)) return;
-            _steppedAs.Remove(pcb.CacheIndex);
-
-            switch (timing)
-            {
-                case EProcessStepTiming.None:
-                    break;
-                case EProcessStepTiming.Update:
-                    _stepping[EProcessStepTiming.Update].Remove(pcb.CacheIndex);
-                    break;
-                case EProcessStepTiming.LateUpdate:
-                    _stepping[EProcessStepTiming.LateUpdate].Remove(pcb.CacheIndex);
-                    break;
-                case EProcessStepTiming.FixedUpdate:
-                    _stepping[EProcessStepTiming.FixedUpdate].Remove(pcb.CacheIndex);
-                    break;
-                case EProcessStepTiming.UpdateAndLate:
-                    _stepping[EProcessStepTiming.Update].Remove(pcb.CacheIndex);
-                    _stepping[EProcessStepTiming.LateUpdate].Remove(pcb.CacheIndex);
-                    break;
-                case EProcessStepTiming.UpdateAndFixed:
-                    _stepping[EProcessStepTiming.Update].Remove(pcb.CacheIndex);
-                    _stepping[EProcessStepTiming.FixedUpdate].Remove(pcb.CacheIndex);
-                    break;
-                case EProcessStepTiming.LateAndFixed:
-                    _stepping[EProcessStepTiming.LateUpdate].Remove(pcb.CacheIndex);
-                    _stepping[EProcessStepTiming.FixedUpdate].Remove(pcb.CacheIndex);
-                    break;
-                case EProcessStepTiming.UpdateFixedAndLate:
-                    _stepping[EProcessStepTiming.Update].Remove(pcb.CacheIndex);
-                    _stepping[EProcessStepTiming.LateUpdate].Remove(pcb.CacheIndex);
-                    _stepping[EProcessStepTiming.FixedUpdate].Remove(pcb.CacheIndex);
-                    break;
-                default:
-                    throw new ArgumentOutOfRangeException();
-            }
-        }
-
-        private int GetEffectivePriority(ProcessControlBlock pcb)
-        {
-            return pcb.Wrapper.PriorityMethod switch
-            {
-                EProcessStepPriorityMethod.Manual => pcb.Wrapper.StepPriority,
-                EProcessStepPriorityMethod.First => 0,
-                EProcessStepPriorityMethod.Last => int.MaxValue,
-                _ => pcb.Wrapper.StepPriority
-            };
-        }
-
-        private void MoveToWaiting(ProcessControlBlock pcb)
-        {
-            _waiting.Add(pcb.CacheIndex);
-        }
-
-        private void RemoveFromWaiting(ProcessControlBlock pcb)
-        {
-            _waiting.Remove(pcb.CacheIndex);
-        }
-        
         #endregion
 
         #region Internal Process Communication
 
-        public void ProcessWillChangeState(ProcessControlBlock pcb, EProcessState state)
-        {
-            if (state == EProcessState.Created) return;
+        public void ProcessWillChangeState(ProcessControlBlock pcb, EProcessState state) => World.ProcessWillChangeState(pcb, state);
 
-            // Reported ahead of acting on it: terminating takes the watchers away, and a run that ends at
-            // once moves the state on again, so afterwards was too late to say this (PC-13)
-            ReportStateChange(pcb);
+        public EProcessState GetDefaultTransitionState(ProcessControlBlock pcb) => World.GetDefaultTransitionState(pcb);
 
-            // A listener can move the process on itself
-            if (pcb.State != state) return;
+        // By this name the harness's oracle reads the transition table
+        private static readonly Dictionary<(EProcessControlState control, EProcessLifecycle lifecycle, EProcessState from), EProcessState>
+            DefaultTransitions = ProcessWorld.DefaultTransitions;
 
-            switch (state)
-            {
-                case EProcessState.Running:
-                    ProcessWillRun(pcb);
-                    break;
-                case EProcessState.Waiting:
-                    ProcessWillWait(pcb);
-                    break;
-                case EProcessState.Terminated:
-                    ProcessWillTerminate(pcb);
-                    break;
-                default:
-                    throw new ArgumentOutOfRangeException(nameof(state), state, null);
-            }
-        }
-
-        private void ReportStateChange(ProcessControlBlock pcb)
-        {
-            try
-            {
-                CheckWatcherOnStateChange(pcb);
-                Callbacks?.ProcessStateChanged(pcb.Relay, pcb.LastState, pcb.State, pcb.Wrapper.Data);
-            }
-            catch (Exception ex)
-            {
-                Debug.LogException(ex);
-            }
-        }
-
-        private void ProcessWillRun(ProcessControlBlock pcb)
-        {
-            RemoveFromWaiting(pcb);
-            MoveToStepping(pcb);
-            pcb.TryRun();
-        }
-
-        private void ProcessWillWait(ProcessControlBlock pcb)
-        {
-            RemoveFromStepping(pcb);
-            MoveToWaiting(pcb);
-            pcb.TryWait();
-        }
-
-        private void ProcessWillTerminate(ProcessControlBlock pcb)
-        {
-            pcb.TryTerminate();
-        }
-        
-        #endregion
-
-        #region State Transition Logic
-
-        // Simplified state transition tables using tuples for cleaner code
-        private static readonly Dictionary<(EProcessControlState control, EProcessLifecycle lifecycle, EProcessState from), EProcessState> 
-            DefaultTransitions = new()
-        {
-            // Ready state
-            { (EProcessControlState.Ready, EProcessLifecycle.SelfTerminating, EProcessState.Created), EProcessState.Running },
-            { (EProcessControlState.Ready, EProcessLifecycle.SelfTerminating, EProcessState.Running), EProcessState.Terminated },
-            { (EProcessControlState.Ready, EProcessLifecycle.SelfTerminating, EProcessState.Waiting), EProcessState.Running },
-            { (EProcessControlState.Ready, EProcessLifecycle.SelfTerminating, EProcessState.Terminated), EProcessState.Terminated },
-            
-            { (EProcessControlState.Ready, EProcessLifecycle.RunThenWait, EProcessState.Created), EProcessState.Running },
-            { (EProcessControlState.Ready, EProcessLifecycle.RunThenWait, EProcessState.Running), EProcessState.Waiting },
-            { (EProcessControlState.Ready, EProcessLifecycle.RunThenWait, EProcessState.Waiting), EProcessState.Running },
-            { (EProcessControlState.Ready, EProcessLifecycle.RunThenWait, EProcessState.Terminated), EProcessState.Terminated },
-            
-            { (EProcessControlState.Ready, EProcessLifecycle.RequiresControl, EProcessState.Created), EProcessState.Waiting },
-            { (EProcessControlState.Ready, EProcessLifecycle.RequiresControl, EProcessState.Running), EProcessState.Waiting },
-            { (EProcessControlState.Ready, EProcessLifecycle.RequiresControl, EProcessState.Waiting), EProcessState.Running },
-            { (EProcessControlState.Ready, EProcessLifecycle.RequiresControl, EProcessState.Terminated), EProcessState.Terminated },
-            
-            { (EProcessControlState.Ready, EProcessLifecycle.Synchronous, EProcessState.Created), EProcessState.Running },
-            { (EProcessControlState.Ready, EProcessLifecycle.Synchronous, EProcessState.Running), EProcessState.Waiting },
-            { (EProcessControlState.Ready, EProcessLifecycle.Synchronous, EProcessState.Waiting), EProcessState.Running },
-            { (EProcessControlState.Ready, EProcessLifecycle.Synchronous, EProcessState.Terminated), EProcessState.Terminated },
-            
-            // Waiting state - everything goes to Waiting except Terminated
-            { (EProcessControlState.Waiting, EProcessLifecycle.SelfTerminating, EProcessState.Created), EProcessState.Waiting },
-            { (EProcessControlState.Waiting, EProcessLifecycle.SelfTerminating, EProcessState.Running), EProcessState.Waiting },
-            { (EProcessControlState.Waiting, EProcessLifecycle.SelfTerminating, EProcessState.Waiting), EProcessState.Waiting },
-            { (EProcessControlState.Waiting, EProcessLifecycle.SelfTerminating, EProcessState.Terminated), EProcessState.Terminated },
-            
-            { (EProcessControlState.Waiting, EProcessLifecycle.RunThenWait, EProcessState.Created), EProcessState.Waiting },
-            { (EProcessControlState.Waiting, EProcessLifecycle.RunThenWait, EProcessState.Running), EProcessState.Waiting },
-            { (EProcessControlState.Waiting, EProcessLifecycle.RunThenWait, EProcessState.Waiting), EProcessState.Waiting },
-            { (EProcessControlState.Waiting, EProcessLifecycle.RunThenWait, EProcessState.Terminated), EProcessState.Terminated },
-            
-            { (EProcessControlState.Waiting, EProcessLifecycle.RequiresControl, EProcessState.Created), EProcessState.Waiting },
-            { (EProcessControlState.Waiting, EProcessLifecycle.RequiresControl, EProcessState.Running), EProcessState.Waiting },
-            { (EProcessControlState.Waiting, EProcessLifecycle.RequiresControl, EProcessState.Waiting), EProcessState.Waiting },
-            { (EProcessControlState.Waiting, EProcessLifecycle.RequiresControl, EProcessState.Terminated), EProcessState.Terminated },
-            
-            { (EProcessControlState.Waiting, EProcessLifecycle.Synchronous, EProcessState.Created), EProcessState.Waiting },
-            { (EProcessControlState.Waiting, EProcessLifecycle.Synchronous, EProcessState.Running), EProcessState.Waiting },
-            { (EProcessControlState.Waiting, EProcessLifecycle.Synchronous, EProcessState.Waiting), EProcessState.Waiting },
-            { (EProcessControlState.Waiting, EProcessLifecycle.Synchronous, EProcessState.Terminated), EProcessState.Terminated },
-            
-            // Terminated states - everything goes to Terminated
-            { (EProcessControlState.Terminated, EProcessLifecycle.SelfTerminating, EProcessState.Created), EProcessState.Terminated },
-            { (EProcessControlState.Terminated, EProcessLifecycle.SelfTerminating, EProcessState.Running), EProcessState.Terminated },
-            { (EProcessControlState.Terminated, EProcessLifecycle.SelfTerminating, EProcessState.Waiting), EProcessState.Terminated },
-            { (EProcessControlState.Terminated, EProcessLifecycle.SelfTerminating, EProcessState.Terminated), EProcessState.Terminated },
-            
-            { (EProcessControlState.Terminated, EProcessLifecycle.RunThenWait, EProcessState.Created), EProcessState.Terminated },
-            { (EProcessControlState.Terminated, EProcessLifecycle.RunThenWait, EProcessState.Running), EProcessState.Terminated },
-            { (EProcessControlState.Terminated, EProcessLifecycle.RunThenWait, EProcessState.Waiting), EProcessState.Terminated },
-            { (EProcessControlState.Terminated, EProcessLifecycle.RunThenWait, EProcessState.Terminated), EProcessState.Terminated },
-            
-            { (EProcessControlState.Terminated, EProcessLifecycle.RequiresControl, EProcessState.Created), EProcessState.Terminated },
-            { (EProcessControlState.Terminated, EProcessLifecycle.RequiresControl, EProcessState.Running), EProcessState.Terminated },
-            { (EProcessControlState.Terminated, EProcessLifecycle.RequiresControl, EProcessState.Waiting), EProcessState.Terminated },
-            { (EProcessControlState.Terminated, EProcessLifecycle.RequiresControl, EProcessState.Terminated), EProcessState.Terminated },
-            
-            { (EProcessControlState.Terminated, EProcessLifecycle.Synchronous, EProcessState.Created), EProcessState.Terminated },
-            { (EProcessControlState.Terminated, EProcessLifecycle.Synchronous, EProcessState.Running), EProcessState.Terminated },
-            { (EProcessControlState.Terminated, EProcessLifecycle.Synchronous, EProcessState.Waiting), EProcessState.Terminated },
-            { (EProcessControlState.Terminated, EProcessLifecycle.Synchronous, EProcessState.Terminated), EProcessState.Terminated },
-            
-            { (EProcessControlState.TerminatedImmediately, EProcessLifecycle.SelfTerminating, EProcessState.Created), EProcessState.Terminated },
-            { (EProcessControlState.TerminatedImmediately, EProcessLifecycle.SelfTerminating, EProcessState.Running), EProcessState.Terminated },
-            { (EProcessControlState.TerminatedImmediately, EProcessLifecycle.SelfTerminating, EProcessState.Waiting), EProcessState.Terminated },
-            { (EProcessControlState.TerminatedImmediately, EProcessLifecycle.SelfTerminating, EProcessState.Terminated), EProcessState.Terminated },
-            
-            { (EProcessControlState.TerminatedImmediately, EProcessLifecycle.RunThenWait, EProcessState.Created), EProcessState.Terminated },
-            { (EProcessControlState.TerminatedImmediately, EProcessLifecycle.RunThenWait, EProcessState.Running), EProcessState.Terminated },
-            { (EProcessControlState.TerminatedImmediately, EProcessLifecycle.RunThenWait, EProcessState.Waiting), EProcessState.Terminated },
-            { (EProcessControlState.TerminatedImmediately, EProcessLifecycle.RunThenWait, EProcessState.Terminated), EProcessState.Terminated },
-            
-            { (EProcessControlState.TerminatedImmediately, EProcessLifecycle.RequiresControl, EProcessState.Created), EProcessState.Terminated },
-            { (EProcessControlState.TerminatedImmediately, EProcessLifecycle.RequiresControl, EProcessState.Running), EProcessState.Terminated },
-            { (EProcessControlState.TerminatedImmediately, EProcessLifecycle.RequiresControl, EProcessState.Waiting), EProcessState.Terminated },
-            { (EProcessControlState.TerminatedImmediately, EProcessLifecycle.RequiresControl, EProcessState.Terminated), EProcessState.Terminated },
-            
-            { (EProcessControlState.TerminatedImmediately, EProcessLifecycle.Synchronous, EProcessState.Created), EProcessState.Terminated },
-            { (EProcessControlState.TerminatedImmediately, EProcessLifecycle.Synchronous, EProcessState.Running), EProcessState.Terminated },
-            { (EProcessControlState.TerminatedImmediately, EProcessLifecycle.Synchronous, EProcessState.Waiting), EProcessState.Terminated },
-            { (EProcessControlState.TerminatedImmediately, EProcessLifecycle.Synchronous, EProcessState.Terminated), EProcessState.Terminated },
-            
-            // Closed - let existing processes run/wait naturally
-            { (EProcessControlState.Closed, EProcessLifecycle.SelfTerminating, EProcessState.Created), EProcessState.Terminated },
-            { (EProcessControlState.Closed, EProcessLifecycle.SelfTerminating, EProcessState.Running), EProcessState.Terminated },
-            { (EProcessControlState.Closed, EProcessLifecycle.SelfTerminating, EProcessState.Waiting), EProcessState.Running },
-            { (EProcessControlState.Closed, EProcessLifecycle.SelfTerminating, EProcessState.Terminated), EProcessState.Terminated },
-            
-            { (EProcessControlState.Closed, EProcessLifecycle.RunThenWait, EProcessState.Created), EProcessState.Terminated },
-            { (EProcessControlState.Closed, EProcessLifecycle.RunThenWait, EProcessState.Running), EProcessState.Waiting },
-            { (EProcessControlState.Closed, EProcessLifecycle.RunThenWait, EProcessState.Waiting), EProcessState.Running },
-            { (EProcessControlState.Closed, EProcessLifecycle.RunThenWait, EProcessState.Terminated), EProcessState.Terminated },
-            
-            { (EProcessControlState.Closed, EProcessLifecycle.RequiresControl, EProcessState.Created), EProcessState.Waiting },
-            { (EProcessControlState.Closed, EProcessLifecycle.RequiresControl, EProcessState.Running), EProcessState.Waiting },
-            { (EProcessControlState.Closed, EProcessLifecycle.RequiresControl, EProcessState.Waiting), EProcessState.Waiting },
-            { (EProcessControlState.Closed, EProcessLifecycle.RequiresControl, EProcessState.Terminated), EProcessState.Terminated },
-            
-            { (EProcessControlState.Closed, EProcessLifecycle.Synchronous, EProcessState.Created), EProcessState.Terminated },
-            { (EProcessControlState.Closed, EProcessLifecycle.Synchronous, EProcessState.Running), EProcessState.Terminated },
-            { (EProcessControlState.Closed, EProcessLifecycle.Synchronous, EProcessState.Waiting), EProcessState.Running },
-            { (EProcessControlState.Closed, EProcessLifecycle.Synchronous, EProcessState.Terminated), EProcessState.Terminated },
-            
-            { (EProcessControlState.ClosedWaiting, EProcessLifecycle.SelfTerminating, EProcessState.Created), EProcessState.Terminated },
-            { (EProcessControlState.ClosedWaiting, EProcessLifecycle.SelfTerminating, EProcessState.Running), EProcessState.Waiting },
-            { (EProcessControlState.ClosedWaiting, EProcessLifecycle.SelfTerminating, EProcessState.Waiting), EProcessState.Waiting },
-            { (EProcessControlState.ClosedWaiting, EProcessLifecycle.SelfTerminating, EProcessState.Terminated), EProcessState.Terminated },
-
-            { (EProcessControlState.ClosedWaiting, EProcessLifecycle.RunThenWait, EProcessState.Created), EProcessState.Terminated },
-            { (EProcessControlState.ClosedWaiting, EProcessLifecycle.RunThenWait, EProcessState.Running), EProcessState.Waiting },
-            { (EProcessControlState.ClosedWaiting, EProcessLifecycle.RunThenWait, EProcessState.Waiting), EProcessState.Waiting },
-            { (EProcessControlState.ClosedWaiting, EProcessLifecycle.RunThenWait, EProcessState.Terminated), EProcessState.Terminated },
-
-            { (EProcessControlState.ClosedWaiting, EProcessLifecycle.RequiresControl, EProcessState.Created), EProcessState.Terminated },
-            { (EProcessControlState.ClosedWaiting, EProcessLifecycle.RequiresControl, EProcessState.Running), EProcessState.Waiting },
-            { (EProcessControlState.ClosedWaiting, EProcessLifecycle.RequiresControl, EProcessState.Waiting), EProcessState.Waiting },
-            { (EProcessControlState.ClosedWaiting, EProcessLifecycle.RequiresControl, EProcessState.Terminated), EProcessState.Terminated },
-            
-            { (EProcessControlState.ClosedWaiting, EProcessLifecycle.Synchronous, EProcessState.Created), EProcessState.Terminated },
-            { (EProcessControlState.ClosedWaiting, EProcessLifecycle.Synchronous, EProcessState.Running), EProcessState.Waiting },
-            { (EProcessControlState.ClosedWaiting, EProcessLifecycle.Synchronous, EProcessState.Waiting), EProcessState.Waiting },
-            { (EProcessControlState.ClosedWaiting, EProcessLifecycle.Synchronous, EProcessState.Terminated), EProcessState.Terminated },
-        };
-
-        public EProcessState GetDefaultTransitionState(ProcessControlBlock pcb)
-        {
-            var key = (State, pcb.Wrapper.Lifecycle, pcb.State);
-            
-            if (DefaultTransitions.TryGetValue(key, out var result))
-                return result;
-            
-            // Fallback for unhandled cases
-            if (OutputLogs)
-                Debug.LogWarning($"[ProcessControl] Unhandled state transition: {key}");
-            
-            return pcb.State; // Stay in current state
-        }
-
-        private bool ValidateStateTransition(ProcessControlBlock pcb, EProcessState to)
-        {
-            var from = pcb.State;
-            var lifecycle = pcb.Wrapper.Lifecycle;
-            
-            // Can't transition to Created
-            if (to == EProcessState.Created) return false;
-            
-            // Already in target state
-            if (from == to) return false;
-            
-            // Common transitions
-            return (from, to, lifecycle) switch
-            {
-                // Can always terminate from any state (except Created which shouldn't be in active)
-                (_, EProcessState.Terminated, _) => true,
-                
-                // Running transitions
-                (EProcessState.Created, EProcessState.Running, EProcessLifecycle.SelfTerminating) => true,
-                (EProcessState.Created, EProcessState.Running, EProcessLifecycle.RunThenWait) => true,
-                (EProcessState.Created, EProcessState.Running, EProcessLifecycle.Synchronous) => true,
-                // The table has the last word on a resume, so what a paused or closed ProcessControl keeps still
-                // stays still. Allowing every resume let Unpause walk a process out of a pause (PC-27)
-                (EProcessState.Waiting, EProcessState.Running, _) => GetDefaultTransitionState(pcb) == EProcessState.Running,
-                
-                // Waiting transitions
-                (EProcessState.Running, EProcessState.Waiting, _) => !pcb.TerminateRequested,
-                (EProcessState.Created, EProcessState.Waiting, EProcessLifecycle.RequiresControl) => true,
-                
-                _ => false
-            };
-        }
-        
         #endregion
 
         #region Public API
@@ -1571,67 +497,41 @@ namespace FarEmerald.PlayForge
         /// A Mono process's transform has a new parent, so the hierarchy files it again under its new ancestors. It
         /// heard only where the process registered (PC-28, Decision 11).
         /// </summary>
-        public void ProcessReparented(ProcessRelay relay)
-        {
-            if (relay is null || !_active.TryGetValue(relay.CacheIndex, out var pcb) || pcb.Relay != relay) return;
-            if (pcb.Wrapper.TryGetProcess<AbstractMonoProcess>(out var mono) && mono) _hierarchy.Reparent(mono.gameObject);
-        }
+        public void ProcessReparented(ProcessRelay relay) => World.ProcessReparented(relay);
 
         /// <summary>
         /// Gets all child process IDs for a given process
         /// </summary>
-        public List<int> GetChildProcessIds(int cacheIndex)
-        {
-            return _hierarchy.GetCascadeTargets(cacheIndex, includeSiblings: false, includeSelf: false);
-        }
+        public List<int> GetChildProcessIds(int cacheIndex) => World.GetChildProcessIds(cacheIndex);
 
         /// <summary>
         /// Gets all sibling process IDs (same GameObject) for a given process
         /// </summary>
-        public List<int> GetSiblingProcessIds(int cacheIndex)
-        {
-            return _hierarchy.GetSiblingProcessIds(cacheIndex);
-        }
-        
+        public List<int> GetSiblingProcessIds(int cacheIndex) => World.GetSiblingProcessIds(cacheIndex);
+
         /// <summary>
         /// Checks if a process exists
         /// </summary>
-        public bool IsRegistered(int cacheIndex) => _active.ContainsKey(cacheIndex);
+        public bool IsRegistered(int cacheIndex) => World.IsRegistered(cacheIndex);
 
         /// <summary>
         /// Checks if a process is currently running (not waiting)
         /// </summary>
-        public bool IsRunning(int cacheIndex)
-        {
-            return StateIs(cacheIndex, EProcessState.Running);
-        }
+        public bool IsRunning(int cacheIndex) => World.IsRunning(cacheIndex);
 
         /// <summary>
         /// Checks if a process is currently waiting/paused
         /// </summary>
-        public bool IsWaiting(int cacheIndex) => _waiting.Contains(cacheIndex);
+        public bool IsWaiting(int cacheIndex) => World.IsWaiting(cacheIndex);
 
-        public bool StateIs(int cacheIndex, EProcessState state) => _active.TryGetValue(cacheIndex, out var pcb) && pcb.State == state;
-        
-        public bool TryGetQueuedState(int cacheIndex, out EProcessState queuedState)
-        {
-            if (TryGetPCB(cacheIndex, out var pcb))
-            {
-                queuedState = pcb.QueuedState;
-                return true;
-            }
+        public bool StateIs(int cacheIndex, EProcessState state) => World.StateIs(cacheIndex, state);
 
-            queuedState = EProcessState.Created;
-            return false;
-        }
+        public bool TryGetQueuedState(int cacheIndex, out EProcessState queuedState) => World.TryGetQueuedState(cacheIndex, out queuedState);
 
         /// <summary>
         /// Gets the ProcessControlBlock for direct access (use cautiously)
         /// </summary>
-        public bool TryGetPCB(int cacheIndex, out ProcessControlBlock pcb)
-        {
-            return _active.TryGetValue(cacheIndex, out pcb);
-        }
+        public bool TryGetPCB(int cacheIndex, out ProcessControlBlock pcb) => World.TryGetPCB(cacheIndex, out pcb);
 
         // ───────────────────────────────────────────────────────────────────────
         // GAS-SPECIFIC REGISTRATION HELPERS
@@ -1676,91 +576,55 @@ namespace FarEmerald.PlayForge
         /// <summary>
         /// Returns the cache indices of all active processes owned by the given GAS.
         /// </summary>
-        public static IReadOnlyCollection<int> GetProcessIdsForGAS(IGameplayAbilitySystem gas)
-        {
-            if (gas == null || Instance == null) return Array.Empty<int>();
-            return Instance._gasProcesses.TryGetValue(gas, out var set)
-                ? (IReadOnlyCollection<int>)set
-                : Array.Empty<int>();
-        }
+        public static IReadOnlyCollection<int> GetProcessIdsForGAS(IGameplayAbilitySystem gas) =>
+            gas == null || Instance == null ? Array.Empty<int>() : Instance.World.ProcessIdsForGAS(gas);
 
         /// <summary>
         /// Returns ProcessRelays for all active processes owned by the given GAS.
         /// </summary>
-        public static IEnumerable<ProcessRelay> GetProcessesForGAS(IGameplayAbilitySystem gas)
-        {
-            if (gas == null || Instance == null) yield break;
-            if (!Instance._gasProcesses.TryGetValue(gas, out var set)) yield break;
-            foreach (int idx in set)
-            {
-                if (Instance._active.TryGetValue(idx, out var pcb))
-                    yield return pcb.Relay;
-            }
-        }
+        public static IEnumerable<ProcessRelay> GetProcessesForGAS(IGameplayAbilitySystem gas) =>
+            gas == null || Instance == null ? Enumerable.Empty<ProcessRelay>() : Instance.World.ProcessesForGAS(gas);
 
         /// <summary>
         /// Number of active processes owned by the given GAS.
         /// </summary>
-        public static int GetProcessCountForGAS(IGameplayAbilitySystem gas)
-        {
-            if (gas == null || Instance == null) return 0;
-            return Instance._gasProcesses.TryGetValue(gas, out var set) ? set.Count : 0;
-        }
+        public static int GetProcessCountForGAS(IGameplayAbilitySystem gas) =>
+            gas == null || Instance == null ? 0 : Instance.World.ProcessCountForGAS(gas);
 
         /// <summary>
         /// Terminates every process owned by the given GAS. When <paramref name="immediate"/>
         /// is true, uses TerminateImmediate; otherwise queues graceful termination.
         /// Returns the number of processes that received a termination request.
         /// </summary>
-        public static int TerminateAllForGAS(IGameplayAbilitySystem gas, bool immediate = false)
-        {
-            if (gas == null || Instance == null) return 0;
-            if (!Instance._gasProcesses.TryGetValue(gas, out var set) || set.Count == 0) return 0;
-
-            // Copy because Terminate paths may mutate the backing set
-            var indices = new List<int>(set);
-            int count = 0;
-            foreach (int idx in indices)
-            {
-                bool ok = immediate
-                    ? Instance.TerminateImmediate(idx)
-                    : Instance.Terminate(idx);
-                if (ok) count++;
-            }
-            return count;
-        }
+        public static int TerminateAllForGAS(IGameplayAbilitySystem gas, bool immediate = false) =>
+            gas == null || Instance == null ? 0 : Instance.World.TerminateAllForGAS(gas, immediate);
 
         #endregion
-        
+
         #region Handler Interface
-        public ProcessRelay[] GetRelays()
-        {
-            return _active.Values.Select(pcb => pcb.Relay).ToArray();
-        }
 
-        public bool HandlerValidateAgainst(IGameplayProcessHandler handler)
-        {
-            return (ProcessControl)handler == this;
-        }
+        public ProcessRelay[] GetRelays() => World.GetRelays();
 
-        public bool HandlerProcessIsSubscribed(ProcessRelay relay)
-        {
-            return _active.ContainsKey(relay.CacheIndex);
-        }
+        // By reference: a cast threw for any handler but a ProcessControl
+        public bool HandlerValidateAgainst(IGameplayProcessHandler handler) => ReferenceEquals(handler, this);
+
+        public bool HandlerProcessIsSubscribed(ProcessRelay relay) => World.IsRegistered(relay.CacheIndex);
 
         public void HandlerSubscribeProcess(ProcessRelay relay)
         {
             // No additional action needed
         }
-        
+
         public bool HandlerVoidProcess(ProcessRelay relay)
         {
             return true;
         }
+
         public AbstractMonoProcessInstantiator GetInstantiator(AbstractMonoProcess mono)
         {
             return CustomInstantiator;
         }
+
         #endregion
     }
 

@@ -72,18 +72,18 @@ namespace FarEmerald.PlayForge
         private readonly IGameplayProcessHandler handler;
         private readonly bool handlerGiven;
         private readonly ProcessDataPacket data;
-        private readonly ProcessControl control;
+        private readonly ProcessWorld world;
 
         internal ProcessRegistration(object process) : this(process, null, false, null, null) { }
 
         private ProcessRegistration(object process, IGameplayProcessHandler handler, bool handlerGiven, ProcessDataPacket data,
-            ProcessControl control)
+            ProcessWorld world)
         {
             this.process = process;
             this.handler = handler;
             this.handlerGiven = handlerGiven;
             this.data = data;
-            this.control = control;
+            this.world = world;
         }
 
         /// <summary>
@@ -91,23 +91,26 @@ namespace FarEmerald.PlayForge
         /// it goes (GAS-52). Null, it has no handler at all.
         /// </summary>
         public ProcessRegistration HandledBy(IGameplayProcessHandler processHandler) =>
-            new(process, processHandler, true, data, control);
+            new(process, processHandler, true, data, world);
 
         /// <summary>
         /// The packet the process carries. A sequence's is a <see cref="SequenceDataPacket"/>. Left out, a MonoBehaviour
         /// process takes the scene root's, which parents it under GameRoot, a runtime process the default, and a
         /// sequence the scene root's sequence packet.
         /// </summary>
-        public ProcessRegistration With(ProcessDataPacket packet) => new(process, handler, handlerGiven, packet, control);
+        public ProcessRegistration With(ProcessDataPacket packet) => new(process, handler, handlerGiven, packet, world);
 
         /// <summary>The ProcessControl that takes the process. Left out, <see cref="ProcessControl.Instance"/> does.</summary>
-        public ProcessRegistration In(ProcessControl processControl) => new(process, handler, handlerGiven, data, processControl);
+        public ProcessRegistration In(ProcessControl processControl) => In(processControl != null ? processControl.World : null);
+
+        /// <summary>The world that takes the process, a world of its own among them (FEAT-10). Left out, the scene's does.</summary>
+        public ProcessRegistration In(ProcessWorld processWorld) => new(process, handler, handlerGiven, data, processWorld);
 
         /// <summary>Registers the process and starts it, or says why it can't.</summary>
         public ProcessRegistrationResult Run()
         {
             if (process == null) return new ProcessRegistrationResult(null, EProcessRegistrationRefusal.NoProcess);
-            var taker = control != null ? control : ProcessControl.Instance;
+            var taker = world ?? (ProcessControl.Instance != null ? ProcessControl.Instance.World : null);
             if (taker == null) return new ProcessRegistrationResult(null, EProcessRegistrationRefusal.NoProcessControl);
 
             var by = handlerGiven ? handler : DefaultHandler(data);
@@ -134,7 +137,7 @@ namespace FarEmerald.PlayForge
             return result.Registered;
         }
 
-        private ProcessRegistrationResult RegisterSequence(ProcessControl taker, TaskSequenceProcess sequence, IGameplayProcessHandler by)
+        private ProcessRegistrationResult RegisterSequence(ProcessWorld taker, TaskSequenceProcess sequence, IGameplayProcessHandler by)
         {
             if (data != null && data is not SequenceDataPacket)
                 return new ProcessRegistrationResult(null, EProcessRegistrationRefusal.NotASequencePacket);

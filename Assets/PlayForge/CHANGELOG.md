@@ -7,6 +7,10 @@ tracks each fix below by its ID.
 ## [Unreleased]
 
 ### Added
+- A world of processes of its own. `ProcessWorld` holds what ProcessControl's bookkeeping held, and ProcessControl
+  wraps one (`ProcessControl.World`) and steps it from Unity's loop, with its API as it was. `new ProcessWorld()` makes
+  one with no scene, `ProcessControl.Register(process).In(world)` registers into it, and `world.Step()` steps it, the
+  headless split's second step (FEAT-10).
 - Targeting input. The click-targeting tasks read the game's input, `ForgeInput.Current`, in place of the Input
   Manager's mouse and `Camera.main`. By default it's the Input System's pointer, a mouse, a pen or a touch, where
   that package is in and on, or else the Input Manager's mouse, each aimed through `Camera.main` or a camera you

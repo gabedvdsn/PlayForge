@@ -122,7 +122,7 @@ namespace FarEmerald.PlayForge
             _memberRelays[relay.CacheIndex] = relay;
 
             // Watch the member so we can clean up when it terminates, with the control that holds it (FEAT-10)
-            relay.Control.WatchProcess(relay, this,
+            relay.World.WatchProcess(relay, this,
                 onUnregister: _ => RemoveMember(relay.CacheIndex));
 
             OnMemberJoined?.Invoke(relay);
@@ -177,7 +177,7 @@ namespace FarEmerald.PlayForge
         {
             if (relay == null || !_memberRelays.ContainsKey(relay.CacheIndex)) return false;
 
-            if (relay.Control != null) relay.Control.StopWatchingProcess(relay, this);
+            relay.World?.StopWatchingProcess(relay, this);
             RemoveMember(relay.CacheIndex);
             return true;
         }

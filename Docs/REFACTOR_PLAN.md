@@ -707,7 +707,7 @@ Phase 2 part, and set Phase 4's direction.
 | FEAT-7 | Time source | Per-entity time scale and deterministic fixed tick (C02). The clock per entity is done (Decision 30): `GetClock()`, the game's time by `ForgeTime` times the entity's `TimeScale`, which its effects, cooldowns, sequences, waits and projectiles run by. The fixed-rate tick is done too: with ProcessControl's Fixed Tick Rate set, each frame runs as many ticks as its time holds, each stepping every process and its end of frame by a fixed step, and each sequence's wait goes on by the tick (`ForgeTick.Next`) |
 | FEAT-8 | Effect conveniences | Cleanse by tag query, immunity, overflow at max stacks, abilities granted by effects, chance to apply. Done. Cleanse and immunity (Removes Effects Tagged, Blocks Effects Tagged) match an effect's asset, context and granted tags (Decision 30); overflow at max stacks is on Stack Bounds (Overflow Effects, Deny Refresh On Overflow, Clear Stacks On Overflow); an effect's Granted Abilities are lent at its origin's level while it's on; an effect lands by its Chance to Apply, drawn from `ForgeRandom`. The Effect inspector edits Chance to Apply in Requirements, above its tables, as it gates the whole application, with the section's summary saying a chance short of 1, and the Tags summary counts the abilities granted, as in "Grants Status.Burning, 1 ability" |
 | FEAT-9 | Save and load | Snapshots of attributes, effects, tags and cooldowns. Done (Decision 30): `ForgeSave.Capture` takes an entity at rest into a `ForgeSnapshot` of plain serializable types: each attribute's permanent commits by retention group, its levels, the abilities it knows of its own by slot, its items with their stacks, worn or not, its effects with their origin, stacks and clock, its loose tags and time scale. A `ForgeAssetCatalog` names the assets by IDs that last, by GUID from its editor command. `ForgeSave.Restore` interrupts running abilities, lets go of what the entity has with nothing told, puts back the save's, compiles the tags once and fires `OnRestored`. An `IForgeEntityIds` names the other entities whose effects are on it |
-| FEAT-10 | Headless mode | Abilities run without a scene ProcessControl. In progress (Decision 30), in six steps the Log lists. Step 1 done: a process reaches the control that holds it, `ProcessControlBlock.Control`, which its relay (`ProcessRelay.Control`), its state changes and unregistering, a watch on it, a runtime process's ending of what it handles, a group's watch and Run Process go through, not `ProcessControl.Instance` |
+| FEAT-10 | Headless mode | Abilities run without a scene ProcessControl. In progress (Decision 30), in six steps the Log lists. Step 1 done: a process reaches the control that holds it, `ProcessControlBlock.Control`, which its relay (`ProcessRelay.Control`), its state changes and unregistering, a watch on it, a runtime process's ending of what it handles, a group's watch and Run Process go through, not `ProcessControl.Instance`. Step 2 done: `ProcessWorld`, a plain class, holds the bookkeeping (the process tables, step groups, watches, groups, GAS registry, callbacks, the control state and its transitions, registration and stepping); ProcessControl wraps one (`ProcessControl.World`), steps it from Unity's loop and forwards its API; `new ProcessWorld()` makes one ready to take processes, `ProcessRegistration.In(world)` registers into it and `world.Step()` steps it; a block and a relay hold their world (`ProcessControlBlock.World`, `ProcessRelay.World`) |
 | FEAT-11 | Input binding | Targeting without legacy `Input` and `Camera.main`. Done (Decision 30): the five click-targeting tasks read `ForgeInput.Current`, an `IForgeInput` of whether a pointer button went down this frame and the ray the pointer aims along, through `AbstractTargetingAbilityTask.WaitForPointerPress`; a game puts its own in with `ForgeInput.Use`; the default is the Input System's pointer (`InputSystemPointerInput`) where its package is in and on, through an optional reference and a version define, or else the Input Manager's mouse (`LegacyPointerInput`), each aimed through a camera given or `Camera.main`; with no camera a press aims nowhere, where it threw; a source-scanning test keeps Unity's input out of the rest of the runtime |
 | FEAT-12 | Ability graph and timeline, effect recorder | Editor |
 | FEAT-13 | Networking | Prediction and replication; not planned. Only its two cheap changes are in Phase 5 (Decision 30): one injectable clock and one seedable random source, and IDs scoped to an entity. Both done: `ForgeTime` and `ForgeRandom`, which a source-scanning test keeps the runtime reading; `HandleId` per ability system; `GameplayEffectSpec.ApplicationId` per target; `Tag.Id` was never serialized (Decision 22) |
@@ -782,6 +782,27 @@ GAS-4 with GAS-5, PC-6, and TS-I with PC-5.
 ## Log
 
 Record baselines, gate results and notable decisions here, newest first.
+
+- 2026-11-05, **FEAT-10, step 2 of 6: the plain world.**
+  - **The change:** `ProcessWorld`, a plain class, holds what ProcessControl's bookkeeping held: the process tables
+    and step groups, the watches, the groups, which processes each GAS owns, the callbacks, the control state and its
+    transitions, registration of runtime, Mono and sequence processes, and stepping, the ticks among it. Its code moved
+    from ProcessControl.cs nearly as it was, the Mono branches with it, since they run only for a Mono process.
+  - **ProcessControl** stays the public MonoBehaviour. It owns a world (`ProcessControl.World`) and steps it from
+    Update, LateUpdate and FixedUpdate. It keeps what needs a GameObject or a scene: the inspector fields, which the
+    world reads, the bootstrap's Instance, DontDestroyOnLoad and Destroy, scene collection, and the static API. It
+    forwards its instance API, and a private `StepProcesses` and `DefaultTransitions` stay for the golden tests and the
+    harness's oracle, which reach them by name.
+  - **A world of its own:** `new ProcessWorld()` is ready to take processes, `ProcessRegistration.In(world)` registers
+    into it, and `world.Step()` steps it once, as a frame: Update, then LateUpdate. A block and a relay hold their world
+    (`ProcessControlBlock.World`, `ProcessRelay.World`; `Control` is the world's ProcessControl, or null). A
+    ProcessControl's handler check compares by reference, where a cast threw for any other handler.
+  - **Its test,** seen failing first: `FEAT_10_A_world_of_its_own_steps_what_it_holds_as_its_owner_steps_it` in
+    PlayMode's new `ProcessWorldTests` (no world class): a world made with new takes a runtime probe, which the scene's
+    frames don't step and each of its owner's steps does, once.
+  - **Tests:** PlayMode 1269: 1262 pass, 0 fail and 7 planted are skipped, in three orders. Planted 7 of 7;
+    EditMode 443 of 443.
+  - **Next:** step 3, a world's own tick and clock.
 
 - 2026-11-05, **The Battle lab,** at the user's asking: a full battle to watch, two sides of many fighters with
   projectiles, spells, area effects, summons, knockback and stuns, lasting well past 15 seconds, with a health bar over
