@@ -1,7 +1,7 @@
 # PlayForge refactor: code tour
 
 This tour lists the places where the refactor changed code, so you can open each one in your IDE and read it. It
-covers `01258b8..d2de8ec` on `main`: 364 commits. Phase 0 ported Arcade Fighter's fixes, Phase 1 made the runtime
+covers `01258b8..67bc9d0` on `main`: 366 commits. Phase 0 ported Arcade Fighter's fixes, Phase 1 made the runtime
 correct, Phase 2 got the package ready to release, Phase 3 made it cheaper to run and gave the two GAS hubs one core,
 Phase 4 rebuilt the editor, and Phase 5 has begun. Each entry says what behaves differently and why, names its tracker IDs and Decisions, and
 points at the two or three places to read. `Docs/REFACTOR_PLAN.md` has every tracker row, the numbered Decisions,
@@ -10,8 +10,8 @@ and a Log of each batch's test results.
 ## How to use this
 
 - Paths are relative to the repo root.
-- Line numbers are as of commit `d2de8ec`, the head of `main` on 2026-11-05. A later commit may move them, so each
-  entry also names the class and method to search for. `git show d2de8ec:<path>` shows a file as it was then.
+- Line numbers are as of commit `67bc9d0`, the head of `main` on 2026-11-05. A later commit may move them, so each
+  entry also names the class and method to search for. `git show 67bc9d0:<path>` shows a file as it was then.
 - In Rider, Go to File accepts `path:line`. In Visual Studio, open the file, then Go To Line (Ctrl+G).
   A bare `:123` after a path means another line in the same file.
 - `git grep "<ID>"` finds the comment at each fix, and `git log --grep "<ID>"` finds its commit. Three exceptions:
@@ -44,8 +44,8 @@ own: the first version walked the shelf on every application, and GAS-P3's cost 
 
 - **IDs:** FEAT-8, commit `04d0742`.
 - **Read:**
-  - `Assets/PlayForge/Runtime/PlayForge/GAS/Core/EffectSystemComponent.cs:186` `IsImmuneTo`, over `:182`
-    `immunities`, and `:199` `RemoveEffectsNamedBy`, which `ApplyGameplayEffect` calls (`:144`).
+  - `Assets/PlayForge/Runtime/PlayForge/GAS/Core/EffectSystemComponent.cs:187` `IsImmuneTo`, over `:183`
+    `immunities`, and `:200` `RemoveEffectsNamedBy`, which `ApplyGameplayEffect` calls (`:144`).
   - `Assets/PlayForge/Runtime/PlayForge/GameplayEffect/Core/GameplayEffect.cs:262` and `:268`, the two lists, and
     `:275` `GameplayEffectTags.Names`, what a list names.
 - **Watch for:** `GameplayEffectTags` is a struct, so a test that sets a list through reflection boxes it, sets the
@@ -81,7 +81,7 @@ every ability's packet. The overloads are `[Obsolete]` wrappers of the builder u
   - `Assets/PlayForge/Runtime/PlayForge/Management/GameplayProcess/Core/ProcessRegistration.cs:112`
     `ProcessRegistration.Run`, and `:157` `DefaultHandler`, by the packet's run-time type; `:4`, the refusals.
   - `Assets/PlayForge/Runtime/PlayForge/Management/GameplayProcess/Core/ProcessControl.cs:275`, the entry points,
-    `:292`, the overloads' one message, and `Assets/PlayForge/Runtime/PlayForge/Management/GameplayProcess/Core/ProcessWorld.cs:620` `RegisterMono` and `:641` `RegisterRuntime`, which say why.
+    `:292`, the overloads' one message, and `Assets/PlayForge/Runtime/PlayForge/Management/GameplayProcess/Core/ProcessWorld.cs:626` `RegisterMono` and `:647` `RegisterRuntime`, which say why.
   - `Assets/PlayForge/Runtime/PlayForge/Management/GameplayProcess/Core/ProcessRelay.cs:97` `ProcessRelay.Run`.
 - **Watch for:** nothing compiles `Samples~`, so the samples' calls were built against the package's source in a
   throwaway project. Proving Grounds' tests still call the overloads, so the gates cover the wrappers.
@@ -105,7 +105,7 @@ requirement pass when an effect is on the shelf, so a loose tag, an ability's or
     or stopped while it hears changes nothing under it.
   - `Assets/PlayForge/Runtime/PlayForge/Tag/TagCache.cs:397` `EvaluateTagWorkers`, and
     `Assets/PlayForge/Runtime/PlayForge/Workers/TagWorker/Core/AbstractTagWorker.cs:37` `EvaluateEveryFrame`.
-  - `Assets/PlayForge/Runtime/PlayForge/GAS/Core/GASCore.cs:273` `CompileGrantedTags`, a rebuild, and
+  - `Assets/PlayForge/Runtime/PlayForge/GAS/Core/GASCore.cs:295` `CompileGrantedTags`, a rebuild, and
     `Assets/PlayForge/Runtime/PlayForge/GAS/Core/EffectSystemComponent.cs:71` `Tick`, GAS-56's check.
 - **Watch for:** a tag added straight to the cache asks for no requirement pass, whose compile would drop it, as
   `GAS_P7_A_tag_lookup_costs_the_same_however_long_its_name` showed the first version doing.
@@ -187,8 +187,8 @@ refreshing the duration, and Clear Stacks On Overflow takes the stacks off.
     `OverflowEffects`, the bound's first of three fields, and `:271` `Overflows`.
   - `Assets/PlayForge/Runtime/PlayForge/GameplayEffect/Core/Definition/GameplayEffectDuration.cs:274`
     `GetStackAmount`, which records the first bound an amount would take past its max.
-  - `Assets/PlayForge/Runtime/PlayForge/GAS/Core/EffectSystemComponent.cs:507`, where a stack finds it overflows,
-    `:527`, where Deny Refresh skips the interaction, and `:569` `Overflow`.
+  - `Assets/PlayForge/Runtime/PlayForge/GAS/Core/EffectSystemComponent.cs:508`, where a stack finds it overflows,
+    `:528`, where Deny Refresh skips the interaction, and `:570` `Overflow`.
 - **Watch for:** the lab's shield worker reads `ForgeTime.FrameCount`, PlayForge's frame, so two blows in one tick
   share what the shield has left.
 - **Tests:** `FEAT_8_An_effect_at_its_max_stacks_overflows` and
@@ -207,9 +207,9 @@ lab gains a jagged strike that lacerates on a seeded roll and a blessing that le
 
 - **IDs:** FEAT-8, commit `60683cd`; Decision 30.
 - **Read:**
-  - `Assets/PlayForge/Runtime/PlayForge/GAS/Core/EffectSystemComponent.cs:170` `RollsToApply`, which
-    `ApplyGameplayEffect` asks (`:108`); `:356` `LendAbilities`, after `Shelve` (`:265`), and `:377`
-    `TakeBackAbilities`, as the cleaning pass ends a container (`:736`) and as a replace swaps effects (`:488`).
+  - `Assets/PlayForge/Runtime/PlayForge/GAS/Core/EffectSystemComponent.cs:171` `RollsToApply`, which
+    `ApplyGameplayEffect` asks (`:108`); `:357` `LendAbilities`, after `Shelve` (`:266`), and `:378`
+    `TakeBackAbilities`, as the cleaning pass ends a container (`:737`) and as a replace swaps effects (`:489`).
   - `Assets/PlayForge/Runtime/PlayForge/GameplayEffect/Core/GameplayEffect.cs:22` `GrantedAbilities`, and
     `Assets/PlayForge/Runtime/PlayForge/GameplayEffect/Core/Definition/GameplayEffectImpact.cs:141` `ChanceToApply`.
   - `Assets/PlayForge/Editor/CustomPropertyDrawers/Forge/Editors/Assets/EffectEditor.cs:302`, the Tags section's
@@ -295,8 +295,8 @@ recovery it cancels. TS-7's shape is a design the plan's Log records for the use
   - `Assets/PlayForge/Runtime/PlayForge/AbilitySystem/Ability/AbilityProxy/Core/AbilityBehaviour.cs:110`
     `AbilityStageCondition` and its `Holds` (`:125`); the compiler's branch is
     `Assets/PlayForge/Runtime/PlayForge/AbilitySystem/Ability/AbilityProxy/Core/AbilitySequenceCompiler.cs:52`.
-  - `Assets/PlayForge/Runtime/PlayForge/Core/TaskSequence/Async/TaskSequenceRuntime.cs:429`, where each stage's start
-    calls `ExitCriticalSectionIfPassed` (`:840`).
+  - `Assets/PlayForge/Runtime/PlayForge/Core/TaskSequence/Async/TaskSequenceRuntime.cs:431`, where each stage's start
+    calls `ExitCriticalSectionIfPassed` (`:843`).
 - **Watch for:** claims are per policy, so a Refuse request doesn't wait on a Queue claim. Put a committed whiff before
   the hit's recovery: the claim goes as the stage after a skipped critical one starts. The MOBA lab casts under Refuse,
   as under its heroes' Queue a spell its channel blocked would buffer.
@@ -339,7 +339,7 @@ whose origin's level changed.
     `GiveItem(Item, int)` and `:132` `RemoveItem(Item, int)`.
   - `Assets/PlayForge/Runtime/PlayForge/ItemSystem/Core/ItemSpecContainer.cs:35` `ChangeStacks`, and
     `Assets/PlayForge/Runtime/PlayForge/GameplayEffect/Modifier/Default/Authored/ItemStacksScaler.cs:12` `ItemStacksScaler`.
-  - `Assets/PlayForge/Runtime/PlayForge/GAS/Core/EffectSystemComponent.cs:324` `RefreshEffectsFrom` and `:338` `RefreshEffectsLevelledBy`, which
+  - `Assets/PlayForge/Runtime/PlayForge/GAS/Core/EffectSystemComponent.cs:325` `RefreshEffectsFrom` and `:339` `RefreshEffectsLevelledBy`, which
     `Assets/PlayForge/Runtime/PlayForge/GAS/Core/GASCore.cs:132` `LevelChanged` calls (wired at `:62`).
 - **Watch for:** `RemoveItem(item)` still takes the whole slot. An effect an entity's item put on another entity isn't
   on its shelf, so it waits for its next read as the item levels.
@@ -361,7 +361,7 @@ of an effect's application runs again, and nothing is told until one tag compile
 - **Read:**
   - `Assets/PlayForge/Runtime/PlayForge/Save/ForgeSave.cs:69` `Capture`, and `:264` `Restore`, whose order is the design; `:190` `SaveOrigin` and
     `:400` `OriginOf`, which name what applied an effect and find it again.
-  - `Assets/PlayForge/Runtime/PlayForge/GAS/Core/EffectSystemComponent.cs:799` `ClearForRestore` and `:826` `Restore`, the shelf's quiet paths, and
+  - `Assets/PlayForge/Runtime/PlayForge/GAS/Core/EffectSystemComponent.cs:801` `ClearForRestore` and `:828` `Restore`, the shelf's quiet paths, and
     `Assets/PlayForge/Runtime/PlayForge/GameplayEffect/Core/GameplayShelfContainer/AbstractEffectContainer.cs:91` `CaptureClock` and `:102`
     `RestoreClock`, which `IndependentDurationsContainer` overrides for its stacks' own times.
   - `Assets/PlayForge/Runtime/PlayForge/AttributeSystem/Attribute/CachedAttributeValue.cs:367` `GetCommits` and `:376` `RestoreCommits`.
@@ -417,7 +417,7 @@ or a tag it carries, and a refusal says why, as a callback tells it.
 - **IDs:** FEAT-18, FEAT-17, commit `c7f7ef1`; Decision 30.
 - **Read:**
   - `Assets/PlayForge/Runtime/PlayForge/Utils/ForgeProfiler.cs:14` `ForgeProfiler`, whose `ProcessStep` wraps a process's step at
-    `Assets/PlayForge/Runtime/PlayForge/Management/GameplayProcess/Core/ProcessControlBlock.cs:431`.
+    `Assets/PlayForge/Runtime/PlayForge/Management/GameplayProcess/Core/ProcessControlBlock.cs:432`.
   - `Assets/PlayForge/Runtime/PlayForge/AbilitySystem/Core/ActivationRefusal.cs:7` `EActivationRefusal` and `:56` `ActivationRefusal`.
   - `Assets/PlayForge/Runtime/PlayForge/AbilitySystem/Core/AbilitySystemComponent.cs:614`, `:625` and `:645`, the request's, the asset's and the tag's
     `TryActivateAbility`; `:686` `TryActivate`, which names each refusal, and `:403` `UnblockedRefusal`, with
@@ -459,7 +459,7 @@ found FEAT-21 too: Run Sequence ran only a sequence a static method made, by nam
   - `Assets/PlayForge/Runtime/PlayForge/GameplayEffect/Modifier/Default/Authored/SetByCallerScaler.cs:13` `SetByCallerScaler`.
   - `Assets/PlayForge/Runtime/PlayForge/AbilitySystem/Tasks/Gameplay/ApplyEffectsAbilityTask.cs:32`, where an ability's effect takes its data's;
     `Assets/PlayForge/Runtime/PlayForge/AbilitySystem/Core/AbilitySpec.cs:21` `ApplyUsageEffects`, the cost's and cooldown's; and
-    `Assets/PlayForge/Runtime/PlayForge/GAS/Core/EffectSystemComponent.cs:213` `ApplyMadeFrom`, a contained or overflow effect's.
+    `Assets/PlayForge/Runtime/PlayForge/GAS/Core/EffectSystemComponent.cs:214` `ApplyMadeFrom`, a contained or overflow effect's.
   - `Assets/PlayForge/Runtime/PlayForge/AbilitySystem/Tasks/Utility/RunSequenceTask.cs:18` `Definition`, a sequence made in code.
 - **Tests:** the three `FEAT_2_*` tests in PlayMode's new `SetByCallerTests`, `FEAT_21_Run_Sequence_runs_a_sequence_made_in_code`
   in `NestedSequenceTests`, and the scenario's two rounds in `Tests/Stretch/AbilityCraftingTests` (category Stretch).
@@ -494,9 +494,9 @@ blows shake the camera, drove it and held at its first run.
   - `Assets/PlayForge/Runtime/PlayForge/GameplayEffect/Cues/AbstractCueHandler.cs:14` `AbstractCueHandler`, whose virtual hooks are the bursts and a
     lasting cue's Begin and End, and `:33` `CueContext`, which `Assets/PlayForge/Runtime/PlayForge/GameplayEffect/Core/GameplayEffect.cs:35` `Cues`
     lists.
-  - `Assets/PlayForge/Runtime/PlayForge/GAS/Core/EffectSystemComponent.cs:763` `Cue`, which plays an effect's cues for a moment. It's called from
-    `:220` `ApplyInstantGameplayEffect`, `:253` `ApplyDurationalGameplayEffect`, `:651` `TickEffectShelf` and `:718`
-    `ClearFinishedEffects`, and from `:799` `ClearForRestore` and `:826` `Restore`, which end and begin the lasting
+  - `Assets/PlayForge/Runtime/PlayForge/GAS/Core/EffectSystemComponent.cs:765` `Cue`, which plays an effect's cues for a moment. It's called from
+    `:221` `ApplyInstantGameplayEffect`, `:254` `ApplyDurationalGameplayEffect`, `:652` `TickEffectShelf` and `:719`
+    `ClearFinishedEffects`, and from `:801` `ClearForRestore` and `:828` `Restore`, which end and begin the lasting
     cues and play no burst.
   - `Assets/PlayForge/Runtime/PlayForge/GameplayEffect/Cues/ForgeCues.cs:4` `ICameraShaker` and `:14` `Shaker`, which
     `Assets/PlayForge/Runtime/PlayForge/GameplayEffect/Cues/CameraShakeCue.cs:11` `CameraShakeCue` goes through. Beside it are
@@ -583,7 +583,7 @@ own and step itself. Its code moved nearly as it was, the Mono branches with it,
 - **Read:**
   - `Assets/PlayForge/Runtime/PlayForge/Management/GameplayProcess/Core/ProcessWorld.cs:14` `ProcessWorld`: `:17` `Control`, its ProcessControl or null; `:20` its public
     constructor, a world of its own, ready; `:427` `Step`, a frame's Update and LateUpdate; `:546` `StepProcesses` and
-    `:370` `RunTicks`; `:641` `RegisterRuntime` and `:620` `RegisterMono`.
+    `:370` `RunTicks`; `:647` `RegisterRuntime` and `:626` `RegisterMono`.
   - `Assets/PlayForge/Runtime/PlayForge/Management/GameplayProcess/Core/ProcessControl.cs:48` `World`, which the MonoBehaviour owns and its `:166` `Update` steps, and `:186`
     `StepProcesses`, kept by name for the golden tests.
   - `Assets/PlayForge/Runtime/PlayForge/Management/GameplayProcess/Core/ProcessRegistration.cs:109` `In`, a registration into a world; `Assets/PlayForge/Runtime/PlayForge/Management/GameplayProcess/Core/ProcessControlBlock.cs:135` `World`
@@ -603,7 +603,7 @@ while it steps or moves a process, so a loop of its steps runs it through its ti
   - `Assets/PlayForge/Runtime/PlayForge/Management/GameplayProcess/Core/ForgeTick.cs:96` `ForgeTickSource`, a tick, and its `:160` `Advance`; `ForgeTick`'s `:29` `Scene` and `:32`
     `Current`, which its statics read, and `:83` `Enter`, which puts a tick in force.
   - `Assets/PlayForge/Runtime/PlayForge/Management/GameplayProcess/Core/ProcessWorld.cs:401` `ownTick`, `:405` `Tick`, `:411` `WorldClock` and `:446` `Step`, by a time its owner
-    gives; `:1165` `ProcessWillChangeState`, which puts the world's tick in force as a process moves.
+    gives; `:1174` `ProcessWillChangeState`, which puts the world's tick in force as a process moves.
 - **Watch for:** a wait at FixedUpdate's timing is still Unity's. An ability activated between steps starts its
   sequence outside them; step 4 takes that up.
 - **Tests:** the two `FEAT_10_*` tests in PlayMode's `ProcessWorldTests`.
@@ -670,12 +670,29 @@ dependency now.
 - **Read:**
   - `Assets/PlayForge/Runtime/PlayForge/Utils/ForgeProfiler.cs:65` `StepOf`, a type's step marker, made the first time the type steps, and `:50`
     `StepLoop`, the step loop's at a timing.
-  - `Assets/PlayForge/Runtime/PlayForge/Management/GameplayProcess/Core/ProcessControlBlock.cs:423`, in `Step`, where a block finds its type's marker at its first step and keeps
-    it, and `Assets/PlayForge/Runtime/PlayForge/Management/GameplayProcess/Core/ProcessWorld.cs:561`, in `StepProcesses`, the step loop's.
-  - `Assets/PlayForge/Runtime/PlayForge/Core/TaskSequence/Async/TaskSequenceRuntime.cs:755`, in `ExecuteStageInternal`, the stage's marker.
+  - `Assets/PlayForge/Runtime/PlayForge/Management/GameplayProcess/Core/ProcessControlBlock.cs:424`, in `Step`, where a block finds its type's marker at its first step and keeps
+    it, and `Assets/PlayForge/Runtime/PlayForge/Management/GameplayProcess/Core/ProcessWorld.cs:562`, in `StepProcesses`, the step loop's.
+  - `Assets/PlayForge/Runtime/PlayForge/Core/TaskSequence/Async/TaskSequenceRuntime.cs:757`, in `ExecuteStageInternal`, the stage's marker.
 - **Watch for:** a marker ends where it began, so a stage's holds only its start, its tasks up to the first that waits.
 - **Tests:** `FEAT_18_The_step_loop_tags_recomputes_stages_and_each_type_show_in_the_Profiler` in PlayMode's
   `ProfilerMarkerTests`.
+
+### Profiler counters (FEAT-18)
+
+The second of FEAT-18's three open parts (Decision 32). The markers time PlayForge's work; the counters say how much of
+it there is: ProcessControl's processes and a frame's registrations, terminations, steps, state changes and step time,
+the GAS's entities, effects, impacts, activations, refusals, tag compiles and recomputes, and TaskSequence's sequences
+and stages.
+
+- **IDs:** FEAT-18, commit `67bc9d0`; Decision 32.
+- **Read:**
+  - `Assets/PlayForge/Runtime/PlayForge/Utils/ForgeCounters.cs:13` `ForgeCounters`, a frame's counts and the levels, and `:96` `ResetLevels`, which
+    starts the levels that follow what starts and ends from 0 each session.
+  - `Assets/PlayForge/Runtime/PlayForge/Management/GameplayProcess/Core/ProcessWorld.cs:578`, in `StepProcesses`, where the scene's ProcessControl sets the process levels as
+    its LateUpdate loop ends.
+  - `Assets/PlayForge/Runtime/PlayForge/GAS/Core/GASCore.cs:234` `CountEffects`, which brings Effects Active up to date as a GAS steps.
+- **Watch for:** a world dropped with its processes still in it leaves its entities, effects and sequences counted.
+- **Tests:** `FEAT_18_PlayForges_counters_count_its_work` in PlayMode's `ProfilerCounterTests`.
 
 ## Phase 4
 
@@ -1147,7 +1164,7 @@ Granted reads Activate At Start, since the runtime tries it only for an entity's
     `ActivationSummary`.
   - `Assets/PlayForge/Editor/CustomPropertyDrawers/Forge/Editors/BasePlayForgeEditor.cs:605` `EnumName`, the name an
     enum field shows.
-  - `Assets/PlayForge/Runtime/PlayForge/AbilitySystem/Core/AbilitySystemComponent.cs:1010`, the enums' shown names.
+  - `Assets/PlayForge/Runtime/PlayForge/AbilitySystem/Core/AbilitySystemComponent.cs:1011`, the enums' shown names.
 - **Watch for:** the tag requirements and the checks still draw in their drawers' own look. The requirements table the
   Effect inspector shares comes with the Effect step.
 - **Tests:** `ED_37_The_Ability_inspector_keeps_the_style_docs_sections`,
@@ -1446,8 +1463,8 @@ went at its next compile, so a tag could be granted only through an effect.
 - **Read:**
   - `Assets/PlayForge/Editor/Debugger/RuntimeDebugger.Entities.cs:446` `SetAttribute`, a delta no worker sees, `:881`
     `GrantTag`, `:589` `ApplyEffect` and `:742` `ActivateAbility`.
-  - `Assets/PlayForge/Runtime/PlayForge/GAS/Core/GASCore.cs:297` the loose tags and `:301` `AddLooseTag`, which
-    `CompileGrantedTags` (`:273`) includes, and `Assets/PlayForge/Runtime/PlayForge/GAS/Interfaces/IGameplayAbilitySystem.cs:36`.
+  - `Assets/PlayForge/Runtime/PlayForge/GAS/Core/GASCore.cs:320` the loose tags and `:324` `AddLooseTag`, which
+    `CompileGrantedTags` (`:295`) includes, and `Assets/PlayForge/Runtime/PlayForge/GAS/Interfaces/IGameplayAbilitySystem.cs:36`.
 - **Watch for:** a removed effect stays on the shelf until the entity's next tick, which clears it, so its row goes a
   sample later. A field being typed in keeps what's typed while samples come.
 - **Tests:** `ED_40_An_attribute_takes_the_value_typed_into_the_debugger`,
@@ -1529,7 +1546,7 @@ own: the registration data's, or else a copy of the asset's.
 - **IDs:** GAS-47, commit `fdc1886`.
 - **Read:**
   - `Assets/PlayForge/Runtime/PlayForge/GAS/Core/GASCore.cs:81`, in `GASCore.Initialize`. The field is at `:21`,
-    `GetAffiliation` at `:260` reads it, and the tag compile at `:284` adds it. The fix went into each hub's copy;
+    `GetAffiliation` at `:282` reads it, and the tag compile at `:307` adds it. The fix went into each hub's copy;
     GAS-S1 later moved it into the core both share.
   - `Assets/PlayForge/Runtime/PlayForge/GAS/Core/MonoBehaviour/GameplayAbilitySystem.cs:44`, where the Mono hub reads
     the registration data's sides as it initializes, and
@@ -1577,8 +1594,8 @@ Instant path committed OnApply entries, so the change never landed. Applying suc
 entries before its ticks run.
 
 - **IDs:** GAS-50, commit `e40b3b6`.
-- **Read:** `Assets/PlayForge/Runtime/PlayForge/GAS/Core/EffectSystemComponent.cs:404`
-  `EffectSystemComponent.ApplyTickOnApplication`. The Instant path, `ApplyInstantGameplayEffect`, is at `:220`.
+- **Read:** `Assets/PlayForge/Runtime/PlayForge/GAS/Core/EffectSystemComponent.cs:405`
+  `EffectSystemComponent.ApplyTickOnApplication`. The Instant path, `ApplyInstantGameplayEffect`, is at `:221`.
 - **Test:** `GAS_50_Tick_On_Application_alone_lands_its_change` in `EffectTickTests`.
 
 ### A set reached twice counts once (GAS-44)
@@ -1629,7 +1646,7 @@ away.
 - **IDs:** GAS-S1, commit `5e7f077`.
 - **Read:**
   - `Assets/PlayForge/Runtime/PlayForge/GAS/Core/GASCore.cs:72` `GASCore.Initialize`, the one build order, then
-    `EndOfFrame` (`:168`), `MarkDead` (`:233`) and `CompileGrantedTags` (`:273`).
+    `EndOfFrame` (`:171`), `MarkDead` (`:254`) and `CompileGrantedTags` (`:295`).
   - `Assets/PlayForge/Runtime/PlayForge/GAS/Core/MonoBehaviour/GameplayAbilitySystem.cs:39`
     `GameplayAbilitySystem.WhenInitialize`. The Mono hub builds its core as it registers, from a copy of its asset.
   - `Assets/PlayForge/Runtime/PlayForge/GAS/Core/Runtime/RuntimeGameplayAbilitySystem.cs:67`, the constructor, where
@@ -1658,13 +1675,13 @@ shelf, and takes about 0.001 ms either way.
   - `Assets/PlayForge/Runtime/PlayForge/GAS/Core/EffectSystemComponent.cs:71` `EffectSystemComponent.Tick`. The
     requirements an application leaves wait for one pass here (`:83`), before the shelf ticks; the application only
     marks them due (`:141`).
-  - `Assets/PlayForge/Runtime/PlayForge/GAS/Core/EffectSystemComponent.cs:289` `Shelve`, which counts a container's
-    tags as it lands, and `Unshelve` (`:307`), which since GAS-P5 takes a whole cleaning pass off at once. They keep
+  - `Assets/PlayForge/Runtime/PlayForge/GAS/Core/EffectSystemComponent.cs:290` `Shelve`, which counts a container's
+    tags as it lands, and `Unshelve` (`:308`), which since GAS-P5 takes a whole cleaning pass off at once. They keep
     the index by asset tag (`:44`).
-  - `Assets/PlayForge/Runtime/PlayForge/GAS/Core/EffectSystemComponent.cs:455`, in
+  - `Assets/PlayForge/Runtime/PlayForge/GAS/Core/EffectSystemComponent.cs:456`, in
     `TryHandleExistingDurationalGameplayEffect`, where a re-application finds its containers in the index.
-  - `Assets/PlayForge/Runtime/PlayForge/GAS/Core/EffectSystemComponent.cs:623` `HandleGameplayEffects`, which
-    compiles the tags once (`:629`), not twice.
+  - `Assets/PlayForge/Runtime/PlayForge/GAS/Core/EffectSystemComponent.cs:624` `HandleGameplayEffects`, which
+    compiles the tags once (`:630`), not twice.
   - `Assets/PlayForge/Runtime/PlayForge/Tag/GrantedTagCompiler.cs:45` `GrantedTagCompiler.AddEffect`, one effect's
     tags, counted the same way by a rebuild and by shelving.
 - **Watch for:** a removal or ongoing requirement an application meets now takes effect at the next tick. The container
@@ -1681,11 +1698,11 @@ ending 50. Ending one now costs 0.0005 ms either way.
 
 - **IDs:** GAS-P5, commit `7ce68aa`. Found fixing GAS-P3.
 - **Read:**
-  - `Assets/PlayForge/Runtime/PlayForge/GAS/Core/EffectSystemComponent.cs:615` `MarkFinished`, which adds to the set
-    that mirrors the list (`:36`). The tick and the requirement pass skip a finished container through it (`:662`,
-    `:636`).
-  - `Assets/PlayForge/Runtime/PlayForge/GAS/Core/EffectSystemComponent.cs:718` `ClearFinishedEffects`, which takes the
-    pass off together (`:731`) before any `OnRemove`, through `Unshelve` (`:307`): one walk of the shelf and one of
+  - `Assets/PlayForge/Runtime/PlayForge/GAS/Core/EffectSystemComponent.cs:616` `MarkFinished`, which adds to the set
+    that mirrors the list (`:36`). The tick and the requirement pass skip a finished container through it (`:663`,
+    `:637`).
+  - `Assets/PlayForge/Runtime/PlayForge/GAS/Core/EffectSystemComponent.cs:719` `ClearFinishedEffects`, which takes the
+    pass off together (`:732`) before any `OnRemove`, through `Unshelve` (`:308`): one walk of the shelf and one of
     the index.
 - **Watch for:** effects ending in the same update leave the shelf together, so one's removal workers no longer find
   another that is ending with it.
@@ -1710,7 +1727,7 @@ removed entries through a lambda and built new ones (288), and a same-root tag q
     `GetContainedEffects`, now a `ContainedEffects` struct (`:248`) over the packets.
   - `Assets/PlayForge/Runtime/PlayForge/AttributeSystem/Attribute/CachedAttributeValue.cs:211` `RemoveCarrier`, one
     pass that keeps order and keeps the entries spare (`:65`) for `RegisterModifier` (`:182`). The recompute clears
-    its kept list (`:69`) at `:430`.
+    its kept list (`:69`) at `:431`.
   - `Assets/PlayForge/Runtime/PlayForge/Tag/Tag.cs:274` `SharesAncestorWith`, which compares roots in place;
     `IsChildOf` (`:223`) compares ordinally, and `IsDirectChildOf` (`:240`) cuts no substring.
   - `Assets/PlayForge/Runtime/PlayForge/Tag/Tags.cs:17`, the first of the 57 built-in tags, each made once.
@@ -1776,8 +1793,8 @@ frame in which an attribute rescaled with its Base allocated 500 bytes, one in w
 - **Read:**
   - `Assets/PlayForge/Runtime/PlayForge/GameplayEffect/Core/IAttributeImpactCarrier.cs:208` `SourceCarriers`, the
     table keyed weakly by source. `For` (`:224`) makes a carrier again only when its impact types or group change.
-  - `Assets/PlayForge/Runtime/PlayForge/AttributeSystem/Attribute/CachedAttributeValue.cs:620` `EnforceScaling`, which
-    takes its carrier from one table for every attribute (`:648`) and its action from the attribute's spares (`:643`).
+  - `Assets/PlayForge/Runtime/PlayForge/AttributeSystem/Attribute/CachedAttributeValue.cs:621` `EnforceScaling`, which
+    takes its carrier from one table for every attribute (`:649`) and its action from the attribute's spares (`:644`).
   - `Assets/PlayForge/Runtime/PlayForge/Workers/ImpactWorker/Authored/RelativeOperationContextImpactWorker.cs:69`
     `TryWork`, the change both halves make, and `CreateDeferredActions` (`:51`), which hands its action back in a
     list it reuses.
@@ -1827,10 +1844,10 @@ joins the review found; the parts are now formatted once, and the LINQ left on a
   - `Assets/PlayForge/Runtime/PlayForge/Management/GameplayProcess/ProcessDataPacket.cs:74` `TrimPath`, which takes
     the path back to a depth (`:67`).
   - `Assets/PlayForge/Runtime/PlayForge/Core/TaskSequence/Async/TaskSequenceRuntime.cs:236`, in `Run`, which takes
-    its part off as it ends (`:369`) and starts each time round from it (`:244`). Its failure log reads the path where
-    the run failed (`:330`).
-  - `Assets/PlayForge/Runtime/PlayForge/Core/TaskSequence/Async/TaskSequenceRuntime.cs:539`, in `RunStage`, which
-    notes where its iterations start (`:545`) and keeps the path where it failed (`:602`). `RestartStage` (`:689`)
+    its part off as it ends (`:371`) and starts each time round from it (`:244`). Its failure log reads the path where
+    the run failed (`:331`).
+  - `Assets/PlayForge/Runtime/PlayForge/Core/TaskSequence/Async/TaskSequenceRuntime.cs:541`, in `RunStage`, which
+    notes where its iterations start (`:547`) and keeps the path where it failed (`:604`). `RestartStage` (`:691`)
     takes off what the last iteration added, for both kinds of stage repeat.
   - `Assets/PlayForge/Runtime/PlayForge/Core/TaskSequence/Async/SequenceStage.cs:176` `SequenceStage.PathPart`, and
     `:398` for a sequence, each formatted once for its name.
@@ -1850,11 +1867,11 @@ runs one stage of one instant task allocated 1,912 bytes either way; under WhenA
 
 - **IDs:** TS-10, commit `a406552`.
 - **Read:**
-  - `Assets/PlayForge/Runtime/PlayForge/Core/TaskSequence/Async/TaskSequenceRuntime.cs:701` `ExecuteStageInternal`,
-    which hands the policy the stage's own source (`:737`) or makes one of its own (`:740`), and disposes only that
-    (`:780`). `OnlyWaits` (`:786`) names the two built-in policies by exact type.
-  - `Assets/PlayForge/Runtime/PlayForge/Core/TaskSequence/Async/TaskSequenceRuntime.cs:563`, in `RunStage`, which passes
-    its source down through `ExecuteStageWithRepeat` (`:638`).
+  - `Assets/PlayForge/Runtime/PlayForge/Core/TaskSequence/Async/TaskSequenceRuntime.cs:703` `ExecuteStageInternal`,
+    which hands the policy the stage's own source (`:739`) or makes one of its own (`:742`), and disposes only that
+    (`:783`). `OnlyWaits` (`:789`) names the two built-in policies by exact type.
+  - `Assets/PlayForge/Runtime/PlayForge/Core/TaskSequence/Async/TaskSequenceRuntime.cs:565`, in `RunStage`, which passes
+    its source down through `ExecuteStageWithRepeat` (`:640`).
 - **Watch for:** a policy of your own still gets a source of its own, as it may cancel what it's handed. One that only
   waits gets no saving unless it's one of the two built in.
 - **Test:** `TS_10_A_stage_that_waits_for_all_its_tasks_makes_no_second_token_source` in `SequenceCostTests`.
@@ -1891,8 +1908,8 @@ Now each ends in the frame its last task does, and an instant ability in the fra
     (`Assets/PlayForge/Runtime/PlayForge/AbilitySystem/Ability/AbilityProxy/Core/AbilityProxy.cs:211`, `:322`) and
     `RunSequenceTask` for its sequence
     (`Assets/PlayForge/Runtime/PlayForge/AbilitySystem/Tasks/Utility/RunSequenceTask.cs:82`).
-  - `Assets/PlayForge/Runtime/PlayForge/Core/TaskSequence/Async/TaskSequenceRuntime.cs:281`, in `Run`, which waits only
-    for maintained stages it has, and `:289`, where a repeating run that took no frame takes one.
+  - `Assets/PlayForge/Runtime/PlayForge/Core/TaskSequence/Async/TaskSequenceRuntime.cs:282`, in `Run`, which waits only
+    for maintained stages it has, and `:290`, where a repeating run that took no frame takes one.
 - **Watch for:** an instant sequence can end inside `ProcessControl.Register`, and an instant ability inside
   `TryActivateAbility`, so their end callbacks can fire before those calls return. A waiter resumes as the process
   terminates, after it's unregistered.
@@ -1936,7 +1953,7 @@ too, and an ending entity's ability system shuts before its abilities end.
     `WhenTerminate`, which ends what the process handles, as
     `Assets/PlayForge/Runtime/PlayForge/Management/GameplayProcess/Wrappers/MonoWrapper/Core/AbstractMonoProcess.cs:117`
     does.
-  - `Assets/PlayForge/Runtime/PlayForge/GAS/Core/GASCore.cs:219` `WhenTerminate`, which each hub's `WhenTerminate`
+  - `Assets/PlayForge/Runtime/PlayForge/GAS/Core/GASCore.cs:222` `WhenTerminate`, which each hub's `WhenTerminate`
     calls before its base's, and `ShutDown` in
     `Assets/PlayForge/Runtime/PlayForge/AbilitySystem/Core/AbilitySystemComponent.cs:161`, with the check
     `TryActivateAbility` now makes first (`:693`).
@@ -1971,7 +1988,7 @@ own, refilled each frame, so a listener reads it during the call.
   - `Assets/PlayForge/Runtime/PlayForge/Workers/Core/FrameSummary.cs:347` `TakeSnapshot`, which refills the summary's
     one snapshot, and `FrameSummarySnapshot` (`:360`), whose lists it keeps from frame to frame (`Fill`, `:392`).
     `CreateSnapshot` (`:335`) still makes a copy to keep.
-  - `Assets/PlayForge/Runtime/PlayForge/GAS/Core/GASCore.cs:205`, in `EndOfFrame`, which hands the listeners the
+  - `Assets/PlayForge/Runtime/PlayForge/GAS/Core/GASCore.cs:208`, in `EndOfFrame`, which hands the listeners the
     refilled snapshot, only when there are some.
 - **Watch for:** a listener that keeps the snapshot sees it change next frame. Copy what you need during the call.
 - **Test:** `GAS_P10_A_frame_whose_summary_has_a_listener_allocates_nothing` in `EffectCostTests`, idle and with an
@@ -2010,11 +2027,11 @@ unregisters, and a throwing `WhenInitialize` refuses the process, so `Register` 
 - **Read:**
   - `Assets/PlayForge/Runtime/PlayForge/Management/GameplayProcess/Core/ProcessControlBlock.cs:412`
     `ProcessControlBlock.Step`. A state queued during the step still applies after a throw.
-  - `Assets/PlayForge/Runtime/PlayForge/Management/GameplayProcess/Core/ProcessControlBlock.cs:514`
-    `ProcessControlBlock.RunProcessAsync`. The catch at `:536` ends a throwing run as a returning one ends.
+  - `Assets/PlayForge/Runtime/PlayForge/Management/GameplayProcess/Core/ProcessControlBlock.cs:515`
+    `ProcessControlBlock.RunProcessAsync`. The catch at `:537` ends a throwing run as a returning one ends.
   - `Assets/PlayForge/Runtime/PlayForge/Management/GameplayProcess/Core/ProcessControlBlock.cs:372`
     `ProcessControlBlock.TryTerminate`. `Unregister` runs whatever `WhenTerminate` did.
-  - `Assets/PlayForge/Runtime/PlayForge/Management/GameplayProcess/Core/ProcessWorld.cs:1000`, in
+  - `Assets/PlayForge/Runtime/PlayForge/Management/GameplayProcess/Core/ProcessWorld.cs:1009`, in
     `ProcessControl.PrepareCreatedProcess`. A throw in `WhenInitialize` force-terminates the half-made block.
 - Watcher callbacks and state-change callbacks are guarded the same way (`ProcessControl.ReportStateChange`,
   `ProcessControl.CheckWatcherOnUnregister`).
@@ -2032,7 +2049,7 @@ no longer runs `WhenTerminate` or `WhenWait` a second time when the cancelled ru
 - **Read:**
   - `Assets/PlayForge/Runtime/PlayForge/Management/GameplayProcess/Core/ProcessControlBlock.cs:215`
     `ProcessControlBlock.QueueTerminate`.
-  - `Assets/PlayForge/Runtime/PlayForge/Management/GameplayProcess/Core/ProcessControlBlock.cs:558`, the end of
+  - `Assets/PlayForge/Runtime/PlayForge/Management/GameplayProcess/Core/ProcessControlBlock.cs:559`, the end of
     `RunProcessAsync`. It applies the queued state only while the process is still Running (PC-4).
   - `Assets/PlayForge/Runtime/PlayForge/Core/TaskSequence/Async/TaskSequenceProcess.cs:249`
     `TaskSequenceProcess.WhenTerminateQueued`, which interrupts the sequence.
@@ -2053,7 +2070,7 @@ waited for the run to end, replaced a pending Terminate, and restarted the run o
 - **IDs:** Decision 5. PC-7 (control changes), PC-11 (pause at once, held runs), PC-12 (a token source per run),
   PC-27 (no Unpause during ProcessControl's pause). TS-Y and TS-AB are the sequence side, under TaskSequence.
 - **Read:**
-  - `Assets/PlayForge/Runtime/PlayForge/Management/GameplayProcess/Core/ProcessWorld.cs:1030`
+  - `Assets/PlayForge/Runtime/PlayForge/Management/GameplayProcess/Core/ProcessWorld.cs:1039`
     `ProcessControl.SetAllProcessesUponStateChange`. Only a pause, or its end, moves a process.
   - `Assets/PlayForge/Runtime/PlayForge/Management/GameplayProcess/Core/ProcessControlBlock.cs:247`
     `ProcessControlBlock.ForceIntoState` holds or cancels the run. `HoldForControl` (`:266`) marks what ProcessControl
@@ -2061,18 +2078,18 @@ waited for the run to end, replaced a pending Terminate, and restarted the run o
   - `Assets/PlayForge/Runtime/PlayForge/Management/GameplayProcess/Core/ProcessControlBlock.cs:319`
     `ProcessControlBlock.TryRun`. On resume a held run carries on. A run that finished during the pause, or one a
     pending Terminate was waiting for, moves on instead of running again.
-  - `Assets/PlayForge/Runtime/PlayForge/Management/GameplayProcess/Core/ProcessWorld.cs:1385`
+  - `Assets/PlayForge/Runtime/PlayForge/Management/GameplayProcess/Core/ProcessWorld.cs:1395`
     `ProcessControl.ValidateStateTransition`. A resume follows the transition table (PC-27), and a pending Terminate
     refuses a pause.
 - **Rules worth knowing:**
   - A requested Terminate outranks a pause and survives ProcessControl's.
   - A process registered during ProcessControl's pause waits with the rest, unless it is RequiresControl:
-    `Assets/PlayForge/Runtime/PlayForge/Management/GameplayProcess/Core/ProcessWorld.cs:956`
+    `Assets/PlayForge/Runtime/PlayForge/Management/GameplayProcess/Core/ProcessWorld.cs:964`
     `ProcessControl.SetProcess`.
   - Pausing a process that ProcessControl already holds makes the pause its own:
-    `Assets/PlayForge/Runtime/PlayForge/Management/GameplayProcess/Core/ProcessWorld.cs:808` `ProcessControl.Wait`.
+    `Assets/PlayForge/Runtime/PlayForge/Management/GameplayProcess/Core/ProcessWorld.cs:816` `ProcessControl.Wait`.
   - A run's token source is its own, so an old run still unwinding can't cancel the new one:
-    `Assets/PlayForge/Runtime/PlayForge/Management/GameplayProcess/Core/ProcessControlBlock.cs:518`, in
+    `Assets/PlayForge/Runtime/PlayForge/Management/GameplayProcess/Core/ProcessControlBlock.cs:519`, in
     `RunProcessAsync`.
 - **New:** `ProcessControlBlock.HeldByControl`, `TerminateRequested`, `HoldForControl`, `WaitForControl`,
   `KeepPaused`, `ReleaseFromControl`; `ProcessControl.IsPaused`. `AbstractMonoProcess.TryHandlePause` and
@@ -2091,12 +2108,12 @@ processes now register with a default packet, not SceneRoot's, which reparented 
 
 - **IDs:** PC-3, PC-28, PC-20, Decision 11.
 - **Read:**
-  - `Assets/PlayForge/Runtime/PlayForge/Management/GameplayProcess/Core/ProcessWorld.cs:969`
-    `ProcessControl.PrepareCreatedProcess`. It files the clone at `:975` and files it again after initializing at
-    `:1015`.
+  - `Assets/PlayForge/Runtime/PlayForge/Management/GameplayProcess/Core/ProcessWorld.cs:977`
+    `ProcessControl.PrepareCreatedProcess`. It files the clone at `:983` and files it again after initializing at
+    `:1024`.
   - `Assets/PlayForge/Runtime/PlayForge/Management/GameplayProcess/Wrappers/MonoWrapper/Core/AbstractMonoProcess.cs:163`
     `AbstractMonoProcess.OnTransformParentChanged`, which calls `ProcessControl.ProcessReparented`
-    (`Assets/PlayForge/Runtime/PlayForge/Management/GameplayProcess/Core/ProcessWorld.cs:1423`) and then
+    (`Assets/PlayForge/Runtime/PlayForge/Management/GameplayProcess/Core/ProcessWorld.cs:1433`) and then
     `ProcessHierarchy.Reparent` (`Assets/PlayForge/Runtime/PlayForge/Management/GameplayProcess/ProcessHierarchy.cs:147`).
   - `Assets/PlayForge/Runtime/PlayForge/Management/GameplayProcess/Core/ProcessControl.cs:202`
     `ProcessControl.CollectSceneProcesses`. The default packet is at `:236` (PC-20).
@@ -2116,7 +2133,7 @@ used as it is. Outside play mode the object is destroyed with `DestroyImmediate`
 - **Read:**
   - `Assets/PlayForge/Runtime/PlayForge/Management/GameplayProcess/Wrappers/MonoWrapper/Core/AbstractMonoProcess.cs:153`
     `AbstractMonoProcess.OnDestroy`, which calls `ProcessControl.EndDestroyedProcess`
-    (`Assets/PlayForge/Runtime/PlayForge/Management/GameplayProcess/Core/ProcessWorld.cs:882`).
+    (`Assets/PlayForge/Runtime/PlayForge/Management/GameplayProcess/Core/ProcessWorld.cs:890`).
   - `Assets/PlayForge/Runtime/PlayForge/Management/GameplayProcess/Core/ProcessWorld.cs:494`
     `ProcessControl.Sweep`, run each Update over `_dormant` (`:151`) and `_unheard` (`:155`). `HidesOnDestroy` (`:518`)
     picks the list.
@@ -2158,13 +2175,13 @@ scene loads, behind an inspector toggle like ProcessControl's, since it is every
   `ProcessRegistration.Run`, since FEAT-15's builder took the overloads' work.
 - **PC-13.** A state change is reported before ProcessControl acts on it, with the real old state, while watchers are
   still attached. `OnProcessUnregistered` fires before the removal.
-  `Assets/PlayForge/Runtime/PlayForge/Management/GameplayProcess/Core/ProcessWorld.cs:1165`
-  `ProcessControl.ProcessWillChangeState`, and `:738` in `Unregister`.
+  `Assets/PlayForge/Runtime/PlayForge/Management/GameplayProcess/Core/ProcessWorld.cs:1174`
+  `ProcessControl.ProcessWillChangeState`, and `:744` in `Unregister`.
 - **PC-14.** The first watcher gets `onStartWatching`, a second subscription is written back into its struct, and a
   callback can stop watching. `Assets/PlayForge/Runtime/PlayForge/Management/GameplayProcess/Core/ProcessWorld.cs:297`
   `ProcessControl.WatchProcess`.
 - **PC-16.** A data packet lets go of a process that ends.
-  `Assets/PlayForge/Runtime/PlayForge/Management/GameplayProcess/Core/ProcessWorld.cs:719`, in `Unregister`.
+  `Assets/PlayForge/Runtime/PlayForge/Management/GameplayProcess/Core/ProcessWorld.cs:725`, in `Unregister`.
 - **PC-17.** `GroupProcess.DetachMember` removes only the group's own watcher.
   `Assets/PlayForge/Runtime/PlayForge/Management/GameplayProcess/Wrappers/ClassWrapper/GroupProcess.cs:176`.
 - **PC-18.** One runtime process instance can't be registered twice at once, and one that has ended can be registered
@@ -2181,7 +2198,7 @@ scene loads, behind an inspector toggle like ProcessControl's, since it is every
   truncating: `Assets/PlayForge/Runtime/PlayForge/Management/GameplayProcess/Core/ProcessRelay.cs:67`.
 - **PC-26.** A block leaves its step groups by the timing it joined under, so changing a running process's timing no
   longer strands it. The hierarchy skips a root whose object is gone.
-  `Assets/PlayForge/Runtime/PlayForge/Management/GameplayProcess/Core/ProcessWorld.cs:1102` `RemoveFromStepping`.
+  `Assets/PlayForge/Runtime/PlayForge/Management/GameplayProcess/Core/ProcessWorld.cs:1111` `RemoveFromStepping`.
 
 ## TaskSequence
 
@@ -2198,9 +2215,9 @@ shared definition. A second run left the first out of reach, and runs broke each
   - `Assets/PlayForge/Runtime/PlayForge/Core/TaskSequence/Async/TaskSequence.cs:24` `TaskSequence._runs`, then
     `CreateRuntime` (`:60`) and `Run(TaskSequenceRuntime, ProcessDataPacket, CancellationToken)` (`:76`).
   - `Assets/PlayForge/Runtime/PlayForge/Core/TaskSequence/Async/TaskSequenceRuntime.cs:90`, the per-run record of
-    fired conditions, broken repeats and repeat counts, read through `IsRepeatBroken` (`:1147`) and `GetRepeatCount`
-    (`:1150`).
-  - `Assets/PlayForge/Runtime/PlayForge/Core/TaskSequence/Async/TaskSequenceRuntime.cs:1002`
+    fired conditions, broken repeats and repeat counts, read through `IsRepeatBroken` (`:1150`) and `GetRepeatCount`
+    (`:1153`).
+  - `Assets/PlayForge/Runtime/PlayForge/Core/TaskSequence/Async/TaskSequenceRuntime.cs:1005`
     `TaskSequenceRuntime.RunClock` (TS-W).
 - **New:** `TaskSequence.CreateRuntime`, the `Run` overload that takes a runtime, `TaskSequenceRuntime.IsRepeatBroken`
   and `GetRepeatCount`.
@@ -2218,12 +2235,12 @@ the stages after it. The stop-maintained requests choose among maintained stages
 
 - **IDs:** TS-N, TS-K, TS-J, TS-L.
 - **Read:**
-  - `Assets/PlayForge/Runtime/PlayForge/Core/TaskSequence/Async/TaskSequenceRuntime.cs:521`
-    `TaskSequenceRuntime.RunStage`, and `ExecuteSubStage` (`:507`).
-  - `Assets/PlayForge/Runtime/PlayForge/Core/TaskSequence/Async/TaskSequenceRuntime.cs:1321`
+  - `Assets/PlayForge/Runtime/PlayForge/Core/TaskSequence/Async/TaskSequenceRuntime.cs:523`
+    `TaskSequenceRuntime.RunStage`, and `ExecuteSubStage` (`:509`).
+  - `Assets/PlayForge/Runtime/PlayForge/Core/TaskSequence/Async/TaskSequenceRuntime.cs:1324`
     `RequestSkipCurrentStage`, which acts on `_injectionSource` (`:130`), the stage applying the injection. Then
-    `RequestSkipAndMaintain` (`:1327`) and the stop-maintained requests from `:1339`.
-  - `Assets/PlayForge/Runtime/PlayForge/Core/TaskSequence/Async/TaskSequenceRuntime.cs:393`
+    `RequestSkipAndMaintain` (`:1330`) and the stop-maintained requests from `:1342`.
+  - `Assets/PlayForge/Runtime/PlayForge/Core/TaskSequence/Async/TaskSequenceRuntime.cs:395`
     `TaskSequenceRuntime.StopMaintainedStages`.
 
 ### Cancellation and cleanup
@@ -2237,12 +2254,12 @@ of a repeating sequence.
 
 - **IDs:** TS-AA, TS-A, TS-E, TS-AD.
 - **Read:**
-  - `Assets/PlayForge/Runtime/PlayForge/Core/TaskSequence/Async/TaskSequenceRuntime.cs:401`
-    `TaskSequenceRuntime.ExecuteStagesSequentially`. The wait on the stage signal is at `:445` (TS-AA).
+  - `Assets/PlayForge/Runtime/PlayForge/Core/TaskSequence/Async/TaskSequenceRuntime.cs:403`
+    `TaskSequenceRuntime.ExecuteStagesSequentially`. The wait on the stage signal is at `:447` (TS-AA).
   - `Assets/PlayForge/Runtime/PlayForge/Core/TaskSequence/Async/SequenceCore.cs:268`
     `WhenAnyStagePolicy.AwaitCompletion` (the fix at `:303`), and `:332` `WhenNStagePolicy.AwaitCompletion` (`:379`).
-  - `Assets/PlayForge/Runtime/PlayForge/Core/TaskSequence/Async/TaskSequenceRuntime.cs:604`, the `finally` of
-    `RunStage` (TS-E, TS-AD), and `:1472` `Cleanup` (TS-AD).
+  - `Assets/PlayForge/Runtime/PlayForge/Core/TaskSequence/Async/TaskSequenceRuntime.cs:606`, the `finally` of
+    `RunStage` (TS-E, TS-AD), and `:1475` `Cleanup` (TS-AD).
 
 ### Repeats
 
@@ -2251,8 +2268,8 @@ task that resets in `Prepare`, such as `SyncDelay`, finished at once from the se
 finished without yielding repeated forever inside one frame.
 
 - **IDs:** TS-M.
-- **Read:** `Assets/PlayForge/Runtime/PlayForge/Core/TaskSequence/Async/TaskSequenceRuntime.cs:638`
-  `TaskSequenceRuntime.ExecuteStageWithRepeat`, and `:686` `RestartStage`.
+- **Read:** `Assets/PlayForge/Runtime/PlayForge/Core/TaskSequence/Async/TaskSequenceRuntime.cs:640`
+  `TaskSequenceRuntime.ExecuteStageWithRepeat`, and `:688` `RestartStage`.
 - **Watch for:** tasks in a repeating stage get `Prepare` and `Clean` on every iteration, not once.
 
 ### Pause inside a sequence (Decision 5)
@@ -2268,8 +2285,8 @@ helpers kept their signatures. `ChannelAbilityTask` yielded twice a loop, so a c
 - **Read:**
   - `Assets/PlayForge/Runtime/PlayForge/Core/TaskSequence/Async/TaskSequenceRuntime.cs:150`
     `TaskSequenceRuntime.Pause`, then `IsPausedRun` (`:171`), `Delay` (`:180`) and `HoldWhilePaused` (`:191`). The
-    token map is at `:55`; `ExecuteStageInternal` adds each stage's token at `:745` and holds a finished stage at
-    `:771`.
+    token map is at `:55`; `ExecuteStageInternal` adds each stage's token at `:747` and holds a finished stage at
+    `:774`.
   - `Assets/PlayForge/Runtime/PlayForge/Core/TaskSequence/Async/TaskSequenceProcess.cs:264`
     `TaskSequenceProcess.TryHandlePause`, and `TryHandleResume` (`:274`).
   - `Assets/PlayForge/Runtime/PlayForge/Core/TaskSequence/Async/SequenceTaskLibrary.cs:847`
@@ -2292,7 +2309,7 @@ between two sequences is false rather than a throw.
 - **IDs:** TS-F, TS-G, TS-O.
 - **Read:**
   - `Assets/PlayForge/Runtime/PlayForge/Core/TaskSequence/Async/TaskSequenceRuntime.cs:219`
-    `TaskSequenceRuntime.Run`. The outer runtime is kept at `:232` and given back at `:368`.
+    `TaskSequenceRuntime.Run`. The outer runtime is kept at `:232` and given back at `:370`.
   - `Assets/PlayForge/Runtime/PlayForge/AbilitySystem/Tasks/Utility/RunSequenceTask.cs:32`
     `RunSequenceTask.Activate`. The relay ends the inner sequence at `:90`.
   - `Assets/PlayForge/Runtime/PlayForge/Core/TaskSequence/Async/TaskSequence.cs:365` `TaskSequenceChain.Run`, and
@@ -2397,11 +2414,11 @@ a hit takes what it says and an override still pins the value.
 - **IDs:** GAS-15, Decision 4. Golden S6 now expects 85, not 90.
 - **Read:**
   - `Assets/PlayForge/Runtime/PlayForge/AttributeSystem/Attribute/CachedAttributeValue.cs:398`
-    `CachedAttributeValue.Recompute`. Committed history is at `:484`.
+    `CachedAttributeValue.Recompute`. Committed history is at `:485`.
   - `Assets/PlayForge/Runtime/PlayForge/GameplayEffect/Core/Definition/GameplayEffectImpact.cs:84`
     `GameplayEffectImpact.ResolveDelivery`, unchanged: how each authored shape maps to a delivery.
-  - `Assets/PlayForge/Runtime/PlayForge/GAS/Core/EffectSystemComponent.cs:220`
-    `EffectSystemComponent.ApplyInstantGameplayEffect` (OnApply commits) and `:431`
+  - `Assets/PlayForge/Runtime/PlayForge/GAS/Core/EffectSystemComponent.cs:221`
+    `EffectSystemComponent.ApplyInstantGameplayEffect` (OnApply commits) and `:432`
     `ApplyDurationGameplayEffectAsInstant` (Periodic commits).
 - `Assets/PlayForge/Documentation/EFFECT_PIPELINE.md` section 2.1 has the new order, and `IMPACT_MODEL_REFACTOR.md`
   has a dated amendment.
@@ -2444,7 +2461,7 @@ rescale is typed `DisallowImpact`, as the startup pulse is, so a worker that che
 changed Base had dealt it.
 
 - **IDs:** GAS-37, GAS-35, Decision 9.
-- **Read:** `Assets/PlayForge/Runtime/PlayForge/AttributeSystem/Attribute/CachedAttributeValue.cs:620`
+- **Read:** `Assets/PlayForge/Runtime/PlayForge/AttributeSystem/Attribute/CachedAttributeValue.cs:621`
   `CachedAttributeValue.EnforceScaling`, and the `unconstrained` value it reads (`:35`). The
   `AcceptUnworkableImpact` tooltip says what it covers:
   `Assets/PlayForge/Runtime/PlayForge/Workers/ImpactWorker/Core/AbstractImpactWorker.cs:19`.
@@ -2467,8 +2484,8 @@ Continuous entries, so a per-stack magnitude updates at once rather than at the 
     `ConfigsByPriority` (`:310`). The
     bound is `StackBoundsConfig.GetStacks`
     (`Assets/PlayForge/Runtime/PlayForge/GameplayEffect/Core/GameplayShelfContainer/Settings/AbstractEffectConfig.cs:280`).
-  - `Assets/PlayForge/Runtime/PlayForge/GAS/Core/EffectSystemComponent.cs:651` `EffectSystemComponent.TickEffectShelf`
-    (a lost stack at `:710`) and `:453` `TryHandleExistingDurationalGameplayEffect` (`Extend` at `:549`).
+  - `Assets/PlayForge/Runtime/PlayForge/GAS/Core/EffectSystemComponent.cs:652` `EffectSystemComponent.TickEffectShelf`
+    (a lost stack at `:711`) and `:454` `TryHandleExistingDurationalGameplayEffect` (`Extend` at `:550`).
 
 #### Durations and ticks
 
@@ -2500,8 +2517,8 @@ next tick since GAS-P3, and again when a tick is due, since tags change without 
     `EffectTagRequirements.CheckRemovalRequirements`.
   - `Assets/PlayForge/Runtime/PlayForge/GameplayEffect/Core/GameplayEffect.cs:189`
     `GameplayEffect.ValidateRemovalRequirements`, and `ValidateApplicationRequirements` (`:178`).
-  - `Assets/PlayForge/Runtime/PlayForge/GAS/Core/EffectSystemComponent.cs:623`
-    `EffectSystemComponent.HandleGameplayEffects`, and the re-check in `TickEffectShelf` at `:682`.
+  - `Assets/PlayForge/Runtime/PlayForge/GAS/Core/EffectSystemComponent.cs:624`
+    `EffectSystemComponent.HandleGameplayEffects`, and the re-check in `TickEffectShelf` at `:683`.
 
 #### Contained effects, records and the cycle guard
 
@@ -2519,7 +2536,7 @@ The `GameplayEffectImpact` copy constructor keeps the affiliation and accepts an
   - `Assets/PlayForge/Runtime/PlayForge/GameplayEffect/Core/GameplayShelfContainer/AbstractEffectContainer.cs:117`
     `AbstractEffectContainer.OnRemove` (GAS-8), and `GetGrantedTags` (`:153`, GAS-14).
   - `Assets/PlayForge/Runtime/PlayForge/Workers/Core/WorkerContext.cs:110` `EffectWorkerContext.Impacts`, filled by
-    `ApplyInstantGameplayEffect` (`Assets/PlayForge/Runtime/PlayForge/GAS/Core/EffectSystemComponent.cs:233`).
+    `ApplyInstantGameplayEffect` (`Assets/PlayForge/Runtime/PlayForge/GAS/Core/EffectSystemComponent.cs:234`).
 - **New:** `EffectWorkerContext.Impacts`.
 - **Watch for:** an effect can no longer apply itself inside its own application.
 
@@ -2600,7 +2617,7 @@ Removing an ability takes it off the active list before tags compile, and still 
 - **IDs:** GAS-21, TS-T, GAS-20.
 - **Read:**
   - `Assets/PlayForge/Runtime/PlayForge/AbilitySystem/Core/AbilitySystemComponent.cs:900`
-    `AbilitySystemComponent.ClaimActive`, then `ReleaseClaim` (`:918`) and `EndActivation` (`:934`).
+    `AbilitySystemComponent.ClaimActive`, then `ReleaseClaim` (`:919`) and `EndActivation` (`:935`).
   - `Assets/PlayForge/Runtime/PlayForge/AbilitySystem/Core/AbilitySystemComponent.cs:311`
     `AbilitySystemComponent.RemoveAbility`.
 - **New:** `AbilitySpecContainer.IsActiveUnder(EAbilityActivationPolicy)`.
@@ -2670,7 +2687,7 @@ cleared, so they outlived the item.
     `ItemSystemComponent.ClearAllItems`. The shelf is created at `:11` (GAS-3).
   - `Assets/PlayForge/Runtime/PlayForge/ItemSystem/Core/ItemSpecContainer.cs:100` `ItemSpecContainer.Unequip`, then
     `RemoveGrantedEffects` (`:155`) and `ApplyActiveAbility` (`:174`).
-  - `Assets/PlayForge/Runtime/PlayForge/GAS/Core/EffectSystemComponent.cs:595`
+  - `Assets/PlayForge/Runtime/PlayForge/GAS/Core/EffectSystemComponent.cs:596`
     `EffectSystemComponent.RemoveGameplayEffect(GameplayEffect, IEffectOrigin)`.
 - **New:** `ITarget.RemoveGameplayEffect(GameplayEffect, IEffectOrigin)`, a default method that falls back to the old
   overload so other implementers still compile (`Assets/PlayForge/Runtime/PlayForge/GAS/Interfaces/ITarget.cs:30`).
@@ -2695,7 +2712,7 @@ the sources' lists instead of allocating iterators.
 - **Read:**
   - `Assets/PlayForge/Runtime/PlayForge/Tag/TagQuery.cs:98` `TagQuery.CountMatches(TagCache)`, and `Matches`
     (`:135`). The hubs call it from `QueryTags`
-    (`Assets/PlayForge/Runtime/PlayForge/GAS/Core/GASCore.cs:321`).
+    (`Assets/PlayForge/Runtime/PlayForge/GAS/Core/GASCore.cs:344`).
   - `Assets/PlayForge/Runtime/PlayForge/Tag/Tag.cs:94` `Tag.Child`, and the implicit conversion at `:348`.
   - `Assets/PlayForge/Runtime/PlayForge/Tag/GrantedTagCompiler.cs:14` `GrantedTagCompiler`.
 - **New:** `GrantedTagCompiler` (internal).
@@ -2736,7 +2753,7 @@ runtime identity's were null and threw. A hub stepped by hand, outside ProcessCo
   above.
 - **Read:**
   - `Assets/PlayForge/Runtime/PlayForge/GAS/Core/Runtime/RuntimeGameplayAbilitySystem.cs:67`, the constructor
-    (`UpdateAndLate` at `:75`), and `RuntimeEntityIdentity(EntityIdentity)` at `:308` (GAS-9).
+    (`UpdateAndLate` at `:75`), and `RuntimeEntityIdentity(EntityIdentity)` at `:323` (GAS-9).
   - `Assets/PlayForge/Runtime/PlayForge/GAS/Core/Runtime/RuntimeGameplayAbilitySystem_EndOfFrame.cs:52` and
     `Assets/PlayForge/Runtime/PlayForge/GAS/Core/MonoBehaviour/GameplayAbilitySystem.EndOfFrame.cs:44`, each hub's
     `HandleDestruction` (GAS-42).
@@ -2985,6 +3002,7 @@ Newest first. Each row is a good place to start reading.
 
 | What | IDs | Where | Commit |
 |---|---|---|---|
+| Profiler counters | FEAT-18 | `Assets/PlayForge/Runtime/PlayForge/Utils/ForgeCounters.cs:13` | `67bc9d0` |
 | The step loop's, tags', recomputes', stages' and each type's markers | FEAT-18 | `Assets/PlayForge/Runtime/PlayForge/Utils/ForgeProfiler.cs:65` | `d2de8ec` |
 | Worlds side by side, and with no scene | FEAT-10 | `Assets/PlayForge/Runtime/PlayForge/Management/GameplayProcess/Core/ProcessWorld.cs:171` | `b9ea337` |
 | Waits that ask once a tick | FEAT-10 | `Assets/PlayForge/Runtime/PlayForge/Management/GameplayProcess/Core/ForgeTick.cs:141` | `d88583a` |
@@ -2994,7 +3012,7 @@ Newest first. Each row is a good place to start reading.
 | A process's own control | FEAT-10 | `Assets/PlayForge/Runtime/PlayForge/Management/GameplayProcess/Core/ProcessControlBlock.cs:138` | `40f257e` |
 | Clear's defaults | ED-42 | `Assets/PlayForge/Editor/CustomPropertyDrawers/Forge/Editors/Windows/SectionClearUtility.cs:22` | `4d110da` |
 | Targeting input | FEAT-11 | `Assets/PlayForge/Runtime/PlayForge/Utils/ForgeInput.cs:31` | `ed60c62` |
-| Gameplay cues | FEAT-1 | `Assets/PlayForge/Runtime/PlayForge/GAS/Core/EffectSystemComponent.cs:763` | `2b623ed` |
+| Gameplay cues | FEAT-1 | `Assets/PlayForge/Runtime/PlayForge/GAS/Core/EffectSystemComponent.cs:765` | `2b623ed` |
 | Ability triggers | FEAT-4 | `Assets/PlayForge/Runtime/PlayForge/AbilitySystem/Core/AbilitySystemComponent.cs:506` | `b4e0cbd` |
 | SetByCaller magnitudes, and a sequence made in code | FEAT-2, FEAT-21 | `Assets/PlayForge/Runtime/PlayForge/GameplayEffect/Core/GameplayEffectSpec.cs:51` | `c24fa00` |
 | Copying an entity, and a level's max before its level | FEAT-20, GAS-59 | `Assets/PlayForge/Runtime/PlayForge/Save/ForgeSave.cs:459` | `7e6dae3` |
@@ -3007,8 +3025,8 @@ Newest first. Each row is a good place to start reading.
 | The input buffer, stages that branch, and the Duel lab | FEAT-6, TS-7 | `Assets/PlayForge/Runtime/PlayForge/AbilitySystem/Core/AbilitySystemComponent.cs:803` | `b0d6492` |
 | The MOBA hero kit lab, GAS-57, and While active heard at once | GAS-57, FEAT-5 | `Assets/PlayForge/Runtime/PlayForge/Workers/ImpactWorker/Authored/RelativeOperationContextImpactWorker.cs:100` | `26aa233` |
 | Cancel and block abilities by tag, and While active | FEAT-5 | `Assets/PlayForge/Runtime/PlayForge/AbilitySystem/Core/AbilitySystemComponent.cs:454` | `cfab32a` |
-| Abilities granted by effects, and the chance to apply | FEAT-8 | `Assets/PlayForge/Runtime/PlayForge/GAS/Core/EffectSystemComponent.cs:356` | `60683cd` |
-| The Status-effect lab, and overflow at max stacks | FEAT-8 | `Assets/PlayForge/Runtime/PlayForge/GAS/Core/EffectSystemComponent.cs:569` | `13eac5b` |
+| Abilities granted by effects, and the chance to apply | FEAT-8 | `Assets/PlayForge/Runtime/PlayForge/GAS/Core/EffectSystemComponent.cs:357` | `60683cd` |
+| The Status-effect lab, and overflow at max stacks | FEAT-8 | `Assets/PlayForge/Runtime/PlayForge/GAS/Core/EffectSystemComponent.cs:570` | `13eac5b` |
 | The fixed-rate tick | FEAT-7 | `Assets/PlayForge/Runtime/PlayForge/Management/GameplayProcess/Core/ProcessWorld.cs:370` | `4058098` |
 | A clock for each entity | FEAT-7, TS-6 | `Assets/PlayForge/Runtime/PlayForge/GAS/Core/EntityClock.cs:12` | `48c2c8e` |
 | One clock and one random source | FEAT-13 | `Assets/PlayForge/Runtime/PlayForge/Utils/ForgeTime.cs:48` | `c500d5e` |
@@ -3017,7 +3035,7 @@ Newest first. Each row is a good place to start reading.
 | The Debugger's foot rows | ED-40 | `Assets/PlayForge/Editor/Debugger/RuntimeDebugger.Entities.cs:254` | `520c433` |
 | Cleanse and immunity name granted tags | FEAT-8 | `Assets/PlayForge/Runtime/PlayForge/GameplayEffect/Core/GameplayEffect.cs:275` | `520c433` |
 | The Debugger, as the boards draw it | ED-4, ED-5 | `Assets/PlayForge/Editor/Debugger/RuntimeDebugger.Tags.cs:159` | `c934980` |
-| Cleanse and immunity | FEAT-8 | `Assets/PlayForge/Runtime/PlayForge/GAS/Core/EffectSystemComponent.cs:186` | `04d0742` |
+| Cleanse and immunity | FEAT-8 | `Assets/PlayForge/Runtime/PlayForge/GAS/Core/EffectSystemComponent.cs:187` | `04d0742` |
 | The debugger acts, and loose tags | ED-40, FEAT-16 | `Assets/PlayForge/Editor/Debugger/RuntimeDebugger.Entities.cs:446` | `5dd7332` |
 | One Runtime Debugger | ED-4, ED-5 | `Assets/PlayForge/Editor/Debugger/RuntimeDebugger.cs:180` | `d220ff4` |
 | Templates work as prefabs do | ED-13 | `Assets/PlayForge/Editor/Tools/ForgeTemplatePropogation/ForgeTemplatePush.cs:37` | `6733220` |
@@ -3060,11 +3078,11 @@ Newest first. Each row is a good place to start reading.
 | An ability asked for inside its own activation starts next frame | TS-8, Decision 25 | `Assets/PlayForge/Runtime/PlayForge/AbilitySystem/Core/AbilitySystemComponent.cs:607` | `c45f4f1` |
 | Sequences and abilities end the frame their last task does | TS-Z, Decision 24 | `Assets/PlayForge/Runtime/PlayForge/Management/GameplayProcess/Core/ProcessRelay.cs:54` | `04c3db1` |
 | A tick, a recompute and a tag query allocate nothing | GAS-P4 | `Assets/PlayForge/Runtime/PlayForge/GameplayEffect/Core/GameplayEffectSpec.cs:192` | `b50a80b` |
-| Ending an effect costs the same however many end with it | GAS-P5 | `Assets/PlayForge/Runtime/PlayForge/GAS/Core/EffectSystemComponent.cs:718` | `7ce68aa` |
+| Ending an effect costs the same however many end with it | GAS-P5 | `Assets/PlayForge/Runtime/PlayForge/GAS/Core/EffectSystemComponent.cs:719` | `7ce68aa` |
 | An application costs the same however much the entity carries | GAS-P3 | `Assets/PlayForge/Runtime/PlayForge/GAS/Core/EffectSystemComponent.cs:71` | `1242251` |
 | Both GAS hubs forward to one core | GAS-S1 | `Assets/PlayForge/Runtime/PlayForge/GAS/Core/GASCore.cs:72` | `5e7f077` |
 | An attribute set reached twice counts once | GAS-44 | `Assets/PlayForge/Runtime/PlayForge/AttributeSystem/Attribute/AttributeSet.cs:63` | `57ea4ff` |
-| Tick On Application alone lands its change | GAS-50 | `Assets/PlayForge/Runtime/PlayForge/GAS/Core/EffectSystemComponent.cs:404` | `e40b3b6` |
+| Tick On Application alone lands its change | GAS-50 | `Assets/PlayForge/Runtime/PlayForge/GAS/Core/EffectSystemComponent.cs:405` | `e40b3b6` |
 | Opening abilities wait for the entity's attributes | GAS-49 | `Assets/PlayForge/Runtime/PlayForge/AbilitySystem/Core/AbilitySystemComponent.cs:225` | `999e779` |
 | Unequipping takes back only the item's grant | GAS-48 | `Assets/PlayForge/Runtime/PlayForge/ItemSystem/Core/ItemSpecContainer.cs:199` | `27c2325` |
 | Each entity keeps its own affiliation | GAS-47 | `Assets/PlayForge/Runtime/PlayForge/GAS/Core/GASCore.cs:81` | `fdc1886` |
@@ -3077,6 +3095,6 @@ Newest first. Each row is a good place to start reading.
 | The samples live in `Samples~` and import on request | SP-20, Decision 16 | `Assets/PlayForge/package.json:15` | `8d17bc0` |
 | A derived refresh runs the post-change pipeline | GAS-27, Decision 14 | `Assets/PlayForge/Runtime/PlayForge/AttributeSystem/Core/AttributeSystemComponent.cs:566` | `550d07b` |
 | Combined elements add up | GAS-27, Decision 13 | `Assets/PlayForge/Runtime/PlayForge/AttributeSystem/Attribute/AttributeBlueprint.cs:85` | `5244d99` |
-| The hierarchy follows transforms; SceneRoot spawns are GameRoot's children | PC-28, Decision 11 | `Assets/PlayForge/Runtime/PlayForge/Management/GameplayProcess/Core/ProcessWorld.cs:1423` | `5f6c0eb` |
-| Commits land after the modifiers | GAS-15, Decision 4 | `Assets/PlayForge/Runtime/PlayForge/AttributeSystem/Attribute/CachedAttributeValue.cs:484` | `66b33ad` |
+| The hierarchy follows transforms; SceneRoot spawns are GameRoot's children | PC-28, Decision 11 | `Assets/PlayForge/Runtime/PlayForge/Management/GameplayProcess/Core/ProcessWorld.cs:1433` | `5f6c0eb` |
+| Commits land after the modifiers | GAS-15, Decision 4 | `Assets/PlayForge/Runtime/PlayForge/AttributeSystem/Attribute/CachedAttributeValue.cs:485` | `66b33ad` |
 | Pause holds a process in place | PC-7, PC-11, PC-12, PC-27, Decision 5 | `Assets/PlayForge/Runtime/PlayForge/Management/GameplayProcess/Core/ProcessControlBlock.cs:247` | `23f52aa`, `666beda` |
