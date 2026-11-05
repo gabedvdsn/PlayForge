@@ -90,7 +90,8 @@ namespace FarEmerald.PlayForge
 
         /// <summary>
         /// Legacy diagnostic projection of the modifier collection in the old
-        /// retention-group shape (GASDebugger et al.). Allocates — do not use in hot paths.
+        /// retention-group shape. Allocates — do not use in hot paths. The Runtime Debugger
+        /// reads <see cref="GetBreakdown"/>, as the GAS Debugger read this (ED-4).
         /// </summary>
         public IReadOnlyDictionary<Tag, RetainedGroup> RetainedGroups
         {

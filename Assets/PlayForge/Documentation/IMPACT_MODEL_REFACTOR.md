@@ -21,8 +21,8 @@ each with its own delivery and retention group, which `RebuildEntries` appends a
 rule checks each attribute a cost's entries spend.
 
 Remaining follow-ups: per-group payloads on `AttributeSystemCallbacks` (queries via
-`GetBreakdown`/`TryGetGroupValue` cover the UX case), GASDebugger modernization (currently
-renders through the compatibility `RetainedGroups` projection).
+`GetBreakdown`/`TryGetGroupValue` cover the UX case). The Runtime Debugger reads `GetBreakdown`, so
+nothing in the package reads the compatibility `RetainedGroups` projection (ED-4).
 Verification: the golden tests, in the Test Runner's EditMode tab.
 Paths relative to `Assets/PlayForge/Runtime/PlayForge/`.
 

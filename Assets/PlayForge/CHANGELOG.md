@@ -25,6 +25,14 @@ tracks each fix below by its ID.
   page, through one table of links in the editor.
 
 ### Changed
+- One Runtime Debugger (`Window → PlayForge → Runtime Debugger`) replaces the GAS Debugger, Process Control and the
+  Tag Debugger. Its Entities view lists every hub ProcessControl registers, runtime hubs among them, beside the one
+  selected: its attributes, tags, effects with the time each has left, abilities with their cooldowns, and the last
+  impact it dealt and took. Its Processes view lists every process with its state and the time its steps take, and
+  pauses, resumes and terminates the one selected, with the processes it handles. The views follow ProcessControl as
+  processes join and leave, change their values in place at the rate the toolbar sets, and in edit mode offer Play
+  Mode. The GAS Debugger scanned the scene for MonoBehaviour hubs and rebuilt its details every 0.25 s, and Process
+  Control's usage was the time between a process's steps, not what they cost (ED-4, ED-5).
 - Templates work as prefabs do. A template reaches its children when it's pushed, with its asset menu's Push to Its
   Children, as one Undo step, and each child, and each of theirs, keeps the fields it overrides. An edit to a child's
   field makes it the child's own, which its inspector marks as Unity marks a prefab instance's override, and one Undo
@@ -97,8 +105,8 @@ tracks each fix below by its ID.
   (ED-15).
 - Every asset inspector's header and sections follow PlayForge's one style sheet, in the editor's Dark or Light
   theme. The header shows the type icon, the asset's name, its type and asset tag, then Open in The Forge, Help and a
-  menu that holds import, the template and Visualize. It no longer shows the description or the asset's own icon. The
-  Forge and the GAS Debugger take the editor's theme (ED-20).
+  menu that holds import and the template. It no longer shows the description or the asset's own icon. The Forge and
+  the Runtime Debugger take the editor's theme (ED-20).
 - The editor shows no emoji. Icons are vector glyphs in the theme's colors, The Forge shows each asset type's icon, and
   a button that showed an emoji alone says what it does, such as Copy, Preview or Trash (ED-20).
 - PlayForge is licensed under the Unity Asset Store EULA.
@@ -231,7 +239,6 @@ tracks each fix below by its ID.
   by two paths counts once.
 - A runtime GAS applies its entity's affiliation as tags, as a GameObject's does, and one made from an Entity asset
   keeps the asset's Local Data.
-- The GAS Debugger names runtime entities. It showed each as "unknown".
 - A sequence that repeats no longer grows its packet's path for as long as it runs. Each part a run or a stage adds to
   the path comes off as it ends, and a failed run still logs the path to where it failed. The parts are formatted
   once, and the LINQ left on an ability's activation is gone.
@@ -247,6 +254,9 @@ tracks each fix below by its ID.
   or turning `Enabled` off. Once the first had ended, it threw, and the rest ran on.
 
 ### Removed
+- The GAS Debugger, Process Control and Tag Debugger windows, which the Runtime Debugger replaces, and Process
+  Control's four public enums, `EProcessDebuggerPolicy`, `EProcessStateFilter`, `EProcessSortMode` and
+  `EUsageSortMode`, which nothing else used (ED-4, ED-5).
 - The Forge's Create, View and Analysis tabs, and the Visualizer window. The detail pane's summary replaces the
   Visualizer, which was blank for items and sets; the Analysis tab's power scores stay hidden until items and entities
   score too. The Create tab's recently created list and statistics, the View tab's browsers of embedded scalers and of

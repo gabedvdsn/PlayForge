@@ -453,7 +453,7 @@ namespace FarEmerald.PlayForge.Extended.Editor
             return header;
         }
 
-        // The asset's other actions: import, its template, and the Visualizer
+        // The asset's other actions: import, and its template and the push to its children
         private void ShowAssetMenu(VisualElement under)
         {
             var menu = new GenericMenu();

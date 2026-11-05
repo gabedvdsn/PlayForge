@@ -36,7 +36,28 @@ namespace FarEmerald.PlayForge
         public float Lifetime => Time.time - _initializeTime;
         public float UnscaledInitializeTime => _unscaledInitializeTime;
         public float InitializeTime => _initializeTime;
+
+        /// <summary>
+        /// The wall-clock time between the block's steps, added up over its run. It says nothing of what a step costs:
+        /// <see cref="StepSeconds"/> does.
+        /// </summary>
         public float TotalUpdateTime => _totalUpdateTime;
+
+        /// <summary>
+        /// Whether each block counts its steps and times them, as the Runtime Debugger asks while it reads the game. Off,
+        /// as it is by default, a step costs one check of it. Process Control showed the time between a process's steps as
+        /// its cost, much the same for every process whatever its work (ED-5).
+        /// </summary>
+        public static bool MeasureSteps { get; set; }
+
+        /// <summary>The steps the block has taken while <see cref="MeasureSteps"/> was on.</summary>
+        public int Steps => _steps;
+
+        /// <summary>The time those steps took, in seconds.</summary>
+        public double StepSeconds => _stepTicks / (double)System.Diagnostics.Stopwatch.Frequency;
+
+        private int _steps;
+        private long _stepTicks;
 
         public float UseSinceLastCheck
         {
@@ -359,6 +380,9 @@ namespace FarEmerald.PlayForge
 
         public void Step(EProcessStepTiming timing)
         {
+            bool timed = MeasureSteps;
+            long started = timed ? System.Diagnostics.Stopwatch.GetTimestamp() : 0L;
+
             // A step that throws is reported and goes no further, as a MonoBehaviour's Update would: the
             // rest of the frame's processes still step, and a state queued for this one still applies
             // below. Escaping, it ended the whole frame's stepping and skipped the flush, so a process
@@ -390,6 +414,12 @@ namespace FarEmerald.PlayForge
             catch (Exception ex)
             {
                 Debug.LogException(ex);
+            }
+
+            if (timed)
+            {
+                _stepTicks += System.Diagnostics.Stopwatch.GetTimestamp() - started;
+                _steps++;
             }
 
             // Synchronous processes have no async completion to flush queued state.

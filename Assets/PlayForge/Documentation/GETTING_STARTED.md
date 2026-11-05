@@ -92,8 +92,11 @@ string perLevel = impact.FormatTotal();           // "20/30/40/50"
   and the problem count. The list's columns sort; a click shows the asset's inspector in the detail pane, under a
   summary of its sections, and a double click shows it in the Project window. Tags lists the project's tags and what
   uses each; declare tags in a Tag Library asset (`Create → PlayForge → Tag Library`).
-- **GAS Debugger** (`Window → PlayForge → GAS Debugger`) — live entity
-  state in play mode: attributes, active effects, abilities, frame impacts.
+- **Runtime Debugger** (`Window → PlayForge → Runtime Debugger`) — the game as it plays. **Entities** lists every
+  entity, of either kind, beside the one selected: its attributes, tags, effects with the time each has left,
+  abilities with their cooldowns, and the last impact it dealt and took. **Processes** lists every process with its
+  state and how long its steps take, and pauses, resumes or terminates the one selected. The toolbar sets how often
+  it reads the game, and holds ProcessControl's state.
 - **Asset fields** — every reference to a PlayForge asset is Unity's object field. **Open** beside it shows the asset
   in a window of its own; **New**, beside an empty one, makes the asset where Project Settings → PlayForge puts its type, named
   for the asset that holds the field. An effect field's right-click menu has its template, a pick of the effects

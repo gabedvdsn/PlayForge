@@ -518,8 +518,8 @@ had no letter in the review. TS-AA onward came from the test project.
 | ED-1 | M | 0 | Three compiler warnings: CS0162, CS8509, CS8321 (PF-009) | `GameplayEffectDrawer.cs:159-176`, `AbilityEditor.cs:138-143`, `TheForge.ViewTab.cs:1640` | verified |
 | ED-2 | H | 4 | The effect inspector never shows delivery and still draws `ReverseImpactOnRemoval`. Now the impact says its delivery, which the duration gives it, and how often a periodic one commits, as in "7 over 6 s, level 1", and Reverse On Removal, which nothing reads, is gone from the inspector | `GameplayEffectImpactDrawer.cs` | fixed |
 | ED-3 | H | 4 | There is no `AttributeImpactEntry` drawer, so multi-entry effects cannot be authored. Now an effect's Additional Impacts are authored entries, each with its own attribute, operation, magnitude and delivery, which `AttributeImpactEntryDrawer` edits and the runtime appends after the derived one; the Cost rule checks each attribute a cost spends | `GameplayEffectImpact.cs` (`RebuildEntries`), `AttributeImpactEntryDrawer.cs`, `CommonValidations.cs` | fixed |
-| ED-4 | H | 4 | GAS Debugger: rebuilds every 0.25 s, `FindObjectsByType` every tick, Mono only, reflection on `TagCache`, raw cooldown magnitude, unlabelled badges | `GASDebugger.cs:142, 239-258, 1462, 1581-1603, 1761` | open |
-| ED-5 | M | 4 | ProcessControlDebugger: usage is not CPU time; the Terminated filter is dead; Pause misleads; per-row style allocations | `ProcessControlDebugger.cs:429, 458, 617-620, 727, 776-799` | open |
+| ED-4 | H | 4 | GAS Debugger: rebuilds every 0.25 s, `FindObjectsByType` every tick, Mono only, reflection on `TagCache`, raw cooldown magnitude, unlabelled badges. Fixed: one Runtime Debugger (Q4) lists each hub ProcessControl registers, of either kind, following its join and leave callbacks (Q28); a sample changes the detail's values in place, at the rate the toolbar sets; it reads no private field; an ability shows its cooldown's time left, and each value says what it is; it listens to the entity it shows alone; in edit mode it offers Play Mode | `Editor/Debugger/RuntimeDebugger.cs`, `RuntimeDebugger.Entities.cs` | fixed |
+| ED-5 | M | 4 | ProcessControlDebugger: usage is not CPU time; the Terminated filter is dead; Pause misleads; per-row style allocations. Fixed: the Runtime Debugger's Processes view shows each process's time a step, which ProcessControl times while the debugger reads the game (`ProcessControlBlock.MeasureSteps`); its filters are Running and Waiting; Pause and Resume take the processes it handles alike, and Pause is offered for any running process; it's UI Toolkit, with no style set in code | `RuntimeDebugger.Processes.cs`, `ProcessControlBlock.cs` | fixed |
 | ED-6 | M | 2 | Settings: an inverted range check; Reset All goes to the wrong tab and is partial; Auto Refresh is never read | `TheForge.SettingsTab.cs:233-236, 264, 346, 1770-1785` | verified |
 | ED-7 | M | 2 | Numeric columns sort as strings | `TheForge.ViewTab.cs:656` | verified |
 | ED-8 | H | 2 | Hard delete with no reference check | `TheForge.ViewTab.cs:2552`, `AssetBrowserWindow.cs:285` | verified |
@@ -554,6 +554,7 @@ had no letter in the review. TS-AA onward came from the test project.
 | ED-37 | M | 4 | The asset inspectors don't follow `Docs/EDITOR_STYLE.md`: their sections stray from its order, Level Source sits apart from Leveling, a collapsed section shows nothing, sentences explain the fields, the link state sits in tinted boxes with colored borders, and many sections' Import and Clear only log a warning. Each inspector is redone in Phase 4's fifth step. Fixed: the Attribute (`ed6295a`, with ED-15), Item (`cf70e8f`), Entity (`a06a4fb`), Attribute Set (`86ead05`), Ability (`031c2d4`) and Effect inspectors: the style doc's order, Leveling with the level link and its provider in Unity's object field, the asset tag under the name, a summary on each section, Import and Clear on each, Used By, and no look set in code; the Entity mockup's attribute table, in the Entity and Attribute Set inspectors; the mockups' When Busy, in the Ability and Entity inspectors; and the Effect mockup's requirements table, in the Effect and Ability inspectors | `EffectEditor.cs`, `AbilityEditor.cs`, `ForgeRequirementsTable.cs` | fixed |
 | ED-38 | M | 4 | An asset reference isn't Unity's object field: `AbstractRefDrawer` draws a button that opens a dropdown list of its own, with hover colors and Clear and Open icon buttons set in C#, and setting an effect asks in a dialog whether to link it. Now every asset reference is Unity's object field with a plain button beside it: Open, which shows the asset in a window of its own, or New, which makes one where The Forge puts its type, named and tagged, and uses it (Q15). An effect field says on a line under it how the effect takes its levels, with Link; its template, a pick of unlinked effects and New Linked Effect are in its right-click menu (Q18) | `AbstractForgeObjectDrawer.cs`, `GameplayEffectDrawer.cs` | fixed |
 | ED-39 | M | 4 | Opening an attribute set element can change the set: 50 ms after it draws, and on every change to the set, `AttributeSetElementDrawer` clamps a Current or Base magnitude that sits outside the element's bounds and applies it to the asset, so looking at a set marks it modified. The runtime clamps the same values as the entity starts. Now the drawer writes nothing as it draws: a help box says how the runtime clamps such a magnitude, and only a value typed into a Magnitude field is kept within the bounds, as part of the same edit. The drawer follows the style sheet | `AttributeSetElementDrawer.cs` | fixed |
+| ED-40 | M | 4 | The debugger only watches: it can't change an attribute or a tag, apply an effect or grant an ability, so trying a change means writing code for it. Q27: editing attributes and tags first, then applying effects and granting abilities | `Editor/Debugger/RuntimeDebugger.Entities.cs` | open |
 
 The design questions behind Phase 4's rows, each with its evidence, are in the UI interview doc of 2026-11-03,
 https://claude.ai/artifact/BbnGybqgX3spJsT6HoTafp. Its answers (Decision 18) settle ED-8, ED-16, ED-19 and ED-12's
@@ -568,7 +569,8 @@ Phase 2 part, and set Phase 4's direction.
 4. ED-20: one style sheet and a kit of controls, in the style `Docs/EDITOR_STYLE.md` records (Decision 20).
 5. The redesign, one surface at a time: the asset inspectors, with ED-2, ED-3, and the Import window and shared
    scalers of Decision 28 (ED-32, ED-33); The Forge, with ED-13, ED-15,
-   ED-21, ED-27 and ED-31 (done); one runtime debugger for the GAS, Process and Tag views (Q4), with ED-4 and ED-5; and
+   ED-21, ED-27 and ED-31 (done); one runtime debugger for the GAS, Process and Tag views (Q4), with ED-4 and ED-5
+   (done), then its edits (Q27, ED-40); and
    the Visualizer, with ED-9 (done: The Forge's detail pane summarizes each asset, Q6).
    The asset inspectors go one at a time, each following the style doc (ED-37): the Attribute, Item, Entity and
    Attribute Set inspectors first (done), then the reference fields (ED-38, done), the Ability inspector (done), then
@@ -657,6 +659,44 @@ GAS-4 with GAS-5, PC-6, and TS-I with PC-5.
 ## Log
 
 Record baselines, gate results and notable decisions here, newest first.
+
+- 2026-11-04, **ED-4 and ED-5: one Runtime Debugger.** From Q4, Q28 and Q30: one window in place of the GAS Debugger,
+  Process Control and the Tag Debugger. ED-4 and ED-5 are fixed; the debugger's edits (Q27) are the new ED-40.
+  - **The window,** `RuntimeDebugger` in `Editor/Debugger/`: a toolbar with the Entities and Processes views, the
+    processes' filter, the search, the rate and ProcessControl's state; a list beside a detail; and a status bar.
+  - **Both kinds of hub, from the registry** (Q28). The hubs are ProcessControl's processes whose wrapper holds an
+    `IGameplayAbilitySystem`. The window follows the ProcessControl it finds, and a process that joins or leaves it has
+    the lists read again at the next sample. Nothing scans the scene, so a runtime hub shows too.
+  - **In place, at a rate** (Q30). While the game plays, the window reads it on the editor's update at 2, 4, 10 or 30
+    samples a second; a sample changes the values the lists and the detail show, and rebuilds a section only when what
+    it lists changes. The GAS Debugger cleared and rebuilt its details every 0.25 s, replacing a field while it was
+    typed in. `.Every(` stays banned (ED-11): nothing runs while the editor is in edit mode.
+  - **The Entities view:** each hub's name, level and affiliation; the selected one's attributes (current and base,
+    with the breakdown by retention group from `GetBreakdown`), tags with their weights, effects with the time each has
+    left of its duration, its next tick and its stacks, abilities with their level and the time a cooldown has left,
+    and the last impact it dealt and took. It listens to that entity's frame summaries alone, and stops as it closes
+    or another is shown (ED-26). It reads no private field.
+  - **The Processes view:** each process's name, ID, handler, state and time a step; the selected one's lifecycle,
+    timing, next state, lifetime and how many processes it handles; and Pause, Resume, Terminate and Terminate Now.
+    Pause and Resume both take the processes it handles; Process Control's Resume didn't, and it greyed out Pause for
+    a running process that waits or needs control, as it read the state the process would take next.
+  - **Step time, in the runtime.** `ProcessControlBlock.MeasureSteps`, on while a debugger reads the game, has each
+    block count its steps and time them with a `Stopwatch` (`Steps`, `StepSeconds`). Off, a step costs one check of
+    it. Process Control's usage was the wall-clock time between a block's steps, much the same for every process.
+  - **In edit mode** it offers Play Mode (Q28).
+  - **Gone:** `GASDebugger`, `ProcessControlDebugger` with its four public enums, and `RuntimeTagViewer`.
+  - **Docs:** `GETTING_STARTED.md`'s Runtime Debugger entry, `PUBLISHING.md`'s checklist, and
+    `IMPACT_MODEL_REFACTOR.md`'s follow-up, which the debugger's move to `GetBreakdown` closes.
+  - **Its tests,** seen failing against the three windows first: `ED_4_The_debugger_lists_each_hub_from_the_registry`,
+    `ED_4_A_sample_changes_the_detail_in_place`, `ED_4_A_cooldown_shows_the_time_it_has_left`,
+    `ED_4_In_edit_mode_the_debugger_offers_Play_Mode`, `ED_5_A_process_shows_how_long_its_steps_take`,
+    `ED_5_A_running_process_pauses_and_resumes`, `ED_26_Closing_the_debugger_removes_its_hooks` and
+    `GAS_S1_The_debugger_names_a_runtime_entity` in the new `RuntimeDebuggerTests`, which replace `GASDebuggerTests`;
+    and `ED_5_A_process_times_its_steps_while_asked` in PlayMode's `ProcessUtilityTests`. The smoke suite opens the
+    new window, and the menu test checks its title.
+  - **Next:** the debugger's edits, attributes and tags first (Q27, ED-40).
+  - **Tests:** PlayMode 962: 955 pass, 0 fail and 7 planted are skipped, in three orders. Planted 7 of 7; EditMode
+    421 of 421.
 
 - 2026-11-04, **ED-13: templates work as prefabs do.** The last of The Forge's redesign, from Q23's answer: an explicit
   push to children, with a mark on each overridden field. ED-13 is fixed, and The Forge's part of step 5 is done.
