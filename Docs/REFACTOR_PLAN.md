@@ -682,6 +682,7 @@ Phase 2 part, and set Phase 4's direction.
 | FEAT-16 | Loose tags | Done with ED-40, ahead of the phase. A tag granted with no effect, ability or item behind it, as Unreal's loose gameplay tags are: `AddLooseTag`, `RemoveLooseTag` and `GetLooseTags` on each hub, each grant counted, and the tag compile includes them. A tag added straight to the tag cache went at its next compile |
 | FEAT-17 | Activation by asset or tag, with a reason | From the review's API changes: activate by ability asset or tag, and say why a refused activation was refused, with a matching callback. `TryActivateAbility` returns only true or false (`AbilitySystemComponent.TryActivateAbility`) |
 | FEAT-18 | Profiler markers | From the review's Profiling gap: Runtime has no `ProfilerMarker`, so the cost of a process step, an effect application or an ability activation can't be seen in Unity's Profiler |
+| FEAT-19 | Effect stacks scaler | Nothing built in read an effect's stack count, so a change by the stack, as a sunder's −5 armor a stack, took a scaler written for it: Proving Grounds wrote its own twice (`StackCountScaler` in `EffectStackingTests` and `GoldenImpactTests`). Found by the Combat lab. Done (Decision 30): `EffectStacksScaler` reads the stack count of the effect's own container, 1 for one that doesn't stack, as `ItemStacksScaler` reads an item's (FEAT-14) |
 
 **Phase 5's order,** from the review's plan for the test project (its labs, one at a time) and the table above. A lab
 is a small game: assets the lab builds in code, and a bot that plays it in PlayMode tests under a live ProcessControl,
@@ -715,8 +716,8 @@ foundation, and FEAT-16 is done.
 
 A separate Unity project that consumes PlayForge as a local UPM package (Decision 2). The project and its shared
 harness exist, with the golden scenarios, the framework and planted suites, and the editor tests (360 EditMode
-tests in `Tests/Editor`, among them the editor smoke suite, which its README explains). The stress suite and the gameplay labs
-don't exist yet. See
+tests in `Tests/Editor`, among them the editor smoke suite, which its README explains). The gameplay labs exist, all eight
+green (Decision 30); the stress suite doesn't yet. See
 Environment for its location and commands. The full plan is in the
 review doc's section "The test project: PlayForge Proving Grounds". In short:
 
@@ -744,6 +745,22 @@ GAS-4 with GAS-5, PC-6, and TS-I with PC-5.
 ## Log
 
 Record baselines, gate results and notable decisions here, newest first.
+
+- 2026-11-05, **The Combat lab, and FEAT-19.** The eighth and last lab, so Phase 5's labs are all green (Decision 30).
+  - **The lab** (`Tests/Labs/CombatLab.cs`, category Lab): a training dummy, and every way an effect lands on it, from
+    a trainer, on a clock of a quarter second a frame. A health bar reads the dummy's Health breakdown by retention
+    group: what it has of its own, what effects add while they last, and the damage it took. Five rounds: each
+    delivery, the ten re-application cases (each policy with what follows it), each stacking policy, a stack count
+    feeding a change, and a bout on whose every frame the bar adds up to the Health and its Base. Every claim the
+    rounds test, from EFFECTS.md, held at the first run.
+  - **FEAT-19,** which the lab found missing: nothing built in read an effect's stack count, so a change by the stack
+    took a scaler written for it, as Proving Grounds wrote twice. `EffectStacksScaler` reads the count of the effect's
+    own container, 1 for one that doesn't stack. Seen failing first:
+    `FEAT_19_The_Effect_Stacks_scaler_reads_the_effects_stack_count`.
+  - **Next:** the stretch scenarios, with FEAT-18 and FEAT-17 first. The labs' scenes, which Decision 30 brings in once
+    their bots are green, and whether they ship in Samples, are the user's call.
+  - **Tests:** PlayMode 1194: 1187 pass, 0 fail and 7 planted are skipped, in three orders (the Combat lab's 10 among
+    them). Planted 7 of 7; EditMode 439 of 439.
 
 - 2026-11-05, **The Tactics lab, and ED-41.** The seventh lab (Decision 30).
   - **The lab** (`Tests/Labs/TacticsLab.cs`, category Lab): a knight and an archer against two goblins, a turn at a

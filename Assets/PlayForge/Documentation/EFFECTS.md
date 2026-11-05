@@ -124,7 +124,8 @@ What happens when the effect is applied to a target that already has it. Each ap
   refreshing or extending the effect; and Clear Stacks On Overflow takes the effect's stacks off.
 - **Stack Amount**, with its scaler: the stacks each application adds. 0 counts as 1.
 
-A Continuous change that reads the stack count updates whenever the count changes.
+A change reads the stack count through an **Effect Stacks** scaler ([SCALERS.md](SCALERS.md)): a magnitude of −5 with
+Multiply With Scaler takes 5 a stack. A Continuous one updates whenever the count changes.
 
 ## Impact
 

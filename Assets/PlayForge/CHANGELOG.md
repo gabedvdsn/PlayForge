@@ -7,6 +7,9 @@ tracks each fix below by its ID.
 ## [Unreleased]
 
 ### Added
+- An Effect Stacks scaler, which reads the stack count of the effect's own container, 1 for one that doesn't stack.
+  With Multiply With Scaler, a sunder of −5 armor takes 5 a stack, and a Continuous change follows the count as it
+  changes (FEAT-19).
 - A warning in the Ability inspector, under Cooldown, while the ability has a cost or a cooldown and no stage applies
   usage effects, so neither is ever applied. The Problems view lists it too (ED-41).
 - Save and load. `ForgeSave.Capture` takes an entity at rest into a `ForgeSnapshot`, plain serializable types a game
