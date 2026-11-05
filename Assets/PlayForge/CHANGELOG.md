@@ -18,7 +18,12 @@ tracks each fix below by its ID.
   page, through one table of links in the editor.
 
 ### Changed
-- A magnitude field reads as the canvas's scaler board draws it: its name and kind (Constant, By Level, Shared or
+- PlayForge's settings belong to the project. **Project Settings → PlayForge** holds where each type's new assets go
+  and how their files are named, each type's defaults (the asset a new one starts as a copy of, and the assets Import
+  lists first) and the Cost and Cooldown effects, in `ProjectSettings/PlayForgeSettings.asset`, under version control.
+  **Preferences → PlayForge** holds each user's view toggles and the log level. They lived in EditorPrefs, which every
+  project on the machine shares; a project takes them from there on its first use (ED-21).
+- A magnitude field reads as the canvas's scaler board draws it:its name and kind (Constant, By Level, Shared or
   another), the range it gives, as "6–8 s", and a field menu with Save as Scaler Asset, Use a Scaler Asset, Import
   Values, Quick Fill and Make Constant. A By Level field's values sit in a table, ten levels to a row, with a read-only
   curve beside them, and Combine says how the field joins its number with its scaler. A Scaler asset's inspector lists
@@ -219,6 +224,9 @@ tracks each fix below by its ID.
   or turning `Enabled` off. Once the first had ended, it threw, and the rest ran on.
 
 ### Removed
+- The Forge's Settings tab, whose settings are on the two settings pages; template tags, which only labelled templates
+  on that tab; and the Create dialog's type settings, of which all but the Requirement's category named fields the types
+  don't have, so they did nothing. A type's New Asset default sets such values now (ED-21).
 - QuickOutline, replaced by the Demo's own outline.
 - The test processes `TestAOEMonoProcess` and `TestMultiProcess`, and the unused `BootstrapperEditor`.
 - Two settings nothing read: an entity's **Cap At Max**, since its level always stays between Starting Level and Max

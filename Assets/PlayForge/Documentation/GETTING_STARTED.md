@@ -93,16 +93,21 @@ string perLevel = impact.FormatTotal();           // "20/30/40/50"
 - **GAS Debugger** (`Window → PlayForge → GAS Debugger`) — live entity
   state in play mode: attributes, active effects, abilities, frame impacts.
 - **Asset fields** — every reference to a PlayForge asset is Unity's object field. **Open** beside it shows the asset
-  in a window of its own; **New**, beside an empty one, makes the asset where The Forge's settings put its type, named
+  in a window of its own; **New**, beside an empty one, makes the asset where Project Settings → PlayForge puts its type, named
   for the asset that holds the field. An effect field's right-click menu has its template, a pick of the effects
   nothing links, and New Linked Effect.
 - **Import and Clear** — each inspector section's header has Import, Clear and Help. Import opens the Import window:
-  choose a source on the left, templates first, then the assets of the type; the right lists the fields that differ,
+  choose a source on the left, the type's defaults first, then the assets of the type; the right lists the fields that differ,
   each checked, beside their values now and the source's. Uncheck a field to leave it. A list is replaced, unless its
   row's **Add** is on, which adds the source's items after its own. **Import N Changes** is one Undo step. The asset
   menu's **Import from Another Asset...** does the same for the whole asset, which keeps its name, description, icons,
   asset tag, template and level link. A worker group's and a requirement group's import buttons open the same window,
   listing every asset that has one. **Clear** resets the section's fields at once, and Undo takes it back.
+- **Settings** — **Project Settings → PlayForge** holds what the project shares, in
+  `ProjectSettings/PlayForgeSettings.asset`, under version control: where each type's new assets go and how their files
+  are named, each type's defaults (the asset a new one starts as a copy of, and the assets Import lists first), and the
+  effects a new Cost or Cooldown copies. **Preferences → PlayForge** holds your own view toggles and the log level. The
+  Forge's window menu opens both.
 - **Golden tests** (the Test Runner's EditMode tab, `FarEmerald.PlayForge.Tests.Golden`) — the framework's behavioral
   contract; run after upgrading.
 - **Audit** (`Window → PlayForge → Audit Effect Impact Deliveries`) — reports every effect's
@@ -110,7 +115,7 @@ string perLevel = impact.FormatTotal();           // "20/30/40/50"
 
 ## Logging
 
-Framework diagnostics route through `ForgeLog`, controlled in **The Forge → Settings →
-Logging** (Verbose / Info / Warning / Error / None). In builds, set
+Framework diagnostics route through `ForgeLog`, controlled in **Preferences → PlayForge →
+Logging** (Verbose / Info / Warning / Error / None).In builds, set
 `ForgeLog.MinimumLevel` from code. `ProcessControl` has its own inspector toggles for
 process lifecycle logs.

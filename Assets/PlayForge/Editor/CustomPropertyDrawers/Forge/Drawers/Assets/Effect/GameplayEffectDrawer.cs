@@ -157,7 +157,7 @@ namespace FarEmerald.PlayForge.Extended.Editor
                 menu.AppendAction($"Copy the {display} Template", _ => field.value = CopyTemplate(asset, holder, display), status);
                 menu.AppendAction($"Use the {display} Template", _ => field.value = asset, status);
                 if (asset == null)
-                    menu.AppendAction($"No {display} Template Is Set in The Forge", _ => { }, DropdownMenuAction.Status.Disabled);
+                    menu.AppendAction($"No {display} Template Is Set in Project Settings", _ => { }, DropdownMenuAction.Status.Disabled);
                 menu.AppendSeparator();
             }
             menu.AppendAction("Pick an Unlinked Effect...", _ => UnlinkedEffectPicker.Show(field));
@@ -445,16 +445,17 @@ namespace FarEmerald.PlayForge.Extended.Editor
             }
             sanitized = Regex.Replace(sanitized, @"[<>:""/\\|?*]", "");
             
-            // Get prefix/suffix from prefs
-            var prefix = EditorPrefs.GetString(TheForge.PREFS_PREFIX + "Prefix_GameplayEffect", "Effect_");
-            var suffix = EditorPrefs.GetString(TheForge.PREFS_PREFIX + "Postfix_GameplayEffect", "");
+            // The prefix and suffix Project Settings → PlayForge names for effects. This dialog read them with defaults of
+            // its own, an "Effect_" prefix among them (ED-21)
+            var prefix = PlayForgeSettings.PrefixFor(typeof(GameplayEffect));
+            var suffix = PlayForgeSettings.SuffixFor(typeof(GameplayEffect));
             
             return $"{prefix}{sanitized}{suffix}";
         }
         
         private string GetEffectPath()
         {
-            return EditorPrefs.GetString(TheForge.PREFS_PREFIX + "Path_GameplayEffect", "Assets/Data/Effects");
+            return PlayForgeSettings.FolderFor(typeof(GameplayEffect));
         }
         
         private void CreateEffect()

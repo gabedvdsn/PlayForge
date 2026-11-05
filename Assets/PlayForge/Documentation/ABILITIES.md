@@ -92,8 +92,8 @@ and it takes no more activations.
   usage effects (see Stages). A cost is usually an Instant effect that lowers a resource such as Mana. A cooldown is
   usually a Durational effect: while it is active, the caster carries its asset tag, and the Cooldown check refuses the
   ability. A line under each field says how its effect takes its levels, and **Link** makes it take this ability's.
-  **New**, beside an empty field, makes an effect linked to this ability. If The Forge's settings name a template for
-  costs or cooldowns, the field's right-click menu copies it or uses it.
+  **New**, beside an empty field, makes an effect linked to this ability. If Project Settings → PlayForge names a Cost
+  or Cooldown effect, the field's right-click menu copies it or uses it.
 - **Targeting**: the task that picks what the ability acts on, such as an entity the player clicks, or the caster
   itself. Targeting holds the activation's claim. If the task fails while its **Break Runtime On Invalid** is on, or it
   doesn't finish, the activation ends. Leave Targeting empty to skip this step.

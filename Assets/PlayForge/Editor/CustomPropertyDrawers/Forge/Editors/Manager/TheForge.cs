@@ -17,10 +17,11 @@ namespace FarEmerald.PlayForge.Extended.Editor
     /// - TheForge.CreateTab.cs - Create tab with statistics
     /// - TheForge.ViewTab.cs - View tab with spreadsheet/tags
     /// - TheForge.AnalysisTab.cs - Analysis tab with power scores
-    /// - TheForge.SettingsTab.cs - Settings with General/Assets tabs
     /// - TheForge.Utilities.cs - Shared helper methods
+    /// Its settings are on Project Settings → PlayForge and Preferences → PlayForge, which its window menu opens. A
+    /// Settings tab held them, all in EditorPrefs (ED-21).
     /// </summary>
-    public partial class TheForge : EditorWindow
+    public partial class TheForge : EditorWindow, IHasCustomMenu
     {
         // ═══════════════════════════════════════════════════════════════════════════
         // Constants & Static Data
@@ -28,23 +29,10 @@ namespace FarEmerald.PlayForge.Extended.Editor
         
         // The title is the menu item's name. It said "PlayForge Manager" (ED-19)
         private const string WINDOW_TITLE = "The Forge";
-        internal const string PREFS_PREFIX = "PlayForge_";
+        internal const string PREFS_PREFIX = PlayForgePreferences.Prefix;
         internal const int COLOR_INDICATOR_WIDTH = 3;
         internal const string TAGS_VIEW_MARKER = "__TAGS__";
-        
-        // Default paths (configurable in settings)
-        internal static readonly Dictionary<Type, string> DefaultPaths = new Dictionary<Type, string>
-        {
-            { typeof(Attribute), "Assets/Data/Attributes" },
-            { typeof(AttributeSet), "Assets/Data/AttributeSets" },
-            { typeof(GameplayEffect), "Assets/Data/Effects" },
-            { typeof(EntityIdentity), "Assets/Data/Entities" },
-            { typeof(Ability), "Assets/Data/Abilities" },
-            { typeof(Item), "Assets/Data/Items" },
-            { typeof(ScalerAsset), "Assets/Data/Templates/Scalers" },
-            { typeof(RequirementTemplate), "Assets/Data/Templates/Requirements" },
-        };
-        
+
         // Asset type metadata for UI
         public static readonly List<AssetTypeInfo> AssetTypes = new List<AssetTypeInfo>
         {
@@ -63,7 +51,7 @@ namespace FarEmerald.PlayForge.Extended.Editor
         // ═══════════════════════════════════════════════════════════════════════════
         
         private int currentTab = 0;
-        private readonly string[] tabNames = { "Create", "View", "Analysis", "Settings" };
+        private readonly string[] tabNames = { "Create", "View", "Analysis" };
         
         // View tab state
         internal string searchFilter = "";
@@ -77,13 +65,7 @@ namespace FarEmerald.PlayForge.Extended.Editor
         internal VisualElement contentContainer;
         private List<Button> tabButtons = new List<Button>();
         
-        // Settings tabs state
-        internal int currentSettingsTab = 0;
-        internal readonly string[] settingsTabNames = { "General", "Assets" };
-        internal List<Button> settingsTabButtons = new List<Button>();
-        internal VisualElement settingsContentContainer;
-        
-        // ═══════════════════════════════════════════════════════════════════════════
+// ═══════════════════════════════════════════════════════════════════════════
         // Window Management
         // ═══════════════════════════════════════════════════════════════════════════
         
@@ -165,9 +147,9 @@ namespace FarEmerald.PlayForge.Extended.Editor
             EditorApplication.projectChanged += OnProjectChanged;
             RefreshAssetCache();
             
-            if (EditorPrefs.GetBool(PREFS_PREFIX + "RememberTypeFilter", true))
+            if (PlayForgePreferences.RememberTypeFilter.Value)
             {
-                var lastType = EditorPrefs.GetString(PREFS_PREFIX + "LastTypeFilter", "");
+                var lastType = EditorPrefs.GetString(PREFS_PREFIX + PlayForgePreferences.LastTypeFilterKey, "");
                 if (lastType == TAGS_VIEW_MARKER)
                 {
                     showTagsView = true;
@@ -194,7 +176,14 @@ namespace FarEmerald.PlayForge.Extended.Editor
         private void OnFocus()
         {
             if (!projectChangedSinceRefresh || contentContainer == null) return;
-            if (EditorPrefs.GetBool(PREFS_PREFIX + "AutoRefresh", true)) RefreshAll();
+            if (PlayForgePreferences.AutoRefresh.Value) RefreshAll();
+        }
+
+        // The window menu opens the settings pages, which hold what the Settings tab did (ED-21)
+        public void AddItemsToMenu(GenericMenu menu)
+        {
+            menu.AddItem(new GUIContent("Project Settings…"), false, PlayForgeSettingsPages.OpenProjectSettings);
+            menu.AddItem(new GUIContent("Preferences…"), false, PlayForgeSettingsPages.OpenPreferences);
         }
 
         private void CreateGUI()
@@ -357,7 +346,6 @@ namespace FarEmerald.PlayForge.Extended.Editor
                 case 0: BuildCreateTab(); break;
                 case 1: BuildViewTab(); break;
                 case 2: BuildAnalysisTab(); break;
-                case 3: BuildSettingsTab(); break;
             }
         }
         

@@ -535,7 +535,7 @@ had no letter in the review. TS-AA onward came from the test project.
 | ED-18 | M | 4 | Collapse state lives in static dictionaries keyed by property path, so every asset shares it and a domain reload loses it. Each drawer now keeps it per asset for the editor session, in SessionState; a [SerializeReference] field's state follows the object it holds, and deleting a stage moves the later stages' states up with them | `AbilityTaskBehaviourStageDrawer.cs:31`, `AbilityBehaviourDrawer.cs:18-20` | fixed |
 | ED-19 | M | 2 | Naming drift: The Forge or PlayForge Manager, and no window's title matches its menu item. The top-level `PlayForge/` menu is not among the placements the Asset Store's rule 2.5.1.a describes: an existing menu such as `Window/`, or else `Tools/`. The docs follow whatever wins | `TheForge.cs:16-28, 88`, `GASDebugger.cs:134`, `GETTING_STARTED.md` | verified |
 | ED-20 | H | 4 | No theming: inline styles, hard-coded dark backgrounds, emoji icons, dead UXML and USS. Now one style sheet, `Editor/UI/PlayForge.uss`, holds every value `Docs/EDITOR_STYLE.md` lists, in a Dark and a Light set, and a kit of controls reads it: the asset header, the section, the glyphs and the type icons. Every asset inspector's header and sections use the kit; The Forge and the GAS Debugger take the theme; no editor text shows an emoji; the dead style sheet and layouts are gone. Each surface's own inline styles go with its redesign, Phase 4's fifth step | `TheForge.cs:183`, `GASDebugger.cs:108`, `ForgeDrawerStyles.cs:111-131` | fixed |
-| ED-21 | M | 4 | Settings live in EditorPrefs and are machine-wide | `EffectTemplateRegistry.cs:12, 46`, `TemplateRegistry.cs:175` | open |
+| ED-21 | M | 4 | Settings live in EditorPrefs and are machine-wide. Fixed: the shared settings (new assets' folders and file names, each type's defaults, the Cost and Cooldown effects) live in `ProjectSettings/PlayForgeSettings.asset`, a `ScriptableSingleton` on Project Settings → PlayForge, and the view toggles on Preferences → PlayForge (Q21). A project takes its EditorPrefs values on first use; The Forge's Settings tab and `TemplateRegistry` are gone | `PlayForgeSettings.cs`, `PlayForgePreferences.cs`, `PlayForgeSettingsPages.cs` | fixed |
 | ED-22 | H | 2 | A second project wipes the first project's templates: `TemplateRegistry` keeps one EditorPrefs JSON for every project on the machine, and `Save()` drops each template whose GUID doesn't resolve in the current project | `TemplateRegistry.cs:110, 164-177` | verified |
 | ED-23 | M | 2 | An Item's Local Data can't be edited: Items inherit `LocalData` and the five other asset editors draw it, but `ItemEditor` builds no section for it | `ItemEditor.cs:71-80`, `BaseForgeAsset.cs:11` | verified |
 | ED-24 | M | 2 | `ParticipateInSiblingCascade` can't be set: it is `[HideInInspector]` and `AbstractMonoProcessEditor` never draws it, yet ProcessControl reads it | `AbstractMonoProcess.cs:24-26`, `ProcessControl.cs:926, 986` | verified |
@@ -657,6 +657,35 @@ GAS-4 with GAS-5, PC-6, and TS-I with PC-5.
 ## Log
 
 Record baselines, gate results and notable decisions here, newest first.
+
+- 2026-11-04, **ED-21: settings belong to the project.** The first of The Forge's redesign (step 5), from Q21's answer.
+  ED-21 is fixed.
+  - **The project's settings,** `PlayForgeSettings`, a `ScriptableSingleton` kept in
+    `ProjectSettings/PlayForgeSettings.asset`, so they travel with the project under version control: each type's
+    folder, prefix and suffix for new assets; each type's defaults, the asset a new one starts as a copy of and the
+    assets Import lists first (Q22's "defaults", which the Import window's first group is now called); and the Cost and
+    Cooldown effects. **Project Settings → PlayForge** edits them, bound, so an edit undoes, and each edit and Undo is
+    saved. A project takes the values The Forge kept in EditorPrefs on its first use: the paths and names, the templates
+    its own key registered (or the shared key's, ED-22), and the usage templates. It writes nothing back, so the other
+    projects on the machine still find theirs.
+  - **Each user's preferences,** `PlayForgePreferences`, stay in EditorPrefs, as Unity's own do: the tag display, The
+    Forge's view toggles and the log level, on **Preferences → PlayForge**, with **Use Defaults**.
+  - **Gone:** The Forge's Settings tab, which the window menu replaces with the two pages, `TemplateRegistry`,
+    template tags (they only labelled templates on that tab), the per-type template tags nothing read, the
+    Additional Settings (all but the Requirement's category named fields the types don't have), and Validate All, which
+    the Problems view replaces next (ED-15). The four view toggles that go with the window's redesign keep their
+    values until then.
+  - **Callers:** `ForgeAssetCreation`, the Create dialog, the effect field's New Linked Effect (which read an "Effect_"
+    prefix of its own), the Import window and `EffectTemplateRegistry` read the settings.
+  - **Docs:** `GETTING_STARTED.md` has a Settings entry; it, `ABILITIES.md` and `PUBLISHING.md` name the pages.
+  - **Its tests** were written with the change, not before it, since the old storage had no API to test against:
+    `ED_21_A_shared_setting_belongs_to_the_project`, `ED_21_A_project_takes_the_settings_it_kept_in_EditorPrefs`,
+    `ED_21_The_Project_Settings_page_edits_the_shared_settings`, `ED_21_The_Preferences_page_edits_each_users_toggles`
+    and `ED_6_Use_Default_Folders_and_Names_keeps_the_defaults` in the new `PlayForgeSettingsTests`, which replace the
+    Settings tab's ED-6 and ED-25 tests and `TemplateRegistryTests`. The smoke suite builds both pages in each theme.
+  - **Next:** one validator, with the Problems view (ED-15).
+  - **Tests:** PlayMode 961: 954 pass, 0 fail and 7 planted are skipped, in three orders. Planted 7 of 7; EditMode
+    411 of 411.
 
 - 2026-11-04, **ED-12, the last part: the Effect, Entity and Attribute Set inspectors edit a multiple selection.** ED-12
   is fixed with it.

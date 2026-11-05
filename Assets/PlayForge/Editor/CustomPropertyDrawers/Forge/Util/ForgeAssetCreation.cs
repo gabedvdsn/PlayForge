@@ -8,8 +8,9 @@ using UnityEngine;
 namespace FarEmerald.PlayForge.Extended.Editor
 {
     /// <summary>
-    /// Makes a PlayForge asset where The Forge makes its type: in the folder The Forge's settings name for the type, with
-    /// its file prefix and suffix, named, and with the asset tag its name gives. A reference field's New uses it (ED-38).
+    /// Makes a PlayForge asset where The Forge makes its type: in the folder Project Settings → PlayForge names for the
+    /// type, with its file prefix and suffix, named, and with the asset tag its name gives. A reference field's New uses it
+    /// (ED-38).
     /// </summary>
     internal static class ForgeAssetCreation
     {
@@ -29,20 +30,15 @@ namespace FarEmerald.PlayForge.Extended.Editor
             Name(asset, name);
             var folder = FolderFor(type);
             EnsureFolder(folder);
-            var prefix = EditorPrefs.GetString(TheForge.PREFS_PREFIX + "Prefix_" + type.Name, "");
-            var suffix = EditorPrefs.GetString(TheForge.PREFS_PREFIX + "Postfix_" + type.Name, "");
+            var prefix = PlayForgeSettings.PrefixFor(type);
+            var suffix = PlayForgeSettings.SuffixFor(type);
             var path = AssetDatabase.GenerateUniqueAssetPath($"{folder}/{prefix}{FileNameOf(name)}{suffix}.asset");
             AssetDatabase.CreateAsset(asset, path);
             return asset;
         }
 
-        /// <summary>The folder The Forge's settings name for a type, or the type's default.</summary>
-        public static string FolderFor(Type type)
-        {
-            var key = TheForge.PREFS_PREFIX + "Path_" + type.Name;
-            if (EditorPrefs.HasKey(key)) return EditorPrefs.GetString(key).TrimEnd('/');
-            return TheForge.DefaultPaths.TryGetValue(type, out var path) ? path.TrimEnd('/') : "Assets/Data";
-        }
+        /// <summary>The folder Project Settings → PlayForge names for a type, or the type's default.</summary>
+        public static string FolderFor(Type type) => PlayForgeSettings.FolderFor(type);
 
         /// <summary>
         /// The asset tag a name gives: its words, without punctuation, capitalised and joined, after the type's name, as

@@ -4,67 +4,34 @@ using UnityEngine;
 namespace FarEmerald.PlayForge.Extended.Editor
 {
     /// <summary>
-    /// Registry for storing GameplayEffect templates used for Cost, Cooldown, etc.
-    /// Templates are stored as asset GUIDs in EditorPrefs.
+    /// The effects a new Cost or Cooldown effect copies, by "Cost" or "Cooldown". Project Settings → PlayForge holds them,
+    /// with the project; they lived in EditorPrefs, which every project on the machine shares (ED-21).
     /// </summary>
     public static class EffectTemplateRegistry
     {
-        internal const string PREFS_PREFIX = "PlayForge_EffectTemplate_";
-        // internal const string TEMPLATE_COOLDOWN
-        
         /// <summary>
         /// Gets the template effect for a given key (e.g., "Cost", "Cooldown").
         /// </summary>
-        public static GameplayEffect GetTemplate(string key)
-        {
-            if (string.IsNullOrEmpty(key)) return null;
-            
-            var guid = EditorPrefs.GetString(PREFS_PREFIX + key, "");
-            if (string.IsNullOrEmpty(guid)) return null;
-            
-            var path = AssetDatabase.GUIDToAssetPath(guid);
-            if (string.IsNullOrEmpty(path)) return null;
-            
-            return AssetDatabase.LoadAssetAtPath<GameplayEffect>(path);
-        }
-        
+        public static GameplayEffect GetTemplate(string key) => string.IsNullOrEmpty(key) ? null : PlayForgeSettings.UsageEffect(key);
+
         /// <summary>
-        /// Sets the template effect for a given key.
+        /// Sets the template effect for a given key, as one Undo step.
         /// </summary>
         public static void SetTemplate(string key, GameplayEffect effect)
         {
             if (string.IsNullOrEmpty(key)) return;
-            
-            if (effect == null)
-            {
-                EditorPrefs.DeleteKey(PREFS_PREFIX + key);
-            }
-            else
-            {
-                var path = AssetDatabase.GetAssetPath(effect);
-                var guid = AssetDatabase.AssetPathToGUID(path);
-                EditorPrefs.SetString(PREFS_PREFIX + key, guid);
-            }
+            PlayForgeSettings.SetUsageEffect(key, effect);
         }
-        
+
         /// <summary>
         /// Checks if a template is set for a given key.
         /// </summary>
-        public static bool HasTemplate(string key)
-        {
-            if (string.IsNullOrEmpty(key)) return false;
-            var guid = EditorPrefs.GetString(PREFS_PREFIX + key, "");
-            return !string.IsNullOrEmpty(guid);
-        }
-        
+        public static bool HasTemplate(string key) => GetTemplate(key) != null;
+
         /// <summary>
         /// Clears the template for a given key.
         /// </summary>
-        public static void ClearTemplate(string key)
-        {
-            if (string.IsNullOrEmpty(key)) return;
-            EditorPrefs.DeleteKey(PREFS_PREFIX + key);
-        }
+        public static void ClearTemplate(string key) => SetTemplate(key, null);
         
         /// <summary>
         /// Gets the display name for a template key.

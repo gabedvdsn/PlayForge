@@ -77,7 +77,7 @@ namespace FarEmerald.PlayForge.Extended.Editor
             content.Add(CreateDivider(16));
             
             // Recently Created Section
-            int takeAmount = EditorPrefs.GetInt(PREFS_PREFIX + "RecentlyCreatedRows", 10);
+            int takeAmount = PlayForgePreferences.RecentlyCreatedRows;
             if (takeAmount > 0)
             {
                 var recentTitle = CreateSectionHeader("Recently Created", "Your latest assets");
@@ -561,8 +561,8 @@ namespace FarEmerald.PlayForge.Extended.Editor
             onCreated = callback;
             
             // Get prefix/suffix settings
-            filePrefix = EditorPrefs.GetString(TheForge.PREFS_PREFIX + "Prefix_" + info.Type.Name, "");
-            fileSuffix = EditorPrefs.GetString(TheForge.PREFS_PREFIX + "Postfix_" + info.Type.Name, "");
+            filePrefix = PlayForgeSettings.PrefixFor(info.Type);
+            fileSuffix = PlayForgeSettings.SuffixFor(info.Type);
             
             titleContent = new GUIContent($"Create {typeInfo.DisplayName}");
             minSize = maxSize = new Vector2(380, 180);
@@ -658,11 +658,10 @@ namespace FarEmerald.PlayForge.Extended.Editor
         {
             if (templateLabel == null) return;
             
-            var defaultTemplate = GetDefaultTemplate();
-            if (defaultTemplate != null)
+            var templateAsset = GetDefaultTemplate();
+            if (templateAsset != null)
             {
-                var templateAsset = defaultTemplate.GetAsset();
-                var templateName = templateAsset != null ? TheForge.GetAssetDisplayName(templateAsset) : "(Missing)";
+                var templateName = TheForge.GetAssetDisplayName(templateAsset);
                 templateLabel.text = $"Template: {templateName}";
                 templateLabel.style.color = Colors.AccentCyan;
             }
@@ -673,11 +672,8 @@ namespace FarEmerald.PlayForge.Extended.Editor
             }
         }
         
-        private AssetTemplate GetDefaultTemplate()
-        {
-            var templates = TemplateRegistry.GetTemplates(typeInfo.Type);
-            return templates?.FirstOrDefault(t => t.IsDefault && t.IsValid());
-        }
+        // The type's New Asset default, from Project Settings → PlayForge (ED-21)
+        private ScriptableObject GetDefaultTemplate() => PlayForgeSettings.NewAssetDefault(typeInfo.Type);
         
         private void UpdateFilePreview()
         {
@@ -743,15 +739,11 @@ namespace FarEmerald.PlayForge.Extended.Editor
             var asset = ScriptableObject.CreateInstance(typeInfo.Type);
             
             // Apply default template if available
-            var defaultTemplate = GetDefaultTemplate();
-            if (defaultTemplate != null)
+            var templateAsset = GetDefaultTemplate();
+            if (templateAsset != null)
             {
-                var templateAsset = defaultTemplate.GetAsset();
-                if (templateAsset != null)
-                {
-                    // Copy serialized data from template to new asset
-                    EditorUtility.CopySerialized(templateAsset, asset);
-                }
+                // Copy serialized data from template to new asset
+                EditorUtility.CopySerialized(templateAsset, asset);
 
                 if (asset is BaseForgeAsset bfa && templateAsset is BaseForgeAsset tbfa)
                 {
@@ -762,8 +754,8 @@ namespace FarEmerald.PlayForge.Extended.Editor
             // Set the display name on the asset (after template copy so it's not overwritten)
             SetAssetName(asset, assetName);
             
-            // Apply type-specific settings from preferences
-            ApplyTypeSpecificSettings(asset, defaultTemplate?.GetAsset() as BaseForgeLevelProvider);
+            // A template that gives levels gives them to the new asset
+            LinkToTemplate(asset, templateAsset as BaseForgeLevelProvider);
             
             // Generate unique file path
             var fullPath = $"{assetPath}/{sanitizedFileName}.asset";
@@ -776,10 +768,10 @@ namespace FarEmerald.PlayForge.Extended.Editor
             EditorGUIUtility.PingObject(asset);
             
             // Show notification if enabled
-            if (EditorPrefs.GetBool(TheForge.PREFS_PREFIX + "ShowNotifications", true))
+            if (PlayForgePreferences.ShowNotifications.Value)
             {
                 string templateNotification = "";
-                if (defaultTemplate is not null) templateNotification = $"(Template: {defaultTemplate.DisplayName})";
+                if (templateAsset != null) templateNotification = $"(Template: {TheForge.GetAssetDisplayName(templateAsset)})";
                 Debug.Log($"[PlayForge] Created {typeInfo.DisplayName}: {assetName} {templateNotification} at {fullPath}");
             }
             
@@ -842,241 +834,19 @@ namespace FarEmerald.PlayForge.Extended.Editor
             }
         }
         
-        /// <summary>
-        /// Applies type-specific settings from EditorPrefs to a newly created asset.
-        /// </summary>
-        private void ApplyTypeSpecificSettings(ScriptableObject asset, BaseForgeLevelProvider provider = null)
+        // A template that gives levels gives them to the new asset, as the Create dialog has done. The type settings it
+        // applied from EditorPrefs went with the Settings tab: all but the Requirement's category named fields the types
+        // don't have, so they did nothing (ED-21)
+        private static void LinkToTemplate(ScriptableObject asset, BaseForgeLevelProvider provider)
         {
-            if (asset == null) return;
-            
-            var so = new SerializedObject(asset);
-            bool modified = false;
-            
+            if (provider == null) return;
             switch (asset)
             {
-                case Ability ability:
-                    modified = ApplyAbilitySettings(so);
-                    if (!ability.IsLinked && provider is not null) ability.LinkToProvider(provider);
-                    break;
-                case GameplayEffect effect:
-                    modified = ApplyEffectSettings(so);
-                    if (!effect.IsLinked && provider is not null) effect.LinkToProvider(provider);
-                    break;
-                case Item item:
-                    modified = ApplyItemSettings(so);
-                    if (!item.IsLinked && provider is not null) item.LinkToProvider(provider);
-                    break;
-                case EntityIdentity entity:
-                    modified = ApplyEntitySettings(so);
-                    if (!entity.IsLinked && provider is not null) entity.LinkToProvider(provider);
-                    break;
-                case AttributeSet attrSet:
-                    modified = ApplyAttributeSetSettings(so);
-                    break;
-                case Attribute attr:
-                    modified = ApplyAttributeSettings(so);
-                    break;
-                case ScalerAsset scalerTemplate:
-                    modified = ApplyScalerTemplateSettings(so);
-                    break;
-                case RequirementTemplate reqTemplate:
-                    modified = ApplyRequirementTemplateSettings(so);
-                    break;
+                case Ability ability when !ability.IsLinked: ability.LinkToProvider(provider); break;
+                case GameplayEffect effect when !effect.IsLinked: effect.LinkToProvider(provider); break;
+                case Item item when !item.IsLinked: item.LinkToProvider(provider); break;
+                case EntityIdentity entity when !entity.IsLinked: entity.LinkToProvider(provider); break;
             }
-            
-            if (modified)
-            {
-                so.ApplyModifiedPropertiesWithoutUndo();
-            }
-        }
-        
-        private bool ApplyAbilitySettings(SerializedObject so)
-        {
-            bool modified = false;
-            
-            // Auto-set starting level
-            if (EditorPrefs.GetBool(TheForge.PREFS_PREFIX + "Ability_AutoLevel", true))
-            {
-                var levelProp = so.FindProperty("Level");
-                if (levelProp != null)
-                {
-                    var currentProp = levelProp.FindPropertyRelative("Current");
-                    if (currentProp != null)
-                    {
-                        currentProp.intValue = 1;
-                        modified = true;
-                    }
-                }
-            }
-            
-            // Auto-initialize cooldown
-            if (EditorPrefs.GetBool(TheForge.PREFS_PREFIX + "Ability_AutoCooldown", false))
-            {
-                var cooldownProp = so.FindProperty("Cooldown");
-                if (cooldownProp != null)
-                {
-                    var durationProp = cooldownProp.FindPropertyRelative("Duration");
-                    if (durationProp != null)
-                    {
-                        durationProp.floatValue = EditorPrefs.GetFloat(TheForge.PREFS_PREFIX + "Ability_DefaultCooldown", 1f);
-                        modified = true;
-                    }
-                }
-            }
-            
-            // Auto-initialize cost
-            if (EditorPrefs.GetBool(TheForge.PREFS_PREFIX + "Ability_AutoCost", false))
-            {
-                // Cost initialization would go here based on your cost structure
-                modified = true;
-            }
-            
-            return modified;
-        }
-        
-        private bool ApplyEffectSettings(SerializedObject so)
-        {
-            bool modified = false;
-            
-            // Default duration policy
-            var durationPolicy = EditorPrefs.GetInt(TheForge.PREFS_PREFIX + "Effect_DurationPolicy", -1);
-            if (durationPolicy >= 0)
-            {
-                var policyProp = so.FindProperty("Definition.DurationPolicy");
-                if (policyProp != null)
-                {
-                    policyProp.enumValueIndex = durationPolicy;
-                    modified = true;
-                }
-            }
-            
-            // Default stacking policy
-            var stackingPolicy = EditorPrefs.GetInt(TheForge.PREFS_PREFIX + "Effect_StackingPolicy", -1);
-            if (stackingPolicy >= 0)
-            {
-                var stackProp = so.FindProperty("Stacking.StackingType");
-                if (stackProp != null)
-                {
-                    stackProp.enumValueIndex = stackingPolicy;
-                    modified = true;
-                }
-            }
-            
-            return modified;
-        }
-        
-        private bool ApplyItemSettings(SerializedObject so)
-        {
-            bool modified = false;
-            
-            // Default max stack
-            if (EditorPrefs.GetBool(TheForge.PREFS_PREFIX + "Item_AutoMaxStack", false))
-            {
-                var maxStackProp = so.FindProperty("ItemDefinition.MaxStack");
-                if (maxStackProp != null)
-                {
-                    maxStackProp.intValue = EditorPrefs.GetInt(TheForge.PREFS_PREFIX + "Item_DefaultMaxStack", 1);
-                    modified = true;
-                }
-            }
-            
-            // Default item type
-            var itemType = EditorPrefs.GetInt(TheForge.PREFS_PREFIX + "Item_DefaultType", -1);
-            if (itemType >= 0)
-            {
-                var typeProp = so.FindProperty("ItemDefinition.ItemType");
-                if (typeProp != null)
-                {
-                    typeProp.enumValueIndex = itemType;
-                    modified = true;
-                }
-            }
-            
-            return modified;
-        }
-        
-        private bool ApplyEntitySettings(SerializedObject so)
-        {
-            bool modified = false;
-            
-            // Auto-set starting level
-            if (EditorPrefs.GetBool(TheForge.PREFS_PREFIX + "Entity_AutoLevel", true))
-            {
-                var levelProp = so.FindProperty("Level");
-                if (levelProp != null)
-                {
-                    var currentProp = levelProp.FindPropertyRelative("Current");
-                    if (currentProp != null)
-                    {
-                        currentProp.intValue = 1;
-                        modified = true;
-                    }
-                }
-            }
-            
-            return modified;
-        }
-        
-        private bool ApplyAttributeSetSettings(SerializedObject so)
-        {
-            // No default settings for AttributeSet currently
-            return false;
-        }
-        
-        private bool ApplyAttributeSettings(SerializedObject so)
-        {
-            bool modified = false;
-            
-            // Default base value
-            if (EditorPrefs.GetBool(TheForge.PREFS_PREFIX + "Attribute_AutoBaseValue", false))
-            {
-                var baseValueProp = so.FindProperty("BaseValue");
-                if (baseValueProp != null)
-                {
-                    baseValueProp.floatValue = EditorPrefs.GetFloat(TheForge.PREFS_PREFIX + "Attribute_DefaultBaseValue", 0f);
-                    modified = true;
-                }
-            }
-            
-            return modified;
-        }
-        
-        private bool ApplyScalerTemplateSettings(SerializedObject so)
-        {
-            bool modified = false;
-            
-            // Default category
-            var defaultCategory = EditorPrefs.GetString(TheForge.PREFS_PREFIX + "ScalerTemplate_DefaultCategory", "");
-            if (!string.IsNullOrEmpty(defaultCategory))
-            {
-                var categoryProp = so.FindProperty("Category");
-                if (categoryProp != null)
-                {
-                    categoryProp.stringValue = defaultCategory;
-                    modified = true;
-                }
-            }
-            
-            return modified;
-        }
-        
-        private bool ApplyRequirementTemplateSettings(SerializedObject so)
-        {
-            bool modified = false;
-            
-            // Default category
-            var defaultCategory = EditorPrefs.GetString(TheForge.PREFS_PREFIX + "RequirementTemplate_DefaultCategory", "");
-            if (!string.IsNullOrEmpty(defaultCategory))
-            {
-                var categoryProp = so.FindProperty("Category");
-                if (categoryProp != null)
-                {
-                    categoryProp.stringValue = defaultCategory;
-                    modified = true;
-                }
-            }
-
-            return modified;
         }
     }
 }

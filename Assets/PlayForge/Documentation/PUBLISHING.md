@@ -53,7 +53,7 @@ Copyright (c) 2019 Yoshifumi Kawai / Cysharp, Inc.
 - ☑ Assembly definitions: `FarEmerald.PlayForge` (runtime), `.Editor` and `.Tests` (both editor-only). The samples
   have `FarEmerald.PlayForge.Samples` and `FarEmerald.PlayForge.Examples`.
 - ☑ Zero unguarded `UnityEditor` references in Runtime; editor tools live in `Editor/`.
-- ☑ Runtime log noise gated: `ForgeLog`, set in The Forge → Settings → Logging.
+- ☑ Runtime log noise gated: `ForgeLog`, set in Preferences → PlayForge → Logging.
 - ☑ Golden tests (the Test Runner's EditMode tab, `FarEmerald.PlayForge.Tests.Golden`): 25 scenarios, all green.
 - ☐ Re-verify all of this before each submission.
 

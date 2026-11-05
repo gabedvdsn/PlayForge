@@ -382,9 +382,9 @@ namespace FarEmerald.PlayForge.Extended.Editor
                 showRequirementsView = false;
                 selectedTypeFilter = type;
                 if (type != null)
-                    EditorPrefs.SetString(PREFS_PREFIX + "LastTypeFilter", type.Name);
+                    EditorPrefs.SetString(PREFS_PREFIX + PlayForgePreferences.LastTypeFilterKey, type.Name);
                 else
-                    EditorPrefs.DeleteKey(PREFS_PREFIX + "LastTypeFilter");
+                    EditorPrefs.DeleteKey(PREFS_PREFIX + PlayForgePreferences.LastTypeFilterKey);
                 ShowTab(1);
             };
             
@@ -2204,7 +2204,7 @@ namespace FarEmerald.PlayForge.Extended.Editor
         private VisualElement CreateDataRow(ScriptableObject asset, List<ColumnDef> columns, bool alternate)
         {
             var typeInfo = AssetTypes.FirstOrDefault(t => t.Type == asset.GetType());
-            bool doubleClickVisualize = EditorPrefs.GetBool(PREFS_PREFIX + "DoubleClickVisualize", true);
+            bool doubleClickVisualize = PlayForgePreferences.DoubleClickVisualize.Value;
 
             var row = new VisualElement();
             row.style.flexDirection = FlexDirection.Row;
@@ -2554,7 +2554,7 @@ namespace FarEmerald.PlayForge.Extended.Editor
         
         private void BuildGroupedListView(VisualElement container, List<ScriptableObject> assets)
         {
-            bool showFileNames = EditorPrefs.GetBool(PREFS_PREFIX + "ShowFileNames", true);
+            bool showFileNames = PlayForgePreferences.ShowFileNames.Value;
             
             foreach (var group in assets.GroupBy(a => a.GetType()).OrderBy(g => g.Key.Name))
             {
@@ -2575,7 +2575,7 @@ namespace FarEmerald.PlayForge.Extended.Editor
         
         private VisualElement CreateCompactAssetRow(ScriptableObject asset, AssetTypeInfo typeInfo, bool showFileNames)
         {
-            bool doubleClickVisualize = EditorPrefs.GetBool(PREFS_PREFIX + "DoubleClickVisualize", true);
+            bool doubleClickVisualize = PlayForgePreferences.DoubleClickVisualize.Value;
             
             var row = new VisualElement();
             row.style.flexDirection = FlexDirection.Row;

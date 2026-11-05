@@ -1140,3 +1140,75 @@
     padding: 0;
     color: var(--pf-secondary-text);
 }
+
+/* ─── Settings pages: Project Settings and Preferences, each a title, then headings over Unity's own fields ───────── */
+
+.pf-root .pf-settings {
+    flex-grow: 1;
+    padding: 1px 10px 10px 10px;
+}
+
+.pf-root .pf-settings__title {
+    margin: 0 0 6px 0;
+    padding: 0;
+    font-size: 19px;
+    -unity-font-style: bold;
+    color: var(--pf-strong-text);
+}
+
+.pf-root .pf-settings__heading {
+    margin: 12px 0 4px 0;
+    padding: 0;
+    -unity-font-style: bold;
+    color: var(--pf-strong-text);
+}
+
+.pf-root .pf-settings__buttons {
+    flex-direction: row;
+    margin-top: 6px;
+}
+
+/* A table row that holds fields takes their height */
+.pf-root .pf-settings__row {
+    height: auto;
+    min-height: 22px;
+}
+
+.pf-root .pf-settings__type {
+    width: 140px;
+    flex-grow: 0;
+    flex-shrink: 0;
+}
+
+.pf-root .pf-settings__folder {
+    flex-grow: 1;
+    flex-shrink: 1;
+    min-width: 0;
+}
+
+.pf-root .pf-settings__folder-field {
+    flex-direction: row;
+    align-items: center;
+}
+
+.pf-root .pf-settings__folder-field > .unity-button {
+    flex-shrink: 0;
+    margin: 0 0 0 2px;
+}
+
+.pf-root .pf-settings__affix {
+    width: 110px;
+    flex-grow: 0;
+    flex-shrink: 0;
+}
+
+.pf-root .pf-settings__text {
+    flex-grow: 1;
+    flex-shrink: 1;
+    min-width: 0;
+    margin: 0;
+}
+
+.pf-root .pf-settings__defaults {
+    margin-top: 2px;
+}

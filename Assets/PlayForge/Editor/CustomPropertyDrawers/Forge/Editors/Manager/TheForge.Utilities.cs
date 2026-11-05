@@ -104,19 +104,8 @@ namespace FarEmerald.PlayForge.Extended.Editor
             return cachedAssets.Count(a => a.GetType() == type);
         }
 
-        private string GetPathForType(Type type)
-        {
-            var key = PREFS_PREFIX + "Path_" + type.Name;
-            if (EditorPrefs.HasKey(key))
-                return EditorPrefs.GetString(key);
-            
-            return DefaultPaths.TryGetValue(type, out var path) ? path : "Assets/Data";
-        }
-
-        private void SetPathForType(Type type, string path)
-        {
-            EditorPrefs.SetString(PREFS_PREFIX + "Path_" + type.Name, path);
-        }
+        // The folder Project Settings → PlayForge names for the type's new assets (ED-21)
+        private string GetPathForType(Type type) => PlayForgeSettings.FolderFor(type);
 
         private string GetRelativeTime(DateTime time)
         {

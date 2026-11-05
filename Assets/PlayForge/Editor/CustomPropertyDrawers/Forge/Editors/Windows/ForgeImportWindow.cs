@@ -186,16 +186,17 @@ namespace FarEmerald.PlayForge.Extended.Editor
         {
             var type = into.targetObject.GetType();
             var targets = new HashSet<Object>(into.targetObjects);
-            var templates = TemplateRegistry.GetTemplates(type).Where(t => t.IsValid()).Select(t => (Object)t.GetAsset())
-                .Where(asset => asset != null && !targets.Contains(asset)).Distinct().ToList();
-            foreach (var template in templates.OrderBy(NameOf, StringComparer.OrdinalIgnoreCase)) yield return ("Templates", template);
+            // The type's Import defaults, from Project Settings → PlayForge, come first (Q22)
+            var defaults = PlayForgeSettings.ImportDefaults(type).Cast<Object>()
+                .Where(asset => !targets.Contains(asset)).Distinct().ToList();
+            foreach (var each in defaults.OrderBy(NameOf, StringComparer.OrdinalIgnoreCase)) yield return ("Defaults", each);
 
             var types = acrossTypes ? new[] { typeof(BaseForgeAsset) } : new[] { type };
             var assets = types.SelectMany(each => AssetDatabase.FindAssets($"t:{each.Name}"))
                 .Distinct()
                 .Select(AssetDatabase.GUIDToAssetPath)
                 .Select(path => AssetDatabase.LoadAssetAtPath<ScriptableObject>(path))
-                .Where(asset => asset != null && !targets.Contains(asset) && !templates.Contains(asset))
+                .Where(asset => asset != null && !targets.Contains(asset) && !defaults.Contains(asset))
                 .Where(asset => !acrossTypes || asset.GetType() == type || HasSameFields(asset))
                 .OrderBy(asset => GroupOf(asset.GetType())).ThenBy(NameOf, StringComparer.OrdinalIgnoreCase);
             foreach (var asset in assets) yield return (GroupOf(asset.GetType()), asset);
