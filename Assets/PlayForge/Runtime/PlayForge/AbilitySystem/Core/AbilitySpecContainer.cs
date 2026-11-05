@@ -39,6 +39,20 @@ namespace FarEmerald.PlayForge
 
         private readonly List<AbilityActivationHandle> _activeHandles = new();
 
+        /// <summary>
+        /// The stage the ability's first active run is in, counted from 0, or -1 while none is running or started. The
+        /// Debugger shows it as "Stage 2/3" (ED-4).
+        /// </summary>
+        public int ActiveStageIndex
+        {
+            get
+            {
+                foreach (var handle in _activeHandles)
+                    if (handle.Data != null && handle.Data.StageIndex >= 0) return handle.Data.StageIndex;
+                return -1;
+            }
+        }
+
         /// <summary>How many times this ability's behaviour has been compiled into a proxy for an activation. Diagnostics.</summary>
         public int CompiledProxies { get; private set; }
 

@@ -307,6 +307,11 @@ from. It lives outside `Assets/` so it never ships in the package.
     screenshot material. Working assumption until the user answers: a lab is test-only in Proving Grounds at first,
     its assets built in code and played by its bot; its scene, and whether it ships in the package's Samples, come
     once its bot is green.
+19. **Where the Debugger's edits go (ED-40).** The boards draw the Entities view's four sections without the edits
+    Q27 asked for. Working assumption until the user answers: Base and Current are set by a double-click on the
+    value; a click selects a table's row, and the buttons under the table act on it (Remove, Activate, Interrupt);
+    a picker under Effects applies one, a picker and a level under Abilities grant one, and a tag field with Add Tag
+    and Project Tags under Tags adds a loose tag.
 
 ## Roadmap
 
@@ -524,8 +529,8 @@ had no letter in the review. TS-AA onward came from the test project.
 | ED-1 | M | 0 | Three compiler warnings: CS0162, CS8509, CS8321 (PF-009) | `GameplayEffectDrawer.cs:159-176`, `AbilityEditor.cs:138-143`, `TheForge.ViewTab.cs:1640` | verified |
 | ED-2 | H | 4 | The effect inspector never shows delivery and still draws `ReverseImpactOnRemoval`. Now the impact says its delivery, which the duration gives it, and how often a periodic one commits, as in "7 over 6 s, level 1", and Reverse On Removal, which nothing reads, is gone from the inspector | `GameplayEffectImpactDrawer.cs` | fixed |
 | ED-3 | H | 4 | There is no `AttributeImpactEntry` drawer, so multi-entry effects cannot be authored. Now an effect's Additional Impacts are authored entries, each with its own attribute, operation, magnitude and delivery, which `AttributeImpactEntryDrawer` edits and the runtime appends after the derived one; the Cost rule checks each attribute a cost spends | `GameplayEffectImpact.cs` (`RebuildEntries`), `AttributeImpactEntryDrawer.cs`, `CommonValidations.cs` | fixed |
-| ED-4 | H | 4 | GAS Debugger: rebuilds every 0.25 s, `FindObjectsByType` every tick, Mono only, reflection on `TagCache`, raw cooldown magnitude, unlabelled badges. Fixed: one Runtime Debugger (Q4) lists each hub ProcessControl registers, of either kind, following its join and leave callbacks (Q28); a sample changes the detail's values in place, at the rate the toolbar sets; it reads no private field; an ability shows its cooldown's time left, and each value says what it is; it listens to the entity it shows alone; in edit mode it offers Play Mode | `Editor/Debugger/RuntimeDebugger.cs`, `RuntimeDebugger.Entities.cs` | fixed |
-| ED-5 | M | 4 | ProcessControlDebugger: usage is not CPU time; the Terminated filter is dead; Pause misleads; per-row style allocations. Fixed: the Runtime Debugger's Processes view shows each process's time a step, which ProcessControl times while the debugger reads the game (`ProcessControlBlock.MeasureSteps`); its filters are Running and Waiting; Pause and Resume take the processes it handles alike, and Pause is offered for any running process; it's UI Toolkit, with no style set in code | `RuntimeDebugger.Processes.cs`, `ProcessControlBlock.cs` | fixed |
+| ED-4 | H | 4 | GAS Debugger: rebuilds every 0.25 s, `FindObjectsByType` every tick, Mono only, reflection on `TagCache`, raw cooldown magnitude, unlabelled badges. Fixed: one Debugger (Q4), built from the design canvas's boards (version 21), lists each hub ProcessControl registers, of either kind, following its join and leave callbacks (Q28); a sample changes the detail's values in place, at the rate the window menu sets; it reads no private field; an entity's header says what it is, and its attributes, effects, abilities and tags sit two by two under titled columns; an ability shows its state, as Stage 2/3, and its cooldown's time left; the Tags view shows every tag held, as a tree, and who holds the one selected; Follow Selection shows the entity selected in the scene; a status bar counts the processes and entities; it listens to the entity it shows alone; outside Play mode it offers Play Mode | `Editor/Debugger/RuntimeDebugger.cs`, `RuntimeDebugger.Entities.cs`, `RuntimeDebugger.Tags.cs` | fixed |
+| ED-5 | M | 4 | ProcessControlDebugger: usage is not CPU time; the Terminated filter is dead; Pause misleads; per-row style allocations. Fixed: the Debugger's Processes view shows each process's time a step over the last second, and its longest, which ProcessControl times while the debugger reads the game (`ProcessControlBlock.MeasureSteps`); its columns sort; its filters are Running and Waiting; Pause and Resume take the processes it handles alike, and Pause is offered for any running process; its Run says whether a paused run is held (`RunIsHeld`); it's UI Toolkit, with no style set in code | `RuntimeDebugger.Processes.cs`, `ProcessControlBlock.cs` | fixed |
 | ED-6 | M | 2 | Settings: an inverted range check; Reset All goes to the wrong tab and is partial; Auto Refresh is never read | `TheForge.SettingsTab.cs:233-236, 264, 346, 1770-1785` | verified |
 | ED-7 | M | 2 | Numeric columns sort as strings | `TheForge.ViewTab.cs:656` | verified |
 | ED-8 | H | 2 | Hard delete with no reference check | `TheForge.ViewTab.cs:2552`, `AssetBrowserWindow.cs:285` | verified |
@@ -560,7 +565,7 @@ had no letter in the review. TS-AA onward came from the test project.
 | ED-37 | M | 4 | The asset inspectors don't follow `Docs/EDITOR_STYLE.md`: their sections stray from its order, Level Source sits apart from Leveling, a collapsed section shows nothing, sentences explain the fields, the link state sits in tinted boxes with colored borders, and many sections' Import and Clear only log a warning. Each inspector is redone in Phase 4's fifth step. Fixed: the Attribute (`ed6295a`, with ED-15), Item (`cf70e8f`), Entity (`a06a4fb`), Attribute Set (`86ead05`), Ability (`031c2d4`) and Effect inspectors: the style doc's order, Leveling with the level link and its provider in Unity's object field, the asset tag under the name, a summary on each section, Import and Clear on each, Used By, and no look set in code; the Entity mockup's attribute table, in the Entity and Attribute Set inspectors; the mockups' When Busy, in the Ability and Entity inspectors; and the Effect mockup's requirements table, in the Effect and Ability inspectors | `EffectEditor.cs`, `AbilityEditor.cs`, `ForgeRequirementsTable.cs` | fixed |
 | ED-38 | M | 4 | An asset reference isn't Unity's object field: `AbstractRefDrawer` draws a button that opens a dropdown list of its own, with hover colors and Clear and Open icon buttons set in C#, and setting an effect asks in a dialog whether to link it. Now every asset reference is Unity's object field with a plain button beside it: Open, which shows the asset in a window of its own, or New, which makes one where The Forge puts its type, named and tagged, and uses it (Q15). An effect field says on a line under it how the effect takes its levels, with Link; its template, a pick of unlinked effects and New Linked Effect are in its right-click menu (Q18) | `AbstractForgeObjectDrawer.cs`, `GameplayEffectDrawer.cs` | fixed |
 | ED-39 | M | 4 | Opening an attribute set element can change the set: 50 ms after it draws, and on every change to the set, `AttributeSetElementDrawer` clamps a Current or Base magnitude that sits outside the element's bounds and applies it to the asset, so looking at a set marks it modified. The runtime clamps the same values as the entity starts. Now the drawer writes nothing as it draws: a help box says how the runtime clamps such a magnitude, and only a value typed into a Magnitude field is kept within the bounds, as part of the same edit. The drawer follows the style sheet | `AttributeSetElementDrawer.cs` | fixed |
-| ED-40 | M | 4 | The debugger only watches: it can't change an attribute or a tag, apply an effect or grant an ability, so trying a change means writing code for it. Q27: editing attributes and tags first, then applying effects and granting abilities. Fixed: the Runtime Debugger's attribute fields take a value, which the entity takes as it is; a tag typed or picked from the project's is granted as a loose tag (FEAT-16), which its row's Remove takes back; an effect picked in Effects lands from the entity itself, and its row's Remove takes it off; an ability picked in Abilities is granted at a level, and its row activates or removes it | `Editor/Debugger/RuntimeDebugger.Entities.cs` | fixed |
+| ED-40 | M | 4 | The debugger only watches: it can't change an attribute or a tag, apply an effect or grant an ability, so trying a change means writing code for it. Q27: editing attributes and tags first, then applying effects and granting abilities. Fixed: a double-click sets an attribute's base or current value, which the entity takes as it is; a tag typed or picked from the project's is granted as a loose tag (FEAT-16), which Remove takes back from its selected row; an effect picked under Effects lands from the entity itself, and Remove takes the selected one off; an ability picked under Abilities is granted at a level, and the selected one is activated, interrupted or removed. Where these go is open decision 19 | `Editor/Debugger/RuntimeDebugger.Entities.cs` | fixed |
 
 The design questions behind Phase 4's rows, each with its evidence, are in the UI interview doc of 2026-11-03,
 https://claude.ai/artifact/BbnGybqgX3spJsT6HoTafp. Its answers (Decision 18) settle ED-8, ED-16, ED-19 and ED-12's
@@ -689,6 +694,49 @@ GAS-4 with GAS-5, PC-6, and TS-I with PC-5.
 ## Log
 
 Record baselines, gate results and notable decisions here, newest first.
+
+- 2026-11-04, **ED-4 and ED-5: the Debugger, as the boards draw it.** The user approved the design canvas's debugger
+  boards (version 21, second row) and asked for the window built from them: the Entities, Processes and Tags boards
+  and the board for outside Play mode. The runtime notes stand: the step time is measured, and `RunIsHeld` is
+  public for the Run field.
+  - **The window** is the Debugger (`Window → PlayForge → Debugger`), as the boards title it. Its toolbar has the
+    three views' toggles, the search, the view's filter (Both, Mono or Runtime hubs; All states, Running or
+    Waiting), Follow Selection or ProcessControl's state, and the frame. The rate is in the window menu (Samples a
+    Second). A status bar counts ProcessControl's state, the processes by state and the entities by hub.
+  - **Entities:** the list's Name, Hub, Lvl and Effects, and a header with the entity's icon, its name, what it is
+    ("Entity · Goblin Raider · Mono hub · Level 3"), Select in Scene and Open Asset. Then four sections two by two,
+    each with its count and titled columns: Attributes (Base, Current, and Changed by: each source of the last
+    second's impacts with what it took a second, then the effects holding a modifier on it), Effects (Left, Stacks,
+    and From, as "Player · Fireball" or Self), Abilities (Lvl, State, as Stage 2/3 from the new
+    `AbilitySpecContainer.ActiveStageIndex`, and Cooldown) and Tags (the path, parents in secondary text, Count, and
+    From: the effect, ability or item that grants it, Affiliation, Asset tag or Loose tag).
+  - **ED-40's edits,** which the boards don't draw, follow open decision 19's working assumption: a double-click
+    sets Base or Current in place; a click selects a row, and the buttons under its table act on it; the pickers
+    and the tag field sit under their tables. The question went to the parent session for the user.
+  - **Processes:** the list's ID, Process, Handler, Lifecycle, Timing ("Update + Late"), State ("Running →
+    Terminated" once asked), Lifetime and Step, the time a step over the last second, from a sample of each
+    process's steps at each read. Its column titles sort it. The detail's header has Select in Scene for a Mono
+    process; then Pause, Resume, Terminate and Terminate Now; then Process (lifecycle, step timing, step priority,
+    and the handler, with Show for its process), State (state, queued, and Run: Going, Held, Cancelled or Ended,
+    with a note that a cancelled run's Resume starts a new one) and Time (lifetime, time running, step time and
+    the longest step, `ProcessControlBlock.PeakStepSeconds`).
+  - **Tags:** every tag the shown hubs hold, as a tree by its path, where a parent counts the entities holding any
+    tag under it and adds up their weights; a parent opens the first time it shows. The selected tag's detail names
+    it and how widely it's held ("Tag · 2 entities · weight 3"), then Held By: each entity, its weight, what
+    grants the tag and where that came from, walked as the tag compile walks its sources.
+  - **Style:** the boards' measures, in the style sheet: 20 px rows that alternate and take Unity's selection color,
+    titled columns that clip their own text, a 120 px fact column, and the type colors only in the icons. USS has
+    no `:first-child`, so a table's first cell carries a class. `--pf-selection-text` is new in both themes.
+  - **Its tests,** seen failing first against the committed window (14 of 21 failed, and the other 7 passed):
+    the updated `ED_4_*`, `ED_5_*` and `ED_40_*` tests in `RuntimeDebuggerTests`, now reading the boards' labels
+    and pressing rows and cells, and the new `ED_4_The_Tags_view_shows_each_tag_and_who_holds_it`,
+    `ED_4_The_status_bar_counts_the_processes_and_entities`, `ED_4_Follow_Selection_shows_the_selected_hub` and
+    `ED_5_The_Run_field_says_whether_a_paused_run_is_held`. The menu test checks the new title.
+  - **Docs:** the CHANGELOG, `GETTING_STARTED.md`, `PUBLISHING.md` and `IMPACT_MODEL_REFACTOR.md` call it the
+    Debugger.
+  - **Next:** Phase 5 goes on: the Status-effect lab, with FEAT-8's overflow at max stacks.
+  - **Tests:** PlayMode 968: 961 pass, 0 fail and 7 planted are skipped, in three orders. Planted 7 of 7; EditMode
+    430 of 430.
 
 - 2026-11-04, **Phase 5 begins; FEAT-8's cleanse and immunity.** Phase 4's exit gate holds: the editor smoke suite
   passes in both themes in every gates run. Phase 5's order is above the test project's section: the labs one at a

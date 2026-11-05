@@ -37,6 +37,13 @@ namespace FarEmerald.PlayForge.Extended.Editor
         Item,
         Attribute,
         AttributeSet,
+
+        // The Debugger's: a tag, a process, Play Mode, following the selection, and a terminate that's at once
+        Tag,
+        Process,
+        Play,
+        Pointer,
+        Terminate,
     }
 
     /// <summary>
@@ -169,6 +176,26 @@ namespace FarEmerald.PlayForge.Extended.Editor
                     pen.RoundedRect(ink, 1.5f, 2, 13, 3, 1);
                     pen.RoundedRect(ink, 1.5f, 6.5f, 13, 3, 1);
                     pen.RoundedRect(ink, 1.5f, 11, 13, 3, 1);
+                    break;
+                case ForgeGlyphShape.Tag:
+                    pen.Outline(ink, 1.2f, 2.5f, 2.5f, 7.7f, 2.5f, 13.7f, 8.5f, 8.5f, 13.7f, 2.5f, 7.7f);
+                    pen.Ring(ink, 1.2f, 5.4f, 5.4f, 1.1f);
+                    break;
+                case ForgeGlyphShape.Process:
+                    pen.RoundedRect(ink, 2, 3, 12, 10, 1, 1.2f);
+                    pen.Line(ink, 1.2f, 5, 6.5f, 7, 8, 5, 9.5f);
+                    pen.Line(ink, 1.2f, 8.5f, 10, 11, 10);
+                    break;
+                case ForgeGlyphShape.Play:
+                    pen.Fill(ink, 4.5f, 3, 4.5f, 13, 13, 8);
+                    break;
+                case ForgeGlyphShape.Pointer:
+                    pen.Outline(ink, 1.5f, 2, 2, 7, 14, 8.8f, 8.8f, 14, 7);
+                    break;
+                case ForgeGlyphShape.Terminate:
+                    pen.Ring(ink, 1.6f, 8, 8, 6);
+                    pen.Line(ink, 1.6f, 5.5f, 5.5f, 10.5f, 10.5f);
+                    pen.Line(ink, 1.6f, 10.5f, 5.5f, 5.5f, 10.5f);
                     break;
             }
         }

@@ -63,7 +63,7 @@ Copyright (c) 2019 Yoshifumi Kawai / Cysharp, Inc.
 2. Import it into a **brand-new** Unity 6 project.
 3. Zero console errors and warnings on import, and no import-time log spam. `Tools/clean-import.py` checks the UPM
    import the same way.
-4. Run the golden tests, and open The Forge and the Runtime Debugger.
+4. Run the golden tests, and open The Forge and the Debugger.
 5. Open and play each sample scene.
 6. Make a **Windows standalone build** (and an IL2CPP one if claiming support); it must succeed. Headless:
    `Unity -batchmode -nographics -projectPath <proj> -executeMethod FarEmerald.PlayForge.Extended.Editor.BuildVerification.BuildWindowsPlayer`.
@@ -73,7 +73,7 @@ Copyright (c) 2019 Yoshifumi Kawai / Cysharp, Inc.
 
 - ☐ Publisher account; support email/website.
 - ☐ Key images: icon 160×160, card 420×280, cover 1950×1300; ≥5 screenshots (The Forge
-  and the Runtime Debugger are the strongest material); optional video.
+  and the Debugger are the strongest material); optional video.
 - ☐ Description; tags; state "samples render in the Built-in RP and URP; the runtime is render-pipeline-agnostic".
 - ☐ Upload from the OLDEST supported Unity version (claim Unity 6.0+ → upload from 6000.0.x).
 - ☑ Which Editor submits: 6000.0, the oldest supported (the plan's decision 17).

@@ -22,6 +22,7 @@
     --pf-help-box: #414141;
     --pf-help-box-border: #2B2B2B;
     --pf-selection: #2C5D87;
+    --pf-selection-text: #FFFFFF;
     --pf-toggle-on: #46607C;
     --pf-text: #C4C4C4;
     --pf-strong-text: #D2D2D2;
@@ -61,6 +62,7 @@
     --pf-help-box: #DCDCDC;
     --pf-help-box-border: #ABABAB;
     --pf-selection: #3A72B0;
+    --pf-selection-text: #FFFFFF;
     --pf-toggle-on: #9DB7D8;
     --pf-text: #1F1F1F;
     --pf-strong-text: #090909;
@@ -1506,7 +1508,7 @@
     background-color: var(--pf-toolbar);
 }
 
-/* ─── The Runtime Debugger: a toolbar, a list beside a detail for entities or processes, then a status bar (Q4) ────── */
+/* ─── The Debugger: the three views' toggles, a list beside a detail, then a status bar, as the boards draw it (Q4) ── */
 
 .pf-root.pf-debugger {
     flex-grow: 1;
@@ -1516,10 +1518,80 @@
     display: none;
 }
 
+/* The toolbar: the view toggles, the search, the view's own filters, then Follow Selection or ProcessControl's state,
+   and the frame */
+.pf-root .pf-debugger__views-toggles {
+    flex-direction: row;
+    flex-shrink: 0;
+    margin-right: 6px;
+}
+
+.pf-root .pf-debugger__view-toggle {
+    flex-shrink: 0;
+}
+
 .pf-root .pf-debugger__search {
-    width: 180px;
+    width: 240px;
     flex-shrink: 1;
     min-width: 80px;
+}
+
+.pf-root .pf-debugger__follow {
+    flex-shrink: 0;
+}
+
+.pf-root .pf-debugger__follow > .unity-toggle__input {
+    display: none;
+}
+
+.pf-root .pf-debugger__follow .pf-glyph,
+.pf-root .pf-debugger__enter .pf-glyph,
+.pf-root .pf-debugger__action .pf-glyph {
+    width: 12px;
+    height: 12px;
+    margin-right: 5px;
+    flex-shrink: 0;
+}
+
+.pf-root .pf-debugger__follow,
+.pf-root .pf-debugger__enter,
+.pf-root .pf-debugger__action {
+    flex-direction: row;
+    align-items: center;
+}
+
+.pf-root .pf-debugger__follow > Label,
+.pf-root .pf-debugger__enter > Label,
+.pf-root .pf-debugger__action > Label {
+    margin: 0;
+    padding: 0;
+}
+
+.pf-root .pf-debugger__toolbar-label,
+.pf-root .pf-debugger__frame {
+    flex-shrink: 0;
+    margin: 0 6px;
+    padding: 0;
+    -unity-text-align: middle-left;
+    color: var(--pf-secondary-text);
+    white-space: nowrap;
+}
+
+/* Outside Play mode: the line, and Enter Play Mode under it */
+.pf-root .pf-debugger__prompt {
+    flex-grow: 1;
+    align-items: center;
+    justify-content: center;
+}
+
+.pf-root .pf-debugger__prompt-text {
+    margin: 0 0 8px 0;
+    color: var(--pf-secondary-text);
+}
+
+.pf-root .pf-debugger__enter {
+    height: 22px;
+    padding: 0 10px;
 }
 
 .pf-root .pf-debugger__views,
@@ -1529,37 +1601,13 @@
     flex-grow: 1;
 }
 
-.pf-root .pf-debugger__prompt {
-    flex-grow: 1;
-    align-items: center;
-    justify-content: center;
-}
-
-.pf-root .pf-debugger__prompt > .pf-note {
-    margin: 0 0 8px 0;
-}
-
-/* A row's name, with its type icon, can shrink to nothing and ends in an ellipsis (Docs/EDITOR_STYLE.md) */
-.pf-root .pf-debugger__name-cell {
-    flex-direction: row;
-    align-items: center;
-    overflow: hidden;
-    padding-left: 4px;
-}
-
-.pf-root .pf-debugger__name-cell .pf-glyph {
-    width: 14px;
-    height: 14px;
-    margin-right: 6px;
-    flex-shrink: 0;
-}
-
+/* A list's cell, or a table's, clips its own text and ends in an ellipsis (Docs/EDITOR_STYLE.md) */
 .pf-root .pf-debugger__name,
 .pf-root .pf-debugger__cell {
     flex-shrink: 1;
     min-width: 0;
     margin: 0;
-    padding: 0 4px 0 0;
+    padding: 0 4px 0 6px;
     -unity-text-align: middle-left;
     overflow: hidden;
     white-space: nowrap;
@@ -1567,6 +1615,63 @@
 }
 
 .pf-root .pf-debugger__name {
+    padding: 0;
+    color: var(--pf-strong-text);
+}
+
+.pf-root .pf-debugger__cell--number {
+    padding: 0 6px 0 4px;
+    -unity-text-align: middle-right;
+}
+
+.pf-root .pf-debugger__cell--strong {
+    color: var(--pf-strong-text);
+}
+
+.pf-root .pf-debugger__cell--secondary {
+    color: var(--pf-secondary-text);
+}
+
+/* A name with its type's icon */
+.pf-root .pf-debugger__name-cell {
+    flex-direction: row;
+    align-items: center;
+    overflow: hidden;
+    padding-left: 6px;
+}
+
+.pf-root .pf-debugger__name-cell .pf-glyph {
+    width: 12px;
+    height: 12px;
+    margin-right: 4px;
+    flex-shrink: 0;
+}
+
+/* A tag's path: its parents, then its leaf */
+.pf-root .pf-debugger__tag-name {
+    flex-direction: row;
+    align-items: center;
+    overflow: hidden;
+    padding-left: 8px;
+}
+
+.pf-root .pf-debugger__tag-parents,
+.pf-root .pf-debugger__tag-leaf {
+    flex-shrink: 0;
+    margin: 0;
+    padding: 0;
+    white-space: nowrap;
+}
+
+.pf-root .pf-debugger__tag-parents {
+    color: var(--pf-secondary-text);
+}
+
+.pf-root .pf-debugger__tag-leaf {
+    flex-shrink: 1;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
     color: var(--pf-strong-text);
 }
 
@@ -1576,36 +1681,48 @@
 }
 
 .pf-root .pf-debugger__detail {
-    padding: 0 0 8px 0;
+    padding: 0;
 }
 
 .pf-root .pf-debugger__detail > .pf-note {
     margin: 8px;
 }
 
-/* The shown entity or process: its type icon, its name, then what it is */
+/* A detail's header: its 32 px icon, its name over what it is, then its buttons */
 .pf-root .pf-debugger__header {
     flex-direction: row;
     align-items: center;
-    height: 28px;
-    padding: 0 8px;
+    padding: 8px;
     border-bottom-width: 1px;
     border-bottom-color: var(--pf-line);
     background-color: var(--pf-header);
 }
 
-.pf-root .pf-debugger__header .pf-glyph {
-    width: 16px;
-    height: 16px;
-    margin-right: 6px;
+.pf-root .pf-debugger__header-icon {
+    width: 32px;
+    height: 32px;
+    margin-right: 8px;
     flex-shrink: 0;
+}
+
+.pf-root .pf-debugger__header-text {
+    flex-grow: 1;
+    flex-shrink: 1;
+    min-width: 0;
+}
+
+.pf-root .pf-debugger__header-name-row {
+    flex-direction: row;
+    min-width: 0;
+    overflow: hidden;
 }
 
 .pf-root .pf-debugger__header-name {
     flex-shrink: 1;
     min-width: 0;
-    margin: 0 8px 0 0;
+    margin: 0;
     padding: 0;
+    font-size: 13px;
     -unity-font-style: bold;
     color: var(--pf-strong-text);
     overflow: hidden;
@@ -1613,97 +1730,290 @@
     text-overflow: ellipsis;
 }
 
-.pf-root .pf-debugger__header-detail {
+.pf-root .pf-debugger__header-parents {
     flex-shrink: 0;
-    margin: 0 8px 0 0;
-    padding: 0;
     color: var(--pf-secondary-text);
 }
 
-.pf-root .pf-debugger__header-button {
-    flex-shrink: 0;
-    margin-left: auto;
-}
-
-/* A detail's rows: the name gives way first, and the values on the right keep their width */
-.pf-root .pf-debugger__row {
-    flex-direction: row;
-    align-items: center;
-    min-height: 18px;
-    margin: 0 0 2px 0;
-}
-
-.pf-root .pf-debugger__row-name {
-    flex-grow: 1;
-    flex-shrink: 1;
-    min-width: 0;
+.pf-root .pf-debugger__header-detail {
     margin: 0;
-    padding: 0 4px 0 0;
-    color: var(--pf-text);
+    padding: 0;
+    color: var(--pf-secondary-text);
     overflow: hidden;
     white-space: nowrap;
     text-overflow: ellipsis;
 }
 
-.pf-root .pf-debugger__row-value {
+.pf-root .pf-debugger__header-button {
     flex-shrink: 0;
-    min-width: 72px;
+    height: 20px;
     margin: 0 0 0 8px;
-    padding: 0;
-    -unity-text-align: middle-right;
-    color: var(--pf-strong-text);
 }
 
-.pf-root .pf-debugger__titles .pf-debugger__row-name,
-.pf-root .pf-debugger__titles .pf-debugger__row-value {
+/* A detail's sections, each with its count. The entity's four sit two by two, apart by Unity's lines */
+.pf-root .pf-debugger__section {
+    margin-left: 0;
+    margin-right: 0;
+}
+
+.pf-root .pf-debugger__section > .pf-section__header {
+    border-top-width: 0;
+}
+
+.pf-root .pf-debugger__section > .pf-section__header > .pf-section__summary {
+    display: flex;
+}
+
+.pf-root .pf-debugger__section > .pf-section__content {
+    padding: 0;
+}
+
+.pf-root .pf-debugger__section--facts > .pf-section__header {
+    border-bottom-width: 1px;
+    border-bottom-color: var(--pf-line);
+}
+
+.pf-root .pf-debugger__section--facts > .pf-section__content {
+    padding: 4px 8px 8px 20px;
+}
+
+.pf-root .pf-debugger__grid {
+    flex-direction: row;
+    flex-wrap: wrap;
+}
+
+.pf-root .pf-debugger__grid > .pf-debugger__section {
+    width: 50%;
+    border-bottom-width: 1px;
+    border-bottom-color: var(--pf-line);
+}
+
+.pf-root .pf-debugger__grid > .pf-debugger__section--left {
+    border-right-width: 1px;
+    border-right-color: var(--pf-line);
+}
+
+/* A table: its column titles, then its rows, which alternate, and the one selected in Unity's selection color */
+.pf-root .pf-debugger__table-head,
+.pf-root .pf-debugger__table-row {
+    flex-direction: row;
+    align-items: center;
+    height: 20px;
+    flex-shrink: 0;
+}
+
+.pf-root .pf-debugger__table-head {
+    background-color: var(--pf-toolbar);
+    border-top-width: 1px;
+    border-top-color: var(--pf-line);
+    border-bottom-width: 1px;
+    border-bottom-color: var(--pf-line);
+}
+
+.pf-root .pf-debugger__table-head > .pf-debugger__cell {
+    height: 20px;
+    color: var(--pf-text);
+    border-left-width: 1px;
+    border-left-color: var(--pf-line);
+}
+
+.pf-root .pf-debugger__table-head > .pf-debugger__cell--first {
+    border-left-width: 0;
+}
+
+.pf-root .pf-debugger__table-row {
+    background-color: var(--pf-panel);
+}
+
+.pf-root .pf-debugger__table-row--alternate {
+    background-color: var(--pf-alternate-row);
+}
+
+.pf-root .pf-debugger__table-head > .pf-debugger__cell--first,
+.pf-root .pf-debugger__table-row > .pf-debugger__cell--first {
+    padding-left: 8px;
+}
+
+.pf-root .pf-debugger__table-row--selected {
+    background-color: var(--pf-selection);
+}
+
+.pf-root .pf-debugger__table-row--selected .pf-debugger__cell,
+.pf-root .pf-debugger__table-row--selected .pf-debugger__name,
+.pf-root .pf-debugger__table-row--selected .pf-debugger__tag-parents,
+.pf-root .pf-debugger__table-row--selected .pf-debugger__tag-leaf {
+    color: var(--pf-selection-text);
+}
+
+.pf-root .pf-debugger__section .pf-note {
+    margin: 2px 8px;
+}
+
+/* A value a double-click sets: the field takes the cell's place */
+.pf-root .pf-debugger__edit {
+    flex-shrink: 0;
+    height: 18px;
+    margin: 0 2px;
+}
+
+/* The columns' widths, as the boards set them: a part of what's left, or a width of its own */
+.pf-root .pf-debugger__col-grow {
+    flex-grow: 1;
+    flex-basis: 0;
+}
+
+.pf-root .pf-debugger__col-grow11 {
+    flex-grow: 1.1;
+    flex-basis: 0;
+}
+
+.pf-root .pf-debugger__col-grow12 {
+    flex-grow: 1.2;
+    flex-basis: 0;
+}
+
+.pf-root .pf-debugger__col-grow13 {
+    flex-grow: 1.3;
+    flex-basis: 0;
+}
+
+.pf-root .pf-debugger__col-40 {
+    flex-shrink: 0;
+    width: 40px;
+}
+
+.pf-root .pf-debugger__col-48 {
+    flex-shrink: 0;
+    width: 48px;
+}
+
+.pf-root .pf-debugger__col-56 {
+    flex-shrink: 0;
+    width: 56px;
+}
+
+.pf-root .pf-debugger__col-60 {
+    flex-shrink: 0;
+    width: 60px;
+}
+
+.pf-root .pf-debugger__col-64 {
+    flex-shrink: 0;
+    width: 64px;
+}
+
+.pf-root .pf-debugger__col-72 {
+    flex-shrink: 0;
+    width: 72px;
+}
+
+/* A detail's fact: its name in a 120 px column, then its value */
+.pf-root .pf-debugger__fact {
+    flex-direction: row;
+    align-items: center;
+    height: 18px;
+    margin: 0 0 2px 0;
+}
+
+.pf-root .pf-debugger__fact-name {
+    flex-shrink: 0;
+    width: 120px;
+    margin: 0;
+    padding: 0;
+    color: var(--pf-text);
+}
+
+.pf-root .pf-debugger__fact-value {
+    flex-shrink: 1;
+    min-width: 0;
+    margin: 0;
+    padding: 0;
+    color: var(--pf-strong-text);
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+}
+
+.pf-root .pf-debugger__fact-value--none {
     color: var(--pf-secondary-text);
 }
 
-.pf-root .pf-debugger__value {
+.pf-root .pf-debugger__fact-button {
     flex-shrink: 0;
-    width: 72px;
+    height: 18px;
     margin: 0 0 0 8px;
 }
 
-/* A row's own actions, as a tag's Remove, keep their width */
-.pf-root .pf-debugger__row-button {
-    flex-shrink: 0;
-    margin: 0 0 0 4px;
+.pf-root .pf-debugger__section--facts HelpBox {
+    margin: 2px 0 0 0;
 }
 
-.pf-root .pf-debugger__pick {
+/* A table's actions, under it, and a process's, under its header */
+.pf-root .pf-debugger__actions {
+    flex-direction: row;
+    flex-wrap: wrap;
+    align-items: center;
+    padding: 4px 6px;
+}
+
+.pf-root .pf-debugger__detail > .pf-debugger__actions {
+    padding: 6px 8px;
+    border-bottom-width: 1px;
+    border-bottom-color: var(--pf-line);
+}
+
+.pf-root .pf-debugger__action {
+    flex-shrink: 0;
+    height: 20px;
+    margin: 0 6px 0 0;
+}
+
+.pf-root .pf-debugger__pick,
+.pf-root .pf-debugger__new-tag {
     flex-grow: 1;
     flex-shrink: 1;
-    min-width: 60px;
-    margin: 0;
+    min-width: 80px;
+    margin: 0 6px 0 0;
 }
 
 .pf-root .pf-debugger__level {
     flex-shrink: 0;
     width: 44px;
-    margin: 0 0 0 4px;
+    margin: 0 6px 0 0;
 }
 
-.pf-root .pf-debugger__new-tag {
-    flex-grow: 1;
+.pf-root .pf-debugger__result {
     flex-shrink: 1;
-    min-width: 60px;
+    min-width: 0;
     margin: 0;
-}
-
-.pf-root .pf-debugger__actions {
-    margin: 6px 8px;
-}
-
-.pf-root .pf-debugger__status {
-    flex-shrink: 0;
-    height: 20px;
-    padding: 0 6px;
-    -unity-text-align: middle-left;
+    padding: 0;
     color: var(--pf-secondary-text);
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+}
+
+/* The status bar: ProcessControl's state, the processes by state, the entities by hub */
+.pf-root .pf-debugger__status {
+    flex-direction: row;
+    flex-shrink: 0;
+    align-items: center;
+    height: 20px;
+    padding: 0 8px;
     border-top-width: 1px;
     border-top-color: var(--pf-line);
     background-color: var(--pf-toolbar);
+}
+
+.pf-root .pf-debugger__status-part {
+    flex-shrink: 1;
+    min-width: 0;
+    margin: 0 16px 0 0;
+    padding: 0;
+    color: var(--pf-secondary-text);
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
 }
 
 /* ─── Overrides: a field a child asset overrides of its template, marked as Unity marks a prefab instance's (Q23) ─── */

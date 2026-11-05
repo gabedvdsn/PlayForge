@@ -44,7 +44,7 @@ namespace FarEmerald.PlayForge
         public float TotalUpdateTime => _totalUpdateTime;
 
         /// <summary>
-        /// Whether each block counts its steps and times them, as the Runtime Debugger asks while it reads the game. Off,
+        /// Whether each block counts its steps and times them, as the Debugger asks while it reads the game. Off,
         /// as it is by default, a step costs one check of it. Process Control showed the time between a process's steps as
         /// its cost, much the same for every process whatever its work (ED-5).
         /// </summary>
@@ -56,8 +56,12 @@ namespace FarEmerald.PlayForge
         /// <summary>The time those steps took, in seconds.</summary>
         public double StepSeconds => _stepTicks / (double)System.Diagnostics.Stopwatch.Frequency;
 
+        /// <summary>The longest of those steps, in seconds.</summary>
+        public double PeakStepSeconds => _peakStepTicks / (double)System.Diagnostics.Stopwatch.Frequency;
+
         private int _steps;
         private long _stepTicks;
+        private long _peakStepTicks;
 
         public float UseSinceLastCheck
         {
@@ -97,8 +101,12 @@ namespace FarEmerald.PlayForge
 
         private CancellationTokenSource _cts;
 
-        // A pause left this run going, for the process to hold
-        private bool RunIsHeld => _cts != null && !_cts.IsCancellationRequested;
+        /// <summary>
+        /// Whether the process's run is going, or held by a pause: a paused process that holds its run picks it up on
+        /// resume, and one that doesn't had it cancelled, so a resume starts a new one (Decision 5). The Debugger shows
+        /// which (ED-5).
+        /// </summary>
+        public bool RunIsHeld => _cts != null && !_cts.IsCancellationRequested;
 
         // Done once the process has terminated and is unregistered, for whatever waits on it: made when something does.
         // Waiting meant polling the state once a frame, which found the end a frame later, and each relay waited on
@@ -418,7 +426,9 @@ namespace FarEmerald.PlayForge
 
             if (timed)
             {
-                _stepTicks += System.Diagnostics.Stopwatch.GetTimestamp() - started;
+                long took = System.Diagnostics.Stopwatch.GetTimestamp() - started;
+                _stepTicks += took;
+                if (took > _peakStepTicks) _peakStepTicks = took;
                 _steps++;
             }
 

@@ -231,7 +231,7 @@ namespace FarEmerald.PlayForge
             GrantedTagCompiler.AddAll(TagCache, looseTags);
         }
 
-        // Tags granted to the entity directly, by its game's code or the Runtime Debugger, with no effect, ability or item
+        // Tags granted to the entity directly, by its game's code or the Debugger, with no effect, ability or item
         // behind them, as Unreal's loose gameplay tags are. Each grant counts, and the compile includes them, so they last
         // until they're taken back; a tag added straight to the cache went at the next compile (FEAT-16)
         private readonly List<Tag> looseTags = new();

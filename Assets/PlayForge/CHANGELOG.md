@@ -10,6 +10,9 @@ tracks each fix below by its ID.
 - Cleanse and immunity. An effect's Removes Effects Tagged takes off, as it lands, every effect on its target tagged
   with one of those tags or a child of one; its Blocks Effects Tagged refuses such an effect while it's on. A cleanse
   or an immunity took a requirement on each effect it meant to clear or block (FEAT-8).
+- What the Debugger reads of a process and an ability: `ProcessControlBlock.MeasureSteps`, which has each process
+  count its steps and time them (`Steps`, `StepSeconds`, `PeakStepSeconds`), `RunIsHeld`, whether a paused
+  process holds its run, and `AbilitySpecContainer.ActiveStageIndex`, the stage an ability's run is in (ED-4, ED-5).
 - Loose tags: `AddLooseTag`, `RemoveLooseTag` and `GetLooseTags` on each hub grant a tag with no effect, ability or
   item behind it, as Unreal's loose gameplay tags do. Each grant counts until it's taken back. A tag added straight to
   the tag cache went at its next compile (FEAT-16).
@@ -31,14 +34,19 @@ tracks each fix below by its ID.
   page, through one table of links in the editor.
 
 ### Changed
-- One Runtime Debugger (`Window → PlayForge → Runtime Debugger`) replaces the GAS Debugger, Process Control and the
-  Tag Debugger. Its Entities view lists every hub ProcessControl registers, runtime hubs among them, beside the one
-  selected: its attributes, tags, effects with the time each has left, abilities with their cooldowns, and the last
-  impact it dealt and took, and it acts on that entity: its attribute fields take a value, a tag typed or picked from
-  the project's is granted until its Remove, an effect picked lands, and an ability picked is granted, activated or
-  removed. Its Processes view lists every process with its state and the time its steps take, and
-  pauses, resumes and terminates the one selected, with the processes it handles. The views follow ProcessControl as
-  processes join and leave, change their values in place at the rate the toolbar sets, and in edit mode offer Play
+- One Debugger (`Window → PlayForge → Debugger`) replaces the GAS Debugger, Process Control and the Tag Debugger.
+  Its toolbar switches between three views, searches the one shown, and filters it by hub or by state. **Entities**
+  lists every hub ProcessControl registers, runtime hubs among them, beside the one selected: its attributes with
+  what changed them, its effects with the time each has left, their stacks and where they came from, its abilities
+  with their state, such as Stage 2/3, and cooldown, and its tags with what grants them. It acts on that entity: a
+  double-click sets an attribute's value, a tag typed or picked from the project's is granted until it's removed, an
+  effect picked lands, and an ability picked is granted at a level, then activated, interrupted or removed. Follow
+  Selection shows the entity whose GameObject is selected. **Processes** lists every process with its lifecycle,
+  timing, state, lifetime and the time its steps took over the last second, sorted by any column, and pauses,
+  resumes and terminates the one selected, with the processes it handles; it says whether a paused run is held or
+  was cancelled. **Tags** shows every tag the entities hold as a tree, beside who holds the one selected and what
+  grants it. The views follow ProcessControl as processes join and leave and change their values in place, at the
+  rate the window menu sets, and a status bar counts the processes and entities. Outside Play mode it offers Play
   Mode. The GAS Debugger scanned the scene for MonoBehaviour hubs and rebuilt its details every 0.25 s, and Process
   Control's usage was the time between a process's steps, not what they cost (ED-4, ED-5, ED-40).
 - Templates work as prefabs do. A template reaches its children when it's pushed, with its asset menu's Push to Its
@@ -114,7 +122,7 @@ tracks each fix below by its ID.
 - Every asset inspector's header and sections follow PlayForge's one style sheet, in the editor's Dark or Light
   theme. The header shows the type icon, the asset's name, its type and asset tag, then Open in The Forge, Help and a
   menu that holds import and the template. It no longer shows the description or the asset's own icon. The Forge and
-  the Runtime Debugger take the editor's theme (ED-20).
+  the Debugger take the editor's theme (ED-20).
 - The editor shows no emoji. Icons are vector glyphs in the theme's colors, The Forge shows each asset type's icon, and
   a button that showed an emoji alone says what it does, such as Copy, Preview or Trash (ED-20).
 - PlayForge is licensed under the Unity Asset Store EULA.
@@ -262,7 +270,7 @@ tracks each fix below by its ID.
   or turning `Enabled` off. Once the first had ended, it threw, and the rest ran on.
 
 ### Removed
-- The GAS Debugger, Process Control and Tag Debugger windows, which the Runtime Debugger replaces, and Process
+- The GAS Debugger, Process Control and Tag Debugger windows, which the Debugger replaces, and Process
   Control's four public enums, `EProcessDebuggerPolicy`, `EProcessStateFilter`, `EProcessSortMode` and
   `EUsageSortMode`, which nothing else used (ED-4, ED-5).
 - The Forge's Create, View and Analysis tabs, and the Visualizer window. The detail pane's summary replaces the
