@@ -557,7 +557,8 @@ namespace FarEmerald.PlayForge
             _stepSnapshot.Clear();
             _stepSnapshot.AddRange(group.GetIndices());
 
-            // Under its timing's marker in the Profiler (FEAT-18)
+            // Under its timing's marker in the Profiler, and timed for its counter (FEAT-18)
+            long started = System.Diagnostics.Stopwatch.GetTimestamp();
             using (ForgeProfiler.StepLoop(timing).Auto())
             {
                 int count = _stepSnapshot.Count;
@@ -570,6 +571,11 @@ namespace FarEmerald.PlayForge
                     }
                 }
             }
+            ForgeCounters.AddStepTime(System.Diagnostics.Stopwatch.GetTimestamp() - started);
+
+            // The scene's levels, as its LateUpdate loop ends (FEAT-18)
+            if (timing == EProcessStepTiming.LateUpdate && Control is not null)
+                ForgeCounters.SceneLevels(Running, _waiting.Count, _created);
         }
         
         // Empties the world into a state: what a ProcessControl's bootstrap does, and a world of its own as it's made
@@ -749,7 +755,9 @@ namespace FarEmerald.PlayForge
                 }
             }
 
-            return _active.Remove(pcb.CacheIndex);
+            if (!_active.Remove(pcb.CacheIndex)) return false;
+            ForgeCounters.Terminations.Value++;
+            return true;
         }
         
         public Dictionary<int, ProcessControlBlock> FetchActiveProcesses() => _active;
@@ -976,6 +984,7 @@ namespace FarEmerald.PlayForge
 
             _waiting.Add(pcb.CacheIndex);
             _active[pcb.CacheIndex] = pcb;
+            ForgeCounters.Registrations.Value++;
 
             // Track GAS-owned processes so observers can query "what processes does this GAS own?"
             var gas = ResolveOwningGAS(pcb.Handler, pcb.Wrapper.Data);
@@ -1181,6 +1190,7 @@ namespace FarEmerald.PlayForge
 
         private void ChangeState(ProcessControlBlock pcb, EProcessState state)
         {
+            ForgeCounters.StateChanges.Value++;
 
             // Reported ahead of acting on it: terminating takes the watchers away, and a run that ends at
             // once moves the state on again, so afterwards was too late to say this (PC-13)

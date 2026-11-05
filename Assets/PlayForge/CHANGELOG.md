@@ -56,6 +56,10 @@ tracks each fix below by its ID.
   and a process's step under a marker of its type's too, with the process's ID as its metadata (FEAT-18).
 - PlayForge depends on `com.unity.profiling.core` 1.0.2, which the editor ships, for its Profiler markers with
   metadata and its counters (FEAT-18).
+- Profiler counters. `ForgeCounters`, in the Profiler's PlayForge category, count ProcessControl's processes, a
+  frame's registrations, terminations, steps, state changes and step time, the entities by hub, the effects active,
+  a frame's effects applied and removed, impacts, activations, refusals, tag compiles and recomputes, the sequences
+  running and a frame's stages started. They count in the editor and development builds (FEAT-18).
 - An Effect Stacks scaler, which reads the stack count of the effect's own container, 1 for one that doesn't stack.
   With Multiply With Scaler, a sunder of −5 armor takes 5 a stack, and a Continuous change follows the count as it
   changes (FEAT-19).

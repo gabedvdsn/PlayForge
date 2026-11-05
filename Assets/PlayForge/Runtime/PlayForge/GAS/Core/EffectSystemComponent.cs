@@ -146,6 +146,7 @@ namespace FarEmerald.PlayForge
                 // Recorded where the callback fires, for analysis workers. Nothing recorded it (GAS-28)
                 Self.GetFrameSummary()?.RecordEffectApplied(spec);
                 Self.GetCallbacks()?.EffectApplied(spec);
+                ForgeCounters.EffectsApplied.Value++;
 
                 foreach (var containedEffect in spec.Base.ImpactSpecification.GetContainedEffects(EApplyTickRemove.OnApply))
                 {
@@ -743,6 +744,7 @@ namespace FarEmerald.PlayForge
                 // Recorded where the callback fires, as an application is (GAS-28)
                 Self.GetFrameSummary()?.RecordEffectRemoved(container.Spec.Base);
                 Self.GetCallbacks()?.EffectRemoved(container.Spec.Base);
+                ForgeCounters.EffectsRemoved.Value++;
 
                 // Its burst, and its lasting cues end (FEAT-1)
                 Cue(container.Spec, ECueMoment.Removed);

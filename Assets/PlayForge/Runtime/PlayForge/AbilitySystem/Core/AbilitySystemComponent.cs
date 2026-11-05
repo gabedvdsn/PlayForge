@@ -905,6 +905,7 @@ namespace FarEmerald.PlayForge
             if (!AbilityCache.TryGetValue(container.Index, out var cached) || cached != container) return false;
 
             Callbacks.AbilityClaimed(AbilityCallbackStatus.GenerateForAbilityEvent(data));
+            ForgeCounters.Activations.Value++;
 
             ActiveCache[data.Request.Policy].Add(container.Index);
 

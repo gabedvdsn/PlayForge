@@ -86,7 +86,12 @@ namespace FarEmerald.PlayForge
             }
             remove => _onAbilityRefused -= value;
         }
-        public void AbilityRefused(ActivationRefusal refusal) => _onAbilityRefused?.Invoke(refusal);
+        public void AbilityRefused(ActivationRefusal refusal)
+        {
+            // Counted as it's told (FEAT-18)
+            ForgeCounters.RefusedActivations.Value++;
+            _onAbilityRefused?.Invoke(refusal);
+        }
         #endregion
 
         // ═══════════════════════════════════════════════════════════════

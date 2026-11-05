@@ -411,6 +411,7 @@ namespace FarEmerald.PlayForge
 
         public void Step(EProcessStepTiming timing)
         {
+            ForgeCounters.Steps.Value++;
             bool timed = MeasureSteps;
             long started = timed ? System.Diagnostics.Stopwatch.GetTimestamp() : 0L;
 

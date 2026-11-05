@@ -398,6 +398,7 @@ namespace FarEmerald.PlayForge
         public AttributeValue Recompute(IReadOnlyDictionary<IAttribute, CachedAttributeValue> cache)
         {
             using var sample = ForgeProfiler.Recompute.Auto();
+            ForgeCounters.Recomputes.Value++;
             attribution.Clear();
             attributionOrder.Clear();
 

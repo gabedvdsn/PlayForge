@@ -152,6 +152,9 @@ namespace FarEmerald.PlayForge
                 // The input buffer's windows count down by the entity's own time (FEAT-6)
                 AbilitySystem.StepBuffer(Clock.DeltaTime);
 
+                // Its shelf, for the Effects Active counter (FEAT-18)
+                CountEffects();
+
                 // Tag workers tick once a frame, at its end, once their activations are settled. Ticked here as well,
                 // they ran at twice their rate (GAS-19)
             }
@@ -216,7 +219,25 @@ namespace FarEmerald.PlayForge
         /// The entity's process is ending. Its ability system takes no more activations, so none starts as the abilities
         /// still running end with the process, nor after it (GAS-52).
         /// </summary>
-        public void WhenTerminate() => AbilitySystem.ShutDown();
+        public void WhenTerminate()
+        {
+            AbilitySystem.ShutDown();
+
+            // Its effects leave the Effects Active counter with it (FEAT-18)
+            ForgeCounters.EffectsActive.Value -= countedEffects;
+            countedEffects = 0;
+        }
+
+        // The effects on its shelf as the Effects Active counter last had them, which each step brings up to date
+        private int countedEffects;
+
+        private void CountEffects()
+        {
+            int now = EffectSystem.Shelf.Count;
+            if (now == countedEffects) return;
+            ForgeCounters.EffectsActive.Value += now - countedEffects;
+            countedEffects = now;
+        }
 
         public void QueueAction(IRootAction action) => ActionQueue?.Enqueue(action);
 
@@ -249,6 +270,7 @@ namespace FarEmerald.PlayForge
 
         public void RecordImpactReceived(ImpactData impact)
         {
+            ForgeCounters.Impacts.Value++;
             FrameSummary?.RecordImpactReceived(impact);
             Callbacks?.ImpactReceived(impact);
         }
@@ -273,6 +295,7 @@ namespace FarEmerald.PlayForge
         public void CompileGrantedTags()
         {
             using var sample = ForgeProfiler.TagCompile.Auto();
+            ForgeCounters.TagCompiles.Value++;
             TagCache.BeginRebuild();
             try
             {

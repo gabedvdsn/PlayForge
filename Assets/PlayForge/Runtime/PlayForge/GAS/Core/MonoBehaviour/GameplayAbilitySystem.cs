@@ -45,7 +45,17 @@ namespace FarEmerald.PlayForge
 
             core = new GASCore(this, Callbacks);
             core.Initialize(EntityData ? new RuntimeEntityIdentity(EntityData) : null, registered);
+
+            // An entity for the Mono Entities counter as it runs, GameRoot aside (FEAT-18)
+            if (this is not IManagerial && !counted)
+            {
+                ForgeCounters.MonoEntities.Value++;
+                counted = true;
+            }
         }
+
+        // Whether the Mono Entities counter has it
+        private bool counted;
 
         public override void WhenUpdate() => core.Tick();
 
@@ -54,6 +64,11 @@ namespace FarEmerald.PlayForge
         // Nothing starts on it from now on, and the base ends what it handles, its abilities among them (GAS-52)
         public override void WhenTerminate()
         {
+            if (counted)
+            {
+                ForgeCounters.MonoEntities.Value--;
+                counted = false;
+            }
             core?.WhenTerminate();
             base.WhenTerminate();
         }

@@ -113,7 +113,17 @@ namespace FarEmerald.PlayForge
 
             // The registration data's sides, on this entity alone: two entities can share one runtime identity (GAS-47)
             if (regData.TryGet(Tags.AFFILIATION, EDataTarget.Primary, out List<Tag> registered)) core.SetAffiliation(registered);
+
+            // An entity for the Runtime Entities counter as it runs (FEAT-18)
+            if (!counted)
+            {
+                ForgeCounters.RuntimeEntities.Value++;
+                counted = true;
+            }
         }
+
+        // Whether the Runtime Entities counter has it
+        private bool counted;
 
         public override void WhenUpdate() => core.Tick();
 
@@ -123,6 +133,11 @@ namespace FarEmerald.PlayForge
         // after it ended (GAS-52)
         public override void WhenTerminate()
         {
+            if (counted)
+            {
+                ForgeCounters.RuntimeEntities.Value--;
+                counted = false;
+            }
             core.WhenTerminate();
             base.WhenTerminate();
         }

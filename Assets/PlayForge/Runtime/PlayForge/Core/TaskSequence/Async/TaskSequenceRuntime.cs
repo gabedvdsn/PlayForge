@@ -244,6 +244,7 @@ namespace FarEmerald.PlayForge
                 Data.TrimPath(runPathDepth);
                 _failurePath = null;
                 IsRunning = true;
+                ForgeCounters.SequencesRunning.Value++;
                 CompletedSuccessfully = false;
                 FailureException = null;
                 ElapsedTime = 0f;
@@ -339,6 +340,7 @@ namespace FarEmerald.PlayForge
                     CleanupAllActiveTasks();
                     Cleanup();
                     IsRunning = false;
+                    ForgeCounters.SequencesRunning.Value--;
 
                     // For whole-sequence-critical sequences, fire once when the sequence exits.
                     // Stage-level critical sequences fire earlier via PopActiveStage.
@@ -762,6 +764,7 @@ namespace FarEmerald.PlayForge
                         return;
                     }
 
+                    ForgeCounters.StagesStarted.Value++;
                     completion = policy.AwaitCompletion(this, stage, units, policySource);
                 }
 
