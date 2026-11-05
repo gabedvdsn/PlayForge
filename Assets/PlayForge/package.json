@@ -9,7 +9,8 @@
   },
   "hideInEditor": false,
   "dependencies": {
-    "com.unity.ugui": "2.0.0"
+    "com.unity.ugui": "2.0.0",
+    "com.unity.profiling.core": "1.0.2"
   },
   "samples": [
     {

@@ -749,15 +749,23 @@ namespace FarEmerald.PlayForge
 
             try
             {
-                // Create execution units using the policy token
-                var units = stage.CreateExecutionUnits(this, stage, data, policyToken);
-
-                if (units.Length == 0)
+                // Its start under a marker of its own in the Profiler: its tasks, up to the first that waits. A marker
+                // ends where it began, so it holds only the start (FEAT-18)
+                UniTask completion;
+                using (ForgeProfiler.Stage.Auto())
                 {
-                    return;
+                    // Create execution units using the policy token
+                    var units = stage.CreateExecutionUnits(this, stage, data, policyToken);
+
+                    if (units.Length == 0)
+                    {
+                        return;
+                    }
+
+                    completion = policy.AwaitCompletion(this, stage, units, policySource);
                 }
 
-                await policy.AwaitCompletion(this, stage, units, policySource);
+                await completion;
 
                 // A task that doesn't hold can finish during a pause, but its stage ends with the pause (TS-Y)
                 await HoldWhilePaused(token);

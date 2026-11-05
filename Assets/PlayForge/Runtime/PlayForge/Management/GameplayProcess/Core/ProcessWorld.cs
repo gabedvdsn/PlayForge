@@ -557,13 +557,17 @@ namespace FarEmerald.PlayForge
             _stepSnapshot.Clear();
             _stepSnapshot.AddRange(group.GetIndices());
 
-            int count = _stepSnapshot.Count;
-            for (int i = 0; i < count; i++)
+            // Under its timing's marker in the Profiler (FEAT-18)
+            using (ForgeProfiler.StepLoop(timing).Auto())
             {
-                int cacheIndex = _stepSnapshot[i];
-                if (_active.TryGetValue(cacheIndex, out var pcb))
+                int count = _stepSnapshot.Count;
+                for (int i = 0; i < count; i++)
                 {
-                    pcb.Step(timing);
+                    int cacheIndex = _stepSnapshot[i];
+                    if (_active.TryGetValue(cacheIndex, out var pcb))
+                    {
+                        pcb.Step(timing);
+                    }
                 }
             }
         }

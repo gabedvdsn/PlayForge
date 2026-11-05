@@ -52,6 +52,10 @@ tracks each fix below by its ID.
   (FEAT-17).
 - Profiler markers. PlayForge's work shows in Unity's Profiler under its own names: a process's step, a GAS's step
   and its end of frame, an effect's application and an ability's activation (`ForgeProfiler`, FEAT-18).
+- More Profiler markers: the step loop at each timing, a tag compile, an attribute's recompute and a stage's start;
+  and a process's step under a marker of its type's too, with the process's ID as its metadata (FEAT-18).
+- PlayForge depends on `com.unity.profiling.core` 1.0.2, which the editor ships, for its Profiler markers with
+  metadata and its counters (FEAT-18).
 - An Effect Stacks scaler, which reads the stack count of the effect's own container, 1 for one that doesn't stack.
   With Multiply With Scaler, a sunder of −5 armor takes 5 a stack, and a Continuous change follows the count as it
   changes (FEAT-19).

@@ -272,6 +272,7 @@ namespace FarEmerald.PlayForge
         // A rebuild of the tags from their sources, which tells, as it ends, only what it changed (FEAT-3)
         public void CompileGrantedTags()
         {
+            using var sample = ForgeProfiler.TagCompile.Auto();
             TagCache.BeginRebuild();
             try
             {

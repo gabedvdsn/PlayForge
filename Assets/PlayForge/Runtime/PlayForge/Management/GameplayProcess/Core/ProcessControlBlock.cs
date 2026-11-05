@@ -1,6 +1,7 @@
 using System;
 using System.Threading;
 using Cysharp.Threading.Tasks;
+using Unity.Profiling;
 using UnityEngine;
 
 namespace FarEmerald.PlayForge
@@ -62,6 +63,10 @@ namespace FarEmerald.PlayForge
         private int _steps;
         private long _stepTicks;
         private long _peakStepTicks;
+
+        // The step marker of the process's type, which its first step finds (FEAT-18)
+        private ProfilerMarker<int> _stepMarker;
+        private bool _stepMarked;
 
         public float UseSinceLastCheck
         {
@@ -414,8 +419,17 @@ namespace FarEmerald.PlayForge
             // below. Escaping, it ended the whole frame's stepping and skipped the flush, so a process
             // terminated while its step kept throwing never left Running (PF-011).
             //
-            // Under its own marker in the Profiler (FEAT-18)
+            // Under its own marker in the Profiler, and its type's, with its ID (FEAT-18)
+            if (!_stepMarked)
+            {
+                _stepMarker = ForgeProfiler.StepOf(Wrapper.TryGetProcess<object>(out var process) && process != null
+                    ? process.GetType()
+                    : Wrapper.GetType());
+                _stepMarked = true;
+            }
+
             using (ForgeProfiler.ProcessStep.Auto())
+            using (_stepMarker.Auto(CacheIndex))
             try
             {
                 switch (timing)
