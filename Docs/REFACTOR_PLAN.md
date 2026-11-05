@@ -665,7 +665,7 @@ Phase 2 part, and set Phase 4's direction.
 
 | ID | Feature | Notes |
 |---|---|---|
-| FEAT-1 | Gameplay cues | Hooks for effects, sounds and camera on apply, tick and remove |
+| FEAT-1 | Gameplay cues | Hooks for effects, sounds and camera on apply, tick and remove. Done (Decision 30): `GameplayEffect.Cues`, a list of `AbstractCueHandler`, whose virtual hooks are bursts (On Applied, On Ticked, On Removed) and a lasting cue's Begin and End; the shelf plays them (`EffectSystemComponent.Cue`), and a restore ends and begins the lasting ones and plays no burst; `CameraShakeCue` goes through the `ICameraShaker` the game gives `ForgeCues.Shaker`, with `SoundCue` and `PrefabCue` beside it; the Effect inspector's Cues section, an effect's own after Impact (EDITOR_STYLE's Q9 order), edits them |
 | FEAT-2 | SetByCaller magnitudes | Scalers read the data packet (C01). Done (Decision 30): `SetByCaller(tag, magnitude)` on a `GameplayEffectSpec` or a `ProcessDataPacket`; `SetByCallerScaler` reads it, or its Default; each spec an ability's data makes takes its magnitudes as it's made (Apply Effects, Apply Remove Effects, the task helpers, the cost and cooldown), a contained or overflow effect takes its container's, and a save keeps them. Found and driven by the ability crafting scenario |
 | FEAT-3 | Tag-change events | Replace tag-worker polling. Done (Decision 30): `TagCache.Listen` hears a tag and the tags under it come and go, at once, or every weight change; `TagChanged` hears every change; a rebuild tells only what it changed; a tag worker is evaluated when the tags change, unless it asks for every frame (`EvaluateEveryFrame`) |
 | FEAT-4 | Ability triggers | Activate on a gameplay event or when a tag is added. Done (Decision 30): `AbilityDefinition.Triggers`, each an `AbilityTrigger` of a source (Gameplay Event, Tag Added) and a tag; `SendGameplayEvent(tag, data)` on the ability system and the hubs activates each known ability an event under the trigger's tag sets off, with the event's data; the ability system hears a tag gained and fires its triggers at once, one at a time, so a triggered ability that grants tags doesn't nest; `OnGameplayEvent` hears each event; the Ability inspector edits them. Driven by the beyond combat scenario |
@@ -748,6 +748,28 @@ GAS-4 with GAS-5, PC-6, and TS-I with PC-5.
 ## Log
 
 Record baselines, gate results and notable decisions here, newest first.
+
+- 2026-11-05, **FEAT-1: gameplay cues, and the sequence-driven boss.** The fifth stretch scenario (Decision 30).
+  - **FEAT-1:** `GameplayEffect.Cues`, a list of `AbstractCueHandler`, as an effect lists its workers. Its virtual
+    hooks are bursts (On Applied, On Ticked, On Removed) and a lasting cue's Begin and End, each given a `CueContext`
+    of the target, the spec, the ticks and where the target is. The shelf plays them (`EffectSystemComponent.Cue`): a
+    burst as an effect lands, ticks or comes off, and Begin and End as a durational or infinite one goes on and off.
+    A restore ends and begins the lasting ones and plays no burst (FEAT-9). `CameraShakeCue` goes through the
+    `ICameraShaker` the game gives `ForgeCues.Shaker`, and `SoundCue` and `PrefabCue` sit beside it. The Effect
+    inspector's new Cues section, an effect's own after Impact, edits them, so ED-37's order and EDITOR_STYLE's Q9
+    sentence name it.
+  - **The sequence-driven boss** runs one TaskSequence whose stages are the fight's phases: it slams until it's worn
+    (an injection breaks the opening's repeat), branches to a meteor rain while the arena's pillars stand or stands
+    exposed once they're down, and ends in a fury, which the arena's alarm can call early by jumping to its stage.
+    Each slam, and the rain as it lands and on each tick, shakes the camera through the game's shaker. It held at its
+    first run: nothing past FEAT-1 was missing, and only its count of shakes was wrong, as the rain shakes as it
+    lands as well.
+  - **Their tests,** seen failing first: `FEAT_1_A_shake_cue_goes_through_the_games_shaker` and
+    `FEAT_1_A_lasting_cue_lasts_as_its_effect_does` in PlayMode's new `GameplayCueTests` (4 of 4), and EditMode's
+    `FEAT_1_The_Effect_inspector_edits_its_cues`.
+  - **Next:** FEAT-11's input binding, then FEAT-10's headless run.
+  - **Tests:** PlayMode 1244: 1237 pass, 0 fail and 7 planted are skipped, in three orders. Planted 7 of 7; EditMode
+    441 of 441.
 
 - 2026-11-05, **FEAT-4: ability triggers, and the beyond combat scenario.** The fourth stretch scenario (Decision 30).
   - **FEAT-4:** `AbilityDefinition.Triggers`, each an `AbilityTrigger` of a source (Gameplay Event, Tag Added) and a

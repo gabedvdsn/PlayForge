@@ -245,12 +245,20 @@ namespace FarEmerald.PlayForge
             spec.RunWorkerRemoval(new EffectWorkerContext(Self, spec, Self.GetFrameSummary(), Self.GetActionQueue(), 1,
                 impacts?[impacts.Count - 1], impacts));
             tagCache.RemoveTags(spec.Base.Tags.GrantedTags);
+
+            // An instant effect lands and is over, so its cue is a burst (FEAT-1)
+            Cue(spec, ECueMoment.Applied);
         }
 
         private void ApplyDurationalGameplayEffect(GameplayEffectSpec spec)
         {
             bool ongoing = ForgeHelper.ValidateEffectOngoingRequirements(spec);
-            if (TryHandleExistingDurationalGameplayEffect(spec, ongoing)) return;
+            if (TryHandleExistingDurationalGameplayEffect(spec, ongoing))
+            {
+                // Taken in by the effect on already, whose lasting cues go on (FEAT-1)
+                Cue(spec, ECueMoment.Applied);
+                return;
+            }
 
             var container = spec.Base.DurationSpecification.GenerateContainer(spec, ongoing);
             Shelve(container);
@@ -262,6 +270,10 @@ namespace FarEmerald.PlayForge
             RegisterContinuousEntries(spec);
 
             container.Spec.RunWorkerApplication(new EffectWorkerContext(Self, container.Spec, Self.GetFrameSummary(), Self.GetActionQueue()));
+
+            // Its burst, and its lasting cues begin (FEAT-1)
+            Cue(container.Spec, ECueMoment.Applied);
+            Cue(container.Spec, ECueMoment.Begin);
 
             if (ongoing && spec.Base.DurationSpecification.TickOnApplication)
             {
@@ -679,6 +691,7 @@ namespace FarEmerald.PlayForge
                     if (executeTicks > 0 && container.Ongoing)
                     {
                         Self.GetCallbacks()?.EffectTick(container.Spec, executeTicks);
+                        Cue(container.Spec, ECueMoment.Ticked, executeTicks);
 
                         for (int _ = 0; _ < executeTicks; _++) ApplyDurationGameplayEffectAsInstant(container);
                     }
@@ -730,9 +743,48 @@ namespace FarEmerald.PlayForge
                 // Recorded where the callback fires, as an application is (GAS-28)
                 Self.GetFrameSummary()?.RecordEffectRemoved(container.Spec.Base);
                 Self.GetCallbacks()?.EffectRemoved(container.Spec.Base);
+
+                // Its burst, and its lasting cues end (FEAT-1)
+                Cue(container.Spec, ECueMoment.Removed);
+                Cue(container.Spec, ECueMoment.End);
             }
 
             HandleGameplayEffects();
+        }
+
+        // ═══════════════════════════════════════════════════════════════════════════
+        // CUES (FEAT-1)
+        // ═══════════════════════════════════════════════════════════════════════════
+
+        private enum ECueMoment { Applied, Ticked, Removed, Begin, End }
+
+        // Plays the effect's cues for the moment. A cue that throws is reported, and the effect goes on: what it shows
+        // mustn't stop what it does
+        private void Cue(GameplayEffectSpec spec, ECueMoment moment, int ticks = 0)
+        {
+            var cues = spec?.Base?.Cues;
+            if (cues == null || cues.Count == 0) return;
+            var context = new CueContext(Self, spec, ticks);
+            for (int i = 0; i < cues.Count; i++)
+            {
+                var cue = cues[i];
+                if (cue == null) continue;
+                try
+                {
+                    switch (moment)
+                    {
+                        case ECueMoment.Applied: cue.OnApplied(context); break;
+                        case ECueMoment.Ticked: cue.OnTicked(context); break;
+                        case ECueMoment.Removed: cue.OnRemoved(context); break;
+                        case ECueMoment.Begin: cue.Begin(context); break;
+                        case ECueMoment.End: cue.End(context); break;
+                    }
+                }
+                catch (Exception exception)
+                {
+                    Debug.LogException(exception);
+                }
+            }
         }
 
         // ═══════════════════════════════════════════════════════════════════════════
@@ -751,6 +803,9 @@ namespace FarEmerald.PlayForge
                 container.ContainerIsActive = false;
                 foreach (var attribute in container.Spec.GetImpactedAttributes(EImpactDelivery.Continuous))
                     AttributeSystem.UnregisterQuietly(attribute, container.Spec);
+
+                // Its lasting cues end, as its effect leaves; no burst plays (FEAT-1)
+                Cue(container.Spec, ECueMoment.End);
             }
 
             EffectShelf.Clear();
@@ -782,6 +837,9 @@ namespace FarEmerald.PlayForge
             LendAbilities(container, quietly: true);
             foreach (var attribute in spec.GetImpactedAttributes(EImpactDelivery.Continuous))
                 AttributeSystem.RegisterQuietly(attribute, spec, spec.GetImpactersFor(attribute, EImpactDelivery.Continuous));
+
+            // Its lasting cues begin again, with no burst (FEAT-1)
+            Cue(spec, ECueMoment.Begin);
 
             requirementsDirty = true;
         }

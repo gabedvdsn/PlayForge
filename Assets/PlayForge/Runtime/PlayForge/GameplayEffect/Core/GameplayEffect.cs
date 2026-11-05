@@ -26,6 +26,13 @@ namespace FarEmerald.PlayForge
         
         [SerializeReference]
         public List<AbstractEffectWorker> Workers;
+
+        /// <summary>
+        /// What the effect shows and sounds as it lands, ticks and goes, and while it lasts, apart from what it changes, as
+        /// its workers are listed: a camera shake, a sound, a prefab. An effect showed nothing of its own (FEAT-1).
+        /// </summary>
+        [SerializeReference]
+        public List<AbstractCueHandler> Cues = new();
         
         public EffectTagRequirements SourceRequirements;
         public EffectTagRequirements TargetRequirements;

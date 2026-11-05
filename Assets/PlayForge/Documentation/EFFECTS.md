@@ -199,6 +199,22 @@ it is still applying is refused, with a warning, so an effect that contains itse
 The group this effect's changes count toward (default `Ignore`), unless an impact names its own. Groups split an
 attribute's value for queries and UI, such as base and bonus health. They never change the math.
 
+## Cues
+
+What the effect shows and sounds, apart from what it changes, listed as its workers are. Pick each cue's kind from the
+list:
+
+- **Camera Shake**: shakes the camera as the effect lands, and on each tick with **On Each Tick**, through the shaker
+  the game gives `ForgeCues.Shaker`, an `ICameraShaker`. With none given, it shakes nothing.
+- **Sound**: plays its clip at the target as the effect lands, and on each tick with **On Each Tick**.
+- **Prefab**: places its prefab at the target as the effect lands, for **Lifetime** seconds, or, with **While Active**,
+  for as long as the effect lasts, following the target.
+
+A cue plays its bursts as the effect lands, as its ticks execute and as it comes off, and a lasting cue, such as a
+While Active prefab, while the effect is on. A re-application that an effect on already takes in plays its burst
+again. A save's load ends each lasting cue and begins it again as the effect leaves and comes back, and plays no burst.
+Write a cue of your own by deriving from `AbstractCueHandler` and overriding the moments it plays at.
+
 ## Requirements
 
 Tag checks against the effect's target, and against its source, the entity behind its origin. The switch at the top

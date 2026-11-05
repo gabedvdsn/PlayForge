@@ -7,6 +7,10 @@ tracks each fix below by its ID.
 ## [Unreleased]
 
 ### Added
+- Gameplay cues. An effect's new Cues section lists what it shows and sounds, as its workers are listed: a camera
+  shake through the shaker the game gives `ForgeCues.Shaker`, a sound, or a prefab, as a burst or for as long as
+  the effect lasts. Derive from `AbstractCueHandler` for a cue of your own. A save's load ends and begins lasting
+  cues again, and plays no burst (FEAT-1).
 - Ability triggers. An ability's Triggers set it off on its own: a gameplay event sent to its entity with
   `SendGameplayEvent(tag, data)`, or a tag its entity gains, under the trigger's tag or one under it. The ability
   inspector edits them, and the callbacks' `OnGameplayEvent` hears each event (FEAT-4).
