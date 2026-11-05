@@ -10,7 +10,7 @@ and a Log of each batch's test results.
 ## How to use this
 
 - Paths are relative to the repo root.
-- Line numbers are as of commit `26aa233`, the head of `main` on 2026-11-05. A later commit may move them, so each
+- Line numbers are as of commit `26aa233`, the head of `main` on 2026-11-04. A later commit may move them, so each
   entry also names the class and method to search for. `git show 26aa233:<path>` shows a file as it was then.
 - In Rider, Go to File accepts `path:line`. In Visual Studio, open the file, then Go To Line (Ctrl+G).
   A bare `:123` after a path means another line in the same file.

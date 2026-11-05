@@ -742,7 +742,7 @@ GAS-4 with GAS-5, PC-6, and TS-I with PC-5.
 
 Record baselines, gate results and notable decisions here, newest first.
 
-- 2026-11-05, **The MOBA hero kit lab, GAS-57, and While active heard at once.** The second lab (Decision 30).
+- 2026-11-04, **The MOBA hero kit lab, GAS-57, and While active heard at once.** The second lab (Decision 30).
   - **The lab** (`Tests/Labs/MobaLab.cs` in Proving Grounds, category Lab): four heroes of four abilities, on a clock
     of half a second a frame. Mana pays for each cast; a hero's Cooldown Reduction shortens its cooldowns (a game's
     scaler on the cooldown's duration); armor and magic resist each let through 100 / (100 + resist) of a blow of
