@@ -81,6 +81,7 @@ namespace FarEmerald.PlayForge.Extended.Editor
         private Label controlStatus;
         private Label processStatus;
         private Label entityStatus;
+        private Label actionStatus;
 
         // ═══════════════════════════════════════════════════════════════════════════
         // Opening
@@ -285,6 +286,8 @@ namespace FarEmerald.PlayForge.Extended.Editor
             controlStatus = StatusPart("ControlStatus");
             processStatus = StatusPart("ProcessStatus");
             entityStatus = StatusPart("EntityStatus");
+            actionStatus = StatusPart("ActionStatus");
+            actionStatus.AddToClassList("pf-debugger__status-action");
             root.Add(statusBar);
             ShowState();
         }
@@ -476,6 +479,13 @@ namespace FarEmerald.PlayForge.Extended.Editor
             processStatus.text = $"{CountOf(processes.Count, "process", "processes")}: {string.Join(", ", parts)}";
             int mono = hubs.Count(gas => gas.ToGASObject() != null);
             entityStatus.text = $"{CountOf(hubs.Count, "entity", "entities")}: {mono} Mono, {hubs.Count - mono} runtime";
+        }
+
+        // What the last action in the window did, as "Applied Burning" or "Burning was refused", on the status bar's
+        // right, so the foot rows never shift to say it
+        private void ShowAction(string text)
+        {
+            if (actionStatus != null) actionStatus.text = text;
         }
 
         // An action on ProcessControl, which the window then reads again

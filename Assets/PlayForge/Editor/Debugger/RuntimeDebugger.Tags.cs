@@ -385,7 +385,7 @@ namespace FarEmerald.PlayForge.Extended.Editor
             if (assetTag == tag) grants.Add(new TagGrant(typeof(EntityIdentity), "Asset tag", "Self"));
             if (gas.GetAffiliation()?.Contains(tag) == true) grants.Add(new TagGrant(typeof(EntityIdentity), "Affiliation", "Self"));
             if (identityTags?.Contains(tag) == true) grants.Add(new TagGrant(typeof(EntityIdentity), "Granted tags", "Self"));
-            if (gas.GetLooseTags()?.Contains(tag) == true) grants.Add(new TagGrant(null, "Loose tag", "Granted directly"));
+            if (gas.GetLooseTags()?.Contains(tag) == true) grants.Add(new TagGrant(null, "Loose", "Granted directly"));
             return grants;
         }
     }

@@ -284,6 +284,51 @@ from. It lives outside `Assets/` so it never ships in the package.
 - Decision 29, 2026-11-04: the asset header stays at the top of the inspector while the content scrolls under it.
   The user's call after seeing ED-20, which reverses Q17's answer, that the header scrolls with the content. It
   follows the Inspector's scroll view by its events and polls nothing, so ED-11 holds (ED-36).
+- Decision 30, 2026-11-04: Phase 5's direction, from the user's answers to a 16-question interview built on a
+  read-only survey of the FEAT rows. The user took the recommended answer every time.
+  - **Scope:** every FEAT row but networking. FEAT-13 gets only two changes that keep it possible: one injectable
+    clock and one seedable random source, which Runtime reads instead of `Time` and `UnityEngine.Random`; and IDs
+    scoped to an entity (a `HandleId` counter per ability system, an ID for each effect application, and `Tag.Id`
+    never serialized).
+  - **Order:** foundations first, then the labs one at a time. The foundations are the Register builder (FEAT-15),
+    tag-change events (FEAT-3, with GAS-56), the time source (FEAT-7, with TS-6), and the IDs and random source
+    above. Each lab then brings the features it finds missing.
+  - **The gate:** all eight labs. A lab is test-only at first: assets built in code and played by a bot in Proving
+    Grounds. Its scene, and whether it ships in Samples, come once its bot is green (open decision 18).
+  - **Cancel and block (FEAT-5):** per stage, with an ability-wide default. A stage lists the tags that cancel it
+    and the abilities it blocks, and stages that list none take the default. A critical stage can't be cancelled.
+    A "While active" Caster group interrupts the ability when it fails.
+  - **Input buffer (FEAT-6):** one slot per ability. A new press refreshes its slot; the highest buffer priority
+    fires first, and ties go to the newest. The Queue policy becomes the buffer, with a window per ability that a
+    request can override, on scaled time.
+  - **Item stacking (FEAT-14):** a give fills the existing stack first, and a full stack opens a second only with
+    Allow Duplicate Items on. A stack applies its effects and abilities once, and a scaler can read its count.
+    `GiveItem(item, count)` takes what fits and returns how many it took.
+  - **Time (FEAT-7):** each GAS owns its clock. A fixed-rate tick steps every GAS and sequence a fixed number of
+    times per frame.
+  - **Save and load (FEAT-9):** an entity at rest: permanent commits, effects with their time left, levels, granted
+    abilities, items and cooldowns. Running abilities end on load. A catalog the editor builds finds assets by GUID.
+  - **Headless (FEAT-10):** ProcessControl's scheduling moves into a plain C# class that the MonoBehaviour wraps.
+    Headless code owns one and steps it, and several worlds can exist.
+  - **Register (FEAT-15):** one fluent builder. The 28 overloads become `[Obsolete]` wrappers, removed before the
+    first Asset Store submission.
+  - **Cues (FEAT-1):** handlers listed on the effect, as its workers are. Camera shake goes through an interface the
+    game implements.
+  - **Ability graph (FEAT-12):** a read-only view. The timeline is recorded from real runs, and the recorder runs in
+    editor Play mode only, as a view of the Debugger.
+  - **Defaults the user accepted:** tag events fire at once, and a listener on a parent tag hears its children;
+    triggers fire on gameplay events and on a tag being added; cleanse and immunity match an effect's asset,
+    context and granted tags; overflow at max stacks gets Overflow Effects, Deny Refresh and Clear Stacks;
+    SetByCaller values are copied into the spec when it's made; targeting reads an input interface, with legacy
+    and Input System defaults.
+- Decision 31, 2026-11-04: the Debugger's edits sit in each section's foot row, under a thin rule, as the design
+  canvas's Entities board draws them (version 22), which answers open decision 19. Attributes: the selected
+  attribute's name, then Base and Current fields that set it on Enter; a double-click on a value goes to its field.
+  Effects: Remove for the selected row, then a picker and Apply. Abilities: Activate and Interrupt for the selected
+  row, then a picker, Level and Grant. Tags: Remove for the selected tag, a loose one only, then a tag field and Add
+  Tag. An action that doesn't apply stays in place, disabled, so nothing shifts, and a section's selected row takes
+  Unity's unfocused selection grey, so the entity list keeps the blue. Double-click alone wasn't enough: the style
+  doc keeps every control visible.
 
 **Open. Ask the user; do not assume:**
 1. ~~**Uncommitted changes**~~: decided, see above.
@@ -303,15 +348,8 @@ from. It lives outside `Assets/` so it never ships in the package.
 15. ~~**QuickOutline (SP-5)**~~: decided, see above.
 16. ~~**Sample layout (SP-20)**~~: decided, see above.
 17. ~~**The submission Editor (SP-22, SP-23)**~~: decided, see above.
-18. **The labs' scenes.** The review asks for each lab as a small playable scene that doubles as a sample and as store
-    screenshot material. Working assumption until the user answers: a lab is test-only in Proving Grounds at first,
-    its assets built in code and played by its bot; its scene, and whether it ships in the package's Samples, come
-    once its bot is green.
-19. **Where the Debugger's edits go (ED-40).** The boards draw the Entities view's four sections without the edits
-    Q27 asked for. Working assumption until the user answers: Base and Current are set by a double-click on the
-    value; a click selects a table's row, and the buttons under the table act on it (Remove, Activate, Interrupt);
-    a picker under Effects applies one, a picker and a level under Abilities grant one, and a tag field with Add Tag
-    and Project Tags under Tags adds a loose tag.
+18. ~~**The labs' scenes**~~: decided, see above (Decision 30).
+19. ~~**Where the Debugger's edits go (ED-40)**~~: decided, see above (Decision 31).
 
 ## Roadmap
 
@@ -414,7 +452,7 @@ had no letter in the review. TS-AA onward came from the test project.
 | TS-3 | H | 0 | The proxy and sequences are recompiled on every activation; `IsCriticalSection` builds the inner sequence 4–5 times (PF-012) | `AbilityProxy.cs:62`, `AbilitySequenceCompiler.cs:30-80`, `RunSequenceTask.cs:18-21` | verified |
 | TS-4 | H | 0 | A bare `catch { }` swallows ability errors (PF-008) | `AbilitySpecContainer.cs:113-116` | verified |
 | TS-5 | M | 3 | LINQ on a hot path; `AppendPath` concatenates strings and grows without bound on repeat. PF-007 (Phase 0) took the LINQ out of `HasAnyStageConditions` and made the path's parts join only when read, which left them to grow: a sequence that repeated added its stages' parts every time round, and its twentieth run had a 272-character path to its first's 25. Now each part a run or a stage adds comes off as it ends, each repeat starts where its iteration began, and a failed run keeps the path to where it failed for its log. The parts are formatted once, and the LINQ left on an ability's activation, in `AbilityProxy`, and in a chain's `HasConditions` is loops | `TaskSequenceRuntime.cs` (`Run`, `RunStage`, `RestartStage`), `ProcessDataPacket.cs` (`TrimPath`), `AbilityProxy.cs`, `AbilityTaskAdapter.cs`, `AbilitySequenceCompiler.cs` | verified |
-| TS-6 | M | 5 | Global time only; `RunProcessTask` defaults to unscaled time (C02) → FEAT-7 | `RunProcessTask.cs:14` | open |
+| TS-6 | M | 5 | Global time only; `RunProcessTask` defaults to unscaled time (C02) → FEAT-7, in Phase 5's foundations (Decision 30) | `RunProcessTask.cs:14` | open |
 | TS-7 | M | 5 | Critical sections are static; the compiler never emits a `BranchStage` (C12) | `AbilitySequenceCompiler.cs` | open |
 | TS-8 | M | 3 | `TryActivate` runs synchronously deep into the first stages (C16). Measured: it runs an instant ability to its end, and a slower one to its first wait, before it returns. An ability asked for again from its own end or claim-released callback nested inside the call: 40 activations, 40 deep, in one frame before a cap, so an uncapped loop overflowed the stack. Activation stays synchronous (Decision 25); an ability asked for again while its own activation call still runs starts next frame | `AbilitySystemComponent.cs` (`TryActivateAbility`), `AbilitySpecContainer.cs` (`ActivateAbility`) | verified |
 | TS-9 | H | 1 | `OnAbilityEnd` means claim released; task callbacks fire only on the legacy path (C07) | `AbilityProxy.cs` | verified |
@@ -510,6 +548,7 @@ had no letter in the review. TS-AA onward came from the test project.
 | GAS-53 | H | 3 | Interrupting every running ability under a policy, all at once or by turning the ability system off walked the live set of them. TS-Z made an interrupted ability end inside the interrupt, taking itself off that set, so the walk threw "Collection was modified" once the first had ended, and the rest ran on: 1 of 2 ended, on both hubs. It now walks a copy | `AbilitySystemComponent.cs` (`Inject`, `ClearAbilityCache`) | verified |
 | GAS-54 | M | 4 | An attribute set element with no Attribute, as a list's "+" leaves one, throws as the entity starts: `AttributeSetMeta` files the set's elements in a dictionary by their attribute, and a null key throws, so the entity gets none of its attributes. Such an element now gives nothing, and the set's unique count leaves it out | `AttributeSet.cs:92, 369-373` | fixed |
 | GAS-55 | M | 4 | Use Minimum takes the first colliding element: `ForgeUtils.IndexMin` started its search from `float.MinValue`, so no value was ever below it. It starts from `float.MaxValue` | `ForgeUtils.cs:23-38` | fixed |
+| GAS-56 | M | 5 | An effect's While-on and Removal requirements are checked again only when an effect is applied or removed (`requirementsDirty`, set in `EffectSystemComponent.ApplyGameplayEffect` and where effects leave the shelf). `CompileGrantedTags` doesn't mark them, so a tag granted or taken back by an ability, an item or a loose tag (FEAT-16) doesn't end an effect until another effect comes or goes. FEAT-3's events should mark them. Found in the Phase 5 survey; no test yet | `EffectSystemComponent.cs`, `GASCore.cs` (`CompileGrantedTags`, `AddLooseTag`) | open |
 | GAS-P1 | M | 0 | `ActionQueue` LINQ allocations; snapshot built every frame (PF-006) | `ActionQueue.cs:41, 46, 156`, `FrameSummary.cs:340-351` | verified |
 | GAS-P2 | M | 0 | Tag and FrameSummary allocations (PF-007) | `TagCache.cs:60`, `TagQuery.cs:89-136`, `FrameSummary.cs:306-308` | verified |
 | GAS-P3 | M | 3 | Each application revalidates every container and rebuilds all tags (area application is quadratic). Measured: an instant application on an entity carrying 1,000 effects took 0.49 ms, 135 times one on an entity carrying 2. Now the requirements wait for one pass at the next tick, a shelved container's tags are counted as it lands, and re-application and removal find containers in an index by asset tag | `EffectSystemComponent.cs:312-348`, `GameplayAbilitySystem.cs:250-281` | verified |
@@ -565,7 +604,7 @@ had no letter in the review. TS-AA onward came from the test project.
 | ED-37 | M | 4 | The asset inspectors don't follow `Docs/EDITOR_STYLE.md`: their sections stray from its order, Level Source sits apart from Leveling, a collapsed section shows nothing, sentences explain the fields, the link state sits in tinted boxes with colored borders, and many sections' Import and Clear only log a warning. Each inspector is redone in Phase 4's fifth step. Fixed: the Attribute (`ed6295a`, with ED-15), Item (`cf70e8f`), Entity (`a06a4fb`), Attribute Set (`86ead05`), Ability (`031c2d4`) and Effect inspectors: the style doc's order, Leveling with the level link and its provider in Unity's object field, the asset tag under the name, a summary on each section, Import and Clear on each, Used By, and no look set in code; the Entity mockup's attribute table, in the Entity and Attribute Set inspectors; the mockups' When Busy, in the Ability and Entity inspectors; and the Effect mockup's requirements table, in the Effect and Ability inspectors | `EffectEditor.cs`, `AbilityEditor.cs`, `ForgeRequirementsTable.cs` | fixed |
 | ED-38 | M | 4 | An asset reference isn't Unity's object field: `AbstractRefDrawer` draws a button that opens a dropdown list of its own, with hover colors and Clear and Open icon buttons set in C#, and setting an effect asks in a dialog whether to link it. Now every asset reference is Unity's object field with a plain button beside it: Open, which shows the asset in a window of its own, or New, which makes one where The Forge puts its type, named and tagged, and uses it (Q15). An effect field says on a line under it how the effect takes its levels, with Link; its template, a pick of unlinked effects and New Linked Effect are in its right-click menu (Q18) | `AbstractForgeObjectDrawer.cs`, `GameplayEffectDrawer.cs` | fixed |
 | ED-39 | M | 4 | Opening an attribute set element can change the set: 50 ms after it draws, and on every change to the set, `AttributeSetElementDrawer` clamps a Current or Base magnitude that sits outside the element's bounds and applies it to the asset, so looking at a set marks it modified. The runtime clamps the same values as the entity starts. Now the drawer writes nothing as it draws: a help box says how the runtime clamps such a magnitude, and only a value typed into a Magnitude field is kept within the bounds, as part of the same edit. The drawer follows the style sheet | `AttributeSetElementDrawer.cs` | fixed |
-| ED-40 | M | 4 | The debugger only watches: it can't change an attribute or a tag, apply an effect or grant an ability, so trying a change means writing code for it. Q27: editing attributes and tags first, then applying effects and granting abilities. Fixed: a double-click sets an attribute's base or current value, which the entity takes as it is; a tag typed or picked from the project's is granted as a loose tag (FEAT-16), which Remove takes back from its selected row; an effect picked under Effects lands from the entity itself, and Remove takes the selected one off; an ability picked under Abilities is granted at a level, and the selected one is activated, interrupted or removed. Where these go is open decision 19 | `Editor/Debugger/RuntimeDebugger.Entities.cs` | fixed |
+| ED-40 | M | 4 | The debugger only watches: it can't change an attribute or a tag, apply an effect or grant an ability, so trying a change means writing code for it. Q27: editing attributes and tags first, then applying effects and granting abilities. Fixed: each section of the Debugger's Entities view ends in a foot row (Decision 31): the selected attribute's Base and Current fields, which the entity takes as they are; Remove for the selected effect, and an effect picked there lands from the entity itself; Activate and Interrupt for the selected ability, and one picked there is granted at a level; Remove for the selected loose tag, and a tag typed or picked from the project's is granted as a loose tag (FEAT-16). The status bar says what each did | `Editor/Debugger/RuntimeDebugger.Entities.cs` | fixed |
 
 The design questions behind Phase 4's rows, each with its evidence, are in the UI interview doc of 2026-11-03,
 https://claude.ai/artifact/BbnGybqgX3spJsT6HoTafp. Its answers (Decision 18) settle ED-8, ED-16, ED-19 and ED-12's
@@ -628,19 +667,25 @@ Phase 2 part, and set Phase 4's direction.
 | FEAT-5 | Cancel and block abilities by tag | C11 |
 | FEAT-6 | Input buffer | Expiry and latest-wins for queued activations (C06) |
 | FEAT-7 | Time source | Per-entity time scale and deterministic fixed tick (C02) |
-| FEAT-8 | Effect conveniences | Cleanse by tag query, immunity, overflow at max stacks, abilities granted by effects, chance to apply. Cleanse and immunity done (Removes Effects Tagged, Blocks Effects Tagged); overflow at max stacks, abilities granted by effects and the chance to apply are next |
+| FEAT-8 | Effect conveniences | Cleanse by tag query, immunity, overflow at max stacks, abilities granted by effects, chance to apply. Cleanse and immunity done (Removes Effects Tagged, Blocks Effects Tagged), matching an effect's asset, context and granted tags (Decision 30); overflow at max stacks (Overflow Effects, Deny Refresh and Clear Stacks), abilities granted by effects and the chance to apply come with the Status-effect lab |
 | FEAT-9 | Save and load | Snapshots of attributes, effects, tags and cooldowns |
 | FEAT-10 | Headless mode | Abilities run without a scene ProcessControl |
 | FEAT-11 | Input binding | Targeting without legacy `Input` and `Camera.main` |
 | FEAT-12 | Ability graph and timeline, effect recorder | Editor |
-| FEAT-13 | Networking | Prediction and replication; not planned yet |
+| FEAT-13 | Networking | Prediction and replication; not planned. Only its two cheap changes are in Phase 5 (Decision 30): one injectable clock and one seedable random source, and IDs scoped to an entity |
 | FEAT-14 | Item stacking | An inventory holds an item as a count, up to the Item's `MaxStackSize`. The field and `ItemSpecContainer.ItemStacks` exist, but nothing reads or sets them (GAS-51). Decide how giving and removing count, how a stack's effects and abilities scale, and how Allow Duplicate Items meets it |
 | FEAT-15 | Register builder | One builder or options struct in place of `ProcessControl`'s 28 static `Register` overloads, from the review's API changes. The roadmap gave it to Phase 3, but no row tracked it, so it moved here when Phase 3 closed. Today the argument's static type picks the overload, and a failed call returns false with a null relay. The review paired it with a `Run` on the relay, which doesn't exist yet, and an awaitable completion, which `ProcessRelay.WhenTerminated` now is (TS-Z) |
 | FEAT-16 | Loose tags | Done with ED-40, ahead of the phase. A tag granted with no effect, ability or item behind it, as Unreal's loose gameplay tags are: `AddLooseTag`, `RemoveLooseTag` and `GetLooseTags` on each hub, each grant counted, and the tag compile includes them. A tag added straight to the tag cache went at its next compile |
+| FEAT-17 | Activation by asset or tag, with a reason | From the review's API changes: activate by ability asset or tag, and say why a refused activation was refused, with a matching callback. `TryActivateAbility` returns only true or false (`AbilitySystemComponent.TryActivateAbility`) |
+| FEAT-18 | Profiler markers | From the review's Profiling gap: Runtime has no `ProfilerMarker`, so the cost of a process step, an effect application or an ability activation can't be seen in Unity's Profiler |
 
 **Phase 5's order,** from the review's plan for the test project (its labs, one at a time) and the table above. A lab
 is a small game: assets the lab builds in code, and a bot that plays it in PlayMode tests under a live ProcessControl,
-as the harness's World runs one. Each lab brings the features it finds missing, test-first.
+as the harness's World runs one. Each lab brings the features it finds missing, test-first. The foundations come
+first (Decision 30).
+0. **Foundations:** FEAT-15, the Register builder; FEAT-3, tag-change events, with GAS-56; FEAT-7 and TS-6, the time
+   source and the fixed-rate tick; and FEAT-13's two changes, the injectable clock and random source and per-entity
+   IDs.
 1. **The Status-effect lab:** poison, burn and bleed under each stacking policy; cleanse, immunity, and shields that
    absorb damage before health. With FEAT-8: cleanse and immunity first, then overflow at max stacks, abilities
    granted by effects and the chance to apply.
@@ -658,8 +703,9 @@ as the harness's World runs one. Each lab brings the features it finds missing, 
 8. **The Combat lab:** every delivery, stacking and interaction policy in one scene, with a health bar from
    `GetBreakdown`.
 
-Then the stretch scenarios, which drive FEAT-1, FEAT-2, FEAT-4, FEAT-10, FEAT-11, FEAT-12 and FEAT-15. FEAT-13,
-networking, isn't planned. FEAT-16 is done.
+Then the stretch scenarios, which drive FEAT-1, FEAT-2, FEAT-4, FEAT-10, FEAT-11 and FEAT-12, all in Phase 5's
+scope (Decision 30), with FEAT-17 and FEAT-18. FEAT-13, networking, gets only its two cheap changes. FEAT-15 is a
+foundation, and FEAT-16 is done.
 
 ## Test project: PlayForge Proving Grounds
 
@@ -694,6 +740,36 @@ GAS-4 with GAS-5, PC-6, and TS-I with PC-5.
 ## Log
 
 Record baselines, gate results and notable decisions here, newest first.
+
+- 2026-11-04, **ED-40 and FEAT-8: the Debugger's foot rows, and cleanse by granted tags.** The user answered Phase
+  5's design interview, which is Decision 30, and the Debugger's edits have their place on the canvas's Entities
+  board (version 22), which is Decision 31. Open decisions 18 and 19 are settled.
+  - **Decision 30** sets Phase 5's direction: every FEAT row but networking; the foundations first (FEAT-15, FEAT-3
+    with GAS-56, FEAT-7 with TS-6, and FEAT-13's two cheap changes), then the labs. New rows: GAS-56 (a tag an
+    ability, an item or a loose tag grants doesn't end an effect until another effect comes or goes), FEAT-17
+    (activation by asset or tag, with a reason) and FEAT-18 (profiler markers). The Status-effect lab waits for the
+    foundations.
+  - **ED-40's foot rows** (Decision 31): each section ends in one, under a thin rule. Attributes: the selected
+    attribute's name, then Base and Current fields, delayed, that set it on Enter; a double-click on a value goes to
+    its field. Effects: Remove, a picker and Apply. Abilities: Activate and Interrupt, then a picker, Level and
+    Grant; the ability's Remove is gone, as the board has it. Tags: Remove, for a loose tag only, a tag field with
+    the project's tags under its arrow, and Add Tag. An action that doesn't apply stays in place, disabled, and the
+    buttons say plain Remove, Activate and Interrupt.
+  - **Selection:** a section's selected row takes Unity's unfocused selection grey (`--pf-selection-unfocused`,
+    Dark #4D4D4D, Light #AEAEAE), now in `EDITOR_STYLE.md`'s colors, so the entity list keeps the blue.
+    `--pf-selection-text` is gone.
+  - **What an action did** (Applied Burning, Burning was refused, Activated Channel) is on the status bar's right, so
+    the foot rows never shift to say it. The boards don't draw it; the result labels beside the buttons are gone.
+  - **FEAT-8:** a cleanse and an immunity name an effect by a tag it grants too, as Decision 30's default asks, so
+    `State.Burning` takes off whatever grants it (`GameplayEffectTags.Names`). `EFFECTS.md` says so.
+  - **Its tests,** seen failing first: the four `ED_40_*` tests in `RuntimeDebuggerTests`, against `c934980`'s
+    window (4 of 16 failed, finding no foot row), which now select rows, fill the foot rows' fields and interrupt a
+    running ability (`ED_40_An_ability_granted_in_the_debugger_activates_and_is_interrupted`); and
+    `FEAT_8_A_cleanse_and_an_immunity_name_an_effect_by_a_tag_it_grants` on each hub in `CleanseAndImmunityTests`,
+    which failed on both.
+  - **Next:** Phase 5's foundations, starting with FEAT-15, the Register builder.
+  - **Tests:** PlayMode 970: 963 pass, 0 fail and 7 planted are skipped, in three orders. Planted 7 of 7; EditMode
+    430 of 430.
 
 - 2026-11-04, **ED-4 and ED-5: the Debugger, as the boards draw it.** The user approved the design canvas's debugger
   boards (version 21, second row) and asked for the window built from them: the Entities, Processes and Tags boards

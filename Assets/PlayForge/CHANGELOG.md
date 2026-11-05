@@ -8,8 +8,9 @@ tracks each fix below by its ID.
 
 ### Added
 - Cleanse and immunity. An effect's Removes Effects Tagged takes off, as it lands, every effect on its target tagged
-  with one of those tags or a child of one; its Blocks Effects Tagged refuses such an effect while it's on. A cleanse
-  or an immunity took a requirement on each effect it meant to clear or block (FEAT-8).
+  with one of those tags or a child of one, by its asset tag, a context tag or a tag it grants; its Blocks Effects
+  Tagged refuses such an effect while it's on. A cleanse or an immunity took a requirement on each effect it meant to
+  clear or block (FEAT-8).
 - What the Debugger reads of a process and an ability: `ProcessControlBlock.MeasureSteps`, which has each process
   count its steps and time them (`Steps`, `StepSeconds`, `PeakStepSeconds`), `RunIsHeld`, whether a paused
   process holds its run, and `AbilitySpecContainer.ActiveStageIndex`, the stage an ability's run is in (ED-4, ED-5).
@@ -38,9 +39,10 @@ tracks each fix below by its ID.
   Its toolbar switches between three views, searches the one shown, and filters it by hub or by state. **Entities**
   lists every hub ProcessControl registers, runtime hubs among them, beside the one selected: its attributes with
   what changed them, its effects with the time each has left, their stacks and where they came from, its abilities
-  with their state, such as Stage 2/3, and cooldown, and its tags with what grants them. It acts on that entity: a
-  double-click sets an attribute's value, a tag typed or picked from the project's is granted until it's removed, an
-  effect picked lands, and an ability picked is granted at a level, then activated, interrupted or removed. Follow
+  with their state, such as Stage 2/3, and cooldown, and its tags with what grants them. Each section's foot row acts
+  on that entity: it sets the selected attribute's base and current values, applies an effect picked there or takes
+  the selected one off, grants an ability picked there at a level and activates or interrupts the selected one, and
+  grants a tag typed or picked from the project's until it's removed. The status bar says what each did. Follow
   Selection shows the entity whose GameObject is selected. **Processes** lists every process with its lifecycle,
   timing, state, lifetime and the time its steps took over the last second, sorted by any column, and pauses,
   resumes and terminates the one selected, with the processes it handles; it says whether a paused run is held or

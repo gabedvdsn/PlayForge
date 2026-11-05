@@ -22,7 +22,7 @@
     --pf-help-box: #414141;
     --pf-help-box-border: #2B2B2B;
     --pf-selection: #2C5D87;
-    --pf-selection-text: #FFFFFF;
+    --pf-selection-unfocused: #4D4D4D;
     --pf-toggle-on: #46607C;
     --pf-text: #C4C4C4;
     --pf-strong-text: #D2D2D2;
@@ -62,7 +62,7 @@
     --pf-help-box: #DCDCDC;
     --pf-help-box-border: #ABABAB;
     --pf-selection: #3A72B0;
-    --pf-selection-text: #FFFFFF;
+    --pf-selection-unfocused: #AEAEAE;
     --pf-toggle-on: #9DB7D8;
     --pf-text: #1F1F1F;
     --pf-strong-text: #090909;
@@ -1834,26 +1834,13 @@
     padding-left: 8px;
 }
 
+/* A section's table keeps its own selection, in Unity's unfocused grey, which its foot row's actions use */
 .pf-root .pf-debugger__table-row--selected {
-    background-color: var(--pf-selection);
-}
-
-.pf-root .pf-debugger__table-row--selected .pf-debugger__cell,
-.pf-root .pf-debugger__table-row--selected .pf-debugger__name,
-.pf-root .pf-debugger__table-row--selected .pf-debugger__tag-parents,
-.pf-root .pf-debugger__table-row--selected .pf-debugger__tag-leaf {
-    color: var(--pf-selection-text);
+    background-color: var(--pf-selection-unfocused);
 }
 
 .pf-root .pf-debugger__section .pf-note {
     margin: 2px 8px;
-}
-
-/* A value a double-click sets: the field takes the cell's place */
-.pf-root .pf-debugger__edit {
-    flex-shrink: 0;
-    height: 18px;
-    margin: 0 2px;
 }
 
 /* The columns' widths, as the boards set them: a part of what's left, or a width of its own */
@@ -1948,15 +1935,11 @@
     margin: 2px 0 0 0;
 }
 
-/* A table's actions, under it, and a process's, under its header */
+/* A process's actions, under its header */
 .pf-root .pf-debugger__actions {
     flex-direction: row;
     flex-wrap: wrap;
     align-items: center;
-    padding: 4px 6px;
-}
-
-.pf-root .pf-debugger__detail > .pf-debugger__actions {
     padding: 6px 8px;
     border-bottom-width: 1px;
     border-bottom-color: var(--pf-line);
@@ -1968,29 +1951,120 @@
     margin: 0 6px 0 0;
 }
 
-.pf-root .pf-debugger__pick,
-.pf-root .pf-debugger__new-tag {
+/* A section's foot row, under a thin rule: the actions on the selected row, then what adds to the table. An action
+   that doesn't apply stays in place, disabled, so nothing shifts (canvas version 22) */
+.pf-root .pf-debugger__foot {
+    flex-direction: row;
+    align-items: center;
+    padding: 6px 2px 6px 8px;
+    border-top-width: 1px;
+    border-top-color: var(--pf-inner-line);
+}
+
+.pf-root .pf-debugger__foot--lines {
+    flex-direction: column;
+    align-items: stretch;
+    padding-bottom: 2px;
+}
+
+.pf-root .pf-debugger__foot-line {
+    flex-direction: row;
+    align-items: center;
+    margin: 0 0 4px 0;
+}
+
+.pf-root .pf-debugger__foot-name {
+    flex-grow: 1;
+    flex-shrink: 1;
+    min-width: 0;
+    margin: 0 6px 0 0;
+    padding: 0;
+    color: var(--pf-strong-text);
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+}
+
+.pf-root .pf-debugger__foot-name--none {
+    color: var(--pf-secondary-text);
+}
+
+.pf-root .pf-debugger__foot-label {
+    flex-shrink: 0;
+    margin: 0 6px 0 0;
+    padding: 0;
+    color: var(--pf-text);
+    white-space: nowrap;
+}
+
+.pf-root .pf-debugger__foot-number {
+    flex-shrink: 0;
+    width: 56px;
+    height: 18px;
+    margin: 0 6px 0 0;
+}
+
+.pf-root .pf-debugger__pick {
     flex-grow: 1;
     flex-shrink: 1;
     min-width: 80px;
+    height: 18px;
     margin: 0 6px 0 0;
 }
 
 .pf-root .pf-debugger__level {
     flex-shrink: 0;
-    width: 44px;
+    width: 36px;
+    height: 18px;
     margin: 0 6px 0 0;
 }
 
-.pf-root .pf-debugger__result {
+/* A tag field: the name, typed, beside the menu of the project's tags, in one field's frame */
+.pf-root .pf-debugger__tag-field {
+    flex-direction: row;
+    flex-grow: 1;
+    flex-shrink: 1;
+    min-width: 80px;
+    height: 18px;
+    margin: 0 6px 0 0;
+    border-width: 1px;
+    border-color: var(--pf-field-border);
+    border-radius: 3px;
+    background-color: var(--pf-field);
+}
+
+.pf-root .pf-debugger__tag-input {
+    flex-grow: 1;
     flex-shrink: 1;
     min-width: 0;
     margin: 0;
+}
+
+.pf-root .pf-debugger__tag-input > .unity-base-text-field__input {
+    margin: 0;
+    padding: 0 0 0 6px;
+    border-width: 0;
+    background-color: rgba(0, 0, 0, 0);
+}
+
+.pf-root .pf-debugger__tag-pick {
+    flex-shrink: 0;
+    width: 18px;
+    height: 16px;
+    margin: 0;
     padding: 0;
+    align-items: center;
+    justify-content: center;
+    border-width: 0 0 0 1px;
+    border-radius: 0;
+    border-color: var(--pf-field-border);
+    background-color: rgba(0, 0, 0, 0);
+}
+
+.pf-root .pf-debugger__tag-pick .pf-glyph {
+    width: 8px;
+    height: 8px;
     color: var(--pf-secondary-text);
-    overflow: hidden;
-    white-space: nowrap;
-    text-overflow: ellipsis;
 }
 
 /* The status bar: ProcessControl's state, the processes by state, the entities by hub */
@@ -2014,6 +2088,12 @@
     overflow: hidden;
     white-space: nowrap;
     text-overflow: ellipsis;
+}
+
+/* What the last action did, at the status bar's right */
+.pf-root .pf-debugger__status-action {
+    margin-left: auto;
+    margin-right: 0;
 }
 
 /* ─── Overrides: a field a child asset overrides of its template, marked as Unity marks a prefab instance's (Q23) ─── */

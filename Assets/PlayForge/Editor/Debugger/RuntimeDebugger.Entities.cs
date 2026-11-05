@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Globalization;
 using System.Linq;
 using UnityEditor;
 using UnityEditor.UIElements;
@@ -9,9 +8,9 @@ using UnityEngine.UIElements;
 
 namespace FarEmerald.PlayForge.Extended.Editor
 {
-    // The Entities view, as the design canvas's Entities board draws it: the hubs ProcessControl holds, beside the one
-    // selected, with its attributes, effects, abilities and tags in a grid of four sections, each of which can change it
-    // (Q27, ED-40)
+    // The Entities view, as the design canvas's Entities board draws it (version 22): the hubs ProcessControl holds,
+    // beside the one selected, with its attributes, effects, abilities and tags in a grid of four sections, each of
+    // whose foot rows changes it (Q27, ED-40)
     public sealed partial class RuntimeDebugger
     {
         private readonly List<IGameplayAbilitySystem> hubs = new();
@@ -30,7 +29,8 @@ namespace FarEmerald.PlayForge.Extended.Editor
         // What changed the shown entity's attributes in the last second: each impact it took, by what made it
         private readonly Queue<(float At, IAttribute Attribute, string By, float Delta)> recentImpacts = new();
 
-        // The rows the shown entity's tables select, which their actions act on
+        // The rows the shown entity's tables select, which their foot rows act on
+        private IAttribute selectedAttribute;
         private AbstractEffectContainer selectedEffect;
         private AbilitySpecContainer selectedAbility;
         private Tag? selectedTag;
@@ -186,6 +186,7 @@ namespace FarEmerald.PlayForge.Extended.Editor
             shownCallbacks = null;
             shownEntity = null;
             recentImpacts.Clear();
+            selectedAttribute = null;
             selectedEffect = null;
             selectedAbility = null;
             selectedTag = null;
@@ -245,13 +246,51 @@ namespace FarEmerald.PlayForge.Extended.Editor
         }
 
         // ═══════════════════════════════════════════════════════════════════════════
+        // The sections' foot rows, as the board draws them (canvas version 22)
+        // ═══════════════════════════════════════════════════════════════════════════
+
+        // A section's foot row, under a thin rule: the actions on the row its table selects, then what adds to it. An
+        // action that doesn't apply stays in place, disabled, so nothing shifts
+        private static VisualElement Foot(string name)
+        {
+            var foot = new VisualElement { name = name };
+            foot.AddToClassList("pf-debugger__foot");
+            return foot;
+        }
+
+        // A foot row of two lines, as the Abilities section's
+        private static VisualElement FootLine(VisualElement foot, string name)
+        {
+            foot.AddToClassList("pf-debugger__foot--lines");
+            var line = new VisualElement { name = name };
+            line.AddToClassList("pf-debugger__foot-line");
+            foot.Add(line);
+            return line;
+        }
+
+        private static Label FootLabel(VisualElement foot, string text)
+        {
+            var label = new Label(text);
+            label.AddToClassList("pf-debugger__foot-label");
+            foot.Add(label);
+            return label;
+        }
+
+        // Whether a field has the keyboard, so a sample leaves what's typed in it alone
+        private static bool HasFocus(VisualElement field)
+        {
+            var focused = field.panel?.focusController?.focusedElement as VisualElement;
+            return focused != null && (focused == field || field.Contains(focused));
+        }
+
+        // ═══════════════════════════════════════════════════════════════════════════
         // Attributes
         // ═══════════════════════════════════════════════════════════════════════════
 
-        // Each attribute, by its base and current values, which a double-click sets (Q27), and what changed it: the
-        // impacts it took in the last second, by what made them, and the effects that hold a modifier on it. The current
-        // value's tooltip breaks it down by retention group, from GetBreakdown; the GAS Debugger read RetainedGroups, which
-        // made a dictionary on each read (ED-4)
+        // Each attribute, by its base and current values and what changed it: the impacts it took in the last second, by
+        // what made them, and the effects that hold a modifier on it. The current value's tooltip breaks it down by
+        // retention group, from GetBreakdown; the GAS Debugger read RetainedGroups, which made a dictionary on each read
+        // (ED-4). The foot row sets the selected attribute's values (Q27); a double-click on a value goes to its field
         private VisualElement AttributesSection(IGameplayAbilitySystem gas)
         {
             var section = Section("Attributes", "Attributes");
@@ -260,17 +299,65 @@ namespace FarEmerald.PlayForge.Extended.Editor
             var rows = new VisualElement { name = "AttributeRows" };
             section.Content.Add(rows);
 
+            IReadOnlyDictionary<IAttribute, CachedAttributeValue> CacheOf() => gas.GetAttributeSystem()?.GetAttributeCache();
+            AttributeValue? Now(IAttribute attribute) =>
+                attribute != null && CacheOf()?.TryGetValue(attribute, out var cached) == true ? cached.ActiveValue : null;
+
+            var foot = Foot("AttributeFoot");
+            var selectedName = new Label { name = "SelectedAttribute" };
+            selectedName.AddToClassList("pf-debugger__foot-name");
+            foot.Add(selectedName);
+            FootLabel(foot, "Base");
+            var baseField = new FloatField { name = "SelectedBase", isDelayed = true, tooltip = "The selected attribute's base value; Enter sets it" };
+            baseField.AddToClassList("pf-debugger__foot-number");
+            foot.Add(baseField);
+            FootLabel(foot, "Current");
+            var currentField = new FloatField { name = "SelectedCurrent", isDelayed = true, tooltip = "The selected attribute's current value; Enter sets it" };
+            currentField.AddToClassList("pf-debugger__foot-number");
+            foot.Add(currentField);
+            baseField.RegisterValueChangedCallback(change => SetAttribute(gas, selectedAttribute, CacheOf, null, change.newValue));
+            currentField.RegisterValueChangedCallback(change => SetAttribute(gas, selectedAttribute, CacheOf, change.newValue, null));
+            section.Content.Add(foot);
+
+            void ShowFoot()
+            {
+                var now = Now(selectedAttribute);
+                bool chosen = now.HasValue;
+                selectedName.text = chosen ? selectedAttribute.GetName() : "None";
+                selectedName.EnableInClassList("pf-debugger__foot-name--none", !chosen);
+                baseField.SetEnabled(chosen);
+                currentField.SetEnabled(chosen);
+                if (!HasFocus(baseField)) baseField.SetValueWithoutNotify(chosen ? now.Value.BaseValue : 0f);
+                if (!HasFocus(currentField)) currentField.SetValueWithoutNotify(chosen ? now.Value.CurrentValue : 0f);
+            }
+
             var shown = new List<IAttribute>();
             var updates = new List<Action>();
-            IReadOnlyDictionary<IAttribute, CachedAttributeValue> CacheOf() => gas.GetAttributeSystem()?.GetAttributeCache();
             void Build(IReadOnlyDictionary<IAttribute, CachedAttributeValue> cache)
             {
                 rows.Clear();
                 updates.Clear();
                 shown.Clear();
                 if (cache != null) shown.AddRange(cache.Keys.OrderBy(attribute => attribute.GetName(), NaturalOrder));
-                for (int i = 0; i < shown.Count; i++) rows.Add(AttributeRow(gas, shown[i], i, updates, CacheOf));
+                for (int i = 0; i < shown.Count; i++)
+                {
+                    var attribute = shown[i];
+                    var row = AttributeRow(gas, attribute, i, updates, CacheOf);
+                    void Choose()
+                    {
+                        selectedAttribute = attribute;
+                        ShowSelected(rows, row);
+                        ShowFoot();
+                    }
+                    Selectable(row, Choose);
+                    // A double-click on a value goes to its field in the foot row
+                    GoesToField(row.Q<Label>("Base"), Choose, baseField);
+                    GoesToField(row.Q<Label>("Current"), Choose, currentField);
+                    rows.Add(row);
+                }
                 if (shown.Count == 0) rows.Add(Note("None"));
+                if (selectedAttribute != null && !shown.Contains(selectedAttribute)) selectedAttribute = null;
+                ShowSelected(rows, selectedAttribute != null ? rows.Children().ElementAtOrDefault(shown.IndexOf(selectedAttribute)) : null);
                 section.Summary.text = shown.Count.ToString();
             }
             entityUpdates.Add(() =>
@@ -278,8 +365,10 @@ namespace FarEmerald.PlayForge.Extended.Editor
                 var cache = CacheOf();
                 if ((cache?.Count ?? 0) != shown.Count || shown.Any(attribute => !cache.ContainsKey(attribute))) Build(cache);
                 foreach (var update in updates) update();
+                ShowFoot();
             });
             Build(CacheOf());
+            ShowFoot();
             return section;
         }
 
@@ -297,10 +386,6 @@ namespace FarEmerald.PlayForge.Extended.Editor
             current.AddToClassList("pf-debugger__cell--number");
             current.AddToClassList("pf-debugger__cell--strong");
             changedBy.AddToClassList("pf-debugger__cell--secondary");
-
-            AttributeValue Now() => cacheOf()?.TryGetValue(attribute, out var cached) == true ? cached.ActiveValue : default;
-            Editable(@base, () => Now().BaseValue, value => SetAttribute(gas, attribute, cacheOf, null, value));
-            Editable(current, () => Now().CurrentValue, value => SetAttribute(gas, attribute, cacheOf, value, null));
             updates.Add(() =>
             {
                 var cache = cacheOf();
@@ -313,10 +398,24 @@ namespace FarEmerald.PlayForge.Extended.Editor
             return row;
         }
 
+        // A value cell a double-click takes to its field: the row is selected, and the field has the keyboard
+        private static void GoesToField(Label cell, Action choose, FloatField field)
+        {
+            cell.AddToClassList("pf-debugger__cell--editable");
+            cell.RegisterCallback<MouseDownEvent>(down =>
+            {
+                if (down.button != 0 || down.clickCount != 2) return;
+                choose();
+                field.Focus();
+                down.StopPropagation();
+            });
+        }
+
         // What changed an attribute: each source of the impacts it took in the last second, with what it took a second,
-        // then each effect on the entity that holds a modifier on it, as "Burning −8/s, Chilled"
+        // then each effect on the entity that holds a modifier on it, as "Burning -8/s, Chilled"
         private string ChangedBy(IGameplayAbilitySystem gas, IAttribute attribute)
         {
+            if (gas == null) return "—";
             var parts = new List<string>();
             foreach (var group in recentImpacts.Where(impact => impact.Attribute.Equals(attribute)).GroupBy(impact => impact.By))
                 parts.Add($"{group.Key} {Signed(group.Sum(impact => impact.Delta))}/s");
@@ -338,72 +437,27 @@ namespace FarEmerald.PlayForge.Extended.Editor
         private static string BreakdownOf(CachedAttributeValue cached)
         {
             var parts = cached.GetBreakdown();
-            if (parts == null || parts.Count <= 1) return "Double-click to set";
+            if (parts == null || parts.Count <= 1) return "Double-click to set it";
             return string.Join("\n", parts.Select(part => $"{TheForge.TagText(part.Group)} {Signed(part.Value.CurrentValue)}"));
         }
 
-        // A value a double-click sets in place: a number field takes the cell's place until Enter or a click elsewhere
-        // sets it, or Escape leaves it
-        private void Editable(Label cell, Func<float> read, Action<float> write)
-        {
-            cell.AddToClassList("pf-debugger__cell--editable");
-            cell.RegisterCallback<MouseDownEvent>(down =>
-            {
-                if (down.button != 0 || down.clickCount != 2) return;
-                BeginEdit(cell, read, write);
-                down.StopPropagation();
-            });
-        }
-
-        private void BeginEdit(Label cell, Func<float> read, Action<float> write)
-        {
-            var parent = cell.parent;
-            if (parent == null || parent.Q<FloatField>(cell.name + "Field") != null) return;
-            var field = new FloatField { name = cell.name + "Field", isDelayed = true };
-            field.SetValueWithoutNotify(read());
-            field.AddToClassList("pf-debugger__edit");
-            foreach (var each in cell.GetClasses().Where(each => each.StartsWith("pf-debugger__col", StringComparison.Ordinal)).ToList())
-                field.AddToClassList(each);
-            parent.Insert(parent.IndexOf(cell) + 1, field);
-            cell.AddToClassList(HiddenClass);
-
-            bool done = false;
-            void End(bool set, float value)
-            {
-                if (done) return;
-                done = true;
-                field.RemoveFromHierarchy();
-                cell.RemoveFromClassList(HiddenClass);
-                if (set) write(value);
-                else SampleNow();
-            }
-            field.RegisterValueChangedCallback(change => End(true, change.newValue));
-            field.RegisterCallback<FocusOutEvent>(_ =>
-            {
-                bool parsed = float.TryParse(field.text, NumberStyles.Float, CultureInfo.InvariantCulture, out var typed);
-                End(parsed, typed);
-            });
-            field.RegisterCallback<KeyDownEvent>(key =>
-            {
-                if (key.keyCode != KeyCode.Escape) return;
-                End(false, 0f);
-                key.StopPropagation();
-            }, TrickleDown.TrickleDown);
-            field.schedule.Execute(() => field.Q<TextElement>()?.Focus());
-        }
-
-        // The entity takes a value set in an attribute's cell as it is: the change goes in directly, as a delta no worker
-        // sees, and the next sample shows what the entity holds (Q27)
+        // The entity takes a value set in the foot row as it is: the change goes in directly, as a delta no worker sees,
+        // and the next sample shows what the entity holds (Q27)
         private void SetAttribute(IGameplayAbilitySystem gas, IAttribute attribute, Func<IReadOnlyDictionary<IAttribute, CachedAttributeValue>> cacheOf,
             float? current, float? @base)
         {
             var cache = cacheOf();
-            if (!Alive(gas) || cache == null || !cache.TryGetValue(attribute, out var cached)) return;
+            if (attribute == null || !Alive(gas) || cache == null || !cache.TryGetValue(attribute, out var cached)) return;
             var now = cached.ActiveValue;
             float toCurrent = current.HasValue ? current.Value - now.CurrentValue : 0f;
             float toBase = @base.HasValue ? @base.Value - now.BaseValue : 0f;
             if (toCurrent != 0f || toBase != 0f)
+            {
                 gas.TryModifyAttribute(attribute, SourcedModifiedAttributeValue.GenerateUnworkable(gas, attribute, toCurrent, toBase));
+                ShowAction(current.HasValue
+                    ? $"Set {attribute.GetName()}'s current value to {Number(current.Value)}"
+                    : $"Set {attribute.GetName()}'s base value to {Number(@base.Value)}");
+            }
             SampleNow();
         }
 
@@ -411,9 +465,9 @@ namespace FarEmerald.PlayForge.Extended.Editor
         // Effects
         // ═══════════════════════════════════════════════════════════════════════════
 
-        // The effects on the entity: each one's time left, its stacks and where it came from, as "Player · Fireball". An
-        // effect picked under the table lands from the entity itself, and Remove takes the selected one off (Q27). The GAS
-        // Debugger printed an impact's values as "current/base", with no label (ED-4)
+        // The effects on the entity: each one's time left, its stacks and where it came from, as "Player · Fireball". The
+        // foot row's Remove takes the selected one off, and an effect picked there lands from the entity itself (Q27).
+        // The GAS Debugger printed an impact's values as "current/base", with no label (ED-4)
         private VisualElement EffectsSection(IGameplayAbilitySystem gas)
         {
             var section = Section("Effects", "Effects");
@@ -422,22 +476,27 @@ namespace FarEmerald.PlayForge.Extended.Editor
             var rows = new VisualElement { name = "EffectRows" };
             section.Content.Add(rows);
 
-            var actions = Actions("EffectActions");
+            var foot = Foot("EffectFoot");
+            var remove = ActionButton(foot, "RemoveEffect", "Remove", "Take the selected effect off, where its source applied it",
+                () => RemoveEffect(gas, selectedEffect));
             var newEffect = new ObjectField { name = "NewEffect", objectType = typeof(GameplayEffect), allowSceneObjects = false, tooltip = "An effect to apply" };
             newEffect.AddToClassList("pf-debugger__pick");
-            actions.Add(newEffect);
-            var applied = new Label { name = "ApplyResult" };
-            applied.AddToClassList("pf-debugger__result");
-            ActionButton(actions, "ApplyEffect", "Apply", "Apply it to the entity, from the entity",
-                () => ApplyEffect(gas, newEffect.value as GameplayEffect, applied));
-            var remove = ActionButton(actions, "RemoveEffect", "Remove", "Take the selected effect off, where its source applied it",
-                () => RemoveEffect(gas, selectedEffect));
-            actions.Add(applied);
-            section.Content.Add(actions);
+            foot.Add(newEffect);
+            var apply = ActionButton(foot, "ApplyEffect", "Apply", "Apply it to the entity, from the entity",
+                () => ApplyEffect(gas, newEffect.value as GameplayEffect));
+            newEffect.RegisterValueChangedCallback(_ => apply.SetEnabled(newEffect.value != null));
+            apply.SetEnabled(false);
+            section.Content.Add(foot);
 
             var shown = new List<AbstractEffectContainer>();
             var updates = new List<Action>();
             IReadOnlyList<AbstractEffectContainer> ShelfOf() => gas.GetEffectSystem()?.Shelf;
+            void ShowRemove()
+            {
+                var name = selectedEffect?.Spec?.Base != null ? selectedEffect.Spec.Base.GetName() : null;
+                remove.SetEnabled(name != null);
+                remove.tooltip = name != null ? $"Take {name} off, where its source applied it" : "Select an effect to take it off";
+            }
             void Build(IReadOnlyList<AbstractEffectContainer> shelf)
             {
                 rows.Clear();
@@ -461,12 +520,6 @@ namespace FarEmerald.PlayForge.Extended.Editor
                 ShowSelected(rows, selectedEffect != null ? rows.Children().ElementAtOrDefault(shown.IndexOf(selectedEffect)) : null);
                 section.Summary.text = shown.Count.ToString();
                 ShowRemove();
-            }
-            void ShowRemove()
-            {
-                var name = selectedEffect?.Spec?.Base != null ? selectedEffect.Spec.Base.GetName() : null;
-                remove.text = name != null ? $"Remove {name}" : "Remove";
-                remove.SetEnabled(name != null);
             }
             entityUpdates.Add(() =>
             {
@@ -533,11 +586,11 @@ namespace FarEmerald.PlayForge.Extended.Editor
         }
 
         // An effect applied in the debugger lands as one the entity applied to itself would
-        private void ApplyEffect(IGameplayAbilitySystem gas, GameplayEffect effect, Label result)
+        private void ApplyEffect(IGameplayAbilitySystem gas, GameplayEffect effect)
         {
             if (effect == null || !Alive(gas)) return;
             bool landed = gas.ApplyGameplayEffect(gas.GenerateEffectSpec(IEffectOrigin.GenerateSourceDerivation(gas), effect));
-            result.text = landed ? "Applied" : "Refused";
+            ShowAction(landed ? $"Applied {effect.GetName()}" : $"{effect.GetName()} was refused");
             SampleNow();
         }
 
@@ -549,6 +602,7 @@ namespace FarEmerald.PlayForge.Extended.Editor
             var origin = container.Spec.GetOrigin();
             if (origin != null) gas.RemoveGameplayEffect(effect, origin);
             else gas.RemoveGameplayEffect(effect);
+            ShowAction($"Removed {effect.GetName()}");
             SampleNow();
         }
 
@@ -557,8 +611,8 @@ namespace FarEmerald.PlayForge.Extended.Editor
         // ═══════════════════════════════════════════════════════════════════════════
 
         // The entity's abilities: each one's level, its state, as "Stage 2/3", and the time its cooldown has left. The
-        // selected one can be activated, interrupted or taken away, and one picked under the table is granted at the level
-        // given (Q27). The GAS Debugger showed the cooldown effect's raw magnitude, before its scaler (ED-4)
+        // foot row activates or interrupts the selected one, and grants one picked there at the level given (Q27). The
+        // GAS Debugger showed the cooldown effect's raw magnitude, before its scaler (ED-4)
         private VisualElement AbilitiesSection(IGameplayAbilitySystem gas)
         {
             var section = Section("Abilities", "Abilities");
@@ -567,35 +621,37 @@ namespace FarEmerald.PlayForge.Extended.Editor
             var rows = new VisualElement { name = "AbilityRows" };
             section.Content.Add(rows);
 
-            var actions = Actions("AbilityActions");
-            var result = new Label { name = "Result" };
-            result.AddToClassList("pf-debugger__result");
-            var activate = ActionButton(actions, "ActivateAbility", "Activate", "Set the selected ability off, as the entity would",
-                () => ActivateAbility(gas, selectedAbility, result));
-            var interrupt = ActionButton(actions, "InterruptAbility", "Interrupt", "Stop the selected ability's run",
-                () => InterruptAbility(gas, selectedAbility, result));
-            var remove = ActionButton(actions, "RemoveAbility", "Remove", "Take the selected ability away from the entity",
-                () => RemoveAbility(gas, selectedAbility));
-            actions.Add(result);
-            section.Content.Add(actions);
-
-            var grant = Actions("AbilityGrant");
+            var foot = Foot("AbilityFoot");
+            var selected = FootLine(foot, "AbilityActions");
+            var activate = ActionButton(selected, "ActivateAbility", "Activate", "Set the selected ability off, as the entity would",
+                () => ActivateAbility(gas, selectedAbility));
+            var interrupt = ActionButton(selected, "InterruptAbility", "Interrupt", "Stop the selected ability's run",
+                () => InterruptAbility(gas, selectedAbility));
+            var grant = FootLine(foot, "AbilityGrant");
             var newAbility = new ObjectField { name = "NewAbility", objectType = typeof(Ability), allowSceneObjects = false, tooltip = "An ability to grant" };
             newAbility.AddToClassList("pf-debugger__pick");
             grant.Add(newAbility);
+            FootLabel(grant, "Level");
             var level = new IntegerField { name = "NewAbilityLevel", value = 1, tooltip = "The level to grant it at" };
             level.AddToClassList("pf-debugger__level");
             grant.Add(level);
-            var granted = new Label { name = "GrantResult" };
-            granted.AddToClassList("pf-debugger__result");
-            ActionButton(grant, "GrantAbility", "Grant", "Grant it to the entity at this level",
-                () => GrantAbility(gas, newAbility.value as Ability, level.value, granted));
-            grant.Add(granted);
-            section.Content.Add(grant);
+            var grantButton = ActionButton(grant, "GrantAbility", "Grant", "Grant it to the entity at this level",
+                () => GrantAbility(gas, newAbility.value as Ability, level.value));
+            newAbility.RegisterValueChangedCallback(_ => grantButton.SetEnabled(newAbility.value != null));
+            grantButton.SetEnabled(false);
+            section.Content.Add(foot);
 
             var shown = new List<AbilitySpecContainer>();
             var updates = new List<Action>();
             List<AbilitySpecContainer> ContainersOf() => gas.GetAbilitySystem()?.GetAbilityContainers() ?? new List<AbilitySpecContainer>();
+            void ShowActions()
+            {
+                var name = selectedAbility?.Spec?.Base != null ? selectedAbility.Spec.Base.GetName() : null;
+                activate.SetEnabled(name != null);
+                interrupt.SetEnabled(name != null && selectedAbility.IsActive);
+                activate.tooltip = name != null ? $"Set {name} off, as the entity would" : "Select an ability to set it off";
+                interrupt.tooltip = name != null ? $"Stop {name}'s run" : "Select a running ability to stop it";
+            }
             void Build(List<AbilitySpecContainer> containers)
             {
                 rows.Clear();
@@ -619,16 +675,6 @@ namespace FarEmerald.PlayForge.Extended.Editor
                 ShowSelected(rows, selectedAbility != null ? rows.Children().ElementAtOrDefault(shown.IndexOf(selectedAbility)) : null);
                 section.Summary.text = shown.Count.ToString();
                 ShowActions();
-            }
-            void ShowActions()
-            {
-                var name = selectedAbility?.Spec?.Base != null ? selectedAbility.Spec.Base.GetName() : null;
-                activate.text = name != null ? $"Activate {name}" : "Activate";
-                interrupt.text = name != null ? $"Interrupt {name}" : "Interrupt";
-                remove.text = name != null ? $"Remove {name}" : "Remove";
-                activate.SetEnabled(name != null);
-                interrupt.SetEnabled(name != null && selectedAbility.IsActive);
-                remove.SetEnabled(name != null);
             }
             entityUpdates.Add(() =>
             {
@@ -684,37 +730,31 @@ namespace FarEmerald.PlayForge.Extended.Editor
             return left.FoundDuration ? left.DurationRemaining : 0f;
         }
 
-        private void GrantAbility(IGameplayAbilitySystem gas, Ability ability, int level, Label result)
+        private void GrantAbility(IGameplayAbilitySystem gas, Ability ability, int level)
         {
             var abilities = gas?.GetAbilitySystem();
             if (ability == null || abilities == null || !Alive(gas)) return;
-            result.text = abilities.GiveAbility(ability, Math.Max(1, level), out _) ? "Granted" : "Refused";
+            bool granted = abilities.GiveAbility(ability, Math.Max(1, level), out _);
+            ShowAction(granted ? $"Granted {ability.GetName()}" : $"{ability.GetName()} wasn't granted");
             SampleNow();
         }
 
-        private void ActivateAbility(IGameplayAbilitySystem gas, AbilitySpecContainer container, Label result)
+        private void ActivateAbility(IGameplayAbilitySystem gas, AbilitySpecContainer container)
         {
             var abilities = gas?.GetAbilitySystem();
             if (container == null || abilities == null || !Alive(gas)) return;
-            result.text = abilities.TryActivateAbility(abilities.CreateActivationRequest(container.Index)) ? "Activated" : "Refused";
+            var name = container.Spec?.Base != null ? container.Spec.Base.GetName() : "The ability";
+            bool activated = abilities.TryActivateAbility(abilities.CreateActivationRequest(container.Index));
+            ShowAction(activated ? $"Activated {name}" : $"{name} didn't activate");
             SampleNow();
         }
 
-        private void InterruptAbility(IGameplayAbilitySystem gas, AbilitySpecContainer container, Label result)
+        private void InterruptAbility(IGameplayAbilitySystem gas, AbilitySpecContainer container)
         {
             var abilities = gas?.GetAbilitySystem();
             if (container == null || abilities == null || !Alive(gas) || !container.IsActive) return;
             abilities.Inject(container.Index, InterruptSequenceInjection.Instance);
-            result.text = "Interrupted";
-            SampleNow();
-        }
-
-        // The copy in this row, where the entity holds an ability more than once
-        private void RemoveAbility(IGameplayAbilitySystem gas, AbilitySpecContainer container)
-        {
-            var abilities = gas?.GetAbilitySystem();
-            if (container == null || abilities == null || !Alive(gas)) return;
-            abilities.RemoveAbilityAt(container.Index, container.Spec?.Base);
+            ShowAction($"Interrupted {(container.Spec?.Base != null ? container.Spec.Base.GetName() : "the ability")}");
             SampleNow();
         }
 
@@ -722,9 +762,10 @@ namespace FarEmerald.PlayForge.Extended.Editor
         // Tags
         // ═══════════════════════════════════════════════════════════════════════════
 
-        // The tags the entity has, each with its count, its weight, and what grants it. A tag's name, typed or picked from
-        // the project's, grants it as a loose tag (FEAT-16), which Remove takes back from the selected row (Q27). A tag
-        // added straight to the entity's cache went at its next compile. The Tag Debugger listed tags in a window of its own
+        // The tags the entity has, each with its count, its weight, and what grants it. The foot row's Remove takes back
+        // the selected tag where it's loose, and a tag typed or picked from the project's there is granted as a loose tag
+        // (FEAT-16, Q27). A tag added straight to the entity's cache went at its next compile. The Tag Debugger listed
+        // tags in a window of its own
         private VisualElement TagsSection(IGameplayAbilitySystem gas)
         {
             var section = Section("Tags", "Tags");
@@ -732,9 +773,24 @@ namespace FarEmerald.PlayForge.Extended.Editor
             var rows = new VisualElement { name = "TagRows" };
             section.Content.Add(rows);
 
-            var actions = Actions("TagActions");
+            var foot = Foot("TagFoot");
+            var remove = ActionButton(foot, "RemoveTag", "Remove", "Take back the selected loose tag", () => TakeTag(gas, selectedTag));
+            // A tag field: its name, typed, or one of the project's from its menu
+            var field = new VisualElement { name = "TagField" };
+            field.AddToClassList("pf-debugger__tag-field");
             var newTag = new TextField { name = "NewTag", tooltip = "A tag's name, such as Status.Stunned" };
-            newTag.AddToClassList("pf-debugger__new-tag");
+            newTag.AddToClassList("pf-debugger__tag-input");
+            newTag.textEdition.placeholder = "None";
+            field.Add(newTag);
+            var pick = new Button { name = "PickTag", tooltip = "Pick one of the project's tags" };
+            pick.AddToClassList("pf-debugger__tag-pick");
+            pick.Add(new ForgeGlyph(ForgeGlyphShape.ArrowDown));
+            pick.clicked += () => PickTag(newTag, field);
+            field.Add(pick);
+            foot.Add(field);
+            var add = ActionButton(foot, "AddTag", "Add Tag", "Grant the entity this tag until it's removed", () => GrantTag(gas, newTag));
+            newTag.RegisterValueChangedCallback(change => add.SetEnabled(!string.IsNullOrWhiteSpace(change.newValue)));
+            add.SetEnabled(false);
             // Enter grants it, as Add Tag does
             newTag.RegisterCallback<KeyDownEvent>(key =>
             {
@@ -742,17 +798,19 @@ namespace FarEmerald.PlayForge.Extended.Editor
                 GrantTag(gas, newTag);
                 key.StopPropagation();
             }, TrickleDown.TrickleDown);
-            actions.Add(newTag);
-            ActionButton(actions, "AddTag", "Add Tag", "Grant the entity this tag until it's removed", () => GrantTag(gas, newTag));
-            Button pick = null;
-            pick = ActionButton(actions, "PickTag", "Project Tags", "Grant one of the project's tags", () => PickTag(gas, pick));
-            var remove = ActionButton(actions, "RemoveTag", "Remove", "Take back one of the selected tag's loose grants",
-                () => TakeTag(gas, selectedTag));
-            section.Content.Add(actions);
+            section.Content.Add(foot);
 
             var shown = new List<Tag>();
             var looseShown = new List<Tag>();
             var updates = new List<Action>();
+            void ShowRemove()
+            {
+                bool loose = selectedTag is { } tag && looseShown.Contains(tag);
+                remove.SetEnabled(loose);
+                remove.tooltip = loose
+                    ? $"Take back {TheForge.TagText(selectedTag.Value)}, a loose tag"
+                    : "Select a loose tag to take it back; what else grants a tag takes it back itself";
+            }
             void Build(List<Tag> tags, IReadOnlyList<Tag> loose)
             {
                 rows.Clear();
@@ -788,12 +846,6 @@ namespace FarEmerald.PlayForge.Extended.Editor
                 ShowSelected(rows, selectedTag is { } kept ? rows.Children().ElementAtOrDefault(shown.IndexOf(kept)) : null);
                 section.Summary.text = shown.Count.ToString();
                 ShowRemove();
-            }
-            void ShowRemove()
-            {
-                bool loose = selectedTag is { } tag && looseShown.Contains(tag);
-                remove.text = selectedTag is { } named ? $"Remove {TheForge.TagText(named)}" : "Remove";
-                remove.SetEnabled(loose);
             }
             entityUpdates.Add(() =>
             {
@@ -831,31 +883,27 @@ namespace FarEmerald.PlayForge.Extended.Editor
             var name = field.value?.Trim();
             if (string.IsNullOrEmpty(name) || !Alive(gas)) return;
             gas.AddLooseTag(Tag.Generate(name));
-            field.SetValueWithoutNotify("");
+            field.value = "";
+            ShowAction($"Added {name}");
             SampleNow();
         }
 
         private void TakeTag(IGameplayAbilitySystem gas, Tag? tag)
         {
             if (tag is not { } taken || !Alive(gas)) return;
-            gas.RemoveLooseTag(taken);
+            if (gas.RemoveLooseTag(taken)) ShowAction($"Removed {taken.Name}");
             SampleNow();
         }
 
-        // The project's tags, each under its root, which grant themselves
-        private void PickTag(IGameplayAbilitySystem gas, VisualElement under)
+        // The project's tags, each under its root: the one picked goes into the field, for Add Tag to grant
+        private static void PickTag(TextField field, VisualElement under)
         {
             var menu = new GenericMenu();
             foreach (var record in ForgeTagRegistry.GetAllTagRecords().OrderBy(record => record.Tag.Name, NaturalOrder))
             {
                 var tag = record.Tag;
                 var root = tag.Name.Split('.')[0];
-                menu.AddItem(new GUIContent($"{root}/{tag.Name}"), false, () =>
-                {
-                    if (!Alive(gas)) return;
-                    gas.AddLooseTag(tag);
-                    SampleNow();
-                });
+                menu.AddItem(new GUIContent($"{root}/{tag.Name}"), field.value == tag.Name, () => field.value = tag.Name);
             }
             if (menu.GetItemCount() == 0) menu.AddDisabledItem(new GUIContent("The project has no tags"));
             menu.DropDown(under.worldBound);

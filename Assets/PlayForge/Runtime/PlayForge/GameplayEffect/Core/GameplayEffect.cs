@@ -242,8 +242,8 @@ namespace FarEmerald.PlayForge
         [ForgeTagContext(ForgeContext.Granted)] public List<Tag> GrantedTags;
 
         /// <summary>
-        /// A cleanse: effects on the target tagged with one of these, by their asset tag or a context tag, or a child of
-        /// one, come off as this effect lands (FEAT-8).
+        /// A cleanse: effects on the target tagged with one of these, or a child of one, by their asset tag, a context
+        /// tag or a tag they grant, come off as this effect lands (FEAT-8).
         /// </summary>
         [ForgeTagContext(ForgeContext.ContextIdentifier)] public List<Tag> RemovesEffectsTagged;
 
@@ -253,7 +253,11 @@ namespace FarEmerald.PlayForge
         /// </summary>
         [ForgeTagContext(ForgeContext.ContextIdentifier)] public List<Tag> BlocksEffectsTagged;
 
-        /// <summary>Whether an effect is tagged with one of the tags, or a child of one, by its asset tag or a context tag.</summary>
+        /// <summary>
+        /// Whether an effect is tagged with one of the tags, or a child of one, by its asset tag, a context tag or a tag
+        /// it grants, as Unreal's queries match (Decision 30). A tag it grants counted for nothing, so "whatever makes
+        /// you Burning" needed a context tag on every effect that burns (FEAT-8).
+        /// </summary>
         public static bool Names(List<Tag> tags, GameplayEffect effect)
         {
             if (tags == null || tags.Count == 0 || effect == null) return false;
@@ -261,10 +265,17 @@ namespace FarEmerald.PlayForge
             {
                 if (!tag.IsValid) continue;
                 if (effect.Tags.AssetTag.MatchesOrIsChildOf(tag)) return true;
-                if (effect.Tags.ContextTags == null) continue;
-                foreach (var context in effect.Tags.ContextTags)
-                    if (context.MatchesOrIsChildOf(tag)) return true;
+                if (AnyMatches(effect.Tags.ContextTags, tag) || AnyMatches(effect.Tags.GrantedTags, tag)) return true;
             }
+            return false;
+        }
+
+        // By index over the list, which allocates nothing
+        private static bool AnyMatches(List<Tag> own, Tag tag)
+        {
+            if (own == null) return false;
+            for (int i = 0; i < own.Count; i++)
+                if (own[i].MatchesOrIsChildOf(tag)) return true;
             return false;
         }
     }

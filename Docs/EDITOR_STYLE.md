@@ -46,6 +46,7 @@ Unity's neutrals carry the whole window.
 | Alternate row | `#3B3B3B` | `#CDCDCD` | Every other row of a long list |
 | Help box | `#414141` | `#DCDCDC` | Info and warning boxes, bordered `#2B2B2B` and `#ABABAB` |
 | Selection | `#2C5D87` | `#3A72B0` | The selected row, with white text |
+| Selection, unfocused | `#4D4D4D` | `#AEAEAE` | A selected row that doesn't have the keyboard, as in a detail's table beside a list that keeps the blue |
 | Toggle on | `#46607C` | `#9DB7D8` | A pressed toolbar toggle |
 | Text | `#C4C4C4` | `#1F1F1F` | Labels |
 | Strong text | `#D2D2D2` | `#090909` | Values, titles and names |

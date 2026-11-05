@@ -95,9 +95,10 @@ string perLevel = impact.FormatTotal();           // "20/30/40/50"
 - **Debugger** (`Window → PlayForge → Debugger`) — the game as it plays, in three views the toolbar switches
   between. **Entities** lists every entity, of either kind, beside the one selected: its attributes with what changed
   them, its effects with the time each has left and where it came from, its abilities with their state and cooldown,
-  and its tags with what grants them. It acts on the entity too: double-click an attribute's value to set it, add a
-  tag by name or from the project's tags (a loose tag, which Remove takes back), apply an effect, or grant an
-  ability; select a row, and the buttons under its table act on it. With Follow Selection on, it shows the entity
+  and its tags with what grants them. It acts on the entity too: select a row, and the foot row under its table acts
+  on it. Set an attribute's base and current values (a double-click on a value goes to its field), apply an effect
+  or take one off, grant an ability and activate or interrupt it, or add a tag by name or from the project's tags (a
+  loose tag, which Remove takes back). With Follow Selection on, it shows the entity
   you select in the scene. **Processes** lists every process with its state and how long its steps take, and
   pauses, resumes or terminates the one selected. **Tags** shows every tag the entities hold, as a tree, and who
   holds the one selected. The window menu sets how often it reads the game.
