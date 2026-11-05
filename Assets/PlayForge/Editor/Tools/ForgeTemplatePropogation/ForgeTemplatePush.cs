@@ -46,7 +46,10 @@ namespace FarEmerald.PlayForge.Extended.Editor
             writing = true;
             try
             {
-                Push(template, changed, new HashSet<BaseForgeAsset>());
+                // The family from one search of the project: each child's own children were searched for over the project
+                // again, so a push to 2,000 children loaded 2,000 assets 2,000 times (ED-44)
+                var family = ForgeTemplatePropagator.ChildrenByTemplate(template.GetType());
+                Push(template, changed, new HashSet<BaseForgeAsset>(), family);
             }
             finally
             {
@@ -56,17 +59,18 @@ namespace FarEmerald.PlayForge.Extended.Editor
             return changed;
         }
 
-        private static void Push(BaseForgeAsset template, List<BaseForgeAsset> changed, HashSet<BaseForgeAsset> seen)
+        private static void Push(BaseForgeAsset template, List<BaseForgeAsset> changed, HashSet<BaseForgeAsset> seen,
+            Dictionary<BaseForgeAsset, List<BaseForgeAsset>> family)
         {
             // A loop of templates stops at the first asset it comes back to
-            if (!seen.Add(template)) return;
-            foreach (var child in ChildrenOf(template))
+            if (!seen.Add(template) || !family.TryGetValue(template, out var children)) return;
+            foreach (var child in children)
             {
                 Undo.RegisterCompleteObjectUndo(child, $"Push {NameOf(template)} to Its Children");
                 ForgeTemplatePropagator.PropagateToChild(template, child);
                 EditorUtility.SetDirty(child);
                 changed.Add(child);
-                Push(child, changed, seen);
+                Push(child, changed, seen, family);
             }
         }
 

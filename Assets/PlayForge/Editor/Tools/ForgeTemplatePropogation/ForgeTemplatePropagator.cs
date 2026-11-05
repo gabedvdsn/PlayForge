@@ -99,23 +99,27 @@ namespace FarEmerald.PlayForge.Extended.Editor
         public static List<BaseForgeAsset> PropagateToAllChildren(BaseForgeAsset template)
         {
             var modified = new List<BaseForgeAsset>();
-            var children = FindChildAssets(template);
-            
+            if (template == null) return modified;
+
+            // The family from one search of the project: each child's own children were searched for over the project
+            // again (ED-44)
+            Cascade(template, ChildrenByTemplate(template.GetType()), modified, new HashSet<BaseForgeAsset>());
+            return modified;
+        }
+
+        // A template's children take its fields, then theirs take theirs. A loop of templates stops at the first asset it
+        // comes back to
+        private static void Cascade(BaseForgeAsset template, Dictionary<BaseForgeAsset, List<BaseForgeAsset>> family,
+            List<BaseForgeAsset> modified, HashSet<BaseForgeAsset> seen)
+        {
+            if (!seen.Add(template) || !family.TryGetValue(template, out var children)) return;
             foreach (var child in children)
             {
                 PropagateToChild(template, child);
                 EditorUtility.SetDirty(child);
                 modified.Add(child);
-                
-                // Cascade: if this child is itself a template, propagate further
-                var grandchildren = FindChildAssets(child);
-                if (grandchildren.Count > 0)
-                {
-                    modified.AddRange(PropagateToAllChildren(child));
-                }
+                Cascade(child, family, modified, seen);
             }
-            
-            return modified;
         }
         
         /// <summary>
@@ -200,24 +204,28 @@ namespace FarEmerald.PlayForge.Extended.Editor
         /// </summary>
         public static List<BaseForgeAsset> FindChildAssets(BaseForgeAsset template)
         {
-            var results = new List<BaseForgeAsset>();
-            if (template == null) return results;
-            
-            var type = template.GetType();
-            var guids = AssetDatabase.FindAssets($"t:{type.Name}");
-            
-            foreach (var guid in guids)
+            if (template == null) return new List<BaseForgeAsset>();
+            return ChildrenByTemplate(template.GetType()).TryGetValue(template, out var children) ? children : new List<BaseForgeAsset>();
+        }
+
+        /// <summary>
+        /// Every asset of a type in the project, by the template it names, from one search. A family's members, looked for
+        /// one at a time, searched the project and loaded each of its assets of the type once for every member, so a push
+        /// to 2,000 children loaded 2,000 assets 2,000 times (ED-44).
+        /// </summary>
+        public static Dictionary<BaseForgeAsset, List<BaseForgeAsset>> ChildrenByTemplate(Type type)
+        {
+            var family = new Dictionary<BaseForgeAsset, List<BaseForgeAsset>>();
+            foreach (var guid in AssetDatabase.FindAssets($"t:{type.Name}"))
             {
-                var path = AssetDatabase.GUIDToAssetPath(guid);
-                var asset = AssetDatabase.LoadAssetAtPath(path, type) as BaseForgeAsset;
-                
-                if (asset != null && asset != template && asset.Template == template)
-                {
-                    results.Add(asset);
-                }
+                var asset = AssetDatabase.LoadAssetAtPath(AssetDatabase.GUIDToAssetPath(guid), type) as BaseForgeAsset;
+                var template = asset != null ? asset.Template : null;
+                if (template == null || template == asset) continue;
+
+                if (!family.TryGetValue(template, out var children)) family[template] = children = new List<BaseForgeAsset>();
+                children.Add(asset);
             }
-            
-            return results;
+            return family;
         }
         
         /// <summary>

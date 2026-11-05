@@ -648,6 +648,7 @@ had no letter in the review. TS-AA onward came from the test project.
 | ED-41 | M | 5 | An ability's cost and cooldown apply only from a stage set to Apply Usage Effects, and nothing said so when no stage was: the Tactics lab's Slash had a cooldown that never came on. Fixed: the Ability inspector warns under Cooldown while the ability has a cost or a cooldown and no stage applies them, and the Problems view lists it (`UsageEffectsRule`) | `Editor/CustomPropertyDrawers/Forge/Editors/Assets/AbilityEditor.cs`, `Editor/Problems/ForgeRules.cs` | verified |
 | ED-42 | M | 5 | A section's Clear set each field to its type's default, 0 or the first choice, not the field's own (`SectionClearUtility.ResetPropertyToDefault`). Clearing an effect's Impact set its affiliation to Use Affiliation List with none listed and its Chance to Apply to 0, so the effect never landed. Fixed: a cleared field takes a new asset's value, read from a new asset of the target's kind that no one sees, and a cleared list still empties. Impact's Import and Clear take the impact's own fields but its chance, which Requirements shows, imports and clears (FEAT-8) | `Editor/CustomPropertyDrawers/Forge/Editors/Windows/SectionClearUtility.cs` (`FreshOf`, `TakeFresh`), `Editor/CustomPropertyDrawers/Forge/Editors/Assets/EffectEditor.cs` | verified |
 | ED-43 | M | 5 | The Debugger kept its wide layout at any width, so docked in a column its lists and details squeezed side by side and its tables clipped, against the user's rule that it read as clearly at 360 px as in a full window (EDITOR_STYLE's Debugger section, the canvas's three narrow boards). Found starting FEAT-12, whose Timeline view follows the rule too. Fixed: below 720 px each view's list sits above its detail, the toolbar's views take a row of their own with the search and the view's menus under them, the frame count moves to the status bar, whose counts drop their parts, the Processes list keeps ID, Process, State and Step, Held By drops Source, and Follow Selection keeps its icon | `Editor/Debugger/RuntimeDebugger.cs` (`Fit`), `Editor/Debugger/RuntimeDebugger.Tags.cs`, `Editor/UI/PlayForge.uss` | verified |
+| ED-44 | M | 5 | A template's push found each child's own children by searching the project for assets of its type and loading every one, so a push searched the project once for each member of the family: a push to 2,000 children loaded 2,000 assets 2,000 times, 14 ms a child against 5 for 200, and took 28 s. `PropagateToAllChildren` searched twice for each. Found by the editor stress runs. Fixed: `ChildrenByTemplate` finds a type's assets by the template they name, in one search, which the push and the propagation walk, so a push costs about 2.9 ms a child however big the family | `Editor/Tools/ForgeTemplatePropogation/ForgeTemplatePush.cs`, `Editor/Tools/ForgeTemplatePropogation/ForgeTemplatePropagator.cs` (`ChildrenByTemplate`) | fixed |
 
 The design questions behind Phase 4's rows, each with its evidence, are in the UI interview doc of 2026-11-03,
 https://claude.ai/artifact/BbnGybqgX3spJsT6HoTafp. Its answers (Decision 18) settle ED-8, ED-16, ED-19 and ED-12's
@@ -789,6 +790,29 @@ GAS-4 with GAS-5, PC-6, and TS-I with PC-5.
 ## Log
 
 Record baselines, gate results and notable decisions here, newest first.
+
+- 2026-11-05, **The editor's stress runs, and ED-44.** The review's editor stress (Module 4), in Proving Grounds'
+  `Tests/Editor/EditorStressTests`, EditMode, category Stress. Each cost is per asset or entity, against a tenth.
+  - **The Forge** over 2,586 assets, 2,000 effects and 500 abilities with the project's own: it lists them at about
+    0.9 ms an asset the first time, as the validator checks each for problems, and 46 µs again, once it knows them.
+    It sorts by every column at 10 µs an asset and filters at 30, each about as fast as over 336. Open and idle over
+    them, an asset's inspector showing, it listens to no editor update.
+  - **A template pushed** to 2,000 children costs 2.9 ms a child, as to 200; saving the template, which changes no
+    child (ED-13), takes 23 ms against 18.
+  - **ED-44,** which the push found: it searched the project for each child's own children, so it searched once for
+    each member of the family. A push to 2,000 children took 28 s, 14 ms a child. One search finds the family now.
+  - **The Debugger** samples 200 entities at 8.5 µs an entity, as 20.
+  - **Not measured:** the review's idle inspector CPU, as batch mode has no graphics device to repaint a window. The
+    editor's update listeners stand for it, as ED-11's tests have them.
+  - **Its tests,** seen failing first: `ED_44_A_push_searches_the_project_once_however_big_the_family`, in
+    `TemplatePushTests`: down a chain of 20, among 100 and then 1,000 other abilities, 88 → 166 ms, and 52 → 60 ms
+    once fixed. And the three in `EditorStressTests`.
+  - **Tests:** PlayMode 1311: 1303 pass, 0 fail, and 8 are skipped, the 7 planted and the soak, in
+    three orders. Planted 7 of 7; EditMode 451 of 451.
+  - **What's left** of the review's test project is the runtime UI kit (Module 4: a health bar from `GetBreakdown`, a
+    buff bar, a cooldown radial and a cast bar, combat text from `FrameSummary`, a debug overlay), which no phase
+    holds, and how it should look is a design question. And the user's: CI (SP-24), and whether the labs ship in
+    Samples (Decision 33).
 
 - 2026-11-05, **The stress suite's other half: churn and soaks, with PC-34.** So the test project's four suites are
   all built.
