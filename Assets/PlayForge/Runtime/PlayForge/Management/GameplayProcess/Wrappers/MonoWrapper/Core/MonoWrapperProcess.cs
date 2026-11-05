@@ -16,6 +16,10 @@ namespace FarEmerald.PlayForge
         /// The active Object process
         /// </summary>
         private AbstractMonoProcess activeMono;
+
+        // The instantiator that made the object, which takes it back as the process ends. The object's own was asked,
+        // which a clone never has, as it isn't serialized, so a pool's object was destroyed instead (PC-33)
+        private AbstractMonoProcessInstantiator madeBy;
         
         public MonoWrapperProcess(AbstractMonoProcess storedMono, ProcessDataPacket data, IGameplayProcessHandler handler) : base(data, handler)
         {
@@ -35,10 +39,12 @@ namespace FarEmerald.PlayForge
             if (StoredMono.UseHandlerInstantiator && inst is not null)
             {
                 activeMono = inst.Create(StoredMono, Data, StoredMono.gameObject.scene.IsValid());
+                if (activeMono) madeBy = inst;
             }
             else if (StoredMono.Instantiator is not null)
             {
                 activeMono = StoredMono.Instantiator.Create(StoredMono, Data, StoredMono.gameObject.scene.IsValid());
+                if (activeMono) madeBy = StoredMono.Instantiator;
             }
             if (activeMono) return;
 
@@ -98,7 +104,9 @@ namespace FarEmerald.PlayForge
             }
             finally
             {
-                if (activeMono.Instantiator is not null) activeMono.Instantiator.CleanProcess(activeMono);
+                // The instantiator that made it takes it back, or the object's own when it was made some other way
+                var cleaner = madeBy ?? activeMono.Instantiator;
+                if (cleaner is not null) cleaner.CleanProcess(activeMono);
                 else
                 {
                     // Destroy is refused outside play mode, where editor tools and edit-mode tests terminate processes;

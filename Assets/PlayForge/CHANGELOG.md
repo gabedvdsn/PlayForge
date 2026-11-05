@@ -249,6 +249,8 @@ tracks each fix below by its ID.
   Asking whether its sequence was paused took 24 bytes a frame.
 
 ### Fixed
+- A Mono process's object goes back to the instantiator that made it as the process ends. The wrapper asked the
+  object's own instantiator, which a clone never has, so a pool's object was destroyed and never reused (PC-33).
 - A task sequence's critical section ends as the run starts a stage past its last critical stage, if a branch skipped
   that stage; it ended only as a critical stage ended, so a skipped one held the ability's claim to the end (TS-7).
 - A relative-operation impact worker reads its Relative Attribute. It read the impacted attribute's value even with

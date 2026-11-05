@@ -439,6 +439,7 @@ Severity: **C** critical, **H** high, **M** medium or low. The phase is the road
 | PC-30 | M | 1 | A process registered on an object that was never active outlives it. Unity sends no OnDestroy to such an object, so the process's block keeps stepping and its hierarchy node stays. This is a gap in PC-10's fix | `AbstractMonoProcess.cs` `OnDestroy`, `ProcessControl.cs` `EndDestroyedProcess` | verified |
 | PC-31 | M | 1 | A Mono process class that declares its own `OnDestroy` hides the base's, which Unity then never calls, so the process outlives its object. PC-30's watch covers only objects that never woke. A warning once per such class at registration, and watching its processes as PC-30 does, would close it | `AbstractMonoProcess.cs:151`, `ProcessControl.cs` `SweepDormant` | verified |
 | PC-32 | M | 2 | A Mono process terminated outside play mode keeps its object: `MonoWrapperProcess.WhenTerminate` calls `Object.Destroy`, which Unity refuses in edit mode, logging an error. Editor tools and edit-mode tests reach it; the Test Runner's golden S22 did (SP-18), as it fails a test on any logged error | `MonoWrapperProcess.cs:104` | verified |
+| PC-33 | H | 5 | A pool's object was destroyed as its process ended. The Mono wrapper handed a finished object back through the object's own `Instantiator`, which a clone never has, as the field isn't serialized, so an instantiator that made it, through a template's `Instantiator` or the handler's, never saw it again and pooling couldn't work (Decision 23 leaves pools to games). Found by the Bullet heaven lab. The wrapper keeps the instantiator that made the object and hands it back to that one | `MonoWrapperProcess.cs` (`ConfigureWrapper`, `WhenTerminate`) | fixed |
 
 ### TaskSequence
 
@@ -741,6 +742,26 @@ GAS-4 with GAS-5, PC-6, and TS-I with PC-5.
 ## Log
 
 Record baselines, gate results and notable decisions here, newest first.
+
+- 2026-11-04, **The Bullet heaven lab, and PC-33.** The fourth lab (Decision 30).
+  - **The lab** (`Tests/Labs/BulletHeavenLab.cs`, category Lab): a wizard and a horde of runtime enemies on a grid, on
+    a clock of 1/64 s a frame. Its bolts are the framework's `ProjectileMonoProcess`, drawn from a pool the lab writes
+    as a game would (Decision 23); its aura burns what's in reach; an enemy dies through the framework's death
+    watcher and blasts its neighbours, which cascades. Four rounds: 10,000 bolts at 500 enemies, the aura over 500,
+    a cascade through one cluster of 200 that stops at a gap, and a storm of all three.
+  - **PC-33,** which the lab found: the Mono wrapper handed a finished object back through the object's own
+    `Instantiator`, which a clone never has, so a pool's object was destroyed and pooling couldn't work. The wrapper
+    keeps the instantiator that made the object. Seen failing first: `PC_33_A_pooled_object_goes_back_to_its_pool`,
+    on a template's instantiator and on the handler's.
+  - **What the review expected it to find:** PC-3 was fixed in Phase 1, and the pooling stub went in PC-24. Churn: the
+    10,000-bolt round takes about half a second of batch time, so `StepGroup.Remove`'s linear search (the review's
+    O(n) unregister) doesn't show at this scale, and no row is opened for it. The lab's own area loops are linear.
+  - **The lab's own two mistakes,** for the record: its wizard was observed while its horde wasn't, so the invariants
+    saw damage dealt with none received (both are unobserved now); and its aura used Replace Existing alone, which
+    leaves a container's time alone as EFFECTS.md says, so it needed Refresh Duration.
+  - **Next:** the Roguelite lab, with FEAT-14 (item stacking).
+  - **Tests:** PlayMode 1123: 1116 pass, 0 fail and 7 planted are skipped, in three orders (Bullet heaven's 4 among
+    them). Planted 7 of 7; EditMode 435 of 435.
 
 - 2026-11-04, **TS-7, stages that branch, and the Duel lab.** The third lab (Decision 30).
   - **TS-7's shape is my call, not the user's:** Decision 30 doesn't cover it, and the review says only that there's
