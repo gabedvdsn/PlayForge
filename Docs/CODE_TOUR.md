@@ -1,7 +1,7 @@
 # PlayForge refactor: code tour
 
 This tour lists the places where the refactor changed code, so you can open each one in your IDE and read it. It
-covers `01258b8..2b623ed` on `main`: 342 commits. Phase 0 ported Arcade Fighter's fixes, Phase 1 made the runtime
+covers `01258b8..ed60c62` on `main`: 344 commits. Phase 0 ported Arcade Fighter's fixes, Phase 1 made the runtime
 correct, Phase 2 got the package ready to release, Phase 3 made it cheaper to run and gave the two GAS hubs one core,
 Phase 4 rebuilt the editor, and Phase 5 has begun. Each entry says what behaves differently and why, names its tracker IDs and Decisions, and
 points at the two or three places to read. `Docs/REFACTOR_PLAN.md` has every tracker row, the numbered Decisions,
@@ -10,8 +10,8 @@ and a Log of each batch's test results.
 ## How to use this
 
 - Paths are relative to the repo root.
-- Line numbers are as of commit `2b623ed`, the head of `main` on 2026-11-05. A later commit may move them, so each
-  entry also names the class and method to search for. `git show 2b623ed:<path>` shows a file as it was then.
+- Line numbers are as of commit `ed60c62`, the head of `main` on 2026-11-05. A later commit may move them, so each
+  entry also names the class and method to search for. `git show ed60c62:<path>` shows a file as it was then.
 - In Rider, Go to File accepts `path:line`. In Visual Studio, open the file, then Go To Line (Ctrl+G).
   A bare `:123` after a path means another line in the same file.
 - `git grep "<ID>"` finds the comment at each fix, and `git log --grep "<ID>"` finds its commit. Three exceptions:
@@ -506,6 +506,29 @@ blows shake the camera, drove it and held at its first run.
   its burst and doesn't begin again.
 - **Tests:** the three `FEAT_1_*` tests in PlayMode's new `GameplayCueTests`, EditMode's
   `FEAT_1_The_Effect_inspector_edits_its_cues`, and `Tests/Stretch/SequenceBossTests` (category Stretch).
+
+### Targeting input (FEAT-11)
+
+The five click-targeting tasks read the Input Manager's mouse and `Camera.main` themselves (Decision 30). A game on the
+Input System alone, with a camera or a reticle of its own, or a test couldn't stand in, and a scene with no main camera
+threw at the press. They read the game's input now, with the project's own as the default.
+
+- **IDs:** FEAT-11, commit `ed60c62`; Decision 30.
+- **Read:**
+  - `Assets/PlayForge/Runtime/PlayForge/Utils/ForgeInput.cs:13` `IForgeInput`, a press and the ray the pointer aims along, and `:31` `ForgeInput`,
+    whose `:39` `Use` puts the game's in and `:50` `Default` picks the project's own. `:62` `TryAimThrough` aims through
+    a camera given or `Camera.main`.
+  - `Assets/PlayForge/Runtime/PlayForge/Utils/ForgeInput.cs:93` `LegacyPointerInput` and `:109` `InputSystemPointerInput`, the defaults, each behind
+    the defines that say its input is there.
+  - `Assets/PlayForge/Runtime/PlayForge/AbilitySystem/Tasks/Targeting/AbstractTargetingAbilityTask.cs:110` `WaitForPointerPress`, which each task
+    awaits, as `Assets/PlayForge/Runtime/PlayForge/AbilitySystem/Tasks/Targeting/Authored/SelectPositionTargetTask.cs:39` does.
+  - `Assets/PlayForge/Runtime/FarEmerald.PlayForge.asmdef:17`, the optional `Unity.InputSystem` reference's version
+    define.
+- **Watch for:** `PLAYFORGE_INPUT_SYSTEM` comes from the asmdef's version define, so a csproj Unity hasn't regenerated
+  lacks it. The Input System default is compile-checked only, as Proving Grounds has no Input System. A press with no
+  camera aims nowhere: a task that retries on a miss waits for the next.
+- **Tests:** EditMode's `FEAT_11_The_runtime_reads_input_only_through_ForgeInput`, and PlayMode's new
+  `TargetingInputTests`.
 
 ## Phase 4
 
@@ -2815,6 +2838,7 @@ Newest first. Each row is a good place to start reading.
 
 | What | IDs | Where | Commit |
 |---|---|---|---|
+| Targeting input | FEAT-11 | `Assets/PlayForge/Runtime/PlayForge/Utils/ForgeInput.cs:31` | `ed60c62` |
 | Gameplay cues | FEAT-1 | `Assets/PlayForge/Runtime/PlayForge/GAS/Core/EffectSystemComponent.cs:763` | `2b623ed` |
 | Ability triggers | FEAT-4 | `Assets/PlayForge/Runtime/PlayForge/AbilitySystem/Core/AbilitySystemComponent.cs:505` | `b4e0cbd` |
 | SetByCaller magnitudes, and a sequence made in code | FEAT-2, FEAT-21 | `Assets/PlayForge/Runtime/PlayForge/GameplayEffect/Core/GameplayEffectSpec.cs:51` | `c24fa00` |
