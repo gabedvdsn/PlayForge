@@ -359,6 +359,8 @@ namespace FarEmerald.PlayForge
             int count = existing.Count;
 
             bool flag = true;
+            AbstractStackingEffectContainer overflowing = null;
+            StackBoundsConfig overflowBound = null;
             switch (spec.Base.DurationSpecification.ReApplicationPolicy)
             {
                 case EEffectReApplicationPolicy.DoNothing:
@@ -397,7 +399,8 @@ namespace FarEmerald.PlayForge
                         break;
                     }
 
-                    int stacks = spec.Base.DurationSpecification.GetStackAmount(container);
+                    int stacks = spec.Base.DurationSpecification.GetStackAmount(container, out overflowBound);
+                    if (overflowBound != null) overflowing = container;
                     container.Stack(stacks);
 
                     // Stacks feed magnitude through the container-aware impacter path —
@@ -415,7 +418,8 @@ namespace FarEmerald.PlayForge
             // containers. On the append path (flag == false) the caller proceeds with a
             // fresh application — running Refresh/Extend + ApplyTickOnApplication here as
             // well would double-tick the effect.
-            if (flag)
+            // An application that overflows with Deny Refresh leaves the effect's duration as it was (FEAT-8)
+            if (flag && !(overflowBound != null && overflowBound.DenyRefreshOnOverflow))
             {
                 switch (spec.Base.DurationSpecification.ReApplicationInteraction)
                 {
@@ -449,7 +453,20 @@ namespace FarEmerald.PlayForge
                 // source of every tag (GAS-P3)
             }
 
+            if (overflowing != null) Overflow(overflowing, overflowBound, spec);
+
             return flag;
+        }
+
+        // A stack its bound held back at its max: the bound's overflow effects land from the application's origin, and
+        // the effect's stacks come off, leaving at the next tick as a removed effect does, when the bound says so. A
+        // stack past the max did nothing, so a bleed couldn't hemorrhage at its fourth stack (FEAT-8, Decision 30)
+        private void Overflow(AbstractStackingEffectContainer container, StackBoundsConfig bound, GameplayEffectSpec spec)
+        {
+            if (bound.ClearStacksOnOverflow && !finishedSet.Contains(container)) MarkFinished(container);
+            if (bound.OverflowEffects == null) return;
+            for (int i = 0; i < bound.OverflowEffects.Count; i++)
+                if (bound.OverflowEffects[i] != null) ApplyGameplayEffect(spec.GetOrigin(), bound.OverflowEffects[i]);
         }
 
         // ═══════════════════════════════════════════════════════════════════════════

@@ -115,7 +115,9 @@ What happens when the effect is applied to a target that already has it. Each ap
   effect lasts as long as its longest stack. Duration Taken From One Stack runs one stack's timer at a time. Each time
   it runs out, one stack is lost and the timer restarts.
 - **Stack Behaviours**: optional stacking rules, such as Stack Bounds Config, which keeps the stack count between a
-  Min and a Max.
+  Min and a Max. An application that would take the effect past the Max overflows: its Overflow Effects land, from
+  the same origin, as a bleed's fourth stack hemorrhages; Deny Refresh On Overflow keeps that application from
+  refreshing or extending the effect; and Clear Stacks On Overflow takes the effect's stacks off.
 - **Stack Amount**, with its scaler: the stacks each application adds. 0 counts as 1.
 
 A Continuous change that reads the stack count updates whenever the count changes.

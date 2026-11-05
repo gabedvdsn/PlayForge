@@ -265,8 +265,16 @@ namespace FarEmerald.PlayForge
 
         }
         
-        public int GetStackAmount(AbstractStackingEffectContainer container)
+        public int GetStackAmount(AbstractStackingEffectContainer container) => GetStackAmount(container, out _);
+
+        /// <summary>
+        /// The stacks an application adds to the container, and the first stack bound the amount would have taken past
+        /// its max, which the bound holds it back from: the effect overflows there (FEAT-8).
+        /// </summary>
+        public int GetStackAmount(AbstractStackingEffectContainer container, out StackBoundsConfig overflowed)
         {
+            overflowed = null;
+
             // An amount left at 0 means one stack, which is what every application added before amounts counted
             int stacks = StackAmountOperation.Scaler is null
                 ? Mathf.Max(1, StackAmountOperation.Magnitude)
@@ -274,6 +282,7 @@ namespace FarEmerald.PlayForge
 
             foreach (var behaviour in ConfigsByPriority())
             {
+                if (overflowed is null && behaviour is StackBoundsConfig bound && bound.Overflows(container, stacks)) overflowed = bound;
                 stacks = behaviour.GetStacks(container, stacks);
             }
 

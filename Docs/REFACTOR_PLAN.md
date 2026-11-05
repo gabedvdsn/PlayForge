@@ -667,7 +667,7 @@ Phase 2 part, and set Phase 4's direction.
 | FEAT-5 | Cancel and block abilities by tag | C11 |
 | FEAT-6 | Input buffer | Expiry and latest-wins for queued activations (C06) |
 | FEAT-7 | Time source | Per-entity time scale and deterministic fixed tick (C02). The clock per entity is done (Decision 30): `GetClock()`, the game's time by `ForgeTime` times the entity's `TimeScale`, which its effects, cooldowns, sequences, waits and projectiles run by. The fixed-rate tick is done too: with ProcessControl's Fixed Tick Rate set, each frame runs as many ticks as its time holds, each stepping every process and its end of frame by a fixed step, and each sequence's wait goes on by the tick (`ForgeTick.Next`) |
-| FEAT-8 | Effect conveniences | Cleanse by tag query, immunity, overflow at max stacks, abilities granted by effects, chance to apply. Cleanse and immunity done (Removes Effects Tagged, Blocks Effects Tagged), matching an effect's asset, context and granted tags (Decision 30); overflow at max stacks (Overflow Effects, Deny Refresh and Clear Stacks), abilities granted by effects and the chance to apply come with the Status-effect lab |
+| FEAT-8 | Effect conveniences | Cleanse by tag query, immunity, overflow at max stacks, abilities granted by effects, chance to apply. Cleanse and immunity done (Removes Effects Tagged, Blocks Effects Tagged), matching an effect's asset, context and granted tags (Decision 30); overflow at max stacks done too, on Stack Bounds (Overflow Effects, Deny Refresh On Overflow, Clear Stacks On Overflow); abilities granted by effects and the chance to apply come with the Status-effect lab |
 | FEAT-9 | Save and load | Snapshots of attributes, effects, tags and cooldowns |
 | FEAT-10 | Headless mode | Abilities run without a scene ProcessControl |
 | FEAT-11 | Input binding | Targeting without legacy `Input` and `Camera.main` |
@@ -740,6 +740,23 @@ GAS-4 with GAS-5, PC-6, and TS-I with PC-5.
 ## Log
 
 Record baselines, gate results and notable decisions here, newest first.
+
+- 2026-11-04, **The Status-effect lab, and FEAT-8's overflow at max stacks.** The first lab (Decision 30's order, now
+  that the foundations are in).
+  - **The lab** (`Tests/Labs` in Proving Grounds, category Lab): a training dummy and a caster; poison, burn and bleed
+    under each stacking policy; a cleanse, an antidote that makes the dummy immune to poison, a barrier whose shield
+    takes damage before health (an inline attribute worker), a strike and a potion; and a bot that plays eight rounds,
+    the last a fight of forty seconds. Its bot passed every round on both hubs at its first run, the foundations and
+    FEAT-8's cleanse and immunity having what it needed. Its shield worker reads `ForgeTime.FrameCount`, as a game on
+    PlayForge should.
+  - **Overflow at max stacks** (Decision 30): a stack bound's `OverflowEffects` land from the application's origin as
+    a stack would take the effect past its max; `DenyRefreshOnOverflow` keeps that application from refreshing or
+    extending the effect; `ClearStacksOnOverflow` takes its stacks off. A stack past the max did nothing.
+  - **Its tests,** seen failing first: `FEAT_8_An_effect_at_its_max_stacks_overflows` and
+    `FEAT_8_Deny_Refresh_keeps_an_overflowing_application_from_refreshing` on each hub in `CleanseAndImmunityTests`.
+  - **Next:** FEAT-8's abilities granted by effects and the chance to apply.
+  - **Tests:** PlayMode 1037: 1030 pass, 0 fail and 7 planted are skipped, in three orders (the lab's 16 among
+    them). Planted 7 of 7; EditMode 431 of 431.
 
 - 2026-11-04, **FEAT-7's fixed-rate tick.** The time source's second part, which closes Phase 5's foundations
   (Decision 30). FEAT-7 is done.

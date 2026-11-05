@@ -255,6 +255,21 @@ namespace FarEmerald.PlayForge
         public int Max;
         public EStackBoundsOnMaxPolicy OnMaxPolicy = EStackBoundsOnMaxPolicy.DoNothing;
 
+        /// <summary>
+        /// The effects that land, from the application's origin, as a stack would take the effect past <see cref="Max"/>,
+        /// as a bleed's fourth stack hemorrhages. A stack past the max did nothing (FEAT-8, Decision 30).
+        /// </summary>
+        public List<GameplayEffect> OverflowEffects = new();
+
+        /// <summary>Whether an application that overflows leaves the effect's duration alone, where it would refresh or extend it.</summary>
+        public bool DenyRefreshOnOverflow;
+
+        /// <summary>Whether the effect's stacks come off as it overflows, so it starts again from none.</summary>
+        public bool ClearStacksOnOverflow;
+
+        /// <summary>Whether an amount reaching the bound would take the container past its max.</summary>
+        public bool Overflows(AbstractStackingEffectContainer container, int amount) => amount > 0 && container.Stacks + amount > Max;
+
         public override int ConfigPriority => 999;
 
         public override void InitializeContainer(AbstractStackingEffectContainer container)

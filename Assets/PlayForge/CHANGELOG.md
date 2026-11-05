@@ -7,6 +7,9 @@ tracks each fix below by its ID.
 ## [Unreleased]
 
 ### Added
+- Overflow at max stacks. A Stack Bounds Config's Overflow Effects land, from the application's origin, as a stack
+  would take the effect past its Max; Deny Refresh On Overflow keeps that application from refreshing or extending
+  the effect; Clear Stacks On Overflow takes its stacks off. A stack past the max did nothing (FEAT-8).
 - A fixed-rate tick: with ProcessControl's Fixed Tick Rate set, the game steps in ticks of a fixed step of its time,
   as many a frame as the frame's time holds, up to Max Ticks Per Frame. Every process steps once a tick, its end of
   frame with it, and each sequence's wait goes on by the tick (`ForgeTick.Next`), so a run comes out the same at any
