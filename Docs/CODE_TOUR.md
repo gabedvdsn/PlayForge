@@ -1,7 +1,7 @@
 # PlayForge refactor: code tour
 
 This tour lists the places where the refactor changed code, so you can open each one in your IDE and read it. It
-covers `01258b8..2c8dff3` on `main`: 378 commits. Phase 0 ported Arcade Fighter's fixes, Phase 1 made the runtime
+covers `01258b8..fff120f` on `main`: 381 commits. Phase 0 ported Arcade Fighter's fixes, Phase 1 made the runtime
 correct, Phase 2 got the package ready to release, Phase 3 made it cheaper to run and gave the two GAS hubs one core,
 Phase 4 rebuilt the editor, and Phase 5 built the missing features. Each entry says what behaves differently and why, names its tracker IDs and Decisions, and
 points at the two or three places to read. `Docs/REFACTOR_PLAN.md` has every tracker row, the numbered Decisions,
@@ -10,8 +10,8 @@ and a Log of each batch's test results.
 ## How to use this
 
 - Paths are relative to the repo root.
-- Line numbers are as of commit `2c8dff3`, the head of `main` on 2026-11-05. A later commit may move them, so each
-  entry also names the class and method to search for. `git show 2c8dff3:<path>` shows a file as it was then.
+- Line numbers are as of commit `fff120f`, the head of `main` on 2026-11-05. A later commit may move them, so each
+  entry also names the class and method to search for. `git show fff120f:<path>` shows a file as it was then.
 - In Rider, Go to File accepts `path:line`. In Visual Studio, open the file, then Go To Line (Ctrl+G).
   A bare `:123` after a path means another line in the same file.
 - `git grep "<ID>"` finds the comment at each fix, and `git log --grep "<ID>"` finds its commit. Three exceptions:
@@ -458,7 +458,7 @@ found FEAT-21 too: Run Sequence ran only a sequence a static method made, by nam
   - `Assets/PlayForge/Runtime/PlayForge/GameplayEffect/Core/GameplayEffectSpec.cs:51` `SetByCaller` and `:64` `TakeSetByCaller`, and
     `Assets/PlayForge/Runtime/PlayForge/Management/GameplayProcess/ProcessDataPacket.cs:116` and `:126`, the data's own.
   - `Assets/PlayForge/Runtime/PlayForge/GameplayEffect/Modifier/Default/Authored/SetByCallerScaler.cs:13` `SetByCallerScaler`.
-  - `Assets/PlayForge/Runtime/PlayForge/AbilitySystem/Tasks/Gameplay/ApplyEffectsAbilityTask.cs:32`, where an ability's effect takes its data's;
+  - `Assets/PlayForge/Runtime/PlayForge/AbilitySystem/Tasks/Gameplay/ApplyEffectsAbilityTask.cs:35`, where an ability's effect takes its data's;
     `Assets/PlayForge/Runtime/PlayForge/AbilitySystem/Core/AbilitySpec.cs:21` `ApplyUsageEffects`, the cost's and cooldown's; and
     `Assets/PlayForge/Runtime/PlayForge/GAS/Core/EffectSystemComponent.cs:214` `ApplyMadeFrom`, a contained or overflow effect's.
   - `Assets/PlayForge/Runtime/PlayForge/AbilitySystem/Tasks/Utility/RunSequenceTask.cs:18` `Definition`, a sequence made in code.
@@ -789,6 +789,25 @@ back as a new one, and the last digits of an effect's timers, which a save kept 
   memory.
 - **Tests:** the `GAS_60_*` and `GAS_61_*` tests in PlayMode's `SaveLoadTests`, and `RollbackTests` in Proving Grounds'
   `Tests/Stretch`.
+
+### An area ability strikes every target (GAS-62)
+
+The stress suite's area run casts an ability, every match within 10 m and then Apply Effects, among 200 entities. It
+struck one. A targeting task set each target it selected as the primary, so each replaced the last, and every match
+kept the farthest; then Target Real and the apply tasks took only the first target.
+
+- **IDs:** GAS-62, commit `fff120f`; Decision 30.
+- **Read:**
+  - `Assets/PlayForge/Runtime/PlayForge/Utils/ProcessTaskUtil.cs:54` `SetTargetingPackets`, which files a task's targets in order, as
+    `Assets/PlayForge/Runtime/PlayForge/AbilitySystem/Tasks/Targeting/Authored/AutoTargetTask.cs:67` does.
+  - `Assets/PlayForge/Runtime/PlayForge/AbilitySystem/Ability/AbilityProxy/Core/AbilityDataPacket.cs:137` `ResolveTarget`, which files each one's
+    entity under Target Real.
+  - `Assets/PlayForge/Runtime/PlayForge/AbilitySystem/Tasks/Gameplay/ApplyEffectsAbilityTask.cs:21` `Activate`, which reaches each target through
+    `Assets/PlayForge/Runtime/PlayForge/Management/GameplayProcess/ProcessDataPacket.cs:288` `TryGetAt`, which builds no list.
+- **Watch for:** a Target row and the Target Checks still check the primary alone.
+- **Tests:** the `GAS_62_*` tests in PlayMode's `AbilityActivationTests`, and `ScaleTests` in Proving Grounds'
+  `Tests/Stress`, the stress suite's scale half, whose allocation probe now ends the editor's Build Report REST
+  service's retries, the bursts it couldn't explain.
 
 ## Phase 4
 
@@ -2291,7 +2310,7 @@ scene loads, behind an inspector toggle like ProcessControl's, since it is every
 - **PC-22.** Processes step in priority order, lowest first, then by arrival. The priority was stored and never used.
   `Assets/PlayForge/Runtime/PlayForge/Management/GameplayProcess/Core/ProcessWorld.cs:207` `StepGroup`.
 - **PC-25.** `ProcessTaskUtil.DoWhile` ends; it measured backwards and looped forever.
-  `Assets/PlayForge/Runtime/PlayForge/Utils/ProcessTaskUtil.cs:112`. `ProcessRelay.RemainingRuntime` converts before
+  `Assets/PlayForge/Runtime/PlayForge/Utils/ProcessTaskUtil.cs:129`. `ProcessRelay.RemainingRuntime` converts before
   truncating: `Assets/PlayForge/Runtime/PlayForge/Management/GameplayProcess/Core/ProcessRelay.cs:67`.
 - **PC-26.** A block leaves its step groups by the timing it joined under, so changing a running process's timing no
   longer strands it. The hierarchy skips a root whose object is gone.
@@ -2694,7 +2713,7 @@ points back at it, as a Mono GAS's does.
 
 - **IDs:** GAS-46, the newest runtime fix, found while writing ED-16's docs.
 - **Read:**
-  - `Assets/PlayForge/Runtime/PlayForge/AbilitySystem/Ability/AbilityProxy/Core/AbilityDataPacket.cs:136`
+  - `Assets/PlayForge/Runtime/PlayForge/AbilitySystem/Ability/AbilityProxy/Core/AbilityDataPacket.cs:137`
     `AbilityDataPacket.ResolveTarget`.
   - `Assets/PlayForge/Runtime/PlayForge/AbilitySystem/Core/AbilitySpecContainer.cs:137`, in
     `AbilitySpecContainer.AwaitAbility`, followed by `ValidateAllActivationRequirements` at `:139`.
@@ -2749,7 +2768,7 @@ collider could fill it.
     `AbstractTargetingAbilityTask.TargetIsValid(ITarget)`.
   - `Assets/PlayForge/Runtime/PlayForge/Utils/Validation/CommonValidations.cs:134` `CheckRangeValidation.Validate`.
   - `Assets/PlayForge/Runtime/PlayForge/AbilitySystem/Tasks/Targeting/Authored/AutoTargetTask.cs:47`
-    `AutoTargetTask.Activate`, and `GatherCandidates` (`:78`). `AutoTargetByAffinityTask`,
+    `AutoTargetTask.Activate`, and `GatherCandidates` (`:76`). `AutoTargetByAffinityTask`,
     `SelectDirectionTargetTask` and `SelectGasTargetInRangeTask` have the same GAS-38 change.
 
 #### Disjoint and homing shots (Decision 10)
@@ -3099,6 +3118,7 @@ Newest first. Each row is a good place to start reading.
 
 | What | IDs | Where | Commit |
 |---|---|---|---|
+| An area ability strikes every target | GAS-62 | `Assets/PlayForge/Runtime/PlayForge/Utils/ProcessTaskUtil.cs:54` | `fff120f` |
 | Rollback: abilities kept through a load, timers saved in full | GAS-60, GAS-61 | `Assets/PlayForge/Runtime/PlayForge/Save/ForgeSave.cs:304` | `2c8dff3` |
 | Moving an effect between entities, and possession | FEAT-23 | `Assets/PlayForge/Runtime/PlayForge/GAS/Core/EffectSystemComponent.cs:860` | `21da7cb` |
 | An entity's time scale from an attribute, and time magic | FEAT-22 | `Assets/PlayForge/Runtime/PlayForge/GAS/Core/GASCore.cs:175` | `0cbdb9a` |
@@ -3189,7 +3209,7 @@ Newest first. Each row is a good place to start reading.
 | Opening abilities wait for the entity's attributes | GAS-49 | `Assets/PlayForge/Runtime/PlayForge/AbilitySystem/Core/AbilitySystemComponent.cs:225` | `999e779` |
 | Unequipping takes back only the item's grant | GAS-48 | `Assets/PlayForge/Runtime/PlayForge/ItemSystem/Core/ItemSpecContainer.cs:199` | `27c2325` |
 | Each entity keeps its own affiliation | GAS-47 | `Assets/PlayForge/Runtime/PlayForge/GAS/Core/GASCore.cs:81` | `fdc1886` |
-| Targeting's packet resolves to the entity, so Apply Effects finds its target | GAS-46 | `Assets/PlayForge/Runtime/PlayForge/AbilitySystem/Ability/AbilityProxy/Core/AbilityDataPacket.cs:136` | `fe4271c` |
+| Targeting's packet resolves to the entity, so Apply Effects finds its target | GAS-46 | `Assets/PlayForge/Runtime/PlayForge/AbilitySystem/Ability/AbilityProxy/Core/AbilityDataPacket.cs:137` | `fe4271c` |
 | Help buttons open the package's own docs through one table | ED-16, Decision 18 | `Assets/PlayForge/Editor/CustomPropertyDrawers/Forge/Util/ForgeDocs.cs:83` | `67db441` |
 | Demo Lit draws the Demos under URP and Built-in | SP-23, Decision 17 | `Assets/PlayForge/Samples~/Demos/Demo/Shaders/DemoLit.shader:42` | `954a11a` |
 | Statics clear at the start of a play session | SP-22, PC-26 | `Assets/PlayForge/Runtime/PlayForge/Utils/AttributeRegistry.cs:14` | `86e9e11` |
