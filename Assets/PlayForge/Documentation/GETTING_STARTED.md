@@ -53,7 +53,7 @@ the `Create → PlayForge` asset menu.
 6. **Scene** — add a `GameplayAbilitySystem` to a GameObject, assign the EntityIdentity,
    make sure a `ProcessControl` exists in the scene. Grant + activate the ability through
    the `AbilitySystemComponent`, or drive everything from code with
-   `RuntimeGameplayAbilitySystem` (no GameObject needed).
+   `RuntimeGameplayAbilitySystem` (no GameObject needed), which `ProcessControl.Register(gas).Run()` starts.
 
 ### Code-driven abilities (sequences)
 
@@ -70,6 +70,21 @@ public static TaskSequence ChainLightning() =>
         .Task(async (d, t) => { /* ... d.TryApplyEffects(target, Tags.EFFECTS) ... */ })
         .BuildSequence();
 ```
+
+### Running a process or a sequence
+
+`ProcessControl.Register` starts a registration, and `Run` makes it: it registers the process, a MonoBehaviour or
+runtime process, a `TaskSequence` or a chain of them, and starts it. `HandledBy` names what the process belongs to,
+which ends it as it ends, and `With` the packet it carries. Left out, an ability's packet hands the process to the
+packet's source, and anything else to GameRoot. A refused registration says why:
+
+```csharp
+var result = ProcessControl.Register(projectile).HandledBy(gas).With(data).Run();
+if (!result) Debug.LogWarning($"Not registered: {result.Refusal}");
+```
+
+A process that requires control waits after it registers; `relay.Run()` starts it. The `Register` overloads that take
+an `out` relay still work, marked obsolete, and go before the first Asset Store release.
 
 ### Tooltips: what does this ability do?
 

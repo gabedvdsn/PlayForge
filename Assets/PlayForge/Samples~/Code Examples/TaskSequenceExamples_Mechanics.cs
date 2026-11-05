@@ -94,7 +94,7 @@ namespace FarEmerald.PlayForge.Extended.Examples
                         var torrentData = new SequenceDataPacket(d);
                         torrentData.SetPrimary(Tags.DATA, torrent);
 
-                        ProcessControl.Register(TorrentSequence2(), torrentData, out _);
+                        ProcessControl.Register(TorrentSequence2()).With(torrentData).Run();
 
                         d.Decrement(ITERATIONS);
                     })

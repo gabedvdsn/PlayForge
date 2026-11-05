@@ -11,7 +11,7 @@ namespace FarEmerald.PlayForge
     ///
     /// Usage:
     ///   var gas = new RuntimeGameplayAbilitySystem(entityData);
-    ///   ProcessControl.Instance.Register(gas, dataPacket, out var relay);
+    ///   var relay = ProcessControl.Register(gas).With(dataPacket).Run().Relay;
     /// </summary>
     public partial class RuntimeGameplayAbilitySystem : LazyRuntimeProcess, IGameplayAbilitySystem
     {

@@ -88,9 +88,9 @@ namespace FarEmerald.PlayForge.Extended.Examples
         {
             if (Input.IsKeyDown(Key.K))
             {
-                //ProcessControl.Register(DemoSequences.TestMultiSequence(), out _);
-                //ProcessControl.Register(new TaskSequence(testSequence.Definition), out _);
-                ProcessControl.Register(testSequence, out _);
+                //ProcessControl.Register(DemoSequences.TestMultiSequence()).Run();
+                //ProcessControl.Register(new TaskSequence(testSequence.Definition)).Run();
+                ProcessControl.Register(testSequence).Run();
             }
         }
 
@@ -263,7 +263,7 @@ namespace FarEmerald.PlayForge.Extended.Examples
                 })
                 .BuildSequence();
 
-            ProcessControl.Register(seq, this, out _transitionRelay);
+            ProcessControl.Register(seq).HandledBy(this).Run(out _transitionRelay);
             camLock = _transitionRelay;
         }
 
@@ -283,7 +283,7 @@ namespace FarEmerald.PlayForge.Extended.Examples
                 })
                 .BuildSequence();
     
-            ProcessControl.Register(seq, this, out _transitionRelay);
+            ProcessControl.Register(seq).HandledBy(this).Run(out _transitionRelay);
             camLock = _transitionRelay;
         }
         
@@ -342,17 +342,17 @@ namespace FarEmerald.PlayForge.Extended.Examples
                 // Spawn enemy
                 .Task(async (d, t) =>
                 {
-                    ProcessControl.Register(DemoEnemy, this, out enemyRelay);
+                    ProcessControl.Register(DemoEnemy).HandledBy(this).Run(out enemyRelay);
                     enemyRelay.TryGetProcess(out enemy);
                     enemyRelay.Wrapper.getProcessName = "Demo Enemy";
 
-                    ProcessControl.Register(enemy.GetComponent<Healthbar>(), enemy, out var healthbarRelay);
+                    ProcessControl.Register(enemy.GetComponent<Healthbar>()).HandledBy(enemy).Run(out var healthbarRelay);
                     healthbarRelay.Wrapper.getProcessName = "Demo Enemy Healthbar";
                     
                     enemy.transform.localScale = Vector3.zero;
                     await SequenceTaskLibrary.ScaleTo(enemy.transform, 3f, 0.5f, t);
 
-                    ProcessControl.Register(enemyPatrolSeq, enemy, d, out _);
+                    ProcessControl.Register(enemyPatrolSeq).HandledBy(enemy).With(d).Run();
                 })
                 .OnTerminate((_, success) =>
                 {
@@ -364,7 +364,7 @@ namespace FarEmerald.PlayForge.Extended.Examples
                 })
                 .BuildSequence();
     
-            ProcessControl.Register(seq, this, out _transitionRelay);
+            ProcessControl.Register(seq).HandledBy(this).Run(out _transitionRelay);
             camLock = _transitionRelay;
         }
         
@@ -402,7 +402,7 @@ namespace FarEmerald.PlayForge.Extended.Examples
                 })
                 .BuildSequence();
     
-            ProcessControl.Register(seq, this, out _transitionRelay);
+            ProcessControl.Register(seq).HandledBy(this).Run(out _transitionRelay);
             camLock = _transitionRelay;
         }
         
@@ -582,7 +582,7 @@ namespace FarEmerald.PlayForge.Extended.Examples
                 activeRelays.Add(relay);
                 
                 var watcher = WatchSequence(relay);
-                ProcessControl.Register(watcher, relay.Handler, out _);
+                ProcessControl.Register(watcher).HandledBy(relay.Handler).Run();
             };
             
             button.RegisterCallback<PointerEnterEvent>(evt =>
@@ -641,7 +641,7 @@ namespace FarEmerald.PlayForge.Extended.Examples
             var data = SequenceDataPacket.SceneLocal(Player.transform);
             data.SetPrimary(Tags.DATA, Player);
             
-            ProcessControl.Register(seq, this, data, out var relay);
+            ProcessControl.Register(seq).HandledBy(this).With(data).Run(out var relay);
 
             return relay;
         }
@@ -651,7 +651,7 @@ namespace FarEmerald.PlayForge.Extended.Examples
             var data = SequenceDataPacket.SceneLocal(Player.transform);
             data.SetPrimary(Tags.DATA, Player);
             
-            ProcessControl.Register(chain, this, data, out var relay);
+            ProcessControl.Register(chain).HandledBy(this).With(data).Run(out var relay);
             // var relay = TaskSequenceProcess.Register(chain, data);
 
             return relay;

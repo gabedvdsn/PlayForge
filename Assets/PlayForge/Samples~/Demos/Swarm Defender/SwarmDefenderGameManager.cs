@@ -136,7 +136,7 @@ namespace FarEmerald.PlayForge.Extended.SwarmDefenderSample
         {
             _gameData = SequenceDataPacket.Default();
 
-            ProcessControl.Register(heroPrefab, out var heroRelay);
+            ProcessControl.Register(heroPrefab).Run(out var heroRelay);
             heroRelay.TryGetProcess(out hero);
 
             // Experience
@@ -169,7 +169,7 @@ namespace FarEmerald.PlayForge.Extended.SwarmDefenderSample
             CancelChain();
             var chain = SwarmDefenderAbilitySequences.BuildGameChain();
             
-            ProcessControl.Register(new TaskSequenceProcess(chain), this, _gameData, out _);
+            ProcessControl.Register(new TaskSequenceProcess(chain)).HandledBy(this).With(_gameData).Run();
         }
 
         private void CancelChain()

@@ -80,6 +80,14 @@ namespace FarEmerald.PlayForge
             => ProcessControl.Instance.Unpause(CacheIndex, cascade);
 
         /// <summary>
+        /// Runs this process, and optionally its children, where it waits, as one that requires control does until
+        /// it's told. ProcessControl could run a process by its index, and the relay that held it couldn't (FEAT-15).
+        /// Returns false for a process that can't run from where it is.
+        /// </summary>
+        public bool Run(bool cascade = false)
+            => ProcessControl.Instance != null && ProcessControl.Instance.Run(CacheIndex, cascade);
+
+        /// <summary>
         /// Terminates this process and optionally its children.
         /// </summary>
         public bool Terminate(bool cascade = true) 

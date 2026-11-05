@@ -439,7 +439,7 @@ namespace FarEmerald.PlayForge
         
                 // Not SceneRoot's packet, which reparents what it's handed: a scene's processes stay where the
                 // scene put them (PC-20)
-                Register(process, ProcessDataPacket.Default(), out _);
+                Register(process).With(ProcessDataPacket.Default()).Run();
             }
     
             if (OutputLogs) Debug.Log($"[ProcessControl] {_hierarchy.GetDebugInfo()}");
@@ -514,149 +514,156 @@ namespace FarEmerald.PlayForge
             return null;
         }
         
-        #region Mono Process
-        public static bool Register(AbstractMonoProcess process, out ProcessRelay relay)
-        {
-            return Instance.Internal_RegisterMonoProcess(process, GameRoot.Instance, ProcessDataPacket.SceneRoot(), out relay);
-        }
-        public static bool Register(AbstractMonoProcess process, AbilityDataPacket data, out ProcessRelay relay)
-        {
-            return Instance.Internal_RegisterMonoProcess(process, data.EffectOrigin.GetSource(), data, out relay);
-        }
-        public static bool Register(AbstractMonoProcess process, ProcessDataPacket data, out ProcessRelay relay)
-        {
-            return Instance.Internal_RegisterMonoProcess(process, GameRoot.Instance, data, out relay);
-        }
-        public static bool Register(AbstractMonoProcess process, IGameplayProcessHandler handler, out ProcessRelay relay)
-        {
-            return Instance.Internal_RegisterMonoProcess(process, handler, ProcessDataPacket.SceneRoot(), out relay);
-        }
-        public static bool Register(AbstractMonoProcess process, IGameplayProcessHandler handler, ProcessDataPacket data, out ProcessRelay relay)
-        {
-            return Instance.Internal_RegisterMonoProcess(process, handler, data, out relay);
-        }
+        #region Registering (FEAT-15)
 
-        private bool Internal_RegisterMonoProcess(AbstractMonoProcess process, IGameplayProcessHandler handler, ProcessDataPacket data, out ProcessRelay relay)
+        /// <summary>
+        /// Starts a MonoBehaviour process's registration, which <see cref="ProcessRegistration.Run()"/> makes:
+        /// <c>ProcessControl.Register(process).HandledBy(gas).With(data).Run()</c>. What isn't given takes its default,
+        /// and a refused registration says why (FEAT-15).
+        /// </summary>
+        public static ProcessRegistration Register(AbstractMonoProcess process) => new(process);
+
+        /// <summary>Starts a runtime process's registration. See <see cref="Register(AbstractMonoProcess)"/>.</summary>
+        public static ProcessRegistration Register(AbstractRuntimeProcess process) => new(process);
+
+        /// <summary>Starts a task sequence's registration, whose packet is a sequence's. See <see cref="Register(AbstractMonoProcess)"/>.</summary>
+        public static ProcessRegistration Register(TaskSequence sequence) => new(sequence);
+
+        /// <summary>Starts a chain of task sequences' registration. See <see cref="Register(AbstractMonoProcess)"/>.</summary>
+        public static ProcessRegistration Register(TaskSequenceChain chain) => new(chain);
+
+        #endregion
+
+        #region Mono Process
+
+        // The overloads' one message: each is a wrapper of the builder, and they go before the first Asset Store
+        // submission (FEAT-15, Decision 30)
+        private const string UseTheBuilder = "Use ProcessControl.Register(process), then HandledBy, With and Run. " +
+                                             "These overloads go before the first Asset Store submission (FEAT-15).";
+
+        [Obsolete(UseTheBuilder)]
+        public static bool Register(AbstractMonoProcess process, out ProcessRelay relay) => Register(process).Run(out relay);
+
+        [Obsolete(UseTheBuilder)]
+        public static bool Register(AbstractMonoProcess process, AbilityDataPacket data, out ProcessRelay relay) =>
+            Register(process).With(data).Run(out relay);
+
+        [Obsolete(UseTheBuilder)]
+        public static bool Register(AbstractMonoProcess process, ProcessDataPacket data, out ProcessRelay relay) =>
+            Register(process).With(data).Run(out relay);
+
+        [Obsolete(UseTheBuilder)]
+        public static bool Register(AbstractMonoProcess process, IGameplayProcessHandler handler, out ProcessRelay relay) =>
+            Register(process).HandledBy(handler).Run(out relay);
+
+        [Obsolete(UseTheBuilder)]
+        public static bool Register(AbstractMonoProcess process, IGameplayProcessHandler handler, ProcessDataPacket data, out ProcessRelay relay) =>
+            Register(process).HandledBy(handler).With(data).Run(out relay);
+
+        // A MonoBehaviour process's registration, as the builder makes it, and why it's refused when it is
+        internal ProcessRegistrationResult RegisterMono(AbstractMonoProcess process, IGameplayProcessHandler handler, ProcessDataPacket data)
         {
-            relay = default;
-            
-            if (process == null || process.IsInitialized) 
-                return false;
-            
-            if (!CanAcceptNewProcesses()) 
-                return false;
-            
+            if (process == null) return new ProcessRegistrationResult(null, EProcessRegistrationRefusal.NoProcess);
+            if (process.IsInitialized) return new ProcessRegistrationResult(null, EProcessRegistrationRefusal.AlreadyRegistered);
+            if (!CanAcceptNewProcesses()) return new ProcessRegistrationResult(null, EProcessRegistrationRefusal.ProcessControlClosed);
+
             var wrapper = new MonoWrapperProcess(process, data, handler);
             var pcb = ProcessControlBlock.Generate(NextCacheIndex, wrapper);
             pcb.isMono = true;
 
-            relay = pcb.Relay;
+            var relay = pcb.Relay;
             handler?.HandlerSubscribeProcess(relay);
             data.HandlerSubscribeProcess(relay);
 
-            if (SetProcess(pcb)) return true;
-
-            relay = default;
-            return false;
+            return SetProcess(pcb)
+                ? new ProcessRegistrationResult(relay, EProcessRegistrationRefusal.None)
+                : new ProcessRegistrationResult(null, EProcessRegistrationRefusal.InitializeThrew);
         }
-        
+
         #endregion
         
         #region Runtime Process
-        public static bool Register(AbstractRuntimeProcess process, out ProcessRelay relay)
-        {
-            return Instance.Internal_RegisterRuntimeProcess(process, GameRoot.Instance, null, out relay);
-        }
-        public static bool Register(AbstractRuntimeProcess process, AbilityDataPacket data, out ProcessRelay relay)
-        {
-            return Instance.Internal_RegisterRuntimeProcess(process, data.EffectOrigin.GetSource(), data, out relay);
-        }
-        public static bool Register(AbstractRuntimeProcess process, IGameplayProcessHandler handler, out ProcessRelay relay)
-        {
-            return Instance.Internal_RegisterRuntimeProcess(process, handler, null, out relay);
-        }
-        public static bool Register(AbstractRuntimeProcess process, ProcessDataPacket data, out ProcessRelay relay)
-        {
-            return Instance.Internal_RegisterRuntimeProcess(process, GameRoot.Instance, data, out relay);
-        }
-        public static bool Register(AbstractRuntimeProcess process, IGameplayProcessHandler handler, ProcessDataPacket data, out ProcessRelay relay)
-        {
-            return Instance.Internal_RegisterRuntimeProcess(process, handler, data, out relay);
-        }
-        private bool Internal_RegisterRuntimeProcess(AbstractRuntimeProcess process, IGameplayProcessHandler handler, ProcessDataPacket data, out ProcessRelay relay)
-        {
-            relay = default;
 
-            if (process == null || process.IsInitialized) 
-                return false;
-            
-            if (!CanAcceptNewProcesses()) 
-                return false;
+        [Obsolete(UseTheBuilder)]
+        public static bool Register(AbstractRuntimeProcess process, out ProcessRelay relay) => Register(process).Run(out relay);
 
-            // The overloads without a packet pass null, and the handler and wrapper below both need one
-            data ??= ProcessDataPacket.Default();
+        [Obsolete(UseTheBuilder)]
+        public static bool Register(AbstractRuntimeProcess process, AbilityDataPacket data, out ProcessRelay relay) =>
+            Register(process).With(data).Run(out relay);
+
+        [Obsolete(UseTheBuilder)]
+        public static bool Register(AbstractRuntimeProcess process, IGameplayProcessHandler handler, out ProcessRelay relay) =>
+            Register(process).HandledBy(handler).Run(out relay);
+
+        [Obsolete(UseTheBuilder)]
+        public static bool Register(AbstractRuntimeProcess process, ProcessDataPacket data, out ProcessRelay relay) =>
+            Register(process).With(data).Run(out relay);
+
+        [Obsolete(UseTheBuilder)]
+        public static bool Register(AbstractRuntimeProcess process, IGameplayProcessHandler handler, ProcessDataPacket data, out ProcessRelay relay) =>
+            Register(process).HandledBy(handler).With(data).Run(out relay);
+
+        // A runtime process's registration, a task sequence's among them, as the builder makes it, and why it's refused
+        // when it is
+        internal ProcessRegistrationResult RegisterRuntime(AbstractRuntimeProcess process, IGameplayProcessHandler handler, ProcessDataPacket data)
+        {
+            if (process == null) return new ProcessRegistrationResult(null, EProcessRegistrationRefusal.NoProcess);
+            if (process.IsInitialized) return new ProcessRegistrationResult(null, EProcessRegistrationRefusal.AlreadyRegistered);
+            if (!CanAcceptNewProcesses()) return new ProcessRegistrationResult(null, EProcessRegistrationRefusal.ProcessControlClosed);
 
             var wrapper = new RuntimeWrapperProcess(process, data, handler);
             var pcb = ProcessControlBlock.Generate(NextCacheIndex, wrapper);
-            
-            relay = pcb.Relay;
+
+            var relay = pcb.Relay;
             handler?.HandlerSubscribeProcess(relay);
             data.HandlerSubscribeProcess(relay);
 
-            if (SetProcess(pcb)) return true;
-
-            relay = default;
-            return false;
+            return SetProcess(pcb)
+                ? new ProcessRegistrationResult(relay, EProcessRegistrationRefusal.None)
+                : new ProcessRegistrationResult(null, EProcessRegistrationRefusal.InitializeThrew);
         }
+
         #endregion
         
         #region Task Sequences (Async)
 
-        public static bool Register(TaskSequence sequence, out ProcessRelay relay)
-        {
-            return Instance.Internal_RegisterAsyncSequence(new TaskSequenceProcess(sequence), GameRoot.Instance, SequenceDataPacket.SceneRoot(), out relay);
-        }
-        public static bool Register(TaskSequence sequence, AbilityDataPacket data, out ProcessRelay relay)
-        {
-            return Instance.Internal_RegisterAsyncSequence(new TaskSequenceProcess(sequence), data.EffectOrigin.GetSource(), data, out relay);
-        }
-        public static bool Register(TaskSequence sequence, IGameplayProcessHandler handler, out ProcessRelay relay)
-        {
-            return Instance.Internal_RegisterAsyncSequence(new TaskSequenceProcess(sequence), handler, SequenceDataPacket.SceneRoot(), out relay);
-        }
-        public static bool Register(TaskSequence sequence, SequenceDataPacket data, out ProcessRelay relay)
-        {
-            return Instance.Internal_RegisterAsyncSequence(new TaskSequenceProcess(sequence), GameRoot.Instance, data, out relay);
-        }
-        public static bool Register(TaskSequence sequence, IGameplayProcessHandler handler, SequenceDataPacket data, out ProcessRelay relay)
-        {
-            return Instance.Internal_RegisterAsyncSequence(new TaskSequenceProcess(sequence), handler, data, out relay);
-        }
-        
-        public static bool Register(TaskSequenceChain chain, out ProcessRelay relay)
-        {
-            return Instance.Internal_RegisterAsyncSequence(new TaskSequenceProcess(chain), GameRoot.Instance, SequenceDataPacket.SceneRoot(), out relay);
-        }
-        public static bool Register(TaskSequenceChain chain, AbilityDataPacket data, out ProcessRelay relay)
-        {
-            return Instance.Internal_RegisterAsyncSequence(new TaskSequenceProcess(chain), data.EffectOrigin.GetSource(), data, out relay);
-        }
-        public static bool Register(TaskSequenceChain chain, IGameplayProcessHandler handler, out ProcessRelay relay)
-        {
-            return Instance.Internal_RegisterAsyncSequence(new TaskSequenceProcess(chain), handler, SequenceDataPacket.SceneRoot(), out relay);
-        }
-        public static bool Register(TaskSequenceChain chain, SequenceDataPacket data, out ProcessRelay relay)
-        {
-            return Instance.Internal_RegisterAsyncSequence(new TaskSequenceProcess(chain), GameRoot.Instance, data, out relay);
-        }
-        public static bool Register(TaskSequenceChain chain, IGameplayProcessHandler handler, SequenceDataPacket data, out ProcessRelay relay)
-        {
-            return Instance.Internal_RegisterAsyncSequence(new TaskSequenceProcess(chain), handler, data, out relay);
-        }
-        private bool Internal_RegisterAsyncSequence(TaskSequenceProcess process, IGameplayProcessHandler handler, SequenceDataPacket data, out ProcessRelay relay)
-        {
-            return Register(process, handler, data, out relay);
-        }
+        [Obsolete(UseTheBuilder)]
+        public static bool Register(TaskSequence sequence, out ProcessRelay relay) => Register(sequence).Run(out relay);
+
+        [Obsolete(UseTheBuilder)]
+        public static bool Register(TaskSequence sequence, AbilityDataPacket data, out ProcessRelay relay) =>
+            Register(sequence).With(data).Run(out relay);
+
+        [Obsolete(UseTheBuilder)]
+        public static bool Register(TaskSequence sequence, IGameplayProcessHandler handler, out ProcessRelay relay) =>
+            Register(sequence).HandledBy(handler).Run(out relay);
+
+        [Obsolete(UseTheBuilder)]
+        public static bool Register(TaskSequence sequence, SequenceDataPacket data, out ProcessRelay relay) =>
+            Register(sequence).With(data).Run(out relay);
+
+        [Obsolete(UseTheBuilder)]
+        public static bool Register(TaskSequence sequence, IGameplayProcessHandler handler, SequenceDataPacket data, out ProcessRelay relay) =>
+            Register(sequence).HandledBy(handler).With(data).Run(out relay);
+
+        [Obsolete(UseTheBuilder)]
+        public static bool Register(TaskSequenceChain chain, out ProcessRelay relay) => Register(chain).Run(out relay);
+
+        [Obsolete(UseTheBuilder)]
+        public static bool Register(TaskSequenceChain chain, AbilityDataPacket data, out ProcessRelay relay) =>
+            Register(chain).With(data).Run(out relay);
+
+        [Obsolete(UseTheBuilder)]
+        public static bool Register(TaskSequenceChain chain, IGameplayProcessHandler handler, out ProcessRelay relay) =>
+            Register(chain).HandledBy(handler).Run(out relay);
+
+        [Obsolete(UseTheBuilder)]
+        public static bool Register(TaskSequenceChain chain, SequenceDataPacket data, out ProcessRelay relay) =>
+            Register(chain).With(data).Run(out relay);
+
+        [Obsolete(UseTheBuilder)]
+        public static bool Register(TaskSequenceChain chain, IGameplayProcessHandler handler, SequenceDataPacket data, out ProcessRelay relay) =>
+            Register(chain).HandledBy(handler).With(data).Run(out relay);
 
         #endregion
 
@@ -682,7 +689,7 @@ namespace FarEmerald.PlayForge
             relay = default;
             if (group == null || _groups.ContainsKey(groupTag)) return false;
 
-            if (!Register(group, data, out relay)) return false;
+            if (!Register(group).With(data).Run(out relay)) return false;
 
             _groups[groupTag] = group;
 
@@ -729,7 +736,7 @@ namespace FarEmerald.PlayForge
                 : explicitData ?? ProcessDataPacket.Default();
 
             // Register the process normally through ProcessControl
-            if (!Register(process, data, out relay))
+            if (!Register(process).With(data).Run(out relay))
                 return false;
 
             // Add as a group member
@@ -1544,45 +1551,37 @@ namespace FarEmerald.PlayForge
         // (or whose data packet resolves to one) is auto-tracked in _gasProcesses.
         // ───────────────────────────────────────────────────────────────────────
 
-        public static bool Register(AbstractRuntimeProcess process, IGameplayAbilitySystem gas, out ProcessRelay relay)
-        {
-            return Instance.Internal_RegisterRuntimeProcess(process, gas, ProcessDataPacket.Default(), out relay);
-        }
+        [Obsolete(UseTheBuilder)]
+        public static bool Register(AbstractRuntimeProcess process, IGameplayAbilitySystem gas, out ProcessRelay relay) =>
+            Register(process).HandledBy(gas).Run(out relay);
 
-        public static bool Register(AbstractRuntimeProcess process, IGameplayAbilitySystem gas, ProcessDataPacket data, out ProcessRelay relay)
-        {
-            return Instance.Internal_RegisterRuntimeProcess(process, gas, data ?? ProcessDataPacket.Default(), out relay);
-        }
+        [Obsolete(UseTheBuilder)]
+        public static bool Register(AbstractRuntimeProcess process, IGameplayAbilitySystem gas, ProcessDataPacket data, out ProcessRelay relay) =>
+            Register(process).HandledBy(gas).With(data).Run(out relay);
 
-        public static bool Register(AbstractMonoProcess process, IGameplayAbilitySystem gas, out ProcessRelay relay)
-        {
-            return Instance.Internal_RegisterMonoProcess(process, gas, ProcessDataPacket.SceneRoot(), out relay);
-        }
+        [Obsolete(UseTheBuilder)]
+        public static bool Register(AbstractMonoProcess process, IGameplayAbilitySystem gas, out ProcessRelay relay) =>
+            Register(process).HandledBy(gas).Run(out relay);
 
-        public static bool Register(AbstractMonoProcess process, IGameplayAbilitySystem gas, ProcessDataPacket data, out ProcessRelay relay)
-        {
-            return Instance.Internal_RegisterMonoProcess(process, gas, data ?? ProcessDataPacket.SceneRoot(), out relay);
-        }
+        [Obsolete(UseTheBuilder)]
+        public static bool Register(AbstractMonoProcess process, IGameplayAbilitySystem gas, ProcessDataPacket data, out ProcessRelay relay) =>
+            Register(process).HandledBy(gas).With(data).Run(out relay);
 
-        public static bool Register(TaskSequence sequence, IGameplayAbilitySystem gas, out ProcessRelay relay)
-        {
-            return Instance.Internal_RegisterAsyncSequence(new TaskSequenceProcess(sequence), gas, SequenceDataPacket.SceneRoot(), out relay);
-        }
+        [Obsolete(UseTheBuilder)]
+        public static bool Register(TaskSequence sequence, IGameplayAbilitySystem gas, out ProcessRelay relay) =>
+            Register(sequence).HandledBy(gas).Run(out relay);
 
-        public static bool Register(TaskSequence sequence, IGameplayAbilitySystem gas, SequenceDataPacket data, out ProcessRelay relay)
-        {
-            return Instance.Internal_RegisterAsyncSequence(new TaskSequenceProcess(sequence), gas, data ?? SequenceDataPacket.SceneRoot(), out relay);
-        }
+        [Obsolete(UseTheBuilder)]
+        public static bool Register(TaskSequence sequence, IGameplayAbilitySystem gas, SequenceDataPacket data, out ProcessRelay relay) =>
+            Register(sequence).HandledBy(gas).With(data).Run(out relay);
 
-        public static bool Register(TaskSequenceChain chain, IGameplayAbilitySystem gas, out ProcessRelay relay)
-        {
-            return Instance.Internal_RegisterAsyncSequence(new TaskSequenceProcess(chain), gas, SequenceDataPacket.SceneRoot(), out relay);
-        }
+        [Obsolete(UseTheBuilder)]
+        public static bool Register(TaskSequenceChain chain, IGameplayAbilitySystem gas, out ProcessRelay relay) =>
+            Register(chain).HandledBy(gas).Run(out relay);
 
-        public static bool Register(TaskSequenceChain chain, IGameplayAbilitySystem gas, SequenceDataPacket data, out ProcessRelay relay)
-        {
-            return Instance.Internal_RegisterAsyncSequence(new TaskSequenceProcess(chain), gas, data ?? SequenceDataPacket.SceneRoot(), out relay);
-        }
+        [Obsolete(UseTheBuilder)]
+        public static bool Register(TaskSequenceChain chain, IGameplayAbilitySystem gas, SequenceDataPacket data, out ProcessRelay relay) =>
+            Register(chain).HandledBy(gas).With(data).Run(out relay);
 
         /// <summary>
         /// Returns the cache indices of all active processes owned by the given GAS.

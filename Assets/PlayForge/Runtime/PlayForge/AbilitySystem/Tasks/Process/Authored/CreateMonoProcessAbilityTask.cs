@@ -35,13 +35,13 @@ namespace FarEmerald.PlayForge
             {
                 if (!RegisterMany && data.TryGet<AbstractMonoProcess>(DataTag, DataTarget, out var process))
                 {
-                    ProcessControl.Register(process, data.EffectOrigin.GetSource(), data, out _);
+                    ProcessControl.Register(process).HandledBy(data.EffectOrigin.GetSource()).With(data).Run();
                 }
                 else if (RegisterMany && data.TryGet<IEnumerable<AbstractMonoProcess>>(DataTag, DataTarget, out var processes))
                 {
                     foreach (var p in processes)
                     {
-                        ProcessControl.Register(p, data.EffectOrigin.GetSource(), data, out _);
+                        ProcessControl.Register(p).HandledBy(data.EffectOrigin.GetSource()).With(data).Run();
                     }
                 }
             }
@@ -49,7 +49,7 @@ namespace FarEmerald.PlayForge
             {
                 foreach (var process in InternalMonoProcesses)
                 {
-                    ProcessControl.Register(process, data.EffectOrigin.GetSource(), data, out _);
+                    ProcessControl.Register(process).HandledBy(data.EffectOrigin.GetSource()).With(data).Run();
                 }
             }
             

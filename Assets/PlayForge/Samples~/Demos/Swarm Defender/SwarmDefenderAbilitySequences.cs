@@ -745,14 +745,14 @@ namespace FarEmerald.PlayForge.Extended.SwarmDefenderSample
         {
             if (enemy == null) return;
 
-            ProcessControl.Register(enemy, d, out _);
+            ProcessControl.Register(enemy).With(d).Run();
             var list = GetOrCreateEnemyList(d);
             list.Add(enemy);
 
             var healthBar = enemy.GetComponent<Healthbar>();
             if (healthBar)
             {
-                ProcessControl.Register(healthBar, enemy, out _);
+                ProcessControl.Register(healthBar).HandledBy(enemy).Run();
             }
 
             var hero = d.GetPrimary<Hero>(SwarmTags.HERO);

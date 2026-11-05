@@ -674,7 +674,7 @@ Phase 2 part, and set Phase 4's direction.
 | FEAT-12 | Ability graph and timeline, effect recorder | Editor |
 | FEAT-13 | Networking | Prediction and replication; not planned. Only its two cheap changes are in Phase 5 (Decision 30): one injectable clock and one seedable random source, and IDs scoped to an entity |
 | FEAT-14 | Item stacking | An inventory holds an item as a count, up to the Item's `MaxStackSize`. The field and `ItemSpecContainer.ItemStacks` exist, but nothing reads or sets them (GAS-51). Decide how giving and removing count, how a stack's effects and abilities scale, and how Allow Duplicate Items meets it |
-| FEAT-15 | Register builder | One builder or options struct in place of `ProcessControl`'s 28 static `Register` overloads, from the review's API changes. The roadmap gave it to Phase 3, but no row tracked it, so it moved here when Phase 3 closed. Today the argument's static type picks the overload, and a failed call returns false with a null relay. The review paired it with a `Run` on the relay, which doesn't exist yet, and an awaitable completion, which `ProcessRelay.WhenTerminated` now is (TS-Z) |
+| FEAT-15 | Register builder | One builder or options struct in place of `ProcessControl`'s 28 static `Register` overloads, from the review's API changes. The roadmap gave it to Phase 3, but no row tracked it, so it moved here when Phase 3 closed. Today the argument's static type picks the overload, and a failed call returns false with a null relay. The review paired it with a `Run` on the relay, which doesn't exist yet, and an awaitable completion, which `ProcessRelay.WhenTerminated` now is (TS-Z). Done (Decision 30): `ProcessControl.Register(process)` starts a registration that `HandledBy`, `With` and `In` shape and `Run` makes, returning the relay or why it was refused; the handler follows the packet's run-time type; `ProcessRelay.Run` starts a waiting process; the 28 overloads are `[Obsolete]` wrappers until the first Asset Store submission |
 | FEAT-16 | Loose tags | Done with ED-40, ahead of the phase. A tag granted with no effect, ability or item behind it, as Unreal's loose gameplay tags are: `AddLooseTag`, `RemoveLooseTag` and `GetLooseTags` on each hub, each grant counted, and the tag compile includes them. A tag added straight to the tag cache went at its next compile |
 | FEAT-17 | Activation by asset or tag, with a reason | From the review's API changes: activate by ability asset or tag, and say why a refused activation was refused, with a matching callback. `TryActivateAbility` returns only true or false (`AbilitySystemComponent.TryActivateAbility`) |
 | FEAT-18 | Profiler markers | From the review's Profiling gap: Runtime has no `ProfilerMarker`, so the cost of a process step, an effect application or an ability activation can't be seen in Unity's Profiler |
@@ -740,6 +740,33 @@ GAS-4 with GAS-5, PC-6, and TS-I with PC-5.
 ## Log
 
 Record baselines, gate results and notable decisions here, newest first.
+
+- 2026-11-04, **FEAT-15: the Register builder.** The first of Phase 5's foundations (Decision 30).
+  - **The builder:** `ProcessControl.Register(process)`, for a MonoBehaviour or runtime process, a task sequence or a
+    chain of them, starts a `ProcessRegistration`; `HandledBy`, `With` and `In` shape it, and `Run()` registers the
+    process and starts it, as registering always has. It returns a `ProcessRegistrationResult`, which reads as true
+    when the process was taken: the relay, or why ProcessControl refused it (`EProcessRegistrationRefusal`: no
+    process, no ProcessControl, registered already, ProcessControl closed, a sequence's packet that isn't a
+    sequence's, or a throw in WhenInitialize). `Run(out relay)` reads as the overloads did.
+  - **The handler follows the packet's run-time type:** an ability's packet hands its process to its source however
+    it's typed. Through the overloads, an ability's packet passed as a `SequenceDataPacket` or a `ProcessDataPacket`
+    put its process under GameRoot, so it didn't end with its entity, as GAS-52's processes didn't;
+    `TaskSequence.RegisterAndRun` did that with every ability's packet.
+  - **The 28 overloads** are `[Obsolete]` wrappers of the builder until the first Asset Store submission. Runtime's
+    nine calls, the golden tests' four and the samples' use the builder; Proving Grounds' tests still call the
+    overloads, so the gates cover the wrappers too. Nothing compiles `Samples~`, so the samples were built against the
+    package's source in a throwaway project, with no error and no obsolete call.
+  - **`ProcessRelay.Run`** starts a process that waits, as one that requires control does after it registers.
+  - **With no ProcessControl,** a registration is refused, where every overload threw (the Phase 5 survey's FEAT-10
+    note).
+  - **Docs:** `GETTING_STARTED.md` has "Running a process or a sequence", and the CHANGELOG has the builder and the
+    overloads' change.
+  - **Its tests,** which didn't compile against `520c433`, the API being new: the six `FEAT_15_*` tests in the new
+    `RegisterBuilderTests`, among them `FEAT_15_The_handler_follows_the_packets_run_time_type` on each hub, whose
+    sequences end with their entity.
+  - **Next:** FEAT-3, tag-change events, with GAS-56.
+  - **Tests:** PlayMode 978: 971 pass, 0 fail and 7 planted are skipped, in three orders. Planted 7 of 7; EditMode
+    430 of 430.
 
 - 2026-11-04, **ED-40 and FEAT-8: the Debugger's foot rows, and cleanse by granted tags.** The user answered Phase
   5's design interview, which is Decision 30, and the Debugger's edits have their place on the canvas's Entities

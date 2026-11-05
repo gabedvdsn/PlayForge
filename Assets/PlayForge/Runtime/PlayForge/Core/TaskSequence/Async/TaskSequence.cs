@@ -46,11 +46,12 @@ namespace FarEmerald.PlayForge
         // EXECUTION
         // ═══════════════════════════════════════════════════════════════════════════
 
-        public ProcessRelay RegisterAndRun(SequenceDataPacket data)
-        {
-            ProcessControl.Register(this, data, out var relay);
-            return relay;
-        }
+        /// <summary>
+        /// Registers the sequence with ProcessControl and runs it, under the packet's source when the packet is an
+        /// ability's. The packet's static type picked the handler, so an ability's packet put its sequence under GameRoot
+        /// (FEAT-15, GAS-52). Null when ProcessControl refuses it.
+        /// </summary>
+        public ProcessRelay RegisterAndRun(SequenceDataPacket data) => ProcessControl.Register(this).With(data).Run().Relay;
         
         /// <summary>
         /// Makes a runtime for one run, for a caller that needs to reach that run and no other.

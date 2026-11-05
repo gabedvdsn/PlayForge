@@ -104,7 +104,7 @@ namespace FarEmerald.PlayForge.Extended.Examples
                         var data = new SequenceDataPacket(d);
                         data.SetPrimary(Tags.DATA, obj);
 
-                        ProcessControl.Register(TorrentSequence(), DemoManager.Instance, data, out _);
+                        ProcessControl.Register(TorrentSequence()).HandledBy(DemoManager.Instance).With(data).Run();
                         
                         d.Decrement(Tags.ITERATIONS);
                     })
@@ -217,7 +217,7 @@ namespace FarEmerald.PlayForge.Extended.Examples
                         torrentData.SetPrimary(Tags.ROTATION, new Vector2(Random.Range(0, 360), Random.Range(0, 360)));
                         torrentData.SetPrimary(Tags.DATA, torrent);
 
-                        ProcessControl.Register(BounceSequence(), DemoManager.Instance, torrentData, out _);
+                        ProcessControl.Register(BounceSequence()).HandledBy(DemoManager.Instance).With(torrentData).Run();
                         
                         d.Decrement(Tags.ITERATIONS);
                     }))
@@ -336,7 +336,7 @@ namespace FarEmerald.PlayForge.Extended.Examples
                         pos += new Vector2(5f * Mathf.Sign(pos.x), 5f * Mathf.Sign(pos.y));
                         obj.transform.position += new Vector3(pos.x, 0f, pos.y);
                         
-                        ProcessControl.Register(WaitForClick(), DemoManager.Instance, data, out var relay);
+                        ProcessControl.Register(WaitForClick()).HandledBy(DemoManager.Instance).With(data).Run(out var relay);
                         //TaskSequenceProcess.Register(WaitForClick(), data);
                     }
                 })
@@ -454,7 +454,7 @@ namespace FarEmerald.PlayForge.Extended.Examples
                         platformData.SetPrimary(Tags.DATA, obj);
                         platformData.SetPrimary(Tags.TARGET_POS, new Vector3(-20f, 0f, -20f));
 
-                        ProcessControl.Register(PlatformMovement(), DemoManager.Instance, platformData, out _);
+                        ProcessControl.Register(PlatformMovement()).HandledBy(DemoManager.Instance).With(platformData).Run();
 
                         await UniTask.Delay(1500, cancellationToken: t);
                     }))
@@ -1412,7 +1412,7 @@ namespace FarEmerald.PlayForge.Extended.Examples
                         // Fire toast lifecycle as its own process
                         var toastData = new SequenceDataPacket(d);
                         toastData.SetPrimary(Tags.DATA, toast);
-                        ProcessControl.Register(ToastLifecycle(), DemoManager.Instance, toastData, out _);
+                        ProcessControl.Register(ToastLifecycle()).HandledBy(DemoManager.Instance).With(toastData).Run();
                         d.Increment(Tags.ITERATIONS);
                         await UniTask.Delay(700, cancellationToken: t);
                     }))
@@ -1693,7 +1693,7 @@ namespace FarEmerald.PlayForge.Extended.Examples
                 {
                     Debug.Log($"Wait for click terminated: {success} ({ctx.Data.GetPrimary<GameObject>(Tags.DATA)}");
                     if (!success) Object.Destroy(ctx.Data.GetPrimary<GameObject>(Tags.DATA));
-                    else ProcessControl.Register(BounceSequence(), DemoManager.Instance, ctx.Data, out _);
+                    else ProcessControl.Register(BounceSequence()).HandledBy(DemoManager.Instance).With(ctx.Data).Run();
 
                 })
                 .BuildSequence();

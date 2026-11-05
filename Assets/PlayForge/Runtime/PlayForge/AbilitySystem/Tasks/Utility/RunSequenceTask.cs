@@ -50,9 +50,11 @@ namespace FarEmerald.PlayForge
                 // the runtime is always visible and manageable. Previously the async+critical path
                 // started the sequence via .Forget() outside ProcessControl, producing an orphaned
                 // runtime that kept running after the outer ability tore down.
-                if (!ProcessControl.Register(taskSeq, data, out var relay))
+                var registration = ProcessControl.Register(taskSeq).With(data).Run();
+                var relay = registration.Relay;
+                if (!registration)
                 {
-                    Debug.LogWarning("[RunSequenceTask] Failed to register inner sequence with ProcessControl.");
+                    Debug.LogWarning($"[RunSequenceTask] ProcessControl refused the inner sequence ({registration.Refusal}).");
                     return;
                 }
 

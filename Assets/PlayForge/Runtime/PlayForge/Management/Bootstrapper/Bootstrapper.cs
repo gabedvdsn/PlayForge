@@ -80,7 +80,7 @@ namespace FarEmerald.PlayForge
             {
                 // Refused, there's no relay to read, and a bare clone would never initialize or step, so it's
                 // reported. Reading the relay threw, and the Bootstrapper never finished (PC-23)
-                if (ProcessControl.Register(GameRootPrefab, ProcessDataPacket.Default(), out var relay)
+                if (ProcessControl.Register(GameRootPrefab).With(ProcessDataPacket.Default()).Run(out var relay)
                     && relay.TryGetProcess<GameRoot>(out var gameRoot))
                 {
                     gameRoot.Bootstrap();

@@ -7,6 +7,11 @@ tracks each fix below by its ID.
 ## [Unreleased]
 
 ### Added
+- `ProcessControl.Register(process)` starts a registration, which `HandledBy`, `With` and `In` shape and `Run` makes:
+  it registers the process and starts it, and says why when ProcessControl refuses it (`ProcessRegistrationResult`,
+  `EProcessRegistrationRefusal`). Left out, the handler follows the packet's run-time type, so an ability's packet
+  hands its process to its source wherever it's passed as a plainer packet. `ProcessRelay.Run` starts a process that
+  waits, as one that requires control does (FEAT-15).
 - Cleanse and immunity. An effect's Removes Effects Tagged takes off, as it lands, every effect on its target tagged
   with one of those tags or a child of one, by its asset tag, a context tag or a tag it grants; its Blocks Effects
   Tagged refuses such an effect while it's on. A cleanse or an immunity took a requirement on each effect it meant to
@@ -35,6 +40,11 @@ tracks each fix below by its ID.
   page, through one table of links in the editor.
 
 ### Changed
+- ProcessControl's 28 static `Register` overloads that take an `out` relay are obsolete wrappers of the builder, and go
+  before the first Asset Store submission. Through them too, an ability's packet passed as a `SequenceDataPacket` or
+  a `ProcessDataPacket` hands its process to its source; it went to GameRoot, so the process didn't end with its
+  entity. `TaskSequence.RegisterAndRun` did this with every ability's packet (FEAT-15). With no ProcessControl, a
+  registration is refused, where the overloads threw.
 - One Debugger (`Window → PlayForge → Debugger`) replaces the GAS Debugger, Process Control and the Tag Debugger.
   Its toolbar switches between three views, searches the one shown, and filters it by hub or by state. **Entities**
   lists every hub ProcessControl registers, runtime hubs among them, beside the one selected: its attributes with

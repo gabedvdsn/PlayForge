@@ -1133,8 +1133,8 @@ namespace FarEmerald.PlayForge.Tests
                 // Stepped in the order registered: the broken one first
                 var broken = new SteppedProcess("S20 Broken", throws: true);
                 var after = new SteppedProcess("S20 After", throws: false);
-                AssertTrue("register the broken process", ProcessControl.Register(broken, control, ProcessDataPacket.Default(), out var brokenRelay));
-                AssertTrue("register the process after it", ProcessControl.Register(after, control, ProcessDataPacket.Default(), out _));
+                AssertTrue("register the broken process", ProcessControl.Register(broken).HandledBy(control).With(ProcessDataPacket.Default()).Run(out var brokenRelay));
+                AssertTrue("register the process after it", ProcessControl.Register(after).HandledBy(control).With(ProcessDataPacket.Default()).Run());
                 AssertTrue("both are running", brokenRelay.IsRunning && after.Relay.IsRunning);
 
                 var stepProcesses = typeof(ProcessControl).GetMethod("StepProcesses",
@@ -1234,7 +1234,7 @@ namespace FarEmerald.PlayForge.Tests
                     readyWhenFired = gas.IsInitialized && gas.AttributeSystem != null;
                 };
 
-                AssertTrue("register the GAS", ProcessControl.Register(gas, control, ProcessDataPacket.Default(), out _));
+                AssertTrue("register the GAS", ProcessControl.Register(gas).HandledBy(control).With(ProcessDataPacket.Default()).Run());
 
                 var stepProcesses = typeof(ProcessControl).GetMethod("StepProcesses",
                     System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic);
@@ -1365,7 +1365,7 @@ namespace FarEmerald.PlayForge.Tests
                 var gas = MakeGAS(MakeSet(MakeElement(MakeAttribute("Unused"), 1, 1)));
                 int framesCompleted = 0;
                 gas.Callbacks.OnFrameComplete += _ => framesCompleted++;
-                AssertTrue("register the GAS", ProcessControl.Register(gas, control, ProcessDataPacket.Default(), out var relay));
+                AssertTrue("register the GAS", ProcessControl.Register(gas).HandledBy(control).With(ProcessDataPacket.Default()).Run(out var relay));
                 AssertTrue("it is running", relay.IsRunning);
 
                 var stepProcesses = typeof(ProcessControl).GetMethod("StepProcesses",
