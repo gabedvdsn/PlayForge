@@ -284,7 +284,8 @@ namespace FarEmerald.PlayForge.Extended.Editor
                 SerializedObject = serializedObject,
                 PropertyPaths = new[]
                 {
-                    TagsPath(nameof(GameplayEffectTags.GrantedTags)), TagsPath(nameof(GameplayEffectTags.ContextTags)),
+                    TagsPath(nameof(GameplayEffectTags.GrantedTags)), nameof(GameplayEffect.GrantedAbilities),
+                    TagsPath(nameof(GameplayEffectTags.ContextTags)),
                     TagsPath(nameof(GameplayEffectTags.RemovesEffectsTagged)), TagsPath(nameof(GameplayEffectTags.BlocksEffectsTagged)),
                 },
                 OnImportComplete = OnSectionReplaced,
@@ -292,10 +293,13 @@ namespace FarEmerald.PlayForge.Extended.Editor
             });
             parent.Add(tagsSection.Section);
 
-            // Granted Tags first, as the mockup has them. Then the effects this one takes off as it lands, a cleanse, and
-            // those it refuses while it's on, an immunity (FEAT-8)
+            // Granted Tags first, as the mockup has them, then the abilities it lends while it's on. Then the effects this
+            // one takes off as it lands, a cleanse, and those it refuses while it's on, an immunity (FEAT-8)
             var content = tagsSection.Content;
             content.Add(CreatePropertyField(serializedObject.FindProperty(TagsPath(nameof(GameplayEffectTags.GrantedTags))), "GrantedTags", "Granted Tags"));
+            var lends = CreatePropertyField(serializedObject.FindProperty(nameof(GameplayEffect.GrantedAbilities)), "GrantedAbilities", "Granted Abilities");
+            lends.tooltip = "Abilities the target has while this is on, at the level of what applied it";
+            content.Add(lends);
             content.Add(CreatePropertyField(serializedObject.FindProperty(TagsPath(nameof(GameplayEffectTags.ContextTags))), "ContextTags", "Context Tags"));
             var removes = CreatePropertyField(serializedObject.FindProperty(TagsPath(nameof(GameplayEffectTags.RemovesEffectsTagged))),
                 "RemovesEffectsTagged", "Removes Effects Tagged");
@@ -488,12 +492,16 @@ namespace FarEmerald.PlayForge.Extended.Editor
         private static bool IsFocused(VisualElement field) =>
             field.panel?.focusController?.focusedElement is VisualElement focused && (focused == field || field.Contains(focused));
 
-        // The context tags and how many tags the effect grants, then what it removes and blocks, as "Removes Status.Debuff"
+        // The context tags and how many tags the effect grants, then the abilities it lends, as "Grants Smite", and what
+        // it removes and blocks, as "Removes Status.Debuff"
         private string TagsSectionSummary()
         {
             var parts = new List<string>();
             var named = TagsSummary(effect.Tags.ContextTags, "context tags", effect.Tags.GrantedTags?.Count(tag => tag.IsValid) ?? 0);
             if (named != "None") parts.Add(named);
+            var lent = effect.GrantedAbilities?.Where(ability => ability != null).ToList() ?? new List<Ability>();
+            if (lent.Count == 1) parts.Add($"Grants {NameOf(lent[0])}");
+            else if (lent.Count > 1) parts.Add($"Grants {lent.Count} abilities");
             AddNamed("Removes", effect.Tags.RemovesEffectsTagged);
             AddNamed("Blocks", effect.Tags.BlocksEffectsTagged);
             return parts.Count == 0 ? "None" : string.Join(" · ", parts);
@@ -556,11 +564,19 @@ namespace FarEmerald.PlayForge.Extended.Editor
             return string.Join(" · ", parts);
         }
 
-        // The first impact, as in "Health −8 · Periodic", then how many more; None when it changes nothing
+        // The first impact, as in "Health −8 · Periodic", then how many more, then a chance to apply short of 1, as in
+        // "30% chance"; None when it changes nothing
         private string ImpactSummary()
         {
             var impact = effect.ImpactSpecification;
             if (impact == null) return "None";
+            var chance = ChanceSummary(impact.ChanceToApply);
+            var impacts = ImpactsSummary(impact);
+            return chance == null ? impacts : impacts == "None" ? chance : $"{impacts} · {chance}";
+        }
+
+        private string ImpactsSummary(GameplayEffectImpact impact)
+        {
             int more = impact.AdditionalImpacts?.Count(each => each != null) ?? 0;
             bool authored = impact.AttributeTarget != null ||
                 impact.MagnitudeOperation != null && (impact.MagnitudeOperation.Scaler != null || impact.MagnitudeOperation.Magnitude != 0f);
@@ -570,6 +586,16 @@ namespace FarEmerald.PlayForge.Extended.Editor
             var first = $"{ImpactFields.AttributeName(impact.AttributeTarget)} {ImpactFields.MagnitudeText(impact.ImpactOperation, magnitude)} · " +
                         ImpactFields.DeliveryName(impact.ResolveDelivery(effect.DurationSpecification, out _));
             return more == 0 ? first : $"{first} · {more} more";
+        }
+
+        // A chance to apply as the summary says it, or null when the effect always lands. One a scaler gives says so, as
+        // it changes by level (FEAT-8)
+        private static string ChanceSummary(ScalerMagnitudeOperation chance)
+        {
+            if (chance == null) return null;
+            if (chance.Scaler != null && chance.RealMagnitude != EMagnitudeOperation.UseMagnitude) return "scaled chance";
+            if (chance.Magnitude >= 1f) return null;
+            return $"{ImpactFields.Number(Mathf.Max(0f, chance.Magnitude) * 100f)}% chance";
         }
 
         // How many tags a side's three groups require or forbid

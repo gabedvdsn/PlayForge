@@ -9,8 +9,8 @@ namespace FarEmerald.PlayForge.Extended.Editor
     /// <summary>
     /// An effect's impact, in Docs/EDITOR_STYLE.md's terms and the Effect mockup's: the attribute, the operation, the
     /// magnitude, then how the impact is delivered, which the duration gives it, and what a periodic one commits (ED-2).
-    /// Then its impact types and who it affects, its additional impacts, each with a delivery of its own, with Add Impact
-    /// (ED-3), and its contained effects. It no longer draws Reverse On Removal, which the impact model removed (ED-2),
+    /// Then its impact types, who it affects and its chance to apply (FEAT-8), its additional impacts, each with a
+    /// delivery of its own, with Add Impact (ED-3), and its contained effects. It no longer draws Reverse On Removal, which the impact model removed (ED-2),
     /// and it takes its look from the style sheet: it drew tinted boxes with colored headings.
     /// </summary>
     [CustomPropertyDrawer(typeof(GameplayEffectImpact))]
@@ -85,6 +85,12 @@ namespace FarEmerald.PlayForge.Extended.Editor
             root.Add(comparison);
             var affiliations = new PropertyField(affiliationsProp, "Affiliations") { name = "Affiliations" };
             root.Add(affiliations);
+            // How likely it is to land, after whom it may change (FEAT-8)
+            root.Add(new PropertyField(property.FindPropertyRelative(nameof(GameplayEffectImpact.ChanceToApply)), "Chance to Apply")
+            {
+                name = "ChanceToApply",
+                tooltip = "How likely the effect is to land, from 0 to 1, drawn each time it's applied. 1 always lands",
+            });
 
             // ─── Additional impacts, each its own entry, then Add Impact ─────────
             // Each effect keeps its own, a list a multiple selection can't edit safely: one of another length would be

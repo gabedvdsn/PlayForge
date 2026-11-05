@@ -63,6 +63,10 @@ links the effect to that asset.
 
 - **Granted Tags** are applied to the target while the effect is active. An Instant effect grants them only for the
   moment it applies.
+- **Granted Abilities** are given to the target as the effect lands, each at the level of what applied it, and taken
+  back as it comes off. One that's running then is interrupted. An ability the target can't take, such as one it
+  knows already when duplicates aren't allowed, isn't lent, so the target keeps its own as the effect comes off. An
+  Instant effect lends none, as it's never on the target.
 - **Context Tags** describe the effect, such as `Fire`. Each change the effect makes carries these and its origin's
   context tags, and workers can filter by them. They are not applied to the entity.
 - **Removes Effects Tagged** makes the effect a cleanse. As it lands, every other effect on the target tagged with one
@@ -152,6 +156,11 @@ duration gives it. Additional Impacts change more attributes, or the same one ag
   target. Affiliated allows targets that share the origin's affiliation, and Unaffiliated allows those that don't. Use
   Affiliation List compares the target with the **Affiliations** list instead.
   - **Comparison** (all but Always Allow): Any (default) needs one tag to match. All needs every tag to match.
+- **Chance to Apply**: how likely the effect is to land, from 0 to 1, which can scale by level. Each application
+  draws once from PlayForge's random source (`ForgeRandom`), and a miss is refused, so applying returns false, as
+  an immunity's refusal does. 1, the default, always lands, and 0 never does; neither draws, so an effect without a
+  chance leaves the numbers others draw as they were. A contained effect draws its own: a strike with a bleed at 0.3
+  lands every time, and its bleed about one time in three.
 
 The inspector no longer shows Reverse On Removal. A Continuous modifier always reverses when the effect ends, and a
 commit never does, so the flag changes nothing. The Problems view still flags a periodic effect that sets it.

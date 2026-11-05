@@ -100,8 +100,9 @@ namespace FarEmerald.PlayForge
                 return false;
             }
 
-            // An immunity on the target refuses an effect it names (FEAT-8)
+            // An immunity on the target refuses an effect it names, and a miss on its chance to apply refuses it too (FEAT-8)
             if (IsImmuneTo(spec.Base)) return false;
+            if (!RollsToApply(spec)) return false;
 
             // Asked for again before its own application is over, an effect contains itself, through its contained
             // effects or what applying it sets off. It recursed until the stack overflowed, which nothing catches (GAS-28)
@@ -159,6 +160,19 @@ namespace FarEmerald.PlayForge
 
         // The number of the entity's last effect application (FEAT-13)
         private int applications;
+
+        // Whether the effect lands by its chance to apply. A chance of 1 or more, every effect's unless it's set, lands
+        // and draws nothing, and one of 0 or less never lands and draws nothing either, so an effect without a chance
+        // leaves the numbers others draw as they were. An effect always landed (FEAT-8)
+        private static bool RollsToApply(GameplayEffectSpec spec)
+        {
+            var chance = spec.Base.ImpactSpecification?.ChanceToApply;
+            if (chance == null) return true;
+            float odds = chance.Evaluate(spec);
+            if (odds >= 1f) return true;
+            if (odds <= 0f) return false;
+            return ForgeRandom.Value < odds;
+        }
 
         // The shelf's immunities, the containers whose effects block others, so an application checks them alone and costs
         // the same however much the entity carries (GAS-P3)
@@ -234,6 +248,7 @@ namespace FarEmerald.PlayForge
 
             var container = spec.Base.DurationSpecification.GenerateContainer(spec, ongoing);
             Shelve(container);
+            LendAbilities(container);
 
             // Continuous entries register as modifiers — transient, derived, reversed by
             // unregistration on removal. Registered BEFORE application workers so workers
@@ -281,6 +296,39 @@ namespace FarEmerald.PlayForge
             if (immunities.Count > 0) immunities.RemoveAll(isLeaving);
 
             leaving.Clear();
+        }
+
+        // The abilities each container lent its target, with the slot each took, to take back as it comes off. Only a
+        // container whose effect grants abilities is here (FEAT-8)
+        private readonly Dictionary<AbstractEffectContainer, List<(Ability Ability, int Slot)>> lent = new();
+
+        // Gives the target each ability the container's effect grants, at the level of what applied it, and notes the slot
+        // each took. One the target can't take, as one it knows already, isn't lent, so it isn't taken back either, as an
+        // item's isn't (GAS-48). An effect couldn't lend an ability (FEAT-8)
+        private void LendAbilities(AbstractEffectContainer container)
+        {
+            var abilities = container.Spec.Base.GrantedAbilities;
+            if (abilities == null || abilities.Count == 0) return;
+            var abilitySystem = Self.GetAbilitySystem();
+            if (abilitySystem == null) return;
+
+            int level = container.Spec.GetOrigin().GetLevel().CurrentValue;
+            List<(Ability, int)> slots = null;
+            foreach (var ability in abilities)
+            {
+                if (ability == null || !abilitySystem.GiveAbility(ability, level, out int slot)) continue;
+                (slots ??= new List<(Ability, int)>(abilities.Count)).Add((ability, slot));
+            }
+            if (slots != null) lent[container] = slots;
+        }
+
+        // Takes back what the container lent, interrupting an ability that's running, as an item's is (FEAT-8)
+        private void TakeBackAbilities(AbstractEffectContainer container)
+        {
+            if (lent.Count == 0 || !lent.Remove(container, out var slots)) return;
+            var abilitySystem = Self.GetAbilitySystem();
+            if (abilitySystem == null) return;
+            foreach (var (ability, slot) in slots) abilitySystem.RemoveAbilityAt(slot, ability);
         }
 
         /// <summary>
@@ -381,8 +429,14 @@ namespace FarEmerald.PlayForge
                         oldContainer.ReplaceValuesWith(newContainer);
                         RegisterContinuousEntries(spec);
 
-                        // Another effect under the same tag grants its own tags, which only a rebuild counts
-                        if (otherEffect) Self.CompileGrantedTags();
+                        // Another effect under the same tag grants its own tags, which only a rebuild counts, and lends
+                        // its own abilities in place of the old one's (FEAT-8)
+                        if (otherEffect)
+                        {
+                            Self.CompileGrantedTags();
+                            TakeBackAbilities(oldContainer);
+                            LendAbilities(oldContainer);
+                        }
                     }
                     break;
                 }
@@ -627,6 +681,7 @@ namespace FarEmerald.PlayForge
             foreach (var container in finished)
             {
                 container.OnRemove();
+                TakeBackAbilities(container);
 
                 var effectContext = new EffectWorkerContext(
                     Self, container.Spec,

@@ -7,6 +7,11 @@ tracks each fix below by its ID.
 ## [Unreleased]
 
 ### Added
+- Abilities granted by effects. An effect's Granted Abilities are given to its target as it lands, at the level of
+  what applied it, and taken back, interrupted if running, as it comes off; only what it gave is taken back
+  (FEAT-8).
+- Chance to Apply. An effect lands by its chance, from 0 to 1 and scalable by level, drawn once each application
+  from `ForgeRandom`; a miss is refused. The default, 1, always lands and draws nothing (FEAT-8).
 - Overflow at max stacks. A Stack Bounds Config's Overflow Effects land, from the application's origin, as a stack
   would take the effect past its Max; Deny Refresh On Overflow keeps that application from refreshing or extending
   the effect; Clear Stacks On Overflow takes its stacks off. A stack past the max did nothing (FEAT-8).

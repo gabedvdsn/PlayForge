@@ -13,6 +13,13 @@ namespace FarEmerald.PlayForge
     {
         public GameplayEffectDefinition Definition = new();
         public GameplayEffectTags Tags = new();
+
+        /// <summary>
+        /// The abilities the target has while this effect is on it, each at the level of what applied the effect, and
+        /// interrupted, if it's running, as the effect comes off. An instant effect lends none, as it's never on its
+        /// target. An effect couldn't lend an ability, so a buff that lets you cast Fireball needed an item (FEAT-8).
+        /// </summary>
+        public List<Ability> GrantedAbilities = new();
         
         public GameplayEffectImpact ImpactSpecification;
         public GameplayEffectDuration DurationSpecification;

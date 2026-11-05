@@ -667,7 +667,7 @@ Phase 2 part, and set Phase 4's direction.
 | FEAT-5 | Cancel and block abilities by tag | C11 |
 | FEAT-6 | Input buffer | Expiry and latest-wins for queued activations (C06) |
 | FEAT-7 | Time source | Per-entity time scale and deterministic fixed tick (C02). The clock per entity is done (Decision 30): `GetClock()`, the game's time by `ForgeTime` times the entity's `TimeScale`, which its effects, cooldowns, sequences, waits and projectiles run by. The fixed-rate tick is done too: with ProcessControl's Fixed Tick Rate set, each frame runs as many ticks as its time holds, each stepping every process and its end of frame by a fixed step, and each sequence's wait goes on by the tick (`ForgeTick.Next`) |
-| FEAT-8 | Effect conveniences | Cleanse by tag query, immunity, overflow at max stacks, abilities granted by effects, chance to apply. Cleanse and immunity done (Removes Effects Tagged, Blocks Effects Tagged), matching an effect's asset, context and granted tags (Decision 30); overflow at max stacks done too, on Stack Bounds (Overflow Effects, Deny Refresh On Overflow, Clear Stacks On Overflow); abilities granted by effects and the chance to apply come with the Status-effect lab |
+| FEAT-8 | Effect conveniences | Cleanse by tag query, immunity, overflow at max stacks, abilities granted by effects, chance to apply. Done. Cleanse and immunity (Removes Effects Tagged, Blocks Effects Tagged) match an effect's asset, context and granted tags (Decision 30); overflow at max stacks is on Stack Bounds (Overflow Effects, Deny Refresh On Overflow, Clear Stacks On Overflow); an effect's Granted Abilities are lent at its origin's level while it's on; an effect lands by its Chance to Apply, drawn from `ForgeRandom` |
 | FEAT-9 | Save and load | Snapshots of attributes, effects, tags and cooldowns |
 | FEAT-10 | Headless mode | Abilities run without a scene ProcessControl |
 | FEAT-11 | Input binding | Targeting without legacy `Input` and `Camera.main` |
@@ -740,6 +740,27 @@ GAS-4 with GAS-5, PC-6, and TS-I with PC-5.
 ## Log
 
 Record baselines, gate results and notable decisions here, newest first.
+
+- 2026-11-04, **FEAT-8 done: abilities granted by effects, and the chance to apply.**
+  - **Granted Abilities** (`GameplayEffect.GrantedAbilities`): a lasting effect gives its target each ability as it
+    lands, at its origin's level, as an item gives its ability at the item's; the shelf notes the slot each took and
+    takes it back as the effect comes off, interrupting it if it runs (`RemoveAbilityAt`). An ability the target can't
+    take isn't lent, so it isn't taken back either (GAS-48). A replace by another effect under the same tag swaps the
+    lent abilities too. An instant effect lends none. The Effect inspector draws them in Tags, after Granted Tags,
+    and the Tags summary says "Grants Smite".
+  - **Chance to Apply** (`GameplayEffectImpact.ChanceToApply`, a scaler magnitude, 1 by default): each application
+    draws once from `ForgeRandom` after the requirements and immunities pass, and a miss is refused. A chance of 1
+    or of 0 draws nothing, so effects without one leave the random numbers as they were. A contained effect draws its
+    own. The inspector draws it in Impact, after Affiliations (who the effect may change, then how likely it lands),
+    and the Impact summary says "30% chance".
+  - **The lab:** two rounds more. A jagged strike lacerates on a roll from a seeded source, the bot predicting each
+    draw, and a blessing lends the caster Smite until it runs out.
+  - **Its tests,** seen failing first (10 of 10 PlayMode, 1 of 1 EditMode): five `FEAT_8_*` tests on each hub in
+    PlayMode's new `GrantedAbilityAndChanceTests`, and
+    `FEAT_8_The_Effect_inspector_edits_the_chance_to_apply_and_granted_abilities` in `InspectorUndoTests`.
+  - **Next:** the next lab in Decision 30's order.
+  - **Tests:** PlayMode 1051: 1044 pass, 0 fail and 7 planted are skipped, in three orders (the lab's 20 among
+    them). Planted 7 of 7; EditMode 432 of 432.
 
 - 2026-11-04, **The Status-effect lab, and FEAT-8's overflow at max stacks.** The first lab (Decision 30's order, now
   that the foundations are in).
