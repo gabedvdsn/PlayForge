@@ -1,7 +1,7 @@
 # PlayForge refactor: code tour
 
 This tour lists the places where the refactor changed code, so you can open each one in your IDE and read it. It
-covers `01258b8..0cbdb9a` on `main`: 374 commits. Phase 0 ported Arcade Fighter's fixes, Phase 1 made the runtime
+covers `01258b8..21da7cb` on `main`: 376 commits. Phase 0 ported Arcade Fighter's fixes, Phase 1 made the runtime
 correct, Phase 2 got the package ready to release, Phase 3 made it cheaper to run and gave the two GAS hubs one core,
 Phase 4 rebuilt the editor, and Phase 5 has begun. Each entry says what behaves differently and why, names its tracker IDs and Decisions, and
 points at the two or three places to read. `Docs/REFACTOR_PLAN.md` has every tracker row, the numbered Decisions,
@@ -10,8 +10,8 @@ and a Log of each batch's test results.
 ## How to use this
 
 - Paths are relative to the repo root.
-- Line numbers are as of commit `0cbdb9a`, the head of `main` on 2026-11-05. A later commit may move them, so each
-  entry also names the class and method to search for. `git show 0cbdb9a:<path>` shows a file as it was then.
+- Line numbers are as of commit `21da7cb`, the head of `main` on 2026-11-05. A later commit may move them, so each
+  entry also names the class and method to search for. `git show 21da7cb:<path>` shows a file as it was then.
 - In Rider, Go to File accepts `path:line`. In Visual Studio, open the file, then Go To Line (Ctrl+G).
   A bare `:123` after a path means another line in the same file.
 - `git grep "<ID>"` finds the comment at each fix, and `git log --grep "<ID>"` finds its commit. Three exceptions:
@@ -758,6 +758,19 @@ attribute, and stacks, ends and comes off as effects do.
 - **Watch for:** an entity with a time-scale attribute follows it every step, so code that sets its clock's scale is
   overwritten; set one or the other.
 - **Tests:** PlayMode's `TimeMagicTests` in Proving Grounds' `Tests/Stretch`.
+
+### Moving an effect between entities, and possession (FEAT-23)
+
+The possession scenario moves a body's abilities and effects to its possessor mid-cast. An effect could only be taken
+off one entity and applied to another, which started its time over and ran its application twice; it moves now with
+its stacks and time left, as a restore puts one back.
+
+- **IDs:** FEAT-23, commit `21da7cb`; Decision 30.
+- **Read:**
+  - `Assets/PlayForge/Runtime/PlayForge/GAS/Core/EffectSystemComponent.cs:860` `MoveTo`: each container's clock taken as a save takes it, its quiet
+    leaving, and `Restore` on the other entity, by what applied it.
+- **Watch for:** a move is neither a removal nor an application, so nothing listening for either hears it.
+- **Tests:** PlayMode's `PossessionTests` in Proving Grounds' `Tests/Stretch`.
 
 ## Phase 4
 
@@ -3067,6 +3080,7 @@ Newest first. Each row is a good place to start reading.
 
 | What | IDs | Where | Commit |
 |---|---|---|---|
+| Moving an effect between entities, and possession | FEAT-23 | `Assets/PlayForge/Runtime/PlayForge/GAS/Core/EffectSystemComponent.cs:860` | `21da7cb` |
 | An entity's time scale from an attribute, and time magic | FEAT-22 | `Assets/PlayForge/Runtime/PlayForge/GAS/Core/GASCore.cs:175` | `0cbdb9a` |
 | The Debugger's Timeline: the ability graph and the effect recorder | FEAT-12 | `Assets/PlayForge/Editor/Debugger/TimelineRecorder.cs:57` | `514fb70` |
 | The Debugger in a narrow column | ED-43 | `Assets/PlayForge/Editor/Debugger/RuntimeDebugger.cs:535` | `73c4208` |
