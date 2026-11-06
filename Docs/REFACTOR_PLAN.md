@@ -378,6 +378,16 @@ from. It lives outside `Assets/` so it never ships in the package.
     `UNITY_PASSWORD`, and `UNITY_LICENSE` for Personal or `UNITY_SERIAL` for Pro or Plus), and, for each PlayForge
     push to run it, a token in PlayForge's (`PROVING_GROUNDS_DISPATCH_TOKEN`). Until the license is there, the
     jobs are skipped with a warning. Proving Grounds' README says how to add them.
+- Decision 36, 2026-11-06: the user's UI list, Phase 6. The user went through the editor and listed what still needs
+  work: in the Debugger, the asset inspectors, the drawers, The Forge and the older inspectors (ED-45 to ED-61), and
+  a question about what an ability spawns (FEAT-24).
+  - **Every drawer and inspector older than Phase 4** is redone in `Docs/EDITOR_STYLE.md`'s style: the tag, task,
+    stage, worker group and asset loader drawers among them, and inspectors such as the Mono Process one. Many
+    can't fill in all they hold, or are confusing.
+  - **The scaler drawer may step outside the style** to make plain which fields are the scaler's. The user counts
+    it the most important field, and it must be legible. It may indent its fields, or set them on a light shaded
+    backing. The rest of the style holds, its Never list above all: no emoji, and none of generated UI's usual
+    look.
 
 **Open. Ask the user; do not assume:**
 1. ~~**Uncommitted changes**~~: decided, see above.
@@ -399,6 +409,9 @@ from. It lives outside `Assets/` so it never ships in the package.
 17. ~~**The submission Editor (SP-22, SP-23)**~~: decided, see above.
 18. ~~**The labs' scenes**~~: decided, see above (Decision 30).
 19. ~~**Where the Debugger's edits go (ED-40)**~~: decided, see above (Decision 31).
+20. **What a spawned thing knows (FEAT-24)**: an arrow an ability fires takes its speed from its archer's Projectile
+    Speed attribute, read by tag on each frame of its flight, and fails if the archer doesn't have it. Should the
+    arrow carry its own speed, set as it spawns? The user's note ends mid-sentence.
 
 ## Roadmap
 
@@ -410,6 +423,7 @@ from. It lives outside `Assets/` so it never ships in the package.
 | 3 | Performance and structure: caching, pooling, one GAS core, a Register builder | Zero steady-state allocation, enforced in CI. Closed on the local gates (Decision 27); CI enforces it since 2026-11-05 (SP-24) |
 | 4 | Editor UX: Undo, theming, no polling, a debugger that can act | Editor smoke suite passes in both themes |
 | 5 | Missing GAS features (FEAT-n) | Every test-project lab green |
+| 6 | The user's UI list: the Debugger, The Forge, the scaler and attribute set drawers, and every drawer and inspector older than Phase 4's style (Decision 36) | Every row verified; the editor smoke suite passes in both themes |
 
 ## Phase 0 checklist
 
@@ -667,6 +681,23 @@ had no letter in the review. TS-AA onward came from the test project.
 | ED-42 | M | 5 | A section's Clear set each field to its type's default, 0 or the first choice, not the field's own (`SectionClearUtility.ResetPropertyToDefault`). Clearing an effect's Impact set its affiliation to Use Affiliation List with none listed and its Chance to Apply to 0, so the effect never landed. Fixed: a cleared field takes a new asset's value, read from a new asset of the target's kind that no one sees, and a cleared list still empties. Impact's Import and Clear take the impact's own fields but its chance, which Requirements shows, imports and clears (FEAT-8) | `Editor/CustomPropertyDrawers/Forge/Editors/Windows/SectionClearUtility.cs` (`FreshOf`, `TakeFresh`), `Editor/CustomPropertyDrawers/Forge/Editors/Assets/EffectEditor.cs` | verified |
 | ED-43 | M | 5 | The Debugger kept its wide layout at any width, so docked in a column its lists and details squeezed side by side and its tables clipped, against the user's rule that it read as clearly at 360 px as in a full window (EDITOR_STYLE's Debugger section, the canvas's three narrow boards). Found starting FEAT-12, whose Timeline view follows the rule too. Fixed: below 720 px each view's list sits above its detail, the toolbar's views take a row of their own with the search and the view's menus under them, the frame count moves to the status bar, whose counts drop their parts, the Processes list keeps ID, Process, State and Step, Held By drops Source, and Follow Selection keeps its icon | `Editor/Debugger/RuntimeDebugger.cs` (`Fit`), `Editor/Debugger/RuntimeDebugger.Tags.cs`, `Editor/UI/PlayForge.uss` | verified |
 | ED-44 | M | 5 | A template's push found each child's own children by searching the project for assets of its type and loading every one, so a push searched the project once for each member of the family: a push to 2,000 children loaded 2,000 assets 2,000 times, 14 ms a child against 5 for 200, and took 28 s. `PropagateToAllChildren` searched twice for each. Found by the editor stress runs. Fixed: `ChildrenByTemplate` finds a type's assets by the template they name, in one search, which the push and the propagation walk, so a push costs about 2.9 ms a child however big the family | `Editor/Tools/ForgeTemplatePropogation/ForgeTemplatePush.cs`, `Editor/Tools/ForgeTemplatePropogation/ForgeTemplatePropagator.cs` (`ChildrenByTemplate`) | fixed |
+| ED-45 | M | 6 | The Debugger's Entities view loses its list: back from another view, the list's column is collapsed against the window's left edge, and only dragging the splitter brings it back | `RuntimeDebugger.Entities.cs` | open |
+| ED-46 | M | 6 | The Timeline adds each new record at the bottom. The newest belongs at the top | `RuntimeDebugger.Timeline.cs`, `TimelineRecorder.cs` | open |
+| ED-47 | M | 6 | Selecting an effect in the Timeline hides part of its Last 10 s bar, usually the span furthest left | `RuntimeDebugger.Timeline.cs`, `PlayForgeEditor.uss` | open |
+| ED-48 | M | 6 | A column's width isn't remembered. The Debugger's tables and The Forge's lists lose a dragged width when their view is switched away and back, as between The Forge's tag view and its asset views | `RuntimeDebugger*.cs`, `TheForge*.cs` | open |
+| ED-49 | M | 6 | The attribute set element drawer needs a rework, above all to show what each attribute's value is when an entity starts: from its magnitudes, its level and its constraints, with its set's subsets, and with the set it's a subset of | `AttributeSetElementDrawer.cs`, `ForgeAttributeTable.cs` | open |
+| ED-50 | M | 6 | An effect's Impact section feels broken, perhaps only because of the scaler drawer inside it (ED-51) | `EffectEditor.cs` (`BuildImpactSection`), `GameplayEffectImpactDrawer.cs`, `MagnitudeField.cs` | open |
+| ED-51 | H | 6 | The scaler drawer isn't legible. Its fields are packed so close to the ones around it that it's hard to see which are the scaler's, and some scalers seem to lack a field for something they hold. The user counts the scaler the most important field, and lets it step outside the style to group its fields (Decision 36) | `ScalerFields.cs`, `MagnitudeField.cs` | open |
+| ED-52 | M | 6 | The ⋮ menu beside a scaler field opens so narrow that none of its items can be read | `MagnitudeField.cs` | open |
+| ED-53 | M | 6 | A scaler's level count can be changed while its asset is linked to a level provider, whose range the scaler must keep. Unless the scaler overrides that, its levels are the provider's | `ScalerFields.cs`, `AbstractScaler.cs` | open |
+| ED-54 | M | 6 | What Stretch Over Levels does is hard to see | `ScalerFields.cs`, `AbstractScaler.cs` | open |
+| ED-55 | M | 6 | The tag drawer doesn't follow `Docs/EDITOR_STYLE.md` | `TagDrawer.cs` | open |
+| ED-56 | M | 6 | The ability task and stage drawers don't follow the style, and some can't fill in all they hold | `AbilityTaskDrawer.cs`, `AbstractTypeRefDrawer.cs`, `AbilityTaskBehaviourStageDrawer.cs` | open |
+| ED-57 | M | 6 | The worker group, asset loader and other drawers older than Phase 4 don't follow the style. Some can't fill in all they hold, or are confusing | `StandardWorkerGroupDrawer.cs`, `AssetSetterDrawer.cs`, `TaskSequenceReferenceDrawer.cs` and others | open |
+| ED-58 | M | 6 | The Forge's list shows each asset's file name beside its name. The file name belongs in the selected asset's header, under Show in Project | `TheForge.cs`, `ForgeAssetHeader.cs` | open |
+| ED-59 | M | 6 | The Forge's tag view can't sort its columns | `TheForge.cs` | open |
+| ED-60 | M | 6 | Tags show their internal names, made unique with a generated suffix, where they should show their display names | `TheForge.cs`, `RuntimeDebugger.Tags.cs`, `BasePlayForgeEditor.cs` | open |
+| ED-61 | M | 6 | Many custom inspectors and windows older than Phase 4 don't follow the style, as the Mono Process inspector | `AbstractMonoProcessEditor.cs` and others | open |
 
 The design questions behind Phase 4's rows, each with its evidence, are in the UI interview doc of 2026-11-03,
 https://claude.ai/artifact/BbnGybqgX3spJsT6HoTafp. Its answers (Decision 18) settle ED-8, ED-16, ED-19 and ED-12's
@@ -688,6 +719,14 @@ Phase 2 part, and set Phase 4's direction.
    Attribute Set inspectors first (done), then the reference fields (ED-38, done), the Ability inspector (done), then
    the Effect inspector with ED-2 and ED-3 (done), then the Import window and shared scalers (ED-32, ED-33, done),
    which freed ED-12's last part (done).
+
+**Phase 6's order,** from the user's list (Decision 36):
+1. The Debugger and The Forge: ED-45 to ED-48, and ED-58 to ED-60.
+2. The scaler drawer, ED-51 to ED-54, then the Impact section around it, ED-50.
+3. The attribute set element drawer, ED-49.
+4. The drawers and inspectors older than Phase 4: ED-55, ED-56, ED-57 and ED-61.
+
+FEAT-24 waits for the user's answer (Open decision 20).
 
 ### Samples and packaging
 
@@ -745,6 +784,7 @@ Phase 2 part, and set Phase 4's direction.
 | FEAT-21 | Run a sequence made in code | Run Sequence ran only a sequence a static method made, by name (`TaskSequenceReference`), so a sequence made in code, as an ability built as the game runs makes one with `TaskSequenceBuilder`, couldn't run in an ability; Proving Grounds' nested-sequence tests handed theirs over in a static field. Found by the ability crafting scenario. Done (Decision 30): `RunSequenceTask.Definition`, a `TaskSequenceDefinition` made in code, of which each activation runs a fresh sequence |
 | FEAT-22 | Time scale from an attribute | The review's time magic: an entity's time (FEAT-7) could be set only by its game's code, through its clock, so no effect could slow or haste one, and two that tried would each need code to undo the other. Found by the time magic scenario. Done (Decision 30): an identity's Time Scale (`EntityIdentity.TimeScaleAttribute`, and the runtime identity's) names the attribute its time runs at, read as each step begins, so an effect on it slows or hastes the entity, stacks with others as modifiers do, and ends with its effect. The Entity inspector's Attributes section edits it |
 | FEAT-23 | Move an effect between entities | The review's possession: an effect could only be taken off one entity and applied to another, which started its time again, ran its application's workers, commits and contained effects a second time, and told both. Found by the possession scenario. Done (Decision 30): `EffectSystemComponent.MoveTo(effect, onto)` moves each of the effect's containers with its stacks, its time left and what applied it, as a restore puts one back (FEAT-9); its lasting modifiers, granted tags, lent abilities and lasting cues go with it, and nothing of a removal or an application runs |
+| FEAT-24 | What a spawned thing knows | The user's question of 2026-11-06, for Phase 6: an arrow an ability fires, how does it know how fast to fly? Should its speed be an attribute, and should the arrow carry it, set as it spawns with respect to factors, as …? The note ends there. Today `ProjectileMonoProcess` reads its source's Projectile Speed attribute by tag on each frame of its flight, and fails if the source doesn't have it. Open: Open decision 20 |
 
 **Phase 5's order,** from the review's plan for the test project (its labs, one at a time) and the table above. A lab
 is a small game: assets the lab builds in code, and a bot that plays it in PlayMode tests under a live ProcessControl,
@@ -808,6 +848,9 @@ GAS-4 with GAS-5, PC-6, and TS-I with PC-5.
 ## Log
 
 Record baselines, gate results and notable decisions here, newest first.
+
+- 2026-11-06, **Phase 6: the user's UI list (Decision 36).** The user listed the editor UI that still needs work.
+  It's in the tracker as ED-45 to ED-61, with a design question as FEAT-24, and the roadmap has a Phase 6 for it.
 
 - 2026-11-05, **CI is green: SP-24.** With the user's Unity license in Proving Grounds' secrets, the `Gates` workflow
   ran the full gates on GitHub's Ubuntu runners, in GameCI's Unity 6000.0.33f1 container.
