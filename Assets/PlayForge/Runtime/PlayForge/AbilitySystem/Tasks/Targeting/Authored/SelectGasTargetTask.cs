@@ -28,11 +28,23 @@ namespace FarEmerald.PlayForge
                  + "1 the secondary (right), 2 the middle")]
         public int MouseButton;
 
+        [Tooltip("When the activation's data already holds a target under TargetReal, as an AI's or a replay's does, take "
+                 + "it rather than wait for a click")]
+        public bool TakeTargetFromData = true;
+
         public override string Description => "Raycast to select a GAS target";
 
         public override async UniTask Activate(AbilityDataPacket data, CancellationToken token)
         {
             var maxDist = MaxDistance > 0 ? MaxDistance : Mathf.Infinity;
+
+            // Handed its target, as an AI's activation hands it, it takes it with no click (GAS-66)
+            if (TakeTargetFromData && TryGetDataTarget(data, out var given))
+            {
+                if (TargetIsValid(given)) data.SetTargetingPacket(Tags.TARGET, given.GetTargetingPacket());
+                else WhenTargetingInvalid(data);
+                return;
+            }
 
             while (!token.IsCancellationRequested)
             {

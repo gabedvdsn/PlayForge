@@ -407,6 +407,9 @@ tracks each fix below by its ID.
   Asking whether its sequence was paused took 24 bytes a frame.
 
 ### Fixed
+- Click targeting takes the target or point its activation's data holds, as an AI's or a replay's does, with no
+  click, so the ability an AI casts can be the one a player clicks; Take Target From Data turns it off. A handed
+  target out of range fails at once. They waited for a click whatever the data held (GAS-66).
 - A process Create Mono Process spawns takes the ability as its origin, so its effects are the caster's at the
   ability's level. It took GameRoot. And the task spawns its own processes where the data holds none; it spawned
   them only with Internal Is Override on (GAS-65).

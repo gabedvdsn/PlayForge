@@ -40,7 +40,24 @@ namespace FarEmerald.PlayForge
                  + "1 the secondary (right), 2 the middle")]
         public int MouseButton;
 
+        [Tooltip("When the activation's data already holds a point under Position, or a target under TargetReal, as an AI's "
+                 + "or a replay's does, aim at it rather than wait for a click")]
+        public bool TakeTargetFromData = true;
+
         public override string Description => "Click to select a direction from caster";
+
+        // Where the data aims it: its point, or else its target's place (GAS-66)
+        private static bool TryGetDataAim(AbilityDataPacket data, out Vector3 point)
+        {
+            if (TryGetDataPoint(data, out point)) return true;
+            if (TryGetDataTarget(data, out var target) && target.GetTargetingPacket() is { } packet)
+            {
+                point = packet.position;
+                return true;
+            }
+            point = default;
+            return false;
+        }
 
         public override async UniTask Activate(AbilityDataPacket data, CancellationToken token)
         {
@@ -57,6 +74,20 @@ namespace FarEmerald.PlayForge
             }
 
             var origin = ownerPacket.position;
+
+            // Handed a point or a target, as an AI's activation hands it, it aims at it with no click (GAS-66)
+            if (TakeTargetFromData && TryGetDataAim(data, out var aimAt))
+            {
+                var toward = aimAt - origin;
+                if (FlattenY) toward.y = 0f;
+                if (toward.sqrMagnitude < MinDistance * MinDistance)
+                {
+                    WhenTargetingInvalid(data);
+                    return;
+                }
+                data.SetTargetingPacket(Tags.TARGET, new StaticTargetingPacket(aimAt) { direction = toward.normalized });
+                return;
+            }
 
             while (!token.IsCancellationRequested)
             {

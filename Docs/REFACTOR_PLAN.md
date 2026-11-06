@@ -660,6 +660,7 @@ had no letter in the review. TS-AA onward came from the test project.
 | GAS-63 | M | 5 | An ability's stage list had no initializer, so an ability whose behaviour was made in code had none until it was saved and loaded, and adding a stage to it threw. Found by the authoring round trip, filling an ability The Forge made. Fixed: the list starts empty, as a load leaves it; an ability with no stage still activates and ends | `AbilitySystem/Ability/AbilityProxy/Core/AbilityBehaviour.cs` | fixed |
 | GAS-64 | M | 6 | A scaler spread over its provider's levels "up to a level" (`ELevelConfig.Clamped`) ended its range at the lower of its Max Level and the level being read, as its tooltip said, so a level always sat at the range's end and every level above the first read the last value. ED-62's Reads row showed it, and the user chose to change it. Fixed: the range ends at the lower of the Max Level and the provider's last level, and a level past it reads the last value; the Reads row reads it the same way | `AbstractScaler.cs` (`GetEffectiveMaxLevel`), `ScalerFields.cs` | verified |
 | GAS-65 | H | 7 | A process an ability's Create Mono Process task spawned took GameRoot as its origin, since nothing passed it the ability, so a projectile read GameRoot's speed and applied GameRoot's effects; the labs and Battle set the origin themselves. And the task spawned its own processes only with Internal Is Override on, so a task given processes and nothing else spawned none. Found surveying for the demo (Decision 37). Fixed: the task passes the ability as the origin (`Tags.DERIVATION`), unless the data has one, and spawns its own processes where the data holds none | `CreateMonoProcessAbilityTask.cs` | verified |
+| GAS-66 | M | 7 | Click targeting waited for a click whatever the activation's data held, so an AI, which hands an ability its target, couldn't cast a click-targeted ability, and the demo's AI and player couldn't share one asset. Fixed: each click-targeting task takes the target its data holds under TargetReal, or the point under Position, with no click (`TakeTargetFromData`, on by default); a handed target that fails the task's checks, or is out of range, fails the targeting at once, since an AI can't click | `AbstractTargetingAbilityTask.cs` and the five Select tasks | verified |
 | GAS-P1 | M | 0 | `ActionQueue` LINQ allocations; snapshot built every frame (PF-006) | `ActionQueue.cs:41, 46, 156`, `FrameSummary.cs:340-351` | verified |
 | GAS-P2 | M | 0 | Tag and FrameSummary allocations (PF-007) | `TagCache.cs:60`, `TagQuery.cs:89-136`, `FrameSummary.cs:306-308` | verified |
 | GAS-P3 | M | 3 | Each application revalidates every container and rebuilds all tags (area application is quadratic). Measured: an instant application on an entity carrying 1,000 effects took 0.49 ms, 135 times one on an entity carrying 2. Now the requirements wait for one pass at the next tick, a shelved container's tags are counted as it lands, and re-application and removal find containers in an index by asset tag | `EffectSystemComponent.cs:312-348`, `GameplayAbilitySystem.cs:250-281` | verified |
@@ -896,6 +897,11 @@ GAS-4 with GAS-5, PC-6, and TS-I with PC-5.
 ## Log
 
 Record baselines, gate results and notable decisions here, newest first.
+
+- 2026-11-06, **GAS-66: click targeting takes a target from data.** The demo's AI hero and its player share each
+  ability asset: the player's cast waits for a click, and the AI's hands the target in its data, which the click
+  tasks now take. Off, a task waits for its click whatever the data holds. The main test failed with it off.
+  - PlayMode: 1327 passed of 1335, 0 failed, 8 skipped (12 new).
 
 - 2026-11-06, **GAS-65 and FEAT-24: what an ability spawns (Decision 39).** The user approved the demo's plan and
   asked for the framework's gaps closed first, above all attributes on mono processes.

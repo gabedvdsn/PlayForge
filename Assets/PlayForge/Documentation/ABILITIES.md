@@ -125,7 +125,10 @@ passes it in, and one effect serves every strength.
     pointer, a mouse, a pen or a touch, where its package is in and on, or else the Input Manager's mouse, each aimed
     through `Camera.main`. With no camera, a press aims nowhere. For a camera of your own, give the default one
     (`new LegacyPointerInput { Camera = camera }`, or `InputSystemPointerInput`), and for a gamepad's reticle or a
-    controller's ray, write an `IForgeInput`. Put either in with `ForgeInput.Use(input)`.
+    controller's ray, write an `IForgeInput`. Put either in with `ForgeInput.Use(input)`. An activation that
+    already holds its target, under TargetReal, or its point, under Position, as an AI's does, takes it with no
+    click, unless the task's **Take Target From Data** is off; a handed target the task can't take, out of range
+    or failing its requirements, fails the targeting at once.
   - **Auto targeting** (Auto Target, Auto Target By Affinity) takes the entities within its **Range**, sorted by its
     **Mode**, up to **Max Targets**, or every one at 0. Each is a target of the activation, and the first, the nearest
     for Nearest, is its primary. Apply Effects and Apply/Remove Effects reach each target, so an area ability is Auto
