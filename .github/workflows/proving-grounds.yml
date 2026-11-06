@@ -1,0 +1,29 @@
+# Asks Proving Grounds, PlayForge's test project (github.com/gabedvdsn/PlayForge-Proving-Grounds), to run its full gates
+# against this push. It needs a token in this repository's secrets, PROVING_GROUNDS_DISPATCH_TOKEN: a fine-grained
+# personal access token for that repository with Contents read and write. Without one it does nothing, and Proving
+# Grounds tests PlayForge's main in its daily run instead.
+
+name: Proving Grounds
+
+on:
+  push:
+    branches: [main]
+
+jobs:
+  dispatch:
+    name: Ask Proving Grounds to run its gates
+    runs-on: ubuntu-24.04
+    steps:
+      - env:
+          TOKEN: ${{ secrets.PROVING_GROUNDS_DISPATCH_TOKEN }}
+        run: |
+          if [ -z "$TOKEN" ]; then
+            echo "::notice title=Proving Grounds::No PROVING_GROUNDS_DISPATCH_TOKEN, so Proving Grounds tests this push in its daily run."
+            exit 0
+          fi
+          curl --silent --show-error --fail -X POST \
+            -H "Accept: application/vnd.github+json" \
+            -H "Authorization: Bearer $TOKEN" \
+            https://api.github.com/repos/gabedvdsn/PlayForge-Proving-Grounds/dispatches \
+            -d "{\"event_type\":\"playforge-pushed\",\"client_payload\":{\"sha\":\"$GITHUB_SHA\"}}"
+          echo "Proving Grounds runs its gates against $GITHUB_SHA"

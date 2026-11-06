@@ -75,7 +75,8 @@ from. It lives outside `Assets/` so it never ships in the package.
     Arcade Fighter's `GameRoot.Awake` adds `DontDestroyOnLoad(gameObject)` (PC-21, Phase 1). Its fixes are
     therefore the diff `3ae8838..HEAD` under `Assets/Internal/PlayForge`.
 - **PlayForge Proving Grounds:** `C:\Users\17074\Documents\GitHub\PlayForge Proving Grounds`, a separate project
-  in its own local git repo, with no remote. It consumes `Assets/PlayForge` as the package
+  in its own git repo, public at github.com/gabedvdsn/PlayForge-Proving-Grounds since 2026-11-05 (Decision 35). Push
+  its `main` after each batch, as PlayForge's, fast-forward only. It consumes `Assets/PlayForge` as the package
   `com.faremerald.playforge` 0.1.0. It was created with
   `Unity.exe -batchmode -nographics -createProject "<path>" -quit -logFile <path>`.
   - **Manifest:** three lines on top of Unity's default project. Relative `file:` paths resolve from the project's
@@ -361,6 +362,22 @@ from. It lives outside `Assets/` so it never ships in the package.
   or skipped. Each entity in the scene gets a capsule and a label, and every entity, of either hub, a card of its
   attributes, effects and tags. The scenes are editor-only, since the runner lives in the test assembly beside the
   labs. Whether the labs ship in Samples stays open.
+- Decision 34, 2026-11-05: the labs and Samples, and the review's UI kit, the user's answers once Phase 5 closed.
+  - **The labs** stay in Proving Grounds, but the Battle lab, the one with a real battle, ships with the package as a
+    sample, Battle. Demos, from before the refactor and maybe too little or out of date, stays beside it and Code
+    Examples until the user has been through it. The user is compiling a list of the UI that still needs work.
+  - **No runtime UI kit.** A game makes its own UI. What PlayForge owes it is an API that's easy to build UI on.
+- Decision 35, 2026-11-05: CI (SP-24). Proving Grounds is public on GitHub, at
+  github.com/gabedvdsn/PlayForge-Proving-Grounds, the user's choice over a private repo, whose runs would count
+  against the account's Actions minutes, and over moving it into PlayForge's repo.
+  - **Its `Gates` workflow** runs the full gates: the PlayMode suite in three orders, the planted failures and the
+    EditMode suite, in GameCI's Unity 6000.0.33f1 container, with PlayForge checked out beside Proving Grounds,
+    where its package reference expects it. It runs on a push to `main`, on a pull request, by hand, each day,
+    and when PlayForge's own workflow, `proving-grounds.yml`, asks after a push to PlayForge's `main`.
+  - **What only the user can give it:** a Unity license in Proving Grounds' secrets (`UNITY_EMAIL`,
+    `UNITY_PASSWORD`, and `UNITY_LICENSE` for Personal or `UNITY_SERIAL` for Pro or Plus), and, for each PlayForge
+    push to run it, a token in PlayForge's (`PROVING_GROUNDS_DISPATCH_TOKEN`). Until the license is there, the
+    jobs are skipped with a warning. Proving Grounds' README says how to add them.
 
 **Open. Ask the user; do not assume:**
 1. ~~**Uncommitted changes**~~: decided, see above.
@@ -699,7 +716,7 @@ Phase 2 part, and set Phase 4's direction.
 | SP-21 | M | 2 | Editor UXML and USS break on a clean import: 4 `TypeLoadException`s from stale `…, Assembly-CSharp` type names (`FESGameplayAbilitySystem.GameRoot` and `.ProcessControl`, the removed `FrameworkIndex`, and `EAbilityActivationPolicyExtended`, which moved assembly), 9 invalid paths to assets outside the package (`Editor/Icons/Creator/ability.png`, `Assets/TextMesh Pro/…`), and an unknown `:last-child` pseudo class. Nothing references `forge_abilityDrawer.uxml`; the other two are default references in script `.meta` files, so check them against ED-20's dead UXML and USS | `fesgas_bootstrapper.uxml`, `forge_abilityDrawer.uxml`, `AbilityInspector.uss:52` | verified |
 | SP-22 | M | 2 | Untested with domain reloading off (Enter Play Mode Options). The Asset Store requires every package to work that way starting with Editor 6.6 (rule 2.5.h), so the static state in ProcessControl, the registries and the caches needs a check. Decision 17 keeps it in Phase 2 | — | verified |
 | SP-23 | M | 2 | The Demos are Built-in RP only: all ten of their materials use the Standard shader, which renders magenta under URP. The Asset Store requires URP or HDRP support of new assets and updates submitted from Editor 6.5 or newer (rule 1.3.c). Decision 17 keeps it in Phase 2, though a 6.0 submission isn't bound by the rule | `Samples~/Demos/**/*.mat`, `PUBLISHING.md` | verified |
-| SP-24 | M | — | No CI, so Phase 3 closed on its local gates, not the CI its exit gate asked for (Decision 27). CI needs two things only the user can provide: tests it can reach, by pushing Proving Grounds to a GitHub remote or by moving the allocation tests and their harness into the package, and a Unity license stored as GitHub secrets | — | open |
+| SP-24 | M | — | No CI, so Phase 3 closed on its local gates, not the CI its exit gate asked for (Decision 27). CI needed tests it can reach and a Unity license stored as GitHub secrets. The first is done: Proving Grounds is public on GitHub, and its `Gates` workflow runs the full gates (Decision 35). It runs once the user stores a Unity license in that repository's secrets | Proving Grounds' `.github/workflows/gates.yml`; `.github/workflows/proving-grounds.yml` | open |
 
 ### Missing features (Phase 5)
 
@@ -791,6 +808,19 @@ GAS-4 with GAS-5, PC-6, and TS-I with PC-5.
 ## Log
 
 Record baselines, gate results and notable decisions here, newest first.
+
+- 2026-11-05, **SP-24's CI, and the user's answers.** Decisions 34 and 35.
+  - **The labs and the UI kit:** the Battle lab ships as a sample, Battle, beside Demos and Code Examples; the other
+    labs stay in Proving Grounds. No runtime UI kit: a game makes its own UI on PlayForge's API.
+  - **Proving Grounds on GitHub:** before it went public, its 236 commits were checked for what they'd publish:
+    no credentials, and no Unity cloud or organization IDs in its project settings. The user's own files, which
+    git ignores or which aren't committed, stayed on the machine.
+  - **The `Gates` workflow:** its first run, on the push that added it, warned that the gates are skipped until
+    the secrets hold a Unity license, and skipped them: https://github.com/gabedvdsn/PlayForge-Proving-Grounds/actions/runs/42162134114. The jobs run on Ubuntu 24.04, pinned, as GitHub
+    moves `ubuntu-latest` to Ubuntu 26.
+  - **What's the user's now:** the license secrets, and the optional dispatch token; then the first full run, which
+    may find what a Linux editor does differently. SP-24 closes when it's green.
+  - **Next:** the Battle sample.
 
 - 2026-11-05, **The authoring round trip, and GAS-63.** The review's last editor check (Module 4), in Proving
   Grounds' `Tests/Editor/AuthoringRoundTripTests`, EditMode.
