@@ -1533,6 +1533,79 @@
     text-overflow: ellipsis;
 }
 
+/* By Rule: each rule's problems under a header with its name, how many break it, and Fix All, as a list's header
+   reads, then a row for each problem with its quick fix (FEAT-25) */
+.pf-root .pf-problems__rules {
+    flex-grow: 1;
+}
+
+.pf-root .pf-problems__group-header {
+    flex-direction: row;
+    align-items: center;
+    height: 22px;
+    padding: 0 6px 0 4px;
+    background-color: var(--pf-list-header);
+    border-bottom-width: 1px;
+    border-bottom-color: var(--pf-inner-line);
+}
+
+.pf-root .pf-problems__group-name {
+    flex-shrink: 1;
+    min-width: 0;
+    margin: 0;
+    padding: 0;
+    -unity-font-style: bold;
+    color: var(--pf-strong-text);
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+}
+
+.pf-root .pf-problems__group-count {
+    flex-shrink: 0;
+    margin: 0 0 0 6px;
+    padding: 0;
+    color: var(--pf-secondary-text);
+}
+
+.pf-root .pf-problems__group-space {
+    flex-grow: 1;
+}
+
+.pf-root .pf-problems__fix {
+    flex-shrink: 0;
+    height: 18px;
+    margin: 0 0 0 6px;
+}
+
+.pf-root .pf-problems__row {
+    flex-direction: row;
+    align-items: center;
+    height: 22px;
+    padding: 0 6px 0 22px;
+}
+
+.pf-root .pf-problems__row--alternate {
+    background-color: var(--pf-alternate-row);
+}
+
+.pf-root .pf-problems__row > .pf-glyph {
+    flex-shrink: 0;
+    width: 14px;
+    height: 14px;
+    margin: 0 6px 0 0;
+}
+
+.pf-root .pf-problems__row > .pf-problems__asset {
+    flex-shrink: 0;
+    width: 180px;
+    padding-left: 0;
+}
+
+.pf-root .pf-problems__row > .pf-problems__message {
+    flex-grow: 1;
+}
+
 .pf-root .pf-problems__status {
     flex-shrink: 0;
     height: 20px;

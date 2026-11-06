@@ -790,7 +790,7 @@ FEAT-24 waits for the user's answer (Open decision 20).
 | FEAT-22 | Time scale from an attribute | The review's time magic: an entity's time (FEAT-7) could be set only by its game's code, through its clock, so no effect could slow or haste one, and two that tried would each need code to undo the other. Found by the time magic scenario. Done (Decision 30): an identity's Time Scale (`EntityIdentity.TimeScaleAttribute`, and the runtime identity's) names the attribute its time runs at, read as each step begins, so an effect on it slows or hastes the entity, stacks with others as modifiers do, and ends with its effect. The Entity inspector's Attributes section edits it |
 | FEAT-23 | Move an effect between entities | The review's possession: an effect could only be taken off one entity and applied to another, which started its time again, ran its application's workers, commits and contained effects a second time, and told both. Found by the possession scenario. Done (Decision 30): `EffectSystemComponent.MoveTo(effect, onto)` moves each of the effect's containers with its stacks, its time left and what applied it, as a restore puts one back (FEAT-9); its lasting modifiers, granted tags, lent abilities and lasting cues go with it, and nothing of a removal or an application runs |
 | FEAT-24 | What a spawned thing knows | The user's question of 2026-11-06, for Phase 6: an arrow an ability fires, how does it know how fast to fly? Should its speed be an attribute, and should the arrow carry it, set as it spawns with respect to factors, as …? The note ends there. Today `ProjectileMonoProcess` reads its source's Projectile Speed attribute by tag on each frame of its flight, and fails if the source doesn't have it. Open: Open decision 20 |
-| FEAT-25 | Quick fixes for problems | The user's request of 2026-11-06: the Problems window gets a second view, its problems grouped under the rule each breaks, and where a simple step fixes a problem, a Quick Fix for it and a Fix All for its rule's problems | `ForgeProblemsWindow.cs`, `ForgeRules.cs`, `ForgeValidator.cs` | open |
+| FEAT-25 | Quick fixes for problems | The user's request of 2026-11-06: the Problems window gets a second view, its problems grouped under the rule each breaks, and where a simple step fixes a problem, a Quick Fix for it and a Fix All for its rule's problems. Done: By Rule, beside the list in the window's toolbar. Each problem knows its rule (`ForgeProblem.Rule`), each rule names what it finds (`ForgeValidationRule.Name`), and a problem a step fixes carries the step (`ForgeProblem.Fix`, a `ForgeQuickFix`): Store the Tag, Use Own Levels, Make It Constant, Give It Its Own, Clamp to Bounds and Remove the Element. A fix and a Fix All are one Undo step each. A problem whose fix needs a choice, as which stage applies usage effects, has none | `ForgeProblemsWindow.cs`, `ForgeRules.cs`, `ForgeProblem.cs`, `ForgeValidator.cs` | verified |
 
 **Phase 5's order,** from the review's plan for the test project (its labs, one at a time) and the table above. A lab
 is a small game: assets the lab builds in code, and a bot that plays it in PlayMode tests under a live ProcessControl,
@@ -854,6 +854,24 @@ GAS-4 with GAS-5, PC-6, and TS-I with PC-5.
 ## Log
 
 Record baselines, gate results and notable decisions here, newest first.
+
+- 2026-11-06, **FEAT-25: quick fixes in the Problems window (the user's request).**
+  - By Rule groups the shown problems under the rule each breaks, a rule with errors first, each with its count
+    and Fix All, then a row for each problem with its Fix. The Errors, Warnings and search filters apply to it.
+  - The validator gives each problem the rule that found it; a rule names what it finds, and a problem a simple
+    step fixes carries the step, written through a SerializedObject so Undo takes it back and the validator checks
+    the asset again. Six fixes: a stale asset tag is stored, as Identity's Update does; a link with no provider
+    takes the asset's own levels, which it already reads; a field that reads a scaler it hasn't got reads its
+    number, as its message says; the second of two fields holding one scaler gets a copy; a magnitude outside its
+    bounds takes the value the runtime clamps it to; an element with no attribute goes. Fix All runs a rule's fixes
+    from the last, so a removed element leaves the places of those before it.
+  - Left without a fix, as each needs a choice: data whose class is missing (a fix would throw it away), an
+    asset with no name, an impact that doesn't land as set, a shared scaler with no Scaler asset, a set that gives
+    nothing, and a cost or cooldown no stage applies.
+  - The snapshot of By Rule over the test project showed 34 Demo assets whose stale tag message named one path
+    twice: their tags were saved with no display name. The message says that now.
+  - Each test failed first: they use `ForgeProblem.Rule` and `Fix`, which didn't exist.
+  - EditMode: 510 of 510. A first full run had ED-44's timing check over its limit, 84.6 ms against 77.4, which passed alone and on the rerun; the validator's work isn't in the push it times.
 
 - 2026-11-06, **ED-56: the kind field; ED-65: the header's file name (the user's report).**
   - ED-56: `AbstractTypeRefDrawer` sits under about seventeen drawers, so its rewrite moves them all into the

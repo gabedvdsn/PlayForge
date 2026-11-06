@@ -44,6 +44,7 @@ namespace FarEmerald.PlayForge.Extended.Editor
             if (asset == null) return problems;
             foreach (var rule in Rules)
             {
+                int before = problems.Count;
                 try
                 {
                     rule.Check(asset, problems);
@@ -53,6 +54,8 @@ namespace FarEmerald.PlayForge.Extended.Editor
                     // One rule that throws doesn't keep the others from checking
                     Debug.LogException(exception);
                 }
+                // Each problem knows the rule that found it, which the By Rule view groups it under (FEAT-25)
+                for (int i = before; i < problems.Count; i++) problems[i].Rule ??= rule;
             }
             return problems;
         }

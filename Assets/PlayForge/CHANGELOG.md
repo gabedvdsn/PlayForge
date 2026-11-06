@@ -7,6 +7,10 @@ tracks each fix below by its ID.
 ## [Unreleased]
 
 ### Added
+- The Problems window's By Rule view: problems grouped under the rule each breaks, with a Quick Fix where one step
+  fixes a problem, as storing a stale asset tag or clamping a magnitude to its bounds, and a Fix All for each rule,
+  each one Undo step. A rule of your own names its group with `ForgeValidationRule.Name`, and offers a fix with
+  `ForgeProblem.Fix` (FEAT-25).
 - `AttributeStartValues`, an editor API that works out what each attribute an entity built from an attribute set
   starts at, at each level, as the runtime does, and which element each value comes from (ED-49).
 - `AbstractScaler.Parts` and `[ForgeShowWhen]`, which say what a scaler of your own shows in its inspector: the parts
@@ -167,6 +171,8 @@ tracks each fix below by its ID.
   page, through one table of links in the editor.
 
 ### Changed
+- A stale asset tag whose path is right says it has no display name, or which one it has, where it named one path
+  twice (FEAT-25).
 - A field that holds an object of some kind, as a task, a cue, a worker or a scaler behaviour, is Unity's field with
   the kind's name in its box, which opens Unity's searchable dropdown of the kinds; the kind's fields indent under
   it, and a kind that folds shows a line of its values. It was a button that opened a list in tinted boxes, with an

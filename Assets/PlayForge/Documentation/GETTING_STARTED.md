@@ -163,9 +163,11 @@ string perLevel = impact.FormatTotal();           // "20/30/40/50"
   contract; run after upgrading.
 - **Problems** (`Window → PlayForge → Problems`) — every problem the validator finds in the project's PlayForge
   assets, such as a link with no provider, an impact that never applies or a field that reads a scaler it hasn't got,
-  with its severity and its asset; a click selects the asset. An inspector's header counts its asset's problems. In
-  batch mode, `ForgeValidator.LogAll` writes them to the Console. Add a check of your own by deriving from
-  `ForgeValidationRule`.
+  with its severity and its asset; a click selects the asset. **By Rule**, in its toolbar, groups them under the rule
+  each breaks: where one step fixes a problem, its row has a Quick Fix, as **Store the Tag**, and its rule a **Fix
+  All**, each one Undo step. An inspector's header counts its asset's problems. In batch mode,
+  `ForgeValidator.LogAll` writes them to the Console. Add a check of your own by deriving from
+  `ForgeValidationRule`: override `Name` to name its group, and give a problem a step that fixes it with its `Fix`.
 
 ## Logging
 

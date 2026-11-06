@@ -14,6 +14,10 @@ namespace FarEmerald.PlayForge.Extended.Editor
     /// severity and its asset, and a click selects the asset. It follows the validator, so it has no Refresh (Q30). It
     /// replaces Validate All, which showed 15 problems in a dialog nothing in could be selected, and the Audit, which
     /// wrote to the Console.
+    /// <para>
+    /// By Rule, its other view, groups the problems under the rule each breaks, and where a simple step fixes a problem,
+    /// gives it a Quick Fix, and its rule a Fix All, each one Undo step (FEAT-25, the user's request).
+    /// </para>
     /// </summary>
     public sealed class ForgeProblemsWindow : EditorWindow
     {
@@ -22,8 +26,14 @@ namespace FarEmerald.PlayForge.Extended.Editor
         [SerializeField] private string search = "";
         [SerializeField] private bool showErrors = true;
         [SerializeField] private bool showWarnings = true;
+        [SerializeField] private bool byRule;
 
         private MultiColumnListView list;
+        private ScrollView rules;
+        private ToolbarToggle listToggle;
+        private ToolbarToggle ruleToggle;
+        // The rules folded in the By Rule view, by name, for the editor session
+        private static readonly HashSet<string> folded = new();
         private ToolbarToggle errorsToggle;
         private ToolbarToggle warningsToggle;
         private ToolbarSearchField searchField;
@@ -60,6 +70,12 @@ namespace FarEmerald.PlayForge.Extended.Editor
             root.AddToClassList("pf-problems");
 
             var toolbar = new Toolbar { name = "ProblemsToolbar" };
+            // The list, or By Rule (FEAT-25)
+            listToggle = Filter(toolbar, "List", !byRule, "Each problem, the errors first, by asset", on => ShowView(!on));
+            listToggle.text = "List";
+            ruleToggle = Filter(toolbar, "ByRule", byRule, "The problems grouped under the rule each breaks, with their quick fixes", on => ShowView(on));
+            ruleToggle.text = "By Rule";
+            toolbar.Add(new ToolbarSpacer());
             errorsToggle = Filter(toolbar, "Errors", showErrors, "Show the problems that stop something working", on =>
             {
                 showErrors = on;
@@ -158,9 +174,24 @@ namespace FarEmerald.PlayForge.Extended.Editor
             };
             root.Add(list);
 
+            rules = new ScrollView(ScrollViewMode.Vertical) { name = "ProblemRules" };
+            rules.AddToClassList("pf-problems__rules");
+            root.Add(rules);
+
             status = new Label { name = "ProblemsStatus" };
             status.AddToClassList("pf-problems__status");
             root.Add(status);
+            ShowView(byRule);
+        }
+
+        // Shows the list or By Rule, the toolbar's two toggles taking turns
+        private void ShowView(bool rulesShown)
+        {
+            byRule = rulesShown;
+            listToggle?.SetValueWithoutNotify(!rulesShown);
+            ruleToggle?.SetValueWithoutNotify(rulesShown);
+            list?.EnableInClassList("pf-hidden", rulesShown);
+            rules?.EnableInClassList("pf-hidden", !rulesShown);
             Refill();
         }
 
@@ -188,16 +219,164 @@ namespace FarEmerald.PlayForge.Extended.Editor
                 .ToList();
             list.itemsSource = shown;
             list.RefreshItems();
+            if (byRule) FillRules();
 
             int errors = all.Count(problem => problem.Severity == ForgeProblemSeverity.Error);
             int warnings = all.Count - errors;
             errorsToggle.text = CountOf(errors, "Error", "Errors");
             warningsToggle.text = CountOf(warnings, "Warning", "Warnings");
             int assets = all.Select(problem => problem.Asset).Distinct().Count();
+            int fixable = shown.Count(problem => problem.Fix != null);
             status.text = all.Count == 0
                 ? "No problems"
                 : $"{CountOf(all.Count, "problem", "problems")} in {CountOf(assets, "asset", "assets")}" +
-                  (shown.Count < all.Count ? $" · {shown.Count} shown" : "");
+                  (shown.Count < all.Count ? $" · {shown.Count} shown" : "") +
+                  (byRule && fixable > 0 ? $" · {fixable} with a quick fix" : "");
+        }
+
+        // ═══════════════════════════════════════════════════════════════════════════
+        // By Rule (FEAT-25)
+        // ═══════════════════════════════════════════════════════════════════════════
+
+        // The shown problems under their rules: a rule with errors first, then by name; each rule's problems as the list
+        // orders them
+        private void FillRules()
+        {
+            rules.Clear();
+            if (shown.Count == 0)
+            {
+                var none = new Label("No problems") { name = "NoProblems" };
+                none.AddToClassList("pf-note");
+                rules.Add(none);
+                return;
+            }
+            var groups = shown.GroupBy(problem => problem.Rule?.Name ?? "Other")
+                .OrderByDescending(group => group.Max(problem => problem.Severity))
+                .ThenBy(group => group.Key, StringComparer.OrdinalIgnoreCase);
+            foreach (var group in groups) rules.Add(RuleGroup(group.Key, group.ToList()));
+        }
+
+        // A rule's header, with its name, how many problems break it, and Fix All, then a row for each of its problems
+        private VisualElement RuleGroup(string rule, List<ForgeProblem> problems)
+        {
+            var box = new VisualElement { name = "RuleGroup" };
+            box.AddToClassList("pf-problems__group");
+
+            var header = new VisualElement { name = "RuleHeader" };
+            header.AddToClassList("pf-problems__group-header");
+            var arrow = new ForgeIconButton(ForgeGlyphShape.ArrowDown, "Collapse", null) { name = "RuleFold" };
+            arrow.AddToClassList("pf-element__arrow");
+            header.Add(arrow);
+            var name = new Label(rule) { name = "RuleName" };
+            name.AddToClassList("pf-problems__group-name");
+            header.Add(name);
+            var count = new Label(problems.Count.ToString()) { name = "RuleCount", tooltip = CountOf(problems.Count, "problem", "problems") };
+            count.AddToClassList("pf-problems__group-count");
+            header.Add(count);
+            var space = new VisualElement();
+            space.AddToClassList("pf-problems__group-space");
+            header.Add(space);
+            var fixable = problems.Where(problem => problem.Fix != null).ToList();
+            if (fixable.Count > 0)
+            {
+                var fixAll = new Button(() => Apply(fixable, $"Fix All: {rule}"))
+                {
+                    name = "FixAll",
+                    text = fixable.Count == problems.Count ? "Fix All" : $"Fix {fixable.Count}",
+                    tooltip = $"{fixable[0].Fix.Name}, for each of the {CountOf(fixable.Count, "problem", "problems")} a step fixes, as one Undo step",
+                };
+                fixAll.AddToClassList("pf-problems__fix");
+                header.Add(fixAll);
+            }
+            box.Add(header);
+
+            var rows = new VisualElement { name = "RuleProblems" };
+            rows.AddToClassList("pf-problems__group-rows");
+            for (int i = 0; i < problems.Count; i++) rows.Add(ProblemRow(problems[i], i % 2 == 1));
+            box.Add(rows);
+
+            void Fold(bool fold)
+            {
+                rows.EnableInClassList("pf-hidden", fold);
+                arrow.Glyph.Shape = fold ? ForgeGlyphShape.ArrowRight : ForgeGlyphShape.ArrowDown;
+                arrow.tooltip = fold ? "Expand" : "Collapse";
+            }
+            arrow.clicked += () =>
+            {
+                bool fold = !folded.Contains(rule);
+                if (fold) folded.Add(rule);
+                else folded.Remove(rule);
+                Fold(fold);
+            };
+            Fold(folded.Contains(rule));
+            return box;
+        }
+
+        // A problem's row: its severity, its asset, which a click selects, what's wrong, and its quick fix
+        private static VisualElement ProblemRow(ForgeProblem problem, bool alternate)
+        {
+            var row = new VisualElement { name = "RuleProblem" };
+            row.AddToClassList("pf-problems__row");
+            row.EnableInClassList("pf-problems__row--alternate", alternate);
+
+            var severity = new ForgeGlyph(ForgeGlyphShape.Warning) { tooltip = problem.Severity.ToString() };
+            severity.EnableInClassList("pf-glyph--warning", problem.Severity == ForgeProblemSeverity.Warning);
+            severity.EnableInClassList("pf-glyph--destructive", problem.Severity == ForgeProblemSeverity.Error);
+            row.Add(severity);
+
+            var asset = new VisualElement();
+            asset.AddToClassList("pf-problems__asset");
+            var type = problem.Asset != null ? problem.Asset.GetType() : null;
+            var icon = new ForgeTypeIcon(type ?? typeof(Ability)) { name = "Icon" };
+            asset.Add(icon);
+            var assetName = new Label(NameOf(problem.Asset)) { name = "Name", tooltip = problem.Asset != null ? AssetDatabase.GetAssetPath(problem.Asset) : "" };
+            assetName.AddToClassList("pf-problems__name");
+            asset.Add(assetName);
+            row.Add(asset);
+
+            var message = new Label(problem.Message) { name = "Message", tooltip = problem.Message };
+            message.AddToClassList("pf-problems__message");
+            row.Add(message);
+
+            if (problem.Fix != null)
+            {
+                var fix = new Button(() => Apply(new List<ForgeProblem> { problem }, problem.Fix.Name))
+                {
+                    name = "Fix",
+                    text = problem.Fix.Name,
+                    tooltip = $"{problem.Fix.Name}, as one Undo step",
+                };
+                fix.AddToClassList("pf-problems__fix");
+                row.Add(fix);
+            }
+            row.AddManipulator(new Clickable(() => Reveal(problem)));
+            return row;
+        }
+
+        /// <summary>
+        /// Applies problems' quick fixes as one Undo step, named for what it does. They run from the last to the first, so
+        /// a fix that removes a list's element leaves the places of those before it as they were found; one that throws
+        /// doesn't keep the others from running. The validator, which follows each edit, checks each asset again.
+        /// </summary>
+        internal static void Apply(IReadOnlyList<ForgeProblem> problems, string name)
+        {
+            var fixes = problems.Where(problem => problem?.Fix != null).ToList();
+            if (fixes.Count == 0) return;
+            Undo.IncrementCurrentGroup();
+            int group = Undo.GetCurrentGroup();
+            for (int i = fixes.Count - 1; i >= 0; i--)
+            {
+                try
+                {
+                    fixes[i].Fix.Apply();
+                }
+                catch (Exception exception)
+                {
+                    Debug.LogException(exception);
+                }
+            }
+            Undo.SetCurrentGroupName(name);
+            Undo.CollapseUndoOperations(group);
         }
 
         private bool Matches(ForgeProblem problem)

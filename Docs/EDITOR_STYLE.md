@@ -128,7 +128,9 @@ The only other colors:
   out, as "100/120/140/160" with the levels on the right. Their Base and Current are magnitude fields, as an
   effect's are, and a bound's floor and ceiling indent under the bounds.
 - **Messages** are Unity help boxes in the flow, under the field they are about. A problem also counts in the asset
-  header, shows as a glyph in The Forge's list, and counts in The Forge's toolbar and status bar (Q8).
+  header, shows as a glyph in The Forge's list, and counts in The Forge's toolbar and status bar (Q8). The Problems
+  view lists them, or groups them By Rule, where a problem one step fixes has a Quick Fix and its rule a Fix All
+  (FEAT-25).
 - **Destructive actions** say what they do, as in "Move to Trash", and send the asset to the trash (Q16). Only their
   icon takes the destructive color.
 - **Clear** empties its section at once, with no confirmation, and one Undo takes it back (Decision 28).
