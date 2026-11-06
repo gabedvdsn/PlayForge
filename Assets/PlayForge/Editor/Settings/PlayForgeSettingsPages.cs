@@ -225,8 +225,11 @@ namespace FarEmerald.PlayForge.Extended.Editor
             Heading(page, "Tags");
             foreach (var each in PlayForgePreferences.TagSwitches) switches.Add((each, Switch(page, each)));
 
-            Heading(page, "The Forge");
-            foreach (var each in PlayForgePreferences.ForgeSwitches) switches.Add((each, Switch(page, each)));
+            if (PlayForgePreferences.ForgeSwitches.Length > 0)
+            {
+                Heading(page, "The Forge");
+                foreach (var each in PlayForgePreferences.ForgeSwitches) switches.Add((each, Switch(page, each)));
+            }
 
             Heading(page, "Logging");
             var level = new EnumField("Minimum Log Level", ForgeLogSettingsBridge.CurrentLevel)

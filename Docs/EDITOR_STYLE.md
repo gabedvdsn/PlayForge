@@ -94,7 +94,8 @@ The only other colors:
 ## Inspectors
 
 - **The asset header** holds the 32 px type icon, the asset's name, its type and asset tag, and its problem count.
-  Then come Open in The Forge (Show in Project, inside The Forge), Help and the asset menu. It stays at the top of
+  Then come Open in The Forge (Show in Project, inside The Forge, with the asset's file name under it), Help and the
+  asset menu. It stays at the top of
   the inspector while the content scrolls under it (Decision 29, the user's call after seeing it scroll, which
   replaces Q17's answer).
 - **Sections are Unity foldout headers**: the arrow and the bold title, then Import, Clear and Help, always visible
@@ -109,7 +110,7 @@ The only other colors:
 - **Object fields** are Unity's, showing the type icon. PlayForge's actions on one, New and Open, are plain buttons
   beside it (Q15). Template import, the link filter and create-linked go in its right-click menu (Q18).
 - **Tag fields** show a tag's parents in secondary text and its leaf in strong text, unless the full-path setting
-  is on.
+  is on. A tag reads by its display name everywhere: a unique tag's name is padded with a generated suffix.
 - **Lists** are Unity's reorderable lists: a header with the count, drag handles, and the + and − footer.
 - **Requirements** are one table: rows for applying, while on and removal, and columns for "Requires" and "Must not
   have". A toggle switches it between the target and the source. Each cell is a button that opens the tag picker,
@@ -135,7 +136,8 @@ The only other colors:
   because the view follows the project as it changes (Q30).
 - **The list** has sortable columns for the name (with its type icon), the type, the asset tag and the levels, and a
   last column for the problem glyph. Rows alternate between the panel and alternate-row colors, and the selected row
-  takes Unity's selection blue.
+  takes Unity's selection blue. A row shows the asset's name alone; its file name is in its header.
+- **The tag view** lists the project's tags, with sortable columns for the tag, what it's for and its uses.
 - **The detail pane** shows the selected asset's inspector, opening on a Summary of what it does and what uses it
   (Q6).
 - **The status bar** holds the asset count and the problem count.

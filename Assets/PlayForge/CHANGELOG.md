@@ -162,6 +162,8 @@ tracks each fix below by its ID.
   page, through one table of links in the editor.
 
 ### Changed
+- The Forge's list shows each asset's name alone, and the selected asset's header shows its file name under Show in
+  Project. The Show File Names preference is gone (ED-58).
 - A world of its own reaches for nothing of the scene's. What's registered there with no handler has none, where
   GameRoot took it and kept it for as long as the scene lasted, and with no packet it takes the default, parented
   nowhere, where a MonoBehaviour process's and a sequence's took the scene root's (FEAT-10).
@@ -339,6 +341,11 @@ tracks each fix below by its ID.
   Asking whether its sequence was paused took 24 bytes a frame.
 
 ### Fixed
+- Tags showed their internal names. A tag the tag picker makes is unique, and pads its name with a generated
+  suffix; The Forge, the Debugger and the inspectors showed that name. Each shows a tag by its display name now, and
+  the Debugger's Tags view keeps a unique tag under its parents (ED-60).
+- The Forge's tag view couldn't sort. Its Tag, For and Uses columns sort, and each list's header shows its sort again
+  after a domain reload (ED-59).
 - The Timeline added each new record at the bottom. The newest track is at the top, and a track's runs and
   applications list the latest first (ED-46).
 - Selecting an effect in the Timeline hid part of its strip: the application its detail shows was drawn in the

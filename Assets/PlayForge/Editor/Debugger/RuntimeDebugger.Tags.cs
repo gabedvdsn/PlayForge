@@ -157,7 +157,8 @@ namespace FarEmerald.PlayForge.Extended.Editor
             tagTree.RefreshItems();
         }
 
-        // The tags the shown hubs hold, as a tree by their paths, each path's parts in natural order
+        // The tags the shown hubs hold, as a tree by their paths, each path's parts in natural order. A path is the tag's
+        // display name: a unique tag's name is padded with a generated suffix, which split it from its parents (ED-60)
         private List<TagNode> TagRoots(out List<TagNode> all)
         {
             var nodes = new Dictionary<string, TagNode>();
@@ -168,7 +169,7 @@ namespace FarEmerald.PlayForge.Extended.Editor
                 if (!Alive(gas) || !ShowsHub(gas)) continue;
                 foreach (var tag in (gas.GetAppliedTags() ?? new List<Tag>()).Distinct())
                 {
-                    var path = tag.Name;
+                    var path = TagDisplaySettings.PathOf(tag);
                     if (string.IsNullOrEmpty(path) || !Matches(path)) continue;
                     int weight = Math.Max(0, gas.GetTagWeight(tag));
                     var parts = path.Split('.');
@@ -328,7 +329,7 @@ namespace FarEmerald.PlayForge.Extended.Editor
         {
             foreach (var tag in (gas.GetAppliedTags() ?? new List<Tag>()).Distinct())
             {
-                var name = tag.Name ?? "";
+                var name = TagDisplaySettings.PathOf(tag);
                 if (name != path && !name.StartsWith(path + ".", StringComparison.Ordinal)) continue;
                 int weight = gas.GetTagWeight(tag);
                 if (weight > 0) yield return (tag, weight);

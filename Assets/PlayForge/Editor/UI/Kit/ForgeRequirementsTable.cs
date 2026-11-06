@@ -131,8 +131,7 @@ namespace FarEmerald.PlayForge.Extended.Editor
             var names = new List<string>();
             for (int i = 0; i < list.arraySize; i++)
             {
-                var tagName = list.GetArrayElementAtIndex(i).FindPropertyRelative(nameof(TagQuery.Tag))?
-                    .FindPropertyRelative(nameof(Tag.Name))?.stringValue;
+                var tagName = TagDisplaySettings.PathOf(list.GetArrayElementAtIndex(i).FindPropertyRelative(nameof(TagQuery.Tag)));
                 names.Add(string.IsNullOrEmpty(tagName) ? "No Tag" : tagName);
             }
             return string.Join(", ", names);

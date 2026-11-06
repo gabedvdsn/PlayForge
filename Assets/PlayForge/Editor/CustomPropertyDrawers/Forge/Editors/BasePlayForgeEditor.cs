@@ -432,6 +432,8 @@ namespace FarEmerald.PlayForge.Extended.Editor
             {
                 var open = header.AddButton("Open in The Forge", "Show this asset in The Forge", OnOpenInManager);
                 open.name = "OpenInForge";
+                // There, the asset's file name sits under the button, as The Forge's list shows its name alone (ED-58)
+                var file = header.AddLineUnder(open, "HeaderFile");
                 open.RegisterCallback<AttachToPanelEvent>(_ =>
                 {
                     if (!InForgeDetail(open)) return;
@@ -442,6 +444,7 @@ namespace FarEmerald.PlayForge.Extended.Editor
                         Selection.activeObject = target;
                         EditorGUIUtility.PingObject(target);
                     });
+                    ForgeAssetHeader.ShowLine(file, target != null ? target.name : "", target != null ? AssetDatabase.GetAssetPath(target) : "");
                 });
             }
 
@@ -507,7 +510,7 @@ namespace FarEmerald.PlayForge.Extended.Editor
                 if (target is BaseForgeLevelProvider provider)
                 {
                     var tag = provider.GetAssetTag();
-                    if (!string.IsNullOrEmpty(tag.Name) && !tag.Equals(Tags.NONE)) parts.Add(tag.Name);
+                    if (!string.IsNullOrEmpty(tag.Name) && !tag.Equals(Tags.NONE)) parts.Add(TagDisplaySettings.PathOf(tag));
                 }
                 if (target is BaseForgeAsset asset && asset.HasTemplate) parts.Add($"Template {asset.Template.GetName()}");
             }
@@ -619,7 +622,7 @@ namespace FarEmerald.PlayForge.Extended.Editor
         /// </summary>
         protected static string TagsSummary(IEnumerable<Tag> named, string kind, int granted)
         {
-            var names = named?.Where(tag => tag.IsValid).Select(tag => tag.Name).ToList() ?? new List<string>();
+            var names = named?.Where(tag => tag.IsValid).Select(TagDisplaySettings.PathOf).ToList() ?? new List<string>();
             var parts = new List<string>();
             if (names.Count is 1 or 2) parts.Add(string.Join(", ", names));
             else if (names.Count > 2) parts.Add($"{names.Count} {kind}");

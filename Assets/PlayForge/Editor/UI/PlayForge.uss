@@ -221,6 +221,33 @@
     flex-shrink: 0;
 }
 
+/* A button with a line of secondary text under it, as Show in Project with the asset's file name in The Forge
+   (ED-58). The line ends in an ellipsis rather than widen the header */
+.pf-root .pf-asset-header__stack {
+    flex-shrink: 0;
+    align-items: flex-end;
+    margin-left: 8px;
+}
+
+.pf-root .pf-asset-header__stack > .pf-asset-header__button {
+    margin-left: 0;
+}
+
+.pf-root .pf-asset-header__under {
+    max-width: 200px;
+    margin: 2px 0 0 0;
+    padding: 0;
+    color: var(--pf-secondary-text);
+    -unity-text-align: middle-right;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+}
+
+.pf-root .pf-asset-header__under--empty {
+    display: none;
+}
+
 .pf-root .pf-asset-header .pf-icon-button {
     width: 20px;
     height: 20px;
@@ -1364,7 +1391,8 @@
     flex-grow: 1;
 }
 
-/* A row's name, with its type icon, can shrink to nothing and ends in an ellipsis; the file name gives way first */
+/* A row's name, with its type icon, can shrink to nothing and ends in an ellipsis. The file name is in the selected
+   asset's header, not the row (ED-58) */
 .pf-root .pf-forge__name-cell {
     flex-direction: row;
     align-items: center;
@@ -1380,7 +1408,6 @@
 }
 
 .pf-root .pf-forge__name,
-.pf-root .pf-forge__file,
 .pf-root .pf-forge__cell {
     flex-shrink: 1;
     min-width: 0;
@@ -1396,10 +1423,6 @@
     flex-shrink: 0;
     max-width: 100%;
     color: var(--pf-strong-text);
-}
-
-.pf-root .pf-forge__file {
-    color: var(--pf-secondary-text);
 }
 
 .pf-root .pf-forge__list .pf-glyph--warning,

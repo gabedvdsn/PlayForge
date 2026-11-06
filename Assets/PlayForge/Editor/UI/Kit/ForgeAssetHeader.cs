@@ -76,6 +76,35 @@ namespace FarEmerald.PlayForge.Extended.Editor
             return button;
         }
 
+        /// <summary>
+        /// Adds a line of secondary text under one of its buttons, as the asset's file name under Show in Project in The
+        /// Forge, whose list shows the asset's name alone (ED-58). The line hides while it has no text.
+        /// </summary>
+        public Label AddLineUnder(Button button, string lineName)
+        {
+            var stack = new VisualElement();
+            stack.AddToClassList("pf-asset-header__stack");
+            Insert(IndexOf(button), stack);
+            stack.Add(button);
+            var line = new Label { name = lineName };
+            line.AddToClassList(UnderClass);
+            line.AddToClassList(UnderEmptyClass);
+            stack.Add(line);
+            return line;
+        }
+
+        public const string UnderClass = "pf-asset-header__under";
+        public const string UnderEmptyClass = "pf-asset-header__under--empty";
+
+        /// <summary>Shows a line added under a button, or hides it when the text is empty.</summary>
+        public static void ShowLine(Label line, string text, string tooltip = "")
+        {
+            if (line == null) return;
+            line.text = text ?? "";
+            line.tooltip = tooltip ?? "";
+            line.EnableInClassList(UnderEmptyClass, string.IsNullOrEmpty(text));
+        }
+
         /// <summary>Adds an action as an icon button, as Help and the asset menu are.</summary>
         public Button AddIconButton(ForgeGlyphShape glyph, string tooltip, Action onClick)
         {

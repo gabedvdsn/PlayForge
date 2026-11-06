@@ -37,6 +37,8 @@ namespace FarEmerald.PlayForge.Extended.Editor
         [SerializeField] private string selectedTag = "";
         [SerializeField] private string sortColumn = "Name";
         [SerializeField] private bool sortAscending = true;
+        [SerializeField] private string tagSortColumn = "Tag";
+        [SerializeField] private bool tagSortAscending = true;
 
         private MultiColumnListView assetList;
         private MultiColumnListView tagList;
@@ -289,20 +291,14 @@ namespace FarEmerald.PlayForge.Extended.Editor
                     var name = new Label { name = "Name" };
                     name.AddToClassList("pf-forge__name");
                     cell.Add(name);
-                    var file = new Label { name = "File" };
-                    file.AddToClassList("pf-forge__file");
-                    cell.Add(file);
                     return cell;
                 },
+                // The asset's name alone: its file name is in the selected asset's header, under Show in Project (ED-58)
                 bindCell = (cell, index) =>
                 {
                     var asset = shownAssets[index];
                     ShowTypeIcon(cell.Q<ForgeGlyph>("Icon"), asset.GetType());
                     cell.Q<Label>("Name").text = NameOf(asset);
-                    var file = cell.Q<Label>("File");
-                    bool showFile = PlayForgePreferences.ShowFileNames.Value && asset.name != NameOf(asset);
-                    file.text = showFile ? asset.name : "";
-                    file.EnableInClassList(HiddenClass, !showFile);
                     cell.tooltip = AssetDatabase.GetAssetPath(asset);
                 },
             });
@@ -323,6 +319,8 @@ namespace FarEmerald.PlayForge.Extended.Editor
                 },
             });
             ForgeColumnWidths.Remember(list.columns, "Forge.Assets");
+            // The sort the window keeps through a domain reload shows in the header again (ED-59)
+            list.sortColumnDescriptions.Add(new SortColumnDescription(sortColumn, sortAscending ? SortDirection.Ascending : SortDirection.Descending));
             list.columnSortingChanged += () =>
             {
                 var sort = list.sortedColumns.FirstOrDefault();
@@ -355,7 +353,7 @@ namespace FarEmerald.PlayForge.Extended.Editor
         };
 
         // The tags: each one, by its full path or its leaf as the tag preferences say, what it's for, and how many assets
-        // use it
+        // use it, each a column that sorts (ED-59)
         private MultiColumnListView BuildTagList()
         {
             var list = new MultiColumnListView
@@ -364,12 +362,21 @@ namespace FarEmerald.PlayForge.Extended.Editor
                 fixedItemHeight = 20,
                 selectionType = SelectionType.Single,
                 showAlternatingRowBackgrounds = AlternatingRowBackground.ContentOnly,
+                sortingMode = ColumnSortingMode.Custom,
             };
             list.AddToClassList("pf-forge__list");
             list.columns.Add(TagColumn("Tag", "Tag", 180, record => TagText(record.Tag), true));
-            list.columns.Add(TagColumn("Contexts", "For", 120, record => string.Join(", ", record.UsageByContext.Keys.OrderBy(key => key)), false));
+            list.columns.Add(TagColumn("Contexts", "For", 120, ContextsOf, false));
             list.columns.Add(TagColumn("Uses", "Uses", 50, record => record.TotalAssetCount.ToString(), false));
             ForgeColumnWidths.Remember(list.columns, "Forge.Tags");
+            list.sortColumnDescriptions.Add(new SortColumnDescription(tagSortColumn, tagSortAscending ? SortDirection.Ascending : SortDirection.Descending));
+            list.columnSortingChanged += () =>
+            {
+                var sort = list.sortedColumns.FirstOrDefault();
+                tagSortColumn = sort?.columnName ?? "Tag";
+                tagSortAscending = sort == null || sort.direction == SortDirection.Ascending;
+                Refill();
+            };
             list.selectionChanged += chosen =>
             {
                 var record = chosen.OfType<ForgeTagRegistry.TagUsageRecord>().FirstOrDefault();
@@ -382,7 +389,7 @@ namespace FarEmerald.PlayForge.Extended.Editor
 
         private Column TagColumn(string name, string title, float width, Func<ForgeTagRegistry.TagUsageRecord, string> text, bool stretch) => new()
         {
-            name = name, title = title, width = width, stretchable = stretch,
+            name = name, title = title, width = width, stretchable = stretch, sortable = true,
             makeCell = () =>
             {
                 var label = new Label();
@@ -415,10 +422,8 @@ namespace FarEmerald.PlayForge.Extended.Editor
 
             if (tagsShown)
             {
-                shownTags = ForgeTagRegistry.GetAllTagRecords()
-                    .Where(record => Matches(TagText(record.Tag)) || Matches(record.Tag.Name))
-                    .OrderBy(record => TagText(record.Tag), Comparer<string>.Create(EditorUtility.NaturalCompare))
-                    .ToList();
+                shownTags = SortedTags(ForgeTagRegistry.GetAllTagRecords()
+                    .Where(record => Matches(TagText(record.Tag)) || Matches(TagDisplaySettings.PathOf(record.Tag))), tagSortColumn, tagSortAscending);
                 tagList.itemsSource = shownTags;
                 tagList.RefreshItems();
                 int at = shownTags.FindIndex(record => record.Tag.Name == selectedTag);
@@ -556,10 +561,12 @@ namespace FarEmerald.PlayForge.Extended.Editor
             }
             var summary = new VisualElement { name = "Summary" };
             summary.AddToClassList("pf-forge__summary");
-            var title = new Label(record.Tag.Name);
+            // Its display name, and the name a unique tag pads, which only tells tags apart, on hover (ED-60)
+            var path = TagDisplaySettings.PathOf(record.Tag);
+            var title = new Label(path) { tooltip = record.Tag.Name != path ? record.Tag.Name : "" };
             title.AddToClassList("pf-forge__summary-title");
             summary.Add(title);
-            summary.Add(Row("For", string.Join(", ", record.UsageByContext.Keys.OrderBy(key => key))));
+            summary.Add(Row("For", ContextsOf(record)));
             summary.Add(Row("Uses", CountOf(record.TotalAssetCount, "asset", "assets")));
             detail.Add(summary);
 
@@ -636,8 +643,7 @@ namespace FarEmerald.PlayForge.Extended.Editor
         private static string AssetTagOf(ScriptableObject asset)
         {
             if (asset is not BaseForgeLevelProvider provider) return "";
-            var tag = provider.GetAssetTag();
-            return tag.IsValid ? tag.Name : "";
+            return TagDisplaySettings.PathOf(provider.GetAssetTag());
         }
 
         // The levels an asset uses, as "1–5", or nothing for an asset without levels of its own
@@ -648,13 +654,36 @@ namespace FarEmerald.PlayForge.Extended.Editor
             return max <= 0 ? "" : $"{provider.GetStartingLevel()}–{max}";
         }
 
-        /// <summary>A tag, by its full path or by its leaf, as the tag preferences say (ED-25).</summary>
+        /// <summary>
+        /// A tag, by its full path or by its leaf, as the tag preferences say (ED-25), from its display name: a unique
+        /// tag's name is padded with a generated suffix (ED-60).
+        /// </summary>
         internal static string TagText(Tag tag)
         {
-            var name = tag.Name ?? "";
+            var name = TagDisplaySettings.PathOf(tag);
             if (TagDisplaySettings.ShowFullPath) return name;
             int dot = name.LastIndexOf('.');
             return dot >= 0 ? name.Substring(dot + 1) : name;
+        }
+
+        // What a tag is for: the contexts its uses are in, by name
+        private static string ContextsOf(ForgeTagRegistry.TagUsageRecord record) => string.Join(", ", record.UsageByContext.Keys.OrderBy(key => key));
+
+        /// <summary>
+        /// The tags in a column's order: by the tag as the list shows it, by what it's for, or by its uses as a number,
+        /// each compared in natural order, then by the tag (ED-59).
+        /// </summary>
+        internal static List<ForgeTagRegistry.TagUsageRecord> SortedTags(IEnumerable<ForgeTagRegistry.TagUsageRecord> records, string column, bool ascending)
+        {
+            Func<ForgeTagRegistry.TagUsageRecord, string> key = column switch
+            {
+                "Contexts" => ContextsOf,
+                "Uses" => record => record.TotalAssetCount.ToString(),
+                _ => record => TagText(record.Tag),
+            };
+            var natural = Comparer<string>.Create(EditorUtility.NaturalCompare);
+            var ordered = ascending ? records.OrderBy(key, natural) : records.OrderByDescending(key, natural);
+            return ordered.ThenBy(record => TagText(record.Tag), natural).ToList();
         }
 
         /// <summary>

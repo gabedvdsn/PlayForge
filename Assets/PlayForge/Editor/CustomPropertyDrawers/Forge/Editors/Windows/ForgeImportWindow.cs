@@ -550,7 +550,7 @@ namespace FarEmerald.PlayForge.Extended.Editor
                     if (property.isArray) return property.arraySize == 0 ? "Empty" : $"{property.arraySize} {(property.arraySize == 1 ? "item" : "items")}";
                     if (property.type == nameof(Tag))
                     {
-                        var tag = property.FindPropertyRelative(nameof(Tag.Name))?.stringValue;
+                        var tag = TagDisplaySettings.PathOf(property);
                         return string.IsNullOrEmpty(tag) ? "None" : tag;
                     }
                     return "…";

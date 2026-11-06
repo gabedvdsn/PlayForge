@@ -819,7 +819,7 @@ namespace FarEmerald.PlayForge.Extended.Editor
                 updates.Clear();
                 shown.Clear();
                 looseShown.Clear();
-                shown.AddRange(tags.Distinct().OrderBy(tag => tag.Name ?? "", NaturalOrder));
+                shown.AddRange(tags.Distinct().OrderBy(TagDisplaySettings.PathOf, NaturalOrder));
                 looseShown.AddRange(loose.Distinct());
                 for (int i = 0; i < shown.Count; i++)
                 {
@@ -862,14 +862,15 @@ namespace FarEmerald.PlayForge.Extended.Editor
             return section;
         }
 
-        // A tag's path: its parents in secondary text and its leaf in strong text
+        // A tag's path, from its display name: its parents in secondary text and its leaf in strong text. A unique tag's name
+        // is padded with a generated suffix (ED-60)
         private static VisualElement TagNameCell(Tag tag)
         {
             var cell = new VisualElement { name = "NameCell" };
             cell.AddToClassList("pf-debugger__cell");
             cell.AddToClassList("pf-debugger__col-grow");
             cell.AddToClassList("pf-debugger__tag-name");
-            var text = tag.Name ?? "";
+            var text = TagDisplaySettings.PathOf(tag);
             int dot = text.LastIndexOf('.');
             var parents = new Label(dot >= 0 ? text.Substring(0, dot + 1) : "") { name = "Parents" };
             parents.AddToClassList("pf-debugger__tag-parents");
@@ -884,28 +885,37 @@ namespace FarEmerald.PlayForge.Extended.Editor
         {
             var name = field.value?.Trim();
             if (string.IsNullOrEmpty(name) || !Alive(gas)) return;
-            gas.AddLooseTag(Tag.Generate(name));
+            var tag = TagNamed(name);
+            gas.AddLooseTag(tag);
             field.value = "";
-            ShowAction($"Added {name}");
+            ShowAction($"Added {TagDisplaySettings.PathOf(tag)}");
             SampleNow();
+        }
+
+        // The project's tag a path names, by its display name or its name, or else a new tag of that name: a unique tag's
+        // name is padded, so the path the field shows isn't its name (ED-60)
+        private static Tag TagNamed(string path)
+        {
+            foreach (var record in ForgeTagRegistry.GetAllTagRecords())
+                if (TagDisplaySettings.PathOf(record.Tag) == path || record.Tag.Name == path) return record.Tag;
+            return TagRegistry.Resolve(path);
         }
 
         private void TakeTag(IGameplayAbilitySystem gas, Tag? tag)
         {
             if (tag is not { } taken || !Alive(gas)) return;
-            if (gas.RemoveLooseTag(taken)) ShowAction($"Removed {taken.Name}");
+            if (gas.RemoveLooseTag(taken)) ShowAction($"Removed {TagDisplaySettings.PathOf(taken)}");
             SampleNow();
         }
 
-        // The project's tags, each under its root: the one picked goes into the field, for Add Tag to grant
+        // The project's tags, each under its root, by display name: the one picked goes into the field, for Add Tag to grant
         private static void PickTag(TextField field, VisualElement under)
         {
             var menu = new GenericMenu();
-            foreach (var record in ForgeTagRegistry.GetAllTagRecords().OrderBy(record => record.Tag.Name, NaturalOrder))
+            foreach (var path in ForgeTagRegistry.GetAllTagRecords().Select(record => TagDisplaySettings.PathOf(record.Tag)).Distinct().OrderBy(path => path, NaturalOrder))
             {
-                var tag = record.Tag;
-                var root = tag.Name.Split('.')[0];
-                menu.AddItem(new GUIContent($"{root}/{tag.Name}"), field.value == tag.Name, () => field.value = tag.Name);
+                var root = path.Split('.')[0];
+                menu.AddItem(new GUIContent($"{root}/{path}"), field.value == path, () => field.value = path);
             }
             if (menu.GetItemCount() == 0) menu.AddDisabledItem(new GUIContent("The project has no tags"));
             menu.DropDown(under.worldBound);

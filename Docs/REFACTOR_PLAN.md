@@ -694,9 +694,9 @@ had no letter in the review. TS-AA onward came from the test project.
 | ED-55 | M | 6 | The tag drawer doesn't follow `Docs/EDITOR_STYLE.md` | `TagDrawer.cs` | open |
 | ED-56 | M | 6 | The ability task and stage drawers don't follow the style, and some can't fill in all they hold | `AbilityTaskDrawer.cs`, `AbstractTypeRefDrawer.cs`, `AbilityTaskBehaviourStageDrawer.cs` | open |
 | ED-57 | M | 6 | The worker group, asset loader and other drawers older than Phase 4 don't follow the style. Some can't fill in all they hold, or are confusing | `StandardWorkerGroupDrawer.cs`, `AssetSetterDrawer.cs`, `TaskSequenceReferenceDrawer.cs` and others | open |
-| ED-58 | M | 6 | The Forge's list shows each asset's file name beside its name. The file name belongs in the selected asset's header, under Show in Project | `TheForge.cs`, `ForgeAssetHeader.cs` | open |
-| ED-59 | M | 6 | The Forge's tag view can't sort its columns | `TheForge.cs` | open |
-| ED-60 | M | 6 | Tags show their internal names, made unique with a generated suffix, where they should show their display names | `TheForge.cs`, `RuntimeDebugger.Tags.cs`, `BasePlayForgeEditor.cs` | open |
+| ED-58 | M | 6 | The Forge's list showed each asset's file name beside its name, while Show File Names was on, its default. Fixed: the list shows the asset's name alone, and the selected asset's header shows its file name under Show in Project, its path on hover (`ForgeAssetHeader.AddLineUnder`). Show File Names is retired: the Preferences page has no switch for it, and Use Defaults clears it | `TheForge.cs`, `ForgeAssetHeader.cs`, `BasePlayForgeEditor.cs`, `PlayForgePreferences.cs`, `PlayForgeSettingsPages.cs` | verified |
+| ED-59 | M | 6 | The Forge's tag view couldn't sort its columns; it listed its tags by their text alone. And the asset list's sort, which the window keeps through a domain reload, didn't show in its header once the window was built again. Fixed: the tag view's Tag, For and Uses columns sort, either way, each in natural order, Uses as a number (`TheForge.SortedTags`), and the window keeps the tag view's sort as it keeps the asset list's. Each list's header shows the window's sort as it's built | `TheForge.cs` | verified |
+| ED-60 | M | 6 | Tags showed their internal names. A tag made unique, as the tag picker makes each new one, pads its name to 64 characters with a generated suffix, and its display name keeps the path as typed; The Forge, the Debugger and the inspectors' summaries showed the padded name, and the Debugger's Tags view split a unique tag from its parents. Fixed: each shows a tag by its display name (`TagDisplaySettings.PathOf`): The Forge's tag view, its search, a tag's detail (the padded name on hover) and the Asset Tag column; the Debugger's Tags view and an entity's Tags table; the asset header, the Tags summaries, the requirements table and the Import window. The Debugger's Add Tag finds the project's tag a display name names | `TheForge.cs`, `RuntimeDebugger.Tags.cs`, `RuntimeDebugger.Entities.cs`, `BasePlayForgeEditor.cs`, `PlayForgePreferences.cs` and others | verified |
 | ED-61 | M | 6 | Many custom inspectors and windows older than Phase 4 don't follow the style, as the Mono Process inspector | `AbstractMonoProcessEditor.cs` and others | open |
 
 The design questions behind Phase 4's rows, each with its evidence, are in the UI interview doc of 2026-11-03,
@@ -848,6 +848,21 @@ GAS-4 with GAS-5, PC-6, and TS-I with PC-5.
 ## Log
 
 Record baselines, gate results and notable decisions here, newest first.
+
+- 2026-11-06, **ED-58, ED-59 and ED-60: The Forge's names, its tag view's sorting, and tags' display names.**
+  - The Forge's list shows each asset's name alone. The selected asset's header shows its file name under Show in
+    Project (a stack of the button and a line of secondary text, `ForgeAssetHeader.AddLineUnder`), and Show File
+    Names is retired. The tag view's three columns sort, and each list's header shows the window's sort again as
+    the window is built, as after a domain reload.
+  - A unique tag (`Tag.GenerateAsUnique`, which the tag picker uses for each new tag) pads its name with a
+    SHA-256 suffix to 64 characters. Every place that showed a tag's name shows its display name now, through one
+    helper, `TagDisplaySettings.PathOf`. A tag's name stays its identity: The Forge keeps the selected tag by it, and
+    the Debugger's rows are named by it.
+  - The tests that failed first: the list's name cell held a file name; the header had no file line; the tag view
+    didn't sort and its rebuilt header lost the sort; TagText gave a 64-character name; the Debugger's tree had no
+    node at the display path. The tag registry reads the project's assets, rebuilding on an import, so the tests
+    put their tags in saved assets rather than registering uses by hand.
+  - EditMode: 477 of 477.
 
 - 2026-11-06, **ED-46 and ED-47: the Timeline's order and its selected span.** The tracks list the newest first, and
   a track's runs and applications the latest first. The span the detail shows was the selection's color on a row

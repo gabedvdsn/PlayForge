@@ -39,17 +39,17 @@ namespace FarEmerald.PlayForge.Extended.Editor
             "Show a tag's whole path, rather than its leaf after an ellipsis", false);
         internal static readonly Switch GroupTagsByRoot = new("GroupTagsByRoot", "Group Tags by Root",
             "Group the tag picker's tags under their root", true);
-        internal static readonly Switch ShowFileNames = new("ShowFileNames", "Show File Names",
-            "The Forge's list shows each asset's file name beside its name, when they differ", true);
 
-        /// <summary>The Forge's switches, in the order the page shows them.</summary>
-        internal static readonly Switch[] ForgeSwitches = { ShowFileNames };
+        /// <summary>The Forge's switches, in the order the page shows them. It has none since Show File Names (ED-58).</summary>
+        internal static readonly Switch[] ForgeSwitches = { };
 
         // The preferences The Forge's redesign left behind: its window keeps its filter, follows the project and selects
-        // what it makes, and its Create tab and Visualizer are gone (ED-27). Use Defaults clears them too
+        // what it makes, and its Create tab and Visualizer are gone (ED-27). Show File Names went when the list stopped
+        // showing file names, which the selected asset's header shows (ED-58). Use Defaults clears them too
         private static readonly string[] Retired =
         {
             "RememberTypeFilter", "DoubleClickVisualize", "AutoRefresh", "ShowNotifications", "RecentlyCreatedRows", "LastTypeFilter",
+            "ShowFileNames",
         };
 
         /// <summary>The tag fields' switches, in the order the page shows them.</summary>
@@ -91,6 +91,19 @@ namespace FarEmerald.PlayForge.Extended.Editor
         {
             get => PlayForgePreferences.GroupTagsByRoot.Value;
             set => PlayForgePreferences.GroupTagsByRoot.Value = value;
+        }
+
+        /// <summary>
+        /// A tag's path as it reads: its display name. A tag made unique, as the tag picker makes one, pads its name to a
+        /// fixed length with a generated suffix, and only its display name leaves that out (ED-60).
+        /// </summary>
+        public static string PathOf(Tag tag) => tag.IsValid ? tag.ToString() : "";
+
+        /// <summary>A serialized tag's path as it reads: its display name, or its name when it has none.</summary>
+        public static string PathOf(SerializedProperty tag)
+        {
+            var display = tag?.FindPropertyRelative(nameof(Tag.DisplayName))?.stringValue;
+            return !string.IsNullOrEmpty(display) ? display : tag?.FindPropertyRelative(nameof(Tag.Name))?.stringValue ?? "";
         }
     }
 

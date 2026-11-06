@@ -559,7 +559,7 @@ namespace FarEmerald.PlayForge.Extended.Editor
             var named = TagsSummary(effect.Tags.ContextTags, "context tags", 0);
             if (named != "None") parts.Add(named);
             var grants = new List<string>();
-            var granted = effect.Tags.GrantedTags?.Where(tag => tag.IsValid).Select(tag => tag.Name).ToList() ?? new List<string>();
+            var granted = effect.Tags.GrantedTags?.Where(tag => tag.IsValid).Select(TagDisplaySettings.PathOf).ToList() ?? new List<string>();
             if (granted.Count is 1 or 2) grants.Add(string.Join(", ", granted));
             else if (granted.Count > 2) grants.Add($"{granted.Count} tags");
             int lent = effect.GrantedAbilities?.Count(ability => ability != null) ?? 0;
