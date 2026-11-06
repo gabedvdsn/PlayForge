@@ -410,6 +410,14 @@ from. It lives outside `Assets/` so it never ships in the package.
     complex, Local Data, tag logic (as blocking an ability's activation, or configuring effects), ability tasks
     (targeting and asset loading among them), ability requirements, retention groups, effect visibility, and the
     rest.
+- Decision 38, 2026-11-06: the demo's play, Open decision 21, the user's answers as Phase 7 starts.
+  - **Controls:** the player moves and targets a hero as in a MOBA: click the ground to move, click an enemy to
+    attack, and keys for the hero's abilities.
+  - **Opponents:** an AI hero, which fights back with its attack and abilities, and a training dummy, which stands
+    and takes damage. The scene offers both.
+  - **Textures:** placeholders made in code and saved as texture assets, so every texture slot is filled and can
+    take art later.
+  - **Packaging:** one sample, Demo, in place of Demos. Battle stays, the sample the labs use.
 
 **Open. Ask the user; do not assume:**
 1. ~~**Uncommitted changes**~~: decided, see above.
@@ -434,10 +442,7 @@ from. It lives outside `Assets/` so it never ships in the package.
 20. **What a spawned thing knows (FEAT-24)**: an arrow an ability fires takes its speed from its archer's Projectile
     Speed attribute, read by tag on each frame of its flight, and fails if the archer doesn't have it. Should the
     arrow carry its own speed, set as it spawns? The user's note ends mid-sentence.
-21. **The demo's play (Decision 37)**, to ask as Phase 7 starts: how a fight is played (the player's input, and how
-    the opponent acts: an AI, a training dummy, or a second player); where the textures come from (placeholders made
-    in code, or the user's art); whether the demo is one sample to import or several; and whether the Battle sample,
-    which the labs use, stays.
+21. ~~**The demo's play (Decision 37)**~~: decided, see above (Decision 38).
 
 ## Roadmap
 
@@ -885,6 +890,10 @@ GAS-4 with GAS-5, PC-6, and TS-I with PC-5.
 ## Log
 
 Record baselines, gate results and notable decisions here, newest first.
+
+- 2026-11-06, **Decision 38: the demo's play (the user's answers).** Phase 7 starts: MOBA controls, an AI hero and a
+  training dummy to fight, placeholder textures made in code, and one Demo sample in place of Demos, Battle beside
+  it. The demo's design, its heroes, items and assets, goes to the user before it's built.
 
 - 2026-11-06, **ED-61: the last inspectors and windows older than Phase 4.** Phase 6's UI list is done but FEAT-24,
   which waits on the user (Open decision 20).
