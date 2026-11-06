@@ -388,6 +388,28 @@ from. It lives outside `Assets/` so it never ships in the package.
     it the most important field, and it must be legible. It may indent its fields, or set them on a light shaded
     backing. The rest of the style holds, its Never list above all: no emoji, and none of generated UI's usual
     look.
+- Decision 37, 2026-11-06: the demo refresh, Phase 7, once Phase 6's UI fixes are in. The demo content, the labs
+  aside, predates the refactor: it's scattered, uses little of what scalers do, and misrepresents the framework. All
+  of it goes, Swarm Defender with it, and a new demo takes its place, made to show PlayForge as a whole approach to a
+  GAS-based game. The user's spec:
+  - **Heroes:** five, of different abilities and strengths. Each has a default attack and two or three other
+    abilities. An ability deals magic, physical or pure damage, as its damage type.
+  - **Attributes:** Health, Mana, Armor (resists incoming physical damage), Movement Speed, Agility, Strength,
+    Intelligence, Lifesteal, Magic Amplification (amplifies all magic damage dealt), Attack Amplification
+    (amplifies all physical damage dealt), Magic Resistance (resists incoming magic damage) and Cooldown Reduction.
+    Health, Mana and Armor derive as a per-hero base plus X times Strength, Intelligence and Agility respectively,
+    X a constant from 8 to 12. Every hero starts with 0% cooldown reduction.
+  - **Items:** at least ten, each giving attributes, an ability, or both.
+  - **Effects, workers and cues** as the abilities need.
+  - **In the scene:** a UI to choose a hero to play as or to fight against, and to give or remove items; and more,
+    as fits, to show the framework's reach.
+  - **Other assets:** attribute sets, effects, templates and level providers, made and assigned as fits; a level
+    provider is often a template too.
+  - **Rules:** every asset a ScriptableObject, each using its features as fits, as sub-sets in attribute sets. Use
+    all of PlayForge's asset features: workers, cues, textures, level providers, templates, scalers basic and
+    complex, Local Data, tag logic (as blocking an ability's activation, or configuring effects), ability tasks
+    (targeting and asset loading among them), ability requirements, retention groups, effect visibility, and the
+    rest.
 
 **Open. Ask the user; do not assume:**
 1. ~~**Uncommitted changes**~~: decided, see above.
@@ -412,6 +434,10 @@ from. It lives outside `Assets/` so it never ships in the package.
 20. **What a spawned thing knows (FEAT-24)**: an arrow an ability fires takes its speed from its archer's Projectile
     Speed attribute, read by tag on each frame of its flight, and fails if the archer doesn't have it. Should the
     arrow carry its own speed, set as it spawns? The user's note ends mid-sentence.
+21. **The demo's play (Decision 37)**, to ask as Phase 7 starts: how a fight is played (the player's input, and how
+    the opponent acts: an AI, a training dummy, or a second player); where the textures come from (placeholders made
+    in code, or the user's art); whether the demo is one sample to import or several; and whether the Battle sample,
+    which the labs use, stays.
 
 ## Roadmap
 
@@ -424,6 +450,7 @@ from. It lives outside `Assets/` so it never ships in the package.
 | 4 | Editor UX: Undo, theming, no polling, a debugger that can act | Editor smoke suite passes in both themes |
 | 5 | Missing GAS features (FEAT-n) | Every test-project lab green |
 | 6 | The user's UI list: the Debugger, The Forge, the scaler and attribute set drawers, and every drawer and inspector older than Phase 4's style (Decision 36) | Every row verified; the editor smoke suite passes in both themes |
+| 7 | The demo refresh: five heroes, their abilities, items, attributes, effects, workers and cues, using every asset feature, with a scene to pick heroes and give items, in place of the old demos and Swarm Defender (Decision 37) | Every feature Decision 37 lists is used and shown; the old demos are gone; the smoke suite sweeps the new demo's assets |
 
 ## Phase 0 checklist
 
@@ -729,9 +756,11 @@ Phase 2 part, and set Phase 4's direction.
 1. The Debugger and The Forge: ED-45 to ED-48, and ED-58 to ED-60.
 2. The scaler drawer, ED-51 to ED-54, then the Impact section around it, ED-50.
 3. The attribute set element drawer, ED-49.
-4. The drawers and inspectors older than Phase 4: ED-55, ED-56, ED-57 and ED-61.
+4. The drawers and inspectors older than Phase 4: ED-55, ED-56, ED-57 and ED-61, with ED-64 split from ED-56.
 
-FEAT-24 waits for the user's answer (Open decision 20).
+The user's reports along the way, ED-62, ED-63, ED-65, GAS-64 and FEAT-25, went in as they came. FEAT-24 waits for
+the user's answer (Open decision 20). Phase 7, the demo refresh (Decision 37), follows; the smoke suite's edit sweep
+reads the old demos' fullest assets, so it moves to the new demo's as the old go.
 
 ### Samples and packaging
 
@@ -854,6 +883,10 @@ GAS-4 with GAS-5, PC-6, and TS-I with PC-5.
 ## Log
 
 Record baselines, gate results and notable decisions here, newest first.
+
+- 2026-11-06, **Decision 37: the demo refresh, Phase 7.** The user asked for a new demo once Phase 6's UI fixes are
+  in, to replace every demo but the labs, Swarm Defender among them. Their spec is Decision 37, and the questions it
+  leaves for when the phase starts are Open decision 21.
 
 - 2026-11-06, **FEAT-25: quick fixes in the Problems window (the user's request).**
   - By Rule groups the shown problems under the rule each breaks, a rule with errors first, each with its count
