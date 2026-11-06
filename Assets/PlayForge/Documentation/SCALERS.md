@@ -42,7 +42,10 @@ The field menu holds:
 - **Import Values…**: a window that lists the Scaler assets and the other assets' fields with values per level. Pick
   one to compare its values with the field's, level by level, with both curves, then **Copy Values**. A shorter table's
   last value holds for the levels past its end, and the window says which levels those are. One Undo takes it back.
-- **Quick Fill…**: fills the table from a pattern, such as a straight line from a start to an end.
+- **Quick Fill…**: fills the table from a pattern: **Same Value**, **Straight Line**, **Slow Then Fast** and **Fast
+  Then Slow** with a **Strength**, **Steps**, **Add Each Level**, **Multiply Each Level**, **Ease In and Out**, or a
+  **Custom Curve** you draw, from one value to another. **Rounding** makes the values whole numbers or rounds them
+  to a **Step**. A preview shows the values as the table will, with their curve, and one Undo takes them back.
 - **Make Constant**: the field reads a number again, the value its first level read.
 
 ## Values per level
@@ -56,8 +59,8 @@ Randomized scaler's **Min Multiplier** and **Max Multiplier** for its Multiplier
   - **Per Level**: one value per level, ten levels to a row. Level 1 reads the first value, level 4 the 4th, and a
     level past the end reads the last.
   - **Spread Over Levels**: the values are points on a curve over a level range, and a level between two points reads
-    between them. Three values, 10, 20 and 30, spread over levels 1 to 5 read 10, 15, 20, 25 and 30. Each value says
-    the level it sits at. A scaler you make in the inspector starts Per Level. The scalers saved before the choice
+    between them. Three values, 10, 20 and 30, spread over levels 1 to 5 read 10, 15, 20, 25 and 30. The points are
+    numbered, and under them each level shows what it reads. A scaler you make in the inspector starts Per Level. The scalers saved before the choice
     existed spread, so they read as they did.
 - **Levels**, Per Level: an asset with a level provider, as an ability, or an effect linked to one, follows the
   provider's levels, as **Fireball's levels (1–4)**, with a value for each. A level past the scaler's values shows the

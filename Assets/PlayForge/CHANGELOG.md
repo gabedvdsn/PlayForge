@@ -167,6 +167,11 @@ tracks each fix below by its ID.
   page, through one table of links in the editor.
 
 ### Changed
+- A spread scaler's points are numbered, and each real level shows what it reads, as the runtime reads it. Its table
+  named each point by a level such as 1.8, and never said what a real level reads (ED-62).
+- Quick Fill is a dialog in the style, with a preview as the scaler's table shows it. It adds Ease In and Out, a
+  Custom Curve, a strength for its bending patterns, rounding to whole numbers or a step, and a count for a scaler
+  with levels or points of its own. Apply is one Undo step (ED-63).
 - An attribute set element shows what its attribute starts at, at each level, worked out as the runtime works it
   out, with a note when another element's value is used and a warning when a scaler reads an attribute the set
   doesn't give. Base and Current are magnitude fields, as an effect's are, both shown, and Bounds, Constraints and

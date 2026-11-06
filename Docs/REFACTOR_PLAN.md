@@ -698,6 +698,8 @@ had no letter in the review. TS-AA onward came from the test project.
 | ED-59 | M | 6 | The Forge's tag view couldn't sort its columns; it listed its tags by their text alone. And the asset list's sort, which the window keeps through a domain reload, didn't show in its header once the window was built again. Fixed: the tag view's Tag, For and Uses columns sort, either way, each in natural order, Uses as a number (`TheForge.SortedTags`), and the window keeps the tag view's sort as it keeps the asset list's. Each list's header shows the window's sort as it's built | `TheForge.cs` | verified |
 | ED-60 | M | 6 | Tags showed their internal names. A tag made unique, as the tag picker makes each new one, pads its name to 64 characters with a generated suffix, and its display name keeps the path as typed; The Forge, the Debugger and the inspectors' summaries showed the padded name, and the Debugger's Tags view split a unique tag from its parents. Fixed: each shows a tag by its display name (`TagDisplaySettings.PathOf`): The Forge's tag view, its search, a tag's detail (the padded name on hover) and the Asset Tag column; the Debugger's Tags view and an entity's Tags table; the asset header, the Tags summaries, the requirements table and the Import window. The Debugger's Add Tag finds the project's tag a display name names | `TheForge.cs`, `RuntimeDebugger.Tags.cs`, `RuntimeDebugger.Entities.cs`, `BasePlayForgeEditor.cs`, `PlayForgePreferences.cs` and others | verified |
 | ED-61 | M | 6 | Many custom inspectors and windows older than Phase 4 don't follow the style, as the Mono Process inspector | `AbstractMonoProcessEditor.cs` and others | open |
+| ED-62 | M | 6 | A spread scaler's table named each point by the level it sat at, as 1.8 or 2.5, which no entity can be, and never said what a real level reads (the user's report). Fixed: the points are numbered, and under them each real level shows what it reads, as the runtime reads it: the stored curve at the level's place between the starting level and the last. A stored curve that reads other than its points draw says so | `ScalerFields.cs` | verified |
+| ED-63 | M | 6 | Quick Fill drew a look of its own, a purple bold title, a green Apply, 10 px hints and tinted boxes, from styles set in C#, with its fields outside the label column, and wrote through a property it kept from when it opened (the user's report: its UI needs a rework, and maybe more content). Fixed: it's a dialog in the style, with what it fills, a pattern and its values, rounding, and a preview as the scaler's table shows it, with its curve. It adds Ease In and Out, a Custom Curve, a strength for its two bending patterns, rounding to whole numbers or a step, and a count for a scaler with levels or points of its own. Apply writes the values and the curve as one Undo step | `QuickFillWizard.cs` | verified |
 
 The design questions behind Phase 4's rows, each with its evidence, are in the UI interview doc of 2026-11-03,
 https://claude.ai/artifact/BbnGybqgX3spJsT6HoTafp. Its answers (Decision 18) settle ED-8, ED-16, ED-19 and ED-12's
@@ -848,6 +850,24 @@ GAS-4 with GAS-5, PC-6, and TS-I with PC-5.
 ## Log
 
 Record baselines, gate results and notable decisions here, newest first.
+
+- 2026-11-06, **ED-62 and ED-63: a spread scaler's levels, and Quick Fill (the user's report, mid-phase).**
+  - A spread scaler's points were named by levels such as 1.8, and nothing showed what levels 2 and 3 read. The
+    points are numbered, and a Reads row under Between Points shows each real level's value: the stored curve at
+    the place `AbstractScaler.GetEffectiveRelativeLevel` gives the level, the runtime's own reading. A curve that
+    reads other than its points draw, as one made in code without `RegenerateCurve`, says so. The first cut
+    compared the curves' keys and warned on a one-point scaler that reads the same either way, which the
+    snapshot showed, so it compares what the levels read.
+  - Quick Fill is a dialog in the style. Its patterns have plain names, as Slow Then Fast, and it adds Ease In and
+    Out, a Custom Curve drawn in Unity's curve field, a strength for the two bending patterns, rounding to whole
+    numbers or the nearest step, and a count for a scaler with levels or points of its own. Apply finds the scaler
+    again by its path, as ED-49's fix does, and writes the values and, through `ScalerFields.KeepCurve`, the curve
+    as one Undo step; it built its own curve, with other tangents.
+  - Found, not changed: a spread scaler over the provider's levels "up to a level" (`ELevelConfig.Clamped`) takes
+    the lower of its Max Level and the current level as the range's end, as its tooltip says, so every level above
+    the starting one reads its last point. The Reads row shows it. Put to the user.
+  - Each test failed first, against the committed drawer and wizard.
+  - EditMode: 501 of 501.
 
 - 2026-11-06, **ED-49: what an attribute starts at.**
   - The user asked whether an attribute's start value can be worked out, given sub-sets and the sets a set sits

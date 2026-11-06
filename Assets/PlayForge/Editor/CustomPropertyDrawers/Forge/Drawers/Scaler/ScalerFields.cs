@@ -605,26 +605,18 @@ namespace FarEmerald.PlayForge.Extended.Editor
             var points = new IntegerField("Points")
             {
                 name = "PointCount",
-                tooltip = "How many values the curve passes through, from the first level to the last",
+                tooltip = "How many values the curve passes through, evenly from the first level to the last",
                 isDelayed = true,
             };
             points.AddToClassList(IntegerField.alignedFieldUssClassName);
             points.RegisterValueChangedCallback(change => Resize(scaler, valuesProp, change.newValue));
             rows.Add(points);
 
-            // Where each value sits: spread evenly from the first level to the last the range reaches
-            int first = range.Known ? range.First : 1;
-            int lastLevel = config == ELevelConfig.LockToLevelProvider ? (range.Known ? range.Last : 0) : maxProp.intValue;
+            // The points, numbered: they sit evenly along the levels, mostly between two, which a level such as 1.8 named
+            // as if it were one (ED-62)
             int stored = valuesProp.arraySize;
-            string At(int index)
-            {
-                if (stored <= 1) return lastLevel > 0 ? first.ToString(CultureInfo.InvariantCulture) : "0%";
-                float t = (float)index / (stored - 1);
-                if (lastLevel <= 0) return $"{Mathf.RoundToInt(t * 100f)}%";
-                float level = Mathf.Lerp(first, Mathf.Max(first, lastLevel), t);
-                return level.ToString("0.#", CultureInfo.InvariantCulture);
-            }
-            var table = Table(scaler, valuesProp, stored, "At level", At, out _, out var preview);
+            var table = Table(scaler, valuesProp, stored, "Point", index => (index + 1).ToString(CultureInfo.InvariantCulture),
+                out _, out var preview, index => $"Point {index + 1} of {stored}");
             rows.Add(table);
 
             var between = new EnumField("Between Points")
@@ -640,12 +632,135 @@ namespace FarEmerald.PlayForge.Extended.Editor
             });
             rows.Add(between);
 
+            // What each real level reads, as the runtime reads it, while the levels are known (ED-62)
+            var (first, last) = RealLevels(range, config, maxProp.intValue);
+            Label[] reads = null;
+            HelpBox outOfDate = null;
+            if (last >= first)
+            {
+                outOfDate = new HelpBox("Its stored curve doesn't follow its points, so each level reads the stored curve.",
+                    HelpBoxMessageType.Warning) { name = "CurveOutOfDate" };
+                outOfDate.AddToClassList(HiddenClass);
+                rows.Add(outOfDate);
+                rows.Add(ReadsTable(first, last, out reads));
+            }
+
+            void ShowReads()
+            {
+                if (reads == null) return;
+                // Selected scalers whose values differ read differently at each level, so their cells show a mixed value
+                bool same = !EachAsset.Differ(scaler, each => string.Join(",", ValuesOf(each)) + "|" + CurveText(each));
+                var curve = scaler.FindPropertyRelative(nameof(AbstractScaler.Scaling))?.animationCurveValue;
+                var read = same && curve != null
+                    ? ReadsAtLevels(curve, first, last, config, maxProp.intValue)
+                    : null;
+                for (int i = 0; i < reads.Length; i++)
+                {
+                    reads[i].text = read == null ? "\u2014" : Number(read[i]);
+                    reads[i].tooltip = read == null ? "The selected scalers read differently" : $"Level {first + i} reads {Number(read[i])}";
+                }
+                // Stale only where a level reads other than its points would have it read: two curves whose keys differ
+                // can read the same at every level
+                var wanted = AbstractScaler.CurveFor(ValuesOf(scaler), (EScalerInterpolation)betweenProp.intValue);
+                var wantedReads = read == null ? null : ReadsAtLevels(wanted, first, last, config, maxProp.intValue);
+                bool stale = read != null && read.Where((value, i) => Mathf.Abs(value - wantedReads[i]) > 0.0001f * Mathf.Max(1f, Mathf.Abs(value))).Any();
+                outOfDate?.EnableInClassList(HiddenClass, !stale);
+            }
+
             return () =>
             {
                 points.SetValueWithoutNotify(valuesProp.arraySize);
                 points.showMixedValue = EachAsset.Differ(valuesProp, each => each.arraySize);
                 ShowCurve(scaler, preview, ValuesOf(scaler), (EScalerInterpolation)betweenProp.intValue);
+                ShowReads();
             };
+        }
+
+        /// <summary>
+        /// The real levels a spread scaler's values are read at: its level provider's, from its starting level to its last,
+        /// while they're known; or, while the scaler takes levels of its own, from 1 to its own last level. None while the
+        /// levels come from whatever uses the scaler.
+        /// </summary>
+        internal static (int First, int Last) RealLevels(LevelRange range, ELevelConfig config, int ownMax)
+        {
+            int last = range.Known ? range.Last : config != ELevelConfig.LockToLevelProvider ? ownMax : 0;
+            int first = range.Known ? range.First : 1;
+            last = Mathf.Min(last, first + MostReads - 1);
+            return (first, last);
+        }
+
+        // The most levels the reads show, from the first
+        private const int MostReads = 100;
+
+        /// <summary>
+        /// What a spread scaler reads at each level from the first to the last, as the runtime reads it: its stored curve at
+        /// the level's place between the starting level and the last its levels reach, which is the provider's, its own,
+        /// or, clamped, its own or the level itself, whichever is lower (AbstractScaler.GetEffectiveRelativeLevel).
+        /// </summary>
+        internal static float[] ReadsAtLevels(AnimationCurve curve, int first, int last, ELevelConfig config, int ownMax)
+        {
+            var reads = new float[Mathf.Max(0, last - first + 1)];
+            for (int level = first; level <= last; level++)
+            {
+                int max = config switch
+                {
+                    ELevelConfig.Unlocked => ownMax,
+                    ELevelConfig.Clamped => Mathf.Min(ownMax, level),
+                    _ => last,
+                };
+                float place = Mathf.Clamp01(Mathf.InverseLerp(first, max, level));
+                reads[level - first] = curve.Evaluate(place);
+            }
+            return reads;
+        }
+
+        // A curve's keys as text, so selected scalers can be told apart by the curve they read
+        private static string CurveText(SerializedProperty scaler)
+        {
+            var curve = scaler.FindPropertyRelative(nameof(AbstractScaler.Scaling))?.animationCurveValue;
+            return curve == null ? "" : string.Join(",", curve.keys.Select(key => $"{key.time}:{key.value}"));
+        }
+
+        /// <summary>
+        /// The levels and what each reads, as the table draws its values, read-only: a row of levels over a row of what
+        /// each reads, ten to a row (ED-62).
+        /// </summary>
+        internal static VisualElement ReadsTable(int first, int last, out Label[] cells)
+        {
+            var root = new VisualElement { name = "LevelReads" };
+            root.AddToClassList("pf-scaler-table");
+            root.AddToClassList("pf-scaler-table--reads");
+            var grid = new VisualElement { name = "Grid" };
+            root.Add(grid);
+            int count = Mathf.Max(0, last - first + 1);
+            cells = new Label[count];
+            for (int start = 0; start < count; start += 10)
+            {
+                var heads = new VisualElement();
+                heads.AddToClassList("pf-scaler-table__levels");
+                var values = new VisualElement();
+                values.AddToClassList("pf-scaler-table__values");
+                var levelHead = new Label("Level");
+                levelHead.AddToClassList("pf-scaler-table__head");
+                heads.Add(levelHead);
+                var readsHead = new Label("Reads");
+                readsHead.AddToClassList("pf-scaler-table__head");
+                values.Add(readsHead);
+                for (int i = start; i < Mathf.Min(start + 10, count); i++)
+                {
+                    var level = new Label((first + i).ToString(CultureInfo.InvariantCulture)) { name = $"ReadsAt{first + i}" };
+                    level.AddToClassList("pf-scaler-table__cell");
+                    heads.Add(level);
+                    var read = new Label { name = $"Reads{first + i}" };
+                    read.AddToClassList("pf-scaler-table__cell");
+                    read.AddToClassList("pf-scaler-table__read");
+                    values.Add(read);
+                    cells[i] = read;
+                }
+                grid.Add(heads);
+                grid.Add(values);
+            }
+            return root;
         }
 
         /// <summary>
@@ -654,7 +769,8 @@ namespace FarEmerald.PlayForge.Extended.Editor
         /// reads; typing there gives that level, and each before it, a value of its own.
         /// </summary>
         internal static VisualElement Table(SerializedProperty scaler, SerializedProperty valuesProp, int columns, string head,
-            Func<int, string> headOf, out List<(int Index, FloatField Field)> past, out ForgeCurvePreview preview)
+            Func<int, string> headOf, out List<(int Index, FloatField Field)> past, out ForgeCurvePreview preview,
+            Func<int, string> tipOf = null)
         {
             var root = new VisualElement { name = "LevelTable" };
             root.AddToClassList("pf-scaler-table");
@@ -686,7 +802,7 @@ namespace FarEmerald.PlayForge.Extended.Editor
                     field.AddToClassList("pf-scaler-table__cell");
                     if (i < stored)
                     {
-                        field.tooltip = $"The value at level {i + 1}";
+                        field.tooltip = tipOf?.Invoke(i) ?? $"The value at level {i + 1}";
                         field.BindProperty(valuesProp.GetArrayElementAtIndex(i));
                         // The curve a spread scaler reads follows a typed value, in the same Undo step. Binding sends the
                         // field change events of its own as it draws, which write nothing (ED-34)

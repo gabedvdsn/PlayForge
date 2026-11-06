@@ -1224,6 +1224,14 @@
     color: var(--pf-secondary-text);
 }
 
+/* What a spread scaler reads at each real level: its cells read as values, in strong text, right under the levels
+   (ED-62) */
+.pf-root .pf-scaler-table__read {
+    -unity-text-align: middle-center;
+    color: var(--pf-strong-text);
+    padding: 1px 2px;
+}
+
 /* A level past the values the scaler has reads the last, which its cell shows in secondary text until it's typed in */
 .pf-root .pf-scaler-table__past .unity-text-element {
     color: var(--pf-secondary-text);

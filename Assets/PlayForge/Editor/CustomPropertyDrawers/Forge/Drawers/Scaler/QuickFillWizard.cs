@@ -1,519 +1,340 @@
 using System;
+using System.Globalization;
+using System.Linq;
 using UnityEditor;
+using UnityEditor.UIElements;
 using UnityEngine;
 using UnityEngine.UIElements;
-using static FarEmerald.PlayForge.Extended.Editor.ForgeDrawerStyles;
+using Object = UnityEngine.Object;
 
 namespace FarEmerald.PlayForge.Extended.Editor
 {
     /// <summary>
-    /// Quick Fill Wizard window for configuring scaler level values with live preview.
+    /// Quick Fill, from a scaler field's menu (ED-63, Docs/EDITOR_STYLE.md): what it fills, the scaler's levels or its
+    /// points; a pattern and its values; rounding; and a preview of the values as the scaler's table shows them, with their
+    /// curve. Apply writes them, and the curve a spread scaler reads, as one Undo step. It drew a look of its own, a purple
+    /// bold title, a green Apply, 10 px hints and tinted boxes, from styles set in C#, with its fields outside the label
+    /// column, and wrote through a property it kept from when it opened.
     /// </summary>
     public class QuickFillWizard : EditorWindow
     {
-        private SerializedProperty _targetProp;
-        private Action _onApply;
-        
-        // Fill parameters
-        private EFillPattern _pattern = EFillPattern.Linear;
-        private float _startValue = 1f;
-        private float _endValue = 10f;
-        private float _exponent = 2f;
-        private int _stepCount = 5;
-        private float _baseValue = 1f;
-        private float _incrementPerLevel = 1f;
-        private float _multiplierPerLevel = 1.1f;
-        
-        // Preview
-        private float[] _previewValues;
-        private int _levelCount;
-        
+        /// <summary>The shape the values take from the first to the last.</summary>
         public enum EFillPattern
         {
-            Constant,
-            Linear,
-            Exponential,
-            Logarithmic,
+            [InspectorName("Same Value")] Constant,
+            [InspectorName("Straight Line")] Linear,
+            [InspectorName("Slow Then Fast")] Exponential,
+            [InspectorName("Fast Then Slow")] Logarithmic,
             Steps,
-            Additive,
-            Multiplicative
+            [InspectorName("Add Each Level")] Additive,
+            [InspectorName("Multiply Each Level")] Multiplicative,
+            [InspectorName("Ease In and Out")] Smooth,
+            [InspectorName("Custom Curve")] Curve,
         }
-        
+
+        /// <summary>How the values are rounded once made.</summary>
+        public enum ERounding
+        {
+            None,
+            [InspectorName("Whole Numbers")] WholeNumbers,
+            [InspectorName("Nearest Step")] ToStep,
+        }
+
+        private const string Hidden = "pf-hidden";
+
+        // The scaler, found again by its path whenever it's read or written
+        private Object[] targets;
+        private string path;
+        private Action onApply;
+
+        private EFillPattern pattern = EFillPattern.Linear;
+        private float from = 1f;
+        private float to = 10f;
+        private float strength = 2f;
+        private int steps = 4;
+        private float add = 1f;
+        private float multiply = 1.1f;
+        private AnimationCurve shape = AnimationCurve.EaseInOut(0f, 0f, 1f, 1f);
+        private ERounding rounding = ERounding.None;
+        private float step = 1f;
+
+        // How many values it fills: the levels or points the scaler's table shows
+        private int _levelCount;
+        private bool spread;
+        private bool ownCount;
+        private string fills = "";
+        private EScalerInterpolation between = EScalerInterpolation.Linear;
+
+        private VisualElement previewTable;
+        private ForgeCurvePreview curve;
+
         public static void Show(SerializedProperty prop, Action onApply)
         {
-            var window = GetWindow<QuickFillWizard>(true, "Quick Fill Wizard");
-            window._targetProp = prop;
-            window._onApply = onApply;
-            window.minSize = new Vector2(380, 480);
-            window.maxSize = new Vector2(450, 600);
-            window.LoadCurrentValues();
+            var window = GetWindow<QuickFillWizard>(true, "Quick Fill");
+            window.targets = prop.serializedObject.targetObjects;
+            window.path = prop.propertyPath;
+            window.onApply = onApply;
+            window.minSize = new Vector2(400f, 440f);
+            window.Read(prop);
+            window.Rebuild();
             window.Show();
         }
-        
-        private void LoadCurrentValues()
+
+        // What it fills, and values to start from: the scaler's first and last
+        private void Read(SerializedProperty scaler)
         {
-            if (_targetProp == null) return;
-            
-            var lvp = _targetProp.FindPropertyRelative("LevelValues");
-            if (lvp != null && lvp.arraySize > 0)
+            var values = ScalerFields.ValuesOf(scaler);
+            if (values.Length > 0)
             {
-                _levelCount = lvp.arraySize;
-                _startValue = lvp.GetArrayElementAtIndex(0).floatValue;
-                _endValue = lvp.GetArrayElementAtIndex(lvp.arraySize - 1).floatValue;
+                from = values[0];
+                to = values[values.Length - 1];
             }
-            else
-            {
-                _levelCount = 10;
-            }
+            spread = scaler.FindPropertyRelative(nameof(AbstractScaler.StretchOverLevels))?.boolValue ?? false;
+            var interpolation = scaler.FindPropertyRelative(nameof(AbstractScaler.Interpolation));
+            if (interpolation != null) between = (EScalerInterpolation)interpolation.intValue;
+            var config = scaler.FindPropertyRelative(nameof(AbstractScaler.Configuration));
+            var range = ScalerFields.LevelsOf(scaler.serializedObject);
+            bool follows = !spread && range.Known && config != null && (ELevelConfig)config.intValue == ELevelConfig.LockToLevelProvider;
+
             // It fills the levels the scaler's table shows: its level provider's, while it follows one, rather than the
-            // values it has (ED-53)
-            int shown = ScalerFields.LevelsShown(_targetProp);
-            if (shown > 0) _levelCount = shown;
-            
-            UpdatePreview();
+            // values it has (ED-53); a spread scaler's points; or its own levels
+            int shown = ScalerFields.LevelsShown(scaler);
+            _levelCount = Mathf.Clamp(shown > 0 ? shown : values.Length > 0 ? values.Length : 4, 1, 100);
+            ownCount = !follows;
+            fills = spread ? Count(_levelCount, "point", "points")
+                : follows ? $"{range.From}'s levels ({range.Text})"
+                : $"Levels 1–{_levelCount}";
         }
-        
-        private void CreateGUI()
+
+        private static string Count(int count, string one, string many) => count == 1 ? $"1 {one}" : $"{count} {many}";
+
+        private void CreateGUI() => Rebuild();
+
+        private void Rebuild()
         {
             var root = rootVisualElement;
-            root.style.paddingLeft = 12;
-            root.style.paddingRight = 12;
-            root.style.paddingTop = 12;
-            root.style.paddingBottom = 12;
-            
-            // Header
-            var header = new Label("Quick Fill Wizard");
-            header.style.fontSize = 14;
-            header.style.unityFontStyleAndWeight = FontStyle.Bold;
-            header.style.color = Colors.AccentPurple;
-            header.style.marginBottom = 12;
-            root.Add(header);
-            
-            // Pattern selection
-            var patternRow = CreateRow("Fill Pattern");
-            var patternField = new EnumField(_pattern);
-            patternField.style.flexGrow = 1;
-            patternField.RegisterValueChangedCallback(evt =>
+            if (root == null) return;
+            root.Clear();
+            ForgeTheme.Apply(root);
+            root.AddToClassList("pf-dialog");
+
+            var fillsRow = ImpactFields.ValueRow("Fills", "Fills", spread
+                ? "A spread scaler's points, evenly along its levels"
+                : "The levels its table shows");
+            fillsRow.SetValueWithoutNotify(fills);
+            root.Add(fillsRow);
+
+            // A count of its own: a spread scaler's points, or the levels of a scaler that doesn't follow its provider
+            var count = new IntegerField(spread ? "Points" : "Levels") { name = "Count", value = _levelCount, isDelayed = true };
+            count.AddToClassList(IntegerField.alignedFieldUssClassName);
+            count.EnableInClassList(Hidden, !ownCount);
+            count.RegisterValueChangedCallback(change =>
             {
-                _pattern = (EFillPattern)evt.newValue;
-                RebuildUI();
-                UpdatePreview();
+                _levelCount = Mathf.Clamp(change.newValue, 1, 100);
+                count.SetValueWithoutNotify(_levelCount);
+                fills = spread ? Count(_levelCount, "point", "points") : $"Levels 1–{_levelCount}";
+                fillsRow.SetValueWithoutNotify(fills);
+                ShowPreview();
             });
-            patternRow.Add(patternField);
-            root.Add(patternRow);
-            
-            // Description
-            var descLabel = new Label(GetPatternDescription(_pattern));
-            descLabel.style.fontSize = 10;
-            descLabel.style.color = Colors.HintText;
-            descLabel.style.marginBottom = 8;
-            descLabel.style.whiteSpace = WhiteSpace.Normal;
-            descLabel.name = "PatternDescription";
-            root.Add(descLabel);
-            
-            // Parameters container
-            var paramsContainer = new VisualElement { name = "ParamsContainer" };
-            paramsContainer.style.marginBottom = 12;
-            root.Add(paramsContainer);
-            BuildParameterFields(paramsContainer);
-            
-            // Preview section
-            var previewSection = new VisualElement { name = "PreviewSection" };
-            previewSection.style.marginTop = 8;
-            root.Add(previewSection);
-            BuildPreviewSection(previewSection);
-            
-            // Buttons
-            var btnRow = new VisualElement();
-            btnRow.style.flexDirection = FlexDirection.Row;
-            btnRow.style.justifyContent = Justify.FlexEnd;
-            btnRow.style.marginTop = 12;
-            
-            var cancelBtn = new Button(Close) { text = "Cancel" };
-            cancelBtn.style.marginRight = 8;
-            btnRow.Add(cancelBtn);
-            
-            var applyBtn = new Button(ApplyFill) { text = "Apply" };
-            applyBtn.style.backgroundColor = Colors.AccentGreen;
-            applyBtn.style.color = Color.white;
-            btnRow.Add(applyBtn);
-            
-            root.Add(btnRow);
+            root.Add(count);
+
+            var patternField = new EnumField("Pattern", pattern) { name = "Pattern", tooltip = "The shape the values take, from the first to the last" };
+            patternField.AddToClassList(EnumField.alignedFieldUssClassName);
+            root.Add(patternField);
+
+            // The pattern's values, each under it, as a field that depends on another is
+            var parts = new VisualElement { name = "Parts" };
+            root.Add(parts);
+            var fromField = Number("From", "From", from, "The first value", value => from = value);
+            var toField = Number("To", "To", to, "The last value", value => to = value);
+            var strengthField = Number("Strength", "Strength", strength, "How strongly it bends: 1 is a straight line", value => strength = Mathf.Clamp(value, 0.1f, 10f));
+            var stepsField = new IntegerField("Steps") { name = "Steps", value = steps, tooltip = "How many equal steps it climbs in" };
+            stepsField.AddToClassList(IntegerField.alignedFieldUssClassName);
+            stepsField.AddToClassList("pf-dependent");
+            stepsField.RegisterValueChangedCallback(change =>
+            {
+                steps = Mathf.Clamp(change.newValue, 1, 100);
+                ShowPreview();
+            });
+            var addField = Number("Add", "Add", add, "What each level adds to the one before", value => add = value);
+            var multiplyField = Number("Multiply", "Multiply", multiply, "What each level multiplies the one before by", value => multiply = value);
+            var shapeField = new CurveField("Shape") { name = "Shape", value = shape, tooltip = "The shape from the first value to the last, across 0 to 1" };
+            shapeField.AddToClassList(CurveField.alignedFieldUssClassName);
+            shapeField.AddToClassList("pf-dependent");
+            shapeField.RegisterValueChangedCallback(change =>
+            {
+                shape = change.newValue ?? AnimationCurve.Linear(0f, 0f, 1f, 1f);
+                ShowPreview();
+            });
+            foreach (var part in new VisualElement[] { fromField, toField, strengthField, stepsField, addField, multiplyField, shapeField })
+                parts.Add(part);
+
+            var roundingField = new EnumField("Rounding", rounding) { name = "Rounding", tooltip = "How each value is rounded once made" };
+            roundingField.AddToClassList(EnumField.alignedFieldUssClassName);
+            root.Add(roundingField);
+            var stepField = Number("Step", "Step", step, "The step each value rounds to, as 5", value => step = value);
+            root.Add(stepField);
+
+            // The values as the scaler's table shows them, with their curve
+            var preview = new VisualElement { name = "Preview" };
+            preview.AddToClassList("pf-scaler-table");
+            previewTable = new VisualElement { name = "Grid" };
+            preview.Add(previewTable);
+            curve = new ForgeCurvePreview { name = "Curve" };
+            preview.Add(curve);
+            root.Add(preview);
+
+            var footer = new VisualElement();
+            footer.AddToClassList("pf-dialog__footer");
+            footer.Add(new Button(Close) { name = "Cancel", text = "Cancel" });
+            footer.Add(new Button(Apply) { name = "Apply", text = "Apply" });
+            root.Add(footer);
+
+            // Each pattern shows the values it reads
+            void ShowParts()
+            {
+                bool ranged = pattern is not (EFillPattern.Constant or EFillPattern.Additive or EFillPattern.Multiplicative);
+                fromField.label = pattern == EFillPattern.Constant ? "Value" : "From";
+                toField.EnableInClassList(Hidden, !ranged);
+                strengthField.EnableInClassList(Hidden, pattern is not (EFillPattern.Exponential or EFillPattern.Logarithmic));
+                stepsField.EnableInClassList(Hidden, pattern != EFillPattern.Steps);
+                addField.EnableInClassList(Hidden, pattern != EFillPattern.Additive);
+                multiplyField.EnableInClassList(Hidden, pattern != EFillPattern.Multiplicative);
+                shapeField.EnableInClassList(Hidden, pattern != EFillPattern.Curve);
+                stepField.EnableInClassList(Hidden, rounding != ERounding.ToStep);
+            }
+            patternField.RegisterValueChangedCallback(change =>
+            {
+                if (change.newValue is EFillPattern chosen) pattern = chosen;
+                ShowParts();
+                ShowPreview();
+            });
+            roundingField.RegisterValueChangedCallback(change =>
+            {
+                if (change.newValue is ERounding chosen) rounding = chosen;
+                ShowParts();
+                ShowPreview();
+            });
+            ShowParts();
+            ShowPreview();
         }
-        
-        private void RebuildUI()
+
+        // A number the pattern reads, under the pattern
+        private FloatField Number(string label, string name, float value, string tooltip, Action<float> set)
         {
-            var root = rootVisualElement;
-            
-            // Update description
-            var descLabel = root.Q<Label>("PatternDescription");
-            if (descLabel != null)
+            var field = new FloatField(label) { name = name, value = value, tooltip = tooltip };
+            field.AddToClassList(FloatField.alignedFieldUssClassName);
+            field.AddToClassList("pf-dependent");
+            field.RegisterValueChangedCallback(change =>
             {
-                descLabel.text = GetPatternDescription(_pattern);
-            }
-            
-            // Rebuild parameters
-            var paramsContainer = root.Q<VisualElement>("ParamsContainer");
-            if (paramsContainer != null)
-            {
-                paramsContainer.Clear();
-                BuildParameterFields(paramsContainer);
-            }
-            
-            // Rebuild preview
-            var previewSection = root.Q<VisualElement>("PreviewSection");
-            if (previewSection != null)
-            {
-                previewSection.Clear();
-                BuildPreviewSection(previewSection);
-            }
+                set(change.newValue);
+                ShowPreview();
+            });
+            return field;
         }
-        
-        private void BuildParameterFields(VisualElement container)
+
+        private float[] Values() => Fill(pattern, _levelCount, from, to, strength, steps, add, multiply, shape, rounding, step);
+
+        // The preview: a row of levels, or points, over the values, ten to a row, and the curve beside them
+        private void ShowPreview()
         {
-            switch (_pattern)
+            if (previewTable == null) return;
+            previewTable.Clear();
+            var values = Values();
+            for (int start = 0; start < values.Length; start += 10)
             {
-                case EFillPattern.Constant:
-                    container.Add(CreateFloatRow("Value", _startValue, v => { _startValue = v; UpdatePreview(); }));
-                    break;
-                    
-                case EFillPattern.Linear:
-                case EFillPattern.Exponential:
-                case EFillPattern.Logarithmic:
-                    container.Add(CreateFloatRow("Start Value", _startValue, v => { _startValue = v; UpdatePreview(); }));
-                    container.Add(CreateFloatRow("End Value", _endValue, v => { _endValue = v; UpdatePreview(); }));
-                    if (_pattern == EFillPattern.Exponential)
-                    {
-                        container.Add(CreateFloatRow("Exponent", _exponent, v => { _exponent = v; UpdatePreview(); }, 0.1f, 5f));
-                    }
-                    break;
-                    
-                case EFillPattern.Steps:
-                    container.Add(CreateFloatRow("Start Value", _startValue, v => { _startValue = v; UpdatePreview(); }));
-                    container.Add(CreateFloatRow("End Value", _endValue, v => { _endValue = v; UpdatePreview(); }));
-                    container.Add(CreateIntRow("Step Count", _stepCount, v => { _stepCount = v; UpdatePreview(); }, 1, 20));
-                    break;
-                    
-                case EFillPattern.Additive:
-                    container.Add(CreateFloatRow("Base Value", _baseValue, v => { _baseValue = v; UpdatePreview(); }));
-                    container.Add(CreateFloatRow("Per Level", _incrementPerLevel, v => { _incrementPerLevel = v; UpdatePreview(); }));
-                    break;
-                    
-                case EFillPattern.Multiplicative:
-                    container.Add(CreateFloatRow("Base Value", _baseValue, v => { _baseValue = v; UpdatePreview(); }));
-                    container.Add(CreateFloatRow("Multiplier", _multiplierPerLevel, v => { _multiplierPerLevel = v; UpdatePreview(); }, 0.5f, 3f));
-                    break;
-            }
-        }
-        
-        private void BuildPreviewSection(VisualElement container)
-        {
-            // Preview header
-            var previewHeader = new Label($"Preview ({_levelCount} levels)");
-            previewHeader.style.fontSize = 11;
-            previewHeader.style.unityFontStyleAndWeight = FontStyle.Bold;
-            previewHeader.style.color = Colors.LabelText;
-            previewHeader.style.marginBottom = 6;
-            container.Add(previewHeader);
-            
-            if (_previewValues == null || _previewValues.Length == 0)
-            {
-                container.Add(new Label("No preview available") { style = { color = Colors.HintText } });
-                return;
-            }
-            
-            // Visual curve preview
-            var curveBox = new VisualElement();
-            curveBox.style.height = 80;
-            curveBox.style.backgroundColor = new Color(0.15f, 0.15f, 0.15f);
-            curveBox.style.borderTopLeftRadius = 4;
-            curveBox.style.borderTopRightRadius = 4;
-            curveBox.style.borderBottomLeftRadius = 4;
-            curveBox.style.borderBottomRightRadius = 4;
-            curveBox.style.marginBottom = 8;
-            
-            // Create curve for preview
-            var curve = new AnimationCurve();
-            float minVal = float.MaxValue, maxVal = float.MinValue;
-            for (int i = 0; i < _previewValues.Length; i++)
-            {
-                float t = _previewValues.Length > 1 ? (float)i / (_previewValues.Length - 1) : 0f;
-                curve.AddKey(t, _previewValues[i]);
-                minVal = Mathf.Min(minVal, _previewValues[i]);
-                maxVal = Mathf.Max(maxVal, _previewValues[i]);
-            }
-            
-            var curveField = new UnityEditor.UIElements.CurveField { value = curve };
-            curveField.style.flexGrow = 1;
-            curveField.style.height = 80;
-            curveField.SetEnabled(false);
-            curveBox.Add(curveField);
-            container.Add(curveBox);
-            
-            // Range info
-            var rangeRow = new VisualElement();
-            rangeRow.style.flexDirection = FlexDirection.Row;
-            rangeRow.style.justifyContent = Justify.SpaceBetween;
-            rangeRow.style.marginBottom = 8;
-            
-            var minLabel = new Label($"Min: {minVal:F2}");
-            minLabel.style.fontSize = 10;
-            minLabel.style.color = Colors.HintText;
-            rangeRow.Add(minLabel);
-            
-            var maxLabel = new Label($"Max: {maxVal:F2}");
-            maxLabel.style.fontSize = 10;
-            maxLabel.style.color = Colors.HintText;
-            rangeRow.Add(maxLabel);
-            
-            container.Add(rangeRow);
-            
-            // Value table (scrollable)
-            var tableLabel = new Label("Level Values:");
-            tableLabel.style.fontSize = 10;
-            tableLabel.style.color = Colors.HintText;
-            tableLabel.style.marginBottom = 4;
-            container.Add(tableLabel);
-            
-            var scrollView = new ScrollView(ScrollViewMode.Vertical);
-            scrollView.style.maxHeight = 120;
-            scrollView.style.backgroundColor = new Color(0.18f, 0.18f, 0.18f);
-            scrollView.style.borderTopLeftRadius = 3;
-            scrollView.style.borderTopRightRadius = 3;
-            scrollView.style.borderBottomLeftRadius = 3;
-            scrollView.style.borderBottomRightRadius = 3;
-            scrollView.style.paddingLeft = 4;
-            scrollView.style.paddingRight = 4;
-            scrollView.style.paddingTop = 4;
-            scrollView.style.paddingBottom = 4;
-            
-            var grid = new VisualElement();
-            grid.style.flexDirection = FlexDirection.Row;
-            grid.style.flexWrap = Wrap.Wrap;
-            
-            for (int i = 0; i < _previewValues.Length; i++)
-            {
-                var cell = new VisualElement();
-                cell.style.width = new Length(25f, LengthUnit.Percent);
-                cell.style.flexDirection = FlexDirection.Row;
-                cell.style.paddingRight = 4;
-                cell.style.paddingBottom = 2;
-                
-                var lvLabel = new Label($"{i + 1}:");
-                lvLabel.style.width = 22;
-                lvLabel.style.fontSize = 9;
-                lvLabel.style.color = Colors.HintText;
-                lvLabel.style.unityTextAlign = TextAnchor.MiddleRight;
-                cell.Add(lvLabel);
-                
-                var valLabel = new Label($"{_previewValues[i]:F2}");
-                valLabel.style.fontSize = 9;
-                valLabel.style.color = Colors.AccentBlue;
-                valLabel.style.marginLeft = 2;
-                cell.Add(valLabel);
-                
-                grid.Add(cell);
-            }
-            
-            scrollView.Add(grid);
-            container.Add(scrollView);
-        }
-        
-        private void UpdatePreview()
-        {
-            _previewValues = new float[_levelCount];
-            
-            for (int i = 0; i < _levelCount; i++)
-            {
-                float t = _levelCount > 1 ? (float)i / (_levelCount - 1) : 0f;
-                
-                _previewValues[i] = _pattern switch
+                var heads = new VisualElement();
+                heads.AddToClassList("pf-scaler-table__levels");
+                var row = new VisualElement();
+                row.AddToClassList("pf-scaler-table__values");
+                var head = new Label(spread ? "Point" : "Level");
+                head.AddToClassList("pf-scaler-table__head");
+                heads.Add(head);
+                var valueHead = new Label("Value");
+                valueHead.AddToClassList("pf-scaler-table__head");
+                row.Add(valueHead);
+                for (int i = start; i < Mathf.Min(start + 10, values.Length); i++)
                 {
-                    EFillPattern.Constant => _startValue,
-                    EFillPattern.Linear => Mathf.Lerp(_startValue, _endValue, t),
-                    EFillPattern.Exponential => Mathf.Lerp(_startValue, _endValue, Mathf.Pow(t, _exponent)),
-                    EFillPattern.Logarithmic => Mathf.Lerp(_startValue, _endValue, Mathf.Sqrt(t)),
-                    EFillPattern.Steps => CalculateStepValue(t),
-                    EFillPattern.Additive => _baseValue + (_incrementPerLevel * i),
-                    EFillPattern.Multiplicative => _baseValue * Mathf.Pow(_multiplierPerLevel, i),
-                    _ => 1f
+                    var at = new Label((i + 1).ToString(CultureInfo.InvariantCulture)) { name = $"PreviewAt{i + 1}" };
+                    at.AddToClassList("pf-scaler-table__cell");
+                    heads.Add(at);
+                    var value = new Label(ScalerFields.Number(values[i])) { name = $"Preview{i + 1}" };
+                    value.AddToClassList("pf-scaler-table__cell");
+                    value.AddToClassList("pf-scaler-table__read");
+                    row.Add(value);
+                }
+                previewTable.Add(heads);
+                previewTable.Add(row);
+            }
+            // A spread scaler's curve passes between its points as it reads them; a table per level steps
+            curve?.Show(values, between: spread ? between : (EScalerInterpolation?)null);
+        }
+
+        /// <summary>
+        /// The values a pattern makes, as many as asked, then rounded: the same value; a straight line, a curve that starts
+        /// slow or fast, or eases in and out, from one value to another; even steps between them; a value that adds or
+        /// multiplies at each level; or a drawn shape from one to the other.
+        /// </summary>
+        internal static float[] Fill(EFillPattern pattern, int count, float from, float to, float strength, int steps, float add,
+            float multiply, AnimationCurve shape, ERounding rounding, float step)
+        {
+            var values = new float[Mathf.Max(1, count)];
+            for (int i = 0; i < values.Length; i++)
+            {
+                float t = values.Length > 1 ? (float)i / (values.Length - 1) : 0f;
+                float value = pattern switch
+                {
+                    EFillPattern.Constant => from,
+                    EFillPattern.Linear => Mathf.Lerp(from, to, t),
+                    EFillPattern.Exponential => Mathf.Lerp(from, to, Mathf.Pow(t, strength)),
+                    EFillPattern.Logarithmic => Mathf.Lerp(from, to, 1f - Mathf.Pow(1f - t, strength)),
+                    EFillPattern.Steps => Mathf.Lerp(from, to, Mathf.Min(1f, Mathf.Floor(t * Mathf.Max(1, steps) + 0.0001f) / Mathf.Max(1, steps))),
+                    EFillPattern.Additive => from + add * i,
+                    EFillPattern.Multiplicative => from * Mathf.Pow(multiply, i),
+                    EFillPattern.Smooth => Mathf.Lerp(from, to, Mathf.SmoothStep(0f, 1f, t)),
+                    EFillPattern.Curve => Mathf.LerpUnclamped(from, to, shape != null ? shape.Evaluate(t) : t),
+                    _ => from,
+                };
+                values[i] = rounding switch
+                {
+                    ERounding.WholeNumbers => Mathf.Round(value),
+                    ERounding.ToStep when step > 0f => Mathf.Round(value / step) * step,
+                    _ => value,
                 };
             }
-            
-            // Rebuild preview section
-            var previewSection = rootVisualElement?.Q<VisualElement>("PreviewSection");
-            if (previewSection != null)
-            {
-                previewSection.Clear();
-                BuildPreviewSection(previewSection);
-            }
+            return values;
         }
-        
-        private float CalculateStepValue(float t)
-        {
-            int step = Mathf.FloorToInt(t * _stepCount);
-            float stepT = (float)step / _stepCount;
-            return Mathf.Lerp(_startValue, _endValue, stepT);
-        }
-        
-        private void ApplyFill()
-        {
-            if (_targetProp == null || _previewValues == null) return;
-            
-            var lvp = _targetProp.FindPropertyRelative("LevelValues");
-            if (lvp == null) return;
-            
-            // Ensure array is correct size
-            if (lvp.arraySize != _previewValues.Length)
-            {
-                lvp.arraySize = _previewValues.Length;
-            }
-            
-            // Apply values
-            for (int i = 0; i < _previewValues.Length; i++)
-            {
-                lvp.GetArrayElementAtIndex(i).floatValue = _previewValues[i];
-            }
-            
-            // Regenerate curve
-            RegenerateCurve();
-            
-            _targetProp.serializedObject.ApplyModifiedProperties();
-            _onApply?.Invoke();
-            
-            Close();
-        }
-        
-        private void RegenerateCurve()
-        {
-            var lvp = _targetProp.FindPropertyRelative("LevelValues");
-            var sp = _targetProp.FindPropertyRelative("Scaling");
-            var ip = _targetProp.FindPropertyRelative("Interpolation");
-            
-            if (lvp == null || lvp.arraySize == 0) return;
-            
-            var interpolation = ip != null ? (EScalerInterpolation)ip.enumValueIndex : EScalerInterpolation.Linear;
-            
-            var curve = new AnimationCurve();
-            int n = lvp.arraySize;
-            for (int i = 0; i < n; i++)
-            {
-                float t = n > 1 ? (float)i / (n - 1) : 0f;
-                curve.AddKey(new Keyframe(t, lvp.GetArrayElementAtIndex(i).floatValue));
-            }
-            
-            var tm = interpolation switch
-            {
-                EScalerInterpolation.Constant => UnityEditor.AnimationUtility.TangentMode.Constant,
-                EScalerInterpolation.Linear => UnityEditor.AnimationUtility.TangentMode.Linear,
-                _ => UnityEditor.AnimationUtility.TangentMode.ClampedAuto
-            };
-            
-            for (int i = 0; i < curve.length; i++)
-            {
-                UnityEditor.AnimationUtility.SetKeyLeftTangentMode(curve, i, tm);
-                UnityEditor.AnimationUtility.SetKeyRightTangentMode(curve, i, tm);
-            }
 
-            if (sp != null)
-                sp.animationCurveValue = curve;
-        }
-        
-        // ═══════════════════════════════════════════════════════════════════════════
-        // UI Helpers
-        // ═══════════════════════════════════════════════════════════════════════════
-        
-        private VisualElement CreateRow(string label)
+        // Writes the values into each selected scaler, and the curve a spread one reads, as one Undo step, through the
+        // scaler found again by its path
+        internal void Apply()
         {
-            var row = new VisualElement();
-            row.style.flexDirection = FlexDirection.Row;
-            row.style.alignItems = Align.Center;
-            row.style.marginBottom = 4;
-            
-            var labelElement = new Label(label);
-            labelElement.style.width = 90;
-            labelElement.style.color = Colors.LabelText;
-            row.Add(labelElement);
-            
-            return row;
-        }
-        
-        private VisualElement CreateFloatRow(string label, float value, Action<float> onChange, float min = float.MinValue, float max = float.MaxValue)
-        {
-            var row = CreateRow(label);
-            
-            var field = new FloatField { value = value };
-            field.style.flexGrow = 1;
-            field.RegisterValueChangedCallback(evt =>
+            if (targets == null || targets.Length == 0 || targets.Any(target => target == null) || string.IsNullOrEmpty(path))
             {
-                float clamped = Mathf.Clamp(evt.newValue, min, max);
-                if (!Mathf.Approximately(clamped, evt.newValue))
-                {
-                    field.SetValueWithoutNotify(clamped);
-                }
-                onChange?.Invoke(clamped);
-            });
-            row.Add(field);
-            
-            if (min != float.MinValue && max != float.MaxValue)
-            {
-                var slider = new Slider(min, max) { value = value };
-                slider.style.flexGrow = 1;
-                slider.style.marginLeft = 8;
-                slider.RegisterValueChangedCallback(evt =>
-                {
-                    field.SetValueWithoutNotify(evt.newValue);
-                    onChange?.Invoke(evt.newValue);
-                });
-                row.Add(slider);
+                Close();
+                return;
             }
-            
-            return row;
-        }
-        
-        private VisualElement CreateIntRow(string label, int value, Action<int> onChange, int min = 1, int max = 100)
-        {
-            var row = CreateRow(label);
-            
-            var field = new IntegerField { value = value };
-            field.style.width = 50;
-            field.RegisterValueChangedCallback(evt =>
+            var serialized = new SerializedObject(targets);
+            var scaler = serialized.FindProperty(path);
+            var valuesProp = scaler?.FindPropertyRelative(nameof(AbstractScaler.LevelValues));
+            if (valuesProp == null)
             {
-                int clamped = Mathf.Clamp(evt.newValue, min, max);
-                if (clamped != evt.newValue)
-                {
-                    field.SetValueWithoutNotify(clamped);
-                }
-                onChange?.Invoke(clamped);
+                Close();
+                return;
+            }
+            var values = Values();
+            Undo.IncrementCurrentGroup();
+            int group = Undo.GetCurrentGroup();
+            Undo.SetCurrentGroupName("Quick Fill");
+            EachAsset.Write(valuesProp, own =>
+            {
+                own.arraySize = values.Length;
+                for (int i = 0; i < values.Length; i++) own.GetArrayElementAtIndex(i).floatValue = values[i];
             });
-            row.Add(field);
-            
-            var slider = new SliderInt(min, max) { value = value };
-            slider.style.flexGrow = 1;
-            slider.style.marginLeft = 8;
-            slider.RegisterValueChangedCallback(evt =>
-            {
-                field.SetValueWithoutNotify(evt.newValue);
-                onChange?.Invoke(evt.newValue);
-            });
-            row.Add(slider);
-            
-            return row;
-        }
-        
-        private string GetPatternDescription(EFillPattern pattern)
-        {
-            return pattern switch
-            {
-                EFillPattern.Constant => "All levels have the same value.",
-                EFillPattern.Linear => "Values increase linearly from start to end.",
-                EFillPattern.Exponential => "Values follow an exponential curve (slow start, fast end). Higher exponent = more curve.",
-                EFillPattern.Logarithmic => "Values follow a logarithmic curve (fast start, slow end). Good for diminishing returns.",
-                EFillPattern.Steps => "Values jump in discrete steps rather than smooth progression.",
-                EFillPattern.Additive => "Each level adds a fixed amount to the base value.",
-                EFillPattern.Multiplicative => "Each level multiplies the previous value. Good for compound growth.",
-                _ => ""
-            };
+            ScalerFields.KeepCurve(scaler);
+            Undo.CollapseUndoOperations(group);
+            onApply?.Invoke();
+            Close();
         }
     }
 }

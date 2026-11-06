@@ -137,7 +137,8 @@ The only other colors:
   field, indented, on a light shade with a hairline under it, so they read as the scaler's among the fields around
   them. It's the style's one shaded container, which the user chose for the scaler alone (Decision 36). A kind shows
   only what it reads. Its Values are Per Level or Spread Over Levels, side by side, and Per Level follows the asset's
-  level provider's levels unless the scaler takes its own.
+  level provider's levels unless the scaler takes its own. Spread, its points are numbered, and under them each real
+  level shows what it reads.
 
 ## The Forge
 
