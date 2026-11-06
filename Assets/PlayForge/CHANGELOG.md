@@ -339,6 +339,10 @@ tracks each fix below by its ID.
   Asking whether its sequence was paused took 24 bytes a frame.
 
 ### Fixed
+- The Timeline added each new record at the bottom. The newest track is at the top, and a track's runs and
+  applications list the latest first (ED-46).
+- Selecting an effect in the Timeline hid part of its strip: the application its detail shows was drawn in the
+  selection's color, on a row the selection colors. It's taller than the other spans now, in strong text (ED-47).
 - The Debugger's Entities view lost its list after another view: its column collapsed against the window's edge
   until its splitter was dragged. The Tags view's tree never showed at all. Each view keeps its splits' sizes
   through the other views, and through Play mode's end and start (ED-45).

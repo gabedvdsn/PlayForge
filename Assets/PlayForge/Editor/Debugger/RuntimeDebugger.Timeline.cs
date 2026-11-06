@@ -174,13 +174,18 @@ namespace FarEmerald.PlayForge.Extended.Editor
 
         private static int CountOf(TimelineTrack track) => track.Spans.Count(span => !span.Refused);
 
-        // The tracks the search lets through, in the order their first span came, keeping the selection
+        // The tracks the search lets through, the newest first, keeping the selection. Listed in the order their first span
+        // came, a long list hid the newest under the oldest (ED-46)
         private void RefillTracks()
         {
             if (trackList == null || recorder == null) return;
             drawnVersion = recorder.Version;
             shownTracks.Clear();
-            shownTracks.AddRange(recorder.Tracks.Where(track => Matches($"{track.EntityName} · {track.Name}")));
+            for (int i = recorder.Tracks.Count - 1; i >= 0; i--)
+            {
+                var track = recorder.Tracks[i];
+                if (Matches($"{track.EntityName} · {track.Name}")) shownTracks.Add(track);
+            }
             trackList.itemsSource = shownTracks;
             trackList.Rebuild();
             int at = shownTracks.IndexOf(shownTrack);
@@ -253,13 +258,13 @@ namespace FarEmerald.PlayForge.Extended.Editor
             if (stages.Count == 0) graph.Add(Note("None"));
             timelineDetail.Add(graphSection);
 
-            // Its runs, the latest last
+            // Its runs, the latest first (ED-46)
             var runsSection = Section("Runs", "Runs");
             runsSection.Content.Add(TableHead(("Run", "pf-debugger__col-40"), ("Start", "pf-debugger__col-60"), ("Length", "pf-debugger__col-60"),
                 ("Stages", "pf-debugger__col-48"), ("Outcome", "pf-debugger__col-grow")));
             var rows = new VisualElement { name = "RunRows" };
             runsSection.Content.Add(rows);
-            for (int i = 0; i < track.Spans.Count; i++) rows.Add(RunRow(track, i, stages.Count, rows));
+            for (int i = track.Spans.Count - 1; i >= 0; i--) rows.Add(RunRow(track, i, rows.childCount, stages.Count, rows));
             if (track.Spans.Count == 0) rows.Add(Note("None"));
             runsSection.Summary.text = track.Spans.Count.ToString();
             timelineDetail.Add(runsSection);
@@ -330,10 +335,11 @@ namespace FarEmerald.PlayForge.Extended.Editor
             return ObjectNames.NicifyVariableName(name);
         }
 
-        private VisualElement RunRow(TimelineTrack track, int index, int stageCount, VisualElement rows)
+        // A run's row, the run's number its place among the track's runs, and its row's place among the rows shown
+        private VisualElement RunRow(TimelineTrack track, int index, int shownAt, int stageCount, VisualElement rows)
         {
             var span = track.Spans[index];
-            var row = TableRow($"Run {index + 1}", index, ("Index", "pf-debugger__col-40"), ("Start", "pf-debugger__col-60"),
+            var row = TableRow($"Run {index + 1}", shownAt, ("Index", "pf-debugger__col-40"), ("Start", "pf-debugger__col-60"),
                 ("Length", "pf-debugger__col-60"), ("Stages", "pf-debugger__col-48"), ("Outcome", "pf-debugger__col-grow"));
             row.Q<Label>("Index").text = (index + 1).ToString();
             row.Q<Label>("Start").text = Seconds(span.Start);
@@ -373,10 +379,11 @@ namespace FarEmerald.PlayForge.Extended.Editor
                 ("Length", "pf-debugger__col-60")));
             var rows = new VisualElement { name = "ApplicationRows" };
             section.Content.Add(rows);
-            for (int i = 0; i < track.Spans.Count; i++)
+            // The latest first (ED-46)
+            for (int i = track.Spans.Count - 1; i >= 0; i--)
             {
                 var span = track.Spans[i];
-                var row = TableRow($"Application {i + 1}", i, ("Index", "pf-debugger__col-grow"), ("Start", "pf-debugger__col-60"),
+                var row = TableRow($"Application {i + 1}", rows.childCount, ("Index", "pf-debugger__col-grow"), ("Start", "pf-debugger__col-60"),
                     ("End", "pf-debugger__col-60"), ("Length", "pf-debugger__col-60"));
                 row.Q<Label>("Index").text = span.Instant ? $"{i + 1}, instant" : (i + 1).ToString();
                 row.Q<Label>("Start").text = Seconds(span.Start);
@@ -400,7 +407,8 @@ namespace FarEmerald.PlayForge.Extended.Editor
 
     /// <summary>
     /// A track's spans over the last seconds, drawn in its row: a run, or an effect's time on the shelf, as a bar, the one
-    /// selected in the selection's color, and an instant, an instant effect or a refused activation, as a tick (FEAT-12).
+    /// the detail shows taller than the rest, and an instant, an instant effect or a refused activation, as a tick
+    /// (FEAT-12, ED-47).
     /// </summary>
     internal sealed class TimelineStrip : VisualElement
     {
