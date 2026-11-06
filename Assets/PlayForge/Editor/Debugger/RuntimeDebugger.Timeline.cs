@@ -89,6 +89,7 @@ namespace FarEmerald.PlayForge.Extended.Editor
                     ((TimelineStrip)cell).Show(track, TimelineNow, timelineSpan, track == shownTrack ? shownRun : -1);
                 },
             });
+            ForgeColumnWidths.Remember(trackList.columns, "Debugger.Timeline");
             trackList.selectionChanged += chosen => ShowTrack(chosen.OfType<TimelineTrack>().FirstOrDefault());
             split.Add(trackList);
 

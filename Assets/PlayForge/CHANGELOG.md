@@ -339,6 +339,12 @@ tracks each fix below by its ID.
   Asking whether its sequence was paused took 24 bytes a frame.
 
 ### Fixed
+- The Debugger's Entities view lost its list after another view: its column collapsed against the window's edge
+  until its splitter was dragged. The Tags view's tree never showed at all. Each view keeps its splits' sizes
+  through the other views, and through Play mode's end and start (ED-45).
+- A table's column widths weren't remembered: a switch of view in the Debugger or The Forge, entering Play mode or
+  closing the window put them back. A width a column is dragged to stays, in the Debugger, The Forge and the
+  Problems view, and Preferences → PlayForge → Use Defaults forgets it (ED-48).
 - An ability made in code had no stage list until it was saved and loaded, so adding a stage to one threw. It starts
   with an empty one (GAS-63).
 - A template's push searched the project again for each child's own children, so a push to 2,000 children took 28 s.

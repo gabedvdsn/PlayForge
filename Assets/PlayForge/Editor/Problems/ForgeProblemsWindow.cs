@@ -148,6 +148,7 @@ namespace FarEmerald.PlayForge.Extended.Editor
                 },
                 comparison = (a, b) => string.Compare(shown[a].Message, shown[b].Message, StringComparison.OrdinalIgnoreCase),
             });
+            ForgeColumnWidths.Remember(list.columns, "Problems");
             // One click selects the asset and shows it in the Project window; a double click opens it in a window of its own
             list.selectionChanged += selection => Reveal(selection.OfType<ForgeProblem>().FirstOrDefault());
             list.itemsChosen += chosen =>

@@ -79,7 +79,8 @@ namespace FarEmerald.PlayForge.Extended.Editor
             });
             tagTree.columns.Add(TagColumn("Entities", "Entities", 72, node => node.Entities.ToString()));
             tagTree.columns.Add(TagColumn("Weight", "Weight", 60, node => node.Weight.ToString()));
-            tagTree.selectionChanged += chosen => ShowTag(chosen.OfType<TagNode>().FirstOrDefault()?.Path);
+            ForgeColumnWidths.Remember(tagTree.columns, "Debugger.Tags");
+            tagTree.selectionChanged +=chosen => ShowTag(chosen.OfType<TagNode>().FirstOrDefault()?.Path);
             split.Add(tagTree);
 
             var scroll = new ScrollView { name = "TagScroll" };

@@ -191,7 +191,9 @@ namespace FarEmerald.PlayForge.Extended.Editor
 
             var split = new TwoPaneSplitView(0, 360, TwoPaneSplitViewOrientation.Horizontal) { name = "Split" };
             split.AddToClassList("pf-forge__split");
-            var lists = new VisualElement { name = "Lists" };
+            // The asset list and the tag list take turns in one place, each laid out while the other shows, so each keeps
+            // its columns' widths (ED-48)
+            var lists = ForgeStack.Make(new VisualElement { name = "Lists" });
             lists.AddToClassList("pf-forge__lists");
             assetList = BuildAssetList();
             tagList = BuildTagList();
@@ -320,6 +322,7 @@ namespace FarEmerald.PlayForge.Extended.Editor
                     cell.tooltip = string.Join("\n", problems.Select(problem => problem.Message));
                 },
             });
+            ForgeColumnWidths.Remember(list.columns, "Forge.Assets");
             list.columnSortingChanged += () =>
             {
                 var sort = list.sortedColumns.FirstOrDefault();
@@ -366,6 +369,7 @@ namespace FarEmerald.PlayForge.Extended.Editor
             list.columns.Add(TagColumn("Tag", "Tag", 180, record => TagText(record.Tag), true));
             list.columns.Add(TagColumn("Contexts", "For", 120, record => string.Join(", ", record.UsageByContext.Keys.OrderBy(key => key)), false));
             list.columns.Add(TagColumn("Uses", "Uses", 50, record => record.TotalAssetCount.ToString(), false));
+            ForgeColumnWidths.Remember(list.columns, "Forge.Tags");
             list.selectionChanged += chosen =>
             {
                 var record = chosen.OfType<ForgeTagRegistry.TagUsageRecord>().FirstOrDefault();
@@ -406,8 +410,8 @@ namespace FarEmerald.PlayForge.Extended.Editor
             foreach (var (name, toggle) in typeToggles) toggle.SetValueWithoutNotify(!tagsShown && typeFilter == name);
             tagsToggle.SetValueWithoutNotify(tagsShown);
             searchField.SetValueWithoutNotify(search);
-            assetList.EnableInClassList(HiddenClass, tagsShown);
-            tagList.EnableInClassList(HiddenClass, !tagsShown);
+            ForgeStack.Show(assetList, !tagsShown);
+            ForgeStack.Show(tagList, tagsShown);
 
             if (tagsShown)
             {

@@ -55,11 +55,12 @@ namespace FarEmerald.PlayForge.Extended.Editor
         /// <summary>The tag fields' switches, in the order the page shows them.</summary>
         internal static readonly Switch[] TagSwitches = { ShowFullTagPath, GroupTagsByRoot };
 
-        /// <summary>The keys every preference here is kept under, and the retired ones'.</summary>
+        /// <summary>The keys every preference here is kept under, the tables' column widths among them, and the retired ones'.</summary>
         internal static IEnumerable<string> Keys()
         {
             foreach (var each in ForgeSwitches) yield return Prefix + each.Key;
             foreach (var each in TagSwitches) yield return Prefix + each.Key;
+            foreach (var table in ForgeColumnWidths.Tables) yield return ForgeColumnWidths.KeyOf(table);
             foreach (var each in Retired) yield return Prefix + each;
             yield return ForgeLogSettingsBridge.PrefsKey;
         }

@@ -1290,6 +1290,26 @@
     background-color: var(--pf-toolbar);
 }
 
+/* ─── Views that take turns in one place, as the Debugger's views and The Forge's lists (ED-45, ED-48) ─────────────── */
+
+/* Each view fills the place and stays laid out while another shows; only the one shown is visible. Hidden by display:
+   none, a view was laid out at 0 px, which shrank its split's fixed pane and its columns, and they kept that size */
+.pf-root .pf-stack {
+    flex-grow: 1;
+}
+
+.pf-root .pf-stack > * {
+    position: absolute;
+    left: 0;
+    top: 0;
+    right: 0;
+    bottom: 0;
+}
+
+.pf-root .pf-stack__hidden {
+    visibility: hidden;
+}
+
 /* ─── The Forge: a toolbar, a list beside a detail pane, then a status bar (Q5, Docs/EDITOR_STYLE.md) ──────────────── */
 
 .pf-root.pf-forge {
@@ -1717,6 +1737,13 @@
 .pf-root .pf-debugger__split,
 .pf-root .pf-debugger__list {
     flex-grow: 1;
+}
+
+/* A list that's its split's fixed pane keeps the width or height the split gives it. Unity's own style gives a tree
+   view a flex basis of 0, so the Tags view's tree laid out at 0 px whatever its width (ED-45). The split sets a
+   flexed pane's basis on the pane itself */
+.pf-root .pf-debugger__list {
+    flex-basis: auto;
 }
 
 /* A list's cell, or a table's, clips its own text and ends in an ellipsis (Docs/EDITOR_STYLE.md) */

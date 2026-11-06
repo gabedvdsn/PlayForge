@@ -70,7 +70,8 @@ namespace FarEmerald.PlayForge.Extended.Editor
             entityList.columns.Add(TextColumn("Hub", "Hub", 72, index => HubOf(shownHubs[index])));
             entityList.columns.Add(TextColumn("Level", "Lvl", 40, index => shownHubs[index].GetLevel().CurrentValue.ToString(), number: true));
             entityList.columns.Add(TextColumn("Effects", "Effects", 56, index => EffectsOn(shownHubs[index]).Count().ToString(), number: true));
-            entityList.selectionChanged += chosen => ShowEntity(chosen.OfType<IGameplayAbilitySystem>().FirstOrDefault());
+            ForgeColumnWidths.Remember(entityList.columns, "Debugger.Entities");
+            entityList.selectionChanged +=chosen => ShowEntity(chosen.OfType<IGameplayAbilitySystem>().FirstOrDefault());
             // A double click selects a MonoBehaviour hub's GameObject
             entityList.itemsChosen += chosen => SelectObjectOf(chosen.OfType<IGameplayAbilitySystem>().FirstOrDefault());
             split.Add(entityList);

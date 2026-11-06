@@ -151,8 +151,8 @@ namespace FarEmerald.PlayForge.Extended.Editor
         {
             if (views == null) return;
             bool live = Live();
-            prompt.EnableInClassList(HiddenClass, live);
-            views.EnableInClassList(HiddenClass, !live);
+            ForgeStack.Show(prompt, !live);
+            ForgeStack.Show(views, live);
             statusBar.EnableInClassList(HiddenClass, !live);
             searchField.SetEnabled(live);
             // The Timeline records afresh each time the game starts playing, and stops hearing as it ends (FEAT-12)
@@ -292,10 +292,13 @@ namespace FarEmerald.PlayForge.Extended.Editor
             root.RegisterCallback<GeometryChangedEvent>(changed => Fit(changed.newRect.width));
             root.Add(BuildToolbar());
 
+            // The prompt and the views take turns in one place, as the views do among themselves: each stays laid out
+            // while another shows, so a view's split and columns keep their sizes (ED-45, ED-48)
+            var body = ForgeStack.Make(new VisualElement { name = "Body" });
             prompt = BuildPrompt();
-            root.Add(prompt);
+            body.Add(prompt);
 
-            views = new VisualElement { name = "Views" };
+            views = ForgeStack.Make(new VisualElement { name = "Views" });
             views.AddToClassList("pf-debugger__views");
             entitiesView = BuildEntitiesView();
             processesView = BuildProcessesView();
@@ -304,7 +307,8 @@ namespace FarEmerald.PlayForge.Extended.Editor
             views.Add(processesView);
             views.Add(tagsView);
             views.Add(BuildTimelineView());
-            root.Add(views);
+            body.Add(views);
+            root.Add(body);
 
             statusBar = new VisualElement { name = "DebuggerStatus" };
             statusBar.AddToClassList("pf-debugger__status");
@@ -467,10 +471,10 @@ namespace FarEmerald.PlayForge.Extended.Editor
             if (views == null) return;
             bool live = Live();
             foreach (var (each, toggle) in viewToggles) toggle.SetValueWithoutNotify(each == view);
-            entitiesView.EnableInClassList(HiddenClass, view != View.Entities);
-            processesView.EnableInClassList(HiddenClass, view != View.Processes);
-            tagsView.EnableInClassList(HiddenClass, view != View.Tags);
-            timelineView.EnableInClassList(HiddenClass, view != View.Timeline);
+            ForgeStack.Show(entitiesView, view == View.Entities);
+            ForgeStack.Show(processesView, view == View.Processes);
+            ForgeStack.Show(tagsView, view == View.Tags);
+            ForgeStack.Show(timelineView, view == View.Timeline);
             hubMenu.EnableInClassList(HiddenClass, !live || view == View.Processes || view == View.Timeline);
             ShowTimelineTools(live);
             filterMenu.EnableInClassList(HiddenClass, !live || view != View.Processes);

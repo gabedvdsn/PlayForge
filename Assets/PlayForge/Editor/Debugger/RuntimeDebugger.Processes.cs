@@ -67,6 +67,7 @@ namespace FarEmerald.PlayForge.Extended.Editor
             processList.columns.Add(TextColumn("Lifetime", "Lifetime", 64, index => Seconds(shownProcesses[index].UnscaledLifetime), number: true));
             processList.columns.Add(TextColumn("Step", "Step", 64, index => StepTimeOf(shownProcesses[index], false), number: true));
             foreach (var column in processList.columns) column.sortable = true;
+            ForgeColumnWidths.Remember(processList.columns, "Debugger.Processes");
             processList.sortColumnDescriptions.Add(new SortColumnDescription("ID", SortDirection.Ascending));
             processList.columnSortingChanged += RefillProcesses;
             processList.selectionChanged += chosen => ShowProcess(chosen.OfType<ProcessControlBlock>().FirstOrDefault());
