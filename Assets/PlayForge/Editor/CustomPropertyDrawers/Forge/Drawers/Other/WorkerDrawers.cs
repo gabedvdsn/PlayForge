@@ -5,14 +5,10 @@ using UnityEngine.UIElements;
 namespace FarEmerald.PlayForge.Extended.Editor
 {
 
+    /// <summary>A worker: its kind, always of some kind, then its fields, folding to a line of their values (ED-56).</summary>
     public abstract class AbstractWorkerDrawer<T> : AbstractGenericDrawer<T> where T : class
     {
-        protected override bool AcceptOpen(SerializedProperty prop) => false;
-        protected override bool AcceptAdd() => false;
-        protected override bool AcceptClear(SerializedProperty prop)
-        {
-            return false;
-        }
+        protected override bool AcceptClear(SerializedProperty prop) => false;
     }
     
     // ═══════════════════════════════════════════════════════════════════════════════

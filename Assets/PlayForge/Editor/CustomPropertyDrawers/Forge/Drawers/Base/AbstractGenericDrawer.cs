@@ -1,430 +1,141 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
+using System.Globalization;
 using UnityEditor;
-using UnityEditor.UIElements;
-using UnityEngine;
 using UnityEngine.UIElements;
 
 namespace FarEmerald.PlayForge.Extended.Editor
 {
     /// <summary>
-    /// Extended drawer for [SerializeReference] fields that shows inline child fields.
-    /// Builds on AbstractTypeRefDrawer to add:
-    /// - Expandable/collapsible child field display
-    /// - Summary badges when collapsed
-    /// - Accent color customization
-    /// 
-    /// Use this when you want users to edit the instance's fields inline.
-    /// For simple type selection without field editing, use AbstractTypeRefDrawer directly.
+    /// A kind field that folds, as an attribute set element does (ED-56): a row with the arrow and the kind field, then the
+    /// kind's fields; folded, one line of their values in secondary text, as "Strength 2 · Duration 0.5 · On Each Tick".
+    /// Whether it's folded is kept with the object the field holds, so it follows the object through its list (ED-18). It
+    /// drew colored badges for a folded field's values, and its arrow and its look from styles set in C#.
     /// </summary>
     public abstract class AbstractGenericDrawer<T> : AbstractTypeRefDrawer<T> where T : class
     {
-        // ═══════════════════════════════════════════════════════════════════════════
-        // Instance State
-        // ═══════════════════════════════════════════════════════════════════════════
-        
-        protected VisualElement HeaderRow;
-        protected Button CollapseButton;
-        protected VisualElement SummaryContainer;
-        protected VisualElement ChildFieldsContainer;
-        protected SerializedProperty CurrentProperty;
-        
-        // ═══════════════════════════════════════════════════════════════════════════
-        // Virtual Configuration
-        // ═══════════════════════════════════════════════════════════════════════════
-        
-        /// <summary>Accent color for the child fields left border.</summary>
-        protected virtual Color AccentColor => new Color(0.4f, 0.4f, 0.4f, 0.6f);
-        
-        /// <summary>Whether to show collapse/expand button.</summary>
+        public const string CollapsedClass = "pf-element--collapsed";
+
+        // The arrow keeps its place while a kind has no fields to fold, so the field lines up with its neighbours
+        private const string InvisibleClass = "pf-invisible";
+
+        /// <summary>Whether the field folds.</summary>
         protected virtual bool EnableCollapse => true;
-        
-        /// <summary>Whether to show summary badges when collapsed.</summary>
+
+        /// <summary>Whether a folded field shows a line of its values.</summary>
         protected virtual bool EnableSummary => true;
-        
-        /// <summary>Maximum summary badges to display.</summary>
-        protected virtual int MaxSummaryBadges => 3;
-        
-        /// <summary>Common suffixes to strip from type names.</summary>
-        protected virtual string[] TypeNameSuffixes => new[] 
-        { 
-            "Worker", "Scaler", "Provider", "Handler", "Processor", "Factory" 
+
+        /// <summary>The words a kind's class name drops from its end before it's spaced out, as "Worker".</summary>
+        protected virtual string[] TypeNameSuffixes => new[]
+        {
+            "Worker", "Scaler", "Provider", "Handler", "Processor", "Factory", "Behaviour", "Behavior", "Strategy",
+            "Policy", "Rule", "Config", "Settings", "Task", "Cue",
         };
 
-        // ═══════════════════════════════════════════════════════════════════════════
-        // Main Entry Point
-        // ═══════════════════════════════════════════════════════════════════════════
-        
-        public override VisualElement CreatePropertyGUI(SerializedProperty prop)
-        {
-            CurrentProperty = prop;
-
-            var root = base.CreatePropertyGUI(prop);
-
-            // Find header row and add extensions
-            HeaderRow = FindHeaderRow(root);
-            if (HeaderRow != null)
-                SetupHeaderExtensions(prop);
-
-            // Reuse the base class _childFieldsContainer instead of creating a duplicate.
-            // AbstractTypeRefDrawer already creates, inserts, and populates it.
-            ChildFieldsContainer = _childFieldsContainer;
-
-            // Apply accent color
-            if (ChildFieldsContainer != null)
-                ChildFieldsContainer.style.borderLeftColor = AccentColor;
-
-            // Initialize display (handles collapse/expand state)
-            InitializeDisplayState(prop);
-
-            // Track changes
-            root.TrackPropertyValue(prop, OnPropertyValueChanged);
-
-            return root;
-        }
-
-        // ═══════════════════════════════════════════════════════════════════════════
-        // Header Extensions
-        // ═══════════════════════════════════════════════════════════════════════════
-        
-        private void SetupHeaderExtensions(SerializedProperty prop)
-        {
-            bool hasValue = HasValue(prop);
-            bool isCollapsed = GetCollapseState(prop);
-            
-            if (EnableCollapse)
-            {
-                CollapseButton = CreateCollapseButton(isCollapsed);
-                CollapseButton.clicked += () => ToggleCollapse(prop);
-                CollapseButton.style.display = hasValue ? DisplayStyle.Flex : DisplayStyle.None;
-                HeaderRow.Insert(0, CollapseButton);
-            }
-            
-            if (EnableSummary)
-            {
-                SummaryContainer = new VisualElement { name = "summary" };
-                SummaryContainer.style.flexDirection = FlexDirection.Row;
-                SummaryContainer.style.alignItems = Align.Center;
-                SummaryContainer.style.marginLeft = 8;
-                SummaryContainer.style.flexShrink = 1;
-                SummaryContainer.style.overflow = Overflow.Hidden;
-                SummaryContainer.style.display = DisplayStyle.None;
-                HeaderRow.Add(SummaryContainer);
-            }
-        }
-        
-        private Button CreateCollapseButton(bool collapsed)
-        {
-            var btn = new Button
-            {
-                text = collapsed ? ForgeDrawerStyles.Icons.ChevronRight : ForgeDrawerStyles.Icons.ChevronDown,
-                tooltip = collapsed ? "Expand" : "Collapse",
-                focusable = false
-            };
-            
-            btn.style.width = 16;
-            btn.style.height = 16;
-            btn.style.marginRight = 4;
-            btn.style.fontSize = 8;
-            btn.style.paddingLeft = btn.style.paddingRight = 0;
-            btn.style.paddingTop = btn.style.paddingBottom = 0;
-            btn.style.unityTextAlign = TextAnchor.MiddleCenter;
-            btn.style.borderTopLeftRadius = btn.style.borderTopRightRadius = 3;
-            btn.style.borderBottomLeftRadius = btn.style.borderBottomRightRadius = 3;
-            btn.style.backgroundColor = ForgeDrawerStyles.Colors.ButtonBackground;
-            
-            btn.RegisterCallback<PointerEnterEvent>(_ => 
-                btn.style.backgroundColor = ForgeDrawerStyles.Colors.ButtonHover);
-            btn.RegisterCallback<PointerLeaveEvent>(_ => 
-                btn.style.backgroundColor = ForgeDrawerStyles.Colors.ButtonBackground);
-            
-            return btn;
-        }
-
-        // ═══════════════════════════════════════════════════════════════════════════
-        // Child Fields
-        // ═══════════════════════════════════════════════════════════════════════════
-        
-        // Child fields container is reused from AbstractTypeRefDrawer._childFieldsContainer
-        
-        /*/// <summary>Override to customize which fields are shown.</summary>
-        protected virtual void PopulateChildFields(SerializedProperty prop)
-        {
-            ChildFieldsContainer.Clear();
-            if (!HasValue(prop)) return;
-
-            var iterator = prop.Copy();
-            var endProperty = prop.GetEndProperty();
-            int count = 0;
-            
-            if (iterator.NextVisible(true))
-            {
-                do
-                {
-                    if (SerializedProperty.EqualContents(iterator, endProperty)) break;
-                    
-                    var field = new PropertyField(iterator.Copy())
-                    {
-                        label = ObjectNames.NicifyVariableName(iterator.name)
-                    };
-                    field.style.marginBottom = 2;
-                    ChildFieldsContainer.Add(field);
-                    count++;
-                    
-                } while (iterator.NextVisible(false));
-            }
-            
-            if (count == 0)
-            {
-                ChildFieldsContainer.style.display = DisplayStyle.None;
-                if (CollapseButton != null) CollapseButton.style.display = DisplayStyle.None;
-            }
-            else
-            {
-                ChildFieldsContainer.Bind(prop.serializedObject);
-            }
-        }*/
-
-        // ═══════════════════════════════════════════════════════════════════════════
-        // Summary Badges
-        // ═══════════════════════════════════════════════════════════════════════════
-        
-        /// <summary>Override to provide custom summary content.</summary>
-        protected virtual void PopulateSummary(SerializedProperty prop)
-        {
-            SummaryContainer.Clear();
-            if (!HasValue(prop)) return;
-
-            var iterator = prop.Copy();
-            var endProperty = prop.GetEndProperty();
-            int count = 0;
-            
-            if (iterator.NextVisible(true))
-            {
-                do
-                {
-                    if (SerializedProperty.EqualContents(iterator, endProperty)) break;
-                    if (count >= MaxSummaryBadges)
-                    {
-                        AddBadge("…", ForgeDrawerStyles.Colors.HintText);
-                        break;
-                    }
-                    
-                    var text = GetSummaryText(iterator);
-                    if (!string.IsNullOrEmpty(text))
-                    {
-                        AddBadge(text, GetSummaryColor(iterator));
-                        count++;
-                    }
-                } while (iterator.NextVisible(false));
-            }
-        }
-        
-        /// <summary>Override to customize property summary text.</summary>
-        protected virtual string GetSummaryText(SerializedProperty prop)
-        {
-            return prop.propertyType switch
-            {
-                SerializedPropertyType.Integer => prop.intValue.ToString(),
-                SerializedPropertyType.Float => prop.floatValue.ToString("F1"),
-                SerializedPropertyType.Boolean => prop.boolValue ? "✓" : "✗",
-                SerializedPropertyType.String when !string.IsNullOrEmpty(prop.stringValue) => 
-                    prop.stringValue.Length > 12 ? prop.stringValue[..12] + "…" : prop.stringValue,
-                SerializedPropertyType.Enum => prop.enumDisplayNames[prop.enumValueIndex],
-                SerializedPropertyType.ObjectReference when prop.objectReferenceValue != null => 
-                    prop.objectReferenceValue.name,
-                _ => null
-            };
-        }
-        
-        /// <summary>Override to customize property badge color.</summary>
-        protected virtual Color GetSummaryColor(SerializedProperty prop)
-        {
-            return prop.propertyType switch
-            {
-                SerializedPropertyType.Boolean => prop.boolValue 
-                    ? ForgeDrawerStyles.Colors.AccentGreen 
-                    : ForgeDrawerStyles.Colors.AccentRed,
-                SerializedPropertyType.ObjectReference => ForgeDrawerStyles.Colors.AccentBlue,
-                _ => ForgeDrawerStyles.Colors.HintText
-            };
-        }
-        
-        protected void AddBadge(string text, Color color)
-        {
-            var badge = new Label(text);
-            badge.style.fontSize = 9;
-            badge.style.color = color;
-            badge.style.backgroundColor = new Color(color.r, color.g, color.b, 0.15f);
-            badge.style.borderTopLeftRadius = badge.style.borderTopRightRadius = 3;
-            badge.style.borderBottomLeftRadius = badge.style.borderBottomRightRadius = 3;
-            badge.style.paddingLeft = badge.style.paddingRight = 4;
-            badge.style.paddingTop = badge.style.paddingBottom = 1;
-            badge.style.marginRight = 4;
-            SummaryContainer.Add(badge);
-        }
-
-        // ═══════════════════════════════════════════════════════════════════════════
-        // Collapse Logic
-        // ═══════════════════════════════════════════════════════════════════════════
-        
-        private void ToggleCollapse(SerializedProperty prop)
-        {
-            bool newState = !GetCollapseState(prop);
-            SetCollapseState(prop, newState);
-            UpdateDisplayState(prop, newState);
-        }
-        
-        private void UpdateDisplayState(SerializedProperty prop, bool collapsed)
-        {
-            // Update button
-            if (CollapseButton != null)
-            {
-                CollapseButton.text = collapsed 
-                    ? ForgeDrawerStyles.Icons.ChevronRight 
-                    : ForgeDrawerStyles.Icons.ChevronDown;
-                CollapseButton.tooltip = collapsed ? "Expand" : "Collapse";
-            }
-            
-            if (collapsed)
-            {
-                ChildFieldsContainer.style.display = DisplayStyle.None;
-                if (EnableSummary && SummaryContainer != null)
-                {
-                    SummaryContainer.style.display = DisplayStyle.Flex;
-                    PopulateSummary(prop);
-                }
-            }
-            else
-            {
-                ChildFieldsContainer.style.display = DisplayStyle.Flex;
-                if (SummaryContainer != null) SummaryContainer.style.display = DisplayStyle.None;
-                if (ChildFieldsContainer.childCount == 0) PopulateChildFields(prop);
-            }
-        }
-        
-        private void InitializeDisplayState(SerializedProperty prop)
-        {
-            bool hasValue = HasValue(prop);
-            bool collapsed = GetCollapseState(prop);
-            
-            if (!hasValue || !collapsed || !EnableCollapse)
-            {
-                if (hasValue) PopulateChildFields(prop);
-                else ChildFieldsContainer.style.display = DisplayStyle.None;
-            }
-            else
-            {
-                ChildFieldsContainer.style.display = DisplayStyle.None;
-                if (EnableSummary && SummaryContainer != null)
-                {
-                    SummaryContainer.style.display = DisplayStyle.Flex;
-                    PopulateSummary(prop);
-                }
-            }
-        }
-
-        // ═══════════════════════════════════════════════════════════════════════════
-        // Change Handling
-        // ═══════════════════════════════════════════════════════════════════════════
-        
-        protected override void OnTypeChanged(SerializedProperty prop, Type newType)
-        {
-            SetCollapseState(prop, false);
-            
-            ChildFieldsContainer?.schedule.Execute(() =>
-            {
-                prop.serializedObject.Update();
-                bool hasValue = newType != null;
-                
-                if (CollapseButton != null)
-                {
-                    CollapseButton.style.display = hasValue ? DisplayStyle.Flex : DisplayStyle.None;
-                    CollapseButton.text = ForgeDrawerStyles.Icons.ChevronDown;
-                    CollapseButton.tooltip = "Collapse";
-                }
-                
-                ChildFieldsContainer.style.display = hasValue ? DisplayStyle.Flex : DisplayStyle.None;
-                if (SummaryContainer != null) SummaryContainer.style.display = DisplayStyle.None;
-                
-                if (hasValue) PopulateChildFields(prop);
-            });
-        }
-        
-        private void OnPropertyValueChanged(SerializedProperty prop)
-        {
-            bool hasValue = HasValue(prop);
-            bool collapsed = GetCollapseState(prop);
-            
-            if (CollapseButton != null)
-                CollapseButton.style.display = hasValue ? DisplayStyle.Flex : DisplayStyle.None;
-            
-            if (!hasValue)
-            {
-                ChildFieldsContainer.Clear();
-                ChildFieldsContainer.style.display = DisplayStyle.None;
-                SummaryContainer?.Clear();
-                if (SummaryContainer != null) SummaryContainer.style.display = DisplayStyle.None;
-            }
-            else if (collapsed && EnableCollapse && EnableSummary)
-            {
-                PopulateSummary(prop);
-            }
-        }
-
-        // ═══════════════════════════════════════════════════════════════════════════
-        // Type Name Override
-        // ═══════════════════════════════════════════════════════════════════════════
-        
         protected override string CleanTypeName(string name)
         {
             foreach (var suffix in TypeNameSuffixes)
             {
                 if (name.EndsWith(suffix) && name.Length > suffix.Length)
-                    return name[..^suffix.Length];
+                    return name.Substring(0, name.Length - suffix.Length);
             }
             return name;
         }
 
-        // ═══════════════════════════════════════════════════════════════════════════
-        // Helpers
-        // ═══════════════════════════════════════════════════════════════════════════
-        
-        // Kept with the object the field holds, so it follows the object through its list (ED-18)
-        private static bool GetCollapseState(SerializedProperty prop) =>
-            DrawerCollapseState.IsCollapsed(prop, collapsedByDefault: false);
-
-        private static void SetCollapseState(SerializedProperty prop, bool collapsed) =>
-            DrawerCollapseState.SetCollapsed(prop, collapsed);
-        
-        protected static bool HasValue(SerializedProperty prop) =>
-            prop.propertyType == SerializedPropertyType.ManagedReference && 
-            prop.managedReferenceValue != null;
-        
-        private static VisualElement FindHeaderRow(VisualElement root) =>
-            root.childCount > 0 && root[0].style.flexDirection == FlexDirection.Row 
-                ? root[0] : null;
-        
-        // InsertAfterHeader no longer needed — container comes from base class
-        
-        /// <summary>Count of serializable child fields for the current value.</summary>
-        protected int GetChildFieldCount(SerializedProperty prop)
+        protected override void Arrange(VisualElement root, SerializedProperty property, VisualElement field, VisualElement fields)
         {
-            if (!HasValue(prop)) return 0;
-            
-            int count = 0;
-            var iterator = prop.Copy();
+            root.AddToClassList("pf-element");
+            var header = new VisualElement { name = "HeaderRow" };
+            header.AddToClassList("pf-element__header");
+            root.Add(header);
+            var arrow = new ForgeIconButton(ForgeGlyphShape.ArrowDown, "Collapse", null) { name = "CollapseBtn" };
+            arrow.AddToClassList("pf-element__arrow");
+            arrow.EnableInClassList(HiddenClass, !EnableCollapse);
+            header.Add(arrow);
+            field.AddToClassList("pf-element__attribute");
+            header.Add(field);
+
+            var summary = new Label { name = "Summary" };
+            summary.AddToClassList("pf-element__summary");
+            root.Add(summary);
+
+            fields.AddToClassList("pf-element__content");
+            root.Add(fields);
+
+            // The arrow folds the field it's in; the property is found again by its path, as the list's elements move
+            var serialized = property.serializedObject;
+            var path = property.propertyPath;
+            arrow.clicked += () =>
+            {
+                var prop = serialized.targetObject != null ? serialized.FindProperty(path) : null;
+                if (prop == null) return;
+                bool folded = !DrawerCollapseState.IsCollapsed(prop, collapsedByDefault: false);
+                DrawerCollapseState.SetCollapsed(prop, folded);
+                Fold(root, folded);
+            };
+        }
+
+        protected override void Shown(VisualElement root, SerializedProperty property)
+        {
+            bool fields = HasFields(property);
+            root.Q(name: "CollapseBtn")?.EnableInClassList(InvisibleClass, !fields);
+            var summary = root.Q<Label>("Summary");
+            if (summary != null) summary.text = EnableSummary && fields ? SummaryOf(property) : "";
+            Fold(root, EnableCollapse && fields && DrawerCollapseState.IsCollapsed(property, collapsedByDefault: false));
+        }
+
+        // A new kind opens, so its fields show
+        protected override void OnTypeChanged(SerializedProperty prop, System.Type newType)
+        {
+            base.OnTypeChanged(prop, newType);
+            DrawerCollapseState.SetCollapsed(prop, false);
+        }
+
+        private static void Fold(VisualElement root, bool folded)
+        {
+            root.EnableInClassList(CollapsedClass, folded);
+            if (root.Q(name: "CollapseBtn") is ForgeIconButton arrow)
+            {
+                arrow.Glyph.Shape = folded ? ForgeGlyphShape.ArrowRight : ForgeGlyphShape.ArrowDown;
+                arrow.tooltip = folded ? "Expand" : "Collapse";
+            }
+        }
+
+        /// <summary>A folded field's line: each of its kind's values that says something, joined by " · ".</summary>
+        protected string SummaryOf(SerializedProperty prop)
+        {
+            var parts = new List<string>();
+            var child = prop.Copy();
             var end = prop.GetEndProperty();
-            
-            if (iterator.NextVisible(true))
+            if (child.NextVisible(true))
             {
                 do
                 {
-                    if (SerializedProperty.EqualContents(iterator, end)) break;
-                    count++;
-                } while (iterator.NextVisible(false));
+                    if (SerializedProperty.EqualContents(child, end)) break;
+                    var part = GetSummaryText(child);
+                    if (!string.IsNullOrEmpty(part)) parts.Add(part);
+                } while (child.NextVisible(false));
             }
-            return count;
+            return string.Join(" · ", parts);
+        }
+
+        /// <summary>
+        /// One value as a folded field's line shows it: a number or a choice after its name, as "Duration 0.5"; a name alone
+        /// for a box that's on, and nothing for one that's off; an asset's name; or nothing.
+        /// </summary>
+        protected virtual string GetSummaryText(SerializedProperty prop)
+        {
+            var label = ObjectNames.NicifyVariableName(prop.name);
+            return prop.propertyType switch
+            {
+                SerializedPropertyType.Integer => $"{label} {prop.intValue.ToString(CultureInfo.CurrentCulture)}",
+                SerializedPropertyType.Float => $"{label} {prop.floatValue.ToString("0.##", CultureInfo.CurrentCulture)}",
+                SerializedPropertyType.Boolean => prop.boolValue ? label : null,
+                SerializedPropertyType.String when !string.IsNullOrEmpty(prop.stringValue) => $"{label} {prop.stringValue}",
+                SerializedPropertyType.Enum when prop.enumValueIndex >= 0 && prop.enumValueIndex < prop.enumDisplayNames.Length =>
+                    $"{label} {prop.enumDisplayNames[prop.enumValueIndex]}",
+                SerializedPropertyType.ObjectReference when prop.objectReferenceValue != null => $"{label} {prop.objectReferenceValue.name}",
+                _ => null,
+            };
         }
     }
 }

@@ -3,37 +3,19 @@ using UnityEditor;
 
 namespace FarEmerald.PlayForge.Extended.Editor
 {
+    /// <summary>
+    /// A proxy stage's policy: its kind, named without "ProxyStagePolicy" or "Policy", always of some kind (ED-56).
+    /// </summary>
     [CustomPropertyDrawer(typeof(IAbilityProxyStagePolicy))]
     public class IProxyStagePolicyDrawer : AbstractTypeRefDrawer<IAbilityProxyStagePolicy>
     {
         protected override string GetStringValue(SerializedProperty prop, Type value)
         {
-            if (value is null) 
-                return base.GetStringValue(prop, value);
-            
-            // Clean up the display name
-            var name = value.Name;
-            name = name.Replace("ProxyStagePolicy", "");
-            name = name.Replace("Policy", "");
-            
-            // Add spaces before capitals
-            var sb = new System.Text.StringBuilder();
-            foreach (char c in name)
-            {
-                if (char.IsUpper(c) && sb.Length > 0) sb.Append(' ');
-                sb.Append(c);
-            }
-            
-            return sb.ToString();
-        }
-        protected override bool AcceptClear(SerializedProperty prop)
-        {
-            return false;
-        }
-        protected override bool AcceptOpen(SerializedProperty prop)
-        {
-            return false;
+            if (value is null) return base.GetStringValue(prop, value);
+            var name = value.Name.Replace("ProxyStagePolicy", "").Replace("Policy", "");
+            return ObjectNames.NicifyVariableName(name);
         }
 
+        protected override bool AcceptClear(SerializedProperty prop) => false;
     }
 }

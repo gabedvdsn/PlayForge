@@ -95,8 +95,8 @@ The only other colors:
 ## Inspectors
 
 - **The asset header** holds the 32 px type icon, the asset's name, its type and asset tag, and its problem count.
-  Then come Open in The Forge (Show in Project, inside The Forge, with the asset's file name under it), Help and the
-  asset menu. It stays at the top of
+  Then come Open in The Forge (Show in Project, inside The Forge), Help and the asset menu, in one row, with the
+  asset's file name in a row of its own under them, on the right, inside The Forge. It stays at the top of
   the inspector while the content scrolls under it (Decision 29, the user's call after seeing it scroll, which
   replaces Q17's answer).
 - **Sections are Unity foldout headers**: the arrow and the bold title, then Import, Clear and Help, always visible
@@ -116,6 +116,9 @@ The only other colors:
   its context offers, with None and New Tag…; its right-click menu clears it, makes a new tag, makes its tag a
   child of another, or copies its path.
 - **Lists** are Unity's reorderable lists: a header with the count, drag handles, and the + and − footer.
+- **Kind fields**, which hold an object of one of a type's kinds, read as tag fields do: the kind's name in the
+  box, which opens Unity's searchable dropdown of the kinds, with None where the field may be empty. The kind's
+  own fields indent under it. A kind that folds shows one line of its values, as "Strength 2 · Duration 0.5".
 - **Requirements** are one table: rows for applying, while on and removal, and columns for "Requires" and "Must not
   have". A toggle switches it between the target and the source. Each cell is a button that opens the tag picker,
   and an empty one reads "None".

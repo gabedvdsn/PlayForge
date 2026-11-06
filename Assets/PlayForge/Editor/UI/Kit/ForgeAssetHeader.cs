@@ -8,8 +8,9 @@ namespace FarEmerald.PlayForge.Extended.Editor
 {
     /// <summary>
     /// The header an asset inspector opens with: the 32 px type icon, the asset's name, and its type and asset tag,
-    /// then its actions. It scrolls with the content (Q17) and takes its look from the style sheet alone
-    /// (Decision 20). It took the type's color as a thick border and badge, and set its own dark colors (ED-20).
+    /// then its actions, in one row on the right, with any line about the asset, as its file name in The Forge, in a row
+    /// of its own under them (ED-65). It takes its look from the style sheet alone (Decision 20). It took the type's
+    /// color as a thick border and badge, and set its own dark colors (ED-20).
     /// </summary>
     internal class ForgeAssetHeader : VisualElement
     {
@@ -33,7 +34,23 @@ namespace FarEmerald.PlayForge.Extended.Editor
             Subtitle.AddToClassList("pf-asset-header__subtitle");
             text.Add(Subtitle);
             Add(text);
+
+            // The actions, one row on the right, and under it the lines about the asset, on the right too (ED-65)
+            var actions = new VisualElement { name = "HeaderActions" };
+            actions.AddToClassList("pf-asset-header__actions");
+            ActionRow = new VisualElement { name = "HeaderActionRow" };
+            ActionRow.AddToClassList("pf-asset-header__row");
+            actions.Add(ActionRow);
+            lines = new VisualElement { name = "HeaderLines" };
+            lines.AddToClassList("pf-asset-header__lines");
+            actions.Add(lines);
+            Add(actions);
         }
+
+        /// <summary>The row the actions sit in, from the problem count to the asset menu.</summary>
+        public VisualElement ActionRow { get; }
+
+        private readonly VisualElement lines;
 
         public ForgeTypeIcon Icon { get; }
         public Label NameLabel { get; }
@@ -51,7 +68,7 @@ namespace FarEmerald.PlayForge.Extended.Editor
             ProblemCount.AddToClassList("pf-asset-header__problems");
             // Hidden by its class, as the header takes its whole look from the style sheet (ED-20)
             ProblemCount.AddToClassList("pf-asset-header__problems--none");
-            Add(ProblemCount);
+            ActionRow.Add(ProblemCount);
             return ProblemCount;
         }
 
@@ -72,31 +89,29 @@ namespace FarEmerald.PlayForge.Extended.Editor
         {
             var button = new Button(onClick) { text = text, tooltip = tooltip };
             button.AddToClassList("pf-asset-header__button");
-            Add(button);
+            ActionRow.Add(button);
             return button;
         }
 
         /// <summary>
-        /// Adds a line of secondary text under one of its buttons, as the asset's file name under Show in Project in The
-        /// Forge, whose list shows the asset's name alone (ED-58). The line hides while it has no text.
+        /// Adds a line of secondary text in a row of its own under the actions, on the right, as the asset's file name in
+        /// The Forge, whose list shows the asset's name alone (ED-58). It sat under Show in Project, which then stood two
+        /// lines tall in the row, so the other actions sat level with its middle (ED-65). The line hides while it has no
+        /// text.
         /// </summary>
-        public Label AddLineUnder(Button button, string lineName)
+        public Label AddLine(string lineName)
         {
-            var stack = new VisualElement();
-            stack.AddToClassList("pf-asset-header__stack");
-            Insert(IndexOf(button), stack);
-            stack.Add(button);
             var line = new Label { name = lineName };
             line.AddToClassList(UnderClass);
             line.AddToClassList(UnderEmptyClass);
-            stack.Add(line);
+            lines.Add(line);
             return line;
         }
 
         public const string UnderClass = "pf-asset-header__under";
         public const string UnderEmptyClass = "pf-asset-header__under--empty";
 
-        /// <summary>Shows a line added under a button, or hides it when the text is empty.</summary>
+        /// <summary>Shows a line added under the actions, or hides it when the text is empty.</summary>
         public static void ShowLine(Label line, string text, string tooltip = "")
         {
             if (line == null) return;
@@ -109,7 +124,7 @@ namespace FarEmerald.PlayForge.Extended.Editor
         public Button AddIconButton(ForgeGlyphShape glyph, string tooltip, Action onClick)
         {
             var button = new ForgeIconButton(glyph, tooltip, onClick);
-            Add(button);
+            ActionRow.Add(button);
             return button;
         }
 

@@ -1,28 +1,16 @@
 ﻿using System;
-using System.Linq;
 using UnityEditor;
-using UnityEngine;
 
 namespace FarEmerald.PlayForge.Extended.Editor
 {
+    /// <summary>An ability's targeting task: its kind, named without "TargetTask" or "Task", then its fields (ED-56).</summary>
     [CustomPropertyDrawer(typeof(AbstractTargetingAbilityTask))]
     public class TargetingTaskDrawer : AbstractGenericDrawer<AbstractTargetingAbilityTask>
     {
-        protected override bool AcceptOpen(SerializedProperty prop)
-        {
-            return false;
-        }
-
         protected override string GetStringValue(SerializedProperty prop, Type value)
         {
-            if (value is null) 
-                return base.GetStringValue(prop, value);
-            
-            // Clean up the display name
-            var name = value.Name;
-            name = name.Replace("TargetTask", "");
-            name = name.Replace("Task", "");
-
+            if (value is null) return base.GetStringValue(prop, value);
+            var name = value.Name.Replace("TargetTask", "").Replace("Task", "");
             return ObjectNames.NicifyVariableName(name);
         }
     }

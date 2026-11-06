@@ -226,22 +226,30 @@
     flex-shrink: 0;
 }
 
-/* A button with a line of secondary text under it, as Show in Project with the asset's file name in The Forge
-   (ED-58). The line ends in an ellipsis rather than widen the header */
-.pf-root .pf-asset-header__stack {
+/* The actions, one row on the right, and under it a row of lines about the asset, as its file name in The Forge,
+   on the right with the actions' inset (ED-58, ED-65). A line ends in an ellipsis rather than widen the header */
+.pf-root .pf-asset-header__actions {
     flex-shrink: 0;
+    flex-direction: column;
     align-items: flex-end;
-    margin-left: 8px;
+    justify-content: center;
 }
 
-.pf-root .pf-asset-header__stack > .pf-asset-header__button {
-    margin-left: 0;
+.pf-root .pf-asset-header__row {
+    flex-direction: row;
+    align-items: center;
+    justify-content: flex-end;
+}
+
+.pf-root .pf-asset-header__lines {
+    align-self: stretch;
+    align-items: flex-end;
 }
 
 .pf-root .pf-asset-header__under {
-    max-width: 200px;
+    max-width: 240px;
     margin: 2px 0 0 0;
-    padding: 0;
+    padding: 0 2px 0 0;
     color: var(--pf-secondary-text);
     -unity-text-align: middle-right;
     overflow: hidden;
@@ -536,6 +544,20 @@
 /* An element its state leaves out, as an entry's Commits while it isn't periodic */
 .pf-root .pf-hidden {
     display: none;
+}
+
+/* An element that keeps its place while it has nothing to do, as a kind's arrow while the kind has no fields */
+.pf-root .pf-invisible {
+    visibility: hidden;
+}
+
+/* A kind field's own fields: indented under it, as a field that depends on another is (ED-56) */
+.pf-root .pf-type-ref__fields {
+    margin-left: 14px;
+}
+
+.pf-root .pf-element > .pf-type-ref__fields {
+    margin-left: 0;
 }
 
 /* What an attribute set element starts at, at each level: a value row in strong text, then its levels in secondary text

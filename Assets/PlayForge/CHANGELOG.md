@@ -167,6 +167,11 @@ tracks each fix below by its ID.
   page, through one table of links in the editor.
 
 ### Changed
+- A field that holds an object of some kind, as a task, a cue, a worker or a scaler behaviour, is Unity's field with
+  the kind's name in its box, which opens Unity's searchable dropdown of the kinds; the kind's fields indent under
+  it, and a kind that folds shows a line of its values. It was a button that opened a list in tinted boxes, with an
+  orange border and colored badges, and a list's elements could show each other's fields (ED-56).
+- In The Forge, an asset header's actions share one row, with the file name in a row of its own under them (ED-65).
 - A spread scaler's points are numbered, and each real level shows what it reads, as the runtime reads it. Its table
   named each point by a level such as 1.8, and never said what a real level reads (ED-62).
 - Quick Fill is a dialog in the style, with a preview as the scaler's table shows it. It adds Ease In and Out, a
@@ -526,6 +531,10 @@ tracks each fix below by its ID.
   or turning `Enabled` off. Once the first had ended, it threw, and the rest ran on.
 
 ### Removed
+- `AbstractRefDrawer`, the old type picker, which only `AbstractTypeRefDrawer` used. A drawer of your own that
+  derives from `AbstractTypeRefDrawer` or `AbstractGenericDrawer` keeps `GetStringValue`, `FilterType`,
+  `CleanTypeName`, `GetEntries`, `AcceptClear`, `SetValue` and `OnTypeChanged`; `AcceptOpen` and `AcceptAdd` are
+  gone (ED-56).
 - The GAS Debugger, Process Control and Tag Debugger windows, which the Debugger replaces, and Process
   Control's four public enums, `EProcessDebuggerPolicy`, `EProcessStateFilter`, `EProcessSortMode` and
   `EUsageSortMode`, which nothing else used (ED-4, ED-5).

@@ -432,8 +432,9 @@ namespace FarEmerald.PlayForge.Extended.Editor
             {
                 var open = header.AddButton("Open in The Forge", "Show this asset in The Forge", OnOpenInManager);
                 open.name = "OpenInForge";
-                // There, the asset's file name sits under the button, as The Forge's list shows its name alone (ED-58)
-                var file = header.AddLineUnder(open, "HeaderFile");
+                // There, the asset's file name sits in a row of its own under the actions, as The Forge's list shows its
+                // name alone (ED-58, ED-65)
+                var file = header.AddLine("HeaderFile");
                 open.RegisterCallback<AttachToPanelEvent>(_ =>
                 {
                     if (!InForgeDetail(open)) return;
@@ -449,10 +450,11 @@ namespace FarEmerald.PlayForge.Extended.Editor
             }
 
             var topic = GetDocumentationTopic();
-            if (!string.IsNullOrEmpty(topic)) header.AddIconButton(ForgeGlyphShape.Help, "Open the documentation", () => ForgeDocs.Open(topic));
+            if (!string.IsNullOrEmpty(topic)) header.AddIconButton(ForgeGlyphShape.Help, "Open the documentation", () => ForgeDocs.Open(topic)).name = "HeaderHelp";
 
             Button menuButton = null;
             menuButton = header.AddIconButton(ForgeGlyphShape.Menu, "Asset menu", () => ShowAssetMenu(menuButton));
+            menuButton.name = "HeaderMenu";
             return header;
         }
 
