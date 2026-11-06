@@ -809,6 +809,24 @@ GAS-4 with GAS-5, PC-6, and TS-I with PC-5.
 
 Record baselines, gate results and notable decisions here, newest first.
 
+- 2026-11-05, **The Battle sample (Decision 34).** The Battle lab ships with the package as the sample Battle, first
+  in Package Manager's list, beside Demos and Code Examples.
+  - **What it is:** the lab's battle, out of Proving Grounds' test assembly. Its fighters, kits, minds, shots and
+    tasks are in `Samples~/Battle/Scripts/Battle.cs`, its view in `BattleView.cs`, and in `BattleKit.cs` what the
+    harness gave it: its assets built in code, and where its entities and shots live. `BattleSample`, the scene's
+    one script, plays battle after battle, brings PlayForge up when the scene has none, and frames the camera.
+  - **Two changes from the lab:** its materials take the render pipeline's own default shader, where the lab's took
+    Standard, which shows pink under URP. And its entities register through the Register builder (FEAT-15), where
+    the harness used an overload marked obsolete, which a clean import counts as a warning.
+  - **Checked:** its scene, opened in play mode with nothing of the harness, brought PlayForge up and played a
+    battle to its end: 28.4 s, Red won, 205 shots, 56 hits over an area, 26 knockbacks, 6 stuns, 10 summons, 14
+    heals, 6 blessings and 21 deaths. The next battle began after the pause. The clean import with every sample
+    (Proving Grounds' `Tools/clean-import.py --samples`): 0 compile errors or warnings, 0 uncompiled scripts, 0
+    missing scripts, references or types, 0 exceptions.
+  - **Not checked:** how it looks, as batch mode draws nothing. Its camera framing is new; the rest is the lab's.
+  - **No runtime or editor code changed,** so the gates didn't run. GETTING_STARTED names the sample, and says the
+    samples render in the Built-in pipeline or URP.
+
 - 2026-11-05, **SP-24's CI, and the user's answers.** Decisions 34 and 35.
   - **The labs and the UI kit:** the Battle lab ships as a sample, Battle, beside Demos and Code Examples; the other
     labs stay in Proving Grounds. No runtime UI kit: a game makes its own UI on PlayForge's API.

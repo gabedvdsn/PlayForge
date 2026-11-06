@@ -7,6 +7,9 @@ tracks each fix below by its ID.
 ## [Unreleased]
 
 ### Added
+- The Battle sample: a battle that plays itself, Blue and Red, eight fighters a side, built from PlayForge's
+  attributes, abilities, effects, cues, projectiles and summons, made in code, with a health bar and effect boxes
+  over each fighter. It needs nothing beyond PlayForge, and renders in the Built-in pipeline or URP.
 - `ProcessDataPacket.TryGetAt` reads the entry at an index under a key, building no list, and
   `SetTargetingPackets` files a targeting task's targets in order, the first as the primary (GAS-62).
 - Moving an effect to another entity. `EffectSystemComponent.MoveTo(effect, onto)` moves each of an effect's

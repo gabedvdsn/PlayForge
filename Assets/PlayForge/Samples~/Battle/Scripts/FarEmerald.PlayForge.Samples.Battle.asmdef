@@ -1,0 +1,17 @@
+{
+    "name": "FarEmerald.PlayForge.Samples.Battle",
+    "rootNamespace": "FarEmerald.PlayForge.Samples.Battles",
+    "references": [
+        "FarEmerald.PlayForge",
+        "UniTask"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": false,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

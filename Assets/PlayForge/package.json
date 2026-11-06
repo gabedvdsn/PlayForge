@@ -14,6 +14,11 @@
   },
   "samples": [
     {
+      "displayName": "Battle",
+      "description": "A battle that plays itself: Blue and Red, eight fighters a side, built from attributes, abilities, effects, cues, projectiles and summons made in code, with health bars and effect boxes over each fighter. It needs nothing beyond PlayForge.",
+      "path": "Samples~/Battle"
+    },
+    {
       "displayName": "Demos",
       "description": "The Demo scene, the Swarm Defender game and the abilities, effects and entities they share. They import together, as they use each other's assets. The Demo needs the Input System package.",
       "path": "Samples~/Demos"
