@@ -662,6 +662,7 @@ had no letter in the review. TS-AA onward came from the test project.
 | GAS-65 | H | 7 | A process an ability's Create Mono Process task spawned took GameRoot as its origin, since nothing passed it the ability, so a projectile read GameRoot's speed and applied GameRoot's effects; the labs and Battle set the origin themselves. And the task spawned its own processes only with Internal Is Override on, so a task given processes and nothing else spawned none. Found surveying for the demo (Decision 37). Fixed: the task passes the ability as the origin (`Tags.DERIVATION`), unless the data has one, and spawns its own processes where the data holds none | `CreateMonoProcessAbilityTask.cs` | verified |
 | GAS-66 | M | 7 | Click targeting waited for a click whatever the activation's data held, so an AI, which hands an ability its target, couldn't cast a click-targeted ability, and the demo's AI and player couldn't share one asset. Fixed: each click-targeting task takes the target its data holds under TargetReal, or the point under Position, with no click (`TakeTargetFromData`, on by default); a handed target that fails the task's checks, or is out of range, fails the targeting at once, since an AI can't click | `AbstractTargetingAbilityTask.cs` and the five Select tasks | verified |
 | GAS-67 | M | 7 | A process Create Mono Process spawned appeared where its prefab stood unless the data held a Position, so a projectile left the world's origin; Battle and the labs placed theirs themselves. Fixed: Spawn At puts it at the caster or at the ability's target, the data's Position set for its registration alone and put back, since the ability's other tasks read it too; As Its Data Says keeps the old way | `CreateMonoProcessAbilityTask.cs` | verified |
+| GAS-68 | M | 7 | The effects a spawned process applied, as a projectile's as it lands, took none of the set-by-caller magnitudes of the data that spawned it, though an ability's other effects take them (FEAT-2), so a magnitude the caller set was lost on the way. Fixed: they take them | `AbstractEffectingMonoProcess.cs` | verified |
 | GAS-P1 | M | 0 | `ActionQueue` LINQ allocations; snapshot built every frame (PF-006) | `ActionQueue.cs:41, 46, 156`, `FrameSummary.cs:340-351` | verified |
 | GAS-P2 | M | 0 | Tag and FrameSummary allocations (PF-007) | `TagCache.cs:60`, `TagQuery.cs:89-136`, `FrameSummary.cs:306-308` | verified |
 | GAS-P3 | M | 3 | Each application revalidates every container and rebuilds all tags (area application is quadratic). Measured: an instant application on an entity carrying 1,000 effects took 0.49 ms, 135 times one on an entity carrying 2. Now the requirements wait for one pass at the next tick, a shelved container's tags are counted as it lands, and re-application and removal find containers in an index by asset tag | `EffectSystemComponent.cs:312-348`, `GameplayAbilitySystem.cs:250-281` | verified |
@@ -898,6 +899,10 @@ GAS-4 with GAS-5, PC-6, and TS-I with PC-5.
 ## Log
 
 Record baselines, gate results and notable decisions here, newest first.
+
+- 2026-11-06, **GAS-68: a projectile's effects take its caller's magnitudes.** Found writing the demo, whose AI sets
+  its difficulty by set-by-caller and fires projectiles. The test failed first, landing the default.
+  - PlayMode: 1330 passed of 1338, 0 failed, 8 skipped (1 new).
 
 - 2026-11-06, **GAS-67: where a spawned process appears.** Create Mono Process's Spawn At places what it spawns at
   the caster or at the target. A process places itself at its data's Position as it starts, and the ability's data

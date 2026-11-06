@@ -407,6 +407,8 @@ tracks each fix below by its ID.
   Asking whether its sequence was paused took 24 bytes a frame.
 
 ### Fixed
+- The effects a spawned process applies, as a projectile's as it lands, take the set-by-caller magnitudes of the data
+  that spawned it, as an ability's other effects do. They took none (GAS-68).
 - Create Mono Process's Spawn At places what it spawns at the caster or at the ability's target. It appeared where
   its prefab stood unless the ability's data held a Position (GAS-67).
 - Click targeting takes the target or point its activation's data holds, as an AI's or a replay's does, with no
