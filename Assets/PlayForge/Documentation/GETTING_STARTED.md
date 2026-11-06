@@ -147,8 +147,8 @@ string perLevel = impact.FormatTotal();           // "20/30/40/50"
   each checked, beside their values now and the source's. Uncheck a field to leave it. A list is replaced, unless its
   row's **Add** is on, which adds the source's items after its own. **Import N Changes** is one Undo step. The asset
   menu's **Import from Another Asset...** does the same for the whole asset, which keeps its name, description, icons,
-  asset tag, template and level link. A worker group's and a requirement group's import buttons open the same window,
-  listing every asset that has one. **Clear** resets the section's fields at once, and Undo takes it back.
+  asset tag, template and level link. A Workers section's import lists every asset that has a worker
+  group, whatever its type. **Clear** resets the section's fields at once, and Undo takes it back.
 - **Templates** — an asset's menu **Set Template...** makes it a child of a template asset of its type. A child
   takes the template's fields when the template is pushed, with the template's asset menu **Push to Its Children**, as
   one Undo step, and keeps each field it overrides: an edit to a child's field makes it the child's own, and its

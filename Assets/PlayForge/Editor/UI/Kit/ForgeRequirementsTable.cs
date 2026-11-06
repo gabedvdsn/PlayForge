@@ -10,6 +10,7 @@ namespace FarEmerald.PlayForge.Extended.Editor
     /// and Removed By, with what it requires and what it must not have, each a cell that lists its tags. A cell opens its
     /// list under the table to edit, with its group's template; opening it again closes it. The table follows the asset
     /// as it changes, an Undo among its changes. It replaces a tinted box with colored subsections and a type badge.
+    /// A group with no field is the requirements themselves, as a lone requirement group's table of one row (ED-66).
     /// </summary>
     internal sealed class ForgeRequirementsTable : VisualElement
     {
@@ -17,7 +18,10 @@ namespace FarEmerald.PlayForge.Extended.Editor
         public const string OpenCellClass = "pf-requirements__cell--open";
         public const string NoneCellClass = "pf-requirements__cell--none";
 
-        /// <summary>One row: its label, the group's field name in the requirements, and what the group checks.</summary>
+        /// <summary>
+        /// One row: its label, the group's field name in the requirements, or none for the requirements themselves, and
+        /// what the group checks.
+        /// </summary>
         public readonly struct Group
         {
             public readonly string Label;
@@ -53,6 +57,8 @@ namespace FarEmerald.PlayForge.Extended.Editor
             var table = new VisualElement { name = "Table" };
             table.AddToClassList("pf-table");
             table.AddToClassList("pf-requirements");
+            // A lone group's row is named by its field, which needs the label column's room
+            if (groups.Length == 1 && string.IsNullOrEmpty(groups[0].Field)) table.AddToClassList("pf-requirements--lone");
             Add(table);
 
             var header = new VisualElement { name = "Header" };
@@ -65,12 +71,13 @@ namespace FarEmerald.PlayForge.Extended.Editor
             for (int i = 0; i < groups.Length; i++)
             {
                 var row = new Row { Group = groups[i] };
-                var element = new VisualElement { name = groups[i].Field, tooltip = groups[i].Tooltip };
+                var key = KeyOf(groups[i]);
+                var element = new VisualElement { name = key, tooltip = groups[i].Tooltip };
                 element.AddToClassList("pf-table__row");
                 if (i % 2 == 1) element.AddToClassList("pf-table__row--alternate");
                 element.Add(Cell(groups[i].Label, "pf-requirements__when"));
-                row.Requires = CellButton($"{groups[i].Field}Requires", () => Toggle(row, true));
-                row.Avoids = CellButton($"{groups[i].Field}Avoids", () => Toggle(row, false));
+                row.Requires = CellButton($"{key}Requires", () => Toggle(row, true));
+                row.Avoids = CellButton($"{key}Avoids", () => Toggle(row, false));
                 element.Add(row.Requires);
                 element.Add(row.Avoids);
                 table.Add(element);
@@ -101,9 +108,15 @@ namespace FarEmerald.PlayForge.Extended.Editor
             return button;
         }
 
+        // A row's name, and its cells' before Requires and Avoids: its group's field, or Group for the requirements themselves
+        private static string KeyOf(Group group) => string.IsNullOrEmpty(group.Field) ? "Group" : group.Field;
+
+        // A row's group: the requirements' field it names, or the requirements themselves
+        private SerializedProperty GroupOf(Row row) =>
+            string.IsNullOrEmpty(row.Group.Field) ? requirements : requirements.FindPropertyRelative(row.Group.Field);
+
         // A group's list of tag queries: what it requires, or what it must not have
-        private SerializedProperty List(Row row, bool requires) => requirements
-            .FindPropertyRelative(row.Group.Field)?
+        private SerializedProperty List(Row row, bool requires) => GroupOf(row)?
             .FindPropertyRelative(requires ? nameof(AvoidRequireTagGroup.RequireTags) : nameof(AvoidRequireTagGroup.AvoidTags));
 
         // Each cell lists its tags, or says None
@@ -157,11 +170,20 @@ namespace FarEmerald.PlayForge.Extended.Editor
             openRequires = requires;
             (requires ? row.Requires : row.Avoids).AddToClassList(OpenCellClass);
 
-            var group = requirements.FindPropertyRelative(row.Group.Field);
+            var group = GroupOf(row);
             var list = List(row, requires);
             if (group == null || list == null) return;
             var column = requires ? "Requires" : "Must Not Have";
             editor.Add(new PropertyField(list, $"{row.Group.Label}: {column}") { name = "Tags" });
+            // The group's name, which tells it apart where it's imported; the drawer showed it, and the table didn't (ED-66)
+            var groupName = new TextField("Name")
+            {
+                name = "RequirementName",
+                bindingPath = group.FindPropertyRelative(nameof(AvoidRequireTagGroup.Name))?.propertyPath,
+                tooltip = "The group's name, which tells it apart where it's imported; optional",
+            };
+            groupName.AddToClassList(TextField.alignedFieldUssClassName);
+            editor.Add(groupName);
             editor.Add(new PropertyField(group.FindPropertyRelative(nameof(AvoidRequireTagGroup.SourceTemplate)), "Template")
             {
                 tooltip = "A shared requirement template this group can take its tags from",

@@ -171,6 +171,17 @@ tracks each fix below by its ID.
   page, through one table of links in the editor.
 
 ### Changed
+- A requirement group of its own, as a targeting task's, is the requirements table of one row, whose cells open its
+  list with its name and template under it. It was a tinted box with colored badges (ED-66).
+- A tag query is its tag, its match, and its count's comparison and number on one row; a threshold is its level, value
+  and tier on one row; a scaler group's member is its operation, then its scaler. Each was drawn with colors of its
+  own (ED-66).
+- A level source is Unity's object field of level providers, with a line of the levels it gives. Its browser window
+  is gone: Unity's picker lists the providers (ED-66).
+- An ability's behaviour, drawn whole in a component of your own, is a foldout of the fields the ability inspector
+  shows (ED-66).
+- A Workers section's import lists every asset with a worker group, whatever its type, as the group's own import
+  did before ED-57 took it (ED-66).
 - A worker group is its name and its four lists of workers, Unity's reorderable lists, where a new worker starts
   empty. It was a box of its own with colored badges and an Import of its own, inside a section that already
   imports it (ED-57).

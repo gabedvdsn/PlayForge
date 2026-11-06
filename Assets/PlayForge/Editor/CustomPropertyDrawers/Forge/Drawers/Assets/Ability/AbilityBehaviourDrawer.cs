@@ -1,489 +1,93 @@
 ﻿using System;
-using System.Collections.Generic;
 using UnityEditor;
 using UnityEditor.UIElements;
-using UnityEngine;
 using UnityEngine.UIElements;
-using static FarEmerald.PlayForge.Extended.Editor.ForgeDrawerStyles;
 
 namespace FarEmerald.PlayForge.Extended.Editor
 {
     /// <summary>
-    /// Custom property drawer for AbilityBehaviour with polished visual styling.
+    /// An ability's behaviour drawn whole, as an asset or a component of the user's own holds one (ED-66): Unity's
+    /// foldout of the fields the ability inspector shows of it, its targeting, its asset loaders, what cancels it and
+    /// what it blocks, and its stages. The lists are Unity's, where a new loader starts empty and each stage keeps its
+    /// fold as one is removed or dragged; Implicit Tag shows under Use Implicit Targeting while it's on. It drew colored
+    /// sections that folded, lists of its own, and badges.
     /// </summary>
     [CustomPropertyDrawer(typeof(AbilityBehaviour))]
     public class AbilityBehaviourDrawer : PropertyDrawer
     {
         public override VisualElement CreatePropertyGUI(SerializedProperty property)
         {
-            var root = new VisualElement { name = "AbilityBehaviourRoot" };
-            root.style.marginBottom = 4;
-            
-            BuildUI(root, property);
-            
+            var root = new Foldout
+            {
+                name = "AbilityBehaviour",
+                text = preferredLabel ?? property.displayName,
+                // Unity's foldout of a field keeps whether it's open on the field, as it does for its own
+                bindingPath = property.propertyPath,
+            };
+            // The style sheet lays out the fields, wherever the behaviour is drawn (ED-20)
+            ForgeTheme.Apply(root);
+
+            var serialized = property.serializedObject;
+            var path = property.propertyPath;
+            string PathOf(string field) => $"{path}.{field}";
+
+            root.Add(new PropertyField(property.FindPropertyRelative(nameof(AbilityBehaviour.Targeting)), "Targeting") { name = "Targeting" });
+
+            var useImplicit = new Toggle("Use Implicit Targeting")
+            {
+                name = "UseImplicitTargeting",
+                tooltip = "The ability's source is its target",
+            };
+            useImplicit.AddToClassList(Toggle.alignedFieldUssClassName);
+            useImplicit.BindProperty(property.FindPropertyRelative(nameof(AbilityBehaviour.UseImplicitTargeting)));
+            root.Add(useImplicit);
+            var implicitTag = new PropertyField(property.FindPropertyRelative(nameof(AbilityBehaviour.ImplicitTag)), "Implicit Tag")
+            {
+                name = "ImplicitTag",
+                tooltip = "The tag the implicit target is given",
+            };
+            implicitTag.AddToClassList("pf-dependent");
+            root.Add(implicitTag);
+
+            var loaders = new PropertyField(property.FindPropertyRelative(nameof(AbilityBehaviour.AssetLoaders)), "Asset Loaders")
+            {
+                name = "AssetLoaders",
+                tooltip = "Tasks that load the assets the stages use, such as the effects they apply",
+            };
+            ForgeLists.AddsEmpty(loaders, serialized, PathOf(nameof(AbilityBehaviour.AssetLoaders)));
+            root.Add(loaders);
+            root.Add(new PropertyField(property.FindPropertyRelative(nameof(AbilityBehaviour.CancelledBy)), "Cancelled By")
+            {
+                name = "CancelledBy",
+                tooltip = "Abilities, by tag, that cancel this one as they activate, in each stage that names none",
+            });
+            root.Add(new PropertyField(property.FindPropertyRelative(nameof(AbilityBehaviour.Blocks)), "Blocks")
+            {
+                name = "Blocks",
+                tooltip = "Abilities, by tag, that can't activate while this one runs, in each stage that names none",
+            });
+            var stages = new PropertyField(property.FindPropertyRelative(nameof(AbilityBehaviour.Stages)), "Stages") { name = "Stages" };
+            ForgeLists.KeepsStates(stages, serialized, PathOf(nameof(AbilityBehaviour.Stages)));
+            root.Add(stages);
+
+            // Implicit Tag follows the toggle, an Undo among its changes
+            void Show()
+            {
+                SerializedProperty shown;
+                try
+                {
+                    shown = serialized.targetObject != null ? serialized.FindProperty(PathOf(nameof(AbilityBehaviour.UseImplicitTargeting))) : null;
+                }
+                catch (Exception)
+                {
+                    return;
+                }
+                if (shown == null) return;
+                implicitTag.EnableInClassList("pf-hidden", !shown.boolValue && !shown.hasMultipleDifferentValues);
+            }
+            root.TrackSerializedObjectValue(serialized, _ => Show());
+            Show();
             return root;
-        }
-        
-        private void BuildUI(VisualElement root, SerializedProperty property)
-        {
-            root.Clear();
-            
-            // ═══════════════════════════════════════════════════════════════════
-            // Targeting Section
-            // ═══════════════════════════════════════════════════════════════════
-            var targetingSection = CreateTargetingSection(property, root);
-            root.Add(targetingSection);
-            
-            root.Add(CreateDivider());
-
-            // ═══════════════════════════════════════════════════════════════════
-            // Asset Loaders Section
-            // ═══════════════════════════════════════════════════════════════════
-            var loadingSection = CreateAssetLoaderSection(property, root);
-            root.Add(loadingSection);
-
-            root.Add(CreateDivider());
-
-            // ═══════════════════════════════════════════════════════════════════
-            // Stages Section
-            // ═══════════════════════════════════════════════════════════════════
-            var stagesSection = CreateStagesSection(property, root);
-            root.Add(stagesSection);
-        }
-        
-        private VisualElement CreateTargetingSection(SerializedProperty property, VisualElement root)
-        {
-            // Kept per asset for the editor session (ED-18)
-            bool isCollapsed = DrawerCollapseState.IsCollapsed(property, collapsedByDefault: false, "Targeting");
-            
-            var container = new VisualElement { name = "TargetingSection" };
-            container.style.borderLeftWidth = 3;
-            container.style.borderLeftColor = Colors.AccentCyan;
-            container.style.borderTopLeftRadius = 4;
-            container.style.borderBottomLeftRadius = 4;
-            container.style.borderTopRightRadius = 4;
-            container.style.borderBottomRightRadius = 4;
-            container.style.backgroundColor = Colors.SectionBackground;
-            container.style.paddingTop = 6;
-            container.style.paddingBottom = isCollapsed ? 6 : 8;
-            container.style.paddingLeft = 8;
-            container.style.paddingRight = 6;
-            container.style.marginTop = 4;
-            container.style.marginBottom = 4;
-            
-            // Header
-            var header = new VisualElement();
-            header.style.flexDirection = FlexDirection.Row;
-            header.style.alignItems = Align.Center;
-            header.style.marginBottom = isCollapsed ? 0 : 6;
-            
-            // Collapse button
-            var collapseBtn = CreateCollapseButton(isCollapsed, () =>
-            {
-                DrawerCollapseState.SetCollapsed(property, !isCollapsed, "Targeting");
-                ScheduleRebuild(root, property);
-            });
-            header.Add(collapseBtn);
-            
-            // Icon and title
-            var iconLabel = new Label(Icons.Target);
-            iconLabel.style.fontSize = 14;
-            iconLabel.style.marginRight = 6;
-            iconLabel.style.color = Colors.AccentCyan;
-            header.Add(iconLabel);
-            
-            var titleLabel = new Label("Targeting");
-            titleLabel.style.unityFontStyleAndWeight = FontStyle.Bold;
-            titleLabel.style.fontSize = 11;
-            titleLabel.style.color = Colors.HeaderText;
-            titleLabel.style.flexGrow = 1;
-            header.Add(titleLabel);
-            
-            // Implicit targeting badge
-            var implicitProp = property.FindPropertyRelative("UseImplicitTargeting");
-            if (implicitProp != null && implicitProp.boolValue)
-            {
-                var badge = CreateBadge("Implicit", Colors.SectionCyan);
-                badge.tooltip = "Uses casting system as implicit target";
-                header.Add(badge);
-            }
-            
-            container.Add(header);
-            
-            if (!isCollapsed)
-            {
-                // Targeting task field
-                var targetingProp = property.FindPropertyRelative("Targeting");
-                if (targetingProp != null)
-                {
-                    var targetingField = new PropertyField(targetingProp, "Targeting Task");
-                    targetingField.style.marginBottom = 4;
-                    container.Add(targetingField);
-                }
-                
-                // Implicit targeting toggle
-                if (implicitProp != null)
-                {
-                    var implicitField = new PropertyField(implicitProp, "Use Implicit Targeting");
-                    implicitField.tooltip = "Implicitly provides the casting system as a target";
-                    container.Add(implicitField);
-                }
-            }
-            else
-            {
-                // Collapsed summary
-                var targetingProp = property.FindPropertyRelative("Targeting");
-                string summary = GetTargetingSummary(targetingProp, implicitProp);
-                var summaryLabel = new Label(summary);
-                summaryLabel.style.fontSize = 10;
-                summaryLabel.style.color = Colors.HintText;
-                summaryLabel.style.marginLeft = 22;
-                summaryLabel.style.marginTop = 2;
-                container.Add(summaryLabel);
-            }
-            
-            return container;
-        }
-
-        private VisualElement CreateAssetLoaderSection(SerializedProperty property, VisualElement root)
-        {
-            // Kept per asset for the editor session (ED-18)
-            bool isCollapsed = DrawerCollapseState.IsCollapsed(property, collapsedByDefault: false, "AssetLoaders");
-
-            var assetLoadersProp = property.FindPropertyRelative("AssetLoaders");
-
-            var container = new VisualElement { name = "AssetLoadersSection" };
-            container.style.borderLeftWidth = 3;
-            container.style.borderLeftColor = Colors.AccentOrange;
-            container.style.borderTopLeftRadius = 4;
-            container.style.borderBottomLeftRadius = 4;
-            container.style.borderTopRightRadius = 4;
-            container.style.borderBottomRightRadius = 4;
-            container.style.backgroundColor = Colors.SectionBackground;
-            container.style.paddingTop = 6;
-            container.style.paddingBottom = isCollapsed ? 6 : 8;
-            container.style.paddingLeft = 8;
-            container.style.paddingRight = 6;
-            container.style.marginTop = 4;
-            container.style.marginBottom = 4;
-
-            // Header
-            var header = new VisualElement();
-            header.style.flexDirection = FlexDirection.Row;
-            header.style.alignItems = Align.Center;
-            header.style.marginBottom = isCollapsed ? 0 : 6;
-
-            // Collapse button
-            var collapseBtn = CreateCollapseButton(isCollapsed, () =>
-            {
-                DrawerCollapseState.SetCollapsed(property, !isCollapsed, "AssetLoaders");
-                ScheduleRebuild(root, property);
-            });
-            header.Add(collapseBtn);
-
-            // Title
-
-            var titleLabel = new Label("Asset Loaders");
-            titleLabel.style.unityFontStyleAndWeight = FontStyle.Bold;
-            titleLabel.style.fontSize = 11;
-            titleLabel.style.color = Colors.HeaderText;
-            titleLabel.style.flexGrow = 1;
-            header.Add(titleLabel);
-
-            // Count badge
-            if (assetLoadersProp != null)
-            {
-                int count = assetLoadersProp.arraySize;
-                var badge = CreateBadge($"{count}", Colors.SectionOrange);
-                header.Add(badge);
-            }
-
-            container.Add(header);
-
-            if (!isCollapsed && assetLoadersProp != null)
-            {
-                // Hint
-                var hint = new Label("Load assets into the data packet before stages execute.");
-                hint.style.fontSize = 10;
-                hint.style.color = Colors.HintText;
-                hint.style.marginBottom = 6;
-                container.Add(hint);
-
-                // Asset loader entries
-                var loadersList = new VisualElement { name = "AssetLoadersList" };
-                loadersList.style.marginTop = 2;
-
-                for (int i = 0; i < assetLoadersProp.arraySize; i++)
-                {
-                    var loaderProp = assetLoadersProp.GetArrayElementAtIndex(i);
-
-                    var entryRow = new VisualElement();
-                    entryRow.style.flexDirection = FlexDirection.Row;
-                    entryRow.style.alignItems = Align.FlexStart;
-                    entryRow.style.marginBottom = 4;
-
-                    // Loader property field (takes up most of the row)
-                    var loaderField = new PropertyField(loaderProp);
-                    loaderField.style.flexGrow = 1;
-                    entryRow.Add(loaderField);
-
-                    // Remove button
-                    int capturedIndex = i;
-                    var removeBtn = new Button { text = Icons.Cross, tooltip = "Remove" };
-                    removeBtn.style.width = 20;
-                    removeBtn.style.height = 20;
-                    removeBtn.style.marginLeft = 4;
-                    removeBtn.style.paddingLeft = 0;
-                    removeBtn.style.paddingRight = 0;
-                    removeBtn.style.paddingTop = 0;
-                    removeBtn.style.paddingBottom = 0;
-                    removeBtn.style.fontSize = 10;
-                    removeBtn.style.unityTextAlign = TextAnchor.MiddleCenter;
-                    ApplyButtonStyle(removeBtn);
-                    removeBtn.clicked += () =>
-                    {
-                        assetLoadersProp.DeleteArrayElementAtIndex(capturedIndex);
-                        assetLoadersProp.serializedObject.ApplyModifiedProperties();
-                        ScheduleRebuild(root, property);
-                    };
-                    entryRow.Add(removeBtn);
-
-                    loadersList.Add(entryRow);
-                }
-
-                // Add loader button
-                var addButtonRow = new VisualElement();
-                addButtonRow.style.flexDirection = FlexDirection.Row;
-                addButtonRow.style.justifyContent = Justify.Center;
-                addButtonRow.style.marginTop = 8;
-
-                var addBtn = new Button { text = "+ Add Asset Loader" };
-                addBtn.style.paddingLeft = 16;
-                addBtn.style.paddingRight = 16;
-                addBtn.style.paddingTop = 4;
-                addBtn.style.paddingBottom = 4;
-                ApplyButtonStyle(addBtn);
-                addBtn.clicked += () =>
-                {
-                    assetLoadersProp.arraySize++;
-                    assetLoadersProp.serializedObject.ApplyModifiedProperties();
-                    ScheduleRebuild(root, property);
-                };
-                addButtonRow.Add(addBtn);
-
-                loadersList.Add(addButtonRow);
-                container.Add(loadersList);
-            }
-            else if (isCollapsed && assetLoadersProp != null)
-            {
-                int count = assetLoadersProp.arraySize;
-                var summary = count == 0 ? "No asset loaders" : $"{count} loader{(count != 1 ? "s" : "")}";
-                var summaryLabel = new Label(summary);
-                summaryLabel.style.fontSize = 10;
-                summaryLabel.style.color = Colors.HintText;
-                summaryLabel.style.marginLeft = 22;
-                summaryLabel.style.marginTop = 2;
-                container.Add(summaryLabel);
-            }
-
-            return container;
-        }
-        
-        private VisualElement CreateStagesSection(SerializedProperty property, VisualElement root)
-        {
-            // Kept per asset for the editor session (ED-18)
-            bool isCollapsed = DrawerCollapseState.IsCollapsed(property, collapsedByDefault: false, "Stages");
-            
-            var container = new VisualElement { name = "StagesSection" };
-            container.style.borderLeftWidth = 3;
-            container.style.borderLeftColor = Colors.AccentBlue;
-            container.style.borderTopLeftRadius = 4;
-            container.style.borderBottomLeftRadius = 4;
-            container.style.borderTopRightRadius = 4;
-            container.style.borderBottomRightRadius = 4;
-            container.style.backgroundColor = Colors.SectionBackground;
-            container.style.paddingTop = 6;
-            container.style.paddingBottom = 8;
-            container.style.paddingLeft = 8;
-            container.style.paddingRight = 6;
-            container.style.marginTop = 4;
-            container.style.marginBottom = 4;
-            
-            // Header
-            var header = new VisualElement();
-            header.style.flexDirection = FlexDirection.Row;
-            header.style.alignItems = Align.Center;
-            header.style.marginBottom = isCollapsed ? 0 : 6;
-            
-            // Collapse button
-            var collapseBtn = CreateCollapseButton(isCollapsed, () =>
-            {
-                DrawerCollapseState.SetCollapsed(property, !isCollapsed, "Stages");
-                ScheduleRebuild(root, property);
-            });
-            header.Add(collapseBtn);
-            
-            // Title
-            
-            var titleLabel = new Label("Execution Stages");
-            titleLabel.style.unityFontStyleAndWeight = FontStyle.Bold;
-            titleLabel.style.fontSize = 11;
-            titleLabel.style.color = Colors.HeaderText;
-            titleLabel.style.flexGrow = 1;
-            header.Add(titleLabel);
-            
-            // Stage count badge
-            var stagesProp = property.FindPropertyRelative("Stages");
-            if (stagesProp != null)
-            {
-                int count = stagesProp.arraySize;
-                var badge = CreateBadge($"{count} stage{(count != 1 ? "s" : "")}", Colors.SectionBlue);
-                header.Add(badge);
-            }
-            
-            container.Add(header);
-            
-            if (!isCollapsed && stagesProp != null)
-            {
-                // Stages list with custom rendering
-                var stagesList = new VisualElement { name = "StagesList" };
-                stagesList.style.marginTop = 4;
-                
-                for (int i = 0; i < stagesProp.arraySize; i++)
-                {
-                    var stageProp = stagesProp.GetArrayElementAtIndex(i);
-                    var stageElement = new PropertyField(stageProp);
-                    stageElement.style.marginBottom = 4;
-                    stagesList.Add(stageElement);
-                }
-                
-                // Add stage button
-                var addButtonRow = new VisualElement();
-                addButtonRow.style.flexDirection = FlexDirection.Row;
-                addButtonRow.style.justifyContent = Justify.Center;
-                addButtonRow.style.marginTop = 8;
-                
-                var addBtn = new Button { text = "+ Add Stage" };
-                addBtn.style.paddingLeft = 16;
-                addBtn.style.paddingRight = 16;
-                addBtn.style.paddingTop = 4;
-                addBtn.style.paddingBottom = 4;
-                ApplyButtonStyle(addBtn);
-                addBtn.clicked += () =>
-                {
-                    stagesProp.arraySize++;
-                    stagesProp.serializedObject.ApplyModifiedProperties();
-                    ScheduleRebuild(root, property);
-                };
-                addButtonRow.Add(addBtn);
-                
-                stagesList.Add(addButtonRow);
-                container.Add(stagesList);
-            }
-            else if (isCollapsed && stagesProp != null)
-            {
-                // Collapsed summary
-                var summary = GetStagesSummary(stagesProp);
-                var summaryLabel = new Label(summary);
-                summaryLabel.style.fontSize = 10;
-                summaryLabel.style.color = Colors.HintText;
-                summaryLabel.style.marginLeft = 22;
-                summaryLabel.style.marginTop = 2;
-                container.Add(summaryLabel);
-            }
-            
-            return container;
-        }
-        
-        // ═══════════════════════════════════════════════════════════════════════════
-        // Helpers
-        // ═══════════════════════════════════════════════════════════════════════════
-        
-        private Button CreateCollapseButton(bool isCollapsed, Action onClick)
-        {
-            var btn = new Button { text = isCollapsed ? "▶" : "▼", tooltip = isCollapsed ? "Expand" : "Collapse" };
-            btn.style.width = 18;
-            btn.style.height = 18;
-            btn.style.marginRight = 4;
-            btn.style.fontSize = 8;
-            btn.style.paddingLeft = 0;
-            btn.style.paddingRight = 0;
-            btn.style.paddingTop = 0;
-            btn.style.paddingBottom = 0;
-            btn.style.unityTextAlign = TextAnchor.MiddleCenter;
-            ApplyButtonStyle(btn);
-            btn.clicked += onClick;
-            return btn;
-        }
-        
-        private static void ApplyButtonStyle(Button btn)
-        {
-            btn.style.borderTopLeftRadius = 3;
-            btn.style.borderTopRightRadius = 3;
-            btn.style.borderBottomLeftRadius = 3;
-            btn.style.borderBottomRightRadius = 3;
-            btn.style.backgroundColor = Colors.ButtonBackground;
-            btn.RegisterCallback<MouseEnterEvent>(_ => btn.style.backgroundColor = Colors.ButtonHover);
-            btn.RegisterCallback<MouseLeaveEvent>(_ => btn.style.backgroundColor = Colors.ButtonBackground);
-        }
-        
-        private string GetTargetingSummary(SerializedProperty targetingProp, SerializedProperty implicitProp)
-        {
-            var parts = new List<string>();
-            
-            if (targetingProp != null && targetingProp.managedReferenceValue != null)
-            {
-                var typeName = targetingProp.managedReferenceValue.GetType().Name;
-                typeName = typeName.Replace("TargetingAbilityTask", "").Replace("Targeting", "");
-                parts.Add(typeName);
-            }
-            else
-            {
-                parts.Add("No targeting task");
-            }
-            
-            if (implicitProp != null && implicitProp.boolValue)
-            {
-                parts.Add("+ implicit self");
-            }
-            
-            return string.Join(" ", parts);
-        }
-        
-        private string GetStagesSummary(SerializedProperty stagesProp)
-        {
-            if (stagesProp.arraySize == 0)
-                return "No stages defined";
-            
-            int totalTasks = 0;
-            for (int i = 0; i < stagesProp.arraySize; i++)
-            {
-                var stageProp = stagesProp.GetArrayElementAtIndex(i);
-                var tasksProp = stageProp.FindPropertyRelative("Tasks");
-                if (tasksProp != null)
-                    totalTasks += tasksProp.arraySize;
-            }
-            
-            return $"{stagesProp.arraySize} stage(s), {totalTasks} total task(s)";
-        }
-        
-        private void ScheduleRebuild(VisualElement root, SerializedProperty property)
-        {
-            var propPath = property.propertyPath;
-            var targetObject = property.serializedObject.targetObject;
-            var serializedObject = property.serializedObject;
-            
-            root.schedule.Execute(() =>
-            {
-                if (targetObject == null) return;
-                // The drawer's own SerializedObject, so the rebuilt UI edits every selected asset. A copy over the
-                // first target edited that asset alone (ED-12)
-                if (root.panel == null) return;
-                var so = serializedObject;
-                so.Update();
-                var freshProp = so.FindProperty(propPath);
-                if (freshProp != null) BuildUI(root, freshProp);
-            });
         }
     }
 }

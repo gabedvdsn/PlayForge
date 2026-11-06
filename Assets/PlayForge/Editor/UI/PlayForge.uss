@@ -433,7 +433,8 @@
 /* A field that depends on another indents its label 14 px under it, as Equipped Too does under Allow Duplicates. A
    property field's own field takes the indent too, as Ticks does under Periodic Ticks */
 .pf-root .pf-dependent > .unity-base-field__label,
-.pf-root .pf-dependent > .unity-base-field > .unity-base-field__label {
+.pf-root .pf-dependent > .unity-base-field > .unity-base-field__label,
+.pf-root .pf-dependent .pf-tag-field > .unity-base-field__label {
     padding-left: 14px;
 }
 
@@ -622,6 +623,35 @@
 }
 
 .pf-root .pf-value-pair__part > .unity-base-field__label {
+    min-width: 0;
+    width: auto;
+    margin: 0;
+    padding: 0 4px 0 0;
+    color: var(--pf-secondary-text);
+}
+
+/* A row of fields as one field, each part with its name, if it has one, before it in secondary text, as Unity's
+   two-part fields show X and Y: a tag query's count, a level threshold (ED-66) */
+.pf-root .pf-parts-field__input {
+    flex-direction: row;
+    flex-grow: 1;
+    flex-shrink: 1;
+    min-width: 0;
+}
+
+.pf-root .pf-parts-field__part {
+    flex-grow: 1;
+    flex-shrink: 1;
+    flex-basis: 0;
+    min-width: 0;
+    margin: 0;
+}
+
+.pf-root .pf-parts-field__part--next {
+    margin-left: 6px;
+}
+
+.pf-root .pf-parts-field__part > .unity-base-field__label {
     min-width: 0;
     width: auto;
     margin: 0;
@@ -822,6 +852,11 @@
 .pf-root .pf-requirements__when {
     width: 84px;
     flex-shrink: 0;
+}
+
+/* A lone requirement group's table: its row is named by its field, as "Requirements" (ED-66) */
+.pf-root .pf-requirements--lone .pf-requirements__when {
+    width: 120px;
 }
 
 .pf-root .pf-table__header > .pf-requirements__tags {

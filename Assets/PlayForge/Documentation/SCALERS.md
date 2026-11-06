@@ -22,6 +22,9 @@ then its field menu, which opens as wide as its items:
   code set under its **Key** as the effect was applied ([EFFECTS.md](EFFECTS.md)), or its **Default** where none was
   set. An attribute set's values use the cached kinds,
   which read other attributes as the entity's values change.
+- A **Threshold** lists its thresholds, each a **Level**, the **Value** it reads from that level up, and an optional
+  **Tier** name. A **Group** lists its members, each an **Operation**, how its result combines with the members'
+  before it, then its **Scaler**.
 
 Choosing a kind is one Undo step. A constant made By Level keeps its number as its first level's value.
 

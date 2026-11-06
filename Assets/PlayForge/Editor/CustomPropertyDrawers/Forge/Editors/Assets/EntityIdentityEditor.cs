@@ -482,6 +482,7 @@ namespace FarEmerald.PlayForge.Extended.Editor
 
                 SerializedObject = serializedObject,
                 PropertyPaths = new[] { nameof(EntityIdentity.WorkerGroup) },
+                ImportAcrossTypes = true,
                 OnImportComplete = OnSectionReplaced,
                 OnClearComplete = OnSectionReplaced,
             });

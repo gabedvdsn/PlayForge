@@ -463,6 +463,12 @@ namespace FarEmerald.PlayForge.Extended.Editor
             /// If true, Import button will be hidden even if PropertyPaths are set.
             /// </summary>
             public bool HideImportButton;
+
+            /// <summary>
+            /// Import lists any PlayForge asset with the section's fields, of the same types at the same paths, as an item's
+            /// worker group is a source for an ability's. A worker group's own Import did this, and went with its box (ED-66).
+            /// </summary>
+            public bool ImportAcrossTypes;
             
             /// <summary>
             /// If true, Clear button will be hidden even if PropertyPaths are set.
@@ -545,7 +551,8 @@ namespace FarEmerald.PlayForge.Extended.Editor
                         config.SerializedObject,
                         config.Title,
                         config.PropertyPaths,
-                        config.OnImportComplete)
+                        config.OnImportComplete,
+                        config.ImportAcrossTypes)
                     : (Action)(() => Debug.LogWarning($"Import not configured for section '{config.Name}'. Set SerializedObject and PropertyPaths."));
                 result.ImportButton = section.AddAction($"{config.Name}Import", ForgeGlyphShape.Import,
                     config.HasImportClearSupport ? $"Import {config.Title} from another asset" : "Import not configured",
