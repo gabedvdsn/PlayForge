@@ -7,6 +7,11 @@ tracks each fix below by its ID.
 ## [Unreleased]
 
 ### Added
+- A gameplay mono process, as a projectile, carries attributes of its own (`Attributes`, `ProcessAttribute`): each
+  read by a role, as a projectile's speed by ProjectileSpeed, and starting as its own value, a number or a scaler at
+  the spawning ability's level, its origin's attribute, or the origin's where it has one. The data that spawns it
+  can set one, and its code reads and sets them as it runs. A projectile's speed is the one it carries, else its
+  caster's (FEAT-24).
 - The Problems window's By Rule view: problems grouped under the rule each breaks, with a Quick Fix where one step
   fixes a problem, as storing a stale asset tag or clamping a magnitude to its bounds, and a Fix All for each rule,
   each one Undo step. A rule of your own names its group with `ForgeValidationRule.Name`, and offers a fix with
@@ -402,6 +407,9 @@ tracks each fix below by its ID.
   Asking whether its sequence was paused took 24 bytes a frame.
 
 ### Fixed
+- A process Create Mono Process spawns takes the ability as its origin, so its effects are the caster's at the
+  ability's level. It took GameRoot. And the task spawns its own processes where the data holds none; it spawned
+  them only with Internal Is Override on (GAS-65).
 - A scaler spread over its provider's levels up to a level read its last value at every level above the first: it
   ended its range at the level being read. It ends at the lower of its Max Level and the provider's last level
   (GAS-64).

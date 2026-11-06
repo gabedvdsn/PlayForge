@@ -418,6 +418,13 @@ from. It lives outside `Assets/` so it never ships in the package.
   - **Textures:** placeholders made in code and saved as texture assets, so every texture slot is filled and can
     take art later.
   - **Packaging:** one sample, Demo, in place of Demos. Battle stays, the sample the labs use.
+- Decision 39, 2026-11-06: what a spawned thing knows, Open decision 20, the user's answer as the demo's build
+  starts. Things like a projectile carry their own attributes and stay mono processes; the approach was left to
+  Claude. A gameplay mono process (`AbstractGameplayMonoProcess`, which knows its origin) carries attributes of its
+  own, each read by a role and starting as its own value, the origin's, or the origin's where it has one (FEAT-24).
+  Plain mono processes don't: with no origin, they have no level for a value to read. The user also asked that
+  levels of abilities, items and heroes be easy to change in the demo, and found the roster fine as long as the
+  abilities show a variety of kinds and creative use of task sequences and effects.
 
 **Open. Ask the user; do not assume:**
 1. ~~**Uncommitted changes**~~: decided, see above.
@@ -439,9 +446,7 @@ from. It lives outside `Assets/` so it never ships in the package.
 17. ~~**The submission Editor (SP-22, SP-23)**~~: decided, see above.
 18. ~~**The labs' scenes**~~: decided, see above (Decision 30).
 19. ~~**Where the Debugger's edits go (ED-40)**~~: decided, see above (Decision 31).
-20. **What a spawned thing knows (FEAT-24)**: an arrow an ability fires takes its speed from its archer's Projectile
-    Speed attribute, read by tag on each frame of its flight, and fails if the archer doesn't have it. Should the
-    arrow carry its own speed, set as it spawns? The user's note ends mid-sentence.
+20. ~~**What a spawned thing knows (FEAT-24)**~~: decided, see above (Decision 39).
 21. ~~**The demo's play (Decision 37)**~~: decided, see above (Decision 38).
 
 ## Roadmap
@@ -654,6 +659,7 @@ had no letter in the review. TS-AA onward came from the test project.
 | GAS-62 | H | 5 | A targeting task filed each target it selected by setting the primary, so each one replaced the last: an Auto Target of every match kept only the farthest, and one of two kept the second nearest. Then Target Real took only the first packet's entity, and Apply Effects and Apply/Remove Effects only the first target. So an area ability, Auto Target and then Apply Effects, struck one entity, and Auto Target From Data with Primary Only off kept one of the targets it says it adds. Found by the stress suite's area run. Fixed: the auto-targeting tasks file every target they select, in order (`SetTargetingPackets`), a resolve files each one's entity under Target Real, and both apply tasks reach each target, through `TryGetAt`, which builds no list | `AbilitySystem/Tasks/Targeting/Authored/AutoTarget*.cs`, `Utils/ProcessTaskUtil.cs`, `AbilitySystem/Ability/AbilityProxy/Core/AbilityDataPacket.cs` (`ResolveTarget`), `AbilitySystem/Tasks/Gameplay/Apply*EffectsAbilityTask.cs` | fixed |
 | GAS-63 | M | 5 | An ability's stage list had no initializer, so an ability whose behaviour was made in code had none until it was saved and loaded, and adding a stage to it threw. Found by the authoring round trip, filling an ability The Forge made. Fixed: the list starts empty, as a load leaves it; an ability with no stage still activates and ends | `AbilitySystem/Ability/AbilityProxy/Core/AbilityBehaviour.cs` | fixed |
 | GAS-64 | M | 6 | A scaler spread over its provider's levels "up to a level" (`ELevelConfig.Clamped`) ended its range at the lower of its Max Level and the level being read, as its tooltip said, so a level always sat at the range's end and every level above the first read the last value. ED-62's Reads row showed it, and the user chose to change it. Fixed: the range ends at the lower of the Max Level and the provider's last level, and a level past it reads the last value; the Reads row reads it the same way | `AbstractScaler.cs` (`GetEffectiveMaxLevel`), `ScalerFields.cs` | verified |
+| GAS-65 | H | 7 | A process an ability's Create Mono Process task spawned took GameRoot as its origin, since nothing passed it the ability, so a projectile read GameRoot's speed and applied GameRoot's effects; the labs and Battle set the origin themselves. And the task spawned its own processes only with Internal Is Override on, so a task given processes and nothing else spawned none. Found surveying for the demo (Decision 37). Fixed: the task passes the ability as the origin (`Tags.DERIVATION`), unless the data has one, and spawns its own processes where the data holds none | `CreateMonoProcessAbilityTask.cs` | verified |
 | GAS-P1 | M | 0 | `ActionQueue` LINQ allocations; snapshot built every frame (PF-006) | `ActionQueue.cs:41, 46, 156`, `FrameSummary.cs:340-351` | verified |
 | GAS-P2 | M | 0 | Tag and FrameSummary allocations (PF-007) | `TagCache.cs:60`, `TagQuery.cs:89-136`, `FrameSummary.cs:306-308` | verified |
 | GAS-P3 | M | 3 | Each application revalidates every container and rebuilds all tags (area application is quadratic). Measured: an instant application on an entity carrying 1,000 effects took 0.49 ms, 135 times one on an entity carrying 2. Now the requirements wait for one pass at the next tick, a shelved container's tags are counted as it lands, and re-application and removal find containers in an index by asset tag | `EffectSystemComponent.cs:312-348`, `GameplayAbilitySystem.cs:250-281` | verified |
@@ -825,7 +831,7 @@ reads the old demos' fullest assets, so it moves to the new demo's as the old go
 | FEAT-21 | Run a sequence made in code | Run Sequence ran only a sequence a static method made, by name (`TaskSequenceReference`), so a sequence made in code, as an ability built as the game runs makes one with `TaskSequenceBuilder`, couldn't run in an ability; Proving Grounds' nested-sequence tests handed theirs over in a static field. Found by the ability crafting scenario. Done (Decision 30): `RunSequenceTask.Definition`, a `TaskSequenceDefinition` made in code, of which each activation runs a fresh sequence |
 | FEAT-22 | Time scale from an attribute | The review's time magic: an entity's time (FEAT-7) could be set only by its game's code, through its clock, so no effect could slow or haste one, and two that tried would each need code to undo the other. Found by the time magic scenario. Done (Decision 30): an identity's Time Scale (`EntityIdentity.TimeScaleAttribute`, and the runtime identity's) names the attribute its time runs at, read as each step begins, so an effect on it slows or hastes the entity, stacks with others as modifiers do, and ends with its effect. The Entity inspector's Attributes section edits it |
 | FEAT-23 | Move an effect between entities | The review's possession: an effect could only be taken off one entity and applied to another, which started its time again, ran its application's workers, commits and contained effects a second time, and told both. Found by the possession scenario. Done (Decision 30): `EffectSystemComponent.MoveTo(effect, onto)` moves each of the effect's containers with its stacks, its time left and what applied it, as a restore puts one back (FEAT-9); its lasting modifiers, granted tags, lent abilities and lasting cues go with it, and nothing of a removal or an application runs |
-| FEAT-24 | What a spawned thing knows | The user's question of 2026-11-06, for Phase 6: an arrow an ability fires, how does it know how fast to fly? Should its speed be an attribute, and should the arrow carry it, set as it spawns with respect to factors, as …? The note ends there. Today `ProjectileMonoProcess` reads its source's Projectile Speed attribute by tag on each frame of its flight, and fails if the source doesn't have it. Open: Open decision 20 |
+| FEAT-24 | What a spawned thing knows | The user's question of 2026-11-06: an arrow an ability fires, how does it know how fast to fly? `ProjectileMonoProcess` read its caster's Projectile Speed by tag, and failed where the caster had none. Done (Decision 39): a gameplay mono process carries attributes of its own, `AbstractGameplayMonoProcess.Attributes`, each a `ProcessAttribute`: the attribute it is, the role it's read by (a projectile's speed is `Tags.PROJECTILE_SPEED`), and where it starts, its own value (a number, or a scaler at the spawning ability's level), the origin's attribute, or the origin's where it has one. What spawns it can set one under its role in the data, and its code reads and sets them (`TryGetRole`, `SetRole`, `TryGetAttribute`, `SetAttribute`, `AttributeChanged`). A role with no own attribute still reads the origin's through `AttributePairs` |
 | FEAT-25 | Quick fixes for problems | The user's request of 2026-11-06: the Problems window gets a second view, its problems grouped under the rule each breaks, and where a simple step fixes a problem, a Quick Fix for it and a Fix All for its rule's problems. Done: By Rule, beside the list in the window's toolbar. Each problem knows its rule (`ForgeProblem.Rule`), each rule names what it finds (`ForgeValidationRule.Name`), and a problem a step fixes carries the step (`ForgeProblem.Fix`, a `ForgeQuickFix`): Store the Tag, Use Own Levels, Make It Constant, Give It Its Own, Clamp to Bounds and Remove the Element. A fix and a Fix All are one Undo step each. A problem whose fix needs a choice, as which stage applies usage effects, has none | `ForgeProblemsWindow.cs`, `ForgeRules.cs`, `ForgeProblem.cs`, `ForgeValidator.cs` | verified |
 
 **Phase 5's order,** from the review's plan for the test project (its labs, one at a time) and the table above. A lab
@@ -890,6 +896,16 @@ GAS-4 with GAS-5, PC-6, and TS-I with PC-5.
 ## Log
 
 Record baselines, gate results and notable decisions here, newest first.
+
+- 2026-11-06, **GAS-65 and FEAT-24: what an ability spawns (Decision 39).** The user approved the demo's plan and
+  asked for the framework's gaps closed first, above all attributes on mono processes.
+  - Create Mono Process passes the ability as the spawned process's origin, and spawns its own processes where
+    the data holds none.
+  - A gameplay mono process carries `ProcessAttribute`s: a projectile flies at the speed it carries, from its
+    prefab, its ability's level, its caster, or the data that spawned it, and its code can change it mid-flight.
+  - A scaler made in code spreads over its levels unless `StretchOverLevels` is off, as the inspector sets it.
+  - The GAS-65 tests failed first against the old task; the FEAT-24 tests call members the old code hadn't.
+  - PlayMode: 1315 passed of 1323, 0 failed, 8 skipped (the planted failures and the soak), 9 new. EditMode: 518 of 518.
 
 - 2026-11-06, **Phase 7's design, for the user's review.** `Docs/DEMO_PLAN.md`: the arena and its controls, the twelve
   attributes and the Hero sets, the damage model, five heroes of an attack and three abilities each, fourteen items,

@@ -109,8 +109,8 @@ namespace FarEmerald.PlayForge
         /// <summary>Used to communicate the act of targeting to the targeted entity</summary>
         public static Tag TARGETED_INTENT { get; } = Tag.GenerateAsUnique("TargetedIntent");
         
-        /// <summary>Used to communicate the act of targeting to the targeted entity</summary>
-        public static Tag PROJECTILE_SPEED { get; } = Tag.GenerateAsUnique("ProjectileSpeed");
+        /// <summary>The role a projectile reads its speed by, among the attributes it carries or its origin's (FEAT-24)</summary>
+        [ForgeContextDefault(ForgeContext.Data)] public static Tag PROJECTILE_SPEED { get; } = Tag.GenerateAsUnique("ProjectileSpeed");
         
         // ═══════════════════════════════════════════════════════════════════════════
         // Report Tags

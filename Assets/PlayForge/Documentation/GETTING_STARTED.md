@@ -83,6 +83,13 @@ var result = ProcessControl.Register(projectile).HandledBy(gas).With(data).Run()
 if (!result) Debug.LogWarning($"Not registered: {result.Refusal}");
 ```
 
+A process an ability's **Create Mono Process** task spawns takes the ability as its origin, so the effects it
+applies are the caster's, at the ability's level. A gameplay mono process, as `ProjectileMonoProcess`, carries
+attributes of its own in **Attributes**: each is an attribute, the role it's read by (a projectile reads its speed
+as ProjectileSpeed), and where it starts: its own value, a number or a scaler read at the spawning ability's level,
+the caster's attribute, or the caster's where it has one. The data that spawns it can set one under its role, and
+its code reads and sets them with `TryGetRole`, `SetRole`, `TryGetAttribute` and `SetAttribute`.
+
 A process that requires control waits after it registers; `relay.Run()` starts it. The `Register` overloads that take
 an `out` relay still work, marked obsolete, and go before the first Asset Store release.
 
