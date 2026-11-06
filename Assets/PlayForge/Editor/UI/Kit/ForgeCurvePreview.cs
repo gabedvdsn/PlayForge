@@ -19,6 +19,7 @@ namespace FarEmerald.PlayForge.Extended.Editor
 
         private float[] values = Array.Empty<float>();
         private float[] second;
+        private EScalerInterpolation? between;
         private readonly VisualElement secondColor;
 
         public ForgeCurvePreview()
@@ -31,11 +32,16 @@ namespace FarEmerald.PlayForge.Extended.Editor
             generateVisualContent += Draw;
         }
 
-        /// <summary>Shows these values, one per level, and a second series beside them, or none.</summary>
-        public void Show(float[] shown, float[] beside = null)
+        /// <summary>
+        /// Shows these values, one per level, and a second series beside them, or none. Values a scaler spreads over its
+        /// levels pass through a curve, which <paramref name="between"/> says how a level between two reads: the earlier
+        /// value in steps, a straight line, or a smooth curve. Without it, a line joins each level's value to the next.
+        /// </summary>
+        public void Show(float[] shown, float[] beside = null, EScalerInterpolation? between = null)
         {
             values = shown ?? Array.Empty<float>();
             second = beside;
+            this.between = between;
             tooltip = Describe(values);
             MarkDirtyRepaint();
         }
@@ -75,28 +81,49 @@ namespace FarEmerald.PlayForge.Extended.Editor
                 max += 1f;
             }
 
-            if (second != null && second.Length > 0) Series(painter, second, min, max, rect, secondColor.resolvedStyle.color);
-            Series(painter, values, min, max, rect, resolvedStyle.color);
+            if (second != null && second.Length > 0) Series(painter, second, min, max, rect, secondColor.resolvedStyle.color, null);
+            Series(painter, values, min, max, rect, resolvedStyle.color, between);
         }
 
-        // One series: a line through its points, spread across the width, then a dot at each point
-        private static void Series(Painter2D painter, float[] series, float min, float max, Rect rect, Color color)
+        // One series: a line through its points, spread across the width, or the curve a spread scaler reads through them,
+        // then a dot at each point
+        private static void Series(Painter2D painter, float[] series, float min, float max, Rect rect, Color color, EScalerInterpolation? between)
         {
             if (series.Length == 0) return;
             const float pad = 3f;
-            Vector2 At(int i)
-            {
-                float x = series.Length == 1 ? rect.width / 2f : pad + (rect.width - 2 * pad) * i / (series.Length - 1);
-                float y = pad + (rect.height - 2 * pad) * (1f - Mathf.InverseLerp(min, max, series[i]));
-                return new Vector2(x, y);
-            }
+            float X(float t) => series.Length == 1 ? rect.width / 2f : pad + (rect.width - 2 * pad) * t;
+            float Y(float value) => pad + (rect.height - 2 * pad) * (1f - Mathf.InverseLerp(min, max, value));
+            Vector2 At(int i) => new(X(series.Length == 1 ? 0f : (float)i / (series.Length - 1)), Y(series[i]));
 
             painter.strokeColor = color;
             painter.fillColor = color;
             painter.lineWidth = 1.5f;
             painter.BeginPath();
             painter.MoveTo(At(0));
-            for (int i = 1; i < series.Length; i++) painter.LineTo(At(i));
+            if (between == EScalerInterpolation.Constant)
+            {
+                // Each value holds until the next
+                for (int i = 1; i < series.Length; i++)
+                {
+                    painter.LineTo(new Vector2(At(i).x, At(i - 1).y));
+                    painter.LineTo(At(i));
+                }
+            }
+            else if (between == EScalerInterpolation.Smooth && series.Length > 2)
+            {
+                // The curve the scaler reads, sampled across the width
+                var curve = AbstractScaler.CurveFor(series, EScalerInterpolation.Smooth);
+                const int samples = 48;
+                for (int s = 1; s <= samples; s++)
+                {
+                    float t = (float)s / samples;
+                    painter.LineTo(new Vector2(X(t), Y(curve.Evaluate(t))));
+                }
+            }
+            else
+            {
+                for (int i = 1; i < series.Length; i++) painter.LineTo(At(i));
+            }
             painter.Stroke();
             for (int i = 0; i < series.Length; i++)
             {

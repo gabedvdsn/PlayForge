@@ -30,6 +30,9 @@
     --pf-button-text: #EEEEEE;
     --pf-link: #81B4FF;
     --pf-override: #0F81BE;
+    /* A scaler's block: a light shade over whatever it sits on, and a hairline under it (Decision 36) */
+    --pf-scaler-backing: rgba(0, 0, 0, 0.14);
+    --pf-scaler-shadow: rgba(0, 0, 0, 0.34);
 
     --pf-type-ability: #80ADE1;
     --pf-type-effect: #A979E0;
@@ -70,6 +73,8 @@
     --pf-button-text: #090909;
     --pf-link: #0A4FA8;
     --pf-override: #0F81BE;
+    --pf-scaler-backing: rgba(0, 0, 0, 0.06);
+    --pf-scaler-shadow: rgba(0, 0, 0, 0.18);
 
     --pf-type-ability: #1757A0;
     --pf-type-effect: #4F277E;
@@ -937,9 +942,14 @@
 }
 
 .pf-root .pf-magnitude__kind {
-    width: 96px;
+    width: 104px;
     flex-shrink: 0;
     margin-left: 4px;
+}
+
+/* Unity's popup keeps 40 px of its text's room free beside the arrow, so a narrow kind read "Constan" */
+.pf-root .pf-magnitude__kind .unity-base-popup-field__text {
+    margin-right: 4px;
 }
 
 /* The range a scaler gives, as "6–8 s", which clips before the kind does */
@@ -960,41 +970,95 @@
     margin-left: 4px;
 }
 
-/* A scaler's content indents past the label column's start, under the field it belongs to */
-.pf-root .pf-magnitude__body,
-.pf-root .pf-scaler-field__content {
-    padding-left: 14px;
+/* A scaler's block: every field the scaler sets for the field it belongs to, on a light shade with a hairline under
+   it, indented under that field. The style's one shaded container, which the user chose so a scaler's fields read as
+   the scaler's among the fields around them (Decision 36, ED-51). A block in a block shades a step deeper */
+.pf-root .pf-scaler-block {
+    margin: 2px 0 6px 14px;
+    padding: 4px 6px 4px 6px;
+    border-radius: 3px;
+    background-color: var(--pf-scaler-backing);
+    border-bottom-width: 1px;
+    border-bottom-color: var(--pf-scaler-shadow);
 }
 
-.pf-root .pf-magnitude__combine {
+/* A kind with nothing to show has no block */
+.pf-root .pf-scaler-block.pf-scaler--empty {
+    display: none;
+}
+
+/* A kind's field its settings leave out, as a Randomized scaler's Variance while it multiplies */
+.pf-root .pf-scaler__hidden {
+    display: none;
+}
+
+/* A field and the number it goes with, side by side: Combine and its number, the Levels a scaler follows and its
+   count */
+.pf-root .pf-magnitude__combine,
+.pf-root .pf-scaler__row {
     flex-direction: row;
     align-items: center;
 }
 
-.pf-root .pf-magnitude__combine > .unity-base-field {
+.pf-root .pf-magnitude__combine > .unity-base-field,
+.pf-root .pf-scaler__row > .unity-base-field {
     flex-grow: 1;
     flex-shrink: 1;
     min-width: 0;
 }
 
-.pf-root .pf-magnitude__combine > .pf-magnitude__combine-number {
+.pf-root .pf-magnitude__combine > .pf-magnitude__combine-number,
+.pf-root .pf-scaler__row > .pf-scaler__row-number {
     flex-grow: 0;
     width: 64px;
     flex-shrink: 0;
     margin-left: 4px;
 }
 
-/* The values per level: a row of levels over a row of values, ten to a row, inside an outline */
+/* A Levels count with nothing before it takes the label column, as any field does */
+.pf-root .pf-scaler__row > .unity-base-field__aligned.pf-scaler__row-number {
+    flex-grow: 1;
+    width: auto;
+    margin-left: 0;
+}
+
+/* A choice shown side by side, as a scaler's Values: Per Level or Spread Over Levels */
+.pf-root .pf-segmented-field > .pf-segmented {
+    flex-grow: 1;
+    margin: 0;
+}
+
+.pf-root .pf-segmented-field > .pf-segmented > .unity-button {
+    height: 18px;
+    padding: 0 4px;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+}
+
+/* The values per level: a row of levels over a row of values, ten to a row, inside an outline, with the curve beside
+   them (EDITOR_STYLE's Scalers). Spread, the top row says the level each value sits at */
 .pf-root .pf-scaler-table {
+    flex-direction: row;
+    align-items: flex-start;
     margin: 2px 0;
 }
 
 .pf-root .pf-scaler-table > #Grid {
+    flex-grow: 1;
+    flex-shrink: 1;
+    min-width: 0;
     border-width: 1px;
     border-color: var(--pf-line);
     border-radius: 3px;
     overflow: hidden;
-    margin-bottom: 2px;
+}
+
+.pf-root .pf-scaler-table > .pf-curve {
+    width: 96px;
+    height: 42px;
+    flex-shrink: 0;
+    margin: 0 0 0 8px;
 }
 
 .pf-root .pf-scaler-table__levels,
@@ -1011,7 +1075,7 @@
 }
 
 .pf-root .pf-scaler-table__head {
-    width: 44px;
+    width: 54px;
     flex-shrink: 0;
     margin: 0;
     padding: 0 6px;
@@ -1029,6 +1093,11 @@
 
 .pf-root .pf-scaler-table__levels > .pf-scaler-table__cell {
     -unity-text-align: middle-center;
+    color: var(--pf-secondary-text);
+}
+
+/* A level past the values the scaler has reads the last, which its cell shows in secondary text until it's typed in */
+.pf-root .pf-scaler-table__past .unity-text-element {
     color: var(--pf-secondary-text);
 }
 

@@ -44,5 +44,8 @@ namespace FarEmerald.PlayForge
         }
 
         public override bool UseScalingOptions() => true;
+
+        // Its values spread over the level's own range, never one it's given, so it reads no level range (ED-51)
+        public override EScalerParts Parts => EScalerParts.LevelValues | EScalerParts.Behaviours;
     }
 }

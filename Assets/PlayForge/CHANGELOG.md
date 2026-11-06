@@ -7,6 +7,9 @@ tracks each fix below by its ID.
 ## [Unreleased]
 
 ### Added
+- `AbstractScaler.Parts` and `[ForgeShowWhen]`, which say what a scaler of your own shows in its inspector: the parts
+  of every scaler it reads, its values per level, their level range and its behaviours, and when a field of its own
+  applies (ED-51).
 - The Battle sample: a battle that plays itself, Blue and Red, eight fighters a side, built from PlayForge's
   attributes, abilities, effects, cues, projectiles and summons, made in code, with a health bar and effect boxes
   over each fighter. It needs nothing beyond PlayForge, and renders in the Built-in pipeline or URP.
@@ -162,6 +165,8 @@ tracks each fix below by its ID.
   page, through one table of links in the editor.
 
 ### Changed
+- A scaler's Stretch Over Levels is its Values: Per Level or Spread Over Levels, side by side. Spread, each value says
+  the level it sits at, and the curve beside the table is the curve the scaler reads (ED-54).
 - The Forge's list shows each asset's name alone, and the selected asset's header shows its file name under Show in
   Project. The Show File Names preference is gone (ED-58).
 - A world of its own reaches for nothing of the scene's. What's registered there with no handler has none, where
@@ -341,6 +346,15 @@ tracks each fix below by its ID.
   Asking whether its sequence was paused took 24 bytes a frame.
 
 ### Fixed
+- A scaler showed parts its kind never reads and hid parts it does: a Fixed Value showed a table of values per level,
+  and a Randomized scaler hid the values its base value comes from. A scaler shows what its kind reads, its settings
+  on a shaded block under its field, and a kind's field that applies to some of its settings shows only for them. A
+  scaler of your own draws every field it adds, its own abstract bases' among them, and none marked Hide in
+  Inspector. A range below 0 reads "-25 to -10" (ED-51).
+- The menu beside a scaler field opened as narrow as its button, so none of its items could be read. It opens as wide
+  as its items (ED-52).
+- A scaler's level count ignored its asset's level provider. Per Level, a scaler follows the provider's levels, with a
+  value for each, unless it takes levels of its own, and Quick Fill fills the levels it shows (ED-53).
 - Tags showed their internal names. A tag the tag picker makes is unique, and pads its name with a generated
   suffix; The Forge, the Debugger and the inspectors showed that name. Each shows a tag by its display name now, and
   the Debugger's Tags view keeps a unique tag under its parents (ED-60).

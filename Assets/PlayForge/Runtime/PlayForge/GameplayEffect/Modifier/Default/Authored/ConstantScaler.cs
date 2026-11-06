@@ -10,6 +10,9 @@ namespace FarEmerald.PlayForge
     {
         [Tooltip("The constant value to return")]
         public float Value = 1f;
+
+        // It reads its value alone (ED-51)
+        public override EScalerParts Parts => EScalerParts.None;
         
         public override void Initialize(IAttributeImpactCarrier deriv)
         {

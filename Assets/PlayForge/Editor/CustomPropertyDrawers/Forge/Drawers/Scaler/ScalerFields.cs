@@ -13,10 +13,12 @@ namespace FarEmerald.PlayForge.Extended.Editor
 {
     /// <summary>
     /// What the scaler drawer and the magnitude fields share, in Decision 28's model and the canvas's scaler board
-    /// (ED-33): the kinds a field takes, in the Kind menu's order; a scaler's values per level, shown as a table with a
-    /// read-only curve beside them; Stretch Over Levels and what it uses; and a shared scaler's asset, with how many fields
-    /// share it. Nothing here writes while it draws (ED-34): every write follows an edit, through the field's own
-    /// SerializedObject, so it reaches each selected asset and one Undo takes it back (ED-12).
+    /// (ED-33), reworked from the user's list (ED-51 to ED-54, Decision 36): the kinds a field takes, in the Kind menu's
+    /// order; a kind's own fields, whatever their types, a scaler of the user's own among them; the parts of every scaler
+    /// the kind reads: its values per level, Per Level or Spread Over Levels, following its asset's level provider, as a
+    /// table with the curve beside it, and its behaviours; and a shared scaler's asset, with how many fields share it.
+    /// Nothing here writes while it draws (ED-34): every write follows an edit, through the field's own SerializedObject,
+    /// so it reaches each selected asset and one Undo takes it back (ED-12).
     /// </summary>
     internal static class ScalerFields
     {
@@ -109,13 +111,17 @@ namespace FarEmerald.PlayForge.Extended.Editor
             return read;
         }
 
-        /// <summary>A series' range as a field reads it, as in "6–8 s", or "6 s" when every level reads the same.</summary>
+        /// <summary>
+        /// A series' range as a field reads it, as in "6–8 s", or "6 s" when every level reads the same. A range with a
+        /// negative end reads "-25 to -10": a dash between two minus signs read as "-25—10" (ED-51).
+        /// </summary>
         internal static string RangeText(IReadOnlyList<float> values, string unit)
         {
             if (values == null || values.Count == 0) return "";
             float min = values.Min(), max = values.Max();
             var suffix = string.IsNullOrEmpty(unit) ? "" : $" {unit}";
-            return Mathf.Approximately(min, max) ? $"{Number(min)}{suffix}" : $"{Number(min)}–{Number(max)}{suffix}";
+            if (Mathf.Approximately(min, max)) return $"{Number(min)}{suffix}";
+            return min < 0f || max < 0f ? $"{Number(min)} to {Number(max)}{suffix}" : $"{Number(min)}–{Number(max)}{suffix}";
         }
 
         internal static string Number(float value) => value.ToString("0.##", CultureInfo.CurrentCulture);
@@ -169,9 +175,20 @@ namespace FarEmerald.PlayForge.Extended.Editor
         // What a scaler shows
         // ═══════════════════════════════════════════════════════════════════════════
 
+        /// <summary>The class a field takes while its kind's settings leave it out, as a Randomized scaler's Variance while it multiplies.</summary>
+        internal const string HiddenClass = "pf-scaler__hidden";
+
+        /// <summary>The class of the block a scaler's fields sit on, under the field they belong to (ED-51, Decision 36).</summary>
+        internal const string BlockClass = "pf-scaler-block";
+
+        /// <summary>The class of a scaler's content while its kind has nothing to show.</summary>
+        internal const string EmptyClass = "pf-scaler--empty";
+
         /// <summary>
-        /// A scaler's content: a Shared scaler's asset; otherwise the kind's own fields, its per-level table and its curve
-        /// while it uses them, Stretch Over Levels and what stretching uses, then its behaviours.
+        /// A scaler's content: a Shared scaler's asset; otherwise the kind's own fields, then the parts of every scaler the
+        /// kind reads (<see cref="AbstractScaler.Parts"/>): its values per level, with their curve, and its behaviours. It
+        /// drew the values for every kind but those that hid them, so a Fixed Value showed values it never read, and a
+        /// Randomized scaler hid the values its base comes from (ED-51).
         /// </summary>
         internal static VisualElement Content(SerializedProperty scaler)
         {
@@ -186,126 +203,544 @@ namespace FarEmerald.PlayForge.Extended.Editor
                 return content;
             }
 
-            foreach (var field in KindFields(scaler)) content.Add(field);
-            if (value.UseScalingOptions())
+            int kindFields = 0;
+            foreach (var field in KindFields(scaler))
             {
-                content.Add(LevelTable(scaler));
-                content.Add(StretchRows(scaler));
+                content.Add(field);
+                kindFields++;
             }
-            var behaviours = scaler.FindPropertyRelative(nameof(AbstractScaler.Behaviours));
-            if (behaviours != null)
-                content.Add(new PropertyField(behaviours, "Behaviours")
+            var parts = new VisualElement { name = "Parts" };
+            content.Add(parts);
+            var shown = (EScalerParts)(-1);
+            void ShowParts()
+            {
+                var now = PartsOf(scaler);
+                if (now == shown) return;
+                shown = now;
+                // A kind with nothing to show, as Effect Stacks, draws no block of its own
+                content.EnableInClassList(EmptyClass, kindFields == 0 && now == EScalerParts.None);
+                parts.Clear();
+                if ((now & EScalerParts.LevelValues) != 0) parts.Add(Values(scaler, (now & EScalerParts.LevelRange) != 0));
+                var behaviours = scaler.FindPropertyRelative(nameof(AbstractScaler.Behaviours));
+                if ((now & EScalerParts.Behaviours) != 0 && behaviours != null)
                 {
-                    name = "Behaviours",
-                    tooltip = "Rules that adjust the value the scaler works out, in order",
-                });
+                    var list = new PropertyField(behaviours, "Behaviours")
+                    {
+                        name = "Behaviours",
+                        tooltip = "Rules that adjust the value the scaler works out, in order",
+                    };
+                    list.BindProperty(behaviours);
+                    parts.Add(list);
+                }
+            }
+            // A kind's parts can follow its fields, as a Conditional scaler reads its own values only with no True scaler
+            content.TrackSerializedObjectValue(scaler.serializedObject, _ =>
+            {
+                if (Alive(scaler)) ShowParts();
+            });
+            ShowParts();
             return content;
         }
 
-        // The fields a kind adds, from the concrete classes in its chain, as a Threshold scaler's thresholds
-        private static IEnumerable<VisualElement> KindFields(SerializedProperty scaler)
+        /// <summary>What the selected scalers read of every scaler's parts: what any of them reads (ED-12).</summary>
+        internal static EScalerParts PartsOf(SerializedProperty scaler) => EachAsset.Of(scaler)
+            .Select(each => (each.managedReferenceValue as AbstractScaler)?.Parts ?? EScalerParts.None)
+            .Aggregate(EScalerParts.None, (all, each) => all | each);
+
+        // The classes every scaler shares, whose fields a scaler's parts draw: a kind's own fields are those declared
+        // below them, the user's own abstract bases among them
+        private static readonly HashSet<Type> SharedBases = new() { typeof(AbstractScaler), typeof(AbstractCachedScaler) };
+
+        /// <summary>
+        /// The fields a kind adds, each as Unity draws its type, from the classes in its chain below the bases every scaler
+        /// shares, a scaler of the user's own and its own abstract bases among them (ED-51). It stopped at the first
+        /// abstract class, so a scaler built on a base of the user's own lost that base's fields. A field marked Hide in
+        /// Inspector stays out, and one marked <see cref="ForgeShowWhenAttribute"/> shows only while the field it names
+        /// holds a value that shows it, as a Randomized scaler's multipliers for its Multiplier mode.
+        /// </summary>
+        internal static IEnumerable<VisualElement> KindFields(SerializedProperty scaler)
         {
             var type = scaler.managedReferenceValue?.GetType();
             if (type == null) yield break;
             var chain = new List<Type>();
-            for (var each = type; each != null && !each.IsAbstract; each = each.BaseType) chain.Add(each);
+            for (var each = type; each != null && !SharedBases.Contains(each) && each != typeof(object); each = each.BaseType) chain.Add(each);
             chain.Reverse();
             var seen = new HashSet<string>();
             foreach (var level in chain)
             {
-                foreach (var field in level.GetFields(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.DeclaredOnly))
+                foreach (var info in level.GetFields(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.DeclaredOnly))
                 {
-                    if (field.IsStatic || !seen.Add(field.Name)) continue;
-                    if (!field.IsPublic && field.GetCustomAttribute<SerializeField>() == null && field.GetCustomAttribute<SerializeReference>() == null) continue;
-                    var property = scaler.FindPropertyRelative(field.Name);
+                    if (info.IsStatic || !seen.Add(info.Name)) continue;
+                    if (!info.IsPublic && info.GetCustomAttribute<SerializeField>() == null && info.GetCustomAttribute<SerializeReference>() == null) continue;
+                    if (info.GetCustomAttribute<HideInInspector>() != null) continue;
+                    var property = scaler.FindPropertyRelative(info.Name);
                     if (property == null) continue;
-                    yield return new PropertyField(property) { name = field.Name };
+                    var field = new PropertyField(property) { name = info.Name };
+                    field.BindProperty(property);
+                    var when = info.GetCustomAttribute<ForgeShowWhenAttribute>();
+                    if (when == null)
+                    {
+                        yield return field;
+                        continue;
+                    }
+                    // The field in a holder of its own, which hears the scaler's changes, as a bound field rebuilds its children
+                    var holder = new VisualElement { name = $"{info.Name}Holder" };
+                    holder.Add(field);
+                    void Show() => field.EnableInClassList(HiddenClass,
+                        !EachAsset.Of(scaler).Any(own => Holds(own.FindPropertyRelative(when.Field), when.Values)));
+                    holder.TrackSerializedObjectValue(scaler.serializedObject, _ =>
+                    {
+                        if (Alive(scaler)) Show();
+                    });
+                    Show();
+                    yield return holder;
                 }
             }
         }
 
+        // Whether a field holds one of the values given: an enum's or a whole number's value, or a bool's. A field that
+        // isn't there shows what depends on it
+        private static bool Holds(SerializedProperty property, object[] values)
+        {
+            if (property == null) return true;
+            foreach (var value in values)
+            {
+                if (value == null) continue;
+                switch (property.propertyType)
+                {
+                    case SerializedPropertyType.Boolean:
+                        if (value is bool flag && property.boolValue == flag) return true;
+                        break;
+                    case SerializedPropertyType.Enum:
+                    case SerializedPropertyType.Integer:
+                        if (value is IConvertible && property.intValue == Convert.ToInt32(value, CultureInfo.InvariantCulture)) return true;
+                        break;
+                }
+            }
+            return false;
+        }
+
+        // ═══════════════════════════════════════════════════════════════════════════
+        // The levels a scaler's asset has
+        // ═══════════════════════════════════════════════════════════════════════════
+
+        /// <summary>The levels an asset's scalers follow: from its first to its last, and whose they are, as "Fireball".</summary>
+        internal readonly struct LevelRange : IEquatable<LevelRange>
+        {
+            public readonly int First;
+            public readonly int Last;
+            public readonly string From;
+
+            public LevelRange(int first, int last, string from)
+            {
+                First = first;
+                Last = last;
+                From = from ?? "";
+            }
+
+            public bool Known => Last > 0;
+            public string Text => First == Last ? $"{First}" : $"{First}–{Last}";
+            public bool Equals(LevelRange other) => First == other.First && Last == other.Last && From == other.From;
+            public override bool Equals(object obj) => obj is LevelRange other && Equals(other);
+            public override int GetHashCode() => HashCode.Combine(First, Last, From);
+        }
+
         /// <summary>
-        /// The values per level, as the scaler board's table: a row of levels over a row of values, ten to a row, then how
-        /// many levels it has, with the curve beside them. A level past the end reads the last value, so a table shorter
-        /// than its asset's levels says which levels read which value.
+        /// The levels the selected assets' scalers follow, when they're known and agree: an ability's, an item's or an
+        /// entity's own, or those of the provider it links to, as a linked effect's are its ability's. An unlinked effect, an
+        /// attribute set or a Scaler asset takes its levels from whatever uses it, so has none known (ED-53).
         /// </summary>
-        internal static VisualElement LevelTable(SerializedProperty scaler)
+        internal static LevelRange LevelsOf(SerializedObject serialized)
+        {
+            LevelRange? found = null;
+            foreach (var target in serialized.targetObjects)
+            {
+                var range = target is BaseForgeLevelProvider provider ? LevelsOf(provider) : default;
+                if (found == null) found = range;
+                else if (!found.Value.Equals(range)) return default;
+            }
+            return found ?? default;
+        }
+
+        private static LevelRange LevelsOf(BaseForgeLevelProvider provider)
+        {
+            // A link's provider's levels, through each link in a chain, as far as a chain can go before it loops
+            for (int hop = 0; provider != null && provider.IsLinked && hop < 8; hop++) provider = provider.LinkedProvider;
+            if (provider == null || provider is GameplayEffect) return default;
+            int last = provider.GetMaxLevel();
+            if (last <= 0) return default;
+            return new LevelRange(Mathf.Clamp(provider.GetStartingLevel(), 1, last), last, ForgeImportWindow.NameOf(provider));
+        }
+
+        /// <summary>
+        /// How many levels a scaler's table shows: its level provider's, while its values follow one level by level, or
+        /// else the values it has (ED-53). Quick Fill fills as many.
+        /// </summary>
+        internal static int LevelsShown(SerializedProperty scaler)
+        {
+            var values = scaler?.FindPropertyRelative(nameof(AbstractScaler.LevelValues));
+            int count = values != null && values.isArray ? values.arraySize : 0;
+            var stretch = scaler?.FindPropertyRelative(nameof(AbstractScaler.StretchOverLevels));
+            var config = scaler?.FindPropertyRelative(nameof(AbstractScaler.Configuration));
+            if (stretch == null || config == null || stretch.boolValue) return count;
+            var range = LevelsOf(scaler.serializedObject);
+            return range.Known && (ELevelConfig)config.intValue == ELevelConfig.LockToLevelProvider ? range.Last : count;
+        }
+
+        // ═══════════════════════════════════════════════════════════════════════════
+        // Values per level
+        // ═══════════════════════════════════════════════════════════════════════════
+
+        private const int PerLevel = 0;
+        private const int Spread = 1;
+
+        /// <summary>
+        /// A scaler's values per level: Values, Per Level or Spread Over Levels side by side, which the user couldn't tell
+        /// apart as a Stretch Over Levels box (ED-54); the levels they follow, an asset's level provider's unless the
+        /// scaler takes levels of its own (ED-53); the table, with the curve beside it; and, spread, how a level between
+        /// two values reads. Each row follows the asset, and only edits write (ED-34).
+        /// </summary>
+        internal static VisualElement Values(SerializedProperty scaler, bool readsRange)
+        {
+            var root = new VisualElement { name = "Values" };
+            var stretchProp = scaler.FindPropertyRelative(nameof(AbstractScaler.StretchOverLevels));
+            var valuesProp = scaler.FindPropertyRelative(nameof(AbstractScaler.LevelValues));
+            if (stretchProp == null || valuesProp == null) return root;
+
+            var mode = new ForgeSegmentedField("Values",
+                ("Per Level", "Each level reads its own value, and a level past the last reads the last"),
+                ("Spread Over Levels", "The values spread over the level range, as points on a curve, and a level between two points reads between them"))
+            {
+                name = "ValuesMode",
+            };
+            mode.AddToClassList(ForgeSegmentedField.alignedFieldUssClassName);
+            mode.RegisterValueChangedCallback(change =>
+            {
+                bool spread = change.newValue == Spread;
+                EachAsset.Write(stretchProp, own =>
+                {
+                    if (own.boolValue != spread) own.boolValue = spread;
+                });
+                KeepCurve(scaler);
+            });
+            root.Add(mode);
+
+            var rows = new VisualElement { name = "ValueRows" };
+            root.Add(rows);
+            string shape = null;
+            Action update = null;
+            void Refresh()
+            {
+                bool spread = EachAsset.Of(scaler).Any(own => own.FindPropertyRelative(nameof(AbstractScaler.StretchOverLevels))?.boolValue == true);
+                mode.SetValueWithoutNotify(spread ? Spread : PerLevel);
+                mode.showMixedValue = stretchProp.hasMultipleDifferentValues;
+                var now = ShapeOf(scaler, readsRange);
+                if (now != shape)
+                {
+                    shape = now;
+                    rows.Clear();
+                    update = spread ? SpreadRows(scaler, rows, readsRange) : PerLevelRows(scaler, rows);
+                }
+                update?.Invoke();
+            }
+            root.TrackSerializedObjectValue(scaler.serializedObject, _ =>
+            {
+                if (Alive(stretchProp) && Alive(valuesProp)) Refresh();
+            });
+            Refresh();
+            return root;
+        }
+
+        // What the value rows are built from: the mode, the level settings, how many values, and the asset's levels. A
+        // change to any of them builds the rows again; a change of a value only updates them
+        private static string ShapeOf(SerializedProperty scaler, bool readsRange)
+        {
+            var parts = EachAsset.Of(scaler).Select(own => string.Join(",",
+                own.FindPropertyRelative(nameof(AbstractScaler.StretchOverLevels))?.boolValue,
+                own.FindPropertyRelative(nameof(AbstractScaler.Configuration))?.intValue,
+                own.FindPropertyRelative(nameof(AbstractScaler.MaxLevel))?.intValue,
+                own.FindPropertyRelative(nameof(AbstractScaler.LevelValues))?.arraySize));
+            var range = LevelsOf(scaler.serializedObject);
+            return $"{string.Join("|", parts)}|{range.First}-{range.Last}-{range.From}|{readsRange}";
+        }
+
+        // Per Level: the levels the values follow, then a value for each level and the curve
+        private static Action PerLevelRows(SerializedProperty scaler, VisualElement rows)
+        {
+            var valuesProp = scaler.FindPropertyRelative(nameof(AbstractScaler.LevelValues));
+            var configProp = scaler.FindPropertyRelative(nameof(AbstractScaler.Configuration));
+            var range = LevelsOf(scaler.serializedObject);
+            bool follows = range.Known && (ELevelConfig)configProp.intValue == ELevelConfig.LockToLevelProvider;
+
+            var levels = new VisualElement { name = "Levels" };
+            levels.AddToClassList("pf-scaler__row");
+            if (range.Known)
+            {
+                var choices = new List<string> { $"{range.From}'s levels ({range.Text})", "Own levels" };
+                var source = new PopupField<string>("Levels", choices, follows ? 0 : 1)
+                {
+                    name = "LevelSource",
+                    tooltip = $"Whether the scaler has a value for each of {range.From}'s levels, or levels of its own",
+                };
+                source.AddToClassList(BaseField<string>.alignedFieldUssClassName);
+                source.showMixedValue = configProp.hasMultipleDifferentValues;
+                source.RegisterValueChangedCallback(change =>
+                {
+                    var chosen = change.newValue == choices[0] ? ELevelConfig.LockToLevelProvider : ELevelConfig.Unlocked;
+                    EachAsset.Write(configProp, own =>
+                    {
+                        if (own.intValue != (int)chosen) own.intValue = (int)chosen;
+                    });
+                });
+                levels.Add(source);
+            }
+            IntegerField count = null;
+            if (!follows)
+            {
+                count = new IntegerField(range.Known ? null : "Levels")
+                {
+                    name = "LevelCount",
+                    tooltip = "How many levels have a value; a level past the end reads the last",
+                    isDelayed = true,
+                };
+                if (!range.Known) count.AddToClassList(IntegerField.alignedFieldUssClassName);
+                count.AddToClassList("pf-scaler__row-number");
+                count.RegisterValueChangedCallback(change => Resize(scaler, valuesProp, change.newValue));
+                levels.Add(count);
+            }
+            rows.Add(levels);
+
+            int stored = valuesProp.arraySize;
+            int columns = follows ? range.Last : stored;
+            var table = Table(scaler, valuesProp, columns, "Level", index => (index + 1).ToString(CultureInfo.InvariantCulture),
+                out var past, out var preview);
+            rows.Add(table);
+            if (follows && stored > range.Last)
+            {
+                var unread = new Label($"{range.From} has {Levels(range.Last)}, so the values past level {range.Last} are never read.")
+                {
+                    name = "PastLevels",
+                };
+                unread.AddToClassList("pf-note");
+                rows.Add(unread);
+            }
+
+            return () =>
+            {
+                if (count != null)
+                {
+                    count.SetValueWithoutNotify(valuesProp.arraySize);
+                    count.showMixedValue = EachAsset.Differ(valuesProp, each => each.arraySize);
+                }
+                var values = ValuesOf(scaler);
+                float last = values.Length > 0 ? values[values.Length - 1] : 1f;
+                foreach (var (index, field) in past) field.SetValueWithoutNotify(last);
+                var read = Enumerable.Range(0, columns).Select(i => i < values.Length ? values[i] : last).ToArray();
+                ShowCurve(scaler, preview, read, null);
+            };
+        }
+
+        // Spread Over Levels: the levels the values spread over, how many values, then each value at the level it sits at,
+        // the curve, and how a level between two values reads
+        private static Action SpreadRows(SerializedProperty scaler, VisualElement rows, bool readsRange)
+        {
+            var valuesProp = scaler.FindPropertyRelative(nameof(AbstractScaler.LevelValues));
+            var configProp = scaler.FindPropertyRelative(nameof(AbstractScaler.Configuration));
+            var maxProp = scaler.FindPropertyRelative(nameof(AbstractScaler.MaxLevel));
+            var betweenProp = scaler.FindPropertyRelative(nameof(AbstractScaler.Interpolation));
+            var range = LevelsOf(scaler.serializedObject);
+            var config = readsRange ? (ELevelConfig)configProp.intValue : ELevelConfig.LockToLevelProvider;
+            var whose = range.Known ? $"{range.From}'s" : "The provider's";
+
+            var over = new VisualElement { name = "Over" };
+            over.AddToClassList("pf-scaler__row");
+            if (readsRange)
+            {
+                var choices = new List<string>
+                {
+                    range.Known ? $"{whose} levels ({range.Text})" : $"{whose} levels",
+                    "Own levels",
+                    $"{whose}, up to a level",
+                };
+                var configs = new[] { ELevelConfig.LockToLevelProvider, ELevelConfig.Unlocked, ELevelConfig.Clamped };
+                var source = new PopupField<string>("Over Levels", choices, Mathf.Max(0, Array.IndexOf(configs, config)))
+                {
+                    name = "LevelSource",
+                    tooltip = "The levels the values spread over: the level provider's, levels of the scaler's own, or the provider's up to a level",
+                };
+                source.AddToClassList(BaseField<string>.alignedFieldUssClassName);
+                source.showMixedValue = configProp.hasMultipleDifferentValues;
+                source.RegisterValueChangedCallback(change =>
+                {
+                    var chosen = configs[Mathf.Max(0, choices.IndexOf(change.newValue))];
+                    EachAsset.Write(configProp, own =>
+                    {
+                        if (own.intValue != (int)chosen) own.intValue = (int)chosen;
+                    });
+                });
+                over.Add(source);
+                if (config != ELevelConfig.LockToLevelProvider)
+                {
+                    var max = new IntegerField { name = "MaxLevel", tooltip = "The last level the values spread to", isDelayed = true };
+                    max.AddToClassList("pf-scaler__row-number");
+                    max.BindProperty(maxProp);
+                    over.Add(max);
+                }
+            }
+            else
+            {
+                // The kind spreads its values over the provider's levels, whatever it's given
+                var fixedRange = new TextField("Over Levels")
+                {
+                    name = "LevelSource",
+                    isReadOnly = true,
+                    value = range.Known ? $"{whose} levels ({range.Text})" : $"{whose} levels",
+                };
+                fixedRange.AddToClassList(TextField.alignedFieldUssClassName);
+                fixedRange.AddToClassList("pf-value-field");
+                over.Add(fixedRange);
+            }
+            rows.Add(over);
+
+            var points = new IntegerField("Points")
+            {
+                name = "PointCount",
+                tooltip = "How many values the curve passes through, from the first level to the last",
+                isDelayed = true,
+            };
+            points.AddToClassList(IntegerField.alignedFieldUssClassName);
+            points.RegisterValueChangedCallback(change => Resize(scaler, valuesProp, change.newValue));
+            rows.Add(points);
+
+            // Where each value sits: spread evenly from the first level to the last the range reaches
+            int first = range.Known ? range.First : 1;
+            int lastLevel = config == ELevelConfig.LockToLevelProvider ? (range.Known ? range.Last : 0) : maxProp.intValue;
+            int stored = valuesProp.arraySize;
+            string At(int index)
+            {
+                if (stored <= 1) return lastLevel > 0 ? first.ToString(CultureInfo.InvariantCulture) : "0%";
+                float t = (float)index / (stored - 1);
+                if (lastLevel <= 0) return $"{Mathf.RoundToInt(t * 100f)}%";
+                float level = Mathf.Lerp(first, Mathf.Max(first, lastLevel), t);
+                return level.ToString("0.#", CultureInfo.InvariantCulture);
+            }
+            var table = Table(scaler, valuesProp, stored, "At level", At, out _, out var preview);
+            rows.Add(table);
+
+            var between = new EnumField("Between Points")
+            {
+                name = "BetweenLevels",
+                tooltip = "How a level between two values reads: the earlier value, a straight line, or a smooth curve",
+            };
+            between.AddToClassList(EnumField.alignedFieldUssClassName);
+            between.BindProperty(betweenProp);
+            between.RegisterValueChangedCallback(_ =>
+            {
+                if (IsTypedInto(between)) KeepCurve(scaler);
+            });
+            rows.Add(between);
+
+            return () =>
+            {
+                points.SetValueWithoutNotify(valuesProp.arraySize);
+                points.showMixedValue = EachAsset.Differ(valuesProp, each => each.arraySize);
+                ShowCurve(scaler, preview, ValuesOf(scaler), (EScalerInterpolation)betweenProp.intValue);
+            };
+        }
+
+        /// <summary>
+        /// The values as the scaler board's table: a row of heads over a row of values, ten to a row, inside an outline,
+        /// with the curve beside them. A column past the values the scaler has shows the last, which a level past the end
+        /// reads; typing there gives that level, and each before it, a value of its own.
+        /// </summary>
+        internal static VisualElement Table(SerializedProperty scaler, SerializedProperty valuesProp, int columns, string head,
+            Func<int, string> headOf, out List<(int Index, FloatField Field)> past, out ForgeCurvePreview preview)
         {
             var root = new VisualElement { name = "LevelTable" };
             root.AddToClassList("pf-scaler-table");
-            var values = scaler.FindPropertyRelative(nameof(AbstractScaler.LevelValues));
-            if (values == null) return root;
-
             var grid = new VisualElement { name = "Grid" };
             root.Add(grid);
-            var preview = new ForgeCurvePreview { name = "Curve" };
+            preview = new ForgeCurvePreview { name = "Curve" };
             root.Add(preview);
+            past = new List<(int, FloatField)>();
 
-            var count = new IntegerField("Levels")
+            int stored = valuesProp.arraySize;
+            for (int start = 0; start < columns; start += 10)
             {
-                name = "LevelCount",
-                tooltip = "How many levels have a value; a level past the end reads the last",
-            };
-            count.AddToClassList(IntegerField.alignedFieldUssClassName);
-            count.isDelayed = true;
-            count.RegisterValueChangedCallback(change => Resize(scaler, values, change.newValue));
-            root.Add(count);
-
-            int shown = -1;
-            void ShowGrid()
-            {
-                count.SetValueWithoutNotify(values.arraySize);
-                // Selected tables of different lengths show their count as mixed, and the curve only while they agree;
-                // the table shows the levels every one of them has (ED-12)
-                count.showMixedValue = EachAsset.Differ(values, each => each.arraySize);
-                bool same = !EachAsset.Differ(scaler, each => string.Join(",", ValuesOf(each)));
-                preview.style.display = same ? DisplayStyle.Flex : DisplayStyle.None;
-                if (same) preview.Show(ValuesOf(scaler));
-                if (values.arraySize == shown) return;
-                shown = values.arraySize;
-                grid.Clear();
-                for (int start = 0; start < values.arraySize; start += 10)
+                var heads = new VisualElement();
+                heads.AddToClassList("pf-scaler-table__levels");
+                var numbers = new VisualElement();
+                numbers.AddToClassList("pf-scaler-table__values");
+                var headLabel = new Label(head);
+                headLabel.AddToClassList("pf-scaler-table__head");
+                heads.Add(headLabel);
+                var valuesLabel = new Label("Value");
+                valuesLabel.AddToClassList("pf-scaler-table__head");
+                numbers.Add(valuesLabel);
+                for (int i = start; i < Mathf.Min(start + 10, columns); i++)
                 {
-                    var levels = new VisualElement();
-                    levels.AddToClassList("pf-scaler-table__levels");
-                    var numbers = new VisualElement();
-                    numbers.AddToClassList("pf-scaler-table__values");
-                    var levelsHead = new Label("Level");
-                    levelsHead.AddToClassList("pf-scaler-table__head");
-                    levels.Add(levelsHead);
-                    var valuesHead = new Label("Value");
-                    valuesHead.AddToClassList("pf-scaler-table__head");
-                    numbers.Add(valuesHead);
-                    for (int i = start; i < Mathf.Min(start + 10, values.arraySize); i++)
+                    var at = new Label(headOf(i)) { name = $"At{i + 1}" };
+                    at.AddToClassList("pf-scaler-table__cell");
+                    heads.Add(at);
+                    var field = new FloatField { name = $"Level{i + 1}" };
+                    field.AddToClassList("pf-scaler-table__cell");
+                    if (i < stored)
                     {
-                        var level = new Label((i + 1).ToString(CultureInfo.InvariantCulture));
-                        level.AddToClassList("pf-scaler-table__cell");
-                        levels.Add(level);
-                        var field = new FloatField { name = $"Level{i + 1}", tooltip = $"The value at level {i + 1}" };
-                        field.AddToClassList("pf-scaler-table__cell");
-                        field.BindProperty(values.GetArrayElementAtIndex(i));
-                        // The curve a stretched scaler reads follows a typed value, in the same Undo step. Binding sends
-                        // the field change events of its own as it draws, which write nothing (ED-34)
+                        field.tooltip = $"The value at level {i + 1}";
+                        field.BindProperty(valuesProp.GetArrayElementAtIndex(i));
+                        // The curve a spread scaler reads follows a typed value, in the same Undo step. Binding sends the
+                        // field change events of its own as it draws, which write nothing (ED-34)
                         field.RegisterValueChangedCallback(_ =>
                         {
                             if (IsTypedInto(field)) KeepCurve(scaler);
                         });
-                        numbers.Add(field);
                     }
-                    grid.Add(levels);
-                    grid.Add(numbers);
+                    else
+                    {
+                        int index = i;
+                        field.tooltip = $"Level {i + 1} reads level {Mathf.Max(1, stored)}'s value; type one to give it its own";
+                        field.isDelayed = true;
+                        field.AddToClassList("pf-scaler-table__past");
+                        field.RegisterValueChangedCallback(change => WriteAt(scaler, valuesProp, index, change.newValue));
+                        past.Add((i, field));
+                    }
+                    numbers.Add(field);
                 }
+                grid.Add(heads);
+                grid.Add(numbers);
             }
-
-            root.TrackSerializedObjectValue(scaler.serializedObject, _ =>
-            {
-                if (Alive(values)) ShowGrid();
-            });
-            ShowGrid();
             return root;
         }
 
-        // Sets how many levels have a value: a new level takes the last value, as a level past the end reads it. Each
+        // Gives a level past the values its own value: each level before it takes the last value, which it read
+        private static void WriteAt(SerializedProperty scaler, SerializedProperty valuesProp, int index, float value)
+        {
+            if (!Alive(valuesProp)) return;
+            EachAsset.Write(valuesProp, own =>
+            {
+                int was = own.arraySize;
+                float last = was > 0 ? own.GetArrayElementAtIndex(was - 1).floatValue : 1f;
+                if (index >= was)
+                {
+                    own.arraySize = index + 1;
+                    for (int i = was; i < index; i++) own.GetArrayElementAtIndex(i).floatValue = last;
+                }
+                own.GetArrayElementAtIndex(index).floatValue = value;
+            });
+            KeepCurve(scaler);
+        }
+
+        // The curve beside the table, while the selected scalers agree on their values (ED-12)
+        private static void ShowCurve(SerializedProperty scaler, ForgeCurvePreview preview, float[] values, EScalerInterpolation? between)
+        {
+            bool same = !EachAsset.Differ(scaler, each => string.Join(",", ValuesOf(each)));
+            preview.EnableInClassList(HiddenClass, !same);
+            if (same) preview.Show(values, between: between);
+        }
+
+        private static string Levels(int count) => count == 1 ? "1 level" : $"{count} levels";
+
+        // Sets how many values a scaler has: a new one takes the last value, as a level past the end reads it. Each
         // selected table takes its own last value, and keeps the values it has (ED-12)
         private static void Resize(SerializedProperty scaler, SerializedProperty values, int levels)
         {
@@ -320,68 +755,6 @@ namespace FarEmerald.PlayForge.Extended.Editor
                 for (int i = was; i < levels; i++) own.GetArrayElementAtIndex(i).floatValue = last;
             });
             KeepCurve(scaler);
-        }
-
-        /// <summary>
-        /// Stretch Over Levels, and while it's on, the level range its values spread over and how a level between two
-        /// reads. Off, level 4 reads the 4th value (Decision 28).
-        /// </summary>
-        internal static VisualElement StretchRows(SerializedProperty scaler)
-        {
-            var root = new VisualElement { name = "Stretch" };
-            var stretchProp = scaler.FindPropertyRelative(nameof(AbstractScaler.StretchOverLevels));
-            var rangeProp = scaler.FindPropertyRelative(nameof(AbstractScaler.Configuration));
-            var maxProp = scaler.FindPropertyRelative(nameof(AbstractScaler.MaxLevel));
-            var betweenProp = scaler.FindPropertyRelative(nameof(AbstractScaler.Interpolation));
-            if (stretchProp == null) return root;
-
-            var stretch = new Toggle("Stretch Over Levels")
-            {
-                name = "StretchOverLevels",
-                tooltip = "Off: level 4 reads the 4th value, and a level past the end reads the last. On: the values " +
-                          "spread over the level range, and a level between two reads between them",
-            };
-            stretch.AddToClassList(Toggle.alignedFieldUssClassName);
-            stretch.BindProperty(stretchProp);
-            root.Add(stretch);
-
-            var range = new EnumField("Level Range") { name = "LevelRange", tooltip = "The levels the values spread over" };
-            range.AddToClassList(EnumField.alignedFieldUssClassName);
-            range.AddToClassList("pf-dependent");
-            range.BindProperty(rangeProp);
-            root.Add(range);
-            var max = new IntegerField("Max Level") { name = "MaxLevel", tooltip = "The last level of the scaler's own range" };
-            max.AddToClassList(IntegerField.alignedFieldUssClassName);
-            max.AddToClassList("pf-dependent");
-            max.BindProperty(maxProp);
-            root.Add(max);
-            var between = new EnumField("Between Levels") { name = "BetweenLevels", tooltip = "How a level between two values reads" };
-            between.AddToClassList(EnumField.alignedFieldUssClassName);
-            between.AddToClassList("pf-dependent");
-            between.BindProperty(betweenProp);
-            between.RegisterValueChangedCallback(_ =>
-            {
-                if (IsTypedInto(between)) KeepCurve(scaler);
-            });
-            root.Add(between);
-
-            // A multiple selection shows what any selected scaler uses (ED-12)
-            void Show()
-            {
-                var each = EachAsset.Of(scaler).ToList();
-                bool on = each.Any(own => own.FindPropertyRelative(nameof(AbstractScaler.StretchOverLevels))?.boolValue == true);
-                bool ownMax = each.Any(own => own.FindPropertyRelative(nameof(AbstractScaler.StretchOverLevels))?.boolValue == true &&
-                    (ELevelConfig)own.FindPropertyRelative(nameof(AbstractScaler.Configuration)).intValue != ELevelConfig.LockToLevelProvider);
-                range.style.display = on ? DisplayStyle.Flex : DisplayStyle.None;
-                between.style.display = on ? DisplayStyle.Flex : DisplayStyle.None;
-                max.style.display = ownMax ? DisplayStyle.Flex : DisplayStyle.None;
-            }
-            root.TrackSerializedObjectValue(scaler.serializedObject, _ =>
-            {
-                if (Alive(stretchProp)) Show();
-            });
-            Show();
-            return root;
         }
 
         /// <summary>

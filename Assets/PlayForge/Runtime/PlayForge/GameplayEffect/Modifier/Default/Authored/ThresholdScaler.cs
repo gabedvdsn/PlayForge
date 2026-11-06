@@ -20,6 +20,9 @@ namespace FarEmerald.PlayForge
         
         [Tooltip("Value to use if below all thresholds")]
         public float DefaultValue = 1f;
+
+        // It reads its thresholds and default (ED-51)
+        public override EScalerParts Parts => EScalerParts.None;
         
         public override void Initialize(IAttributeImpactCarrier deriv)
         {

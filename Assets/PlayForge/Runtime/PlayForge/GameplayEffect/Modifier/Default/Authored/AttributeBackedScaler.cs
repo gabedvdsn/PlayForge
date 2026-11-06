@@ -94,6 +94,9 @@ namespace FarEmerald.PlayForge
         {
             return false;
         }
+
+        // It reads the attribute, through its behaviours (ED-51)
+        public override EScalerParts Parts => EScalerParts.Behaviours;
     }
     
     public enum ESourceTarget

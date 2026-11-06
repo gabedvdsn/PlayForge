@@ -18,6 +18,9 @@ namespace FarEmerald.PlayForge
         [Tooltip("What the scaler reads where the caller set nothing under the tag")]
         public float Default;
 
+        // It reads what the caller set, or its default (ED-51)
+        public override EScalerParts Parts => EScalerParts.None;
+
         public override void Initialize(IAttributeImpactCarrier deriv)
         {
         }

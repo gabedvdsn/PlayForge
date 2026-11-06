@@ -687,10 +687,10 @@ had no letter in the review. TS-AA onward came from the test project.
 | ED-48 | M | 6 | A column's width wasn't remembered. Switched away, a table was laid out at 0 px, which shrank its columns to their least, and they came back at their first widths; and a domain reload, as entering Play mode is, or the window's closing built them at their first widths again. Unity keeps a table's columns only for a table with a view data key, which brings back its selection and scroll too, behind the window's back. Fixed: the Debugger's views and The Forge's two lists keep their layout while hidden (ED-45), and each table keeps the widths its columns are dragged to, one preference a table (`ForgeColumnWidths`), which Use Defaults forgets: the Debugger's four lists, The Forge's two and the Problems view's | `Kit/ForgeColumnWidths.cs`, `RuntimeDebugger*.cs`, `TheForge.cs`, `ForgeProblemsWindow.cs`, `PlayForgePreferences.cs` | verified |
 | ED-49 | M | 6 | The attribute set element drawer needs a rework, above all to show what each attribute's value is when an entity starts: from its magnitudes, its level and its constraints, with its set's subsets, and with the set it's a subset of | `AttributeSetElementDrawer.cs`, `ForgeAttributeTable.cs` | open |
 | ED-50 | M | 6 | An effect's Impact section feels broken, perhaps only because of the scaler drawer inside it (ED-51) | `EffectEditor.cs` (`BuildImpactSection`), `GameplayEffectImpactDrawer.cs`, `MagnitudeField.cs` | open |
-| ED-51 | H | 6 | The scaler drawer isn't legible. Its fields are packed so close to the ones around it that it's hard to see which are the scaler's, and some scalers seem to lack a field for something they hold. The user counts the scaler the most important field, and lets it step outside the style to group its fields (Decision 36) | `ScalerFields.cs`, `MagnitudeField.cs` | open |
-| ED-52 | M | 6 | The ⋮ menu beside a scaler field opens so narrow that none of its items can be read | `MagnitudeField.cs` | open |
-| ED-53 | M | 6 | A scaler's level count can be changed while its asset is linked to a level provider, whose range the scaler must keep. Unless the scaler overrides that, its levels are the provider's | `ScalerFields.cs`, `AbstractScaler.cs` | open |
-| ED-54 | M | 6 | What Stretch Over Levels does is hard to see | `ScalerFields.cs`, `AbstractScaler.cs` | open |
+| ED-51 | H | 6 | The scaler drawer wasn't legible. Its fields ran on, unmarked, into the fields around it, and it drew what a kind's base class allowed, not what the kind reads: a Fixed Value, a Set By Caller, a Threshold and the stack kinds showed a table of values per level they never read, while a Randomized scaler, a Conditional with no True scaler and a Group with no members read a table the drawer hid. It drew a kind's own fields only down to the first abstract class, so a scaler of the user's own built on a base of its own lost that base's fields (the user's question), and a range below 0 read "-25—10". Fixed: a scaler's settings sit on one shaded, indented block under its field (Decision 36). Each kind says what it reads of every scaler's parts (`AbstractScaler.Parts`, `EScalerParts`), which the drawer draws and no others. A kind's own fields draw from every class below PlayForge's bases, as Unity draws their types, without those marked Hide in Inspector, and `[ForgeShowWhen]` shows one only for the settings it applies to. A range below 0 reads "-25 to -10" | `ScalerFields.cs`, `MagnitudeField.cs`, `ScalerDrawer.cs`, `AbstractScaler.cs` and each kind, `ForgeShowWhenAttribute.cs` | verified |
+| ED-52 | M | 6 | The ⋮ menu beside a scaler field opened so narrow that none of its items could be read: anchored to its button, it took the button's 20 px. Fixed: it opens at the button, as wide as its widest item (`GenericDropdownMenu.DropDown`'s fit-content width) | `MagnitudeField.cs` | verified |
+| ED-53 | M | 6 | A scaler's Levels count could be set to anything while its asset was linked to a level provider, whose levels the scaler must keep, and Quick Fill filled the values the scaler had. Fixed: Per Level, a scaler whose asset has a level provider, as an ability, or an effect linked to one, follows the provider's levels, as "Fireball's levels (1–4)", with a value for each. A level past its values shows the last, and typing there gives it its own. Own levels gives it a count again; an asset whose levels come from whatever uses it has the count alone. Quick Fill fills the levels the table shows | `ScalerFields.cs` (`LevelsOf`, `LevelsShown`), `QuickFillWizard.cs` | verified |
+| ED-54 | M | 6 | What Stretch Over Levels did was hard to see: a box, with Level Range, Max Level and Between Levels under it while on, over a table that labelled each value with a level it might not sit at. Fixed: a scaler's Values are Per Level or Spread Over Levels, side by side (`ForgeSegmentedField`). Spread, each value says the level it sits at over the range, the range reads Over Levels with Points beside it, and the curve beside the table is the one the scaler reads, steps, straight or smooth | `ScalerFields.cs`, `ForgeSegmentedField.cs`, `ForgeCurvePreview.cs` | verified |
 | ED-55 | M | 6 | The tag drawer doesn't follow `Docs/EDITOR_STYLE.md` | `TagDrawer.cs` | open |
 | ED-56 | M | 6 | The ability task and stage drawers don't follow the style, and some can't fill in all they hold | `AbilityTaskDrawer.cs`, `AbstractTypeRefDrawer.cs`, `AbilityTaskBehaviourStageDrawer.cs` | open |
 | ED-57 | M | 6 | The worker group, asset loader and other drawers older than Phase 4 don't follow the style. Some can't fill in all they hold, or are confusing | `StandardWorkerGroupDrawer.cs`, `AssetSetterDrawer.cs`, `TaskSequenceReferenceDrawer.cs` and others | open |
@@ -848,6 +848,28 @@ GAS-4 with GAS-5, PC-6, and TS-I with PC-5.
 ## Log
 
 Record baselines, gate results and notable decisions here, newest first.
+
+- 2026-11-06, **ED-51 to ED-54: the scaler drawer.** The scaler, which the user counts the most important field,
+  is reworked from the user's list, with the style exception Decision 36 gives it.
+  - **What a scaler shows:** its settings sit on one block under its field, indented, on a translucent shade with a
+    hairline under it (`--pf-scaler-backing`, `--pf-scaler-shadow`), so a block in a block shades a step deeper.
+    A kind shows what it reads: `AbstractScaler.Parts` says which of every scaler's parts, values per level, level
+    range and behaviours, it reads, its default following `UseScalingOptions()` so a user's existing scaler shows
+    as it did. A kind's own fields draw from each class below `AbstractScaler` and `AbstractCachedScaler`, as Unity
+    draws them, so any field type and any property drawer of the user's own work (the user's question while it
+    was built). `[ForgeShowWhen]` shows a field for some settings only.
+  - **Its levels:** Values are Per Level or Spread Over Levels, side by side. Per Level follows the asset's level
+    provider unless the scaler takes its own levels; spread, each value says the level it sits at.
+  - **Seen, not only tested:** a diagnostic kept in the private copy alone renders an inspector into a runtime
+    panel with a target texture, with Unity run in batch mode with graphics, and writes it as a PNG. The
+    snapshots showed the block, the menu, the curve beside the table, and a Constant kind popup that read
+    "Constan": Unity's popup keeps 40 px of its text's room beside the arrow, which PlayForge's style gives back.
+    They also showed what ED-50 is: an impact entry's Retention Group drawn as a bare bar, and its row naming no
+    delivery.
+  - Each test failed first; the menu opened 20 px wide. A scaler of the user's own, with a base of its own and
+    fields of eleven types, draws each field.
+  - EditMode: 482 of 482. PlayMode, its golden scenarios among them: 1305 of 1313, the 7 planted and the soak skipped
+    as ever. The runtime change adds `Parts` and an attribute that nothing at runtime reads.
 
 - 2026-11-06, **ED-58, ED-59 and ED-60: The Forge's names, its tag view's sorting, and tags' display names.**
   - The Forge's list shows each asset's name alone. The selected asset's header shows its file name under Show in

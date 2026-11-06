@@ -83,7 +83,14 @@ namespace FarEmerald.PlayForge
         public virtual float Evaluate(AbstractStackingEffectContainer container) => Evaluate(container.Spec);
 
         public virtual bool UseScalingOptions() => true;
-        
+
+        /// <summary>
+        /// What the scaler reads of the fields every scaler has: its values per level, the level range they spread over,
+        /// and its behaviours. Its inspector draws these parts and no others, as a Fixed Value reads none of them; a
+        /// kind's own fields always draw (ED-51). A kind that reads none of them overrides this.
+        /// </summary>
+        public virtual EScalerParts Parts => UseScalingOptions() ? EScalerParts.All : EScalerParts.Behaviours;
+
         // ═══════════════════════════════════════════════════════════════════════════
         // Level Value Management
         // ═══════════════════════════════════════════════════════════════════════════
@@ -427,7 +434,27 @@ namespace FarEmerald.PlayForge
     // ═══════════════════════════════════════════════════════════════════════════
     // Enums
     // ═══════════════════════════════════════════════════════════════════════════
-    
+
+    /// <summary>The parts of every scaler a kind reads, which its inspector draws (<see cref="AbstractScaler.Parts"/>).</summary>
+    [Flags]
+    public enum EScalerParts
+    {
+        None = 0,
+
+        /// <summary>Its values per level: <see cref="AbstractScaler.LevelValues"/>, whether they spread over the level
+        /// range, and how a level between two reads.</summary>
+        LevelValues = 1,
+
+        /// <summary>The level range its values spread over when they do: <see cref="AbstractScaler.Configuration"/> and
+        /// <see cref="AbstractScaler.MaxLevel"/>.</summary>
+        LevelRange = 2,
+
+        /// <summary>Its behaviours, which adjust the value it works out.</summary>
+        Behaviours = 4,
+
+        All = LevelValues | LevelRange | Behaviours,
+    }
+
     public enum ECalculationOperation
     {
         Add,

@@ -20,6 +20,9 @@ namespace FarEmerald.PlayForge
         [Tooltip("How to handle multiple Override members")]
         public EValueCollisionPolicy OverrideMemberCollisionPolicy = EValueCollisionPolicy.UseMaximum;
 
+        // It reads its members alone (ED-51)
+        public override EScalerParts Parts => EScalerParts.None;
+
         public override void RegulateContactWith(IAttribute related, AttributeRegulationCache rules)
         {
             if (Calculations == null) return;

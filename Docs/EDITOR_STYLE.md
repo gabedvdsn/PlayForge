@@ -18,7 +18,8 @@ value below is one the mockups use. The Q numbers are the interview's questions.
 ## Never
 
 - Colored borders, stripes or accent dividers on sections, cards or rows.
-- Tinted, rounded or floating containers, and drop shadows.
+- Tinted, rounded or floating containers, and drop shadows. A scaler's block is the one exception (Decision 36, under
+  Inspectors).
 - Small, bold, letter-spaced or uppercase headings.
 - Gradients and emoji.
 - Controls that appear only on hover (Q18).
@@ -126,7 +127,11 @@ The only other colors:
   differ, each pre-checked, then import as one Undo step. A list is replaced unless Add to the List is chosen
   (Decision 28).
 - **Scalers** show their per-level table with a read-only curve preview beside it, wherever a scaler appears: in a
-  field, in a Scaler asset and in the Import window (Decision 28).
+  field, in a Scaler asset and in the Import window (Decision 28). A scaler's settings sit on one block under its
+  field, indented, on a light shade with a hairline under it, so they read as the scaler's among the fields around
+  them. It's the style's one shaded container, which the user chose for the scaler alone (Decision 36). A kind shows
+  only what it reads. Its Values are Per Level or Spread Over Levels, side by side, and Per Level follows the asset's
+  level provider's levels unless the scaler takes its own.
 
 ## The Forge
 

@@ -81,8 +81,10 @@ namespace FarEmerald.PlayForge.Extended.Editor
                 }
                 else if (shownType != null)
                 {
+                    // The scaler's fields sit on one block under its kind (ED-51, Decision 36)
                     var content = ScalerFields.Content(property);
                     content.AddToClassList("pf-scaler-field__content");
+                    content.AddToClassList(ScalerFields.BlockClass);
                     root.Add(content);
                 }
 

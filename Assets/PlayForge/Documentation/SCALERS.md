@@ -7,12 +7,12 @@ inspector shows.
 ## A magnitude field
 
 A magnitude field, such as an effect's Magnitude or Duration, shows its name, then its **kind**, then what it reads,
-then its field menu:
+then its field menu, which opens as wide as its items:
 
 - **Constant**: the field reads its number, with its unit beside it, as Tick Every's "1 s". A field that used to read
   its scaler, and has none, reads 0, and a warning says so.
 - **By Level**: the field reads a table of values per level (below). The range it gives shows beside the kind, as
-  "6–8 s".
+  "6–8 s", or "-25 to -10" where it goes below 0.
 - **Shared**: the field reads a Scaler asset (below).
 - The other kinds work out a value from the values or from the entity: **Attribute Backed** reads an attribute,
   **Clamped** keeps a value within bounds, **Conditional** chooses between two scalers, **Randomized** rolls a random
@@ -47,21 +47,48 @@ The field menu holds:
 
 ## Values per level
 
-- **Level** and **Value**: one value per level, ten levels to a row. Level 1 reads the first value, level 4 the 4th,
-  and a level past the end reads the last.
-- **Levels**: how many levels have a value. A new level takes the last value.
-- A read-only curve shows the values beside the table. Its tooltip reads them, as "6 at level 1, rising to 8 at level
-  5".
-- **Stretch Over Levels**: on, the values spread over a level range instead, and a level between two values reads
-  between them. Three values, 10, 20 and 30, stretched over levels 1 to 5 read 10, 15, 20, 25 and 30. A scaler you make
-  in the inspector starts with it off. The scalers saved before the option existed have it on, so they read as they
-  did.
-  - **Level Range**, while it stretches: **Provider's Levels** uses the level provider's range, **Own Max Level** the
-    scaler's own **Max Level**, and **Clamped to Provider** the lower of the Max Level and the provider's level.
-  - **Between Levels**, while it stretches: **Steps**, **Straight Line** or **Smooth Curve**.
+A scaler's settings sit on a shaded block under its field, so they read as the scaler's among the fields around them.
+A kind shows only what it reads: a **Fixed Value** shows its value, and a **Randomized** scaler its variance, then the
+values its base value comes from. A kind's field that applies only to some of its settings shows only for them, as a
+Randomized scaler's **Min Multiplier** and **Max Multiplier** for its Multiplier mode.
+
+- **Values**: **Per Level** or **Spread Over Levels**.
+  - **Per Level**: one value per level, ten levels to a row. Level 1 reads the first value, level 4 the 4th, and a
+    level past the end reads the last.
+  - **Spread Over Levels**: the values are points on a curve over a level range, and a level between two points reads
+    between them. Three values, 10, 20 and 30, spread over levels 1 to 5 read 10, 15, 20, 25 and 30. Each value says
+    the level it sits at. A scaler you make in the inspector starts Per Level. The scalers saved before the choice
+    existed spread, so they read as they did.
+- **Levels**, Per Level: an asset with a level provider, as an ability, or an effect linked to one, follows the
+  provider's levels, as **Fireball's levels (1–4)**, with a value for each. A level past the scaler's values shows the
+  last in secondary text; type there to give it a value of its own. **Own levels** gives the scaler a count of its own.
+  An asset whose levels come from whatever uses it, as an unlinked effect, an attribute set or a Scaler asset, shows
+  the count alone. A new level takes the last value.
+- **Over Levels**, spread: the provider's levels, **Own levels** up to the scaler's own **Max Level**, or the
+  provider's **up to a level**, the lower of the Max Level and the provider's level. **Points**: how many values.
+- **Between Points**, spread: **Steps**, **Straight Line** or **Smooth Curve**.
+- A read-only curve beside the table shows the values, and spread, the curve they make. Its tooltip reads them, as "6
+  at level 1, rising to 8 at level 5".
 - **Behaviours**: rules that adjust the value the scaler works out, in order.
 
-Nothing changes a scaler's values while it's drawn: its table keeps its length until you change it.
+Quick Fill fills the levels the table shows. Nothing changes a scaler's values while it's drawn: its table keeps its
+length until you change it.
+
+## Writing your own scaler
+
+A scaler of your own derives from `AbstractScaler`, or from `AbstractCachedScaler` for an attribute set's values, and
+has a public constructor with no parameters. The Kind menu lists it by its name without "Scaler", as **Damage Curve**
+for `DamageCurveScaler`. Its inspector draws:
+
+- Each field it adds, public or `[SerializeField]`, as Unity draws the field's type, through any property drawer you
+  write for that type. The fields of an abstract base of your own draw too. `[HideInInspector]` keeps a field out, and
+  `[ForgeShowWhen(nameof(Mode), EMode.Curved)]` shows one only while another field, an enum or a bool, holds one of
+  the values given.
+- The parts every scaler has, as its `Parts` say: its values per level (`EScalerParts.LevelValues`), the level range
+  they spread over (`EScalerParts.LevelRange`), and its behaviours (`EScalerParts.Behaviours`). Unless you override it,
+  a scaler reads all three, or its behaviours alone where its `UseScalingOptions()` returns false. Override `Parts` to
+  say what yours reads, as a scaler that reads only an attribute returns `EScalerParts.Behaviours`. `Parts` can follow
+  the scaler's own fields, as a Conditional reads its own values only while it has no True scaler.
 
 ## Scaler assets
 

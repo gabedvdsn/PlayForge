@@ -60,5 +60,8 @@ namespace FarEmerald.PlayForge
 
         // Its values are the asset's, so the field shows no table of its own
         public override bool UseScalingOptions() => false;
+
+        // It reads its asset's scaler alone (ED-51)
+        public override EScalerParts Parts => EScalerParts.None;
     }
 }

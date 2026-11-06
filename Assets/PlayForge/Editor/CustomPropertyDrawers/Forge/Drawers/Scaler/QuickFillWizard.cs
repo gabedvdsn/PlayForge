@@ -65,6 +65,10 @@ namespace FarEmerald.PlayForge.Extended.Editor
             {
                 _levelCount = 10;
             }
+            // It fills the levels the scaler's table shows: its level provider's, while it follows one, rather than the
+            // values it has (ED-53)
+            int shown = ScalerFields.LevelsShown(_targetProp);
+            if (shown > 0) _levelCount = shown;
             
             UpdatePreview();
         }

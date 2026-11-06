@@ -14,15 +14,20 @@ namespace FarEmerald.PlayForge
         public EScalerCondition Condition = EScalerCondition.SourceTagCondition;
 
         [Tooltip("Tag to check for tag-based conditions")]
+        [ForgeShowWhen(nameof(Condition), EScalerCondition.SourceTagCondition, EScalerCondition.TargetTagCondition)]
         public TagQuery TagCondition;
         
         [Tooltip("Attribute to check for attribute-based conditions")]
+        [ForgeShowWhen(nameof(Condition), EScalerCondition.SourceAttributeThreshold, EScalerCondition.TargetAttributeThreshold)]
         public Attribute CheckAttribute;
         
         [Tooltip("Threshold value for comparison conditions")]
+        [ForgeShowWhen(nameof(Condition), EScalerCondition.SourceAttributeThreshold, EScalerCondition.TargetAttributeThreshold,
+            EScalerCondition.LevelAbove, EScalerCondition.LevelBelow, EScalerCondition.RelativeLevelAbove)]
         public float ThresholdValue = 50f;
         
         [Tooltip("Comparison operator for threshold conditions")]
+        [ForgeShowWhen(nameof(Condition), EScalerCondition.SourceAttributeThreshold, EScalerCondition.TargetAttributeThreshold)]
         public EComparisonOperator Comparison = EComparisonOperator.GreaterThan;
         
         [Tooltip("Scaler to use when condition is TRUE")]
@@ -57,6 +62,9 @@ namespace FarEmerald.PlayForge
         {
             return false;
         }
+
+        // With no True scaler, a met condition reads its own values per level (ED-51)
+        public override EScalerParts Parts => TrueScaler == null ? EScalerParts.All : EScalerParts.None;
 
         private bool EvaluateCondition(IAttributeImpactCarrier spec)
         {

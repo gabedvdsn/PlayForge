@@ -10,6 +10,9 @@ namespace FarEmerald.PlayForge
     [Serializable]
     public class EffectStacksScaler : AbstractScaler
     {
+        // It reads the effect's stacks alone (ED-51)
+        public override EScalerParts Parts => EScalerParts.None;
+
         public override void Initialize(IAttributeImpactCarrier deriv)
         {
         }

@@ -11,6 +11,9 @@ namespace FarEmerald.PlayForge
     [Serializable]
     public class ItemStacksScaler : AbstractScaler
     {
+        // It reads the item's stacks alone (ED-51)
+        public override EScalerParts Parts => EScalerParts.None;
+
         public override void Initialize(IAttributeImpactCarrier deriv)
         {
         }

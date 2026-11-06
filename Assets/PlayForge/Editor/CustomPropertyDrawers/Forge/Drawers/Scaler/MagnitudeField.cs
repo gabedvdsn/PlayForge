@@ -145,6 +145,12 @@ namespace FarEmerald.PlayForge.Extended.Editor
                     range.AddToClassList("pf-magnitude__range");
                     row.Add(range);
 
+                    // Everything the scaler sets for the field sits on one block under it, so its fields read as the
+                    // scaler's among the fields around them (ED-51, Decision 36)
+                    var block = new VisualElement { name = "ScalerBlock" };
+                    block.AddToClassList(ScalerFields.BlockClass);
+                    body.Add(block);
+
                     // How the number joins the scaler
                     var combineRow = new VisualElement { name = "CombineRow" };
                     combineRow.AddToClassList("pf-magnitude__combine");
@@ -168,17 +174,17 @@ namespace FarEmerald.PlayForge.Extended.Editor
                     combineNumber.name = "CombineNumber";
                     combineNumber.AddToClassList("pf-magnitude__combine-number");
                     combineRow.Add(combineNumber);
-                    body.Add(combineRow);
+                    block.Add(combineRow);
 
                     if (integer && roundingProp != null)
                     {
                         var rounding = new EnumField("Rounding") { name = "Rounding", tooltip = "How the value becomes a whole number" };
                         rounding.AddToClassList(EnumField.alignedFieldUssClassName);
                         rounding.BindProperty(roundingProp);
-                        body.Add(rounding);
+                        block.Add(rounding);
                     }
 
-                    body.Add(ScalerFields.Content(scalerProp));
+                    block.Add(ScalerFields.Content(scalerProp));
                 }
 
                 kind.RegisterValueChangedCallback(change =>
@@ -269,7 +275,7 @@ namespace FarEmerald.PlayForge.Extended.Editor
             // Fields whose kinds differ have no one table to fill (ED-12)
             bool mixedKinds = EachAsset.Differ(scalerProp, ScalerFields.KindOf);
             var scaler = mixedKinds ? null : scalerProp.managedReferenceValue as AbstractScaler;
-            bool ownValues = scaler != null && !ScalerFields.IsShared(scaler.GetType()) && scaler.UseScalingOptions();
+            bool ownValues = scaler != null && !ScalerFields.IsShared(scaler.GetType()) && (scaler.Parts & EScalerParts.LevelValues) != 0;
             var menu = new GenericDropdownMenu();
 
             // Saving keeps one field's values, so it waits for one selected asset (ED-12)
@@ -310,7 +316,8 @@ namespace FarEmerald.PlayForge.Extended.Editor
             if (EachAsset.Of(scalerProp).Any(each => each.managedReferenceValue != null))
                 menu.AddItem("Make Constant", false, () => ScalerActions.MakeConstant(operation));
             else menu.AddDisabledItem("Make Constant", false);
-            menu.DropDown(anchor.worldBound, anchor, true);
+            // At the button, as wide as its items: anchored alone, it took the button's 20 px and no item could be read (ED-52)
+            menu.DropDown(anchor.worldBound, anchor, true, true);
         }
 
         // A name for what the field holds, as "Burning Duration"

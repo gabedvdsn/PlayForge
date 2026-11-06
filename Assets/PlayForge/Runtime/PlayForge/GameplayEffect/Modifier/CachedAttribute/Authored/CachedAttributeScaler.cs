@@ -51,5 +51,8 @@ namespace FarEmerald.PlayForge
         }
 
         public override bool UseScalingOptions() => false;
+
+        // It reads the attribute alone (ED-51)
+        public override EScalerParts Parts => EScalerParts.None;
     }
 }

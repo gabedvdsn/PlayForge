@@ -31,6 +31,9 @@ namespace FarEmerald.PlayForge
             return false;
         }
 
+        // With no members, it reads its own values per level (ED-51)
+        public override EScalerParts Parts => Calculations == null || Calculations.Length == 0 ? EScalerParts.All : EScalerParts.None;
+
         public override float Evaluate(IAttributeImpactCarrier deriv)
         {
             if (Calculations == null || Calculations.Length == 0)

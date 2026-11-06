@@ -12,13 +12,16 @@ namespace FarEmerald.PlayForge
         public EVarianceMode VarianceMode = EVarianceMode.Percentage;
         
         [Tooltip("Amount of variance (interpretation depends on mode)")]
+        [ForgeShowWhen(nameof(VarianceMode), EVarianceMode.Percentage, EVarianceMode.Flat)]
         [Range(0f, 1f)]
         public float Variance = 0.1f;
         
         [Tooltip("Minimum multiplier when using random range")]
+        [ForgeShowWhen(nameof(VarianceMode), EVarianceMode.Multiplier)]
         public float MinMultiplier = 0.9f;
         
         [Tooltip("Maximum multiplier when using random range")]
+        [ForgeShowWhen(nameof(VarianceMode), EVarianceMode.Multiplier)]
         public float MaxMultiplier = 1.1f;
 
         [Tooltip("Roll once per effect spec and keep it, so a buff holds its roll and every tick of one application " +
@@ -77,6 +80,9 @@ namespace FarEmerald.PlayForge
         {
             return false;
         }
+
+        // Its base value is its values per level, through its behaviours, so it reads them all (ED-51)
+        public override EScalerParts Parts => EScalerParts.All;
 
         /// <summary>
         /// Gets the minimum possible value at current level (for UI display).
