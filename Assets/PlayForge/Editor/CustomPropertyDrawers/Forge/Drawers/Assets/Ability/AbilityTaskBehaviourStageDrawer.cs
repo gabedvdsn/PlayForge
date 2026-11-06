@@ -1,671 +1,207 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
 using UnityEditor;
 using UnityEditor.UIElements;
-using UnityEngine;
 using UnityEngine.UIElements;
-using static FarEmerald.PlayForge.Extended.Editor.ForgeDrawerStyles;
 
 namespace FarEmerald.PlayForge.Extended.Editor
 {
     /// <summary>
-    /// Custom property drawer for AbilityTaskBehaviourStage with polished visual styling.
-    /// Each stage gets a distinct visual treatment with collapsible tasks.
+    /// An ability's stage, in Docs/EDITOR_STYLE.md's terms (ED-64): a foldout row named by its place, as "Stage 1", with
+    /// Critical on its right while a task commits the ability to it; folded, one line of what it holds, as "2 tasks · All ·
+    /// Applies usage effects"; open, its completion policy, its usage effects, its condition, what cancels it and what it
+    /// blocks, then its tasks in Unity's reorderable list, where a new task starts empty. The stages' own list removes a
+    /// stage.
+    /// <para>
+    /// It drew a colored badge for the stage's number, its policy, its usage effects, its task count and a critical task,
+    /// ▶ and ▼ as text, a delete button, and a list of its own with ▲, ▼ and × buttons, from 163 styles set in C#; and it
+    /// grew that list as an array, which gave a new task the last one's object, so the two were one.
+    /// </para>
     /// </summary>
     [CustomPropertyDrawer(typeof(AbilityTaskBehaviourStage))]
     public class AbilityTaskBehaviourStageDrawer : PropertyDrawer
     {
-        // Stage accent colors (cycle through for visual distinction)
-        private static readonly Color[] StageColors = new Color[]
-        {
-            Colors.AccentBlue,
-            Colors.AccentGreen,
-            Colors.AccentOrange,
-            Colors.AccentPurple,
-            Colors.AccentCyan,
-            Colors.AccentYellow
-        };
-        
-        // Kept per asset for the editor session (ED-18)
-        private static bool IsCollapsed(SerializedProperty property) =>
-            DrawerCollapseState.IsCollapsed(property, collapsedByDefault: false);
-        
-        private static void SetCollapsed(SerializedProperty property, bool collapsed) =>
-            DrawerCollapseState.SetCollapsed(property, collapsed);
-        
+        public const string CollapsedClass = "pf-element--collapsed";
+        private const string Hidden = "pf-hidden";
+
         public override VisualElement CreatePropertyGUI(SerializedProperty property)
         {
             var root = new VisualElement { name = "StageRoot" };
-            root.style.marginBottom = 6;
-            
-            BuildStageUI(root, property);
-            
-            return root;
-        }
-        
-        private void BuildStageUI(VisualElement root, SerializedProperty property)
-        {
-            root.Clear();
-            
-            int stageIndex = GetStageIndex(property.propertyPath);
-            Color stageColor = StageColors[stageIndex % StageColors.Length];
-            bool isCollapsed = IsCollapsed(property);
-            
-            // Main container
-            var container = new VisualElement { name = "StageContainer" };
-            container.style.borderLeftWidth = 4;
-            container.style.borderLeftColor = stageColor;
-            container.style.borderTopLeftRadius = 6;
-            container.style.borderBottomLeftRadius = 6;
-            container.style.borderTopRightRadius = 6;
-            container.style.borderBottomRightRadius = 6;
-            container.style.backgroundColor = new Color(0.18f, 0.18f, 0.2f, 0.8f);
-            container.style.paddingTop = 8;
-            container.style.paddingBottom = isCollapsed ? 8 : 10;
-            container.style.paddingLeft = 10;
-            container.style.paddingRight = 8;
-            container.style.marginTop = 2;
-            
-            // Header
-            container.Add(CreateStageHeader(property, root, stageIndex, stageColor, isCollapsed));
-            
-            if (!isCollapsed)
+            // The style sheet lays out the stage, wherever it's drawn (ED-20)
+            ForgeTheme.Apply(root);
+            root.AddToClassList("pf-element");
+
+            // The stage, found again by its path, as the stages' list moves and an Undo puts objects back (ED-49)
+            var serialized = property.serializedObject;
+            var path = property.propertyPath;
+            SerializedProperty Fresh()
             {
-                // Stage content
-                container.Add(CreateStageContent(property, root, stageColor));
+                try
+                {
+                    return serialized.targetObject != null ? serialized.FindProperty(path) : null;
+                }
+                catch (Exception)
+                {
+                    return null;
+                }
             }
-            else
-            {
-                // Collapsed summary
-                container.Add(CreateCollapsedSummary(property));
-            }
-            
-            root.Add(container);
-            
-            // Bind after building to ensure all PropertyFields work
-            root.Bind(property.serializedObject);
-        }
-        
-        private VisualElement CreateStageHeader(SerializedProperty property, VisualElement root, 
-            int stageIndex, Color stageColor, bool isCollapsed)
-        {
+
+            // ─── The foldout row: the arrow, the stage's place, and Critical ──
             var header = new VisualElement { name = "StageHeader" };
-            header.style.flexDirection = FlexDirection.Row;
-            header.style.alignItems = Align.Center;
-            header.style.marginBottom = isCollapsed ? 0 : 8;
-            
-            // Collapse button
-            var collapseBtn = new Button { text = isCollapsed ? "▶" : "▼", tooltip = isCollapsed ? "Expand" : "Collapse" };
-            collapseBtn.style.width = 18;
-            collapseBtn.style.height = 18;
-            collapseBtn.style.marginRight = 6;
-            collapseBtn.style.fontSize = 8;
-            collapseBtn.style.paddingLeft = 0;
-            collapseBtn.style.paddingRight = 0;
-            collapseBtn.style.paddingTop = 0;
-            collapseBtn.style.paddingBottom = 0;
-            collapseBtn.style.unityTextAlign = TextAnchor.MiddleCenter;
-            ApplyButtonStyle(collapseBtn);
-            collapseBtn.clicked += () =>
+            header.AddToClassList("pf-element__header");
+            root.Add(header);
+            var arrow = new ForgeIconButton(ForgeGlyphShape.ArrowDown, "Collapse", null) { name = "CollapseBtn" };
+            arrow.AddToClassList("pf-element__arrow");
+            header.Add(arrow);
+            var title = new Label($"Stage {IndexOf(path) + 1}") { name = "StageTitle" };
+            title.AddToClassList("pf-stage__title");
+            header.Add(title);
+            var critical = new Label("Critical")
             {
-                SetCollapsed(property, !isCollapsed);
-                ScheduleRebuild(root, property);
+                name = "StageCritical",
+                tooltip = "A task in the stage is a critical section: nothing cancels the ability while the stage runs",
             };
-            header.Add(collapseBtn);
-            
-            // Stage number badge (smaller - 20px)
-            var stageBadge = new VisualElement();
-            stageBadge.style.width = 20;
-            stageBadge.style.height = 20;
-            stageBadge.style.borderTopLeftRadius = 10;
-            stageBadge.style.borderTopRightRadius = 10;
-            stageBadge.style.borderBottomLeftRadius = 10;
-            stageBadge.style.borderBottomRightRadius = 10;
-            stageBadge.style.backgroundColor = stageColor;
-            stageBadge.style.alignItems = Align.Center;
-            stageBadge.style.justifyContent = Justify.Center;
-            stageBadge.style.marginRight = 6;
-            
-            var stageNumber = new Label((stageIndex + 1).ToString());
-            stageNumber.style.fontSize = 10;
-            stageNumber.style.unityFontStyleAndWeight = FontStyle.Bold;
-            stageNumber.style.color = Color.white;
-            stageNumber.style.unityTextAlign = TextAnchor.MiddleCenter;
-            stageBadge.Add(stageNumber);
-            header.Add(stageBadge);
-            
-            // Stage title
-            var titleLabel = new Label($"Stage {stageIndex + 1}");
-            titleLabel.style.unityFontStyleAndWeight = FontStyle.Bold;
-            titleLabel.style.fontSize = 12;
-            titleLabel.style.color = Colors.HeaderText;
-            titleLabel.style.flexGrow = 1;
-            header.Add(titleLabel);
-            
-            var tasksProp = property.FindPropertyRelative("Tasks");
+            critical.AddToClassList("pf-element__delivery");
+            header.Add(critical);
 
-            // Critical section badge — iterate array elements, read managed reference
-            if (tasksProp != null && HasCriticalTask(tasksProp))
-            {
-                var critBadge = CreateBadge("Critical", Colors.AccentRed);
-                critBadge.style.marginRight = 2;
-                critBadge.tooltip = "This stage contains one or more critical section tasks";
-                critBadge.style.marginLeft = 4;
-                header.Add(critBadge);
-            }
+            // The one line a folded stage shows
+            var summary = new Label { name = "Summary" };
+            summary.AddToClassList("pf-element__summary");
+            root.Add(summary);
 
-            // Policy badge
-            var stagePolicyProp = property.FindPropertyRelative("StagePolicy");
-            if (stagePolicyProp != null && stagePolicyProp.managedReferenceValue != null)
-            {
-                var policyName = GetPolicyDisplayName(stagePolicyProp);
-                var policyBadge = CreatePolicyBadge(policyName);
-                header.Add(policyBadge);
-            }
-            
-            // Apply usage effects indicator
-            var applyUsageProp = property.FindPropertyRelative("ApplyUsageEffects");
-            if (applyUsageProp != null && applyUsageProp.boolValue)
-            {
-                var usageBadge = CreateBadge("Usage", Colors.SectionYellow);
-                usageBadge.tooltip = "Applies cost and cooldown at the beginning of this stage";
-                usageBadge.style.marginLeft = 4;
-                header.Add(usageBadge);
-            }
-            
-            // Task count badge
-            
-            if (tasksProp != null)
-            {
-                int taskCount = tasksProp.arraySize;
-                var taskBadge = CreateBadge($"{taskCount} task{(taskCount != 1 ? "s" : "")}");
-                taskBadge.style.marginLeft = 4;
-                header.Add(taskBadge);
-            }
-            
-            // Delete button
-            var deleteBtn = new Button { text = "×", tooltip = "Delete this stage" };
-            deleteBtn.style.width = 20;
-            deleteBtn.style.height = 20;
-            deleteBtn.style.marginLeft = 8;
-            deleteBtn.style.fontSize = 12;
-            deleteBtn.style.color = Colors.AccentRed;
-            ApplyButtonStyle(deleteBtn);
-            deleteBtn.clicked += () => DeleteStage(property, root);
-            header.Add(deleteBtn);
-            
-            return header;
-        }
-        
-        private VisualElement CreateStageContent(SerializedProperty property, VisualElement root, Color stageColor)
-        {
             var content = new VisualElement { name = "StageContent" };
+            content.AddToClassList("pf-element__content");
+            root.Add(content);
 
-            var settings = CreateRow(wrap: true);
-            //settings.style.backgroundColor = Colors.SubsectionBackground;
-            settings.style.flexDirection = FlexDirection.Column;
+            content.Add(new PropertyField(property.FindPropertyRelative(nameof(AbilityTaskBehaviourStage.StagePolicy)), "Completion")
+            {
+                name = "StagePolicy",
+                tooltip = "When the stage is complete: as all its tasks end, as any does, or as its policy says",
+            });
 
-            var policyRow = CreateRow();
-            policyRow.style.flexGrow = 1;
-            policyRow.style.marginRight = 12;
-            policyRow.style.marginLeft = 8;
-            
-            policyRow.Add(CreateFieldLabel("Completion Policy"));
-            var stagePolicyProp = property.FindPropertyRelative("StagePolicy");
-            if (stagePolicyProp != null)
+            var usage = new Toggle("Apply Usage Effects")
             {
-                var policyField = new PropertyField(stagePolicyProp, "Completion Policy");
-                policyField = CreatePropertyField(stagePolicyProp, "StagePolicy", "Completion Policy");
-                policyField.style.minHeight = 20;
-                policyField.style.flexGrow = 1;
-                policyField.style.marginLeft = 24;
-                policyRow.Add(policyField);
-            }
-            settings.Add(policyRow);
-            
-            // Apply Usage Effects - use PropertyField with label
-            var applyUsageOnStartContainer = CreateRow();
-            applyUsageOnStartContainer.style.flexGrow = 1;
-            applyUsageOnStartContainer.style.marginRight = 18;
-            applyUsageOnStartContainer.style.marginLeft = 8;
-            
-            applyUsageOnStartContainer.Add(CreateFieldLabel("Apply Usage At Start"));
-            var applyUsageOnStartProp = property.FindPropertyRelative(nameof(AbilityTaskBehaviourStage.ApplyUsageAtStageStart));
-            if (applyUsageOnStartProp != null)
-            {
-                var usageField = new PropertyField(applyUsageOnStartProp, "");
-                usageField.tooltip = "Apply usage effects at the beginning or end of this stage";
-                usageField.style.minHeight = 20;
-                usageField.style.marginLeft = 10;
-                applyUsageOnStartContainer.Add(usageField);
-            }
-            
-            // Apply Usage Effects - use PropertyField with label
-            var applyUsageContainer = CreateRow();
-            applyUsageContainer.style.flexGrow = 1;
-            applyUsageContainer.style.marginRight = 18;
-            applyUsageContainer.style.marginLeft = 8;
-            
-            applyUsageContainer.Add(CreateFieldLabel("Apply Usage Effects"));
-            var applyUsageProp = property.FindPropertyRelative(nameof(AbilityTaskBehaviourStage.ApplyUsageEffects));
-            if (applyUsageProp != null)
-            {
-                var usageField = new PropertyField(applyUsageProp, "");
-                usageField.tooltip = "During this stage, apply the ability's cost and cooldown";
-                usageField.style.minHeight = 20;
-                usageField.style.marginLeft = 10;
-                applyUsageContainer.Add(usageField);
-            }
-            settings.Add(applyUsageContainer);
-            settings.Add(applyUsageOnStartContainer);
-
-            // What cancels the ability and what it blocks while this stage runs; a stage that names none takes the
-            // ability's (FEAT-5)
-            var cancelledBy = new PropertyField(property.FindPropertyRelative(nameof(AbilityTaskBehaviourStage.CancelledBy)), "Cancelled By")
-            {
-                name = "CancelledBy",
-                tooltip = "Abilities, by tag, that cancel this one as they activate in this stage. None takes the ability's",
+                name = "ApplyUsageEffects",
+                tooltip = "Apply the ability's cost and cooldown in this stage. With no stage set to, they never apply",
             };
-            cancelledBy.style.marginLeft = 8;
-            settings.Add(cancelledBy);
-            var blocks = new PropertyField(property.FindPropertyRelative(nameof(AbilityTaskBehaviourStage.Blocks)), "Blocks")
+            usage.AddToClassList(Toggle.alignedFieldUssClassName);
+            usage.BindProperty(property.FindPropertyRelative(nameof(AbilityTaskBehaviourStage.ApplyUsageEffects)));
+            content.Add(usage);
+            var atStart = new Toggle("At Stage Start")
             {
-                name = "Blocks",
-                tooltip = "Abilities, by tag, that can't activate during this stage. None takes the ability's",
+                name = "ApplyUsageAtStageStart",
+                tooltip = "Apply them as the stage starts; off, as it ends",
             };
-            blocks.style.marginLeft = 8;
-            settings.Add(blocks);
+            atStart.AddToClassList(Toggle.alignedFieldUssClassName);
+            atStart.AddToClassList("pf-dependent");
+            atStart.BindProperty(property.FindPropertyRelative(nameof(AbilityTaskBehaviourStage.ApplyUsageAtStageStart)));
+            content.Add(atStart);
 
-            // When the stage runs: always, or only while a tag is there or missing, which is how two stages branch (TS-7)
-            var condition = new PropertyField(property.FindPropertyRelative(nameof(AbilityTaskBehaviourStage.Condition)), "Condition")
+            content.Add(new PropertyField(property.FindPropertyRelative(nameof(AbilityTaskBehaviourStage.Condition)), "Condition")
             {
                 name = "Condition",
-                tooltip = "When the stage runs: always, or only while a tag is there, or missing. Two stages that name one tag branch",
-            };
-            condition.style.marginLeft = 8;
-            settings.Add(condition);
-            
-            content.Add(settings);
-            
-            // Tasks section
-            var tasksSection = CreateTasksSection(property, root, stageColor);
-            content.Add(tasksSection);
-            
-            return content;
-        }
-        
-        private VisualElement CreateTasksSection(SerializedProperty property, VisualElement root, Color stageColor)
-        {
-            var section = new VisualElement { name = "TasksSection" };
-            section.style.borderLeftWidth = 2;
-            section.style.borderLeftColor = new Color(stageColor.r, stageColor.g, stageColor.b, 0.4f);
-            section.style.paddingLeft = 8;
-            section.style.marginLeft = 4;
-            section.style.marginTop = 4;
-            
-            // Tasks header
-            var tasksHeader = new VisualElement();
-            tasksHeader.style.flexDirection = FlexDirection.Row;
-            tasksHeader.style.alignItems = Align.Center;
-            tasksHeader.style.marginBottom = 6;
-            
-            var tasksLabel = new Label("TASKS");
-            tasksLabel.style.fontSize = 9;
-            tasksLabel.style.letterSpacing = 1;
-            tasksLabel.style.unityFontStyleAndWeight = FontStyle.Bold;
-            tasksLabel.style.color = Colors.SectionTitle;
-            tasksHeader.Add(tasksLabel);
-            
-            section.Add(tasksHeader);
-            
-            // Tasks list
-            var tasksProp = property.FindPropertyRelative("Tasks");
-            if (tasksProp != null)
-            {
-                var tasksList = new VisualElement { name = "TasksList" };
-                
-                if (tasksProp.arraySize == 0)
-                {
-                    var emptyLabel = new Label("No tasks defined. Add a task to define stage behavior.");
-                    emptyLabel.style.fontSize = 10;
-                    emptyLabel.style.color = Colors.HintText;
-                    emptyLabel.style.unityFontStyleAndWeight = FontStyle.Italic;
-                    emptyLabel.style.marginBottom = 6;
-                    emptyLabel.style.marginLeft = 4;
-                    tasksList.Add(emptyLabel);
-                }
-                else
-                {
-                    for (int i = 0; i < tasksProp.arraySize; i++)
-                    {
-                        var taskProp = tasksProp.GetArrayElementAtIndex(i);
-                        var taskElement = CreateTaskElement(taskProp, tasksProp, i, root, property, stageColor);
-                        tasksList.Add(taskElement);
-                    }
-                }
-                
-                section.Add(tasksList);
-                
-                // Add task button
-                var addButtonRow = new VisualElement();
-                addButtonRow.style.flexDirection = FlexDirection.Row;
-                addButtonRow.style.marginTop = 6;
-                
-                var addBtn = new Button { text = "+ Add Task" };
-                addBtn.style.paddingLeft = 12;
-                addBtn.style.paddingRight = 12;
-                addBtn.style.paddingTop = 3;
-                addBtn.style.paddingBottom = 3;
-                addBtn.style.fontSize = 10;
-                ApplyButtonStyle(addBtn);
-                addBtn.clicked += () =>
-                {
-                    tasksProp.arraySize++;
-                    tasksProp.serializedObject.ApplyModifiedProperties();
-                    ScheduleRebuild(root, property);
-                };
-                addButtonRow.Add(addBtn);
-                
-                section.Add(addButtonRow);
-            }
-            
-            return section;
-        }
-        
-        private VisualElement CreateTaskElement(SerializedProperty taskProp, SerializedProperty tasksProp, 
-            int index, VisualElement root, SerializedProperty stageProp, Color stageColor)
-        {
-            var taskContainer = new VisualElement { name = $"Task_{index}" };
-            taskContainer.style.flexDirection = FlexDirection.Row;
-            taskContainer.style.alignItems = Align.FlexStart;
-            taskContainer.style.marginBottom = 4;
-            taskContainer.style.paddingTop = 6;
-            taskContainer.style.paddingBottom = 6;
-            taskContainer.style.paddingLeft = 6;
-            taskContainer.style.paddingRight = 4;
-            taskContainer.style.backgroundColor = Colors.ItemBackground;
-            taskContainer.style.borderTopLeftRadius = 4;
-            taskContainer.style.borderTopRightRadius = 4;
-            taskContainer.style.borderBottomLeftRadius = 4;
-            taskContainer.style.borderBottomRightRadius = 4;
-            
-            // Task index indicator
-            var indexLabel = new Label($"{index + 1}.");
-            indexLabel.style.width = 18;
-            indexLabel.style.fontSize = 10;
-            indexLabel.style.color = Colors.HintText;
-            indexLabel.style.unityTextAlign = TextAnchor.MiddleRight;
-            indexLabel.style.marginRight = 4;
-            indexLabel.style.marginTop = 2;
-            taskContainer.Add(indexLabel);
-
-            // Critical section indicator per task
-            if (taskProp.managedReferenceValue is AbstractAbilityTask task && task.IsCriticalSection)
-            {
-                taskContainer.style.borderLeftWidth = 3;
-                taskContainer.style.borderLeftColor = Colors.AccentRed;
-
-                var critLabel = CreateBadge("Critical", Colors.AccentRed);
-                critLabel.tooltip = "This task is a critical section — blocks concurrent critical abilities";
-                critLabel.style.marginRight = 4;
-                critLabel.style.marginTop = 2;
-                critLabel.style.height = 18;
-                critLabel.style.alignSelf = Align.FlexStart;
-                taskContainer.Add(critLabel);
-            }
-
-            // Task content area - this will contain the AbilityTaskDrawer output
-            var taskContent = new VisualElement();
-            taskContent.style.flexGrow = 1;
-            taskContent.style.minHeight = 22;
-            
-            // Task property field (uses AbilityTaskDrawer via [CustomPropertyDrawer])
-            var taskField = new PropertyField(taskProp);
-            taskField.style.marginLeft = 0;
-            taskField.style.marginRight = 0;
-            taskContent.Add(taskField);
-            
-            taskContainer.Add(taskContent);
-            
-            // Button column
-            var buttonColumn = new VisualElement();
-            buttonColumn.style.flexDirection = FlexDirection.Column;
-            buttonColumn.style.marginLeft = 4;
-            buttonColumn.style.alignItems = Align.Center;
-            
-            // Move up
-            if (index > 0)
-            {
-                var upBtn = CreateSmallButton("▲", "Move up", () =>
-                {
-                    tasksProp.MoveArrayElement(index, index - 1);
-                    tasksProp.serializedObject.ApplyModifiedProperties();
-                    ScheduleRebuild(root, stageProp);
-                });
-                buttonColumn.Add(upBtn);
-            }
-            
-            // Move down
-            if (index < tasksProp.arraySize - 1)
-            {
-                var downBtn = CreateSmallButton("▼", "Move down", () =>
-                {
-                    tasksProp.MoveArrayElement(index, index + 1);
-                    tasksProp.serializedObject.ApplyModifiedProperties();
-                    ScheduleRebuild(root, stageProp);
-                });
-                buttonColumn.Add(downBtn);
-            }
-            
-            // Delete
-            var deleteBtn = CreateSmallButton("×", "Remove task", () =>
-            {
-                tasksProp.DeleteArrayElementAtIndex(index);
-                tasksProp.serializedObject.ApplyModifiedProperties();
-                ScheduleRebuild(root, stageProp);
             });
-            deleteBtn.style.color = Colors.AccentRed;
-            buttonColumn.Add(deleteBtn);
-            
-            taskContainer.Add(buttonColumn);
-            
-            return taskContainer;
-        }
-        
-        private Button CreateSmallButton(string text, string tooltip, Action onClick)
-        {
-            var btn = new Button { text = text, tooltip = tooltip };
-            btn.style.width = 18;
-            btn.style.height = 16;
-            btn.style.fontSize = 9;
-            btn.style.marginBottom = 2;
-            btn.style.paddingLeft = 0;
-            btn.style.paddingRight = 0;
-            btn.style.paddingTop = 0;
-            btn.style.paddingBottom = 0;
-            ApplyButtonStyle(btn);
-            btn.clicked += onClick;
-            return btn;
-        }
-        
-        private VisualElement CreateCollapsedSummary(SerializedProperty property)
-        {
-            var summary = new VisualElement();
-            summary.style.flexDirection = FlexDirection.Row;
-            summary.style.alignItems = Align.Center;
-            summary.style.marginLeft = 44; // Align with content after smaller badge
-            summary.style.marginTop = 4;
-            
-            var tasksProp = property.FindPropertyRelative("Tasks");
-            var policyProp = property.FindPropertyRelative("StagePolicy");
-            
-            var parts = new List<string>();
-            
-            // Policy
-            if (policyProp != null && policyProp.managedReferenceValue != null)
+            content.Add(new PropertyField(property.FindPropertyRelative(nameof(AbilityTaskBehaviourStage.CancelledBy)), "Cancelled By")
             {
-                parts.Add(GetPolicyDisplayName(policyProp));
-            }
-            
-            // Tasks summary
-            if (tasksProp != null)
+                name = "CancelledBy",
+                tooltip = "The abilities that cancel this one as they activate while this stage runs; with none, the ability's own",
+            });
+            content.Add(new PropertyField(property.FindPropertyRelative(nameof(AbilityTaskBehaviourStage.Blocks)), "Blocks")
             {
-                int count = tasksProp.arraySize;
-                if (count > 0)
-                {
-                    var taskNames = new List<string>();
-                    for (int i = 0; i < Math.Min(count, 3); i++)
-                    {
-                        var taskProp = tasksProp.GetArrayElementAtIndex(i);
-                        if (taskProp.managedReferenceValue != null)
-                        {
-                            var name = taskProp.managedReferenceValue.GetType().Name;
-                            name = name.Replace("AbilityTask", "").Replace("Task", "");
-                            taskNames.Add(name);
-                        }
-                    }
-                    
-                    if (taskNames.Count > 0)
-                    {
-                        var taskSummary = string.Join(", ", taskNames);
-                        if (count > 3) taskSummary += $" +{count - 3} more";
-                        parts.Add($"[{taskSummary}]");
-                    }
-                }
+                name = "Blocks",
+                tooltip = "The abilities that can't activate while this stage runs; with none, the ability's own",
+            });
+
+            // The tasks, in Unity's reorderable list. A new task starts empty, for its kind to be picked
+            var tasks = new PropertyField(property.FindPropertyRelative(nameof(AbilityTaskBehaviourStage.Tasks)), "Tasks") { name = "Tasks" };
+            content.Add(tasks);
+            ForgeLists.AddsEmpty(tasks, serialized, $"{path}.{nameof(AbilityTaskBehaviourStage.Tasks)}");
+
+            // ─── Behaviour ─────────────────────────────────────────────────────
+            void Show()
+            {
+                var stage = Fresh();
+                if (stage == null) return;
+                var tasksProp = stage.FindPropertyRelative(nameof(AbilityTaskBehaviourStage.Tasks));
+                var usageProp = stage.FindPropertyRelative(nameof(AbilityTaskBehaviourStage.ApplyUsageEffects));
+                summary.text = SummaryOf(stage);
+                critical.EnableInClassList(Hidden, !HasCritical(tasksProp));
+                atStart.EnableInClassList(Hidden, usageProp == null || !usageProp.boolValue || usageProp.hasMultipleDifferentValues);
             }
-            
-            var summaryLabel = new Label(string.Join(" → ", parts));
-            summaryLabel.style.fontSize = 10;
-            summaryLabel.style.color = Colors.HintText;
-            summary.Add(summaryLabel);
-            
-            return summary;
+
+            void SetFolded(bool folded)
+            {
+                root.EnableInClassList(CollapsedClass, folded);
+                arrow.Glyph.Shape = folded ? ForgeGlyphShape.ArrowRight : ForgeGlyphShape.ArrowDown;
+                arrow.tooltip = folded ? "Expand" : "Collapse";
+            }
+
+            arrow.clicked += () =>
+            {
+                var stage = Fresh();
+                if (stage == null) return;
+                bool folded = !DrawerCollapseState.IsCollapsed(stage, collapsedByDefault: false);
+                DrawerCollapseState.SetCollapsed(stage, folded);
+                SetFolded(folded);
+            };
+            root.TrackSerializedObjectValue(serialized, _ => Show());
+            SetFolded(DrawerCollapseState.IsCollapsed(property, collapsedByDefault: false));
+            Show();
+            return root;
         }
-        
-        // ═══════════════════════════════════════════════════════════════════════════
-        // Helpers
-        // ═══════════════════════════════════════════════════════════════════════════
 
         /// <summary>
-        /// Checks whether any task in the Tasks array is a critical section.
-        /// Iterates individual array elements and reads managedReferenceValue
-        /// (not the array property itself, which has no managed reference).
+        /// A folded stage's line: its tasks, its completion policy, when it applies usage effects, and the tag it runs on,
+        /// as "2 tasks · All · Applies usage effects".
         /// </summary>
-        private static bool HasCriticalTask(SerializedProperty tasksArrayProp)
+        internal static string SummaryOf(SerializedProperty stage)
         {
-            for (int i = 0; i < tasksArrayProp.arraySize; i++)
+            var parts = new List<string>();
+            var tasks = stage.FindPropertyRelative(nameof(AbilityTaskBehaviourStage.Tasks));
+            int count = tasks?.arraySize ?? 0;
+            parts.Add(count == 1 ? "1 task" : $"{count} tasks");
+            var policy = stage.FindPropertyRelative(nameof(AbilityTaskBehaviourStage.StagePolicy))?.managedReferenceValue;
+            if (policy != null) parts.Add(PolicyName(policy.GetType()));
+            var usage = stage.FindPropertyRelative(nameof(AbilityTaskBehaviourStage.ApplyUsageEffects));
+            if (usage != null && usage.boolValue)
             {
-                var element = tasksArrayProp.GetArrayElementAtIndex(i);
-                if (element.managedReferenceValue is AbstractAbilityTask task && task.IsCriticalSection)
-                    return true;
+                var atStart = stage.FindPropertyRelative(nameof(AbilityTaskBehaviourStage.ApplyUsageAtStageStart));
+                parts.Add(atStart == null || atStart.boolValue ? "Applies usage effects" : "Applies usage effects as it ends");
             }
+            var condition = stage.FindPropertyRelative(nameof(AbilityTaskBehaviourStage.Condition));
+            var tag = condition?.FindPropertyRelative(nameof(AbilityStageCondition.Tag));
+            if (tag != null)
+            {
+                var name = TagDisplaySettings.PathOf(tag);
+                if (!string.IsNullOrEmpty(name))
+                {
+                    bool missing = condition.FindPropertyRelative(nameof(AbilityStageCondition.WhenMissing))?.boolValue ?? false;
+                    parts.Add(missing ? $"Without {name}" : $"With {name}");
+                }
+            }
+            return string.Join(" · ", parts);
+        }
+
+        // A policy's kind as the line names it, as "All" for AllProxyStagePolicy
+        private static string PolicyName(Type type) =>
+            ObjectNames.NicifyVariableName(type.Name.Replace("ProxyStagePolicy", "").Replace("Policy", ""));
+
+        // Whether a task in the list is a critical section
+        private static bool HasCritical(SerializedProperty tasks)
+        {
+            if (tasks == null || !tasks.isArray) return false;
+            for (int i = 0; i < tasks.arraySize; i++)
+                if (tasks.GetArrayElementAtIndex(i).managedReferenceValue is AbstractAbilityTask { IsCriticalSection: true })
+                    return true;
             return false;
         }
-        
-        private VisualElement CreatePolicyBadge(string policyName)
+
+        // A stage's place in its list, from its path, as 0 for "...Stages.Array.data[0]"
+        private static int IndexOf(string path)
         {
-            var badge = new VisualElement();
-            badge.style.flexDirection = FlexDirection.Row;
-            badge.style.alignItems = Align.Center;
-            badge.style.paddingLeft = 6;
-            badge.style.paddingRight = 6;
-            badge.style.paddingTop = 2;
-            badge.style.paddingBottom = 2;
-            badge.style.borderTopLeftRadius = 8;
-            badge.style.borderTopRightRadius = 8;
-            badge.style.borderBottomLeftRadius = 8;
-            badge.style.borderBottomRightRadius = 8;
-            badge.style.backgroundColor = Colors.PolicyPurple;
-            badge.tooltip = "Stage completion policy";
-            
-            var label = new Label(policyName);
-            label.style.fontSize = 9;
-            label.style.color = new Color(0.9f, 0.9f, 0.9f);
-            badge.Add(label);
-            
-            return badge;
-        }
-        
-        private string GetPolicyDisplayName(SerializedProperty policyProp)
-        {
-            if (policyProp.managedReferenceValue == null) return "None";
-            
-            var typeName = policyProp.managedReferenceValue.GetType().Name;
-            typeName = typeName.Replace("ProxyStagePolicy", "").Replace("Policy", "");
-            
-            // Add spaces before capitals
-            var sb = new System.Text.StringBuilder();
-            foreach (char c in typeName)
-            {
-                if (char.IsUpper(c) && sb.Length > 0) sb.Append(' ');
-                sb.Append(c);
-            }
-            
-            return sb.ToString();
-        }
-        
-        private int GetStageIndex(string propertyPath)
-        {
-            var match = System.Text.RegularExpressions.Regex.Match(propertyPath, @"data\[(\d+)\]");
-            if (match.Success && int.TryParse(match.Groups[1].Value, out int index))
-            {
-                return index;
-            }
-            return 0;
-        }
-        
-        private void DeleteStage(SerializedProperty property, VisualElement root)
-        {
-            // Find the parent array
-            var path = property.propertyPath;
-            var lastArrayIndex = path.LastIndexOf(".Array.data[");
-            if (lastArrayIndex < 0) return;
-            
-            var arrayPath = path.Substring(0, lastArrayIndex);
-            var so = property.serializedObject;
-            var arrayProp = so.FindProperty(arrayPath);
-            
-            if (arrayProp != null && arrayProp.isArray)
-            {
-                int index = GetStageIndex(path);
-                int countBefore = arrayProp.arraySize;
-                arrayProp.DeleteArrayElementAtIndex(index);
-                so.ApplyModifiedProperties();
-                
-                // Each later stage keeps its own collapse state. Every stage's was cleared, so all of them opened (ED-18)
-                DrawerCollapseState.RemoveElement(arrayProp, index, countBefore);
-            }
-        }
-        
-        private static void ApplyButtonStyle(Button btn)
-        {
-            btn.style.borderTopLeftRadius = 3;
-            btn.style.borderTopRightRadius = 3;
-            btn.style.borderBottomLeftRadius = 3;
-            btn.style.borderBottomRightRadius = 3;
-            btn.style.backgroundColor = Colors.ButtonBackground;
-            btn.RegisterCallback<MouseEnterEvent>(_ => btn.style.backgroundColor = Colors.ButtonHover);
-            btn.RegisterCallback<MouseLeaveEvent>(_ => btn.style.backgroundColor = Colors.ButtonBackground);
-        }
-        
-        private void ScheduleRebuild(VisualElement root, SerializedProperty property)
-        {
-            var propPath = property.propertyPath;
-            var targetObject = property.serializedObject.targetObject;
-            var serializedObject = property.serializedObject;
-            
-            root.schedule.Execute(() =>
-            {
-                if (targetObject == null) return;
-                // The drawer's own SerializedObject, so the rebuilt UI edits every selected asset. A copy over the
-                // first target edited that asset alone (ED-12)
-                if (root.panel == null) return;
-                var so = serializedObject;
-                so.Update();
-                var freshProp = so.FindProperty(propPath);
-                if (freshProp != null) BuildStageUI(root, freshProp);
-            });
+            int open = path.LastIndexOf('[');
+            int close = path.LastIndexOf(']');
+            return open >= 0 && close > open && int.TryParse(path.Substring(open + 1, close - open - 1), out int index) ? index : 0;
         }
     }
 }

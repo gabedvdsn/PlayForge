@@ -149,7 +149,9 @@ namespace FarEmerald.PlayForge.Extended.Editor
                     if (now != null) SetValue(now, type);
                 }).Show(opened.Box.worldBound);
             };
-            root.TrackPropertyValue(property, _ => Show());
+            // The asset is followed, not the property: a list's element removed before Unity takes up a property's
+            // tracking threw as it did (ED-64)
+            root.TrackSerializedObjectValue(serialized, _ => Show());
             Show();
             return root;
         }

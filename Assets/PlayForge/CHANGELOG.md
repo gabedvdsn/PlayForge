@@ -171,6 +171,11 @@ tracks each fix below by its ID.
   page, through one table of links in the editor.
 
 ### Changed
+- An ability's stage folds as an attribute set element does, to a line of what it holds, with Critical on its row
+  while a task commits the ability to it. Its tasks are Unity's reorderable list, where a new task starts empty, and
+  its condition shows where it looks for its tag only once it names one. The stages' list removes a stage, and each
+  stage keeps its fold as one is removed or dragged. It drew colored badges, arrows as text, and a list of its own
+  whose new task shared the last one's object (ED-64).
 - A stale asset tag whose path is right says it has no display name, or which one it has, where it named one path
   twice (FEAT-25).
 - A field that holds an object of some kind, as a task, a cue, a worker or a scaler behaviour, is Unity's field with

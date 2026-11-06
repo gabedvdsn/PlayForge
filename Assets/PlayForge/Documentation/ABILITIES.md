@@ -146,22 +146,27 @@ This section is what the ability does once it has started.
 - **Blocks**: abilities, named the same way, that can't activate while this one runs. Each stage that names none
   takes this list. A blocked activation is refused, unless When Busy is Queue: then it waits in the input buffer for
   the block to lift.
-- **Stages**: each stage starts all its tasks together. The next stage starts when it ends.
-  - **Completion Policy**: All ends the stage when every task has finished. Any ends it when the first task finishes,
+- **Stages**: each stage starts all its tasks together. The next stage starts when it ends. A stage folds to one
+  line of what it holds, as "2 tasks · All · Applies usage effects", and shows Critical on its row while a task
+  commits the ability to it. The list's **−** removes the selected stage, and a stage keeps its fold as others
+  are removed or dragged.
+  - **Completion**: All ends the stage when every task has finished. Any ends it when the first task finishes,
     and cancels the rest. A stage with no policy set behaves as All.
   - **Apply Usage Effects**: apply the ability's cost and cooldown in this stage. They apply once per activation, in
     the first stage that does this. If no stage does, they are never applied, and a warning under Cooldown says so,
     as the Problems view does.
-  - **Apply Usage At Start**: on, apply them as the stage starts. Off, apply them as it ends, and only if it succeeded.
-  - **Tasks**: the work, such as Apply Effects, Delay or Run Sequence. Run Sequence runs the sequence a static method
+  - **At Stage Start**, under Apply Usage Effects: on, apply them as the stage starts. Off, apply them as it ends,
+    and only if it succeeded.
+  - **Tasks**: the work, such as Apply Effects, Delay or Run Sequence, in a list whose **+** adds an empty task to
+    pick a kind for. Run Sequence runs the sequence a static method
     makes, or, for an ability built in code, a fresh run of the sequence its `Definition` describes, which
     `TaskSequenceBuilder` makes. A stage that holds a critical task is critical.
     The activation keeps its claim until its last critical stage ends. With no critical stage, it lets the claim go
     as the stages start. Apply Effects' **Record Landed As** tags the activation's data as an effect lands on a
     target, for a later stage's Condition.
-  - **Condition**: when the stage runs. With no **Tag**, always. Otherwise only while the tag is there, or, with
-    **When Missing**, only while it isn't: **On** The Activation looks in the activation's data, as Record Landed As
-    fills it, and Caster or Target in that entity's tags. A stage whose condition fails is skipped. Two stages that
+  - **Condition**: when the stage runs, by a tag. With none, always. Otherwise only while the tag is there, or, with
+    **When Missing**, only while it isn't: **Looked For On** The Activation looks in the activation's data, as Record
+    Landed As fills it, and Caster or Target in that entity's tags. Both show once the condition names a tag. A stage whose condition fails is skipped. Two stages that
     name one tag, one wanting it and one wanting it missing, branch: a jab's hit recovery and its whiff. A critical
     stage that's skipped lets the claim go as the next stage starts, so put a committed whiff before the hit's
     recovery, and the claim goes as that recovery starts.

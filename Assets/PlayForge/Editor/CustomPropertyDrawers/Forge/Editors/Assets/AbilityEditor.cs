@@ -464,7 +464,10 @@ namespace FarEmerald.PlayForge.Extended.Editor
             var blocks = CreatePropertyField(serializedObject.FindProperty(BehaviourPath(nameof(AbilityBehaviour.Blocks))), "DefaultBlocks", "Blocks");
             blocks.tooltip = "Abilities, by tag, that can't activate while this one runs, in each stage that names none";
             stagesSection.Content.Add(blocks);
-            stagesSection.Content.Add(CreatePropertyField(serializedObject.FindProperty(BehaviourPath(nameof(AbilityBehaviour.Stages))), "Stages", "Stages"));
+            // The stages' list removes and moves a stage, and each stage keeps its fold as it does (ED-64, ED-18)
+            var stages = CreatePropertyField(serializedObject.FindProperty(BehaviourPath(nameof(AbilityBehaviour.Stages))), "Stages", "Stages");
+            ForgeLists.KeepsStates(stages, serializedObject, BehaviourPath(nameof(AbilityBehaviour.Stages)));
+            stagesSection.Content.Add(stages);
         }
 
         // ═══════════════════════════════════════════════════════════════════════════

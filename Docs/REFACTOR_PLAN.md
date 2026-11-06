@@ -728,7 +728,7 @@ had no letter in the review. TS-AA onward came from the test project.
 | ED-61 | M | 6 | Many custom inspectors and windows older than Phase 4 don't follow the style, as the Mono Process inspector | `AbstractMonoProcessEditor.cs` and others | open |
 | ED-62 | M | 6 | A spread scaler's table named each point by the level it sat at, as 1.8 or 2.5, which no entity can be, and never said what a real level reads (the user's report). Fixed: the points are numbered, and under them each real level shows what it reads, as the runtime reads it: the stored curve at the level's place between the starting level and the last. A stored curve that reads other than its points draw says so | `ScalerFields.cs` | verified |
 | ED-63 | M | 6 | Quick Fill drew a look of its own, a purple bold title, a green Apply, 10 px hints and tinted boxes, from styles set in C#, with its fields outside the label column, and wrote through a property it kept from when it opened (the user's report: its UI needs a rework, and maybe more content). Fixed: it's a dialog in the style, with what it fills, a pattern and its values, rounding, and a preview as the scaler's table shows it, with its curve. It adds Ease In and Out, a Custom Curve, a strength for its two bending patterns, rounding to whole numbers or a step, and a count for a scaler with levels or points of its own. Apply writes the values and the curve as one Undo step | `QuickFillWizard.cs` | verified |
-| ED-64 | M | 6 | Split from ED-56: the ability stage drawer doesn't follow the style. It colors each stage with an accent, draws badges and ▶/▼ text, and sets 163 styles in C# | `AbilityTaskBehaviourStageDrawer.cs` | open |
+| ED-64 | M | 6 | Split from ED-56: the ability stage drawer didn't follow the style. It drew a colored badge for the stage's number, its policy, its usage effects, its task count and a critical task, ▶ and ▼ as text, a delete button, and a list of its own with ▲, ▼ and × buttons, from 163 styles set in C#, and grew that list as an array, which gave a new task the last one's object. A stage's condition was Unity's foldout, its subject and When Missing showing with no tag. Fixed: a stage folds as an attribute set element does, named by its place, Critical on its right, to a line of what it holds; its tasks are Unity's reorderable list, where a new task starts empty (`ForgeLists.AddsEmpty`); At Stage Start indents under Apply Usage Effects; and a condition's subject and When Missing show once it names a tag (`AbilityStageConditionDrawer`). The stages' list removes a stage, and as it removes or moves one, each stage keeps its fold (`ForgeLists.KeepsStates`, ED-18) | `AbilityTaskBehaviourStageDrawer.cs`, `AbilityStageConditionDrawer.cs`, `ForgeLists.cs`, `DrawerCollapseState.cs` | verified |
 | ED-65 | M | 6 | In The Forge, the asset header's file name sat under Show in Project, so that button stood two lines tall in the header's row, and the problem count, Help and the menu sat level with its middle (the user's report on ED-58). Fixed: the actions share one row, and the file name has a row of its own under them, on the right | `ForgeAssetHeader.cs`, `BasePlayForgeEditor.cs` | verified |
 
 The design questions behind Phase 4's rows, each with its evidence, are in the UI interview doc of 2026-11-03,
@@ -883,6 +883,21 @@ GAS-4 with GAS-5, PC-6, and TS-I with PC-5.
 ## Log
 
 Record baselines, gate results and notable decisions here, newest first.
+
+- 2026-11-06, **ED-64: the ability stage drawer.**
+  - A stage folds as an attribute set element does, "Stage 1" with Critical on its right while a task commits the
+    ability, to a line as "2 tasks · All · Applies usage effects". Its fields are Unity's, the policy the kind field
+    ED-56 made, its tasks Unity's reorderable list. A condition draws its tag, then Looked For On and When Missing
+    under it once it has one.
+  - `ForgeLists` (Kit) hooks the list a PropertyField builds, as the field is laid out or pressed, so nothing polls
+    (ED-11). `AddsEmpty` makes + add an empty element, so a new task never shares the last one's object.
+    `KeepsStates` makes the stages' − and drag move each stage's fold with it (`DrawerCollapseState.MoveElement`):
+    the stage's own × did this, and a drag never had.
+  - Found on the way: the kind field and the condition tracked their property, and Unity threw "has disappeared" as
+    it took up the tracking of a stage just removed. They follow the asset now and find the property again.
+  - Testing Unity's list: query a list's own footer buttons, since its elements' lists come first in its tree, and
+    use it only once it's laid out. Before its first layout Unity's binding reads an element a delete took.
+  - Each test failed first. EditMode: 516 of 516.
 
 - 2026-11-06, **Decision 37: the demo refresh, Phase 7.** The user asked for a new demo once Phase 6's UI fixes are
   in, to replace every demo but the labs, Swarm Defender among them. Their spec is Decision 37, and the questions it

@@ -546,6 +546,20 @@
     display: none;
 }
 
+/* An ability's stage, named by its place in its foldout row, as "Stage 1" (ED-64) */
+.pf-root .pf-stage__title {
+    flex-grow: 1;
+    flex-shrink: 1;
+    min-width: 0;
+    margin: 0;
+    padding: 0;
+    -unity-font-style: bold;
+    color: var(--pf-strong-text);
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+}
+
 /* An element that keeps its place while it has nothing to do, as a kind's arrow while the kind has no fields */
 .pf-root .pf-invisible {
     visibility: hidden;

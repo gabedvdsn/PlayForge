@@ -45,6 +45,28 @@ namespace FarEmerald.PlayForge.Extended.Editor
             SessionState.EraseInt(Element(countBefore - 1));
         }
 
+        /// <summary>
+        /// Moves the state of the element dragged from <paramref name="from"/> to <paramref name="to"/>, and each one
+        /// between a place toward where it was, as the list moves the elements, so each state stays with its element.
+        /// </summary>
+        public static void MoveElement(SerializedProperty list, int from, int to, string part = null)
+        {
+            string Element(int index) => Key(list.serializedObject, $"{list.propertyPath}.Array.data[{index}]", part);
+
+            if (from == to || from < 0 || to < 0) return;
+            var moved = SessionState.GetInt(Element(from), Unset);
+            int step = from < to ? 1 : -1;
+            for (int index = from; index != to; index += step)
+                Set(Element(index), SessionState.GetInt(Element(index + step), Unset));
+            Set(Element(to), moved);
+        }
+
+        private static void Set(string key, int stored)
+        {
+            if (stored == Unset) SessionState.EraseInt(key);
+            else SessionState.SetInt(key, stored);
+        }
+
         private static string Key(SerializedProperty property, string part)
         {
             var heldObject = property.propertyType == SerializedPropertyType.ManagedReference
