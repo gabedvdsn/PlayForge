@@ -23,6 +23,16 @@ namespace FarEmerald.PlayForge
         [Tooltip("When true, the processes below are spawned whatever the data holds. When false, they're spawned where the data holds none.")]
         public bool InternalIsOverride = false;
         [FormerlySerializedAs("MonoProcesses")] public List<AbstractMonoProcess> InternalMonoProcesses = new();
+        [Tooltip("Where a spawned process appears: where the data's Position says, or else where its prefab stands; at the caster, as a projectile does; or at the ability's target, as a fire on the ground does")]
+        public ESpawnPoint SpawnAt = ESpawnPoint.Data;
+
+        /// <summary>Where a spawned process appears (GAS-67).</summary>
+        public enum ESpawnPoint
+        {
+            [InspectorName("As Its Data Says")] Data,
+            [InspectorName("At the Caster")] Caster,
+            [InspectorName("At the Target")] Target,
+        }
 
         public CreateMonoProcessAbilityTask()
         {
@@ -42,12 +52,51 @@ namespace FarEmerald.PlayForge
             if (!data.Contains(Tags.DERIVATION)) data.SetPrimary(Tags.DERIVATION, data.EffectOrigin);
 
             var source = data.EffectOrigin.GetSource();
-            foreach (var process in ProcessesFor(data))
+
+            // Placed where Spawn At says for its registration alone, as a process places itself at its data's Position as it
+            // starts, and the data put back after, since the ability's other tasks read it too. A process appeared where
+            // its prefab stood unless the data held a Position, so a projectile left the world's origin (GAS-67)
+            bool placed = TrySpawnPoint(data, source, out var point);
+            object before = null;
+            bool held = placed && data.TryGet(Tags.POSITION, EDataTarget.Primary, out before);
+            if (placed) data.SetPrimary(Tags.POSITION, point);
+            try
             {
-                ProcessControl.Register(process).HandledBy(source).With(data).In(ProcessWorld.Of(source)).Run();
+                foreach (var process in ProcessesFor(data))
+                {
+                    ProcessControl.Register(process).HandledBy(source).With(data).In(ProcessWorld.Of(source)).Run();
+                }
+            }
+            finally
+            {
+                if (placed)
+                {
+                    if (held) data.SetPrimary(Tags.POSITION, before);
+                    else data.Remove(Tags.POSITION);
+                }
             }
 
             return UniTask.CompletedTask;
+        }
+
+        // The point Spawn At names: the caster's place, or the ability's target's. False where it's the data's, or the
+        // place can't be found
+        private bool TrySpawnPoint(AbilityDataPacket data, ISource source, out Vector3 point)
+        {
+            point = default;
+            switch (SpawnAt)
+            {
+                case ESpawnPoint.Caster:
+                    if (source?.GetTargetingPacket() is not { } caster) return false;
+                    point = caster.position;
+                    return true;
+                case ESpawnPoint.Target:
+                    if (!data.GetTargetingPacket(Tags.TARGET, out var target, autoInterrupt: false) || target == null) return false;
+                    point = target.position;
+                    return true;
+                default:
+                    return false;
+            }
         }
 
         // The data's processes, or, where it holds none or the task's own override it, the task's own. The task's own

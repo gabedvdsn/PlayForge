@@ -407,6 +407,8 @@ tracks each fix below by its ID.
   Asking whether its sequence was paused took 24 bytes a frame.
 
 ### Fixed
+- Create Mono Process's Spawn At places what it spawns at the caster or at the ability's target. It appeared where
+  its prefab stood unless the ability's data held a Position (GAS-67).
 - Click targeting takes the target or point its activation's data holds, as an AI's or a replay's does, with no
   click, so the ability an AI casts can be the one a player clicks; Take Target From Data turns it off. A handed
   target out of range fails at once. They waited for a click whatever the data held (GAS-66).
