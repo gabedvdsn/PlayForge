@@ -23,9 +23,9 @@ namespace FarEmerald.PlayForge
         
         [Header("Configuration")]
         [Tooltip("How this scaler determines its level range.\n\n" +
-                 "LockToSource: Uses the owning Ability/Entity's level range automatically.\n" +
-                 "Unlocked: Uses its own MaxLevel setting.\n" +
-                 "Partitioned: Uses min(MaxLevel, source's current level).")]
+                 "Provider's Levels: the owning Ability or Entity's level range.\n" +
+                 "Own Max Level: its own MaxLevel.\n" +
+                 "Clamped to Provider: the provider's levels, up to its own MaxLevel.")]
         public ELevelConfig Configuration = ELevelConfig.LockToLevelProvider;
         
         // ═══════════════════════════════════════════════════════════════════════════
@@ -370,11 +370,14 @@ namespace FarEmerald.PlayForge
                 case ELevelConfig.Unlocked:
                     return MaxLevel;
 
+                // The provider's levels, up to the scaler's own Max Level: the lower of the two ends the range, and a level
+                // past it reads the last value. It took the lower of Max Level and the level being read, so a level always
+                // sat at the range's end, and every level above the first read the last value (GAS-64)
                 case ELevelConfig.Clamped:
-                    int current = source is not null ? source.GetLevel().CurrentValue
-                        : origin is not null ? origin.GetLevel().CurrentValue
+                    int providerMax = source is not null ? source.GetLevel().MaxValue
+                        : origin is not null ? origin.GetLevel().MaxValue
                         : MaxLevel;
-                    return Mathf.Min(MaxLevel, current);
+                    return Mathf.Min(MaxLevel, providerMax);
 
                 default:
                     return MaxLevel;
@@ -482,10 +485,9 @@ namespace FarEmerald.PlayForge
                  "Useful for Scalers that need a fixed level range.")]
         [InspectorName("Own Max Level")] Unlocked,
         
-        [Tooltip("Uses min(MaxLevel, provider's current level).\n" +
-                 "Useful for effects that scale up to the provider's current level,\n" +
-                 "but cap at a maximum even if provider exceeds it.\n" +
-                 "Useful for scalers that need a fixed level range.")]
+        [Tooltip("Uses the provider's levels, up to its own MaxLevel: min(MaxLevel, the provider's max level).\n" +
+                 "A level past MaxLevel reads the last value, so the scaler reaches its last value at MaxLevel\n" +
+                 "however many levels the provider has (GAS-64).")]
         [InspectorName("Clamped to Provider")] Clamped
     }
     

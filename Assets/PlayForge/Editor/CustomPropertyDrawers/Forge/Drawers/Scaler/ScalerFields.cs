@@ -632,8 +632,10 @@ namespace FarEmerald.PlayForge.Extended.Editor
             });
             rows.Add(between);
 
-            // What each real level reads, as the runtime reads it, while the levels are known (ED-62)
+            // What each real level reads, as the runtime reads it, while the levels are known (ED-62). The provider's last
+            // level ends a range up to a level that it falls short of (GAS-64)
             var (first, last) = RealLevels(range, config, maxProp.intValue);
+            int providerLast = range.Known ? range.Last : maxProp.intValue;
             Label[] reads = null;
             HelpBox outOfDate = null;
             if (last >= first)
@@ -652,7 +654,7 @@ namespace FarEmerald.PlayForge.Extended.Editor
                 bool same = !EachAsset.Differ(scaler, each => string.Join(",", ValuesOf(each)) + "|" + CurveText(each));
                 var curve = scaler.FindPropertyRelative(nameof(AbstractScaler.Scaling))?.animationCurveValue;
                 var read = same && curve != null
-                    ? ReadsAtLevels(curve, first, last, config, maxProp.intValue)
+                    ? ReadsAtLevels(curve, first, last, config, maxProp.intValue, providerLast)
                     : null;
                 for (int i = 0; i < reads.Length; i++)
                 {
@@ -662,7 +664,7 @@ namespace FarEmerald.PlayForge.Extended.Editor
                 // Stale only where a level reads other than its points would have it read: two curves whose keys differ
                 // can read the same at every level
                 var wanted = AbstractScaler.CurveFor(ValuesOf(scaler), (EScalerInterpolation)betweenProp.intValue);
-                var wantedReads = read == null ? null : ReadsAtLevels(wanted, first, last, config, maxProp.intValue);
+                var wantedReads = read == null ? null : ReadsAtLevels(wanted, first, last, config, maxProp.intValue, providerLast);
                 bool stale = read != null && read.Where((value, i) => Mathf.Abs(value - wantedReads[i]) > 0.0001f * Mathf.Max(1f, Mathf.Abs(value))).Any();
                 outOfDate?.EnableInClassList(HiddenClass, !stale);
             }
@@ -695,9 +697,10 @@ namespace FarEmerald.PlayForge.Extended.Editor
         /// <summary>
         /// What a spread scaler reads at each level from the first to the last, as the runtime reads it: its stored curve at
         /// the level's place between the starting level and the last its levels reach, which is the provider's, its own,
-        /// or, clamped, its own or the level itself, whichever is lower (AbstractScaler.GetEffectiveRelativeLevel).
+        /// or, up to a level, its own or the provider's, whichever is lower (AbstractScaler.GetEffectiveRelativeLevel,
+        /// GAS-64).
         /// </summary>
-        internal static float[] ReadsAtLevels(AnimationCurve curve, int first, int last, ELevelConfig config, int ownMax)
+        internal static float[] ReadsAtLevels(AnimationCurve curve, int first, int last, ELevelConfig config, int ownMax, int providerLast)
         {
             var reads = new float[Mathf.Max(0, last - first + 1)];
             for (int level = first; level <= last; level++)
@@ -705,8 +708,8 @@ namespace FarEmerald.PlayForge.Extended.Editor
                 int max = config switch
                 {
                     ELevelConfig.Unlocked => ownMax,
-                    ELevelConfig.Clamped => Mathf.Min(ownMax, level),
-                    _ => last,
+                    ELevelConfig.Clamped => Mathf.Min(ownMax, providerLast),
+                    _ => providerLast,
                 };
                 float place = Mathf.Clamp01(Mathf.InverseLerp(first, max, level));
                 reads[level - first] = curve.Evaluate(place);

@@ -363,6 +363,9 @@ tracks each fix below by its ID.
   Asking whether its sequence was paused took 24 bytes a frame.
 
 ### Fixed
+- A scaler spread over its provider's levels up to a level read its last value at every level above the first: it
+  ended its range at the level being read. It ends at the lower of its Max Level and the provider's last level
+  (GAS-64).
 - Changing how many values a scaler spreads over its levels, after a change to it was undone, could crash the
   editor: its field wrote through a property it kept from before the Undo (ED-49).
 - A reference field inside a list's element, as the attribute a scaler reads in an attribute set element, had no

@@ -68,7 +68,8 @@ Randomized scaler's **Min Multiplier** and **Max Multiplier** for its Multiplier
   An asset whose levels come from whatever uses it, as an unlinked effect, an attribute set or a Scaler asset, shows
   the count alone. A new level takes the last value.
 - **Over Levels**, spread: the provider's levels, **Own levels** up to the scaler's own **Max Level**, or the
-  provider's **up to a level**, the lower of the Max Level and the provider's level. **Points**: how many values.
+  provider's **up to a level**: its levels, up to the Max Level, so the values reach the last at the lower of the
+  Max Level and the provider's last level, and a level past it reads the last value. **Points**: how many values.
 - **Between Points**, spread: **Steps**, **Straight Line** or **Smooth Curve**.
 - A read-only curve beside the table shows the values, and spread, the curve they make. Its tooltip reads them, as "6
   at level 1, rising to 8 at level 5".

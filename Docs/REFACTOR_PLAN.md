@@ -621,6 +621,7 @@ had no letter in the review. TS-AA onward came from the test project.
 | GAS-61 | M | 5 | A save kept an effect's time left and its time to its next tick as floats, which its timers, doubles since GAS-33, rounded, so a restored effect ran on from a time a hair off, and came to differ from one never restored in the last digit. Found by the rollback scenario. Fixed: the clock's capture and restore carry doubles (`ExactDurationRemaining` and `ExactTimeUntilPeriodTick` on the containers), and `EffectSave` keeps them; a save written with floats still loads | `GameplayEffect/Core/GameplayShelfContainer/*`, `Save/ForgeSnapshot.cs` | verified |
 | GAS-62 | H | 5 | A targeting task filed each target it selected by setting the primary, so each one replaced the last: an Auto Target of every match kept only the farthest, and one of two kept the second nearest. Then Target Real took only the first packet's entity, and Apply Effects and Apply/Remove Effects only the first target. So an area ability, Auto Target and then Apply Effects, struck one entity, and Auto Target From Data with Primary Only off kept one of the targets it says it adds. Found by the stress suite's area run. Fixed: the auto-targeting tasks file every target they select, in order (`SetTargetingPackets`), a resolve files each one's entity under Target Real, and both apply tasks reach each target, through `TryGetAt`, which builds no list | `AbilitySystem/Tasks/Targeting/Authored/AutoTarget*.cs`, `Utils/ProcessTaskUtil.cs`, `AbilitySystem/Ability/AbilityProxy/Core/AbilityDataPacket.cs` (`ResolveTarget`), `AbilitySystem/Tasks/Gameplay/Apply*EffectsAbilityTask.cs` | fixed |
 | GAS-63 | M | 5 | An ability's stage list had no initializer, so an ability whose behaviour was made in code had none until it was saved and loaded, and adding a stage to it threw. Found by the authoring round trip, filling an ability The Forge made. Fixed: the list starts empty, as a load leaves it; an ability with no stage still activates and ends | `AbilitySystem/Ability/AbilityProxy/Core/AbilityBehaviour.cs` | fixed |
+| GAS-64 | M | 6 | A scaler spread over its provider's levels "up to a level" (`ELevelConfig.Clamped`) ended its range at the lower of its Max Level and the level being read, as its tooltip said, so a level always sat at the range's end and every level above the first read the last value. ED-62's Reads row showed it, and the user chose to change it. Fixed: the range ends at the lower of the Max Level and the provider's last level, and a level past it reads the last value; the Reads row reads it the same way | `AbstractScaler.cs` (`GetEffectiveMaxLevel`), `ScalerFields.cs` | verified |
 | GAS-P1 | M | 0 | `ActionQueue` LINQ allocations; snapshot built every frame (PF-006) | `ActionQueue.cs:41, 46, 156`, `FrameSummary.cs:340-351` | verified |
 | GAS-P2 | M | 0 | Tag and FrameSummary allocations (PF-007) | `TagCache.cs:60`, `TagQuery.cs:89-136`, `FrameSummary.cs:306-308` | verified |
 | GAS-P3 | M | 3 | Each application revalidates every container and rebuilds all tags (area application is quadratic). Measured: an instant application on an entity carrying 1,000 effects took 0.49 ms, 135 times one on an entity carrying 2. Now the requirements wait for one pass at the next tick, a shelved container's tags are counted as it lands, and re-application and removal find containers in an index by asset tag | `EffectSystemComponent.cs:312-348`, `GameplayAbilitySystem.cs:250-281` | verified |
@@ -850,6 +851,16 @@ GAS-4 with GAS-5, PC-6, and TS-I with PC-5.
 ## Log
 
 Record baselines, gate results and notable decisions here, newest first.
+
+- 2026-11-06, **GAS-64: "up to a level" spreads to its level (the user's call).**
+  - ED-62's Reads row showed a scaler spread "up to a level" read its last value at every level above the first:
+    `GetEffectiveMaxLevel` took the lower of its Max Level and the level being read as the range's end. The user
+    chose the lower of the Max Level and the provider's last level, so the values spread to the Max Level, or to the
+    provider's last level when it has fewer, and a level past the range reads the last value.
+  - Red first: `ScalerTests.GAS_64_A_scaler_spread_up_to_a_level_spreads_to_it` (PlayMode) read 30 at level 2
+    where 20 belongs, and `ScalerDrawerTests.GAS_64_The_reads_row_spreads_up_to_a_level` (EditMode) likewise.
+    The tooltips say what the option does now.
+  - EditMode: 502 of 502. PlayMode, its golden scenarios among them: 1306 of 1314, the 7 planted and the soak skipped, as before.
 
 - 2026-11-06, **ED-62 and ED-63: a spread scaler's levels, and Quick Fill (the user's report, mid-phase).**
   - A spread scaler's points were named by levels such as 1.8, and nothing showed what levels 2 and 3 read. The
