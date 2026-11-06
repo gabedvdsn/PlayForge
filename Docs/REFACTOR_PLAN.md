@@ -407,7 +407,7 @@ from. It lives outside `Assets/` so it never ships in the package.
 | 0 | Port Arcade Fighter's 13 fixes and 22 golden tests; make three one-line fixes | Golden tests green, none masked |
 | 1 | Runtime correctness: exception isolation, queued state, every critical and high bug | Fault-injection and framework suites pass |
 | 2 | Release readiness: samples, packaging, docs, Unity Test Framework, CI | Clean import into a fresh Unity 6 project: zero warnings, zero missing types |
-| 3 | Performance and structure: caching, pooling, one GAS core, a Register builder | Zero steady-state allocation, enforced in CI. Closed on the local gates instead (Decision 27) |
+| 3 | Performance and structure: caching, pooling, one GAS core, a Register builder | Zero steady-state allocation, enforced in CI. Closed on the local gates (Decision 27); CI enforces it since 2026-11-05 (SP-24) |
 | 4 | Editor UX: Undo, theming, no polling, a debugger that can act | Editor smoke suite passes in both themes |
 | 5 | Missing GAS features (FEAT-n) | Every test-project lab green |
 
@@ -716,7 +716,7 @@ Phase 2 part, and set Phase 4's direction.
 | SP-21 | M | 2 | Editor UXML and USS break on a clean import: 4 `TypeLoadException`s from stale `…, Assembly-CSharp` type names (`FESGameplayAbilitySystem.GameRoot` and `.ProcessControl`, the removed `FrameworkIndex`, and `EAbilityActivationPolicyExtended`, which moved assembly), 9 invalid paths to assets outside the package (`Editor/Icons/Creator/ability.png`, `Assets/TextMesh Pro/…`), and an unknown `:last-child` pseudo class. Nothing references `forge_abilityDrawer.uxml`; the other two are default references in script `.meta` files, so check them against ED-20's dead UXML and USS | `fesgas_bootstrapper.uxml`, `forge_abilityDrawer.uxml`, `AbilityInspector.uss:52` | verified |
 | SP-22 | M | 2 | Untested with domain reloading off (Enter Play Mode Options). The Asset Store requires every package to work that way starting with Editor 6.6 (rule 2.5.h), so the static state in ProcessControl, the registries and the caches needs a check. Decision 17 keeps it in Phase 2 | — | verified |
 | SP-23 | M | 2 | The Demos are Built-in RP only: all ten of their materials use the Standard shader, which renders magenta under URP. The Asset Store requires URP or HDRP support of new assets and updates submitted from Editor 6.5 or newer (rule 1.3.c). Decision 17 keeps it in Phase 2, though a 6.0 submission isn't bound by the rule | `Samples~/Demos/**/*.mat`, `PUBLISHING.md` | verified |
-| SP-24 | M | — | No CI, so Phase 3 closed on its local gates, not the CI its exit gate asked for (Decision 27). CI needed tests it can reach and a Unity license stored as GitHub secrets. The first is done: Proving Grounds is public on GitHub, and its `Gates` workflow runs the full gates (Decision 35). It runs once the user stores a Unity license in that repository's secrets | Proving Grounds' `.github/workflows/gates.yml`; `.github/workflows/proving-grounds.yml` | open |
+| SP-24 | M | — | No CI, so Phase 3 closed on its local gates, not the CI its exit gate asked for (Decision 27). CI needed tests it can reach and a Unity license stored as GitHub secrets. Done: Proving Grounds is public on GitHub, and its `Gates` workflow runs the full gates on Ubuntu, with the user's license in its secrets (Decision 35). Its first green run passed PlayMode in three orders, the planted failures and EditMode | Proving Grounds' `.github/workflows/gates.yml`; `.github/workflows/proving-grounds.yml` | verified |
 
 ### Missing features (Phase 5)
 
@@ -808,6 +808,25 @@ GAS-4 with GAS-5, PC-6, and TS-I with PC-5.
 ## Log
 
 Record baselines, gate results and notable decisions here, newest first.
+
+- 2026-11-05, **CI is green: SP-24.** With the user's Unity license in Proving Grounds' secrets, the `Gates` workflow
+  ran the full gates on GitHub's Ubuntu runners, in GameCI's Unity 6000.0.33f1 container.
+  - **The first run** ran nothing. GameCI's `unity-test-runner@v4` now names v4.4.0, which wraps a new CLI, and that
+    CLI took the workflow's `coverageEnabled: false` as an unknown argument and stopped. The workflow pins v4.3.2,
+    the classic runner, with coverage off by an empty `coverageOptions`; checkout, cache and upload-artifact move
+    to their current majors, which run on Node 24.
+  - **The second** passed PlayMode in all three orders, 1305 of 1313 with the 7 planted and the soak skipped, as on
+    Windows, and the planted failures, 7 of 7. EditMode passed 467 of 468:
+    `ED_4_The_status_bar_counts_the_processes_and_entities` read the Debugger's short counts. A batch editor on
+    Linux opens its windows narrower than 720 px, so the Debugger laid itself out as a column (ED-43); on Windows a
+    batch window has no width, and it stays wide. The test fits the window to a full width first, as ED-43's
+    test fits it to each width it checks. Nothing of PlayForge changed.
+  - **The third** is green: https://github.com/gabedvdsn/PlayForge-Proving-Grounds/actions/runs/42176163757. PlayMode 1305 of 1313 in each order, the planted failures 7 of 7, EditMode 468
+    of 468. Each job takes about five to six minutes once the Library cache is there.
+  - **Phase 3's exit gate,** zero steady-state allocation enforced in CI, is met now: the allocation tests run in
+    every run. Decision 27 closed the phase without it. SP-24 is verified.
+  - **Not set up:** `PROVING_GROUNDS_DISPATCH_TOKEN` in PlayForge's secrets, so a PlayForge push waits for the
+    daily run or a Proving Grounds push. The check runs the test runner makes read neutral, not passed.
 
 - 2026-11-05, **The Battle sample (Decision 34).** The Battle lab ships with the package as the sample Battle, first
   in Package Manager's list, beside Demos and Code Examples.
