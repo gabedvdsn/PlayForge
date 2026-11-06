@@ -282,32 +282,51 @@ namespace FarEmerald.PlayForge.Extended.Editor
         /// </summary>
         protected void OpenImportPicker() => ForgeImportWindow.ShowForAsset(serializedObject, Refresh);
 
-        protected void ShowTemplatePicker()
+        // The asset's template, picked from Unity's searchable dropdown of the other assets of its type, under the asset
+        // menu (ED-61). It was the Asset Browser, a window of its own with type badges and an Assign button on each row
+        protected void ShowTemplatePicker(Rect under)
         {
-            var assetType = target.GetType();
-            var windowConfig = AssetBrowserConfig.Create("Choose Template")
-                .ForTypes(assetType)
-                .WithSubtitle("Set asset template.")
-                .Excluding(target)
-                .WithDisplayName(so =>
-                {
-                    var bfo = so as BaseForgeAsset;
-                    return bfo?.GetName() ?? assetType.Name;
-                })
-                .WithAction("Assign", so =>
-                {
-                    var sfo = so as BaseForgeAsset;
-                    AssignTemplate(sfo);
-                    Debug.Log($"[ PlayForge ] Template \"{sfo.GetName()}\" assigned.");
-                }, closeOnClick: true)
-                .WithTypeBadges();
-            if (target is BaseForgeAsset _bfo && _bfo.HasTemplate)
+            if (target is not BaseForgeAsset asset) return;
+            var templates = TemplatesFor(asset).Select(each => ((Object)each.Asset, each.Name)).ToList();
+            new ForgeAssetPicker(templates, "Template", "No other assets of this type", picked =>
             {
-                string template = _bfo.Template.GetName();
-                windowConfig.WithFooterAction($"Unnasign Template \"{template}\"", () => AssignTemplate(null));
-            }
+                if (picked is BaseForgeAsset template) AssignTemplate(template);
+            }).Show(under);
+        }
 
-            AssetBrowserWindow.Show(windowConfig);
+        /// <summary>
+        /// The assets an asset can take as its template: the others of its type, but those that take it as theirs, or a
+        /// template of a template that does, which would make a loop, by name. Two of one name add their file's.
+        /// </summary>
+        public static List<(BaseForgeAsset Asset, string Name)> TemplatesFor(BaseForgeAsset asset)
+        {
+            if (asset == null) return new List<(BaseForgeAsset, string)>();
+            var type = asset.GetType();
+            var candidates = AssetDatabase.FindAssets($"t:{type.Name}")
+                .Select(AssetDatabase.GUIDToAssetPath)
+                .Select(AssetDatabase.LoadAssetAtPath<BaseForgeAsset>)
+                .Where(each => each != null && each.GetType() == type && each != asset && !TakesFrom(each, asset))
+                .Distinct()
+                .ToList();
+            string NameOf(BaseForgeAsset each)
+            {
+                var name = each.GetName();
+                return string.IsNullOrEmpty(name) ? each.name : name;
+            }
+            var repeated = new HashSet<string>(candidates.GroupBy(NameOf).Where(group => group.Count() > 1).Select(group => group.Key));
+            return candidates
+                .Select(each => (each, repeated.Contains(NameOf(each)) ? $"{NameOf(each)} ({each.name})" : NameOf(each)))
+                .OrderBy(each => each.Item2, StringComparer.OrdinalIgnoreCase)
+                .ToList();
+        }
+
+        // Whether an asset takes another as its template, through any templates between them
+        private static bool TakesFrom(BaseForgeAsset asset, BaseForgeAsset ancestor)
+        {
+            var seen = new HashSet<BaseForgeAsset>();
+            for (var each = asset.Template; each != null && seen.Add(each); each = each.Template)
+                if (each == ancestor) return true;
+            return false;
         }
 
         /// <summary>Gives the asset a template, or takes it away with null. The template picker's two actions call it.</summary>
@@ -465,7 +484,7 @@ namespace FarEmerald.PlayForge.Extended.Editor
             if (ShowImportButton) menu.AddItem(new GUIContent("Import from Another Asset..."), false, OpenImportPicker);
             if (ShowTemplateButton && !IsMultiple)
             {
-                menu.AddItem(new GUIContent("Set Template..."), false, ShowTemplatePicker);
+                menu.AddItem(new GUIContent("Set Template..."), false, () => ShowTemplatePicker(under.worldBound));
                 if (target is BaseForgeAsset asset && asset.HasTemplate)
                     menu.AddItem(new GUIContent($"Unassign Template \"{asset.Template.GetName()}\""), false, () => AssignTemplate(null));
                 // A template's changes reach its children when it's pushed, as one Undo step. Saving it asked in a dialog,

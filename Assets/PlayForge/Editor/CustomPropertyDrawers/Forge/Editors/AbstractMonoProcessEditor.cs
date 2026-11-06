@@ -1,227 +1,122 @@
+using System;
+using System.Collections.Generic;
 using UnityEditor;
-using UnityEngine;
-using UnityEngine.UIElements;
 using UnityEditor.UIElements;
+using UnityEngine.UIElements;
 
 namespace FarEmerald.PlayForge.Extended.Editor
 {
-    // Every field is a PropertyField bound to its property, so a multiple selection edits each process, and a prefab
-    // instance's edits show as overrides. Without [CanEditMultipleObjects] the Inspector never offered one (ED-12).
+    /// <summary>
+    /// A Mono Process's inspector, in Docs/EDITOR_STYLE.md's terms (ED-61): a Process section of Unity's fields, its
+    /// lifecycle, its timing, how it's ordered as it steps, how it's made, and whether it follows its siblings, each
+    /// choice saying what it does in its field's tooltip; then the component's own fields. Priority Method shows while
+    /// the process steps, and Priority under it while the method is Manual. It drew a tinted box, a gray hint in 10 px
+    /// under each field, set 50 ms after it drew, and a gray rule.
+    /// <para>
+    /// Every field is a PropertyField bound to its property, so a multiple selection edits each process, and a prefab
+    /// instance's edits show as overrides. Without [CanEditMultipleObjects] the Inspector never offered one (ED-12).
+    /// </para>
+    /// </summary>
     [CustomEditor(typeof(AbstractMonoProcess), true), CanEditMultipleObjects]
     public class AbstractMonoProcessEditor : UnityEditor.Editor
     {
+        private const string Hidden = "pf-hidden";
+
+        private static readonly Dictionary<int, string> Lifecycles = new()
+        {
+            [(int)EProcessLifecycle.SelfTerminating] = "Runs once, and ends as its run completes",
+            [(int)EProcessLifecycle.RunThenWait] = "Runs once, then waits to be run again",
+            [(int)EProcessLifecycle.RequiresControl] = "Waits from the start, to be run and ended by its owner",
+            [(int)EProcessLifecycle.Synchronous] = "Ends from its update loop, with no async run",
+        };
+
+        private static readonly Dictionary<int, string> Timings = new()
+        {
+            [(int)EProcessStepTiming.None] = "Steps in no update loop",
+            [(int)EProcessStepTiming.Update] = "Steps in Update, each frame",
+            [(int)EProcessStepTiming.LateUpdate] = "Steps in LateUpdate, each frame",
+            [(int)EProcessStepTiming.FixedUpdate] = "Steps in FixedUpdate, each physics step",
+            [(int)EProcessStepTiming.UpdateAndLate] = "Steps in Update and LateUpdate, each frame",
+            [(int)EProcessStepTiming.UpdateAndFixed] = "Steps in Update and FixedUpdate",
+            [(int)EProcessStepTiming.LateAndFixed] = "Steps in LateUpdate and FixedUpdate",
+            [(int)EProcessStepTiming.UpdateFixedAndLate] = "Steps in Update, LateUpdate and FixedUpdate",
+        };
+
+        private static readonly Dictionary<int, string> Methods = new()
+        {
+            [(int)EProcessStepPriorityMethod.Manual] = "By its Priority: a lower one steps earlier",
+            [(int)EProcessStepPriorityMethod.First] = "Before the other processes",
+            [(int)EProcessStepPriorityMethod.Last] = "After the other processes",
+        };
+
         public override VisualElement CreateInspectorGUI()
         {
-            var root = new VisualElement();
-            
-            // Process Settings Section
-            var processSection = CreateSection("Process Settings", new Color(0.55f, 0.78f, 0.91f), false);
-            root.Add(processSection);
-            
-            // Lifecycle
-            var lifecycleContainer = new VisualElement();
-            lifecycleContainer.style.marginBottom = 8;
-            processSection.Add(lifecycleContainer);
-            
-            var lifecycleField = new PropertyField(serializedObject.FindProperty(nameof(AbstractMonoProcess.ProcessLifecycle)));
-            lifecycleField.RegisterValueChangeCallback(_ => UpdateLifecycleHint(lifecycleContainer));
-            lifecycleContainer.Add(lifecycleField);
-            
-            var lifecycleHint = CreateHintLabel("LifecycleHint");
-            lifecycleContainer.Add(lifecycleHint);
-            
-            // Timing
-            var timingContainer = new VisualElement();
-            timingContainer.style.marginBottom = 8;
-            processSection.Add(timingContainer);
+            var root = new VisualElement { name = "MonoProcess" };
+            // The style sheet lays out the section, wherever the inspector is drawn (ED-20)
+            ForgeTheme.Apply(root);
 
-            var timingProp = serializedObject.FindProperty(nameof(AbstractMonoProcess.ProcessTiming));
-            var timingField = new PropertyField(timingProp);
-            timingContainer.Add(timingField);
-            
-            var timingHint = CreateHintLabel("TimingHint");
-            timingContainer.Add(timingHint);
-            
-            // Priority
-            var priorityContainer = new VisualElement();
-            priorityContainer.style.marginBottom = 8;
-            processSection.Add(priorityContainer);
-            
-            timingField.RegisterValueChangeCallback(_ =>
+            var section = new ForgeSection("Process", "Process", true);
+            root.Add(section);
+            var content = section.Content;
+
+            var lifecycle = Field(content, nameof(AbstractMonoProcess.ProcessLifecycle), "Lifecycle");
+            var timing = Field(content, nameof(AbstractMonoProcess.ProcessTiming), "Timing");
+            var method = Field(content, nameof(AbstractMonoProcess.PriorityMethod), "Priority Method");
+            var priority = Field(content, nameof(AbstractMonoProcess.ProcessStepPriority), "Priority");
+            priority?.AddToClassList("pf-dependent");
+            var instantiator = Field(content, nameof(AbstractMonoProcess.Instantiator), "Instantiator");
+            if (instantiator != null) instantiator.tooltip = "Makes and destroys the process's object; with none, Object.Instantiate and Object.Destroy do";
+            var cascade = Field(content, nameof(AbstractMonoProcess.ParticipateInSiblingCascade), null);
+            if (cascade != null) cascade.tooltip = "Pauses and ends as its siblings do; off, a sibling's pause or end leaves it be";
+
+            // Each choice's tooltip, and the priority's fields, follow the process
+            void Show()
             {
-                UpdateTimingHint(timingContainer);
-                UpdatePriorityVisibility(priorityContainer, timingProp.enumValueIndex);
-            });
-            
-            var priorityMethodField = new PropertyField(serializedObject.FindProperty(nameof(AbstractMonoProcess.PriorityMethod)));
-            priorityMethodField.RegisterValueChangeCallback(_ => 
-            {
-                UpdatePriorityVisibility(priorityContainer, timingProp.enumValueIndex);
-                UpdatePriorityMethodHint(priorityContainer);
-            });
-            priorityContainer.Add(priorityMethodField);
-            
-            var priorityMethodHint = CreateHintLabel("PriorityMethodHint");
-            priorityContainer.Add(priorityMethodHint);
-            
-            var manualPriorityField = new PropertyField(serializedObject.FindProperty(nameof(AbstractMonoProcess.ProcessStepPriority)), "Priority Value");
-            manualPriorityField.name = "ManualPriorityField";
-            manualPriorityField.style.marginTop = 4;
-            priorityContainer.Add(manualPriorityField);
-            
-            // Instantiator
-            var instantiatorProp = serializedObject.FindProperty(nameof(AbstractMonoProcess.Instantiator));
-            if (instantiatorProp != null)
-            {
-                var instantiatorField = new PropertyField(instantiatorProp);
-                instantiatorField.style.marginBottom = 4;
-                processSection.Add(instantiatorField);
-                
-                var instantiatorHint = CreateHintLabel("InstantiatorHint");
-                instantiatorHint.text = "Custom instantiation/destruction logic. Uses Object.Instantiate and Object.Destroy when null.";
-                processSection.Add(instantiatorHint);
+                if (serializedObject.targetObject == null) return;
+                var lifecycleProp = serializedObject.FindProperty(nameof(AbstractMonoProcess.ProcessLifecycle));
+                var timingProp = serializedObject.FindProperty(nameof(AbstractMonoProcess.ProcessTiming));
+                var methodProp = serializedObject.FindProperty(nameof(AbstractMonoProcess.PriorityMethod));
+                if (lifecycle != null) lifecycle.tooltip = TipOf(lifecycleProp, Lifecycles, "How the process runs and ends");
+                if (timing != null) timing.tooltip = TipOf(timingProp, Timings, "The update loops the process steps in");
+                if (method != null) method.tooltip = TipOf(methodProp, Methods, "Where the process steps among the others");
+
+                bool steps = timingProp == null || timingProp.hasMultipleDifferentValues || timingProp.intValue != (int)EProcessStepTiming.None;
+                bool manual = methodProp != null && (methodProp.hasMultipleDifferentValues || methodProp.intValue == (int)EProcessStepPriorityMethod.Manual);
+                method?.EnableInClassList(Hidden, !steps);
+                priority?.EnableInClassList(Hidden, !steps || !manual);
             }
+            // Each field says when its value changes, as the user picks one or an Undo puts one back
+            lifecycle?.RegisterValueChangeCallback(_ => Show());
+            timing?.RegisterValueChangeCallback(_ => Show());
+            method?.RegisterValueChangeCallback(_ => Show());
+            Show();
 
-            // Hidden from the default inspector with the other process fields, and drawn nowhere, though ProcessControl
-            // reads it (ED-24)
-            var cascadeField = new PropertyField(serializedObject.FindProperty(nameof(AbstractMonoProcess.ParticipateInSiblingCascade)));
-            cascadeField.style.marginBottom = 4;
-            processSection.Add(cascadeField);
-            
-            // Separator
-            var separator = new VisualElement();
-            separator.style.height = 1;
-            separator.style.backgroundColor = new Color(0.3f, 0.3f, 0.3f);
-            separator.style.marginTop = 12;
-            separator.style.marginBottom = 8;
-            root.Add(separator);
-            
+            // The component's own fields, after the process's
             InspectorElement.FillDefaultInspector(root, serializedObject, this);
-            
-            // Initial hint updates
-            root.schedule.Execute(() =>
-            {
-                UpdateLifecycleHint(lifecycleContainer);
-                UpdateTimingHint(timingContainer);
-                UpdatePriorityVisibility(priorityContainer, timingProp.enumValueIndex);
-                UpdatePriorityMethodHint(priorityContainer);
-            }).ExecuteLater(50);
-            
             return root;
         }
-        
-        private bool IsProcessField(string name)
-        {
-            return name is "ProcessLifecycle" or "ProcessTiming" or "PriorityMethod" 
-                or "ProcessStepPriority" or "Instantiator" or "ParticipateInSiblingCascade";
-        }
-        
-        private VisualElement CreateSection(string title, Color accentColor, bool withTitle = true)
-        {
-            var section = new VisualElement();
-            section.style.marginBottom = 4;
-            section.style.paddingLeft = 8;
-            section.style.paddingRight = 8;
-            section.style.paddingTop = 8;
-            section.style.paddingBottom = 8;
-            section.style.backgroundColor = new Color(0.22f, 0.22f, 0.22f);
-            section.style.borderTopLeftRadius = 4;
-            section.style.borderTopRightRadius = 4;
-            section.style.borderBottomLeftRadius = 4;
-            section.style.borderBottomRightRadius = 4;
-            //section.style.borderLeftWidth = 3;
-            section.style.borderLeftColor = accentColor;
 
-            if (withTitle)
-            {
-                var header = new Label(title);
-                header.style.fontSize = 12;
-                header.style.unityFontStyleAndWeight = FontStyle.Bold;
-                header.style.color = accentColor;
-                header.style.marginBottom = 4;
-                section.Add(header);
-            }
-            
-            return section;
-        }
-        
-        private Label CreateHintLabel(string name)
+        // A property's field, named by its property, or none where the process has no such property
+        private PropertyField Field(VisualElement parent, string path, string label)
         {
-            var hint = new Label();
-            hint.name = name;
-            hint.style.fontSize = 10;
-            hint.style.color = new Color(0.6f, 0.6f, 0.6f);
-            hint.style.marginLeft = 3;
-            hint.style.marginTop = 2;
-            hint.style.whiteSpace = WhiteSpace.Normal;
-            return hint;
+            var property = serializedObject.FindProperty(path);
+            if (property == null) return null;
+            var field = label == null ? new PropertyField(property) : new PropertyField(property, label);
+            field.name = path;
+            parent.Add(field);
+            return field;
         }
-        
-        private void UpdateLifecycleHint(VisualElement container)
-        {
-            var hint = container.Q<Label>("LifecycleHint");
-            if (hint == null) return;
-            
-            var prop = serializedObject.FindProperty("ProcessLifecycle");
-            hint.text = prop.enumValueIndex switch
-            {
-                0 => "Runs once, terminates when RunProcess completes.",
-                1 => "Runs once, then waits. Can be resumed externally.",
-                2 => "Starts waiting. Must be manually ran & terminated.",
-                3 => "Termination derived from Update loop. Produces no async overhead.",
-                _ => ""
-            };
-        }
-        
-        private void UpdateTimingHint(VisualElement container)
-        {
-            var hint = container.Q<Label>("TimingHint");
-            if (hint == null) return;
-            
-            var prop = serializedObject.FindProperty("ProcessTiming");
-            hint.text = prop.enumValueIndex switch
-            {
-                0 => "Process is completely detached from the Update loop.",
-                1 => "WhenUpdate called every frame.",
-                2 => "WhenLateUpdate called every frame.",
-                3 => "WhenFixedUpdate called every physics step.",
-                4 => "WhenUpdate + WhenLateUpdate each frame.",
-                5 => "WhenUpdate + WhenFixedUpdate.",
-                6 => "WhenLateUpdate + WhenFixedUpdate.",
-                7 => "All three update methods called.",
-                _ => ""
-            };
-        }
-        
-        private void UpdatePriorityVisibility(VisualElement container, int stepIndex)
-        {
-            var manualField = container.Q("ManualPriorityField");
-            if (manualField == null) return;
-            
-            var prop = serializedObject.FindProperty("PriorityMethod");
-            manualField.style.display = prop.enumValueIndex == 0 && stepIndex > 0
-                ? DisplayStyle.Flex 
-                : DisplayStyle.None;
 
-            container.style.display = stepIndex > 0
-                ? DisplayStyle.Flex
-                : DisplayStyle.None;
-
-        }
-        
-        private void UpdatePriorityMethodHint(VisualElement container)
+        // A choice's tooltip: its name and what it does, as "Run Then Wait: runs once, then waits to be run again"
+        private static string TipOf(SerializedProperty choice, Dictionary<int, string> meanings, string field)
         {
-            var hint = container.Q<Label>("PriorityMethodHint");
-            if (hint == null) return;
-            
-            var prop = serializedObject.FindProperty("PriorityMethod");
-            hint.text = prop.enumValueIndex switch
-            {
-                0 => "Explicit priority value. Lower = earlier.",
-                1 => "Stepped before other processes.",
-                2 => "Stepped after other processes.",
-                _ => ""
-            };
+            if (choice == null || choice.hasMultipleDifferentValues) return field;
+            var names = choice.enumDisplayNames;
+            var index = choice.enumValueIndex;
+            var name = index >= 0 && index < names.Length ? names[index] : null;
+            return meanings.TryGetValue(choice.intValue, out var meaning) && name != null
+                ? $"{name}: {char.ToLowerInvariant(meaning[0])}{meaning.Substring(1)}"
+                : field;
         }
     }
 }

@@ -171,6 +171,13 @@ tracks each fix below by its ID.
   page, through one table of links in the editor.
 
 ### Changed
+- A Mono Process's inspector is a Process section of Unity's fields; each choice says what it does in its tooltip,
+  and Priority Method shows only while the process steps, Priority only for Manual. It drew a tinted box and gray
+  hints (ED-61).
+- Set Template... is Unity's searchable dropdown of the other assets of the type, leaving out those that take the
+  asset as their template. It was the Asset Browser window, which is gone (ED-61).
+- New Linked Effect... names the effect in The Forge's New Asset window and links it. The Create Linked Effect
+  dialog is gone, as are the unused Type Picker window, `TypePickerField` and `TypeRef` (ED-61).
 - A requirement group of its own, as a targeting task's, is the requirements table of one row, whose cells open its
   list with its name and template under it. It was a tinted box with colored badges (ED-66).
 - A tag query is its tag, its match, and its count's comparison and number on one row; a threshold is its level, value

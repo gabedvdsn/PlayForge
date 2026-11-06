@@ -1138,8 +1138,6 @@ the glyph is sized and colored in Unity's own inspector too.
   - `Assets/PlayForge/Editor/CustomPropertyDrawers/Forge/Drawers/Assets/Effect/GameplayEffectDrawer.cs:90`, a warning
     icon as a glyph, as the other surfaces' are.
   - `Assets/PlayForge/Editor/CustomPropertyDrawers/Forge/Drawers/Scaler/ScalerDrawer.cs:28`, a drawer taking the theme.
-  - `Assets/PlayForge/Editor/CustomPropertyDrawers/Forge/Editors/Windows/AssetBrowserWindow.cs:273`, a button that says
-    what it does.
 - **Still open:** text symbols with no emoji form, such as a check mark or an arrow, go with each surface's redesign.
 - **Test:** `ED_20_No_editor_text_shows_an_emoji` in `EditorSourceTests`.
 
@@ -2951,9 +2949,8 @@ deleted for good, without looking.
 - **Read:**
   - `Assets/PlayForge/Editor/CustomPropertyDrawers/Forge/Util/ForgeAssetDeletion.cs:25`
     `ForgeAssetDeletion.MoveToTrash`, and `FindUsers` (`:43`). Tests answer the question through `Confirm` (`:21`).
-  - Callers: The Forge's Move to Trash, `Assets/PlayForge/Editor/CustomPropertyDrawers/Forge/Editors/Manager/TheForge.cs:610`, and
-    `Assets/PlayForge/Editor/CustomPropertyDrawers/Forge/Editors/Windows/AssetBrowserWindow.cs:275`
-    `AssetAction.Delete`.
+  - Caller: The Forge's Move to Trash, `Assets/PlayForge/Editor/CustomPropertyDrawers/Forge/Editors/Manager/TheForge.cs:610`.
+    The Asset Browser's Delete called it too, until ED-61 took the browser.
 - **New:** `ForgeAssetDeletion`.
 
 ### Showing an asset never writes its tag (Decision 18)

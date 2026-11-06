@@ -141,7 +141,7 @@ string perLevel = impact.FormatTotal();           // "20/30/40/50"
 - **Asset fields** — every reference to a PlayForge asset is Unity's object field. **Open** beside it shows the asset
   in a window of its own; **New**, beside an empty one, makes the asset where Project Settings → PlayForge puts its type, named
   for the asset that holds the field. An effect field's right-click menu has its template, a pick of the effects
-  nothing links, and New Linked Effect.
+  nothing links, and New Linked Effect, which names the effect in the New Asset window and links it to the asset.
 - **Import and Clear** — each inspector section's header has Import, Clear and Help. Import opens the Import window:
   choose a source on the left, the type's defaults first, then the assets of the type; the right lists the fields that differ,
   each checked, beside their values now and the source's. Uncheck a field to leave it. A list is replaced, unless its
@@ -149,7 +149,8 @@ string perLevel = impact.FormatTotal();           // "20/30/40/50"
   menu's **Import from Another Asset...** does the same for the whole asset, which keeps its name, description, icons,
   asset tag, template and level link. A Workers section's import lists every asset that has a worker
   group, whatever its type. **Clear** resets the section's fields at once, and Undo takes it back.
-- **Templates** — an asset's menu **Set Template...** makes it a child of a template asset of its type. A child
+- **Templates** — an asset's menu **Set Template...** picks, from a searchable list of the other assets of its type,
+  the template it becomes a child of; an asset that takes it as its template isn't listed. A child
   takes the template's fields when the template is pushed, with the template's asset menu **Push to Its Children**, as
   one Undo step, and keeps each field it overrides: an edit to a child's field makes it the child's own, and its
   inspector marks it as Unity marks a prefab instance's override. A marked field's right-click menu has **Revert to
