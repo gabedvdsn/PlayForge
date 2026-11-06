@@ -110,8 +110,11 @@ The only other colors:
   under Periodic Ticks.
 - **Object fields** are Unity's, showing the type icon. PlayForge's actions on one, New and Open, are plain buttons
   beside it (Q15). Template import, the link filter and create-linked go in its right-click menu (Q18).
-- **Tag fields** show a tag's parents in secondary text and its leaf in strong text, unless the full-path setting
-  is on. A tag reads by its display name everywhere: a unique tag's name is padded with a generated suffix.
+- **Tag fields** are Unity's fields, their label in the label column, and show a tag's parents in secondary text
+  and its leaf in strong text, unless the full-path setting is on. A tag reads by its display name everywhere: a
+  unique tag's name is padded with a generated suffix. Pressing one opens Unity's searchable dropdown of the tags
+  its context offers, with None and New Tag…; its right-click menu clears it, makes a new tag, makes its tag a
+  child of another, or copies its path.
 - **Lists** are Unity's reorderable lists: a header with the count, drag handles, and the + and − footer.
 - **Requirements** are one table: rows for applying, while on and removal, and columns for "Requires" and "Must not
   have". A toggle switches it between the target and the source. Each cell is a button that opens the tag picker,

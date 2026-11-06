@@ -525,6 +525,78 @@
     margin: 0 0 0 4px;
 }
 
+/* An impact entry's delivery, named on the right of its row, in secondary text (Q19, ED-50) */
+.pf-root .pf-element__delivery {
+    flex-shrink: 0;
+    margin: 0 0 0 6px;
+    padding: 0;
+    color: var(--pf-secondary-text);
+}
+
+/* An element its state leaves out, as an entry's Commits while it isn't periodic */
+.pf-root .pf-hidden {
+    display: none;
+}
+
+/* ─── A tag field: Unity's field, the tag in a field's box, its parents in secondary text and its leaf in strong text,
+   then a popup's arrow (ED-55, Docs/EDITOR_STYLE.md) ─── */
+.pf-root .pf-tag-field__box {
+    flex-direction: row;
+    align-items: center;
+    flex-grow: 1;
+    flex-shrink: 1;
+    min-width: 0;
+    height: 18px;
+    padding: 0 2px 0 4px;
+    border-width: 1px;
+    border-radius: 3px;
+    border-color: var(--pf-field-border);
+    background-color: var(--pf-field);
+}
+
+/* The parents give way first, from their start, so a narrow field keeps the leaf */
+.pf-root .pf-tag-field__parents {
+    flex-shrink: 1;
+    min-width: 0;
+    margin: 0;
+    padding: 0;
+    color: var(--pf-secondary-text);
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+    -unity-text-overflow-position: start;
+}
+
+.pf-root .pf-tag-field__parents--empty {
+    display: none;
+}
+
+.pf-root .pf-tag-field__leaf {
+    flex-shrink: 1;
+    min-width: 0;
+    margin: 0;
+    padding: 0;
+    color: var(--pf-strong-text);
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+}
+
+.pf-root .pf-tag-field__leaf--none {
+    color: var(--pf-secondary-text);
+}
+
+.pf-root .pf-tag-field__space {
+    flex-grow: 1;
+}
+
+.pf-root .pf-tag-field__box > .pf-tag-field__arrow {
+    width: 10px;
+    height: 10px;
+    margin: 0 2px 0 4px;
+    color: var(--pf-secondary-text);
+}
+
 /* A contained effect: when it's applied, then the effect, on one row */
 .pf-root .pf-contained-effect {
     flex-direction: row;

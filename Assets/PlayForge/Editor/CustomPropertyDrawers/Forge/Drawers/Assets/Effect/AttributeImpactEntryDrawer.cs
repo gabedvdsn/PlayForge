@@ -50,6 +50,10 @@ namespace FarEmerald.PlayForge.Extended.Editor
             var attributeField = new PropertyField(attributeProp, "") { name = "Attribute" };
             attributeField.AddToClassList("pf-element__attribute");
             header.Add(attributeField);
+            // Its delivery, named on the right of its row, as EDITOR_STYLE has an entry's (Q19). It named none (ED-50)
+            var headerDelivery = new Label { name = "HeaderDelivery", tooltip = "When the impact lands" };
+            headerDelivery.AddToClassList("pf-element__delivery");
+            header.Add(headerDelivery);
             var remove = new ForgeIconButton(ForgeGlyphShape.Trash, "Remove this impact", () => Remove(root, property))
             {
                 name = "RemoveImpact",
@@ -94,6 +98,9 @@ namespace FarEmerald.PlayForge.Extended.Editor
                 deliveryProp.serializedObject.ApplyModifiedProperties();
             });
             content.Add(delivery);
+            // What a periodic entry commits, as the first impact says it (ED-50)
+            var commits = ImpactFields.ValueRow("Commits", "EntryCommits", "How many times the impact lands, at the effect's first level");
+            content.Add(commits);
             var problem = new HelpBox("", HelpBoxMessageType.Warning) { name = "DeliveryProblem" };
             content.Add(problem);
 
@@ -134,6 +141,11 @@ namespace FarEmerald.PlayForge.Extended.Editor
                 operation.Refresh();
                 delivery.choices = ImpactFields.DeliveriesFor(duration, current);
                 delivery.SetValueWithoutNotify(current);
+                headerDelivery.text = ImpactFields.DeliveryName(current);
+                var effect = property.serializedObject.targetObject as GameplayEffect;
+                bool periodic = current == EImpactDelivery.Periodic && effect != null && duration != null;
+                commits.SetValueWithoutNotify(periodic ? ImpactFields.CommitsText(effect) : "");
+                commits.EnableInClassList("pf-hidden", !periodic);
                 var why = duration == null ? null : ImpactFields.DeliveryProblem(duration, current);
                 problem.text = why ?? "";
                 problem.style.display = why != null ? DisplayStyle.Flex : DisplayStyle.None;

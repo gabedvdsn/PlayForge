@@ -1,844 +1,209 @@
 using System;
-using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using UnityEditor;
+using UnityEditor.UIElements;
 using UnityEngine;
 using UnityEngine.UIElements;
-using static FarEmerald.PlayForge.Extended.Editor.ForgeDrawerStyles;
 
 namespace FarEmerald.PlayForge.Extended.Editor
 {
     /// <summary>
-    /// Hierarchical Tag picker drawer with context filtering, parent assignment, and creation support.
-    /// Shows leaf name by default, full path on hover.
+    /// A tag field in Docs/EDITOR_STYLE.md's terms (ED-55): Unity's field, its label in the label column, the tag's parents in
+    /// secondary text and its leaf in strong text, by its display name (<see cref="ForgeTagField"/>). Pressing it opens the
+    /// tag picker, Unity's searchable dropdown of the tags its context offers (<see cref="ForgeTagContext"/>), with None and,
+    /// where the field may make one, New Tag… (<see cref="ForgeTagPicker"/>). Its right-click menu clears it, makes a new
+    /// tag, makes its tag a child of another, or copies its path. It was a button with a colored left border, a 120 px label
+    /// it dropped for any field inside a list, text that changed as the pointer passed, and a picker drawn under it in
+    /// tinted boxes in code, with a button that showed only on hover.
     /// </summary>
     [CustomPropertyDrawer(typeof(Tag))]
     public class TagDrawer : PropertyDrawer
     {
-        // ═══════════════════════════════════════════════════════════════════════════
-        // Drawer State
-        // ═══════════════════════════════════════════════════════════════════════════
-        
-        private class DrawerState
+        // What a field's attributes say of it: the tags it offers, whether it makes new ones, and whether it edits
+        private sealed class Settings
         {
-            public bool IsOpen;
-            public List<Tag> Results = new List<Tag>();
-            public string[] ContextStrings = Array.Empty<string>();
+            public string[] Contexts = Array.Empty<string>();
             public bool AllowCreate = true;
             public bool IncludeUniversal = true;
-            public bool IsReadOnly;
-            public string CurrentFilter = "";
-            
-            // For fresh property access (fixes list item issues)
-            public string PropertyPath;
-            public UnityEngine.Object TargetObject;
-            public SerializedObject SerializedObject;
+            public bool ReadOnly;
+            public string Tooltip;
         }
-        
-        public override VisualElement CreatePropertyGUI(SerializedProperty prop)
+
+        public override VisualElement CreatePropertyGUI(SerializedProperty property)
         {
             var root = new VisualElement { name = "TagDrawerRoot" };
-            var state = new DrawerState
+            // The style sheet lays out the field, wherever it's drawn (ED-20)
+            ForgeTheme.Apply(root);
+            var settings = SettingsOf(property);
+            var field = new ForgeTagField(LabelOf(property)) { name = "TagField", tooltip = settings.Tooltip ?? "" };
+            field.AddToClassList(BaseField<string>.alignedFieldUssClassName);
+            root.Add(field);
+
+            // The tag each selected asset holds, mixed where they differ (ED-12)
+            void Show()
             {
-                PropertyPath = prop.propertyPath,
-                TargetObject = prop.serializedObject.targetObject,
-                SerializedObject = prop.serializedObject,
-            };
-            root.userData = state;
-            
-            // Get attributes
-            var contextAttr = GetFieldAttribute<ForgeTagContext>(prop);
-            state.ContextStrings = contextAttr?.Context ?? Array.Empty<string>();
-            state.AllowCreate = contextAttr?.AllowCreate ?? true;
-            state.IncludeUniversal = contextAttr?.IncludeUniversal ?? true;
-            if (GetFieldAttribute<ForgeTagNoCreate>(prop) != null) state.AllowCreate = false;
-            if (GetFieldAttribute<ForgeTagExcludeUniversal>(prop) != null) state.IncludeUniversal = false;
-            state.IsReadOnly = GetFieldAttribute<ForgeTagReadOnly>(prop) != null;
-            
-            // Main row
-            var mainRow = new VisualElement();
-            mainRow.style.flexDirection = FlexDirection.Row;
-            mainRow.style.alignItems = Align.Center;
-            mainRow.style.minHeight = 20;
-            root.Add(mainRow);
-            
-            // Label (if not in list)
-            if (!IsInList(prop))
-            {
-                var label = new Label(ObjectNames.NicifyVariableName(prop.name));
-                label.style.minWidth = 120;
-                label.style.marginRight = 0;
-                label.style.marginLeft = 4;
-                label.style.color = Colors.LabelText;
-                
-                var tooltipAttr = GetFieldAttribute<ForgeTagTooltip>(prop);
-                if (tooltipAttr != null) label.tooltip = tooltipAttr.Tooltip;
-                
-                mainRow.Add(label);
+                if (!ScalerFields.Alive(property)) return;
+                var each = EachAsset.Of(property).Select(TagOf).ToList();
+                field.Show(each.Count > 0 ? each[0] : default, TagDisplaySettings.ShowFullPath);
+                field.showMixedValue = each.Select(tag => tag.Name ?? "").Distinct().Count() > 1;
             }
-            
-            // Value button - use fresh property lookup
-            var valueBtn = CreateValueButton(state);
-            mainRow.Add(valueBtn);
-            
-            // Read-only state
-            if (state.IsReadOnly)
+            root.TrackSerializedObjectValue(property.serializedObject, _ => Show());
+            Show();
+
+            if (settings.ReadOnly)
             {
-                valueBtn.SetEnabled(false);
-                valueBtn.style.opacity = 0.6f;
+                field.SetEnabled(false);
                 return root;
             }
-            
-            // Dropdown
-            var dropdown = CreateDropdown(root, state, valueBtn);
-            root.Add(dropdown);
-            
-            valueBtn.clicked += () => ToggleDropdown(state, dropdown, valueBtn);
-            
+
+            field.Opened += opened => OpenPicker(property, settings, opened.Box, "Tags", tag => Pick(property, tag, settings.Contexts));
+            field.AddManipulator(new ContextualMenuManipulator(menu => Menu(menu, property, settings, field)));
             return root;
         }
-        
-        // ═══════════════════════════════════════════════════════════════════════════
-        // Fresh Property Access - Fixes stale reference issues in lists
-        // ═══════════════════════════════════════════════════════════════════════════
-        
-        private SerializedProperty GetFreshProperty(DrawerState state)
+
+        // The field's label: the one the inspector gives it, or its name; none for a list's element, whose list names it
+        private string LabelOf(SerializedProperty property) =>
+            property.propertyPath.EndsWith("]", StringComparison.Ordinal) ? null : preferredLabel ?? property.displayName;
+
+        private Settings SettingsOf(SerializedProperty property)
         {
-            if (state.TargetObject == null) return null;
-            // The drawer's own SerializedObject, refreshed, so a read or a pick covers every selected asset. A copy over
-            // the first target read and wrote that asset alone (ED-12)
-            state.SerializedObject.Update();
-            return state.SerializedObject.FindProperty(state.PropertyPath);
-        }
-        
-        private Tag GetCurrentTagFresh(DrawerState state)
-        {
-            var prop = GetFreshProperty(state);
-            if (prop == null) return default;
-            return GetCurrentTag(prop);
-        }
-        
-        // ═══════════════════════════════════════════════════════════════════════════
-        // Value Button - Shows leaf name, full path on hover
-        // ═══════════════════════════════════════════════════════════════════════════
-        
-        private Button CreateValueButton(DrawerState state)
-        {
-            var tag = GetCurrentTagFresh(state);
-            var contextColor = GetContextColor(state.ContextStrings);
-            
-            var displayText = GetDisplayText(tag);
-            var fullPath = tag.Equals(default(Tag)) ? "" : tag.DisplayName;
-            
-            var btn = new Button { name = "ValueButton", text = displayText, focusable = false };
-            btn.style.flexGrow = 1;
-            btn.style.height = 20;
-            btn.style.marginLeft = 0;
-            btn.style.marginRight = 0;
-            btn.style.paddingLeft = 6;
-            btn.style.paddingRight = 6;
-            btn.style.fontSize = 11;
-            btn.style.unityTextAlign = TextAnchor.MiddleLeft;
-            btn.style.backgroundColor = Colors.ButtonBackground;
-            btn.style.borderTopLeftRadius = 3;
-            btn.style.borderTopRightRadius = 3;
-            btn.style.borderBottomLeftRadius = 3;
-            btn.style.borderBottomRightRadius = 3;
-            btn.style.borderLeftWidth = 2;
-            btn.style.borderLeftColor = contextColor;
-            
-            btn.tooltip = string.IsNullOrEmpty(fullPath) ? "No tag selected" : fullPath;
-            
-            // Hover: show display name, restore short name on leave
-            btn.RegisterCallback<MouseEnterEvent>(_ =>
+            var context = GetFieldAttribute<ForgeTagContext>(property);
+            var settings = new Settings
             {
-                btn.style.backgroundColor = Colors.ButtonHover;
-                var currentTag = GetCurrentTagFresh(state);
-                if (!ShowFullPath() && !currentTag.Equals(default(Tag)))
-                {
-                    btn.text = currentTag.DisplayName;
-                }
-            });
-            
-            btn.RegisterCallback<MouseLeaveEvent>(_ =>
-            {
-                btn.style.backgroundColor = Colors.ButtonBackground;
-                // Get fresh tag on leave
-                var currentTag = GetCurrentTagFresh(state);
-                btn.text = GetDisplayText(currentTag);
-            });
-            
-            return btn;
+                Contexts = context?.Context ?? Array.Empty<string>(),
+                AllowCreate = context?.AllowCreate ?? true,
+                IncludeUniversal = context?.IncludeUniversal ?? true,
+                ReadOnly = GetFieldAttribute<ForgeTagReadOnly>(property) != null,
+                Tooltip = GetFieldAttribute<ForgeTagTooltip>(property)?.Tooltip ?? GetFieldAttribute<TooltipAttribute>(property)?.tooltip,
+            };
+            if (GetFieldAttribute<ForgeTagNoCreate>(property) != null) settings.AllowCreate = false;
+            if (GetFieldAttribute<ForgeTagExcludeUniversal>(property) != null) settings.IncludeUniversal = false;
+            return settings;
         }
-        
-        private bool ShowFullPath() => TagDisplaySettings.ShowFullPath;
 
         private bool GroupByRoot() => TagDisplaySettings.GroupByRoot;
 
-        private string GetDisplayText(Tag tag)
+        // Opens the picker under the field's box, over the tags the field's context offers
+        private void OpenPicker(SerializedProperty property, Settings settings, VisualElement under, string title, Action<Tag> picked)
         {
-            if (tag.Equals(default(Tag))) return "<None>";
+            var tags = ForgeTagRegistry.GetTagsForContext(settings.Contexts, settings.IncludeUniversal).ToList();
+            var start = StartOf(TagOf(property));
+            new ForgeTagPicker(tags, settings.AllowCreate, GroupByRoot(), title, picked,
+                () => ForgeNewTagWindow.Show(start, made => Pick(property, made, settings.Contexts))).Show(under.worldBound);
+        }
 
-            // The display name drops a deterministic tag's hash padding. The setting was read only in code after this
-            // had already returned (ED-25)
-            var path = string.IsNullOrEmpty(tag.DisplayName) ? tag.Name : tag.DisplayName;
-            var lastDot = path.LastIndexOf('.');
-            return ShowFullPath() || lastDot < 0 ? path : "…" + path.Substring(lastDot + 1);
-        }
-        
-        // ═══════════════════════════════════════════════════════════════════════════
-        // Dropdown with Hierarchy Support
-        // ═══════════════════════════════════════════════════════════════════════════
-        
-        private class TagItemData
+        // A new tag's path starts with the field's tag's parents
+        private static string StartOf(Tag tag)
         {
-            public Tag Tag;
-            public Color NormalColor;
-            public Color HoverColor;
-            public Action<Tag> OnSelect;
-            public Action<Tag> OnSetAsParent;
-            public int Depth;
-            public bool IsCurrent;
+            var path = TagDisplaySettings.PathOf(tag);
+            int dot = path.LastIndexOf('.');
+            return dot >= 0 ? path.Substring(0, dot + 1) : "";
         }
-        
-        private VisualElement CreateDropdown(VisualElement root, DrawerState state, Button valueBtn)
+
+        // The field's right-click menu: None, New Tag…, Make It a Child Of…, Copy Path
+        private void Menu(ContextualMenuPopulateEvent menu, SerializedProperty property, Settings settings, ForgeTagField field)
         {
-            var dropdown = new VisualElement { name = "Dropdown" };
-            dropdown.style.display = DisplayStyle.None;
-            dropdown.style.marginTop = 2;
-            dropdown.style.marginLeft = IsInListPath(state.PropertyPath) ? 0 : 120;
-            dropdown.style.backgroundColor = new Color(0.18f, 0.18f, 0.18f, 0.95f);
-            dropdown.style.borderTopLeftRadius = 4;
-            dropdown.style.borderTopRightRadius = 4;
-            dropdown.style.borderBottomLeftRadius = 4;
-            dropdown.style.borderBottomRightRadius = 4;
-            dropdown.style.borderLeftWidth = 2;
-            dropdown.style.borderLeftColor = GetContextColor(state.ContextStrings);
-            dropdown.style.paddingTop = 4;
-            dropdown.style.paddingBottom = 4;
-            dropdown.style.paddingLeft = 4;
-            dropdown.style.paddingRight = 4;
-            dropdown.style.minWidth = 280;
-            
-            // Current tag display (just shows full path)
-            var currentTagHeader = new VisualElement { name = "CurrentTagHeader" };
-            currentTagHeader.style.marginBottom = 4;
-            dropdown.Add(currentTagHeader);
-            
-            // Divider
-            var divider = new VisualElement();
-            divider.style.height = 1;
-            divider.style.backgroundColor = Colors.BorderDark;
-            divider.style.marginTop = 2;
-            divider.style.marginBottom = 4;
-            dropdown.Add(divider);
-            
-            // Search row
-            var searchRow = new VisualElement();
-            searchRow.style.flexDirection = FlexDirection.Row;
-            searchRow.style.marginBottom = 4;
-            dropdown.Add(searchRow);
-            
-            var searchField = new TextField { value = "" };
-            searchField.style.flexGrow = 1;
-            searchField.style.height = 20;
-            searchField.style.fontSize = 11;
-            searchRow.Add(searchField);
-            
-            if (state.AllowCreate)
+            var tag = TagOf(property);
+            bool held = tag.IsValid;
+            menu.menu.AppendAction("None", _ => Pick(property, default, settings.Contexts),
+                held ? DropdownMenuAction.Status.Normal : DropdownMenuAction.Status.Disabled);
+            if (settings.AllowCreate)
             {
-                var createBtn = CreateIconButton("+", "Create new tag (uses search text)", () =>
+                menu.menu.AppendAction("New Tag…", _ => ForgeNewTagWindow.Show(StartOf(tag), made => Pick(property, made, settings.Contexts)));
+                // Its leaf under a tag the picker chooses, as Burn under Status.Debuff makes Status.Debuff.Burn
+                menu.menu.AppendAction("Make It a Child Of…", _ => OpenPicker(property, settings, field.Box, "Make It a Child Of", parent =>
                 {
-                    CreateNewTag(state, searchField.value, valueBtn, dropdown);
-                });
-                createBtn.style.marginLeft = 4;
-                createBtn.style.backgroundColor = new Color(0.3f, 0.45f, 0.3f);
-                searchRow.Add(createBtn);
+                    if (!parent.IsValid) return;
+                    var leaf = TagDisplaySettings.PathOf(tag);
+                    leaf = leaf.Substring(leaf.LastIndexOf('.') + 1);
+                    Pick(property, Tag.GenerateAsUnique($"{TagDisplaySettings.PathOf(parent)}.{leaf}"), settings.Contexts);
+                }), held ? DropdownMenuAction.Status.Normal : DropdownMenuAction.Status.Disabled);
             }
-            
-            // Context hint
-            if (state.ContextStrings.Length > 0)
-            {
-                var contextHint = new Label(string.Join(" · ", state.ContextStrings));
-                contextHint.style.fontSize = 9;
-                contextHint.style.color = Colors.HintText;
-                contextHint.style.marginBottom = 4;
-                dropdown.Add(contextHint);
-            }
-            
-            // Results list
-            var listView = new ListView();
-            listView.name = "ResultsList";
-            listView.style.maxHeight = 200;
-            listView.style.minHeight = 60;
-            listView.fixedItemHeight = 22;
-            listView.selectionType = SelectionType.Single;
-            
-            listView.makeItem = () => CreateTagListItem();
-            
-            listView.bindItem = (element, index) =>
-            {
-                BindTagListItem(element, index, state, valueBtn, dropdown);
-            };
-            
-            dropdown.Add(listView);
-            
-            // Search filtering
-            searchField.RegisterValueChangedCallback(evt =>
-            {
-                state.CurrentFilter = evt.newValue;
-                FilterResults(state, evt.newValue, listView);
-            });
-            
-            searchField.RegisterCallback<KeyDownEvent>(evt =>
-            {
-                if (evt.keyCode == KeyCode.Escape)
-                {
-                    CloseDropdown(state, dropdown);
-                    evt.StopPropagation();
-                }
-                else if (evt.keyCode == KeyCode.Return && state.AllowCreate && !string.IsNullOrWhiteSpace(searchField.value))
-                {
-                    CreateNewTag(state, searchField.value, valueBtn, dropdown);
-                    evt.StopPropagation();
-                }
-            });
-            
-            // Click outside to close
-            root.RegisterCallback<AttachToPanelEvent>(attachEvt =>
-            {
-                var panelRoot = root.panel?.visualTree;
-                if (panelRoot == null) return;
-    
-                panelRoot.RegisterCallback<PointerDownEvent>(pointerEvt =>
-                {
-                    if (!state.IsOpen) return;
-        
-                    var clickPos = pointerEvt.position;
-        
-                    if (dropdown.worldBound.Contains(clickPos)) return;
-                    if (valueBtn.worldBound.Contains(clickPos)) return;
-        
-                    CloseDropdown(state, dropdown);
-        
-                }, TrickleDown.TrickleDown);
-            });
-            
-            return dropdown;
+            menu.menu.AppendAction("Copy Path", _ => EditorGUIUtility.systemCopyBuffer = TagDisplaySettings.PathOf(tag),
+                held ? DropdownMenuAction.Status.Normal : DropdownMenuAction.Status.Disabled);
         }
-        
+
+        // ═══════════════════════════════════════════════════════════════════════════
+        // Reading and writing a tag
+        // ═══════════════════════════════════════════════════════════════════════════
+
         /// <summary>
-        /// Updates the header to show just the full tag path.
+        /// Gives a field a tag, its name and display name, in each selected asset, as one Undo step, and tells the tag
+        /// registry which assets use it now, and which no longer use the tag they had. The default tag clears the field.
         /// </summary>
-        private void UpdateCurrentTagHeader(VisualElement dropdown, DrawerState state)
+        internal static void Pick(SerializedProperty property, Tag tag, string[] contexts)
         {
-            var header = dropdown.Q<VisualElement>("CurrentTagHeader");
-            if (header == null) return;
-            
-            header.Clear();
-            
-            var tag = GetCurrentTagFresh(state);
-            
-            if (tag.Equals(default(Tag)))
+            if (property == null) return;
+            var serialized = property.serializedObject;
+            serialized.Update();
+            var own = serialized.FindProperty(property.propertyPath);
+            if (own == null) return;
+            var had = serialized.targetObjects
+                .Select(target => (Target: target, Tag: TagOf(new SerializedObject(target).FindProperty(property.propertyPath))))
+                .ToList();
+            Write(own, tag);
+            serialized.ApplyModifiedProperties();
+            foreach (var (target, old) in had)
             {
-                var noTagLabel = new Label("No tag selected");
-                noTagLabel.style.fontSize = 11;
-                noTagLabel.style.color = Colors.HintText;
-                noTagLabel.style.unityFontStyleAndWeight = FontStyle.Italic;
-                header.Add(noTagLabel);
-                return;
+                if (target is not ScriptableObject asset) continue;
+                if (old.IsValid && old.Name != tag.Name) ForgeTagRegistry.UnregisterTagUsage(old, contexts ?? Array.Empty<string>(), asset);
+                if (tag.IsValid) ForgeTagRegistry.RegisterTagUsage(tag, contexts ?? Array.Empty<string>(), asset);
             }
-            
-            // Show display name (clean, human-readable)
-            var displayName = tag.DisplayName;
-            var nameLabel = new Label(displayName);
-            nameLabel.style.fontSize = 11;
-            nameLabel.style.color = Colors.AccentCyan;
-            nameLabel.style.unityFontStyleAndWeight = FontStyle.Bold;
-            nameLabel.tooltip = tag.DisplayName; // Full hashed name on hover
-            header.Add(nameLabel);
         }
-        
-        // ═══════════════════════════════════════════════════════════════════════════
-        // Tag List Item with Parent Assignment Button
-        // ═══════════════════════════════════════════════════════════════════════════
-        
-        private VisualElement CreateTagListItem()
-        {
-            var container = new VisualElement();
-            container.style.flexDirection = FlexDirection.Row;
-            container.style.alignItems = Align.Center;
-            container.style.height = 20;
-            container.style.marginTop = 1;
-            container.style.marginBottom = 1;
-            container.style.borderTopLeftRadius = 2;
-            container.style.borderTopRightRadius = 2;
-            container.style.borderBottomLeftRadius = 2;
-            container.style.borderBottomRightRadius = 2;
-            
-            // Main clickable area (tag name)
-            var tagBtn = new Button { name = "TagButton", focusable = false };
-            tagBtn.style.flexGrow = 1;
-            tagBtn.style.height = 18;
-            tagBtn.style.marginLeft = 0;
-            tagBtn.style.marginRight = 0;
-            tagBtn.style.paddingLeft = 6;
-            tagBtn.style.paddingRight = 4;
-            tagBtn.style.fontSize = 10;
-            tagBtn.style.unityTextAlign = TextAnchor.MiddleLeft;
-            tagBtn.style.backgroundColor = StyleKeyword.Null;
-            tagBtn.style.borderTopLeftRadius = 2;
-            tagBtn.style.borderTopRightRadius = 0;
-            tagBtn.style.borderBottomLeftRadius = 2;
-            tagBtn.style.borderBottomRightRadius = 0;
-            tagBtn.clickable = null;
-            container.Add(tagBtn);
-            
-            // "Set as Parent" button (hidden by default, shown on hover)
-            var parentBtn = new Button { name = "ParentButton", text = "▲", focusable = false };
-            parentBtn.style.width = 20;
-            parentBtn.style.height = 18;
-            parentBtn.style.paddingLeft = 0;
-            parentBtn.style.paddingRight = 0;
-            parentBtn.style.paddingTop = 0;
-            parentBtn.style.paddingBottom = 0;
-            parentBtn.style.marginLeft = 2;
-            parentBtn.style.marginRight = 2;
-            parentBtn.style.fontSize = 8;
-            parentBtn.style.unityTextAlign = TextAnchor.MiddleCenter;
-            parentBtn.style.backgroundColor = Colors.AccentPurple.Fade(0.4f);
-            parentBtn.style.borderTopLeftRadius = 0;
-            parentBtn.style.borderTopRightRadius = 2;
-            parentBtn.style.borderBottomLeftRadius = 0;
-            parentBtn.style.borderBottomRightRadius = 2;
-            parentBtn.style.display = DisplayStyle.None; // Hidden by default
-            parentBtn.tooltip = "Set as parent of current tag";
-            container.Add(parentBtn);
-            
-            // Hover behavior - show/hide parent button
-            container.RegisterCallback<PointerEnterEvent>(evt =>
-            {
-                if (container.userData is TagItemData data)
-                {
-                    container.style.backgroundColor = data.HoverColor;
-                    // Only show parent button if this isn't the current tag
-                    if (!data.IsCurrent)
-                    {
-                        parentBtn.style.display = DisplayStyle.Flex;
-                    }
-                }
-            });
-            
-            container.RegisterCallback<PointerLeaveEvent>(evt =>
-            {
-                if (container.userData is TagItemData data)
-                {
-                    container.style.backgroundColor = data.NormalColor;
-                    parentBtn.style.display = DisplayStyle.None;
-                }
-            });
-            
-            // Tag selection (click on tag name)
-            tagBtn.RegisterCallback<PointerUpEvent>(evt =>
-            {
-                if (evt.button == 0 && container.userData is TagItemData data)
-                {
-                    data.OnSelect?.Invoke(data.Tag);
-                    evt.StopPropagation();
-                }
-            });
-            
-            tagBtn.RegisterCallback<PointerDownEvent>(evt =>
-            {
-                if (evt.button == 0) evt.StopPropagation();
-            });
-            
-            // Parent assignment (click on parent button)
-            parentBtn.RegisterCallback<PointerUpEvent>(evt =>
-            {
-                if (evt.button == 0 && container.userData is TagItemData data)
-                {
-                    data.OnSetAsParent?.Invoke(data.Tag);
-                    evt.StopPropagation();
-                }
-            });
-            
-            parentBtn.RegisterCallback<PointerDownEvent>(evt =>
-            {
-                if (evt.button == 0) evt.StopPropagation();
-            });
-            
-            return container;
-        }
-        
-        private void BindTagListItem(VisualElement element, int index, DrawerState state, Button valueBtn, VisualElement dropdown)
-        {
-            if (index >= state.Results.Count) return;
 
-            var tag = state.Results[index];
-            var currentTag = GetCurrentTagFresh(state);
-            var isCurrent = tag.Equals(currentTag);
-            
-            var tagBtn = element.Q<Button>("TagButton");
-            var parentBtn = element.Q<Button>("ParentButton");
-            
-            if (tagBtn == null) return;
-
-            // Display with hierarchy indent
-            var groupByRoot = GroupByRoot();
-            var indent = groupByRoot ? (tag.Depth - 1) * 12 : 0;
-            var cleanName = tag.DisplayName;
-            var displayName = groupByRoot && tag.Depth > 1
-                ? $"└ {cleanName}"
-                : cleanName;
-            
-            tagBtn.text = displayName;
-            tagBtn.style.paddingLeft = 6 + indent;
-            tagBtn.tooltip = tag.DisplayName;
-
-            var normalColor = isCurrent 
-                ? new Color(0.25f, 0.35f, 0.25f, 0.5f) 
-                : new Color(0, 0, 0, 0);
-            var hoverColor = isCurrent
-                ? new Color(0.3f, 0.45f, 0.3f, 0.5f)
-                : new Color(0.3f, 0.3f, 0.3f, 0.5f);
-
-            element.style.backgroundColor = normalColor;
-            tagBtn.style.color = isCurrent ? Colors.AccentGreen : Colors.LabelText;
-            
-            // Style based on depth
-            if (tag.Depth == 1 && groupByRoot)
-            {
-                tagBtn.style.unityFontStyleAndWeight = FontStyle.Bold;
-            }
-            else
-            {
-                tagBtn.style.unityFontStyleAndWeight = FontStyle.Normal;
-            }
-            
-            // Reset parent button visibility
-            if (parentBtn != null)
-            {
-                parentBtn.style.display = DisplayStyle.None;
-                // Disable parent button for current tag (can't be parent of itself)
-                parentBtn.SetEnabled(!isCurrent);
-                
-                // Update tooltip
-                if (!currentTag.Equals(default(Tag)))
-                {
-                    parentBtn.tooltip = $"Set '{tag.DisplayName}' as parent of '{currentTag.GetLeafName()}'";
-                }
-            }
-
-            element.userData = new TagItemData
-            {
-                Tag = tag,
-                NormalColor = normalColor,
-                HoverColor = hoverColor,
-                OnSelect = t => SelectTag(state, t, valueBtn, dropdown),
-                OnSetAsParent = t => SetTagAsParent(state, t, valueBtn, dropdown),
-                Depth = tag.Depth,
-                IsCurrent = isCurrent
-            };
-        }
-        
         /// <summary>
-        /// Sets the specified tag as the parent of the current tag.
+        /// The tag a field holds. The registry's tag of its name, with its display name; after a domain reload the registry
+        /// may not know a unique tag, so the field's own display name fills it in.
         /// </summary>
-        private void SetTagAsParent(DrawerState state, Tag parentTag, Button valueBtn, VisualElement dropdown)
+        internal static Tag TagOf(SerializedProperty property)
         {
-            var currentTag = GetCurrentTagFresh(state);
-            if (currentTag.Equals(default(Tag))) return;
-            
-            // Get the leaf name of current tag
-            var leafName = currentTag.GetLeafName();
-            
-            // Create new tag with parent
-            var newPath = $"{parentTag.DisplayName}.{leafName}";
-            var newTag = Tag.GenerateAsUnique(newPath);
-            
-            SelectTag(state, newTag, valueBtn, dropdown);
-        }
-        
-        private Button CreateIconButton(string icon, string tooltip, Action onClick)
-        {
-            var btn = new Button { text = icon, tooltip = tooltip, focusable = false };
-            btn.style.width = 20;
-            btn.style.height = 20;
-            btn.style.paddingLeft = 0;
-            btn.style.paddingRight = 0;
-            btn.style.paddingTop = 0;
-            btn.style.paddingBottom = 0;
-            btn.style.fontSize = 12;
-            btn.style.unityTextAlign = TextAnchor.MiddleCenter;
-            btn.style.backgroundColor = Colors.ButtonBackground;
-            btn.style.borderTopLeftRadius = 3;
-            btn.style.borderTopRightRadius = 3;
-            btn.style.borderBottomLeftRadius = 3;
-            btn.style.borderBottomRightRadius = 3;
-            
-            btn.RegisterCallback<MouseEnterEvent>(_ => btn.style.backgroundColor = Colors.ButtonHover);
-            btn.RegisterCallback<MouseLeaveEvent>(_ => btn.style.backgroundColor = Colors.ButtonBackground);
-            
-            btn.clicked += onClick;
-            return btn;
-        }
-        
-        // ═══════════════════════════════════════════════════════════════════════════
-        // Dropdown Logic
-        // ═══════════════════════════════════════════════════════════════════════════
-        
-        private void ToggleDropdown(DrawerState state, VisualElement dropdown, Button valueBtn)
-        {
-            if (state.IsOpen)
-                CloseDropdown(state, dropdown);
-            else
-                OpenDropdown(state, dropdown, valueBtn);
-        }
-        
-        private void OpenDropdown(DrawerState state, VisualElement dropdown, Button valueBtn)
-        {
-            state.IsOpen = true;
-            dropdown.style.display = DisplayStyle.Flex;
-            
-            // Update header with current tag
-            UpdateCurrentTagHeader(dropdown, state);
-            
-            // Load tags hierarchically
-            LoadTagsHierarchically(state);
-            
-            var listView = dropdown.Q<ListView>("ResultsList");
-            if (listView != null)
-            {
-                listView.itemsSource = state.Results;
-                listView.Rebuild();
-            }
-            
-            dropdown.Q<TextField>()?.Focus();
-        }
-        
-        private void CloseDropdown(DrawerState state, VisualElement dropdown)
-        {
-            state.IsOpen = false;
-            dropdown.style.display = DisplayStyle.None;
-        }
-        
-        private void LoadTagsHierarchically(DrawerState state)
-        {
-            var allTags = ForgeTagRegistry.GetTagsForContext(state.ContextStrings, state.IncludeUniversal).ToList();
-            
-            if (GroupByRoot())
-            {
-                var sorted = new List<Tag>();
-                var roots = allTags.Where(t => t.IsRoot).OrderBy(t => t.Name).ToList();
-                
-                foreach (var root in roots)
-                {
-                    sorted.Add(root);
-                    var children = allTags
-                        .Where(t => t.IsChildOf(root))
-                        .OrderBy(t => t.Name)
-                        .ToList();
-                    sorted.AddRange(children);
-                }
-                
-                var remaining = allTags.Except(sorted).OrderBy(t => t.Name);
-                sorted.AddRange(remaining);
-                
-                state.Results = sorted;
-            }
-            else
-            {
-                state.Results = allTags.OrderBy(t => t.Name).ToList();
-            }
-        }
-        
-        private void FilterResults(DrawerState state, string filter, ListView listView)
-        {
-            var allTags = ForgeTagRegistry.GetTagsForContext(state.ContextStrings, state.IncludeUniversal);
-            
-            if (string.IsNullOrEmpty(filter))
-            {
-                LoadTagsHierarchically(state);
-            }
-            else
-            {
-                var filterLower = filter.ToLowerInvariant();
-                state.Results = allTags
-                    .Where(t => t.DisplayName.ToLowerInvariant().Contains(filterLower) ||
-                                t.DisplayName.ToLowerInvariant().Contains(filterLower))
-                    .OrderBy(t => t.DisplayName)
-                    .ToList();
-            }
-            
-            listView.itemsSource = state.Results;
-            listView.Rebuild();
-        }
-        
-        private void SelectTag(DrawerState state, Tag tag, Button valueBtn, VisualElement dropdown)
-        {
-            var prop = GetFreshProperty(state);
-            if (prop == null) return;
-            
-            var oldTag = GetCurrentTag(prop);
-            var asset = prop.serializedObject.targetObject as ScriptableObject;
-            
-            // Unregister old
-            if (!oldTag.Equals(default(Tag)) && asset != null)
-                ForgeTagRegistry.UnregisterTagUsage(oldTag, state.ContextStrings, asset);
-            
-            // Set new
-            SetTag(prop, tag);
-            
-            // Apply changes
-            prop.serializedObject.ApplyModifiedProperties();
-            EditorUtility.SetDirty(prop.serializedObject.targetObject);
-            
-            // Update button with new display text
-            UpdateValueButton(valueBtn, tag);
-            
-            // Register new
-            if (!tag.Equals(default(Tag)) && asset != null) ForgeTagRegistry.RegisterTagUsage(tag, state.ContextStrings, asset);
-            
-            CloseDropdown(state, dropdown);
-        }
-        
-        private void UpdateValueButton(Button btn, Tag tag)
-        {
-            var displayText = GetDisplayText(tag);
-            var fullPath = tag.Equals(default(Tag)) ? "" : tag.DisplayName;
-            
-            btn.text = displayText;
-            btn.tooltip = string.IsNullOrEmpty(fullPath) ? "No tag selected" : fullPath;
-        }
-        
-        private void CreateNewTag(DrawerState state, string tagName, Button valueBtn, VisualElement dropdown)
-        {
-            if (string.IsNullOrWhiteSpace(tagName))
-            {
-                EditorUtility.DisplayDialog("Create Tag", "Please enter a tag name.", "OK");
-                return;
-            }
-            
-            tagName = tagName.Trim();
-            
-            if (!TagRegistry.IsValidPath(tagName))
-            {
-                EditorUtility.DisplayDialog("Create Tag", 
-                    "Invalid tag path. Use letters, numbers, underscores.\nUse dots for hierarchy (e.g., 'Status.Debuff.Burn').", 
-                    "OK");
-                return;
-            }
-
-            SelectTag(state, Tag.GenerateAsUnique(tagName), valueBtn, dropdown);
-        }
-        
-        // ═══════════════════════════════════════════════════════════════════════════
-        // Tag Access
-        // ═══════════════════════════════════════════════════════════════════════════
-        
-        private Tag GetCurrentTag(SerializedProperty prop)
-        {
-            var nameProp = prop.FindPropertyRelative("Name");
+            var nameProp = property?.FindPropertyRelative(nameof(Tag.Name));
             if (nameProp == null || string.IsNullOrEmpty(nameProp.stringValue)) return default;
-
             var resolved = TagRegistry.Resolve(nameProp.stringValue);
-
-            // Resolve falls back to Tag.Generate(name) when the tag isn't in the runtime registry
-            // (e.g. after a domain reload), which leaves DisplayName == Name (the hash).
-            // Read the stored DisplayName field from the serialized property as a fallback.
-            if (resolved.DisplayName == resolved.Name)
-            {
-                var displayNameProp = prop.FindPropertyRelative(nameof(Tag.DisplayName));
-                if (displayNameProp != null
-                    && !string.IsNullOrEmpty(displayNameProp.stringValue)
-                    && displayNameProp.stringValue != resolved.Name)
-                {
-                    // Re-generate with the correct display name — also re-registers in TagRegistry
-                    // so subsequent Resolve() calls find it without hitting this fallback.
-                    return Tag.Generate(resolved.Name, displayNameProp.stringValue);
-                }
-            }
-
-            return resolved;
+            if (resolved.DisplayName != resolved.Name) return resolved;
+            var display = property.FindPropertyRelative(nameof(Tag.DisplayName))?.stringValue;
+            return !string.IsNullOrEmpty(display) && display != resolved.Name ? Tag.Generate(resolved.Name, display) : resolved;
         }
-        
-        private void SetTag(SerializedProperty prop, Tag tag)
+
+        private static void Write(SerializedProperty property, Tag tag)
         {
-            var nameProp = prop.FindPropertyRelative(nameof(Tag.Name));
-            if (nameProp != null) nameProp.stringValue = tag.Equals(default(Tag)) ? "" : tag.Name;
+            var nameProp = property.FindPropertyRelative(nameof(Tag.Name));
+            if (nameProp != null) nameProp.stringValue = tag.IsValid ? tag.Name : "";
+            var displayProp = property.FindPropertyRelative(nameof(Tag.DisplayName));
+            if (displayProp != null) displayProp.stringValue = tag.IsValid ? tag.DisplayName : "";
+        }
 
-            var displayNameProp = prop.FindPropertyRelative(nameof(Tag.DisplayName));
-            if (displayNameProp is not null)
-            {
-                displayNameProp.stringValue = tag.Equals(default(Tag)) ? "" : tag.DisplayName;
-            }
-        }
-        
         // ═══════════════════════════════════════════════════════════════════════════
-        // Helpers
+        // The field's attributes
         // ═══════════════════════════════════════════════════════════════════════════
-        
-        private bool IsInList(SerializedProperty property) => property.propertyPath.Contains(".Array.data[");
-        private bool IsInListPath(string path) => path.Contains(".Array.data[");
-        
-        private Color GetContextColor(string[] contextStrings)
-        {
-            if (contextStrings == null || contextStrings.Length == 0)
-                return Colors.HintText;
-            
-            var first = contextStrings[0];
-            if (first.Contains("Ability")) return Colors.AccentOrange;
-            if (first.Contains("Effect")) return Colors.AccentRed;
-            if (first.Contains("Entity")) return Colors.AccentPurple;
-            if (first.Contains("Attribute")) return Colors.AccentBlue;
-            if (first.Contains("Granted")) return Colors.AccentGreen;
-            if (first.Contains("Required")) return Colors.AccentYellow;
-            if (first.Contains("Blocked")) return Colors.AccentRed;
-            
-            return Colors.AccentGray;
-        }
-        
+
         private T GetFieldAttribute<T>(SerializedProperty property) where T : System.Attribute
         {
-            if (fieldInfo != null)
-                return fieldInfo.GetCustomAttribute<T>();
-            
+            if (fieldInfo != null) return fieldInfo.GetCustomAttribute<T>();
             var targets = property.serializedObject.targetObjects;
             if (targets == null || targets.Length == 0) return null;
-            
-            var fi = ResolveFieldInfo(targets[0].GetType(), property.propertyPath);
-            return fi?.GetCustomAttribute<T>();
+            return ResolveFieldInfo(targets[0].GetType(), property.propertyPath)?.GetCustomAttribute<T>();
         }
-        
+
         private static FieldInfo ResolveFieldInfo(Type host, string propertyPath)
         {
-            var flags = BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic;
-            Type curType = host;
-            FieldInfo lastField = null;
-            
-            foreach (var p in propertyPath.Split('.'))
+            const BindingFlags flags = BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic;
+            var type = host;
+            FieldInfo last = null;
+            foreach (var part in propertyPath.Split('.'))
             {
-                if (p == "Array") continue;
-                if (p.StartsWith("data[")) continue;
-                
-                var fi = curType.GetField(p, flags);
-                if (fi == null) return lastField;
-                lastField = fi;
-                curType = fi.FieldType;
-                
-                if (curType.IsArray) curType = curType.GetElementType();
-                else if (curType.IsGenericType && typeof(System.Collections.IList).IsAssignableFrom(curType))
-                    curType = curType.GetGenericArguments()[0];
+                if (part == "Array" || part.StartsWith("data[")) continue;
+                var field = type.GetField(part, flags);
+                if (field == null) return last;
+                last = field;
+                type = field.FieldType;
+                if (type.IsArray) type = type.GetElementType();
+                else if (type.IsGenericType && typeof(System.Collections.IList).IsAssignableFrom(type)) type = type.GetGenericArguments()[0];
             }
-            
-            return lastField;
+            return last;
         }
-        
-        public override float GetPropertyHeight(SerializedProperty property, GUIContent label)
-        {
-            return EditorGUIUtility.singleLineHeight;
-        }
+
+        public override float GetPropertyHeight(SerializedProperty property, GUIContent label) => EditorGUIUtility.singleLineHeight;
     }
 }

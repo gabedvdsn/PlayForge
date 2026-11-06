@@ -165,6 +165,10 @@ tracks each fix below by its ID.
   page, through one table of links in the editor.
 
 ### Changed
+- A tag field is Unity's field: its label in the label column, the tag's parents in secondary text and its leaf in
+  strong text. It opens Unity's searchable dropdown of the tags its context offers, with None and New Tag…, and its
+  right-click menu clears it, makes a new tag, makes its tag a child of another, or copies its path. It was a button
+  with a colored border, text that changed as the pointer passed, and a picker drawn under it (ED-55).
 - A scaler's Stretch Over Levels is its Values: Per Level or Spread Over Levels, side by side. Spread, each value says
   the level it sits at, and the curve beside the table is the curve the scaler reads (ED-54).
 - The Forge's list shows each asset's name alone, and the selected asset's header shows its file name under Show in
@@ -346,6 +350,9 @@ tracks each fix below by its ID.
   Asking whether its sequence was paused took 24 bytes a frame.
 
 ### Fixed
+- An effect's additional impact named no delivery on its row and didn't say what it commits, and its Retention Group
+  drew as a bare bar with no label. Its row names its delivery, a periodic one says what it commits, and its Retention
+  Group has its label (ED-50).
 - A scaler showed parts its kind never reads and hid parts it does: a Fixed Value showed a table of values per level,
   and a Randomized scaler hid the values its base value comes from. A scaler shows what its kind reads, its settings
   on a shaded block under its field, and a kind's field that applies to some of its settings shows only for them. A

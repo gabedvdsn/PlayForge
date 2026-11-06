@@ -36,7 +36,7 @@ namespace FarEmerald.PlayForge.Extended.Editor
         }
 
         internal static readonly Switch ShowFullTagPath = new("ShowFullTagPath", "Show Full Tag Paths",
-            "Show a tag's whole path, rather than its leaf after an ellipsis", false);
+            "Show a tag's whole path in strong text, rather than its parents in secondary text before its leaf", false);
         internal static readonly Switch GroupTagsByRoot = new("GroupTagsByRoot", "Group Tags by Root",
             "Group the tag picker's tags under their root", true);
 
@@ -79,7 +79,7 @@ namespace FarEmerald.PlayForge.Extended.Editor
     /// </summary>
     internal static class TagDisplaySettings
     {
-        /// <summary>A tag's whole path, rather than its leaf after an ellipsis. Off unless set.</summary>
+        /// <summary>A tag's whole path in strong text, rather than its parents in secondary text before its leaf. Off unless set.</summary>
         public static bool ShowFullPath
         {
             get => PlayForgePreferences.ShowFullTagPath.Value;
