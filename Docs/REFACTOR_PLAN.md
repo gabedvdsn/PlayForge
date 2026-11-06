@@ -891,6 +891,12 @@ GAS-4 with GAS-5, PC-6, and TS-I with PC-5.
 
 Record baselines, gate results and notable decisions here, newest first.
 
+- 2026-11-06, **Phase 7's design, for the user's review.** `Docs/DEMO_PLAN.md`: the arena and its controls, the twelve
+  attributes and the Hero sets, the damage model, five heroes of an attack and three abilities each, fourteen items,
+  the AI hero and the dummy, the placeholder icons, and where each asset feature shows. It names two gaps the demo
+  needs closed: a projectile that Create Mono Process spawns takes GameRoot as its origin, and Open decision 20.
+  Nothing is built until the user answers its three questions.
+
 - 2026-11-06, **Decision 38: the demo's play (the user's answers).** Phase 7 starts: MOBA controls, an AI hero and a
   training dummy to fight, placeholder textures made in code, and one Demo sample in place of Demos, Battle beside
   it. The demo's design, its heroes, items and assets, goes to the user before it's built.
