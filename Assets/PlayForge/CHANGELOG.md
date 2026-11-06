@@ -171,6 +171,11 @@ tracks each fix below by its ID.
   page, through one table of links in the editor.
 
 ### Changed
+- A worker group is its name and its four lists of workers, Unity's reorderable lists, where a new worker starts
+  empty. It was a box of its own with colored badges and an Import of its own, inside a section that already
+  imports it (ED-57).
+- A sequence reference is Unity's popup of the project's sequences, None first, with a method that's gone marked
+  missing. It was an IMGUI popup (ED-57).
 - An ability's stage folds as an attribute set element does, to a line of what it holds, with Critical on its row
   while a task commits the ability to it. Its tasks are Unity's reorderable list, where a new task starts empty, and
   its condition shows where it looks for its tag only once it names one. The stages' list removes a stage, and each

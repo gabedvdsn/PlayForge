@@ -125,7 +125,8 @@ group. It holds four lists:
 - **Tag** workers react when the entity's tags change.
 - **Analysis** workers examine the frame at its end, for example to detect death.
 
-The import button in the group's header copies a worker group from another asset.
+Each list's **+** adds an empty worker to pick a kind for. The section's import button copies a worker group
+from another asset.
 
 ## Local Data
 

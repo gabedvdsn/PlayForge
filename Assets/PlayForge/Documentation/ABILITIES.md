@@ -159,7 +159,7 @@ This section is what the ability does once it has started.
     and only if it succeeded.
   - **Tasks**: the work, such as Apply Effects, Delay or Run Sequence, in a list whose **+** adds an empty task to
     pick a kind for. Run Sequence runs the sequence a static method
-    makes, or, for an ability built in code, a fresh run of the sequence its `Definition` describes, which
+    makes, picked in **Sequence** by name from the project's `[TaskSequenceMethod]` methods, or, for an ability built in code, a fresh run of the sequence its `Definition` describes, which
     `TaskSequenceBuilder` makes. A stage that holds a critical task is critical.
     The activation keeps its claim until its last critical stage ends. With no critical stage, it lets the claim go
     as the stages start. Apply Effects' **Record Landed As** tags the activation's data as an effect lands on a
@@ -217,7 +217,8 @@ four lists:
 - **Tag** workers react when the entity's tags change.
 - **Analysis** workers examine the frame at its end, for example to detect death.
 
-The import button in the group's header copies a worker group from another asset.
+Each list's **+** adds an empty worker to pick a kind for. The section's import button copies a worker group
+from another asset.
 
 ## Local Data
 
