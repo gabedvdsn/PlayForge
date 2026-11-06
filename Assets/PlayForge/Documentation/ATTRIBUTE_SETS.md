@@ -43,37 +43,41 @@ asset whose level range another asset follows.
 
 ## Attributes
 
-Each element sets up one attribute. Folded, an element shows one line: how its Current and Base start, and its range.
+Each element sets up one attribute. Folded, an element shows one line: what its attribute starts at, and its range.
 
+- **Preview In**, above the list while another set holds this one as a sub-set: This Set, or a set that holds it,
+  directly or through another. An entity built from that set starts with these attributes as part of it, so the
+  elements and All Attributes show their values there, with that set's collisions and the attributes it gives. The
+  choice lasts until the editor closes.
 - **Attribute** (in the element's row): the attribute asset.
+- **Starts At**: what the attribute starts at, at each of the set's levels, as "100/120/140/160", with the levels on the
+  right; Current and Base apart, as "Current 50 · Base 80", when they differ; or a range past six levels. It is worked
+  out as the runtime works it out: an entity at each level, built from the set, with its sub-sets, collisions, scalers,
+  bounds and rounding, before any effect, item or worker acts on it. A note says when another element's value is the
+  one used, and a warning says when a scaler reads an attribute the set doesn't give, which reads 0.
+- **Base** and **Current**: each a magnitude field, as an effect's are: a number, or a cached scaler with how the number
+  combines with it. One kind of scaler follows the entity's level. Another follows a different attribute, and this
+  attribute is then worked out again whenever that one changes. Each field's menu copies the other side's number and
+  scaler into it.
+- **Link Current to Base**: Current takes Base's number and scaler, and its own field hides.
+- **Bounds**: the range the values are held in, with the Floor and Ceiling the policy reads, each a Current and a Base.
+  - **Zero To Base**: Current stays between 0 and Base.
+  - **Floor To Base**: Current stays between the Floor's Current and Base. Base stays at or above the Floor's Base.
+  - **Zero To Ceil**: Current stays between 0 and the Ceiling's Current. Base stays between 0 and the Ceiling's Base.
+  - **Floor To Ceil**: Current and Base each stay between their Floor and Ceiling.
+  - **Unlimited**: no bounds.
+
+  Right-click a Floor or a Ceiling for No Floor or No Ceiling. A magnitude you type is kept within the bounds. A stored
+  magnitude outside them, as after the bounds change, shows a warning, and the runtime clamps it.
+- **Auto Clamp**: apply the Bounds. With it off, the Bounds are ignored at runtime.
+- **Scale With Base**: when Base changes, change Current by the same share. A value of 80/100 that loses half its Base
+  ends at 40/50.
+- **Rounding**: None, To Floor, To Ceil, Round, or Snap To with a **Snap Interval**. Rounding applies after the Bounds,
+  each time the value changes, so it can make a change bigger or smaller than its effect asked for.
 - **Retention Group**: the group the root value counts toward. Groups split an attribute's value for queries and UI,
   such as base and bonus health. They never change the math.
 - **Collision**: what to do when this attribute appears more than once across the set and its sub-sets. See Collision
   Settings.
-- **Link Current to Base**: Current takes Base's settings, and its own are disabled.
-- **Current** and **Base**, one at a time on a two-button switch, each hold:
-  - **Magnitude**: the starting value.
-  - **Scaling**: an optional cached scaler. One kind follows the entity's level. Another follows a different attribute,
-    and this attribute is then recalculated whenever that one changes.
-  - **Real Magnitude**: how Magnitude and Scaling combine: Add Scaler, Multiply With Scaler, Use Magnitude or Use
-    Scaler. With no Scaling, Magnitude is used as it is.
-- **Copy Base's Magnitude** and **Copy Base's Settings**, or Current's while Base shows, copy the other side's
-  Magnitude, or all three of its settings, into the side shown.
-- **Bounds**: the range the values are held in.
-  - **Zero To Base**: Current stays between 0 and Base.
-  - **Floor To Base**: Current stays between the Floor's Current and Base. Base stays at or above the Floor's Base.
-  - **Zero To Ceil**: Current stays between 0 and the Ceil's Current. Base stays between 0 and the Ceil's Base.
-  - **Floor To Ceil**: Current and Base each stay between their Floor and Ceil.
-  - **Unlimited**: no bounds.
-
-  The −∞ and +∞ buttons make a Floor or Ceil unlimited. A magnitude you type is kept within the bounds. A stored
-  magnitude outside them, as after the bounds change, shows a warning, and the runtime clamps it.
-- **Constraints**:
-  - **Clamp**: apply the Bounds. With Clamp off, the Bounds are ignored at runtime.
-  - **Scale Current**: when Base changes, change Current by the same proportion. A value of 80/100 that loses half its
-    Base ends at 40/50.
-  - **Rounding**: None, To Floor, To Ceil, Round, or Snap To with an **Interval**. Rounding applies after the Bounds,
-    each time the value changes, so it can make a change bigger or smaller than its effect asked for.
 
 ## Sub-Sets
 
@@ -105,9 +109,10 @@ Collision Setting, Use This, Combine, Use Existing. Elements in the other groups
 ## All Attributes
 
 A table of each attribute the set gives an entity, its sub-sets' included, once each: the value its Current starts at,
-and the range the set keeps it in. Where several elements give an attribute, the value is the one Collision Settings
-settle on. A value a scaler sets reads Scaled, since it is worked out as the entity starts. Hover over a value for its
-Current and Base. The Entity inspector shows the same table under the entity's Attribute Set.
+at each level, and the range the set keeps it in. The values are the ones the elements show, in the set this set is
+previewed in. Hover over a value for its Current and Base at each level, and, where several elements give an
+attribute, whose value is used. The Entity inspector shows the same table under the entity's Attribute Set, at the
+entity's levels.
 
 ## Workers
 

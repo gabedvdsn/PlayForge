@@ -1,56 +1,27 @@
 ﻿using UnityEditor;
+using UnityEditor.UIElements;
 using UnityEngine.UIElements;
 
 namespace FarEmerald.PlayForge.Extended.Editor
 {
+    /// <summary>
+    /// An attribute value: its label in the label column, then its Current and Base side by side (ED-49). It drew "Cur" and
+    /// "Base" in 9 px text with a slash between them, from styles set in C#.
+    /// </summary>
     [CustomPropertyDrawer(typeof(AttributeValue))]
     public class AttributeValueDrawer : PropertyDrawer
     {
-        public override VisualElement CreatePropertyGUI(SerializedProperty property)
+        public override VisualElement CreatePropertyGUI(SerializedProperty property) =>
+            Build(property, preferredLabel ?? property.displayName, property.name);
+
+        /// <summary>A value's field, bound to its Current and Base.</summary>
+        internal static ForgeValuePairField Build(SerializedProperty value, string label, string name)
         {
-            var container = new VisualElement();
-            container.style.flexDirection = FlexDirection.Row;
-            container.style.alignItems = Align.Center;
-            
-            var currentProp = property.FindPropertyRelative("CurrentValue");
-            var baseProp = property.FindPropertyRelative("BaseValue");
-            
-            // Current
-            var currentLabel = new Label("Cur");
-            currentLabel.style.width = 24;
-            currentLabel.style.color = ForgeDrawerStyles.Colors.HintText;
-            currentLabel.style.fontSize = 9;
-            currentLabel.tooltip = "Current Value";
-            container.Add(currentLabel);
-            
-            var currentField = new FloatField();
-            currentField.style.flexGrow = 1;
-            currentField.style.minWidth = 40;
-            currentField.bindingPath = currentProp.propertyPath;
-            container.Add(currentField);
-            
-            // Separator
-            var sep = new Label("/");
-            sep.style.marginLeft = 4;
-            sep.style.marginRight = 4;
-            sep.style.color = ForgeDrawerStyles.Colors.HintText;
-            container.Add(sep);
-            
-            // Base
-            var baseLabel = new Label("Base");
-            baseLabel.style.width = 28;
-            baseLabel.style.color = ForgeDrawerStyles.Colors.HintText;
-            baseLabel.style.fontSize = 9;
-            baseLabel.tooltip = "Base Value";
-            container.Add(baseLabel);
-            
-            var baseField = new FloatField();
-            baseField.style.flexGrow = 1;
-            baseField.style.minWidth = 40;
-            baseField.bindingPath = baseProp.propertyPath;
-            container.Add(baseField);
-            
-            return container;
+            var field = new ForgeValuePairField(label) { name = name };
+            ForgeTheme.Apply(field);
+            field.Current.BindProperty(value.FindPropertyRelative(nameof(AttributeValue.CurrentValue)));
+            field.Base.BindProperty(value.FindPropertyRelative(nameof(AttributeValue.BaseValue)));
+            return field;
         }
     }
 }

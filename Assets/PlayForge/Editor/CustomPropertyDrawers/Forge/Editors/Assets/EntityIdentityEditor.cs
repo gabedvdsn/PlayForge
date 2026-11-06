@@ -356,7 +356,8 @@ namespace FarEmerald.PlayForge.Extended.Editor
             attributeTable = new ForgeAttributeTable();
             attributeTable.Changed += UpdateSummaries;
             attributesSection.Content.Add(attributeTable);
-            attributeTable.Show(entity.AttributeSet);
+            // At the entity's levels, as it starts with them (ED-49)
+            attributeTable.Show(entity.AttributeSet, entity);
         }
 
         private void BuildAbilitiesSection(VisualElement parent)
@@ -550,8 +551,10 @@ namespace FarEmerald.PlayForge.Extended.Editor
                 nameField.SetValueWithoutNotify(entity.Name ?? "");
             UpdateAssetTagDisplay();
             UpdateEquippedToo();
-            // The table follows its set's own changes; here it follows the entity to another set
-            if (attributeTable != null && attributeTable.Set != entity.AttributeSet) attributeTable.Show(entity.AttributeSet);
+            // The table follows its set's own changes; here it follows the entity to another set, or to other levels, which
+            // its values are at (ED-49)
+            if (attributeTable != null && (attributeTable.Set != entity.AttributeSet || attributeTable.Levels != AttributeStartValues.LevelsOf(entity)))
+                attributeTable.Show(entity.AttributeSet, entity);
             UpdateSummaries();
         }
 

@@ -538,6 +538,61 @@
     display: none;
 }
 
+/* What an attribute set element starts at, at each level: a value row in strong text, then its levels in secondary text
+   on the right (ED-49) */
+.pf-root .pf-element__starts {
+    flex-direction: row;
+    align-items: center;
+}
+
+.pf-root .pf-element__starts-value {
+    flex-grow: 1;
+    flex-shrink: 1;
+    min-width: 0;
+}
+
+.pf-root .pf-element__starts-levels {
+    flex-shrink: 0;
+    margin: 0 0 0 6px;
+    padding: 0;
+    color: var(--pf-secondary-text);
+}
+
+/* A value shown but not edited that is the point of its row, as what an attribute starts at: in strong text */
+.pf-root .pf-value-field--strong > .unity-base-text-field__input,
+.pf-root .pf-value-field--strong > .unity-base-text-field__input .unity-text-element {
+    color: var(--pf-strong-text);
+}
+
+/* An attribute value: its Current and Base side by side, each with its name before it in secondary text, as Unity's
+   two-part fields show X and Y (ED-49) */
+.pf-root .pf-value-pair__input {
+    flex-direction: row;
+    flex-grow: 1;
+    flex-shrink: 1;
+    min-width: 0;
+}
+
+.pf-root .pf-value-pair__part {
+    flex-grow: 1;
+    flex-shrink: 1;
+    flex-basis: 0;
+    min-width: 0;
+    margin: 0;
+}
+
+.pf-root .pf-value-pair__part--second {
+    margin-left: 6px;
+}
+
+.pf-root .pf-value-pair__part > .unity-base-field__label {
+    min-width: 0;
+    width: auto;
+    margin: 0;
+    padding: 0 4px 0 0;
+    color: var(--pf-secondary-text);
+}
+
 /* ─── A tag field: Unity's field, the tag in a field's box, its parents in secondary text and its leaf in strong text,
    then a popup's arrow (ED-55, Docs/EDITOR_STYLE.md) ─── */
 .pf-root .pf-tag-field__box {
@@ -699,8 +754,9 @@
     text-overflow: ellipsis;
 }
 
+/* Wide enough for a value at each of four levels, as "100/120/140/160" (ED-49) */
 .pf-root .pf-table__cell--number {
-    width: 72px;
+    width: 120px;
     flex-shrink: 0;
     -unity-text-align: middle-right;
 }

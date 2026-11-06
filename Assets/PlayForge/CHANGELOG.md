@@ -7,6 +7,8 @@ tracks each fix below by its ID.
 ## [Unreleased]
 
 ### Added
+- `AttributeStartValues`, an editor API that works out what each attribute an entity built from an attribute set
+  starts at, at each level, as the runtime does, and which element each value comes from (ED-49).
 - `AbstractScaler.Parts` and `[ForgeShowWhen]`, which say what a scaler of your own shows in its inspector: the parts
   of every scaler it reads, its values per level, their level range and its behaviours, and when a field of its own
   applies (ED-51).
@@ -165,6 +167,12 @@ tracks each fix below by its ID.
   page, through one table of links in the editor.
 
 ### Changed
+- An attribute set element shows what its attribute starts at, at each level, worked out as the runtime works it
+  out, with a note when another element's value is used and a warning when a scaler reads an attribute the set
+  doesn't give. Base and Current are magnitude fields, as an effect's are, both shown, and Bounds, Constraints and
+  a value's Current and Base are Unity's fields. The Attribute Set inspector's Preview In works a set's values out
+  as part of a set that holds it, and All Attributes shows the same values. An element showed a formula, Current
+  and Base one at a time on a switch, and the table read Scaled (ED-49).
 - A tag field is Unity's field: its label in the label column, the tag's parents in secondary text and its leaf in
   strong text. It opens Unity's searchable dropdown of the tags its context offers, with None and New Tag…, and its
   right-click menu clears it, makes a new tag, makes its tag a child of another, or copies its path. It was a button
@@ -350,6 +358,11 @@ tracks each fix below by its ID.
   Asking whether its sequence was paused took 24 bytes a frame.
 
 ### Fixed
+- Changing how many values a scaler spreads over its levels, after a change to it was undone, could crash the
+  editor: its field wrote through a property it kept from before the Undo (ED-49).
+- A reference field inside a list's element, as the attribute a scaler reads in an attribute set element, had no
+  label. A magnitude field whose kind reads no values of its own, as one that reads an attribute, showed a range
+  from values it never reads (ED-49).
 - An effect's additional impact named no delivery on its row and didn't say what it commits, and its Retention Group
   drew as a bare bar with no label. Its row names its delivery, a periodic one says what it commits, and its Retention
   Group has its label (ED-50).

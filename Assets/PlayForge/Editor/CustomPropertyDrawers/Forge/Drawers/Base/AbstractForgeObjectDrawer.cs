@@ -88,6 +88,8 @@ namespace FarEmerald.PlayForge.Extended.Editor
             _ => asset.name,
         };
 
-        private static bool IsInList(SerializedProperty property) => property.propertyPath.Contains(".Array.data[");
+        // Whether the field is a list's row itself. A field inside a list's element, as a scaler's attribute inside an
+        // attribute set's element, keeps its label: it dropped it, as the tag field did (ED-49, ED-55)
+        private static bool IsInList(SerializedProperty property) => property.propertyPath.EndsWith("]");
     }
 }

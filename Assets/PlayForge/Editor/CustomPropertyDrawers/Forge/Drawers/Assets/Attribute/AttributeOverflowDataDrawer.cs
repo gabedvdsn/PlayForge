@@ -5,141 +5,69 @@ using UnityEngine.UIElements;
 
 namespace FarEmerald.PlayForge.Extended.Editor
 {
+    /// <summary>
+    /// An attribute's bounds (ED-49): the policy, then the floor and the ceiling it reads, each indented under it, as a
+    /// field that depends on another is. A bound's right-click menu sets it to no limit. It drew the floor and ceiling with
+    /// 10 px labels and buttons in an accent color, from styles set in C#, and showed them 50 ms after it drew.
+    /// </summary>
     [CustomPropertyDrawer(typeof(AttributeOverflowData))]
     public class AttributeOverflowDataDrawer : PropertyDrawer
     {
+        private const string Hidden = "pf-hidden";
+
         public override VisualElement CreatePropertyGUI(SerializedProperty property)
         {
-            var container = new VisualElement();
-            
+            var root = new VisualElement { name = "Bounds" };
+            ForgeTheme.Apply(root);
+
             var policyProp = property.FindPropertyRelative(nameof(AttributeOverflowData.Policy));
             var floorProp = property.FindPropertyRelative(nameof(AttributeOverflowData.Floor));
             var ceilProp = property.FindPropertyRelative(nameof(AttributeOverflowData.Ceil));
 
-            var floorBase = floorProp.FindPropertyRelative(nameof(AttributeValue.BaseValue));
-            var floorCurr = floorProp.FindPropertyRelative(nameof(AttributeValue.CurrentValue));
-            
-            var ceilBase = ceilProp.FindPropertyRelative(nameof(AttributeValue.BaseValue));
-            var ceilCurr = ceilProp.FindPropertyRelative(nameof(AttributeValue.CurrentValue));
-            
-            // Policy row
-            var policyRow = new VisualElement();
-            policyRow.style.flexDirection = FlexDirection.Row;
-            policyRow.style.alignItems = Align.Center;
-            policyRow.style.marginBottom = 2;
-            container.Add(policyRow);
-            
-            var policyField = new PropertyField(policyProp, "");
-            policyField.style.flexGrow = 1;
-            policyField.BindProperty(policyProp);
-            policyRow.Add(policyField);
-            
-            // Floor row (shown for FloorToBase, FloorToCeil)
-            var floorRow = new VisualElement { name = "FloorRow" };
-            floorRow.style.flexDirection = FlexDirection.Row;
-            floorRow.style.alignItems = Align.Center;
-            floorRow.style.marginTop = 2;
-            container.Add(floorRow);
-            
-            var floorLabel = new Label("Floor");
-            floorLabel.style.width = 36;
-            floorLabel.style.fontSize = 10;
-            floorLabel.style.color = ForgeDrawerStyles.Colors.HintText;
-            floorRow.Add(floorLabel);
-            
-            var floorField = new PropertyField(floorProp, "");
-            floorField.style.flexGrow = 1;
-            floorField.BindProperty(floorProp);
-            floorRow.Add(floorField);
+            var policy = new EnumField(preferredLabel ?? "Bounds")
+            {
+                name = "Policy",
+                tooltip = "What keeps Current and Base within bounds: 0, a floor, Base or a ceiling",
+            };
+            policy.AddToClassList(EnumField.alignedFieldUssClassName);
+            policy.BindProperty(policyProp);
+            root.Add(policy);
 
-            var floorButton = new Button()
-            {
-                text = "−∞",
-                tooltip = "Set both floor values to negative infinity (unlimited lower bound)",
-                style =
-                {
-                    minWidth = 32,
-                    height = 20,
-                    marginLeft = 8,
-                    fontSize = 11,
-                    unityTextAlign = TextAnchor.MiddleCenter,
-                    color = ForgeDrawerStyles.Colors.AccentBlue
-                },
-                focusable = false
-            };
-            floorButton.clicked += () =>
-            {
-                UpdateUnlimitedBounds(floorBase, floorCurr, Mathf.NegativeInfinity);
-                property.serializedObject.ApplyModifiedProperties();
-            };
-            floorRow.Add(floorButton);
-            
-            // Ceil row (shown for ZeroToCeil, FloorToCeil)
-            var ceilRow = new VisualElement { name = "CeilRow" };
-            ceilRow.style.flexDirection = FlexDirection.Row;
-            ceilRow.style.alignItems = Align.Center;
-            ceilRow.style.marginTop = 2;
-            container.Add(ceilRow);
-            
-            var ceilLabel = new Label("Ceil");
-            ceilLabel.style.width = 36;
-            ceilLabel.style.fontSize = 10;
-            ceilLabel.style.color = ForgeDrawerStyles.Colors.HintText;
-            ceilRow.Add(ceilLabel);
-            
-            var ceilField = new PropertyField(ceilProp, "");
-            ceilField.style.flexGrow = 1;
-            ceilField.BindProperty(ceilProp);
-            ceilRow.Add(ceilField);
+            var floor = AttributeValueDrawer.Build(floorProp, "Floor", "Floor");
+            floor.tooltip = "The lowest Current and Base can be";
+            floor.AddToClassList("pf-dependent");
+            floor.AddManipulator(new ContextualMenuManipulator(menu =>
+                menu.menu.AppendAction("No Floor", _ => SetBoth(floorProp, Mathf.NegativeInfinity))));
+            root.Add(floor);
 
-            var ceilButton = new Button()
+            var ceil = AttributeValueDrawer.Build(ceilProp, "Ceiling", "Ceil");
+            ceil.tooltip = "The highest Current and Base can be";
+            ceil.AddToClassList("pf-dependent");
+            ceil.AddManipulator(new ContextualMenuManipulator(menu =>
+                menu.menu.AppendAction("No Ceiling", _ => SetBoth(ceilProp, Mathf.Infinity))));
+            root.Add(ceil);
+
+            // A floor shows for the policies that read one, and a ceiling likewise
+            void Show()
             {
-                text = "+∞",
-                tooltip = "Set both ceil values to positive infinity (unlimited upper bound)",
-                style =
-                {
-                    minWidth = 32,
-                    height = 20,
-                    marginLeft = 8,
-                    fontSize = 11,
-                    unityTextAlign = TextAnchor.MiddleCenter,
-                    color = ForgeDrawerStyles.Colors.AccentBlue
-                },
-                focusable = false
-            };
-            ceilButton.clicked += () =>
-            {
-                UpdateUnlimitedBounds(ceilBase, ceilCurr, Mathf.Infinity);
-                property.serializedObject.ApplyModifiedProperties();
-            };
-            ceilRow.Add(ceilButton);
-            
-            void UpdateVisibility()
-            {
-                var policy = (EAttributeOverflowPolicy)policyProp.enumValueIndex;
-                
-                // Floor shown for: FloorToBase, FloorToCeil
-                bool showFloor = policy == EAttributeOverflowPolicy.FloorToBase || 
-                                 policy == EAttributeOverflowPolicy.FloorToCeil;
-                
-                // Ceil shown for: ZeroToCeil, FloorToCeil
-                bool showCeil = policy == EAttributeOverflowPolicy.ZeroToCeil || 
-                                policy == EAttributeOverflowPolicy.FloorToCeil;
-                
-                floorRow.style.display = showFloor ? DisplayStyle.Flex : DisplayStyle.None;
-                ceilRow.style.display = showCeil ? DisplayStyle.Flex : DisplayStyle.None;
+                if (policyProp.serializedObject.targetObject == null) return;
+                var shown = (EAttributeOverflowPolicy)policyProp.enumValueIndex;
+                bool mixed = policyProp.hasMultipleDifferentValues;
+                floor.EnableInClassList(Hidden, mixed || shown is not (EAttributeOverflowPolicy.FloorToBase or EAttributeOverflowPolicy.FloorToCeil));
+                ceil.EnableInClassList(Hidden, mixed || shown is not (EAttributeOverflowPolicy.ZeroToCeil or EAttributeOverflowPolicy.FloorToCeil));
             }
-            
-            container.schedule.Execute(UpdateVisibility).StartingIn(50);
-            policyField.RegisterValueChangeCallback(_ => UpdateVisibility());
-            
-            void UpdateUnlimitedBounds(SerializedProperty baseProp, SerializedProperty currProp, float value)
-            {
-                baseProp.floatValue = value;
-                currProp.floatValue = value;
-            }
-            
-            return container;
+            policy.RegisterValueChangedCallback(_ => Show());
+            root.TrackPropertyValue(policyProp, _ => Show());
+            Show();
+            return root;
+        }
+
+        // Both of a bound's values, as one edit
+        private static void SetBoth(SerializedProperty bound, float value)
+        {
+            bound.FindPropertyRelative(nameof(AttributeValue.CurrentValue)).floatValue = value;
+            bound.FindPropertyRelative(nameof(AttributeValue.BaseValue)).floatValue = value;
+            bound.serializedObject.ApplyModifiedProperties();
         }
     }
 }

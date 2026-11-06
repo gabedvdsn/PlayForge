@@ -288,8 +288,90 @@ namespace FarEmerald.PlayForge.Extended.Editor
                 attributesSection.Content.Add(CreateNote("Select one set to edit its attributes."));
                 return;
             }
+            // The set its elements and All Attributes work their values out in, while another set holds it (ED-49)
+            previewIn = new VisualElement { name = "PreviewInRow" };
+            attributesSection.Content.Add(previewIn);
+            previewIn.RegisterCallback<AttachToPanelEvent>(_ =>
+            {
+                ShowPreviewIn();
+                EditorApplication.projectChanged += ShowPreviewIn;
+                ObjectChangeEvents.changesPublished += SetsChanged;
+                AttributeStartValues.PreviewChanged += PreviewChanged;
+            });
+            previewIn.RegisterCallback<DetachFromPanelEvent>(_ =>
+            {
+                EditorApplication.projectChanged -= ShowPreviewIn;
+                ObjectChangeEvents.changesPublished -= SetsChanged;
+                AttributeStartValues.PreviewChanged -= PreviewChanged;
+            });
+            ShowPreviewIn();
             // The list's header counts its elements; the section's header showed a count of its own as well (ED-37)
             attributesSection.Content.Add(CreatePropertyField(serializedObject.FindProperty(nameof(AttributeSet.Attributes)), "Attributes", ""));
+        }
+
+        // ═══════════════════════════════════════════════════════════════════════════
+        // Preview In: the set an entity is built from, for what the set's attributes start at (ED-49)
+        // ═══════════════════════════════════════════════════════════════════════════
+
+        private VisualElement previewIn;
+        // The sets the popup offers, so it redraws only when they change
+        private string shownHolders;
+
+        /// <summary>
+        /// Preview In, while another set holds this one: This Set, or a set that holds it, directly or through another. An
+        /// entity built from that set starts with these attributes as part of it, so the elements and All Attributes show
+        /// their values there. A set nothing holds has no choice to make, and shows none.
+        /// </summary>
+        private void ShowPreviewIn()
+        {
+            if (previewIn == null || attributeSet == null) return;
+            var holders = AttributeStartValues.HoldersOf(attributeSet);
+            var key = string.Join(",", holders.Select(holder => holder.GetInstanceID()));
+            var current = AttributeStartValues.PreviewOf(attributeSet);
+            if (key == shownHolders && previewIn.childCount == (holders.Count > 0 ? 1 : 0))
+            {
+                previewIn.Q<PopupField<AttributeSet>>()?.SetValueWithoutNotify(current);
+                return;
+            }
+            shownHolders = key;
+            previewIn.Clear();
+            // A holder the project no longer has can't be previewed in
+            if (current != attributeSet && !holders.Contains(current)) AttributeStartValues.PreviewIn(attributeSet, null);
+            if (holders.Count == 0) return;
+
+            var choices = new List<AttributeSet> { attributeSet };
+            choices.AddRange(holders);
+            string NameOf(AttributeSet set) => set == attributeSet ? "This Set" : AttributeStartValues.NameOf(set);
+            var popup = new PopupField<AttributeSet>("Preview In", choices, AttributeStartValues.PreviewOf(attributeSet), NameOf, NameOf)
+            {
+                name = "PreviewIn",
+                tooltip = "The set an entity is built from, for what each attribute starts at: this set alone, or a set that holds it",
+            };
+            popup.AddToClassList(BaseField<AttributeSet>.alignedFieldUssClassName);
+            popup.RegisterValueChangedCallback(change => AttributeStartValues.PreviewIn(attributeSet, change.newValue));
+            previewIn.Add(popup);
+        }
+
+        // A set made to hold this one, or to stop holding it, changes what the popup offers
+        private void SetsChanged(ref ObjectChangeEventStream stream)
+        {
+            for (int i = 0; i < stream.length; i++)
+            {
+                if (stream.GetEventType(i) != ObjectChangeKind.ChangeAssetObjectProperties) continue;
+                stream.GetChangeAssetObjectPropertiesEvent(i, out var change);
+                if (EditorUtility.InstanceIDToObject(change.instanceId) is AttributeSet changed && changed != attributeSet)
+                {
+                    ShowPreviewIn();
+                    return;
+                }
+            }
+        }
+
+        private void PreviewChanged(AttributeSet set)
+        {
+            if (set != attributeSet) return;
+            previewIn?.Q<PopupField<AttributeSet>>()?.SetValueWithoutNotify(AttributeStartValues.PreviewOf(attributeSet));
+            UpdateSummaries();
         }
 
         private void BuildSubsetsSection(VisualElement parent)
@@ -465,7 +547,12 @@ namespace FarEmerald.PlayForge.Extended.Editor
             if (settingsSection != null)
                 settingsSection.Summary.text = ObjectNames.NicifyVariableName(attributeSet.CollisionResolutionPolicy.ToString());
             if (allAttributesSection != null && attributeTable != null)
-                allAttributesSection.Summary.text = CountOf(attributeTable.Count, "attribute", "attributes");
+            {
+                // And the set it's previewed in, whose values it shows (ED-49)
+                var preview = AttributeStartValues.PreviewOf(attributeSet);
+                var count = CountOf(attributeTable.Count, "attribute", "attributes");
+                allAttributesSection.Summary.text = preview != attributeSet ? $"{count}, in {AttributeStartValues.NameOf(preview)}" : count;
+            }
             if (workersSection != null) workersSection.Summary.text = CountOf(WorkerCount(attributeSet.WorkerGroup), "worker", "workers");
             if (localDataSection != null) localDataSection.Summary.text = CountOf(attributeSet.LocalData?.Count ?? 0, "entry", "entries");
             if (usedBySection != null) usedBySection.Summary.text = usedBy == null ? "" : CountOf(usedBy.Count, "asset", "assets");

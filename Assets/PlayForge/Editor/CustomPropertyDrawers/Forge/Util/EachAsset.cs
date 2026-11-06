@@ -9,18 +9,21 @@ namespace FarEmerald.PlayForge.Extended.Editor
     /// A property across a multiple selection, one selected asset at a time, each through a SerializedObject of its own.
     /// A property of a multiple selection reads the first asset, and a write through it gives every asset the same
     /// value, so what is worked out from an asset's own values, such as a scaler's first value or its curve, is read and
-    /// written per asset (ED-12). With one asset selected, each call uses the property itself.
+    /// written per asset (ED-12). With one asset selected, each call uses the property found again by its path, since one
+    /// a field kept since it was built can point into a managed reference an Undo has since put back (ED-49).
     /// </summary>
     internal static class EachAsset
     {
-        /// <summary>Each selected asset's own copy of the property; the property itself when one asset is selected.</summary>
+        /// <summary>Each selected asset's own copy of the property; the property found again when one asset is selected.</summary>
         internal static IEnumerable<SerializedProperty> Of(SerializedProperty property)
         {
             if (property == null) yield break;
             var serialized = property.serializedObject;
             if (!serialized.isEditingMultipleObjects)
             {
-                yield return property;
+                // Found again by its path, as Write finds it (ED-49)
+                var fresh = serialized.FindProperty(property.propertyPath);
+                if (fresh != null) yield return fresh;
                 yield break;
             }
             foreach (var target in serialized.targetObjects)
@@ -45,7 +48,11 @@ namespace FarEmerald.PlayForge.Extended.Editor
             var serialized = property.serializedObject;
             if (!serialized.isEditingMultipleObjects)
             {
-                write(property);
+                // Found again by its path: a property a field kept since it was built can point into a managed reference
+                // an Undo has since put back, and resizing an array through it crashed the editor (ED-49)
+                var fresh = serialized.FindProperty(property.propertyPath);
+                if (fresh == null) return;
+                write(fresh);
                 serialized.ApplyModifiedProperties();
                 return;
             }

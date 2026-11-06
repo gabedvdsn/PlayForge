@@ -1,26 +1,31 @@
 ﻿using System.Collections.Generic;
 using System.Globalization;
+using System.Linq;
 using UnityEditor;
 using UnityEditor.UIElements;
 using UnityEngine;
 using UnityEngine.UIElements;
-using static FarEmerald.PlayForge.Extended.Editor.ForgeDrawerStyles;
 
 namespace FarEmerald.PlayForge.Extended.Editor
 {
     /// <summary>
     /// An attribute set element, in Docs/EDITOR_STYLE.md's terms: a foldout row with the attribute, and while it's folded
-    /// one line of how it starts; open, its retention group and collision, then Current and Base, one at a time, each with
-    /// its Magnitude, Real Magnitude and Scaling, then its bounds and constraints. It takes its look from the style sheet:
-    /// it drew a tinted, rounded box with a border in its collision policy's color, tab buttons and 9 px text (ED-39).
-    /// It writes nothing while it draws. It clamped a magnitude outside the bounds into the asset 50 ms after it drew, and
-    /// on every change to the set; a help box says how the runtime clamps it, and only a typed magnitude is kept within the
-    /// bounds, as part of the same edit (ED-39).
+    /// one line of what it starts at; open, what it starts at at each level, then Base and Current, each a magnitude field
+    /// as an effect's are, then its bounds, its constraints, its retention group and its collision (ED-49).
+    /// <para>
+    /// What it starts at is worked out by the runtime (<see cref="AttributeStartValues"/>): a stand-in entity at each level
+    /// of the set it's previewed in, with the set's sub-sets. A note says when another element's value is the one used, and
+    /// a message when a scaler reads an attribute the set doesn't give. The element showed its magnitudes as a formula, as
+    /// "10 + Level", and Current and Base one at a time on a switch.
+    /// </para>
+    /// It writes nothing while it draws, and only a typed magnitude is kept within the bounds, as part of the same edit
+    /// (ED-39).
     /// </summary>
     [CustomPropertyDrawer(typeof(AttributeSetElement))]
     public class AttributeSetElementDrawer : PropertyDrawer
     {
         public const string CollapsedClass = "pf-element--collapsed";
+        private const string Hidden = "pf-hidden";
 
         // Kept per asset for the editor session (ED-18)
         private static bool IsCollapsed(SerializedProperty property) =>
@@ -43,13 +48,10 @@ namespace FarEmerald.PlayForge.Extended.Editor
             var collisionProp   = property.FindPropertyRelative(nameof(AttributeSetElement.CollisionPolicy));
             var constraintsProp = property.FindPropertyRelative(nameof(AttributeSetElement.Constraints));
             var retGroupProp    = property.FindPropertyRelative(nameof(AttributeSetElement.RetentionGroup));
-
             var curMagProp      = currentProp.FindPropertyRelative(nameof(AttributeMagnitudeSpec.Magnitude));
-            var curScalingProp  = currentProp.FindPropertyRelative(nameof(AttributeMagnitudeSpec.Scaling));
-            var curRealMagProp  = currentProp.FindPropertyRelative(nameof(AttributeMagnitudeSpec.RealMagnitude));
             var baseMagProp     = baseProp.FindPropertyRelative(nameof(AttributeMagnitudeSpec.Magnitude));
-            var baseScalingProp = baseProp.FindPropertyRelative(nameof(AttributeMagnitudeSpec.Scaling));
-            var baseRealMagProp = baseProp.FindPropertyRelative(nameof(AttributeMagnitudeSpec.RealMagnitude));
+            var set = property.serializedObject.targetObject as AttributeSet;
+            var path = property.propertyPath;
 
             // ─── The foldout row: the arrow and the attribute ───────────────────
             var header = new VisualElement { name = "HeaderRow" };
@@ -71,87 +73,55 @@ namespace FarEmerald.PlayForge.Extended.Editor
             content.AddToClassList("pf-element__content");
             root.Add(content);
 
-            content.Add(new PropertyField(retGroupProp, "Retention Group"));
-            content.Add(new PropertyField(collisionProp, "Collision"));
+            // ─── What it starts at, at each level ───────────────────────────────
+            var startsRow = new VisualElement { name = "StartsAtRow" };
+            startsRow.AddToClassList("pf-element__starts");
+            var starts = ImpactFields.ValueRow("Starts At", "StartsAt", "");
+            starts.AddToClassList("pf-value-field--strong");
+            starts.AddToClassList("pf-element__starts-value");
+            startsRow.Add(starts);
+            var levels = new Label { name = "StartsAtLevels" };
+            levels.AddToClassList("pf-element__starts-levels");
+            startsRow.Add(levels);
+            content.Add(startsRow);
+            var note = new Label { name = "StartsAtNote" };
+            note.AddToClassList("pf-note");
+            note.AddToClassList(Hidden);
+            content.Add(note);
+            var warning = new HelpBox("", HelpBoxMessageType.Warning) { name = "StartsAtWarning" };
+            warning.AddToClassList(Hidden);
+            content.Add(warning);
+
+            // ─── Base, then Current, which can take Base's settings ────────────
+            content.Add(MagnitudeField.Build(baseProp, "Base", null, false, "BaseMagnitude",
+                menu => CopyItem(menu, "Copy Current's Settings", currentProp, baseProp, linkProp, true)));
             var linkToggle = new Toggle("Link Current to Base")
             {
                 name = "LinkCurrentToBase",
-                tooltip = "Current takes Base's Magnitude, Real Magnitude and Scaling, and its own are disabled",
+                tooltip = "Current takes Base's magnitude and scaler",
             };
             linkToggle.AddToClassList(Toggle.alignedFieldUssClassName);
             linkToggle.BindProperty(linkProp);
             content.Add(linkToggle);
-
-            // ─── Current and Base, one at a time, on a two-button switch ─────────
-            var sides = new VisualElement { name = "Sides" };
-            sides.AddToClassList("pf-segmented");
-            var currentTab = new Button { name = "CurrentTab", text = "Current", focusable = false };
-            var baseTab = new Button { name = "BaseTab", text = "Base", focusable = false };
-            sides.Add(currentTab);
-            sides.Add(baseTab);
-            content.Add(sides);
-
-            var linkedNote = CreateNote("Current takes Base's settings.");
-            linkedNote.name = "LinkedNote";
-            content.Add(linkedNote);
-            var currentSide = Side("Current", curMagProp, curRealMagProp, curScalingProp);
-            var baseSide = Side("Base", baseMagProp, baseRealMagProp, baseScalingProp);
-            content.Add(currentSide);
-            content.Add(baseSide);
-
-            // Copy the other side's Magnitude, or all three of its settings, into the side shown
-            var copyRow = new VisualElement { name = "CopyRow" };
-            copyRow.AddToClassList("pf-button-row");
-            var copyMagnitude = new Button { name = "CopyMagnitude", focusable = false };
-            var copyAll = new Button { name = "CopyAll", focusable = false };
-            copyRow.Add(copyMagnitude);
-            copyRow.Add(copyAll);
-            content.Add(copyRow);
+            var currentField = MagnitudeField.Build(currentProp, "Current", null, false, "CurrentMagnitude",
+                menu => CopyItem(menu, "Copy Base's Settings", baseProp, currentProp, linkProp, false));
+            currentField.name = "CurrentField";
+            content.Add(currentField);
 
             var outOfBounds = new HelpBox("", HelpBoxMessageType.Warning) { name = "OutOfBounds" };
             content.Add(outOfBounds);
 
             content.Add(new PropertyField(overflowProp, "Bounds"));
             content.Add(new PropertyField(constraintsProp, "Constraints"));
+            content.Add(new PropertyField(retGroupProp, "Retention Group"));
+            content.Add(new PropertyField(collisionProp, "Collision"));
 
             // ─── Behaviour ─────────────────────────────────────────────────────
-            bool currentShown = true;
-            void ShowSide(bool current)
-            {
-                currentShown = current;
-                currentSide.style.display = current ? DisplayStyle.Flex : DisplayStyle.None;
-                baseSide.style.display = current ? DisplayStyle.None : DisplayStyle.Flex;
-                currentTab.EnableInClassList("pf-segmented__selected", current);
-                baseTab.EnableInClassList("pf-segmented__selected", !current);
-                var other = current ? "Base" : "Current";
-                copyMagnitude.text = $"Copy {other}'s Magnitude";
-                copyMagnitude.tooltip = $"Copy {other}'s Magnitude into {(current ? "Current" : "Base")}";
-                copyAll.text = $"Copy {other}'s Settings";
-                copyAll.tooltip = $"Copy {other}'s Magnitude, Real Magnitude and Scaling into {(current ? "Current" : "Base")}";
-                ShowLinked();
-            }
-
-            // While Current takes Base's settings, Current's own are disabled, and copying between them does nothing
+            // While Current takes Base's settings, its own don't count, so they don't show
             void ShowLinked()
             {
-                var linked = linkProp.boolValue;
-                currentSide.SetEnabled(!linked);
-                linkedNote.style.display = linked && currentShown ? DisplayStyle.Flex : DisplayStyle.None;
-                copyMagnitude.SetEnabled(!linked);
-                copyAll.SetEnabled(!linked);
-            }
-
-            void Copy(bool all)
-            {
-                var (from, to) = currentShown ? (baseProp, currentProp) : (currentProp, baseProp);
-                Prop(to, nameof(AttributeMagnitudeSpec.Magnitude)).floatValue = Prop(from, nameof(AttributeMagnitudeSpec.Magnitude)).floatValue;
-                if (all)
-                {
-                    Prop(to, nameof(AttributeMagnitudeSpec.RealMagnitude)).enumValueIndex = Prop(from, nameof(AttributeMagnitudeSpec.RealMagnitude)).enumValueIndex;
-                    // A managed reference: both sides share the one scaler after the copy
-                    Prop(to, nameof(AttributeMagnitudeSpec.Scaling)).managedReferenceValue = Prop(from, nameof(AttributeMagnitudeSpec.Scaling)).managedReferenceValue;
-                }
-                property.serializedObject.ApplyModifiedProperties();
+                if (!Alive(property)) return;
+                currentField.EnableInClassList(Hidden, linkProp.boolValue && !linkProp.hasMultipleDifferentValues);
             }
 
             // A typed magnitude stays within the bounds, as part of the same edit; a change to Base keeps Current within
@@ -174,17 +144,45 @@ namespace FarEmerald.PlayForge.Extended.Editor
                 }
             }
 
-            // How the element starts, and whether the runtime clamps a magnitude outside the bounds
+            // What it starts at, its line, and whether the runtime clamps a magnitude outside the bounds
             void Show()
             {
+                if (!Alive(property) || set == null) return;
+                var element = ElementOf(set, path);
+                var result = AttributeStartValues.Shown(set);
+                var start = result.Of(element?.Attribute);
                 var overflow = ReadOverflowFromProperty(overflowProp);
                 var clamped = Prop(constraintsProp, nameof(AttributeConstraints.AutoClamp))?.boolValue ?? true;
-                var currentText = linkProp.boolValue ? "Current takes Base's" : $"Current {SideText(curMagProp, curScalingProp, curRealMagProp)}";
-                summary.text = $"{currentText} · Base {SideText(baseMagProp, baseScalingProp, baseRealMagProp)} · {ForgeAttributeTable.RangeOf(overflow, clamped).text}";
+                var range = ForgeAttributeTable.RangeOf(overflow, clamped).text;
+
+                if (result.Problem != null || start == null)
+                {
+                    starts.SetValueWithoutNotify("—");
+                    starts.tooltip = element?.Attribute == null ? "An element with no attribute gives nothing" : "";
+                    levels.text = "";
+                    summary.text = element?.Attribute == null ? "No attribute" : $"Starts at — · {range}";
+                }
+                else
+                {
+                    var text = AttributeStartValues.Text(start);
+                    starts.SetValueWithoutNotify(text);
+                    starts.tooltip = AttributeStartValues.Detail(start);
+                    levels.text = start.Varies ? AttributeStartValues.LevelsText(result.FirstLevel, result.LastLevel) : "";
+                    levels.tooltip = result.LastLevel < result.Levels
+                        ? $"The first {result.LastLevel - result.FirstLevel + 1} of levels {result.FirstLevel}–{result.Levels}" : "";
+                    summary.text = $"Starts at {text} · {range}";
+                }
+
+                var said = NoteOf(element, start, result);
+                note.text = said ?? "";
+                note.EnableInClassList(Hidden, said == null);
+                var problem = WarningOf(element, result);
+                warning.text = problem ?? "";
+                warning.EnableInClassList(Hidden, problem == null);
 
                 var messages = BoundsMessages(overflow, clamped, baseMagProp.floatValue, linkProp.boolValue, curMagProp.floatValue);
                 outOfBounds.text = string.Join(" ", messages);
-                outOfBounds.style.display = messages.Count > 0 ? DisplayStyle.Flex : DisplayStyle.None;
+                outOfBounds.EnableInClassList(Hidden, messages.Count == 0);
             }
 
             void SetFolded(bool folded)
@@ -200,46 +198,145 @@ namespace FarEmerald.PlayForge.Extended.Editor
                 SetCollapsed(property, folded);
                 SetFolded(folded);
             };
-            currentTab.clicked += () => ShowSide(true);
-            baseTab.clicked += () => ShowSide(false);
-            copyMagnitude.clicked += () => Copy(false);
-            copyAll.clicked += () => Copy(true);
             linkToggle.RegisterValueChangedCallback(_ => ShowLinked());
-            currentSide.Q<FloatField>("CurrentMagnitude").RegisterValueChangedCallback(change =>
-                KeepTypedInBounds(true, change.newValue, (FloatField)change.target));
-            baseSide.Q<FloatField>("BaseMagnitude").RegisterValueChangedCallback(change =>
-                KeepTypedInBounds(false, change.newValue, (FloatField)change.target));
+            // The magnitude fields redraw their number as their kind changes, so their typing is heard as it bubbles up
+            content.RegisterCallback<ChangeEvent<float>>(change =>
+            {
+                if (change.target is not FloatField field) return;
+                if (field.name == "CurrentMagnitude") KeepTypedInBounds(true, change.newValue, field);
+                else if (field.name == "BaseMagnitude") KeepTypedInBounds(false, change.newValue, field);
+            });
 
-            // The line and the help box follow the set, an Undo among its changes; they only read it
+            // What it starts at follows the set, an Undo among its changes; the set it's previewed in, as that changes; and
+            // the other sets and scalers it reads, as they change elsewhere. It only reads them
             root.TrackSerializedObjectValue(property.serializedObject, _ => { Show(); ShowLinked(); });
+            void PreviewChanged(AttributeSet changed)
+            {
+                if (changed == set) Show();
+            }
+            void OthersChanged(ref ObjectChangeEventStream stream)
+            {
+                if (ReadsAChange(ref stream, set)) Show();
+            }
+            root.RegisterCallback<AttachToPanelEvent>(_ =>
+            {
+                AttributeStartValues.PreviewChanged += PreviewChanged;
+                ObjectChangeEvents.changesPublished += OthersChanged;
+            });
+            root.RegisterCallback<DetachFromPanelEvent>(_ =>
+            {
+                AttributeStartValues.PreviewChanged -= PreviewChanged;
+                ObjectChangeEvents.changesPublished -= OthersChanged;
+            });
 
             SetFolded(IsCollapsed(property));
-            ShowSide(true);
+            ShowLinked();
             Show();
             return root;
         }
 
+        // The element at a path, read from the set as it is now
+        private static AttributeSetElement ElementOf(AttributeSet set, string path)
+        {
+            const string prefix = nameof(AttributeSet.Attributes) + ".Array.data[";
+            if (set == null || set.Attributes == null || !path.StartsWith(prefix)) return null;
+            var end = path.IndexOf(']', prefix.Length);
+            return end > prefix.Length && int.TryParse(path.Substring(prefix.Length, end - prefix.Length), out int index) &&
+                   index >= 0 && index < set.Attributes.Count
+                ? set.Attributes[index]
+                : null;
+        }
+
+        // Whether a change elsewhere is to something the element's values read: another attribute set, a Scaler asset,
+        // or an attribute
+        private static bool ReadsAChange(ref ObjectChangeEventStream stream, AttributeSet set)
+        {
+            for (int i = 0; i < stream.length; i++)
+            {
+                if (stream.GetEventType(i) != ObjectChangeKind.ChangeAssetObjectProperties) continue;
+                stream.GetChangeAssetObjectPropertiesEvent(i, out var change);
+                var changed = EditorUtility.InstanceIDToObject(change.instanceId);
+                if (changed != set && changed is AttributeSet or ScalerAsset or Attribute) return true;
+            }
+            return false;
+        }
+
+        /// <summary>
+        /// What the note under Starts At says of an element: that another element gives its attribute too, and whose value
+        /// is used, or that the values add up; or null.
+        /// </summary>
+        internal static string NoteOf(AttributeSetElement element, AttributeStartValues.Start start, AttributeStartValues.Result result)
+        {
+            if (element?.Attribute == null || start == null || result == null || result.Problem != null) return null;
+            var others = start.Elements.Where(other => other != element).ToList();
+            if (others.Count == 0) return null;
+            var attribute = AttributeStartValues.NameOf(element.Attribute);
+            var mine = result.SetOf(element);
+            var otherSet = result.SetOf(start.From.Contains(element) ? others[0] : start.From.FirstOrDefault() ?? others[0]);
+            var who = otherSet == mine ? $"This set gives {attribute} twice" : $"{AttributeStartValues.NameOf(otherSet)} gives {attribute} too";
+            if (!start.From.Contains(element)) return otherSet == mine ? $"{who}, and the other value is the one used." : $"{who}, and its value is the one used.";
+            if (start.From.Count > 1)
+                return start.From.All(part => part.CollisionPolicy == EAttributeElementCollisionPolicy.Combine)
+                    ? $"{who}, and the values add up."
+                    : $"{who}, and the values are averaged.";
+            return null;
+        }
+
+        /// <summary>
+        /// What the message under Starts At says of an element: what the runtime threw working out the set's values, or an
+        /// attribute its scalers read that the set doesn't give, which reads 0; or null.
+        /// </summary>
+        internal static string WarningOf(AttributeSetElement element, AttributeStartValues.Result result)
+        {
+            if (result == null) return null;
+            if (result.Problem != null) return $"The values can't be worked out: {result.Problem}";
+            var missing = AttributeStartValues.MissingReads(element, result);
+            if (missing.Count == 0) return null;
+            var names = string.Join(" and ", missing.Select(AttributeStartValues.NameOf));
+            var reads = missing.Count == 1 ? "so it reads 0" : "so each reads 0";
+            return $"Reads {names}, which {AttributeStartValues.NameOf(result.Root)} doesn't give, {reads}.";
+        }
+
+        // The menu item that copies one side's magnitude and scaler into the other, a shared scaler after the copy
+        private static void CopyItem(GenericDropdownMenu menu, string label, SerializedProperty from, SerializedProperty to,
+            SerializedProperty link, bool intoBase)
+        {
+            // While Current takes Base's settings, a copy into Current changes nothing it reads
+            if (!intoBase && link.boolValue)
+            {
+                menu.AddDisabledItem(label, false);
+                return;
+            }
+            menu.AddItem(label, false, () =>
+            {
+                Prop(to, nameof(AttributeMagnitudeSpec.Magnitude)).floatValue = Prop(from, nameof(AttributeMagnitudeSpec.Magnitude)).floatValue;
+                Prop(to, nameof(AttributeMagnitudeSpec.RealMagnitude)).enumValueIndex = Prop(from, nameof(AttributeMagnitudeSpec.RealMagnitude)).enumValueIndex;
+                Prop(to, nameof(AttributeMagnitudeSpec.Scaling)).managedReferenceValue = Prop(from, nameof(AttributeMagnitudeSpec.Scaling)).managedReferenceValue;
+                to.serializedObject.ApplyModifiedProperties();
+            });
+        }
+
         private static SerializedProperty Prop(SerializedProperty parent, string name) => parent.FindPropertyRelative(name);
+
+        // Whether a property still reads its asset: a drawer outlives an element removed from its list
+        private static bool Alive(SerializedProperty property)
+        {
+            try
+            {
+                return property.serializedObject.targetObject != null && property.serializedObject.FindProperty(property.propertyPath) != null;
+            }
+            catch (System.Exception)
+            {
+                return false;
+            }
+        }
 
         // Whether the field has the focus, as it does while a value is typed into it
         private static bool IsTypedInto(VisualElement field) =>
             field.panel?.focusController?.focusedElement is VisualElement focused && (focused == field || field.Contains(focused));
 
-        // One side's Magnitude, Real Magnitude and Scaling
-        private static VisualElement Side(string side, SerializedProperty magnitude, SerializedProperty real, SerializedProperty scaling)
-        {
-            var box = new VisualElement { name = $"{side}Side" };
-            var magnitudeField = new FloatField("Magnitude") { name = $"{side}Magnitude", tooltip = $"The value {side} starts at" };
-            magnitudeField.AddToClassList(FloatField.alignedFieldUssClassName);
-            magnitudeField.BindProperty(magnitude);
-            box.Add(magnitudeField);
-            box.Add(new PropertyField(real, "Real Magnitude"));
-            box.Add(new PropertyField(scaling, "Scaling"));
-            return box;
-        }
-
         /// <summary>Reconstructs an <see cref="AttributeOverflowData"/> from its serialized form, to use its clamp helpers.</summary>
-        private static AttributeOverflowData ReadOverflowFromProperty(SerializedProperty overflowProp)
+        internal static AttributeOverflowData ReadOverflowFromProperty(SerializedProperty overflowProp)
         {
             var policyProp = overflowProp.FindPropertyRelative(nameof(AttributeOverflowData.Policy));
             var floorProp  = overflowProp.FindPropertyRelative(nameof(AttributeOverflowData.Floor));
@@ -255,30 +352,6 @@ namespace FarEmerald.PlayForge.Extended.Editor
                     ceilProp.FindPropertyRelative(nameof(AttributeValue.CurrentValue)).floatValue,
                     ceilProp.FindPropertyRelative(nameof(AttributeValue.BaseValue)).floatValue),
             };
-        }
-
-        // A side as the line shows it: its Magnitude, or how it combines with its scaler, as in "10 + Level"
-        private static string SideText(SerializedProperty magProp, SerializedProperty scalingProp, SerializedProperty realMagProp)
-        {
-            var magnitude = Number(magProp.floatValue);
-            var scaler = scalingProp.managedReferenceValue is AbstractCachedScaler s ? ScalerName(s) : null;
-            var real = (EMagnitudeOperation)realMagProp.enumValueIndex;
-            if (string.IsNullOrEmpty(scaler) || real == EMagnitudeOperation.UseMagnitude) return magnitude;
-            return real switch
-            {
-                EMagnitudeOperation.AddScaler => $"{magnitude} + {scaler}",
-                EMagnitudeOperation.MultiplyWithScaler => $"{magnitude} × {scaler}",
-                EMagnitudeOperation.UseScaler => scaler,
-                _ => magnitude,
-            };
-        }
-
-        private static string ScalerName(AbstractCachedScaler scaler)
-        {
-            var name = scaler.GetType().Name;
-            if (name.StartsWith("Cached")) name = name.Substring("Cached".Length);
-            if (name.EndsWith("Scaler")) name = name.Substring(0, name.Length - "Scaler".Length);
-            return name.Length > 0 ? ObjectNames.NicifyVariableName(name) : "Scaler";
         }
 
         private static string Number(float value) => value.ToString("0.##", CultureInfo.CurrentCulture);

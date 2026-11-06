@@ -121,6 +121,9 @@ The only other colors:
   and an empty one reads "None".
 - **Impact entries** fold, with their delivery named on the right of the row (Q19). Open, an entry says when it
   commits and how often.
+- **Attribute set elements** fold, and show what their attribute starts at, at each level, as the runtime works it
+  out, as "100/120/140/160" with the levels on the right. Their Base and Current are magnitude fields, as an
+  effect's are, and a bound's floor and ceiling indent under the bounds.
 - **Messages** are Unity help boxes in the flow, under the field they are about. A problem also counts in the asset
   header, shows as a glyph in The Forge's list, and counts in The Forge's toolbar and status bar (Q8).
 - **Destructive actions** say what they do, as in "Move to Trash", and send the asset to the trash (Q16). Only their

@@ -11,9 +11,10 @@ namespace FarEmerald.PlayForge.Extended.Editor
     /// <summary>
     /// The attributes an attribute set gives an entity, its sub-sets' among them, as the Entity mockup's Attributes
     /// section draws them: a table of each attribute's type icon and name, the value its Current starts at, and the range
-    /// the set keeps it in. Where sets overlap, the value is the one the runtime settles on, by the same rules
-    /// (AttributeSetMeta), and a value a scaler sets reads "Scaled". It follows the set as it changes. The Attribute Set
-    /// inspector listed the attributes in a dialog, and the Entity inspector showed none of them (ED-37).
+    /// the set keeps it in. The values are the runtime's (<see cref="AttributeStartValues"/>): each attribute at each of
+    /// the levels, where sets overlap the one the runtime settles on, and in the set the set is previewed in. It follows
+    /// the set as it changes, and the sets and scalers it reads. The Attribute Set inspector listed the attributes in a
+    /// dialog, and the Entity inspector showed none of them (ED-37); a value a scaler set read "Scaled" (ED-49).
     /// </summary>
     internal sealed class ForgeAttributeTable : VisualElement
     {
@@ -21,6 +22,8 @@ namespace FarEmerald.PlayForge.Extended.Editor
 
         private readonly VisualElement content;
         private AttributeSet shown;
+        // The entity whose levels the values are at, or null for the set's own and the set it's previewed in
+        private BaseForgeLevelProvider levelsFrom;
         private VisualElement tracker;
 
         public ForgeAttributeTable()
@@ -28,6 +31,16 @@ namespace FarEmerald.PlayForge.Extended.Editor
             name = "AttributeTable";
             content = new VisualElement { name = "AttributeTableContent" };
             Add(content);
+            RegisterCallback<AttachToPanelEvent>(_ =>
+            {
+                AttributeStartValues.PreviewChanged += PreviewChanged;
+                ObjectChangeEvents.changesPublished += OthersChanged;
+            });
+            RegisterCallback<DetachFromPanelEvent>(_ =>
+            {
+                AttributeStartValues.PreviewChanged -= PreviewChanged;
+                ObjectChangeEvents.changesPublished -= OthersChanged;
+            });
         }
 
         /// <summary>How many attributes the table shows.</summary>
@@ -36,12 +49,19 @@ namespace FarEmerald.PlayForge.Extended.Editor
         /// <summary>The set the table shows, or null.</summary>
         public AttributeSet Set => shown;
 
+        /// <summary>The levels its values are at, as it last drew them.</summary>
+        public (int First, int Last) Levels { get; private set; }
+
         /// <summary>Raised each time the table is redrawn, as its set changes.</summary>
         public event Action Changed;
 
-        /// <summary>Shows a set's attributes, or "None", and follows the set's changes from then on.</summary>
-        public void Show(AttributeSet set)
+        /// <summary>
+        /// Shows a set's attributes, or "None", and follows the set's changes from then on: at the set's levels, in the set
+        /// it's previewed in; or, given an entity, at the entity's levels, as the entity starts with them.
+        /// </summary>
+        public void Show(AttributeSet set, BaseForgeLevelProvider entity = null)
         {
+            levelsFrom = entity;
             if (set != shown || tracker == null)
             {
                 shown = set;
@@ -58,10 +78,32 @@ namespace FarEmerald.PlayForge.Extended.Editor
             Rebuild();
         }
 
+        private void PreviewChanged(AttributeSet set)
+        {
+            if (set == shown && levelsFrom == null) Rebuild();
+        }
+
+        // A change elsewhere to a set, a Scaler asset or an attribute can change what the set's attributes start at
+        private void OthersChanged(ref ObjectChangeEventStream stream)
+        {
+            if (shown == null) return;
+            for (int i = 0; i < stream.length; i++)
+            {
+                if (stream.GetEventType(i) != ObjectChangeKind.ChangeAssetObjectProperties) continue;
+                stream.GetChangeAssetObjectPropertiesEvent(i, out var change);
+                if (EditorUtility.InstanceIDToObject(change.instanceId) is AttributeSet or ScalerAsset or Attribute)
+                {
+                    Rebuild();
+                    return;
+                }
+            }
+        }
+
         private void Rebuild()
         {
             content.Clear();
-            var rows = RowsOf(shown);
+            var rows = RowsOf(shown, levelsFrom);
+            Levels = AttributeStartValues.LevelsOf(levelsFrom != null ? levelsFrom : AttributeStartValues.PreviewOf(shown));
             Count = rows.Count;
             content.EnableInClassList(TableClass, rows.Count > 0);
             if (rows.Count == 0)
@@ -141,81 +183,72 @@ namespace FarEmerald.PlayForge.Extended.Editor
             }
         }
 
-        private enum Settle { One, Sum, Average }
-
-        // Each attribute the set gives, in the order the runtime first meets it: this set, then each sub-set, depth first
-        private static List<Row> RowsOf(AttributeSet set)
+        // Each attribute the set gives, in the order the runtime first meets it: this set, then each sub-set, depth first;
+        // its values as the set it's previewed in starts it, or the entity
+        private static List<Row> RowsOf(AttributeSet set, BaseForgeLevelProvider entity)
         {
             var rows = new List<Row>();
             if (set == null) return rows;
 
             var order = new List<Attribute>();
-            var elements = new Dictionary<Attribute, List<AttributeSetElement>>();
+            var first = new Dictionary<Attribute, AttributeSetElement>();
             foreach (var each in set.SelfAndSubSets())
             {
                 if (each.Attributes == null) continue;
                 foreach (var element in each.Attributes)
                 {
                     // An element with no attribute gives nothing
-                    if (element?.Attribute == null) continue;
-                    if (!elements.TryGetValue(element.Attribute, out var list))
-                    {
-                        elements[element.Attribute] = list = new List<AttributeSetElement>();
-                        order.Add(element.Attribute);
-                    }
-                    list.Add(element);
+                    if (element?.Attribute == null || first.ContainsKey(element.Attribute)) continue;
+                    first[element.Attribute] = element;
+                    order.Add(element.Attribute);
                 }
             }
 
-            foreach (var attribute in order) rows.Add(RowOf(attribute, elements[attribute], set.CollisionResolutionPolicy));
+            AttributeStartValues.Result result;
+            if (entity != null)
+            {
+                var (from, to) = AttributeStartValues.LevelsOf(entity);
+                result = AttributeStartValues.Shown(set, from, to);
+            }
+            else result = AttributeStartValues.Shown(set);
+
+            foreach (var attribute in order)
+            {
+                var start = result.Of(attribute);
+                // The bounds the runtime keeps are those of the element it keeps, or the first it adds up
+                var kept = start?.From.FirstOrDefault() ?? first[attribute];
+                string text, tooltip;
+                if (result.Problem != null)
+                {
+                    text = "—";
+                    tooltip = $"The values can't be worked out: {result.Problem}";
+                }
+                else if (start == null)
+                {
+                    text = "—";
+                    tooltip = "";
+                }
+                else
+                {
+                    text = AttributeStartValues.CurrentText(start);
+                    tooltip = Join(AttributeStartValues.Detail(start), How(start, result));
+                }
+                rows.Add(new Row(AttributeStartValues.NameOf(attribute), text, tooltip, RangeOf(kept)));
+            }
             return rows;
         }
 
-        // The runtime takes the elements that use the set's setting, or else those set to Use This, Combine, then Use
-        // Existing, and settles them by the root set's policy (AttributeSetMeta.InitializeAttributeSystem)
-        private static Row RowOf(Attribute attribute, List<AttributeSetElement> elements, EValueCollisionPolicy resolution)
+        // Where elements overlap, whose value is used, or that they add up
+        private static string How(AttributeStartValues.Start start, AttributeStartValues.Result result)
         {
-            List<AttributeSetElement> Of(EAttributeElementCollisionPolicy policy) => elements.Where(element => element.CollisionPolicy == policy).ToList();
-
-            var group = Of(EAttributeElementCollisionPolicy.UseSetCollisionSetting);
-            if (group.Count == 0) group = Of(EAttributeElementCollisionPolicy.UseThis);
-            if (group.Count == 0)
-            {
-                var combined = Of(EAttributeElementCollisionPolicy.Combine);
-                if (combined.Count > 0)
-                    return Settled(attribute, combined, Settle.Sum, combined.Count > 1 ? $"{combined.Count} elements give it, and they add up" : null);
-                group = Of(EAttributeElementCollisionPolicy.UseExisting);
-            }
-            if (group.Count == 1) return Settled(attribute, group, Settle.One, null);
-
-            var how = $"{group.Count} elements give it, and {ObjectNames.NicifyVariableName(resolution.ToString())} settles it";
-            // Use Maximum and Use Minimum compare the elements' Base magnitudes, through the runtime's own helpers
-            return resolution switch
-            {
-                EValueCollisionPolicy.UseAverage => Settled(attribute, group, Settle.Average, how),
-                EValueCollisionPolicy.UseMaximum => Settled(attribute, new List<AttributeSetElement> { group[group.IndexMax(element => element.Base.Magnitude)] }, Settle.One, how),
-                EValueCollisionPolicy.UseMinimum => Settled(attribute, new List<AttributeSetElement> { group[group.IndexMin(element => element.Base.Magnitude)] }, Settle.One, how),
-                EValueCollisionPolicy.UseLast => Settled(attribute, new List<AttributeSetElement> { group[group.Count - 1] }, Settle.One, how),
-                _ => Settled(attribute, new List<AttributeSetElement> { group[0] }, Settle.One, how),
-            };
-        }
-
-        // The value the parts start Current at, and the range of the first, whose bounds the runtime keeps
-        private static Row Settled(Attribute attribute, List<AttributeSetElement> parts, Settle settle, string how)
-        {
-            var name = string.IsNullOrEmpty(attribute.GetName()) ? attribute.name : attribute.GetName();
-            var range = RangeOf(parts[0]);
-            if (parts.Any(part => !part.EffectiveCurrent.BypassScaling))
-                return new Row(name, "Scaled", Join("A scaler sets its Current as the entity starts", how), range);
-
-            var current = parts.Sum(part => part.EffectiveCurrent.Magnitude);
-            var baseValue = parts.Sum(part => part.Base.Magnitude);
-            if (settle == Settle.Average)
-            {
-                current /= parts.Count;
-                baseValue /= parts.Count;
-            }
-            return new Row(name, Number(current), Join($"Current {Number(current)}, Base {Number(baseValue)}", how), range);
+            if (start.Elements.Count <= 1) return null;
+            var given = $"{start.Elements.Count} elements give it";
+            if (start.From.Count > 1)
+                return start.From.All(part => part.CollisionPolicy == EAttributeElementCollisionPolicy.Combine)
+                    ? $"{given}, and they add up"
+                    : $"{given}, and they're averaged";
+            var used = start.From.FirstOrDefault();
+            return used == null ? given : $"{given}, and {AttributeStartValues.NameOf(result.SetOf(used))}'s is used";
         }
 
         private static string Join(string fact, string how) => how == null ? fact : $"{fact}. {how}.";
