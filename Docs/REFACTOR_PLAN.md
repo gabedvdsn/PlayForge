@@ -664,6 +664,7 @@ had no letter in the review. TS-AA onward came from the test project.
 | GAS-67 | M | 7 | A process Create Mono Process spawned appeared where its prefab stood unless the data held a Position, so a projectile left the world's origin; Battle and the labs placed theirs themselves. Fixed: Spawn At puts it at the caster or at the ability's target, the data's Position set for its registration alone and put back, since the ability's other tasks read it too; As Its Data Says keeps the old way | `CreateMonoProcessAbilityTask.cs` | verified |
 | GAS-68 | M | 7 | The effects a spawned process applied, as a projectile's as it lands, took none of the set-by-caller magnitudes of the data that spawned it, though an ability's other effects take them (FEAT-2), so a magnitude the caller set was lost on the way. Fixed: they take them | `AbstractEffectingMonoProcess.cs` | verified |
 | GAS-69 | M | 7 | A Conditional scaler's Target Attribute Threshold read the attribute on the effect's source, as Source Attribute Threshold does, so "more against a target below 50 Health" read the caster's Health. Found building the demo. Fixed: a target threshold reads the target's attribute | `ConditionalScaler.cs` | verified |
+| GAS-70 | H | 7 | An effect's Stack Behaviours never saved. The stacking configs derive from a generic base and weren't `[Serializable]`, and Unity drops a `[SerializeReference]` list of such types whole: a bound set in the inspector or by code on an asset was gone once the asset saved, and the inspector's field read nothing. Found building the demo, whose Burning bursts at its sixth stack. Fixed: each config class is `[Serializable]` | `AbstractEffectConfig.cs` | verified |
 | GAS-P1 | M | 0 | `ActionQueue` LINQ allocations; snapshot built every frame (PF-006) | `ActionQueue.cs:41, 46, 156`, `FrameSummary.cs:340-351` | verified |
 | GAS-P2 | M | 0 | Tag and FrameSummary allocations (PF-007) | `TagCache.cs:60`, `TagQuery.cs:89-136`, `FrameSummary.cs:306-308` | verified |
 | GAS-P3 | M | 3 | Each application revalidates every container and rebuilds all tags (area application is quadratic). Measured: an instant application on an entity carrying 1,000 effects took 0.49 ms, 135 times one on an entity carrying 2. Now the requirements wait for one pass at the next tick, a shelved container's tags are counted as it lands, and re-application and removal find containers in an index by asset tag | `EffectSystemComponent.cs:312-348`, `GameplayAbilitySystem.cs:250-281` | verified |
@@ -902,6 +903,12 @@ GAS-4 with GAS-5, PC-6, and TS-I with PC-5.
 ## Log
 
 Record baselines, gate results and notable decisions here, newest first.
+
+- 2026-11-06, **GAS-70: an effect's stack behaviours save.** The demo's Burning lost its stack bound each time it
+  saved. An experiment in the private copy showed why: Unity keeps a `[SerializeReference]` list of types that derive
+  from a generic base only when they're `[Serializable]`, and the stacking configs weren't. The test copies an effect
+  through the serializer, as a save does; it kept 0 of 3 configs before the fix.
+  - PlayMode: 1336 passed of 1344, 0 failed, 8 skipped (1 new). EditMode, with the Demo imported: 728 of 732, the 4 failures the new Demo's own, its menu's place and the smoke sweep's timing, fixed with it.
 
 - 2026-11-06, **GAS-69, FEAT-26 and FEAT-27: three gaps the demo's abilities found.** A Conditional scaler's
   target threshold reads the target; an Attribute Validation can compare a share of the attribute's base; a Clamped

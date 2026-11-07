@@ -411,6 +411,8 @@ tracks each fix below by its ID.
   Asking whether its sequence was paused took 24 bytes a frame.
 
 ### Fixed
+- An effect's Stack Behaviours save. Unity dropped the list whole as the asset saved, so a stack bound, its overflow
+  effects or a stack amount rule set in the inspector was gone, and the inspector's field read nothing (GAS-70).
 - A Conditional scaler's Target Attribute Threshold reads the attribute on the effect's target. It read the
   source's, as Source Attribute Threshold does (GAS-69).
 - The effects a spawned process applies, as a projectile's as it lands, take the set-by-caller magnitudes of the data

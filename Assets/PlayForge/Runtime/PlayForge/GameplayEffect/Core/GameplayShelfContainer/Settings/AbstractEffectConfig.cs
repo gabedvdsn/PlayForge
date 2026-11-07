@@ -133,6 +133,7 @@ namespace FarEmerald.PlayForge
         public static ValueModifier Override(float value) => new() { Operation = ECalculationOperation.Override, Value = value };*/
     }
     
+    [Serializable]
     public abstract class GameplayPipelineConfiguration
     {
         public string Name;
@@ -160,6 +161,7 @@ namespace FarEmerald.PlayForge
         UseNeither
     }
 
+    [Serializable]
     public class EffectImpactConfig : AbstractEffectConfig<AbstractEffectContainer>
     {
         public Attribute AttributeTarget;
@@ -187,6 +189,7 @@ namespace FarEmerald.PlayForge
         }
     }
     
+    [Serializable]
     public abstract class AbstractEffectDurationConfig : AbstractEffectConfig<AbstractEffectContainer>
     {
         public EEffectDurationPolicy? DurationPolicy;
@@ -225,6 +228,9 @@ namespace FarEmerald.PlayForge
         }
     }
     
+    // [Serializable] on each, as their base is generic: without it Unity dropped a [SerializeReference] list of them
+    // whole, so an effect's Stack Behaviours never saved (GAS-70)
+    [Serializable]
     public abstract class AbstractStackingConfig : AbstractEffectConfig<AbstractStackingEffectContainer>
     {
         public EEffectStackPolicy? StackPolicy;
@@ -249,6 +255,7 @@ namespace FarEmerald.PlayForge
         AppendNewContainer
     }
 
+    [Serializable]
     public class StackBoundsConfig : AbstractStackingConfig
     {
         public int Min;
@@ -292,6 +299,7 @@ namespace FarEmerald.PlayForge
         }
     }
 
+    [Serializable]
     public class StackAmountOperation : AbstractStackingConfig
     {
         public EMagnitudeOperation Operation;
@@ -327,6 +335,7 @@ namespace FarEmerald.PlayForge
         } 
     }
 
+    [Serializable]
     public class InitializationOperation : AbstractStackingConfig
     {
         public int InitializationStacks = 0;
