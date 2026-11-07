@@ -7,6 +7,10 @@ tracks each fix below by its ID.
 ## [Unreleased]
 
 ### Added
+- `AttributeValidation.ShareOfBase` compares an attribute's share of its base, from 0 to 1, in place of its value, as
+  "a target below half its health" (FEAT-26).
+- `ClampedScaler.Inner`: a Clamped scaler clamps the value of a scaler inside it, as damage worked out from a
+  target's missing health is capped. With none, it clamps its own values per level, as before (FEAT-27).
 - A gameplay mono process, as a projectile, carries attributes of its own (`Attributes`, `ProcessAttribute`): each
   read by a role, as a projectile's speed by ProjectileSpeed, and starting as its own value, a number or a scaler at
   the spawning ability's level, its origin's attribute, or the origin's where it has one. The data that spawns it
@@ -407,6 +411,8 @@ tracks each fix below by its ID.
   Asking whether its sequence was paused took 24 bytes a frame.
 
 ### Fixed
+- A Conditional scaler's Target Attribute Threshold reads the attribute on the effect's target. It read the
+  source's, as Source Attribute Threshold does (GAS-69).
 - The effects a spawned process applies, as a projectile's as it lands, take the set-by-caller magnitudes of the data
   that spawned it, as an ability's other effects do. They took none (GAS-68).
 - Create Mono Process's Spawn At places what it spawns at the caster or at the ability's target. It appeared where

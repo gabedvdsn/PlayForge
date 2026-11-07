@@ -83,11 +83,14 @@ namespace FarEmerald.PlayForge
             };
         }
         
+        // The target's attribute for a target threshold, the source's for a source threshold. Both read the source's, so a
+        // target threshold never looked at the target (GAS-69)
         private bool CheckAttributeThreshold(IAttributeImpactCarrier spec)
         {
             if (CheckAttribute is null) return false;
-            
-            if (!spec.GetOrigin().GetSource().TryGetAttributeValue(CheckAttribute, out var attrValue))
+
+            ITarget entity = Condition == EScalerCondition.TargetAttributeThreshold ? spec.GetTarget() : spec.GetOrigin()?.GetSource();
+            if (entity is null || !entity.TryGetAttributeValue(CheckAttribute, out var attrValue))
             {
                 return false;
             }

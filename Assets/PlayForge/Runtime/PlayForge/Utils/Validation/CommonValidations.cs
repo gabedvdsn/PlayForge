@@ -72,6 +72,13 @@ namespace FarEmerald.PlayForge
     {
         public EComparisonOperator Comparison;
         public float Value;
+
+        /// <summary>
+        /// Compares the attribute's share of its base, from 0 to 1, in place of its value: "a target below half its
+        /// health" whatever its health. It compared the value alone, right for one entity and wrong for the next (FEAT-26).
+        /// </summary>
+        [Tooltip("Compare the attribute's share of its base, from 0 to 1, in place of its value")]
+        public bool ShareOfBase;
         
         public override bool Validate(AbilityDataPacket data, Func<ITarget> getSource, out string error)
         {
@@ -81,15 +88,18 @@ namespace FarEmerald.PlayForge
             
             if (!source.TryGetAttributeValue(Attribute, out var attrVal))
                 return false;
-            
+
+            // Its share of its base, where the rule asks for one (FEAT-26)
+            float value = !ShareOfBase ? attrVal.CurrentValue
+                : attrVal.BaseValue > 0f ? attrVal.CurrentValue / attrVal.BaseValue : 0f;
             return Comparison switch
             {
-                EComparisonOperator.GreaterThan => attrVal.CurrentValue > Value,
-                EComparisonOperator.LessThan => attrVal.CurrentValue < Value,
-                EComparisonOperator.GreaterOrEqual => attrVal.CurrentValue >= Value,
-                EComparisonOperator.LessOrEqual => attrVal.CurrentValue <= Value,
-                EComparisonOperator.Equal => Mathf.Approximately(attrVal.CurrentValue, Value),
-                EComparisonOperator.NotEqual => !Mathf.Approximately(attrVal.CurrentValue, Value),
+                EComparisonOperator.GreaterThan => value > Value,
+                EComparisonOperator.LessThan => value < Value,
+                EComparisonOperator.GreaterOrEqual => value >= Value,
+                EComparisonOperator.LessOrEqual => value <= Value,
+                EComparisonOperator.Equal => Mathf.Approximately(value, Value),
+                EComparisonOperator.NotEqual => !Mathf.Approximately(value, Value),
                 _ => throw new ArgumentOutOfRangeException()
             };
         }
