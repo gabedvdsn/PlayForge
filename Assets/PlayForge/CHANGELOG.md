@@ -7,6 +7,10 @@ tracks each fix below by its ID.
 ## [Unreleased]
 
 ### Added
+- What a gameplay mono process carries reaches the effects it applies: `GiveMagnitudes(spec)` gives a spec the
+  set-by-caller magnitudes of the data that spawned it, then each of the process's own attributes under its role,
+  so an effect's Set By Caller scaler reads what the process carries, as a fire's burn its heat. A projectile's
+  effects take them as they land (FEAT-28).
 - `AttributeValidation.ShareOfBase` compares an attribute's share of its base, from 0 to 1, in place of its value, as
   "a target below half its health" (FEAT-26).
 - `ClampedScaler.Inner`: a Clamped scaler clamps the value of a scaler inside it, as damage worked out from a

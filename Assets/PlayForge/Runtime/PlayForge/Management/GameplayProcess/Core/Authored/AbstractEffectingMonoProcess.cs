@@ -1,4 +1,4 @@
-using System.Collections;
+﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -19,9 +19,9 @@ namespace FarEmerald.PlayForge
             {
                 if (effect == null) continue;
                 var spec = target.GenerateEffectSpec(Origin, effect);
-                // The magnitudes what spawned it set, as an ability's other effects take them. A projectile's effects took
-                // none, so a magnitude its ability's caller set was lost on the way (GAS-68)
-                if (regData != null) spec?.TakeSetByCaller(regData.SetByCallerMagnitudes);
+                // The magnitudes what spawned it set, as an ability's other effects take them (GAS-68), and its own
+                // attributes by role (FEAT-28)
+                GiveMagnitudes(spec);
                 target.ApplyCarrier(spec);
             }
         }

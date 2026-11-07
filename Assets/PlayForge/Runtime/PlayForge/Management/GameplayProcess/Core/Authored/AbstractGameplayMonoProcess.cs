@@ -78,6 +78,21 @@ namespace FarEmerald.PlayForge
             return false;
         }
 
+        /// <summary>
+        /// Gives an effect spec the process applies the set-by-caller magnitudes it should read: those of the data that
+        /// spawned it, then each of its own attributes under its role, so an effect scales by what the process carries,
+        /// as a fire's burn by its heat. Its own win, as the nearer. Only its caller's reached its effects, so what it
+        /// carried stopped at the process (FEAT-28).
+        /// </summary>
+        public void GiveMagnitudes(GameplayEffectSpec spec)
+        {
+            if (spec == null) return;
+            if (regData != null) spec.TakeSetByCaller(regData.SetByCallerMagnitudes);
+            if (Attributes == null || values == null) return;
+            for (int i = 0; i < Attributes.Count && i < values.Length; i++)
+                if (Attributes[i] != null && Attributes[i].Role.IsValid) spec.SetByCaller(Attributes[i].Role, values[i]);
+        }
+
         /// <summary>Sets one of the process's own attributes, by the attribute it is. False where it carries none.</summary>
         public bool SetAttribute(IAttribute attribute, float value) => Set(IndexOf(attribute), value);
 

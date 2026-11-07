@@ -840,6 +840,7 @@ reads the old demos' fullest assets, so it moves to the new demo's as the old go
 | FEAT-25 | Quick fixes for problems | The user's request of 2026-11-06: the Problems window gets a second view, its problems grouped under the rule each breaks, and where a simple step fixes a problem, a Quick Fix for it and a Fix All for its rule's problems. Done: By Rule, beside the list in the window's toolbar. Each problem knows its rule (`ForgeProblem.Rule`), each rule names what it finds (`ForgeValidationRule.Name`), and a problem a step fixes carries the step (`ForgeProblem.Fix`, a `ForgeQuickFix`): Store the Tag, Use Own Levels, Make It Constant, Give It Its Own, Clamp to Bounds and Remove the Element. A fix and a Fix All are one Undo step each. A problem whose fix needs a choice, as which stage applies usage effects, has none | `ForgeProblemsWindow.cs`, `ForgeRules.cs`, `ForgeProblem.cs`, `ForgeValidator.cs` | verified |
 | FEAT-26 | An attribute rule by share | Found building the demo, whose Eviscerate is for a target below half its health: an Attribute Validation compared the attribute's value alone, right for one entity and wrong for the next. Done: `AttributeValidation.ShareOfBase` compares the attribute's share of its base, 0 to 1 |
 | FEAT-27 | Clamp another scaler | Found building the demo, whose Eviscerate caps damage worked out from its target's missing health: a Clamped scaler clamped its own table alone. Done: `ClampedScaler.Inner`, a scaler whose value it clamps; with none, its own values per level, as before |
+| FEAT-28 | What a process carries reaches its effects | Found building the demo, whose Flame Wall fire burns harder by its ability's level: a process's own attributes (FEAT-24) stopped at the process, and only its caller's set-by-caller magnitudes reached the effects it applied. Done: `AbstractGameplayMonoProcess.GiveMagnitudes(spec)` gives an effect spec its caller's magnitudes, then each of its own attributes under its role, its own winning; a projectile's effects take them as they land, so a Set By Caller scaler on an effect reads what the process carries |
 
 **Phase 5's order,** from the review's plan for the test project (its labs, one at a time) and the table above. A lab
 is a small game: assets the lab builds in code, and a bot that plays it in PlayMode tests under a live ProcessControl,
@@ -903,6 +904,11 @@ GAS-4 with GAS-5, PC-6, and TS-I with PC-5.
 ## Log
 
 Record baselines, gate results and notable decisions here, newest first.
+
+- 2026-11-06, **FEAT-28: what a process carries reaches its effects.** A gameplay mono process gives each effect it
+  applies its own attributes by role, as set-by-caller magnitudes, after its caller's: the demo's fire carries a heat
+  by Flame Wall's level, and Burning reads it. The test failed first with the caller's magnitude landing.
+  - PlayMode, with the Demo imported: 1345 passed of 1353, 0 failed, 8 skipped (1 new, beside the Demo's own 8). EditMode, with the Demo imported: 734 of 734.
 
 - 2026-11-06, **GAS-70: an effect's stack behaviours save.** The demo's Burning lost its stack bound each time it
   saved. An experiment in the private copy showed why: Unity keeps a `[SerializeReference]` list of types that derive
