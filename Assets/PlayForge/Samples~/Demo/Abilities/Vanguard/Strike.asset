@@ -1,0 +1,173 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d5a42dbe2415465689d11a1e8ae1fdbc, type: 3}
+  m_Name: Strike
+  m_EditorClassIdentifier: 
+  LocalData: []
+  _template: {fileID: 0}
+  _templateOverrides: []
+  _templateListSnapshots: []
+  Definition:
+    Name: Strike
+    Description: A melee blow, physical, by Strength.
+    ActivationPolicy: 0
+    BufferWindow: 0.3
+    BufferPriority: 0
+    ActivateImmediately: 0
+    Triggers: []
+    Textures:
+    - Tag:
+        Name: PrimaryYKmcVmH4Jn9iqWqQsYjmr_mmcquW7EYPYKmcVmH4Jn9iqWqQsYjmr_mmc
+        DisplayName: Primary
+      Texture: {fileID: 2800000, guid: 34c5b5ba34ad3494282188769c7d98b1, type: 3}
+  Tags:
+    AssetTag:
+      Name: Demo.Ability.Strike
+      DisplayName: Demo.Ability.Strike
+    ContextTags:
+    - Name: Ability.Attack
+      DisplayName: Ability.Attack
+    PassiveGrantedTags: []
+    ActiveGrantedTags:
+    - Name: State.Attacking
+      DisplayName: State.Attacking
+    TagRequirements:
+      Name: 
+      SourceRequirements:
+        Name: 
+        SourceTemplate: {fileID: 0}
+        SyncWithTemplate: 0
+        AvoidTags:
+        - Tag:
+            Name: State.Stunned
+            DisplayName: State.Stunned
+          Operator: 5
+          Magnitude: 0
+          MatchMode: 0
+        RequireTags: []
+      WhileActiveRequirements:
+        Name: 
+        SourceTemplate: {fileID: 0}
+        SyncWithTemplate: 0
+        AvoidTags: []
+        RequireTags: []
+      TargetRequirements:
+        Name: 
+        SourceTemplate: {fileID: 0}
+        SyncWithTemplate: 0
+        AvoidTags: []
+        RequireTags: []
+  Behaviour:
+    Targeting:
+      rid: 2403794261189067217
+    UseImplicitTargeting: 0
+    ImplicitTag:
+      Name: TargetzfvEmaa5gNtqhQ0_dE2_NOOAGh1QLRP8zfvEmaa5gNtqhQ0_dE2_NOOAGh
+      DisplayName: Target
+    AssetLoaders: []
+    Stages:
+    - StagePolicy:
+        rid: 2403794261189067218
+      Tasks:
+      - rid: 2403794261189067219
+      - rid: 2403794261189067220
+      ApplyUsageEffects: 1
+      ApplyUsageAtStageStart: 1
+      Condition:
+        On: 0
+        Tag:
+          Name: 
+          DisplayName: 
+        WhenMissing: 0
+      CancelledBy: []
+      Blocks: []
+    CancelledBy: []
+    Blocks: []
+  SourceActivationRules:
+  - rid: 2403794261189066803
+  - rid: 2403794261189066804
+  - rid: 2403794261189066805
+  TargetActivationRules:
+  - rid: 2403794261189066806
+  StartingLevel: 1
+  MaxLevel: 4
+  IgnoreWhenLevelZero: 1
+  Cost: {fileID: 0}
+  Cooldown: {fileID: 11400000, guid: 8a8f1eb95dbcabf42aab69c28e60215c, type: 2}
+  WorkerGroup:
+    Name: Workers
+    AttributeWorkers: []
+    ImpactWorkers: []
+    TagWorkers: []
+    AnalysisWorkers: []
+  LinkMode: 0
+  _linkedSource: {fileID: 0}
+  references:
+    version: 2
+    RefIds:
+    - rid: 2403794261189066803
+      type: {class: CooldownValidation, ns: FarEmerald.PlayForge, asm: FarEmerald.PlayForge}
+      data: 
+    - rid: 2403794261189066804
+      type: {class: CostValidation, ns: FarEmerald.PlayForge, asm: FarEmerald.PlayForge}
+      data: 
+    - rid: 2403794261189066805
+      type: {class: IsAliveValidation, ns: FarEmerald.PlayForge, asm: FarEmerald.PlayForge}
+      data: 
+    - rid: 2403794261189066806
+      type: {class: IsAliveValidation, ns: FarEmerald.PlayForge, asm: FarEmerald.PlayForge}
+      data: 
+    - rid: 2403794261189067217
+      type: {class: SelectGasTargetTask, ns: FarEmerald.PlayForge, asm: FarEmerald.PlayForge}
+      data:
+        BreakRuntimeOnInvalid: 1
+        Requirements:
+          Name: 
+          SourceTemplate: {fileID: 0}
+          SyncWithTemplate: 0
+          AvoidTags:
+          - Tag:
+              Name: State.Invisible
+              DisplayName: State.Invisible
+            Operator: 5
+            Magnitude: 0
+            MatchMode: 0
+          - Tag:
+              Name: State.Untargetable
+              DisplayName: State.Untargetable
+            Operator: 5
+            Magnitude: 0
+            MatchMode: 0
+          RequireTags: []
+        RaycastLayers:
+          serializedVersion: 2
+          m_Bits: 4294967295
+        MaxDistance: 300
+        RetryOnInvalid: 1
+        MouseButton: 0
+        TakeTargetFromData: 1
+    - rid: 2403794261189067218
+      type: {class: AllProxyStagePolicy, ns: FarEmerald.PlayForge, asm: FarEmerald.PlayForge}
+      data: 
+    - rid: 2403794261189067219
+      type: {class: DelayTask, ns: FarEmerald.PlayForge, asm: FarEmerald.PlayForge}
+      data:
+        DelayMilliseconds: 150
+    - rid: 2403794261189067220
+      type: {class: ApplyEffectsAbilityTask, ns: FarEmerald.PlayForge, asm: FarEmerald.PlayForge}
+      data:
+        Effects:
+        - {fileID: 11400000, guid: 98a3be6a8f81e0e43b94fc3989503388, type: 2}
+        DelayBetweenApplicationMs: 0
+        RecordLandedAs:
+          Name: 
+          DisplayName: 

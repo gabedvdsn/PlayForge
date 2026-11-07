@@ -1,0 +1,109 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 0b7a26c4f509d404b9ec7508cf949518, type: 3}
+  m_Name: Demo Roster
+  m_EditorClassIdentifier: 
+  Heroes:
+  - Identity: {fileID: 11400000, guid: fac3bfbc9f474044fbd94ae2ff775472, type: 2}
+    Color: {r: 0.35, g: 0.55, b: 0.9, a: 1}
+    Summary: Strength, melee, physical. Shield Bash stuns; Rallying Cry adds Armor;
+      Iron Skin breaks and blocks stuns.
+  - Identity: {fileID: 11400000, guid: 699fb1eaed29cc342901941e472754b3, type: 2}
+    Color: {r: 0.35, g: 0.75, b: 0.4, a: 1}
+    Summary: Agility, ranged, physical. Hunter's Mark makes physical blows hurt more;
+      Volley hits an area; Tumble rolls away.
+  - Identity: {fileID: 11400000, guid: a09f4ce7c3778da4b956139941d9cecc, type: 2}
+    Color: {r: 0.9, g: 0.4, b: 0.2, a: 1}
+    Summary: Intelligence, ranged, magic. Fireball and Flame Wall stack Burning,
+      which bursts at six; Combustion ignites it.
+  - Identity: {fileID: 11400000, guid: 12b18f4519dbf3d4493a23e486d15ce6, type: 2}
+    Color: {r: 0.6, g: 0.35, b: 0.8, a: 1}
+    Summary: Agility, melee, pure. Shadow Step empowers its next cut; Eviscerate
+      finishes the hurt; Smoke Veil hides it.
+  - Identity: {fileID: 11400000, guid: 363c0d9ea8122fa448734025312c92d0, type: 2}
+    Color: {r: 0.35, g: 0.85, b: 0.85, a: 1}
+    Summary: Intelligence, ranged, magic. Drain Life channels and heals; Hex silences;
+      Renewal cleanses and heals.
+  TrainingDummy: {fileID: 11400000, guid: 3f2f7b094b3f2df40bfce490d3c675e9, type: 2}
+  DummyColor: {r: 0.62, g: 0.56, b: 0.45, a: 1}
+  DummyMend: {fileID: 11400000, guid: 275b9cfce7c21fb4fb3f65e74cbbd5a7, type: 2}
+  Items:
+  - {fileID: 11400000, guid: 9547173ed5e04dd4481037ac5b2fc630, type: 2}
+  - {fileID: 11400000, guid: 0cdeb86c92c7e4c479205b0c908df77b, type: 2}
+  - {fileID: 11400000, guid: 941dc6e851b49704082edd1d262b12e2, type: 2}
+  - {fileID: 11400000, guid: d552db1e14f8f1141a2a83380c2f0b1e, type: 2}
+  - {fileID: 11400000, guid: 194f02b75584ad94e8597f6c4b9c6652, type: 2}
+  - {fileID: 11400000, guid: 3cbcb30a29421ba4090640a7e412a9c3, type: 2}
+  - {fileID: 11400000, guid: 016585b03f179784dbb054aa1bee0d68, type: 2}
+  - {fileID: 11400000, guid: ca869d7987125884288f7a2b1b1e44bd, type: 2}
+  - {fileID: 11400000, guid: 327b8cc1f021da846b7b390604f272aa, type: 2}
+  - {fileID: 11400000, guid: eae83d013503e094db5f26a32960b5da, type: 2}
+  - {fileID: 11400000, guid: 63e1c9514ab39614396b0a3b20cce4b9, type: 2}
+  - {fileID: 11400000, guid: ede5545a5d3195049b904229750b9531, type: 2}
+  - {fileID: 11400000, guid: 5baee5e519bf351439eafdb1002cd02b, type: 2}
+  - {fileID: 11400000, guid: 4c9b571510e3901408cd7794aff1a450, type: 2}
+  Health: {fileID: 11400000, guid: b865fa5ec88ff314ab348516f14527f7, type: 2}
+  Mana: {fileID: 11400000, guid: a75dd2d6e2d622947b9bfdd3f8507c01, type: 2}
+  MovementSpeed: {fileID: 11400000, guid: f91616365c2f4394581d66675b9208fa, type: 2}
+  Shown:
+  - {fileID: 11400000, guid: 68b5217a78b8e544fb7586bdf897268f, type: 2}
+  - {fileID: 11400000, guid: 1aadfbe470192574b917692686c8496f, type: 2}
+  - {fileID: 11400000, guid: 781fdf8841bc79441bc32a1d136f3c4f, type: 2}
+  - {fileID: 11400000, guid: 49ede9aab52bf7a40b12b9b165392f8c, type: 2}
+  - {fileID: 11400000, guid: 19d77af1048214f418cb274145095022, type: 2}
+  - {fileID: 11400000, guid: 3e8e0a8d8742715489be084df6157132, type: 2}
+  - {fileID: 11400000, guid: 1a51f6301ad10594a9a05f0acacdb9fd, type: 2}
+  - {fileID: 11400000, guid: 91630288f688daf44a76f3b7f7f187b2, type: 2}
+  - {fileID: 11400000, guid: 1c4edf0603f5c9c499cdf42c0ab619a7, type: 2}
+  - {fileID: 11400000, guid: f91616365c2f4394581d66675b9208fa, type: 2}
+  PlayerSide:
+    Name: Demo.Side.Player
+    DisplayName: Demo.Side.Player
+  OpponentSide:
+    Name: Demo.Side.Opponent
+    DisplayName: Demo.Side.Opponent
+  Stunned:
+    Name: State.Stunned
+    DisplayName: State.Stunned
+  Invisible:
+    Name: State.Invisible
+    DisplayName: State.Invisible
+  Untargetable:
+    Name: State.Untargetable
+    DisplayName: State.Untargetable
+  Channeling:
+    Name: State.Channeling
+    DisplayName: State.Channeling
+  AttackRange:
+    Name: Demo.AttackRange
+    DisplayName: Demo.AttackRange
+  CastOrder:
+    Name: Demo.CastOrder
+    DisplayName: Demo.CastOrder
+  Reach:
+    Name: Demo.Reach
+    DisplayName: Demo.Reach
+  CastWhen:
+    Name: Demo.CastWhen
+    DisplayName: Demo.CastWhen
+  Difficulty:
+    Name: Demo.Difficulty
+    DisplayName: Demo.Difficulty
+  Physical:
+    Name: Damage.Physical
+    DisplayName: Damage.Physical
+  Magic:
+    Name: Damage.Magic
+    DisplayName: Damage.Magic
+  Pure:
+    Name: Damage.Pure
+    DisplayName: Damage.Pure

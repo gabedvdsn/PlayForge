@@ -1,0 +1,233 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f540c3b03f1458d459ad17cf8a6b5c71, type: 3}
+  m_Name: Training Dummy Attributes
+  m_EditorClassIdentifier: 
+  LocalData: []
+  _template: {fileID: 0}
+  _templateOverrides: []
+  _templateListSnapshots: []
+  Name: Training Dummy Attributes
+  Description: 'The dummy''s own: a deep pool of Health, some Armor and Magic Resistance,
+    and the damage model''s workers, so it takes blows as a hero does. No sub-sets.'
+  Textures: []
+  AssetTag:
+    Name: Demo.Set.TrainingDummyAttributes
+    DisplayName: Demo.Set.TrainingDummyAttributes
+  Attributes:
+  - Attribute: {fileID: 11400000, guid: b865fa5ec88ff314ab348516f14527f7, type: 2}
+    Current:
+      Magnitude: 0
+      Scaling:
+        rid: -2
+      RealMagnitude: 2
+    Base:
+      Magnitude: 4000
+      Scaling:
+        rid: -2
+      RealMagnitude: 2
+    LinkCurrentToBase: 1
+    Overflow:
+      Policy: 0
+      Floor:
+        CurrentValue: 0
+        BaseValue: 0
+      Ceil:
+        CurrentValue: 0
+        BaseValue: 0
+    RetentionGroup:
+      Name: DefaultHZrocVrnTyCe46yj0U4URw7eigNeYI7THZrocVrnTyCe46yj0U4URw7ei
+      DisplayName: Default
+    CollisionPolicy: 0
+    Constraints:
+      AutoClamp: 1
+      AutoScaleWithBase: 0
+      RoundingMode: 0
+      SnapInterval: 0
+  - Attribute: {fileID: 11400000, guid: 49ede9aab52bf7a40b12b9b165392f8c, type: 2}
+    Current:
+      Magnitude: 0
+      Scaling:
+        rid: -2
+      RealMagnitude: 2
+    Base:
+      Magnitude: 60
+      Scaling:
+        rid: -2
+      RealMagnitude: 2
+    LinkCurrentToBase: 1
+    Overflow:
+      Policy: 4
+      Floor:
+        CurrentValue: 0
+        BaseValue: 0
+      Ceil:
+        CurrentValue: 0
+        BaseValue: 0
+    RetentionGroup:
+      Name: DefaultHZrocVrnTyCe46yj0U4URw7eigNeYI7THZrocVrnTyCe46yj0U4URw7ei
+      DisplayName: Default
+    CollisionPolicy: 0
+    Constraints:
+      AutoClamp: 1
+      AutoScaleWithBase: 0
+      RoundingMode: 0
+      SnapInterval: 0
+  - Attribute: {fileID: 11400000, guid: 19d77af1048214f418cb274145095022, type: 2}
+    Current:
+      Magnitude: 0
+      Scaling:
+        rid: -2
+      RealMagnitude: 2
+    Base:
+      Magnitude: 0.2
+      Scaling:
+        rid: -2
+      RealMagnitude: 2
+    LinkCurrentToBase: 1
+    Overflow:
+      Policy: 2
+      Floor:
+        CurrentValue: 0
+        BaseValue: 0
+      Ceil:
+        CurrentValue: 0.75
+        BaseValue: 0.75
+    RetentionGroup:
+      Name: DefaultHZrocVrnTyCe46yj0U4URw7eigNeYI7THZrocVrnTyCe46yj0U4URw7ei
+      DisplayName: Default
+    CollisionPolicy: 0
+    Constraints:
+      AutoClamp: 1
+      AutoScaleWithBase: 0
+      RoundingMode: 0
+      SnapInterval: 0
+  - Attribute: {fileID: 11400000, guid: f91616365c2f4394581d66675b9208fa, type: 2}
+    Current:
+      Magnitude: 0
+      Scaling:
+        rid: -2
+      RealMagnitude: 2
+    Base:
+      Magnitude: 0
+      Scaling:
+        rid: -2
+      RealMagnitude: 2
+    LinkCurrentToBase: 1
+    Overflow:
+      Policy: 4
+      Floor:
+        CurrentValue: 0
+        BaseValue: 0
+      Ceil:
+        CurrentValue: 0
+        BaseValue: 0
+    RetentionGroup:
+      Name: DefaultHZrocVrnTyCe46yj0U4URw7eigNeYI7THZrocVrnTyCe46yj0U4URw7ei
+      DisplayName: Default
+    CollisionPolicy: 0
+    Constraints:
+      AutoClamp: 1
+      AutoScaleWithBase: 0
+      RoundingMode: 0
+      SnapInterval: 0
+  SubSets: []
+  CollisionResolutionPolicy: 3
+  WorkerGroup:
+    Name: Workers
+    AttributeWorkers:
+    - rid: 2403794261189066780
+    - rid: 2403794261189066781
+    - rid: 2403794261189066782
+    - rid: 2403794261189066783
+    ImpactWorkers: []
+    TagWorkers: []
+    AnalysisWorkers: []
+  StartingLevel: 1
+  MaxLevel: 10
+  LinkMode: 0
+  _linkedSource: {fileID: 0}
+  references:
+    version: 2
+    RefIds:
+    - rid: -2
+      type: {class: , ns: , asm: }
+    - rid: 2403794261189066780
+      type: {class: MitigationWorker, ns: FarEmerald.PlayForge.Samples.Demo, asm: FarEmerald.PlayForge.Samples.Demo}
+      data:
+        TimingConfig: 0
+        TargetAttribute: {fileID: 11400000, guid: b865fa5ec88ff314ab348516f14527f7, type: 2}
+        AllowSelfModification: 1
+        TargetModification: 0
+        ExclusivelyTargetModification: 0
+        SignPolicy: 2
+        AnyImpactType: 0
+        ImpactTypes:
+        - Name: Damage.Physical
+          DisplayName: Damage.Physical
+        AnyContextTag: 1
+        ContextMatchingPolicy: 0
+        ValidContextTags: []
+        Resistance: {fileID: 11400000, guid: 49ede9aab52bf7a40b12b9b165392f8c, type: 2}
+        Kind: 0
+    - rid: 2403794261189066781
+      type: {class: MitigationWorker, ns: FarEmerald.PlayForge.Samples.Demo, asm: FarEmerald.PlayForge.Samples.Demo}
+      data:
+        TimingConfig: 0
+        TargetAttribute: {fileID: 11400000, guid: b865fa5ec88ff314ab348516f14527f7, type: 2}
+        AllowSelfModification: 1
+        TargetModification: 0
+        ExclusivelyTargetModification: 0
+        SignPolicy: 2
+        AnyImpactType: 0
+        ImpactTypes:
+        - Name: Damage.Magic
+          DisplayName: Damage.Magic
+        AnyContextTag: 1
+        ContextMatchingPolicy: 0
+        ValidContextTags: []
+        Resistance: {fileID: 11400000, guid: 19d77af1048214f418cb274145095022, type: 2}
+        Kind: 1
+    - rid: 2403794261189066782
+      type: {class: AmplificationWorker, ns: FarEmerald.PlayForge.Samples.Demo, asm: FarEmerald.PlayForge.Samples.Demo}
+      data:
+        TimingConfig: 0
+        TargetAttribute: {fileID: 11400000, guid: b865fa5ec88ff314ab348516f14527f7, type: 2}
+        AllowSelfModification: 1
+        TargetModification: 0
+        ExclusivelyTargetModification: 0
+        SignPolicy: 2
+        AnyImpactType: 0
+        ImpactTypes:
+        - Name: Damage.Physical
+          DisplayName: Damage.Physical
+        AnyContextTag: 1
+        ContextMatchingPolicy: 0
+        ValidContextTags: []
+        Amplification: {fileID: 11400000, guid: 3e8e0a8d8742715489be084df6157132, type: 2}
+    - rid: 2403794261189066783
+      type: {class: AmplificationWorker, ns: FarEmerald.PlayForge.Samples.Demo, asm: FarEmerald.PlayForge.Samples.Demo}
+      data:
+        TimingConfig: 0
+        TargetAttribute: {fileID: 11400000, guid: b865fa5ec88ff314ab348516f14527f7, type: 2}
+        AllowSelfModification: 1
+        TargetModification: 0
+        ExclusivelyTargetModification: 0
+        SignPolicy: 2
+        AnyImpactType: 0
+        ImpactTypes:
+        - Name: Damage.Magic
+          DisplayName: Damage.Magic
+        AnyContextTag: 1
+        ContextMatchingPolicy: 0
+        ValidContextTags: []
+        Amplification: {fileID: 11400000, guid: 1a51f6301ad10594a9a05f0acacdb9fd, type: 2}

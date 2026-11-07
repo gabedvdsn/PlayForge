@@ -1,0 +1,236 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d5a42dbe2415465689d11a1e8ae1fdbc, type: 3}
+  m_Name: Combustion
+  m_EditorClassIdentifier: 
+  LocalData:
+  - Key:
+      Name: Demo.CastWhen
+      DisplayName: Demo.CastWhen
+    Type: 3
+    stringValue: InRange
+    boolValue: 0
+    intValue: 0
+    floatValue: 0
+    objectValue: {fileID: 0}
+    monoBehaviourValue: {fileID: 0}
+    scriptableObjectValue: {fileID: 0}
+    tagValue:
+      Name: 
+      DisplayName: 
+    attributeValue: {fileID: 0}
+    effectValue: {fileID: 0}
+    abilityValue: {fileID: 0}
+    entityValue: {fileID: 0}
+  - Key:
+      Name: Demo.Reach
+      DisplayName: Demo.Reach
+    Type: 5
+    stringValue: 
+    boolValue: 0
+    intValue: 0
+    floatValue: 9
+    objectValue: {fileID: 0}
+    monoBehaviourValue: {fileID: 0}
+    scriptableObjectValue: {fileID: 0}
+    tagValue:
+      Name: 
+      DisplayName: 
+    attributeValue: {fileID: 0}
+    effectValue: {fileID: 0}
+    abilityValue: {fileID: 0}
+    entityValue: {fileID: 0}
+  _template: {fileID: 0}
+  _templateOverrides: []
+  _templateListSnapshots: []
+  Definition:
+    Name: Combustion
+    Description: Pure damage to an enemy; if it's burning, the burning ignites for
+      more, and goes. A stage condition on the target's Status.Burning picks the
+      second stage.
+    ActivationPolicy: 0
+    BufferWindow: 0.3
+    BufferPriority: 0
+    ActivateImmediately: 0
+    Triggers: []
+    Textures:
+    - Tag:
+        Name: PrimaryYKmcVmH4Jn9iqWqQsYjmr_mmcquW7EYPYKmcVmH4Jn9iqWqQsYjmr_mmc
+        DisplayName: Primary
+      Texture: {fileID: 2800000, guid: 159a5ad28e72cfc428953838370bec4b, type: 3}
+  Tags:
+    AssetTag:
+      Name: Demo.Ability.Combustion
+      DisplayName: Demo.Ability.Combustion
+    ContextTags:
+    - Name: Ability.Spell
+      DisplayName: Ability.Spell
+    PassiveGrantedTags: []
+    ActiveGrantedTags: []
+    TagRequirements:
+      Name: 
+      SourceRequirements:
+        Name: 
+        SourceTemplate: {fileID: 0}
+        SyncWithTemplate: 0
+        AvoidTags:
+        - Tag:
+            Name: State.Stunned
+            DisplayName: State.Stunned
+          Operator: 5
+          Magnitude: 0
+          MatchMode: 0
+        - Tag:
+            Name: State.Silenced
+            DisplayName: State.Silenced
+          Operator: 5
+          Magnitude: 0
+          MatchMode: 0
+        RequireTags: []
+      WhileActiveRequirements:
+        Name: 
+        SourceTemplate: {fileID: 0}
+        SyncWithTemplate: 0
+        AvoidTags: []
+        RequireTags: []
+      TargetRequirements:
+        Name: 
+        SourceTemplate: {fileID: 0}
+        SyncWithTemplate: 0
+        AvoidTags: []
+        RequireTags: []
+  Behaviour:
+    Targeting:
+      rid: 2403794261189067266
+    UseImplicitTargeting: 0
+    ImplicitTag:
+      Name: TargetzfvEmaa5gNtqhQ0_dE2_NOOAGh1QLRP8zfvEmaa5gNtqhQ0_dE2_NOOAGh
+      DisplayName: Target
+    AssetLoaders: []
+    Stages:
+    - StagePolicy:
+        rid: 2403794261189067267
+      Tasks:
+      - rid: 2403794261189067268
+      ApplyUsageEffects: 1
+      ApplyUsageAtStageStart: 1
+      Condition:
+        On: 0
+        Tag:
+          Name: 
+          DisplayName: 
+        WhenMissing: 0
+      CancelledBy: []
+      Blocks: []
+    - StagePolicy:
+        rid: 2403794261189067269
+      Tasks:
+      - rid: 2403794261189067270
+      ApplyUsageEffects: 0
+      ApplyUsageAtStageStart: 1
+      Condition:
+        On: 2
+        Tag:
+          Name: Status.Burning
+          DisplayName: Status.Burning
+        WhenMissing: 0
+      CancelledBy: []
+      Blocks: []
+    CancelledBy: []
+    Blocks: []
+  SourceActivationRules:
+  - rid: 2403794261189066954
+  - rid: 2403794261189066955
+  - rid: 2403794261189066956
+  TargetActivationRules:
+  - rid: 2403794261189066957
+  StartingLevel: 1
+  MaxLevel: 4
+  IgnoreWhenLevelZero: 1
+  Cost: {fileID: 11400000, guid: 6f7173d314f325f4d9feb6379a030590, type: 2}
+  Cooldown: {fileID: 11400000, guid: 543981c88e108c14c9fbd1de5e541eb4, type: 2}
+  WorkerGroup:
+    Name: Workers
+    AttributeWorkers: []
+    ImpactWorkers: []
+    TagWorkers: []
+    AnalysisWorkers: []
+  LinkMode: 0
+  _linkedSource: {fileID: 0}
+  references:
+    version: 2
+    RefIds:
+    - rid: 2403794261189066954
+      type: {class: CooldownValidation, ns: FarEmerald.PlayForge, asm: FarEmerald.PlayForge}
+      data: 
+    - rid: 2403794261189066955
+      type: {class: CostValidation, ns: FarEmerald.PlayForge, asm: FarEmerald.PlayForge}
+      data: 
+    - rid: 2403794261189066956
+      type: {class: IsAliveValidation, ns: FarEmerald.PlayForge, asm: FarEmerald.PlayForge}
+      data: 
+    - rid: 2403794261189066957
+      type: {class: IsAliveValidation, ns: FarEmerald.PlayForge, asm: FarEmerald.PlayForge}
+      data: 
+    - rid: 2403794261189067266
+      type: {class: SelectGasTargetTask, ns: FarEmerald.PlayForge, asm: FarEmerald.PlayForge}
+      data:
+        BreakRuntimeOnInvalid: 1
+        Requirements:
+          Name: 
+          SourceTemplate: {fileID: 0}
+          SyncWithTemplate: 0
+          AvoidTags:
+          - Tag:
+              Name: State.Invisible
+              DisplayName: State.Invisible
+            Operator: 5
+            Magnitude: 0
+            MatchMode: 0
+          - Tag:
+              Name: State.Untargetable
+              DisplayName: State.Untargetable
+            Operator: 5
+            Magnitude: 0
+            MatchMode: 0
+          RequireTags: []
+        RaycastLayers:
+          serializedVersion: 2
+          m_Bits: 4294967295
+        MaxDistance: 300
+        RetryOnInvalid: 1
+        MouseButton: 0
+        TakeTargetFromData: 1
+    - rid: 2403794261189067267
+      type: {class: AllProxyStagePolicy, ns: FarEmerald.PlayForge, asm: FarEmerald.PlayForge}
+      data: 
+    - rid: 2403794261189067268
+      type: {class: ApplyEffectsAbilityTask, ns: FarEmerald.PlayForge, asm: FarEmerald.PlayForge}
+      data:
+        Effects:
+        - {fileID: 11400000, guid: b40aed221a82ba241b9a82c5d75c2bff, type: 2}
+        DelayBetweenApplicationMs: 0
+        RecordLandedAs:
+          Name: 
+          DisplayName: 
+    - rid: 2403794261189067269
+      type: {class: AllProxyStagePolicy, ns: FarEmerald.PlayForge, asm: FarEmerald.PlayForge}
+      data: 
+    - rid: 2403794261189067270
+      type: {class: ApplyEffectsAbilityTask, ns: FarEmerald.PlayForge, asm: FarEmerald.PlayForge}
+      data:
+        Effects:
+        - {fileID: 11400000, guid: 185e9df8b8654084ab479636a8f10067, type: 2}
+        DelayBetweenApplicationMs: 0
+        RecordLandedAs:
+          Name: 
+          DisplayName: 

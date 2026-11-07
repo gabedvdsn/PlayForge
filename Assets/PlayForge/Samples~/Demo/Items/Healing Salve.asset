@@ -1,0 +1,52 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e6948d58850a1a944915a8061c5229e8, type: 3}
+  m_Name: Healing Salve
+  m_EditorClassIdentifier: 
+  LocalData: []
+  _template: {fileID: 0}
+  _templateOverrides: []
+  _templateListSnapshots: []
+  Definition:
+    Name: Healing Salve
+    Description: Its ability heals over 6 seconds and uses one up. Holds three at
+      most; the last one used, it goes.
+    Visibility:
+      Name: Always Visibleycx2HSMbeCw4_ZdNk8WObSgxBodyaEWcycx2HSMbeCw4_ZdNk8
+      DisplayName: Always Visible
+    Textures:
+    - Tag:
+        Name: PrimaryYKmcVmH4Jn9iqWqQsYjmr_mmcquW7EYPYKmcVmH4Jn9iqWqQsYjmr_mmc
+        DisplayName: Primary
+      Texture: {fileID: 2800000, guid: 9435618dfe1114342b8d2dce258eedc7, type: 3}
+    MaxStackSize: 3
+  Tags:
+    AssetTag:
+      Name: Demo.Item.HealingSalve
+      DisplayName: Demo.Item.HealingSalve
+    ContextTags: []
+    PassiveGrantedTags: []
+  StartingLevel: 1
+  MaxLevel: 3
+  LinkMode: 0
+  _linkedSource: {fileID: 0}
+  GrantedEffects: []
+  ActiveAbility: {fileID: 11400000, guid: bf5e84982bf9d61448defb16210a8dd2, type: 2}
+  WorkerGroup:
+    Name: Workers
+    AttributeWorkers: []
+    ImpactWorkers: []
+    TagWorkers: []
+    AnalysisWorkers: []
+  references:
+    version: 2
+    RefIds: []

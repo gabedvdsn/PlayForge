@@ -1,0 +1,223 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 2d34fc1f98f8a0b4c9b37da3e706e0e1, type: 3}
+  m_Name: Rallied
+  m_EditorClassIdentifier: 
+  LocalData: []
+  _template: {fileID: 0}
+  _templateOverrides: []
+  _templateListSnapshots: []
+  Definition:
+    Name: Rallied
+    Description: Armor, as a Bonus, for 6 seconds.
+    Visibility:
+      Name: Always Visibleycx2HSMbeCw4_ZdNk8WObSgxBodyaEWcycx2HSMbeCw4_ZdNk8
+      DisplayName: Always Visible
+    Textures:
+    - Tag:
+        Name: PrimaryYKmcVmH4Jn9iqWqQsYjmr_mmcquW7EYPYKmcVmH4Jn9iqWqQsYjmr_mmc
+        DisplayName: Primary
+      Texture: {fileID: 2800000, guid: 71c27ff3cb4e22f40b0f5557a54c87e1, type: 3}
+    RetentionGroup:
+      Name: BonusyjJTN9mNKWQRBtyrTZCKCEbhD63hGgFGyjJTN9mNKWQRBtyrTZCKCEbhD63
+      DisplayName: Bonus
+  Tags:
+    AssetTag:
+      Name: Demo.Effect.Rallied
+      DisplayName: Demo.Effect.Rallied
+    ContextTags:
+    - Name: Kind.Buff
+      DisplayName: Kind.Buff
+    GrantedTags: []
+    RemovesEffectsTagged: []
+    BlocksEffectsTagged: []
+  GrantedAbilities: []
+  ImpactSpecification:
+    AttributeTarget: {fileID: 11400000, guid: 49ede9aab52bf7a40b12b9b165392f8c, type: 2}
+    TargetImpact: 0
+    ImpactOperation: 0
+    MultiplyBehaviour: 0
+    AffiliationPolicy: 2
+    AffiliationComparison: 0
+    Affiliations: []
+    ChanceToApply:
+      Magnitude: 1
+      RealMagnitude: 2
+      Scaler:
+        rid: -2
+    ImpactTypes: []
+    ReverseImpactOnRemoval: 1
+    MagnitudeOperation:
+      Magnitude: 0
+      RealMagnitude: 3
+      Scaler:
+        rid: 2403794261189066841
+    AdditionalImpacts: []
+    Packets: []
+  DurationSpecification:
+    DurationPolicy: 1
+    DurationOperation:
+      Magnitude: 6
+      RealMagnitude: 2
+      Scaler:
+        rid: -2
+    RealDeltaTime: 1
+    DeltaTimeScaler:
+      rid: -2
+    EnablePeriodicTicks: 0
+    TickOnApplication: 0
+    TicksOperation:
+      Magnitude: 0
+      RealMagnitude: 2
+      Scaler:
+        rid: -2
+      Rounding: 0
+    TickIntervalOperation:
+      Magnitude: 1
+      RealMagnitude: 2
+      Scaler:
+        rid: -2
+    AdditionalExecuteTicksOperation:
+      Magnitude: 0
+      RealMagnitude: 2
+      Scaler:
+        rid: -2
+      Rounding: 0
+    ReApplicationPolicy: 1
+    ReApplicationInteraction: 0
+    StackPolicy: 0
+    StackingConfigs: []
+    StackAmountOperation:
+      Magnitude: 1
+      RealMagnitude: 2
+      Scaler:
+        rid: -2
+      Rounding: 0
+  Workers: []
+  Cues:
+  - rid: 2403794261189066842
+  - rid: 2403794261189066843
+  SourceRequirements:
+    Name: 
+    ApplicationRequirements:
+      Name: 
+      SourceTemplate: {fileID: 0}
+      SyncWithTemplate: 0
+      AvoidTags: []
+      RequireTags: []
+    OngoingRequirements:
+      Name: 
+      SourceTemplate: {fileID: 0}
+      SyncWithTemplate: 0
+      AvoidTags: []
+      RequireTags: []
+    RemovalRequirements:
+      Name: 
+      SourceTemplate: {fileID: 0}
+      SyncWithTemplate: 0
+      AvoidTags: []
+      RequireTags: []
+  TargetRequirements:
+    Name: 
+    ApplicationRequirements:
+      Name: 
+      SourceTemplate: {fileID: 0}
+      SyncWithTemplate: 0
+      AvoidTags: []
+      RequireTags: []
+    OngoingRequirements:
+      Name: 
+      SourceTemplate: {fileID: 0}
+      SyncWithTemplate: 0
+      AvoidTags: []
+      RequireTags: []
+    RemovalRequirements:
+      Name: 
+      SourceTemplate: {fileID: 0}
+      SyncWithTemplate: 0
+      AvoidTags: []
+      RequireTags: []
+  LinkMode: 1
+  _linkedSource: {fileID: 11400000, guid: c8658cbcadd0e3f47a4f60e0bb29e0ca, type: 2}
+  references:
+    version: 2
+    RefIds:
+    - rid: -2
+      type: {class: , ns: , asm: }
+    - rid: 2403794261189066841
+      type: {class: SimpleScaler, ns: FarEmerald.PlayForge, asm: FarEmerald.PlayForge}
+      data:
+        Name: Armor, by level
+        Configuration: 0
+        MaxLevel: 4
+        LevelValues:
+        - 30
+        - 45
+        - 60
+        - 75
+        Interpolation: 1
+        StretchOverLevels: 0
+        Scaling:
+          serializedVersion: 2
+          m_Curve:
+          - serializedVersion: 3
+            time: 0
+            value: 30
+            inSlope: 0
+            outSlope: 45
+            tangentMode: 69
+            weightedMode: 0
+            inWeight: 0
+            outWeight: 0
+          - serializedVersion: 3
+            time: 0.33333334
+            value: 45
+            inSlope: 45
+            outSlope: 45
+            tangentMode: 69
+            weightedMode: 0
+            inWeight: 0
+            outWeight: 0
+          - serializedVersion: 3
+            time: 0.6666667
+            value: 60
+            inSlope: 45
+            outSlope: 45.000004
+            tangentMode: 69
+            weightedMode: 0
+            inWeight: 0
+            outWeight: 0
+          - serializedVersion: 3
+            time: 1
+            value: 75
+            inSlope: 45.000004
+            outSlope: 0
+            tangentMode: 69
+            weightedMode: 0
+            inWeight: 0
+            outWeight: 0
+          m_PreInfinity: 2
+          m_PostInfinity: 2
+          m_RotationOrder: 4
+        Behaviours: []
+    - rid: 2403794261189066842
+      type: {class: PrefabCue, ns: FarEmerald.PlayForge, asm: FarEmerald.PlayForge}
+      data:
+        Prefab: {fileID: 7103157881736917147, guid: 86430e25dbc2661419a9e103870e1e6d, type: 3}
+        WhileActive: 1
+        Lifetime: 0
+    - rid: 2403794261189066843
+      type: {class: FloatingTextCue, ns: FarEmerald.PlayForge.Samples.Demo, asm: FarEmerald.PlayForge.Samples.Demo}
+      data:
+        Text: Rallied
+        Color: {r: 0.5, g: 1, b: 0.6, a: 1}
+        OnEachTick: 0

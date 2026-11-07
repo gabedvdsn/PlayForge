@@ -7,6 +7,11 @@ tracks each fix below by its ID.
 ## [Unreleased]
 
 ### Added
+- The Demo sample: a hero arena of five heroes, fourteen items, an AI hero and a training dummy, with a panel to
+  pick heroes, give items and change levels, and a HUD. Every hero, ability, item, effect and attribute is an
+  asset, and between them they use every asset feature; its README maps each to where it shows. It needs nothing
+  beyond PlayForge, reads the Input System or the Input Manager, renders in the Built-in pipeline or URP, and its
+  PlayMode tests play it (SP-25).
 - What a gameplay mono process carries reaches the effects it applies: `GiveMagnitudes(spec)` gives a spec the
   set-by-caller magnitudes of the data that spawned it, then each of the process's own attributes under its role,
   so an effect's Set By Caller scaler reads what the process carries, as a fire's burn its heat. A projectile's
@@ -184,6 +189,7 @@ tracks each fix below by its ID.
   page, through one table of links in the editor.
 
 ### Changed
+- The synced sequence examples are in Code Examples, with the rest; they shipped with the Demos (SP-26).
 - A Mono Process's inspector is a Process section of Unity's fields; each choice says what it does in its tooltip,
   and Priority Method shows only while the process steps, Priority only for Manual. It drew a tinted box and gray
   hints (ED-61).
@@ -592,6 +598,7 @@ tracks each fix below by its ID.
   or turning `Enabled` off. Once the first had ended, it threw, and the rest ran on.
 
 ### Removed
+- The Demos sample, the Demo scene and Swarm Defender, which the Demo sample replaces (SP-26, Decision 37).
 - `AbstractRefDrawer`, the old type picker, which only `AbstractTypeRefDrawer` used. A drawer of your own that
   derives from `AbstractTypeRefDrawer` or `AbstractGenericDrawer` keeps `GetStringValue`, `FilterType`,
   `CleanTypeName`, `GetEntries`, `AcceptClear`, `SetValue` and `OnTypeChanged`; `AcceptOpen` and `AcceptAdd` are

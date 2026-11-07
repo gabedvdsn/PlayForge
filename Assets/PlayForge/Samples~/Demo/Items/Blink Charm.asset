@@ -1,0 +1,52 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e6948d58850a1a944915a8061c5229e8, type: 3}
+  m_Name: Blink Charm
+  m_EditorClassIdentifier: 
+  LocalData: []
+  _template: {fileID: 0}
+  _templateOverrides: []
+  _templateListSnapshots: []
+  Definition:
+    Name: Blink Charm
+    Description: Its ability, Blink, puts its holder at a point a short way off,
+      at once.
+    Visibility:
+      Name: Always Visibleycx2HSMbeCw4_ZdNk8WObSgxBodyaEWcycx2HSMbeCw4_ZdNk8
+      DisplayName: Always Visible
+    Textures:
+    - Tag:
+        Name: PrimaryYKmcVmH4Jn9iqWqQsYjmr_mmcquW7EYPYKmcVmH4Jn9iqWqQsYjmr_mmc
+        DisplayName: Primary
+      Texture: {fileID: 2800000, guid: 4d0693792d4b69d4e8f359d180fe1302, type: 3}
+    MaxStackSize: 1
+  Tags:
+    AssetTag:
+      Name: Demo.Item.BlinkCharm
+      DisplayName: Demo.Item.BlinkCharm
+    ContextTags: []
+    PassiveGrantedTags: []
+  StartingLevel: 1
+  MaxLevel: 1
+  LinkMode: 0
+  _linkedSource: {fileID: 0}
+  GrantedEffects: []
+  ActiveAbility: {fileID: 11400000, guid: ae5aa1c65cdf2c14da26dd224434085a, type: 2}
+  WorkerGroup:
+    Name: Workers
+    AttributeWorkers: []
+    ImpactWorkers: []
+    TagWorkers: []
+    AnalysisWorkers: []
+  references:
+    version: 2
+    RefIds: []

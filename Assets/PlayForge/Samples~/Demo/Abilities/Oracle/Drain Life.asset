@@ -1,0 +1,255 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d5a42dbe2415465689d11a1e8ae1fdbc, type: 3}
+  m_Name: Drain Life
+  m_EditorClassIdentifier: 
+  LocalData:
+  - Key:
+      Name: Demo.CastWhen
+      DisplayName: Demo.CastWhen
+    Type: 3
+    stringValue: InRange
+    boolValue: 0
+    intValue: 0
+    floatValue: 0
+    objectValue: {fileID: 0}
+    monoBehaviourValue: {fileID: 0}
+    scriptableObjectValue: {fileID: 0}
+    tagValue:
+      Name: 
+      DisplayName: 
+    attributeValue: {fileID: 0}
+    effectValue: {fileID: 0}
+    abilityValue: {fileID: 0}
+    entityValue: {fileID: 0}
+  - Key:
+      Name: Demo.Reach
+      DisplayName: Demo.Reach
+    Type: 5
+    stringValue: 
+    boolValue: 0
+    intValue: 0
+    floatValue: 8
+    objectValue: {fileID: 0}
+    monoBehaviourValue: {fileID: 0}
+    scriptableObjectValue: {fileID: 0}
+    tagValue:
+      Name: 
+      DisplayName: 
+    attributeValue: {fileID: 0}
+    effectValue: {fileID: 0}
+    abilityValue: {fileID: 0}
+    entityValue: {fileID: 0}
+  _template: {fileID: 0}
+  _templateOverrides: []
+  _templateListSnapshots: []
+  Definition:
+    Name: Drain Life
+    Description: 'Channels for 3 seconds: magic damage each second, and half of it
+      back to the Oracle as Health, by the ability''s own impact worker. A stun breaks
+      the channel.'
+    ActivationPolicy: 0
+    BufferWindow: 0.3
+    BufferPriority: 0
+    ActivateImmediately: 0
+    Triggers: []
+    Textures:
+    - Tag:
+        Name: PrimaryYKmcVmH4Jn9iqWqQsYjmr_mmcquW7EYPYKmcVmH4Jn9iqWqQsYjmr_mmc
+        DisplayName: Primary
+      Texture: {fileID: 2800000, guid: db17781946efd8a4c92f0475c68c7dc3, type: 3}
+  Tags:
+    AssetTag:
+      Name: Demo.Ability.DrainLife
+      DisplayName: Demo.Ability.DrainLife
+    ContextTags:
+    - Name: Ability.Spell
+      DisplayName: Ability.Spell
+    PassiveGrantedTags: []
+    ActiveGrantedTags:
+    - Name: State.Channeling
+      DisplayName: State.Channeling
+    TagRequirements:
+      Name: 
+      SourceRequirements:
+        Name: 
+        SourceTemplate: {fileID: 0}
+        SyncWithTemplate: 0
+        AvoidTags:
+        - Tag:
+            Name: State.Stunned
+            DisplayName: State.Stunned
+          Operator: 5
+          Magnitude: 0
+          MatchMode: 0
+        - Tag:
+            Name: State.Silenced
+            DisplayName: State.Silenced
+          Operator: 5
+          Magnitude: 0
+          MatchMode: 0
+        RequireTags: []
+      WhileActiveRequirements:
+        Name: 
+        SourceTemplate: {fileID: 0}
+        SyncWithTemplate: 0
+        AvoidTags:
+        - Tag:
+            Name: State.Stunned
+            DisplayName: State.Stunned
+          Operator: 5
+          Magnitude: 0
+          MatchMode: 0
+        - Tag:
+            Name: State.Silenced
+            DisplayName: State.Silenced
+          Operator: 5
+          Magnitude: 0
+          MatchMode: 0
+        RequireTags: []
+      TargetRequirements:
+        Name: 
+        SourceTemplate: {fileID: 0}
+        SyncWithTemplate: 0
+        AvoidTags: []
+        RequireTags: []
+  Behaviour:
+    Targeting:
+      rid: 2403794261189067261
+    UseImplicitTargeting: 0
+    ImplicitTag:
+      Name: TargetzfvEmaa5gNtqhQ0_dE2_NOOAGh1QLRP8zfvEmaa5gNtqhQ0_dE2_NOOAGh
+      DisplayName: Target
+    AssetLoaders: []
+    Stages:
+    - StagePolicy:
+        rid: 2403794261189067262
+      Tasks:
+      - rid: 2403794261189067263
+      - rid: 2403794261189067264
+      ApplyUsageEffects: 1
+      ApplyUsageAtStageStart: 1
+      Condition:
+        On: 0
+        Tag:
+          Name: 
+          DisplayName: 
+        WhenMissing: 0
+      CancelledBy: []
+      Blocks: []
+    CancelledBy: []
+    Blocks: []
+  SourceActivationRules:
+  - rid: 2403794261189067052
+  - rid: 2403794261189067053
+  - rid: 2403794261189067054
+  TargetActivationRules:
+  - rid: 2403794261189067055
+  StartingLevel: 1
+  MaxLevel: 4
+  IgnoreWhenLevelZero: 1
+  Cost: {fileID: 11400000, guid: e0a4b1e4b5acb4944a8d743d0055e13d, type: 2}
+  Cooldown: {fileID: 11400000, guid: 66ab17c3b966cee4b8a84aef82f86787, type: 2}
+  WorkerGroup:
+    Name: Workers
+    AttributeWorkers: []
+    ImpactWorkers:
+    - rid: 2403794261189067265
+    TagWorkers: []
+    AnalysisWorkers: []
+  LinkMode: 0
+  _linkedSource: {fileID: 0}
+  references:
+    version: 2
+    RefIds:
+    - rid: 2403794261189067052
+      type: {class: CooldownValidation, ns: FarEmerald.PlayForge, asm: FarEmerald.PlayForge}
+      data: 
+    - rid: 2403794261189067053
+      type: {class: CostValidation, ns: FarEmerald.PlayForge, asm: FarEmerald.PlayForge}
+      data: 
+    - rid: 2403794261189067054
+      type: {class: IsAliveValidation, ns: FarEmerald.PlayForge, asm: FarEmerald.PlayForge}
+      data: 
+    - rid: 2403794261189067055
+      type: {class: IsAliveValidation, ns: FarEmerald.PlayForge, asm: FarEmerald.PlayForge}
+      data: 
+    - rid: 2403794261189067261
+      type: {class: SelectGasTargetInRangeTask, ns: FarEmerald.PlayForge, asm: FarEmerald.PlayForge}
+      data:
+        BreakRuntimeOnInvalid: 1
+        Requirements:
+          Name: 
+          SourceTemplate: {fileID: 0}
+          SyncWithTemplate: 0
+          AvoidTags:
+          - Tag:
+              Name: State.Invisible
+              DisplayName: State.Invisible
+            Operator: 5
+            Magnitude: 0
+            MatchMode: 0
+          - Tag:
+              Name: State.Untargetable
+              DisplayName: State.Untargetable
+            Operator: 5
+            Magnitude: 0
+            MatchMode: 0
+          RequireTags: []
+        RaycastLayers:
+          serializedVersion: 2
+          m_Bits: 4294967295
+        MaxRayDistance: 300
+        MaxTargetRange: 8.5
+        FlattenRangeCheck: 1
+        RetryOnInvalid: 1
+        MouseButton: 0
+        TakeTargetFromData: 1
+    - rid: 2403794261189067262
+      type: {class: AllProxyStagePolicy, ns: FarEmerald.PlayForge, asm: FarEmerald.PlayForge}
+      data: 
+    - rid: 2403794261189067263
+      type: {class: ApplyEffectsAbilityTask, ns: FarEmerald.PlayForge, asm: FarEmerald.PlayForge}
+      data:
+        Effects:
+        - {fileID: 11400000, guid: bce871dbd86536f46ace4d28eb0f15da, type: 2}
+        - {fileID: 11400000, guid: bce871dbd86536f46ace4d28eb0f15da, type: 2}
+        - {fileID: 11400000, guid: bce871dbd86536f46ace4d28eb0f15da, type: 2}
+        DelayBetweenApplicationMs: 1000
+        RecordLandedAs:
+          Name: 
+          DisplayName: 
+    - rid: 2403794261189067264
+      type: {class: ChannelAbilityTask, ns: FarEmerald.PlayForge, asm: FarEmerald.PlayForge}
+      data:
+        ChannelDuration: 3
+        Timing: 8
+    - rid: 2403794261189067265
+      type: {class: ShareBackWorker, ns: FarEmerald.PlayForge.Samples.Demo, asm: FarEmerald.PlayForge.Samples.Demo}
+      data:
+        AcceptUnworkableImpact: 0
+        ImpactedAttribute: {fileID: 11400000, guid: b865fa5ec88ff314ab348516f14527f7, type: 2}
+        AnyImpactType: 1
+        ImpactType: []
+        ImpactTarget: 3
+        ImpactTargetExclusive: 0
+        ImpactSign: 1
+        AllowSelfImpact: 0
+        AnyContextTag: 0
+        ContextMatchingPolicy: 0
+        ImpactAbilityContextTags:
+        - Name: Damage.Drain
+          DisplayName: Damage.Drain
+        WorkAttribute: {fileID: 11400000, guid: b865fa5ec88ff314ab348516f14527f7, type: 2}
+        WorkImpactType: []
+        WorkSignPolicy: 0
+        Share: 0.5

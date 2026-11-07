@@ -1,0 +1,157 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: dac855327e524f0f9473752d46a88179, type: 3}
+  m_Name: Shade
+  m_EditorClassIdentifier: 
+  LocalData:
+  - Key:
+      Name: Demo.AttackRange
+      DisplayName: Demo.AttackRange
+    Type: 5
+    stringValue: 
+    boolValue: 0
+    intValue: 0
+    floatValue: 2.2
+    objectValue: {fileID: 0}
+    monoBehaviourValue: {fileID: 0}
+    scriptableObjectValue: {fileID: 0}
+    tagValue:
+      Name: 
+      DisplayName: 
+    attributeValue: {fileID: 0}
+    effectValue: {fileID: 0}
+    abilityValue: {fileID: 0}
+    entityValue: {fileID: 0}
+  - Key:
+      Name: Demo.CastOrder
+      DisplayName: Demo.CastOrder
+    Type: 3
+    stringValue: Q W E
+    boolValue: 0
+    intValue: 0
+    floatValue: 0
+    objectValue: {fileID: 0}
+    monoBehaviourValue: {fileID: 0}
+    scriptableObjectValue: {fileID: 0}
+    tagValue:
+      Name: 
+      DisplayName: 
+    attributeValue: {fileID: 0}
+    effectValue: {fileID: 0}
+    abilityValue: {fileID: 0}
+    entityValue: {fileID: 0}
+  _template: {fileID: 11400000, guid: dcb9af90ea4de394ea587997045b0622, type: 2}
+  _templateOverrides:
+  - AttributeSet
+  _templateListSnapshots:
+  - PropertyPath: LocalData
+    ElementIdentifiers:
+    - composite:5|False|0|2.2|null|0|0|null|0|0|null|0|0|null|0|0|null|0|0|null|0|0|null|0|0
+  - PropertyPath: Affiliation
+    ElementIdentifiers: []
+  - PropertyPath: GrantedTags
+    ElementIdentifiers: []
+  - PropertyPath: ContextTags
+    ElementIdentifiers: []
+  - PropertyPath: StartingAbilities
+    ElementIdentifiers: []
+  - PropertyPath: StartingItems
+    ElementIdentifiers: []
+  - PropertyPath: WorkerGroup.AttributeWorkers
+    ElementIdentifiers: []
+  - PropertyPath: WorkerGroup.ImpactWorkers
+    ElementIdentifiers: []
+  - PropertyPath: WorkerGroup.TagWorkers
+    ElementIdentifiers: []
+  - PropertyPath: WorkerGroup.AnalysisWorkers
+    ElementIdentifiers:
+    - managed:FarEmerald.PlayForge.DeathWatcherAnalysisWorker:{"Target":{"instanceID":7950},"Threshold":0.0,"Comparison":1,"TriggerOnce":true}
+  Name: Shade
+  Description: An assassin that strikes from stealth.
+  Textures:
+  - Tag:
+      Name: PrimaryYKmcVmH4Jn9iqWqQsYjmr_mmcquW7EYPYKmcVmH4Jn9iqWqQsYjmr_mmc
+      DisplayName: Primary
+    Texture: {fileID: 2800000, guid: 2d79a7d42c343874ba640340b3c2805b, type: 3}
+  Affiliation: []
+  AssetTag:
+    Name: Demo.Entity.Shade
+    DisplayName: Demo.Entity.Shade
+  GrantedTags: []
+  ContextTags: []
+  StartingLevel: 1
+  MaxLevel: 10
+  ActivationPolicy: 2
+  MaxAbilitiesOperation:
+    Magnitude: 12
+    RealMagnitude: 2
+    Scaler:
+      rid: -2
+    Rounding: 0
+  StartingAbilities:
+  - {fileID: 11400000, guid: 18d6fdc5cb4f0044088148532e315190, type: 2}
+  - {fileID: 11400000, guid: b21eef4c335db6942870fce5994ffaea, type: 2}
+  - {fileID: 11400000, guid: d0959c8a0a24af74288bdc7f385701e3, type: 2}
+  - {fileID: 11400000, guid: 24c13f55e704d9c41b34c497d94e6004, type: 2}
+  - {fileID: 11400000, guid: 417a6437abe43a84b930c0eedd249eb7, type: 2}
+  AllowDuplicateAbilities: 0
+  MaxItemsOperation:
+    Magnitude: 12
+    RealMagnitude: 2
+    Scaler:
+      rid: -2
+    Rounding: 0
+  MaxEquippedItemsOperation:
+    Magnitude: 6
+    RealMagnitude: 2
+    Scaler:
+      rid: -2
+    Rounding: 0
+  StartingItems: []
+  AllowDuplicateItems: 0
+  AllowDuplicateEquippedItems: 0
+  AttributeSet: {fileID: 11400000, guid: 4dfafa0714d3cf843b9b559781dadabe, type: 2}
+  TimeScaleAttribute: {fileID: 0}
+  WorkerGroup:
+    Name: Workers
+    AttributeWorkers: []
+    ImpactWorkers: []
+    TagWorkers:
+    - rid: 2403794261189067176
+    AnalysisWorkers:
+    - rid: 2403794261189067145
+  LinkMode: 0
+  _linkedSource: {fileID: 0}
+  references:
+    version: 2
+    RefIds:
+    - rid: -2
+      type: {class: , ns: , asm: }
+    - rid: 2403794261189067145
+      type: {class: DeathWatcherAnalysisWorker, ns: FarEmerald.PlayForge, asm: FarEmerald.PlayForge}
+      data:
+        Target: {fileID: 11400000, guid: b865fa5ec88ff314ab348516f14527f7, type: 2}
+        Threshold: 0
+        Comparison: 1
+        TriggerOnce: 1
+    - rid: 2403794261189067176
+      type: {class: WhileTaggedEffectWorker, ns: FarEmerald.PlayForge.Samples.Demo, asm: FarEmerald.PlayForge.Samples.Demo}
+      data:
+        Requirements:
+          TagPackets:
+          - Tag:
+              Name: State.Invisible
+              DisplayName: State.Invisible
+            Policy: 0
+            RequiredWeight: 1
+        TickPause: -1
+        Effect: {fileID: 11400000, guid: 3d053ad3e3b838c47beda936b86609dd, type: 2}

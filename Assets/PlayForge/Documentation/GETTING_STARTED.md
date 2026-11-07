@@ -11,8 +11,8 @@ task pipelines, and tags glue everything together for requirements, filtering an
   `https://github.com/Cysharp/UniTask.git?path=src/UniTask/Assets/Plugins/UniTask#2.5.11`.
   A package can't declare a git dependency, so the project's manifest has to name it.
 - The samples import from Package Manager's Samples tab. **Battle**, a battle that plays itself, needs nothing
-  more. **Demos** needs the **Input System** package, with Active Input Handling set to Input System or Both;
-  without it the sample's scripts don't compile and its scenes do nothing. **Code Examples** needs nothing more.
+  more. **Demo**, a hero arena to pick heroes, give items and fight, needs nothing more either: it reads the Input
+  System where the project has it, and the Input Manager otherwise. **Code Examples** needs nothing more.
 - The samples render in the **Built-in Render Pipeline** or **URP**. HDRP isn't supported.
 
 ## The pieces in one paragraph

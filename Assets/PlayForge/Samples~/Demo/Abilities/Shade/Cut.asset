@@ -1,0 +1,222 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d5a42dbe2415465689d11a1e8ae1fdbc, type: 3}
+  m_Name: Cut
+  m_EditorClassIdentifier: 
+  LocalData: []
+  _template: {fileID: 0}
+  _templateOverrides: []
+  _templateListSnapshots: []
+  Definition:
+    Name: Cut
+    Description: A melee blow, physical, by Agility. Empowered, it deals pure damage
+      instead, by a stage condition on the caster's State.Empowered.
+    ActivationPolicy: 0
+    BufferWindow: 0.3
+    BufferPriority: 0
+    ActivateImmediately: 0
+    Triggers: []
+    Textures:
+    - Tag:
+        Name: PrimaryYKmcVmH4Jn9iqWqQsYjmr_mmcquW7EYPYKmcVmH4Jn9iqWqQsYjmr_mmc
+        DisplayName: Primary
+      Texture: {fileID: 2800000, guid: 0fb9efeb57a7c5a4f98e9cb99ebb4a2c, type: 3}
+  Tags:
+    AssetTag:
+      Name: Demo.Ability.Cut
+      DisplayName: Demo.Ability.Cut
+    ContextTags:
+    - Name: Ability.Attack
+      DisplayName: Ability.Attack
+    PassiveGrantedTags: []
+    ActiveGrantedTags:
+    - Name: State.Attacking
+      DisplayName: State.Attacking
+    TagRequirements:
+      Name: 
+      SourceRequirements:
+        Name: 
+        SourceTemplate: {fileID: 0}
+        SyncWithTemplate: 0
+        AvoidTags:
+        - Tag:
+            Name: State.Stunned
+            DisplayName: State.Stunned
+          Operator: 5
+          Magnitude: 0
+          MatchMode: 0
+        RequireTags: []
+      WhileActiveRequirements:
+        Name: 
+        SourceTemplate: {fileID: 0}
+        SyncWithTemplate: 0
+        AvoidTags: []
+        RequireTags: []
+      TargetRequirements:
+        Name: 
+        SourceTemplate: {fileID: 0}
+        SyncWithTemplate: 0
+        AvoidTags: []
+        RequireTags: []
+  Behaviour:
+    Targeting:
+      rid: 2403794261189067185
+    UseImplicitTargeting: 0
+    ImplicitTag:
+      Name: TargetzfvEmaa5gNtqhQ0_dE2_NOOAGh1QLRP8zfvEmaa5gNtqhQ0_dE2_NOOAGh
+      DisplayName: Target
+    AssetLoaders: []
+    Stages:
+    - StagePolicy:
+        rid: 2403794261189067186
+      Tasks:
+      - rid: 2403794261189067187
+      ApplyUsageEffects: 1
+      ApplyUsageAtStageStart: 1
+      Condition:
+        On: 0
+        Tag:
+          Name: 
+          DisplayName: 
+        WhenMissing: 0
+      CancelledBy: []
+      Blocks: []
+    - StagePolicy:
+        rid: 2403794261189067188
+      Tasks:
+      - rid: 2403794261189067189
+      ApplyUsageEffects: 0
+      ApplyUsageAtStageStart: 1
+      Condition:
+        On: 1
+        Tag:
+          Name: State.Empowered
+          DisplayName: State.Empowered
+        WhenMissing: 1
+      CancelledBy: []
+      Blocks: []
+    - StagePolicy:
+        rid: 2403794261189067190
+      Tasks:
+      - rid: 2403794261189067191
+      - rid: 2403794261189067192
+      ApplyUsageEffects: 0
+      ApplyUsageAtStageStart: 1
+      Condition:
+        On: 1
+        Tag:
+          Name: State.Empowered
+          DisplayName: State.Empowered
+        WhenMissing: 0
+      CancelledBy: []
+      Blocks: []
+    CancelledBy: []
+    Blocks: []
+  SourceActivationRules:
+  - rid: 2403794261189066974
+  - rid: 2403794261189066975
+  - rid: 2403794261189066976
+  TargetActivationRules:
+  - rid: 2403794261189066977
+  StartingLevel: 1
+  MaxLevel: 4
+  IgnoreWhenLevelZero: 1
+  Cost: {fileID: 0}
+  Cooldown: {fileID: 11400000, guid: f5ebd1276d2a5644eb80bd0a03c6bb35, type: 2}
+  WorkerGroup:
+    Name: Workers
+    AttributeWorkers: []
+    ImpactWorkers: []
+    TagWorkers: []
+    AnalysisWorkers: []
+  LinkMode: 0
+  _linkedSource: {fileID: 0}
+  references:
+    version: 2
+    RefIds:
+    - rid: 2403794261189066974
+      type: {class: CooldownValidation, ns: FarEmerald.PlayForge, asm: FarEmerald.PlayForge}
+      data: 
+    - rid: 2403794261189066975
+      type: {class: CostValidation, ns: FarEmerald.PlayForge, asm: FarEmerald.PlayForge}
+      data: 
+    - rid: 2403794261189066976
+      type: {class: IsAliveValidation, ns: FarEmerald.PlayForge, asm: FarEmerald.PlayForge}
+      data: 
+    - rid: 2403794261189066977
+      type: {class: IsAliveValidation, ns: FarEmerald.PlayForge, asm: FarEmerald.PlayForge}
+      data: 
+    - rid: 2403794261189067185
+      type: {class: SelectGasTargetTask, ns: FarEmerald.PlayForge, asm: FarEmerald.PlayForge}
+      data:
+        BreakRuntimeOnInvalid: 1
+        Requirements:
+          Name: 
+          SourceTemplate: {fileID: 0}
+          SyncWithTemplate: 0
+          AvoidTags:
+          - Tag:
+              Name: State.Invisible
+              DisplayName: State.Invisible
+            Operator: 5
+            Magnitude: 0
+            MatchMode: 0
+          - Tag:
+              Name: State.Untargetable
+              DisplayName: State.Untargetable
+            Operator: 5
+            Magnitude: 0
+            MatchMode: 0
+          RequireTags: []
+        RaycastLayers:
+          serializedVersion: 2
+          m_Bits: 4294967295
+        MaxDistance: 300
+        RetryOnInvalid: 1
+        MouseButton: 0
+        TakeTargetFromData: 1
+    - rid: 2403794261189067186
+      type: {class: AllProxyStagePolicy, ns: FarEmerald.PlayForge, asm: FarEmerald.PlayForge}
+      data: 
+    - rid: 2403794261189067187
+      type: {class: DelayTask, ns: FarEmerald.PlayForge, asm: FarEmerald.PlayForge}
+      data:
+        DelayMilliseconds: 120
+    - rid: 2403794261189067188
+      type: {class: AllProxyStagePolicy, ns: FarEmerald.PlayForge, asm: FarEmerald.PlayForge}
+      data: 
+    - rid: 2403794261189067189
+      type: {class: ApplyEffectsAbilityTask, ns: FarEmerald.PlayForge, asm: FarEmerald.PlayForge}
+      data:
+        Effects:
+        - {fileID: 11400000, guid: f10b8c458d067324fbfdfd83c8364c50, type: 2}
+        DelayBetweenApplicationMs: 0
+        RecordLandedAs:
+          Name: 
+          DisplayName: 
+    - rid: 2403794261189067190
+      type: {class: AllProxyStagePolicy, ns: FarEmerald.PlayForge, asm: FarEmerald.PlayForge}
+      data: 
+    - rid: 2403794261189067191
+      type: {class: ApplyEffectsAbilityTask, ns: FarEmerald.PlayForge, asm: FarEmerald.PlayForge}
+      data:
+        Effects:
+        - {fileID: 11400000, guid: a8ad9cf4c3dcb9645a732f688d23621c, type: 2}
+        DelayBetweenApplicationMs: 0
+        RecordLandedAs:
+          Name: 
+          DisplayName: 
+    - rid: 2403794261189067192
+      type: {class: ApplyToCasterTask, ns: FarEmerald.PlayForge.Samples.Demo, asm: FarEmerald.PlayForge.Samples.Demo}
+      data:
+        Effects:
+        - {fileID: 11400000, guid: 78ae27cfcf8a35e48b5bf249ea91f93f, type: 2}

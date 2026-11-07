@@ -6,14 +6,16 @@ completed groundwork ☑.
 ## ☑/☐ 1. Samples
 
 - ☑ The samples live in `Samples~` and are listed in `package.json`, so Package Manager imports them on request:
-  **Demos** (the Demo scene, Swarm Defender and the data they share, imported together) and **Code Examples**.
+  **Battle**, a battle that plays itself; **Demo**, a hero arena of five heroes, fourteen items, an AI hero and a
+  training dummy; and **Code Examples**.
 - ☑ A clean import into a fresh project shows zero warnings and zero missing types, and importing both samples into
   it shows zero missing scripts, references and types. Proving Grounds' `Tools/clean-import.py` checks both, the
   samples with `--samples`.
-- ☑ **Demos** needs the Input System package. Its assembly compiles only where that package is installed, so importing
-  it without the package leaves it inert instead of breaking the project's compile.
-- ☐ A polished, self-contained demo scene (Built-in RP, no external packages beyond UniTask). The Demo imports and
-  checks clean, but it is dev-grade, and nobody has played it since its repairs.
+- ☑ **Demo** needs nothing beyond PlayForge: it reads the Input System where the project has it, and the Input
+  Manager otherwise, so it compiles and plays in any project (Phase 7).
+- ☐ A polished, self-contained demo scene. The Demo (Phase 7, Decision 37) is self-contained, renders in the
+  Built-in pipeline and URP, and its PlayMode tests play every hero's abilities, but nobody has played it by hand
+  yet.
 
 ## ☐ 2. The packaging branch: embed UniTask, include the samples
 
@@ -77,7 +79,7 @@ Copyright (c) 2019 Yoshifumi Kawai / Cysharp, Inc.
 - ☐ Description; tags; state "samples render in the Built-in RP and URP; the runtime is render-pipeline-agnostic".
 - ☐ Upload from the OLDEST supported Unity version (claim Unity 6.0+ → upload from 6000.0.x).
 - ☑ Which Editor submits: 6000.0, the oldest supported (the plan's decision 17).
-- ☑ The Demos render in URP (SP-23), and the package works with domain reloading off (SP-22). The
+- ☑ The samples render in URP (SP-23), and the package works with domain reloading off (SP-22). The
   [submission guidelines](https://assetstore.unity.com/publishing/submission-guidelines) (updated 2026-10-23) require
   them of anything submitted from 6.5 (rule 1.3.c) and 6.6 (rule 2.5.h). Decision 17 does both anyway.
 - ☑ Menus under an existing menu (rule 2.5.1.a): every item sits under `Window/PlayForge/` (ED-19).

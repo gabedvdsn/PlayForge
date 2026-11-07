@@ -1,0 +1,54 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e6948d58850a1a944915a8061c5229e8, type: 3}
+  m_Name: Stat Item
+  m_EditorClassIdentifier: 
+  LocalData: []
+  _template: {fileID: 0}
+  _templateOverrides: []
+  _templateListSnapshots: []
+  Definition:
+    Name: Stat Item
+    Description: 'The template every stat item takes: three levels, one to a slot,
+      and the Item.Stat context tag. An item sets its own bonuses.'
+    Visibility:
+      Name: Always Visibleycx2HSMbeCw4_ZdNk8WObSgxBodyaEWcycx2HSMbeCw4_ZdNk8
+      DisplayName: Always Visible
+    Textures:
+    - Tag:
+        Name: PrimaryYKmcVmH4Jn9iqWqQsYjmr_mmcquW7EYPYKmcVmH4Jn9iqWqQsYjmr_mmc
+        DisplayName: Primary
+      Texture: {fileID: 2800000, guid: e5ea8582e7d687b4488ae0213712554b, type: 3}
+    MaxStackSize: 1
+  Tags:
+    AssetTag:
+      Name: Demo.Item.StatItem
+      DisplayName: Demo.Item.StatItem
+    ContextTags:
+    - Name: Item.Stat
+      DisplayName: Item.Stat
+    PassiveGrantedTags: []
+  StartingLevel: 1
+  MaxLevel: 3
+  LinkMode: 0
+  _linkedSource: {fileID: 0}
+  GrantedEffects: []
+  ActiveAbility: {fileID: 0}
+  WorkerGroup:
+    Name: Workers
+    AttributeWorkers: []
+    ImpactWorkers: []
+    TagWorkers: []
+    AnalysisWorkers: []
+  references:
+    version: 2
+    RefIds: []

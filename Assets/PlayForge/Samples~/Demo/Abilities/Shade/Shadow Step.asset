@@ -1,0 +1,256 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d5a42dbe2415465689d11a1e8ae1fdbc, type: 3}
+  m_Name: Shadow Step
+  m_EditorClassIdentifier: 
+  LocalData:
+  - Key:
+      Name: Demo.CastWhen
+      DisplayName: Demo.CastWhen
+    Type: 3
+    stringValue: InRange
+    boolValue: 0
+    intValue: 0
+    floatValue: 0
+    objectValue: {fileID: 0}
+    monoBehaviourValue: {fileID: 0}
+    scriptableObjectValue: {fileID: 0}
+    tagValue:
+      Name: 
+      DisplayName: 
+    attributeValue: {fileID: 0}
+    effectValue: {fileID: 0}
+    abilityValue: {fileID: 0}
+    entityValue: {fileID: 0}
+  - Key:
+      Name: Demo.Reach
+      DisplayName: Demo.Reach
+    Type: 5
+    stringValue: 
+    boolValue: 0
+    intValue: 0
+    floatValue: 8
+    objectValue: {fileID: 0}
+    monoBehaviourValue: {fileID: 0}
+    scriptableObjectValue: {fileID: 0}
+    tagValue:
+      Name: 
+      DisplayName: 
+    attributeValue: {fileID: 0}
+    effectValue: {fileID: 0}
+    abilityValue: {fileID: 0}
+    entityValue: {fileID: 0}
+  _template: {fileID: 0}
+  _templateOverrides: []
+  _templateListSnapshots: []
+  Definition:
+    Name: Shadow Step
+    Description: Blinks behind an enemy, and empowers the next cut. If the enemy
+      slips away first, an Inject task ends the step before the empowerment.
+    ActivationPolicy: 0
+    BufferWindow: 0.3
+    BufferPriority: 0
+    ActivateImmediately: 0
+    Triggers: []
+    Textures:
+    - Tag:
+        Name: PrimaryYKmcVmH4Jn9iqWqQsYjmr_mmcquW7EYPYKmcVmH4Jn9iqWqQsYjmr_mmc
+        DisplayName: Primary
+      Texture: {fileID: 2800000, guid: 5dbe379f6800bd343af177448a9b7ec3, type: 3}
+  Tags:
+    AssetTag:
+      Name: Demo.Ability.ShadowStep
+      DisplayName: Demo.Ability.ShadowStep
+    ContextTags:
+    - Name: Ability.Spell
+      DisplayName: Ability.Spell
+    PassiveGrantedTags: []
+    ActiveGrantedTags:
+    - Name: State.Attacking
+      DisplayName: State.Attacking
+    TagRequirements:
+      Name: 
+      SourceRequirements:
+        Name: 
+        SourceTemplate: {fileID: 0}
+        SyncWithTemplate: 0
+        AvoidTags:
+        - Tag:
+            Name: State.Stunned
+            DisplayName: State.Stunned
+          Operator: 5
+          Magnitude: 0
+          MatchMode: 0
+        - Tag:
+            Name: State.Silenced
+            DisplayName: State.Silenced
+          Operator: 5
+          Magnitude: 0
+          MatchMode: 0
+        RequireTags: []
+      WhileActiveRequirements:
+        Name: 
+        SourceTemplate: {fileID: 0}
+        SyncWithTemplate: 0
+        AvoidTags: []
+        RequireTags: []
+      TargetRequirements:
+        Name: 
+        SourceTemplate: {fileID: 0}
+        SyncWithTemplate: 0
+        AvoidTags: []
+        RequireTags: []
+  Behaviour:
+    Targeting:
+      rid: 2403794261189067177
+    UseImplicitTargeting: 0
+    ImplicitTag:
+      Name: TargetzfvEmaa5gNtqhQ0_dE2_NOOAGh1QLRP8zfvEmaa5gNtqhQ0_dE2_NOOAGh
+      DisplayName: Target
+    AssetLoaders: []
+    Stages:
+    - StagePolicy:
+        rid: 2403794261189067178
+      Tasks:
+      - rid: 2403794261189067179
+      ApplyUsageEffects: 1
+      ApplyUsageAtStageStart: 1
+      Condition:
+        On: 0
+        Tag:
+          Name: 
+          DisplayName: 
+        WhenMissing: 0
+      CancelledBy: []
+      Blocks: []
+    - StagePolicy:
+        rid: 2403794261189067180
+      Tasks:
+      - rid: 2403794261189067181
+      ApplyUsageEffects: 0
+      ApplyUsageAtStageStart: 1
+      Condition:
+        On: 2
+        Tag:
+          Name: State.Untargetable
+          DisplayName: State.Untargetable
+        WhenMissing: 0
+      CancelledBy: []
+      Blocks: []
+    - StagePolicy:
+        rid: 2403794261189067182
+      Tasks:
+      - rid: 2403794261189067183
+      ApplyUsageEffects: 0
+      ApplyUsageAtStageStart: 1
+      Condition:
+        On: 0
+        Tag:
+          Name: 
+          DisplayName: 
+        WhenMissing: 0
+      CancelledBy: []
+      Blocks: []
+    CancelledBy: []
+    Blocks: []
+  SourceActivationRules:
+  - rid: 2403794261189066996
+  - rid: 2403794261189066997
+  - rid: 2403794261189066998
+  TargetActivationRules:
+  - rid: 2403794261189066999
+  StartingLevel: 1
+  MaxLevel: 4
+  IgnoreWhenLevelZero: 1
+  Cost: {fileID: 11400000, guid: 7472c1fc72637294495d3aebbcce6c59, type: 2}
+  Cooldown: {fileID: 11400000, guid: a9406e085510e3a41ac94146be9db9de, type: 2}
+  WorkerGroup:
+    Name: Workers
+    AttributeWorkers: []
+    ImpactWorkers: []
+    TagWorkers: []
+    AnalysisWorkers: []
+  LinkMode: 0
+  _linkedSource: {fileID: 0}
+  references:
+    version: 2
+    RefIds:
+    - rid: 2403794261189066996
+      type: {class: CooldownValidation, ns: FarEmerald.PlayForge, asm: FarEmerald.PlayForge}
+      data: 
+    - rid: 2403794261189066997
+      type: {class: CostValidation, ns: FarEmerald.PlayForge, asm: FarEmerald.PlayForge}
+      data: 
+    - rid: 2403794261189066998
+      type: {class: IsAliveValidation, ns: FarEmerald.PlayForge, asm: FarEmerald.PlayForge}
+      data: 
+    - rid: 2403794261189066999
+      type: {class: IsAliveValidation, ns: FarEmerald.PlayForge, asm: FarEmerald.PlayForge}
+      data: 
+    - rid: 2403794261189067177
+      type: {class: SelectGasTargetInRangeTask, ns: FarEmerald.PlayForge, asm: FarEmerald.PlayForge}
+      data:
+        BreakRuntimeOnInvalid: 1
+        Requirements:
+          Name: 
+          SourceTemplate: {fileID: 0}
+          SyncWithTemplate: 0
+          AvoidTags:
+          - Tag:
+              Name: State.Invisible
+              DisplayName: State.Invisible
+            Operator: 5
+            Magnitude: 0
+            MatchMode: 0
+          - Tag:
+              Name: State.Untargetable
+              DisplayName: State.Untargetable
+            Operator: 5
+            Magnitude: 0
+            MatchMode: 0
+          RequireTags: []
+        RaycastLayers:
+          serializedVersion: 2
+          m_Bits: 4294967295
+        MaxRayDistance: 300
+        MaxTargetRange: 8
+        FlattenRangeCheck: 1
+        RetryOnInvalid: 1
+        MouseButton: 0
+        TakeTargetFromData: 1
+    - rid: 2403794261189067178
+      type: {class: AllProxyStagePolicy, ns: FarEmerald.PlayForge, asm: FarEmerald.PlayForge}
+      data: 
+    - rid: 2403794261189067179
+      type: {class: BlinkTask, ns: FarEmerald.PlayForge.Samples.Demo, asm: FarEmerald.PlayForge.Samples.Demo}
+      data:
+        Reach: 8
+        Behind: 1.2
+    - rid: 2403794261189067180
+      type: {class: AllProxyStagePolicy, ns: FarEmerald.PlayForge, asm: FarEmerald.PlayForge}
+      data: 
+    - rid: 2403794261189067181
+      type: {class: InjectAbilityTask, ns: FarEmerald.PlayForge, asm: FarEmerald.PlayForge}
+      data:
+        Injection:
+          rid: 2403794261189067184
+    - rid: 2403794261189067182
+      type: {class: AllProxyStagePolicy, ns: FarEmerald.PlayForge, asm: FarEmerald.PlayForge}
+      data: 
+    - rid: 2403794261189067183
+      type: {class: ApplyToCasterTask, ns: FarEmerald.PlayForge.Samples.Demo, asm: FarEmerald.PlayForge.Samples.Demo}
+      data:
+        Effects:
+        - {fileID: 11400000, guid: 69d32752a69ac134282b7237890adef3, type: 2}
+    - rid: 2403794261189067184
+      type: {class: InterruptSequenceInjection, ns: FarEmerald.PlayForge, asm: FarEmerald.PlayForge}
+      data: 

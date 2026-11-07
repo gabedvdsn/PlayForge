@@ -1,0 +1,100 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: dac855327e524f0f9473752d46a88179, type: 3}
+  m_Name: Hero
+  m_EditorClassIdentifier: 
+  LocalData:
+  - Key:
+      Name: Demo.AttackRange
+      DisplayName: Demo.AttackRange
+    Type: 5
+    stringValue: 
+    boolValue: 0
+    intValue: 0
+    floatValue: 2.2
+    objectValue: {fileID: 0}
+    monoBehaviourValue: {fileID: 0}
+    scriptableObjectValue: {fileID: 0}
+    tagValue:
+      Name: 
+      DisplayName: 
+    attributeValue: {fileID: 0}
+    effectValue: {fileID: 0}
+    abilityValue: {fileID: 0}
+    entityValue: {fileID: 0}
+  _template: {fileID: 0}
+  _templateOverrides: []
+  _templateListSnapshots: []
+  Name: Hero
+  Description: 'The template every hero takes: levels 1 to 10, a death watcher on
+    its Health, a melee attack range and the Hero attribute set. A hero sets its
+    own set, abilities and Local Data.'
+  Textures:
+  - Tag:
+      Name: PrimaryYKmcVmH4Jn9iqWqQsYjmr_mmcquW7EYPYKmcVmH4Jn9iqWqQsYjmr_mmc
+      DisplayName: Primary
+    Texture: {fileID: 2800000, guid: 156c4436416379745b85869d132981ef, type: 3}
+  Affiliation: []
+  AssetTag:
+    Name: Demo.Entity.Hero
+    DisplayName: Demo.Entity.Hero
+  GrantedTags: []
+  ContextTags: []
+  StartingLevel: 1
+  MaxLevel: 10
+  ActivationPolicy: 2
+  MaxAbilitiesOperation:
+    Magnitude: 12
+    RealMagnitude: 2
+    Scaler:
+      rid: -2
+    Rounding: 0
+  StartingAbilities: []
+  AllowDuplicateAbilities: 0
+  MaxItemsOperation:
+    Magnitude: 12
+    RealMagnitude: 2
+    Scaler:
+      rid: -2
+    Rounding: 0
+  MaxEquippedItemsOperation:
+    Magnitude: 6
+    RealMagnitude: 2
+    Scaler:
+      rid: -2
+    Rounding: 0
+  StartingItems: []
+  AllowDuplicateItems: 0
+  AllowDuplicateEquippedItems: 0
+  AttributeSet: {fileID: 11400000, guid: aefd8ede8aa5c05458b326cee023ab03, type: 2}
+  TimeScaleAttribute: {fileID: 0}
+  WorkerGroup:
+    Name: Workers
+    AttributeWorkers: []
+    ImpactWorkers: []
+    TagWorkers: []
+    AnalysisWorkers:
+    - rid: 2403794261189067145
+  LinkMode: 0
+  _linkedSource: {fileID: 0}
+  references:
+    version: 2
+    RefIds:
+    - rid: -2
+      type: {class: , ns: , asm: }
+    - rid: 2403794261189067145
+      type: {class: DeathWatcherAnalysisWorker, ns: FarEmerald.PlayForge, asm: FarEmerald.PlayForge}
+      data:
+        Target: {fileID: 11400000, guid: b865fa5ec88ff314ab348516f14527f7, type: 2}
+        Threshold: 0
+        Comparison: 1
+        TriggerOnce: 1

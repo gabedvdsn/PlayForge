@@ -1,0 +1,73 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e6948d58850a1a944915a8061c5229e8, type: 3}
+  m_Name: Ember Brand
+  m_EditorClassIdentifier: 
+  LocalData: []
+  _template: {fileID: 0}
+  _templateOverrides: []
+  _templateListSnapshots: []
+  Definition:
+    Name: Ember Brand
+    Description: Default attacks apply a stack of Burning, by the demo's own impact
+      worker in the item's worker group.
+    Visibility:
+      Name: Always Visibleycx2HSMbeCw4_ZdNk8WObSgxBodyaEWcycx2HSMbeCw4_ZdNk8
+      DisplayName: Always Visible
+    Textures:
+    - Tag:
+        Name: PrimaryYKmcVmH4Jn9iqWqQsYjmr_mmcquW7EYPYKmcVmH4Jn9iqWqQsYjmr_mmc
+        DisplayName: Primary
+      Texture: {fileID: 2800000, guid: 16d3cd53a4c556a40b47e09e49fc15a9, type: 3}
+    MaxStackSize: 1
+  Tags:
+    AssetTag:
+      Name: Demo.Item.EmberBrand
+      DisplayName: Demo.Item.EmberBrand
+    ContextTags: []
+    PassiveGrantedTags: []
+  StartingLevel: 1
+  MaxLevel: 1
+  LinkMode: 0
+  _linkedSource: {fileID: 0}
+  GrantedEffects: []
+  ActiveAbility: {fileID: 0}
+  WorkerGroup:
+    Name: Workers
+    AttributeWorkers: []
+    ImpactWorkers:
+    - rid: 2403794261189067256
+    TagWorkers: []
+    AnalysisWorkers: []
+  references:
+    version: 2
+    RefIds:
+    - rid: 2403794261189067256
+      type: {class: ApplyEffectOnHitWorker, ns: FarEmerald.PlayForge.Samples.Demo, asm: FarEmerald.PlayForge.Samples.Demo}
+      data:
+        AcceptUnworkableImpact: 0
+        ImpactedAttribute: {fileID: 11400000, guid: b865fa5ec88ff314ab348516f14527f7, type: 2}
+        AnyImpactType: 1
+        ImpactType: []
+        ImpactTarget: 3
+        ImpactTargetExclusive: 0
+        ImpactSign: 1
+        AllowSelfImpact: 0
+        AnyContextTag: 0
+        ContextMatchingPolicy: 0
+        ImpactAbilityContextTags:
+        - Name: Damage.Attack
+          DisplayName: Damage.Attack
+        WorkAttribute: {fileID: 0}
+        WorkImpactType: []
+        WorkSignPolicy: 0
+        Effect: {fileID: 11400000, guid: 2a13eefc1a0c02141b3e3f390c98e1c4, type: 2}

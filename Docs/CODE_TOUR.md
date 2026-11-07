@@ -3106,6 +3106,24 @@ kept on purpose: static tag fields register once per domain, as their types init
 - **SP-7.** Placeholder descriptions are filled in, and `EFECT_Speed_Override` is `EFFECT_Speed_Override`, with its
   GUID kept.
 
+### The Demo replaces the Demos (Phase 7, Decision 37)
+
+The entries above describe the Demos and Swarm Defender as they were at `e91fe34`. Phase 7 replaced them with one
+sample, the Demo: a hero arena of five heroes, fourteen items, an AI hero and a training dummy, every piece an asset,
+using every asset feature. It needs nothing beyond PlayForge and renders in the Built-in pipeline and URP, as every
+shape is made as the scene plays. `git show e91fe34:<path>` shows the old files.
+
+- **IDs:** SP-25, SP-26, Decisions 37 to 39; the framework gaps it found, GAS-65 to GAS-70 and FEAT-24, FEAT-26 and
+  FEAT-27.
+- **Read:**
+  - `Assets/PlayForge/Samples~/Demo/README.md`, which maps each feature to the assets that show it.
+  - `Assets/PlayForge/Samples~/Demo/Scripts/Forge`, the demo's own workers, tasks, sequences, cue and process.
+  - `Assets/PlayForge/Samples~/Demo/Scripts/Game/DemoUnit.cs` `DemoUnit.Create`, how a hero is put in.
+  - `Assets/PlayForge/Samples~/Demo/Scripts/Tests/DemoTests.cs`, the scene played: every ability cast, the damage
+    formulas, items, levels, Burning's overflow, the AI.
+- **New:** the Demo sample. The synced sequence examples moved from the Demos to Code Examples. Proving Grounds'
+  smoke suite sweeps the Demo's assets.
+
 ### Package and repo
 
 - **The package (Decision 2).** `Assets/PlayForge/package.json` makes PlayForge the local UPM package

@@ -256,3 +256,38 @@ Each step is a commit on main with its tests, as Phase 6's were.
 1. **The roster:** do these five heroes, their abilities and the items fit what you want the demo to show?
 2. **Projectile speed (Open decision 20):** should a projectile carry its own speed, as above?
 3. **Levels in the scene:** the panel's level − and + let you watch scalers change with level. Keep them?
+
+The user answered all three on 2026-11-06: yes to the roster, a projectile carries its own speed (Decision 39), and
+keep the level controls, for heroes, abilities and items.
+
+## As built
+
+The Demo follows this plan, with these differences, each for the reason given:
+
+- **Every hero has a passive,** Second Wind, which gives it Regeneration as it comes in: Health and Mana back each
+  second, the Mana by an Additional Impact. With no regeneration, a hero ran dry of Mana in a few casts.
+- **Each hero sets its own vitals' bases** (Health, Mana, Armor), as the user's spec has it, as well as its primaries'
+  growth and its speed.
+- **Rallying Cry** applies its armor through the demo's own area task, which reaches the caster and its allies. Auto
+  Target By Affinity leaves the caster out, and in a one-on-one fight there are no other allies. Thunderclap shows
+  Auto Target By Affinity instead, on the enemies around its holder.
+- **Volley** takes a point, then a task sequence looses an arrow at each enemy around it, reading the arrow's prefab,
+  the radius and the most arrows from the ability's Local Data.
+- **Combustion** deals pure damage, and a second stage, which runs only while the target has Status.Burning, ignites
+  the burning for more and takes it off. A tag's weight counts its sources, not an effect's stacks, so a Conditional
+  scaler by the weight of Status.Burning couldn't read the stacks.
+- **Cut** picks its damage type by two stages, one for while the Shade is Empowered and one for when it isn't, each
+  applying its own blow. An effect's damage type is one per effect.
+- **Shadow Step** blinks, then an Inject task ends the ability if the target turned untargetable meanwhile, before
+  the empowerment.
+- **Eviscerate** needs a target below half its Health by an Attribute Validation of its share (FEAT-26), caps its
+  damage with a Clamped scaler around the missing-health sum (FEAT-27), and finishes a target below a tenth by its
+  effect's own worker.
+- **Flame Wall's fire** carries a Heat attribute too, by the ability's level, which the Burning it applies reads
+  (FEAT-28).
+- **Damage numbers** float from each blow as Health takes it, after mitigation, from the HUD's own listener. The
+  demo's own cue floats status words, as "Stunned" or "Marked".
+- **The AI's low-health check** reads its health share directly. The Death Watcher shows the analysis workers.
+- **Item values** fit the demo's scales: Warden Plate gives 30 Armor, Swift Boots 1.5 Movement Speed.
+- **The icon menu** is Window → PlayForge → Demo → Make Placeholder Icons, as every PlayForge menu item sits under
+  Window → PlayForge (ED-19).

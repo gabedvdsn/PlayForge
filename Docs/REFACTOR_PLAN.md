@@ -808,6 +808,8 @@ reads the old demos' fullest assets, so it moves to the new demo's as the old go
 | SP-22 | M | 2 | Untested with domain reloading off (Enter Play Mode Options). The Asset Store requires every package to work that way starting with Editor 6.6 (rule 2.5.h), so the static state in ProcessControl, the registries and the caches needs a check. Decision 17 keeps it in Phase 2 | — | verified |
 | SP-23 | M | 2 | The Demos are Built-in RP only: all ten of their materials use the Standard shader, which renders magenta under URP. The Asset Store requires URP or HDRP support of new assets and updates submitted from Editor 6.5 or newer (rule 1.3.c). Decision 17 keeps it in Phase 2, though a 6.0 submission isn't bound by the rule | `Samples~/Demos/**/*.mat`, `PUBLISHING.md` | verified |
 | SP-24 | M | — | No CI, so Phase 3 closed on its local gates, not the CI its exit gate asked for (Decision 27). CI needed tests it can reach and a Unity license stored as GitHub secrets. Done: Proving Grounds is public on GitHub, and its `Gates` workflow runs the full gates on Ubuntu, with the user's license in its secrets (Decision 35). Its first green run passed PlayMode in three orders, the planted failures and EditMode | Proving Grounds' `.github/workflows/gates.yml`; `.github/workflows/proving-grounds.yml` | verified |
+| SP-25 | M | 7 | The demo content predated the refactor: scattered, using little of what scalers do, misrepresenting the framework, its Demo needing the Input System and drawing magenta under URP without its own shader (Decision 37). Done: the Demo sample, a hero arena of five heroes with an attack and three abilities each, a passive, fourteen items, an AI hero and a training dummy; every piece an asset, between them every asset feature; a panel to pick heroes, give items and change levels, and a HUD; placeholder icons drawn in code; any input and either pipeline; PlayMode tests that play it | `Assets/PlayForge/Samples~/Demo` | verified |
+| SP-26 | L | 7 | The Demos and Swarm Defender, which the Demo replaces, and what only they used: `Assets/demo_uss.uss`, `Assets/UI Toolkit` and the project's root namespace `…SwarmDefenderSample`. Done: gone; the synced sequence examples, PlayForge's alone, moved to Code Examples; Proving Grounds' smoke suite sweeps the Demo's assets, and its gates import the Demo | `Assets/PlayForge/Samples~`, `package.json` | verified |
 
 ### Missing features (Phase 5)
 
@@ -904,6 +906,17 @@ GAS-4 with GAS-5, PC-6, and TS-I with PC-5.
 ## Log
 
 Record baselines, gate results and notable decisions here, newest first.
+
+- 2026-11-06, **Phase 7: the Demo (SP-25, SP-26, Decisions 37 to 39).** The Demo sample replaces the Demos and Swarm
+  Defender. Five heroes, each with an attack, three abilities and a passive; fourteen items; an AI hero and a training
+  dummy; a panel to pick heroes, give and take items and change every level; a HUD. Every hero, ability, item, effect
+  and attribute is an asset, and between them they use every asset feature: the README maps each to where it shows.
+  An editor tool kept outside the repo builds the assets in place, so a rebuild keeps their GUIDs.
+  - Found and fixed on the way, each with its test: GAS-65 to GAS-70, FEAT-24, FEAT-26, FEAT-27 and FEAT-28.
+  - The Demo's PlayMode tests play its scene: every ability of every hero casts, armor, magic resistance and pure
+    damage come out as their formulas say, an item's bonus follows its level and goes with it, levels and cooldown
+    reduction set a cooldown, Burning bursts at its sixth stack, and the AI hero fights back.
+  - The Demo's PlayMode tests: 9 of 9. PlayMode, Demo imported: 1345 passed of 1353, 0 failed, 8 skipped, before the ninth demo test; EditMode, Demo imported: 734 of 734. Phase 7's gate holds: every feature Decision 37 lists is used and shown, the old demos are gone, and the smoke suite sweeps the Demo's assets. Phase 7 is closed.
 
 - 2026-11-06, **FEAT-28: what a process carries reaches its effects.** A gameplay mono process gives each effect it
   applies its own attributes by role, as set-by-caller magnitudes, after its caller's: the demo's fire carries a heat

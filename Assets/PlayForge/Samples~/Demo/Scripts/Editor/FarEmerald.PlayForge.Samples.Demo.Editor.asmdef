@@ -1,0 +1,19 @@
+{
+    "name": "FarEmerald.PlayForge.Samples.Demo.Editor",
+    "rootNamespace": "FarEmerald.PlayForge.Samples.Demo.Editor",
+    "references": [
+        "FarEmerald.PlayForge",
+        "FarEmerald.PlayForge.Samples.Demo"
+    ],
+    "includePlatforms": [
+        "Editor"
+    ],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": false,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

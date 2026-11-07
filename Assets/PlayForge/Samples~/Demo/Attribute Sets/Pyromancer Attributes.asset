@@ -1,0 +1,1079 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f540c3b03f1458d459ad17cf8a6b5c71, type: 3}
+  m_Name: Pyromancer Attributes
+  m_EditorClassIdentifier: 
+  LocalData: []
+  _template: {fileID: 11400000, guid: aefd8ede8aa5c05458b326cee023ab03, type: 2}
+  _templateOverrides: []
+  _templateListSnapshots:
+  - PropertyPath: LocalData
+    ElementIdentifiers: []
+  - PropertyPath: Attributes
+    ElementIdentifiers: []
+  - PropertyPath: SubSets
+    ElementIdentifiers:
+    - ref:29c03a906f30b504da761f4e878a9072
+    - ref:61bde3c73eef07845a70b31c9b64e10c
+    - ref:e4b77cd88aee5284fb5f609b56d01f41
+    - ref:378fe26d6aff3b948a703b14607bd5cd
+    - ref:4295bb22cb28d3e4c9434d03f61d2923
+  - PropertyPath: WorkerGroup.AttributeWorkers
+    ElementIdentifiers:
+    - managed:FarEmerald.PlayForge.Samples.Demo.MitigationWorker:{"TimingConfig":0,"TargetAttribute":{"instanceID":7950},"AllowSelfModification":true,"TargetModification":0,"ExclusivelyTargetModification":false,"SignPolicy":2,"AnyImpactType":false,"ImpactTypes":[{"Name":"Damage.Physical","DisplayName":"Damage.Physical"}],"AnyContextTag":true,"ContextMatchingPolicy":0,"ValidContextTags":[],"Resistance":{"instanceID":8000},"Kind":0}
+    - managed:FarEmerald.PlayForge.Samples.Demo.MitigationWorker:{"TimingConfig":0,"TargetAttribute":{"instanceID":7950},"AllowSelfModification":true,"TargetModification":0,"ExclusivelyTargetModification":false,"SignPolicy":2,"AnyImpactType":false,"ImpactTypes":[{"Name":"Damage.Magic","DisplayName":"Damage.Magic"}],"AnyContextTag":true,"ContextMatchingPolicy":0,"ValidContextTags":[],"Resistance":{"instanceID":8152},"Kind":1}
+    - managed:FarEmerald.PlayForge.Samples.Demo.AmplificationWorker:{"TimingConfig":0,"TargetAttribute":{"instanceID":7950},"AllowSelfModification":true,"TargetModification":0,"ExclusivelyTargetModification":false,"SignPolicy":2,"AnyImpactType":false,"ImpactTypes":[{"Name":"Damage.Physical","DisplayName":"Damage.Physical"}],"AnyContextTag":true,"ContextMatchingPolicy":0,"ValidContextTags":[],"Amplification":{"instanceID":8154}}
+    - managed:FarEmerald.PlayForge.Samples.Demo.AmplificationWorker:{"TimingConfig":0,"TargetAttribute":{"instanceID":7950},"AllowSelfModification":true,"TargetModification":0,"ExclusivelyTargetModification":false,"SignPolicy":2,"AnyImpactType":false,"ImpactTypes":[{"Name":"Damage.Magic","DisplayName":"Damage.Magic"}],"AnyContextTag":true,"ContextMatchingPolicy":0,"ValidContextTags":[],"Amplification":{"instanceID":8156}}
+  - PropertyPath: WorkerGroup.ImpactWorkers
+    ElementIdentifiers:
+    - managed:FarEmerald.PlayForge.RelativeOperationContextImpactWorker:{"AcceptUnworkableImpact":false,"ImpactedAttribute":{"instanceID":7950},"AnyImpactType":false,"ImpactType":[{"Name":"Damage.Physical","DisplayName":"Damage.Physical"}],"ImpactTarget":3,"ImpactTargetExclusive":false,"ImpactSign":1,"AllowSelfImpact":false,"AnyContextTag":true,"ContextMatchingPolicy":0,"ImpactAbilityContextTags":[],"WorkAttribute":{"instanceID":7950},"WorkImpactType":[],"WorkSignPolicy":0,"RelativeAttribute":{"instanceID":8158},"Operation":1,"WithRespectTo":1,"ExecutionMode":1,"WorkerImpactWorkable":false}
+  - PropertyPath: WorkerGroup.TagWorkers
+    ElementIdentifiers: []
+  - PropertyPath: WorkerGroup.AnalysisWorkers
+    ElementIdentifiers: []
+  Name: Pyromancer Attributes
+  Description: 'The Pyromancer''s own: its primaries'' growth, its speed and its
+    vitals'' bases. The rest comes from the Hero template.'
+  Textures: []
+  AssetTag:
+    Name: Demo.Set.Pyromancer
+    DisplayName: Demo.Set.Pyromancer
+  Attributes:
+  - Attribute: {fileID: 11400000, guid: 68b5217a78b8e544fb7586bdf897268f, type: 2}
+    Current:
+      Magnitude: 0
+      Scaling:
+        rid: -2
+      RealMagnitude: 2
+    Base:
+      Magnitude: 0
+      Scaling:
+        rid: 2403794261189067158
+      RealMagnitude: 3
+    LinkCurrentToBase: 1
+    Overflow:
+      Policy: 4
+      Floor:
+        CurrentValue: 0
+        BaseValue: 0
+      Ceil:
+        CurrentValue: 0
+        BaseValue: 0
+    RetentionGroup:
+      Name: DefaultHZrocVrnTyCe46yj0U4URw7eigNeYI7THZrocVrnTyCe46yj0U4URw7ei
+      DisplayName: Default
+    CollisionPolicy: 0
+    Constraints:
+      AutoClamp: 1
+      AutoScaleWithBase: 0
+      RoundingMode: 0
+      SnapInterval: 0
+  - Attribute: {fileID: 11400000, guid: 1aadfbe470192574b917692686c8496f, type: 2}
+    Current:
+      Magnitude: 0
+      Scaling:
+        rid: -2
+      RealMagnitude: 2
+    Base:
+      Magnitude: 0
+      Scaling:
+        rid: 2403794261189067159
+      RealMagnitude: 3
+    LinkCurrentToBase: 1
+    Overflow:
+      Policy: 4
+      Floor:
+        CurrentValue: 0
+        BaseValue: 0
+      Ceil:
+        CurrentValue: 0
+        BaseValue: 0
+    RetentionGroup:
+      Name: DefaultHZrocVrnTyCe46yj0U4URw7eigNeYI7THZrocVrnTyCe46yj0U4URw7ei
+      DisplayName: Default
+    CollisionPolicy: 0
+    Constraints:
+      AutoClamp: 1
+      AutoScaleWithBase: 0
+      RoundingMode: 0
+      SnapInterval: 0
+  - Attribute: {fileID: 11400000, guid: 781fdf8841bc79441bc32a1d136f3c4f, type: 2}
+    Current:
+      Magnitude: 0
+      Scaling:
+        rid: -2
+      RealMagnitude: 2
+    Base:
+      Magnitude: 0
+      Scaling:
+        rid: 2403794261189067160
+      RealMagnitude: 3
+    LinkCurrentToBase: 1
+    Overflow:
+      Policy: 4
+      Floor:
+        CurrentValue: 0
+        BaseValue: 0
+      Ceil:
+        CurrentValue: 0
+        BaseValue: 0
+    RetentionGroup:
+      Name: DefaultHZrocVrnTyCe46yj0U4URw7eigNeYI7THZrocVrnTyCe46yj0U4URw7ei
+      DisplayName: Default
+    CollisionPolicy: 0
+    Constraints:
+      AutoClamp: 1
+      AutoScaleWithBase: 0
+      RoundingMode: 0
+      SnapInterval: 0
+  - Attribute: {fileID: 11400000, guid: f91616365c2f4394581d66675b9208fa, type: 2}
+    Current:
+      Magnitude: 0
+      Scaling:
+        rid: -2
+      RealMagnitude: 2
+    Base:
+      Magnitude: 5.5
+      Scaling:
+        rid: -2
+      RealMagnitude: 2
+    LinkCurrentToBase: 1
+    Overflow:
+      Policy: 4
+      Floor:
+        CurrentValue: 0
+        BaseValue: 0
+      Ceil:
+        CurrentValue: 0
+        BaseValue: 0
+    RetentionGroup:
+      Name: DefaultHZrocVrnTyCe46yj0U4URw7eigNeYI7THZrocVrnTyCe46yj0U4URw7ei
+      DisplayName: Default
+    CollisionPolicy: 0
+    Constraints:
+      AutoClamp: 1
+      AutoScaleWithBase: 0
+      RoundingMode: 0
+      SnapInterval: 0
+  - Attribute: {fileID: 11400000, guid: b865fa5ec88ff314ab348516f14527f7, type: 2}
+    Current:
+      Magnitude: 0
+      Scaling:
+        rid: -2
+      RealMagnitude: 2
+    Base:
+      Magnitude: 150
+      Scaling:
+        rid: 2403794261189067161
+      RealMagnitude: 1
+    LinkCurrentToBase: 1
+    Overflow:
+      Policy: 0
+      Floor:
+        CurrentValue: 0
+        BaseValue: 0
+      Ceil:
+        CurrentValue: 0
+        BaseValue: 0
+    RetentionGroup:
+      Name: DefaultHZrocVrnTyCe46yj0U4URw7eigNeYI7THZrocVrnTyCe46yj0U4URw7ei
+      DisplayName: Default
+    CollisionPolicy: 0
+    Constraints:
+      AutoClamp: 1
+      AutoScaleWithBase: 1
+      RoundingMode: 0
+      SnapInterval: 0
+  - Attribute: {fileID: 11400000, guid: a75dd2d6e2d622947b9bfdd3f8507c01, type: 2}
+    Current:
+      Magnitude: 0
+      Scaling:
+        rid: -2
+      RealMagnitude: 2
+    Base:
+      Magnitude: 130
+      Scaling:
+        rid: 2403794261189067162
+      RealMagnitude: 1
+    LinkCurrentToBase: 1
+    Overflow:
+      Policy: 0
+      Floor:
+        CurrentValue: 0
+        BaseValue: 0
+      Ceil:
+        CurrentValue: 0
+        BaseValue: 0
+    RetentionGroup:
+      Name: DefaultHZrocVrnTyCe46yj0U4URw7eigNeYI7THZrocVrnTyCe46yj0U4URw7ei
+      DisplayName: Default
+    CollisionPolicy: 0
+    Constraints:
+      AutoClamp: 1
+      AutoScaleWithBase: 1
+      RoundingMode: 0
+      SnapInterval: 0
+  - Attribute: {fileID: 11400000, guid: 49ede9aab52bf7a40b12b9b165392f8c, type: 2}
+    Current:
+      Magnitude: 0
+      Scaling:
+        rid: -2
+      RealMagnitude: 2
+    Base:
+      Magnitude: 0
+      Scaling:
+        rid: 2403794261189067163
+      RealMagnitude: 1
+    LinkCurrentToBase: 1
+    Overflow:
+      Policy: 4
+      Floor:
+        CurrentValue: 0
+        BaseValue: 0
+      Ceil:
+        CurrentValue: 0
+        BaseValue: 0
+    RetentionGroup:
+      Name: DefaultHZrocVrnTyCe46yj0U4URw7eigNeYI7THZrocVrnTyCe46yj0U4URw7ei
+      DisplayName: Default
+    CollisionPolicy: 0
+    Constraints:
+      AutoClamp: 1
+      AutoScaleWithBase: 0
+      RoundingMode: 0
+      SnapInterval: 0
+  SubSets:
+  - {fileID: 11400000, guid: 29c03a906f30b504da761f4e878a9072, type: 2}
+  - {fileID: 11400000, guid: 61bde3c73eef07845a70b31c9b64e10c, type: 2}
+  - {fileID: 11400000, guid: e4b77cd88aee5284fb5f609b56d01f41, type: 2}
+  - {fileID: 11400000, guid: 378fe26d6aff3b948a703b14607bd5cd, type: 2}
+  - {fileID: 11400000, guid: 4295bb22cb28d3e4c9434d03f61d2923, type: 2}
+  CollisionResolutionPolicy: 3
+  WorkerGroup:
+    Name: Workers
+    AttributeWorkers:
+    - rid: 2403794261189066775
+    - rid: 2403794261189066776
+    - rid: 2403794261189066777
+    - rid: 2403794261189066778
+    ImpactWorkers:
+    - rid: 2403794261189066779
+    TagWorkers: []
+    AnalysisWorkers: []
+  StartingLevel: 1
+  MaxLevel: 10
+  LinkMode: 1
+  _linkedSource: {fileID: 11400000, guid: a09f4ce7c3778da4b956139941d9cecc, type: 2}
+  references:
+    version: 2
+    RefIds:
+    - rid: -2
+      type: {class: , ns: , asm: }
+    - rid: 2403794261189066775
+      type: {class: MitigationWorker, ns: FarEmerald.PlayForge.Samples.Demo, asm: FarEmerald.PlayForge.Samples.Demo}
+      data:
+        TimingConfig: 0
+        TargetAttribute: {fileID: 11400000, guid: b865fa5ec88ff314ab348516f14527f7, type: 2}
+        AllowSelfModification: 1
+        TargetModification: 0
+        ExclusivelyTargetModification: 0
+        SignPolicy: 2
+        AnyImpactType: 0
+        ImpactTypes:
+        - Name: Damage.Physical
+          DisplayName: Damage.Physical
+        AnyContextTag: 1
+        ContextMatchingPolicy: 0
+        ValidContextTags: []
+        Resistance: {fileID: 11400000, guid: 49ede9aab52bf7a40b12b9b165392f8c, type: 2}
+        Kind: 0
+    - rid: 2403794261189066776
+      type: {class: MitigationWorker, ns: FarEmerald.PlayForge.Samples.Demo, asm: FarEmerald.PlayForge.Samples.Demo}
+      data:
+        TimingConfig: 0
+        TargetAttribute: {fileID: 11400000, guid: b865fa5ec88ff314ab348516f14527f7, type: 2}
+        AllowSelfModification: 1
+        TargetModification: 0
+        ExclusivelyTargetModification: 0
+        SignPolicy: 2
+        AnyImpactType: 0
+        ImpactTypes:
+        - Name: Damage.Magic
+          DisplayName: Damage.Magic
+        AnyContextTag: 1
+        ContextMatchingPolicy: 0
+        ValidContextTags: []
+        Resistance: {fileID: 11400000, guid: 19d77af1048214f418cb274145095022, type: 2}
+        Kind: 1
+    - rid: 2403794261189066777
+      type: {class: AmplificationWorker, ns: FarEmerald.PlayForge.Samples.Demo, asm: FarEmerald.PlayForge.Samples.Demo}
+      data:
+        TimingConfig: 0
+        TargetAttribute: {fileID: 11400000, guid: b865fa5ec88ff314ab348516f14527f7, type: 2}
+        AllowSelfModification: 1
+        TargetModification: 0
+        ExclusivelyTargetModification: 0
+        SignPolicy: 2
+        AnyImpactType: 0
+        ImpactTypes:
+        - Name: Damage.Physical
+          DisplayName: Damage.Physical
+        AnyContextTag: 1
+        ContextMatchingPolicy: 0
+        ValidContextTags: []
+        Amplification: {fileID: 11400000, guid: 3e8e0a8d8742715489be084df6157132, type: 2}
+    - rid: 2403794261189066778
+      type: {class: AmplificationWorker, ns: FarEmerald.PlayForge.Samples.Demo, asm: FarEmerald.PlayForge.Samples.Demo}
+      data:
+        TimingConfig: 0
+        TargetAttribute: {fileID: 11400000, guid: b865fa5ec88ff314ab348516f14527f7, type: 2}
+        AllowSelfModification: 1
+        TargetModification: 0
+        ExclusivelyTargetModification: 0
+        SignPolicy: 2
+        AnyImpactType: 0
+        ImpactTypes:
+        - Name: Damage.Magic
+          DisplayName: Damage.Magic
+        AnyContextTag: 1
+        ContextMatchingPolicy: 0
+        ValidContextTags: []
+        Amplification: {fileID: 11400000, guid: 1a51f6301ad10594a9a05f0acacdb9fd, type: 2}
+    - rid: 2403794261189066779
+      type: {class: RelativeOperationContextImpactWorker, ns: FarEmerald.PlayForge, asm: FarEmerald.PlayForge}
+      data:
+        AcceptUnworkableImpact: 0
+        ImpactedAttribute: {fileID: 11400000, guid: b865fa5ec88ff314ab348516f14527f7, type: 2}
+        AnyImpactType: 0
+        ImpactType:
+        - Name: Damage.Physical
+          DisplayName: Damage.Physical
+        ImpactTarget: 3
+        ImpactTargetExclusive: 0
+        ImpactSign: 1
+        AllowSelfImpact: 0
+        AnyContextTag: 1
+        ContextMatchingPolicy: 0
+        ImpactAbilityContextTags: []
+        WorkAttribute: {fileID: 11400000, guid: b865fa5ec88ff314ab348516f14527f7, type: 2}
+        WorkImpactType: []
+        WorkSignPolicy: 0
+        RelativeAttribute: {fileID: 11400000, guid: 91630288f688daf44a76f3b7f7f187b2, type: 2}
+        Operation: 1
+        WithRespectTo: 1
+        ExecutionMode: 1
+        WorkerImpactWorkable: 0
+    - rid: 2403794261189067158
+      type: {class: CachedSimpleScaler, ns: FarEmerald.PlayForge, asm: FarEmerald.PlayForge}
+      data:
+        Name: By the hero's level
+        Configuration: 0
+        MaxLevel: 10
+        LevelValues:
+        - 14
+        - 16
+        - 17
+        - 18
+        - 20
+        - 22
+        - 23
+        - 24
+        - 26
+        - 28
+        Interpolation: 1
+        StretchOverLevels: 0
+        Scaling:
+          serializedVersion: 2
+          m_Curve:
+          - serializedVersion: 3
+            time: 0
+            value: 14
+            inSlope: 0
+            outSlope: 18
+            tangentMode: 69
+            weightedMode: 0
+            inWeight: 0
+            outWeight: 0
+          - serializedVersion: 3
+            time: 0.11111111
+            value: 16
+            inSlope: 18
+            outSlope: 9
+            tangentMode: 69
+            weightedMode: 0
+            inWeight: 0
+            outWeight: 0
+          - serializedVersion: 3
+            time: 0.22222222
+            value: 17
+            inSlope: 9
+            outSlope: 8.999999
+            tangentMode: 69
+            weightedMode: 0
+            inWeight: 0
+            outWeight: 0
+          - serializedVersion: 3
+            time: 0.33333334
+            value: 18
+            inSlope: 8.999999
+            outSlope: 18.000002
+            tangentMode: 69
+            weightedMode: 0
+            inWeight: 0
+            outWeight: 0
+          - serializedVersion: 3
+            time: 0.44444445
+            value: 20
+            inSlope: 18.000002
+            outSlope: 17.999996
+            tangentMode: 69
+            weightedMode: 0
+            inWeight: 0
+            outWeight: 0
+          - serializedVersion: 3
+            time: 0.5555556
+            value: 22
+            inSlope: 17.999996
+            outSlope: 9.000001
+            tangentMode: 69
+            weightedMode: 0
+            inWeight: 0
+            outWeight: 0
+          - serializedVersion: 3
+            time: 0.6666667
+            value: 23
+            inSlope: 9.000001
+            outSlope: 9.000001
+            tangentMode: 69
+            weightedMode: 0
+            inWeight: 0
+            outWeight: 0
+          - serializedVersion: 3
+            time: 0.7777778
+            value: 24
+            inSlope: 9.000001
+            outSlope: 18.000002
+            tangentMode: 69
+            weightedMode: 0
+            inWeight: 0
+            outWeight: 0
+          - serializedVersion: 3
+            time: 0.8888889
+            value: 26
+            inSlope: 18.000002
+            outSlope: 18.000002
+            tangentMode: 69
+            weightedMode: 0
+            inWeight: 0
+            outWeight: 0
+          - serializedVersion: 3
+            time: 1
+            value: 28
+            inSlope: 18.000002
+            outSlope: 0
+            tangentMode: 69
+            weightedMode: 0
+            inWeight: 0
+            outWeight: 0
+          m_PreInfinity: 2
+          m_PostInfinity: 2
+          m_RotationOrder: 4
+        Behaviours: []
+    - rid: 2403794261189067159
+      type: {class: CachedSimpleScaler, ns: FarEmerald.PlayForge, asm: FarEmerald.PlayForge}
+      data:
+        Name: By the hero's level
+        Configuration: 0
+        MaxLevel: 10
+        LevelValues:
+        - 10
+        - 12
+        - 13
+        - 14
+        - 16
+        - 18
+        - 19
+        - 20
+        - 22
+        - 24
+        Interpolation: 1
+        StretchOverLevels: 0
+        Scaling:
+          serializedVersion: 2
+          m_Curve:
+          - serializedVersion: 3
+            time: 0
+            value: 10
+            inSlope: 0
+            outSlope: 18
+            tangentMode: 69
+            weightedMode: 0
+            inWeight: 0
+            outWeight: 0
+          - serializedVersion: 3
+            time: 0.11111111
+            value: 12
+            inSlope: 18
+            outSlope: 9
+            tangentMode: 69
+            weightedMode: 0
+            inWeight: 0
+            outWeight: 0
+          - serializedVersion: 3
+            time: 0.22222222
+            value: 13
+            inSlope: 9
+            outSlope: 8.999999
+            tangentMode: 69
+            weightedMode: 0
+            inWeight: 0
+            outWeight: 0
+          - serializedVersion: 3
+            time: 0.33333334
+            value: 14
+            inSlope: 8.999999
+            outSlope: 18.000002
+            tangentMode: 69
+            weightedMode: 0
+            inWeight: 0
+            outWeight: 0
+          - serializedVersion: 3
+            time: 0.44444445
+            value: 16
+            inSlope: 18.000002
+            outSlope: 17.999996
+            tangentMode: 69
+            weightedMode: 0
+            inWeight: 0
+            outWeight: 0
+          - serializedVersion: 3
+            time: 0.5555556
+            value: 18
+            inSlope: 17.999996
+            outSlope: 9.000001
+            tangentMode: 69
+            weightedMode: 0
+            inWeight: 0
+            outWeight: 0
+          - serializedVersion: 3
+            time: 0.6666667
+            value: 19
+            inSlope: 9.000001
+            outSlope: 9.000001
+            tangentMode: 69
+            weightedMode: 0
+            inWeight: 0
+            outWeight: 0
+          - serializedVersion: 3
+            time: 0.7777778
+            value: 20
+            inSlope: 9.000001
+            outSlope: 18.000002
+            tangentMode: 69
+            weightedMode: 0
+            inWeight: 0
+            outWeight: 0
+          - serializedVersion: 3
+            time: 0.8888889
+            value: 22
+            inSlope: 18.000002
+            outSlope: 18.000002
+            tangentMode: 69
+            weightedMode: 0
+            inWeight: 0
+            outWeight: 0
+          - serializedVersion: 3
+            time: 1
+            value: 24
+            inSlope: 18.000002
+            outSlope: 0
+            tangentMode: 69
+            weightedMode: 0
+            inWeight: 0
+            outWeight: 0
+          m_PreInfinity: 2
+          m_PostInfinity: 2
+          m_RotationOrder: 4
+        Behaviours: []
+    - rid: 2403794261189067160
+      type: {class: CachedSimpleScaler, ns: FarEmerald.PlayForge, asm: FarEmerald.PlayForge}
+      data:
+        Name: By the hero's level
+        Configuration: 0
+        MaxLevel: 10
+        LevelValues:
+        - 26
+        - 30
+        - 33
+        - 36
+        - 40
+        - 44
+        - 47
+        - 50
+        - 54
+        - 58
+        Interpolation: 1
+        StretchOverLevels: 0
+        Scaling:
+          serializedVersion: 2
+          m_Curve:
+          - serializedVersion: 3
+            time: 0
+            value: 26
+            inSlope: 0
+            outSlope: 36
+            tangentMode: 69
+            weightedMode: 0
+            inWeight: 0
+            outWeight: 0
+          - serializedVersion: 3
+            time: 0.11111111
+            value: 30
+            inSlope: 36
+            outSlope: 27
+            tangentMode: 69
+            weightedMode: 0
+            inWeight: 0
+            outWeight: 0
+          - serializedVersion: 3
+            time: 0.22222222
+            value: 33
+            inSlope: 27
+            outSlope: 26.999998
+            tangentMode: 69
+            weightedMode: 0
+            inWeight: 0
+            outWeight: 0
+          - serializedVersion: 3
+            time: 0.33333334
+            value: 36
+            inSlope: 26.999998
+            outSlope: 36.000004
+            tangentMode: 69
+            weightedMode: 0
+            inWeight: 0
+            outWeight: 0
+          - serializedVersion: 3
+            time: 0.44444445
+            value: 40
+            inSlope: 36.000004
+            outSlope: 35.999992
+            tangentMode: 69
+            weightedMode: 0
+            inWeight: 0
+            outWeight: 0
+          - serializedVersion: 3
+            time: 0.5555556
+            value: 44
+            inSlope: 35.999992
+            outSlope: 27.000002
+            tangentMode: 69
+            weightedMode: 0
+            inWeight: 0
+            outWeight: 0
+          - serializedVersion: 3
+            time: 0.6666667
+            value: 47
+            inSlope: 27.000002
+            outSlope: 27.000002
+            tangentMode: 69
+            weightedMode: 0
+            inWeight: 0
+            outWeight: 0
+          - serializedVersion: 3
+            time: 0.7777778
+            value: 50
+            inSlope: 27.000002
+            outSlope: 36.000004
+            tangentMode: 69
+            weightedMode: 0
+            inWeight: 0
+            outWeight: 0
+          - serializedVersion: 3
+            time: 0.8888889
+            value: 54
+            inSlope: 36.000004
+            outSlope: 36.000004
+            tangentMode: 69
+            weightedMode: 0
+            inWeight: 0
+            outWeight: 0
+          - serializedVersion: 3
+            time: 1
+            value: 58
+            inSlope: 36.000004
+            outSlope: 0
+            tangentMode: 69
+            weightedMode: 0
+            inWeight: 0
+            outWeight: 0
+          m_PreInfinity: 2
+          m_PostInfinity: 2
+          m_RotationOrder: 4
+        Behaviours: []
+    - rid: 2403794261189067161
+      type: {class: CachedAttributeBackedScaler, ns: FarEmerald.PlayForge, asm: FarEmerald.PlayForge}
+      data:
+        Name: "10 \xD7 Strength"
+        Configuration: 0
+        MaxLevel: 10
+        LevelValues:
+        - 10
+        - 10
+        - 10
+        - 10
+        - 10
+        - 10
+        - 10
+        - 10
+        - 10
+        - 10
+        Interpolation: 1
+        StretchOverLevels: 0
+        Scaling:
+          serializedVersion: 2
+          m_Curve:
+          - serializedVersion: 3
+            time: 0
+            value: 10
+            inSlope: 0
+            outSlope: 0
+            tangentMode: 69
+            weightedMode: 0
+            inWeight: 0
+            outWeight: 0
+          - serializedVersion: 3
+            time: 0.11111111
+            value: 10
+            inSlope: -0
+            outSlope: 0
+            tangentMode: 69
+            weightedMode: 0
+            inWeight: 0
+            outWeight: 0
+          - serializedVersion: 3
+            time: 0.22222222
+            value: 10
+            inSlope: -0
+            outSlope: 0
+            tangentMode: 69
+            weightedMode: 0
+            inWeight: 0
+            outWeight: 0
+          - serializedVersion: 3
+            time: 0.33333334
+            value: 10
+            inSlope: -0
+            outSlope: 0
+            tangentMode: 69
+            weightedMode: 0
+            inWeight: 0
+            outWeight: 0
+          - serializedVersion: 3
+            time: 0.44444445
+            value: 10
+            inSlope: -0
+            outSlope: 0
+            tangentMode: 69
+            weightedMode: 0
+            inWeight: 0
+            outWeight: 0
+          - serializedVersion: 3
+            time: 0.5555556
+            value: 10
+            inSlope: -0
+            outSlope: 0
+            tangentMode: 69
+            weightedMode: 0
+            inWeight: 0
+            outWeight: 0
+          - serializedVersion: 3
+            time: 0.6666667
+            value: 10
+            inSlope: -0
+            outSlope: 0
+            tangentMode: 69
+            weightedMode: 0
+            inWeight: 0
+            outWeight: 0
+          - serializedVersion: 3
+            time: 0.7777778
+            value: 10
+            inSlope: -0
+            outSlope: 0
+            tangentMode: 69
+            weightedMode: 0
+            inWeight: 0
+            outWeight: 0
+          - serializedVersion: 3
+            time: 0.8888889
+            value: 10
+            inSlope: -0
+            outSlope: 0
+            tangentMode: 69
+            weightedMode: 0
+            inWeight: 0
+            outWeight: 0
+          - serializedVersion: 3
+            time: 1
+            value: 10
+            inSlope: -0
+            outSlope: 0
+            tangentMode: 69
+            weightedMode: 0
+            inWeight: 0
+            outWeight: 0
+          m_PreInfinity: 2
+          m_PostInfinity: 2
+          m_RotationOrder: 4
+        Behaviours: []
+        CaptureAttribute: {fileID: 11400000, guid: 68b5217a78b8e544fb7586bdf897268f, type: 2}
+        CaptureWhat: 0
+        RelativeOperation: 1
+    - rid: 2403794261189067162
+      type: {class: CachedAttributeBackedScaler, ns: FarEmerald.PlayForge, asm: FarEmerald.PlayForge}
+      data:
+        Name: "12 \xD7 Intelligence"
+        Configuration: 0
+        MaxLevel: 10
+        LevelValues:
+        - 12
+        - 12
+        - 12
+        - 12
+        - 12
+        - 12
+        - 12
+        - 12
+        - 12
+        - 12
+        Interpolation: 1
+        StretchOverLevels: 0
+        Scaling:
+          serializedVersion: 2
+          m_Curve:
+          - serializedVersion: 3
+            time: 0
+            value: 12
+            inSlope: 0
+            outSlope: 0
+            tangentMode: 69
+            weightedMode: 0
+            inWeight: 0
+            outWeight: 0
+          - serializedVersion: 3
+            time: 0.11111111
+            value: 12
+            inSlope: -0
+            outSlope: 0
+            tangentMode: 69
+            weightedMode: 0
+            inWeight: 0
+            outWeight: 0
+          - serializedVersion: 3
+            time: 0.22222222
+            value: 12
+            inSlope: -0
+            outSlope: 0
+            tangentMode: 69
+            weightedMode: 0
+            inWeight: 0
+            outWeight: 0
+          - serializedVersion: 3
+            time: 0.33333334
+            value: 12
+            inSlope: -0
+            outSlope: 0
+            tangentMode: 69
+            weightedMode: 0
+            inWeight: 0
+            outWeight: 0
+          - serializedVersion: 3
+            time: 0.44444445
+            value: 12
+            inSlope: -0
+            outSlope: 0
+            tangentMode: 69
+            weightedMode: 0
+            inWeight: 0
+            outWeight: 0
+          - serializedVersion: 3
+            time: 0.5555556
+            value: 12
+            inSlope: -0
+            outSlope: 0
+            tangentMode: 69
+            weightedMode: 0
+            inWeight: 0
+            outWeight: 0
+          - serializedVersion: 3
+            time: 0.6666667
+            value: 12
+            inSlope: -0
+            outSlope: 0
+            tangentMode: 69
+            weightedMode: 0
+            inWeight: 0
+            outWeight: 0
+          - serializedVersion: 3
+            time: 0.7777778
+            value: 12
+            inSlope: -0
+            outSlope: 0
+            tangentMode: 69
+            weightedMode: 0
+            inWeight: 0
+            outWeight: 0
+          - serializedVersion: 3
+            time: 0.8888889
+            value: 12
+            inSlope: -0
+            outSlope: 0
+            tangentMode: 69
+            weightedMode: 0
+            inWeight: 0
+            outWeight: 0
+          - serializedVersion: 3
+            time: 1
+            value: 12
+            inSlope: -0
+            outSlope: 0
+            tangentMode: 69
+            weightedMode: 0
+            inWeight: 0
+            outWeight: 0
+          m_PreInfinity: 2
+          m_PostInfinity: 2
+          m_RotationOrder: 4
+        Behaviours: []
+        CaptureAttribute: {fileID: 11400000, guid: 781fdf8841bc79441bc32a1d136f3c4f, type: 2}
+        CaptureWhat: 0
+        RelativeOperation: 1
+    - rid: 2403794261189067163
+      type: {class: CachedAttributeBackedScaler, ns: FarEmerald.PlayForge, asm: FarEmerald.PlayForge}
+      data:
+        Name: "8 \xD7 Agility"
+        Configuration: 0
+        MaxLevel: 10
+        LevelValues:
+        - 8
+        - 8
+        - 8
+        - 8
+        - 8
+        - 8
+        - 8
+        - 8
+        - 8
+        - 8
+        Interpolation: 1
+        StretchOverLevels: 0
+        Scaling:
+          serializedVersion: 2
+          m_Curve:
+          - serializedVersion: 3
+            time: 0
+            value: 8
+            inSlope: 0
+            outSlope: 0
+            tangentMode: 69
+            weightedMode: 0
+            inWeight: 0
+            outWeight: 0
+          - serializedVersion: 3
+            time: 0.11111111
+            value: 8
+            inSlope: -0
+            outSlope: 0
+            tangentMode: 69
+            weightedMode: 0
+            inWeight: 0
+            outWeight: 0
+          - serializedVersion: 3
+            time: 0.22222222
+            value: 8
+            inSlope: -0
+            outSlope: 0
+            tangentMode: 69
+            weightedMode: 0
+            inWeight: 0
+            outWeight: 0
+          - serializedVersion: 3
+            time: 0.33333334
+            value: 8
+            inSlope: -0
+            outSlope: 0
+            tangentMode: 69
+            weightedMode: 0
+            inWeight: 0
+            outWeight: 0
+          - serializedVersion: 3
+            time: 0.44444445
+            value: 8
+            inSlope: -0
+            outSlope: 0
+            tangentMode: 69
+            weightedMode: 0
+            inWeight: 0
+            outWeight: 0
+          - serializedVersion: 3
+            time: 0.5555556
+            value: 8
+            inSlope: -0
+            outSlope: 0
+            tangentMode: 69
+            weightedMode: 0
+            inWeight: 0
+            outWeight: 0
+          - serializedVersion: 3
+            time: 0.6666667
+            value: 8
+            inSlope: -0
+            outSlope: 0
+            tangentMode: 69
+            weightedMode: 0
+            inWeight: 0
+            outWeight: 0
+          - serializedVersion: 3
+            time: 0.7777778
+            value: 8
+            inSlope: -0
+            outSlope: 0
+            tangentMode: 69
+            weightedMode: 0
+            inWeight: 0
+            outWeight: 0
+          - serializedVersion: 3
+            time: 0.8888889
+            value: 8
+            inSlope: -0
+            outSlope: 0
+            tangentMode: 69
+            weightedMode: 0
+            inWeight: 0
+            outWeight: 0
+          - serializedVersion: 3
+            time: 1
+            value: 8
+            inSlope: -0
+            outSlope: 0
+            tangentMode: 69
+            weightedMode: 0
+            inWeight: 0
+            outWeight: 0
+          m_PreInfinity: 2
+          m_PostInfinity: 2
+          m_RotationOrder: 4
+        Behaviours: []
+        CaptureAttribute: {fileID: 11400000, guid: 1aadfbe470192574b917692686c8496f, type: 2}
+        CaptureWhat: 0
+        RelativeOperation: 1

@@ -8,5 +8,4 @@ assembly, `FarEmerald.PlayForge.Examples`, and need nothing beyond PlayForge.
 | `TaskSequenceExamples.cs` | Task sequence features one at a time: stages, tasks, delays, conditions and data packets. Each method marked `[TaskSequenceMethod]` appears in an ability's sequence dropdown, so you can run it from an ability. |
 | `TaskSequenceExamples_Mechanics.cs` | The same features applied to gameplay mechanics in the style of MOBA and ARPG games. |
 | `GroupProcessExamples.cs` | Processes run as a group, with the Synchronous lifecycle. Its summary lists the scene setup it needs. |
-
-The synced sequence examples ship in the **Demos** sample instead, because the Demo uses them.
+| `SyncSequenceExamples.cs` | Synced sequences: processes you drop into a scene that tick, patrol, chase, bob, orbit, pulse and burn, each a `LazyMonoProcess` with the Synchronous lifecycle. Its summary lists the setup. |

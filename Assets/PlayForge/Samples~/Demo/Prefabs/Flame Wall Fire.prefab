@@ -1,0 +1,283 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!1 &670901917191116715
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 4430900371901957446}
+  - component: {fileID: 8884435885601159376}
+  m_Layer: 0
+  m_Name: Fire
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &4430900371901957446
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 670901917191116715}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 1780579420093359761}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &8884435885601159376
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 670901917191116715}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b73738941840cdd44ae8df1361a56e9e, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  Shape: 2
+  Size: {x: 1, y: 0.02, z: 1}
+  Offset: {x: 0, y: 0, z: 0}
+  Color: {r: 1, g: 0.42, b: 0.12, a: 1}
+  KeepCollider: 0
+  Pulse: 0
+--- !u!1 &6627187870725260890
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1780579420093359761}
+  - component: {fileID: 7704633089071360104}
+  m_Layer: 0
+  m_Name: Flame Wall Fire
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &1780579420093359761
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6627187870725260890}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children:
+  - {fileID: 4430900371901957446}
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &7704633089071360104
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6627187870725260890}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e6b21ef3f2e0c354ba15ef3745033199, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  ProcessLifecycle: 0
+  ProcessTiming: 0
+  PriorityMethod: 1
+  ProcessStepPriority: 0
+  Instantiator:
+    rid: -2
+  UseHandlerInstantiator: 0
+  ParticipateInSiblingCascade: 1
+  Attributes:
+  - Attribute: {fileID: 11400000, guid: b0f3b545bd1251448b55c88aa7b30fca, type: 2}
+    Role:
+      Name: Demo.Fire.Radius
+      DisplayName: Demo.Fire.Radius
+    StartsFrom: 0
+    Value:
+      Magnitude: 0
+      RealMagnitude: 3
+      Scaler:
+        rid: 2403794261189066947
+  - Attribute: {fileID: 11400000, guid: 114c3049dcb3d124c9d0fb9fef7841c2, type: 2}
+    Role:
+      Name: Demo.Fire.Lifetime
+      DisplayName: Demo.Fire.Lifetime
+    StartsFrom: 0
+    Value:
+      Magnitude: 4
+      RealMagnitude: 2
+      Scaler:
+        rid: -2
+  - Attribute: {fileID: 11400000, guid: dbd4225d731831a409b3c32f18385f7d, type: 2}
+    Role:
+      Name: Demo.Fire.Interval
+      DisplayName: Demo.Fire.Interval
+    StartsFrom: 0
+    Value:
+      Magnitude: 1
+      RealMagnitude: 2
+      Scaler:
+        rid: -2
+  - Attribute: {fileID: 11400000, guid: 1ffa4b4a9d452ae408403727a0988b4a, type: 2}
+    Role:
+      Name: Demo.Fire.Heat
+      DisplayName: Demo.Fire.Heat
+    StartsFrom: 0
+    Value:
+      Magnitude: 0
+      RealMagnitude: 3
+      Scaler:
+        rid: 2403794261189066948
+  AttributePairs: []
+  RadiusRole:
+    Name: Demo.Fire.Radius
+    DisplayName: Demo.Fire.Radius
+  LifetimeRole:
+    Name: Demo.Fire.Lifetime
+    DisplayName: Demo.Fire.Lifetime
+  IntervalRole:
+    Name: Demo.Fire.Interval
+    DisplayName: Demo.Fire.Interval
+  Radius: 2.5
+  Lifetime: 4
+  Interval: 1
+  Effects:
+  - {fileID: 11400000, guid: 2a13eefc1a0c02141b3e3f390c98e1c4, type: 2}
+  Affects: 0
+  Layers:
+    serializedVersion: 2
+    m_Bits: 4294967295
+  Look: {fileID: 4430900371901957446}
+  references:
+    version: 2
+    RefIds:
+    - rid: -2
+      type: {class: , ns: , asm: }
+    - rid: 2403794261189066947
+      type: {class: SimpleScaler, ns: FarEmerald.PlayForge, asm: FarEmerald.PlayForge}
+      data:
+        Name: Radius, by Flame Wall's level
+        Configuration: 0
+        MaxLevel: 4
+        LevelValues:
+        - 2.5
+        - 3
+        - 3.5
+        - 4
+        Interpolation: 1
+        StretchOverLevels: 0
+        Scaling:
+          serializedVersion: 2
+          m_Curve:
+          - serializedVersion: 3
+            time: 0
+            value: 2.5
+            inSlope: 0
+            outSlope: 1.5
+            tangentMode: 69
+            weightedMode: 0
+            inWeight: 0
+            outWeight: 0
+          - serializedVersion: 3
+            time: 0.33333334
+            value: 3
+            inSlope: 1.5
+            outSlope: 1.5
+            tangentMode: 69
+            weightedMode: 0
+            inWeight: 0
+            outWeight: 0
+          - serializedVersion: 3
+            time: 0.6666667
+            value: 3.5
+            inSlope: 1.5
+            outSlope: 1.5000001
+            tangentMode: 69
+            weightedMode: 0
+            inWeight: 0
+            outWeight: 0
+          - serializedVersion: 3
+            time: 1
+            value: 4
+            inSlope: 1.5000001
+            outSlope: 0
+            tangentMode: 69
+            weightedMode: 0
+            inWeight: 0
+            outWeight: 0
+          m_PreInfinity: 2
+          m_PostInfinity: 2
+          m_RotationOrder: 4
+        Behaviours: []
+    - rid: 2403794261189066948
+      type: {class: SimpleScaler, ns: FarEmerald.PlayForge, asm: FarEmerald.PlayForge}
+      data:
+        Name: Heat, by Flame Wall's level
+        Configuration: 0
+        MaxLevel: 4
+        LevelValues:
+        - 1
+        - 1.25
+        - 1.5
+        - 1.75
+        Interpolation: 1
+        StretchOverLevels: 0
+        Scaling:
+          serializedVersion: 2
+          m_Curve:
+          - serializedVersion: 3
+            time: 0
+            value: 1
+            inSlope: 0
+            outSlope: 0.75
+            tangentMode: 69
+            weightedMode: 0
+            inWeight: 0
+            outWeight: 0
+          - serializedVersion: 3
+            time: 0.33333334
+            value: 1.25
+            inSlope: 0.75
+            outSlope: 0.75
+            tangentMode: 69
+            weightedMode: 0
+            inWeight: 0
+            outWeight: 0
+          - serializedVersion: 3
+            time: 0.6666667
+            value: 1.5
+            inSlope: 0.75
+            outSlope: 0.75000006
+            tangentMode: 69
+            weightedMode: 0
+            inWeight: 0
+            outWeight: 0
+          - serializedVersion: 3
+            time: 1
+            value: 1.75
+            inSlope: 0.75000006
+            outSlope: 0
+            tangentMode: 69
+            weightedMode: 0
+            inWeight: 0
+            outWeight: 0
+          m_PreInfinity: 2
+          m_PostInfinity: 2
+          m_RotationOrder: 4
+        Behaviours: []
