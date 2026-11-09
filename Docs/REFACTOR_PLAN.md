@@ -448,6 +448,9 @@ from. It lives outside `Assets/` so it never ships in the package.
 19. ~~**Where the Debugger's edits go (ED-40)**~~: decided, see above (Decision 31).
 20. ~~**What a spawned thing knows (FEAT-24)**~~: decided, see above (Decision 39).
 21. ~~**The demo's play (Decision 37)**~~: decided, see above (Decision 38).
+22. **Number fields (FEAT-29)**: the eight questions at the end of `Docs/NUMBER_FIELDS_DESIGN.md`: the type's name,
+    whether the magnitude field becomes it, its kinds, when a number is read, percentages, migration, relative
+    attribute bounds, and the scope. Nothing is built before the answers.
 
 ## Roadmap
 
@@ -843,6 +846,7 @@ reads the old demos' fullest assets, so it moves to the new demo's as the old go
 | FEAT-26 | An attribute rule by share | Found building the demo, whose Eviscerate is for a target below half its health: an Attribute Validation compared the attribute's value alone, right for one entity and wrong for the next. Done: `AttributeValidation.ShareOfBase` compares the attribute's share of its base, 0 to 1 |
 | FEAT-27 | Clamp another scaler | Found building the demo, whose Eviscerate caps damage worked out from its target's missing health: a Clamped scaler clamped its own table alone. Done: `ClampedScaler.Inner`, a scaler whose value it clamps; with none, its own values per level, as before |
 | FEAT-28 | What a process carries reaches its effects | Found building the demo, whose Flame Wall fire burns harder by its ability's level: a process's own attributes (FEAT-24) stopped at the process, and only its caller's set-by-caller magnitudes reached the effects it applied. Done: `AbstractGameplayMonoProcess.GiveMagnitudes(spec)` gives an effect spec its caller's magnitudes, then each of its own attributes under its role, its own winning; a projectile's effects take them as they land, so a Set By Caller scaler on an effect reads what the process carries |
+| FEAT-29 | Number fields | The user's request of 2026-11-08: a Conditional scaler couldn't say "below 30% of max health", as its threshold is a bare float, and only an effect's own numbers can scale. Proposed: one number type for every authored gameplay number, grown from the magnitude field, a constant by default or a value by level, a multiple of an attribute, a caller's value, Local Data or any scaler. Design in `Docs/NUMBER_FIELDS_DESIGN.md`, waiting on Open decision 22 |
 
 **Phase 5's order,** from the review's plan for the test project (its labs, one at a time) and the table above. A lab
 is a small game: assets the lab builds in code, and a bot that plays it in PlayMode tests under a live ProcessControl,
@@ -906,6 +910,12 @@ GAS-4 with GAS-5, PC-6, and TS-I with PC-5.
 ## Log
 
 Record baselines, gate results and notable decisions here, newest first.
+
+- 2026-11-08, **FEAT-29's design, for the user's review.** `Docs/NUMBER_FIELDS_DESIGN.md`: one number type for every
+  authored gameplay number, grown from the magnitude field so saved magnitudes load as they are, with kinds the
+  inspector offers where a field's context can resolve them, a context that lets a number read the caster, the
+  target, the level, the caller's magnitudes and Local Data without allocating, and a census of which fields convert
+  (about 30) and which stay plain, and why. Open decision 22 holds its questions.
 
 - 2026-11-06, **Phase 7: the Demo (SP-25, SP-26, Decisions 37 to 39).** The Demo sample replaces the Demos and Swarm
   Defender. Five heroes, each with an attack, three abilities and a passive; fourteen items; an AI hero and a training
