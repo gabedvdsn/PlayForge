@@ -441,6 +441,16 @@ from. It lives outside `Assets/` so it never ships in the package.
   - **Scope:** about 35 fields convert, an item's Max Stack Size and tag weights in requirements among them; levels,
     priorities, settings and runtime values stay plain.
 
+- Decision 41, 2026-11-09: number fields (FEAT-29), the user's additions to Decision 40.
+  - **Tracked Impact:** a kind that reads what an effect has dealt, its last impact, its total or its impact count:
+    this effect's own, an effect's on the caster or the target, or every effect's with a tag there, summed.
+  - **Group Impact:** a kind that reads one retention group's part of an attribute, as the Bonus group's part of
+    Strength, which is what items add.
+  - **Extending it is accessible:** a kind of a project's own is one class, `NumberKind`, with one method that reads a
+    public `NumberContext`; `[NumberKind]` names it, files it and says what it reads, so the inspector offers it only
+    where it resolves. PlayForge's new kinds are written on the same base. The design has eight phases now, the
+    extension API in the first.
+
 **Open. Ask the user; do not assume:**
 1. ~~**Uncommitted changes**~~: decided, see above.
 2. ~~**The test project, "PlayForge Proving Grounds"**~~: decided, see above.
@@ -859,7 +869,7 @@ reads the old demos' fullest assets, so it moves to the new demo's as the old go
 | FEAT-26 | An attribute rule by share | Found building the demo, whose Eviscerate is for a target below half its health: an Attribute Validation compared the attribute's value alone, right for one entity and wrong for the next. Done: `AttributeValidation.ShareOfBase` compares the attribute's share of its base, 0 to 1 |
 | FEAT-27 | Clamp another scaler | Found building the demo, whose Eviscerate caps damage worked out from its target's missing health: a Clamped scaler clamped its own table alone. Done: `ClampedScaler.Inner`, a scaler whose value it clamps; with none, its own values per level, as before |
 | FEAT-28 | What a process carries reaches its effects | Found building the demo, whose Flame Wall fire burns harder by its ability's level: a process's own attributes (FEAT-24) stopped at the process, and only its caller's set-by-caller magnitudes reached the effects it applied. Done: `AbstractGameplayMonoProcess.GiveMagnitudes(spec)` gives an effect spec its caller's magnitudes, then each of its own attributes under its role, its own winning; a projectile's effects take them as they land, so a Set By Caller scaler on an effect reads what the process carries |
-| FEAT-29 | Number fields | The user's request of 2026-11-08: a Conditional scaler couldn't say "below 30% of max health", as its threshold is a bare float, and only an effect's own numbers can scale. Proposed: one number type for every authored gameplay number, grown from the magnitude field, a constant by default or a value by level, a multiple of an attribute, a caller's value, Local Data or any scaler. Decided (Decision 40), the design in `Docs/NUMBER_FIELDS_DESIGN.md`. Its seven phases, each with tracker rows of its own, are next |
+| FEAT-29 | Number fields | The user's request of 2026-11-08: a Conditional scaler couldn't say "below 30% of max health", as its threshold is a bare float, and only an effect's own numbers can scale. Proposed: one number type for every authored gameplay number, grown from the magnitude field, a constant by default or a value by level, a multiple of an attribute, a caller's value, Local Data or any scaler. Decided (Decisions 40 and 41), the design in `Docs/NUMBER_FIELDS_DESIGN.md`. Its eight phases, each with tracker rows of its own, are next |
 
 **Phase 5's order,** from the review's plan for the test project (its labs, one at a time) and the table above. A lab
 is a small game: assets the lab builds in code, and a bot that plays it in PlayMode tests under a live ProcessControl,
@@ -923,6 +933,11 @@ GAS-4 with GAS-5, PC-6, and TS-I with PC-5.
 ## Log
 
 Record baselines, gate results and notable decisions here, newest first.
+
+- 2026-11-09, **Decision 41: two more number kinds, and kinds of your own.** The user asked for kinds that read an
+  effect's tracked impact (last, total, count) and a retention group's part of an attribute, and for the type to be
+  easy to extend. Both kinds rest on what the runtime already keeps (`TrackedImpact`, `GetGroupValue`). A project's
+  own kind is one class with one method, and PlayForge's new kinds use the same public base.
 
 - 2026-11-08, **Decision 40: number fields, the user's answers.** All eight of FEAT-29's questions: the recommended
   name, one type grown from the magnitude field, read once at its moment, percent display and the migration; and

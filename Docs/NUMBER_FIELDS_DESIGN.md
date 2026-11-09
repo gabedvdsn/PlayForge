@@ -5,8 +5,8 @@ number, a scaler and how the two combine. This design makes one number type for 
 default it is a plain number, as now, but it can also be a value per level, a multiple of an attribute, a value its
 caller sets, and more.
 
-**Status:** decided 2026-11-08 (Decision 40, FEAT-29). The user answered the eight questions; the answers are under
-Decisions at the end, and the sections below follow them.
+**Status:** decided 2026-11-08 (Decision 40, FEAT-29), with two kinds and an accessible extension API added on
+2026-11-09 (Decision 41). The answers are under Decisions at the end, and the sections below follow them.
 
 ## The problem
 
@@ -37,7 +37,10 @@ these kinds:
 | **Set By Caller** | The value the caller set under a key, or the number where it set none. | The AI's difficulty |
 | **Local Data** | A value in the ability's, item's or entity's Local Data, under a key. | A hero's attack range |
 | **Relative to a field** | The number times, or plus, another number field of the same object. | A Clamped scaler's Max as `2 × Min` |
+| **Tracked Impact** | The number times what an effect has dealt: its last impact, its total, or how many impacts. | A burn that grows each tick; a heal of half the last blow |
+| **Group Impact** | The number times what one retention group holds of an attribute. | `2 × Caster's Strength (Bonus)`, from items alone |
 | **Scaler** | Any scaler, and how it combines with the number. As a magnitude field does today. | A Conditional, a Group |
+| **Your own** | A kind a project writes: one class, one method (Extending it, below). | Distance to the target |
 
 There are precedents for this:
 
@@ -62,7 +65,8 @@ There are precedents for this:
   - By Level is a Simple scaler.
   - × Attribute is an Attribute Backed scaler, as "Scaler × Number".
   - Set By Caller is the Set By Caller scaler.
-  - Local Data is a new Local Data scaler.
+  - Local Data, Tracked Impact and Group Impact are new kinds, written on the same public base a project's own kinds
+    use (Extending it, below), so the extension API is proven by PlayForge's own kinds.
   - Relative to a field is the one kind that isn't a scaler, as it reads its own object (below).
   - Scaler is any scaler.
 
@@ -147,6 +151,109 @@ There are precedents for this:
   level, so a stack can grow with the item's level or the owner's attributes. A reader with no owner, as a shop's
   UI, reads its number. A stack that's bigger than its new size, as after a level goes down, keeps what it holds and
   takes no more until it's below the size.
+
+### Tracked Impact
+
+- **What's there.** Every effect spec, and every other impact carrier, keeps a `TrackedImpact` of what it has dealt:
+  its **Last** impact, its **Total** and its **Count**. The source's ability system records each impact as it's
+  dealt (`ProvideFrameImpactDealt`), after workers, so these are what landed: a blow after the target's armor.
+- **The kind** is the number times one of them:
+  - **What:** Last, Total or Count.
+  - **Of whom:**
+    - this effect, the carrier whose number it is, as a periodic effect reading its own ticks;
+    - an effect on the caster or on the target, by its asset, its containers summed;
+    - or every effect on the caster or the target tagged with a tag, a group of effects, summed.
+  - **Which side:** the impact's current or base part. Count has no side.
+  - **As dealt or by size:** an impact is signed, so damage is negative. Size reads it positive, as a heal of half a
+    blow wants.
+- **Examples:**
+  - A burn that grows each tick: magnitude `−8 × (1 + 0.25 × its own Count)`, built as a Group of the number and the
+    kind.
+  - Drain Life's heal: `0.5 × the size of this effect's Last`.
+  - Combustion consuming a burn: `1 × the size of the Total of the target's Burning`.
+  - A shield that holds for three blows: a Conditional on its own Count.
+- **Timing.** An effect's magnitude is worked out as it's applied, and again at each tick of a periodic effect, as
+  `ScalerImpacter` does now, so a number on its own Count reads the ticks so far. At its first application, an
+  effect has dealt nothing: Last and Total are 0, and Count is 0.
+- **Where it resolves:**
+  - "This effect" needs a carrier: an effect, a worker's impact or a cue.
+  - "An effect on" someone needs only that entity, so a task can read it too.
+  - Where there's nothing tracked, as an effect that isn't on the target, the kind reads 0.
+- **A limit.** A save (FEAT-9) restores an effect's time and stacks but not what it has dealt, so after a load its
+  tracked impact starts again at 0. Saving it too is a small addition to the snapshot, if wanted.
+
+### Group Impact
+
+- **What's there.** An attribute's value is the sum of its retention groups' parts. `CachedAttributeValue.GetGroupValue`
+  reads one: the Bonus group's part of Strength is what items add, which the Demo's HUD shows as "(+8)".
+- **The kind** is the number times one group's part of an attribute, on the caster or the target, current or base:
+  `2 × Caster's Strength (Bonus)` deals more for Strength from items and nothing for the hero's own.
+- **Where it resolves:** wherever × Attribute does. In an attribute set, as a bound, it registers its attribute for
+  tracking as × Attribute does, since a group's part changes only when its attribute does.
+- **The other "group".** If "group impact" also means the impact of a group of effects, Tracked Impact's "every
+  effect tagged" covers it: the summed Total of every Burning-tagged effect on the target.
+
+### Extending it: kinds of your own
+
+**Today**, a project can add a scaler: a class that derives from `AbstractScaler`. The Kind menu lists it by its
+name, and its fields draw with no editor code (SCALERS.md, "Writing your own scaler"). It isn't easy, though:
+
+- it implements two methods against impact carriers;
+- it opts out of the per-level table it doesn't use, through `Parts`;
+- it can't show a one-line summary or say what it reads;
+- and it works only where an effect spec exists, so a task's range or a worker's threshold couldn't use it.
+
+**The design** makes a kind of your own one class with one method:
+
+```csharp
+/// <summary>The distance from the caster to the target: a blow that hits harder from afar.</summary>
+[Serializable]
+[NumberKind("Distance to Target", Category = "Space", Reads = NumberReads.Caster | NumberReads.Target)]
+public class DistanceToTarget : NumberKind
+{
+    [Tooltip("Along the ground, leaving height out")]
+    public bool Flat = true;
+
+    protected override float Evaluate(in NumberContext context)
+    {
+        var from = context.Caster.GetTargetingPacket().position;
+        var to = context.Target.GetTargetingPacket().position;
+        if (Flat) from.y = to.y = 0f;
+        return Vector3.Distance(from, to);
+    }
+
+    public override string Describe() => "the distance to the target";
+}
+```
+
+- **The base, `NumberKind`,** derives from `AbstractScaler`. A kind of your own is still a scaler, so it works
+  everywhere a scaler does: inside a Group, a Conditional or a Clamped. The base answers the carrier methods by
+  building a `NumberContext` and calling yours. It reads no per-level table unless it asks to.
+- **`NumberContext` is the API a kind reads.** It is public and documented, and adding to it later breaks no kind.
+  It offers:
+  - the caster, the target and the level;
+  - the carrier, where there is one, and its tracked impact;
+  - set-by-caller values and Local Data, each by key;
+  - an attribute's value or a group's part, on either side;
+  - the effects on either side;
+  - the activation's data, where a task reads it;
+  - the owner, for a field's own object.
+
+  `context.Has(NumberReads.Target)` says what this site provides.
+- **`[NumberKind]`** names the kind in the menu, files it under a category, and says what it reads. The inspector then
+  offers it only where the context provides it, and the Problems window flags it where it doesn't. Without the
+  attribute, a kind takes its class name, as scalers do now, and is offered everywhere.
+- **`Describe()`** gives the summary line, so the field reads "0.5 × the distance to the target".
+- **Its fields** draw as a scaler's do now, with `[ForgeShowWhen]`, `[Tooltip]`, and the "%" unit for shares.
+- **Whole numbers.** `ScalableInt` takes every kind, rounding its value, so a kind is written once.
+- **Code-only kinds.** An asset built in code, as Battle's are, can take `ScalableFloat.From(context => ...)`, a
+  number worked out by a function. It isn't saved, as a function can't be.
+- **Renaming.** A kind is saved by its type name, as every `[SerializeReference]` value is, so renaming its class
+  needs Unity's `[MovedFrom]`. The docs say so, with an example.
+- **Testing.** `NumberContext.For(caster, target, level)` builds a context in a test, and `number.Evaluate(context)`
+  reads it, so a kind is tested without an effect.
+- **The Demo** ships one kind of its own, Distance to Target, used by Thunderclap's damage falling off with distance,
+  as a working example.
 
 ### When a number is read
 
@@ -257,18 +364,21 @@ than `0.5 × Target's Health (base)`.
 
 Each phase gets its own tracker rows, with red tests first, the full suites and the Demo's tests.
 
-1. **Foundation.** This covers:
+1. **Foundation and the extension API.** This covers:
    - the type, the context, and the reusable carrier;
-   - Set By Caller from any context, and the Local Data scaler;
-   - Relative to a field, its accessor cache and its loop guard;
-   - the capability attribute, the inspector's kinds, percent display and the Problems rules;
+   - `NumberKind`, `[NumberKind]` and `NumberContext` as public API, with a test of a kind written as a project would;
+   - Set By Caller from any context;
+   - the inspector's kind menu, by category, with summaries and percent display; the Problems rules;
    - the legacy-field pattern and the upgrade command.
-2. **Scaler parameters,** starting with the user's case as the first red test.
-3. **Tasks and validation.**
-4. **Workers, stacking and an item's stack size.**
-5. **Tag weights in requirements:** the checks take a context, and the zero-allocation probes cover them.
-6. **Attribute bounds:** Floor and Ceil as numbers, registered in the regulation cache, with the loop check.
-7. **Cues, then adoption and docs.** The Demo and Battle adopt the type where it shows something, and the docs follow.
+2. **The new kinds,** each written on the public base as a project's would be: Local Data, Relative to a field (its
+   accessor cache and loop guard), Tracked Impact and Group Impact.
+3. **Scaler parameters,** starting with the user's case as the first red test.
+4. **Tasks and validation.**
+5. **Workers, stacking and an item's stack size.**
+6. **Tag weights in requirements:** the checks take a context, and the zero-allocation probes cover them.
+7. **Attribute bounds:** Floor and Ceil as numbers, registered in the regulation cache, with the loop check.
+8. **Cues, then adoption and docs.** The Demo and Battle adopt the type where it shows something, the Demo's own
+   Distance to Target kind among it, and the docs follow, a "Writing your own kind" guide among them.
 
 ## Decisions (Decision 40)
 
@@ -285,3 +395,10 @@ The user's answers of 2026-11-08:
 7. **Attribute bounds:** now, in this refactor, with dependency tracking.
 8. **Scope:** an item's Max Stack Size and tag weights in requirements convert too. The rest of the keep-plain list
    stays plain.
+
+The user's additions of 2026-11-09 (Decision 41):
+
+9. **Two more kinds:** Tracked Impact (an effect's last impact, its total, or its impact count) and Group Impact (one
+   retention group's part of an attribute).
+10. **Extending it should be accessible:** a kind of a project's own is one class with one method, works in every
+    number field, and is offered only where it resolves. PlayForge's new kinds are written on that same public base.
