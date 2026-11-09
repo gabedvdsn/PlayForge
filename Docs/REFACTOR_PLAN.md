@@ -426,6 +426,21 @@ from. It lives outside `Assets/` so it never ships in the package.
   levels of abilities, items and heroes be easy to change in the demo, and found the roster fine as long as the
   abilities show a variety of kinds and creative use of task sequences and effects.
 
+- Decision 40, 2026-11-08: number fields (FEAT-29), Open decision 22, the user's answers to the design's eight
+  questions. `Docs/NUMBER_FIELDS_DESIGN.md` follows them.
+  - **Name and shape:** `ScalableFloat` and `ScalableInt`. The magnitude field (`ScalerMagnitudeOperation` and its
+    whole-number twin) becomes the type, keeping its saved field names.
+  - **Kinds:** Constant, By Level, × Attribute (the relative value: a multiple of the caster's or the target's
+    attribute), Set By Caller, Local Data, Scaler, and Relative to another field of the same object.
+  - **Timing:** a number is read once, at its site's natural moment: an effect as it's applied, a task as it starts.
+  - **Percentages:** a field that declares "%" shows 0.3 as 30%.
+  - **Migration:** old floats move on load through hidden legacy fields, an upgrade command re-saves a project's
+    assets, and the legacy fields go after one version.
+  - **Attribute bounds:** Floor and Ceil become numbers now, with the attributes they read tracked by the regulation
+    cache.
+  - **Scope:** about 35 fields convert, an item's Max Stack Size and tag weights in requirements among them; levels,
+    priorities, settings and runtime values stay plain.
+
 **Open. Ask the user; do not assume:**
 1. ~~**Uncommitted changes**~~: decided, see above.
 2. ~~**The test project, "PlayForge Proving Grounds"**~~: decided, see above.
@@ -448,9 +463,7 @@ from. It lives outside `Assets/` so it never ships in the package.
 19. ~~**Where the Debugger's edits go (ED-40)**~~: decided, see above (Decision 31).
 20. ~~**What a spawned thing knows (FEAT-24)**~~: decided, see above (Decision 39).
 21. ~~**The demo's play (Decision 37)**~~: decided, see above (Decision 38).
-22. **Number fields (FEAT-29)**: the eight questions at the end of `Docs/NUMBER_FIELDS_DESIGN.md`: the type's name,
-    whether the magnitude field becomes it, its kinds, when a number is read, percentages, migration, relative
-    attribute bounds, and the scope. Nothing is built before the answers.
+22. ~~**Number fields (FEAT-29)**~~: decided, see above (Decision 40).
 
 ## Roadmap
 
@@ -846,7 +859,7 @@ reads the old demos' fullest assets, so it moves to the new demo's as the old go
 | FEAT-26 | An attribute rule by share | Found building the demo, whose Eviscerate is for a target below half its health: an Attribute Validation compared the attribute's value alone, right for one entity and wrong for the next. Done: `AttributeValidation.ShareOfBase` compares the attribute's share of its base, 0 to 1 |
 | FEAT-27 | Clamp another scaler | Found building the demo, whose Eviscerate caps damage worked out from its target's missing health: a Clamped scaler clamped its own table alone. Done: `ClampedScaler.Inner`, a scaler whose value it clamps; with none, its own values per level, as before |
 | FEAT-28 | What a process carries reaches its effects | Found building the demo, whose Flame Wall fire burns harder by its ability's level: a process's own attributes (FEAT-24) stopped at the process, and only its caller's set-by-caller magnitudes reached the effects it applied. Done: `AbstractGameplayMonoProcess.GiveMagnitudes(spec)` gives an effect spec its caller's magnitudes, then each of its own attributes under its role, its own winning; a projectile's effects take them as they land, so a Set By Caller scaler on an effect reads what the process carries |
-| FEAT-29 | Number fields | The user's request of 2026-11-08: a Conditional scaler couldn't say "below 30% of max health", as its threshold is a bare float, and only an effect's own numbers can scale. Proposed: one number type for every authored gameplay number, grown from the magnitude field, a constant by default or a value by level, a multiple of an attribute, a caller's value, Local Data or any scaler. Design in `Docs/NUMBER_FIELDS_DESIGN.md`, waiting on Open decision 22 |
+| FEAT-29 | Number fields | The user's request of 2026-11-08: a Conditional scaler couldn't say "below 30% of max health", as its threshold is a bare float, and only an effect's own numbers can scale. Proposed: one number type for every authored gameplay number, grown from the magnitude field, a constant by default or a value by level, a multiple of an attribute, a caller's value, Local Data or any scaler. Decided (Decision 40), the design in `Docs/NUMBER_FIELDS_DESIGN.md`. Its seven phases, each with tracker rows of its own, are next |
 
 **Phase 5's order,** from the review's plan for the test project (its labs, one at a time) and the table above. A lab
 is a small game: assets the lab builds in code, and a bot that plays it in PlayMode tests under a live ProcessControl,
@@ -910,6 +923,12 @@ GAS-4 with GAS-5, PC-6, and TS-I with PC-5.
 ## Log
 
 Record baselines, gate results and notable decisions here, newest first.
+
+- 2026-11-08, **Decision 40: number fields, the user's answers.** All eight of FEAT-29's questions: the recommended
+  name, one type grown from the magnitude field, read once at its moment, percent display and the migration; and
+  three additions to the design: a Relative to another field kind, attribute bounds with dependency tracking in this
+  refactor, and an item's Max Stack Size and tag weights in requirements among the fields that convert. The design
+  doc now has the decided design and seven phases.
 
 - 2026-11-08, **FEAT-29's design, for the user's review.** `Docs/NUMBER_FIELDS_DESIGN.md`: one number type for every
   authored gameplay number, grown from the magnitude field so saved magnitudes load as they are, with kinds the
