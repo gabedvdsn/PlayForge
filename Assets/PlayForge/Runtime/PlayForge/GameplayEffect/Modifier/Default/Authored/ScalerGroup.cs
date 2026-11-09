@@ -8,6 +8,7 @@ namespace FarEmerald.PlayForge
     /// Combines multiple scalers with mathematical operations.
     /// Supports Add, Multiply, and Override operations between members.
     /// </summary>
+    [NumberKind("Group", Category = "Scaler")]
     public class ScalerGroup : AbstractScaler
     {
         [Tooltip("Group members with their operations")]

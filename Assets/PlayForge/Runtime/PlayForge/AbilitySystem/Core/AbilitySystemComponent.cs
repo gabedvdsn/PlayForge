@@ -21,7 +21,7 @@ namespace FarEmerald.PlayForge
         private EAbilityActivationPolicy activationPolicy;
         public EAbilityActivationPolicy DefaultActivationPolicy => activationPolicy;
         private bool allowDuplicateAbilities;
-        private ScalerIntegerMagnitudeOperation maxAbilitiesOperation;
+        private ScalableInt maxAbilitiesOperation;
 
         public readonly IGameplayAbilitySystem Self;
 
@@ -177,7 +177,7 @@ namespace FarEmerald.PlayForge
         public void Setup(
             EAbilityActivationPolicy activationPolicy, 
             bool allowDuplicates,
-            ScalerIntegerMagnitudeOperation maxAbilitiesOperation)
+            ScalableInt maxAbilitiesOperation)
         {
             this.activationPolicy = activationPolicy;
             this.allowDuplicateAbilities = allowDuplicates;

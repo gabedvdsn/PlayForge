@@ -513,7 +513,7 @@ namespace FarEmerald.PlayForge
         /// pipeline, using a synthetic leveler carrier. <paramref name="isDynamic"/> is
         /// true when the result depends on runtime state.
         /// </summary>
-        public static float EvaluateAtLevel(ScalerMagnitudeOperation operation, int level, int minLevel, int maxLevel, out bool isDynamic)
+        public static float EvaluateAtLevel(ScalableFloat operation, int level, int minLevel, int maxLevel, out bool isDynamic)
         {
             var carrier = MakeLevelCarrier(level, minLevel, maxLevel);
             return SafeEvaluate(operation, carrier, out isDynamic);
@@ -699,10 +699,10 @@ namespace FarEmerald.PlayForge
                 null, new IntValuePairClamped(level, minLevel, maxLevel));
         }
 
-        private static float SafeEvaluate(ScalerMagnitudeOperation operation, IAttributeImpactCarrier carrier, out bool isDynamic)
+        private static float SafeEvaluate(ScalableFloat operation, IAttributeImpactCarrier carrier, out bool isDynamic)
             => SafeEvaluate(operation, carrier, out isDynamic, out _);
 
-        private static float SafeEvaluate(ScalerMagnitudeOperation operation, IAttributeImpactCarrier carrier, out bool isDynamic, out string reason)
+        private static float SafeEvaluate(ScalableFloat operation, IAttributeImpactCarrier carrier, out bool isDynamic, out string reason)
         {
             isDynamic = false;
             reason = null;
@@ -738,7 +738,7 @@ namespace FarEmerald.PlayForge
             }
         }
 
-        private static int SafeEvaluateInt(ScalerIntegerMagnitudeOperation operation, IAttributeImpactCarrier carrier, out bool isDynamic)
+        private static int SafeEvaluateInt(ScalableInt operation, IAttributeImpactCarrier carrier, out bool isDynamic)
         {
             isDynamic = false;
             if (operation == null) return 0;

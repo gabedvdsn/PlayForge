@@ -1169,6 +1169,17 @@
     margin-left: 4px;
 }
 
+/* A number of a kind's one-line summary of what it reads, as "0.3 × Target's Health (base)", under its row, indented as
+   its block is, in secondary text, clipped to its line (FEAT-29) */
+.pf-root .pf-magnitude__summary {
+    margin: 0 0 2px 14px;
+    padding: 0;
+    color: var(--pf-secondary-text);
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+}
+
 /* A scaler's block: every field the scaler sets for the field it belongs to, on a light shade with a hairline under
    it, indented under that field. The style's one shaded container, which the user chose so a scaler's fields read as
    the scaler's among the fields around them (Decision 36, ED-51). A block in a block shades a step deeper */

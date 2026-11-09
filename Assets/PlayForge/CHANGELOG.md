@@ -7,6 +7,28 @@ tracks each fix below by its ID.
 ## [Unreleased]
 
 ### Added
+- Number fields' foundation (FEAT-29, phase 1): `ScalableFloat` and `ScalableInt`, one number type for every authored
+  gameplay number, a constant by default and a value by level, a multiple of an attribute, a caller's value or any
+  scaler otherwise. A float converts to one, a read is `Evaluate(context)`, and `IsConstant` and `Constant` serve
+  previews and setup code (NUM-1).
+- `NumberContext`, what a number is read against: the caster, the target, the level, the carrier, the caller's
+  magnitudes, Local Data, the activation's data and the owner, with `Has(NumberReads)`. Build one `Of` an effect spec,
+  an activation's data, a worker's context, an entity, a cue or a process, or `For` a test. A read allocates nothing:
+  a scaler read where there's no carrier evaluates against a reusable one the context fills (NUM-2).
+- Kinds of number of your own: a `NumberKind` is one class with one method, `Evaluate(in NumberContext)`, and
+  `Describe()` for its field's summary; `[NumberKind(name, Category, Reads)]` names it, files it in the kind menu and
+  says what it reads, so the inspector offers it only where it can be worked out. A kind is a scaler, so it works in
+  an effect's magnitude, a Group or a Conditional too. `ScalableFloat.From(function)` gives an asset built in code a
+  number worked out by a function (NUM-3).
+- The number field's inspector files the kind menu by category and offers only the kinds a field's context resolves,
+  which `[NumberContext]` declares; another kind shows a one-line summary, as "0.3 × Target's Health (base)"; and a
+  field whose unit is "%" shows and takes 0.3 as 30% (NUM-5).
+- A Problems rule for a number whose kind its field's context can't resolve, as one that reads a target its field
+  hasn't got (NUM-6).
+- Window/PlayForge/Upgrade Assets re-saves every asset that holds PlayForge data, so each is written in this version's
+  form, and `LegacyNumber.Move` moves a float saved before its field became a number into the number as it loads
+  (NUM-7).
+- `ERoundingOperation.Round`: a whole number can round to the nearest, a half away from zero (NUM-1).
 - The Demo sample: a hero arena of five heroes, fourteen items, an AI hero and a training dummy, with a panel to
   pick heroes, give items and change levels, and a HUD. Every hero, ability, item, effect and attribute is an
   asset, and between them they use every asset feature; its README maps each to where it shows. It needs nothing
@@ -189,6 +211,18 @@ tracks each fix below by its ID.
   page, through one table of links in the editor.
 
 ### Changed
+- `ScalerMagnitudeOperation` is `ScalableFloat` and `ScalerIntegerMagnitudeOperation` is `ScalableInt`, with the same
+  saved fields, so every saved magnitude loads as it was. The old names stay this version as obsolete subclasses, so
+  code that names them compiles with a warning; they go in the next (NUM-1).
+- `SetByCallerScaler` is a number kind, and reads the caller's magnitudes from any context that holds them: an
+  activation's data as a task reads it, the data that spawned a process, an effect's cue and workers. It read only an
+  effect spec's, so anything else read its default (NUM-4).
+- A gameplay mono process's own attributes read through the process's context, so a Set By Caller reads its caller's
+  magnitude, and a read allocates nothing; the carrier they were read through was made on every read and reported
+  the process's source as its target (NUM-4).
+- The kind menu names Attribute Backed "× Attribute", which the menu starts as the number times the attribute, and
+  files the scalers of every kind under Scaler, Effect Stacks under Effect and Item Stacks under Item. A kind with no
+  values per level shows its summary under its row in place of its name beside it (NUM-5).
 - The synced sequence examples are in Code Examples, with the rest; they shipped with the Demos (SP-26).
 - A Mono Process's inspector is a Process section of Unity's fields; each choice says what it does in its tooltip,
   and Priority Method shows only while the process steps, Priority only for Manual. It drew a tinted box and gray

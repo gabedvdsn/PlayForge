@@ -13,7 +13,7 @@ namespace FarEmerald.PlayForge
     public struct ValueModifier
     {
         public ECalculationOperation Operation;
-        public ScalerMagnitudeOperation MagnitudeOperation;
+        public ScalableFloat MagnitudeOperation;
     
         /// <summary>Optional condition - modifier only applies if tag requirements are met.</summary>
         [SerializeReference]
@@ -75,7 +75,7 @@ namespace FarEmerald.PlayForge
     public struct ValueIntModifier
     {
         public ECalculationOperation Operation;
-        public ScalerIntegerMagnitudeOperation MagnitudeOperation;
+        public ScalableInt MagnitudeOperation;
     
         /// <summary>Optional condition - modifier only applies if tag requirements are met.</summary>
         [SerializeReference]

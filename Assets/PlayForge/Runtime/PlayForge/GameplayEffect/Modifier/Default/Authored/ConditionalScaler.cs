@@ -8,6 +8,7 @@ namespace FarEmerald.PlayForge
     /// Selects between different scalers based on a condition.
     /// Useful for abilities that behave differently under certain circumstances.
     /// </summary>
+    [NumberKind("Conditional", Category = "Scaler")]
     public class ConditionalScaler : AbstractScaler
     {
         [Tooltip("The condition to evaluate")]

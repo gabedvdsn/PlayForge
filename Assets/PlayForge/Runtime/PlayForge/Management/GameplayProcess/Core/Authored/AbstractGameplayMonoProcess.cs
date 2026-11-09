@@ -28,6 +28,12 @@ namespace FarEmerald.PlayForge
         /// <summary>Raised as one of the process's own attributes changes, with the attribute and its new value.</summary>
         public event Action<ProcessAttribute, float> AttributeChanged;
 
+        /// <summary>The data that spawned the process, which its numbers read (FEAT-29).</summary>
+        internal ProcessDataPacket SpawnData => regData;
+
+        /// <summary>The ability or entity that spawned the process, whose caster and level its numbers read (FEAT-29).</summary>
+        internal IEffectOrigin SpawnOrigin => Origin;
+
         public override void WhenInitialize()
         {
             base.WhenInitialize();
@@ -122,8 +128,10 @@ namespace FarEmerald.PlayForge
             }
 
             if (attribute.Value == null) return 0f;
-            var level = IAttributeImpactCarrier.GenerateLevelerDerivation(Origin.GetSource(), Origin.GetLevel(), attribute.Attribute);
-            return attribute.Value.Evaluate(level);
+            // Read in the process's context: its origin's caster and level, and the magnitudes its data carries, so a Set By
+            // Caller reads what its caller set. The leveler carrier it was read through allocated each time, and read only
+            // the default (FEAT-29)
+            return attribute.Value.Evaluate(NumberContext.Of(this));
         }
 
         private bool TryGetOrigins(IAttribute attribute, out float value)
@@ -219,7 +227,7 @@ namespace FarEmerald.PlayForge
         public EProcessAttributeStart StartsFrom = EProcessAttributeStart.Own;
 
         [Tooltip("Its own value: a number, or a scaler read at the level of what spawned the process")]
-        public ScalerMagnitudeOperation Value = new() { Magnitude = 1f, RealMagnitude = EMagnitudeOperation.UseMagnitude };
+        public ScalableFloat Value = new() { Magnitude = 1f, RealMagnitude = EMagnitudeOperation.UseMagnitude };
     }
 
     /// <summary>Where a process's own attribute starts (FEAT-24).</summary>

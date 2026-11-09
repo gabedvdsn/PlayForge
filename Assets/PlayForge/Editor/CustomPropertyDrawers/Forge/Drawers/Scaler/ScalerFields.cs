@@ -50,13 +50,16 @@ namespace FarEmerald.PlayForge.Extended.Editor
         /// <summary>Whether a kind reads a Scaler asset: Shared, or the cached Shared an attribute set's elements take.</summary>
         internal static bool IsShared(Type type) => type == typeof(SharedScaler) || type == typeof(SharedCachedScaler);
 
-        /// <summary>A kind's name in the Kind menu: By Level for a simple scaler, Shared for a Scaler asset's.</summary>
+        /// <summary>
+        /// A kind's name in the Kind menu: the name its <see cref="NumberKindAttribute"/> gives, as By Level for a simple
+        /// scaler and Shared for a Scaler asset's (FEAT-29); else its class's name, without "Cached" and "Scaler".
+        /// </summary>
         internal static string KindName(Type type)
         {
             if (type == null) return "None";
-            if (type == typeof(SimpleScaler) || type == typeof(CachedSimpleScaler)) return "By Level";
-            if (IsShared(type)) return "Shared";
-            if (type == typeof(ConstantScaler)) return "Fixed Value";
+            if (type == typeof(CachedSimpleScaler)) return "By Level";
+            if (type == typeof(SharedCachedScaler)) return "Shared";
+            if (NumberKindAttribute.Of(type) is { Name: { Length: > 0 } declared }) return declared;
             var name = type.Name;
             if (name.StartsWith("Cached")) name = name.Substring("Cached".Length);
             if (name.EndsWith("Scaler")) name = name.Substring(0, name.Length - "Scaler".Length);
@@ -249,7 +252,7 @@ namespace FarEmerald.PlayForge.Extended.Editor
 
         // The classes every scaler shares, whose fields a scaler's parts draw: a kind's own fields are those declared
         // below them, the user's own abstract bases among them
-        private static readonly HashSet<Type> SharedBases = new() { typeof(AbstractScaler), typeof(AbstractCachedScaler) };
+        private static readonly HashSet<Type> SharedBases = new() { typeof(AbstractScaler), typeof(AbstractCachedScaler), typeof(NumberKind) };
 
         /// <summary>
         /// The fields a kind adds, each as Unity draws its type, from the classes in its chain below the bases every scaler
@@ -1008,7 +1011,7 @@ namespace FarEmerald.PlayForge.Extended.Editor
         internal static string FieldLabel(string path)
         {
             var parts = path.Replace(".Array.data[", "[").Split('.')
-                .Where(part => part != nameof(ScalerMagnitudeOperation.Scaler))
+                .Where(part => part != nameof(ScalableFloat.Scaler))
                 .Select(part => ObjectNames.NicifyVariableName(part.EndsWith("Operation") ? part.Substring(0, part.Length - "Operation".Length) : part));
             return string.Join(" › ", parts);
         }

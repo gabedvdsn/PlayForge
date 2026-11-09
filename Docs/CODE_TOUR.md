@@ -3139,6 +3139,37 @@ shape is made as the scene plays. `git show e91fe34:<path>` shows the old files.
 - **SP-9, SP-10, SP-17 (Decision 7).** Stray files are gone. `.gitignore` covers `**/.claude/worktrees/`, `.idea/`,
   `/UIElementsSchema/` and the two material packs, which stay on disk untracked. History wasn't rewritten.
 
+## Number fields (FEAT-29)
+
+One number type for every authored gameplay number, grown from the magnitude field, built in eight phases
+(`Docs/NUMBER_FIELDS_DESIGN.md`, Decisions 40 and 41). Phase 1, the foundation and the extension API, came after the
+commits above; the entries name classes and methods to search for.
+
+### The type, its context and kinds of your own (phase 1)
+
+A magnitude field was the only number that could scale, and its scalers read an impact carrier, which only an effect
+had. The magnitude classes are now `ScalableFloat` and `ScalableInt`, with the same saved fields, and a number reads a
+`NumberContext`, which any site builds: a task from its activation's data, a process from what spawned it, a worker
+or a cue from its effect. A scaler read where there's no carrier evaluates against a reusable carrier the context
+fills, so a read allocates nothing. A kind of a project's own is one class, `NumberKind`, with one method.
+
+- **IDs:** NUM-1 to NUM-7 (FEAT-29, phase 1).
+- **Read:**
+  - `Assets/PlayForge/Runtime/PlayForge/Numbers/ScalableFloat.cs` `ScalableFloat.Evaluate(in NumberContext)`: a
+    constant is a field read; another kind reads through the context.
+  - `Assets/PlayForge/Runtime/PlayForge/Numbers/NumberContext.cs` the `Of` builders, and `ReadScaler`, which sends a
+    `NumberKind` the context and any other scaler a carrier.
+  - `Assets/PlayForge/Runtime/PlayForge/Numbers/NumberBridge.cs` `Rent`, the reusable carrier, one for each depth.
+  - `Assets/PlayForge/Runtime/PlayForge/Numbers/NumberKind.cs`: `NumberKind`, whose carrier methods build the context
+    and call the kind's one `Evaluate`, and `NumberKindAttribute`.
+  - `Assets/PlayForge/Runtime/PlayForge/GameplayEffect/Modifier/Default/Authored/SetByCallerScaler.cs`, a kind now,
+    which reads any context's magnitudes.
+  - `Assets/PlayForge/Editor/CustomPropertyDrawers/Forge/Drawers/Scaler/MagnitudeField.cs` `MagnitudeField.Build`:
+    the kind menu by category (`KindPopup`), the summary line and percent numbers (`NumberField`).
+  - `Assets/PlayForge/Editor/Problems/ForgeRules.cs` `NumberContextRule`, and `Assets/PlayForge/Editor/Tools/ForgeUpgrade.cs`.
+- **New:** everything above. The old names stay a version as obsolete subclasses
+  (`Assets/PlayForge/Runtime/PlayForge/Utils/ScalerMagnitudeOperation.cs`).
+
 ## Tests
 
 - **The golden runner** is in `Assets/PlayForge/Tests`:

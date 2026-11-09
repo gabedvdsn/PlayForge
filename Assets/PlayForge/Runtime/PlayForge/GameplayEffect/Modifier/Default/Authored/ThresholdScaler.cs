@@ -8,6 +8,7 @@ namespace FarEmerald.PlayForge
     /// Returns values based on level thresholds.
     /// Useful for tier-based progression (e.g., Bronze/Silver/Gold ranks).
     /// </summary>
+    [NumberKind("Threshold", Category = "Scaler", Reads = NumberReads.Level)]
     public class ThresholdScaler : AbstractScaler
     {
         [Tooltip("Level thresholds and their corresponding values")]

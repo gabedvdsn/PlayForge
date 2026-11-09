@@ -1121,6 +1121,8 @@ namespace FarEmerald.PlayForge
             {
                 ERoundingOperation.Floor => Mathf.FloorToInt(v),
                 ERoundingOperation.Ceil => Mathf.CeilToInt(v),
+                // A half away from zero, as a designer reads "round": Unity's RoundToInt takes a half to the even number
+                ERoundingOperation.Round => (int)Math.Round(v, MidpointRounding.AwayFromZero),
                 _ => throw new ArgumentOutOfRangeException(nameof(rounding), rounding, null)
             };
         }

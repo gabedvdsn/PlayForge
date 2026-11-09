@@ -21,7 +21,7 @@ namespace FarEmerald.PlayForge
         // ═══════════════════════════════════════════════════════════════════════════
 
         [ScalerOperationKeyword("Duration", Unit = "s")]
-        public ScalerMagnitudeOperation DurationOperation;
+        public ScalableFloat DurationOperation;
 
         public EMagnitudeOperation RealDeltaTime = EMagnitudeOperation.AddScaler;
         [SerializeReference] public AbstractScaler DeltaTimeScaler;
@@ -40,17 +40,17 @@ namespace FarEmerald.PlayForge
         public bool TickOnApplication = false;
 
         [ScalerOperationKeyword("Ticks")]
-        public ScalerIntegerMagnitudeOperation TicksOperation;
+        public ScalableInt TicksOperation;
         
         [ScalerOperationKeyword("Tick Interval", Unit = "s")]
-        public ScalerMagnitudeOperation TickIntervalOperation;
+        public ScalableFloat TickIntervalOperation;
 
         // ═══════════════════════════════════════════════════════════════════════════
         // Execute Ticks
         // ═══════════════════════════════════════════════════════════════════════════
 
         [ScalerOperationKeyword("Additional Execute Ticks")]
-        public ScalerIntegerMagnitudeOperation AdditionalExecuteTicksOperation;
+        public ScalableInt AdditionalExecuteTicksOperation;
         
         // ═══════════════════════════════════════════════════════════════════════════
         // Re-Application
@@ -68,7 +68,7 @@ namespace FarEmerald.PlayForge
         [SerializeReference] public List<AbstractStackingConfig> StackingConfigs = new();
 
         [ScalerOperationKeyword("Stack Amount")]
-        public ScalerIntegerMagnitudeOperation StackAmountOperation = new() { Magnitude = 1 };
+        public ScalableInt StackAmountOperation = new() { Magnitude = 1 };
         
         // ═══════════════════════════════════════════════════════════════════════════
         // Constructor
@@ -331,6 +331,9 @@ namespace FarEmerald.PlayForge
     public enum ERoundingOperation
     {
         Floor,
-        Ceil
+        Ceil,
+
+        /// <summary>To the nearest whole number, a half away from zero (FEAT-29).</summary>
+        Round
     }
 }

@@ -8,6 +8,7 @@ namespace FarEmerald.PlayForge
     /// Scales based on an attribute value from source or target.
     /// The attribute value is used as input to the scaling curve.
     /// </summary>
+    [NumberKind("× Attribute", Reads = NumberReads.Caster)]
     public class AttributeBackedScaler : AbstractScaler
     {
         [Tooltip("Which attribute to read")]
@@ -30,13 +31,13 @@ namespace FarEmerald.PlayForge
             switch (CaptureFrom)
             {
                 case ESourceTarget.Source:
-                    if (!deriv.GetOrigin().GetSource().TryGetAttributeValue(CaptureAttribute, out var sourceValue)) 
+                    if (deriv.GetOrigin()?.GetSource() is not { } source || !source.TryGetAttributeValue(CaptureAttribute, out var sourceValue)) 
                         break;
                     deriv.GetSourcedCapturedAttributes()[this] = sourceValue;
                     break;
                     
                 case ESourceTarget.Target:
-                    if (!deriv.GetTarget().TryGetAttributeValue(CaptureAttribute, out var targetValue)) 
+                    if (deriv.GetTarget() is not { } target || !target.TryGetAttributeValue(CaptureAttribute, out var targetValue)) 
                         break;
                     deriv.GetSourcedCapturedAttributes()[this] = targetValue;
                     break;
@@ -74,10 +75,11 @@ namespace FarEmerald.PlayForge
             
             // Get live attribute value
             var entity = CaptureFrom == ESourceTarget.Source 
-                ? deriv.GetOrigin().GetSource() 
+                ? deriv.GetOrigin()?.GetSource() 
                 : deriv.GetTarget();
             
-            if (!entity.TryGetAttributeValue(CaptureAttribute, out var attrValue))
+            // A context with no one on that side, as a number read where there's no target, reads 0 (FEAT-29)
+            if (entity == null || CaptureAttribute is null || !entity.TryGetAttributeValue(CaptureAttribute, out var attrValue))
             {
                 return 0f;
             }

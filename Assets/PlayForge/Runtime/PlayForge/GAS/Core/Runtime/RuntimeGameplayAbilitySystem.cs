@@ -299,12 +299,12 @@ namespace FarEmerald.PlayForge
         public EAbilityActivationPolicy ActivationPolicy = EAbilityActivationPolicy.QueueActivationIfBusy;
 
         // Defaults as EntityIdentity's: unset, these were null, and giving an ability or an item threw (GAS-23)
-        public ScalerIntegerMagnitudeOperation MaxAbilitiesOperation = new() { Magnitude = 99 };
+        public ScalableInt MaxAbilitiesOperation = new() { Magnitude = 99 };
         public List<Ability> StartingAbilities = new();
         public bool AllowDuplicateAbilities;
 
-        public ScalerIntegerMagnitudeOperation MaxItemsOperation = new() { Magnitude = 99 };
-        public ScalerIntegerMagnitudeOperation MaxEquippedItemsOperation = new() { Magnitude = 99 };
+        public ScalableInt MaxItemsOperation = new() { Magnitude = 99 };
+        public ScalableInt MaxEquippedItemsOperation = new() { Magnitude = 99 };
         public List<StartingItemContainer> StartingItems = new();
         public bool AllowDuplicateItems;
         public bool AllowDuplicateEquippedItems;

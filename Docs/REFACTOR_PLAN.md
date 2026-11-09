@@ -11,8 +11,8 @@ from. It lives outside `Assets/` so it never ships in the package.
 
 - Read it before changing anything. Check **Decisions** before acting on an open question.
 - Every finding has an ID: `PC-n` (ProcessControl), `TS-n` and `TS-A`…`TS-Z` (TaskSequence), `GAS-n` (GAS core),
-  `ED-n` (editor and UI), `SP-n` (samples and packaging), `FEAT-n` (missing features). `PF-nnn`, `C-nn` and
-  `B-nn` refer to Arcade Fighter's log.
+  `ED-n` (editor and UI), `SP-n` (samples and packaging), `FEAT-n` (missing features), `NUM-n` (number fields,
+  FEAT-29's phases). `PF-nnn`, `C-nn` and `B-nn` refer to Arcade Fighter's log.
 - **Red first.** Write a failing test for an ID before fixing it. Name the test after the ID, for example
   `PC_03_PrefabCascade_KillsOnlyOne`.
 - **Update the Status column in the same commit as the fix:** `open` → `red` (test written) → `fixed`
@@ -869,7 +869,7 @@ reads the old demos' fullest assets, so it moves to the new demo's as the old go
 | FEAT-26 | An attribute rule by share | Found building the demo, whose Eviscerate is for a target below half its health: an Attribute Validation compared the attribute's value alone, right for one entity and wrong for the next. Done: `AttributeValidation.ShareOfBase` compares the attribute's share of its base, 0 to 1 |
 | FEAT-27 | Clamp another scaler | Found building the demo, whose Eviscerate caps damage worked out from its target's missing health: a Clamped scaler clamped its own table alone. Done: `ClampedScaler.Inner`, a scaler whose value it clamps; with none, its own values per level, as before |
 | FEAT-28 | What a process carries reaches its effects | Found building the demo, whose Flame Wall fire burns harder by its ability's level: a process's own attributes (FEAT-24) stopped at the process, and only its caller's set-by-caller magnitudes reached the effects it applied. Done: `AbstractGameplayMonoProcess.GiveMagnitudes(spec)` gives an effect spec its caller's magnitudes, then each of its own attributes under its role, its own winning; a projectile's effects take them as they land, so a Set By Caller scaler on an effect reads what the process carries |
-| FEAT-29 | Number fields | The user's request of 2026-11-08: a Conditional scaler couldn't say "below 30% of max health", as its threshold is a bare float, and only an effect's own numbers can scale. Proposed: one number type for every authored gameplay number, grown from the magnitude field, a constant by default or a value by level, a multiple of an attribute, a caller's value, Local Data or any scaler. Decided (Decisions 40 and 41), the design in `Docs/NUMBER_FIELDS_DESIGN.md`. Its eight phases, each with tracker rows of its own, are next |
+| FEAT-29 | Number fields | The user's request of 2026-11-08: a Conditional scaler couldn't say "below 30% of max health", as its threshold is a bare float, and only an effect's own numbers can scale. Proposed: one number type for every authored gameplay number, grown from the magnitude field, a constant by default or a value by level, a multiple of an attribute, a caller's value, Local Data or any scaler. Decided (Decisions 40 and 41), the design in `Docs/NUMBER_FIELDS_DESIGN.md`. Its eight phases each have tracker rows of their own, under Number fields (FEAT-29) below. Phase 1, the foundation and the extension API, is done (NUM-1 to NUM-7) |
 
 **Phase 5's order,** from the review's plan for the test project (its labs, one at a time) and the table above. A lab
 is a small game: assets the lab builds in code, and a bot that plays it in PlayMode tests under a live ProcessControl,
@@ -898,6 +898,22 @@ first (Decision 30).
 Then the stretch scenarios, which drive FEAT-1, FEAT-2, FEAT-4, FEAT-10, FEAT-11 and FEAT-12, all in Phase 5's
 scope (Decision 30), with FEAT-17 and FEAT-18. FEAT-13, networking, gets only its two cheap changes. FEAT-15 is a
 foundation, and FEAT-16 is done.
+
+### Number fields (FEAT-29)
+
+FEAT-29's design (`Docs/NUMBER_FIELDS_DESIGN.md`, Decisions 40 and 41) is built in eight phases, each with rows of its
+own here, red tests first. The Phase column is FEAT-29's phase. Phase 1, the foundation and the extension API, is
+done; phase 2, the new kinds, is next.
+
+| ID | Phase | Piece | Notes | Where | Status |
+|---|---|---|---|---|---|
+| NUM-1 | 1 | The type | `ScalableFloat` and `ScalableInt` replace the magnitude classes and keep their saved fields (`Magnitude`, `RealMagnitude`, `Scaler`, `Rounding`), so every saved magnitude loads as it was; the old names stay a version as `[Obsolete]` subclasses. A float converts to one (`Range = 20f`), a read is `Evaluate(context)`, `IsConstant` and `Constant` serve previews and setup code, and a whole number rounds Floor, Ceil or, new, Round, a half away from zero | `Runtime/PlayForge/Numbers/ScalableFloat.cs`, `Utils/ScalerMagnitudeOperation.cs`, `ForgeHelper.MagnitudeAndScalerOperation` | verified |
+| NUM-2 | 1 | The context | `NumberContext`, a public struct: the caster, the target, the level, the origin, the carrier, the caller's magnitudes, Local Data, the activation's data and the owner, and `Has(NumberReads)`. Built `Of` a spec, a container, an activation's data, an effect, attribute or impact worker's context, an entity, a cue or a gameplay mono process, and `For` a test. A scaler read where there's no carrier evaluates against a bridge carrier the context fills, kept one for each depth a read nests to, so a read allocates nothing; a constant is a field read. A probe holds each to 0 bytes | `Runtime/PlayForge/Numbers/NumberContext.cs`, `NumberBridge.cs` | verified |
+| NUM-3 | 1 | The extension API | `NumberKind`, a scaler with one `Evaluate(in NumberContext)` and `Describe()`, whose carrier methods build the context and call it; `[NumberKind(name, Category, Reads)]`; a kind that can't be worked out where it's read reads its field's number and logs once; `ScalableFloat.From(function)` for an asset built in code. Proving Grounds' Distance to Target, written as the docs write it, works in an effect's magnitude and in a task's number, and is tested without an effect through `NumberContext.For` | `Runtime/PlayForge/Numbers/NumberKind.cs`, `NumberText.cs` | verified |
+| NUM-4 | 1 | Set By Caller from any context | `SetByCallerScaler` is a number kind, and reads the magnitudes of any context that holds them: a task's activation data, the data that spawned a process, an effect's cue and workers. It read only a `GameplayEffectSpec`'s, so a task's or a process's number read its default. A process's own attributes read through the process's context, which also ends the leveler carrier they allocated on every read | `SetByCallerScaler.cs`, `AbstractGameplayMonoProcess.StartingValue` | verified |
+| NUM-5 | 1 | The inspector | The number field, the magnitude field's drawer for both types: its kind menu files kinds by category (Constant, By Level, Shared, × Attribute and Set By Caller at its top; Scaler, Effect, Item and a project's own categories under it) and offers only the kinds the field's `[NumberContext]` resolves; another kind shows a one-line summary, as "0.3 × Target's Health (base)"; a field whose unit is "%" shows and takes 0.3 as 30; a kind its field can't resolve warns in place; × Attribute and a project's own kinds start as the number times them | `Editor/.../Scaler/MagnitudeField.cs`, `NumberFields.cs`, `UI/PlayForge.uss` | verified |
+| NUM-6 | 1 | The Problems rule | Numbers whose kind can't be read where they are: a kind that reads what its field's context doesn't provide, an attribute read from a target the field hasn't got among them, inside another scaler too | `Editor/Problems/ForgeRules.cs` (`NumberContextRule`) | verified |
+| NUM-7 | 1 | Migration | The legacy-field pattern, `LegacyNumber.Move`: a hidden float renamed from the old field with `[FormerlySerializedAs]`, which its owner's `OnAfterDeserialize` moves into the number; and Window/PlayForge/Upgrade Assets (`ForgeUpgrade`), which re-saves every asset that holds PlayForge data. Proved on a test field: an asset saved with a float loads into the number, and the command writes the new form, which loads the same | `Runtime/PlayForge/Numbers/LegacyNumber.cs`, `Editor/Tools/ForgeUpgrade.cs` | verified |
 
 ## Test project: PlayForge Proving Grounds
 
@@ -933,6 +949,32 @@ GAS-4 with GAS-5, PC-6, and TS-I with PC-5.
 ## Log
 
 Record baselines, gate results and notable decisions here, newest first.
+
+- 2026-11-09, **FEAT-29 phase 1: number fields' foundation and the extension API (NUM-1 to NUM-7).** The magnitude
+  classes are `ScalableFloat` and `ScalableInt`, with the same saved fields; `NumberContext` is what a number is read
+  against, built at any site; `NumberKind` and `[NumberKind]` make a kind of a project's own one class with one method;
+  Set By Caller reads any context's magnitudes; the kind menu is grouped and filtered by a field's `[NumberContext]`,
+  with a summary line and percent fields; a Problems rule flags a kind its field can't resolve; and the legacy-field
+  pattern and Window/PlayForge/Upgrade Assets carry old floats into numbers.
+  - Red first: Proving Grounds' `NumberFieldTests` (PlayMode) and `NumberFieldDrawerTests` (EditMode), written before
+    the types. With the types in, the two NUM-4 tests failed as the gap said: a task read Set By Caller's default 1 for
+    the caller's 6, and a process its default 5 for 40. With the fix, 43 of 43 with the Set By Caller, spawned process
+    and scaler suites.
+  - Gates: MSBuild, the Editor and Tests projects: 0 errors, 0 warnings. Proving Grounds, Demo imported: PlayMode 1362
+    passed of 1370, 0 failed, 8 skipped (the 1353 before, the Demo's ninth test and these 16); EditMode 741 of 741 (734
+    and these 7); the Demo's tests 9 of 9. Phase 3's allocation probes pass, and two new ones hold a constant's read
+    and a scaler's read through a context with no carrier to 0 bytes. The golden runner, batch mode: 25 of 25.
+  - The Demo's saved magnitudes load unchanged: in the private copy, the upgrade command re-saved all 173 of the
+    Demo's assets that hold PlayForge data, with 662 numbers among them (371 `ScalableFloat`, 291 `ScalableInt`; 84 of
+    a kind: 44 By Level, 38 Group, a Threshold and an Item Stacks), and not a byte of the sample changed, metas and all.
+  - On the way: the private copy's `Library/PackageCache` had lost most of `com.unity.ugui`, `com.unity.test-framework`
+    and `com.unity.multiplayer.center` (no metas), so every batch run failed in UniTask; it was mirrored again from
+    Proving Grounds'. Proving Grounds has the Demo imported under `Assets/Samples` (the user's, with asset tags
+    re-stored), which duplicated the gate's copy at `Assets/PlayForgeDemo` and failed the compile, so the gate now
+    removes it in the copy first; the copy's asset database then needed a reset before the Demo's roster was found.
+  - Left: Proving Grounds' `HeadlessSimulationTests.cs` and `RollbackTests.cs` hold the user's uncommitted changes and
+    still name `ScalerMagnitudeOperation`, so they compile with an obsolete warning until renamed. Phase 2, the new
+    kinds, is next.
 
 - 2026-11-09, **Decision 41: two more number kinds, and kinds of your own.** The user asked for kinds that read an
   effect's tracked impact (last, total, count) and a retention group's part of an attribute, and for the type to be

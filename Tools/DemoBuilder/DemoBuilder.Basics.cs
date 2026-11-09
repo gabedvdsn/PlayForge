@@ -142,7 +142,7 @@ namespace FarEmerald.PlayForge.Samples.Demo.Building
             effect.Tags = tags;
         }
 
-        private static void Lasts(GameplayEffect effect, ScalerMagnitudeOperation seconds, EEffectReApplicationPolicy again = EEffectReApplicationPolicy.ReplaceOldContainer)
+        private static void Lasts(GameplayEffect effect, ScalableFloat seconds, EEffectReApplicationPolicy again = EEffectReApplicationPolicy.ReplaceOldContainer)
         {
             effect.DurationSpecification.DurationPolicy = EEffectDurationPolicy.Durational;
             effect.DurationSpecification.DurationOperation = seconds;
@@ -172,7 +172,7 @@ namespace FarEmerald.PlayForge.Samples.Demo.Building
         }
 
         /// <summary>A lasting change to an attribute's current value while the effect is on, which goes as it ends.</summary>
-        private static void Changes(GameplayEffect effect, ForgeAttribute attribute, ScalerMagnitudeOperation by)
+        private static void Changes(GameplayEffect effect, ForgeAttribute attribute, ScalableFloat by)
         {
             effect.ImpactSpecification.AttributeTarget = attribute;
             effect.ImpactSpecification.TargetImpact = EAttributeTarget.Current;
@@ -208,7 +208,7 @@ namespace FarEmerald.PlayForge.Samples.Demo.Building
         }
 
         /// <summary>A blow from a template: its own name, magnitude, context and level provider.</summary>
-        private static GameplayEffect Blow(string folder, string name, string description, GameplayEffect template, ScalerMagnitudeOperation damage,
+        private static GameplayEffect Blow(string folder, string name, string description, GameplayEffect template, ScalableFloat damage,
             BaseForgeLevelProvider by, Tag hit)
         {
             var effect = ChildOf(template);
@@ -224,7 +224,7 @@ namespace FarEmerald.PlayForge.Samples.Demo.Building
         }
 
         /// <summary>An item's bonus to an attribute, from the Stat Bonus template, linked to its item.</summary>
-        private static GameplayEffect Bonus(Item item, ForgeAttribute attribute, ScalerMagnitudeOperation by, string name = null)
+        private static GameplayEffect Bonus(Item item, ForgeAttribute attribute, ScalableFloat by, string name = null)
         {
             var effect = ChildOf(StatBonus);
             name ??= $"{item.GetName()} {attribute.Name}";
@@ -442,7 +442,7 @@ namespace FarEmerald.PlayForge.Samples.Demo.Building
         }
 
         /// <summary>A stun of its own length and level provider, from the shared one.</summary>
-        private static GameplayEffect Stun(string folder, string name, ScalerMagnitudeOperation seconds, BaseForgeLevelProvider by)
+        private static GameplayEffect Stun(string folder, string name, ScalableFloat seconds, BaseForgeLevelProvider by)
         {
             var stun = Object.Instantiate(StunEffect);
             stun.Definition.Name = name;

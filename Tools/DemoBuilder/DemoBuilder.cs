@@ -258,20 +258,20 @@ namespace FarEmerald.PlayForge.Samples.Demo.Building
 
         private static SetByCallerScaler DifficultyScaler() => new() { Name = "The AI's difficulty", Key = Difficulty, Default = 1f, Behaviours = new List<AbstractScalerBehaviour>() };
 
-        private static ScalerMagnitudeOperation Fixed(float value) => new() { Magnitude = value, RealMagnitude = EMagnitudeOperation.UseMagnitude };
+        private static ScalableFloat Fixed(float value) => new() { Magnitude = value, RealMagnitude = EMagnitudeOperation.UseMagnitude };
 
-        private static ScalerMagnitudeOperation Scaled(AbstractScaler scaler) => new() { Magnitude = 0f, RealMagnitude = EMagnitudeOperation.UseScaler, Scaler = scaler };
+        private static ScalableFloat Scaled(AbstractScaler scaler) => new() { Magnitude = 0f, RealMagnitude = EMagnitudeOperation.UseScaler, Scaler = scaler };
 
-        private static ScalerMagnitudeOperation Negated(AbstractScaler scaler) => new() { Magnitude = -1f, RealMagnitude = EMagnitudeOperation.MultiplyWithScaler, Scaler = scaler };
+        private static ScalableFloat Negated(AbstractScaler scaler) => new() { Magnitude = -1f, RealMagnitude = EMagnitudeOperation.MultiplyWithScaler, Scaler = scaler };
 
-        private static ScalerIntegerMagnitudeOperation Count(int value) => new() { Magnitude = value, RealMagnitude = EMagnitudeOperation.UseMagnitude };
+        private static ScalableInt Count(int value) => new() { Magnitude = value, RealMagnitude = EMagnitudeOperation.UseMagnitude };
 
         /// <summary>
         /// A blow's size, as a negative change to Health: its base by level, plus a coefficient times one of the caster's
         /// attributes; for an attack, times the attack growth every hero's attack shares; for a physical blow, more
         /// against a marked target; and times the AI's difficulty, 1 where nothing set it.
         /// </summary>
-        private static ScalerMagnitudeOperation Damage(float[] byLevel, ForgeAttribute stat, float coefficient, Tag kind, bool attack = false,
+        private static ScalableFloat Damage(float[] byLevel, ForgeAttribute stat, float coefficient, Tag kind, bool attack = false,
             AbstractScaler extra = null)
         {
             var parts = new List<(AbstractScaler, ECalculationOperation)> { (Named(Levels(byLevel), "Base, by level"), Add) };
@@ -284,7 +284,7 @@ namespace FarEmerald.PlayForge.Samples.Demo.Building
         }
 
         /// <summary>A heal's size: its base by level, plus a coefficient times one of the caster's attributes.</summary>
-        private static ScalerMagnitudeOperation Healing(float[] byLevel, ForgeAttribute stat = null, float coefficient = 0f)
+        private static ScalableFloat Healing(float[] byLevel, ForgeAttribute stat = null, float coefficient = 0f)
         {
             if (stat == null) return Scaled(Named(Levels(byLevel), "Healing, by level"));
             return Scaled(Named(Group((Named(Levels(byLevel), "Base, by level"), Add),

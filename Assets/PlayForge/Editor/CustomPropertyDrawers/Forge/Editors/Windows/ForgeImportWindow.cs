@@ -149,7 +149,7 @@ namespace FarEmerald.PlayForge.Extended.Editor
                 return;
             }
 
-            bool magnitude = property.type is nameof(ScalerMagnitudeOperation) or nameof(ScalerIntegerMagnitudeOperation);
+            bool magnitude = NumberFields.IsNumber(property);
             var owner = string.IsNullOrEmpty(label) ? Trimmed(property.displayName) : Trimmed(label);
             var child = property.Copy();
             var end = property.GetEndProperty();
@@ -162,8 +162,8 @@ namespace FarEmerald.PlayForge.Extended.Editor
                 if (magnitude)
                     childLabel = child.name switch
                     {
-                        nameof(ScalerMagnitudeOperation.Magnitude) => owner,
-                        nameof(ScalerMagnitudeOperation.Scaler) => $"{owner} scaler",
+                        nameof(ScalableFloat.Magnitude) => owner,
+                        nameof(ScalableFloat.Scaler) => $"{owner} scaler",
                         _ => $"{owner}: {child.displayName}",
                     };
                 else childLabel = string.IsNullOrEmpty(label) ? child.displayName : $"{label} › {child.displayName}";

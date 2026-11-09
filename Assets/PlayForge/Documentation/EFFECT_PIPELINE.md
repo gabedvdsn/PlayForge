@@ -267,7 +267,7 @@ blueprint scalers create live dependencies.
 are its authored surface; `GameplayEffectImpact.RebuildEntries` re-derives that entry on
 **every `Generate()`**, so inspector edits (magnitude, attribute target, duration policy, tick
 flags) always take effect on the next application. `Magnitude` on the derived entry references
-the live `ScalerMagnitudeOperation`, so even already-registered modifiers re-evaluate new
+the live `ScalableFloat`, so even already-registered modifiers re-evaluate new
 magnitudes on their next recompute.
 
 > Serializing the derived entry was tried and reverted: `OnValidate` froze half-authored state

@@ -193,9 +193,9 @@ namespace FarEmerald.PlayForge.Extended.Editor
                     continue;
                 }
                 if (iterator.propertyType != SerializedPropertyType.Generic) continue;
-                if (iterator.type != nameof(ScalerMagnitudeOperation) && iterator.type != nameof(ScalerIntegerMagnitudeOperation)) continue;
-                var real = iterator.FindPropertyRelative(nameof(ScalerMagnitudeOperation.RealMagnitude));
-                var scaler = iterator.FindPropertyRelative(nameof(ScalerMagnitudeOperation.Scaler));
+                if (!NumberFields.IsNumber(iterator)) continue;
+                var real = iterator.FindPropertyRelative(nameof(ScalableFloat.RealMagnitude));
+                var scaler = iterator.FindPropertyRelative(nameof(ScalableFloat.Scaler));
                 if (real == null || scaler == null || scaler.managedReferenceValue != null) continue;
                 if ((EMagnitudeOperation)real.intValue is EMagnitudeOperation.UseScaler or EMagnitudeOperation.MultiplyWithScaler)
                 {
@@ -206,11 +206,39 @@ namespace FarEmerald.PlayForge.Extended.Editor
                         // As the field's own message says: Constant reads its number
                         Fix = new ForgeQuickFix("Make It Constant", () => QuickFixes.Write(asset, serialized =>
                         {
-                            var reads = serialized.FindProperty($"{path}.{nameof(ScalerMagnitudeOperation.RealMagnitude)}");
+                            var reads = serialized.FindProperty($"{path}.{nameof(ScalableFloat.RealMagnitude)}");
                             if (reads != null) reads.intValue = (int)EMagnitudeOperation.UseMagnitude;
                         })),
                     });
                 }
+            }
+        }
+    }
+
+    /// <summary>
+    /// A number whose kind its field's context can't resolve (FEAT-29), as a kind that reads the target in a field that
+    /// declares none, often one copied from another field. At runtime it reads its number, as the field warns. Its fix
+    /// is a choice of kind, so it has no Quick Fix.
+    /// </summary>
+    internal sealed class NumberContextRule : ForgeValidationRule
+    {
+        public override string Name => "Numbers whose kind can't be read where they are";
+
+        public override void Check(Object asset, List<ForgeProblem> problems)
+        {
+            var iterator = new SerializedObject(asset).GetIterator();
+            while (iterator.Next(true))
+            {
+                if (!NumberFields.IsNumber(iterator)) continue;
+                var kind = iterator.FindPropertyRelative(nameof(ScalableFloat.Scaler))?.managedReferenceValue as AbstractScaler;
+                if (kind == null) continue;
+                var provides = NumberFields.ProvidesOf(iterator);
+                if (provides == NumberReads.All) continue;
+                var missing = NumberFields.Missing(NumberFields.ReadsOf(kind), provides);
+                if (missing.Length == 0) continue;
+                var path = iterator.propertyPath;
+                problems.Add(new ForgeProblem(asset, ForgeProblemSeverity.Warning,
+                    $"{ScalerFields.FieldLabel(path)} reads {missing}, which its field doesn't have, so it reads its number.", path));
             }
         }
     }

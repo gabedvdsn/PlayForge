@@ -7,6 +7,7 @@ namespace FarEmerald.PlayForge
     /// is capped, or else its own values per level, as a Simple scaler reads them. It clamped its own table alone, so
     /// nothing another scaler worked out could be capped (FEAT-27).
     /// </summary>
+    [NumberKind("Clamped", Category = "Scaler")]
     public class ClampedScaler : AbstractScaler
     {
         [Tooltip("Minimum value (floor)")]

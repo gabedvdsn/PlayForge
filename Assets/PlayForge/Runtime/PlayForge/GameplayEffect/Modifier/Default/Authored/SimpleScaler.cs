@@ -6,6 +6,7 @@ namespace FarEmerald.PlayForge
     /// Simple level-based scaler that evaluates based on relative level.
     /// Uses the level values array for easy configuration.
     /// </summary>
+    [NumberKind("By Level", Reads = NumberReads.Level)]
     public class SimpleScaler : AbstractScaler
     {
         public override void Initialize(IAttributeImpactCarrier deriv)

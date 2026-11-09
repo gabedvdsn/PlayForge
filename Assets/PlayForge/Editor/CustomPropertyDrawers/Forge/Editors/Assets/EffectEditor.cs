@@ -658,7 +658,7 @@ namespace FarEmerald.PlayForge.Extended.Editor
 
         // A chance to apply as the summary says it, or null when the effect always lands. One a scaler gives says so, as
         // it changes by level (FEAT-8)
-        private static string ChanceSummary(ScalerMagnitudeOperation chance)
+        private static string ChanceSummary(ScalableFloat chance)
         {
             if (chance == null) return null;
             if (chance.Scaler != null && chance.RealMagnitude != EMagnitudeOperation.UseMagnitude) return "scaled chance";

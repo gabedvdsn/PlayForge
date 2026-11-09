@@ -54,7 +54,7 @@ namespace FarEmerald.PlayForge
         public int SortOrder;
 
         [ScalerOperationKeyword("Magnitude")]
-        public ScalerMagnitudeOperation Magnitude = new();
+        public ScalableFloat Magnitude = new();
 
         /// <summary>
         /// Retention group this entry's contribution is attributed to. Invalid (unset)

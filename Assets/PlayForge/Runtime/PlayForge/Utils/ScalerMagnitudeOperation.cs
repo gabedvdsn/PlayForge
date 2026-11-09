@@ -1,54 +1,24 @@
 ﻿using System;
-using UnityEngine;
 
 namespace FarEmerald.PlayForge
 {
+    /// <summary>
+    /// The magnitude field's old name: it is <see cref="ScalableFloat"/> now (FEAT-29). It stays a version, so code that
+    /// names it still compiles, and goes in the next.
+    /// </summary>
     [Serializable]
-    public class ScalerMagnitudeOperation
+    [Obsolete("ScalerMagnitudeOperation is ScalableFloat now (FEAT-29); this name goes in the next version.")]
+    public class ScalerMagnitudeOperation : ScalableFloat
     {
-        public float Magnitude;
-        public EMagnitudeOperation RealMagnitude = EMagnitudeOperation.AddScaler;
-        [SerializeReference] 
-        [ScalerRootAssignment(null, typeof(AbstractCachedScaler))] 
-        [DeriveScalerName]
-        public AbstractScaler Scaler;
-
-        public float Evaluate(IAttributeImpactCarrier spec)
-        {
-            return ForgeHelper.MagnitudeAndScalerOperation(
-                Magnitude, Scaler?.Evaluate(spec) ?? 0f, RealMagnitude
-            );
-        }
-
-        /// <summary>
-        /// Container-aware evaluation — scalers that read container state (stack count)
-        /// see the live container instead of just the spec. Scalers that don't care fall
-        /// back to spec-based evaluation via <see cref="AbstractScaler.Evaluate(AbstractStackingEffectContainer)"/>.
-        /// </summary>
-        public float Evaluate(AbstractStackingEffectContainer container)
-        {
-            return ForgeHelper.MagnitudeAndScalerOperation(
-                Magnitude, Scaler?.Evaluate(container) ?? 0f, RealMagnitude
-            );
-        }
     }
-    
-    [Serializable]
-    public class ScalerIntegerMagnitudeOperation
-    {
-        [Min(0)] public int Magnitude;
-        public EMagnitudeOperation RealMagnitude = EMagnitudeOperation.AddScaler;
-        [SerializeReference] 
-        [ScalerRootAssignment(null, typeof(AbstractCachedScaler))] 
-        [DeriveScalerName]
-        public AbstractScaler Scaler;
-        public ERoundingOperation Rounding;
 
-        public int Evaluate(IAttributeImpactCarrier spec)
-        {
-            return ForgeHelper.MagnitudeAndScalerOperation(
-                Magnitude, Scaler?.Evaluate(spec) ?? 0f, RealMagnitude, Rounding
-            );
-        }
+    /// <summary>
+    /// The whole-number magnitude field's old name: it is <see cref="ScalableInt"/> now (FEAT-29). It stays a version, so
+    /// code that names it still compiles, and goes in the next.
+    /// </summary>
+    [Serializable]
+    [Obsolete("ScalerIntegerMagnitudeOperation is ScalableInt now (FEAT-29); this name goes in the next version.")]
+    public class ScalerIntegerMagnitudeOperation : ScalableInt
+    {
     }
 }

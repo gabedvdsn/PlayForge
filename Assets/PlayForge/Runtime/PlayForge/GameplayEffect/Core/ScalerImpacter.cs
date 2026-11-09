@@ -1,7 +1,7 @@
 namespace FarEmerald.PlayForge
 {
     /// <summary>
-    /// The default impacter shape — wraps a <see cref="ScalerMagnitudeOperation"/>
+    /// The default impacter shape — wraps a <see cref="ScalableFloat"/>
     /// (the editor-authored magnitude + scaler + RealMagnitude triplet that already lives
     /// on <see cref="GameplayEffectImpact"/>) and exposes it through the impacter contract.
     ///
@@ -11,7 +11,7 @@ namespace FarEmerald.PlayForge
     /// </summary>
     public class ScalerImpacter : IAttributeImpacter
     {
-        private readonly ScalerMagnitudeOperation magnitudeOperation;
+        private readonly ScalableFloat magnitudeOperation;
 
         public ECalculationOperation Operation { get; }
         public EAttributeTarget      TargetSlot { get; }
@@ -20,7 +20,7 @@ namespace FarEmerald.PlayForge
         public Tag                   Group { get; }
 
         public ScalerImpacter(
-            ScalerMagnitudeOperation magnitudeOperation,
+            ScalableFloat magnitudeOperation,
             ECalculationOperation operation,
             EAttributeTarget targetSlot,
             int sortOrder = 0,

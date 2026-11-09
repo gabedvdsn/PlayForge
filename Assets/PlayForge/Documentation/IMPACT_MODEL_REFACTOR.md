@@ -202,7 +202,7 @@ class AttributeImpactEntry {
     ECalculationOperation Operation;       // Add | Multiply | FlatBonus | Override
     EMultiplyBehaviour   MultiplyBehaviour;
     int                  SortOrder;
-    ScalerMagnitudeOperation Magnitude;    // container-aware evaluation kept (stacks)
+    ScalableFloat Magnitude;    // container-aware evaluation kept (stacks)
     Tag                  RetentionGroupOverride;  // default: effect Definition.RetentionGroup
     List<Tag>            ImpactTypes;
 }

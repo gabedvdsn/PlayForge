@@ -138,7 +138,7 @@ namespace FarEmerald.PlayForge
         /// applied; a miss is refused, as an immunity refuses. 1, the default, always lands and draws nothing. An effect
         /// always landed, so a strike couldn't bleed one time in three but through a worker (FEAT-8).
         /// </summary>
-        public ScalerMagnitudeOperation ChanceToApply = new() { Magnitude = 1f, RealMagnitude = EMagnitudeOperation.UseMagnitude };
+        public ScalableFloat ChanceToApply = new() { Magnitude = 1f, RealMagnitude = EMagnitudeOperation.UseMagnitude };
 
         [ForgeTagContext(ForgeContext.Impact)]
         public List<Tag> ImpactTypes;
@@ -159,7 +159,7 @@ namespace FarEmerald.PlayForge
         public bool ReverseImpactOnRemoval;
 
         [ScalerOperationKeyword("Magnitude")]
-        public ScalerMagnitudeOperation MagnitudeOperation;
+        public ScalableFloat MagnitudeOperation;
 
         /// <summary>
         /// The effect's further impacts, after the one above: each with its own attribute, operation, magnitude and

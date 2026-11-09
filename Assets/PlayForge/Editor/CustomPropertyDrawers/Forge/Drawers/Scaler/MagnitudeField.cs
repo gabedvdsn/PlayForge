@@ -10,29 +10,36 @@ using UnityEngine.UIElements;
 namespace FarEmerald.PlayForge.Extended.Editor
 {
     /// <summary>
-    /// A magnitude field, as the canvas's scaler board draws it (ED-33): its name, then its kind, Constant or a scaler's,
-    /// and either its number or its range, as in "6–8 s", and its field menu. A scaler's kind adds how the field combines
-    /// its number with the scaler, then the scaler's own content: its values per level and their curve, or its Scaler
-    /// asset. The field showed its Magnitude, Real Magnitude and a scaler in a tinted box of its own, one after another.
+    /// A number field (FEAT-29), as the canvas's scaler board drew the magnitude field it grew from (ED-33): its name, then
+    /// its kind, Constant or another, and either its number or its range, as in "6–8 s", and its field menu. Another kind
+    /// adds a one-line summary of what it reads, how the field combines its number with the kind, then the kind's own
+    /// content: its values per level and their curve, its Scaler asset, or its fields. The kind menu files kinds by
+    /// category and offers only those the field's context resolves (<see cref="NumberContextAttribute"/>), and a field
+    /// whose unit is "%" shows and takes its number as a percentage.
     /// </summary>
-    [CustomPropertyDrawer(typeof(ScalerMagnitudeOperation))]
-    public class ScalerMagnitudeOperationDrawer : PropertyDrawer
+    [CustomPropertyDrawer(typeof(ScalableFloat), true)]
+    public class ScalableFloatDrawer : PropertyDrawer
     {
         public override VisualElement CreatePropertyGUI(SerializedProperty property) =>
-            MagnitudeField.Build(property, preferredLabel ?? property.displayName, MagnitudeField.UnitOf(fieldInfo), integer: false);
+            MagnitudeField.Build(property, preferredLabel ?? property.displayName, NumberFields.UnitOf(fieldInfo), integer: false,
+                provides: NumberFields.ProvidesOf(fieldInfo));
     }
 
-    /// <summary>A whole-number magnitude field, such as Ticks: the same field, with its rounding.</summary>
-    [CustomPropertyDrawer(typeof(ScalerIntegerMagnitudeOperation))]
-    public class ScalerIntegerMagnitudeOperationDrawer : PropertyDrawer
+    /// <summary>A whole-number field, such as Ticks: the same field, with its rounding.</summary>
+    [CustomPropertyDrawer(typeof(ScalableInt), true)]
+    public class ScalableIntDrawer : PropertyDrawer
     {
         public override VisualElement CreatePropertyGUI(SerializedProperty property) =>
-            MagnitudeField.Build(property, preferredLabel ?? property.displayName, MagnitudeField.UnitOf(fieldInfo), integer: true);
+            MagnitudeField.Build(property, preferredLabel ?? property.displayName, NumberFields.UnitOf(fieldInfo), integer: true,
+                provides: NumberFields.ProvidesOf(fieldInfo));
     }
 
     internal static class MagnitudeField
     {
         private const string ConstantKind = "Constant";
+
+        // The unit that shows and takes a field's number as a percentage (FEAT-29)
+        internal const string Percent = "%";
 
         // How a field combines its number with its scaler, by the names the Combine popup shows
         private static readonly (string name, EMagnitudeOperation real)[] Combines =
@@ -43,14 +50,14 @@ namespace FarEmerald.PlayForge.Extended.Editor
             ("Number Only", EMagnitudeOperation.UseMagnitude),
         };
 
-        internal static string UnitOf(FieldInfo field) => field?.GetCustomAttribute<ScalerOperationKeyword>()?.Unit;
+        internal static string UnitOf(FieldInfo field) => NumberFields.UnitOf(field);
 
         /// <summary>
         /// A magnitude's scaler: an operation's Scaler, or an attribute set element's side's Scaling, which the field
         /// draws the same way (ED-49).
         /// </summary>
         internal static SerializedProperty ScalerOf(SerializedProperty operation) =>
-            operation.FindPropertyRelative(nameof(ScalerMagnitudeOperation.Scaler))
+            operation.FindPropertyRelative(nameof(ScalableFloat.Scaler))
             ?? operation.FindPropertyRelative(nameof(AttributeMagnitudeSpec.Scaling));
 
         // Whether a field that reads its scaler reads 0 without one. An element's side reads its number (AttributeBlueprint)
@@ -65,19 +72,22 @@ namespace FarEmerald.PlayForge.Extended.Editor
         /// <param name="integer">Whether it takes whole numbers.</param>
         /// <param name="numberName">The name its number field takes, so a drawer can find it; or null.</param>
         /// <param name="moreItems">Items the drawer adds to its field menu, before Make Constant; or null.</param>
+        /// <param name="provides">What the field's context provides, which kinds its menu offers (FEAT-29).</param>
         internal static VisualElement Build(SerializedProperty operation, string label, string unit, bool integer,
-            string numberName = null, Action<GenericDropdownMenu> moreItems = null)
+            string numberName = null, Action<GenericDropdownMenu> moreItems = null, NumberReads provides = NumberReads.All)
         {
             var root = new VisualElement { name = "MagnitudeField" };
             // The style sheet lays out the field, wherever it's drawn (ED-20)
             ForgeTheme.Apply(root);
             root.AddToClassList("pf-magnitude");
 
-            var magnitudeProp = operation.FindPropertyRelative(nameof(ScalerMagnitudeOperation.Magnitude));
-            var realProp = operation.FindPropertyRelative(nameof(ScalerMagnitudeOperation.RealMagnitude));
+            var magnitudeProp = operation.FindPropertyRelative(nameof(ScalableFloat.Magnitude));
+            var realProp = operation.FindPropertyRelative(nameof(ScalableFloat.RealMagnitude));
             var scalerProp = ScalerOf(operation);
-            var roundingProp = operation.FindPropertyRelative(nameof(ScalerIntegerMagnitudeOperation.Rounding));
-            var kinds = ScalerFields.KindsFor(scalerProp);
+            var roundingProp = operation.FindPropertyRelative(nameof(ScalableInt.Rounding));
+            // The kinds the field's context resolves, in the menu's order, each with its place in the menu (FEAT-29)
+            var kinds = NumberFields.InMenuOrder(ScalerFields.KindsFor(scalerProp).Where(kind => NumberFields.Resolves(provides, kind)));
+            bool percent = unit == Percent && !integer;
 
             var row = new VisualElement { name = "Row" };
             row.AddToClassList("pf-magnitude__row");
@@ -90,8 +100,11 @@ namespace FarEmerald.PlayForge.Extended.Editor
             bool mixedKinds = false;
             bool built = false;
             Label range = null;
+            Label summary = null;
+            HelpBox unresolved = null;
             PopupField<string> combine = null;
             VisualElement combineNumber = null;
+            FloatField shownNumber = null;
             HelpBox noScaler = null;
 
             // The field's properties, found again by their paths. One kept since the field was built can point into a
@@ -103,10 +116,47 @@ namespace FarEmerald.PlayForge.Extended.Editor
                 var fresh = operation.serializedObject.FindProperty(operationPath);
                 if (fresh == null) return;
                 operation = fresh;
-                magnitudeProp = operation.FindPropertyRelative(nameof(ScalerMagnitudeOperation.Magnitude));
-                realProp = operation.FindPropertyRelative(nameof(ScalerMagnitudeOperation.RealMagnitude));
+                magnitudeProp = operation.FindPropertyRelative(nameof(ScalableFloat.Magnitude));
+                realProp = operation.FindPropertyRelative(nameof(ScalableFloat.RealMagnitude));
                 scalerProp = ScalerOf(operation);
-                roundingProp = operation.FindPropertyRelative(nameof(ScalerIntegerMagnitudeOperation.Rounding));
+                roundingProp = operation.FindPropertyRelative(nameof(ScalableInt.Rounding));
+            }
+
+            // A kind's place in the menu, as "Scaler/Clamped"; Constant and the common kinds sit at its top
+            PopupField<string> KindPopup(string fieldLabel, List<string> choices, string shown)
+            {
+                var paths = new Dictionary<string, string>();
+                foreach (var each in kinds) paths.TryAdd(ScalerFields.KindName(each), NumberFields.MenuPathOf(each));
+                if (shownType != null) paths.TryAdd(shown, NumberFields.MenuPathOf(shownType));
+                var popup = fieldLabel == null
+                    ? new PopupField<string>(choices, shown)
+                    : new PopupField<string>(fieldLabel, choices, shown);
+                popup.name = "Kind";
+                popup.tooltip = "The field's kind: Constant, or another";
+                popup.formatSelectedValueCallback = name => name;
+                popup.formatListItemCallback = name => paths.TryGetValue(name, out var path) ? path : name;
+                return popup;
+            }
+
+            // A number field: bound to the number, or, where the field's unit is "%", showing and taking it times 100
+            VisualElement NumberField(string fieldLabel)
+            {
+                if (!percent)
+                    return integer
+                        ? Bound(fieldLabel == null ? new IntegerField() : new IntegerField(fieldLabel), magnitudeProp)
+                        : Bound(fieldLabel == null ? new FloatField() : new FloatField(fieldLabel), magnitudeProp);
+                var shown = fieldLabel == null ? new FloatField() : new FloatField(fieldLabel);
+                shown.tooltip = "As a percentage: 30 is 0.3";
+                shown.SetValueWithoutNotify(magnitudeProp.floatValue * 100f);
+                shown.showMixedValue = magnitudeProp.hasMultipleDifferentValues;
+                shown.RegisterValueChangedCallback(change =>
+                {
+                    if (!ScalerFields.Alive(magnitudeProp)) return;
+                    magnitudeProp.floatValue = change.newValue / 100f;
+                    operation.serializedObject.ApplyModifiedProperties();
+                });
+                shownNumber = shown;
+                return shown;
             }
 
             void Draw()
@@ -116,8 +166,11 @@ namespace FarEmerald.PlayForge.Extended.Editor
                 row.Clear();
                 body.Clear();
                 range = null;
+                summary = null;
+                unresolved = null;
                 combine = null;
                 combineNumber = null;
+                shownNumber = null;
                 noScaler = null;
                 // Selected fields whose kinds differ show a mixed kind, and neither field's content as both's (ED-12)
                 mixedKinds = EachAsset.Differ(scalerProp, ScalerFields.KindOf);
@@ -127,12 +180,13 @@ namespace FarEmerald.PlayForge.Extended.Editor
                 var choices = new List<string> { ConstantKind };
                 choices.AddRange(kinds.Select(ScalerFields.KindName));
                 var shownName = shownType == null ? ConstantKind : ScalerFields.KindName(shownType);
+                // A kind the field's context doesn't resolve still shows, as one copied from another field does
                 if (!choices.Contains(shownName)) choices.Add(shownName);
 
                 PopupField<string> kind;
                 if (mixedKinds)
                 {
-                    kind = new PopupField<string>(label, choices, shownName) { name = "Kind", tooltip = "The field's kind: Constant, or a scaler's" };
+                    kind = KindPopup(label, choices, shownName);
                     kind.AddToClassList(BaseField<string>.alignedFieldUssClassName);
                     kind.AddToClassList("pf-magnitude__kind-labelled");
                     kind.showMixedValue = true;
@@ -144,9 +198,7 @@ namespace FarEmerald.PlayForge.Extended.Editor
                 else if (shownType == null)
                 {
                     // Constant: the number, its unit, then the kind
-                    VisualElement number = integer
-                        ? Bound(new IntegerField(label), magnitudeProp)
-                        : Bound(new FloatField(label), magnitudeProp);
+                    var number = NumberField(label);
                     number.name = numberName ?? "Number";
                     number.AddToClassList(BaseField<float>.alignedFieldUssClassName);
                     number.AddToClassList("pf-magnitude__number");
@@ -157,7 +209,7 @@ namespace FarEmerald.PlayForge.Extended.Editor
                         unitLabel.AddToClassList("pf-magnitude__unit");
                         row.Add(unitLabel);
                     }
-                    kind = new PopupField<string>(choices, shownName) { name = "Kind", tooltip = "The field's kind: Constant, or a scaler's" };
+                    kind = KindPopup(null, choices, shownName);
                     kind.AddToClassList("pf-magnitude__kind");
                     row.Add(kind);
 
@@ -173,14 +225,21 @@ namespace FarEmerald.PlayForge.Extended.Editor
                 }
                 else
                 {
-                    // A scaler: the kind beside the name, then the range it gives
-                    kind = new PopupField<string>(label, choices, shownName) { name = "Kind", tooltip = "The field's kind: Constant, or a scaler's" };
+                    // Another kind: the kind beside the name, then the range it gives, and under them what it reads
+                    kind = KindPopup(label, choices, shownName);
                     kind.AddToClassList(BaseField<string>.alignedFieldUssClassName);
                     kind.AddToClassList("pf-magnitude__kind-labelled");
                     row.Add(kind);
                     range = new Label { name = "Range" };
                     range.AddToClassList("pf-magnitude__range");
                     row.Add(range);
+                    summary = new Label { name = "Summary" };
+                    summary.AddToClassList("pf-magnitude__summary");
+                    body.Add(summary);
+
+                    // A kind its field's context can't resolve, as one copied from another field, says so in place
+                    unresolved = new HelpBox("", HelpBoxMessageType.Warning) { name = "Unresolved" };
+                    body.Add(unresolved);
 
                     // Everything the scaler sets for the field sits on one block under it, so its fields read as the
                     // scaler's among the fields around them (ED-51, Decision 36)
@@ -205,9 +264,7 @@ namespace FarEmerald.PlayForge.Extended.Editor
                         operation.serializedObject.ApplyModifiedProperties();
                     });
                     combineRow.Add(combine);
-                    combineNumber = integer
-                        ? Bound(new IntegerField(), magnitudeProp)
-                        : Bound(new FloatField(), magnitudeProp);
+                    combineNumber = NumberField(null);
                     combineNumber.name = numberName ?? "CombineNumber";
                     combineNumber.AddToClassList("pf-magnitude__combine-number");
                     combineRow.Add(combineNumber);
@@ -257,6 +314,27 @@ namespace FarEmerald.PlayForge.Extended.Editor
                     bool differ = EachAsset.Differ(operation, each => RangeOf(each, unit));
                     range.text = differ ? MixedRange : RangeOf(operation, unit);
                     range.tooltip = differ ? "The selected fields give different values" : "";
+                    // A kind with no values per level has no range; its summary says what it reads
+                    range.EnableInClassList(ScalerFields.HiddenClass, range.text.Length == 0);
+                }
+                if (summary != null)
+                {
+                    bool differ = EachAsset.Differ(operation, each => SummaryOf(each, unit));
+                    summary.text = differ ? MixedRange : SummaryOf(operation, unit);
+                    summary.tooltip = differ ? "The selected fields read different things" : summary.text;
+                }
+                if (unresolved != null)
+                {
+                    var missing = EachAsset.Of(scalerProp)
+                        .Select(each => NumberFields.Missing(NumberFields.ReadsOf(each.managedReferenceValue as AbstractScaler), provides))
+                        .FirstOrDefault(each => each.Length > 0) ?? "";
+                    unresolved.text = $"Its kind reads {missing}, which this field doesn't have, so it reads its number.";
+                    unresolved.EnableInClassList(ScalerFields.HiddenClass, missing.Length == 0);
+                }
+                if (shownNumber != null && ScalerFields.Alive(magnitudeProp) && !ScalerFields.IsTypedInto(shownNumber))
+                {
+                    shownNumber.SetValueWithoutNotify(magnitudeProp.floatValue * 100f);
+                    shownNumber.showMixedValue = magnitudeProp.hasMultipleDifferentValues;
                 }
                 if (combine != null)
                 {
@@ -290,23 +368,38 @@ namespace FarEmerald.PlayForge.Extended.Editor
         }
 
         /// <summary>
-        /// What a field reads across its scaler's levels, through its Combine, as in "6–8 s"; a kind with no values per
-        /// level reads by what it is.
+        /// What a field reads across its scaler's levels, through its Combine, as in "6–8 s"; empty for a kind with no
+        /// values per level, whose summary says what it reads (FEAT-29).
         /// </summary>
         internal static string RangeOf(SerializedProperty operation, string unit)
         {
             var scalerProp = ScalerOf(operation);
             var values = ScalerFields.ValuesOf(scalerProp);
-            // A kind that reads no values of its own, as one that reads an attribute, reads by what it is: its values per
-            // level, 1 unless set, aren't what it gives (ED-49)
+            // A kind that reads no values of its own, as one that reads an attribute, has no range: its values per level,
+            // 1 unless set, aren't what it gives (ED-49)
             var kind = scalerProp.managedReferenceValue as AbstractScaler;
             bool ownValues = kind != null && (ScalerFields.IsShared(kind.GetType()) || (kind.Parts & EScalerParts.LevelValues) != 0);
-            if (values.Length == 0 || !ownValues) return ScalerFields.KindName(scalerProp.managedReferenceValue?.GetType());
-            var magnitudeProp = operation.FindPropertyRelative(nameof(ScalerMagnitudeOperation.Magnitude));
+            if (values.Length == 0 || !ownValues) return "";
+            var magnitudeProp = operation.FindPropertyRelative(nameof(ScalableFloat.Magnitude));
             float magnitude = magnitudeProp.propertyType == SerializedPropertyType.Integer ? magnitudeProp.intValue : magnitudeProp.floatValue;
-            var real = (EMagnitudeOperation)operation.FindPropertyRelative(nameof(ScalerMagnitudeOperation.RealMagnitude)).intValue;
+            var real = (EMagnitudeOperation)operation.FindPropertyRelative(nameof(ScalableFloat.RealMagnitude)).intValue;
             var read = values.Select(value => ForgeHelper.MagnitudeAndScalerOperation(magnitude, value, real)).ToArray();
+            if (unit == Percent) return ScalerFields.RangeText(read.Select(value => value * 100f).ToArray(), Percent).Replace(" %", "%");
             return ScalerFields.RangeText(read, unit);
+        }
+
+        /// <summary>
+        /// A number field's one-line summary of what it reads, as "0.3 × Target's Health (base)" (FEAT-29), from its
+        /// number, its Combine and its kind.
+        /// </summary>
+        internal static string SummaryOf(SerializedProperty operation, string unit)
+        {
+            var magnitudeProp = operation.FindPropertyRelative(nameof(ScalableFloat.Magnitude));
+            var realProp = operation.FindPropertyRelative(nameof(ScalableFloat.RealMagnitude));
+            if (magnitudeProp == null || realProp == null) return "";
+            float magnitude = magnitudeProp.propertyType == SerializedPropertyType.Integer ? magnitudeProp.intValue : magnitudeProp.floatValue;
+            var kind = ScalerOf(operation)?.managedReferenceValue as AbstractScaler;
+            return NumberText.Of(magnitude, (EMagnitudeOperation)realProp.intValue, kind, unit);
         }
 
         // The field menu: Save as Scaler Asset, Use a Scaler Asset, Import Values, Quick Fill, the drawer's own items,
@@ -402,16 +495,27 @@ namespace FarEmerald.PlayForge.Extended.Editor
                 if (ScalerFields.KindOf(scaler) == type) return;
                 float first = ValueAtFirstLevel(own);
                 scaler.managedReferenceValue = ScalerFields.Make(type, first);
-                var real = own.FindPropertyRelative(nameof(ScalerMagnitudeOperation.RealMagnitude));
+                var real = own.FindPropertyRelative(nameof(ScalableFloat.RealMagnitude));
                 if (ScalerFields.IsShared(type))
                 {
                     real.intValue = (int)EMagnitudeOperation.MultiplyWithScaler;
-                    SetNumber(own.FindPropertyRelative(nameof(ScalerMagnitudeOperation.Magnitude)), 1f);
+                    SetNumber(own.FindPropertyRelative(nameof(ScalableFloat.Magnitude)), 1f);
+                }
+                else if (ReadsTimesNumber(type))
+                {
+                    // A quantity, as × Attribute or a distance, reads times the number: the field's own, else 1 (FEAT-29)
+                    real.intValue = (int)EMagnitudeOperation.MultiplyWithScaler;
+                    SetNumber(own.FindPropertyRelative(nameof(ScalableFloat.Magnitude)), Mathf.Approximately(first, 0f) ? 1f : first);
                 }
                 else real.intValue = (int)EMagnitudeOperation.UseScaler;
             });
             ScalerFields.ForgetUses();
         }
+
+        // The kinds the menu makes as "the number times" them: × Attribute and a project's own kinds, as a distance. Set By
+        // Caller reads the caller's value as it is
+        private static bool ReadsTimesNumber(Type type) =>
+            type == typeof(AttributeBackedScaler) || (typeof(NumberKind).IsAssignableFrom(type) && type != typeof(SetByCallerScaler));
 
         /// <summary>The field reads its number again: no scaler, and the number the field read at level 1.</summary>
         public static void MakeConstant(SerializedProperty operation)
@@ -420,8 +524,8 @@ namespace FarEmerald.PlayForge.Extended.Editor
             {
                 float value = ValueAtFirstLevel(own);
                 ScalerOf(own).managedReferenceValue = null;
-                own.FindPropertyRelative(nameof(ScalerMagnitudeOperation.RealMagnitude)).intValue = (int)EMagnitudeOperation.UseMagnitude;
-                SetNumber(own.FindPropertyRelative(nameof(ScalerMagnitudeOperation.Magnitude)), value);
+                own.FindPropertyRelative(nameof(ScalableFloat.RealMagnitude)).intValue = (int)EMagnitudeOperation.UseMagnitude;
+                SetNumber(own.FindPropertyRelative(nameof(ScalableFloat.Magnitude)), value);
             });
             ScalerFields.ForgetUses();
         }
@@ -436,7 +540,7 @@ namespace FarEmerald.PlayForge.Extended.Editor
             var shared = ScalerFields.KindsFor(ScalerOf(operation)).Contains(typeof(SharedCachedScaler)) ? typeof(SharedCachedScaler) : typeof(SharedScaler);
             EachAsset.Write(operation, own =>
             {
-                var real = own.FindPropertyRelative(nameof(ScalerMagnitudeOperation.RealMagnitude));
+                var real = own.FindPropertyRelative(nameof(ScalableFloat.RealMagnitude));
                 var keep = (EMagnitudeOperation)real.intValue;
                 var made = ScalerFields.Make(shared, 0f);
                 switch (made)
@@ -488,13 +592,13 @@ namespace FarEmerald.PlayForge.Extended.Editor
         // What the field reads at level 1, through its Combine: a constant's number, or its scaler's first value
         private static float ValueAtFirstLevel(SerializedProperty operation)
         {
-            var magnitudeProp = operation.FindPropertyRelative(nameof(ScalerMagnitudeOperation.Magnitude));
+            var magnitudeProp = operation.FindPropertyRelative(nameof(ScalableFloat.Magnitude));
             float magnitude = magnitudeProp.propertyType == SerializedPropertyType.Integer ? magnitudeProp.intValue : magnitudeProp.floatValue;
             var scaler = ScalerOf(operation);
             if (scaler.managedReferenceValue == null) return magnitude;
             var values = ScalerFields.ValuesOf(scaler);
             if (values.Length == 0) return magnitude;
-            var real = (EMagnitudeOperation)operation.FindPropertyRelative(nameof(ScalerMagnitudeOperation.RealMagnitude)).intValue;
+            var real = (EMagnitudeOperation)operation.FindPropertyRelative(nameof(ScalableFloat.RealMagnitude)).intValue;
             return ForgeHelper.MagnitudeAndScalerOperation(magnitude, values[0], real);
         }
 

@@ -6,16 +6,21 @@ inspector shows.
 
 ## A magnitude field
 
-A magnitude field, such as an effect's Magnitude or Duration, shows its name, then its **kind**, then what it reads,
-then its field menu, which opens as wide as its items:
+A magnitude field, such as an effect's Magnitude or Duration, is a number field (`ScalableFloat`, or `ScalableInt` for
+a whole number). It shows its name, then its **kind**, then what it reads, then its field menu, which opens as wide as
+its items. The kind menu lists Constant, By Level, Shared, × Attribute and Set By Caller at its top, and files the rest
+by category: the scalers of every kind under **Scaler**, Effect Stacks under **Effect**, Item Stacks under **Item**, and
+a kind of a project's own under the category it names. A field whose code declares what its context provides, with
+`[NumberContext]`, offers only the kinds that can be worked out there: a targeting task's range, which has no target
+yet, offers no kind that reads one.
 
 - **Constant**: the field reads its number, with its unit beside it, as Tick Every's "1 s". A field that used to read
   its scaler, and has none, reads 0, and a warning says so.
 - **By Level**: the field reads a table of values per level (below). The range it gives shows beside the kind, as
   "6–8 s", or "-25 to -10" where it goes below 0.
 - **Shared**: the field reads a Scaler asset (below).
-- The other kinds work out a value from the values or from the entity: **Attribute Backed** reads an attribute,
-  **Clamped** keeps a value within bounds, **Conditional** chooses between two scalers, **Randomized** rolls a random
+- The other kinds work out a value from the values or from the entity: **× Attribute** reads an attribute of the
+  caster or the target, which the menu starts as the field's number times it, **Clamped** keeps a value within bounds, **Conditional** chooses between two scalers, **Randomized** rolls a random
   value, **Group** combines scalers, **Threshold** steps at thresholds, and **Fixed Value** is one number. **Effect
   Stacks** reads the stack count of the effect's own container, and **Item Stacks** that of the item that applied it
   ([ITEMS.md](ITEMS.md)); each reads 1 where there's nothing stacked. **Set By Caller** reads the magnitude the
@@ -33,9 +38,13 @@ one gives it to each field, from that field's own value; a field of that kind ke
 work on each field's own values, and a count, range or curve the fields disagree on shows as mixed. Save as Scaler Asset
 waits for one asset.
 
-A kind other than Constant shows **Combine**, how the field joins its number with the scaler: **Scaler** reads the
-scaler's value, **Scaler + Number** and **Scaler × Number** add or multiply the field's number, and **Number Only**
-reads the number. A whole-number field, such as Ticks, also shows its **Rounding**.
+A kind other than Constant shows a one-line summary of what the field reads under its row, as "0.3 × Target's Health
+(base)", then **Combine**, how the field joins its number with the scaler: **Scaler** reads the scaler's value,
+**Scaler + Number** and **Scaler × Number** add or multiply the field's number, and **Number Only** reads the number. A
+whole-number field, such as Ticks, also shows its **Rounding**: Floor, Ceil, or Round, to the nearest, a half away
+from zero. A field whose unit is "%" stores 0.3 and shows and takes it as 30%. A kind its field can't work out, as one
+copied from a field that has a target into one that hasn't, says so under the field, and the Problems window lists it;
+it reads the field's number.
 
 The field menu holds:
 
@@ -96,6 +105,16 @@ for `DamageCurveScaler`. Its inspector draws:
   a scaler reads all three, or its behaviours alone where its `UseScalingOptions()` returns false. Override `Parts` to
   say what yours reads, as a scaler that reads only an attribute returns `EScalerParts.Behaviours`. `Parts` can follow
   the scaler's own fields, as a Conditional reads its own values only while it has no True scaler.
+
+A **kind of number** of your own is simpler: derive from `NumberKind` and override its one method,
+`Evaluate(in NumberContext context)`, which reads what the field's site has: `context.Caster`, `context.Target`,
+`context.Level`, the caller's magnitudes, Local Data, an attribute on either side, and more; `context.Has(...)` says
+which. `Describe()` gives the field's summary, as "the distance to the target". `[NumberKind("Distance to Target",
+Category = "Space", Reads = NumberReads.Caster | NumberReads.Target)]` names it, files it in the kind menu, and says
+what it reads, so a field offers it only where it can be worked out; where it can't, the field reads its number. A kind
+is a scaler, so it also works in an effect's magnitude and inside a Group or a Conditional, and its fields draw as a
+scaler's do. Test one without an effect: `number.Evaluate(NumberContext.For(caster, target, level))`. A kind is saved
+by its class's name, so renaming the class needs Unity's `[MovedFrom]`.
 
 ## Scaler assets
 

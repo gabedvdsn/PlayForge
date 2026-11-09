@@ -43,7 +43,7 @@ namespace FarEmerald.PlayForge.Samples.Demo.Building
             return Settle(Dirty(item));
         }
 
-        private static ScalerMagnitudeOperation ByItemLevel(params float[] values) => Scaled(Named(Levels(values), "By the item's level"));
+        private static ScalableFloat ByItemLevel(params float[] values) => Scaled(Named(Levels(values), "By the item's level"));
 
         private static void MakeItems()
         {
@@ -118,7 +118,7 @@ namespace FarEmerald.PlayForge.Samples.Demo.Building
 
             // +3 Intelligence a shard, by an Item Stacks scaler
             var shard = Save("Items/Soul Shard", NewItem("Soul Shard", "+3 Intelligence for each shard held, by an Item Stacks scaler. Holds ten at most.", maxLevel: 1, stack: 10));
-            Gives(shard, Bonus(shard, Intelligence, new ScalerMagnitudeOperation
+            Gives(shard, Bonus(shard, Intelligence, new ScalableFloat
             {
                 Magnitude = 3f, RealMagnitude = EMagnitudeOperation.MultiplyWithScaler,
                 Scaler = Named(new ItemStacksScaler { Behaviours = new List<AbstractScalerBehaviour>() }, "Shards held"),

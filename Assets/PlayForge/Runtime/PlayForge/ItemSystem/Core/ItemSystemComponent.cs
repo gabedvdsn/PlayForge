@@ -12,8 +12,8 @@ namespace FarEmerald.PlayForge
 
         private bool allowDuplicateItems;
         private bool allowDuplicateEquippedItems;
-        private ScalerIntegerMagnitudeOperation maxItemsOperation;
-        private ScalerIntegerMagnitudeOperation maxEquippedItemsOperation;
+        private ScalableInt maxItemsOperation;
+        private ScalableInt maxEquippedItemsOperation;
         
         private bool _enabled;
         public bool Enabled
@@ -35,7 +35,7 @@ namespace FarEmerald.PlayForge
             Self = self;
         }
 
-        public void Setup(bool allowDuplicates, bool allowDuplicateEquipped, ScalerIntegerMagnitudeOperation maxItemsOperation, ScalerIntegerMagnitudeOperation maxEquippedItemsOperation)
+        public void Setup(bool allowDuplicates, bool allowDuplicateEquipped, ScalableInt maxItemsOperation, ScalableInt maxEquippedItemsOperation)
         {
             allowDuplicateItems = allowDuplicates;
             allowDuplicateEquippedItems = allowDuplicateEquipped;

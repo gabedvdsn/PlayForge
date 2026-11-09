@@ -9,6 +9,7 @@ namespace FarEmerald.PlayForge
     /// the field's Magnitude adjusts what it reads, as in Fire Duration × 1.5.
     /// </summary>
     [Serializable]
+    [NumberKind("Shared")]
     public class SharedScaler : AbstractScaler
     {
         [Tooltip("The Scaler asset this field reads")]

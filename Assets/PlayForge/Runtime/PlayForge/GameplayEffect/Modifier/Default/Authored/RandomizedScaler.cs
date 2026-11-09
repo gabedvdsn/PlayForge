@@ -6,6 +6,7 @@ namespace FarEmerald.PlayForge
     /// Adds random variance to level-based scaling.
     /// Useful for damage ranges, proc chances, etc.
     /// </summary>
+    [NumberKind("Randomized", Category = "Scaler")]
     public class RandomizedScaler : AbstractScaler
     {
         [Tooltip("How variance is applied")]

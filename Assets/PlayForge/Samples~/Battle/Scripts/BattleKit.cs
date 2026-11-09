@@ -97,9 +97,9 @@ namespace FarEmerald.PlayForge.Samples.Battles
             entity.GrantedTags = new List<Tag>();
             entity.ContextTags = new List<Tag>();
             entity.MaxLevel = 1;
-            entity.MaxAbilitiesOperation = new ScalerIntegerMagnitudeOperation { Magnitude = 8 };
-            entity.MaxItemsOperation = new ScalerIntegerMagnitudeOperation { Magnitude = 8 };
-            entity.MaxEquippedItemsOperation = new ScalerIntegerMagnitudeOperation { Magnitude = 8 };
+            entity.MaxAbilitiesOperation = new ScalableInt { Magnitude = 8 };
+            entity.MaxItemsOperation = new ScalableInt { Magnitude = 8 };
+            entity.MaxEquippedItemsOperation = new ScalableInt { Magnitude = 8 };
             entity.StartingAbilities = new List<Ability>();
             entity.StartingItems = new List<StartingItemContainer>();
             entity.AttributeSet = set;
@@ -129,19 +129,19 @@ namespace FarEmerald.PlayForge.Samples.Battles
                 ImpactOperation = config.Op,
                 AffiliationPolicy = EAffiliationPolicy.AlwaysAllow,
                 ImpactTypes = new List<Tag>(),
-                MagnitudeOperation = new ScalerMagnitudeOperation { Magnitude = config.Magnitude, RealMagnitude = EMagnitudeOperation.UseMagnitude },
+                MagnitudeOperation = new ScalableFloat { Magnitude = config.Magnitude, RealMagnitude = EMagnitudeOperation.UseMagnitude },
                 Packets = System.Array.Empty<ContainedEffectPacket>(),
             };
 
             effect.DurationSpecification = new GameplayEffectDuration
             {
                 DurationPolicy = config.Policy,
-                DurationOperation = new ScalerMagnitudeOperation { Magnitude = config.Duration, RealMagnitude = EMagnitudeOperation.UseMagnitude },
+                DurationOperation = new ScalableFloat { Magnitude = config.Duration, RealMagnitude = EMagnitudeOperation.UseMagnitude },
                 EnablePeriodicTicks = config.PeriodicTicks,
-                TicksOperation = new ScalerIntegerMagnitudeOperation { Magnitude = config.Ticks },
-                TickIntervalOperation = new ScalerMagnitudeOperation { Magnitude = 1f, RealMagnitude = EMagnitudeOperation.UseMagnitude },
-                AdditionalExecuteTicksOperation = new ScalerIntegerMagnitudeOperation { Magnitude = 0 },
-                StackAmountOperation = new ScalerIntegerMagnitudeOperation { Magnitude = 1 },
+                TicksOperation = new ScalableInt { Magnitude = config.Ticks },
+                TickIntervalOperation = new ScalableFloat { Magnitude = 1f, RealMagnitude = EMagnitudeOperation.UseMagnitude },
+                AdditionalExecuteTicksOperation = new ScalableInt { Magnitude = 0 },
+                StackAmountOperation = new ScalableInt { Magnitude = 1 },
                 StackingConfigs = new List<AbstractStackingConfig>(),
                 ReApplicationPolicy = config.Reapply,
                 ReApplicationInteraction = config.Interaction,

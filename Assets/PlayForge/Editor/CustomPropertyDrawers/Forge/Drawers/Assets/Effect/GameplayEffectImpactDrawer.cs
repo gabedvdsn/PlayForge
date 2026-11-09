@@ -218,7 +218,7 @@ namespace FarEmerald.PlayForge.Extended.Editor
                 effect.ImpactSpecification.AdditionalImpacts.Add(new AttributeImpactEntry
                 {
                     Delivery = ImpactFields.DefaultDelivery(effect.DurationSpecification),
-                    Magnitude = new ScalerMagnitudeOperation { RealMagnitude = EMagnitudeOperation.UseMagnitude },
+                    Magnitude = new ScalableFloat { RealMagnitude = EMagnitudeOperation.UseMagnitude },
                 });
                 EditorUtility.SetDirty(effect);
             }

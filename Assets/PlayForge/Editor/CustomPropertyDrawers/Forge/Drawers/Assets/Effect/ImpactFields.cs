@@ -143,9 +143,9 @@ namespace FarEmerald.PlayForge.Extended.Editor
         /// </summary>
         internal static string MagnitudeText(ECalculationOperation operation, SerializedProperty magnitude)
         {
-            var value = magnitude.FindPropertyRelative(nameof(ScalerMagnitudeOperation.Magnitude)).floatValue;
-            var real = (EMagnitudeOperation)magnitude.FindPropertyRelative(nameof(ScalerMagnitudeOperation.RealMagnitude)).intValue;
-            var scaler = magnitude.FindPropertyRelative(nameof(ScalerMagnitudeOperation.Scaler)).managedReferenceValue is AbstractScaler s
+            var value = magnitude.FindPropertyRelative(nameof(ScalableFloat.Magnitude)).floatValue;
+            var real = (EMagnitudeOperation)magnitude.FindPropertyRelative(nameof(ScalableFloat.RealMagnitude)).intValue;
+            var scaler = magnitude.FindPropertyRelative(nameof(ScalableFloat.Scaler)).managedReferenceValue is AbstractScaler s
                 ? ScalerName(s) : null;
 
             var number = operation switch
