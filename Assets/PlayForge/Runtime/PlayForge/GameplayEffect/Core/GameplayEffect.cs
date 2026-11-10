@@ -284,6 +284,16 @@ namespace FarEmerald.PlayForge
             return false;
         }
 
+        /// <summary>
+        /// Whether an effect is tagged with the tag, or a child of it, by its asset tag, a context tag or a tag it grants,
+        /// as <see cref="Names(List{Tag}, GameplayEffect)"/> matches each; allocates nothing (FEAT-29).
+        /// </summary>
+        public static bool Names(Tag tag, GameplayEffect effect)
+        {
+            if (!tag.IsValid || effect == null) return false;
+            return effect.Tags.AssetTag.MatchesOrIsChildOf(tag) || AnyMatches(effect.Tags.ContextTags, tag) || AnyMatches(effect.Tags.GrantedTags, tag);
+        }
+
         // By index over the list, which allocates nothing
         private static bool AnyMatches(List<Tag> own, Tag tag)
         {

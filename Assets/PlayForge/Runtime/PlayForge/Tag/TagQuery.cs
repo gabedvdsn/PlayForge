@@ -221,7 +221,7 @@ namespace FarEmerald.PlayForge
         public override string ToString()
         {
             string modeStr = MatchMode != ETagMatchMode.Exact ? $" [{MatchMode}]" : "";
-            return $"{Tag.Name} {Operator} {Magnitude}{modeStr}";
+            return $"{Tag} {Operator} {Magnitude}{modeStr}";
         }
     }
 }

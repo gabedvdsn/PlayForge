@@ -280,8 +280,9 @@ namespace FarEmerald.PlayForge.Extended.Editor
                     if (property == null) continue;
                     var field = new PropertyField(property) { name = info.Name };
                     field.BindProperty(property);
-                    var when = info.GetCustomAttribute<ForgeShowWhenAttribute>();
-                    if (when == null)
+                    // Every condition a field carries must hold for it to show (FEAT-29)
+                    var when = info.GetCustomAttributes<ForgeShowWhenAttribute>().ToArray();
+                    if (when.Length == 0)
                     {
                         yield return field;
                         continue;
@@ -290,7 +291,7 @@ namespace FarEmerald.PlayForge.Extended.Editor
                     var holder = new VisualElement { name = $"{info.Name}Holder" };
                     holder.Add(field);
                     void Show() => field.EnableInClassList(HiddenClass,
-                        !EachAsset.Of(scaler).Any(own => Holds(own.FindPropertyRelative(when.Field), when.Values)));
+                        !EachAsset.Of(scaler).Any(own => when.All(each => Holds(own.FindPropertyRelative(each.Field), each.Values))));
                     holder.TrackSerializedObjectValue(scaler.serializedObject, _ =>
                     {
                         if (Alive(scaler)) Show();

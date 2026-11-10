@@ -26,7 +26,7 @@ namespace FarEmerald.PlayForge
         /// <summary>Whether the entity had the tag and doesn't now.</summary>
         public bool Removed => Before > 0 && After == 0;
 
-        public override string ToString() => $"{Tag.Name}: {Before} -> {After}";
+        public override string ToString() => $"{Tag}: {Before} -> {After}";
     }
 
     /// <summary>What a tag listener hears (FEAT-3).</summary>

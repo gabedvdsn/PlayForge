@@ -35,8 +35,11 @@ namespace FarEmerald.PlayForge.Extended.Editor
             var effectProp = property.FindPropertyRelative("effectValue");
             var entityProp = property.FindPropertyRelative("entityValue");
 
-            var keyField = new PropertyField()
+            // The row's first column, with no label: under one, as wide as an inspector's label column, the tag's box had
+            // no width left to press (ED-68)
+            var keyField = new PropertyField(keyProp, "")
             {
+                name = "Key",
                 style =
                 {
                     minWidth = 150, maxWidth = 170, marginRight = 6
@@ -173,9 +176,10 @@ namespace FarEmerald.PlayForge.Extended.Editor
             return field;
         }
 
+        // A value drawn by its own drawer, with no label: the row's type says what it is (ED-68)
         private VisualElement CreatePropertyField(SerializedProperty prop)
         {
-            var field = new PropertyField();
+            var field = new PropertyField(prop, "");
             field.BindProperty(prop);
 
             return field;

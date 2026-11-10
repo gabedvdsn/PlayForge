@@ -451,6 +451,22 @@ from. It lives outside `Assets/` so it never ships in the package.
     where it resolves. PlayForge's new kinds are written on the same base. The design has eight phases now, the
     extension API in the first.
 
+- Decision 42, 2026-11-10: number fields (FEAT-29), the user's additions as phase 2 was built.
+  - **Asset Part:** a number can find any effect, ability or item on the caster or the target by a tag, its asset
+    tag among them, and read any part of it: stacks, tracked impact, level, time left and the rest (NUM-13).
+  - **Workers answer numbers:** a number of the Worker kind asks a worker for a value under a key, and a worker
+    answers through `INumberWorker`. The case is Dota 2's Maledict, damage each second and more every fourth by the
+    health the target has lost since it began, which took three effects and is now one. `NumberWorkers.TryAsk` is the
+    same question from code, for the rest of the framework (NUM-12).
+  - **Group is a kind:** the scaler Group is offered as a kind of number, and its members can be any kind (NUM-14).
+    Group Impact, the retention group's part of an attribute, is the other "group" (NUM-11).
+  - **Field attributes:** a number field takes a minimum, a maximum, a range and a tooltip. The limits are
+    `[NumberMin]`, `[NumberMax]` and `[NumberRange]`, since Unity's `[Min]` and `[Range]` take the field's drawing
+    from it; the console says so where one is used (NUM-15).
+  - **Set By Caller says what it checks:** a value set under exactly its key in what the number is read in, and its
+    Default where none is (NUM-4's docs, tooltips and summary).
+  - **Tags read by their display names** wherever one is shown (ED-67).
+
 **Open. Ask the user; do not assume:**
 1. ~~**Uncommitted changes**~~: decided, see above.
 2. ~~**The test project, "PlayForge Proving Grounds"**~~: decided, see above.
@@ -474,6 +490,75 @@ from. It lives outside `Assets/` so it never ships in the package.
 20. ~~**What a spawned thing knows (FEAT-24)**~~: decided, see above (Decision 39).
 21. ~~**The demo's play (Decision 37)**~~: decided, see above (Decision 38).
 22. ~~**Number fields (FEAT-29)**~~: decided, see above (Decision 40).
+23. **An enum or a class for a choice of behaviour** (the user's question of 2026-11-10): should a choice saved as an
+    enum, as a Conditional scaler's Condition is, be a class instance (`[SerializeReference]`), so that a project can
+    add a choice of its own?
+    - **For:** a project adds a case with one class and no change to PlayForge. Each case carries its own fields,
+      where the Conditional scaler shows and hides four fields by its enum (`[ForgeShowWhen]`). Each case says what
+      it reads, where the editor now takes the side from an enum member's name (`NumberFields.ConditionReads`, by
+      "Source" and "Target"). Kinds of number, tasks, workers and an ability's validation rules are chosen this way
+      already.
+    - **Against:** a class instance is a managed reference. It saves more text, it is an object for each field that
+      has one, a class renamed or removed loses its data where an enum's number stays, there is no `switch` or `==`,
+      and what is saved needs carrying over (the legacy-field pattern and Upgrade Assets, as NUM-7 did for floats).
+      Six of the samples' assets save a Conditional, each with the target's tag condition.
+    - **Recommended:** not as a rule for every enum. Convert one where all three hold: a project would add a case;
+      the cases carry different fields; and a case's behaviour is its own, one method, and not the engine's, spread
+      over several places. `EScalerCondition` passes all three (nine cases, one `switch`): make the condition a class
+      read against a `NumberContext`, with FEAT-29's phase 3, which opens that scaler for NUM-16. Closed sets stay
+      enums: a comparison (`EComparisonOperator`), rounding, a magnitude's operation, and the stacking, re-application
+      and overflow policies, which the engine carries out. About thirty enums choose a behaviour, most with a few
+      cases and one to three `switch` sites; a pass over them by the test above is a tracker row once this is
+      answered.
+    - **To answer:** the Conditional's condition as a class, with phase 3? And one condition type for the framework
+      (a scaler's condition, an ability's activation rules and an effect's requirements read the same things), or
+      the scaler's alone?
+24. **Interfaces that nothing takes** (the user's question of 2026-11-10: do `IValidationReady`,
+    `IProxyTaskBehaviourUser` and `IProxyTaskBehaviourCaller` benefit the framework, how could they, and are there
+    others?). An interface earns its place where code takes it: as a parameter, in a collection, or as a constraint
+    whose members are called. `ISource`, `ITagHandler`, `ILocalDataUser` and `INumberWorker` do.
+    - **`IValidationReady`** has no members. It is the constraint on `IValidationRule<T>`, and it marks `IAttribute`,
+      `ITarget`, `BasicEffectOrigin` and `ProcessDataPacket`; but the only rules there are validate an
+      `AbilityDataPacket` (`IAbilityValidationRule`), and nothing takes an `IValidationRule<T>`. So it gives a rule
+      nothing to call and stops nothing but `IValidationRule<int>`. It would be of use with a second family of rules,
+      as whether an effect may be applied to a target, drawn by one rule picker for any `T`. Recommended: remove it
+      and the generic until then; if Open decision 23 makes conditions classes, the condition is that second family,
+      and its type is the one to keep.
+    - **`IProxyTaskBehaviourCaller`** puts two `ApplyBehaviour` methods on every process and every ability system for
+      one caller, `DisjointAbilityTask`. Both process bases implement them alike (`cb.RunAsync(this, user, token)`),
+      `RunAsync` takes the caller and doesn't use it, and `IGameplayProcess` declares the two a second time.
+      **`IProxyTaskBehaviourUser`** is one property, `Data`, which only a caller implements. Recommended: the behaviour
+      runs itself over its users (`behaviour.RunAsync(users, token)`), and the two interfaces go, with
+      `CompositeBehaviourPacket`, which nothing uses. They would be of use with a second behaviour that different
+      callers run differently; none is planned.
+    - **Others:** `IAttributeHandler` and `IGameplayConfigUser` have no members, implementers or users.
+      `ILockedTagProvider` has no implementer. `IGameplayProcess` (about sixteen members, on the two process bases),
+      `ITagSource`, `IWorkerGroupSource` and `IAnalysisUser` are implemented and never taken as a type.
+      `Utils/RuntimeProxy.cs` is commented out, its two interfaces with it.
+    - **To answer:** remove the unused ones in one pass, each a CHANGELOG line since a project could name one, or keep
+      any there are plans for?
+25. **Effects, abilities and entities made in code** (the user's question of 2026-11-10: is there a good way, and is
+    there a benefit to a form that isn't an asset?).
+    - **Now:** every authored type is a ScriptableObject, and a spec holds the concrete type
+      (`GameplayEffectSpec.Base` is a `GameplayEffect`), so code makes one with `ScriptableObject.CreateInstance` and
+      fills its fields, in a build as in the editor. The helpers that do so aren't the package's API: `BattleAssets`
+      in the Battle sample, and `ForgeAssets` in Proving Grounds' harness. The documentation has no page on it.
+    - **What `CreateInstance` costs** is paid once for each definition and not for each application: applying an
+      effect makes a spec, a plain object. It makes a native object, on the main thread only, which stays until it is
+      destroyed. It hasn't been measured here; a probe in Proving Grounds would say what a thousand cost.
+    - **(a) A builder in the package:** the helpers become a supported runtime API, with a scope that destroys what it
+      made, a documentation page, and a name a save can find a definition made in code by (a save between sessions
+      finds assets through the catalog, which holds assets of the project). No change to the core.
+    - **(b) Definitions that aren't assets:** each definition is data behind an interface, which the asset and a plain
+      class both give, and a spec holds the interface. That gives `new`, nothing to destroy, definitions built off the
+      main thread or read from data files, and tests with no Unity objects. It changes every spec, the save (keyed by
+      ScriptableObject), the caches keyed by `Attribute`, each `if (asset)`, and every editor and the Debugger, and
+      leaves two forms of each type to keep alike. `RuntimeAttribute` and `RuntimeEntityIdentity` are such forms
+      already, and show the cost: a save skips a `RuntimeAttribute`'s commits (`ForgeSave.CaptureCommits`).
+    - **Recommended:** (a), and the probe first. What differs from one application to the next needs no new
+      definition: a level, Set By Caller, Local Data and a worker's number carry it. (b) is for a need (a) can't meet:
+      definitions in bulk from data or mods, or built off the main thread.
+    - **To answer:** (a) or (b), and whether the builder is the package's Runtime or stays a sample's.
 
 ## Roadmap
 
@@ -773,6 +858,13 @@ had no letter in the review. TS-AA onward came from the test project.
 | ED-64 | M | 6 | Split from ED-56: the ability stage drawer didn't follow the style. It drew a colored badge for the stage's number, its policy, its usage effects, its task count and a critical task, ▶ and ▼ as text, a delete button, and a list of its own with ▲, ▼ and × buttons, from 163 styles set in C#, and grew that list as an array, which gave a new task the last one's object. A stage's condition was Unity's foldout, its subject and When Missing showing with no tag. Fixed: a stage folds as an attribute set element does, named by its place, Critical on its right, to a line of what it holds; its tasks are Unity's reorderable list, where a new task starts empty (`ForgeLists.AddsEmpty`); At Stage Start indents under Apply Usage Effects; and a condition's subject and When Missing show once it names a tag (`AbilityStageConditionDrawer`). The stages' list removes a stage, and as it removes or moves one, each stage keeps its fold (`ForgeLists.KeepsStates`, ED-18) | `AbilityTaskBehaviourStageDrawer.cs`, `AbilityStageConditionDrawer.cs`, `ForgeLists.cs`, `DrawerCollapseState.cs` | verified |
 | ED-65 | M | 6 | In The Forge, the asset header's file name sat under Show in Project, so that button stood two lines tall in the header's row, and the problem count, Help and the menu sat level with its middle (the user's report on ED-58). Fixed: the actions share one row, and the file name has a row of its own under them, on the right | `ForgeAssetHeader.cs`, `BasePlayForgeEditor.cs` | verified |
 | ED-66 | M | 6 | Split from ED-57: the drawers older than Phase 4 that set their colors, borders or fonts in C#. A lone requirement group drew a tinted box with green and red stripes, colored count badges, a Name and an Import of its own; a tag query a tinted box; a level threshold "Lv" in blue and an arrow as text, with fields that followed nothing after they wrote; a scaler group's member a stripe and a symbol in its operation's color and a "CACHED" badge; a level source took any asset and warned at a wrong one, with a type badge and a browser window of its own; and an ability's behaviour, drawn whole, colored sections and lists of its own. Fixed: a lone group is the requirements table of one row, whose cells open its list with its Name, Template and Sync under it; a tag query is its Tag, Match and Count, the comparison and number on one row (`ForgePartsField`); a threshold is its Level, Value and Tier, bound; a member is its Operation, then its Scaler; a level source is Unity's object field of level providers, with a line of the levels it gives, and the browser window went; a behaviour is a foldout of the fields the ability inspector shows, its lists adding empty loaders and keeping each stage's fold. The worker group's own Import, gone with ED-57, listed assets of every type; the Workers sections do now (`ImportAcrossTypes`). The effect reference and impact drawers already kept the style; the effect reference's dialog is ED-61's | `TagRequirementDrawers.cs`, `ForgeRequirementsTable.cs`, `TagQueryDrawer.cs`, `ScalerSupportDrawers.cs`, `LevelProviderDrawer.cs`, `AbilityBehaviourDrawer.cs`, `ForgePartsField.cs`, `ForgeDrawerStyles.cs` | verified |
+| ED-67 | M | 6 | The user's rule (Decision 42): wherever a tag is shown, it reads by its display name. Some places showed its stored name, which a unique tag pads to tell it apart: an effect's and an item's summaries in The Forge, the import window's tag column, a tag query's and a tag event's text, the tag cache's log and a process's role. Fixed: each shows the display name (`TagDisplaySettings.PathOf` in the editor, `ToString()` at runtime), and `Tag.GetName()` returns it, where it returned `Name`. Four places still name the stored name, each on purpose, for the user to overrule: the Identity section's Asset Tag field's tooltip ("Stored as"), the asset tag problem's message, which names both (FEAT-25), The Forge's tag row hover (ED-60), and the Debugger's row element name, which nothing shows | `Tag.cs`, `TagCache.cs`, `TagEvents.cs`, `TagQuery.cs`, `AbstractGameplayMonoProcess.cs`, `EffectEditor.cs`, `ItemEditor.cs`, `ForgeImportWindow.cs` | verified |
+| ED-68 | M | 6 | A Local Data row's key couldn't be pressed (the user's report). `DataWrapperDrawer` drew the key under its label, "Key", as wide as an inspector's label column, in a column at most 170 wide, which left the tag's box 8 pixels. Fixed: the key is the row's first column, with no label, and a value drawn by its own drawer, as a tag's, has none either | `DataWrapperDrawer.cs` | verified |
+| ED-69 | M | 6 | The user's request of 2026-11-10: an asset with a texture shows it in place of its type's icon, in its breakdown's header and in the Inspector. The texture is the one under the primary tag key, else the first valid one in the asset's Textures. The Forge's list rows keep the type's icon | `ForgeAssetHeader.cs`, `BasePlayForgeEditor.cs` | open |
+| ED-70 | M | 6 | The user's request of 2026-11-10: renaming an asset in its inspector renames the ScriptableObject's file as well, so the two don't drift. To settle as it's built: a name another file already has, a name with characters a file can't have, and Undo | `BasePlayForgeEditor.cs` | open |
+| ED-71 | L | 6 | The user's request of 2026-11-10: the menu at the three dots in an asset's breakdown header offers what a right-click on its row in The Forge's list does: Show in Project, Open in Window, Duplicate and Move to Trash. One menu builder serves both | `ForgeAssetHeader.cs`, `TheForge.cs` (the row's menu) | open |
+| ED-72 | L | 6 | The user's request of 2026-11-10: The Forge remembers the sizes of its view's columns between closing and opening. Its lists' column widths are kept already (ED-48), so what is left is the split between the list and the breakdown, which opens 360 wide each time; confirm with the user that this is what was meant | `TheForge.cs` (`TwoPaneSplitView`), `ForgeColumnWidths.cs` | open |
+| ED-73 | L | 6 | Found fixing ED-68: `DataWrapperDrawer` sets its separator's color in C# (`new Color(.15f, .15f, .15f)`), against `Docs/EDITOR_STYLE.md`, and lays its row out with widths set in C# | `DataWrapperDrawer.cs` | open |
 
 The design questions behind Phase 4's rows, each with its evidence, are in the UI interview doc of 2026-11-03,
 https://claude.ai/artifact/BbnGybqgX3spJsT6HoTafp. Its answers (Decision 18) settle ED-8, ED-16, ED-19 and ED-12's
@@ -869,7 +961,7 @@ reads the old demos' fullest assets, so it moves to the new demo's as the old go
 | FEAT-26 | An attribute rule by share | Found building the demo, whose Eviscerate is for a target below half its health: an Attribute Validation compared the attribute's value alone, right for one entity and wrong for the next. Done: `AttributeValidation.ShareOfBase` compares the attribute's share of its base, 0 to 1 |
 | FEAT-27 | Clamp another scaler | Found building the demo, whose Eviscerate caps damage worked out from its target's missing health: a Clamped scaler clamped its own table alone. Done: `ClampedScaler.Inner`, a scaler whose value it clamps; with none, its own values per level, as before |
 | FEAT-28 | What a process carries reaches its effects | Found building the demo, whose Flame Wall fire burns harder by its ability's level: a process's own attributes (FEAT-24) stopped at the process, and only its caller's set-by-caller magnitudes reached the effects it applied. Done: `AbstractGameplayMonoProcess.GiveMagnitudes(spec)` gives an effect spec its caller's magnitudes, then each of its own attributes under its role, its own winning; a projectile's effects take them as they land, so a Set By Caller scaler on an effect reads what the process carries |
-| FEAT-29 | Number fields | The user's request of 2026-11-08: a Conditional scaler couldn't say "below 30% of max health", as its threshold is a bare float, and only an effect's own numbers can scale. Proposed: one number type for every authored gameplay number, grown from the magnitude field, a constant by default or a value by level, a multiple of an attribute, a caller's value, Local Data or any scaler. Decided (Decisions 40 and 41), the design in `Docs/NUMBER_FIELDS_DESIGN.md`. Its eight phases each have tracker rows of their own, under Number fields (FEAT-29) below. Phase 1, the foundation and the extension API, is done (NUM-1 to NUM-7) |
+| FEAT-29 | Number fields | The user's request of 2026-11-08: a Conditional scaler couldn't say "below 30% of max health", as its threshold is a bare float, and only an effect's own numbers can scale. Proposed: one number type for every authored gameplay number, grown from the magnitude field, a constant by default or a value by level, a multiple of an attribute, a caller's value, Local Data or any scaler. Decided (Decisions 40 and 41), the design in `Docs/NUMBER_FIELDS_DESIGN.md`. Its eight phases each have tracker rows of their own, under Number fields (FEAT-29) below. Phase 1, the foundation and the extension API, is done (NUM-1 to NUM-7), and phase 2, the new kinds, with the user's additions (Decision 42): Asset Part, numbers that ask workers, Group as a kind, and limits (NUM-8 to NUM-15) |
 
 **Phase 5's order,** from the review's plan for the test project (its labs, one at a time) and the table above. A lab
 is a small game: assets the lab builds in code, and a bot that plays it in PlayMode tests under a live ProcessControl,
@@ -902,8 +994,9 @@ foundation, and FEAT-16 is done.
 ### Number fields (FEAT-29)
 
 FEAT-29's design (`Docs/NUMBER_FIELDS_DESIGN.md`, Decisions 40 and 41) is built in eight phases, each with rows of its
-own here, red tests first. The Phase column is FEAT-29's phase. Phase 1, the foundation and the extension API, is
-done; phase 2, the new kinds, is next.
+own here, red tests first. The Phase column is FEAT-29's phase. Phase 1, the foundation and the extension API, and
+phase 2, the new kinds, with the user's additions as it was built (Decision 42), are done. Phase 3, scaler
+parameters, is next, and NUM-16 is its first row.
 
 | ID | Phase | Piece | Notes | Where | Status |
 |---|---|---|---|---|---|
@@ -914,6 +1007,15 @@ done; phase 2, the new kinds, is next.
 | NUM-5 | 1 | The inspector | The number field, the magnitude field's drawer for both types: its kind menu files kinds by category (Constant, By Level, Shared, × Attribute and Set By Caller at its top; Scaler, Effect, Item and a project's own categories under it) and offers only the kinds the field's `[NumberContext]` resolves; another kind shows a one-line summary, as "0.3 × Target's Health (base)"; a field whose unit is "%" shows and takes 0.3 as 30; a kind its field can't resolve warns in place; × Attribute and a project's own kinds start as the number times them | `Editor/.../Scaler/MagnitudeField.cs`, `NumberFields.cs`, `UI/PlayForge.uss` | verified |
 | NUM-6 | 1 | The Problems rule | Numbers whose kind can't be read where they are: a kind that reads what its field's context doesn't provide, an attribute read from a target the field hasn't got among them, inside another scaler too | `Editor/Problems/ForgeRules.cs` (`NumberContextRule`) | verified |
 | NUM-7 | 1 | Migration | The legacy-field pattern, `LegacyNumber.Move`: a hidden float renamed from the old field with `[FormerlySerializedAs]`, which its owner's `OnAfterDeserialize` moves into the number; and Window/PlayForge/Upgrade Assets (`ForgeUpgrade`), which re-saves every asset that holds PlayForge data. Proved on a test field: an asset saved with a float loads into the number, and the command writes the new form, which loads the same | `Runtime/PlayForge/Numbers/LegacyNumber.cs`, `Editor/Tools/ForgeUpgrade.cs` | verified |
+| NUM-8 | 2 | Local Data | A kind that reads a number under a tag in Local Data: the context's own, the caster's or the target's, else its Default. Its summary reads as "Charge in the caster's Local Data, else 0" | `Runtime/PlayForge/Numbers/Kinds/LocalDataKind.cs` | verified |
+| NUM-9 | 2 | Relative to a Field | A kind that reads another number field of the object that holds it, picked from a menu of that object's number fields (`[NumberSiblingField]`). It is offered where the field's context has an owner, which its code gives with `Evaluate(context, this)`. The field's accessor is found once for each type and name, a compiled getter, or reflection under IL2CPP. Fields that read one another stop eight deep, where the field reads its own number and logs once | `Numbers/Kinds/RelativeToFieldKind.cs`, `Editor/.../Scaler/NumberSiblingFieldDrawer.cs` | verified |
+| NUM-10 | 2 | Tracked Impact | A kind that reads what an effect has dealt, its last impact, its total or how many, by size or signed: this effect's own, one effect's on the caster or the target, or every effect's with a tag there, summed. It reads 0 where nothing is tracked, and a save doesn't keep what was tracked. A burn that grows with its own count is the red test | `Numbers/Kinds/TrackedImpactKind.cs` | verified |
+| NUM-11 | 2 | Group Impact | A kind that is the number times one retention group's part of an attribute, on the caster or the target, as "Caster's Strength (Bonus)", which is what items add | `Numbers/Kinds/GroupImpactKind.cs` | verified |
+| NUM-12 | 2 | Workers answer numbers | The user's case (Decision 42): a curse that deals damage each second and more every fourth by the health its target has lost since it began took three effects, since a number couldn't ask a worker. Now a worker that implements `INumberWorker` answers `TryGetNumber(key, context, out value)`, and the Worker kind asks under a key: this effect's workers, or the workers the caster or the target provides, the first to answer, else its Default. A worker group provides its workers as it's added and takes them back as it goes, `NumberWorkers.Provide` provides one in code, and `NumberWorkers.TryAsk` asks from code. A worker is shared by every application of its effect, so what it keeps for one goes in `GameplayEffectSpec.GetWorkerState<T>(worker)`, which a worker reaches as `ctx.GetState<T>(this)`. The Attribute Change effect worker answers what an attribute has lost, gained or changed by since the effect began, or what it was then, each tick or every Nth. The test authors the curse as one effect | `Workers/Core/INumberWorker.cs`, `Numbers/Kinds/WorkerNumberKind.cs`, `Workers/EffectWorker/Authored/AttributeChangeEffectWorker.cs`, `GameplayEffectSpec.cs`, `WorkerContext.cs`, `StandardWorkerGroup.cs` | verified |
+| NUM-13 | 2 | Asset Part | The user's request (Decision 42): find any effect, ability or item on the caster or the target by a tag, its asset tag, a context tag or a tag it grants, or a child of one, and read any part of it. An effect: how many, stacks, level, last impact, total impact, impact count, time left, duration, time to its next tick, or a worker's value under a key. An ability: how many, level, whether it's active, whether it's on cooldown, cooldown left. An item: how many, stacks, level, whether it's equipped. Where several match it takes their sum, the first, the highest or the lowest, and its Default where none does; a count reads 0 | `Numbers/Kinds/AssetPartKind.cs`, `GameplayEffect.cs` (`GameplayEffectTags.Names`) | verified |
+| NUM-14 | 2 | Group as a kind | The user's request (Decision 42): the scaler Group is a kind of number, at the kind menu's top, and its members can be any kind. It joins them in the number's context, so each member reads all the context gives; an old group, with no members of its own, reads as it did. Its Flat Bonus members join, after the Multiplies: `ScalerGroup` summed Adds and multiplied by Multiplies and left a Flat Bonus out, so a group of 5 and a Flat Bonus of 3 read 5. With the Ignore policy its Override members are set aside and the rest join. Joining allocates nothing | `ScalerGroup.cs`, `NumberContext.ReadScaler` | verified |
+| NUM-15 | 2 | Limits and tooltips | The user's request (Decision 42): a number field takes field attributes. `[NumberMin]`, `[NumberMax]` and `[NumberRange]` limit the constant typed in the inspector, a range as a slider, in a percent field by what is shown, and a whole number by whole numbers; `[Tooltip]` shows on the field's label, and stays there where the label is too narrow for the field's name: Unity gives a clipped label its own text as its tooltip, which took the field's place until the full EditMode run caught it. They are PlayForge's own because Unity gives a field with `[Min]` or `[Range]` to that attribute's drawer, which draws "Use Range with float or int" where the number was; as scripts load, the console names each number field that has one, with the attribute to use. A limit is on what is typed, not on what a kind reads, which a Clamped scaler limits. No framework field has a limit yet: each takes one as its phase converts it | `Numbers/NumberLimits.cs`, `Editor/.../Scaler/NumberFields.cs` (`LimitsOf`, `WarnOfUnityLimits`), `MagnitudeField.cs` | verified |
+| NUM-16 | 3 | A kind inside a plain scaler | Open. A scaler that isn't a kind is read through the effect's carrier where there is one (`scaler.Evaluate(context.Carrier)`), so a kind it holds, as a Clamped scaler's Inner or a Conditional's True and False, builds its context from the carrier alone: it has no owner and none of the activation's data that the carrier doesn't hold. Relative to a Field can't be worked out there and reads its field's number. A Group passes its context on (NUM-14); phase 3, which gives scalers' own parameters numbers, does the same for the rest | `NumberContext.ReadScaler`, `ClampedScaler.cs`, `ConditionalScaler.cs` | open |
 
 ## Test project: PlayForge Proving Grounds
 
@@ -950,6 +1052,31 @@ GAS-4 with GAS-5, PC-6, and TS-I with PC-5.
 
 Record baselines, gate results and notable decisions here, newest first.
 
+- 2026-11-10, **FEAT-29 phase 2: the new kinds, numbers that ask workers, Group as a kind and limits (NUM-8 to
+  NUM-15), with tags' display names (ED-67) and the Local Data key (ED-68).** Six kinds, each a `NumberKind` written
+  as a project's would be: Local Data, Relative to a Field, Tracked Impact, Group Impact, Asset Part and Worker. A
+  worker answers a number through `INumberWorker` and keeps what it knows of one application on the effect's spec,
+  and the Attribute Change worker makes the user's curse one effect, where it took three. Group is a kind, and joins
+  its members in the number's context, Flat Bonus members among them. A number field takes `[NumberMin]`,
+  `[NumberMax]`, `[NumberRange]` and `[Tooltip]`. Set By Caller says what it checks. A tag reads by its display name
+  wherever one is shown, and `Tag.GetName()` returns it. Decision 42 holds the user's additions.
+  - Red first: Proving Grounds' `NumberKindTests` (PlayMode), written before the kinds, then 26 of 26. The five
+    NUM-15 tests of `NumberFieldDrawerTests` (EditMode) red, then 18 of 18. ED-67's test red in PlayMode and its
+    summary test in EditMode, then green. ED-68's red, the key's box 8 pixels wide, then green.
+  - Gates: MSBuild, the Editor and Tests projects: 0 errors. Proving Grounds, Demo imported: PlayMode 1389 passed of
+    1397, 0 failed, 8 skipped (the 1362 before, the 26 and ED-67's), the Demo's nine among them and the allocation
+    probes; EditMode 754 of 754 (the 741 before, eleven more of the drawer's, ED-67's and ED-68's). The golden runner,
+    batch mode: 25 of 25.
+  - On the way: the first full EditMode run failed one test that had passed alone, the tooltip on a number field's
+    label reading "Told", the field's name. Unity gives a label too narrow for its text that text as its tooltip
+    (`displayTooltipWhenElided`), which took the field's place wherever an inspector was narrow. The test now clips a
+    label, red, and `MagnitudeField.Tell` turns that off for a label it gives a tooltip. In the first PlayMode run the
+    Demo's nine tests were inconclusive: the gate's mirror takes the Demo out of the private copy in a run without
+    it, and the run that puts it back runs the tests before its roster is imported. Every run of the gate takes the
+    Demo now.
+  - Left: NUM-16, a kind inside a plain scaler, for phase 3. A save keeps neither what a worker kept nor what was
+    tracked. ED-69 to ED-73 are the user's notes of 2026-11-10, open, and Open decisions 23 to 25 the three questions
+    asked with them. Proving Grounds' renames of a process's relay stay the user's, uncommitted.
 - 2026-11-09, **FEAT-29 phase 1: number fields' foundation and the extension API (NUM-1 to NUM-7).** The magnitude
   classes are `ScalableFloat` and `ScalableInt`, with the same saved fields; `NumberContext` is what a number is read
   against, built at any site; `NumberKind` and `[NumberKind]` make a kind of a project's own one class with one method;

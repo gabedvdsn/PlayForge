@@ -15,14 +15,15 @@ namespace FarEmerald.PlayForge.Extended.Editor
     /// adds a one-line summary of what it reads, how the field combines its number with the kind, then the kind's own
     /// content: its values per level and their curve, its Scaler asset, or its fields. The kind menu files kinds by
     /// category and offers only those the field's context resolves (<see cref="NumberContextAttribute"/>), and a field
-    /// whose unit is "%" shows and takes its number as a percentage.
+    /// whose unit is "%" shows and takes its number as a percentage. Its constant keeps the field's limits, on a slider
+    /// where it has a range (NUM-15), and its label shows the field's tooltip.
     /// </summary>
     [CustomPropertyDrawer(typeof(ScalableFloat), true)]
     public class ScalableFloatDrawer : PropertyDrawer
     {
         public override VisualElement CreatePropertyGUI(SerializedProperty property) =>
             MagnitudeField.Build(property, preferredLabel ?? property.displayName, NumberFields.UnitOf(fieldInfo), integer: false,
-                provides: NumberFields.ProvidesOf(fieldInfo));
+                provides: NumberFields.ProvidesOf(fieldInfo), limits: NumberFields.LimitsOf(fieldInfo, whole: false));
     }
 
     /// <summary>A whole-number field, such as Ticks: the same field, with its rounding.</summary>
@@ -31,7 +32,7 @@ namespace FarEmerald.PlayForge.Extended.Editor
     {
         public override VisualElement CreatePropertyGUI(SerializedProperty property) =>
             MagnitudeField.Build(property, preferredLabel ?? property.displayName, NumberFields.UnitOf(fieldInfo), integer: true,
-                provides: NumberFields.ProvidesOf(fieldInfo));
+                provides: NumberFields.ProvidesOf(fieldInfo), limits: NumberFields.LimitsOf(fieldInfo, whole: true));
     }
 
     internal static class MagnitudeField
@@ -73,8 +74,10 @@ namespace FarEmerald.PlayForge.Extended.Editor
         /// <param name="numberName">The name its number field takes, so a drawer can find it; or null.</param>
         /// <param name="moreItems">Items the drawer adds to its field menu, before Make Constant; or null.</param>
         /// <param name="provides">What the field's context provides, which kinds its menu offers (FEAT-29).</param>
+        /// <param name="limits">The limits its constant keeps, on a slider where they're a range (NUM-15).</param>
         internal static VisualElement Build(SerializedProperty operation, string label, string unit, bool integer,
-            string numberName = null, Action<GenericDropdownMenu> moreItems = null, NumberReads provides = NumberReads.All)
+            string numberName = null, Action<GenericDropdownMenu> moreItems = null, NumberReads provides = NumberReads.All,
+            NumberLimits limits = default)
         {
             var root = new VisualElement { name = "MagnitudeField" };
             // The style sheet lays out the field, wherever it's drawn (ED-20)
@@ -88,6 +91,8 @@ namespace FarEmerald.PlayForge.Extended.Editor
             // The kinds the field's context resolves, in the menu's order, each with its place in the menu (FEAT-29)
             var kinds = NumberFields.InMenuOrder(ScalerFields.KindsFor(scalerProp).Where(kind => NumberFields.Resolves(provides, kind)));
             bool percent = unit == Percent && !integer;
+            // The field's [Tooltip], which its label shows as a field Unity draws shows its own (NUM-15)
+            string tooltip = operation.tooltip;
 
             var row = new VisualElement { name = "Row" };
             row.AddToClassList("pf-magnitude__row");
@@ -104,7 +109,7 @@ namespace FarEmerald.PlayForge.Extended.Editor
             HelpBox unresolved = null;
             PopupField<string> combine = null;
             VisualElement combineNumber = null;
-            FloatField shownNumber = null;
+            Action showNumber = null;
             HelpBox noScaler = null;
 
             // The field's properties, found again by their paths. One kept since the field was built can point into a
@@ -138,24 +143,70 @@ namespace FarEmerald.PlayForge.Extended.Editor
                 return popup;
             }
 
-            // A number field: bound to the number, or, where the field's unit is "%", showing and taking it times 100
-            VisualElement NumberField(string fieldLabel)
+            // A number field: bound to the number; or, where the field's unit is "%" or the number keeps limits, one that
+            // shows the number, times 100 for a percentage, and takes what's typed, kept inside the limits (NUM-15)
+            VisualElement NumberField(string fieldLabel, NumberLimits kept)
             {
-                if (!percent)
+                if (!percent && !kept.Any)
                     return integer
-                        ? Bound(fieldLabel == null ? new IntegerField() : new IntegerField(fieldLabel), magnitudeProp)
-                        : Bound(fieldLabel == null ? new FloatField() : new FloatField(fieldLabel), magnitudeProp);
-                var shown = fieldLabel == null ? new FloatField() : new FloatField(fieldLabel);
-                shown.tooltip = "As a percentage: 30 is 0.3";
-                shown.SetValueWithoutNotify(magnitudeProp.floatValue * 100f);
-                shown.showMixedValue = magnitudeProp.hasMultipleDifferentValues;
-                shown.RegisterValueChangedCallback(change =>
+                        ? Bound(new IntegerField(fieldLabel), magnitudeProp)
+                        : Bound(new FloatField(fieldLabel), magnitudeProp);
+
+                float scale = percent ? 100f : 1f;
+                VisualElement shown = null;
+                Action<float> show = null;
+                if (integer)
+                {
+                    BaseField<int> whole = kept.Slider
+                        ? new SliderInt(fieldLabel, Mathf.RoundToInt(kept.Min.Value), Mathf.RoundToInt(kept.Max.Value)) { showInputField = true }
+                        : new IntegerField(fieldLabel);
+                    whole.RegisterValueChangedCallback(change => Take(change.newValue));
+                    show = value =>
+                    {
+                        whole.SetValueWithoutNotify(Mathf.RoundToInt(value));
+                        whole.showMixedValue = magnitudeProp.hasMultipleDifferentValues;
+                    };
+                    shown = whole;
+                }
+                else
+                {
+                    BaseField<float> real = kept.Slider
+                        ? new Slider(fieldLabel, kept.Min.Value * scale, kept.Max.Value * scale) { showInputField = true }
+                        : new FloatField(fieldLabel);
+                    real.RegisterValueChangedCallback(change => Take(change.newValue));
+                    show = value =>
+                    {
+                        real.SetValueWithoutNotify(value);
+                        real.showMixedValue = magnitudeProp.hasMultipleDifferentValues;
+                    };
+                    shown = real;
+                }
+                shown.tooltip = string.Join(". ", new[] { percent ? "As a percentage: 30 is 0.3" : "", kept.Text(scale) }.Where(each => each.Length > 0));
+
+                float Stored() => magnitudeProp.propertyType == SerializedPropertyType.Integer ? magnitudeProp.intValue : magnitudeProp.floatValue;
+
+                // The number as it's stored, which a field being typed into doesn't take back
+                void Showing()
+                {
+                    if (ScalerFields.Alive(magnitudeProp) && !ScalerFields.IsTypedInto(shown)) show(Stored() * scale);
+                }
+
+                void Take(float typed)
                 {
                     if (!ScalerFields.Alive(magnitudeProp)) return;
-                    magnitudeProp.floatValue = change.newValue / 100f;
+                    float asked = typed / scale;
+                    float stored = kept.Clamp(asked);
+                    if (magnitudeProp.propertyType == SerializedPropertyType.Integer) magnitudeProp.intValue = Mathf.RoundToInt(stored);
+                    else magnitudeProp.floatValue = stored;
                     operation.serializedObject.ApplyModifiedProperties();
-                });
-                shownNumber = shown;
+                    // A number past a limit shows as it was kept: at once where it wasn't typed, and as the field is left
+                    // where it was, so a number on its way past the limit can still be typed
+                    if (!Mathf.Approximately(stored, asked)) Showing();
+                }
+
+                shown.RegisterCallback<FocusOutEvent>(_ => shown.schedule.Execute(Showing));
+                Showing();
+                showNumber = Showing;
                 return shown;
             }
 
@@ -170,7 +221,7 @@ namespace FarEmerald.PlayForge.Extended.Editor
                 unresolved = null;
                 combine = null;
                 combineNumber = null;
-                shownNumber = null;
+                showNumber = null;
                 noScaler = null;
                 // Selected fields whose kinds differ show a mixed kind, and neither field's content as both's (ED-12)
                 mixedKinds = EachAsset.Differ(scalerProp, ScalerFields.KindOf);
@@ -190,6 +241,7 @@ namespace FarEmerald.PlayForge.Extended.Editor
                     kind.AddToClassList(BaseField<string>.alignedFieldUssClassName);
                     kind.AddToClassList("pf-magnitude__kind-labelled");
                     kind.showMixedValue = true;
+                    Tell(kind, tooltip);
                     row.Add(kind);
                     var note = new Label("The selected fields' kinds differ. Choose one to give it to each.") { name = "MixedKinds" };
                     note.AddToClassList("pf-note");
@@ -198,10 +250,11 @@ namespace FarEmerald.PlayForge.Extended.Editor
                 else if (shownType == null)
                 {
                     // Constant: the number, its unit, then the kind
-                    var number = NumberField(label);
+                    var number = NumberField(label, limits);
                     number.name = numberName ?? "Number";
                     number.AddToClassList(BaseField<float>.alignedFieldUssClassName);
                     number.AddToClassList("pf-magnitude__number");
+                    Tell(number, tooltip);
                     row.Add(number);
                     if (!string.IsNullOrEmpty(unit))
                     {
@@ -229,6 +282,7 @@ namespace FarEmerald.PlayForge.Extended.Editor
                     kind = KindPopup(label, choices, shownName);
                     kind.AddToClassList(BaseField<string>.alignedFieldUssClassName);
                     kind.AddToClassList("pf-magnitude__kind-labelled");
+                    Tell(kind, tooltip);
                     row.Add(kind);
                     range = new Label { name = "Range" };
                     range.AddToClassList("pf-magnitude__range");
@@ -264,7 +318,8 @@ namespace FarEmerald.PlayForge.Extended.Editor
                         operation.serializedObject.ApplyModifiedProperties();
                     });
                     combineRow.Add(combine);
-                    combineNumber = NumberField(null);
+                    // The limits are the constant's: a kind's number is one part of what the field works out as the game runs
+                    combineNumber = NumberField(null, default);
                     combineNumber.name = numberName ?? "CombineNumber";
                     combineNumber.AddToClassList("pf-magnitude__combine-number");
                     combineRow.Add(combineNumber);
@@ -331,11 +386,7 @@ namespace FarEmerald.PlayForge.Extended.Editor
                     unresolved.text = $"Its kind reads {missing}, which this field doesn't have, so it reads its number.";
                     unresolved.EnableInClassList(ScalerFields.HiddenClass, missing.Length == 0);
                 }
-                if (shownNumber != null && ScalerFields.Alive(magnitudeProp) && !ScalerFields.IsTypedInto(shownNumber))
-                {
-                    shownNumber.SetValueWithoutNotify(magnitudeProp.floatValue * 100f);
-                    shownNumber.showMixedValue = magnitudeProp.hasMultipleDifferentValues;
-                }
+                showNumber?.Invoke();
                 if (combine != null)
                 {
                     combine.SetValueWithoutNotify(Combines[CombineIndex()].name);
@@ -358,6 +409,17 @@ namespace FarEmerald.PlayForge.Extended.Editor
             });
             Draw();
             return root;
+        }
+
+        // A field's tooltip, on the label of the control that carries the field's name
+        private static void Tell(VisualElement labelled, string tooltip)
+        {
+            if (string.IsNullOrEmpty(tooltip)) return;
+            var name = labelled.Q<Label>(className: BaseField<float>.labelUssClassName);
+            if (name == null) return;
+            // Unity gives a label too narrow for its text that text as its tooltip, in place of the field's
+            name.displayTooltipWhenElided = false;
+            name.tooltip = tooltip;
         }
 
         private static T Bound<T>(T field, SerializedProperty property) where T : VisualElement, IBindable

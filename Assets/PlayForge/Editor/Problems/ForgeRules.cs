@@ -219,6 +219,10 @@ namespace FarEmerald.PlayForge.Extended.Editor
     /// A number whose kind its field's context can't resolve (FEAT-29), as a kind that reads the target in a field that
     /// declares none, often one copied from another field. At runtime it reads its number, as the field warns. Its fix
     /// is a choice of kind, so it has no Quick Fix.
+    /// <para>
+    /// A relative number is flagged where its field's code gives it no owner, as any kind its field can't resolve, and
+    /// where the object that holds it has no field of the name it reads, as after a rename (NUM-9).
+    /// </para>
     /// </summary>
     internal sealed class NumberContextRule : ForgeValidationRule
     {
@@ -227,18 +231,37 @@ namespace FarEmerald.PlayForge.Extended.Editor
         public override void Check(Object asset, List<ForgeProblem> problems)
         {
             var iterator = new SerializedObject(asset).GetIterator();
+            string outer = null;
             while (iterator.Next(true))
             {
                 if (!NumberFields.IsNumber(iterator)) continue;
+                var path = iterator.propertyPath;
+                // A number inside another's scaler is read with it, so the outer number's check covers what it reads
+                if (outer != null && path.StartsWith(outer, StringComparison.Ordinal)) continue;
+                outer = $"{path}.";
                 var kind = iterator.FindPropertyRelative(nameof(ScalableFloat.Scaler))?.managedReferenceValue as AbstractScaler;
                 if (kind == null) continue;
                 var provides = NumberFields.ProvidesOf(iterator);
-                if (provides == NumberReads.All) continue;
                 var missing = NumberFields.Missing(NumberFields.ReadsOf(kind), provides);
-                if (missing.Length == 0) continue;
-                var path = iterator.propertyPath;
-                problems.Add(new ForgeProblem(asset, ForgeProblemSeverity.Warning,
-                    $"{ScalerFields.FieldLabel(path)} reads {missing}, which its field doesn't have, so it reads its number.", path));
+                if (missing.Length > 0)
+                    problems.Add(new ForgeProblem(asset, ForgeProblemSeverity.Warning,
+                        $"{ScalerFields.FieldLabel(path)} reads {missing}, which its field doesn't have, so it reads its number.", path));
+
+                // With an owner to read, a relative number still needs the field it names
+                if ((provides & NumberReads.Owner) == 0) continue;
+                Type owner = null;
+                foreach (var relative in NumberFields.ScalersIn(kind).OfType<RelativeToFieldKind>())
+                {
+                    owner ??= NumberFields.OwnerTypeOf(iterator);
+                    if (owner == null) break;
+                    if (string.IsNullOrEmpty(relative.Field))
+                        problems.Add(new ForgeProblem(asset, ForgeProblemSeverity.Warning,
+                            $"{ScalerFields.FieldLabel(path)} is relative to a field, and names none.", path));
+                    else if (RelativeToFieldKind.SiblingField(owner, relative.Field) == null)
+                        problems.Add(new ForgeProblem(asset, ForgeProblemSeverity.Warning,
+                            $"{ScalerFields.FieldLabel(path)} reads the field \"{relative.Field}\", which " +
+                            $"{ObjectNames.NicifyVariableName(owner.Name)} has no number field by the name of, so it reads its number.", path));
+                }
             }
         }
     }

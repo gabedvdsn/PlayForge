@@ -122,7 +122,7 @@ namespace FarEmerald.PlayForge
                 if (Caster != null) provides |= NumberReads.Caster;
                 if (Target != null) provides |= NumberReads.Target;
                 if (Magnitudes != null) provides |= NumberReads.Caller;
-                if (LocalData != null) provides |= NumberReads.LocalData;
+                if (LocalData != null || OwningEntity != null) provides |= NumberReads.LocalData;
                 if (Carrier != null) provides |= NumberReads.Carrier;
                 if (Data != null) provides |= NumberReads.Data;
                 if (Owner != null) provides |= NumberReads.Owner;
@@ -290,36 +290,65 @@ namespace FarEmerald.PlayForge
         /// <summary>The container holding the carrier, where it's an effect on its target's shelf; null otherwise.</summary>
         public AbstractEffectContainer Container => (Carrier as GameplayEffectSpec)?.RuntimeContainer;
 
-        /// <summary>The magnitude the caller set under a tag.</summary>
+        /// <summary>
+        /// The value the caller set under exactly this tag, on what the context was built from: an effect's spec, an
+        /// activation's data, or the data that spawned a process. A tag above or below it doesn't match. False where
+        /// nothing was set under it, or the context holds no values at all.
+        /// </summary>
         public bool TryGetSetByCaller(Tag key, out float magnitude)
         {
             magnitude = 0f;
             return Magnitudes != null && Magnitudes.TryGetValue(key, out magnitude);
         }
 
-        /// <summary>The Local Data entry under a key, of the asset the context reads.</summary>
+        /// <summary>
+        /// The Local Data entry under a key, of what the number belongs to: the ability's or the item's asset, or, for an
+        /// entity's own number, the entity's Local Data as it holds it at runtime.
+        /// </summary>
         public bool TryGetLocalData(Tag key, out DataWrapper data)
         {
             data = null;
             var entries = LocalData?.GetLocalData();
-            if (entries == null) return false;
-            for (int i = 0; i < entries.Count; i++)
+            if (entries != null)
             {
-                if (entries[i] == null || entries[i].Key != key) continue;
-                data = entries[i];
-                return true;
+                for (int i = 0; i < entries.Count; i++)
+                {
+                    if (entries[i] == null || entries[i].Key != key) continue;
+                    data = entries[i];
+                    return true;
+                }
+                return false;
             }
-            return false;
+            return OwningEntity is { } entity && entity.TryGetLocalData(key, out data) && data != null;
         }
 
-        /// <summary>The number in the Local Data entry under a key: its float, or its whole number.</summary>
-        public bool TryGetLocalData(Tag key, out float value)
+        /// <summary>The number in the Local Data entry under a key, of what the number belongs to: a float or a whole number.</summary>
+        public bool TryGetLocalData(Tag key, out float value) => NumberOf(TryGetLocalData(key, out DataWrapper data) ? data : null, out value);
+
+        /// <summary>The number in an entity's Local Data under a key, the caster's or the target's, as it holds it at runtime.</summary>
+        public bool TryGetLocalData(NumberSide side, Tag key, out float value)
+        {
+            DataWrapper data = null;
+            bool found = EntityOn(side) is ILocalDataUser entity && entity.TryGetLocalData(key, out data);
+            return NumberOf(found ? data : null, out value);
+        }
+
+        // An entry's number: a float's, or a whole number's; any other entry holds none
+        private static bool NumberOf(DataWrapper data, out float value)
         {
             value = 0f;
-            if (!TryGetLocalData(key, out DataWrapper data)) return false;
-            value = data.Type == EDataWrapperType.Int ? data.intValue : data.floatValue;
-            return true;
+            if (data == null) return false;
+            switch (data.Type)
+            {
+                case EDataWrapperType.Float: value = data.floatValue; return true;
+                case EDataWrapperType.Int: value = data.intValue; return true;
+                default: return false;
+            }
         }
+
+        // The entity whose own number this is, as an entity on its own or an effect it applied itself: it keeps its Local
+        // Data at runtime, not on an asset
+        private ILocalDataUser OwningEntity => Origin?.GetReadableDefinition() as ILocalDataUser;
 
         /// <summary>An attribute's value on one side.</summary>
         public bool TryGetAttribute(NumberSide side, IAttribute attribute, out AttributeValue value)
@@ -361,13 +390,14 @@ namespace FarEmerald.PlayForge
         /// </summary>
         internal static bool CanRead(AbstractScaler scaler, in NumberContext context)
         {
-            if (scaler is not NumberKind kind || context.Has(kind.Reads)) return true;
+            if (scaler is not NumberKind kind || kind.CanEvaluate(in context)) return true;
             LogUnresolved(kind, in context);
             return false;
         }
 
         /// <summary>
-        /// A scaler's value in a context: a <see cref="NumberKind"/> reads the context; another scaler evaluates against
+        /// A scaler's value in a context: a <see cref="NumberKind"/> reads the context, and a Group joins its
+        /// members in it; another scaler evaluates against
         /// the context's carrier, or a reusable carrier the context fills, which it is initialized against first, as a
         /// spec's scalers are as it's made.
         /// </summary>
@@ -375,6 +405,8 @@ namespace FarEmerald.PlayForge
         {
             if (scaler == null) return 0f;
             if (scaler is NumberKind kind) return kind.Read(in context);
+            // A group joins its members in the context itself, so each reads all the context gives (NUM-14)
+            if (scaler is ScalerGroup { HasMembers: true } group) return group.Read(in context);
             if (context.Carrier != null) return scaler.Evaluate(context.Carrier);
 
             var bridge = NumberBridge.Rent(in context);
@@ -396,8 +428,7 @@ namespace FarEmerald.PlayForge
         internal static void LogUnresolved(NumberKind kind, in NumberContext context)
         {
             if (kind == null || !Unresolved.Add(kind.GetType())) return;
-            var missing = kind.Reads & ~context.Provides;
-            ForgeLog.Warning($"A {NumberText.KindName(kind.GetType())} number reads {missing}, which isn't where it was read, so it reads its number (FEAT-29).");
+            ForgeLog.Warning($"A {NumberText.KindName(kind.GetType())} number can't be worked out where it was read: {kind.WhyNot(in context)}, so it reads its number (FEAT-29).");
         }
 
         // The Local Data an origin reads: its asset's, as an ability's or an entity's

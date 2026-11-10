@@ -153,7 +153,9 @@ duration gives it. Additional Impacts change more attributes, or the same one ag
   Continuous modifier works its magnitude out again whenever the attribute is recalculated. A commit works it out
   once. A **Set By Caller** scaler reads a magnitude the code sets as it applies the effect, under a tag: on the spec
   with `SetByCaller(tag, magnitude)`, or on an ability activation's data, which each effect the ability applies takes
-  as it's made, its cost, cooldown and contained effects among them.
+  as it's made, its cost, cooldown and contained effects among them. Only the tag itself matches, and where none is
+  set it reads its Default. A magnitude can also read what the effect has dealt, a part of another effect, ability or
+  item on either side, or what a worker answers; SCALERS.md lists each kind.
 - **Delivery**, read-only: when the impact lands, which the duration gives it (see the table above). On applying,
   While the effect lasts, or Each tick, which adds ", and on applying" when Tick On Application is on. A note says when
   Tick On Application alone keeps a multiply or override as a modifier, so it reverses as the effect ends.
@@ -249,6 +251,12 @@ are checked whenever an effect is applied to or removed from the target. While O
 Effect workers react to this effect's own events. A worker can act when the effect is applied, when it ticks, when it
 is removed, and when it deals a change to an attribute. Workers return actions, which run at the end of the frame. An
 Instant effect runs its apply and remove workers within its one application.
+
+A worker can also answer numbers: a magnitude of the Worker kind asks the effect's workers for a value under a key,
+and one that implements `INumberWorker` answers, as the **Attribute Change** worker answers how much health the target
+has lost since the effect began. What a worker keeps for one application of its effect goes in
+`ctx.GetState<T>(this)`, since the worker itself is shared by every application
+([SCALERS.md](SCALERS.md#asking-a-worker)).
 
 ## Local Data
 

@@ -572,7 +572,7 @@ namespace FarEmerald.PlayForge.Extended.Editor
             void AddNamed(string verb, List<Tag> tags)
             {
                 var valid = tags?.Where(tag => tag.IsValid).ToList() ?? new List<Tag>();
-                if (valid.Count == 1) parts.Add($"{verb} {valid[0].Name}");
+                if (valid.Count == 1) parts.Add($"{verb} {TagDisplaySettings.PathOf(valid[0])}");
                 else if (valid.Count > 1) parts.Add($"{verb} {valid.Count} tags");
             }
         }

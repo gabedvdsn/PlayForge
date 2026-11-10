@@ -292,7 +292,9 @@ namespace FarEmerald.PlayForge
         // IHasReadableDefinition Implementation
         // ═══════════════════════════════════════════════════════════════════════════
         
-        public string GetName() => Name;
+        // The name it reads by, which is its display name: its Name is what tells it apart, and a unique tag's is
+        // padded (ED-67)
+        public string GetName() => ToString();
         public string GetDescription() => "";
         public Texture2D GetDefaultIcon() => null;
 

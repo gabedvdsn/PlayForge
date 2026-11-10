@@ -28,6 +28,38 @@ tracks each fix below by its ID.
 - Window/PlayForge/Upgrade Assets re-saves every asset that holds PlayForge data, so each is written in this version's
   form, and `LegacyNumber.Move` moves a float saved before its field became a number into the number as it loads
   (NUM-7).
+- Number kinds that read the game (FEAT-29, phase 2), each with a summary that says what it reads:
+  - **Local Data** reads a number under a tag in its own, the caster's or the target's Local Data, else its Default
+    (NUM-8).
+  - **Relative to a Field** reads another number field of the same object, as a radius that is half a range. It is
+    offered where the field's context has an owner, and fields that read one another in a loop stop eight deep,
+    where the field reads its own number and logs once (NUM-9).
+  - **Tracked Impact** reads what an effect has dealt: its last impact, its total or how many, of this effect or of
+    one found on the caster or the target by its asset or by a tag (NUM-10).
+  - **Group Impact** reads an attribute's change held under a retention group, as a caster's Strength bonus from
+    items (NUM-11).
+  - **Asset Part** finds an effect, an ability or an item on the caster or the target by a tag, its asset tag, a
+    context tag or a tag it grants, and reads a part of it: an effect's stacks, level, tracked impact, time left,
+    time to its next tick or a worker's value; an ability's level, whether it is active or on cooldown and the
+    cooldown left; an item's stacks, level and whether it is equipped; or how many match. Where several match it
+    takes their sum, the first, the highest or the lowest (NUM-13).
+- A number can ask a worker. A worker that implements `INumberWorker` answers `TryGetNumber(key, context, out value)`,
+  and a number of the **Worker** kind asks under a key: this effect's workers, or the workers an entity provides, the
+  caster's or the target's. An entity's worker groups provide their workers as they are added, `NumberWorkers.Provide`
+  provides one in code, and `NumberWorkers.TryAsk` asks from code, so anything can ask what a number can (NUM-12).
+- `GameplayEffectSpec.GetWorkerState<T>(worker)` and `EffectWorkerContext.GetState<T>(worker)`: what one worker keeps
+  for one application of its effect. A worker is shared by every application, so its own fields are not the place
+  (NUM-12).
+- The **Attribute Change** effect worker answers how much of an attribute an entity has lost, gained or changed by
+  since the effect began, or what it was as the effect began, and can answer only every so many ticks. With a Worker
+  number it makes a curse that deals damage each second and more every fourth by the health lost so far, in one
+  effect (NUM-12).
+- `[NumberMin]`, `[NumberMax]` and `[NumberRange]` limit the constant a number field takes in the inspector, a range
+  as a slider, and a number field shows its `[Tooltip]`, a clipped label's too. They limit what is typed, not what a kind reads: a Clamped
+  scaler limits that. Unity's own `[Min]` and `[Range]` take a number field's drawing from it, so the console names
+  each number field that has one as scripts load (NUM-15).
+- `GameplayEffectTags.Names(tag, effect)`: whether a tag names an effect, as its asset tag, one of its context tags
+  or a tag it grants, or a child of one (NUM-13).
 - `ERoundingOperation.Round`: a whole number can round to the nearest, a half away from zero (NUM-1).
 - The Demo sample: a hero arena of five heroes, fourteen items, an AI hero and a training dummy, with a panel to
   pick heroes, give items and change levels, and a HUD. Every hero, ability, item, effect and attribute is an
@@ -211,6 +243,15 @@ tracks each fix below by its ID.
   page, through one table of links in the editor.
 
 ### Changed
+- **Group** is a kind of number, at the kind menu's top, and a member can be any kind, as a Local Data read or a
+  Tracked Impact. Its Flat Bonus members join the sum, after the Multiplies: they were left out, so a group of
+  5 and a Flat Bonus of 3 read 5. With the Ignore policy its Override members are set aside and the rest join, and
+  joining allocates nothing (NUM-14).
+- A Set By Caller number says what it checks, in its summary, as "the caller's Damage, else 0", and in its tooltips: a
+  value set under exactly its key, on the effect's spec, an activation's data or the data that spawned a process,
+  and its Default where none is. Its behaviour is unchanged (NUM-4).
+- `Tag.GetName()` returns the tag's display name, as `ToString()` does. It returned `Name`, which a unique tag pads
+  to tell it apart; code that wants that reads `Name` (ED-67).
 - `ScalerMagnitudeOperation` is `ScalableFloat` and `ScalerIntegerMagnitudeOperation` is `ScalableInt`, with the same
   saved fields, so every saved magnitude loads as it was. The old names stay this version as obsolete subclasses, so
   code that names them compiles with a warning; they go in the next (NUM-1).
@@ -455,6 +496,12 @@ tracks each fix below by its ID.
   Asking whether its sequence was paused took 24 bytes a frame.
 
 ### Fixed
+- A tag is shown by its display name wherever it is read: an effect's and an item's summaries in the Forge, the
+  import window's tag column, a tag query's and a tag event's text, the tag cache's log and a process's role. Each
+  showed the tag's stored name, which is padded for a unique tag (ED-67).
+- A Local Data row's key can be pressed. The key was drawn under a label as wide as an inspector's label column, in a
+  column narrower than that, which left the tag's box 8 pixels wide. The key, and a value drawn by its own drawer, as
+  a tag's, have no label (ED-68).
 - An effect's Stack Behaviours save. Unity dropped the list whole as the asset saved, so a stack bound, its overflow
   effects or a stack amount rule set in the inspector was gone, and the inspector's field read nothing (GAS-70).
 - A Conditional scaler's Target Attribute Threshold reads the attribute on the effect's target. It read the

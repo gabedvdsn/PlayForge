@@ -37,6 +37,26 @@ namespace FarEmerald.PlayForge
 
         private Dictionary<IScaler, AttributeValue?> SourceCapturedAttributes;
 
+        // Each worker's state for this application, made the first time the worker asks (FEAT-29)
+        private Dictionary<AbstractEffectWorker, object> workerStates;
+
+        /// <summary>
+        /// A worker's state for this application of the effect, made the first time the worker asks for it and kept
+        /// while the application lasts, as a task's state is kept on its activation's data. A worker is one object on
+        /// its effect's asset, shared by every application, so what it counts for one of them is kept here: the
+        /// target's health as the effect began, how many times it has ticked. A worker that answers numbers reads it
+        /// back as it's asked (FEAT-29).
+        /// </summary>
+        public T GetWorkerState<T>(AbstractEffectWorker worker) where T : class, new()
+        {
+            workerStates ??= new Dictionary<AbstractEffectWorker, object>();
+            if (workerStates.TryGetValue(worker, out var state)) return (T)state;
+
+            var created = new T();
+            workerStates[worker] = created;
+            return created;
+        }
+
         // Magnitudes the caller set under a tag, which a Set By Caller scaler reads (FEAT-2)
         private Dictionary<Tag, float> setByCaller;
         private static readonly Dictionary<Tag, float> NoMagnitudes = new();

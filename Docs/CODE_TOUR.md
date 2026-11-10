@@ -3142,8 +3142,8 @@ shape is made as the scene plays. `git show e91fe34:<path>` shows the old files.
 ## Number fields (FEAT-29)
 
 One number type for every authored gameplay number, grown from the magnitude field, built in eight phases
-(`Docs/NUMBER_FIELDS_DESIGN.md`, Decisions 40 and 41). Phase 1, the foundation and the extension API, came after the
-commits above; the entries name classes and methods to search for.
+(`Docs/NUMBER_FIELDS_DESIGN.md`, Decisions 40 to 42). Phases 1 and 2, the foundation with the extension API and
+the new kinds, came after the commits above; the entries name classes and methods to search for.
 
 ### The type, its context and kinds of your own (phase 1)
 
@@ -3169,6 +3169,34 @@ fills, so a read allocates nothing. A kind of a project's own is one class, `Num
   - `Assets/PlayForge/Editor/Problems/ForgeRules.cs` `NumberContextRule`, and `Assets/PlayForge/Editor/Tools/ForgeUpgrade.cs`.
 - **New:** everything above. The old names stay a version as obsolete subclasses
   (`Assets/PlayForge/Runtime/PlayForge/Utils/ScalerMagnitudeOperation.cs`).
+
+### Kinds that read the game, and numbers that ask workers (phase 2)
+
+A number could read a level, an attribute, a caller's value or a scaler. The new kinds read the rest of the game:
+Local Data, another field of the same object, what an effect has dealt, a retention group's part of an attribute,
+any part of an effect, an ability or an item found by a tag, and a worker's answer. Each is a `NumberKind` written as
+a project's own would be. A Group is a kind too, and joins its members in the number's context.
+
+- **IDs:** NUM-8 to NUM-15 (FEAT-29, phase 2, Decision 42). NUM-16 is open.
+- **Read:**
+  - `Assets/PlayForge/Runtime/PlayForge/Numbers/Kinds/AssetPartKind.cs` `Evaluate`: finds the effects, abilities or
+    items a tag names and joins a part of each.
+  - `Assets/PlayForge/Runtime/PlayForge/Workers/Core/INumberWorker.cs`: `INumberWorker`, and `NumberWorkers`, which
+    keeps the workers an entity provides and asks them (`TryAsk`).
+  - `Assets/PlayForge/Runtime/PlayForge/Numbers/Kinds/WorkerNumberKind.cs`, the kind that asks.
+  - `Assets/PlayForge/Runtime/PlayForge/Workers/EffectWorker/Authored/AttributeChangeEffectWorker.cs`: a worker that
+    answers, keeping its state for each application in `GameplayEffectSpec.GetWorkerState`.
+  - `Assets/PlayForge/Runtime/PlayForge/Numbers/Kinds/RelativeToFieldKind.cs` `NumberSibling`, the accessor found
+    once for a type and a field, and the loop guard.
+  - `Assets/PlayForge/Runtime/PlayForge/Numbers/Kinds/TrackedImpactKind.cs`, `GroupImpactKind.cs` and
+    `LocalDataKind.cs`.
+  - `Assets/PlayForge/Runtime/PlayForge/GameplayEffect/Modifier/Default/Authored/ScalerGroup.cs` `Read`: the join,
+    Flat Bonus members among it, in the number's context.
+  - `Assets/PlayForge/Runtime/PlayForge/Numbers/NumberLimits.cs`, and
+    `Assets/PlayForge/Editor/CustomPropertyDrawers/Forge/Drawers/Scaler/NumberFields.cs` `LimitsOf` and
+    `WarnOfUnityLimits`.
+- **New:** the kinds, `INumberWorker`, `NumberWorkers`, the Attribute Change worker, `GetWorkerState`,
+  `GameplayEffectTags.Names` and the limit attributes.
 
 ## Tests
 

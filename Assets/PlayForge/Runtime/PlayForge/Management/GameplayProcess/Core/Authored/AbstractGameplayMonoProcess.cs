@@ -168,7 +168,7 @@ namespace FarEmerald.PlayForge
             return -1;
         }
 
-        private static string RoleName(ProcessAttribute attribute) => attribute.Role.IsValid ? attribute.Role.Name : "it";
+        private static string RoleName(ProcessAttribute attribute) => attribute.Role.IsValid ? attribute.Role.ToString() : "it";
 
         // ═══════════════════════════════════════════════════════════════════════════
         // The origin's attributes, by role

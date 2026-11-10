@@ -123,7 +123,7 @@ namespace FarEmerald.PlayForge
         private static bool Approximately(float a, float b) => Math.Abs(a - b) < 1e-6f;
 
         // "AttributeBacked" as "Attribute Backed"
-        private static string Spaced(string name)
+        internal static string Spaced(string name)
         {
             var spaced = new StringBuilder(name.Length + 4);
             for (int i = 0; i < name.Length; i++)

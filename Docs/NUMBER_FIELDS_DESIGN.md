@@ -6,7 +6,8 @@ default it is a plain number, as now, but it can also be a value per level, a mu
 caller sets, and more.
 
 **Status:** decided 2026-11-08 (Decision 40, FEAT-29), with two kinds and an accessible extension API added on
-2026-11-09 (Decision 41). The answers are under Decisions at the end, and the sections below follow them.
+2026-11-09 (Decision 41), and Asset Part, numbers that ask workers, Group as a kind and limits on 2026-11-10
+(Decision 42). Phases 1 and 2 are built. The answers are under Decisions at the end, and the sections below follow them.
 
 ## The problem
 
@@ -193,6 +194,72 @@ There are precedents for this:
 - **The other "group".** If "group impact" also means the impact of a group of effects, Tracked Impact's "every
   effect tagged" covers it: the summed Total of every Burning-tagged effect on the target.
 
+### Asset Part
+
+- **What's there.** An entity's ability system knows the effects on it, the abilities it has and the items it holds,
+  each with its level, and with its stacks, its timers or its cooldown.
+- **The kind** finds those a tag names, on the caster or the target, and is the number times a part of them:
+  - **What:** an effect, an ability or an item.
+  - **Tagged:** the tag that names it: its asset tag, one of its context tags or a tag it grants, or a tag under one.
+  - **Part:**
+    - of an effect: how many, its stacks, its level, its last impact, its total impact, its impact count, its time
+      left, its duration, the time to its next tick, or what one of its workers answers under a key;
+    - of an ability: how many, its level, whether it's active, whether it's on cooldown, and the cooldown left;
+    - of an item: how many, its stacks, its level and whether it's equipped. A yes reads 1 and a no 0.
+  - **Among:** where several match, their sum, the first, the highest or the lowest. Where none does, the kind reads
+    its Default, and a count reads 0.
+- **Examples:** `0.5 × the stacks of the target's Burning`; `the cooldown left of the caster's Blink`;
+  `10 × how many of the caster's items are tagged Relic`.
+- **Where it resolves:** wherever the side it names is, so a task can read it as an effect can.
+- **Beside Tracked Impact.** Tracked Impact stays for an effect's own impact, "this effect", which a tag doesn't
+  name. For another effect's, either kind reads it.
+
+### Asking a worker
+
+- **The case.** Dota 2's Maledict deals damage each second, and every fourth second more, by the health its target
+  has lost since the curse began, from every source. A worker is the place for that bookkeeping, and a number had no
+  way to ask one, so the curse took three effects: one to apply the other two.
+- **The channel.** A worker that implements `INumberWorker` answers `TryGetNumber(key, in context, out value)`. A
+  number of the **Worker** kind names a key and whom to ask:
+  - this effect's workers;
+  - or the workers the caster or the target provides: those in its worker groups, and any given with
+    `NumberWorkers.Provide(entity, worker)`.
+  The first to answer gives the value, and where none does, the kind reads its Default.
+- **A worker's state.** A worker is part of an asset, shared by every application of its effect, so what it keeps
+  for one application is not its own field: `spec.GetWorkerState<T>(worker)` keeps it on the effect's spec, and a
+  worker reaches it as `ctx.GetState<T>(this)`.
+- **Attribute Change,** an effect worker, notes an attribute as each application of its effect begins, and answers
+  how much it has lost, gained or changed by since, or what it was then, the target's or the caster's. With Every
+  Ticks above 0 it answers on each Nth tick and 0 on the others, so an impact that reads it lands every Nth tick.
+- **The curse, as one effect:** a periodic effect whose impact is −5 on Health; an additional impact whose magnitude
+  is −0.25 × a Worker number; and an Attribute Change worker on the target's Health, Lost, Every Ticks 4.
+- **From code.** `NumberWorkers.TryAsk(entity, key, context, out value)` and `TryAsk(effect, key, out value)` ask
+  the same question, so a task, a cue or a HUD can ask what a number can.
+- **A limit.** A save restores an effect's time and stacks but not what its workers kept, so after a load an
+  Attribute Change starts again from the attribute as it is then.
+
+### Group, as a kind
+
+- **What's there.** A Group scaler joins its members: Adds are summed, each Multiply multiplies the sum, and an
+  Override replaces it, by the group's policy.
+- **As a kind,** Group is at the kind menu's top, and a member can be any kind: `(5 + Caster's Strength) × 2 + 3`
+  is an Add of 5, an Add of × Attribute, a Multiply of 2 and a Flat Bonus of 3. It joins its members in the number's
+  own context, so each reads all the context gives, an owner and an activation's data among it.
+- **Flat Bonus.** A Flat Bonus member is added after the Multiplies. `ScalerGroup` left it out before.
+- **A group saved before** has members that are plain scalers, and reads as it did.
+
+### Limits and tooltips
+
+- A number field takes a limit on the constant typed into it: `[NumberMin(0)]`, `[NumberMax(10)]` or
+  `[NumberRange(0, 1)]`, which draws a slider. A field whose unit is "%" limits what is shown, and a whole number
+  takes whole numbers.
+- They are PlayForge's own attributes. Unity gives a field with `[Min]` or `[Range]` to that attribute's drawer,
+  which draws "Use Range with float or int" where the number was. As scripts load, the console names each number
+  field that has one, with the attribute to use in its place.
+- A limit is on what is typed, not on what a kind reads: a multiple of an attribute goes where the attribute does.
+  A Clamped scaler limits that.
+- `[Tooltip]` shows on the field's label, and stays there where the label is too narrow for the field's name.
+
 ### Extending it: kinds of your own
 
 **Today**, a project can add a scaler: a class that derives from `AbstractScaler`. The Kind menu lists it by its
@@ -371,7 +438,8 @@ Each phase gets its own tracker rows, with red tests first, the full suites and 
    - the inspector's kind menu, by category, with summaries and percent display; the Problems rules;
    - the legacy-field pattern and the upgrade command.
 2. **The new kinds,** each written on the public base as a project's would be: Local Data, Relative to a field (its
-   accessor cache and loop guard), Tracked Impact and Group Impact.
+   accessor cache and loop guard), Tracked Impact and Group Impact. Decision 42 added Asset Part, the Worker kind
+   and its channel, Group as a kind, and limits and tooltips.
 3. **Scaler parameters,** starting with the user's case as the first red test.
 4. **Tasks and validation.**
 5. **Workers, stacking and an item's stack size.**
@@ -402,3 +470,13 @@ The user's additions of 2026-11-09 (Decision 41):
    retention group's part of an attribute).
 10. **Extending it should be accessible:** a kind of a project's own is one class with one method, works in every
     number field, and is offered only where it resolves. PlayForge's new kinds are written on that same public base.
+
+The user's additions of 2026-11-10 (Decision 42):
+
+11. **Asset Part:** find any effect, ability or item by a tag, on the caster or the target, and read any part of it.
+12. **Numbers ask workers:** a Worker kind, and `INumberWorker` for a worker to answer through, with the same
+    question open to code.
+13. **Group is a kind of number.**
+14. **Field attributes:** a minimum, a maximum, a range and a tooltip.
+15. **Set By Caller says what it checks:** a value under exactly its key, else its Default.
+16. **Tags read by their display names** wherever one is shown.

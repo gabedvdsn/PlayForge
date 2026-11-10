@@ -4,29 +4,38 @@ using UnityEngine;
 namespace FarEmerald.PlayForge
 {
     /// <summary>
-    /// A magnitude the caller sets under a tag as it applies the effect, as Unreal's SetByCaller is: on the spec, or on an
-    /// ability activation's data, which each effect the ability applies takes as it's made. Where none is set, it reads its
-    /// Default. An effect's amount came only from its asset and its scalers, so code that knew the amount as it applied
-    /// the effect couldn't pass it in (FEAT-2, PF-C01).
+    /// A value the caller passes in under a tag, as Unreal's SetByCaller is (FEAT-2): code that knows the amount as it
+    /// applies an effect or activates an ability sets it, and the number reads it.
     /// <para>
-    /// It reads from any context that holds magnitudes, as a number kind (FEAT-29): an effect's spec, an activation's data
-    /// as a task reads it, the data that spawned a process, and an effect's cue or worker. It read only an effect spec's,
-    /// so a task's or a process's number read its default.
+    /// What it checks: whether the context it's read in holds a value under exactly <see cref="Key"/>. A context holds
+    /// the values set on what it was built from: an effect's spec (<c>spec.SetByCaller(tag, value)</c>, before it's
+    /// applied), an ability activation's data (<c>data.SetByCaller(tag, value)</c>, which each effect the ability makes
+    /// takes as it's made, and which the ability's tasks read), or the data that spawned a process. Only the key itself
+    /// matches: a value set under a tag above or below it in the tag tree doesn't. A value set to 0 is a value, and is
+    /// read. Where the context holds no value under the key, or holds no values at all, as an entity on its own, it reads
+    /// <see cref="Default"/>.
+    /// </para>
+    /// <para>
+    /// It is a number kind (FEAT-29), so it reads from any context that holds values: it read only an effect spec's, so a
+    /// task's or a process's number read its default.
     /// </para>
     /// </summary>
     [Serializable]
     [NumberKind("Set By Caller")]
     public class SetByCallerScaler : NumberKind
     {
-        [Tooltip("The tag the caller sets the magnitude under")]
+        [Tooltip("The tag the caller sets the value under, on the effect's spec or the activation's data. Only this tag " +
+                 "matches, not one above or below it")]
         public Tag Key;
 
-        [Tooltip("What the scaler reads where the caller set nothing under the tag")]
+        [Tooltip("What it reads where the caller set no value under the key")]
         public float Default;
 
         protected override float Evaluate(in NumberContext context) =>
             context.TryGetSetByCaller(Key, out float magnitude) ? magnitude : Default;
 
-        public override string Describe() => Key.IsValid ? $"the caller's {Key.GetName()}" : "the caller's value";
+        // "the caller's Damage, else 0": the key by its display name, and what it reads where nothing is set
+        public override string Describe() =>
+            $"the caller's {(Key.IsValid ? Key.ToString() : "value")}, else {NumberText.Number(Default)}";
     }
 }

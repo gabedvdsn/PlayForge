@@ -109,6 +109,15 @@ namespace FarEmerald.PlayForge
         /// </summary>
         public readonly IReadOnlyList<ImpactData> Impacts;
 
+        /// <summary>The effect's spec, where the carrier is one; null for another carrier.</summary>
+        public GameplayEffectSpec Spec => Carrier as GameplayEffectSpec;
+
+        /// <summary>
+        /// The worker's state for this application of its effect (<see cref="GameplayEffectSpec.GetWorkerState{T}"/>);
+        /// null where the carrier isn't an effect's spec (FEAT-29).
+        /// </summary>
+        public T GetState<T>(AbstractEffectWorker worker) where T : class, new() => Spec?.GetWorkerState<T>(worker);
+
         public EffectWorkerContext(
             IGameplayAbilitySystem system,
             IAttributeImpactCarrier carrier,

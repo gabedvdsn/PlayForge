@@ -225,7 +225,7 @@ namespace FarEmerald.PlayForge.Extended.Editor
             ? forge.GetName()
             : asset != null ? asset.name : "None";
 
-        private static string TagOf(Object asset) => asset is BaseForgeLevelProvider provider ? provider.GetAssetTag().Name ?? "" : "";
+        private static string TagOf(Object asset) => asset is BaseForgeLevelProvider provider ? TagDisplaySettings.PathOf(provider.GetAssetTag()) : "";
 
         /// <summary>Chooses the asset to import from, as a click on its row does, and lists what it would change.</summary>
         public void Choose(Object asset)

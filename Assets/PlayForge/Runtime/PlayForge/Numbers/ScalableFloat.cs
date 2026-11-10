@@ -88,6 +88,13 @@ namespace FarEmerald.PlayForge
             return ForgeHelper.MagnitudeAndScalerOperation(Magnitude, NumberContext.ReadScaler(Scaler, in context), RealMagnitude);
         }
 
+        /// <summary>
+        /// Reads the number where it is, with the object it belongs to, as that object's own code reads its numbers:
+        /// <c>MaxValue.Evaluate(context, this)</c>. A number relative to another field of its object reads that field
+        /// through the owner (FEAT-29).
+        /// </summary>
+        public float Evaluate(in NumberContext context, object owner) => Evaluate(context.WithOwner(owner));
+
         /// <summary>Reads the number against an impact carrier, as an effect's own numbers are read.</summary>
         public float Evaluate(IAttributeImpactCarrier spec)
         {
@@ -177,6 +184,9 @@ namespace FarEmerald.PlayForge
             if (!NumberContext.CanRead(Scaler, in context)) return Magnitude;
             return ForgeHelper.MagnitudeAndScalerOperation(Magnitude, NumberContext.ReadScaler(Scaler, in context), RealMagnitude, Rounding);
         }
+
+        /// <summary>Reads the number where it is, with the object it belongs to, as that object's own code reads it (FEAT-29).</summary>
+        public int Evaluate(in NumberContext context, object owner) => Evaluate(context.WithOwner(owner));
 
         /// <summary>Reads the number against an impact carrier, as an effect's own numbers are read.</summary>
         public int Evaluate(IAttributeImpactCarrier spec)

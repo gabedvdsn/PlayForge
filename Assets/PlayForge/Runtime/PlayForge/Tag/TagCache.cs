@@ -696,7 +696,7 @@ namespace FarEmerald.PlayForge
             Debug.Log("[ TAG WEIGHTS ]");
             foreach (var kvp in _tagWeights)
             {
-                Debug.Log($"\t{kvp.Key.Name} => {kvp.Value}");
+                Debug.Log($"\t{kvp.Key} => {kvp.Value}");
             }
         }
         
@@ -721,7 +721,7 @@ namespace FarEmerald.PlayForge
                 var root = tag.GetRoot().Name;
                 if (!roots.ContainsKey(root))
                     roots[root] = new List<string>();
-                roots[root].Add($"{tag.Name} ({_tagWeights[tag]})");
+                roots[root].Add($"{tag} ({_tagWeights[tag]})");
             }
             
             var sb = new System.Text.StringBuilder();

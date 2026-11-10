@@ -61,6 +61,12 @@ namespace FarEmerald.PlayForge
                     if (worker != null) analysis.ProvideWorker(worker);
                 }
             }
+
+            // Those that answer numbers, so a number can ask the entity's workers (FEAT-29)
+            NumberWorkers.ProvideEach(system, AttributeWorkers);
+            NumberWorkers.ProvideEach(system, ImpactWorkers);
+            NumberWorkers.ProvideEach(system, TagWorkers);
+            NumberWorkers.ProvideEach(system, AnalysisWorkers);
         }
         
         /// <summary>
@@ -104,6 +110,11 @@ namespace FarEmerald.PlayForge
                     if (worker != null) analysis.RemoveWorker(worker);
                 }
             }
+
+            NumberWorkers.RemoveEach(system, AttributeWorkers);
+            NumberWorkers.RemoveEach(system, ImpactWorkers);
+            NumberWorkers.RemoveEach(system, TagWorkers);
+            NumberWorkers.RemoveEach(system, AnalysisWorkers);
         }
         
         /// <summary>

@@ -80,6 +80,17 @@ namespace FarEmerald.PlayForge
         /// <summary>What a kind reads where its context lacks what it needs, inside another scaler; 0 by default.</summary>
         protected virtual float Fallback => 0f;
 
+        /// <summary>
+        /// Whether the kind can be worked out in this context: by default, whether the context provides what it reads
+        /// (<see cref="Reads"/>). A kind that needs more overrides it, as one that reads another field of its object needs
+        /// that field to be there. Where it can't, its field reads its own number, and the kind logs once.
+        /// </summary>
+        public virtual bool CanEvaluate(in NumberContext context) => context.Has(Reads);
+
+        /// <summary>Why the kind can't be worked out in this context, for the log: what it reads that isn't there.</summary>
+        protected internal virtual string WhyNot(in NumberContext context) =>
+            $"it reads {Reads & ~context.Provides}, which isn't there";
+
         // A kind reads none of every scaler's parts unless it asks to (ED-51)
         public override EScalerParts Parts => EScalerParts.None;
         public override bool UseScalingOptions() => false;
@@ -92,10 +103,10 @@ namespace FarEmerald.PlayForge
         /// <summary>A kind evaluated against an effect's container, as a stacking effect's are.</summary>
         public sealed override float Evaluate(AbstractStackingEffectContainer container) => Read(NumberContext.Of(container));
 
-        /// <summary>Reads the kind in a context, or its fallback where the context lacks what it reads.</summary>
+        /// <summary>Reads the kind in a context, or its fallback where it can't be worked out there.</summary>
         internal float Read(in NumberContext context)
         {
-            if (!context.Has(Reads))
+            if (!CanEvaluate(in context))
             {
                 NumberContext.LogUnresolved(this, in context);
                 return Fallback;
@@ -144,8 +155,10 @@ namespace FarEmerald.PlayForge
     /// Says what a number field's context provides, which kinds its kind menu then offers, and which the Problems window
     /// flags (FEAT-29). A targeting task's range has no target yet, as the target is what it looks for:
     /// <c>[NumberContext(NumberReads.Level | NumberReads.Caster | NumberReads.Caller | NumberReads.LocalData)]</c>. A field
-    /// without it offers every kind, as an effect's numbers have everything. It also takes the field's unit: a field whose
-    /// unit is "%" stores 0.3 and shows and takes it as 30%.
+    /// without it offers every kind but one that reads its owner, as an effect's numbers have everything else. An owner
+    /// is given only by the code that reads the field, <c>Max.Evaluate(context, this)</c>, so a field whose code gives
+    /// one says so, <c>[NumberContext(NumberReads.All)]</c>, and Relative to a Field joins its menu (NUM-9). It also
+    /// takes the field's unit: a field whose unit is "%" stores 0.3 and shows and takes it as 30%.
     /// </summary>
     [AttributeUsage(AttributeTargets.Field)]
     public sealed class NumberContextAttribute : System.Attribute

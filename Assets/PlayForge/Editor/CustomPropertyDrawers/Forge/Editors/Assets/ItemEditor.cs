@@ -458,7 +458,7 @@ namespace FarEmerald.PlayForge.Extended.Editor
                 return;
             }
 
-            if (identitySection != null) identitySection.Summary.text = item.Definition.Visibility.IsValid ? item.Definition.Visibility.Name : "";
+            if (identitySection != null) identitySection.Summary.text = TagDisplaySettings.PathOf(item.Definition.Visibility);
             if (levelingSection != null)
                 levelingSection.Summary.text = LevelingSummary(item, IsLinkMode, item.GetStartingLevel(), item.GetMaxLevel());
             if (tagsSection != null)
