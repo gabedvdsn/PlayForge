@@ -22,6 +22,9 @@ namespace FarEmerald.PlayForge
         
         [Tooltip("Use base or current attribute value")]
         public EAttributeTargetBinary CaptureWhat = EAttributeTargetBinary.Current;
+
+        [Tooltip("Which retention groups' parts it reads: all of them, the whole value, unless it says (TW-3)")]
+        public RetentionGroups Groups = new();
         
         public override void Initialize(IAttributeImpactCarrier deriv)
         {
@@ -31,13 +34,13 @@ namespace FarEmerald.PlayForge
             switch (CaptureFrom)
             {
                 case ESourceTarget.Source:
-                    if (deriv.GetOrigin()?.GetSource() is not { } source || !source.TryGetAttributeValue(CaptureAttribute, out var sourceValue)) 
+                    if (deriv.GetOrigin()?.GetSource() is not { } source || !RetentionGroups.TryRead(Groups, source, CaptureAttribute, out var sourceValue)) 
                         break;
                     deriv.GetSourcedCapturedAttributes()[this] = sourceValue;
                     break;
                     
                 case ESourceTarget.Target:
-                    if (deriv.GetTarget() is not { } target || !target.TryGetAttributeValue(CaptureAttribute, out var targetValue)) 
+                    if (deriv.GetTarget() is not { } target || !RetentionGroups.TryRead(Groups, target, CaptureAttribute, out var targetValue)) 
                         break;
                     deriv.GetSourcedCapturedAttributes()[this] = targetValue;
                     break;
@@ -79,7 +82,7 @@ namespace FarEmerald.PlayForge
                 : deriv.GetTarget();
             
             // A context with no one on that side, as a number read where there's no target, reads 0 (FEAT-29)
-            if (entity == null || CaptureAttribute is null || !entity.TryGetAttributeValue(CaptureAttribute, out var attrValue))
+            if (entity == null || CaptureAttribute is null || !RetentionGroups.TryRead(Groups, entity, CaptureAttribute, out var attrValue))
             {
                 return 0f;
             }

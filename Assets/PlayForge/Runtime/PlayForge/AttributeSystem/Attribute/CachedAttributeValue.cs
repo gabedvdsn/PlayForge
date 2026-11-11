@@ -558,6 +558,27 @@ namespace FarEmerald.PlayForge
         public AttributeValue GetGroupValue(Tag group)
             => attribution.TryGetValue(group, out var v) ? v : default;
 
+        /// <summary>
+        /// The slices of every group that one of <paramref name="groups"/> names, a tag naming the groups under it too,
+        /// summed: what a read of only those groups takes (TW-3). Allocates nothing.
+        /// </summary>
+        public AttributeValue GetGroupsValue(List<Tag> groups)
+        {
+            AttributeValue sum = default;
+            if (groups == null || groups.Count == 0) return sum;
+            for (int i = 0; i < attributionOrder.Count; i++)
+            {
+                var group = attributionOrder[i];
+                for (int j = 0; j < groups.Count; j++)
+                {
+                    if (!groups[j].IsValid || !group.MatchesOrIsChildOf(groups[j])) continue;
+                    sum += attribution[group];
+                    break;
+                }
+            }
+            return sum;
+        }
+
         public IReadOnlyList<GroupContribution> GetBreakdown()
         {
             var list = new List<GroupContribution>(attributionOrder.Count);

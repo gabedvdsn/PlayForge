@@ -62,7 +62,8 @@ namespace FarEmerald.PlayForge
                 case AttributeBackedScaler attribute:
                     var side = attribute.CaptureFrom == ESourceTarget.Target ? "Target's" : "Caster's";
                     var name = attribute.CaptureAttribute != null ? attribute.CaptureAttribute.GetName() : "attribute";
-                    return attribute.CaptureWhat == EAttributeTargetBinary.Base ? $"{side} {name} (base)" : $"{side} {name}";
+                    var groups = RetentionGroups.Describe(attribute.Groups);
+                    return attribute.CaptureWhat == EAttributeTargetBinary.Base ? $"{side} {name}{groups} (base)" : $"{side} {name}{groups}";
                 case EffectStacksScaler:
                     return "the effect's stacks";
                 case ItemStacksScaler:

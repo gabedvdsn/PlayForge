@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using UnityEngine;
 
 namespace FarEmerald.PlayForge
 {
@@ -79,6 +80,10 @@ namespace FarEmerald.PlayForge
     public class ThresholdAnalysisWorker : AbstractAnalysisWorker
     {
         public Attribute Target;
+
+        [Tooltip("Which retention groups' parts it reads: all of them, the whole value, unless it says (TW-3)")]
+        public RetentionGroups Groups = new();
+
         public float Threshold;
         public EThresholdComparison Comparison = EThresholdComparison.LessThanOrEqual;
         public bool TriggerOnce = true;
@@ -87,7 +92,7 @@ namespace FarEmerald.PlayForge
         {
             if (Target is null) yield break;
             if (TriggerOnce && HasTriggered(system)) yield break;
-            if (!system.TryGetAttributeValue(Target, out AttributeValue value)) yield break;
+            if (!RetentionGroups.TryRead(Groups, system, Target, out AttributeValue value)) yield break;
             
             bool conditionMet = Comparison switch
             {

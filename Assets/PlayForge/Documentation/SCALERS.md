@@ -21,7 +21,8 @@ which has no target yet, offers no kind that reads one.
   "6–8 s", or "-25 to -10" where it goes below 0.
 - **Shared**: the field reads a Scaler asset (below).
 - The other kinds work out a value from the values or from the entity: **× Attribute** reads an attribute of the
-  caster or the target, which the menu starts as the field's number times it, **Clamped** keeps a number within
+  caster or the target, which the menu starts as the field's number times it, all of it or only some of its retention
+  groups (below), **Clamped** keeps a number within
   bounds, **Conditional** reads one number where a condition holds and another where it doesn't, **Randomized** rolls
   a random value, **Threshold** steps at thresholds, and **Fixed Value** is one number. **Effect Stacks** reads the stack count of the effect's own container, and **Item
   Stacks** that of the item that applied it ([ITEMS.md](ITEMS.md)); each reads 1 where there's nothing stacked. An
@@ -80,6 +81,11 @@ Kinds that read the game, each with a summary that says what it reads:
   first impact, and after a load, it reads 0.
 - **Group Impact** reads one retention group's part of an attribute on the caster or the target, as "Caster's Strength
   (Bonus)": the Strength items add, and none of the hero's own.
+- **Retention groups in any attribute read** (TW-3): × Attribute, the Attribute condition, a relative attribute worker's
+  Relative To and the Threshold worker each have *Groups*: **All**, the whole value, as before; **Only These**, as a
+  bonus of the items' Strength reads their group; or **All But These**, as a bonus of a hero's own damage leaves its
+  items' out. A group names the groups under it too, so *Items* takes *Items.Ring*. The read says which: "Caster's
+  Strength (Items)", "Caster's Attack Damage (all but Items)".
 - **Asset Part** finds effects, abilities or items on the caster or the target by a tag, and reads a part of them.
   An effect matches by its asset tag, a context tag or a tag it grants, and an ability or an item by its asset tag or
   a context tag; a tag under the one given matches too.

@@ -361,6 +361,10 @@ namespace FarEmerald.PlayForge
             return entity != null && attribute != null && entity.TryGetAttributeValue(attribute, out value);
         }
 
+        /// <summary>The part of an attribute on one side that <paramref name="groups"/> reads, all of it where none (TW-3).</summary>
+        public bool TryGetAttribute(NumberSide side, IAttribute attribute, RetentionGroups groups, out AttributeValue value) =>
+            RetentionGroups.TryRead(groups, EntityOn(side), attribute, out value);
+
         /// <summary>An attribute's current or base value on one side, or 0 where it has none.</summary>
         public float Attribute(NumberSide side, IAttribute attribute, EAttributeTargetBinary which = EAttributeTargetBinary.Current)
         {

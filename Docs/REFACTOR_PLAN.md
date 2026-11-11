@@ -1074,7 +1074,7 @@ on-hit (TW-5, TW-6), which most of the rest build on.
 |---|---|---|---|---|
 | TW-1 | Attributes say how their bonuses accumulate: a role (a value, a bonus share, a multiplier, a resistance or a chance, whose bonuses diminish) and buckets that add within and multiply across; and how a number reads one: × Attribute as a multiplier (`1 + x`) or a resistance (`1 − x`). The user's question of 2026-11-11. Decided (Decision 46): the role is the attribute's, an effect's impact can override it | Framework | 5 | open |
 | TW-2 | A damage pipeline, defined once for each damage type: the hit's amount, the source's outgoing bonuses, bonuses that read the other side, a critical roll, the target's reductions, absorption, then health; each stage kept, for a breakdown of each hit. The user's question of 2026-11-11. Decided (Decision 46): a Value Pipeline asset, generic for any numeric pipeline, which an effect names as its shared calculation, apart from a Scaler asset | Framework | 5 | open |
-| TW-3 | Every attribute read (× Attribute, an Attribute condition, the Math worker's Relative To, Asset Part, a threshold) chooses its retention groups: all, only these, all but these, by tag; Group Impact folds in. The user's note of 2026-11-11 | Framework | 5 | open |
+| TW-3 | Every attribute read (× Attribute, an Attribute condition, the Math worker's Relative To, Asset Part, a threshold) chooses its retention groups: all, only these, all but these, by tag; Group Impact folds in. The user's note of 2026-11-11. Done: `RetentionGroups`, a read of all the groups, the whole value, only these or all but these, a tag naming the groups under it, on × Attribute (`Groups`), the Attribute condition (`Groups`), a relative attribute worker's Relative To (`RelativeGroups`) and the Threshold worker (`Groups`); `CachedAttributeValue.GetGroupsValue` sums the groups' slices with no allocation; a read saved before reads the whole, as it did. Asset Part reads no attribute, so it has none; Group Impact reads one group, as × Attribute's Only These does | Framework | 5 | verified |
 | TW-4 | Death that doesn't end the entity, and its body as a process: a death policy (End, or Stay: registered, its abilities refused, effects kept or ended by tag), revival with a respawn timer, a body instantiator that despawns and respawns the model, and Died and Revived events. The user's request of 2026-11-11. Decided (Decision 46): the body is a MonoBehaviour process from a prefab, which the entity follows | Framework | 5 | open |
 | TW-5 | Gameplay events sent by the core: hit dealt and taken, kill and death, heal, block and evade, critical hit, effect applied and removed, ability activated; with the instigator in a place of its own, apart from the ability's targets | Framework | 5 | open |
 | TW-6 | On Hit and On Kill on items, effects and abilities: effects, the impact types they take, to whom, a condition | Framework | 5 | open |
@@ -1141,6 +1141,12 @@ GAS-4 with GAS-5, PC-6, and TS-I with PC-5.
 ## Log
 
 Record baselines, gate results and notable decisions here, newest first.
+
+- 2026-11-11, **TW-3: attribute reads choose their retention groups.** × Attribute, the Attribute condition, a relative
+  attribute worker's Relative To and the Threshold worker each read all of an attribute's groups, only these, or all but
+  these, a tag naming the groups under it; the sum allocates nothing, and a read saved before reads the whole.
+  - Red first: `RetentionGroupReadTests`, four tests on both hubs, don't compile against the old code: `RetentionGroups` and the fields that take it are new.
+  - Gates: EditMode 789 of 790, ED-61 red from the working tree's lifecycle change; PlayMode 1503 of 1526, 8 skipped, the 15 red the known ones; golden 25 of 25.
 
 - 2026-11-11, **GAS-72 to GAS-76: what the content labs found.** An impact worker's context names its holder, the
   dealer, as its System (GAS-72); an ability's effects with no delay between them land in one frame (GAS-74); area

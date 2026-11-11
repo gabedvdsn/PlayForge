@@ -7,6 +7,8 @@ tracks each fix below by its ID.
 ## [Unreleased]
 
 ### Added
+- Attribute reads choose their retention groups: × Attribute, the Attribute condition, a relative attribute worker's
+  Relative To and the Threshold worker read all of them, only these, or all but these (TW-3).
 - `ForgeEntities`: every live entity on both hubs, which area searches go through (GAS-75).
 - An asset with a texture shows it in its header in place of its type's icon: the texture under its Primary tag, else
   the first that has one (ED-69).

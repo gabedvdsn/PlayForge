@@ -19,6 +19,9 @@ namespace FarEmerald.PlayForge
         
         [Tooltip("Multiplier applied to the relative attribute value")]
         public float RelativeMultiplier = 1f;
+
+        [Tooltip("Which of the relative attribute's retention groups it reads: all of them, the whole value, unless it says (TW-3)")]
+        public RetentionGroups RelativeGroups = new();
         
         // ═══════════════════════════════════════════════════════════════════════════
         // VALIDATION
@@ -50,12 +53,12 @@ namespace FarEmerald.PlayForge
         {
             return From switch
             {
-                EFromSelfSource.FromSource => ctx.Change.Value.Carrier.GetOrigin().GetSource()
-                    .TryGetAttributeValue(RelativeTo, out AttributeValue value)
+                EFromSelfSource.FromSource => RetentionGroups.TryRead(RelativeGroups, ctx.Change.Value.Carrier.GetOrigin().GetSource(),
+                    RelativeTo, out AttributeValue value)
                         ? value * RelativeMultiplier
                         : default,
                 EFromSelfSource.FromSelf => ctx.AttributeCache.TryGetValue(RelativeTo, out var cached)
-                    ? cached.ActiveValue * RelativeMultiplier
+                    ? (RetentionGroups.ReadsAll(RelativeGroups) ? cached.ActiveValue : RelativeGroups.Of(cached)) * RelativeMultiplier
                     : default,
                 _ => default
             };

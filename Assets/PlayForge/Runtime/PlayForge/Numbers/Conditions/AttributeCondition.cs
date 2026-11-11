@@ -21,6 +21,9 @@ namespace FarEmerald.PlayForge
         [Tooltip("Its current value, or its base")]
         public EAttributeTargetBinary What = EAttributeTargetBinary.Current;
 
+        [Tooltip("Which retention groups' parts it reads: all of them, the whole value, unless it says (TW-3)")]
+        public RetentionGroups Groups = new();
+
         [Tooltip("How the attribute compares with the value")]
         public EComparisonOperator Comparison = EComparisonOperator.GreaterThan;
 
@@ -31,7 +34,7 @@ namespace FarEmerald.PlayForge
 
         protected override bool Evaluate(in NumberContext context)
         {
-            if (!context.TryGetAttribute(On, Attribute, out var value)) return false;
+            if (!context.TryGetAttribute(On, Attribute, Groups, out var value)) return false;
             float attribute = What == EAttributeTargetBinary.Base ? value.BaseValue : value.CurrentValue;
             return NumberComparison.Holds(attribute, Comparison, Value?.Evaluate(in context, this) ?? 0f);
         }
@@ -42,8 +45,8 @@ namespace FarEmerald.PlayForge
         public override void Explain(in NumberContext context, NumberTrace trace)
         {
             string name = Attribute != null ? Attribute.GetName() : "attribute";
-            string label = $"{(On == NumberSide.Caster ? "Caster's" : "Target's")} {name}{(What == EAttributeTargetBinary.Base ? " (base)" : "")}";
-            if (context.TryGetAttribute(On, Attribute, out var value))
+            string label = $"{(On == NumberSide.Caster ? "Caster's" : "Target's")} {name}{RetentionGroups.Describe(Groups)}{(What == EAttributeTargetBinary.Base ? " (base)" : "")}";
+            if (context.TryGetAttribute(On, Attribute, Groups, out var value))
                 trace.Add(label, What == EAttributeTargetBinary.Base ? value.BaseValue : value.CurrentValue, "Attribute");
             else trace.Add(label, 0f, "Attribute").Needing($"{(On == NumberSide.Caster ? "the caster's" : "the target's")} {name}");
             trace.Add(Value, context, this, "Value");
@@ -54,7 +57,7 @@ namespace FarEmerald.PlayForge
             string side = On == NumberSide.Caster ? "Caster's" : "Target's";
             string name = Attribute != null ? Attribute.GetName() : "attribute";
             string what = What == EAttributeTargetBinary.Base ? " (base)" : "";
-            return $"{side} {name}{what} {NumberComparison.Symbol(Comparison)} {NumberText.Of(Value)}";
+            return $"{side} {name}{RetentionGroups.Describe(Groups)}{what} {NumberComparison.Symbol(Comparison)} {NumberText.Of(Value)}";
         }
     }
 }
