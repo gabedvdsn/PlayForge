@@ -55,11 +55,16 @@ namespace FarEmerald.PlayForge.Extended.Editor
 
         /// <summary>
         /// A magnitude's scaler: an operation's Scaler, or an attribute set element's side's Scaling, which the field
-        /// draws the same way (ED-49).
+        /// draws the same way (ED-49); or the property itself, a scaler field of its own, as a Group member's (ED-77).
         /// </summary>
         internal static SerializedProperty ScalerOf(SerializedProperty operation) =>
-            operation.FindPropertyRelative(nameof(ScalableFloat.Scaler))
-            ?? operation.FindPropertyRelative(nameof(AttributeMagnitudeSpec.Scaling));
+            IsScalerField(operation) ? operation
+            : operation.FindPropertyRelative(nameof(ScalableFloat.Scaler))
+              ?? operation.FindPropertyRelative(nameof(AttributeMagnitudeSpec.Scaling));
+
+        /// <summary>Whether a property is a scaler field of its own, with no number around it, as a Group member's (ED-77).</summary>
+        internal static bool IsScalerField(SerializedProperty property) =>
+            property != null && property.propertyType == SerializedPropertyType.ManagedReference;
 
         // Whether a field that reads its scaler reads 0 without one. An element's side reads its number (AttributeBlueprint)
         private static bool ReadsZeroWithoutScaler(SerializedProperty operation) => operation.type != nameof(AttributeMagnitudeSpec);
@@ -76,7 +81,7 @@ namespace FarEmerald.PlayForge.Extended.Editor
         /// <param name="provides">What the field's context provides, which kinds its menu offers (FEAT-29).</param>
         /// <param name="limits">The limits its constant keeps, on a slider where they're a range (NUM-15).</param>
         internal static VisualElement Build(SerializedProperty operation, string label, string unit, bool integer,
-            string numberName = null, Action<GenericDropdownMenu> moreItems = null, NumberReads provides = NumberReads.All,
+            string numberName = null, Action<ForgeFieldMenu> moreItems = null, NumberReads provides = NumberReads.All,
             NumberLimits limits = default)
         {
             var root = new VisualElement { name = "MagnitudeField" };
@@ -130,16 +135,12 @@ namespace FarEmerald.PlayForge.Extended.Editor
             // A kind's place in the menu, as "Scaler/Clamped"; Constant and the common kinds sit at its top
             PopupField<string> KindPopup(string fieldLabel, List<string> choices, string shown)
             {
-                var paths = new Dictionary<string, string>();
-                foreach (var each in kinds) paths.TryAdd(ScalerFields.KindName(each), NumberFields.MenuPathOf(each));
-                if (shownType != null) paths.TryAdd(shown, NumberFields.MenuPathOf(shownType));
                 var popup = fieldLabel == null
                     ? new PopupField<string>(choices, shown)
                     : new PopupField<string>(fieldLabel, choices, shown);
                 popup.name = "Kind";
                 popup.tooltip = "The field's kind: Constant, or another";
-                popup.formatSelectedValueCallback = name => name;
-                popup.formatListItemCallback = name => paths.TryGetValue(name, out var path) ? path : name;
+                NumberFields.FileByCategory(popup, kinds, shownType);
                 return popup;
             }
 
@@ -468,16 +469,27 @@ namespace FarEmerald.PlayForge.Extended.Editor
             return NumberText.Of(magnitude, (EMagnitudeOperation)realProp.intValue, kind, unit);
         }
 
-        // The field menu: Save as Scaler Asset, Use a Scaler Asset, Import Values, Quick Fill, the drawer's own items,
-        // then Make Constant
-        private static void ShowMenu(SerializedProperty operation, VisualElement anchor, string label, Action<GenericDropdownMenu> moreItems)
+        /// <summary>The field menu's submenu of the Scaler assets a field can share (ED-77).</summary>
+        internal const string ScalerAssetsMenu = "Scaler Assets";
+
+        /// <summary>
+        /// The field menu, wherever a scaler is chosen: a number field's, and a scaler field's of its own, as a Group
+        /// member's (ED-77). Save as Scaler Asset, the Scaler assets it can share, under Scaler Assets, Import Values,
+        /// Quick Fill, the drawer's own items, then Make Constant. Each Scaler asset sat at the menu's top, as UI Toolkit's
+        /// dropdown has no submenus here; Unity's own menu files them under Scaler Assets (ForgeFieldMenu).
+        /// </summary>
+        internal static void ShowMenu(SerializedProperty operation, VisualElement anchor, string label, Action<ForgeFieldMenu> moreItems) =>
+            MenuFor(operation, label, moreItems).DropDown(anchor);
+
+        /// <summary>The field menu's items, as <see cref="ShowMenu"/> opens them.</summary>
+        internal static ForgeFieldMenu MenuFor(SerializedProperty operation, string label, Action<ForgeFieldMenu> moreItems)
         {
             var scalerProp = ScalerOf(operation);
             // Fields whose kinds differ have no one table to fill (ED-12)
             bool mixedKinds = EachAsset.Differ(scalerProp, ScalerFields.KindOf);
             var scaler = mixedKinds ? null : scalerProp.managedReferenceValue as AbstractScaler;
             bool ownValues = scaler != null && !ScalerFields.IsShared(scaler.GetType()) && (scaler.Parts & EScalerParts.LevelValues) != 0;
-            var menu = new GenericDropdownMenu();
+            var menu = new ForgeFieldMenu();
 
             // Saving keeps one field's values, so it waits for one selected asset (ED-12)
             if (ownValues && !operation.serializedObject.isEditingMultipleObjects)
@@ -491,14 +503,17 @@ namespace FarEmerald.PlayForge.Extended.Editor
                 .Select(AssetDatabase.GUIDToAssetPath).Select(AssetDatabase.LoadAssetAtPath<ScalerAsset>)
                 .Where(asset => asset != null && asset.Scaler != null && asset.Scaler is AbstractCachedScaler == cached)
                 .OrderBy(asset => asset.DisplayName, StringComparer.OrdinalIgnoreCase).ToList();
+            // In a submenu of their own: they sat at the menu's top (ED-77). A name with a slash would make submenus of its own
             bool canShare = kinds.Any(ScalerFields.IsShared);
-            if (!canShare || assets.Count == 0) menu.AddDisabledItem("Use a Scaler Asset…", false);
+            if (!canShare || assets.Count == 0) menu.AddDisabledItem(ScalerAssetsMenu, false);
             else
             {
+                var shared = ScalerFields.AssetOf(scalerProp.managedReferenceValue);
                 foreach (var asset in assets)
                 {
                     var each = asset;
-                    menu.AddItem($"Use a Scaler Asset…/{asset.DisplayName}", false, () => ScalerActions.UseScalerAsset(operation, each));
+                    menu.AddItem($"{ScalerAssetsMenu}/{asset.DisplayName.Replace('/', '\u2215')}", !mixedKinds && asset == shared,
+                        () => ScalerActions.UseScalerAsset(operation, each));
                 }
             }
 
@@ -520,11 +535,10 @@ namespace FarEmerald.PlayForge.Extended.Editor
             }
 
             menu.AddSeparator("");
-            if (EachAsset.Of(scalerProp).Any(each => each.managedReferenceValue != null))
+            if (ScalerActions.CanMakeConstant(operation))
                 menu.AddItem("Make Constant", false, () => ScalerActions.MakeConstant(operation));
             else menu.AddDisabledItem("Make Constant", false);
-            // At the button, as wide as its items: anchored alone, it took the button's 20 px and no item could be read (ED-52)
-            menu.DropDown(anchor.worldBound, anchor, true, true);
+            return menu;
         }
 
         // A name for what the field holds, as "Burning Duration"
@@ -562,6 +576,8 @@ namespace FarEmerald.PlayForge.Extended.Editor
                 float first = ValueAtFirstLevel(own);
                 scaler.managedReferenceValue = ScalerFields.Make(type, first);
                 var real = own.FindPropertyRelative(nameof(ScalableFloat.RealMagnitude));
+                // A scaler field of its own has no number to combine with (ED-77)
+                if (real == null) return;
                 if (ScalerFields.IsShared(type))
                 {
                     real.intValue = (int)EMagnitudeOperation.MultiplyWithScaler;
@@ -586,9 +602,51 @@ namespace FarEmerald.PlayForge.Extended.Editor
             || (typeof(NumberKind).IsAssignableFrom(type) && type != typeof(SetByCallerScaler)
                 && NumberFields.CategoryOf(type) != NumberFields.ScalerCategory);
 
-        /// <summary>The field reads its number again: no scaler, and the number the field read at level 1.</summary>
+        /// <summary>
+        /// Whether Make Constant changes the field: a number field with a kind, or a scaler field of its own whose scaler
+        /// isn't a constant already (ED-77).
+        /// </summary>
+        public static bool CanMakeConstant(SerializedProperty operation)
+        {
+            if (operation == null) return false;
+            if (!MagnitudeField.IsScalerField(operation))
+                return EachAsset.Of(ScalerOf(operation)).Any(each => each.managedReferenceValue != null);
+            var constant = ConstantKindFor(operation);
+            return constant != null && EachAsset.Of(operation).Any(each => each.managedReferenceValue?.GetType() != constant);
+        }
+
+        // The kind a scaler field of its own takes as a constant: a Fixed Value, or where it takes no Fixed Value, as a
+        // cached member's, a By Level of one value
+        private static Type ConstantKindFor(SerializedProperty scaler)
+        {
+            var kinds = ScalerFields.KindsFor(scaler);
+            if (kinds.Contains(typeof(ConstantScaler))) return typeof(ConstantScaler);
+            if (kinds.Contains(typeof(SimpleScaler))) return typeof(SimpleScaler);
+            return kinds.Contains(typeof(CachedSimpleScaler)) ? typeof(CachedSimpleScaler) : null;
+        }
+
+        /// <summary>
+        /// The field reads its number again: no scaler, and the number the field read at level 1. A scaler field of its
+        /// own, with no number, as a Group member's, becomes a Fixed Value of what it read at level 1 (ED-77).
+        /// </summary>
         public static void MakeConstant(SerializedProperty operation)
         {
+            if (MagnitudeField.IsScalerField(operation))
+            {
+                var constant = ConstantKindFor(operation);
+                if (constant == null) return;
+                EachAsset.Write(operation, own =>
+                {
+                    if (own.managedReferenceValue?.GetType() == constant) return;
+                    var values = ScalerFields.ValuesOf(own);
+                    float first = values.Length > 0 ? values[0] : 1f;
+                    own.managedReferenceValue = constant == typeof(ConstantScaler)
+                        ? new ConstantScaler { Value = first }
+                        : ScalerFields.Make(constant, first);
+                });
+                ScalerFields.ForgetUses();
+                return;
+            }
             EachAsset.Write(operation, own =>
             {
                 float value = ValueAtFirstLevel(own);
@@ -610,7 +668,7 @@ namespace FarEmerald.PlayForge.Extended.Editor
             EachAsset.Write(operation, own =>
             {
                 var real = own.FindPropertyRelative(nameof(ScalableFloat.RealMagnitude));
-                var keep = (EMagnitudeOperation)real.intValue;
+                var keep = real != null ? (EMagnitudeOperation)real.intValue : EMagnitudeOperation.UseScaler;
                 var made = ScalerFields.Make(shared, 0f);
                 switch (made)
                 {
@@ -618,7 +676,8 @@ namespace FarEmerald.PlayForge.Extended.Editor
                     case SharedCachedScaler each: each.Asset = asset; break;
                 }
                 ScalerOf(own).managedReferenceValue = made;
-                real.intValue = (int)(keep == EMagnitudeOperation.UseMagnitude ? EMagnitudeOperation.UseScaler : keep);
+                // A scaler field of its own has no number to combine with (ED-77)
+                if (real != null) real.intValue = (int)(keep == EMagnitudeOperation.UseMagnitude ? EMagnitudeOperation.UseScaler : keep);
             });
             ScalerFields.ForgetUses();
         }
@@ -661,6 +720,12 @@ namespace FarEmerald.PlayForge.Extended.Editor
         // What the field reads at level 1, through its Combine: a constant's number, or its scaler's first value
         private static float ValueAtFirstLevel(SerializedProperty operation)
         {
+            // A scaler field of its own reads its scaler alone (ED-77)
+            if (MagnitudeField.IsScalerField(operation))
+            {
+                var own = ScalerFields.ValuesOf(operation);
+                return own.Length > 0 ? own[0] : 1f;
+            }
             var magnitudeProp = operation.FindPropertyRelative(nameof(ScalableFloat.Magnitude));
             float magnitude = magnitudeProp.propertyType == SerializedPropertyType.Integer ? magnitudeProp.intValue : magnitudeProp.floatValue;
             var scaler = ScalerOf(operation);

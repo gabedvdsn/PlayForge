@@ -5,6 +5,7 @@ using System.Linq;
 using System.Reflection;
 using UnityEditor;
 using UnityEngine;
+using UnityEngine.UIElements;
 
 namespace FarEmerald.PlayForge.Extended.Editor
 {
@@ -457,6 +458,19 @@ namespace FarEmerald.PlayForge.Extended.Editor
             var category = CategoryOf(kind);
             var name = ScalerFields.KindName(kind);
             return string.IsNullOrEmpty(category) ? name : $"{category}/{name}";
+        }
+
+        /// <summary>
+        /// Files a kind popup's kinds by category, as the number field's kind menu does: each at its place, as
+        /// "Scaler/Clamped", and its name alone in the box. A scaler field's popup listed its kinds flat (ED-81).
+        /// </summary>
+        internal static void FileByCategory(PopupField<string> popup, IEnumerable<Type> kinds, Type shown)
+        {
+            var paths = new Dictionary<string, string>();
+            foreach (var each in kinds) paths.TryAdd(ScalerFields.KindName(each), MenuPathOf(each));
+            if (shown != null) paths.TryAdd(ScalerFields.KindName(shown), MenuPathOf(shown));
+            popup.formatSelectedValueCallback = name => name;
+            popup.formatListItemCallback = name => paths.TryGetValue(name, out var path) ? path : name;
         }
 
         /// <summary>

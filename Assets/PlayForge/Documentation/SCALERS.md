@@ -108,19 +108,24 @@ from zero. A field whose unit is "%" stores 0.3 and shows and takes it as 30%. A
 copied from a field that has a target into one that hasn't, says so under the field, and the Problems window lists it;
 it reads the field's number.
 
-The field menu holds:
+The field menu holds the items below. A scaler field of its own, as a Group member's, has the same menu, and its kind
+menu files its kinds by category, as a number field's does.
 
 - **Save as Scaler Asset…**: a name and a folder, then **Save and Use**, which saves the field's scaler as a Scaler
   asset and makes the field share it.
-- **Use a Scaler Asset…**: a list of the project's Scaler assets. The field shares the one you pick.
+- **Scaler Assets**: a submenu of the project's Scaler assets, the one the field shares checked. The field shares the
+  one you pick.
 - **Import Values…**: a window that lists the Scaler assets and the other assets' fields with values per level. Pick
   one to compare its values with the field's, level by level, with both curves, then **Copy Values**. A shorter table's
   last value holds for the levels past its end, and the window says which levels those are. One Undo takes it back.
 - **Quick Fill…**: fills the table from a pattern: **Same Value**, **Straight Line**, **Slow Then Fast** and **Fast
   Then Slow** with a **Strength**, **Steps**, **Add Each Level**, **Multiply Each Level**, **Ease In and Out**, or a
   **Custom Curve** you draw, from one value to another. **Rounding** makes the values whole numbers or rounds them
-  to a **Step**. A preview shows the values as the table will, with their curve, and one Undo takes them back.
-- **Make Constant**: the field reads a number again, the value its first level read.
+  to a **Step**. A preview shows the values as the table will, with their curve, and one Undo takes them back. On a
+  scaler spread over levels it fills the points, as many as **Points** says, and the preview shows what each level
+  reads between them.
+- **Make Constant**: the field reads a number again, the value its first level read. A scaler field of its own, with
+  no number, becomes a **Fixed Value** of that value.
 
 ## Values per level
 
@@ -259,7 +264,7 @@ number and Combine: Scaler × Number with a number of 1.5 reads the asset's valu
 - The asset's own inspector shows its name, its kind and how many fields use it, its **Description**, its **Values**,
   and **Used By**: each field that shares it, by its asset and field. Click a row to select the asset.
 - Any magnitude field can share a Scaler asset. An attribute set's element shares one whose scaler is a cached kind,
-  and its Use a Scaler Asset lists only those. A Scaler asset can't hold a Shared scaler of its own.
+  and its Scaler Assets lists only those. A Scaler asset can't hold a Shared scaler of its own.
 - A field whose asset is missing reads as a field with no scaler, and an element whose asset is missing reads its root
   value. A chain of shared scalers that comes back to its own asset stops after eight steps, rather than run forever.
 

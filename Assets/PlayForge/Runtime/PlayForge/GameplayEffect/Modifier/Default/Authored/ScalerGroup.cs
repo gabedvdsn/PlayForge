@@ -160,7 +160,9 @@ namespace FarEmerald.PlayForge
     [Serializable]
     public struct MagnitudeModifierGroupMember
     {
+        // The kinds a number takes, none of an attribute set's cached ones, which its kind menu offered beside them (ED-81)
         [SerializeReference]
+        [ScalerRootAssignment(null, typeof(AbstractCachedScaler))]
         [Tooltip("The member: a scaler, or a kind of number")]
         public AbstractScaler Calculation;
 

@@ -7,6 +7,9 @@ tracks each fix below by its ID.
 ## [Unreleased]
 
 ### Added
+- A scaler field of its own, as a Group member's, has the number field's menu: Save as Scaler Asset, Scaler Assets,
+  Import Values, Quick Fill and Make Constant, which makes it a Fixed Value of what it read at level 1 (ED-77).
+- Quick Fill on a scaler spread over levels previews what each level reads between its points (ED-82).
 - `AbstractScaler.IsEmpty`, whether a scaler is no kind at all, as a Group with no members, and
   `AbstractScaler.IsNone(scaler)` for a slot: a field that holds one reads its number, as a field with no scaler does
   (ED-80).
@@ -271,6 +274,9 @@ tracks each fix below by its ID.
   page, through one table of links in the editor.
 
 ### Changed
+- The field menu files the Scaler assets under a **Scaler Assets** submenu, the one the field shares checked; it
+  listed each at its top (ED-77).
+- A scaler field's kind menu files its kinds by category, as a number field's does (ED-81).
 - A Group with no members, or none that holds a kind, is no kind at all: its field reads its number, where it read
   values per level the inspector hid. A Group shows no values per level (ED-80, Decision 44).
 - **`ConditionalScaler`** is a number kind. Its condition is `When`, a `GameplayCondition`, in place of `Condition`
@@ -545,6 +551,8 @@ tracks each fix below by its ID.
   Asking whether its sequence was paused took 24 bytes a frame.
 
 ### Fixed
+- A Group member's kind menu offers a number's kinds alone; it offered an attribute set's cached kinds beside them,
+  By Level and Shared each twice. A number inside a scaler, as a Conditional's, takes its own kinds too (ED-81).
 - A cached Group, an attribute set element's, set to ignore its overriding members, no longer throws as its element is
   worked out; it sets them aside, and the others join as they would (ED-80).
 - An effect's Stack Behaviours can be added and edited in the inspector: each picks its kind, Stack Bounds, Scaled

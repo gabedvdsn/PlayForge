@@ -35,13 +35,26 @@ namespace FarEmerald.PlayForge.Extended.Editor
         {
             var assignment = scaler.GetAttribute<ScalerRootAssignment>();
             bool inAsset = scaler.serializedObject.targetObject is ScalerAsset;
+            // A field declared as a narrower type, as a cached Group member's, takes its kinds alone: a kind it can't hold
+            // was offered, and failed to set (ED-81)
+            var declared = DeclaredTypeOf(scaler);
             return TypeCache.GetTypesDerivedFrom<AbstractScaler>()
                 .Where(type => !type.IsAbstract && !type.IsGenericType && type.GetConstructor(Type.EmptyTypes) != null)
+                .Where(type => declared == null || declared.IsAssignableFrom(type))
                 .Where(type => assignment?.RootType == null || assignment.RootType.IsAssignableFrom(type))
                 .Where(type => assignment?.AvoidType == null || !assignment.AvoidType.IsAssignableFrom(type))
                 .Where(type => !(inAsset && IsShared(type)))
                 .OrderBy(Rank).ThenBy(KindName, StringComparer.OrdinalIgnoreCase)
                 .ToList();
+        }
+
+        // The type a managed reference field is declared as, from Unity's "Assembly Namespace.Type"; null where it can't tell
+        private static Type DeclaredTypeOf(SerializedProperty property)
+        {
+            if (property == null || property.propertyType != SerializedPropertyType.ManagedReference) return null;
+            var name = property.managedReferenceFieldTypename;
+            int space = string.IsNullOrEmpty(name) ? -1 : name.IndexOf(' ');
+            return space < 0 ? null : Type.GetType($"{name.Substring(space + 1)}, {name.Substring(0, space)}");
         }
 
         private static int Rank(Type type) =>

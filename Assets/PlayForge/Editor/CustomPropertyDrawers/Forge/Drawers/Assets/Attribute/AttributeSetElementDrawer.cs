@@ -298,7 +298,7 @@ namespace FarEmerald.PlayForge.Extended.Editor
         }
 
         // The menu item that copies one side's magnitude and scaler into the other, a shared scaler after the copy
-        private static void CopyItem(GenericDropdownMenu menu, string label, SerializedProperty from, SerializedProperty to,
+        private static void CopyItem(ForgeFieldMenu menu, string label, SerializedProperty from, SerializedProperty to,
             SerializedProperty link, bool intoBase)
         {
             // While Current takes Base's settings, a copy into Current changes nothing it reads

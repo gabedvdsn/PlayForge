@@ -14,7 +14,9 @@ namespace FarEmerald.PlayForge.Extended.Editor
     /// level with their curve, Stretch Over Levels, the kind's own fields and its behaviours, or a Shared scaler's
     /// asset. It drew a tinted box with a colored border, a collapse arrow, Quick Fill tabs and an import button, and
     /// rebuilt itself on a copy of the first selected asset, so an edit after a rebuild reached that asset alone (ED-12).
-    /// It writes nothing while it draws (ED-34).
+    /// It writes nothing while it draws (ED-34). Its kinds file by category, as a number field's do (ED-81), and its field
+    /// menu is a number field's: Save as Scaler Asset, the Scaler assets, Import Values, Quick Fill and Make Constant
+    /// (ED-77).
     /// </summary>
     [CustomPropertyDrawer(typeof(AbstractScaler), true)]
     public class ScalerDrawer : PropertyDrawer
@@ -28,7 +30,8 @@ namespace FarEmerald.PlayForge.Extended.Editor
             ForgeTheme.Apply(root);
             root.AddToClassList("pf-scaler-field");
             var label = preferredLabel ?? property.displayName;
-            var kinds = ScalerFields.KindsFor(property);
+            // In the number field's menu's order, filed by category (ED-81)
+            var kinds = NumberFields.InMenuOrder(ScalerFields.KindsFor(property));
 
             Type shownType = null;
             bool mixedKinds = false;
@@ -55,10 +58,16 @@ namespace FarEmerald.PlayForge.Extended.Editor
                 kind.AddToClassList(BaseField<string>.alignedFieldUssClassName);
                 kind.AddToClassList("pf-magnitude__kind-labelled");
                 kind.showMixedValue = mixedKinds;
+                NumberFields.FileByCategory(kind, kinds, shownType);
                 row.Add(kind);
                 range = new Label { name = "Range" };
                 range.AddToClassList("pf-magnitude__range");
                 row.Add(range);
+                // The number field's menu, wherever a scaler is chosen (ED-77)
+                var menu = new ForgeIconButton(ForgeGlyphShape.Menu, $"{label} field menu", null) { name = "FieldMenu" };
+                menu.AddToClassList("pf-magnitude__menu");
+                menu.clicked += () => MagnitudeField.ShowMenu(property, menu, label, null);
+                row.Add(menu);
                 root.Add(row);
 
                 // A scaler another list element shares, after Unity's array "+" copied its reference id, says so, with a

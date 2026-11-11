@@ -12,7 +12,8 @@ namespace FarEmerald.PlayForge.Extended.Editor
     /// <summary>
     /// Quick Fill, from a scaler field's menu (ED-63, Docs/EDITOR_STYLE.md): what it fills, the scaler's levels or its
     /// points; a pattern and its values; rounding; and a preview of the values as the scaler's table shows them, with their
-    /// curve. Apply writes them, and the curve a spread scaler reads, as one Undo step. It drew a look of its own, a purple
+    /// curve, and, for a scaler spread over levels, what each level reads between its points (ED-82). Apply writes them,
+    /// and the curve a spread scaler reads, as one Undo step. It drew a look of its own, a purple
     /// bold title, a green Apply, 10 px hints and tinted boxes, from styles set in C#, with its fields outside the label
     /// column, and wrote through a property it kept from when it opened.
     /// </summary>
@@ -65,6 +66,12 @@ namespace FarEmerald.PlayForge.Extended.Editor
         private string fills = "";
         private EScalerInterpolation between = EScalerInterpolation.Linear;
 
+        // A spread scaler's levels, which its points spread over and the preview reads between them (ED-82)
+        private ScalerFields.LevelRange levels;
+        private ELevelConfig levelConfig = ELevelConfig.LockToLevelProvider;
+        private int ownMax;
+        private VisualElement previewReads;
+
         private VisualElement previewTable;
         private ForgeCurvePreview curve;
 
@@ -94,6 +101,12 @@ namespace FarEmerald.PlayForge.Extended.Editor
             if (interpolation != null) between = (EScalerInterpolation)interpolation.intValue;
             var config = scaler.FindPropertyRelative(nameof(AbstractScaler.Configuration));
             var range = ScalerFields.LevelsOf(scaler.serializedObject);
+            // The levels a spread scaler's points spread over, as its table reads them: a kind that takes no range of its
+            // own spreads over its provider's (ED-82)
+            levels = range;
+            bool readsRange = scaler.managedReferenceValue is AbstractScaler kind && (kind.Parts & EScalerParts.LevelRange) != 0;
+            levelConfig = readsRange && config != null ? (ELevelConfig)config.intValue : ELevelConfig.LockToLevelProvider;
+            ownMax = scaler.FindPropertyRelative(nameof(AbstractScaler.MaxLevel))?.intValue ?? 0;
             bool follows = !spread && range.Known && config != null && (ELevelConfig)config.intValue == ELevelConfig.LockToLevelProvider;
 
             // It fills the levels the scaler's table shows: its level provider's, while it follows one, rather than the
@@ -183,6 +196,9 @@ namespace FarEmerald.PlayForge.Extended.Editor
             curve = new ForgeCurvePreview { name = "Curve" };
             preview.Add(curve);
             root.Add(preview);
+            // Spread, what each level reads between the points, as the scaler's table shows (ED-82)
+            previewReads = new VisualElement { name = "PreviewReads" };
+            root.Add(previewReads);
 
             var footer = new VisualElement();
             footer.AddToClassList("pf-dialog__footer");
@@ -268,6 +284,26 @@ namespace FarEmerald.PlayForge.Extended.Editor
             }
             // A spread scaler's curve passes between its points as it reads them; a table per level steps
             curve?.Show(values, between: spread ? between : (EScalerInterpolation?)null);
+            ShowReads(values);
+        }
+
+        // What each of a spread scaler's levels reads between the points, as the runtime reads them, while its levels are
+        // known: the points are spread over them, not a value for each (ED-82)
+        private void ShowReads(float[] values)
+        {
+            if (previewReads == null) return;
+            previewReads.Clear();
+            if (!spread) return;
+            var (first, last) = ScalerFields.RealLevels(levels, levelConfig, ownMax);
+            if (last < first) return;
+            int providerLast = levels.Known ? levels.Last : ownMax;
+            var reads = ScalerFields.ReadsAtLevels(AbstractScaler.CurveFor(values, between), first, last, levelConfig, ownMax, providerLast);
+            previewReads.Add(ScalerFields.ReadsTable(first, last, out var cells));
+            for (int i = 0; i < cells.Length; i++)
+            {
+                cells[i].text = ScalerFields.Number(reads[i]);
+                cells[i].tooltip = $"Level {first + i} reads {ScalerFields.Number(reads[i])}";
+            }
         }
 
         /// <summary>
