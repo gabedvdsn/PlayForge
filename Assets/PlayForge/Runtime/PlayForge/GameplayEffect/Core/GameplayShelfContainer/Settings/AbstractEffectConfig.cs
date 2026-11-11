@@ -258,20 +258,28 @@ namespace FarEmerald.PlayForge
     [Serializable]
     public class StackBoundsConfig : AbstractStackingConfig
     {
+        [Tooltip("The fewest stacks the effect holds; a new one starts with these")]
         public int Min;
+
+        [Tooltip("The most stacks the effect holds; an application past them overflows")]
         public int Max;
+
+        [Tooltip("At the most: do nothing more, or start a new effect of its own that stacks again")]
         public EStackBoundsOnMaxPolicy OnMaxPolicy = EStackBoundsOnMaxPolicy.DoNothing;
 
         /// <summary>
         /// The effects that land, from the application's origin, as a stack would take the effect past <see cref="Max"/>,
         /// as a bleed's fourth stack hemorrhages. A stack past the max did nothing (FEAT-8, Decision 30).
         /// </summary>
+        [Tooltip("Effects that land, from the application's origin, as an application would take the effect past its most")]
         public List<GameplayEffect> OverflowEffects = new();
 
         /// <summary>Whether an application that overflows leaves the effect's duration alone, where it would refresh or extend it.</summary>
+        [Tooltip("An application that overflows leaves the effect's time as it is, where it would refresh or extend it")]
         public bool DenyRefreshOnOverflow;
 
         /// <summary>Whether the effect's stacks come off as it overflows, so it starts again from none.</summary>
+        [Tooltip("The stacks come off as it overflows, so the effect starts again from none")]
         public bool ClearStacksOnOverflow;
 
         /// <summary>Whether an amount reaching the bound would take the container past its max.</summary>
@@ -302,9 +310,14 @@ namespace FarEmerald.PlayForge
     [Serializable]
     public class StackAmountOperation : AbstractStackingConfig
     {
+        [Tooltip("How the scaler sets the stacks an application adds: times the amount, plus it, or in its place")]
         public EMagnitudeOperation Operation;
-        [ScalerRootAssignment(null, typeof(AbstractCachedScaler))] [SerializeReference] 
+
+        [Tooltip("The scaler, read against the effect")]
+        [ScalerRootAssignment(null, typeof(AbstractCachedScaler))] [SerializeReference]
         public AbstractScaler Scaler;
+
+        [Tooltip("How a part of a stack becomes a whole one")]
         public ERoundingOperation Rounding;
 
         public override void InitializeContainer(AbstractStackingEffectContainer container)
@@ -325,23 +338,37 @@ namespace FarEmerald.PlayForge
                 _ => throw new ArgumentOutOfRangeException()
             };
 
-            return Rounding switch
-            {
-
-                ERoundingOperation.Floor => Mathf.FloorToInt(stacks),
-                ERoundingOperation.Ceil => Mathf.CeilToInt(stacks),
-                _ => throw new ArgumentOutOfRangeException()
-            };
+            return StackRounding.Whole(stacks, Rounding);
         } 
+    }
+
+    // A part of a stack made whole, as a behaviour's rounding says. Round, a half away from zero, came with number fields
+    // (NUM-1), and threw where the behaviours made their stacks whole (ED-75)
+    internal static class StackRounding
+    {
+        public static int Whole(float stacks, ERoundingOperation rounding) => rounding switch
+        {
+            ERoundingOperation.Floor => Mathf.FloorToInt(stacks),
+            ERoundingOperation.Ceil => Mathf.CeilToInt(stacks),
+            ERoundingOperation.Round => (int)Math.Round(stacks, MidpointRounding.AwayFromZero),
+            _ => Mathf.FloorToInt(stacks),
+        };
     }
 
     [Serializable]
     public class InitializationOperation : AbstractStackingConfig
     {
+        [Tooltip("The stacks a new effect starts with")]
         public int InitializationStacks = 0;
+
+        [Tooltip("How the scaler sets them: times these, plus them, or in their place")]
         public EMagnitudeOperation Operation;
-        [ScalerRootAssignment(null, typeof(AbstractCachedScaler))] [SerializeReference] 
+
+        [Tooltip("The scaler, read against the effect")]
+        [ScalerRootAssignment(null, typeof(AbstractCachedScaler))] [SerializeReference]
         public AbstractScaler Scaler;
+
+        [Tooltip("How a part of a stack becomes a whole one")]
         public ERoundingOperation Rounding;
         
         public override void InitializeContainer(AbstractStackingEffectContainer container)
@@ -361,12 +388,7 @@ namespace FarEmerald.PlayForge
                 _ => throw new ArgumentOutOfRangeException()
             };
 
-            var intStacks = Rounding switch
-            {
-                ERoundingOperation.Floor => Mathf.FloorToInt(stacks),
-                ERoundingOperation.Ceil => Mathf.CeilToInt(stacks),
-                _ => throw new ArgumentOutOfRangeException()
-            };
+            var intStacks = StackRounding.Whole(stacks, Rounding);
             
             container.Stack(intStacks);
         }

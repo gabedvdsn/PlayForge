@@ -538,6 +538,11 @@ tracks each fix below by its ID.
   Asking whether its sequence was paused took 24 bytes a frame.
 
 ### Fixed
+- An effect's Stack Behaviours can be added and edited in the inspector: each picks its kind, Stack Bounds, Scaled
+  Stack Amount or Starting Stacks, and shows its fields, with tooltips. They had no drawer, so a new behaviour had no
+  kind to pick (ED-75).
+- A Scaled Stack Amount or Starting Stacks behaviour that rounds to the nearest no longer throws as its effect stacks;
+  it rounds a half away from zero (ED-75).
 - A tag is shown by its display name wherever it is read: an effect's and an item's summaries in the Forge, the
   import window's tag column, a tag query's and a tag event's text, the tag cache's log and a process's role. Each
   showed the tag's stored name, which is padded for a unique tag (ED-67).

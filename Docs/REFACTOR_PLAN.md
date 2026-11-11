@@ -839,7 +839,7 @@ had no letter in the review. TS-AA onward came from the test project.
 | ED-72 | L | 6 | The user's request of 2026-11-10: The Forge remembers the sizes of its view's columns between closing and opening. Its lists' column widths are kept already (ED-48), so what is left is the split between the list and the breakdown, which opens 360 wide each time; confirm with the user that this is what was meant | `TheForge.cs` (`TwoPaneSplitView`), `ForgeColumnWidths.cs` | open |
 | ED-73 | L | 6 | Found fixing ED-68: `DataWrapperDrawer` sets its separator's color in C# (`new Color(.15f, .15f, .15f)`), against `Docs/EDITOR_STYLE.md`, and lays its row out with widths set in C# | `DataWrapperDrawer.cs` | open |
 | ED-74 | M | 6 | The user's notes of 2026-11-11 on a Scaler asset in The Forge: it can't be renamed there, and its summary is empty. Its panel for trying it with values of its own is FEAT-32 | The Forge's Scaler asset breakdown | open |
-| ED-75 | H | 6 | The user's report of 2026-11-11: an effect's Stack Behaviours can't be used. The list is a `[SerializeReference] List<AbstractStackingConfig>` drawn by Unity's own field, whose "+" makes no behaviour, as it has no type to make, so none can be added in the inspector (GAS-70 made them save). Wanted: a picker of the behaviours, Stack Bounds, Stack Amount and Initial Stacks, each drawn with its fields and named for what it does. "Stack Amount" is also the duration's own field (`StackAmountOperation`), beside a behaviour class of that name | `GameplayEffectDurationDrawer.cs`, `AbstractEffectConfig.cs` | open |
+| ED-75 | H | 6 | The user's report of 2026-11-11: an effect's Stack Behaviours couldn't be used. They configure a stacking container, `AbstractEffectConfig<AbstractStackingEffectContainer>`, a type apart from the `AbstractEffectConfig<AbstractEffectContainer>` the effect behaviour drawer takes, so they had no drawer, and Unity's own field gave a new element no kind to pick. `StackBehaviourDrawer` draws each as a worker is drawn (ED-56): its kind picked from the behaviours, then its fields, which have tooltips now. Each is named for what it does: Stack Bounds, Scaled Stack Amount (it was Stack Amount Operation, beside the duration's own Stack Amount) and Starting Stacks. Found on the way: both behaviours that round threw on Round, which number fields added (NUM-1), as an effect stacked; they round a half away from zero | `Editor/.../Effect/StackBehaviourDrawer.cs`, `AbstractEffectConfig.cs` | verified |
 | ED-76 | M | 6 | The user's request of 2026-11-11: The Forge goes back and forward over the assets it has shown, as a browser does, so a look at another asset is a click from the one before; and an entry in an asset's Used By opens that asset in The Forge | `TheForge.cs` | open |
 | ED-77 | M | 6 | The user's request of 2026-11-11, importing scalers: a number field's three-dot menu lists every Scaler asset at its top; they go under a "Scaler Assets/" submenu. Wherever a scaler is chosen, a Group member's Calculation among them, its field offers the same menu: Save as Scaler Asset, Import Scaler Asset, Import Values, Quick Fill and Make Constant | `MagnitudeField.cs`, `ScalerDrawer.cs`, `ScalerSupportDrawers.cs` | open |
 | ED-78 | L | 6 | The user's note of 2026-11-11: a Scaler asset and a Requirement Template each have a description, drawn two ways. Each shows it in its breakdown's summary header, as text to read, and not only in the box that edits it | The Forge's breakdowns of both | open |
@@ -1063,6 +1063,19 @@ GAS-4 with GAS-5, PC-6, and TS-I with PC-5.
 ## Log
 
 Record baselines, gate results and notable decisions here, newest first.
+
+- 2026-11-11, **ED-75: stack behaviours can be added.** An effect's Stack Behaviours had no drawer, as they configure
+  a stacking container, a type apart from the one the effect behaviour drawer takes, so Unity's own field gave a new
+  element no kind to pick. Each picks its kind and shows its fields as a worker does, named for what it does: Stack
+  Bounds, Scaled Stack Amount and Starting Stacks, with tooltips. The two behaviours that round threw on Round, which
+  number fields added; they round a half away from zero.
+  - Red first: `StackBehaviourDrawerTests` (EditMode) and `StackBehaviourTests` (PlayMode) in Proving Grounds, written
+    before the fix, red by not compiling against it; the rounding test wasn't run against the old code.
+  - Gates: MSBuild, the runtime and Editor projects: 0 errors. Proving Grounds, Demo imported: EditMode 760 of 762, the
+    edit-and-undo smoke tests of every asset with stack behaviours among the passes; the two failures are ED-61, which
+    the user's uncommitted process lifecycle change fails, and ED-44's timing check, 91 ms where it allows 89, which
+    passed in the two runs before and touches nothing here. PlayMode ran the two new tests, 2 of 2; the full suite ran
+    with FEAT-32 earlier the same day. The golden runner: 25 of 25.
 
 - 2026-11-11, **FEAT-32: an effect level by level, with what makes each of its numbers (LVL-1 to LVL-4).** A number
   explains its read as a tree of parts, each with what it read and what it gave, and says what a part needs where its
