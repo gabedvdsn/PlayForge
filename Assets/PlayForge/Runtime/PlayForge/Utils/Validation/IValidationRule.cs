@@ -2,11 +2,6 @@
 
 namespace FarEmerald.PlayForge
 {
-    public interface IValidationRule<T> where T : IValidationReady
-    {
-        bool Validate(T data, Func<ITarget> getSource, out string error);
-    }
-
     [Serializable]
     public abstract class AbstractAttributeValidationRule : IAbilityValidationRule
     {
@@ -16,8 +11,14 @@ namespace FarEmerald.PlayForge
         public abstract string GetName();
     }
     
-    public interface IAbilityValidationRule : IValidationRule<AbilityDataPacket>
+    /// <summary>
+    /// A rule an ability's activation keeps, for its source or its target. It took the generic IValidationRule, which
+    /// nothing else took; it declares its own Validate (FEAT-36, Decision 44).
+    /// </summary>
+    public interface IAbilityValidationRule
     {
+        bool Validate(AbilityDataPacket data, Func<ITarget> getSource, out string error);
+
         public string GetName();
     }
 }

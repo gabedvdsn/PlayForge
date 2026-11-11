@@ -3,7 +3,7 @@ using JetBrains.Annotations;
 
 namespace FarEmerald.PlayForge
 {
-    public interface ITarget : IAffiliated, ITagHandler, IValidationReady, IHasReadableDefinition
+    public interface ITarget : IAffiliated, ITagHandler, IHasReadableDefinition
     {
         public void CommunicateTargetedIntent(AbstractGameplayMonoProcess entity);
 

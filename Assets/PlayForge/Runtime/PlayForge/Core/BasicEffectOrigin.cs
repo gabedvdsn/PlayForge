@@ -3,7 +3,7 @@
 
 namespace FarEmerald.PlayForge
 {
-    public abstract class BasicEffectOrigin : IEffectOrigin, IValidationReady
+    public abstract class BasicEffectOrigin : IEffectOrigin
     {
         public ISource Source { get; private set; }
         

@@ -4,7 +4,7 @@ using UnityEngine;
 
 namespace FarEmerald.PlayForge
 {
-    public interface IAttribute : IValidationReady, IHasReadableDefinition, ITagSource, IEquatable<IAttribute>
+    public interface IAttribute : IHasReadableDefinition, ITagSource, IEquatable<IAttribute>
     {
         public string GetAbbreviation();
         public List<TextureItem> GetTextures();

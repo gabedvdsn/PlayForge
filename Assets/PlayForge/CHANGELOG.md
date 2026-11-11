@@ -563,6 +563,8 @@ tracks each fix below by its ID.
   Asking whether its sequence was paused took 24 bytes a frame.
 
 ### Fixed
+- An OnApply impact on a durational effect lands as the effect does, where the effect doesn't tick on application; it
+  never landed, and only the effect's ticks dealt (GAS-71).
 - A Group member's kind menu offers a number's kinds alone; it offered an attribute set's cached kinds beside them,
   By Level and Shared each twice. A number inside a scaler, as a Conditional's, takes its own kinds too (ED-81).
 - A cached Group, an attribute set element's, set to ignore its overriding members, no longer throws as its element is
@@ -755,6 +757,13 @@ tracks each fix below by its ID.
   or turning `Enabled` off. Once the first had ended, it threw, and the rest ran on.
 
 ### Removed
+- `IValidationReady`, which nothing took; `IAttribute`, `ITarget`, `BasicEffectOrigin` and `ProcessDataPacket` no
+  longer implement it (FEAT-36).
+- The generic `IValidationRule<T>`; `IAbilityValidationRule` declares its own `Validate` (FEAT-36).
+- `IAttributeHandler`, which nothing took (FEAT-36).
+- `IGameplayConfigUser`, which nothing took (FEAT-36).
+- `ILockedTagProvider`, which nothing read; the locked-tag attributes stay (FEAT-36).
+- `Utils/RuntimeProxy.cs`, whose code was commented out (FEAT-36).
 - The Demos sample, the Demo scene and Swarm Defender, which the Demo sample replaces (SP-26, Decision 37).
 - `AbstractRefDrawer`, the old type picker, which only `AbstractTypeRefDrawer` used. A drawer of your own that
   derives from `AbstractTypeRefDrawer` or `AbstractGenericDrawer` keeps `GetStringValue`, `FilterType`,

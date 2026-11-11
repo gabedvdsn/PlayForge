@@ -18,7 +18,7 @@ namespace FarEmerald.PlayForge
     ///         E.g. procuring the target transform via Data.TryGetPayload[Transform](Target, GameRoot.TransformParameter, Primary, out Transform value)
     ///         This procures the Transform value under the Target classification stored under the key GameRoot.TransformParameter
     /// </summary>
-    public class ProcessDataPacket : IValidationReady, IGameplayProcessHandler
+    public class ProcessDataPacket : IGameplayProcessHandler
     {
         private const char pathSeparator = '>';
         

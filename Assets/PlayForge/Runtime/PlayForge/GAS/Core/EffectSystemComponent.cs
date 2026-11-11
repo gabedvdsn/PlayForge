@@ -16,7 +16,7 @@ namespace FarEmerald.PlayForge
     /// Apply (durational):  shelve container
     ///                      → RegisterModifier per Continuous entry
     ///                      → app workers
-    ///                      → TickOnApplication? commit OnApply entries, then Periodic ones once
+    ///                      → commit OnApply entries; TickOnApplication? then Periodic ones once
     /// Tick:                commit Periodic entries per execute tick
     /// Remove:              container.OnRemove() → UnregisterModifier per Continuous entry.
     ///                      Commits are permanent — there is no rollback path.
@@ -276,9 +276,23 @@ namespace FarEmerald.PlayForge
             Cue(container.Spec, ECueMoment.Applied);
             Cue(container.Spec, ECueMoment.Begin);
 
-            if (ongoing && spec.Base.DurationSpecification.TickOnApplication)
+            if (!ongoing) return;
+            // An OnApply entry is one commit, made as the effect lands. Tick On Application commits them with its tick, and
+            // was the only durational path that did, so an impact authored to land as a ticking effect does was dropped,
+            // and only its ticks dealt (GAS-71)
+            if (spec.Base.DurationSpecification.TickOnApplication) ApplyTickOnApplication(container);
+            else CommitOnApply(container.Spec);
+        }
+
+        // Commits each OnApply entry, per attribute, as the effect is applied
+        private void CommitOnApply(GameplayEffectSpec spec)
+        {
+            foreach (var attribute in spec.GetImpactedAttributes(EImpactDelivery.OnApply))
             {
-                ApplyTickOnApplication(container);
+                AttributeSystem.CommitImpact(
+                    attribute,
+                    new SourcedModifiedAttributeValue(spec, 0f, 0f),
+                    spec.GetImpactersFor(attribute, EImpactDelivery.OnApply));
             }
         }
 
@@ -407,13 +421,7 @@ namespace FarEmerald.PlayForge
             // An OnApply entry is one commit, made as the effect is applied. A durational effect whose only tick is
             // Tick On Application derives OnApply for Add and Flat Bonus, and only the Instant path committed it, so
             // its change never landed (GAS-50)
-            foreach (var attribute in container.Spec.GetImpactedAttributes(EImpactDelivery.OnApply))
-            {
-                AttributeSystem.CommitImpact(
-                    attribute,
-                    new SourcedModifiedAttributeValue(container.Spec, 0f, 0f),
-                    container.Spec.GetImpactersFor(attribute, EImpactDelivery.OnApply));
-            }
+            CommitOnApply(container.Spec);
 
             // Evaluate the tick count ONCE (a scaler-driven count must not be re-rolled
             // per loop iteration), run tick workers with that count, then execute.
