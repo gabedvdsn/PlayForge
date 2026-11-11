@@ -401,7 +401,12 @@ MonoBehaviour:
         Key:
           Name: Demo.Difficulty
           DisplayName: Demo.Difficulty
-        Default: 1
+        Default:
+          Magnitude: 1
+          RealMagnitude: 2
+          Scaler:
+            rid: -2
+        legacyDefault: NaN
     - rid: 2403794261189066936
       type: {class: AttributeBackedScaler, ns: FarEmerald.PlayForge, asm: FarEmerald.PlayForge}
       data:

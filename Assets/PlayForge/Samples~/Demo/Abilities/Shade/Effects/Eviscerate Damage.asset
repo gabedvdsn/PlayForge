@@ -298,10 +298,25 @@ MonoBehaviour:
           m_PostInfinity: 2
           m_RotationOrder: 4
         Behaviours: []
-        MinValue: 0
-        MaxValue: 400
+        MinValue:
+          Magnitude: 0
+          RealMagnitude: 2
+          Scaler:
+            rid: -2
+        MaxValue:
+          Magnitude: 400
+          RealMagnitude: 2
+          Scaler:
+            rid: -2
+        Value:
+          Magnitude: 1
+          RealMagnitude: 3
+          Scaler:
+            rid: 2403794261189067013
+        legacyMinValue: NaN
+        legacyMaxValue: NaN
         Inner:
-          rid: 2403794261189067013
+          rid: -2
     - rid: 2403794261189067012
       type: {class: SetByCallerScaler, ns: FarEmerald.PlayForge, asm: FarEmerald.PlayForge}
       data:
@@ -340,7 +355,12 @@ MonoBehaviour:
         Key:
           Name: Demo.Difficulty
           DisplayName: Demo.Difficulty
-        Default: 1
+        Default:
+          Magnitude: 1
+          RealMagnitude: 2
+          Scaler:
+            rid: -2
+        legacyDefault: NaN
     - rid: 2403794261189067013
       type: {class: ScalerGroup, ns: FarEmerald.PlayForge, asm: FarEmerald.PlayForge}
       data:

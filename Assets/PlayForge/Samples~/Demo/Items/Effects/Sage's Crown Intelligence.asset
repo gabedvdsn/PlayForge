@@ -241,12 +241,32 @@ MonoBehaviour:
         Behaviours: []
         Thresholds:
         - Level: 1
-          Value: 5
+          Value:
+            Magnitude: 5
+            RealMagnitude: 2
+            Scaler:
+              rid: -2
           TierName: Bronze
+          legacyValue: 0
         - Level: 2
-          Value: 10
+          Value:
+            Magnitude: 10
+            RealMagnitude: 2
+            Scaler:
+              rid: -2
           TierName: Silver
+          legacyValue: 0
         - Level: 3
-          Value: 20
+          Value:
+            Magnitude: 20
+            RealMagnitude: 2
+            Scaler:
+              rid: -2
           TierName: Gold
-        DefaultValue: 0
+          legacyValue: 0
+        DefaultValue:
+          Magnitude: 0
+          RealMagnitude: 2
+          Scaler:
+            rid: -2
+        legacyDefaultValue: NaN

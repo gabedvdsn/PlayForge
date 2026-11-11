@@ -1071,8 +1071,11 @@ Record baselines, gate results and notable decisions here, newest first.
     condition under `Condition`, and Unity can't read a number and a reference under one name. A number inside a
     scaler's own field reads the scaler as its owner, so it can no longer read the outer object's fields. A tag
     condition on the target counts by weight, as on the caster, which changes what a query with a count reads there.
-  - Left: the Demo's assets load through the migration and are not yet re-saved in the new form; the "%" unit on a
-    field inside a scaler is phase 4's. A condition in an ability's validation or an effect's requirements is FEAT-30's.
+  - The Demo, re-saved (the user's ask): Upgrade Assets, run on the private copy, re-saved the 21 of the Demo's 173
+    PlayForge assets that hold one of the five scalers, and no other. Its 705 numbers read the same from the new form
+    as from the old, a second re-save changes nothing, and the Demo's 9 tests pass on it.
+  - Left: the "%" unit on a field inside a scaler is phase 4's. A condition in an ability's validation or an effect's
+    requirements is FEAT-30's.
 
 - 2026-11-10, **FEAT-29 phase 2: the new kinds, numbers that ask workers, Group as a kind and limits (NUM-8 to
   NUM-15), with tags' display names (ED-67) and the Local Data key (ED-68).** Six kinds, each a `NumberKind` written

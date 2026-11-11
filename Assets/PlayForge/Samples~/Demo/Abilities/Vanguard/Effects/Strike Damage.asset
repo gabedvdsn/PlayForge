@@ -411,21 +411,33 @@ MonoBehaviour:
           m_PostInfinity: 2
           m_RotationOrder: 4
         Behaviours: []
-        Condition: 1
-        TagCondition:
+        When:
+          rid: 2403794356902821892
+        TrueValue:
+          Magnitude: 1
+          RealMagnitude: 3
+          Scaler:
+            rid: 2403794261189066815
+        FalseValue:
+          Magnitude: 1
+          RealMagnitude: 3
+          Scaler:
+            rid: 2403794261189066816
+        legacyCondition: -1
+        legacyTagQuery:
           Tag:
-            Name: Status.Marked
-            DisplayName: Status.Marked
+            Name: 
+            DisplayName: 
           Operator: 5
           Magnitude: 0
           MatchMode: 0
-        CheckAttribute: {fileID: 0}
-        ThresholdValue: 50
-        Comparison: 5
+        legacyAttribute: {fileID: 0}
+        legacyThreshold: NaN
+        legacyComparison: 0
         TrueScaler:
-          rid: 2403794261189066815
+          rid: -2
         FalseScaler:
-          rid: 2403794261189066816
+          rid: -2
     - rid: 2403794261189066812
       type: {class: SetByCallerScaler, ns: FarEmerald.PlayForge, asm: FarEmerald.PlayForge}
       data:
@@ -464,7 +476,12 @@ MonoBehaviour:
         Key:
           Name: Demo.Difficulty
           DisplayName: Demo.Difficulty
-        Default: 1
+        Default:
+          Magnitude: 1
+          RealMagnitude: 2
+          Scaler:
+            rid: -2
+        legacyDefault: NaN
     - rid: 2403794261189066813
       type: {class: AttributeBackedScaler, ns: FarEmerald.PlayForge, asm: FarEmerald.PlayForge}
       data:
@@ -612,3 +629,14 @@ MonoBehaviour:
           m_RotationOrder: 4
         Behaviours: []
         Value: 1
+    - rid: 2403794356902821892
+      type: {class: TagCondition, ns: FarEmerald.PlayForge, asm: FarEmerald.PlayForge}
+      data:
+        On: 1
+        Query:
+          Tag:
+            Name: Status.Marked
+            DisplayName: Status.Marked
+          Operator: 5
+          Magnitude: 0
+          MatchMode: 0
