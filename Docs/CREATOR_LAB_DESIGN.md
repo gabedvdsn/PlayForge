@@ -3,9 +3,9 @@
 One lab for trying a project's own assets of every sort, the way a designer works: put units down, give them abilities,
 effects and items, cast, watch the numbers move, change an asset, and see the change in play.
 
-**Status:** for review (FEAT-35, the user's request of 2026-11-11). Nothing is built. Open decisions 26 and 27 hold
-two of its questions already, and this design adds 29 and 30; each is under *To answer* at the end. FEAT-32 (an effect
-level by level) and FEAT-34 (Forge Projects) feed it.
+**Status:** decided 2026-11-11 (Decision 44): a scene, in the package, showing all six ways inside, with a driver for
+the author's unit; Forge Projects are folders. Phase 1, FEAT-32, is built (LVL-1 to LVL-4). FEAT-34 (Forge Projects)
+feeds it.
 
 ## The problem
 
@@ -178,7 +178,10 @@ Each phase gets tracker rows of its own, red tests first, as FEAT-29's did.
    in the lab and in the Debugger.
 6. **Forge Projects:** the switch in the library, once FEAT-34 is built.
 
-## To answer
+## Decided (Decision 44)
+
+Each as recommended below.
+
 
 - **Open decision 27** (already open): which of the six ways of showing its working, in what order; and whether the
   lab is a scene in the package or an editor window. **Recommended:** all six, in the order above; a scene played in the

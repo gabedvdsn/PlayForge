@@ -479,6 +479,27 @@ from. It lives outside `Assets/` so it never ships in the package.
     comparison, rounding, a magnitude's operation, and the stacking, re-application and overflow policies. The pass
     over the other enums that choose a behaviour, by that test, is FEAT-30.
 
+- Decision 44, 2026-11-11: the user's answers to Open decisions 24 to 30, each as recommended.
+  - **Interfaces that nothing takes go,** in one pass, each a CHANGELOG line, as a project could name one:
+    `IValidationReady` and the generic `IValidationRule<T>` (`GameplayCondition` is the second family of rules it waited
+    for), `IProxyTaskBehaviourUser` and `IProxyTaskBehaviourCaller` (the behaviour runs itself over its users) with
+    `CompositeBehaviourPacket`, `IAttributeHandler`, `IGameplayConfigUser`, `ILockedTagProvider`, and the commented-out
+    `Utils/RuntimeProxy.cs`. FEAT-36.
+  - **A builder in the package** for effects, abilities and entities made in code: the harness's and the Battle
+    sample's helpers become a supported runtime API, with a scope that destroys what it made and a documentation page,
+    after a probe of what `CreateInstance` costs. Definitions stay assets. FEAT-37.
+  - **A Forge Project is a folder,** with a project asset at its root that names its assets for saves, as the catalog
+    does now; every asset picker scopes to the active project's folder (FEAT-34).
+  - **The Creator Lab shows all six ways inside,** in the design's order: explain a number, an effect's journal, a
+    combat log, stopping on an event and stepping, watches and logs; the Debugger shows the same journals for any game.
+  - **The lab is a scene,** played in the Game view, its panels UI Toolkit over the space.
+  - **The lab lives in the package,** as a tool, its own assembly a build can leave out, opened from Window →
+    PlayForge; the Demo's arena code moves into it, and the Demo uses it.
+  - **The author's unit moves and casts through a driver** the project implements, `ILabUnitDriver`, with the Demo's
+    controls as the lab's own, and `ForgeInput` for targeting, as now.
+  - **A Group with no members reads as no kind,** so its field reads its number, and a Group shows no values per level
+    (ED-80).
+
 **Open. Ask the user; do not assume:**
 1. ~~**Uncommitted changes**~~: decided, see above.
 2. ~~**The test project, "PlayForge Proving Grounds"**~~: decided, see above.
@@ -503,86 +524,13 @@ from. It lives outside `Assets/` so it never ships in the package.
 21. ~~**The demo's play (Decision 37)**~~: decided, see above (Decision 38).
 22. ~~**Number fields (FEAT-29)**~~: decided, see above (Decision 40).
 23. ~~**An enum or a class for a choice of behaviour**~~: decided, see above (Decision 43).
-24. **Interfaces that nothing takes** (the user's question of 2026-11-10: do `IValidationReady`,
-    `IProxyTaskBehaviourUser` and `IProxyTaskBehaviourCaller` benefit the framework, how could they, and are there
-    others?). An interface earns its place where code takes it: as a parameter, in a collection, or as a constraint
-    whose members are called. `ISource`, `ITagHandler`, `ILocalDataUser` and `INumberWorker` do.
-    - **`IValidationReady`** has no members. It is the constraint on `IValidationRule<T>`, and it marks `IAttribute`,
-      `ITarget`, `BasicEffectOrigin` and `ProcessDataPacket`; but the only rules there are validate an
-      `AbilityDataPacket` (`IAbilityValidationRule`), and nothing takes an `IValidationRule<T>`. So it gives a rule
-      nothing to call and stops nothing but `IValidationRule<int>`. It would be of use with a second family of rules,
-      as whether an effect may be applied to a target, drawn by one rule picker for any `T`. Recommended: remove it
-      and the generic until then; if Open decision 23 makes conditions classes, the condition is that second family,
-      and its type is the one to keep.
-    - **`IProxyTaskBehaviourCaller`** puts two `ApplyBehaviour` methods on every process and every ability system for
-      one caller, `DisjointAbilityTask`. Both process bases implement them alike (`cb.RunAsync(this, user, token)`),
-      `RunAsync` takes the caller and doesn't use it, and `IGameplayProcess` declares the two a second time.
-      **`IProxyTaskBehaviourUser`** is one property, `Data`, which only a caller implements. Recommended: the behaviour
-      runs itself over its users (`behaviour.RunAsync(users, token)`), and the two interfaces go, with
-      `CompositeBehaviourPacket`, which nothing uses. They would be of use with a second behaviour that different
-      callers run differently; none is planned.
-    - **Others:** `IAttributeHandler` and `IGameplayConfigUser` have no members, implementers or users.
-      `ILockedTagProvider` has no implementer. `IGameplayProcess` (about sixteen members, on the two process bases),
-      `ITagSource`, `IWorkerGroupSource` and `IAnalysisUser` are implemented and never taken as a type.
-      `Utils/RuntimeProxy.cs` is commented out, its two interfaces with it.
-    - **To answer:** remove the unused ones in one pass, each a CHANGELOG line since a project could name one, or keep
-      any there are plans for?
-25. **Effects, abilities and entities made in code** (the user's question of 2026-11-10: is there a good way, and is
-    there a benefit to a form that isn't an asset?).
-    - **Now:** every authored type is a ScriptableObject, and a spec holds the concrete type
-      (`GameplayEffectSpec.Base` is a `GameplayEffect`), so code makes one with `ScriptableObject.CreateInstance` and
-      fills its fields, in a build as in the editor. The helpers that do so aren't the package's API: `BattleAssets`
-      in the Battle sample, and `ForgeAssets` in Proving Grounds' harness. The documentation has no page on it.
-    - **What `CreateInstance` costs** is paid once for each definition and not for each application: applying an
-      effect makes a spec, a plain object. It makes a native object, on the main thread only, which stays until it is
-      destroyed. It hasn't been measured here; a probe in Proving Grounds would say what a thousand cost.
-    - **(a) A builder in the package:** the helpers become a supported runtime API, with a scope that destroys what it
-      made, a documentation page, and a name a save can find a definition made in code by (a save between sessions
-      finds assets through the catalog, which holds assets of the project). No change to the core.
-    - **(b) Definitions that aren't assets:** each definition is data behind an interface, which the asset and a plain
-      class both give, and a spec holds the interface. That gives `new`, nothing to destroy, definitions built off the
-      main thread or read from data files, and tests with no Unity objects. It changes every spec, the save (keyed by
-      ScriptableObject), the caches keyed by `Attribute`, each `if (asset)`, and every editor and the Debugger, and
-      leaves two forms of each type to keep alike. `RuntimeAttribute` and `RuntimeEntityIdentity` are such forms
-      already, and show the cost: a save skips a `RuntimeAttribute`'s commits (`ForgeSave.CaptureCommits`).
-    - **Recommended:** (a), and the probe first. What differs from one application to the next needs no new
-      definition: a level, Set By Caller, Local Data and a worker's number carry it. (b) is for a need (a) can't meet:
-      definitions in bulk from data or mods, or built off the main thread.
-    - **To answer:** (a) or (b), and whether the builder is the package's Runtime or stays a sample's.
-26. **Forge Projects** (FEAT-34, the user's request of 2026-11-11): is a project a folder, whose assets live
-    under it so that moving one moves its file, or a list, whose assets live anywhere and which names them?
-    - **Recommended:** a folder, with a project asset at its root that names its assets for saves, as the catalog
-      does now (FEAT-9). The Demo's assets are one folder already, and a folder is what Unity's Project window shows.
-      A folder also scopes every asset picker to the active project with no list to keep: Unity's object picker
-      takes a search scoped to a folder, and PlayForge's own pickers filter by it.
-    - **To answer:** a folder or a list; and whether The Forge can also show every project at once.
-27. **What the Creator Lab shows of the inside** (FEAT-35, the user's question of 2026-11-11: "what do you propose for
-    this semantic control?"). Proposed, each in the editor alone, so a build pays nothing for it:
-    - **Explain a number:** a number field, a scaler or a condition traces a read as a tree, each part with what it
-      read and what it gave: "−180 = −1 × (100, Caster's Attack Damage, + 80, as Caster's Jingu Charges 4 > 0)".
-    - **An effect's journal:** each application, tick, impact and removal, with its numbers' traces, the workers that
-      ran (which hook, on which side) and the actions they queued and ran.
-    - **An attribute's journal, a combat log:** each change to an attribute as it was made, each worker that changed it
-      and how, and what landed, by dealer and by effect.
-    - **Pause on an event, and step:** pause the lab as an effect lands, a worker runs, an attribute crosses a value or
-      a tag comes or goes, then step a frame at a time on the lab's own clock (`ForgeTime.Use`).
-    - **Watches:** pin an entity's attributes, tags, an effect's stacks or a number, and see them over time.
-    - **Logs:** ForgeLog's levels for each system, filtered to the selected entity.
-    - **To answer:** which of these, in what order; and whether the lab is a scene in the package or an editor window.
-28. **A Group with no members** (ED-80): what it reads. It reads its own values per level today (ED-51).
-    - **Recommended:** nothing, as no kind, so its field reads its number.
-    - **To answer:** nothing, its number, or 0.
-29. **Where the Creator Lab lives** (FEAT-35, `Docs/CREATOR_LAB_DESIGN.md`): (a) in the package, as a tool, a lab module
-    of its own whose assembly a build can leave out, opened from the Window menu; or (b) a sample the author imports.
-    - **Recommended:** (a): it's a tool every project uses, not an example to copy. The Demo's arena code moves into
-      it, and the Demo uses it.
-    - **To answer:** (a) or (b), and whether it ships in builds, where it lists what a Forge Project names.
-30. **The author's unit's controls in the Creator Lab** (FEAT-35): the user asked that it follow "the user's schemas for
-    movement, casting, etc.". PlayForge has no movement or controls of its own.
-    - **Recommended:** a driver the project implements, `ILabUnitDriver` (move to a point, attack a unit, cast an
-      ability at a target, stop), with the lab's own, the Demo's controls, as the default, and `ForgeInput` for
-      targeting, as now.
-    - **To answer:** that, or something the project has already that the lab should read.
+24. ~~**Interfaces that nothing takes**~~: decided, see above (Decision 44).
+25. ~~**Effects, abilities and entities made in code**~~: decided, see above (Decision 44).
+26. ~~**Forge Projects**~~: decided, see above (Decision 44).
+27. ~~**What the Creator Lab shows of the inside**~~: decided, see above (Decision 44).
+28. ~~**A Group with no members**~~: decided, see above (Decision 44).
+29. ~~**Where the Creator Lab lives**~~: decided, see above (Decision 44).
+30. ~~**The author's unit's controls in the Creator Lab**~~: decided, see above (Decision 44).
 
 ## Roadmap
 
@@ -896,7 +844,7 @@ had no letter in the review. TS-AA onward came from the test project.
 | ED-77 | M | 6 | The user's request of 2026-11-11, importing scalers: a number field's three-dot menu lists every Scaler asset at its top; they go under a "Scaler Assets/" submenu. Wherever a scaler is chosen, a Group member's Calculation among them, its field offers the same menu: Save as Scaler Asset, Import Scaler Asset, Import Values, Quick Fill and Make Constant | `MagnitudeField.cs`, `ScalerDrawer.cs`, `ScalerSupportDrawers.cs` | open |
 | ED-78 | L | 6 | The user's note of 2026-11-11: a Scaler asset and a Requirement Template each have a description, drawn two ways. Each shows it in its breakdown's summary header, as text to read, and not only in the box that edits it | The Forge's breakdowns of both | open |
 | ED-79 | L | 6 | The user's note of 2026-11-11: a Requirement Template's category is a tag, in a context of its own, in place of a string | the Requirement Template and its drawer | open |
-| ED-80 | M | 6 | The user's notes of 2026-11-11 on the Group scaler: it shows no values per level, and with no members reads nothing (Open decision 28); where it has Multiply members and no Add, it says so, as the sum they multiply is 0. Members join as the sum of the Adds, times each Multiply, plus each Flat Bonus, in any order, so a first member need not be an Add | `ScalerGroup.cs`, `ScalerFields.cs` | open |
+| ED-80 | M | 6 | The user's notes of 2026-11-11 on the Group scaler: it shows no values per level, and with no members reads as no kind, so its field reads its number (Decision 44); where it has Multiply members and no Add, it says so, as the sum they multiply is 0. Members join as the sum of the Adds, times each Multiply, plus each Flat Bonus, in any order, so a first member need not be an Add | `ScalerGroup.cs`, `ScalerFields.cs` | open |
 | ED-81 | M | 6 | The user's note of 2026-11-11: a scaler field's kind menu (`ScalerDrawer`) lists its kinds flat, where a number field's files them by category; it takes the number field's menu | `ScalerDrawer.cs`, `NumberFields.MenuPathOf` | open |
 | ED-82 | L | 6 | The user's note of 2026-11-11: with Spread Over Levels on, Quick Fill fills the points the curve spreads over, not a value for each level | Quick Fill (`ScalerFields.cs`) | open |
 | ED-83 | M | 6 | The user's report of 2026-11-11: a tag's context can't be changed, in The Forge or where a tag is made outside it | the tag picker, and The Forge's Tags view | open |
@@ -1001,8 +949,10 @@ reads the old demos' fullest assets, so it moves to the new demo's as the old go
 | FEAT-31 | Effect tooling, from the Dota lab | The user's request of 2026-11-10: ten effects from Dota 2 as assets, with a list of what PlayForge could provide to make complex effects approachable. The effects are in Proving Grounds' `Assets/ProvingGrounds/Dota/`, and `Tests/Labs/DotaLabTests.cs` plays each: Maledict, Jingu Mastery, Coup de Grace, Ice Blast, Attribute Shift, Fury Swipes, Essence Shift, Mana Void, Shallow Grave and Blade Mail. Five needed no code; the other five needed seven small workers, in the lab's `Scripts/`. The list, `Docs/EFFECT_TOOLING_WISHLIST.md`, is sixteen items ranked by how many of the ten each would have made simpler, the first three an effect that lands on the caster, rules (workers) that come with an effect, and the common rules built in; with two findings: GAS-71, and a stacking effect's lasting change counting once unless it reads Effect Stacks. To do: the user picks what to build, each a row of its own. Open |
 | FEAT-32 | What an effect does, level by level | The user's request of 2026-11-11: in The Forge it's hard to see what an effect's impacts are. Wanted: a query of an effect over its level range that returns each impact's parts, the numbers that make it, and its result at each level where it can be worked out; for the inspector, for a game's own UI ("80/120/160"), and for the Creator Lab (FEAT-35). Its rows are under Level by level (FEAT-32): a number explained, an effect level by level with its parts and its lines, and The Forge's Levels section are done (LVL-1 to LVL-4); a Scaler asset's panel for trying it is open (LVL-5) |
 | FEAT-33 | Stack behaviours that matter | Proposed from the user's question of 2026-11-11 and the Dota lab: stacks for each source; stacks that fall off one at a time; a behaviour at N stacks, not only past the most; spending stacks, as charges; the most as a number; a continuous change that counts each stack, as a periodic one does; and a line that says what the effect's stacking does. After ED-75. Open |
-| FEAT-34 | Forge Projects | The user's request of 2026-11-11: the Asset Catalog becomes a Forge Project, a set of assets of its own. New assets go into the active project, a default one made with the first; The Forge shows the active project's assets alone and switches between projects; assets, one or a selection, move or copy to another project; and the Demo's assets make one project. Every asset picker shows the active project's assets alone (the user's point of 2026-11-11): Unity's object fields, whose picker shows every asset of a type in the project, and PlayForge's own lists, as the Scaler asset menu and the tag picker. The catalog names assets for saves (FEAT-9), which a project goes on doing for its own. Open decision 26. Open |
-| FEAT-35 | The Creator Lab | The user's request of 2026-11-11: one lab for testing a project's assets of every sort. An overhead 3D space whose camera the user moves, tilts and resets. Three modes: test dummies (any number, dragged, reset, given affiliations), battle (teams of bots given identities, abilities and items, and levelled) and none (an empty space where abilities still cast); and in any of them a unit the user controls, by the game's own movement and casting. The user selects an asset to see it level by level (FEAT-32), applies effects and casts abilities freely, and drags them from the library onto units or the ground. Panels: projects (FEAT-34) and assets by type on the left, the selected asset in the middle, hidden until one is, and the mode's controls on the right (play, pause, reset, a quick battle, the user's unit), each collapsible. What it shows of the inside, the user's question, is Open decision 27. The design, for review: `Docs/CREATOR_LAB_DESIGN.md`, with Open decisions 29 and 30. Open |
+| FEAT-34 | Forge Projects | The user's request of 2026-11-11: the Asset Catalog becomes a Forge Project, a set of assets of its own. New assets go into the active project, a default one made with the first; The Forge shows the active project's assets alone and switches between projects; assets, one or a selection, move or copy to another project; and the Demo's assets make one project. A project is a folder, with a project asset at its root (Decision 44). Every asset picker shows the active project's assets alone (the user's point of 2026-11-11): Unity's object fields, whose picker shows every asset of a type in the project, and PlayForge's own lists, as the Scaler asset menu and the tag picker. The catalog names assets for saves (FEAT-9), which a project goes on doing for its own. Open |
+| FEAT-35 | The Creator Lab | The user's request of 2026-11-11: one lab for testing a project's assets of every sort. An overhead 3D space whose camera the user moves, tilts and resets. Three modes: test dummies (any number, dragged, reset, given affiliations), battle (teams of bots given identities, abilities and items, and levelled) and none (an empty space where abilities still cast); and in any of them a unit the user controls, by the game's own movement and casting. The user selects an asset to see it level by level (FEAT-32), applies effects and casts abilities freely, and drags them from the library onto units or the ground. Panels: projects (FEAT-34) and assets by type on the left, the selected asset in the middle, hidden until one is, and the mode's controls on the right (play, pause, reset, a quick battle, the user's unit), each collapsible. What it shows of the inside, the user's question, is Open decision 27. The design: `Docs/CREATOR_LAB_DESIGN.md`, decided by Decision 44: a scene in the package, all six ways inside, and a driver for the author's unit. Open |
+| FEAT-36 | Interfaces that nothing takes | Decision 44: remove, in one pass, each a CHANGELOG line, the interfaces no code takes: `IValidationReady` and `IValidationRule<T>`, `IProxyTaskBehaviourUser` and `IProxyTaskBehaviourCaller` (the behaviour runs itself over its users, `behaviour.RunAsync(users, token)`) with `CompositeBehaviourPacket`, `IAttributeHandler`, `IGameplayConfigUser`, `ILockedTagProvider`, and the commented-out `Utils/RuntimeProxy.cs`. `IGameplayProcess`, `ITagSource`, `IWorkerGroupSource` and `IAnalysisUser` are implemented, and stay unless a pass finds them unused too. Open |
+| FEAT-37 | A builder for assets made in code | Decision 44: the helpers that make effects, abilities and entities in code, Proving Grounds' `ForgeAssets` and the Battle sample's `BattleAssets`, become a supported runtime API: a scope that destroys what it made, and a documentation page; first, a probe of what a thousand `CreateInstance` calls cost. Definitions stay assets. Open |
 
 **Phase 5's order,** from the review's plan for the test project (its labs, one at a time) and the table above. A lab
 is a small game: assets the lab builds in code, and a bot that plays it in PlayMode tests under a live ProcessControl,
