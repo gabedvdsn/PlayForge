@@ -2641,3 +2641,71 @@
 .pf-root .pf-override.unity-base-field > .unity-base-field__label {
     -unity-font-style: bold;
 }
+
+/* ─── An effect level by level (FEAT-32): a row for each number, a column for each level, each clipping its own text,
+   and the parts behind the selected cell under them, in secondary text. The selected cell is bold, as the style keeps
+   color for icons ─── */
+
+.pf-root .pf-levels__range {
+    flex-direction: row;
+    align-items: center;
+}
+
+.pf-root .pf-levels__range > .unity-integer-field {
+    flex-grow: 0;
+}
+
+.pf-root .pf-levels__range > #From {
+    flex-grow: 1;
+}
+
+.pf-root .pf-levels__range > #To {
+    width: 48px;
+}
+
+.pf-root .pf-levels__table {
+    margin: 4px 0;
+}
+
+.pf-root .pf-levels__row {
+    flex-direction: row;
+    min-height: 18px;
+    align-items: center;
+}
+
+.pf-root .pf-levels__header {
+    color: var(--pf-secondary-text);
+}
+
+.pf-root .pf-levels__name {
+    flex-grow: 1;
+    flex-shrink: 1;
+    min-width: 60px;
+    margin: 0;
+    padding: 0 4px 0 0;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+}
+
+.pf-root .pf-levels__cell {
+    width: 48px;
+    flex-shrink: 0;
+    margin: 0;
+    padding: 0 2px;
+    -unity-text-align: middle-right;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+}
+
+.pf-root .pf-levels__cell--selected {
+    -unity-font-style: bold;
+}
+
+.pf-root .pf-levels__parts {
+    margin: 2px 0;
+    padding: 0;
+    color: var(--pf-secondary-text);
+    white-space: pre-wrap;
+}

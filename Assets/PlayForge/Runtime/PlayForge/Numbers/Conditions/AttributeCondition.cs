@@ -38,6 +38,17 @@ namespace FarEmerald.PlayForge
 
         public override void Initialize(IAttributeImpactCarrier carrier) => Value?.Initialize(carrier);
 
+        // The attribute's value, and the number it was compared with (FEAT-32)
+        public override void Explain(in NumberContext context, NumberTrace trace)
+        {
+            string name = Attribute != null ? Attribute.GetName() : "attribute";
+            string label = $"{(On == NumberSide.Caster ? "Caster's" : "Target's")} {name}{(What == EAttributeTargetBinary.Base ? " (base)" : "")}";
+            if (context.TryGetAttribute(On, Attribute, out var value))
+                trace.Add(label, What == EAttributeTargetBinary.Base ? value.BaseValue : value.CurrentValue, "Attribute");
+            else trace.Add(label, 0f, "Attribute").Needing($"{(On == NumberSide.Caster ? "the caster's" : "the target's")} {name}");
+            trace.Add(Value, context, this, "Value");
+        }
+
         public override string Describe()
         {
             string side = On == NumberSide.Caster ? "Caster's" : "Target's";

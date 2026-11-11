@@ -42,6 +42,14 @@ namespace FarEmerald.PlayForge
         public override string Describe() =>
             $"the caller's {(Key.IsValid ? Key.ToString() : "value")}, else {(Default != null ? NumberText.Of(Default) : NumberText.Number(0f))}";
 
+        // The caller's value, or the default it reads where there's none (FEAT-32)
+        public override void Explain(in NumberContext context, NumberTrace trace)
+        {
+            if (context.TryGetSetByCaller(Key, out float magnitude))
+                trace.Add($"the caller's {(Key.IsValid ? Key.ToString() : "value")}", magnitude, "Caller");
+            else trace.Add(Default, context, this, "Default");
+        }
+
         // Its default was a float (FEAT-29)
         [FormerlySerializedAs("Default"), SerializeField, HideInInspector] private float legacyDefault = LegacyNumber.None;
 

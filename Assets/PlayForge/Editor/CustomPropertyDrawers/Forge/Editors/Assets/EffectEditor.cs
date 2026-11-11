@@ -38,6 +38,8 @@ namespace FarEmerald.PlayForge.Extended.Editor
         private SectionResult tagsSection;
         private SectionResult durationSection;
         private SectionResult impactSection;
+        private SectionResult levelsSection;
+        private EffectLevelsView levelsView;
         private SectionResult requirementsSection;
         private SectionResult workersSection;
         private SectionResult cuesSection;
@@ -101,6 +103,7 @@ namespace FarEmerald.PlayForge.Extended.Editor
             BuildTagsSection(parent);
             BuildDurationSection(parent);
             BuildImpactSection(parent);
+            BuildLevelsSection(parent);
             BuildCuesSection(parent);
             BuildRequirementsSection(parent);
             BuildWorkersSection(parent);
@@ -363,6 +366,50 @@ namespace FarEmerald.PlayForge.Extended.Editor
         }
 
         // ═══════════════════════════════════════════════════════════════════════════
+        // Levels Section: what the effect does, level by level (FEAT-32)
+        // ═══════════════════════════════════════════════════════════════════════════
+
+        // Its duration, ticks, chance and each impact at each level, and the parts behind a cell. Read alone, it changes
+        // nothing, so it has no Import or Clear
+        private void BuildLevelsSection(VisualElement parent)
+        {
+            levelsSection = CreateSection(new SectionConfig
+            {
+                Name = "Levels",
+                Title = "Levels",
+                HelpTopic = "effects/levels",
+                StartExpanded = true,
+            });
+            parent.Add(levelsSection.Section);
+
+            if (IsMultiple)
+            {
+                var note = new Label("Select one effect to see it level by level.") { name = "LevelsNote" };
+                note.AddToClassList("pf-note");
+                levelsSection.Content.Add(note);
+                return;
+            }
+            levelsView = new EffectLevelsView(effect);
+            levelsSection.Content.Add(levelsView);
+            // An edit to the effect reads again
+            levelsView.TrackSerializedObjectValue(serializedObject, _ =>
+            {
+                levelsView.Refresh();
+                if (levelsSection != null) levelsSection.Summary.text = LevelsSummary();
+            });
+        }
+
+        // The first impact at each level, as "-10/-20/-30 Health"
+        private string LevelsSummary()
+        {
+            var series = AbilityInspector.BuildEffectSeries(effect, 1, 5, null, null);
+            var impact = series?.Impacts.FirstOrDefault();
+            if (impact == null) return "No impact";
+            string attribute = impact.Attribute != null ? impact.Attribute.GetName() : "nothing";
+            return $"{ImpactSeries.FormatSeries(impact.Magnitude)} {attribute}{(impact.Needs != null ? " *" : "")}";
+        }
+
+        // ═══════════════════════════════════════════════════════════════════════════
         // Requirements Section: the target's and the source's tags
         // ═══════════════════════════════════════════════════════════════════════════
 
@@ -582,7 +629,7 @@ namespace FarEmerald.PlayForge.Extended.Editor
             // A multiple selection's effects differ, so one line would describe only the first
             if (IsMultiple)
             {
-                var sections = new[] { levelingSection, tagsSection, durationSection, impactSection, cuesSection, requirementsSection, workersSection, localDataSection, usedBySection };
+                var sections = new[] { levelingSection, tagsSection, durationSection, impactSection, levelsSection, cuesSection, requirementsSection, workersSection, localDataSection, usedBySection };
                 foreach (var section in sections.Where(section => section != null)) section.Summary.text = "";
                 return;
             }
@@ -591,6 +638,7 @@ namespace FarEmerald.PlayForge.Extended.Editor
             if (tagsSection != null) tagsSection.Summary.text = TagsSectionSummary();
             if (durationSection != null) durationSection.Summary.text = DurationSummary();
             if (impactSection != null) impactSection.Summary.text = ImpactSummary();
+            if (levelsSection != null) levelsSection.Summary.text = LevelsSummary();
             if (requirementsSection != null) requirementsSection.Summary.text = RequirementsSummary();
             if (workersSection != null) workersSection.Summary.text = CountOf(effect.Workers?.Count(worker => worker != null) ?? 0, "worker", "workers");
             if (cuesSection != null) cuesSection.Summary.text = CountOf(effect.Cues?.Count(cue => cue != null) ?? 0, "cue", "cues");

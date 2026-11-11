@@ -118,6 +118,39 @@ namespace FarEmerald.PlayForge
             return name.Length > 0 ? Spaced(name) : "Condition";
         }
 
+        /// <summary>
+        /// What a number reads, by name, as a sentence ends: "the target", "the caster and the target", "a level". Null
+        /// for none (FEAT-32).
+        /// </summary>
+        public static string Reads(NumberReads reads)
+        {
+            if (reads == NumberReads.None) return null;
+            var names = new System.Collections.Generic.List<string>();
+            if ((reads & NumberReads.Level) != 0) names.Add("a level");
+            if ((reads & NumberReads.Caster) != 0) names.Add("the caster");
+            if ((reads & NumberReads.Target) != 0) names.Add("the target");
+            if ((reads & NumberReads.Caller) != 0) names.Add("the caller's values");
+            if ((reads & NumberReads.LocalData) != 0) names.Add("Local Data");
+            if ((reads & NumberReads.Carrier) != 0) names.Add("an effect");
+            if ((reads & NumberReads.Data) != 0) names.Add("an activation's data");
+            if ((reads & NumberReads.Owner) != 0) names.Add("its owner");
+            return Join(names);
+        }
+
+        /// <summary>Names joined as a sentence joins them: "a", "a and b", "a, b and c".</summary>
+        public static string Join(System.Collections.Generic.IReadOnlyList<string> names)
+        {
+            if (names == null || names.Count == 0) return "";
+            if (names.Count == 1) return names[0];
+            var text = new StringBuilder();
+            for (int i = 0; i < names.Count; i++)
+            {
+                if (i > 0) text.Append(i == names.Count - 1 ? " and " : ", ");
+                text.Append(names[i]);
+            }
+            return text.ToString();
+        }
+
         // A series as the style writes one, "8/9/10/12", or its range past six values, "8–20"
         private static string Series(float[] values, bool percent)
         {

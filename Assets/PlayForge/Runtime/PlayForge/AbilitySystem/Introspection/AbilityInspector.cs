@@ -107,6 +107,18 @@ namespace FarEmerald.PlayForge
         public bool IsDynamic;
         public string DynamicReason;
 
+        /// <summary>The impact's number as its field's summary reads it, as "−0.1 × Target's Health (base)" (FEAT-32).</summary>
+        public string Line;
+
+        /// <summary>
+        /// The number's read at each level, explained: each part, what it read and what it gave (FEAT-32). Set by the
+        /// read against a caster and a target, <see cref="AbilityInspector.BuildEffectSeries(GameplayEffect, int, int, ISource, ITarget)"/>.
+        /// </summary>
+        public NumberTrace[] Parts;
+
+        /// <summary>What the number reads that the read wasn't given, as "the target"; null where it had all it reads (FEAT-32).</summary>
+        public string Needs;
+
         public string FormatMagnitude(string format = "0.##") => FormatSeries(Magnitude, format);
         public string FormatTotal(string format = "0.##") => FormatSeries(Total, format);
 
@@ -138,8 +150,76 @@ namespace FarEmerald.PlayForge
         public int[] Ticks;
 
         public List<ImpactSeries> Impacts = new();
-
         public string FormatDuration(string format = "0.##") => ImpactSeries.FormatSeries(Duration, format);
+
+        /// <summary>Its chance to apply at each level, 1 where it always does (FEAT-32).</summary>
+        public float[] Chance;
+
+        /// <summary>The time between its ticks at each level, for an infinite effect that ticks (FEAT-32).</summary>
+        public float[] Interval;
+
+        /// <summary>The effects it contains, each read the same way, with when it lands (FEAT-32).</summary>
+        public List<ContainedSeries> Contained = new();
+
+        /// <summary>
+        /// What the effect does at a level, an impact to a line, then its contained effects (FEAT-32): "−15 Health each
+        /// tick, 12 ticks over 12 s", "+20 Armor while it lasts, 5 s", "and Crit as it lands, 15% of the time: −225 Health".
+        /// A number that reads what the read wasn't given says so: "(needs the target)".
+        /// </summary>
+        public List<string> Describe(int level)
+        {
+            var lines = new List<string>();
+            int i = Mathf.Clamp(level - MinLevel, 0, LevelCount - 1);
+            foreach (var impact in Impacts) lines.Add(Line(impact, i));
+            foreach (var contained in Contained)
+            {
+                if (contained.Series == null) continue;
+                string when = contained.Policy switch
+                {
+                    EApplyTickRemove.OnApply => "as it lands",
+                    EApplyTickRemove.OnTick => "each tick",
+                    _ => "as it ends",
+                };
+                float chance = contained.Series.Chance?[Mathf.Clamp(level - contained.Series.MinLevel, 0, contained.Series.LevelCount - 1)] ?? 1f;
+                string odds = chance < 1f ? $", {NumberText.Number(chance, percent: true)} of the time" : "";
+                var inner = contained.Series.Describe(level);
+                lines.Add($"and {contained.Series.Effect?.GetName()} {when}{odds}{(inner.Count > 0 ? ": " + string.Join("; ", inner) : "")}");
+            }
+            return lines;
+        }
+
+        private string Line(ImpactSeries impact, int i)
+        {
+            string attribute = impact.Attribute != null ? impact.Attribute.GetName() : "nothing";
+            float value = impact.Magnitude != null && i < impact.Magnitude.Length ? impact.Magnitude[i] : 0f;
+            string amount = impact.Operation switch
+            {
+                ECalculationOperation.Multiply => $"× {NumberText.Number(value)}",
+                ECalculationOperation.Override => $"= {NumberText.Number(value)}",
+                _ => value >= 0f ? $"+{NumberText.Number(value)}" : NumberText.Number(value),
+            };
+            string needs = string.IsNullOrEmpty(impact.Needs) ? "" : $" (needs {impact.Needs})";
+            switch (impact.Delivery)
+            {
+                case EImpactDelivery.Periodic when DurationPolicy == EEffectDurationPolicy.Durational:
+                    return $"{amount} {attribute} each tick, {Ticks[i]} ticks over {NumberText.Number(Duration[i])} s{needs}";
+                case EImpactDelivery.Periodic:
+                    return $"{amount} {attribute} every {NumberText.Number(Interval != null ? Interval[i] : 1f)} s{needs}";
+                case EImpactDelivery.Continuous when DurationPolicy == EEffectDurationPolicy.Durational:
+                    return $"{amount} {attribute} while it lasts, {NumberText.Number(Duration[i])} s{needs}";
+                case EImpactDelivery.Continuous:
+                    return $"{amount} {attribute} while it lasts{needs}";
+                default:
+                    return $"{amount} {attribute}{needs}";
+            }
+        }
+    }
+
+    /// <summary>An effect another contains, read level by level, with when it lands (FEAT-32).</summary>
+    public class ContainedSeries
+    {
+        public EApplyTickRemove Policy;
+        public EffectLevelSeries Series;
     }
 
     /// <summary>One effect's participation in an ability, with per-level numbers and contained effects.</summary>
@@ -502,6 +582,117 @@ namespace FarEmerald.PlayForge
                     }
 
                     series.Impacts.Add(impact);
+                }
+            }
+
+            return series;
+        }
+
+        /// <summary>
+        /// One effect across a level range, read against a caster and a target, either of which may be null (FEAT-32):
+        /// its duration, ticks, tick interval and chance at each level; each impact's number at each level, with its line,
+        /// its parts explained (<see cref="NumberTrace"/>), and what it needs that it wasn't given, as "the target"; and its
+        /// contained effects, each read the same way. A number that reads the target, read with none, gives what its field
+        /// falls back to, and says so.
+        /// </summary>
+        public static EffectLevelSeries BuildEffectSeries(GameplayEffect effect, int minLevel, int maxLevel, ISource caster, ITarget target) =>
+            BuildEffectSeries(effect, minLevel, maxLevel, caster, target, 0);
+
+        // How deep contained effects are read, past which a loop is assumed
+        private const int MostContainedDepth = 4;
+
+        private static EffectLevelSeries BuildEffectSeries(GameplayEffect effect, int minLevel, int maxLevel, ISource caster, ITarget target, int depth)
+        {
+            if (effect == null) return null;
+
+            minLevel = Mathf.Max(1, minLevel);
+            maxLevel = Mathf.Max(minLevel, maxLevel);
+            int count = maxLevel - minLevel + 1;
+
+            var duration = effect.DurationSpecification;
+            effect.ImpactSpecification?.RebuildEntries(duration);
+
+            var series = new EffectLevelSeries
+            {
+                Effect = effect,
+                MinLevel = minLevel,
+                MaxLevel = maxLevel,
+                DurationPolicy = duration?.DurationPolicy ?? EEffectDurationPolicy.Instant,
+                TickOnApplication = duration?.TickOnApplication ?? false,
+                PeriodicTicks = duration?.EnablePeriodicTicks ?? false,
+                Duration = new float[count],
+                Ticks = new int[count],
+                Interval = new float[count],
+                Chance = new float[count],
+            };
+
+            for (int i = 0; i < count; i++)
+            {
+                var context = NumberContext.For(caster, target, minLevel + i, maxLevel);
+                if (duration != null)
+                {
+                    if (series.DurationPolicy == EEffectDurationPolicy.Durational)
+                    {
+                        series.Duration[i] = NumberTrace.Of(duration.DurationOperation, context).Value;
+                        series.Ticks[i] = series.PeriodicTicks ? Mathf.RoundToInt(NumberTrace.Of(duration.TicksOperation, context).Value) : 0;
+                    }
+                    if (series.PeriodicTicks) series.Interval[i] = NumberTrace.Of(duration.TickIntervalOperation, context).Value;
+                }
+                var chance = effect.ImpactSpecification?.ChanceToApply;
+                series.Chance[i] = chance == null ? 1f : NumberTrace.Of(chance, context).Value;
+            }
+
+            if (effect.ImpactSpecification != null)
+            {
+                foreach (var entry in effect.ImpactSpecification.Entries)
+                {
+                    if (entry == null) continue;
+
+                    var impact = new ImpactSeries
+                    {
+                        Attribute = entry.AttributeTarget,
+                        Delivery = entry.Delivery,
+                        Operation = entry.Operation,
+                        Slot = entry.TargetSlot,
+                        Magnitude = new float[count],
+                        Total = new float[count],
+                        Parts = new NumberTrace[count],
+                        Line = NumberText.Of(entry.Magnitude),
+                    };
+
+                    var needs = new List<string>();
+                    for (int i = 0; i < count; i++)
+                    {
+                        var trace = NumberTrace.Of(entry.Magnitude, NumberContext.For(caster, target, minLevel + i, maxLevel));
+                        impact.Parts[i] = trace;
+                        impact.Magnitude[i] = trace.Value;
+                        impact.Total[i] = entry.Delivery == EImpactDelivery.Periodic
+                            ? trace.Value * (series.Ticks[i] + (series.TickOnApplication ? 1 : 0))
+                            : trace.Value;
+                        foreach (var part in trace.Unresolved)
+                            if (!needs.Contains(part.Missing)) needs.Add(part.Missing);
+                    }
+                    if (needs.Count > 0)
+                    {
+                        impact.Needs = NumberText.Join(needs);
+                        impact.IsDynamic = true;
+                        impact.DynamicReason = $"needs {impact.Needs}";
+                    }
+
+                    series.Impacts.Add(impact);
+                }
+
+                if (depth < MostContainedDepth && effect.ImpactSpecification.Packets != null)
+                {
+                    foreach (var packet in effect.ImpactSpecification.Packets)
+                    {
+                        if (packet.ContainedEffect == null) continue;
+                        series.Contained.Add(new ContainedSeries
+                        {
+                            Policy = packet.Policy,
+                            Series = BuildEffectSeries(packet.ContainedEffect, minLevel, maxLevel, caster, target, depth + 1),
+                        });
+                    }
                 }
             }
 

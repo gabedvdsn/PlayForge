@@ -32,6 +32,7 @@ namespace FarEmerald.PlayForge.Extended.Editor
             ["effects/leveling"]           = ("EFFECTS.md", "Leveling"),
             ["effects/tags"]               = ("EFFECTS.md", "Tags"),
             ["effects/impact"]             = ("EFFECTS.md", "Impact"),
+            ["effects/levels"]             = ("EFFECTS.md", "Levels"),
             ["effects/duration"]           = ("EFFECTS.md", "Duration"),
             ["effects/workers"]            = ("EFFECTS.md", "Workers"),
             ["effects/cues"]               = ("EFFECTS.md", "Cues"),

@@ -80,6 +80,15 @@ namespace FarEmerald.PlayForge
         /// <summary>What a kind reads where its context lacks what it needs, inside another scaler; 0 by default.</summary>
         protected virtual float Fallback => 0f;
 
+        // What a trace reads of a kind that can't be worked out where it's read (FEAT-32)
+        internal float FallbackValue => Fallback;
+
+        /// <summary>
+        /// Adds the kind's parts to a trace of its read (FEAT-32), as a Clamped adds its value and its bounds:
+        /// <c>trace.Add(Min, context, this, "Min")</c>. A kind with no parts of its own, as most, adds none.
+        /// </summary>
+        public virtual void Explain(in NumberContext context, NumberTrace trace) { }
+
         /// <summary>
         /// Whether the kind can be worked out in this context: by default, whether the context provides what it reads
         /// (<see cref="Reads"/>). A kind that needs more overrides it, as one that reads another field of its object needs

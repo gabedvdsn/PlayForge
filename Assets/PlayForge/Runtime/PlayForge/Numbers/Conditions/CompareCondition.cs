@@ -29,6 +29,13 @@ namespace FarEmerald.PlayForge
             Right?.Initialize(carrier);
         }
 
+        // The two numbers it compared (FEAT-32)
+        public override void Explain(in NumberContext context, NumberTrace trace)
+        {
+            trace.Add(Left, context, this, "Left");
+            trace.Add(Right, context, this, "Right");
+        }
+
         public override string Describe() =>
             $"{NumberText.Of(Left)} {NumberComparison.Symbol(Comparison)} {NumberText.Of(Right)}";
     }

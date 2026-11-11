@@ -7,6 +7,15 @@ tracks each fix below by its ID.
 ## [Unreleased]
 
 ### Added
+- An effect level by level, with what makes each of its numbers (FEAT-32). `NumberTrace.Of(number, context)` explains a
+  number's read as a tree of parts, each with what it read and what it gave, and says what a part needs where its
+  context lacks it, as "the target"; a kind or a condition of your own adds its parts by overriding `Explain`.
+  `AbilityInspector.BuildEffectSeries(effect, min, max, caster, target)` reads an effect against a caster and a target,
+  either of which may be null: each impact with its line, its parts at each level and what it needs, and the effect
+  with its chance, tick interval and contained effects; `Describe(level)` says what it does at a level, an impact to a
+  line (LVL-1 to LVL-3).
+- The effect inspector's Levels section, which The Forge shows: the effect's duration, ticks, chance and impacts at
+  each level, its contained effects' among them, and under them the parts behind the cell selected (LVL-4).
 - Number fields' foundation (FEAT-29, phase 1): `ScalableFloat` and `ScalableInt`, one number type for every authored
   gameplay number, a constant by default and a value by level, a multiple of an attribute, a caller's value or any
   scaler otherwise. A float converts to one, a read is `Evaluate(context)`, and `IsConstant` and `Constant` serve

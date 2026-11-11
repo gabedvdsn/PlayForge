@@ -28,26 +28,35 @@ namespace FarEmerald.PlayForge
 
         protected override float Evaluate(in NumberContext context)
         {
-            int currentLevel = context.Level.CurrentValue;
-
-            // Find the highest threshold that is <= current level
-            int matched = -1;
-            int highestMatchedLevel = 0;
-            if (Thresholds != null)
-            {
-                for (int i = 0; i < Thresholds.Length; i++)
-                {
-                    if (currentLevel >= Thresholds[i].Level && Thresholds[i].Level > highestMatchedLevel)
-                    {
-                        highestMatchedLevel = Thresholds[i].Level;
-                        matched = i;
-                    }
-                }
-            }
-
+            int matched = Tier(context.Level.CurrentValue);
             return matched >= 0
                 ? Thresholds[matched].Value?.Evaluate(in context) ?? 0f
                 : DefaultValue?.Evaluate(in context, this) ?? 0f;
+        }
+
+        // The highest threshold at or below the level, or -1 where it's below them all
+        private int Tier(int currentLevel)
+        {
+            int matched = -1;
+            int highestMatchedLevel = 0;
+            if (Thresholds == null) return matched;
+            for (int i = 0; i < Thresholds.Length; i++)
+            {
+                if (currentLevel >= Thresholds[i].Level && Thresholds[i].Level > highestMatchedLevel)
+                {
+                    highestMatchedLevel = Thresholds[i].Level;
+                    matched = i;
+                }
+            }
+            return matched;
+        }
+
+        // The tier the level is in, or the default below them all (FEAT-32)
+        public override void Explain(in NumberContext context, NumberTrace trace)
+        {
+            int matched = Tier(context.Level.CurrentValue);
+            if (matched >= 0) trace.Add(Thresholds[matched].Value, context, null, $"From level {Thresholds[matched].Level}");
+            else trace.Add(DefaultValue, context, this, "Default");
         }
 
         public override void Initialize(IAttributeImpactCarrier deriv)

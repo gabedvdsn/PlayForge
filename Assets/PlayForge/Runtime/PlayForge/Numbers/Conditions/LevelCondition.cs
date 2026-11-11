@@ -28,6 +28,13 @@ namespace FarEmerald.PlayForge
 
         public override void Initialize(IAttributeImpactCarrier carrier) => Value?.Initialize(carrier);
 
+        // The level, and the number it was compared with (FEAT-32)
+        public override void Explain(in NumberContext context, NumberTrace trace)
+        {
+            trace.Add(Relative ? "relative level" : "level", Relative ? context.Level.Ratio : context.Level.CurrentValue, "Level");
+            trace.Add(Value, context, this, "Value");
+        }
+
         public override string Describe() =>
             $"{(Relative ? "relative level" : "level")} {NumberComparison.Symbol(Comparison)} {NumberText.Of(Value)}";
     }

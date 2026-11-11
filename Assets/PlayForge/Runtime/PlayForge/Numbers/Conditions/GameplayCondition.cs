@@ -79,6 +79,12 @@ namespace FarEmerald.PlayForge
         /// </summary>
         public virtual void Initialize(IAttributeImpactCarrier carrier) { }
 
+        /// <summary>
+        /// Adds the condition's parts to a trace of its read (FEAT-32): what it compared, or the conditions it joins, as
+        /// an Attribute condition adds the attribute's value and its number. A condition with none adds none.
+        /// </summary>
+        public virtual void Explain(in NumberContext context, NumberTrace trace) { }
+
         // How deep conditions are being read inside each other, so one that holds itself stops
         private const int MostDepth = 16;
         private static int depth;

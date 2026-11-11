@@ -40,6 +40,13 @@ namespace FarEmerald.PlayForge
         public override string Describe() =>
             $"{NumberText.Of(TrueValue)} if {NumberText.Of(When)}, else {NumberText.Of(FalseValue)}";
 
+        // Its condition, and the branch it took (FEAT-32)
+        public override void Explain(in NumberContext context, NumberTrace trace)
+        {
+            bool holds = When != null && trace.Add(When, context, "When").Holds;
+            trace.Add(holds ? TrueValue : FalseValue, context, this, holds ? "True" : "False");
+        }
+
         // ═══════════════════════════════════════════════════════════════════════════
         // Saved before its condition was a class (FEAT-29)
         // ═══════════════════════════════════════════════════════════════════════════

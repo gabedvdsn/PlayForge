@@ -32,6 +32,9 @@ namespace FarEmerald.PlayForge
         public override void Initialize(IAttributeImpactCarrier carrier) => GroupCondition.Initialize(Conditions, carrier);
 
         public override string Describe() => GroupCondition.Describe(Conditions, " and ", "always");
+
+        // Each condition it joins (FEAT-32)
+        public override void Explain(in NumberContext context, NumberTrace trace) => GroupCondition.Explain(Conditions, context, trace);
     }
 
     /// <summary>
@@ -60,6 +63,9 @@ namespace FarEmerald.PlayForge
         public override void Initialize(IAttributeImpactCarrier carrier) => GroupCondition.Initialize(Conditions, carrier);
 
         public override string Describe() => GroupCondition.Describe(Conditions, " or ", "never");
+
+        // Each condition it joins (FEAT-32)
+        public override void Explain(in NumberContext context, NumberTrace trace) => GroupCondition.Explain(Conditions, context, trace);
     }
 
     /// <summary>
@@ -86,6 +92,12 @@ namespace FarEmerald.PlayForge
         public override void Initialize(IAttributeImpactCarrier carrier) => Condition?.Initialize(carrier);
 
         public override string Describe() => $"not ({NumberText.Of(Condition)})";
+
+        // The condition it turns (FEAT-32)
+        public override void Explain(in NumberContext context, NumberTrace trace)
+        {
+            if (Condition != null) trace.Add(Condition, context, "Not");
+        }
     }
 
     // What All Of and Any Of share
@@ -98,6 +110,13 @@ namespace FarEmerald.PlayForge
             for (int i = 0; i < conditions.Count; i++)
                 if (conditions[i] != null) reads |= conditions[i].Reads;
             return reads;
+        }
+
+        public static void Explain(List<GameplayCondition> conditions, in NumberContext context, NumberTrace trace)
+        {
+            if (conditions == null) return;
+            for (int i = 0; i < conditions.Count; i++)
+                if (conditions[i] != null) trace.Add(conditions[i], context, "Of");
         }
 
         public static void Initialize(List<GameplayCondition> conditions, IAttributeImpactCarrier carrier)

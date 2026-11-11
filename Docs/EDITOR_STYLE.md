@@ -103,8 +103,9 @@ The only other colors:
   (Q18). A collapsed header shows a one-line summary of its section, such as "Levels 1–5" or "Removed by
   Status.Wet".
 - **Every asset type keeps one section order** (Q9): Identity, Leveling, Tags, the type's own sections, then
-  Requirements, Workers and Local Data. An Effect's own sections are Duration, Impact and Cues (FEAT-1), and an
-  Ability's are Activation and Stages.
+  Requirements, Workers and Local Data. An Effect's own sections are Duration, Impact, Levels and Cues (FEAT-1,
+  FEAT-32), and an Ability's are Activation and Stages. A section that only reads, as Levels and Used By, has no Import
+  or Clear.
 - **Fields** are Unity's text and number fields, with any unit after the field in secondary text, as in
   "6 seconds". Choices use Unity's popup. A field that depends on another indents 14 px under it, as Tick Every does
   under Periodic Ticks.

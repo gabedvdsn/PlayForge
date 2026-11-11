@@ -203,6 +203,34 @@ it is still applying is refused, with a warning, so an effect that contains itse
 The group this effect's changes count toward (default `Ignore`), unless an impact names its own. Groups split an
 attribute's value for queries and UI, such as base and bonus health. They never change the math.
 
+## Levels
+
+What the effect does, level by level, read from the effect as it is now: a row for its duration, its ticks and its
+chance where it has them, then one for each impact, its own and its contained effects', with its value at each level.
+**Levels** sets the first and last level shown, ten at most. Select a cell to see the parts behind it, each with what it
+read and what it gave:
+
+```
+Health as it lands, level 2:
+-1 × (Caster's Attack Damage + 80 if Caster's Jingu Charges > 0, else 0) = -100
+  Group = 100
+    Add: Caster's Attack Damage = 100
+    Add: Conditional = 0
+      When: Caster's Jingu Charges > 0: doesn't hold
+      False: 0 = 0
+```
+
+It reads with no caster and no target, so a part that reads one gives what its field falls back to, and its row is
+marked `*` with what it needs, as "the target".
+
+The same reading is code's, for a tooltip or a game's own screen: `AbilityInspector.BuildEffectSeries(effect, 1, 5,
+caster, target)` reads the effect at levels 1 to 5 against a caster and a target, either of which may be null. Each
+impact gives its `Magnitude` and `Total` at each level, its `Line`, as its field's summary reads it, its `Parts` at each
+level, and what it `Needs`; the effect gives its `Duration`, `Ticks`, `Interval`, `Chance` and `Contained` effects, and
+`Describe(level)` says what it does at a level, an impact to a line: "-15 Health each tick, 12 ticks over 12 s".
+`NumberTrace.Of(number, context)` explains any one number the same way. A kind or a condition of your own adds its
+parts by overriding `Explain`: `trace.Add(Min, context, this, "Min")`.
+
 ## Cues
 
 What the effect shows and sounds, apart from what it changes, listed as its workers are. Pick each cue's kind from the

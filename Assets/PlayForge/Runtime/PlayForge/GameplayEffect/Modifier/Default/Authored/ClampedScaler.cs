@@ -40,6 +40,14 @@ namespace FarEmerald.PlayForge
         public override string Describe() =>
             $"{NumberText.Of(Value)}, between {NumberText.Of(MinValue)} and {NumberText.Of(MaxValue)}";
 
+        // What it clamps, and its bounds (FEAT-32)
+        public override void Explain(in NumberContext context, NumberTrace trace)
+        {
+            trace.Add(Value, context, this, "Value");
+            trace.Add(MinValue, context, this, "Min");
+            trace.Add(MaxValue, context, this, "Max");
+        }
+
         // ═══════════════════════════════════════════════════════════════════════════
         // Saved before its bounds were numbers (FEAT-29)
         // ═══════════════════════════════════════════════════════════════════════════
