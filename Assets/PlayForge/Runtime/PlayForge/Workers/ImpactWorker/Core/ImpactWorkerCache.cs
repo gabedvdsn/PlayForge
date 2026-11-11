@@ -62,12 +62,15 @@ namespace FarEmerald.PlayForge
         /// Run all impact workers for the given impact data.
         /// Inline workers execute immediately, deferred workers queue actions.
         /// </summary>
-        public void RunImpactData(ImpactData impactData)
+        /// <param name="holder">Whose workers these are: the impact's dealer, as impact workers run for the dealer.</param>
+        public void RunImpactData(ImpactData impactData, ISource holder = null)
         {
             if (!_cache.ContainsKey(impactData.Attribute)) return;
-            
+
+            // The workers' holder, the dealer. It was the one hit, so a worker that took its context's System for its
+            // holder applied its holder's effects to the target (GAS-72)
             var context = new ImpactWorkerContext(
-                impactData.Target?.ToGAS(),
+                holder ?? impactData.SourcedModifier.Source,
                 impactData,
                 _frameSummary,
                 _actionQueue

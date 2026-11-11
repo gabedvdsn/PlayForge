@@ -70,41 +70,15 @@ namespace FarEmerald.PlayForge
         }
 
         /// <summary>
-        /// Gathers raw ITarget candidates from the world.
-        /// Uses OverlapSphere when Range > 0, otherwise FindObjectsByType.
+        /// Gathers raw ITarget candidates from the world: every live entity, or with a range, what physics finds and each
+        /// runtime entity within it (<see cref="ForgeEntities.Around"/>).
         /// </summary>
         private List<ITarget> GatherCandidates(AbstractTargetingPacket origin, ISource owner)
         {
+            // Every live entity, on both hubs: the scene's MonoBehaviour entities were the only ones it found, and
+            // with a range, physics' alone (GAS-75)
             var results = new List<ITarget>();
-
-            if (Range > 0f && origin != null)
-            {
-                // Every collider in range. A buffer MaxTargets long had no room at 0, which means every match, and at 1
-                // the caster's own collider could fill it (GAS-43)
-                var colliders = Physics.OverlapSphere(origin.position, Range, DetectionLayers);
-                for (int i = 0; i < colliders.Length; i++)
-                {
-                    var targets = colliders[i].GetComponents<ITarget>();
-                    foreach (var t in targets)
-                    {
-                        if (!IncludeSelf && ReferenceEquals(t, owner)) continue;
-                        if (!results.Contains(t)) results.Add(t);
-                    }
-                }
-            }
-            else
-            {
-                // Unlimited range — find all ITarget in scene
-                // Use GameplayAbilitySystem as proxy since it implements ITarget
-                var systems = UnityEngine.Object.FindObjectsByType<GameplayAbilitySystem>(
-                    FindObjectsInactive.Exclude, FindObjectsSortMode.None);
-                foreach (var sys in systems)
-                {
-                    if (!IncludeSelf && ReferenceEquals(sys, owner)) continue;
-                    results.Add(sys);
-                }
-            }
-
+            ForgeEntities.Around(origin, Range, DetectionLayers, owner, IncludeSelf, results);
             return results;
         }
 

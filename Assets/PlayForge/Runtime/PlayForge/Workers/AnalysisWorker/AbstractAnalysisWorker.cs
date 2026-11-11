@@ -28,7 +28,23 @@ namespace FarEmerald.PlayForge
         }
 
         protected const string MY_KEY_PREFIX = "Analysis_Worker_";
-        protected Tag MyKey => Tag.GenerateAsUnique(GetType().Name, MY_KEY_PREFIX);
+
+        // This worker's own, made as it's first asked. It was its type's name, so two workers of a type on one entity,
+        // as thresholds at a half and a quarter, shared it, and the first to fire marked the other (GAS-76)
+        [NonSerialized] private Tag myKey;
+        [NonSerialized] private bool keyMade;
+        private static int keys;
+
+        protected Tag MyKey
+        {
+            get
+            {
+                if (keyMade) return myKey;
+                myKey = Tag.GenerateAsUnique($"{GetType().Name}_{++keys}", MY_KEY_PREFIX);
+                keyMade = true;
+                return myKey;
+            }
+        }
         
         protected virtual bool HasTriggered(ILocalDataUser system)
         {

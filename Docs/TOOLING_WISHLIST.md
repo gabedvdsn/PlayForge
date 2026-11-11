@@ -14,7 +14,9 @@ The labs are in Proving Grounds, each played by a bot: `Tests/Labs/DotaLabTests.
 `DotaAbilitiesLabTests.cs`, `RiskOfRainLabTests.cs` and `HadesLabTests.cs`. What they needed that PlayForge doesn't
 have is in the Lab Kit, `Assets/ProvingGrounds/LabKit/`: seven small classes, each standing in for an item here, so
 the labs' assets use them as an author would a built-in. The rows these items became are under *The tooling wishlist
-(FEAT-38)* in `Docs/REFACTOR_PLAN.md`, proposed until the user has reviewed the sort.
+(FEAT-38)* in `Docs/REFACTOR_PLAN.md`. The user approved the sort on 2026-11-11 and settled the shapes left open
+(Decision 46): an attribute's role, which an effect can override (TW-1); a generic *Value Pipeline* asset, which an
+effect names as its shared calculation (TW-2); and a body that is a MonoBehaviour process (TW-4).
 
 ## The sort at a glance
 
@@ -133,8 +135,8 @@ avatar can die and spawn again while the attributes and effects stay
   dies, and spawns again as it revives; the entity itself, a runtime GAS, never leaves;
 - **events**: Died, Revived (TW-5).
 
-Open question for the review: whether the body is any process, or a MonoBehaviour process with a transform the entity
-follows for position (targeting, areas).
+Decided (Decision 46): the body is a MonoBehaviour process spawned from a prefab, and the entity, a runtime GAS,
+follows it for its position (targeting, areas) while it's there.
 
 ### Events, on-hit and modifiers
 

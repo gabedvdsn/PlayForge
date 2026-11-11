@@ -65,6 +65,10 @@ namespace FarEmerald.PlayForge
     /// </summary>
     public readonly struct ImpactWorkerContext
     {
+        /// <summary>
+        /// Whose workers ran: the impact's dealer, as impact workers run for the dealer. The one hit is
+        /// <see cref="ImpactData"/>'s Target (GAS-72).
+        /// </summary>
         public readonly ISource System;
         public readonly ImpactData ImpactData;
         public readonly FrameSummary FrameSummary;

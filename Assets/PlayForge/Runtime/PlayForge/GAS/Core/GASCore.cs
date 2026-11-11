@@ -74,6 +74,9 @@ namespace FarEmerald.PlayForge
             Identity = identity;
             localData.Init(identity);
 
+            // Live, for an area search on either hub, until it ends (GAS-75)
+            ForgeEntities.Add(owner);
+
             if (identity is null) return;
 
             // This entity's sides: the registration data's, or else a copy of the identity's. They were written onto the
@@ -232,6 +235,7 @@ namespace FarEmerald.PlayForge
         public void WhenTerminate()
         {
             AbilitySystem.ShutDown();
+            ForgeEntities.Remove(owner);
 
             // Its effects leave the Effects Active counter with it (FEAT-18)
             ForgeCounters.EffectsActive.Value -= countedEffects;

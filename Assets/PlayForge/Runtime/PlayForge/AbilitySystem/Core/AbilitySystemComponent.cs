@@ -992,7 +992,7 @@ namespace FarEmerald.PlayForge
             // Run global impact workers (source-side)
             if (runWorkers)
             {
-                ImpactWorkerCache.RunImpactData(impactData);
+                ImpactWorkerCache.RunImpactData(impactData, Self);
             }
 
             // Record DEALT impact on this (source) GAS — fires source-side callbacks

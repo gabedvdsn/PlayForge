@@ -7,6 +7,7 @@ tracks each fix below by its ID.
 ## [Unreleased]
 
 ### Added
+- `ForgeEntities`: every live entity on both hubs, which area searches go through (GAS-75).
 - An asset with a texture shows it in its header in place of its type's icon: the texture under its Primary tag, else
   the first that has one (ED-69).
 - An asset header's three dots offer what a right-click on its row in The Forge does: Show in Project, Open in a
@@ -583,6 +584,11 @@ tracks each fix below by its ID.
   Asking whether its sequence was paused took 24 bytes a frame.
 
 ### Fixed
+- An impact worker's context names its holder, the hit's dealer, as its System; it named the one hit (GAS-72).
+- An ability's effects with no delay between them land in one frame; a delay of 0 waited a frame (GAS-74).
+- Auto Target and Auto Target by Affinity find runtime entities, with no range and within one; they found MonoBehaviour
+  entities alone (GAS-75).
+- Two analysis workers of one type on an entity each keep their own "has fired"; they shared one (GAS-76).
 - An asset's icon is the texture under its Primary tag, else the first item that has a texture; it was the first item's,
   with no texture as it might be (ED-69).
 - An OnApply impact on a durational effect lands as the effect does, where the effect doesn't tick on application; it

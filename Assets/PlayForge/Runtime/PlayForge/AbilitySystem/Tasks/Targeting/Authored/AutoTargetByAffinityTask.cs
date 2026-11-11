@@ -73,32 +73,10 @@ namespace FarEmerald.PlayForge
 
         private List<ITarget> GatherCandidates(AbstractTargetingPacket origin, ISource owner)
         {
+            // Every live entity, on both hubs: the scene's MonoBehaviour entities were the only ones it found, and
+            // with a range, physics' alone (GAS-75)
             var results = new List<ITarget>();
-
-            if (Range > 0f && origin != null)
-            {
-                var colliders = Physics.OverlapSphere(origin.position, Range, DetectionLayers);
-                foreach (var col in colliders)
-                {
-                    var targets = col.GetComponents<ITarget>();
-                    foreach (var t in targets)
-                    {
-                        if (ReferenceEquals(t, owner)) continue;
-                        if (!results.Contains(t)) results.Add(t);
-                    }
-                }
-            }
-            else
-            {
-                var systems = UnityEngine.Object.FindObjectsByType<GameplayAbilitySystem>(
-                    FindObjectsInactive.Exclude, FindObjectsSortMode.None);
-                foreach (var sys in systems)
-                {
-                    if (ReferenceEquals(sys, owner)) continue;
-                    results.Add(sys);
-                }
-            }
-
+            ForgeEntities.Around(origin, Range, DetectionLayers, owner, false, results);
             return results;
         }
 

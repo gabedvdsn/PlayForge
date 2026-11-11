@@ -24,8 +24,9 @@ namespace FarEmerald.PlayForge
             int targets = data.Count(Tags.TARGET_REAL);
             if (targets == 0) return;
 
-            foreach (GameplayEffect effect in Effects)
+            for (int e = 0; e < Effects.Count; e++)
             {
+                var effect = Effects[e];
                 for (int i = 0; i < targets; i++)
                 {
                     if (!data.TryGetAt(Tags.TARGET_REAL, i, out ITarget target) || target is null) continue;
@@ -36,7 +37,10 @@ namespace FarEmerald.PlayForge
                     bool landed = target.ApplyCarrier(spec);
                     if (landed && RecordLandedAs.IsValid) data.SetPrimary(RecordLandedAs, effect);
                 }
-                await SequenceTaskLibrary.Delay(DelayBetweenApplicationMs / 1000f, token);
+                // Between effects, where there's a delay: a delay of 0 waited a frame, so a second effect, as a heal's
+                // lockout, landed a frame after the first; and the last waited for nothing to follow (GAS-74)
+                if (DelayBetweenApplicationMs > 0 && e < Effects.Count - 1)
+                    await SequenceTaskLibrary.Delay(DelayBetweenApplicationMs / 1000f, token);
             }
         }
         public override bool IsCriticalSection => false;
