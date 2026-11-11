@@ -570,6 +570,17 @@ from. It lives outside `Assets/` so it never ships in the package.
 28. **A Group with no members** (ED-80): what it reads. It reads its own values per level today (ED-51).
     - **Recommended:** nothing, as no kind, so its field reads its number.
     - **To answer:** nothing, its number, or 0.
+29. **Where the Creator Lab lives** (FEAT-35, `Docs/CREATOR_LAB_DESIGN.md`): (a) in the package, as a tool, a lab module
+    of its own whose assembly a build can leave out, opened from the Window menu; or (b) a sample the author imports.
+    - **Recommended:** (a): it's a tool every project uses, not an example to copy. The Demo's arena code moves into
+      it, and the Demo uses it.
+    - **To answer:** (a) or (b), and whether it ships in builds, where it lists what a Forge Project names.
+30. **The author's unit's controls in the Creator Lab** (FEAT-35): the user asked that it follow "the user's schemas for
+    movement, casting, etc.". PlayForge has no movement or controls of its own.
+    - **Recommended:** a driver the project implements, `ILabUnitDriver` (move to a point, attack a unit, cast an
+      ability at a target, stop), with the lab's own, the Demo's controls, as the default, and `ForgeInput` for
+      targeting, as now.
+    - **To answer:** that, or something the project has already that the lab should read.
 
 ## Roadmap
 
@@ -987,7 +998,7 @@ reads the old demos' fullest assets, so it moves to the new demo's as the old go
 | FEAT-32 | What an effect does, level by level | The user's request of 2026-11-11: in The Forge it's hard to see what an effect's impacts are. Wanted: a query of an effect over its level range that returns each impact's parts, the numbers that make it, and its result at each level where it can be worked out; for the inspector, for a game's own UI ("80/120/160"), and for the Creator Lab (FEAT-35). Its pieces: a public API, as `AbilityInspector` is for an ability; an effect's one-line summary, built from its numbers' (`NumberText`); and a Scaler asset's panel for trying it, where an author sets what it reads (the level, an attribute, a caller's value) and reads what it gives (ED-74). Open |
 | FEAT-33 | Stack behaviours that matter | Proposed from the user's question of 2026-11-11 and the Dota lab: stacks for each source; stacks that fall off one at a time; a behaviour at N stacks, not only past the most; spending stacks, as charges; the most as a number; a continuous change that counts each stack, as a periodic one does; and a line that says what the effect's stacking does. After ED-75. Open |
 | FEAT-34 | Forge Projects | The user's request of 2026-11-11: the Asset Catalog becomes a Forge Project, a set of assets of its own. New assets go into the active project, a default one made with the first; The Forge shows the active project's assets alone and switches between projects; assets, one or a selection, move or copy to another project; and the Demo's assets make one project. The catalog names assets for saves (FEAT-9), which a project goes on doing for its own. Open decision 26. Open |
-| FEAT-35 | The Creator Lab | The user's request of 2026-11-11: one lab for testing a project's assets of every sort. An overhead 3D space whose camera the user moves, tilts and resets. Three modes: test dummies (any number, dragged, reset, given affiliations), battle (teams of bots given identities, abilities and items, and levelled) and none (an empty space where abilities still cast); and in any of them a unit the user controls, by the game's own movement and casting. The user selects an asset to see it level by level (FEAT-32), applies effects and casts abilities freely, and drags them from the library onto units or the ground. Panels: projects (FEAT-34) and assets by type on the left, the selected asset in the middle, hidden until one is, and the mode's controls on the right (play, pause, reset, a quick battle, the user's unit), each collapsible. What it shows of the inside, the user's question, is Open decision 27. A design for review comes before any of it is built. Open |
+| FEAT-35 | The Creator Lab | The user's request of 2026-11-11: one lab for testing a project's assets of every sort. An overhead 3D space whose camera the user moves, tilts and resets. Three modes: test dummies (any number, dragged, reset, given affiliations), battle (teams of bots given identities, abilities and items, and levelled) and none (an empty space where abilities still cast); and in any of them a unit the user controls, by the game's own movement and casting. The user selects an asset to see it level by level (FEAT-32), applies effects and casts abilities freely, and drags them from the library onto units or the ground. Panels: projects (FEAT-34) and assets by type on the left, the selected asset in the middle, hidden until one is, and the mode's controls on the right (play, pause, reset, a quick battle, the user's unit), each collapsible. What it shows of the inside, the user's question, is Open decision 27. The design, for review: `Docs/CREATOR_LAB_DESIGN.md`, with Open decisions 29 and 30. Open |
 
 **Phase 5's order,** from the review's plan for the test project (its labs, one at a time) and the table above. A lab
 is a small game: assets the lab builds in code, and a bot that plays it in PlayMode tests under a live ProcessControl,
