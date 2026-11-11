@@ -16,8 +16,12 @@ namespace FarEmerald.PlayForge
     /// <para>
     /// Each member reads in the number's own context, so a member that is a kind reads all the field's context gives, and
     /// a member that is a scaler evaluates against the effect, or against the carrier the context fills where there's no
-    /// effect. With no members, it reads its own values per level, as a scaler does (ED-51). Joining its members allocates
-    /// nothing.
+    /// effect. Joining its members allocates nothing.
+    /// </para>
+    /// <para>
+    /// It reads its members alone, so it has no values per level. With no members, or none that holds a kind, it is no
+    /// kind at all (<see cref="AbstractScaler.IsEmpty"/>): its field reads its number, as a field with no kind does
+    /// (ED-80, Decision 44). It read values per level of its own, which its inspector hid (ED-51).
     /// </para>
     /// </summary>
     [Serializable]
@@ -31,8 +35,25 @@ namespace FarEmerald.PlayForge
                  "lowest, their average, the first or the last. Ignore sets them aside, and the other members join as they would")]
         public EValueCollisionPolicy OverrideMemberCollisionPolicy = EValueCollisionPolicy.UseMaximum;
 
-        /// <summary>Whether it has members to join. Without any, it reads its own values per level (ED-51).</summary>
-        public bool HasMembers => Calculations != null && Calculations.Length > 0;
+        /// <summary>
+        /// Whether it has members to join: a member that holds a kind. Without one, it is no kind at all, so its field reads
+        /// its number (ED-80).
+        /// </summary>
+        public bool HasMembers
+        {
+            get
+            {
+                if (Calculations == null) return false;
+                for (int i = 0; i < Calculations.Length; i++)
+                {
+                    if (!IsNone(Calculations[i].Calculation)) return true;
+                }
+                return false;
+            }
+        }
+
+        /// <summary>With no members that hold a kind, it is no kind at all (ED-80, Decision 44).</summary>
+        public override bool IsEmpty => !HasMembers;
 
         public override void Initialize(IAttributeImpactCarrier deriv)
         {
@@ -49,15 +70,16 @@ namespace FarEmerald.PlayForge
             return false;
         }
 
-        // With no members, it reads its own values per level (ED-51)
-        public override EScalerParts Parts => HasMembers ? EScalerParts.None : EScalerParts.All;
+        // It reads its members alone, so it shows no values per level, with members or without (ED-80)
+        public override EScalerParts Parts => EScalerParts.None;
 
-        public override float Evaluate(IAttributeImpactCarrier deriv) =>
-            HasMembers ? Read(NumberContext.Of(deriv)) : EvaluateFromSpec(deriv);
+        // With no members it is no kind, which its field doesn't read; read on its own, it joins nothing, 0 (ED-80)
+        public override float Evaluate(IAttributeImpactCarrier deriv) => HasMembers ? Read(NumberContext.Of(deriv)) : 0f;
 
         /// <summary>
         /// Joins its members in a number's context: a member that overrides alone, by the policy; else the members that
-        /// add, times each that multiplies, plus each flat bonus. By index and with no lists, so it allocates nothing.
+        /// add, times each that multiplies, plus each flat bonus, in whatever order they're listed. A member that holds no
+        /// kind joins nothing. By index and with no lists, so it allocates nothing.
         /// </summary>
         internal float Read(in NumberContext context)
         {
@@ -70,7 +92,7 @@ namespace FarEmerald.PlayForge
                 for (int i = 0; i < Calculations.Length; i++)
                 {
                     var member = Calculations[i];
-                    if (member.RelativeOperation != ECalculationOperation.Override || member.Calculation == null) continue;
+                    if (member.RelativeOperation != ECalculationOperation.Override || IsNone(member.Calculation)) continue;
                     float read = NumberContext.ReadScaler(member.Calculation, in context);
                     switch (OverrideMemberCollisionPolicy)
                     {
@@ -101,7 +123,7 @@ namespace FarEmerald.PlayForge
             for (int i = 0; i < Calculations.Length; i++)
             {
                 var member = Calculations[i];
-                if (member.Calculation == null) continue;
+                if (IsNone(member.Calculation)) continue;
                 switch (member.RelativeOperation)
                 {
                     case ECalculationOperation.Add:

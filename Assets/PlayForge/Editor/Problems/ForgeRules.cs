@@ -169,7 +169,8 @@ namespace FarEmerald.PlayForge.Extended.Editor
     }
 
     /// <summary>
-    /// A magnitude field that reads a scaler it hasn't got, as the field warns, and a Shared scaler with no Scaler asset.
+    /// A magnitude field that reads a scaler it hasn't got, as the field warns, a Shared scaler with no Scaler asset, and a
+    /// Group whose members multiply with none that adds, which multiply 0 (ED-80).
     /// </summary>
     internal sealed class MagnitudeRule : ForgeValidationRule
     {
@@ -186,6 +187,8 @@ namespace FarEmerald.PlayForge.Extended.Editor
                     {
                         SharedScaler { Asset: null } => "shares no Scaler asset, so it reads 0.",
                         SharedCachedScaler { Asset: null } => "shares no Scaler asset, so it reads its root value.",
+                        AbstractScaler group when ScalerFields.MultipliesNothing(group) =>
+                            "is a Group with members that multiply and none that adds, so they multiply 0.",
                         _ => null,
                     };
                     if (message != null)

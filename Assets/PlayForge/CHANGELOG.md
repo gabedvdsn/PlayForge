@@ -7,6 +7,11 @@ tracks each fix below by its ID.
 ## [Unreleased]
 
 ### Added
+- `AbstractScaler.IsEmpty`, whether a scaler is no kind at all, as a Group with no members, and
+  `AbstractScaler.IsNone(scaler)` for a slot: a field that holds one reads its number, as a field with no scaler does
+  (ED-80).
+- A Group whose members multiply, with none that adds, says they multiply 0, under its members and in the Problems
+  view (ED-80).
 - An effect level by level, with what makes each of its numbers (FEAT-32). `NumberTrace.Of(number, context)` explains a
   number's read as a tree of parts, each with what it read and what it gave, and says what a part needs where its
   context lacks it, as "the target"; a kind or a condition of your own adds its parts by overriding `Explain`.
@@ -266,6 +271,8 @@ tracks each fix below by its ID.
   page, through one table of links in the editor.
 
 ### Changed
+- A Group with no members, or none that holds a kind, is no kind at all: its field reads its number, where it read
+  values per level the inspector hid. A Group shows no values per level (ED-80, Decision 44).
 - **`ConditionalScaler`** is a number kind. Its condition is `When`, a `GameplayCondition`, in place of `Condition`
   (an `EScalerCondition`), `TagCondition`, `CheckAttribute`, `ThresholdValue` and `Comparison`, and its branches are
   `TrueValue` and `FalseValue`, numbers, in place of `TrueScaler` and `FalseScaler`. With no condition it reads
@@ -538,6 +545,8 @@ tracks each fix below by its ID.
   Asking whether its sequence was paused took 24 bytes a frame.
 
 ### Fixed
+- A cached Group, an attribute set element's, set to ignore its overriding members, no longer throws as its element is
+  worked out; it sets them aside, and the others join as they would (ED-80).
 - An effect's Stack Behaviours can be added and edited in the inspector: each picks its kind, Stack Bounds, Scaled
   Stack Amount or Starting Stacks, and shows its fields, with tooltips. They had no drawer, so a new behaviour had no
   kind to pick (ED-75).

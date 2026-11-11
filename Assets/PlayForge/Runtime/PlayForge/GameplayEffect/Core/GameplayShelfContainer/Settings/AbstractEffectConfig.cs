@@ -327,7 +327,7 @@ namespace FarEmerald.PlayForge
         
         public override int GetStacks(AbstractStackingEffectContainer container, int amount = 1)
         {
-            if (Scaler is null) return amount;
+            if (AbstractScaler.IsNone(Scaler)) return amount;
             
             float stacks = Operation switch
             {
@@ -373,7 +373,7 @@ namespace FarEmerald.PlayForge
         
         public override void InitializeContainer(AbstractStackingEffectContainer container)
         {
-            if (Scaler is null)
+            if (AbstractScaler.IsNone(Scaler))
             {
                 container.Stack(InitializationStacks);
                 return;

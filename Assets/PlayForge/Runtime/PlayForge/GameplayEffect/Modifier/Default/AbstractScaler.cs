@@ -91,6 +91,16 @@ namespace FarEmerald.PlayForge
         /// </summary>
         public virtual EScalerParts Parts => UseScalingOptions() ? EScalerParts.All : EScalerParts.Behaviours;
 
+        /// <summary>
+        /// Whether the scaler is no kind at all, as a Group with no members: a field that holds it reads as one with none
+        /// does, its number, and a slot that holds it, as a Group's member, as an empty one (ED-80, Decision 44). A scaler
+        /// of a project's own that holds nothing to read yet overrides this.
+        /// </summary>
+        public virtual bool IsEmpty => false;
+
+        /// <summary>Whether a scaler slot reads as no kind: it holds no scaler, or one that is empty (ED-80).</summary>
+        public static bool IsNone(AbstractScaler scaler) => scaler == null || scaler.IsEmpty;
+
         // ═══════════════════════════════════════════════════════════════════════════
         // Level Value Management
         // ═══════════════════════════════════════════════════════════════════════════

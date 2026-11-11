@@ -407,7 +407,8 @@ namespace FarEmerald.PlayForge
         /// </summary>
         internal static float ReadScaler(AbstractScaler scaler, in NumberContext context)
         {
-            if (scaler == null) return 0f;
+            // A kind that is none, as a Group with no members, joins nothing (ED-80)
+            if (AbstractScaler.IsNone(scaler)) return 0f;
             if (scaler is NumberKind kind) return kind.Read(in context);
             // A group joins its members in the context itself, so each reads all the context gives (NUM-14)
             if (scaler is ScalerGroup { HasMembers: true } group) return group.Read(in context);

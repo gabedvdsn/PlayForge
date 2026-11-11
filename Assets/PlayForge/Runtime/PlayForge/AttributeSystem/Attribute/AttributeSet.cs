@@ -191,7 +191,8 @@ namespace FarEmerald.PlayForge
 
         public EMagnitudeOperation RealMagnitude = EMagnitudeOperation.UseMagnitude;
 
-        public bool BypassScaling => Scaling is null || RealMagnitude == EMagnitudeOperation.UseMagnitude;
+        // A scaling that is no kind, as a Group with no members, reads as none: the number (ED-80)
+        public bool BypassScaling => AbstractScaler.IsNone(Scaling) || RealMagnitude == EMagnitudeOperation.UseMagnitude;
 
         public void CopyFrom(AttributeMagnitudeSpec other)
         {

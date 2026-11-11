@@ -844,7 +844,7 @@ had no letter in the review. TS-AA onward came from the test project.
 | ED-77 | M | 6 | The user's request of 2026-11-11, importing scalers: a number field's three-dot menu lists every Scaler asset at its top; they go under a "Scaler Assets/" submenu. Wherever a scaler is chosen, a Group member's Calculation among them, its field offers the same menu: Save as Scaler Asset, Import Scaler Asset, Import Values, Quick Fill and Make Constant | `MagnitudeField.cs`, `ScalerDrawer.cs`, `ScalerSupportDrawers.cs` | open |
 | ED-78 | L | 6 | The user's note of 2026-11-11: a Scaler asset and a Requirement Template each have a description, drawn two ways. Each shows it in its breakdown's summary header, as text to read, and not only in the box that edits it | The Forge's breakdowns of both | open |
 | ED-79 | L | 6 | The user's note of 2026-11-11: a Requirement Template's category is a tag, in a context of its own, in place of a string | the Requirement Template and its drawer | open |
-| ED-80 | M | 6 | The user's notes of 2026-11-11 on the Group scaler: it shows no values per level, and with no members reads as no kind, so its field reads its number (Decision 44); where it has Multiply members and no Add, it says so, as the sum they multiply is 0. Members join as the sum of the Adds, times each Multiply, plus each Flat Bonus, in any order, so a first member need not be an Add | `ScalerGroup.cs`, `ScalerFields.cs` | open |
+| ED-80 | M | 6 | The user's notes of 2026-11-11 on the Group scaler. With no members it read values per level of its own, which its inspector hid (ED-51). A Group with no members, or none that holds a kind, is no kind at all (Decision 44): `AbstractScaler.IsEmpty`, and `AbstractScaler.IsNone(scaler)` for a slot, which every read that takes a missing scaler as its number takes too, so its field reads its number, as a Constant does: a number read in a context, an effect's magnitude, duration, ticks and stacks, a stack behaviour, and an attribute set element's side. A member that is none joins nothing. The field shows that number. A Group shows no values per level. Where its members multiply with none that adds, they multiply 0, and it says so under its members and in the Problems view. Members join as the sum of the Adds, times each Multiply, plus each Flat Bonus, in any order, so a first member needn't add. Found on the way: the cached Group, an attribute set element's, threw on its Ignore policy; it sets overriding members aside, as the Group does (NUM-14) | `AbstractScaler.cs`, `ScalerGroup.cs`, `CachedScalerGroup.cs`, `ScalableFloat.cs`, `GameplayEffectDuration.cs`, `AbstractEffectConfig.cs`, `AttributeSet.cs`, `ScalerFields.cs`, `MagnitudeField.cs`, `ScalerDrawer.cs`, `ForgeRules.cs` | verified |
 | ED-81 | M | 6 | The user's note of 2026-11-11: a scaler field's kind menu (`ScalerDrawer`) lists its kinds flat, where a number field's files them by category; it takes the number field's menu | `ScalerDrawer.cs`, `NumberFields.MenuPathOf` | open |
 | ED-82 | L | 6 | The user's note of 2026-11-11: with Spread Over Levels on, Quick Fill fills the points the curve spreads over, not a value for each level | Quick Fill (`ScalerFields.cs`) | open |
 | ED-83 | M | 6 | The user's report of 2026-11-11: a tag's context can't be changed, in The Forge or where a tag is made outside it | the tag picker, and The Forge's Tags view | open |
@@ -1063,6 +1063,18 @@ GAS-4 with GAS-5, PC-6, and TS-I with PC-5.
 ## Log
 
 Record baselines, gate results and notable decisions here, newest first.
+
+- 2026-11-11, **ED-80: a Group with no members is no kind.** It read values per level of its own, which its inspector
+  hid. A Group with no members, or none that holds a kind, is no kind at all (Decision 44), so its field reads its
+  number, as a Constant does, wherever the field is read: `AbstractScaler.IsEmpty` says a scaler is none, and
+  `AbstractScaler.IsNone(scaler)` a slot, which each read that took a missing scaler as its number takes too. A Group
+  shows no values per level; members that multiply with none that adds say they multiply 0, under the members and in
+  the Problems view. The cached Group threw on its Ignore policy; it sets overriding members aside.
+  - Red first: `GroupScalerTests` (PlayMode) and `ScalerDrawerTests.ED_80_*` (EditMode) in Proving Grounds, five
+    failures against the old code: the empty Group read 1, its values per level showed, and nothing warned. The cached
+    Group's Ignore test came after, red by reading: its policy reached a `throw`. The test that members join in any
+    order passed before, as they did.
+  - Gates: MSBuild, the runtime and Editor projects: 0 errors. Proving Grounds, Demo imported: EditMode 763 of 764, the one failure ED-61, the user's uncommitted lifecycle change; PlayMode 1433 of 1456, 8 skipped, 15 failed: the 13 the user's uncommitted lifecycle change fails (Bullet Heaven 3, Lab Scenes 2, Spawned Process 8), and the Dota lab's Fury Swipes in both hubs, which fails on the working tree's Dota assets, re-saved by the user's editor with their asset tags renamed, so Ursa's attack finds no Fury Swipes; with the committed assets the Dota lab passes 20 of 20. Golden 25 of 25.
 
 - 2026-11-11, **ED-75: stack behaviours can be added.** An effect's Stack Behaviours had no drawer, as they configure
   a stacking container, a type apart from the one the effect behaviour drawer takes, so Unity's own field gave a new

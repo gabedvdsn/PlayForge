@@ -182,7 +182,7 @@ namespace FarEmerald.PlayForge
         {
             // The target's own time: a slowed entity's effects, its cooldowns among them, last longer (FEAT-7)
             float dt = ForgeTime.DeltaTimeFor(spec?.GetTarget());
-            return DeltaTimeScaler is null 
+            return AbstractScaler.IsNone(DeltaTimeScaler)
                 ? dt 
                 : ForgeHelper.MagnitudeAndScalerOperation(dt, DeltaTimeScaler.Evaluate(spec), RealDeltaTime);
         }
@@ -191,7 +191,7 @@ namespace FarEmerald.PlayForge
         {
             if (DurationPolicy == EEffectDurationPolicy.Infinite) return float.MaxValue;
             
-            return DurationOperation.Scaler is null 
+            return AbstractScaler.IsNone(DurationOperation.Scaler)
                 ? DurationOperation.Magnitude 
                 : ForgeHelper.MagnitudeAndScalerOperation(DurationOperation.Magnitude, DurationOperation.Scaler.Evaluate(spec), DurationOperation.RealMagnitude);
 
@@ -201,7 +201,7 @@ namespace FarEmerald.PlayForge
         {
             if (DurationPolicy == EEffectDurationPolicy.Infinite) return float.MaxValue;
             
-            return DurationOperation.Scaler is null 
+            return AbstractScaler.IsNone(DurationOperation.Scaler)
                 ? DurationOperation.Magnitude 
                 : ForgeHelper.MagnitudeAndScalerOperation(DurationOperation.Magnitude, DurationOperation.Scaler.Evaluate(container), DurationOperation.RealMagnitude);
         }
@@ -210,7 +210,7 @@ namespace FarEmerald.PlayForge
         {
             if (TickIntervalOperation is null) return 0f;
 
-            return TickIntervalOperation.Scaler is null
+            return AbstractScaler.IsNone(TickIntervalOperation.Scaler)
                 ? TickIntervalOperation.Magnitude
                 : ForgeHelper.MagnitudeAndScalerOperation(TickIntervalOperation.Magnitude, TickIntervalOperation.Scaler.Evaluate(spec), TickIntervalOperation.RealMagnitude);
         }
@@ -220,7 +220,7 @@ namespace FarEmerald.PlayForge
             if (DurationPolicy == EEffectDurationPolicy.Infinite) return 0;
             if (!EnablePeriodicTicks) return 0;
             
-            if (TicksOperation.Scaler is null)
+            if (AbstractScaler.IsNone(TicksOperation.Scaler))
             {
                 return TicksOperation.Magnitude;
             }
@@ -245,7 +245,7 @@ namespace FarEmerald.PlayForge
 
         public int GetExecuteTicks(GameplayEffectSpec spec, int baseExecuteTicks)
         {
-            if (AdditionalExecuteTicksOperation.Scaler is null)
+            if (AbstractScaler.IsNone(AdditionalExecuteTicksOperation.Scaler))
             {
                 return baseExecuteTicks + AdditionalExecuteTicksOperation.Magnitude;
             }
@@ -259,7 +259,7 @@ namespace FarEmerald.PlayForge
 
         public int GetStackAmount(GameplayEffectSpec spec)
         {
-            return StackAmountOperation.Scaler is null 
+            return AbstractScaler.IsNone(StackAmountOperation.Scaler)
                 ? StackAmountOperation.Magnitude 
                 : ForgeHelper.MagnitudeAndScalerOperation(StackAmountOperation.Magnitude, StackAmountOperation.Scaler.Evaluate(spec), StackAmountOperation.RealMagnitude, StackAmountOperation.Rounding);
 
@@ -276,7 +276,7 @@ namespace FarEmerald.PlayForge
             overflowed = null;
 
             // An amount left at 0 means one stack, which is what every application added before amounts counted
-            int stacks = StackAmountOperation.Scaler is null
+            int stacks = AbstractScaler.IsNone(StackAmountOperation.Scaler)
                 ? Mathf.Max(1, StackAmountOperation.Magnitude)
                 : ForgeHelper.MagnitudeAndScalerOperation(StackAmountOperation.Magnitude, StackAmountOperation.Scaler.Evaluate(container), StackAmountOperation.RealMagnitude, StackAmountOperation.Rounding);
 

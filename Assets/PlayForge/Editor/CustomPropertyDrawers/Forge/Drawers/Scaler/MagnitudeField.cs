@@ -392,8 +392,12 @@ namespace FarEmerald.PlayForge.Extended.Editor
                     combine.SetValueWithoutNotify(Combines[CombineIndex()].name);
                     combine.showMixedValue = realProp.hasMultipleDifferentValues;
                 }
+                // The number shows where the field reads it: through its Combine, or as its kind is none, as a Group with
+                // no members (ED-80)
                 if (combineNumber != null)
-                    combineNumber.style.display = reals.Any(real => real != EMagnitudeOperation.UseScaler) ? DisplayStyle.Flex : DisplayStyle.None;
+                    combineNumber.style.display = reals.Any(real => real != EMagnitudeOperation.UseScaler)
+                        || EachAsset.Of(scalerProp).Any(each => AbstractScaler.IsNone(each.managedReferenceValue as AbstractScaler))
+                        ? DisplayStyle.Flex : DisplayStyle.None;
                 if (noScaler != null)
                     noScaler.style.display = reals.Any(real => real is EMagnitudeOperation.UseScaler or EMagnitudeOperation.MultiplyWithScaler)
                         ? DisplayStyle.Flex : DisplayStyle.None;

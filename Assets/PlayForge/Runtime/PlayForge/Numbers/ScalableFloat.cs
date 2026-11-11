@@ -58,15 +58,16 @@ namespace FarEmerald.PlayForge
             new(new FunctionNumberKind(function), 1f, EMagnitudeOperation.UseScaler) { Magnitude = 0f };
 
         /// <summary>
-        /// Whether the number reads the same wherever it's read: it has no scaler, or it reads its number alone. A
-        /// constant costs a read of <see cref="Constant"/> and nothing more.
+        /// Whether the number reads the same wherever it's read: it has no scaler, or one that is no kind, as a Group with
+        /// no members (ED-80), or it reads its number alone. A constant costs a read of <see cref="Constant"/> and nothing
+        /// more.
         /// </summary>
-        public bool IsConstant => Scaler == null || RealMagnitude == EMagnitudeOperation.UseMagnitude;
+        public bool IsConstant => AbstractScaler.IsNone(Scaler) || RealMagnitude == EMagnitudeOperation.UseMagnitude;
 
         /// <summary>
-        /// What a constant reads: its number, or, through a Combine that reads a scaler it hasn't got, 0. A number of
-        /// another kind reads its number here, the value it falls back to where its kind can't be worked out. For editor
-        /// previews and setup code.
+        /// What a constant reads: its number, or, through a Combine that reads a scaler it hasn't got, 0. A number whose
+        /// kind is none, as a Group with no members, reads its number (ED-80). A number of another kind reads its number
+        /// here, the value it falls back to where its kind can't be worked out. For editor previews and setup code.
         /// </summary>
         public float Constant => RealMagnitude switch
         {
@@ -98,6 +99,8 @@ namespace FarEmerald.PlayForge
         /// <summary>Reads the number against an impact carrier, as an effect's own numbers are read.</summary>
         public float Evaluate(IAttributeImpactCarrier spec)
         {
+            // A kind that is none, as a Group with no members, reads as no kind: the number (ED-80)
+            if (Scaler is { IsEmpty: true }) return Magnitude;
             return ForgeHelper.MagnitudeAndScalerOperation(
                 Magnitude, Scaler?.Evaluate(spec) ?? 0f, RealMagnitude
             );
@@ -120,6 +123,7 @@ namespace FarEmerald.PlayForge
         /// </summary>
         public float Evaluate(AbstractStackingEffectContainer container)
         {
+            if (Scaler is { IsEmpty: true }) return Magnitude;
             return ForgeHelper.MagnitudeAndScalerOperation(
                 Magnitude, Scaler?.Evaluate(container) ?? 0f, RealMagnitude
             );
@@ -173,8 +177,11 @@ namespace FarEmerald.PlayForge
         /// <summary>A constant, so an int assigns to a whole-number field: <c>Ticks = 3</c>.</summary>
         public static implicit operator ScalableInt(int value) => new(value);
 
-        /// <summary>Whether the number reads the same wherever it's read: it has no scaler, or it reads its number alone.</summary>
-        public bool IsConstant => Scaler == null || RealMagnitude == EMagnitudeOperation.UseMagnitude;
+        /// <summary>
+        /// Whether the number reads the same wherever it's read: it has no scaler, or one that is no kind (ED-80), or it
+        /// reads its number alone.
+        /// </summary>
+        public bool IsConstant => AbstractScaler.IsNone(Scaler) || RealMagnitude == EMagnitudeOperation.UseMagnitude;
 
         /// <summary>
         /// What a constant reads: its number, or, through a Combine that reads a scaler it hasn't got, 0. A number of
@@ -201,6 +208,7 @@ namespace FarEmerald.PlayForge
         /// <summary>Reads the number against an impact carrier, as an effect's own numbers are read.</summary>
         public int Evaluate(IAttributeImpactCarrier spec)
         {
+            if (Scaler is { IsEmpty: true }) return Magnitude;
             return ForgeHelper.MagnitudeAndScalerOperation(
                 Magnitude, Scaler?.Evaluate(spec) ?? 0f, RealMagnitude, Rounding
             );

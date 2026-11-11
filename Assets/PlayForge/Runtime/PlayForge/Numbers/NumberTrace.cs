@@ -188,7 +188,7 @@ namespace FarEmerald.PlayForge
                 case ScalerGroup { HasMembers: true } group:
                     trace.Value = NumberContext.ReadScaler(kind, in context);
                     foreach (var member in group.Calculations)
-                        if (member.Calculation != null) trace.Add(member.Calculation, in context, OperationName(member.RelativeOperation));
+                        if (!AbstractScaler.IsNone(member.Calculation)) trace.Add(member.Calculation, in context, OperationName(member.RelativeOperation));
                     return trace;
 
                 case AttributeBackedScaler attribute:

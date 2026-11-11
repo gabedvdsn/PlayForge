@@ -114,6 +114,10 @@ namespace FarEmerald.PlayForge.Extended.Editor
             return read;
         }
 
+        /// <summary>Whether a scaler reads values per level: its own, as its kind's parts say, or its Scaler asset's.</summary>
+        internal static bool ReadsValues(SerializedProperty scaler) => scaler?.managedReferenceValue is AbstractScaler kind
+            && (IsShared(kind.GetType()) || (kind.Parts & EScalerParts.LevelValues) != 0);
+
         /// <summary>
         /// A series' range as a field reads it, as in "6–8 s", or "6 s" when every level reads the same. A range with a
         /// negative end reads "-25 to -10": a dash between two minus signs read as "-25—10" (ED-51).
@@ -212,6 +216,17 @@ namespace FarEmerald.PlayForge.Extended.Editor
                 content.Add(field);
                 kindFields++;
             }
+
+            // A Group whose members multiply, with none that adds, multiplies 0, and says so under its members (ED-80)
+            HelpBox multipliesNothing = null;
+            if (value is ScalerGroup or CachedScalerGroup)
+            {
+                multipliesNothing = new HelpBox(MultipliesNothingText, HelpBoxMessageType.Warning) { name = "MultipliesNothing" };
+                content.Add(multipliesNothing);
+            }
+            void ShowNote() => multipliesNothing?.EnableInClassList(HiddenClass,
+                !EachAsset.Of(scaler).Any(own => MultipliesNothing(own.managedReferenceValue as AbstractScaler)));
+
             var parts = new VisualElement { name = "Parts" };
             content.Add(parts);
             var shown = (EScalerParts)(-1);
@@ -239,10 +254,39 @@ namespace FarEmerald.PlayForge.Extended.Editor
             // A kind's parts can follow its fields, as a scaler of a project's own can read its values per level in one mode alone
             content.TrackSerializedObjectValue(scaler.serializedObject, _ =>
             {
-                if (Alive(scaler)) ShowParts();
+                if (!Alive(scaler)) return;
+                ShowParts();
+                ShowNote();
             });
             ShowParts();
+            ShowNote();
             return content;
+        }
+
+        /// <summary>What a Group whose members multiply nothing says under its members, and the Problems view after its field.</summary>
+        internal const string MultipliesNothingText = "No member adds, so the members that multiply multiply 0.";
+
+        /// <summary>
+        /// Whether a Group's members multiply with none that adds, so they multiply the sum of nothing, 0 (ED-80). Members
+        /// join as the sum of those that add, times each that multiplies, plus each flat bonus, in any order. Where a member
+        /// overrides, and the Group doesn't set overriding members aside, it reads the override, and multiplies nothing.
+        /// </summary>
+        internal static bool MultipliesNothing(AbstractScaler scaler)
+        {
+            var members = scaler switch
+            {
+                ScalerGroup group => (group.Calculations ?? Array.Empty<MagnitudeModifierGroupMember>())
+                    .Select(member => (Joins: member.RelativeOperation, Kind: member.Calculation)).ToList(),
+                CachedScalerGroup cached => (cached.Calculations ?? Array.Empty<CachedMagnitudeModifierGroupMember>())
+                    .Select(member => (Joins: member.RelativeOperation, Kind: (AbstractScaler)member.Calculation)).ToList(),
+                _ => null,
+            };
+            if (members == null) return false;
+            members.RemoveAll(member => AbstractScaler.IsNone(member.Kind));
+            var policy = scaler is ScalerGroup own ? own.OverrideMemberCollisionPolicy : ((CachedScalerGroup)scaler).OverrideMemberCollisionPolicy;
+            if (policy != EValueCollisionPolicy.Ignore && members.Any(member => member.Joins == ECalculationOperation.Override)) return false;
+            return members.Any(member => member.Joins == ECalculationOperation.Multiply)
+                && members.All(member => member.Joins != ECalculationOperation.Add);
         }
 
         /// <summary>What the selected scalers read of every scaler's parts: what any of them reads (ED-12).</summary>

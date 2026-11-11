@@ -56,9 +56,12 @@ which has no target yet, offers no kind that reads one.
   Min Value, whatever field the Clamped is in.
 - A **Group** joins several numbers as one. It lists its members, each an **Operation** then its **Scaler**, which
   can be any kind. The members that **Add** are added up, that sum is multiplied by each member that **Multiplies**,
-  then each **Flat Bonus** is added on, so `(5 + Caster's Strength) × 2 + 3` is one number. A member that
-  **Overrides** gives the group's value alone; where several do, the group's policy picks the highest, the lowest,
-  their average, the first or the last, and Ignore sets them aside.
+  then each **Flat Bonus** is added on, in whatever order they're listed, so `(5 + Caster's Strength) × 2 + 3` is one
+  number, and a first member needn't add. Members that multiply with none that adds multiply 0, and the Group says
+  so. A member that **Overrides** gives the group's value alone; where several do, the group's policy picks the
+  highest, the lowest, their average, the first or the last, and Ignore sets them aside. A Group has no values per
+  level. With no members, or none that holds a kind, it's no kind at all, so its field reads its number, as a
+  Constant does.
 
 Kinds that read the game, each with a summary that says what it reads:
 

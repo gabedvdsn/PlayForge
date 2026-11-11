@@ -104,11 +104,15 @@ namespace FarEmerald.PlayForge.Extended.Editor
                 Show();
             }
 
+            // The range of the values per level it reads; none for a kind that reads none, as a Group (ED-80)
+            string RangeOf(SerializedProperty each) =>
+                ScalerFields.ReadsValues(each) ? ScalerFields.RangeText(ScalerFields.ValuesOf(each), null) : "";
+
             void Show()
             {
                 if (range == null) return;
-                bool differ = EachAsset.Differ(property, each => ScalerFields.RangeText(ScalerFields.ValuesOf(each), null));
-                range.text = differ ? MagnitudeField.MixedRange : ScalerFields.RangeText(ScalerFields.ValuesOf(property), null);
+                bool differ = EachAsset.Differ(property, RangeOf);
+                range.text = differ ? MagnitudeField.MixedRange : RangeOf(property);
             }
 
             root.TrackSerializedObjectValue(property.serializedObject, _ =>

@@ -11,6 +11,10 @@ namespace FarEmerald.PlayForge
     /// the member's <see cref="ECalculationOperation"/>. Override members short-circuit other
     /// operations and resolve via <see cref="OverrideMemberCollisionPolicy"/>.
     /// Regulation propagates to all members so any captured-attribute change triggers a refresh.
+    /// <para>
+    /// With no members, or none that holds a kind, it is no kind at all, so its element's side reads its number, as the
+    /// Group does (ED-80, Decision 44). Its Ignore policy threw; it sets overriding members aside (ED-80).
+    /// </para>
     /// </summary>
     public class CachedScalerGroup : AbstractCachedScaler
     {
@@ -22,6 +26,20 @@ namespace FarEmerald.PlayForge
 
         // It reads its members alone (ED-51)
         public override EScalerParts Parts => EScalerParts.None;
+
+        /// <summary>With no members that hold a kind, it is no kind at all (ED-80, Decision 44).</summary>
+        public override bool IsEmpty
+        {
+            get
+            {
+                if (Calculations == null) return true;
+                for (int i = 0; i < Calculations.Length; i++)
+                {
+                    if (!IsNone(Calculations[i].Calculation)) return false;
+                }
+                return true;
+            }
+        }
 
         public override void RegulateContactWith(IAttribute related, AttributeRegulationCache rules)
         {
@@ -47,37 +65,38 @@ namespace FarEmerald.PlayForge
             IReadOnlyDictionary<IAttribute, CachedAttributeValue> cache,
             bool initial)
         {
-            if (Calculations == null || Calculations.Length == 0) return new AttributeValue(0f, 0f);
+            if (IsEmpty) return new AttributeValue(0f, 0f);
 
             AttributeValue Eval(AbstractCachedScaler s) =>
                 initial ? s.EvaluateInitialValue(blueprint, cache) : s.EvaluateActiveValue(blueprint, cache);
 
             // Override members short-circuit everything else.
             var overrides = Calculations
-                .Where(m => m.RelativeOperation == ECalculationOperation.Override && m.Calculation != null)
+                .Where(m => m.RelativeOperation == ECalculationOperation.Override && !IsNone(m.Calculation))
                 .ToList();
 
-            if (overrides.Count > 0)
+            // Ignore sets them aside, and the other members join as they would without them
+            if (overrides.Count > 0 && OverrideMemberCollisionPolicy != EValueCollisionPolicy.Ignore)
             {
                 return ResolveOverrideCollision(overrides, Eval);
             }
 
             // Additive sum.
             var value = new AttributeValue(0f, 0f);
-            foreach (var member in Calculations.Where(m => m.RelativeOperation == ECalculationOperation.Add && m.Calculation != null))
+            foreach (var member in Calculations.Where(m => m.RelativeOperation == ECalculationOperation.Add && !IsNone(m.Calculation)))
             {
                 value += Eval(member.Calculation);
             }
 
             // Multiplicative.
-            foreach (var member in Calculations.Where(m => m.RelativeOperation == ECalculationOperation.Multiply && m.Calculation != null))
+            foreach (var member in Calculations.Where(m => m.RelativeOperation == ECalculationOperation.Multiply && !IsNone(m.Calculation)))
             {
                 var factor = Eval(member.Calculation);
                 value = new AttributeValue(value.CurrentValue * factor.CurrentValue, value.BaseValue * factor.BaseValue);
             }
 
             // Flat bonus added at the end.
-            foreach (var member in Calculations.Where(m => m.RelativeOperation == ECalculationOperation.FlatBonus && m.Calculation != null))
+            foreach (var member in Calculations.Where(m => m.RelativeOperation == ECalculationOperation.FlatBonus && !IsNone(m.Calculation)))
             {
                 value += Eval(member.Calculation);
             }

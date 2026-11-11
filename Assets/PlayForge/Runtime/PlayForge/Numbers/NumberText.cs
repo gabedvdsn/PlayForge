@@ -25,7 +25,8 @@ namespace FarEmerald.PlayForge
             bool percent = unit == "%";
             string suffix = percent || string.IsNullOrEmpty(unit) ? "" : $" {unit}";
             string number = Number(magnitude, percent);
-            if (kind == null || combine == EMagnitudeOperation.UseMagnitude)
+            // A kind that is none, as a Group with no members, reads as no kind: the number (ED-80)
+            if (AbstractScaler.IsNone(kind) || combine == EMagnitudeOperation.UseMagnitude)
                 return kind == null && combine is EMagnitudeOperation.UseScaler or EMagnitudeOperation.MultiplyWithScaler
                     ? $"{Number(0f, percent)}{suffix}"
                     : $"{number}{suffix}";
