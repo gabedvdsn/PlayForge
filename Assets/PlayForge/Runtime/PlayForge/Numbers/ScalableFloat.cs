@@ -104,6 +104,16 @@ namespace FarEmerald.PlayForge
         }
 
         /// <summary>
+        /// Readies the number's scaler against an impact carrier, as an effect's spec does for its own numbers as it's
+        /// made: a scaler that captures an attribute on creation captures it here. A scaler that holds numbers passes it
+        /// on to them, so each of its own is ready as it is.
+        /// </summary>
+        public void Initialize(IAttributeImpactCarrier carrier)
+        {
+            if (!IsConstant && carrier != null) Scaler.Initialize(carrier);
+        }
+
+        /// <summary>
         /// Container-aware evaluation — scalers that read container state (stack count)
         /// see the live container instead of just the spec. Scalers that don't care fall
         /// back to spec-based evaluation via <see cref="AbstractScaler.Evaluate(AbstractStackingEffectContainer)"/>.
@@ -194,6 +204,12 @@ namespace FarEmerald.PlayForge
             return ForgeHelper.MagnitudeAndScalerOperation(
                 Magnitude, Scaler?.Evaluate(spec) ?? 0f, RealMagnitude, Rounding
             );
+        }
+
+        /// <summary>Readies the number's scaler against an impact carrier, as <see cref="ScalableFloat.Initialize"/> does.</summary>
+        public void Initialize(IAttributeImpactCarrier carrier)
+        {
+            if (!IsConstant && carrier != null) Scaler.Initialize(carrier);
         }
 
         public override string ToString() => NumberText.Of(this);

@@ -127,7 +127,7 @@ namespace FarEmerald.PlayForge.Extended.Editor
         /// "+" copies the previous element's id, so two elements can hold one scaler, and an edit to one changes both.
         /// Returns that element's index, or -1. It only reads (ED-34).
         /// </summary>
-        private static int FindSharedSibling(SerializedProperty property)
+        internal static int FindSharedSibling(SerializedProperty property)
         {
             if (property == null) return -1;
             if (property.propertyType != SerializedPropertyType.ManagedReference) return -1;
@@ -162,8 +162,8 @@ namespace FarEmerald.PlayForge.Extended.Editor
         }
 
         // Gives this element a scaler of its own, a copy of the one it shares, as one undoable step: in each selected asset
-        // whose element shares one (ED-12)
-        private static void GiveOwnCopy(SerializedProperty property) =>
+        // whose element shares one (ED-12). A condition in a list takes it too (FEAT-29)
+        internal static void GiveOwnCopy(SerializedProperty property) =>
             EachAsset.Write(property, own =>
             {
                 if (FindSharedSibling(own) < 0) return;

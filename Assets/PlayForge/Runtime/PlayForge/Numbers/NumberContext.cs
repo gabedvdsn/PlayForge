@@ -156,6 +156,9 @@ namespace FarEmerald.PlayForge
         {
             if (carrier == null) return default;
             if (carrier is NumberBridge bridge) return bridge.Context;
+            // A kind inside a plain scaler reads the context its number was read in, and not one made again from the
+            // carrier, which has no owner, no data and none of what the reader set (NUM-16)
+            if (readingDepth > 0 && ReferenceEquals(Reading[readingDepth - 1].Carrier, carrier)) return Reading[readingDepth - 1];
             var origin = carrier.GetOrigin();
             var magnitudes = carrier is GameplayEffectSpec spec ? spec.SetByCallerMagnitudes : null;
             return new NumberContext(origin?.GetSource(), carrier.GetTarget(), origin?.GetLevel() ?? default, origin != null,
@@ -399,7 +402,8 @@ namespace FarEmerald.PlayForge
         /// A scaler's value in a context: a <see cref="NumberKind"/> reads the context, and a Group joins its
         /// members in it; another scaler evaluates against
         /// the context's carrier, or a reusable carrier the context fills, which it is initialized against first, as a
-        /// spec's scalers are as it's made.
+        /// spec's scalers are as it's made. A kind such a scaler holds reads this context, whichever carrier it is given
+        /// (NUM-16).
         /// </summary>
         internal static float ReadScaler(AbstractScaler scaler, in NumberContext context)
         {
@@ -407,7 +411,19 @@ namespace FarEmerald.PlayForge
             if (scaler is NumberKind kind) return kind.Read(in context);
             // A group joins its members in the context itself, so each reads all the context gives (NUM-14)
             if (scaler is ScalerGroup { HasMembers: true } group) return group.Read(in context);
-            if (context.Carrier != null) return scaler.Evaluate(context.Carrier);
+            if (context.Carrier != null)
+            {
+                if (readingDepth >= Reading.Length) return scaler.Evaluate(context.Carrier);
+                Reading[readingDepth++] = context;
+                try
+                {
+                    return scaler.Evaluate(context.Carrier);
+                }
+                finally
+                {
+                    Reading[--readingDepth] = default;
+                }
+            }
 
             var bridge = NumberBridge.Rent(in context);
             if (bridge == null) return 0f;
@@ -421,6 +437,11 @@ namespace FarEmerald.PlayForge
                 NumberBridge.Return(bridge);
             }
         }
+
+        // The contexts plain scalers are being read in against their carriers, the innermost last. A kind inside one
+        // reads the context its number was read in, with its owner and its data (NUM-16)
+        private static readonly NumberContext[] Reading = new NumberContext[NumberBridge.MostDepth];
+        private static int readingDepth;
 
         // The kinds that have said they can't be worked out where they were read, each said once
         private static readonly HashSet<Type> Unresolved = new();

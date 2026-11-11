@@ -1,29 +1,34 @@
-﻿using UnityEngine;
+﻿using System;
+using UnityEngine;
+using UnityEngine.Serialization;
 
 namespace FarEmerald.PlayForge
 {
     /// <summary>
     /// Adds random variance to level-based scaling.
     /// Useful for damage ranges, proc chances, etc.
+    /// Its variance and its multipliers are numbers of any kind, read with the scaler as their owner, so a variance can
+    /// widen by level and a Max multiplier can be 3 × its Min (FEAT-29).
     /// </summary>
+    [Serializable]
     [NumberKind("Randomized", Category = "Scaler")]
-    public class RandomizedScaler : AbstractScaler
+    public class RandomizedScaler : AbstractScaler, ISerializationCallbackReceiver
     {
         [Tooltip("How variance is applied")]
         public EVarianceMode VarianceMode = EVarianceMode.Percentage;
-        
-        [Tooltip("Amount of variance (interpretation depends on mode)")]
+
+        [Tooltip("Amount of variance: a share of the base value as a percentage, or an amount as a flat variance")]
         [ForgeShowWhen(nameof(VarianceMode), EVarianceMode.Percentage, EVarianceMode.Flat)]
-        [Range(0f, 1f)]
-        public float Variance = 0.1f;
-        
+        [NumberMin(0f)]
+        public ScalableFloat Variance = 0.1f;
+
         [Tooltip("Minimum multiplier when using random range")]
         [ForgeShowWhen(nameof(VarianceMode), EVarianceMode.Multiplier)]
-        public float MinMultiplier = 0.9f;
-        
+        public ScalableFloat MinMultiplier = 0.9f;
+
         [Tooltip("Maximum multiplier when using random range")]
         [ForgeShowWhen(nameof(VarianceMode), EVarianceMode.Multiplier)]
-        public float MaxMultiplier = 1.1f;
+        public ScalableFloat MaxMultiplier = 1.1f;
 
         [Tooltip("Roll once per effect spec and keep it, so a buff holds its roll and every tick of one application " +
                  "deals the same. Off, it rolls on every evaluation, and a buff re-rolls whenever its attribute recomputes")]
@@ -31,6 +36,10 @@ namespace FarEmerald.PlayForge
 
         public override void Initialize(IAttributeImpactCarrier deriv)
         {
+            Variance?.Initialize(deriv);
+            MinMultiplier?.Initialize(deriv);
+            MaxMultiplier?.Initialize(deriv);
+
             // One roll per spec, kept with what the spec captures. Rolled on every evaluation, a modifier re-rolled
             // whenever its attribute recomputed (GAS-27, Decision 12). Initialize can run twice for one spec
             var captured = deriv?.GetSourcedCapturedAttributes();
@@ -52,6 +61,10 @@ namespace FarEmerald.PlayForge
             return ForgeRandom.Value;
         }
 
+        // Its own numbers, read where it is, with itself as their owner (FEAT-29)
+        private float Read(ScalableFloat number, IAttributeImpactCarrier deriv, float fallback) =>
+            number?.Evaluate(NumberContext.Of(deriv), this) ?? fallback;
+
         public override float Evaluate(IAttributeImpactCarrier deriv)
         {
             float baseValue = EvaluateFromSpec(deriv);
@@ -61,17 +74,18 @@ namespace FarEmerald.PlayForge
             {
                 case EVarianceMode.Percentage:
                     // ±Variance% of base value
-                    float range = baseValue * Variance;
+                    float range = baseValue * Read(Variance, deriv, 0f);
                     return baseValue + Mathf.Lerp(-range, range, roll);
 
                 case EVarianceMode.Flat:
                     // ±Variance flat amount
-                    return baseValue + Mathf.Lerp(-Variance, Variance, roll);
+                    float variance = Read(Variance, deriv, 0f);
+                    return baseValue + Mathf.Lerp(-variance, variance, roll);
 
                 case EVarianceMode.Multiplier:
                     // Multiply by random value in range
-                    return baseValue * Mathf.Lerp(MinMultiplier, MaxMultiplier, roll);
-                    
+                    return baseValue * Mathf.Lerp(Read(MinMultiplier, deriv, 1f), Read(MaxMultiplier, deriv, 1f), roll);
+
                 default:
                     return baseValue;
             }
@@ -91,49 +105,66 @@ namespace FarEmerald.PlayForge
         public float GetMinValue(IAttributeImpactCarrier spec)
         {
             float baseValue = EvaluateFromSpec(spec);
-            
+
             switch (VarianceMode)
             {
                 case EVarianceMode.Percentage:
-                    return baseValue * (1f - Variance);
+                    return baseValue * (1f - Read(Variance, spec, 0f));
                 case EVarianceMode.Flat:
-                    return baseValue - Variance;
+                    return baseValue - Read(Variance, spec, 0f);
                 case EVarianceMode.Multiplier:
-                    return baseValue * MinMultiplier;
+                    return baseValue * Read(MinMultiplier, spec, 1f);
                 default:
                     return baseValue;
             }
         }
-        
+
         /// <summary>
         /// Gets the maximum possible value at current level (for UI display).
         /// </summary>
         public float GetMaxValue(IAttributeImpactCarrier spec)
         {
             float baseValue = EvaluateFromSpec(spec);
-            
+
             switch (VarianceMode)
             {
                 case EVarianceMode.Percentage:
-                    return baseValue * (1f + Variance);
+                    return baseValue * (1f + Read(Variance, spec, 0f));
                 case EVarianceMode.Flat:
-                    return baseValue + Variance;
+                    return baseValue + Read(Variance, spec, 0f);
                 case EVarianceMode.Multiplier:
-                    return baseValue * MaxMultiplier;
+                    return baseValue * Read(MaxMultiplier, spec, 1f);
                 default:
                     return baseValue;
             }
         }
+
+        // ═══════════════════════════════════════════════════════════════════════════
+        // Saved before its variance was a number (FEAT-29)
+        // ═══════════════════════════════════════════════════════════════════════════
+
+        [FormerlySerializedAs("Variance"), SerializeField, HideInInspector] private float legacyVariance = LegacyNumber.None;
+        [FormerlySerializedAs("MinMultiplier"), SerializeField, HideInInspector] private float legacyMinMultiplier = LegacyNumber.None;
+        [FormerlySerializedAs("MaxMultiplier"), SerializeField, HideInInspector] private float legacyMaxMultiplier = LegacyNumber.None;
+
+        void ISerializationCallbackReceiver.OnBeforeSerialize() { }
+
+        void ISerializationCallbackReceiver.OnAfterDeserialize()
+        {
+            LegacyNumber.Move(ref legacyVariance, ref Variance);
+            LegacyNumber.Move(ref legacyMinMultiplier, ref MinMultiplier);
+            LegacyNumber.Move(ref legacyMaxMultiplier, ref MaxMultiplier);
+        }
     }
-    
+
     public enum EVarianceMode
     {
         [Tooltip("Variance is a percentage of base value")]
         Percentage,
-        
+
         [Tooltip("Variance is a flat amount added/subtracted")]
         Flat,
-        
+
         [Tooltip("Base value is multiplied by random value in range")]
         Multiplier
     }

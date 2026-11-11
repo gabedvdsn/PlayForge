@@ -23,7 +23,7 @@ namespace FarEmerald.PlayForge.Extended.Editor
     {
         public override VisualElement CreatePropertyGUI(SerializedProperty property) =>
             MagnitudeField.Build(property, preferredLabel ?? property.displayName, NumberFields.UnitOf(fieldInfo), integer: false,
-                provides: NumberFields.ProvidesOf(fieldInfo), limits: NumberFields.LimitsOf(fieldInfo, whole: false));
+                provides: NumberFields.ProvidesOf(property), limits: NumberFields.LimitsOf(fieldInfo, whole: false));
     }
 
     /// <summary>A whole-number field, such as Ticks: the same field, with its rounding.</summary>
@@ -32,7 +32,7 @@ namespace FarEmerald.PlayForge.Extended.Editor
     {
         public override VisualElement CreatePropertyGUI(SerializedProperty property) =>
             MagnitudeField.Build(property, preferredLabel ?? property.displayName, NumberFields.UnitOf(fieldInfo), integer: true,
-                provides: NumberFields.ProvidesOf(fieldInfo), limits: NumberFields.LimitsOf(fieldInfo, whole: true));
+                provides: NumberFields.ProvidesOf(property), limits: NumberFields.LimitsOf(fieldInfo, whole: true));
     }
 
     internal static class MagnitudeField
@@ -575,9 +575,12 @@ namespace FarEmerald.PlayForge.Extended.Editor
         }
 
         // The kinds the menu makes as "the number times" them: × Attribute and a project's own kinds, as a distance. Set By
-        // Caller reads the caller's value as it is
+        // Caller reads the caller's value as it is, and so does a scaler that is a kind, as a Conditional or a Clamped,
+        // whose numbers are its own (FEAT-29)
         private static bool ReadsTimesNumber(Type type) =>
-            type == typeof(AttributeBackedScaler) || (typeof(NumberKind).IsAssignableFrom(type) && type != typeof(SetByCallerScaler));
+            type == typeof(AttributeBackedScaler)
+            || (typeof(NumberKind).IsAssignableFrom(type) && type != typeof(SetByCallerScaler)
+                && NumberFields.CategoryOf(type) != NumberFields.ScalerCategory);
 
         /// <summary>The field reads its number again: no scaler, and the number the field read at level 1.</summary>
         public static void MakeConstant(SerializedProperty operation)

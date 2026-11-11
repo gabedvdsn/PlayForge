@@ -5,10 +5,10 @@ using UnityEngine.UIElements;
 namespace FarEmerald.PlayForge.Extended.Editor
 {
     /// <summary>
-    /// A Threshold scaler's threshold, on one row (ED-66): the level it holds from, what the scaler reads from there, and
-    /// the tier's name, Unity's fields bound to them, so an Undo shows in them. In a list it needs no label of its own.
-    /// It drew a tinted row with "Lv" in blue and an arrow as text, and its fields wrote as they changed and followed
-    /// nothing after.
+    /// A Threshold scaler's threshold (ED-66): the level it holds from and the tier's name on one row, Unity's fields bound
+    /// to them, so an Undo shows in them, and under them what the scaler reads from there, a number field of any kind
+    /// (FEAT-29). In a list it needs no label of its own. It drew a tinted row with "Lv" in blue and an arrow as text,
+    /// and its fields wrote as they changed and followed nothing after.
     /// </summary>
     [CustomPropertyDrawer(typeof(LevelThreshold))]
     public class LevelThresholdDrawer : PropertyDrawer
@@ -16,17 +16,22 @@ namespace FarEmerald.PlayForge.Extended.Editor
         public override VisualElement CreatePropertyGUI(SerializedProperty property)
         {
             var inList = property.propertyPath.EndsWith("]");
-            var row = new ForgePartsField(inList ? null : preferredLabel ?? property.displayName) { name = "LevelThreshold" };
+            var root = new VisualElement { name = "LevelThreshold" };
             // The style sheet lays out the row, wherever the threshold is drawn (ED-20)
-            ForgeTheme.Apply(row);
+            ForgeTheme.Apply(root);
+            var row = new ForgePartsField(inList ? null : preferredLabel ?? property.displayName) { name = "Row" };
+            root.Add(row);
 
             var level = row.Part(new IntegerField("Level") { name = "Level", tooltip = "The level the threshold holds from" });
             level.BindProperty(property.FindPropertyRelative(nameof(LevelThreshold.Level)));
-            var value = row.Part(new FloatField("Value") { name = "Value", tooltip = "What the scaler reads from this level up, until the next threshold" });
-            value.BindProperty(property.FindPropertyRelative(nameof(LevelThreshold.Value)));
             var tier = row.Part(new TextField("Tier") { name = "Tier", tooltip = "A name for the tier, such as Bronze or Silver; optional" });
             tier.BindProperty(property.FindPropertyRelative(nameof(LevelThreshold.TierName)));
-            return row;
+
+            var value = property.FindPropertyRelative(nameof(LevelThreshold.Value));
+            var number = new PropertyField(value, "Value") { name = "Value" };
+            number.BindProperty(value);
+            root.Add(number);
+            return root;
         }
     }
 

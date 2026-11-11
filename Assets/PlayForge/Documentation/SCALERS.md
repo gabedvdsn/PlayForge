@@ -21,9 +21,9 @@ which has no target yet, offers no kind that reads one.
   "6–8 s", or "-25 to -10" where it goes below 0.
 - **Shared**: the field reads a Scaler asset (below).
 - The other kinds work out a value from the values or from the entity: **× Attribute** reads an attribute of the
-  caster or the target, which the menu starts as the field's number times it, **Clamped** keeps a value within bounds,
-  **Conditional** chooses between two scalers, **Randomized** rolls a random value, **Threshold** steps at thresholds,
-  and **Fixed Value** is one number. **Effect Stacks** reads the stack count of the effect's own container, and **Item
+  caster or the target, which the menu starts as the field's number times it, **Clamped** keeps a number within
+  bounds, **Conditional** reads one number where a condition holds and another where it doesn't, **Randomized** rolls
+  a random value, **Threshold** steps at thresholds, and **Fixed Value** is one number. **Effect Stacks** reads the stack count of the effect's own container, and **Item
   Stacks** that of the item that applied it ([ITEMS.md](ITEMS.md)); each reads 1 where there's nothing stacked. An
   attribute set's values use the cached kinds, which read other attributes as the entity's values change.
 - **Set By Caller** reads a value the code passes in. It checks one thing: whether what the number is read in holds a
@@ -32,8 +32,28 @@ which has no target yet, offers no kind that reads one.
   takes and the ability's tasks read, or on the data that spawns a process ([EFFECTS.md](EFFECTS.md)). Only the key
   itself matches, not a tag above or below it in the tag tree, and a value set to 0 is a value. Where none is set, the
   field reads the kind's **Default**; its summary says both, as "the caller's Damage, else 0".
-- A **Threshold** lists its thresholds, each a **Level**, the **Value** it reads from that level up, and an optional
-  **Tier** name.
+- A **Threshold** lists its thresholds, each a **Level** and an optional **Tier** name, with the **Value** it reads
+  from that level up under them, a number of any kind; below every threshold it reads its **Default Value**.
+- A **Conditional** has a condition, **When**, and two numbers, **True Value** and **False Value**: it reads True
+  where the condition holds, and False where it doesn't, or where it has none. Its summary says all three, as "−0.1 ×
+  Target's Health (base) if Target's Health < 0.3 × Target's Health (base), else 0". A condition picks its kind from a
+  menu, as a number does, and says itself in a line:
+  - **Tag**: whether the caster or the target holds a tag, counted by its weight, so a tag granted twice counts twice;
+  - **Attribute**: an attribute of the caster or the target, current or base, compared with a number, as 0.3 × the
+    target's base Health;
+  - **Level**: the level, or how far up its range it is, from 0 to 1, compared with a number;
+  - **Compare Numbers**: one number compared with another;
+  - **Always** and **Never**;
+  - and under Logic, **All Of**, **Any Of** and **Not**, which join others. All Of none holds; Any Of none doesn't.
+
+  Where what the number is read in lacks what a condition reads, as a target's tag where there's no target, the
+  condition doesn't hold, and neither does Not it.
+- A **Clamped** keeps its **Value** between its **Min Value** and **Max Value**, three numbers of any kind; one made
+  in the inspector clamps a value by level.
+- A **Randomized** scaler's **Variance**, **Min Multiplier** and **Max Multiplier** are numbers, so its variance can
+  widen by level.
+- A scaler's own numbers read the scaler as their object: a Clamped's Max Value can be Relative to a Field, 2 × its
+  Min Value, whatever field the Clamped is in.
 - A **Group** joins several numbers as one. It lists its members, each an **Operation** then its **Scaler**, which
   can be any kind. The members that **Add** are added up, that sum is multiplied by each member that **Multiplies**,
   then each **Flat Bonus** is added on, so `(5 + Caster's Strength) × 2 + 3` is one number. A member that
@@ -143,7 +163,7 @@ for `DamageCurveScaler`. Its inspector draws:
   they spread over (`EScalerParts.LevelRange`), and its behaviours (`EScalerParts.Behaviours`). Unless you override it,
   a scaler reads all three, or its behaviours alone where its `UseScalingOptions()` returns false. Override `Parts` to
   say what yours reads, as a scaler that reads only an attribute returns `EScalerParts.Behaviours`. `Parts` can follow
-  the scaler's own fields, as a Conditional reads its own values only while it has no True scaler.
+  the scaler's own fields, as one that reads its values per level in one mode alone.
 
 A **kind of number** of your own is simpler: derive from `NumberKind` and override its one method,
 `Evaluate(in NumberContext context)`, which reads what the field's site has: `context.Caster`, `context.Target`,
@@ -155,6 +175,13 @@ is a scaler, so it also works in an effect's magnitude and inside a Group or a C
 scaler's do. Test one without an effect: `number.Evaluate(NumberContext.For(caster, target, level))`. A kind is saved
 by its class's name, so renaming the class needs Unity's `[MovedFrom]`. PlayForge's own kinds, Local Data, Tracked
 Impact, Asset Part and the rest, are written this way, in `Runtime/PlayForge/Numbers/Kinds`.
+
+A **condition** of your own, for a Conditional, is the same: derive from `GameplayCondition`, override
+`Evaluate(in NumberContext context)` to say whether it holds and `Describe()` for its line, and name it with
+`[GameplayCondition("Target Is Caster", Reads = NumberReads.Caster | NumberReads.Target)]`; the condition menu offers
+it, and `condition.Holds(context)` reads it. A kind or a condition that holds numbers reads them with itself as their
+owner, `MaxValue.Evaluate(context, this)`, and passes `Initialize(carrier)` on to them, so a number in it captures what
+it captures as an effect's spec is made. PlayForge's are in `Runtime/PlayForge/Numbers/Conditions`.
 
 ## A number field in your own code
 

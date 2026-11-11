@@ -236,7 +236,7 @@ namespace FarEmerald.PlayForge.Extended.Editor
                     parts.Add(list);
                 }
             }
-            // A kind's parts can follow its fields, as a Conditional scaler reads its own values only with no True scaler
+            // A kind's parts can follow its fields, as a scaler of a project's own can read its values per level in one mode alone
             content.TrackSerializedObjectValue(scaler.serializedObject, _ =>
             {
                 if (Alive(scaler)) ShowParts();

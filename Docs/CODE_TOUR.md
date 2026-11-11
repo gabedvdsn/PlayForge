@@ -3142,8 +3142,9 @@ shape is made as the scene plays. `git show e91fe34:<path>` shows the old files.
 ## Number fields (FEAT-29)
 
 One number type for every authored gameplay number, grown from the magnitude field, built in eight phases
-(`Docs/NUMBER_FIELDS_DESIGN.md`, Decisions 40 to 42). Phases 1 and 2, the foundation with the extension API and
-the new kinds, came after the commits above; the entries name classes and methods to search for.
+(`Docs/NUMBER_FIELDS_DESIGN.md`, Decisions 40 to 43). Phases 1 to 3, the foundation with the extension API, the
+new kinds and the scalers' own numbers, came after the commits above; the entries name classes and methods to search
+for.
 
 ### The type, its context and kinds of your own (phase 1)
 
@@ -3177,7 +3178,7 @@ Local Data, another field of the same object, what an effect has dealt, a retent
 any part of an effect, an ability or an item found by a tag, and a worker's answer. Each is a `NumberKind` written as
 a project's own would be. A Group is a kind too, and joins its members in the number's context.
 
-- **IDs:** NUM-8 to NUM-15 (FEAT-29, phase 2, Decision 42). NUM-16 is open.
+- **IDs:** NUM-8 to NUM-15 (FEAT-29, phase 2, Decision 42).
 - **Read:**
   - `Assets/PlayForge/Runtime/PlayForge/Numbers/Kinds/AssetPartKind.cs` `Evaluate`: finds the effects, abilities or
     items a tag names and joins a part of each.
@@ -3197,6 +3198,29 @@ a project's own would be. A Group is a kind too, and joins its members in the nu
     `WarnOfUnityLimits`.
 - **New:** the kinds, `INumberWorker`, `NumberWorkers`, the Attribute Change worker, `GetWorkerState`,
   `GameplayEffectTags.Names` and the limit attributes.
+
+### Scalers' own numbers, and conditions as classes (phase 3)
+
+A Conditional's threshold, a Clamped's bounds, a Randomized's variance, Set By Caller's default and a Threshold's tiers
+were plain floats, and a Conditional's condition one of nine in an enum. Each is a number now, and the condition a
+class, `GameplayCondition`, read against the number's context, so a project adds one as it adds a kind. A scaler reads
+its own numbers with itself as their owner. A kind inside a plain scaler reads the context its number was read in.
+
+- **IDs:** NUM-16 to NUM-24 (FEAT-29, phase 3, Decision 43).
+- **Read:**
+  - `Assets/PlayForge/Runtime/PlayForge/Numbers/Conditions/GameplayCondition.cs`: `GameplayCondition.Holds`, its
+    `[GameplayCondition]`, and `NumberComparison`; the built-in conditions beside it.
+  - `Assets/PlayForge/Runtime/PlayForge/GameplayEffect/Modifier/Default/Authored/ConditionalScaler.cs`: `Evaluate`,
+    and `OnAfterDeserialize`, which carries an old asset's numbered condition and branch scalers over.
+  - `ClampedScaler.cs`, `RandomizedScaler.cs`, `SetByCallerScaler.cs` and `ThresholdScaler.cs` beside it, each with
+    its legacy fields; `Assets/PlayForge/Runtime/PlayForge/Numbers/LegacyNumber.cs` `TakeTable`.
+  - `Assets/PlayForge/Runtime/PlayForge/Numbers/NumberContext.cs` `ReadScaler` and `Of(IAttributeImpactCarrier)`: the
+    reading stack a kind inside a plain scaler reads (NUM-16).
+  - `Assets/PlayForge/Editor/CustomPropertyDrawers/Forge/Drawers/Scaler/ConditionDrawer.cs`, the condition's field,
+    and `NumberFields.cs` `OwnerNumber`, `ProvidesOf(SerializedProperty)` and `ScalersIn(value, Walk)`, which give a
+    scaler's own numbers the scaler as their owner.
+- **New:** `GameplayCondition` and its nine conditions, `ConditionDrawer`, `LegacyNumber.TakeTable`, and
+  `ScalableFloat.Initialize`. **Gone:** `EScalerCondition`, and the Conditional's and the Clamped's scaler slots.
 
 ## Tests
 

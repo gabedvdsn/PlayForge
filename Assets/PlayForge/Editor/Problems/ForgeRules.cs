@@ -237,20 +237,21 @@ namespace FarEmerald.PlayForge.Extended.Editor
                 if (!NumberFields.IsNumber(iterator)) continue;
                 var path = iterator.propertyPath;
                 // A number inside another's scaler is read with it, so the outer number's check covers what it reads
-                if (outer != null && path.StartsWith(outer, StringComparison.Ordinal)) continue;
-                outer = $"{path}.";
+                bool inner = outer != null && path.StartsWith(outer, StringComparison.Ordinal);
+                if (!inner) outer = $"{path}.";
                 var kind = iterator.FindPropertyRelative(nameof(ScalableFloat.Scaler))?.managedReferenceValue as AbstractScaler;
                 if (kind == null) continue;
                 var provides = NumberFields.ProvidesOf(iterator);
-                var missing = NumberFields.Missing(NumberFields.ReadsOf(kind), provides);
+                var missing = inner ? "" : NumberFields.Missing(NumberFields.ReadsOf(kind), provides);
                 if (missing.Length > 0)
                     problems.Add(new ForgeProblem(asset, ForgeProblemSeverity.Warning,
                         $"{ScalerFields.FieldLabel(path)} reads {missing}, which its field doesn't have, so it reads its number.", path));
 
-                // With an owner to read, a relative number still needs the field it names
+                // With an owner to read, a relative number still needs the field it names: each number's own, inside a
+                // scaler's or a condition's too, read on the object its owner is (FEAT-29)
                 if ((provides & NumberReads.Owner) == 0) continue;
                 Type owner = null;
-                foreach (var relative in NumberFields.ScalersIn(kind).OfType<RelativeToFieldKind>())
+                foreach (var relative in NumberFields.ScalersIn(kind, NumberFields.Walk.SameNumber).OfType<RelativeToFieldKind>())
                 {
                     owner ??= NumberFields.OwnerTypeOf(iterator);
                     if (owner == null) break;

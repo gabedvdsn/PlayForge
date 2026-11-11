@@ -467,6 +467,18 @@ from. It lives outside `Assets/` so it never ships in the package.
     Default where none is (NUM-4's docs, tooltips and summary).
   - **Tags read by their display names** wherever one is shown (ED-67).
 
+- Decision 43, 2026-11-10: a class for a choice of behaviour (Open decision 23), the user's answers.
+  - **The Conditional scaler's condition is a class,** built with FEAT-29's phase 3: a project adds a condition with
+    one class, each condition carries its own fields, and each says what it reads. `EScalerCondition` goes, and what
+    was saved with it is carried over as it loads (NUM-17, NUM-23).
+  - **One condition type for the framework, the scaler first:** `GameplayCondition`, read against a `NumberContext`.
+    Phase 3 uses it in the Conditional scaler alone. An ability's validation rules and an effect's requirements can
+    take it up later, each under a tracker row of its own.
+  - **Not a rule for every enum,** as recommended: an enum becomes a class where a project would add a case, the
+    cases carry different fields, and a case's behaviour is its own, one method. Closed sets stay enums: a
+    comparison, rounding, a magnitude's operation, and the stacking, re-application and overflow policies. The pass
+    over the other enums that choose a behaviour, by that test, is FEAT-30.
+
 **Open. Ask the user; do not assume:**
 1. ~~**Uncommitted changes**~~: decided, see above.
 2. ~~**The test project, "PlayForge Proving Grounds"**~~: decided, see above.
@@ -490,29 +502,7 @@ from. It lives outside `Assets/` so it never ships in the package.
 20. ~~**What a spawned thing knows (FEAT-24)**~~: decided, see above (Decision 39).
 21. ~~**The demo's play (Decision 37)**~~: decided, see above (Decision 38).
 22. ~~**Number fields (FEAT-29)**~~: decided, see above (Decision 40).
-23. **An enum or a class for a choice of behaviour** (the user's question of 2026-11-10): should a choice saved as an
-    enum, as a Conditional scaler's Condition is, be a class instance (`[SerializeReference]`), so that a project can
-    add a choice of its own?
-    - **For:** a project adds a case with one class and no change to PlayForge. Each case carries its own fields,
-      where the Conditional scaler shows and hides four fields by its enum (`[ForgeShowWhen]`). Each case says what
-      it reads, where the editor now takes the side from an enum member's name (`NumberFields.ConditionReads`, by
-      "Source" and "Target"). Kinds of number, tasks, workers and an ability's validation rules are chosen this way
-      already.
-    - **Against:** a class instance is a managed reference. It saves more text, it is an object for each field that
-      has one, a class renamed or removed loses its data where an enum's number stays, there is no `switch` or `==`,
-      and what is saved needs carrying over (the legacy-field pattern and Upgrade Assets, as NUM-7 did for floats).
-      Six of the samples' assets save a Conditional, each with the target's tag condition.
-    - **Recommended:** not as a rule for every enum. Convert one where all three hold: a project would add a case;
-      the cases carry different fields; and a case's behaviour is its own, one method, and not the engine's, spread
-      over several places. `EScalerCondition` passes all three (nine cases, one `switch`): make the condition a class
-      read against a `NumberContext`, with FEAT-29's phase 3, which opens that scaler for NUM-16. Closed sets stay
-      enums: a comparison (`EComparisonOperator`), rounding, a magnitude's operation, and the stacking, re-application
-      and overflow policies, which the engine carries out. About thirty enums choose a behaviour, most with a few
-      cases and one to three `switch` sites; a pass over them by the test above is a tracker row once this is
-      answered.
-    - **To answer:** the Conditional's condition as a class, with phase 3? And one condition type for the framework
-      (a scaler's condition, an ability's activation rules and an effect's requirements read the same things), or
-      the scaler's alone?
+23. ~~**An enum or a class for a choice of behaviour**~~: decided, see above (Decision 43).
 24. **Interfaces that nothing takes** (the user's question of 2026-11-10: do `IValidationReady`,
     `IProxyTaskBehaviourUser` and `IProxyTaskBehaviourCaller` benefit the framework, how could they, and are there
     others?). An interface earns its place where code takes it: as a parameter, in a collection, or as a constraint
@@ -961,7 +951,8 @@ reads the old demos' fullest assets, so it moves to the new demo's as the old go
 | FEAT-26 | An attribute rule by share | Found building the demo, whose Eviscerate is for a target below half its health: an Attribute Validation compared the attribute's value alone, right for one entity and wrong for the next. Done: `AttributeValidation.ShareOfBase` compares the attribute's share of its base, 0 to 1 |
 | FEAT-27 | Clamp another scaler | Found building the demo, whose Eviscerate caps damage worked out from its target's missing health: a Clamped scaler clamped its own table alone. Done: `ClampedScaler.Inner`, a scaler whose value it clamps; with none, its own values per level, as before |
 | FEAT-28 | What a process carries reaches its effects | Found building the demo, whose Flame Wall fire burns harder by its ability's level: a process's own attributes (FEAT-24) stopped at the process, and only its caller's set-by-caller magnitudes reached the effects it applied. Done: `AbstractGameplayMonoProcess.GiveMagnitudes(spec)` gives an effect spec its caller's magnitudes, then each of its own attributes under its role, its own winning; a projectile's effects take them as they land, so a Set By Caller scaler on an effect reads what the process carries |
-| FEAT-29 | Number fields | The user's request of 2026-11-08: a Conditional scaler couldn't say "below 30% of max health", as its threshold is a bare float, and only an effect's own numbers can scale. Proposed: one number type for every authored gameplay number, grown from the magnitude field, a constant by default or a value by level, a multiple of an attribute, a caller's value, Local Data or any scaler. Decided (Decisions 40 and 41), the design in `Docs/NUMBER_FIELDS_DESIGN.md`. Its eight phases each have tracker rows of their own, under Number fields (FEAT-29) below. Phase 1, the foundation and the extension API, is done (NUM-1 to NUM-7), and phase 2, the new kinds, with the user's additions (Decision 42): Asset Part, numbers that ask workers, Group as a kind, and limits (NUM-8 to NUM-15) |
+| FEAT-29 | Number fields | The user's request of 2026-11-08: a Conditional scaler couldn't say "below 30% of max health", as its threshold is a bare float, and only an effect's own numbers can scale. Proposed: one number type for every authored gameplay number, grown from the magnitude field, a constant by default or a value by level, a multiple of an attribute, a caller's value, Local Data or any scaler. Decided (Decisions 40 and 41), the design in `Docs/NUMBER_FIELDS_DESIGN.md`. Its eight phases each have tracker rows of their own, under Number fields (FEAT-29) below. Phase 1, the foundation and the extension API, is done (NUM-1 to NUM-7), and phase 2, the new kinds, with the user's additions (Decision 42): Asset Part, numbers that ask workers, Group as a kind, and limits (NUM-8 to NUM-15). Phase 3, scaler parameters, with conditions as classes (Decision 43), is done too (NUM-16 to NUM-24); phases 4 to 8 are to come |
+| FEAT-30 | Enums that choose a behaviour | Decision 43: an enum that chooses a behaviour becomes a class (`[SerializeReference]`) where all three hold: a project would add a case; the cases carry different fields; and a case's behaviour is its own, one method, and not the engine's, spread over several places. `EScalerCondition` was the first (NUM-17). About thirty enums choose a behaviour, most with a few cases and one to three `switch` sites. To do: list them, mark each by the test, and convert those that pass, each with its saved data carried over (the legacy-field pattern and Upgrade Assets). An ability's validation rules and an effect's requirements can read a `GameplayCondition` as part of it. Closed sets stay enums: a comparison, rounding, a magnitude's operation, and the stacking, re-application and overflow policies. Open |
 
 **Phase 5's order,** from the review's plan for the test project (its labs, one at a time) and the table above. A lab
 is a small game: assets the lab builds in code, and a bot that plays it in PlayMode tests under a live ProcessControl,
@@ -995,8 +986,8 @@ foundation, and FEAT-16 is done.
 
 FEAT-29's design (`Docs/NUMBER_FIELDS_DESIGN.md`, Decisions 40 and 41) is built in eight phases, each with rows of its
 own here, red tests first. The Phase column is FEAT-29's phase. Phase 1, the foundation and the extension API, and
-phase 2, the new kinds, with the user's additions as it was built (Decision 42), are done. Phase 3, scaler
-parameters, is next, and NUM-16 is its first row.
+phase 2, the new kinds, with the user's additions as it was built (Decision 42), and phase 3, scaler parameters,
+with conditions as classes (Decision 43), are done.
 
 | ID | Phase | Piece | Notes | Where | Status |
 |---|---|---|---|---|---|
@@ -1015,7 +1006,15 @@ parameters, is next, and NUM-16 is its first row.
 | NUM-13 | 2 | Asset Part | The user's request (Decision 42): find any effect, ability or item on the caster or the target by a tag, its asset tag, a context tag or a tag it grants, or a child of one, and read any part of it. An effect: how many, stacks, level, last impact, total impact, impact count, time left, duration, time to its next tick, or a worker's value under a key. An ability: how many, level, whether it's active, whether it's on cooldown, cooldown left. An item: how many, stacks, level, whether it's equipped. Where several match it takes their sum, the first, the highest or the lowest, and its Default where none does; a count reads 0 | `Numbers/Kinds/AssetPartKind.cs`, `GameplayEffect.cs` (`GameplayEffectTags.Names`) | verified |
 | NUM-14 | 2 | Group as a kind | The user's request (Decision 42): the scaler Group is a kind of number, at the kind menu's top, and its members can be any kind. It joins them in the number's context, so each member reads all the context gives; an old group, with no members of its own, reads as it did. Its Flat Bonus members join, after the Multiplies: `ScalerGroup` summed Adds and multiplied by Multiplies and left a Flat Bonus out, so a group of 5 and a Flat Bonus of 3 read 5. With the Ignore policy its Override members are set aside and the rest join. Joining allocates nothing | `ScalerGroup.cs`, `NumberContext.ReadScaler` | verified |
 | NUM-15 | 2 | Limits and tooltips | The user's request (Decision 42): a number field takes field attributes. `[NumberMin]`, `[NumberMax]` and `[NumberRange]` limit the constant typed in the inspector, a range as a slider, in a percent field by what is shown, and a whole number by whole numbers; `[Tooltip]` shows on the field's label, and stays there where the label is too narrow for the field's name: Unity gives a clipped label its own text as its tooltip, which took the field's place until the full EditMode run caught it. They are PlayForge's own because Unity gives a field with `[Min]` or `[Range]` to that attribute's drawer, which draws "Use Range with float or int" where the number was; as scripts load, the console names each number field that has one, with the attribute to use. A limit is on what is typed, not on what a kind reads, which a Clamped scaler limits. No framework field has a limit yet: each takes one as its phase converts it | `Numbers/NumberLimits.cs`, `Editor/.../Scaler/NumberFields.cs` (`LimitsOf`, `WarnOfUnityLimits`), `MagnitudeField.cs` | verified |
-| NUM-16 | 3 | A kind inside a plain scaler | Open. A scaler that isn't a kind is read through the effect's carrier where there is one (`scaler.Evaluate(context.Carrier)`), so a kind it holds, as a Clamped scaler's Inner or a Conditional's True and False, builds its context from the carrier alone: it has no owner and none of the activation's data that the carrier doesn't hold. Relative to a Field can't be worked out there and reads its field's number. A Group passes its context on (NUM-14); phase 3, which gives scalers' own parameters numbers, does the same for the rest | `NumberContext.ReadScaler`, `ClampedScaler.cs`, `ConditionalScaler.cs` | open |
+| NUM-16 | 3 | A kind inside a plain scaler | A scaler that isn't a kind is read through the effect's carrier where there is one (`scaler.Evaluate(context.Carrier)`), so a kind it held, as a scaler of a project's own holds one, built its context from the carrier alone: no owner, and none of the activation's data the carrier doesn't hold, so Relative to a Field read its field's number. `ReadScaler` keeps the context it reads a plain scaler in, and a kind inside reads it (`NumberContext.Of(carrier)` for that carrier), its owner and data with it. A number read directly for the same carrier inside such a read takes that context too, which is harmless | `NumberContext.cs` (`ReadScaler`, `Of(IAttributeImpactCarrier)`) | verified |
+| NUM-17 | 3 | Conditions as classes | Decision 43. `GameplayCondition`, a class read against a `NumberContext` (`Holds`), with `[GameplayCondition(name, Category, Reads)]`; where the context lacks what it reads, it doesn't hold and logs once. Built in: Tag (on either side, by weight on both), Attribute (current or base, against a number), Level (or how far up its range), Compare Numbers, Always, Never, and under Logic All Of, Any Of and Not. Each says itself in a line, and reads its numbers with itself as their owner. The user's case is one scaler, the first red test: below `0.3 × Target's Health (base)`, `−0.1 × Target's Health (base)`, else 0. A tag on the target counts by its weight now, as on the caster; it counted each tag once | `Runtime/PlayForge/Numbers/Conditions/`, `NumberText.Of(GameplayCondition)` | verified |
+| NUM-18 | 3 | Conditional's True and False | The Conditional scaler is a kind: `When`, its condition, and `TrueValue` and `FalseValue`, numbers in place of two scaler slots, read with the scaler as their owner. With no condition it reads False, and it no longer reads its own table. The field is `When` as an old asset saves its numbered condition under `Condition`. Its line reads "2 if Target has Marked, else 1", and reading the user's case allocates nothing, through a context or a spec | `ConditionalScaler.cs` | verified |
+| NUM-19 | 3 | Clamped's Min, Max and Value | The Clamped scaler is a kind: `MinValue`, `MaxValue`, and `Value`, what it clamps, in place of the Inner slot (FEAT-27), a value by level where it's made. It reads them with itself as the owner, so its Max can be `2 × Min`, and no longer reads its own table | `ClampedScaler.cs` | verified |
+| NUM-20 | 3 | Randomized's Variance, Min and Max | The Randomized scaler's Variance and its Min and Max multipliers are numbers, read with the scaler as their owner, so a Variance can widen by level and a Max be `3 × Min`. It stays a scaler, its base its own values per level, and rolls as it did. Variance takes `[NumberMin(0)]` in place of `[Range(0, 1)]`, so a flat variance can pass 1 | `RandomizedScaler.cs` | verified |
+| NUM-21 | 3 | Set By Caller's Default | Set By Caller's Default is a number, so a value the caller didn't set can fall back to any kind, as a value by level; a value the caller set still wins | `SetByCallerScaler.cs` | verified |
+| NUM-22 | 3 | Threshold's tier values and Default | The Threshold scaler is a kind: each tier's Value and its Default are numbers. A tier is read in the scaler's context, its Default with the scaler as its owner, and a tier made in code with no value reads 0. A tier draws its level and name on a row and its value as a number field under them | `ThresholdScaler.cs`, `ScalerSupportDrawers.cs` (`LevelThresholdDrawer`) | verified |
+| NUM-23 | 3 | Saved scalers load as they were | Each converted scaler carries its old saved fields into the new ones as it loads, through hidden legacy fields its `OnAfterDeserialize` moves (NUM-7): a Conditional's numbered condition becomes a condition of the class it named, with its tag query, attribute, comparison and threshold, each branch scaler its number's kind, and an empty True its own values by level (`LegacyNumber.TakeTable`), as it read; a Clamped's Min and Max, and its Inner or its own values; a Randomized's three floats; Set By Caller's Default; a Threshold's tiers and Default, its saved Default saying the tiers are old. Unity calls the callback on managed references, with what they reference in place. Proved on an asset written in the old YAML, the user's Culling Blade's Conditional among it, which Upgrade Assets re-saves in the new form, which loads the same | the five scalers, `LegacyNumber.cs`, `Tests/Editor/NumberFieldDrawerTests.cs` (Proving Grounds) | verified |
+| NUM-24 | 3 | The inspector for scalers' numbers | A condition's field draws as a scaler's does: its kind from a menu, the logic under Logic, its line, and its own fields, its numbers as number fields, with the warning a scaler in a list has where Unity's "+" shares one. A number inside a scaler or a condition offers what its outer field's context gives, with an owner, as each reads its own numbers with itself as their owner (`NumberFields.OwnerNumber`), and Relative to a Field there lists that scaler's own numbers. A scaler that is a kind, as a Conditional, picked as a number's kind reads as it is. The Problems rule asks no owner of a scaler's own numbers, and checks a field named in one against that scaler | `Editor/.../Scaler/ConditionDrawer.cs`, `NumberFields.cs`, `MagnitudeField.cs`, `ScalerDrawer.cs`, `Editor/Problems/ForgeRules.cs` | verified |
 
 ## Test project: PlayForge Proving Grounds
 
@@ -1051,6 +1050,29 @@ GAS-4 with GAS-5, PC-6, and TS-I with PC-5.
 ## Log
 
 Record baselines, gate results and notable decisions here, newest first.
+
+- 2026-11-10, **FEAT-29 phase 3: scalers' own numbers, and conditions as classes (NUM-16 to NUM-24, Decision 43).** A
+  Conditional's condition is a `GameplayCondition`, read against the number's context, and a project adds one with
+  one class; the nine built in are Tag, Attribute, Level, Compare Numbers, Always, Never, All Of, Any Of and Not. Its
+  branches are numbers, and so are a Clamped's bounds and what it clamps, a Randomized's variance, Set By Caller's
+  default and a Threshold's tiers. The Conditional, the Clamped and the Threshold are kinds. A scaler reads its own
+  numbers with itself as their owner, and a kind inside a plain scaler reads the context its number was read in. The
+  user's case is one scaler, which reads "−0.1 × Target's Health (base) if Target's Health < 0.3 × Target's Health
+  (base), else 0". Old assets load as they read.
+  - Red first: Proving Grounds' `ScalerNumberTests` (PlayMode), written before the scalers changed, red by not
+    compiling against the old API; NUM-16's test in `NumberKindTests` red at HEAD, as run, the relative read inside a
+    plain scaler reading its field's number. NUM-23's and NUM-24's tests (EditMode) were written with the change, and
+    passed on their first run, with the drawer tests around them, 46 of 46.
+  - Gates: MSBuild, the Editor, Tests and Tests.Golden projects: 0 errors. Proving Grounds, Demo imported: PlayMode 1408 passed
+    of 1416, 0 failed, 8 skipped (the 1389 before, and the 19 of `ScalerNumberTests` and NUM-16's), the Demo's tests and
+    the allocation probes among them, NUM-18's two; EditMode 758 of 758 (the 754 before, and NUM-23's and NUM-24's
+    four). The golden runner, batch mode: 25 of 25.
+  - Decided on the way: the Conditional's condition is `When`, not `Condition`, as an old asset saves its numbered
+    condition under `Condition`, and Unity can't read a number and a reference under one name. A number inside a
+    scaler's own field reads the scaler as its owner, so it can no longer read the outer object's fields. A tag
+    condition on the target counts by weight, as on the caster, which changes what a query with a count reads there.
+  - Left: the Demo's assets load through the migration and are not yet re-saved in the new form; the "%" unit on a
+    field inside a scaler is phase 4's. A condition in an ability's validation or an effect's requirements is FEAT-30's.
 
 - 2026-11-10, **FEAT-29 phase 2: the new kinds, numbers that ask workers, Group as a kind and limits (NUM-8 to
   NUM-15), with tags' display names (ED-67) and the Local Data key (ED-68).** Six kinds, each a `NumberKind` written

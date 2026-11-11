@@ -89,8 +89,26 @@ namespace FarEmerald.PlayForge.Extended.Editor
         public static NumberReads ProvidesOf(FieldInfo field) =>
             field?.GetCustomAttribute<NumberContextAttribute>()?.Provides ?? DefaultProvides;
 
-        /// <summary>What a number property's context provides, found through the managed references on its path.</summary>
-        public static NumberReads ProvidesOf(SerializedProperty property) => ProvidesOf(FieldOf(property));
+        /// <summary>
+        /// What a number property's context provides, found through the managed references on its path: its own field's
+        /// <see cref="NumberContextAttribute"/>'s where it has one; else, for a number inside another's scaler, what the
+        /// outermost number's field provides, as it's read in that number's context, with an owner where a scaler or a
+        /// condition reads it, as each reads its own numbers with itself as their owner (FEAT-29).
+        /// </summary>
+        public static NumberReads ProvidesOf(SerializedProperty property)
+        {
+            var field = FieldOf(property);
+            if (field?.GetCustomAttribute<NumberContextAttribute>() is { } declared) return declared.Provides;
+            var outermost = OutermostNumber(property);
+            if (outermost == null || outermost.propertyPath == property.propertyPath) return ProvidesOf(field);
+            var provides = ProvidesOf(FieldOf(outermost));
+            FieldOf(OwnerNumber(property), out var holder);
+            return IsScalerPart(holder) ? provides | NumberReads.Owner : provides;
+        }
+
+        // Whether an object of this type is a scaler or a condition, which reads its own numbers with itself as their owner
+        private static bool IsScalerPart(Type type) =>
+            type != null && (typeof(AbstractScaler).IsAssignableFrom(type) || typeof(GameplayCondition).IsAssignableFrom(type));
 
         /// <summary>A field's unit: its <see cref="NumberContextAttribute"/>'s, else its <see cref="ScalerOperationKeyword"/>'s.</summary>
         public static string UnitOf(FieldInfo field) =>
@@ -234,6 +252,34 @@ namespace FarEmerald.PlayForge.Extended.Editor
             return null;
         }
 
+        /// <summary>
+        /// The number whose owner a property's relative read reads (FEAT-29): the innermost number on its path, itself
+        /// among them, that a scaler or a condition holds as its own field, as each reads those with itself as their
+        /// owner; else the outermost number, as a Group's members and a Threshold's tiers are read in its context. Null
+        /// where the path holds no number.
+        /// </summary>
+        public static SerializedProperty OwnerNumber(SerializedProperty property)
+        {
+            if (property?.serializedObject == null) return null;
+            var numbers = new List<SerializedProperty>();
+            var parts = property.propertyPath.Split('.');
+            var walked = "";
+            for (int i = 0; i < parts.Length; i++)
+            {
+                walked = i == 0 ? parts[i] : $"{walked}.{parts[i]}";
+                if (parts[i] == "Array") continue;
+                var at = property.serializedObject.FindProperty(walked);
+                if (IsNumber(at)) numbers.Add(at);
+            }
+            if (numbers.Count == 0) return null;
+            for (int i = numbers.Count - 1; i > 0; i--)
+            {
+                FieldOf(numbers[i], out var holder);
+                if (IsScalerPart(holder)) return numbers[i];
+            }
+            return numbers[0];
+        }
+
         // The object at a path, read off the asset itself: the value a field holds, or a list's element
         private static object ValueAt(object root, string path)
         {
@@ -267,14 +313,16 @@ namespace FarEmerald.PlayForge.Extended.Editor
         public static List<string> SiblingChoices(SerializedProperty property)
         {
             var choices = new List<string>();
-            var number = OutermostNumber(property);
+            var number = OwnerNumber(property);
             var own = FieldOf(number, out var holder);
             if (own == null || holder == null) return choices;
             int cut = number.propertyPath.LastIndexOf('.');
             var owner = ValueAt(number.serializedObject.targetObject, cut < 0 ? "" : number.propertyPath.Substring(0, cut));
 
+            // A scaler's own fields, as its inspector draws them, and not those every scaler has, as its Max Level
             var chain = new List<Type>();
-            for (var each = holder; each != null && each != typeof(object); each = each.BaseType) chain.Add(each);
+            for (var each = holder; each != null && each != typeof(object) && each != typeof(AbstractScaler) && each != typeof(NumberKind); each = each.BaseType)
+                chain.Add(each);
             chain.Reverse();
             foreach (var level in chain)
             {
@@ -290,18 +338,21 @@ namespace FarEmerald.PlayForge.Extended.Editor
             return choices;
         }
 
-        /// <summary>The type of the object that holds a property's outermost number: a relative number's owner.</summary>
+        /// <summary>
+        /// The type of the object a property's relative read reads, which holds its <see cref="OwnerNumber"/>: a
+        /// scaler or a condition for its own numbers, else the object that holds the outermost number.
+        /// </summary>
         public static Type OwnerTypeOf(SerializedProperty property)
         {
-            FieldOf(OutermostNumber(property), out var holder);
+            FieldOf(OwnerNumber(property), out var holder);
             return holder;
         }
 
-        // Whether a field's number reads the named one, straight or through the fields it reads
+        // Whether a field's number reads the named one, straight or through the fields it reads, on the same owner
         private static bool ReadsBack(object owner, Type holder, FieldInfo field, string name, int depth)
         {
             if (depth > MostDepth) return true;
-            foreach (var relative in ScalersIn(field.GetValue(owner)).OfType<RelativeToFieldKind>())
+            foreach (var relative in ScalersIn(field.GetValue(owner), Walk.SameOwner).OfType<RelativeToFieldKind>())
             {
                 if (string.IsNullOrEmpty(relative.Field)) continue;
                 if (relative.Field == name) return true;
@@ -311,39 +362,69 @@ namespace FarEmerald.PlayForge.Extended.Editor
             return false;
         }
 
-        /// <summary>Every scaler a number or a scaler holds, itself among them, and those inside them.</summary>
-        public static List<AbstractScaler> ScalersIn(object value)
+        /// <summary>How far <see cref="ScalersIn"/> walks into the numbers a value holds.</summary>
+        public enum Walk
+        {
+            /// <summary>Into every number inside it, a scaler's and a condition's own among them.</summary>
+            Everything,
+
+            /// <summary>
+            /// Into the numbers read with the same owner: not those a scaler or a condition holds as its own fields, which
+            /// each reads with itself as their owner; a Threshold's tiers are read in its context, so they are walked.
+            /// </summary>
+            SameOwner,
+
+            /// <summary>Into no number inside it: the scalers its own number reads, a Group's members among them.</summary>
+            SameNumber,
+        }
+
+        /// <summary>Every scaler a number, a scaler or a condition holds, itself among them, and those inside them.</summary>
+        public static List<AbstractScaler> ScalersIn(object value, Walk walk = Walk.Everything)
         {
             var found = new List<AbstractScaler>();
-            Collect(value, 0, found);
+            Collect(value, 0, found, walk);
             return found;
         }
 
-        private static void Collect(object value, int depth, List<AbstractScaler> found)
+        private static void Collect(object value, int depth, List<AbstractScaler> found, Walk walk)
         {
             if (value == null || depth > MostDepth) return;
             switch (value)
             {
                 case ScalableFloat number:
-                    Collect(number.Scaler, depth + 1, found);
+                    Collect(number.Scaler, depth + 1, found, walk);
                     return;
                 case ScalableInt whole:
-                    Collect(whole.Scaler, depth + 1, found);
+                    Collect(whole.Scaler, depth + 1, found, walk);
                     return;
                 case AbstractScaler scaler:
                     if (found.Contains(scaler)) return;
                     found.Add(scaler);
                     break;
             }
+            bool own = IsScalerPart(value.GetType());
             foreach (var field in PartsOf(value.GetType()))
             {
                 var held = field.GetValue(value);
                 if (held is IEnumerable many and not string)
                 {
-                    foreach (var each in many) Collect(each, depth + 1, found);
+                    foreach (var each in many)
+                        if (Walks(each, own, walk)) Collect(each, depth + 1, found, walk);
                 }
-                else Collect(held, depth + 1, found);
+                else if (Walks(held, own, walk)) Collect(held, depth + 1, found, walk);
             }
+        }
+
+        // Whether a walk goes into a value a field holds: a number only as the walk says
+        private static bool Walks(object held, bool heldByScalerPart, Walk walk)
+        {
+            if (held is not ScalableFloat and not ScalableInt) return true;
+            return walk switch
+            {
+                Walk.SameNumber => false,
+                Walk.SameOwner => !heldByScalerPart,
+                _ => true,
+            };
         }
 
         // ═══════════════════════════════════════════════════════════════════════════
@@ -402,9 +483,14 @@ namespace FarEmerald.PlayForge.Extended.Editor
 
         /// <summary>
         /// What a scaler reads of its context, as it's set now: a kind's needs, an attribute read from the target or the
-        /// caster, a Conditional's condition, and what the scalers and numbers inside it read.
+        /// caster, a Conditional's condition, and what the scalers, conditions and numbers inside it read. A number a
+        /// scaler or a condition holds as its own field reads its owner there, so what it reads of an owner isn't asked
+        /// of the field (FEAT-29).
         /// </summary>
         public static NumberReads ReadsOf(AbstractScaler scaler) => ReadsOf(scaler, 0);
+
+        /// <summary>What a condition reads of its context, as it's set now, with what the numbers and conditions inside it read.</summary>
+        public static NumberReads ReadsOf(GameplayCondition condition) => ReadsOf(condition, 0);
 
         // How deep a scaler's own scalers are walked, past which a loop is assumed
         private const int MostDepth = 12;
@@ -421,37 +507,38 @@ namespace FarEmerald.PlayForge.Extended.Editor
                     {
                         NumberKind kind => kind.Reads,
                         AttributeBackedScaler attribute => attribute.CaptureFrom == ESourceTarget.Target ? NumberReads.Target : NumberReads.Caster,
-                        ConditionalScaler conditional => ConditionReads(conditional.Condition),
                         _ => NeedsOf(scaler.GetType()),
                     };
                     return reads | PartsRead(scaler, depth);
+                case GameplayCondition condition:
+                    return condition.Reads | PartsRead(condition, depth);
                 default:
                     return PartsRead(value, depth);
             }
         }
 
-        private static NumberReads ConditionReads(EScalerCondition condition)
-        {
-            var name = condition.ToString();
-            if (name.StartsWith("Target")) return NumberReads.Target;
-            if (name.StartsWith("Source")) return NumberReads.Caster;
-            return NumberReads.Level;
-        }
-
-        // What the scalers and numbers a value holds read: its fields that hold one, a list of them, or a struct holding one
+        // What the scalers, conditions and numbers a value holds read: its fields that hold one, a list of them, or a
+        // struct holding one. A scaler's or a condition's own number reads itself as its owner
         private static NumberReads PartsRead(object value, int depth)
         {
             var reads = NumberReads.None;
+            bool own = IsScalerPart(value.GetType());
             foreach (var field in PartsOf(value.GetType()))
             {
                 var held = field.GetValue(value);
                 if (held is IEnumerable many and not string)
                 {
-                    foreach (var each in many) reads |= ReadsOf(each, depth + 1);
+                    foreach (var each in many) reads |= ReadOfPart(each, own, depth);
                 }
-                else reads |= ReadsOf(held, depth + 1);
+                else reads |= ReadOfPart(held, own, depth);
             }
             return reads;
+        }
+
+        private static NumberReads ReadOfPart(object held, bool heldByScalerPart, int depth)
+        {
+            var reads = ReadsOf(held, depth + 1);
+            return heldByScalerPart && held is ScalableFloat or ScalableInt ? reads & ~NumberReads.Owner : reads;
         }
 
         private static readonly Dictionary<Type, List<FieldInfo>> Parts = new();
@@ -474,11 +561,12 @@ namespace FarEmerald.PlayForge.Extended.Editor
             return found;
         }
 
-        // Whether a field of this type can hold a scaler or a number, itself or in a struct or class of its own
+        // Whether a field of this type can hold a scaler, a condition or a number, itself or in a struct or class of its own
         private static bool CanHold(Type type, int depth)
         {
             if (type == null || depth > 3 || type.IsPrimitive || type.IsEnum || type == typeof(string)) return false;
-            if (typeof(AbstractScaler).IsAssignableFrom(type) || type == typeof(ScalableFloat) || type == typeof(ScalableInt)
+            if (typeof(AbstractScaler).IsAssignableFrom(type) || typeof(GameplayCondition).IsAssignableFrom(type)
+                || type == typeof(ScalableFloat) || type == typeof(ScalableInt)
                 || typeof(ScalableFloat).IsAssignableFrom(type) || typeof(ScalableInt).IsAssignableFrom(type)) return true;
             if (typeof(UnityEngine.Object).IsAssignableFrom(type)) return false;
             if (type.GetCustomAttribute<SerializableAttribute>() == null) return false;

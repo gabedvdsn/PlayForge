@@ -248,6 +248,40 @@ There are precedents for this:
 - **Flat Bonus.** A Flat Bonus member is added after the Multiplies. `ScalerGroup` left it out before.
 - **A group saved before** has members that are plain scalers, and reads as it did.
 
+### Scalers' own numbers, and conditions
+
+Phase 3 gives the scalers' own parameters numbers, and the Conditional scaler a condition that is a class
+(Decision 43).
+
+- **A condition** is a `GameplayCondition`, read against the number's context: `Holds(context)`. A project adds one
+  as it adds a kind: one class, `Evaluate(in NumberContext)` and `Describe()`, named, filed and said what it reads
+  with `[GameplayCondition(name, Category, Reads)]`. Where the context lacks what it reads, it doesn't hold, and it
+  logs once. Built in: **Tag** (on the caster or the target, by weight on both), **Attribute** (current or base,
+  compared with a number), **Level** (the level, or how far up its range), **Compare Numbers**, **Always**,
+  **Never**, and under Logic **All Of**, **Any Of** and **Not**. All of none holds and any of none doesn't; a member
+  that can't be worked out doesn't hold, and neither does Not it.
+- **The Conditional** is a kind: `When`, its condition, then `TrueValue` and `FalseValue`, two numbers. With no
+  condition it reads False. Its field is `When`, not `Condition`, as an old asset saves its numbered condition under
+  `Condition`, and the two can't share the name.
+- **The Clamped** is a kind: `MinValue`, `MaxValue`, and `Value`, what it clamps, a value by level where it's made.
+- **The Randomized** stays a scaler, as its base is its own values per level: its `Variance`, `MinMultiplier` and
+  `MaxMultiplier` are numbers.
+- **Set By Caller's** `Default` is a number, so a value the caller didn't set can fall back to a value by level.
+- **The Threshold** is a kind: each tier's `Value` and its `DefaultValue` are numbers.
+- **The owner.** A scaler, and a condition, reads its own numbers with itself as their owner, as
+  `MaxValue.Evaluate(context, this)`, so a Clamped's ceiling can be `2 × its floor`. A Threshold's tiers and a Group's
+  members are read in the number's own context, owner and all. The inspector follows: Relative to a Field, in a
+  scaler's own number, lists that scaler's other numbers, and the Problems rule checks the name against the scaler.
+  A number inside a scaler's own field can no longer read the outer object's fields.
+- **What they read.** A number inside a scaler offers what its outer field's context gives, and a Problems check of
+  the outer field covers what its scalers' numbers read, but an owner: each is its scaler's.
+- **A kind inside a plain scaler** reads the context its number was read in, with its owner and its data, and not one
+  made again from the carrier (NUM-16).
+- **Saved data** carries over as it loads (NUM-23): a Conditional's numbered condition becomes a condition of the
+  class it named, with its tag, attribute, comparison and threshold; each branch scaler becomes its number's kind;
+  with no True scaler, True reads the scaler's own values by level, as it did. A Clamped's Inner becomes its Value,
+  or its own values by level with none. Each plain float becomes a constant.
+
 ### Limits and tooltips
 
 - A number field takes a limit on the constant typed into it: `[NumberMin(0)]`, `[NumberMax(10)]` or
@@ -423,6 +457,10 @@ The case is an effect, Execution. Its magnitude's scaler is a Conditional:
 - **Condition:** Target Attribute Threshold, Health (current), less than **`0.3 × Target's Health (base)`**.
 - **True:** **`−0.1 × Target's Health (base)`**.
 - **False:** **`0`**.
+
+As built in phase 3, the Conditional's `When` is an Attribute condition, on the target, Health (current), less than
+`0.3 × Target's Health (base)`, and its field reads "−0.1 × Target's Health (base) if Target's Health < 0.3 ×
+Target's Health (base), else 0".
 
 The same threshold works for an ability that's usable only on a hurt target: an Attribute Validation of Health less
 than `0.5 × Target's Health (base)`.

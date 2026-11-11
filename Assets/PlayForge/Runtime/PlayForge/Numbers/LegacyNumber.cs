@@ -40,5 +40,28 @@ namespace FarEmerald.PlayForge
             legacy = NoneInt;
             return true;
         }
+
+        /// <summary>
+        /// A scaler that was saved reading its own values per level, as a Clamped with nothing to clamp did, and reads a
+        /// number in their place: its values, its level range and its behaviours move into a number of the By Level kind,
+        /// which reads them as it did, and its own are left as a new scaler's (FEAT-29).
+        /// </summary>
+        public static ScalableFloat TakeTable(AbstractScaler scaler)
+        {
+            var table = new SimpleScaler
+            {
+                Configuration = scaler.Configuration,
+                MaxLevel = scaler.MaxLevel,
+                LevelValues = scaler.LevelValues,
+                Interpolation = scaler.Interpolation,
+                StretchOverLevels = scaler.StretchOverLevels,
+                Scaling = scaler.Scaling,
+                Behaviours = scaler.Behaviours ?? new System.Collections.Generic.List<AbstractScalerBehaviour>(),
+            };
+            scaler.LevelValues = new[] { 1f };
+            scaler.Scaling = UnityEngine.AnimationCurve.Linear(0f, 1f, 1f, 1f);
+            scaler.Behaviours = new System.Collections.Generic.List<AbstractScalerBehaviour>();
+            return new ScalableFloat(table, 1f, EMagnitudeOperation.UseScaler);
+        }
     }
 }

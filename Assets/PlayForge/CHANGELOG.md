@@ -58,6 +58,20 @@ tracks each fix below by its ID.
   as a slider, and a number field shows its `[Tooltip]`, a clipped label's too. They limit what is typed, not what a kind reads: a Clamped
   scaler limits that. Unity's own `[Min]` and `[Range]` take a number field's drawing from it, so the console names
   each number field that has one as scripts load (NUM-15).
+- Conditions as classes (FEAT-29, phase 3, Decision 43): `GameplayCondition`, read against a number's context with
+  `Holds(context)`, and `[GameplayCondition(name, Category, Reads)]`, so a project adds a condition with one class.
+  Built in: Tag, Attribute, Level, Compare Numbers, Always, Never, and under Logic All Of, Any Of and Not, each with
+  its own fields and its own line, as "Target's Health < 0.3 × Target's Health (base)". Where the context lacks what a
+  condition reads, it doesn't hold and logs once. A condition's field picks its kind from a menu (NUM-17, NUM-24).
+- A scaler's own parameters are numbers (FEAT-29, phase 3): a Conditional's True and False, a Clamped's Min, Max and
+  what it clamps, a Randomized's Variance and multipliers, Set By Caller's Default, and a Threshold's tier values and
+  Default. Each scaler reads its own numbers with itself as their owner, so a Clamped's Max can be relative to its
+  Min, and an asset saved before loads as it read (NUM-18 to NUM-23).
+- In the inspector, a number inside a scaler offers the kinds its outer field's context resolves, and Relative to a
+  Field there lists that scaler's own numbers; the Problems rule checks such a field against the scaler (NUM-24).
+- `ScalableFloat.Initialize(carrier)` and `ScalableInt.Initialize(carrier)` ready a number's scaler as an effect's spec
+  readies its own, and `LegacyNumber.TakeTable(scaler)` moves a scaler's own values per level into a number of the By
+  Level kind, for a scaler that reads a number in their place (NUM-17, NUM-23).
 - `GameplayEffectTags.Names(tag, effect)`: whether a tag names an effect, as its asset tag, one of its context tags
   or a tag it grants, or a child of one (NUM-13).
 - `ERoundingOperation.Round`: a whole number can round to the nearest, a half away from zero (NUM-1).
@@ -72,8 +86,8 @@ tracks each fix below by its ID.
   effects take them as they land (FEAT-28).
 - `AttributeValidation.ShareOfBase` compares an attribute's share of its base, from 0 to 1, in place of its value, as
   "a target below half its health" (FEAT-26).
-- `ClampedScaler.Inner`: a Clamped scaler clamps the value of a scaler inside it, as damage worked out from a
-  target's missing health is capped. With none, it clamps its own values per level, as before (FEAT-27).
+- A Clamped scaler clamps a value worked out elsewhere, as damage worked out from a target's missing health is
+  capped: its `Value`, a number of any kind (FEAT-27, FEAT-29).
 - A gameplay mono process, as a projectile, carries attributes of its own (`Attributes`, `ProcessAttribute`): each
   read by a role, as a projectile's speed by ProjectileSpeed, and starting as its own value, a number or a scaler at
   the spawning ability's level, its origin's attribute, or the origin's where it has one. The data that spawns it
@@ -243,6 +257,25 @@ tracks each fix below by its ID.
   page, through one table of links in the editor.
 
 ### Changed
+- **`ConditionalScaler`** is a number kind. Its condition is `When`, a `GameplayCondition`, in place of `Condition`
+  (an `EScalerCondition`), `TagCondition`, `CheckAttribute`, `ThresholdValue` and `Comparison`, and its branches are
+  `TrueValue` and `FalseValue`, numbers, in place of `TrueScaler` and `FalseScaler`. With no condition it reads
+  False, and it no longer reads its own values per level. `EScalerCondition` is gone. Saved assets load as they read
+  (NUM-17, NUM-18, NUM-23).
+- A Conditional's tag condition on the target counts a tag by its weight, as on the caster, so a tag granted twice
+  counts twice: on the target it counted each tag once, and a query with a count read differently on the two sides
+  (NUM-17).
+- **`ClampedScaler`** is a number kind. `MinValue` and `MaxValue` are numbers, and what it clamps is `Value`, a number,
+  in place of `Inner`; one made with nothing set clamps a value by level, 1, and it no longer reads its own values
+  per level (NUM-19).
+- `RandomizedScaler`'s `Variance`, `MinMultiplier` and `MaxMultiplier` are numbers; `Variance` takes `[NumberMin(0)]`
+  in place of `[Range(0, 1)]`, so a flat variance can pass 1 (NUM-20).
+- `SetByCallerScaler.Default` is a number (NUM-21).
+- **`ThresholdScaler`** is a number kind, and reads its context's level. `LevelThreshold.Value` and `DefaultValue` are
+  numbers, and a tier's value draws as a number field under its level and name. A `LevelThreshold` saved outside a
+  Threshold scaler loads with no value, which reads 0 (NUM-22).
+- A kind inside a scaler that isn't a kind, as one of your own holds, reads the context its number was read in, with
+  its owner and its data; it read one made again from the effect's carrier, which has neither (NUM-16).
 - **Group** is a kind of number, at the kind menu's top, and a member can be any kind, as a Local Data read or a
   Tracked Impact. Its Flat Bonus members join the sum, after the Multiplies: they were left out, so a group of
   5 and a Flat Bonus of 3 read 5. With the Ignore policy its Override members are set aside and the rest join, and

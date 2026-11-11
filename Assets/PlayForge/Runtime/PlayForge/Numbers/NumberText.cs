@@ -92,6 +92,32 @@ namespace FarEmerald.PlayForge
             return name.Length > 0 ? Spaced(name) : "Scaler";
         }
 
+        /// <summary>
+        /// A condition's one line, as a Conditional scaler's summary reads it: "Target's Health &lt; 0.3 × Target's Health
+        /// (base)". A condition of your own gives its line through <see cref="GameplayCondition.Describe"/>, or else it
+        /// reads as its name.
+        /// </summary>
+        public static string Of(GameplayCondition condition)
+        {
+            if (condition == null) return "no condition";
+            var described = condition.Describe();
+            return string.IsNullOrEmpty(described) ? ConditionName(condition.GetType()) : described;
+        }
+
+        /// <summary>
+        /// A condition's name, as the condition menu shows it: its <see cref="GameplayConditionAttribute.Name"/>, or else
+        /// its class's name without "Condition", spaced out.
+        /// </summary>
+        public static string ConditionName(Type type)
+        {
+            if (type == null) return "None";
+            var declared = GameplayConditionAttribute.Of(type);
+            if (declared != null && !string.IsNullOrEmpty(declared.Name)) return declared.Name;
+            var name = type.Name;
+            if (name.EndsWith("Condition")) name = name.Substring(0, name.Length - "Condition".Length);
+            return name.Length > 0 ? Spaced(name) : "Condition";
+        }
+
         // A series as the style writes one, "8/9/10/12", or its range past six values, "8–20"
         private static string Series(float[] values, bool percent)
         {
