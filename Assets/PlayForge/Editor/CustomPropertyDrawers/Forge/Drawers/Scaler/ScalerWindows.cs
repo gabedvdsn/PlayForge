@@ -441,11 +441,11 @@ namespace FarEmerald.PlayForge.Extended.Editor
                 foreach (var use in uses.OrderBy(each => ForgeImportWindow.NameOf(each.Asset), StringComparer.OrdinalIgnoreCase))
                 {
                     var each = use;
-                    var row = new Button(() =>
+                    // A row opens its asset in The Forge, which it selected in the Project window (ED-76)
+                    var row = new Button(() => TheForge.OpenToAsset(each.Asset))
                     {
-                        Selection.activeObject = each.Asset;
-                        EditorGUIUtility.PingObject(each.Asset);
-                    }) { name = ForgeImportWindow.NameOf(each.Asset), tooltip = $"Select {ForgeImportWindow.NameOf(each.Asset)}" };
+                        name = ForgeImportWindow.NameOf(each.Asset), tooltip = $"Open {ForgeImportWindow.NameOf(each.Asset)} in The Forge",
+                    };
                     row.AddToClassList("pf-used-by__row");
                     row.Add(new ForgeGlyph(ForgeAssetTypes.GlyphOf(each.Asset.GetType())));
                     var assetName = new Label(ForgeImportWindow.NameOf(each.Asset));

@@ -54,6 +54,13 @@ namespace FarEmerald.PlayForge.Extended.Editor
         private UnityEditor.Editor detailEditor;
         private Object shownInDetail;
 
+        // Back and forward over the assets the detail pane has shown, as a browser's, which a domain reload keeps (ED-76)
+        [SerializeField] private List<Object> backHistory = new();
+        [SerializeField] private List<Object> forwardHistory = new();
+        private ToolbarButton backButton;
+        private ToolbarButton forwardButton;
+        private const int MostHistory = 50;
+
         /// <summary>The asset the detail pane shows.</summary>
         internal Object Selected => selected;
 
@@ -95,6 +102,7 @@ namespace FarEmerald.PlayForge.Extended.Editor
             forge.tagsShown = false;
             forge.search = "";
             forge.typeFilter = Types.FirstOrDefault(type => type.IsInstanceOfType(asset))?.Name ?? "";
+            forge.Visit(asset);
             forge.selected = asset;
             forge.Refill();
         }
@@ -213,13 +221,37 @@ namespace FarEmerald.PlayForge.Extended.Editor
             status = new Label { name = "ForgeStatus" };
             status.AddToClassList("pf-forge__status");
             root.Add(status);
+
+            // Alt+Left and Alt+Right, and the mouse's back and forward buttons, go back and forward, but in a text field,
+            // where the keys move the cursor (ED-76)
+            root.RegisterCallback<KeyDownEvent>(key =>
+            {
+                if (!key.altKey || key.keyCode is not (KeyCode.LeftArrow or KeyCode.RightArrow)) return;
+                if ((key.target as VisualElement)?.GetFirstAncestorOfType<TextField>() != null || key.target is TextField) return;
+                if (key.keyCode == KeyCode.LeftArrow) GoBack();
+                else GoForward();
+                key.StopPropagation();
+            });
+            root.RegisterCallback<PointerDownEvent>(down =>
+            {
+                if (down.button == 3) GoBack();
+                else if (down.button == 4) GoForward();
+            }, TrickleDown.TrickleDown);
             Reload();
+            ShowHistory();
         }
 
         // Create, the type filters, each with its type icon, Tags, the search and the problem count
         private Toolbar BuildToolbar()
         {
             var toolbar = new Toolbar { name = "ForgeToolbar" };
+            // Back and forward over the assets shown, as a browser's (ED-76)
+            backButton = new ToolbarButton(GoBack) { name = "Back", tooltip = "Back to the asset shown before (Alt+Left)" };
+            backButton.Add(new ForgeGlyph(ForgeGlyphShape.Back));
+            toolbar.Add(backButton);
+            forwardButton = new ToolbarButton(GoForward) { name = "Forward", tooltip = "Forward to the asset gone back from (Alt+Right)" };
+            forwardButton.Add(new ForgeGlyph(ForgeGlyphShape.Forward));
+            toolbar.Add(forwardButton);
             var create = new ToolbarMenu { name = "Create", text = "Create", tooltip = "Make a new asset where Project Settings puts its type" };
             foreach (var type in Types)
                 create.menu.AppendAction(ForgeAssetTypes.NameOf(type), _ => ForgeNewAssetWindow.Show(type, OpenToAsset));
@@ -332,6 +364,7 @@ namespace FarEmerald.PlayForge.Extended.Editor
             {
                 var asset = chosen.OfType<ScriptableObject>().FirstOrDefault();
                 if (asset == null) return;
+                Visit(asset);
                 selected = asset;
                 ShowDetail();
             };
@@ -576,6 +609,20 @@ namespace FarEmerald.PlayForge.Extended.Editor
             summary.Add(Row("Uses", CountOf(record.TotalAssetCount, "asset", "assets")));
             detail.Add(summary);
 
+            // The contexts it's declared for, which put it in those contexts' pickers as well as its uses' (ED-83)
+            var tag = record.Tag;
+            var declared = new ForgeTagContextsField("Declared For", ForgeTagContexts.DeclaredOf(tag))
+            {
+                name = "TagContexts",
+                tooltip = "The contexts the tag is declared for, in the Tag Library: a field of one offers it, whatever uses it",
+            };
+            declared.Changed += contexts =>
+            {
+                ForgeTagContexts.Declare(tag, contexts);
+                QueueReload();
+            };
+            detail.Add(declared);
+
             var users = new VisualElement { name = "TagUsers" };
             users.AddToClassList("pf-forge__users");
             var usages = record.UsageByContext.Values.SelectMany(usage => usage.Usages)
@@ -605,6 +652,61 @@ namespace FarEmerald.PlayForge.Extended.Editor
         {
             if (detailEditor != null) DestroyImmediate(detailEditor);
             detailEditor = null;
+        }
+
+        // ═══════════════════════════════════════════════════════════════════════════
+        // Back and forward (ED-76)
+        // ═══════════════════════════════════════════════════════════════════════════
+
+        /// <summary>Whether there's an asset to go back to (ED-76).</summary>
+        internal bool CanGoBack => backHistory.Any(asset => asset != null);
+
+        /// <summary>Whether there's an asset to go forward to (ED-76).</summary>
+        internal bool CanGoForward => forwardHistory.Any(asset => asset != null);
+
+        // A new asset shown: the one before goes on the way back, and the way forward is gone, as a browser's
+        private void Visit(Object asset)
+        {
+            if (asset == null || asset == selected) return;
+            if (selected != null)
+            {
+                backHistory.Add(selected);
+                if (backHistory.Count > MostHistory) backHistory.RemoveAt(0);
+            }
+            forwardHistory.Clear();
+            ShowHistory();
+        }
+
+        /// <summary>Shows the asset shown before, as a browser's Back (ED-76).</summary>
+        internal void GoBack() => Step(backHistory, forwardHistory);
+
+        /// <summary>Shows the asset gone back from, as a browser's Forward (ED-76).</summary>
+        internal void GoForward() => Step(forwardHistory, backHistory);
+
+        // The last asset one way, passing over any deleted since, shown, and the one it replaces put on the other way. Its
+        // type's filter goes on only where the list hides it, so the list stays as it is where it can
+        private void Step(List<Object> from, List<Object> to)
+        {
+            while (from.Count > 0 && from[from.Count - 1] == null) from.RemoveAt(from.Count - 1);
+            if (from.Count == 0) return;
+            var asset = from[from.Count - 1];
+            from.RemoveAt(from.Count - 1);
+            if (selected != null) to.Add(selected);
+            tagsShown = false;
+            if (!Shows(asset as ScriptableObject))
+            {
+                search = "";
+                typeFilter = Types.FirstOrDefault(type => type.IsInstanceOfType(asset))?.Name ?? "";
+            }
+            selected = asset;
+            Refill();
+            ShowHistory();
+        }
+
+        private void ShowHistory()
+        {
+            backButton?.SetEnabled(CanGoBack);
+            forwardButton?.SetEnabled(CanGoForward);
         }
 
         // ═══════════════════════════════════════════════════════════════════════════

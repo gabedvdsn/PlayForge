@@ -128,11 +128,14 @@ string perLevel = impact.FormatTotal();           // "20/30/40/50"
 ## Tooling tour
 
 - **The Forge** (`Window → PlayForge → The Forge`, or Ctrl+Alt+Shift+F, which focuses its search) — every
-  PlayForge asset in one list beside a detail pane. The toolbar holds Create, a filter for each type, Tags, the search
-  and the problem count. The list's columns sort; a click shows the asset's inspector in the detail pane, under its
+  PlayForge asset in one list beside a detail pane. The toolbar holds Back and Forward, which go over the assets it has
+  shown, as a browser's do, Create, a filter for each type, Tags, the search and the problem count. The list's columns sort; a click shows the asset's inspector in the detail pane, under its
   summary: its description, then a line for each of its sections, or for a Scaler asset or a Requirement Template, of
-  its parts. A double click shows it in the Project window. Tags lists the project's tags and what
-  uses each; declare tags in a Tag Library asset (`Create → PlayForge → Tag Library`).
+  its parts. A double click shows it in the Project window, and a row of an asset's Used By opens that asset in The
+  Forge. Tags lists the project's tags and what uses each; a tag's **Declared For** declares it for contexts, so their
+  fields' pickers offer it, in a Tag Library asset (`Create → PlayForge → Tag Library`), made where Project Settings
+  puts new assets while there's none. New Tag's **Contexts** start as its field's, and another chosen declares the
+  tag for it.
 - **Debugger** (`Window → PlayForge → Debugger`) — the game as it plays, in four views the toolbar switches
   between. **Entities** lists every entity, of either kind, beside the one selected: its attributes with what changed
   them, its effects with the time each has left and where it came from, its abilities with their state and cooldown,

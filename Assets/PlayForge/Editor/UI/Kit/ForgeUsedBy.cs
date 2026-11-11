@@ -10,8 +10,8 @@ namespace FarEmerald.PlayForge.Extended.Editor
     /// <summary>
     /// The PlayForge assets whose data refers to an asset, each with its type icon, in name order: what
     /// Docs/EDITOR_STYLE.md calls "a list that shows what uses what". It follows the project as it changes (Q30), and a
-    /// row selects its asset. The Attribute inspector's Find All References opened a dialog telling the user how to
-    /// search (ED-15).
+    /// row opens its asset in The Forge, which it selected in the Project window (the user's request, ED-76). The
+    /// Attribute inspector's Find All References opened a dialog telling the user how to search (ED-15).
     /// </summary>
     internal class ForgeUsedBy : VisualElement
     {
@@ -66,17 +66,12 @@ namespace FarEmerald.PlayForge.Extended.Editor
             foreach (var user in users)
             {
                 var name = NameOf(user);
-                var row = new VisualElement { tooltip = $"Select {name}" };
+                var row = new Button(() => TheForge.OpenToAsset(user)) { name = name, tooltip = $"Open {name} in The Forge" };
                 row.AddToClassList("pf-used-by__row");
                 row.Add(new ForgeTypeIcon(user.GetType()));
                 var label = new Label(name);
                 label.AddToClassList("pf-used-by__name");
                 row.Add(label);
-                row.AddManipulator(new Clickable(() =>
-                {
-                    Selection.activeObject = user;
-                    EditorGUIUtility.PingObject(user);
-                }));
                 Add(row);
             }
             Changed?.Invoke();

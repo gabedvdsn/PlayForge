@@ -22,6 +22,9 @@ namespace FarEmerald.PlayForge
             [Tooltip("Full hierarchical tag name, dot-delimited (e.g. Status.Debuff.Burn)")]
             public string Name;
 
+            [Tooltip("The name the tag reads by, where it differs from its Name, as a unique tag's, whose Name has a suffix")]
+            public string DisplayName;
+
             [Tooltip("Contexts this tag is intended for (ForgeContext constants). Empty = Universal.")]
             public List<string> Contexts = new();
 

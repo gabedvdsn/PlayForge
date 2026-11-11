@@ -7,6 +7,10 @@ tracks each fix below by its ID.
 ## [Unreleased]
 
 ### Added
+- The Forge goes back and forward over the assets it has shown, as a browser does: **Back** and **Forward** in its
+  toolbar, Alt+Left and Alt+Right, and the mouse's back and forward buttons (ED-76).
+- A tag's contexts can be declared: in The Forge's tag detail, **Declared For**, and in New Tag, **Contexts**, which
+  start as the field's. The project's Tag Library keeps them, and a field of a declared context offers the tag (ED-83).
 - The Forge's summary of a Scaler asset and a Requirement Template: its description, as text, and a line for each of
   its parts, where it said nothing (ED-74, ED-78).
 - A Scaler asset's inspector has a **Name**, which renames it, as The Forge and the field menus list it (ED-74).
@@ -277,6 +281,8 @@ tracks each fix below by its ID.
   page, through one table of links in the editor.
 
 ### Changed
+- A row of an asset's Used By, a Scaler asset's among them, opens that asset in The Forge, where it selected it in the
+  Project window (ED-76).
 - A Requirement Template's **Category** is a tag of the Requirement Category context, where it was a string; a
   template saved with one loads it as the tag of its name (ED-79).
 - A scaler keeps its name as its kind changes (ED-74).

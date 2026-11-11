@@ -90,7 +90,7 @@ namespace FarEmerald.PlayForge.Extended.Editor
             var tags = ForgeTagRegistry.GetTagsForContext(settings.Contexts, settings.IncludeUniversal).ToList();
             var start = StartOf(TagOf(property));
             new ForgeTagPicker(tags, settings.AllowCreate, GroupByRoot(), title, picked,
-                () => ForgeNewTagWindow.Show(start, made => Pick(property, made, settings.Contexts))).Show(under.worldBound);
+                () => ForgeNewTagWindow.ShowFor(start, settings.Contexts, made => Pick(property, made, settings.Contexts))).Show(under.worldBound);
         }
 
         // A new tag's path starts with the field's tag's parents
@@ -110,7 +110,7 @@ namespace FarEmerald.PlayForge.Extended.Editor
                 held ? DropdownMenuAction.Status.Normal : DropdownMenuAction.Status.Disabled);
             if (settings.AllowCreate)
             {
-                menu.menu.AppendAction("New Tag…", _ => ForgeNewTagWindow.Show(StartOf(tag), made => Pick(property, made, settings.Contexts)));
+                menu.menu.AppendAction("New Tag…", _ => ForgeNewTagWindow.ShowFor(StartOf(tag), settings.Contexts, made => Pick(property, made, settings.Contexts)));
                 // Its leaf under a tag the picker chooses, as Burn under Status.Debuff makes Status.Debuff.Burn
                 menu.menu.AppendAction("Make It a Child Of…", _ => OpenPicker(property, settings, field.Box, "Make It a Child Of", parent =>
                 {

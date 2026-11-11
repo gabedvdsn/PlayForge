@@ -790,7 +790,10 @@ namespace FarEmerald.PlayForge.Extended.Editor
                 {
                     if (entry == null || string.IsNullOrWhiteSpace(entry.Name)) continue;
 
-                    var tag = Tag.Generate(entry.Name.Trim());
+                    // A unique tag reads by its display name, as it does where it's used (ED-83)
+                    var tag = string.IsNullOrWhiteSpace(entry.DisplayName)
+                        ? Tag.Generate(entry.Name.Trim())
+                        : Tag.Generate(entry.Name.Trim(), entry.DisplayName.Trim());
                     string[] contexts = entry.Contexts is { Count: > 0 }
                         ? entry.Contexts.Where(c => !string.IsNullOrWhiteSpace(c)).ToArray()
                         : new[] { ForgeContext.Universal };

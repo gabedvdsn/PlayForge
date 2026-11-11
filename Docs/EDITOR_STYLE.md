@@ -149,13 +149,14 @@ The only other colors:
 ## The Forge
 
 - A list-and-detail view that embeds the inspector (Q5).
-- **The toolbar** holds Create, the type filters (each with its type icon), the search field, the problem count and
-  the window menu. The window's shortcut opens it with the search field focused (Q29). There is no Refresh button,
+- **The toolbar** holds Back and Forward, which go over the assets shown as a browser's do (ED-76), Create, the type
+  filters (each with its type icon), the search field, the problem count and the window menu. The window's shortcut opens it with the search field focused (Q29). There is no Refresh button,
   because the view follows the project as it changes (Q30).
 - **The list** has sortable columns for the name (with its type icon), the type, the asset tag and the levels, and a
   last column for the problem glyph. Rows alternate between the panel and alternate-row colors, and the selected row
   takes Unity's selection blue. A row shows the asset's name alone; its file name is in its header.
-- **The tag view** lists the project's tags, with sortable columns for the tag, what it's for and its uses.
+- **The tag view** lists the project's tags, with sortable columns for the tag, what it's for and its uses. A tag's
+  detail declares the contexts it's for in the Tag Library, from a popup whose menu checks them (ED-83).
 - **The detail pane** shows the selected asset's inspector, opening on a Summary of what it does and what uses it
   (Q6).
 - **The status bar** holds the asset count and the problem count.

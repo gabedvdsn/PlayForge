@@ -25,6 +25,8 @@ namespace FarEmerald.PlayForge.Extended.Editor
         Remove,
         Check,
         Link,
+        Back,
+        Forward,
 
         // Messages
         Info,
@@ -131,6 +133,13 @@ namespace FarEmerald.PlayForge.Extended.Editor
                 case ForgeGlyphShape.Search:
                     pen.Ring(ink, 1.6f, 7, 7, 4.5f);
                     pen.Line(ink, 1.6f, 10.5f, 10.5f, 14, 14);
+                    break;
+                // The Forge's back and forward, as a browser's (ED-76)
+                case ForgeGlyphShape.Back:
+                    pen.Line(ink, 1.6f, 10, 3, 5, 8, 10, 13);
+                    break;
+                case ForgeGlyphShape.Forward:
+                    pen.Line(ink, 1.6f, 6, 3, 11, 8, 6, 13);
                     break;
                 case ForgeGlyphShape.Trash:
                     pen.Line(ink, 1.5f, 3, 4.5f, 13, 4.5f);
