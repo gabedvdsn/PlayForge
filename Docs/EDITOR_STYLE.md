@@ -94,7 +94,7 @@ The only other colors:
 
 ## Inspectors
 
-- **The asset header** holds the 32 px type icon, the asset's name, its type and asset tag, and its problem count.
+- **The asset header** holds the 32 px type icon, or the asset's own texture where it has one (ED-69), the asset's name, its type and asset tag, and its problem count.
   Then come Open in The Forge (Show in Project, inside The Forge), Help and the asset menu, in one row, with the
   asset's file name in a row of its own under them, on the right, inside The Forge. It stays at the top of
   the inspector while the content scrolls under it (Decision 29, the user's call after seeing it scroll, which

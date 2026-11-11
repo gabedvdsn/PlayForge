@@ -23,16 +23,22 @@ namespace FarEmerald.PlayForge
 
         public static bool ValidateEffectRemovalRequirements(GameplayEffectSpec spec) => spec.Base.ValidateRemovalRequirements(spec);
 
+        /// <summary>
+        /// The texture under a tag, as an asset's Primary icon; else the first that has a texture. The first item was taken,
+        /// with no texture as it might be, and the item under the tag even with none (ED-69).
+        /// </summary>
         public static Texture2D GetTextureItem(IEnumerable<TextureItem> textures, Tag tag)
         {
             if (textures is null || string.IsNullOrEmpty(tag.GetLeafName())) return null;
-            
-            var _textures = textures.ToArray();
-            foreach (var ti in _textures)
+
+            Texture2D first = null;
+            foreach (var ti in textures)
             {
+                if (ti?.Texture == null) continue;
                 if (ti.Tag == tag) return ti.Texture;
+                first ??= ti.Texture;
             }
-            return _textures.Length > 0 ? _textures[0].Texture : null;
+            return first;
         }
 
         public static float RelativeOffsetValue(IntValuePairClamped valuePair, float offset = 1f)

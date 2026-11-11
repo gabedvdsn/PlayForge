@@ -165,6 +165,8 @@ namespace FarEmerald.PlayForge.Extended.Editor
                 SyncAssetTag();
                 UpdateHeader();
                 MarkDirty(ability);
+                // Its file follows its name (ED-70)
+                RenameFile(ability, nameField.value);
                 Repaint();
             });
             // Each ability's tag comes from its own name, so a multiple selection shows the names and can't rename (ED-12)

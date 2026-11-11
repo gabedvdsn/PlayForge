@@ -204,12 +204,17 @@ namespace FarEmerald.PlayForge.Extended.Editor
             root.AddToClassList("pf-forge");
             root.Add(BuildToolbar());
 
-            var split = new TwoPaneSplitView(0, 360, TwoPaneSplitViewOrientation.Horizontal) { name = "Split" };
+            // The list as wide as the user left it; its columns' widths are kept as well (ED-48, ED-72)
+            var split = new TwoPaneSplitView(0, ListWidth, TwoPaneSplitViewOrientation.Horizontal) { name = "Split" };
             split.AddToClassList("pf-forge__split");
             // The asset list and the tag list take turns in one place, each laid out while the other shows, so each keeps
             // its columns' widths (ED-48)
             var lists = ForgeStack.Make(new VisualElement { name = "Lists" });
             lists.AddToClassList("pf-forge__lists");
+            lists.RegisterCallback<GeometryChangedEvent>(change =>
+            {
+                if (change.newRect.width > 0f && Mathf.Abs(change.newRect.width - change.oldRect.width) > 0.5f) ListWidth = change.newRect.width;
+            });
             assetList = BuildAssetList();
             tagList = BuildTagList();
             lists.Add(assetList);
@@ -693,6 +698,17 @@ namespace FarEmerald.PlayForge.Extended.Editor
             detailEditor = null;
         }
 
+        // How wide the list is, which a user's drag of the split sets, kept for each user as the columns' widths are. It
+        // opened 360 wide each time (ED-72)
+        private static string ListWidthKey => PlayForgePreferences.Prefix + "Forge.Split";
+
+        internal static float ListWidth
+        {
+            get => float.TryParse(EditorPrefs.GetString(ListWidthKey, ""), System.Globalization.NumberStyles.Float,
+                System.Globalization.CultureInfo.InvariantCulture, out var width) ? Mathf.Clamp(width, 200f, 1600f) : 360f;
+            set => EditorPrefs.SetString(ListWidthKey, Mathf.Clamp(value, 200f, 1600f).ToString(System.Globalization.CultureInfo.InvariantCulture));
+        }
+
         // ═══════════════════════════════════════════════════════════════════════════
         // Back and forward (ED-76)
         // ═══════════════════════════════════════════════════════════════════════════
@@ -755,46 +771,10 @@ namespace FarEmerald.PlayForge.Extended.Editor
         // The selected asset's actions, in its right-click menu
         private void AssetMenu(ContextualMenuPopulateEvent menu) => FillAssetMenu(menu.menu);
 
-        // The selected assets' actions: the first's alone, then the selection's into another Forge Project (FEAT-34)
-        internal void FillAssetMenu(DropdownMenu menu)
-        {
-            var asset = selected as ScriptableObject;
-            var status = asset != null && !tagsShown ? DropdownMenuAction.Status.Normal : DropdownMenuAction.Status.Disabled;
-            menu.AppendAction("Show in Project", _ => ShowInProject(asset), status);
-            menu.AppendAction("Open in a Window", _ => EditorUtility.OpenPropertyEditor(asset), status);
-            menu.AppendSeparator();
-            menu.AppendAction("Duplicate", _ =>
-            {
-                var copy = ForgeAssetCreation.Duplicate(asset);
-                if (copy != null) OpenToAsset(copy);
-            }, status);
-
-            // Each selected asset, into another project's folder for its type
-            var chosen = SelectedAssets();
-            var others = tagsShown ? new List<ForgeProject>() : ForgeProjects.All().Where(project => project != ForgeProjects.Active).ToList();
-            foreach (var project in others)
-            {
-                var each = project;
-                menu.AppendAction($"Move to Project/{each.name}", _ =>
-                {
-                    foreach (var one in chosen) ForgeProjects.MoveInto(one, each);
-                }, chosen.Count > 0 ? DropdownMenuAction.Status.Normal : DropdownMenuAction.Status.Disabled);
-            }
-            foreach (var project in others)
-            {
-                var each = project;
-                menu.AppendAction($"Copy to Project/{each.name}", _ =>
-                {
-                    foreach (var one in chosen) ForgeProjects.CopyInto(one, each);
-                }, chosen.Count > 0 ? DropdownMenuAction.Status.Normal : DropdownMenuAction.Status.Disabled);
-            }
-            if (others.Count == 0)
-            {
-                menu.AppendAction("Move to Project", _ => { }, DropdownMenuAction.Status.Disabled);
-                menu.AppendAction("Copy to Project", _ => { }, DropdownMenuAction.Status.Disabled);
-            }
-            menu.AppendAction("Move to Trash", _ => ForgeAssetDeletion.MoveToTrash(asset), status);
-        }
+        // The selected assets' actions, one menu with an asset header's three dots (ED-71): the first's alone, and the
+        // selection's into another Forge Project (FEAT-34)
+        internal void FillAssetMenu(DropdownMenu menu) =>
+            ForgeAssetActions.AddTo(menu, ForgeAssetActions.For(SelectedAssets(), copy => OpenToAsset(copy)));
 
         // The assets the list has selected, or the one the detail shows
         private List<ScriptableObject> SelectedAssets()

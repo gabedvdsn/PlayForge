@@ -7,15 +7,19 @@ using Object = UnityEngine.Object;
 
 namespace FarEmerald.PlayForge.Extended.Editor
 {
+    /// <summary>
+    /// A Local Data row: its key, its type and its value, each a column of its own, laid out by the style sheet. It set its
+    /// columns' widths in C#, and drew a separator in a dark gray of its own, in either theme (ED-73).
+    /// </summary>
     [CustomPropertyDrawer(typeof(DataWrapper))]
     public class DataWrapperDrawer : PropertyDrawer
     {
         public override VisualElement CreatePropertyGUI(SerializedProperty property)
         {
-            var root = new VisualElement
-            {
-                style = { flexDirection = FlexDirection.Row, flexGrow = 1 }
-            };
+            var root = new VisualElement { name = "DataWrapper" };
+            // The style sheet lays out the row, wherever it's drawn (ED-20, ED-73)
+            ForgeTheme.Apply(root);
+            root.AddToClassList("pf-data-wrapper");
 
             // Get sub-properties
             var keyProp = property.FindPropertyRelative("Key");
@@ -37,49 +41,20 @@ namespace FarEmerald.PlayForge.Extended.Editor
 
             // The row's first column, with no label: under one, as wide as an inspector's label column, the tag's box had
             // no width left to press (ED-68)
-            var keyField = new PropertyField(keyProp, "")
-            {
-                name = "Key",
-                style =
-                {
-                    minWidth = 150, maxWidth = 170, marginRight = 6
-                }
-            };
-
-            var sep = new VisualElement()
-            {
-                style =
-                {
-                    maxWidth = 3,
-                    borderLeftWidth = 2, borderLeftColor = new Color(.15f, .15f, .15f, 1f),
-                    marginRight = 6
-                }
-            };
-
+            var keyField = new PropertyField(keyProp, "") { name = "Key" };
+            keyField.AddToClassList("pf-data-wrapper__key");
             keyField.BindProperty(keyProp);
             root.Add(keyField);
-            root.Add(sep);
-            
-            // Type dropdown (compact)
-            var typeField = new EnumField((EDataWrapperType)typeProp.enumValueIndex)
-            {
-                style =
-                {
-                    minWidth = 70,
-                    maxWidth = 80,
-                    marginRight = 8,
-                    flexGrow = 0, alignSelf = Align.FlexStart
-                }
-            };
-            
+
+            // Its type, a compact choice
+            var typeField = new EnumField((EDataWrapperType)typeProp.enumValueIndex) { name = "Type" };
+            typeField.AddToClassList("pf-data-wrapper__type");
             typeField.BindProperty(typeProp);
             root.Add(typeField);
 
-            // Container for the value field
-            var valueContainer = new VisualElement
-            {
-                style = { flexGrow = 1, flexDirection = FlexDirection.Row }
-            };
+            // Its value, which the type chooses the field of
+            var valueContainer = new VisualElement { name = "Value" };
+            valueContainer.AddToClassList("pf-data-wrapper__value");
             root.Add(valueContainer);
 
             // Initial draw
@@ -133,7 +108,7 @@ namespace FarEmerald.PlayForge.Extended.Editor
                 _ => new Label("Select a type")
             };
 
-            valueField.style.flexGrow = 1;
+            valueField.AddToClassList("pf-data-wrapper__field");
             container.Add(valueField);
         }
 

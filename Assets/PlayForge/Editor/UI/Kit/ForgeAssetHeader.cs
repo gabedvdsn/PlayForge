@@ -7,10 +7,10 @@ using UnityEngine.UIElements;
 namespace FarEmerald.PlayForge.Extended.Editor
 {
     /// <summary>
-    /// The header an asset inspector opens with: the 32 px type icon, the asset's name, and its type and asset tag,
-    /// then its actions, in one row on the right, with any line about the asset, as its file name in The Forge, in a row
-    /// of its own under them (ED-65). It takes its look from the style sheet alone (Decision 20). It took the type's
-    /// color as a thick border and badge, and set its own dark colors (ED-20).
+    /// The header an asset inspector opens with: the 32 px type icon, or the asset's own texture where it has one (ED-69),
+    /// the asset's name, and its type and asset tag, then its actions, in one row on the right, with any line about the
+    /// asset, as its file name in The Forge, in a row of its own under them (ED-65). It takes its look from the style sheet
+    /// alone (Decision 20). It took the type's color as a thick border and badge, and set its own dark colors (ED-20).
     /// </summary>
     internal class ForgeAssetHeader : VisualElement
     {
@@ -21,9 +21,14 @@ namespace FarEmerald.PlayForge.Extended.Editor
             name = "AssetHeader";
             AddToClassList(HeaderClass);
 
-            Icon = new ForgeTypeIcon(assetType);
+            Icon = new ForgeTypeIcon(assetType) { name = "HeaderIcon" };
             Icon.AddToClassList("pf-asset-header__icon");
             Add(Icon);
+            // The asset's own texture, in the icon's place, where it has one (ED-69)
+            Picture = new Image { name = "HeaderPicture", scaleMode = ScaleMode.ScaleToFit };
+            Picture.AddToClassList("pf-asset-header__icon");
+            Picture.AddToClassList(HiddenClass);
+            Add(Picture);
 
             var text = new VisualElement();
             text.AddToClassList("pf-asset-header__text");
@@ -53,6 +58,20 @@ namespace FarEmerald.PlayForge.Extended.Editor
         private readonly VisualElement lines;
 
         public ForgeTypeIcon Icon { get; }
+
+        /// <summary>The asset's own texture, which takes the type icon's place where it has one (ED-69).</summary>
+        public Image Picture { get; }
+
+        private const string HiddenClass = "pf-hidden";
+
+        /// <summary>Shows a texture in the type icon's place, or the type icon for none (ED-69).</summary>
+        public void ShowPicture(Texture texture)
+        {
+            Picture.image = texture;
+            Picture.EnableInClassList(HiddenClass, texture == null);
+            Icon.EnableInClassList(HiddenClass, texture != null);
+        }
+
         public Label NameLabel { get; }
 
         /// <summary>The line under the name: the asset's type and asset tag, as in "Gameplay Effect · Effect.Burning".</summary>

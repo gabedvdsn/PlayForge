@@ -75,12 +75,54 @@ namespace FarEmerald.PlayForge.Extended.Editor
         {
             // Nothing listens to the editor's update here: an inspector listens only while an object picker is open,
             // through WaitForPicker. It listened every frame of its life (ED-11)
+            // An Undo of a rename brings the file back with the name (ED-70)
+            Undo.undoRedoPerformed += FileFollowsName;
         }
 
         protected virtual void OnDisable()
         {
             EditorApplication.update -= OnEditorUpdate;
+            Undo.undoRedoPerformed -= FileFollowsName;
             _waitingForPicker = false;
+        }
+
+        // The assets this inspector renamed, whose files follow their names through Undo and Redo. Only these: an asset
+        // whose file never matched its name keeps its file as an unrelated Undo is made (ED-70)
+        private readonly HashSet<Object> renamedHere = new();
+
+        // Each renamed asset's file named for its name again, as an Undo or a Redo changes the name
+        private void FileFollowsName()
+        {
+            foreach (var each in renamedHere.ToList())
+            {
+                if (each is BaseForgeAsset asset && !string.IsNullOrWhiteSpace(asset.GetName())) RenameFile(asset, asset.GetName());
+            }
+        }
+
+        /// <summary>
+        /// Renames an asset's file after its name, with its type's prefix and suffix from Project Settings, so the two
+        /// don't drift apart (ED-70, the user's request): a character a file can't have is left out, as a new asset's file
+        /// leaves it; a name another file in its folder has takes a number, as Unity's own duplicate does; and an Undo of
+        /// the rename brings the file back with the name, for an asset this inspector renamed. An asset not saved yet has no
+        /// file to rename.
+        /// </summary>
+        protected void RenameFile(Object asset, string name)
+        {
+            var path = AssetDatabase.GetAssetPath(asset);
+            if (string.IsNullOrEmpty(path) || !AssetDatabase.IsMainAsset(asset) || string.IsNullOrWhiteSpace(name)) return;
+            renamedHere.Add(asset);
+            var type = asset.GetType();
+            var wanted = $"{PlayForgeSettings.PrefixFor(type)}{ForgeAssetCreation.FileNameOf(name)}{PlayForgeSettings.SuffixFor(type)}";
+            var current = System.IO.Path.GetFileNameWithoutExtension(path);
+            if (current == wanted) return;
+            int slash = path.LastIndexOf('/');
+            var folder = slash < 0 ? "Assets" : path.Substring(0, slash);
+            var extension = System.IO.Path.GetExtension(path);
+            var free = System.IO.Path.GetFileNameWithoutExtension(AssetDatabase.GenerateUniqueAssetPath($"{folder}/{wanted}{extension}"));
+            // The unique name of its own file, where it's the one that has the name with a number already
+            if (free == current) return;
+            var error = AssetDatabase.RenameAsset(path, free);
+            if (!string.IsNullOrEmpty(error)) ForgeLog.Warning($"{asset.name} keeps its file's name: {error}");
         }
 
         // The object picker reports its choice only to code that asks, so the inspector asks each frame while one is open
@@ -432,9 +474,12 @@ namespace FarEmerald.PlayForge.Extended.Editor
         private ForgeAssetHeader CreateEditorHeader()
         {
             var header = new ForgeAssetHeader(target.GetType());
+            _header = header;
             _headerNameLabel = header.NameLabel;
             _headerSubtitleLabel = header.Subtitle;
             UpdateHeader();
+            // Its texture follows its Textures as they're edited (ED-69)
+            header.TrackSerializedObjectValue(serializedObject, _ => UpdateHeaderIcon());
 
             // How many problems the validator finds in the selection, which follows it and opens the Problems view on the
             // asset (Q8, ED-15)
@@ -479,8 +524,12 @@ namespace FarEmerald.PlayForge.Extended.Editor
             return header;
         }
 
-        // The asset's other actions: import, and its template and the push to its children
-        private void ShowAssetMenu(VisualElement under)
+        // The asset's other actions: import, and its template and the push to its children; then what a right-click on its
+        // row in The Forge's list offers, one menu for both (ED-71)
+        private void ShowAssetMenu(VisualElement under) => AssetMenu(under).DropDown(under.worldBound);
+
+        /// <summary>The asset menu, at the header's three dots, as <see cref="ShowAssetMenu"/> opens it.</summary>
+        internal GenericMenu AssetMenu(VisualElement under)
         {
             var menu = new GenericMenu();
             if (ShowImportButton) menu.AddItem(new GUIContent("Import from Another Asset..."), false, OpenImportPicker);
@@ -500,8 +549,12 @@ namespace FarEmerald.PlayForge.Extended.Editor
                     else menu.AddDisabledItem(new GUIContent("Push to Children"));
                 }
             }
-            if (menu.GetItemCount() == 0) menu.AddDisabledItem(new GUIContent("No Actions"));
-            menu.DropDown(under.worldBound);
+            // Show in Project, Open in a Window, Duplicate, Move or Copy to Project and Move to Trash, as The Forge's list
+            // offers them on a row (ED-71)
+            var assets = targets.OfType<ScriptableObject>().Where(AssetDatabase.Contains).ToList();
+            if (menu.GetItemCount() > 0) menu.AddSeparator("");
+            ForgeAssetActions.AddTo(menu, ForgeAssetActions.For(assets, ForgeAssetActions.ShowCopy));
+            return menu;
         }
 
         // ═══════════════════════════════════════════════════════════════════════════
@@ -540,12 +593,18 @@ namespace FarEmerald.PlayForge.Extended.Editor
             _headerSubtitleLabel.text = string.Join(" · ", parts);
         }
 
+        // The header, whose icon shows the asset's texture where it has one (ED-69)
+        private ForgeAssetHeader _header;
+
         /// <summary>
-        /// The header shows the asset's type icon, which doesn't change, so there's nothing to update. It showed the
-        /// asset's own icon texture.
+        /// Shows the asset's own texture in the header, in the type icon's place: the one under its Primary tag, else its
+        /// first that has a texture (ED-69, the user's request); the type icon where it has none, or for a selection of
+        /// several. The Forge's list rows keep the type's icon.
         /// </summary>
         protected void UpdateHeaderIcon()
         {
+            if (_header == null) return;
+            _header.ShowPicture(!IsMultiple && target is BaseForgeAsset asset ? asset.GetDefaultIcon() : null);
         }
 
         /// <summary>
@@ -555,6 +614,7 @@ namespace FarEmerald.PlayForge.Extended.Editor
         {
             UpdateHeaderName();
             UpdateHeaderDescription();
+            UpdateHeaderIcon();
         }
 
         // ═══════════════════════════════════════════════════════════════════════════

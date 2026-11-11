@@ -163,6 +163,8 @@ namespace FarEmerald.PlayForge.Extended.Editor
                 SyncAssetTag();
                 UpdateHeader();
                 MarkDirty(effect);
+                // Its file follows its name (ED-70)
+                RenameFile(effect, nameField.value);
                 Repaint();
             });
             // Each effect's tag comes from its own name, so a multiple selection shows the names and can't rename (ED-12)

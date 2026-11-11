@@ -161,6 +161,8 @@ namespace FarEmerald.PlayForge.Extended.Editor
                 MarkDirty(attributeSet);
                 SyncAssetTag();
                 UpdateHeader();
+                // Its file follows its name (ED-70)
+                RenameFile(attributeSet, nameField.value);
                 Repaint();
             });
             // Each set's tag comes from its own name, so a multiple selection shows the names and can't rename (ED-12)

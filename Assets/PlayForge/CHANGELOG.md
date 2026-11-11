@@ -7,6 +7,10 @@ tracks each fix below by its ID.
 ## [Unreleased]
 
 ### Added
+- An asset with a texture shows it in its header in place of its type's icon: the texture under its Primary tag, else
+  the first that has one (ED-69).
+- An asset header's three dots offer what a right-click on its row in The Forge does: Show in Project, Open in a
+  Window, Duplicate, Move or Copy to Project and Move to Trash (ED-71).
 - The Forge's asset menu moves or copies its selection into another Forge Project, each asset into its type's folder
   there; its list takes a selection (FEAT-34).
 - The Demo's assets make a Forge Project of their own, Demo Project, at the sample's root (FEAT-34).
@@ -288,6 +292,10 @@ tracks each fix below by its ID.
   page, through one table of links in the editor.
 
 ### Changed
+- Renaming an asset in its inspector renames its file, with its type's prefix and suffix; a name another file has takes
+  a number, and an Undo of the rename brings the file back (ED-70).
+- The Forge opens its list as wide as it was left (ED-72).
+- A Local Data row takes its look from the style sheet, with no separator of its own (ED-73).
 - Every asset picker offers the active Forge Project's assets alone: a PlayForge object field's picker, the Scaler
   Assets menu, the template picker, the Import window, Import Values, the unlinked-effect picker, and the tag picker,
   which offers the tags the project's assets use (FEAT-34).
@@ -575,6 +583,8 @@ tracks each fix below by its ID.
   Asking whether its sequence was paused took 24 bytes a frame.
 
 ### Fixed
+- An asset's icon is the texture under its Primary tag, else the first item that has a texture; it was the first item's,
+  with no texture as it might be (ED-69).
 - An OnApply impact on a durational effect lands as the effect does, where the effect doesn't tick on application; it
   never landed, and only the effect's ticks dealt (GAS-71).
 - A Group member's kind menu offers a number's kinds alone; it offered an attribute set's cached kinds beside them,
