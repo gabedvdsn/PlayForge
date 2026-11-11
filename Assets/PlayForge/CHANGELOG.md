@@ -7,6 +7,10 @@ tracks each fix below by its ID.
 ## [Unreleased]
 
 ### Added
+- Forge Projects (FEAT-34): **Create → PlayForge → Forge Project** makes a project of the assets in its folder, an Asset
+  Catalog of its own, whose **Add Its Assets** names them for saves. The Forge shows the active project's assets alone,
+  and its toolbar's project menu switches between projects and makes new ones. A new asset goes into the active
+  project; the first made makes the default project, at the project's root, which holds every asset no other does.
 - The Forge goes back and forward over the assets it has shown, as a browser does: **Back** and **Forward** in its
   toolbar, Alt+Left and Alt+Right, and the mouse's back and forward buttons (ED-76).
 - A tag's contexts can be declared: in The Forge's tag detail, **Declared For**, and in New Tag, **Contexts**, which
@@ -281,6 +285,8 @@ tracks each fix below by its ID.
   page, through one table of links in the editor.
 
 ### Changed
+- The Create menu makes a Forge Project in the Asset Catalog's place; a catalog made before goes on as it was
+  (FEAT-34).
 - A row of an asset's Used By, a Scaler asset's among them, opens that asset in The Forge, where it selected it in the
   Project window (ED-76).
 - A Requirement Template's **Category** is a tag of the Requirement Category context, where it was a string; a

@@ -10,8 +10,9 @@ namespace FarEmerald.PlayForge
     ///
     /// <para>In the editor, Add Every PlayForge Asset, in the catalog's menu, names each PlayForge asset in the project by
     /// its GUID, which lasts as the asset is renamed or moved. A game can add its own as it runs.</para>
+    /// <para>A <see cref="ForgeProject"/> is the catalog the Create menu makes, of the assets in its folder (FEAT-34); a
+    /// catalog made before goes on naming what it names.</para>
     /// </summary>
-    [CreateAssetMenu(menuName = "PlayForge/Asset Catalog", fileName = "AssetCatalog_")]
     public class ForgeAssetCatalog : ScriptableObject, IAssetNames
     {
         [Serializable]
@@ -100,13 +101,20 @@ namespace FarEmerald.PlayForge
         /// A sub-asset's ID adds its local file ID to its file's GUID.
         /// </summary>
         [ContextMenu("Add Every PlayForge Asset")]
-        public int AddProjectAssets()
+        public int AddProjectAssets() => AddAssets(null);
+
+        /// <summary>
+        /// Adds each PlayForge asset at a path <paramref name="within"/> takes, or each in the project for none, that the
+        /// catalog doesn't name yet, named by its GUID, and says how many it added. A project adds its own (FEAT-34).
+        /// </summary>
+        protected int AddAssets(Func<string, bool> within)
         {
-            UnityEditor.Undo.RecordObject(this, "Add Every PlayForge Asset");
+            UnityEditor.Undo.RecordObject(this, "Add PlayForge Assets");
             int added = 0;
             foreach (string guid in UnityEditor.AssetDatabase.FindAssets("t:ScriptableObject"))
             {
                 string path = UnityEditor.AssetDatabase.GUIDToAssetPath(guid);
+                if (within != null && !within(path)) continue;
                 foreach (var asset in UnityEditor.AssetDatabase.LoadAllAssetsAtPath(path))
                 {
                     if (asset is not BaseForgeAsset forgeAsset) continue;

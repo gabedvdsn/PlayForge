@@ -22,13 +22,13 @@ Only a hub built from an entity can be saved or loaded: a `GameplayAbilitySystem
 
 A save can't hold references to assets, because a reference doesn't last from one session to the next. It names each
 asset by an ID instead, and an **Asset Catalog** finds the asset by that ID. The catalog lists attributes, effects,
-abilities and items.
+abilities and items. A **Forge Project** is the catalog of its own assets, those in its folder.
 
-1. Create one with **Create → PlayForge → Asset Catalog**.
-2. In the catalog's inspector, open the menu in its header and choose **Add Every PlayForge Asset**. It names each
-   PlayForge asset in the project by its GUID, which stays the same when the asset is renamed or moved. Run it again
-   after you add assets.
-3. Pass the catalog to every capture and restore.
+1. Use your Forge Project, or create one with **Create → PlayForge → Forge Project**.
+2. In the project's inspector, open the menu in its header and choose **Add Its Assets**. It names each PlayForge asset
+   in the project's folder by its GUID, which stays the same when the asset is renamed or moved; **Add Every PlayForge
+   Asset** names every one in the Unity project. Run it again after you add assets.
+3. Pass the project to every capture and restore.
 
 Code can add entries while the game runs, with `catalog.Add(id, asset)`. An ID or an asset can be listed only once.
 

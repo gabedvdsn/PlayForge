@@ -128,8 +128,12 @@ string perLevel = impact.FormatTotal();           // "20/30/40/50"
 ## Tooling tour
 
 - **The Forge** (`Window → PlayForge → The Forge`, or Ctrl+Alt+Shift+F, which focuses its search) — every
-  PlayForge asset in one list beside a detail pane. The toolbar holds Back and Forward, which go over the assets it has
-  shown, as a browser's do, Create, a filter for each type, Tags, the search and the problem count. The list's columns sort; a click shows the asset's inspector in the detail pane, under its
+  PlayForge asset of the active **Forge Project** in one list beside a detail pane. A Forge Project is a folder with a
+  project asset at its root (**Create → PlayForge → Forge Project**), and holds the assets under it that no project
+  inside it does. The toolbar holds Back and Forward, which go over the assets it has shown, as a browser's do, the
+  project menu, which switches projects and makes a new one, Create, a filter for each type, Tags, the search and the
+  problem count. A new asset goes into the active project, in its type's folder within the project's; the first one
+  made makes the default project, at the project's root. The list's columns sort; a click shows the asset's inspector in the detail pane, under its
   summary: its description, then a line for each of its sections, or for a Scaler asset or a Requirement Template, of
   its parts. A double click shows it in the Project window, and a row of an asset's Used By opens that asset in The
   Forge. Tags lists the project's tags and what uses each; a tag's **Declared For** declares it for contexts, so their

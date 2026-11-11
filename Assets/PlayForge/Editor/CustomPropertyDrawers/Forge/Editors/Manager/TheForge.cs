@@ -61,6 +61,9 @@ namespace FarEmerald.PlayForge.Extended.Editor
         private ToolbarButton forwardButton;
         private const int MostHistory = 50;
 
+        // The active Forge Project, whose assets the list shows, and the others to switch to (FEAT-34)
+        private ToolbarMenu projectMenu;
+
         /// <summary>The asset the detail pane shows.</summary>
         internal Object Selected => selected;
 
@@ -122,6 +125,7 @@ namespace FarEmerald.PlayForge.Extended.Editor
         {
             open.Add(this);
             EditorApplication.projectChanged += QueueReload;
+            ForgeProjects.Changed += QueueReload;
             ForgeValidator.Changed += OnProblemsChanged;
             ObjectChangeEvents.changesPublished += OnObjectChanges;
         }
@@ -130,6 +134,7 @@ namespace FarEmerald.PlayForge.Extended.Editor
         {
             open.Remove(this);
             EditorApplication.projectChanged -= QueueReload;
+            ForgeProjects.Changed -= QueueReload;
             EditorApplication.update -= ReloadQueued;
             ForgeValidator.Changed -= OnProblemsChanged;
             ObjectChangeEvents.changesPublished -= OnObjectChanges;
@@ -252,6 +257,9 @@ namespace FarEmerald.PlayForge.Extended.Editor
             forwardButton = new ToolbarButton(GoForward) { name = "Forward", tooltip = "Forward to the asset gone back from (Alt+Right)" };
             forwardButton.Add(new ForgeGlyph(ForgeGlyphShape.Forward));
             toolbar.Add(forwardButton);
+            // The active Forge Project, whose assets the list shows (FEAT-34)
+            projectMenu = new ToolbarMenu { name = "Project", tooltip = "The Forge Project whose assets The Forge shows" };
+            toolbar.Add(projectMenu);
             var create = new ToolbarMenu { name = "Create", text = "Create", tooltip = "Make a new asset where Project Settings puts its type" };
             foreach (var type in Types)
                 create.menu.AppendAction(ForgeAssetTypes.NameOf(type), _ => ForgeNewAssetWindow.Show(type, OpenToAsset));
@@ -439,7 +447,10 @@ namespace FarEmerald.PlayForge.Extended.Editor
         // Reads the project's assets again, then shows what the filters let through
         private void Reload()
         {
-            allAssets = ForgeValidator.ProjectAssets().ToList();
+            // The active Forge Project's assets alone; every asset, while the project has none (FEAT-34)
+            var inActive = ForgeProjects.InActive();
+            allAssets = ForgeValidator.ProjectAssets().Where(asset => inActive(asset)).ToList();
+            ShowProject();
             if (selected == null) selected = null;
             Refill();
         }
@@ -480,6 +491,25 @@ namespace FarEmerald.PlayForge.Extended.Editor
             ShowCounts();
         }
 
+        // The project menu: each project, the active one checked, then New Project and the active one's file (FEAT-34)
+        private void ShowProject()
+        {
+            if (projectMenu == null) return;
+            var active = ForgeProjects.Active;
+            projectMenu.text = active != null ? active.name : "All Assets";
+            projectMenu.menu.ClearItems();
+            foreach (var project in ForgeProjects.All())
+            {
+                var each = project;
+                projectMenu.menu.AppendAction(each.name, _ => ForgeProjects.Active = each,
+                    _ => each == active ? DropdownMenuAction.Status.Checked : DropdownMenuAction.Status.Normal);
+            }
+            projectMenu.menu.AppendSeparator();
+            projectMenu.menu.AppendAction("New Project…", _ => ForgeNewProjectWindow.Open());
+            projectMenu.menu.AppendAction("Show in Project", _ => ShowInProject(active),
+                active != null ? DropdownMenuAction.Status.Normal : DropdownMenuAction.Status.Disabled);
+        }
+
         // Whether the filters and the search let an asset through
         private bool Shows(ScriptableObject asset)
         {
@@ -503,7 +533,10 @@ namespace FarEmerald.PlayForge.Extended.Editor
             var listed = tagsShown
                 ? (shownTags.Count == ForgeTagRegistry.GetAllTagRecords().Count() ? CountOf(shownTags.Count, "tag", "tags") : $"{shownTags.Count} of {CountOf(ForgeTagRegistry.GetAllTagRecords().Count(), "tag", "tags")}")
                 : (shownAssets.Count == allAssets.Count ? CountOf(allAssets.Count, "asset", "assets") : $"{shownAssets.Count} of {CountOf(allAssets.Count, "asset", "assets")}");
-            status.text = $"{listed} · {(problems.Count == 0 ? "no problems" : CountOf(problems.Count, "problem", "problems"))}";
+            // The Forge Project the assets are of (FEAT-34)
+            var project = tagsShown ? null : ForgeProjects.Active;
+            var where = project != null ? $" in {project.name}" : "";
+            status.text = $"{listed}{where} · {(problems.Count == 0 ? "no problems" : CountOf(problems.Count, "problem", "problems"))}";
         }
 
         // The detail pane: the selected asset's summary and inspector, or the selected tag and what uses it

@@ -26,7 +26,8 @@ namespace FarEmerald.PlayForge.Extended.Editor
             window.type = type;
             window.created = onCreated;
             window.assetName = $"New {ForgeAssetTypes.NameOf(type)}";
-            window.folder = PlayForgeSettings.FolderFor(type);
+            // In the active Forge Project (FEAT-34)
+            window.folder = ForgeAssetCreation.FolderFor(type);
             window.titleContent = new GUIContent($"New {ForgeAssetTypes.NameOf(type)}");
             window.minSize = new Vector2(380, 128);
             window.ShowUtility();

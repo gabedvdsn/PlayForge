@@ -149,8 +149,9 @@ The only other colors:
 ## The Forge
 
 - A list-and-detail view that embeds the inspector (Q5).
-- **The toolbar** holds Back and Forward, which go over the assets shown as a browser's do (ED-76), Create, the type
-  filters (each with its type icon), the search field, the problem count and the window menu. The window's shortcut opens it with the search field focused (Q29). There is no Refresh button,
+- **The toolbar** holds Back and Forward, which go over the assets shown as a browser's do (ED-76), the project menu,
+  named for the active Forge Project, whose assets the list shows (FEAT-34), Create, the type filters (each with its
+  type icon), the search field, the problem count and the window menu. The window's shortcut opens it with the search field focused (Q29). There is no Refresh button,
   because the view follows the project as it changes (Q30).
 - **The list** has sortable columns for the name (with its type icon), the type, the asset tag and the levels, and a
   last column for the problem glyph. Rows alternate between the panel and alternate-row colors, and the selected row

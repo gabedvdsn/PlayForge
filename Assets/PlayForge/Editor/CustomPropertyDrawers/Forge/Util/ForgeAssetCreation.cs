@@ -28,6 +28,8 @@ namespace FarEmerald.PlayForge.Extended.Editor
         {
             var type = asset.GetType();
             Name(asset, name);
+            // The first asset made makes the default project, which holds it (FEAT-34)
+            ForgeProjects.EnsureActive();
             var folder = FolderFor(type);
             EnsureFolder(folder);
             var prefix = PlayForgeSettings.PrefixFor(type);
@@ -37,8 +39,11 @@ namespace FarEmerald.PlayForge.Extended.Editor
             return asset;
         }
 
-        /// <summary>The folder Project Settings → PlayForge names for a type, or the type's default.</summary>
-        public static string FolderFor(Type type) => PlayForgeSettings.FolderFor(type);
+        /// <summary>
+        /// The folder Project Settings → PlayForge names for a type, or the type's default, within the active Forge
+        /// Project's folder (FEAT-34).
+        /// </summary>
+        public static string FolderFor(Type type) => ForgeProjects.FolderFor(type);
 
         /// <summary>
         /// Makes a new asset of any type The Forge lists, as its Create does: a copy of the type's New Asset default when
@@ -52,6 +57,8 @@ namespace FarEmerald.PlayForge.Extended.Editor
             var copied = PlayForgeSettings.NewAssetDefault(type);
             if (copied != null) EditorUtility.CopySerialized(copied, asset);
             NameAny(asset, name);
+            // The first asset made makes the default project, which holds it (FEAT-34)
+            ForgeProjects.EnsureActive();
             folder = string.IsNullOrWhiteSpace(folder) ? FolderFor(type) : folder.Trim().TrimEnd('/');
             EnsureFolder(folder);
             var path = AssetDatabase.GenerateUniqueAssetPath(
