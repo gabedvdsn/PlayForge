@@ -89,7 +89,11 @@ namespace FarEmerald.PlayForge.Extended.Editor
             EachAsset.Write(scaler, own =>
             {
                 if (type != null && KindOf(own) == type) return;
-                own.managedReferenceValue = Make(type, firstValue(own));
+                // A scaler's name stays, as a Scaler asset's name is its scaler's (ED-74)
+                var kept = (own.managedReferenceValue as AbstractScaler)?.Name;
+                var made = Make(type, firstValue(own));
+                if (made != null && !string.IsNullOrEmpty(kept)) made.Name = kept;
+                own.managedReferenceValue = made;
             });
 
         /// <summary>A field's kind: its scaler's type, or null for a field with none.</summary>

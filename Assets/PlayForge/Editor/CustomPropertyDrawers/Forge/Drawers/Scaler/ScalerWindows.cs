@@ -373,7 +373,8 @@ namespace FarEmerald.PlayForge.Extended.Editor
 
     /// <summary>
     /// A Scaler asset's inspector, as the scaler board's third step: its name, kind and how many fields use it, its
-    /// Description, its values, and the fields that use it, each a row that selects its asset (ED-33).
+    /// Description, its values, and the fields that use it, each a row that selects its asset (ED-33). Its Name names it,
+    /// as menus and The Forge list it; it could only be read, so a Scaler asset couldn't be renamed in The Forge (ED-74).
     /// </summary>
     [CustomEditor(typeof(ScalerAsset))]
     public class ScalerAssetEditor : UnityEditor.Editor
@@ -394,6 +395,12 @@ namespace FarEmerald.PlayForge.Extended.Editor
             about.AddToClassList("pf-scaler-asset__about");
             header.Add(about);
             root.Add(header);
+
+            // Its name, as lists and menus show it: its scaler's, or its file's while it has no scaler to hold one (ED-74)
+            var rename = new TextField("Name") { name = "ScalerName", value = asset.DisplayName, isDelayed = true, tooltip = "The Scaler asset's name, as menus and The Forge list it" };
+            rename.AddToClassList(TextField.alignedFieldUssClassName);
+            rename.RegisterValueChangedCallback(change => Rename(asset, change.newValue));
+            root.Add(rename);
 
             var description = new TextField("Description") { name = "Description", multiline = true, bindingPath = nameof(ScalerAsset.Description) };
             description.AddToClassList(TextField.alignedFieldUssClassName);
@@ -457,10 +464,31 @@ namespace FarEmerald.PlayForge.Extended.Editor
             {
                 if (target == null) return;
                 name.text = asset.DisplayName;
+                if (rename.focusController?.focusedElement != rename) rename.SetValueWithoutNotify(asset.DisplayName);
                 Show();
             });
             Show();
             return root;
+        }
+
+        /// <summary>
+        /// Renames a Scaler asset: its scaler's name, as one Undo step; or, while it has no scaler to hold one, its file
+        /// (ED-74). An empty name leaves it as it was.
+        /// </summary>
+        internal static void Rename(ScalerAsset asset, string name)
+        {
+            name = name?.Trim();
+            if (asset == null || string.IsNullOrEmpty(name) || name == asset.DisplayName) return;
+            if (asset.Scaler != null)
+            {
+                Undo.RecordObject(asset, "Rename Scaler Asset");
+                asset.Scaler.Name = name;
+                EditorUtility.SetDirty(asset);
+                ScalerFields.ForgetUses();
+                return;
+            }
+            var path = AssetDatabase.GetAssetPath(asset);
+            if (!string.IsNullOrEmpty(path)) AssetDatabase.RenameAsset(path, ForgeAssetCreation.FileNameOf(name));
         }
     }
 }

@@ -57,6 +57,9 @@
         
         /// <summary>Tags for categorization/filtering</summary>
         public const string Category = "Category";
+
+        /// <summary>A Requirement Template's category, a context of its own (ED-79)</summary>
+        public const string RequirementCategory = "Requirement Category";
         
         /// <summary>Tags for targeting conditions</summary>
         public const string Targeting = "Targeting";

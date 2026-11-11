@@ -268,7 +268,8 @@ each group:
 Each row has two cells. **Requires** lists the tags the entity must have, and **Must not have** the tags it must not
 have, or says None. A row passes when the entity has every tag it requires and none it must not have. Click a cell to
 edit its list under the table, with the row's **Template**, a shared Requirement Template, and **Sync With Template**,
-which keeps the row's tags the same as its template's. Each entry is a tag query: a **Tag**, a **Match** mode and a
+which keeps the row's tags the same as its template's. A template's **Category** is a tag of its own context,
+Requirement Category, which groups templates. Each entry is a tag query: a **Tag**, a **Match** mode and a
 comparison with a number, where Greater Than 0 means "the tag is present".
 
 Empty Applying and While On rows always pass. An empty Removed By row never removes anything. While On and Removed By

@@ -7,6 +7,9 @@ tracks each fix below by its ID.
 ## [Unreleased]
 
 ### Added
+- The Forge's summary of a Scaler asset and a Requirement Template: its description, as text, and a line for each of
+  its parts, where it said nothing (ED-74, ED-78).
+- A Scaler asset's inspector has a **Name**, which renames it, as The Forge and the field menus list it (ED-74).
 - A scaler field of its own, as a Group member's, has the number field's menu: Save as Scaler Asset, Scaler Assets,
   Import Values, Quick Fill and Make Constant, which makes it a Fixed Value of what it read at level 1 (ED-77).
 - Quick Fill on a scaler spread over levels previews what each level reads between its points (ED-82).
@@ -274,6 +277,9 @@ tracks each fix below by its ID.
   page, through one table of links in the editor.
 
 ### Changed
+- A Requirement Template's **Category** is a tag of the Requirement Category context, where it was a string; a
+  template saved with one loads it as the tag of its name (ED-79).
+- A scaler keeps its name as its kind changes (ED-74).
 - The field menu files the Scaler assets under a **Scaler Assets** submenu, the one the field shares checked; it
   listed each at its top (ED-77).
 - A scaler field's kind menu files its kinds by category, as a number field's does (ED-81).

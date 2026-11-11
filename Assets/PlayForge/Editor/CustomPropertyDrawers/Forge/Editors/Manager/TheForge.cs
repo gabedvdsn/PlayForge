@@ -516,7 +516,8 @@ namespace FarEmerald.PlayForge.Extended.Editor
             var title = new Label("Summary");
             title.AddToClassList("pf-forge__summary-title");
             summary.Add(title);
-            var description = asset is BaseForgeAsset forge ? forge.GetDescription() : null;
+            // A Scaler asset's and a Requirement Template's description too, as text to read (ED-78)
+            var description = ForgeSummaries.DescriptionOf(asset);
             if (!string.IsNullOrWhiteSpace(description))
             {
                 var text = new Label(description);
@@ -531,6 +532,11 @@ namespace FarEmerald.PlayForge.Extended.Editor
                     if (string.IsNullOrWhiteSpace(line) || string.IsNullOrWhiteSpace(section.Title)) continue;
                     summary.Add(Row(section.Title, line));
                 }
+            }
+            // An inspector with no sections, as a Scaler asset's, said nothing here (ED-74)
+            else
+            {
+                foreach (var (label, line) in ForgeSummaries.LinesOf(asset)) summary.Add(Row(label, line));
             }
             var problems = ForgeValidator.ProblemsOf(asset);
             if (problems.Count > 0) summary.Add(Row("Problems", string.Join(" ", problems.Select(problem => problem.Message))));
@@ -637,6 +643,9 @@ namespace FarEmerald.PlayForge.Extended.Editor
         {
             null => "",
             BaseForgeAsset forge when !string.IsNullOrWhiteSpace(forge.GetName()) => forge.GetName(),
+            // The name its inspector gives it, as menus list it (ED-74)
+            ScalerAsset scaler => scaler.DisplayName,
+            RequirementTemplate template => template.DisplayName,
             _ => asset.name,
         };
 

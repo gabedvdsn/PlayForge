@@ -261,8 +261,10 @@ to copy or propagate. **Open** shows the asset in a window of its own. Under the
 its range, as "6–8, levels 1–5", and how many fields share it. A field adjusts the shared values only through its own
 number and Combine: Scaler × Number with a number of 1.5 reads the asset's values times 1.5, as in Fire Duration × 1.5.
 
-- The asset's own inspector shows its name, its kind and how many fields use it, its **Description**, its **Values**,
-  and **Used By**: each field that shares it, by its asset and field. Click a row to select the asset.
+- The asset's own inspector shows its name, its kind and how many fields use it, its **Name**, which renames it, as
+  The Forge and the field menus list it, its **Description**, its **Values**, and **Used By**: each field that
+  shares it, by its asset and field. Click a row to select the asset. In The Forge, its summary says its
+  description, its kind, what it reads and how many fields use it.
 - Any magnitude field can share a Scaler asset. An attribute set's element shares one whose scaler is a cached kind,
   and its Scaler Assets lists only those. A Scaler asset can't hold a Shared scaler of its own.
 - A field whose asset is missing reads as a field with no scaler, and an element whose asset is missing reads its root
