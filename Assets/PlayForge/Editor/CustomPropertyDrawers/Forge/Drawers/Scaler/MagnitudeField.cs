@@ -499,9 +499,11 @@ namespace FarEmerald.PlayForge.Extended.Editor
             // The assets the field can read: a cached kind's for an attribute set's element, any other kind's otherwise
             var kinds = ScalerFields.KindsFor(scalerProp);
             bool cached = kinds.Contains(typeof(SharedCachedScaler));
+            // The active Forge Project's alone (FEAT-34)
+            var inProject = ForgeProjects.InActive();
             var assets = AssetDatabase.FindAssets($"t:{nameof(ScalerAsset)}")
                 .Select(AssetDatabase.GUIDToAssetPath).Select(AssetDatabase.LoadAssetAtPath<ScalerAsset>)
-                .Where(asset => asset != null && asset.Scaler != null && asset.Scaler is AbstractCachedScaler == cached)
+                .Where(asset => asset != null && asset.Scaler != null && asset.Scaler is AbstractCachedScaler == cached && inProject(asset))
                 .OrderBy(asset => asset.DisplayName, StringComparer.OrdinalIgnoreCase).ToList();
             // In a submenu of their own: they sat at the menu's top (ED-77). A name with a slash would make submenus of its own
             bool canShare = kinds.Any(ScalerFields.IsShared);

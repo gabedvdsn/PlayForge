@@ -192,11 +192,13 @@ namespace FarEmerald.PlayForge.Extended.Editor
             foreach (var each in defaults.OrderBy(NameOf, StringComparer.OrdinalIgnoreCase)) yield return ("Defaults", each);
 
             var types = acrossTypes ? new[] { typeof(BaseForgeAsset) } : new[] { type };
+            // The active Forge Project's alone (FEAT-34)
+            var inProject = ForgeProjects.InActive();
             var assets = types.SelectMany(each => AssetDatabase.FindAssets($"t:{each.Name}"))
                 .Distinct()
                 .Select(AssetDatabase.GUIDToAssetPath)
                 .Select(path => AssetDatabase.LoadAssetAtPath<ScriptableObject>(path))
-                .Where(asset => asset != null && !targets.Contains(asset) && !defaults.Contains(asset))
+                .Where(asset => asset != null && !targets.Contains(asset) && !defaults.Contains(asset) && inProject(asset))
                 .Where(asset => !acrossTypes || asset.GetType() == type || HasSameFields(asset))
                 .OrderBy(asset => GroupOf(asset.GetType())).ThenBy(NameOf, StringComparer.OrdinalIgnoreCase);
             foreach (var asset in assets) yield return (GroupOf(asset.GetType()), asset);

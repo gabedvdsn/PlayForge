@@ -7,6 +7,9 @@ tracks each fix below by its ID.
 ## [Unreleased]
 
 ### Added
+- The Forge's asset menu moves or copies its selection into another Forge Project, each asset into its type's folder
+  there; its list takes a selection (FEAT-34).
+- The Demo's assets make a Forge Project of their own, Demo Project, at the sample's root (FEAT-34).
 - Forge Projects (FEAT-34): **Create → PlayForge → Forge Project** makes a project of the assets in its folder, an Asset
   Catalog of its own, whose **Add Its Assets** names them for saves. The Forge shows the active project's assets alone,
   and its toolbar's project menu switches between projects and makes new ones. A new asset goes into the active
@@ -285,6 +288,9 @@ tracks each fix below by its ID.
   page, through one table of links in the editor.
 
 ### Changed
+- Every asset picker offers the active Forge Project's assets alone: a PlayForge object field's picker, the Scaler
+  Assets menu, the template picker, the Import window, Import Values, the unlinked-effect picker, and the tag picker,
+  which offers the tags the project's assets use (FEAT-34).
 - The Create menu makes a Forge Project in the Asset Catalog's place; a catalog made before goes on as it was
   (FEAT-34).
 - A row of an asset's Used By, a Scaler asset's among them, opens that asset in The Forge, where it selected it in the

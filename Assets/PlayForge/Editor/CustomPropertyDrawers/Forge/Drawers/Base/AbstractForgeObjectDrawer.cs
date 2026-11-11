@@ -34,6 +34,18 @@ namespace FarEmerald.PlayForge.Extended.Editor
             field.AddToClassList(ObjectField.alignedFieldUssClassName);
             field.BindProperty(property);
             row.Add(field);
+            // Its picker offers the active Forge Project's assets alone, where Unity's offers every asset of the type, while
+            // the project has a Forge Project (FEAT-34)
+            void PickInProject(EventBase down, int button)
+            {
+                if (button != 0 || ForgeProjects.All().Count == 0) return;
+                var selector = field.Q(className: ObjectField.selectorUssClassName);
+                if (selector == null || down.target is not VisualElement target || (target != selector && !selector.Contains(target))) return;
+                down.StopImmediatePropagation();
+                ShowProjectPicker(field);
+            }
+            field.RegisterCallback<PointerDownEvent>(down => PickInProject(down, down.button), TrickleDown.TrickleDown);
+            field.RegisterCallback<MouseDownEvent>(down => PickInProject(down, down.button), TrickleDown.TrickleDown);
 
             var action = new Button { name = "ReferenceAction" };
             action.AddToClassList("pf-reference__action");
@@ -60,6 +72,21 @@ namespace FarEmerald.PlayForge.Extended.Editor
             field.AddManipulator(new ContextualMenuManipulator(menu => AddMenuItems(menu.menu, field, host)));
             return row;
         }
+
+        /// <summary>
+        /// Shows the picker of the active Forge Project's assets of the field's type, None first, as Unity's searchable
+        /// dropdown, under the field (FEAT-34).
+        /// </summary>
+        internal static void ShowProjectPicker(ObjectField field)
+        {
+            var assets = new List<(Object Asset, string Name)> { (null, "None") };
+            assets.AddRange(ProjectAssets().Select(asset => (asset, NameOf(asset))));
+            new ForgeAssetPicker(assets, ForgeAssetTypes.NameOf(typeof(T)), "None", picked => field.value = picked).Show(field.worldBound);
+        }
+
+        /// <summary>The active Forge Project's assets of the field's type, by name, as its picker offers them (FEAT-34).</summary>
+        internal static List<Object> ProjectAssets() => ForgeProjects.AssetsOf(typeof(T))
+            .OrderBy(NameOf, StringComparer.OrdinalIgnoreCase).ToList();
 
         /// <summary>The label the field shows: none in a list, whose rows need none, else the property's.</summary>
         protected string LabelOf(SerializedProperty property) => IsInList(property) ? "" : preferredLabel ?? property.displayName;

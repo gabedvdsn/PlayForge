@@ -133,7 +133,10 @@ string perLevel = impact.FormatTotal();           // "20/30/40/50"
   inside it does. The toolbar holds Back and Forward, which go over the assets it has shown, as a browser's do, the
   project menu, which switches projects and makes a new one, Create, a filter for each type, Tags, the search and the
   problem count. A new asset goes into the active project, in its type's folder within the project's; the first one
-  made makes the default project, at the project's root. The list's columns sort; a click shows the asset's inspector in the detail pane, under its
+  made makes the default project, at the project's root. With projects and none chosen, the active one is the
+  project at the root, or none, when The Forge shows the assets in no project. The asset menu moves or copies the
+  selected assets into another project. Every asset picker, an object field's among them, offers the active project's
+  assets alone, and the tag picker the tags they use. The Demo's assets are a project of their own. The list's columns sort; a click shows the asset's inspector in the detail pane, under its
   summary: its description, then a line for each of its sections, or for a Scaler asset or a Requirement Template, of
   its parts. A double click shows it in the Project window, and a row of an asset's Used By opens that asset in The
   Forge. Tags lists the project's tags and what uses each; a tag's **Declared For** declares it for contexts, so their

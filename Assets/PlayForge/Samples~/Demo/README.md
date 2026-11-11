@@ -2,7 +2,8 @@
 
 A small hero arena, in the style of a MOBA. Pick a hero and an opponent, give items, change levels, and fight. Every
 hero, ability, item, effect and attribute is a ScriptableObject asset, so you can open any of them in the inspector,
-change it, and see the change in play.
+change it, and see the change in play. The assets are a Forge Project of their own, **Demo Project**: choose it in The
+Forge's project menu to see them there.
 
 ## Running it
 

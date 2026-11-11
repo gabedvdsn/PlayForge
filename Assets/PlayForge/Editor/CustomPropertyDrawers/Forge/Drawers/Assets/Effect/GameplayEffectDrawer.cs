@@ -208,10 +208,12 @@ namespace FarEmerald.PlayForge.Extended.Editor
 
             public static void Show(ObjectField field)
             {
+                // The active Forge Project's alone (FEAT-34)
+                var inProject = ForgeProjects.InActive();
                 var effects = AssetDatabase.FindAssets($"t:{nameof(GameplayEffect)}")
                     .Select(AssetDatabase.GUIDToAssetPath)
                     .Select(AssetDatabase.LoadAssetAtPath<GameplayEffect>)
-                    .Where(effect => effect != null && !effect.IsLinked)
+                    .Where(effect => effect != null && !effect.IsLinked && inProject(effect))
                     .OrderBy(effect => NameOf(effect), StringComparer.OrdinalIgnoreCase)
                     .ToList();
                 new UnlinkedEffectPicker(field, effects).Show(field.worldBound);

@@ -87,7 +87,9 @@ namespace FarEmerald.PlayForge.Extended.Editor
         // Opens the picker under the field's box, over the tags the field's context offers
         private void OpenPicker(SerializedProperty property, Settings settings, VisualElement under, string title, Action<Tag> picked)
         {
-            var tags = ForgeTagRegistry.GetTagsForContext(settings.Contexts, settings.IncludeUniversal).ToList();
+            // The tags the active Forge Project uses alone, where another project uses them alone (FEAT-34)
+            var offers = ForgeProjects.OffersTag();
+            var tags = ForgeTagRegistry.GetTagsForContext(settings.Contexts, settings.IncludeUniversal).Where(offers).ToList();
             var start = StartOf(TagOf(property));
             new ForgeTagPicker(tags, settings.AllowCreate, GroupByRoot(), title, picked,
                 () => ForgeNewTagWindow.ShowFor(start, settings.Contexts, made => Pick(property, made, settings.Contexts))).Show(under.worldBound);

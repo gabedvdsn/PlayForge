@@ -302,10 +302,12 @@ namespace FarEmerald.PlayForge.Extended.Editor
         {
             if (asset == null) return new List<(BaseForgeAsset, string)>();
             var type = asset.GetType();
+            // The active Forge Project's alone (FEAT-34)
+            var inProject = ForgeProjects.InActive();
             var candidates = AssetDatabase.FindAssets($"t:{type.Name}")
                 .Select(AssetDatabase.GUIDToAssetPath)
                 .Select(AssetDatabase.LoadAssetAtPath<BaseForgeAsset>)
-                .Where(each => each != null && each.GetType() == type && each != asset && !TakesFrom(each, asset))
+                .Where(each => each != null && each.GetType() == type && each != asset && !TakesFrom(each, asset) && inProject(each))
                 .Distinct()
                 .ToList();
             string NameOf(BaseForgeAsset each)

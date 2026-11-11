@@ -152,8 +152,10 @@ namespace FarEmerald.PlayForge.Extended.Editor
         private List<Source> FindSources()
         {
             var found = new List<Source>();
+            // The active Forge Project's alone (FEAT-34)
+            var inProject = ForgeProjects.InActive();
             foreach (var asset in AssetDatabase.FindAssets($"t:{nameof(ScalerAsset)}").Select(AssetDatabase.GUIDToAssetPath)
-                         .Select(AssetDatabase.LoadAssetAtPath<ScalerAsset>).Where(asset => asset != null))
+                         .Select(AssetDatabase.LoadAssetAtPath<ScalerAsset>).Where(asset => asset != null && inProject(asset)))
             {
                 var values = asset.Scaler?.LevelValues;
                 if (values == null || values.Length == 0) continue;
@@ -164,7 +166,7 @@ namespace FarEmerald.PlayForge.Extended.Editor
             foreach (var assetPath in AssetDatabase.FindAssets($"t:{nameof(BaseForgeAsset)}").Select(AssetDatabase.GUIDToAssetPath).Distinct())
             {
                 var asset = AssetDatabase.LoadAssetAtPath<ScriptableObject>(assetPath);
-                if (asset == null) continue;
+                if (asset == null || !inProject(asset)) continue;
                 var iterator = new SerializedObject(asset).GetIterator();
                 while (iterator.Next(true))
                 {

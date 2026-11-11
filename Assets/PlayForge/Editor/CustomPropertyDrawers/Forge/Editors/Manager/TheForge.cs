@@ -315,7 +315,8 @@ namespace FarEmerald.PlayForge.Extended.Editor
             {
                 name = "Assets",
                 fixedItemHeight = 20,
-                selectionType = SelectionType.Single,
+                // A selection moves or copies into another project at once; the first shows in the detail (FEAT-34)
+                selectionType = SelectionType.Multiple,
                 showAlternatingRowBackgrounds = AlternatingRowBackground.ContentOnly,
                 sortingMode = ColumnSortingMode.Custom,
             };
@@ -496,14 +497,19 @@ namespace FarEmerald.PlayForge.Extended.Editor
         {
             if (projectMenu == null) return;
             var active = ForgeProjects.Active;
-            projectMenu.text = active != null ? active.name : "All Assets";
+            var projects = ForgeProjects.All();
+            projectMenu.text = active != null ? active.name : projects.Count > 0 ? "No Project" : "All Assets";
             projectMenu.menu.ClearItems();
-            foreach (var project in ForgeProjects.All())
+            foreach (var project in projects)
             {
                 var each = project;
                 projectMenu.menu.AppendAction(each.name, _ => ForgeProjects.Active = each,
                     _ => each == active ? DropdownMenuAction.Status.Checked : DropdownMenuAction.Status.Normal);
             }
+            // The assets in no project, where no project at the root holds them
+            if (projects.Count > 0 && projects.All(project => project.Folder != "Assets"))
+                projectMenu.menu.AppendAction("No Project", _ => ForgeProjects.Active = null,
+                    _ => active == null ? DropdownMenuAction.Status.Checked : DropdownMenuAction.Status.Normal);
             projectMenu.menu.AppendSeparator();
             projectMenu.menu.AppendAction("New Project…", _ => ForgeNewProjectWindow.Open());
             projectMenu.menu.AppendAction("Show in Project", _ => ShowInProject(active),
@@ -747,19 +753,56 @@ namespace FarEmerald.PlayForge.Extended.Editor
         // ═══════════════════════════════════════════════════════════════════════════
 
         // The selected asset's actions, in its right-click menu
-        private void AssetMenu(ContextualMenuPopulateEvent menu)
+        private void AssetMenu(ContextualMenuPopulateEvent menu) => FillAssetMenu(menu.menu);
+
+        // The selected assets' actions: the first's alone, then the selection's into another Forge Project (FEAT-34)
+        internal void FillAssetMenu(DropdownMenu menu)
         {
             var asset = selected as ScriptableObject;
             var status = asset != null && !tagsShown ? DropdownMenuAction.Status.Normal : DropdownMenuAction.Status.Disabled;
-            menu.menu.AppendAction("Show in Project", _ => ShowInProject(asset), status);
-            menu.menu.AppendAction("Open in a Window", _ => EditorUtility.OpenPropertyEditor(asset), status);
-            menu.menu.AppendSeparator();
-            menu.menu.AppendAction("Duplicate", _ =>
+            menu.AppendAction("Show in Project", _ => ShowInProject(asset), status);
+            menu.AppendAction("Open in a Window", _ => EditorUtility.OpenPropertyEditor(asset), status);
+            menu.AppendSeparator();
+            menu.AppendAction("Duplicate", _ =>
             {
                 var copy = ForgeAssetCreation.Duplicate(asset);
                 if (copy != null) OpenToAsset(copy);
             }, status);
-            menu.menu.AppendAction("Move to Trash", _ => ForgeAssetDeletion.MoveToTrash(asset), status);
+
+            // Each selected asset, into another project's folder for its type
+            var chosen = SelectedAssets();
+            var others = tagsShown ? new List<ForgeProject>() : ForgeProjects.All().Where(project => project != ForgeProjects.Active).ToList();
+            foreach (var project in others)
+            {
+                var each = project;
+                menu.AppendAction($"Move to Project/{each.name}", _ =>
+                {
+                    foreach (var one in chosen) ForgeProjects.MoveInto(one, each);
+                }, chosen.Count > 0 ? DropdownMenuAction.Status.Normal : DropdownMenuAction.Status.Disabled);
+            }
+            foreach (var project in others)
+            {
+                var each = project;
+                menu.AppendAction($"Copy to Project/{each.name}", _ =>
+                {
+                    foreach (var one in chosen) ForgeProjects.CopyInto(one, each);
+                }, chosen.Count > 0 ? DropdownMenuAction.Status.Normal : DropdownMenuAction.Status.Disabled);
+            }
+            if (others.Count == 0)
+            {
+                menu.AppendAction("Move to Project", _ => { }, DropdownMenuAction.Status.Disabled);
+                menu.AppendAction("Copy to Project", _ => { }, DropdownMenuAction.Status.Disabled);
+            }
+            menu.AppendAction("Move to Trash", _ => ForgeAssetDeletion.MoveToTrash(asset), status);
+        }
+
+        // The assets the list has selected, or the one the detail shows
+        private List<ScriptableObject> SelectedAssets()
+        {
+            if (tagsShown) return new List<ScriptableObject>();
+            var chosen = assetList?.selectedItems.OfType<ScriptableObject>().ToList() ?? new List<ScriptableObject>();
+            if (chosen.Count == 0 && selected is ScriptableObject one) chosen.Add(one);
+            return chosen;
         }
 
         private static void ShowInProject(Object asset)
