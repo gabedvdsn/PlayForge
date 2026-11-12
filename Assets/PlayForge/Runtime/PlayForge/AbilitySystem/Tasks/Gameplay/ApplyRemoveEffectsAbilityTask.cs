@@ -9,14 +9,15 @@ namespace FarEmerald.PlayForge
     {
         public List<GameplayEffect> Effects;
 
+        [Tooltip("Lands on the targets in the project's resolve order; off, in the order the targeting gave them (TW-31)")]
+        public bool UseResolveOrder = true;
+
         public override void Prepare(AbilityDataPacket data)
         {
-            // On each target, as an area ability has several. Only the first took them (GAS-62)
-            int targets = data.Count(Tags.TARGET_REAL);
-            for (int i = 0; i < targets; i++)
+            // On each target, as an area ability has several. Only the first took them (GAS-62). In the project's resolve
+            // order, or the targeting's where it's off (TW-31)
+            foreach (var target in ForgeResolveOrder.TargetsOf(data, UseResolveOrder))
             {
-                if (!data.TryGetAt(Tags.TARGET_REAL, i, out ITarget target) || target is null) continue;
-
                 // With the magnitudes the caller set on the activation's data (FEAT-2)
                 foreach (GameplayEffect effect in Effects)
                 {

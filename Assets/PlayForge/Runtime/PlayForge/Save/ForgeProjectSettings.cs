@@ -34,6 +34,10 @@ namespace FarEmerald.PlayForge
         [Tooltip("The crowd control rules an entity follows where it names none of its own (TW-16)")]
         public CrowdControlRules CrowdControl;
 
+        [Tooltip("The order an area's effects land on those it takes, by the tags they carry: each entry a tag and an Order, " +
+                 "lower first; one carrying none is at 0, one carrying several takes the first entry's (TW-31)")]
+        public List<ResolveOrderEntry> ResolveOrder = new();
+
         [Tooltip("How The Forge makes the project's assets: where each type's go and how they're named, their defaults, and " +
                  "the Cost and Cooldown templates (TW-30)")]
         public ForgeAuthoringSettings Authoring = new();

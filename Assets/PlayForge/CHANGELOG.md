@@ -7,6 +7,9 @@ tracks each fix below by its ID.
 ## [Unreleased]
 
 ### Added
+- A resolve order for area hits: the Forge Project's Resolve Order, each entry a tag and an Order, decides the order an
+  area's effects land on those it takes; an ability's Apply Effects, an effect's Area, its target among those it takes,
+  and an aura follow it, and each but the aura can turn it off (TW-31).
 - Transfers and toggles: an effect's Transfers each move an amount from an attribute of its caster or its target to one
   of either, as it lands, each tick, or while it lasts, giving back as it ends, and only what the giver has; an
   ability's Toggles turns an effect on, paying its cost, and off, starting its cooldown (TW-20).

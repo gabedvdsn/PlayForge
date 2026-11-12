@@ -142,7 +142,9 @@ namespace FarEmerald.PlayForge
                 run.Held.RemoveAt(i);
             }
 
-            // On each near that hasn't it, or whose has ended on its own, as a durational effect does
+            // On each near that hasn't it, or whose has ended on its own, as a durational effect does, in the project's
+            // resolve order (TW-31)
+            ForgeResolveOrder.Sort(near);
             foreach (var target in near)
             {
                 bool holds = run.Held.Contains(target);

@@ -172,8 +172,9 @@ passes it in, and one effect serves every strength.
     or failing its requirements, fails the targeting at once.
   - **Auto targeting** (Auto Target, Auto Target By Affinity) takes the entities within its **Range**, sorted by its
     **Mode**, up to **Max Targets**, or every one at 0. Each is a target of the activation, and the first, the nearest
-    for Nearest, is its primary. Apply Effects and Apply/Remove Effects reach each target, so an area ability is Auto
-    Target and then Apply Effects. A Target row and the Target Checks check the primary. **Auto Target From Data**
+    for Nearest, is its primary. Apply Effects and Apply/Remove Effects reach each target, in the project's resolve
+    order unless their **Use Resolve Order** is off (TW-31, [EFFECTS.md](EFFECTS.md#resolve-order)), so an area ability
+    is Auto Target and then Apply Effects. A Target row and the Target Checks check the primary. **Auto Target From Data**
     with **Primary Only** off takes each target its key holds.
     Each entity is found by its position, on either hub, with no collider needed (TW-10). **Around** says where the
     range is measured from: the caster, the activation's target (as an AI hands it, or a task before it in a

@@ -17,7 +17,10 @@ namespace FarEmerald.PlayForge
         /// </summary>
         [Tooltip("As an effect lands, the activation's data takes this tag, for a later stage's condition")]
         public Tag RecordLandedAs;
-        
+
+        [Tooltip("Lands on the targets in the project's resolve order; off, in the order the targeting gave them (TW-31)")]
+        public bool UseResolveOrder = true;
+
         public override async UniTask Activate(AbilityDataPacket data, CancellationToken token)
         {
             // Each target, as an area ability has several. Only the first was struck (GAS-62)
@@ -27,9 +30,12 @@ namespace FarEmerald.PlayForge
             for (int e = 0; e < Effects.Count; e++)
             {
                 var effect = Effects[e];
-                for (int i = 0; i < targets; i++)
+
+                // In the project's resolve order, read as each effect lands, or the targeting's where it's off (TW-31)
+                var ordered = ForgeResolveOrder.TargetsOf(data, UseResolveOrder);
+                for (int i = 0; i < ordered.Count; i++)
                 {
-                    if (!data.TryGetAt(Tags.TARGET_REAL, i, out ITarget target) || target is null) continue;
+                    var target = ordered[i];
 
                     // With the magnitudes the caller set on the activation's data (FEAT-2)
                     var spec = target.GenerateEffectSpec(data.EffectOrigin, effect);

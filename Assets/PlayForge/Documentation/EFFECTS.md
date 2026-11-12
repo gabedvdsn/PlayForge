@@ -341,7 +341,9 @@ the one it hits: each within its **Radius** of the target, read as it lands, alo
 of the sides it **Takes** from its caster's (enemies, allies, or both; a caster with no sides takes anyone); its caster
 too where **Include Caster** says; and at most **Max Targets** besides the target, the nearest first, or every one at 0.
 Each is found by its position, with no collider. Each takes the effect from the same origin, so its modifiers and its
-chance to apply are its own, and an effect that lands by an area spreads no further. A Radius of 0 is no area.
+chance to apply are its own, and an effect that lands by an area spreads no further. A Radius of 0 is no area. It lands
+on its target and those it takes in the project's resolve order, its target among them, unless its **Use Resolve
+Order** is off (TW-31; see Resolve Order, below).
 
 **Lifesteal**, in Impact, heals the effect's caster for the hits it deals (TW-15): its **Share** of each workable loss
 it deals another to its **Attribute**, the Health role's where it names none, while its **When** holds. The heal is a
@@ -369,6 +371,26 @@ default, at which it checks who's near, by its holder's own time. It puts its ef
 origin of its own, and takes it off as they leave, die or end, as its holder dies or ends, or as the aura goes; an
 effect of its that ends on its own, a durational one, goes on again at its next check. An Infinite effect holds as long
 as they're near. Two of an item hold two, as their effect's stacking says.
+
+### Resolve Order
+
+The project's **Resolve Order**, under Forge Project in Project Settings → PlayForge, decides the order an area's
+effects land on those it takes (TW-31), so specific behaviour can be coded, as a totem whose aura keeps its allies alive
+resolving after them. Each entry is a **Tag** and an **Order**: one carrying the tag, or one under it, resolves at its
+Order, lower first, and one carrying none of the entries' tags at 0. One carrying several takes the first entry it
+matches, so the list's order is its precedence. An entity carries a tag on its identity, as a totem always does, or
+while something grants it, as an aura can grant its holder one while it holds. The area's own order breaks ties.
+
+Apply Effects and Apply/Remove Effects land on an ability's targets in it, though the targeting keeps its own order and
+its primary target; an effect's **Area** lands on its target and those it takes in it, its target among them; and an
+aura puts its effect on those that came near in it. The tasks' and the Area's **Use Resolve Order**, on by default,
+turns it off for that one. Code reads it through `ForgeResolveOrder`: `OrderOf(target)`, `Sort(targets)`, and
+`TargetsOf(data)` for an activation's targets in order.
+
+A death waits for its entity's end of frame, and an aura comes off a dead holder at its next check or as the holder
+ends, so one area's hits resolve together: a blow that kills the totem doesn't take its aura off the hero the same
+explosion strikes next. The order matters for what changes as each lands, as an effect that lands on the caster with
+each hit (TW-14) or a transfer (TW-20).
 
 ### Modifiers
 

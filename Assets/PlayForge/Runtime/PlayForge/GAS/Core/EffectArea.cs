@@ -39,6 +39,10 @@ namespace FarEmerald.PlayForge
         [Tooltip("At most this many besides its target, the nearest first; 0, every one it reaches")]
         [Min(0)] public int MaxTargets;
 
+        [Tooltip("Lands on its target and those it takes in the project's resolve order, its target among them; off, its " +
+                 "target first, then those near (TW-31)")]
+        public bool UseResolveOrder = true;
+
         /// <summary>Whether it reaches past its target at all: a radius that's more than a plain 0.</summary>
         public bool Reaches => Radius != null && (Radius.Magnitude > 0f || !AbstractScaler.IsNone(Radius.Scaler));
     }

@@ -115,6 +115,21 @@ namespace FarEmerald.PlayForge
                 return false;
             }
 
+            // Its area: each the area takes near this one takes it too, and spreads it no further (TW-10); in the project's
+            // resolve order, this one among them, where the area follows it (TW-31)
+            var area = spec.FromArea ? null : spec.Base.Area;
+            bool spreads = area is { Reaches: true };
+            if (spreads && area.UseResolveOrder && ForgeResolveOrder.Orders) return LandOverArea(spec, area);
+
+            if (!Land(spec)) return false;
+            if (spreads) SpreadOverArea(spec, area);
+            return true;
+        }
+
+        // Lands the effect on this one, once nothing refused it: numbered, applied, told and its contained effects applied.
+        // False where it asks for itself inside its own application (GAS-28)
+        private bool Land(GameplayEffectSpec spec)
+        {
             // Asked for again before its own application is over, an effect contains itself, through its contained
             // effects or what applying it sets off. It recursed until the stack overflowed, which nothing catches (GAS-28)
             if (!applying.Add(spec.Base))
@@ -164,10 +179,6 @@ namespace FarEmerald.PlayForge
                 // A throw part way mustn't leave the effect refused here for good
                 applying.Remove(spec.Base);
             }
-
-            // Its area: each the area takes near this one takes it too, and spreads it no further (TW-10)
-            if (!spec.FromArea && spec.Base.Area is { Reaches: true } area) SpreadOverArea(spec, area);
-
             return true;
         }
 
@@ -175,31 +186,72 @@ namespace FarEmerald.PlayForge
         // takes at most some (TW-10)
         private void SpreadOverArea(GameplayEffectSpec spec, EffectArea area)
         {
-            var here = Self.GetTargetingPacket();
-            if (here == null) return;
-            float radius = area.Radius.Evaluate(NumberContext.Of(spec));
-            if (radius <= 0f) return;
+            var taken = TakenBy(spec, area);
+            int landed = 0;
+            foreach (var other in taken)
+            {
+                if (!LandFromArea(spec, other)) continue;
+                if (area.MaxTargets > 0 && ++landed >= area.MaxTargets) break;
+            }
+        }
 
-            var near = new List<ITarget>();
-            ForgeEntities.Within(here.position, radius, area.Flat, near);
+        // Lands the effect on this one, its target, and on those its area takes, all in the project's resolve order, this
+        // one first among those placed alike (TW-31). The area takes whom it would, the nearest at most some, and one that
+        // refuses the effect gives its place to the next nearest, as it did (TW-10). Whether it landed on this one
+        private bool LandOverArea(GameplayEffectSpec spec, EffectArea area)
+        {
+            var taken = TakenBy(spec, area);
+            int picked = area.MaxTargets > 0 ? Mathf.Min(area.MaxTargets, taken.Count) : taken.Count;
+            var order = new List<ITarget>(picked + 1) { Self };
+            for (int i = 0; i < picked; i++) order.Add(taken[i]);
+            ForgeResolveOrder.Sort(order);
+
+            bool landed = false;
+            int others = 0;
+            foreach (var each in order)
+            {
+                if (ReferenceEquals(each, Self)) landed = Land(spec);
+                else if (LandFromArea(spec, each)) others++;
+            }
+            for (int next = picked; area.MaxTargets > 0 && others < area.MaxTargets && next < taken.Count; next++)
+                if (LandFromArea(spec, taken[next])) others++;
+            return landed;
+        }
+
+        // Those its area takes near this one, the nearest first where it takes at most some: each it reaches but this one,
+        // the dead, and its caster unless it says, of the sides it takes (TW-10)
+        private List<ITarget> TakenBy(GameplayEffectSpec spec, EffectArea area)
+        {
+            var taken = new List<ITarget>();
+            var here = Self.GetTargetingPacket();
+            if (here == null) return taken;
+            float radius = area.Radius.Evaluate(NumberContext.Of(spec));
+            if (radius <= 0f) return taken;
+
+            ForgeEntities.Within(here.position, radius, area.Flat, taken);
             var centre = here.position;
-            if (area.MaxTargets > 0) near.Sort((a, b) => ForgeEntities.Distance(a, centre, area.Flat).CompareTo(ForgeEntities.Distance(b, centre, area.Flat)));
+            if (area.MaxTargets > 0) taken.Sort((a, b) => ForgeEntities.Distance(a, centre, area.Flat).CompareTo(ForgeEntities.Distance(b, centre, area.Flat)));
 
             var caster = spec.Origin?.GetSource();
             var sides = spec.Origin?.GetAffiliation();
-            int landed = 0;
-            foreach (var other in near)
+            for (int i = taken.Count - 1; i >= 0; i--)
             {
-                if (ReferenceEquals(other, Self) || other.IsDead) continue;
-                if (ReferenceEquals(other, caster) && !area.IncludeCaster) continue;
-                if (!ForgeEntities.Takes(area.Takes, sides, other)) continue;
-                var made = other.GenerateEffectSpec(spec.Origin, spec.Base);
-                if (made == null) continue;
-                made.FromArea = true;
-                if (spec.SetByCallerMagnitudes != null) made.TakeSetByCaller(spec.SetByCallerMagnitudes);
-                if (!other.ApplyGameplayEffect(made)) continue;
-                if (area.MaxTargets > 0 && ++landed >= area.MaxTargets) break;
+                var other = taken[i];
+                if (ReferenceEquals(other, Self) || other.IsDead || ReferenceEquals(other, caster) && !area.IncludeCaster
+                    || !ForgeEntities.Takes(area.Takes, sides, other))
+                    taken.RemoveAt(i);
             }
+            return taken;
+        }
+
+        // Lands the effect on another its area takes, made for it from the same origin, and spreading no further (TW-10)
+        private static bool LandFromArea(GameplayEffectSpec spec, ITarget other)
+        {
+            var made = other.GenerateEffectSpec(spec.Origin, spec.Base);
+            if (made == null) return false;
+            made.FromArea = true;
+            if (spec.SetByCallerMagnitudes != null) made.TakeSetByCaller(spec.SetByCallerMagnitudes);
+            return other.ApplyGameplayEffect(made);
         }
 
         // The number of the entity's last effect application (FEAT-13)
