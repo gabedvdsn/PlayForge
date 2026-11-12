@@ -53,6 +53,9 @@ namespace FarEmerald.PlayForge
         /// <summary>The side changes it's under, each from an effect that lasts (TW-18).</summary>
         public SideSet GetSides() => null;
 
+        /// <summary>Its combat log: what the project subscribes to of the hits it takes and deals, its changes and its events (TW-22).</summary>
+        public CombatLog GetCombatLog() => null;
+
         /// <summary>
         /// Grants a tag directly, with no effect, ability or item behind it, as Unreal's loose gameplay tags are. Each
         /// grant counts, and lasts until <see cref="RemoveLooseTag"/> takes it back. A tag added straight to the tag cache

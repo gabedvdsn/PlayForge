@@ -518,6 +518,9 @@ namespace FarEmerald.PlayForge
         public int SendGameplayEvent(Tag eventTag, ProcessDataPacket data = null)
         {
             if (!eventTag.IsValid) return 0;
+
+            // In its combat log, where the project writes the event (TW-22)
+            if (ForgeCombatLog.Writes(eventTag)) Self.GetCombatLog()?.WriteEvent(eventTag, data, Self);
             Callbacks.GameplayEventReceived(eventTag, data);
             return FireTriggers(EAbilityTriggerSource.GameplayEvent, eventTag, data);
         }
@@ -590,7 +593,11 @@ namespace FarEmerald.PlayForge
         /// </summary>
         public bool ListensFor(Tag eventTag)
         {
-            if (AbilityCache == null || AbilityCache.Count == 0 || !eventTag.IsValid) return false;
+            if (!eventTag.IsValid) return false;
+
+            // Its combat log hears the events the project writes, though no ability listens (TW-22)
+            if (ForgeCombatLog.Writes(eventTag)) return true;
+            if (AbilityCache == null || AbilityCache.Count == 0) return false;
             foreach (var container in AbilityCache.Values)
                 if (IsTriggeredBy(container.Spec.Base, EAbilityTriggerSource.GameplayEvent, eventTag)) return true;
             return false;

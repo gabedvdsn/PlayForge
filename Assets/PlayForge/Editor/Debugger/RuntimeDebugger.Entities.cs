@@ -179,7 +179,58 @@ namespace FarEmerald.PlayForge.Extended.Editor
             grid.Add(abilities);
             grid.Add(TagsSection(gas));
             entityDetail.Add(grid);
+            entityDetail.Add(CombatLogSection(gas));
             SampleEntity();
+        }
+
+        // The entity's combat log, newest first, as its project writes it; a click on an entry shows its hit's run through
+        // its pipeline (TW-22)
+        private VisualElement CombatLogSection(IGameplayAbilitySystem gas)
+        {
+            var section = Section("CombatLog", "Combat Log");
+            section.Content.Add(TableHead(("When", "pf-debugger__col-64"), ("Entry", "pf-debugger__col-grow")));
+            var rows = new VisualElement { name = "CombatLogRows" };
+            section.Content.Add(rows);
+            var run = new Label { name = "CombatLogBreakdown" };
+            run.AddToClassList("pf-note");
+            section.Content.Add(run);
+
+            int shownWritten = -1, shownCount = -1;
+            void Build()
+            {
+                var log = gas.GetCombatLog();
+                int written = log?.Written ?? 0, count = log?.Count ?? 0;
+                if (written == shownWritten && count == shownCount) return;
+                shownWritten = written;
+                shownCount = count;
+                rows.Clear();
+                run.text = "";
+                var entries = log?.Entries;
+                section.Summary.text = (entries?.Count ?? 0).ToString();
+                if (entries == null || entries.Count == 0)
+                {
+                    rows.Add(Note(ForgeCombatLog.Keeps ? "None yet" : "The project keeps no combat log"));
+                    return;
+                }
+                for (int i = entries.Count - 1, shown = 0; i >= 0; i--, shown++)
+                {
+                    var entry = entries[i];
+                    var row = TableRow($"CombatLogEntry {shown}", shown, ("When", "pf-debugger__col-64"), ("Entry", "pf-debugger__col-grow"));
+                    row.Q<Label>("When").text = $"{entry.Time.ToString("0.00", System.Globalization.CultureInfo.InvariantCulture)} s";
+                    row.Q<Label>("Entry").text = entry.ToString();
+                    row.tooltip = entry.ToString();
+                    Selectable(row, () =>
+                    {
+                        ShowSelected(rows, row);
+                        var breakdown = entry.BreakdownText;
+                        run.text = string.IsNullOrEmpty(breakdown) ? "No pipeline ran for it." : breakdown;
+                    });
+                    rows.Add(row);
+                }
+            }
+            entityUpdates.Add(Build);
+            Build();
+            return section;
         }
 
         private void ForgetShownEntity()

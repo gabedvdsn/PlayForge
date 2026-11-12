@@ -283,8 +283,9 @@ namespace FarEmerald.PlayForge.Extended.Editor
             var section = new VisualElement { name = "ForgeProject" };
             if (project == null) return section;
             section.Add(Note("What the project's game reads as it runs, through its GameRoot: the part each attribute plays, by a " +
-                             "role tag, the crowd control rules an entity follows where it names none, and the order an area's " +
-                             "effects land on those it takes, by the tags they carry. PlayForge reads its " +
+                             "role tag, the crowd control rules an entity follows where it names none, the order an area's " +
+                             "effects land on those it takes, by the tags they carry, and what each entity's combat log " +
+                             "writes and keeps. PlayForge reads its " +
                              "own roles: Health, what an entity dies of at 0 and what On Hit counts where an entry names none; " +
                              "Luck, read on every chance's caster; Movement Speed, what the Creator Lab's units walk at. Your " +
                              "code reads its own by their tags."));
@@ -302,6 +303,9 @@ namespace FarEmerald.PlayForge.Extended.Editor
 
             // The order an area's effects land on those it takes, by the tags they carry (TW-31)
             section.Add(new PropertyField(settings.FindPropertyRelative(nameof(ProjectSettingsData.ResolveOrder)), "Resolve Order") { name = "ResolveOrder" });
+
+            // What each entity's combat log writes, and how many entries it keeps (TW-22)
+            section.Add(new PropertyField(settings.FindPropertyRelative(nameof(ProjectSettingsData.CombatLog)), "Combat Log") { name = "CombatLog" });
 
             var buttons = new VisualElement();
             buttons.AddToClassList("pf-settings__buttons");

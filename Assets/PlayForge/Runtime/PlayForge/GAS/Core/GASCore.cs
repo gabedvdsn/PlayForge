@@ -43,6 +43,9 @@ namespace FarEmerald.PlayForge
         /// <summary>The side changes it's under, which go over its own sides while they last (TW-18).</summary>
         public SideSet Sides { get; } = new();
 
+        /// <summary>Its combat log, which writes what the project subscribes to (TW-22).</summary>
+        public CombatLog CombatLog { get; } = new();
+
         /// <summary>The crowd control rules its abilities follow: its identity's, or else the project's (TW-16).</summary>
         public CrowdControlRules CrowdControl => Identity?.CrowdControl is { } own && own ? own : ProjectCrowdControl;
 
@@ -329,6 +332,13 @@ namespace FarEmerald.PlayForge
 
             // Died to itself, with its killer; Kill to the killer (TW-5)
             var killer = Killer();
+
+            // The blow that killed it, in its combat log and its killer's (TW-22)
+            if (killer != null)
+            {
+                CombatLog.MarkKilling(ECombatLogKind.Taken, killer);
+                (killer as IGameplayAbilitySystem)?.GetCombatLog()?.MarkKilling(ECombatLogKind.Dealt, owner);
+            }
             Send(owner, Tags.DIED, EventData(killer, owner));
             if (killer is IGameplayAbilitySystem slayer) Send(slayer, Tags.KILL, EventData(killer, owner));
 
@@ -411,6 +421,8 @@ namespace FarEmerald.PlayForge
         {
             FrameSummary?.RecordImpactDealt(impact);
             Callbacks?.ImpactDealt(impact);
+            // In its combat log, where the project writes the hits it deals (TW-22)
+            CombatLog.WriteDealt(impact, owner);
             SendImpactEvent(Tags.IMPACT_DEALT, impact, owner, impact.Target);
         }
 
@@ -419,6 +431,8 @@ namespace FarEmerald.PlayForge
             ForgeCounters.Impacts.Value++;
             FrameSummary?.RecordImpactReceived(impact);
             Callbacks?.ImpactReceived(impact);
+            // In its combat log, where the project writes the hits it takes or its other changes (TW-22)
+            CombatLog.WriteReceived(impact, owner);
             SendImpactEvent(Tags.IMPACT_TAKEN, impact, impact.SourcedModifier.Source, owner);
         }
 

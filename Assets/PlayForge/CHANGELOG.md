@@ -7,6 +7,10 @@ tracks each fix below by its ID.
 ## [Unreleased]
 
 ### Added
+- A combat log for each entity: what the Forge Project subscribes to of the hits it takes and deals, its other attribute
+  changes and the gameplay events it's sent, its last entries as many as the project keeps (100 by default, 0 none), each
+  with who else, the effect, the attribute, before and after, the hit's breakdown and whether it killed; read through
+  `GetCombatLog()` and shown in the Debugger's Entities view (TW-22).
 - One line for each asset, in its inspector's header and The Forge's Summary column, which sorts: an ability's numbers by
   level, then its costs and cooldown; an item's what it changes while equipped and the ability it grants; an entity's
   first attributes as it starts and its abilities; an effect's first impact by level (TW-21).

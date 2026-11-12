@@ -183,6 +183,23 @@ doesn't kill it.
 `Revive(at)` on either hub brings a staying entity back, at a point or where it was; it re-arms the entity's analysis
 workers, so its death watcher sees its next death. Callbacks hear `OnEntityRevived`, as they hear `OnEntityDied`.
 
+## Combat Log
+
+Each entity keeps a combat log of what happens to it (TW-22), which a test reads as the game does, through
+`gas.GetCombatLog()`, and the Debugger shows under the entity it has selected. What it writes is the project's to say,
+under **Combat Log** in Project Settings → PlayForge: its **Records**, the **Hits Taken** (a workable change another's
+effect makes to its attributes), the **Hits Dealt**, and its other **Changes** (its own, a cost, regeneration, a transfer);
+and its **Events**, the gameplay events it's sent by tag, or one under it, as Died, Kill or your own, written though no
+ability listens for them. **Keep** is how many entries each entity keeps, its last, 100 by default; 0 keeps none, as for a
+build.
+
+Each entry is a `CombatLogEntry`: its **Kind** (Taken, Dealt, Changed or Event), its **Time** and **Frame**, the
+**Other** entity (the dealer of a hit taken, the one a hit dealt struck, an event's source or the one it names), the
+**Effect** behind it, the **Attribute**, its value **Before** and **After** and the **Change**, the hit's **Steps** through
+its pipeline (TW-2), and whether it **Killed**, marked on the blow that killed in both logs. The log's **Entries** run
+oldest first; **Of(kind)**, **By(effect)** and **With(entity)** filter them, and **Total(kind, attribute)** adds their
+changes up, as the damage an entity took. An entry reads as a line: "Took -20 Health from Lina (Fireball)".
+
 ## Local Data
 
 Local Data is a list of named values stored on the asset. Each row has a **Key** (a tag), a **Type**, and a value of

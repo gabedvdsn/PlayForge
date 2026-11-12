@@ -38,6 +38,10 @@ namespace FarEmerald.PlayForge
                  "lower first; one carrying none is at 0, one carrying several takes the first entry's (TW-31)")]
         public List<ResolveOrderEntry> ResolveOrder = new();
 
+        [Tooltip("What each entity's combat log writes, the hits it takes and deals, its other changes and the events it's " +
+                 "sent, and how many entries it keeps (TW-22)")]
+        public CombatLogSettings CombatLog = new();
+
         [Tooltip("How The Forge makes the project's assets: where each type's go and how they're named, their defaults, and " +
                  "the Cost and Cooldown templates (TW-30)")]
         public ForgeAuthoringSettings Authoring = new();

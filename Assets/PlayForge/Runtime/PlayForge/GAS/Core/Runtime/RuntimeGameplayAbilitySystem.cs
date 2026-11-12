@@ -221,6 +221,9 @@ namespace FarEmerald.PlayForge
         /// <summary>The side changes it's under (TW-18).</summary>
         public SideSet GetSides() => core?.Sides;
 
+        /// <summary>Its combat log (TW-22).</summary>
+        public CombatLog GetCombatLog() => core?.CombatLog;
+
         /// <summary>Sets its own sides, as the game runs, which its tags follow (TW-18).</summary>
         public void SetAffiliation(List<Tag> sides) => core.SetAffiliation(sides);
 
