@@ -107,6 +107,9 @@ namespace FarEmerald.PlayForge
         /// </summary>
         public EffectChanges Changes { get; internal set; }
 
+        /// <summary>Whether it landed by another's area, so it spreads no further (TW-10).</summary>
+        public bool FromArea { get; internal set; }
+
         // Each Chance condition's roll for this hit, kept so a hit read twice reads the same (TW-8)
         private Dictionary<object, bool> rolls;
 

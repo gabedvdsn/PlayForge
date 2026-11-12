@@ -136,6 +136,9 @@ namespace FarEmerald.PlayForge
         public GameplayAbilitySystemCallbacks GetCallbacks() => Callbacks;
         public EffectModifierSet GetEffectModifiers() => core.EffectModifiers;
 
+        /// <summary>The auras it runs (TW-10).</summary>
+        public AuraSet GetAuras() => core.Auras;
+
         #endregion
 
         public override string ToString()

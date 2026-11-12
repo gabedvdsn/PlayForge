@@ -7,6 +7,10 @@ tracks each fix below by its ID.
 ## [Unreleased]
 
 ### Added
+- Areas without physics: an area search finds each entity on either hub by its position, flat by default, around the
+  caster, the activation's target or its point, with physics only where it asks; an effect's own Area lands it on those
+  near its target; and auras on items, abilities, effects and entities hold their effects on those near their holders
+  (TW-10).
 - Number math: a Stacking Curve kind (linear, hyperbolic, reciprocal, inverse, exponential, then a number added), a
   Group's Divide, and an attribute read as what's missing of it (base − current) or its share of its base
   (current ÷ base), in × Attribute, the cached attribute scaler and the Attribute condition (TW-9).
@@ -330,6 +334,8 @@ tracks each fix below by its ID.
   page, through one table of links in the editor.
 
 ### Changed
+- Auto Target and Auto Target By Affinity find entities by position, flat by default, with no collider needed; **Use
+  Physics** searches with physics on their layers as they did (TW-10).
 - A Group member's Operation is an `EGroupOperation`: an impact's four in their order, so a member saved before keeps
   its meaning, and Divide. `ScalerGroup.AddMember` takes either (TW-9).
 - The Demo's units, camera, dummy and controls are the Creator Lab's, its roster the lab's rules; `DemoInput` is gone,

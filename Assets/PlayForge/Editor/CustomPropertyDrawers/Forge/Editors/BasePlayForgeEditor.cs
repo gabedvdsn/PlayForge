@@ -722,13 +722,19 @@ namespace FarEmerald.PlayForge.Extended.Editor
         /// <summary>
         /// A Workers section's line with its modifiers among it: "1 on hit, 2 modifiers, 1 worker", or "None" (TW-7).
         /// </summary>
-        protected static string WorkersLine(List<OnHitEntry> onHit, List<EffectModifierEntry> modifiers, int workers)
+        protected static string WorkersLine(List<OnHitEntry> onHit, List<EffectModifierEntry> modifiers, int workers) =>
+            WorkersLine(onHit, modifiers, null, workers);
+
+        /// <summary>A Workers section's line with its auras among it: "1 on hit, 2 auras, 1 worker" (TW-10).</summary>
+        protected static string WorkersLine(List<OnHitEntry> onHit, List<EffectModifierEntry> modifiers, List<AuraEntry> auras, int workers)
         {
             var parts = new List<string>();
             int hits = onHit?.Count(entry => entry != null) ?? 0;
             int changes = modifiers?.Count(entry => entry != null) ?? 0;
+            int held = auras?.Count(entry => entry != null) ?? 0;
             if (hits > 0) parts.Add(CountOf(hits, "on hit", "on hits"));
             if (changes > 0) parts.Add(CountOf(changes, "modifier", "modifiers"));
+            if (held > 0) parts.Add(CountOf(held, "aura", "auras"));
             if (workers > 0 || parts.Count == 0) parts.Add(CountOf(workers, "worker", "workers"));
             return string.Join(", ", parts);
         }

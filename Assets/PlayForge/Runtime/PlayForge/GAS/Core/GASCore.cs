@@ -37,6 +37,9 @@ namespace FarEmerald.PlayForge
         /// <summary>The modifiers the entity holds now: its own, its items', its abilities' and its effects' (TW-7).</summary>
         public EffectModifierSet EffectModifiers { get; } = new();
 
+        /// <summary>The auras the entity runs, its items', abilities', effects' and its own (TW-10).</summary>
+        public AuraSet Auras { get; } = new();
+
         /// <summary>The entity's settings as this GAS uses them, or null for a hub given none.</summary>
         public RuntimeEntityIdentity Identity { get; private set; }
 
@@ -168,6 +171,9 @@ namespace FarEmerald.PlayForge
                 // The input buffer's windows count down by the entity's own time (FEAT-6)
                 AbilitySystem.StepBuffer(Clock.DeltaTime);
 
+                // Its auras check who's near by its own time too (TW-10)
+                Auras.Step(Clock.DeltaTime);
+
                 // Its shelf, for the Effects Active counter (FEAT-18)
                 CountEffects();
 
@@ -256,6 +262,8 @@ namespace FarEmerald.PlayForge
         /// </summary>
         public void WhenTerminate()
         {
+            // Its auras' effects come off each they held them on (TW-10)
+            Auras.Clear();
             AbilitySystem.ShutDown();
             ForgeEntities.Remove(owner);
             EndBody();

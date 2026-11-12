@@ -138,6 +138,9 @@ namespace FarEmerald.PlayForge
         [Tooltip("Modifiers of other effects, its holder's own or those landing on it, while it's equipped (TW-7)")]
         public List<EffectModifierEntry> Modifiers = new();
 
+        [Tooltip("Auras it holds on those near its holder, while it's equipped (TW-10)")]
+        public List<AuraEntry> Auras = new();
+
         // ═══════════════════════════════════════════════════════════════════════════
         // Generation
         // ═══════════════════════════════════════════════════════════════════════════
@@ -319,12 +322,14 @@ namespace FarEmerald.PlayForge
             WorkerGroup?.ProvideWorkersTo(system);
             OnHits.Provide(OnHit, system);
             EffectModifiers.Provide(Modifiers, system);
+            ForgeAuras.Provide(Auras, system);
         }
         public void RemoveWorkers(ISource system)
         {
             WorkerGroup?.RemoveWorkersFrom(system);
             OnHits.Remove(OnHit, system);
             EffectModifiers.Remove(Modifiers, system);
+            ForgeAuras.Remove(Auras, system);
         }
     }
 

@@ -26,6 +26,12 @@ namespace FarEmerald.PlayForge
 
         [Tooltip("Modifiers of other effects, its holder's own or those landing on it, while it lasts, the holder the one it's on (TW-7)")]
         public List<EffectModifierEntry> Modifiers = new();
+
+        [Tooltip("Auras it holds on those near the one it's on, while it lasts (TW-10)")]
+        public List<AuraEntry> Auras = new();
+
+        [Tooltip("Its area: as it lands on its target, it lands on each the area takes near that target too (TW-10)")]
+        public EffectArea Area = new();
         
         [Tooltip("Its own proc coefficient in place of its ability's: what its hits carry for their on-hit effects (TW-8)")]
         public bool OwnProcCoefficient;

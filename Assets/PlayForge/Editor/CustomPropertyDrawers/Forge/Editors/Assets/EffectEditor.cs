@@ -369,6 +369,9 @@ namespace FarEmerald.PlayForge.Extended.Editor
             // What its hits carry for on-hit effects, its own or else its ability's (TW-8)
             content.Add(CreatePropertyField(serializedObject.FindProperty(nameof(GameplayEffect.OwnProcCoefficient)), "OwnProcCoefficient", "Own Proc Coefficient"));
             content.Add(CreatePropertyField(serializedObject.FindProperty(nameof(GameplayEffect.ProcCoefficient)), "ProcCoefficient", "Proc Coefficient"));
+
+            // Its area: as it lands, on each the area takes near its target too (TW-10)
+            content.Add(CreatePropertyField(serializedObject.FindProperty(nameof(GameplayEffect.Area)), "Area", "Area"));
         }
 
         // ═══════════════════════════════════════════════════════════════════════════
@@ -448,6 +451,7 @@ namespace FarEmerald.PlayForge.Extended.Editor
             paths.Add(DefinitionPath(nameof(GameplayEffectDefinition.RetentionGroup)));
             paths.Add(nameof(GameplayEffect.OwnProcCoefficient));
             paths.Add(nameof(GameplayEffect.ProcCoefficient));
+            paths.Add(nameof(GameplayEffect.Area));
             return paths.ToArray();
         }
 
@@ -538,7 +542,7 @@ namespace FarEmerald.PlayForge.Extended.Editor
                 HelpTopic = "effects/workers",
 
                 SerializedObject = serializedObject,
-                PropertyPaths = new[] { nameof(GameplayEffect.OnHit), nameof(GameplayEffect.Modifiers), nameof(GameplayEffect.Workers) },
+                PropertyPaths = new[] { nameof(GameplayEffect.OnHit), nameof(GameplayEffect.Modifiers), nameof(GameplayEffect.Auras), nameof(GameplayEffect.Workers) },
                 OnImportComplete = OnSectionReplaced,
                 OnClearComplete = OnSectionReplaced,
             });
@@ -554,6 +558,8 @@ namespace FarEmerald.PlayForge.Extended.Editor
             workersSection.Content.Add(CreatePropertyField(serializedObject.FindProperty(nameof(GameplayEffect.OnHit)), "OnHit", "On Hit"));
             // How it changes other effects, of the one it's on or landing on it, while it lasts (TW-7)
             workersSection.Content.Add(CreatePropertyField(serializedObject.FindProperty(nameof(GameplayEffect.Modifiers)), "Modifiers", "Modifiers"));
+            // The effects it holds on those near the one it's on, while it lasts (TW-10)
+            workersSection.Content.Add(CreatePropertyField(serializedObject.FindProperty(nameof(GameplayEffect.Auras)), "Auras", "Auras"));
             workersSection.Content.Add(CreatePropertyField(serializedObject.FindProperty(nameof(GameplayEffect.Workers)), "Workers", ""));
         }
 
@@ -657,7 +663,7 @@ namespace FarEmerald.PlayForge.Extended.Editor
             if (impactSection != null) impactSection.Summary.text = ImpactSummary();
             if (levelsSection != null) levelsSection.Summary.text = LevelsSummary();
             if (requirementsSection != null) requirementsSection.Summary.text = RequirementsSummary();
-            if (workersSection != null) workersSection.Summary.text = WorkersLine(effect.OnHit, effect.Modifiers, effect.Workers?.Count(worker => worker != null) ?? 0);
+            if (workersSection != null) workersSection.Summary.text = WorkersLine(effect.OnHit, effect.Modifiers, effect.Auras, effect.Workers?.Count(worker => worker != null) ?? 0);
             if (cuesSection != null) cuesSection.Summary.text = CountOf(effect.Cues?.Count(cue => cue != null) ?? 0, "cue", "cues");
             if (localDataSection != null) localDataSection.Summary.text = CountOf(effect.LocalData?.Count ?? 0, "entry", "entries");
             if (usedBySection != null) usedBySection.Summary.text = usedBy == null ? "" : CountOf(usedBy.Count, "asset", "assets");

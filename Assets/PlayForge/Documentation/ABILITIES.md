@@ -152,6 +152,11 @@ passes it in, and one effect serves every strength.
     for Nearest, is its primary. Apply Effects and Apply/Remove Effects reach each target, so an area ability is Auto
     Target and then Apply Effects. A Target row and the Target Checks check the primary. **Auto Target From Data**
     with **Primary Only** off takes each target its key holds.
+    Each entity is found by its position, on either hub, with no collider needed (TW-10). **Around** says where the
+    range is measured from: the caster, the activation's target (as an AI hands it, or a task before it in a
+    Composite picks it), or its point; **Flat**, on by default, measures along the ground, and off, a sphere. **Use
+    Physics** finds entities with physics instead, by collider on its **Detection Layers**, as it did, and a runtime
+    entity by its position. Auto Target By Affinity's **Include Self** takes its caster where it's of the sides it takes.
 - **Use Implicit Targeting** (default on): before targeting, record the caster as the activation's target, under
   **Implicit Tag** (default `Target`), which shows while this is on. A targeting task that sets a target replaces it.
 
@@ -253,6 +258,12 @@ types and a condition ([ITEMS.md](ITEMS.md#on-hit)).
 **Modifiers**, under On Hit, change other effects as they're made, while the entity knows the ability: its holder's own, as a boon that adds a
 burst to its holder's every Chill, or those landing on it, as a cloak that halves the stuns its wearer takes (TW-7).
 Each entry is a rule of its own or names a shared Effect Modifier asset ([EFFECTS.md](EFFECTS.md#modifiers)).
+
+### Auras
+
+**Auras**, after Modifiers, hold an effect on those near its holder, while the entity knows the ability, as a banner that inspires the allies
+round its bearer (TW-10): each a radius, whom it takes, its holder too or not, and how often it checks
+([EFFECTS.md](EFFECTS.md#auras)).
 ## Local Data
 
 Local Data is a list of named values stored on the asset. Each row has a **Key** (a tag), a **Type**, and a value of

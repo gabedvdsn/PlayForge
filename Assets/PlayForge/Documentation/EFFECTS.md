@@ -316,6 +316,23 @@ its On Hit does nothing. Another effect that replaces it under its tag takes it 
 and their duration by it, so a damage over time at 0.25 sets them off a quarter as often, for a quarter as long, and 0
 sets nothing off. With **Own Proc Coefficient** off, its ability's stands, or else 1.
 
+**Area**, in Impact, lands the effect on those near its target as it lands (TW-10), as Storm Hammer stuns everyone near
+the one it hits: each within its **Radius** of the target, read as it lands, along the ground unless **Flat** is off;
+of the sides it **Takes** from its caster's (enemies, allies, or both; a caster with no sides takes anyone); its caster
+too where **Include Caster** says; and at most **Max Targets** besides the target, the nearest first, or every one at 0.
+Each is found by its position, with no collider. Each takes the effect from the same origin, so its modifiers and its
+chance to apply are its own, and an effect that lands by an area spreads no further. A Radius of 0 is no area.
+
+### Auras
+
+**Auras**, after Modifiers, hold an effect on those near the one it's on, while it lasts (TW-10). Items, abilities and
+entities hold them too. Each has the **Effect** it holds, a **Radius** from its holder, read at each check, **Flat**,
+whom it **Takes** from its holder's sides, its holder too where **Include Holder** says, and an **Interval**, 0.25 s by
+default, at which it checks who's near, by its holder's own time. It puts its effect on each that comes near, from an
+origin of its own, and takes it off as they leave, die or end, as its holder dies or ends, or as the aura goes; an
+effect of its that ends on its own, a durational one, goes on again at its next check. An Infinite effect holds as long
+as they're near. Two of an item hold two, as their effect's stacking says.
+
 ### Modifiers
 
 **Modifiers**, under On Hit, change other effects as they're made, for that application alone (TW-7): a boon that adds

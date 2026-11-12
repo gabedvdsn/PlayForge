@@ -131,6 +131,12 @@ dagger's bleed, a hammer's armor break, a barrier on a kill (TW-6). Each entry h
 **Modifiers**, under On Hit, change other effects as they're made, while it's equipped: its holder's own, as a boon that adds a
 burst to its holder's every Chill, or those landing on it, as a cloak that halves the stuns its wearer takes (TW-7).
 Each entry is a rule of its own or names a shared Effect Modifier asset ([EFFECTS.md](EFFECTS.md#modifiers)).
+
+### Auras
+
+**Auras**, after Modifiers, hold an effect on those near its holder, while it's equipped, as a banner that inspires the allies
+round its bearer (TW-10): each a radius, whom it takes, its holder too or not, and how often it checks
+([EFFECTS.md](EFFECTS.md#auras)).
 ## Local Data
 
 Local Data is a list of named values stored on the asset. Each row has a **Key** (a tag), a **Type**, and a value of

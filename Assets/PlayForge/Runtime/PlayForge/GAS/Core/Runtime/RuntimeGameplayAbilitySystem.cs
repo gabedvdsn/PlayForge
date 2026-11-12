@@ -212,6 +212,9 @@ namespace FarEmerald.PlayForge
         public GameplayAbilitySystemCallbacks GetCallbacks() => Callbacks;
         public EffectModifierSet GetEffectModifiers() => core.EffectModifiers;
 
+        /// <summary>The auras it runs (TW-10).</summary>
+        public AuraSet GetAuras() => core.Auras;
+
         // ═══════════════════════════════════════════════════════════════════════════
         // TOSTRING
         // ═══════════════════════════════════════════════════════════════════════════
@@ -326,6 +329,9 @@ namespace FarEmerald.PlayForge
         /// <summary>Its own modifiers of effects, as <see cref="EntityIdentity.Modifiers"/> (TW-7).</summary>
         public List<EffectModifierEntry> Modifiers = new();
 
+        /// <summary>Its own auras, as <see cref="EntityIdentity.Auras"/> (TW-10).</summary>
+        public List<AuraEntry> Auras = new();
+
         public RuntimeEntityIdentity()
         {
         }
@@ -356,6 +362,7 @@ namespace FarEmerald.PlayForge
             LocalData = data.LocalData;
             Death = data.Death;
             Modifiers = data.Modifiers;
+            Auras = data.Auras;
         }
 
         public string GetName()
@@ -402,11 +409,13 @@ namespace FarEmerald.PlayForge
         {
             WorkerGroup?.ProvideWorkersTo(system);
             EffectModifiers.Provide(Modifiers, system);
+            ForgeAuras.Provide(Auras, system);
         }
         public void RemoveWorkers(ISource system)
         {
             WorkerGroup?.RemoveWorkersFrom(system);
             EffectModifiers.Remove(Modifiers, system);
+            ForgeAuras.Remove(Auras, system);
         }
     }
 }

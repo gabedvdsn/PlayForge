@@ -40,6 +40,9 @@ namespace FarEmerald.PlayForge
         /// <summary>The modifiers it holds now, which change its own effects and those landing on it (TW-7).</summary>
         public EffectModifierSet GetEffectModifiers() => null;
 
+        /// <summary>The auras it runs, which hold their effects on those near it (TW-10).</summary>
+        public AuraSet GetAuras() => null;
+
         /// <summary>
         /// Grants a tag directly, with no effect, ability or item behind it, as Unreal's loose gameplay tags are. Each
         /// grant counts, and lasts until <see cref="RemoveLooseTag"/> takes it back. A tag added straight to the tag cache

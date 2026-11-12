@@ -127,6 +127,10 @@ from another asset.
 Frost Mage's every Chill granting Frozen, or those landing on it (TW-7). Each entry is a rule of its own or names a
 shared Effect Modifier asset ([EFFECTS.md](EFFECTS.md#modifiers)).
 
+**Auras**, after Modifiers, hold an effect on those near the entity as long as it lives, as a captain's command aura
+(TW-10, [EFFECTS.md](EFFECTS.md#auras)). An entity that dies takes its auras' effects off, and one that stays and
+revives holds them again.
+
 ## Death
 
 What the entity's death does (TW-4). **Policy** is **End** by default: as it dies, its hub ends it at its frame's end,

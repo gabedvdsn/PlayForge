@@ -31,8 +31,19 @@ namespace FarEmerald.PlayForge
         [Tooltip("Detection radius from the caster (0 = infinite, uses FindObjectsByType)")]
         public float Range = 20f;
 
-        [Tooltip("Layers to detect targets on")]
+        [Tooltip("Layers to detect targets on, where it uses physics")]
         public LayerMask DetectionLayers = ~0;
+
+        [Tooltip("Where its range is measured from: the caster; the activation's target, as an AI hands it or a task before " +
+                 "it in a Composite picks it; or the activation's point (TW-10)")]
+        public EAreaCentre Around = EAreaCentre.Caster;
+
+        [Tooltip("Measures its range along the ground, leaving height out; off, a sphere (TW-10)")]
+        public bool Flat = true;
+
+        [Tooltip("Finds entities with physics, by collider on its Detection Layers, as well as by position. Off, each entity " +
+                 "on either hub is found by its position, with no collider needed (TW-10)")]
+        public bool UsePhysics;
 
         [Header("Attribute Conditions")]
         [Tooltip("Optional attribute conditions targets must satisfy")]
@@ -51,9 +62,11 @@ namespace FarEmerald.PlayForge
             // none, searched the whole scene whatever its range, and sorted nothing (GAS-38)
             var origin = owner?.GetTargetingPacket();
 
-            var candidates = GatherCandidates(origin, owner);
+            // Measured from the caster, the activation's target or its point (TW-10)
+            var centre = CentreOf(data, origin);
+            var candidates = GatherCandidates(centre, owner);
             var valid = FilterCandidates(candidates);
-            var sorted = SortCandidates(valid, origin);
+            var sorted = SortCandidates(valid, centre);
             var selected = SelectTargets(sorted);
 
             if (selected.Count == 0)
@@ -73,14 +86,23 @@ namespace FarEmerald.PlayForge
         /// Gathers raw ITarget candidates from the world: every live entity, or with a range, what physics finds and each
         /// runtime entity within it (<see cref="ForgeEntities.Around"/>).
         /// </summary>
-        private List<ITarget> GatherCandidates(AbstractTargetingPacket origin, ISource owner)
+        private List<ITarget> GatherCandidates(Vector3? centre, ISource owner)
         {
-            // Every live entity, on both hubs: the scene's MonoBehaviour entities were the only ones it found, and
-            // with a range, physics' alone (GAS-75)
+            // Every live entity, on both hubs, by its position, with no collider needed; physics where it asks, on its
+            // layers (TW-10)
             var results = new List<ITarget>();
-            ForgeEntities.Around(origin, Range, DetectionLayers, owner, IncludeSelf, results);
+            if (UsePhysics) ForgeEntities.Around(centre, Range, DetectionLayers, owner, IncludeSelf, results);
+            else ForgeEntities.Within(centre ?? Vector3.zero, centre.HasValue ? Range : 0f, Flat, results, owner, IncludeSelf);
             return results;
         }
+
+        // Where its range is measured from: the caster, the activation's target, or its point (TW-10)
+        private Vector3? CentreOf(AbilityDataPacket data, AbstractTargetingPacket caster) => Around switch
+        {
+            EAreaCentre.Target when TryGetDataTarget(data, out var target) && target.GetTargetingPacket() is { } packet => packet.position,
+            EAreaCentre.Point when TryGetDataPoint(data, out var point) => point,
+            _ => caster?.position,
+        };
 
         /// <summary>
         /// Filters candidates by tag requirements, attribute conditions, and alive status.
@@ -109,11 +131,11 @@ namespace FarEmerald.PlayForge
         /// <summary>
         /// Sorts candidates based on the configured mode.
         /// </summary>
-        private List<ITarget> SortCandidates(List<ITarget> candidates, AbstractTargetingPacket origin)
+        private List<ITarget> SortCandidates(List<ITarget> candidates, Vector3? centre)
         {
-            if (origin == null || candidates.Count <= 1) return candidates;
+            if (!centre.HasValue || candidates.Count <= 1) return candidates;
 
-            var originPos = origin.position;
+            var originPos = centre.Value;
 
             return Mode switch
             {
@@ -162,11 +184,10 @@ namespace FarEmerald.PlayForge
             return true;
         }
 
-        private static float DistanceTo(ITarget target, Vector3 origin)
+        // Flat where its range is, so its nearest is the one its search measured nearest (TW-10)
+        private float DistanceTo(ITarget target, Vector3 origin)
         {
-            var transform = target.GetTargetingPacket();
-            if (transform == null) return float.MaxValue;
-            return Vector3.Distance(origin, transform.position);
+            return ForgeEntities.Distance(target, origin, Flat);
         }
 
     }

@@ -160,7 +160,41 @@ namespace FarEmerald.PlayForge
                 applying.Remove(spec.Base);
             }
 
+            // Its area: each the area takes near this one takes it too, and spreads it no further (TW-10)
+            if (!spec.FromArea && spec.Base.Area is { Reaches: true } area) SpreadOverArea(spec, area);
+
             return true;
+        }
+
+        // Lands an effect on each its area takes near the one it landed on, from the same origin, nearest first where it
+        // takes at most some (TW-10)
+        private void SpreadOverArea(GameplayEffectSpec spec, EffectArea area)
+        {
+            var here = Self.GetTargetingPacket();
+            if (here == null) return;
+            float radius = area.Radius.Evaluate(NumberContext.Of(spec));
+            if (radius <= 0f) return;
+
+            var near = new List<ITarget>();
+            ForgeEntities.Within(here.position, radius, area.Flat, near);
+            var centre = here.position;
+            if (area.MaxTargets > 0) near.Sort((a, b) => ForgeEntities.Distance(a, centre, area.Flat).CompareTo(ForgeEntities.Distance(b, centre, area.Flat)));
+
+            var caster = spec.Origin?.GetSource();
+            var sides = spec.Origin?.GetAffiliation();
+            int landed = 0;
+            foreach (var other in near)
+            {
+                if (ReferenceEquals(other, Self) || other.IsDead) continue;
+                if (ReferenceEquals(other, caster) && !area.IncludeCaster) continue;
+                if (!ForgeEntities.Takes(area.Takes, sides, other)) continue;
+                var made = other.GenerateEffectSpec(spec.Origin, spec.Base);
+                if (made == null) continue;
+                made.FromArea = true;
+                if (spec.SetByCallerMagnitudes != null) made.TakeSetByCaller(spec.SetByCallerMagnitudes);
+                if (!other.ApplyGameplayEffect(made)) continue;
+                if (area.MaxTargets > 0 && ++landed >= area.MaxTargets) break;
+            }
         }
 
         // The number of the entity's last effect application (FEAT-13)
@@ -376,6 +410,9 @@ namespace FarEmerald.PlayForge
         // The modifiers each container gave its target, kept apart as its On Hits are (TW-7)
         private readonly Dictionary<AbstractEffectContainer, List<EffectModifierEntry>> modifiersLent = new();
 
+        // The auras each container gave its target, kept apart as its modifiers are (TW-10)
+        private readonly Dictionary<AbstractEffectContainer, List<AuraEntry>> aurasLent = new();
+
         // Gives the target each ability the container's effect grants, at the level of what applied it, and notes the slot
         // each took. One the target can't take, as one it knows already, isn't lent, so it isn't taken back either, as an
         // item's isn't (GAS-48). An effect couldn't lend an ability (FEAT-8). A restore lends them quietly, and compiles the
@@ -398,6 +435,15 @@ namespace FarEmerald.PlayForge
                 var given = new List<EffectModifierEntry>(modifiers);
                 EffectModifiers.Provide(given, Self);
                 modifiersLent[container] = given;
+            }
+
+            // Its auras, while it lasts (TW-10)
+            var auras = container.Spec.Base.Auras;
+            if (auras is { Count: > 0 })
+            {
+                var given = new List<AuraEntry>(auras);
+                ForgeAuras.Provide(given, Self);
+                aurasLent[container] = given;
             }
 
             var abilities = container.Spec.Base.GrantedAbilities;
@@ -423,6 +469,7 @@ namespace FarEmerald.PlayForge
         {
             if (onHitsLent.Count > 0 && onHitsLent.Remove(container, out var onHit)) OnHits.Remove(onHit, Self);
             if (modifiersLent.Count > 0 && modifiersLent.Remove(container, out var modifiers)) EffectModifiers.Remove(modifiers, Self);
+            if (aurasLent.Count > 0 && aurasLent.Remove(container, out var auras)) ForgeAuras.Remove(auras, Self);
 
             if (lent.Count == 0 || !lent.Remove(container, out var slots)) return;
             var abilitySystem = Self.GetAbilitySystem();
@@ -906,6 +953,8 @@ namespace FarEmerald.PlayForge
             onHitsLent.Clear();
             foreach (var modifiers in modifiersLent.Values) EffectModifiers.Remove(modifiers, Self);
             modifiersLent.Clear();
+            foreach (var auras in aurasLent.Values) ForgeAuras.Remove(auras, Self);
+            aurasLent.Clear();
             requirementsDirty = true;
         }
 
