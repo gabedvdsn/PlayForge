@@ -123,6 +123,17 @@ the same time. **Name** labels the group. It holds four lists:
 Each list's **+** adds an empty worker to pick a kind for. The section's import button copies a worker group
 from another asset.
 
+A **Threshold**, an analysis worker, acts as an attribute crosses a value, without code (TW-11): Megaera rages as her
+Health falls past half, and Ice Blast shatters below 13%. It reads its **Target** attribute's **What**: its current, its
+base, what's missing of it, or its share of its base, so a **Threshold** of 0.5 on its share is half. **Crossing** says
+when it fires: while its **Comparison** holds, as it always did; or as what it reads falls to the threshold or below,
+rises above it, or either. **Trigger Once** fires at its first crossing alone; off, each time. As it fires it applies its
+**Effects** to the entity, from the entity itself, or, with **Applied By** set to Crosser, from the one whose change
+crossed it this frame, so a shatter is its caster's, kill and all; and it sends its **Event**, a gameplay event its
+abilities' triggers hear, its source the one who crossed it and its subject the entity. It checks at the frame's end,
+as the death watcher, a Threshold that kills, does, so the frame's hits and heals net out. An entity that revives re-arms
+it, and its first check after notes its side again.
+
 **Modifiers**, above the workers, change other effects as they're made for as long as the entity lives: its own, as a
 Frost Mage's every Chill granting Frozen, or those landing on it (TW-7). Each entry is a rule of its own or names a
 shared Effect Modifier asset ([EFFECTS.md](EFFECTS.md#modifiers)).

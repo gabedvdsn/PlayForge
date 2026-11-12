@@ -7,6 +7,9 @@ tracks each fix below by its ID.
 ## [Unreleased]
 
 ### Added
+- Thresholds that act: the Threshold analysis worker reads an attribute's share of its base, or what's missing, fires
+  as it crosses, falling, rising or either, once or each time, and applies effects, from the entity or the one whose hit
+  crossed it, and sends a gameplay event (TW-11).
 - Areas without physics: an area search finds each entity on either hub by its position, flat by default, around the
   caster, the activation's target or its point, with physics only where it asks; an effect's own Area lands it on those
   near its target; and auras on items, abilities, effects and entities hold their effects on those near their holders
