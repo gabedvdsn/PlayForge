@@ -142,6 +142,19 @@ namespace FarEmerald.PlayForge
         /// <summary>The crowd control rules its abilities follow (TW-16).</summary>
         public CrowdControlRules GetCrowdControl() => core.CrowdControl;
 
+        /// <summary>The side changes it's under (TW-18).</summary>
+        public SideSet GetSides() => core?.Sides;
+
+        /// <summary>
+        /// Sets its own sides, as the game runs, which its tags follow (TW-18); before it initializes, its registration's,
+        /// which it takes as it does.
+        /// </summary>
+        public void SetAffiliation(List<Tag> sides)
+        {
+            if (core != null) core.SetAffiliation(sides);
+            else regData.SetPrimary(Tags.AFFILIATION, sides);
+        }
+
         #endregion
 
         public override string ToString()

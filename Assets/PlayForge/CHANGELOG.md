@@ -7,6 +7,9 @@ tracks each fix below by its ID.
 ## [Unreleased]
 
 ### Added
+- Changing sides as the game runs: `SetAffiliation` on both hubs, and an effect's Side Change, which gives the one it's
+  on its caster's sides or those it names while it lasts, the highest priority holding, and interrupts what it runs
+  where it says so (TW-18).
 - A game's settings on its Forge Project, read through its GameRoot (or set in code): its attributes' roles, each a role
   tag, PlayForge reading its own (Health, Luck, Movement Speed) and a game's code its own through `ForgeRoles`, and its
   default crowd control; an ability's Attribute Costs, each spending the attribute or role it names beside its Cost

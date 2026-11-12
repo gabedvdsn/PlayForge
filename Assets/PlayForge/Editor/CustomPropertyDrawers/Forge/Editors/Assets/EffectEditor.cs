@@ -291,7 +291,7 @@ namespace FarEmerald.PlayForge.Extended.Editor
                 SerializedObject = serializedObject,
                 PropertyPaths = new[]
                 {
-                    TagsPath(nameof(GameplayEffectTags.GrantedTags)), nameof(GameplayEffect.GrantedAbilities),
+                    TagsPath(nameof(GameplayEffectTags.GrantedTags)), nameof(GameplayEffect.GrantedAbilities), nameof(GameplayEffect.SideChange),
                     TagsPath(nameof(GameplayEffectTags.ContextTags)),
                     TagsPath(nameof(GameplayEffectTags.RemovesEffectsTagged)), TagsPath(nameof(GameplayEffectTags.BlocksEffectsTagged)),
                 },
@@ -307,6 +307,8 @@ namespace FarEmerald.PlayForge.Extended.Editor
             var lends = CreatePropertyField(serializedObject.FindProperty(nameof(GameplayEffect.GrantedAbilities)), "GrantedAbilities", "Granted Abilities");
             lends.tooltip = "Abilities the target has while this is on, at the level of what applied it";
             content.Add(lends);
+            // The sides it gives the one it's on while it lasts, a mind control's or a pacify's (TW-18)
+            content.Add(CreatePropertyField(serializedObject.FindProperty(nameof(GameplayEffect.SideChange)), "SideChange", "Side Change"));
             content.Add(CreatePropertyField(serializedObject.FindProperty(TagsPath(nameof(GameplayEffectTags.ContextTags))), "ContextTags", "Context Tags"));
             var removes = CreatePropertyField(serializedObject.FindProperty(TagsPath(nameof(GameplayEffectTags.RemovesEffectsTagged))),
                 "RemovesEffectsTagged", "Removes Effects Tagged");

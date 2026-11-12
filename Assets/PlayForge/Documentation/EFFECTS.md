@@ -67,6 +67,11 @@ links the effect to that asset.
   back as it comes off. One that's running then is interrupted. An ability the target can't take, such as one it
   knows already when duplicates aren't allowed, isn't lent, so the target keeps its own as the effect comes off. An
   Instant effect lends none, as it's never on the target.
+- **Side Change** (TW-18), on, changes the target's sides while the effect lasts: to its caster's, as they are as it
+  lands (**Sides From** Caster, a mind control), or to the **Sides** it names (Named, a pacify's Neutral). Of several on
+  one entity, the highest **Priority** holds, a tie going to the latest, and as the last ends its own sides come back.
+  Its tags follow, so whom effects and areas take changes with it. **Interrupts** breaks what the target runs as the
+  change lands or ends, where it changes the sides, not where a change of higher priority keeps them.
 - **Context Tags** describe the effect, such as `Fire`. Each change the effect makes carries these and its origin's
   context tags, and workers can filter by them. They are not applied to the entity.
 - **Removes Effects Tagged** makes the effect a cleanse. As it lands, every other effect on the target tagged with one

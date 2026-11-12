@@ -1,4 +1,5 @@
-﻿using JetBrains.Annotations;
+﻿using System.Collections.Generic;
+using JetBrains.Annotations;
 
 namespace FarEmerald.PlayForge
 {
@@ -45,6 +46,12 @@ namespace FarEmerald.PlayForge
 
         /// <summary>The crowd control rules its abilities follow: its own, or the project's (TW-16).</summary>
         public CrowdControlRules GetCrowdControl() => null;
+
+        /// <summary>Sets its own sides, as the game runs, which its tags follow; effects that change its sides go over them (TW-18).</summary>
+        public void SetAffiliation(List<Tag> sides) { }
+
+        /// <summary>The side changes it's under, each from an effect that lasts (TW-18).</summary>
+        public SideSet GetSides() => null;
 
         /// <summary>
         /// Grants a tag directly, with no effect, ability or item behind it, as Unreal's loose gameplay tags are. Each

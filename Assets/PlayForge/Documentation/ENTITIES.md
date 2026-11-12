@@ -49,7 +49,9 @@ it is linked.
 
 - **Affiliation**: the entity's team or faction tags. An effect's Affiliation check compares its origin's affiliation
   with its target's. Code that starts a GAS can pass affiliation tags in its registration data, and those replace this
-  list. The GAS also applies these tags to the entity, on either hub.
+  list; as the game runs, `SetAffiliation` on either hub sets them, as a side switch or a scripted betrayal (TW-18). The
+  GAS also applies these tags to the entity, on either hub. An effect's Side Change goes over them while it lasts
+  ([EFFECTS.md](EFFECTS.md)), and `GetSides` says which it's under.
 - **Context Tags** describe the entity, such as `Undead`. Changes the entity makes as an origin itself carry them as
   context, and workers can filter by them.
 - **Granted Tags** are always applied to the entity.

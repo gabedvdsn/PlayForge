@@ -509,6 +509,9 @@ namespace FarEmerald.PlayForge
         // The auras each container gave its target, kept apart as its modifiers are (TW-10)
         private readonly Dictionary<AbstractEffectContainer, List<AuraEntry>> aurasLent = new();
 
+        // The containers whose side change their target is under, each held by its container (TW-18)
+        private readonly HashSet<AbstractEffectContainer> sidesLent = new();
+
         // The worker group each container gave its target, and how many of the containers lasting gave each, so two of an
         // effect give it once and the last to go takes it back: a worker is one object, which its cache keeps once (TW-13)
         private readonly Dictionary<AbstractEffectContainer, StandardWorkerGroup> groupsLent = new();
@@ -546,6 +549,17 @@ namespace FarEmerald.PlayForge
                 if (giving == 0) group.ProvideWorkersTo(Self);
                 groupCounts[group] = giving + 1;
                 groupsLent[container] = group;
+            }
+
+            // Its side change, while it lasts: its caster's sides as they are as it lands, or those it names (TW-18)
+            var change = container.Spec.Base.SideChange;
+            if (change is { Changes: true } && Self.GetSides() is { } sides)
+            {
+                var given = change.Source == ESideSource.Caster
+                    ? new List<Tag>(container.Spec.Origin?.GetAffiliation() ?? new List<Tag>())
+                    : new List<Tag>(change.Sides ?? new List<Tag>());
+                sidesLent.Add(container);
+                sides.Add(container, given, change.Priority, change.Interrupts);
             }
 
             // Its auras, while it lasts (TW-10)
@@ -599,6 +613,8 @@ namespace FarEmerald.PlayForge
             if (modifiersLent.Count > 0 && modifiersLent.Remove(container, out var modifiers)) EffectModifiers.Remove(modifiers, Self);
             if (aurasLent.Count > 0 && aurasLent.Remove(container, out var auras)) ForgeAuras.Remove(auras, Self);
             if (groupsLent.Count > 0 && groupsLent.Remove(container, out var group)) TakeBackGroup(group);
+            if (sidesLent.Count > 0 && sidesLent.Remove(container))
+                Self.GetSides()?.Remove(container, container.Spec.Base.SideChange?.Interrupts ?? false);
 
             if (lent.Count == 0 || !lent.Remove(container, out var slots)) return;
             var abilitySystem = Self.GetAbilitySystem();
@@ -1081,6 +1097,8 @@ namespace FarEmerald.PlayForge
             foreach (var group in groupCounts.Keys) group.RemoveWorkersFrom(Self);
             groupCounts.Clear();
             groupsLent.Clear();
+            foreach (var container in sidesLent) Self.GetSides()?.Remove(container);
+            sidesLent.Clear();
             requirementsDirty = true;
         }
 

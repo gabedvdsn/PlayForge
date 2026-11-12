@@ -40,6 +40,9 @@ namespace FarEmerald.PlayForge
         /// <summary>The auras the entity runs, its items', abilities', effects' and its own (TW-10).</summary>
         public AuraSet Auras { get; } = new();
 
+        /// <summary>The side changes it's under, which go over its own sides while they last (TW-18).</summary>
+        public SideSet Sides { get; } = new();
+
         /// <summary>The crowd control rules its abilities follow: its identity's, or else the project's (TW-16).</summary>
         public CrowdControlRules CrowdControl => Identity?.CrowdControl is { } own && own ? own : ProjectCrowdControl;
 
@@ -75,6 +78,9 @@ namespace FarEmerald.PlayForge
 
             // A running ability's While active group is checked again once the tags change (FEAT-5)
             TagCache.TagChanged += AbilitySystem.HearTagChange;
+
+            // An effect's side change goes over its sides while it lasts (TW-18)
+            Sides.Changed = SidesChanged;
 
             // An effect that reads a level reads it again as it changes (GAS-58)
             LevelSystem.Callbacks.OnLevelChanged += LevelChanged;
@@ -274,6 +280,7 @@ namespace FarEmerald.PlayForge
         {
             // Its auras' effects come off each they held them on (TW-10)
             Auras.Clear();
+            Sides.Clear();
             AbilitySystem.ShutDown();
             ForgeEntities.Remove(owner);
             EndBody();
@@ -490,16 +497,39 @@ namespace FarEmerald.PlayForge
         // Tags and affiliation
         // ═══════════════════════════════════════════════════════════════════════════
 
-        public List<Tag> GetAffiliation() => affiliation ?? Identity?.Affiliation;
+        /// <summary>Its sides: those the side change it's under gives, or else its own (TW-18).</summary>
+        public List<Tag> GetAffiliation() => Sides.Current ?? OwnAffiliation;
+
+        /// <summary>Its own sides: those its registration or code set, or else its identity's; a side change goes over them.</summary>
+        public List<Tag> OwnAffiliation => affiliation ?? Identity?.Affiliation;
 
         /// <summary>
-        /// The sides a runtime GAS's registration data gives. It learns them only once registered, after it built itself
-        /// in its constructor. They replace the identity's, and its tags follow.
+        /// Sets its own sides, as its registration data does or the game as it runs (TW-18), in place of its identity's; its
+        /// tags follow. A side change it's under still goes over them.
         /// </summary>
         public void SetAffiliation(List<Tag> sides)
         {
             affiliation = sides;
             if (Identity != null) CompileGrantedTags();
+        }
+
+        // Its sides where a side change came or went: its tags follow, and what runs is interrupted where the change says
+        // so; where its sides are as they were, as under a change of higher priority, neither (TW-18)
+        private void SidesChanged(List<Tag> before, List<Tag> after, bool interrupts)
+        {
+            if (SameSides(before ?? OwnAffiliation, after ?? OwnAffiliation)) return;
+            if (Identity != null) CompileGrantedTags();
+            if (interrupts) AbilitySystem.InjectAll(InterruptSequenceInjection.Instance);
+        }
+
+        private static bool SameSides(List<Tag> a, List<Tag> b)
+        {
+            if (ReferenceEquals(a, b)) return true;
+            int countA = a?.Count ?? 0, countB = b?.Count ?? 0;
+            if (countA != countB) return false;
+            for (int i = 0; i < countA; i++)
+                if (!b.Contains(a[i])) return false;
+            return true;
         }
 
         // A rebuild of the tags from their sources, which tells, as it ends, only what it changed (FEAT-3)

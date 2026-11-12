@@ -21,6 +21,10 @@ namespace FarEmerald.PlayForge
         /// </summary>
         public List<Ability> GrantedAbilities = new();
 
+        [Tooltip("Changes the sides of the one it's on while it lasts, to its caster's, as a mind control, or to those it " +
+                 "names (TW-18)")]
+        public SideChange SideChange = new();
+
         [Tooltip("Effects its holder's hits apply, or a kill's, while it lasts, the holder the one it's on (TW-6)")]
         public List<OnHitEntry> OnHit = new();
 
