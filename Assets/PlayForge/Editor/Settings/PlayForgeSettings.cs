@@ -6,33 +6,11 @@ using UnityEngine;
 
 namespace FarEmerald.PlayForge.Extended.Editor
 {
-    /// <summary>Where a type's new assets go, and how their files are named.</summary>
-    [Serializable]
-    public sealed class NewAssetSettings
-    {
-        [Tooltip("The asset type, by its class name")]
-        public string Type;
-        [Tooltip("The folder a new asset of this type goes in")]
-        public string Folder;
-        [Tooltip("Text a new asset's file name starts with")]
-        public string Prefix;
-        [Tooltip("Text a new asset's file name ends with")]
-        public string Suffix;
-    }
-
-    /// <summary>A type's defaults: the asset a new one starts as a copy of, and the assets Import lists first.</summary>
-    [Serializable]
-    public sealed class TypeDefaults
-    {
-        [Tooltip("The asset type, by its class name")]
-        public string Type;
-        [Tooltip("The asset a new asset of this type starts as a copy of")]
-        public ScriptableObject NewAsset;
-        [Tooltip("The assets Import lists first for this type")]
-        public List<ScriptableObject> Import = new();
-    }
-
-    /// <summary>What the project's shared settings hold.</summary>
+    /// <summary>
+    /// What ProjectSettings/PlayForgeSettings.asset holds: the project's authoring settings from before TW-30, which the
+    /// first Forge Project to need them takes, once. <see cref="NewAssetSettings"/> and <see cref="TypeDefaults"/> moved
+    /// to the runtime, where a Forge Project holds them.
+    /// </summary>
     [Serializable]
     public sealed class PlayForgeSettingsData
     {
@@ -74,6 +52,23 @@ namespace FarEmerald.PlayForge.Extended.Editor
         };
 
         [SerializeField] internal PlayForgeSettingsData Data = new();
+
+        // Whether the first Forge Project to need the settings has taken them, which it does once (TW-30)
+        [SerializeField] private bool movedToProject;
+
+        // The project a test uses in place of the active one
+        private static ForgeProject usedProject;
+
+        /// <summary>
+        /// Uses <paramref name="project"/>'s authoring settings in place of the active project's, as a test does, or the
+        /// active project's again for null. Gives back the one used before, to put back (TW-30).
+        /// </summary>
+        public static ForgeProject UseProject(ForgeProject project)
+        {
+            var was = usedProject;
+            usedProject = project;
+            return was;
+        }
         // Whether this project has taken the settings it kept in EditorPrefs, which it does on its first use
         [SerializeField] private bool tookMachineSettings;
 
@@ -122,77 +117,150 @@ namespace FarEmerald.PlayForge.Extended.Editor
         // What the settings say
         // ═══════════════════════════════════════════════════════════════════════════
 
-        /// <summary>The folder a new asset of the type goes in, as "Assets/Data/Abilities".</summary>
-        public static string FolderFor(Type type)
+        // ─── The project whose settings these are (TW-30) ───
+
+        /// <summary>
+        /// The project whose authoring settings The Forge reads and writes: the one a test uses, or else the active Forge
+        /// Project; or null, where there's none (TW-30). They were the whole Unity project's, in this file.
+        /// </summary>
+        internal static ForgeProject Project => usedProject != null ? usedProject : ForgeProjects.Active;
+
+        // A project's authoring settings, ready to read, or null for no project: the old file's taken where none has taken
+        // them yet
+        private static ForgeAuthoringSettings AuthoringOf(ForgeProject project)
         {
-            var folder = NewAssetsFor(Ready.Data, type)?.Folder;
+            if (project == null) return null;
+            project.Settings ??= new ForgeProjectSettings();
+            project.Settings.Authoring ??= new ForgeAuthoringSettings();
+            TakeOldSettings(project);
+            return project.Settings.Authoring;
+        }
+
+        // The project an edit writes to: the one in use, or else the default project, made where there's none
+        private static ForgeProject ProjectToWrite()
+        {
+            var project = Project;
+            if (project == null) project = ForgeProjects.EnsureActive();
+            if (project != null) AuthoringOf(project);
+            return project;
+        }
+
+        private static void Save(ForgeProject project)
+        {
+            EditorUtility.SetDirty(project);
+            AssetDatabase.SaveAssetIfDirty(project);
+        }
+
+        /// <summary>
+        /// Hands what this file held to the first project that needs authoring settings, once, where that project holds
+        /// none of its own yet; EditorPrefs' are taken into the file first, as before (TW-30).
+        /// </summary>
+        private static void TakeOldSettings(ForgeProject project)
+        {
+            if (instance.movedToProject) return;
+            var settings = Ready;
+            settings.movedToProject = true;
+            settings.SaveSettings();
+
+            var authoring = project.Settings.Authoring;
+            if (authoring.NewAssets.Count > 0 || authoring.Defaults.Count > 0 || authoring.CostEffect != null || authoring.CooldownEffect != null) return;
+            var old = settings.Data;
+            authoring.NewAssets = old.NewAssets.Where(entry => entry != null)
+                .Select(entry => new NewAssetSettings { Type = entry.Type, Folder = entry.Folder, Prefix = entry.Prefix, Suffix = entry.Suffix }).ToList();
+            authoring.Defaults = old.Defaults.Where(entry => entry != null)
+                .Select(entry => new TypeDefaults { Type = entry.Type, NewAsset = entry.NewAsset, Import = new List<ScriptableObject>(entry.Import ?? new List<ScriptableObject>()) })
+                .ToList();
+            authoring.CostEffect = old.CostEffect;
+            authoring.CooldownEffect = old.CooldownEffect;
+            Save(project);
+        }
+
+        // ─── What the settings say ───
+
+        /// <summary>The folder a new asset of the type goes in, in the project in use, as "Assets/Data/Abilities".</summary>
+        public static string FolderFor(Type type) => FolderFor(type, Project);
+
+        /// <summary>The folder a new asset of the type goes in, by a project's settings, as "Assets/Data/Abilities" (TW-30).</summary>
+        public static string FolderFor(Type type, ForgeProject project)
+        {
+            var folder = NewAssetsFor(AuthoringOf(project)?.NewAssets, type)?.Folder;
             return (string.IsNullOrWhiteSpace(folder) ? DefaultFolder(type) : folder.Trim()).TrimEnd('/');
         }
 
         /// <summary>The text a new asset's file name starts with.</summary>
-        public static string PrefixFor(Type type) => NewAssetsFor(Ready.Data, type)?.Prefix ?? "";
+        public static string PrefixFor(Type type) => NewAssetsFor(AuthoringOf(Project)?.NewAssets, type)?.Prefix ?? "";
 
         /// <summary>The text a new asset's file name ends with.</summary>
-        public static string SuffixFor(Type type) => NewAssetsFor(Ready.Data, type)?.Suffix ?? "";
+        public static string SuffixFor(Type type) => NewAssetsFor(AuthoringOf(Project)?.NewAssets, type)?.Suffix ?? "";
 
         /// <summary>The asset a new asset of the type starts as a copy of, or null.</summary>
         public static ScriptableObject NewAssetDefault(Type type)
         {
-            var asset = DefaultsFor(Ready.Data, type)?.NewAsset;
+            var asset = DefaultsFor(AuthoringOf(Project)?.Defaults, type)?.NewAsset;
             return asset != null && type.IsInstanceOfType(asset) ? asset : null;
         }
 
         /// <summary>The assets Import lists first for the type.</summary>
         public static IEnumerable<ScriptableObject> ImportDefaults(Type type) =>
-            (DefaultsFor(Ready.Data, type)?.Import ?? new List<ScriptableObject>()).Where(asset => asset != null && type.IsInstanceOfType(asset));
+            (DefaultsFor(AuthoringOf(Project)?.Defaults, type)?.Import ?? new List<ScriptableObject>()).Where(asset => asset != null && type.IsInstanceOfType(asset));
 
         /// <summary>The effect a new Cost or Cooldown effect starts as a copy of, by "Cost" or "Cooldown".</summary>
-        public static GameplayEffect UsageEffect(string key) => key switch
+        public static GameplayEffect UsageEffect(string key)
         {
-            "Cost" => Ready.Data.CostEffect,
-            "Cooldown" => Ready.Data.CooldownEffect,
-            _ => null,
-        };
+            var authoring = AuthoringOf(Project);
+            return key switch
+            {
+                "Cost" => authoring?.CostEffect,
+                "Cooldown" => authoring?.CooldownEffect,
+                _ => null,
+            };
+        }
 
         /// <summary>Sets the effect a new Cost or Cooldown effect starts as a copy of, as one Undo step.</summary>
         public static void SetUsageEffect(string key, GameplayEffect effect)
         {
-            var settings = Ready;
-            Undo.RecordObject(settings, $"Set the {key} Effect");
+            var project = ProjectToWrite();
+            if (project == null) return;
+            var authoring = project.Settings.Authoring;
+            Undo.RecordObject(project, $"Set the {key} Effect");
             switch (key)
             {
-                case "Cost": settings.Data.CostEffect = effect; break;
-                case "Cooldown": settings.Data.CooldownEffect = effect; break;
+                case "Cost": authoring.CostEffect = effect; break;
+                case "Cooldown": authoring.CooldownEffect = effect; break;
                 default: return;
             }
-            settings.SaveSettings();
+            Save(project);
         }
 
         /// <summary>Sets where a type's new assets go and how their files are named, as one Undo step.</summary>
         public static void SetNewAssets(Type type, string folder, string prefix, string suffix)
         {
-            var settings = Ready;
-            Undo.RecordObject(settings, $"Set New {ForgeAssetTypes.NameOf(type)} Assets");
-            EnsureKinds(settings.Data);
-            var entry = settings.Data.NewAssets.FirstOrDefault(found => found.Type == type.Name);
-            if (entry == null) settings.Data.NewAssets.Add(entry = new NewAssetSettings { Type = type.Name });
+            var project = ProjectToWrite();
+            if (project == null) return;
+            var authoring = project.Settings.Authoring;
+            Undo.RecordObject(project, $"Set New {ForgeAssetTypes.NameOf(type)} Assets");
+            EnsureKinds(authoring.NewAssets, authoring.Defaults);
+            var entry = authoring.NewAssets.FirstOrDefault(found => found.Type == type.Name);
+            if (entry == null) authoring.NewAssets.Add(entry = new NewAssetSettings { Type = type.Name });
             entry.Folder = folder;
             entry.Prefix = prefix ?? "";
             entry.Suffix = suffix ?? "";
-            settings.SaveSettings();
+            Save(project);
         }
 
         /// <summary>Sets a type's defaults, the asset a new one copies and the assets Import lists first, as one Undo step.</summary>
         public static void SetDefaults(Type type, ScriptableObject newAsset, IEnumerable<ScriptableObject> import)
         {
-            var settings = Ready;
-            Undo.RecordObject(settings, $"Set {ForgeAssetTypes.NameOf(type)} Defaults");
-            EnsureKinds(settings.Data);
-            var entry = settings.Data.Defaults.FirstOrDefault(found => found.Type == type.Name);
-            if (entry == null) settings.Data.Defaults.Add(entry = new TypeDefaults { Type = type.Name });
+            var project = ProjectToWrite();
+            if (project == null) return;
+            var authoring = project.Settings.Authoring;
+            Undo.RecordObject(project, $"Set {ForgeAssetTypes.NameOf(type)} Defaults");
+            EnsureKinds(authoring.NewAssets, authoring.Defaults);
+            var entry = authoring.Defaults.FirstOrDefault(found => found.Type == type.Name);
+            if (entry == null) authoring.Defaults.Add(entry = new TypeDefaults { Type = type.Name });
             entry.NewAsset = newAsset;
             entry.Import = (import ?? Enumerable.Empty<ScriptableObject>()).Where(asset => asset != null).Distinct().ToList();
-            settings.SaveSettings();
+            Save(project);
         }
 
         /// <summary>
@@ -201,11 +269,13 @@ namespace FarEmerald.PlayForge.Extended.Editor
         /// </summary>
         public static void UseDefaultFoldersAndNames()
         {
-            var settings = Ready;
-            Undo.RecordObject(settings, "Use Default Folders and Names");
-            settings.Data.NewAssets.Clear();
-            EnsureKinds(settings.Data);
-            settings.SaveSettings();
+            var project = ProjectToWrite();
+            if (project == null) return;
+            var authoring = project.Settings.Authoring;
+            Undo.RecordObject(project, "Use Default Folders and Names");
+            authoring.NewAssets.Clear();
+            EnsureKinds(authoring.NewAssets, authoring.Defaults);
+            Save(project);
         }
 
         /// <summary>The folder a type's new assets go in until a setting says otherwise.</summary>
@@ -222,46 +292,51 @@ namespace FarEmerald.PlayForge.Extended.Editor
         }
 
         // The entry for a type, or for the nearest of its base types with one
-        internal static NewAssetSettings NewAssetsFor(PlayForgeSettingsData data, Type type)
+        internal static NewAssetSettings NewAssetsFor(List<NewAssetSettings> entries, Type type)
         {
+            if (entries == null) return null;
             for (var each = type; each != null; each = each.BaseType)
             {
-                var entry = data.NewAssets.FirstOrDefault(found => found != null && found.Type == each.Name);
+                var entry = entries.FirstOrDefault(found => found != null && found.Type == each.Name);
                 if (entry != null) return entry;
             }
             return null;
         }
 
-        internal static TypeDefaults DefaultsFor(PlayForgeSettingsData data, Type type)
+        internal static TypeDefaults DefaultsFor(List<TypeDefaults> entries, Type type)
         {
+            if (entries == null) return null;
             for (var each = type; each != null; each = each.BaseType)
             {
-                var entry = data.Defaults.FirstOrDefault(found => found != null && found.Type == each.Name);
+                var entry = entries.FirstOrDefault(found => found != null && found.Type == each.Name);
                 if (entry != null) return entry;
             }
             return null;
         }
 
         /// <summary>Gives every type an entry, in The Forge's order, so the Project Settings page shows each.</summary>
-        internal static void EnsureKinds(PlayForgeSettingsData data)
+        internal static void EnsureKinds(List<NewAssetSettings> newAssets, List<TypeDefaults> defaults)
         {
             foreach (var (type, folder) in Kinds)
             {
-                if (data.NewAssets.All(entry => entry?.Type != type.Name))
-                    data.NewAssets.Add(new NewAssetSettings { Type = type.Name, Folder = folder, Prefix = "", Suffix = "" });
-                if (data.Defaults.All(entry => entry?.Type != type.Name))
-                    data.Defaults.Add(new TypeDefaults { Type = type.Name });
+                if (newAssets.All(entry => entry?.Type != type.Name))
+                    newAssets.Add(new NewAssetSettings { Type = type.Name, Folder = folder, Prefix = "", Suffix = "" });
+                if (defaults.All(entry => entry?.Type != type.Name))
+                    defaults.Add(new TypeDefaults { Type = type.Name });
             }
-            data.NewAssets.RemoveAll(entry => entry == null);
-            data.Defaults.RemoveAll(entry => entry == null);
+            newAssets.RemoveAll(entry => entry == null);
+            defaults.RemoveAll(entry => entry == null);
             int Order(string name)
             {
                 int at = Array.FindIndex(Kinds, kind => kind.type.Name == name);
                 return at >= 0 ? at : Kinds.Length;
             }
-            data.NewAssets.Sort((a, b) => Order(a.Type).CompareTo(Order(b.Type)));
-            data.Defaults.Sort((a, b) => Order(a.Type).CompareTo(Order(b.Type)));
+            newAssets.Sort((a, b) => Order(a.Type).CompareTo(Order(b.Type)));
+            defaults.Sort((a, b) => Order(a.Type).CompareTo(Order(b.Type)));
         }
+
+        /// <summary>Gives every type an entry in this file's settings, from before TW-30.</summary>
+        internal static void EnsureKinds(PlayForgeSettingsData data) => EnsureKinds(data.NewAssets, data.Defaults);
 
         // ═══════════════════════════════════════════════════════════════════════════
         // The settings a project kept in EditorPrefs
@@ -281,7 +356,7 @@ namespace FarEmerald.PlayForge.Extended.Editor
             EnsureKinds(data);
             foreach (var (type, folder) in Kinds)
             {
-                var entry = NewAssetsFor(data, type);
+                var entry = NewAssetsFor(data.NewAssets, type);
                 entry.Folder = EditorPrefs.GetString(PrefsPrefix + "Path_" + type.Name, folder);
                 entry.Prefix = EditorPrefs.GetString(PrefsPrefix + "Prefix_" + type.Name, "");
                 entry.Suffix = EditorPrefs.GetString(PrefsPrefix + "Postfix_" + type.Name, "");
@@ -305,7 +380,7 @@ namespace FarEmerald.PlayForge.Extended.Editor
             {
                 var type = Kinds.Select(kind => kind.type).FirstOrDefault(kind => kind.Name == collection?.TypeName);
                 if (type == null) continue;
-                var defaults = DefaultsFor(data, type);
+                var defaults = DefaultsFor(data.Defaults, type);
                 foreach (var template in collection.Templates ?? new List<LegacyTemplate>())
                 {
                     var asset = Load<ScriptableObject>(template?.AssetGUID);
@@ -327,15 +402,16 @@ namespace FarEmerald.PlayForge.Extended.Editor
         }
 
         /// <summary>
-        /// A SerializedObject over the settings, for the Project Settings page, with every type's entry. A
-        /// ScriptableSingleton isn't editable until it's told so.
+        /// A SerializedObject over a project, for the Project Settings page, with an entry for every type in its authoring
+        /// settings, saved where the entries are new (TW-30).
         /// </summary>
-        internal static SerializedObject Serialized()
+        internal static SerializedObject Serialized(ForgeProject project)
         {
-            var settings = Ready;
-            EnsureKinds(settings.Data);
-            settings.hideFlags &= ~HideFlags.NotEditable;
-            return new SerializedObject(settings);
+            var authoring = AuthoringOf(project);
+            int before = authoring.NewAssets.Count + authoring.Defaults.Count;
+            EnsureKinds(authoring.NewAssets, authoring.Defaults);
+            if (authoring.NewAssets.Count + authoring.Defaults.Count != before) Save(project);
+            return new SerializedObject(project);
         }
     }
 }

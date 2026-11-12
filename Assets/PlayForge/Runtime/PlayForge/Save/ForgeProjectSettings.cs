@@ -34,6 +34,10 @@ namespace FarEmerald.PlayForge
         [Tooltip("The crowd control rules an entity follows where it names none of its own (TW-16)")]
         public CrowdControlRules CrowdControl;
 
+        [Tooltip("How The Forge makes the project's assets: where each type's go and how they're named, their defaults, and " +
+                 "the Cost and Cooldown templates (TW-30)")]
+        public ForgeAuthoringSettings Authoring = new();
+
         /// <summary>The attribute playing <paramref name="role"/>, the first that does, or null where none does.</summary>
         public Attribute AttributeFor(Tag role)
         {

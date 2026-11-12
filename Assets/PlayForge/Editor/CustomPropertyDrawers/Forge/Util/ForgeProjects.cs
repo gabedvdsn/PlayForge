@@ -136,7 +136,7 @@ namespace FarEmerald.PlayForge.Extended.Editor
         /// </summary>
         public static string FolderIn(ForgeProject project, Type type)
         {
-            var folder = PlayForgeSettings.FolderFor(type);
+            var folder = PlayForgeSettings.FolderFor(type, project);
             var root = project != null ? project.Folder : "Assets";
             if (root == "Assets") return folder;
             return folder == "Assets" ? root

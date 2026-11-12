@@ -356,6 +356,10 @@ tracks each fix below by its ID.
   page, through one table of links in the editor.
 
 ### Changed
+- The authoring settings live on the Forge Project, each game's its own: where each type's new assets go and how their
+  files are named, each type's defaults, and the Cost and Cooldown templates. Project Settings → PlayForge shows the
+  active project's settings, and the first project to need them takes what ProjectSettings/PlayForgeSettings.asset held,
+  once (TW-30).
 - An ability's cost, Mana Cost and cooldown apply as it starts, after its targeting, where no stage marked Apply Usage
   Effects takes them; they applied only from such a stage, so most abilities paid nothing. The warning that said so,
   and its Problems rule, are gone (TW-17, ED-41).

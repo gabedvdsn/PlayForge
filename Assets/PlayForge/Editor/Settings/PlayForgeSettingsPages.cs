@@ -51,19 +51,34 @@ namespace FarEmerald.PlayForge.Extended.Editor
         // ═══════════════════════════════════════════════════════════════════════════
 
         /// <summary>
-        /// Builds the project's page in a root: where each type's new assets go and how they're named, each type's
-        /// defaults, and the Cost and Cooldown effects. Its fields bind to the settings, so an edit undoes, and each edit
-        /// is saved to ProjectSettings/PlayForgeSettings.asset.
+        /// Builds the project's page in a root: the active Forge Project's settings (TW-30), where each type's new assets go
+        /// and how they're named, each type's defaults, the Cost and Cooldown effects, its roles and its crowd control. Its
+        /// fields bind to the project, so an edit undoes, and each edit is saved in its asset. With no Forge Project, a
+        /// button makes one. They were the whole Unity project's, in ProjectSettings/PlayForgeSettings.asset.
         /// </summary>
         internal static VisualElement BuildProjectPage(VisualElement root)
         {
             var page = Page(root, "PlayForge");
-            var serialized = PlayForgeSettings.Serialized();
-            var data = serialized.FindProperty(nameof(PlayForgeSettings.Data));
+            page.Add(ActiveProjectSection());
+            return page;
+        }
 
-            Heading(page, "New Assets");
-            page.Add(Note("Where The Forge and a field's New put each type's new assets, and how their files are named."));
-            page.Add(NewAssetsTable(data.FindPropertyRelative(nameof(PlayForgeSettingsData.NewAssets))));
+        // Everything the page shows of a project, bound to it, each edit saved in its asset (TW-30)
+        private static VisualElement ProjectSettingsPage(ForgeProject project)
+        {
+            var page = new VisualElement { name = "ProjectSettings" };
+
+            // Its roles and crowd control first, with the project it is, bound on their own (TW-29)
+            page.Add(ForgeProjectSettings(project));
+
+            var serialized = PlayForgeSettings.Serialized(project);
+            var authoring = serialized.FindProperty($"{nameof(ForgeProject.Settings)}.{nameof(ProjectSettingsData.Authoring)}");
+            var section = new VisualElement { name = "Authoring" };
+
+            Heading(section, "New Assets");
+            section.Add(Note("Where The Forge and a field's New put each type's new assets, within the project's folder, and how " +
+                             "their files are named."));
+            section.Add(NewAssetsTable(authoring.FindPropertyRelative(nameof(ForgeAuthoringSettings.NewAssets))));
             var buttons = new VisualElement();
             buttons.AddToClassList("pf-settings__buttons");
             buttons.Add(new Button(() =>
@@ -76,32 +91,32 @@ namespace FarEmerald.PlayForge.Extended.Editor
                 text = "Use Default Folders and Names",
                 tooltip = "Put every type's folder, prefix and suffix back to their defaults. The defaults below stay",
             });
-            page.Add(buttons);
+            section.Add(buttons);
 
-            Heading(page, "Defaults");
-            page.Add(Note("A new asset starts as a copy of its type's New Asset default, when it has one. Import lists a " +
-                          "type's Import defaults first."));
-            var defaults = data.FindPropertyRelative(nameof(PlayForgeSettingsData.Defaults));
+            Heading(section, "Defaults");
+            section.Add(Note("A new asset starts as a copy of its type's New Asset default, when it has one. Import lists a " +
+                             "type's Import defaults first."));
+            var defaults = authoring.FindPropertyRelative(nameof(ForgeAuthoringSettings.Defaults));
             for (int i = 0; i < defaults.arraySize; i++)
             {
                 var entry = defaults.GetArrayElementAtIndex(i);
                 var type = KindOf(entry.FindPropertyRelative(nameof(TypeDefaults.Type)).stringValue);
-                if (type != null) page.Add(DefaultsOf(type, entry));
+                if (type != null) section.Add(DefaultsOf(type, entry));
             }
 
-            Heading(page, "Cost and Cooldown");
-            page.Add(Note("The effects an ability's Cost and Cooldown fields offer to copy or use, in their right-click menu."));
-            page.Add(EffectField(data, nameof(PlayForgeSettingsData.CostEffect), "Cost Effect"));
-            page.Add(EffectField(data, nameof(PlayForgeSettingsData.CooldownEffect), "Cooldown Effect"));
+            Heading(section, "Cost and Cooldown");
+            section.Add(Note("The effects an ability's Cost and Cooldown fields offer to copy or use, in their right-click menu."));
+            section.Add(EffectField(authoring, nameof(ForgeAuthoringSettings.CostEffect), "Cost Effect"));
+            section.Add(EffectField(authoring, nameof(ForgeAuthoringSettings.CooldownEffect), "Cooldown Effect"));
 
-            page.Bind(serialized);
-            // Each edit, and an Undo of one, is written to the file
-            page.TrackSerializedObjectValue(serialized, _ => PlayForgeSettings.instance.SaveSettings());
-
-            // The active Forge Project's settings, bound to the project after the page binds to its own, which would take
-            // the project's fields for its own (TW-29). TW-28 kept fixed attribute slots in a Resources asset here
-            Heading(page, "Forge Project");
-            page.Add(ActiveProjectSection());
+            section.Bind(serialized);
+            // Each edit, and an Undo of one, is written to the project's asset
+            section.TrackSerializedObjectValue(serialized, _ =>
+            {
+                EditorUtility.SetDirty(project);
+                AssetDatabase.SaveAssetIfDirty(project);
+            });
+            page.Add(section);
             return page;
         }
 
@@ -230,14 +245,15 @@ namespace FarEmerald.PlayForge.Extended.Editor
             void Fill()
             {
                 holder.Clear();
-                var project = ForgeProjects.Active;
+                var project = PlayForgeSettings.Project;
                 if (project != null)
                 {
-                    holder.Add(ForgeProjectSettings(project));
+                    holder.Add(ProjectSettingsPage(project));
                     return;
                 }
-                holder.Add(Note("No Forge Project is active, so none holds the settings its game reads. Choose one in The Forge, or " +
-                                "make the default one, at the project's root, which holds every asset no other project does."));
+                holder.Add(Note("No Forge Project is active, so none holds the project's settings: how The Forge makes its assets, " +
+                                "and what its game reads as it runs. Choose one in The Forge, or make the default one, at the " +
+                                "project's root, which holds every asset no other project does."));
                 var buttons = new VisualElement();
                 buttons.AddToClassList("pf-settings__buttons");
                 buttons.Add(new Button(() =>

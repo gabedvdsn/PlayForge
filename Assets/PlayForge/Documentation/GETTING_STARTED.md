@@ -177,12 +177,13 @@ string perLevel = impact.FormatTotal();           // "20/30/40/50"
   one Undo step, and keeps each field it overrides: an edit to a child's field makes it the child's own, and its
   inspector marks it as Unity marks a prefab instance's override. A marked field's right-click menu has **Revert to
   Template**. Saving a template changes no child.
-- **Settings** — **Project Settings → PlayForge** holds what the project shares, in
-  `ProjectSettings/PlayForgeSettings.asset`, under version control: where each type's new assets go and how their files
-  are named, each type's defaults (the asset a new one starts as a copy of, and the assets Import lists first), and the
-  effects a new Cost or Cooldown copies. Its **Forge Project** section shows the active project's settings, which its
-  game reads through its GameRoot: the roles its attributes play, by tag, and its default crowd control
-  ([ATTRIBUTES.md](ATTRIBUTES.md#roles)).
+- **Settings** — **Project Settings → PlayForge** shows the active Forge Project's settings, kept in its asset under
+  version control, each game its own (TW-30): where each type's new assets go, within the project's folder, and how their
+  files are named; each type's defaults (the asset a new one starts as a copy of, and the assets Import lists first); the
+  effects a new Cost or Cooldown copies; and what its game reads through its GameRoot as it runs, the roles its
+  attributes play, by tag, and its default crowd control ([ATTRIBUTES.md](ATTRIBUTES.md#roles)). With no Forge Project,
+  **Create Forge Project** makes the default one. The first project to need them takes what
+  `ProjectSettings/PlayForgeSettings.asset` held, where the settings were the whole Unity project's, once.
   **Preferences → PlayForge** holds your own view toggles and the log level. The
   Forge's window menu opens both.
 - **Golden tests** (the Test Runner's EditMode tab, `FarEmerald.PlayForge.Tests.Golden`) — the framework's behavioral
