@@ -13,7 +13,8 @@ Each item is sorted:
 The labs are in Proving Grounds, each played by a bot: `Tests/Labs/DotaLabTests.cs` (the first ten effects, FEAT-31),
 `DotaAbilitiesLabTests.cs`, `RiskOfRainLabTests.cs` and `HadesLabTests.cs`. What they needed that PlayForge doesn't
 have is in the Lab Kit, `Assets/ProvingGrounds/LabKit/`: seven small classes, each standing in for an item here, so
-the labs' assets use them as an author would a built-in. The rows these items became are under *The tooling wishlist
+the labs' assets use them as an author would a built-in. As each item lands, its class goes and the labs use the
+built-in (AC-6): TW-5's and TW-6's have. The rows these items became are under *The tooling wishlist
 (FEAT-38)* in `Docs/REFACTOR_PLAN.md`. The user approved the sort on 2026-11-11 and settled the shapes left open
 (Decision 46): an attribute's role, which an effect can override (TW-1); a generic *Value Pipeline* asset, which an
 effect names as its shared calculation (TW-2); and a body that is a MonoBehaviour process (TW-4).
@@ -297,7 +298,9 @@ they are. The labs' recreations stay in Proving Grounds: they bear other games' 
 **AC-6. Retiring the Lab Kit.** As each framework need lands, its Lab Kit class goes and the labs' assets switch over:
 `OnHitApplyEffectsImpactWorker` (TW-6), `HitTakenEventAttributeWorker` (TW-5), `ThresholdCrossingAttributeWorker`
 (TW-11), `BarrierAttributeWorker` and `BlockChanceAttributeWorker` (TW-12), `ChanceCondition` (TW-8),
-`StackingCurveKind` (TW-9); and the Dota lab's seven workers to TW-13 to TW-15.
+`StackingCurveKind` (TW-9); and the Dota lab's seven workers to TW-13 to TW-15. TW-5's and TW-6's went on 2026-11-11:
+Counter Helix's trigger takes Impact Taken, Health's losses to attacks, on its 20%; the seven on-hit assets have On Hit
+entries.
 
 ## Found on the way
 
@@ -351,6 +354,8 @@ they are. The labs' recreations stay in Proving Grounds: they bear other games' 
 | **Zagreus** and **Megaera** (entities) | Their sets and Strike; Megaera rages past half her health, +50% Damage Dealt, once | Lab Kit: a threshold that acts (TW-11) |
 
 Of the 25 assets, 11 needed no code of their own; the other 14 used seven Lab Kit classes, each a framework need above.
+Counter Helix and the seven on-hit assets have since moved to the built-ins, TW-5's events and TW-6's On Hit (AC-6), and
+the Lab Kit is five classes.
 
 ## Research
 

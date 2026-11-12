@@ -1105,7 +1105,7 @@ on-hit (TW-5, TW-6), which most of the rest build on.
 | AC-3 | Formula presets: armor formulas, item curves, pseudo-random constants, as named presets of TW-1 and TW-9 | Additional Content | 7 | open |
 | AC-4 | Genre rules too narrow for the core, as Attribute Shift's moving of points over time | Additional Content | 7 | open |
 | AC-5 | A starter set of generic assets, from framework features alone, named for what they are; the labs' recreations stay in Proving Grounds | Additional Content | 7 | open |
-| AC-6 | Retiring the Lab Kit: each class goes as its framework need lands, and the labs' assets switch over | Additional Content | 7 | open |
+| AC-6 | Retiring the Lab Kit: each class goes as its framework need lands, and the labs' assets switch over. Under way: TW-5's and TW-6's classes went on 2026-11-11, Counter Helix to an Impact Taken trigger and the seven on-hit assets to On Hit | Additional Content | 7 | open |
 
 ## Test project: PlayForge Proving Grounds
 
@@ -1142,6 +1142,13 @@ GAS-4 with GAS-5, PC-6, and TS-I with PC-5.
 ## Log
 
 Record baselines, gate results and notable decisions here, newest first.
+
+- 2026-11-11, **AC-6, in part: the labs on TW-5's and TW-6's built-ins.** A one-off editor pass moved each lab asset
+  from the Lab Kit's stand-ins to the built-ins, with their settings: Counter Helix's trigger listens for Impact Taken,
+  Health's losses to attacks, on its 20%, and its worker went; Desolator, Tri-Tip Dagger, Topaz Brooch and four Hades
+  boons have On Hit entries in place of their impact workers. `OnHitApplyEffectsImpactWorker` and
+  `HitTakenEventAttributeWorker` are gone from the Lab Kit.
+  - Gates: The labs' tests, run alone: 78 of 79, the BulletHeaven scene the one red, a known one; Counter Helix still draws a roll for each of four attacks and spins on two. Full: EditMode 799 of 800, ED-61 red from the working tree's lifecycle change; PlayMode 1562 of 1583, 8 skipped, the 13 known red; golden 25 of 25.
 
 - 2026-11-11, **TW-6: On Hit on items, abilities and effects.** Each has a list of entries, the effects its holder's
   hits apply, or a kill's: losses to an attribute that the holder deals another, of some impact types, to the one hit or
