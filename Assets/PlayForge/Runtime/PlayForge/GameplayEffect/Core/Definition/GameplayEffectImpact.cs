@@ -340,7 +340,13 @@ namespace FarEmerald.PlayForge
     public enum EAttributeTargetBinary
     {
         Current,
-        Base
+        Base,
+
+        /// <summary>What's missing of it: base − current, as a pool's lost Health or spent Mana (TW-9).</summary>
+        Missing,
+
+        /// <summary>Its share: current ÷ base, as 0.9 for a pool at 90%; 0 where its base is 0 (TW-9).</summary>
+        Share,
     }
 
     public enum EAttributeTarget

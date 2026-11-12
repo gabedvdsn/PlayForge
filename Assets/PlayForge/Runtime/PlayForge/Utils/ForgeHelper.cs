@@ -904,7 +904,7 @@ namespace FarEmerald.PlayForge
             }
             
             // Check for override members first
-            var overrides = calculations.Where(m => m.RelativeOperation == ECalculationOperation.Override && m.Calculation != null);
+            var overrides = calculations.Where(m => m.RelativeOperation == EGroupOperation.Override && m.Calculation != null);
             var members = overrides as CachedMagnitudeModifierGroupMember[] ?? overrides.ToArray();
             if (members.Any() && overridePolicy != EValueCollisionPolicy.Ignore)
             {
@@ -922,17 +922,24 @@ namespace FarEmerald.PlayForge
             
             // Calculate additive sum
             value = calculations
-                .Where(m => m.RelativeOperation == ECalculationOperation.Add && m.Calculation != null)
+                .Where(m => m.RelativeOperation == EGroupOperation.Add && m.Calculation != null)
                 .Sum(member => member.Calculation.Evaluate(deriv));
             
             // Apply multipliers
-            foreach (var member in calculations.Where(m => m.RelativeOperation == ECalculationOperation.Multiply && m.Calculation != null))
+            foreach (var member in calculations.Where(m => m.RelativeOperation == EGroupOperation.Multiply && m.Calculation != null))
             {
                 value *= member.Calculation.Evaluate(deriv);
             }
 
+            // Divided by each member that divides; one that reads 0 divides nothing (TW-9)
+            foreach (var member in calculations.Where(m => m.RelativeOperation == EGroupOperation.Divide && m.Calculation != null))
+            {
+                float divisor = member.Calculation.Evaluate(deriv);
+                if (divisor != 0f) value /= divisor;
+            }
+
             float flatBonus = calculations
-                .Where(m => m.RelativeOperation == ECalculationOperation.FlatBonus && m.Calculation != null)
+                .Where(m => m.RelativeOperation == EGroupOperation.FlatBonus && m.Calculation != null)
                 .Sum(member => member.Calculation.Evaluate(deriv));
             
             value += flatBonus;

@@ -7,6 +7,9 @@ tracks each fix below by its ID.
 ## [Unreleased]
 
 ### Added
+- Number math: a Stacking Curve kind (linear, hyperbolic, reciprocal, inverse, exponential, then a number added), a
+  Group's Divide, and an attribute read as what's missing of it (base − current) or its share of its base
+  (current ÷ base), in × Attribute, the cached attribute scaler and the Attribute condition (TW-9).
 - Chance, built in: a Chance condition that rolls once for a hit; pseudo-random chances, each caster's streak its own;
   luck, the project's Luck or a chance's own; an ability's Chance to Activate; and a hit's Proc Coefficient, which scales
   its on-hit effects' chance and duration (TW-8).
@@ -327,6 +330,8 @@ tracks each fix below by its ID.
   page, through one table of links in the editor.
 
 ### Changed
+- A Group member's Operation is an `EGroupOperation`: an impact's four in their order, so a member saved before keeps
+  its meaning, and Divide. `ScalerGroup.AddMember` takes either (TW-9).
 - The Demo's units, camera, dummy and controls are the Creator Lab's, its roster the lab's rules; `DemoInput` is gone,
   the Demo reading `ForgeInput` (LAB-7).
 - Renaming an asset in its inspector renames its file, with its type's prefix and suffix; a name another file has takes

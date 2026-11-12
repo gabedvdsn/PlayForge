@@ -5,9 +5,10 @@ namespace FarEmerald.PlayForge
 {
     /// <summary>
     /// Several numbers joined as one (FEAT-29, NUM-14): each member is a scaler or a kind of number, and says how it joins
-    /// the others. Members that add are added up; that sum is multiplied by each member that multiplies; then each flat
-    /// bonus is added on. So <c>(5 + Caster's Strength) × 2 + 3</c> is one number, and a curse's <c>5 + what its worker
-    /// answers</c> is one magnitude.
+    /// the others. Members that add are added up; that sum is multiplied by each member that multiplies and divided by each
+    /// that divides (TW-9); then each flat bonus is added on. So <c>(5 + Caster's Strength) × 2 + 3</c> is one number, a
+    /// wind-up's <c>1.7 ÷ Caster's Attack Speed</c> another, and a curse's <c>5 + what its worker answers</c> is one
+    /// magnitude.
     /// <para>
     /// A member that overrides gives the group's value alone. Where several override,
     /// <see cref="OverrideMemberCollisionPolicy"/> picks among them: the highest, the lowest, their average, the first or
@@ -28,7 +29,8 @@ namespace FarEmerald.PlayForge
     [NumberKind("Group")]
     public class ScalerGroup : AbstractScaler
     {
-        [Tooltip("The group's members, each with how it joins the others: added up, then multiplied, then flat bonuses added on")]
+        [Tooltip("The group's members, each with how it joins the others: added up, then multiplied and divided, then flat " +
+                 "bonuses added on")]
         public MagnitudeModifierGroupMember[] Calculations = Array.Empty<MagnitudeModifierGroupMember>();
 
         [Tooltip("A member that overrides gives the group's value alone. Where several do, which one: the highest, the " +
@@ -78,8 +80,9 @@ namespace FarEmerald.PlayForge
 
         /// <summary>
         /// Joins its members in a number's context: a member that overrides alone, by the policy; else the members that
-        /// add, times each that multiplies, plus each flat bonus, in whatever order they're listed. A member that holds no
-        /// kind joins nothing. By index and with no lists, so it allocates nothing.
+        /// add, times each that multiplies, divided by each that divides, plus each flat bonus, in whatever order they're
+        /// listed. A member that holds no kind joins nothing, and one that divides by 0 divides nothing. By index and with
+        /// no lists, so it allocates nothing.
         /// </summary>
         internal float Read(in NumberContext context)
         {
@@ -92,7 +95,7 @@ namespace FarEmerald.PlayForge
                 for (int i = 0; i < Calculations.Length; i++)
                 {
                     var member = Calculations[i];
-                    if (member.RelativeOperation != ECalculationOperation.Override || IsNone(member.Calculation)) continue;
+                    if (member.RelativeOperation != EGroupOperation.Override || IsNone(member.Calculation)) continue;
                     float read = NumberContext.ReadScaler(member.Calculation, in context);
                     switch (OverrideMemberCollisionPolicy)
                     {
@@ -126,13 +129,18 @@ namespace FarEmerald.PlayForge
                 if (IsNone(member.Calculation)) continue;
                 switch (member.RelativeOperation)
                 {
-                    case ECalculationOperation.Add:
+                    case EGroupOperation.Add:
                         sum += NumberContext.ReadScaler(member.Calculation, in context);
                         break;
-                    case ECalculationOperation.Multiply:
+                    case EGroupOperation.Multiply:
                         times *= NumberContext.ReadScaler(member.Calculation, in context);
                         break;
-                    case ECalculationOperation.FlatBonus:
+                    case EGroupOperation.Divide:
+                        // A member that reads 0 divides nothing (TW-9)
+                        float divisor = NumberContext.ReadScaler(member.Calculation, in context);
+                        if (divisor != 0f) times /= divisor;
+                        break;
+                    case EGroupOperation.FlatBonus:
                         bonus += NumberContext.ReadScaler(member.Calculation, in context);
                         break;
                 }
@@ -140,10 +148,11 @@ namespace FarEmerald.PlayForge
             return sum * times + bonus;
         }
 
-        /// <summary>
-        /// Adds a new calculation member to the group.
-        /// </summary>
-        public void AddMember(AbstractScaler scaler, ECalculationOperation operation)
+        /// <summary>Adds a member that joins as an impact's operation would: added, multiplied, a flat bonus or an override.</summary>
+        public void AddMember(AbstractScaler scaler, ECalculationOperation operation) => AddMember(scaler, (EGroupOperation)operation);
+
+        /// <summary>Adds a member that joins as <paramref name="operation"/> says, Divide among them (TW-9).</summary>
+        public void AddMember(AbstractScaler scaler, EGroupOperation operation)
         {
             Calculations ??= Array.Empty<MagnitudeModifierGroupMember>();
             var newArray = new MagnitudeModifierGroupMember[Calculations.Length + 1];
@@ -166,9 +175,31 @@ namespace FarEmerald.PlayForge
         [Tooltip("The member: a scaler, or a kind of number")]
         public AbstractScaler Calculation;
 
-        [Tooltip("How it joins the others: added up, multiplied into the sum, added on after as a flat bonus, or " +
-                 "overriding them all")]
-        public ECalculationOperation RelativeOperation;
+        [Tooltip("How it joins the others: added up, multiplied into the sum, dividing it, added on after as a flat bonus, " +
+                 "or overriding them all")]
+        public EGroupOperation RelativeOperation;
+    }
+
+    /// <summary>
+    /// How a Group's member joins the others (TW-9): an impact's four operations, in their order, so a member saved before
+    /// keeps its meaning, and Divide.
+    /// </summary>
+    public enum EGroupOperation
+    {
+        /// <summary>Added up with the others that add.</summary>
+        Add,
+
+        /// <summary>The sum multiplied by it.</summary>
+        Multiply,
+
+        /// <summary>It alone gives the Group's value, by the Group's policy where several do.</summary>
+        Override,
+
+        /// <summary>Added on after the sum is multiplied and divided.</summary>
+        FlatBonus,
+
+        /// <summary>The sum divided by it, as an attack's wind-up by its attack speed; one that reads 0 divides nothing (TW-9).</summary>
+        Divide,
     }
 
     public enum EValueCollisionPolicy

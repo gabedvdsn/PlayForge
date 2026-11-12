@@ -20,7 +20,8 @@ namespace FarEmerald.PlayForge
         [Tooltip("When to capture the attribute value")]
         public ECaptureAttributeWhen CaptureWhen = ECaptureAttributeWhen.OnApplication;
         
-        [Tooltip("Use base or current attribute value")]
+        [Tooltip("What of it it reads: its current value, its base, what's missing of it (base − current), or its share " +
+                 "of its base (current ÷ base) (TW-9)")]
         public EAttributeTargetBinary CaptureWhat = EAttributeTargetBinary.Current;
 
         [Tooltip("Which retention groups' parts it reads: all of them, the whole value, unless it says (TW-3)")]
@@ -87,12 +88,7 @@ namespace FarEmerald.PlayForge
             {
                 if (deriv?.GetSourcedCapturedAttributes().TryGetValue(this, out var capturedValue) ?? false)
                 {
-                    return Read(CaptureWhat switch
-                    {
-                        EAttributeTargetBinary.Current => capturedValue?.CurrentValue ?? 0f,
-                        EAttributeTargetBinary.Base => capturedValue?.BaseValue ?? 0f,
-                        _ => throw new ArgumentOutOfRangeException()
-                    });
+                    return Read(capturedValue.HasValue ? AttributeParts.Read(capturedValue.Value, CaptureWhat) : 0f);
                 }
 
                 Debug.LogWarning($"[PlayForge] Attribute backed scaler operation failed: impact derivation is null.");
@@ -110,12 +106,7 @@ namespace FarEmerald.PlayForge
                 return 0f;
             }
             
-            return Read(CaptureWhat switch
-            {
-                EAttributeTargetBinary.Current => attrValue.CurrentValue,
-                EAttributeTargetBinary.Base => attrValue.BaseValue,
-                _ => throw new ArgumentOutOfRangeException()
-            });
+            return Read(AttributeParts.Read(attrValue, CaptureWhat));
         }
 
         public override bool UseScalingOptions()

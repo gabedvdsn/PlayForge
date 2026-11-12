@@ -229,12 +229,13 @@ namespace FarEmerald.PlayForge
             return trace;
         }
 
-        private static string OperationName(ECalculationOperation operation) => operation switch
+        private static string OperationName(EGroupOperation operation) => operation switch
         {
-            ECalculationOperation.Add => "Add",
-            ECalculationOperation.Multiply => "Multiply",
-            ECalculationOperation.FlatBonus => "Flat Bonus",
-            ECalculationOperation.Override => "Override",
+            EGroupOperation.Add => "Add",
+            EGroupOperation.Multiply => "Multiply",
+            EGroupOperation.FlatBonus => "Flat Bonus",
+            EGroupOperation.Override => "Override",
+            EGroupOperation.Divide => "Divide",
             _ => operation.ToString(),
         };
 

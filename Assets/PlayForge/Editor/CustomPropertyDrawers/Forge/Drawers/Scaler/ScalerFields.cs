@@ -281,7 +281,7 @@ namespace FarEmerald.PlayForge.Extended.Editor
         }
 
         /// <summary>What a Group whose members multiply nothing says under its members, and the Problems view after its field.</summary>
-        internal const string MultipliesNothingText = "No member adds, so the members that multiply multiply 0.";
+        internal const string MultipliesNothingText = "No member adds, so the members that multiply or divide work on 0.";
 
         /// <summary>
         /// Whether a Group's members multiply with none that adds, so they multiply the sum of nothing, 0 (ED-80). Members
@@ -301,9 +301,9 @@ namespace FarEmerald.PlayForge.Extended.Editor
             if (members == null) return false;
             members.RemoveAll(member => AbstractScaler.IsNone(member.Kind));
             var policy = scaler is ScalerGroup own ? own.OverrideMemberCollisionPolicy : ((CachedScalerGroup)scaler).OverrideMemberCollisionPolicy;
-            if (policy != EValueCollisionPolicy.Ignore && members.Any(member => member.Joins == ECalculationOperation.Override)) return false;
-            return members.Any(member => member.Joins == ECalculationOperation.Multiply)
-                && members.All(member => member.Joins != ECalculationOperation.Add);
+            if (policy != EValueCollisionPolicy.Ignore && members.Any(member => member.Joins == EGroupOperation.Override)) return false;
+            return members.Any(member => member.Joins is EGroupOperation.Multiply or EGroupOperation.Divide)
+                && members.All(member => member.Joins != EGroupOperation.Add);
         }
 
         /// <summary>What the selected scalers read of every scaler's parts: what any of them reads (ED-12).</summary>

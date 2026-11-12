@@ -21,11 +21,17 @@ which has no target yet, offers no kind that reads one.
   "6–8 s", or "-25 to -10" where it goes below 0.
 - **Shared**: the field reads a Scaler asset (below).
 - The other kinds work out a value from the values or from the entity: **× Attribute** reads an attribute of the
-  caster or the target, which the menu starts as the field's number times it, all of it or only some of its retention
+  caster or the target, its current, its base, what's missing of it (base − current) or its share of its base
+  (current ÷ base) (TW-9), which the menu starts as the field's number times it, all of it or only some of its retention
   groups (below), and reads it as its attribute's role says, a Bonus Share as 1 + x and a Resistance as 1 − x, or as
   its Read As says (TW-1), **Clamped** keeps a number within
   bounds, **Conditional** reads one number where a condition holds and another where it doesn't, **Randomized** rolls
-  a random value, **Threshold** steps at thresholds, and **Fixed Value** is one number. **Effect Stacks** reads the stack count of the effect's own container, and **Item
+  a random value, **Threshold** steps at thresholds, and **Fixed Value** is one number. **Stacking Curve** turns a
+  **Count**, as an item's stacks or an attribute, into its number by a **Curve** and its **Coefficient**, a (TW-9):
+  **Linear**, a × n, as 15% a stack; **Hyperbolic**, 1 − 1 / (1 + a × n), a chance that nears 1 and never reaches it, 13%
+  with one stack and 60% with ten at 0.15; **Reciprocal**, 1 / (1 + a × n), as what Dota's armor leaves of a hit at
+  0.06; **Inverse**, a / n, as a wind-up an attack speed shortens; and **Exponential**, a to the n. Its **Plus** is
+  added after, 1 making a share a multiplier. **Effect Stacks** reads the stack count of the effect's own container, and **Item
   Stacks** that of the item that applied it ([ITEMS.md](ITEMS.md)); each reads 1 where there's nothing stacked. An
   attribute set's values use the cached kinds, which read other attributes as the entity's values change.
 - **Set By Caller** reads a value the code passes in. It checks one thing: whether what the number is read in holds a
@@ -41,8 +47,8 @@ which has no target yet, offers no kind that reads one.
   Target's Health (base) if Target's Health < 0.3 × Target's Health (base), else 0". A condition picks its kind from a
   menu, as a number does, and says itself in a line:
   - **Tag**: whether the caster or the target holds a tag, counted by its weight, so a tag granted twice counts twice;
-  - **Attribute**: an attribute of the caster or the target, current or base, compared with a number, as 0.3 × the
-    target's base Health;
+  - **Attribute**: an attribute of the caster or the target, its current, its base, what's missing of it or its share
+    of its base (TW-9), compared with a number, as 0.3 × the target's base Health, or a share above 0.9 for "above 90%";
   - **Level**: the level, or how far up its range it is, from 0 to 1, compared with a number;
   - **Compare Numbers**: one number compared with another;
   - **Always** and **Never**;
@@ -57,10 +63,11 @@ which has no target yet, offers no kind that reads one.
 - A scaler's own numbers read the scaler as their object: a Clamped's Max Value can be Relative to a Field, 2 × its
   Min Value, whatever field the Clamped is in.
 - A **Group** joins several numbers as one. It lists its members, each an **Operation** then its **Scaler**, which
-  can be any kind. The members that **Add** are added up, that sum is multiplied by each member that **Multiplies**,
-  then each **Flat Bonus** is added on, in whatever order they're listed, so `(5 + Caster's Strength) × 2 + 3` is one
-  number, and a first member needn't add. Members that multiply with none that adds multiply 0, and the Group says
-  so. A member that **Overrides** gives the group's value alone; where several do, the group's policy picks the
+  can be any kind. The members that **Add** are added up, that sum is multiplied by each member that **Multiplies**
+  and divided by each that **Divides** (TW-9), one that reads 0 dividing nothing, then each **Flat Bonus** is added
+  on, in whatever order they're listed, so `(5 + Caster's Strength) × 2 + 3` is one number, and `1.7 ÷ Caster's Attack
+  Speed` another, and a first member needn't add. Members that multiply or divide with none that adds work on 0, and
+  the Group says so. A member that **Overrides** gives the group's value alone; where several do, the group's policy picks the
   highest, the lowest, their average, the first or the last, and Ignore sets them aside. A Group has no values per
   level. With no members, or none that holds a kind, it's no kind at all, so its field reads its number, as a
   Constant does.

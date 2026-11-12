@@ -72,7 +72,7 @@ namespace FarEmerald.PlayForge
 
             // Override members short-circuit everything else.
             var overrides = Calculations
-                .Where(m => m.RelativeOperation == ECalculationOperation.Override && !IsNone(m.Calculation))
+                .Where(m => m.RelativeOperation == EGroupOperation.Override && !IsNone(m.Calculation))
                 .ToList();
 
             // Ignore sets them aside, and the other members join as they would without them
@@ -83,20 +83,29 @@ namespace FarEmerald.PlayForge
 
             // Additive sum.
             var value = new AttributeValue(0f, 0f);
-            foreach (var member in Calculations.Where(m => m.RelativeOperation == ECalculationOperation.Add && !IsNone(m.Calculation)))
+            foreach (var member in Calculations.Where(m => m.RelativeOperation == EGroupOperation.Add && !IsNone(m.Calculation)))
             {
                 value += Eval(member.Calculation);
             }
 
             // Multiplicative.
-            foreach (var member in Calculations.Where(m => m.RelativeOperation == ECalculationOperation.Multiply && !IsNone(m.Calculation)))
+            foreach (var member in Calculations.Where(m => m.RelativeOperation == EGroupOperation.Multiply && !IsNone(m.Calculation)))
             {
                 var factor = Eval(member.Calculation);
                 value = new AttributeValue(value.CurrentValue * factor.CurrentValue, value.BaseValue * factor.BaseValue);
             }
 
+            // Divided by each member that divides; one that reads 0 divides nothing (TW-9)
+            foreach (var member in Calculations.Where(m => m.RelativeOperation == EGroupOperation.Divide && !IsNone(m.Calculation)))
+            {
+                var divisor = Eval(member.Calculation);
+                value = new AttributeValue(
+                    divisor.CurrentValue != 0f ? value.CurrentValue / divisor.CurrentValue : value.CurrentValue,
+                    divisor.BaseValue != 0f ? value.BaseValue / divisor.BaseValue : value.BaseValue);
+            }
+
             // Flat bonus added at the end.
-            foreach (var member in Calculations.Where(m => m.RelativeOperation == ECalculationOperation.FlatBonus && !IsNone(m.Calculation)))
+            foreach (var member in Calculations.Where(m => m.RelativeOperation == EGroupOperation.FlatBonus && !IsNone(m.Calculation)))
             {
                 value += Eval(member.Calculation);
             }
@@ -159,7 +168,8 @@ namespace FarEmerald.PlayForge
         [Tooltip("The cached scaler calculation")]
         public AbstractCachedScaler Calculation;
 
-        [Tooltip("How this member's result combines with others")]
-        public ECalculationOperation RelativeOperation;
+        [Tooltip("How this member's result combines with others: added up, multiplied into the sum, dividing it, added on " +
+                 "after as a flat bonus, or overriding them all")]
+        public EGroupOperation RelativeOperation;
     }
 }

@@ -42,12 +42,8 @@ namespace FarEmerald.PlayForge
 
         protected float ProjectToBinaryTarget(AttributeValue value)
         {
-            return CaptureWhat switch
-            {
-                EAttributeTargetBinary.Current => value.CurrentValue,
-                EAttributeTargetBinary.Base => value.BaseValue,
-                _ => throw new ArgumentOutOfRangeException()
-            };
+            // Its current, its base, what's missing or its share (TW-9)
+            return AttributeParts.Read(value, CaptureWhat);
         }
 
         public override bool UseScalingOptions() => false;
