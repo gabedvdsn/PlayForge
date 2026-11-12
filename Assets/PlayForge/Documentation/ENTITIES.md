@@ -134,6 +134,12 @@ abilities' triggers hear, its source the one who crossed it and its subject the 
 as the death watcher, a Threshold that kills, does, so the frame's hits and heals net out. An entity that revives re-arms
 it, and its first check after notes its side again.
 
+Two attribute workers keep the common rules (TW-15). **Can't Fall Below** holds its attribute at its **Floor**: a loss
+that would take it lower takes it to the floor, as Shallow Grave keeps its target at 1 Health, in a buff's worker group
+while it lasts. **Return Damage** sends its **Share** of each workable loss its attribute takes from another back to the
+one who dealt it, typed Returned, so a return on the other side doesn't send it back again and no lifesteal heals from it,
+as Blade Mail.
+
 **Modifiers**, above the workers, change other effects as they're made for as long as the entity lives: its own, as a
 Frost Mage's every Chill granting Frozen, or those landing on it (TW-7). Each entry is a rule of its own or names a
 shared Effect Modifier asset ([EFFECTS.md](EFFECTS.md#modifiers)).
@@ -141,6 +147,9 @@ shared Effect Modifier asset ([EFFECTS.md](EFFECTS.md#modifiers)).
 **Auras**, after Modifiers, hold an effect on those near the entity as long as it lives, as a captain's command aura
 (TW-10, [EFFECTS.md](EFFECTS.md#auras)). An entity that dies takes its auras' effects off, and one that stays and
 revives holds them again.
+
+**Lifesteal**, after Auras, heals the entity for the hits it deals as long as it lives (TW-15,
+[ITEMS.md](ITEMS.md#lifesteal)).
 
 ## Death
 

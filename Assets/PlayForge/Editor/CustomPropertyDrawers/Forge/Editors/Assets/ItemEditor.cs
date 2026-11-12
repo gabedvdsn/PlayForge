@@ -372,7 +372,7 @@ namespace FarEmerald.PlayForge.Extended.Editor
                 HelpTopic = "items/workers",
 
                 SerializedObject = serializedObject,
-                PropertyPaths = new[] { nameof(Item.OnHit), nameof(Item.Modifiers), nameof(Item.Auras), nameof(Item.WorkerGroup) },
+                PropertyPaths = new[] { nameof(Item.OnHit), nameof(Item.Modifiers), nameof(Item.Auras), nameof(Item.Lifesteal), nameof(Item.WorkerGroup) },
                 ImportAcrossTypes = true,
                 OnImportComplete = OnSectionReplaced,
                 OnClearComplete = OnSectionReplaced,
@@ -385,6 +385,8 @@ namespace FarEmerald.PlayForge.Extended.Editor
             workersSection.Content.Add(CreatePropertyField(serializedObject.FindProperty(nameof(Item.Modifiers)), "Modifiers", "Modifiers"));
             // The effects it holds on those near its holder (TW-10)
             workersSection.Content.Add(CreatePropertyField(serializedObject.FindProperty(nameof(Item.Auras)), "Auras", "Auras"));
+            // What its holder heals of the damage it deals (TW-15)
+            workersSection.Content.Add(CreatePropertyField(serializedObject.FindProperty(nameof(Item.Lifesteal)), "Lifesteal", "Lifesteal"));
             workersSection.Content.Add(CreatePropertyField(serializedObject.FindProperty(nameof(Item.WorkerGroup)), "WorkerGroup", ""));
         }
 
@@ -473,7 +475,7 @@ namespace FarEmerald.PlayForge.Extended.Editor
                 tagsSection.Summary.text = TagsSummary(item.Tags.ContextTags, "context tags", item.Tags.PassiveGrantedTags?.Count(tag => tag.IsValid) ?? 0);
             if (effectsSection != null) effectsSection.Summary.text = CountOf(item.GrantedEffects?.Count(effect => effect != null) ?? 0, "effect", "effects");
             if (abilitiesSection != null) abilitiesSection.Summary.text = item.ActiveAbility != null ? NameOf(item.ActiveAbility) : "None";
-            if (workersSection != null) workersSection.Summary.text = WorkersLine(item.OnHit, item.Modifiers, item.Auras, WorkerCount(item.WorkerGroup));
+            if (workersSection != null) workersSection.Summary.text = WorkersLine(item.OnHit, item.Modifiers, item.Auras, item.Lifesteal, WorkerCount(item.WorkerGroup));
             if (localDataSection != null) localDataSection.Summary.text = CountOf(item.LocalData?.Count ?? 0, "entry", "entries");
             if (usedBySection != null) usedBySection.Summary.text = usedBy == null ? "" : CountOf(usedBy.Count, "asset", "assets");
         }

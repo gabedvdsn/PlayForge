@@ -331,6 +331,10 @@ too where **Include Caster** says; and at most **Max Targets** besides the targe
 Each is found by its position, with no collider. Each takes the effect from the same origin, so its modifiers and its
 chance to apply are its own, and an effect that lands by an area spreads no further. A Radius of 0 is no area.
 
+**Lifesteal**, in Impact, heals the effect's caster for the hits it deals (TW-15): its **Share** of each workable loss
+it deals another to its **Attribute**, the project's Health where it names none, while its **When** holds. The heal is a
+gain like any other, so Healing Received scales it, and damage a return sends back heals nothing.
+
 ### Auras
 
 **Auras**, after Modifiers, hold an effect on those near the one it's on, while it lasts (TW-10). Items, abilities and

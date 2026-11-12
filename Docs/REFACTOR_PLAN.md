@@ -568,6 +568,13 @@ from. It lives outside `Assets/` so it never ships in the package.
   0 by its end. A Block or Evade stage **stops the whole effect as it lands**, rolled once, nothing of it landing. **Each
   side hears it by its own tag**, as Kill and Died: Blocked or Evaded to the one hit, Hit Blocked or Hit Evaded to the
   dealer.
+- Decision 53, 2026-11-12: TW-15's shape, the user's answers. A healing-received multiplier is **an attribute setting**,
+  Gains Scaled By, so no heal has to ask for it, and 0 blocks healing. Lifesteal goes **on the effect and on holders**:
+  an effect's own for the hits it deals, and entries on items, abilities and entities, as On Hit, for their holder's.
+  Execute, floors and damage return are **stages and workers**: Execute a Value Pipeline stage, Can't Fall Below an
+  attribute worker a buff's group can carry, and Damage Return a worker whose returned damage is typed so no return
+  returns it again. Damage taken is the one hit's attribute worker's to see, as an impact worker sees what an entity
+  deals, so the return is one.
 
 **Open. Ask the user; do not assume:**
 1. ~~**Uncommitted changes**~~: decided, see above.
@@ -1155,7 +1162,7 @@ on-hit (TW-5, TW-6), which most of the rest build on.
 | TW-12 | Absorption and block: an attribute that absorbs for another, with a decay; block and evade as stages a hit can fail, with their events. Decided (Decision 52): an attribute role, Absorbs For; decay both by a rate and with a lasting effect; a block or an evade stops the whole effect as it lands; each side hears it by a tag of its own. Done: the **Barrier** role, **Absorbs For**, soaks each workable loss to the attribute it names in the commit, after the pre-change workers, as much as it holds less what it soaked this frame, taken off it unworkable at the frame's end; **Decay Per Second**, a number or a share of its base, by the entity's own time; **Fades With Effect** scales a durational effect's lasting barrier by its share of the time left, its shelf refreshing it as it ticks. The **Block** and **Evade** stages roll once as an effect lands, after its chance to apply, from its hits' pipelines, each once, and the stages its modifiers bring for an attribute it impacts; on a stop it's refused, and `ForgeEvents.Send` gives the one hit **Blocked** or **Evaded** and the dealer **Hit Blocked** or **Hit Evaded**. The Attribute inspector shows a Barrier's settings while its role is Barrier | Framework | 5 | verified |
 | TW-13 | Rules that come with an effect: an effect's own worker group, given as it lands, taken back as it goes. Done: an effect's **Worker Group**, the attribute, impact, tag and analysis workers an item's or an ability's has, goes to the one it's on as a lasting container of it lands and comes back as it goes, counted, so two of the effect give it once and the last to go takes it back, as a worker is one object its cache keeps once; a restore lets go of every group lent. An Instant effect doesn't last, so its group does nothing. The Effect inspector's Workers section holds it after its effect workers, and its line counts it | Framework | 5 | verified |
 | TW-14 | Effects that land on the caster: Target or Caster on each contained, overflow and packet effect. Done: `EEffectRecipient`, Target or Caster, on each contained effect's packet (**Lands On**), on a stack bound's overflow effects (**Overflow Lands On**), and on a modifier's Add Contained Effect and Add Overflow Effect. Each lands from the same origin on the effect's target, as it always did, or on its caster, where that's an entity: as it lands, each tick, as it overflows, and as it ends, the removal sending each made carrier to its own target. The contained effect row shows its choice | Framework | 5 | verified |
-| TW-15 | The common rules, built in: a healing-received multiplier, execute below a share, can't fall below, damage return that isn't returned again, lifesteal with a condition | Framework | 5 | open |
+| TW-15 | The common rules, built in: a healing-received multiplier, execute below a share, can't fall below, damage return that isn't returned again, lifesteal with a condition. Decided (Decision 53): healing received an attribute setting; lifesteal on the effect and on holders; execute, floors and return as stages and workers. Done: an attribute's **Gains Scaled By** multiplies each workable gain to its current by that attribute's value, in the commit, 0 blocking it; an effect's own **Lifesteal** (a share, an attribute, a condition) heals its caster for the hits it deals, beside its own effect workers, and a **Lifesteal** entry on items, abilities and entities, an impact worker as On Hit's, heals its holder for its hits of some types, each heal a workable gain; the **Execute** stage takes the rest of a hit that would leave less than its share of the base; **Can't Fall Below**, an inline attribute worker, holds an attribute at its floor; **Return Damage**, a deferred attribute worker on the one hit, sends a share of each workable loss back to its dealer typed **Returned**, which no return returns again and no lifesteal heals from. The inspectors hold each | Framework | 5 | verified |
 | TW-16 | Crowd control, project-wide: activation rules by tag (Stunned stops every ability, Silenced spells, Disarmed attacks), which cancel what's running; an ability opts out | Framework | 5 | open |
 | TW-17 | An ability's cost and cooldown apply as it starts unless a stage takes them; charges, several uses with a cooldown each | Framework | 5 | open |
 | TW-18 | Changing sides as the game runs: `SetAffiliation` on the hubs, and an effect that changes its target's side while it lasts | Framework | 5 | open |
@@ -1211,6 +1218,12 @@ GAS-4 with GAS-5, PC-6, and TS-I with PC-5.
 ## Log
 
 Record baselines, gate results and notable decisions here, newest first.
+
+- 2026-11-12, **TW-15: the common rules, built in.** Healing received scales each heal, 0 blocking it; lifesteal on
+  effects and holders; an Execute stage; Can't Fall Below, as Shallow Grave; and Damage Return, as Blade Mail, returned
+  once (Decision 53).
+  - Red first: CommonRulesTests 12 of 12 red with the shape in and no behaviour; CommonRulesEditorTests came with its code
+  - Gates: EditMode 815/817 (ED-61, the user's lifecycle work, and ED-12's undo binding flake on the Shared Second Wind); PlayMode 1695/1715 with 8 skipped, the 12 known reds; golden 25/25. CommonRulesTests 12/12
 
 - 2026-11-11, **TW-14: effects that land on the caster.** Each contained effect, a stack bound's overflow effects and an
   effect a modifier adds says whom it lands on, the target or the caster: a lifesteal's heal, a frenzy on overflowing a

@@ -37,6 +37,10 @@ it holds, such as the abbreviation or how many assets use the attribute.
     fades; **Fades With Effect** fades what a lasting effect gives it to 0 by the time that effect ends. A hit the
     barrier soaks whole is no loss to the other, so an On Hit counting it doesn't go off.
 
+**Gains Scaled By** names an attribute that multiplies each workable gain to this one's current, on the same entity
+(TW-15): Health's by Healing Received, so a curse at 0.5 halves heals and Ice Blast's 0 blocks them. A loss passes it by,
+and a gain to the base, as more maximum, does too.
+
   An effect's impact can add its own way (**Add Behaviour**: as the attribute's role says, a plain Sum, or Diminishing),
   and a number can read its own way (× Attribute's **Read As**).
 

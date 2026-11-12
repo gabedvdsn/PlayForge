@@ -372,6 +372,9 @@ namespace FarEmerald.PlayForge.Extended.Editor
 
             // Its area: as it lands, on each the area takes near its target too (TW-10)
             content.Add(CreatePropertyField(serializedObject.FindProperty(nameof(GameplayEffect.Area)), "Area", "Area"));
+
+            // Its own lifesteal: its caster heals a share of each loss it deals (TW-15)
+            content.Add(CreatePropertyField(serializedObject.FindProperty(nameof(GameplayEffect.Lifesteal)), "Lifesteal", "Lifesteal"));
         }
 
         // ═══════════════════════════════════════════════════════════════════════════
@@ -452,6 +455,7 @@ namespace FarEmerald.PlayForge.Extended.Editor
             paths.Add(nameof(GameplayEffect.OwnProcCoefficient));
             paths.Add(nameof(GameplayEffect.ProcCoefficient));
             paths.Add(nameof(GameplayEffect.Area));
+            paths.Add(nameof(GameplayEffect.Lifesteal));
             return paths.ToArray();
         }
 

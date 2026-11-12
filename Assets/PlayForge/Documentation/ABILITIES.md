@@ -266,6 +266,12 @@ Each entry is a rule of its own or names a shared Effect Modifier asset ([EFFECT
 **Auras**, after Modifiers, hold an effect on those near its holder, while the entity knows the ability, as a banner that inspires the allies
 round its bearer (TW-10): each a radius, whom it takes, its holder too or not, and how often it checks
 ([EFFECTS.md](EFFECTS.md#auras)).
+
+### Lifesteal
+
+**Lifesteal**, after Auras, heals its holder for the hits it deals, while the entity knows the ability (TW-15): each entry's **Share** of each
+workable loss it deals another to its **Attribute**, the project's Health where it names none, of some **Impact Types**
+where it names any, while its **When** holds, as a vampiric mask heals its wearer for its attacks.
 ## Local Data
 
 Local Data is a list of named values stored on the asset. Each row has a **Key** (a tag), a **Type**, and a value of

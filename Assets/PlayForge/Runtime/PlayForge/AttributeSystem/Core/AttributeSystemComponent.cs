@@ -346,6 +346,13 @@ namespace FarEmerald.PlayForge
             if (mode == ECommitMode.CommitImpact && sourcedModifiedValue.ImpactIsWorkable && change.Value.CurrentValue < 0f)
                 SoakIntoBarriers(attribute, change);
 
+            // A workable gain to its current, multiplied by the attribute it names, as Healing Received scales a heal and 0
+            // blocks it (TW-15)
+            if (mode == ECommitMode.CommitImpact && sourcedModifiedValue.ImpactIsWorkable && change.Value.CurrentValue > 0f
+                && attribute is Attribute { GainsScaledBy: { } scaledBy } && AttributeCache.TryGetValue(scaledBy, out var scale))
+                change.Value = new SourcedModifiedAttributeValue(change.Value,
+                    change.Value.CurrentValue * Mathf.Max(0f, scale.ActiveValue.CurrentValue), change.Value.BaseValue, change.Value.ImpactIsWorkable);
+
             // ═══════════════════════════════════════════════════════════════════════
             // PHASE 2: Dispatch per mode.
             // ═══════════════════════════════════════════════════════════════════════

@@ -25,6 +25,10 @@ namespace FarEmerald.PlayForge
 
         [ForgeContextDefault(ForgeContext.Impact)]
         public static Tag DISALLOW { get; } = Tag.GenerateAsUnique("Never Allow");
+
+        /// <summary>The type of damage a return sends back, so no return returns it again and no lifesteal heals from it (TW-15).</summary>
+        [ForgeContextDefault(ForgeContext.Impact)]
+        public static Tag RETURNED { get; } = Tag.GenerateAsUnique("Returned");
         
         [ForgeContextDefault(ForgeContext.Debug, ForgeContext.Texture)]
         public static Tag DEBUG { get; } = Tag.GenerateAsUnique("Debug");

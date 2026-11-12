@@ -332,6 +332,9 @@ namespace FarEmerald.PlayForge
         /// <summary>Its own auras, as <see cref="EntityIdentity.Auras"/> (TW-10).</summary>
         public List<AuraEntry> Auras = new();
 
+        /// <summary>Its own lifesteal, as <see cref="EntityIdentity.Lifesteal"/> (TW-15).</summary>
+        public List<LifestealEntry> Lifesteal = new();
+
         public RuntimeEntityIdentity()
         {
         }
@@ -363,6 +366,7 @@ namespace FarEmerald.PlayForge
             Death = data.Death;
             Modifiers = data.Modifiers;
             Auras = data.Auras;
+            Lifesteal = data.Lifesteal;
         }
 
         public string GetName()
@@ -410,12 +414,14 @@ namespace FarEmerald.PlayForge
             WorkerGroup?.ProvideWorkersTo(system);
             EffectModifiers.Provide(Modifiers, system);
             ForgeAuras.Provide(Auras, system);
+            Lifesteals.Provide(Lifesteal, system);
         }
         public void RemoveWorkers(ISource system)
         {
             WorkerGroup?.RemoveWorkersFrom(system);
             EffectModifiers.Remove(Modifiers, system);
             ForgeAuras.Remove(Auras, system);
+            Lifesteals.Remove(Lifesteal, system);
         }
     }
 }

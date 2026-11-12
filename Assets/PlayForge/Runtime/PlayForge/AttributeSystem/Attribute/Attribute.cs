@@ -32,6 +32,10 @@ namespace FarEmerald.PlayForge
 
         [Tooltip("As a Barrier: what a lasting effect gives it fades to 0 by the time that effect ends (TW-12)")]
         public bool FadesWithEffect;
+
+        [Tooltip("Each workable gain to its current is multiplied by this attribute's value on the same entity, as Health's by " +
+                 "Healing Received: 0 blocks healing outright. None, none (TW-15)")]
+        public Attribute GainsScaledBy;
         
         #region Internal
         

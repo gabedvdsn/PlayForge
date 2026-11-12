@@ -7,6 +7,9 @@ tracks each fix below by its ID.
 ## [Unreleased]
 
 ### Added
+- The common rules, built in: an attribute's Gains Scaled By, as Healing Received; lifesteal on an effect and on items,
+  abilities and entities; an Execute stage; a Can't Fall Below worker; and a Return Damage worker whose returned damage
+  isn't returned again (TW-15).
 - Effects that land on the caster: each contained effect, a stack bound's overflow effects and an effect a modifier adds
   lands on the target, as it did, or on the caster, as it says (TW-14).
 - An effect's own worker group: attribute, impact, tag and analysis workers it gives the one it's on while it lasts,

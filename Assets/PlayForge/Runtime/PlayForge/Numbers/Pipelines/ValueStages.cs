@@ -187,4 +187,32 @@ namespace FarEmerald.PlayForge
         public override Tag DealerEvent => Tags.HIT_EVADED;
         protected override string Verb => "evaded";
     }
+
+    /// <summary>
+    /// An execute (TW-15, Decision 53): a hit that would leave the one hit with less than a share of its attribute's base
+    /// takes the rest, as Culling Blade does below its threshold.
+    /// </summary>
+    [Serializable]
+    public class ExecuteStage : AbstractValueStage
+    {
+        [Tooltip("The share of its base below which a hit takes the rest, as 0.13")]
+        public ScalableFloat Share = 0.1f;
+
+        [Tooltip("The attribute it reads, the one hit's. None, the project's Health")]
+        public Attribute Attribute;
+
+        public override float Apply(float value, in ValueRun run)
+        {
+            if (value >= 0f) return value;
+            var attribute = Attribute ? Attribute : ForgeAttributes.Health;
+            if (attribute == null || !run.Context.TryGetAttribute(NumberSide.Target, attribute, out var pool)) return value;
+            float share = Share?.Evaluate(in run.Context, this) ?? 0f;
+            float left = pool.CurrentValue + value;
+            if (left <= 0f || left >= share * pool.BaseValue) return value;
+            run.Note("executed");
+            return -pool.CurrentValue;
+        }
+
+        public override string Describe() => $"executes below {NumberText.Of(Share)} of its base";
+    }
 }

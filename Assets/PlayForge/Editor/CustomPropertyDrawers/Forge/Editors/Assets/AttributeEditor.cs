@@ -160,6 +160,9 @@ namespace FarEmerald.PlayForge.Extended.Editor
             ShowBarrier();
             role.RegisterCallback<SerializedPropertyChangeEvent>(_ => ShowBarrier());
 
+            // What scales the gains to it, as Healing Received scales Health's (TW-15)
+            content.Add(CreatePropertyField(serializedObject.FindProperty(nameof(Attribute.GainsScaledBy)), "GainsScaledBy", "Gains Scaled By"));
+
             // Its part in the project, where it fills one of the project's slots (TW-28)
             var part = IsMultiple ? null : ProjectPartOf(attribute);
             var projectPart = CreateNote(part ?? "");

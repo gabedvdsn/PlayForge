@@ -57,6 +57,9 @@ namespace FarEmerald.PlayForge
         [Tooltip("Auras it holds on those near its holder, while it's known (TW-10)")]
         public List<AuraEntry> Auras = new();
 
+        [Tooltip("Its holder heals a share of each loss it deals, while it's known (TW-15)")]
+        public List<LifestealEntry> Lifesteal = new();
+
         // ═══════════════════════════════════════════════════════════════════════════
         // Level Provider Linking
         // ═══════════════════════════════════════════════════════════════════════════
@@ -229,6 +232,7 @@ namespace FarEmerald.PlayForge
             OnHits.Provide(OnHit, system);
             EffectModifiers.Provide(Modifiers, system);
             ForgeAuras.Provide(Auras, system);
+            Lifesteals.Provide(Lifesteal, system);
         }
         public void RemoveWorkers(ISource system)
         {
@@ -236,6 +240,7 @@ namespace FarEmerald.PlayForge
             OnHits.Remove(OnHit, system);
             EffectModifiers.Remove(Modifiers, system);
             ForgeAuras.Remove(Auras, system);
+            Lifesteals.Remove(Lifesteal, system);
         }
     }
 

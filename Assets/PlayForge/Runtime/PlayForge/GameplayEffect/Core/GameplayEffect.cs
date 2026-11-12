@@ -32,6 +32,9 @@ namespace FarEmerald.PlayForge
 
         [Tooltip("Its area: as it lands on its target, it lands on each the area takes near that target too (TW-10)")]
         public EffectArea Area = new();
+
+        [Tooltip("Its own lifesteal: its caster heals a share of each loss it deals another (TW-15)")]
+        public EffectLifesteal Lifesteal = new();
         
         [Tooltip("Its own proc coefficient in place of its ability's: what its hits carry for their on-hit effects (TW-8)")]
         public bool OwnProcCoefficient;
