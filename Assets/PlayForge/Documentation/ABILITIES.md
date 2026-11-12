@@ -157,7 +157,7 @@ passes it in, and one effect serves every strength.
   on where its usage would be paid, paying its Cost and Attribute Costs and starting no cooldown; used again, it takes
   the effect off, paying nothing and asking no cost, and starts its Cooldown, or spends a charge. Neither its cost nor
   its cooldown stops it turning off. It counts only the effect it put on; one another put there leaves it off. Code asks
-  through its spec's `IsToggledOn`.
+  through its spec's `IsToggledOn`. The Problems view warns where it toggles an Instant effect, which is never on.
 - **Targeting**: the task that picks what the ability acts on, such as an entity the player clicks, or the caster
   itself. Targeting holds the activation's claim. If the task fails while its **Break Runtime On Invalid** is on, or it
   doesn't finish, the activation ends. Leave Targeting empty to skip this step.

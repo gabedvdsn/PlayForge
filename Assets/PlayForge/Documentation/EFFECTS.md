@@ -356,7 +356,9 @@ when: **On Apply** moves once as the effect lands and **Periodic** each tick, bo
 effect lands and holds while it lasts, a modifier on each side, read again only where a stack or a level changes its
 amount, and gives back as the effect ends, as a load or a move takes it, or as the entity it's on goes. Each side's
 change is exact: no worker takes it for a hit, no barrier soaks it and nothing scales it, so the getter gets what the
-giver gave, as far as its own bounds let it; what its maximum can't hold is lost, as an overheal is.
+giver gave, as far as its own bounds let it; what its maximum can't hold is lost, as an overheal is. The Problems view
+warns of a transfer whose Delivery the effect's duration can't make, as it does an additional impact's, and of one that
+names no attribute to give or get.
 
 ### Auras
 
