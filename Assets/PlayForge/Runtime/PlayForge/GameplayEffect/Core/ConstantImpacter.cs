@@ -18,6 +18,7 @@ namespace FarEmerald.PlayForge
         public EAttributeTarget      TargetSlot { get; }
         public int                   SortOrder { get; }
         public EMultiplyBehaviour    MultiplyBehaviour { get; }
+        public EAddBehaviour         AddBehaviour { get; }
         public Tag                   Group { get; }
 
         public ConstantImpacter(
@@ -26,13 +27,15 @@ namespace FarEmerald.PlayForge
             EAttributeTarget targetSlot,
             int sortOrder = 0,
             EMultiplyBehaviour multiplyBehaviour = EMultiplyBehaviour.Multiplicative,
-            Tag group = default)
+            Tag group = default,
+            EAddBehaviour addBehaviour = EAddBehaviour.AttributeRole)
         {
             this.magnitude    = magnitude;
             Operation         = operation;
             TargetSlot        = targetSlot;
             SortOrder         = sortOrder;
             MultiplyBehaviour = multiplyBehaviour;
+            AddBehaviour      = addBehaviour;
             Group             = group.IsValid ? group : Tags.IgnoreRetention;
         }
 
@@ -46,6 +49,6 @@ namespace FarEmerald.PlayForge
         /// </summary>
         public static ConstantImpacter Snapshot(IAttributeImpacter impacter, IAttributeImpactCarrier carrier)
             => new(impacter.Evaluate(carrier), impacter.Operation, impacter.TargetSlot,
-                impacter.SortOrder, impacter.MultiplyBehaviour, impacter.Group);
+                impacter.SortOrder, impacter.MultiplyBehaviour, impacter.Group, impacter.AddBehaviour);
     }
 }

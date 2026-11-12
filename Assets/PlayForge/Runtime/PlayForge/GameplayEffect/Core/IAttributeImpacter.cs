@@ -41,6 +41,12 @@ namespace FarEmerald.PlayForge
         EMultiplyBehaviour MultiplyBehaviour => EMultiplyBehaviour.Multiplicative;
 
         /// <summary>
+        /// Only meaningful when <see cref="Operation"/> is <see cref="ECalculationOperation.Add"/>: how this add combines with
+        /// the others on the attribute, as its role says, a plain sum, or diminishing (TW-1).
+        /// </summary>
+        EAddBehaviour AddBehaviour => EAddBehaviour.AttributeRole;
+
+        /// <summary>
         /// Retention group this impacter's contribution is attributed to (per-group value
         /// breakdown — base vs bonus health, etc.). Attribution only; never changes the
         /// math. Default: unattributed.
@@ -62,6 +68,19 @@ namespace FarEmerald.PlayForge
     /// MultiplyBehaviour decides how DIFFERENT carriers' multiply contributions to the
     /// SAME attribute slot compose.
     /// </summary>
+    /// <summary>How an Add impacter combines with the others on its attribute (TW-1).</summary>
+    public enum EAddBehaviour
+    {
+        /// <summary>As the attribute's role says: a Resistance's adds diminish, every other role's sum.</summary>
+        AttributeRole,
+
+        /// <summary>A plain sum, whatever the role.</summary>
+        Sum,
+
+        /// <summary>On what's left, 1 − (1 − x)(1 − v), whatever the role, after the sums.</summary>
+        Diminishing,
+    }
+
     public enum EMultiplyBehaviour
     {
         /// <summary>

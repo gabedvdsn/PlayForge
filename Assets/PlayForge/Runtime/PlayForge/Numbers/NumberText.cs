@@ -63,7 +63,14 @@ namespace FarEmerald.PlayForge
                     var side = attribute.CaptureFrom == ESourceTarget.Target ? "Target's" : "Caster's";
                     var name = attribute.CaptureAttribute != null ? attribute.CaptureAttribute.GetName() : "attribute";
                     var groups = RetentionGroups.Describe(attribute.Groups);
-                    return attribute.CaptureWhat == EAttributeTargetBinary.Base ? $"{side} {name}{groups} (base)" : $"{side} {name}{groups}";
+                    var read = attribute.CaptureWhat == EAttributeTargetBinary.Base ? $"{side} {name}{groups} (base)" : $"{side} {name}{groups}";
+                    // As its role or its own choice reads it: "(1 + Caster's Damage Amplification)" (TW-1)
+                    return AttributeBackedScaler.Resolve(attribute.ReadAs, attribute.CaptureAttribute) switch
+                    {
+                        EAttributeRead.AsMultiplier => $"(1 + {read})",
+                        EAttributeRead.AsRemainder => $"(1 − {read})",
+                        _ => read,
+                    };
                 case EffectStacksScaler:
                     return "the effect's stacks";
                 case ItemStacksScaler:

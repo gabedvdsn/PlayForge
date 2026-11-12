@@ -35,6 +35,7 @@ namespace FarEmerald.PlayForge.Extended.Editor
             var slotProp      = property.FindPropertyRelative(nameof(AttributeImpactEntry.TargetSlot));
             var operationProp = property.FindPropertyRelative(nameof(AttributeImpactEntry.Operation));
             var multiplyProp  = property.FindPropertyRelative(nameof(AttributeImpactEntry.MultiplyBehaviour));
+            var addProp = property.FindPropertyRelative(nameof(AttributeImpactEntry.AddBehaviour));
             var orderProp     = property.FindPropertyRelative(nameof(AttributeImpactEntry.SortOrder));
             var magnitudeProp = property.FindPropertyRelative(nameof(AttributeImpactEntry.Magnitude));
             var groupProp     = property.FindPropertyRelative(nameof(AttributeImpactEntry.RetentionGroupOverride));
@@ -81,6 +82,17 @@ namespace FarEmerald.PlayForge.Extended.Editor
             multiply.AddToClassList("pf-dependent");
             multiply.BindProperty(multiplyProp);
             content.Add(multiply);
+            // Shown for an Add on a Resistance, whose adds diminish, or one that says its own way (TW-1)
+            var add = new EnumField("Add Behaviour")
+            {
+                name = "AddBehaviour",
+                tooltip = "How this add combines with others on the attribute: as its role says (a Resistance's diminish), a " +
+                          "plain sum, or on what's left",
+            };
+            add.AddToClassList(EnumField.alignedFieldUssClassName);
+            add.AddToClassList("pf-dependent");
+            add.BindProperty(addProp);
+            content.Add(add);
             content.Add(new PropertyField(magnitudeProp, "Magnitude"));
 
             var delivery = new PopupField<EImpactDelivery>("Delivery",
@@ -151,6 +163,8 @@ namespace FarEmerald.PlayForge.Extended.Editor
                 problem.style.display = why != null ? DisplayStyle.Flex : DisplayStyle.None;
 
                 multiply.style.display = kind == ECalculationOperation.Multiply ? DisplayStyle.Flex : DisplayStyle.None;
+                add.style.display = GameplayEffectImpactDrawer.ShowsAdd(attributeProp, addProp, kind == ECalculationOperation.Add)
+                    ? DisplayStyle.Flex : DisplayStyle.None;
                 order.style.display = kind == ECalculationOperation.Override ? DisplayStyle.Flex : DisplayStyle.None;
 
                 var slot = (EAttributeTarget)slotProp.intValue;

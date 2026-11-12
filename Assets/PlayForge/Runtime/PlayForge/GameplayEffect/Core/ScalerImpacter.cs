@@ -17,6 +17,7 @@ namespace FarEmerald.PlayForge
         public EAttributeTarget      TargetSlot { get; }
         public int                   SortOrder { get; }
         public EMultiplyBehaviour    MultiplyBehaviour { get; }
+        public EAddBehaviour         AddBehaviour { get; }
         public Tag                   Group { get; }
 
         public ScalerImpacter(
@@ -25,13 +26,15 @@ namespace FarEmerald.PlayForge
             EAttributeTarget targetSlot,
             int sortOrder = 0,
             EMultiplyBehaviour multiplyBehaviour = EMultiplyBehaviour.Multiplicative,
-            Tag group = default)
+            Tag group = default,
+            EAddBehaviour addBehaviour = EAddBehaviour.AttributeRole)
         {
             this.magnitudeOperation = magnitudeOperation;
             Operation         = operation;
             TargetSlot        = targetSlot;
             SortOrder         = sortOrder;
             MultiplyBehaviour = multiplyBehaviour;
+            AddBehaviour      = addBehaviour;
             Group             = group.IsValid ? group : Tags.IgnoreRetention;
         }
 

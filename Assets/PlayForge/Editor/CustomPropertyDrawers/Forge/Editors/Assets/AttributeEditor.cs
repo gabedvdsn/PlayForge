@@ -140,6 +140,9 @@ namespace FarEmerald.PlayForge.Extended.Editor
             content.Add(CreateBoundTextField(nameof(Attribute.Abbreviation), "Abbreviation"));
             content.Add(CreateBoundTextField(nameof(Attribute.Description), "Description", multiline: true, minHeight: 18));
 
+            // What it is, which says how its bonuses add up and how a number reads it (TW-1)
+            content.Add(CreatePropertyField(serializedObject.FindProperty(nameof(Attribute.Role)), "Role", "Role"));
+
             var textures = serializedObject.FindProperty(nameof(Attribute.Textures));
             var texturesField = CreatePropertyField(textures, "Textures", "Textures");
             texturesField.RegisterCallback<SerializedPropertyChangeEvent>(_ =>

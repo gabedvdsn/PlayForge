@@ -25,6 +25,29 @@ namespace FarEmerald.PlayForge
 
         [Tooltip("Which retention groups' parts it reads: all of them, the whole value, unless it says (TW-3)")]
         public RetentionGroups Groups = new();
+
+        [Tooltip("How it reads the attribute: as its role says, a Bonus Share as 1 + x and a Resistance as 1 − x; as it " +
+                 "is; as a multiplier, 1 + x; or as what's left, 1 − x (TW-1)")]
+        public EAttributeRead ReadAs = EAttributeRead.ByRole;
+
+        /// <summary>How a read of <paramref name="attribute"/> as <paramref name="read"/> reads it, the role resolved.</summary>
+        public static EAttributeRead Resolve(EAttributeRead read, Attribute attribute)
+        {
+            if (read != EAttributeRead.ByRole) return read;
+            return attribute == null ? EAttributeRead.AsIs : attribute.Role switch
+            {
+                EAttributeRole.BonusShare => EAttributeRead.AsMultiplier,
+                EAttributeRole.Resistance => EAttributeRead.AsRemainder,
+                _ => EAttributeRead.AsIs,
+            };
+        }
+
+        private float Read(float value) => Resolve(ReadAs, CaptureAttribute) switch
+        {
+            EAttributeRead.AsMultiplier => 1f + value,
+            EAttributeRead.AsRemainder => 1f - value,
+            _ => value,
+        };
         
         public override void Initialize(IAttributeImpactCarrier deriv)
         {
@@ -64,12 +87,12 @@ namespace FarEmerald.PlayForge
             {
                 if (deriv?.GetSourcedCapturedAttributes().TryGetValue(this, out var capturedValue) ?? false)
                 {
-                    return CaptureWhat switch
+                    return Read(CaptureWhat switch
                     {
                         EAttributeTargetBinary.Current => capturedValue?.CurrentValue ?? 0f,
                         EAttributeTargetBinary.Base => capturedValue?.BaseValue ?? 0f,
                         _ => throw new ArgumentOutOfRangeException()
-                    };
+                    });
                 }
 
                 Debug.LogWarning($"[PlayForge] Attribute backed scaler operation failed: impact derivation is null.");
@@ -87,12 +110,12 @@ namespace FarEmerald.PlayForge
                 return 0f;
             }
             
-            return CaptureWhat switch
+            return Read(CaptureWhat switch
             {
                 EAttributeTargetBinary.Current => attrValue.CurrentValue,
                 EAttributeTargetBinary.Base => attrValue.BaseValue,
                 _ => throw new ArgumentOutOfRangeException()
-            };
+            });
         }
 
         public override bool UseScalingOptions()
@@ -104,6 +127,22 @@ namespace FarEmerald.PlayForge
         public override EScalerParts Parts => EScalerParts.Behaviours;
     }
     
+    /// <summary>How × Attribute reads its attribute (TW-1).</summary>
+    public enum EAttributeRead
+    {
+        /// <summary>As the attribute's role says: a Bonus Share as a multiplier, a Resistance as what's left, else as it is.</summary>
+        ByRole,
+
+        /// <summary>The value as it is.</summary>
+        AsIs,
+
+        /// <summary>As a multiplier: 1 + x.</summary>
+        AsMultiplier,
+
+        /// <summary>As what's left: 1 − x.</summary>
+        AsRemainder,
+    }
+
     public enum ESourceTarget
     {
         [Tooltip("Use the target entity's attribute")]

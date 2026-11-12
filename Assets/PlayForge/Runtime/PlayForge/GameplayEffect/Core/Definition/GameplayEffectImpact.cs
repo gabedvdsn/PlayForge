@@ -58,6 +58,7 @@ namespace FarEmerald.PlayForge
                     TargetSlot = TargetImpact,
                     Operation = ImpactOperation,
                     MultiplyBehaviour = MultiplyBehaviour,
+                    AddBehaviour = AddBehaviour,
                     SortOrder = 0,
                     Magnitude = MagnitudeOperation, // live reference — inspector edits apply instantly
                     RetentionGroupOverride = default, // falls back to Definition.RetentionGroup
@@ -129,6 +130,12 @@ namespace FarEmerald.PlayForge
         /// </summary>
         public EMultiplyBehaviour MultiplyBehaviour = EMultiplyBehaviour.Multiplicative;
 
+        /// <summary>
+        /// Only meaningful when <see cref="ImpactOperation"/> is Add: how this add combines with the others on the attribute,
+        /// as its role says, a plain sum, or diminishing (TW-1).
+        /// </summary>
+        public EAddBehaviour AddBehaviour = EAddBehaviour.AttributeRole;
+
         public EAffiliationPolicy AffiliationPolicy = EAffiliationPolicy.AlwaysAllow;
         public EAnyAllPolicy AffiliationComparison = EAnyAllPolicy.Any;
         [ForgeTagContext(ForgeContext.Affiliation)] public List<Tag> Affiliations = new List<Tag>();
@@ -181,6 +188,7 @@ namespace FarEmerald.PlayForge
             TargetImpact = o.TargetImpact;
             ImpactOperation = o.ImpactOperation;
             MultiplyBehaviour = o.MultiplyBehaviour;
+            AddBehaviour = o.AddBehaviour;
             AffiliationPolicy = o.AffiliationPolicy;
             AffiliationComparison = o.AffiliationComparison;
             Affiliations = o.Affiliations is null ? null : new List<Tag>(o.Affiliations);

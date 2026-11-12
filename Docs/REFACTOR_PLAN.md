@@ -1072,7 +1072,7 @@ on-hit (TW-5, TW-6), which most of the rest build on.
 
 | ID | Need | Sort | Phase | Status |
 |---|---|---|---|---|
-| TW-1 | Attributes say how their bonuses accumulate: a role (a value, a bonus share, a multiplier, a resistance or a chance, whose bonuses diminish) and buckets that add within and multiply across; and how a number reads one: × Attribute as a multiplier (`1 + x`) or a resistance (`1 − x`). The user's question of 2026-11-11. Decided (Decision 46): the role is the attribute's, an effect's impact can override it | Framework | 5 | open |
+| TW-1 | Attributes say how their bonuses accumulate and how a number reads them. The user's question of 2026-11-11. Decided (Decision 46): the role is the attribute's, an effect's impact can override it. Done: an attribute's Role, Value (as before), Bonus Share (bonuses add; read as 1 + x), Multiplier (as a Value; read as it is) or Resistance (bonuses diminish, each on what's left, 1 − (1 − x)(1 − v); read as 1 − x). An impact's Add Behaviour, As the Attribute's Role, Sum or Diminishing, which the drawers show where it matters; the Add stage sums, then diminishes. × Attribute's Read As: By Role, As Is, As a Multiplier or As What's Left, its line saying so, "(1 + Caster's Damage Amplification)". Every attribute made before is a Value and reads as it did. Buckets that add within and multiply across are TW-2's stages | Framework | 5 | verified |
 | TW-2 | A damage pipeline, defined once for each damage type: the hit's amount, the source's outgoing bonuses, bonuses that read the other side, a critical roll, the target's reductions, absorption, then health; each stage kept, for a breakdown of each hit. The user's question of 2026-11-11. Decided (Decision 46): a Value Pipeline asset, generic for any numeric pipeline, which an effect names as its shared calculation, apart from a Scaler asset | Framework | 5 | open |
 | TW-3 | Every attribute read (× Attribute, an Attribute condition, the Math worker's Relative To, Asset Part, a threshold) chooses its retention groups: all, only these, all but these, by tag; Group Impact folds in. The user's note of 2026-11-11. Done: `RetentionGroups`, a read of all the groups, the whole value, only these or all but these, a tag naming the groups under it, on × Attribute (`Groups`), the Attribute condition (`Groups`), a relative attribute worker's Relative To (`RelativeGroups`) and the Threshold worker (`Groups`); `CachedAttributeValue.GetGroupsValue` sums the groups' slices with no allocation; a read saved before reads the whole, as it did. Asset Part reads no attribute, so it has none; Group Impact reads one group, as × Attribute's Only These does | Framework | 5 | verified |
 | TW-4 | Death that doesn't end the entity, and its body as a process: a death policy (End, or Stay: registered, its abilities refused, effects kept or ended by tag), revival with a respawn timer, a body instantiator that despawns and respawns the model, and Died and Revived events. The user's request of 2026-11-11. Decided (Decision 46): the body is a MonoBehaviour process from a prefab, which the entity follows | Framework | 5 | open |
@@ -1141,6 +1141,13 @@ GAS-4 with GAS-5, PC-6, and TS-I with PC-5.
 ## Log
 
 Record baselines, gate results and notable decisions here, newest first.
+
+- 2026-11-11, **TW-1: an attribute says how its bonuses add up and how a number reads it.** The user's Damage
+  Amplification question: as a Bonus Share, +20% and +30% add to 0.5 and an attack reads it as 1.5; a Resistance's two
+  30% make 51% and a blow reads what's left. An effect's impact can sum or diminish its own way, and a number can read
+  as it chooses; every attribute made before is a Value, as it was.
+  - Red first: `AttributeRoleTests`, five tests on both hubs, don't compile against the old code: the role, Add Behaviour and Read As are new.
+  - Gates: EditMode 789 of 790, ED-61 red from the working tree's lifecycle change; PlayMode 1514 of 1536, 8 skipped, 14 red, the known ones, the Battle scene's round passing this time; golden 25 of 25.
 
 - 2026-11-11, **TW-3: attribute reads choose their retention groups.** × Attribute, the Attribute condition, a relative
   attribute worker's Relative To and the Threshold worker each read all of an attribute's groups, only these, or all but

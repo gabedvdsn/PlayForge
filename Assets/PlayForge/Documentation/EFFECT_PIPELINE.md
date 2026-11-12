@@ -62,7 +62,9 @@ State:
 ### 2.1 Recompute pipeline
 
 1. Baseline = the root value.
-2. **Add** — additive modifier impacters, per slot (Current / Base / CurrentAndBase) → `DirtyValue`.
+2. **Add** — additive modifier impacters, per slot (Current / Base / CurrentAndBase) → `DirtyValue`. The sums
+   first; then each add that diminishes, on what's left, `1 − (1 − x)(1 − v)`: every add on a Resistance attribute,
+   unless its Add Behaviour says Sum, and any whose Add Behaviour says Diminishing (TW-1).
 3. **Multiply** — `Multiplicative` impacters compound (×1.5, ×1.5 → ×2.25);
    `AdditiveBonus` impacters pool `(eval − 1)` into one `×(1 + Σ)` (+50%, +50% → ×2.0).
 4. **FlatBonus** — post-multiplication additive.

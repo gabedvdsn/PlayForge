@@ -150,6 +150,9 @@ namespace FarEmerald.PlayForge
         // RetentionGroup ("base" slice of the pool); generic ones use the group passed in.
         private Tag rootGroup;
 
+        // What the attribute is, which says how its adds combine (TW-1)
+        private EAttributeRole role;
+
         private bool Initialize(IAttribute attribute, IGameplayAbilitySystem source, IReadOnlyDictionary<IAttribute, CachedAttributeValue> cache, Tag retentionGroup,
             AttributeValue value)
         {
@@ -164,6 +167,7 @@ namespace FarEmerald.PlayForge
                 new List<Tag>() { Tags.DisallowImpact });
 
             rootGroup = retentionGroup.IsValid ? retentionGroup : Tags.DEFAULT;
+            role = attribute is Attribute asset ? asset.Role : EAttributeRole.Value;
             if (Blueprint is null) genericRootValue = value;
 
             Recompute(cache);
@@ -410,14 +414,36 @@ namespace FarEmerald.PlayForge
             float baseV = rootValue.BaseValue;
 
             // ─── Add ─────────────────────────────────────────────────────────────
+            // The sums first; then each add that diminishes, as a Resistance's do, on what's left (TW-1)
             foreach (var m in modifiers)
             {
                 var imp = m.Impacter;
-                if (imp.Operation != ECalculationOperation.Add) continue;
+                if (imp.Operation != ECalculationOperation.Add || Diminishes(imp)) continue;
                 float v = imp.Evaluate(m.Carrier);
                 float dc = 0f, db = 0f;
                 if (imp.TargetSlot is EAttributeTarget.Current or EAttributeTarget.CurrentAndBase) { curr += v; dc = v; }
                 if (imp.TargetSlot is EAttributeTarget.Base or EAttributeTarget.CurrentAndBase) { baseV += v; db = v; }
+                Attribute_Accumulate(m.Group, new AttributeValue(dc, db));
+            }
+
+            foreach (var m in modifiers)
+            {
+                var imp = m.Impacter;
+                if (imp.Operation != ECalculationOperation.Add || !Diminishes(imp)) continue;
+                float v = imp.Evaluate(m.Carrier);
+                float dc = 0f, db = 0f;
+                if (imp.TargetSlot is EAttributeTarget.Current or EAttributeTarget.CurrentAndBase)
+                {
+                    float next = 1f - (1f - curr) * (1f - v);
+                    dc = next - curr;
+                    curr = next;
+                }
+                if (imp.TargetSlot is EAttributeTarget.Base or EAttributeTarget.CurrentAndBase)
+                {
+                    float next = 1f - (1f - baseV) * (1f - v);
+                    db = next - baseV;
+                    baseV = next;
+                }
                 Attribute_Accumulate(m.Group, new AttributeValue(dc, db));
             }
 
@@ -533,6 +559,11 @@ namespace FarEmerald.PlayForge
 
             return ActiveValue;
         }
+
+        // Whether an add combines on what's left: as it says, or as a Resistance's role says (TW-1)
+        private bool Diminishes(IAttributeImpacter impacter) =>
+            impacter.AddBehaviour == EAddBehaviour.Diminishing
+            || (impacter.AddBehaviour == EAddBehaviour.AttributeRole && role == EAttributeRole.Resistance);
 
         private void Attribute_Accumulate(Tag group, AttributeValue delta)
         {

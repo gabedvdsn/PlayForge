@@ -50,6 +50,9 @@ namespace FarEmerald.PlayForge
         /// <summary>Only meaningful for Multiply — see <see cref="EMultiplyBehaviour"/>.</summary>
         public EMultiplyBehaviour MultiplyBehaviour = EMultiplyBehaviour.Multiplicative;
 
+        /// <summary>Only meaningful for Add — see <see cref="EAddBehaviour"/> (TW-1).</summary>
+        public EAddBehaviour AddBehaviour = EAddBehaviour.AttributeRole;
+
         /// <summary>Tie-break for Override entries (lowest wins); ordering hint elsewhere.</summary>
         public int SortOrder;
 
@@ -77,6 +80,7 @@ namespace FarEmerald.PlayForge
             TargetSlot = o.TargetSlot;
             Operation = o.Operation;
             MultiplyBehaviour = o.MultiplyBehaviour;
+            AddBehaviour = o.AddBehaviour;
             SortOrder = o.SortOrder;
             Magnitude = o.Magnitude;
             RetentionGroupOverride = o.RetentionGroupOverride;

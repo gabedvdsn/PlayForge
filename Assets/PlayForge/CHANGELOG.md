@@ -7,6 +7,9 @@ tracks each fix below by its ID.
 ## [Unreleased]
 
 ### Added
+- An attribute's Role says how bonuses to it add up and how a number reads it: a Bonus Share's bonuses add and read as
+  1 + x; a Resistance's stack with diminishing returns and read as 1 − x. An effect's Add Behaviour and × Attribute's
+  Read As can choose their own way (TW-1).
 - Attribute reads choose their retention groups: × Attribute, the Attribute condition, a relative attribute worker's
   Relative To and the Threshold worker read all of them, only these, or all but these (TW-3).
 - `ForgeEntities`: every live entity on both hubs, which area searches go through (GAS-75).

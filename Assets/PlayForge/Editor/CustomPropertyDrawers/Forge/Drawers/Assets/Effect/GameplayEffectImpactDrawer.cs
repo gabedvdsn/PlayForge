@@ -29,6 +29,7 @@ namespace FarEmerald.PlayForge.Extended.Editor
             var slotProp         = property.FindPropertyRelative(nameof(GameplayEffectImpact.TargetImpact));
             var operationProp    = property.FindPropertyRelative(nameof(GameplayEffectImpact.ImpactOperation));
             var multiplyProp     = property.FindPropertyRelative(nameof(GameplayEffectImpact.MultiplyBehaviour));
+            var addProp = property.FindPropertyRelative(nameof(GameplayEffectImpact.AddBehaviour));
             var magnitudeProp    = property.FindPropertyRelative(nameof(GameplayEffectImpact.MagnitudeOperation));
             var typesProp        = property.FindPropertyRelative(nameof(GameplayEffectImpact.ImpactTypes));
             var affiliationProp  = property.FindPropertyRelative(nameof(GameplayEffectImpact.AffiliationPolicy));
@@ -52,6 +53,17 @@ namespace FarEmerald.PlayForge.Extended.Editor
             multiply.AddToClassList("pf-dependent");
             multiply.BindProperty(multiplyProp);
             root.Add(multiply);
+            // Shown for an Add on a Resistance, whose adds diminish, or one that says its own way (TW-1)
+            var add = new EnumField("Add Behaviour")
+            {
+                name = "AddBehaviour",
+                tooltip = "How this add combines with others on the attribute: as its role says (a Resistance's diminish), a " +
+                          "plain sum, or on what's left",
+            };
+            add.AddToClassList(EnumField.alignedFieldUssClassName);
+            add.AddToClassList("pf-dependent");
+            add.BindProperty(addProp);
+            root.Add(add);
             root.Add(new PropertyField(magnitudeProp, "Magnitude"));
 
             // How the runtime delivers it, which the duration decides, and how often a periodic one lands. The drawer
@@ -141,6 +153,7 @@ namespace FarEmerald.PlayForge.Extended.Editor
                     policy: (EAffiliationPolicy)own.FindPropertyRelative(nameof(GameplayEffectImpact.AffiliationPolicy)).intValue))
                     .ToList();
                 multiply.style.display = each.Any(e => e.kind == ECalculationOperation.Multiply) ? DisplayStyle.Flex : DisplayStyle.None;
+                add.style.display = ShowsAdd(attributeProp, addProp, each.Any(e => e.kind == ECalculationOperation.Add)) ? DisplayStyle.Flex : DisplayStyle.None;
                 comparison.style.display = each.Any(e => e.policy != EAffiliationPolicy.AlwaysAllow) ? DisplayStyle.Flex : DisplayStyle.None;
                 affiliations.style.display = each.Any(e => e.policy == EAffiliationPolicy.UseAffiliationList) ? DisplayStyle.Flex : DisplayStyle.None;
 
@@ -157,6 +170,11 @@ namespace FarEmerald.PlayForge.Extended.Editor
         // The first impact's delivery, and how often it lands when it's periodic. Hidden when the first impact changes
         // nothing, as in an effect that only grants tags. A multiple selection shows a mixed value where the selected
         // effects differ (ED-12)
+        // Add Behaviour matters for an Add on a Resistance, whose adds diminish, or one that says its own way (TW-1)
+        internal static bool ShowsAdd(SerializedProperty attribute, SerializedProperty add, bool isAdd) =>
+            isAdd && ((attribute.objectReferenceValue is FarEmerald.PlayForge.Attribute target && target.Role == EAttributeRole.Resistance)
+                      || (EAddBehaviour)add.intValue != EAddBehaviour.AttributeRole);
+
         private static void ShowDelivery(SerializedProperty property, TextField delivery, TextField commits, HelpBox note)
         {
             var each = property.serializedObject.targetObjects.OfType<GameplayEffect>().Select(DeliveryOf).ToList();

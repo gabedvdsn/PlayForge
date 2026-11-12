@@ -234,7 +234,8 @@ namespace FarEmerald.PlayForge
                     entry.TargetSlot,
                     entry.SortOrder,
                     entry.MultiplyBehaviour,
-                    entry.ResolveGroup(defaultGroup));
+                    entry.ResolveGroup(defaultGroup),
+                    entry.AddBehaviour);
                 entryImpacters.Add((entry, impacter));
                 IndexImpacter(entry.Delivery, entry.AttributeTarget, impacter);
             }

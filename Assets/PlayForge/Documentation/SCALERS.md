@@ -22,7 +22,8 @@ which has no target yet, offers no kind that reads one.
 - **Shared**: the field reads a Scaler asset (below).
 - The other kinds work out a value from the values or from the entity: **× Attribute** reads an attribute of the
   caster or the target, which the menu starts as the field's number times it, all of it or only some of its retention
-  groups (below), **Clamped** keeps a number within
+  groups (below), and reads it as its attribute's role says, a Bonus Share as 1 + x and a Resistance as 1 − x, or as
+  its Read As says (TW-1), **Clamped** keeps a number within
   bounds, **Conditional** reads one number where a condition holds and another where it doesn't, **Randomized** rolls
   a random value, **Threshold** steps at thresholds, and **Fixed Value** is one number. **Effect Stacks** reads the stack count of the effect's own container, and **Item
   Stacks** that of the item that applied it ([ITEMS.md](ITEMS.md)); each reads 1 where there's nothing stacked. An
