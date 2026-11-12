@@ -470,7 +470,7 @@ namespace FarEmerald.PlayForge.Extended.Editor
                 HelpTopic = "effects/requirements",
 
                 SerializedObject = serializedObject,
-                PropertyPaths = new[] { ChancePath, ChanceRollPath, nameof(GameplayEffect.TargetRequirements), nameof(GameplayEffect.SourceRequirements) },
+                PropertyPaths = new[] { ChancePath, ChanceRollPath, nameof(GameplayEffect.TargetRequirements), nameof(GameplayEffect.SourceRequirements), nameof(GameplayEffect.Conditions) },
                 OnImportComplete = OnSectionReplaced,
                 OnClearComplete = OnSectionReplaced,
             });
@@ -497,6 +497,12 @@ namespace FarEmerald.PlayForge.Extended.Editor
             var source = CreatePropertyField(serializedObject.FindProperty(nameof(GameplayEffect.SourceRequirements)), "SourceRequirements", "");
             content.Add(target);
             content.Add(source);
+
+            // Its conditions beside the tags of each phase, either side's numbers in reach of each (TW-19)
+            string conditions = nameof(GameplayEffect.Conditions);
+            content.Add(CreatePropertyField(serializedObject.FindProperty($"{conditions}.{nameof(EffectConditions.Application)}"), "ApplyConditions", "Apply Conditions"));
+            content.Add(CreatePropertyField(serializedObject.FindProperty($"{conditions}.{nameof(EffectConditions.Ongoing)}"), "OngoingConditions", "Ongoing Conditions"));
+            content.Add(CreatePropertyField(serializedObject.FindProperty($"{conditions}.{nameof(EffectConditions.Removal)}"), "RemovalConditions", "Removal Conditions"));
 
             void ShowSide(bool onTheTarget)
             {

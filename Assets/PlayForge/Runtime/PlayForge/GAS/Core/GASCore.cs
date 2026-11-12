@@ -249,6 +249,9 @@ namespace FarEmerald.PlayForge
             // The attribute playing the project's Health role, where its own workers watch for no death (TW-28, TW-29)
             WatchProjectHealth();
 
+            // Its lasting effects' Ongoing and Removal conditions, which no tag change asks for (TW-19)
+            EffectSystem.CheckConditions();
+
             // Actions queued by analysis workers
             totalExecuted += ActionQueue.ProcessAll(owner);
 

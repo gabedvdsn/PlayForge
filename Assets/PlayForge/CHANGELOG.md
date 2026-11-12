@@ -7,6 +7,9 @@ tracks each fix below by its ID.
 ## [Unreleased]
 
 ### Added
+- Conditions in an effect's requirements, beside its tags: Apply conditions to land, Ongoing ones to go on, Removal ones
+  to come off, a phase passing only when its tags and conditions all say so, the lasting ones checked at each frame's
+  end (TW-19).
 - Changing sides as the game runs: `SetAffiliation` on both hubs, and an effect's Side Change, which gives the one it's
   on its caster's sides or those it names while it lasts, the highest priority holding, and interrupts what it runs
   where it says so (TW-18).

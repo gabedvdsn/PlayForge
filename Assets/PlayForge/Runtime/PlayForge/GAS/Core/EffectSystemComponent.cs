@@ -917,6 +917,22 @@ namespace FarEmerald.PlayForge
             // Once: checking requirements changes no tag, and a second compile here rebuilt the same ones (GAS-P3)
         }
 
+        /// <summary>
+        /// Checks each lasting effect's Ongoing and Removal conditions as the frame ends, as no tag needs to change for an
+        /// attribute a condition reads to: one whose Removal phase is met comes off, and the rest go on or pause. Only the
+        /// tags' changes asked before (TW-19).
+        /// </summary>
+        internal void CheckConditions()
+        {
+            for (int i = 0; i < EffectShelf.Count; i++)
+            {
+                var container = EffectShelf[i];
+                if (container.Spec.Base.Conditions is not { Watched: true } || finishedSet.Contains(container)) continue;
+                if (ForgeHelper.ValidateEffectRemovalRequirements(container.Spec)) MarkFinished(container);
+                else container.Ongoing = ForgeHelper.ValidateEffectOngoingRequirements(container.Spec);
+            }
+        }
+
         private void TickEffectShelf()
         {
             // Index-based over the frame-start count: executing a tick can apply contained

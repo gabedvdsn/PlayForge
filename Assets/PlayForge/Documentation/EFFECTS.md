@@ -300,6 +300,13 @@ comparison with a number, where Greater Than 0 means "the tag is present".
 Empty Applying and While On rows always pass. An empty Removed By row never removes anything. While On and Removed By
 are checked whenever an effect is applied to or removed from the target. While On is also checked before each tick.
 
+Under the tables are its **Conditions** for each phase (TW-19), each a condition read in the effect's context, its
+caster's and its target's numbers in reach, as "the target below 30% Health". **Apply Conditions** must each hold for it
+to land; **Ongoing Conditions** pause it while one fails, as While On does; and **Removal Conditions** take it off once
+each holds, with its Removed By rows where it names any, as Attribute Shift stops at its floor. A phase passes only when
+its tags pass and its conditions all hold. The Ongoing and Removal conditions are checked at the entity's end of frame
+while the effect lasts, as no tag needs to change for an attribute they read to, and before each tick as well.
+
 ## Workers
 
 Effect workers react to this effect's own events. A worker can act when the effect is applied, when it ticks, when it

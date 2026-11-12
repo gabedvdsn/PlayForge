@@ -65,7 +65,10 @@ namespace FarEmerald.PlayForge
         
         public EffectTagRequirements SourceRequirements;
         public EffectTagRequirements TargetRequirements;
-        
+
+        [Tooltip("Its conditions beside the tags of each phase: to land, to go on, and to come off (TW-19)")]
+        public EffectConditions Conditions = new();
+
         // ═══════════════════════════════════════════════════════════════════════════
         // Level Provider Linking
         // ═══════════════════════════════════════════════════════════════════════════
@@ -207,27 +210,39 @@ namespace FarEmerald.PlayForge
         
         #region Effect Base
 
+        /// <summary>
+        /// Whether it may land: its tags to apply pass, each of its Apply conditions holds, and its Removal phase isn't met
+        /// already, its tags and conditions together (TW-19).
+        /// </summary>
         public bool ValidateApplicationRequirements(GameplayEffectSpec spec)
         {
-            var targetTags = spec.Target.GetAppliedTags();
-            var sourceTags = spec.Source.GetAppliedTags();
-            bool result = TargetRequirements.CheckApplicationRequirements(targetTags)
-                          && !TargetRequirements.CheckRemovalRequirements(targetTags)
-                          && SourceRequirements.CheckApplicationRequirements(sourceTags)
-                          && !SourceRequirements.CheckRemovalRequirements(sourceTags);
-            return result;
+            bool result = TargetRequirements.CheckApplicationRequirements(spec.Target.GetAppliedTags())
+                          && SourceRequirements.CheckApplicationRequirements(spec.Source.GetAppliedTags());
+            if (!result) return false;
+            if (EffectConditions.Has(Conditions?.Application) && !EffectConditions.AllHold(Conditions.Application, NumberContext.Of(spec))) return false;
+            return !ValidateRemovalRequirements(spec);
         }
-        
+
+        /// <summary>
+        /// Whether it comes off: its Removal tags, where it names any, and its Removal conditions, where it has any, all say
+        /// so; with neither, never. Its tags alone said so before its conditions were (TW-19).
+        /// </summary>
         public bool ValidateRemovalRequirements(GameplayEffectSpec spec)
         {
-            return TargetRequirements.CheckRemovalRequirements(spec.Target.GetAppliedTags())
-                   || SourceRequirements.CheckRemovalRequirements(spec.Source.GetAppliedTags());
+            bool hasTags = TargetRequirements.HasRemovalRequirements || SourceRequirements.HasRemovalRequirements;
+            bool hasConditions = EffectConditions.Has(Conditions?.Removal);
+            if (!hasTags && !hasConditions) return false;
+            if (hasTags && !(TargetRequirements.CheckRemovalRequirements(spec.Target.GetAppliedTags())
+                             || SourceRequirements.CheckRemovalRequirements(spec.Source.GetAppliedTags()))) return false;
+            return !hasConditions || EffectConditions.AllHold(Conditions.Removal, NumberContext.Of(spec));
         }
-        
+
+        /// <summary>Whether it goes on: its Ongoing tags pass, and each of its Ongoing conditions holds (TW-19).</summary>
         public bool ValidateOngoingRequirements(GameplayEffectSpec spec)
         {
             return TargetRequirements.CheckOngoingRequirements(spec.Target.GetAppliedTags())
-                   && SourceRequirements.CheckOngoingRequirements(spec.Source.GetAppliedTags());
+                   && SourceRequirements.CheckOngoingRequirements(spec.Source.GetAppliedTags())
+                   && (!EffectConditions.Has(Conditions?.Ongoing) || EffectConditions.AllHold(Conditions.Ongoing, NumberContext.Of(spec)));
         }
         
         public void ApplyDurationSpecifications(AbstractEffectContainer container)
