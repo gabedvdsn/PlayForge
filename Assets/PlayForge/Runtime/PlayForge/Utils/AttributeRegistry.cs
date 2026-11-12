@@ -14,6 +14,12 @@ namespace FarEmerald.PlayForge
         private static void Clear() => Library.Clear();
 
         /// <summary>
+        /// Forgets every attribute registered, as a test's world does as it ends, so the next test registers its own
+        /// afresh (TW-26). TagRegistry.Reset does the same for tags.
+        /// </summary>
+        public static void Reset() => Library.Clear();
+
+        /// <summary>
         /// REFACTOR THIS TO REFLECT YOUR ATTRIBUTE NAMING CONVENTION
         ///
         /// With respect to source code:

@@ -7,6 +7,13 @@ tracks each fix below by its ID.
 ## [Unreleased]
 
 ### Added
+- A test kit, the assembly `FarEmerald.PlayForge.Testing`, which a project's own tests reference to play its content:
+  `ForgeTest`, a base class that makes a live world for each test and, after it, checks that attribute parts sum, that
+  what's dealt is received and that no process leaked; `ForgeTestWorld`, the world itself, which a test can make on its
+  own; a frame stepper; entities on either hub, from attributes or an identity asset; Cast, Use, Hold and Hit; a clock
+  and scripted rolls; an asset factory; and an allocation probe. It compiles wherever the Test Framework package is
+  installed; `Documentation/TESTING.md` sets it up (TW-26). `AttributeRegistry.Reset()` forgets every registered
+  attribute, as `TagRegistry.Reset()` does tags.
 - A content linter in the Problems view, reading what the project's assets give each other: a stacking effect's periodic
   impact or transfer that reads its own stacks, as it lands once for each already, with a quick fix; an effect that
   reads an item's stacks where no item applies it; an On Hit's, a lifesteal's, a trigger's or a modifier's Change

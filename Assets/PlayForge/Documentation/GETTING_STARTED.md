@@ -197,6 +197,9 @@ string perLevel = impact.FormatTotal();           // "20/30/40/50"
   Forge's window menu opens both.
 - **Golden tests** (the Test Runner's EditMode tab, `FarEmerald.PlayForge.Tests.Golden`) — the framework's behavioral
   contract; run after upgrading.
+- **The test kit** (`FarEmerald.PlayForge.Testing`) — play your own abilities, effects and items in your own tests: a
+  live world for each test, stepped a frame at a time, entities on either hub, Cast, Use, Hold and Hit, scripted time
+  and rolls, and checks after each test that nothing leaked (TW-26). [TESTING.md](TESTING.md) sets it up.
 - **Problems** (`Window → PlayForge → Problems`) — every problem the validator finds in the project's PlayForge
   assets, such as a link with no provider, an impact that never applies or a field that reads a scaler it hasn't got,
   with its severity and its asset; a click selects the asset. **By Rule**, in its toolbar, groups them under the rule
