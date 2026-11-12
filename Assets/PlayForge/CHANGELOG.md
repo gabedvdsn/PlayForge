@@ -7,6 +7,9 @@ tracks each fix below by its ID.
 ## [Unreleased]
 
 ### Added
+- The project's attributes, on Project Settings → PlayForge: Health, what an entity dies of at 0 where nothing of its
+  own watches for its death, and what On Hit counts; Mana, what an ability's new Mana Cost spends; Luck; and Movement
+  Speed, the Creator Lab's units'. Each is optional, and an asset's own setting wins (TW-28).
 - Effect modifiers: items, abilities, effects and entities change other effects as they're made, their holder's own or
   those landing on it, picked by tag, with a contained effect added, an impact's number changed by a Value Pipeline
   stage, an overflow added, a duration, stacks, a chance or granted tags changed; inline, or a shared Effect Modifier

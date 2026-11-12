@@ -114,7 +114,8 @@ from another asset.
 **On Hit**, above the workers, holds the effects the item applies as its holder's hits land, while it's equipped: a
 dagger's bleed, a hammer's armor break, a barrier on a kill (TW-6). Each entry has:
 
-- **Attribute**: what a hit lowers, as Health. A hit is a loss to it that the holder deals another entity.
+- **Attribute**: what a hit lowers, as Health. A hit is a loss to it that the holder deals another entity. None
+  counts the project's Health ([ATTRIBUTES.md](ATTRIBUTES.md#the-projects-attributes)), where it names one (TW-28).
 - **Effects**: what it applies. Each effect's own Chance to Apply rolls as it lands, and its hits set the entry off no
   more, so a shock it applies doesn't shock again.
 - **To**: the one hit (**Target**), or the **Holder**, as a barrier on a kill does.

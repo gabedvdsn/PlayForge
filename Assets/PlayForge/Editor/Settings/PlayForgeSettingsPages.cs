@@ -24,7 +24,11 @@ namespace FarEmerald.PlayForge.Extended.Editor
         {
             label = "PlayForge",
             activateHandler = (_, root) => BuildProjectPage(root),
-            keywords = new HashSet<string> { "PlayForge", "Folder", "Prefix", "Suffix", "Defaults", "New Asset", "Import", "Cost", "Cooldown" },
+            keywords = new HashSet<string>
+            {
+                "PlayForge", "Folder", "Prefix", "Suffix", "Defaults", "New Asset", "Import", "Cost", "Cooldown",
+                "Attributes", "Health", "Mana", "Luck", "Movement Speed",
+            },
         };
 
         [SettingsProvider]
@@ -88,6 +92,10 @@ namespace FarEmerald.PlayForge.Extended.Editor
             page.Add(Note("The effects an ability's Cost and Cooldown fields offer to copy or use, in their right-click menu."));
             page.Add(EffectField(data, nameof(PlayForgeSettingsData.CostEffect), "Cost Effect"));
             page.Add(EffectField(data, nameof(PlayForgeSettingsData.CooldownEffect), "Cooldown Effect"));
+
+            // The project's attributes, in an asset of their own that a build keeps (TW-28)
+            Heading(page, "Project Attributes");
+            page.Add(ProjectAttributesSection());
 
             page.Bind(serialized);
             // Each edit, and an Undo of one, is written to the file
@@ -211,6 +219,168 @@ namespace FarEmerald.PlayForge.Extended.Editor
             effect.AddToClassList(ObjectField.alignedFieldUssClassName);
             return effect;
         }
+
+        /// <summary>The folder the project's attributes are made in: a Resources folder, so a build has them (TW-28).</summary>
+        internal const string ProjectAttributesFolder = "Assets/Resources";
+
+        /// <summary>Where the project's attributes are made.</summary>
+        internal static string ProjectAttributesPath => $"{ProjectAttributesFolder}/{ProjectAttributes.ResourceName}.asset";
+
+        // Each slot, by its field's name, and its label
+        private static readonly (string slot, string label)[] Slots =
+        {
+            (nameof(ProjectAttributes.Health), "Health"),
+            (nameof(ProjectAttributes.Mana), "Mana"),
+            (nameof(ProjectAttributes.Luck), "Luck"),
+            (nameof(ProjectAttributes.MovementSpeed), "Movement Speed"),
+        };
+
+        // The project's attributes (TW-28): a field for each slot, or, where the project has none, a button that makes them
+        private static VisualElement ProjectAttributesSection()
+        {
+            var section = new VisualElement { name = "ProjectAttributes" };
+            FillProjectAttributes(section);
+            return section;
+        }
+
+        private static void FillProjectAttributes(VisualElement section)
+        {
+            section.Clear();
+            section.Add(Note("The attributes PlayForge reads by their part in the game. Health is what an entity dies of at 0, " +
+                             "where no death watcher of its own watches, and what On Hit counts where an entry names none; Mana " +
+                             "is what an ability's Mana Cost spends; Luck is read on every chance's caster; Movement Speed is " +
+                             "what the Creator Lab's units walk at. Each is optional, and an asset's own setting wins."));
+
+            var asset = Resources.Load<ProjectAttributes>(ProjectAttributes.ResourceName);
+            var buttons = new VisualElement();
+            buttons.AddToClassList("pf-settings__buttons");
+            if (!asset)
+            {
+                buttons.Add(new Button(() =>
+                {
+                    CreateProjectAttributes();
+                    FillProjectAttributes(section);
+                })
+                {
+                    name = "CreateProjectAttributes",
+                    text = "Create Project Attributes",
+                    tooltip = $"Make the asset that holds them, at {ProjectAttributesPath}, so a build has it too, each slot " +
+                              "filled with the project's attribute of its name",
+                });
+                section.Add(buttons);
+                return;
+            }
+
+            var serialized = new SerializedObject(asset);
+            var fields = new List<ObjectField>();
+            foreach (var (slot, label) in Slots)
+            {
+                var property = serialized.FindProperty(slot);
+                var field = new ObjectField(label)
+                {
+                    name = slot,
+                    objectType = typeof(Attribute),
+                    allowSceneObjects = false,
+                    tooltip = property?.tooltip,
+                };
+                field.SetValueWithoutNotify(property?.objectReferenceValue);
+                field.AddToClassList(ObjectField.alignedFieldUssClassName);
+                field.RegisterValueChangedCallback(change => SetSlot(asset, slot, change.newValue as Attribute));
+                section.Add(field);
+                fields.Add(field);
+            }
+
+            void Show()
+            {
+                serialized.Update();
+                foreach (var field in fields) field.SetValueWithoutNotify(serialized.FindProperty(field.name)?.objectReferenceValue);
+            }
+
+            buttons.Add(new Button(() =>
+            {
+                Undo.RecordObject(asset, "Fill the Project Attributes by Name");
+                if (FillByName(asset))
+                {
+                    EditorUtility.SetDirty(asset);
+                    AssetDatabase.SaveAssetIfDirty(asset);
+                }
+                Show();
+            })
+            {
+                name = "FillByName",
+                text = "Fill by Name",
+                tooltip = "Fill each empty slot with the project's attribute of its name: Health, Mana, Luck, and Movement Speed " +
+                          "or Move Speed",
+            });
+            section.Add(buttons);
+
+            var held = new ObjectField("Asset") { name = "ProjectAttributesAsset", objectType = typeof(ProjectAttributes), tooltip = "The asset that holds them" };
+            held.SetValueWithoutNotify(asset);
+            held.SetEnabled(false);
+            held.AddToClassList(ObjectField.alignedFieldUssClassName);
+            section.Add(held);
+
+            // An Undo, or an edit in the asset's own inspector, shows here
+            section.TrackSerializedObjectValue(serialized, _ => Show());
+        }
+
+        // A slot set, as one Undo step, and saved
+        private static void SetSlot(ProjectAttributes asset, string slot, Attribute attribute)
+        {
+            if (!asset) return;
+            var serialized = new SerializedObject(asset);
+            var property = serialized.FindProperty(slot);
+            if (property == null || property.objectReferenceValue == attribute) return;
+            property.objectReferenceValue = attribute;
+            serialized.ApplyModifiedProperties();
+            AssetDatabase.SaveAssetIfDirty(asset);
+        }
+
+        /// <summary>
+        /// Makes the project's attributes, in a Resources folder, each slot filled with the project's attribute of its name;
+        /// or gives back the ones it has (TW-28).
+        /// </summary>
+        internal static ProjectAttributes CreateProjectAttributes()
+        {
+            var existing = Resources.Load<ProjectAttributes>(ProjectAttributes.ResourceName);
+            if (existing) return existing;
+            if (!AssetDatabase.IsValidFolder(ProjectAttributesFolder)) AssetDatabase.CreateFolder("Assets", "Resources");
+            var asset = ScriptableObject.CreateInstance<ProjectAttributes>();
+            FillByName(asset);
+            AssetDatabase.CreateAsset(asset, ProjectAttributesPath);
+            AssetDatabase.SaveAssets();
+            ForgeAttributes.Refresh();
+            return asset;
+        }
+
+        /// <summary>
+        /// Fills each empty slot with the project's attribute of its name, by its Name or else its file's: Health, Mana,
+        /// Luck, and Movement Speed or Move Speed. True where it filled any.
+        /// </summary>
+        internal static bool FillByName(ProjectAttributes asset)
+        {
+            if (!asset) return false;
+            var attributes = AssetDatabase.FindAssets("t:" + nameof(Attribute))
+                .Select(AssetDatabase.GUIDToAssetPath)
+                .OrderBy(path => path, StringComparer.Ordinal)
+                .Select(path => AssetDatabase.LoadAssetAtPath<Attribute>(path))
+                .Where(found => found != null)
+                .ToList();
+
+            Attribute Named(params string[] names) =>
+                attributes.FirstOrDefault(found => names.Contains(Plain(found.Name))) ??
+                attributes.FirstOrDefault(found => names.Contains(Plain(found.name)));
+
+            bool filled = false;
+            if (!asset.Health && Named("health") is { } health) { asset.Health = health; filled = true; }
+            if (!asset.Mana && Named("mana") is { } mana) { asset.Mana = mana; filled = true; }
+            if (!asset.Luck && Named("luck") is { } luck) { asset.Luck = luck; filled = true; }
+            if (!asset.MovementSpeed && Named("movementspeed", "movespeed") is { } speed) { asset.MovementSpeed = speed; filled = true; }
+            return filled;
+        }
+
+        // A name in letters and digits alone, lower case, so "Movement Speed" and "MovementSpeed" are one
+        private static string Plain(string name) => new string((name ?? "").Where(char.IsLetterOrDigit).ToArray()).ToLowerInvariant();
 
         // ═══════════════════════════════════════════════════════════════════════════
         // Preferences → PlayForge

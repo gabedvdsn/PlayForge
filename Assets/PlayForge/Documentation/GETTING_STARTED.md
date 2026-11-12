@@ -180,7 +180,9 @@ string perLevel = impact.FormatTotal();           // "20/30/40/50"
 - **Settings** — **Project Settings → PlayForge** holds what the project shares, in
   `ProjectSettings/PlayForgeSettings.asset`, under version control: where each type's new assets go and how their files
   are named, each type's defaults (the asset a new one starts as a copy of, and the assets Import lists first), and the
-  effects a new Cost or Cooldown copies. **Preferences → PlayForge** holds your own view toggles and the log level. The
+  effects a new Cost or Cooldown copies. Its **Project Attributes**, in an asset of their own that a build keeps, name
+  the project's Health, Mana, Luck and Movement Speed ([ATTRIBUTES.md](ATTRIBUTES.md#the-projects-attributes)).
+  **Preferences → PlayForge** holds your own view toggles and the log level. The
   Forge's window menu opens both.
 - **Golden tests** (the Test Runner's EditMode tab, `FarEmerald.PlayForge.Tests.Golden`) — the framework's behavioral
   contract; run after upgrading.

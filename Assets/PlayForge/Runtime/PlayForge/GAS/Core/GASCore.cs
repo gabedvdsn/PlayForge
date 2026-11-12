@@ -224,6 +224,9 @@ namespace FarEmerald.PlayForge
 
             AnalysisCache.Analyze(owner);
 
+            // The project's Health, where its own workers watch for no death (TW-28)
+            WatchProjectHealth();
+
             // Actions queued by analysis workers
             totalExecuted += ActionQueue.ProcessAll(owner);
 
@@ -424,19 +427,44 @@ namespace FarEmerald.PlayForge
             return data;
         }
 
-        // Who killed it: the source of the last workable loss it took this frame from another
+        // Who killed it: the source of the last workable loss it took this frame from another; of the project's Health
+        // where it has one, so a loss after the blow, to another attribute, doesn't take the kill (TW-28)
         private ISource Killer()
         {
             var received = FrameSummary?.ImpactsReceived;
             if (received == null) return null;
+            var health = ForgeAttributes.Health;
+            if (health != null && LastLoss(received, health) is { } slayer) return slayer;
+            return LastLoss(received, null);
+        }
+
+        // The source of the last workable loss from another among the impacts, to the attribute, or to any for null
+        private ISource LastLoss(List<ImpactData> received, IAttribute to)
+        {
             for (int i = received.Count - 1; i >= 0; i--)
             {
                 var impact = received[i];
                 var source = impact.SourcedModifier.Source;
                 if (!impact.SourcedModifier.ImpactIsWorkable || source == null || ReferenceEquals(source, owner)) continue;
+                if (to != null && !to.Equals(impact.Attribute)) continue;
                 if (impact.RealImpact.CurrentValue < 0f || impact.RealImpact.BaseValue < 0f) return source;
             }
             return null;
+        }
+
+        // The project's Health (TW-28): an entity whose analysis workers watch for no death of their own, and whose Death
+        // doesn't say otherwise, dies as its Health reaches 0. One without the attribute doesn't
+        private void WatchProjectHealth()
+        {
+            if (IsDead || pendingDestruction) return;
+            var health = ForgeAttributes.Health;
+            if (health == null) return;
+            if (Identity?.Death is { DiesAtZeroHealth: false }) return;
+            var workers = AnalysisCache.Workers;
+            for (int i = 0; i < workers.Count; i++)
+                if (workers[i] is DeathWatcherAnalysisWorker) return;
+            if (!owner.TryGetAttributeValue(health, out var value) || value.CurrentValue > 0f) return;
+            QueueAction(new DeathAction(owner));
         }
 
         // ═══════════════════════════════════════════════════════════════════════════

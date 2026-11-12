@@ -26,7 +26,7 @@ namespace FarEmerald.PlayForge
     [Serializable]
     public class OnHitEntry
     {
-        [Tooltip("The attribute a hit lowers, as Health")]
+        [Tooltip("The attribute a hit lowers, as Health. None, the project's Health (TW-28)")]
         public Attribute Attribute;
 
         [Tooltip("The effects it applies")]
@@ -47,6 +47,9 @@ namespace FarEmerald.PlayForge
 
         [NonSerialized] private OnHitImpactWorker worker;
 
+        /// <summary>The attribute its hits lower: its own, or else the project's Health, or null for none (TW-28).</summary>
+        public Attribute HitAttribute => Attribute ? Attribute : ForgeAttributes.Health;
+
         // The impact worker that runs it for its holder's hits, one for the entry, whoever holds it
         internal OnHitImpactWorker Worker => worker ??= new OnHitImpactWorker(this);
     }
@@ -59,7 +62,7 @@ namespace FarEmerald.PlayForge
         {
             if (entries == null || entries.Count == 0 || holder == null || !holder.FindAbilitySystem(out var abilities) || abilities == null) return;
             foreach (var entry in entries)
-                if (entry?.Attribute != null) abilities.ProvideWorker(entry.Worker);
+                if (entry?.HitAttribute != null) abilities.ProvideWorker(entry.Worker);
         }
 
         /// <summary>Takes back what <see cref="Provide"/> gave.</summary>
@@ -67,7 +70,7 @@ namespace FarEmerald.PlayForge
         {
             if (entries == null || entries.Count == 0 || holder == null || !holder.FindAbilitySystem(out var abilities) || abilities == null) return;
             foreach (var entry in entries)
-                if (entry?.Attribute != null) abilities.RemoveWorker(entry.Worker);
+                if (entry != null) abilities.RemoveWorker(entry.Worker);
         }
     }
 
@@ -76,10 +79,13 @@ namespace FarEmerald.PlayForge
     {
         private readonly OnHitEntry entry;
 
+        // The attribute each cache took it under, so it leaves the one it joined, though the project's Health change (TW-28)
+        private readonly Dictionary<ImpactWorkerCache, Attribute> joined = new();
+
         public OnHitImpactWorker(OnHitEntry entry) => this.entry = entry;
 
         public override bool PreValidateWorkFor(ImpactData impactData) =>
-            entry.Attribute != null && impactData.Attribute != null && impactData.Attribute.Equals(entry.Attribute);
+            entry.HitAttribute is { } attribute && impactData.Attribute != null && impactData.Attribute.Equals(attribute);
 
         public override bool ValidateWorkFor(ImpactData impactData)
         {
@@ -114,8 +120,18 @@ namespace FarEmerald.PlayForge
             return actions;
         }
 
-        public override void SubscribeToCache(ImpactWorkerCache cache) => cache.ProvideWorker(entry.Attribute, this);
+        public override void SubscribeToCache(ImpactWorkerCache cache)
+        {
+            var attribute = entry.HitAttribute;
+            if (attribute == null) return;
+            joined[cache] = attribute;
+            cache.ProvideWorker(attribute, this);
+        }
 
-        public override void UnsubscribeFromCache(ImpactWorkerCache cache) => cache.RemoveWorker(entry.Attribute, this);
+        public override void UnsubscribeFromCache(ImpactWorkerCache cache)
+        {
+            if (!joined.Remove(cache, out var attribute)) attribute = entry.HitAttribute;
+            if (attribute != null) cache.RemoveWorker(attribute, this);
+        }
     }
 }

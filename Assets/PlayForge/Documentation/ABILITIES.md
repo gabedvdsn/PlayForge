@@ -126,6 +126,11 @@ passes it in, and one effect serves every strength.
   ability. A line under each field says how its effect takes its levels, and **Link** makes it take this ability's.
   **New**, beside an empty field, makes an effect linked to this ability. If Project Settings → PlayForge names a Cost
   or Cooldown effect, the field's right-click menu copies it or uses it.
+- **Mana Cost**, after Cost: what the ability costs in the project's Mana ([ATTRIBUTES.md](ATTRIBUTES.md#the-projects-attributes)),
+  a number that can scale by level, where it has no Cost effect (TW-28). It's refused with Cost while its caster has less,
+  or the project or the caster has no Mana, and paid where a Cost is, as a stage applies its usage effects. A Cost
+  effect, where it has one, is paid in its place, for a cost in another attribute or one an effect has to say. The
+  section's line says it, as "30 Mana".
 - **Targeting**: the task that picks what the ability acts on, such as an entity the player clicks, or the caster
   itself. Targeting holds the activation's claim. If the task fails while its **Break Runtime On Invalid** is on, or it
   doesn't finish, the activation ends. Leave Targeting empty to skip this step.

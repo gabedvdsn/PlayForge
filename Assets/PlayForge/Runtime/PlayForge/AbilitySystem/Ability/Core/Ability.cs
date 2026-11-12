@@ -35,6 +35,14 @@ namespace FarEmerald.PlayForge
         
         [ForgeEffectTemplate("Cost", "Cost")] 
         public GameplayEffect Cost;
+
+        [Tooltip("What it costs in the project's Mana (Project Settings → PlayForge), where it has no Cost effect: refused " +
+                 "with Cost while its caster has less, and paid where a Cost is, as a stage applies its usage effects (TW-28)")]
+        public ScalableFloat ManaCost = 0f;
+
+        /// <summary>Whether it costs the project's Mana: a Mana Cost, and no Cost effect paid in its place (TW-28).</summary>
+        public bool CostsMana => Cost == null && ManaCost != null && (ManaCost.Magnitude > 0f || !AbstractScaler.IsNone(ManaCost.Scaler));
+
         [ForgeEffectTemplate("Cooldown", "Cooldown")] 
         public GameplayEffect Cooldown;
 

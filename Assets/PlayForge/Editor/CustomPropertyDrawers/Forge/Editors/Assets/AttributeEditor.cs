@@ -143,6 +143,13 @@ namespace FarEmerald.PlayForge.Extended.Editor
             // What it is, which says how its bonuses add up and how a number reads it (TW-1)
             content.Add(CreatePropertyField(serializedObject.FindProperty(nameof(Attribute.Role)), "Role", "Role"));
 
+            // Its part in the project, where it fills one of the project's slots (TW-28)
+            var part = IsMultiple ? null : ProjectPartOf(attribute);
+            var projectPart = CreateNote(part ?? "");
+            projectPart.name = "ProjectPart";
+            projectPart.style.display = part == null ? DisplayStyle.None : DisplayStyle.Flex;
+            content.Add(projectPart);
+
             var textures = serializedObject.FindProperty(nameof(Attribute.Textures));
             var texturesField = CreatePropertyField(textures, "Textures", "Textures");
             texturesField.RegisterCallback<SerializedPropertyChangeEvent>(_ =>
@@ -152,6 +159,20 @@ namespace FarEmerald.PlayForge.Extended.Editor
                 Repaint(); // Refresh IMGUI header
             });
             content.Add(texturesField);
+        }
+
+        /// <summary>What an attribute is to the project, where it fills one of the project's slots, or null (TW-28).</summary>
+        internal static string ProjectPartOf(Attribute attribute)
+        {
+            var project = ForgeAttributes.Project;
+            if (!project || !attribute) return null;
+            const string where = " (Project Settings → PlayForge).";
+            if (project.Health == attribute)
+                return "This project's Health: what an entity dies of at 0, and what On Hit counts where an entry names none" + where;
+            if (project.Mana == attribute) return "This project's Mana: what an ability's Mana Cost spends" + where;
+            if (project.Luck == attribute) return "This project's Luck: read on the caster of every chance that gives no luck of its own" + where;
+            if (project.MovementSpeed == attribute) return "This project's Movement Speed: what the Creator Lab's units walk at" + where;
+            return null;
         }
 
         private void BuildLocalDataSection(VisualElement parent)

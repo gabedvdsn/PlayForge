@@ -395,12 +395,72 @@ namespace FarEmerald.PlayForge.Extended.Editor
         /// <summary>What no stage of the ability applies, said as the inspector says it, or null where a stage applies its usage effects or it has none.</summary>
         internal static string Unapplied(Ability ability)
         {
-            bool cost = ability.Cost != null, cooldown = ability.Cooldown != null;
+            // A Mana Cost is a cost, paid where a Cost effect is (TW-28)
+            bool cost = ability.Cost != null || ability.CostsMana, cooldown = ability.Cooldown != null;
             if (!cost && !cooldown) return null;
             if (ability.Behaviour?.Stages != null && ability.Behaviour.Stages.Any(stage => stage != null && stage.ApplyUsageEffects)) return null;
 
             string what = cost && cooldown ? "the cost and the cooldown never apply" : cost ? "the cost never applies" : "the cooldown never applies";
             return $"No stage applies usage effects, so {what}. Turn on Apply Usage Effects in the stage that should apply them.";
+        }
+    }
+
+    /// <summary>
+    /// An asset that leans on one of the project's attributes it can't have (TW-28): an ability's Mana Cost with no Mana
+    /// of the project's to pay it, which refuses it with Cost; an entity whose abilities cost Mana its attribute set doesn't
+    /// give; and an entity that stays when it dies, whom the project's Health can't kill, as its set lacks it, with no death
+    /// watcher of its own.
+    /// </summary>
+    internal sealed class ProjectAttributesRule : ForgeValidationRule
+    {
+        public override string Name => "The project's attributes";
+
+        public override void Check(Object asset, List<ForgeProblem> problems)
+        {
+            switch (asset)
+            {
+                case Ability ability when ability.CostsMana && ForgeAttributes.Mana == null:
+                    problems.Add(new ForgeProblem(asset, ForgeProblemSeverity.Warning,
+                        "Its Mana Cost spends the project's Mana, and the project has no Mana, so it's refused with Cost. Set one " +
+                        "in Project Settings → PlayForge, or give it a Cost effect.", nameof(Ability.ManaCost)));
+                    break;
+                case EntityIdentity entity:
+                    CheckEntity(entity, problems);
+                    break;
+            }
+        }
+
+        private static void CheckEntity(EntityIdentity entity, List<ForgeProblem> problems)
+        {
+            var given = entity.AttributeSet != null ? entity.AttributeSet.GetUnique() : new HashSet<IAttribute>();
+
+            var mana = ForgeAttributes.Mana;
+            if (mana != null && !given.Contains(mana))
+            {
+                foreach (var ability in entity.StartingAbilities ?? new List<Ability>())
+                {
+                    if (ability == null || !ability.CostsMana) continue;
+                    problems.Add(new ForgeProblem(entity, ForgeProblemSeverity.Warning,
+                        $"{ability.GetName()} costs {mana.Name}, which its attribute set doesn't give, so it's refused with Cost.",
+                        nameof(EntityIdentity.StartingAbilities)));
+                }
+            }
+
+            var health = ForgeAttributes.Health;
+            var death = entity.Death;
+            if (health == null || !EntityDeath.Stays(death) || !death.DiesAtZeroHealth || given.Contains(health) || WatchesForDeath(entity)) return;
+            problems.Add(new ForgeProblem(entity, ForgeProblemSeverity.Warning,
+                $"It stays when it dies, but its attribute set has no {health.Name}, the project's, and no death watcher of its " +
+                "own watches, so only code can kill it.", nameof(EntityIdentity.Death)));
+        }
+
+        // Whether a death watcher of its own, or of its attribute sets', watches for its death
+        private static bool WatchesForDeath(EntityIdentity entity)
+        {
+            if (entity.WorkerGroup?.AnalysisWorkers?.Any(worker => worker is DeathWatcherAnalysisWorker) == true) return true;
+            if (entity.AttributeSet == null) return false;
+            return entity.AttributeSet.SelfAndSubSets().Any(set =>
+                set != null && set.WorkerGroup?.AnalysisWorkers?.Any(worker => worker is DeathWatcherAnalysisWorker) == true);
         }
     }
 }

@@ -132,6 +132,11 @@ shared Effect Modifier asset ([EFFECTS.md](EFFECTS.md#modifiers)).
 What the entity's death does (TW-4). **Policy** is **End** by default: as it dies, its hub ends it at its frame's end,
 as an entity always did. **Stay** keeps it, dead, until it revives: a MOBA hero, or anyone who dies and comes back.
 
+An entity dies as a death watcher among its analysis workers, or its attribute set's, says it does. Where none watches
+and the project names a Health ([ATTRIBUTES.md](ATTRIBUTES.md#the-projects-attributes)), it dies as its Health reaches 0
+(TW-28). **Dies At Zero Health**, on by default, says it does; off, as for a training dummy, the project's Health doesn't
+kill it.
+
 - A staying entity dies at its frame's end and stays registered, with its items, levels and lasting effects. Its
   abilities are refused while it's dead.
 - **Ends Effects Tagged**: the effects its death ends, by an asset, context or granted tag, as a cleanse ends them: its

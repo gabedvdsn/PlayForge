@@ -342,7 +342,7 @@ namespace FarEmerald.PlayForge.Extended.Editor
                 {
                     DefinitionPath(nameof(AbilityDefinition.ActivationPolicy)), DefinitionPath(nameof(AbilityDefinition.BufferWindow)),
                     DefinitionPath(nameof(AbilityDefinition.BufferPriority)), DefinitionPath(nameof(AbilityDefinition.ActivateImmediately)),
-                    nameof(Ability.Cost), nameof(Ability.Cooldown), BehaviourPath(nameof(AbilityBehaviour.Targeting)),
+                    nameof(Ability.Cost), nameof(Ability.ManaCost), nameof(Ability.Cooldown), BehaviourPath(nameof(AbilityBehaviour.Targeting)),
                     BehaviourPath(nameof(AbilityBehaviour.UseImplicitTargeting)), BehaviourPath(nameof(AbilityBehaviour.ImplicitTag)),
                 },
                 OnImportComplete = OnSectionReplaced,
@@ -388,6 +388,8 @@ namespace FarEmerald.PlayForge.Extended.Editor
             content.Add(triggers);
 
             content.Add(CreatePropertyField(serializedObject.FindProperty(nameof(Ability.Cost)), "Cost", "Cost"));
+            // Its cost in the project's Mana, where it has no Cost effect (TW-28)
+            content.Add(CreatePropertyField(serializedObject.FindProperty(nameof(Ability.ManaCost)), "ManaCost", "Mana Cost"));
             content.Add(CreatePropertyField(serializedObject.FindProperty(nameof(Ability.Cooldown)), "Cooldown", "Cooldown"));
 
             // They apply only from a stage set to Apply Usage Effects, which nothing said when none was (ED-41)
@@ -636,6 +638,8 @@ namespace FarEmerald.PlayForge.Extended.Editor
         {
             var parts = new List<string> { EnumName(ability.Definition.ActivationPolicy) };
             if (ability.Cost != null) parts.Add(NameOf(ability.Cost));
+            // Or its Mana Cost, in the project's Mana, as "30 Mana" (TW-28)
+            else if (ability.CostsMana) parts.Add(NumberText.Of(ability.ManaCost, ForgeAttributes.Mana ? ForgeAttributes.Mana.Name : "Mana"));
             if (ability.Cooldown != null) parts.Add(NameOf(ability.Cooldown));
             return string.Join(" · ", parts);
         }

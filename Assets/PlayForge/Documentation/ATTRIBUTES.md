@@ -34,6 +34,31 @@ it holds, such as the abbreviation or how many assets use the attribute.
   An effect's impact can add its own way (**Add Behaviour**: as the attribute's role says, a plain Sum, or Diminishing),
   and a number can read its own way (× Attribute's **Read As**).
 
+An attribute that fills one of the project's slots says so under its Role, as "This project's Health".
+
+## The Project's Attributes
+
+**Project Settings → PlayForge** names, under **Project Attributes**, the attributes PlayForge reads by their part in
+the game (TW-28). **Create Project Attributes** makes the asset that holds them, at
+`Assets/Resources/PlayForge Project Attributes.asset`, so a build has it too, and fills each slot with the project's
+attribute of its name; **Fill by Name** fills the empty ones again. Each slot is optional, and an empty one leaves
+things as they were. An asset's own setting always wins over the project's.
+
+- **Health**: what an entity dies of as it reaches 0, where no death watcher of its own watches for its death and its
+  Death doesn't say otherwise ([ENTITIES.md](ENTITIES.md#death)); what On Hit counts as a hit where an entry names no
+  attribute ([ITEMS.md](ITEMS.md#on-hit)); and whose loss names the killer, for Kill and Died. An entity whose set has
+  no Health doesn't die of it. A trigger's Attribute of None still takes every attribute.
+- **Mana**: what an ability's **Mana Cost** spends, where it has no Cost effect ([ABILITIES.md](ABILITIES.md#activation)).
+  A caster with less, or with no Mana, is refused with Cost.
+- **Luck**: read on the caster of every chance that gives no luck of its own (TW-8).
+- **Movement Speed**: what the Creator Lab's units walk at, where its rules name none ([CREATOR_LAB.md](CREATOR_LAB.md)).
+
+Code reads them through `ForgeAttributes`, as `ForgeAttributes.Health`, each null where the project sets none. A test
+uses attributes of its own with `ForgeAttributes.Use(attributes)`, which gives back the ones it replaced, to put back.
+The Problems window warns of an ability whose Mana Cost has no Mana of the project's to pay it, an entity whose starting
+abilities cost Mana its attribute set doesn't give, and an entity that stays when it dies whose set lacks the project's
+Health, with no death watcher of its own.
+
 ## Local Data
 
 Local Data is a list of named values stored on the asset. Each row has a **Key** (a tag), a **Type**, and a value of

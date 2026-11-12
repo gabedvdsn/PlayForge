@@ -52,17 +52,20 @@ namespace FarEmerald.PlayForge.Lab
     }
 
     /// <summary>
-    /// A project's rules for the Creator Lab, as an asset (LAB-1). An attribute left empty is found by its name among the
-    /// project's: Health, and Movement Speed or Move Speed. With no asset, the lab makes one and finds both.
+    /// A project's rules for the Creator Lab, as an asset (LAB-1). An attribute left empty is the project's own, from Project
+    /// Settings → PlayForge (TW-28), or else found by its name among the project's: Health, and Movement Speed or Move
+    /// Speed. With no asset, the lab makes one and finds both.
     /// </summary>
     [CreateAssetMenu(menuName = "PlayForge/Lab Rules", fileName = "Lab Rules")]
     public class LabRules : ScriptableObject, ILabRules
     {
         [Header("Attributes")]
-        [Tooltip("A unit's health: its bar, and what a dummy counts. Left empty, the lab takes the project's attribute named Health")]
+        [Tooltip("A unit's health: its bar, and what a dummy counts. Left empty, the lab takes the project's Health (Project " +
+                 "Settings → PlayForge), or else its attribute named Health")]
         public Attribute Health;
 
-        [Tooltip("What a unit walks at, in units a second. Left empty, the lab takes one named Movement Speed or Move Speed")]
+        [Tooltip("What a unit walks at, in units a second. Left empty, the lab takes the project's Movement Speed (Project " +
+                 "Settings → PlayForge), or else one named Movement Speed or Move Speed")]
         public Attribute MovementSpeed;
 
         [Tooltip("How fast a unit walks where it has no movement speed")]
@@ -101,8 +104,8 @@ namespace FarEmerald.PlayForge.Lab
         [System.NonSerialized] private Attribute foundHealth;
         [System.NonSerialized] private Attribute foundSpeed;
 
-        Attribute ILabRules.Health => Health ? Health : foundHealth;
-        Attribute ILabRules.MovementSpeed => MovementSpeed ? MovementSpeed : foundSpeed;
+        Attribute ILabRules.Health => Health ? Health : ForgeAttributes.Health ?? foundHealth;
+        Attribute ILabRules.MovementSpeed => MovementSpeed ? MovementSpeed : ForgeAttributes.MovementSpeed ?? foundSpeed;
         float ILabRules.WalkSpeed => WalkSpeed;
         IReadOnlyList<Tag> ILabRules.Stops => Stops;
         IReadOnlyList<Tag> ILabRules.Hides => Hides;
