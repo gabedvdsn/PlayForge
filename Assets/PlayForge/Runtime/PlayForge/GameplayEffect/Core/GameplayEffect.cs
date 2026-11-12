@@ -45,6 +45,10 @@ namespace FarEmerald.PlayForge
         [SerializeReference]
         public List<AbstractEffectWorker> Workers;
 
+        [Tooltip("Workers it gives the one it's on while it lasts, and takes back as it goes: attribute, impact, tag and " +
+                 "analysis workers, as a debuff that changes how its target takes damage, or shatters it below 13% (TW-13)")]
+        public StandardWorkerGroup WorkerGroup;
+
         /// <summary>
         /// What the effect shows and sounds as it lands, ticks and goes, and while it lasts, apart from what it changes, as
         /// its workers are listed: a camera shake, a sound, a prefab. An effect showed nothing of its own (FEAT-1).

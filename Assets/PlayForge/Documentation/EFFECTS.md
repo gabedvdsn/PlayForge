@@ -305,6 +305,12 @@ has lost since the effect began. What a worker keeps for one application of its 
 `ctx.GetState<T>(this)`, since the worker itself is shared by every application
 ([SCALERS.md](SCALERS.md#asking-a-worker)).
 
+**Worker Group**, after them, gives the one the effect is on more workers while it lasts, as an item's group does while
+it's equipped (TW-13): attribute workers, as a debuff that changes how its target takes damage; impact, tag and
+analysis workers, as Ice Blast's debuff shattering its target as its Health falls below 13% by a Threshold. They come
+back as it goes. Two of the effect on one target give the group once, and the last of them to go takes it back. An
+Instant effect doesn't last, so its group does nothing.
+
 ### On Hit
 
 **On Hit**, above the workers, holds the effects the hits of the one this effect is on apply while it lasts: a

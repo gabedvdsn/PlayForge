@@ -542,7 +542,11 @@ namespace FarEmerald.PlayForge.Extended.Editor
                 HelpTopic = "effects/workers",
 
                 SerializedObject = serializedObject,
-                PropertyPaths = new[] { nameof(GameplayEffect.OnHit), nameof(GameplayEffect.Modifiers), nameof(GameplayEffect.Auras), nameof(GameplayEffect.Workers) },
+                PropertyPaths = new[]
+                {
+                    nameof(GameplayEffect.OnHit), nameof(GameplayEffect.Modifiers), nameof(GameplayEffect.Auras), nameof(GameplayEffect.Workers),
+                    nameof(GameplayEffect.WorkerGroup),
+                },
                 OnImportComplete = OnSectionReplaced,
                 OnClearComplete = OnSectionReplaced,
             });
@@ -561,6 +565,8 @@ namespace FarEmerald.PlayForge.Extended.Editor
             // The effects it holds on those near the one it's on, while it lasts (TW-10)
             workersSection.Content.Add(CreatePropertyField(serializedObject.FindProperty(nameof(GameplayEffect.Auras)), "Auras", "Auras"));
             workersSection.Content.Add(CreatePropertyField(serializedObject.FindProperty(nameof(GameplayEffect.Workers)), "Workers", ""));
+            // The workers it gives the one it's on while it lasts (TW-13)
+            workersSection.Content.Add(CreatePropertyField(serializedObject.FindProperty(nameof(GameplayEffect.WorkerGroup)), "WorkerGroup", "Worker Group"));
         }
 
         private void BuildLocalDataSection(VisualElement parent)
@@ -663,7 +669,7 @@ namespace FarEmerald.PlayForge.Extended.Editor
             if (impactSection != null) impactSection.Summary.text = ImpactSummary();
             if (levelsSection != null) levelsSection.Summary.text = LevelsSummary();
             if (requirementsSection != null) requirementsSection.Summary.text = RequirementsSummary();
-            if (workersSection != null) workersSection.Summary.text = WorkersLine(effect.OnHit, effect.Modifiers, effect.Auras, effect.Workers?.Count(worker => worker != null) ?? 0);
+            if (workersSection != null) workersSection.Summary.text = WorkersLine(effect.OnHit, effect.Modifiers, effect.Auras, (effect.Workers?.Count(worker => worker != null) ?? 0) + WorkerCount(effect.WorkerGroup));
             if (cuesSection != null) cuesSection.Summary.text = CountOf(effect.Cues?.Count(cue => cue != null) ?? 0, "cue", "cues");
             if (localDataSection != null) localDataSection.Summary.text = CountOf(effect.LocalData?.Count ?? 0, "entry", "entries");
             if (usedBySection != null) usedBySection.Summary.text = usedBy == null ? "" : CountOf(usedBy.Count, "asset", "assets");

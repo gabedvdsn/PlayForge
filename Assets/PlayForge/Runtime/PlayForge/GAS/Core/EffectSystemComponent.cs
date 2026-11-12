@@ -494,6 +494,11 @@ namespace FarEmerald.PlayForge
         // The auras each container gave its target, kept apart as its modifiers are (TW-10)
         private readonly Dictionary<AbstractEffectContainer, List<AuraEntry>> aurasLent = new();
 
+        // The worker group each container gave its target, and how many of the containers lasting gave each, so two of an
+        // effect give it once and the last to go takes it back: a worker is one object, which its cache keeps once (TW-13)
+        private readonly Dictionary<AbstractEffectContainer, StandardWorkerGroup> groupsLent = new();
+        private readonly Dictionary<StandardWorkerGroup, int> groupCounts = new();
+
         // Gives the target each ability the container's effect grants, at the level of what applied it, and notes the slot
         // each took. One the target can't take, as one it knows already, isn't lent, so it isn't taken back either, as an
         // item's isn't (GAS-48). An effect couldn't lend an ability (FEAT-8). A restore lends them quietly, and compiles the
@@ -516,6 +521,16 @@ namespace FarEmerald.PlayForge
                 var given = new List<EffectModifierEntry>(modifiers);
                 EffectModifiers.Provide(given, Self);
                 modifiersLent[container] = given;
+            }
+
+            // Its worker group, while it lasts (TW-13)
+            var group = container.Spec.Base.WorkerGroup;
+            if (group != null && HasWorkers(group))
+            {
+                groupCounts.TryGetValue(group, out int giving);
+                if (giving == 0) group.ProvideWorkersTo(Self);
+                groupCounts[group] = giving + 1;
+                groupsLent[container] = group;
             }
 
             // Its auras, while it lasts (TW-10)
@@ -545,12 +560,30 @@ namespace FarEmerald.PlayForge
             if (slots != null) lent[container] = slots;
         }
 
+        // One container's share of a worker group back: the last of them takes the group back (TW-13)
+        private void TakeBackGroup(StandardWorkerGroup group)
+        {
+            if (!groupCounts.TryGetValue(group, out int giving)) return;
+            if (giving > 1)
+            {
+                groupCounts[group] = giving - 1;
+                return;
+            }
+            groupCounts.Remove(group);
+            group.RemoveWorkersFrom(Self);
+        }
+
+        private static bool HasWorkers(StandardWorkerGroup group) =>
+            group.AttributeWorkers is { Count: > 0 } || group.ImpactWorkers is { Count: > 0 } ||
+            group.TagWorkers is { Count: > 0 } || group.AnalysisWorkers is { Count: > 0 };
+
         // Takes back what the container lent, interrupting an ability that's running, as an item's is (FEAT-8)
         private void TakeBackAbilities(AbstractEffectContainer container)
         {
             if (onHitsLent.Count > 0 && onHitsLent.Remove(container, out var onHit)) OnHits.Remove(onHit, Self);
             if (modifiersLent.Count > 0 && modifiersLent.Remove(container, out var modifiers)) EffectModifiers.Remove(modifiers, Self);
             if (aurasLent.Count > 0 && aurasLent.Remove(container, out var auras)) ForgeAuras.Remove(auras, Self);
+            if (groupsLent.Count > 0 && groupsLent.Remove(container, out var group)) TakeBackGroup(group);
 
             if (lent.Count == 0 || !lent.Remove(container, out var slots)) return;
             var abilitySystem = Self.GetAbilitySystem();
@@ -1037,6 +1070,9 @@ namespace FarEmerald.PlayForge
             modifiersLent.Clear();
             foreach (var auras in aurasLent.Values) ForgeAuras.Remove(auras, Self);
             aurasLent.Clear();
+            foreach (var group in groupCounts.Keys) group.RemoveWorkersFrom(Self);
+            groupCounts.Clear();
+            groupsLent.Clear();
             requirementsDirty = true;
         }
 

@@ -7,6 +7,8 @@ tracks each fix below by its ID.
 ## [Unreleased]
 
 ### Added
+- An effect's own worker group: attribute, impact, tag and analysis workers it gives the one it's on while it lasts,
+  once however many of it last (TW-13).
 - Absorption and block: the Barrier attribute role soaks the losses to the attribute it absorbs for, decaying at a rate
   or fading with the effect that gave it; Block and Evade pipeline stages stop an effect as it lands, the one hit hearing
   Blocked or Evaded and the dealer Hit Blocked or Hit Evaded (TW-12).
