@@ -112,12 +112,17 @@ namespace FarEmerald.PlayForge
         [Tooltip("When it lands: as the effect lands, each tick, or as it ends")]
         public EApplyTickRemove When = EApplyTickRemove.OnApply;
 
+        [Tooltip("Whom it lands on: the effect's target, or its caster (TW-14)")]
+        public EEffectRecipient LandsOn = EEffectRecipient.Target;
+
         public override void Apply(EffectChanges changes, GameplayEffectSpec spec, EffectModifierRule rule)
         {
-            if (Effect) changes.Packets.Add(new EffectChanges.Packet(When, Effect, rule));
+            if (Effect) changes.Packets.Add(new EffectChanges.Packet(When, Effect, rule, LandsOn));
         }
 
-        public override string Describe() => Effect ? $"Adds {Effect.GetName()} {EffectChanges.WhenText(When)}" : "Adds an effect";
+        public override string Describe() => Effect
+            ? $"Adds {Effect.GetName()} {EffectChanges.WhenText(When)}{(LandsOn == EEffectRecipient.Caster ? ", on its caster" : "")}"
+            : "Adds an effect";
     }
 
     /// <summary>
@@ -161,9 +166,12 @@ namespace FarEmerald.PlayForge
         [Tooltip("Its stacks come off as it overflows, so it starts again from none")]
         public bool ClearStacks;
 
+        [Tooltip("Whom the overflow's effect lands on: the effect's target, or its caster (TW-14)")]
+        public EEffectRecipient LandsOn = EEffectRecipient.Target;
+
         public override void Apply(EffectChanges changes, GameplayEffectSpec spec, EffectModifierRule rule)
         {
-            if (Effect) changes.Overflows.Add(new EffectChanges.Packet(EApplyTickRemove.OnApply, Effect, rule));
+            if (Effect) changes.Overflows.Add(new EffectChanges.Packet(EApplyTickRemove.OnApply, Effect, rule, LandsOn));
             if (ClearStacks) changes.ClearStacksOnOverflow = true;
         }
 
@@ -258,11 +266,15 @@ namespace FarEmerald.PlayForge
             public readonly GameplayEffect Effect;
             public readonly EffectModifierRule AddedBy;
 
-            public Packet(EApplyTickRemove when, GameplayEffect effect, EffectModifierRule addedBy)
+            /// <summary>Whom it lands on: the effect's target, or its caster (TW-14).</summary>
+            public readonly EEffectRecipient LandsOn;
+
+            public Packet(EApplyTickRemove when, GameplayEffect effect, EffectModifierRule addedBy, EEffectRecipient landsOn = EEffectRecipient.Target)
             {
                 When = when;
                 Effect = effect;
                 AddedBy = addedBy;
+                LandsOn = landsOn;
             }
         }
 

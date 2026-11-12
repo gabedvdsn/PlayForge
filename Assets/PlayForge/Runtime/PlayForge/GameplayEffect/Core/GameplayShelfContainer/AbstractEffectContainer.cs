@@ -127,10 +127,12 @@ namespace FarEmerald.PlayForge
 
             ReverseImpact();
 
-            // Onto the target, where the OnApply and OnTick ones land. These went to the source (GAS-8)
+            // Onto the target, where the OnApply and OnTick ones land. These went to the source (GAS-8). One made for the
+            // caster, where it says, onto the caster (TW-14)
             foreach (var carrier in Spec.GetContainedCarriers(EApplyTickRemove.OnRemove))
             {
-                Spec.Target.ApplyCarrier(carrier);
+                var onto = (carrier as IAttributeImpactCarrier)?.GetTarget() ?? Spec.Target;
+                onto.ApplyCarrier(carrier);
             }
         }
 

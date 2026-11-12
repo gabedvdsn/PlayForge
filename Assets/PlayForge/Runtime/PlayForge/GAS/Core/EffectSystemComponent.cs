@@ -156,10 +156,7 @@ namespace FarEmerald.PlayForge
                 Self.GetCallbacks()?.EffectApplied(spec);
                 ForgeCounters.EffectsApplied.Value++;
 
-                foreach (var containedEffect in spec.Base.ImpactSpecification.GetContainedEffects(EApplyTickRemove.OnApply))
-                {
-                    ApplyMadeFrom(spec, containedEffect);
-                }
+                ApplyContained(spec, EApplyTickRemove.OnApply);
                 ApplyAddedPackets(spec, EApplyTickRemove.OnApply);
             }
             finally
@@ -327,13 +324,31 @@ namespace FarEmerald.PlayForge
         }
 
         // An effect another lands, from its origin and with the magnitudes its caller set: a contained effect, or an
-        // overflow's (FEAT-2)
-        private bool ApplyMadeFrom(GameplayEffectSpec from, GameplayEffect effect)
+        // overflow's (FEAT-2); on this one's target, or on its caster where it says (TW-14)
+        private bool ApplyMadeFrom(GameplayEffectSpec from, GameplayEffect effect, EEffectRecipient landsOn = EEffectRecipient.Target,
+            EffectModifierRule addedBy = null)
         {
+            var onto = Recipient(from, landsOn);
+            if (onto == null) return false;
+
             // The rules whose added effect the one it's made from is change it no more (TW-7)
-            var spec = EffectModifiers.Make(Self, from.GetOrigin(), effect, from, null);
+            var spec = EffectModifiers.Make(onto, from.GetOrigin(), effect, from, addedBy);
             spec?.TakeSetByCaller(from.SetByCallerMagnitudes);
-            return ApplyGameplayEffect(spec);
+            return ReferenceEquals(onto, Self) ? ApplyGameplayEffect(spec) : onto.ApplyGameplayEffect(spec);
+        }
+
+        // Whom an effect another lands lands on: this one's target, or its caster where that's an entity (TW-14)
+        private ITarget Recipient(GameplayEffectSpec from, EEffectRecipient landsOn) =>
+            landsOn == EEffectRecipient.Caster ? from.GetOrigin()?.GetSource() as ITarget : Self as ITarget;
+
+        // Its own contained effects for a moment, each on whom it says (TW-14)
+        private void ApplyContained(GameplayEffectSpec spec, EApplyTickRemove when)
+        {
+            var packets = spec.Base.ImpactSpecification?.Packets;
+            if (packets == null) return;
+            for (int i = 0; i < packets.Length; i++)
+                if (packets[i].Policy == when && packets[i].ContainedEffect != null)
+                    ApplyMadeFrom(spec, packets[i].ContainedEffect, packets[i].LandsOn);
         }
 
         private void ApplyInstantGameplayEffect(GameplayEffectSpec spec)
@@ -643,10 +658,7 @@ namespace FarEmerald.PlayForge
                     spec.GetImpactersFor(attribute, EImpactDelivery.Periodic));
             }
 
-            foreach (var containedEffect in spec.Base.ImpactSpecification.GetContainedEffects(EApplyTickRemove.OnTick))
-            {
-                ApplyMadeFrom(spec, containedEffect);
-            }
+            ApplyContained(spec, EApplyTickRemove.OnTick);
             ApplyAddedPackets(spec, EApplyTickRemove.OnTick);
         }
 
@@ -658,9 +670,7 @@ namespace FarEmerald.PlayForge
             foreach (var packet in spec.Changes.Packets)
             {
                 if (packet.When != when || packet.Effect == null) continue;
-                var made = EffectModifiers.Make(Self, spec.GetOrigin(), packet.Effect, spec, packet.AddedBy);
-                made?.TakeSetByCaller(spec.SetByCallerMagnitudes);
-                ApplyGameplayEffect(made);
+                ApplyMadeFrom(spec, packet.Effect, packet.LandsOn, packet.AddedBy);
             }
         }
 
@@ -790,16 +800,12 @@ namespace FarEmerald.PlayForge
             if (clear && !finishedSet.Contains(container)) MarkFinished(container);
             if (bound.OverflowEffects != null)
                 for (int i = 0; i < bound.OverflowEffects.Count; i++)
-                    if (bound.OverflowEffects[i] != null) ApplyMadeFrom(spec, bound.OverflowEffects[i]);
+                    if (bound.OverflowEffects[i] != null) ApplyMadeFrom(spec, bound.OverflowEffects[i], bound.OverflowLandsOn);
 
             // And those its modifiers add, each kept from the rule that added it (TW-7)
             if (spec.Changes == null) return;
             foreach (var overflow in spec.Changes.Overflows)
-            {
-                var made = EffectModifiers.Make(Self, spec.GetOrigin(), overflow.Effect, spec, overflow.AddedBy);
-                made?.TakeSetByCaller(spec.SetByCallerMagnitudes);
-                ApplyGameplayEffect(made);
-            }
+                if (overflow.Effect != null) ApplyMadeFrom(spec, overflow.Effect, overflow.LandsOn, overflow.AddedBy);
         }
 
         // ═══════════════════════════════════════════════════════════════════════════

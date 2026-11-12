@@ -120,8 +120,9 @@ What happens when the effect is applied to a target that already has it. Each ap
   it runs out, one stack is lost and the timer restarts.
 - **Stack Behaviours**: optional stacking rules, such as Stack Bounds Config, which keeps the stack count between a
   Min and a Max. An application that would take the effect past the Max overflows: its Overflow Effects land, from
-  the same origin, as a bleed's fourth stack hemorrhages; Deny Refresh On Overflow keeps that application from
-  refreshing or extending the effect; and Clear Stacks On Overflow takes the effect's stacks off.
+  the same origin, as a bleed's fourth stack hemorrhages, on the target or, with **Overflow Lands On** set to Caster,
+  on its caster, as a frenzy (TW-14); Deny Refresh On Overflow keeps that application from refreshing or extending the
+  effect; and Clear Stacks On Overflow takes the effect's stacks off.
 - **Stack Amount**, with its scaler: the stacks each application adds. 0 counts as 1.
 
 A change reads the stack count through an **Effect Stacks** scaler ([SCALERS.md](SCALERS.md)): a magnitude of −5 with
@@ -198,9 +199,10 @@ An impact with no Attribute changes nothing. The Cost check counts every attribu
 
 ### Contained Effects
 
-Other effects this one applies to the same target, with the same origin. Each row pairs a moment with an effect: On
-Apply (when this effect is applied), On Tick (on each execute tick) or On Remove (when this effect is removed). An
-Instant effect has no ticks and no removal, so only its On Apply rows run. An effect that is asked to apply again while
+Other effects this one applies, with the same origin. Each row pairs a moment with an effect: On Apply (when this effect
+is applied), On Tick (on each execute tick) or On Remove (when this effect is removed); and says whom it lands on (TW-14):
+the **Target**, this effect's, as it always did, or the **Caster**, as a lifesteal's heal or a curse's rebound as it ends.
+An Instant effect has no ticks and no removal, so only its On Apply rows run. An effect that is asked to apply again while
 it is still applying is refused, with a warning, so an effect that contains itself doesn't loop forever.
 
 ### Retention Group
@@ -355,12 +357,14 @@ A rule has:
   one, so `Status.Chill` picks every Chill. None picks every effect.
 - **When**: a condition read as the effect is made, its caster the caster and its target the target.
 - **Changes**, each of a kind:
-  - **Add Contained Effect**: an effect that lands on the target as this one lands, each tick, or as it ends.
+  - **Add Contained Effect**: an effect that lands as this one lands, each tick, or as it ends, on the target or, with
+    **Lands On** set to Caster, on its caster (TW-14).
   - **Change Impact**: a Value Pipeline stage its impacts on an attribute go through, of some impact types where it
     names any. An impact that commits, a hit or a tick, runs it after its own pipeline, and its breakdown keeps it; a
     lasting impact, which no pipeline runs on, takes it on its magnitude, as Weak's −30% made −40%.
-  - **Add Overflow Effect**: an effect that lands as an application would take it past its most stacks, and **Clear
-    Stacks**, which takes its stacks off with it. It needs a stack bound of the effect's own to overflow.
+  - **Add Overflow Effect**: an effect that lands as an application would take it past its most stacks, on the target
+    or its caster as its **Lands On** says, and **Clear Stacks**, which takes its stacks off with it. It needs a stack
+    bound of the effect's own to overflow.
   - **Change Duration**: its time multiplied, then more added; its ticks spread over the time it has.
   - **Change Stacks**: more it can hold at most, where a stack bound of its own sets a most, and more a landing gives.
   - **Change Chance to Apply**: multiplied, then added to.

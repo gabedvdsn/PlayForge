@@ -389,15 +389,24 @@ namespace FarEmerald.PlayForge
             // ICarrierApplication) using THIS spec's origin and target — preserving the
             // attribution chain that Source.ApplyGameplayEffect / Source.GenerateEffectSpec
             // would otherwise stamp in.
-            foreach (var contained in Base.ImpactSpecification.GetContainedEffects(phase))
+            var packets = Base.ImpactSpecification?.Packets;
+            if (packets != null)
             {
-                if (contained == null) continue;
+                for (int i = 0; i < packets.Length; i++)
+                {
+                    var contained = packets[i].ContainedEffect;
+                    if (packets[i].Policy != phase || contained == null) continue;
 
-                // With this one's magnitudes, as a contained effect takes them (FEAT-2); the rules whose added effect
-                // this is change it no more (TW-7)
-                var made = EffectModifiers.Make(Target, Origin, contained, this, null);
-                made?.TakeSetByCaller(setByCaller);
-                yield return made;
+                    // On this one's target, or on its caster where it says (TW-14)
+                    var onto = packets[i].LandsOn == EEffectRecipient.Caster ? Origin?.GetSource() as ITarget : Target;
+                    if (onto == null) continue;
+
+                    // With this one's magnitudes, as a contained effect takes them (FEAT-2); the rules whose added effect
+                    // this is change it no more (TW-7)
+                    var made = EffectModifiers.Make(onto, Origin, contained, this, null);
+                    made?.TakeSetByCaller(setByCaller);
+                    yield return made;
+                }
             }
 
             // Those its modifiers add, each made with the rule that added it kept from changing it again (TW-7)
@@ -405,7 +414,9 @@ namespace FarEmerald.PlayForge
             foreach (var packet in Changes.Packets)
             {
                 if (packet.When != phase || packet.Effect == null) continue;
-                var made = EffectModifiers.Make(Target, Origin, packet.Effect, this, packet.AddedBy);
+                var onto = packet.LandsOn == EEffectRecipient.Caster ? Origin?.GetSource() as ITarget : Target;
+                if (onto == null) continue;
+                var made = EffectModifiers.Make(onto, Origin, packet.Effect, this, packet.AddedBy);
                 made?.TakeSetByCaller(setByCaller);
                 yield return made;
             }

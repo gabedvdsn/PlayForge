@@ -223,7 +223,8 @@ namespace FarEmerald.PlayForge
                 Packets[i] = new ContainedEffectPacket()
                 {
                     Policy = o.Packets[i].Policy,
-                    ContainedEffect = o.Packets[i].ContainedEffect
+                    ContainedEffect = o.Packets[i].ContainedEffect,
+                    LandsOn = o.Packets[i].LandsOn,
                 };
             }
         }
@@ -321,6 +322,19 @@ namespace FarEmerald.PlayForge
     {
         public EApplyTickRemove Policy;
         public GameplayEffect ContainedEffect;
+
+        [Tooltip("Whom it lands on: the target, as it always did, or the caster, as a lifesteal's heal (TW-14)")]
+        public EEffectRecipient LandsOn;
+    }
+
+    /// <summary>Whom an effect another lands lands on: a contained effect, an overflow's, or one a modifier adds (TW-14).</summary>
+    public enum EEffectRecipient
+    {
+        /// <summary>The one the effect it comes from lands on.</summary>
+        Target,
+
+        /// <summary>The caster of the effect it comes from, as a lifesteal's heal or a frenzy on overflowing a bleed.</summary>
+        Caster,
     }
 
     public enum EMagnitudeOperation

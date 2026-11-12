@@ -275,6 +275,16 @@ namespace FarEmerald.PlayForge.Extended.Editor
             var effect = new PropertyField(property.FindPropertyRelative(nameof(ContainedEffectPacket.ContainedEffect)), "") { name = "Effect" };
             effect.AddToClassList("pf-contained-effect__effect");
             row.Add(effect);
+
+            // Whom it lands on: the target, or the caster (TW-14)
+            var landsOn = new EnumField
+            {
+                name = "LandsOn",
+                tooltip = "Whom it lands on: the target, as it always did, or the caster, as a lifesteal's heal",
+            };
+            landsOn.AddToClassList("pf-contained-effect__policy");
+            landsOn.BindProperty(property.FindPropertyRelative(nameof(ContainedEffectPacket.LandsOn)));
+            row.Add(landsOn);
             return row;
         }
     }

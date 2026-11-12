@@ -7,6 +7,8 @@ tracks each fix below by its ID.
 ## [Unreleased]
 
 ### Added
+- Effects that land on the caster: each contained effect, a stack bound's overflow effects and an effect a modifier adds
+  lands on the target, as it did, or on the caster, as it says (TW-14).
 - An effect's own worker group: attribute, impact, tag and analysis workers it gives the one it's on while it lasts,
   once however many of it last (TW-13).
 - Absorption and block: the Barrier attribute role soaks the losses to the attribute it absorbs for, decaying at a rate
