@@ -1,0 +1,23 @@
+{
+    "name": "FarEmerald.PlayForge.Lab.Editor",
+    "rootNamespace": "FarEmerald.PlayForge.Lab.Editor",
+    "references": [
+        "FarEmerald.PlayForge",
+        "FarEmerald.PlayForge.Lab",
+        "FarEmerald.PlayForge.Editor",
+        "UniTask"
+    ],
+    "includePlatforms": [
+        "Editor"
+    ],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [
+        "!PLAYFORGE_NO_LAB"
+    ],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

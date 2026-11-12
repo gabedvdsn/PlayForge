@@ -259,7 +259,7 @@ namespace FarEmerald.PlayForge.Samples.Demo
             seat.DownAt = -1f;
             if (!seat.IsPlayer)
             {
-                if (seat.IsDummy) seat.Unit.gameObject.AddComponent<DemoDummy>();
+                if (seat.IsDummy) seat.Unit.gameObject.AddComponent<DemoDummy>().Mend = Roster.DummyMend;
                 else seat.Unit.gameObject.AddComponent<DemoAI>();
             }
             Changed?.Invoke();

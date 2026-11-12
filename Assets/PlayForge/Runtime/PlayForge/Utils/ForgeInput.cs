@@ -20,6 +20,25 @@ namespace FarEmerald.PlayForge
 
         /// <summary>The ray the pointer aims along, or false with nothing to aim through, as with no camera.</summary>
         bool TryGetPointerRay(out Ray ray);
+
+        // What the Creator Lab reads besides (LAB-3, LAB-11). Each has a default, so an input written for click targeting
+        // alone still compiles, and reads as nothing held, nowhere, unscrolled and no key
+
+        /// <summary>Whether a pointer's button is down now: 0 the primary, 1 the secondary, 2 the middle.</summary>
+        bool PointerHeld(int button) => false;
+
+        /// <summary>Where the pointer is on the screen, in pixels from its bottom left, or false where there's none.</summary>
+        bool TryGetPointerPosition(out Vector2 position)
+        {
+            position = default;
+            return false;
+        }
+
+        /// <summary>How far the scroll wheel turned this frame, in notches, away from the player positive.</summary>
+        float ScrollDelta => 0f;
+
+        /// <summary>Whether a key went down this frame.</summary>
+        bool KeyPressed(KeyCode key) => false;
     }
 
     /// <summary>
@@ -98,6 +117,18 @@ namespace FarEmerald.PlayForge
         public bool PointerPressed(int button) => Input.GetMouseButtonDown(button);
 
         public bool TryGetPointerRay(out Ray ray) => ForgeInput.TryAimThrough(Camera, Input.mousePosition, out ray);
+
+        public bool PointerHeld(int button) => Input.GetMouseButton(button);
+
+        public bool TryGetPointerPosition(out Vector2 position)
+        {
+            position = Input.mousePosition;
+            return Input.mousePresent;
+        }
+
+        public float ScrollDelta => Input.mouseScrollDelta.y;
+
+        public bool KeyPressed(KeyCode key) => key != KeyCode.None && Input.GetKeyDown(key);
     }
 #endif
 
@@ -137,6 +168,73 @@ namespace FarEmerald.PlayForge
             }
 
             return ForgeInput.TryAimThrough(Camera, pointer.position.ReadValue(), out ray);
+        }
+
+        public bool PointerHeld(int button)
+        {
+            var mouse = Mouse.current;
+            switch (button)
+            {
+                case 0:
+                    return (mouse != null && mouse.leftButton.isPressed) || (Pointer.current is { } pointer && pointer.press.isPressed);
+                case 1:
+                    return mouse != null && mouse.rightButton.isPressed;
+                case 2:
+                    return mouse != null && mouse.middleButton.isPressed;
+                default:
+                    return false;
+            }
+        }
+
+        public bool TryGetPointerPosition(out Vector2 position)
+        {
+            if (Pointer.current is not { } pointer)
+            {
+                position = default;
+                return false;
+            }
+
+            position = pointer.position.ReadValue();
+            return true;
+        }
+
+        // The Input System scrolls in steps of 120 a notch on most mice
+        public float ScrollDelta => Mouse.current is { } mouse ? mouse.scroll.ReadValue().y / 120f : 0f;
+
+        public bool KeyPressed(KeyCode key)
+        {
+            var keys = Keyboard.current;
+            var control = keys != null ? KeyOf(key) : Key.None;
+            return control != Key.None && keys[control].wasPressedThisFrame;
+        }
+
+        // The Input System's key for the Input Manager's code: letters, digits, F-keys and the common others
+        private static Key KeyOf(KeyCode code)
+        {
+            if (code >= KeyCode.A && code <= KeyCode.Z) return Key.A + (code - KeyCode.A);
+            if (code >= KeyCode.Alpha1 && code <= KeyCode.Alpha9) return Key.Digit1 + (code - KeyCode.Alpha1);
+            if (code >= KeyCode.F1 && code <= KeyCode.F12) return Key.F1 + (code - KeyCode.F1);
+            return code switch
+            {
+                KeyCode.Alpha0 => Key.Digit0,
+                KeyCode.Escape => Key.Escape,
+                KeyCode.Space => Key.Space,
+                KeyCode.Return => Key.Enter,
+                KeyCode.Tab => Key.Tab,
+                KeyCode.Backspace => Key.Backspace,
+                KeyCode.Delete => Key.Delete,
+                KeyCode.UpArrow => Key.UpArrow,
+                KeyCode.DownArrow => Key.DownArrow,
+                KeyCode.LeftArrow => Key.LeftArrow,
+                KeyCode.RightArrow => Key.RightArrow,
+                KeyCode.LeftShift => Key.LeftShift,
+                KeyCode.RightShift => Key.RightShift,
+                KeyCode.LeftControl => Key.LeftCtrl,
+                KeyCode.RightControl => Key.RightCtrl,
+                KeyCode.LeftAlt => Key.LeftAlt,
+                KeyCode.RightAlt => Key.RightAlt,
+                _ => Key.None,
+            };
         }
     }
 #endif

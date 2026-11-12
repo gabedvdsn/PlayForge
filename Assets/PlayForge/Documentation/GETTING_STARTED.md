@@ -127,6 +127,9 @@ string perLevel = impact.FormatTotal();           // "20/30/40/50"
 
 ## Tooling tour
 
+- **The Creator Lab** (`Window → PlayForge → Creator Lab`) — a space to try the project's own assets in: put units
+  and test dummies down, drop effects, abilities and items on them, and read any asset's numbers level by level. It
+  opens in a new scene and plays; its time pauses, steps and speeds up on its own. [CREATOR_LAB.md](CREATOR_LAB.md).
 - **The Forge** (`Window → PlayForge → The Forge`, or Ctrl+Alt+Shift+F, which focuses its search) — every
   PlayForge asset of the active **Forge Project** in one list beside a detail pane. A Forge Project is a folder with a
   project asset at its root (**Create → PlayForge → Forge Project**), and holds the assets under it that no project

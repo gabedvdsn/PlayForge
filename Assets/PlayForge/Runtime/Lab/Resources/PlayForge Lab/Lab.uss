@@ -1,0 +1,51 @@
+/* The Creator Lab's panels (LAB-5): neutral, docked at the edges, a type's color in its icon alone (Docs/EDITOR_STYLE.md) */
+
+.lab-root { flex-grow: 1; }
+.lab-overlay { position: absolute; left: 0; top: 0; right: 0; bottom: 0; }
+
+.lab-panel {
+    position: absolute;
+    background-color: rgba(34, 35, 38, 0.95);
+    border-width: 1px;
+    border-color: rgb(24, 24, 26);
+    color: rgb(212, 212, 212);
+    font-size: 12px;
+}
+.lab-panel--left { left: 8px; top: 8px; bottom: 8px; width: 260px; }
+.lab-panel--right { right: 8px; top: 8px; bottom: 8px; width: 280px; }
+.lab-panel--middle { left: 280px; right: 300px; top: 8px; max-height: 58%; }
+.lab-panel--bottom { left: 280px; right: 300px; bottom: 8px; max-height: 30%; }
+.lab-panel--collapsed { bottom: auto; width: auto; max-height: none; }
+.lab-panel--collapsed.lab-panel--right { left: auto; }
+
+.lab-panel__header {
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+    padding: 3px 6px;
+    background-color: rgb(44, 45, 49);
+}
+.lab-panel__title { -unity-font-style: bold; overflow: hidden; text-overflow: ellipsis; flex-shrink: 1; }
+.lab-panel__collapse { width: 22px; height: 18px; margin: 0; padding: 0; }
+.lab-panel__content { flex-grow: 1; flex-shrink: 1; padding: 6px; }
+
+.lab-row { flex-direction: row; flex-wrap: wrap; align-items: center; }
+.lab-heading { -unity-font-style: bold; margin-top: 8px; margin-bottom: 2px; }
+.lab-muted { color: rgb(150, 150, 152); }
+.lab-line { white-space: normal; overflow: hidden; }
+.lab-search { margin-top: 4px; margin-bottom: 4px; }
+.lab-list { flex-grow: 1; flex-shrink: 1; }
+
+.lab-asset { flex-direction: row; align-items: center; padding: 2px 4px; }
+.lab-asset:hover { background-color: rgba(255, 255, 255, 0.06); }
+.lab-asset__icon { width: 10px; height: 10px; margin-right: 6px; border-radius: 2px; flex-shrink: 0; }
+.lab-asset__name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; flex-shrink: 1; }
+
+.lab-ghost { position: absolute; padding: 2px 6px; background-color: rgba(50, 51, 56, 0.95); color: rgb(240, 240, 240); }
+.lab-hint { position: absolute; bottom: 14px; left: 40%; padding: 4px 8px; background-color: rgba(30, 30, 32, 0.92); color: rgb(220, 220, 220); }
+
+.lab-bar { position: absolute; width: 100px; align-items: center; }
+.lab-bar__line { font-size: 11px; color: rgb(232, 232, 232); -unity-text-align: middle-center; white-space: nowrap; overflow: hidden; }
+.lab-bar__track { width: 100px; height: 6px; background-color: rgba(0, 0, 0, 0.6); }
+.lab-bar__fill { height: 100%; }
+.lab-bar--selected .lab-bar__line { -unity-font-style: bold; color: rgb(255, 255, 255); }

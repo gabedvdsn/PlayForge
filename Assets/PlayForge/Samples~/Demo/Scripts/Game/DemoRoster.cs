@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using FarEmerald.PlayForge.Lab;
 using UnityEngine;
 
 namespace FarEmerald.PlayForge.Samples.Demo
@@ -9,7 +10,7 @@ namespace FarEmerald.PlayForge.Samples.Demo
     /// shows, and the tags and keys its scripts use. One asset, so no script names an asset of its own.
     /// </summary>
     [CreateAssetMenu(menuName = "PlayForge/Demo/Roster", fileName = "Demo Roster")]
-    public class DemoRoster : ScriptableObject
+    public class DemoRoster : ScriptableObject, ILabRules
     {
         [Header("Who fights")]
         public List<DemoHero> Heroes = new();
@@ -54,6 +55,24 @@ namespace FarEmerald.PlayForge.Samples.Demo
         public Tag CastWhen;
         [Tooltip("The Set By Caller key the AI's difficulty is under, which every damage effect multiplies by")]
         public Tag Difficulty;
+
+        // ═══════════════════════════════════════════════════════════════════════════
+        // The Creator Lab's rules (LAB-7): the units, which are the lab's, read the roster as a project's rules
+        // ═══════════════════════════════════════════════════════════════════════════
+
+        [NonSerialized] private List<Tag> stops, hides, shields;
+
+        private void OnValidate() => stops = hides = shields = null;
+
+        Attribute ILabRules.Health => Health;
+        Attribute ILabRules.MovementSpeed => MovementSpeed;
+        float ILabRules.WalkSpeed => 0f;
+        IReadOnlyList<Tag> ILabRules.Stops => stops ??= new List<Tag> { Stunned, Channeling };
+        IReadOnlyList<Tag> ILabRules.Hides => hides ??= new List<Tag> { Invisible };
+        IReadOnlyList<Tag> ILabRules.Shields => shields ??= new List<Tag> { Untargetable };
+        Tag ILabRules.AttackRangeKey => AttackRange;
+        float ILabRules.AttackRange => 2f;
+        int ILabRules.AttackSlot => 0;
 
         [Header("Damage types, as impact types, by which damage numbers are colored")]
         public Tag Physical;

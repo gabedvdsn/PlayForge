@@ -1,0 +1,19 @@
+{
+    "name": "FarEmerald.PlayForge.Lab",
+    "rootNamespace": "FarEmerald.PlayForge.Lab",
+    "references": [
+        "FarEmerald.PlayForge",
+        "UniTask"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [
+        "!PLAYFORGE_NO_LAB"
+    ],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

@@ -7,6 +7,10 @@ tracks each fix below by its ID.
 ## [Unreleased]
 
 ### Added
+- The Creator Lab, Window → PlayForge → Creator Lab: a space for trying a project's assets, its units, test dummies,
+  library, panels and its own time (FEAT-35, LAB-1 to LAB-8). See `Documentation/CREATOR_LAB.md`.
+- `IForgeInput` reads a key, a held pointer button, the pointer's place and the scroll wheel, each with a default, so a
+  project's own input for click targeting still compiles (LAB-2).
 - On Hit on items, abilities and effects: the effects the holder's hits apply, or a kill's, only of some impact types,
   to the one hit or the holder, under a condition; an item's while it's equipped, an ability's while it's known, an
   effect's while it lasts (TW-6).
@@ -311,6 +315,8 @@ tracks each fix below by its ID.
   page, through one table of links in the editor.
 
 ### Changed
+- The Demo's units, camera, dummy and controls are the Creator Lab's, its roster the lab's rules; `DemoInput` is gone,
+  the Demo reading `ForgeInput` (LAB-7).
 - Renaming an asset in its inspector renames its file, with its type's prefix and suffix; a name another file has takes
   a number, and an Undo of the rename brings the file back (ED-70).
 - The Forge opens its list as wide as it was left (ED-72).

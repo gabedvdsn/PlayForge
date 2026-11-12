@@ -10,8 +10,9 @@ Forge's project menu to see them there.
 1. Import the sample from the Package Manager (PlayForge → Samples → Demo).
 2. Open `Demo.unity` and press Play.
 
-It needs nothing beyond PlayForge. It reads input through the Input System or the Input Manager, whichever the project
-has. It renders in the Built-in pipeline and in URP: every shape is made as the scene plays, with the pipeline's own
+It needs nothing beyond PlayForge. It reads input through PlayForge's `ForgeInput`, the Input System or the Input
+Manager, whichever the project has. Its units, its camera and its training dummy are the Creator Lab's, which the
+roster gives its rules, so the arena and the lab can't drift. It renders in the Built-in pipeline and in URP: every shape is made as the scene plays, with the pipeline's own
 default material.
 
 ## Controls

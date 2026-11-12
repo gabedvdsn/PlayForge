@@ -518,9 +518,11 @@ namespace FarEmerald.PlayForge.Samples.Demo
         }
 
         /// <summary>The damage type a blow carried, by its impact types: physical, magic or pure.</summary>
-        public static Tag KindOf(DemoRoster roster, ImpactData impact)
+        public static Tag KindOf(DemoRoster roster, ImpactData impact) => KindOf(roster, impact.SourcedModifier.Carrier?.GetImpactTypes());
+
+        /// <summary>The damage type of a blow's impact types: physical, magic or pure.</summary>
+        public static Tag KindOf(DemoRoster roster, List<Tag> types)
         {
-            var types = impact.SourcedModifier.Carrier?.GetImpactTypes();
             if (types == null || roster == null) return default;
             if (types.Contains(roster.Magic)) return roster.Magic;
             if (types.Contains(roster.Pure)) return roster.Pure;

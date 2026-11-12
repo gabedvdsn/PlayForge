@@ -5,7 +5,7 @@ effects and items, cast, watch the numbers move, change an asset, and see the ch
 
 **Status:** decided 2026-11-11 (Decision 44): a scene, in the package, showing all six ways inside, with a driver for
 the author's unit; Forge Projects are folders. Phase 1, FEAT-32, is built (LVL-1 to LVL-4). FEAT-34 (Forge Projects)
-feeds it.
+feeds it. Phase 2, the shell, is built (LAB-1 to LAB-8): `Assets/PlayForge/Documentation/CREATOR_LAB.md`.
 
 ## The problem
 

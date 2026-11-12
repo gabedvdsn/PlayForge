@@ -1,12 +1,13 @@
+using FarEmerald.PlayForge.Lab;
 using UnityEngine;
 
 namespace FarEmerald.PlayForge.Samples.Demo
 {
     /// <summary>
-    /// The arena's camera: it follows the player's hero from above and behind, and shakes as a camera shake cue asks, as
-    /// Thunderclap's does. It's the game's camera shaker, which PlayForge's cues reach through ForgeCues.
+    /// The arena's camera: the Creator Lab's (LAB-7), following the player's hero from above and behind, at the offset its
+    /// scene gives, and shaking as a camera shake cue asks, as Thunderclap's does.
     /// </summary>
-    public class DemoCamera : MonoBehaviour, ICameraShaker
+    public class DemoCamera : LabCamera
     {
         [Tooltip("Where it sits from the hero")]
         public Vector3 Offset = new(0f, 15f, -11f);
@@ -14,41 +15,25 @@ namespace FarEmerald.PlayForge.Samples.Demo
         [Tooltip("How quickly it catches up")]
         public float Follow = 5f;
 
-        private Vector3 focus;
-        private float strength;
-        private float shakeLeft;
-        private float shakeLength = 1f;
-
-        private void OnEnable() => ForgeCues.Shaker = this;
-
-        private void OnDisable()
+        protected override void Awake()
         {
-            if (ReferenceEquals(ForgeCues.Shaker, this)) ForgeCues.Shaker = null;
+            // The offset as the lab's camera keeps a view: how far, how steeply down, and which way
+            Distance = Offset.magnitude;
+            Tilt = Mathf.Atan2(Offset.y, new Vector2(Offset.x, Offset.z).magnitude) * Mathf.Rad2Deg;
+            Yaw = Mathf.Atan2(-Offset.x, -Offset.z) * Mathf.Rad2Deg;
+            MinDistance = Mathf.Min(MinDistance, Distance);
+            MaxDistance = Mathf.Max(MaxDistance, Distance);
+            FollowSpeed = Follow;
+            ReadsInput = false;
+            base.Awake();
         }
 
-        private void LateUpdate()
+        protected override void LateUpdate()
         {
             var game = DemoGame.Current;
             var player = game != null ? game.Player : null;
-            var want = player != null ? player.transform.position : Vector3.zero;
-            focus = Vector3.Lerp(focus, want, 1f - Mathf.Exp(-Follow * Time.deltaTime));
-
-            var at = focus + Offset;
-            if (shakeLeft > 0f)
-            {
-                shakeLeft -= Time.deltaTime;
-                float fade = Mathf.Clamp01(shakeLeft / shakeLength);
-                at += Random.insideUnitSphere * (strength * 0.35f * fade);
-            }
-            transform.position = at;
-            transform.rotation = Quaternion.LookRotation(focus - (focus + Offset));
-        }
-
-        public void Shake(float strength, float duration)
-        {
-            this.strength = Mathf.Max(shakeLeft > 0f ? this.strength : 0f, strength);
-            shakeLength = Mathf.Max(0.05f, duration);
-            shakeLeft = shakeLength;
+            Following = player != null ? player.transform : null;
+            base.LateUpdate();
         }
     }
 }
