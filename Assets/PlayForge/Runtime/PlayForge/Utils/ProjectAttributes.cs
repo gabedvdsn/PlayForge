@@ -25,6 +25,10 @@ namespace FarEmerald.PlayForge
 
         [Tooltip("What the Creator Lab's units walk at, in units a second, where its rules name none")]
         public Attribute MovementSpeed;
+
+        [Header("Crowd Control")]
+        [Tooltip("The crowd control rules an entity follows where it names none of its own (TW-16)")]
+        public CrowdControlRules CrowdControl;
     }
 
     /// <summary>
@@ -74,6 +78,9 @@ namespace FarEmerald.PlayForge
 
         /// <summary>What the Creator Lab's units walk at where its rules name none; or null.</summary>
         public static Attribute MovementSpeed => Project is { } project && project.MovementSpeed ? project.MovementSpeed : null;
+
+        /// <summary>The crowd control rules an entity follows where it names none of its own; or null (TW-16).</summary>
+        public static CrowdControlRules CrowdControl => Project is { } project && project.CrowdControl ? project.CrowdControl : null;
 
         /// <summary>
         /// Uses <paramref name="attributes"/> in place of the project's own, as a test does, or the project's own again for

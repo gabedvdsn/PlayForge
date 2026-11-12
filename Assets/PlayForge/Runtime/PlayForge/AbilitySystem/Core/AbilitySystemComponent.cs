@@ -634,6 +634,9 @@ namespace FarEmerald.PlayForge
             int count = RunningCount();
             if (count == 0) return;
             var tags = Self.GetTagCache();
+
+            // The crowd control its caster is under breaks what it stops, as a stun breaks a channel (TW-16)
+            var crowdControl = Self.GetCrowdControl();
             var slots = ArrayPool<int>.Shared.Rent(count);
             try
             {
@@ -641,7 +644,8 @@ namespace FarEmerald.PlayForge
                 for (int i = 0; i < found; i++)
                 {
                     if (!AbilityCache.TryGetValue(slots[i], out var running) || !running.IsActive) continue;
-                    if (!PassesWhileActive(running, tags)) running.Inject(InterruptSequenceInjection.Instance);
+                    if (!PassesWhileActive(running, tags) || (crowdControl != null && crowdControl.Stopping(running.Spec.Base, tags) != null))
+                        running.Inject(InterruptSequenceInjection.Instance);
                 }
             }
             finally

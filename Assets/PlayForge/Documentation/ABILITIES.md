@@ -78,7 +78,7 @@ Code asks for an ability by its slot, with a request from `CreateActivationReque
 (`TryActivateAbility(ability)`), or by a tag (`TryActivateAbility(tag)`). A tag activates the first ability, by slot,
 whose asset tag or one of whose context tags is that tag or under it. Each form can say why it was refused, through an
 `out ActivationRefusal`: its `Reason`, such as Cooldown, Cost, Requirements, Blocked or Busy, and for another caster
-check, that check's name in `Rule`. The ability system's `OnAbilityRefused` callback tells each refusal as it happens.
+check, that check's name in `Rule`; for Crowd Control, `Rule` is the rule's tag, as Stunned. The ability system's `OnAbilityRefused` callback tells each refusal as it happens.
 A request that waits in the input buffer isn't refused, and isn't told again as the buffer retries it. A check on the
 target comes after targeting, and ends the activation instead.
 
@@ -126,6 +126,9 @@ passes it in, and one effect serves every strength.
 - **Chance to Activate** (TW-8): how likely an activation is to start, from 0 to 1, rolled once for each, a player's
   or a trigger's, after its other checks; a miss is refused with Chance. **Activation Roll** makes it pseudo-random or
   lucky. **Proc Coefficient**: what its effects' hits carry for on-hit effects, where an effect sets none of its own.
+- **Ignores Crowd Control** (TW-16): the crowd control rules the ability ignores, by their tags, as Black King Bar's
+  Avatar ignores Silenced: the other rules still stop it, and still interrupt it as it runs (see Requirements). A tag
+  ignores the rules under it too.
 - **Cost** and **Cooldown**: gameplay effects ([EFFECTS.md](EFFECTS.md)) applied to the caster when a stage applies
   usage effects (see Stages). A cost is usually an Instant effect that lowers a resource such as Mana. A cooldown is
   usually a Durational effect: while it is active, the caster carries its asset tag, and the Cooldown check refuses the
@@ -233,6 +236,20 @@ The check types:
 
 The section's Clear button empties the tag requirements and leaves the checks, since an ability without them would
 skip its cost and cooldown.
+
+### Crowd Control
+
+**Crowd control** holds for every ability at once, so no ability has to list Stunned among the tags it must not have
+(TW-16). A **Crowd Control Rules** asset (Create → PlayForge → Crowd Control Rules) holds its rules, each a **Tag** the
+caster carries, as Stunned, and what it **Stops**: **Every Ability**, as a stun, or **Abilities Tagged**, those whose
+asset tag or a context tag is one of its **Ability Tags** or under it, as Silenced stops spells and Disarmed attacks.
+An entity's abilities follow its own **Crowd Control** ([ENTITIES.md](ENTITIES.md#abilities)), or, where it names none,
+the project's ([ATTRIBUTES.md](ATTRIBUTES.md#the-projects-attributes)).
+
+While the caster carries a rule's tag, or one under it, an ability the rule stops is refused with **Crowd Control**,
+the refusal's `Rule` naming the tag, and one that runs is interrupted as the tag lands, as a stun breaks a channel. An
+ability's **Ignores Crowd Control** (see Activation) opts it out of the rules it names. Code asks with
+`rules.Stopping(ability, tags)`, the first rule that stops the ability, or null.
 
 ## Workers
 

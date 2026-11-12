@@ -215,6 +215,9 @@ namespace FarEmerald.PlayForge
         /// <summary>The auras it runs (TW-10).</summary>
         public AuraSet GetAuras() => core.Auras;
 
+        /// <summary>The crowd control rules its abilities follow (TW-16).</summary>
+        public CrowdControlRules GetCrowdControl() => core.CrowdControl;
+
         // ═══════════════════════════════════════════════════════════════════════════
         // TOSTRING
         // ═══════════════════════════════════════════════════════════════════════════
@@ -335,6 +338,9 @@ namespace FarEmerald.PlayForge
         /// <summary>Its own lifesteal, as <see cref="EntityIdentity.Lifesteal"/> (TW-15).</summary>
         public List<LifestealEntry> Lifesteal = new();
 
+        /// <summary>Its crowd control rules, as <see cref="EntityIdentity.CrowdControl"/> (TW-16).</summary>
+        public CrowdControlRules CrowdControl;
+
         public RuntimeEntityIdentity()
         {
         }
@@ -367,6 +373,7 @@ namespace FarEmerald.PlayForge
             Modifiers = data.Modifiers;
             Auras = data.Auras;
             Lifesteal = data.Lifesteal;
+            CrowdControl = data.CrowdControl;
         }
 
         public string GetName()

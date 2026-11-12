@@ -40,6 +40,9 @@ namespace FarEmerald.PlayForge
         /// <summary>The auras the entity runs, its items', abilities', effects' and its own (TW-10).</summary>
         public AuraSet Auras { get; } = new();
 
+        /// <summary>The crowd control rules its abilities follow: its identity's, or else the project's (TW-16).</summary>
+        public CrowdControlRules CrowdControl => Identity?.CrowdControl is { } own && own ? own : ForgeAttributes.CrowdControl;
+
         /// <summary>The entity's settings as this GAS uses them, or null for a hub given none.</summary>
         public RuntimeEntityIdentity Identity { get; private set; }
 

@@ -575,6 +575,10 @@ from. It lives outside `Assets/` so it never ships in the package.
   attribute worker a buff's group can carry, and Damage Return a worker whose returned damage is typed so no return
   returns it again. Damage taken is the one hit's attribute worker's to see, as an impact worker sees what an entity
   deals, so the return is one.
+- Decision 54, 2026-11-12: TW-16's shape, the user's answers. Crowd control rules live in **a shared asset entities
+  name**: a Crowd Control Rules asset, which each entity names, and the project's (in its Project Attributes) for an
+  entity that names none, so teams and bosses can follow rules of their own. An ability opts out **per rule**: it lists
+  the crowd control tags it ignores, as Avatar ignores Silenced and not a stun, rather than ignoring every rule.
 
 **Open. Ask the user; do not assume:**
 1. ~~**Uncommitted changes**~~: decided, see above.
@@ -1163,7 +1167,7 @@ on-hit (TW-5, TW-6), which most of the rest build on.
 | TW-13 | Rules that come with an effect: an effect's own worker group, given as it lands, taken back as it goes. Done: an effect's **Worker Group**, the attribute, impact, tag and analysis workers an item's or an ability's has, goes to the one it's on as a lasting container of it lands and comes back as it goes, counted, so two of the effect give it once and the last to go takes it back, as a worker is one object its cache keeps once; a restore lets go of every group lent. An Instant effect doesn't last, so its group does nothing. The Effect inspector's Workers section holds it after its effect workers, and its line counts it | Framework | 5 | verified |
 | TW-14 | Effects that land on the caster: Target or Caster on each contained, overflow and packet effect. Done: `EEffectRecipient`, Target or Caster, on each contained effect's packet (**Lands On**), on a stack bound's overflow effects (**Overflow Lands On**), and on a modifier's Add Contained Effect and Add Overflow Effect. Each lands from the same origin on the effect's target, as it always did, or on its caster, where that's an entity: as it lands, each tick, as it overflows, and as it ends, the removal sending each made carrier to its own target. The contained effect row shows its choice | Framework | 5 | verified |
 | TW-15 | The common rules, built in: a healing-received multiplier, execute below a share, can't fall below, damage return that isn't returned again, lifesteal with a condition. Decided (Decision 53): healing received an attribute setting; lifesteal on the effect and on holders; execute, floors and return as stages and workers. Done: an attribute's **Gains Scaled By** multiplies each workable gain to its current by that attribute's value, in the commit, 0 blocking it; an effect's own **Lifesteal** (a share, an attribute, a condition) heals its caster for the hits it deals, beside its own effect workers, and a **Lifesteal** entry on items, abilities and entities, an impact worker as On Hit's, heals its holder for its hits of some types, each heal a workable gain; the **Execute** stage takes the rest of a hit that would leave less than its share of the base; **Can't Fall Below**, an inline attribute worker, holds an attribute at its floor; **Return Damage**, a deferred attribute worker on the one hit, sends a share of each workable loss back to its dealer typed **Returned**, which no return returns again and no lifesteal heals from. The inspectors hold each | Framework | 5 | verified |
-| TW-16 | Crowd control, project-wide: activation rules by tag (Stunned stops every ability, Silenced spells, Disarmed attacks), which cancel what's running; an ability opts out | Framework | 5 | open |
+| TW-16 | Crowd control, project-wide: activation rules by tag (Stunned stops every ability, Silenced spells, Disarmed attacks), which cancel what's running; an ability opts out. Decided (Decision 54): the rules in a shared asset each entity names, the project's where it names none; an ability opts out of each rule by its tag. Done: a **Crowd Control Rules** asset holds rules, each a **Tag** and what it **Stops**, every ability or those carrying one of its **Ability Tags**; an entity's **Crowd Control**, or the project's (Project Settings → PlayForge), is what its abilities follow. While the entity carries a rule's tag, or one under it, an ability the rule stops is refused with **Crowd Control**, the refusal naming the tag, and one running is interrupted, as a stun breaks a channel. An ability's **Ignores Crowd Control** lists the rules it ignores, as Avatar ignores Silenced and not a stun. The inspectors hold each | Framework | 5 | verified |
 | TW-17 | An ability's cost and cooldown apply as it starts unless a stage takes them; charges, several uses with a cooldown each | Framework | 5 | open |
 | TW-18 | Changing sides as the game runs: `SetAffiliation` on the hubs, and an effect that changes its target's side while it lasts | Framework | 5 | open |
 | TW-19 | Conditions in an effect's requirements, beside its tags | Framework | 5 | open |
@@ -1218,6 +1222,12 @@ GAS-4 with GAS-5, PC-6, and TS-I with PC-5.
 ## Log
 
 Record baselines, gate results and notable decisions here, newest first.
+
+- 2026-11-12, **TW-16: crowd control, project-wide.** Crowd Control Rules, each a tag and what it stops, named by an
+  entity or the project's; a stopped ability is refused with Crowd Control and a running one interrupted; an ability
+  ignores the rules it names (Decision 54).
+  - Red first: CrowdControlTests 6 of 6 red with the shape in and no behaviour (no refusal, no interrupt); CrowdControlEditorTests 3 of 3 red against the same snapshot with an empty rule drawer (no fields, no row, no slot)
+  - Gates: EditMode 819/820 (ED-61, the user's lifecycle work); PlayMode 1700/1721 with 8 skipped, the 12 known reds and the Battle scene's area-hit flake (4 of 6); golden 25/25. CrowdControlTests 6/6, CrowdControlEditorTests 3/3
 
 - 2026-11-12, **TW-15: the common rules, built in.** Healing received scales each heal, 0 blocking it; lifesteal on
   effects and holders; an Execute stage; Can't Fall Below, as Shallow Grave; and Damage Return, as Blade Mail, returned

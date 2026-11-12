@@ -62,6 +62,8 @@ things as they were. An asset's own setting always wins over the project's.
   A caster with less, or with no Mana, is refused with Cost.
 - **Luck**: read on the caster of every chance that gives no luck of its own (TW-8).
 - **Movement Speed**: what the Creator Lab's units walk at, where its rules name none ([CREATOR_LAB.md](CREATOR_LAB.md)).
+- **Crowd Control**: not an attribute, but the project's all the same: the crowd control rules an entity's abilities
+  follow where it names none of its own (TW-16, [ABILITIES.md](ABILITIES.md#crowd-control)).
 
 Code reads them through `ForgeAttributes`, as `ForgeAttributes.Health`, each null where the project sets none. A test
 uses attributes of its own with `ForgeAttributes.Use(attributes)`, which gives back the ones it replaced, to put back.

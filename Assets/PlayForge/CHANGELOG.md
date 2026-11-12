@@ -7,6 +7,9 @@ tracks each fix below by its ID.
 ## [Unreleased]
 
 ### Added
+- Crowd control, project-wide: Crowd Control Rules, each a tag and the abilities it stops, named by an entity or else the
+  project's; an ability they stop is refused with Crowd Control and one running is interrupted; an ability's Ignores
+  Crowd Control opts it out of the rules it names (TW-16).
 - The common rules, built in: an attribute's Gains Scaled By, as Healing Received; lifesteal on an effect and on items,
   abilities and entities; an Execute stage; a Can't Fall Below worker; and a Return Damage worker whose returned damage
   isn't returned again (TW-15).

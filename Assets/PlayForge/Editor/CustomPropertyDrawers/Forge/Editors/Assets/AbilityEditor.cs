@@ -343,7 +343,7 @@ namespace FarEmerald.PlayForge.Extended.Editor
                     DefinitionPath(nameof(AbilityDefinition.ActivationPolicy)), DefinitionPath(nameof(AbilityDefinition.BufferWindow)),
                     DefinitionPath(nameof(AbilityDefinition.BufferPriority)), DefinitionPath(nameof(AbilityDefinition.ActivateImmediately)),
                     DefinitionPath(nameof(AbilityDefinition.ChanceToActivate)), DefinitionPath(nameof(AbilityDefinition.ActivationRoll)),
-                    DefinitionPath(nameof(AbilityDefinition.ProcCoefficient)),
+                    DefinitionPath(nameof(AbilityDefinition.ProcCoefficient)), DefinitionPath(nameof(AbilityDefinition.IgnoresCrowdControl)),
                     nameof(Ability.Cost), nameof(Ability.ManaCost), nameof(Ability.Cooldown), BehaviourPath(nameof(AbilityBehaviour.Targeting)),
                     BehaviourPath(nameof(AbilityBehaviour.UseImplicitTargeting)), BehaviourPath(nameof(AbilityBehaviour.ImplicitTag)),
                 },
@@ -394,6 +394,8 @@ namespace FarEmerald.PlayForge.Extended.Editor
             content.Add(CreatePropertyField(serializedObject.FindProperty(DefinitionPath(nameof(AbilityDefinition.ChanceToActivate))), "ChanceToActivate", "Chance to Activate"));
             content.Add(CreatePropertyField(serializedObject.FindProperty(DefinitionPath(nameof(AbilityDefinition.ActivationRoll))), "ActivationRoll", "Activation Roll"));
             content.Add(CreatePropertyField(serializedObject.FindProperty(DefinitionPath(nameof(AbilityDefinition.ProcCoefficient))), "ProcCoefficient", "Proc Coefficient"));
+            // The crowd control it ignores, by its tags, as Avatar ignores Silenced and not a stun (TW-16)
+            content.Add(CreatePropertyField(serializedObject.FindProperty(DefinitionPath(nameof(AbilityDefinition.IgnoresCrowdControl))), "IgnoresCrowdControl", "Ignores Crowd Control"));
 
             content.Add(CreatePropertyField(serializedObject.FindProperty(nameof(Ability.Cost)), "Cost", "Cost"));
             // Its cost in the project's Mana, where it has no Cost effect (TW-28)

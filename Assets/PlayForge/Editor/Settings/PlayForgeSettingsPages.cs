@@ -226,13 +226,14 @@ namespace FarEmerald.PlayForge.Extended.Editor
         /// <summary>Where the project's attributes are made.</summary>
         internal static string ProjectAttributesPath => $"{ProjectAttributesFolder}/{ProjectAttributes.ResourceName}.asset";
 
-        // Each slot, by its field's name, and its label
-        private static readonly (string slot, string label)[] Slots =
+        // Each slot, by its field's name, its label, and what it holds: an attribute, or the crowd control rules (TW-16)
+        private static readonly (string slot, string label, Type type)[] Slots =
         {
-            (nameof(ProjectAttributes.Health), "Health"),
-            (nameof(ProjectAttributes.Mana), "Mana"),
-            (nameof(ProjectAttributes.Luck), "Luck"),
-            (nameof(ProjectAttributes.MovementSpeed), "Movement Speed"),
+            (nameof(ProjectAttributes.Health), "Health", typeof(Attribute)),
+            (nameof(ProjectAttributes.Mana), "Mana", typeof(Attribute)),
+            (nameof(ProjectAttributes.Luck), "Luck", typeof(Attribute)),
+            (nameof(ProjectAttributes.MovementSpeed), "Movement Speed", typeof(Attribute)),
+            (nameof(ProjectAttributes.CrowdControl), "Crowd Control", typeof(CrowdControlRules)),
         };
 
         // The project's attributes (TW-28): a field for each slot, or, where the project has none, a button that makes them
@@ -249,7 +250,8 @@ namespace FarEmerald.PlayForge.Extended.Editor
             section.Add(Note("The attributes PlayForge reads by their part in the game. Health is what an entity dies of at 0, " +
                              "where no death watcher of its own watches, and what On Hit counts where an entry names none; Mana " +
                              "is what an ability's Mana Cost spends; Luck is read on every chance's caster; Movement Speed is " +
-                             "what the Creator Lab's units walk at. Each is optional, and an asset's own setting wins."));
+                             "what the Creator Lab's units walk at; Crowd Control is the rules an entity's abilities follow " +
+                             "where it names none, as a stun stops every ability. Each is optional, and an asset's own setting wins."));
 
             var asset = Resources.Load<ProjectAttributes>(ProjectAttributes.ResourceName);
             var buttons = new VisualElement();
@@ -273,19 +275,19 @@ namespace FarEmerald.PlayForge.Extended.Editor
 
             var serialized = new SerializedObject(asset);
             var fields = new List<ObjectField>();
-            foreach (var (slot, label) in Slots)
+            foreach (var (slot, label, type) in Slots)
             {
                 var property = serialized.FindProperty(slot);
                 var field = new ObjectField(label)
                 {
                     name = slot,
-                    objectType = typeof(Attribute),
+                    objectType = type,
                     allowSceneObjects = false,
                     tooltip = property?.tooltip,
                 };
                 field.SetValueWithoutNotify(property?.objectReferenceValue);
                 field.AddToClassList(ObjectField.alignedFieldUssClassName);
-                field.RegisterValueChangedCallback(change => SetSlot(asset, slot, change.newValue as Attribute));
+                field.RegisterValueChangedCallback(change => SetSlot(asset, slot, change.newValue));
                 section.Add(field);
                 fields.Add(field);
             }
@@ -325,13 +327,13 @@ namespace FarEmerald.PlayForge.Extended.Editor
         }
 
         // A slot set, as one Undo step, and saved
-        private static void SetSlot(ProjectAttributes asset, string slot, Attribute attribute)
+        private static void SetSlot(ProjectAttributes asset, string slot, UnityEngine.Object value)
         {
             if (!asset) return;
             var serialized = new SerializedObject(asset);
             var property = serialized.FindProperty(slot);
-            if (property == null || property.objectReferenceValue == attribute) return;
-            property.objectReferenceValue = attribute;
+            if (property == null || property.objectReferenceValue == value) return;
+            property.objectReferenceValue = value;
             serialized.ApplyModifiedProperties();
             AssetDatabase.SaveAssetIfDirty(asset);
         }

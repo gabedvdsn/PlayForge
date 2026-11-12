@@ -53,6 +53,9 @@ namespace FarEmerald.PlayForge
 
         /// <summary>Its chance to activate didn't come up (TW-8).</summary>
         Chance,
+
+        /// <summary>A crowd control rule its caster is under stops it, as a stun stops every ability (TW-16).</summary>
+        CrowdControl,
     }
 
     /// <summary>A refused activation: the ability, its slot, why, and for a caster check, which (FEAT-17).</summary>
@@ -66,7 +69,10 @@ namespace FarEmerald.PlayForge
 
         public readonly EActivationRefusal Reason;
 
-        /// <summary>The name of the caster check that refused it, for <see cref="EActivationRefusal.Rule"/>.</summary>
+        /// <summary>
+        /// The name of the caster check that refused it, for <see cref="EActivationRefusal.Rule"/>; or the tag of the
+        /// crowd control rule, as Stunned, for <see cref="EActivationRefusal.CrowdControl"/> (TW-16).
+        /// </summary>
         public readonly string Rule;
 
         public ActivationRefusal(Ability ability, int index, EActivationRefusal reason, string rule = null)

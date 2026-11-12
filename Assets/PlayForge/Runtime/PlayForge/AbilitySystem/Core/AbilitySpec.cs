@@ -85,6 +85,15 @@ namespace FarEmerald.PlayForge
             // activation, alongside the validation rules. Missing groups mean no requirement.
             if (!(Base.Tags?.TagRequirements?.CheckSourceRequirements(owner.GetAppliedTags()) ?? true)) return EActivationRefusal.Requirements;
 
+            // The crowd control its caster is under, as a stun stops every ability and Silenced a spell; the refusal
+            // names the rule's tag (TW-16)
+            if (owner is IGameplayAbilitySystem gas && gas.GetCrowdControl() is { } crowdControl
+                && crowdControl.Stopping(Base, owner.GetTagCache()) is { } stopping)
+            {
+                rule = stopping.Tag.ToString();
+                return EActivationRefusal.CrowdControl;
+            }
+
             // An empty rule slot, which a list's "+" can leave, asks nothing; it threw (ED-12)
             foreach (var check in Base.SourceActivationRules)
             {

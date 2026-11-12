@@ -95,6 +95,9 @@ Scale, the entity's time scale is its game's code's to set, through `GetClock().
 - **Max Abilities** (default 99): the most abilities the entity can hold. Its kind can make it a scaler, which changes
   the limit with the entity's level ([SCALERS.md](SCALERS.md)).
 - **Allow Duplicates** (default off): let the entity hold the same ability more than once.
+- **Crowd Control** (TW-16): the crowd control rules its abilities follow, as a stun stops every ability and Silenced
+  spells, or, where it names none, the project's ([ABILITIES.md](ABILITIES.md#crowd-control)). A runtime entity's
+  identity names them too.
 
 ## Items
 

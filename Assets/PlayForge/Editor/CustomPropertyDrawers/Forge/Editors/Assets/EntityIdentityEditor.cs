@@ -378,6 +378,7 @@ namespace FarEmerald.PlayForge.Extended.Editor
                 PropertyPaths = new[]
                 {
                     nameof(EntityIdentity.ActivationPolicy), nameof(EntityIdentity.StartingAbilities), nameof(EntityIdentity.AllowDuplicateAbilities),
+                    nameof(EntityIdentity.CrowdControl),
                 },
                 OnImportComplete = OnSectionReplaced,
                 OnClearComplete = OnSectionReplaced,
@@ -407,6 +408,9 @@ namespace FarEmerald.PlayForge.Extended.Editor
             content.Add(new PropertyField(serializedObject.FindProperty(nameof(EntityIdentity.MaxAbilitiesOperation)), ""));
             content.Add(BoundToggle("AllowDuplicates", nameof(EntityIdentity.AllowDuplicateAbilities), entity.AllowDuplicateAbilities,
                 "Allow Duplicates", "Let the entity hold the same ability more than once"));
+
+            // The crowd control rules its abilities follow, or the project's where it names none (TW-16)
+            content.Add(CreatePropertyField(serializedObject.FindProperty(nameof(EntityIdentity.CrowdControl)), "CrowdControl", "Crowd Control"));
         }
 
         private void BuildItemsSection(VisualElement parent)

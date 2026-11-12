@@ -44,6 +44,10 @@ namespace FarEmerald.PlayForge
 
         [Tooltip("What its effects' hits carry for their on-hit effects, where an effect sets none of its own (TW-8)")]
         [Min(0f)] public float ProcCoefficient = 1f;
+
+        [Tooltip("The crowd control it ignores, by its tags, as Silenced: the other rules still stop it, and still interrupt " +
+                 "it as it runs (TW-16)")]
+        public List<Tag> IgnoresCrowdControl = new();
         
         public List<TextureItem> Textures;
     }

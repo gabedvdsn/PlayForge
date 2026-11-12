@@ -139,6 +139,9 @@ namespace FarEmerald.PlayForge
         /// <summary>The auras it runs (TW-10).</summary>
         public AuraSet GetAuras() => core.Auras;
 
+        /// <summary>The crowd control rules its abilities follow (TW-16).</summary>
+        public CrowdControlRules GetCrowdControl() => core.CrowdControl;
+
         #endregion
 
         public override string ToString()

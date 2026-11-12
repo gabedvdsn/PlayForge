@@ -62,6 +62,9 @@ namespace FarEmerald.PlayForge
         [Tooltip("It heals a share of each loss it deals, while it lives (TW-15)")]
         public List<LifestealEntry> Lifesteal = new();
 
+        [Tooltip("The crowd control rules its abilities follow. None, the project's (TW-16)")]
+        public CrowdControlRules CrowdControl;
+
         [Tooltip("What its death does: End, as an entity always did, or Stay, dead, until it revives, with the effects its " +
                  "death ends and takes, and its body (TW-4)")]
         public EntityDeath Death = new();
