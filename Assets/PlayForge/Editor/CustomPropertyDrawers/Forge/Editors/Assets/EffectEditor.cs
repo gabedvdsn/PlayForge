@@ -365,6 +365,10 @@ namespace FarEmerald.PlayForge.Extended.Editor
             var retention = CreatePropertyField(serializedObject.FindProperty(DefinitionPath(nameof(GameplayEffectDefinition.RetentionGroup))), "RetentionGroup", "Retention Group");
             retention.tooltip = "The group the effect's changes count toward, such as bonus health";
             content.Add(retention);
+
+            // What its hits carry for on-hit effects, its own or else its ability's (TW-8)
+            content.Add(CreatePropertyField(serializedObject.FindProperty(nameof(GameplayEffect.OwnProcCoefficient)), "OwnProcCoefficient", "Own Proc Coefficient"));
+            content.Add(CreatePropertyField(serializedObject.FindProperty(nameof(GameplayEffect.ProcCoefficient)), "ProcCoefficient", "Proc Coefficient"));
         }
 
         // ═══════════════════════════════════════════════════════════════════════════
@@ -420,6 +424,9 @@ namespace FarEmerald.PlayForge.Extended.Editor
         // The impact's chance to apply, which the Requirements section shows (FEAT-8)
         private static readonly string ChancePath = $"{nameof(GameplayEffect.ImpactSpecification)}.{nameof(GameplayEffectImpact.ChanceToApply)}";
 
+        // And how it rolls, pseudo-random and its luck, which the Requirements section shows with it (TW-8)
+        private static readonly string ChanceRollPath = $"{nameof(GameplayEffect.ImpactSpecification)}.{nameof(GameplayEffectImpact.ChanceRoll)}";
+
         // The impact's own fields, as the section's Import and Clear take them, and its retention group
         private string[] ImpactPaths()
         {
@@ -434,11 +441,13 @@ namespace FarEmerald.PlayForge.Extended.Editor
                     do
                     {
                         if (SerializedProperty.EqualContents(child, end)) break;
-                        if (child.propertyPath != ChancePath) paths.Add(child.propertyPath);
+                        if (child.propertyPath != ChancePath && child.propertyPath != ChanceRollPath) paths.Add(child.propertyPath);
                     } while (child.NextVisible(false));
                 }
             }
             paths.Add(DefinitionPath(nameof(GameplayEffectDefinition.RetentionGroup)));
+            paths.Add(nameof(GameplayEffect.OwnProcCoefficient));
+            paths.Add(nameof(GameplayEffect.ProcCoefficient));
             return paths.ToArray();
         }
 
@@ -451,7 +460,7 @@ namespace FarEmerald.PlayForge.Extended.Editor
                 HelpTopic = "effects/requirements",
 
                 SerializedObject = serializedObject,
-                PropertyPaths = new[] { ChancePath, nameof(GameplayEffect.TargetRequirements), nameof(GameplayEffect.SourceRequirements) },
+                PropertyPaths = new[] { ChancePath, ChanceRollPath, nameof(GameplayEffect.TargetRequirements), nameof(GameplayEffect.SourceRequirements) },
                 OnImportComplete = OnSectionReplaced,
                 OnClearComplete = OnSectionReplaced,
             });
@@ -463,6 +472,8 @@ namespace FarEmerald.PlayForge.Extended.Editor
             var chance = CreatePropertyField(serializedObject.FindProperty(ChancePath), "ChanceToApply", "Chance to Apply");
             chance.tooltip = "How likely the effect is to land, from 0 to 1, drawn each time it's applied. 1 always lands";
             content.Add(chance);
+            // How it rolls: pseudo-random, and its luck (TW-8)
+            content.Add(CreatePropertyField(serializedObject.FindProperty(ChanceRollPath), "ChanceRoll", "Chance Roll"));
 
             var sides = new VisualElement { name = "Sides" };
             sides.AddToClassList("pf-segmented");

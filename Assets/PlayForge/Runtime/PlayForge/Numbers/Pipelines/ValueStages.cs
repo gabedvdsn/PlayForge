@@ -76,11 +76,13 @@ namespace FarEmerald.PlayForge
         [Tooltip("What the breakdown notes when it rolls: critical")]
         public string Note = "critical";
 
+        [Tooltip("How it rolls: pseudo-random, and its luck (TW-8)")]
+        public ChanceRoll Roll = new();
+
         public override float Apply(float value, in ValueRun run)
         {
             float chance = Chance?.Evaluate(in run.Context, this) ?? 0f;
-            if (chance <= 0f) return value;
-            if (chance < 1f && ForgeRandom.Value >= chance) return value;
+            if (!ForgeChance.Roll(chance, in run.Context, Roll, this)) return value;
             run.Note(Note);
             return value * (Multiplier?.Evaluate(in run.Context, this) ?? 1f);
         }

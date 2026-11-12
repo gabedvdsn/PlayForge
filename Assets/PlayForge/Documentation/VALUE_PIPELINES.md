@@ -39,7 +39,7 @@ Each stage has a **Label**, the name a breakdown gives it, and **Enabled**, whic
 - **Add**: a number added to the value's size. A flat bonus of 10 makes a blow of −100 one of −110, and a heal of 50 one
   of 60.
 - **Chance**: on a chance, the value times a number: a critical hit. It rolls once for the hit, and the breakdown notes
-  it.
+  it. Its **Roll** makes it pseudo-random or lucky (TW-8, [EFFECTS.md](EFFECTS.md#requirements)).
 - **Clamp**: the value's size kept between two numbers, its sign as it was.
 - **Absorb**: a loss taken first from another attribute of the one hit, as a barrier or a shield takes a blow before
   health. What it soaks comes off that attribute at the frame's end, and the rest goes on.

@@ -91,6 +91,9 @@ namespace FarEmerald.PlayForge
         {
             var dealer = impactData.SourcedModifier.Source;
             if (dealer == null || ReferenceEquals(dealer, impactData.Target)) return false;
+
+            // A hit whose proc coefficient is 0 sets nothing off (TW-8)
+            if (impactData.SourcedModifier.Carrier is GameplayEffectSpec hit && hit.ProcCoefficient <= 0f) return false;
             if (impactData.RealImpact.CurrentValue >= 0f) return false;
 
             // Its own effects' hits set it off no more, so a shock it applies doesn't shock again, and again
@@ -115,9 +118,27 @@ namespace FarEmerald.PlayForge
             var onto = entry.To == EOnHitTo.Holder ? holder as ITarget : ctx.ImpactData.Target;
             if (holder == null || onto == null) return actions;
             var origin = IEffectOrigin.GenerateSourceDerivation(holder);
+
+            // Their chance and duration scale by the hit's proc coefficient (TW-8)
+            float proc = (ctx.ImpactData.SourcedModifier.Carrier as GameplayEffectSpec)?.ProcCoefficient ?? 1f;
             foreach (var effect in entry.Effects)
-                if (effect != null) actions.Add(new ApplyEffectAction(onto, effect, origin));
+            {
+                if (effect == null) continue;
+                if (Mathf.Approximately(proc, 1f)) actions.Add(new ApplyEffectAction(onto, effect, origin));
+                else actions.Add(new LambdaAction(_ => ApplyScaled(onto, effect, origin, proc), $"ApplyEffect({effect.GetName()}) × {proc:0.##}"));
+            }
             return actions;
+        }
+
+        // An effect made with its chance and duration scaled by a proc coefficient, and applied
+        private static void ApplyScaled(ITarget onto, GameplayEffect effect, IEffectOrigin origin, float proc)
+        {
+            var spec = onto.GenerateEffectSpec(origin, effect);
+            if (spec == null) return;
+            spec.Changes ??= new EffectChanges();
+            spec.Changes.ChanceScale *= proc;
+            spec.Changes.DurationScale *= proc;
+            onto.ApplyGameplayEffect(spec);
         }
 
         public override void SubscribeToCache(ImpactWorkerCache cache)

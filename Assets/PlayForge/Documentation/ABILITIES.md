@@ -116,10 +116,14 @@ passes it in, and one effect serves every strength.
     the one who died, its killer the source of the last blow it took; **Revived**, to a staying entity as it revives.
     Their data hold the instigator as Source, the entity it was done to as Subject, and an impact as Impact.
   - For an impact event, a trigger takes only impacts on its **Attribute**, a **Sign** (Loss or Gain), and its
-    **Impact Types**. Its **Chance** rolls once for each event: Counter Helix's 20%. Its **Target** is the ability's
+    **Impact Types**. Its **Chance** rolls once for each event: Counter Helix's 20%, its **Chance Roll** pseudo-random
+    or lucky ([EFFECTS.md](EFFECTS.md#requirements)). Its **Target** is the ability's
     own targeting, as an area spin finds the enemies round it; the event's **Instigator**, as a counterattack; or its
     **Subject**, as an on-hit ability targets the one hit. An ability set off by Died runs on a dead entity only if its
     rules don't ask that its caster be alive.
+- **Chance to Activate** (TW-8): how likely an activation is to start, from 0 to 1, rolled once for each, a player's
+  or a trigger's, after its other checks; a miss is refused with Chance. **Activation Roll** makes it pseudo-random or
+  lucky. **Proc Coefficient**: what its effects' hits carry for on-hit effects, where an effect sets none of its own.
 - **Cost** and **Cooldown**: gameplay effects ([EFFECTS.md](EFFECTS.md)) applied to the caster when a stage applies
   usage effects (see Stages). A cost is usually an Instant effect that lowers a resource such as Mana. A cooldown is
   usually a Durational effect: while it is active, the caster carries its asset tag, and the Cooldown check refuses the

@@ -176,9 +176,8 @@ namespace FarEmerald.PlayForge
             float odds = chance?.Evaluate(spec) ?? 1f;
             // As its modifiers change it (TW-7)
             if (spec.Changes != null) odds = spec.Changes.Chance(odds);
-            if (odds >= 1f) return true;
-            if (odds <= 0f) return false;
-            return ForgeRandom.Value < odds;
+            // Pseudo-random and lucky as its roll says, its streak the caster's for this effect (TW-8)
+            return ForgeChance.Roll(odds, NumberContext.Of(spec), spec.Base.ImpactSpecification?.ChanceRoll, spec.Base);
         }
 
         // The shelf's immunities, the containers whose effects block others, so an application checks them alone and costs

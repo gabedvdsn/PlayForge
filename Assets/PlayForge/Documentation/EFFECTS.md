@@ -261,6 +261,19 @@ always lands, and 0 never does; neither draws, so an effect without a chance lea
 were. A contained effect draws its own: a strike with a bleed at 0.3 lands every time, and its bleed about one time
 in three. The section's summary shows a chance short of 1.
 
+**Chance Roll**, under it, says how the chance rolls, as every chance PlayForge rolls can (TW-8):
+
+- **Pseudo Random**: each miss raises the next roll's odds by a constant and a hit starts them again, so streaks even
+  out and the chance over many rolls stays the same, as Dota's pseudo-random distribution: a 25% chance's first roll
+  has about 8.5%, its next about 17%, and so on. Each caster keeps its own streak for each chance.
+- **Luck**: the project's Luck ([ATTRIBUTES.md](ATTRIBUTES.md#the-projects-attributes)), read on the caster, or with
+  **Own Luck** a number of the chance's own: above 0 it rolls that many more times and keeps the best, below 0 the worst.
+
+A chance of 1 or more always comes up and one of 0 or less never does, and neither draws. The same roll is on a
+trigger's Chance, the Chance stage of a Value Pipeline, an ability's Chance to Activate, and the **Chance** condition,
+which holds on a roll of its number, as a critical strike chance read from an attribute: in a hit it rolls once and keeps
+the roll, so a hit read twice, its preview and its commit, reads the same.
+
 Under it are tag checks against the effect's target, and against its source, the entity behind its origin. The
 switch shows one side's table at a time: **On the target** first, then **On the source**. Each table has a row for
 each group:
@@ -298,6 +311,10 @@ has lost since the effect began. What a worker keeps for one application of its 
 poisoned blade, a boon's Weak (TW-6). Its entries are an item's: an attribute, the effects, to the one hit or the
 holder, only on a kill, impact types and a condition ([ITEMS.md](ITEMS.md#on-hit)). An Instant effect doesn't last, so
 its On Hit does nothing. Another effect that replaces it under its tag takes it off, and a load puts it back once.
+
+**Proc Coefficient**, in Impact, is what the effect's own hits carry for On Hit effects (TW-8): theirs scale their chance
+and their duration by it, so a damage over time at 0.25 sets them off a quarter as often, for a quarter as long, and 0
+sets nothing off. With **Own Proc Coefficient** off, its ability's stands, or else 1.
 
 ### Modifiers
 

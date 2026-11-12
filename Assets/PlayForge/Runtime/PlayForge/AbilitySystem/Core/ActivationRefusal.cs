@@ -50,6 +50,9 @@ namespace FarEmerald.PlayForge
 
         /// <summary>An Activate Anyway ability's critical section keeps another out.</summary>
         Critical,
+
+        /// <summary>Its chance to activate didn't come up (TW-8).</summary>
+        Chance,
     }
 
     /// <summary>A refused activation: the ability, its slot, why, and for a caster check, which (FEAT-17).</summary>

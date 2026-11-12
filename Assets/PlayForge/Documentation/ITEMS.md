@@ -117,7 +117,8 @@ dagger's bleed, a hammer's armor break, a barrier on a kill (TW-6). Each entry h
 - **Attribute**: what a hit lowers, as Health. A hit is a loss to it that the holder deals another entity. None
   counts the project's Health ([ATTRIBUTES.md](ATTRIBUTES.md#the-projects-attributes)), where it names one (TW-28).
 - **Effects**: what it applies. Each effect's own Chance to Apply rolls as it lands, and its hits set the entry off no
-  more, so a shock it applies doesn't shock again.
+  more, so a shock it applies doesn't shock again. A hit's proc coefficient scales their chance and duration, and 0 sets
+  nothing off ([EFFECTS.md](EFFECTS.md#on-hit)).
 - **To**: the one hit (**Target**), or the **Holder**, as a barrier on a kill does.
 - **Only On Kill**: only the hit that takes the attribute from above 0 to 0 or below.
 - **Impact Types**: only hits of one of these types, as attacks, so a bleed's ticks, typed apart, set off nothing.

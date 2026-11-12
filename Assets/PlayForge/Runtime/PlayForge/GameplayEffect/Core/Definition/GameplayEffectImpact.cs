@@ -155,6 +155,9 @@ namespace FarEmerald.PlayForge
         /// </summary>
         public ScalableFloat ChanceToApply = new() { Magnitude = 1f, RealMagnitude = EMagnitudeOperation.UseMagnitude };
 
+        [Tooltip("How its chance to apply rolls: pseudo-random, and its luck (TW-8)")]
+        public ChanceRoll ChanceRoll = new();
+
         [ForgeTagContext(ForgeContext.Impact)]
         public List<Tag> ImpactTypes;
 
@@ -205,6 +208,7 @@ namespace FarEmerald.PlayForge
             ReverseImpactOnRemoval = o.ReverseImpactOnRemoval;
             MagnitudeOperation = o.MagnitudeOperation;
             ChanceToApply = o.ChanceToApply;
+            ChanceRoll = o.ChanceRoll;
             // Each its own copy, as the affiliation list is; a copy shares a magnitude, as the quad's does (ED-3)
             AdditionalImpacts = o.AdditionalImpacts is null
                 ? new List<AttributeImpactEntry>()

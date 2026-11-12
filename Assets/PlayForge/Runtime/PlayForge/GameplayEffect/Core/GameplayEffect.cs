@@ -27,6 +27,12 @@ namespace FarEmerald.PlayForge
         [Tooltip("Modifiers of other effects, its holder's own or those landing on it, while it lasts, the holder the one it's on (TW-7)")]
         public List<EffectModifierEntry> Modifiers = new();
         
+        [Tooltip("Its own proc coefficient in place of its ability's: what its hits carry for their on-hit effects (TW-8)")]
+        public bool OwnProcCoefficient;
+
+        [Tooltip("What its hits carry for their on-hit effects, whose chance and duration scale by it; 0 sets nothing off (TW-8)")]
+        [Min(0f)] public float ProcCoefficient = 1f;
+
         public GameplayEffectImpact ImpactSpecification;
         public GameplayEffectDuration DurationSpecification;
         

@@ -773,12 +773,24 @@ namespace FarEmerald.PlayForge
             // Busy, a request from the buffer waits on in its slot
             if (fromBuffer && IsClaimingPolicy(req.Policy)) return Refuse(out refusal, ability, req.Index, EActivationRefusal.Busy);
 
+            // Its chance to activate, rolled once for the activation, as it would start (TW-8)
+            if (!RollsToActivate(ability, data)) return Refuse(out refusal, ability, req.Index, EActivationRefusal.Chance);
+
             // Each running ability in a stage this one cancels ends first, so this one starts clear of it (FEAT-5)
             CancelAbilitiesCancelledBy(ability);
 
             why = ProcessActivationRequest(data);
             if (why != EActivationRefusal.None) return Refuse(out refusal, ability, req.Index, why);
             return true;
+        }
+
+        // Whether an ability's chance to activate comes up; one that can't miss draws nothing (TW-8)
+        private static bool RollsToActivate(Ability ability, AbilityDataPacket data)
+        {
+            var chance = ability.Definition?.ChanceToActivate;
+            if (chance == null) return true;
+            var context = NumberContext.Of(data);
+            return ForgeChance.Roll(chance.Evaluate(context), in context, ability.Definition.ActivationRoll, ability);
         }
 
         private static bool Refuse(out ActivationRefusal refusal, Ability ability, int index, EActivationRefusal why, string rule = null)

@@ -7,6 +7,9 @@ tracks each fix below by its ID.
 ## [Unreleased]
 
 ### Added
+- Chance, built in: a Chance condition that rolls once for a hit; pseudo-random chances, each caster's streak its own;
+  luck, the project's Luck or a chance's own; an ability's Chance to Activate; and a hit's Proc Coefficient, which scales
+  its on-hit effects' chance and duration (TW-8).
 - The project's attributes, on Project Settings → PlayForge: Health, what an entity dies of at 0 where nothing of its
   own watches for its death, and what On Hit counts; Mana, what an ability's new Mana Cost spends; Luck; and Movement
   Speed, the Creator Lab's units'. Each is optional, and an asset's own setting wins (TW-28).

@@ -107,6 +107,25 @@ namespace FarEmerald.PlayForge
         /// </summary>
         public EffectChanges Changes { get; internal set; }
 
+        // Each Chance condition's roll for this hit, kept so a hit read twice reads the same (TW-8)
+        private Dictionary<object, bool> rolls;
+
+        internal bool TryGetRoll(object key, out bool rolled)
+        {
+            rolled = false;
+            return rolls != null && rolls.TryGetValue(key, out rolled);
+        }
+
+        internal void KeepRoll(object key, bool rolled) => (rolls ??= new Dictionary<object, bool>())[key] = rolled;
+
+        /// <summary>
+        /// What its hits carry for their on-hit effects (TW-8): its effect's own where it sets one, or else the ability's
+        /// that made it, or 1. On Hit's effects scale their chance and duration by it, and 0 sets nothing off.
+        /// </summary>
+        public float ProcCoefficient =>
+            Base.OwnProcCoefficient ? Base.ProcCoefficient
+            : Origin?.GetReadableDefinition() is Ability ability ? ability.Definition.ProcCoefficient : 1f;
+
         public GameplayEffectSpec(GameplayEffect GameplayEffect, IEffectOrigin origin, ITarget target)
         {
             Base = GameplayEffect;

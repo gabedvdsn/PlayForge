@@ -342,6 +342,8 @@ namespace FarEmerald.PlayForge.Extended.Editor
                 {
                     DefinitionPath(nameof(AbilityDefinition.ActivationPolicy)), DefinitionPath(nameof(AbilityDefinition.BufferWindow)),
                     DefinitionPath(nameof(AbilityDefinition.BufferPriority)), DefinitionPath(nameof(AbilityDefinition.ActivateImmediately)),
+                    DefinitionPath(nameof(AbilityDefinition.ChanceToActivate)), DefinitionPath(nameof(AbilityDefinition.ActivationRoll)),
+                    DefinitionPath(nameof(AbilityDefinition.ProcCoefficient)),
                     nameof(Ability.Cost), nameof(Ability.ManaCost), nameof(Ability.Cooldown), BehaviourPath(nameof(AbilityBehaviour.Targeting)),
                     BehaviourPath(nameof(AbilityBehaviour.UseImplicitTargeting)), BehaviourPath(nameof(AbilityBehaviour.ImplicitTag)),
                 },
@@ -386,6 +388,12 @@ namespace FarEmerald.PlayForge.Extended.Editor
             var triggers = CreatePropertyField(serializedObject.FindProperty(DefinitionPath(nameof(AbilityDefinition.Triggers))), "Triggers", "Triggers");
             triggers.tooltip = "Gameplay events sent to the entity, and tags it gains, that activate the ability on their own";
             content.Add(triggers);
+
+            // Its chance to activate, rolled once for each activation, and how it rolls; and what its effects' hits carry
+            // for on-hit effects (TW-8)
+            content.Add(CreatePropertyField(serializedObject.FindProperty(DefinitionPath(nameof(AbilityDefinition.ChanceToActivate))), "ChanceToActivate", "Chance to Activate"));
+            content.Add(CreatePropertyField(serializedObject.FindProperty(DefinitionPath(nameof(AbilityDefinition.ActivationRoll))), "ActivationRoll", "Activation Roll"));
+            content.Add(CreatePropertyField(serializedObject.FindProperty(DefinitionPath(nameof(AbilityDefinition.ProcCoefficient))), "ProcCoefficient", "Proc Coefficient"));
 
             content.Add(CreatePropertyField(serializedObject.FindProperty(nameof(Ability.Cost)), "Cost", "Cost"));
             // Its cost in the project's Mana, where it has no Cost effect (TW-28)

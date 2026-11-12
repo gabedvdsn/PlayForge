@@ -76,6 +76,9 @@ namespace FarEmerald.PlayForge
         [Tooltip("The chance the event sets the ability off, from 0 to 1, rolled once for each event (TW-5)")]
         public ScalableFloat Chance = 1f;
 
+        [Tooltip("How its chance rolls: pseudo-random, and its luck (TW-8)")]
+        public ChanceRoll ChanceRoll = new();
+
         [Tooltip("What the ability targets: what its own targeting finds; the event's instigator, as a counterattack; or " +
                  "its subject, as an on-hit (TW-5)")]
         public ETriggerTarget Target = ETriggerTarget.Own;
@@ -96,9 +99,8 @@ namespace FarEmerald.PlayForge
                     return false;
             }
 
-            float chance = Chance?.Evaluate(NumberContext.Of(receiver)) ?? 1f;
-            if (chance >= 1f) return true;
-            return chance > 0f && ForgeRandom.Value < chance;
+            var context = NumberContext.Of(receiver);
+            return ForgeChance.Roll(Chance?.Evaluate(context) ?? 1f, in context, ChanceRoll, this);
         }
 
         /// <summary>What the ability targets in <paramref name="data"/>, as the trigger says; null for its own targeting.</summary>

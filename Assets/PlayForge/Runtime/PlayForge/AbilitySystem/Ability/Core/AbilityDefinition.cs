@@ -35,6 +35,15 @@ namespace FarEmerald.PlayForge
         /// hold. An ability activated only when code asked for it (FEAT-4).
         /// </summary>
         public List<AbilityTrigger> Triggers = new();
+
+        [Tooltip("The chance it activates, from 0 to 1, rolled once for each activation, a player's or a trigger's (TW-8)")]
+        public ScalableFloat ChanceToActivate = 1f;
+
+        [Tooltip("How its chance to activate rolls: pseudo-random, and its luck")]
+        public ChanceRoll ActivationRoll = new();
+
+        [Tooltip("What its effects' hits carry for their on-hit effects, where an effect sets none of its own (TW-8)")]
+        [Min(0f)] public float ProcCoefficient = 1f;
         
         public List<TextureItem> Textures;
     }
