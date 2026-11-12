@@ -201,9 +201,13 @@ string perLevel = impact.FormatTotal();           // "20/30/40/50"
   assets, such as a link with no provider, an impact that never applies or a field that reads a scaler it hasn't got,
   with its severity and its asset; a click selects the asset. **By Rule**, in its toolbar, groups them under the rule
   each breaks: where one step fixes a problem, its row has a Quick Fix, as **Store the Tag**, and its rule a **Fix
-  All**, each one Undo step. An inspector's header counts its asset's problems. In batch mode,
-  `ForgeValidator.LogAll` writes them to the Console. Add a check of your own by deriving from
-  `ForgeValidationRule`: override `Name` to name its group, and give a problem a step that fixes it with its `Fix`.
+  All**, each one Undo step. Its linter reads what the project's assets give each other: a stacking effect's periodic
+  number that reads its own stacks, an item's stacks read in an effect no item applies, a filter's impact type nothing
+  deals, and a trigger on an event nothing sends, which is a **Note**, as code may send it: the view lists notes under a
+  filter of their own, and the counts leave them out (TW-25). An inspector's header counts its asset's problems. In
+  batch mode, `ForgeValidator.LogAll` writes them to the Console, a note as a plain line. Add a check of your own by
+  deriving from `ForgeValidationRule`: override `Name` to name its group, and give a problem a step that fixes it with
+  its `Fix`.
 
 ## Logging
 

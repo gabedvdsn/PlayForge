@@ -18,6 +18,10 @@ namespace FarEmerald.PlayForge.Extended.Editor
     /// By Rule, its other view, groups the problems under the rule each breaks, and where a simple step fixes a problem,
     /// gives it a Quick Fix, and its rule a Fix All, each one Undo step (FEAT-25, the user's request).
     /// </para>
+    /// <para>
+    /// It lists the linter's notes too, which may be meant, as a trigger on an event that code sends, under their own
+    /// filter, and its counts leave them out (TW-25).
+    /// </para>
     /// </summary>
     public sealed class ForgeProblemsWindow : EditorWindow
     {
@@ -26,6 +30,7 @@ namespace FarEmerald.PlayForge.Extended.Editor
         [SerializeField] private string search = "";
         [SerializeField] private bool showErrors = true;
         [SerializeField] private bool showWarnings = true;
+        [SerializeField] private bool showNotes = true;
         [SerializeField] private bool byRule;
 
         private MultiColumnListView list;
@@ -36,6 +41,7 @@ namespace FarEmerald.PlayForge.Extended.Editor
         private static readonly HashSet<string> folded = new();
         private ToolbarToggle errorsToggle;
         private ToolbarToggle warningsToggle;
+        private ToolbarToggle notesToggle;
         private ToolbarSearchField searchField;
         private Label status;
         private List<ForgeProblem> shown = new();
@@ -86,6 +92,11 @@ namespace FarEmerald.PlayForge.Extended.Editor
                 showWarnings = on;
                 Refill();
             });
+            notesToggle = Filter(toolbar, "Notes", showNotes, "Show the notes, which may be meant, as a trigger on an event that code sends", on =>
+            {
+                showNotes = on;
+                Refill();
+            });
             toolbar.Add(new ToolbarSpacer { flex = true });
             searchField = new ToolbarSearchField { name = "Search", tooltip = "Show the problems whose asset or message has this text" };
             searchField.SetValueWithoutNotify(search);
@@ -111,13 +122,7 @@ namespace FarEmerald.PlayForge.Extended.Editor
             {
                 name = "Severity", title = "", width = 26, resizable = false, sortable = true,
                 makeCell = () => new ForgeGlyph(ForgeGlyphShape.Warning),
-                bindCell = (cell, index) =>
-                {
-                    var problem = shown[index];
-                    cell.EnableInClassList("pf-glyph--warning", problem.Severity == ForgeProblemSeverity.Warning);
-                    cell.EnableInClassList("pf-glyph--destructive", problem.Severity == ForgeProblemSeverity.Error);
-                    cell.tooltip = problem.Severity.ToString();
-                },
+                bindCell = (cell, index) => ShowSeverity((ForgeGlyph)cell, shown[index]),
                 comparison = (a, b) => shown[b].Severity.CompareTo(shown[a].Severity),
             });
             list.columns.Add(new Column
@@ -206,13 +211,15 @@ namespace FarEmerald.PlayForge.Extended.Editor
 
         private static readonly string[] Modifiers = { "ability", "effect", "entity", "item", "attribute", "attribute-set" };
 
-        // Shows the problems the filters let through, the errors first, then by asset
+        // Shows the problems and notes the filters let through, the errors first and the notes last, then by asset
         private void Refill()
         {
             if (list == null) return;
-            var all = ForgeValidator.All;
+            var problems = ForgeValidator.All;
+            var notes = ForgeValidator.Notes;
+            var all = problems.Concat(notes).ToList();
             shown = all
-                .Where(problem => problem.Severity == ForgeProblemSeverity.Error ? showErrors : showWarnings)
+                .Where(Shows)
                 .Where(Matches)
                 .OrderByDescending(problem => problem.Severity)
                 .ThenBy(problem => NameOf(problem.Asset), StringComparer.OrdinalIgnoreCase)
@@ -221,17 +228,36 @@ namespace FarEmerald.PlayForge.Extended.Editor
             list.RefreshItems();
             if (byRule) FillRules();
 
-            int errors = all.Count(problem => problem.Severity == ForgeProblemSeverity.Error);
-            int warnings = all.Count - errors;
+            int errors = problems.Count(problem => problem.Severity == ForgeProblemSeverity.Error);
+            int warnings = problems.Count - errors;
             errorsToggle.text = CountOf(errors, "Error", "Errors");
             warningsToggle.text = CountOf(warnings, "Warning", "Warnings");
-            int assets = all.Select(problem => problem.Asset).Distinct().Count();
+            notesToggle.text = CountOf(notes.Count, "Note", "Notes");
+            int assets = problems.Select(problem => problem.Asset).Distinct().Count();
             int fixable = shown.Count(problem => problem.Fix != null);
-            status.text = all.Count == 0
-                ? "No problems"
-                : $"{CountOf(all.Count, "problem", "problems")} in {CountOf(assets, "asset", "assets")}" +
-                  (shown.Count < all.Count ? $" · {shown.Count} shown" : "") +
-                  (byRule && fixable > 0 ? $" · {fixable} with a quick fix" : "");
+            // The problems, and the notes beside them, which they don't count (TW-25)
+            status.text = (problems.Count == 0 ? "No problems" : $"{CountOf(problems.Count, "problem", "problems")} in {CountOf(assets, "asset", "assets")}") +
+                          (notes.Count > 0 ? $" · {CountOf(notes.Count, "note", "notes")}" : "") +
+                          (shown.Count < all.Count ? $" · {shown.Count} shown" : "") +
+                          (byRule && fixable > 0 ? $" · {fixable} with a quick fix" : "");
+        }
+
+        // Whether the toolbar's filters let a problem's severity through
+        private bool Shows(ForgeProblem problem) => problem.Severity switch
+        {
+            ForgeProblemSeverity.Error => showErrors,
+            ForgeProblemSeverity.Note => showNotes,
+            _ => showWarnings,
+        };
+
+        // A problem's severity as its glyph: a warning's triangle, an error's in the destructive color, and a note's info
+        // mark in the neutral one (TW-25)
+        private static void ShowSeverity(ForgeGlyph glyph, ForgeProblem problem)
+        {
+            glyph.Shape = problem.Severity == ForgeProblemSeverity.Note ? ForgeGlyphShape.Info : ForgeGlyphShape.Warning;
+            glyph.EnableInClassList("pf-glyph--warning", problem.Severity == ForgeProblemSeverity.Warning);
+            glyph.EnableInClassList("pf-glyph--destructive", problem.Severity == ForgeProblemSeverity.Error);
+            glyph.tooltip = problem.Severity.ToString();
         }
 
         // ═══════════════════════════════════════════════════════════════════════════
@@ -319,9 +345,8 @@ namespace FarEmerald.PlayForge.Extended.Editor
             row.AddToClassList("pf-problems__row");
             row.EnableInClassList("pf-problems__row--alternate", alternate);
 
-            var severity = new ForgeGlyph(ForgeGlyphShape.Warning) { tooltip = problem.Severity.ToString() };
-            severity.EnableInClassList("pf-glyph--warning", problem.Severity == ForgeProblemSeverity.Warning);
-            severity.EnableInClassList("pf-glyph--destructive", problem.Severity == ForgeProblemSeverity.Error);
+            var severity = new ForgeGlyph(ForgeGlyphShape.Warning);
+            ShowSeverity(severity, problem);
             row.Add(severity);
 
             var asset = new VisualElement();

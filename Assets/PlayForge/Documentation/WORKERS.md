@@ -58,7 +58,7 @@ Attribute workers run for every change, workable or not; one that cares reads `c
 - **A stacking effect's periodic tick lands once for each stack, while its lasting change counts once.** A number that
   reads the effect's stacks on each tick multiplies again: Hangover, which read its stacks, took 100 a tick where 20 was
   meant. Read the stacks in a lasting change, or leave them out of a periodic one (FEAT-33 is to make a lasting change
-  count each stack as a tick does).
+  count each stack as a tick does). The Problems view warns of it (TW-25).
 - **What a worker sets in motion waits for the frame's end.** Deferred actions, deaths and the kills they give, and an
   aura's effect coming off a dead holder all land at the entity's end of frame, so one area's hits resolve together
   ([EFFECTS.md](EFFECTS.md#resolve-order)).

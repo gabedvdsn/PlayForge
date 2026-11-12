@@ -44,7 +44,8 @@ off goes; `RemoveItem(item)` still takes the whole slot. A slot's count is its c
 
 A stack applies its effects and its ability once. An **Item Stacks** scaler reads the count of the item that applied
 the effect, so a magnitude of 5 with Multiply With Scaler grants +5 a stack. As the count changes, an equipped
-item's effects read it again.
+item's effects read it again. An effect that reads an item's stacks where no item in the project applies it reads 1, and
+the Problems view says so (TW-25).
 
 ## Leveling
 
@@ -125,7 +126,7 @@ dagger's bleed, a hammer's armor break, a barrier on a kill (TW-6). Each entry h
 - **To**: the one hit (**Target**), or the **Holder**, as a barrier on a kill does.
 - **Only On Kill**: only the hit that takes the attribute from above 0 to 0 or below.
 - **Impact Types**: only hits of one of these types, as attacks, so a bleed's ticks, typed apart, set off nothing.
-  None takes any hit.
+  None takes any hit. The Problems view warns of a type no effect in the project deals, which never matches (TW-25).
 - **When**: a condition read at the hit, the holder its caster and the one hit its target.
 
 

@@ -7,6 +7,12 @@ tracks each fix below by its ID.
 ## [Unreleased]
 
 ### Added
+- A content linter in the Problems view, reading what the project's assets give each other: a stacking effect's periodic
+  impact or transfer that reads its own stacks, as it lands once for each already, with a quick fix; an effect that
+  reads an item's stacks where no item applies it; an On Hit's, a lifesteal's, a trigger's or a modifier's Change
+  Impact's impact type that nothing deals, with a quick fix where the filter keeps one that is; and a trigger on an
+  event neither the core nor an asset sends, as a Note, a new severity the view lists under a filter of its own and
+  leaves out of its counts (TW-25).
 - Presets in The Forge's Create menu, under each type, Blank first: Damage, Damage over Time, Buff, Debuff, Stun and Aura
   effects, On-Hit and Active items, a Passive (Triggered) ability and a Hero, each ready to fill in, reading the project's
   roles and crowd control; a Forge Project's own template assets, under Templates in its settings, listed after them

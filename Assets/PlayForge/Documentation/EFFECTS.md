@@ -131,7 +131,9 @@ What happens when the effect is applied to a target that already has it. Each ap
 - **Stack Amount**, with its scaler: the stacks each application adds. 0 counts as 1.
 
 A change reads the stack count through an **Effect Stacks** scaler ([SCALERS.md](SCALERS.md)): a magnitude of −5 with
-Multiply With Scaler takes 5 a stack. A Continuous one updates whenever the count changes.
+Multiply With Scaler takes 5 a stack. A Continuous one updates whenever the count changes. A Periodic one lands once for
+each stack already, so one that reads its stacks counts them twice, 3 stacks hitting 9 times as hard as 1: the Problems
+view warns of it, and its quick fix, **Count Stacks Once**, gives the number one stack gives (TW-25).
 
 ### Moving an effect to another entity
 

@@ -5,11 +5,16 @@ using Object = UnityEngine.Object;
 
 namespace FarEmerald.PlayForge.Extended.Editor
 {
-    /// <summary>How serious a problem is: a Warning is likely a mistake, and an Error stops something working.</summary>
+    /// <summary>
+    /// How serious a problem is: a Warning is likely a mistake, and an Error stops something working. A Note may be meant,
+    /// as a trigger on an event that code sends (TW-25): the Problems view lists it, and the counts and an inspector's
+    /// header leave it out.
+    /// </summary>
     public enum ForgeProblemSeverity
     {
-        Warning,
-        Error,
+        Note = -1,
+        Warning = 0,
+        Error = 1,
     }
 
     /// <summary>One problem the validator found in a PlayForge asset: the asset, how serious it is, and what's wrong.</summary>

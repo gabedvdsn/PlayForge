@@ -127,6 +127,9 @@ passes it in, and one effect serves every strength.
     own targeting, as an area spin finds the enemies round it; the event's **Instigator**, as a counterattack; or its
     **Subject**, as an on-hit ability targets the one hit. An ability set off by Died runs on a dead entity only if its
     rules don't ask that its caster be alive.
+  - The Problems view notes a Gameplay Event trigger on an event neither the core nor an asset in the project sends, as
+    a threshold's Event or a stop stage's does, as only code can send it; and warns of an Impact Dealt or Impact Taken
+    trigger's impact type that no effect deals, which never matches (TW-25).
 - **Chance to Activate** (TW-8): how likely an activation is to start, from 0 to 1, rolled once for each, a player's
   or a trigger's, after its other checks; a miss is refused with Chance. **Activation Roll** makes it pseudo-random or
   lucky. **Proc Coefficient**: what its effects' hits carry for on-hit effects, where an effect sets none of its own.
