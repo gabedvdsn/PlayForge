@@ -377,6 +377,9 @@ namespace FarEmerald.PlayForge.Extended.Editor
 
             // Its own lifesteal: its caster heals a share of each loss it deals (TW-15)
             content.Add(CreatePropertyField(serializedObject.FindProperty(nameof(GameplayEffect.Lifesteal)), "Lifesteal", "Lifesteal"));
+
+            // Its transfers, each from one attribute to another, its caster's or its target's (TW-20)
+            content.Add(CreatePropertyField(serializedObject.FindProperty(nameof(GameplayEffect.Transfers)), "Transfers", "Transfers"));
         }
 
         // ═══════════════════════════════════════════════════════════════════════════
@@ -458,6 +461,7 @@ namespace FarEmerald.PlayForge.Extended.Editor
             paths.Add(nameof(GameplayEffect.ProcCoefficient));
             paths.Add(nameof(GameplayEffect.Area));
             paths.Add(nameof(GameplayEffect.Lifesteal));
+            paths.Add(nameof(GameplayEffect.Transfers));
             return paths.ToArray();
         }
 

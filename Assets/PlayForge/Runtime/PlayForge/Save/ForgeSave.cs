@@ -364,6 +364,9 @@ namespace FarEmerald.PlayForge
             // the level it reads
             core.AttributeSystem.RecomputeAll();
 
+            // The effects' lasting transfers take from what the load put back, and the attributes read them (TW-20)
+            if (core.EffectSystem.LendRestoredTransfers()) core.AttributeSystem.RecomputeAll();
+
             var loose = new List<Tag>();
             foreach (string name in Each(snapshot.LooseTags))
             {

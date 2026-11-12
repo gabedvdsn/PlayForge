@@ -377,6 +377,9 @@ namespace FarEmerald.PlayForge
                 if (impact.Attribute is not null) (impacts ??= new List<ImpactData>(1)).Add(impact);
             }
 
+            // What its transfers move as it lands (TW-20)
+            ForgeTransfers.Move(spec, Self, EImpactDelivery.OnApply);
+
             spec.RunWorkerRemoval(new EffectWorkerContext(Self, spec, Self.GetFrameSummary(), Self.GetActionQueue(), 1,
                 impacts?[impacts.Count - 1], impacts));
             tagCache.RemoveTags(spec.Base.Tags.GrantedTags);
@@ -429,6 +432,9 @@ namespace FarEmerald.PlayForge
                     new SourcedModifiedAttributeValue(spec, 0f, 0f),
                     spec.GetImpactersFor(attribute, EImpactDelivery.OnApply));
             }
+
+            // And what its transfers move as it lands (TW-20)
+            ForgeTransfers.Move(spec, Self, EImpactDelivery.OnApply);
         }
 
         /// <summary>
@@ -636,6 +642,9 @@ namespace FarEmerald.PlayForge
                     new SourcedModifiedAttributeValue(spec, 0f, 0f),
                     spec.GetImpactersFor(attribute, EImpactDelivery.Continuous));
             }
+
+            // Its lasting transfers, lent or read again with its entries; ReverseImpact gives them back (TW-20)
+            ForgeTransfers.Lend(spec, Self);
         }
 
         private static int StackCount(AbstractEffectContainer container)
@@ -673,6 +682,9 @@ namespace FarEmerald.PlayForge
                     new SourcedModifiedAttributeValue(spec, 0f, 0f),
                     spec.GetImpactersFor(attribute, EImpactDelivery.Periodic));
             }
+
+            // What its transfers move each tick (TW-20)
+            ForgeTransfers.Move(spec, Self, EImpactDelivery.Periodic);
 
             ApplyContained(spec, EApplyTickRemove.OnTick);
             ApplyAddedPackets(spec, EApplyTickRemove.OnTick);
@@ -1091,6 +1103,9 @@ namespace FarEmerald.PlayForge
                 foreach (var attribute in container.Spec.GetImpactedAttributes(EImpactDelivery.Continuous))
                     AttributeSystem.UnregisterQuietly(attribute, container.Spec);
 
+                // What its lasting transfers hold, on this entity and the other side, which the load lends again (TW-20)
+                ForgeTransfers.GiveBack(container.Spec, quietly: true);
+
                 // Its lasting cues end, as its effect leaves; no burst plays (FEAT-1)
                 Cue(container.Spec, ECueMoment.End);
             }
@@ -1116,6 +1131,32 @@ namespace FarEmerald.PlayForge
             foreach (var container in sidesLent) Self.GetSides()?.Remove(container);
             sidesLent.Clear();
             requirementsDirty = true;
+        }
+
+        /// <summary>
+        /// Lends each effect's lasting transfers with nothing told, once a load has put the entity's commits back, as what
+        /// each takes reads them; a restore lends none. Whether any effect has them (TW-20).
+        /// </summary>
+        internal bool LendRestoredTransfers()
+        {
+            bool any = false;
+            foreach (var container in EffectShelf)
+            {
+                if (container.Spec.Base.Transfers is not { Count: > 0 }) continue;
+                ForgeTransfers.Lend(container.Spec, Self, quietly: true);
+                any = true;
+            }
+            return any;
+        }
+
+        /// <summary>
+        /// Gives back what every lasting transfer on the shelf holds, as the entity goes with its effects, which nothing else
+        /// ends: told on another entity, with nothing told on this one (TW-20).
+        /// </summary>
+        internal void GiveBackTransfers()
+        {
+            foreach (var container in EffectShelf)
+                ForgeTransfers.GiveBack(container.Spec, quietOn: AttributeSystem);
         }
 
         /// <summary>
@@ -1182,14 +1223,17 @@ namespace FarEmerald.PlayForge
                 container.ContainerIsActive = false;
                 foreach (var attribute in container.Spec.GetImpactedAttributes(EImpactDelivery.Continuous))
                     AttributeSystem.UnregisterQuietly(attribute, container.Spec);
+                ForgeTransfers.GiveBack(container.Spec, quietly: true);
                 Cue(container.Spec, ECueMoment.End);
                 TakeBackAbilities(container);
 
-                // Onto the other, as a restore puts one back, by what applied it
+                // Onto the other, as a restore puts one back, by what applied it, its lasting transfers taking from it
+                // now (TW-20)
                 var spec = onto.GenerateEffectSpec(container.Spec.Origin, effect);
                 if (spec == null) continue;
                 spec.TakeSetByCaller(container.Spec.SetByCallerMagnitudes);
                 target.Restore(spec, save);
+                ForgeTransfers.Lend(spec, onto, quietly: true);
             }
 
             int moved = moving.Count;

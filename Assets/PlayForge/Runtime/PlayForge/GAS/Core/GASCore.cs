@@ -283,6 +283,9 @@ namespace FarEmerald.PlayForge
         {
             // Its auras' effects come off each they held them on (TW-10)
             Auras.Clear();
+
+            // What its effects' lasting transfers hold, given back, as they go with it (TW-20)
+            EffectSystem.GiveBackTransfers();
             Sides.Clear();
             AbilitySystem.ShutDown();
             ForgeEntities.Remove(owner);

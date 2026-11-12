@@ -347,6 +347,17 @@ chance to apply are its own, and an effect that lands by an area spreads no furt
 it deals another to its **Attribute**, the Health role's where it names none, while its **When** holds. The heal is a
 gain like any other, so Healing Received scales it, and damage a return sends back heals nothing.
 
+**Transfers**, after Lifesteal in Impact, each move an amount from one attribute to another (TW-20), as Essence Shift
+steals Agility or Attribute Shift moves Agility into Strength. **From**, the effect's caster or its target, gives its
+**From Attribute**, and **To** gets its **To Attribute**, each side its own, so an entity can give to itself. **Slot**
+says which values move: Current, as a pool's Mana; Base; or Current And Base, as a stat's Strength. **Amount** can scale
+by level. Only what the giver has moves, so one with 3 of a steal of 5 gives 3, and nothing is made. **Delivery** says
+when: **On Apply** moves once as the effect lands and **Periodic** each tick, both for good; **Continuous** moves as the
+effect lands and holds while it lasts, a modifier on each side, read again only where a stack or a level changes its
+amount, and gives back as the effect ends, as a load or a move takes it, or as the entity it's on goes. Each side's
+change is exact: no worker takes it for a hit, no barrier soaks it and nothing scales it, so the getter gets what the
+giver gave, as far as its own bounds let it; what its maximum can't hold is lost, as an overheal is.
+
 ### Auras
 
 **Auras**, after Modifiers, hold an effect on those near the one it's on, while it lasts (TW-10). Items, abilities and

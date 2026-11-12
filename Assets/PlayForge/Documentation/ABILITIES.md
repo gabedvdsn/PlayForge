@@ -153,6 +153,11 @@ passes it in, and one effect serves every strength.
   through its spec's `Charges`, as `container.Spec.Charges.InHand`. The section's line counts them, as "3 charges",
   and a warning under Recharge, as in the Problems view, says where built-in charges have no Cooldown to bring them
   back, so they never run out.
+- **Toggles** (TW-20): an effect the ability turns on and off on its caster, as a mana shield: used, it puts the effect
+  on where its usage would be paid, paying its Cost and Attribute Costs and starting no cooldown; used again, it takes
+  the effect off, paying nothing and asking no cost, and starts its Cooldown, or spends a charge. Neither its cost nor
+  its cooldown stops it turning off. It counts only the effect it put on; one another put there leaves it off. Code asks
+  through its spec's `IsToggledOn`.
 - **Targeting**: the task that picks what the ability acts on, such as an entity the player clicks, or the caster
   itself. Targeting holds the activation's claim. If the task fails while its **Break Runtime On Invalid** is on, or it
   doesn't finish, the activation ends. Leave Targeting empty to skip this step.

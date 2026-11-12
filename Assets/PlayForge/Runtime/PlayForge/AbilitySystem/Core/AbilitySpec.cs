@@ -24,13 +24,46 @@ namespace FarEmerald.PlayForge
         /// </summary>
         public void ApplyUsageEffects(ProcessDataPacket data = null)
         {
-            // A charge spent, as its Recharge says, where its charges are counted; or else its cooldown (TW-17)
+            // One that toggles an effect turns it on or off in their place (TW-20)
+            if (Base.Toggles is not null)
+            {
+                Toggle(data);
+                return;
+            }
+
+            SpendCooldown(data);
+            PayCosts(data);
+        }
+
+        // A charge spent, as its Recharge says, where its charges are counted; or else its cooldown (TW-17)
+        private void SpendCooldown(ProcessDataPacket data)
+        {
             if (Charges.Counted) Charges.Spend(data);
             else ApplyCooldown(data, ownContainer: false);
+        }
 
-            // Its Cost effect, and beside it each of its attribute costs (TW-29)
+        // Its Cost effect, and beside it each of its attribute costs (TW-29)
+        private void PayCosts(ProcessDataPacket data)
+        {
             if (Base.Cost is not null) Source.ApplyCarrier(Usage(Base.Cost, data));
             PayAttributeCosts(data);
+        }
+
+        /// <summary>Whether the effect it toggles is on its caster, put there by it (TW-20).</summary>
+        public bool IsToggledOn =>
+            Base.Toggles is { } toggles && Source?.ToGAS()?.GetEffectSystem() is { } effects && effects.CountFrom(toggles, this) > 0;
+
+        // On, with the activation's magnitudes, paying its cost; or off, paying nothing and starting its cooldown (TW-20)
+        private void Toggle(ProcessDataPacket data)
+        {
+            if (IsToggledOn)
+            {
+                Source.ToGAS()?.GetEffectSystem()?.RemoveGameplayEffect(Base.Toggles, this);
+                SpendCooldown(data);
+                return;
+            }
+            Source.ApplyCarrier(Usage(Base.Toggles, data));
+            PayCosts(data);
         }
 
         /// <summary>

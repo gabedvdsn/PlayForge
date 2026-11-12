@@ -7,6 +7,9 @@ tracks each fix below by its ID.
 ## [Unreleased]
 
 ### Added
+- Transfers and toggles: an effect's Transfers each move an amount from an attribute of its caster or its target to one
+  of either, as it lands, each tick, or while it lasts, giving back as it ends, and only what the giver has; an
+  ability's Toggles turns an effect on, paying its cost, and off, starting its cooldown (TW-20).
 - Conditions in an effect's requirements, beside its tags: Apply conditions to land, Ongoing ones to go on, Removal ones
   to come off, a phase passing only when its tags and conditions all say so, the lasting ones checked at each frame's
   end (TW-19).

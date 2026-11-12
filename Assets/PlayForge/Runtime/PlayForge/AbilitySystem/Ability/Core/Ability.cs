@@ -52,6 +52,10 @@ namespace FarEmerald.PlayForge
                  "they're all spent, or as a recharge of your own says (TW-17)")]
         public AbstractChargeRecharge Recharge = new EachChargeRecharge();
 
+        [Tooltip("An effect it toggles on its caster: used, it puts the effect on, paying its cost; used again, it takes the " +
+                 "effect off, paying and asking nothing, and starts its cooldown. None, it doesn't toggle (TW-20)")]
+        public GameplayEffect Toggles;
+
         /// <summary>
         /// Whether a stage marked Apply Usage Effects takes its cost and cooldown; where none does, they apply as it starts,
         /// after its targeting (TW-17).

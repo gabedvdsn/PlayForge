@@ -119,6 +119,9 @@ namespace FarEmerald.PlayForge
         /// </summary>
         internal bool OwnContainer { get; set; }
 
+        /// <summary>What its lasting transfers hold on each side, to give back as it ends (TW-20). Null where none holds any.</summary>
+        internal List<LentTransfer> TransfersLent { get; set; }
+
         // Each Chance condition's roll for this hit, kept so a hit read twice reads the same (TW-8)
         private Dictionary<object, bool> rolls;
 

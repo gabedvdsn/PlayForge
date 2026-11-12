@@ -147,6 +147,9 @@ namespace FarEmerald.PlayForge
         /// </summary>
         public void ReverseImpact()
         {
+            // What its lasting transfers hold, on both sides, wherever the target is (TW-20)
+            ForgeTransfers.GiveBack(Spec);
+
             AttributeSystemComponent attrSystem = null;
             if (!(Spec.Target?.FindAttributeSystem(out attrSystem) ?? false) || attrSystem == null) return;
 

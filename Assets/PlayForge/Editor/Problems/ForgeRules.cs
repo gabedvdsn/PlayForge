@@ -413,6 +413,37 @@ namespace FarEmerald.PlayForge.Extended.Editor
     }
 
     /// <summary>
+    /// A transfer that never moves as it's set (TW-20): one whose delivery its effect's duration can't make, as an additional
+    /// impact's, or one that names no attribute to give or to get; and an ability that toggles an Instant effect, which is
+    /// never on to turn off.
+    /// </summary>
+    internal sealed class TransfersRule : ForgeValidationRule
+    {
+        public override string Name => "Transfers and toggles that never work";
+
+        public override void Check(Object asset, List<ForgeProblem> problems)
+        {
+            if (asset is Ability ability && ability.Toggles != null
+                && ability.Toggles.DurationSpecification?.DurationPolicy == EEffectDurationPolicy.Instant)
+                problems.Add(new ForgeProblem(asset, ForgeProblemSeverity.Warning,
+                    "It toggles an Instant effect, which is never on to turn off. Toggle a lasting one.", nameof(Ability.Toggles)));
+
+            if (asset is not GameplayEffect effect || effect.Transfers == null) return;
+            for (int i = 0; i < effect.Transfers.Count; i++)
+            {
+                var transfer = effect.Transfers[i];
+                if (transfer == null) continue;
+                var problem = !transfer.FromAttribute || !transfer.ToAttribute
+                    ? "It names no attribute to give or to get, so it moves nothing."
+                    : effect.DurationSpecification != null ? ImpactFields.DeliveryProblem(effect.DurationSpecification, transfer.Delivery) : null;
+                if (problem == null) continue;
+                problems.Add(new ForgeProblem(asset, ForgeProblemSeverity.Warning, $"Transfer {i + 1}: {problem}",
+                    $"{nameof(GameplayEffect.Transfers)}.Array.data[{i}]"));
+            }
+        }
+    }
+
+    /// <summary>
     /// An asset that leans on its project's roles where they can't serve it (TW-29; TW-28's fixed attributes before it): an
     /// ability's attribute cost that names nothing to spend, or a role no attribute plays in its project; an entity whose
     /// starting abilities spend attributes its set doesn't give; and an entity that stays when it dies, whom the Health

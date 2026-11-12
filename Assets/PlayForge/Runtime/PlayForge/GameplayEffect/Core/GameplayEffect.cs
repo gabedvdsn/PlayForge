@@ -39,7 +39,11 @@ namespace FarEmerald.PlayForge
 
         [Tooltip("Its own lifesteal: its caster heals a share of each loss it deals another (TW-15)")]
         public EffectLifesteal Lifesteal = new();
-        
+
+        [Tooltip("Its transfers: each moves an amount from an attribute of its caster or its target to one of either, as it " +
+                 "lands, each tick, or while it lasts, giving back as it ends; only what the giver has moves (TW-20)")]
+        public List<AttributeTransfer> Transfers = new();
+
         [Tooltip("Its own proc coefficient in place of its ability's: what its hits carry for their on-hit effects (TW-8)")]
         public bool OwnProcCoefficient;
 

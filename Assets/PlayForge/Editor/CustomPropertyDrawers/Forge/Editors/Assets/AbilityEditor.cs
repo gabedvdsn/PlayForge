@@ -346,7 +346,7 @@ namespace FarEmerald.PlayForge.Extended.Editor
                     DefinitionPath(nameof(AbilityDefinition.ChanceToActivate)), DefinitionPath(nameof(AbilityDefinition.ActivationRoll)),
                     DefinitionPath(nameof(AbilityDefinition.ProcCoefficient)), DefinitionPath(nameof(AbilityDefinition.IgnoresCrowdControl)),
                     nameof(Ability.Cost), nameof(Ability.AttributeCosts), nameof(Ability.Cooldown), nameof(Ability.Charges), nameof(Ability.Recharge),
-                    BehaviourPath(nameof(AbilityBehaviour.Targeting)),
+                    nameof(Ability.Toggles), BehaviourPath(nameof(AbilityBehaviour.Targeting)),
                     BehaviourPath(nameof(AbilityBehaviour.UseImplicitTargeting)), BehaviourPath(nameof(AbilityBehaviour.ImplicitTag)),
                 },
                 OnImportComplete = OnSectionReplaced,
@@ -414,6 +414,9 @@ namespace FarEmerald.PlayForge.Extended.Editor
             chargesNote = new HelpBox("", HelpBoxMessageType.Warning) { name = "ChargesNeverRunOut" };
             content.Add(chargesNote);
             ShowCharges();
+
+            // An effect it turns on and off, paying its cost as it turns on and starting its cooldown as it turns off (TW-20)
+            content.Add(CreatePropertyField(serializedObject.FindProperty(nameof(Ability.Toggles)), "Toggles", "Toggles"));
 
             // The targeting is an object each ability keeps of its own, which a multiple selection can't edit safely (ED-12)
             if (IsMultiple) content.Add(CreateNote("Select one ability to edit its targeting."));
