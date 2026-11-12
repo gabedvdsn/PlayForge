@@ -342,6 +342,10 @@ namespace FarEmerald.PlayForge
             // ═══════════════════════════════════════════════════════════════════════
             if (runEvents) PreChangeHandler.RunWorkers(ctx);
 
+            // A barrier takes a workable loss first, as much as it holds (TW-12)
+            if (mode == ECommitMode.CommitImpact && sourcedModifiedValue.ImpactIsWorkable && change.Value.CurrentValue < 0f)
+                SoakIntoBarriers(attribute, change);
+
             // ═══════════════════════════════════════════════════════════════════════
             // PHASE 2: Dispatch per mode.
             // ═══════════════════════════════════════════════════════════════════════
@@ -679,6 +683,88 @@ namespace FarEmerald.PlayForge
                     if (cached.Recompute(AttributeCache) != before) changed = true;
                 }
                 if (!changed) return;
+            }
+        }
+
+        // ═══════════════════════════════════════════════════════════════════════════
+        // BARRIERS (TW-12)
+        // ═══════════════════════════════════════════════════════════════════════════
+
+        // The entity's barriers, kept as its attributes were when last counted
+        private List<Attribute> barriers;
+        private int barriersCounted = -1;
+
+        // What each barrier has soaked this frame and not yet given up, so a second hit soaks no more than it holds
+        private Dictionary<IAttribute, float> soakedThisFrame;
+
+        // Each barrier's decay carrier, made once, so its decay allocates nothing
+        private Dictionary<IAttribute, IAttributeImpactCarrier> decayCarriers;
+
+        private List<Attribute> Barriers()
+        {
+            if (barriers != null && barriersCounted == AttributeCache.Count) return barriers;
+            barriers ??= new List<Attribute>();
+            barriers.Clear();
+            foreach (var key in AttributeCache.Keys)
+                if (key is Attribute attribute && attribute.Role == EAttributeRole.Barrier) barriers.Add(attribute);
+            barriersCounted = AttributeCache.Count;
+            return barriers;
+        }
+
+        // A workable loss to an attribute, taken first from each barrier that absorbs for it, as much as each holds; what a
+        // barrier soaks comes off it at the frame's end, unworkable, and the rest goes on
+        private void SoakIntoBarriers(IAttribute attribute, ChangeValue change)
+        {
+            var all = Barriers();
+            if (all.Count == 0) return;
+            float loss = -change.Value.CurrentValue;
+            float soaked = 0f;
+            for (int i = 0; i < all.Count && soaked < loss; i++)
+            {
+                var barrier = all[i];
+                if (barrier.AbsorbsFor == null || !barrier.AbsorbsFor.Equals(attribute)) continue;
+                if (!AttributeCache.TryGetValue(barrier, out var cached)) continue;
+                float already = soakedThisFrame != null && soakedThisFrame.TryGetValue(barrier, out var pending) ? pending : 0f;
+                float held = cached.ActiveValue.CurrentValue - already;
+                if (held <= 0f) continue;
+                float soak = Mathf.Min(held, loss - soaked);
+                soaked += soak;
+                (soakedThisFrame ??= new Dictionary<IAttribute, float>())[barrier] = already + soak;
+
+                var taken = barrier;
+                _actionQueue?.Enqueue(new LambdaAction(_ =>
+                {
+                    if (soakedThisFrame != null && soakedThisFrame.TryGetValue(taken, out var left))
+                        soakedThisFrame[taken] = Mathf.Max(0f, left - soak);
+                    ModifyAttribute(taken, SourcedModifiedAttributeValue.GenerateUnworkable(Self, taken, -soak, 0f));
+                }, $"{taken.GetName()} soaks {soak:0.##}"));
+            }
+            if (soaked > 0f)
+                change.Value = new SourcedModifiedAttributeValue(change.Value, change.Value.CurrentValue + soaked,
+                    change.Value.BaseValue, change.Value.ImpactIsWorkable);
+        }
+
+        /// <summary>
+        /// Each barrier's decay by <paramref name="deltaTime"/> of the entity's own time: its Decay Per Second, or that
+        /// share of its base, unworkable, to 0 and no further.
+        /// </summary>
+        internal void StepBarriers(float deltaTime)
+        {
+            if (deltaTime <= 0f || AttributeCache == null) return;
+            var all = Barriers();
+            for (int i = 0; i < all.Count; i++)
+            {
+                var barrier = all[i];
+                if (barrier.DecayPerSecond <= 0f || !AttributeCache.TryGetValue(barrier, out var cached)) continue;
+                var value = cached.ActiveValue;
+                if (value.CurrentValue <= 0f) continue;
+                float rate = barrier.DecayAsShareOfBase ? barrier.DecayPerSecond * value.BaseValue : barrier.DecayPerSecond;
+                float amount = Mathf.Min(value.CurrentValue, rate * deltaTime);
+                if (amount <= 0f) continue;
+                decayCarriers ??= new Dictionary<IAttribute, IAttributeImpactCarrier>();
+                if (!decayCarriers.TryGetValue(barrier, out var carrier))
+                    decayCarriers[barrier] = carrier = IAttributeImpactCarrier.GenerateSourceDerivation(Self, barrier);
+                ModifyAttribute(barrier, new SourcedModifiedAttributeValue(carrier, -amount, 0f, false));
             }
         }
 

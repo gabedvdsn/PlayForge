@@ -19,6 +19,19 @@ namespace FarEmerald.PlayForge
         [Tooltip("What the attribute is: how bonuses to it add up, and how a number reads it, unless an effect or the " +
                  "number says otherwise (TW-1)")]
         public EAttributeRole Role = EAttributeRole.Value;
+
+        [Tooltip("As a Barrier: the attribute it absorbs for, as Health. Every workable loss to that one comes off this " +
+                 "first, as much as it holds (TW-12)")]
+        public Attribute AbsorbsFor;
+
+        [Tooltip("As a Barrier: how much it loses each second, by its holder's time, as a barrier fades; 0, none (TW-12)")]
+        [Min(0f)] public float DecayPerSecond;
+
+        [Tooltip("As a Barrier: reads Decay Per Second as a share of its base, so a base of 100 at 0.1 loses 10 a second")]
+        public bool DecayAsShareOfBase;
+
+        [Tooltip("As a Barrier: what a lasting effect gives it fades to 0 by the time that effect ends (TW-12)")]
+        public bool FadesWithEffect;
         
         #region Internal
         
@@ -88,5 +101,11 @@ namespace FarEmerald.PlayForge
         /// left, 1 − (1 − x)(1 − v), so two of 30% make 51% and none takes it past 1; a number reads what's left, 1 − x.
         /// </summary>
         Resistance,
+
+        /// <summary>
+        /// A barrier, as a shield before Health: it absorbs for the attribute it names, each workable loss to that one taken
+        /// from it first, and it can decay, by a rate or with the effect that gave it (TW-12).
+        /// </summary>
+        Barrier,
     }
 }

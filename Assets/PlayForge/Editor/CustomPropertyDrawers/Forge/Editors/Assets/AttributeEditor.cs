@@ -141,7 +141,24 @@ namespace FarEmerald.PlayForge.Extended.Editor
             content.Add(CreateBoundTextField(nameof(Attribute.Description), "Description", multiline: true, minHeight: 18));
 
             // What it is, which says how its bonuses add up and how a number reads it (TW-1)
-            content.Add(CreatePropertyField(serializedObject.FindProperty(nameof(Attribute.Role)), "Role", "Role"));
+            var role = CreatePropertyField(serializedObject.FindProperty(nameof(Attribute.Role)), "Role", "Role");
+            content.Add(role);
+
+            // As a Barrier: what it absorbs for, how it decays, and whether it fades with its effect (TW-12)
+            var barrier = new VisualElement { name = "BarrierSettings" };
+            barrier.Add(CreatePropertyField(serializedObject.FindProperty(nameof(Attribute.AbsorbsFor)), "AbsorbsFor", "Absorbs For"));
+            barrier.Add(CreatePropertyField(serializedObject.FindProperty(nameof(Attribute.DecayPerSecond)), "DecayPerSecond", "Decay Per Second"));
+            barrier.Add(CreatePropertyField(serializedObject.FindProperty(nameof(Attribute.DecayAsShareOfBase)), "DecayAsShareOfBase", "Decay As Share Of Base"));
+            barrier.Add(CreatePropertyField(serializedObject.FindProperty(nameof(Attribute.FadesWithEffect)), "FadesWithEffect", "Fades With Effect"));
+            content.Add(barrier);
+            void ShowBarrier()
+            {
+                var roleProperty = serializedObject.FindProperty(nameof(Attribute.Role));
+                bool shows = roleProperty != null && !roleProperty.hasMultipleDifferentValues && roleProperty.enumValueIndex == (int)EAttributeRole.Barrier;
+                barrier.style.display = shows ? DisplayStyle.Flex : DisplayStyle.None;
+            }
+            ShowBarrier();
+            role.RegisterCallback<SerializedPropertyChangeEvent>(_ => ShowBarrier());
 
             // Its part in the project, where it fills one of the project's slots (TW-28)
             var part = IsMultiple ? null : ProjectPartOf(attribute);

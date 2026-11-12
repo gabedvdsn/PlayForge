@@ -42,7 +42,14 @@ Each stage has a **Label**, the name a breakdown gives it, and **Enabled**, whic
   it. Its **Roll** makes it pseudo-random or lucky (TW-8, [EFFECTS.md](EFFECTS.md#requirements)).
 - **Clamp**: the value's size kept between two numbers, its sign as it was.
 - **Absorb**: a loss taken first from another attribute of the one hit, as a barrier or a shield takes a blow before
-  health. What it soaks comes off that attribute at the frame's end, and the rest goes on.
+  health. What it soaks comes off that attribute at the frame's end, and the rest goes on. An attribute with the
+  Barrier role soaks the losses to the one it absorbs for with no stage at all (TW-12, [ATTRIBUTES.md](ATTRIBUTES.md)).
+- **Block** and **Evade** (TW-12): a **Chance**, read as the effect lands, that stops it. Each rolls once, before anything
+  of the effect lands, and where it comes up nothing of it does, its damage, tags, contained effects and on-hits, and
+  its ticks aren't rolled again; the one hit hears Blocked or Evaded, and the dealer Hit Blocked or Hit Evaded. A
+  defender brings one through an incoming modifier's Change Impact, as Tougher Times blocks the hits landing on its
+  holder by a stacking curve of its stacks ([EFFECTS.md](EFFECTS.md#modifiers)). As the hit commits, it passes the
+  value on.
 
 A project writes its own stage by deriving from `AbstractValueStage` and overriding `Apply(value, in run)`. `run.Context`
 reads the hit's caster, target and level, as any number does, and `run.Note` notes what the stage did.

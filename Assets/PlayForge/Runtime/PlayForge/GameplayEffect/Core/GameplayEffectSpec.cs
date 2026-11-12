@@ -110,6 +110,9 @@ namespace FarEmerald.PlayForge
         /// <summary>Whether it landed by another's area, so it spreads no further (TW-10).</summary>
         public bool FromArea { get; internal set; }
 
+        /// <summary>Whether a lasting impact of its fades with it, a barrier's, so its shelf refreshes it as it ticks (TW-12).</summary>
+        internal bool Fades { get; private set; }
+
         // Each Chance condition's roll for this hit, kept so a hit read twice reads the same (TW-8)
         private Dictionary<object, bool> rolls;
 
@@ -270,9 +273,16 @@ namespace FarEmerald.PlayForge
             if (impact?.Entries == null) return;
 
             var defaultGroup = Base.Definition.RetentionGroup;
+            bool durational = Base.DurationSpecification.DurationPolicy == EEffectDurationPolicy.Durational;
+            Fades = false;
             foreach (var entry in impact.Entries)
             {
                 if (entry == null) continue;
+
+                // A lasting barrier of a durational effect fades with it, where its attribute says (TW-12)
+                bool fades = durational && entry.Delivery == EImpactDelivery.Continuous
+                             && entry.AttributeTarget is Attribute { Role: EAttributeRole.Barrier, FadesWithEffect: true };
+                Fades |= fades;
                 var impacter = new ScalerImpacter(
                     entry.Magnitude,
                     entry.Operation,
@@ -284,7 +294,8 @@ namespace FarEmerald.PlayForge
                     entry.Pipeline,
                     // The modifiers' stages for its attribute: a lasting entry's on its magnitude, others' as it commits (TW-7)
                     Changes?.StagesFor(entry.AttributeTarget),
-                    entry.Delivery == EImpactDelivery.Continuous);
+                    entry.Delivery == EImpactDelivery.Continuous,
+                    fades);
                 entryImpacters.Add((entry, impacter));
                 IndexImpacter(entry.Delivery, entry.AttributeTarget, impacter);
             }

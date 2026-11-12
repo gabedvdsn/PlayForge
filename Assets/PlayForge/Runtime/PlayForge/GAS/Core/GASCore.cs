@@ -174,6 +174,9 @@ namespace FarEmerald.PlayForge
                 // Its auras check who's near by its own time too (TW-10)
                 Auras.Step(Clock.DeltaTime);
 
+                // And its barriers decay by it (TW-12)
+                AttributeSystem.StepBarriers(Clock.DeltaTime);
+
                 // Its shelf, for the Effects Active counter (FEAT-18)
                 CountEffects();
 

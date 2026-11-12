@@ -93,6 +93,18 @@ namespace FarEmerald.PlayForge
 
         /// <summary>To a staying entity as it revives.</summary>
         [ForgeContextDefault(ForgeContext.Trigger)] public static Tag REVIVED { get; } = Tag.GenerateAsUnique("Revived");
+
+        /// <summary>To the one hit as it blocks an effect, its dealer as Source (TW-12).</summary>
+        [ForgeContextDefault(ForgeContext.Trigger)] public static Tag BLOCKED { get; } = Tag.GenerateAsUnique("Blocked");
+
+        /// <summary>To the one hit as it evades an effect, its dealer as Source (TW-12).</summary>
+        [ForgeContextDefault(ForgeContext.Trigger)] public static Tag EVADED { get; } = Tag.GenerateAsUnique("Evaded");
+
+        /// <summary>To the dealer as the one it hit blocks its effect, that one as Subject (TW-12).</summary>
+        [ForgeContextDefault(ForgeContext.Trigger)] public static Tag HIT_BLOCKED { get; } = Tag.GenerateAsUnique("Hit Blocked");
+
+        /// <summary>To the dealer as the one it hit evades its effect, that one as Subject (TW-12).</summary>
+        [ForgeContextDefault(ForgeContext.Trigger)] public static Tag HIT_EVADED { get; } = Tag.GenerateAsUnique("Hit Evaded");
         [ForgeContextDefault(ForgeContext.Data)] public static Tag DATA { get; } = Tag.GenerateAsUnique("Data");
         [ForgeContextDefault(ForgeContext.Data)] public static Tag ASSETS { get; } = Tag.GenerateAsUnique("Assets");
         [ForgeContextDefault(ForgeContext.Data)] public static Tag EFFECTS { get; } = Tag.GenerateAsUnique("Effects");

@@ -7,6 +7,9 @@ tracks each fix below by its ID.
 ## [Unreleased]
 
 ### Added
+- Absorption and block: the Barrier attribute role soaks the losses to the attribute it absorbs for, decaying at a rate
+  or fading with the effect that gave it; Block and Evade pipeline stages stop an effect as it lands, the one hit hearing
+  Blocked or Evaded and the dealer Hit Blocked or Hit Evaded (TW-12).
 - Thresholds that act: the Threshold analysis worker reads an attribute's share of its base, or what's missing, fires
   as it crosses, falling, rising or either, once or each time, and applies effects, from the entity or the one whose hit
   crossed it, and sends a gameplay event (TW-11).

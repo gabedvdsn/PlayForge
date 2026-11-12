@@ -113,7 +113,9 @@ passes it in, and one effect serves every strength.
   so its checks and its When Busy still hold.
   - **The core's own events** (TW-5), sent only where an ability listens for them: **Impact Dealt**, to the dealer, and
     **Impact Taken**, to the one hit, as an impact lands between two entities; **Kill**, to the killer, and **Died**, to
-    the one who died, its killer the source of the last blow it took; **Revived**, to a staying entity as it revives.
+    the one who died, its killer the source of the last blow it took; **Revived**, to a staying entity as it revives;
+    **Blocked** and **Evaded**, to one that stops an effect by a Block or Evade stage, and **Hit Blocked** and **Hit
+    Evaded**, to its dealer (TW-12).
     Their data hold the instigator as Source, the entity it was done to as Subject, and an impact as Impact.
   - For an impact event, a trigger takes only impacts on its **Attribute**, a **Sign** (Loss or Gain), and its
     **Impact Types**. Its **Chance** rolls once for each event: Counter Helix's 20%, its **Chance Roll** pseudo-random

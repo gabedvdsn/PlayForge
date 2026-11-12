@@ -107,6 +107,14 @@ namespace FarEmerald.PlayForge
             if (IsImmuneTo(spec.Base)) return false;
             if (!RollsToApply(spec)) return false;
 
+            // A Block or Evade stage in its hits' pipelines, or one a modifier brings, rolls once as it lands; on a stop
+            // nothing of it lands, and each side hears it (TW-12)
+            if (StoppedBy(spec) is { } stop)
+            {
+                HearStopped(spec, stop);
+                return false;
+            }
+
             // Asked for again before its own application is over, an effect contains itself, through its contained
             // effects or what applying it sets off. It recursed until the stack overflowed, which nothing catches (GAS-28)
             if (!applying.Add(spec.Base))
@@ -199,6 +207,79 @@ namespace FarEmerald.PlayForge
 
         // The number of the entity's last effect application (FEAT-13)
         private int applications;
+
+        // The first Block or Evade stage whose chance comes up, of its hits' pipelines, each pipeline once, then the stages
+        // its modifiers bring for an attribute it impacts; null where none does (TW-12)
+        private static AbstractStopStage StoppedBy(GameplayEffectSpec spec)
+        {
+            var impact = spec.Base.ImpactSpecification;
+            if (impact != null)
+            {
+                if (Stops(impact.Pipeline, spec) is { } own) return own;
+                var entries = impact.Entries;
+                if (entries != null)
+                {
+                    for (int i = 0; i < entries.Count; i++)
+                    {
+                        var pipeline = entries[i]?.Pipeline;
+                        if (pipeline == null || ReferenceEquals(pipeline, impact.Pipeline) || SeenBefore(entries, i, pipeline)) continue;
+                        if (Stops(pipeline, spec) is { } entry) return entry;
+                    }
+                }
+            }
+
+            var added = spec.Changes?.Stages;
+            if (added != null)
+            {
+                for (int i = 0; i < added.Count; i++)
+                {
+                    if (added[i].Stage is not AbstractStopStage stop || !stop.Enabled) continue;
+                    if (added[i].Attribute != null && !Impacts(impact, added[i].Attribute)) continue;
+                    if (Rolls(stop, spec)) return stop;
+                }
+            }
+            return null;
+        }
+
+        private static bool SeenBefore(IReadOnlyList<AttributeImpactEntry> entries, int index, ValuePipeline pipeline)
+        {
+            for (int i = 0; i < index; i++)
+                if (ReferenceEquals(entries[i]?.Pipeline, pipeline)) return true;
+            return false;
+        }
+
+        private static bool Impacts(GameplayEffectImpact impact, Attribute attribute)
+        {
+            var entries = impact?.Entries;
+            if (entries == null) return false;
+            for (int i = 0; i < entries.Count; i++)
+                if (entries[i] != null && attribute.Equals(entries[i].AttributeTarget)) return true;
+            return false;
+        }
+
+        private static AbstractStopStage Stops(ValuePipeline pipeline, GameplayEffectSpec spec)
+        {
+            if (pipeline == null || pipeline.Stages == null) return null;
+            for (int i = 0; i < pipeline.Stages.Count; i++)
+                if (pipeline.Stages[i] is AbstractStopStage { Enabled: true } stop && Rolls(stop, spec)) return stop;
+            return null;
+        }
+
+        private static bool Rolls(AbstractStopStage stop, GameplayEffectSpec spec)
+        {
+            var context = NumberContext.Of(spec);
+            return ForgeChance.Roll(stop.Chance?.Evaluate(in context, stop) ?? 0f, in context, stop.Roll, stop);
+        }
+
+        // The one hit hears its Blocked or Evaded, and the dealer its Hit Blocked or Hit Evaded, as Died and Kill are heard
+        private void HearStopped(GameplayEffectSpec spec, AbstractStopStage stop)
+        {
+            var dealer = spec.Origin?.GetSource();
+            var hit = Self as ITarget;
+            ForgeEvents.Send(Self, stop.StoppedEvent, dealer as ITarget, hit);
+            if (dealer is IGameplayAbilitySystem dealing && !ReferenceEquals(dealing, Self))
+                ForgeEvents.Send(dealing, stop.DealerEvent, dealer as ITarget, hit);
+        }
 
         // Whether the effect lands by its chance to apply. A chance of 1 or more, every effect's unless it's set, lands
         // and draws nothing, and one of 0 or less never lands and draws nothing either, so an effect without a chance
@@ -838,7 +919,8 @@ namespace FarEmerald.PlayForge
                     // A stack ran out and others are left. A per-stack magnitude reads the count only when its
                     // attribute recomputes, so this refreshes as gaining a stack does. The old count held until
                     // something else recomputed the attribute, and that change took the credit (GAS-34)
-                    if (StackCount(container) != stacksBefore) RegisterContinuousEntries(container.Spec);
+                    // And a barrier that fades with its effect reads its share of the time left (TW-12)
+                    if (StackCount(container) != stacksBefore || container.Spec.Fades) RegisterContinuousEntries(container.Spec);
                     continue;
                 }
 

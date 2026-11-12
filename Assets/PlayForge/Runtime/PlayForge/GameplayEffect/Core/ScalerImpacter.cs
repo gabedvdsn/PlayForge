@@ -29,6 +29,9 @@ namespace FarEmerald.PlayForge
         // A lasting impact's stages run on its magnitude, as no pipeline runs on it
         private readonly bool stagesOnMagnitude;
 
+        // A lasting effect's barrier that fades with it, to 0 by its end (TW-12)
+        private readonly bool fades;
+
         public ScalerImpacter(
             ScalableFloat magnitudeOperation,
             ECalculationOperation operation,
@@ -39,8 +42,10 @@ namespace FarEmerald.PlayForge
             EAddBehaviour addBehaviour = EAddBehaviour.AttributeRole,
             ValuePipeline pipeline = null,
             IReadOnlyList<AbstractValueStage> stages = null,
-            bool stagesOnMagnitude = false)
+            bool stagesOnMagnitude = false,
+            bool fades = false)
         {
+            this.fades = fades;
             this.magnitudeOperation = magnitudeOperation;
             Operation         = operation;
             TargetSlot        = targetSlot;
@@ -56,6 +61,10 @@ namespace FarEmerald.PlayForge
         public float Evaluate(IAttributeImpactCarrier carrier)
         {
             float value = EvaluateOwn(carrier);
+
+            // As much as its effect has left of its duration (TW-12)
+            if (fades && carrier is GameplayEffectSpec faded && faded.RuntimeContainer is { TotalDuration: > 0f } container)
+                value *= UnityEngine.Mathf.Clamp01(container.DurationRemaining / container.TotalDuration);
             return stagesOnMagnitude ? ValuePipeline.RunAfter(Stages, value, carrier, null, false) : value;
         }
 

@@ -140,4 +140,51 @@ namespace FarEmerald.PlayForge
 
         public override string Describe() => $"{(Into != null ? Into.GetName() : "an attribute")} takes it first";
     }
+
+    /// <summary>
+    /// A stage that can stop a hit (TW-12, Decision 52): it rolls its chance once as the effect lands, before anything of it
+    /// does, and on a roll that comes up nothing of the effect lands, its damage, tags, contained effects and on-hits, and
+    /// each side hears it. A lasting effect's ticks aren't rolled again. As the hit commits it passes the value on.
+    /// </summary>
+    [Serializable]
+    public abstract class AbstractStopStage : AbstractValueStage
+    {
+        [Tooltip("The chance it stops the effect, from 0 to 1, read as the effect lands: a number of any kind, as the one " +
+                 "hit's Block Chance, or a stacking curve of an item's stacks")]
+        public ScalableFloat Chance = 0.1f;
+
+        [Tooltip("How it rolls: pseudo-random, and its luck (TW-8)")]
+        public ChanceRoll Roll = new();
+
+        /// <summary>What the one hit hears as it stops the effect.</summary>
+        public abstract Tag StoppedEvent { get; }
+
+        /// <summary>What the dealer hears as the one it hit stops its effect.</summary>
+        public abstract Tag DealerEvent { get; }
+
+        /// <summary>Its verb, as "blocked".</summary>
+        protected abstract string Verb { get; }
+
+        public override float Apply(float value, in ValueRun run) => value;
+
+        public override string Describe() => $"{Verb} on a {NumberText.Of(Chance)} chance";
+    }
+
+    /// <summary>A block: on its chance, nothing of the effect lands, as Tougher Times blocks a hit outright (TW-12).</summary>
+    [Serializable]
+    public class BlockStage : AbstractStopStage
+    {
+        public override Tag StoppedEvent => Tags.BLOCKED;
+        public override Tag DealerEvent => Tags.HIT_BLOCKED;
+        protected override string Verb => "blocked";
+    }
+
+    /// <summary>An evade: on its chance, nothing of the effect lands, as a dodge (TW-12).</summary>
+    [Serializable]
+    public class EvadeStage : AbstractStopStage
+    {
+        public override Tag StoppedEvent => Tags.EVADED;
+        public override Tag DealerEvent => Tags.HIT_EVADED;
+        protected override string Verb => "evaded";
+    }
 }
