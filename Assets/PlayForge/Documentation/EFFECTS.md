@@ -292,6 +292,13 @@ has lost since the effect began. What a worker keeps for one application of its 
 `ctx.GetState<T>(this)`, since the worker itself is shared by every application
 ([SCALERS.md](SCALERS.md#asking-a-worker)).
 
+### On Hit
+
+**On Hit**, above the workers, holds the effects the hits of the one this effect is on apply while it lasts: a
+poisoned blade, a boon's Weak (TW-6). Its entries are an item's: an attribute, the effects, to the one hit or the
+holder, only on a kill, impact types and a condition ([ITEMS.md](ITEMS.md#on-hit)). An Instant effect doesn't last, so
+its On Hit does nothing. Another effect that replaces it under its tag takes it off, and a load puts it back once.
+
 ## Local Data
 
 Local Data is a list of named values stored on the asset. Each row has a **Key** (a tag), a **Type**, and a value of

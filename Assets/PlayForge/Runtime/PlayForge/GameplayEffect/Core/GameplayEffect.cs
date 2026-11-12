@@ -20,6 +20,9 @@ namespace FarEmerald.PlayForge
         /// target. An effect couldn't lend an ability, so a buff that lets you cast Fireball needed an item (FEAT-8).
         /// </summary>
         public List<Ability> GrantedAbilities = new();
+
+        [Tooltip("Effects its holder's hits apply, or a kill's, while it lasts, the holder the one it's on (TW-6)")]
+        public List<OnHitEntry> OnHit = new();
         
         public GameplayEffectImpact ImpactSpecification;
         public GameplayEffectDuration DurationSpecification;

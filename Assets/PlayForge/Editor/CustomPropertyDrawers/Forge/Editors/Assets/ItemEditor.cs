@@ -372,13 +372,15 @@ namespace FarEmerald.PlayForge.Extended.Editor
                 HelpTopic = "items/workers",
 
                 SerializedObject = serializedObject,
-                PropertyPaths = new[] { nameof(Item.WorkerGroup) },
+                PropertyPaths = new[] { nameof(Item.OnHit), nameof(Item.WorkerGroup) },
                 ImportAcrossTypes = true,
                 OnImportComplete = OnSectionReplaced,
                 OnClearComplete = OnSectionReplaced,
             });
             parent.Add(workersSection.Section);
 
+            // The effects its holder's hits apply (TW-6)
+            workersSection.Content.Add(CreatePropertyField(serializedObject.FindProperty(nameof(Item.OnHit)), "OnHit", "On Hit"));
             workersSection.Content.Add(CreatePropertyField(serializedObject.FindProperty(nameof(Item.WorkerGroup)), "WorkerGroup", ""));
         }
 
@@ -467,7 +469,7 @@ namespace FarEmerald.PlayForge.Extended.Editor
                 tagsSection.Summary.text = TagsSummary(item.Tags.ContextTags, "context tags", item.Tags.PassiveGrantedTags?.Count(tag => tag.IsValid) ?? 0);
             if (effectsSection != null) effectsSection.Summary.text = CountOf(item.GrantedEffects?.Count(effect => effect != null) ?? 0, "effect", "effects");
             if (abilitiesSection != null) abilitiesSection.Summary.text = item.ActiveAbility != null ? NameOf(item.ActiveAbility) : "None";
-            if (workersSection != null) workersSection.Summary.text = CountOf(WorkerCount(item.WorkerGroup), "worker", "workers");
+            if (workersSection != null) workersSection.Summary.text = WorkersLine(item.OnHit, WorkerCount(item.WorkerGroup));
             if (localDataSection != null) localDataSection.Summary.text = CountOf(item.LocalData?.Count ?? 0, "entry", "entries");
             if (usedBySection != null) usedBySection.Summary.text = usedBy == null ? "" : CountOf(usedBy.Count, "asset", "assets");
         }

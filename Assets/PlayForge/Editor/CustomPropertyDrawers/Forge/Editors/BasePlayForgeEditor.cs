@@ -713,6 +713,18 @@ namespace FarEmerald.PlayForge.Extended.Editor
             return parts.Count == 0 ? "None" : string.Join(" · ", parts);
         }
 
+        /// <summary>
+        /// A Workers section's line: its On Hit entries, then its workers, as in "None", "1 on hit" or "1 on hit, 2
+        /// workers" (TW-6).
+        /// </summary>
+        protected static string WorkersLine(List<OnHitEntry> onHit, int workers)
+        {
+            int hits = onHit?.Count(entry => entry != null) ?? 0;
+            if (hits == 0) return CountOf(workers, "worker", "workers");
+            var line = CountOf(hits, "on hit", "on hits");
+            return workers == 0 ? line : $"{line}, {CountOf(workers, "worker", "workers")}";
+        }
+
         /// <summary>How many workers a group holds, across its four lists.</summary>
         protected static int WorkerCount(StandardWorkerGroup group) => group == null
             ? 0

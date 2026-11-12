@@ -109,6 +109,20 @@ lists:
 Each list's **+** adds an empty worker to pick a kind for. The section's import button copies a worker group
 from another asset.
 
+### On Hit
+
+**On Hit**, above the workers, holds the effects the item applies as its holder's hits land, while it's equipped: a
+dagger's bleed, a hammer's armor break, a barrier on a kill (TW-6). Each entry has:
+
+- **Attribute**: what a hit lowers, as Health. A hit is a loss to it that the holder deals another entity.
+- **Effects**: what it applies. Each effect's own Chance to Apply rolls as it lands, and its hits set the entry off no
+  more, so a shock it applies doesn't shock again.
+- **To**: the one hit (**Target**), or the **Holder**, as a barrier on a kill does.
+- **Only On Kill**: only the hit that takes the attribute from above 0 to 0 or below.
+- **Impact Types**: only hits of one of these types, as attacks, so a bleed's ticks, typed apart, set off nothing.
+  None takes any hit.
+- **When**: a condition read at the hit, the holder its caster and the one hit its target.
+
 ## Local Data
 
 Local Data is a list of named values stored on the asset. Each row has a **Key** (a tag), a **Type**, and a value of

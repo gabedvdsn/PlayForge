@@ -132,6 +132,9 @@ namespace FarEmerald.PlayForge
         [Tooltip("Worker group providing additional behaviors while equipped.")]
         public StandardWorkerGroup WorkerGroup;
 
+        [Tooltip("Effects its holder's hits apply, or a kill's, while it's equipped (TW-6)")]
+        public List<OnHitEntry> OnHit = new();
+
         // ═══════════════════════════════════════════════════════════════════════════
         // Generation
         // ═══════════════════════════════════════════════════════════════════════════
@@ -311,10 +314,12 @@ namespace FarEmerald.PlayForge
         public void InitWorkers(ISource system)
         {
             WorkerGroup?.ProvideWorkersTo(system);
+            OnHits.Provide(OnHit, system);
         }
         public void RemoveWorkers(ISource system)
         {
             WorkerGroup?.RemoveWorkersFrom(system);
+            OnHits.Remove(OnHit, system);
         }
     }
 

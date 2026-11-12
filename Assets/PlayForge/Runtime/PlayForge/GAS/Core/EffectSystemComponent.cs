@@ -364,12 +364,25 @@ namespace FarEmerald.PlayForge
         // container whose effect grants abilities is here (FEAT-8)
         private readonly Dictionary<AbstractEffectContainer, List<(Ability Ability, int Slot)>> lent = new();
 
+        // The On Hits each container gave its target, to take back as it comes off. Kept apart, as a replacement by another
+        // effect under its tag gives the container the other's spec first, and a load clears the shelf quietly (TW-6)
+        private readonly Dictionary<AbstractEffectContainer, List<OnHitEntry>> onHitsLent = new();
+
         // Gives the target each ability the container's effect grants, at the level of what applied it, and notes the slot
         // each took. One the target can't take, as one it knows already, isn't lent, so it isn't taken back either, as an
         // item's isn't (GAS-48). An effect couldn't lend an ability (FEAT-8). A restore lends them quietly, and compiles the
         // tags once as it ends (FEAT-9)
         private void LendAbilities(AbstractEffectContainer container, bool quietly = false)
         {
+            // Its On Hits, while it lasts, as what it lends (TW-6)
+            var onHit = container.Spec.Base.OnHit;
+            if (onHit is { Count: > 0 })
+            {
+                var given = new List<OnHitEntry>(onHit);
+                OnHits.Provide(given, Self);
+                onHitsLent[container] = given;
+            }
+
             var abilities = container.Spec.Base.GrantedAbilities;
             if (abilities == null || abilities.Count == 0) return;
             var abilitySystem = Self.GetAbilitySystem();
@@ -391,6 +404,8 @@ namespace FarEmerald.PlayForge
         // Takes back what the container lent, interrupting an ability that's running, as an item's is (FEAT-8)
         private void TakeBackAbilities(AbstractEffectContainer container)
         {
+            if (onHitsLent.Count > 0 && onHitsLent.Remove(container, out var onHit)) OnHits.Remove(onHit, Self);
+
             if (lent.Count == 0 || !lent.Remove(container, out var slots)) return;
             var abilitySystem = Self.GetAbilitySystem();
             if (abilitySystem == null) return;
@@ -820,8 +835,8 @@ namespace FarEmerald.PlayForge
 
         /// <summary>
         /// Takes every effect off the shelf at once with nothing told and nothing run: no removal effects, workers or
-        /// callbacks. Nor does it take back the abilities effects lent, which the ability system lets go of with the rest. A
-        /// restore puts back what the save had.
+        /// callbacks. Nor does it take back the abilities effects lent, which the ability system lets go of with the rest; the
+        /// On Hits they gave it does, which the ability system keeps (TW-6). A restore puts back what the save had.
         /// </summary>
         internal void ClearForRestore()
         {
@@ -842,6 +857,10 @@ namespace FarEmerald.PlayForge
             byTag.Clear();
             immunities.Clear();
             lent.Clear();
+
+            // The On Hits they gave are the ability system's, which keeps them through its own clear (TW-6)
+            foreach (var onHit in onHitsLent.Values) OnHits.Remove(onHit, Self);
+            onHitsLent.Clear();
             requirementsDirty = true;
         }
 

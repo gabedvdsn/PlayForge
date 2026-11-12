@@ -232,6 +232,12 @@ four lists:
 Each list's **+** adds an empty worker to pick a kind for. The section's import button copies a worker group
 from another asset.
 
+### On Hit
+
+**On Hit**, above the workers, holds the effects the entity's hits apply while it knows the ability, as a passive's
+(TW-6). Its entries are an item's: an attribute, the effects, to the one hit or the holder, only on a kill, impact
+types and a condition ([ITEMS.md](ITEMS.md#on-hit)).
+
 ## Local Data
 
 Local Data is a list of named values stored on the asset. Each row has a **Key** (a tag), a **Type**, and a value of

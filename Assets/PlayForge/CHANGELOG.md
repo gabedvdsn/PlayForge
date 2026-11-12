@@ -7,6 +7,9 @@ tracks each fix below by its ID.
 ## [Unreleased]
 
 ### Added
+- On Hit on items, abilities and effects: the effects the holder's hits apply, or a kill's, only of some impact types,
+  to the one hit or the holder, under a condition; an item's while it's equipped, an ability's while it's known, an
+  effect's while it lasts (TW-6).
 - Gameplay events the core sends where an ability listens: Impact Dealt, Impact Taken, Kill, Died and Revived, with the
   instigator as Source and the one it was done to as Subject. An ability trigger takes only some impacts (attribute,
   sign, impact types), rolls a chance once for each event, and can target the instigator or the subject (TW-5).
