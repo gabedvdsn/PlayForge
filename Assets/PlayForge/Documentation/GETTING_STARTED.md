@@ -34,6 +34,9 @@ everything about its lifecycle:
 sequences), with cost and cooldown expressed as effects. Full pipeline reference:
 [EFFECT_PIPELINE.md](EFFECT_PIPELINE.md).
 
+[RECIPES.md](RECIPES.md) builds ten common rules from these pieces with no code, a crit, an execute, a counter and more,
+each in the Additional Content sample; [WORKERS.md](WORKERS.md) maps when each kind of worker runs, and for whom.
+
 ## Quickstart: a damage ability in ~10 minutes
 
 Everything below can be done from **Window → PlayForge → The Forge** (its Create menu), or via

@@ -314,7 +314,7 @@ while the effect lasts, as no tag needs to change for an attribute they read to,
 ## Workers
 
 Effect workers react to this effect's own events. A worker can act when the effect is applied, when it ticks, when it
-is removed, and when it deals a change to an attribute. Workers return actions, which run at the end of the frame. An
+is removed, and when it deals a change to an attribute ([WORKERS.md](WORKERS.md) maps each, and on whose side it runs). Workers return actions, which run at the end of the frame. An
 Instant effect runs its apply and remove workers within its one application.
 
 A worker can also answer numbers: a magnitude of the Worker kind asks the effect's workers for a value under a key,

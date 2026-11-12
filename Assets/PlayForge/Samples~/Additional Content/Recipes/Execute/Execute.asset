@@ -1,0 +1,34 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ba2465a807e6461192abc117106cd3f3, type: 3}
+  m_Name: Execute
+  m_EditorClassIdentifier: 
+  Description: Takes the rest where a hit would leave its target under a fifth of
+    its Health
+  Stages:
+  - rid: 2403794393699713032
+  references:
+    version: 2
+    RefIds:
+    - rid: -2
+      type: {class: , ns: , asm: }
+    - rid: 2403794393699713032
+      type: {class: ExecuteStage, ns: FarEmerald.PlayForge, asm: FarEmerald.PlayForge}
+      data:
+        Label: 
+        Enabled: 1
+        Share:
+          Magnitude: 0.2
+          RealMagnitude: 2
+          Scaler:
+            rid: -2
+        Attribute: {fileID: 11400000, guid: 1a451b4c7d2bb934a98a21b053faf5a8, type: 2}

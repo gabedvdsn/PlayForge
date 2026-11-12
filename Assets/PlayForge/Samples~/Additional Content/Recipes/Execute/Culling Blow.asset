@@ -1,0 +1,199 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 2d34fc1f98f8a0b4c9b37da3e706e0e1, type: 3}
+  m_Name: Culling Blow
+  m_EditorClassIdentifier: 
+  LocalData: []
+  _template: {fileID: 0}
+  _templateOverrides: []
+  _templateListSnapshots: []
+  Definition:
+    Name: Culling Blow
+    Description: 
+    Visibility:
+      Name: 
+      DisplayName: 
+    Textures: []
+    RetentionGroup:
+      Name: IgnoreaQ90wcmjZGnP0AQuPovNalcismrHWacbaQ90wcmjZGnP0AQuPovNalcism
+      DisplayName: Ignore
+  Tags:
+    AssetTag:
+      Name: Recipe.Effect.CullingBlow
+      DisplayName: Recipe.Effect.CullingBlow
+    ContextTags: []
+    GrantedTags: []
+    RemovesEffectsTagged: []
+    BlocksEffectsTagged: []
+  GrantedAbilities: []
+  SideChange:
+    Changes: 0
+    Source: 0
+    Sides: []
+    Priority: 0
+    Interrupts: 0
+  OnHit: []
+  Modifiers: []
+  Auras: []
+  Area:
+    Radius:
+      Magnitude: 0
+      RealMagnitude: 2
+      Scaler:
+        rid: -2
+    Flat: 1
+    Takes: 1
+    IncludeCaster: 0
+    MaxTargets: 0
+    UseResolveOrder: 1
+  Lifesteal:
+    Share:
+      Magnitude: 0
+      RealMagnitude: 2
+      Scaler:
+        rid: -2
+    Attribute: {fileID: 0}
+    When:
+      rid: -2
+  Transfers: []
+  OwnProcCoefficient: 0
+  ProcCoefficient: 1
+  ImpactSpecification:
+    AttributeTarget: {fileID: 11400000, guid: 1a451b4c7d2bb934a98a21b053faf5a8, type: 2}
+    TargetImpact: 0
+    ImpactOperation: 0
+    MultiplyBehaviour: 0
+    AddBehaviour: 0
+    Pipeline: {fileID: 11400000, guid: 727392d7b60c3d44582e279b022b28e0, type: 2}
+    AffiliationPolicy: 3
+    AffiliationComparison: 0
+    Affiliations: []
+    ChanceToApply:
+      Magnitude: 1
+      RealMagnitude: 2
+      Scaler:
+        rid: -2
+    ChanceRoll:
+      PseudoRandom: 0
+      OwnLuck: 0
+      Luck:
+        Magnitude: 0
+        RealMagnitude: 2
+        Scaler:
+          rid: -2
+    ImpactTypes: []
+    ReverseImpactOnRemoval: 0
+    MagnitudeOperation:
+      Magnitude: -15
+      RealMagnitude: 2
+      Scaler:
+        rid: -2
+    AdditionalImpacts: []
+    Packets: []
+  DurationSpecification:
+    DurationPolicy: 0
+    DurationOperation:
+      Magnitude: 0
+      RealMagnitude: 2
+      Scaler:
+        rid: -2
+    RealDeltaTime: 1
+    DeltaTimeScaler:
+      rid: -2
+    EnablePeriodicTicks: 0
+    TickOnApplication: 0
+    TicksOperation:
+      Magnitude: 0
+      RealMagnitude: 1
+      Scaler:
+        rid: -2
+      Rounding: 0
+    TickIntervalOperation:
+      Magnitude: 1
+      RealMagnitude: 2
+      Scaler:
+        rid: -2
+    AdditionalExecuteTicksOperation:
+      Magnitude: 0
+      RealMagnitude: 1
+      Scaler:
+        rid: -2
+      Rounding: 0
+    ReApplicationPolicy: 2
+    ReApplicationInteraction: 0
+    StackPolicy: 0
+    StackingConfigs: []
+    StackAmountOperation:
+      Magnitude: 1
+      RealMagnitude: 1
+      Scaler:
+        rid: -2
+      Rounding: 0
+  Workers: []
+  WorkerGroup:
+    Name: Workers
+    AttributeWorkers: []
+    ImpactWorkers: []
+    TagWorkers: []
+    AnalysisWorkers: []
+  Cues: []
+  SourceRequirements:
+    Name: 
+    ApplicationRequirements:
+      Name: 
+      SourceTemplate: {fileID: 0}
+      SyncWithTemplate: 0
+      AvoidTags: []
+      RequireTags: []
+    OngoingRequirements:
+      Name: 
+      SourceTemplate: {fileID: 0}
+      SyncWithTemplate: 0
+      AvoidTags: []
+      RequireTags: []
+    RemovalRequirements:
+      Name: 
+      SourceTemplate: {fileID: 0}
+      SyncWithTemplate: 0
+      AvoidTags: []
+      RequireTags: []
+  TargetRequirements:
+    Name: 
+    ApplicationRequirements:
+      Name: 
+      SourceTemplate: {fileID: 0}
+      SyncWithTemplate: 0
+      AvoidTags: []
+      RequireTags: []
+    OngoingRequirements:
+      Name: 
+      SourceTemplate: {fileID: 0}
+      SyncWithTemplate: 0
+      AvoidTags: []
+      RequireTags: []
+    RemovalRequirements:
+      Name: 
+      SourceTemplate: {fileID: 0}
+      SyncWithTemplate: 0
+      AvoidTags: []
+      RequireTags: []
+  Conditions:
+    Application: []
+    Ongoing: []
+    Removal: []
+  LinkMode: 0
+  _linkedSource: {fileID: 0}
+  references:
+    version: 2
+    RefIds:
+    - rid: -2
+      type: {class: , ns: , asm: }

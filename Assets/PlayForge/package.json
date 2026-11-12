@@ -27,6 +27,11 @@
       "displayName": "Code Examples",
       "description": "Annotated TaskSequence, synced sequence and group process examples, as code to read. They compiled into the runtime until they moved here.",
       "path": "Samples~/Code Examples"
+    },
+    {
+      "displayName": "Additional Content",
+      "description": "Recipes for common rules, each built from PlayForge's own assets with no code: a curse that bursts, a counter, a crit, an execute, lifesteal, damage return, can't die, on hit, on kill, and a boss's phase. Documentation/RECIPES.md describes each, field by field.",
+      "path": "Samples~/Additional Content"
     }
   ]
 }

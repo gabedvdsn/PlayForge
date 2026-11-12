@@ -1,0 +1,90 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f540c3b03f1458d459ad17cf8a6b5c71, type: 3}
+  m_Name: Boss
+  m_EditorClassIdentifier: 
+  LocalData: []
+  _template: {fileID: 0}
+  _templateOverrides: []
+  _templateListSnapshots: []
+  Name: Boss
+  Description: 
+  Textures: []
+  AssetTag:
+    Name: Recipe.Set.Boss
+    DisplayName: Recipe.Set.Boss
+  Attributes:
+  - Attribute: {fileID: 11400000, guid: 1a451b4c7d2bb934a98a21b053faf5a8, type: 2}
+    Current:
+      Magnitude: 1000
+      Scaling:
+        rid: -2
+      RealMagnitude: 2
+    Base:
+      Magnitude: 1000
+      Scaling:
+        rid: -2
+      RealMagnitude: 2
+    LinkCurrentToBase: 0
+    Overflow:
+      Policy: 0
+      Floor:
+        CurrentValue: 0
+        BaseValue: 0
+      Ceil:
+        CurrentValue: 0
+        BaseValue: 0
+    RetentionGroup:
+      Name: DefaultHZrocVrnTyCe46yj0U4URw7eigNeYI7THZrocVrnTyCe46yj0U4URw7ei
+      DisplayName: Default
+    CollisionPolicy: 0
+    Constraints:
+      AutoClamp: 1
+      AutoScaleWithBase: 0
+      RoundingMode: 0
+      SnapInterval: 0
+  SubSets: []
+  CollisionResolutionPolicy: 0
+  WorkerGroup:
+    Name: Workers
+    AttributeWorkers: []
+    ImpactWorkers: []
+    TagWorkers: []
+    AnalysisWorkers:
+    - rid: 2403794393699713035
+  StartingLevel: 1
+  MaxLevel: 4
+  LinkMode: 0
+  _linkedSource: {fileID: 0}
+  references:
+    version: 2
+    RefIds:
+    - rid: -2
+      type: {class: , ns: , asm: }
+    - rid: 2403794393699713035
+      type: {class: ThresholdAnalysisWorker, ns: FarEmerald.PlayForge, asm: FarEmerald.PlayForge}
+      data:
+        Target: {fileID: 11400000, guid: 1a451b4c7d2bb934a98a21b053faf5a8, type: 2}
+        Groups:
+          Read: 0
+          Groups: []
+        What: 3
+        Threshold: 0.5
+        Crossing: 1
+        Comparison: 1
+        TriggerOnce: 1
+        Effects:
+        - {fileID: 11400000, guid: b1ae684229d87944e8d4a7c561b7ecd5, type: 2}
+        AppliedBy: 0
+        Event:
+          Name: 
+          DisplayName: 
