@@ -32,7 +32,8 @@ namespace FarEmerald.PlayForge.Extended.Editor
         private PropertyField implicitTagField;
 
         // Under the cooldown, while no stage applies the usage effects (ED-41)
-        private HelpBox unappliedUsageNote;
+        private HelpBox chargesNote;
+        private VisualElement rechargeField;
 
         private SectionResult levelingSection;
         private SectionResult tagsSection;
@@ -344,7 +345,8 @@ namespace FarEmerald.PlayForge.Extended.Editor
                     DefinitionPath(nameof(AbilityDefinition.BufferPriority)), DefinitionPath(nameof(AbilityDefinition.ActivateImmediately)),
                     DefinitionPath(nameof(AbilityDefinition.ChanceToActivate)), DefinitionPath(nameof(AbilityDefinition.ActivationRoll)),
                     DefinitionPath(nameof(AbilityDefinition.ProcCoefficient)), DefinitionPath(nameof(AbilityDefinition.IgnoresCrowdControl)),
-                    nameof(Ability.Cost), nameof(Ability.ManaCost), nameof(Ability.Cooldown), BehaviourPath(nameof(AbilityBehaviour.Targeting)),
+                    nameof(Ability.Cost), nameof(Ability.ManaCost), nameof(Ability.Cooldown), nameof(Ability.Charges), nameof(Ability.Recharge),
+                    BehaviourPath(nameof(AbilityBehaviour.Targeting)),
                     BehaviourPath(nameof(AbilityBehaviour.UseImplicitTargeting)), BehaviourPath(nameof(AbilityBehaviour.ImplicitTag)),
                 },
                 OnImportComplete = OnSectionReplaced,
@@ -402,10 +404,15 @@ namespace FarEmerald.PlayForge.Extended.Editor
             content.Add(CreatePropertyField(serializedObject.FindProperty(nameof(Ability.ManaCost)), "ManaCost", "Mana Cost"));
             content.Add(CreatePropertyField(serializedObject.FindProperty(nameof(Ability.Cooldown)), "Cooldown", "Cooldown"));
 
-            // They apply only from a stage set to Apply Usage Effects, which nothing said when none was (ED-41)
-            unappliedUsageNote = new HelpBox("", HelpBoxMessageType.Warning) { name = "UnappliedUsage" };
-            content.Add(unappliedUsageNote);
-            ShowUnappliedUsage();
+            // Its charges, several uses with a cooldown each, and how they come back, shown while they're counted, with a
+            // note where they never run out (TW-17). A note under the cooldown said no stage applied it (ED-41); TW-17
+            // applies it as the ability starts
+            content.Add(CreatePropertyField(serializedObject.FindProperty(nameof(Ability.Charges)), "Charges", "Charges"));
+            rechargeField = CreatePropertyField(serializedObject.FindProperty(nameof(Ability.Recharge)), "Recharge", "Recharge");
+            content.Add(rechargeField);
+            chargesNote = new HelpBox("", HelpBoxMessageType.Warning) { name = "ChargesNeverRunOut" };
+            content.Add(chargesNote);
+            ShowCharges();
 
             // The targeting is an object each ability keeps of its own, which a multiple selection can't edit safely (ED-12)
             if (IsMultiple) content.Add(CreateNote("Select one ability to edit its targeting."));
@@ -433,13 +440,16 @@ namespace FarEmerald.PlayForge.Extended.Editor
             if (implicitTagField != null) implicitTagField.style.display = shown ? DisplayStyle.Flex : DisplayStyle.None;
         }
 
-        // Shown while the ability has a cost or a cooldown and no stage applies them, in the Problems view's words
-        private void ShowUnappliedUsage()
+        // Recharge shows while the charges may be counted, and the note while they never run out, in the Problems view's
+        // words (TW-17)
+        private void ShowCharges()
         {
-            if (unappliedUsageNote == null) return;
-            var message = IsMultiple ? null : UsageEffectsRule.Unapplied(ability);
-            unappliedUsageNote.text = message ?? "";
-            unappliedUsageNote.style.display = message != null ? DisplayStyle.Flex : DisplayStyle.None;
+            if (rechargeField != null)
+                rechargeField.style.display = IsMultiple || ChargesRule.Counted(ability) ? DisplayStyle.Flex : DisplayStyle.None;
+            if (chargesNote == null) return;
+            var message = IsMultiple ? null : ChargesRule.NeverRunOut(ability);
+            chargesNote.text = message ?? "";
+            chargesNote.style.display = message != null ? DisplayStyle.Flex : DisplayStyle.None;
         }
 
         // The asset loaders and the stages: what the ability does as it runs. They sat in Runtime Behaviour, between
@@ -613,7 +623,7 @@ namespace FarEmerald.PlayForge.Extended.Editor
             if (!IsMultiple && nameField != null && !IsFocused(nameField) && nameField.value != (ability.Definition.Name ?? ""))
                 nameField.SetValueWithoutNotify(ability.Definition.Name ?? "");
             ShowImplicitTag(ability.Behaviour.UseImplicitTargeting);
-            ShowUnappliedUsage();
+            ShowCharges();
             UpdateAssetTagDisplay();
             UpdateSummaries();
         }
@@ -647,7 +657,8 @@ namespace FarEmerald.PlayForge.Extended.Editor
             if (usedBySection != null) usedBySection.Summary.text = usedBy == null ? "" : CountOf(usedBy.Count, "asset", "assets");
         }
 
-        // When Busy's choice, then the cost and the cooldown, as in "Queue · Fireball Cost · Fireball Cooldown"
+        // When Busy's choice, then the cost and the cooldown, and the charges where they're counted, as in "Queue · Fireball
+        // Cost · Fireball Cooldown · 3 charges"
         private string ActivationSummary()
         {
             var parts = new List<string> { EnumName(ability.Definition.ActivationPolicy) };
@@ -655,6 +666,9 @@ namespace FarEmerald.PlayForge.Extended.Editor
             // Or its Mana Cost, in the project's Mana, as "30 Mana" (TW-28)
             else if (ability.CostsMana) parts.Add(NumberText.Of(ability.ManaCost, ForgeAttributes.Mana ? ForgeAttributes.Mana.Name : "Mana"));
             if (ability.Cooldown != null) parts.Add(NameOf(ability.Cooldown));
+            // Its charges, as "3 charges" (TW-17)
+            if (ChargesRule.Counted(ability) && ability.Charges != null)
+                parts.Add(ability.Charges.IsConstant ? CountOf(ability.Charges.Constant, "charge", "charges") : NumberText.Of(ability.Charges, "charges"));
             return string.Join(" · ", parts);
         }
 

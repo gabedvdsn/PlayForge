@@ -817,6 +817,10 @@ namespace FarEmerald.PlayForge.Extended.Editor
         /// </summary>
         private static void CopyManagedReference(SerializedProperty source, SerializedProperty dest)
         {
+            // One equal already, in its kind and its fields, is left as it is: a copy gave it a new reference id, a change
+            // to the child's file the push didn't make, as each push did to an ability's Recharge (TW-17)
+            if (AreManagedReferencesEqual(source, dest)) return;
+
             var srcObj = source.managedReferenceValue;
             if (srcObj != null)
             {

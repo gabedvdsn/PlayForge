@@ -9,9 +9,13 @@ namespace FarEmerald.PlayForge
     {
         public Ability Base;
         
+        /// <summary>Its charges on its caster: how many it holds, how many are in hand, and what its recharge counts (TW-17).</summary>
+        public AbilityCharges Charges { get; }
+
         public AbilitySpec(ISource source, Ability ability, int level) : base(source, new IntValuePairClamped(level, ability.StartingLevel, ability.MaxLevel), ability.Tags.AssetTag)
         {
             Base = ability;
+            Charges = new AbilityCharges(this);
         }
 
         /// <summary>
@@ -20,14 +24,31 @@ namespace FarEmerald.PlayForge
         /// </summary>
         public void ApplyUsageEffects(ProcessDataPacket data = null)
         {
-            // Apply cost and cooldown effects
-            if (Base.Cooldown is not null) Source.ApplyCarrier(Usage(Base.Cooldown, data));
+            // A charge spent, as its Recharge says, where its charges are counted; or else its cooldown (TW-17)
+            if (Charges.Counted) Charges.Spend(data);
+            else ApplyCooldown(data, ownContainer: false);
 
             if (Base.Cost is not null) Source.ApplyCarrier(Usage(Base.Cost, data));
 
             // Or its Mana Cost, in the project's Mana, where it has no Cost effect (TW-28)
             else PayManaCost(data);
         }
+
+        /// <summary>
+        /// Applies its Cooldown to its caster, with the activation's magnitudes; as a container of its own where a spent
+        /// charge's runs alone (TW-17). Nothing, where it has no Cooldown.
+        /// </summary>
+        internal void ApplyCooldown(ProcessDataPacket data, bool ownContainer)
+        {
+            if (Base.Cooldown is null) return;
+            var spec = Usage(Base.Cooldown, data);
+            if (spec == null) return;
+            spec.OwnContainer = ownContainer;
+            Source.ApplyCarrier(spec);
+        }
+
+        /// <summary>Whether its caster carries its Cooldown's asset tag, as an ordinary cooldown's check asks.</summary>
+        internal bool OnCooldown => Base.Cooldown is { } cooldown && Source.GetTagCache().TryGetWeight(cooldown.Tags.AssetTag, out _);
 
         /// <summary>
         /// What its Mana Cost comes to for an activation, at its level, read in the activation's data where it's given; 0

@@ -680,6 +680,8 @@ namespace FarEmerald.PlayForge
 
         private bool TryHandleExistingDurationalGameplayEffect(GameplayEffectSpec spec, bool ongoing)
         {
+            // A spent charge's cooldown runs alone, whatever its effect does when it's applied again (TW-17)
+            if (spec.OwnContainer) return false;
             if (!byTag.TryGetValue(spec.Base.Tags.AssetTag, out var existing) || existing.Count == 0) return false;
 
             // By index over the count found here: a tick on application can apply effects, which shelve containers
@@ -1193,6 +1195,22 @@ namespace FarEmerald.PlayForge
         {
             containers = byTag.TryGetValue(effect.Tags.AssetTag, out var same) ? same.ToArray() : Array.Empty<AbstractEffectContainer>();
             return containers.Length > 0;
+        }
+
+        /// <summary>
+        /// How many containers of <paramref name="effect"/> that <paramref name="origin"/> applied are on the shelf and not
+        /// leaving it: an ability's charges count their cooldowns so (TW-17). Allocates nothing.
+        /// </summary>
+        public int CountFrom(GameplayEffect effect, IEffectOrigin origin)
+        {
+            if (effect == null || !byTag.TryGetValue(effect.Tags.AssetTag, out var same)) return 0;
+            int count = 0;
+            for (int i = 0; i < same.Count; i++)
+            {
+                var container = same[i];
+                if (container.Spec.Base == effect && container.Spec.Origin == origin && !finishedSet.Contains(container)) count++;
+            }
+            return count;
         }
 
         public EffectDurationRemaining GetLongestDurationFor(Tag lookForTag)

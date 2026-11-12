@@ -153,6 +153,14 @@ namespace FarEmerald.PlayForge
             {
                 handle.IsExecuting = true;
 
+                // Its cost and cooldown, as it starts, after its targeting, where no stage marked Apply Usage Effects takes
+                // them: an author who sets a cost expects it paid, and they applied only from such a stage (TW-17)
+                if (!Spec.Base.StageTakesUsage && !handle.Data.UsageEffectsApplied)
+                {
+                    handle.Data.UsageEffectsApplied = true;
+                    Spec.ApplyUsageEffects(handle.Data);
+                }
+
                 Spec.Source.CompileGrantedTags();
 
                 // Wire critical section callback before activation

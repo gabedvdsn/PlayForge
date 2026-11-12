@@ -609,7 +609,10 @@ namespace FarEmerald.PlayForge
                 try
                 {
                     var ctx = new SequenceEventContext(Data, this, stage);
-                    stage.OnTerminate?.Invoke(ctx, !cancelled && error is null);
+
+                    // Cut short as what holds it was interrupted or cancelled, it didn't succeed, though its policy took
+                    // its cancelled tasks as ended: WhenAll did, and said it had (TS-AE)
+                    stage.OnTerminate?.Invoke(ctx, !cancelled && error is null && !parentToken.IsCancellationRequested);
                 }
                 catch (Exception ex)
                 {

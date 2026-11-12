@@ -82,7 +82,7 @@ namespace FarEmerald.PlayForge.Extended.Editor
             var usage = new Toggle("Apply Usage Effects")
             {
                 name = "ApplyUsageEffects",
-                tooltip = "Apply the ability's cost and cooldown in this stage. With no stage set to, they never apply",
+                tooltip = "Apply the ability's cost and cooldown in this stage. With no stage set to, they apply as the ability starts, after its targeting (TW-17)",
             };
             usage.AddToClassList(Toggle.alignedFieldUssClassName);
             usage.BindProperty(property.FindPropertyRelative(nameof(AbilityTaskBehaviourStage.ApplyUsageEffects)));

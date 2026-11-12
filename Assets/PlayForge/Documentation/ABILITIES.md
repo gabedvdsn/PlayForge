@@ -129,17 +129,29 @@ passes it in, and one effect serves every strength.
 - **Ignores Crowd Control** (TW-16): the crowd control rules the ability ignores, by their tags, as Black King Bar's
   Avatar ignores Silenced: the other rules still stop it, and still interrupt it as it runs (see Requirements). A tag
   ignores the rules under it too.
-- **Cost** and **Cooldown**: gameplay effects ([EFFECTS.md](EFFECTS.md)) applied to the caster when a stage applies
-  usage effects (see Stages). A cost is usually an Instant effect that lowers a resource such as Mana. A cooldown is
+- **Cost** and **Cooldown**: gameplay effects ([EFFECTS.md](EFFECTS.md)) applied to the caster as the ability starts,
+  after its targeting, so a cancelled targeting pays nothing, or by the stage that takes them (see Stages) (TW-17). A
+  cost is usually an Instant effect that lowers a resource such as Mana. A cooldown is
   usually a Durational effect: while it is active, the caster carries its asset tag, and the Cooldown check refuses the
   ability. A line under each field says how its effect takes its levels, and **Link** makes it take this ability's.
   **New**, beside an empty field, makes an effect linked to this ability. If Project Settings → PlayForge names a Cost
   or Cooldown effect, the field's right-click menu copies it or uses it.
 - **Mana Cost**, after Cost: what the ability costs in the project's Mana ([ATTRIBUTES.md](ATTRIBUTES.md#the-projects-attributes)),
   a number that can scale by level, where it has no Cost effect (TW-28). It's refused with Cost while its caster has less,
-  or the project or the caster has no Mana, and paid where a Cost is, as a stage applies its usage effects. A Cost
+  or the project or the caster has no Mana, and paid where a Cost is, as the ability starts or its stage applies usage. A Cost
   effect, where it has one, is paid in its place, for a cost in another attribute or one an effect has to say. The
   section's line says it, as "30 Mana".
+- **Charges** (TW-17): how many uses it holds, a number that can scale by level, each use spending a charge. With 1 it
+  is an ordinary cooldown. With more, the Cooldown check refuses it only with none in hand, and its **Recharge** says
+  how spent ones come back: **Each Charge** (the default) starts the Cooldown for each charge spent, a container of its
+  own whatever the effect does when applied again, and each brings its charge back as it ends, so three spent a second
+  apart come back a second apart; **All At Once** starts the Cooldown only as the last is spent, and its end brings them
+  all back. Write a recharge of your own by extending `AbstractChargeRecharge`: override `InHand` (how many are in
+  hand) and `Spend` (what a use does), using `AbilityCharges`' `Max`, `Spent`, `Cooldowns` and `StartCooldown`; one
+  of your own counts even a single charge, unless its `CountsASingleCharge` says not. Code reads an ability's charges
+  through its spec's `Charges`, as `container.Spec.Charges.InHand`. The section's line counts them, as "3 charges",
+  and a warning under Recharge, as in the Problems view, says where built-in charges have no Cooldown to bring them
+  back, so they never run out.
 - **Targeting**: the task that picks what the ability acts on, such as an entity the player clicks, or the caster
   itself. Targeting holds the activation's claim. If the task fails while its **Break Runtime On Invalid** is on, or it
   doesn't finish, the activation ends. Leave Targeting empty to skip this step.
@@ -184,8 +196,7 @@ This section is what the ability does once it has started.
   - **Completion**: All ends the stage when every task has finished. Any ends it when the first task finishes,
     and cancels the rest. A stage with no policy set behaves as All.
   - **Apply Usage Effects**: apply the ability's cost and cooldown in this stage. They apply once per activation, in
-    the first stage that does this. If no stage does, they are never applied, and a warning under Cooldown says so,
-    as the Problems view does.
+    the first stage that does this. If no stage does, they apply as the ability starts, after its targeting (TW-17).
   - **At Stage Start**, under Apply Usage Effects: on, apply them as the stage starts. Off, apply them as it ends,
     and only if it succeeded.
   - **Tasks**: the work, such as Apply Effects, Delay or Run Sequence, in a list whose **+** adds an empty task to

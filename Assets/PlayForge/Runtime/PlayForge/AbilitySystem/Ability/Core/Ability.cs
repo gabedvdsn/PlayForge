@@ -43,8 +43,33 @@ namespace FarEmerald.PlayForge
         /// <summary>Whether it costs the project's Mana: a Mana Cost, and no Cost effect paid in its place (TW-28).</summary>
         public bool CostsMana => Cost == null && ManaCost != null && (ManaCost.Magnitude > 0f || !AbstractScaler.IsNone(ManaCost.Scaler));
 
-        [ForgeEffectTemplate("Cooldown", "Cooldown")] 
+        [ForgeEffectTemplate("Cooldown", "Cooldown")]
         public GameplayEffect Cooldown;
+
+        [Tooltip("How many uses it holds, each spending a charge that comes back as its Recharge says; 1 is an ordinary " +
+                 "cooldown (TW-17)")]
+        public ScalableInt Charges = 1;
+
+        [SerializeReference]
+        [Tooltip("How its spent charges come back: each on a cooldown of its own, or all at once as one cooldown ends once " +
+                 "they're all spent, or as a recharge of your own says (TW-17)")]
+        public AbstractChargeRecharge Recharge = new EachChargeRecharge();
+
+        /// <summary>
+        /// Whether a stage marked Apply Usage Effects takes its cost and cooldown; where none does, they apply as it starts,
+        /// after its targeting (TW-17).
+        /// </summary>
+        public bool StageTakesUsage
+        {
+            get
+            {
+                var stages = Behaviour?.Stages;
+                if (stages == null) return false;
+                for (int i = 0; i < stages.Count; i++)
+                    if (stages[i] != null && stages[i].ApplyUsageEffects) return true;
+                return false;
+            }
+        }
 
         public StandardWorkerGroup WorkerGroup;
 

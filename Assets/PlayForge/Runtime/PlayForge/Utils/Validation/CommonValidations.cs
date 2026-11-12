@@ -45,8 +45,10 @@ namespace FarEmerald.PlayForge
         {
             error = "";
             if (data.EffectOrigin is not AbilitySpec ability) return false;
-            if (ability.Base.Cooldown is null) return true;
-            return !ability.Source.GetTagCache().TryGetWeight(ability.Base.Cooldown.Tags.AssetTag, out _);
+
+            // With its charges counted, it's refused only with none in hand, whatever else carries its cooldown's tag (TW-17)
+            if (ability.Charges.Counted) return ability.Charges.InHand > 0;
+            return !ability.OnCooldown;
         }
         public string GetName()
         {

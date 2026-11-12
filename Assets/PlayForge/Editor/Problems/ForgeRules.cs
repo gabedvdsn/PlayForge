@@ -376,32 +376,39 @@ namespace FarEmerald.PlayForge.Extended.Editor
     }
 
     /// <summary>
-    /// An ability's cost or cooldown that no stage applies, as the Ability inspector warns under its cooldown. They apply
-    /// only from a stage set to Apply Usage Effects, so with none, they never apply. Nothing said so, and the Tactics lab's
-    /// Slash had a cooldown that never applied (ED-41).
+    /// Charges that a built-in recharge brings back with no Cooldown to bring them (TW-17): they never run out, so they
+    /// limit nothing. A recharge of one's own decides for itself. It took the place of ED-41's rule, of a cost or a
+    /// cooldown no stage applied, as TW-17 applies them as the ability starts.
     /// </summary>
-    internal sealed class UsageEffectsRule : ForgeValidationRule
+    internal sealed class ChargesRule : ForgeValidationRule
     {
-        // Its fix is the author's choice: which stage applies them
-        public override string Name => "Costs and cooldowns no stage applies";
+        public override string Name => "Charges that never run out";
 
         public override void Check(Object asset, List<ForgeProblem> problems)
         {
             if (asset is not Ability ability) return;
-            var message = Unapplied(ability);
-            if (message != null) problems.Add(new ForgeProblem(asset, ForgeProblemSeverity.Warning, message, nameof(Ability.Cooldown)));
+            var message = NeverRunOut(ability);
+            if (message != null) problems.Add(new ForgeProblem(asset, ForgeProblemSeverity.Warning, message, nameof(Ability.Charges)));
         }
 
-        /// <summary>What no stage of the ability applies, said as the inspector says it, or null where a stage applies its usage effects or it has none.</summary>
-        internal static string Unapplied(Ability ability)
-        {
-            // A Mana Cost is a cost, paid where a Cost effect is (TW-28)
-            bool cost = ability.Cost != null || ability.CostsMana, cooldown = ability.Cooldown != null;
-            if (!cost && !cooldown) return null;
-            if (ability.Behaviour?.Stages != null && ability.Behaviour.Stages.Any(stage => stage != null && stage.ApplyUsageEffects)) return null;
+        /// <summary>
+        /// Whether its charges may be counted, as far as the asset says: more than 1, or a number that scales, or a recharge
+        /// that counts a single charge. With 1 and a built-in recharge, it's an ordinary cooldown.
+        /// </summary>
+        internal static bool Counted(Ability ability) =>
+            ability.Charges != null && (!ability.Charges.IsConstant || ability.Charges.Constant > 1)
+            || (ability.Recharge?.CountsASingleCharge ?? false);
 
-            string what = cost && cooldown ? "the cost and the cooldown never apply" : cost ? "the cost never applies" : "the cooldown never applies";
-            return $"No stage applies usage effects, so {what}. Turn on Apply Usage Effects in the stage that should apply them.";
+        // Each Charge and All At Once, exactly: a recharge of one's own, even one made from them, decides for itself
+        private static bool BuiltIn(AbstractChargeRecharge recharge) =>
+            recharge == null || recharge.GetType() == typeof(EachChargeRecharge) || recharge.GetType() == typeof(AllAtOnceRecharge);
+
+        /// <summary>Why its charges never run out, said as the inspector says it, or null where they do or aren't counted.</summary>
+        internal static string NeverRunOut(Ability ability)
+        {
+            if (ability.Cooldown != null || !BuiltIn(ability.Recharge) || !Counted(ability)) return null;
+            return "Its charges never run out, as it has no Cooldown to bring them back. Give it a Cooldown, or a recharge of " +
+                   "your own.";
         }
     }
 

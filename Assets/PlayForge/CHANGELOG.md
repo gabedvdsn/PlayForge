@@ -7,6 +7,8 @@ tracks each fix below by its ID.
 ## [Unreleased]
 
 ### Added
+- Charges: an ability's Charges, several uses with a cooldown each, and its Recharge: each spent charge on a cooldown of
+  its own, all at once as one cooldown ends once all are spent, or a recharge of your own (TW-17).
 - Crowd control, project-wide: Crowd Control Rules, each a tag and the abilities it stops, named by an entity or else the
   project's; an ability they stop is refused with Crowd Control and one running is interrupted; an ability's Ignores
   Crowd Control opts it out of the rules it names (TW-16).
@@ -350,6 +352,9 @@ tracks each fix below by its ID.
   page, through one table of links in the editor.
 
 ### Changed
+- An ability's cost, Mana Cost and cooldown apply as it starts, after its targeting, where no stage marked Apply Usage
+  Effects takes them; they applied only from such a stage, so most abilities paid nothing. The warning that said so,
+  and its Problems rule, are gone (TW-17, ED-41).
 - Auto Target and Auto Target By Affinity find entities by position, flat by default, with no collider needed; **Use
   Physics** searches with physics on their layers as they did (TW-10).
 - A Group member's Operation is an `EGroupOperation`: an impact's four in their order, so a member saved before keeps
@@ -647,6 +652,8 @@ tracks each fix below by its ID.
   Asking whether its sequence was paused took 24 bytes a frame.
 
 ### Fixed
+- A stage cut short as its run is interrupted no longer says it succeeded, so a stage that applies usage effects as it
+  ends doesn't pay them for a broken channel (TS-AE).
 - Updating an asset's tag, from the Problems window or Identity, carries the new tag to every asset that stored the old
   one, as an Asset Part that finds the asset by it; it changed the asset's tag alone, and what named it broke (ED-84).
 - An impact worker's context names its holder, the hit's dealer, as its System; it named the one hit (GAS-72).

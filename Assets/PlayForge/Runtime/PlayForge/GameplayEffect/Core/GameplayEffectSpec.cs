@@ -113,6 +113,12 @@ namespace FarEmerald.PlayForge
         /// <summary>Whether a lasting impact of its fades with it, a barrier's, so its shelf refreshes it as it ticks (TW-12).</summary>
         internal bool Fades { get; private set; }
 
+        /// <summary>
+        /// Whether it lands as a container of its own, whatever its effect does when it's applied again, as each spent
+        /// charge's cooldown runs alone (TW-17).
+        /// </summary>
+        internal bool OwnContainer { get; set; }
+
         // Each Chance condition's roll for this hit, kept so a hit read twice reads the same (TW-8)
         private Dictionary<object, bool> rolls;
 
