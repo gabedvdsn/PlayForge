@@ -73,6 +73,9 @@ namespace FarEmerald.PlayForge.Samples.Demo
         Tag ILabRules.AttackRangeKey => AttackRange;
         float ILabRules.AttackRange => 2f;
         int ILabRules.AttackSlot => 0;
+        Tag ILabRules.CastOrderKey => CastOrder;
+        Tag ILabRules.CastWhenKey => CastWhen;
+        Tag ILabRules.ReachKey => Reach;
 
         [Header("Damage types, as impact types, by which damage numbers are colored")]
         public Tag Physical;

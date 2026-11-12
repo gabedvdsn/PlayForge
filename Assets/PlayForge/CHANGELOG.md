@@ -7,6 +7,8 @@ tracks each fix below by its ID.
 ## [Unreleased]
 
 ### Added
+- The Creator Lab's battle: teams of bots, a quick battle, play and reset; `LabBot`, a bot's mind, which the Demo's AI
+  now is (LAB-9, LAB-10).
 - The Creator Lab, Window → PlayForge → Creator Lab: a space for trying a project's assets, its units, test dummies,
   library, panels and its own time (FEAT-35, LAB-1 to LAB-8). See `Documentation/CREATOR_LAB.md`.
 - `IForgeInput` reads a key, a held pointer button, the pointer's place and the scroll wheel, each with a default, so a

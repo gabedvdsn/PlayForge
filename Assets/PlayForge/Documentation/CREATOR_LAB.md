@@ -5,7 +5,8 @@ numbers move. Open it from **Window → PlayForge → Creator Lab**: it opens in
 before are saved first, if you want them saved.
 
 The lab plays every PlayForge asset in the project's own folders. Its design is `Docs/CREATOR_LAB_DESIGN.md` in the
-repository; what's built so far is the space, its units and dummies, its panels and its time (phase 2, LAB-1 to LAB-8).
+repository; what's built so far is the space, its units and dummies, its panels and its time (phase 2, LAB-1 to LAB-8),
+and battle (phase 3, LAB-9 and LAB-10).
 
 ## The space
 
@@ -54,6 +55,27 @@ full; **Clear** takes every unit out.
 
 An effect or an entity changed in the inspector or The Forge as the lab plays is read on its next application, as
 every asset is. What a unit was made from, its attribute set and its starting abilities, shows on a new unit.
+
+## Battle
+
+The **Battle** mode fights teams of bots. Pick an entity and a side above, a level in **Level**, and **Add bot**; each
+side stands in a line of its own, Blue to the south, Red to the north, Green to the west and Gold to the east. **Quick
+battle** makes Blue against Red, **A side** of each, of the entity selected in the library, or picked at random from the
+project's. **Play** starts the fight and the lab's time; the line under the buttons says who stands, and who won, or
+that no one stands. **Reset** makes every bot anew where it started, at full, with the items and abilities you gave it
+since and their levels.
+
+A bot takes the nearest foe it can target, casts what's ready, and otherwise attacks with its attack. Its order and its
+moments are its rules':
+
+- **Cast Order Key**: the Local Data key an entity's order is under, as "W Q E", the letters its abilities other than its
+  attack, in its entity's order. With none, each in turn.
+- **Cast When Key**: the key for when it casts an ability: **InRange** (the default), **Hurt** (below 60% health),
+  **Low** (below 35%, away from its foe, as an escape), **Stunned** (while something stops it) or **FoeLow** (its foe
+  below half).
+- **Reach Key**: the key for an ability's reach, 0 for anywhere.
+
+Low on health, a bot backs off a moment once in a while. The Demo's AI hero is a bot, its roster giving the keys.
 
 ## Time
 

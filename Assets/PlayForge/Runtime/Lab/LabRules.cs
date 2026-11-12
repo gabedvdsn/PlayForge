@@ -37,6 +37,18 @@ namespace FarEmerald.PlayForge.Lab
 
         /// <summary>Which of an entity's starting abilities is its attack, from 0, or -1 where none is.</summary>
         int AttackSlot { get; }
+
+        /// <summary>The Local Data key an entity's bot casting order is under, as "W Q E", or none to cast each in turn (LAB-10).</summary>
+        Tag CastOrderKey { get; }
+
+        /// <summary>
+        /// The Local Data key for when a bot casts an ability: InRange, Hurt, Low (away from its foe), Stunned or FoeLow;
+        /// or none to cast each in range (LAB-10).
+        /// </summary>
+        Tag CastWhenKey { get; }
+
+        /// <summary>The Local Data key an ability's reach for a bot is under, 0 for anywhere, or none for anywhere (LAB-10).</summary>
+        Tag ReachKey { get; }
     }
 
     /// <summary>
@@ -76,6 +88,16 @@ namespace FarEmerald.PlayForge.Lab
         [Tooltip("Which of an entity's starting abilities is its attack, from 0, or -1 where none is")]
         public int AttackSlot;
 
+        [Header("Bots")]
+        [Tooltip("The Local Data key an entity's casting order is under, as \"W Q E\": the letters its abilities other than its attack, in its entity's order. With none, each in turn")]
+        public Tag CastOrderKey;
+
+        [Tooltip("The Local Data key for when a bot casts an ability: InRange, Hurt, Low (away from its foe), Stunned or FoeLow. With none, each in range")]
+        public Tag CastWhenKey;
+
+        [Tooltip("The Local Data key an ability's reach for a bot is under, 0 for anywhere. With none, anywhere")]
+        public Tag ReachKey;
+
         [System.NonSerialized] private Attribute foundHealth;
         [System.NonSerialized] private Attribute foundSpeed;
 
@@ -88,6 +110,9 @@ namespace FarEmerald.PlayForge.Lab
         Tag ILabRules.AttackRangeKey => AttackRangeKey;
         float ILabRules.AttackRange => AttackRange;
         int ILabRules.AttackSlot => AttackSlot;
+        Tag ILabRules.CastOrderKey => CastOrderKey;
+        Tag ILabRules.CastWhenKey => CastWhenKey;
+        Tag ILabRules.ReachKey => ReachKey;
 
         /// <summary>
         /// Finds the attributes left empty among a library's, by their names: Health, and Movement Speed or Move Speed.

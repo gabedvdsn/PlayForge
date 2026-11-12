@@ -31,6 +31,10 @@ namespace FarEmerald.PlayForge.Lab
         private TextField search;
         private Label libraryName, ghost, hint;
         private DropdownField dummyEntity, dummySide;
+        private VisualElement dummySection, battleSection;
+        private SliderInt botLevel, perSide;
+        private Label battleLine;
+        private DropdownField teachChoice, giveChoice;
         private Slider distance, tilt, speed;
         private Button pause;
         private readonly Dictionary<LabUnit, (VisualElement root, VisualElement fill, Label line)> bars = new();
@@ -199,21 +203,41 @@ namespace FarEmerald.PlayForge.Lab
             foreach (LabMode each in Enum.GetValues(typeof(LabMode)))
             {
                 var kind = each;
-                var button = new Button(() => lab?.SetMode(kind)) { name = $"Mode{kind}", text = kind.ToString() };
-                button.SetEnabled(kind != LabMode.Battle);
-                if (kind == LabMode.Battle) button.tooltip = "Comes with LAB-9";
-                modes.Add(button);
+                modes.Add(new Button(() => lab?.SetMode(kind)) { name = $"Mode{kind}", text = kind.ToString() });
             }
 
-            Heading(content, "Test dummies");
+            // The entity and the side what's put down is of, which the dummies and the battle share
             dummyEntity = new DropdownField("Entity", new List<string>(), 0) { name = "DummyEntity" };
             content.Add(dummyEntity);
             dummySide = new DropdownField("Side", LabSides.All.Select(side => side.Name).ToList(), 1) { name = "DummySide" };
             content.Add(dummySide);
-            var dummies = Row(content, "DummyButtons");
+
+            dummySection = new VisualElement { name = "DummySection" };
+            content.Add(dummySection);
+            Heading(dummySection, "Test dummies");
+            var dummies = Row(dummySection, "DummyButtons");
             dummies.Add(new Button(AddDummy) { name = "AddDummy", text = "Add", tooltip = "Put a dummy of the entity down, on the side" });
             dummies.Add(new Button(() => lab?.ResetDummies()) { name = "ResetDummies", text = "Reset", tooltip = "Each dummy back where it was put, at full" });
             dummies.Add(new Button(() => lab?.Clear()) { name = "ClearUnits", text = "Clear", tooltip = "Take every unit out" });
+
+            battleSection = new VisualElement { name = "BattleSection" };
+            content.Add(battleSection);
+            Heading(battleSection, "Battle");
+            botLevel = new SliderInt("Level", 1, 30) { name = "BotLevel", value = 1, showInputField = true };
+            battleSection.Add(botLevel);
+            var bots = Row(battleSection, "BotButtons");
+            bots.Add(new Button(AddBot) { name = "AddBot", text = "Add bot", tooltip = "A bot of the entity, on the side, at the level" });
+            bots.Add(new Button(() => lab?.Clear()) { name = "ClearBattle", text = "Clear", tooltip = "Take every bot out" });
+            perSide = new SliderInt("A side", 1, 8) { name = "PerSide", value = 4, showInputField = true };
+            battleSection.Add(perSide);
+            battleSection.Add(new Button(() => lab?.QuickBattle(perSide.value)) { name = "QuickBattle", text = "Quick battle",
+                tooltip = "Blue against Red, so many a side, of the entity selected in the library, or at random" });
+            var fight = Row(battleSection, "FightButtons");
+            fight.Add(new Button(() => lab?.Play()) { name = "Play", text = "Play", tooltip = "The bots fight" });
+            fight.Add(new Button(() => lab?.ResetBattle()) { name = "ResetBattle", text = "Reset", tooltip = "Every bot back where it started, at full" });
+            battleLine = new Label { name = "BattleLine" };
+            battleLine.AddToClassList("lab-muted");
+            battleSection.Add(battleLine);
 
             Heading(content, "Camera");
             var view = lab != null ? lab.View : null;
@@ -254,6 +278,15 @@ namespace FarEmerald.PlayForge.Lab
             var heading = new Label(text);
             heading.AddToClassList("lab-heading");
             parent.Add(heading);
+        }
+
+        private void AddBot()
+        {
+            if (lab == null || dummyEntity == null) return;
+            int index = dummyEntity.index;
+            if (index < 0 || index >= entityChoices.Count) return;
+            if (lab.Mode != LabMode.Battle) lab.SetMode(LabMode.Battle);
+            lab.AddBot(entityChoices[index], LabSides.Named(dummySide.value), level: botLevel != null ? botLevel.value : 0);
         }
 
         private void AddDummy()
@@ -410,6 +443,7 @@ namespace FarEmerald.PlayForge.Lab
             {
                 nextRedraw = ForgeTime.UnscaledTime + RedrawEvery;
                 DrawSelected();
+                DrawBattleLine();
             }
             DrawBars();
         }
@@ -422,12 +456,29 @@ namespace FarEmerald.PlayForge.Lab
             DrawModeChoices();
             DrawSelected();
             if (pause != null) pause.text = lab.Paused ? "Play" : "Pause";
+            if (dummySection != null) dummySection.style.display = lab.Mode == LabMode.Dummies ? DisplayStyle.Flex : DisplayStyle.None;
+            if (battleSection != null) battleSection.style.display = lab.Mode == LabMode.Battle ? DisplayStyle.Flex : DisplayStyle.None;
+            DrawBattleLine();
             if (lab.View)
             {
                 distance?.SetValueWithoutNotify(lab.View.Distance);
                 tilt?.SetValueWithoutNotify(lab.View.Tilt);
             }
             speed?.SetValueWithoutNotify(lab.Speed);
+        }
+
+        // Who stands on each side, and who won
+        private void DrawBattleLine()
+        {
+            if (battleLine == null || lab == null) return;
+            if (lab.Ended) battleLine.text = lab.Winner.HasValue ? $"{lab.Winner.Value.Name} wins" : "No one stands";
+            else if (lab.Seats.Count == 0) battleLine.text = "No bots yet";
+            else
+            {
+                var standing = lab.Seats.Where(seat => seat.Unit && seat.Unit.Alive).GroupBy(seat => seat.Side.Name)
+                    .Select(side => $"{side.Key} {side.Count()}");
+                battleLine.text = (lab.Fighting ? "Fighting · " : "") + string.Join(" · ", standing);
+            }
         }
 
         // The middle dock: the asset selected, level by level, or the unit, as it is now
@@ -475,16 +526,34 @@ namespace FarEmerald.PlayForge.Lab
                 var row = Row(selectedBody, $"Ability {ability.GetName()}");
                 float cooldown = unit.CooldownLeft(ability);
                 row.Add(new Label($"{ability.GetName()} · level {unit.LevelOf(ability)}{(cooldown > 0f ? $" · {cooldown:0.0}s" : "")}"));
-                row.Add(new Button(() => { unit.ApplyLevel(ability, Mathf.Max(1, unit.LevelOf(ability) - 1)); MarkDirty(); }) { text = "−", tooltip = "A level less" });
-                row.Add(new Button(() => { unit.ApplyLevel(ability, unit.LevelOf(ability) + 1); MarkDirty(); }) { text = "+", tooltip = "A level more" });
-                row.Add(new Button(() => { unit.Forget(ability); MarkDirty(); }) { text = "×", tooltip = "Take it" });
+                row.Add(new Button(() => lab.SetAbilityLevel(ability, unit, unit.LevelOf(ability) - 1)) { text = "−", tooltip = "A level less" });
+                row.Add(new Button(() => lab.SetAbilityLevel(ability, unit, unit.LevelOf(ability) + 1)) { text = "+", tooltip = "A level more" });
+                row.Add(new Button(() => lab.Forget(ability, unit)) { text = "×", tooltip = "Take it" });
+            }
+            var abilities = lab.Library?.Assets(LabAssetKind.Abilities) ?? Array.Empty<ScriptableObject>();
+            if (abilities.Count > 0)
+            {
+                var teach = Row(selectedBody, "Teach");
+                teachChoice = new DropdownField(abilities.Select(LabAssets.NameOf).ToList(), 0) { name = "TeachChoice" };
+                teach.Add(teachChoice);
+                teach.Add(new Button(() => { if (teachChoice.index >= 0) lab.Teach(abilities[teachChoice.index] as Ability, unit); })
+                    { name = "TeachAbility", text = "Teach", tooltip = "The unit learns the ability" });
             }
             Heading(selectedBody, "Items");
             foreach (var item in unit.Items())
             {
                 var row = Row(selectedBody, $"Item {item.GetName()}");
                 row.Add(new Label($"{item.GetName()} · level {unit.LevelOf(item)}"));
-                row.Add(new Button(() => { unit.Take(item); MarkDirty(); }) { text = "×", tooltip = "Take it" });
+                row.Add(new Button(() => lab.TakeItem(item, unit)) { text = "×", tooltip = "Take it" });
+            }
+            var items = lab.Library?.Assets(LabAssetKind.Items) ?? Array.Empty<ScriptableObject>();
+            if (items.Count > 0)
+            {
+                var give = Row(selectedBody, "Give");
+                giveChoice = new DropdownField(items.Select(LabAssets.NameOf).ToList(), 0) { name = "GiveChoice" };
+                give.Add(giveChoice);
+                give.Add(new Button(() => { if (giveChoice.index >= 0) lab.GiveItem(items[giveChoice.index] as Item, unit); })
+                    { name = "GiveItem", text = "Give", tooltip = "The unit takes the item, equipped" });
             }
             if (unit.TryGetComponent<LabDummy>(out var dummy))
             {

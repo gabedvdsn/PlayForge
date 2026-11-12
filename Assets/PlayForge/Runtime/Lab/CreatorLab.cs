@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using UnityEngine;
 
 namespace FarEmerald.PlayForge.Lab
@@ -15,6 +16,24 @@ namespace FarEmerald.PlayForge.Lab
 
         /// <summary>An empty space, where abilities still cast and effects still land.</summary>
         None,
+    }
+
+    /// <summary>
+    /// A bot's place in a battle (LAB-9): what it's made of, its side, its level and where it starts, and what the author
+    /// gave it since, which a reset gives again as it makes the bot anew.
+    /// </summary>
+    public sealed class LabSeat
+    {
+        public ScriptableObject Entity;
+        public LabSide Side;
+        public int Level;
+        public Vector3 Home;
+        public readonly List<Item> Items = new();
+        public readonly List<Ability> Taught = new();
+        public readonly Dictionary<Ability, int> AbilityLevels = new();
+
+        /// <summary>The bot standing for it now, or null between a reset's take-out and its make.</summary>
+        public LabUnit Unit;
     }
 
     /// <summary>
@@ -84,6 +103,19 @@ namespace FarEmerald.PlayForge.Lab
         /// <summary>Raised as what it holds or what's selected changes, for the panels to redraw.</summary>
         public event Action Changed;
 
+        /// <summary>The battle's seats, a bot standing for each (LAB-9).</summary>
+        public IReadOnlyList<LabSeat> Seats => seats;
+
+        /// <summary>Whether the battle's bots fight.</summary>
+        public bool Fighting { get; private set; }
+
+        /// <summary>The side left standing as a battle ends, or null while it goes on or none is.</summary>
+        public LabSide? Winner { get; private set; }
+
+        /// <summary>Whether the battle is over: a side stands alone, or no one stands at all.</summary>
+        public bool Ended { get; private set; }
+
+        private readonly List<LabSeat> seats = new();
         private readonly List<LabUnit> units = new();
         private readonly List<UnityEngine.Object> made = new();
         private GameObject ground;
@@ -278,8 +310,26 @@ namespace FarEmerald.PlayForge.Lab
                 }
                 unit.Step(deltaTime);
                 if (unit.TryGetComponent<LabDummy>(out var dummy)) dummy.Step(deltaTime);
+                if (unit.TryGetComponent<LabBot>(out var bot)) bot.Step(deltaTime);
             }
             if (Caster) Caster.Step(deltaTime);
+            if (Fighting) Judge();
+        }
+
+        // A battle is over as no more than one side has a bot standing
+        private void Judge()
+        {
+            LabSide? standing = null;
+            foreach (var seat in seats)
+            {
+                if (!seat.Unit || !seat.Unit.Alive) continue;
+                if (standing.HasValue && !standing.Value.Tag.Equals(seat.Side.Tag)) return;
+                standing = seat.Side;
+            }
+            Winner = standing;
+            Ended = true;
+            SetFighting(false);
+            Changed?.Invoke();
         }
 
         private void Update()
@@ -322,20 +372,143 @@ namespace FarEmerald.PlayForge.Lab
             return dummy;
         }
 
-        /// <summary>Takes a unit out of the lab.</summary>
+        /// <summary>Takes a unit out of the lab, and its seat where it's a bot.</summary>
         public void RemoveUnit(LabUnit unit)
         {
             if (!unit || !units.Remove(unit)) return;
             if (SelectedUnit == unit) SelectedUnit = null;
+            seats.RemoveAll(seat => seat.Unit == unit);
             unit.Remove();
             Changed?.Invoke();
         }
 
-        /// <summary>Takes every unit out.</summary>
+        /// <summary>Takes every unit out, and every seat: the battle with them.</summary>
         public void Clear()
         {
             foreach (var unit in units.ToArray()) RemoveUnit(unit);
+            seats.Clear();
+            Fighting = false;
+            Winner = null;
+            Ended = false;
         }
+
+        // ═══════════════════════════════════════════════════════════════════════════
+        // Battle (LAB-9)
+        // ═══════════════════════════════════════════════════════════════════════════
+
+        /// <summary>
+        /// A bot on a side, of an entity or a set, at a level: a seat, which a reset makes it from again, and the bot
+        /// standing for it. With no point given, it stands in its side's line.
+        /// </summary>
+        public LabBot AddBot(ScriptableObject entityOrSet, LabSide side, Vector3? at = null, int level = 0)
+        {
+            if (entityOrSet is not (EntityIdentity or AttributeSet)) return null;
+            var seat = new LabSeat { Entity = entityOrSet, Side = side, Level = level, Home = at ?? NextSpot(side) };
+            seats.Add(seat);
+            return MakeBot(seat);
+        }
+
+        // The bot for a seat, given what the author gave it, fighting as the battle does
+        private LabBot MakeBot(LabSeat seat)
+        {
+            var unit = AddUnit(seat.Entity, seat.Side, seat.Home, seat.Level, stays: true);
+            if (unit == null) return null;
+            seat.Unit = unit;
+            unit.transform.rotation = Quaternion.LookRotation(Facing(seat.Side));
+            foreach (var ability in seat.Taught) unit.Teach(ability, Mathf.Max(1, ability.StartingLevel));
+            foreach (var pair in seat.AbilityLevels) unit.ApplyLevel(pair.Key, pair.Value);
+            foreach (var item in seat.Items) unit.Give(item, Mathf.Max(1, item.StartingLevel));
+            var bot = unit.gameObject.AddComponent<LabBot>();
+            bot.Fighting = Fighting;
+            Changed?.Invoke();
+            return bot;
+        }
+
+        // Each side's line: Blue to the south, Red to the north, Green to the west and Gold to the east
+        private Vector3 NextSpot(LabSide side)
+        {
+            int index = seats.Count(seat => seat.Side.Tag.Equals(side.Tag));
+            float along = (index % 8 - 3.5f) * 2.5f;
+            float back = index / 8 * 2.5f;
+            if (side.Tag.Equals(LabSides.Red.Tag)) return new Vector3(along, 0f, 8f + back);
+            if (side.Tag.Equals(LabSides.Green.Tag)) return new Vector3(-10f - back, 0f, along);
+            if (side.Tag.Equals(LabSides.Gold.Tag)) return new Vector3(10f + back, 0f, along);
+            return new Vector3(along, 0f, -8f - back);
+        }
+
+        private static Vector3 Facing(LabSide side)
+        {
+            if (side.Tag.Equals(LabSides.Red.Tag)) return Vector3.back;
+            if (side.Tag.Equals(LabSides.Green.Tag)) return Vector3.right;
+            if (side.Tag.Equals(LabSides.Gold.Tag)) return Vector3.left;
+            return Vector3.forward;
+        }
+
+        /// <summary>
+        /// A quick battle: Blue against Red, so many a side, each of the entity given, or the one selected, or else picked
+        /// at random from the project's entities.
+        /// </summary>
+        public void QuickBattle(int perSide = 4, ScriptableObject entity = null)
+        {
+            SetMode(LabMode.Battle);
+            Clear();
+            entity ??= SelectedAsset is EntityIdentity or AttributeSet ? SelectedAsset : null;
+            var pool = new List<ScriptableObject>();
+            if (entity) pool.Add(entity);
+            else
+            {
+                pool.AddRange(Library.Assets(LabAssetKind.Entities));
+                if (pool.Count == 0) pool.AddRange(Library.Assets(LabAssetKind.AttributeSets));
+            }
+            if (pool.Count == 0) return;
+            for (int side = 0; side < 2; side++)
+            for (int i = 0; i < Mathf.Max(1, perSide); i++)
+            {
+                var pick = pool[Mathf.Min(pool.Count - 1, (int)(ForgeRandom.Value * pool.Count))];
+                AddBot(pick, side == 0 ? LabSides.Blue : LabSides.Red);
+            }
+            Changed?.Invoke();
+        }
+
+        /// <summary>The battle's bots fight, and the lab's time runs.</summary>
+        public void Play()
+        {
+            Winner = null;
+            Ended = false;
+            Paused = false;
+            SetFighting(true);
+            Changed?.Invoke();
+        }
+
+        /// <summary>Every bot back where it started, at full, made anew from its seat with what it was given; none fight.</summary>
+        public void ResetBattle()
+        {
+            SetFighting(false);
+            Winner = null;
+            Ended = false;
+            foreach (var seat in seats)
+            {
+                if (seat.Unit)
+                {
+                    units.Remove(seat.Unit);
+                    if (SelectedUnit == seat.Unit) SelectedUnit = null;
+                    seat.Unit.Remove();
+                }
+                seat.Unit = null;
+            }
+            foreach (var seat in seats.ToArray()) MakeBot(seat);
+            Changed?.Invoke();
+        }
+
+        private void SetFighting(bool fighting)
+        {
+            Fighting = fighting;
+            foreach (var seat in seats)
+                if (seat.Unit && seat.Unit.TryGetComponent<LabBot>(out var bot)) bot.Fighting = fighting;
+        }
+
+        /// <summary>The seat a bot stands for, or null for a unit that's no bot.</summary>
+        public LabSeat SeatOf(LabUnit unit) => unit ? seats.Find(seat => seat.Unit == unit) : null;
 
         /// <summary>Each dummy back where it was put, at full health, its count cleared.</summary>
         public void ResetDummies()
@@ -488,13 +661,55 @@ namespace FarEmerald.PlayForge.Lab
             return caster;
         }
 
-        /// <summary>An item given to a unit, equipped, at its starting level.</summary>
+        /// <summary>An item given to a unit, equipped, at its starting level; a bot's seat keeps it for a reset.</summary>
         public bool GiveItem(Item item, LabUnit to)
         {
             if (!item || !to) return false;
             to.Give(item, Mathf.Max(1, item.StartingLevel));
+            SeatOf(to)?.Items.Add(item);
             Changed?.Invoke();
             return true;
+        }
+
+        /// <summary>An item taken from a unit, all of it.</summary>
+        public void TakeItem(Item item, LabUnit from)
+        {
+            if (!item || !from) return;
+            from.Take(item);
+            SeatOf(from)?.Items.RemoveAll(each => each == item);
+            Changed?.Invoke();
+        }
+
+        /// <summary>An ability taught a unit, at its starting level; a bot's seat keeps it for a reset.</summary>
+        public bool Teach(Ability ability, LabUnit to)
+        {
+            if (!ability || !to || !to.Teach(ability, Mathf.Max(1, ability.StartingLevel))) return false;
+            SeatOf(to)?.Taught.Add(ability);
+            Changed?.Invoke();
+            return true;
+        }
+
+        /// <summary>An ability a unit knows, taken.</summary>
+        public void Forget(Ability ability, LabUnit from)
+        {
+            if (!ability || !from) return;
+            from.Forget(ability);
+            if (SeatOf(from) is { } seat)
+            {
+                seat.Taught.Remove(ability);
+                seat.AbilityLevels.Remove(ability);
+            }
+            Changed?.Invoke();
+        }
+
+        /// <summary>An ability's level on a unit; a bot's seat keeps it for a reset.</summary>
+        public void SetAbilityLevel(Ability ability, LabUnit on, int level)
+        {
+            if (!ability || !on) return;
+            level = Mathf.Clamp(level, 1, Mathf.Max(1, ability.MaxLevel));
+            on.ApplyLevel(ability, level);
+            if (SeatOf(on) is { } seat) seat.AbilityLevels[ability] = level;
+            Changed?.Invoke();
         }
 
         /// <summary>Ends what the lab's caster and the selected unit are casting, as Esc does.</summary>
