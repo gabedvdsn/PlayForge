@@ -7,6 +7,9 @@ tracks each fix below by its ID.
 ## [Unreleased]
 
 ### Added
+- One line for each asset, in its inspector's header and The Forge's Summary column, which sorts: an ability's numbers by
+  level, then its costs and cooldown; an item's what it changes while equipped and the ability it grants; an entity's
+  first attributes as it starts and its abilities; an effect's first impact by level (TW-21).
 - A resolve order for area hits: the Forge Project's Resolve Order, each entry a tag and an Order, decides the order an
   area's effects land on those it takes; an ability's Apply Effects, an effect's Area, its target among those it takes,
   and an aura follow it, and each but the aura can turn it off (TW-31).

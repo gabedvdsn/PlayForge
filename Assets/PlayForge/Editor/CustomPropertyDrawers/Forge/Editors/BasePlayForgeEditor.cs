@@ -481,6 +481,20 @@ namespace FarEmerald.PlayForge.Extended.Editor
             // Its texture follows its Textures as they're edited (ED-69)
             header.TrackSerializedObjectValue(serializedObject, _ => UpdateHeaderIcon());
 
+            // Its one line, as The Forge's list shows it: an ability's numbers by level, an item's what it gives, following
+            // its edits (TW-21)
+            if (!IsMultiple)
+            {
+                var line = header.AddLine("HeaderLine");
+                void ShowLine()
+                {
+                    string text = ForgeAssetLines.Of(target);
+                    ForgeAssetHeader.ShowLine(line, text, text);
+                }
+                ShowLine();
+                line.TrackSerializedObjectValue(serializedObject, _ => ShowLine());
+            }
+
             // How many problems the validator finds in the selection, which follows it and opens the Problems view on the
             // asset (Q8, ED-15)
             var problems = header.AddProblemCount(() => ForgeProblemsWindow.ShowFor(target));

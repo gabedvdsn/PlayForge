@@ -14,6 +14,9 @@ equipped or not, and keeps the item's level under it. Each section below matches
 name. A collapsed section shows one line about what it holds, such as the level range or how many effects the item
 grants.
 
+The inspector's header shows the item's one line, as The Forge's Summary column does (TW-21): what each effect it gives
+changes while it's equipped, by its first impact across its levels, then the ability it grants, as "+20 Armor; Blink".
+
 ## Identity
 
 - **Name**: the item's display name. It also gives the asset tag, so renaming the item changes its tag. Update anything

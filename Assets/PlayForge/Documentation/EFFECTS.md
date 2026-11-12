@@ -235,6 +235,10 @@ Health as it lands, level 2:
 It reads with no caster and no target, so a part that reads one gives what its field falls back to, and its row is
 marked `*` with what it needs, as "the target".
 
+The section's line, which the effect's header and The Forge's Summary column show too, is its first impact by level, an
+add signed, as "-10/-20/-30 Health" or "+20 Armor", at its provider's levels where it's linked to one and at levels 1 to
+5 where it isn't (TW-21). `ForgeAssetLines.Of(asset)` gives any asset's line in the editor.
+
 The same reading is code's, for a tooltip or a game's own screen: `AbilityInspector.BuildEffectSeries(effect, 1, 5,
 caster, target)` reads the effect at levels 1 to 5 against a caster and a target, either of which may be null. Each
 impact gives its `Magnitude` and `Total` at each level, its `Line`, as its field's summary reads it, its `Parts` at each

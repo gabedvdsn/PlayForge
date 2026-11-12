@@ -351,6 +351,23 @@ namespace FarEmerald.PlayForge.Extended.Editor
             list.columns.Add(TextColumn("Type", "Type", 100, asset => ForgeAssetTypes.NameOf(asset.GetType())));
             list.columns.Add(TextColumn("AssetTag", "Asset Tag", 130, AssetTagOf));
             list.columns.Add(TextColumn("Levels", "Levels", 56, LevelsOf));
+            // Each asset's one line, as its header shows it, clipped, the whole of it in the cell's tooltip (TW-21)
+            list.columns.Add(new Column
+            {
+                name = "Summary", title = "Summary", width = 220, sortable = true,
+                makeCell = () =>
+                {
+                    var label = new Label();
+                    label.AddToClassList("pf-forge__cell");
+                    return label;
+                },
+                bindCell = (cell, index) =>
+                {
+                    string line = ForgeAssetLines.Kept(shownAssets[index]);
+                    ((Label)cell).text = line;
+                    cell.tooltip = line;
+                },
+            });
             list.columns.Add(new Column
             {
                 name = "Problems", title = "", width = 24, resizable = false, sortable = true,
@@ -864,6 +881,8 @@ namespace FarEmerald.PlayForge.Extended.Editor
                 "Type" => asset => ForgeAssetTypes.NameOf(asset.GetType()),
                 "AssetTag" => AssetTagOf,
                 "Levels" => LevelsOf,
+                // By each asset's one line (TW-21)
+                "Summary" => ForgeAssetLines.Kept,
                 "Problems" => asset => ForgeValidator.ProblemsOf(asset).Count.ToString(),
                 _ => NameOf,
             };

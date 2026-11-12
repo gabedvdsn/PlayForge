@@ -14,6 +14,10 @@ made from its Name: Hero gives `Entity.Hero`. The entity carries this tag and ke
 below matches the inspector section of the same name. A collapsed section shows one line about what it holds, such as
 the level range or how many starting items the entity equips.
 
+The inspector's header shows the entity's one line, as The Forge's Summary column does (TW-21): its attribute set's
+first three attributes as it starts, at its starting level, then its starting abilities, as "Health 500, Mana 300, Armor
+5; Fireball, Blink".
+
 ## Identity
 
 - **Name**: the entity's display name. It also gives the asset tag, so renaming the entity changes its tag. Update

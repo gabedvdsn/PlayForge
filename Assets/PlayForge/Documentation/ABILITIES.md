@@ -13,6 +13,10 @@ Tags are names, such as `State.Stunned`, that an entity carries and that require
 made from its Name: Fire Ball gives `Ability.FireBall`. The entity carries this tag while it has the ability, and keeps
 the ability's level under it. Each section below matches the inspector section of the same name.
 
+The inspector's header shows the ability's one line, as The Forge's Summary column does (TW-21): each effect it applies,
+by its first impact across its levels, then its costs and its cooldown, as "-450/-600/-750 Health; 280/420/680 Mana;
+70/60/50 s". A number that reads what the editor can't give it, as the target, is marked `*`.
+
 ## Identity
 
 - **Name**: the ability's display name. It also gives the asset tag, so renaming the ability changes its tag. Update

@@ -417,13 +417,11 @@ namespace FarEmerald.PlayForge.Extended.Editor
         }
 
         // The first impact at each level, as "-10/-20/-30 Health"
+        // Its one line, as its header and The Forge's list read it (TW-21)
         private string LevelsSummary()
         {
-            var series = AbilityInspector.BuildEffectSeries(effect, 1, 5, null, null);
-            var impact = series?.Impacts.FirstOrDefault();
-            if (impact == null) return "No impact";
-            string attribute = impact.Attribute != null ? impact.Attribute.GetName() : "nothing";
-            return $"{ImpactSeries.FormatSeries(impact.Magnitude)} {attribute}{(impact.Needs != null ? " *" : "")}";
+            string line = ForgeAssetLines.Of(effect);
+            return string.IsNullOrEmpty(line) ? "No impact" : line;
         }
 
         // ═══════════════════════════════════════════════════════════════════════════
