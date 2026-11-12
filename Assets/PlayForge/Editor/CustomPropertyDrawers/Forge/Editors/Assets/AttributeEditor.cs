@@ -1,4 +1,5 @@
-﻿using UnityEditor;
+﻿using System.Linq;
+using UnityEditor;
 using UnityEditor.UIElements;
 using UnityEngine;
 using UnityEngine.UIElements;
@@ -163,7 +164,7 @@ namespace FarEmerald.PlayForge.Extended.Editor
             // What scales the gains to it, as Healing Received scales Health's (TW-15)
             content.Add(CreatePropertyField(serializedObject.FindProperty(nameof(Attribute.GainsScaledBy)), "GainsScaledBy", "Gains Scaled By"));
 
-            // Its part in the project, where it fills one of the project's slots (TW-28)
+            // The roles it plays in its project (TW-29), as TW-28's note said which slot it filled
             var part = IsMultiple ? null : ProjectPartOf(attribute);
             var projectPart = CreateNote(part ?? "");
             projectPart.name = "ProjectPart";
@@ -181,18 +182,20 @@ namespace FarEmerald.PlayForge.Extended.Editor
             content.Add(texturesField);
         }
 
-        /// <summary>What an attribute is to the project, where it fills one of the project's slots, or null (TW-28).</summary>
+        /// <summary>
+        /// The roles an attribute plays in its project, as "Plays Health in Arena", by their tags, or null where it plays
+        /// none (TW-29).
+        /// </summary>
         internal static string ProjectPartOf(Attribute attribute)
         {
-            var project = ForgeAttributes.Project;
-            if (!project || !attribute) return null;
-            const string where = " (Project Settings → PlayForge).";
-            if (project.Health == attribute)
-                return "This project's Health: what an entity dies of at 0, and what On Hit counts where an entry names none" + where;
-            if (project.Mana == attribute) return "This project's Mana: what an ability's Mana Cost spends" + where;
-            if (project.Luck == attribute) return "This project's Luck: read on the caster of every chance that gives no luck of its own" + where;
-            if (project.MovementSpeed == attribute) return "This project's Movement Speed: what the Creator Lab's units walk at" + where;
-            return null;
+            if (attribute == null) return null;
+            var project = ForgeProjects.Of(attribute);
+            var roles = project != null ? project.Settings?.RolesOf(attribute) : null;
+            if (roles == null || roles.Count == 0) return null;
+            var names = roles.Select(role => role.ToString()).ToList();
+            string said = names.Count == 1 ? names[0] : string.Join(", ", names.Take(names.Count - 1)) + " and " + names[^1];
+            string what = roles.Contains(Tags.ROLE_HEALTH) ? ": what an entity dies of at 0, and what On Hit counts where an entry names none" : "";
+            return $"Plays {said} in {project.name}{what}.";
         }
 
         private void BuildLocalDataSection(VisualElement parent)

@@ -26,7 +26,7 @@ namespace FarEmerald.PlayForge
     [Serializable]
     public class OnHitEntry
     {
-        [Tooltip("The attribute a hit lowers, as Health. None, the project's Health (TW-28)")]
+        [Tooltip("The attribute a hit lowers, as Health. None, the one playing the project's Health role (TW-28, TW-29)")]
         public Attribute Attribute;
 
         [Tooltip("The effects it applies")]
@@ -47,8 +47,8 @@ namespace FarEmerald.PlayForge
 
         [NonSerialized] private OnHitImpactWorker worker;
 
-        /// <summary>The attribute its hits lower: its own, or else the project's Health, or null for none (TW-28).</summary>
-        public Attribute HitAttribute => Attribute ? Attribute : ForgeAttributes.Health;
+        /// <summary>The attribute its hits lower: its own, or else the Health role's in the project, or null for none (TW-29).</summary>
+        public Attribute HitAttribute => Attribute ? Attribute : ForgeRoles.AttributeFor(Tags.ROLE_HEALTH);
 
         // The impact worker that runs it for its holder's hits, one for the entry, whoever holds it
         internal OnHitImpactWorker Worker => worker ??= new OnHitImpactWorker(this);
@@ -79,7 +79,7 @@ namespace FarEmerald.PlayForge
     {
         private readonly OnHitEntry entry;
 
-        // The attribute each cache took it under, so it leaves the one it joined, though the project's Health change (TW-28)
+        // The attribute each cache took it under, so it leaves the one it joined, though the project's Health role change (TW-28)
         private readonly Dictionary<ImpactWorkerCache, Attribute> joined = new();
 
         public OnHitImpactWorker(OnHitEntry entry) => this.entry = entry;

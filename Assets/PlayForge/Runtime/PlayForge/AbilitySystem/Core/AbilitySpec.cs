@@ -28,10 +28,9 @@ namespace FarEmerald.PlayForge
             if (Charges.Counted) Charges.Spend(data);
             else ApplyCooldown(data, ownContainer: false);
 
+            // Its Cost effect, and beside it each of its attribute costs (TW-29)
             if (Base.Cost is not null) Source.ApplyCarrier(Usage(Base.Cost, data));
-
-            // Or its Mana Cost, in the project's Mana, where it has no Cost effect (TW-28)
-            else PayManaCost(data);
+            PayAttributeCosts(data);
         }
 
         /// <summary>
@@ -51,37 +50,55 @@ namespace FarEmerald.PlayForge
         internal bool OnCooldown => Base.Cooldown is { } cooldown && Source.GetTagCache().TryGetWeight(cooldown.Tags.AssetTag, out _);
 
         /// <summary>
-        /// What its Mana Cost comes to for an activation, at its level, read in the activation's data where it's given; 0
-        /// where it has a Cost effect, which is paid in its place, or no Mana Cost (TW-28).
+        /// What an attribute cost comes to for an activation, at the ability's level, read in the activation's data where
+        /// it's given; never under 0 (TW-29).
         /// </summary>
-        public float ManaCostOf(ProcessDataPacket data = null)
+        public float AmountOf(AttributeCost cost, ProcessDataPacket data = null)
         {
-            if (Base.Cost is not null || Base.ManaCost == null) return 0f;
+            if (cost?.Amount == null) return 0f;
             var context = data is AbilityDataPacket activation && ReferenceEquals(activation.EffectOrigin, this)
                 ? NumberContext.Of(data)
                 : new NumberContext(Source, null, GetLevel(), true, this, null, data?.SetByCallerMagnitudes, null, data);
-            return Mathf.Max(0f, Base.ManaCost.Evaluate(context));
+            return Mathf.Max(0f, cost.Amount.Evaluate(context));
         }
 
         /// <summary>
-        /// Whether its caster can pay its Mana Cost: it costs nothing, or its caster has as much of the project's Mana. With
-        /// no Mana of the project's, or none of the caster's, a cost can't be paid (TW-28).
+        /// Whether its caster can pay its attribute costs: one that comes to 0 asks nothing, and the rest need their
+        /// attribute found, their own or their role's in the project, with as much of it on the caster as all of them that
+        /// spend it come to (TW-29).
         /// </summary>
-        public bool CanPayManaCost(ProcessDataPacket data = null)
+        public bool CanPayAttributeCosts(ProcessDataPacket data = null)
         {
-            float cost = ManaCostOf(data);
-            if (cost <= 0f) return true;
-            var mana = ForgeAttributes.Mana;
-            return mana != null && Source.TryGetAttributeValue(mana, out var value) && value.CurrentValue >= cost;
+            var costs = Base.AttributeCosts;
+            if (costs == null || costs.Count == 0) return true;
+            for (int i = 0; i < costs.Count; i++)
+            {
+                if (costs[i] == null || AmountOf(costs[i], data) <= 0f) continue;
+                var attribute = costs[i].Spends;
+                if (attribute == null || !Source.TryGetAttributeValue(attribute, out var value)) return false;
+
+                // Every cost that spends this attribute, together
+                float total = 0f;
+                for (int j = 0; j < costs.Count; j++)
+                    if (costs[j] != null && costs[j].Spends == attribute) total += AmountOf(costs[j], data);
+                if (value.CurrentValue < total) return false;
+            }
+            return true;
         }
 
-        // Its Mana Cost, spent from its caster's Mana as a change of the caster's own
-        private void PayManaCost(ProcessDataPacket data)
+        // Each attribute cost, spent from its caster's attribute as a change of the caster's own (TW-29)
+        private void PayAttributeCosts(ProcessDataPacket data)
         {
-            float cost = ManaCostOf(data);
-            var mana = ForgeAttributes.Mana;
-            if (cost <= 0f || mana == null || Source is not ITarget caster) return;
-            caster.TryModifyAttribute(mana, SourcedModifiedAttributeValue.GenerateSimple(Source, mana, -cost, 0f));
+            var costs = Base.AttributeCosts;
+            if (costs == null || costs.Count == 0 || Source is not ITarget caster) return;
+            for (int i = 0; i < costs.Count; i++)
+            {
+                if (costs[i] == null) continue;
+                float amount = AmountOf(costs[i], data);
+                var attribute = costs[i].Spends;
+                if (amount <= 0f || attribute == null) continue;
+                caster.TryModifyAttribute(attribute, SourcedModifiedAttributeValue.GenerateSimple(Source, attribute, -amount, 0f));
+            }
         }
 
         private GameplayEffectSpec Usage(GameplayEffect effect, ProcessDataPacket data)

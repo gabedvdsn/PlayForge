@@ -81,6 +81,20 @@ namespace FarEmerald.PlayForge
         /// <summary>An impact event's impact, an <see cref="ImpactData"/> (TW-5).</summary>
         [ForgeContextDefault(ForgeContext.Data)] public static Tag IMPACT { get; } = Tag.GenerateAsUnique("EventImpact");
 
+        // ─── The roles PlayForge's features read, each filled by a project's attribute (TW-29) ───
+
+        /// <summary>
+        /// The attribute an entity dies of as it reaches 0, where no death watcher of its own watches; which On Hit counts,
+        /// lifesteal heals and Execute reads where they name none; and whose loss names the killer.
+        /// </summary>
+        [ForgeContextDefault(ForgeContext.Role)] public static Tag ROLE_HEALTH { get; } = Tag.GenerateAsUnique("Health");
+
+        /// <summary>The attribute read on the caster of every chance that gives no luck of its own.</summary>
+        [ForgeContextDefault(ForgeContext.Role)] public static Tag ROLE_LUCK { get; } = Tag.GenerateAsUnique("Luck");
+
+        /// <summary>The attribute the Creator Lab's units walk at, in units a second, where its rules name none.</summary>
+        [ForgeContextDefault(ForgeContext.Role)] public static Tag ROLE_MOVEMENT_SPEED { get; } = Tag.GenerateAsUnique("Movement Speed");
+
         // ─── The gameplay events the core sends, where an ability listens (TW-5) ───
 
         /// <summary>To the dealer, as an impact it dealt lands on another entity.</summary>

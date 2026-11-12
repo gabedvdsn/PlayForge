@@ -198,13 +198,13 @@ namespace FarEmerald.PlayForge
         [Tooltip("The share of its base below which a hit takes the rest, as 0.13")]
         public ScalableFloat Share = 0.1f;
 
-        [Tooltip("The attribute it reads, the one hit's. None, the project's Health")]
+        [Tooltip("The attribute it reads, the one hit's. None, the one playing the project's Health role")]
         public Attribute Attribute;
 
         public override float Apply(float value, in ValueRun run)
         {
             if (value >= 0f) return value;
-            var attribute = Attribute ? Attribute : ForgeAttributes.Health;
+            var attribute = Attribute ? Attribute : ForgeRoles.AttributeFor(Tags.ROLE_HEALTH);
             if (attribute == null || !run.Context.TryGetAttribute(NumberSide.Target, attribute, out var pool)) return value;
             float share = Share?.Evaluate(in run.Context, this) ?? 0f;
             float left = pool.CurrentValue + value;

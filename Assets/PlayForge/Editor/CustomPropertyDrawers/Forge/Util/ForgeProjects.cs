@@ -97,6 +97,16 @@ namespace FarEmerald.PlayForge.Extended.Editor
         }
 
         /// <summary>
+        /// The project an asset is in, the innermost whose folder holds it, which its settings come from in the editor; or
+        /// none, for one in no project or not yet saved (TW-29).
+        /// </summary>
+        public static ForgeProject Of(Object asset)
+        {
+            var path = asset != null ? AssetDatabase.GetAssetPath(asset) : null;
+            return string.IsNullOrEmpty(path) ? null : ForgeProject.Owner(path, ForgeProject.Folders());
+        }
+
+        /// <summary>
         /// The active project, made while the project has none: the default project, at the project's root, which holds
         /// every asset no other project does.
         /// </summary>

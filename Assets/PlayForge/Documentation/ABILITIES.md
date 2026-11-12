@@ -136,11 +136,12 @@ passes it in, and one effect serves every strength.
   ability. A line under each field says how its effect takes its levels, and **Link** makes it take this ability's.
   **New**, beside an empty field, makes an effect linked to this ability. If Project Settings → PlayForge names a Cost
   or Cooldown effect, the field's right-click menu copies it or uses it.
-- **Mana Cost**, after Cost: what the ability costs in the project's Mana ([ATTRIBUTES.md](ATTRIBUTES.md#the-projects-attributes)),
-  a number that can scale by level, where it has no Cost effect (TW-28). It's refused with Cost while its caster has less,
-  or the project or the caster has no Mana, and paid where a Cost is, as the ability starts or its stage applies usage. A Cost
-  effect, where it has one, is paid in its place, for a cost in another attribute or one an effect has to say. The
-  section's line says it, as "30 Mana".
+- **Attribute Costs**, after Cost (TW-29): what the ability spends of attributes as it's used, beside its Cost effect,
+  both paid. Each names the **Attribute** it spends, or, where it names none, a **Role** whose attribute in the project it
+  spends ([ATTRIBUTES.md](ATTRIBUTES.md#roles)), and an **Amount** that can scale by level. It's refused with Cost while
+  its caster has less than they come to, lacks the attribute, or no attribute plays the role, and they're paid where a
+  Cost is, as the ability starts or its stage applies usage. The section's line says them, as "30 Mana". They took the
+  place of TW-28's Mana Cost, which spent the project's Mana alone.
 - **Charges** (TW-17): how many uses it holds, a number that can scale by level, each use spending a charge. With 1 it
   is an ordinary cooldown. With more, the Cooldown check refuses it only with none in hand, and its **Recharge** says
   how spent ones come back: **Each Charge** (the default) starts the Cooldown for each charge spent, a container of its
@@ -255,7 +256,7 @@ skip its cost and cooldown.
 caster carries, as Stunned, and what it **Stops**: **Every Ability**, as a stun, or **Abilities Tagged**, those whose
 asset tag or a context tag is one of its **Ability Tags** or under it, as Silenced stops spells and Disarmed attacks.
 An entity's abilities follow its own **Crowd Control** ([ENTITIES.md](ENTITIES.md#abilities)), or, where it names none,
-the project's ([ATTRIBUTES.md](ATTRIBUTES.md#the-projects-attributes)).
+its Forge Project's ([ATTRIBUTES.md](ATTRIBUTES.md#roles)).
 
 While the caster carries a rule's tag, or one under it, an ability the rule stops is refused with **Crowd Control**,
 the refusal's `Rule` naming the tag, and one that runs is interrupted as the tag lands, as a stun breaks a channel. An
@@ -298,7 +299,7 @@ round its bearer (TW-10): each a radius, whom it takes, its holder too or not, a
 ### Lifesteal
 
 **Lifesteal**, after Auras, heals its holder for the hits it deals, while the entity knows the ability (TW-15): each entry's **Share** of each
-workable loss it deals another to its **Attribute**, the project's Health where it names none, of some **Impact Types**
+workable loss it deals another to its **Attribute**, the Health role's where it names none, of some **Impact Types**
 where it names any, while its **When** holds, as a vampiric mask heals its wearer for its attacks.
 ## Local Data
 

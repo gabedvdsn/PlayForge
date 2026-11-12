@@ -22,6 +22,17 @@ namespace FarEmerald.PlayForge
 
         [Tooltip("Keeps GameRoot through scene loads. It's the handler for every Register overload that isn't given one.")]
         [SerializeField] private new bool DontDestroyOnLoad = true;
+
+        [Tooltip("The Forge Project this game runs, whose settings PlayForge reads as it runs: its attributes' roles, and its " +
+                 "default crowd control (TW-29)")]
+        [SerializeField] private ForgeProject project;
+
+        /// <summary>The Forge Project this game runs, whose settings PlayForge reads where code uses none (TW-29).</summary>
+        public ForgeProject Project
+        {
+            get => project;
+            set => project = value;
+        }
         
         // Useful for backend systems like observers, audio, etc...
         [SerializeReference]

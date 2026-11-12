@@ -51,7 +51,7 @@ Each stage has a **Label**, the name a breakdown gives it, and **Enabled**, whic
   holder by a stacking curve of its stacks ([EFFECTS.md](EFFECTS.md#modifiers)). As the hit commits, it passes the
   value on.
 - **Execute** (TW-15): a hit that would leave the one hit with less than its **Share** of its **Attribute**'s base, the
-  project's Health where it names none, takes the rest, as Culling Blade; the breakdown notes it.
+  Health role's where it names none, takes the rest, as Culling Blade; the breakdown notes it.
 
 A project writes its own stage by deriving from `AbstractValueStage` and overriding `Apply(value, in run)`. `run.Context`
 reads the hit's caster, target and level, as any number does, and `run.Note` notes what the stage did.

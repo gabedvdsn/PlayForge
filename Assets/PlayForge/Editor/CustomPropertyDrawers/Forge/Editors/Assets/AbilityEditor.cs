@@ -345,7 +345,7 @@ namespace FarEmerald.PlayForge.Extended.Editor
                     DefinitionPath(nameof(AbilityDefinition.BufferPriority)), DefinitionPath(nameof(AbilityDefinition.ActivateImmediately)),
                     DefinitionPath(nameof(AbilityDefinition.ChanceToActivate)), DefinitionPath(nameof(AbilityDefinition.ActivationRoll)),
                     DefinitionPath(nameof(AbilityDefinition.ProcCoefficient)), DefinitionPath(nameof(AbilityDefinition.IgnoresCrowdControl)),
-                    nameof(Ability.Cost), nameof(Ability.ManaCost), nameof(Ability.Cooldown), nameof(Ability.Charges), nameof(Ability.Recharge),
+                    nameof(Ability.Cost), nameof(Ability.AttributeCosts), nameof(Ability.Cooldown), nameof(Ability.Charges), nameof(Ability.Recharge),
                     BehaviourPath(nameof(AbilityBehaviour.Targeting)),
                     BehaviourPath(nameof(AbilityBehaviour.UseImplicitTargeting)), BehaviourPath(nameof(AbilityBehaviour.ImplicitTag)),
                 },
@@ -400,8 +400,9 @@ namespace FarEmerald.PlayForge.Extended.Editor
             content.Add(CreatePropertyField(serializedObject.FindProperty(DefinitionPath(nameof(AbilityDefinition.IgnoresCrowdControl))), "IgnoresCrowdControl", "Ignores Crowd Control"));
 
             content.Add(CreatePropertyField(serializedObject.FindProperty(nameof(Ability.Cost)), "Cost", "Cost"));
-            // Its cost in the project's Mana, where it has no Cost effect (TW-28)
-            content.Add(CreatePropertyField(serializedObject.FindProperty(nameof(Ability.ManaCost)), "ManaCost", "Mana Cost"));
+            // What it spends of attributes beside its Cost effect, each the attribute or the role it names (TW-29). TW-28's
+            // Mana Cost spent the project's Mana alone
+            content.Add(CreatePropertyField(serializedObject.FindProperty(nameof(Ability.AttributeCosts)), "AttributeCosts", "Attribute Costs"));
             content.Add(CreatePropertyField(serializedObject.FindProperty(nameof(Ability.Cooldown)), "Cooldown", "Cooldown"));
 
             // Its charges, several uses with a cooldown each, and how they come back, shown while they're counted, with a
@@ -663,8 +664,12 @@ namespace FarEmerald.PlayForge.Extended.Editor
         {
             var parts = new List<string> { EnumName(ability.Definition.ActivationPolicy) };
             if (ability.Cost != null) parts.Add(NameOf(ability.Cost));
-            // Or its Mana Cost, in the project's Mana, as "30 Mana" (TW-28)
-            else if (ability.CostsMana) parts.Add(NumberText.Of(ability.ManaCost, ForgeAttributes.Mana ? ForgeAttributes.Mana.Name : "Mana"));
+            // Each attribute cost, as "30 Mana": its attribute's name, or its role's (TW-29)
+            foreach (var cost in ability.AttributeCosts ?? new List<AttributeCost>())
+            {
+                if (cost?.Amount == null || (cost.Amount.Magnitude <= 0f && AbstractScaler.IsNone(cost.Amount.Scaler))) continue;
+                parts.Add(NumberText.Of(cost.Amount, cost.Attribute != null ? cost.Attribute.Name : cost.Role.IsValid ? cost.Role.ToString() : "?"));
+            }
             if (ability.Cooldown != null) parts.Add(NameOf(ability.Cooldown));
             // Its charges, as "3 charges" (TW-17)
             if (ChargesRule.Counted(ability) && ability.Charges != null)

@@ -7,7 +7,7 @@ namespace FarEmerald.PlayForge
 {
     /// <summary>
     /// How a chance rolls (TW-8, Decision 48): pseudo-random, so each miss raises the next roll's odds and a hit starts them
-    /// again, each caster keeping its own streak for the chance; and its luck, the project's Luck attribute read on the
+    /// again, each caster keeping its own streak for the chance; and its luck, the attribute playing the project's Luck role, read on the
     /// caster, unless the chance gives its own.
     /// </summary>
     [Serializable]
@@ -17,7 +17,7 @@ namespace FarEmerald.PlayForge
                  "chance the same over many rolls. Each caster keeps its own streak for this chance")]
         public bool PseudoRandom;
 
-        [Tooltip("Its own luck in place of the project's Luck attribute")]
+        [Tooltip("Its own luck in place of the attribute playing the project's Luck role")]
         public bool OwnLuck;
 
         [Tooltip("Its luck, read for the roll: above 0 it rolls that many more times and keeps the best, below 0 the worst")]
@@ -32,9 +32,9 @@ namespace FarEmerald.PlayForge
     {
         /// <summary>
         /// The project's luck, read on the caster where a chance gives none of its own, or null for none: the project's
-        /// Luck attribute, from Project Settings → PlayForge (TW-28).
+        /// Luck role, from its Forge Project (TW-28, TW-29).
         /// </summary>
-        public static Attribute ProjectLuck => ForgeAttributes.Luck;
+        public static Attribute ProjectLuck => ForgeRoles.AttributeFor(Tags.ROLE_LUCK);
 
         // Each caster's misses in a row for each pseudo-random chance, by the chance's key; they go with the caster
         private static readonly ConditionalWeakTable<object, Dictionary<object, int>> streaks = new();

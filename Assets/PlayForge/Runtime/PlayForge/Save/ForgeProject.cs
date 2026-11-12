@@ -17,6 +17,42 @@ namespace FarEmerald.PlayForge
         [TextArea(2, 4)]
         public string Description;
 
+        [Tooltip("The project's settings, which its game reads as it runs: its attributes' roles, and the crowd control rules " +
+                 "an entity follows where it names none (TW-29)")]
+        public ForgeProjectSettings Settings = new();
+
+        // The project code uses, in place of the GameRoot's
+        private static ForgeProject used;
+
+        // Statics outlive play mode when domain reload is off
+        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
+        private static void ClearUsed() => used = null;
+
+        /// <summary>
+        /// The project a running game reads its settings from (TW-29): the one code uses, or else its GameRoot's; or null,
+        /// where neither names one. The editor's active project isn't among them, so play mode reads what a build does.
+        /// </summary>
+        public static ForgeProject Current
+        {
+            get
+            {
+                if (used) return used;
+                var root = GameRoot.Instance;
+                return root && root.Project ? root.Project : null;
+            }
+        }
+
+        /// <summary>
+        /// Uses <paramref name="project"/> in place of the GameRoot's, as a test or a game with no GameRoot does, or the
+        /// GameRoot's again for null. Gives back the one used before, to put back.
+        /// </summary>
+        public static ForgeProject Use(ForgeProject project)
+        {
+            var was = used;
+            used = project;
+            return was;
+        }
+
 #if UNITY_EDITOR
         /// <summary>The folder the project's asset is in, which holds its assets, as "Assets/Games/Arena".</summary>
         public string Folder => FolderOf(UnityEditor.AssetDatabase.GetAssetPath(this));

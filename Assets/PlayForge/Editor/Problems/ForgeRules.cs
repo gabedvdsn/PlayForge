@@ -413,23 +413,22 @@ namespace FarEmerald.PlayForge.Extended.Editor
     }
 
     /// <summary>
-    /// An asset that leans on one of the project's attributes it can't have (TW-28): an ability's Mana Cost with no Mana
-    /// of the project's to pay it, which refuses it with Cost; an entity whose abilities cost Mana its attribute set doesn't
-    /// give; and an entity that stays when it dies, whom the project's Health can't kill, as its set lacks it, with no death
-    /// watcher of its own.
+    /// An asset that leans on its project's roles where they can't serve it (TW-29; TW-28's fixed attributes before it): an
+    /// ability's attribute cost that names nothing to spend, or a role no attribute plays in its project; an entity whose
+    /// starting abilities spend attributes its set doesn't give; and an entity that stays when it dies, whom the Health
+    /// role's attribute can't kill, as its set lacks it, with no death watcher of its own. Each asset is read against its
+    /// own project, the one whose folder holds it.
     /// </summary>
-    internal sealed class ProjectAttributesRule : ForgeValidationRule
+    internal sealed class ProjectRolesRule : ForgeValidationRule
     {
-        public override string Name => "The project's attributes";
+        public override string Name => "The project's roles";
 
         public override void Check(Object asset, List<ForgeProblem> problems)
         {
             switch (asset)
             {
-                case Ability ability when ability.CostsMana && ForgeAttributes.Mana == null:
-                    problems.Add(new ForgeProblem(asset, ForgeProblemSeverity.Warning,
-                        "Its Mana Cost spends the project's Mana, and the project has no Mana, so it's refused with Cost. Set one " +
-                        "in Project Settings → PlayForge, or give it a Cost effect.", nameof(Ability.ManaCost)));
+                case Ability ability:
+                    CheckCosts(ability, problems);
                     break;
                 case EntityIdentity entity:
                     CheckEntity(entity, problems);
@@ -437,28 +436,67 @@ namespace FarEmerald.PlayForge.Extended.Editor
             }
         }
 
+        // Whether a cost asks anything: an amount above 0, or one a scaler reads
+        private static bool Asks(AttributeCost cost) =>
+            cost?.Amount != null && (cost.Amount.Magnitude > 0f || !AbstractScaler.IsNone(cost.Amount.Scaler));
+
+        private static void CheckCosts(Ability ability, List<ForgeProblem> problems)
+        {
+            var costs = ability.AttributeCosts;
+            if (costs == null) return;
+            ForgeProject project = null;
+            bool looked = false;
+            for (int i = 0; i < costs.Count; i++)
+            {
+                var cost = costs[i];
+                if (cost == null || cost.Attribute != null || !Asks(cost)) continue;
+                if (!cost.Role.IsValid)
+                {
+                    problems.Add(new ForgeProblem(ability, ForgeProblemSeverity.Warning,
+                        $"Its attribute cost {i + 1} names no attribute and no role, so it spends nothing.", nameof(Ability.AttributeCosts)));
+                    continue;
+                }
+
+                // In no project, which roles it can have isn't known
+                if (!looked)
+                {
+                    project = ForgeProjects.Of(ability);
+                    looked = true;
+                }
+                if (project == null || project.Settings?.AttributeFor(cost.Role) != null) continue;
+                problems.Add(new ForgeProblem(ability, ForgeProblemSeverity.Warning,
+                    $"Its attribute cost {i + 1} spends the {cost.Role} role, and no attribute plays it in {project.name}, so it's " +
+                    "refused with Cost. Fill the role in the project's settings, or name an attribute.", nameof(Ability.AttributeCosts)));
+            }
+        }
+
         private static void CheckEntity(EntityIdentity entity, List<ForgeProblem> problems)
         {
+            var project = ForgeProjects.Of(entity);
             var given = entity.AttributeSet != null ? entity.AttributeSet.GetUnique() : new HashSet<IAttribute>();
 
-            var mana = ForgeAttributes.Mana;
-            if (mana != null && !given.Contains(mana))
+            // Its starting abilities' costs, each of which spends an attribute its set must give
+            foreach (var ability in entity.StartingAbilities ?? new List<Ability>())
             {
-                foreach (var ability in entity.StartingAbilities ?? new List<Ability>())
+                if (ability == null || ability.AttributeCosts == null) continue;
+                foreach (var cost in ability.AttributeCosts)
                 {
-                    if (ability == null || !ability.CostsMana) continue;
+                    if (!Asks(cost)) continue;
+                    var spends = cost.Attribute != null ? cost.Attribute : project != null ? project.Settings?.AttributeFor(cost.Role) : null;
+                    if (spends == null || given.Contains(spends)) continue;
                     problems.Add(new ForgeProblem(entity, ForgeProblemSeverity.Warning,
-                        $"{ability.GetName()} costs {mana.Name}, which its attribute set doesn't give, so it's refused with Cost.",
+                        $"{ability.GetName()} spends {spends.Name}, which its attribute set doesn't give, so it's refused with Cost.",
                         nameof(EntityIdentity.StartingAbilities)));
+                    break;
                 }
             }
 
-            var health = ForgeAttributes.Health;
+            var health = project != null ? project.Settings?.AttributeFor(Tags.ROLE_HEALTH) : null;
             var death = entity.Death;
             if (health == null || !EntityDeath.Stays(death) || !death.DiesAtZeroHealth || given.Contains(health) || WatchesForDeath(entity)) return;
             problems.Add(new ForgeProblem(entity, ForgeProblemSeverity.Warning,
-                $"It stays when it dies, but its attribute set has no {health.Name}, the project's, and no death watcher of its " +
-                "own watches, so only code can kill it.", nameof(EntityIdentity.Death)));
+                $"It stays when it dies, but its attribute set has no {health.Name}, which plays its project's Health role, and no " +
+                "death watcher of its own watches, so only code can kill it.", nameof(EntityIdentity.Death)));
         }
 
         // Whether a death watcher of its own, or of its attribute sets', watches for its death

@@ -15,7 +15,7 @@ namespace FarEmerald.PlayForge
         [Tooltip("The share of each loss it deals that its caster heals, as 0.25; 0, none")]
         public ScalableFloat Share = 0f;
 
-        [Tooltip("The attribute whose losses count and its caster heals, as Health. None, the project's Health")]
+        [Tooltip("The attribute whose losses count and its caster heals, as Health. None, the one playing the project's Health role")]
         public Attribute Attribute;
 
         [Tooltip("Only while this holds, read at the hit: the caster its caster, the one hit its target")]
@@ -36,7 +36,7 @@ namespace FarEmerald.PlayForge
         [Tooltip("The share of each loss its holder deals that it heals, as 0.15")]
         public ScalableFloat Share = 0.1f;
 
-        [Tooltip("The attribute whose losses count and its holder heals, as Health. None, the project's Health")]
+        [Tooltip("The attribute whose losses count and its holder heals, as Health. None, the one playing the project's Health role")]
         public Attribute Attribute;
 
         [Tooltip("Only hits of one of these types, as attacks. None, any")]
@@ -51,8 +51,8 @@ namespace FarEmerald.PlayForge
         // The impact worker that runs it for its holder's hits, one for the entry, whoever holds it
         internal LifestealImpactWorker Worker => worker ??= new LifestealImpactWorker(this);
 
-        /// <summary>The attribute whose losses count: its own, or else the project's Health, or null for none.</summary>
-        public Attribute StealsFrom => Attribute ? Attribute : ForgeAttributes.Health;
+        /// <summary>The attribute whose losses count: its own, or else the Health role's in the project, or null for none.</summary>
+        public Attribute StealsFrom => Attribute ? Attribute : ForgeRoles.AttributeFor(Tags.ROLE_HEALTH);
     }
 
     /// <summary>Gives a holder the lifesteals it has, and takes them back (TW-15).</summary>
@@ -80,7 +80,7 @@ namespace FarEmerald.PlayForge
     {
         private readonly LifestealEntry entry;
 
-        // The attribute each cache took it under, so it leaves the one it joined, though the project's Health change
+        // The attribute each cache took it under, so it leaves the one it joined, though the project's Health role change
         private readonly Dictionary<ImpactWorkerCache, Attribute> joined = new();
 
         public LifestealImpactWorker(LifestealEntry entry) => this.entry = entry;
@@ -155,7 +155,7 @@ namespace FarEmerald.PlayForge
         public static void Steal(IGameplayAbilitySystem caster, ImpactData impact, EffectLifesteal steal)
         {
             if (caster is not ITarget healer || steal == null) return;
-            var attribute = steal.Attribute ? steal.Attribute : ForgeAttributes.Health;
+            var attribute = steal.Attribute ? steal.Attribute : ForgeRoles.AttributeFor(Tags.ROLE_HEALTH);
             var context = NumberContext.Of(impact.SourcedModifier.Carrier).WithTarget(impact.Target);
             if (steal.When != null && !steal.When.Holds(context)) return;
             float amount = HealFor(impact, attribute, steal.Share?.Evaluate(context) ?? 0f);

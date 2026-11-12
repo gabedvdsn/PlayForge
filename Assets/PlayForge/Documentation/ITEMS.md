@@ -115,7 +115,7 @@ from another asset.
 dagger's bleed, a hammer's armor break, a barrier on a kill (TW-6). Each entry has:
 
 - **Attribute**: what a hit lowers, as Health. A hit is a loss to it that the holder deals another entity. None
-  counts the project's Health ([ATTRIBUTES.md](ATTRIBUTES.md#the-projects-attributes)), where it names one (TW-28).
+  counts the attribute playing the project's Health role ([ATTRIBUTES.md](ATTRIBUTES.md#roles)), where it has one.
 - **Effects**: what it applies. Each effect's own Chance to Apply rolls as it lands, and its hits set the entry off no
   more, so a shock it applies doesn't shock again. A hit's proc coefficient scales their chance and duration, and 0 sets
   nothing off ([EFFECTS.md](EFFECTS.md#on-hit)).
@@ -141,7 +141,7 @@ round its bearer (TW-10): each a radius, whom it takes, its holder too or not, a
 ### Lifesteal
 
 **Lifesteal**, after Auras, heals its holder for the hits it deals, while it's equipped (TW-15): each entry's **Share** of each
-workable loss it deals another to its **Attribute**, the project's Health where it names none, of some **Impact Types**
+workable loss it deals another to its **Attribute**, the Health role's where it names none, of some **Impact Types**
 where it names any, while its **When** holds, as a vampiric mask heals its wearer for its attacks.
 ## Local Data
 

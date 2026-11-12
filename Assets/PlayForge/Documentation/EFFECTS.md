@@ -268,7 +268,7 @@ in three. The section's summary shows a chance short of 1.
 - **Pseudo Random**: each miss raises the next roll's odds by a constant and a hit starts them again, so streaks even
   out and the chance over many rolls stays the same, as Dota's pseudo-random distribution: a 25% chance's first roll
   has about 8.5%, its next about 17%, and so on. Each caster keeps its own streak for each chance.
-- **Luck**: the project's Luck ([ATTRIBUTES.md](ATTRIBUTES.md#the-projects-attributes)), read on the caster, or with
+- **Luck**: the attribute playing the project's Luck role ([ATTRIBUTES.md](ATTRIBUTES.md#roles)), read on the caster, or with
   **Own Luck** a number of the chance's own: above 0 it rolls that many more times and keeps the best, below 0 the worst.
 
 A chance of 1 or more always comes up and one of 0 or less never does, and neither draws. The same roll is on a
@@ -332,7 +332,7 @@ Each is found by its position, with no collider. Each takes the effect from the 
 chance to apply are its own, and an effect that lands by an area spreads no further. A Radius of 0 is no area.
 
 **Lifesteal**, in Impact, heals the effect's caster for the hits it deals (TW-15): its **Share** of each workable loss
-it deals another to its **Attribute**, the project's Health where it names none, while its **When** holds. The heal is a
+it deals another to its **Attribute**, the Health role's where it names none, while its **When** holds. The heal is a
 gain like any other, so Healing Received scales it, and damage a return sends back heals nothing.
 
 ### Auras

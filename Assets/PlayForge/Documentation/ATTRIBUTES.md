@@ -44,32 +44,39 @@ and a gain to the base, as more maximum, does too.
   An effect's impact can add its own way (**Add Behaviour**: as the attribute's role says, a plain Sum, or Diminishing),
   and a number can read its own way (× Attribute's **Read As**).
 
-An attribute that fills one of the project's slots says so under its Role, as "This project's Health".
+An attribute that plays one of its project's roles says so, as "Plays Health in Arena".
 
-## The Project's Attributes
+## Roles
 
-**Project Settings → PlayForge** names, under **Project Attributes**, the attributes PlayForge reads by their part in
-the game (TW-28). **Create Project Attributes** makes the asset that holds them, at
-`Assets/Resources/PlayForge Project Attributes.asset`, so a build has it too, and fills each slot with the project's
-attribute of its name; **Fill by Name** fills the empty ones again. Each slot is optional, and an empty one leaves
-things as they were. An asset's own setting always wins over the project's.
+A game's settings live on its **Forge Project** (TW-29), the asset at the root of its folder that The Forge's projects
+are. Among them are its **Roles**: the part each attribute plays in the game, each a **role tag** and the attribute that
+plays it. PlayForge's own features read the roles it ships, and a game's code reads its own by their tags, so no
+attribute's name is built in:
 
-- **Health**: what an entity dies of as it reaches 0, where no death watcher of its own watches for its death and its
-  Death doesn't say otherwise ([ENTITIES.md](ENTITIES.md#death)); what On Hit counts as a hit where an entry names no
-  attribute ([ITEMS.md](ITEMS.md#on-hit)); and whose loss names the killer, for Kill and Died. An entity whose set has
-  no Health doesn't die of it. A trigger's Attribute of None still takes every attribute.
-- **Mana**: what an ability's **Mana Cost** spends, where it has no Cost effect ([ABILITIES.md](ABILITIES.md#activation)).
-  A caster with less, or with no Mana, is refused with Cost.
-- **Luck**: read on the caster of every chance that gives no luck of its own (TW-8).
-- **Movement Speed**: what the Creator Lab's units walk at, where its rules name none ([CREATOR_LAB.md](CREATOR_LAB.md)).
-- **Crowd Control**: not an attribute, but the project's all the same: the crowd control rules an entity's abilities
-  follow where it names none of its own (TW-16, [ABILITIES.md](ABILITIES.md#crowd-control)).
+- **Health** (`Tags.ROLE_HEALTH`): what an entity dies of as it reaches 0, where no death watcher of its own watches
+  for its death and its Death doesn't say otherwise ([ENTITIES.md](ENTITIES.md#death)); what On Hit counts, lifesteal
+  heals and Execute reads where they name no attribute; and whose loss names the killer, for Kill and Died. An entity
+  whose set has no attribute in this role doesn't die of it.
+- **Luck** (`Tags.ROLE_LUCK`): read on the caster of every chance that gives no luck of its own (TW-8).
+- **Movement Speed** (`Tags.ROLE_MOVEMENT_SPEED`): what the Creator Lab's units walk at, where its rules name none.
+- **A role of your own**: any tag, as `Role.Energy`, in the same list. Code reads it with `ForgeRoles.AttributeFor(tag)`,
+  and an ability's attribute cost can spend it ([ABILITIES.md](ABILITIES.md#activation)).
 
-Code reads them through `ForgeAttributes`, as `ForgeAttributes.Health`, each null where the project sets none. A test
-uses attributes of its own with `ForgeAttributes.Use(attributes)`, which gives back the ones it replaced, to put back.
-The Problems window warns of an ability whose Mana Cost has no Mana of the project's to pay it, an entity whose starting
-abilities cost Mana its attribute set doesn't give, and an entity that stays when it dies whose set lacks the project's
-Health, with no death watcher of its own.
+Each role is optional, and an empty one leaves things as they were. **Project Settings → PlayForge** shows the active
+project's settings under **Forge Project**: **Fill Roles by Name** fills each of PlayForge's roles no attribute plays yet
+with the project's attribute of its name, and **Create Forge Project** makes the default project where there's none.
+The settings also hold the project's default **Crowd Control** ([ABILITIES.md](ABILITIES.md#crowd-control)).
+
+A running game reads its settings from `ForgeProject.Current`: the project code sets with `ForgeProject.Use(project)`,
+as a test or a game with no GameRoot does, or else the one its **GameRoot** names in its **Project** field. A build has
+the project because the GameRoot names it, and play mode reads it as a build does, not The Forge's active project. In
+the editor, the inspectors and the Problems window read each asset against its own project, the one whose folder holds
+it. The Problems window warns of an attribute cost that spends nothing, or a role no attribute plays in its project; an
+entity whose starting abilities spend attributes its set doesn't give; and an entity that stays when it dies whose set
+lacks the Health role's attribute, with no death watcher of its own.
+
+TW-28 kept fixed Health, Mana, Luck and Movement Speed slots in a Resources asset, read through `ForgeAttributes`; TW-29
+replaced them.
 
 ## Local Data
 

@@ -7,6 +7,10 @@ tracks each fix below by its ID.
 ## [Unreleased]
 
 ### Added
+- A game's settings on its Forge Project, read through its GameRoot (or set in code): its attributes' roles, each a role
+  tag, PlayForge reading its own (Health, Luck, Movement Speed) and a game's code its own through `ForgeRoles`, and its
+  default crowd control; an ability's Attribute Costs, each spending the attribute or role it names beside its Cost
+  effect (TW-29).
 - Charges: an ability's Charges, several uses with a cooldown each, and its Recharge: each spent charge on a cooldown of
   its own, all at once as one cooldown ends once all are spent, or a recharge of your own (TW-17).
 - Crowd control, project-wide: Crowd Control Rules, each a tag and the abilities it stops, named by an entity or else the
@@ -857,6 +861,8 @@ tracks each fix below by its ID.
   or turning `Enabled` off. Once the first had ended, it threw, and the rest ran on.
 
 ### Removed
+- `ProjectAttributes`, `ForgeAttributes` and an ability's Mana Cost (TW-28): their fixed Health, Mana, Luck and Movement
+  Speed slots became the Forge Project's roles, and Mana Cost became attribute costs (TW-29).
 - `IValidationReady`, which nothing took; `IAttribute`, `ITarget`, `BasicEffectOrigin` and `ProcessDataPacket` no
   longer implement it (FEAT-36).
 - The generic `IValidationRule<T>`; `IAbilityValidationRule` declares its own `Validate` (FEAT-36).

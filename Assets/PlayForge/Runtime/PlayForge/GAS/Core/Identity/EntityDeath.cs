@@ -31,8 +31,8 @@ namespace FarEmerald.PlayForge
         [Tooltip("End, as an entity always did; or Stay, dead, until it revives")]
         public EDeathPolicy Policy = EDeathPolicy.End;
 
-        [Tooltip("Dies as the project's Health reaches 0 (Project Settings → PlayForge), where no death watcher of its own " +
-                 "watches for its death. Off, as for a training dummy, the project's Health doesn't kill it (TW-28)")]
+        [Tooltip("Dies as the attribute playing the project's Health role reaches 0, where no death watcher of its own " +
+                 "watches for its death. Off, as for a training dummy, that attribute doesn't kill it (TW-28, TW-29)")]
         public bool DiesAtZeroHealth = true;
 
         [Tooltip("Where it stays: the effects its death ends, by an asset, context or granted tag, as its buffs and debuffs; " +

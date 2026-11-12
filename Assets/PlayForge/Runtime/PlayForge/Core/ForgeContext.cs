@@ -100,6 +100,9 @@
 
         /// <summary>Tags for effect impact retention groups</summary>
         public const string RetentionGroup = "Impact Retention";
+
+        /// <summary>Tags that name a part an attribute plays in a project, as Health (TW-29)</summary>
+        public const string Role = "Role";
         
         // ═══════════════════════════════════════════════════════════════════════════
         // Special Contexts

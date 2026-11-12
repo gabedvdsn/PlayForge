@@ -41,7 +41,11 @@ namespace FarEmerald.PlayForge
         public AuraSet Auras { get; } = new();
 
         /// <summary>The crowd control rules its abilities follow: its identity's, or else the project's (TW-16).</summary>
-        public CrowdControlRules CrowdControl => Identity?.CrowdControl is { } own && own ? own : ForgeAttributes.CrowdControl;
+        public CrowdControlRules CrowdControl => Identity?.CrowdControl is { } own && own ? own : ProjectCrowdControl;
+
+        // The current project's, where it names any (TW-29)
+        private static CrowdControlRules ProjectCrowdControl =>
+            ForgeProject.Current is { } project && project.Settings?.CrowdControl is { } rules && rules ? rules : null;
 
         /// <summary>The entity's settings as this GAS uses them, or null for a hub given none.</summary>
         public RuntimeEntityIdentity Identity { get; private set; }
@@ -236,7 +240,7 @@ namespace FarEmerald.PlayForge
 
             AnalysisCache.Analyze(owner);
 
-            // The project's Health, where its own workers watch for no death (TW-28)
+            // The attribute playing the project's Health role, where its own workers watch for no death (TW-28, TW-29)
             WatchProjectHealth();
 
             // Actions queued by analysis workers
@@ -441,13 +445,14 @@ namespace FarEmerald.PlayForge
             return data;
         }
 
-        // Who killed it: the source of the last workable loss it took this frame from another; of the project's Health
-        // where it has one, so a loss after the blow, to another attribute, doesn't take the kill (TW-28)
+        // Who killed it: the source of the last workable loss it took this frame from another; of the attribute playing
+        // the Health role where the project has one, so a loss after the blow, to another attribute, doesn't take the kill
+        // (TW-28, TW-29)
         private ISource Killer()
         {
             var received = FrameSummary?.ImpactsReceived;
             if (received == null) return null;
-            var health = ForgeAttributes.Health;
+            var health = ForgeRoles.AttributeFor(Tags.ROLE_HEALTH);
             if (health != null && LastLoss(received, health) is { } slayer) return slayer;
             return LastLoss(received, null);
         }
@@ -466,12 +471,12 @@ namespace FarEmerald.PlayForge
             return null;
         }
 
-        // The project's Health (TW-28): an entity whose analysis workers watch for no death of their own, and whose Death
+        // The Health role's attribute (TW-28, TW-29): an entity whose analysis workers watch for no death of their own, and whose Death
         // doesn't say otherwise, dies as its Health reaches 0. One without the attribute doesn't
         private void WatchProjectHealth()
         {
             if (IsDead || pendingDestruction) return;
-            var health = ForgeAttributes.Health;
+            var health = ForgeRoles.AttributeFor(Tags.ROLE_HEALTH);
             if (health == null) return;
             if (Identity?.Death is { DiesAtZeroHealth: false }) return;
             var workers = AnalysisCache.Workers;

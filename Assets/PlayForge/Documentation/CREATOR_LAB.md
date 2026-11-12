@@ -87,8 +87,8 @@ while it's paused.
 ## The lab's rules
 
 The lab needs to know a few things about a project: which attribute is a unit's health, which it walks at, which tags
-stop, hide or shield it, and which ability is its attack. With no rules given, it takes the project's Health and
-Movement Speed ([ATTRIBUTES.md](ATTRIBUTES.md#the-projects-attributes)), or else finds the attributes named Health and
+stop, hide or shield it, and which ability is its attack. With no rules given, it takes the attributes playing the
+project's Health and Movement Speed roles ([ATTRIBUTES.md](ATTRIBUTES.md#roles)), or else finds the attributes named Health and
 Movement Speed (or Move Speed), and walks a unit without a speed at 4 a second. To say more, make a **Lab Rules** asset
 (**Create → PlayForge → Lab Rules**) and give it to the lab's `CreatorLab` component:
 

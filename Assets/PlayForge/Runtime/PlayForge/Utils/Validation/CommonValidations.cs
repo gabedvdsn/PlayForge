@@ -13,8 +13,9 @@ namespace FarEmerald.PlayForge
             error = "";
             if (data.EffectOrigin is not AbilitySpec ability) return false;
 
-            // With no Cost effect, its Mana Cost, in the project's Mana (TW-28)
-            if (ability.Base.Cost is null) return ability.CanPayManaCost(data);
+            // Its attribute costs, each paid beside its Cost effect (TW-29)
+            if (!ability.CanPayAttributeCosts(data)) return false;
+            if (ability.Base.Cost is null) return true;
 
             // Generating the spec rebuilds the cost's impacts, and each attribute it spends is checked: a cost can spend
             // more than one, and only the first was (ED-3). The caster must have each attribute
