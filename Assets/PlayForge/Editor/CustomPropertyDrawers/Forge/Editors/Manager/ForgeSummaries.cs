@@ -28,7 +28,7 @@ namespace FarEmerald.PlayForge.Extended.Editor
             {
                 case ScalerAsset scaler:
                     var kind = scaler.Scaler;
-                    yield return ("Kind", kind == null ? "None" : NumberText.KindName(kind.GetType()));
+                    yield return ("Kind", kind == null ? "None" : NumberText.KindName(kind));
                     if (kind != null) yield return ("Reads", NumberText.Describe(kind));
                     int uses = ScalerFields.UsesOf(scaler).Count;
                     yield return ("Used By", uses == 0 ? "None" : uses == 1 ? "1 field" : $"{uses} fields");

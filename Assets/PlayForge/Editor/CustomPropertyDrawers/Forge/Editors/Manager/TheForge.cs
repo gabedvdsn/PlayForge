@@ -115,6 +115,18 @@ namespace FarEmerald.PlayForge.Extended.Editor
             menu.AddItem(new GUIContent("Problems…"), false, () => ForgeProblemsWindow.ShowWindow());
             menu.AddItem(new GUIContent("Project Settings…"), false, PlayForgeSettingsPages.OpenProjectSettings);
             menu.AddItem(new GUIContent("Preferences…"), false, PlayForgeSettingsPages.OpenPreferences);
+
+            // Numbers by level and item stats, to a spreadsheet and back: the project's, or the selected assets' (TW-27)
+            menu.AddSeparator("");
+            var chosen = SelectedAssets();
+            var items = chosen.OfType<Item>().ToList();
+            menu.AddItem(new GUIContent("Spreadsheets/Export Numbers…"), false, () => ForgeSpreadsheets.ExportNumbers(allAssets));
+            if (chosen.Count > 0) menu.AddItem(new GUIContent("Spreadsheets/Export Selected Numbers…"), false, () => ForgeSpreadsheets.ExportNumbers(chosen));
+            else menu.AddDisabledItem(new GUIContent("Spreadsheets/Export Selected Numbers…"));
+            menu.AddItem(new GUIContent("Spreadsheets/Export Item Stats…"), false, () => ForgeSpreadsheets.ExportStats(allAssets.OfType<Item>()));
+            if (items.Count > 0) menu.AddItem(new GUIContent("Spreadsheets/Export Selected Item Stats…"), false, () => ForgeSpreadsheets.ExportStats(items));
+            else menu.AddDisabledItem(new GUIContent("Spreadsheets/Export Selected Item Stats…"));
+            menu.AddItem(new GUIContent("Spreadsheets/Import…"), false, ForgeSpreadsheets.Import);
         }
 
         // ═══════════════════════════════════════════════════════════════════════════

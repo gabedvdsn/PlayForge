@@ -79,22 +79,79 @@ namespace FarEmerald.PlayForge.Extended.Editor
             return name.Length > 0 ? ObjectNames.NicifyVariableName(name) : "Scaler";
         }
 
+        /// <summary>The Kind menu's name for a number by level read exactly, level by level: a Table (TW-27).</summary>
+        internal const string TableKind = "Table";
+
+        /// <summary>Whether a kind is a number by level, which the Kind menu offers twice: as a Table, and as By Level (TW-27).</summary>
+        internal static bool IsLevelKind(Type type) => type == typeof(SimpleScaler) || type == typeof(CachedSimpleScaler);
+
+        /// <summary>The names the Kind menu gives a kind: a number by level's two, Table first; another's one (TW-27).</summary>
+        internal static IEnumerable<string> ChoiceNames(Type type) =>
+            IsLevelKind(type) ? new[] { TableKind, KindName(type) } : new[] { KindName(type) };
+
+        /// <summary>
+        /// A field's kind as the Kind menu shows it: a number by level that reads exactly, level by level, is a Table, and
+        /// one spread over the levels is By Level (TW-27). Null for a field with no scaler.
+        /// </summary>
+        internal static string ChoiceOf(SerializedProperty scaler)
+        {
+            if (scaler?.managedReferenceValue is not AbstractScaler value) return null;
+            return IsLevelKind(value.GetType()) && !value.StretchOverLevels ? TableKind : KindName(value.GetType());
+        }
+
+        /// <summary>
+        /// The kind a Kind menu name chooses among these, and for a number by level whether it spreads over the levels: a
+        /// Table doesn't, By Level does (TW-27). Null for a name none of them has.
+        /// </summary>
+        internal static (Type Type, bool? Spread) Chosen(string name, IEnumerable<Type> kinds)
+        {
+            foreach (var kind in kinds)
+            {
+                if (IsLevelKind(kind) && name == TableKind) return (kind, false);
+                if (name == KindName(kind)) return (kind, IsLevelKind(kind) ? true : null);
+            }
+            return (null, null);
+        }
+
         /// <summary>
         /// Gives the field a new scaler of a kind, which maps levels exactly and starts with one value: for each selected
         /// asset, the value firstValue reads from that asset's own field. Each asset gets an object of its own, since one
-        /// shared between assets would be one scaler in two places, and a field of that kind keeps its scaler (ED-12).
-        /// Null takes the scaler away.
+        /// shared between assets would be one scaler in two places, and a field of that kind keeps its scaler (ED-12), as
+        /// a Table or By Level as <paramref name="spread"/> says where it's given (TW-27). Null takes the scaler away.
         /// </summary>
-        internal static void SetKind(SerializedProperty scaler, Type type, Func<SerializedProperty, float> firstValue) =>
+        internal static void SetKind(SerializedProperty scaler, Type type, Func<SerializedProperty, float> firstValue, bool? spread = null) =>
             EachAsset.Write(scaler, own =>
             {
-                if (type != null && KindOf(own) == type) return;
+                if (type != null && KindOf(own) == type)
+                {
+                    if (spread.HasValue) SpreadOverLevels(own, spread.Value);
+                    return;
+                }
                 // A scaler's name stays, as a Scaler asset's name is its scaler's (ED-74)
                 var kept = (own.managedReferenceValue as AbstractScaler)?.Name;
                 var made = Make(type, firstValue(own));
                 if (made != null && !string.IsNullOrEmpty(kept)) made.Name = kept;
+                if (made != null && spread.HasValue) made.StretchOverLevels = spread.Value;
                 own.managedReferenceValue = made;
             });
+
+        /// <summary>
+        /// Makes a scaler, as one selected asset's own property, read its values exactly or spread over the levels: a Table
+        /// becomes By Level, or By Level a Table, its values kept (TW-27).
+        /// </summary>
+        internal static void SpreadOverLevels(SerializedProperty own, bool spread)
+        {
+            var stretch = own?.FindPropertyRelative(nameof(AbstractScaler.StretchOverLevels));
+            if (stretch == null || stretch.boolValue == spread) return;
+            stretch.boolValue = spread;
+
+            // Spread, it reads its curve, which its values give
+            var curve = own.FindPropertyRelative(nameof(AbstractScaler.Scaling));
+            var interpolation = own.FindPropertyRelative(nameof(AbstractScaler.Interpolation));
+            if (!spread || curve == null || interpolation == null) return;
+            var wanted = AbstractScaler.CurveFor(ValuesOf(own), (EScalerInterpolation)interpolation.intValue);
+            if (!SameCurve(curve.animationCurveValue, wanted)) curve.animationCurveValue = wanted;
+        }
 
         /// <summary>A field's kind: its scaler's type, or null for a field with none.</summary>
         internal static Type KindOf(SerializedProperty scaler) => scaler?.managedReferenceValue?.GetType();
@@ -488,7 +545,10 @@ namespace FarEmerald.PlayForge.Extended.Editor
                 });
                 KeepCurve(scaler);
             });
-            root.Add(mode);
+            // A number by level's kind says how it reads, a Table or By Level, so it has no choice of its own here, and a
+            // Table shows no curve (TW-27)
+            bool levelKind = IsLevelKind(KindOf(scaler));
+            if (!levelKind) root.Add(mode);
 
             var rows = new VisualElement { name = "ValueRows" };
             root.Add(rows);
@@ -504,7 +564,7 @@ namespace FarEmerald.PlayForge.Extended.Editor
                 {
                     shape = now;
                     rows.Clear();
-                    update = spread ? SpreadRows(scaler, rows, readsRange) : PerLevelRows(scaler, rows);
+                    update = spread ? SpreadRows(scaler, rows, readsRange) : PerLevelRows(scaler, rows, !levelKind);
                 }
                 update?.Invoke();
             }
@@ -530,7 +590,7 @@ namespace FarEmerald.PlayForge.Extended.Editor
         }
 
         // Per Level: the levels the values follow, then a value for each level and the curve
-        private static Action PerLevelRows(SerializedProperty scaler, VisualElement rows)
+        private static Action PerLevelRows(SerializedProperty scaler, VisualElement rows, bool curve)
         {
             var valuesProp = scaler.FindPropertyRelative(nameof(AbstractScaler.LevelValues));
             var configProp = scaler.FindPropertyRelative(nameof(AbstractScaler.Configuration));
@@ -579,6 +639,8 @@ namespace FarEmerald.PlayForge.Extended.Editor
             int columns = follows ? range.Last : stored;
             var table = Table(scaler, valuesProp, columns, "Level", index => (index + 1).ToString(CultureInfo.InvariantCulture),
                 out var past, out var preview);
+            // A Table reads its values exactly, so it has no curve to show (TW-27)
+            if (!curve) preview.RemoveFromHierarchy();
             rows.Add(table);
             if (follows && stored > range.Last)
             {
@@ -601,7 +663,7 @@ namespace FarEmerald.PlayForge.Extended.Editor
                 float last = values.Length > 0 ? values[values.Length - 1] : 1f;
                 foreach (var (index, field) in past) field.SetValueWithoutNotify(last);
                 var read = Enumerable.Range(0, columns).Select(i => i < values.Length ? values[i] : last).ToArray();
-                ShowCurve(scaler, preview, read, null);
+                if (curve) ShowCurve(scaler, preview, read, null);
             };
         }
 

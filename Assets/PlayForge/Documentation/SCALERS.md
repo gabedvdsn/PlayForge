@@ -8,7 +8,7 @@ inspector shows.
 
 A magnitude field, such as an effect's Magnitude or Duration, is a number field (`ScalableFloat`, or `ScalableInt` for
 a whole number). It shows its name, then its **kind**, then what it reads, then its field menu, which opens as wide as
-its items. The kind menu lists Constant, By Level, Shared, × Attribute and Set By Caller at its top, then the kinds
+its items. The kind menu lists Constant, Table, By Level, Shared, × Attribute and Set By Caller at its top, then the kinds
 that read the game (below): Asset Part, Group, Group Impact, Local Data, Relative to a Field and Worker. It files the
 rest by category: the scalers of every kind under **Scaler**, Effect Stacks and Tracked Impact under **Effect**, Item
 Stacks under **Item**, and a kind of a project's own under the category it names. A field whose code declares what its
@@ -17,8 +17,13 @@ which has no target yet, offers no kind that reads one.
 
 - **Constant**: the field reads its number, with its unit beside it, as Tick Every's "1 s". A field that used to read
   its scaler, and has none, reads 0, and a warning says so.
-- **By Level**: the field reads a table of values per level (below). The range it gives shows beside the kind, as
-  "6–8 s", or "-25 to -10" where it goes below 0.
+- **Table**: the field reads one value for each level, exactly: level 1 the first, level 4 the 4th, and a level past
+  the last the last, as Laguna Blade's 450, 600 and 750 (TW-27). The range it gives shows beside the kind, as "6–8 s",
+  or "-25 to -10" where it goes below 0. Its values sit in a row under it, with no curve.
+- **By Level**: the field reads its values spread over a level range, as points on a curve, a level between two reading
+  between them (below). It's the same number by level as a Table, read another way, so choosing one for the other keeps
+  its values; one saved reading exactly shows as a Table, and nothing saved changes. [SPREADSHEETS.md](SPREADSHEETS.md)
+  writes a project's Tables and By Levels to a spreadsheet and reads them back.
 - **Shared**: the field reads a Scaler asset (below).
 - The other kinds work out a value from the values or from the entity: **× Attribute** reads an attribute of the
   caster or the target, its current, its base, what's missing of it (base − current) or its share of its base
@@ -107,7 +112,7 @@ Kinds that read the game, each with a summary that says what it reads:
 - **Worker** asks workers for a number under a **Key**: **This Effect**'s own workers, or the **Caster**'s or the
   **Target**'s. Where none answers it reads its **Default**. See Asking a worker, below.
 
-Choosing a kind is one Undo step. A constant made By Level keeps its number as its first level's value.
+Choosing a kind is one Undo step. A constant made a Table or By Level keeps its number as its first level's value.
 
 With more than one asset selected, the field edits each asset's own field. Kinds that differ show as mixed, and choosing
 one gives it to each field, from that field's own value; a field of that kind keeps its scaler. Levels and Make Constant
@@ -148,7 +153,8 @@ A kind shows only what it reads: a **Fixed Value** shows its value, and a **Rand
 values its base value comes from. A kind's field that applies only to some of its settings shows only for them, as a
 Randomized scaler's **Min Multiplier** and **Max Multiplier** for its Multiplier mode.
 
-- **Values**: **Per Level** or **Spread Over Levels**.
+- **Values**: **Per Level** or **Spread Over Levels**. A Table reads Per Level and By Level spreads, as their kinds say,
+  so they have no choice here; a scaler of another kind with values for each level chooses.
   - **Per Level**: one value per level, ten levels to a row. Level 1 reads the first value, level 4 the 4th, and a
     level past the end reads the last.
   - **Spread Over Levels**: the values are points on a curve over a level range, and a level between two points reads

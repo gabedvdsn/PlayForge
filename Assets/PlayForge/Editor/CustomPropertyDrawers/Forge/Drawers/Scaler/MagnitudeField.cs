@@ -224,14 +224,16 @@ namespace FarEmerald.PlayForge.Extended.Editor
                 combineNumber = null;
                 showNumber = null;
                 noScaler = null;
-                // Selected fields whose kinds differ show a mixed kind, and neither field's content as both's (ED-12)
-                mixedKinds = EachAsset.Differ(scalerProp, ScalerFields.KindOf);
+                // Selected fields whose kinds differ show a mixed kind, and neither field's content as both's (ED-12); a Table
+                // and a By Level differ as kinds do (TW-27)
+                mixedKinds = EachAsset.Differ(scalerProp, ScalerFields.ChoiceOf);
                 shownType = ScalerFields.KindOf(scalerProp);
                 built = true;
 
+                // A number by level is offered twice: as a Table, read exactly, and as By Level, spread over the levels
                 var choices = new List<string> { ConstantKind };
-                choices.AddRange(kinds.Select(ScalerFields.KindName));
-                var shownName = shownType == null ? ConstantKind : ScalerFields.KindName(shownType);
+                choices.AddRange(kinds.SelectMany(ScalerFields.ChoiceNames));
+                var shownName = shownType == null ? ConstantKind : ScalerFields.ChoiceOf(scalerProp);
                 // A kind the field's context doesn't resolve still shows, as one copied from another field does
                 if (!choices.Contains(shownName)) choices.Add(shownName);
 
@@ -344,8 +346,8 @@ namespace FarEmerald.PlayForge.Extended.Editor
                     if (change.newValue == ConstantKind) ScalerActions.MakeConstant(operation);
                     else
                     {
-                        var type = kinds.FirstOrDefault(each => ScalerFields.KindName(each) == change.newValue);
-                        if (type != null) ScalerActions.SetKind(operation, type);
+                        var (type, spread) = ScalerFields.Chosen(change.newValue, kinds);
+                        if (type != null) ScalerActions.SetKind(operation, type, spread);
                     }
                     Draw();
                 });
@@ -562,9 +564,10 @@ namespace FarEmerald.PlayForge.Extended.Editor
         /// <summary>
         /// Gives the field a scaler of a kind, which maps levels exactly. A level-based one starts with the value the
         /// field read at level 1, and reads its scaler; a Shared one reads its asset times the field's number, 1. A field
-        /// that has the kind keeps its scaler.
+        /// that has the kind keeps its scaler. A number by level reads as a Table, or By Level, as <paramref name="spread"/>
+        /// says where it's given, its values kept (TW-27).
         /// </summary>
-        public static void SetKind(SerializedProperty operation, Type type)
+        public static void SetKind(SerializedProperty operation, Type type, bool? spread = null)
         {
             if (type == null)
             {
@@ -574,9 +577,15 @@ namespace FarEmerald.PlayForge.Extended.Editor
             EachAsset.Write(operation, own =>
             {
                 var scaler = ScalerOf(own);
-                if (ScalerFields.KindOf(scaler) == type) return;
+                if (ScalerFields.KindOf(scaler) == type)
+                {
+                    if (spread.HasValue) ScalerFields.SpreadOverLevels(scaler, spread.Value);
+                    return;
+                }
                 float first = ValueAtFirstLevel(own);
-                scaler.managedReferenceValue = ScalerFields.Make(type, first);
+                var made = ScalerFields.Make(type, first);
+                if (spread.HasValue) made.StretchOverLevels = spread.Value;
+                scaler.managedReferenceValue = made;
                 var real = own.FindPropertyRelative(nameof(ScalableFloat.RealMagnitude));
                 // A scaler field of its own has no number to combine with (ED-77)
                 if (real == null) return;

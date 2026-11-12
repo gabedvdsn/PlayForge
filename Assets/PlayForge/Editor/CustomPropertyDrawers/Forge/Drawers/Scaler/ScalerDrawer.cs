@@ -42,14 +42,16 @@ namespace FarEmerald.PlayForge.Extended.Editor
             {
                 if (!ScalerFields.Alive(property)) return;
                 root.Clear();
-                // Selected scalers whose kinds differ show a mixed kind, and neither scaler's content as both's (ED-12)
-                mixedKinds = EachAsset.Differ(property, ScalerFields.KindOf);
+                // Selected scalers whose kinds differ show a mixed kind, and neither scaler's content as both's (ED-12); a
+                // Table and a By Level differ as kinds do (TW-27)
+                mixedKinds = EachAsset.Differ(property, ScalerFields.ChoiceOf);
                 shownType = ScalerFields.KindOf(property);
                 built = true;
 
+                // A number by level is offered twice: as a Table, read exactly, and as By Level, spread over the levels
                 var choices = new List<string> { NoKind };
-                choices.AddRange(kinds.Select(ScalerFields.KindName));
-                var shownName = shownType == null ? NoKind : ScalerFields.KindName(shownType);
+                choices.AddRange(kinds.SelectMany(ScalerFields.ChoiceNames));
+                var shownName = shownType == null ? NoKind : ScalerFields.ChoiceOf(property);
                 if (!choices.Contains(shownName)) choices.Add(shownName);
 
                 var row = new VisualElement { name = "Row" };
@@ -101,13 +103,13 @@ namespace FarEmerald.PlayForge.Extended.Editor
                 {
                     // A mixed kind takes the one chosen, even the first scaler's
                     if (!mixedKinds && change.newValue == change.previousValue) return;
-                    var type = change.newValue == NoKind ? null : kinds.FirstOrDefault(each => ScalerFields.KindName(each) == change.newValue);
+                    var (type, spread) = change.newValue == NoKind ? ((Type)null, (bool?)null) : ScalerFields.Chosen(change.newValue, kinds);
                     // Each selected asset's scaler starts from its own first value (ED-12)
                     ScalerFields.SetKind(property, type, own =>
                     {
                         var values = ScalerFields.ValuesOf(own);
                         return values.Length > 0 ? values[0] : 1f;
-                    });
+                    }, spread);
                     Draw();
                 });
                 Show();

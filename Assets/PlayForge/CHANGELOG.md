@@ -7,6 +7,13 @@ tracks each fix below by its ID.
 ## [Unreleased]
 
 ### Added
+- Table, a number kind of its own beside By Level: one value for each level, read exactly, with no curve; By Level
+  spreads its values over the levels. A number by level saved reading exactly shows as a Table; nothing saved changes
+  (TW-27).
+- Spreadsheets: The Forge's window menu writes the project's numbers by level (a row for each, the levels what it reads)
+  or its items' stats (a column for each attribute their effects add to) to CSV, and reads a sheet back, each row's
+  asset found by its asset tag or else its name, its changes listed in a window and made as one Undo step;
+  `ForgeSpreadsheets` does the same in code. `Documentation/SPREADSHEETS.md` gives the sheets (TW-27).
 - A test kit, the assembly `FarEmerald.PlayForge.Testing`, which a project's own tests reference to play its content:
   `ForgeTest`, a base class that makes a live world for each test and, after it, checks that attribute parts sum, that
   what's dealt is received and that no process leaked; `ForgeTestWorld`, the world itself, which a test can make on its

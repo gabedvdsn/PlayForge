@@ -85,6 +85,13 @@ namespace FarEmerald.PlayForge
         }
 
         /// <summary>
+        /// A scaler's kind's name, as the kind menu shows it: a number by level that reads its values exactly, level by
+        /// level, is a Table, and one spread over the levels By Level (TW-27).
+        /// </summary>
+        public static string KindName(AbstractScaler scaler) =>
+            scaler is SimpleScaler or CachedSimpleScaler && !scaler.StretchOverLevels ? "Table" : KindName(scaler?.GetType());
+
+        /// <summary>
         /// A kind's name, as the kind menu shows it: its <see cref="NumberKindAttribute.Name"/>, or else its class's name
         /// without "Cached" and "Scaler", spaced out.
         /// </summary>

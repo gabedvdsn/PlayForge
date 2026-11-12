@@ -147,7 +147,9 @@ string perLevel = impact.FormatTotal();           // "20/30/40/50"
   made makes the default project, at the project's root. With projects and none chosen, the active one is the
   project at the root, or none, when The Forge shows the assets in no project. The asset menu moves or copies the
   selected assets into another project. Every asset picker, an object field's among them, offers the active project's
-  assets alone, and the tag picker the tags they use. The Demo's assets are a project of their own. The list's columns sort, Summary among them, which shows each asset's one line, as its inspector's header does (TW-21); a click shows the asset's inspector in the detail pane, under its
+  assets alone, and the tag picker the tags they use. The Demo's assets are a project of their own. Its window menu's
+  **Spreadsheets** writes the project's numbers by level, or its items' stats, to CSV, and reads a sheet back, listing
+  its changes before it makes them ([SPREADSHEETS.md](SPREADSHEETS.md), TW-27). The list's columns sort, Summary among them, which shows each asset's one line, as its inspector's header does (TW-21); a click shows the asset's inspector in the detail pane, under its
   summary: its description, then a line for each of its sections, or for a Scaler asset or a Requirement Template, of
   its parts. A double click shows it in the Project window, and a row of an asset's Used By opens that asset in The
   Forge. Tags lists the project's tags and what uses each; a tag's **Declared For** declares it for contexts, so their

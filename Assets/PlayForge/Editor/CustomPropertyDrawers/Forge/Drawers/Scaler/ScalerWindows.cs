@@ -429,7 +429,8 @@ namespace FarEmerald.PlayForge.Extended.Editor
             {
                 if (target == null) return;
                 var uses = ScalerFields.UsesOf(asset);
-                var kind = ScalerFields.KindName(asset.Scaler?.GetType());
+                // A Table, or By Level, as the kind menu names a number by level (TW-27)
+                var kind = asset.Scaler != null ? NumberText.KindName(asset.Scaler) : ScalerFields.KindName(null);
                 about.text = $"Scaler · {kind} · {(uses.Count == 1 ? "1 use" : $"{uses.Count} uses")}";
                 usedBy.Summary.text = uses.Count == 0 ? "None" : uses.Count == 1 ? "1 field" : $"{uses.Count} fields";
                 usedBy.Content.Clear();
