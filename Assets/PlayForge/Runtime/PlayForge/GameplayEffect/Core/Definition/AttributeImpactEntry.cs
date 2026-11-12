@@ -53,6 +53,10 @@ namespace FarEmerald.PlayForge
         /// <summary>Only meaningful for Add — see <see cref="EAddBehaviour"/> (TW-1).</summary>
         public EAddBehaviour AddBehaviour = EAddBehaviour.AttributeRole;
 
+        /// <summary>The calculation each hit of it goes through as it lands, if any (TW-2).</summary>
+        [Tooltip("The calculation each hit goes through as it lands: an instant impact's, each tick of a periodic one's")]
+        public ValuePipeline Pipeline;
+
         /// <summary>Tie-break for Override entries (lowest wins); ordering hint elsewhere.</summary>
         public int SortOrder;
 
@@ -81,6 +85,7 @@ namespace FarEmerald.PlayForge
             Operation = o.Operation;
             MultiplyBehaviour = o.MultiplyBehaviour;
             AddBehaviour = o.AddBehaviour;
+            Pipeline = o.Pipeline;
             SortOrder = o.SortOrder;
             Magnitude = o.Magnitude;
             RetentionGroupOverride = o.RetentionGroupOverride;

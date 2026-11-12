@@ -18,6 +18,7 @@ namespace FarEmerald.PlayForge
         public int                   SortOrder { get; }
         public EMultiplyBehaviour    MultiplyBehaviour { get; }
         public EAddBehaviour         AddBehaviour { get; }
+        public ValuePipeline         Pipeline { get; }
         public Tag                   Group { get; }
 
         public ScalerImpacter(
@@ -27,7 +28,8 @@ namespace FarEmerald.PlayForge
             int sortOrder = 0,
             EMultiplyBehaviour multiplyBehaviour = EMultiplyBehaviour.Multiplicative,
             Tag group = default,
-            EAddBehaviour addBehaviour = EAddBehaviour.AttributeRole)
+            EAddBehaviour addBehaviour = EAddBehaviour.AttributeRole,
+            ValuePipeline pipeline = null)
         {
             this.magnitudeOperation = magnitudeOperation;
             Operation         = operation;
@@ -35,6 +37,7 @@ namespace FarEmerald.PlayForge
             SortOrder         = sortOrder;
             MultiplyBehaviour = multiplyBehaviour;
             AddBehaviour      = addBehaviour;
+            Pipeline          = pipeline;
             Group             = group.IsValid ? group : Tags.IgnoreRetention;
         }
 

@@ -94,6 +94,8 @@ namespace FarEmerald.PlayForge.Extended.Editor
             add.BindProperty(addProp);
             content.Add(add);
             content.Add(new PropertyField(magnitudeProp, "Magnitude"));
+            // The calculation each hit goes through as it lands (TW-2)
+            content.Add(new PropertyField(property.FindPropertyRelative(nameof(AttributeImpactEntry.Pipeline)), "Pipeline") { name = "Pipeline" });
 
             var delivery = new PopupField<EImpactDelivery>("Delivery",
                 ImpactFields.DeliveriesFor(Duration(property), (EImpactDelivery)deliveryProp.intValue),

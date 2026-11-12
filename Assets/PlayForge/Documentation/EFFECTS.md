@@ -150,6 +150,9 @@ duration gives it. Additional Impacts change more attributes, or the same one ag
   give ×2.25. Additive Bonus adds the bonuses first, so +50% and +50% give ×2.0.
 - **Add Behaviour** (Add only, shown where it matters): as the attribute's role says, a Resistance's adds diminishing; a
   plain Sum; or Diminishing, on what's left ([ATTRIBUTES.md](ATTRIBUTES.md), TW-1).
+- **Pipeline**: the calculation each hit of the impact goes through as it lands, a Value Pipeline: the caster's bonuses,
+  the target's reductions, a critical roll, a barrier. It runs for an instant impact's hit and each tick of a periodic
+  one ([VALUE_PIPELINES.md](VALUE_PIPELINES.md), TW-2).
 - **Magnitude**: the amount: a Constant number, or by its kind a scaler's value at the origin's level, such as a By
   Level table of values per level, with Combine joining the scaler and the number ([SCALERS.md](SCALERS.md)). A
   Continuous modifier works its magnitude out again whenever the attribute is recalculated. A commit works it out

@@ -22,6 +22,14 @@ namespace FarEmerald.PlayForge
         public TrackedImpact TrackedImpact;
 
         /// <summary>
+        /// The last hit's run through a pipeline: each stage's before and after, and a note, as a critical hit (TW-2). Null
+        /// until one runs; one is kept for the spec and filled again by each run.
+        /// </summary>
+        public ValueBreakdown Breakdown { get; private set; }
+
+        internal ValueBreakdown TakeBreakdown() => Breakdown ??= new ValueBreakdown();
+
+        /// <summary>
         /// The shelf container currently holding this spec (null for instant effects and
         /// for specs not yet shelved). Set by <see cref="AbstractEffectContainer"/> on
         /// construction and on <see cref="AbstractEffectContainer.ReplaceValuesWith"/>.
@@ -235,7 +243,8 @@ namespace FarEmerald.PlayForge
                     entry.SortOrder,
                     entry.MultiplyBehaviour,
                     entry.ResolveGroup(defaultGroup),
-                    entry.AddBehaviour);
+                    entry.AddBehaviour,
+                    entry.Pipeline);
                 entryImpacters.Add((entry, impacter));
                 IndexImpacter(entry.Delivery, entry.AttributeTarget, impacter);
             }

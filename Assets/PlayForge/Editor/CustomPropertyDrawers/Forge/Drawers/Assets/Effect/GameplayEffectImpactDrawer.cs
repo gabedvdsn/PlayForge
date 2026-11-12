@@ -65,6 +65,8 @@ namespace FarEmerald.PlayForge.Extended.Editor
             add.BindProperty(addProp);
             root.Add(add);
             root.Add(new PropertyField(magnitudeProp, "Magnitude"));
+            // The calculation each hit goes through as it lands (TW-2)
+            root.Add(new PropertyField(property.FindPropertyRelative(nameof(GameplayEffectImpact.Pipeline)), "Pipeline") { name = "Pipeline" });
 
             // How the runtime delivers it, which the duration decides, and how often a periodic one lands. The drawer
             // didn't say, and drew Reverse On Removal, which nothing reads since commits stay (ED-2)

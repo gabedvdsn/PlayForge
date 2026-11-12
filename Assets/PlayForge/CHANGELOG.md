@@ -7,6 +7,9 @@ tracks each fix below by its ID.
 ## [Unreleased]
 
 ### Added
+- Value Pipelines: an asset of ordered stages (Multiply, Add, Chance, Clamp, Absorb, or a project's own) that an
+  effect's impact names as its calculation, run once for each hit as it lands, with a breakdown of each stage kept on the
+  spec (TW-2). `Documentation/VALUE_PIPELINES.md`.
 - An attribute's Role says how bonuses to it add up and how a number reads it: a Bonus Share's bonuses add and read as
   1 + x; a Resistance's stack with diminishing returns and read as 1 − x. An effect's Add Behaviour and × Attribute's
   Read As can choose their own way (TW-1).

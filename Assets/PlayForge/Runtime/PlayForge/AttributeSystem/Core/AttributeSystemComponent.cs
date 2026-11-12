@@ -470,6 +470,8 @@ namespace FarEmerald.PlayForge
                     if (imp == null) continue;
 
                     float magnitude = imp.Evaluate(carrier);
+                    // Through its calculation, once for the hit, so a roll in it is drawn once (TW-2)
+                    if (imp.Pipeline != null) magnitude = imp.Pipeline.Run(magnitude, carrier, (carrier as GameplayEffectSpec)?.TakeBreakdown());
                     Next().Set(magnitude, imp.Operation, imp.TargetSlot, imp.SortOrder, imp.MultiplyBehaviour, imp.Group);
                 }
             }

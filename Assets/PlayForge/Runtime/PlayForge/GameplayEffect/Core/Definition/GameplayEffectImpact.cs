@@ -59,6 +59,7 @@ namespace FarEmerald.PlayForge
                     Operation = ImpactOperation,
                     MultiplyBehaviour = MultiplyBehaviour,
                     AddBehaviour = AddBehaviour,
+                    Pipeline = Pipeline,
                     SortOrder = 0,
                     Magnitude = MagnitudeOperation, // live reference — inspector edits apply instantly
                     RetentionGroupOverride = default, // falls back to Definition.RetentionGroup
@@ -136,6 +137,13 @@ namespace FarEmerald.PlayForge
         /// </summary>
         public EAddBehaviour AddBehaviour = EAddBehaviour.AttributeRole;
 
+        /// <summary>
+        /// The calculation each hit of the first impact goes through as it lands, as an Unreal effect names its execution
+        /// calculation: an instant impact's, each tick of a periodic one's (TW-2).
+        /// </summary>
+        [Tooltip("The calculation each hit goes through as it lands: an instant impact's, each tick of a periodic one's")]
+        public ValuePipeline Pipeline;
+
         public EAffiliationPolicy AffiliationPolicy = EAffiliationPolicy.AlwaysAllow;
         public EAnyAllPolicy AffiliationComparison = EAnyAllPolicy.Any;
         [ForgeTagContext(ForgeContext.Affiliation)] public List<Tag> Affiliations = new List<Tag>();
@@ -189,6 +197,7 @@ namespace FarEmerald.PlayForge
             ImpactOperation = o.ImpactOperation;
             MultiplyBehaviour = o.MultiplyBehaviour;
             AddBehaviour = o.AddBehaviour;
+            Pipeline = o.Pipeline;
             AffiliationPolicy = o.AffiliationPolicy;
             AffiliationComparison = o.AffiliationComparison;
             Affiliations = o.Affiliations is null ? null : new List<Tag>(o.Affiliations);

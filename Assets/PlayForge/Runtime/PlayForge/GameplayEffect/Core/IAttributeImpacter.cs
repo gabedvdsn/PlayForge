@@ -47,6 +47,12 @@ namespace FarEmerald.PlayForge
         EAddBehaviour AddBehaviour => EAddBehaviour.AttributeRole;
 
         /// <summary>
+        /// The calculation its value goes through as it commits, once for each hit: an instant impact's, each tick of a
+        /// periodic one's. None, it lands as it's evaluated (TW-2).
+        /// </summary>
+        ValuePipeline Pipeline => null;
+
+        /// <summary>
         /// Retention group this impacter's contribution is attributed to (per-group value
         /// breakdown — base vs bonus health, etc.). Attribution only; never changes the
         /// math. Default: unattributed.
