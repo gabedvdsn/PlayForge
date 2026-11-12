@@ -70,6 +70,29 @@ namespace FarEmerald.PlayForge
         [ForgeContextDefault(ForgeContext.Data)] public static Tag TARGET { get; } = Tag.GenerateAsUnique("Target");
         [ForgeContextDefault(ForgeContext.Data)] public static Tag TARGET_REAL { get; } = Tag.GenerateAsUnique("TargetReal");
         [ForgeContextDefault(ForgeContext.Data)] public static Tag TARGET_POS { get; } = Tag.GenerateAsUnique("TargetPosition");
+
+        /// <summary>A core event's subject: the one hit, the one killed, or the entity itself (TW-5).</summary>
+        [ForgeContextDefault(ForgeContext.Data)] public static Tag SUBJECT { get; } = Tag.GenerateAsUnique("EventSubject");
+
+        /// <summary>An impact event's impact, an <see cref="ImpactData"/> (TW-5).</summary>
+        [ForgeContextDefault(ForgeContext.Data)] public static Tag IMPACT { get; } = Tag.GenerateAsUnique("EventImpact");
+
+        // ─── The gameplay events the core sends, where an ability listens (TW-5) ───
+
+        /// <summary>To the dealer, as an impact it dealt lands on another entity.</summary>
+        [ForgeContextDefault(ForgeContext.Trigger)] public static Tag IMPACT_DEALT { get; } = Tag.GenerateAsUnique("Impact Dealt");
+
+        /// <summary>To the one hit, as an impact another entity dealt lands on it.</summary>
+        [ForgeContextDefault(ForgeContext.Trigger)] public static Tag IMPACT_TAKEN { get; } = Tag.GenerateAsUnique("Impact Taken");
+
+        /// <summary>To the killer, as an entity it dealt the last blow to dies.</summary>
+        [ForgeContextDefault(ForgeContext.Trigger)] public static Tag KILL { get; } = Tag.GenerateAsUnique("Kill");
+
+        /// <summary>To the one who died, with its killer, if another, as Source.</summary>
+        [ForgeContextDefault(ForgeContext.Trigger)] public static Tag DIED { get; } = Tag.GenerateAsUnique("Died");
+
+        /// <summary>To a staying entity as it revives.</summary>
+        [ForgeContextDefault(ForgeContext.Trigger)] public static Tag REVIVED { get; } = Tag.GenerateAsUnique("Revived");
         [ForgeContextDefault(ForgeContext.Data)] public static Tag DATA { get; } = Tag.GenerateAsUnique("Data");
         [ForgeContextDefault(ForgeContext.Data)] public static Tag ASSETS { get; } = Tag.GenerateAsUnique("Assets");
         [ForgeContextDefault(ForgeContext.Data)] public static Tag EFFECTS { get; } = Tag.GenerateAsUnique("Effects");

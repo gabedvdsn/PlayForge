@@ -290,6 +290,11 @@ namespace FarEmerald.PlayForge
             Callbacks?.EntityDied(owner);
             FrameSummary?.RecordDeath(owner);
 
+            // Died to itself, with its killer; Kill to the killer (TW-5)
+            var killer = Killer();
+            Send(owner, Tags.DIED, EventData(killer, owner));
+            if (killer is IGameplayAbilitySystem slayer) Send(slayer, Tags.KILL, EventData(killer, owner));
+
             // One that stays dies at its frame's end and stays; any other ends there, as it always did (TW-4)
             if (EntityDeath.Stays(Identity?.Death)) pendingDeath = true;
             else pendingDestruction = true;
@@ -316,6 +321,7 @@ namespace FarEmerald.PlayForge
             ApplyEach(Identity.Death.OnRevive);
             SpawnBody();
             Callbacks?.EntityRevived(owner);
+            Send(owner, Tags.REVIVED, EventData(null, owner));
             return true;
         }
 
@@ -368,6 +374,7 @@ namespace FarEmerald.PlayForge
         {
             FrameSummary?.RecordImpactDealt(impact);
             Callbacks?.ImpactDealt(impact);
+            SendImpactEvent(Tags.IMPACT_DEALT, impact, owner, impact.Target);
         }
 
         public void RecordImpactReceived(ImpactData impact)
@@ -375,6 +382,58 @@ namespace FarEmerald.PlayForge
             ForgeCounters.Impacts.Value++;
             FrameSummary?.RecordImpactReceived(impact);
             Callbacks?.ImpactReceived(impact);
+            SendImpactEvent(Tags.IMPACT_TAKEN, impact, impact.SourcedModifier.Source, owner);
+        }
+
+        // ═══════════════════════════════════════════════════════════════════════════
+        // The core's gameplay events (TW-5)
+        // ═══════════════════════════════════════════════════════════════════════════
+
+        // An impact between two entities, as an event to this one, where an ability listens: a system's own impact, and
+        // one an entity deals itself, send none
+        private void SendImpactEvent(Tag tag, ImpactData impact, ITarget dealer, ITarget subject)
+        {
+            if (!impact.SourcedModifier.ImpactIsWorkable || dealer == null || ReferenceEquals(dealer, subject)) return;
+            if (!AbilitySystem.ListensFor(tag)) return;
+            var data = ProcessDataPacket.Default();
+            data.SetPrimary(Tags.SOURCE, dealer);
+            if (subject != null) data.SetPrimary(Tags.SUBJECT, subject);
+            data.SetPrimary(Tags.IMPACT, impact);
+            Send(owner, tag, data);
+        }
+
+        // An event to an entity where an ability of its listens, sent as its frame's actions run: an ability set off
+        // mid-commit would change what's committing
+        private static void Send(IGameplayAbilitySystem to, Tag tag, ProcessDataPacket data)
+        {
+            var abilities = to?.GetAbilitySystem();
+            if (abilities == null || !abilities.ListensFor(tag)) return;
+            var queue = to.GetActionQueue();
+            if (queue != null) queue.Enqueue(new LambdaAction(_ => abilities.SendGameplayEvent(tag, data), $"Send {tag}"));
+            else abilities.SendGameplayEvent(tag, data);
+        }
+
+        private static ProcessDataPacket EventData(ITarget source, ITarget subject)
+        {
+            var data = ProcessDataPacket.Default();
+            if (source != null) data.SetPrimary(Tags.SOURCE, source);
+            if (subject != null) data.SetPrimary(Tags.SUBJECT, subject);
+            return data;
+        }
+
+        // Who killed it: the source of the last workable loss it took this frame from another
+        private ISource Killer()
+        {
+            var received = FrameSummary?.ImpactsReceived;
+            if (received == null) return null;
+            for (int i = received.Count - 1; i >= 0; i--)
+            {
+                var impact = received[i];
+                var source = impact.SourcedModifier.Source;
+                if (!impact.SourcedModifier.ImpactIsWorkable || source == null || ReferenceEquals(source, owner)) continue;
+                if (impact.RealImpact.CurrentValue < 0f || impact.RealImpact.BaseValue < 0f) return source;
+            }
+            return null;
         }
 
         // ═══════════════════════════════════════════════════════════════════════════

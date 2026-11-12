@@ -111,6 +111,15 @@ passes it in, and one effect serves every strength.
   the event's data, its target among it. A **Tag Added** trigger activates it as the entity gains the tag, or one under
   it, that it didn't have; more of a tag it holds sets off nothing. Each trigger tries the ability as a request would,
   so its checks and its When Busy still hold.
+  - **The core's own events** (TW-5), sent only where an ability listens for them: **Impact Dealt**, to the dealer, and
+    **Impact Taken**, to the one hit, as an impact lands between two entities; **Kill**, to the killer, and **Died**, to
+    the one who died, its killer the source of the last blow it took; **Revived**, to a staying entity as it revives.
+    Their data hold the instigator as Source, the entity it was done to as Subject, and an impact as Impact.
+  - For an impact event, a trigger takes only impacts on its **Attribute**, a **Sign** (Loss or Gain), and its
+    **Impact Types**. Its **Chance** rolls once for each event: Counter Helix's 20%. Its **Target** is the ability's
+    own targeting, as an area spin finds the enemies round it; the event's **Instigator**, as a counterattack; or its
+    **Subject**, as an on-hit ability targets the one hit. An ability set off by Died runs on a dead entity only if its
+    rules don't ask that its caster be alive.
 - **Cost** and **Cooldown**: gameplay effects ([EFFECTS.md](EFFECTS.md)) applied to the caster when a stage applies
   usage effects (see Stages). A cost is usually an Instant effect that lowers a resource such as Mana. A cooldown is
   usually a Durational effect: while it is active, the caster carries its asset tag, and the Cooldown check refuses the

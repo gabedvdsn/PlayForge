@@ -7,6 +7,9 @@ tracks each fix below by its ID.
 ## [Unreleased]
 
 ### Added
+- Gameplay events the core sends where an ability listens: Impact Dealt, Impact Taken, Kill, Died and Revived, with the
+  instigator as Source and the one it was done to as Subject. An ability trigger takes only some impacts (attribute,
+  sign, impact types), rolls a chance once for each event, and can target the instigator or the subject (TW-5).
 - An entity that stays when it dies: an identity's Death says End, as before, or Stay, with the effects its death ends
   by tag, the effects it takes as it dies and revives, and its Body, a MonoBehaviour process that goes as it dies and
   comes back as it revives; `Revive(at)` on either hub, `ReviveOnRemovalEffectWorker` for a respawn timer, `GetBody()`,

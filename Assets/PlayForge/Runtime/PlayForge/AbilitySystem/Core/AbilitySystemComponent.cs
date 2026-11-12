@@ -549,9 +549,51 @@ namespace FarEmerald.PlayForge
             foreach (int slot in AbilityCache.Keys.OrderBy(index => index).ToList())
             {
                 if (!AbilityCache.TryGetValue(slot, out var container) || !IsTriggeredBy(container.Spec.Base, source, tag)) continue;
-                if (TryActivateAbility(CreateActivationRequest(slot, data), out _)) fired++;
+                // The trigger's impact filters and its chance, rolled once for the event (TW-5)
+                var trigger = AcceptingTrigger(container.Spec.Base, source, tag, data);
+                if (trigger == null) continue;
+                var request = data;
+                if (trigger.TargetIn(data) is { } target)
+                {
+                    // Its own data, so one ability's target isn't another's
+                    request = ProcessDataPacket.Default();
+                    CopyEvent(data, request);
+                    request.SetPrimary(Tags.TARGET_REAL, target);
+                }
+                if (TryActivateAbility(CreateActivationRequest(slot, request), out _)) fired++;
             }
             return fired;
+        }
+
+        // The ability's first trigger that matches and takes the event
+        private AbilityTrigger AcceptingTrigger(Ability ability, EAbilityTriggerSource source, Tag tag, ProcessDataPacket data)
+        {
+            foreach (var trigger in ability.Definition.Triggers)
+            {
+                if (trigger == null || trigger.Source != source || !trigger.Tag.IsValid || !tag.MatchesOrIsChildOf(trigger.Tag)) continue;
+                if (trigger.Accepts(data, Self)) return trigger;
+            }
+            return null;
+        }
+
+        private static void CopyEvent(ProcessDataPacket from, ProcessDataPacket to)
+        {
+            if (from == null) return;
+            if (from.TryGetFirst<ITarget>(Tags.SOURCE, out var source)) to.SetPrimary(Tags.SOURCE, source);
+            if (from.TryGetFirst<ITarget>(Tags.SUBJECT, out var subject)) to.SetPrimary(Tags.SUBJECT, subject);
+            if (from.TryGetFirst<ImpactData>(Tags.IMPACT, out var impact)) to.SetPrimary(Tags.IMPACT, impact);
+        }
+
+        /// <summary>
+        /// Whether an ability it knows is set off by a gameplay event under <paramref name="eventTag"/>: the core sends its
+        /// own events only where one is, so an entity that listens for none pays nothing (TW-5).
+        /// </summary>
+        public bool ListensFor(Tag eventTag)
+        {
+            if (AbilityCache == null || AbilityCache.Count == 0 || !eventTag.IsValid) return false;
+            foreach (var container in AbilityCache.Values)
+                if (IsTriggeredBy(container.Spec.Base, EAbilityTriggerSource.GameplayEvent, eventTag)) return true;
+            return false;
         }
 
         private static bool IsTriggeredBy(Ability ability, EAbilityTriggerSource source, Tag tag)
