@@ -51,19 +51,33 @@ namespace FarEmerald.PlayForge.Extended.Editor
         /// prefix and suffix. One factory makes every new asset (Q20); the copy is the default's values, not a link to it
         /// (Q22).
         /// </summary>
-        public static ScriptableObject CreateNew(Type type, string name, string folder = null)
+        public static ScriptableObject CreateNew(Type type, string name, string folder = null) => CreateFrom(type, name, folder, null);
+
+        /// <summary>A new asset as <see cref="CreateNew"/> makes one, filled by a preset or copied from a template first (TW-24).</summary>
+        public static ScriptableObject CreateFrom(Type type, string name, string folder, ForgePreset preset)
         {
             var asset = ScriptableObject.CreateInstance(type);
             var copied = PlayForgeSettings.NewAssetDefault(type);
             if (copied != null) EditorUtility.CopySerialized(copied, asset);
-            NameAny(asset, name);
             // The first asset made makes the default project, which holds it (FEAT-34)
             ForgeProjects.EnsureActive();
-            folder = string.IsNullOrWhiteSpace(folder) ? FolderFor(type) : folder.Trim().TrimEnd('/');
+            string own = FolderFor(type);
+            folder = string.IsNullOrWhiteSpace(folder) ? own : folder.Trim().TrimEnd('/');
+
+            // A preset fills it, or a template it copies, over the type's default, before it takes its own name; the assets
+            // it needs go in their own types' folders, or in the one asked for where that isn't this type's (TW-24)
+            ForgePresetMaking making = null;
+            if (preset?.Fill != null)
+            {
+                making = new ForgePresetMaking(name, folder == own ? null : folder);
+                preset.Fill(asset, making);
+            }
+            NameAny(asset, name);
             EnsureFolder(folder);
             var path = AssetDatabase.GenerateUniqueAssetPath(
                 $"{folder}/{PlayForgeSettings.PrefixFor(type)}{FileNameOf(name)}{PlayForgeSettings.SuffixFor(type)}.asset");
             AssetDatabase.CreateAsset(asset, path);
+            making?.Finish();
             return asset;
         }
 

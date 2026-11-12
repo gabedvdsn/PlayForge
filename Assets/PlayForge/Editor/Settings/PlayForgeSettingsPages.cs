@@ -109,6 +109,12 @@ namespace FarEmerald.PlayForge.Extended.Editor
             section.Add(EffectField(authoring, nameof(ForgeAuthoringSettings.CostEffect), "Cost Effect"));
             section.Add(EffectField(authoring, nameof(ForgeAuthoringSettings.CooldownEffect), "Cooldown Effect"));
 
+            // The project's own template assets, which The Forge's Create lists beside PlayForge's presets (TW-24)
+            Heading(section, "Templates");
+            section.Add(Note("Assets of the project's own that a new asset can start as a copy of, listed in The Forge's Create " +
+                             "menu under their type, after PlayForge's presets."));
+            section.Add(new PropertyField(authoring.FindPropertyRelative(nameof(ForgeAuthoringSettings.Templates)), "Templates") { name = "Templates" });
+
             section.Bind(serialized);
             // Each edit, and an Undo of one, is written to the project's asset
             section.TrackSerializedObjectValue(serialized, _ =>

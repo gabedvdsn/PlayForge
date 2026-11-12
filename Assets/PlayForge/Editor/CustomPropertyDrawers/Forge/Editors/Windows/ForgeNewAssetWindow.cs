@@ -15,20 +15,24 @@ namespace FarEmerald.PlayForge.Extended.Editor
     public sealed class ForgeNewAssetWindow : EditorWindow
     {
         private Type type;
+        private ForgePreset preset;
         private Action<Object> created;
         private string assetName;
         private string folder;
         private Label fileLabel;
 
-        public static ForgeNewAssetWindow Show(Type type, Action<Object> onCreated)
+        /// <summary>Asks for a new asset's name and folder, then makes it, from a preset where one's given (TW-24).</summary>
+        public static ForgeNewAssetWindow Show(Type type, Action<Object> onCreated, ForgePreset preset = null)
         {
             var window = CreateInstance<ForgeNewAssetWindow>();
             window.type = type;
+            window.preset = preset;
             window.created = onCreated;
-            window.assetName = $"New {ForgeAssetTypes.NameOf(type)}";
+            string noun = preset?.AssetName ?? ForgeAssetTypes.NameOf(type);
+            window.assetName = $"New {noun}";
             // In the active Forge Project (FEAT-34)
             window.folder = ForgeAssetCreation.FolderFor(type);
-            window.titleContent = new GUIContent($"New {ForgeAssetTypes.NameOf(type)}");
+            window.titleContent = new GUIContent($"New {noun}");
             window.minSize = new Vector2(380, 128);
             window.ShowUtility();
             window.Build();
@@ -48,7 +52,7 @@ namespace FarEmerald.PlayForge.Extended.Editor
         public ScriptableObject CreateAsset()
         {
             if (type == null || string.IsNullOrWhiteSpace(assetName)) return null;
-            var asset = ForgeAssetCreation.CreateNew(type, assetName.Trim(), folder);
+            var asset = ForgeAssetCreation.CreateFrom(type, assetName.Trim(), folder, preset);
             Close();
             created?.Invoke(asset);
             return asset;

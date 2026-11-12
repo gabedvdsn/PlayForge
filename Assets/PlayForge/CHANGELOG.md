@@ -7,6 +7,10 @@ tracks each fix below by its ID.
 ## [Unreleased]
 
 ### Added
+- Presets in The Forge's Create menu, under each type, Blank first: Damage, Damage over Time, Buff, Debuff, Stun and Aura
+  effects, On-Hit and Active items, a Passive (Triggered) ability and a Hero, each ready to fill in, reading the project's
+  roles and crowd control; a Forge Project's own template assets, under Templates in its settings, listed after them
+  (TW-24).
 - Recipes and a worker map: `Documentation/RECIPES.md` builds ten common rules from PlayForge's own assets with no code,
   each in the new Additional Content sample and played as a test; `Documentation/WORKERS.md` maps when each kind of
   worker runs, for whom, what its context holds, what Unworkable means, and the traps the labs met (TW-23).

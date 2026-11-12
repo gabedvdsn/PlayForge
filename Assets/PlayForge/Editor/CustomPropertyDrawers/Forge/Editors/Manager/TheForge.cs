@@ -266,8 +266,9 @@ namespace FarEmerald.PlayForge.Extended.Editor
             projectMenu = new ToolbarMenu { name = "Project", tooltip = "The Forge Project whose assets The Forge shows" };
             toolbar.Add(projectMenu);
             var create = new ToolbarMenu { name = "Create", text = "Create", tooltip = "Make a new asset where Project Settings puts its type" };
-            foreach (var type in Types)
-                create.menu.AppendAction(ForgeAssetTypes.NameOf(type), _ => ForgeNewAssetWindow.Show(type, OpenToAsset));
+            FillCreate(create);
+            // Again as it opens, so the project's templates are as they are now (TW-24)
+            create.RegisterCallback<PointerDownEvent>(_ => FillCreate(create), TrickleDown.TrickleDown);
             toolbar.Add(create);
 
             foreach (var type in Types)
@@ -402,6 +403,35 @@ namespace FarEmerald.PlayForge.Extended.Editor
             list.itemsChosen += chosen => ShowInProject(chosen.OfType<Object>().FirstOrDefault());
             list.AddManipulator(new ContextualMenuManipulator(AssetMenu));
             return list;
+        }
+
+        // Create's items: each type, and under one with presets, Blank first, then PlayForge's presets, then the project's
+        // templates after a line (TW-24)
+        private void FillCreate(ToolbarMenu create)
+        {
+            create.menu.MenuItems().Clear();
+            foreach (var type in Types)
+            {
+                string typeName = ForgeAssetTypes.NameOf(type);
+                var presets = ForgePresets.For(type);
+                if (presets.Count == 0)
+                {
+                    create.menu.AppendAction(typeName, _ => ForgeNewAssetWindow.Show(type, OpenToAsset));
+                    continue;
+                }
+                create.menu.AppendAction($"{typeName}/Blank", _ => ForgeNewAssetWindow.Show(type, OpenToAsset));
+                bool templates = false;
+                foreach (var preset in presets)
+                {
+                    if (preset.Template != null && !templates)
+                    {
+                        create.menu.AppendSeparator($"{typeName}/");
+                        templates = true;
+                    }
+                    var each = preset;
+                    create.menu.AppendAction($"{typeName}/{each.Name}", _ => ForgeNewAssetWindow.Show(type, OpenToAsset, each));
+                }
+            }
         }
 
         private Column TextColumn(string name, string title, float width, Func<ScriptableObject, string> text) => new()

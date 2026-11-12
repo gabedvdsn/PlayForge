@@ -138,7 +138,12 @@ string perLevel = impact.FormatTotal();           // "20/30/40/50"
   project asset at its root (**Create → PlayForge → Forge Project**), and holds the assets under it that no project
   inside it does. The toolbar holds Back and Forward, which go over the assets it has shown, as a browser's do, the
   project menu, which switches projects and makes a new one, Create, a filter for each type, Tags, the search and the
-  problem count. A new asset goes into the active project, in its type's folder within the project's; the first one
+  problem count. Create makes an asset of a type: Blank, or from a preset under it (TW-24), each ready to fill in: a
+  **Damage**, **Damage over Time**, **Buff**, **Debuff**, **Stun** (granting the tag of the project's crowd control rule
+  that stops every ability) or **Aura** effect; an **On-Hit** or **Active** item (the Active one with an ability of its
+  own, its cost and cooldown copies of the project's Cost and Cooldown effects); a **Passive (Triggered)** ability; or a
+  **Hero**, with an attribute set of the attributes playing the project's roles, Health first. The project's own
+  **Templates** follow, each a new asset's copy. A new asset goes into the active project, in its type's folder within the project's; the first one
   made makes the default project, at the project's root. With projects and none chosen, the active one is the
   project at the root, or none, when The Forge shows the assets in no project. The asset menu moves or copies the
   selected assets into another project. Every asset picker, an object field's among them, offers the active project's
@@ -183,7 +188,8 @@ string perLevel = impact.FormatTotal();           // "20/30/40/50"
 - **Settings** — **Project Settings → PlayForge** shows the active Forge Project's settings, kept in its asset under
   version control, each game its own (TW-30): where each type's new assets go, within the project's folder, and how their
   files are named; each type's defaults (the asset a new one starts as a copy of, and the assets Import lists first); the
-  effects a new Cost or Cooldown copies; and what its game reads through its GameRoot as it runs, the roles its
+  effects a new Cost or Cooldown copies; its Templates, which The Forge's Create offers beside PlayForge's presets
+  (TW-24); and what its game reads through its GameRoot as it runs, the roles its
   attributes play, by tag, and its default crowd control ([ATTRIBUTES.md](ATTRIBUTES.md#roles)). With no Forge Project,
   **Create Forge Project** makes the default one. The first project to need them takes what
   `ProjectSettings/PlayForgeSettings.asset` held, where the settings were the whole Unity project's, once.
