@@ -101,6 +101,12 @@ namespace FarEmerald.PlayForge
         // now the spec is considered immutable for the lifetime of the effect.
         private IReadOnlyList<IAttributeImpacter> cachedImpacters;
 
+        /// <summary>
+        /// What modifiers changed of this application (TW-7): its contained effects, its numbers, its overflow, its time,
+        /// its stacks, its chance and its tags. Null where none did.
+        /// </summary>
+        public EffectChanges Changes { get; internal set; }
+
         public GameplayEffectSpec(GameplayEffect GameplayEffect, IEffectOrigin origin, ITarget target)
         {
             Base = GameplayEffect;
@@ -196,7 +202,16 @@ namespace FarEmerald.PlayForge
         }
         public IEnumerable<Tag> GetGrantedTags()
         {
-            return Base.Tags.GrantedTags;
+            if (Changes == null || Changes.GrantedTags.Count == 0) return Base.Tags.GrantedTags;
+            return GrantedWithChanges();
+        }
+
+        // Its own granted tags, then those its modifiers add (TW-7)
+        private IEnumerable<Tag> GrantedWithChanges()
+        {
+            if (Base.Tags.GrantedTags != null)
+                foreach (var tag in Base.Tags.GrantedTags) yield return tag;
+            foreach (var tag in Changes.GrantedTags) yield return tag;
         }
 
         // ════════════════════════════════════════════════════════════════════════
@@ -244,7 +259,10 @@ namespace FarEmerald.PlayForge
                     entry.MultiplyBehaviour,
                     entry.ResolveGroup(defaultGroup),
                     entry.AddBehaviour,
-                    entry.Pipeline);
+                    entry.Pipeline,
+                    // The modifiers' stages for its attribute: a lasting entry's on its magnitude, others' as it commits (TW-7)
+                    Changes?.StagesFor(entry.AttributeTarget),
+                    entry.Delivery == EImpactDelivery.Continuous);
                 entryImpacters.Add((entry, impacter));
                 IndexImpacter(entry.Delivery, entry.AttributeTarget, impacter);
             }
@@ -342,8 +360,19 @@ namespace FarEmerald.PlayForge
             {
                 if (contained == null) continue;
 
-                // With this one's magnitudes, as a contained effect takes them (FEAT-2)
-                var made = Target.GenerateEffectSpec(Origin, contained);
+                // With this one's magnitudes, as a contained effect takes them (FEAT-2); the rules whose added effect
+                // this is change it no more (TW-7)
+                var made = EffectModifiers.Make(Target, Origin, contained, this, null);
+                made?.TakeSetByCaller(setByCaller);
+                yield return made;
+            }
+
+            // Those its modifiers add, each made with the rule that added it kept from changing it again (TW-7)
+            if (Changes == null) yield break;
+            foreach (var packet in Changes.Packets)
+            {
+                if (packet.When != phase || packet.Effect == null) continue;
+                var made = EffectModifiers.Make(Target, Origin, packet.Effect, this, packet.AddedBy);
                 made?.TakeSetByCaller(setByCaller);
                 yield return made;
             }

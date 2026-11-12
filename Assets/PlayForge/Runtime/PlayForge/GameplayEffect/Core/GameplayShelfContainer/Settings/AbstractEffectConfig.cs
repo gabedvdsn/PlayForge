@@ -283,7 +283,10 @@ namespace FarEmerald.PlayForge
         public bool ClearStacksOnOverflow;
 
         /// <summary>Whether an amount reaching the bound would take the container past its max.</summary>
-        public bool Overflows(AbstractStackingEffectContainer container, int amount) => amount > 0 && container.Stacks + amount > Max;
+        public bool Overflows(AbstractStackingEffectContainer container, int amount) => amount > 0 && container.Stacks + amount > MaxFor(container.Spec);
+
+        /// <summary>The most stacks an application's effect holds: the bound's, and more where its modifiers say (TW-7).</summary>
+        public int MaxFor(GameplayEffectSpec spec) => Max + (spec?.Changes?.MostStacks ?? 0);
 
         public override int ConfigPriority => 999;
 
@@ -294,7 +297,7 @@ namespace FarEmerald.PlayForge
         
         public override int GetStacks(AbstractStackingEffectContainer container, int amount = 1)
         {
-            int total = Mathf.Min(Max, Mathf.Max(Min, container.Stacks + amount));
+            int total = Mathf.Min(MaxFor(container.Spec), Mathf.Max(Min, container.Stacks + amount));
             return Mathf.Max(0, total - container.Stacks);
         }
         
@@ -303,7 +306,7 @@ namespace FarEmerald.PlayForge
         {
             return OnMaxPolicy == EStackBoundsOnMaxPolicy.DoNothing 
                 ? base.GetCorrectContainer(spec, ongoing, containers) 
-                : containers.FirstOrDefault(c => c.Stacks < Max);
+                : containers.FirstOrDefault(c => c.Stacks < MaxFor(c.Spec));
         }
     }
 

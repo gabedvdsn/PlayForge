@@ -54,6 +54,28 @@ namespace FarEmerald.PlayForge
             return value;
         }
 
+        /// <summary>
+        /// Stages a value goes through after its pipeline, as modifiers add them (TW-7): kept in the breakdown after the
+        /// pipeline's own steps where one ran, as a breakdown of their own where none did.
+        /// </summary>
+        public static float RunAfter(IReadOnlyList<AbstractValueStage> stages, float value, IAttributeImpactCarrier carrier,
+            ValueBreakdown breakdown, bool pipelineRan)
+        {
+            if (stages == null || stages.Count == 0) return value;
+            if (!pipelineRan) breakdown?.Begin(null, value);
+            var run = new ValueRun(carrier, NumberContext.Of(carrier), breakdown);
+            for (int i = 0; i < stages.Count; i++)
+            {
+                var stage = stages[i];
+                if (stage == null || !stage.Enabled) continue;
+                float before = value;
+                value = stage.Apply(value, in run);
+                breakdown?.Step(stage, before, value);
+            }
+            breakdown?.End(value);
+            return value;
+        }
+
         /// <summary>Its stages, in a line: "× (1 + Caster's Damage Amplification), then × (1 − Target's Damage Resistance)".</summary>
         public string Describe()
         {

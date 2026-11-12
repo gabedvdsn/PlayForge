@@ -210,6 +210,7 @@ namespace FarEmerald.PlayForge
             => core.EffectSystem.GetLongestDurationFor(lookForTags);
 
         public GameplayAbilitySystemCallbacks GetCallbacks() => Callbacks;
+        public EffectModifierSet GetEffectModifiers() => core.EffectModifiers;
 
         // ═══════════════════════════════════════════════════════════════════════════
         // TOSTRING
@@ -322,6 +323,9 @@ namespace FarEmerald.PlayForge
         /// <summary>What its death does, as <see cref="EntityIdentity.Death"/> (TW-4).</summary>
         public EntityDeath Death = new();
 
+        /// <summary>Its own modifiers of effects, as <see cref="EntityIdentity.Modifiers"/> (TW-7).</summary>
+        public List<EffectModifierEntry> Modifiers = new();
+
         public RuntimeEntityIdentity()
         {
         }
@@ -351,6 +355,7 @@ namespace FarEmerald.PlayForge
             WorkerGroup = data.WorkerGroup;
             LocalData = data.LocalData;
             Death = data.Death;
+            Modifiers = data.Modifiers;
         }
 
         public string GetName()
@@ -396,10 +401,12 @@ namespace FarEmerald.PlayForge
         public void InitWorkers(ISource system)
         {
             WorkerGroup?.ProvideWorkersTo(system);
+            EffectModifiers.Provide(Modifiers, system);
         }
         public void RemoveWorkers(ISource system)
         {
             WorkerGroup?.RemoveWorkersFrom(system);
+            EffectModifiers.Remove(Modifiers, system);
         }
     }
 }

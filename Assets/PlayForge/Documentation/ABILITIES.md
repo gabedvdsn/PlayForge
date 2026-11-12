@@ -238,6 +238,12 @@ from another asset.
 (TW-6). Its entries are an item's: an attribute, the effects, to the one hit or the holder, only on a kill, impact
 types and a condition ([ITEMS.md](ITEMS.md#on-hit)).
 
+
+### Modifiers
+
+**Modifiers**, under On Hit, change other effects as they're made, while the entity knows the ability: its holder's own, as a boon that adds a
+burst to its holder's every Chill, or those landing on it, as a cloak that halves the stuns its wearer takes (TW-7).
+Each entry is a rule of its own or names a shared Effect Modifier asset ([EFFECTS.md](EFFECTS.md#modifiers)).
 ## Local Data
 
 Local Data is a list of named values stored on the asset. Each row has a **Key** (a tag), a **Type**, and a value of

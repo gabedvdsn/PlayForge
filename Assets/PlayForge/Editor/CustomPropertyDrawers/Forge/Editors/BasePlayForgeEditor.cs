@@ -717,12 +717,20 @@ namespace FarEmerald.PlayForge.Extended.Editor
         /// A Workers section's line: its On Hit entries, then its workers, as in "None", "1 on hit" or "1 on hit, 2
         /// workers" (TW-6).
         /// </summary>
-        protected static string WorkersLine(List<OnHitEntry> onHit, int workers)
+        protected static string WorkersLine(List<OnHitEntry> onHit, int workers) => WorkersLine(onHit, null, workers);
+
+        /// <summary>
+        /// A Workers section's line with its modifiers among it: "1 on hit, 2 modifiers, 1 worker", or "None" (TW-7).
+        /// </summary>
+        protected static string WorkersLine(List<OnHitEntry> onHit, List<EffectModifierEntry> modifiers, int workers)
         {
+            var parts = new List<string>();
             int hits = onHit?.Count(entry => entry != null) ?? 0;
-            if (hits == 0) return CountOf(workers, "worker", "workers");
-            var line = CountOf(hits, "on hit", "on hits");
-            return workers == 0 ? line : $"{line}, {CountOf(workers, "worker", "workers")}";
+            int changes = modifiers?.Count(entry => entry != null) ?? 0;
+            if (hits > 0) parts.Add(CountOf(hits, "on hit", "on hits"));
+            if (changes > 0) parts.Add(CountOf(changes, "modifier", "modifiers"));
+            if (workers > 0 || parts.Count == 0) parts.Add(CountOf(workers, "worker", "workers"));
+            return string.Join(", ", parts);
         }
 
         /// <summary>How many workers a group holds, across its four lists.</summary>

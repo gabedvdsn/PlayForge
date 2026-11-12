@@ -7,6 +7,10 @@ tracks each fix below by its ID.
 ## [Unreleased]
 
 ### Added
+- Effect modifiers: items, abilities, effects and entities change other effects as they're made, their holder's own or
+  those landing on it, picked by tag, with a contained effect added, an impact's number changed by a Value Pipeline
+  stage, an overflow added, a duration, stacks, a chance or granted tags changed; inline, or a shared Effect Modifier
+  asset (TW-7).
 - The Creator Lab's battle: teams of bots, a quick battle, play and reset; `LabBot`, a bot's mind, which the Demo's AI
   now is (LAB-9, LAB-10).
 - The Creator Lab, Window → PlayForge → Creator Lab: a space for trying a project's assets, its units, test dummies,

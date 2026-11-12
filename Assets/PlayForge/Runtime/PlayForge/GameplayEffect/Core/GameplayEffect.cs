@@ -23,6 +23,9 @@ namespace FarEmerald.PlayForge
 
         [Tooltip("Effects its holder's hits apply, or a kill's, while it lasts, the holder the one it's on (TW-6)")]
         public List<OnHitEntry> OnHit = new();
+
+        [Tooltip("Modifiers of other effects, its holder's own or those landing on it, while it lasts, the holder the one it's on (TW-7)")]
+        public List<EffectModifierEntry> Modifiers = new();
         
         public GameplayEffectImpact ImpactSpecification;
         public GameplayEffectDuration DurationSpecification;
@@ -172,6 +175,9 @@ namespace FarEmerald.PlayForge
 
             var spec = new GameplayEffectSpec(this, origin, target);
             ImpactSpecification.ApplyImpactSpecifications(spec);
+
+            // What its source's modifiers and its target's change of it, for this application alone (TW-7)
+            EffectModifiers.Apply(spec);
 
             return spec;
         }

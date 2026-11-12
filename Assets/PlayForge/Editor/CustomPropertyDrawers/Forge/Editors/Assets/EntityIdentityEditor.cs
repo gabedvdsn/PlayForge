@@ -486,13 +486,15 @@ namespace FarEmerald.PlayForge.Extended.Editor
                 HelpTopic = "entities/workers",
 
                 SerializedObject = serializedObject,
-                PropertyPaths = new[] { nameof(EntityIdentity.WorkerGroup) },
+                PropertyPaths = new[] { nameof(EntityIdentity.Modifiers), nameof(EntityIdentity.WorkerGroup) },
                 ImportAcrossTypes = true,
                 OnImportComplete = OnSectionReplaced,
                 OnClearComplete = OnSectionReplaced,
             });
             parent.Add(workersSection.Section);
 
+            // How it changes effects, its own or those landing on it, as long as it lives (TW-7)
+            workersSection.Content.Add(CreatePropertyField(serializedObject.FindProperty(nameof(EntityIdentity.Modifiers)), "Modifiers", "Modifiers"));
             workersSection.Content.Add(CreatePropertyField(serializedObject.FindProperty(nameof(EntityIdentity.WorkerGroup)), "WorkerGroup", ""));
         }
 
@@ -603,7 +605,7 @@ namespace FarEmerald.PlayForge.Extended.Editor
             if (abilitiesSection != null)
                 abilitiesSection.Summary.text = CountOf(entity.StartingAbilities?.Count(ability => ability != null) ?? 0, "ability", "abilities");
             if (itemsSection != null) itemsSection.Summary.text = ItemsSummary();
-            if (workersSection != null) workersSection.Summary.text = CountOf(WorkerCount(entity.WorkerGroup), "worker", "workers");
+            if (workersSection != null) workersSection.Summary.text = WorkersLine(null, entity.Modifiers, WorkerCount(entity.WorkerGroup));
             if (localDataSection != null) localDataSection.Summary.text = CountOf(entity.LocalData?.Count ?? 0, "entry", "entries");
             if (usedBySection != null) usedBySection.Summary.text = usedBy == null ? "" : CountOf(usedBy.Count, "asset", "assets");
         }

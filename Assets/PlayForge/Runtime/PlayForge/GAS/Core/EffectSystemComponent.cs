@@ -152,6 +152,7 @@ namespace FarEmerald.PlayForge
                 {
                     ApplyMadeFrom(spec, containedEffect);
                 }
+                ApplyAddedPackets(spec, EApplyTickRemove.OnApply);
             }
             finally
             {
@@ -171,8 +172,10 @@ namespace FarEmerald.PlayForge
         private static bool RollsToApply(GameplayEffectSpec spec)
         {
             var chance = spec.Base.ImpactSpecification?.ChanceToApply;
-            if (chance == null) return true;
-            float odds = chance.Evaluate(spec);
+            if (chance == null && spec.Changes == null) return true;
+            float odds = chance?.Evaluate(spec) ?? 1f;
+            // As its modifiers change it (TW-7)
+            if (spec.Changes != null) odds = spec.Changes.Chance(odds);
             if (odds >= 1f) return true;
             if (odds <= 0f) return false;
             return ForgeRandom.Value < odds;
@@ -213,7 +216,8 @@ namespace FarEmerald.PlayForge
         // overflow's (FEAT-2)
         private bool ApplyMadeFrom(GameplayEffectSpec from, GameplayEffect effect)
         {
-            var spec = Self.GenerateEffectSpec(from.GetOrigin(), effect);
+            // The rules whose added effect the one it's made from is change it no more (TW-7)
+            var spec = EffectModifiers.Make(Self, from.GetOrigin(), effect, from, null);
             spec?.TakeSetByCaller(from.SetByCallerMagnitudes);
             return ApplyGameplayEffect(spec);
         }
@@ -223,6 +227,7 @@ namespace FarEmerald.PlayForge
             var tagCache = Self.GetTagCache();
 
             tagCache.AddTags(spec.Base.Tags.GrantedTags);
+            if (spec.Changes != null) tagCache.AddTags(spec.Changes.GrantedTags);
             spec.RunWorkerApplication(new EffectWorkerContext(Self, spec, Self.GetFrameSummary(), Self.GetActionQueue()));
             
             // Commit every OnApply entry, per attribute. Undefined/null attribute targets
@@ -246,6 +251,7 @@ namespace FarEmerald.PlayForge
             spec.RunWorkerRemoval(new EffectWorkerContext(Self, spec, Self.GetFrameSummary(), Self.GetActionQueue(), 1,
                 impacts?[impacts.Count - 1], impacts));
             tagCache.RemoveTags(spec.Base.Tags.GrantedTags);
+            if (spec.Changes != null) tagCache.RemoveTags(spec.Changes.GrantedTags);
 
             // An instant effect lands and is over, so its cue is a burst (FEAT-1)
             Cue(spec, ECueMoment.Applied);
@@ -368,6 +374,9 @@ namespace FarEmerald.PlayForge
         // effect under its tag gives the container the other's spec first, and a load clears the shelf quietly (TW-6)
         private readonly Dictionary<AbstractEffectContainer, List<OnHitEntry>> onHitsLent = new();
 
+        // The modifiers each container gave its target, kept apart as its On Hits are (TW-7)
+        private readonly Dictionary<AbstractEffectContainer, List<EffectModifierEntry>> modifiersLent = new();
+
         // Gives the target each ability the container's effect grants, at the level of what applied it, and notes the slot
         // each took. One the target can't take, as one it knows already, isn't lent, so it isn't taken back either, as an
         // item's isn't (GAS-48). An effect couldn't lend an ability (FEAT-8). A restore lends them quietly, and compiles the
@@ -381,6 +390,15 @@ namespace FarEmerald.PlayForge
                 var given = new List<OnHitEntry>(onHit);
                 OnHits.Provide(given, Self);
                 onHitsLent[container] = given;
+            }
+
+            // Its modifiers, while it lasts (TW-7)
+            var modifiers = container.Spec.Base.Modifiers;
+            if (modifiers is { Count: > 0 })
+            {
+                var given = new List<EffectModifierEntry>(modifiers);
+                EffectModifiers.Provide(given, Self);
+                modifiersLent[container] = given;
             }
 
             var abilities = container.Spec.Base.GrantedAbilities;
@@ -405,6 +423,7 @@ namespace FarEmerald.PlayForge
         private void TakeBackAbilities(AbstractEffectContainer container)
         {
             if (onHitsLent.Count > 0 && onHitsLent.Remove(container, out var onHit)) OnHits.Remove(onHit, Self);
+            if (modifiersLent.Count > 0 && modifiersLent.Remove(container, out var modifiers)) EffectModifiers.Remove(modifiers, Self);
 
             if (lent.Count == 0 || !lent.Remove(container, out var slots)) return;
             var abilitySystem = Self.GetAbilitySystem();
@@ -467,6 +486,21 @@ namespace FarEmerald.PlayForge
             foreach (var containedEffect in spec.Base.ImpactSpecification.GetContainedEffects(EApplyTickRemove.OnTick))
             {
                 ApplyMadeFrom(spec, containedEffect);
+            }
+            ApplyAddedPackets(spec, EApplyTickRemove.OnTick);
+        }
+
+        // The contained effects its modifiers add for a moment, each made with the rule that added it kept from changing
+        // it again; those as it ends come through its container's removal, as its own do (TW-7)
+        private void ApplyAddedPackets(GameplayEffectSpec spec, EApplyTickRemove when)
+        {
+            if (spec.Changes == null || spec.Changes.Packets.Count == 0) return;
+            foreach (var packet in spec.Changes.Packets)
+            {
+                if (packet.When != when || packet.Effect == null) continue;
+                var made = EffectModifiers.Make(Self, spec.GetOrigin(), packet.Effect, spec, packet.AddedBy);
+                made?.TakeSetByCaller(spec.SetByCallerMagnitudes);
+                ApplyGameplayEffect(made);
             }
         }
 
@@ -592,10 +626,20 @@ namespace FarEmerald.PlayForge
         // stack past the max did nothing, so a bleed couldn't hemorrhage at its fourth stack (FEAT-8, Decision 30)
         private void Overflow(AbstractStackingEffectContainer container, StackBoundsConfig bound, GameplayEffectSpec spec)
         {
-            if (bound.ClearStacksOnOverflow && !finishedSet.Contains(container)) MarkFinished(container);
-            if (bound.OverflowEffects == null) return;
-            for (int i = 0; i < bound.OverflowEffects.Count; i++)
-                if (bound.OverflowEffects[i] != null) ApplyMadeFrom(spec, bound.OverflowEffects[i]);
+            bool clear = bound.ClearStacksOnOverflow || (spec.Changes?.ClearStacksOnOverflow ?? false);
+            if (clear && !finishedSet.Contains(container)) MarkFinished(container);
+            if (bound.OverflowEffects != null)
+                for (int i = 0; i < bound.OverflowEffects.Count; i++)
+                    if (bound.OverflowEffects[i] != null) ApplyMadeFrom(spec, bound.OverflowEffects[i]);
+
+            // And those its modifiers add, each kept from the rule that added it (TW-7)
+            if (spec.Changes == null) return;
+            foreach (var overflow in spec.Changes.Overflows)
+            {
+                var made = EffectModifiers.Make(Self, spec.GetOrigin(), overflow.Effect, spec, overflow.AddedBy);
+                made?.TakeSetByCaller(spec.SetByCallerMagnitudes);
+                ApplyGameplayEffect(made);
+            }
         }
 
         // ═══════════════════════════════════════════════════════════════════════════
@@ -861,6 +905,8 @@ namespace FarEmerald.PlayForge
             // The On Hits they gave are the ability system's, which keeps them through its own clear (TW-6)
             foreach (var onHit in onHitsLent.Values) OnHits.Remove(onHit, Self);
             onHitsLent.Clear();
+            foreach (var modifiers in modifiersLent.Values) EffectModifiers.Remove(modifiers, Self);
+            modifiersLent.Clear();
             requirementsDirty = true;
         }
 

@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 namespace FarEmerald.PlayForge
 {
     /// <summary>
@@ -51,6 +52,12 @@ namespace FarEmerald.PlayForge
         /// periodic one's. None, it lands as it's evaluated (TW-2).
         /// </summary>
         ValuePipeline Pipeline => null;
+
+        /// <summary>
+        /// The stages its holders' modifiers add, run after its pipeline as it commits and kept in the hit's breakdown; a
+        /// lasting impact runs them on its magnitude itself (TW-7). None by default.
+        /// </summary>
+        IReadOnlyList<AbstractValueStage> Stages => null;
 
         /// <summary>
         /// Retention group this impacter's contribution is attributed to (per-group value

@@ -299,6 +299,36 @@ poisoned blade, a boon's Weak (TW-6). Its entries are an item's: an attribute, t
 holder, only on a kill, impact types and a condition ([ITEMS.md](ITEMS.md#on-hit)). An Instant effect doesn't last, so
 its On Hit does nothing. Another effect that replaces it under its tag takes it off, and a load puts it back once.
 
+### Modifiers
+
+**Modifiers**, under On Hit, change other effects as they're made, for that application alone (TW-7): a boon that adds
+a burst to every Chill its holder applies, a ring that makes its holder's debuffs last longer, a cloak that halves the
+stuns landing on its wearer. An effect's hold on the one it's on while it lasts; an item's, an ability's and an entity's
+modifiers are the same entries. Each entry is a rule of its own, or names a shared **Effect Modifier** asset (**Create →
+PlayForge → Effect Modifier**), whose rule it uses in its place.
+
+A rule has:
+
+- **Direction**: **Outgoing**, its holder's own effects as it applies them, on another or itself; **Incoming**, the
+  effects landing on its holder, whoever applies them; or **Both**.
+- **Effect Tags**: the effects it changes, each with one of these among its asset tag and context tags, or a child of
+  one, so `Status.Chill` picks every Chill. None picks every effect.
+- **When**: a condition read as the effect is made, its caster the caster and its target the target.
+- **Changes**, each of a kind:
+  - **Add Contained Effect**: an effect that lands on the target as this one lands, each tick, or as it ends.
+  - **Change Impact**: a Value Pipeline stage its impacts on an attribute go through, of some impact types where it
+    names any. An impact that commits, a hit or a tick, runs it after its own pipeline, and its breakdown keeps it; a
+    lasting impact, which no pipeline runs on, takes it on its magnitude, as Weak's −30% made −40%.
+  - **Add Overflow Effect**: an effect that lands as an application would take it past its most stacks, and **Clear
+    Stacks**, which takes its stacks off with it. It needs a stack bound of the effect's own to overflow.
+  - **Change Duration**: its time multiplied, then more added; its ticks spread over the time it has.
+  - **Change Stacks**: more it can hold at most, where a stack bound of its own sets a most, and more a landing gives.
+  - **Change Chance to Apply**: multiplied, then added to.
+  - **Grant Tags**: more tags it grants while it's on.
+
+An effect a rule adds, and what that effect contains, isn't changed by that rule again, so a Chill that adds a Chill
+adds one. Two of an item modify twice.
+
 ## Local Data
 
 Local Data is a list of named values stored on the asset. Each row has a **Key** (a tag), a **Type**, and a value of

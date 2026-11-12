@@ -25,6 +25,10 @@ does.
 It runs for what an impact commits: an instant impact's hit, and each tick of a periodic one. A lasting impact, as +10
 Strength while a buff holds, is read again whenever its attribute changes, so a pipeline doesn't run it.
 
+A modifier's **Change Impact** brings a stage of its own (TW-7, [EFFECTS.md](EFFECTS.md#modifiers)): a hit runs it after
+its pipeline, or alone where it has none, and the breakdown keeps it with the pipeline's steps; a lasting impact takes it
+on its magnitude.
+
 ## Stages
 
 Each stage has a **Label**, the name a breakdown gives it, and **Enabled**, which lets the value pass it by.

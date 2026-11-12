@@ -123,6 +123,10 @@ the same time. **Name** labels the group. It holds four lists:
 Each list's **+** adds an empty worker to pick a kind for. The section's import button copies a worker group
 from another asset.
 
+**Modifiers**, above the workers, change other effects as they're made for as long as the entity lives: its own, as a
+Frost Mage's every Chill granting Frozen, or those landing on it (TW-7). Each entry is a rule of its own or names a
+shared Effect Modifier asset ([EFFECTS.md](EFFECTS.md#modifiers)).
+
 ## Death
 
 What the entity's death does (TW-4). **Policy** is **End** by default: as it dies, its hub ends it at its frame's end,

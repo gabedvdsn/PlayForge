@@ -1,3 +1,5 @@
+using System.Collections.Generic;
+
 namespace FarEmerald.PlayForge
 {
     /// <summary>
@@ -21,6 +23,12 @@ namespace FarEmerald.PlayForge
         public ValuePipeline         Pipeline { get; }
         public Tag                   Group { get; }
 
+        /// <summary>The modifiers' stages for it (TW-7): on its magnitude where it lasts, after its pipeline as it commits.</summary>
+        public IReadOnlyList<AbstractValueStage> Stages { get; }
+
+        // A lasting impact's stages run on its magnitude, as no pipeline runs on it
+        private readonly bool stagesOnMagnitude;
+
         public ScalerImpacter(
             ScalableFloat magnitudeOperation,
             ECalculationOperation operation,
@@ -29,7 +37,9 @@ namespace FarEmerald.PlayForge
             EMultiplyBehaviour multiplyBehaviour = EMultiplyBehaviour.Multiplicative,
             Tag group = default,
             EAddBehaviour addBehaviour = EAddBehaviour.AttributeRole,
-            ValuePipeline pipeline = null)
+            ValuePipeline pipeline = null,
+            IReadOnlyList<AbstractValueStage> stages = null,
+            bool stagesOnMagnitude = false)
         {
             this.magnitudeOperation = magnitudeOperation;
             Operation         = operation;
@@ -39,9 +49,17 @@ namespace FarEmerald.PlayForge
             AddBehaviour      = addBehaviour;
             Pipeline          = pipeline;
             Group             = group.IsValid ? group : Tags.IgnoreRetention;
+            Stages            = stages is { Count: > 0 } ? stages : null;
+            this.stagesOnMagnitude = stagesOnMagnitude && Stages != null;
         }
 
         public float Evaluate(IAttributeImpactCarrier carrier)
+        {
+            float value = EvaluateOwn(carrier);
+            return stagesOnMagnitude ? ValuePipeline.RunAfter(Stages, value, carrier, null, false) : value;
+        }
+
+        private float EvaluateOwn(IAttributeImpactCarrier carrier)
         {
             if (magnitudeOperation is null) return 0f;
 

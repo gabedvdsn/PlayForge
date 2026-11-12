@@ -43,6 +43,9 @@ namespace FarEmerald.PlayForge
         [Tooltip("Effects its holder's hits apply, or a kill's, while it's known (TW-6)")]
         public List<OnHitEntry> OnHit = new();
 
+        [Tooltip("Modifiers of other effects, its holder's own or those landing on it, while it's known (TW-7)")]
+        public List<EffectModifierEntry> Modifiers = new();
+
         // ═══════════════════════════════════════════════════════════════════════════
         // Level Provider Linking
         // ═══════════════════════════════════════════════════════════════════════════
@@ -213,11 +216,13 @@ namespace FarEmerald.PlayForge
         {
             WorkerGroup?.ProvideWorkersTo(system);
             OnHits.Provide(OnHit, system);
+            EffectModifiers.Provide(Modifiers, system);
         }
         public void RemoveWorkers(ISource system)
         {
             WorkerGroup?.RemoveWorkersFrom(system);
             OnHits.Remove(OnHit, system);
+            EffectModifiers.Remove(Modifiers, system);
         }
     }
 

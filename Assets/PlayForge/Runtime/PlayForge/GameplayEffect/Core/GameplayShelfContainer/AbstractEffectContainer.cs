@@ -163,6 +163,9 @@ namespace FarEmerald.PlayForge
             // of whoever had affected it (GAS-14)
             yield return Spec.Base.GetAssetTag();
             foreach (var t in Spec.Base.GetGrantedTags()) yield return t;
+            // And those its modifiers add (TW-7)
+            if (Spec.Changes != null)
+                foreach (var t in Spec.Changes.GrantedTags) yield return t;
         }
 
     }

@@ -34,6 +34,9 @@ namespace FarEmerald.PlayForge
         public TagCache TagCache { get; }
         public GameplayAbilitySystemCallbacks Callbacks { get; }
 
+        /// <summary>The modifiers the entity holds now: its own, its items', its abilities' and its effects' (TW-7).</summary>
+        public EffectModifierSet EffectModifiers { get; } = new();
+
         /// <summary>The entity's settings as this GAS uses them, or null for a hub given none.</summary>
         public RuntimeEntityIdentity Identity { get; private set; }
 

@@ -47,6 +47,8 @@ namespace FarEmerald.PlayForge
             cache.AddTag(spec.Base.Tags.AssetTag);
             if (spec.Base.GetGrantedTags() is List<Tag> granted) AddAll(cache, granted);
             else foreach (var t in spec.Base.GetGrantedTags()) cache.AddTag(t);
+            // And those its modifiers add (TW-7)
+            if (spec.Changes != null) AddAll(cache, spec.Changes.GrantedTags);
         }
 
         public static void AddAll(TagCache cache, List<Tag> tags)

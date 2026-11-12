@@ -372,7 +372,7 @@ namespace FarEmerald.PlayForge.Extended.Editor
                 HelpTopic = "items/workers",
 
                 SerializedObject = serializedObject,
-                PropertyPaths = new[] { nameof(Item.OnHit), nameof(Item.WorkerGroup) },
+                PropertyPaths = new[] { nameof(Item.OnHit), nameof(Item.Modifiers), nameof(Item.WorkerGroup) },
                 ImportAcrossTypes = true,
                 OnImportComplete = OnSectionReplaced,
                 OnClearComplete = OnSectionReplaced,
@@ -381,6 +381,8 @@ namespace FarEmerald.PlayForge.Extended.Editor
 
             // The effects its holder's hits apply (TW-6)
             workersSection.Content.Add(CreatePropertyField(serializedObject.FindProperty(nameof(Item.OnHit)), "OnHit", "On Hit"));
+            // How it changes other effects, its holder's or those landing on it (TW-7)
+            workersSection.Content.Add(CreatePropertyField(serializedObject.FindProperty(nameof(Item.Modifiers)), "Modifiers", "Modifiers"));
             workersSection.Content.Add(CreatePropertyField(serializedObject.FindProperty(nameof(Item.WorkerGroup)), "WorkerGroup", ""));
         }
 
@@ -469,7 +471,7 @@ namespace FarEmerald.PlayForge.Extended.Editor
                 tagsSection.Summary.text = TagsSummary(item.Tags.ContextTags, "context tags", item.Tags.PassiveGrantedTags?.Count(tag => tag.IsValid) ?? 0);
             if (effectsSection != null) effectsSection.Summary.text = CountOf(item.GrantedEffects?.Count(effect => effect != null) ?? 0, "effect", "effects");
             if (abilitiesSection != null) abilitiesSection.Summary.text = item.ActiveAbility != null ? NameOf(item.ActiveAbility) : "None";
-            if (workersSection != null) workersSection.Summary.text = WorkersLine(item.OnHit, WorkerCount(item.WorkerGroup));
+            if (workersSection != null) workersSection.Summary.text = WorkersLine(item.OnHit, item.Modifiers, WorkerCount(item.WorkerGroup));
             if (localDataSection != null) localDataSection.Summary.text = CountOf(item.LocalData?.Count ?? 0, "entry", "entries");
             if (usedBySection != null) usedBySection.Summary.text = usedBy == null ? "" : CountOf(usedBy.Count, "asset", "assets");
         }

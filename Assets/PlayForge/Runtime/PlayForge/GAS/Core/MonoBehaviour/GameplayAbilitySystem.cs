@@ -134,6 +134,7 @@ namespace FarEmerald.PlayForge
             => core.EffectSystem.GetLongestDurationFor(lookForTags);
 
         public GameplayAbilitySystemCallbacks GetCallbacks() => Callbacks;
+        public EffectModifierSet GetEffectModifiers() => core.EffectModifiers;
 
         #endregion
 

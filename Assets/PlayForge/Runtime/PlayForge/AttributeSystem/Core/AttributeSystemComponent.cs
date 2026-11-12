@@ -472,6 +472,9 @@ namespace FarEmerald.PlayForge
                     float magnitude = imp.Evaluate(carrier);
                     // Through its calculation, once for the hit, so a roll in it is drawn once (TW-2)
                     if (imp.Pipeline != null) magnitude = imp.Pipeline.Run(magnitude, carrier, (carrier as GameplayEffectSpec)?.TakeBreakdown());
+                    // Then its holders' modifiers' stages, in the same breakdown (TW-7)
+                    if (imp.Stages != null && imp.Operation != ECalculationOperation.Override)
+                        magnitude = ValuePipeline.RunAfter(imp.Stages, magnitude, carrier, (carrier as GameplayEffectSpec)?.TakeBreakdown(), imp.Pipeline != null);
                     Next().Set(magnitude, imp.Operation, imp.TargetSlot, imp.SortOrder, imp.MultiplyBehaviour, imp.Group);
                 }
             }

@@ -53,6 +53,9 @@ namespace FarEmerald.PlayForge
 
         public StandardWorkerGroup WorkerGroup;
 
+        [Tooltip("Modifiers of other effects, its holder's own or those landing on it, while it lives (TW-7)")]
+        public List<EffectModifierEntry> Modifiers = new();
+
         [Tooltip("What its death does: End, as an entity always did, or Stay, dead, until it revives, with the effects its " +
                  "death ends and takes, and its body (TW-4)")]
         public EntityDeath Death = new();

@@ -127,7 +127,10 @@ namespace FarEmerald.PlayForge
         private void ApplyDurationalSpecs(AbstractEffectContainer container)
         {
             // Apply duration
-            container.SetTotalDuration(GetTotalDuration(container.Spec));
+            // As its modifiers change it, for this application alone (TW-7)
+            float total = GetTotalDuration(container.Spec);
+            if (container.Spec.Changes != null) total = container.Spec.Changes.Duration(total);
+            container.SetTotalDuration(total);
             container.SetDurationRemaining(container.TotalDuration);
             
             // Apply period - only if periodic ticks are enabled
@@ -279,6 +282,8 @@ namespace FarEmerald.PlayForge
             int stacks = AbstractScaler.IsNone(StackAmountOperation.Scaler)
                 ? Mathf.Max(1, StackAmountOperation.Magnitude)
                 : ForgeHelper.MagnitudeAndScalerOperation(StackAmountOperation.Magnitude, StackAmountOperation.Scaler.Evaluate(container), StackAmountOperation.RealMagnitude, StackAmountOperation.Rounding);
+            // More a landing gives, as its modifiers say (TW-7)
+            if (container.Spec?.Changes != null) stacks += container.Spec.Changes.StacksPerLanding;
 
             foreach (var behaviour in ConfigsByPriority())
             {
