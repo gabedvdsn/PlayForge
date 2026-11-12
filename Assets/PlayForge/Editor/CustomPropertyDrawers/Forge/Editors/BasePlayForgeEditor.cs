@@ -830,10 +830,13 @@ namespace FarEmerald.PlayForge.Extended.Editor
             if (isUnknown || (stored.Name == result && stored.DisplayName == display)) return;
 
             Undo.RecordObject(asset, "Update Asset Tag");
+            var from = stored.Name;
             stored.Name = result;
             stored.DisplayName = display;
             store(stored);
             EditorUtility.SetDirty(asset);
+            // What stored its old tag stores the new one, or it finds the asset no more (ED-84)
+            ForgeTagRenames.Rename(from, result, display, asset);
         }
 
         // ═══════════════════════════════════════════════════════════════════════════

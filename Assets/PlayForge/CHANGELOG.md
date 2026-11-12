@@ -599,6 +599,8 @@ tracks each fix below by its ID.
   Asking whether its sequence was paused took 24 bytes a frame.
 
 ### Fixed
+- Updating an asset's tag, from the Problems window or Identity, carries the new tag to every asset that stored the old
+  one, as an Asset Part that finds the asset by it; it changed the asset's tag alone, and what named it broke (ED-84).
 - An impact worker's context names its holder, the hit's dealer, as its System; it named the one hit (GAS-72).
 - An ability's effects with no delay between them land in one frame; a delay of 0 waited a frame (GAS-74).
 - Auto Target and Auto Target by Affinity find runtime entities, with no range and within one; they found MonoBehaviour

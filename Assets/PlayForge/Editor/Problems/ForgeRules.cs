@@ -88,8 +88,11 @@ namespace FarEmerald.PlayForge.Extended.Editor
                 {
                     var tag = serialized.FindProperty("Tags.AssetTag") ?? serialized.FindProperty("AssetTag");
                     if (tag == null) return;
+                    var from = tag.FindPropertyRelative(nameof(Tag.Name)).stringValue;
                     tag.FindPropertyRelative(nameof(Tag.Name)).stringValue = result;
                     tag.FindPropertyRelative(nameof(Tag.DisplayName)).stringValue = display;
+                    // What stored its old tag stores the new one, or it finds the asset no more (ED-84)
+                    ForgeTagRenames.Rename(from, result, display, asset);
                 })),
             });
         }
