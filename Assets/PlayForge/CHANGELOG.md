@@ -7,6 +7,10 @@ tracks each fix below by its ID.
 ## [Unreleased]
 
 ### Added
+- An entity that stays when it dies: an identity's Death says End, as before, or Stay, with the effects its death ends
+  by tag, the effects it takes as it dies and revives, and its Body, a MonoBehaviour process that goes as it dies and
+  comes back as it revives; `Revive(at)` on either hub, `ReviveOnRemovalEffectWorker` for a respawn timer, `GetBody()`,
+  and `OnEntityRevived` (TW-4).
 - Value Pipelines: an asset of ordered stages (Multiply, Add, Chance, Clamp, Absorb, or a project's own) that an
   effect's impact names as its calculation, run once for each hit as it lands, with a breakdown of each stage kept on the
   spec (TW-2). `Documentation/VALUE_PIPELINES.md`.

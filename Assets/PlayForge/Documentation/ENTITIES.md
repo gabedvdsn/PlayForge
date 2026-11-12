@@ -123,6 +123,24 @@ the same time. **Name** labels the group. It holds four lists:
 Each list's **+** adds an empty worker to pick a kind for. The section's import button copies a worker group
 from another asset.
 
+## Death
+
+What the entity's death does (TW-4). **Policy** is **End** by default: as it dies, its hub ends it at its frame's end,
+as an entity always did. **Stay** keeps it, dead, until it revives: a MOBA hero, or anyone who dies and comes back.
+
+- A staying entity dies at its frame's end and stays registered, with its items, levels and lasting effects. Its
+  abilities are refused while it's dead.
+- **Ends Effects Tagged**: the effects its death ends, by an asset, context or granted tag, as a cleanse ends them: its
+  buffs and debuffs. The rest go on, as its cooldowns.
+- **On Death**: the effects it takes as it dies. A respawn timer is a durational effect with a **Revive On Removal**
+  worker: as it ends, the entity revives, where it was or at a point.
+- **On Revive**: the effects it takes as it revives, as its health back.
+- **Body**: a MonoBehaviour process, a prefab, that it spawns where it is as it starts and as it revives, and ends as it
+  dies. A runtime entity takes its position from its body, so an area search finds it there; `GetBody()` returns it.
+
+`Revive(at)` on either hub brings a staying entity back, at a point or where it was; it re-arms the entity's analysis
+workers, so its death watcher sees its next death. Callbacks hear `OnEntityRevived`, as they hear `OnEntityDied`.
+
 ## Local Data
 
 Local Data is a list of named values stored on the asset. Each row has a **Key** (a tag), a **Type**, and a value of

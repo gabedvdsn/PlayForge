@@ -319,6 +319,9 @@ namespace FarEmerald.PlayForge
         // An asset's Local Data. The copy left it out, so a runtime GAS made from an asset had none (GAS-S1)
         public List<DataWrapper> LocalData = new();
 
+        /// <summary>What its death does, as <see cref="EntityIdentity.Death"/> (TW-4).</summary>
+        public EntityDeath Death = new();
+
         public RuntimeEntityIdentity()
         {
         }
@@ -347,6 +350,7 @@ namespace FarEmerald.PlayForge
             TimeScaleAttribute = data.TimeScaleAttribute;
             WorkerGroup = data.WorkerGroup;
             LocalData = data.LocalData;
+            Death = data.Death;
         }
 
         public string GetName()

@@ -38,6 +38,12 @@ namespace FarEmerald.PlayForge
         /// </summary>
         public void MarkDead() => core?.MarkDead();
 
+        /// <summary>Brings it back where it stays, as its death says (TW-4).</summary>
+        public bool Revive(Vector3? at = null) => core?.Revive(at) ?? false;
+
+        /// <summary>The body it follows, while it has one (TW-4).</summary>
+        public AbstractMonoProcess GetBody() => core?.Body;
+
         /// <summary>
         /// Called after frame is fully complete, once the entity has died.
         /// </summary>

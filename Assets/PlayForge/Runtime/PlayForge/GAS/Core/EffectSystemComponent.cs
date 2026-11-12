@@ -592,6 +592,23 @@ namespace FarEmerald.PlayForge
             return RemoveGameplayEffect(effect.Tags.AssetTag);
         }
 
+        /// <summary>
+        /// Ends each effect on the shelf that one of <paramref name="tags"/> names, by its asset tag, a context tag or a tag it
+        /// grants, or one under them, as a cleanse ends them; how many it ended (TW-4).
+        /// </summary>
+        public int RemoveEffectsTagged(List<Tag> tags)
+        {
+            if (tags == null || tags.Count == 0) return 0;
+            int ended = 0;
+            foreach (var container in Shelf)
+            {
+                if (finishedSet.Contains(container) || !GameplayEffectTags.Names(tags, container.Spec.Base)) continue;
+                MarkFinished(container);
+                ended++;
+            }
+            return ended;
+        }
+
         public bool RemoveGameplayEffect(Tag identifier)
         {
             if (!byTag.TryGetValue(identifier, out var same) || same.Count == 0) return false;

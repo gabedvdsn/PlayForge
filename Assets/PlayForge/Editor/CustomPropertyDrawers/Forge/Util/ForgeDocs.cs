@@ -56,6 +56,7 @@ namespace FarEmerald.PlayForge.Extended.Editor
             ["entities/items"]             = ("ENTITIES.md", "Items"),
             ["entities/attributes"]        = ("ENTITIES.md", "Attributes"),
             ["entities/workers"]           = ("ENTITIES.md", "Workers"),
+            ["entities/death"]             = ("ENTITIES.md", "Death"),
             ["entities/localdata"]         = ("ENTITIES.md", "Local Data"),
             ["attributes"]                 = ("ATTRIBUTES.md", null),
             // The Identity and Used By sections keep their first topic names, from Definition and Usage

@@ -21,6 +21,11 @@ namespace FarEmerald.PlayForge
         private List<Tag> affiliation;
         private bool pendingDestruction;
 
+        // A staying entity's death, run at its frame's end, and its body while it has one (TW-4)
+        private bool pendingDeath;
+        private ProcessRelay bodyRelay;
+        private AbstractMonoProcess body;
+
         public AttributeSystemComponent AttributeSystem { get; }
         public AbilitySystemComponent AbilitySystem { get; }
         public ItemSystemComponent ItemSystem { get; }
@@ -103,6 +108,9 @@ namespace FarEmerald.PlayForge
 
             // Once attributes, items and tags exist, so the rules can check them (GAS-49)
             AbilitySystem.ActivateImmediateAbilities();
+
+            // Its body, where it is (TW-4)
+            SpawnBody();
 
             Callbacks?.SystemInitialized();
         }
@@ -222,6 +230,14 @@ namespace FarEmerald.PlayForge
 
             FrameSummary.Clear();
 
+            // A staying entity dies here, once the frame's work is done, and stays; one with a body follows it (TW-4)
+            if (pendingDeath)
+            {
+                pendingDeath = false;
+                Die();
+            }
+            FollowBody();
+
             if (!pendingDestruction) return false;
 
             Callbacks?.SystemDisabled();
@@ -236,6 +252,7 @@ namespace FarEmerald.PlayForge
         {
             AbilitySystem.ShutDown();
             ForgeEntities.Remove(owner);
+            EndBody();
 
             // Its effects leave the Effects Active counter with it (FEAT-18)
             ForgeCounters.EffectsActive.Value -= countedEffects;
@@ -273,7 +290,78 @@ namespace FarEmerald.PlayForge
             Callbacks?.EntityDied(owner);
             FrameSummary?.RecordDeath(owner);
 
-            pendingDestruction = true;
+            // One that stays dies at its frame's end and stays; any other ends there, as it always did (TW-4)
+            if (EntityDeath.Stays(Identity?.Death)) pendingDeath = true;
+            else pendingDestruction = true;
+        }
+
+        // ═══════════════════════════════════════════════════════════════════════════
+        // Staying dead, reviving, and the body (TW-4)
+        // ═══════════════════════════════════════════════════════════════════════════
+
+        /// <summary>The body it follows, while it has one: the MonoBehaviour process its identity's death names.</summary>
+        public AbstractMonoProcess Body => body ? body : null;
+
+        /// <summary>
+        /// Brings a staying entity back: alive, its analysis workers ready to see its next death, its revive effects taken,
+        /// its body spawned at <paramref name="at"/>, or where it was. False where it isn't dead, or doesn't stay.
+        /// </summary>
+        public bool Revive(UnityEngine.Vector3? at = null)
+        {
+            if (!IsDead || !EntityDeath.Stays(Identity?.Death)) return false;
+            IsDead = false;
+            pendingDeath = false;
+            foreach (var worker in AnalysisCache.Workers) worker?.Rearm(owner);
+            if (at.HasValue && owner.GetTargetingPacket() is { } packet) packet.position = at.Value;
+            ApplyEach(Identity.Death.OnRevive);
+            SpawnBody();
+            Callbacks?.EntityRevived(owner);
+            return true;
+        }
+
+        // A staying entity's death: the effects it ends, its body gone, the effects it takes, as a respawn timer
+        private void Die()
+        {
+            var death = Identity?.Death;
+            if (death == null) return;
+            if (death.EndsEffectsTagged is { Count: > 0 }) EffectSystem.RemoveEffectsTagged(death.EndsEffectsTagged);
+            EndBody();
+            ApplyEach(death.OnDeath);
+        }
+
+        // Each effect, from the entity to itself
+        private void ApplyEach(List<GameplayEffect> effects)
+        {
+            if (effects == null || effects.Count == 0) return;
+            var origin = IEffectOrigin.GenerateSourceDerivation(owner);
+            foreach (var effect in effects)
+                if (effect != null) owner.ApplyGameplayEffect(owner.GenerateEffectSpec(origin, effect));
+        }
+
+        // Its body, from its template, where the entity is
+        private void SpawnBody()
+        {
+            var template = Identity?.Death?.Body;
+            if (template == null || Body != null) return;
+            var data = ProcessDataPacket.Default();
+            if (owner.GetTargetingPacket() is { } packet) data.SetPrimary(Tags.POSITION, packet.position);
+            var made = ProcessControl.Register(template).HandledBy(owner).With(data).In(ProcessWorld.Of(owner)).Run();
+            bodyRelay = made.Relay;
+            body = bodyRelay != null && bodyRelay.TryGetProcess<AbstractMonoProcess>(out var spawned) ? spawned : null;
+        }
+
+        private void EndBody()
+        {
+            if (bodyRelay != null && Body != null) bodyRelay.Terminate();
+            bodyRelay = null;
+            body = null;
+        }
+
+        // A runtime entity is where its body is. A MonoBehaviour entity has a place of its own
+        private void FollowBody()
+        {
+            if (owner is UnityEngine.Object || Body == null) return;
+            if (owner.GetTargetingPacket() is { } packet) packet.position = body.transform.position;
         }
 
         public void RecordImpactDealt(ImpactData impact)

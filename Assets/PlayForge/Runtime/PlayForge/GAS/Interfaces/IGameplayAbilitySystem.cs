@@ -4,6 +4,15 @@ namespace FarEmerald.PlayForge
 {
     public interface IGameplayAbilitySystem : ISource, ILocalDataUser, IAnalysisUser, IProxyTaskBehaviourCaller
     {
+        /// <summary>
+        /// Brings a staying entity back, at <paramref name="at"/> or where it was: alive, its revive effects taken, its
+        /// body spawned. False where it isn't dead, or doesn't stay (TW-4).
+        /// </summary>
+        public bool Revive(UnityEngine.Vector3? at = null) => false;
+
+        /// <summary>The body a staying entity follows, while it has one (TW-4).</summary>
+        public AbstractMonoProcess GetBody() => null;
+
         public AttributeSystemComponent GetAttributeSystem();
         public AbilitySystemComponent GetAbilitySystem();
 

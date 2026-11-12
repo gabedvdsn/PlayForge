@@ -43,6 +43,7 @@ namespace FarEmerald.PlayForge.Extended.Editor
         private SectionResult abilitiesSection;
         private SectionResult itemsSection;
         private SectionResult workersSection;
+        private SectionResult deathSection;
         private SectionResult localDataSection;
         private SectionResult usedBySection;
         private ForgeUsedBy usedBy;
@@ -111,6 +112,8 @@ namespace FarEmerald.PlayForge.Extended.Editor
             BuildAttributesSection(parent);
             BuildAbilitiesSection(parent);
             BuildItemsSection(parent);
+            // The entity's own, before Workers and Local Data, as the style doc orders them
+            BuildDeathSection(parent);
             BuildWorkersSection(parent);
             BuildLocalDataSection(parent);
             BuildUsedBySection(parent);
@@ -491,6 +494,25 @@ namespace FarEmerald.PlayForge.Extended.Editor
             parent.Add(workersSection.Section);
 
             workersSection.Content.Add(CreatePropertyField(serializedObject.FindProperty(nameof(EntityIdentity.WorkerGroup)), "WorkerGroup", ""));
+        }
+
+        // What its death does: End, or Stay with the effects it ends and takes, and its body (TW-4)
+        private void BuildDeathSection(VisualElement parent)
+        {
+            deathSection = CreateSection(new SectionConfig
+            {
+                Name = "Death",
+                Title = "Death",
+                HelpTopic = "entities/death",
+
+                SerializedObject = serializedObject,
+                PropertyPaths = new[] { nameof(EntityIdentity.Death) },
+                OnImportComplete = OnSectionReplaced,
+                OnClearComplete = OnSectionReplaced,
+            });
+            parent.Add(deathSection.Section);
+
+            deathSection.Content.Add(CreatePropertyField(serializedObject.FindProperty(nameof(EntityIdentity.Death)), "Death", ""));
         }
 
         // ═══════════════════════════════════════════════════════════════════════════

@@ -52,6 +52,10 @@ namespace FarEmerald.PlayForge
         public Attribute TimeScaleAttribute;
 
         public StandardWorkerGroup WorkerGroup;
+
+        [Tooltip("What its death does: End, as an entity always did, or Stay, dead, until it revives, with the effects its " +
+                 "death ends and takes, and its body (TW-4)")]
+        public EntityDeath Death = new();
         
         public override string GetName()
         {

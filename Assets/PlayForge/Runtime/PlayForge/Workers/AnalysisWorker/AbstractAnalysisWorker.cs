@@ -62,6 +62,12 @@ namespace FarEmerald.PlayForge
             if (!system.TryGetLocalData(MyKey, out var data)) return;
             data.boolValue = false;
         }
+
+        /// <summary>
+        /// Ready to fire again, as an entity that revives readies its death watcher for its next death (TW-4). Each worker
+        /// that fires once is re-armed so; one that keeps more overrides it.
+        /// </summary>
+        public virtual void Rearm(ILocalDataUser system) => ResetTriggered(system);
     }
 
     [Serializable]

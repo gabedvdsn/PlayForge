@@ -364,5 +364,12 @@ namespace FarEmerald.PlayForge
         public event DeathDelegate OnEntityDied { add => _onEntityDied += value; remove => _onEntityDied -= value; }
         
         public void EntityDied(IGameplayAbilitySystem system) => _onEntityDied?.Invoke(system);
+
+        private event DeathDelegate _onEntityRevived;
+
+        /// <summary>A staying entity revived (TW-4).</summary>
+        public event DeathDelegate OnEntityRevived { add => _onEntityRevived += value; remove => _onEntityRevived -= value; }
+
+        public void EntityRevived(IGameplayAbilitySystem system) => _onEntityRevived?.Invoke(system);
     }
 }
