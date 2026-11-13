@@ -122,7 +122,7 @@ namespace FarEmerald.PlayForge
 
     public abstract class AbstractTagValidationRule : IAbilityValidationRule
     {
-        [ForgeTagContext(ForgeContext.Granted, ForgeContext.AssetTag)]
+        [ForgeTagContext(ForgeContext.Granted, ForgeContext.AssetTag, ForgeContext.LocalDataKey)]
         public Tag Tag;
 
         public virtual DataWrapper GetValue(AbilityDataPacket data)

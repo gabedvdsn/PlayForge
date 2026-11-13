@@ -29,7 +29,7 @@ namespace FarEmerald.PlayForge
         public EModifierDirection Direction = EModifierDirection.Outgoing;
 
         [Tooltip("The effects it changes: one with any of these among its asset tag and context tags, or a child of one. None, every effect")]
-        [ForgeTagContext(ForgeContext.AssetTag)]
+        [ForgeTagContext(ForgeContext.AssetTag, ForgeContext.ContextTag)]
         public List<Tag> EffectTags = new();
 
         [Tooltip("Only while this holds, read as the effect is made: its caster the caster, its target the target")]

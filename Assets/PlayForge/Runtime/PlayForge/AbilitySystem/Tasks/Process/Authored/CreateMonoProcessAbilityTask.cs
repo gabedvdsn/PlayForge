@@ -5,6 +5,7 @@ using System.Threading;
 using Cysharp.Threading.Tasks;
 using UnityEngine;
 using UnityEngine.Serialization;
+using FarEmerald.PlayForge.Extended;
 
 namespace FarEmerald.PlayForge
 {
@@ -16,6 +17,7 @@ namespace FarEmerald.PlayForge
     /// </summary>
     public class CreateMonoProcessAbilityTask : AbstractCreateProcessAbilityTask
     {
+        [ForgeTagContext(ForgeContext.DataKey)]
         public Tag DataTag = Tags.DATA;
         [Tooltip("When true, retrieve data as an enumerable.")]
         public bool RegisterMany = false;

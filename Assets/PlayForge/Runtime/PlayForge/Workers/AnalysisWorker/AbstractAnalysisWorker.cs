@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
+using FarEmerald.PlayForge.Extended;
 
 namespace FarEmerald.PlayForge
 {
@@ -120,6 +121,7 @@ namespace FarEmerald.PlayForge
 
         [Tooltip("A gameplay event it sends the entity as it fires, for its abilities' triggers: its source the one whose " +
                  "change crossed it, its subject the entity. None, none (TW-11)")]
+        [ForgeTagContext(ForgeContext.Event)]
         public Tag Event;
         
         public override IEnumerable<IRootAction> Analyze(IGameplayAbilitySystem system, FrameSummary frameSummary)

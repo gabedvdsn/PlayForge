@@ -760,6 +760,10 @@ tracks each fix below by its ID.
   Asking whether its sequence was paused took 24 bytes a frame.
 
 ### Fixed
+- Every tag field designers fill names the kinds of tag it takes: 25 named none, so their pickers offered every tag.
+  The field that writes a kind of tag and the field that reads it share it, as a Local Data key, a set-by-caller key,
+  an event, crowd control's states and a stage's flag do; a field that matches an effect by its tags offers its asset,
+  context and granted tags, and one that matches an ability its asset and context tags (TAG-3).
 - A tag picker matches its contexts exactly: an Impact field offers no retention group, and a tag picked in a field of
   several contexts isn't offered in each one's fields (TAG-4).
 - The tag registry reads every PlayForge asset type, items, Requirement Templates, Crowd Control Rules and the Forge

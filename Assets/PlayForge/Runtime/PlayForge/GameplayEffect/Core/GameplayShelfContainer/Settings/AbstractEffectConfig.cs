@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using JetBrains.Annotations;
 using UnityEngine;
+using FarEmerald.PlayForge.Extended;
 
 namespace FarEmerald.PlayForge
 {
@@ -140,6 +141,7 @@ namespace FarEmerald.PlayForge
         public int Priority;
         public virtual int ConfigPriority => Priority;
 
+        [ForgeTagContext(ForgeContext.Granted)]
         public List<Tag> AdditionalGrantedTags;
     }
     
@@ -173,9 +175,11 @@ namespace FarEmerald.PlayForge
         
         public EAffiliationPolicy? AffiliationPolicy;
         public EAnyAllPolicy? AffiliationComparison;
+        [ForgeTagContext(ForgeContext.Affiliation)]
         public List<Tag> AffiliationList;
         public EInclusionPolicy AffiliationListInclusion = EInclusionPolicy.UseBoth;
 
+        [ForgeTagContext(ForgeContext.ImpactType)]
         public List<Tag> ImpactTypes;
         public EInclusionPolicy ImpactTypeInclusion = EInclusionPolicy.UseBoth; 
         public bool? ReverseImpactOnRemoval;

@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using UnityEngine;
+using FarEmerald.PlayForge.Extended;
 
 namespace FarEmerald.PlayForge
 {
@@ -19,12 +20,14 @@ namespace FarEmerald.PlayForge
     public class CrowdControlRule
     {
         [Tooltip("The tag its holder carries, as Stunned")]
+        [ForgeTagContext(ForgeContext.Granted)]
         public Tag Tag;
 
         [Tooltip("What it stops: every ability, or those carrying one of its tags")]
         public ECrowdControlStops Stops = ECrowdControlStops.EveryAbility;
 
         [Tooltip("The abilities it stops, by an asset or context tag of theirs, or one under it, as Spell")]
+        [ForgeTagContext(ForgeContext.AssetTag, ForgeContext.ContextTag)]
         public List<Tag> AbilityTags = new();
     }
 

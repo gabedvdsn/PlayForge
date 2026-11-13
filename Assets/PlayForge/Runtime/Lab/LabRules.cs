@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using UnityEngine;
+using FarEmerald.PlayForge.Extended;
 
 namespace FarEmerald.PlayForge.Lab
 {
@@ -79,16 +80,20 @@ namespace FarEmerald.PlayForge.Lab
 
         [Header("States")]
         [Tooltip("A unit with any of these can't move, as while it's stunned or channeling")]
+        [ForgeTagContext(ForgeContext.Granted)]
         public List<Tag> Stops = new();
 
         [Tooltip("A unit with any of these can't be seen or targeted by the other side, as while it's invisible")]
+        [ForgeTagContext(ForgeContext.Granted)]
         public List<Tag> Hides = new();
 
         [Tooltip("A unit with any of these can't be targeted by anyone")]
+        [ForgeTagContext(ForgeContext.Granted)]
         public List<Tag> Shields = new();
 
         [Header("Attacks")]
         [Tooltip("The Local Data key a unit's attack range is under; with none, every unit stands at the range below")]
+        [ForgeTagContext(ForgeContext.LocalDataKey)]
         public Tag AttackRangeKey;
 
         [Tooltip("How near a unit stands to attack where its Local Data gives no range")]
@@ -99,12 +104,15 @@ namespace FarEmerald.PlayForge.Lab
 
         [Header("Bots")]
         [Tooltip("The Local Data key an entity's casting order is under, as \"W Q E\": the letters its abilities other than its attack, in its entity's order. With none, each in turn")]
+        [ForgeTagContext(ForgeContext.LocalDataKey)]
         public Tag CastOrderKey;
 
         [Tooltip("The Local Data key for when a bot casts an ability: InRange, Hurt, Low (away from its foe), Stunned or FoeLow. With none, each in range")]
+        [ForgeTagContext(ForgeContext.LocalDataKey)]
         public Tag CastWhenKey;
 
         [Tooltip("The Local Data key an ability's reach for a bot is under, 0 for anywhere. With none, anywhere")]
+        [ForgeTagContext(ForgeContext.LocalDataKey)]
         public Tag ReachKey;
 
         [Header("The author's unit")]

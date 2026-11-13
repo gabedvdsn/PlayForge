@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using UnityEngine;
+using FarEmerald.PlayForge.Extended;
 
 namespace FarEmerald.PlayForge
 {
@@ -96,6 +97,7 @@ namespace FarEmerald.PlayForge
     [Serializable]
     public struct TagWorkerRequirementPacket
     {
+        [ForgeTagContext(ForgeContext.Granted)]
         public Tag Tag;
         public ERequireAvoidPolicy Policy;
         public int RequiredWeight;

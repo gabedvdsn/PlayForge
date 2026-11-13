@@ -1,6 +1,7 @@
 using System;
 using UnityEngine;
 using UnityEngine.Serialization;
+using FarEmerald.PlayForge.Extended;
 
 namespace FarEmerald.PlayForge
 {
@@ -28,6 +29,7 @@ namespace FarEmerald.PlayForge
     {
         [Tooltip("The tag the caller sets the value under, on the effect's spec or the activation's data. Only this tag " +
                  "matches, not one above or below it")]
+        [ForgeTagContext(ForgeContext.SetByCallerKey)]
         public Tag Key;
 
         [Tooltip("What it reads where the caller set no value under the key")]

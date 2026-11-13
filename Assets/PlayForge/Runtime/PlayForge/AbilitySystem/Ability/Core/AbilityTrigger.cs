@@ -61,6 +61,7 @@ namespace FarEmerald.PlayForge
 
         [Tooltip("The event's tag, or the tag gained. One under it sets the ability off too. The core's own: Impact Dealt, " +
                  "Impact Taken, Kill, Died, Revived")]
+        [ForgeTagContext(ForgeContext.Event, ForgeContext.Granted)]
         public Tag Tag;
 
         [Tooltip("For an impact event, only impacts on this attribute. None, any (TW-5)")]

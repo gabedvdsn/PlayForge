@@ -199,6 +199,7 @@ namespace FarEmerald.PlayForge
     [Serializable]
     public struct TagAttributePair
     {
+        [ForgeTagContext(ForgeContext.SetByCallerKey)]
         public Tag Key;
         public Attribute Attribute;
 

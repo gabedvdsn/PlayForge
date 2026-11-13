@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using UnityEngine;
+using FarEmerald.PlayForge.Extended;
 
 namespace FarEmerald.PlayForge
 {
@@ -12,6 +13,7 @@ namespace FarEmerald.PlayForge
     public class ResolveOrderEntry
     {
         [Tooltip("The tag an entity carries, or one under it, as a totem's, or one an aura grants its holder while it holds")]
+        [ForgeTagContext(ForgeContext.Granted, ForgeContext.AssetTag)]
         public Tag Tag;
 
         [Tooltip("Where those carrying it resolve among an area's hits, lower first; one carrying none of the entries' tags is at 0")]

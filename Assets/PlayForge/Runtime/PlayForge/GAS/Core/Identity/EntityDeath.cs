@@ -37,7 +37,7 @@ namespace FarEmerald.PlayForge
 
         [Tooltip("Where it stays: the effects its death ends, by an asset, context or granted tag, as its buffs and debuffs; " +
                  "the rest, as its cooldowns, go on")]
-        [ForgeTagContext(ForgeContext.ContextTag)]
+        [ForgeTagContext(ForgeContext.AssetTag, ForgeContext.ContextTag, ForgeContext.Granted)]
         public List<Tag> EndsEffectsTagged = new();
 
         [Tooltip("Where it stays: the effects it takes as it dies, as a respawn timer, whose end revives it " +

@@ -20,6 +20,7 @@ namespace FarEmerald.PlayForge
         
         [Tooltip("Implicitly provides the casting system as a target.")]
         public bool UseImplicitTargeting = true; 
+        [ForgeTagContext(ForgeContext.DataKey)]
         public Tag ImplicitTag = Tags.TARGET;
 
         [SerializeReference] 
@@ -33,13 +34,13 @@ namespace FarEmerald.PlayForge
         /// each stage that names none of its own. A critical stage is committed, so nothing cancels it. Nothing
         /// cancelled an ability but an interrupt by slot (FEAT-5).
         /// </summary>
-        [ForgeTagContext(ForgeContext.ContextTag)] public List<Tag> CancelledBy = new();
+        [ForgeTagContext(ForgeContext.AssetTag, ForgeContext.ContextTag)] public List<Tag> CancelledBy = new();
 
         /// <summary>
         /// The abilities, by asset tag or a context tag, or a child of one, that can't activate while this one runs, in
         /// each stage that names none of its own. Blocking was the claim alone, per activation policy (FEAT-5).
         /// </summary>
-        [ForgeTagContext(ForgeContext.ContextTag)] public List<Tag> Blocks = new();
+        [ForgeTagContext(ForgeContext.AssetTag, ForgeContext.ContextTag)] public List<Tag> Blocks = new();
 
         public AbilityProxy GenerateProxy(string abilityName = null)
         {
@@ -75,13 +76,13 @@ namespace FarEmerald.PlayForge
         /// The abilities that cancel the ability as they activate while this stage runs, as the ability's Cancelled By
         /// says; a stage that names none takes the ability's. A critical stage can't be cancelled (FEAT-5).
         /// </summary>
-        [ForgeTagContext(ForgeContext.ContextTag)] public List<Tag> CancelledBy = new();
+        [ForgeTagContext(ForgeContext.AssetTag, ForgeContext.ContextTag)] public List<Tag> CancelledBy = new();
 
         /// <summary>
         /// The abilities that can't activate while this stage runs, as the ability's Blocks says; a stage that names none
         /// takes the ability's (FEAT-5).
         /// </summary>
-        [ForgeTagContext(ForgeContext.ContextTag)] public List<Tag> Blocks = new();
+        [ForgeTagContext(ForgeContext.AssetTag, ForgeContext.ContextTag)] public List<Tag> Blocks = new();
 
         /// <summary>The stage's own Cancelled By, or <paramref name="ability"/>'s when it names none (FEAT-5).</summary>
         public List<Tag> CancelledByOr(List<Tag> ability) => CancelledBy is { Count: > 0 } ? CancelledBy : ability;
@@ -114,6 +115,7 @@ namespace FarEmerald.PlayForge
         public EAbilityStageConditionSubject On = EAbilityStageConditionSubject.Activation;
 
         [Tooltip("The tag the stage asks for. With none, the stage always runs")]
+        [ForgeTagContext(ForgeContext.StageFlag, ForgeContext.Granted)]
         public Tag Tag;
 
         [Tooltip("Run the stage while the tag is missing instead, as a miss's recovery does")]

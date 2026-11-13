@@ -3,6 +3,7 @@ using System.Threading;
 using Cysharp.Threading.Tasks;
 using UnityEngine;
 using UnityEngine.Serialization;
+using FarEmerald.PlayForge.Extended;
 
 namespace FarEmerald.PlayForge
 {
@@ -16,6 +17,7 @@ namespace FarEmerald.PlayForge
         /// another on a miss. None records nothing (TS-7).
         /// </summary>
         [Tooltip("As an effect lands, the activation's data takes this tag, for a later stage's condition")]
+        [ForgeTagContext(ForgeContext.StageFlag)]
         public Tag RecordLandedAs;
 
         [Tooltip("Lands on the targets in the project's resolve order; off, in the order the targeting gave them (TW-31)")]

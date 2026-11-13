@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Serialization;
+using FarEmerald.PlayForge.Extended;
 
 namespace FarEmerald.PlayForge
 {
@@ -47,6 +48,7 @@ namespace FarEmerald.PlayForge
 
         [Tooltip("The crowd control it ignores, by its tags, as Silenced: the other rules still stop it, and still interrupt " +
                  "it as it runs (TW-16)")]
+        [ForgeTagContext(ForgeContext.Granted)]
         public List<Tag> IgnoresCrowdControl = new();
         
         public List<TextureItem> Textures;

@@ -305,6 +305,7 @@ namespace FarEmerald.PlayForge
     [Serializable]
     public class DataWrapper
     {
+        [ForgeTagContext(ForgeContext.LocalDataKey)]
         public Tag Key;
         public EDataWrapperType Type;
 

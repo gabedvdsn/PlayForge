@@ -41,6 +41,7 @@ namespace FarEmerald.PlayForge
         public bool AnyContextTag;
         public EAnyAllPolicy ContextMatchingPolicy;
         [Tooltip("The context tags the impact source must have (if not any)")]
+        [ForgeTagContext(ForgeContext.ContextTag)]
         public List<Tag> ImpactAbilityContextTags;
         
         [Header("Work Context")]
