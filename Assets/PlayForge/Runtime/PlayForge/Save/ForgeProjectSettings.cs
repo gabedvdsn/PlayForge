@@ -13,7 +13,7 @@ namespace FarEmerald.PlayForge
     public class AttributeRole
     {
         [Tooltip("The role, by its tag: one of PlayForge's, as Health, which death at 0 reads, or one of your own")]
-        [ForgeTagContext(ForgeContext.Role)]
+        [ForgeTagContext(ForgeContext.AttributeRole)]
         public Tag Role;
 
         [Tooltip("The project's attribute that plays it")]

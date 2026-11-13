@@ -51,16 +51,56 @@ namespace FarEmerald.PlayForge.Extended.Editor
             ForgeTagRegistry.MarkDirty();
         }
 
-        /// <summary>Why a name makes no new context, or null where it makes one (FN-9).</summary>
-        public static string WhyNotContext(string name) =>
-            string.IsNullOrWhiteSpace(name) ? "A context needs a name."
-            : All().Contains(name.Trim(), StringComparer.OrdinalIgnoreCase) ? $"There is a context {name.Trim()} already." : null;
+        /// <summary>
+        /// Why a name makes no new context, or null where it makes one (FN-9). An old context's name is refused, as it reads
+        /// as its new one wherever it's written (TAG-6).
+        /// </summary>
+        public static string WhyNotContext(string name)
+        {
+            name = name?.Trim();
+            if (string.IsNullOrWhiteSpace(name)) return "A context needs a name.";
+            var old = ForgeContext.Renamed.Keys.FirstOrDefault(each => string.Equals(each, name, StringComparison.OrdinalIgnoreCase));
+            if (old != null)
+                return ForgeContext.Renamed[old].Length > 0
+                    ? $"{old} is {string.Join(", ", ForgeContext.Renamed[old])} now, one of PlayForge's own."
+                    : $"{old} was one of PlayForge's contexts, so its name stays unused.";
+            return All().Contains(name, StringComparer.OrdinalIgnoreCase) ? $"There is a context {name} already." : null;
+        }
+
+        /// <summary>
+        /// Moves each Tag Library's old contexts to their new names, as TAG-6 renamed, merged and dropped them, and saves
+        /// each library it changed; the number it changed. It runs as the editor loads (Decision 74).
+        /// </summary>
+        public static int MigrateLibraries()
+        {
+            var changed = 0;
+            foreach (var library in Libraries())
+            {
+                var moved = false;
+                foreach (var entry in library.Entries ?? new List<ForgeTagLibrary.Entry>())
+                {
+                    if (entry?.Contexts == null || !entry.Contexts.Any(context => context != null && ForgeContext.Renamed.ContainsKey(context))) continue;
+                    entry.Contexts = ForgeContext.Current(entry.Contexts).ToList();
+                    moved = true;
+                }
+                if (!moved) continue;
+                EditorUtility.SetDirty(library);
+                AssetDatabase.SaveAssetIfDirty(library);
+                changed++;
+            }
+            if (changed > 0) ForgeTagRegistry.MarkDirty();
+            return changed;
+        }
+
+        [InitializeOnLoadMethod]
+        private static void MigrateOnLoad() => EditorApplication.delayCall += () => MigrateLibraries();
 
         /// <summary>The contexts a tag is declared for, in the Tag Library that names it; none where none does.</summary>
         public static List<string> DeclaredOf(Tag tag)
         {
             var entry = EntryOf(tag, out _);
-            return entry?.Contexts?.Where(context => !string.IsNullOrWhiteSpace(context)).Distinct().ToList() ?? new List<string>();
+            // An old context reads as its new one (TAG-6)
+            return entry?.Contexts != null ? ForgeContext.Current(entry.Contexts).ToList() : new List<string>();
         }
 
         /// <summary>
@@ -71,7 +111,7 @@ namespace FarEmerald.PlayForge.Extended.Editor
         public static void Declare(Tag tag, IEnumerable<string> contexts)
         {
             if (!tag.IsValid) return;
-            var chosen = (contexts ?? Enumerable.Empty<string>()).Where(context => !string.IsNullOrWhiteSpace(context)).Distinct().ToList();
+            var chosen = ForgeContext.Current(contexts).ToList();
             var entry = EntryOf(tag, out var library);
             if (library == null)
             {

@@ -220,7 +220,7 @@ namespace FarEmerald.PlayForge
         public Attribute Attribute;
 
         [Tooltip("The role the process reads it by, as ProjectileSpeed for a projectile's speed. What spawns the process can set it under this tag in its data")]
-        [ForgeTagContext(ForgeContext.Data)]
+        [ForgeTagContext(ForgeContext.SetByCallerKey)]
         public Tag Role;
 
         [Tooltip("Where its value starts: its own Value, the origin's attribute, or the origin's where it has one and its own where not")]

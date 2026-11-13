@@ -67,7 +67,7 @@ namespace FarEmerald.PlayForge
 
         [Tooltip("The tag the effects it reads carry: as their asset tag, a context tag or a tag they grant, or a tag under it")]
         [ForgeShowWhen(nameof(Of), ETrackedImpactOf.TaggedOnCaster, ETrackedImpactOf.TaggedOnTarget)]
-        [ForgeTagContext(ForgeContext.ContextIdentifier)]
+        [ForgeTagContext(ForgeContext.ContextTag)]
         public Tag Tagged;
 
         [Tooltip("The impact's current part, or its base")]

@@ -696,6 +696,13 @@ from. It lives outside `Assets/` so it never ships in the package.
   `[ForgeTagExposed(params string[] contexts)]`, named as the other tag attributes are, replaces `[ForgeContextDefault]`
   and goes on a field too, its contexts optional, a tag with none under Code; nothing hides a tag, as none is offered
   unmarked.
+- Decision 74, 2026-11-13: TAG-6's contexts, the user's choices. **One context per kind of tag, 18 of them**: Asset
+  Tag, Context Tag, Requirement Category, Granted, Affiliation, Visibility, Impact Type, Retention Group, Event,
+  Attribute Role, Texture Slot, Data Key, Local Data Key, Worker Key, Set By Caller Key, Stage Flag, Code and Universal.
+  Category merges into Context Tag; Required, Condition and Blocked into Granted; System into Affiliation; Targeting into
+  Visibility; **Data splits into its four kinds of key**; the asset-type contexts, Modifier, Cost, Cooldown, Duration
+  and Debug go. **The old constants are removed**, each rename in the CHANGELOG, as `[ForgeContextDefault]` went; an old
+  name written as text still reads as its new one, and a library's are moved.
 
 **Open. Ask the user; do not assume:**
 1. ~~**Uncommitted changes**~~: decided, see above.
@@ -1344,10 +1351,10 @@ The fixes the tag review found (FN-10, `Docs/TAG_REVIEW.md`), as Decision 71 dec
 |---|---|---|
 | TAG-1 | A unique tag's hierarchy by its display path: `IsChildOf` and what reads it, the tag cache's parent listeners, `GetParent`, and ForgeLint's Under, so a New-Tag tag can have children; Make It a Child Of… builds from the parent's path (§5.1). Done: `Tag.Path`, a unique tag's display path or any other tag's name, which every hierarchy helper reads; the tag cache tells the listeners on each tag whose path is above, plain or unique; ForgeLint's events and triggers go by path (`Tag.cs`, `TagCache.cs`, `ForgeLint.cs`, `TagDrawer.cs`) | verified |
 | TAG-2 | New Tag warns where a text is a core tag's, and offers that tag (§3.3.1-2). Done: as the path is typed, New Tag says where it is one of PlayForge's own tags' text, which a tag made of it would be, with Use It, which gives the field the core tag; Create makes nothing of that path (`ForgeNewTagWindow.cs`) | verified |
-| TAG-3 | Each field's contexts made right against TAG-6's set: the writer and the reader of a kind of tag share one, the ~25 unmarked fields get theirs, and Data split into its kinds (§2.2-2.4) | open |
+| TAG-3 | Each field's contexts made right against TAG-6's set: the writer and the reader of a kind of tag share one, the ~25 unmarked fields get theirs, and Data split into its kinds, which TAG-6 did for the fields that named it (§2.2-2.4) | open |
 | TAG-4 | Contexts matched exactly, not by substring, and a field with several contexts no longer files its pick under each (§5.2-5.4). Done: a picker takes each of its contexts' own tags by its exact key, and its own set's, so an Impact field offers no retention group and a Granted field no tag picked in a field of several contexts (`ForgeTagRegistry.cs`) | verified |
 | TAG-5 | A project's code tags reach the pickers, those it exposes: a static Tag field or property marked `[ForgeTagExposed]`, which replaces `[ForgeContextDefault]` and goes on a field too, under its contexts or a Code context; ForgeLint and the runtime registry read the same (§4; opt-in by Decision 73, in place of Decision 71's convention scan). Done: the registry finds each type of the project's code with an exposed static Tag, in the player assemblies that reference PlayForge and PlayForge's own, tests left out, once a domain reload; a code tag not marked isn't offered. Every tag `Tags.cs` writes is marked, `GAME_ROOT`, `NONE` and the process statuses under Code, `TARGETED_INTENT` under Data; so are `IS_DISJOINTABLE` and the Demo's sequence keys, under Data. ForgeLint reads the code's events and impact types from the registry; the runtime registry needs nothing, a code tag registering as it's made (`ForgeTagRegistry.cs`, `ForgeLint.cs`, `ForgeAttributes.cs`, `ForgeContext.cs`, `Tags.cs`, `DisjointProxyTaskBehaviour.cs`, `DemoSequences.cs`) | verified |
-| TAG-6 | The contexts pruned and renamed: the 18 no field names go, the overlaps merge, the unclear names change, with a pass over the Tag Libraries' declarations (§1) | open |
+| TAG-6 | The contexts pruned and renamed: the 18 no field names go, the overlaps merge, the unclear names change, with a pass over the Tag Libraries' declarations (§1). Done: 18 contexts, one per kind of tag, each constant its value without its spaces (Decision 74): eight renamed, seven merged, ten dropped, and Data split into Data Key, Local Data Key, Worker Key and Set By Caller Key, each field that named Data taking its kind, `Tags.cs`'s keys Data Key but `PROJECTILE_SPEED`, a process role. An old name reads as its new one (`ForgeContext.Renamed`, `Current`), in a field's attribute and a library as it's read, and a pass moves each library's as the editor loads; no context of the project's own takes an old name. The registry's guess of an unmarked field's contexts, from its name and its asset's type, goes, so its tags are filed under none, as its pick is (`ForgeContext.cs`, `ForgeAttributes.cs`, `ForgeTagContexts.cs`, `ForgeTagRegistry.cs`, `Tags.cs`, and each field's file) | verified |
 | TAG-7 | Every PlayForge asset type scanned, and the fields the walk skips, through a SerializedObject walk as ForgeLint's (§2.4). Done: the registry reads the asset types by name, the validator's, the Forge Project and the lab's rules among them, and the object a `[SerializeReference]` field holds under an interface or a base not marked serializable, each object once; prefabs it still doesn't read (`ForgeTagRegistry.cs`) | verified |
 | TAG-8 | `Tags.cs` made sound: contexts for the five with none, the unused Data keys pruned or hidden, the docs fixed, long paths refused, and a test that pins the padded names and each tag's context (§3) | open |
 
@@ -1386,6 +1393,19 @@ GAS-4 with GAS-5, PC-6, and TS-I with PC-5.
 ## Log
 
 Record baselines, gate results and notable decisions here, newest first.
+
+- 2026-11-13, **TAG-6: one context per kind of tag.** There were 32 contexts: 18 no field named, among them the five
+  asset types the registry guessed for an unmarked field; several overlapped, Required, Condition and Blocked, or
+  Visibility and Targeting; two kinds were mixed, what a tag is and where it's used; Data held four kinds of key, so a
+  worker's key picker offered every packet key; and four constants read otherwise than their values, so a library entry
+  typed "RetentionGroup" matched nothing. There are 18, one per kind of tag, each constant its value without its spaces
+  (Decision 74). Each field that named Data takes its kind: a Set Assets task's tag and a packet key Data Key, a Local
+  Data number's key Local Data Key, a worker's key Worker Key, a process attribute's role Set By Caller Key. An old name
+  reads as its new one, in a field's `[ForgeTagContext]` and in a Tag Library, whose entries a pass moves as the editor
+  loads, Data to each kind it held; no context of a project's own can take one. The registry no longer guesses an
+  unmarked field's contexts after a rescan, so its tags are filed under none, as its pick is.
+  - Red first: TAG_6's two tests against the code as it was: there were 32 contexts, Data among them, and no pass moved a library's old contexts
+  - Gates, on a frozen snapshot of the package: EditMode 911 of 912, ED-61 red from the working tree's lifecycle change; PlayMode 1816 of 1837, 8 skipped, the 12 known reds and the Battle scene's flake; golden 25 of 25.
 
 - 2026-11-13, **TAG-5: a project's code tags reach the pickers, those it exposes.** A tag written in code reached the
   editor's pickers only from PlayForge's own `Tags`: a project's, as Proving Grounds' Enraged or the Demo's sequence

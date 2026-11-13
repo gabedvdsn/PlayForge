@@ -10,9 +10,9 @@ namespace FarEmerald.PlayForge
     [Serializable]
     public class AbilityTags
     {
-        [ForgeTagContext(ForgeContext.AssetIdentifier)]
+        [ForgeTagContext(ForgeContext.AssetTag)]
         public Tag AssetTag;
-        [ForgeTagContext(ForgeContext.ContextIdentifier)]
+        [ForgeTagContext(ForgeContext.ContextTag)]
         public List<Tag> ContextTags;
         
         [ForgeTagContext(ForgeContext.Granted)]

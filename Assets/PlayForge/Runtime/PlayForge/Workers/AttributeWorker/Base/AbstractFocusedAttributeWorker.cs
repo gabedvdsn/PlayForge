@@ -41,7 +41,7 @@ namespace FarEmerald.PlayForge
         public bool AnyImpactType = true;
         
         [Tooltip("The impact types to accept (if not any)")]
-        [ForgeTagContext(ForgeContext.Impact)]
+        [ForgeTagContext(ForgeContext.ImpactType)]
         public List<Tag> ImpactTypes;
         
         [Header("Context Validation")]
@@ -50,7 +50,7 @@ namespace FarEmerald.PlayForge
 
         public EAnyAllPolicy ContextMatchingPolicy;
         [Tooltip("The context tags to accept (if not any)")]
-        [ForgeTagContext(ForgeContext.ContextIdentifier)]
+        [ForgeTagContext(ForgeContext.ContextTag)]
         public List<Tag> ValidContextTags;
         
         // ═══════════════════════════════════════════════════════════════════════════

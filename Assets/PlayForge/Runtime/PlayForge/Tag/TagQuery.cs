@@ -15,7 +15,7 @@ namespace FarEmerald.PlayForge
         /// <summary>
         /// The tag to query for.
         /// </summary>
-        [ForgeTagContext(ForgeContext.Required, ForgeContext.Granted, ForgeContext.AssetIdentifier)]
+        [ForgeTagContext(ForgeContext.Granted, ForgeContext.AssetTag)]
         public Tag Tag;
         
         /// <summary>

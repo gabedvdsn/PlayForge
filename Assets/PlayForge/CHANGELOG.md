@@ -438,6 +438,13 @@ tracks each fix below by its ID.
   page, through one table of links in the editor.
 
 ### Changed
+- The tag contexts are one per kind of tag, 18 of them: Asset Tag, Context Tag, Requirement Category, Granted,
+  Affiliation, Visibility, Impact Type, Retention Group, Event, Attribute Role, Texture Slot, Data Key, Local Data Key,
+  Worker Key, Set By Caller Key, Stage Flag, Code and Universal. Data is split into its four kinds of key, so a worker's
+  key picker offers worker keys, not every packet key. A Tag Library's old contexts are moved to their new names as the
+  editor loads, and an old name in `[ForgeTagContext("…")]` reads as its new one (TAG-6).
+- A tag field with no `[ForgeTagContext]` files its tags under no context after a rescan, as it does when one is picked;
+  the registry guessed contexts from the field's name and its asset's type (TAG-6).
 - `[ForgeContextDefault]` is `[ForgeTagExposed]`, named as the other tag attributes are, and goes on a field too; its
   contexts are optional, a tag with none offered under Code. Rename it where your code has it. Every tag `Tags.cs`
   writes carries it (TAG-5).
@@ -978,6 +985,12 @@ tracks each fix below by its ID.
   or turning `Enabled` off. Once the first had ended, it threw, and the rest ran on.
 
 ### Removed
+- The old `ForgeContext` constants. `AssetIdentifier` is `AssetTag`; `ContextIdentifier` and `Category` are
+  `ContextTag`; `Required`, `Condition` and `Blocked` are `Granted`; `System` is `Affiliation`; `Targeting` is
+  `Visibility`; `Impact` is `ImpactType`; `Trigger` is `Event`; `Role` is `AttributeRole`; `Texture` is `TextureSlot`;
+  `Data` is `DataKey`, `LocalDataKey`, `WorkerKey` or `SetByCallerKey`, by the key; `Worker` is `WorkerKey`; `Stage`
+  is `StageFlag`. `Ability`, `Effect`, `Entity`, `Attribute`, `AttributeSet`, `Modifier`, `Cost`, `Cooldown`,
+  `Duration` and `Debug` are gone, and `RetentionGroup` reads "Retention Group" (TAG-6).
 - `ProjectAttributes`, `ForgeAttributes` and an ability's Mana Cost (TW-28): their fixed Health, Mana, Luck and Movement
   Speed slots became the Forge Project's roles, and Mana Cost became attribute costs (TW-29).
 - `IValidationReady`, which nothing took; `IAttribute`, `ITarget`, `BasicEffectOrigin` and `ProcessDataPacket` no

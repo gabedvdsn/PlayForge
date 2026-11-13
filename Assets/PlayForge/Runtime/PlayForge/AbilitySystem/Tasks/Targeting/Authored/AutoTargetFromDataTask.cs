@@ -20,7 +20,7 @@ namespace FarEmerald.PlayForge
     public class AutoTargetFromDataTask : AbstractGasTargetingAbilityTask
     {
         [Tooltip("The data packet key to read the target from")]
-        [ForgeTagContext(ForgeContext.Data)]
+        [ForgeTagContext(ForgeContext.DataKey)]
         public Tag SourceKey;
 
         [Tooltip("When true, reads the Primary entry. When false, reads all entries and adds them.")]

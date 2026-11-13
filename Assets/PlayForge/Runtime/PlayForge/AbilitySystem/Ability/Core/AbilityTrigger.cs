@@ -70,7 +70,7 @@ namespace FarEmerald.PlayForge
         public ETriggerImpactSign Sign = ETriggerImpactSign.Any;
 
         [Tooltip("For an impact event, only impacts of one of these types. None, any (TW-5)")]
-        [ForgeTagContext(ForgeContext.Impact)]
+        [ForgeTagContext(ForgeContext.ImpactType)]
         public List<Tag> ImpactTypes = new();
 
         [Tooltip("The chance the event sets the ability off, from 0 to 1, rolled once for each event (TW-5)")]

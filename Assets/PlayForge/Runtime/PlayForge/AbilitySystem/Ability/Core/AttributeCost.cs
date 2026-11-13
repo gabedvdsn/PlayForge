@@ -15,7 +15,7 @@ namespace FarEmerald.PlayForge
         public Attribute Attribute;
 
         [Tooltip("The role whose attribute it spends, where it names no attribute, as one of your own for a resource")]
-        [ForgeTagContext(ForgeContext.Role)]
+        [ForgeTagContext(ForgeContext.AttributeRole)]
         public Tag Role;
 
         [Tooltip("How much it spends, a number that can scale by level")]

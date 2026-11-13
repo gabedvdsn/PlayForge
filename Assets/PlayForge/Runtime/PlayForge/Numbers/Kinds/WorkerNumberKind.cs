@@ -33,7 +33,7 @@ namespace FarEmerald.PlayForge
     public class WorkerNumberKind : NumberKind
     {
         [Tooltip("The key it asks for. A worker answers the keys it knows; the first worker that answers this one gives the value")]
-        [ForgeTagContext(ForgeContext.Data)]
+        [ForgeTagContext(ForgeContext.WorkerKey)]
         public Tag Key;
 
         [Tooltip("Whose workers it asks: those of the effect whose number it is, or the caster's or the target's own")]

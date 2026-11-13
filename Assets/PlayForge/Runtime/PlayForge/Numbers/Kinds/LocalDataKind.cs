@@ -28,7 +28,7 @@ namespace FarEmerald.PlayForge
     public class LocalDataKind : NumberKind
     {
         [Tooltip("The key the value is under")]
-        [ForgeTagContext(ForgeContext.Data)]
+        [ForgeTagContext(ForgeContext.LocalDataKey)]
         public Tag Key;
 
         [Tooltip("Whose Local Data it reads: what the number belongs to, as its ability, or the caster's or the target's")]

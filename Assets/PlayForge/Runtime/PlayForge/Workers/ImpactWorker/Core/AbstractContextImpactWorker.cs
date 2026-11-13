@@ -20,7 +20,7 @@ namespace FarEmerald.PlayForge
         public bool AnyImpactType = true;
         
         [Tooltip("The impact types to accept (if not any)")]
-        [ForgeTagContext(ForgeContext.Impact)]
+        [ForgeTagContext(ForgeContext.ImpactType)]
         public List<Tag> ImpactType;
         
         [Tooltip("Which part of the attribute was impacted")]
@@ -48,7 +48,7 @@ namespace FarEmerald.PlayForge
         public Attribute WorkAttribute;
         
         [Tooltip("The impact type for the work output")]
-        [ForgeTagContext(ForgeContext.Impact)]
+        [ForgeTagContext(ForgeContext.ImpactType)]
         public List<Tag> WorkImpactType;
         
         [Tooltip("The sign policy for the work output")]

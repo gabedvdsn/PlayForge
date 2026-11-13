@@ -14,7 +14,7 @@ namespace FarEmerald.PlayForge
         public string Description;
         public List<TextureItem> Textures = new();
         
-        [ForgeTagContext(ForgeContext.AssetIdentifier)]
+        [ForgeTagContext(ForgeContext.AssetTag)]
         public Tag AssetTag;
         
         [SerializeField]

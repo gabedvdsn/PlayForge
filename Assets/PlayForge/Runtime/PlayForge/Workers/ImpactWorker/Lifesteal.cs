@@ -40,7 +40,7 @@ namespace FarEmerald.PlayForge
         public Attribute Attribute;
 
         [Tooltip("Only hits of one of these types, as attacks. None, any")]
-        [ForgeTagContext(ForgeContext.Impact)]
+        [ForgeTagContext(ForgeContext.ImpactType)]
         public List<Tag> ImpactTypes = new();
 
         [Tooltip("Only while this holds, read at the hit: the holder its caster, the one hit its target")]

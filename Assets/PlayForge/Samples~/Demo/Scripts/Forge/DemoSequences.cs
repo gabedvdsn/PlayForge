@@ -13,15 +13,15 @@ namespace FarEmerald.PlayForge.Samples.Demo
     public static class DemoSequences
     {
         /// <summary>The tag Renewal's asset loaders load its pulse under.</summary>
-        [ForgeTagExposed(ForgeContext.Data)] public static readonly Tag RenewalPulse = Tag.Generate("Demo.Renewal.Pulse");
+        [ForgeTagExposed(ForgeContext.DataKey)] public static readonly Tag RenewalPulse = Tag.Generate("Demo.Renewal.Pulse");
         /// <summary>The tag Renewal's asset loaders load its cleanse under.</summary>
-        [ForgeTagExposed(ForgeContext.Data)] public static readonly Tag RenewalCleanse = Tag.Generate("Demo.Renewal.Cleanse");
+        [ForgeTagExposed(ForgeContext.DataKey)] public static readonly Tag RenewalCleanse = Tag.Generate("Demo.Renewal.Cleanse");
         /// <summary>The Local Data key a volley's arrow prefab is under, on the ability.</summary>
-        [ForgeTagExposed(ForgeContext.Data)] public static readonly Tag VolleyArrow = Tag.Generate("Demo.Volley.Arrow");
+        [ForgeTagExposed(ForgeContext.LocalDataKey)] public static readonly Tag VolleyArrow = Tag.Generate("Demo.Volley.Arrow");
         /// <summary>The Local Data key a volley's radius is under, on the ability.</summary>
-        [ForgeTagExposed(ForgeContext.Data)] public static readonly Tag VolleyRadius = Tag.Generate("Demo.Volley.Radius");
+        [ForgeTagExposed(ForgeContext.LocalDataKey)] public static readonly Tag VolleyRadius = Tag.Generate("Demo.Volley.Radius");
         /// <summary>The Local Data key the most arrows a volley looses is under, on the ability.</summary>
-        [ForgeTagExposed(ForgeContext.Data)] public static readonly Tag VolleyArrows = Tag.Generate("Demo.Volley.Arrows");
+        [ForgeTagExposed(ForgeContext.LocalDataKey)] public static readonly Tag VolleyArrows = Tag.Generate("Demo.Volley.Arrows");
 
         /// <summary>
         /// Renewal: the cleanse its loaders loaded, at once, then a pulse of healing each second, five times, to the

@@ -329,7 +329,7 @@ namespace FarEmerald.PlayForge.Extended.Editor
         /// <summary>
         /// Gets tags that have been used in a specific context.
         /// </summary>
-        /// <param name="contextStrings">The context strings to filter by (e.g., ForgeContext.Effect).</param>
+        /// <param name="contextStrings">The context strings to filter by (e.g., ForgeContext.Granted).</param>
         /// <param name="includeUniversal">If true, also includes Universal tags.</param>
         public static IEnumerable<Tag> GetTagsForContext(string[] contextStrings, bool includeUniversal = true)
         {
@@ -832,8 +832,9 @@ namespace FarEmerald.PlayForge.Extended.Editor
                     var tag = string.IsNullOrWhiteSpace(entry.DisplayName)
                         ? Tag.Generate(entry.Name.Trim())
                         : Tag.Generate(entry.Name.Trim(), entry.DisplayName.Trim());
+                    // An old context reads as its new one, though the library isn't moved yet (TAG-6)
                     string[] contexts = entry.Contexts is { Count: > 0 }
-                        ? entry.Contexts.Where(c => !string.IsNullOrWhiteSpace(c)).ToArray()
+                        ? ForgeContext.Current(entry.Contexts)
                         : new[] { ForgeContext.Universal };
                     if (contexts.Length == 0) contexts = new[] { ForgeContext.Universal };
 
@@ -1036,45 +1037,13 @@ namespace FarEmerald.PlayForge.Extended.Editor
             }
         }
         
+        // A field's contexts, as its [ForgeTagContext] names them; none where it names none, as its pick is filed. The scan
+        // guessed some from the field's name and its asset's type, so a tag was filed one way as it was picked and another
+        // after, under contexts no field names (TAG-6)
         private static TagContext GetContextFromField(FieldInfo field, Type rootType)
         {
-            // First check for explicit ForgeTagContext attribute
             var contextAttr = field.GetCustomAttribute<ForgeTagContext>();
-            if (contextAttr != null && contextAttr.Context.Length > 0)
-            {
-                return new TagContext(contextAttr.Context);
-            }
-            
-            // Otherwise derive context from field name and root type
-            return DeriveContextFromField(field, rootType);
-        }
-        
-        private static TagContext DeriveContextFromField(FieldInfo field, Type rootType)
-        {
-            var derivedContexts = new List<string>();
-            
-            // Add asset type context
-            if (rootType == typeof(Ability)) derivedContexts.Add(ForgeContext.Ability);
-            else if (rootType == typeof(GameplayEffect)) derivedContexts.Add(ForgeContext.Effect);
-            else if (rootType == typeof(EntityIdentity)) derivedContexts.Add(ForgeContext.Entity);
-            else if (rootType == typeof(Attribute)) derivedContexts.Add(ForgeContext.Attribute);
-            else if (rootType == typeof(AttributeSet)) derivedContexts.Add(ForgeContext.AttributeSet);
-            
-            // Add semantic context based on field name
-            var fieldName = field.Name.ToLowerInvariant();
-            
-            if (fieldName.Contains("grant")) derivedContexts.Add(ForgeContext.Granted);
-            else if (fieldName.Contains("require")) derivedContexts.Add(ForgeContext.Required);
-            else if (fieldName.Contains("block")) derivedContexts.Add(ForgeContext.Blocked);
-            else if (fieldName.Contains("visibility") || fieldName.Contains("visible")) derivedContexts.Add(ForgeContext.Visibility);
-            else if (fieldName.Contains("affiliation") || fieldName.Contains("team")) derivedContexts.Add(ForgeContext.Affiliation);
-            else if (fieldName.Contains("target")) derivedContexts.Add(ForgeContext.Targeting);
-            else if (fieldName.Contains("category") || fieldName.Contains("type")) derivedContexts.Add(ForgeContext.Category);
-            else if (fieldName.Contains("assettag") || fieldName.Contains("identifier")) derivedContexts.Add(ForgeContext.AssetIdentifier);
-            else if (fieldName.Contains("cost")) derivedContexts.Add(ForgeContext.Cost);
-            else if (fieldName.Contains("cooldown")) derivedContexts.Add(ForgeContext.Cooldown);
-            
-            return new TagContext(derivedContexts.ToArray());
+            return new TagContext(contextAttr?.Context ?? Array.Empty<string>());
         }
         
         private static void RegisterTagInCache(Tag tag, TagContext context, ScriptableObject asset, string fieldPath)

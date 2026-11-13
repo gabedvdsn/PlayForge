@@ -158,7 +158,7 @@ namespace FarEmerald.PlayForge
         [Tooltip("How its chance to apply rolls: pseudo-random, and its luck (TW-8)")]
         public ChanceRoll ChanceRoll = new();
 
-        [ForgeTagContext(ForgeContext.Impact)]
+        [ForgeTagContext(ForgeContext.ImpactType)]
         public List<Tag> ImpactTypes;
 
         /// <summary>

@@ -72,7 +72,7 @@ namespace FarEmerald.PlayForge
         [ForgeTagContext(ForgeContext.RetentionGroup)]
         public Tag RetentionGroupOverride;
 
-        [ForgeTagContext(ForgeContext.Impact)]
+        [ForgeTagContext(ForgeContext.ImpactType)]
         public List<Tag> ImpactTypes = new();
 
         public AttributeImpactEntry() { }

@@ -21,9 +21,9 @@ namespace FarEmerald.PlayForge.Extended.Editor
         // The code's impact types and events, PlayForge's and the project's own, as the tag registry finds those the code
         // exposes (TAG-5): an impact type every filter takes, as Always Allow, or one the core deals, as Returned; an event
         // the core sends, as Kill
-        private static HashSet<string> CoreImpactTypes => CodeTags(ForgeContext.Impact, tag => tag.Name);
+        private static HashSet<string> CoreImpactTypes => CodeTags(ForgeContext.ImpactType, tag => tag.Name);
         // The code's events by their paths, as a trigger takes a tag under its own by its path (TAG-1, TAG-5)
-        private static HashSet<string> CoreEvents => CodeTags(ForgeContext.Trigger, tag => tag.Path);
+        private static HashSet<string> CoreEvents => CodeTags(ForgeContext.Event, tag => tag.Path);
 
         private static HashSet<string> CodeTags(string context, System.Func<Tag, string> read) =>
             new(ForgeTagRegistry.GetSystemDefaultTagsForContext(new[] { context }).Select(read).Where(each => !string.IsNullOrEmpty(each)),

@@ -20,7 +20,7 @@ namespace FarEmerald.PlayForge
     public class SetAssetsTask : AbstractSetAssetsTask
     {
         
-        [ForgeTagContext(ForgeContext.Data)]  public Tag Tag = Tags.ASSETS;
+        [ForgeTagContext(ForgeContext.DataKey)]  public Tag Tag = Tags.ASSETS;
         public BaseForgeAsset[] Assets;
 
         public override bool IsCriticalSection => false;
@@ -39,7 +39,7 @@ namespace FarEmerald.PlayForge
     
     public class SetEffectsTask : AbstractSetAssetsTask
     {
-        [ForgeTagContext(ForgeContext.Data)]  public Tag Tag = Tags.EFFECTS;
+        [ForgeTagContext(ForgeContext.DataKey)]  public Tag Tag = Tags.EFFECTS;
         public GameplayEffect[] Effects;
 
         public override bool IsCriticalSection => false;
@@ -58,7 +58,7 @@ namespace FarEmerald.PlayForge
     public class SetEntitiesTask : AbstractSetAssetsTask
     {
         
-        [ForgeTagContext(ForgeContext.Data)]  public Tag Tag = Tags.ENTITIES;
+        [ForgeTagContext(ForgeContext.DataKey)]  public Tag Tag = Tags.ENTITIES;
         public EntityIdentity[] Entities;
 
         public override bool IsCriticalSection => false;
@@ -77,7 +77,7 @@ namespace FarEmerald.PlayForge
     public class SetAttributesTask : AbstractSetAssetsTask
     {
         
-        [ForgeTagContext(ForgeContext.Data)]  public Tag Tag = Tags.ATTRIBUTES;
+        [ForgeTagContext(ForgeContext.DataKey)]  public Tag Tag = Tags.ATTRIBUTES;
         public BaseForgeAsset[] Attributes;
 
         public override bool IsCriticalSection => false;
@@ -96,7 +96,7 @@ namespace FarEmerald.PlayForge
     public class SetAttributeSetsTask : AbstractSetAssetsTask
     {
         
-        [ForgeTagContext(ForgeContext.Data)]  public Tag Tag = Tags.ATTRIBUTE_SETS;
+        [ForgeTagContext(ForgeContext.DataKey)]  public Tag Tag = Tags.ATTRIBUTE_SETS;
         public AttributeSet[] AttributeSets;
 
         public override bool IsCriticalSection => false;
@@ -114,7 +114,7 @@ namespace FarEmerald.PlayForge
     
     public class SetAbilitiesTask : AbstractSetAssetsTask
     {
-        [ForgeTagContext(ForgeContext.Data)]  public Tag Tag = Tags.ABILITIES;
+        [ForgeTagContext(ForgeContext.DataKey)]  public Tag Tag = Tags.ABILITIES;
         public Ability[] Abilities;
 
         public override bool IsCriticalSection => false;
@@ -132,7 +132,7 @@ namespace FarEmerald.PlayForge
     
     public class SetTagsTask : AbstractSetAssetsTask
     {
-        [ForgeTagContext(ForgeContext.Data)]  public Tag Tag = PlayForge.Tags.TAGS;
+        [ForgeTagContext(ForgeContext.DataKey)]  public Tag Tag = PlayForge.Tags.TAGS;
         [SerializeReference] public Tag[] Tags;
 
         public override bool IsCriticalSection => false;

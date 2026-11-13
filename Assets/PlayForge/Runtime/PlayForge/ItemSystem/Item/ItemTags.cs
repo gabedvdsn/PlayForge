@@ -7,11 +7,11 @@ namespace FarEmerald.PlayForge
     [System.Serializable]
     public class ItemTags
     {
-        [ForgeTagContext(ForgeContext.AssetIdentifier)]
+        [ForgeTagContext(ForgeContext.AssetTag)]
         [Tooltip("Unique identifier tag for this item.")]
         public Tag AssetTag;
         
-        [ForgeTagContext(ForgeContext.ContextIdentifier)]
+        [ForgeTagContext(ForgeContext.ContextTag)]
         [Tooltip("Context tags for categorization and queries.")]
         public List<Tag> ContextTags = new();
         

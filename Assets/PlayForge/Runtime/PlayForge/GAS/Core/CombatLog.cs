@@ -36,7 +36,7 @@ namespace FarEmerald.PlayForge
         public ECombatLogRecords Records = ECombatLogRecords.HitsTaken | ECombatLogRecords.HitsDealt;
 
         [Tooltip("The gameplay events it writes as the entity is sent them, by tag, or one under it: Kill, Died, your own")]
-        [ForgeTagContext(ForgeContext.Trigger)]
+        [ForgeTagContext(ForgeContext.Event)]
         public List<Tag> Events = new();
     }
 

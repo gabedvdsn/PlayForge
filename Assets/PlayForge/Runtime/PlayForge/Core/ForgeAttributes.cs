@@ -3,16 +3,18 @@
 namespace FarEmerald.PlayForge.Extended
 {
     /// <summary>
-    /// Specifies the context(s) in which a tag field is used.
-    /// This allows the TagDrawer to filter available tags based on context.
-    /// 
+    /// The kinds of tag a tag field takes, which its picker offers: one context per kind, as ForgeContext names them, or a
+    /// project's own (TAG-6).
+    ///
     /// Usage:
-    /// [ForgeTagContext(ForgeContext.Effect, ForgeContext.Visibility)]
-    /// public Tag VisibilityTag;
-    /// 
+    /// [ForgeTagContext(ForgeContext.Granted, ForgeContext.AssetTag)]
+    /// public Tag Required;
+    ///
     /// Or with string literals:
-    /// [ForgeTagContext("Effect", "Visibility")]
-    /// public Tag VisibilityTag;
+    /// [ForgeTagContext("Granted", "Asset Tag")]
+    /// public Tag Required;
+    ///
+    /// An old context's name reads as its new one, as Trigger does as Event (Decision 74).
     /// </summary>
     [AttributeUsage(AttributeTargets.Field, AllowMultiple = false, Inherited = true)]
     public class ForgeTagContext : System.Attribute
@@ -38,10 +40,11 @@ namespace FarEmerald.PlayForge.Extended
         /// Creates a tag context attribute with the specified context strings.
         /// Use ForgeContext constants or string literals.
         /// </summary>
-        /// <param name="context">One or more context identifiers (e.g., ForgeContext.Effect, ForgeContext.Visibility)</param>
+        /// <param name="context">One or more contexts (e.g., ForgeContext.Granted, ForgeContext.Event)</param>
         public ForgeTagContext(params string[] context)
         {
-            Context = context ?? Array.Empty<string>();
+            // An old context's name reads as its new one (TAG-6)
+            Context = ForgeContext.Current(context);
         }
     }
 
@@ -158,7 +161,7 @@ namespace FarEmerald.PlayForge.Extended
 
         public ForgeTagExposed(params string[] context)
         {
-            Context = context;
+            Context = ForgeContext.Current(context);
         }
     }
     

@@ -38,7 +38,7 @@ namespace FarEmerald.PlayForge
     public class AttributeChangeEffectWorker : AbstractEffectWorker, INumberWorker
     {
         [Tooltip("The key it answers under: a number of the Worker kind with this key reads its answer")]
-        [ForgeTagContext(ForgeContext.Data)]
+        [ForgeTagContext(ForgeContext.WorkerKey)]
         public Tag Key;
 
         [Tooltip("The attribute it watches")]

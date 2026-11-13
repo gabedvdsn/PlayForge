@@ -125,7 +125,7 @@ namespace FarEmerald.PlayForge
 
         [Tooltip("The tag they carry: an effect's asset tag, a context tag or a tag it grants; an ability's or an item's " +
                  "asset tag or a context tag. A tag under this one matches too")]
-        [ForgeTagContext(ForgeContext.AssetIdentifier, ForgeContext.ContextIdentifier, ForgeContext.Granted)]
+        [ForgeTagContext(ForgeContext.AssetTag, ForgeContext.ContextTag, ForgeContext.Granted)]
         public Tag Tagged;
 
         [Tooltip("Whose: the caster's or the target's")]
@@ -138,7 +138,7 @@ namespace FarEmerald.PlayForge
         [Tooltip("The key it asks each effect's workers for")]
         [ForgeShowWhen(nameof(What), EAssetPartOf.Effect)]
         [ForgeShowWhen(nameof(EffectPart), EEffectPart.WorkerValue)]
-        [ForgeTagContext(ForgeContext.Data)]
+        [ForgeTagContext(ForgeContext.WorkerKey)]
         public Tag WorkerKey;
 
         [Tooltip("What it reads of each ability")]

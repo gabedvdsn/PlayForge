@@ -300,23 +300,23 @@ namespace FarEmerald.PlayForge
     [Serializable]
     public struct GameplayEffectTags
     {
-        [ForgeTagContext(ForgeContext.AssetIdentifier)]
+        [ForgeTagContext(ForgeContext.AssetTag)]
         public Tag AssetTag;
         
-        [ForgeTagContext(ForgeContext.ContextIdentifier)] public List<Tag> ContextTags;
+        [ForgeTagContext(ForgeContext.ContextTag)] public List<Tag> ContextTags;
         [ForgeTagContext(ForgeContext.Granted)] public List<Tag> GrantedTags;
 
         /// <summary>
         /// A cleanse: effects on the target tagged with one of these, or a child of one, by their asset tag, a context
         /// tag or a tag they grant, come off as this effect lands (FEAT-8).
         /// </summary>
-        [ForgeTagContext(ForgeContext.ContextIdentifier)] public List<Tag> RemovesEffectsTagged;
+        [ForgeTagContext(ForgeContext.ContextTag)] public List<Tag> RemovesEffectsTagged;
 
         /// <summary>
         /// An immunity: while this effect is on the target, an effect tagged with one of these, or a child of one, can't
         /// land on it (FEAT-8).
         /// </summary>
-        [ForgeTagContext(ForgeContext.ContextIdentifier)] public List<Tag> BlocksEffectsTagged;
+        [ForgeTagContext(ForgeContext.ContextTag)] public List<Tag> BlocksEffectsTagged;
 
         /// <summary>
         /// Whether an effect is tagged with one of the tags, or a child of one, by its asset tag, a context tag or a tag
