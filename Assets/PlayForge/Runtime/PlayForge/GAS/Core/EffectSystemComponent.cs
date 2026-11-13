@@ -258,13 +258,14 @@ namespace FarEmerald.PlayForge
         private int applications;
 
         // The first Block or Evade stage whose chance comes up, of its hits' pipelines, each pipeline once, then the stages
-        // its modifiers bring for an attribute it impacts; null where none does (TW-12)
-        private static AbstractStopStage StoppedBy(GameplayEffectSpec spec)
+        // its modifiers bring for an attribute it impacts; null where none does (TW-12). A stop that stops losses alone
+        // rolls only for an effect that lowers its attribute, so a heal lands past it unrolled (GAS-77)
+        private AbstractStopStage StoppedBy(GameplayEffectSpec spec)
         {
             var impact = spec.Base.ImpactSpecification;
             if (impact != null)
             {
-                if (Stops(impact.Pipeline, spec) is { } own) return own;
+                if (Stops(impact.Pipeline, spec, impact.AttributeTarget) is { } own) return own;
                 var entries = impact.Entries;
                 if (entries != null)
                 {
@@ -272,7 +273,7 @@ namespace FarEmerald.PlayForge
                     {
                         var pipeline = entries[i]?.Pipeline;
                         if (pipeline == null || ReferenceEquals(pipeline, impact.Pipeline) || SeenBefore(entries, i, pipeline)) continue;
-                        if (Stops(pipeline, spec) is { } entry) return entry;
+                        if (Stops(pipeline, spec, entries[i].AttributeTarget) is { } entry) return entry;
                     }
                 }
             }
@@ -284,10 +285,52 @@ namespace FarEmerald.PlayForge
                 {
                     if (added[i].Stage is not AbstractStopStage stop || !stop.Enabled) continue;
                     if (added[i].Attribute != null && !Impacts(impact, added[i].Attribute)) continue;
-                    if (Rolls(stop, spec)) return stop;
+                    if (Reaches(stop, spec, added[i].Attribute) && Rolls(stop, spec)) return stop;
                 }
             }
             return null;
+        }
+
+        // Whether a stop can stop the effect: any effect where it stops any impact; else one that lowers its attribute, or
+        // any attribute where it names none (GAS-77)
+        private bool Reaches(AbstractStopStage stop, GameplayEffectSpec spec, IAttribute attribute) =>
+            stop.Stops == EStopImpacts.AnyImpact || Lowers(spec, attribute);
+
+        private static readonly EImpactDelivery[] StopDeliveries = { EImpactDelivery.OnApply, EImpactDelivery.Periodic, EImpactDelivery.Continuous };
+
+        // Whether any of the effect's impacts on the attribute, or on any where it's none, lowers it as it stands: an add
+        // below 0, a multiplier below 1, an override below where it is
+        private bool Lowers(GameplayEffectSpec spec, IAttribute attribute)
+        {
+            foreach (var delivery in StopDeliveries)
+            {
+                foreach (var impacted in spec.GetImpactedAttributes(delivery))
+                {
+                    if (attribute != null && !attribute.Equals(impacted)) continue;
+                    var impacters = spec.GetImpactersFor(impacted, delivery);
+                    for (int i = 0; i < impacters.Count; i++)
+                        if (Lowers(impacters[i], spec, impacted)) return true;
+                }
+            }
+            return false;
+        }
+
+        private bool Lowers(IAttributeImpacter impacter, GameplayEffectSpec spec, IAttribute attribute)
+        {
+            float magnitude = impacter.Evaluate(spec);
+            switch (impacter.Operation)
+            {
+                case ECalculationOperation.Add:
+                case ECalculationOperation.FlatBonus:
+                    return magnitude < 0f;
+                case ECalculationOperation.Multiply:
+                    return magnitude < 1f;
+                case ECalculationOperation.Override:
+                    if (!Self.TryGetAttributeValue(attribute, out var value)) return false;
+                    return magnitude < (impacter.TargetSlot == EAttributeTarget.Base ? value.BaseValue : value.CurrentValue);
+                default:
+                    return false;
+            }
         }
 
         private static bool SeenBefore(IReadOnlyList<AttributeImpactEntry> entries, int index, ValuePipeline pipeline)
@@ -306,11 +349,11 @@ namespace FarEmerald.PlayForge
             return false;
         }
 
-        private static AbstractStopStage Stops(ValuePipeline pipeline, GameplayEffectSpec spec)
+        private AbstractStopStage Stops(ValuePipeline pipeline, GameplayEffectSpec spec, IAttribute attribute)
         {
             if (pipeline == null || pipeline.Stages == null) return null;
             for (int i = 0; i < pipeline.Stages.Count; i++)
-                if (pipeline.Stages[i] is AbstractStopStage { Enabled: true } stop && Rolls(stop, spec)) return stop;
+                if (pipeline.Stages[i] is AbstractStopStage { Enabled: true } stop && Reaches(stop, spec, attribute) && Rolls(stop, spec)) return stop;
             return null;
         }
 

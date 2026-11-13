@@ -48,8 +48,10 @@ Each stage has a **Label**, the name a breakdown gives it, and **Enabled**, whic
   of the effect lands, and where it comes up nothing of it does, its damage, tags, contained effects and on-hits, and
   its ticks aren't rolled again; the one hit hears Blocked or Evaded, and the dealer Hit Blocked or Hit Evaded. A
   defender brings one through an incoming modifier's Change Impact, as Tougher Times blocks the hits landing on its
-  holder by a stacking curve of its stacks ([EFFECTS.md](EFFECTS.md#modifiers)). As the hit commits, it passes the
-  value on.
+  holder by a stacking curve of its stacks ([EFFECTS.md](EFFECTS.md#modifiers)). Its **Stops** says what it can stop:
+  **Losses**, the default, an effect that lowers its attribute, an add below 0, a multiplier below 1 or an override
+  below where it stands, so a heal lands past it unrolled; or **Any Impact**, heals and buffs too (GAS-77). As the hit
+  commits, it passes the value on.
 - **Execute** (TW-15): a hit that would leave the one hit with less than its **Share** of its **Attribute**'s base, the
   Health role's where it names none, takes the rest, as Culling Blade; the breakdown notes it.
 

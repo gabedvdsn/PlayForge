@@ -413,6 +413,8 @@ tracks each fix below by its ID.
   page, through one table of links in the editor.
 
 ### Changed
+- A Block or Evade stage stops only an effect that lowers its attribute, as a hit, by its new Stops setting, so a heal
+  lands past an incoming block unrolled; Any Impact stops heals and buffs too, as every stop did before (GAS-77).
 - The authoring settings live on the Forge Project, each game's its own: where each type's new assets go and how their
   files are named, each type's defaults, and the Cost and Cooldown templates. Project Settings → PlayForge shows the
   active project's settings, and the first project to need them takes what ProjectSettings/PlayForgeSettings.asset held,

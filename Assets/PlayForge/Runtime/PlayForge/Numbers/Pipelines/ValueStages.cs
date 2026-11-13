@@ -156,6 +156,10 @@ namespace FarEmerald.PlayForge
         [Tooltip("How it rolls: pseudo-random, and its luck (TW-8)")]
         public ChanceRoll Roll = new();
 
+        [Tooltip("What it can stop: Losses, an effect that lowers its attribute, as a hit, letting a heal land; or Any " +
+                 "Impact, heals and buffs too (GAS-77)")]
+        public EStopImpacts Stops = EStopImpacts.Losses;
+
         /// <summary>What the one hit hears as it stops the effect.</summary>
         public abstract Tag StoppedEvent { get; }
 
@@ -167,7 +171,18 @@ namespace FarEmerald.PlayForge
 
         public override float Apply(float value, in ValueRun run) => value;
 
-        public override string Describe() => $"{Verb} on a {NumberText.Of(Chance)} chance";
+        public override string Describe() =>
+            $"{Verb} on a {NumberText.Of(Chance)} chance{(Stops == EStopImpacts.AnyImpact ? ", any impact" : "")}";
+    }
+
+    /// <summary>What a Block or Evade stage can stop (GAS-77).</summary>
+    public enum EStopImpacts
+    {
+        /// <summary>An effect that lowers its attribute, as a hit: a heal or a buff lands past it.</summary>
+        Losses,
+
+        /// <summary>An effect of any impact on its attribute: heals and buffs too.</summary>
+        AnyImpact,
     }
 
     /// <summary>A block: on its chance, nothing of the effect lands, as Tougher Times blocks a hit outright (TW-12).</summary>

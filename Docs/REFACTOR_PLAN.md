@@ -923,6 +923,7 @@ had no letter in the review. TS-AA onward came from the test project.
 | GAS-74 | L | 5 | Found building Mekansm (Decision 45): Apply Effects waited `DelayBetweenApplicationMs` between its effects through `SequenceTaskLibrary.Delay`, which ticks once even for 0, so an ability's second effect landed a frame after its first: Mekansm's lockout a frame after its heal. Fixed: it waits only for a delay above 0, and not after its last effect | `ApplyEffectsAbilityTask.cs` | verified |
 | GAS-75 | M | 5 | Found building Mekansm and Counter Helix (Decision 45): Auto Target and Auto Target by Affinity with no range searched the scene for MonoBehaviour entities (`FindObjectsByType<GameplayAbilitySystem>`), so a runtime entity was never found; with a range they searched with physics alone, which finds no runtime entity. Fixed: `ForgeEntities`, every live entity on both hubs, each joining as its core initializes and leaving as it ends; a search with no range goes through it, and one with a range finds a runtime entity by its targeting packet, physics still finding MonoBehaviour ones on their layers. The caster is still left out (TW-10) | `ForgeEntities.cs`, `GASCore.cs`, `AutoTargetTask.cs`, `AutoTargetByAffinityTask.cs` | verified |
 | GAS-76 | M | 5 | Found surveying thresholds for Megaera (Decision 45): an analysis worker's "has fired" key was its type's name (`MyKey`), so two Threshold workers on one entity shared it, and the first to fire marked the other. Fixed: each worker makes its own key as it's first asked | `AbstractAnalysisWorker.cs` | verified |
+| GAS-77 | M | 5 | Found moving Tougher Times to the built-ins (AC-6): a Block or Evade stage rolled for every effect impacting its attribute, so an incoming block stopped a heal on its chance. Fixed at the user's word as a setting: each stop's **Stops**, Losses by default, an effect that lowers its attribute (an add below 0, a multiplier below 1, an override below where it is), so a heal lands past it unrolled; or Any Impact, as every stop did | `ValueStages.cs`, `EffectSystemComponent.cs` | verified |
 | GAS-P1 | M | 0 | `ActionQueue` LINQ allocations; snapshot built every frame (PF-006) | `ActionQueue.cs:41, 46, 156`, `FrameSummary.cs:340-351` | verified |
 | GAS-P2 | M | 0 | Tag and FrameSummary allocations (PF-007) | `TagCache.cs:60`, `TagQuery.cs:89-136`, `FrameSummary.cs:306-308` | verified |
 | GAS-P3 | M | 3 | Each application revalidates every container and rebuilds all tags (area application is quadratic). Measured: an instant application on an entity carrying 1,000 effects took 0.49 ms, 135 times one on an entity carrying 2. Now the requirements wait for one pass at the next tick, a shelved container's tags are counted as it lands, and re-application and removal find containers in an index by asset tag | `EffectSystemComponent.cs:312-348`, `GameplayAbilitySystem.cs:250-281` | verified |
@@ -1314,6 +1315,15 @@ GAS-4 with GAS-5, PC-6, and TS-I with PC-5.
 ## Log
 
 Record baselines, gate results and notable decisions here, newest first.
+
+- 2026-11-12, **GAS-77: a stop stops losses, unless it's set to stop any impact.** A Block or Evade stage has a Stops
+  setting, the user's ask: Losses, the default, rolls only for an effect that lowers its attribute, an add below 0, a
+  multiplier below 1 or an override below where it stands, read from the effect's impacters as it lands, so a heal lands
+  past Tougher Times unrolled; Any Impact rolls for any effect on it, as every stop did. A pipeline's stop reads its
+  entry's attribute, a modifier's the one it names or any.
+  - Red first: GAS_77's two tests, on both hubs, don't compile against the old code, Stops being new; there a heal on a
+    Tougher Times holder was rolled for and blocked
+  - Gates: BlockTests and RiskOfRainLabTests, run alone: 40 of 40. Full: EditMode 860 of 862, ED-61 red from the working tree's lifecycle change and an inspector-undo case, Strike Damage's, with the known managed reference error, which passed run again; PlayMode 1809 of 1829, 8 skipped, the 12 known reds; golden 25 of 25.
 
 - 2026-11-12, **AC-1 and AC-2: the Additional Content sample's assembly and its feedback.** The sample's code is an
   assembly of its own, `FarEmerald.PlayForge.AdditionalContent`, on uGUI and TextMeshPro, which nothing in PlayForge
