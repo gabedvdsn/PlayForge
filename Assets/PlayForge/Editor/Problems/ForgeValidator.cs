@@ -130,11 +130,12 @@ namespace FarEmerald.PlayForge.Extended.Editor
         }
 
         /// <summary>Whether the validator checks an asset: every PlayForge asset, Scaler asset and requirement template.</summary>
-        public static bool Checks(Object asset) => asset is BaseForgeAsset or ScalerAsset or RequirementTemplate;
+        public static bool Checks(Object asset) =>
+            asset is BaseForgeAsset or ScalerAsset or RequirementTemplate or ValuePipeline or EffectModifier or CrowdControlRules;
 
         /// <summary>The project's PlayForge assets.</summary>
         internal static IEnumerable<ScriptableObject> ProjectAssets() =>
-            new[] { nameof(BaseForgeAsset), nameof(ScalerAsset), nameof(RequirementTemplate) }
+            new[] { nameof(BaseForgeAsset), nameof(ScalerAsset), nameof(RequirementTemplate), nameof(ValuePipeline), nameof(EffectModifier), nameof(CrowdControlRules) }
                 .SelectMany(type => AssetDatabase.FindAssets("t:" + type))
                 .Distinct()
                 .Select(AssetDatabase.GUIDToAssetPath)

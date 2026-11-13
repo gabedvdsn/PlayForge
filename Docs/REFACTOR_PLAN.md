@@ -684,6 +684,11 @@ from. It lives outside `Assets/` so it never ships in the package.
   or a Code context, with an attribute that hides one (TAG-5). **The contexts are pruned and renamed**: those no field
   names go, the overlaps merge, the unclear names change, with a pass over the Tag Libraries' declarations, and the
   fields' contexts are fixed against the new set (TAG-6, TAG-3).
+- Decision 72, 2026-11-13: FN-12's shape, the user's choices. **The Forge lists the rules assets too**, Value
+  Pipelines, Effect Modifiers and Crowd Control Rules, each with its folder in Project Settings and its Create entry;
+  the Tag Library, the lab's assets and the Forge Project stay out, set up where they're used. **Every PlayForge asset
+  opens with the shared header**, each with an inspector of its own. **The toolbar keeps the six PlayForge assets as
+  toggles**, the rest under More.
 
 **Open. Ask the user; do not assume:**
 1. ~~**Uncommitted changes**~~: decided, see above.
@@ -1316,7 +1321,7 @@ Death's section and a body for a running entity.
 | FN-9 | Tags in The Forge: renamed there; a tag's summary shows its whole path under its primary name where the path says more; and new tag contexts made there (Decision 70: new contexts only). Done: the Tags view renames a tag, as F2 or a row's Rename… does, and the tags under its path with it, in every asset that names them and the Tag Library, a unique tag staying unique; an asset's own tag, which follows its asset's name, and PlayForge's own it doesn't rename, and says why. A tag's summary names it by its leaf, its whole path under it. A contexts field's New Context… makes a context of the project's own, kept in its Tag Library, offered in every contexts field (`TheForge.cs`, `ForgeTagRenames.cs`, `ForgeNameWindow.cs`, `ForgeTagContexts.cs`, `ForgeTagContextsField.cs`, `ForgeTagLibrary.cs`) | UI | verified |
 | FN-10 | Tag contexts gone through as they are: which exist, whether each is apt, how they're assigned to fields, and whether each field has the right ones; the tags `Tags.cs` writes, how robust they are; and how a project's own hard-coded tags reach the tag registry with nothing done by hand. Done: `Docs/TAG_REVIEW.md`. A tag made in New Tag can't have children, the core tags alias designers' tags of the same text, fields that write a kind of tag and fields that read it carry different contexts, about 25 have none, the registry scans five asset types, contexts match by substring, 18 of 31 contexts go unused, and code tags reach pickers only from `Tags`. Its fixes are TAG-1 to TAG-8, decided by Decision 71 | Review | done |
 | FN-11 | The less common assets made easier to make: **New** or **Open** beside a Value Pipeline, Crowd Control Rules or Effect Modifier field; Value Pipelines in the Demo; and the docs say a Forge Tag Library belongs to no project, every one being read wherever it is. Done: a Value Pipeline, Crowd Control Rules or Effect Modifier field is a reference as a PlayForge asset's is, New beside it making one named for the asset and the field, and Open once it names one (`AbstractForgeObjectDrawer.cs`, `LessCommonAssetDrawers.cs`); the getting-started guide says a Tag Library belongs to no project. To do: Value Pipelines in the Demo, which change the damage its tests read | UI | open |
-| FN-12 | Every asset type has its editor, with headers, and is in The Forge | UI | open |
+| FN-12 | Every asset type has its editor, with headers, and is in The Forge. Done (Decision 72): every PlayForge asset's inspector opens with the shared header, its name and type, its line, its problems, Open in The Forge or Show in Project, and the asset menu, the Requirement Template, Crowd Control Rules, Tag Library, Forge Project and the lab's assets with inspectors of their own; The Forge lists Value Pipelines, Effect Modifiers and Crowd Control Rules, its toolbar the six PlayForge assets as toggles and the rest under More (`ForgeAssetHeaders.cs`, `LabAssetEditors.cs`, `PlayForgeSettings.cs`, `ForgeValidator.cs`, `TheForge.cs`, the Scaler asset's, Value Pipeline's and Effect Modifier's inspectors, and `EffectModifier.cs`, the class in a file of its own name, which a saved Effect Modifier needs to find its script) | UI | verified |
 | FN-13 | The PlayForge Create menu ordered. Done: the Forge Project; then the assets The Forge lists first, in its order; then the numbers, rules and the Tag Library; then the lab's assets; then the Demo's roster, each group apart by a line, and the Requirement Template out of a Templates submenu of its own (the Create menu attributes) | UI | verified |
 | FN-14 | Components (Decision 70): a Components section on effects, abilities, items and entities, distinct from Unity's, components added from a menu, each a class with hooks into its asset (an effect's land, tick, end and hit; an ability's start and end; an entity's register and death). Effects' Area, Transfers and Auras, abilities' Charges, Toggles and Auras, and entities' Auras become components, existing assets moved by a one-off pass | Refactor | open |
 | FN-15 | Lifesteal is an attribute an impact worker reads, a share of what its holder deals healing it; the worker given project-wide, as workers every entity has on its Forge Project, or on an entity, and never run twice for one (Decision 70); the effects' and items' own lifesteal fields go, their assets moved onto the attribute | Refactor | open |
@@ -1374,6 +1379,20 @@ GAS-4 with GAS-5, PC-6, and TS-I with PC-5.
 ## Log
 
 Record baselines, gate results and notable decisions here, newest first.
+
+- 2026-11-13, **FN-12: every asset's inspector, and the rules assets in The Forge.** A Requirement Template, a Crowd
+  Control Rules asset, a Tag Library, a Forge Project and the lab's assets had Unity's own inspector, and a Scaler
+  asset's, an Effect Modifier's and a Value Pipeline's opened with no header. `ForgeAssetHeaders` builds the shared
+  header for any asset: its type's icon, its name as The Forge lists it, its type, its line, its problem count, Open in
+  The Forge for a type The Forge lists or Show in Project, and the asset menu, The Forge's row menu; each of these
+  inspectors opens with it, those with none of their own drawing their fields under it. The Forge lists Value Pipelines,
+  Effect Modifiers and Crowd Control Rules, which the validator checks too, each with its folder in Project Settings;
+  its toolbar keeps the six PlayForge assets as toggles, and the rest are filters under More, which says the one chosen
+  (Decision 72).
+  On the way: an Effect Modifier saved as an asset came back with no script, its class being in EffectModifiers.cs, a
+  file of another name, so no search by its type found one; it has a file of its own name now.
+  - Red first: FN_12's two tests against HEAD's editor: the Scaler asset's inspector had no shared header, and The Forge listed no rules asset
+  - Gates, on a frozen snapshot of the package: a first run's EditMode found the smoke suite opening none of the new inspectors, which it opens now, a new Crowd Control Rules and Tag Library with nothing to edit, given an element, the Forge test seeing a filter another test left, and the Effect Modifier's file; all fixed, and run again: EditMode 906 of 907, ED-61 red from the working tree's lifecycle change; PlayMode 1816 of 1837, 8 skipped, the 12 known reds and the Battle scene's flake; golden 25 of 25.
 
 - 2026-11-13, **FN-9: tags in The Forge.** A tag could be renamed nowhere but in each asset that used it. The Tags view
   renames one, as F2 or a row's Rename… does: a dialog with its path to type over, then it and the tags under its path

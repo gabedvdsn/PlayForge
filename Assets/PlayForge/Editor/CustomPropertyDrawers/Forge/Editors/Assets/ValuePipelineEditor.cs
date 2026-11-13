@@ -16,6 +16,8 @@ namespace FarEmerald.PlayForge.Extended.Editor
             var pipeline = (ValuePipeline)target;
             var root = new VisualElement { name = "ValuePipelineRoot" };
             ForgeTheme.Apply(root);
+            // The shared header, as every PlayForge asset's inspector opens with (FN-12)
+            root.Add(ForgeAssetHeaders.For(this));
 
             var description = new TextField("Description")
             {

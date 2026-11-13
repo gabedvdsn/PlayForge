@@ -7,6 +7,12 @@ tracks each fix below by its ID.
 ## [Unreleased]
 
 ### Added
+- Every PlayForge asset's inspector opens with the shared header, a Requirement Template's, Crowd Control Rules', a Tag
+  Library's, a Forge Project's and the lab's assets' among them, each with an inspector of its own (FN-12).
+- The Forge lists Value Pipelines, Effect Modifiers and Crowd Control Rules; its toolbar keeps the six PlayForge assets
+  as toggles, the rest under More (FN-12).
+- An Effect Modifier saved as an asset keeps its script, its class in a file of its own name; it came back with none
+  (FN-12).
 - The Forge's Tags view renames a tag, as F2 or a row's Rename… does, and the tags under its path with it, in every
   asset that names them and the Tag Library; a tag's summary names it by its leaf, its whole path under it (FN-9).
 - New Context… in a tag contexts field makes a context of the project's own, which its Tag Library keeps, offered in

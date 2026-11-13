@@ -48,6 +48,10 @@ namespace FarEmerald.PlayForge.Extended.Editor
         private ToolbarSearchField searchField;
         private ToolbarToggle tagsToggle;
         private readonly Dictionary<string, ToolbarToggle> typeToggles = new();
+        private ToolbarMenu moreMenu;
+
+        // The types the toolbar shows as toggles: the PlayForge assets; the rest are under More (FN-12, Decision 72)
+        private static bool IsCommon(Type type) => typeof(BaseForgeAsset).IsAssignableFrom(type);
         private List<ScriptableObject> allAssets = new();
         private List<ScriptableObject> shownAssets = new();
         private List<ForgeTagRegistry.TagUsageRecord> shownTags = new();
@@ -283,7 +287,8 @@ namespace FarEmerald.PlayForge.Extended.Editor
             create.RegisterCallback<PointerDownEvent>(_ => FillCreate(create), TrickleDown.TrickleDown);
             toolbar.Add(create);
 
-            foreach (var type in Types)
+            // The common types as toggles, the rest under More, which says the one chosen (FN-12, Decision 72)
+            foreach (var type in Types.Where(IsCommon))
             {
                 var name = ForgeAssetTypes.NameOf(type);
                 var toggle = new ToolbarToggle { name = type.Name, tooltip = $"Show only {name} assets" };
@@ -300,6 +305,18 @@ namespace FarEmerald.PlayForge.Extended.Editor
                 typeToggles[type.Name] = toggle;
                 toolbar.Add(toggle);
             }
+            moreMenu = new ToolbarMenu { name = "More", text = "More", tooltip = "Show only assets of another type" };
+            foreach (var type in Types.Where(type => !IsCommon(type)))
+            {
+                var each = type;
+                moreMenu.menu.AppendAction(ForgeAssetTypes.NameOf(each), _ =>
+                {
+                    typeFilter = typeFilter == each.Name ? "" : each.Name;
+                    if (typeFilter != "") tagsShown = false;
+                    Refill();
+                }, _ => typeFilter == each.Name ? DropdownMenuAction.Status.Checked : DropdownMenuAction.Status.Normal);
+            }
+            toolbar.Add(moreMenu);
             tagsToggle = new ToolbarToggle { name = "Tags", text = "Tags", tooltip = "Show the project's tags and what uses each" };
             tagsToggle.RegisterValueChangedCallback(change =>
             {
@@ -562,6 +579,9 @@ namespace FarEmerald.PlayForge.Extended.Editor
         {
             if (assetList == null) return;
             foreach (var (name, toggle) in typeToggles) toggle.SetValueWithoutNotify(!tagsShown && typeFilter == name);
+            // More says the type it shows, where it's one of its own
+            var other = tagsShown ? null : Types.FirstOrDefault(type => !IsCommon(type) && type.Name == typeFilter);
+            if (moreMenu != null) moreMenu.text = other != null ? ForgeAssetTypes.NameOf(other) : "More";
             tagsToggle.SetValueWithoutNotify(tagsShown);
             searchField.SetValueWithoutNotify(search);
             ForgeStack.Show(assetList, !tagsShown);

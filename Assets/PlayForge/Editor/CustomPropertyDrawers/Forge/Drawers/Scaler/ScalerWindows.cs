@@ -388,14 +388,11 @@ namespace FarEmerald.PlayForge.Extended.Editor
             ForgeTheme.Apply(root);
             root.AddToClassList("pf-scaler-asset");
 
-            var header = new VisualElement { name = "Header" };
-            header.AddToClassList("pf-scaler-asset__header");
-            var name = new Label(asset.DisplayName) { name = "AssetName" };
-            name.AddToClassList("pf-scaler-asset__name");
-            header.Add(name);
-            var about = new Label { name = "AssetAbout" };
-            about.AddToClassList("pf-scaler-asset__about");
-            header.Add(about);
+            // The shared header, as every PlayForge asset's inspector opens with, and under it what the asset is and how many
+            // fields use it (FN-12)
+            var header = ForgeAssetHeaders.For(this);
+            var name = header.NameLabel;
+            var about = header.AddLine("AssetAbout");
             root.Add(header);
 
             // Its name, as lists and menus show it: its scaler's, or its file's while it has no scaler to hold one (ED-74)
@@ -431,7 +428,7 @@ namespace FarEmerald.PlayForge.Extended.Editor
                 var uses = ScalerFields.UsesOf(asset);
                 // A Table, or By Level, as the kind menu names a number by level (TW-27)
                 var kind = asset.Scaler != null ? NumberText.KindName(asset.Scaler) : ScalerFields.KindName(null);
-                about.text = $"Scaler · {kind} · {(uses.Count == 1 ? "1 use" : $"{uses.Count} uses")}";
+                ForgeAssetHeader.ShowLine(about, $"Scaler · {kind} · {(uses.Count == 1 ? "1 use" : $"{uses.Count} uses")}");
                 usedBy.Summary.text = uses.Count == 0 ? "None" : uses.Count == 1 ? "1 field" : $"{uses.Count} fields";
                 usedBy.Content.Clear();
                 if (uses.Count == 0)

@@ -60,19 +60,6 @@ namespace FarEmerald.PlayForge
     }
 
     /// <summary>
-    /// A modifier shared between assets (TW-7, Decision 47): a rule that an item's, an ability's, an effect's or an
-    /// entity's modifier entry names in place of its own, as a Value Pipeline is shared.
-    /// </summary>
-    [CreateAssetMenu(menuName = "PlayForge/Effect Modifier", fileName = "Effect Modifier", order = 43)]
-    public class EffectModifier : ScriptableObject
-    {
-        [Tooltip("What it's for, as The Forge shows it")]
-        [TextArea] public string Description;
-
-        public EffectModifierRule Rule = new();
-    }
-
-    /// <summary>
     /// A modifier an item, an ability, an effect or an entity holds (TW-7): its own rule, or a shared Effect Modifier's,
     /// which it names in place of its own.
     /// </summary>

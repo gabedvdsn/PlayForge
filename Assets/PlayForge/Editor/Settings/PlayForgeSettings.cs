@@ -49,6 +49,10 @@ namespace FarEmerald.PlayForge.Extended.Editor
             (typeof(EntityIdentity), "Assets/Data/Entities"),
             (typeof(ScalerAsset), "Assets/Data/Templates/Scalers"),
             (typeof(RequirementTemplate), "Assets/Data/Templates/Requirements"),
+            // The rules assets, which The Forge lists too (FN-12, Decision 72)
+            (typeof(ValuePipeline), "Assets/Data/Pipelines"),
+            (typeof(EffectModifier), "Assets/Data/Modifiers"),
+            (typeof(CrowdControlRules), "Assets/Data/Rules"),
         };
 
         [SerializeField] internal PlayForgeSettingsData Data = new();

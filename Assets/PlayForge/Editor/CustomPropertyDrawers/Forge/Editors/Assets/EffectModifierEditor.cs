@@ -17,6 +17,8 @@ namespace FarEmerald.PlayForge.Extended.Editor
             var modifier = (EffectModifier)target;
             var root = new VisualElement { name = "EffectModifierRoot" };
             ForgeTheme.Apply(root);
+            // The shared header, as every PlayForge asset's inspector opens with (FN-12)
+            root.Add(ForgeAssetHeaders.For(this));
 
             var description = new TextField("Description")
             {

@@ -138,8 +138,9 @@ string perLevel = impact.FormatTotal();           // "20/30/40/50"
   PlayForge asset of the active **Forge Project** in one list beside a detail pane. A Forge Project is a folder with a
   project asset at its root (**Create → PlayForge → Forge Project**), and holds the assets under it that no project
   inside it does. The toolbar holds Back and Forward, which go over the assets it has shown, as a browser's do, the
-  project menu, which switches projects and makes a new one, Create, a filter for each type, Tags, the search and the
-  problem count. Create makes an asset of a type: Blank, or from a preset under it (TW-24), each ready to fill in: a
+  project menu, which switches projects and makes a new one, Create, a filter for each PlayForge asset type and More,
+  which holds the filters of the rest, Scaler assets, Requirement Templates, Value Pipelines, Effect Modifiers and Crowd
+  Control Rules, then Tags, the search and the problem count. Create makes an asset of a type: Blank, or from a preset under it (TW-24), each ready to fill in: a
   **Damage**, **Damage over Time**, **Buff**, **Debuff**, **Stun** (granting the tag of the project's crowd control rule
   that stops every ability) or **Aura** effect; an **On-Hit** or **Active** item (the Active one with an ability of its
   own, its cost and cooldown copies of the project's Cost and Cooldown effects); a **Passive (Triggered)** ability; or a
