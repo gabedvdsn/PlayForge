@@ -69,6 +69,17 @@ namespace FarEmerald.PlayForge.Extended.Editor
         // Whether a field that reads its scaler reads 0 without one. An element's side reads its number (AttributeBlueprint)
         private static bool ReadsZeroWithoutScaler(SerializedProperty operation) => operation.type != nameof(AttributeMagnitudeSpec);
 
+        // Whether a field reads 0 as it is: its number multiplied by a scaler it hasn't got, or giving way to it, as the
+        // Problems view says. One that reads its number alone, or adds its scaler, reads its number (FN-1)
+        internal static bool ReadsMissingScaler(SerializedProperty operation)
+        {
+            if (operation == null || IsScalerField(operation) || !ReadsZeroWithoutScaler(operation)) return false;
+            var scaler = operation.FindPropertyRelative(nameof(ScalableFloat.Scaler));
+            var real = operation.FindPropertyRelative(nameof(ScalableFloat.RealMagnitude));
+            if (scaler == null || real == null || scaler.managedReferenceValue != null) return false;
+            return (EMagnitudeOperation)real.intValue is EMagnitudeOperation.MultiplyWithScaler or EMagnitudeOperation.UseScaler;
+        }
+
         // The range a multiple selection shows when its fields give different values, as a mixed field shows
         internal const string MixedRange = "—";
 
@@ -269,13 +280,24 @@ namespace FarEmerald.PlayForge.Extended.Editor
                     kind.AddToClassList("pf-magnitude__kind");
                     row.Add(kind);
 
-                    // With no scaler, a field that reads its scaler reads 0
+                    // With no scaler, a field that reads its scaler reads 0, shown where it does (Show). Its kind already
+                    // shows Constant, which choosing again changes nothing, so the warning's own button makes it one (FN-1)
                     if (ReadsZeroWithoutScaler(operation))
                     {
-                        noScaler = new HelpBox("With no scaler, this field reads 0. Make it Constant to read its number.", HelpBoxMessageType.Warning)
+                        noScaler = new HelpBox("This field reads its scaler, but has none, so it reads 0.", HelpBoxMessageType.Warning)
                         {
                             name = "NoScaler",
                         };
+                        noScaler.Add(new Button(() =>
+                        {
+                            ScalerActions.MakeConstant(operation);
+                            Draw();
+                        })
+                        {
+                            name = "MakeConstant",
+                            text = "Make It Constant",
+                            tooltip = "Read the field's number alone",
+                        });
                         body.Add(noScaler);
                     }
                 }
@@ -620,8 +642,10 @@ namespace FarEmerald.PlayForge.Extended.Editor
         public static bool CanMakeConstant(SerializedProperty operation)
         {
             if (operation == null) return false;
+            // A field with a scaler, or one that reads a scaler it hasn't got, which reads 0 as it is (FN-1)
             if (!MagnitudeField.IsScalerField(operation))
-                return EachAsset.Of(ScalerOf(operation)).Any(each => each.managedReferenceValue != null);
+                return EachAsset.Of(ScalerOf(operation)).Any(each => each.managedReferenceValue != null)
+                    || EachAsset.Of(operation).Any(MagnitudeField.ReadsMissingScaler);
             var constant = ConstantKindFor(operation);
             return constant != null && EachAsset.Of(operation).Any(each => each.managedReferenceValue?.GetType() != constant);
         }

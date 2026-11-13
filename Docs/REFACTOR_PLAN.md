@@ -1297,7 +1297,7 @@ Death's section and a body for a running entity.
 
 | ID | Note | Kind | Status |
 |---|---|---|---|
-| FN-1 | A Scalable number field warns that it needs a scaler, with a hint to set it to Constant, when it's already Constant | Bug | open |
+| FN-1 | A Scalable number field warns that it needs a scaler, with a hint to set it to Constant, when it's already Constant. Fixed: the warning was right where it showed, a field whose number is multiplied by a scaler it hasn't got, or gives way to one, reading 0; but its kind already showed Constant, which choosing again changed nothing, and the field's menu offered Make Constant only to a field with a scaler. The warning says what the Problems view says, with a **Make It Constant** button, and the menu offers Make Constant to such a field; either keeps its number (`MagnitudeField.cs`) | Bug | verified |
 | FN-2 | Adding an element to a scaler group copies the last one, so the two share their scaler and each warns "Element N holds the same scaler, so an edit here changes it too"; **Make a separate copy** on one clears neither warning, nor does it on the other after | Bug | open |
 | FN-3 | An entity identity's Items section has two Scalable whole-number fields with no label | UI | open |
 | FN-4 | The Standard Worker Group drawer shows its Name field, which it shouldn't | UI | open |
@@ -1351,6 +1351,17 @@ GAS-4 with GAS-5, PC-6, and TS-I with PC-5.
 ## Log
 
 Record baselines, gate results and notable decisions here, newest first.
+
+- 2026-11-13, **FN-1: a number field that reads a scaler it hasn't got.** The user's first note: a Scalable number field
+  warned that it needed a scaler, with a hint to set it to Constant, when it was already Constant. The warning was right
+  where it showed: a field whose number is multiplied by a scaler, or gives way to one, reads 0 with none. But its kind
+  showed Constant, as any field with no scaler does, choosing Constant again changed nothing, and the field's menu
+  offered Make Constant only to a field with a scaler, so nothing in the inspector could follow the hint. The warning now
+  says what the Problems view says, with the Problems view's fix as a **Make It Constant** button, and the field's menu
+  offers Make Constant to such a field too; either keeps the field's number. The warning is still built for any field
+  that could read 0 and shown as it does, so an Undo of the fix brings it back.
+  - Red first: FN_1 against HEAD's drawer failed, its menu offering no Make Constant and its warning no button
+  - Gates: NumberFieldDrawerTests and the Problems rules' tests, 23 of 23. Full, on a frozen snapshot of the package: EditMode 863 of 864, ED-61 red from the working tree's lifecycle change; PlayMode 1815 of 1835, 8 skipped, the 12 known reds. No golden run: the change is the editor's alone.
 
 - 2026-11-13, **LAB-18: Forge Projects in the library.** The lab's library in the editor plays the active Forge
   Project's assets, as The Forge's pickers offer them, from the project's own folders, and every asset while there's no

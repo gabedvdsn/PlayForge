@@ -728,6 +728,9 @@ tracks each fix below by its ID.
   Asking whether its sequence was paused took 24 bytes a frame.
 
 ### Fixed
+- A number field that reads a scaler it hasn't got, and so reads 0, is made a Constant by its warning's **Make It
+  Constant** button, or its menu's Make Constant, keeping its number; the warning told the author to choose Constant,
+  which the field already showed, and choosing it again changed nothing (FN-1).
 - A stage cut short as its run is interrupted no longer says it succeeded, so a stage that applies usage effects as it
   ends doesn't pay them for a broken channel (TS-AE).
 - Updating an asset's tag, from the Problems window or Identity, carries the new tag to every asset that stored the old
