@@ -53,8 +53,10 @@ namespace FarEmerald.PlayForge
         private bool _workersDirty = true;
         private int _everyFrameWorkers;
 
-        // Each tag's ancestors, for the listeners on a parent, made once a tag
-        private static readonly Dictionary<Tag, Tag[]> ancestors = new();
+        // Each tag's ancestors' paths, for the listeners on a parent, made once a tag; and the tags listened to, by path,
+        // so a listener on a unique tag, whose name is padded, hears the tags under its path (TAG-1)
+        private static readonly Dictionary<Tag, string[]> ancestors = new();
+        private readonly Dictionary<string, List<Tag>> _listenedByPath = new(StringComparer.Ordinal);
 
         // Deferred execution context
         private ActionQueue _actionQueue;
@@ -521,7 +523,12 @@ namespace FarEmerald.PlayForge
         {
             if (onChange == null) throw new ArgumentNullException(nameof(onChange));
             var listener = new TagListener(this, tag, onChange, kind);
-            if (!_listeners.TryGetValue(tag, out var list)) _listeners[tag] = list = new List<TagListener>();
+            if (!_listeners.TryGetValue(tag, out var list))
+            {
+                _listeners[tag] = list = new List<TagListener>();
+                if (!_listenedByPath.TryGetValue(tag.Path, out var listened)) _listenedByPath[tag.Path] = listened = new List<Tag>();
+                listened.Add(tag);
+            }
             list.Add(listener);
             _listenerCount++;
             return listener;
@@ -537,7 +544,13 @@ namespace FarEmerald.PlayForge
         {
             if (!_listeners.TryGetValue(listener.Tag, out var list) || !list.Remove(listener)) return;
             _listenerCount--;
-            if (list.Count == 0) _listeners.Remove(listener.Tag);
+            if (list.Count > 0) return;
+            _listeners.Remove(listener.Tag);
+            if (_listenedByPath.TryGetValue(listener.Tag.Path, out var listened))
+            {
+                listened.Remove(listener.Tag);
+                if (listened.Count == 0) _listenedByPath.Remove(listener.Tag.Path);
+            }
         }
 
         /// <summary>
@@ -610,8 +623,14 @@ namespace FarEmerald.PlayForge
             try
             {
                 TellListenersOf(change.Tag, change);
+                // The listeners on each tag whose path is above the tag's, plain or unique (TAG-1)
                 var above = AncestorsOf(change.Tag);
-                for (int i = 0; i < above.Length; i++) TellListenersOf(above[i], change);
+                for (int i = 0; i < above.Length; i++)
+                {
+                    if (!_listenedByPath.TryGetValue(above[i], out var listened)) continue;
+                    int count = listened.Count;
+                    for (int j = 0; j < count && j < listened.Count; j++) TellListenersOf(listened[j], change);
+                }
             }
             finally
             {
@@ -670,11 +689,11 @@ namespace FarEmerald.PlayForge
             }
         }
 
-        private static Tag[] AncestorsOf(Tag tag)
+        private static string[] AncestorsOf(Tag tag)
         {
             if (ancestors.TryGetValue(tag, out var found)) return found;
-            var list = new List<Tag>();
-            foreach (var each in tag.GetAncestors()) list.Add(each);
+            var list = new List<string>();
+            foreach (var each in tag.GetAncestorPaths()) list.Add(each);
             found = list.ToArray();
             ancestors[tag] = found;
             return found;

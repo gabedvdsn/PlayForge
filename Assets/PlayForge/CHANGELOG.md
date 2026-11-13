@@ -736,6 +736,8 @@ tracks each fix below by its ID.
   Asking whether its sequence was paused took 24 bytes a frame.
 
 ### Fixed
+- A tag made in New Tag can have children: a unique tag's hierarchy goes by its display path, so a query for a tag and
+  its children, crowd control, Removes Effects Tagged and triggers find a New-Tag tag under another (TAG-1).
 - The Forge's rows set their words and icons in the middle of the row, with room at a column's left; they sat at its
   top, and the Tags view's words pressed against the window's edge (FN-6).
 - A table's hidden columns stay hidden as its window is closed and opened again, as their widths do, in The Forge, the

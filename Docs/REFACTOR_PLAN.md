@@ -1330,7 +1330,7 @@ The fixes the tag review found (FN-10, `Docs/TAG_REVIEW.md`), as Decision 71 dec
 
 | ID | Fix | Status |
 |---|---|---|
-| TAG-1 | A unique tag's hierarchy by its display path: `IsChildOf` and what reads it, the tag cache's parent listeners, `GetParent`, and ForgeLint's Under, so a New-Tag tag can have children; Make It a Child Of… builds from the parent's path (§5.1) | open |
+| TAG-1 | A unique tag's hierarchy by its display path: `IsChildOf` and what reads it, the tag cache's parent listeners, `GetParent`, and ForgeLint's Under, so a New-Tag tag can have children; Make It a Child Of… builds from the parent's path (§5.1). Done: `Tag.Path`, a unique tag's display path or any other tag's name, which every hierarchy helper reads; the tag cache tells the listeners on each tag whose path is above, plain or unique; ForgeLint's events and triggers go by path (`Tag.cs`, `TagCache.cs`, `ForgeLint.cs`, `TagDrawer.cs`) | verified |
 | TAG-2 | New Tag warns where a text is a core tag's, and offers that tag (§3.3.1-2) | open |
 | TAG-3 | Each field's contexts made right against TAG-6's set: the writer and the reader of a kind of tag share one, the ~25 unmarked fields get theirs, and Data split into its kinds (§2.2-2.4) | open |
 | TAG-4 | Contexts matched exactly, not by substring, and a field with several contexts no longer files its pick under each (§5.2-5.4) | open |
@@ -1374,6 +1374,18 @@ GAS-4 with GAS-5, PC-6, and TS-I with PC-5.
 ## Log
 
 Record baselines, gate results and notable decisions here, newest first.
+
+- 2026-11-13, **TAG-1: a unique tag's hierarchy goes by its display path.** A tag New Tag makes is unique, its name
+  padded with a hash to 64 characters, so a New-Tag "Status.Debuff.Burn" was never under a New-Tag "Status.Debuff": a
+  query for a tag and its children, crowd control, Removes Effects Tagged and a trigger's "or a tag under it" all
+  missed it. `Tag.Path` is a unique tag's display path, what the designer sees, and any other tag's name, so an asset
+  tag, whose display is its leaf, keeps its whole name; `IsChildOf` and every hierarchy helper read it, allocating
+  nothing, and equality still goes by the name, so a plain "Status.Debuff.Burn" is another tag under the same parents.
+  The tag cache tells the listeners on each tag whose path is above a change's, plain or unique, where it looked for the
+  plain tags of the ancestors' names. ForgeLint's events and triggers go by path, and Make It a Child Of… goes under the
+  parent's path, an asset tag's whole name (Decision 71).
+  - Red first: TAG_1's two tests against HEAD's tag code: a unique tag wasn't under the unique tag its path is under, and a query for a unique tag and its children found none
+  - Gates, on a frozen snapshot of the package: EditMode 876 of 877, ED-61 red from the working tree's lifecycle change; PlayMode 1817 of 1837, 8 skipped, the 12 known reds; golden 25 of 25.
 
 - 2026-11-13, **FN-11: New and Open beside a pipeline, rules or modifier field.** A Value Pipeline, Crowd Control Rules
   or Effect Modifier field was Unity's bare object field, with no way to make one in place. Each is a reference now, as

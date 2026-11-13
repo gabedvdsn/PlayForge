@@ -21,10 +21,11 @@ namespace FarEmerald.PlayForge.Extended.Editor
         // The core's own impact types and events, as Tags marks them: an impact type every filter takes, as Always Allow,
         // or one the core deals, as Returned; an event the core sends, as Kill
         private static readonly HashSet<string> CoreImpactTypes = CoreTags(ForgeContext.Impact);
-        private static readonly HashSet<string> CoreEvents = CoreTags(ForgeContext.Trigger);
+        // The core events by their paths, as a trigger takes a tag under its own by its path (TAG-1)
+        private static readonly HashSet<string> CoreEvents = CoreTags(ForgeContext.Trigger, tag => tag.Path);
 
         // The events that carry an impact, which a trigger's impact types filter; another's data holds none
-        private static readonly string[] ImpactEvents = { Tags.IMPACT_DEALT.Name, Tags.IMPACT_TAKEN.Name };
+        private static readonly string[] ImpactEvents = { Tags.IMPACT_DEALT.Path, Tags.IMPACT_TAKEN.Path };
 
         private static Facts facts;
 
@@ -164,12 +165,12 @@ namespace FarEmerald.PlayForge.Extended.Editor
                             break;
                         // The event a threshold sends as it fires
                         case ThresholdAnalysisWorker threshold when threshold.Event.IsValid:
-                            given.Sent.Add(threshold.Event.Name);
+                            given.Sent.Add(threshold.Event.Path);
                             break;
                         // The events a stop stage sends as it stops a hit, as a project's own parry's
                         case AbstractStopStage stop:
-                            if (stop.StoppedEvent.IsValid) given.Sent.Add(stop.StoppedEvent.Name);
-                            if (stop.DealerEvent.IsValid) given.Sent.Add(stop.DealerEvent.Name);
+                            if (stop.StoppedEvent.IsValid) given.Sent.Add(stop.StoppedEvent.Path);
+                            if (stop.DealerEvent.IsValid) given.Sent.Add(stop.DealerEvent.Path);
                             break;
                     }
                 }
@@ -187,15 +188,19 @@ namespace FarEmerald.PlayForge.Extended.Editor
                 if (tag.IsValid) into.Add(tag.Name);
         }
 
-        // Whether an event is the trigger's tag or one under it, by their names, as a trigger takes it
+        /// <summary>A serialized tag's path, as its tag's <see cref="Tag.Path"/> (TAG-1).</summary>
+        internal static string PathOf(SerializedProperty tag) => tag == null ? "" : Tag.PathOf(
+            tag.FindPropertyRelative(nameof(Tag.Name))?.stringValue ?? "", tag.FindPropertyRelative(nameof(Tag.DisplayName))?.stringValue ?? "");
+
+        // Whether an event is the trigger's tag or one under it, by their paths, as a trigger takes it (TAG-1)
         private static bool Under(string sent, string trigger) =>
             sent == trigger || sent.Length > trigger.Length && sent.StartsWith(trigger, StringComparison.Ordinal) && sent[trigger.Length] == '.';
 
-        private static HashSet<string> CoreTags(string context) => new(
+        private static HashSet<string> CoreTags(string context, System.Func<Tag, string> read = null) => new(
             typeof(Tags).GetProperties(BindingFlags.Public | BindingFlags.Static)
                 .Where(property => property.PropertyType == typeof(Tag)
                                    && property.GetCustomAttribute<ForgeContextDefault>()?.Context?.Contains(context) == true)
-                .Select(property => ((Tag)property.GetValue(null)).Name)
+                .Select(property => (read ?? (tag => tag.Name))((Tag)property.GetValue(null)))
                 .Where(name => !string.IsNullOrEmpty(name)),
             StringComparer.Ordinal);
 
@@ -340,7 +345,7 @@ namespace FarEmerald.PlayForge.Extended.Editor
                 // A trigger reads its impact types only for an event that carries an impact: not a tag gained, a Kill, or an
                 // event of the project's own, which code may send with any data
                 if (kind == "Trigger" && (iterator.FindPropertyRelative(nameof(AbilityTrigger.Source))?.intValue != (int)EAbilityTriggerSource.GameplayEvent
-                                          || !ForgeLint.TakesImpacts(iterator.FindPropertyRelative($"{nameof(AbilityTrigger.Tag)}.{nameof(Tag.Name)}")?.stringValue ?? "")))
+                                          || !ForgeLint.TakesImpacts(ForgeLint.PathOf(iterator.FindPropertyRelative(nameof(AbilityTrigger.Tag))))))
                     continue;
                 CheckFilter(asset, iterator.FindPropertyRelative(nameof(OnHitEntry.ImpactTypes)), ForgeLint.Numbered(kind, iterator.propertyPath), problems);
             }
@@ -401,7 +406,7 @@ namespace FarEmerald.PlayForge.Extended.Editor
             {
                 var trigger = triggers[i];
                 if (trigger == null || trigger.Source != EAbilityTriggerSource.GameplayEvent || !trigger.Tag.IsValid) continue;
-                if (ForgeLint.Sends(trigger.Tag.Name)) continue;
+                if (ForgeLint.Sends(trigger.Tag.Path)) continue;
                 problems.Add(new ForgeProblem(asset, ForgeProblemSeverity.Note,
                     $"Trigger {i + 1} waits for {trigger.Tag}, an event no asset in the project sends, so only code can set it off.",
                     $"{nameof(Ability.Definition)}.{nameof(AbilityDefinition.Triggers)}.Array.data[{i}]"));

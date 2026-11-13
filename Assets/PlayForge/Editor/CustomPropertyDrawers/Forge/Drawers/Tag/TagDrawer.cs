@@ -119,7 +119,8 @@ namespace FarEmerald.PlayForge.Extended.Editor
                     if (!parent.IsValid) return;
                     var leaf = TagDisplaySettings.PathOf(tag);
                     leaf = leaf.Substring(leaf.LastIndexOf('.') + 1);
-                    Pick(property, Tag.GenerateAsUnique($"{TagDisplaySettings.PathOf(parent)}.{leaf}"), settings.Contexts);
+                    // Under the parent's path, which is an asset tag's whole name where its display is its leaf (TAG-1)
+                    Pick(property, Tag.GenerateAsUnique($"{parent.Path}.{leaf}"), settings.Contexts);
                 }), held ? DropdownMenuAction.Status.Normal : DropdownMenuAction.Status.Disabled);
             }
             menu.menu.AppendAction("Copy Path", _ => EditorGUIUtility.systemCopyBuffer = TagDisplaySettings.PathOf(tag),

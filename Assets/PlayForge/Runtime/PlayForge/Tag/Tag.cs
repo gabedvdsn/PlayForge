@@ -40,6 +40,27 @@ namespace FarEmerald.PlayForge
 
         public bool IsValid => !string.IsNullOrEmpty(Name);
 
+        /// <summary>
+        /// The path its hierarchy goes by: a unique tag's display path, what the designer sees, as its name carries hash
+        /// padding; any other tag's name. So a New-Tag "Status.Debuff.Burn" is under a New-Tag "Status.Debuff", and under a
+        /// plain "Status" (TAG-1, Decision 71). Equality still goes by the name.
+        /// </summary>
+        public string Path => PathOf(Name, DisplayName);
+
+        /// <summary>
+        /// The path a tag of a name and a display text goes by, as <see cref="Path"/>, for a tag read from its parts, as
+        /// a serialized one is. A unique tag's name is its display text with hash padding after it, which has no dot, or
+        /// the text cut short at its length (TagRegistry.TagUtil.GenerateDeterministicTag); an asset tag's display is its
+        /// leaf alone, so its name is its path. Nothing is allocated, as a query reads paths often.
+        /// </summary>
+        public static string PathOf(string name, string display)
+        {
+            if (string.IsNullOrEmpty(name) || string.IsNullOrEmpty(display) || ReferenceEquals(name, display)) return name ?? "";
+            if (name.Length > display.Length)
+                return name.StartsWith(display, StringComparison.Ordinal) && name.IndexOf('.', display.Length) < 0 ? display : name;
+            return name.Length < display.Length && display.StartsWith(name, StringComparison.Ordinal) ? display : name;
+        }
+
         // ═══════════════════════════════════════════════════════════════════════════
         // Constructors & Factory Methods
         // ═══════════════════════════════════════════════════════════════════════════
@@ -96,7 +117,9 @@ namespace FarEmerald.PlayForge
             if (string.IsNullOrEmpty(childName))
                 return this;
             
-            string newName = string.IsNullOrEmpty(Name) ? childName : $"{Name}.{childName}";
+            // Under its path, so a unique tag's child goes under what it reads as, not its padding (TAG-1)
+            var path = Path;
+            string newName = string.IsNullOrEmpty(path) ? childName : $"{path}.{childName}";
 
             // The tag of that name. These helpers made deterministic tags, whose names are padded with a hash, so
             // none of them was ever the tag of the name it stood for (GAS-17)
@@ -114,11 +137,12 @@ namespace FarEmerald.PlayForge
         {
             get
             {
-                if (string.IsNullOrEmpty(Name)) return 0;
+                var path = Path;
+                if (string.IsNullOrEmpty(path)) return 0;
                 int count = 1;
-                for (int i = 0; i < Name.Length; i++)
+                for (int i = 0; i < path.Length; i++)
                 {
-                    if (Name[i] == '.') count++;
+                    if (path[i] == '.') count++;
                 }
                 return count;
             }
@@ -127,7 +151,7 @@ namespace FarEmerald.PlayForge
         /// <summary>
         /// Returns true if this is a root tag (no parent).
         /// </summary>
-        public bool IsRoot => !string.IsNullOrEmpty(Name) && !Name.Contains('.');
+        public bool IsRoot => !string.IsNullOrEmpty(Path) && !Path.Contains('.');
         
         /// <summary>
         /// Returns the leaf name (last segment after the final dot).
@@ -135,9 +159,10 @@ namespace FarEmerald.PlayForge
         /// </summary>
         public string GetLeafName()
         {
-            if (string.IsNullOrEmpty(Name)) return "";
-            int lastDot = Name.LastIndexOf('.');
-            return lastDot < 0 ? Name : Name.Substring(lastDot + 1);
+            var path = Path;
+            if (string.IsNullOrEmpty(path)) return "";
+            int lastDot = path.LastIndexOf('.');
+            return lastDot < 0 ? path : path.Substring(lastDot + 1);
         }
         
         /// <summary>
@@ -146,13 +171,14 @@ namespace FarEmerald.PlayForge
         /// </summary>
         public string GetParentPath()
         {
-            if (string.IsNullOrEmpty(Name)) return null;
-            
+            var path = Path;
+            if (string.IsNullOrEmpty(path)) return null;
+
             // Use cached value if available
             if (CachedParentPath != null) return CachedParentPath == "" ? null : CachedParentPath;
-            
-            int lastDot = Name.LastIndexOf('.');
-            return lastDot < 0 ? null : Name.Substring(0, lastDot);
+
+            int lastDot = path.LastIndexOf('.');
+            return lastDot < 0 ? null : path.Substring(0, lastDot);
         }
         
         /// <summary>
@@ -196,9 +222,10 @@ namespace FarEmerald.PlayForge
         /// </summary>
         public Tag GetRoot()
         {
-            if (string.IsNullOrEmpty(Name)) return this;
-            int firstDot = Name.IndexOf('.');
-            return firstDot < 0 ? this : Generate(Name.Substring(0, firstDot));
+            var path = Path;
+            if (string.IsNullOrEmpty(path)) return this;
+            int firstDot = path.IndexOf('.');
+            return firstDot < 0 ? this : Generate(path.Substring(0, firstDot));
         }
         
         /// <summary>
@@ -207,8 +234,9 @@ namespace FarEmerald.PlayForge
         /// </summary>
         public string[] GetSegments()
         {
-            if (string.IsNullOrEmpty(Name)) return Array.Empty<string>();
-            return Name.Split('.');
+            var path = Path;
+            if (string.IsNullOrEmpty(path)) return Array.Empty<string>();
+            return path.Split('.');
         }
 
         // ═══════════════════════════════════════════════════════════════════════════
@@ -222,14 +250,17 @@ namespace FarEmerald.PlayForge
         /// </summary>
         public bool IsChildOf(Tag parent)
         {
-            if (string.IsNullOrEmpty(parent.Name) || string.IsNullOrEmpty(Name))
+            // By their paths, so a unique tag, whose name is padded, has children and parents (TAG-1)
+            var path = Path;
+            var parentPath = parent.Path;
+            if (string.IsNullOrEmpty(parentPath) || string.IsNullOrEmpty(path))
                 return false;
-            
-            // Must be longer than parent and start with parent name followed by dot. Ordinal: names are identifiers, and
+
+            // Must be longer than parent and start with parent path followed by dot. Ordinal: paths are identifiers, and
             // a culture-aware StartsWith was slower and could match by the current culture's rules (GAS-P4)
-            return Name.Length > parent.Name.Length
-                   && Name.StartsWith(parent.Name, StringComparison.Ordinal)
-                   && Name[parent.Name.Length] == '.';
+            return path.Length > parentPath.Length
+                   && path.StartsWith(parentPath, StringComparison.Ordinal)
+                   && path[parentPath.Length] == '.';
         }
         
         /// <summary>
@@ -242,7 +273,7 @@ namespace FarEmerald.PlayForge
             if (!IsChildOf(parent)) return false;
 
             // No more dots after the parent path, looked for in place: the rest was cut out as a new string (GAS-P4)
-            return Name.IndexOf('.', parent.Name.Length + 1) < 0;
+            return Path.IndexOf('.', parent.Path.Length + 1) < 0;
         }
         
         /// <summary>
@@ -273,13 +304,16 @@ namespace FarEmerald.PlayForge
         /// </summary>
         public bool SharesAncestorWith(Tag other)
         {
-            if (string.IsNullOrEmpty(Name) || string.IsNullOrEmpty(other.Name))
+            // By their paths, as a unique tag's name is padded (TAG-1)
+            var path = Path;
+            var otherPath = other.Path;
+            if (string.IsNullOrEmpty(path) || string.IsNullOrEmpty(otherPath))
                 return false;
 
             // The first segments compared in place. Each side's root was cut out as a new string and registered as a
             // tag, for every tag a same-root query compared (GAS-P4)
-            int length = RootLength(Name);
-            return length == RootLength(other.Name) && string.CompareOrdinal(Name, 0, other.Name, 0, length) == 0;
+            int length = RootLength(path);
+            return length == RootLength(otherPath) && string.CompareOrdinal(path, 0, otherPath, 0, length) == 0;
         }
 
         private static int RootLength(string name)
