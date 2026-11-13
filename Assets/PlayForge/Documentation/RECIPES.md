@@ -94,3 +94,34 @@ As the boss's Health falls to half, it enrages, once.
 
 The phase's own moves start from the tag: an ability with a **Tag Added** trigger on `Recipe.Enraged`, or a stage
 condition that reads it. The worker's **Event** sends a gameplay event as well, for a trigger of its own.
+
+## Formulas
+
+Scaler assets for a genre's formulas, under `Formulas`, each named for what it computes (AC-3). A field reads one with
+its **Shared** kind ([SCALERS.md](SCALERS.md)); each is a **Stacking Curve** of a count, with an **a**.
+
+- **1 ÷ (1 + 0.06 × Armor)**: Reciprocal, **a** 0.06, of the hit's target's Armor. In a Value Pipeline's **Multiply**
+  stage, a hit leaves all of itself at 0 Armor, a half at about 17, never none.
+- **100 ÷ (100 + Armor)**: Reciprocal, **a** 0.01: a half at 100 Armor, a third at 200.
+- **−Armor**: Linear, **a** −1. In an **Add** stage, a blow of 100 against 20 Armor lands as 80.
+- **0.15 × Stacks**: Linear, **a** 0.15, of an item's stacks, a bonus that grows by as much with each.
+- **1 − 1 ÷ (1 + 0.15 × Stacks)**: Hyperbolic, a chance that nears 1 and never reaches it: 13% with one stack, 60%
+  with ten.
+- **0.9 ^ Stacks**: Exponential, a share that falls by a tenth with each stack.
+
+The Armor ones read the **Armor** attribute in `Formulas/Attributes`, as the hit lands; point them at your own.
+
+## A starter set
+
+Plain assets named for what they are, under `Starter Set` (AC-5); the recipes above hold the rest of a starter set, a
+damage over time, an on hit, an on kill and a boss's phase. Each hit reads the recipes' Health.
+
+- **Melee Attack** (an ability): **Apply Effects**, Melee Hit, on what it's cast at; **Cooldown** Melee Cooldown.
+  **Melee Hit**: Instant, -10 Health. **Melee Cooldown**: Durational, 1 s.
+- **Bolt** (an ability): the same, its **Bolt Hit** -25 Health, its **Bolt Cooldown** 3 s.
+- **Slow** (an effect): Durational, 3 s, **Multiply** Movement Speed by 0.7, back as it ends.
+- **Shield** (an effect): Durational, 5 s, +50 to Shield's current and base while it lasts; its **Modifiers**, one
+  **Incoming** rule whose **Change Impact** on Health adds an **Absorb** stage into Shield, so each hit on its holder's
+  Health comes off its Shield first. Give Shield's element a base of 0, between 0 and its base, so it's 0 without one.
+
+They read the **Movement Speed** and **Shield** attributes in `Starter Set/Attributes`.

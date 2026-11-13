@@ -654,6 +654,12 @@ from. It lives outside `Assets/` so it never ships in the package.
   through a window that lists each change, applied as one Undo step. A row names its asset **both ways**, the user's
   own answer: by its asset tag and by its name, the tag found first, the name where a row gives no tag, a name two
   assets share reported, not guessed.
+- Decision 68, 2026-11-12: the Additional Content items' shapes, the user's answers. **AC-6 retires the Lab Kit
+  wholly**: its last classes go and every lab asset moves to the built-ins, **Blade Mail among them**, the user's own
+  answer, its uncommitted edit taken in. **AC-2's cue handlers draw with uGUI**, a world-space Canvas and TextMeshPro,
+  in the sample's own assembly (AC-1). **AC-3's formula presets are Scaler assets** in the sample, each named for what
+  it computes, never for a game. **AC-5 adds the starter set's rest as sample assets**: a melee attack, a bolt, a slow
+  and a shield, made by the recipe book beside the recipes. AC-4's shifting of points is TW-20's transfer.
 
 **Open. Ask the user; do not assume:**
 1. ~~**Uncommitted changes**~~: decided, see above.
@@ -1261,9 +1267,9 @@ on-hit (TW-5, TW-6), which most of the rest build on.
 | TW-31 | A resolve order for area hits: a project-wide order, by tags the entities carry, in which an area's effects land on those it takes, so specific behaviour can be coded, as a totem that makes those near it immortal resolving after them. The user's request of 2026-11-12. A death already waits for its entity's end of frame, so one area's hits resolve together; the order matters for what changes as they land. Decided (Decision 60): a tag and an Order per entry; applied as the effects land; an effect's Area with its target among those it takes. Done: the Forge Project's **Resolve Order** (`ResolveOrderEntry`: Tag, Order), lower first, those carrying none of its tags at 0, the first entry an entity carries placing it, a tag under an entry's counting as it, read as the effects land; `ForgeResolveOrder` (`OrderOf`, `Sort`, `TargetsOf`) for code. Apply Effects and Apply/Remove Effects land on an ability's targets in it, leaving the targeting's order and its primary target; an effect's Area lands on its target and those it takes in it, its target first among equals, one that refuses giving its place to the next nearest as before; an aura puts its effect on those near in it. The tasks and the Area have **Use Resolve Order**, on by default. Project Settings → PlayForge shows it after Crowd Control | Framework | 5 | verified |
 | AC-1 | The Additional Content sample: `Samples~/Additional Content`, its own assembly, which nothing in the runtime references, so a blank project builds without it | Additional Content | 7 | open |
 | AC-2 | Cue handlers: floating damage numbers, a hit flash, a status icon bar, screen shake, a sound on hit | Additional Content | 7 | open |
-| AC-3 | Formula presets: armor formulas, item curves, pseudo-random constants, as named presets of TW-1 and TW-9 | Additional Content | 7 | open |
+| AC-3 | Formula presets: armor formulas, item curves, pseudo-random constants, as named presets of TW-1 and TW-9. Decided (Decision 68): Scaler assets in the sample, named for what they compute. Done: `Samples~/Additional Content/Formulas`, made by Proving Grounds' `FormulaBook`: **1 ÷ (1 + 0.06 × Armor)**, **100 ÷ (100 + Armor)** and **−Armor**, of the hit's target's Armor (an Armor attribute beside them), and **0.15 × Stacks**, **1 − 1 ÷ (1 + 0.15 × Stacks)** and **0.9 ^ Stacks**, of an item's stacks, each a Stacking Curve with its description. The pseudo-random constants need no preset: TW-8's Pseudo-Random works them out | Additional Content | 7 | verified |
 | AC-4 | Genre rules too narrow for the core, as Attribute Shift's moving of points over time | Additional Content | 7 | open |
-| AC-5 | A starter set of generic assets, from framework features alone, named for what they are; the labs' recreations stay in Proving Grounds | Additional Content | 7 | open |
+| AC-5 | A starter set of generic assets, from framework features alone, named for what they are; the labs' recreations stay in Proving Grounds. Decided (Decision 68): the rest of it as sample assets. Done: `Samples~/Additional Content/Starter Set`, made by Proving Grounds' `StarterBook`: a **Melee Attack** (10, a 1 s cooldown) and a **Bolt** (25, 3 s), each an ability with its hit and its cooldown; a **Slow** (70% of Movement Speed for 3 s); and a **Shield** (+50 to Shield's current and base for 5 s, and an Incoming modifier whose Change Impact adds an Absorb stage into Shield to each hit on its holder's Health), with Movement Speed and Shield attributes; the recipes hold the rest. `RecipeExport.SaveAll` saves the recipes, formulas and starter set in place. Documented in RECIPES.md and the sample's README | Additional Content | 7 | verified |
 | AC-6 | Retiring the Lab Kit: each class goes as its framework need lands, and the labs' assets switch over. Under way: TW-5's and TW-6's classes went on 2026-11-11, Counter Helix to an Impact Taken trigger and the seven on-hit assets to On Hit | Additional Content | 7 | open |
 
 ## Test project: PlayForge Proving Grounds
@@ -1301,6 +1307,13 @@ GAS-4 with GAS-5, PC-6, and TS-I with PC-5.
 ## Log
 
 Record baselines, gate results and notable decisions here, newest first.
+
+- 2026-11-12, **AC-3 and AC-5: formulas and a starter set.** The Additional Content sample's Scaler assets named for
+  what they compute, and its melee attack, bolt, slow and shield, made by Proving Grounds' formula and starter books
+  beside the recipe book (Decision 68).
+  - Red first: AdditionalContentTests 9 of 9 red with the books' sets in and nothing built
+  - The export saved 35 assets, the recipes' metas unchanged; their six assets that differed only in managed reference ids were left as committed
+  - Gates: EditMode 858/860 (ED-61, the user's lifecycle work, and an inspector-undo case, Arrow Damage's, with the known managed reference error, which passed run again); PlayMode 1795/1815 with 8 skipped and the 12 known reds. AdditionalContentTests 9/9, RecipeExportTests 2/2
 
 - 2026-11-12, **TW-27: Table as a kind, and spreadsheets.** Table beside By Level in the kind menu, a number by level
   read exactly; numbers by level and item stats to CSV and back, rows found by asset tag or else name, the changes

@@ -7,6 +7,10 @@ tracks each fix below by its ID.
 ## [Unreleased]
 
 ### Added
+- The Additional Content sample's formulas and starter set: Scaler assets named for what they compute, as
+  1 ÷ (1 + 0.06 × Armor), 100 ÷ (100 + Armor), −Armor, and an item's stacks through a line, a hyperbola and a power
+  (AC-3); and a melee attack, a bolt, a slow and a shield that takes its holder's hits first (AC-5), described in
+  `Documentation/RECIPES.md`.
 - Table, a number kind of its own beside By Level: one value for each level, read exactly, with no curve; By Level
   spreads its values over the levels. A number by level saved reading exactly shows as a Table; nothing saved changes
   (TW-27).

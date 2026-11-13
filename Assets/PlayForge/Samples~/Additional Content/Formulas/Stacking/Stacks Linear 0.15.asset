@@ -1,0 +1,106 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 331f3eee0c294079bfbb597ca568750f, type: 3}
+  m_Name: Stacks Linear 0.15
+  m_EditorClassIdentifier: 
+  Description: 'An item''s stacks, 0.15 each: a bonus that grows by as much with
+    each stack, as 15% more speed a stack.'
+  Category: Stacking
+  Scaler:
+    rid: 2403794398312661010
+  references:
+    version: 2
+    RefIds:
+    - rid: -2
+      type: {class: , ns: , asm: }
+    - rid: 2403794398312661010
+      type: {class: StackingCurveKind, ns: FarEmerald.PlayForge, asm: FarEmerald.PlayForge}
+      data:
+        Name: "0.15 \xD7 Stacks"
+        Configuration: 0
+        MaxLevel: 10
+        LevelValues:
+        - 1
+        Interpolation: 1
+        StretchOverLevels: 1
+        Scaling:
+          serializedVersion: 2
+          m_Curve:
+          - serializedVersion: 3
+            time: 0
+            value: 1
+            inSlope: 0
+            outSlope: 0
+            tangentMode: 0
+            weightedMode: 0
+            inWeight: 0
+            outWeight: 0
+          - serializedVersion: 3
+            time: 1
+            value: 1
+            inSlope: 0
+            outSlope: 0
+            tangentMode: 0
+            weightedMode: 0
+            inWeight: 0
+            outWeight: 0
+          m_PreInfinity: 2
+          m_PostInfinity: 2
+          m_RotationOrder: 4
+        Behaviours: []
+        Count:
+          Magnitude: 1
+          RealMagnitude: 3
+          Scaler:
+            rid: 2403794398312661011
+        Curve: 0
+        Coefficient:
+          Magnitude: 0.15
+          RealMagnitude: 2
+          Scaler:
+            rid: -2
+        Plus: 0
+    - rid: 2403794398312661011
+      type: {class: ItemStacksScaler, ns: FarEmerald.PlayForge, asm: FarEmerald.PlayForge}
+      data:
+        Name: 
+        Configuration: 0
+        MaxLevel: 10
+        LevelValues:
+        - 1
+        Interpolation: 1
+        StretchOverLevels: 1
+        Scaling:
+          serializedVersion: 2
+          m_Curve:
+          - serializedVersion: 3
+            time: 0
+            value: 1
+            inSlope: 0
+            outSlope: 0
+            tangentMode: 0
+            weightedMode: 0
+            inWeight: 0
+            outWeight: 0
+          - serializedVersion: 3
+            time: 1
+            value: 1
+            inSlope: 0
+            outSlope: 0
+            tangentMode: 0
+            weightedMode: 0
+            inWeight: 0
+            outWeight: 0
+          m_PreInfinity: 2
+          m_PostInfinity: 2
+          m_RotationOrder: 4
+        Behaviours: []
