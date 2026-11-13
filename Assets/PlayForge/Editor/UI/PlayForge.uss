@@ -1385,6 +1385,7 @@
     margin: 0 0 0 8px;
     padding: 0;
     color: var(--pf-secondary-text);
+    -unity-text-align: middle-left;
     overflow: hidden;
     white-space: nowrap;
     text-overflow: ellipsis;
@@ -1469,7 +1470,8 @@
     flex-grow: 1;
 }
 
-/* A row opens its asset in The Forge (ED-76) */
+/* A row opens its asset in The Forge (ED-76). It is a button, whose words the editor's theme centers: its names keep to
+   its left (FN-5) */
 .pf-root .pf-used-by__row:hover {
     background-color: var(--pf-alternate-row);
 }
@@ -1487,6 +1489,7 @@
     margin: 0;
     padding: 0;
     color: var(--pf-link);
+    -unity-text-align: middle-left;
     overflow: hidden;
     white-space: nowrap;
     text-overflow: ellipsis;
@@ -1790,6 +1793,11 @@
     flex-grow: 1;
 }
 
+/* A list's cells set their words and icons in the middle of the row's height, where they sat at its top (FN-6) */
+.pf-root .pf-forge__list .unity-multi-column-view__cell {
+    justify-content: center;
+}
+
 /* A row's name, with its type icon, can shrink to nothing and ends in an ellipsis. The file name is in the selected
    asset's header, not the row (ED-58) */
 .pf-root .pf-forge__name-cell {
@@ -1822,6 +1830,11 @@
     flex-shrink: 0;
     max-width: 100%;
     color: var(--pf-strong-text);
+}
+
+/* A text column's words keep off its left edge, as the name's do; the Tags view's pressed against the window's (FN-6) */
+.pf-root .pf-forge__cell {
+    padding-left: 4px;
 }
 
 .pf-root .pf-forge__list .pf-glyph--warning,

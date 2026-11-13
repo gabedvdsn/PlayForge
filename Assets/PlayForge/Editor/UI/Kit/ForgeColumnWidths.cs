@@ -7,10 +7,10 @@ using UnityEngine.UIElements;
 namespace FarEmerald.PlayForge.Extended.Editor
 {
     /// <summary>
-    /// Remembers the widths a table's columns are dragged to, so they outlive the window's closing and a domain reload, as
-    /// entering Play mode is (ED-48). Unity keeps a table's columns only for a table with a view data key, which brings
-    /// back its selection and scroll too, behind the window's back. This keeps the widths alone, one preference a table,
-    /// and Use Defaults forgets them.
+    /// Remembers the widths a table's columns are dragged to, and the columns its header's menu hides, so they outlive the
+    /// window's closing and a domain reload, as entering Play mode is (ED-48, FN-7). Unity keeps a table's columns only for
+    /// a table with a view data key, which brings back its selection and scroll too, behind the window's back. This keeps
+    /// the widths and the hidden columns alone, a preference each a table, and Use Defaults forgets them.
     /// </summary>
     internal static class ForgeColumnWidths
     {
@@ -22,6 +22,9 @@ namespace FarEmerald.PlayForge.Extended.Editor
 
         /// <summary>The preference a table's widths are kept under.</summary>
         internal static string KeyOf(string table) => PlayForgePreferences.Prefix + "Columns_" + table;
+
+        /// <summary>The preference a table's hidden columns are kept under (FN-7).</summary>
+        internal static string HiddenKeyOf(string table) => PlayForgePreferences.Prefix + "HiddenColumns_" + table;
 
         /// <summary>
         /// Gives a table's columns the widths they were last dragged to, and keeps each width a drag gives one from now on.
@@ -52,6 +55,24 @@ namespace FarEmerald.PlayForge.Extended.Editor
                     else kept[column.name] = width;
                     if (kept.Count == 0) EditorPrefs.DeleteKey(key);
                     else EditorPrefs.SetString(key, Write(kept));
+                };
+            }
+
+            // The columns the header's menu hides, hidden again as the table is built; they came back as the window was
+            // closed and opened again (FN-7)
+            var hiddenKey = HiddenKeyOf(table);
+            var hidden = new SortedSet<string>(EditorPrefs.GetString(hiddenKey, "").Split(';').Where(name => name.Length > 0));
+            foreach (var column in columns)
+            {
+                if (string.IsNullOrEmpty(column.name) || !column.optional) continue;
+                if (hidden.Contains(column.name)) column.visible = false;
+                column.propertyChanged += (_, changed) =>
+                {
+                    if (changed.propertyName.ToString() != nameof(Column.visible)) return;
+                    if (column.visible) hidden.Remove(column.name);
+                    else hidden.Add(column.name);
+                    if (hidden.Count == 0) EditorPrefs.DeleteKey(hiddenKey);
+                    else EditorPrefs.SetString(hiddenKey, string.Join(";", hidden));
                 };
             }
         }

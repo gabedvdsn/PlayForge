@@ -422,6 +422,7 @@ tracks each fix below by its ID.
   page, through one table of links in the editor.
 
 ### Changed
+- A worker group's drawer no longer draws its Name, which nothing reads (FN-4).
 - A Block or Evade stage stops only an effect that lowers its attribute, as a hit, by its new Stops setting, so a heal
   lands past an incoming block unrolled; Any Impact stops heals and buffs too, as every stop did before (GAS-77).
 - The authoring settings live on the Forge Project, each game's its own: where each type's new assets go and how their
@@ -728,6 +729,12 @@ tracks each fix below by its ID.
   Asking whether its sequence was paused took 24 bytes a frame.
 
 ### Fixed
+- The Forge's rows set their words and icons in the middle of the row, with room at a column's left; they sat at its
+  top, and the Tags view's words pressed against the window's edge (FN-6).
+- A table's hidden columns stay hidden as its window is closed and opened again, as their widths do, in The Forge, the
+  Debugger and the Problems view; Use Defaults shows them again (FN-7).
+- An entity's Max Items, Max Equipped Items and Max Abilities are drawn by their names; they had none (FN-3).
+- A Used By row's name sits at the row's left; it was centered in its row (FN-5).
 - A scaler Group's + adds a member with a scaler of its own, a copy of the last member's; the two shared one, so an edit
   to either changed both. A list among any kind's fields adds as a Group's does, or, as a list of objects held by
   reference, an empty element (FN-2).

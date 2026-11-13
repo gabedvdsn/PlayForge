@@ -405,7 +405,8 @@ namespace FarEmerald.PlayForge.Extended.Editor
             content.Add(policyField);
 
             content.Add(CreatePropertyField(serializedObject.FindProperty(nameof(EntityIdentity.StartingAbilities)), "StartingAbilities", "Starting Abilities"));
-            content.Add(new PropertyField(serializedObject.FindProperty(nameof(EntityIdentity.MaxAbilitiesOperation)), ""));
+            // Each limit by its name, where an empty label left it unnamed (FN-3)
+            content.Add(new PropertyField(serializedObject.FindProperty(nameof(EntityIdentity.MaxAbilitiesOperation)), "Max Abilities"));
             content.Add(BoundToggle("AllowDuplicates", nameof(EntityIdentity.AllowDuplicateAbilities), entity.AllowDuplicateAbilities,
                 "Allow Duplicates", "Let the entity hold the same ability more than once"));
 
@@ -437,8 +438,9 @@ namespace FarEmerald.PlayForge.Extended.Editor
 
             // Each starting item takes one row, with its Equip checkbox (StartingItemDrawer)
             content.Add(CreatePropertyField(serializedObject.FindProperty(nameof(EntityIdentity.StartingItems)), "StartingItems", "Starting Items"));
-            content.Add(new PropertyField(serializedObject.FindProperty(nameof(EntityIdentity.MaxItemsOperation)), ""));
-            content.Add(new PropertyField(serializedObject.FindProperty(nameof(EntityIdentity.MaxEquippedItemsOperation)), ""));
+            // Each limit by its name, where an empty label left it unnamed (FN-3)
+            content.Add(new PropertyField(serializedObject.FindProperty(nameof(EntityIdentity.MaxItemsOperation)), "Max Items"));
+            content.Add(new PropertyField(serializedObject.FindProperty(nameof(EntityIdentity.MaxEquippedItemsOperation)), "Max Equipped Items"));
 
             // The Allow Duplicate toggles bind to their properties, so an edit undoes (ED-12)
             content.Add(BoundToggle("AllowDuplicateItems", nameof(EntityIdentity.AllowDuplicateItems), entity.AllowDuplicateItems,

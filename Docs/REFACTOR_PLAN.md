@@ -1299,11 +1299,11 @@ Death's section and a body for a running entity.
 |---|---|---|---|
 | FN-1 | A Scalable number field warns that it needs a scaler, with a hint to set it to Constant, when it's already Constant. Fixed: the warning was right where it showed, a field whose number is multiplied by a scaler it hasn't got, or gives way to one, reading 0; but its kind already showed Constant, which choosing again changed nothing, and the field's menu offered Make Constant only to a field with a scaler. The warning says what the Problems view says, with a **Make It Constant** button, and the menu offers Make Constant to such a field; either keeps its number (`MagnitudeField.cs`) | Bug | verified |
 | FN-2 | Adding an element to a scaler group copies the last one, so the two share their scaler and each warns "Element N holds the same scaler, so an edit here changes it too"; **Make a separate copy** on one clears neither warning, nor does it on the other after. Fixed: Unity's list grows an array by copying its last element, the objects it holds by reference with it. A list among a kind's fields, as a Group's members, adds a copy of its last element with objects of its own now, and one of objects held by reference an empty one, as ED-64's lists do; and a shared scaler's or condition's warning looks again as the asset changes, so a separate copy clears both elements' (`ForgeLists.cs`, `ScalerFields.cs`, `ScalerDrawer.cs`, `ConditionDrawer.cs`) | Bug | verified |
-| FN-3 | An entity identity's Items section has two Scalable whole-number fields with no label | UI | open |
-| FN-4 | The Standard Worker Group drawer shows its Name field, which it shouldn't | UI | open |
-| FN-5 | The rows of a **Used By** section draw their labels centered; they belong at the left | UI | open |
-| FN-6 | The Forge's text sits wrong in many places: rows want left padding (the Tags view's labels press against the window's edge), and a view table row's text and icons sit higher than they should | UI | open |
-| FN-7 | The Forge's view table forgets which columns were hidden as it's closed and opened, as Type and Asset Tag, which the user always hides | UI | open |
+| FN-3 | An entity identity's Items section has two Scalable whole-number fields with no label. Fixed: Max Items and Max Equipped Items, drawn with an empty label, are drawn by their names, as is the Abilities section's Max Abilities, drawn the same way (`EntityIdentityEditor.cs`) | UI | verified |
+| FN-4 | The Standard Worker Group drawer shows its Name field, which it shouldn't. Fixed: the drawer draws the group's four lists alone; nothing reads the name, which the debugger never showed, and the Workers section names the group. The runtime field stays, unread (`StandardWorkerGroupDrawer.cs`) | UI | verified |
+| FN-5 | The rows of a **Used By** section draw their labels centered; they belong at the left. Fixed: a row is a button, whose words the editor's theme centers, and its labels took that; they keep to the row's left, a Scaler asset's Used By's too (`PlayForge.uss`) | UI | verified |
+| FN-6 | The Forge's text sits wrong in many places: rows want left padding (the Tags view's labels press against the window's edge), and a view table row's text and icons sit higher than they should. Fixed: a list's cells sit in the middle of their rows, where each column's cell held its words or icon at the row's top, and a text column's words keep 4 px off its left edge, as the name column's do (`PlayForge.uss`) | UI | verified |
+| FN-7 | The Forge's view table forgets which columns were hidden as it's closed and opened, as Type and Asset Tag, which the user always hides. Fixed: the window remembers the columns its header hides, as it does their widths, one preference a table, the Debugger's and the Problems view's tables too, and Use Defaults forgets them (`ForgeColumnWidths.cs`, `PlayForgePreferences.cs`) | UI | verified |
 | FN-8 | The Forge renames every asset type it lists, requirement templates, tags, value pipelines and crowd control rules among them | UI | open |
 | FN-9 | Tags in The Forge: renamed there; a tag's summary shows its whole path under its primary name where the path says more; and new tag contexts made there (Decision 70: new contexts only) | UI | open |
 | FN-10 | Tag contexts gone through as they are: which exist, whether each is apt, how they're assigned to fields, and whether each field has the right ones; the tags `Tags.cs` writes, how robust they are; and how a project's own hard-coded tags reach the tag registry with nothing done by hand | Review | open |
@@ -1351,6 +1351,25 @@ GAS-4 with GAS-5, PC-6, and TS-I with PC-5.
 ## Log
 
 Record baselines, gate results and notable decisions here, newest first.
+
+- 2026-11-13, **FN-6 and FN-7: The Forge's rows, and the columns it hides.** A list's cells sat at the top of their
+  20 px rows, each column's cell holding its words or icon at their own height; each sits in its row's middle now. A
+  text column's words pressed against its left edge, the Tags view's against the window's; they keep 4 px off it, as the
+  name column's do (FN-6). The header's menu hid a column only while the window was open: closed and opened again, as a
+  domain reload builds it again, Type and Asset Tag came back. The window remembers the columns hidden, as it does their
+  widths, one preference a table, the Debugger's and the Problems view's tables too, and Use Defaults forgets them
+  (FN-7).
+  - Red first: FN_6, FN_7 and the Preferences page's test against HEAD's editor: an asset's icon sat 2 px above its row's middle, Type came back as the window was opened again, and Use Defaults left the hidden columns' preference
+  - Gates, for FN-2 to FN-7 together, on a frozen snapshot of the package: EditMode 866 of 871, ED-61 red from the working tree's lifecycle change and four inspector-undo cases on Unity's IsInSyncWithParentSerializedObject assertion, the known intermittent, which passed run again: the smoke and undo suites 87 of 87, on the working tree and with HEAD's FN-2 files alike; PlayMode 1814 of 1835, 8 skipped, the 12 known reds and the Battle scene's area-hit flake. No golden run: the changes are the editor's alone.
+
+- 2026-11-13, **FN-3 to FN-5: unnamed limits, a worker group's name, and Used By's rows.** Three of the user's UI
+  notes. An entity's Items section drew Max Items and Max Equipped Items with an empty label, as its Abilities section
+  drew Max Abilities, so each whole-number field stood unnamed; each is drawn by its name (FN-3). A worker group's
+  drawer drew a Name nothing reads; it draws the group's four lists alone, the runtime field kept (FN-4). A Used By row
+  is a button, whose words the editor's theme centers, and its name took that, so it sat in the middle of its row; the
+  names keep to the row's left, in a Scaler asset's Used By too (FN-5).
+  - Red first: FN_3, FN_4 and FN_5 against HEAD's editor: the limits' labels were empty, the group drew its Name, and a row's name resolved centered under the theme's centered button
+  - Gates, for FN-2 to FN-7 together, on a frozen snapshot of the package: EditMode 866 of 871, ED-61 red from the working tree's lifecycle change and four inspector-undo cases on Unity's IsInSyncWithParentSerializedObject assertion, the known intermittent, which passed run again: the smoke and undo suites 87 of 87, on the working tree and with HEAD's FN-2 files alike; PlayMode 1814 of 1835, 8 skipped, the 12 known reds and the Battle scene's area-hit flake. No golden run: the changes are the editor's alone.
 
 - 2026-11-13, **FN-2: a Group's new member, and a scaler two elements share.** The user's second note: adding a member
   to a scaler Group copied the last one, so the two shared their scaler and each warned of it, and Make a Separate Copy

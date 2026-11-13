@@ -5,9 +5,9 @@ using UnityEngine.UIElements;
 namespace FarEmerald.PlayForge.Extended.Editor
 {
     /// <summary>
-    /// A worker group, in Docs/EDITOR_STYLE.md's terms (ED-57): its name, then its four lists of workers, each Unity's
-    /// reorderable list, where a new worker starts empty for its kind to be picked. The Workers section it's drawn in
-    /// folds, counts and imports it.
+    /// A worker group, in Docs/EDITOR_STYLE.md's terms (ED-57): its four lists of workers, each Unity's reorderable list,
+    /// where a new worker starts empty for its kind to be picked. The Workers section it's drawn in folds, counts and
+    /// imports it. Its name, which nothing reads, it doesn't draw (FN-4).
     /// <para>
     /// It was a box of its own, with a colored border, colored count badges, a type tag and an Import of its own, from 90
     /// styles set in C#, inside a section whose header already counted and imported it.
@@ -34,15 +34,6 @@ namespace FarEmerald.PlayForge.Extended.Editor
             var root = new VisualElement { name = "WorkerGroup" };
             // The style sheet lays out the group, wherever it's drawn (ED-20)
             ForgeTheme.Apply(root);
-
-            var name = new TextField("Name")
-            {
-                name = "WorkerGroupName",
-                tooltip = "The group's name, as the debugger shows it",
-            };
-            name.AddToClassList(TextField.alignedFieldUssClassName);
-            name.BindProperty(property.FindPropertyRelative(nameof(StandardWorkerGroup.Name)));
-            root.Add(name);
 
             var serialized = property.serializedObject;
             foreach (var (path, label, tip) in Lists)
