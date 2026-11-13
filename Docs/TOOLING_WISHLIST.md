@@ -11,10 +11,10 @@ Each item is sorted:
   past PlayForge's basic scope, which a project imports when it wants them and can do without.
 
 The labs are in Proving Grounds, each played by a bot: `Tests/Labs/DotaLabTests.cs` (the first ten effects, FEAT-31),
-`DotaAbilitiesLabTests.cs`, `RiskOfRainLabTests.cs` and `HadesLabTests.cs`. What they needed that PlayForge doesn't
-have is in the Lab Kit, `Assets/ProvingGrounds/LabKit/`: seven small classes, each standing in for an item here, so
-the labs' assets use them as an author would a built-in. As each item lands, its class goes and the labs use the
-built-in (AC-6): TW-5's and TW-6's have. The rows these items became are under *The tooling wishlist
+`DotaAbilitiesLabTests.cs`, `RiskOfRainLabTests.cs` and `HadesLabTests.cs`. What they needed that PlayForge didn't
+have was in the Lab Kit, `Assets/ProvingGrounds/LabKit/`: seven small classes, each standing in for an item here, so
+the labs' assets used them as an author would a built-in. As each item landed its class went, and on 2026-11-12 the
+last of them and the Dota lab's own workers: the labs use the built-ins alone (AC-6). The rows these items became are under *The tooling wishlist
 (FEAT-38)* in `Docs/REFACTOR_PLAN.md`. The user approved the sort on 2026-11-11 and settled the shapes left open
 (Decision 46): an attribute's role, which an effect can override (TW-1); a generic *Value Pipeline* asset, which an
 effect names as its shared calculation (TW-2); and a body that is a MonoBehaviour process (TW-4).
@@ -300,7 +300,15 @@ they are. The labs' recreations stay in Proving Grounds: they bear other games' 
 (TW-11), `BarrierAttributeWorker` and `BlockChanceAttributeWorker` (TW-12), `ChanceCondition` (TW-8),
 `StackingCurveKind` (TW-9); and the Dota lab's seven workers to TW-13 to TW-15. TW-5's and TW-6's went on 2026-11-11:
 Counter Helix's trigger takes Impact Taken, Health's losses to attacks, on its 20%; the seven on-hit assets have On Hit
-entries.
+entries. The rest went on 2026-11-12. Tougher Times blocks by an incoming Block stage, its chance a stacking curve of its
+stacks, so a blocked hit is refused, and an effect it lands on its holder, as a bleed, rolls once as it lands where the
+worker rolled each loss. Survivor's Barrier is a Barrier attribute, and Megaera's rage her set's threshold. Ice Blast's
+shatter is an incoming Execute stage, and its heal block a Healing Received it holds at 0, which Health's gains are
+scaled by: an attribute every Dota hero has, at 1. Shallow Grave and Blade Mail carry Can't Fall Below and Return
+Damage. Slark's steal and Monkey King's spend are packets that land on their caster, the spend only while he has a
+charge, and Monkey King's lifesteal is his attack's own. Jingu Mastery's trigger gives its charges as it ends, the step
+after the hit that set it off, as the worker's queued action did. The Lab Kit's chance and stacking curve are the
+built-ins wherever they sat.
 
 ## Found on the way
 
@@ -355,7 +363,7 @@ entries.
 
 Of the 25 assets, 11 needed no code of their own; the other 14 used seven Lab Kit classes, each a framework need above.
 Counter Helix and the seven on-hit assets have since moved to the built-ins, TW-5's events and TW-6's On Hit (AC-6), and
-the Lab Kit is five classes.
+the rest on 2026-11-12: the Lab Kit is gone, and no lab asset uses code of its own.
 
 ## Research
 

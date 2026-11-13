@@ -1270,7 +1270,7 @@ on-hit (TW-5, TW-6), which most of the rest build on.
 | AC-3 | Formula presets: armor formulas, item curves, pseudo-random constants, as named presets of TW-1 and TW-9. Decided (Decision 68): Scaler assets in the sample, named for what they compute. Done: `Samples~/Additional Content/Formulas`, made by Proving Grounds' `FormulaBook`: **1 ÷ (1 + 0.06 × Armor)**, **100 ÷ (100 + Armor)** and **−Armor**, of the hit's target's Armor (an Armor attribute beside them), and **0.15 × Stacks**, **1 − 1 ÷ (1 + 0.15 × Stacks)** and **0.9 ^ Stacks**, of an item's stacks, each a Stacking Curve with its description. The pseudo-random constants need no preset: TW-8's Pseudo-Random works them out | Additional Content | 7 | verified |
 | AC-4 | Genre rules too narrow for the core, as Attribute Shift's moving of points over time | Additional Content | 7 | open |
 | AC-5 | A starter set of generic assets, from framework features alone, named for what they are; the labs' recreations stay in Proving Grounds. Decided (Decision 68): the rest of it as sample assets. Done: `Samples~/Additional Content/Starter Set`, made by Proving Grounds' `StarterBook`: a **Melee Attack** (10, a 1 s cooldown) and a **Bolt** (25, 3 s), each an ability with its hit and its cooldown; a **Slow** (70% of Movement Speed for 3 s); and a **Shield** (+50 to Shield's current and base for 5 s, and an Incoming modifier whose Change Impact adds an Absorb stage into Shield to each hit on its holder's Health), with Movement Speed and Shield attributes; the recipes hold the rest. `RecipeExport.SaveAll` saves the recipes, formulas and starter set in place. Documented in RECIPES.md and the sample's README | Additional Content | 7 | verified |
-| AC-6 | Retiring the Lab Kit: each class goes as its framework need lands, and the labs' assets switch over. Under way: TW-5's and TW-6's classes went on 2026-11-11, Counter Helix to an Impact Taken trigger and the seven on-hit assets to On Hit | Additional Content | 7 | open |
+| AC-6 | Retiring the Lab Kit: each class goes as its framework need lands, and the labs' assets switch over. Decided (Decision 68): wholly, Blade Mail among them. Done: TW-5's and TW-6's classes went on 2026-11-11, Counter Helix to an Impact Taken trigger and the seven on-hit assets to On Hit; the rest on 2026-11-12, a one-off editor pass moving 20 lab assets to TW-8, TW-9, TW-11 to TW-15's built-ins and adding Dota's Healing Received. `Assets/ProvingGrounds/LabKit` and `Dota/Scripts` are gone, and the labs play as they did | Additional Content | 7 | verified |
 
 ## Test project: PlayForge Proving Grounds
 
@@ -1307,6 +1307,20 @@ GAS-4 with GAS-5, PC-6, and TS-I with PC-5.
 ## Log
 
 Record baselines, gate results and notable decisions here, newest first.
+
+- 2026-11-12, **AC-6: the Lab Kit retired.** A one-off editor pass, in the private copy, moved the labs' last assets from
+  the Lab Kit and the Dota lab's seven workers to the built-ins, with their settings, and both went (Decision 68).
+  Tougher Times blocks by an incoming Block stage (TW-12) and Survivor's Barrier is a Barrier attribute; Megaera's rage
+  is a threshold on her set, falling below half, each time (TW-11); Ice Blast's shatter is an incoming Execute stage
+  and its heal block a new Healing Received at 0, which Dota's Health scales its gains by (TW-15); Shallow Grave and
+  Blade Mail carry Can't Fall Below and Return Damage in their worker groups (TW-13); Slark's and Monkey King's effects
+  for their caster are packets on it (TW-14), Monkey King's spend landing only on a charge and his lifesteal the
+  attack's own; Jingu Mastery's trigger lasts until the next step and gives its charges as it ends, as the worker's
+  queued action did, so the fourth hit spends none. Six assets' stacking curves and two chances are the built-ins.
+  - No red of its own: the labs' tests are its spec, passing before and after. Three of Tougher Times' asserts changed,
+    as a blocked hit is refused now, where the worker let it land as nothing; and the bleed a landing hit sets off rolls
+    Tougher Times' block once as it lands, where the worker rolled each tick, so its test scripts a third roll
+  - Gates: The labs' tests, run alone: 68 of 70, the two reds A_blocked_hit_sets_off_no_item on both hubs, its bleed blocked by its own roll; with that roll scripted, Risk of Rain's 16 of 16, and every lab test passes in the full run. Full: EditMode 858 of 860, ED-61 red from the working tree's lifecycle change and ED-12's inspector-undo assertion, the known intermittent, which passed run again; PlayMode 1794 of 1815, 8 skipped, the 12 known reds and the Battle scene's stalemate flake. No runtime changed, so no golden run.
 
 - 2026-11-12, **AC-3 and AC-5: formulas and a starter set.** The Additional Content sample's Scaler assets named for
   what they compute, and its melee attack, bolt, slow and shield, made by Proving Grounds' formula and starter books
