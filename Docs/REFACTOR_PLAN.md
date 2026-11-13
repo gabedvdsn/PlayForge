@@ -676,6 +676,14 @@ from. It lives outside `Assets/` so it never ships in the package.
   contexts as they are, and the tags `Tags.cs` writes, and how a project's own hard-coded tags reach the registry
   (FN-9, FN-10). **The order: bugs and UI first**, then components and lifesteal, then effect purging after its
   research, then Death's section and a body for a running entity.
+- Decision 71, 2026-11-13: the tag review's choices (FN-10, `Docs/TAG_REVIEW.md`). **A unique tag's hierarchy goes by
+  its display path**, what the designer sees, so a New-Tag "Status.Debuff.Burn" is under a New-Tag "Status.Debuff",
+  with no stored name changed (TAG-1). **New Tag warns where a text is a core tag's**, and offers that tag, rather than
+  the core tags moving under a namespace (TAG-2). **A project's code tags are found by convention**: every public static
+  Tag field or property in its assemblies, on each reload, filed under its `[ForgeContextDefault]`, widened to fields,
+  or a Code context, with an attribute that hides one (TAG-5). **The contexts are pruned and renamed**: those no field
+  names go, the overlaps merge, the unclear names change, with a pass over the Tag Libraries' declarations, and the
+  fields' contexts are fixed against the new set (TAG-6, TAG-3).
 
 **Open. Ask the user; do not assume:**
 1. ~~**Uncommitted changes**~~: decided, see above.
@@ -1306,7 +1314,7 @@ Death's section and a body for a running entity.
 | FN-7 | The Forge's view table forgets which columns were hidden as it's closed and opened, as Type and Asset Tag, which the user always hides. Fixed: the window remembers the columns its header hides, as it does their widths, one preference a table, the Debugger's and the Problems view's tables too, and Use Defaults forgets them (`ForgeColumnWidths.cs`, `PlayForgePreferences.cs`) | UI | verified |
 | FN-8 | The Forge renames every asset type it lists, requirement templates, tags, value pipelines and crowd control rules among them. Done for assets: Rename… in a row's menu and an asset header's, and F2 on The Forge's list, a dialog that renames an asset as its inspector does through `ForgeRenames`: a PlayForge asset's name, with the tag its name gives, an attribute's, a Scaler asset's scaler's and a Requirement template's requirements', and the file of an asset with no name of its own, as a Value Pipeline or Crowd Control Rules; the file follows the name, back through an Undo. Value pipelines and crowd control rules are in The Forge's list with FN-12; tags rename in its Tags view with FN-9 (`ForgeRenames.cs`, `ForgeRenameWindow.cs`, `ForgeAssetActions.cs`, `BasePlayForgeEditor.cs`, `TheForge.cs`) | UI | verified |
 | FN-9 | Tags in The Forge: renamed there; a tag's summary shows its whole path under its primary name where the path says more; and new tag contexts made there (Decision 70: new contexts only) | UI | open |
-| FN-10 | Tag contexts gone through as they are: which exist, whether each is apt, how they're assigned to fields, and whether each field has the right ones; the tags `Tags.cs` writes, how robust they are; and how a project's own hard-coded tags reach the tag registry with nothing done by hand | Review | open |
+| FN-10 | Tag contexts gone through as they are: which exist, whether each is apt, how they're assigned to fields, and whether each field has the right ones; the tags `Tags.cs` writes, how robust they are; and how a project's own hard-coded tags reach the tag registry with nothing done by hand. Done: `Docs/TAG_REVIEW.md`. A tag made in New Tag can't have children, the core tags alias designers' tags of the same text, fields that write a kind of tag and fields that read it carry different contexts, about 25 have none, the registry scans five asset types, contexts match by substring, 18 of 31 contexts go unused, and code tags reach pickers only from `Tags`. Its fixes are TAG-1 to TAG-8, decided by Decision 71 | Review | done |
 | FN-11 | The less common assets made easier to make: **New** or **Open** beside a Value Pipeline, Crowd Control Rules or Effect Modifier field; Value Pipelines in the Demo; and the docs say a Forge Tag Library belongs to no project, every one being read wherever it is | UI | open |
 | FN-12 | Every asset type has its editor, with headers, and is in The Forge | UI | open |
 | FN-13 | The PlayForge Create menu ordered. Done: the Forge Project; then the assets The Forge lists first, in its order; then the numbers, rules and the Tag Library; then the lab's assets; then the Demo's roster, each group apart by a line, and the Requirement Template out of a Templates submenu of its own (the Create menu attributes) | UI | verified |
@@ -1315,6 +1323,21 @@ Death's section and a body for a running entity.
 | FN-16 | Effect purging: research how MOBAs purge effects (tiers that an effect needs at least to be purged, effects no purge takes, the system purging anything), then a shape for the user to decide. A death that keeps the entity purges what was applied but what's kept, as cooldowns and effects its abilities and items grant passively, and what else research finds; and whether a dead entity's gains and losses are 0 by a pipeline-wide modifier. It takes the place of Death's Ends Effects Tagged, which may need every effect tag of a project | Feature | open |
 | FN-17 | The Death section's single collapsible field inside it looks out of place | UI | open |
 | FN-18 | A body for a running entity: an entity whose body process isn't its identity's Body is given one at runtime | Feature | open |
+
+### The tag review (TAG)
+
+The fixes the tag review found (FN-10, `Docs/TAG_REVIEW.md`), as Decision 71 decided them. Its sections are the § marks.
+
+| ID | Fix | Status |
+|---|---|---|
+| TAG-1 | A unique tag's hierarchy by its display path: `IsChildOf` and what reads it, the tag cache's parent listeners, `GetParent`, and ForgeLint's Under, so a New-Tag tag can have children; Make It a Child Of… builds from the parent's path (§5.1) | open |
+| TAG-2 | New Tag warns where a text is a core tag's, and offers that tag (§3.3.1-2) | open |
+| TAG-3 | Each field's contexts made right against TAG-6's set: the writer and the reader of a kind of tag share one, the ~25 unmarked fields get theirs, and Data split into its kinds (§2.2-2.4) | open |
+| TAG-4 | Contexts matched exactly, not by substring, and a field with several contexts no longer files its pick under each (§5.2-5.4) | open |
+| TAG-5 | A project's code tags found by convention: every public static Tag field or property in its assemblies, under its `[ForgeContextDefault]`, widened to fields, or a Code context, with an attribute that hides one; ForgeLint and the runtime registry read the same (§4) | open |
+| TAG-6 | The contexts pruned and renamed: the 18 no field names go, the overlaps merge, the unclear names change, with a pass over the Tag Libraries' declarations (§1) | open |
+| TAG-7 | Every PlayForge asset type scanned, and the fields the walk skips, through a SerializedObject walk as ForgeLint's (§2.4) | open |
+| TAG-8 | `Tags.cs` made sound: contexts for the five with none, the unused Data keys pruned or hidden, the docs fixed, long paths refused, and a test that pins the padded names and each tag's context (§3) | open |
 
 ## Test project: PlayForge Proving Grounds
 
@@ -1351,6 +1374,15 @@ GAS-4 with GAS-5, PC-6, and TS-I with PC-5.
 ## Log
 
 Record baselines, gate results and notable decisions here, newest first.
+
+- 2026-11-13, **FN-10: the tag review.** The user's note asked for the tag contexts gone through, the tags `Tags.cs`
+  writes, and how a project's hard-coded tags reach the registry. A read of the code, a subagent's, written up as
+  `Docs/TAG_REVIEW.md`, its worst findings checked again against the code: a tag made in New Tag has a name padded to
+  64 characters with a hash, so `IsChildOf`, matching by name, finds no New-Tag tag under another; the core tags are
+  made from short texts, so New Tag "Blocked" is the core Blocked event; the registry scans five asset types and matches
+  contexts by substring; and code tags reach pickers only from `Tags`. Its fixes are TAG-1 to TAG-8, which the user's
+  choices shape (Decision 71): hierarchy by display path, a warning in New Tag, a convention scan for code tags, and the
+  contexts pruned and renamed. Nothing in the code changed.
 
 - 2026-11-13, **FN-13: the PlayForge Create menu ordered.** Its entries sat at Unity's default order, all but three, so
   the menu read Ability, Crowd Control Rules, Attribute, and on, and a Templates submenu held the Requirement Template
