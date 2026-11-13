@@ -9,8 +9,8 @@ namespace FarEmerald.PlayForge.Extended.Editor
 {
     /// <summary>
     /// What can be done to assets, one menu for The Forge's list and an asset's header (ED-71): Show in Project, Open in a
-    /// Window, Duplicate, Move to Project and Copy to Project (FEAT-34), and Move to Trash. A right-click on a row of The
-    /// Forge's list offered these, and the header's three dots its own actions alone.
+    /// Window, Rename (FN-8), Duplicate, Move to Project and Copy to Project (FEAT-34), and Move to Trash. A right-click on a
+    /// row of The Forge's list offered these, and the header's three dots its own actions alone.
     /// </summary>
     internal static class ForgeAssetActions
     {
@@ -50,6 +50,8 @@ namespace FarEmerald.PlayForge.Extended.Editor
                 }),
                 new("Open in a Window", one, () => EditorUtility.OpenPropertyEditor(first)),
                 Item.Separator,
+                // As its inspector renames it, or its file where it has no name of its own (FN-8)
+                new("Rename…", one && ForgeRenames.CanRename(first), () => ForgeRenameWindow.Show(first)),
                 new("Duplicate", one, () =>
                 {
                     var copy = ForgeAssetCreation.Duplicate(first);

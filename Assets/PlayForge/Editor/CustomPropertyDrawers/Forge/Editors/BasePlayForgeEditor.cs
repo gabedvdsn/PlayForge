@@ -111,18 +111,8 @@ namespace FarEmerald.PlayForge.Extended.Editor
             var path = AssetDatabase.GetAssetPath(asset);
             if (string.IsNullOrEmpty(path) || !AssetDatabase.IsMainAsset(asset) || string.IsNullOrWhiteSpace(name)) return;
             renamedHere.Add(asset);
-            var type = asset.GetType();
-            var wanted = $"{PlayForgeSettings.PrefixFor(type)}{ForgeAssetCreation.FileNameOf(name)}{PlayForgeSettings.SuffixFor(type)}";
-            var current = System.IO.Path.GetFileNameWithoutExtension(path);
-            if (current == wanted) return;
-            int slash = path.LastIndexOf('/');
-            var folder = slash < 0 ? "Assets" : path.Substring(0, slash);
-            var extension = System.IO.Path.GetExtension(path);
-            var free = System.IO.Path.GetFileNameWithoutExtension(AssetDatabase.GenerateUniqueAssetPath($"{folder}/{wanted}{extension}"));
-            // The unique name of its own file, where it's the one that has the name with a number already
-            if (free == current) return;
-            var error = AssetDatabase.RenameAsset(path, free);
-            if (!string.IsNullOrEmpty(error)) ForgeLog.Warning($"{asset.name} keeps its file's name: {error}");
+            // As The Forge's Rename renames it (FN-8)
+            ForgeRenames.FileFollows(asset, name);
         }
 
         // The object picker reports its choice only to code that asks, so the inspector asks each frame while one is open
@@ -871,20 +861,9 @@ namespace FarEmerald.PlayForge.Extended.Editor
         /// Stores the tag a name gives, recorded for Undo and marked modified. A rename calls it in the same step as the
         /// name's own change, so one Undo takes back both (ED-12).
         /// </summary>
-        protected void StoreAssetTag(Object asset, string assetName, string typeName, Tag stored, Action<Tag> store)
-        {
-            var (result, display, isUnknown) = GenerateAssetTag(assetName, typeName);
-            if (isUnknown || (stored.Name == result && stored.DisplayName == display)) return;
-
-            Undo.RecordObject(asset, "Update Asset Tag");
-            var from = stored.Name;
-            stored.Name = result;
-            stored.DisplayName = display;
-            store(stored);
-            EditorUtility.SetDirty(asset);
-            // What stored its old tag stores the new one, or it finds the asset no more (ED-84)
-            ForgeTagRenames.Rename(from, result, display, asset);
-        }
+        protected void StoreAssetTag(Object asset, string assetName, string typeName, Tag stored, Action<Tag> store) =>
+            // What stored its old tag stores the new one, or it finds the asset no more (ED-84); as The Forge's Rename (FN-8)
+            ForgeRenames.StoreAssetTag(asset, assetName, typeName, stored, store);
 
         // ═══════════════════════════════════════════════════════════════════════════
         // Utility Methods

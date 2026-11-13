@@ -414,6 +414,15 @@ namespace FarEmerald.PlayForge.Extended.Editor
             };
             list.itemsChosen += chosen => ShowInProject(chosen.OfType<Object>().FirstOrDefault());
             list.AddManipulator(new ContextualMenuManipulator(AssetMenu));
+            // F2 renames the selected asset, as in the Project window (FN-8)
+            list.RegisterCallback<KeyDownEvent>(key =>
+            {
+                if (key.keyCode != KeyCode.F2) return;
+                var asset = SelectedAssets().FirstOrDefault();
+                if (asset == null) return;
+                key.StopPropagation();
+                ForgeRenameWindow.Show(asset);
+            });
             return list;
         }
 

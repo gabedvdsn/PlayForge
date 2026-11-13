@@ -1304,7 +1304,7 @@ Death's section and a body for a running entity.
 | FN-5 | The rows of a **Used By** section draw their labels centered; they belong at the left. Fixed: a row is a button, whose words the editor's theme centers, and its labels took that; they keep to the row's left, a Scaler asset's Used By's too (`PlayForge.uss`) | UI | verified |
 | FN-6 | The Forge's text sits wrong in many places: rows want left padding (the Tags view's labels press against the window's edge), and a view table row's text and icons sit higher than they should. Fixed: a list's cells sit in the middle of their rows, where each column's cell held its words or icon at the row's top, and a text column's words keep 4 px off its left edge, as the name column's do (`PlayForge.uss`) | UI | verified |
 | FN-7 | The Forge's view table forgets which columns were hidden as it's closed and opened, as Type and Asset Tag, which the user always hides. Fixed: the window remembers the columns its header hides, as it does their widths, one preference a table, the Debugger's and the Problems view's tables too, and Use Defaults forgets them (`ForgeColumnWidths.cs`, `PlayForgePreferences.cs`) | UI | verified |
-| FN-8 | The Forge renames every asset type it lists, requirement templates, tags, value pipelines and crowd control rules among them | UI | open |
+| FN-8 | The Forge renames every asset type it lists, requirement templates, tags, value pipelines and crowd control rules among them. Done for assets: Rename… in a row's menu and an asset header's, and F2 on The Forge's list, a dialog that renames an asset as its inspector does through `ForgeRenames`: a PlayForge asset's name, with the tag its name gives, an attribute's, a Scaler asset's scaler's and a Requirement template's requirements', and the file of an asset with no name of its own, as a Value Pipeline or Crowd Control Rules; the file follows the name, back through an Undo. Value pipelines and crowd control rules are in The Forge's list with FN-12; tags rename in its Tags view with FN-9 (`ForgeRenames.cs`, `ForgeRenameWindow.cs`, `ForgeAssetActions.cs`, `BasePlayForgeEditor.cs`, `TheForge.cs`) | UI | verified |
 | FN-9 | Tags in The Forge: renamed there; a tag's summary shows its whole path under its primary name where the path says more; and new tag contexts made there (Decision 70: new contexts only) | UI | open |
 | FN-10 | Tag contexts gone through as they are: which exist, whether each is apt, how they're assigned to fields, and whether each field has the right ones; the tags `Tags.cs` writes, how robust they are; and how a project's own hard-coded tags reach the tag registry with nothing done by hand | Review | open |
 | FN-11 | The less common assets made easier to make: **New** or **Open** beside a Value Pipeline, Crowd Control Rules or Effect Modifier field; Value Pipelines in the Demo; and the docs say a Forge Tag Library belongs to no project, every one being read wherever it is | UI | open |
@@ -1351,6 +1351,18 @@ GAS-4 with GAS-5, PC-6, and TS-I with PC-5.
 ## Log
 
 Record baselines, gate results and notable decisions here, newest first.
+
+- 2026-11-13, **FN-8: The Forge renames every type it lists.** An asset's name was its inspector's to change, where it
+  had one: The Forge's own list renamed nothing, and a Requirement template, with no inspector of its own, or a Scaler
+  asset, had no name field. A row's menu, and an asset header's, offer Rename… now, as F2 on The Forge's list does: a
+  dialog with the name to type over, Enter to rename and Escape to cancel. `ForgeRenames` renames as the inspectors do,
+  one Undo step: a PlayForge asset's name and the tag its name gives, carried to what stored the old one (ED-84); an
+  attribute's name; a Scaler asset's scaler's and a Requirement template's requirements', which its lists show; and for
+  an asset with no name of its own, as a Value Pipeline, its file. The file follows the name, with its type's prefix and
+  suffix, and back through an Undo (ED-70); the inspectors' own renames go through it too. Value pipelines and crowd
+  control rules join The Forge's list with FN-12, and tags rename in its Tags view with FN-9.
+  - Red first: FN-8's tests don't compile against the old code: ForgeRenames and ForgeRenameWindow are new. Their first run failed on the tests' own expectations, a file with the name's spaces and an empty tag read as null, and on the window smoke test, which listed the new dialog as a window it didn't open; and a value pipeline's file, its only name, lost the name's spaces, which it keeps now
+  - Gates, for FN-8 and FN-13 together, on a frozen snapshot of the package: EditMode 869 of 874, ED-61 red from the working tree's lifecycle change, FN-8's two tests and the window smoke test's two themes, fixed and run again: FN-8's tests and the window tests 44 of 44; PlayMode 1814 of 1835, 8 skipped, the 12 known reds and the Battle scene's flake; golden 25 of 25.
 
 - 2026-11-13, **FN-6 and FN-7: The Forge's rows, and the columns it hides.** A list's cells sat at the top of their
   20 px rows, each column's cell holding its words or icon at their own height; each sits in its row's middle now. A

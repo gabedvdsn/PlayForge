@@ -146,7 +146,8 @@ string perLevel = impact.FormatTotal();           // "20/30/40/50"
   **Templates** follow, each a new asset's copy. A new asset goes into the active project, in its type's folder within the project's; the first one
   made makes the default project, at the project's root. With projects and none chosen, the active one is the
   project at the root, or none, when The Forge shows the assets in no project. The asset menu moves or copies the
-  selected assets into another project. Every asset picker, an object field's among them, offers the active project's
+  selected assets into another project, and renames an asset, as F2 on the list does: its name as its inspector gives
+  it, with the tag the name gives and the file following, or the file of an asset with no name of its own. Every asset picker, an object field's among them, offers the active project's
   assets alone, and the tag picker the tags they use. The Demo's assets are a project of their own. Its window menu's
   **Spreadsheets** writes the project's numbers by level, or its items' stats, to CSV, and reads a sheet back, listing
   its changes before it makes them ([SPREADSHEETS.md](SPREADSHEETS.md), TW-27). The list's columns sort, Summary among them, which shows each asset's one line, as its inspector's header does (TW-21); a click shows the asset's inspector in the detail pane, under its
