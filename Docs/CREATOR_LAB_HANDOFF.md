@@ -15,7 +15,7 @@ design is `Docs/CREATOR_LAB_DESIGN.md` (Decision 44); the tracker rows are LAB-1
 | 3. Battle | LAB-9, LAB-10 | Done: the commits after those, "LAB-9, LAB-10" |
 | 4. The author's unit | LAB-11 | Done on 2026-11-13, as drafted (below) |
 | 5. Showing its working | LAB-12 to LAB-17 | **Open** |
-| 6. Forge Projects in the library | LAB-18 | **Open**; FEAT-34 is done, so nothing blocks it |
+| 6. Forge Projects in the library | LAB-18 | Done on 2026-11-13 |
 
 Every test of the lab passes: `CreatorLabTests` (13, PlayMode), `CreatorLabEditorTests` (2, EditMode), and the Demo's
 nine, which play the Demo on the lab's kit.
@@ -134,7 +134,12 @@ on an event and stepping (LAB-14: the lab's world is its own, so stopping is `Pa
 (LAB-15), ForgeLog by system in the bottom panel (LAB-16, a ForgeLog listener), and the same journals in the Debugger
 (LAB-17: `Editor/Debugger/TimelineRecorder.cs`, `RuntimeDebugger.cs`).
 
-### LAB-18: Forge Projects in the library
+### LAB-18: Forge Projects in the library (done)
+
+Built on 2026-11-13: the library offers projects through `ILabLibrary.Projects`, `Project` and `UseProject` (default
+members); `EditorLabLibrary` plays the active project's assets of the project's own folders and switches the active
+project, `ForgeProjects` being visible to the lab's editor through `Editor/AssemblyInfo.cs`; the header's switch follows
+a switch made in The Forge; and a build's lab plays `ListLibrary.Of(ForgeProject.Current)`. The note, as it was:
 
 `EditorLabLibrary` takes folders: give it the active Forge Project's (FEAT-34's `ForgeProjects` in the Editor
 assembly), with a project switch in the library's header; with no projects, every asset. In a build, a library of

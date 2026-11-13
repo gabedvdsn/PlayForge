@@ -29,6 +29,8 @@ namespace FarEmerald.PlayForge.Lab
         private VisualElement library, selected, mode, log;
         private ScrollView libraryList, selectedBody;
         private TextField search;
+        private DropdownField libraryProject;
+        private int shownProject = -1;
         private Label libraryName, ghost, hint;
         private DropdownField dummyEntity, dummySide;
         private VisualElement dummySection, battleSection;
@@ -182,6 +184,22 @@ namespace FarEmerald.PlayForge.Lab
             libraryName = new Label { name = "LibraryName" };
             libraryName.AddToClassList("lab-muted");
             content.Add(libraryName);
+            // The Forge Project it plays, where its library offers several (LAB-18)
+            libraryProject = new DropdownField("Project", new List<string>(), 0)
+            {
+                name = "LibraryProject",
+                tooltip = "The Forge Project the library plays; in the editor, switching it switches the active project, as The Forge does",
+            };
+            libraryProject.RegisterValueChangedCallback(evt =>
+            {
+                var projects = lab != null ? lab.Library?.Projects : null;
+                if (projects == null) return;
+                int index = IndexOfName(projects, evt.newValue);
+                if (index < 0 || index == lab.Library.Project) return;
+                lab.Library.UseProject(index);
+                MarkDirty();
+            });
+            content.Add(libraryProject);
             search = new TextField { name = "Search" };
             search.AddToClassList("lab-search");
             search.RegisterValueChangedCallback(_ => DrawLibrary());
@@ -354,6 +372,7 @@ namespace FarEmerald.PlayForge.Lab
         {
             if (libraryList == null || lab == null) return;
             libraryName.text = lab.Library?.Name ?? "";
+            DrawProjects();
             libraryList.Clear();
             string filter = search?.value?.Trim() ?? "";
             foreach (LabAssetKind kind in Enum.GetValues(typeof(LabAssetKind)))
@@ -477,6 +496,7 @@ namespace FarEmerald.PlayForge.Lab
                 DrawSelected();
                 DrawBattleLine();
                 DrawControlLine();
+                FollowProject();
             }
             DrawBars();
         }
@@ -499,6 +519,33 @@ namespace FarEmerald.PlayForge.Lab
                 tilt?.SetValueWithoutNotify(lab.View.Tilt);
             }
             speed?.SetValueWithoutNotify(lab.Speed);
+        }
+
+        // The projects the library offers, the one it plays chosen; hidden where it offers none
+        private void DrawProjects()
+        {
+            if (libraryProject == null) return;
+            var projects = lab.Library?.Projects ?? Array.Empty<string>();
+            shownProject = lab.Library?.Project ?? -1;
+            libraryProject.style.display = projects.Count > 0 ? DisplayStyle.Flex : DisplayStyle.None;
+            libraryProject.choices = projects.ToList();
+            libraryProject.SetValueWithoutNotify(shownProject >= 0 && shownProject < projects.Count ? projects[shownProject] : "");
+        }
+
+        private static int IndexOfName(IReadOnlyList<string> names, string name)
+        {
+            for (int i = 0; i < names.Count; i++)
+                if (names[i] == name) return i;
+            return -1;
+        }
+
+        // A project switched elsewhere, as in The Forge: the library lists its assets again
+        private void FollowProject()
+        {
+            var library = lab.Library;
+            if (library == null || library.Projects.Count == 0 || library.Project == shownProject) return;
+            library.Refresh();
+            MarkDirty();
         }
 
         // Whom the author controls, and what each of the section's buttons can do now

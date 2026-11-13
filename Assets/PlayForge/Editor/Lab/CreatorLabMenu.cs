@@ -45,35 +45,64 @@ namespace FarEmerald.PlayForge.Lab.Editor
         }
     }
 
-    /// <summary>The library in the editor: every PlayForge asset of the project's own folders, by kind (LAB-5).</summary>
+    /// <summary>
+    /// The library in the editor, by kind (LAB-5, LAB-18): the active Forge Project's assets, as The Forge's pickers offer
+    /// them, or every asset of the project's own folders while it has no Forge Project; it switches the active project, as
+    /// The Forge does, and follows as The Forge switches it. Given folders, it plays those folders' assets alone.
+    /// </summary>
     public sealed class EditorLabLibrary : ILabLibrary
     {
         private readonly Dictionary<LabAssetKind, List<ScriptableObject>> byKind = new();
         private readonly string[] folders;
 
-        public string Name => "Every asset";
+        /// <summary>The active project's name, "Assets in no project" where none is active, or "Every asset".</summary>
+        public string Name
+        {
+            get
+            {
+                if (folders != null || ForgeProject.Folders().Count == 0) return "Every asset";
+                var active = ForgeProjects.Active;
+                return active ? active.name : "Assets in no project";
+            }
+        }
 
-        /// <param name="folders">The folders it searches, or the project's Assets where none are given.</param>
+        /// <param name="folders">The folders it plays alone; with none, the active Forge Project's assets.</param>
         public EditorLabLibrary(params string[] folders)
         {
-            this.folders = folders is { Length: > 0 } ? folders : new[] { "Assets" };
+            this.folders = folders is { Length: > 0 } ? folders : null;
             Refresh();
         }
 
         public IReadOnlyList<ScriptableObject> Assets(LabAssetKind kind) =>
             byKind.TryGetValue(kind, out var list) ? list : (IReadOnlyList<ScriptableObject>)Array.Empty<ScriptableObject>();
 
+        public IReadOnlyList<string> Projects =>
+            folders != null ? Array.Empty<string>() : ForgeProjects.All().Select(project => project.name).ToList();
+
+        public int Project => folders != null ? -1 : ForgeProjects.All().IndexOf(ForgeProjects.Active);
+
+        public void UseProject(int index)
+        {
+            if (folders != null) return;
+            var all = ForgeProjects.All();
+            ForgeProjects.Active = index >= 0 && index < all.Count ? all[index] : null;
+            Refresh();
+        }
+
         public void Refresh()
         {
             byKind.Clear();
+            // The project's own folders, the packages' left out; of them, the active Forge Project's
+            var inActive = folders == null ? ForgeProjects.InActive() : null;
+            var searched = folders ?? new[] { "Assets" };
             foreach (LabAssetKind kind in Enum.GetValues(typeof(LabAssetKind)))
             {
                 var type = LabAssets.TypeOf(kind);
-                byKind[kind] = AssetDatabase.FindAssets($"t:{type.Name}", folders)
+                byKind[kind] = AssetDatabase.FindAssets($"t:{type.Name}", searched)
                     .Select(AssetDatabase.GUIDToAssetPath)
                     .Distinct()
                     .Select(path => AssetDatabase.LoadAssetAtPath(path, type) as ScriptableObject)
-                    .Where(asset => asset && LabAssets.TryKindOf(asset, out var found) && found == kind)
+                    .Where(asset => asset && LabAssets.TryKindOf(asset, out var found) && found == kind && (inActive == null || inActive(asset)))
                     .OrderBy(asset => LabAssets.NameOf(asset), StringComparer.OrdinalIgnoreCase)
                     .ToList();
             }

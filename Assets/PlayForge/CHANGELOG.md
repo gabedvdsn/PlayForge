@@ -7,6 +7,10 @@ tracks each fix below by its ID.
 ## [Unreleased]
 
 ### Added
+- The Creator Lab's library plays the active Forge Project's assets, and a Project switch in its header switches the
+  active project, as The Forge's does; where no editor gives it a library, as in a build, the lab plays what its game's
+  Forge Project names (`ListLibrary.Of`). A library offers projects through `ILabLibrary.Projects`, `Project` and
+  `UseProject`, which have defaults (LAB-18).
 - The Creator Lab's author's unit (LAB-11): put one down, or take over a unit, and play it with the lab's controls,
   the Demo's made general (`LabControls`): right-click to move or attack, Q W E R to cast, 1 to 6 for items, S to stop.
   Its orders go through a driver a project can give, a `LabDriver` asset on its Lab Rules (`ILabUnitDriver`), or the

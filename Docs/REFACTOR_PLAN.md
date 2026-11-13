@@ -1231,7 +1231,7 @@ component builds, so the menu opens it in a new scene rather than a scene file t
 | LAB-15 | 5 | Watches | A unit's attribute, a tag's count, an effect's stacks or time, or a number read on it, pinned and drawn as lines over the last minute of the lab's time |  | open |
 | LAB-16 | 5 | Logs | ForgeLog's levels by system, filtered to the selected unit, in the bottom panel |  | open |
 | LAB-17 | 5 | The Debugger's journals | The Debugger shows the effect journal in its Timeline and the combat log in its Entities view, for any game |  | open |
-| LAB-18 | 6 | Forge Projects in the library | The library plays the active project's assets, or every asset where there are none, and switches between projects; in a build, it lists what a project names |  | open |
+| LAB-18 | 6 | Forge Projects in the library | The library plays the active project's assets, or every asset where there are none, and switches between projects; in a build, it lists what a project names. Done: `ILabLibrary.Projects`, `Project` and `UseProject`, default members, so a library of one set of assets offers none; `EditorLabLibrary` plays the active Forge Project's assets of the project's own folders and switches the active project, as The Forge does (the editor's internals visible to the lab's editor); the library's header has a Project switch that follows a switch made elsewhere; with no editor library, the lab plays what its game's project names (`ListLibrary.Of`) | `LabLibrary.cs`, `LabPanels.cs`, `CreatorLab.cs`, `Editor/Lab/CreatorLabMenu.cs`, `Editor/AssemblyInfo.cs` | verified |
 
 ### The tooling wishlist (FEAT-38)
 
@@ -1315,6 +1315,16 @@ GAS-4 with GAS-5, PC-6, and TS-I with PC-5.
 ## Log
 
 Record baselines, gate results and notable decisions here, newest first.
+
+- 2026-11-13, **LAB-18: Forge Projects in the library.** The lab's library in the editor plays the active Forge
+  Project's assets, as The Forge's pickers offer them, from the project's own folders, and every asset while there's no
+  Forge Project; the library's header switches the active project, as The Forge does, and follows a switch made there.
+  A library offers projects through three default members of `ILabLibrary`, so a library of one set of assets, as the
+  tests' and a game's own, needs no change. Where no editor gives the lab its library, as in a build, it plays what the
+  game's Forge Project names, the assets in its catalog. `ForgeProjects` stays internal: the Editor assembly lets the
+  lab's editor see it.
+  - Red first: LAB-18's tests don't compile against the old code: ILabLibrary.Projects, Project and UseProject, and ListLibrary.Of are new. On their first run the panel's test failed, its wait counting frames where the panel looks again a few times a second of real time, the test's own fault, fixed
+  - Gates: CreatorLabEditorTests and ForgeProjectTests 10 of 10, CreatorLabTests 19 of 19. Full: EditMode twice cut short, as the user's edit to ForgeTagRegistry.cs, saved in their editor during the run, recompiled the private copy's package, then on a frozen snapshot of the package 862 of 863, ED-61 red from the working tree's lifecycle change; PlayMode 1815 of 1835, 8 skipped, the 12 known reds; golden 25 of 25.
 
 - 2026-11-13, **LAB-11: the author's unit.** The Creator Lab resumes at the user's word with its phase 4, as Decision 44
   drew it and the hand-over drafted it. A unit the author puts down, or a bot they take over, takes the lab's controls,

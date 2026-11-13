@@ -30,11 +30,33 @@ namespace FarEmerald.PlayForge.Lab
 
         /// <summary>Lists the assets again, as after one is made or deleted.</summary>
         void Refresh();
+
+        /// <summary>The Forge Projects it can play, by name, which the library's header switches between: none where it plays one set of assets (LAB-18).</summary>
+        IReadOnlyList<string> Projects => Array.Empty<string>();
+
+        /// <summary>Which of <see cref="Projects"/> it plays now, or -1.</summary>
+        int Project => -1;
+
+        /// <summary>Plays another of its projects, its assets listed again.</summary>
+        void UseProject(int index) { }
     }
 
     /// <summary>A library of the assets given, as a test or a build gives them.</summary>
     public sealed class ListLibrary : ILabLibrary
     {
+        /// <summary>
+        /// The library of what a Forge Project names, the assets in its catalog, under its name, as a build has them
+        /// (LAB-18); null for none.
+        /// </summary>
+        public static ListLibrary Of(ForgeProject project)
+        {
+            if (!project) return null;
+            var named = new List<ScriptableObject>();
+            foreach (var entry in project.Entries)
+                if (entry.Asset) named.Add(entry.Asset);
+            return new ListLibrary(project.name, named);
+        }
+
         private readonly List<ScriptableObject> assets;
         private readonly Dictionary<LabAssetKind, List<ScriptableObject>> byKind = new();
 

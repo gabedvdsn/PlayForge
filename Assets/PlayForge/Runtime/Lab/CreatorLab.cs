@@ -150,7 +150,8 @@ namespace FarEmerald.PlayForge.Lab
         {
             Current = this;
             BringUpPlayForge();
-            Library = givenLibrary ?? DefaultLibrary?.Invoke() ?? new ListLibrary("Nothing", null);
+            // Given; or the editor's, its active Forge Project's; or, as in a build, what the game's project names (LAB-18)
+            Library = givenLibrary ?? DefaultLibrary?.Invoke() ?? ListLibrary.Of(ForgeProject.Current) ?? new ListLibrary("Nothing", null);
             ActiveRules = Rules ? Rules : Own(LabRules.MakeDefault(Library));
             if (Rules) Rules.FindIn(Library);
             World = new ProcessWorld();

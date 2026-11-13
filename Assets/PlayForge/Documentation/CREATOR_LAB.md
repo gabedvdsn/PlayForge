@@ -24,9 +24,10 @@ and battle (phase 3, LAB-9 and LAB-10).
 
 Each panel collapses to a tab at its edge with its − button.
 
-- **Library** (left): the project's assets by kind, abilities, effects, items, entities, attribute sets, attributes
-  and scalers, each kind by name. The search box filters them; **Refresh** lists them again after you make or delete
-  one. A kind's color shows in its icon alone.
+- **Library** (left): the active Forge Project's assets by kind, abilities, effects, items, entities, attribute sets,
+  attributes and scalers, each kind by name, or every asset of the project while it has no Forge Project. **Project**
+  switches the active project, as The Forge does, and follows The Forge's switch. The search box filters them;
+  **Refresh** lists them again after you make or delete one. A kind's color shows in its icon alone.
 - **Selected** (middle): hidden until something is selected. Click an asset in the library to see its numbers level by
   level, as "−80/−120/−160 Health"; **Open in The Forge** opens it there. Click a unit to see its attributes, tags,
   effects with their stacks and time left, abilities with their levels and cooldowns, and items. There, − and + change
@@ -125,7 +126,9 @@ The Demo's roster is the Demo's rules: its units, camera and dummy are the lab's
 `AddDummy`, `ApplyEffect`, `CastAt`, `GiveItem`, `Drop` (at a point of the screen) and `DropAt` (on a unit or a point),
 `Select`, `SetMode`, `ResetDummies`, `Clear`, and `Step`, `Paused`, `Speed` and `StepFrame` for its time. A library is an
 `ILabLibrary`: in the editor every asset of the project (`EditorLabLibrary`), in code a `ListLibrary` of the assets
-given. The unit you control is `ControlledUnit`, given by `PutDownOwnUnit`, `TakeControl` and `ReleaseControl`, its
+given; a game's own build gets `ListLibrary.Of(project)`, the assets its Forge Project's catalog names, which the lab
+plays where no editor gives it a library. A library offers projects to switch between through `ILabLibrary.Projects`,
+`Project` and `UseProject`, which have defaults. The unit you control is `ControlledUnit`, given by `PutDownOwnUnit`, `TakeControl` and `ReleaseControl`, its
 camera by `Follow`; the lab's controls are its `Controls`, a `LabControls`, whose `Driver` comes before its rules'. A
 game's own player can be a `LabControls` too, as the Demo's is: its unit set on it, or its `ControlledUnit()`
 overridden.
