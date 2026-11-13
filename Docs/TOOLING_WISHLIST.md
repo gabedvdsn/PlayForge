@@ -290,7 +290,8 @@ for TW-8.
 
 **AC-4. Genre rules too narrow for the core.** Attribute Shift's moving of points between attributes over time, if the
 transfer impact (TW-20) doesn't cover it, and such rules as the labs meet that only one genre uses. The labs' other
-workers move to the framework (AC-6).
+workers move to the framework (AC-6). Covered on 2026-11-12 (Decision 68): TW-20's transfer moves the points, and the
+lab's Attribute Shift, which stops at 1 Strength, needs no code; AC-6 moved the labs' last workers.
 
 **AC-5. A starter set of generic assets.** A melee attack, a bolt, a stun, a damage over time, a slow, a shield, an
 on-hit item and an on-kill item, a boss with a second phase, built from framework features alone and named for what
