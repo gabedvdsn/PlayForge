@@ -48,8 +48,8 @@ namespace FarEmerald.PlayForge
     /// The core sends events of its own to an entity where an ability listens for them (TW-5): <see cref="Tags.IMPACT_DEALT"/>
     /// and <see cref="Tags.IMPACT_TAKEN"/> as an impact lands between two entities, <see cref="Tags.KILL"/> to the killer and
     /// <see cref="Tags.DIED"/> to the one who died, and <see cref="Tags.REVIVED"/>. Their data hold the instigator as
-    /// <see cref="Tags.SOURCE"/>, the entity it was done to as <see cref="Tags.SUBJECT"/>, and an impact's
-    /// <see cref="ImpactData"/> as <see cref="Tags.IMPACT"/>. A trigger can take only some impacts, roll a chance, and target
+    /// <see cref="Tags.SOURCE"/>, the entity it was done to as <see cref="Tags.EVENT_SUBJECT"/>, and an impact's
+    /// <see cref="ImpactData"/> as <see cref="Tags.EVENT_IMPACT"/>. A trigger can take only some impacts, roll a chance, and target
     /// the instigator or the subject.
     /// </para>
     /// </summary>
@@ -90,7 +90,7 @@ namespace FarEmerald.PlayForge
         /// </summary>
         public bool Accepts(ProcessDataPacket data, IGameplayAbilitySystem receiver)
         {
-            if (Source == EAbilityTriggerSource.GameplayEvent && data != null && data.TryGetFirst<ImpactData>(Tags.IMPACT, out var impact))
+            if (Source == EAbilityTriggerSource.GameplayEvent && data != null && data.TryGetFirst<ImpactData>(Tags.EVENT_IMPACT, out var impact))
             {
                 if (Attribute != null && !Attribute.Equals(impact.Attribute)) return false;
                 float change = impact.RealImpact.CurrentValue != 0f ? impact.RealImpact.CurrentValue : impact.RealImpact.BaseValue;
@@ -108,7 +108,7 @@ namespace FarEmerald.PlayForge
         public ITarget TargetIn(ProcessDataPacket data)
         {
             if (data == null || Target == ETriggerTarget.Own) return null;
-            var key = Target == ETriggerTarget.Instigator ? Tags.SOURCE : Tags.SUBJECT;
+            var key = Target == ETriggerTarget.Instigator ? Tags.SOURCE : Tags.EVENT_SUBJECT;
             return data.TryGetFirst<ITarget>(key, out var target) ? target : null;
         }
     }

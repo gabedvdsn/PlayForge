@@ -316,7 +316,7 @@ namespace FarEmerald.PlayForge
             if (data != null)
             {
                 if (data.TryGet(Tags.SOURCE, EDataTarget.Primary, out ITarget source) && !ReferenceEquals(source, self)) other = source;
-                else if (data.TryGet(Tags.SUBJECT, EDataTarget.Primary, out ITarget subject) && !ReferenceEquals(subject, self)) other = subject;
+                else if (data.TryGet(Tags.EVENT_SUBJECT, EDataTarget.Primary, out ITarget subject) && !ReferenceEquals(subject, self)) other = subject;
             }
             Write(new CombatLogEntry(ECombatLogKind.Event, ForgeTime.Time, ForgeTime.FrameCount, other, null, null, null,
                 default, default, eventTag, null, false), settings.Keep);

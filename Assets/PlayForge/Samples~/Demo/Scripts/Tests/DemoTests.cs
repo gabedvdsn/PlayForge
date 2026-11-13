@@ -207,7 +207,7 @@ namespace FarEmerald.PlayForge.Samples.Demo.Tests
 
         private float Bonus(Attribute attribute) =>
             game.Player.Gas.GetAttributeSystem().TryGetCachedValue(attribute, out CachedAttributeValue cached)
-                ? cached.GetGroupValue(Tags.ADDITIONAL).CurrentValue : 0f;
+                ? cached.GetGroupValue(Tags.BONUS).CurrentValue : 0f;
 
         /// <summary>A hero's level raises its primaries, and an ability's level and Cooldown Reduction set its cooldown.</summary>
         [UnityTest]

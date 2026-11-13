@@ -355,7 +355,7 @@ namespace FarEmerald.PlayForge.Samples.Demo
                 float value = me.Value(attribute);
                 // The part items give, as the Bonus retention group holds it
                 float bonus = system != null && system.TryGetCachedValue(attribute, out CachedAttributeValue cached)
-                    ? cached.GetGroupValue(Tags.ADDITIONAL).CurrentValue : 0f;
+                    ? cached.GetGroupValue(Tags.BONUS).CurrentValue : 0f;
                 string shown = Number(value);
                 if (Mathf.Abs(bonus) > 0.0001f) shown += $" (+{Number(bonus)})";
                 line.text = $"{attribute.GetAbbreviation()}  {shown}";

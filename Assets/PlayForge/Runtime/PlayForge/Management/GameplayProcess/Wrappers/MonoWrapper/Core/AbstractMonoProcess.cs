@@ -68,7 +68,7 @@ namespace FarEmerald.PlayForge
             _initialized = true;
             
             // Transform
-            if (regData.TryGetFirst<Transform>(Tags.PARENT_TRANSFORM, out var pt))
+            if (regData.TryGetFirst<Transform>(Tags.TRANSFORM, out var pt))
             {
                 transform.SetParent(pt);
             }

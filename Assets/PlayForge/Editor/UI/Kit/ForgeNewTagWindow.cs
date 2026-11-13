@@ -169,6 +169,10 @@ namespace FarEmerald.PlayForge.Extended.Editor
         {
             if (string.IsNullOrWhiteSpace(text)) return "A tag needs a path.";
             if (!TagRegistry.IsValidPath(text)) return "A path is names of letters, numbers and underscores, joined by dots.";
+            // A tag's name is its path padded to 64 characters, so a longer one is cut, and two that begin alike are one
+            // tag (TAG-8)
+            if (text.Trim().Length >= TagRegistry.TagUtil.rngGenerationBufferSize)
+                return $"A path of {TagRegistry.TagUtil.rngGenerationBufferSize} characters or more would be cut, so it could be another's tag.";
             return null;
         }
     }

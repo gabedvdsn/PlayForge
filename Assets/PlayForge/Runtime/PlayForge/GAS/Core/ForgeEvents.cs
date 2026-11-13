@@ -13,7 +13,7 @@ namespace FarEmerald.PlayForge
             if (abilities == null || !tag.IsValid || !abilities.ListensFor(tag)) return;
             var data = ProcessDataPacket.Default();
             if (source != null) data.SetPrimary(Tags.SOURCE, source);
-            if (subject != null) data.SetPrimary(Tags.SUBJECT, subject);
+            if (subject != null) data.SetPrimary(Tags.EVENT_SUBJECT, subject);
             var queue = to.GetActionQueue();
             if (queue != null) queue.Enqueue(new LambdaAction(_ => abilities.SendGameplayEvent(tag, data), $"Send {tag}"));
             else abilities.SendGameplayEvent(tag, data);

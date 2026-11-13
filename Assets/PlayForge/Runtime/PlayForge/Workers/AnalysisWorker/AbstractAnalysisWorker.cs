@@ -205,7 +205,7 @@ namespace FarEmerald.PlayForge
                     if (abilities == null || !abilities.ListensFor(tag)) return;
                     var data = ProcessDataPacket.Default();
                     if (crosser is ITarget source) data.SetPrimary(Tags.SOURCE, source);
-                    if (system is ITarget subject) data.SetPrimary(Tags.SUBJECT, subject);
+                    if (system is ITarget subject) data.SetPrimary(Tags.EVENT_SUBJECT, subject);
                     abilities.SendGameplayEvent(tag, data);
                 }, $"Send {tag}");
             }

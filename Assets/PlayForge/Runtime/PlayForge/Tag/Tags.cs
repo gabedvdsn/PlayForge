@@ -4,6 +4,11 @@ using FarEmerald.PlayForge.Extended;
 
 namespace FarEmerald.PlayForge
 {
+    /// <summary>
+    /// PlayForge's own tags, grouped by kind. Each is its text padded to 64 characters by a hash of it, a name every asset
+    /// that uses the tag stores, so a text changed is another tag; a test pins each one's name and kind (TAG-8). Each is
+    /// exposed to the editor's pickers for its kind (TAG-5).
+    /// </summary>
     public static partial class Tags
     {
         // Each is made once, as the class first loads. Made on every read, each took two locks and two lookups of its
@@ -13,75 +18,46 @@ namespace FarEmerald.PlayForge
         // Special Tags
         // ═══════════════════════════════════════════════════════════════════════════
 
-        [ForgeTagExposed(ForgeContext.Affiliation)]
-        public static Tag SYSTEM { get; } = Tag.GenerateAsUnique("System");
-
+        [ForgeTagExposed(ForgeContext.Affiliation)] public static Tag SYSTEM { get; } = Tag.GenerateAsUnique("System");
         [ForgeTagExposed] public static Tag GAME_ROOT { get; } = Tag.GenerateAsUnique("Game Root");
-        
         [ForgeTagExposed] public static Tag NONE { get; } = Tag.GenerateAsUnique("None");
-        
-        [ForgeTagExposed(ForgeContext.ImpactType)]
-        public static Tag ALLOW { get; } = Tag.GenerateAsUnique("Always Allow");
+        [ForgeTagExposed] public static Tag DEBUG { get; } = Tag.GenerateAsUnique("Debug");
 
-        [ForgeTagExposed(ForgeContext.ImpactType)]
-        public static Tag DISALLOW { get; } = Tag.GenerateAsUnique("Never Allow");
+        // ═══════════════════════════════════════════════════════════════════════════
+        // Impact Types
+        // ═══════════════════════════════════════════════════════════════════════════
+
+        [ForgeTagExposed(ForgeContext.ImpactType)] public static Tag ALWAYS_ALLOW { get; } = Tag.GenerateAsUnique("Always Allow");
+        [ForgeTagExposed(ForgeContext.ImpactType)] public static Tag NEVER_ALLOW { get; } = Tag.GenerateAsUnique("Never Allow");
 
         /// <summary>The type of damage a return sends back, so no return returns it again and no lifesteal heals from it (TW-15).</summary>
-        [ForgeTagExposed(ForgeContext.ImpactType)]
-        public static Tag RETURNED { get; } = Tag.GenerateAsUnique("Returned");
-        
-        [ForgeTagExposed]
-        public static Tag DEBUG { get; } = Tag.GenerateAsUnique("Debug");
-        
-        // ═══════════════════════════════════════════════════════════════════════════
-        // Base Tags
-        // ═══════════════════════════════════════════════════════════════════════════
-        
-        [ForgeTagExposed(ForgeContext.RetentionGroup)]
-        public static Tag IGNORE { get; } = Tag.GenerateAsUnique("Ignore");
-        
-        [ForgeTagExposed(ForgeContext.TextureSlot)]
-        public static Tag PRIMARY { get; } = Tag.GenerateAsUnique("Primary");
-        
-        [ForgeTagExposed(ForgeContext.RetentionGroup)]
-        public static Tag DEFAULT { get; } = Tag.GenerateAsUnique("Default");
-        
-        [ForgeTagExposed(ForgeContext.RetentionGroup)]
-        public static Tag ADDITIONAL { get; } = Tag.GenerateAsUnique("Bonus");
-        
-        // ═══════════════════════════════════════════════════════════════════════════
-        // Classification Tags
-        // ═══════════════════════════════════════════════════════════════════════════
-        
-        [ForgeTagExposed(ForgeContext.Visibility)]
-        public static Tag ALWAYS_VISIBLE { get; } = Tag.GenerateAsUnique("Always Visible");
-        
-        [ForgeTagExposed(ForgeContext.Visibility)]
-        public static Tag NOT_VISIBLE { get; } = Tag.GenerateAsUnique("Not Visible");
-        
-        // ═══════════════════════════════════════════════════════════════════════════
-        // Mono Process Initialization Tags
-        // ═══════════════════════════════════════════════════════════════════════════
-        
-        [ForgeTagExposed(ForgeContext.DataKey)] public static Tag PARENT_TRANSFORM { get; } = Tag.GenerateAsUnique("Transform");
-        [ForgeTagExposed(ForgeContext.DataKey)] public static Tag POSITION { get; } = Tag.GenerateAsUnique("Position");
-        [ForgeTagExposed(ForgeContext.DataKey)] public static Tag ROTATION { get; } = Tag.GenerateAsUnique("Rotation");
-        
-        [ForgeTagExposed(ForgeContext.DataKey)] public static Tag GAMEPLAY_ABILITY_SYSTEM { get; } = Tag.GenerateAsUnique("GameplayAbilitySystem");
-        [ForgeTagExposed(ForgeContext.DataKey)] public static Tag DERIVATION { get; } = Tag.GenerateAsUnique("Derivation");
-        [ForgeTagExposed(ForgeContext.DataKey)] public static Tag AFFILIATION { get; } = Tag.GenerateAsUnique("Affiliation");
-        [ForgeTagExposed(ForgeContext.DataKey)] public static Tag SOURCE { get; } = Tag.GenerateAsUnique("Source");
-        [ForgeTagExposed(ForgeContext.DataKey)] public static Tag TARGET { get; } = Tag.GenerateAsUnique("Target");
-        [ForgeTagExposed(ForgeContext.DataKey)] public static Tag TARGET_REAL { get; } = Tag.GenerateAsUnique("TargetReal");
-        [ForgeTagExposed(ForgeContext.DataKey)] public static Tag TARGET_POS { get; } = Tag.GenerateAsUnique("TargetPosition");
+        [ForgeTagExposed(ForgeContext.ImpactType)] public static Tag RETURNED { get; } = Tag.GenerateAsUnique("Returned");
 
-        /// <summary>A core event's subject: the one hit, the one killed, or the entity itself (TW-5).</summary>
-        [ForgeTagExposed(ForgeContext.DataKey)] public static Tag SUBJECT { get; } = Tag.GenerateAsUnique("EventSubject");
+        // ═══════════════════════════════════════════════════════════════════════════
+        // Retention Groups
+        // ═══════════════════════════════════════════════════════════════════════════
 
-        /// <summary>An impact event's impact, an <see cref="ImpactData"/> (TW-5).</summary>
-        [ForgeTagExposed(ForgeContext.DataKey)] public static Tag IMPACT { get; } = Tag.GenerateAsUnique("EventImpact");
+        [ForgeTagExposed(ForgeContext.RetentionGroup)] public static Tag IGNORE { get; } = Tag.GenerateAsUnique("Ignore");
+        [ForgeTagExposed(ForgeContext.RetentionGroup)] public static Tag DEFAULT { get; } = Tag.GenerateAsUnique("Default");
+        [ForgeTagExposed(ForgeContext.RetentionGroup)] public static Tag BONUS { get; } = Tag.GenerateAsUnique("Bonus");
 
-        // ─── The roles PlayForge's features read, each filled by a project's attribute (TW-29) ───
+        // ═══════════════════════════════════════════════════════════════════════════
+        // Texture Slots
+        // ═══════════════════════════════════════════════════════════════════════════
+
+        [ForgeTagExposed(ForgeContext.TextureSlot)] public static Tag PRIMARY { get; } = Tag.GenerateAsUnique("Primary");
+
+        // ═══════════════════════════════════════════════════════════════════════════
+        // Visibility
+        // ═══════════════════════════════════════════════════════════════════════════
+
+        [ForgeTagExposed(ForgeContext.Visibility)] public static Tag ALWAYS_VISIBLE { get; } = Tag.GenerateAsUnique("Always Visible");
+        [ForgeTagExposed(ForgeContext.Visibility)] public static Tag NOT_VISIBLE { get; } = Tag.GenerateAsUnique("Not Visible");
+
+        // ═══════════════════════════════════════════════════════════════════════════
+        // Attribute Roles
+        // ═══════════════════════════════════════════════════════════════════════════
+        // The roles PlayForge's features read, each filled by a project's attribute (TW-29)
 
         /// <summary>
         /// The attribute an entity dies of as it reaches 0, where no death watcher of its own watches; which On Hit counts,
@@ -95,7 +71,10 @@ namespace FarEmerald.PlayForge
         /// <summary>The attribute the Creator Lab's units walk at, in units a second, where its rules name none.</summary>
         [ForgeTagExposed(ForgeContext.AttributeRole)] public static Tag ROLE_MOVEMENT_SPEED { get; } = Tag.GenerateAsUnique("Movement Speed");
 
-        // ─── The gameplay events the core sends, where an ability listens (TW-5) ───
+        // ═══════════════════════════════════════════════════════════════════════════
+        // Events
+        // ═══════════════════════════════════════════════════════════════════════════
+        // The gameplay events the core sends, where an ability listens (TW-5)
 
         /// <summary>To the dealer, as an impact it dealt lands on another entity.</summary>
         [ForgeTagExposed(ForgeContext.Event)] public static Tag IMPACT_DEALT { get; } = Tag.GenerateAsUnique("Impact Dealt");
@@ -123,6 +102,32 @@ namespace FarEmerald.PlayForge
 
         /// <summary>To the dealer as the one it hit evades its effect, that one as Subject (TW-12).</summary>
         [ForgeTagExposed(ForgeContext.Event)] public static Tag HIT_EVADED { get; } = Tag.GenerateAsUnique("Hit Evaded");
+
+        // ═══════════════════════════════════════════════════════════════════════════
+        // Data Keys
+        // ═══════════════════════════════════════════════════════════════════════════
+        // The keys the core reads and writes an ability's or a process's data under: Transform, Position and Rotation
+        // place a process as it starts
+
+        [ForgeTagExposed(ForgeContext.DataKey)] public static Tag TRANSFORM { get; } = Tag.GenerateAsUnique("Transform");
+        [ForgeTagExposed(ForgeContext.DataKey)] public static Tag POSITION { get; } = Tag.GenerateAsUnique("Position");
+        [ForgeTagExposed(ForgeContext.DataKey)] public static Tag ROTATION { get; } = Tag.GenerateAsUnique("Rotation");
+        [ForgeTagExposed(ForgeContext.DataKey)] public static Tag DERIVATION { get; } = Tag.GenerateAsUnique("Derivation");
+        [ForgeTagExposed(ForgeContext.DataKey)] public static Tag AFFILIATION { get; } = Tag.GenerateAsUnique("Affiliation");
+        [ForgeTagExposed(ForgeContext.DataKey)] public static Tag SOURCE { get; } = Tag.GenerateAsUnique("Source");
+        [ForgeTagExposed(ForgeContext.DataKey)] public static Tag TARGET { get; } = Tag.GenerateAsUnique("Target");
+        [ForgeTagExposed(ForgeContext.DataKey)] public static Tag TARGET_REAL { get; } = Tag.GenerateAsUnique("TargetReal");
+        [ForgeTagExposed(ForgeContext.DataKey)] public static Tag TARGET_POS { get; } = Tag.GenerateAsUnique("TargetPosition");
+
+        /// <summary>A core event's subject: the one hit, the one killed, or the entity itself (TW-5).</summary>
+        [ForgeTagExposed(ForgeContext.DataKey)] public static Tag EVENT_SUBJECT { get; } = Tag.GenerateAsUnique("EventSubject");
+
+        /// <summary>An impact event's impact, an <see cref="ImpactData"/> (TW-5).</summary>
+        [ForgeTagExposed(ForgeContext.DataKey)] public static Tag EVENT_IMPACT { get; } = Tag.GenerateAsUnique("EventImpact");
+
+        /// <summary>Used to communicate the act of targeting to the targeted entity</summary>
+        [ForgeTagExposed(ForgeContext.DataKey)] public static Tag TARGETED_INTENT { get; } = Tag.GenerateAsUnique("TargetedIntent");
+
         [ForgeTagExposed(ForgeContext.DataKey)] public static Tag DATA { get; } = Tag.GenerateAsUnique("Data");
         [ForgeTagExposed(ForgeContext.DataKey)] public static Tag ASSETS { get; } = Tag.GenerateAsUnique("Assets");
         [ForgeTagExposed(ForgeContext.DataKey)] public static Tag EFFECTS { get; } = Tag.GenerateAsUnique("Effects");
@@ -131,6 +136,14 @@ namespace FarEmerald.PlayForge
         [ForgeTagExposed(ForgeContext.DataKey)] public static Tag ATTRIBUTES { get; } = Tag.GenerateAsUnique("Attributes");
         [ForgeTagExposed(ForgeContext.DataKey)] public static Tag ATTRIBUTE_SETS { get; } = Tag.GenerateAsUnique("AttributeSets");
         [ForgeTagExposed(ForgeContext.DataKey)] public static Tag TAGS { get; } = Tag.GenerateAsUnique("Tags");
+
+        // ═══════════════════════════════════════════════════════════════════════════
+        // Data Keys for Coded Behaviours
+        // ═══════════════════════════════════════════════════════════════════════════
+        // Ready-made keys a project's coded behaviours carry their values under, in the data packets of the processes
+        // they run; PlayForge's own code reads none (TAG-8)
+
+        [ForgeTagExposed(ForgeContext.DataKey)] public static Tag GAMEPLAY_ABILITY_SYSTEM { get; } = Tag.GenerateAsUnique("GameplayAbilitySystem");
         [ForgeTagExposed(ForgeContext.DataKey)] public static Tag INDEX { get; } = Tag.GenerateAsUnique("Index");
         [ForgeTagExposed(ForgeContext.DataKey)] public static Tag OBJECT { get; } = Tag.GenerateAsUnique("Object");
         [ForgeTagExposed(ForgeContext.DataKey)] public static Tag GAMEOBJECT { get; } = Tag.GenerateAsUnique("GameObject");
@@ -154,19 +167,16 @@ namespace FarEmerald.PlayForge
         [ForgeTagExposed(ForgeContext.DataKey)] public static Tag PROCESS_RELAY { get; } = Tag.GenerateAsUnique("ProcessRelay");
         [ForgeTagExposed(ForgeContext.DataKey)] public static Tag CONTAINER { get; } = Tag.GenerateAsUnique("Container");
         [ForgeTagExposed(ForgeContext.DataKey)] public static Tag UI { get; } = Tag.GenerateAsUnique("UI");
-        
+
         // ═══════════════════════════════════════════════════════════════════════════
-        // Functional Tags
+        // Set By Caller Keys
         // ═══════════════════════════════════════════════════════════════════════════
-        
-        /// <summary>Used to communicate the act of targeting to the targeted entity</summary>
-        [ForgeTagExposed(ForgeContext.DataKey)] public static Tag TARGETED_INTENT { get; } = Tag.GenerateAsUnique("TargetedIntent");
-        
+
         /// <summary>The role a projectile reads its speed by, among the attributes it carries or its origin's (FEAT-24)</summary>
         [ForgeTagExposed(ForgeContext.SetByCallerKey)] public static Tag PROJECTILE_SPEED { get; } = Tag.GenerateAsUnique("ProjectileSpeed");
-        
+
         // ═══════════════════════════════════════════════════════════════════════════
-        // Report Tags
+        // Process Statuses
         // ═══════════════════════════════════════════════════════════════════════════
 
         /// <summary>A process's status as it failed as it began (TAG-5)</summary>

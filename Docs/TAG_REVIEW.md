@@ -33,7 +33,8 @@ Decided by Decision 71, the user's choices, the first of each pair below: hierar
 Tag, a convention scan, and the contexts pruned and renamed. Decision 73 then made TAG-5 opt-in: a code tag reaches the
 pickers only marked `[ForgeTagExposed]`, which replaces `[ForgeContextDefault]`, and every tag `Tags.cs` writes is
 marked. Decision 74 set TAG-6's contexts: 18, one per kind of tag, Data split into its four kinds of key, and the old
-constants removed.
+constants removed. Decision 75 kept `Tags.cs`'s 24 unread keys, for coded behaviours, and renamed six properties to
+their texts (TAG-8).
 
 1. **TAG-1, a hierarchy for unique tags.** Match a unique tag's hierarchy by its display path, what the designer sees,
    with no asset touched; or make New Tag's tags plain, with a pass that renames the padded ones; or pad a child from

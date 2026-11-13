@@ -438,6 +438,10 @@ tracks each fix below by its ID.
   page, through one table of links in the editor.
 
 ### Changed
+- Six `Tags` properties take their texts' names: `ADDITIONAL` is `BONUS`, `PARENT_TRANSFORM` is `TRANSFORM`, `SUBJECT`
+  is `EVENT_SUBJECT`, `IMPACT` is `EVENT_IMPACT`, `ALLOW` is `ALWAYS_ALLOW` and `DISALLOW` is `NEVER_ALLOW`; rename them
+  where your code has them. The tags themselves, and every asset that stores one, are as they were. `Tags.cs` is grouped
+  by kind of tag, its ready-made keys for coded behaviours in a section of their own (TAG-8).
 - The tag contexts are one per kind of tag, 18 of them: Asset Tag, Context Tag, Requirement Category, Granted,
   Affiliation, Visibility, Impact Type, Retention Group, Event, Attribute Role, Texture Slot, Data Key, Local Data Key,
   Worker Key, Set By Caller Key, Stage Flag, Code and Universal. Data is split into its four kinds of key, so a worker's
@@ -760,6 +764,9 @@ tracks each fix below by its ID.
   Asking whether its sequence was paused took 24 bytes a frame.
 
 ### Fixed
+- A unique tag is remembered by its prefix, its text and its length apart: run together, another split of the same
+  letters was the same tag, and a tag asked for at another length came back at the first's. New Tag refuses a path of
+  64 characters or more, which would be cut, so two long paths that began alike were one tag (TAG-8).
 - Every tag field designers fill names the kinds of tag it takes: 25 named none, so their pickers offered every tag.
   The field that writes a kind of tag and the field that reads it share it, as a Local Data key, a set-by-caller key,
   an event, crowd control's states and a stage's flag do; a field that matches an effect by its tags offers its asset,

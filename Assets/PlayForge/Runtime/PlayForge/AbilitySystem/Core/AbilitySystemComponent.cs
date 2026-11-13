@@ -583,8 +583,8 @@ namespace FarEmerald.PlayForge
         {
             if (from == null) return;
             if (from.TryGetFirst<ITarget>(Tags.SOURCE, out var source)) to.SetPrimary(Tags.SOURCE, source);
-            if (from.TryGetFirst<ITarget>(Tags.SUBJECT, out var subject)) to.SetPrimary(Tags.SUBJECT, subject);
-            if (from.TryGetFirst<ImpactData>(Tags.IMPACT, out var impact)) to.SetPrimary(Tags.IMPACT, impact);
+            if (from.TryGetFirst<ITarget>(Tags.EVENT_SUBJECT, out var subject)) to.SetPrimary(Tags.EVENT_SUBJECT, subject);
+            if (from.TryGetFirst<ImpactData>(Tags.EVENT_IMPACT, out var impact)) to.SetPrimary(Tags.EVENT_IMPACT, impact);
         }
 
         /// <summary>

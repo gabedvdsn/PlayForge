@@ -161,7 +161,7 @@ namespace FarEmerald.PlayForge
         {
             var data = new ProcessDataPacket();
             
-            if (setParent) data.SetPrimary(Tags.PARENT_TRANSFORM, parent);
+            if (setParent) data.SetPrimary(Tags.TRANSFORM, parent);
             
             return data;
         }

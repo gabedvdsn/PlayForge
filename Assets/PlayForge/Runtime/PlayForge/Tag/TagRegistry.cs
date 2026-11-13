@@ -563,16 +563,18 @@ namespace FarEmerald.PlayForge
             /// (or fewer only if prefix + input together exceed it).</returns>
             public static Tag GenerateDeterministicTag(string input, string prefix, int N = rngGenerationBufferSize)
             {
+                N = System.Math.Clamp(N, 32, 64);
+                // Remembered by its prefix, its text and its length, each apart: run together, a text and a prefix were
+                // another split of the same letters, and a tag asked for at one length came back at another's (TAG-8)
+                var key = $"{prefix}\u001f{input}\u001f{N}";
                 lock (_lock)
                 {
-                    if (_deterministicTagsByName.TryGetValue(input + prefix, out var t)) return t;
+                    if (_deterministicTagsByName.TryGetValue(key, out var t)) return t;
                 }
                 
                 // Valid characters per IsValidPath (no dot at end, so omit it from padding pool)
                 const string PaddingChars =
                     "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_";
-
-                N = System.Math.Clamp(N, 32, 64);
 
                 string head = (prefix ?? string.Empty) + (input ?? string.Empty);
 
@@ -580,7 +582,7 @@ namespace FarEmerald.PlayForge
                 if (head.Length >= N)
                 {
                     var _tag = Tag.Generate(head.Substring(0, N), input);
-                    lock (_lock) _deterministicTagsByName[input + prefix] = _tag;
+                    lock (_lock) _deterministicTagsByName[key] = _tag;
                     return _tag;
                 }
 
@@ -602,7 +604,7 @@ namespace FarEmerald.PlayForge
                     sb.Append(PaddingChars[hashBytes[i % hashBytes.Length] % PaddingChars.Length]);
 
                 var _tag2 = Tag.Generate(sb.ToString(), input);
-                lock (_lock) _deterministicTagsByName[input + prefix] = _tag2;
+                lock (_lock) _deterministicTagsByName[key] = _tag2;
                 return _tag2;
             }
         }

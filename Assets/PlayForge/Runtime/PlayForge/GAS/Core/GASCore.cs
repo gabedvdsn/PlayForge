@@ -448,8 +448,8 @@ namespace FarEmerald.PlayForge
             if (!AbilitySystem.ListensFor(tag)) return;
             var data = ProcessDataPacket.Default();
             data.SetPrimary(Tags.SOURCE, dealer);
-            if (subject != null) data.SetPrimary(Tags.SUBJECT, subject);
-            data.SetPrimary(Tags.IMPACT, impact);
+            if (subject != null) data.SetPrimary(Tags.EVENT_SUBJECT, subject);
+            data.SetPrimary(Tags.EVENT_IMPACT, impact);
             Send(owner, tag, data);
         }
 
@@ -468,7 +468,7 @@ namespace FarEmerald.PlayForge
         {
             var data = ProcessDataPacket.Default();
             if (source != null) data.SetPrimary(Tags.SOURCE, source);
-            if (subject != null) data.SetPrimary(Tags.SUBJECT, subject);
+            if (subject != null) data.SetPrimary(Tags.EVENT_SUBJECT, subject);
             return data;
         }
 

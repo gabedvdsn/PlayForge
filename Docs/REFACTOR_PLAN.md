@@ -703,6 +703,10 @@ from. It lives outside `Assets/` so it never ships in the package.
   Visibility; **Data splits into its four kinds of key**; the asset-type contexts, Modifier, Cost, Cooldown, Duration
   and Debug go. **The old constants are removed**, each rename in the CHANGELOG, as `[ForgeContextDefault]` went; an old
   name written as text still reads as its new one, and a library's are moved.
+- Decision 75, 2026-11-13: TAG-8's choices, the user's. **The 24 Data keys no PlayForge code reads stay**, for a
+  project's coded behaviours to carry values under in their processes' data packets, grouped in a section of their own
+  rather than pruned. **Six properties take their texts' names**, each rename in the CHANGELOG; their texts, the tags'
+  identities, stay.
 
 **Open. Ask the user; do not assume:**
 1. ~~**Uncommitted changes**~~: decided, see above.
@@ -1356,7 +1360,7 @@ The fixes the tag review found (FN-10, `Docs/TAG_REVIEW.md`), as Decision 71 dec
 | TAG-5 | A project's code tags reach the pickers, those it exposes: a static Tag field or property marked `[ForgeTagExposed]`, which replaces `[ForgeContextDefault]` and goes on a field too, under its contexts or a Code context; ForgeLint and the runtime registry read the same (§4; opt-in by Decision 73, in place of Decision 71's convention scan). Done: the registry finds each type of the project's code with an exposed static Tag, in the player assemblies that reference PlayForge and PlayForge's own, tests left out, once a domain reload; a code tag not marked isn't offered. Every tag `Tags.cs` writes is marked, `GAME_ROOT`, `NONE` and the process statuses under Code, `TARGETED_INTENT` under Data; so are `IS_DISJOINTABLE` and the Demo's sequence keys, under Data. ForgeLint reads the code's events and impact types from the registry; the runtime registry needs nothing, a code tag registering as it's made (`ForgeTagRegistry.cs`, `ForgeLint.cs`, `ForgeAttributes.cs`, `ForgeContext.cs`, `Tags.cs`, `DisjointProxyTaskBehaviour.cs`, `DemoSequences.cs`) | verified |
 | TAG-6 | The contexts pruned and renamed: the 18 no field names go, the overlaps merge, the unclear names change, with a pass over the Tag Libraries' declarations (§1). Done: 18 contexts, one per kind of tag, each constant its value without its spaces (Decision 74): eight renamed, seven merged, ten dropped, and Data split into Data Key, Local Data Key, Worker Key and Set By Caller Key, each field that named Data taking its kind, `Tags.cs`'s keys Data Key but `PROJECTILE_SPEED`, a process role. An old name reads as its new one (`ForgeContext.Renamed`, `Current`), in a field's attribute and a library as it's read, and a pass moves each library's as the editor loads; no context of the project's own takes an old name. The registry's guess of an unmarked field's contexts, from its name and its asset's type, goes, so its tags are filed under none, as its pick is (`ForgeContext.cs`, `ForgeAttributes.cs`, `ForgeTagContexts.cs`, `ForgeTagRegistry.cs`, `Tags.cs`, and each field's file) | verified |
 | TAG-7 | Every PlayForge asset type scanned, and the fields the walk skips, through a SerializedObject walk as ForgeLint's (§2.4). Done: the registry reads the asset types by name, the validator's, the Forge Project and the lab's rules among them, and the object a `[SerializeReference]` field holds under an interface or a base not marked serializable, each object once; prefabs it still doesn't read (`ForgeTagRegistry.cs`) | verified |
-| TAG-8 | `Tags.cs` made sound: contexts for the five with none, the unused Data keys pruned or hidden, the docs fixed, long paths refused, and a test that pins the padded names and each tag's context (§3) | open |
+| TAG-8 | `Tags.cs` made sound: contexts for the five with none, the unused Data keys pruned or hidden, the docs fixed, long paths refused, and a test that pins the padded names and each tag's context (§3). Done: the five carry `[ForgeTagExposed]` (TAG-5); `Tags.cs` is grouped by kind of tag, the 24 keys no PlayForge code reads kept, as ready-made keys for a project's coded behaviours, in a section of their own (Decision 75); six properties take their texts' names, `BONUS`, `TRANSFORM`, `EVENT_SUBJECT`, `EVENT_IMPACT`, `ALWAYS_ALLOW` and `NEVER_ALLOW`; a unique tag is remembered by its prefix, its text and its length apart, where text and prefix run together made another split of the same letters the same tag and a tag asked for at another length came back at the first's; New Tag refuses a path of 64 characters or more, which would be cut; and a test pins each core tag's name, text and contexts (`Tags.cs`, `Tags.Direct.cs`, `TagRegistry.cs`, `ForgeNewTagWindow.cs`, and each use of the six) | verified |
 
 ## Test project: PlayForge Proving Grounds
 
@@ -1393,6 +1397,18 @@ GAS-4 with GAS-5, PC-6, and TS-I with PC-5.
 ## Log
 
 Record baselines, gate results and notable decisions here, newest first.
+
+- 2026-11-13, **TAG-8: `Tags.cs` made sound.** Nothing pinned it: a core tag's name is its text padded by a hash of
+  it, which every asset that uses the tag stores, so a change to a text, the padding or the hash would lose them, and no
+  test said so. A test pins each of the 72 now, its name, text and contexts. The file is grouped by kind of tag, the 24
+  keys PlayForge's code doesn't read kept as ready-made keys for coded behaviours (Decision 75), and six properties take
+  their texts' names: `ADDITIONAL` is `BONUS`, `PARENT_TRANSFORM` `TRANSFORM`, `SUBJECT` `EVENT_SUBJECT`, `IMPACT`
+  `EVENT_IMPACT`, `ALLOW` `ALWAYS_ALLOW`, `DISALLOW` `NEVER_ALLOW`. A unique tag was remembered by its text and prefix
+  run together, so another split of the same letters was the same tag, and a tag asked for at another length came back
+  at the first's; it's remembered by each apart. New Tag refuses a path of 64 characters or more, which the padding cut,
+  so two long paths that began alike were one tag.
+  - Red first: TAG_8's two tests against the code as it was: of the 72 core tags only the six renamed failed their pins, the rest keeping their names, texts and contexts; and another split of a unique tag's text and prefix came back as the first's tag
+  - Gates, on a frozen snapshot of the package: EditMode 915 of 916, ED-61 red from the working tree's lifecycle change; PlayMode 1817 of 1837, 8 skipped, the 12 known reds, the Battle scene passing this run; golden 25 of 25.
 
 - 2026-11-13, **TAG-3: each tag field names the kinds it takes.** 25 tag fields designers fill named no context, so
   each one's picker offered every tag: an ability's trigger, a threshold's event, crowd control's rules, an asset's

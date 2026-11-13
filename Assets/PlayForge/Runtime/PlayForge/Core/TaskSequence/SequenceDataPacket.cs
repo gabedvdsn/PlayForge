@@ -278,7 +278,7 @@ namespace FarEmerald.PlayForge
         {
             var data = new SequenceDataPacket();
             
-            if (setParent) data.SetPrimary(Tags.PARENT_TRANSFORM, parent);
+            if (setParent) data.SetPrimary(Tags.TRANSFORM, parent);
             
             return data;
         }

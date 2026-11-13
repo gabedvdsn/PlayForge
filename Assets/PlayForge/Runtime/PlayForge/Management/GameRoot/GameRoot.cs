@@ -63,7 +63,7 @@ namespace FarEmerald.PlayForge
                 false, default
             );
             
-            NativeDataPacket.AddPayload(Tags.PARENT_TRANSFORM, transform);
+            NativeDataPacket.AddPayload(Tags.TRANSFORM, transform);
             
             RunProcessTasks(CreateProcessTasks);
         }

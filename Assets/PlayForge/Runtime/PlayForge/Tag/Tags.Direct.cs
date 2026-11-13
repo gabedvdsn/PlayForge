@@ -7,7 +7,7 @@
         public static Tag DefaultRetention => DEFAULT;
         
         // Impact keys
-        public static Tag AllowImpact => ALLOW;
-        public static Tag DisallowImpact => DISALLOW;
+        public static Tag AllowImpact => ALWAYS_ALLOW;
+        public static Tag DisallowImpact => NEVER_ALLOW;
     }
 }
