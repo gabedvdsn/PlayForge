@@ -1338,10 +1338,10 @@ The fixes the tag review found (FN-10, `Docs/TAG_REVIEW.md`), as Decision 71 dec
 | TAG-1 | A unique tag's hierarchy by its display path: `IsChildOf` and what reads it, the tag cache's parent listeners, `GetParent`, and ForgeLint's Under, so a New-Tag tag can have children; Make It a Child Of… builds from the parent's path (§5.1). Done: `Tag.Path`, a unique tag's display path or any other tag's name, which every hierarchy helper reads; the tag cache tells the listeners on each tag whose path is above, plain or unique; ForgeLint's events and triggers go by path (`Tag.cs`, `TagCache.cs`, `ForgeLint.cs`, `TagDrawer.cs`) | verified |
 | TAG-2 | New Tag warns where a text is a core tag's, and offers that tag (§3.3.1-2). Done: as the path is typed, New Tag says where it is one of PlayForge's own tags' text, which a tag made of it would be, with Use It, which gives the field the core tag; Create makes nothing of that path (`ForgeNewTagWindow.cs`) | verified |
 | TAG-3 | Each field's contexts made right against TAG-6's set: the writer and the reader of a kind of tag share one, the ~25 unmarked fields get theirs, and Data split into its kinds (§2.2-2.4) | open |
-| TAG-4 | Contexts matched exactly, not by substring, and a field with several contexts no longer files its pick under each (§5.2-5.4) | open |
+| TAG-4 | Contexts matched exactly, not by substring, and a field with several contexts no longer files its pick under each (§5.2-5.4). Done: a picker takes each of its contexts' own tags by its exact key, and its own set's, so an Impact field offers no retention group and a Granted field no tag picked in a field of several contexts (`ForgeTagRegistry.cs`) | verified |
 | TAG-5 | A project's code tags found by convention: every public static Tag field or property in its assemblies, under its `[ForgeContextDefault]`, widened to fields, or a Code context, with an attribute that hides one; ForgeLint and the runtime registry read the same (§4) | open |
 | TAG-6 | The contexts pruned and renamed: the 18 no field names go, the overlaps merge, the unclear names change, with a pass over the Tag Libraries' declarations (§1) | open |
-| TAG-7 | Every PlayForge asset type scanned, and the fields the walk skips, through a SerializedObject walk as ForgeLint's (§2.4) | open |
+| TAG-7 | Every PlayForge asset type scanned, and the fields the walk skips, through a SerializedObject walk as ForgeLint's (§2.4). Done: the registry reads the asset types by name, the validator's, the Forge Project and the lab's rules among them, and the object a `[SerializeReference]` field holds under an interface or a base not marked serializable, each object once; prefabs it still doesn't read (`ForgeTagRegistry.cs`) | verified |
 | TAG-8 | `Tags.cs` made sound: contexts for the five with none, the unused Data keys pruned or hidden, the docs fixed, long paths refused, and a test that pins the padded names and each tag's context (§3) | open |
 
 ## Test project: PlayForge Proving Grounds
@@ -1379,6 +1379,18 @@ GAS-4 with GAS-5, PC-6, and TS-I with PC-5.
 ## Log
 
 Record baselines, gate results and notable decisions here, newest first.
+
+- 2026-11-13, **TAG-4 and TAG-7: what the tag registry reads, and how a picker matches.** A picker took the tags of
+  every context whose name held its own, so an Impact field offered every retention group, filed under "Impact
+  Retention", and a tag picked in a field of several contexts, filed under all of them joined, went to each one's
+  pickers: an effect's asset tag picked in a requirement was offered as a granted tag. A picker takes each of its
+  contexts' own tags by its exact key, and its own set's (TAG-4). The registry read five asset types, and in them no
+  field that holds its object by reference under an interface or a base not marked serializable, so a tag used only in
+  an item, a Requirement Template or an ability's targeting left every picker at the next rescan. It reads every
+  PlayForge asset type, by name, so the lab's rules in their own assembly are among them, and each object such a field
+  holds, once, a loop of references ending (TAG-7).
+  - Red first: TAG_4 and TAG_7 against HEAD's registry: an Impact picker offered the retention group, and an item's granted tag wasn't read
+  - Gates, on a frozen snapshot of the package: EditMode 908 of 909, ED-61 red from the working tree's lifecycle change; PlayMode 1816 of 1837, 8 skipped, the 12 known reds and the Battle scene's flake. No golden run: the change is the editor's alone.
 
 - 2026-11-13, **FN-12: every asset's inspector, and the rules assets in The Forge.** A Requirement Template, a Crowd
   Control Rules asset, a Tag Library, a Forge Project and the lab's assets had Unity's own inspector, and a Scaler

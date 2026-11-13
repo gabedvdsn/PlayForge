@@ -283,14 +283,13 @@ namespace FarEmerald.PlayForge.Extended.Editor
             typeof(Tags)
         };
         
-        // Asset types to scan
-        private static readonly Type[] ScanTypes = new Type[]
+        // The asset types to scan, by name, so the lab's, in an assembly of its own, are among them: every type the validator
+        // checks, the Forge Project's roles, resolve order and combat log, and the lab's rules. Five were read, so a tag
+        // used only in an item or a Requirement Template left every picker at the next rescan (TAG-7)
+        private static readonly string[] ScanTypeNames =
         {
-            typeof(Ability),
-            typeof(GameplayEffect),
-            typeof(EntityIdentity),
-            typeof(Attribute),
-            typeof(AttributeSet)
+            "Ability", "GameplayEffect", "Item", "EntityIdentity", "Attribute", "AttributeSet", "ScalerAsset", "RequirementTemplate",
+            "ValuePipeline", "EffectModifier", "CrowdControlRules", "ForgeProject", "LabRules",
         };
         
         // ═══════════════════════════════════════════════════════════════════════════
@@ -349,17 +348,14 @@ namespace FarEmerald.PlayForge.Extended.Editor
                     result.Add(tag);
             }
             
-            // Also get tags that match any of the context strings individually
+            // Each context's own tags, by its exact key. A key that only holds a context's name was taken too: "Impact
+            // Retention" by an Impact field, and a field of several contexts, whose key joins them, by each one's pickers,
+            // so a tag picked there went everywhere its contexts did (TAG-4)
             foreach (var ctxStr in contextStrings)
             {
-                foreach (var kvp in _contextToTags)
-                {
-                    if (kvp.Key.Contains(ctxStr))
-                    {
-                        foreach (var tag in kvp.Value)
-                            result.Add(tag);
-                    }
-                }
+                if (!_contextToTags.TryGetValue(new TagContext(new[] { ctxStr }).ContextKey, out var single)) continue;
+                foreach (var tag in single)
+                    result.Add(tag);
             }
             
             // Include universal tags
@@ -628,9 +624,10 @@ namespace FarEmerald.PlayForge.Extended.Editor
                 ScanTagLibraries();
 
                 // Then scan assets
-                foreach (var assetType in ScanTypes)
+                var scanned = new HashSet<string>();
+                foreach (var typeName in ScanTypeNames)
                 {
-                    ScanAssetsOfType(assetType);
+                    ScanAssetsOfType(typeName, scanned);
                 }
                 
                 _isDirty = false;
@@ -858,26 +855,36 @@ namespace FarEmerald.PlayForge.Extended.Editor
             contextSet.Add(tag);
         }
         
-        private static void ScanAssetsOfType(Type assetType)
+        private static void ScanAssetsOfType(string typeName, HashSet<string> scanned)
         {
-            var guids = AssetDatabase.FindAssets($"t:{assetType.Name}");
-            
+            var guids = AssetDatabase.FindAssets($"t:{typeName}");
+
             foreach (var guid in guids)
             {
+                if (!scanned.Add(guid)) continue;
                 var path = AssetDatabase.GUIDToAssetPath(guid);
                 var asset = AssetDatabase.LoadAssetAtPath<ScriptableObject>(path);
-                
+
                 if (asset == null) continue;
-                
-                ScanObject(asset, asset, assetType, "");
+
+                ScanObject(asset, asset, asset.GetType(), "", new HashSet<object>(ByReference.Instance));
             }
         }
-        
-        private static void ScanObject(object obj, ScriptableObject rootAsset, Type rootType, string parentFieldPath)
+
+        // Objects compared by reference, so an object two fields hold is read once, and a loop of references ends
+        private sealed class ByReference : IEqualityComparer<object>
+        {
+            public static readonly ByReference Instance = new();
+            public new bool Equals(object a, object b) => ReferenceEquals(a, b);
+            public int GetHashCode(object each) => System.Runtime.CompilerServices.RuntimeHelpers.GetHashCode(each);
+        }
+
+        private static void ScanObject(object obj, ScriptableObject rootAsset, Type rootType, string parentFieldPath, HashSet<object> visited)
         {
             if (obj == null) return;
-            
+
             var type = obj.GetType();
+            if (!type.IsValueType && !visited.Add(obj)) return;
             var fields = GetAllFields(type);
             
             foreach (var field in fields)
@@ -936,6 +943,19 @@ namespace FarEmerald.PlayForge.Extended.Editor
                         }
                     }
                 }
+                // A field that holds its object by reference, under an interface or a base not marked serializable, which say
+                // nothing of what it holds: the object's own fields, as an ability's activation rules' and its targeting's
+                // (TAG-7)
+                else if (field.GetCustomAttribute<SerializeReference>() != null && !ShouldRecurse(fieldType))
+                {
+                    var value = field.GetValue(obj);
+                    if (value is System.Collections.IList held)
+                    {
+                        for (int i = 0; i < held.Count; i++)
+                            if (held[i] != null) ScanObject(held[i], rootAsset, rootType, $"{fieldPath}[{i}]", visited);
+                    }
+                    else if (value != null) ScanObject(value, rootAsset, rootType, fieldPath, visited);
+                }
                 // Recurse into nested objects
                 else if (ShouldRecurse(fieldType))
                 {
@@ -950,7 +970,7 @@ namespace FarEmerald.PlayForge.Extended.Editor
                             {
                                 var item = list[i];
                                 if (item != null)
-                                    ScanObject(item, rootAsset, rootType, $"{fieldPath}[{i}]");
+                                    ScanObject(item, rootAsset, rootType, $"{fieldPath}[{i}]", visited);
                             }
                         }
                     }
@@ -963,13 +983,13 @@ namespace FarEmerald.PlayForge.Extended.Editor
                             {
                                 var item = array.GetValue(i);
                                 if (item != null)
-                                    ScanObject(item, rootAsset, rootType, $"{fieldPath}[{i}]");
+                                    ScanObject(item, rootAsset, rootType, $"{fieldPath}[{i}]", visited);
                             }
                         }
                     }
                     else if (value != null)
                     {
-                        ScanObject(value, rootAsset, rootType, fieldPath);
+                        ScanObject(value, rootAsset, rootType, fieldPath, visited);
                     }
                 }
             }

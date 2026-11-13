@@ -748,6 +748,10 @@ tracks each fix below by its ID.
   Asking whether its sequence was paused took 24 bytes a frame.
 
 ### Fixed
+- A tag picker matches its contexts exactly: an Impact field offers no retention group, and a tag picked in a field of
+  several contexts isn't offered in each one's fields (TAG-4).
+- The tag registry reads every PlayForge asset type, items, Requirement Templates, Crowd Control Rules and the Forge
+  Project among them, and the objects fields hold by reference, so a tag used only there stays in its pickers (TAG-7).
 - A tag made in New Tag can have children: a unique tag's hierarchy goes by its display path, so a query for a tag and
   its children, crowd control, Removes Effects Tagged and triggers find a New-Tag tag under another (TAG-1).
 - The Forge's rows set their words and icons in the middle of the row, with room at a column's left; they sat at its
