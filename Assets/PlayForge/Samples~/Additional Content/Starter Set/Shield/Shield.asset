@@ -50,7 +50,7 @@ MonoBehaviour:
       When:
         rid: -2
       Changes:
-      - rid: 2403794398312661030
+      - rid: 2403794400654131241
   Auras: []
   Area:
     Radius:
@@ -153,7 +153,8 @@ MonoBehaviour:
     ImpactWorkers: []
     TagWorkers: []
     AnalysisWorkers: []
-  Cues: []
+  Cues:
+  - rid: 2403794400654131242
   SourceRequirements:
     Name: 
     ApplicationRequirements:
@@ -205,14 +206,21 @@ MonoBehaviour:
     RefIds:
     - rid: -2
       type: {class: , ns: , asm: }
-    - rid: 2403794398312661030
+    - rid: 2403794400654131241
       type: {class: ChangeImpactChange, ns: FarEmerald.PlayForge, asm: FarEmerald.PlayForge}
       data:
         Attribute: {fileID: 11400000, guid: 1a451b4c7d2bb934a98a21b053faf5a8, type: 2}
         ImpactTypes: []
         Stage:
-          rid: 2403794398312661031
-    - rid: 2403794398312661031
+          rid: 2403794400654131243
+    - rid: 2403794400654131242
+      type: {class: FloatingWordCue, ns: FarEmerald.PlayForge.AdditionalContent, asm: FarEmerald.PlayForge.AdditionalContent}
+      data:
+        Text: Shielded
+        Color: {r: 1, g: 0.85, b: 0.35, a: 1}
+        Scale: 1
+        OnEachTick: 0
+    - rid: 2403794400654131243
       type: {class: AbsorbStage, ns: FarEmerald.PlayForge, asm: FarEmerald.PlayForge}
       data:
         Label: 

@@ -277,11 +277,12 @@ plainly. And games balance in spreadsheets: import numbers by level and item sta
 
 **AC-1. The Additional Content sample.** `Samples~/Additional Content`, imported from the Package Manager as Demo and
 Data are, with an assembly of its own that references the runtime and that nothing in the runtime references, so a
-blank project builds without it.
+blank project builds without it. Done on 2026-11-12: `FarEmerald.PlayForge.AdditionalContent`, its tests beside it.
 
 **AC-2. Cue handlers.** The cue system is the framework's (FEAT-1); handlers that make a project's look are content:
 floating damage numbers (reading TW-2's breakdown, crits marked), a hit flash, a status icon bar, screen shake, a sound
-on hit.
+on hit. Done on 2026-11-12 (Decision 69): components on an entity that show its own hits, a camera shaker, two cues,
+and a Sparring scene that plays them.
 
 **AC-3. Formula presets.** Named presets of TW-9's curves and TW-1's roles for a genre's formulas: armor as Dota has it
 (0.06, reciprocal) or as `100 / (100 + armor)`, flat armor; Risk of Rain's item curves; Dota's pseudo-random constants

@@ -145,7 +145,8 @@ MonoBehaviour:
     ImpactWorkers: []
     TagWorkers: []
     AnalysisWorkers: []
-  Cues: []
+  Cues:
+  - rid: 2403794400654131240
   SourceRequirements:
     Name: 
     ApplicationRequirements:
@@ -197,3 +198,10 @@ MonoBehaviour:
     RefIds:
     - rid: -2
       type: {class: , ns: , asm: }
+    - rid: 2403794400654131240
+      type: {class: FloatingWordCue, ns: FarEmerald.PlayForge.AdditionalContent, asm: FarEmerald.PlayForge.AdditionalContent}
+      data:
+        Text: Slowed
+        Color: {r: 0.55, g: 0.8, b: 1, a: 1}
+        Scale: 1
+        OnEachTick: 0

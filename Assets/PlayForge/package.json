@@ -30,7 +30,7 @@
     },
     {
       "displayName": "Additional Content",
-      "description": "Recipes for common rules, each built from PlayForge's own assets with no code: a curse that bursts, a counter, a crit, an execute, lifesteal, damage return, can't die, on hit, on kill, and a boss's phase; formulas, Scaler assets named for what they compute, as 1 ÷ (1 + 0.06 × Armor); and a starter set, a melee attack, a bolt, a slow and a shield. Documentation/RECIPES.md describes each, field by field.",
+      "description": "Recipes for common rules, each built from PlayForge's own assets with no code: a curse that bursts, a counter, a crit, an execute, lifesteal, damage return, can't die, on hit, on kill, and a boss's phase; formulas, Scaler assets named for what they compute, as 1 ÷ (1 + 0.06 × Armor); a starter set, a melee attack, a bolt, a slow and a shield; and feedback on uGUI and TextMeshPro, floating numbers, a hit flash, a hit sound, a status bar, a camera shaker and two cues, with a Sparring scene that plays them. Documentation/RECIPES.md describes the recipes, field by field.",
       "path": "Samples~/Additional Content"
     }
   ]

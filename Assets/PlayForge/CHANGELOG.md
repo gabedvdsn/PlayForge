@@ -7,6 +7,13 @@ tracks each fix below by its ID.
 ## [Unreleased]
 
 ### Added
+- The Additional Content sample's code, an assembly of its own, `FarEmerald.PlayForge.AdditionalContent`, which nothing
+  in PlayForge references, with its tests beside it on the test kit (AC-1); and feedback on uGUI and TextMeshPro (AC-2):
+  Floating Numbers, Hit Flash, Hit Sound and Status Bar, components on an entity that show its own hits and effects with
+  nothing set per effect, a critical hit marked where its breakdown carries a Chance stage's note; a Camera Shaker that
+  PlayForge's Camera Shake cue shakes; Floating Word and Flash cues for what one effect wants of its own; and a Sparring
+  scene, two dummies trading the starter set's attacks with every handler on. The starter set's Bolt flashes and shakes,
+  its Slow and Shield float their words, and its cooldowns show on no status bar.
 - The Additional Content sample's formulas and starter set: Scaler assets named for what they compute, as
   1 ÷ (1 + 0.06 × Armor), 100 ÷ (100 + Armor), −Armor, and an item's stacks through a line, a hyperbola and a power
   (AC-3); and a melee attack, a bolt, a slow and a shield that takes its holder's hits first (AC-5), described in

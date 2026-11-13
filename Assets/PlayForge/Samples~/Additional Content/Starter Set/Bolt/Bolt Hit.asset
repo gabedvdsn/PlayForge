@@ -145,7 +145,9 @@ MonoBehaviour:
     ImpactWorkers: []
     TagWorkers: []
     AnalysisWorkers: []
-  Cues: []
+  Cues:
+  - rid: 2403794400654131231
+  - rid: 2403794400654131232
   SourceRequirements:
     Name: 
     ApplicationRequirements:
@@ -197,3 +199,15 @@ MonoBehaviour:
     RefIds:
     - rid: -2
       type: {class: , ns: , asm: }
+    - rid: 2403794400654131231
+      type: {class: CameraShakeCue, ns: FarEmerald.PlayForge, asm: FarEmerald.PlayForge}
+      data:
+        Strength: 0.6
+        Duration: 0.2
+        OnEachTick: 0
+    - rid: 2403794400654131232
+      type: {class: FlashCue, ns: FarEmerald.PlayForge.AdditionalContent, asm: FarEmerald.PlayForge.AdditionalContent}
+      data:
+        Color: {r: 0.45, g: 0.75, b: 1, a: 1}
+        Duration: 0.25
+        OnEachTick: 0
