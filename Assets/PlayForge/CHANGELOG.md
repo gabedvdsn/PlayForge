@@ -424,6 +424,9 @@ tracks each fix below by its ID.
   page, through one table of links in the editor.
 
 ### Changed
+- Create → PlayForge lists its assets in groups: the Forge Project, then the assets The Forge lists, in its order, then
+  the numbers, rules and the Tag Library, then the lab's; the Requirement Template is out of its Templates submenu
+  (FN-13).
 - A worker group's drawer no longer draws its Name, which nothing reads (FN-4).
 - A Block or Evade stage stops only an effect that lowers its attribute, as a hit, by its new Stops setting, so a heal
   lands past an incoming block unrolled; Any Impact stops heals and buffs too, as every stop did before (GAS-77).

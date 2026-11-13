@@ -62,7 +62,7 @@ namespace FarEmerald.PlayForge.Lab
     /// the project (TW-29), Health or Movement Speed, or else found by its name among the project's: Health, and Movement
     /// Speed or Move Speed. With no asset, the lab makes one and finds both.
     /// </summary>
-    [CreateAssetMenu(menuName = "PlayForge/Lab Rules", fileName = "Lab Rules")]
+    [CreateAssetMenu(menuName = "PlayForge/Lab Rules", fileName = "Lab Rules", order = 60)]
     public class LabRules : ScriptableObject, ILabRules
     {
         [Header("Attributes")]

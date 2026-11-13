@@ -13,7 +13,7 @@ namespace FarEmerald.PlayForge
     ///
     /// <para>Multiple libraries may exist (e.g. one per feature); all are scanned.</para>
     /// </summary>
-    [CreateAssetMenu(menuName = "PlayForge/Tag Library", fileName = "TagLibrary_")]
+    [CreateAssetMenu(menuName = "PlayForge/Tag Library", fileName = "TagLibrary_", order = 45)]
     public class ForgeTagLibrary : ScriptableObject
     {
         [Serializable]

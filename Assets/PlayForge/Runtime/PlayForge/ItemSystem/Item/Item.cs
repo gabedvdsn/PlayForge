@@ -8,7 +8,7 @@ namespace FarEmerald.PlayForge
     /// Items can grant effects, abilities, and tags when equipped.
     /// Supports level scaling for linked effects and abilities.
     /// </summary>
-    [CreateAssetMenu(menuName = "PlayForge/Item", fileName = "Item_")]
+    [CreateAssetMenu(menuName = "PlayForge/Item", fileName = "Item_", order = 22)]
     public class Item : BaseForgeLevelProvider, IWorkerGroupSource
     {
         public ItemDefinition Definition = new();

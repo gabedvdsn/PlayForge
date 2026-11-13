@@ -20,7 +20,7 @@ namespace FarEmerald.PlayForge
     /// read again as its attribute changes, so nothing runs it.
     /// </para>
     /// </summary>
-    [CreateAssetMenu(fileName = "New Value Pipeline", menuName = "PlayForge/Value Pipeline", order = 101)]
+    [CreateAssetMenu(fileName = "New Value Pipeline", menuName = "PlayForge/Value Pipeline", order = 42)]
     public class ValuePipeline : ScriptableObject
     {
         [Tooltip("What the pipeline is for")]

@@ -17,7 +17,7 @@ namespace FarEmerald.PlayForge
     /// 
     /// Note: Linked requirements can "break" the link to make local modifications.
     /// </summary>
-    [CreateAssetMenu(fileName = "New Requirement Template", menuName = "PlayForge/Templates/Requirement Template", order = 101)]
+    [CreateAssetMenu(fileName = "New Requirement Template", menuName = "PlayForge/Requirement Template", order = 41)]
     public class RequirementTemplate : ScriptableObject, ISerializationCallbackReceiver
     {
         [Tooltip("Description of what this requirement template is used for")]

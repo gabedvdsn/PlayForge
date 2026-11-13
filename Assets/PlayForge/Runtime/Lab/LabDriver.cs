@@ -27,7 +27,7 @@ namespace FarEmerald.PlayForge.Lab
     /// A project's driver as an asset (LAB-11): each order a virtual that does as the lab's does, so a project overrides
     /// those its game gives its own way, and names the asset on its Lab Rules. Create → PlayForge → Lab Driver.
     /// </summary>
-    [CreateAssetMenu(menuName = "PlayForge/Lab Driver", fileName = "Lab Driver")]
+    [CreateAssetMenu(menuName = "PlayForge/Lab Driver", fileName = "Lab Driver", order = 61)]
     public class LabDriver : ScriptableObject, ILabUnitDriver
     {
         public virtual void MoveTo(LabUnit unit, Vector3 point) => LabBodyDriver.Instance.MoveTo(unit, point);

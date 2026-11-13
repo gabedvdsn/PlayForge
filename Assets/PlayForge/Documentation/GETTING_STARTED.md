@@ -40,7 +40,8 @@ each in the Additional Content sample; [WORKERS.md](WORKERS.md) maps when each k
 ## Quickstart: a damage ability in ~10 minutes
 
 Everything below can be done from **Window → PlayForge → The Forge** (its Create menu), or via
-the `Create → PlayForge` asset menu.
+the `Create → PlayForge` asset menu, which lists the Forge Project, then the assets The Forge lists, in its order, then
+the numbers, rules and the Tag Library.
 
 1. **Attribute** — create `Attribute` asset "Health".
 2. **AttributeSet** — create a set; add an element for Health with Base/Current `100`,

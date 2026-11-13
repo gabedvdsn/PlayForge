@@ -7,7 +7,7 @@ using UnityEngine.Serialization;
 
 namespace FarEmerald.PlayForge
 {
-    [CreateAssetMenu(menuName = "PlayForge/Attribute Set", fileName = "AttributeSet_")]
+    [CreateAssetMenu(menuName = "PlayForge/Attribute Set", fileName = "AttributeSet_", order = 24)]
     public class AttributeSet : BaseForgeLevelProvider, IWorkerGroupSource
     {
         public string Name;

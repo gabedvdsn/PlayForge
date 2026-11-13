@@ -34,7 +34,7 @@ namespace FarEmerald.PlayForge
     /// stops is refused, and one running is interrupted, as a stun breaks a channel; an ability can ignore a rule by its tag.
     /// An entity names its rules, or takes the project's.
     /// </summary>
-    [CreateAssetMenu(menuName = "PlayForge/Crowd Control Rules", fileName = "Crowd Control Rules")]
+    [CreateAssetMenu(menuName = "PlayForge/Crowd Control Rules", fileName = "Crowd Control Rules", order = 44)]
     public class CrowdControlRules : ScriptableObject
     {
         [Tooltip("Each rule: a tag its holder carries, and what that stops")]

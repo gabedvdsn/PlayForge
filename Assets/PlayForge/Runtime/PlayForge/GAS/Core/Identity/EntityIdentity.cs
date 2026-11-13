@@ -6,7 +6,7 @@ using UnityEngine.Serialization;
 
 namespace FarEmerald.PlayForge
 {
-    [CreateAssetMenu(menuName = "PlayForge/Entity", fileName = "Entity_")]
+    [CreateAssetMenu(menuName = "PlayForge/Entity", fileName = "Entity_", order = 25)]
     public class EntityIdentity : BaseForgeLevelProvider, IWorkerGroupSource
     {
         public string Name;

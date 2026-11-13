@@ -8,7 +8,7 @@ using UnityEngine.Serialization;
 
 namespace FarEmerald.PlayForge
 {
-    [CreateAssetMenu(menuName = "PlayForge/Gameplay Effect", fileName = "Effect_")]
+    [CreateAssetMenu(menuName = "PlayForge/Gameplay Effect", fileName = "Effect_", order = 21)]
     public class GameplayEffect : BaseForgeLevelProvider
     {
         public GameplayEffectDefinition Definition = new();

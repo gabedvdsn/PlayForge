@@ -8,7 +8,7 @@ using Object = UnityEngine.Object;
 
 namespace FarEmerald.PlayForge
 {
-    [CreateAssetMenu(menuName = "PlayForge/Ability", fileName = "Ability_")]
+    [CreateAssetMenu(menuName = "PlayForge/Ability", fileName = "Ability_", order = 20)]
     public class Ability : BaseForgeLevelProvider, IWorkerGroupSource
     {
         public AbilityDefinition Definition = new();

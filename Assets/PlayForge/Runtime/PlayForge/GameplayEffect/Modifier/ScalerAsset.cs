@@ -9,7 +9,7 @@ namespace FarEmerald.PlayForge
     /// its own Magnitude, as in Fire Duration × 1.5. It was the Scaler Template, whose link code had no callers, so reuse
     /// meant copying a scaler into each field and propagating edits by hand.
     /// </summary>
-    [CreateAssetMenu(fileName = "New Scaler", menuName = "PlayForge/Scaler", order = 100)]
+    [CreateAssetMenu(fileName = "New Scaler", menuName = "PlayForge/Scaler", order = 40)]
     public class ScalerAsset : ScriptableObject
     {
         [Tooltip("What the scaler is for")]

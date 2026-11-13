@@ -9,7 +9,7 @@ namespace FarEmerald.PlayForge.Samples.Demo
     /// What the demo offers and what its scene reads: its heroes, its training dummy, its items, the attributes its HUD
     /// shows, and the tags and keys its scripts use. One asset, so no script names an asset of its own.
     /// </summary>
-    [CreateAssetMenu(menuName = "PlayForge/Demo/Roster", fileName = "Demo Roster")]
+    [CreateAssetMenu(menuName = "PlayForge/Demo/Roster", fileName = "Demo Roster", order = 80)]
     public class DemoRoster : ScriptableObject, ILabRules
     {
         [Header("Who fights")]

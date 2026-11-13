@@ -8,7 +8,7 @@ using UnityEngine.Serialization;
 
 namespace FarEmerald.PlayForge
 {
-    [CreateAssetMenu(menuName = "PlayForge/Attribute", fileName = "Attribute_")]
+    [CreateAssetMenu(menuName = "PlayForge/Attribute", fileName = "Attribute_", order = 23)]
     public class Attribute : BaseForgeAsset, IAttribute
     {
         public string Name;
