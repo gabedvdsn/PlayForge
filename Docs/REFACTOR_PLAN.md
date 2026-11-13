@@ -681,14 +681,21 @@ from. It lives outside `Assets/` so it never ships in the package.
   with no stored name changed (TAG-1). **New Tag warns where a text is a core tag's**, and offers that tag, rather than
   the core tags moving under a namespace (TAG-2). **A project's code tags are found by convention**: every public static
   Tag field or property in its assemblies, on each reload, filed under its `[ForgeContextDefault]`, widened to fields,
-  or a Code context, with an attribute that hides one (TAG-5). **The contexts are pruned and renamed**: those no field
-  names go, the overlaps merge, the unclear names change, with a pass over the Tag Libraries' declarations, and the
+  or a Code context, with an attribute that hides one (TAG-5; Decision 73 made it opt-in). **The contexts are pruned
+  and renamed**: those no field names go, the overlaps merge, the unclear names change, with a pass over the Tag
+  Libraries' declarations, and the
   fields' contexts are fixed against the new set (TAG-6, TAG-3).
 - Decision 72, 2026-11-13: FN-12's shape, the user's choices. **The Forge lists the rules assets too**, Value
   Pipelines, Effect Modifiers and Crowd Control Rules, each with its folder in Project Settings and its Create entry;
   the Tag Library, the lab's assets and the Forge Project stay out, set up where they're used. **Every PlayForge asset
   opens with the shared header**, each with an inspector of its own. **The toolbar keeps the six PlayForge assets as
   toggles**, the rest under More.
+- Decision 73, 2026-11-13: TAG-5 is opt-in, the user's call, in place of Decision 71's convention scan. **Only a code
+  tag marked `[ForgeTagExposed]` reaches the pickers**, so a project isn't flooded with every static tag its code has,
+  and chooses which its designers see; **every tag `Tags.cs` writes is marked**. **One attribute**:
+  `[ForgeTagExposed(params string[] contexts)]`, named as the other tag attributes are, replaces `[ForgeContextDefault]`
+  and goes on a field too, its contexts optional, a tag with none under Code; nothing hides a tag, as none is offered
+  unmarked.
 
 **Open. Ask the user; do not assume:**
 1. ~~**Uncommitted changes**~~: decided, see above.
@@ -1339,7 +1346,7 @@ The fixes the tag review found (FN-10, `Docs/TAG_REVIEW.md`), as Decision 71 dec
 | TAG-2 | New Tag warns where a text is a core tag's, and offers that tag (§3.3.1-2). Done: as the path is typed, New Tag says where it is one of PlayForge's own tags' text, which a tag made of it would be, with Use It, which gives the field the core tag; Create makes nothing of that path (`ForgeNewTagWindow.cs`) | verified |
 | TAG-3 | Each field's contexts made right against TAG-6's set: the writer and the reader of a kind of tag share one, the ~25 unmarked fields get theirs, and Data split into its kinds (§2.2-2.4) | open |
 | TAG-4 | Contexts matched exactly, not by substring, and a field with several contexts no longer files its pick under each (§5.2-5.4). Done: a picker takes each of its contexts' own tags by its exact key, and its own set's, so an Impact field offers no retention group and a Granted field no tag picked in a field of several contexts (`ForgeTagRegistry.cs`) | verified |
-| TAG-5 | A project's code tags found by convention: every public static Tag field or property in its assemblies, under its `[ForgeContextDefault]`, widened to fields, or a Code context, with an attribute that hides one; ForgeLint and the runtime registry read the same (§4) | open |
+| TAG-5 | A project's code tags reach the pickers, those it exposes: a static Tag field or property marked `[ForgeTagExposed]`, which replaces `[ForgeContextDefault]` and goes on a field too, under its contexts or a Code context; ForgeLint and the runtime registry read the same (§4; opt-in by Decision 73, in place of Decision 71's convention scan). Done: the registry finds each type of the project's code with an exposed static Tag, in the player assemblies that reference PlayForge and PlayForge's own, tests left out, once a domain reload; a code tag not marked isn't offered. Every tag `Tags.cs` writes is marked, `GAME_ROOT`, `NONE` and the process statuses under Code, `TARGETED_INTENT` under Data; so are `IS_DISJOINTABLE` and the Demo's sequence keys, under Data. ForgeLint reads the code's events and impact types from the registry; the runtime registry needs nothing, a code tag registering as it's made (`ForgeTagRegistry.cs`, `ForgeLint.cs`, `ForgeAttributes.cs`, `ForgeContext.cs`, `Tags.cs`, `DisjointProxyTaskBehaviour.cs`, `DemoSequences.cs`) | verified |
 | TAG-6 | The contexts pruned and renamed: the 18 no field names go, the overlaps merge, the unclear names change, with a pass over the Tag Libraries' declarations (§1) | open |
 | TAG-7 | Every PlayForge asset type scanned, and the fields the walk skips, through a SerializedObject walk as ForgeLint's (§2.4). Done: the registry reads the asset types by name, the validator's, the Forge Project and the lab's rules among them, and the object a `[SerializeReference]` field holds under an interface or a base not marked serializable, each object once; prefabs it still doesn't read (`ForgeTagRegistry.cs`) | verified |
 | TAG-8 | `Tags.cs` made sound: contexts for the five with none, the unused Data keys pruned or hidden, the docs fixed, long paths refused, and a test that pins the padded names and each tag's context (§3) | open |
@@ -1379,6 +1386,20 @@ GAS-4 with GAS-5, PC-6, and TS-I with PC-5.
 ## Log
 
 Record baselines, gate results and notable decisions here, newest first.
+
+- 2026-11-13, **TAG-5: a project's code tags reach the pickers, those it exposes.** A tag written in code reached the
+  editor's pickers only from PlayForge's own `Tags`: a project's, as Proving Grounds' Enraged or the Demo's sequence
+  keys, none offered, `[ForgeContextDefault]` couldn't mark a field, and the hook a project could call,
+  `RegisterContextDefaultSource`, nothing called. A code tag marked `[ForgeTagExposed]`, which replaces
+  `[ForgeContextDefault]` and goes on a field too, is found in the project's code, in the player assemblies that
+  reference PlayForge and PlayForge's own, tests left out, once a domain reload, and offered under its contexts, or
+  under a new Code context; one not marked isn't, so a project chooses which of its tags its designers see (Decision 73,
+  in place of Decision 71's scan of every public one). Every tag `Tags.cs` writes is marked, the five it left out among
+  them; `IS_DISJOINTABLE`, a packet key no field offered, and the Demo's keys are marked for Data. ForgeLint reads the
+  code's events and impact types from the registry, so a trigger on a project's own event isn't called one nothing
+  sends.
+  - Red first: TAG_5 against HEAD's registry and lint, the attribute's new name put in so they compile: Proving Grounds' Enraged, a field it exposes, wasn't among the code's tags (the recipes' Enrage effect grants it, so a picker offers it from that asset alone, and the test reads the code's tags)
+  - Gates, on a frozen snapshot of the package: EditMode 909 of 910, ED-61 red from the working tree's lifecycle change; PlayMode 1817 of 1837, 8 skipped, the 12 known reds; golden 25 of 25. TAG_5 was rerun alone, green, once it read Enraged from the code's tags.
 
 - 2026-11-13, **TAG-4 and TAG-7: what the tag registry reads, and how a picker matches.** A picker took the tags of
   every context whose name held its own, so an Impact field offered every retention group, filed under "Impact

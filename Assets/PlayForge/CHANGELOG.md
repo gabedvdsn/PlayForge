@@ -7,6 +7,8 @@ tracks each fix below by its ID.
 ## [Unreleased]
 
 ### Added
+- A project's code tags reach the tag pickers: each static Tag field or property its code marks `[ForgeTagExposed]`,
+  under the contexts it names, or under Code; a code tag not marked isn't offered (TAG-5).
 - Every PlayForge asset's inspector opens with the shared header, a Requirement Template's, Crowd Control Rules', a Tag
   Library's, a Forge Project's and the lab's assets' among them, each with an inspector of its own (FN-12).
 - The Forge lists Value Pipelines, Effect Modifiers and Crowd Control Rules; its toolbar keeps the six PlayForge assets
@@ -436,6 +438,9 @@ tracks each fix below by its ID.
   page, through one table of links in the editor.
 
 ### Changed
+- `[ForgeContextDefault]` is `[ForgeTagExposed]`, named as the other tag attributes are, and goes on a field too; its
+  contexts are optional, a tag with none offered under Code. Rename it where your code has it. Every tag `Tags.cs`
+  writes carries it (TAG-5).
 - New Tag says where a path is one of PlayForge's own tags' text, which a tag made of it would be, and offers that tag
   with Use It; Create makes nothing of such a path (TAG-2).
 - Create → PlayForge lists its assets in groups: the Forge Project, then the assets The Forge lists, in its order, then

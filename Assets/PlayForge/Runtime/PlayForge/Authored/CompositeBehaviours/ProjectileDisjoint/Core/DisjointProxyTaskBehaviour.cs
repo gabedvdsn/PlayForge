@@ -14,6 +14,8 @@ namespace FarEmerald.PlayForge
     /// </summary>
     public class DisjointProxyTaskBehaviour : AbstractProxyTaskBehaviour
     {
+        // A packet key an ability's data sets, exposed where Data keys are picked (TAG-5)
+        [Extended.ForgeTagExposed(Extended.ForgeContext.Data)]
         public static Tag IS_DISJOINTABLE => Tag.GenerateAsUnique("CB_IS_DISJOINTABLE");
         public static Tag COMMAND => Tag.GenerateAsUnique("CB_DISJOINT");
 

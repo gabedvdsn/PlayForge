@@ -162,8 +162,10 @@ string perLevel = impact.FormatTotal();           // "20/30/40/50"
   declares the tag for it. A path that is one of PlayForge's own tags' text, as Blocked or Health, would make that very
   tag: New Tag says so, and offers it with **Use It**. A contexts field's **New Context…** makes a context of the
   project's own, which the Tag Library keeps and every contexts field offers; a field in the project's own code takes it
-  with `[ForgeTagContext("…")]`. The Tags view renames a tag, as F2 or a row's **Rename…** does, and the tags under its
-  path with it, everywhere they're stored; an asset's own tag follows its asset's name instead.
+  with `[ForgeTagContext("…")]`. A tag written in code, a static Tag field or property, reaches the pickers marked
+  `[ForgeTagExposed(...)]`, under the contexts it names, or under Code; one not marked stays out. The Tags view renames
+  a tag, as F2 or a row's **Rename…** does, and the tags under its path with it, everywhere they're stored; an asset's
+  own tag follows its asset's name instead.
 - **Debugger** (`Window → PlayForge → Debugger`) — the game as it plays, in four views the toolbar switches
   between. **Entities** lists every entity, of either kind, beside the one selected: its attributes with what changed
   them, its effects with the time each has left and where it came from, its abilities with their state and cooldown,

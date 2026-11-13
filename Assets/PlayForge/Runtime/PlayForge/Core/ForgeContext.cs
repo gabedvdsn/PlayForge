@@ -116,5 +116,11 @@
         
         /// <summary>Tags for debugging/development</summary>
         public const string Debug = "Debug";
+
+        /// <summary>
+        /// Tags written in code and exposed to the editor with [ForgeTagExposed], which name no context of their own, a
+        /// project's as PlayForge's (TAG-5)
+        /// </summary>
+        public const string Code = "Code";
     }
 }

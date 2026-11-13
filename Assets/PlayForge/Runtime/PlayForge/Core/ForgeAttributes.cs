@@ -144,18 +144,24 @@ namespace FarEmerald.PlayForge.Extended
     }
     
     #region System Tags
-    
-    [AttributeUsage(AttributeTargets.Property, AllowMultiple = false, Inherited = true)]
-    public class ForgeContextDefault : System.Attribute
+
+    /// <summary>
+    /// Exposes a tag written in code to the editor's tag pickers, on a static Tag property or field, a project's own as
+    /// PlayForge's in Tags: only a code tag marked so is offered, so a project chooses which of its tags its designers see
+    /// (TAG-5, Decision 73). Its contexts say which fields offer it; with none, it's under Code. It was ForgeContextDefault,
+    /// which a property alone could carry.
+    /// </summary>
+    [AttributeUsage(AttributeTargets.Property | AttributeTargets.Field, AllowMultiple = false, Inherited = true)]
+    public class ForgeTagExposed : System.Attribute
     {
         public string[] Context { get; }
 
-        public ForgeContextDefault(params string[] context)
+        public ForgeTagExposed(params string[] context)
         {
             Context = context;
         }
     }
     
     #endregion
-    
+
 }

@@ -18,11 +18,16 @@ namespace FarEmerald.PlayForge.Extended.Editor
     /// </summary>
     public static class ForgeLint
     {
-        // The core's own impact types and events, as Tags marks them: an impact type every filter takes, as Always Allow,
-        // or one the core deals, as Returned; an event the core sends, as Kill
-        private static readonly HashSet<string> CoreImpactTypes = CoreTags(ForgeContext.Impact);
-        // The core events by their paths, as a trigger takes a tag under its own by its path (TAG-1)
-        private static readonly HashSet<string> CoreEvents = CoreTags(ForgeContext.Trigger, tag => tag.Path);
+        // The code's impact types and events, PlayForge's and the project's own, as the tag registry finds those the code
+        // exposes (TAG-5): an impact type every filter takes, as Always Allow, or one the core deals, as Returned; an event
+        // the core sends, as Kill
+        private static HashSet<string> CoreImpactTypes => CodeTags(ForgeContext.Impact, tag => tag.Name);
+        // The code's events by their paths, as a trigger takes a tag under its own by its path (TAG-1, TAG-5)
+        private static HashSet<string> CoreEvents => CodeTags(ForgeContext.Trigger, tag => tag.Path);
+
+        private static HashSet<string> CodeTags(string context, System.Func<Tag, string> read) =>
+            new(ForgeTagRegistry.GetSystemDefaultTagsForContext(new[] { context }).Select(read).Where(each => !string.IsNullOrEmpty(each)),
+                StringComparer.Ordinal);
 
         // The events that carry an impact, which a trigger's impact types filter; another's data holds none
         private static readonly string[] ImpactEvents = { Tags.IMPACT_DEALT.Path, Tags.IMPACT_TAKEN.Path };
@@ -195,14 +200,6 @@ namespace FarEmerald.PlayForge.Extended.Editor
         // Whether an event is the trigger's tag or one under it, by their paths, as a trigger takes it (TAG-1)
         private static bool Under(string sent, string trigger) =>
             sent == trigger || sent.Length > trigger.Length && sent.StartsWith(trigger, StringComparison.Ordinal) && sent[trigger.Length] == '.';
-
-        private static HashSet<string> CoreTags(string context, System.Func<Tag, string> read = null) => new(
-            typeof(Tags).GetProperties(BindingFlags.Public | BindingFlags.Static)
-                .Where(property => property.PropertyType == typeof(Tag)
-                                   && property.GetCustomAttribute<ForgeContextDefault>()?.Context?.Contains(context) == true)
-                .Select(property => (read ?? (tag => tag.Name))((Tag)property.GetValue(null)))
-                .Where(name => !string.IsNullOrEmpty(name)),
-            StringComparer.Ordinal);
 
         // ═══════════════════════════════════════════════════════════════════════════
         // What the linter's checks share

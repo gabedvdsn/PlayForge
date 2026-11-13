@@ -120,7 +120,7 @@ namespace FarEmerald.PlayForge.Extended.Editor
             public Dictionary<string, ContextUsage> UsageByContext { get; } = new Dictionary<string, ContextUsage>();
             
             /// <summary>
-            /// If true, this tag was registered via [ForgeContextDefault] attribute.
+            /// If true, this tag was registered via [ForgeTagExposed] attribute.
             /// </summary>
             public bool IsSystemDefault { get; private set; }
             
@@ -257,7 +257,7 @@ namespace FarEmerald.PlayForge.Extended.Editor
             }
             
             /// <summary>
-            /// Gets system default usages (from ForgeContextDefault attributes).
+            /// Gets system default usages (from ForgeTagExposed attributes).
             /// </summary>
             public IEnumerable<FieldUsageInfo> GetSystemDefaults()
             {
@@ -277,7 +277,7 @@ namespace FarEmerald.PlayForge.Extended.Editor
         private static bool _isScanning = false;
         private static DateTime _lastScanTime = DateTime.MinValue;
         
-        // Types containing static Tag properties to scan for ForgeContextDefault
+        // Types containing static Tag properties to scan for ForgeTagExposed
         private static readonly Type[] ContextDefaultSourceTypes = new Type[]
         {
             typeof(Tags)
@@ -414,7 +414,7 @@ namespace FarEmerald.PlayForge.Extended.Editor
         }
         
         /// <summary>
-        /// Gets all tags that were registered as system defaults via ForgeContextDefault.
+        /// Gets all tags that were registered as system defaults via ForgeTagExposed.
         /// </summary>
         public static IEnumerable<Tag> GetSystemDefaultTags()
         {
@@ -617,7 +617,7 @@ namespace FarEmerald.PlayForge.Extended.Editor
                 _contextToTags.Clear();
                 _allTags.Clear();
                 
-                // Scan ForgeContextDefault attributes first (system defaults)
+                // Scan ForgeTagExposed attributes first (system defaults)
                 int defaultCount = ScanContextDefaults();
 
                 // Declared tags from project tag libraries (created via The Forge)
@@ -662,7 +662,7 @@ namespace FarEmerald.PlayForge.Extended.Editor
         }
 
         /// <summary>
-        /// Scans static Tag properties in registered types for ForgeContextDefault attributes.
+        /// Scans static Tag properties in registered types for ForgeTagExposed attributes.
         /// These define default tags that should always appear for specific contexts.
         /// </summary>
         /// <returns>Number of system default tags registered.</returns>
@@ -681,12 +681,53 @@ namespace FarEmerald.PlayForge.Extended.Editor
             {
                 count += ScanTypeForContextDefaults(sourceType);
             }
-            
+
+            // And the code tags the project exposes: each type of its code with a static Tag field or property marked
+            // [ForgeTagExposed] (TAG-5, Decision 73)
+            foreach (var sourceType in CodeTagTypes())
+            {
+                if (ContextDefaultSourceTypes.Contains(sourceType) || _additionalContextDefaultSources.Contains(sourceType)) continue;
+                count += ScanTypeForContextDefaults(sourceType);
+            }
+
             return count;
+        }
+
+        // The types of the project's code with a static Tag field or property it exposes: in the player assemblies that
+        // reference PlayForge, and PlayForge's own, tests left out. Found once a domain reload (TAG-5)
+        private static List<Type> codeTagTypes;
+        private static IEnumerable<Type> CodeTagTypes()
+        {
+            if (codeTagTypes != null) return codeTagTypes;
+            var player = new HashSet<string>(UnityEditor.Compilation.CompilationPipeline
+                .GetAssemblies(UnityEditor.Compilation.AssembliesType.PlayerWithoutTestAssemblies).Select(assembly => assembly.name));
+            var playForge = typeof(Tag).Assembly.GetName().Name;
+            var anyStatic = BindingFlags.Static | BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.DeclaredOnly;
+            codeTagTypes = AppDomain.CurrentDomain.GetAssemblies()
+                .Where(assembly => player.Contains(assembly.GetName().Name)
+                                   && (assembly.GetName().Name == playForge || assembly.GetReferencedAssemblies().Any(each => each.Name == playForge)))
+                .SelectMany(assembly =>
+                {
+                    try { return assembly.GetTypes(); }
+                    catch (ReflectionTypeLoadException loaded) { return loaded.Types.Where(type => type != null).ToArray(); }
+                })
+                .Where(type => type.GetFields(anyStatic).Any(field => field.FieldType == typeof(Tag) && field.IsDefined(typeof(ForgeTagExposed)))
+                               || type.GetProperties(anyStatic).Any(property => property.PropertyType == typeof(Tag) && property.IsDefined(typeof(ForgeTagExposed))))
+                .ToList();
+            return codeTagTypes;
+        }
+
+        // The contexts a code tag is offered in: those it's exposed for, or Code where it names none; none where it isn't
+        // exposed, which keeps it out of the pickers (TAG-5, Decision 73)
+        private static string[] CodeContextsOf(MemberInfo member)
+        {
+            var exposed = member.GetCustomAttribute<ForgeTagExposed>();
+            if (exposed == null) return null;
+            return exposed.Context is { Length: > 0 } ? exposed.Context : new[] { ForgeContext.Code };
         }
         
         /// <summary>
-        /// Scans a single type for static Tag properties with ForgeContextDefault attributes.
+        /// Scans a single type for static Tag properties with ForgeTagExposed attributes.
         /// </summary>
         private static int ScanTypeForContextDefaults(Type type)
         {
@@ -699,18 +740,18 @@ namespace FarEmerald.PlayForge.Extended.Editor
                 if (property.PropertyType != typeof(Tag))
                     continue;
                 
-                var contextAttr = property.GetCustomAttribute<ForgeContextDefault>();
-                if (contextAttr == null || contextAttr.Context == null || contextAttr.Context.Length == 0)
+                var contexts = CodeContextsOf(property);
+                if (contexts == null)
                     continue;
-                
+
                 try
                 {
                     var tag = (Tag)property.GetValue(null);
                     if (!IsTagSetForScanning(tag))
                         continue;
-                    
-                    // Register this tag for each context specified in the attribute
-                    RegisterSystemDefaultTag(tag, contextAttr.Context, $"{type.Name}.{property.Name}");
+
+                    // Register this tag for each context it's exposed for, or Code (TAG-5)
+                    RegisterSystemDefaultTag(tag, contexts, $"{type.Name}.{property.Name}");
                     count++;
                 }
                 catch (Exception ex)
@@ -725,17 +766,17 @@ namespace FarEmerald.PlayForge.Extended.Editor
                 if (field.FieldType != typeof(Tag))
                     continue;
                 
-                var contextAttr = field.GetCustomAttribute<ForgeContextDefault>();
-                if (contextAttr == null || contextAttr.Context == null || contextAttr.Context.Length == 0)
+                var contexts = CodeContextsOf(field);
+                if (contexts == null)
                     continue;
-                
+
                 try
                 {
                     var tag = (Tag)field.GetValue(null);
                     if (!IsTagSetForScanning(tag))
                         continue;
-                       
-                    RegisterSystemDefaultTag(tag, contextAttr.Context, $"{type.Name}.{field.Name}");
+
+                    RegisterSystemDefaultTag(tag, contexts, $"{type.Name}.{field.Name}");
                     count++;
                 }
                 catch (Exception ex)
@@ -1163,7 +1204,7 @@ namespace FarEmerald.PlayForge.Extended.Editor
         // ═══════════════════════════════════════════════════════════════════════════
         
         /// <summary>
-        /// Registers an additional type to be scanned for ForgeContextDefault attributes.
+        /// Registers an additional type to be scanned for ForgeTagExposed attributes.
         /// Call this during editor initialization if you have custom tag definition classes.
         /// </summary>
         public static void RegisterContextDefaultSource(Type type)
@@ -1176,7 +1217,7 @@ namespace FarEmerald.PlayForge.Extended.Editor
         }
         
         /// <summary>
-        /// Gets all types that will be scanned for ForgeContextDefault attributes.
+        /// Gets all types that will be scanned for ForgeTagExposed attributes.
         /// </summary>
         public static IEnumerable<Type> GetContextDefaultSourceTypes()
         {

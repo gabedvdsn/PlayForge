@@ -30,7 +30,9 @@ Each fix is a row under The tag review (TAG) in `Docs/REFACTOR_PLAN.md`.
 ## Decisions it needed
 
 Decided by Decision 71, the user's choices, the first of each pair below: hierarchy by display path, a warning in New
-Tag, a convention scan, and the contexts pruned and renamed.
+Tag, a convention scan, and the contexts pruned and renamed. Decision 73 then made TAG-5 opt-in: a code tag reaches the
+pickers only marked `[ForgeTagExposed]`, which replaces `[ForgeContextDefault]`, and every tag `Tags.cs` writes is
+marked.
 
 1. **TAG-1, a hierarchy for unique tags.** Match a unique tag's hierarchy by its display path, what the designer sees,
    with no asset touched; or make New Tag's tags plain, with a pass that renames the padded ones; or pad a child from
