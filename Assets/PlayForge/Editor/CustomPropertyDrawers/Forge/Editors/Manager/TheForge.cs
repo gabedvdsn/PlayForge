@@ -499,7 +499,36 @@ namespace FarEmerald.PlayForge.Extended.Editor
                 selectedTag = record.Tag.Name;
                 ShowDetail();
             };
+            // Rename… on a tag's row, as F2 on the list, renames it and the tags under it, everywhere they're stored (FN-9)
+            list.AddManipulator(new ContextualMenuManipulator(menu =>
+            {
+                var tag = SelectedTag();
+                menu.menu.AppendAction("Rename…", _ => RenameTag(tag), tag.IsValid ? DropdownMenuAction.Status.Normal : DropdownMenuAction.Status.Disabled);
+            }));
+            list.RegisterCallback<KeyDownEvent>(key =>
+            {
+                if (key.keyCode != KeyCode.F2) return;
+                var tag = SelectedTag();
+                if (!tag.IsValid) return;
+                key.StopPropagation();
+                RenameTag(tag);
+            });
             return list;
+        }
+
+        // The tag the Tags view has selected, or none
+        private Tag SelectedTag() => shownTags.FirstOrDefault(each => each.Tag.Name == selectedTag)?.Tag ?? default;
+
+        /// <summary>Asks for a tag's new path, then renames it and the tags under it, everywhere they're stored (FN-9).</summary>
+        internal void RenameTag(Tag tag)
+        {
+            if (!tag.IsValid) return;
+            ForgeNameWindow.Show($"Rename the Tag {tag}", "Path", tag.Path, "Rename", path => ForgeTagRenames.WhyNotRename(tag, path), path =>
+            {
+                var became = ForgeTagRenames.RenameTag(tag, path);
+                selectedTag = became.Name;
+                QueueReload();
+            });
         }
 
         private Column TagColumn(string name, string title, float width, Func<ForgeTagRegistry.TagUsageRecord, string> text, bool stretch) => new()
@@ -712,11 +741,19 @@ namespace FarEmerald.PlayForge.Extended.Editor
             }
             var summary = new VisualElement { name = "Summary" };
             summary.AddToClassList("pf-forge__summary");
-            // Its display name, and the name a unique tag pads, which only tells tags apart, on hover (ED-60)
-            var path = TagDisplaySettings.PathOf(record.Tag);
-            var title = new Label(path) { tooltip = record.Tag.Name != path ? record.Tag.Name : "" };
+            // Its own name, its leaf, and under it its whole path where the path says more, as a tag's parents or an asset
+            // tag's type (FN-9); the name a unique tag pads, which only tells tags apart, on hover (ED-60)
+            var path = record.Tag.Path;
+            var primary = record.Tag.GetLeafName();
+            var title = new Label(primary) { name = "TagName", tooltip = record.Tag.Name != path ? record.Tag.Name : "" };
             title.AddToClassList("pf-forge__summary-title");
             summary.Add(title);
+            if (path != primary)
+            {
+                var whole = new Label(path) { name = "TagPath", tooltip = "The tag's whole path" };
+                whole.AddToClassList("pf-forge__summary-path");
+                summary.Add(whole);
+            }
             summary.Add(Row("For", ContextsOf(record)));
             summary.Add(Row("Uses", CountOf(record.TotalAssetCount, "asset", "assets")));
             detail.Add(summary);

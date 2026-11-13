@@ -82,7 +82,18 @@ namespace FarEmerald.PlayForge.Extended.Editor
                 var each = context;
                 menu.AddItem(each, chosen.Contains(each), () => Toggle(each));
             }
+            // A context of the project's own (FN-9, Decision 70)
+            menu.AddSeparator("");
+            menu.AddItem("New Context…", false, NewContext);
             menu.DropDown(this.Q(className: inputUssClassName));
         }
+
+        /// <summary>Asks for a new context's name, makes it, and chooses it here (FN-9).</summary>
+        internal void NewContext() =>
+            ForgeNameWindow.Show("New Tag Context", "Name", "", "Make", ForgeTagContexts.WhyNotContext, name =>
+            {
+                ForgeTagContexts.MakeContext(name);
+                if (!chosen.Contains(name)) Toggle(name);
+            });
     }
 }

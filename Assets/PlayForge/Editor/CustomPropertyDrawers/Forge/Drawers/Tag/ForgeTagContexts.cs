@@ -15,20 +15,46 @@ namespace FarEmerald.PlayForge.Extended.Editor
     /// </summary>
     internal static class ForgeTagContexts
     {
-        /// <summary>The contexts there are: PlayForge's, then any a field of the project names; Universal first.</summary>
+        /// <summary>
+        /// The contexts there are: PlayForge's, any a field of the project names, and the project's own, which its Tag
+        /// Libraries keep (FN-9); Universal first.
+        /// </summary>
         public static List<string> All()
         {
             var own = typeof(ForgeContext).GetFields(BindingFlags.Public | BindingFlags.Static)
                 .Where(field => field.IsLiteral && field.FieldType == typeof(string))
                 .Select(field => (string)field.GetRawConstantValue());
             var used = ForgeTagRegistry.GetAllContexts().SelectMany(context => context.ContextStrings);
-            return own.Concat(used)
+            var made = Libraries().SelectMany(library => library.Contexts ?? new List<string>());
+            return own.Concat(used).Concat(made)
                 .Where(context => !string.IsNullOrWhiteSpace(context))
                 .Distinct()
                 .OrderBy(context => context == ForgeContext.Universal ? 0 : 1)
                 .ThenBy(context => context, StringComparer.OrdinalIgnoreCase)
                 .ToList();
         }
+
+        /// <summary>
+        /// Makes a context of the project's own, in its first Tag Library, made where Project Settings puts new assets while
+        /// there's none, as one Undo step (FN-9, Decision 70). A context there already changes nothing.
+        /// </summary>
+        public static void MakeContext(string name)
+        {
+            name = name?.Trim();
+            if (WhyNotContext(name) != null) return;
+            var library = Libraries().FirstOrDefault() ?? MakeLibrary();
+            Undo.RecordObject(library, "Make a Tag Context");
+            library.Contexts ??= new List<string>();
+            library.Contexts.Add(name);
+            EditorUtility.SetDirty(library);
+            AssetDatabase.SaveAssetIfDirty(library);
+            ForgeTagRegistry.MarkDirty();
+        }
+
+        /// <summary>Why a name makes no new context, or null where it makes one (FN-9).</summary>
+        public static string WhyNotContext(string name) =>
+            string.IsNullOrWhiteSpace(name) ? "A context needs a name."
+            : All().Contains(name.Trim(), StringComparer.OrdinalIgnoreCase) ? $"There is a context {name.Trim()} already." : null;
 
         /// <summary>The contexts a tag is declared for, in the Tag Library that names it; none where none does.</summary>
         public static List<string> DeclaredOf(Tag tag)

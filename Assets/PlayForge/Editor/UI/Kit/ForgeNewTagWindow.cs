@@ -144,6 +144,13 @@ namespace FarEmerald.PlayForge.Extended.Editor
         // PlayForge's own tags by the text each reads as, which a path of that text would make into that very tag (TAG-2)
         private static Dictionary<string, Tag> coreByText;
 
+        /// <summary>Whether a name is one of PlayForge's own tags', which code writes (FN-9).</summary>
+        internal static bool IsCoreName(string name)
+        {
+            IsCoreText("", out _);
+            return !string.IsNullOrEmpty(name) && coreByText.Values.Any(tag => tag.Name == name);
+        }
+
         /// <summary>Whether a path is one of PlayForge's own tags' text, and that tag (TAG-2).</summary>
         internal static bool IsCoreText(string text, out Tag found)
         {

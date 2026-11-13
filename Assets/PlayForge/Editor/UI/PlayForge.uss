@@ -1872,6 +1872,13 @@
     color: var(--pf-strong-text);
 }
 
+/* A tag's whole path, under its name (FN-9) */
+.pf-root .pf-forge__summary-path {
+    margin: 0 0 4px 0;
+    padding: 0;
+    color: var(--pf-secondary-text);
+}
+
 .pf-root .pf-forge__summary-description {
     margin: 0 0 4px 0;
     padding: 0;

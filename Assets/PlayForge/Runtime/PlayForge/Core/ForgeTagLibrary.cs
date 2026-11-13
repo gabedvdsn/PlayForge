@@ -33,5 +33,9 @@ namespace FarEmerald.PlayForge
         }
 
         public List<Entry> Entries = new();
+
+        [Tooltip("The project's own tag contexts, made in a contexts field's New Context…: a tag declared for one is offered " +
+                 "where a field of the project's names it, with [ForgeTagContext]")]
+        public List<string> Contexts = new();
     }
 }

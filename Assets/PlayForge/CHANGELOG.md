@@ -7,6 +7,10 @@ tracks each fix below by its ID.
 ## [Unreleased]
 
 ### Added
+- The Forge's Tags view renames a tag, as F2 or a row's Rename… does, and the tags under its path with it, in every
+  asset that names them and the Tag Library; a tag's summary names it by its leaf, its whole path under it (FN-9).
+- New Context… in a tag contexts field makes a context of the project's own, which its Tag Library keeps, offered in
+  every contexts field (FN-9).
 - New and Open beside a Value Pipeline, Crowd Control Rules or Effect Modifier field, as a PlayForge asset's reference
   has them (FN-11).
 - Rename… in The Forge's asset menu and an asset header's, and F2 on The Forge's list: a dialog that renames an asset as
