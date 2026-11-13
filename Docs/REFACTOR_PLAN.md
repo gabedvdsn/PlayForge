@@ -1331,7 +1331,7 @@ The fixes the tag review found (FN-10, `Docs/TAG_REVIEW.md`), as Decision 71 dec
 | ID | Fix | Status |
 |---|---|---|
 | TAG-1 | A unique tag's hierarchy by its display path: `IsChildOf` and what reads it, the tag cache's parent listeners, `GetParent`, and ForgeLint's Under, so a New-Tag tag can have children; Make It a Child Of… builds from the parent's path (§5.1). Done: `Tag.Path`, a unique tag's display path or any other tag's name, which every hierarchy helper reads; the tag cache tells the listeners on each tag whose path is above, plain or unique; ForgeLint's events and triggers go by path (`Tag.cs`, `TagCache.cs`, `ForgeLint.cs`, `TagDrawer.cs`) | verified |
-| TAG-2 | New Tag warns where a text is a core tag's, and offers that tag (§3.3.1-2) | open |
+| TAG-2 | New Tag warns where a text is a core tag's, and offers that tag (§3.3.1-2). Done: as the path is typed, New Tag says where it is one of PlayForge's own tags' text, which a tag made of it would be, with Use It, which gives the field the core tag; Create makes nothing of that path (`ForgeNewTagWindow.cs`) | verified |
 | TAG-3 | Each field's contexts made right against TAG-6's set: the writer and the reader of a kind of tag share one, the ~25 unmarked fields get theirs, and Data split into its kinds (§2.2-2.4) | open |
 | TAG-4 | Contexts matched exactly, not by substring, and a field with several contexts no longer files its pick under each (§5.2-5.4) | open |
 | TAG-5 | A project's code tags found by convention: every public static Tag field or property in its assemblies, under its `[ForgeContextDefault]`, widened to fields, or a Code context, with an attribute that hides one; ForgeLint and the runtime registry read the same (§4) | open |
@@ -1374,6 +1374,13 @@ GAS-4 with GAS-5, PC-6, and TS-I with PC-5.
 ## Log
 
 Record baselines, gate results and notable decisions here, newest first.
+
+- 2026-11-13, **TAG-2: New Tag warns of a core tag's text.** A core tag is made from its text, padded with a hash, as a
+  New-Tag tag is, so New Tag "Blocked" made the core Blocked event itself, and said nothing: a designer's Blocked state
+  was the event. As the path is typed, New Tag says where it is one of PlayForge's own tags' text, and offers that tag
+  with Use It; Create makes nothing of such a path, rather than the core tags moving under a namespace (Decision 71).
+  - Red first: TAG_2 against HEAD's New Tag: it had no word for a core tag's text
+  - Gates, on a frozen snapshot of the package: EditMode 877 of 878, ED-61 red from the working tree's lifecycle change; PlayMode 1817 of 1837, 8 skipped, the 12 known reds. No golden run: the change is the editor's alone.
 
 - 2026-11-13, **TAG-1: a unique tag's hierarchy goes by its display path.** A tag New Tag makes is unique, its name
   padded with a hash to 64 characters, so a New-Tag "Status.Debuff.Burn" was never under a New-Tag "Status.Debuff": a

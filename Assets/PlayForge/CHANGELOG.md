@@ -426,6 +426,8 @@ tracks each fix below by its ID.
   page, through one table of links in the editor.
 
 ### Changed
+- New Tag says where a path is one of PlayForge's own tags' text, which a tag made of it would be, and offers that tag
+  with Use It; Create makes nothing of such a path (TAG-2).
 - Create → PlayForge lists its assets in groups: the Forge Project, then the assets The Forge lists, in its order, then
   the numbers, rules and the Tag Library, then the lab's; the Requirement Template is out of its Templates submenu
   (FN-13).

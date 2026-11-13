@@ -158,7 +158,8 @@ string perLevel = impact.FormatTotal();           // "20/30/40/50"
   fields' pickers offer it, in a Tag Library asset (`Create → PlayForge → Tag Library`), made where Project Settings
   puts new assets while there's none. A Tag Library belongs to no Forge Project: every library in the project is read,
   wherever it sits, so one library can serve them all. New Tag's **Contexts** start as its field's, and another chosen
-  declares the tag for it.
+  declares the tag for it. A path that is one of PlayForge's own tags' text, as Blocked or Health, would make that very
+  tag: New Tag says so, and offers it with **Use It**.
 - **Debugger** (`Window → PlayForge → Debugger`) — the game as it plays, in four views the toolbar switches
   between. **Entities** lists every entity, of either kind, beside the one selected: its attributes with what changed
   them, its effects with the time each has left and where it came from, its abilities with their state and cooldown,
