@@ -77,6 +77,24 @@ moments are its rules':
 
 Low on health, a bot backs off a moment once in a while. The Demo's AI hero is a bot, its roster giving the keys.
 
+## Your unit
+
+In either mode you can play a unit of your own. **Put down** in the Lab panel's **Your unit** section puts one of the
+entity picked above down on the side picked, where the camera looks, and gives you control of it; **Take control** takes
+the unit selected, and a bot taken over stops fighting until you let it go, a new fight passing it over and **Reset**
+keeping you on its seat's new bot. **Release** lets it go, and **Follow** has the camera follow it. The line under the
+buttons says whom you control.
+
+The controls are the Demo's: right-click the ground to walk there, a foe to attack it, or an ally to walk to it; **Q**,
+**W**, **E** and **R** cast its abilities past its attack, in its entity's order, and **1** to **6** its items' active
+abilities; an ability that needs a target waits for a left-click, and **Esc** cancels it; **S** stops it. They read
+PlayForge's input, `ForgeInput`, so a game's own input or a test's stands in.
+
+Its orders go through a driver. The lab's walks a unit in a straight line and casts as the lab's units do. A project
+whose units move and cast their own way makes a **Lab Driver** asset (**Create → PlayForge → Lab Driver**) of its own
+class, overriding the orders its game gives its own way (`MoveTo`, `Attack`, `Cast`, `Stop`, each doing as the lab's
+does unless overridden), and names it on its Lab Rules' **Driver**.
+
 ## Time
 
 The lab's units live in a world of the lab's own (`ProcessWorld`), which the lab steps by its own time, so its time
@@ -97,6 +115,7 @@ Movement Speed (or Move Speed), and walks a unit without a speed at 4 a second. 
   it, as Invisible. **Shields**: tags under which no one can target it.
 - **Attack Range Key**: the Local Data key a unit's attack range is under, or **Attack Range** for every unit.
 - **Attack Slot**: which of an entity's starting abilities is its attack, from 0, or −1 for none.
+- **Driver**: the project's **Lab Driver**, which the unit you control is ordered about through ([Your unit](#your-unit)).
 
 The Demo's roster is the Demo's rules: its units, camera and dummy are the lab's, so the two can't drift.
 
@@ -106,6 +125,9 @@ The Demo's roster is the Demo's rules: its units, camera and dummy are the lab's
 `AddDummy`, `ApplyEffect`, `CastAt`, `GiveItem`, `Drop` (at a point of the screen) and `DropAt` (on a unit or a point),
 `Select`, `SetMode`, `ResetDummies`, `Clear`, and `Step`, `Paused`, `Speed` and `StepFrame` for its time. A library is an
 `ILabLibrary`: in the editor every asset of the project (`EditorLabLibrary`), in code a `ListLibrary` of the assets
-given.
+given. The unit you control is `ControlledUnit`, given by `PutDownOwnUnit`, `TakeControl` and `ReleaseControl`, its
+camera by `Follow`; the lab's controls are its `Controls`, a `LabControls`, whose `Driver` comes before its rules'. A
+game's own player can be a `LabControls` too, as the Demo's is: its unit set on it, or its `ControlledUnit()`
+overridden.
 
 A build can leave the lab out by defining `PLAYFORGE_NO_LAB`. The Demo uses the lab's units, so it goes too.

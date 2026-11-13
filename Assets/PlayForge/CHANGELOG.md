@@ -7,6 +7,11 @@ tracks each fix below by its ID.
 ## [Unreleased]
 
 ### Added
+- The Creator Lab's author's unit (LAB-11): put one down, or take over a unit, and play it with the lab's controls,
+  the Demo's made general (`LabControls`): right-click to move or attack, Q W E R to cast, 1 to 6 for items, S to stop.
+  Its orders go through a driver a project can give, a `LabDriver` asset on its Lab Rules (`ILabUnitDriver`), or the
+  lab's, which walks it. A bot taken over stops fighting until it's let go. The Lab panel has a Your unit section, and
+  `CreatorLab` has `PutDownOwnUnit`, `TakeControl`, `ReleaseControl` and `Follow`.
 - The Additional Content sample's code, an assembly of its own, `FarEmerald.PlayForge.AdditionalContent`, which nothing
   in PlayForge references, with its tests beside it on the test kit (AC-1); and feedback on uGUI and TextMeshPro (AC-2):
   Floating Numbers, Hit Flash, Hit Sound and Status Bar, components on an entity that show its own hits and effects with

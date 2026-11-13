@@ -1,6 +1,7 @@
 # The Creator Lab: hand-over note
 
-Paused on 2026-11-11 at the user's word, to go back to the tooling wishlist (TW-7 onward); to be picked up later. The
+Paused on 2026-11-11 at the user's word, to go back to the tooling wishlist (TW-7 onward), and picked up again on
+2026-11-13 with LAB-11, once the wishlist and the Additional Content items were done. The
 design is `Docs/CREATOR_LAB_DESIGN.md` (Decision 44); the tracker rows are LAB-1 to LAB-18 under *The Creator Lab
 (FEAT-35)* in `Docs/REFACTOR_PLAN.md`; the user's page is `Assets/PlayForge/Documentation/CREATOR_LAB.md`.
 
@@ -12,7 +13,7 @@ design is `Docs/CREATOR_LAB_DESIGN.md` (Decision 44); the tracker rows are LAB-1
 | 1. A Scaler asset to try | LVL-5 | **Open**: needs a caster and a target in the editor |
 | 2. The lab's shell | LAB-1 to LAB-8 | Done: PlayForge `f7afb28`, Proving Grounds `ed3ca46` |
 | 3. Battle | LAB-9, LAB-10 | Done: the commits after those, "LAB-9, LAB-10" |
-| 4. The author's unit | LAB-11 | **Open**: designed and drafted below, not in the repo |
+| 4. The author's unit | LAB-11 | Done on 2026-11-13, as drafted (below) |
 | 5. Showing its working | LAB-12 to LAB-17 | **Open** |
 | 6. Forge Projects in the library | LAB-18 | **Open**; FEAT-34 is done, so nothing blocks it |
 
@@ -91,7 +92,12 @@ Two ways: a pair of `RuntimeGameplayAbilitySystem`s made from attribute sets the
 mode with no ProcessControl (check first); or a `NumberContext` over plain values, without entities. The second is
 lighter and is what the panel needs.
 
-### LAB-11: the author's unit (drafted)
+### LAB-11: the author's unit (done)
+
+Built on 2026-11-13 as drafted here, with three changes: `ILabRules.Driver` is a default interface member, so the Demo's
+roster and a project's own rules needn't change; `LabControls` picks through the lab's `TryPick` where it has no
+camera of its own and a lab is open, else by a raycast on its layers; and a reset carries the author's control to their
+seat's new bot. The lab adds its `LabControls` to its own object, as `Controls`. The draft, as it was:
 
 Decided by Decision 44: `ILabUnitDriver` (move to a point, attack a unit, cast an ability with its data, stop), a
 project's own named on its rules, or the lab's, which walks the unit in straight lines; and the Demo's controls as the

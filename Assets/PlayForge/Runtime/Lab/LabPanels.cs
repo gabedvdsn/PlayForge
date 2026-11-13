@@ -34,6 +34,9 @@ namespace FarEmerald.PlayForge.Lab
         private VisualElement dummySection, battleSection;
         private SliderInt botLevel, perSide;
         private Label battleLine;
+        private VisualElement unitSection;
+        private Label controlLine;
+        private Button takeControl, releaseControl, followUnit;
         private DropdownField teachChoice, giveChoice;
         private Slider distance, tilt, speed;
         private Button pause;
@@ -220,6 +223,25 @@ namespace FarEmerald.PlayForge.Lab
             dummies.Add(new Button(() => lab?.ResetDummies()) { name = "ResetDummies", text = "Reset", tooltip = "Each dummy back where it was put, at full" });
             dummies.Add(new Button(() => lab?.Clear()) { name = "ClearUnits", text = "Clear", tooltip = "Take every unit out" });
 
+            // The author's own unit, in either mode (LAB-11)
+            unitSection = new VisualElement { name = "UnitSection" };
+            content.Add(unitSection);
+            Heading(unitSection, "Your unit");
+            var own = Row(unitSection, "UnitButtons");
+            own.Add(new Button(PutDownOwn) { name = "PutDownOwn", text = "Put down",
+                tooltip = "A unit of the entity, on the side, that you control: right-click to move or attack, Q W E R to cast, S to stop" });
+            takeControl = new Button(() => { if (lab) lab.TakeControl(lab.SelectedUnit); }) { name = "TakeControl", text = "Take control",
+                tooltip = "Control the selected unit; a bot stops fighting until you let it go" };
+            own.Add(takeControl);
+            releaseControl = new Button(() => lab?.ReleaseControl()) { name = "ReleaseControl", text = "Release", tooltip = "Let your unit go" };
+            own.Add(releaseControl);
+            followUnit = new Button(() => { if (lab) lab.Follow(lab.ControlledUnit); }) { name = "FollowUnit", text = "Follow",
+                tooltip = "The camera follows your unit" };
+            own.Add(followUnit);
+            controlLine = new Label { name = "ControlLine" };
+            controlLine.AddToClassList("lab-muted");
+            unitSection.Add(controlLine);
+
             battleSection = new VisualElement { name = "BattleSection" };
             content.Add(battleSection);
             Heading(battleSection, "Battle");
@@ -287,6 +309,16 @@ namespace FarEmerald.PlayForge.Lab
             if (index < 0 || index >= entityChoices.Count) return;
             if (lab.Mode != LabMode.Battle) lab.SetMode(LabMode.Battle);
             lab.AddBot(entityChoices[index], LabSides.Named(dummySide.value), level: botLevel != null ? botLevel.value : 0);
+        }
+
+        // A unit of the entity picked, on the side picked, where the camera looks, under the author's control
+        private void PutDownOwn()
+        {
+            if (lab == null || dummyEntity == null) return;
+            int index = dummyEntity.index;
+            if (index < 0 || index >= entityChoices.Count) return;
+            var at = lab.View ? new Vector3(lab.View.Focus.x, 0f, lab.View.Focus.z) : Vector3.zero;
+            lab.PutDownOwnUnit(entityChoices[index], LabSides.Named(dummySide.value), at);
         }
 
         private void AddDummy()
@@ -444,6 +476,7 @@ namespace FarEmerald.PlayForge.Lab
                 nextRedraw = ForgeTime.UnscaledTime + RedrawEvery;
                 DrawSelected();
                 DrawBattleLine();
+                DrawControlLine();
             }
             DrawBars();
         }
@@ -459,12 +492,26 @@ namespace FarEmerald.PlayForge.Lab
             if (dummySection != null) dummySection.style.display = lab.Mode == LabMode.Dummies ? DisplayStyle.Flex : DisplayStyle.None;
             if (battleSection != null) battleSection.style.display = lab.Mode == LabMode.Battle ? DisplayStyle.Flex : DisplayStyle.None;
             DrawBattleLine();
+            DrawControlLine();
             if (lab.View)
             {
                 distance?.SetValueWithoutNotify(lab.View.Distance);
                 tilt?.SetValueWithoutNotify(lab.View.Tilt);
             }
             speed?.SetValueWithoutNotify(lab.Speed);
+        }
+
+        // Whom the author controls, and what each of the section's buttons can do now
+        private void DrawControlLine()
+        {
+            if (controlLine == null || lab == null) return;
+            var unit = lab.ControlledUnit;
+            controlLine.text = unit
+                ? $"You control {unit.name}: right-click to move or attack, Q W E R to cast, S to stop"
+                : "No unit of your own: put one down, or take control of the one selected";
+            takeControl?.SetEnabled(lab.SelectedUnit && lab.SelectedUnit != unit);
+            releaseControl?.SetEnabled(unit);
+            followUnit?.SetEnabled(unit);
         }
 
         // Who stands on each side, and who won

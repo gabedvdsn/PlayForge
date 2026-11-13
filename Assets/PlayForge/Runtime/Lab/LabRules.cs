@@ -49,6 +49,12 @@ namespace FarEmerald.PlayForge.Lab
 
         /// <summary>The Local Data key an ability's reach for a bot is under, 0 for anywhere, or none for anywhere (LAB-10).</summary>
         Tag ReachKey { get; }
+
+        /// <summary>
+        /// The driver the author's unit is ordered about through, a project's own movement and casting, or null for the
+        /// lab's (LAB-11).
+        /// </summary>
+        ILabUnitDriver Driver => null;
     }
 
     /// <summary>
@@ -101,6 +107,11 @@ namespace FarEmerald.PlayForge.Lab
         [Tooltip("The Local Data key an ability's reach for a bot is under, 0 for anywhere. With none, anywhere")]
         public Tag ReachKey;
 
+        [Header("The author's unit")]
+        [Tooltip("The project's own way of ordering a unit about, which the author's unit is moved and made to cast through. " +
+                 "With none, the lab's: a unit walks in a straight line (LAB-11)")]
+        public LabDriver Driver;
+
         [System.NonSerialized] private Attribute foundHealth;
         [System.NonSerialized] private Attribute foundSpeed;
 
@@ -116,6 +127,7 @@ namespace FarEmerald.PlayForge.Lab
         Tag ILabRules.CastOrderKey => CastOrderKey;
         Tag ILabRules.CastWhenKey => CastWhenKey;
         Tag ILabRules.ReachKey => ReachKey;
+        ILabUnitDriver ILabRules.Driver => Driver ? Driver : null;
 
         /// <summary>
         /// Finds the attributes left empty among a library's, by their names: Health, and Movement Speed or Move Speed.

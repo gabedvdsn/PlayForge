@@ -94,6 +94,12 @@ namespace FarEmerald.PlayForge.Lab
         public LabUnit SelectedUnit { get; private set; }
         public ScriptableObject SelectedAsset { get; private set; }
 
+        /// <summary>The unit the author controls, if any: moved and made to cast by the lab's controls (LAB-11).</summary>
+        public LabUnit ControlledUnit { get; private set; }
+
+        /// <summary>The lab's controls, which give the author's unit its orders through its driver (LAB-11).</summary>
+        public LabControls Controls { get; private set; }
+
         /// <summary>Whether its time stands still.</summary>
         public bool Paused { get; set; }
 
@@ -150,6 +156,7 @@ namespace FarEmerald.PlayForge.Lab
             World = new ProcessWorld();
             BuildSpace();
             Caster = MakeCaster();
+            Controls = gameObject.AddComponent<LabControls>();
             if (ShowPanels) Panels = gameObject.AddComponent<LabPanels>();
         }
 
@@ -377,6 +384,7 @@ namespace FarEmerald.PlayForge.Lab
         {
             if (!unit || !units.Remove(unit)) return;
             if (SelectedUnit == unit) SelectedUnit = null;
+            if (ControlledUnit == unit) ReleaseControl();
             seats.RemoveAll(seat => seat.Unit == unit);
             unit.Remove();
             Changed?.Invoke();
@@ -486,6 +494,9 @@ namespace FarEmerald.PlayForge.Lab
             SetFighting(false);
             Winner = null;
             Ended = false;
+            // The author keeps the seat they control, on its new bot
+            var controlled = SeatOf(ControlledUnit);
+            if (controlled != null) ReleaseControl();
             foreach (var seat in seats)
             {
                 if (seat.Unit)
@@ -497,14 +508,60 @@ namespace FarEmerald.PlayForge.Lab
                 seat.Unit = null;
             }
             foreach (var seat in seats.ToArray()) MakeBot(seat);
+            if (controlled?.Unit) TakeControl(controlled.Unit);
             Changed?.Invoke();
         }
 
+        // Each bot fights as the battle does, but the one the author controls
         private void SetFighting(bool fighting)
         {
             Fighting = fighting;
             foreach (var seat in seats)
-                if (seat.Unit && seat.Unit.TryGetComponent<LabBot>(out var bot)) bot.Fighting = fighting;
+                if (seat.Unit && seat.Unit != ControlledUnit && seat.Unit.TryGetComponent<LabBot>(out var bot)) bot.Fighting = fighting;
+        }
+
+        // ═══════════════════════════════════════════════════════════════════════════
+        // The author's unit (LAB-11)
+        // ═══════════════════════════════════════════════════════════════════════════
+
+        /// <summary>Puts down a unit of an entity or a set, on a side, at a point, and takes control of it.</summary>
+        public LabUnit PutDownOwnUnit(ScriptableObject entityOrSet, LabSide side, Vector3 at, int level = 0)
+        {
+            var unit = AddUnit(entityOrSet, side, at, level);
+            if (unit) TakeControl(unit);
+            return unit;
+        }
+
+        /// <summary>
+        /// Takes control of a unit, letting go of any other: the lab's controls order it about, and a bot stops fighting
+        /// until it's let go.
+        /// </summary>
+        public void TakeControl(LabUnit unit)
+        {
+            // Only a unit of the lab's: not its caster, nor one it has taken out, as a reset's bots, which go at the frame's end
+            if (!unit || !units.Contains(unit) || ControlledUnit == unit) return;
+            ReleaseControl();
+            ControlledUnit = unit;
+            if (unit.TryGetComponent<LabBot>(out var bot)) bot.Fighting = false;
+            unit.Stop();
+            Changed?.Invoke();
+        }
+
+        /// <summary>Lets go of the author's unit: a bot fights again as the battle does, and the camera follows it no more.</summary>
+        public void ReleaseControl()
+        {
+            var unit = ControlledUnit;
+            ControlledUnit = null;
+            if (!unit) return;
+            if (unit.TryGetComponent<LabBot>(out var bot)) bot.Fighting = Fighting;
+            if (View && View.Following == unit.transform) View.Following = null;
+            Changed?.Invoke();
+        }
+
+        /// <summary>Has the camera follow a unit, or none.</summary>
+        public void Follow(LabUnit unit)
+        {
+            if (View) View.Following = unit ? unit.transform : null;
         }
 
         /// <summary>The seat a bot stands for, or null for a unit that's no bot.</summary>
