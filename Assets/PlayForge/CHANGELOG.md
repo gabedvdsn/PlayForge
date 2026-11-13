@@ -7,6 +7,8 @@ tracks each fix below by its ID.
 ## [Unreleased]
 
 ### Added
+- New and Open beside a Value Pipeline, Crowd Control Rules or Effect Modifier field, as a PlayForge asset's reference
+  has them (FN-11).
 - Rename… in The Forge's asset menu and an asset header's, and F2 on The Forge's list: a dialog that renames an asset as
   its inspector does, its tag and its file following, or the file of an asset with no name of its own (FN-8).
 - The Creator Lab's library plays the active Forge Project's assets, and a Project switch in its header switches the

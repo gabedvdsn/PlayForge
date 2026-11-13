@@ -3,19 +3,21 @@ using System.Collections.Generic;
 using System.Linq;
 using UnityEditor;
 using UnityEditor.UIElements;
+using UnityEngine;
 using UnityEngine.UIElements;
 using Object = UnityEngine.Object;
 
 namespace FarEmerald.PlayForge.Extended.Editor
 {
     /// <summary>
-    /// A reference to a PlayForge asset, as Docs/EDITOR_STYLE.md draws one: Unity's object field, with its type's icon,
+    /// A reference to a PlayForge asset, or to a Value Pipeline, Crowd Control Rules or Effect Modifier (FN-11), as
+    /// Docs/EDITOR_STYLE.md draws one: Unity's object field, with its type's icon,
     /// and beside it a plain button, Open while it names an asset, which shows the asset in a window of its own, or New
     /// while it's empty, which makes one where The Forge makes its type and uses it. A drawer adds its own actions to the
     /// field's right-click menu. It was a button that opened a dropdown list of its own, with hover colors and Clear and
     /// Open icon buttons set in C# (ED-38).
     /// </summary>
-    public abstract class AbstractForgeObjectDrawer<T> : PropertyDrawer where T : BaseForgeAsset
+    public abstract class AbstractForgeObjectDrawer<T> : PropertyDrawer where T : ScriptableObject
     {
         public override VisualElement CreatePropertyGUI(SerializedProperty property)
         {
@@ -98,7 +100,11 @@ namespace FarEmerald.PlayForge.Extended.Editor
         /// Makes the asset New uses, named for the asset that holds the field and the field, as in "Goblin Attribute
         /// Set". One Undo takes back the field's new value; the asset stays.
         /// </summary>
-        protected virtual T New(Object host, string name) => ForgeAssetCreation.Create<T>(name);
+        protected virtual T New(Object host, string name) =>
+            typeof(BaseForgeAsset).IsAssignableFrom(typeof(T))
+                ? (T)(ScriptableObject)ForgeAssetCreation.Create(typeof(T), name)
+                // An asset with no name of its own, as a Value Pipeline, is named by its file (FN-11)
+                : (T)ForgeAssetCreation.CreateNew(typeof(T), name);
 
         /// <summary>Adds a drawer's own actions to the field's right-click menu. None by default.</summary>
         protected virtual void AddMenuItems(DropdownMenu menu, ObjectField field, Object host) { }

@@ -156,8 +156,9 @@ string perLevel = impact.FormatTotal();           // "20/30/40/50"
   its parts. A double click shows it in the Project window, and a row of an asset's Used By opens that asset in The
   Forge. Tags lists the project's tags and what uses each; a tag's **Declared For** declares it for contexts, so their
   fields' pickers offer it, in a Tag Library asset (`Create → PlayForge → Tag Library`), made where Project Settings
-  puts new assets while there's none. New Tag's **Contexts** start as its field's, and another chosen declares the
-  tag for it.
+  puts new assets while there's none. A Tag Library belongs to no Forge Project: every library in the project is read,
+  wherever it sits, so one library can serve them all. New Tag's **Contexts** start as its field's, and another chosen
+  declares the tag for it.
 - **Debugger** (`Window → PlayForge → Debugger`) — the game as it plays, in four views the toolbar switches
   between. **Entities** lists every entity, of either kind, beside the one selected: its attributes with what changed
   them, its effects with the time each has left and where it came from, its abilities with their state and cooldown,

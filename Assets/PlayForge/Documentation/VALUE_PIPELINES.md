@@ -6,7 +6,9 @@ hit of that impact goes through the pipeline's stages, so a project writes once 
 new item that changes every hit is a stage, not an edit to each attack.
 
 It's generic: the value is any number an impact lands with, a blow, a heal, a drain. Create one from
-**Create > PlayForge > Value Pipeline**.
+**Create > PlayForge > Value Pipeline**, or with **New** beside an impact's Pipeline field, which makes one named for
+the effect and uses it; once the field names one, **Open** shows it (FN-11). A Crowd Control Rules or Effect Modifier
+field has the same two.
 
 ## Not a Scaler asset
 
