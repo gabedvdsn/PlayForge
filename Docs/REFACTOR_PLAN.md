@@ -667,6 +667,15 @@ from. It lives outside `Assets/` so it never ships in the package.
   Grounds**, as Unity's import makes them, so its tests draw real text, locally and in CI. **The sample gets a small
   scene**: two sparring dummies trading the starter set's attacks, every handler on, built by Proving Grounds' books
   like the rest of the sample, and played by a PlayMode test.
+- Decision 70, 2026-11-13: the user's notes on the framework, much of it the UI and the TW features (the FN rows), and
+  their answers. **Components, as a list**: each effect, ability, item and entity gets a Components section, components
+  added from a menu, each a class with hooks into its asset; the rarely used behaviours move into them, existing assets
+  moved by a one-off pass (FN-14). **Lifesteal is an attribute an impact worker reads**, the worker given both ways,
+  project-wide, as workers every entity has, and on an entity, never run twice for one (FN-15). **Tag contexts: new
+  contexts only**, made in The Forge's Tags view, the code's assignments kept; and a row to go through the tag
+  contexts as they are, and the tags `Tags.cs` writes, and how a project's own hard-coded tags reach the registry
+  (FN-9, FN-10). **The order: bugs and UI first**, then components and lifesteal, then effect purging after its
+  research, then Death's section and a body for a running entity.
 
 **Open. Ask the user; do not assume:**
 1. ~~**Uncommitted changes**~~: decided, see above.
@@ -1279,6 +1288,33 @@ on-hit (TW-5, TW-6), which most of the rest build on.
 | AC-4 | Genre rules too narrow for the core, as Attribute Shift's moving of points over time. Covered (Decision 68): nothing to build. TW-20's transfer moves points from one attribute to another, only what the giver has; the Dota lab's Attribute Shift, which stops at 1 Strength, is two impacts a tick under a condition, with no code, and its test passes; AC-6 moved the labs' last workers to the built-ins | Additional Content | 7 | verified |
 | AC-5 | A starter set of generic assets, from framework features alone, named for what they are; the labs' recreations stay in Proving Grounds. Decided (Decision 68): the rest of it as sample assets. Done: `Samples~/Additional Content/Starter Set`, made by Proving Grounds' `StarterBook`: a **Melee Attack** (10, a 1 s cooldown) and a **Bolt** (25, 3 s), each an ability with its hit and its cooldown; a **Slow** (70% of Movement Speed for 3 s); and a **Shield** (+50 to Shield's current and base for 5 s, and an Incoming modifier whose Change Impact adds an Absorb stage into Shield to each hit on its holder's Health), with Movement Speed and Shield attributes; the recipes hold the rest. `RecipeExport.SaveAll` saves the recipes, formulas and starter set in place. Documented in RECIPES.md and the sample's README | Additional Content | 7 | verified |
 | AC-6 | Retiring the Lab Kit: each class goes as its framework need lands, and the labs' assets switch over. Decided (Decision 68): wholly, Blade Mail among them. Done: TW-5's and TW-6's classes went on 2026-11-11, Counter Helix to an Impact Taken trigger and the seven on-hit assets to On Hit; the rest on 2026-11-12, a one-off editor pass moving 20 lab assets to TW-8, TW-9, TW-11 to TW-15's built-ins and adding Dota's Healing Received. `Assets/ProvingGrounds/LabKit` and `Dota/Scripts` are gone, and the labs play as they did | Additional Content | 7 | verified |
+
+### The framework notes (FN)
+
+The user's notes of 2026-11-13 on the framework, much of it the UI and the TW features, as they gave them (Decision 70).
+Worked in the order below: the bugs, then the UI, then components and lifesteal, then purging after its research, then
+Death's section and a body for a running entity.
+
+| ID | Note | Kind | Status |
+|---|---|---|---|
+| FN-1 | A Scalable number field warns that it needs a scaler, with a hint to set it to Constant, when it's already Constant | Bug | open |
+| FN-2 | Adding an element to a scaler group copies the last one, so the two share their scaler and each warns "Element N holds the same scaler, so an edit here changes it too"; **Make a separate copy** on one clears neither warning, nor does it on the other after | Bug | open |
+| FN-3 | An entity identity's Items section has two Scalable whole-number fields with no label | UI | open |
+| FN-4 | The Standard Worker Group drawer shows its Name field, which it shouldn't | UI | open |
+| FN-5 | The rows of a **Used By** section draw their labels centered; they belong at the left | UI | open |
+| FN-6 | The Forge's text sits wrong in many places: rows want left padding (the Tags view's labels press against the window's edge), and a view table row's text and icons sit higher than they should | UI | open |
+| FN-7 | The Forge's view table forgets which columns were hidden as it's closed and opened, as Type and Asset Tag, which the user always hides | UI | open |
+| FN-8 | The Forge renames every asset type it lists, requirement templates, tags, value pipelines and crowd control rules among them | UI | open |
+| FN-9 | Tags in The Forge: renamed there; a tag's summary shows its whole path under its primary name where the path says more; and new tag contexts made there (Decision 70: new contexts only) | UI | open |
+| FN-10 | Tag contexts gone through as they are: which exist, whether each is apt, how they're assigned to fields, and whether each field has the right ones; the tags `Tags.cs` writes, how robust they are; and how a project's own hard-coded tags reach the tag registry with nothing done by hand | Review | open |
+| FN-11 | The less common assets made easier to make: **New** or **Open** beside a Value Pipeline, Crowd Control Rules or Effect Modifier field; Value Pipelines in the Demo; and the docs say a Forge Tag Library belongs to no project, every one being read wherever it is | UI | open |
+| FN-12 | Every asset type has its editor, with headers, and is in The Forge | UI | open |
+| FN-13 | The PlayForge Create menu ordered | UI | open |
+| FN-14 | Components (Decision 70): a Components section on effects, abilities, items and entities, distinct from Unity's, components added from a menu, each a class with hooks into its asset (an effect's land, tick, end and hit; an ability's start and end; an entity's register and death). Effects' Area, Transfers and Auras, abilities' Charges, Toggles and Auras, and entities' Auras become components, existing assets moved by a one-off pass | Refactor | open |
+| FN-15 | Lifesteal is an attribute an impact worker reads, a share of what its holder deals healing it; the worker given project-wide, as workers every entity has on its Forge Project, or on an entity, and never run twice for one (Decision 70); the effects' and items' own lifesteal fields go, their assets moved onto the attribute | Refactor | open |
+| FN-16 | Effect purging: research how MOBAs purge effects (tiers that an effect needs at least to be purged, effects no purge takes, the system purging anything), then a shape for the user to decide. A death that keeps the entity purges what was applied but what's kept, as cooldowns and effects its abilities and items grant passively, and what else research finds; and whether a dead entity's gains and losses are 0 by a pipeline-wide modifier. It takes the place of Death's Ends Effects Tagged, which may need every effect tag of a project | Feature | open |
+| FN-17 | The Death section's single collapsible field inside it looks out of place | UI | open |
+| FN-18 | A body for a running entity: an entity whose body process isn't its identity's Body is given one at runtime | Feature | open |
 
 ## Test project: PlayForge Proving Grounds
 
