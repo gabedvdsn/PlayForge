@@ -1,3 +1,5 @@
+using System;
+using System.Collections.Generic;
 using System.Linq;
 using UnityEditor;
 using UnityEditor.UIElements;
@@ -13,6 +15,7 @@ namespace FarEmerald.PlayForge.Extended.Editor
     internal static class ForgeLists
     {
         private const string AddsEmptyHook = "pf-list--adds-empty";
+        private const string AddsOwnCopiesHook = "pf-list--adds-own-copies";
         private const string KeepsStatesHook = "pf-list--keeps-states";
 
         /// <summary>
@@ -21,6 +24,15 @@ namespace FarEmerald.PlayForge.Extended.Editor
         /// </summary>
         public static void AddsEmpty(PropertyField field, SerializedObject serialized, string path) =>
             Hook(field, AddsEmptyHook, list => list.overridingAddButtonBehavior = (_, _) => AddEmpty(serialized, path));
+
+        /// <summary>
+        /// A list whose elements hold objects by reference, as a scaler Group's members hold their scalers: its + adds a copy
+        /// of the last element, as Unity's does, each object it holds a copy of its own. Grown as an array, the new element
+        /// held the last one's objects, so an edit to one changed both (FN-2). An element that is itself an object held by
+        /// reference starts empty, as <see cref="AddsEmpty"/> has it.
+        /// </summary>
+        public static void AddsOwnCopies(PropertyField field, SerializedObject serialized, string path) =>
+            Hook(field, AddsOwnCopiesHook, list => list.overridingAddButtonBehavior = (_, _) => AddOwnCopies(serialized, path));
 
         /// <summary>
         /// A list whose elements keep their collapse states by place (<see cref="DrawerCollapseState"/>): as its − removes
@@ -60,6 +72,53 @@ namespace FarEmerald.PlayForge.Extended.Editor
             var added = list.GetArrayElementAtIndex(at);
             if (added.propertyType == SerializedPropertyType.ManagedReference) added.managedReferenceValue = null;
             serialized.ApplyModifiedProperties();
+        }
+
+        /// <summary>
+        /// Adds a copy of the last element to the list at <paramref name="path"/>, each object it holds a copy of its own, as
+        /// one Undo step; in a multiple selection, each asset's list copies its own last element (ED-12).
+        /// </summary>
+        internal static void AddOwnCopies(SerializedObject serialized, string path)
+        {
+            var list = Find(serialized, path);
+            if (list == null) return;
+            EachAsset.Write(list, own =>
+            {
+                int at = own.arraySize;
+                own.arraySize = at + 1;
+                var added = own.GetArrayElementAtIndex(at);
+                if (added.propertyType == SerializedPropertyType.ManagedReference)
+                {
+                    added.managedReferenceValue = null;
+                    return;
+                }
+                foreach (var held in HeldByReference(added)) CopyOwn(own.serializedObject.FindProperty(held));
+            });
+        }
+
+        /// <summary>Gives a field a copy of its own of the object it holds, with the same values.</summary>
+        internal static void CopyOwn(SerializedProperty field)
+        {
+            var current = field?.managedReferenceValue;
+            if (current == null) return;
+            var copy = Activator.CreateInstance(current.GetType());
+            EditorJsonUtility.FromJsonOverwrite(EditorJsonUtility.ToJson(current), copy);
+            field.managedReferenceValue = copy;
+        }
+
+        // The paths of the objects an element holds by reference, each the outermost: an object's own go with its copy
+        private static List<string> HeldByReference(SerializedProperty element)
+        {
+            var paths = new List<string>();
+            var each = element.Copy();
+            var end = element.GetEndProperty();
+            bool enter = true;
+            while (each.Next(enter) && !SerializedProperty.EqualContents(each, end))
+            {
+                enter = each.propertyType != SerializedPropertyType.ManagedReference;
+                if (!enter && each.managedReferenceValue != null) paths.Add(each.propertyPath);
+            }
+            return paths;
         }
 
         // Removes the selected elements, or the last, moving each later element's state up a place

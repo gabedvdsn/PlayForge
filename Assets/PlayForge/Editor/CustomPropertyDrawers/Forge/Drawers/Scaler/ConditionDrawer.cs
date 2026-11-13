@@ -31,6 +31,7 @@ namespace FarEmerald.PlayForge.Extended.Editor
             long shownId = 0;
             bool mixedKinds = false;
             bool built = false;
+            int sharedWith = -1;
             Label line = null;
 
             void Draw()
@@ -62,7 +63,7 @@ namespace FarEmerald.PlayForge.Extended.Editor
 
                 // A condition another list element shares, after Unity's array "+" copied its reference id, says so, as a
                 // scaler does, with a button that gives this element its own copy
-                int sharedWith = EachAsset.Of(property).Select(ScalerDrawer.FindSharedSibling).Where(index => index >= 0).DefaultIfEmpty(-1).First();
+                sharedWith = ScalerDrawer.SharedWith(property);
                 if (sharedWith >= 0)
                 {
                     var note = new HelpBox($"Element {sharedWith} holds the same condition, so an edit here changes it too.",
@@ -116,8 +117,10 @@ namespace FarEmerald.PlayForge.Extended.Editor
             {
                 if (!ScalerFields.Alive(property)) return;
                 bool mixed = EachAsset.Differ(property, ScalerFields.KindOf);
-                // A new kind, or a copy of its own in place of a shared one, draws it again
-                if (!built || mixed != mixedKinds || ScalerFields.KindOf(property) != shownType || property.managedReferenceId != shownId) Draw();
+                // A new kind, or a copy of its own in place of a shared one, draws it again; and the element it shared with,
+                // which no longer shares it (FN-2)
+                if (!built || mixed != mixedKinds || ScalerFields.KindOf(property) != shownType || property.managedReferenceId != shownId
+                    || ScalerDrawer.SharedWith(property) != sharedWith) Draw();
                 else Show();
             });
             Draw();

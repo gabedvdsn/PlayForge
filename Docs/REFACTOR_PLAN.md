@@ -1298,7 +1298,7 @@ Death's section and a body for a running entity.
 | ID | Note | Kind | Status |
 |---|---|---|---|
 | FN-1 | A Scalable number field warns that it needs a scaler, with a hint to set it to Constant, when it's already Constant. Fixed: the warning was right where it showed, a field whose number is multiplied by a scaler it hasn't got, or gives way to one, reading 0; but its kind already showed Constant, which choosing again changed nothing, and the field's menu offered Make Constant only to a field with a scaler. The warning says what the Problems view says, with a **Make It Constant** button, and the menu offers Make Constant to such a field; either keeps its number (`MagnitudeField.cs`) | Bug | verified |
-| FN-2 | Adding an element to a scaler group copies the last one, so the two share their scaler and each warns "Element N holds the same scaler, so an edit here changes it too"; **Make a separate copy** on one clears neither warning, nor does it on the other after | Bug | open |
+| FN-2 | Adding an element to a scaler group copies the last one, so the two share their scaler and each warns "Element N holds the same scaler, so an edit here changes it too"; **Make a separate copy** on one clears neither warning, nor does it on the other after. Fixed: Unity's list grows an array by copying its last element, the objects it holds by reference with it. A list among a kind's fields, as a Group's members, adds a copy of its last element with objects of its own now, and one of objects held by reference an empty one, as ED-64's lists do; and a shared scaler's or condition's warning looks again as the asset changes, so a separate copy clears both elements' (`ForgeLists.cs`, `ScalerFields.cs`, `ScalerDrawer.cs`, `ConditionDrawer.cs`) | Bug | verified |
 | FN-3 | An entity identity's Items section has two Scalable whole-number fields with no label | UI | open |
 | FN-4 | The Standard Worker Group drawer shows its Name field, which it shouldn't | UI | open |
 | FN-5 | The rows of a **Used By** section draw their labels centered; they belong at the left | UI | open |
@@ -1351,6 +1351,17 @@ GAS-4 with GAS-5, PC-6, and TS-I with PC-5.
 ## Log
 
 Record baselines, gate results and notable decisions here, newest first.
+
+- 2026-11-13, **FN-2: a Group's new member, and a scaler two elements share.** The user's second note: adding a member
+  to a scaler Group copied the last one, so the two shared their scaler and each warned of it, and Make a Separate Copy
+  on one cleared neither warning, nor on the other after. Unity's list grows an array by copying its last element, and
+  the objects it holds by reference with it, so the new member held the last one's scaler. A list among a kind's
+  fields, as a Group's members or an All Of's conditions, now adds through `ForgeLists.AddsOwnCopies`: a copy of its
+  last element with objects of its own, or, where its elements are themselves objects held by reference, an empty one,
+  as ED-64's lists do. The warnings were drawn once and looked at nothing after: a scaler's, or a condition's, now looks
+  again as the asset changes, so the copy clears both, the element copied and the one it shared with.
+  - Red first: FN_2's two tests against HEAD's editor: the new member held the last one's scaler, and the warning of the element a scaler was shared with stayed after the copy. A submit sent to the list's + doesn't reach it inside a number field in a test's panel, so the test presses it as the list does, through its add
+  - Gates, for FN-2 to FN-7 together, on a frozen snapshot of the package: EditMode 866 of 871, ED-61 red from the working tree's lifecycle change and four inspector-undo cases on Unity's IsInSyncWithParentSerializedObject assertion, the known intermittent, which passed run again: the smoke and undo suites 87 of 87, on the working tree and with HEAD's FN-2 files alike; PlayMode 1814 of 1835, 8 skipped, the 12 known reds and the Battle scene's area-hit flake. No golden run: the changes are the editor's alone.
 
 - 2026-11-13, **FN-1: a number field that reads a scaler it hasn't got.** The user's first note: a Scalable number field
   warned that it needed a scaler, with a hint to set it to Constant, when it was already Constant. The warning was right

@@ -398,6 +398,9 @@ namespace FarEmerald.PlayForge.Extended.Editor
                     if (property == null) continue;
                     var field = new PropertyField(property) { name = info.Name };
                     field.BindProperty(property);
+                    // A list's + gives its new element objects of its own, as a Group's member its scaler (FN-2)
+                    if (property.isArray && property.propertyType == SerializedPropertyType.Generic)
+                        ForgeLists.AddsOwnCopies(field, property.serializedObject, property.propertyPath);
                     // Every condition a field carries must hold for it to show (FEAT-29)
                     var when = info.GetCustomAttributes<ForgeShowWhenAttribute>().ToArray();
                     if (when.Length == 0)

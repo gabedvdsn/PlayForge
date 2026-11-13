@@ -728,6 +728,11 @@ tracks each fix below by its ID.
   Asking whether its sequence was paused took 24 bytes a frame.
 
 ### Fixed
+- A scaler Group's + adds a member with a scaler of its own, a copy of the last member's; the two shared one, so an edit
+  to either changed both. A list among any kind's fields adds as a Group's does, or, as a list of objects held by
+  reference, an empty element (FN-2).
+- Make a Separate Copy clears the warning of both elements that shared a scaler or a condition; it cleared neither, and
+  pressed on the other after, it did nothing (FN-2).
 - A number field that reads a scaler it hasn't got, and so reads 0, is made a Constant by its warning's **Make It
   Constant** button, or its menu's Make Constant, keeping its number; the warning told the author to choose Constant,
   which the field already showed, and choosing it again changed nothing (FN-1).

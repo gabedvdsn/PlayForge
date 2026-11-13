@@ -36,6 +36,7 @@ namespace FarEmerald.PlayForge.Extended.Editor
             Type shownType = null;
             bool mixedKinds = false;
             bool built = false;
+            int sharedWith = -1;
             Label range = null;
 
             void Draw()
@@ -75,7 +76,7 @@ namespace FarEmerald.PlayForge.Extended.Editor
                 // A scaler another list element shares, after Unity's array "+" copied its reference id, says so, with a
                 // button that gives this element its own copy. Building the drawer cloned it, so drawing changed it (ED-34)
                 // In a multiple selection, the first selected asset whose element shares one
-                int sharedWith = EachAsset.Of(property).Select(FindSharedSibling).Where(index => index >= 0).DefaultIfEmpty(-1).First();
+                sharedWith = SharedWith(property);
                 if (sharedWith >= 0)
                 {
                     var note = new HelpBox($"Element {sharedWith} holds the same scaler, so an edit here changes it too.",
@@ -130,12 +131,18 @@ namespace FarEmerald.PlayForge.Extended.Editor
             {
                 if (!ScalerFields.Alive(property)) return;
                 bool mixed = EachAsset.Differ(property, ScalerFields.KindOf);
-                if (!built || mixed != mixedKinds || ScalerFields.KindOf(property) != shownType) Draw();
+                // A copy of its own, given to this element or to the one it shared with, draws it again, so neither warns
+                // on of a scaler they no longer share (FN-2)
+                if (!built || mixed != mixedKinds || ScalerFields.KindOf(property) != shownType || SharedWith(property) != sharedWith) Draw();
                 else Show();
             });
             Draw();
             return root;
         }
+
+        // The element of its list whose object this one shares, in the first selected asset whose element shares one, or -1
+        internal static int SharedWith(SerializedProperty property) =>
+            EachAsset.Of(property).Select(FindSharedSibling).Where(index => index >= 0).DefaultIfEmpty(-1).First();
 
         /// <summary>
         /// Finds another element of the same list whose scaler has this property's managed-reference id. Unity's array
@@ -181,12 +188,7 @@ namespace FarEmerald.PlayForge.Extended.Editor
         internal static void GiveOwnCopy(SerializedProperty property) =>
             EachAsset.Write(property, own =>
             {
-                if (FindSharedSibling(own) < 0) return;
-                var current = own.managedReferenceValue;
-                if (current == null) return;
-                var clone = Activator.CreateInstance(current.GetType());
-                EditorJsonUtility.FromJsonOverwrite(EditorJsonUtility.ToJson(current), clone);
-                own.managedReferenceValue = clone;
+                if (FindSharedSibling(own) >= 0) ForgeLists.CopyOwn(own);
             });
     }
 }
