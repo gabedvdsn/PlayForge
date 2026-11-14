@@ -161,7 +161,8 @@ passes it in, and one effect serves every strength.
     already holds its target, under TargetReal, or its point, under Position, as an AI's does, takes it with no
     click, unless the task's **Take Target From Data** is off; a handed target the task can't take, out of range
     or failing its requirements, fails the targeting at once.
-  - **Auto targeting** (Auto Target, Auto Target By Affinity) takes the entities within its **Range**, sorted by its
+  - **Auto targeting** (Auto Target, Auto Target By Affinity) takes the entities within its **Range**, or its ability's
+    Cast Range where it has one, the range measured from the caster and **Use Cast Range** on, sorted by its
     **Mode**, up to **Max Targets**, or every one at 0. Each is a target of the activation, and the first, the nearest
     for Nearest, is its primary. Apply Effects and Apply/Remove Effects reach each target, in the project's resolve
     order unless their **Use Resolve Order** is off (TW-31, [EFFECTS.md](EFFECTS.md#resolve-order)), so an area ability
@@ -268,6 +269,18 @@ An ability's components are features it carries, each a class with hooks into it
 A component of your own derives from `AbstractAbilityComponent` and overrides the hooks it needs, each a no-op
 otherwise. It's the ability's, shared by everything that holds it, so what it keeps for one entity's ability it keeps through its
 context: `ctx.GetState<T>(this)`.
+
+### Cast Range
+
+A **Cast Range** component is the one range the ability has (FN-14): how far from its caster its target or its point
+may be, its **Range** a number that can scale by level, measured along the ground unless **Flat** is off; 0 reaches
+anywhere. An activation handed a target or a point beyond it, under TargetReal or Position, as an AI's is, is refused
+as **Range**, so nothing of it is paid and an AI can walk closer and ask again; targeting that picks a target beyond it,
+whichever task picked it, ends the activation before its stages. The auto-targeting tasks measured from the caster, and
+Select GAS Target In Range, search within it where their **Use Cast Range** is on, as it is by default, their own range
+set aside. The Creator Lab's units attack from their attack's Cast Range, and its bots cast an ability once their foe is
+within its Cast Range, where it has one ([CREATOR_LAB.md](CREATOR_LAB.md)). Code reads it through `ForgeCastRange`. An
+ability holds one at most.
 
 ### Charges
 

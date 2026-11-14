@@ -7,6 +7,11 @@ tracks each fix below by its ID.
 ## [Unreleased]
 
 ### Added
+- A Cast Range component on abilities, the one range an ability has, which scales by level: an activation handed a
+  target or a point beyond it is refused as `EActivationRefusal.Range`, targeting that picks one beyond it ends the
+  activation, the auto-targeting tasks and Select GAS Target In Range search within it under their Use Cast Range, and
+  the Creator Lab's units and bots read it. `ForgeCastRange` reads it, and `AbilitySpec.Read` reads any number of an
+  ability at its level (FN-14).
 - Components: each effect, ability, entity and item has a Components section, above Workers, whose list's + adds a
   component, a class with hooks into its asset's life: an effect's Land, Tick, Hit and End; an ability's Granted,
   Removed, CanStart, Start, Commit and End; an entity's Register, Death, Revive and End; an item's Given, Equipped,

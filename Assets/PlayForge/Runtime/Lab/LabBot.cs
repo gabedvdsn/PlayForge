@@ -11,7 +11,7 @@ namespace FarEmerald.PlayForge.Lab
     /// <para>
     /// Its order is its entity's Local Data under the rules' cast order key, as "W Q E", the letters its casts in its
     /// entity's order; with none, each in turn. An ability's moment is its Local Data under the rules' cast-when key:
-    /// InRange, the default, within its Local Data reach, 0 for anywhere; Hurt, below 60% health; Low, below 35%, cast away
+    /// InRange, the default, within its Cast Range, or else its Local Data reach, 0 for anywhere; Hurt, below 60% health; Low, below 35%, cast away
     /// from its foe, as an escape; Stunned, while something stops it; FoeLow, with its foe below half.
     /// </para>
     /// </summary>
@@ -129,8 +129,9 @@ namespace FarEmerald.PlayForge.Lab
             var rules = unit.Rules;
             string when = rules != null && rules.CastWhenKey.IsValid && ability.TryGetLocalData(rules.CastWhenKey, out var whenData)
                 ? whenData.stringValue : "InRange";
-            float reach = rules != null && rules.ReachKey.IsValid && ability.TryGetLocalData(rules.ReachKey, out var reachData)
-                ? reachData.floatValue : 0f;
+            // Its reach: its Cast Range where it has one (FN-14), else its Local Data's, 0 for anywhere
+            float reach = ForgeCastRange.TryRead(unit.Gas, ability, out float cast) ? cast
+                : rules != null && rules.ReachKey.IsValid && ability.TryGetLocalData(rules.ReachKey, out var reachData) ? reachData.floatValue : 0f;
             bool inReach = reach <= 0f || unit.DistanceTo(foe) <= reach;
             away = when == "Low";
             return when switch

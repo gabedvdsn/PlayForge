@@ -113,13 +113,20 @@ namespace FarEmerald.PlayForge
         /// What an attribute cost comes to for an activation, at the ability's level, read in the activation's data where
         /// it's given; never under 0 (TW-29).
         /// </summary>
-        public float AmountOf(AttributeCost cost, ProcessDataPacket data = null)
+        public float AmountOf(AttributeCost cost, ProcessDataPacket data = null) =>
+            cost?.Amount == null ? 0f : Mathf.Max(0f, Read(cost.Amount, data));
+
+        /// <summary>
+        /// What a number of the ability comes to, at its level, read in an activation's data where it's given, as its
+        /// Cast Range (FN-14) and its attribute costs read; 0 for none.
+        /// </summary>
+        public float Read(ScalableFloat number, ProcessDataPacket data = null)
         {
-            if (cost?.Amount == null) return 0f;
+            if (number == null) return 0f;
             var context = data is AbilityDataPacket activation && ReferenceEquals(activation.EffectOrigin, this)
                 ? NumberContext.Of(data)
                 : new NumberContext(Source, null, GetLevel(), true, this, null, data?.SetByCallerMagnitudes, null, data);
-            return Mathf.Max(0f, cost.Amount.Evaluate(context));
+            return number.Evaluate(context);
         }
 
         /// <summary>
@@ -214,7 +221,7 @@ namespace FarEmerald.PlayForge
                 {
                     if (component?.CanStart(new AbilityComponentContext(this, data)) is not { } reason) continue;
                     rule = reason;
-                    return EActivationRefusal.Rule;
+                    return component is CastRangeAbilityComponent ? EActivationRefusal.Range : EActivationRefusal.Rule;
                 }
             }
             return EActivationRefusal.None;

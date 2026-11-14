@@ -30,6 +30,10 @@ namespace FarEmerald.PlayForge
         [Tooltip("When true, the range check ignores the Y axis (horizontal distance only)")]
         public bool FlattenRangeCheck;
 
+        [Tooltip("Its range is its ability's Cast Range, flat as the Cast Range says, where the ability has one; off, its own " +
+                 "Max Target Range (FN-14)")]
+        public bool UseCastRange = true;
+
         [Header("Behaviour")]
         [Tooltip("When true, an invalid click re-prompts instead of failing")]
         public bool RetryOnInvalid = true;
@@ -62,7 +66,7 @@ namespace FarEmerald.PlayForge
             // (GAS-66)
             if (TakeTargetFromData && TryGetDataTarget(data, out var given))
             {
-                if (TargetIsValid(given) && IsWithinRange(ownerPacket, given)) data.SetTargetingPacket(Tags.TARGET, given.GetTargetingPacket());
+                if (TargetIsValid(given) && IsWithinRange(data, ownerPacket, given)) data.SetTargetingPacket(Tags.TARGET, given.GetTargetingPacket());
                 else WhenTargetingInvalid(data);
                 return;
             }
@@ -85,7 +89,7 @@ namespace FarEmerald.PlayForge
                 }
 
                 // Range check
-                if (!IsWithinRange(ownerPacket, target))
+                if (!IsWithinRange(data, ownerPacket, target))
                 {
                     if (RetryOnInvalid) continue;
                     WhenTargetingInvalid(data);
@@ -97,15 +101,20 @@ namespace FarEmerald.PlayForge
             }
         }
 
-        private bool IsWithinRange(AbstractTargetingPacket caster, ITarget target)
+        // Within its range: its ability's Cast Range where it reads it (FN-14), else its own
+        private bool IsWithinRange(AbilityDataPacket data, AbstractTargetingPacket caster, ITarget target)
         {
             var targetTransform = target.GetTargetingPacket();
             if (targetTransform == null) return false;
 
+            float castRange = 0f;
+            bool castFlat = false;
+            bool cast = UseCastRange && ForgeCastRange.TryRead(data, out castRange, out castFlat);
+            float range = cast ? castRange : MaxTargetRange;
             var delta = targetTransform.position - caster.position;
-            if (FlattenRangeCheck) delta.y = 0f;
+            if (cast ? castFlat : FlattenRangeCheck) delta.y = 0f;
 
-            return delta.sqrMagnitude <= MaxTargetRange * MaxTargetRange;
+            return delta.sqrMagnitude <= range * range;
         }
     }
 }

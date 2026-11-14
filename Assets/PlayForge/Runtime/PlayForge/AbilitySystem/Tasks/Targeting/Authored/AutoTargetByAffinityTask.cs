@@ -35,6 +35,10 @@ namespace FarEmerald.PlayForge
         [Tooltip("Detection radius from the caster (0 = infinite)")]
         public float Range = 20f;
 
+        [Tooltip("Searches within its ability's Cast Range, where the ability has one and its range is measured from the " +
+                 "caster; off, within its own Range (FN-14)")]
+        public bool UseCastRange = true;
+
         [Tooltip("Layers to detect targets on, where it uses physics")]
         public LayerMask DetectionLayers = ~0;
 
@@ -68,7 +72,7 @@ namespace FarEmerald.PlayForge
 
             // Measured from the caster, the activation's target or its point (TW-10)
             var centre = CentreOf(data, origin);
-            var candidates = GatherCandidates(centre, owner);
+            var candidates = GatherCandidates(centre, owner, RangeFor(data));
             var filtered = FilterByAffinity(candidates, ownerAffiliation);
             var valid = FilterValid(filtered);
             var sorted = SortCandidates(valid, centre);
@@ -87,15 +91,19 @@ namespace FarEmerald.PlayForge
             return UniTask.CompletedTask;
         }
 
-        private List<ITarget> GatherCandidates(Vector3? centre, ISource owner)
+        private List<ITarget> GatherCandidates(Vector3? centre, ISource owner, float range)
         {
             // Every live entity, on both hubs, by its position, with no collider needed; physics where it asks, on its
             // layers (TW-10). Its caster where it asks: it was always left out
             var results = new List<ITarget>();
-            if (UsePhysics) ForgeEntities.Around(centre, Range, DetectionLayers, owner, IncludeSelf, results);
-            else ForgeEntities.Within(centre ?? Vector3.zero, centre.HasValue ? Range : 0f, Flat, results, owner, IncludeSelf);
+            if (UsePhysics) ForgeEntities.Around(centre, range, DetectionLayers, owner, IncludeSelf, results);
+            else ForgeEntities.Within(centre ?? Vector3.zero, centre.HasValue ? range : 0f, Flat, results, owner, IncludeSelf);
             return results;
         }
+
+        // How far it searches: its ability's Cast Range, measured from the caster, where it reads it; else its own (FN-14)
+        private float RangeFor(AbilityDataPacket data) =>
+            UseCastRange && Around == EAreaCentre.Caster && ForgeCastRange.TryRead(data, out float cast) ? cast : Range;
 
         // Where its range is measured from: the caster, the activation's target, or its point (TW-10)
         private Vector3? CentreOf(AbilityDataPacket data, AbstractTargetingPacket caster) => Around switch

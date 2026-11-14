@@ -272,8 +272,12 @@ namespace FarEmerald.PlayForge.Lab
         public float LocalFloat(Tag key, float fallback) =>
             Gas != null && key.IsValid && Gas.TryGetLocalData(key, out var data) ? data.floatValue : fallback;
 
-        /// <summary>How near it must stand to attack.</summary>
-        public float AttackRange => Rules == null ? 2f : LocalFloat(Rules.AttackRangeKey, Rules.AttackRange);
+        /// <summary>
+        /// How near it must stand to attack: its attack's Cast Range where it has one (FN-14), else its Local Data's or its
+        /// rules'.
+        /// </summary>
+        public float AttackRange => AttackAbility is { } attack && ForgeCastRange.TryRead(Gas, attack, out float cast) ? cast
+            : Rules == null ? 2f : LocalFloat(Rules.AttackRangeKey, Rules.AttackRange);
 
         /// <summary>
         /// Whether it can see and target another: an ally always, a foe unless that one is hidden or shielded, as an

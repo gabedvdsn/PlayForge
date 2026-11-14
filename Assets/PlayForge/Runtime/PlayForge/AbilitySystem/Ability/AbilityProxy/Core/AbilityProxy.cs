@@ -187,6 +187,13 @@ namespace FarEmerald.PlayForge
             {
                 throw new OperationCanceledException();
             }
+
+            // A target its targeting picked beyond its Cast Range, whichever task picked it, ends it here (FN-14)
+            if (ForgeCastRange.PickedBeyond(implicitData))
+            {
+                implicitData.TargetingFailed = true;
+                throw new OperationCanceledException();
+            }
         }
 
         /// <summary>

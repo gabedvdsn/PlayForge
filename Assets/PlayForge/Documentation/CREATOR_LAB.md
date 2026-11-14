@@ -74,7 +74,8 @@ moments are its rules':
 - **Cast When Key**: the key for when it casts an ability: **InRange** (the default), **Hurt** (below 60% health),
   **Low** (below 35%, away from its foe, as an escape), **Stunned** (while something stops it) or **FoeLow** (its foe
   below half).
-- **Reach Key**: the key for an ability's reach, 0 for anywhere.
+- **Reach Key**: the key for an ability's reach, 0 for anywhere, where it has no Cast Range; one that has reaches as far
+  as its Cast Range (FN-14).
 
 Low on health, a bot backs off a moment once in a while. The Demo's AI hero is a bot, its roster giving the keys.
 
@@ -114,7 +115,8 @@ Movement Speed (or Move Speed), and walks a unit without a speed at 4 a second. 
 - **Health** and **Movement Speed**, or **Walk Speed** where a unit has none. Left empty, each is the project's.
 - **Stops**: tags that stop a unit moving, as Stunned. **Hides**: tags under which the other side can't see or target
   it, as Invisible. **Shields**: tags under which no one can target it.
-- **Attack Range Key**: the Local Data key a unit's attack range is under, or **Attack Range** for every unit.
+- **Attack Range Key**: the Local Data key a unit's attack range is under, or **Attack Range** for every unit; a unit
+  whose attack has a Cast Range attacks from as far as it reaches (FN-14).
 - **Attack Slot**: which of an entity's starting abilities is its attack, from 0, or −1 for none.
 - **Driver**: the project's **Lab Driver**, which the unit you control is ordered about through ([Your unit](#your-unit)).
 

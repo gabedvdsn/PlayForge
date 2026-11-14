@@ -56,6 +56,11 @@ namespace FarEmerald.PlayForge
 
         /// <summary>A crowd control rule its caster is under stops it, as a stun stops every ability (TW-16).</summary>
         CrowdControl,
+
+        /// <summary>
+        /// The target or the point it was handed lies beyond its Cast Range (FN-14), so an AI can walk closer and ask again.
+        /// </summary>
+        Range,
     }
 
     /// <summary>A refused activation: the ability, its slot, why, and for a caster check, which (FEAT-17).</summary>
