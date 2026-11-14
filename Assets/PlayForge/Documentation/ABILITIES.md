@@ -172,8 +172,12 @@ passes it in, and one effect serves every strength.
     Each entity is found by its position, on either hub, with no collider needed (TW-10). **Around** says where the
     range is measured from: the caster, the activation's target (as an AI hands it, or a task before it in a
     Composite picks it), or its point; **Flat**, on by default, measures along the ground, and off, a sphere. **Use
-    Physics** finds entities with physics instead, by collider on its **Detection Layers**, as it did, and a runtime
-    entity by its position. Auto Target By Affinity's **Include Self** takes its caster where it's of the sides it takes.
+    Physics** finds entities with physics instead, by collider on its **Detection Layers**, which show under it alone,
+    as it did, and a runtime entity by its position. Auto Target By Affinity's **Include Self** takes its caster where
+    it's of the sides it takes.
+  - A targeting task's numbers, as its **Range**, its **Max Targets**, a pointer task's **Max Distance** and an
+    attribute condition's value, are numbers that can scale by level or read an attribute, read as its activation
+    starts, at its ability's level (FN-20). A pointer's **Mouse Button** picks one of three, so it stays a choice.
 - **Use Implicit Targeting** (default on): before targeting, record the caster as the activation's target, under
   **Implicit Tag** (default `Target`), which shows while this is on. A targeting task that sets a target replaces it.
 

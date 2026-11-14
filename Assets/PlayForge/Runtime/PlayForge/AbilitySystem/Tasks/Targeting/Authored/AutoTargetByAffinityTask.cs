@@ -20,26 +20,24 @@ namespace FarEmerald.PlayForge
     [Serializable]
     public class AutoTargetByAffinityTask : AbstractGasTargetingAbilityTask
     {
-        [Header("Affiliation")]
         [Tooltip("Which affiliations to include relative to the caster")]
         public EAffinityFilter AffinityFilter = EAffinityFilter.Enemies;
 
-        [Header("Selection")]
         [Tooltip("How targets are selected and sorted")]
         public EAutoTargetMode Mode = EAutoTargetMode.Nearest;
 
         [Tooltip("Maximum number of targets to select (0 = all matching)")]
-        public int MaxTargets = 1;
+        [NumberMin(0f)] public ScalableInt MaxTargets = 1;
 
-        [Header("Spatial")]
         [Tooltip("Detection radius from the caster (0 = infinite)")]
-        public float Range = 20f;
+        [NumberMin(0f)] public ScalableFloat Range = 20f;
 
         [Tooltip("Searches within its ability's Cast Range, where the ability has one and its range is measured from the " +
                  "caster; off, within its own Range (FN-14)")]
         public bool UseCastRange = true;
 
         [Tooltip("Layers to detect targets on, where it uses physics")]
+        [ShownWhen(nameof(UsePhysics))]
         public LayerMask DetectionLayers = ~0;
 
         [Tooltip("Where its range is measured from: the caster; the activation's target, as an AI hands it or a task before " +
@@ -56,7 +54,6 @@ namespace FarEmerald.PlayForge
         [Tooltip("Whether the caster is a candidate, where it's of the sides it takes (TW-10)")]
         public bool IncludeSelf;
 
-        [Header("Filters")]
         [Tooltip("When true, dead targets are excluded")]
         public bool ExcludeDead = true;
 
@@ -76,7 +73,7 @@ namespace FarEmerald.PlayForge
             var filtered = FilterByAffinity(candidates, ownerAffiliation);
             var valid = FilterValid(filtered);
             var sorted = SortCandidates(valid, centre);
-            var selected = SelectTargets(sorted);
+            var selected = SelectTargets(sorted, Read(MaxTargets, data));
 
             if (selected.Count == 0)
             {
@@ -103,7 +100,7 @@ namespace FarEmerald.PlayForge
 
         // How far it searches: its ability's Cast Range, measured from the caster, where it reads it; else its own (FN-14)
         private float RangeFor(AbilityDataPacket data) =>
-            UseCastRange && Around == EAreaCentre.Caster && ForgeCastRange.TryRead(data, out float cast) ? cast : Range;
+            UseCastRange && Around == EAreaCentre.Caster && ForgeCastRange.TryRead(data, out float cast) ? cast : Read(Range, data);
 
         // Where its range is measured from: the caster, the activation's target, or its point (TW-10)
         private Vector3? CentreOf(AbilityDataPacket data, AbstractTargetingPacket caster) => Around switch
@@ -165,10 +162,10 @@ namespace FarEmerald.PlayForge
             };
         }
 
-        private List<ITarget> SelectTargets(List<ITarget> sorted)
+        private static List<ITarget> SelectTargets(List<ITarget> sorted, int most)
         {
-            if (MaxTargets <= 0 || MaxTargets >= sorted.Count) return sorted;
-            return sorted.GetRange(0, MaxTargets);
+            if (most <= 0 || most >= sorted.Count) return sorted;
+            return sorted.GetRange(0, most);
         }
 
         private static bool HasOverlap(List<Tag> a, List<Tag> b)

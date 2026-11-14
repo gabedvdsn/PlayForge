@@ -148,6 +148,8 @@ MonoBehaviour:
   references:
     version: 2
     RefIds:
+    - rid: -2
+      type: {class: , ns: , asm: }
     - rid: 2403794261189067129
       type: {class: CooldownValidation, ns: FarEmerald.PlayForge, asm: FarEmerald.PlayForge}
       data: 
@@ -184,8 +186,17 @@ MonoBehaviour:
           RequireTags: []
         AffinityFilter: 1
         Mode: 3
-        MaxTargets: 5
-        Range: 4
+        MaxTargets:
+          Magnitude: 5
+          RealMagnitude: 2
+          Scaler:
+            rid: -2
+          Rounding: 0
+        Range:
+          Magnitude: 4
+          RealMagnitude: 2
+          Scaler:
+            rid: -2
         DetectionLayers:
           serializedVersion: 2
           m_Bits: 4294967295

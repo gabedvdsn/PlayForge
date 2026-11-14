@@ -16,16 +16,14 @@ namespace FarEmerald.PlayForge
     [Serializable]
     public class SelectGasTargetInRangeTask : AbstractGasTargetingAbilityTask
     {
-        [Header("Raycast Settings")]
         [Tooltip("Layers to raycast against when selecting targets")]
         public LayerMask RaycastLayers = ~0;
 
         [Tooltip("Maximum raycast distance for the camera ray (0 = infinite)")]
-        public float MaxRayDistance = Mathf.Infinity;
+        [NumberMin(0f)] public ScalableFloat MaxRayDistance = 0f;
 
-        [Header("Range")]
         [Tooltip("Maximum allowed distance from caster to selected target")]
-        public float MaxTargetRange = 10f;
+        [NumberMin(0f)] public ScalableFloat MaxTargetRange = 10f;
 
         [Tooltip("When true, the range check ignores the Y axis (horizontal distance only)")]
         public bool FlattenRangeCheck;
@@ -34,7 +32,6 @@ namespace FarEmerald.PlayForge
                  "Max Target Range (FN-14)")]
         public bool UseCastRange = true;
 
-        [Header("Behaviour")]
         [Tooltip("When true, an invalid click re-prompts instead of failing")]
         public bool RetryOnInvalid = true;
 
@@ -50,7 +47,8 @@ namespace FarEmerald.PlayForge
 
         public override async UniTask Activate(AbilityDataPacket data, CancellationToken token)
         {
-            var maxDist = MaxRayDistance > 0 ? MaxRayDistance : Mathf.Infinity;
+            float reach = Read(MaxRayDistance, data);
+            var maxDist = reach > 0 ? reach : Mathf.Infinity;
             var owner = data.EffectOrigin.GetSource();
             // From the caster's targeting packet, which every caster has. Through its transform, a runtime caster, which
             // has none, always failed (GAS-38)
@@ -110,7 +108,7 @@ namespace FarEmerald.PlayForge
             float castRange = 0f;
             bool castFlat = false;
             bool cast = UseCastRange && ForgeCastRange.TryRead(data, out castRange, out castFlat);
-            float range = cast ? castRange : MaxTargetRange;
+            float range = cast ? castRange : Read(MaxTargetRange, data);
             var delta = targetTransform.position - caster.position;
             if (cast ? castFlat : FlattenRangeCheck) delta.y = 0f;
 

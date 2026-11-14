@@ -13,14 +13,12 @@ namespace FarEmerald.PlayForge
     [Serializable]
     public class SelectPositionTargetTask : AbstractTargetingAbilityTask
     {
-        [Header("Raycast Settings")]
         [Tooltip("Layers to raycast against when selecting positions")]
         public LayerMask RaycastLayers = ~0;
 
-        [Tooltip("Maximum raycast distance (0 = infinite)")]
-        public float MaxDistance = Mathf.Infinity;
+        [Tooltip("How far its pointer's ray reaches; 0, any distance")]
+        [NumberMin(0f)] public ScalableFloat MaxDistance = 0f;
 
-        [Header("Behaviour")]
         [Tooltip("When true, an invalid click re-prompts for another click instead of failing")]
         public bool RetryOnInvalid;
 
@@ -36,7 +34,8 @@ namespace FarEmerald.PlayForge
 
         public override async UniTask Activate(AbilityDataPacket data, CancellationToken token)
         {
-            var maxDist = MaxDistance > 0 ? MaxDistance : Mathf.Infinity;
+            float reach = Read(MaxDistance, data);
+            var maxDist = reach > 0 ? reach : Mathf.Infinity;
 
             // Handed its point, as an AI's activation hands it, it takes it with no click (GAS-66)
             if (TakeTargetFromData && TryGetDataPoint(data, out var given))

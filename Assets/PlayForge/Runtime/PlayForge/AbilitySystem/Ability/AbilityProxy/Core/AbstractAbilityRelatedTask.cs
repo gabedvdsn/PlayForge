@@ -20,6 +20,17 @@ namespace FarEmerald.PlayForge
         /// </summary>
         public abstract bool IsCriticalSection { get; }
         
+        /// <summary>
+        /// A number of the task, read for its activation as it runs: at its ability's level, against its caster, its target
+        /// and its data (FN-20). None reads 0.
+        /// </summary>
+        protected static float Read(ScalableFloat number, AbilityDataPacket data) =>
+            number == null ? 0f : number.Evaluate(NumberContext.Of(data));
+
+        /// <summary>A whole number of the task, read for its activation, as <see cref="Read(ScalableFloat, AbilityDataPacket)"/> reads.</summary>
+        protected static int Read(ScalableInt number, AbilityDataPacket data) =>
+            number == null ? 0 : number.Evaluate(NumberContext.Of(data));
+
         #region Task Methods
         
         public virtual void Prepare(AbilityDataPacket data) { }

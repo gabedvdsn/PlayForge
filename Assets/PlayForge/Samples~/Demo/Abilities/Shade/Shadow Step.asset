@@ -184,6 +184,8 @@ MonoBehaviour:
   references:
     version: 2
     RefIds:
+    - rid: -2
+      type: {class: , ns: , asm: }
     - rid: 2403794261189066996
       type: {class: CooldownValidation, ns: FarEmerald.PlayForge, asm: FarEmerald.PlayForge}
       data: 
@@ -221,8 +223,16 @@ MonoBehaviour:
         RaycastLayers:
           serializedVersion: 2
           m_Bits: 4294967295
-        MaxRayDistance: 300
-        MaxTargetRange: 8
+        MaxRayDistance:
+          Magnitude: 300
+          RealMagnitude: 2
+          Scaler:
+            rid: -2
+        MaxTargetRange:
+          Magnitude: 8
+          RealMagnitude: 2
+          Scaler:
+            rid: -2
         FlattenRangeCheck: 1
         RetryOnInvalid: 1
         MouseButton: 0

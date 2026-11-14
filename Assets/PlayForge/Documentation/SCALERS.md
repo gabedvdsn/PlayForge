@@ -232,6 +232,10 @@ public ScalableFloat Range = 20f;
   0% to 100%, and a whole-number field takes the whole numbers inside the limits. They limit the constant alone: a
   number of another kind is worked out as the game runs, so where what it reads must stay inside limits, give it the
   Clamped kind or clamp what the code reads.
+- In a kind of your own, as an ability task, a targeting task or a scaler, `[ShownWhen(nameof(UsePhysics))]` shows a
+  field only while a toggle of the same object is on, and `[ShownWhen(nameof(Mode), (int)EMode.Area)]` only while an
+  enum is one of the values, as a targeting task's Detection Layers show under Use Physics (FN-20). A task reads its
+  numbers with `Read(number, data)`, at its ability's level.
 - Unity's own `[Min]` and `[Range]` don't work on a number field: Unity gives the field to that attribute's drawer,
   which draws "Use Range with float or int" where the number was. As scripts load, the console names each number
   field that has one, with the attribute to use in its place.

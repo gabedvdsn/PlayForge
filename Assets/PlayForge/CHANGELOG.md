@@ -7,6 +7,8 @@ tracks each fix below by its ID.
 ## [Unreleased]
 
 ### Added
+- `[ShownWhen]`: a field of a kind, as a task's or a scaler's, shown only while a toggle of its object is on or an enum
+  is one of the values given; and `Read(number, data)` for a task's numbers, at its ability's level (FN-20).
 - An effect's **Inherit From Origin** and **Origin Texture**: its icon is the texture of its origin, the ability, item or
   entity that applied it, under a tag, `Primary` to start, or its own where the origin has none. `GameplayEffectSpec.GetIcon()`
   reads it, and `IHasTextures` gives an origin's textures (FN-25).
@@ -473,6 +475,10 @@ tracks each fix below by its ID.
   page, through one table of links in the editor.
 
 ### Changed
+- The targeting tasks have no headers between their fields, and their numbers are Scalable, read at the ability's level:
+  Auto Target's and Auto Target By Affinity's Range and Max Targets, each pointer task's Max Distance, Select Direction's
+  Min Distance, Select GAS Target In Range's Max Ray Distance and Max Target Range, and an attribute condition's value.
+  A pointer task's Max Distance is 0, any distance, to start. Detection Layers show under Use Physics alone (FN-20).
 - Fields that don't apply are hidden: an ability's Buffer Window and Buffer Priority but under Queue or its entity's
   policy, an effect's Proc Coefficient but under Own Proc Coefficient, a roll but for a chance that can miss, and a
   roll's Luck but under Own Luck. A roll draws in a drawer of its own, `ChanceRollDrawer` (FN-23).

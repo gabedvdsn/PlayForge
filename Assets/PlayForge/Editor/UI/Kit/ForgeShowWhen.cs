@@ -62,6 +62,20 @@ namespace FarEmerald.PlayForge.Extended.Editor
             return number.IsConstant && number.Constant >= 1f;
         }
 
+        /// <summary>
+        /// Whether a field says another applies, as <see cref="ShownWhenAttribute"/> reads it: a toggle that's on, or, given
+        /// values, an enum or a whole number that's one of them; null where a selection's values differ or there's no such
+        /// field.
+        /// </summary>
+        public static bool? Says(SerializedProperty field, int[] values)
+        {
+            if (field == null || field.hasMultipleDifferentValues) return null;
+            if (values == null || values.Length == 0)
+                return field.propertyType == SerializedPropertyType.Boolean ? field.boolValue : null;
+            if (field.propertyType is not (SerializedPropertyType.Enum or SerializedPropertyType.Integer)) return null;
+            return System.Array.IndexOf(values, field.intValue) >= 0;
+        }
+
         /// <summary>Whether a chance's roll matters: it can miss. Null where that can't be told, which shows the roll.</summary>
         public static bool? Rolls(SerializedProperty chance) => CantMiss(chance) is { } sure ? !sure : null;
     }

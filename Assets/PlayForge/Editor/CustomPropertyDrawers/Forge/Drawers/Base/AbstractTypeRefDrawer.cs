@@ -197,13 +197,25 @@ namespace FarEmerald.PlayForge.Extended.Editor
                     do
                     {
                         if (SerializedProperty.EqualContents(child, end)) break;
-                        fields.Add(new PropertyField(child.Copy()) { name = child.name });
+                        var each = new PropertyField(child.Copy()) { name = child.name };
+                        fields.Add(each);
+                        ShownWhen(each, prop, child.name);
                         count++;
                     } while (child.NextVisible(false));
                 }
             }
             fields.EnableInClassList(HiddenClass, count == 0);
             if (count > 0) fields.Bind(prop.serializedObject);
+        }
+
+        // A field of the kind's object under [ShownWhen], shown only while the field it reads says so (FN-20)
+        private static void ShownWhen(VisualElement each, SerializedProperty prop, string field)
+        {
+            var info = prop.managedReferenceValue?.GetType().GetField(field,
+                System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.NonPublic);
+            if (info == null || System.Attribute.GetCustomAttribute(info, typeof(ShownWhenAttribute)) is not ShownWhenAttribute when) return;
+            var path = $"{prop.propertyPath}.{when.Field}";
+            ForgeShowWhen.Track(each, prop.serializedObject, serialized => ForgeShowWhen.Says(serialized.FindProperty(path), when.Values));
         }
 
         /// <summary>Whether the field's kind has fields of its own to show.</summary>

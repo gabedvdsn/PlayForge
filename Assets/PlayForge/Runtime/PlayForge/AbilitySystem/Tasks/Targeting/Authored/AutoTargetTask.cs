@@ -17,25 +17,24 @@ namespace FarEmerald.PlayForge
     [Serializable]
     public class AutoTargetTask : AbstractGasTargetingAbilityTask
     {
-        [Header("Selection")]
         [Tooltip("How targets are selected and sorted")]
         public EAutoTargetMode Mode = EAutoTargetMode.Nearest;
 
         [Tooltip("Maximum number of targets to select (0 = all matching)")]
-        public int MaxTargets = 1;
+        [NumberMin(0f)] public ScalableInt MaxTargets = 1;
 
         [Tooltip("Whether to include the caster as a candidate")]
         public bool IncludeSelf;
 
-        [Header("Spatial")]
         [Tooltip("Detection radius from the caster (0 = infinite, uses FindObjectsByType)")]
-        public float Range = 20f;
+        [NumberMin(0f)] public ScalableFloat Range = 20f;
 
         [Tooltip("Searches within its ability's Cast Range, where the ability has one and its range is measured from the " +
                  "caster; off, within its own Range (FN-14)")]
         public bool UseCastRange = true;
 
         [Tooltip("Layers to detect targets on, where it uses physics")]
+        [ShownWhen(nameof(UsePhysics))]
         public LayerMask DetectionLayers = ~0;
 
         [Tooltip("Where its range is measured from: the caster; the activation's target, as an AI hands it or a task before " +
@@ -49,11 +48,9 @@ namespace FarEmerald.PlayForge
                  "on either hub is found by its position, with no collider needed (TW-10)")]
         public bool UsePhysics;
 
-        [Header("Attribute Conditions")]
         [Tooltip("Optional attribute conditions targets must satisfy")]
         public List<TargetAttributeCondition> AttributeConditions = new();
 
-        [Header("Alive Filter")]
         [Tooltip("When true, dead targets (IsDead) are excluded")]
         public bool ExcludeDead = true;
 
@@ -69,9 +66,9 @@ namespace FarEmerald.PlayForge
             // Measured from the caster, the activation's target or its point (TW-10)
             var centre = CentreOf(data, origin);
             var candidates = GatherCandidates(centre, owner, RangeFor(data));
-            var valid = FilterCandidates(candidates);
+            var valid = FilterCandidates(candidates, NumberContext.Of(data));
             var sorted = SortCandidates(valid, centre);
-            var selected = SelectTargets(sorted);
+            var selected = SelectTargets(sorted, Read(MaxTargets, data));
 
             if (selected.Count == 0)
             {
@@ -102,7 +99,7 @@ namespace FarEmerald.PlayForge
 
         // How far it searches: its ability's Cast Range, measured from the caster, where it reads it; else its own (FN-14)
         private float RangeFor(AbilityDataPacket data) =>
-            UseCastRange && Around == EAreaCentre.Caster && ForgeCastRange.TryRead(data, out float cast) ? cast : Range;
+            UseCastRange && Around == EAreaCentre.Caster && ForgeCastRange.TryRead(data, out float cast) ? cast : Read(Range, data);
 
         // Where its range is measured from: the caster, the activation's target, or its point (TW-10)
         private Vector3? CentreOf(AbilityDataPacket data, AbstractTargetingPacket caster) => Around switch
@@ -115,7 +112,7 @@ namespace FarEmerald.PlayForge
         /// <summary>
         /// Filters candidates by tag requirements, attribute conditions, and alive status.
         /// </summary>
-        private List<ITarget> FilterCandidates(List<ITarget> candidates)
+        private List<ITarget> FilterCandidates(List<ITarget> candidates, in NumberContext context)
         {
             var results = new List<ITarget>();
 
@@ -128,7 +125,7 @@ namespace FarEmerald.PlayForge
                 if (!TargetIsValid(target)) continue;
 
                 // Attribute conditions
-                if (!PassesAttributeConditions(target)) continue;
+                if (!PassesAttributeConditions(target, context)) continue;
 
                 results.Add(target);
             }
@@ -167,18 +164,18 @@ namespace FarEmerald.PlayForge
         /// <summary>
         /// Selects the final target set from sorted candidates.
         /// </summary>
-        private List<ITarget> SelectTargets(List<ITarget> sorted)
+        private static List<ITarget> SelectTargets(List<ITarget> sorted, int most)
         {
-            if (MaxTargets <= 0 || MaxTargets >= sorted.Count)
+            if (most <= 0 || most >= sorted.Count)
                 return sorted;
 
-            return sorted.GetRange(0, MaxTargets);
+            return sorted.GetRange(0, most);
         }
 
         /// <summary>
         /// Checks whether a target passes all configured attribute conditions.
         /// </summary>
-        private bool PassesAttributeConditions(ITarget target)
+        private bool PassesAttributeConditions(ITarget target, in NumberContext context)
         {
             if (AttributeConditions == null || AttributeConditions.Count == 0) return true;
 
@@ -186,7 +183,7 @@ namespace FarEmerald.PlayForge
             {
                 if (condition.Attribute == null) continue;
                 if (!target.TryGetAttributeValue(condition.Attribute, out var value)) return false;
-                if (!condition.Evaluate(value.CurrentValue)) return false;
+                if (!condition.Evaluate(value.CurrentValue, context.WithTarget(target))) return false;
             }
 
             return true;
@@ -232,22 +229,23 @@ namespace FarEmerald.PlayForge
         [Tooltip("Comparison operator")]
         public EComparisonOperator Operator = EComparisonOperator.GreaterThan;
 
-        [Tooltip("The value to compare against")]
-        public float CompareValue;
+        [Tooltip("The value to compare against, read for the target it checks")]
+        public ScalableFloat CompareValue = 0f;
 
         /// <summary>
-        /// Evaluates whether the given attribute value passes this condition.
+        /// Evaluates whether the given attribute value passes this condition, its value read where it's checked (FN-20).
         /// </summary>
-        public bool Evaluate(float currentValue)
+        public bool Evaluate(float currentValue, in NumberContext context)
         {
+            float against = CompareValue == null ? 0f : CompareValue.Evaluate(context);
             return Operator switch
             {
-                EComparisonOperator.LessThan => currentValue < CompareValue,
-                EComparisonOperator.LessOrEqual => currentValue <= CompareValue,
-                EComparisonOperator.Equal => Mathf.Approximately(currentValue, CompareValue),
-                EComparisonOperator.NotEqual => !Mathf.Approximately(currentValue, CompareValue),
-                EComparisonOperator.GreaterOrEqual => currentValue >= CompareValue,
-                EComparisonOperator.GreaterThan => currentValue > CompareValue,
+                EComparisonOperator.LessThan => currentValue < against,
+                EComparisonOperator.LessOrEqual => currentValue <= against,
+                EComparisonOperator.Equal => Mathf.Approximately(currentValue, against),
+                EComparisonOperator.NotEqual => !Mathf.Approximately(currentValue, against),
+                EComparisonOperator.GreaterOrEqual => currentValue >= against,
+                EComparisonOperator.GreaterThan => currentValue > against,
                 _ => throw new ArgumentOutOfRangeException()
             };
         }

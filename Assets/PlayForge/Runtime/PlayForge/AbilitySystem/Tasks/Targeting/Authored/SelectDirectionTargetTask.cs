@@ -17,22 +17,19 @@ namespace FarEmerald.PlayForge
     [Serializable]
     public class SelectDirectionTargetTask : AbstractTargetingAbilityTask
     {
-        [Header("Raycast Settings")]
         [Tooltip("Layers to raycast against when selecting direction")]
         public LayerMask RaycastLayers = ~0;
 
-        [Tooltip("Maximum raycast distance (0 = infinite)")]
-        public float MaxDistance = Mathf.Infinity;
+        [Tooltip("How far its pointer's ray reaches; 0, any distance")]
+        [NumberMin(0f)] public ScalableFloat MaxDistance = 0f;
 
-        [Header("Direction")]
         [Tooltip("When true, the Y component of the direction is zeroed out (horizontal only)")]
         public bool FlattenY = true;
 
         [Tooltip("Minimum distance from caster to clicked point for a valid direction. " +
                  "Prevents degenerate directions from clicking too close.")]
-        public float MinDistance = 0.5f;
+        [NumberMin(0f)] public ScalableFloat MinDistance = 0.5f;
 
-        [Header("Behaviour")]
         [Tooltip("When true, an invalid click re-prompts instead of failing")]
         public bool RetryOnInvalid = true;
 
@@ -61,7 +58,9 @@ namespace FarEmerald.PlayForge
 
         public override async UniTask Activate(AbilityDataPacket data, CancellationToken token)
         {
-            var maxDist = MaxDistance > 0 ? MaxDistance : Mathf.Infinity;
+            float reach = Read(MaxDistance, data);
+            var maxDist = reach > 0 ? reach : Mathf.Infinity;
+            float least = Read(MinDistance, data);
             var owner = data.EffectOrigin.GetSource();
             // From the caster's targeting packet, which every caster has. Through its transform, a runtime caster, which
             // has none, always failed (GAS-38)
@@ -80,7 +79,7 @@ namespace FarEmerald.PlayForge
             {
                 var toward = aimAt - origin;
                 if (FlattenY) toward.y = 0f;
-                if (toward.sqrMagnitude < MinDistance * MinDistance)
+                if (toward.sqrMagnitude < least * least)
                 {
                     WhenTargetingInvalid(data);
                     return;
@@ -104,7 +103,7 @@ namespace FarEmerald.PlayForge
 
                 if (FlattenY) toTarget.y = 0f;
 
-                if (toTarget.sqrMagnitude < MinDistance * MinDistance)
+                if (toTarget.sqrMagnitude < least * least)
                 {
                     if (RetryOnInvalid) continue;
                     WhenTargetingInvalid(data);
