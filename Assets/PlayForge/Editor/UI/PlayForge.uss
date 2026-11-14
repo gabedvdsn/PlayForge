@@ -2768,3 +2768,42 @@
     color: var(--pf-secondary-text);
     white-space: pre-wrap;
 }
+
+/* A Scaler asset's Try section (LVL-5): each side's attributes, and the caller's keys, a row each under its side */
+.pf-root .pf-try__side {
+    margin: 2px 0 4px 0;
+}
+
+.pf-root .pf-try__title {
+    -unity-font-style: bold;
+    margin: 2px 0;
+}
+
+.pf-root .pf-try__row {
+    flex-direction: row;
+    align-items: center;
+    min-height: 18px;
+    margin-left: 14px;
+}
+
+.pf-root .pf-try__name {
+    flex-grow: 1;
+    flex-shrink: 1;
+    min-width: 60px;
+    margin: 0;
+    padding: 0 4px 0 0;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+}
+
+.pf-root .pf-try__has {
+    flex-shrink: 0;
+    margin: 0 4px 0 0;
+}
+
+.pf-root .pf-try__value {
+    width: 64px;
+    flex-shrink: 0;
+    margin: 0 0 0 2px;
+}

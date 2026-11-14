@@ -743,6 +743,13 @@ from. It lives outside `Assets/` so it never ships in the package.
   the same numbers, every physical or magic blow naming its kind's, and the workers leave the Demo (the recommendation).
   The other choices were the same with a critical strike stage, which would change the damage the Demo's tests read, or
   the workers kept beside one pipeline where it adds something new.
+- Decision 82, 2026-11-14: LVL-5's shape, the user's answers. **A Scaler asset is tried against values the author
+  types, or fills from an entity**: stand-ins for its caster and its target hold the attributes the scaler reads, each
+  typed or filled from an Entity asset's attribute set, as its starting values are, and a caller's values by key; no
+  runtime entity is made in edit mode. **The panel is a Try section of the Scaler asset's inspector**, after Values, so
+  The Forge shows it. **It reads each level of a range, as an effect's Levels does**, with the parts behind the level
+  picked. **What's typed is kept for the session**, never written into the asset. The recommendation was the same
+  without the entity fill.
 
 **Open. Ask the user; do not assume:**
 1. ~~**Uncommitted changes**~~: decided, see above.
@@ -1281,12 +1288,12 @@ inside, without the lab. Its rows:
 | LVL-2 | An effect level by level, with its parts | `AbilityInspector.BuildEffectSeries(effect, min, max, caster, target)`: the effect read through `NumberContext` against a caster and a target, either of which may be null. Each impact gives its line, its parts at each level and what it needs; the effect its chance and tick interval at each level and its contained effects, each read the same way. The first overload, with no caster or target, reads as it did | `AbilityInspector.cs` | verified |
 | LVL-3 | An effect's lines at a level | `EffectLevelSeries.Describe(level)`: an impact to a line, "-15 Health each tick, 12 ticks over 12 s", "+20 Armor while it lasts, 5 s", and a contained effect with when it lands and its chance, "and Crit as it lands, 15% of the time: -225 Health"; a line whose number needs what the read wasn't given says so | `AbilityInspector.cs` | verified |
 | LVL-4 | The Forge: an effect level by level | The effect's inspector, which The Forge shows, has a Levels section after Impact: a row for its duration, ticks, interval and chance where it has them and one for each impact, its own and its contained effects', a column for each level, up to ten, each clipping its own text; the cell selected shows the parts behind it under the table. Its header's line is the first impact's series, as "-10/-20/-30 Health". `EFFECTS.md` has a Levels section, which its help button opens | `Editor/.../Assets/EffectLevelsView.cs`, `EffectEditor.cs`, `UI/PlayForge.uss`, `ForgeDocs.cs`, `Documentation/EFFECTS.md` | verified |
-| LVL-5 | A Scaler asset to try | A Scaler asset's panel where the author sets what it reads, the level, an attribute's value on either side, a caller's value, and reads what it gives, with its parts (ED-74). It needs a caster and a target in the editor, which nothing makes yet: sample entities, or the Creator Lab's | The Forge's Scaler asset breakdown | open |
+| LVL-5 | A Scaler asset to try | A Scaler asset's panel where the author sets what it reads, the level, an attribute's value on either side, a caller's value, and reads what it gives, with its parts (ED-74). Done (Decision 82): its inspector's Try section, after Values, reads it at each level of a range, as Levels does, against a stand-in caster and target, `NumberStandIn`, whose attributes are typed, or filled from an Entity asset's attribute set at its starting level, and a caller's values; a row for each attribute and key the scaler reads, found as it reads; kept for the session, never in the asset; `ScalerTry` in code | `Editor/.../Drawers/Scaler/ScalerTry.cs`, `ScalerTryView.cs`, `ScalerWindows.cs` (`ScalerAssetEditor`), `UI/PlayForge.uss` | verified |
 
 ### The Creator Lab (FEAT-35)
 
-The lab's rows, by its design's phases (`Docs/CREATOR_LAB_DESIGN.md`, Decision 44); phase 1 is FEAT-32's, above, with
-LVL-5 still open. The user asked on 2026-11-11 for the lab in full before TW-7. The lab is a scene its `CreatorLab`
+The lab's rows, by its design's phases (`Docs/CREATOR_LAB_DESIGN.md`, Decision 44); phase 1 is FEAT-32's and LVL-5's, above,
+all done. The user asked on 2026-11-11 for the lab in full before TW-7. The lab is a scene its `CreatorLab`
 component builds, so the menu opens it in a new scene rather than a scene file the package would keep in step.
 
 | ID | Phase | Piece | Notes | Where | Status |
@@ -1434,6 +1441,21 @@ GAS-4 with GAS-5, PC-6, and TS-I with PC-5.
 ## Log
 
 Record baselines, gate results and notable decisions here, newest first.
+
+- 2026-11-14, **LVL-5: a Scaler asset to try.** A Scaler asset showed its values per level but nothing of what it gives
+  against an entity: a × Attribute, a curve of the target's Armor or a Set By Caller read only in play. Now its
+  inspector, which The Forge shows, has a **Try** section after Values, as the user chose (Decision 82): a row of what
+  it gives at each level of a range, as an effect's Levels does, and the parts behind the level picked, read against a
+  stand-in caster and target and a caller. A read asks the try for each attribute and key it reads, so a row for each
+  is found as it reads, filled from the side's Entity where one is set, through `AttributeStartValues` at the entity's
+  starting level; an attribute its set doesn't give, the side lacks, and it reads as an entity without it does. A
+  stand-in is an `ISource` holding attributes alone, so no runtime entity, ProcessControl or scene is made in edit mode,
+  and what reads effects, items, tags, retention-group parts or Local Data reads as on an entity with none of them. A
+  read that throws says so in the parts rather than break the inspector. What's typed is kept in `SessionState` by the
+  asset's GUID, never in the asset, and `ScalerTry` reads the same in code. The style doc's sections that only read
+  name Try beside Levels and Used By, so it has no Import or Clear.
+  - Red first: LVL-5's six tests don't compile against HEAD, 10 errors, `ScalerTry` being new. On the first run one failed, the try kept for the session: its range came back and its typed values didn't, the references to Attribute assets in its kept JSON lost; they're kept by instance ID now
+  - Gates, on a frozen snapshot of the package with the Demo imported: EditMode 948 of 949, ED-61 red from the working tree's lifecycle change; PlayMode 1905 of 1925, 8 skipped, the 12 known reds; no golden run, as only editor code changed. Before them, LVL-5's tests with every inspector and Demo asset opening passed 393 of 394, the session test the one, then the LVL tests 7 of 7 with its fix.
 
 - 2026-11-14, **FN-11: the Demo's damage through Value Pipelines; FN-11 done.** The Demo worked out its blows with workers
   of its own on every attribute set, a Mitigation for Armor and one for Magic Resistance, an Amplification for each kind,

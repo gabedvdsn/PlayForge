@@ -7,6 +7,9 @@ tracks each fix below by its ID.
 ## [Unreleased]
 
 ### Added
+- A Scaler asset's **Try** section: what it gives at each level of a range, with the parts behind each, against a
+  caster, a target and a caller whose values the author types or fills from an Entity asset; kept for the session,
+  never in the asset. `ScalerTry` reads the same in code (LVL-5).
 - Purging: a Forge Project's **Purge Levels**, tiers of tags weakest first, and purges of a strength, of the kinds they
   name, of the effects applied by whom they say, through filters of a project's own (`AbstractPurgeFilter`, **Except
   Tagged** among them); an effect's **Purges**, as it lands; `ForgePurge.Purge` for code (FN-16).

@@ -10,7 +10,7 @@ design is `Docs/CREATOR_LAB_DESIGN.md` (Decision 44); the tracker rows are LAB-1
 | Phase | Rows | State |
 |---|---|---|
 | 1. The inside, without the lab | LVL-1 to LVL-4 | Done (FEAT-32) |
-| 1. A Scaler asset to try | LVL-5 | **Open**: needs a caster and a target in the editor |
+| 1. A Scaler asset to try | LVL-5 | Done on 2026-11-14 (Decision 82) |
 | 2. The lab's shell | LAB-1 to LAB-8 | Done: PlayForge `f7afb28`, Proving Grounds `ed3ca46` |
 | 3. Battle | LAB-9, LAB-10 | Done: the commits after those, "LAB-9, LAB-10" |
 | 4. The author's unit | LAB-11 | Done on 2026-11-13, as drafted (below) |
@@ -84,13 +84,14 @@ Two assemblies, each left out of a build that defines `PLAYFORGE_NO_LAB`:
 
 ## What's next
 
-### LVL-5: a Scaler asset to try
+### LVL-5: a Scaler asset to try (done)
 
-The Forge's Scaler asset panel: the author sets what the scaler reads (the level, an attribute's value on each side, a
-caller's value) and reads what it gives, with its parts (`NumberTrace`). It needs a caster and a target in edit mode.
-Two ways: a pair of `RuntimeGameplayAbilitySystem`s made from attribute sets the panel names, if they can live in edit
-mode with no ProcessControl (check first); or a `NumberContext` over plain values, without entities. The second is
-lighter and is what the panel needs.
+Built on 2026-11-14 as the user chose (Decision 82): a Scaler asset's **Try** section, after Values, reads it at each
+level of a range against stand-ins, `NumberStandIn`, an `ISource` holding only the attributes its side of a
+`ScalerTry` gives, and a caller's values, `CallerValues`; each asks the try for what a read asks it for, so the rows
+are found as it reads. A side fills from an Entity asset through `AttributeStartValues`, at the entity's starting
+level. No runtime entity is made, so nothing needs ProcessControl in edit mode. A Scaler asset's try is kept in
+`SessionState`, by its GUID.
 
 ### LAB-11: the author's unit (done)
 

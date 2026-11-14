@@ -414,6 +414,19 @@ namespace FarEmerald.PlayForge.Extended.Editor
             values.Content.Add(new PropertyField(serializedObject.FindProperty(nameof(ScalerAsset.Scaler)), "Kind") { name = "Scaler" });
             root.Add(values.Section);
 
+            // What it gives at each level, against a caster, a target and a caller the author gives it, typed or filled from
+            // an entity; it only reads the asset, so it has no Import or Clear (LVL-5, Decision 82)
+            var tryIt = ForgeDrawerStyles.CreateCollapsibleSection(new ForgeDrawerStyles.SectionConfig
+            {
+                Name = "Try",
+                Title = "Try",
+                IncludeButtons = new[] { false, false, false },
+            });
+            var tried = new ScalerTryView(asset);
+            tryIt.Content.Add(tried);
+            tryIt.Summary.text = tried.Summary;
+            root.Add(tryIt.Section);
+
             var usedBy = ForgeDrawerStyles.CreateCollapsibleSection(new ForgeDrawerStyles.SectionConfig
             {
                 Name = "UsedBy",
@@ -465,6 +478,9 @@ namespace FarEmerald.PlayForge.Extended.Editor
                 if (target == null) return;
                 name.text = asset.DisplayName;
                 if (rename.focusController?.focusedElement != rename) rename.SetValueWithoutNotify(asset.DisplayName);
+                // An edit to its kind or its values reads again
+                tried.Refresh();
+                tryIt.Summary.text = tried.Summary;
                 Show();
             });
             Show();

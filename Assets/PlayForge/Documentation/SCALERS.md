@@ -285,6 +285,15 @@ number and Combine: Scaler × Number with a number of 1.5 reads the asset's valu
   The Forge and the field menus list it, its **Description**, its **Values**, and **Used By**: each field that
   shares it, by its asset and field. Click a row to select the asset. In The Forge, its summary says its
   description, its kind, what it reads and how many fields use it.
+- Its **Try** section reads it at each level of a range, Levels 1 to 5 to start, as an effect's Levels does (LVL-5): a
+  row of what it gives at each, and under it the parts behind the level picked. It reads against a stand-in
+  **Caster** and **Target** and a **Caller**, each with a row for what the scaler asks of it, found as it reads: an
+  attribute on its side, whether the side **Has** it, its current and its base; and a key the caller sets, whether
+  it's **Set** and its value, unset reading the scaler's default. A side's **Entity** fills its attributes from what
+  that entity's attribute set starts each at, at its starting level, and one the set doesn't give, it lacks. A
+  stand-in holds attributes alone, so a number that reads an effect, an item, a tag, a retention group's part or
+  Local Data reads as on an entity with none of them. What's typed is kept for the session, never in the asset.
+  `ScalerTry` does the same in code: `new ScalerTry { From = 1, To = 5 }.Read(scaler)`.
 - Any magnitude field can share a Scaler asset. An attribute set's element shares one whose scaler is a cached kind,
   and its Scaler Assets lists only those. A Scaler asset can't hold a Shared scaler of its own.
 - A field whose asset is missing reads as a field with no scaler, and an element whose asset is missing reads its root
