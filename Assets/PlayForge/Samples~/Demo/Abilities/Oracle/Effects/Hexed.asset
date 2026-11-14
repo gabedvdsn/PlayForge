@@ -72,6 +72,7 @@ MonoBehaviour:
       TargetSlot: 0
       Operation: 0
       MultiplyBehaviour: 0
+      Pipeline: {fileID: 11400000, guid: bd387b1fb15f45d9806e16201d1b6e46, type: 2}
       SortOrder: 0
       Magnitude:
         Magnitude: -1

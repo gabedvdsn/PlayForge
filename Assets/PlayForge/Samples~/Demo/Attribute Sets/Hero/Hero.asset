@@ -34,11 +34,7 @@ MonoBehaviour:
   CollisionResolutionPolicy: 3
   WorkerGroup:
     Name: Workers
-    AttributeWorkers:
-    - rid: 2403794261189066775
-    - rid: 2403794261189066776
-    - rid: 2403794261189066777
-    - rid: 2403794261189066778
+    AttributeWorkers: []
     ImpactWorkers:
     - rid: 2403794261189066779
     TagWorkers: []
@@ -50,76 +46,6 @@ MonoBehaviour:
   references:
     version: 2
     RefIds:
-    - rid: 2403794261189066775
-      type: {class: MitigationWorker, ns: FarEmerald.PlayForge.Samples.Demo, asm: FarEmerald.PlayForge.Samples.Demo}
-      data:
-        TimingConfig: 0
-        TargetAttribute: {fileID: 11400000, guid: b865fa5ec88ff314ab348516f14527f7, type: 2}
-        AllowSelfModification: 1
-        TargetModification: 0
-        ExclusivelyTargetModification: 0
-        SignPolicy: 2
-        AnyImpactType: 0
-        ImpactTypes:
-        - Name: Damage.Physical
-          DisplayName: Damage.Physical
-        AnyContextTag: 1
-        ContextMatchingPolicy: 0
-        ValidContextTags: []
-        Resistance: {fileID: 11400000, guid: 49ede9aab52bf7a40b12b9b165392f8c, type: 2}
-        Kind: 0
-    - rid: 2403794261189066776
-      type: {class: MitigationWorker, ns: FarEmerald.PlayForge.Samples.Demo, asm: FarEmerald.PlayForge.Samples.Demo}
-      data:
-        TimingConfig: 0
-        TargetAttribute: {fileID: 11400000, guid: b865fa5ec88ff314ab348516f14527f7, type: 2}
-        AllowSelfModification: 1
-        TargetModification: 0
-        ExclusivelyTargetModification: 0
-        SignPolicy: 2
-        AnyImpactType: 0
-        ImpactTypes:
-        - Name: Damage.Magic
-          DisplayName: Damage.Magic
-        AnyContextTag: 1
-        ContextMatchingPolicy: 0
-        ValidContextTags: []
-        Resistance: {fileID: 11400000, guid: 19d77af1048214f418cb274145095022, type: 2}
-        Kind: 1
-    - rid: 2403794261189066777
-      type: {class: AmplificationWorker, ns: FarEmerald.PlayForge.Samples.Demo, asm: FarEmerald.PlayForge.Samples.Demo}
-      data:
-        TimingConfig: 0
-        TargetAttribute: {fileID: 11400000, guid: b865fa5ec88ff314ab348516f14527f7, type: 2}
-        AllowSelfModification: 1
-        TargetModification: 0
-        ExclusivelyTargetModification: 0
-        SignPolicy: 2
-        AnyImpactType: 0
-        ImpactTypes:
-        - Name: Damage.Physical
-          DisplayName: Damage.Physical
-        AnyContextTag: 1
-        ContextMatchingPolicy: 0
-        ValidContextTags: []
-        Amplification: {fileID: 11400000, guid: 3e8e0a8d8742715489be084df6157132, type: 2}
-    - rid: 2403794261189066778
-      type: {class: AmplificationWorker, ns: FarEmerald.PlayForge.Samples.Demo, asm: FarEmerald.PlayForge.Samples.Demo}
-      data:
-        TimingConfig: 0
-        TargetAttribute: {fileID: 11400000, guid: b865fa5ec88ff314ab348516f14527f7, type: 2}
-        AllowSelfModification: 1
-        TargetModification: 0
-        ExclusivelyTargetModification: 0
-        SignPolicy: 2
-        AnyImpactType: 0
-        ImpactTypes:
-        - Name: Damage.Magic
-          DisplayName: Damage.Magic
-        AnyContextTag: 1
-        ContextMatchingPolicy: 0
-        ValidContextTags: []
-        Amplification: {fileID: 11400000, guid: 1a51f6301ad10594a9a05f0acacdb9fd, type: 2}
     - rid: 2403794261189066779
       type: {class: RelativeOperationContextImpactWorker, ns: FarEmerald.PlayForge, asm: FarEmerald.PlayForge}
       data:

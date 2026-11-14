@@ -50,9 +50,9 @@ Every hero also has Second Wind, a passive that gives it Regeneration as it come
 | Feature | Where to look |
 |---|---|
 | Attribute sets and templates | `Attribute Sets/Hero/Hero` is the template each hero's set takes; its sub-sets hold the vitals, primaries, offense, defense and utility. Health, Mana and Armor follow Strength, Intelligence and Agility through cached scalers. |
-| The damage model | The Hero set's workers: Mitigation (Armor, Magic Resistance), Amplification, and Lifesteal, PlayForge's own impact worker. `Scripts/Forge/DemoWorkers.cs`. |
+| The damage model | Two Value Pipelines, `Effects/Pipelines/Physical Damage` and `Magic Damage`: a blow harder by its dealer's Attack or Magic Amplification, then lessened by its target's Armor, 100 ÷ (100 + Armor) of it going through, or its Magic Resistance, 1 − it. The Physical and Magic Strike templates name them, and so each blow that takes one, with Burning, Flashpoint and Hex's blow. Lifesteal, PlayForge's own impact worker, is on the Hero set. |
 | Effect templates | `Effects/Templates`: Physical, Magic and Pure Strike, which every blow takes, and Stat Bonus, which every item's bonus takes. |
-| Scalers | Constant, Simple, Attribute Backed (every blow), Clamped (Eviscerate), Conditional (Hunter's Mark's bonus on every physical blow), Randomized (Arrow), Group (every cooldown), Threshold (Sage's Crown), Effect Stacks (Burning), Item Stacks (Soul Shard), Set By Caller (the AI's difficulty), Shared (`Scalers/Attack Growth`). |
+| Scalers | Constant, Simple, Attribute Backed (every blow), Stacking Curve (the pipelines' Armor and amplification), Clamped (Eviscerate, and Magic Damage's resistance), Conditional (Hunter's Mark's bonus on every physical blow), Randomized (Arrow), Group (every cooldown), Threshold (Sage's Crown), Effect Stacks (Burning), Item Stacks (Soul Shard), Set By Caller (the AI's difficulty), Shared (`Scalers/Attack Growth`). |
 | Stacking | Burning stacks to five; a sixth bursts as Flashpoint, its overflow effect. |
 | Cleanse and immunity | Iron Skin blocks and removes stuns; Renewal removes every debuff. |
 | Tag logic | Stuns and silences block abilities by their requirements; Smoke Veil ends as the Shade attacks; Combustion's second stage runs only on a burning target; Cut picks its damage type by a stage condition. |

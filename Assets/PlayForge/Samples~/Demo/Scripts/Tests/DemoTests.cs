@@ -181,6 +181,30 @@ namespace FarEmerald.PlayForge.Samples.Demo.Tests
             Assert.That(before - DummyHealth, Is.EqualTo(50f + 0.5f * intelligence).Within(0.5f), "Combustion, pure, through nothing");
         }
 
+        /// <summary>
+        /// A blow's dealer's amplification makes it harder: Duelist's Edge's Attack Amplification on a physical blow,
+        /// (30 + 1.2 × Strength) × (1 + Attack Amplification) × 100 / (100 + Armor), as the Physical Damage pipeline has it.
+        /// </summary>
+        [UnityTest]
+        public IEnumerator Amplification_makes_a_blow_harder()
+        {
+            yield return Face("Vanguard");
+            var me = game.Player;
+            game.Give(game.PlayerSeat, Asset<Item>("Duelist's Edge"));
+            yield return Frames(3);
+            float amplification = me.Value(Asset<Attribute>("Attack Amplification"));
+            Assert.That(amplification, Is.GreaterThan(0f), "Duelist's Edge gives Attack Amplification");
+            float strength = me.Value(Asset<Attribute>("Strength"));
+            float armor = game.Opponent.Value(Asset<Attribute>("Armor"));
+
+            float before = DummyHealth;
+            Assert.That(me.Cast(me.AbilityAt(0), me.DataAt(game.Opponent)), "Strike casts");
+            yield return Until(() => DummyHealth < before, 2f);
+            float expected = (30f + 1.2f * strength) * (1f + amplification) * 100f / (100f + armor);
+            Assert.That(before - DummyHealth, Is.EqualTo(expected).Within(0.5f),
+                $"Strike at {strength} Strength and {amplification} Attack Amplification through {armor} Armor");
+        }
+
         /// <summary>An item's bonus shows apart, by its retention group, and follows the item's level; Health's base follows Strength.</summary>
         [UnityTest]
         public IEnumerator An_items_bonus_follows_its_level_and_goes_with_it()

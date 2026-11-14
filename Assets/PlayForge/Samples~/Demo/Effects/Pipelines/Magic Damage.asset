@@ -1,0 +1,277 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ba2465a807e6461192abc117106cd3f3, type: 3}
+  m_Name: Magic Damage
+  m_EditorClassIdentifier: 
+  Description: "A magic blow, as every magic blow of the Demo's goes: harder by its dealer's Magic Amplification, as 1 + it, then lessened by its target's Magic Resistance, 1 \u2212 it going through, the resistance kept between 0 and 1, so 0.25 takes a quarter off and a Hex below 0 adds nothing"
+  Stages:
+  - rid: 4632439066114718435
+  - rid: 4632439066114718436
+  references:
+    version: 2
+    RefIds:
+    - rid: -2
+      type: {class: , ns: , asm: }
+    - rid: 4632439066114718435
+      type: {class: MultiplyStage, ns: FarEmerald.PlayForge, asm: FarEmerald.PlayForge}
+      data:
+        Label: "Magic Amplification"
+        Enabled: 1
+        By:
+          Magnitude: 1
+          RealMagnitude: 3
+          Scaler:
+            rid: 4632439066114718437
+    - rid: 4632439066114718436
+      type: {class: MultiplyStage, ns: FarEmerald.PlayForge, asm: FarEmerald.PlayForge}
+      data:
+        Label: "Magic Resistance"
+        Enabled: 1
+        By:
+          Magnitude: 1
+          RealMagnitude: 3
+          Scaler:
+            rid: 4632439066114718438
+    - rid: 4632439066114718437
+      type: {class: StackingCurveKind, ns: FarEmerald.PlayForge, asm: FarEmerald.PlayForge}
+      data:
+        Name: "1 + Magic Amplification"
+        Configuration: 0
+        MaxLevel: 20
+        LevelValues:
+        - 1
+        Interpolation: 1
+        StretchOverLevels: 1
+        Scaling:
+          serializedVersion: 2
+          m_Curve:
+          - serializedVersion: 3
+            time: 0
+            value: 1
+            inSlope: 0
+            outSlope: 0
+            tangentMode: 0
+            weightedMode: 0
+            inWeight: 0
+            outWeight: 0
+          - serializedVersion: 3
+            time: 1
+            value: 1
+            inSlope: 0
+            outSlope: 0
+            tangentMode: 0
+            weightedMode: 0
+            inWeight: 0
+            outWeight: 0
+          m_PreInfinity: 2
+          m_PostInfinity: 2
+          m_RotationOrder: 4
+        Behaviours: []
+        Count:
+          Magnitude: 1
+          RealMagnitude: 3
+          Scaler:
+            rid: 4632439066114718439
+        Curve: 0
+        Coefficient:
+          Magnitude: 1
+          RealMagnitude: 2
+          Scaler:
+            rid: -2
+        Plus: 1
+    - rid: 4632439066114718439
+      type: {class: AttributeBackedScaler, ns: FarEmerald.PlayForge, asm: FarEmerald.PlayForge}
+      data:
+        Name: 
+        Configuration: 0
+        MaxLevel: 20
+        LevelValues:
+        - 1
+        Interpolation: 1
+        StretchOverLevels: 1
+        Scaling:
+          serializedVersion: 2
+          m_Curve:
+          - serializedVersion: 3
+            time: 0
+            value: 1
+            inSlope: 0
+            outSlope: 0
+            tangentMode: 0
+            weightedMode: 0
+            inWeight: 0
+            outWeight: 0
+          - serializedVersion: 3
+            time: 1
+            value: 1
+            inSlope: 0
+            outSlope: 0
+            tangentMode: 0
+            weightedMode: 0
+            inWeight: 0
+            outWeight: 0
+          m_PreInfinity: 2
+          m_PostInfinity: 2
+          m_RotationOrder: 4
+        Behaviours: []
+        CaptureAttribute: {fileID: 11400000, guid: 1a51f6301ad10594a9a05f0acacdb9fd, type: 2}
+        CaptureFrom: 1
+        CaptureWhen: 1
+        CaptureWhat: 0
+        Groups:
+          Read: 0
+          Groups: []
+        ReadAs: 1
+    - rid: 4632439066114718438
+      type: {class: StackingCurveKind, ns: FarEmerald.PlayForge, asm: FarEmerald.PlayForge}
+      data:
+        Name: "1 \u2212 Magic Resistance"
+        Configuration: 0
+        MaxLevel: 20
+        LevelValues:
+        - 1
+        Interpolation: 1
+        StretchOverLevels: 1
+        Scaling:
+          serializedVersion: 2
+          m_Curve:
+          - serializedVersion: 3
+            time: 0
+            value: 1
+            inSlope: 0
+            outSlope: 0
+            tangentMode: 0
+            weightedMode: 0
+            inWeight: 0
+            outWeight: 0
+          - serializedVersion: 3
+            time: 1
+            value: 1
+            inSlope: 0
+            outSlope: 0
+            tangentMode: 0
+            weightedMode: 0
+            inWeight: 0
+            outWeight: 0
+          m_PreInfinity: 2
+          m_PostInfinity: 2
+          m_RotationOrder: 4
+        Behaviours: []
+        Count:
+          Magnitude: 1
+          RealMagnitude: 3
+          Scaler:
+            rid: 4632439066114718441
+        Curve: 0
+        Coefficient:
+          Magnitude: -1
+          RealMagnitude: 2
+          Scaler:
+            rid: -2
+        Plus: 1
+    - rid: 4632439066114718441
+      type: {class: ClampedScaler, ns: FarEmerald.PlayForge, asm: FarEmerald.PlayForge}
+      data:
+        Name: "Between 0 and 1"
+        Configuration: 0
+        MaxLevel: 20
+        LevelValues:
+        - 1
+        Interpolation: 1
+        StretchOverLevels: 1
+        Scaling:
+          serializedVersion: 2
+          m_Curve:
+          - serializedVersion: 3
+            time: 0
+            value: 1
+            inSlope: 0
+            outSlope: 0
+            tangentMode: 0
+            weightedMode: 0
+            inWeight: 0
+            outWeight: 0
+          - serializedVersion: 3
+            time: 1
+            value: 1
+            inSlope: 0
+            outSlope: 0
+            tangentMode: 0
+            weightedMode: 0
+            inWeight: 0
+            outWeight: 0
+          m_PreInfinity: 2
+          m_PostInfinity: 2
+          m_RotationOrder: 4
+        Behaviours: []
+        MinValue:
+          Magnitude: 0
+          RealMagnitude: 2
+          Scaler:
+            rid: -2
+        MaxValue:
+          Magnitude: 1
+          RealMagnitude: 2
+          Scaler:
+            rid: -2
+        Value:
+          Magnitude: 1
+          RealMagnitude: 3
+          Scaler:
+            rid: 4632439066114718440
+        legacyMinValue: NaN
+        legacyMaxValue: NaN
+        Inner:
+          rid: -2
+    - rid: 4632439066114718440
+      type: {class: AttributeBackedScaler, ns: FarEmerald.PlayForge, asm: FarEmerald.PlayForge}
+      data:
+        Name: 
+        Configuration: 0
+        MaxLevel: 20
+        LevelValues:
+        - 1
+        Interpolation: 1
+        StretchOverLevels: 1
+        Scaling:
+          serializedVersion: 2
+          m_Curve:
+          - serializedVersion: 3
+            time: 0
+            value: 1
+            inSlope: 0
+            outSlope: 0
+            tangentMode: 0
+            weightedMode: 0
+            inWeight: 0
+            outWeight: 0
+          - serializedVersion: 3
+            time: 1
+            value: 1
+            inSlope: 0
+            outSlope: 0
+            tangentMode: 0
+            weightedMode: 0
+            inWeight: 0
+            outWeight: 0
+          m_PreInfinity: 2
+          m_PostInfinity: 2
+          m_RotationOrder: 4
+        Behaviours: []
+        CaptureAttribute: {fileID: 11400000, guid: 19d77af1048214f418cb274145095022, type: 2}
+        CaptureFrom: 0
+        CaptureWhen: 1
+        CaptureWhat: 0
+        Groups:
+          Read: 0
+          Groups: []
+        ReadAs: 1

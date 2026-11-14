@@ -42,6 +42,7 @@ MonoBehaviour:
     TargetImpact: 0
     ImpactOperation: 0
     MultiplyBehaviour: 0
+    Pipeline: {fileID: 11400000, guid: 08395a525faf464e8f948ff2dda59b97, type: 2}
     AffiliationPolicy: 1
     AffiliationComparison: 0
     Affiliations: []

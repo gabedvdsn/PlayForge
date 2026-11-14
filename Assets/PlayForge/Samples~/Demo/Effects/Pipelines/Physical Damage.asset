@@ -1,0 +1,223 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ba2465a807e6461192abc117106cd3f3, type: 3}
+  m_Name: Physical Damage
+  m_EditorClassIdentifier: 
+  Description: "A physical blow, as every physical blow of the Demo's goes: harder by its dealer's Attack Amplification, as 1 + it, then lessened by its target's Armor, 100 \xF7 (100 + Armor) of it going through, so Armor of 100 halves it"
+  Stages:
+  - rid: 4632439066114718429
+  - rid: 4632439066114718430
+  references:
+    version: 2
+    RefIds:
+    - rid: -2
+      type: {class: , ns: , asm: }
+    - rid: 4632439066114718429
+      type: {class: MultiplyStage, ns: FarEmerald.PlayForge, asm: FarEmerald.PlayForge}
+      data:
+        Label: "Attack Amplification"
+        Enabled: 1
+        By:
+          Magnitude: 1
+          RealMagnitude: 3
+          Scaler:
+            rid: 4632439066114718431
+    - rid: 4632439066114718430
+      type: {class: MultiplyStage, ns: FarEmerald.PlayForge, asm: FarEmerald.PlayForge}
+      data:
+        Label: "Armor"
+        Enabled: 1
+        By:
+          Magnitude: 1
+          RealMagnitude: 3
+          Scaler:
+            rid: 4632439066114718432
+    - rid: 4632439066114718431
+      type: {class: StackingCurveKind, ns: FarEmerald.PlayForge, asm: FarEmerald.PlayForge}
+      data:
+        Name: "1 + Attack Amplification"
+        Configuration: 0
+        MaxLevel: 20
+        LevelValues:
+        - 1
+        Interpolation: 1
+        StretchOverLevels: 1
+        Scaling:
+          serializedVersion: 2
+          m_Curve:
+          - serializedVersion: 3
+            time: 0
+            value: 1
+            inSlope: 0
+            outSlope: 0
+            tangentMode: 0
+            weightedMode: 0
+            inWeight: 0
+            outWeight: 0
+          - serializedVersion: 3
+            time: 1
+            value: 1
+            inSlope: 0
+            outSlope: 0
+            tangentMode: 0
+            weightedMode: 0
+            inWeight: 0
+            outWeight: 0
+          m_PreInfinity: 2
+          m_PostInfinity: 2
+          m_RotationOrder: 4
+        Behaviours: []
+        Count:
+          Magnitude: 1
+          RealMagnitude: 3
+          Scaler:
+            rid: 4632439066114718433
+        Curve: 0
+        Coefficient:
+          Magnitude: 1
+          RealMagnitude: 2
+          Scaler:
+            rid: -2
+        Plus: 1
+    - rid: 4632439066114718433
+      type: {class: AttributeBackedScaler, ns: FarEmerald.PlayForge, asm: FarEmerald.PlayForge}
+      data:
+        Name: 
+        Configuration: 0
+        MaxLevel: 20
+        LevelValues:
+        - 1
+        Interpolation: 1
+        StretchOverLevels: 1
+        Scaling:
+          serializedVersion: 2
+          m_Curve:
+          - serializedVersion: 3
+            time: 0
+            value: 1
+            inSlope: 0
+            outSlope: 0
+            tangentMode: 0
+            weightedMode: 0
+            inWeight: 0
+            outWeight: 0
+          - serializedVersion: 3
+            time: 1
+            value: 1
+            inSlope: 0
+            outSlope: 0
+            tangentMode: 0
+            weightedMode: 0
+            inWeight: 0
+            outWeight: 0
+          m_PreInfinity: 2
+          m_PostInfinity: 2
+          m_RotationOrder: 4
+        Behaviours: []
+        CaptureAttribute: {fileID: 11400000, guid: 3e8e0a8d8742715489be084df6157132, type: 2}
+        CaptureFrom: 1
+        CaptureWhen: 1
+        CaptureWhat: 0
+        Groups:
+          Read: 0
+          Groups: []
+        ReadAs: 1
+    - rid: 4632439066114718432
+      type: {class: StackingCurveKind, ns: FarEmerald.PlayForge, asm: FarEmerald.PlayForge}
+      data:
+        Name: "100 \xF7 (100 + Armor)"
+        Configuration: 0
+        MaxLevel: 20
+        LevelValues:
+        - 1
+        Interpolation: 1
+        StretchOverLevels: 1
+        Scaling:
+          serializedVersion: 2
+          m_Curve:
+          - serializedVersion: 3
+            time: 0
+            value: 1
+            inSlope: 0
+            outSlope: 0
+            tangentMode: 0
+            weightedMode: 0
+            inWeight: 0
+            outWeight: 0
+          - serializedVersion: 3
+            time: 1
+            value: 1
+            inSlope: 0
+            outSlope: 0
+            tangentMode: 0
+            weightedMode: 0
+            inWeight: 0
+            outWeight: 0
+          m_PreInfinity: 2
+          m_PostInfinity: 2
+          m_RotationOrder: 4
+        Behaviours: []
+        Count:
+          Magnitude: 1
+          RealMagnitude: 3
+          Scaler:
+            rid: 4632439066114718434
+        Curve: 2
+        Coefficient:
+          Magnitude: 0.01
+          RealMagnitude: 2
+          Scaler:
+            rid: -2
+        Plus: 0
+    - rid: 4632439066114718434
+      type: {class: AttributeBackedScaler, ns: FarEmerald.PlayForge, asm: FarEmerald.PlayForge}
+      data:
+        Name: 
+        Configuration: 0
+        MaxLevel: 20
+        LevelValues:
+        - 1
+        Interpolation: 1
+        StretchOverLevels: 1
+        Scaling:
+          serializedVersion: 2
+          m_Curve:
+          - serializedVersion: 3
+            time: 0
+            value: 1
+            inSlope: 0
+            outSlope: 0
+            tangentMode: 0
+            weightedMode: 0
+            inWeight: 0
+            outWeight: 0
+          - serializedVersion: 3
+            time: 1
+            value: 1
+            inSlope: 0
+            outSlope: 0
+            tangentMode: 0
+            weightedMode: 0
+            inWeight: 0
+            outWeight: 0
+          m_PreInfinity: 2
+          m_PostInfinity: 2
+          m_RotationOrder: 4
+        Behaviours: []
+        CaptureAttribute: {fileID: 11400000, guid: 49ede9aab52bf7a40b12b9b165392f8c, type: 2}
+        CaptureFrom: 0
+        CaptureWhen: 1
+        CaptureWhat: 0
+        Groups:
+          Read: 0
+          Groups: []
+        ReadAs: 1

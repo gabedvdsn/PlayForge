@@ -71,6 +71,12 @@ reads the hit's caster, target and level, as any number does, and `run.Note` not
 Every damage effect names it, so a blow of 100 from a caster with 50% amplification, on a target with 20% resistance,
 lands as 120.
 
+The Demo's blows go through two such pipelines, **Physical Damage** and **Magic Damage** in its `Effects/Pipelines`
+(FN-11): each multiplies a blow by its dealer's Attack or Magic Amplification, a Stacking Curve of it read as 1 + it,
+then by what its target's Armor leaves, 100 ÷ (100 + Armor), or its Magic Resistance, 1 − it, kept between 0 and 1.
+Its Physical and Magic Strike templates name them, and so does each blow that takes one, so a new attack takes its
+kind's from its template.
+
 ## The breakdown
 
 An effect's spec keeps its last run as a **Breakdown**: the value in, each stage's before and after with its note, and

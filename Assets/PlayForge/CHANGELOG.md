@@ -467,6 +467,9 @@ tracks each fix below by its ID.
   page, through one table of links in the editor.
 
 ### Changed
+- The Demo's blows go through two Value Pipelines, Physical Damage and Magic Damage, which do what its Mitigation and
+  Amplification workers did: a blow harder by its dealer's amplification, then lessened by its target's Armor or Magic
+  Resistance, with the same numbers (FN-11).
 - A staying entity's death purges its effects, all but those it keeps: the categories it keeps whatever their tiers
   (cooldowns, lent effects and toggles as a project starts, and its own where it says), and the tiers it keeps, its
   project's Purge Levels' and its own (FN-16).
@@ -1053,6 +1056,7 @@ tracks each fix below by its ID.
   or turning `Enabled` off. Once the first had ended, it threw, and the rest ran on.
 
 ### Removed
+- The Demo's `MitigationWorker` and `AmplificationWorker`: its Value Pipelines do their work (FN-11).
 - Death's **Ends Effects Tagged**: a staying entity's death purges its effects but those it keeps (FN-16).
 - Items', abilities' and entities' **Lifesteal** lists, with `Lifesteals`, `LifestealEntry`'s worker and
   `ForgeLifesteal.Heal`: a holder's lifesteal is its Lifesteal attribute, which an effect raises and the Lifesteal worker
