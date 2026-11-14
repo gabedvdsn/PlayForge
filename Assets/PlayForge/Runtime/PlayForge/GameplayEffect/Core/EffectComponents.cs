@@ -65,7 +65,7 @@ namespace FarEmerald.PlayForge
         public GameplayEffect Effect;
 
         [Tooltip("How far from the one it's on it reaches, read at its effect's level")]
-        public ScalableFloat Radius = 4f;
+        [NumberMin(0f)] public ScalableFloat Radius = 4f;
 
         [Tooltip("Measures along the ground, leaving height out; off, a sphere")]
         public bool Flat = true;
@@ -76,11 +76,13 @@ namespace FarEmerald.PlayForge
         [Tooltip("Its caster too, where it reaches them and takes their side")]
         public bool IncludeCaster;
 
-        [Tooltip("At most this many each time it spreads, the nearest first; 0, every one it reaches")]
-        [Min(0)] public int MaxTargets;
+        [Tooltip("At most this many each time it spreads, the nearest first; 0, every one it reaches")] 
+        [NumberMin(0f)]
+        public ScalableInt MaxTargets = 0;
 
         [Tooltip("How many more times a landing it made spreads on: 0, it spreads only from where its effect landed of its own")]
-        [Min(0)] public int Hops;
+        [NumberMin(0)]
+        public ScalableInt Hops = 0;
 
         [Tooltip("Passes over those who have the effect it spreads already")]
         public bool SkipHolders = true;
@@ -101,7 +103,7 @@ namespace FarEmerald.PlayForge
         {
             var spec = ctx.Spec;
             var holder = ctx.System;
-            if (spec?.Base == null || holder == null || spec.SpreadHop > spread.Hops) return;
+            if (spec?.Base == null || holder == null || spec.SpreadHop > spread.Hops.Evaluate(NumberContext.Of(ctx.Spec))) return;
             var effect = spread.Effect != null ? spread.Effect : spec.Base;
             var here = holder.GetTargetingPacket();
             if (here == null) return;
@@ -122,7 +124,8 @@ namespace FarEmerald.PlayForge
                     taken.RemoveAt(i);
             }
             taken.Sort((a, b) => ForgeEntities.Distance(a, centre, spread.Flat).CompareTo(ForgeEntities.Distance(b, centre, spread.Flat)));
-            if (spread.MaxTargets > 0 && taken.Count > spread.MaxTargets) taken.RemoveRange(spread.MaxTargets, taken.Count - spread.MaxTargets);
+            int maxTargets = spread.MaxTargets.Evaluate(NumberContext.Of(ctx.Spec));
+            if (maxTargets > 0 && taken.Count > maxTargets) taken.RemoveRange(maxTargets, taken.Count - maxTargets);
             if (spread.UseResolveOrder && ForgeResolveOrder.Orders) ForgeResolveOrder.Sort(taken);
 
             foreach (var other in taken)

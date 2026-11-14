@@ -151,8 +151,8 @@ namespace FarEmerald.PlayForge
         /// that made it, or 1. On Hit's effects scale their chance and duration by it, and 0 sets nothing off.
         /// </summary>
         public float ProcCoefficient =>
-            Base.OwnProcCoefficient ? Base.ProcCoefficient
-            : Origin?.GetReadableDefinition() is Ability ability ? ability.Definition.ProcCoefficient : 1f;
+            Base.OwnProcCoefficient ? Base.ProcCoefficient.Evaluate(NumberContext.Of(this))
+            : Origin?.GetReadableDefinition() is Ability ability ? ability.Definition.ProcCoefficient.Evaluate(NumberContext.Of(this)) : 1f;
 
         public GameplayEffectSpec(GameplayEffect GameplayEffect, IEffectOrigin origin, ITarget target)
         {

@@ -7,9 +7,6 @@ namespace FarEmerald.PlayForge
     /// affiliation, its end of frame, and its death. <see cref="GameplayAbilitySystem"/>, a MonoBehaviour, and
     /// <see cref="RuntimeGameplayAbilitySystem"/>, a plain process, each own one and forward to it. What stays with a hub
     /// is how it is built, where its entity is, and how it goes away.
-    ///
-    /// Each hub kept its own copy of all this, about 400 lines, and the copies drifted: only the Mono hub applied the
-    /// entity's affiliation as tags, and a runtime GAS made from an Entity asset lost the asset's Local Data (GAS-S1).
     /// </summary>
     internal sealed class GASCore
     {

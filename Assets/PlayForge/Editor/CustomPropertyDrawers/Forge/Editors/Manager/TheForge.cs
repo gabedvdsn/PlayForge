@@ -80,7 +80,7 @@ namespace FarEmerald.PlayForge.Extended.Editor
         public static void ShowWindow() => Open();
 
         // A shortcut, rebindable in Edit → Shortcuts, opens The Forge with its search focused (Q29)
-        [Shortcut("PlayForge/The Forge", KeyCode.F, ShortcutModifiers.Action | ShortcutModifiers.Alt | ShortcutModifiers.Shift)]
+        [Shortcut("PlayForge/The Forge", KeyCode.F, ShortcutModifiers.Alt | ShortcutModifiers.Shift)]
         private static void OpenToSearch()
         {
             var forge = Open();

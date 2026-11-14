@@ -254,7 +254,7 @@ namespace FarEmerald.PlayForge
         public bool IsActive() => !IsDead;
 
         // Its process's name when it has no Entity Data, which threw
-        public override string GetName() => EntityData?.Name ?? ProcessName;
+        public override string GetName() => EntityData?.Name ?? base.GetName();
 
         public void CommunicateTargetedIntent(AbstractGameplayMonoProcess entity)
         {

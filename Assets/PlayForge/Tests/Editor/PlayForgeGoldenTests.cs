@@ -1135,7 +1135,7 @@ namespace FarEmerald.PlayForge.Tests
                 var after = new SteppedProcess("S20 After", throws: false);
                 AssertTrue("register the broken process", ProcessControl.Register(broken).HandledBy(control).With(ProcessDataPacket.Default()).Run(out var brokenRelay));
                 AssertTrue("register the process after it", ProcessControl.Register(after).HandledBy(control).With(ProcessDataPacket.Default()).Run());
-                AssertTrue("both are running", brokenRelay.IsRunning && after.Relay.IsRunning);
+                AssertTrue("both are running", brokenRelay.IsRunning && after.ProcessRelay.IsRunning);
 
                 var stepProcesses = typeof(ProcessControl).GetMethod("StepProcesses",
                     System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic);

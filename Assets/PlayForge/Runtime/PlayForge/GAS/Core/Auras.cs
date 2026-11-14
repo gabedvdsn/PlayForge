@@ -16,6 +16,7 @@ namespace FarEmerald.PlayForge
         public GameplayEffect Effect;
 
         [Tooltip("How far it reaches from its holder, read at each check")]
+        [NumberMin(0f)]
         public ScalableFloat Radius = 5f;
 
         [Tooltip("Measures along the ground, leaving height out; off, a sphere")]
@@ -28,6 +29,7 @@ namespace FarEmerald.PlayForge
         public bool IncludeHolder = true;
 
         [Tooltip("How often it checks who's near, in seconds of its holder's time; 0, every step")]
+        [NumberMin(0f)]
         [Min(0f)] public float Interval = 0.25f;
     }
 

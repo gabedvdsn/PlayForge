@@ -27,15 +27,19 @@ namespace FarEmerald.PlayForge
         /// once. A process that has ended can be registered again.
         /// </summary>
         public bool IsInitialized => _initialized;
-        public ProcessRelay Relay;
+        protected ProcessRelay Relay;
         
         public readonly Dictionary<int, ProcessRelay> HandlerRelays = new();
 
         public AbstractMonoProcessInstantiator CustomInstantiator;
+
+        public virtual EProcessStepPriorityMethod PriorityMethod => priorityMethod;
+        public virtual EProcessStepTiming StepTiming => stepTiming;
+        public virtual EProcessLifecycle Lifecycle => lifecycle;
         
         protected AbstractRuntimeProcess()
         {
-            name = $"Anon-{GetType()}";
+            name = GetType().Name;
             priorityMethod = EProcessStepPriorityMethod.First;
             stepPriority = 0;
             stepTiming = EProcessStepTiming.None;
@@ -44,7 +48,7 @@ namespace FarEmerald.PlayForge
 
         protected AbstractRuntimeProcess(string name, EProcessStepPriorityMethod priorityMethod, int stepPriority, EProcessStepTiming stepTiming, EProcessLifecycle lifecycle)
         {
-            this.name = name;
+            this.name = name ?? GetType().Name;
             this.priorityMethod = priorityMethod;
             this.stepPriority = stepPriority;
             this.stepTiming = stepTiming;
@@ -55,7 +59,7 @@ namespace FarEmerald.PlayForge
         
         public virtual string GetName()
         {
-            return Relay.Wrapper.ProcessName;
+            return Relay?.Wrapper.ProcessName ?? name;
         }
         public virtual string GetDescription()
         {
@@ -72,6 +76,8 @@ namespace FarEmerald.PlayForge
         {
             regData = data;
             Relay = relay;
+
+            Relay.Wrapper.getProcessName = name;
         }
 
         public virtual void WhenInitialize()
@@ -147,11 +153,6 @@ namespace FarEmerald.PlayForge
             process = default;
             return false;
         }
-
-        public string ProcessName => string.IsNullOrEmpty(name) ? "AnonymousClassProcess" : name;
-        public virtual EProcessStepPriorityMethod PriorityMethod => priorityMethod;
-        public virtual EProcessStepTiming StepTiming => stepTiming;
-        public virtual EProcessLifecycle Lifecycle => lifecycle;
         
         public virtual int StepPriority => stepPriority;
         public virtual bool BehaviourIsApplicable(AbstractProxyTaskBehaviour behaviour) => false;

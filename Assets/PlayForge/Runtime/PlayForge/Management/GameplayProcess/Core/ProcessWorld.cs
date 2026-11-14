@@ -34,7 +34,7 @@ namespace FarEmerald.PlayForge
         {
             var relay = process switch
             {
-                AbstractRuntimeProcess runtime => runtime.Relay,
+                AbstractRuntimeProcess runtime => runtime.ProcessRelay,
                 AbstractMonoProcess mono => mono.ProcessRelay,
                 _ => null,
             };

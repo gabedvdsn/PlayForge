@@ -64,11 +64,6 @@ namespace FarEmerald.PlayForge
                 retentionGroup, impactType,
                 rootCarrier, retainOverride);
         }
-
-        // GenerateNullifiedDerivation removed — the recompute model has no zombie state.
-        // Carriers are present in retainedGroups iff they actively contribute; lifecycle
-        // owners call RemoveCarrier when contribution should stop. There is no scenario
-        // that needs a "marker carrier that exists but contributes nothing".
     }
 
     public class SourceAttributeImpact : IAttributeImpactCarrier

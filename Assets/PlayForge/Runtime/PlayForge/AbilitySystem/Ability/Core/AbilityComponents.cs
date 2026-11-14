@@ -12,6 +12,7 @@ namespace FarEmerald.PlayForge
     {
         [Tooltip("How many uses it holds, each spending a charge that comes back as its Recharge says; 1 is an ordinary " +
                  "cooldown (TW-17)")]
+        [NumberMin(2)]
         public ScalableInt Charges = 2;
 
         [SerializeReference]

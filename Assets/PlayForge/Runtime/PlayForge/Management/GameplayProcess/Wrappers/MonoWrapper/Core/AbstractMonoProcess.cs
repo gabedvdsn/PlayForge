@@ -11,8 +11,8 @@ namespace FarEmerald.PlayForge
     {
         [Header("Mono Gameplay Process")] 
         
-        [HideInInspector] public EProcessLifecycle ProcessLifecycle;
-        [HideInInspector] public EProcessStepTiming ProcessTiming;
+        [HideInInspector] public EProcessLifecycle ProcessLifecycle = EProcessLifecycle.Synchronous;
+        [HideInInspector] public EProcessStepTiming ProcessTiming = EProcessStepTiming.UpdateAndLate;
         [HideInInspector] public EProcessStepPriorityMethod PriorityMethod = EProcessStepPriorityMethod.First;
         [HideInInspector] public int ProcessStepPriority;
         
@@ -27,7 +27,7 @@ namespace FarEmerald.PlayForge
         
         protected ProcessDataPacket regData;
         protected bool processActive;
-
+        
         public ProcessDataPacket Data => regData;
         public ProcessRelay ProcessRelay => Relay;
 

@@ -817,7 +817,7 @@ namespace FarEmerald.PlayForge.Extended.Editor
         private static int ScanTagLibraries()
         {
             int count = 0;
-            var guids = AssetDatabase.FindAssets("t:ForgeTagLibrary");
+            var guids = AssetDatabase.FindAssets($"t:{typeof(ForgeTagLibrary)}");
 
             foreach (var guid in guids)
             {

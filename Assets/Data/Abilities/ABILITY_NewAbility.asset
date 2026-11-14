@@ -1,0 +1,237 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d5a42dbe2415465689d11a1e8ae1fdbc, type: 3}
+  m_Name: ABILITY_NewAbility
+  m_EditorClassIdentifier: 
+  LocalData: []
+  _template: {fileID: 0}
+  _templateOverrides: []
+  _templateListSnapshots: []
+  Definition:
+    Name: New Ability
+    Description: 
+    ActivationPolicy: 0
+    BufferWindow: 0
+    BufferPriority:
+      Magnitude: 0
+      RealMagnitude: 2
+      Scaler:
+        rid: -2
+      Rounding: 0
+    ActivateImmediately: 0
+    Triggers: []
+    ChanceToActivate:
+      Magnitude: 1
+      RealMagnitude: 2
+      Scaler:
+        rid: -2
+    ActivationRoll:
+      PseudoRandom: 0
+      OwnLuck: 0
+      Luck:
+        Magnitude: 0
+        RealMagnitude: 2
+        Scaler:
+          rid: -2
+    ProcCoefficient:
+      Magnitude: 0
+      RealMagnitude: 2
+      Scaler:
+        rid: -2
+    IgnoresCrowdControl: []
+    Textures: []
+  Tags:
+    AssetTag:
+      Name: Ability.NewAbility
+      DisplayName: NewAbility
+    ContextTags: []
+    PassiveGrantedTags: []
+    ActiveGrantedTags: []
+    TagRequirements:
+      Name: 
+      SourceRequirements:
+        Name: 
+        SourceTemplate: {fileID: 0}
+        SyncWithTemplate: 0
+        AvoidTags: []
+        RequireTags: []
+      WhileActiveRequirements:
+        Name: 
+        SourceTemplate: {fileID: 0}
+        SyncWithTemplate: 0
+        AvoidTags: []
+        RequireTags: []
+      TargetRequirements:
+        Name: 
+        SourceTemplate: {fileID: 0}
+        SyncWithTemplate: 0
+        AvoidTags: []
+        RequireTags: []
+  Behaviour:
+    Targeting:
+      rid: 2403794428300361812
+    UseImplicitTargeting: 1
+    ImplicitTag:
+      Name: TargetzfvEmaa5gNtqhQ0_dE2_NOOAGh1QLRP8zfvEmaa5gNtqhQ0_dE2_NOOAGh
+      DisplayName: Target
+    AssetLoaders: []
+    Stages:
+    - StagePolicy:
+        rid: 2403794428300361821
+      Tasks: []
+      ApplyUsageEffects: 0
+      ApplyUsageAtStageStart: 0
+      Condition:
+        On: 0
+        Tag:
+          Name: 
+          DisplayName: 
+        WhenMissing: 0
+      CancelledBy: []
+      Blocks: []
+    CancelledBy: []
+    Blocks: []
+  SourceActivationRules:
+  - rid: 2403794428300361729
+  - rid: 2403794428300361730
+  - rid: 2403794428300361731
+  TargetActivationRules:
+  - rid: 2403794428300361732
+  StartingLevel: 1
+  MaxLevel: 4
+  IgnoreWhenLevelZero: 1
+  Cost: {fileID: 0}
+  AttributeCosts: []
+  Cooldown: {fileID: 0}
+  legacyCharges:
+    Magnitude: 1
+    RealMagnitude: 2
+    Scaler:
+      rid: -2
+    Rounding: 0
+  legacyRecharge:
+    rid: 2403794428300361733
+  legacyToggles: {fileID: 0}
+  WorkerGroup:
+    Name: Workers
+    AttributeWorkers: []
+    ImpactWorkers: []
+    TagWorkers: []
+    AnalysisWorkers: []
+  OnHit: []
+  Modifiers: []
+  Auras: []
+  Components:
+  - rid: 2403794428300361735
+  - rid: 2403794428300361736
+  - rid: 2403794428300361737
+  - rid: 2403794428300361739
+  legacyLifesteal: []
+  LinkMode: 0
+  _linkedSource: {fileID: 0}
+  references:
+    version: 2
+    RefIds:
+    - rid: -2
+      type: {class: , ns: , asm: }
+    - rid: 2403794428300361729
+      type: {class: CooldownValidation, ns: FarEmerald.PlayForge, asm: FarEmerald.PlayForge}
+      data: 
+    - rid: 2403794428300361730
+      type: {class: CostValidation, ns: FarEmerald.PlayForge, asm: FarEmerald.PlayForge}
+      data: 
+    - rid: 2403794428300361731
+      type: {class: IsAliveValidation, ns: FarEmerald.PlayForge, asm: FarEmerald.PlayForge}
+      data: 
+    - rid: 2403794428300361732
+      type: {class: IsAliveValidation, ns: FarEmerald.PlayForge, asm: FarEmerald.PlayForge}
+      data: 
+    - rid: 2403794428300361733
+      type: {class: EachChargeRecharge, ns: FarEmerald.PlayForge, asm: FarEmerald.PlayForge}
+      data: 
+    - rid: 2403794428300361735
+      type: {class: CastRangeAbilityComponent, ns: FarEmerald.PlayForge, asm: FarEmerald.PlayForge}
+      data:
+        Range:
+          Magnitude: 6
+          RealMagnitude: 2
+          Scaler:
+            rid: -2
+        Flat: 1
+    - rid: 2403794428300361736
+      type: {class: AuraAbilityComponent, ns: FarEmerald.PlayForge, asm: FarEmerald.PlayForge}
+      data:
+        Aura:
+          Effect: {fileID: 0}
+          Radius:
+            Magnitude: 5
+            RealMagnitude: 2
+            Scaler:
+              rid: -2
+          Flat: 1
+          Takes: 0
+          IncludeHolder: 1
+          Interval: 0.25
+    - rid: 2403794428300361737
+      type: {class: AuraAbilityComponent, ns: FarEmerald.PlayForge, asm: FarEmerald.PlayForge}
+      data:
+        Aura:
+          Effect: {fileID: 0}
+          Radius:
+            Magnitude: 0.43
+            RealMagnitude: 2
+            Scaler:
+              rid: -2
+          Flat: 1
+          Takes: 0
+          IncludeHolder: 1
+          Interval: 0.25
+    - rid: 2403794428300361739
+      type: {class: ChargesAbilityComponent, ns: FarEmerald.PlayForge, asm: FarEmerald.PlayForge}
+      data:
+        Charges:
+          Magnitude: 2
+          RealMagnitude: 2
+          Scaler:
+            rid: -2
+          Rounding: 0
+        Recharge:
+          rid: 2403794428300361817
+    - rid: 2403794428300361812
+      type: {class: AutoTargetTask, ns: FarEmerald.PlayForge, asm: FarEmerald.PlayForge}
+      data:
+        BreakRuntimeOnInvalid: 1
+        Requirements:
+          Name: 
+          SourceTemplate: {fileID: 0}
+          SyncWithTemplate: 0
+          AvoidTags: []
+          RequireTags: []
+        Mode: 0
+        MaxTargets: 1
+        IncludeSelf: 0
+        Range: 20
+        UseCastRange: 1
+        DetectionLayers:
+          serializedVersion: 2
+          m_Bits: 4294967295
+        Around: 2
+        Flat: 1
+        UsePhysics: 0
+        AttributeConditions: []
+        ExcludeDead: 1
+    - rid: 2403794428300361817
+      type: {class: EachChargeRecharge, ns: FarEmerald.PlayForge, asm: FarEmerald.PlayForge}
+      data: 
+    - rid: 2403794428300361821
+      type: {class: AllProxyStagePolicy, ns: FarEmerald.PlayForge, asm: FarEmerald.PlayForge}
+      data: 

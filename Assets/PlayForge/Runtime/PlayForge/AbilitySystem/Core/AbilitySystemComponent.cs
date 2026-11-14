@@ -865,7 +865,7 @@ namespace FarEmerald.PlayForge
             float window = req.BufferWindow >= 0f ? req.BufferWindow : definition.BufferWindow;
             if (window <= 0f) return false;
 
-            var entry = new BufferedRequest { Request = req, Left = window, Priority = definition.BufferPriority, Order = ++presses };
+            var entry = new BufferedRequest { Request = req, Left = window, Priority = definition.BufferPriority.Evaluate(NumberContext.Of(Self)), Order = ++presses };
             for (int i = 0; i < buffer.Count; i++)
             {
                 if (buffer[i].Request.Index != req.Index) continue;

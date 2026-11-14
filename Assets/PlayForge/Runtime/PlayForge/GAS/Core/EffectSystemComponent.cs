@@ -197,7 +197,8 @@ namespace FarEmerald.PlayForge
             foreach (var other in taken)
             {
                 if (!LandFromArea(spec, other)) continue;
-                if (area.MaxTargets > 0 && ++landed >= area.MaxTargets) break;
+                int maxTargets = area.MaxTargets.Evaluate(NumberContext.Of(spec));
+                if (maxTargets > 0 && ++landed >= maxTargets) break;
             }
         }
 
@@ -207,7 +208,8 @@ namespace FarEmerald.PlayForge
         private bool LandOverArea(GameplayEffectSpec spec, EffectArea area)
         {
             var taken = TakenBy(spec, area);
-            int picked = area.MaxTargets > 0 ? Mathf.Min(area.MaxTargets, taken.Count) : taken.Count;
+            int maxTargets = area.MaxTargets.Evaluate(NumberContext.Of(spec));
+            int picked = maxTargets > 0 ? Mathf.Min(maxTargets, taken.Count) : taken.Count;
             var order = new List<ITarget>(picked + 1) { Self };
             for (int i = 0; i < picked; i++) order.Add(taken[i]);
             ForgeResolveOrder.Sort(order);
@@ -219,7 +221,7 @@ namespace FarEmerald.PlayForge
                 if (ReferenceEquals(each, Self)) landed = Land(spec);
                 else if (LandFromArea(spec, each)) others++;
             }
-            for (int next = picked; area.MaxTargets > 0 && others < area.MaxTargets && next < taken.Count; next++)
+            for (int next = picked; maxTargets > 0 && others < maxTargets && next < taken.Count; next++)
                 if (LandFromArea(spec, taken[next])) others++;
             return landed;
         }
@@ -229,6 +231,7 @@ namespace FarEmerald.PlayForge
         private List<ITarget> TakenBy(GameplayEffectSpec spec, EffectArea area)
         {
             var taken = new List<ITarget>();
+            int maxTargets = area.MaxTargets.Evaluate(NumberContext.Of(spec));
             var here = Self.GetTargetingPacket();
             if (here == null) return taken;
             float radius = area.Radius.Evaluate(NumberContext.Of(spec));
@@ -236,7 +239,7 @@ namespace FarEmerald.PlayForge
 
             ForgeEntities.Within(here.position, radius, area.Flat, taken);
             var centre = here.position;
-            if (area.MaxTargets > 0) taken.Sort((a, b) => ForgeEntities.Distance(a, centre, area.Flat).CompareTo(ForgeEntities.Distance(b, centre, area.Flat)));
+            if (maxTargets > 0) taken.Sort((a, b) => ForgeEntities.Distance(a, centre, area.Flat).CompareTo(ForgeEntities.Distance(b, centre, area.Flat)));
 
             var caster = spec.Origin?.GetSource();
             var sides = spec.Origin?.GetAffiliation();

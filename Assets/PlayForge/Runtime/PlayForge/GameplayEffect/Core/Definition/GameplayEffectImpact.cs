@@ -12,20 +12,6 @@ namespace FarEmerald.PlayForge
     [Serializable]
     public class GameplayEffectImpact
     {
-        // ═══════════════════════════════════════════════════════════════════════════
-        // IMPACT ENTRIES — REBUILT ON EVERY Generate() (IMPACT_MODEL_REFACTOR.md §3.1)
-        //
-        // The first entry is derived from the single quad below and the duration flags,
-        // and never serialized, so inspector edits — magnitude, attribute target, duration
-        // policy, tick flags — always take effect immediately. Serializing it was a bug:
-        // OnValidate froze half-authored state into the asset (null targets, stale
-        // magnitudes, deliveries minted while the policy was still Instant) and never
-        // re-synced.
-        //
-        // The entries after it are AdditionalImpacts, authored as entries, each with its
-        // own delivery, now that a drawer edits them (ED-3).
-        // ═══════════════════════════════════════════════════════════════════════════
-
         [NonSerialized] private List<AttributeImpactEntry> derivedEntries;
 
         public IReadOnlyList<AttributeImpactEntry> Entries =>

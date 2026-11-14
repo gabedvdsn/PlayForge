@@ -76,7 +76,7 @@ namespace FarEmerald.PlayForge
         public bool OwnProcCoefficient;
 
         [Tooltip("What its hits carry for their on-hit effects, whose chance and duration scale by it; 0 sets nothing off (TW-8)")]
-        [Min(0f)] public float ProcCoefficient = 1f;
+        [NumberMin(0f)] public ScalableFloat ProcCoefficient = 1f;
 
         public GameplayEffectImpact ImpactSpecification;
         public GameplayEffectDuration DurationSpecification;

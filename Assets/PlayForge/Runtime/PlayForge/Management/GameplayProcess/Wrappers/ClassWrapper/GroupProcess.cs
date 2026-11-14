@@ -333,8 +333,8 @@ namespace FarEmerald.PlayForge
 
         #region Readable Definition
 
-        public override string GetName() => $"Group: {ProcessName}";
-        public override string GetDescription() => $"Group process '{ProcessName}' with {MemberCount} member(s).";
+        public override string GetName() => $"Group: {base.GetName()}";
+        public override string GetDescription() => $"Group process '{base.GetName()}' with {MemberCount} member(s).";
 
         #endregion
     }

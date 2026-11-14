@@ -49,7 +49,7 @@ namespace FarEmerald.PlayForge
         [Tooltip("Maximum level for Unlocked/Partitioned modes.\n" +
                  "Ignored when using LockToSource (uses source's max level instead).")]
         [Min(1)]
-        public int MaxLevel = 20;
+        public int MaxLevel = 10;
         
         [Tooltip("Value at each level (index 0 = level 1)")]
         public float[] LevelValues = new float[] { 1f };

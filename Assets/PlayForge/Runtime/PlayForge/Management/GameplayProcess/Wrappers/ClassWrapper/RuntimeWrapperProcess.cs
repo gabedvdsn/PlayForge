@@ -89,7 +89,7 @@ namespace FarEmerald.PlayForge
         {
             return Process.IsInitialized;
         }
-        public override string ProcessName => getProcessName ?? Process.ProcessName;
+        public override string ProcessName => getProcessName ?? Process.GetName();
         public override EProcessStepPriorityMethod PriorityMethod => Process.PriorityMethod;
         public override int StepPriority => Process.StepPriority;
         public override EProcessStepTiming StepTiming => Process.StepTiming;

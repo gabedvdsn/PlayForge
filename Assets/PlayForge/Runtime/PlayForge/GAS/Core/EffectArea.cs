@@ -25,6 +25,7 @@ namespace FarEmerald.PlayForge
     public class EffectArea
     {
         [Tooltip("How far from its target it reaches, read as it lands; 0, no area: it lands on its target alone")]
+        [NumberMin(0f)]
         public ScalableFloat Radius = 0f;
 
         [Tooltip("Measures along the ground, leaving height out; off, a sphere")]
@@ -37,7 +38,7 @@ namespace FarEmerald.PlayForge
         public bool IncludeCaster;
 
         [Tooltip("At most this many besides its target, the nearest first; 0, every one it reaches")]
-        [Min(0)] public int MaxTargets;
+        [NumberMin(0f)] public ScalableInt MaxTargets;
 
         [Tooltip("Lands on its target and those it takes in the project's resolve order, its target among them; off, its " +
                  "target first, then those near (TW-31)")]

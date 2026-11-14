@@ -1,0 +1,98 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &1
+MonoBehaviour:
+  m_ObjectHideFlags: 53
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3591c67299724587a4d0b988b74b98c5, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  Data:
+    NewAssets:
+    - Type: Ability
+      Folder: Assets/Data/Abilities
+      Prefix: ABILITY_
+      Suffix: 
+    - Type: GameplayEffect
+      Folder: Assets/Data/Effects
+      Prefix: EFFECT_
+      Suffix: 
+    - Type: Item
+      Folder: Assets/Data/Items
+      Prefix: ITEM_
+      Suffix: 
+    - Type: Attribute
+      Folder: Assets/Data/Attributes
+      Prefix: ATTR_
+      Suffix: 
+    - Type: AttributeSet
+      Folder: Assets/Data/AttributeSets
+      Prefix: ATTR_SET_
+      Suffix: 
+    - Type: EntityIdentity
+      Folder: Assets/Data/Entities
+      Prefix: ENTITY_
+      Suffix: 
+    - Type: ScalerAsset
+      Folder: Assets/Data/Templates/Scalers
+      Prefix: 
+      Suffix: 
+    - Type: RequirementTemplate
+      Folder: Assets/Data/Requirements
+      Prefix: REQ_
+      Suffix: 
+    - Type: ValuePipeline
+      Folder: Assets/Data/Pipelines
+      Prefix: 
+      Suffix: 
+    - Type: EffectModifier
+      Folder: Assets/Data/Modifiers
+      Prefix: 
+      Suffix: 
+    - Type: CrowdControlRules
+      Folder: Assets/Data/Rules
+      Prefix: 
+      Suffix: 
+    Defaults:
+    - Type: Ability
+      NewAsset: {fileID: 0}
+      Import: []
+    - Type: GameplayEffect
+      NewAsset: {fileID: 0}
+      Import: []
+    - Type: Item
+      NewAsset: {fileID: 0}
+      Import: []
+    - Type: Attribute
+      NewAsset: {fileID: 0}
+      Import: []
+    - Type: AttributeSet
+      NewAsset: {fileID: 0}
+      Import: []
+    - Type: EntityIdentity
+      NewAsset: {fileID: 0}
+      Import: []
+    - Type: ScalerAsset
+      NewAsset: {fileID: 0}
+      Import: []
+    - Type: RequirementTemplate
+      NewAsset: {fileID: 0}
+      Import: []
+    - Type: ValuePipeline
+      NewAsset: {fileID: 0}
+      Import: []
+    - Type: EffectModifier
+      NewAsset: {fileID: 0}
+      Import: []
+    - Type: CrowdControlRules
+      NewAsset: {fileID: 0}
+      Import: []
+    CostEffect: {fileID: 0}
+    CooldownEffect: {fileID: 0}
+  movedToProject: 1
+  tookMachineSettings: 1
