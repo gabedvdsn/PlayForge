@@ -663,11 +663,11 @@ namespace FarEmerald.PlayForge
                 sides.Add(container, given, change.Priority, change.Interrupts);
             }
 
-            // Its auras, while it lasts (TW-10)
-            var auras = container.Spec.Base.Auras;
+            // Its auras, its Aura components', while it lasts (TW-10, FN-14)
+            var auras = ForgeAuras.Of(container.Spec.Base.Components);
             if (auras is { Count: > 0 })
             {
-                var given = new List<AuraEntry>(auras);
+                var given = auras;
                 ForgeAuras.Provide(given, Self);
                 aurasLent[container] = given;
             }

@@ -519,7 +519,7 @@ namespace FarEmerald.PlayForge.Extended.Editor
                 HelpTopic = "entities/workers",
 
                 SerializedObject = serializedObject,
-                PropertyPaths = new[] { nameof(EntityIdentity.Modifiers), nameof(EntityIdentity.Auras), nameof(EntityIdentity.Lifesteal), nameof(EntityIdentity.WorkerGroup) },
+                PropertyPaths = new[] { nameof(EntityIdentity.Modifiers), nameof(EntityIdentity.Lifesteal), nameof(EntityIdentity.WorkerGroup) },
                 ImportAcrossTypes = true,
                 OnImportComplete = OnSectionReplaced,
                 OnClearComplete = OnSectionReplaced,
@@ -528,8 +528,6 @@ namespace FarEmerald.PlayForge.Extended.Editor
 
             // How it changes effects, its own or those landing on it, as long as it lives (TW-7)
             workersSection.Content.Add(CreatePropertyField(serializedObject.FindProperty(nameof(EntityIdentity.Modifiers)), "Modifiers", "Modifiers"));
-            // The effects it holds on those near it, as long as it lives (TW-10)
-            workersSection.Content.Add(CreatePropertyField(serializedObject.FindProperty(nameof(EntityIdentity.Auras)), "Auras", "Auras"));
             // What it heals of the damage it deals (TW-15)
             workersSection.Content.Add(CreatePropertyField(serializedObject.FindProperty(nameof(EntityIdentity.Lifesteal)), "Lifesteal", "Lifesteal"));
             workersSection.Content.Add(CreatePropertyField(serializedObject.FindProperty(nameof(EntityIdentity.WorkerGroup)), "WorkerGroup", ""));
@@ -653,7 +651,7 @@ namespace FarEmerald.PlayForge.Extended.Editor
                 abilitiesSection.Summary.text = CountOf(entity.StartingAbilities?.Count(ability => ability != null) ?? 0, "ability", "abilities");
             if (itemsSection != null) itemsSection.Summary.text = ItemsSummary();
             if (componentsSection != null) componentsSection.Summary.text = CountOf(entity.Components?.Count(each => each != null) ?? 0, "component", "components");
-            if (workersSection != null) workersSection.Summary.text = WorkersLine(null, entity.Modifiers, entity.Auras, entity.Lifesteal, WorkerCount(entity.WorkerGroup));
+            if (workersSection != null) workersSection.Summary.text = WorkersLine(null, entity.Modifiers, null, entity.Lifesteal, WorkerCount(entity.WorkerGroup));
             if (localDataSection != null) localDataSection.Summary.text = CountOf(entity.LocalData?.Count ?? 0, "entry", "entries");
             if (usedBySection != null) usedBySection.Summary.text = usedBy == null ? "" : CountOf(usedBy.Count, "asset", "assets");
         }

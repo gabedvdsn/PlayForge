@@ -49,6 +49,55 @@ namespace FarEmerald.PlayForge
             foreach (var entry in entries)
                 if (entry != null) auras.Remove(entry);
         }
+
+        /// <summary>The auras a list of components holds, each an Aura component's; null where it holds none (FN-14).</summary>
+        public static List<AuraEntry> Of<T>(List<T> components) where T : AbstractForgeComponent
+        {
+            if (components == null) return null;
+            List<AuraEntry> auras = null;
+            foreach (var component in components)
+                if (component is IAuraComponent held && held.Aura != null) (auras ??= new List<AuraEntry>()).Add(held.Aura);
+            return auras;
+        }
+    }
+
+    /// <summary>A component that holds an aura: its holder's effect on those near it (TW-10, FN-14).</summary>
+    public interface IAuraComponent
+    {
+        /// <summary>The aura it holds.</summary>
+        AuraEntry Aura { get; }
+    }
+
+    /// <summary>An aura an effect holds while it lasts, on those near the one it's on (TW-10, FN-14).</summary>
+    [Serializable]
+    public sealed class AuraEffectComponent : AbstractEffectComponent, IAuraComponent
+    {
+        public AuraEntry Aura = new();
+        AuraEntry IAuraComponent.Aura => Aura;
+    }
+
+    /// <summary>An aura an ability holds while its holder knows it, on those near its holder (TW-10, FN-14).</summary>
+    [Serializable]
+    public sealed class AuraAbilityComponent : AbstractAbilityComponent, IAuraComponent
+    {
+        public AuraEntry Aura = new();
+        AuraEntry IAuraComponent.Aura => Aura;
+    }
+
+    /// <summary>An aura an item holds while it's equipped, on those near its holder (TW-10, FN-14).</summary>
+    [Serializable]
+    public sealed class AuraItemComponent : AbstractItemComponent, IAuraComponent
+    {
+        public AuraEntry Aura = new();
+        AuraEntry IAuraComponent.Aura => Aura;
+    }
+
+    /// <summary>An aura an entity holds while it lives, on those near it (TW-10, FN-14).</summary>
+    [Serializable]
+    public sealed class AuraEntityComponent : AbstractEntityComponent, IAuraComponent
+    {
+        public AuraEntry Aura = new();
+        AuraEntry IAuraComponent.Aura => Aura;
     }
 
     /// <summary>

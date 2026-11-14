@@ -322,6 +322,16 @@ A component of your own derives from `AbstractEffectComponent` and overrides the
 otherwise. It's the effect's, shared by everything that holds it, so what it keeps for one application of it it keeps through its
 context: `ctx.GetState<T>(this)`.
 
+### Auras
+
+An **Aura** component holds an effect on those near the one it's on, while it lasts (TW-10). Items, abilities and
+entities have one too, each its own kind (FN-14). Each has the **Effect** it holds, a **Radius** from its holder, read at each check, **Flat**,
+whom it **Takes** from its holder's sides, its holder too where **Include Holder** says, and an **Interval**, 0.25 s by
+default, at which it checks who's near, by its holder's own time. It puts its effect on each that comes near, from an
+origin of its own, and takes it off as they leave, die or end, as its holder dies or ends, or as the aura goes; an
+effect of its that ends on its own, a durational one, goes on again at its next check. An Infinite effect holds as long
+as they're near. Two of an item hold two, as their effect's stacking says.
+
 ## Workers
 
 Effect workers react to this effect's own events. A worker can act when the effect is applied, when it ticks, when it
@@ -376,16 +386,6 @@ change is exact: no worker takes it for a hit, no barrier soaks it and nothing s
 giver gave, as far as its own bounds let it; what its maximum can't hold is lost, as an overheal is. The Problems view
 warns of a transfer whose Delivery the effect's duration can't make, as it does an additional impact's, and of one that
 names no attribute to give or get.
-
-### Auras
-
-**Auras**, after Modifiers, hold an effect on those near the one it's on, while it lasts (TW-10). Items, abilities and
-entities hold them too. Each has the **Effect** it holds, a **Radius** from its holder, read at each check, **Flat**,
-whom it **Takes** from its holder's sides, its holder too where **Include Holder** says, and an **Interval**, 0.25 s by
-default, at which it checks who's near, by its holder's own time. It puts its effect on each that comes near, from an
-origin of its own, and takes it off as they leave, die or end, as its holder dies or ends, or as the aura goes; an
-effect of its that ends on its own, a durational one, goes on again at its next check. An Infinite effect holds as long
-as they're near. Two of an item hold two, as their effect's stacking says.
 
 ### Resolve Order
 

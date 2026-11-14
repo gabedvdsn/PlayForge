@@ -1,5 +1,7 @@
 using System;
 using UnityEditor;
+using UnityEditor.UIElements;
+using UnityEngine.UIElements;
 
 namespace FarEmerald.PlayForge.Extended.Editor
 {
@@ -45,6 +47,28 @@ namespace FarEmerald.PlayForge.Extended.Editor
             var path = element.propertyPath;
             int at = path.LastIndexOf(".Array.data[", StringComparison.Ordinal);
             return at < 0 ? null : element.serializedObject.FindProperty(path.Substring(0, at));
+        }
+    }
+
+    /// <summary>
+    /// An aura's fields, drawn where it's held, as an Aura component's own: a field of the aura's whole drew a foldout
+    /// inside the component (FN-14, as FN-17's Death).
+    /// </summary>
+    [CustomPropertyDrawer(typeof(AuraEntry))]
+    public class AuraEntryDrawer : PropertyDrawer
+    {
+        public override VisualElement CreatePropertyGUI(SerializedProperty property)
+        {
+            var root = new VisualElement { name = "AuraFields" };
+            var child = property.Copy();
+            var end = property.GetEndProperty();
+            if (!child.NextVisible(true)) return root;
+            do
+            {
+                if (SerializedProperty.EqualContents(child, end)) break;
+                root.Add(new PropertyField(child.Copy()) { name = child.name });
+            } while (child.NextVisible(false));
+            return root;
         }
     }
 

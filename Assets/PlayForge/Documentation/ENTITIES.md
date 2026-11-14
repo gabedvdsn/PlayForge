@@ -127,6 +127,10 @@ A component of your own derives from `AbstractEntityComponent` and overrides the
 otherwise. It's the entity's, shared by everything that holds it, so what it keeps for one entity it keeps through its
 context: `ctx.GetState<T>(this)`.
 
+An **Aura** component holds an effect on those near the entity as long as it lives, as a captain's command aura
+(TW-10, [EFFECTS.md](EFFECTS.md#auras)). An entity that dies takes its auras' effects off, and one that stays and
+revives holds them again.
+
 ## Workers
 
 Workers are reusable behaviours, picked from a list, that react to what happens to an entity. This group is subscribed
@@ -162,11 +166,7 @@ as Blade Mail.
 Frost Mage's every Chill granting Frozen, or those landing on it (TW-7). Each entry is a rule of its own or names a
 shared Effect Modifier asset ([EFFECTS.md](EFFECTS.md#modifiers)).
 
-**Auras**, after Modifiers, hold an effect on those near the entity as long as it lives, as a captain's command aura
-(TW-10, [EFFECTS.md](EFFECTS.md#auras)). An entity that dies takes its auras' effects off, and one that stays and
-revives holds them again.
-
-**Lifesteal**, after Auras, heals the entity for the hits it deals as long as it lives (TW-15,
+**Lifesteal**, after Modifiers, heals the entity for the hits it deals as long as it lives (TW-15,
 [ITEMS.md](ITEMS.md#lifesteal)).
 
 ## Death

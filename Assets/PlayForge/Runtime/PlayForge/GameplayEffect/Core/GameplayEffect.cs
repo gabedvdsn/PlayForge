@@ -9,7 +9,7 @@ using UnityEngine.Serialization;
 namespace FarEmerald.PlayForge
 {
     [CreateAssetMenu(menuName = "PlayForge/Gameplay Effect", fileName = "Effect_", order = 21)]
-    public class GameplayEffect : BaseForgeLevelProvider
+    public class GameplayEffect : BaseForgeLevelProvider, ISerializationCallbackReceiver, IMovesToComponents
     {
         public GameplayEffectDefinition Definition = new();
         public GameplayEffectTags Tags = new();
@@ -31,8 +31,8 @@ namespace FarEmerald.PlayForge
         [Tooltip("Modifiers of other effects, its holder's own or those landing on it, while it lasts, the holder the one it's on (TW-7)")]
         public List<EffectModifierEntry> Modifiers = new();
 
-        [Tooltip("Auras it holds on those near the one it's on, while it lasts (TW-10)")]
-        public List<AuraEntry> Auras = new();
+        // Its auras as a save before components kept them, each moved into an Aura component as it loads (FN-14)
+        [SerializeField, HideInInspector] private List<AuraEntry> Auras = new();
 
         [Tooltip("Its area: as it lands on its target, it lands on each the area takes near that target too (TW-10)")]
         public EffectArea Area = new();
@@ -60,6 +60,22 @@ namespace FarEmerald.PlayForge
                  "ends (FN-14)")]
         [SerializeReference]
         public List<AbstractEffectComponent> Components = new();
+
+        /// <summary>Whether it moved an older save's fields into its components as it loaded, which a save keeps (FN-14).</summary>
+        public bool MovedToComponents { get; set; }
+
+        void ISerializationCallbackReceiver.OnBeforeSerialize() { }
+
+        // An older save's fields, each moved into a component as it loads, in the editor and in a build (FN-14, Decision 76)
+        void ISerializationCallbackReceiver.OnAfterDeserialize()
+        {
+            if (Auras is not { Count: > 0 }) return;
+            Components ??= new List<AbstractEffectComponent>();
+            foreach (var aura in Auras)
+                if (aura != null) Components.Add(new AuraEffectComponent { Aura = aura });
+            Auras.Clear();
+            MovedToComponents = true;
+        }
 
         [Tooltip("Workers it gives the one it's on while it lasts, and takes back as it goes: attribute, impact, tag and " +
                  "analysis workers, as a debuff that changes how its target takes damage, or shatters it below 13% (TW-13)")]

@@ -444,6 +444,11 @@ tracks each fix below by its ID.
   page, through one table of links in the editor.
 
 ### Changed
+- Auras are components: an Aura component on an effect, an ability, an item or an entity, in its Components section,
+  where they were a list in Workers. `GameplayEffect.Auras`, `Ability.Auras`, `Item.Auras`, `EntityIdentity.Auras` and
+  `RuntimeEntityIdentity.Auras` are gone; add an `AuraEffectComponent`, `AuraAbilityComponent`, `AuraItemComponent` or
+  `AuraEntityComponent` instead. A saved asset's auras move into components as it loads, and Window → PlayForge → Move
+  to Components saves each asset that moved (FN-14).
 - Six `Tags` properties take their texts' names: `ADDITIONAL` is `BONUS`, `PARENT_TRANSFORM` is `TRANSFORM`, `SUBJECT`
   is `EVENT_SUBJECT`, `IMPACT` is `EVENT_IMPACT`, `ALLOW` is `ALWAYS_ALLOW` and `DISALLOW` is `NEVER_ALLOW`; rename them
   where your code has them. The tags themselves, and every asset that stores one, are as they were. `Tags.cs` is grouped

@@ -9,7 +9,7 @@ using Object = UnityEngine.Object;
 namespace FarEmerald.PlayForge
 {
     [CreateAssetMenu(menuName = "PlayForge/Ability", fileName = "Ability_", order = 20)]
-    public class Ability : BaseForgeLevelProvider, IWorkerGroupSource
+    public class Ability : BaseForgeLevelProvider, IWorkerGroupSource, ISerializationCallbackReceiver, IMovesToComponents
     {
         public AbilityDefinition Definition = new();
         public AbilityTags Tags = new();
@@ -80,12 +80,28 @@ namespace FarEmerald.PlayForge
         [Tooltip("Modifiers of other effects, its holder's own or those landing on it, while it's known (TW-7)")]
         public List<EffectModifierEntry> Modifiers = new();
 
-        [Tooltip("Auras it holds on those near its holder, while it's known (TW-10)")]
-        public List<AuraEntry> Auras = new();
+        // Its auras as a save before components kept them, each moved into an Aura component as it loads (FN-14)
+        [SerializeField, HideInInspector] private List<AuraEntry> Auras = new();
 
         [Tooltip("Its components: features it carries, each a class with hooks into its life, as it's granted, starts, commits its cost and cooldown, ends and is removed; each may refuse an activation (FN-14)")]
         [SerializeReference]
         public List<AbstractAbilityComponent> Components = new();
+
+        /// <summary>Whether it moved an older save's fields into its components as it loaded, which a save keeps (FN-14).</summary>
+        public bool MovedToComponents { get; set; }
+
+        void ISerializationCallbackReceiver.OnBeforeSerialize() { }
+
+        // An older save's fields, each moved into a component as it loads, in the editor and in a build (FN-14, Decision 76)
+        void ISerializationCallbackReceiver.OnAfterDeserialize()
+        {
+            if (Auras is not { Count: > 0 }) return;
+            Components ??= new List<AbstractAbilityComponent>();
+            foreach (var aura in Auras)
+                if (aura != null) Components.Add(new AuraAbilityComponent { Aura = aura });
+            Auras.Clear();
+            MovedToComponents = true;
+        }
 
         [Tooltip("Its holder heals a share of each loss it deals, while it's known (TW-15)")]
         public List<LifestealEntry> Lifesteal = new();
@@ -261,7 +277,7 @@ namespace FarEmerald.PlayForge
             WorkerGroup?.ProvideWorkersTo(system);
             OnHits.Provide(OnHit, system);
             EffectModifiers.Provide(Modifiers, system);
-            ForgeAuras.Provide(Auras, system);
+            ForgeAuras.Provide(ForgeAuras.Of(Components), system);
             Lifesteals.Provide(Lifesteal, system);
         }
         public void RemoveWorkers(ISource system)
@@ -269,7 +285,7 @@ namespace FarEmerald.PlayForge
             WorkerGroup?.RemoveWorkersFrom(system);
             OnHits.Remove(OnHit, system);
             EffectModifiers.Remove(Modifiers, system);
-            ForgeAuras.Remove(Auras, system);
+            ForgeAuras.Remove(ForgeAuras.Of(Components), system);
             Lifesteals.Remove(Lifesteal, system);
         }
     }

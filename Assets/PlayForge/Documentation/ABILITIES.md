@@ -285,6 +285,12 @@ A component of your own derives from `AbstractAbilityComponent` and overrides th
 otherwise. It's the ability's, shared by everything that holds it, so what it keeps for one entity's ability it keeps through its
 context: `ctx.GetState<T>(this)`.
 
+### Auras
+
+An **Aura** component holds an effect on those near its holder, while the entity knows the ability, as a banner that inspires the allies
+round its bearer (TW-10): each a radius, whom it takes, its holder too or not, and how often it checks
+([EFFECTS.md](EFFECTS.md#auras)).
+
 ## Workers
 
 Workers are reusable behaviours, picked from a list, that react to what happens to an entity. This group is subscribed
@@ -312,15 +318,9 @@ types and a condition ([ITEMS.md](ITEMS.md#on-hit)).
 burst to its holder's every Chill, or those landing on it, as a cloak that halves the stuns its wearer takes (TW-7).
 Each entry is a rule of its own or names a shared Effect Modifier asset ([EFFECTS.md](EFFECTS.md#modifiers)).
 
-### Auras
-
-**Auras**, after Modifiers, hold an effect on those near its holder, while the entity knows the ability, as a banner that inspires the allies
-round its bearer (TW-10): each a radius, whom it takes, its holder too or not, and how often it checks
-([EFFECTS.md](EFFECTS.md#auras)).
-
 ### Lifesteal
 
-**Lifesteal**, after Auras, heals its holder for the hits it deals, while the entity knows the ability (TW-15): each entry's **Share** of each
+**Lifesteal**, after Modifiers, heals its holder for the hits it deals, while the entity knows the ability (TW-15): each entry's **Share** of each
 workable loss it deals another to its **Attribute**, the Health role's where it names none, of some **Impact Types**
 where it names any, while its **When** holds, as a vampiric mask heals its wearer for its attacks.
 ## Local Data

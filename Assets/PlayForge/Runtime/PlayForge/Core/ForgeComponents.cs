@@ -19,6 +19,16 @@ namespace FarEmerald.PlayForge
         public virtual bool AllowsSeveral => true;
     }
 
+    /// <summary>
+    /// An asset that moves an older save's fields into its components as it loads, in the editor and in a build; until
+    /// it's saved, it moves them each time (FN-14, Decision 76).
+    /// </summary>
+    public interface IMovesToComponents
+    {
+        /// <summary>Whether it moved any as it last loaded, which only a save keeps.</summary>
+        bool MovedToComponents { get; set; }
+    }
+
     /// <summary>What a holder's components keep for it: an object for each component, made the first time it's asked for (FN-14).</summary>
     public sealed class ComponentStates
     {

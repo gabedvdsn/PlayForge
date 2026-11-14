@@ -127,7 +127,7 @@ namespace FarEmerald.PlayForge.Extended.Editor
                 {
                     Lasting(effect, EEffectDurationPolicy.Infinite, 0f);
                     Impact(effect, null, 0f, EAffiliationPolicy.Affiliated);
-                    effect.Auras.Add(new AuraEntry());
+                    effect.Components.Add(new AuraEffectComponent());
                 }),
             new("On-Hit", typeof(Item), "On-Hit Item", "An item whose holder's hits apply the effects its On Hit entry names",
                 (asset, _) => ((Item)asset).OnHit.Add(new OnHitEntry { To = EOnHitTo.Target })),
