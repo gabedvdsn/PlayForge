@@ -467,6 +467,9 @@ tracks each fix below by its ID.
   page, through one table of links in the editor.
 
 ### Changed
+- A staying entity's death purges its effects, all but those it keeps: the categories it keeps whatever their tiers
+  (cooldowns, lent effects and toggles as a project starts, and its own where it says), and the tiers it keeps, its
+  project's Purge Levels' and its own (FN-16).
 - A dead entity takes no one else's effects: one another applies to it while it's dead is refused, its own landing still,
   as its death's and revive's (FN-16).
 - An effect's own Lifesteal raises its caster's Lifesteal for its own hits, which the Lifesteal worker heals by, its
@@ -1050,6 +1053,7 @@ tracks each fix below by its ID.
   or turning `Enabled` off. Once the first had ended, it threw, and the rest ran on.
 
 ### Removed
+- Death's **Ends Effects Tagged**: a staying entity's death purges its effects but those it keeps (FN-16).
 - Items', abilities' and entities' **Lifesteal** lists, with `Lifesteals`, `LifestealEntry`'s worker and
   `ForgeLifesteal.Heal`: a holder's lifesteal is its Lifesteal attribute, which an effect raises and the Lifesteal worker
   heals by. An older save's list loads hidden and heals no more; the Problems view names it (FN-15).

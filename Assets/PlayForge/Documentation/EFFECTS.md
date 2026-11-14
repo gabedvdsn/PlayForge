@@ -99,6 +99,10 @@ enemies (its debuffs), an applier sharing none of its sides an enemy; and **Filt
 An effect a purge takes comes off at the next tick, as a removed effect does, and a purge never takes the effect doing
 it. `ForgePurge.Purge(entity, strength)` purges by a strength alone, of every kind.
 
+A staying entity's death purges its effects too, all but those it keeps: each tier's **Kept On Death** keeps the
+effects at it, and the table's **Kept On Death** categories keep theirs whatever their tiers, an ability's cooldowns,
+lent effects and toggles as a project starts ([ENTITIES.md](ENTITIES.md#death)).
+
 ## Duration
 
 The fields show as the Policy uses them.

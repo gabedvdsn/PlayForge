@@ -470,12 +470,13 @@ namespace FarEmerald.PlayForge
             return true;
         }
 
-        // A staying entity's death: the effects it ends, its body gone, the effects it takes, as a respawn timer
+        // A staying entity's death: its purge, all but what it keeps (FN-16), its body gone, the effects it takes, as a
+        // respawn timer
         private void Die()
         {
             var death = Identity?.Death;
             if (death == null) return;
-            if (death.EndsEffectsTagged is { Count: > 0 }) EffectSystem.RemoveEffectsTagged(death.EndsEffectsTagged);
+            if (death.Purges) ForgePurge.PurgeOnDeath(owner, death);
             EndBody();
             ApplyEach(death.OnDeath);
         }

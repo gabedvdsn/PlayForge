@@ -35,10 +35,21 @@ namespace FarEmerald.PlayForge
                  "watches for its death. Off, as for a training dummy, that attribute doesn't kill it (TW-28, TW-29)")]
         public bool DiesAtZeroHealth = true;
 
-        [Tooltip("Where it stays: the effects its death ends, by an asset, context or granted tag, as its buffs and debuffs; " +
-                 "the rest, as its cooldowns, go on")]
-        [ForgeTagContext(ForgeContext.AssetTag, ForgeContext.ContextTag, ForgeContext.Granted)]
-        public List<Tag> EndsEffectsTagged = new();
+        [Tooltip("Where it stays: as it dies, it purges its effects, all but those it keeps, as the games' deaths do; off, it " +
+                 "keeps them all (FN-16)")]
+        public bool Purges = true;
+
+        [Tooltip("It keeps what its project's Purge Levels keep on death, their tiers and categories, beside its own below; " +
+                 "with no project, cooldowns, lent effects and toggles")]
+        public bool KeepsAsProject = true;
+
+        [Tooltip("The tiers it keeps besides, by their tags in its project's Purge Levels")]
+        [ForgeTagContext(ForgeContext.ContextTag, ForgeContext.AssetTag)]
+        public List<Tag> KeepsTiers = new();
+
+        [Tooltip("The categories it keeps besides, whatever their effects' tiers: an ability's cooldown, what an item, an aura, " +
+                 "a set bonus or a passive lends, a toggle, its own")]
+        public EEffectCategory KeepsCategories = EEffectCategory.None;
 
         [Tooltip("Where it stays: the effects it takes as it dies, as a respawn timer, whose end revives it " +
                  "(Revive On Removal)")]

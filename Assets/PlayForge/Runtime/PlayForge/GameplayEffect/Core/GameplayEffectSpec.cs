@@ -120,6 +120,9 @@ namespace FarEmerald.PlayForge
         /// </summary>
         public int SpreadHop { get; internal set; }
 
+        /// <summary>Whether an aura lent it, which takes it back as its holder goes or the one it's on leaves (FN-16).</summary>
+        public bool LentByAura { get; internal set; }
+
         /// <summary>Whether a lasting impact of its fades with it, a barrier's, so its shelf refreshes it as it ticks (TW-12).</summary>
         internal bool Fades { get; private set; }
 

@@ -35,7 +35,7 @@ namespace FarEmerald.PlayForge
         /// <summary>The effect an ability toggled on its caster.</summary>
         Toggle = 4,
 
-        /// <summary>One the entity applied to itself.</summary>
+        /// <summary>One the entity applied to itself, but its cooldowns, lent effects and toggles.</summary>
         Own = 8,
     }
 
@@ -167,6 +167,65 @@ namespace FarEmerald.PlayForge
     {
         /// <summary>The current project's purge levels, or null where no project is current.</summary>
         public static PurgeLevels Levels => ForgeProject.Current?.Settings?.PurgeLevels;
+
+        // What a death keeps with no project: no tiers, and cooldowns, lent effects and toggles, as a project starts
+        private static readonly PurgeLevels NoProject = new();
+
+        /// <summary>
+        /// A staying entity's death's purge (FN-16, Decision 79): each of its effects comes off but those its death keeps,
+        /// the categories it keeps whatever their tiers, and the tiers it keeps, its project's where it keeps what its
+        /// project does and its own; an effect at no tier goes (Decision 80). How many came off.
+        /// </summary>
+        public static int PurgeOnDeath(IGameplayAbilitySystem dead, EntityDeath death)
+        {
+            if (dead?.GetEffectSystem() is not { } effects || death == null) return 0;
+            var levels = Levels ?? NoProject;
+            var categories = death.KeepsCategories | (death.KeepsAsProject ? levels.KeptOnDeath : EEffectCategory.None);
+            return effects.Purge(container => !KeptOnDeath(container, dead, death, levels, categories));
+        }
+
+        // Whether a death keeps an effect: of a category it keeps, whatever its tier, as a cooldown is (Decision 79); or at
+        // a tier it keeps, its project's or its own
+        private static bool KeptOnDeath(AbstractEffectContainer container, IGameplayAbilitySystem dead, EntityDeath death,
+            PurgeLevels levels, EEffectCategory categories)
+        {
+            if ((CategoriesOf(container, dead) & categories) != 0) return true;
+            var effect = container?.Spec?.Base;
+            if (effect == null) return false;
+            int tier = levels.TierOf(effect);
+            if (tier < 0) return false;
+            if (death.KeepsAsProject && levels.Tiers[tier] is { KeptOnDeath: true }) return true;
+            if (death.KeepsTiers == null) return false;
+            for (int i = 0; i < death.KeepsTiers.Count; i++)
+                if (levels.TierOf(death.KeepsTiers[i]) == tier) return true;
+            return false;
+        }
+
+        /// <summary>
+        /// The categories an effect on an entity is of (Decision 80): an ability's cooldown; lent, by an equipped item, a set
+        /// bonus, an aura, or a passive ability on its holder, one that activates as it's granted; an ability's toggle; and
+        /// its own, applied by itself, where it's none of the others.
+        /// </summary>
+        public static EEffectCategory CategoriesOf(AbstractEffectContainer container, IGameplayAbilitySystem on)
+        {
+            var spec = container?.Spec;
+            var effect = spec?.Base;
+            if (effect == null) return EEffectCategory.None;
+            var categories = EEffectCategory.None;
+            var origin = spec.Origin;
+            if (origin is AbilitySpec ability && ability.Base != null)
+            {
+                if (ReferenceEquals(ability.Base.Cooldown, effect)) categories |= EEffectCategory.Cooldown;
+                if (ReferenceEquals(ability.Base.Toggles, effect)) categories |= EEffectCategory.Toggle;
+                if (ability.Base.Definition is { ActivateImmediately: true } && ReferenceEquals(ability.GetSource(), on))
+                    categories |= EEffectCategory.Lent;
+            }
+            if (origin is ItemSpec || spec.LentByAura) categories |= EEffectCategory.Lent;
+
+            // Its own, but its cooldowns, lent effects and toggles, each a category of its own
+            if (categories == EEffectCategory.None && ReferenceEquals(origin?.GetSource(), on)) categories = EEffectCategory.Own;
+            return categories;
+        }
 
         /// <summary>
         /// Purges <paramref name="purged"/> by <paramref name="purge"/>: each effect on it at a tier at or under the purge's

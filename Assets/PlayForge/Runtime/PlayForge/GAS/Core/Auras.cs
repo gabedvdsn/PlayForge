@@ -199,7 +199,9 @@ namespace FarEmerald.PlayForge
                 bool holds = run.Held.Contains(target);
                 if (holds && Holds(target, entry.Effect, run.Origin)) continue;
                 var spec = target.GenerateEffectSpec(run.Origin, entry.Effect);
-                if (spec == null || !target.ApplyGameplayEffect(spec)) continue;
+                if (spec == null) continue;
+                spec.LentByAura = true;
+                if (!target.ApplyGameplayEffect(spec)) continue;
                 if (!holds) run.Held.Add(target);
             }
         }

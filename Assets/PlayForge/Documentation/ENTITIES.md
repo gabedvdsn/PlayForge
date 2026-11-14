@@ -200,8 +200,14 @@ doesn't kill it.
 
 - A staying entity dies at its frame's end and stays registered, with its items, levels and lasting effects. Its
   abilities are refused while it's dead.
-- **Ends Effects Tagged**: the effects its death ends, by an asset, context or granted tag, as a cleanse ends them: its
-  buffs and debuffs. The rest go on, as its cooldowns.
+- **Purges**, on by default: its death purges its effects, all but those it keeps, as the games' deaths do (FN-16,
+  [EFFECTS.md](EFFECTS.md#purging)). It keeps the **categories** it keeps whatever their effects' tiers: an ability's
+  **Cooldown**, what's **Lent** (by an equipped item, a set bonus, an aura, or a passive, an ability that activates as
+  it's granted), a **Toggle**, and its **Own**, the rest it applied to itself; and the **tiers** it keeps. **Keeps As
+  Project**, on, keeps what its project's Purge Levels keep on death, each tier's Kept On Death and their Kept On Death
+  categories, cooldowns, lent effects and toggles as a project starts, and those with no project; **Keeps Tiers** and
+  **Keeps Categories** keep more. An effect at no tier goes, unless a category it's of is kept. It took the place of
+  Ends Effects Tagged, which ended effects by their tags.
 - **On Death**: the effects it takes as it dies. A respawn timer is a durational effect with a **Revive On Removal**
   worker: as it ends, the entity revives, where it was or at a point.
 - **On Revive**: the effects it takes as it revives, as its health back.
