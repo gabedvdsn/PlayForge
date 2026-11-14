@@ -1344,7 +1344,7 @@ Death's section and a body for a running entity.
 | FN-14 | Components (Decision 70): a Components section on effects, abilities, items and entities, distinct from Unity's, components added from a menu, each a class with hooks into its asset (an effect's land, tick, end and hit; an ability's start and end; an entity's register and death). Effects' Area, Transfers and Auras, abilities' Charges, Toggles and Auras, and entities' Auras become components, existing assets moved by a one-off pass | Refactor | open |
 | FN-15 | Lifesteal is an attribute an impact worker reads, a share of what its holder deals healing it; the worker given project-wide, as workers every entity has on its Forge Project, or on an entity, and never run twice for one (Decision 70); the effects' and items' own lifesteal fields go, their assets moved onto the attribute | Refactor | open |
 | FN-16 | Effect purging: research how MOBAs purge effects (tiers that an effect needs at least to be purged, effects no purge takes, the system purging anything), then a shape for the user to decide. A death that keeps the entity purges what was applied but what's kept, as cooldowns and effects its abilities and items grant passively, and what else research finds; and whether a dead entity's gains and losses are 0 by a pipeline-wide modifier. It takes the place of Death's Ends Effects Tagged, which may need every effect tag of a project | Feature | open |
-| FN-17 | The Death section's single collapsible field inside it looks out of place | UI | open |
+| FN-17 | The Death section's single collapsible field inside it looks out of place. Done: Death's fields stand in the section, each by its name, where one field of its whole drew a foldout of its own inside it (`EntityIdentityEditor.cs`) | UI | verified |
 | FN-18 | A body for a running entity: an entity whose body process isn't its identity's Body is given one at runtime | Feature | open |
 
 ### The tag review (TAG)
@@ -1397,6 +1397,13 @@ GAS-4 with GAS-5, PC-6, and TS-I with PC-5.
 ## Log
 
 Record baselines, gate results and notable decisions here, newest first.
+
+- 2026-11-13, **FN-17: an entity's Death fields stand in its section.** The Death section held one field, the entity's
+  whole Death, which drew a foldout of its own inside the section, so the section opened onto another to open. Its
+  fields, Policy, Dies At Zero Health, Ends Effects Tagged, On Death, On Revive and Body, stand in the section, each by
+  its name.
+  - Red first: FN_17 against HEAD's inspector: the Death section held one field of the entity's whole Death
+  - Gates, on a frozen snapshot of the package: EditMode 916 of 917, ED-61 red from the working tree's lifecycle change; PlayMode 1817 of 1837, 8 skipped, the 12 known reds. No golden run: the change is the editor's alone.
 
 - 2026-11-13, **TAG-8: `Tags.cs` made sound.** Nothing pinned it: a core tag's name is its text padded by a hash of
   it, which every asset that uses the tag stores, so a change to a text, the padding or the hash would lose them, and no

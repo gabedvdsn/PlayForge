@@ -764,6 +764,8 @@ tracks each fix below by its ID.
   Asking whether its sequence was paused took 24 bytes a frame.
 
 ### Fixed
+- An entity's Death section shows Death's fields in it, each by its name; one field of the whole drew a foldout of its
+  own inside the section (FN-17).
 - A unique tag is remembered by its prefix, its text and its length apart: run together, another split of the same
   letters was the same tag, and a tag asked for at another length came back at the first's. New Tag refuses a path of
   64 characters or more, which would be cut, so two long paths that began alike were one tag (TAG-8).

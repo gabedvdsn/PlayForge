@@ -524,7 +524,17 @@ namespace FarEmerald.PlayForge.Extended.Editor
             });
             parent.Add(deathSection.Section);
 
-            deathSection.Content.Add(CreatePropertyField(serializedObject.FindProperty(nameof(EntityIdentity.Death)), "Death", ""));
+            // Death's own fields stand in the section, each by its name: one field of its whole drew a foldout of its own
+            // inside the section, which opened onto another to open (FN-17)
+            var death = serializedObject.FindProperty(nameof(EntityIdentity.Death));
+            var child = death.Copy();
+            var end = death.GetEndProperty();
+            if (!child.NextVisible(true)) return;
+            do
+            {
+                if (SerializedProperty.EqualContents(child, end)) break;
+                deathSection.Content.Add(CreatePropertyField(child.Copy(), child.name, child.displayName));
+            } while (child.NextVisible(false));
         }
 
         // ═══════════════════════════════════════════════════════════════════════════
