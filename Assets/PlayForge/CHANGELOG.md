@@ -7,6 +7,8 @@ tracks each fix below by its ID.
 ## [Unreleased]
 
 ### Added
+- `UseBody(process)` on either hub gives a running entity a body of its own, which it follows and which ends with it as
+  it dies (FN-18).
 - The Lifesteal role and the Lifesteal worker, which heals its holder its Lifesteal's share of each loss it deals another,
   of the impact types it names; a Forge Project's **Workers**, which every entity in it has, the Lifesteal worker among
   them as a project starts; and `AbstractImpactWorker.OncePerHit`, a kind that runs once for a hit however many its holder

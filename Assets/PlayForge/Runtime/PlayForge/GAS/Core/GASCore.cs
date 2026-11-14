@@ -443,6 +443,33 @@ namespace FarEmerald.PlayForge
             _ => null,
         };
 
+        /// <summary>
+        /// Gives the entity a body at runtime, one that isn't its identity's Body (FN-18, Decision 78): a MonoBehaviour
+        /// process, running already or registered for it here, which a runtime entity follows and which ends as the entity
+        /// dies, as its identity's Body does; a revive spawns the identity's Body, where it has one. The body it had ends
+        /// first, and null lets go of the one it has, ending it. False for a dead entity, which has none.
+        /// </summary>
+        public bool UseBody(AbstractMonoProcess given)
+        {
+            if (IsDead) return false;
+            if (given != null && ReferenceEquals(given, Body)) return true;
+            EndBody();
+            if (given == null) return true;
+
+            // Its relay where it's running, or else registered for the entity, as its identity's Body is
+            var relay = given.ProcessRelay;
+            if (relay == null)
+            {
+                relay = ProcessControl.Register(given).HandledBy(owner).In(ProcessWorld.Of(owner)).Run().Relay;
+                if (relay == null || !relay.TryGetProcess<AbstractMonoProcess>(out var registered)) return false;
+                given = registered;
+            }
+            bodyRelay = relay;
+            body = given;
+            FollowBody();
+            return true;
+        }
+
         // A staying entity's death: the effects it ends, its body gone, the effects it takes, as a respawn timer
         private void Die()
         {

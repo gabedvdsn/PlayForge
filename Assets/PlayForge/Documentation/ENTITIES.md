@@ -207,6 +207,10 @@ doesn't kill it.
 - **On Revive**: the effects it takes as it revives, as its health back.
 - **Body**: a MonoBehaviour process, a prefab, that it spawns where it is as it starts and as it revives, and ends as it
   dies. A runtime entity takes its position from its body, so an area search finds it there; `GetBody()` returns it.
+  A running entity can be given a body of its own at runtime with `UseBody(process)`, a process running already or
+  registered for it there, which it follows and which ends with it as it dies, as its identity's Body does; a revive
+  spawns the identity's Body, where it has one (FN-18). The body it had ends first, `UseBody(null)` lets one go, ending
+  it, and a dead entity takes none.
 
 `Revive(at)` on either hub brings a staying entity back, at a point or where it was; it re-arms the entity's analysis
 workers, so its death watcher sees its next death. Callbacks hear `OnEntityRevived`, as they hear `OnEntityDied`.

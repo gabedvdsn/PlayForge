@@ -1371,7 +1371,7 @@ Death's section and a body for a running entity.
 | FN-15 | Lifesteal is an attribute an impact worker reads, a share of what its holder deals healing it; the worker given project-wide, as workers every entity has on its Forge Project, or on an entity, and never run twice for one (Decision 70); the effects' and items' own lifesteal fields go, their assets moved onto the attribute. Decided (Decision 78). Done so far (FN-15a): the Lifesteal role; the Lifesteal worker, which heals its holder that attribute's share of each loss it deals another, of the impact types it names, and an effect's own Lifesteal besides for that effect's hits, allocating nothing; a kind of impact worker that runs once for a hit, however many its holder has; a Forge Project's Workers, which every entity has after its own, the worker among them as a project starts, on the settings page; Fill Roles by Name for Lifesteal (`Lifesteal.cs`, `ImpactWorkerCache.cs`, `ForgeProjectSettings.cs`, `GASCore.cs`). The holders' lists out (FN-15b): items', abilities' and entities' Lifesteal lists go from the inspectors and from what an entity holds, a holder's lifesteal its Lifesteal attribute, which an effect raises; an older save's list kept hidden under its name, which the Problems view names; the linter reads a Lifesteal worker's impact types | Refactor | verified |
 | FN-16 | Effect purging: research how MOBAs purge effects (tiers that an effect needs at least to be purged, effects no purge takes, the system purging anything), then a shape for the user to decide. Researched (`Docs/PURGE_REVIEW.md`) and decided (Decision 79): a project's Purge Levels table of tags ranked into tiers and of categories, purges by tag and by relation or affiliation, a death keeping the tiers and categories it names, a category over a tier, and the dead taking no one else's effects. A death that keeps the entity purges what was applied but what's kept, as cooldowns and effects its abilities and items grant passively, and what else research finds; and whether a dead entity's gains and losses are 0 by a pipeline-wide modifier. It takes the place of Death's Ends Effects Tagged, which may need every effect tag of a project | Feature | open |
 | FN-17 | The Death section's single collapsible field inside it looks out of place. Done: Death's fields stand in the section, each by its name, where one field of its whole drew a foldout of its own inside it (`EntityIdentityEditor.cs`) | UI | verified |
-| FN-18 | A body for a running entity: an entity whose body process isn't its identity's Body is given one at runtime | Feature | open |
+| FN-18 | A body for a running entity: an entity whose body process isn't its identity's Body is given one at runtime. Done (Decision 78): `UseBody(process)` on either hub gives a running entity a body of its own, a process running already or registered for it, which a runtime entity follows and which ends with it as it dies; a revive spawns the identity's Body where it has one; the body it had ends first, null lets one go, and a dead entity takes none (`GASCore.cs`, `IGameplayAbilitySystem.cs`, the hubs' end-of-frame halves) | Feature | verified |
 
 ### The tag review (TAG)
 
@@ -1423,6 +1423,14 @@ GAS-4 with GAS-5, PC-6, and TS-I with PC-5.
 ## Log
 
 Record baselines, gate results and notable decisions here, newest first.
+
+- 2026-11-13, **FN-18: a body for a running entity.** An entity's body was its identity's Body, a template it spawned as
+  it started and revived. `UseBody(process)` gives a running entity one of its own: a process running already, whose
+  relay it takes, or one it registers, which a runtime entity follows as it follows its identity's, and which ends as the
+  entity dies, as the user chose; a revive spawns the identity's Body, where it has one. The body it had ends first,
+  `UseBody(null)` lets one go, ending it, and a dead entity takes none.
+  - Red first: FN-18's tests don't compile against HEAD, 6 errors, UseBody being new
+  - Gates, on a frozen snapshot of the package: EditMode 928 of 929, ED-61 red from the working tree's lifecycle change; PlayMode 1888 of 1908, 8 skipped, the 12 known reds; golden 25 of 25.
 
 - 2026-11-13, **FN-15b: holders' lifesteal is their Lifesteal; FN-15 done.** Items, abilities and entities each held a
   Lifesteal list whose entries gave their holder a worker each. A holder's lifesteal is its Lifesteal attribute now, which

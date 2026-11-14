@@ -51,6 +51,9 @@ namespace FarEmerald.PlayForge
         /// <summary>The body it follows, while it has one (TW-4).</summary>
         public AbstractMonoProcess GetBody() => core.Body;
 
+        /// <summary>Gives it a body of its own at runtime, as <see cref="IGameplayAbilitySystem.UseBody"/> says (FN-18).</summary>
+        public bool UseBody(AbstractMonoProcess body) => core.UseBody(body);
+
         /// <summary>
         /// Called after frame is fully complete, once the entity has died. Terminates the process via ProcessControl.
         /// Unlike the MonoBehaviour version, there is no GameObject to destroy.

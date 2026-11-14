@@ -14,6 +14,14 @@ namespace FarEmerald.PlayForge
         /// <summary>The body a staying entity follows, while it has one (TW-4).</summary>
         public AbstractMonoProcess GetBody() => null;
 
+        /// <summary>
+        /// Gives the running entity a body of its own, one that isn't its identity's Body (FN-18): a MonoBehaviour process,
+        /// running already or registered for it here, which a runtime entity follows and which ends as the entity dies, as
+        /// its identity's Body does; a revive spawns the identity's Body, where it has one. The body it had ends first, and
+        /// null lets go of the one it has, ending it. False for a dead entity, which takes none.
+        /// </summary>
+        public bool UseBody(AbstractMonoProcess body) => false;
+
         public AttributeSystemComponent GetAttributeSystem();
         public AbilitySystemComponent GetAbilitySystem();
 
