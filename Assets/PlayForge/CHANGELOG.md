@@ -470,6 +470,9 @@ tracks each fix below by its ID.
   page, through one table of links in the editor.
 
 ### Changed
+- Fields that don't apply are hidden: an ability's Buffer Window and Buffer Priority but under Queue or its entity's
+  policy, an effect's Proc Coefficient but under Own Proc Coefficient, a roll but for a chance that can miss, and a
+  roll's Luck but under Own Luck. A roll draws in a drawer of its own, `ChanceRollDrawer` (FN-23).
 - A mono process starts Synchronous, stepping in Update and LateUpdate, where it started Self Terminating with no step
   timing; a projectile, any `AbstractTargetedMonoProcess`, still starts as it did (PC-35). An ability's Buffer Priority
   and Proc Coefficient, an effect's Proc Coefficient, an Area's Max Targets and a Spread's Max Targets and Hops are

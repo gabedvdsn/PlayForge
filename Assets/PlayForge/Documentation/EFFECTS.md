@@ -295,13 +295,15 @@ always lands, and 0 never does; neither draws, so an effect without a chance lea
 were. A contained effect draws its own: a strike with a bleed at 0.3 lands every time, and its bleed about one time
 in three. The section's summary shows a chance short of 1.
 
-**Chance Roll**, under it, says how the chance rolls, as every chance PlayForge rolls can (TW-8):
+**Chance Roll**, under it, says how the chance rolls, as every chance PlayForge rolls can (TW-8), and shows for a
+chance that can miss (FN-23):
 
 - **Pseudo Random**: each miss raises the next roll's odds by a constant and a hit starts them again, so streaks even
   out and the chance over many rolls stays the same, as Dota's pseudo-random distribution: a 25% chance's first roll
   has about 8.5%, its next about 17%, and so on. Each caster keeps its own streak for each chance.
 - **Luck**: the attribute playing the project's Luck role ([ATTRIBUTES.md](ATTRIBUTES.md#roles)), read on the caster, or with
-  **Own Luck** a number of the chance's own: above 0 it rolls that many more times and keeps the best, below 0 the worst.
+  **Own Luck** a number of the chance's own, its **Luck**, shown under Own Luck alone (FN-23): above 0 it rolls that
+  many more times and keeps the best, below 0 the worst.
 
 A chance of 1 or more always comes up and one of 0 or less never does, and neither draws. The same roll is on a
 trigger's Chance, the Chance stage of a Value Pipeline, an ability's Chance to Activate, and the **Chance** condition,
@@ -423,7 +425,8 @@ its On Hit does nothing. Another effect that replaces it under its tag takes it 
 
 **Proc Coefficient**, in Impact, is what the effect's own hits carry for On Hit effects (TW-8): theirs scale their chance
 and their duration by it, so a damage over time at 0.25 sets them off a quarter as often, for a quarter as long, and 0
-sets nothing off. With **Own Proc Coefficient** off, its ability's stands, or else 1.
+sets nothing off. With **Own Proc Coefficient** off, its ability's stands, or else 1, and Proc Coefficient is hidden
+(FN-23).
 
 An effect has no lifesteal of its own (FN-22): what its hits heal its caster is the caster's **Lifesteal**, the attribute
 playing the project's Lifesteal role, which the Lifesteal worker heals by, the one the project gives every entity or the

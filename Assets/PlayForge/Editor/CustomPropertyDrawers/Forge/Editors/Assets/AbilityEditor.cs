@@ -373,6 +373,17 @@ namespace FarEmerald.PlayForge.Extended.Editor
             var priority = CreatePropertyField(serializedObject.FindProperty(DefinitionPath(nameof(AbilityDefinition.BufferPriority))), "BufferPriority", "Buffer Priority");
             priority.tooltip = "Which waiting press fires first: the highest, then the newest of equals";
             content.Add(priority);
+            // Queue's alone, which its entity's policy may be: under a policy of its own of another kind, they're hidden
+            // (FN-23)
+            bool? Queues(SerializedObject serialized)
+            {
+                var chosen = serialized.FindProperty(DefinitionPath(nameof(AbilityDefinition.ActivationPolicy)));
+                if (chosen == null || chosen.hasMultipleDifferentValues) return null;
+                return (EAbilityActivationPolicyExtended)chosen.intValue is EAbilityActivationPolicyExtended.QueueActivationIfBusy
+                    or EAbilityActivationPolicyExtended.UseLocalPolicy;
+            }
+            ForgeShowWhen.Track(window, serializedObject, Queues);
+            ForgeShowWhen.Track(priority, serializedObject, Queues);
 
             // The mockup's Activate When Granted. The runtime tries it only for an entity's Starting Abilities, as its GAS
             // starts, so the label says so: an ability an item or code grants later doesn't try it
@@ -394,7 +405,11 @@ namespace FarEmerald.PlayForge.Extended.Editor
             // Its chance to activate, rolled once for each activation, and how it rolls; and what its effects' hits carry
             // for on-hit effects (TW-8)
             content.Add(CreatePropertyField(serializedObject.FindProperty(DefinitionPath(nameof(AbilityDefinition.ChanceToActivate))), "ChanceToActivate", "Chance to Activate"));
-            content.Add(CreatePropertyField(serializedObject.FindProperty(DefinitionPath(nameof(AbilityDefinition.ActivationRoll))), "ActivationRoll", "Activation Roll"));
+            var roll = CreatePropertyField(serializedObject.FindProperty(DefinitionPath(nameof(AbilityDefinition.ActivationRoll))), "ActivationRoll", "Activation Roll");
+            content.Add(roll);
+            // A chance that can't miss has nothing to roll (FN-23)
+            ForgeShowWhen.Track(roll, serializedObject, serialized =>
+                ForgeShowWhen.Rolls(serialized.FindProperty(DefinitionPath(nameof(AbilityDefinition.ChanceToActivate)))));
             content.Add(CreatePropertyField(serializedObject.FindProperty(DefinitionPath(nameof(AbilityDefinition.ProcCoefficient))), "ProcCoefficient", "Proc Coefficient"));
             // The crowd control it ignores, by its tags, as Avatar ignores Silenced and not a stun (TW-16)
             content.Add(CreatePropertyField(serializedObject.FindProperty(DefinitionPath(nameof(AbilityDefinition.IgnoresCrowdControl))), "IgnoresCrowdControl", "Ignores Crowd Control"));

@@ -1406,7 +1406,7 @@ them, worked in its order.
 | FN-20 | A pass over the targeting tasks, whose headers go | UI | open |
 | FN-21 | Legacy, obsolete and asset-updating code removed, all of it (Decision 83): the moves of old fields into components, of lifesteal lists, of numbers and of a template's category; the Upgrade Assets and Move to Components menus; the old tag-context and settings imports; every `FormerlySerializedAs`; ProcessControl's obsolete Register calls. Every asset in PlayForge and Proving Grounds is saved as it is now first, so none needs them | Refactor | open |
 | FN-22 | An effect's Impact has no lifesteal of its own: lifesteal is the Lifesteal attribute alone, as its holder's, which reverses Decision 78's own lifesteal of an effect. Done: `EffectLifesteal` and an effect's Lifesteal go, from its Impact section and from what the Lifesteal worker reads, a hit healing by its dealer's Lifesteal alone. The Additional Content's Vampiric Strike, a blow with its own, is Vampirism, an Infinite +0.5 Lifesteal, with a Lifesteal attribute beside the recipes' Health; the Dota lab's Monkey King heals his 30% by his Lifesteal, which Jingu Mastery Lifesteal raises by 0.3 as his charges come and takes off at frame's end once they're spent, its Removal condition reading them, and the lab has a Lifesteal attribute (`Lifesteal.cs`, `GameplayEffect.cs`, `EffectEditor.cs`) | Refactor | verified |
-| FN-23 | Fields that don't apply are hidden: an ability's Buffer Window and Buffer Priority but under Queue or its entity's policy, which may be Queue; an effect's Proc Coefficient but under Own Proc Coefficient; and others where they don't apply | UI | open |
+| FN-23 | Fields that don't apply are hidden: an ability's Buffer Window and Buffer Priority but under Queue or its entity's policy, which may be Queue; an effect's Proc Coefficient but under Own Proc Coefficient; and others where they don't apply. Done: those, an ability's Activation Roll and an effect's Chance Roll but for a chance that can miss, a plain 1 or more having nothing to roll, and a roll's Luck but under Own Luck, in a drawer of the roll's own; each hidden by `ForgeShowWhen`, which reads its object as it changes, an Undo among its changes, a selection whose values differ showing it; the style doc says so (`ForgeShowWhen.cs`, `ChanceRollDrawer.cs`, `AbilityEditor.cs`, `EffectEditor.cs`) | UI | verified |
 | FN-24 | A pass over the ability tasks: those a framework should have (Decision 83: waits for an event, a tag gained or lost and an attribute crossing a value; sending an event, tags while a stage runs and cancelling abilities by tag; Dash, Blink and Area Effect, and Consume Item and Apply To Caster, from the Demo), the others refactored, Run Sequence's picker searchable as the framework's others are, Scalable numbers where they belong, and the task picker grouped by category, which each task names | Feature | open |
 | FN-25 | An effect's texture from its origin, the ability, item or entity that applied it: Inherit From Origin and a tag, Primary to start, its own where the origin has none (Decision 83: one option per effect) | Feature | open |
 
@@ -1460,6 +1460,17 @@ GAS-4 with GAS-5, PC-6, and TS-I with PC-5.
 ## Log
 
 Record baselines, gate results and notable decisions here, newest first.
+
+- 2026-11-14, **FN-23: fields shown only where they apply.** The user's note: hide what doesn't apply, as an ability's
+  Buffer Window and Buffer Priority under a policy that isn't Queue or the entity's, whose policy may be Queue, and an
+  effect's Proc Coefficient without Own Proc Coefficient. Done, with two more of the same kind: a roll, an ability's
+  Activation Roll or an effect's Chance Roll, hides for a chance that can't miss, a plain 1 or more, read as the runtime
+  reads it, so a scaled chance keeps its roll; and a roll's Luck hides without Own Luck, the project's Luck role read in
+  its place, in a drawer of the roll's own. `ForgeShowWhen` does each: it reads the object as it changes, as ED-61's
+  priority method does, and shows a field whose condition it can't tell, as a selection whose values differ. Hidden,
+  not disabled, as the style doc now says; an action that doesn't apply stays disabled (Q27).
+  - Red: FN-23's five tests failed on the code before it, each field shown where it doesn't apply and the roll with no drawer of its own (fn23_red).
+  - Gates, on a frozen snapshot of the package with the Demo imported: EditMode 954 of 955, ED-21's Project Settings page raising Unity's IsInSyncWithParentSerializedObject as it edits and undoes, the intermittent the edit-and-undo tests have shown before, a page with none of FN-23's fields, which passes run alone twice (fn23_ed21_1, _2); PlayMode 1917 of 1925, 8 skipped, none failing, Essence Shift's two passing again since Proving Grounds' Dota assets were put back as committed, the user's call. Editor only, so no golden.
 
 - 2026-11-14, **FN-22: an effect has no lifesteal of its own.** The user's note: an effect's Impact shouldn't have
   lifesteal built in. Decision 78 had given it one, a share its caster's Lifesteal rose by for its own hits; now an

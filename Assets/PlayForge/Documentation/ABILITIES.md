@@ -107,7 +107,8 @@ passes it in, and one effect serves every strength.
 
   Whatever the choice, an ability can't start again while its own activation holds its claim.
 - **Buffer Window** (default 0.3 s) and **Buffer Priority** (default 0): the input buffer's, under Queue, as above. A
-  window of 0 doesn't wait, so the request is refused.
+  window of 0 doesn't wait, so the request is refused. They show under Queue and under the entity's policy, which may be
+  Queue, and are hidden under the others (FN-23).
 - **Activate At Start**: when the ability is one of the entity's Starting Abilities, it tries to activate once, as the
   entity's GAS starts. An ability that an item or code grants later doesn't try it.
 - **Triggers**: what sets the ability off on its own. A **Gameplay Event** trigger activates it when code sends the
@@ -132,7 +133,7 @@ passes it in, and one effect serves every strength.
     trigger's impact type that no effect deals, which never matches (TW-25).
 - **Chance to Activate** (TW-8): how likely an activation is to start, from 0 to 1, rolled once for each, a player's
   or a trigger's, after its other checks; a miss is refused with Chance. **Activation Roll** makes it pseudo-random or
-  lucky. **Proc Coefficient**: what its effects' hits carry for on-hit effects, where an effect sets none of its own.
+  lucky, and shows for a chance that can miss (FN-23). **Proc Coefficient**: what its effects' hits carry for on-hit effects, where an effect sets none of its own.
 - **Ignores Crowd Control** (TW-16): the crowd control rules the ability ignores, by their tags, as Black King Bar's
   Avatar ignores Silenced: the other rules still stop it, and still interrupt it as it runs (see Requirements). A tag
   ignores the rules under it too.

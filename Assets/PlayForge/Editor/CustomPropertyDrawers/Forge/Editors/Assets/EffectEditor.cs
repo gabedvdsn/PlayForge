@@ -375,7 +375,10 @@ namespace FarEmerald.PlayForge.Extended.Editor
 
             // What its hits carry for on-hit effects, its own or else its ability's (TW-8)
             content.Add(CreatePropertyField(serializedObject.FindProperty(nameof(GameplayEffect.OwnProcCoefficient)), "OwnProcCoefficient", "Own Proc Coefficient"));
-            content.Add(CreatePropertyField(serializedObject.FindProperty(nameof(GameplayEffect.ProcCoefficient)), "ProcCoefficient", "Proc Coefficient"));
+            var proc = CreatePropertyField(serializedObject.FindProperty(nameof(GameplayEffect.ProcCoefficient)), "ProcCoefficient", "Proc Coefficient");
+            content.Add(proc);
+            // Its own, under Own Proc Coefficient alone: without it, its ability's is read (FN-23)
+            ForgeShowWhen.Track(proc, serializedObject, serialized => ForgeShowWhen.IsOn(serialized.FindProperty(nameof(GameplayEffect.OwnProcCoefficient))));
             // No lifesteal of its own: its caster's Lifesteal heals by its hits (FN-22)
         }
 
@@ -479,7 +482,10 @@ namespace FarEmerald.PlayForge.Extended.Editor
             chance.tooltip = "How likely the effect is to land, from 0 to 1, drawn each time it's applied. 1 always lands";
             content.Add(chance);
             // How it rolls: pseudo-random, and its luck (TW-8)
-            content.Add(CreatePropertyField(serializedObject.FindProperty(ChanceRollPath), "ChanceRoll", "Chance Roll"));
+            var roll = CreatePropertyField(serializedObject.FindProperty(ChanceRollPath), "ChanceRoll", "Chance Roll");
+            content.Add(roll);
+            // A chance that can't miss has nothing to roll (FN-23)
+            ForgeShowWhen.Track(roll, serializedObject, serialized => ForgeShowWhen.Rolls(serialized.FindProperty(ChancePath)));
 
             var sides = new VisualElement { name = "Sides" };
             sides.AddToClassList("pf-segmented");

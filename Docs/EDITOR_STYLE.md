@@ -109,6 +109,10 @@ The only other colors:
 - **Fields** are Unity's text and number fields, with any unit after the field in secondary text, as in
   "6 seconds". Choices use Unity's popup. A field that depends on another indents 14 px under it, as Tick Every does
   under Periodic Ticks.
+- **A field that doesn't apply is hidden**, by what another field says, not disabled, and shows again as that one
+  changes, an Undo among its changes (FN-23): an ability's Buffer Window and Buffer Priority under Queue or its
+  entity's policy, which may be Queue; an effect's Proc Coefficient under Own Proc Coefficient; a roll only for a
+  chance that can miss; a roll's Luck under Own Luck. A selection whose values differ shows it.
 - **Object fields** are Unity's, showing the type icon. PlayForge's actions on one, New and Open, are plain buttons
   beside it (Q15). Template import, the link filter and create-linked go in its right-click menu (Q18).
 - **Tag fields** are Unity's fields, their label in the label column, and show a tag's parents in secondary text
