@@ -661,15 +661,17 @@ namespace FarEmerald.PlayForge
                 groupsLent[container] = group;
             }
 
-            // Its side change, while it lasts: its caster's sides as they are as it lands, or those it names (TW-18)
+            // Its side change, its Side Change component's, while it lasts: its caster's sides as they are as it lands, or
+            // those it names (TW-18, FN-26)
             var change = container.Spec.Base.SideChange;
-            if (change is { Changes: true } && Self.GetSides() is { } sides)
+            if (change != null && Self.GetSides() is { } sides)
             {
                 var given = change.Source == ESideSource.Caster
                     ? new List<Tag>(container.Spec.Origin?.GetAffiliation() ?? new List<Tag>())
                     : new List<Tag>(change.Sides ?? new List<Tag>());
                 sidesLent.Add(container);
-                sides.Add(container, given, change.Priority, change.Interrupts);
+                int priority = change.Priority == null ? 0 : change.Priority.Evaluate(NumberContext.Of(container.Spec));
+                sides.Add(container, given, priority, change.Interrupts);
             }
 
             // Its auras, its Aura components', while it lasts (TW-10, FN-14)

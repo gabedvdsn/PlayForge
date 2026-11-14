@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using FarEmerald.PlayForge.Extended;
 using UnityEngine;
 
 namespace FarEmerald.PlayForge
@@ -28,6 +29,33 @@ namespace FarEmerald.PlayForge
     {
         [Tooltip("What it moves: when, who gives and of what, who gets and in what, which of the values, and how much (TW-20)")]
         public AttributeTransfer Transfer = new();
+    }
+
+    /// <summary>
+    /// Side Change: while its effect lasts, its target's sides are its caster's, as they are as it lands, a mind control,
+    /// or those it names, as a pacify's Neutral (TW-18, FN-26). Of several on one entity, the highest Priority holds, a
+    /// tie going to the latest, and the entity's own come back as the last ends. One that interrupts breaks what its
+    /// target runs as it changes the side, landing or ending. An Instant effect doesn't last, so it changes nothing. An
+    /// effect holds one at most. It was a field of the effect's own, with a switch.
+    /// </summary>
+    [Serializable]
+    public sealed class SideChangeEffectComponent : AbstractEffectComponent
+    {
+        [Tooltip("Whose sides it gives: its caster's, as a mind control, or those it names")]
+        public ESideSource Source = ESideSource.Caster;
+
+        [Tooltip("The sides it gives, where it names them, as Neutral")]
+        [ForgeTagContext(ForgeContext.Affiliation)]
+        [ShownWhen(nameof(Source), (int)ESideSource.Named)]
+        public List<Tag> Sides = new();
+
+        [Tooltip("Of several on one entity, the highest holds, a tie going to the latest; read as it lands")]
+        public ScalableInt Priority = 0;
+
+        [Tooltip("Interrupt what its target runs as it changes its side, as it lands and as it ends")]
+        public bool Interrupts;
+
+        public override bool AllowsSeveral => false;
     }
 
     /// <summary>The moments a Spread component spreads at (FN-14).</summary>

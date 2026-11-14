@@ -16,31 +16,6 @@ namespace FarEmerald.PlayForge
     }
 
     /// <summary>
-    /// An effect's change of its target's sides while it lasts (TW-18, Decision 56): to its caster's, or to those it names.
-    /// Of several on one entity, the highest Priority holds, a tie going to the latest; the entity's own come back as the
-    /// last ends. One that interrupts breaks what its target runs as it changes the side, landing or ending.
-    /// </summary>
-    [Serializable]
-    public class SideChange
-    {
-        [Tooltip("Whether it changes its target's sides while it lasts")]
-        public bool Changes;
-
-        [Tooltip("Whose sides it gives: its caster's, as a mind control, or those it names")]
-        public ESideSource Source = ESideSource.Caster;
-
-        [Tooltip("The sides it gives, where it names them, as Neutral")]
-        [ForgeTagContext(ForgeContext.Affiliation)]
-        public List<Tag> Sides = new();
-
-        [Tooltip("Of several on one entity, the highest holds, a tie going to the latest")]
-        public int Priority;
-
-        [Tooltip("Interrupt what its target runs as it changes its side, as it lands and as it ends")]
-        public bool Interrupts;
-    }
-
-    /// <summary>
     /// The side changes an entity is under (TW-18), each from an effect that lasts: the sides the highest Priority gives, a
     /// tie to the latest, or none, where its own hold.
     /// </summary>

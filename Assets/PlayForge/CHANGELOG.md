@@ -475,6 +475,9 @@ tracks each fix below by its ID.
   page, through one table of links in the editor.
 
 ### Changed
+- An effect's side change is an effect component, **Side Change**, one at most, in its Components section, where it was
+  a field of the effect's own with a switch; its Priority is a Scalable whole number, read as it lands.
+  `GameplayEffect.SideChange` reads the component, and the `SideChange` class and its drawer are gone (FN-26).
 - The targeting tasks have no headers between their fields, and their numbers are Scalable, read at the ability's level:
   Auto Target's and Auto Target By Affinity's Range and Max Targets, each pointer task's Max Distance, Select Direction's
   Min Distance, Select GAS Target In Range's Max Ray Distance and Max Target Range, and an attribute condition's value.
