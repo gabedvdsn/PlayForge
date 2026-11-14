@@ -117,15 +117,6 @@ MonoBehaviour:
   Cost: {fileID: 0}
   AttributeCosts: []
   Cooldown: {fileID: 11400000, guid: 07e0337ae63c3394b99b560cef63ca94, type: 2}
-  Charges:
-    Magnitude: 1
-    RealMagnitude: 2
-    Scaler:
-      rid: -2
-    Rounding: 0
-  Recharge:
-    rid: 2403794398312661029
-  Toggles: {fileID: 0}
   WorkerGroup:
     Name: Workers
     AttributeWorkers: []
@@ -134,8 +125,7 @@ MonoBehaviour:
     AnalysisWorkers: []
   OnHit: []
   Modifiers: []
-  Auras: []
-  Lifesteal: []
+  Components: []
   LinkMode: 0
   _linkedSource: {fileID: 0}
   references:
@@ -172,7 +162,4 @@ MonoBehaviour:
       data: 
     - rid: 2403794398312661028
       type: {class: IsAliveValidation, ns: FarEmerald.PlayForge, asm: FarEmerald.PlayForge}
-      data: 
-    - rid: 2403794398312661029
-      type: {class: EachChargeRecharge, ns: FarEmerald.PlayForge, asm: FarEmerald.PlayForge}
       data: 

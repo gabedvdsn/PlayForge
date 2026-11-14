@@ -69,6 +69,25 @@ MonoBehaviour:
       Rounding: 0
     ActivateImmediately: 0
     Triggers: []
+    ChanceToActivate:
+      Magnitude: 1
+      RealMagnitude: 2
+      Scaler:
+        rid: -2
+    ActivationRoll:
+      PseudoRandom: 0
+      OwnLuck: 0
+      Luck:
+        Magnitude: 0
+        RealMagnitude: 2
+        Scaler:
+          rid: -2
+    ProcCoefficient:
+      Magnitude: 1
+      RealMagnitude: 2
+      Scaler:
+        rid: -2
+    IgnoresCrowdControl: []
     Textures:
     - Tag:
         Name: PrimaryYKmcVmH4Jn9iqWqQsYjmr_mmcquW7EYPYKmcVmH4Jn9iqWqQsYjmr_mmc
@@ -145,6 +164,7 @@ MonoBehaviour:
   MaxLevel: 3
   IgnoreWhenLevelZero: 1
   Cost: {fileID: 0}
+  AttributeCosts: []
   Cooldown: {fileID: 11400000, guid: 8c2cf1ba529e6af47a854187cf1a0ff6, type: 2}
   WorkerGroup:
     Name: Workers
@@ -152,6 +172,9 @@ MonoBehaviour:
     ImpactWorkers: []
     TagWorkers: []
     AnalysisWorkers: []
+  OnHit: []
+  Modifiers: []
+  Components: []
   LinkMode: 1
   _linkedSource: {fileID: 11400000, guid: 63e1c9514ab39614396b0a3b20cce4b9, type: 2}
   references:
@@ -188,7 +211,14 @@ MonoBehaviour:
         RecordLandedAs:
           Name: 
           DisplayName: 
+        UseResolveOrder: 1
     - rid: 2403794261189067201
       type: {class: ConsumeItemTask, ns: FarEmerald.PlayForge, asm: FarEmerald.PlayForge}
       data:
         Item: {fileID: 11400000, guid: 63e1c9514ab39614396b0a3b20cce4b9, type: 2}
+        Count:
+          Magnitude: 1
+          RealMagnitude: 2
+          Scaler:
+            rid: -2
+          Rounding: 0

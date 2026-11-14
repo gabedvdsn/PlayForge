@@ -156,8 +156,7 @@ string perLevel = impact.FormatTotal();           // "20/30/40/50"
   summary: its description, then a line for each of its sections, or for a Scaler asset or a Requirement Template, of
   its parts. A double click shows it in the Project window, and a row of an asset's Used By opens that asset in The
   Forge. Tags lists the project's tags and what uses each. A context is a kind of tag, as Granted, Event, Impact Type or
-  Local Data Key, and a tag field's picker offers the kinds it takes; an old context's name, as Trigger, reads as its
-  new one (TAG-6). A tag's **Declared For** declares it for contexts, so their fields' pickers offer it, in a Tag
+  Local Data Key, and a tag field's picker offers the kinds it takes. A tag's **Declared For** declares it for contexts, so their fields' pickers offer it, in a Tag
   Library asset (`Create → PlayForge → Tag Library`), made where Project Settings
   puts new assets while there's none. A Tag Library belongs to no Forge Project: every library in the project is read,
   wherever it sits, so one library can serve them all. New Tag's **Contexts** start as its field's, and another chosen
@@ -205,8 +204,7 @@ string perLevel = impact.FormatTotal();           // "20/30/40/50"
   effects a new Cost or Cooldown copies; its Templates, which The Forge's Create offers beside PlayForge's presets
   (TW-24); and what its game reads through its GameRoot as it runs, the roles its
   attributes play, by tag, and its default crowd control ([ATTRIBUTES.md](ATTRIBUTES.md#roles)). With no Forge Project,
-  **Create Forge Project** makes the default one. The first project to need them takes what
-  `ProjectSettings/PlayForgeSettings.asset` held, where the settings were the whole Unity project's, once.
+  **Create Forge Project** makes the default one.
   **Preferences → PlayForge** holds your own view toggles and the log level. The
   Forge's window menu opens both.
 - **Golden tests** (the Test Runner's EditMode tab, `FarEmerald.PlayForge.Tests.Golden`) — the framework's behavioral

@@ -29,6 +29,10 @@ MonoBehaviour:
         Name: PrimaryYKmcVmH4Jn9iqWqQsYjmr_mmcquW7EYPYKmcVmH4Jn9iqWqQsYjmr_mmc
         DisplayName: Primary
       Texture: {fileID: 2800000, guid: f3856646e14ad914f8338d07eeea3873, type: 3}
+    InheritFromOrigin: 0
+    OriginTexture:
+      Name: PrimaryYKmcVmH4Jn9iqWqQsYjmr_mmcquW7EYPYKmcVmH4Jn9iqWqQsYjmr_mmc
+      DisplayName: Primary
     RetentionGroup:
       Name: IgnoreaQ90wcmjZGnP0AQuPovNalcismrHWacbaQ90wcmjZGnP0AQuPovNalcism
       DisplayName: Ignore
@@ -46,12 +50,28 @@ MonoBehaviour:
       DisplayName: Status.Burning
     RemovesEffectsTagged: []
     BlocksEffectsTagged: []
+  Purges:
+    Strength:
+      Name: 
+      DisplayName: 
+    Kinds: []
+    AppliedBy: 7
+    Filters: []
   GrantedAbilities: []
+  OnHit: []
+  Modifiers: []
+  OwnProcCoefficient: 0
+  ProcCoefficient:
+    Magnitude: 1
+    RealMagnitude: 2
+    Scaler:
+      rid: -2
   ImpactSpecification:
     AttributeTarget: {fileID: 11400000, guid: b865fa5ec88ff314ab348516f14527f7, type: 2}
     TargetImpact: 0
     ImpactOperation: 0
     MultiplyBehaviour: 0
+    AddBehaviour: 0
     Pipeline: {fileID: 11400000, guid: bd387b1fb15f45d9806e16201d1b6e46, type: 2}
     AffiliationPolicy: 1
     AffiliationComparison: 0
@@ -61,6 +81,14 @@ MonoBehaviour:
       RealMagnitude: 2
       Scaler:
         rid: -2
+    ChanceRoll:
+      PseudoRandom: 0
+      OwnLuck: 0
+      Luck:
+        Magnitude: 0
+        RealMagnitude: 2
+        Scaler:
+          rid: -2
     ImpactTypes:
     - Name: Damage.Magic
       DisplayName: Damage.Magic
@@ -113,6 +141,13 @@ MonoBehaviour:
         rid: -2
       Rounding: 0
   Workers: []
+  Components: []
+  WorkerGroup:
+    Name: Workers
+    AttributeWorkers: []
+    ImpactWorkers: []
+    TagWorkers: []
+    AnalysisWorkers: []
   Cues:
   - rid: 2403794261189066795
   SourceRequirements:
@@ -155,6 +190,10 @@ MonoBehaviour:
       SyncWithTemplate: 0
       AvoidTags: []
       RequireTags: []
+  Conditions:
+    Application: []
+    Ongoing: []
+    Removal: []
   LinkMode: 1
   _linkedSource: {fileID: 11400000, guid: e5bd8f5bbe996264ca46bd66bf7cfed9, type: 2}
   references:
@@ -269,6 +308,7 @@ MonoBehaviour:
         OnMaxPolicy: 0
         OverflowEffects:
         - {fileID: 11400000, guid: 35f3f36077816b84fb5d9da290346731, type: 2}
+        OverflowLandsOn: 0
         DenyRefreshOnOverflow: 0
         ClearStacksOnOverflow: 1
     - rid: 2403794261189066795
@@ -419,7 +459,6 @@ MonoBehaviour:
           RealMagnitude: 2
           Scaler:
             rid: -2
-        legacyDefault: NaN
     - rid: 2403794261189066799
       type: {class: EffectStacksScaler, ns: FarEmerald.PlayForge, asm: FarEmerald.PlayForge}
       data:
@@ -498,4 +537,3 @@ MonoBehaviour:
           RealMagnitude: 2
           Scaler:
             rid: -2
-        legacyDefault: NaN

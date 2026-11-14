@@ -295,12 +295,10 @@ namespace FarEmerald.PlayForge
             if (impact.RealImpact.CurrentValue < 0)
             {
                 _onReductionReceived?.Invoke(impact);
-                _onAttributeReduced?.Invoke(impact);
             }
             else if (impact.RealImpact.CurrentValue > 0)
             {
                 _onIncreaseReceived?.Invoke(impact);
-                _onAttributeIncreased?.Invoke(impact);
             }
         }
 
@@ -336,25 +334,6 @@ namespace FarEmerald.PlayForge
                 _onIncreaseReceived?.Invoke(impact);
         }
 
-        // ──────────────────────────────────────────────────────────────────────
-        // LEGACY ATTRIBUTE EVENTS (fired on RECEIVED side)
-        // Retained for backwards-compat; equivalent to the Received variants.
-        // ──────────────────────────────────────────────────────────────────────
-
-        private ImpactDelegate _onAttributeReduced;
-        public event ImpactDelegate OnAttributeReduced
-        {
-            add => _onAttributeReduced += value;
-            remove => _onAttributeReduced -= value;
-        }
-
-        private ImpactDelegate _onAttributeIncreased;
-        public event ImpactDelegate OnAttributeIncreased
-        {
-            add => _onAttributeIncreased += value;
-            remove => _onAttributeIncreased -= value;
-        }
-        
         // ═══════════════════════════════════════════════════════════════════════════
         // SPECIAL EVENT TRACKING
         // ═══════════════════════════════════════════════════════════════════════════

@@ -1,6 +1,5 @@
 using System;
 using UnityEngine;
-using UnityEngine.Serialization;
 using FarEmerald.PlayForge.Extended;
 
 namespace FarEmerald.PlayForge
@@ -25,7 +24,7 @@ namespace FarEmerald.PlayForge
     /// </summary>
     [Serializable]
     [NumberKind("Set By Caller")]
-    public class SetByCallerScaler : NumberKind, ISerializationCallbackReceiver
+    public class SetByCallerScaler : NumberKind
     {
         [Tooltip("The tag the caller sets the value under, on the effect's spec or the activation's data. Only this tag " +
                  "matches, not one above or below it")]
@@ -51,12 +50,5 @@ namespace FarEmerald.PlayForge
                 trace.Add($"the caller's {(Key.IsValid ? Key.ToString() : "value")}", magnitude, "Caller");
             else trace.Add(Default, context, this, "Default");
         }
-
-        // Its default was a float (FEAT-29)
-        [FormerlySerializedAs("Default"), SerializeField, HideInInspector] private float legacyDefault = LegacyNumber.None;
-
-        void ISerializationCallbackReceiver.OnBeforeSerialize() { }
-
-        void ISerializationCallbackReceiver.OnAfterDeserialize() => LegacyNumber.Move(ref legacyDefault, ref Default);
     }
 }

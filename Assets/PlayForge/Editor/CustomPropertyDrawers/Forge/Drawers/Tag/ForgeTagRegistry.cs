@@ -153,12 +153,6 @@ namespace FarEmerald.PlayForge.Extended.Editor
                 usage.AddUsage(asset, fieldPath, isSystemDefault);
             }
             
-            // Legacy overload for backward compatibility
-            public void AddUsage(TagContext context, ScriptableObject asset)
-            {
-                AddUsage(context, asset, "", false);
-            }
-            
             public bool RemoveUsage(TagContext context, ScriptableObject asset)
             {
                 if (UsageByContext.TryGetValue(context.ContextKey, out var usage))
@@ -202,13 +196,6 @@ namespace FarEmerald.PlayForge.Extended.Editor
         {
             public TagContext Context { get; }
             public List<FieldUsageInfo> Usages { get; } = new List<FieldUsageInfo>();
-            
-            // Convenience property for backward compatibility - unique assets
-            public List<ScriptableObject> Assets => Usages
-                .Where(u => u.Asset != null)
-                .Select(u => u.Asset)
-                .Distinct()
-                .ToList();
             
             public ContextUsage(TagContext context)
             {

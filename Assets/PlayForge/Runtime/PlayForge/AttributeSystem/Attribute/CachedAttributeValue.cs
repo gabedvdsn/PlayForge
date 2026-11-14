@@ -77,40 +77,6 @@ namespace FarEmerald.PlayForge
         private readonly Dictionary<Tag, AttributeValue> attribution = new();
         private readonly List<Tag> attributionOrder = new();
 
-        /// <summary>Aggregate committed history across all groups (diagnostics / legacy).</summary>
-        public AttributeValue CommittedOneShotDelta
-        {
-            get
-            {
-                float c = 0f, b = 0f;
-                foreach (var v in committedByGroup.Values) { c += v.CurrentValue; b += v.BaseValue; }
-                return new AttributeValue(c, b);
-            }
-        }
-
-        /// <summary>
-        /// Legacy diagnostic projection of the modifier collection in the old
-        /// retention-group shape. Allocates — do not use in hot paths. The Debugger
-        /// reads <see cref="GetBreakdown"/>, as the GAS Debugger read this (ED-4).
-        /// </summary>
-        public IReadOnlyDictionary<Tag, RetainedGroup> RetainedGroups
-        {
-            get
-            {
-                var view = new Dictionary<Tag, RetainedGroup>();
-                foreach (var m in modifiers)
-                {
-                    if (!view.TryGetValue(m.Group, out var g))
-                    {
-                        g = new RetainedGroup(m.Group);
-                        view[m.Group] = g;
-                    }
-                    if (!g.Carriers.Contains(m.Carrier)) g.Carriers.Add(m.Carrier);
-                }
-                return view;
-            }
-        }
-
         // ═══════════════════════════════════════════════════════════════════════════
         // CONSTRUCTION / INITIALIZATION
         // ═══════════════════════════════════════════════════════════════════════════
@@ -722,21 +688,5 @@ namespace FarEmerald.PlayForge
         }
 
         public override string ToString() => $"{Group}: {Value.CurrentValue}/{Value.BaseValue}";
-    }
-
-    /// <summary>
-    /// Legacy diagnostic shape — a retention-group bucket of carriers. Kept for editor
-    /// tooling that renders the old view; the runtime store is the modifier collection
-    /// inside <see cref="CachedAttributeValue"/>.
-    /// </summary>
-    public class RetainedGroup
-    {
-        public Tag RetentionGroup;
-        public List<IAttributeImpactCarrier> Carriers = new();
-
-        public RetainedGroup(Tag retentionGroup)
-        {
-            RetentionGroup = retentionGroup;
-        }
     }
 }

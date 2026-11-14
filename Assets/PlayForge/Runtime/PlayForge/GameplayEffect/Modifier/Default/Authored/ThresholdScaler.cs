@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Text;
 using UnityEngine;
-using UnityEngine.Serialization;
 
 namespace FarEmerald.PlayForge
 {
@@ -13,7 +12,7 @@ namespace FarEmerald.PlayForge
     /// </summary>
     [Serializable]
     [NumberKind("Threshold", Category = "Scaler", Reads = NumberReads.Level)]
-    public class ThresholdScaler : NumberKind, ISerializationCallbackReceiver
+    public class ThresholdScaler : NumberKind
     {
         [Tooltip("Level thresholds and their corresponding values")]
         public LevelThreshold[] Thresholds = new LevelThreshold[]
@@ -101,26 +100,6 @@ namespace FarEmerald.PlayForge
                 };
             }
         }
-
-        // ═══════════════════════════════════════════════════════════════════════════
-        // Saved before its values were numbers (FEAT-29)
-        // ═══════════════════════════════════════════════════════════════════════════
-
-        // Its default and each tier's value were floats. A saved default says the tiers are old too, as a tier, a struct,
-        // can't hold a float that says it's empty, and they move into the numbers as the asset loads.
-        [FormerlySerializedAs("DefaultValue"), SerializeField, HideInInspector] private float legacyDefaultValue = LegacyNumber.None;
-
-        void ISerializationCallbackReceiver.OnBeforeSerialize() { }
-
-        void ISerializationCallbackReceiver.OnAfterDeserialize()
-        {
-            if (!LegacyNumber.Move(ref legacyDefaultValue, ref DefaultValue) || Thresholds == null) return;
-            for (int i = 0; i < Thresholds.Length; i++)
-            {
-                Thresholds[i].Value = new ScalableFloat(Thresholds[i].legacyValue);
-                Thresholds[i].legacyValue = 0f;
-            }
-        }
     }
 
     [Serializable]
@@ -134,8 +113,5 @@ namespace FarEmerald.PlayForge
 
         [Tooltip("Optional name for this tier (e.g., 'Bronze', 'Silver')")]
         public string TierName;
-
-        // Its value was a float, which its scaler moves as the asset loads (FEAT-29)
-        [FormerlySerializedAs("Value"), SerializeField, HideInInspector] internal float legacyValue;
     }
 }

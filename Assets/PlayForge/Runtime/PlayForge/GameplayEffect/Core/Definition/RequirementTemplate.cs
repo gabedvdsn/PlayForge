@@ -2,7 +2,6 @@ using System;
 using System.Collections.Generic;
 using FarEmerald.PlayForge.Extended;
 using UnityEngine;
-using UnityEngine.Serialization;
 
 namespace FarEmerald.PlayForge
 {
@@ -18,7 +17,7 @@ namespace FarEmerald.PlayForge
     /// Note: Linked requirements can "break" the link to make local modifications.
     /// </summary>
     [CreateAssetMenu(fileName = "New Requirement Template", menuName = "PlayForge/Requirement Template", order = 41)]
-    public class RequirementTemplate : ScriptableObject, ISerializationCallbackReceiver
+    public class RequirementTemplate : ScriptableObject
     {
         [Tooltip("Description of what this requirement template is used for")]
         [TextArea(2, 4)]
@@ -31,9 +30,6 @@ namespace FarEmerald.PlayForge
         [Tooltip("The template's category, which groups templates; a tag of the Requirement Category context")]
         [ForgeTagContext(ForgeContext.RequirementCategory)]
         public Tag Category;
-
-        // The category a template saved before held, as a string, which loads as its tag (ED-79)
-        [FormerlySerializedAs("Category"), SerializeField, HideInInspector] private string legacyCategory;
         
         [Tooltip("The requirement configuration stored in this template")]
         public AvoidRequireTagGroup Requirements;
@@ -43,16 +39,6 @@ namespace FarEmerald.PlayForge
         /// </summary>
         public string DisplayName => Requirements?.HasName == true ? Requirements.Name : name;
 
-        public void OnBeforeSerialize() { }
-
-        // A category saved as a string becomes the tag of its name, unless the template has a tag already (ED-79)
-        public void OnAfterDeserialize()
-        {
-            if (string.IsNullOrEmpty(legacyCategory)) return;
-            if (!Category.IsValid) Category = Tag.Generate(legacyCategory);
-            legacyCategory = null;
-        }
-        
         /// <summary>
         /// Copies values from this template to a target requirement group.
         /// </summary>

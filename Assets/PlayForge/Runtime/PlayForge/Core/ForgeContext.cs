@@ -94,46 +94,10 @@ namespace FarEmerald.PlayForge.Extended
         /// <summary>Tags every picker offers: those a Tag Library declares for no context</summary>
         public const string Universal = "Universal";
 
-        /// <summary>
-        /// The contexts TAG-6 renamed, merged or dropped, by their old values, and what each reads as now: Data, which held
-        /// four kinds of key, reads as each of them, and one dropped as none (Decision 74). No context of a project's own
-        /// can take an old name, so an old name always reads so.
-        /// </summary>
-        public static readonly IReadOnlyDictionary<string, string[]> Renamed = new Dictionary<string, string[]>
-        {
-            ["Asset Identifier"] = new[] { AssetTag },
-            ["Context Identifier"] = new[] { ContextTag },
-            ["Category"] = new[] { ContextTag },
-            ["Required"] = new[] { Granted },
-            ["Condition"] = new[] { Granted },
-            ["Blocked"] = new[] { Granted },
-            ["System"] = new[] { Affiliation },
-            ["Targeting"] = new[] { Visibility },
-            ["Impact"] = new[] { ImpactType },
-            ["Impact Retention"] = new[] { RetentionGroup },
-            ["Trigger"] = new[] { Event },
-            ["Role"] = new[] { AttributeRole },
-            ["Texture"] = new[] { TextureSlot },
-            ["Data"] = new[] { DataKey, LocalDataKey, WorkerKey, SetByCallerKey },
-            ["Worker"] = new[] { WorkerKey },
-            ["Stage"] = new[] { StageFlag },
-            ["Ability"] = new string[0],
-            ["Effect"] = new string[0],
-            ["Entity"] = new string[0],
-            ["Attribute"] = new string[0],
-            ["AttributeSet"] = new string[0],
-            ["Modifier"] = new string[0],
-            ["Cost"] = new string[0],
-            ["Cooldown"] = new string[0],
-            ["Duration"] = new string[0],
-            ["Debug"] = new string[0],
-        };
-
-        /// <summary>Contexts as they read now: an old one as its new, one dropped gone, any other as it is, each once (TAG-6)</summary>
+        /// <summary>Contexts as they're kept: each once, a blank one dropped.</summary>
         public static string[] Current(IEnumerable<string> contexts) =>
             (contexts ?? Enumerable.Empty<string>())
             .Where(context => !string.IsNullOrWhiteSpace(context))
-            .SelectMany(context => Renamed.TryGetValue(context, out var now) ? now : new[] { context })
             .Distinct()
             .ToArray();
     }

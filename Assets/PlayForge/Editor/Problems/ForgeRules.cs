@@ -412,25 +412,6 @@ namespace FarEmerald.PlayForge.Extended.Editor
         }
     }
 
-    /// <summary>
-    /// An item, an ability or an entity that keeps an older save's Lifesteal list, which heals no more: a holder's lifesteal
-    /// is its Lifesteal attribute now (FN-15).
-    /// </summary>
-    internal sealed class OlderLifestealRule : ForgeValidationRule
-    {
-        public override string Name => "Older lifesteal lists";
-
-        public override void Check(Object asset, List<ForgeProblem> problems)
-        {
-            if (asset is not (Item or Ability or EntityIdentity)) return;
-            using var serialized = new SerializedObject(asset);
-            if (serialized.FindProperty("legacyLifesteal") is not { isArray: true, arraySize: > 0 }) return;
-            problems.Add(new ForgeProblem(asset, ForgeProblemSeverity.Warning,
-                "It keeps an older save's Lifesteal list, which heals no more: a holder's lifesteal is its Lifesteal attribute. " +
-                "Give it an effect that raises the attribute playing the Lifesteal role."));
-        }
-    }
-
     /// <summary>An item whose Uses never counts, as it lends no ability to use (FN-14).</summary>
     internal sealed class UsesRule : ForgeValidationRule
     {

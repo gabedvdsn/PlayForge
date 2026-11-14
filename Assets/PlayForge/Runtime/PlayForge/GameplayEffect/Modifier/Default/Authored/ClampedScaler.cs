@@ -1,6 +1,5 @@
 ﻿using System;
 using UnityEngine;
-using UnityEngine.Serialization;
 
 namespace FarEmerald.PlayForge
 {
@@ -11,7 +10,7 @@ namespace FarEmerald.PlayForge
     /// </summary>
     [Serializable]
     [NumberKind("Clamped", Category = "Scaler")]
-    public class ClampedScaler : NumberKind, ISerializationCallbackReceiver
+    public class ClampedScaler : NumberKind
     {
         [Tooltip("The least it reads")]
         public ScalableFloat MinValue = 0f;
@@ -46,28 +45,6 @@ namespace FarEmerald.PlayForge
             trace.Add(Value, context, this, "Value");
             trace.Add(MinValue, context, this, "Min");
             trace.Add(MaxValue, context, this, "Max");
-        }
-
-        // ═══════════════════════════════════════════════════════════════════════════
-        // Saved before its bounds were numbers (FEAT-29)
-        // ═══════════════════════════════════════════════════════════════════════════
-
-        // Its bounds were floats, and what it clamped a scaler, with none meaning its own values per level. A saved bound
-        // says the rest is old, and they move into the numbers as the asset loads.
-        [FormerlySerializedAs("MinValue"), SerializeField, HideInInspector] private float legacyMinValue = LegacyNumber.None;
-        [FormerlySerializedAs("MaxValue"), SerializeField, HideInInspector] private float legacyMaxValue = LegacyNumber.None;
-        [SerializeReference, HideInInspector] private AbstractScaler Inner;
-
-        void ISerializationCallbackReceiver.OnBeforeSerialize() { }
-
-        void ISerializationCallbackReceiver.OnAfterDeserialize()
-        {
-            bool old = LegacyNumber.Move(ref legacyMinValue, ref MinValue);
-            old |= LegacyNumber.Move(ref legacyMaxValue, ref MaxValue);
-            if (!old) return;
-
-            Value = Inner != null ? new ScalableFloat(Inner, 1f, EMagnitudeOperation.UseScaler) : LegacyNumber.TakeTable(this);
-            Inner = null;
         }
     }
 }

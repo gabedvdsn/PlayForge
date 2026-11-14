@@ -1,6 +1,5 @@
 ﻿using System;
 using UnityEngine;
-using UnityEngine.Serialization;
 
 namespace FarEmerald.PlayForge
 {
@@ -12,7 +11,7 @@ namespace FarEmerald.PlayForge
     /// </summary>
     [Serializable]
     [NumberKind("Randomized", Category = "Scaler")]
-    public class RandomizedScaler : AbstractScaler, ISerializationCallbackReceiver
+    public class RandomizedScaler : AbstractScaler
     {
         [Tooltip("How variance is applied")]
         public EVarianceMode VarianceMode = EVarianceMode.Percentage;
@@ -137,23 +136,6 @@ namespace FarEmerald.PlayForge
                 default:
                     return baseValue;
             }
-        }
-
-        // ═══════════════════════════════════════════════════════════════════════════
-        // Saved before its variance was a number (FEAT-29)
-        // ═══════════════════════════════════════════════════════════════════════════
-
-        [FormerlySerializedAs("Variance"), SerializeField, HideInInspector] private float legacyVariance = LegacyNumber.None;
-        [FormerlySerializedAs("MinMultiplier"), SerializeField, HideInInspector] private float legacyMinMultiplier = LegacyNumber.None;
-        [FormerlySerializedAs("MaxMultiplier"), SerializeField, HideInInspector] private float legacyMaxMultiplier = LegacyNumber.None;
-
-        void ISerializationCallbackReceiver.OnBeforeSerialize() { }
-
-        void ISerializationCallbackReceiver.OnAfterDeserialize()
-        {
-            LegacyNumber.Move(ref legacyVariance, ref Variance);
-            LegacyNumber.Move(ref legacyMinMultiplier, ref MinMultiplier);
-            LegacyNumber.Move(ref legacyMaxMultiplier, ref MaxMultiplier);
         }
     }
 

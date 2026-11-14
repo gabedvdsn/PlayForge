@@ -24,3 +24,18 @@ MonoBehaviour:
       Name: PrimaryYKmcVmH4Jn9iqWqQsYjmr_mmcquW7EYPYKmcVmH4Jn9iqWqQsYjmr_mmc
       DisplayName: Primary
     Texture: {fileID: 2800000, guid: ac64344b218fa0b4aa831d88ed0a6eb6, type: 3}
+  Role: 0
+  AbsorbsFor: {fileID: 0}
+  DecayPerSecond:
+    Magnitude: 0
+    RealMagnitude: 2
+    Scaler:
+      rid: -2
+  DecayAsShareOfBase: 0
+  FadesWithEffect: 0
+  GainsScaledBy: {fileID: 0}
+  references:
+    version: 2
+    RefIds:
+    - rid: -2
+      type: {class: , ns: , asm: }

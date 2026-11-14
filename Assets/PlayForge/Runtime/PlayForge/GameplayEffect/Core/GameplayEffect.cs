@@ -4,12 +4,11 @@ using System.Collections.Generic;
 using System.Linq;
 using FarEmerald.PlayForge.Extended;
 using UnityEngine;
-using UnityEngine.Serialization;
 
 namespace FarEmerald.PlayForge
 {
     [CreateAssetMenu(menuName = "PlayForge/Gameplay Effect", fileName = "Effect_", order = 21)]
-    public class GameplayEffect : BaseForgeLevelProvider, ISerializationCallbackReceiver, IMovesToComponents, IHasTextures
+    public class GameplayEffect : BaseForgeLevelProvider, IHasTextures
     {
         public GameplayEffectDefinition Definition = new();
         public GameplayEffectTags Tags = new();
@@ -33,12 +32,6 @@ namespace FarEmerald.PlayForge
 
         [Tooltip("Modifiers of other effects, its holder's own or those landing on it, while it lasts, the holder the one it's on (TW-7)")]
         public List<EffectModifierEntry> Modifiers = new();
-
-        // Its auras, area and transfers as a save before components kept them, each moved into its component as it loads
-        // (FN-14)
-        [SerializeField, HideInInspector] private List<AuraEntry> Auras = new();
-        [SerializeField, HideInInspector, FormerlySerializedAs("Area")] private EffectArea legacyArea = new();
-        [SerializeField, HideInInspector, FormerlySerializedAs("Transfers")] private List<AttributeTransfer> legacyTransfers = new();
 
         /// <summary>Its area: its Area component's, or none, where it lands on its target alone (TW-10, FN-14).</summary>
         public EffectArea Area => FirstComponent<AreaEffectComponent>()?.Area;
@@ -84,42 +77,6 @@ namespace FarEmerald.PlayForge
                  "ends (FN-14)")]
         [SerializeReference]
         public List<AbstractEffectComponent> Components = new();
-
-        /// <summary>Whether it moved an older save's fields into its components as it loaded, which a save keeps (FN-14).</summary>
-        public bool MovedToComponents { get; set; }
-
-        void ISerializationCallbackReceiver.OnBeforeSerialize() { }
-
-        // An older save's fields, each moved into a component as it loads, in the editor and in a build (FN-14, Decision 76)
-        void ISerializationCallbackReceiver.OnAfterDeserialize()
-        {
-            if (Auras is { Count: > 0 })
-            {
-                Components ??= new List<AbstractEffectComponent>();
-                foreach (var aura in Auras)
-                    if (aura != null) Components.Add(new AuraEffectComponent { Aura = aura });
-                Auras.Clear();
-                MovedToComponents = true;
-            }
-
-            // An area that reaches past its target: a Radius of 0 was no area
-            if (legacyArea is { Reaches: true })
-            {
-                Components ??= new List<AbstractEffectComponent>();
-                Components.Add(new AreaEffectComponent { Area = legacyArea });
-                legacyArea = new EffectArea();
-                MovedToComponents = true;
-            }
-
-            if (legacyTransfers is { Count: > 0 })
-            {
-                Components ??= new List<AbstractEffectComponent>();
-                foreach (var transfer in legacyTransfers)
-                    if (transfer != null) Components.Add(new TransferEffectComponent { Transfer = transfer });
-                legacyTransfers.Clear();
-                MovedToComponents = true;
-            }
-        }
 
         [Tooltip("Workers it gives the one it's on while it lasts, and takes back as it goes: attribute, impact, tag and " +
                  "analysis workers, as a debuff that changes how its target takes damage, or shatters it below 13% (TW-13)")]

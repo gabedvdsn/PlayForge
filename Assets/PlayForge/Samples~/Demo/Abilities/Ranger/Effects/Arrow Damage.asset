@@ -86,6 +86,10 @@ MonoBehaviour:
       Name: Not Visibled2xuDNqtid9uamDM5aBXkxUexwFpJUF4d2xuDNqtid9uamDM5aBXk
       DisplayName: Not Visible
     Textures: []
+    InheritFromOrigin: 0
+    OriginTexture:
+      Name: PrimaryYKmcVmH4Jn9iqWqQsYjmr_mmcquW7EYPYKmcVmH4Jn9iqWqQsYjmr_mmc
+      DisplayName: Primary
     RetentionGroup:
       Name: IgnoreaQ90wcmjZGnP0AQuPovNalcismrHWacbaQ90wcmjZGnP0AQuPovNalcism
       DisplayName: Ignore
@@ -99,12 +103,28 @@ MonoBehaviour:
     GrantedTags: []
     RemovesEffectsTagged: []
     BlocksEffectsTagged: []
+  Purges:
+    Strength:
+      Name: 
+      DisplayName: 
+    Kinds: []
+    AppliedBy: 7
+    Filters: []
   GrantedAbilities: []
+  OnHit: []
+  Modifiers: []
+  OwnProcCoefficient: 0
+  ProcCoefficient:
+    Magnitude: 1
+    RealMagnitude: 2
+    Scaler:
+      rid: -2
   ImpactSpecification:
     AttributeTarget: {fileID: 11400000, guid: b865fa5ec88ff314ab348516f14527f7, type: 2}
     TargetImpact: 0
     ImpactOperation: 0
     MultiplyBehaviour: 0
+    AddBehaviour: 0
     Pipeline: {fileID: 11400000, guid: 08395a525faf464e8f948ff2dda59b97, type: 2}
     AffiliationPolicy: 1
     AffiliationComparison: 0
@@ -114,6 +134,14 @@ MonoBehaviour:
       RealMagnitude: 2
       Scaler:
         rid: -2
+    ChanceRoll:
+      PseudoRandom: 0
+      OwnLuck: 0
+      Luck:
+        Magnitude: 0
+        RealMagnitude: 2
+        Scaler:
+          rid: -2
     ImpactTypes:
     - Name: Damage.Physical
       DisplayName: Damage.Physical
@@ -165,6 +193,13 @@ MonoBehaviour:
         rid: -2
       Rounding: 0
   Workers: []
+  Components: []
+  WorkerGroup:
+    Name: Workers
+    AttributeWorkers: []
+    ImpactWorkers: []
+    TagWorkers: []
+    AnalysisWorkers: []
   Cues:
   - rid: 2403794261189066754
   SourceRequirements:
@@ -207,6 +242,10 @@ MonoBehaviour:
       SyncWithTemplate: 0
       AvoidTags: []
       RequireTags: []
+  Conditions:
+    Application: []
+    Ongoing: []
+    Removal: []
   LinkMode: 1
   _linkedSource: {fileID: 11400000, guid: 4456c3c7bd4445843976ed92fbcabd3e, type: 2}
   references:
@@ -391,9 +430,6 @@ MonoBehaviour:
           Scaler:
             rid: -2
         RollOncePerSpec: 1
-        legacyVariance: NaN
-        legacyMinMultiplier: NaN
-        legacyMaxMultiplier: NaN
     - rid: 2403794261189066869
       type: {class: SharedScaler, ns: FarEmerald.PlayForge, asm: FarEmerald.PlayForge}
       data:
@@ -477,21 +513,6 @@ MonoBehaviour:
           RealMagnitude: 3
           Scaler:
             rid: 2403794261189066875
-        legacyCondition: -1
-        legacyTagQuery:
-          Tag:
-            Name: 
-            DisplayName: 
-          Operator: 5
-          Magnitude: 0
-          MatchMode: 0
-        legacyAttribute: {fileID: 0}
-        legacyThreshold: NaN
-        legacyComparison: 0
-        TrueScaler:
-          rid: -2
-        FalseScaler:
-          rid: -2
     - rid: 2403794261189066871
       type: {class: SetByCallerScaler, ns: FarEmerald.PlayForge, asm: FarEmerald.PlayForge}
       data:
@@ -535,7 +556,6 @@ MonoBehaviour:
           RealMagnitude: 2
           Scaler:
             rid: -2
-        legacyDefault: NaN
     - rid: 2403794261189066872
       type: {class: AttributeBackedScaler, ns: FarEmerald.PlayForge, asm: FarEmerald.PlayForge}
       data:
@@ -575,6 +595,10 @@ MonoBehaviour:
         CaptureFrom: 1
         CaptureWhen: 1
         CaptureWhat: 0
+        Groups:
+          Read: 0
+          Groups: []
+        ReadAs: 0
     - rid: 2403794261189066873
       type: {class: ConstantScaler, ns: FarEmerald.PlayForge, asm: FarEmerald.PlayForge}
       data:

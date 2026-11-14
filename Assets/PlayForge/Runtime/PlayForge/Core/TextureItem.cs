@@ -1,7 +1,6 @@
 ﻿using System;
 using FarEmerald.PlayForge.Extended;
 using UnityEngine;
-using UnityEngine.Serialization;
 
 namespace FarEmerald.PlayForge
 {

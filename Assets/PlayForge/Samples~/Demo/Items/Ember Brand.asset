@@ -53,6 +53,9 @@ MonoBehaviour:
     - rid: 2403794261189067256
     TagWorkers: []
     AnalysisWorkers: []
+  OnHit: []
+  Modifiers: []
+  Components: []
   references:
     version: 2
     RefIds:

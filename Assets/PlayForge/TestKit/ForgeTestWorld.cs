@@ -122,7 +122,7 @@ namespace FarEmerald.PlayForge.Testing
         public ProcessRelay Register(AbstractRuntimeProcess process, ProcessDataPacket data = null)
         {
             // By its type: a refused process has no relay to read its name through
-            if (!ProcessControl.Register(process, data ?? ProcessDataPacket.Default(), out var relay))
+            if (!ProcessControl.Register(process).With(data ?? ProcessDataPacket.Default()).Run(out var relay))
                 throw new AssertionException($"ProcessControl refused a {process.GetType().Name}");
 
             owned.Add(relay);
@@ -132,7 +132,7 @@ namespace FarEmerald.PlayForge.Testing
         /// <summary>Registers a process the world ends if the test doesn't.</summary>
         public ProcessRelay Register(AbstractMonoProcess process, ProcessDataPacket data = null)
         {
-            if (!ProcessControl.Register(process, data ?? ProcessDataPacket.Default(), out var relay))
+            if (!ProcessControl.Register(process).With(data ?? ProcessDataPacket.Default()).Run(out var relay))
                 throw new AssertionException($"ProcessControl refused {process.name}");
 
             owned.Add(relay);

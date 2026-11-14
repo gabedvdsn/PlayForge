@@ -129,6 +129,19 @@ MonoBehaviour:
     - rid: 2403794261189067176
     AnalysisWorkers:
     - rid: 2403794261189067145
+  Modifiers: []
+  Components: []
+  CrowdControl: {fileID: 0}
+  Death:
+    Policy: 0
+    DiesAtZeroHealth: 1
+    Purges: 1
+    KeepsAsProject: 1
+    KeepsTiers: []
+    KeepsCategories: 0
+    OnDeath: []
+    OnRevive: []
+    Body: {fileID: 0}
   LinkMode: 0
   _linkedSource: {fileID: 0}
   references:
@@ -140,13 +153,23 @@ MonoBehaviour:
       type: {class: DeathWatcherAnalysisWorker, ns: FarEmerald.PlayForge, asm: FarEmerald.PlayForge}
       data:
         Target: {fileID: 11400000, guid: b865fa5ec88ff314ab348516f14527f7, type: 2}
+        Groups:
+          Read: 0
+          Groups: []
+        What: 0
         Threshold:
           Magnitude: 0
           RealMagnitude: 2
           Scaler:
             rid: -2
+        Crossing: 0
         Comparison: 1
         TriggerOnce: 1
+        Effects: []
+        AppliedBy: 0
+        Event:
+          Name: 
+          DisplayName: 
     - rid: 2403794261189067176
       type: {class: WhileTaggedEffectWorker, ns: FarEmerald.PlayForge.Samples.Demo, asm: FarEmerald.PlayForge.Samples.Demo}
       data:

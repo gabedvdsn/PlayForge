@@ -1101,6 +1101,20 @@ tracks each fix below by its ID.
   or turning `Enabled` off. Once the first had ended, it threw, and the rest ran on.
 
 ### Removed
+- Legacy, obsolete and asset-updating code (FN-21, Decision 83), every asset of the package, its samples and Proving
+  Grounds saved as it is now first: the moves of an older save's fields into components, with `IMovesToComponents` and
+  `MovedToComponents`, and the hidden fields they moved from (an ability's charges, recharge, toggle and auras, an
+  effect's auras, area and transfers, an item's and an entity's auras); every holder's old Lifesteal list, with
+  `LifestealEntry` and the Problems rule that named one; the scalers' moves of their old floats, with `LegacyNumber`; a
+  Requirement Template's string category; the old tag-context names (`ForgeContext.Renamed`) and the tag libraries'
+  pass; the settings' imports from `ProjectSettings/PlayForgeSettings.asset` and EditorPrefs, with the file itself, so
+  `PlayForgeSettings` is a static class over the Forge Project's settings, and the retired preferences Use Defaults
+  cleared; the obsolete `ScalerMagnitudeOperation` and `ScalerIntegerMagnitudeOperation`; the **Upgrade Assets** and
+  **Move to Components** menus; every `FormerlySerializedAs`; the ability proxy's legacy execution, which nothing
+  reached, its injection's second path and `IAbilityProxyStagePolicy.AwaitStageActivation`; and what its comments called
+  legacy: the GAS callbacks' `OnAttributeReduced` and `OnAttributeIncreased`, the Received events being theirs, an
+  attribute value's `RetainedGroups` and `CommittedOneShotDelta`, and a handful of unused aliases. ProcessControl's
+  obsolete Register overloads stay a while.
 - An effect's own **Lifesteal**, in Impact, and `EffectLifesteal`: an effect's hits heal its caster by the caster's
   Lifesteal alone, which an effect raises while it should. The Additional Content's Vampiric Strike recipe is
   **Vampirism**, an effect of +0.5 Lifesteal, with the recipes' Lifesteal attribute (FN-22).

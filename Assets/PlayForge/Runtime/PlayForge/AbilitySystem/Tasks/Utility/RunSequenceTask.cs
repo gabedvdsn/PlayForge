@@ -2,14 +2,13 @@ using System.Linq;
 using System.Threading;
 using Cysharp.Threading.Tasks;
 using UnityEngine;
-using UnityEngine.Serialization;
 
 namespace FarEmerald.PlayForge
 {
     [ForgeCategory("Sequence")]
     public class RunSequenceTask : AbstractAbilityTask
     {
-        [FormerlySerializedAs("SequenceReference")] public TaskSequenceReference Sequence;
+        public TaskSequenceReference Sequence;
 
         /// <summary>
         /// A sequence made in code, as an ability a game builds as it runs makes one with <see cref="TaskSequenceBuilder"/>.

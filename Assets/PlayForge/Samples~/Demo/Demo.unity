@@ -413,6 +413,16 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: c1752098d194be340a0df6c0616d820c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  Distance: 24
+  Tilt: 55
+  Yaw: 0
+  MinDistance: 6
+  MaxDistance: 90
+  ScrollShare: 0.12
+  FollowSpeed: 5
+  ReadsInput: 1
+  Focus: {x: 0, y: 0, z: 0}
+  Following: {fileID: 0}
   Offset: {x: 0, y: 15, z: -11}
   Follow: 5
 --- !u!81 &711548644
@@ -797,6 +807,12 @@ MonoBehaviour:
   Layers:
     serializedVersion: 2
     m_Bits: 4294967295
+  Unit: {fileID: 0}
+  Driver: {fileID: 0}
+  AbilityKeys: 71000000770000006500000072000000
+  ItemKeys: 310000003200000033000000340000003500000036000000
+  StopKey: 115
+  CancelKey: 27
 --- !u!114 &2051062127
 MonoBehaviour:
   m_ObjectHideFlags: 0

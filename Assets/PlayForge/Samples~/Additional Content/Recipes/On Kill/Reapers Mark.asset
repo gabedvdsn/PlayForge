@@ -57,8 +57,7 @@ MonoBehaviour:
     When:
       rid: -2
   Modifiers: []
-  Auras: []
-  Lifesteal: []
+  Components: []
   references:
     version: 2
     RefIds:

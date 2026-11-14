@@ -138,7 +138,7 @@ namespace FarEmerald.PlayForge
         {
             value = 0f;
             if (attribute == null || Source.AttributeSystem == null) return false;
-            if (!Source.AttributeSystem.TryGetCachedValue(attribute, out CachedAttributeValue cached) || cached.RetainedGroups is null) return false;
+            if (!Source.AttributeSystem.TryGetCachedValue(attribute, out CachedAttributeValue cached)) return false;
             value = cached.ActiveValue.CurrentValue;
             return true;
         }

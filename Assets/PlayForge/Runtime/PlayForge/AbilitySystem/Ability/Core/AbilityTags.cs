@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using FarEmerald.PlayForge.Extended;
 using UnityEngine;
-using UnityEngine.Serialization;
 using Object = UnityEngine.Object;
 
 namespace FarEmerald.PlayForge

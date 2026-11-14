@@ -58,15 +58,12 @@ namespace FarEmerald.PlayForge.Extended.Editor
     /// </summary>
     public static class NumberFields
     {
-        // The number types' saved names, the old ones among them, as a SerializedProperty's type gives them
-        private static readonly HashSet<string> NumberTypes = new()
-        {
-            nameof(ScalableFloat), nameof(ScalableInt), "ScalerMagnitudeOperation", "ScalerIntegerMagnitudeOperation",
-        };
+        // The number types' saved names, as a SerializedProperty's type gives them
+        private static readonly HashSet<string> NumberTypes = new() { nameof(ScalableFloat), nameof(ScalableInt) };
 
-        private static readonly HashSet<string> WholeTypes = new() { nameof(ScalableInt), "ScalerIntegerMagnitudeOperation" };
+        private static readonly HashSet<string> WholeTypes = new() { nameof(ScalableInt) };
 
-        /// <summary>Whether a property is a number field: a ScalableFloat or a ScalableInt, by its new name or its old.</summary>
+        /// <summary>Whether a property is a number field: a ScalableFloat or a ScalableInt.</summary>
         public static bool IsNumber(SerializedProperty property) =>
             property != null && property.propertyType == SerializedPropertyType.Generic && NumberTypes.Contains(property.type);
 

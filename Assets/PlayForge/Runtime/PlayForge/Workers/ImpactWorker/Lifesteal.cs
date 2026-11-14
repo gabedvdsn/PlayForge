@@ -6,28 +6,6 @@ using UnityEngine;
 namespace FarEmerald.PlayForge
 {
     /// <summary>
-    /// A holder's lifesteal entry as a save before FN-15 kept it, in an item's, an ability's or an entity's Lifesteal list,
-    /// which heals no more: a holder's lifesteal is its Lifesteal attribute now, which an effect on it raises, and the
-    /// Lifesteal worker heals by it (Decision 78). Kept so an older save's list loads, for the Problems view to name.
-    /// </summary>
-    [Serializable]
-    public class LifestealEntry
-    {
-        [Tooltip("The share of each loss its holder deals that it heals, as 0.15")]
-        public ScalableFloat Share = 0.1f;
-
-        [Tooltip("The attribute whose losses count and its holder heals, as Health. None, the one playing the project's Health role")]
-        public Attribute Attribute;
-
-        [Tooltip("Only hits of one of these types, as attacks. None, any")]
-        [ForgeTagContext(ForgeContext.ImpactType)]
-        public List<Tag> ImpactTypes = new();
-
-        [Tooltip("Only while this holds, read at the hit: the holder its caster, the one hit its target")]
-        [SerializeReference] public GameplayCondition When;
-    }
-
-    /// <summary>
     /// The Lifesteal worker (FN-15, Decision 78): it heals its holder a share of each workable loss it deals another, the
     /// value of its holder's Lifesteal, the attribute playing the project's Lifesteal role or the one it names, which an
     /// effect on the holder raises while it should. An effect has no lifesteal of its own (FN-22). Only hits of the impact

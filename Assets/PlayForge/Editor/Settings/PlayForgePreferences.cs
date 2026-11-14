@@ -43,21 +43,11 @@ namespace FarEmerald.PlayForge.Extended.Editor
         /// <summary>The Forge's switches, in the order the page shows them. It has none since Show File Names (ED-58).</summary>
         internal static readonly Switch[] ForgeSwitches = { };
 
-        // The preferences The Forge's redesign left behind: its window keeps its filter, follows the project and selects
-        // what it makes, and its Create tab and Visualizer are gone (ED-27). Show File Names went when the list stopped
-        // showing file names, which the selected asset's header shows (ED-58). Use Defaults clears them too
-        private static readonly string[] Retired =
-        {
-            "RememberTypeFilter", "DoubleClickVisualize", "AutoRefresh", "ShowNotifications", "RecentlyCreatedRows", "LastTypeFilter",
-            "ShowFileNames",
-        };
-
         /// <summary>The tag fields' switches, in the order the page shows them.</summary>
         internal static readonly Switch[] TagSwitches = { ShowFullTagPath, GroupTagsByRoot };
 
         /// <summary>
-        /// The keys every preference here is kept under, the tables' column widths and hidden columns among them (FN-7), and
-        /// the retired ones'.
+        /// The keys every preference here is kept under, the tables' column widths and hidden columns among them (FN-7).
         /// </summary>
         internal static IEnumerable<string> Keys()
         {
@@ -68,7 +58,6 @@ namespace FarEmerald.PlayForge.Extended.Editor
                 yield return ForgeColumnWidths.KeyOf(table);
                 yield return ForgeColumnWidths.HiddenKeyOf(table);
             }
-            foreach (var each in Retired) yield return Prefix + each;
             yield return ForgeLogSettingsBridge.PrefsKey;
         }
 

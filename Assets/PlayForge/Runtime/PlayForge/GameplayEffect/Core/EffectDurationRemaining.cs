@@ -1,5 +1,4 @@
-﻿using UnityEngine.Serialization;
-
+﻿
 namespace FarEmerald.PlayForge
 {
     public struct EffectDurationRemaining

@@ -120,16 +120,6 @@ namespace FarEmerald.PlayForge
         {
             _workers.Clear();
         }
-        
-        // Legacy property for backwards compatibility
-        public Dictionary<IAttribute, List<AbstractAttributeWorker>> ChangeEvents
-        {
-            get => _workers;
-            set => _workers = value;
-        }
-        
-        // Legacy method names for backwards compatibility
-        public bool AddEvent(IAttribute attribute, AbstractAttributeWorker worker) => AddWorker(attribute, worker);
-        public bool RemoveEvent(IAttribute attribute, AbstractAttributeWorker worker) => RemoveWorker(attribute, worker);
+
     }
 }

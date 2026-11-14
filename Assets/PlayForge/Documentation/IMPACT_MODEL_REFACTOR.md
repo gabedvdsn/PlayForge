@@ -273,6 +273,8 @@ scheduling math, containers/stacking configs, `EnforceScaling`, init pulse.
 
 ## 5. Migration
 
+> The migration code went with FN-21, every asset saved in its final shape first; this section is the design's history.
+
 Serialized `GameplayEffect` assets upgrade via `ISerializationCallbackReceiver` (or a one-shot
 editor tool — recommended so the upgrade is visible and committable):
 

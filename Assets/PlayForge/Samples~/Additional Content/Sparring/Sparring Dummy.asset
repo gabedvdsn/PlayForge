@@ -63,13 +63,15 @@ MonoBehaviour:
     TagWorkers: []
     AnalysisWorkers: []
   Modifiers: []
-  Auras: []
-  Lifesteal: []
+  Components: []
   CrowdControl: {fileID: 0}
   Death:
     Policy: 0
     DiesAtZeroHealth: 1
-    EndsEffectsTagged: []
+    Purges: 1
+    KeepsAsProject: 1
+    KeepsTiers: []
+    KeepsCategories: 0
     OnDeath: []
     OnRevive: []
     Body: {fileID: 0}

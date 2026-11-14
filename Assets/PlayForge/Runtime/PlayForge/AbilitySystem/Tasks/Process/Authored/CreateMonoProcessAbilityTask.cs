@@ -4,7 +4,6 @@ using System.Collections.Generic;
 using System.Threading;
 using Cysharp.Threading.Tasks;
 using UnityEngine;
-using UnityEngine.Serialization;
 using FarEmerald.PlayForge.Extended;
 
 namespace FarEmerald.PlayForge
@@ -24,7 +23,7 @@ namespace FarEmerald.PlayForge
         public EDataTarget DataTarget = EDataTarget.Primary;
         [Tooltip("When true, the processes below are spawned whatever the data holds. When false, they're spawned where the data holds none.")]
         public bool InternalIsOverride = false;
-        [FormerlySerializedAs("MonoProcesses")] public List<AbstractMonoProcess> InternalMonoProcesses = new();
+        public List<AbstractMonoProcess> InternalMonoProcesses = new();
         [Tooltip("Where a spawned process appears: where the data's Position says, or else where its prefab stands; at the caster, as a projectile does; or at the ability's target, as a fire on the ground does")]
         public ESpawnPoint SpawnAt = ESpawnPoint.Data;
 

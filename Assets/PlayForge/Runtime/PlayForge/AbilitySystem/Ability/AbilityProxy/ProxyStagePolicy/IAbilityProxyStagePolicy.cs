@@ -1,31 +1,20 @@
-﻿using System.Threading;
-using Cysharp.Threading.Tasks;
-using UnityEngine;
-
-namespace FarEmerald.PlayForge
+﻿namespace FarEmerald.PlayForge
 {
+    /// <summary>
+    /// How a stage's tasks end it: the compiler maps each to a sequence's stage policy, Any to the first task's end and
+    /// All to every task's (AbilitySequenceCompiler). The legacy execution that awaited one itself is gone (FN-21).
+    /// </summary>
     public interface IAbilityProxyStagePolicy
     {
-        public UniTask AwaitStageActivation(AbilityProxy proxy, AbilityTaskBehaviourStage stage, UniTask[] tasks, AbilityDataPacket data, AbilitySystemCallbacks callbacks,
-            CancellationTokenSource stageCts);
-        
     }
 
+    /// <summary>The stage ends as its first task does.</summary>
     public class AnyProxyStagePolicy : IAbilityProxyStagePolicy
     {
-        public UniTask AwaitStageActivation(AbilityProxy proxy, AbilityTaskBehaviourStage stage, UniTask[] tasks, AbilityDataPacket data, AbilitySystemCallbacks callbacks,
-            CancellationTokenSource stageCts)
-        {
-            return UniTask.CompletedTask;
-        }
     }
-    
+
+    /// <summary>The stage ends as its last task does.</summary>
     public class AllProxyStagePolicy : IAbilityProxyStagePolicy
     {
-        public UniTask AwaitStageActivation(AbilityProxy proxy, AbilityTaskBehaviourStage stage, UniTask[] tasks, AbilityDataPacket data, AbilitySystemCallbacks callbacks,
-            CancellationTokenSource stageCts)
-        {
-            return UniTask.CompletedTask;
-        }
     }
 }

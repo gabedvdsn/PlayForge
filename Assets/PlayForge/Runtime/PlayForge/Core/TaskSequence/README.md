@@ -24,7 +24,7 @@ Every process has a lifecycle that determines how it starts, runs, and finishes:
 
 ```csharp
 // Register a process
-ProcessControl.Instance.Register(myProcess, data, out ProcessRelay relay);
+ProcessControl.Register(myProcess).With(data).Run(out ProcessRelay relay);
 
 // Control via ProcessRelay
 relay.Pause();       // Move to Waiting at once (removes from update loop)

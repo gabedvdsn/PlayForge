@@ -13,4 +13,39 @@ MonoBehaviour:
   m_Name: Demo Project
   m_EditorClassIdentifier: 
   entries: []
-  Description: The Demo's assets, its heroes, abilities, effects, items and attributes, a Forge Project of their own
+  Description: The Demo's assets, its heroes, abilities, effects, items and attributes,
+    a Forge Project of their own
+  Settings:
+    Roles: []
+    CrowdControl: {fileID: 0}
+    ResolveOrder: []
+    CombatLog:
+      Keep: 100
+      Records: 3
+      Events: []
+    Authoring:
+      NewAssets: []
+      Defaults: []
+      CostEffect: {fileID: 0}
+      CooldownEffect: {fileID: 0}
+      Templates: []
+    PurgeLevels:
+      Tiers: []
+      KeptOnDeath: 7
+    Workers:
+      Name: Every Entity
+      AttributeWorkers: []
+      ImpactWorkers:
+      - rid: 2403794439031488536
+      TagWorkers: []
+      AnalysisWorkers: []
+  references:
+    version: 2
+    RefIds:
+    - rid: 2403794439031488536
+      type: {class: LifestealImpactWorker, ns: FarEmerald.PlayForge, asm: FarEmerald.PlayForge}
+      data:
+        AcceptUnworkableImpact: 0
+        Share: {fileID: 0}
+        Heals: {fileID: 0}
+        ImpactTypes: []

@@ -82,6 +82,10 @@ MonoBehaviour:
       Name: Not Visibled2xuDNqtid9uamDM5aBXkxUexwFpJUF4d2xuDNqtid9uamDM5aBXk
       DisplayName: Not Visible
     Textures: []
+    InheritFromOrigin: 0
+    OriginTexture:
+      Name: PrimaryYKmcVmH4Jn9iqWqQsYjmr_mmcquW7EYPYKmcVmH4Jn9iqWqQsYjmr_mmc
+      DisplayName: Primary
     RetentionGroup:
       Name: BonusyjJTN9mNKWQRBtyrTZCKCEbhD63hGgFGyjJTN9mNKWQRBtyrTZCKCEbhD63
       DisplayName: Bonus
@@ -93,12 +97,29 @@ MonoBehaviour:
     GrantedTags: []
     RemovesEffectsTagged: []
     BlocksEffectsTagged: []
+  Purges:
+    Strength:
+      Name: 
+      DisplayName: 
+    Kinds: []
+    AppliedBy: 7
+    Filters: []
   GrantedAbilities: []
+  OnHit: []
+  Modifiers: []
+  OwnProcCoefficient: 0
+  ProcCoefficient:
+    Magnitude: 1
+    RealMagnitude: 2
+    Scaler:
+      rid: -2
   ImpactSpecification:
     AttributeTarget: {fileID: 11400000, guid: 781fdf8841bc79441bc32a1d136f3c4f, type: 2}
     TargetImpact: 0
     ImpactOperation: 0
     MultiplyBehaviour: 0
+    AddBehaviour: 0
+    Pipeline: {fileID: 0}
     AffiliationPolicy: 3
     AffiliationComparison: 0
     Affiliations: []
@@ -107,6 +128,14 @@ MonoBehaviour:
       RealMagnitude: 2
       Scaler:
         rid: -2
+    ChanceRoll:
+      PseudoRandom: 0
+      OwnLuck: 0
+      Luck:
+        Magnitude: 0
+        RealMagnitude: 2
+        Scaler:
+          rid: -2
     ImpactTypes: []
     ReverseImpactOnRemoval: 1
     MagnitudeOperation:
@@ -156,6 +185,13 @@ MonoBehaviour:
         rid: -2
       Rounding: 0
   Workers: []
+  Components: []
+  WorkerGroup:
+    Name: Workers
+    AttributeWorkers: []
+    ImpactWorkers: []
+    TagWorkers: []
+    AnalysisWorkers: []
   Cues: []
   SourceRequirements:
     Name: 
@@ -197,6 +233,10 @@ MonoBehaviour:
       SyncWithTemplate: 0
       AvoidTags: []
       RequireTags: []
+  Conditions:
+    Application: []
+    Ongoing: []
+    Removal: []
   LinkMode: 1
   _linkedSource: {fileID: 11400000, guid: 4c9b571510e3901408cd7794aff1a450, type: 2}
   references:
@@ -247,7 +287,6 @@ MonoBehaviour:
             Scaler:
               rid: -2
           TierName: Bronze
-          legacyValue: 0
         - Level: 2
           Value:
             Magnitude: 10
@@ -255,7 +294,6 @@ MonoBehaviour:
             Scaler:
               rid: -2
           TierName: Silver
-          legacyValue: 0
         - Level: 3
           Value:
             Magnitude: 20
@@ -263,10 +301,8 @@ MonoBehaviour:
             Scaler:
               rid: -2
           TierName: Gold
-          legacyValue: 0
         DefaultValue:
           Magnitude: 0
           RealMagnitude: 2
           Scaler:
             rid: -2
-        legacyDefaultValue: NaN

@@ -13,8 +13,6 @@ namespace FarEmerald.PlayForge.Extended
     /// Or with string literals:
     /// [ForgeTagContext("Granted", "Asset Tag")]
     /// public Tag Required;
-    ///
-    /// An old context's name reads as its new one, as Trigger does as Event (Decision 74).
     /// </summary>
     [AttributeUsage(AttributeTargets.Field, AllowMultiple = false, Inherited = true)]
     public class ForgeTagContext : System.Attribute
@@ -43,7 +41,6 @@ namespace FarEmerald.PlayForge.Extended
         /// <param name="context">One or more contexts (e.g., ForgeContext.Granted, ForgeContext.Event)</param>
         public ForgeTagContext(params string[] context)
         {
-            // An old context's name reads as its new one (TAG-6)
             Context = ForgeContext.Current(context);
         }
     }

@@ -71,6 +71,25 @@ MonoBehaviour:
       Rounding: 0
     ActivateImmediately: 0
     Triggers: []
+    ChanceToActivate:
+      Magnitude: 1
+      RealMagnitude: 2
+      Scaler:
+        rid: -2
+    ActivationRoll:
+      PseudoRandom: 0
+      OwnLuck: 0
+      Luck:
+        Magnitude: 0
+        RealMagnitude: 2
+        Scaler:
+          rid: -2
+    ProcCoefficient:
+      Magnitude: 1
+      RealMagnitude: 2
+      Scaler:
+        rid: -2
+    IgnoresCrowdControl: []
     Textures:
     - Tag:
         Name: PrimaryYKmcVmH4Jn9iqWqQsYjmr_mmcquW7EYPYKmcVmH4Jn9iqWqQsYjmr_mmc
@@ -167,6 +186,7 @@ MonoBehaviour:
   MaxLevel: 4
   IgnoreWhenLevelZero: 1
   Cost: {fileID: 11400000, guid: e0a4b1e4b5acb4944a8d743d0055e13d, type: 2}
+  AttributeCosts: []
   Cooldown: {fileID: 11400000, guid: 66ab17c3b966cee4b8a84aef82f86787, type: 2}
   WorkerGroup:
     Name: Workers
@@ -175,6 +195,9 @@ MonoBehaviour:
     - rid: 2403794261189067265
     TagWorkers: []
     AnalysisWorkers: []
+  OnHit: []
+  Modifiers: []
+  Components: []
   LinkMode: 0
   _linkedSource: {fileID: 0}
   references:
@@ -230,6 +253,7 @@ MonoBehaviour:
           Scaler:
             rid: -2
         FlattenRangeCheck: 1
+        UseCastRange: 1
         RetryOnInvalid: 1
         MouseButton: 0
         TakeTargetFromData: 1
@@ -252,6 +276,7 @@ MonoBehaviour:
         RecordLandedAs:
           Name: 
           DisplayName: 
+        UseResolveOrder: 1
     - rid: 2403794261189067264
       type: {class: ChannelAbilityTask, ns: FarEmerald.PlayForge, asm: FarEmerald.PlayForge}
       data:

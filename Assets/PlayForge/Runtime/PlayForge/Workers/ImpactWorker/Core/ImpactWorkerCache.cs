@@ -144,8 +144,6 @@ namespace FarEmerald.PlayForge
         {
             _cache.Clear();
         }
-        
-        // Legacy property access
-        public Dictionary<IAttribute, List<AbstractImpactWorker>> Cache => _cache;
+
     }
 }

@@ -3,13 +3,12 @@ using System.Collections.Generic;
 using System.Linq;
 using FarEmerald.PlayForge.Extended;
 using UnityEngine;
-using UnityEngine.Serialization;
 using Object = UnityEngine.Object;
 
 namespace FarEmerald.PlayForge
 {
     [CreateAssetMenu(menuName = "PlayForge/Ability", fileName = "Ability_", order = 20)]
-    public class Ability : BaseForgeLevelProvider, IWorkerGroupSource, ISerializationCallbackReceiver, IMovesToComponents, IHasTextures
+    public class Ability : BaseForgeLevelProvider, IWorkerGroupSource, IHasTextures
     {
         public AbilityDefinition Definition = new();
         public AbilityTags Tags = new();
@@ -42,12 +41,6 @@ namespace FarEmerald.PlayForge
 
         [ForgeEffectTemplate("Cooldown", "Cooldown")]
         public GameplayEffect Cooldown;
-
-        // Its charges, recharge and toggle as a save before components kept them, each moved into its component as it
-        // loads (FN-14)
-        [SerializeField, HideInInspector, FormerlySerializedAs("Charges")] private ScalableInt legacyCharges = 1;
-        [SerializeReference, HideInInspector, FormerlySerializedAs("Recharge")] private AbstractChargeRecharge legacyRecharge = new EachChargeRecharge();
-        [SerializeField, HideInInspector, FormerlySerializedAs("Toggles")] private GameplayEffect legacyToggles;
 
         /// <summary>Its charges: its Charges component's, or one, an ordinary cooldown (TW-17, FN-14).</summary>
         public ScalableInt Charges => FirstComponent<ChargesAbilityComponent>() is { Charges: { } charges } ? charges : OneCharge;
@@ -94,56 +87,9 @@ namespace FarEmerald.PlayForge
         [Tooltip("Modifiers of other effects, its holder's own or those landing on it, while it's known (TW-7)")]
         public List<EffectModifierEntry> Modifiers = new();
 
-        // Its auras as a save before components kept them, each moved into an Aura component as it loads (FN-14)
-        [SerializeField, HideInInspector] private List<AuraEntry> Auras = new();
-
         [Tooltip("Its components: features it carries, each a class with hooks into its life, as it's granted, starts, commits its cost and cooldown, ends and is removed; each may refuse an activation (FN-14)")]
         [SerializeReference]
         public List<AbstractAbilityComponent> Components = new();
-
-        /// <summary>Whether it moved an older save's fields into its components as it loaded, which a save keeps (FN-14).</summary>
-        public bool MovedToComponents { get; set; }
-
-        void ISerializationCallbackReceiver.OnBeforeSerialize() { }
-
-        // An older save's fields, each moved into a component as it loads, in the editor and in a build (FN-14, Decision 76)
-        void ISerializationCallbackReceiver.OnAfterDeserialize()
-        {
-            if (Auras is { Count: > 0 })
-            {
-                Components ??= new List<AbstractAbilityComponent>();
-                foreach (var aura in Auras)
-                    if (aura != null) Components.Add(new AuraAbilityComponent { Aura = aura });
-                Auras.Clear();
-                MovedToComponents = true;
-            }
-
-            // Charges more than one, or that scale, or a recharge of another kind: each kept plain data, so a load, which
-            // mustn't ask Unity anything, can tell
-            bool charged = legacyCharges != null && (legacyCharges.Magnitude > 1 || !AbstractScaler.IsNone(legacyCharges.Scaler));
-            bool recharged = legacyRecharge != null && legacyRecharge.GetType() != typeof(EachChargeRecharge);
-            if (charged || recharged)
-            {
-                Components ??= new List<AbstractAbilityComponent>();
-                Components.Add(new ChargesAbilityComponent { Charges = legacyCharges ?? 1, Recharge = legacyRecharge ?? new EachChargeRecharge() });
-                legacyCharges = 1;
-                legacyRecharge = new EachChargeRecharge();
-                MovedToComponents = true;
-            }
-
-            // A toggle, by its reference alone, which a load can read
-            if (!ReferenceEquals(legacyToggles, null))
-            {
-                Components ??= new List<AbstractAbilityComponent>();
-                Components.Add(new ToggleAbilityComponent { Effect = legacyToggles });
-                legacyToggles = null;
-                MovedToComponents = true;
-            }
-        }
-
-        // Its lifesteal as a save before the Lifesteal attribute kept it, which heals no more, kept for the Problems view to
-        // name (FN-15)
-        [SerializeField, HideInInspector, FormerlySerializedAs("Lifesteal")] private List<LifestealEntry> legacyLifesteal = new();
 
         // ═══════════════════════════════════════════════════════════════════════════
         // Level Provider Linking
