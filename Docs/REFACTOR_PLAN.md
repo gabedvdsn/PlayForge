@@ -750,6 +750,16 @@ from. It lives outside `Assets/` so it never ships in the package.
   The Forge shows it. **It reads each level of a range, as an effect's Levels does**, with the parts behind the level
   picked. **What's typed is kept for the session**, never written into the asset. The recommendation was the same
   without the entity fill.
+- Decision 83, 2026-11-14: the shape of the user's notes of 2026-11-14 (FN-19 to FN-25), their answers. **Legacy code goes,
+  all of it** (FN-21): the moves of old fields, the menus that run them, the old imports, every `FormerlySerializedAs`
+  and the obsolete Register calls, once every asset is saved as it is now. **The ability tasks gain all four groups**
+  (FN-24): waits for an event, a tag gained or lost and an attribute crossing a value, on the caster or the target;
+  sending an event, granting tags while a stage runs and cancelling abilities by tag; Dash, Blink and Area Effect from
+  the Demo; and Consume Item and Apply To Caster from the Demo. **An effect inherits its texture by one option of its
+  own** (FN-25): Inherit From Origin and a tag, Primary to start, its own where the origin has none. **Every authored
+  number is Scalable** (FN-19), cues' and stack limits among them, each asset re-authored, not migrated. Each was the
+  recommendation but the last, which went further than recommended. Worked in this order: PC-35, then FN-22, FN-23,
+  FN-25, FN-20, FN-24, FN-19, and FN-21 last, once every asset is in its final shape.
 
 **Open. Ask the user; do not assume:**
 1. ~~**Uncommitted changes**~~: decided, see above.
@@ -875,6 +885,7 @@ Severity: **C** critical, **H** high, **M** medium or low. The phase is the road
 | PC-32 | M | 2 | A Mono process terminated outside play mode keeps its object: `MonoWrapperProcess.WhenTerminate` calls `Object.Destroy`, which Unity refuses in edit mode, logging an error. Editor tools and edit-mode tests reach it; the Test Runner's golden S22 did (SP-18), as it fails a test on any logged error | `MonoWrapperProcess.cs:104` | verified |
 | PC-33 | H | 5 | A pool's object was destroyed as its process ended. The Mono wrapper handed a finished object back through the object's own `Instantiator`, which a clone never has, as the field isn't serialized, so an instantiator that made it, through a template's `Instantiator` or the handler's, never saw it again and pooling couldn't work (Decision 23 leaves pools to games). Found by the Bullet heaven lab. The wrapper keeps the instantiator that made the object and hands it back to that one | `MonoWrapperProcess.cs` (`ConfigureWrapper`, `WhenTerminate`) | verified |
 | PC-34 | M | 5 | Ending a process searched its step group's list for it from the front and shifted what came after, so ending one cost as much as the processes stepped with it: ending the newest of 10,000 took about 4.4 µs against 0.7 among 1,000, and ending every one of them cost the square of how many there were. The review's O(n) unregister, which Bullet heaven's 10,000 bolts didn't show, as they end oldest first. Found by the stress suite's churn. Fixed: a step group knows each process's position, so an ending leaves a hole there at once, which stepping passes over, and the holes are swept out in place once they outnumber the processes, the order kept | `Management/GameplayProcess/Core/ProcessWorld.cs` (`StepGroup`) | fixed |
+| PC-35 | H | 5 | A projectile made in code never flew. The user's change made a mono process start Synchronous, stepping in Update and LateUpdate, and a Synchronous process has no run, while a projectile's flight is its run: one made in code, as the Bullet Heaven lab's bolts and the spawned-process tests' arrows are, stood where it spawned, never landed and never ended. A prefab saved before kept the lifecycle it was saved with. Fixed: a projectile, any `AbstractTargetedMonoProcess`, starts Self Terminating with no step timing, as it did, and so does the Demo's ground fire, whose burning is its run; every other mono process keeps the new default. ED-61's test sets the lifecycle and timing it reads, as it read the old defaults | `Management/GameplayProcess/Core/Authored/AbstractTargetedMonoProcess.cs`, `Samples~/Demo/Scripts/Forge/DemoProcesses.cs` | verified |
 
 ### TaskSequence
 
@@ -1368,7 +1379,8 @@ on-hit (TW-5, TW-6), which most of the rest build on.
 
 The user's notes of 2026-11-13 on the framework, much of it the UI and the TW features, as they gave them (Decision 70).
 Worked in the order below: the bugs, then the UI, then components and lifesteal, then purging after its research, then
-Death's section and a body for a running entity.
+Death's section and a body for a running entity. FN-19 to FN-25 are their notes of 2026-11-14, as Decision 83 shapes
+them, worked in its order.
 
 | ID | Note | Kind | Status |
 |---|---|---|---|
@@ -1390,6 +1402,13 @@ Death's section and a body for a running entity.
 | FN-16 | Effect purging: research how MOBAs purge effects (tiers that an effect needs at least to be purged, effects no purge takes, the system purging anything), then a shape for the user to decide. Researched (`Docs/PURGE_REVIEW.md`) and decided (Decision 79): a project's Purge Levels table of tags ranked into tiers and of categories, purges by tag and by relation or affiliation, a death keeping the tiers and categories it names, a category over a tier, and the dead taking no one else's effects. A death that keeps the entity purges what was applied but what's kept, as cooldowns and effects its abilities and items grant passively, and what else research finds; and whether a dead entity's gains and losses are 0 by a pipeline-wide modifier. It takes the place of Death's Ends Effects Tagged, which may need every effect tag of a project. Done so far: a dead entity takes no one else's effects, its own landing still, as its death's and its revive's (FN-16a); a project's Purge Levels, tiers of tags weakest first, and purges of a strength, their kinds, whom by who applied each, and filters of a project's own, Except Tagged among them, an effect's Purges purging its target as it lands and `ForgePurge` for code (FN-16b; `Purging.cs`, `EffectSystemComponent.cs`). A death's purge (FN-16c): a staying entity's death purges its effects but the categories it keeps, whatever their tiers, cooldowns, lent effects and toggles as a project starts, and the tiers it keeps, its project's and its own; an effect at no tier goes; Death's Ends Effects Tagged gone in its place | Feature | verified |
 | FN-17 | The Death section's single collapsible field inside it looks out of place. Done: Death's fields stand in the section, each by its name, where one field of its whole drew a foldout of its own inside it (`EntityIdentityEditor.cs`) | UI | verified |
 | FN-18 | A body for a running entity: an entity whose body process isn't its identity's Body is given one at runtime. Done (Decision 78): `UseBody(process)` on either hub gives a running entity a body of its own, a process running already or registered for it, which a runtime entity follows and which ends with it as it dies; a revive spawns the identity's Body where it has one; the body it had ends first, null lets one go, and a dead entity takes none (`GASCore.cs`, `IGameplayAbilitySystem.cs`, the hubs' end-of-frame halves) | Feature | verified |
+| FN-19 | More Scalable numbers, throughout: every authored number, gameplay numbers, cues' and stack limits among them (Decision 83), each asset saved with a plain number re-authored, not migrated. Begun by the user (63efdc3): an ability's Buffer Priority and Proc Coefficient, an effect's Proc Coefficient, an Area's Max Targets, a Spread's Max Targets and Hops. FN-19a: an Area's Max Targets had no value of its own, so an area made in code threw as it landed; it reads 0, every one it reaches, and the input-buffer tests set Buffer Priority as a number, where reflection couldn't from an int (`EffectArea.cs`) | Refactor | open |
+| FN-20 | A pass over the targeting tasks, whose headers go | UI | open |
+| FN-21 | Legacy, obsolete and asset-updating code removed, all of it (Decision 83): the moves of old fields into components, of lifesteal lists, of numbers and of a template's category; the Upgrade Assets and Move to Components menus; the old tag-context and settings imports; every `FormerlySerializedAs`; ProcessControl's obsolete Register calls. Every asset in PlayForge and Proving Grounds is saved as it is now first, so none needs them | Refactor | open |
+| FN-22 | An effect's Impact has no lifesteal of its own: lifesteal is the Lifesteal attribute alone, as its holder's, which reverses Decision 78's own lifesteal of an effect | Refactor | open |
+| FN-23 | Fields that don't apply are hidden: an ability's Buffer Window and Buffer Priority but under Queue or its entity's policy, which may be Queue; an effect's Proc Coefficient but under Own Proc Coefficient; and others where they don't apply | UI | open |
+| FN-24 | A pass over the ability tasks: those a framework should have (Decision 83: waits for an event, a tag gained or lost and an attribute crossing a value; sending an event, tags while a stage runs and cancelling abilities by tag; Dash, Blink and Area Effect, and Consume Item and Apply To Caster, from the Demo), the others refactored, Run Sequence's picker searchable as the framework's others are, Scalable numbers where they belong, and the task picker grouped by category, which each task names | Feature | open |
+| FN-25 | An effect's texture from its origin, the ability, item or entity that applied it: Inherit From Origin and a tag, Primary to start, its own where the origin has none (Decision 83: one option per effect) | Feature | open |
 
 ### The tag review (TAG)
 
@@ -1441,6 +1460,20 @@ GAS-4 with GAS-5, PC-6, and TS-I with PC-5.
 ## Log
 
 Record baselines, gate results and notable decisions here, newest first.
+
+- 2026-11-14, **The user's edits committed; PC-35 and FN-19a.** The user asked for their PlayForge edits to be committed
+  as they were (63efdc3): more Scalable numbers (an ability's Buffer Priority and Proc Coefficient, an effect's Proc
+  Coefficient, an Area's Max Targets, a Spread's Max Targets and Hops, with limits), a runtime process's name and relay,
+  and a mono process starting Synchronous, stepping in Update and LateUpdate. The retyped fields lose no saved value:
+  the one non-default Max Targets in the repositories' assets is a targeting task's, which kept its type. Their default
+  left a projectile made in code standing where it spawned, a Synchronous process having no run, which the 12 PlayMode
+  failures and ED-61's had shown since FEAT-31's entry, the change then uncommitted. PC-35: a projectile starts Self
+  Terminating with no step timing, as before, and so does the Demo's ground fire; ED-61's test sets what it reads. The
+  gates on the commit found 16 failures more, from the user's newer numbers: an Area made in code had no Max Targets and
+  threw as it landed, and the input-buffer tests set Buffer Priority by reflection from an int. FN-19a gives Max Targets
+  its 0 and the tests set the field. Their notes of 2026-11-14 are FN-19 to FN-25, shaped by Decision 83.
+  - Red: PC-35's test failed on the user's commit, its projectile starting Synchronous (pc35_red), and FN-19a's, an area made in code having no Max Targets (fn19a_red).
+  - Gates, on a frozen snapshot of the package with the Demo imported: EditMode 949 of 949, ED-61 among them; PlayMode 1900 of 1926, 8 skipped, before FN-19a: the 12 known failures gone and 18 others, 16 of them the user's newer numbers', which FN-19a's focused run then passed (34 of 36: FN-19a, FEAT-6's buffer tests, TW-10's and TW-31's areas, PC-35), and Essence Shift's two, from Proving Grounds' uncommitted Agility.asset, now a Barrier that fades with its effect, which pass with the committed asset (2 of 2). Golden 25 of 25, run in the private copy, as PlayForge is open in the user's editor.
 
 - 2026-11-14, **LVL-5: a Scaler asset to try.** A Scaler asset showed its values per level but nothing of what it gives
   against an entity: a × Attribute, a curve of the target's Armor or a Set By Caller read only in play. Now its

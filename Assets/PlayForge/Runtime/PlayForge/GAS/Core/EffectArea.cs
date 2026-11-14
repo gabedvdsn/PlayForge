@@ -38,7 +38,7 @@ namespace FarEmerald.PlayForge
         public bool IncludeCaster;
 
         [Tooltip("At most this many besides its target, the nearest first; 0, every one it reaches")]
-        [NumberMin(0f)] public ScalableInt MaxTargets;
+        [NumberMin(0f)] public ScalableInt MaxTargets = 0;
 
         [Tooltip("Lands on its target and those it takes in the project's resolve order, its target among them; off, its " +
                  "target first, then those near (TW-31)")]

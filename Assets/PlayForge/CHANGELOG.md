@@ -470,6 +470,10 @@ tracks each fix below by its ID.
   page, through one table of links in the editor.
 
 ### Changed
+- A mono process starts Synchronous, stepping in Update and LateUpdate, where it started Self Terminating with no step
+  timing; a projectile, any `AbstractTargetedMonoProcess`, still starts as it did (PC-35). An ability's Buffer Priority
+  and Proc Coefficient, an effect's Proc Coefficient, an Area's Max Targets and a Spread's Max Targets and Hops are
+  Scalable numbers (FN-19). A runtime process's name defaults to its type's, and `ProcessName` gives way to `GetName()`.
 - The Demo's blows go through two Value Pipelines, Physical Damage and Magic Damage, which do what its Mitigation and
   Amplification workers did: a blow harder by its dealer's amplification, then lessened by its target's Armor or Magic
   Resistance, with the same numbers (FN-11).
@@ -820,6 +824,9 @@ tracks each fix below by its ID.
   Asking whether its sequence was paused took 24 bytes a frame.
 
 ### Fixed
+- A projectile made in code flies: under a mono process's new Synchronous default, which has no run, one stood where it
+  spawned and never landed or ended (PC-35).
+- An effect's Area made in code lands: its Max Targets, a Scalable whole number, had no value, and it threw (FN-19a).
 - Looking at an effect leaves it as it was: Unity's own flags field stored its Purges' Applied By, Any, as Everything,
   -1, so the inspector changed every effect it showed, a template's child took it as an override, and Unity could
   assert IsInSyncWithParentSerializedObject. PlayForge's flags fields write only the flags picked, of those their type

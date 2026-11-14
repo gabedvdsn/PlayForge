@@ -14,6 +14,14 @@ namespace FarEmerald.PlayForge.Samples.Demo
     /// </summary>
     public class GroundFireProcess : AbstractGameplayMonoProcess
     {
+        // Its burning is its run, so it starts Self Terminating, with no step timing, where a mono process starts
+        // Synchronous, which has no run (PC-35)
+        public GroundFireProcess()
+        {
+            ProcessLifecycle = EProcessLifecycle.SelfTerminating;
+            ProcessTiming = EProcessStepTiming.None;
+        }
+
         [Header("Roles of the attributes it carries")]
         [Tooltip("The role its radius is read by")]
         public Tag RadiusRole;

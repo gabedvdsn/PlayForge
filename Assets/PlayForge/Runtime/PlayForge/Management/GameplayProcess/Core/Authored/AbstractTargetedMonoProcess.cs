@@ -8,12 +8,23 @@ using UnityEngine;
 namespace FarEmerald.PlayForge
 {
     /// <summary>
-    /// The base class for following/tracking projectiles. 
+    /// The base class for following/tracking projectiles.
     /// </summary>
     public abstract class AbstractTargetedMonoProcess : AbstractEffectingMonoProcess, IHasIntentToTarget
     {
         protected ITarget target;
         protected AbstractTargetingPacket targeting;
+
+        /// <summary>
+        /// A projectile's flight is its run, so it starts Self Terminating, ending as it lands, with no step timing, as it
+        /// has no update of its own. A mono process starts Synchronous, which has no run, so one made in code never flew
+        /// (PC-35). Its inspector, or code, still sets either.
+        /// </summary>
+        protected AbstractTargetedMonoProcess()
+        {
+            ProcessLifecycle = EProcessLifecycle.SelfTerminating;
+            ProcessTiming = EProcessStepTiming.None;
+        }
 
         public override void WhenInitialize()
         {
