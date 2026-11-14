@@ -1245,6 +1245,22 @@ namespace FarEmerald.PlayForge
         }
 
         /// <summary>
+        /// Each effect on the shelf hears the entity die, its components' Death, in the shelf's order, before the death
+        /// takes any off (FN-14). A component may land effects on others as it hears, never this one, which is dead.
+        /// </summary>
+        internal void HearDeath()
+        {
+            if (EffectShelf.Count == 0) return;
+            var shelf = EffectShelf.ToArray();
+            foreach (var container in shelf)
+            {
+                var spec = container?.Spec;
+                if (spec?.Base?.Components is not { Count: > 0 }) continue;
+                spec.RunComponentDeath(new EffectWorkerContext(Self, spec, Self.GetFrameSummary(), Self.GetActionQueue()));
+            }
+        }
+
+        /// <summary>
         /// Gives back what every lasting transfer on the shelf holds, as the entity goes with its effects, which nothing else
         /// ends: told on another entity, with nothing told on this one (TW-20).
         /// </summary>

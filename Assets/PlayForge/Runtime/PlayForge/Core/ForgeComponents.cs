@@ -65,6 +65,12 @@ namespace FarEmerald.PlayForge
 
         /// <summary>As the effect comes off: an instant one as it's done, a lasting one as it's removed.</summary>
         public virtual void End(EffectComponentContext ctx) { }
+
+        /// <summary>
+        /// As the one it's on dies, while it's on them, before what the death ends comes off; heard whether the entity
+        /// stays or ends (FN-14).
+        /// </summary>
+        public virtual void Death(EffectComponentContext ctx) { }
     }
 
     /// <summary>What an effect's component hears a moment of its effect with (FN-14).</summary>

@@ -316,7 +316,9 @@ while the effect lasts, as no tag needs to change for an attribute they read to,
 ## Components
 
 An effect's components are features it carries, each a class with hooks into its life, added with the list's **+**
-(FN-14). A component hears the effect **Land** on the entity it's on, **Tick** each period, **Hit** as an impact it deals lands, and **End** as it comes off: an instant effect at once, a lasting one as it's removed, at the moments its workers do. A kind that makes no sense twice is offered only while the effect holds none of it.
+(FN-14). A component hears the effect **Land** on the entity it's on, **Tick** each period, **Hit** as an impact it deals lands, and **End** as it comes off: an instant effect at once, a lasting one as it's removed, at the moments its workers do; and
+**Death** as the one it's on dies while it's on them, whether the entity stays or ends, before what the death ends comes
+off. A kind that makes no sense twice is offered only while the effect holds none of it.
 
 A component of your own derives from `AbstractEffectComponent` and overrides the hooks it needs, each a no-op
 otherwise. It's the effect's, shared by everything that holds it, so what it keeps for one application of it it keeps through its
@@ -359,6 +361,19 @@ giver gave, as far as its own bounds let it; what its maximum can't hold is lost
 warns of a transfer whose Delivery the effect's duration can't make, as it does an additional impact's, and of one that
 names no attribute to give or get, each numbered among the effect's transfers. An effect holds as many as it
 moves, each its own (FN-14).
+
+### Spread
+
+A **Spread** component spreads its effect, or the **Effect** it names, from the one it's on to those near them, at the
+moments its **When** names, any of them: as the effect **Land**s, each **Tick**, as it comes off (**End**), however it
+ends, or as the one it's on dies (**Death**), as a plague jumps from its victim to the enemies near it (FN-14). It takes
+each within its **Radius** of the one it's on, read at the effect's level, along the ground unless **Flat** is off; of
+the sides it **Takes** from its caster's; its caster too where **Include Caster** says; at most **Max Targets** each
+time, the nearest first, or every one at 0; and passes over those who have the effect it spreads already, unless **Skip
+Holders** is off. Each takes the effect from the same origin, its caster's, so its modifiers and its chance to land
+are its own, in the project's resolve order unless **Use Resolve Order** is off. A landing it made spreads on only so
+far as its **Hops** allow: at 0, it spreads only from where the effect landed of its own; at 1, once more from each it
+spread to; and on. An effect holds as many as it has moments to spread at, each its own.
 
 ## Workers
 

@@ -114,6 +114,12 @@ namespace FarEmerald.PlayForge
         /// <summary>Whether it landed by another's area, so it spreads no further (TW-10).</summary>
         public bool FromArea { get; internal set; }
 
+        /// <summary>
+        /// How many spreads it is from where its effect first landed: 0 for a landing of its own, 1 for one a Spread
+        /// component made from it, and on (FN-14).
+        /// </summary>
+        public int SpreadHop { get; internal set; }
+
         /// <summary>Whether a lasting impact of its fades with it, a barrier's, so its shelf refreshes it as it ticks (TW-12).</summary>
         internal bool Fades { get; private set; }
 
@@ -235,6 +241,13 @@ namespace FarEmerald.PlayForge
             if (Base.Components != null)
                 foreach (var component in Base.Components) component?.End(new EffectComponentContext(ctx));
         }
+        /// <summary>Its components hear the one it's on die, while it's on them (FN-14).</summary>
+        internal void RunComponentDeath(EffectWorkerContext ctx)
+        {
+            if (Base.Components == null) return;
+            foreach (var component in Base.Components) component?.Death(new EffectComponentContext(ctx));
+        }
+
         public void RunWorkerImpact(EffectWorkerContext ctx)
         {
             foreach (AbstractEffectWorker worker in Base.Workers) ctx.ActionQueue.EnqueueRange(worker.OnEffectImpact(ctx));

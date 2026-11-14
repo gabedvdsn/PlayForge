@@ -361,8 +361,9 @@ namespace FarEmerald.PlayForge
             Send(owner, Tags.DIED, EventData(killer, owner));
             if (killer is IGameplayAbilitySystem slayer) Send(slayer, Tags.KILL, EventData(killer, owner));
 
-            // Its components hear it die (FN-14)
+            // Its components hear it die, then its effects' (FN-14)
             HearComponents((component, ctx) => component.Death(ctx));
+            EffectSystem.HearDeath();
 
             // One that stays dies at its frame's end and stays; any other ends there, as it always did (TW-4)
             if (EntityDeath.Stays(Identity?.Death)) pendingDeath = true;
