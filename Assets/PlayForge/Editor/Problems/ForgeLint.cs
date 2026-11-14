@@ -282,13 +282,16 @@ namespace FarEmerald.PlayForge.Extended.Editor
                     $"Additional impact {i + 1} on {entry.AttributeTarget.Name} reads its stacks, {ticks}", problems);
             }
 
-            var transfers = effect.Transfers ?? new List<AttributeTransfer>();
-            for (int i = 0; i < transfers.Count; i++)
+            // Its transfers, each a component, numbered among themselves (FN-14)
+            var components = effect.Components ?? new List<AbstractEffectComponent>();
+            for (int i = 0, n = 0; i < components.Count; i++)
             {
-                var transfer = transfers[i];
-                if (transfer == null || transfer.Delivery != EImpactDelivery.Periodic || ImpactFields.DeliveryProblem(duration, transfer.Delivery) != null) continue;
-                Add(effect, transfer.Amount, $"{nameof(GameplayEffect.Transfers)}.Array.data[{i}].{nameof(AttributeTransfer.Amount)}",
-                    $"Transfer {i + 1} reads its stacks, but moves once for each stack already, so 3 stacks move 9 times what 1 does.", problems);
+                if (components[i] is not TransferEffectComponent { Transfer: { } transfer }) continue;
+                n++;
+                if (transfer.Delivery != EImpactDelivery.Periodic || ImpactFields.DeliveryProblem(duration, transfer.Delivery) != null) continue;
+                Add(effect, transfer.Amount,
+                    $"{nameof(GameplayEffect.Components)}.Array.data[{i}].{nameof(TransferEffectComponent.Transfer)}.{nameof(AttributeTransfer.Amount)}",
+                    $"Transfer {n} reads its stacks, but moves once for each stack already, so 3 stacks move 9 times what 1 does.", problems);
             }
         }
 

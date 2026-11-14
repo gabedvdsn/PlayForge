@@ -444,6 +444,10 @@ tracks each fix below by its ID.
   page, through one table of links in the editor.
 
 ### Changed
+- An effect's Area and Transfers are effect components, an Area component holding its area, one at most, and a Transfer
+  component each transfer, in the Components section, where they were fields of Impact. `GameplayEffect.Area` and
+  `GameplayEffect.Transfers` read them and can't be set: add an `AreaEffectComponent` or a `TransferEffectComponent`
+  instead. A saved effect's area and transfers move into components as it loads (FN-14).
 - Charges and Toggles are ability components, a Charges component holding its charges and recharge and a Toggle
   component its effect, in the Components section, where they were fields of Activation. `Ability.Charges`,
   `Ability.Recharge` and `Ability.Toggles` read them and can't be set: add a `ChargesAbilityComponent` or a

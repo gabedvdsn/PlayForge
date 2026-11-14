@@ -31,18 +31,42 @@ namespace FarEmerald.PlayForge
         [Tooltip("Modifiers of other effects, its holder's own or those landing on it, while it lasts, the holder the one it's on (TW-7)")]
         public List<EffectModifierEntry> Modifiers = new();
 
-        // Its auras as a save before components kept them, each moved into an Aura component as it loads (FN-14)
+        // Its auras, area and transfers as a save before components kept them, each moved into its component as it loads
+        // (FN-14)
         [SerializeField, HideInInspector] private List<AuraEntry> Auras = new();
+        [SerializeField, HideInInspector, FormerlySerializedAs("Area")] private EffectArea legacyArea = new();
+        [SerializeField, HideInInspector, FormerlySerializedAs("Transfers")] private List<AttributeTransfer> legacyTransfers = new();
 
-        [Tooltip("Its area: as it lands on its target, it lands on each the area takes near that target too (TW-10)")]
-        public EffectArea Area = new();
+        /// <summary>Its area: its Area component's, or none, where it lands on its target alone (TW-10, FN-14).</summary>
+        public EffectArea Area => FirstComponent<AreaEffectComponent>()?.Area;
 
         [Tooltip("Its own lifesteal: its caster heals a share of each loss it deals another (TW-15)")]
         public EffectLifesteal Lifesteal = new();
 
-        [Tooltip("Its transfers: each moves an amount from an attribute of its caster or its target to one of either, as it " +
-                 "lands, each tick, or while it lasts, giving back as it ends; only what the giver has moves (TW-20)")]
-        public List<AttributeTransfer> Transfers = new();
+        /// <summary>
+        /// Its transfers: each of its Transfer components', in their order, a list read anew each time (TW-20, FN-14). A
+        /// <see cref="TransferEffectComponent"/> adds one.
+        /// </summary>
+        public IReadOnlyList<AttributeTransfer> Transfers
+        {
+            get
+            {
+                var transfers = new List<AttributeTransfer>();
+                if (Components == null) return transfers;
+                foreach (var component in Components)
+                    if (component is TransferEffectComponent { Transfer: { } transfer }) transfers.Add(transfer);
+                return transfers;
+            }
+        }
+
+        // Its first component of a kind, or null
+        private T FirstComponent<T>() where T : AbstractEffectComponent
+        {
+            if (Components == null) return null;
+            foreach (var component in Components)
+                if (component is T found) return found;
+            return null;
+        }
 
         [Tooltip("Its own proc coefficient in place of its ability's: what its hits carry for their on-hit effects (TW-8)")]
         public bool OwnProcCoefficient;
@@ -69,12 +93,32 @@ namespace FarEmerald.PlayForge
         // An older save's fields, each moved into a component as it loads, in the editor and in a build (FN-14, Decision 76)
         void ISerializationCallbackReceiver.OnAfterDeserialize()
         {
-            if (Auras is not { Count: > 0 }) return;
-            Components ??= new List<AbstractEffectComponent>();
-            foreach (var aura in Auras)
-                if (aura != null) Components.Add(new AuraEffectComponent { Aura = aura });
-            Auras.Clear();
-            MovedToComponents = true;
+            if (Auras is { Count: > 0 })
+            {
+                Components ??= new List<AbstractEffectComponent>();
+                foreach (var aura in Auras)
+                    if (aura != null) Components.Add(new AuraEffectComponent { Aura = aura });
+                Auras.Clear();
+                MovedToComponents = true;
+            }
+
+            // An area that reaches past its target: a Radius of 0 was no area
+            if (legacyArea is { Reaches: true })
+            {
+                Components ??= new List<AbstractEffectComponent>();
+                Components.Add(new AreaEffectComponent { Area = legacyArea });
+                legacyArea = new EffectArea();
+                MovedToComponents = true;
+            }
+
+            if (legacyTransfers is { Count: > 0 })
+            {
+                Components ??= new List<AbstractEffectComponent>();
+                foreach (var transfer in legacyTransfers)
+                    if (transfer != null) Components.Add(new TransferEffectComponent { Transfer = transfer });
+                legacyTransfers.Clear();
+                MovedToComponents = true;
+            }
         }
 
         [Tooltip("Workers it gives the one it's on while it lasts, and takes back as it goes: attribute, impact, tag and " +

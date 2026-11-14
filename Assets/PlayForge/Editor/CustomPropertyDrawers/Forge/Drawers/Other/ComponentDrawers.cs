@@ -51,15 +51,17 @@ namespace FarEmerald.PlayForge.Extended.Editor
     }
 
     /// <summary>
-    /// An aura's fields, drawn where it's held, as an Aura component's own: a field of the aura's whole drew a foldout
-    /// inside the component (FN-14, as FN-17's Death).
+    /// A field's own fields, drawn where it's held, as a component's own: a field of its whole drew a foldout inside the
+    /// component (FN-14, as FN-17's Death).
     /// </summary>
-    [CustomPropertyDrawer(typeof(AuraEntry))]
-    public class AuraEntryDrawer : PropertyDrawer
+    public class InlineFieldsDrawer : PropertyDrawer
     {
+        // The name of the element that holds them
+        protected virtual string HolderName => "Fields";
+
         public override VisualElement CreatePropertyGUI(SerializedProperty property)
         {
-            var root = new VisualElement { name = "AuraFields" };
+            var root = new VisualElement { name = HolderName };
             var child = property.Copy();
             var end = property.GetEndProperty();
             if (!child.NextVisible(true)) return root;
@@ -70,6 +72,20 @@ namespace FarEmerald.PlayForge.Extended.Editor
             } while (child.NextVisible(false));
             return root;
         }
+    }
+
+    /// <summary>An aura's fields, drawn where it's held, as an Aura component's own (FN-14).</summary>
+    [CustomPropertyDrawer(typeof(AuraEntry))]
+    public class AuraEntryDrawer : InlineFieldsDrawer
+    {
+        protected override string HolderName => "AuraFields";
+    }
+
+    /// <summary>An effect's area's fields, drawn where it's held, as an Area component's own (TW-10, FN-14).</summary>
+    [CustomPropertyDrawer(typeof(EffectArea))]
+    public class EffectAreaDrawer : InlineFieldsDrawer
+    {
+        protected override string HolderName => "AreaFields";
     }
 
     [CustomPropertyDrawer(typeof(AbstractEffectComponent), true)]

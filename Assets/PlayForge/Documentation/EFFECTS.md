@@ -332,6 +332,34 @@ origin of its own, and takes it off as they leave, die or end, as its holder die
 effect of its that ends on its own, a durational one, goes on again at its next check. An Infinite effect holds as long
 as they're near. Two of an item hold two, as their effect's stacking says.
 
+### Area
+
+An **Area** component lands the effect on those near its target as it lands (TW-10), as Storm Hammer stuns everyone near
+the one it hits: each within its **Radius** of the target, read as it lands, along the ground unless **Flat** is off;
+of the sides it **Takes** from its caster's (enemies, allies, or both; a caster with no sides takes anyone); its caster
+too where **Include Caster** says; and at most **Max Targets** besides the target, the nearest first, or every one at 0.
+Each is found by its position, with no collider. Each takes the effect from the same origin, so its modifiers and its
+chance to apply are its own, and an effect that lands by an area spreads no further. A Radius of 0 is no area. It lands
+on its target and those it takes in the project's resolve order, its target among them, unless its **Use Resolve
+Order** is off (TW-31; see [Resolve Order](#resolve-order)). An effect holds one at most; without one, it lands on its
+target alone (FN-14).
+
+### Transfers
+
+A **Transfer** component moves an amount from one attribute to another (TW-20), as Essence Shift
+steals Agility or Attribute Shift moves Agility into Strength. **From**, the effect's caster or its target, gives its
+**From Attribute**, and **To** gets its **To Attribute**, each side its own, so an entity can give to itself. **Slot**
+says which values move: Current, as a pool's Mana; Base; or Current And Base, as a stat's Strength. **Amount** can scale
+by level. Only what the giver has moves, so one with 3 of a steal of 5 gives 3, and nothing is made. **Delivery** says
+when: **On Apply** moves once as the effect lands and **Periodic** each tick, both for good; **Continuous** moves as the
+effect lands and holds while it lasts, a modifier on each side, read again only where a stack or a level changes its
+amount, and gives back as the effect ends, as a load or a move takes it, or as the entity it's on goes. Each side's
+change is exact: no worker takes it for a hit, no barrier soaks it and nothing scales it, so the getter gets what the
+giver gave, as far as its own bounds let it; what its maximum can't hold is lost, as an overheal is. The Problems view
+warns of a transfer whose Delivery the effect's duration can't make, as it does an additional impact's, and of one that
+names no attribute to give or get, each numbered among the effect's transfers. An effect holds as many as it
+moves, each its own (FN-14).
+
 ## Workers
 
 Effect workers react to this effect's own events. A worker can act when the effect is applied, when it ticks, when it
@@ -361,31 +389,9 @@ its On Hit does nothing. Another effect that replaces it under its tag takes it 
 and their duration by it, so a damage over time at 0.25 sets them off a quarter as often, for a quarter as long, and 0
 sets nothing off. With **Own Proc Coefficient** off, its ability's stands, or else 1.
 
-**Area**, in Impact, lands the effect on those near its target as it lands (TW-10), as Storm Hammer stuns everyone near
-the one it hits: each within its **Radius** of the target, read as it lands, along the ground unless **Flat** is off;
-of the sides it **Takes** from its caster's (enemies, allies, or both; a caster with no sides takes anyone); its caster
-too where **Include Caster** says; and at most **Max Targets** besides the target, the nearest first, or every one at 0.
-Each is found by its position, with no collider. Each takes the effect from the same origin, so its modifiers and its
-chance to apply are its own, and an effect that lands by an area spreads no further. A Radius of 0 is no area. It lands
-on its target and those it takes in the project's resolve order, its target among them, unless its **Use Resolve
-Order** is off (TW-31; see Resolve Order, below).
-
 **Lifesteal**, in Impact, heals the effect's caster for the hits it deals (TW-15): its **Share** of each workable loss
 it deals another to its **Attribute**, the Health role's where it names none, while its **When** holds. The heal is a
 gain like any other, so Healing Received scales it, and damage a return sends back heals nothing.
-
-**Transfers**, after Lifesteal in Impact, each move an amount from one attribute to another (TW-20), as Essence Shift
-steals Agility or Attribute Shift moves Agility into Strength. **From**, the effect's caster or its target, gives its
-**From Attribute**, and **To** gets its **To Attribute**, each side its own, so an entity can give to itself. **Slot**
-says which values move: Current, as a pool's Mana; Base; or Current And Base, as a stat's Strength. **Amount** can scale
-by level. Only what the giver has moves, so one with 3 of a steal of 5 gives 3, and nothing is made. **Delivery** says
-when: **On Apply** moves once as the effect lands and **Periodic** each tick, both for good; **Continuous** moves as the
-effect lands and holds while it lasts, a modifier on each side, read again only where a stack or a level changes its
-amount, and gives back as the effect ends, as a load or a move takes it, or as the entity it's on goes. Each side's
-change is exact: no worker takes it for a hit, no barrier soaks it and nothing scales it, so the getter gets what the
-giver gave, as far as its own bounds let it; what its maximum can't hold is lost, as an overheal is. The Problems view
-warns of a transfer whose Delivery the effect's duration can't make, as it does an additional impact's, and of one that
-names no attribute to give or get.
 
 ### Resolve Order
 
@@ -397,7 +403,7 @@ matches, so the list's order is its precedence. An entity carries a tag on its i
 while something grants it, as an aura can grant its holder one while it holds. The area's own order breaks ties.
 
 Apply Effects and Apply/Remove Effects land on an ability's targets in it, though the targeting keeps its own order and
-its primary target; an effect's **Area** lands on its target and those it takes in it, its target among them; and an
+its primary target; an effect's **Area** component lands on its target and those it takes in it, its target among them; and an
 aura puts its effect on those that came near in it. The tasks' and the Area's **Use Resolve Order**, on by default,
 turns it off for that one. Code reads it through `ForgeResolveOrder`: `OrderOf(target)`, `Sort(targets)`, and
 `TargetsOf(data)` for an activation's targets in order.

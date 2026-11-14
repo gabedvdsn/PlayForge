@@ -428,17 +428,18 @@ namespace FarEmerald.PlayForge.Extended.Editor
                 problems.Add(new ForgeProblem(asset, ForgeProblemSeverity.Warning,
                     "It toggles an Instant effect, which is never on to turn off. Toggle a lasting one.", nameof(Ability.Components)));
 
-            if (asset is not GameplayEffect effect || effect.Transfers == null) return;
-            for (int i = 0; i < effect.Transfers.Count; i++)
+            // Its transfers, each a component, numbered among themselves (FN-14)
+            if (asset is not GameplayEffect effect || effect.Components == null) return;
+            for (int i = 0, n = 0; i < effect.Components.Count; i++)
             {
-                var transfer = effect.Transfers[i];
-                if (transfer == null) continue;
+                if (effect.Components[i] is not TransferEffectComponent { Transfer: { } transfer }) continue;
+                n++;
                 var problem = !transfer.FromAttribute || !transfer.ToAttribute
                     ? "It names no attribute to give or to get, so it moves nothing."
                     : effect.DurationSpecification != null ? ImpactFields.DeliveryProblem(effect.DurationSpecification, transfer.Delivery) : null;
                 if (problem == null) continue;
-                problems.Add(new ForgeProblem(asset, ForgeProblemSeverity.Warning, $"Transfer {i + 1}: {problem}",
-                    $"{nameof(GameplayEffect.Transfers)}.Array.data[{i}]"));
+                problems.Add(new ForgeProblem(asset, ForgeProblemSeverity.Warning, $"Transfer {n}: {problem}",
+                    $"{nameof(GameplayEffect.Components)}.Array.data[{i}].{nameof(TransferEffectComponent.Transfer)}"));
             }
         }
     }

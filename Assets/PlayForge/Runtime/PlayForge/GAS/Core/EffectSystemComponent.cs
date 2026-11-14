@@ -115,8 +115,8 @@ namespace FarEmerald.PlayForge
                 return false;
             }
 
-            // Its area: each the area takes near this one takes it too, and spreads it no further (TW-10); in the project's
-            // resolve order, this one among them, where the area follows it (TW-31)
+            // Its area, its Area component's: each the area takes near this one takes it too, and spreads it no further
+            // (TW-10, FN-14); in the project's resolve order, this one among them, where the area follows it (TW-31)
             var area = spec.FromArea ? null : spec.Base.Area;
             bool spreads = area is { Reaches: true };
             if (spreads && area.UseResolveOrder && ForgeResolveOrder.Orders) return LandOverArea(spec, area);
@@ -1237,7 +1237,7 @@ namespace FarEmerald.PlayForge
             bool any = false;
             foreach (var container in EffectShelf)
             {
-                if (container.Spec.Base.Transfers is not { Count: > 0 }) continue;
+                if (!ForgeTransfers.Any(container.Spec.Base)) continue;
                 ForgeTransfers.Lend(container.Spec, Self, quietly: true);
                 any = true;
             }

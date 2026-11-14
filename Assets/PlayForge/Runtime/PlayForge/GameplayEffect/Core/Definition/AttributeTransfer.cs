@@ -56,18 +56,28 @@ namespace FarEmerald.PlayForge
     /// </summary>
     internal static class ForgeTransfers
     {
+        /// <summary>Whether an effect holds a transfer, a Transfer component's (TW-20, FN-14).</summary>
+        internal static bool Any(GameplayEffect effect)
+        {
+            var components = effect?.Components;
+            if (components == null) return false;
+            for (int i = 0; i < components.Count; i++)
+                if (components[i] is TransferEffectComponent { Transfer: not null }) return true;
+            return false;
+        }
+
         /// <summary>
         /// Moves what each of the effect's transfers of a delivery moves, now: OnApply as it lands, Periodic each tick.
         /// <paramref name="target"/> is the one the effect is on.
         /// </summary>
         internal static void Move(GameplayEffectSpec spec, ITarget target, EImpactDelivery delivery)
         {
-            var transfers = spec?.Base?.Transfers;
-            if (transfers == null || transfers.Count == 0) return;
-            for (int i = 0; i < transfers.Count; i++)
+            var components = spec?.Base?.Components;
+            if (components == null || components.Count == 0) return;
+            for (int i = 0; i < components.Count; i++)
             {
-                var transfer = transfers[i];
-                if (transfer == null || transfer.Delivery != delivery || !transfer.Moves) continue;
+                if (components[i] is not TransferEffectComponent { Transfer: { } transfer }) continue;
+                if (transfer.Delivery != delivery || !transfer.Moves) continue;
                 if (!Sides(spec, target, transfer, out var giver, out var getter)) continue;
                 float take = Take(transfer, giver, AmountOf(spec, target, transfer));
                 if (take <= 0f) continue;
@@ -91,12 +101,12 @@ namespace FarEmerald.PlayForge
         /// </summary>
         internal static void Lend(GameplayEffectSpec spec, ITarget target, bool quietly = false)
         {
-            var transfers = spec?.Base?.Transfers;
-            if (transfers == null || transfers.Count == 0) return;
-            for (int i = 0; i < transfers.Count; i++)
+            var components = spec?.Base?.Components;
+            if (components == null || components.Count == 0) return;
+            for (int i = 0; i < components.Count; i++)
             {
-                var transfer = transfers[i];
-                if (transfer == null || transfer.Delivery != EImpactDelivery.Continuous) continue;
+                if (components[i] is not TransferEffectComponent { Transfer: { } transfer }) continue;
+                if (transfer.Delivery != EImpactDelivery.Continuous) continue;
 
                 var held = Held(spec, transfer);
                 AttributeSystemComponent giver = null, getter = null;
@@ -112,7 +122,7 @@ namespace FarEmerald.PlayForge
 
                 // Kept though it takes nothing, so a read of the same amount holds as it is
                 var lent = new LentTransfer { Transfer = transfer, Amount = amount, Giver = giver, Getter = getter };
-                (spec.TransfersLent ??= new List<LentTransfer>(transfers.Count)).Add(lent);
+                (spec.TransfersLent ??= new List<LentTransfer>()).Add(lent);
                 float take = Take(transfer, giver, amount);
                 if (take <= 0f) continue;
 
