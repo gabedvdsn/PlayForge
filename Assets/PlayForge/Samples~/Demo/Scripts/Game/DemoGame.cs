@@ -192,7 +192,7 @@ namespace FarEmerald.PlayForge.Samples.Demo
                 seat.Items.Add(held);
                 if (seat.Unit) seat.Unit.Give(item, held.Level);
             }
-            else if (held.Count < Mathf.Max(1, item.Definition.MaxStackSize))
+            else if (held.Count < item.Definition.StackSizeAt(NumberContext.For(null, null, held.Level, item.MaxLevel)))
             {
                 held.Count++;
                 if (seat.Unit) seat.Unit.Give(item, held.Level);

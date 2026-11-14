@@ -646,15 +646,19 @@ namespace FarEmerald.PlayForge
                 EAttributeRoundingPolicy.Round => new AttributeValue(
                     Mathf.Round(value.CurrentValue),
                     Mathf.Round(value.BaseValue)),
-                EAttributeRoundingPolicy.SnapTo => Mathf.Approximately(Blueprint.SetElement.Constraints.SnapInterval, 0f)
-                    ? value
-                    : new AttributeValue(
-                        Mathf.Round(value.CurrentValue / Blueprint.SetElement.Constraints.SnapInterval) * Blueprint.SetElement.Constraints.SnapInterval,
-                        Mathf.Round(value.BaseValue / Blueprint.SetElement.Constraints.SnapInterval) * Blueprint.SetElement.Constraints.SnapInterval),
+                EAttributeRoundingPolicy.SnapTo => Snap(value),
                 _ => throw new ArgumentOutOfRangeException()
             };
 
             return value;
+        }
+
+        // A value snapped to its element's Snap Interval, read for its owner as its set's numbers are (FN-19); 0 snaps none
+        private AttributeValue Snap(AttributeValue value)
+        {
+            float step = Blueprint.SetElement.Constraints.SnapInterval?.Evaluate(NumberContext.Of(Blueprint.Derivation)) ?? 0f;
+            if (Mathf.Approximately(step, 0f)) return value;
+            return new AttributeValue(Mathf.Round(value.CurrentValue / step) * step, Mathf.Round(value.BaseValue / step) * step);
         }
 
         /// <summary>Clamp <see cref="ActiveValue"/> to the element's overflow bounds.</summary>

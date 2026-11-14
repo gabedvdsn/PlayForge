@@ -51,7 +51,11 @@ MonoBehaviour:
       AutoClamp: 1
       AutoScaleWithBase: 0
       RoundingMode: 0
-      SnapInterval: 0
+      SnapInterval:
+        Magnitude: 0
+        RealMagnitude: 2
+        Scaler:
+          rid: -2
   - Attribute: {fileID: 11400000, guid: d54a78acf85807042993f0bdae34f197, type: 2}
     Current:
       Magnitude: 5
@@ -80,7 +84,11 @@ MonoBehaviour:
       AutoClamp: 1
       AutoScaleWithBase: 0
       RoundingMode: 0
-      SnapInterval: 0
+      SnapInterval:
+        Magnitude: 0
+        RealMagnitude: 2
+        Scaler:
+          rid: -2
   - Attribute: {fileID: 11400000, guid: 32ddedf576d7eed459371902d2a30e04, type: 2}
     Current:
       Magnitude: 0
@@ -109,7 +117,11 @@ MonoBehaviour:
       AutoClamp: 1
       AutoScaleWithBase: 0
       RoundingMode: 0
-      SnapInterval: 0
+      SnapInterval:
+        Magnitude: 0
+        RealMagnitude: 2
+        Scaler:
+          rid: -2
   SubSets: []
   CollisionResolutionPolicy: 0
   WorkerGroup:

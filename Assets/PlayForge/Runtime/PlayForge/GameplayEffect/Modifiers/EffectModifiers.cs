@@ -188,16 +188,16 @@ namespace FarEmerald.PlayForge
     [Serializable]
     public class StacksChange : AbstractEffectChange
     {
-        [Tooltip("More stacks it can hold at most, where a stack bound of its own sets a most")]
-        public int MostStacks;
+        [Tooltip("More stacks it can hold at most, where a stack bound of its own sets a most, read at the effect's level")]
+        public ScalableInt MostStacks = 0;
 
-        [Tooltip("More stacks a landing gives")]
-        public int StacksPerLanding;
+        [Tooltip("More stacks a landing gives, read at the effect's level")]
+        public ScalableInt StacksPerLanding = 0;
 
         public override void Apply(EffectChanges changes, GameplayEffectSpec spec, EffectModifierRule rule)
         {
-            changes.MostStacks += MostStacks;
-            changes.StacksPerLanding += StacksPerLanding;
+            changes.MostStacks += MostStacks?.Evaluate(spec) ?? 0;
+            changes.StacksPerLanding += StacksPerLanding?.Evaluate(spec) ?? 0;
         }
 
         public override string Describe() => "Changes its stacks";

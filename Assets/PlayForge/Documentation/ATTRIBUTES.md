@@ -32,7 +32,7 @@ it holds, such as the abbreviation or how many assets use the attribute.
     bonuses diminish; a permanent change, which an instant or periodic impact commits, adds as it is.
   - **Barrier** (TW-12), as a shield before Health: it absorbs for the attribute its **Absorbs For** names, each workable
     loss to that one coming off it first, as much as it holds, and the rest going on; two hits in a frame soak no more
-    than it holds, and what it soaks comes off it at the frame's end. **Decay Per Second** takes it down by its holder's
+    than it holds, and what it soaks comes off it at the frame's end. **Decay Per Second**, a number field read at its holder's level (FN-19), takes it down by its holder's
     own time, a number a second or, with **Decay As Share Of Base**, that share of its base, as Topaz Brooch's barrier
     fades; **Fades With Effect** fades what a lasting effect gives it to 0 by the time that effect ends. A hit the
     barrier soaks whole is no loss to the other, so an On Hit counting it doesn't go off.

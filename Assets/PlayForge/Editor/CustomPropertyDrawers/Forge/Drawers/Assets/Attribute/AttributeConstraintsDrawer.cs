@@ -47,10 +47,9 @@ namespace FarEmerald.PlayForge.Extended.Editor
             rounding.BindProperty(roundingProp);
             root.Add(rounding);
 
-            var snap = new FloatField("Snap Interval") { name = "SnapInterval", tooltip = "The step values snap to, as 0.5" };
-            snap.AddToClassList(FloatField.alignedFieldUssClassName);
+            // A number of any kind, as each of an attribute set's numbers is (FN-19)
+            var snap = new PropertyField(snapProp, "Snap Interval") { name = "SnapInterval", tooltip = "The step values snap to, as 0.5" };
             snap.AddToClassList("pf-dependent");
-            snap.BindProperty(snapProp);
             root.Add(snap);
 
             // Snap Interval shows while Rounding snaps

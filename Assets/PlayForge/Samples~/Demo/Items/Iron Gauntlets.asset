@@ -44,7 +44,12 @@ MonoBehaviour:
         Name: PrimaryYKmcVmH4Jn9iqWqQsYjmr_mmcquW7EYPYKmcVmH4Jn9iqWqQsYjmr_mmc
         DisplayName: Primary
       Texture: {fileID: 2800000, guid: 9d3cc9024e4f8694bb6f03135bdb63c0, type: 3}
-    MaxStackSize: 1
+    MaxStackSize:
+      Magnitude: 1
+      RealMagnitude: 2
+      Scaler:
+        rid: -2
+      Rounding: 0
   Tags:
     AssetTag:
       Name: Demo.Item.IronGauntlets
@@ -68,4 +73,6 @@ MonoBehaviour:
     AnalysisWorkers: []
   references:
     version: 2
-    RefIds: []
+    RefIds:
+    - rid: -2
+      type: {class: , ns: , asm: }

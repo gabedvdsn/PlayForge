@@ -82,7 +82,9 @@ namespace FarEmerald.PlayForge
     public class AttributeValidation : AbstractAttributeValidationRule
     {
         public EComparisonOperator Comparison;
-        public float Value;
+
+        [Tooltip("The value it compares with, read at the ability's level")]
+        public ScalableFloat Value = 0f;
 
         /// <summary>
         /// Compares the attribute's share of its base, from 0 to 1, in place of its value: "a target below half its
@@ -103,14 +105,15 @@ namespace FarEmerald.PlayForge
             // Its share of its base, where the rule asks for one (FEAT-26)
             float value = !ShareOfBase ? attrVal.CurrentValue
                 : attrVal.BaseValue > 0f ? attrVal.CurrentValue / attrVal.BaseValue : 0f;
+            float compared = Value?.Evaluate(NumberContext.Of(data)) ?? 0f;
             return Comparison switch
             {
-                EComparisonOperator.GreaterThan => value > Value,
-                EComparisonOperator.LessThan => value < Value,
-                EComparisonOperator.GreaterOrEqual => value >= Value,
-                EComparisonOperator.LessOrEqual => value <= Value,
-                EComparisonOperator.Equal => Mathf.Approximately(value, Value),
-                EComparisonOperator.NotEqual => !Mathf.Approximately(value, Value),
+                EComparisonOperator.GreaterThan => value > compared,
+                EComparisonOperator.LessThan => value < compared,
+                EComparisonOperator.GreaterOrEqual => value >= compared,
+                EComparisonOperator.LessOrEqual => value <= compared,
+                EComparisonOperator.Equal => Mathf.Approximately(value, compared),
+                EComparisonOperator.NotEqual => !Mathf.Approximately(value, compared),
                 _ => throw new ArgumentOutOfRangeException()
             };
         }

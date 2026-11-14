@@ -58,8 +58,17 @@ MonoBehaviour:
       400, for an enemy below half its health. A target below a tenth after it is
       finished.
     ActivationPolicy: 0
-    BufferWindow: 0.3
-    BufferPriority: 0
+    BufferWindow:
+      Magnitude: 0.3
+      RealMagnitude: 2
+      Scaler:
+        rid: -2
+    BufferPriority:
+      Magnitude: 0
+      RealMagnitude: 2
+      Scaler:
+        rid: -2
+      Rounding: 0
     ActivateImmediately: 0
     Triggers: []
     Textures:
@@ -243,5 +252,9 @@ MonoBehaviour:
       data:
         Attribute: {fileID: 11400000, guid: b865fa5ec88ff314ab348516f14527f7, type: 2}
         Comparison: 0
-        Value: 0.5
+        Value:
+          Magnitude: 0.5
+          RealMagnitude: 2
+          Scaler:
+            rid: -2
         ShareOfBase: 1

@@ -482,6 +482,15 @@ tracks each fix below by its ID.
   page, through one table of links in the editor.
 
 ### Changed
+- Every authored number is Scalable (FN-19, Decision 83), read at the level of what holds it: an ability's Buffer
+  Window; an attribute's Decay Per Second and an attribute set's Snap Interval; an effect's Stack Bounds Min and Max,
+  its Starting Stacks and a Stacks change's Most Stacks and Stacks Per Landing; the Camera Shake, Prefab and Sound cues'
+  numbers; an aura's Interval; an item's Max Stack Size and a set bonus's Pieces; the Threshold, Can't Fall Below,
+  Return Damage, relative, attribute change and tag workers' numbers; and an Attribute Validation's Value. An item's
+  `StackSize` is `StackSizeOf(spec)` and `StackSizeAt(context)`, with `NumberContext.Of(ItemSpec)`; Starting Stacks
+  (`InitializationOperation`) is one `InitializationStacks` number, its Operation, Scaler and Rounding gone. A folded
+  field's line shows its Scalable numbers, as "Uses 3"; Snap Interval and a tag worker's Required Weight are number
+  fields.
 - Run Sequence's **Sequence** picks from a searchable dropdown, a field as a kind field is, each class's sequences under
   its name where more than one class holds them, where it was Unity's popup; `TaskSequenceReferenceDrawer.Pick` makes a
   pick in code. Delay's, Channel's, Apply Effects' and Run Process's numbers are Scalable, each its name and unit

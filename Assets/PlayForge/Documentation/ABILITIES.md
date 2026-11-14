@@ -106,8 +106,8 @@ passes it in, and one effect serves every strength.
     (`CreateActivationRequest`'s `bufferWindow`).
 
   Whatever the choice, an ability can't start again while its own activation holds its claim.
-- **Buffer Window** (default 0.3 s) and **Buffer Priority** (default 0): the input buffer's, under Queue, as above. A
-  window of 0 doesn't wait, so the request is refused. They show under Queue and under the entity's policy, which may be
+- **Buffer Window** (default 0.3 s) and **Buffer Priority** (default 0): the input buffer's, under Queue, as above,
+  each a number field read at the ability's level (FN-19). A window of 0 doesn't wait, so the request is refused. They show under Queue and under the entity's policy, which may be
   Queue, and are hidden under the others (FN-23).
 - **Activate At Start**: when the ability is one of the entity's Starting Abilities, it tries to activate once, as the
   entity's GAS starts. An ability that an item or code grants later doesn't try it.

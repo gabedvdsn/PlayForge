@@ -28,7 +28,12 @@ MonoBehaviour:
         Name: PrimaryYKmcVmH4Jn9iqWqQsYjmr_mmcquW7EYPYKmcVmH4Jn9iqWqQsYjmr_mmc
         DisplayName: Primary
       Texture: {fileID: 2800000, guid: 16d3cd53a4c556a40b47e09e49fc15a9, type: 3}
-    MaxStackSize: 1
+    MaxStackSize:
+      Magnitude: 1
+      RealMagnitude: 2
+      Scaler:
+        rid: -2
+      Rounding: 0
   Tags:
     AssetTag:
       Name: Demo.Item.EmberBrand
@@ -51,6 +56,8 @@ MonoBehaviour:
   references:
     version: 2
     RefIds:
+    - rid: -2
+      type: {class: , ns: , asm: }
     - rid: 2403794261189067256
       type: {class: ApplyEffectOnHitWorker, ns: FarEmerald.PlayForge.Samples.Demo, asm: FarEmerald.PlayForge.Samples.Demo}
       data:

@@ -221,7 +221,11 @@ MonoBehaviour:
       data:
         Prefab: {fileID: 3659149408006394474, guid: 7b9b0e7a4ce7cc7469453ec67bc79dbc, type: 3}
         WhileActive: 0
-        Lifetime: 0.4
+        Lifetime:
+          Magnitude: 0.4
+          RealMagnitude: 2
+          Scaler:
+            rid: -2
     - rid: 2403794261189067056
       type: {class: ScalerGroup, ns: FarEmerald.PlayForge, asm: FarEmerald.PlayForge}
       data:

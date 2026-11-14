@@ -72,7 +72,11 @@ MonoBehaviour:
       AutoClamp: 1
       AutoScaleWithBase: 0
       RoundingMode: 0
-      SnapInterval: 0
+      SnapInterval:
+        Magnitude: 0
+        RealMagnitude: 2
+        Scaler:
+          rid: -2
   - Attribute: {fileID: 11400000, guid: 1aadfbe470192574b917692686c8496f, type: 2}
     Current:
       Magnitude: 0
@@ -101,7 +105,11 @@ MonoBehaviour:
       AutoClamp: 1
       AutoScaleWithBase: 0
       RoundingMode: 0
-      SnapInterval: 0
+      SnapInterval:
+        Magnitude: 0
+        RealMagnitude: 2
+        Scaler:
+          rid: -2
   - Attribute: {fileID: 11400000, guid: 781fdf8841bc79441bc32a1d136f3c4f, type: 2}
     Current:
       Magnitude: 0
@@ -130,7 +138,11 @@ MonoBehaviour:
       AutoClamp: 1
       AutoScaleWithBase: 0
       RoundingMode: 0
-      SnapInterval: 0
+      SnapInterval:
+        Magnitude: 0
+        RealMagnitude: 2
+        Scaler:
+          rid: -2
   - Attribute: {fileID: 11400000, guid: f91616365c2f4394581d66675b9208fa, type: 2}
     Current:
       Magnitude: 0
@@ -159,7 +171,11 @@ MonoBehaviour:
       AutoClamp: 1
       AutoScaleWithBase: 0
       RoundingMode: 0
-      SnapInterval: 0
+      SnapInterval:
+        Magnitude: 0
+        RealMagnitude: 2
+        Scaler:
+          rid: -2
   - Attribute: {fileID: 11400000, guid: b865fa5ec88ff314ab348516f14527f7, type: 2}
     Current:
       Magnitude: 0
@@ -188,7 +204,11 @@ MonoBehaviour:
       AutoClamp: 1
       AutoScaleWithBase: 1
       RoundingMode: 0
-      SnapInterval: 0
+      SnapInterval:
+        Magnitude: 0
+        RealMagnitude: 2
+        Scaler:
+          rid: -2
   - Attribute: {fileID: 11400000, guid: a75dd2d6e2d622947b9bfdd3f8507c01, type: 2}
     Current:
       Magnitude: 0
@@ -217,7 +237,11 @@ MonoBehaviour:
       AutoClamp: 1
       AutoScaleWithBase: 1
       RoundingMode: 0
-      SnapInterval: 0
+      SnapInterval:
+        Magnitude: 0
+        RealMagnitude: 2
+        Scaler:
+          rid: -2
   - Attribute: {fileID: 11400000, guid: 49ede9aab52bf7a40b12b9b165392f8c, type: 2}
     Current:
       Magnitude: 0
@@ -246,7 +270,11 @@ MonoBehaviour:
       AutoClamp: 1
       AutoScaleWithBase: 0
       RoundingMode: 0
-      SnapInterval: 0
+      SnapInterval:
+        Magnitude: 0
+        RealMagnitude: 2
+        Scaler:
+          rid: -2
   SubSets:
   - {fileID: 11400000, guid: 29c03a906f30b504da761f4e878a9072, type: 2}
   - {fileID: 11400000, guid: 61bde3c73eef07845a70b31c9b64e10c, type: 2}

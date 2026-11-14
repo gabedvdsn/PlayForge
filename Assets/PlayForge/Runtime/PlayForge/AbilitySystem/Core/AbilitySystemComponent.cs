@@ -888,7 +888,7 @@ namespace FarEmerald.PlayForge
         {
             if (!AbilityCache.TryGetValue(req.Index, out var container)) return false;
             var definition = container.Spec.Base.Definition;
-            float window = req.BufferWindow >= 0f ? req.BufferWindow : definition.BufferWindow;
+            float window = req.BufferWindow >= 0f ? req.BufferWindow : container.Spec.Read(definition.BufferWindow, req.Data);
             if (window <= 0f) return false;
 
             var entry = new BufferedRequest { Request = req, Left = window, Priority = definition.BufferPriority.Evaluate(NumberContext.Of(Self)), Order = ++presses };

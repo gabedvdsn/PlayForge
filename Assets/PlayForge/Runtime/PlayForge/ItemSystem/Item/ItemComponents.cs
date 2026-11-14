@@ -72,8 +72,8 @@ namespace FarEmerald.PlayForge
         [ForgeTagContext(ForgeContext.ContextTag)]
         public Tag Set;
 
-        [Tooltip("How many of the set's pieces its holder needs equipped for the bonus, each item counted once")]
-        [Min(1)] public int Pieces = 2;
+        [Tooltip("How many of the set's pieces its holder needs equipped for the bonus, each item counted once, read at its holder's level")]
+        [NumberMin(1f)] public ScalableInt Pieces = 2;
 
         [Tooltip("The effect its holder has while it has that many equipped")]
         public GameplayEffect Bonus;
@@ -106,6 +106,7 @@ namespace FarEmerald.PlayForge
             var pieces = new List<ItemSpecContainer>();
             var counted = new HashSet<Item>();
             var tiers = new List<SetBonusItemComponent>();
+            var context = NumberContext.Of(holder);
             foreach (var container in items.GetItemContainers())
             {
                 if (container?.Spec?.Base?.Components == null) continue;
@@ -114,7 +115,7 @@ namespace FarEmerald.PlayForge
                 {
                     if (component is not SetBonusItemComponent bonus || !bonus.Set.Equals(set) || bonus.Bonus == null) continue;
                     piece = true;
-                    if (!tiers.Exists(tier => tier.Pieces == bonus.Pieces && tier.Bonus == bonus.Bonus)) tiers.Add(bonus);
+                    if (!tiers.Exists(tier => PiecesOf(tier, context) == PiecesOf(bonus, context) && tier.Bonus == bonus.Bonus)) tiers.Add(bonus);
                 }
                 if (piece && container.IsEquipped && !ReferenceEquals(container, leaving) && counted.Add(container.Spec.Base))
                     pieces.Add(container);
@@ -123,8 +124,8 @@ namespace FarEmerald.PlayForge
             var shelf = holder.ToGAS()?.GetEffectSystem()?.Shelf;
             foreach (var tier in tiers)
             {
-                bool wanted = pieces.Count >= tier.Pieces;
-                var held = Held(shelf, tier, set);
+                bool wanted = pieces.Count >= PiecesOf(tier, context);
+                var held = Held(shelf, tier, set, context);
                 if (held != null && (!wanted || leaving != null && ReferenceEquals(held.Spec.Origin, leaving.Spec)))
                 {
                     holder.RemoveGameplayEffect(tier.Bonus, held.Spec.Origin);
@@ -149,15 +150,19 @@ namespace FarEmerald.PlayForge
             foreach (var (set, from) in sets) Refresh(from, set, null);
         }
 
+        // How many pieces a tier needs, read for its holder: a tier is its pieces and its bonus, its number read and not the
+        // number itself, which a Scalable one would compare as one object with another (FN-19)
+        private static int PiecesOf(SetBonusItemComponent tier, NumberContext context) => tier.Pieces?.Evaluate(context) ?? 0;
+
         // A tier's bonus on its holder, from one of the set's pieces, or null
-        private static AbstractEffectContainer Held(IReadOnlyList<AbstractEffectContainer> shelf, SetBonusItemComponent tier, Tag set)
+        private static AbstractEffectContainer Held(IReadOnlyList<AbstractEffectContainer> shelf, SetBonusItemComponent tier, Tag set, NumberContext context)
         {
             if (shelf == null) return null;
             foreach (var container in shelf)
             {
                 if (!ReferenceEquals(container?.Spec?.Base, tier.Bonus) || container.Spec.Origin is not ItemSpec piece || piece.Base?.Components == null) continue;
                 foreach (var component in piece.Base.Components)
-                    if (component is SetBonusItemComponent other && other.Set.Equals(set) && other.Pieces == tier.Pieces && other.Bonus == tier.Bonus)
+                    if (component is SetBonusItemComponent other && other.Set.Equals(set) && PiecesOf(other, context) == PiecesOf(tier, context) && other.Bonus == tier.Bonus)
                         return container;
             }
             return null;

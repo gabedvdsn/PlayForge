@@ -12,7 +12,7 @@ namespace FarEmerald.PlayForge
     public class CantFallBelowAttributeWorker : AbstractFocusedAttributeWorker
     {
         [Tooltip("The least its attribute falls to, as 1")]
-        public float Floor = 1f;
+        public ScalableFloat Floor = 1f;
 
         public CantFallBelowAttributeWorker()
         {
@@ -28,8 +28,9 @@ namespace FarEmerald.PlayForge
             if (TargetAttribute == null || !ctx.AttributeCache.TryGetValue(TargetAttribute, out var cached)) return;
             var change = ctx.Change.Value;
             float current = cached.ActiveValue.CurrentValue;
-            if (change.CurrentValue >= 0f || current + change.CurrentValue >= Floor) return;
-            float allowed = Mathf.Min(0f, Floor - current);
+            float floor = Floor?.Evaluate(NumberContext.Of(in ctx)) ?? 1f;
+            if (change.CurrentValue >= 0f || current + change.CurrentValue >= floor) return;
+            float allowed = Mathf.Min(0f, floor - current);
             ctx.Change.Value = new SourcedModifiedAttributeValue(change, allowed, change.BaseValue, change.ImpactIsWorkable);
         }
     }
@@ -42,7 +43,7 @@ namespace FarEmerald.PlayForge
     public class ReturnDamageAttributeWorker : AbstractFocusedAttributeWorker
     {
         [Tooltip("The share of each loss it returns to its dealer, as 1 for all of it")]
-        public float Share = 1f;
+        public ScalableFloat Share = 1f;
 
         public ReturnDamageAttributeWorker()
         {
@@ -62,7 +63,7 @@ namespace FarEmerald.PlayForge
             float loss = -change.CurrentValue;
             if (loss <= 0f || !change.ImpactIsWorkable || TargetAttribute == null) yield break;
             if (change.Carrier?.GetOrigin()?.GetSource() is not ITarget dealer || ReferenceEquals(dealer, ctx.System)) yield break;
-            float amount = loss * Mathf.Max(0f, Share);
+            float amount = loss * Mathf.Max(0f, Share?.Evaluate(NumberContext.Of(ctx)) ?? 1f);
             if (amount <= 0f) yield break;
 
             var returner = ctx.System;

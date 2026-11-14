@@ -219,7 +219,11 @@ MonoBehaviour:
       data:
         Prefab: {fileID: 4121550626229954195, guid: 2608c06f98a671944bc295d0cea3432e, type: 3}
         WhileActive: 0
-        Lifetime: 0.4
+        Lifetime:
+          Magnitude: 0.4
+          RealMagnitude: 2
+          Scaler:
+            rid: -2
     - rid: 2403794261189067010
       type: {class: ScalerGroup, ns: FarEmerald.PlayForge, asm: FarEmerald.PlayForge}
       data:
@@ -743,4 +747,8 @@ MonoBehaviour:
       type: {class: ExecuteEffectWorker, ns: FarEmerald.PlayForge.Samples.Demo, asm: FarEmerald.PlayForge.Samples.Demo}
       data:
         Health: {fileID: 11400000, guid: b865fa5ec88ff314ab348516f14527f7, type: 2}
-        Below: 0.1
+        Below:
+          Magnitude: 0.1
+          RealMagnitude: 2
+          Scaler:
+            rid: -2

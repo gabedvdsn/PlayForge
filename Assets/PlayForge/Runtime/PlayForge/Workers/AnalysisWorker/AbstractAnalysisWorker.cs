@@ -99,8 +99,8 @@ namespace FarEmerald.PlayForge
                  "Health at a Threshold of 0.5 (TW-11)")]
         public EAttributeTargetBinary What = EAttributeTargetBinary.Current;
 
-        [Tooltip("The value it watches for")]
-        public float Threshold;
+        [Tooltip("The value it watches for, read at its entity's level")]
+        public ScalableFloat Threshold = 0f;
 
         [Tooltip("As it fires: while its comparison holds, as a threshold always did; or as what it reads crosses its " +
                  "threshold, falling to it or below, rising above it, or either way (TW-11)")]
@@ -132,24 +132,25 @@ namespace FarEmerald.PlayForge
             
             // What it reads of the attribute: its current, as it always read, its base, what's missing or its share (TW-11)
             float read = AttributeParts.Read(value, What);
+            float threshold = Threshold?.Evaluate(NumberContext.Of(system)) ?? 0f;
 
             bool fires;
             if (Crossing == EThresholdCrossing.WhileItHolds)
             {
                 fires = Comparison switch
                 {
-                    EThresholdComparison.LessThan => read < Threshold,
-                    EThresholdComparison.LessThanOrEqual => read <= Threshold,
-                    EThresholdComparison.GreaterThan => read > Threshold,
-                    EThresholdComparison.GreaterThanOrEqual => read >= Threshold,
-                    EThresholdComparison.Equal => Math.Abs(read - Threshold) < 0.001f,
+                    EThresholdComparison.LessThan => read < threshold,
+                    EThresholdComparison.LessThanOrEqual => read <= threshold,
+                    EThresholdComparison.GreaterThan => read > threshold,
+                    EThresholdComparison.GreaterThanOrEqual => read >= threshold,
+                    EThresholdComparison.Equal => Math.Abs(read - threshold) < 0.001f,
                     _ => false
                 };
             }
             else
             {
                 // A crossing is a change of side since its last check; its first check only notes its side (TW-11)
-                bool above = read > Threshold;
+                bool above = read > threshold;
                 bool known = TryGetSide(system, out bool wasAbove);
                 SetSide(system, above);
                 fires = known && wasAbove != above && Crossing switch

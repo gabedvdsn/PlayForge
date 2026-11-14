@@ -24,8 +24,8 @@ namespace FarEmerald.PlayForge
                  "first, as much as it holds (TW-12)")]
         public Attribute AbsorbsFor;
 
-        [Tooltip("As a Barrier: how much it loses each second, by its holder's time, as a barrier fades; 0, none (TW-12)")]
-        [Min(0f)] public float DecayPerSecond;
+        [Tooltip("As a Barrier: how much it loses each second, by its holder's time and at its holder's level, as a barrier fades; 0, none (TW-12)")]
+        [NumberMin(0f)] public ScalableFloat DecayPerSecond = 0f;
 
         [Tooltip("As a Barrier: reads Decay Per Second as a share of its base, so a base of 100 at 0.1 loses 10 a second")]
         public bool DecayAsShareOfBase;

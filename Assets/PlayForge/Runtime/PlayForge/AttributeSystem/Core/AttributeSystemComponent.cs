@@ -762,10 +762,12 @@ namespace FarEmerald.PlayForge
             for (int i = 0; i < all.Count; i++)
             {
                 var barrier = all[i];
-                if (barrier.DecayPerSecond <= 0f || !AttributeCache.TryGetValue(barrier, out var cached)) continue;
+                // Its decay, read at its holder's level (FN-19)
+                float decay = barrier.DecayPerSecond?.Evaluate(NumberContext.Of(Self)) ?? 0f;
+                if (decay <= 0f || !AttributeCache.TryGetValue(barrier, out var cached)) continue;
                 var value = cached.ActiveValue;
                 if (value.CurrentValue <= 0f) continue;
-                float rate = barrier.DecayAsShareOfBase ? barrier.DecayPerSecond * value.BaseValue : barrier.DecayPerSecond;
+                float rate = barrier.DecayAsShareOfBase ? decay * value.BaseValue : decay;
                 float amount = Mathf.Min(value.CurrentValue, rate * deltaTime);
                 if (amount <= 0f) continue;
                 decayCarriers ??= new Dictionary<IAttribute, IAttributeImpactCarrier>();

@@ -103,7 +103,7 @@ namespace FarEmerald.PlayForge
         private bool TryStack(Item item, out ItemSpecContainer stack)
         {
             stack = null;
-            if (item.Definition.StackSize <= 1) return false;
+            // A slot of it with room, by the stack size of its own level, which 1 or less leaves none (FN-19)
             foreach (var container in ItemShelf)
             {
                 if (container.Spec.Base != item || !container.HasRoom) continue;
@@ -325,7 +325,7 @@ namespace FarEmerald.PlayForge
             if (ItemShelf == null || item == null) return null;
 
             var container = new ItemSpecContainer(item.Generate(Self, level), ItemShelf.Count);
-            container.Spec.Stacks = System.Math.Clamp(stacks, 1, System.Math.Max(1, item.Definition.StackSize));
+            container.Spec.Stacks = System.Math.Clamp(stacks, 1, item.Definition.StackSizeOf(container.Spec));
             ItemShelf.Add(container);
             container.HearGiven();
             if (equipped) container.RestoreEquipped();

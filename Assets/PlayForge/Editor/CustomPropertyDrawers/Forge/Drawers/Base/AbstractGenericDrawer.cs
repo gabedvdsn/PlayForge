@@ -120,11 +120,17 @@ namespace FarEmerald.PlayForge.Extended.Editor
 
         /// <summary>
         /// One value as a folded field's line shows it: a number or a choice after its name, as "Duration 0.5"; a name alone
-        /// for a box that's on, and nothing for one that's off; an asset's name; or nothing.
+        /// for a box that's on, and nothing for one that's off; an asset's name; a Scalable number as its own field sums it
+        /// up, as "Uses 3" (FN-19); or nothing.
         /// </summary>
         protected virtual string GetSummaryText(SerializedProperty prop)
         {
             var label = ObjectNames.NicifyVariableName(prop.name);
+            if (prop.propertyType == SerializedPropertyType.Generic && prop.type is nameof(ScalableFloat) or nameof(ScalableInt))
+            {
+                string number = MagnitudeField.SummaryOf(prop, "");
+                return string.IsNullOrEmpty(number) ? null : $"{label} {number}";
+            }
             return prop.propertyType switch
             {
                 SerializedPropertyType.Integer => $"{label} {prop.intValue.ToString(CultureInfo.CurrentCulture)}",

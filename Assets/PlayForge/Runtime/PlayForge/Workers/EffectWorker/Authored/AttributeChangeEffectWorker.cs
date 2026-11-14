@@ -55,9 +55,9 @@ namespace FarEmerald.PlayForge
         public EAttributeTargetBinary Part = EAttributeTargetBinary.Current;
 
         [Tooltip("0: it answers at every read. Above 0, it answers only on each Nth tick of its effect, and 0 on the " +
-                 "others, so an impact that reads it lands every Nth tick")]
-        [Min(0)]
-        public int EveryTicks;
+                 "others, so an impact that reads it lands every Nth tick. Read as its effect lands")]
+        [NumberMin(0f)]
+        public ScalableInt EveryTicks = 0;
 
         /// <summary>What it keeps for one application of its effect.</summary>
         public class State
@@ -73,6 +73,9 @@ namespace FarEmerald.PlayForge
 
             /// <summary>Whether the last tick was an Nth one, where it answers only on those.</summary>
             public bool Due;
+
+            /// <summary>Its Every Ticks, read as the effect began (FN-19).</summary>
+            public int Every;
         }
 
         public override IEnumerable<IRootAction> OnEffectApplication(EffectWorkerContext ctx)
@@ -81,6 +84,7 @@ namespace FarEmerald.PlayForge
             if (state != null && !state.Began)
             {
                 state.AtStart = NumberContext.Of(in ctx).Attribute(Of, Attribute, Part);
+                state.Every = EveryTicks?.Evaluate(NumberContext.Of(in ctx)) ?? 0;
                 state.Began = true;
             }
             return base.OnEffectApplication(ctx);
@@ -94,7 +98,7 @@ namespace FarEmerald.PlayForge
             {
                 int before = state.Ticks;
                 state.Ticks += ctx.ExecuteTicks;
-                state.Due = EveryTicks > 0 && state.Ticks / EveryTicks > before / EveryTicks;
+                state.Due = state.Every > 0 && state.Ticks / state.Every > before / state.Every;
             }
             return base.OnEffectTick(ctx);
         }
@@ -106,7 +110,7 @@ namespace FarEmerald.PlayForge
             if (!Key.IsValid || key != Key) return false;
             var state = (context.Carrier as GameplayEffectSpec)?.GetWorkerState<State>(this);
             if (state == null || !state.Began) return false;
-            if (EveryTicks > 0 && !state.Due) return true;
+            if (state.Every > 0 && !state.Due) return true;
 
             float now = context.Attribute(Of, Attribute, Part);
             value = What switch

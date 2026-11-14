@@ -220,7 +220,11 @@ MonoBehaviour:
       data:
         Prefab: {fileID: 3659149408006394474, guid: 7b9b0e7a4ce7cc7469453ec67bc79dbc, type: 3}
         WhileActive: 0
-        Lifetime: 0.4
+        Lifetime:
+          Magnitude: 0.4
+          RealMagnitude: 2
+          Scaler:
+            rid: -2
     - rid: 2403794261189067134
       type: {class: ScalerGroup, ns: FarEmerald.PlayForge, asm: FarEmerald.PlayForge}
       data:
@@ -357,12 +361,24 @@ MonoBehaviour:
     - rid: 2403794261189067137
       type: {class: CameraShakeCue, ns: FarEmerald.PlayForge, asm: FarEmerald.PlayForge}
       data:
-        Strength: 0.6
-        Duration: 0.3
+        Strength:
+          Magnitude: 0.6
+          RealMagnitude: 2
+          Scaler:
+            rid: -2
+        Duration:
+          Magnitude: 0.3
+          RealMagnitude: 2
+          Scaler:
+            rid: -2
         OnEachTick: 0
     - rid: 2403794261189067138
       type: {class: PrefabCue, ns: FarEmerald.PlayForge, asm: FarEmerald.PlayForge}
       data:
         Prefab: {fileID: 8507003227236178003, guid: 9846e4f8c8b8ff443b968634ab90d62c, type: 3}
         WhileActive: 0
-        Lifetime: 0.5
+        Lifetime:
+          Magnitude: 0.5
+          RealMagnitude: 2
+          Scaler:
+            rid: -2

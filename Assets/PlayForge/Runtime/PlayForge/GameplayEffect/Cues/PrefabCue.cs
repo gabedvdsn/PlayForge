@@ -18,7 +18,7 @@ namespace FarEmerald.PlayForge
         public bool WhileActive;
 
         [Tooltip("How long a burst's prefab stays, in seconds; 0 keeps it")]
-        [Min(0f)] public float Lifetime = 2f;
+        [NumberMin(0f)] public ScalableFloat Lifetime = 2f;
 
         // The prefab each lasting effect placed, by its spec: one handler serves every entity the effect is on
         [NonSerialized] private Dictionary<GameplayEffectSpec, GameObject> placed;
@@ -27,7 +27,8 @@ namespace FarEmerald.PlayForge
         {
             if (WhileActive || Prefab == null) return;
             var made = Place(cue, follow: false);
-            if (Lifetime > 0f) Object.Destroy(made, Lifetime);
+            float lifetime = Lifetime?.Evaluate(NumberContext.Of(in cue)) ?? 0f;
+            if (lifetime > 0f) Object.Destroy(made, lifetime);
         }
 
         public override void Begin(CueContext cue)

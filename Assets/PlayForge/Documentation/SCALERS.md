@@ -15,6 +15,15 @@ Stacks under **Item**, and a kind of a project's own under the category it names
 context provides, with `[NumberContext]`, offers only the kinds that can be worked out there: a targeting task's range,
 which has no target yet, offers no kind that reads one.
 
+Every number an asset authors is a number field (FN-19, Decision 83), read at the level of what holds it: an ability's,
+as its Buffer Window and its tasks', at its level; an effect's, as its Stack Bounds' Min and Max, its Starting Stacks and
+a Stacks change's, at the effect's; a cue's Strength, Duration, Lifetime and Volume, for its effect as it lands; an item's
+Max Stack Size at its own level, and a set bonus's Pieces at its holder's; and an entity's own, as a barrier's Decay Per
+Second, an attribute set's Snap Interval, an aura's Interval and a worker's Threshold, Floor, Share, Every Ticks, Tick
+Pause or Required Weight, at the entity's or the change's. A level, a pointer's button, an order, a priority among
+configs and a log's size stay whole numbers, as do a kind's and a scaler's own numbers. A folded field's line shows a
+number field by what it reads, as "Uses 3".
+
 - **Constant**: the field reads its number, with its unit beside it, as Tick Every's "1 s". A field that used to read
   its scaler, and has none, reads 0, and a warning says so.
 - **Table**: the field reads one value for each level, exactly: level 1 the first, level 4 the 4th, and a level past

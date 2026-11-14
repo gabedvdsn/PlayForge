@@ -18,7 +18,7 @@ namespace FarEmerald.PlayForge
         public Attribute RelativeTo;
         
         [Tooltip("Multiplier applied to the relative attribute value")]
-        public float RelativeMultiplier = 1f;
+        public ScalableFloat RelativeMultiplier = 1f;
 
         [Tooltip("Which of the relative attribute's retention groups it reads: all of them, the whole value, unless it says (TW-3)")]
         public RetentionGroups RelativeGroups = new();
@@ -51,14 +51,15 @@ namespace FarEmerald.PlayForge
         /// </summary>
         protected AttributeValue GetRelative(WorkerContext ctx)
         {
+            float multiplier = RelativeMultiplier?.Evaluate(NumberContext.Of(in ctx)) ?? 1f;
             return From switch
             {
                 EFromSelfSource.FromSource => RetentionGroups.TryRead(RelativeGroups, ctx.Change.Value.Carrier.GetOrigin().GetSource(),
                     RelativeTo, out AttributeValue value)
-                        ? value * RelativeMultiplier
+                        ? value * multiplier
                         : default,
                 EFromSelfSource.FromSelf => ctx.AttributeCache.TryGetValue(RelativeTo, out var cached)
-                    ? (RetentionGroups.ReadsAll(RelativeGroups) ? cached.ActiveValue : RelativeGroups.Of(cached)) * RelativeMultiplier
+                    ? (RetentionGroups.ReadsAll(RelativeGroups) ? cached.ActiveValue : RelativeGroups.Of(cached)) * multiplier
                     : default,
                 _ => default
             };

@@ -444,8 +444,9 @@ namespace FarEmerald.PlayForge
             
             foreach (var worker in _activeWorkers)
             {
-                // Skip if ticking is disabled
-                if (worker.TickPause < 0) continue;
+                // Skip if ticking is disabled: a pause below 0, read at the entity's level (FN-19)
+                int pause = worker.TickPause?.Evaluate(NumberContext.Of(_system)) ?? -1;
+                if (pause < 0) continue;
                 
                 // Check tick counter
                 if (!_tickCounters.TryGetValue(worker, out int counter))
@@ -455,7 +456,7 @@ namespace FarEmerald.PlayForge
                 {
                     // Time to tick
                     worker.Tick(_system);
-                    _tickCounters[worker] = worker.TickPause;
+                    _tickCounters[worker] = pause;
                 }
                 else
                 {

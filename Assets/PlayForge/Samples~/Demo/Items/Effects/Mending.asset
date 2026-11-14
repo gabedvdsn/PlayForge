@@ -203,4 +203,8 @@ MonoBehaviour:
       data:
         Prefab: {fileID: 7153230074201641399, guid: 5d33c8e9650346f44858daf16b4de39d, type: 3}
         WhileActive: 0
-        Lifetime: 0.6
+        Lifetime:
+          Magnitude: 0.6
+          RealMagnitude: 2
+          Scaler:
+            rid: -2

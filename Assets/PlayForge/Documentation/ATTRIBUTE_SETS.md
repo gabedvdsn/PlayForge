@@ -72,7 +72,8 @@ Each element sets up one attribute. Folded, an element shows one line: what its 
 - **Auto Clamp**: apply the Bounds. With it off, the Bounds are ignored at runtime.
 - **Scale With Base**: when Base changes, change Current by the same share. A value of 80/100 that loses half its Base
   ends at 40/50.
-- **Rounding**: None, To Floor, To Ceil, Round, or Snap To with a **Snap Interval**. Rounding applies after the Bounds,
+- **Rounding**: None, To Floor, To Ceil, Round, or Snap To with a **Snap Interval**, a number field read at its owner's
+  level (FN-19). Rounding applies after the Bounds,
   each time the value changes, so it can make a change bigger or smaller than its effect asked for.
 - **Retention Group**: the group the root value counts toward. Groups split an attribute's value for queries and UI,
   such as base and bonus health. They never change the math.

@@ -223,7 +223,11 @@ MonoBehaviour:
       data:
         Prefab: {fileID: 4872485733627083681, guid: b6eb105cdbc8fea4abd059f69ca27b8b, type: 3}
         WhileActive: 1
-        Lifetime: 0
+        Lifetime:
+          Magnitude: 0
+          RealMagnitude: 2
+          Scaler:
+            rid: -2
     - rid: 2403794261189067034
       type: {class: FloatingTextCue, ns: FarEmerald.PlayForge.Samples.Demo, asm: FarEmerald.PlayForge.Samples.Demo}
       data:

@@ -28,9 +28,8 @@ namespace FarEmerald.PlayForge
         [Tooltip("Its holder too, where it takes the holder's side")]
         public bool IncludeHolder = true;
 
-        [Tooltip("How often it checks who's near, in seconds of its holder's time; 0, every step")]
-        [NumberMin(0f)]
-        [Min(0f)] public float Interval = 0.25f;
+        [Tooltip("How often it checks who's near, in seconds of its holder's time, read at its holder's level; 0, every step")]
+        [NumberMin(0f)] public ScalableFloat Interval = 0.25f;
     }
 
     /// <summary>Gives a holder the auras it has, and takes them back (TW-10).</summary>
@@ -155,7 +154,7 @@ namespace FarEmerald.PlayForge
             {
                 var run = runs[i];
                 run.Waited += Mathf.Max(0f, deltaTime);
-                if (run.Waited < run.Entry.Interval) continue;
+                if (run.Waited < (run.Entry.Interval?.Evaluate(NumberContext.Of(run.Holder)) ?? 0f)) continue;
                 run.Waited = 0f;
                 Check(run);
             }

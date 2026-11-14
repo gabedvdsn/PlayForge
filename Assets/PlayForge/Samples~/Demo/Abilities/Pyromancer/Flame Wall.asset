@@ -59,8 +59,17 @@ MonoBehaviour:
       and heat as attributes of its own, its radius and heat by the ability''s level,
       and its burns read its heat.'
     ActivationPolicy: 0
-    BufferWindow: 0.3
-    BufferPriority: 0
+    BufferWindow:
+      Magnitude: 0.3
+      RealMagnitude: 2
+      Scaler:
+        rid: -2
+    BufferPriority:
+      Magnitude: 0
+      RealMagnitude: 2
+      Scaler:
+        rid: -2
+      Rounding: 0
     ActivateImmediately: 0
     Triggers: []
     Textures:

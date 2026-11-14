@@ -28,7 +28,12 @@ MonoBehaviour:
         Name: PrimaryYKmcVmH4Jn9iqWqQsYjmr_mmcquW7EYPYKmcVmH4Jn9iqWqQsYjmr_mmc
         DisplayName: Primary
       Texture: {fileID: 2800000, guid: 9435618dfe1114342b8d2dce258eedc7, type: 3}
-    MaxStackSize: 3
+    MaxStackSize:
+      Magnitude: 3
+      RealMagnitude: 2
+      Scaler:
+        rid: -2
+      Rounding: 0
   Tags:
     AssetTag:
       Name: Demo.Item.HealingSalve
@@ -49,4 +54,6 @@ MonoBehaviour:
     AnalysisWorkers: []
   references:
     version: 2
-    RefIds: []
+    RefIds:
+    - rid: -2
+      type: {class: , ns: , asm: }

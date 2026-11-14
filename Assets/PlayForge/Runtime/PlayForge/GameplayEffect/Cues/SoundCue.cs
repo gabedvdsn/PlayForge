@@ -9,7 +9,7 @@ namespace FarEmerald.PlayForge
     {
         public AudioClip Clip;
 
-        [Range(0f, 1f)] public float Volume = 1f;
+        [NumberRange(0f, 1f)] public ScalableFloat Volume = 1f;
 
         [Tooltip("Play on each tick too")]
         public bool OnEachTick;
@@ -23,7 +23,7 @@ namespace FarEmerald.PlayForge
 
         private void Play(CueContext cue)
         {
-            if (Clip != null) AudioSource.PlayClipAtPoint(Clip, cue.Position, Volume);
+            if (Clip != null) AudioSource.PlayClipAtPoint(Clip, cue.Position, Mathf.Clamp01(Volume?.Evaluate(NumberContext.Of(in cue)) ?? 1f));
         }
     }
 }

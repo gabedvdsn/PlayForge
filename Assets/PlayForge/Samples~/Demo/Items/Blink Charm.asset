@@ -28,7 +28,12 @@ MonoBehaviour:
         Name: PrimaryYKmcVmH4Jn9iqWqQsYjmr_mmcquW7EYPYKmcVmH4Jn9iqWqQsYjmr_mmc
         DisplayName: Primary
       Texture: {fileID: 2800000, guid: 4d0693792d4b69d4e8f359d180fe1302, type: 3}
-    MaxStackSize: 1
+    MaxStackSize:
+      Magnitude: 1
+      RealMagnitude: 2
+      Scaler:
+        rid: -2
+      Rounding: 0
   Tags:
     AssetTag:
       Name: Demo.Item.BlinkCharm
@@ -49,4 +54,6 @@ MonoBehaviour:
     AnalysisWorkers: []
   references:
     version: 2
-    RefIds: []
+    RefIds:
+    - rid: -2
+      type: {class: , ns: , asm: }

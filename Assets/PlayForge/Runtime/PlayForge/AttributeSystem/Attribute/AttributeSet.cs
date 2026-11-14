@@ -332,7 +332,8 @@ namespace FarEmerald.PlayForge
     
         [Tooltip("Round attribute values after changes are applied. Will artificially increase/decrease attribute impact.")]
         public EAttributeRoundingPolicy RoundingMode;
-        public float SnapInterval;  // For Snap mode
+        [Tooltip("Under Snap To, the step values snap to, as 0.5, read at its owner's level")]
+        [NumberMin(0f)] public ScalableFloat SnapInterval = 0f;
     }
 
     public enum EAttributeOverflowPolicy

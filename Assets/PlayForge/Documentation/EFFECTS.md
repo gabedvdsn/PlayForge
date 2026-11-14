@@ -146,7 +146,9 @@ What happens when the effect is applied to a target that already has it. Each ap
   effect lasts as long as its longest stack. Duration Taken From One Stack runs one stack's timer at a time. Each time
   it runs out, one stack is lost and the timer restarts.
 - **Stack Behaviours**: optional stacking rules, such as Stack Bounds Config, which keeps the stack count between a
-  Min and a Max. An application that would take the effect past the Max overflows: its Overflow Effects land, from
+  Min and a Max, and Starting Stacks, the stacks a new effect starts with, each a number field read at the effect's
+  level (FN-19); Starting Stacks is one, where a number, a scaler, a combine and a rounding of its own were one written
+  out. An application that would take the effect past the Max overflows: its Overflow Effects land, from
   the same origin, as a bleed's fourth stack hemorrhages, on the target or, with **Overflow Lands On** set to Caster,
   on its caster, as a frenzy (TW-14); Deny Refresh On Overflow keeps that application from refreshing or extending the
   effect; and Clear Stacks On Overflow takes the effect's stacks off.
@@ -277,7 +279,8 @@ What the effect shows and sounds, apart from what it changes, listed as its work
 list:
 
 - **Camera Shake**: shakes the camera as the effect lands, and on each tick with **On Each Tick**, through the shaker
-  the game gives `ForgeCues.Shaker`, an `ICameraShaker`. With none given, it shakes nothing.
+  the game gives `ForgeCues.Shaker`, an `ICameraShaker`. With none given, it shakes nothing. Its **Strength** and
+  **Duration**, as Prefab's Lifetime and Sound's Volume, are number fields read for its effect as it lands (FN-19).
 - **Sound**: plays its clip at the target as the effect lands, and on each tick with **On Each Tick**.
 - **Prefab**: places its prefab at the target as the effect lands, for **Lifetime** seconds, or, with **While Active**,
   for as long as the effect lasts, following the target.

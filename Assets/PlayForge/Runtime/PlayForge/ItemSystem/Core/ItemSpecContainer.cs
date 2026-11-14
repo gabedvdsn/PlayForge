@@ -26,7 +26,7 @@ namespace FarEmerald.PlayForge
         public int ItemStacks => Spec.Stacks;
 
         /// <summary>Whether the slot has room for another of its item (FEAT-14).</summary>
-        public bool HasRoom => Spec.Stacks < Spec.Base.Definition.StackSize;
+        public bool HasRoom => Spec.Stacks < Spec.Base.Definition.StackSizeOf(Spec);
 
         /// <summary>
         /// Adds or takes off stacks, within 1 and the item's Max Stack Size, and how many it changed by. An equipped item's
@@ -35,7 +35,7 @@ namespace FarEmerald.PlayForge
         internal int ChangeStacks(int by)
         {
             int before = Spec.Stacks;
-            Spec.Stacks = System.Math.Clamp(before + by, 1, Spec.Base.Definition.StackSize);
+            Spec.Stacks = System.Math.Clamp(before + by, 1, Spec.Base.Definition.StackSizeOf(Spec));
             int changed = Spec.Stacks - before;
             if (changed != 0 && IsEquipped) Spec.Source.ToGAS()?.GetEffectSystem()?.RefreshEffectsFrom(Spec);
             return changed;

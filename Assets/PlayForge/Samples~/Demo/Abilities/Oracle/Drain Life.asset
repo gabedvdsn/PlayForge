@@ -58,8 +58,17 @@ MonoBehaviour:
       back to the Oracle as Health, by the ability''s own impact worker. A stun breaks
       the channel.'
     ActivationPolicy: 0
-    BufferWindow: 0.3
-    BufferPriority: 0
+    BufferWindow:
+      Magnitude: 0.3
+      RealMagnitude: 2
+      Scaler:
+        rid: -2
+    BufferPriority:
+      Magnitude: 0
+      RealMagnitude: 2
+      Scaler:
+        rid: -2
+      Rounding: 0
     ActivateImmediately: 0
     Triggers: []
     Textures:
@@ -271,4 +280,8 @@ MonoBehaviour:
         WorkAttribute: {fileID: 11400000, guid: b865fa5ec88ff314ab348516f14527f7, type: 2}
         WorkImpactType: []
         WorkSignPolicy: 0
-        Share: 0.5
+        Share:
+          Magnitude: 0.5
+          RealMagnitude: 2
+          Scaler:
+            rid: -2

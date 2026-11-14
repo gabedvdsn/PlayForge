@@ -44,7 +44,12 @@ MonoBehaviour:
         Name: PrimaryYKmcVmH4Jn9iqWqQsYjmr_mmcquW7EYPYKmcVmH4Jn9iqWqQsYjmr_mmc
         DisplayName: Primary
       Texture: {fileID: 2800000, guid: 6261a766e6d8be648878ae1bf95ec373, type: 3}
-    MaxStackSize: 1
+    MaxStackSize:
+      Magnitude: 1
+      RealMagnitude: 2
+      Scaler:
+        rid: -2
+      Rounding: 0
   Tags:
     AssetTag:
       Name: Demo.Item.VampiricFang
@@ -68,4 +73,6 @@ MonoBehaviour:
     AnalysisWorkers: []
   references:
     version: 2
-    RefIds: []
+    RefIds:
+    - rid: -2
+      type: {class: , ns: , asm: }

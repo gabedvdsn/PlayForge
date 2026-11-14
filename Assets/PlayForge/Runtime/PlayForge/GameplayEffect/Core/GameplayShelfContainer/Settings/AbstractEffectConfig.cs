@@ -262,11 +262,11 @@ namespace FarEmerald.PlayForge
     [Serializable]
     public class StackBoundsConfig : AbstractStackingConfig
     {
-        [Tooltip("The fewest stacks the effect holds; a new one starts with these")]
-        public int Min;
+        [Tooltip("The fewest stacks the effect holds; a new one starts with these. Read at the effect's level")]
+        [NumberMin(0f)] public ScalableInt Min = 0;
 
-        [Tooltip("The most stacks the effect holds; an application past them overflows")]
-        public int Max;
+        [Tooltip("The most stacks the effect holds; an application past them overflows. Read at the effect's level")]
+        [NumberMin(0f)] public ScalableInt Max = 0;
 
         [Tooltip("At the most: do nothing more, or start a new effect of its own that stacks again")]
         public EStackBoundsOnMaxPolicy OnMaxPolicy = EStackBoundsOnMaxPolicy.DoNothing;
@@ -293,18 +293,18 @@ namespace FarEmerald.PlayForge
         public bool Overflows(AbstractStackingEffectContainer container, int amount) => amount > 0 && container.Stacks + amount > MaxFor(container.Spec);
 
         /// <summary>The most stacks an application's effect holds: the bound's, and more where its modifiers say (TW-7).</summary>
-        public int MaxFor(GameplayEffectSpec spec) => Max + (spec?.Changes?.MostStacks ?? 0);
+        public int MaxFor(GameplayEffectSpec spec) => (Max?.Evaluate(spec) ?? 0) + (spec?.Changes?.MostStacks ?? 0);
 
         public override int ConfigPriority => 999;
 
         public override void InitializeContainer(AbstractStackingEffectContainer container)
         {
-            container.Stack(Min);
+            container.Stack(Min?.Evaluate(container.Spec) ?? 0);
         }
         
         public override int GetStacks(AbstractStackingEffectContainer container, int amount = 1)
         {
-            int total = Mathf.Min(MaxFor(container.Spec), Mathf.Max(Min, container.Stacks + amount));
+            int total = Mathf.Min(MaxFor(container.Spec), Mathf.Max(Min?.Evaluate(container.Spec) ?? 0, container.Stacks + amount));
             return Mathf.Max(0, total - container.Stacks);
         }
         
@@ -368,40 +368,18 @@ namespace FarEmerald.PlayForge
     [Serializable]
     public class InitializationOperation : AbstractStackingConfig
     {
-        [Tooltip("The stacks a new effect starts with")]
-        public int InitializationStacks = 0;
+        /// <summary>
+        /// The stacks a new effect starts with: a number of any kind, read at the effect's level, as its other numbers are.
+        /// Its own number, scaler, combine and rounding were a Scalable whole number written out (FN-19).
+        /// </summary>
+        [Tooltip("The stacks a new effect starts with, read at the effect's level")]
+        [NumberMin(0f)] public ScalableInt InitializationStacks = 0;
 
-        [Tooltip("How the scaler sets them: times these, plus them, or in their place")]
-        public EMagnitudeOperation Operation;
-
-        [Tooltip("The scaler, read against the effect")]
-        [ScalerRootAssignment(null, typeof(AbstractCachedScaler))] [SerializeReference]
-        public AbstractScaler Scaler;
-
-        [Tooltip("How a part of a stack becomes a whole one")]
-        public ERoundingOperation Rounding;
-        
         public override void InitializeContainer(AbstractStackingEffectContainer container)
         {
-            if (AbstractScaler.IsNone(Scaler))
-            {
-                container.Stack(InitializationStacks);
-                return;
-            }
-            
-            float stacks = Operation switch
-            {
-                EMagnitudeOperation.MultiplyWithScaler => InitializationStacks * Scaler.Evaluate(container.Spec),
-                EMagnitudeOperation.AddScaler => InitializationStacks + Scaler.Evaluate(container.Spec),
-                EMagnitudeOperation.UseMagnitude => InitializationStacks,
-                EMagnitudeOperation.UseScaler => Scaler.Evaluate(container.Spec),
-                _ => throw new ArgumentOutOfRangeException()
-            };
-
-            var intStacks = StackRounding.Whole(stacks, Rounding);
-            
-            container.Stack(intStacks);
+            container.Stack(InitializationStacks?.Evaluate(container.Spec) ?? 0);
         }
+
         public override int GetStacks(AbstractStackingEffectContainer container, int amount = 1)
         {
             return amount;

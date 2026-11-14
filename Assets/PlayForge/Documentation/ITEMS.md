@@ -29,7 +29,8 @@ changes while it's equipped, by its first impact across its levels, then the abi
   The runtime doesn't act on it.
 - **Textures**: icons, each paired with a tag. The texture tagged `Primary` is the item's icon. Without one, the first
   texture is used.
-- **Max Stack Size**: how many of the item one inventory slot holds. 1 or less, and each is a slot of its own.
+- **Max Stack Size**: how many of the item one inventory slot holds, a number field read at the item's level (FN-19),
+  as `StackSizeOf(spec)` reads it. 1 or less, and each is a slot of its own.
 
 Whether an inventory may hold an item more than once is the entity's choice, through its **Allow Duplicate Items**
 setting (see [ENTITIES.md](ENTITIES.md)).
@@ -129,7 +130,7 @@ one at most.
 
 A **Set Bonus** component gives its holder a **Bonus** effect while it has enough of a set's pieces equipped, as two
 pieces of a set giving fire resistance and four a flame aura (FN-14). Each piece names its **Set** by a tag and carries
-the set's bonuses, each a component with the **Pieces** it needs. The holder's equipped pieces count each item once, and
+the set's bonuses, each a component with the **Pieces** it needs, a number field read at its holder's level (FN-19). The holder's equipped pieces count each item once, and
 a bonus holds while they're as many as it needs, once for the holder however many pieces carry it; it comes from one of
 the pieces, and moves to another as that one leaves while enough stay. A load puts the bonus back with the other
 effects, and weighs each set once.

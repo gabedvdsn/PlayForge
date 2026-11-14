@@ -21,8 +21,17 @@ MonoBehaviour:
     Description: 'Every hero''s passive: it activates as the hero comes in, and gives
       it Regeneration for good.'
     ActivationPolicy: 0
-    BufferWindow: 0.3
-    BufferPriority: 0
+    BufferWindow:
+      Magnitude: 0.3
+      RealMagnitude: 2
+      Scaler:
+        rid: -2
+    BufferPriority:
+      Magnitude: 0
+      RealMagnitude: 2
+      Scaler:
+        rid: -2
+      Rounding: 0
     ActivateImmediately: 1
     Triggers: []
     Textures:

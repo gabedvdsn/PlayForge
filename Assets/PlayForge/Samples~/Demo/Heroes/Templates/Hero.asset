@@ -95,6 +95,10 @@ MonoBehaviour:
       type: {class: DeathWatcherAnalysisWorker, ns: FarEmerald.PlayForge, asm: FarEmerald.PlayForge}
       data:
         Target: {fileID: 11400000, guid: b865fa5ec88ff314ab348516f14527f7, type: 2}
-        Threshold: 0
+        Threshold:
+          Magnitude: 0
+          RealMagnitude: 2
+          Scaler:
+            rid: -2
         Comparison: 1
         TriggerOnce: 1

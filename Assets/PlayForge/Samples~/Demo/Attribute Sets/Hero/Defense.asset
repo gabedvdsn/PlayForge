@@ -51,7 +51,11 @@ MonoBehaviour:
       AutoClamp: 1
       AutoScaleWithBase: 0
       RoundingMode: 0
-      SnapInterval: 0
+      SnapInterval:
+        Magnitude: 0
+        RealMagnitude: 2
+        Scaler:
+          rid: -2
   SubSets: []
   CollisionResolutionPolicy: 3
   WorkerGroup:

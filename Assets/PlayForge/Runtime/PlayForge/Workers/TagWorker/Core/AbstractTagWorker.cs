@@ -27,8 +27,8 @@ namespace FarEmerald.PlayForge
         public TagWorkerRequirements Requirements;
         
         [Space(5)]
-        [Tooltip("Frames between Tick calls. 0 = every frame, -1 = no ticking")]
-        public int TickPause = -1;
+        [Tooltip("Frames between Tick calls, read at its entity's level. 0 = every frame, -1 = no ticking")]
+        public ScalableInt TickPause = -1;
         
         /// <summary>
         /// Whether the worker is evaluated at the end of every frame, as every worker was. Off, as it is by default, it's
@@ -48,14 +48,15 @@ namespace FarEmerald.PlayForge
             foreach (var packet in Requirements.TagPackets)
             {
                 int weight = handler.GetTagWeight(packet.Tag);
+                int required = packet.RequiredWeight?.Evaluate(NumberContext.Of(handler as ISource)) ?? 0;
                 
                 switch (packet.Policy)
                 {
                     case ERequireAvoidPolicy.Require:
-                        if (weight < packet.RequiredWeight) return false;
+                        if (weight < required) return false;
                         break;
                     case ERequireAvoidPolicy.Avoid:
-                        if (weight >= packet.RequiredWeight) return false;
+                        if (weight >= required) return false;
                         break;
                     default:
                         throw new ArgumentOutOfRangeException();
@@ -100,7 +101,7 @@ namespace FarEmerald.PlayForge
         [ForgeTagContext(ForgeContext.Granted)]
         public Tag Tag;
         public ERequireAvoidPolicy Policy;
-        public int RequiredWeight;
+        public ScalableInt RequiredWeight;
 
         public TagWorkerRequirementPacket(Tag tag, ERequireAvoidPolicy policy, int requiredWeight = 1)
         {

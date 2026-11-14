@@ -220,6 +220,13 @@ namespace FarEmerald.PlayForge
         /// <summary>The context of an entity on its own (<see cref="Of(ISource)"/>).</summary>
         public static NumberContext Of(IGameplayAbilitySystem entity) => Of(entity as ISource);
 
+        /// <summary>
+        /// The context of an item as its holder has it: its holder as the caster, at the item's level, with the item's
+        /// Local Data and no target, as its stack size reads it (FN-19).
+        /// </summary>
+        public static NumberContext Of(ItemSpec item) =>
+            item == null ? default : new NumberContext(item.GetSource(), null, item.GetLevel(), true, item, localData: LocalDataOf(item));
+
         /// <summary>The context of a cue as it fires: its effect's, landing on the cue's entity.</summary>
         public static NumberContext Of(in CueContext cue)
         {

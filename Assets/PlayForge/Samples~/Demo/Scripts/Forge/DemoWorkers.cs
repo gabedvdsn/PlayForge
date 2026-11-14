@@ -34,15 +34,15 @@ namespace FarEmerald.PlayForge.Samples.Demo
     [Serializable]
     public sealed class ShareBackWorker : AbstractContextImpactWorker
     {
-        [Tooltip("The share of each blow that comes back"), Range(0f, 1f)]
-        public float Share = 0.5f;
+        [Tooltip("The share of each blow that comes back"), NumberRange(0f, 1f)]
+        public ScalableFloat Share = 0.5f;
 
         public override EWorkerExecution Execution => EWorkerExecution.Deferred;
 
         public override IEnumerable<IRootAction> CreateDeferredActions(ImpactWorkerContext ctx)
         {
             var hitter = ctx.ImpactData.SourcedModifier.Source;
-            float back = Mathf.Abs(ctx.ImpactData.RealImpact.CurrentValue) * Share;
+            float back = Mathf.Abs(ctx.ImpactData.RealImpact.CurrentValue) * (Share?.Evaluate(NumberContext.Of(in ctx)) ?? 0f);
             if (hitter == null || hitter.IsDead || WorkAttribute == null || back <= 0f) return Array.Empty<IRootAction>();
             return new IRootAction[]
             {
@@ -83,8 +83,8 @@ namespace FarEmerald.PlayForge.Samples.Demo
         [Tooltip("The attribute a blow leaves low")]
         public Attribute Health;
 
-        [Tooltip("The share of its most Health below which a target is finished"), Range(0f, 1f)]
-        public float Below = 0.1f;
+        [Tooltip("The share of its most Health below which a target is finished"), NumberRange(0f, 1f)]
+        public ScalableFloat Below = 0.1f;
 
         public override IEnumerable<IRootAction> OnEffectImpact(EffectWorkerContext ctx)
         {
@@ -92,7 +92,7 @@ namespace FarEmerald.PlayForge.Samples.Demo
             var finisher = ctx.Carrier?.GetOrigin()?.GetSource();
             if (Health == null || target == null || finisher == null || target.IsDead) yield break;
             if (!target.TryGetAttributeValue(Health, out var health) || health.BaseValue <= 0f) yield break;
-            if (health.CurrentValue <= 0f || health.CurrentValue / health.BaseValue > Below) yield break;
+            if (health.CurrentValue <= 0f || health.CurrentValue / health.BaseValue > (Below?.Evaluate(NumberContext.Of(ctx)) ?? 0f)) yield break;
 
             yield return new ModifyAttributeAction(target, Health,
                 SourcedModifiedAttributeValue.GenerateSimple(finisher, Health, -health.CurrentValue, 0f));

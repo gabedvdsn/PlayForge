@@ -57,8 +57,17 @@ MonoBehaviour:
     Description: 'Hexes an enemy for 6 seconds: lower Magic Resistance, a burst of
       magic damage as it lands by an Additional Impact, and a silence it contains.'
     ActivationPolicy: 0
-    BufferWindow: 0.3
-    BufferPriority: 0
+    BufferWindow:
+      Magnitude: 0.3
+      RealMagnitude: 2
+      Scaler:
+        rid: -2
+    BufferPriority:
+      Magnitude: 0
+      RealMagnitude: 2
+      Scaler:
+        rid: -2
+      Rounding: 0
     ActivateImmediately: 0
     Triggers: []
     Textures:

@@ -125,13 +125,12 @@ namespace FarEmerald.PlayForge.Extended.Editor
             policyField.BindProperty(policyProp);
             container.Add(policyField);
             
-            // Weight field
+            // Weight field: a number of any kind, as each authored number is (FN-19)
             var weightProp = property.FindPropertyRelative("RequiredWeight");
-            var weightField = new IntegerField
+            var weightField = new PropertyField(weightProp, "")
             {
-                style = { width = 40, marginLeft = 4 }
+                style = { minWidth = 60, flexShrink = 0, marginLeft = 4 }
             };
-            weightField.BindProperty(weightProp);
             container.Add(weightField);
             
             return container;
