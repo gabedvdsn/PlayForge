@@ -7,6 +7,10 @@ tracks each fix below by its ID.
 ## [Unreleased]
 
 ### Added
+- The Lifesteal role and the Lifesteal worker, which heals its holder its Lifesteal's share of each loss it deals another,
+  of the impact types it names; a Forge Project's **Workers**, which every entity in it has, the Lifesteal worker among
+  them as a project starts; and `AbstractImpactWorker.OncePerHit`, a kind that runs once for a hit however many its holder
+  has (FN-15).
 - Uses and Set Bonus components on items: Uses counts the uses of an item's ability, a stack or the item going as they
   run out; Set Bonus gives its holder an effect while enough of a set's pieces are equipped. An item component hears a
   fifth moment, `Used`, and its context's `Restoring` says a moment comes from a load (FN-14).
@@ -458,6 +462,9 @@ tracks each fix below by its ID.
   page, through one table of links in the editor.
 
 ### Changed
+- An effect's own Lifesteal raises its caster's Lifesteal for its own hits, which the Lifesteal worker heals by, its
+  project's or its own; it heals nothing where no worker reads it. Its **Attribute** is gone: the worker's **Heals**, or
+  the Health role, names what it heals. `ForgeLifesteal.Steal` is gone with it (FN-15).
 - An effect's Area and Transfers are effect components, an Area component holding its area, one at most, and a Transfer
   component each transfer, in the Components section, where they were fields of Impact. `GameplayEffect.Area` and
   `GameplayEffect.Transfers` read them and can't be set: add an `AreaEffectComponent` or a `TransferEffectComponent`

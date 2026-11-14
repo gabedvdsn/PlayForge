@@ -59,6 +59,8 @@ attribute's name is built in:
   whose set has no attribute in this role doesn't die of it.
 - **Luck** (`Tags.ROLE_LUCK`): read on the caster of every chance that gives no luck of its own (TW-8).
 - **Movement Speed** (`Tags.ROLE_MOVEMENT_SPEED`): what the Creator Lab's units walk at, where its rules name none.
+- **Lifesteal** (`Tags.ROLE_LIFESTEAL`): the share of each loss an entity deals that the Lifesteal worker heals it, as
+  0.15 for 15% (FN-15, [WORKERS.md](WORKERS.md#lifesteal)). An item or a buff gives lifesteal by an effect on it.
 - **A role of your own**: any tag, as `Role.Energy`, in the same list. Code reads it with `ForgeRoles.AttributeFor(tag)`,
   and an ability's attribute cost can spend it ([ABILITIES.md](ABILITIES.md#activation)).
 

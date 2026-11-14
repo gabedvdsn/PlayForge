@@ -71,6 +71,12 @@ namespace FarEmerald.PlayForge
         /// <summary>The attribute the Creator Lab's units walk at, in units a second, where its rules name none.</summary>
         [ForgeTagExposed(ForgeContext.AttributeRole)] public static Tag ROLE_MOVEMENT_SPEED { get; } = Tag.GenerateAsUnique("Movement Speed");
 
+        /// <summary>
+        /// The attribute whose value is the share of each loss its holder deals that the Lifesteal worker heals it, as 0.15
+        /// for 15%, where the worker names none of its own (FN-15).
+        /// </summary>
+        [ForgeTagExposed(ForgeContext.AttributeRole)] public static Tag ROLE_LIFESTEAL { get; } = Tag.GenerateAsUnique("Lifesteal");
+
         // ═══════════════════════════════════════════════════════════════════════════
         // Events
         // ═══════════════════════════════════════════════════════════════════════════

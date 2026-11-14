@@ -76,16 +76,29 @@ namespace FarEmerald.PlayForge
                 _actionQueue
             );
             
+            // The kinds that run once for a hit and have run for this one, the first held apart so one kind asks no list
+            System.Type ranOnce = null;
+            List<System.Type> moreRanOnce = null;
+
             foreach (var worker in _cache[impactData.Attribute])
             {
                 // Check workable flag
                 if (!impactData.SourcedModifier.ImpactIsWorkable && !worker.AcceptUnworkableImpact) continue;
-                
+
                 // Pre-validation (fast check)
                 if (!worker.PreValidateWorkFor(impactData)) continue;
-                
+
                 // Full validation
                 if (!worker.ValidateWorkFor(impactData)) continue;
+
+                // A kind that runs once for a hit, which another of has, runs no more for it (FN-15)
+                if (worker.OncePerHit)
+                {
+                    var kind = worker.GetType();
+                    if (kind == ranOnce || moreRanOnce != null && moreRanOnce.Contains(kind)) continue;
+                    if (ranOnce == null) ranOnce = kind;
+                    else (moreRanOnce ??= new List<System.Type>()).Add(kind);
+                }
                 
                 // Route based on execution mode
                 switch (worker.Execution)

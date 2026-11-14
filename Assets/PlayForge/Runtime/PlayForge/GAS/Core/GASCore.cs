@@ -132,6 +132,10 @@ namespace FarEmerald.PlayForge
             identity.InitWorkers(owner);
             if (identity.AttributeSet) identity.AttributeSet.InitWorkers(owner);
 
+            // Its project's workers, which every entity has, after its own, so the first of a kind that runs once is its own
+            // (FN-15)
+            ForgeProject.Current?.Settings?.Workers?.ProvideWorkersTo(owner);
+
             LevelSystem.Register(identity.AssetTag, new IntValuePairClamped(identity.GetStartingLevel(), identity.GetMaxLevel()));
 
             AbilitySystem.Initialize(identity.StartingAbilities);

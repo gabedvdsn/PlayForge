@@ -404,9 +404,12 @@ its On Hit does nothing. Another effect that replaces it under its tag takes it 
 and their duration by it, so a damage over time at 0.25 sets them off a quarter as often, for a quarter as long, and 0
 sets nothing off. With **Own Proc Coefficient** off, its ability's stands, or else 1.
 
-**Lifesteal**, in Impact, heals the effect's caster for the hits it deals (TW-15): its **Share** of each workable loss
-it deals another to its **Attribute**, the Health role's where it names none, while its **When** holds. The heal is a
-gain like any other, so Healing Received scales it, and damage a return sends back heals nothing.
+**Lifesteal**, in Impact, raises its caster's Lifesteal for the effect's own hits alone by its **Share**, while its
+**When** holds, as though the attribute rose for the hit and went back (TW-15, FN-15): a strike of 0.5 from a caster of
+0.25 heals three quarters of what it deals, and the caster's other hits a quarter. The Lifesteal worker heals by it, the
+one the project gives every entity or the caster's own ([WORKERS.md](WORKERS.md#lifesteal)), so where no worker reads it,
+it heals nothing. The heal is a gain like any other, so Healing Received scales it, and damage a return sends back heals
+nothing.
 
 ### Resolve Order
 

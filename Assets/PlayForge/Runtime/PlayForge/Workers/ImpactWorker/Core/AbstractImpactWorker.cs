@@ -25,6 +25,12 @@ namespace FarEmerald.PlayForge
         /// Default is Deferred for safety (prevents re-entrancy issues).
         /// </summary>
         public virtual EWorkerExecution Execution => EWorkerExecution.Deferred;
+
+        /// <summary>
+        /// Whether a kind of worker runs once for a hit, however many of it its holder has, as the Lifesteal worker, which
+        /// would heal twice for one blow from its project's and its own (FN-15). The first of the kind to take the hit runs.
+        /// </summary>
+        public virtual bool OncePerHit => false;
         
         /// <summary>
         /// Fast pre-validation check using only the impact data.

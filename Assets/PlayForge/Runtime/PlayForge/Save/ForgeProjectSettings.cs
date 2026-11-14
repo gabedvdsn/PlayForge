@@ -46,6 +46,14 @@ namespace FarEmerald.PlayForge
                  "the Cost and Cooldown templates (TW-30)")]
         public ForgeAuthoringSettings Authoring = new();
 
+        [Tooltip("Workers every entity in the project has, beside its own, as it registers: the Lifesteal worker, which heals " +
+                 "by its Lifesteal, as a project starts (FN-15)")]
+        public StandardWorkerGroup Workers = new()
+        {
+            Name = "Every Entity",
+            ImpactWorkers = new List<AbstractImpactWorker> { new LifestealImpactWorker() },
+        };
+
         /// <summary>The attribute playing <paramref name="role"/>, the first that does, or null where none does.</summary>
         public Attribute AttributeFor(Tag role)
         {

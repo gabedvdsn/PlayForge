@@ -46,7 +46,9 @@ A hit that would leave its target under a fifth of its Health takes the rest.
 
 Its caster heals half of each loss it deals another.
 
-- **Vampiric Strike** (an effect): Instant, -20 Health; its **Lifesteal**, **Share** 0.5, **Attribute** Health.
+- **Vampiric Strike** (an effect): Instant, -20 Health; its **Lifesteal**, **Share** 0.5, which the Lifesteal worker
+  heals by, the one your Forge Project's Workers give every entity as a project starts, to its Health role's attribute
+  ([WORKERS.md](WORKERS.md#lifesteal)).
 
 For lifesteal on every hit an item's or an ability's holder deals, use its **Lifesteal** list instead
 ([ITEMS.md](ITEMS.md#lifesteal)).
