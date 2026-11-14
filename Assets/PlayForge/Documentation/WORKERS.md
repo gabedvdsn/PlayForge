@@ -13,7 +13,7 @@ system and for whom, and what its context holds (TW-23). [RECIPES.md](RECIPES.md
 - **An item's, an ability's or an effect's Worker Group**: the entity holds them while the item is equipped, the ability
   known, or the effect lasts on it (TW-13). Two of an effect lasting give its group once.
 - **An effect's Workers**: effect workers, which run for that effect's own events.
-- **Built in**: an On Hit entry and a lifesteal give their holder an impact worker (TW-6, TW-15).
+- **Built in**: an On Hit entry gives its holder an impact worker (TW-6).
 
 ## Lifesteal
 

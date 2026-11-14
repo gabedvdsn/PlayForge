@@ -141,8 +141,9 @@ namespace FarEmerald.PlayForge
             }
         }
 
-        [Tooltip("Its holder heals a share of each loss it deals, while it's known (TW-15)")]
-        public List<LifestealEntry> Lifesteal = new();
+        // Its lifesteal as a save before the Lifesteal attribute kept it, which heals no more, kept for the Problems view to
+        // name (FN-15)
+        [SerializeField, HideInInspector, FormerlySerializedAs("Lifesteal")] private List<LifestealEntry> legacyLifesteal = new();
 
         // ═══════════════════════════════════════════════════════════════════════════
         // Level Provider Linking
@@ -316,7 +317,6 @@ namespace FarEmerald.PlayForge
             OnHits.Provide(OnHit, system);
             EffectModifiers.Provide(Modifiers, system);
             ForgeAuras.Provide(ForgeAuras.Of(Components), system);
-            Lifesteals.Provide(Lifesteal, system);
         }
         public void RemoveWorkers(ISource system)
         {
@@ -324,7 +324,6 @@ namespace FarEmerald.PlayForge
             OnHits.Remove(OnHit, system);
             EffectModifiers.Remove(Modifiers, system);
             ForgeAuras.Remove(ForgeAuras.Of(Components), system);
-            Lifesteals.Remove(Lifesteal, system);
         }
     }
 

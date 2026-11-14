@@ -185,8 +185,8 @@ as Blade Mail.
 Frost Mage's every Chill granting Frozen, or those landing on it (TW-7). Each entry is a rule of its own or names a
 shared Effect Modifier asset ([EFFECTS.md](EFFECTS.md#modifiers)).
 
-**Lifesteal**, after Modifiers, heals the entity for the hits it deals as long as it lives (TW-15,
-[ITEMS.md](ITEMS.md#lifesteal)).
+An entity's own lifesteal is its **Lifesteal**, the attribute playing the project's Lifesteal role, its set's value
+for it, which the Lifesteal worker heals by ([WORKERS.md](WORKERS.md#lifesteal)); its Lifesteal list is gone (FN-15).
 
 ## Death
 

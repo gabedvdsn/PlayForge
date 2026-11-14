@@ -79,8 +79,9 @@ namespace FarEmerald.PlayForge
             MovedToComponents = true;
         }
 
-        [Tooltip("It heals a share of each loss it deals, while it lives (TW-15)")]
-        public List<LifestealEntry> Lifesteal = new();
+        // Its lifesteal as a save before the Lifesteal attribute kept it, which heals no more, kept for the Problems view to
+        // name (FN-15)
+        [SerializeField, HideInInspector, FormerlySerializedAs("Lifesteal")] private List<LifestealEntry> legacyLifesteal = new();
 
         [Tooltip("The crowd control rules its abilities follow. None, the project's (TW-16)")]
         public CrowdControlRules CrowdControl;

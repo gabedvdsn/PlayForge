@@ -341,9 +341,10 @@ Each entry is a rule of its own or names a shared Effect Modifier asset ([EFFECT
 
 ### Lifesteal
 
-**Lifesteal**, after Modifiers, heals its holder for the hits it deals, while the entity knows the ability (TW-15): each entry's **Share** of each
-workable loss it deals another to its **Attribute**, the Health role's where it names none, of some **Impact Types**
-where it names any, while its **When** holds, as a vampiric mask heals its wearer for its attacks.
+An ability gives its holder lifesteal by an effect that raises the holder's **Lifesteal**, the attribute playing the project's
+Lifesteal role, as a passive applies it to its caster, which the Lifesteal worker heals by ([WORKERS.md](WORKERS.md#lifesteal)): a vampiric mask's
+Infinite effect of +0.15 Lifesteal heals its wearer 15% of each blow it deals. Its Lifesteal list is gone (FN-15); an
+older save keeps one hidden, which heals no more and the Problems view names.
 ## Local Data
 
 Local Data is a list of named values stored on the asset. Each row has a **Key** (a tag), a **Type**, and a value of

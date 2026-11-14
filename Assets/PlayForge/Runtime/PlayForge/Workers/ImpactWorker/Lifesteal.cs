@@ -25,9 +25,9 @@ namespace FarEmerald.PlayForge
     }
 
     /// <summary>
-    /// A holder's lifesteal (TW-15): its holder heals a share of each loss it deals another on an attribute, of some impact
-    /// types where it names any, while a condition holds: an item's while it's equipped, an ability's while it's known, an
-    /// entity's as it lives, as a vampiric mask does for its wearer's attacks.
+    /// A holder's lifesteal entry as a save before FN-15 kept it, in an item's, an ability's or an entity's Lifesteal list,
+    /// which heals no more: a holder's lifesteal is its Lifesteal attribute now, which an effect on it raises, and the
+    /// Lifesteal worker heals by it (Decision 78). Kept so an older save's list loads, for the Problems view to name.
     /// </summary>
     [Serializable]
     public class LifestealEntry
@@ -44,83 +44,6 @@ namespace FarEmerald.PlayForge
 
         [Tooltip("Only while this holds, read at the hit: the holder its caster, the one hit its target")]
         [SerializeReference] public GameplayCondition When;
-
-        [NonSerialized] private HolderLifestealWorker worker;
-
-        // The impact worker that runs it for its holder's hits, one for the entry, whoever holds it
-        internal HolderLifestealWorker Worker => worker ??= new HolderLifestealWorker(this);
-
-        /// <summary>The attribute whose losses count: its own, or else the Health role's in the project, or null for none.</summary>
-        public Attribute StealsFrom => Attribute ? Attribute : ForgeRoles.AttributeFor(Tags.ROLE_HEALTH);
-    }
-
-    /// <summary>Gives a holder the lifesteals it has, and takes them back (TW-15).</summary>
-    public static class Lifesteals
-    {
-        /// <summary>Gives <paramref name="holder"/> each entry's worker, which runs for the hits it deals.</summary>
-        public static void Provide(List<LifestealEntry> entries, ISource holder)
-        {
-            if (entries == null || entries.Count == 0 || holder == null || !holder.FindAbilitySystem(out var abilities) || abilities == null) return;
-            foreach (var entry in entries)
-                if (entry?.StealsFrom != null) abilities.ProvideWorker(entry.Worker);
-        }
-
-        /// <summary>Takes back what <see cref="Provide"/> gave.</summary>
-        public static void Remove(List<LifestealEntry> entries, ISource holder)
-        {
-            if (entries == null || entries.Count == 0 || holder == null || !holder.FindAbilitySystem(out var abilities) || abilities == null) return;
-            foreach (var entry in entries)
-                if (entry != null) abilities.RemoveWorker(entry.Worker);
-        }
-    }
-
-    /// <summary>The impact worker a lifesteal entry gives its holder: it runs for the hits the holder deals (TW-15).</summary>
-    internal sealed class HolderLifestealWorker : AbstractImpactWorker
-    {
-        private readonly LifestealEntry entry;
-
-        // The attribute each cache took it under, so it leaves the one it joined, though the project's Health role change
-        private readonly Dictionary<ImpactWorkerCache, Attribute> joined = new();
-
-        public HolderLifestealWorker(LifestealEntry entry) => this.entry = entry;
-
-        public override bool PreValidateWorkFor(ImpactData impactData) =>
-            entry.StealsFrom is { } attribute && impactData.Attribute != null && impactData.Attribute.Equals(attribute);
-
-        public override bool ValidateWorkFor(ImpactData impactData)
-        {
-            if (!ForgeLifesteal.Counts(impactData)) return false;
-            if (entry.ImpactTypes is { Count: > 0 })
-            {
-                var types = impactData.SourcedModifier.Carrier?.GetImpactTypes();
-                if (types == null || !ForgeHelper.ValidateImpactTypes(false, types, entry.ImpactTypes)) return false;
-            }
-            return true;
-        }
-
-        public override IEnumerable<IRootAction> CreateDeferredActions(ImpactWorkerContext ctx)
-        {
-            var context = NumberContext.Of(in ctx);
-            if (entry.When != null && !entry.When.Holds(context)) yield break;
-            var attribute = entry.StealsFrom;
-            float amount = ForgeLifesteal.HealFor(ctx.ImpactData, attribute, entry.Share?.Evaluate(context) ?? 0f);
-            if (amount <= 0f || ctx.System is not ITarget healer) yield break;
-            yield return ForgeLifesteal.Heal(healer, attribute, amount);
-        }
-
-        public override void SubscribeToCache(ImpactWorkerCache cache)
-        {
-            var attribute = entry.StealsFrom;
-            if (attribute == null) return;
-            joined[cache] = attribute;
-            cache.ProvideWorker(attribute, this);
-        }
-
-        public override void UnsubscribeFromCache(ImpactWorkerCache cache)
-        {
-            if (!joined.Remove(cache, out var attribute)) attribute = entry.StealsFrom;
-            if (attribute != null) cache.RemoveWorker(attribute, this);
-        }
     }
 
     /// <summary>
@@ -239,11 +162,6 @@ namespace FarEmerald.PlayForge
             if (attribute == null || share <= 0f || impact.Attribute == null || !impact.Attribute.Equals(attribute) || !Counts(impact)) return 0f;
             return -impact.RealImpact.CurrentValue * share;
         }
-
-        /// <summary>The heal itself: a workable gain to the healer, so what scales its heals scales it (TW-15).</summary>
-        public static IRootAction Heal(ITarget healer, IAttribute attribute, float amount) => new LambdaAction(
-            _ => healer.TryModifyAttribute(attribute, SourcedModifiedAttributeValue.GenerateSimple(healer as ISource, attribute, amount, 0f)),
-            $"Lifesteal {amount:0.##} {attribute.GetName()}");
 
         /// <summary>Whether a change is returned damage, which no return returns again and no lifesteal heals from.</summary>
         public static bool Returned(IAttributeImpactCarrier carrier)

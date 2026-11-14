@@ -571,7 +571,7 @@ namespace FarEmerald.PlayForge.Extended.Editor
                 HelpTopic = "abilities/workers",
 
                 SerializedObject = serializedObject,
-                PropertyPaths = new[] { nameof(Ability.OnHit), nameof(Ability.Modifiers), nameof(Ability.Lifesteal), nameof(Ability.WorkerGroup) },
+                PropertyPaths = new[] { nameof(Ability.OnHit), nameof(Ability.Modifiers), nameof(Ability.WorkerGroup) },
                 ImportAcrossTypes = true,
                 OnImportComplete = OnSectionReplaced,
                 OnClearComplete = OnSectionReplaced,
@@ -582,8 +582,6 @@ namespace FarEmerald.PlayForge.Extended.Editor
             workersSection.Content.Add(CreatePropertyField(serializedObject.FindProperty(nameof(Ability.OnHit)), "OnHit", "On Hit"));
             // How it changes other effects, its holder's or those landing on it (TW-7)
             workersSection.Content.Add(CreatePropertyField(serializedObject.FindProperty(nameof(Ability.Modifiers)), "Modifiers", "Modifiers"));
-            // What its holder heals of the damage it deals (TW-15)
-            workersSection.Content.Add(CreatePropertyField(serializedObject.FindProperty(nameof(Ability.Lifesteal)), "Lifesteal", "Lifesteal"));
             workersSection.Content.Add(CreatePropertyField(serializedObject.FindProperty(nameof(Ability.WorkerGroup)), "WorkerGroup", ""));
         }
 
@@ -669,7 +667,7 @@ namespace FarEmerald.PlayForge.Extended.Editor
                 stagesSection.Summary.text = CountOf(ability.Behaviour.Stages?.Count(stage => stage != null) ?? 0, "stage", "stages");
             if (requirementsSection != null) requirementsSection.Summary.text = RequirementsSummary();
             if (componentsSection != null) componentsSection.Summary.text = CountOf(ability.Components?.Count(each => each != null) ?? 0, "component", "components");
-            if (workersSection != null) workersSection.Summary.text = WorkersLine(ability.OnHit, ability.Modifiers, null, ability.Lifesteal, WorkerCount(ability.WorkerGroup));
+            if (workersSection != null) workersSection.Summary.text = WorkersLine(ability.OnHit, ability.Modifiers, WorkerCount(ability.WorkerGroup));
             if (localDataSection != null) localDataSection.Summary.text = CountOf(ability.LocalData?.Count ?? 0, "entry", "entries");
             if (usedBySection != null) usedBySection.Summary.text = usedBy == null ? "" : CountOf(usedBy.Count, "asset", "assets");
         }

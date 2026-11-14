@@ -344,9 +344,6 @@ namespace FarEmerald.PlayForge
         /// <summary>Its components, as <see cref="EntityIdentity.Components"/> (FN-14).</summary>
         public List<AbstractEntityComponent> Components = new();
 
-        /// <summary>Its own lifesteal, as <see cref="EntityIdentity.Lifesteal"/> (TW-15).</summary>
-        public List<LifestealEntry> Lifesteal = new();
-
         /// <summary>Its crowd control rules, as <see cref="EntityIdentity.CrowdControl"/> (TW-16).</summary>
         public CrowdControlRules CrowdControl;
 
@@ -381,7 +378,6 @@ namespace FarEmerald.PlayForge
             Death = data.Death;
             Modifiers = data.Modifiers;
             Components = data.Components;
-            Lifesteal = data.Lifesteal;
             CrowdControl = data.CrowdControl;
         }
 
@@ -431,14 +427,12 @@ namespace FarEmerald.PlayForge
             EffectModifiers.Provide(Modifiers, system);
             // Its auras, its Aura components' (TW-10, FN-14)
             ForgeAuras.Provide(ForgeAuras.Of(Components), system);
-            Lifesteals.Provide(Lifesteal, system);
         }
         public void RemoveWorkers(ISource system)
         {
             WorkerGroup?.RemoveWorkersFrom(system);
             EffectModifiers.Remove(Modifiers, system);
             ForgeAuras.Remove(ForgeAuras.Of(Components), system);
-            Lifesteals.Remove(Lifesteal, system);
         }
     }
 }

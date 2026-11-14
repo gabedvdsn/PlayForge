@@ -730,12 +730,7 @@ namespace FarEmerald.PlayForge.Extended.Editor
             WorkersLine(onHit, modifiers, null, workers);
 
         /// <summary>A Workers section's line with its auras among it: "1 on hit, 2 auras, 1 worker" (TW-10).</summary>
-        protected static string WorkersLine(List<OnHitEntry> onHit, List<EffectModifierEntry> modifiers, List<AuraEntry> auras, int workers) =>
-            WorkersLine(onHit, modifiers, auras, null, workers);
-
-        /// <summary>A Workers section's line with its lifesteals among it: "1 on hit, 1 lifesteal" (TW-15).</summary>
-        protected static string WorkersLine(List<OnHitEntry> onHit, List<EffectModifierEntry> modifiers, List<AuraEntry> auras,
-            List<LifestealEntry> lifesteal, int workers)
+        protected static string WorkersLine(List<OnHitEntry> onHit, List<EffectModifierEntry> modifiers, List<AuraEntry> auras, int workers)
         {
             var parts = new List<string>();
             int hits = onHit?.Count(entry => entry != null) ?? 0;
@@ -744,8 +739,6 @@ namespace FarEmerald.PlayForge.Extended.Editor
             if (hits > 0) parts.Add(CountOf(hits, "on hit", "on hits"));
             if (changes > 0) parts.Add(CountOf(changes, "modifier", "modifiers"));
             if (held > 0) parts.Add(CountOf(held, "aura", "auras"));
-            int steals = lifesteal?.Count(entry => entry != null) ?? 0;
-            if (steals > 0) parts.Add(CountOf(steals, "lifesteal", "lifesteals"));
             if (workers > 0 || parts.Count == 0) parts.Add(CountOf(workers, "worker", "workers"));
             return string.Join(", ", parts);
         }

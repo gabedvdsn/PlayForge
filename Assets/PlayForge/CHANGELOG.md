@@ -1039,6 +1039,9 @@ tracks each fix below by its ID.
   or turning `Enabled` off. Once the first had ended, it threw, and the rest ran on.
 
 ### Removed
+- Items', abilities' and entities' **Lifesteal** lists, with `Lifesteals`, `LifestealEntry`'s worker and
+  `ForgeLifesteal.Heal`: a holder's lifesteal is its Lifesteal attribute, which an effect raises and the Lifesteal worker
+  heals by. An older save's list loads hidden and heals no more; the Problems view names it (FN-15).
 - The old `ForgeContext` constants. `AssetIdentifier` is `AssetTag`; `ContextIdentifier` and `Category` are
   `ContextTag`; `Required`, `Condition` and `Blocked` are `Granted`; `System` is `Affiliation`; `Targeting` is
   `Visibility`; `Impact` is `ImpactType`; `Trigger` is `Event`; `Role` is `AttributeRole`; `Texture` is `TextureSlot`;

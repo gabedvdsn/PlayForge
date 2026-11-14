@@ -50,8 +50,8 @@ Its caster heals half of each loss it deals another.
   heals by, the one your Forge Project's Workers give every entity as a project starts, to its Health role's attribute
   ([WORKERS.md](WORKERS.md#lifesteal)).
 
-For lifesteal on every hit an item's or an ability's holder deals, use its **Lifesteal** list instead
-([ITEMS.md](ITEMS.md#lifesteal)).
+For lifesteal on every hit an entity deals, raise its **Lifesteal** attribute instead, by an item's effect or an entity's
+set ([ITEMS.md](ITEMS.md#lifesteal)).
 
 ## Damage return
 

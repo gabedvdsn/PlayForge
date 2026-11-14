@@ -336,7 +336,7 @@ namespace FarEmerald.PlayForge.Extended.Editor
                 string kind = iterator.propertyType switch
                 {
                     SerializedPropertyType.Generic when iterator.type == nameof(OnHitEntry) => "On Hit",
-                    SerializedPropertyType.Generic when iterator.type == nameof(LifestealEntry) => "Lifesteal",
+                    SerializedPropertyType.ManagedReference when iterator.managedReferenceValue is LifestealImpactWorker => "Lifesteal",
                     SerializedPropertyType.Generic when iterator.type == nameof(AbilityTrigger) => "Trigger",
                     SerializedPropertyType.ManagedReference when iterator.managedReferenceValue is ChangeImpactChange => "Change Impact",
                     _ => null,
