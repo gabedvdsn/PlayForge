@@ -811,6 +811,10 @@ tracks each fix below by its ID.
   Asking whether its sequence was paused took 24 bytes a frame.
 
 ### Fixed
+- Looking at an effect leaves it as it was: Unity's own flags field stored its Purges' Applied By, Any, as Everything,
+  -1, so the inspector changed every effect it showed, a template's child took it as an override, and Unity could
+  assert IsInSyncWithParentSerializedObject. PlayForge's flags fields write only the flags picked, of those their type
+  has (ED-85).
 - A toggle's effect comes off as its ability is forgotten; it stayed on, which nothing could turn off (FN-14).
 - An entity's Death section shows Death's fields in it, each by its name; one field of the whole drew a foldout of its
   own inside the section (FN-17).
