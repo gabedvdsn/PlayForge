@@ -344,6 +344,9 @@ namespace FarEmerald.PlayForge
         /// <summary>Its own auras, as <see cref="EntityIdentity.Auras"/> (TW-10).</summary>
         public List<AuraEntry> Auras = new();
 
+        /// <summary>Its components, as <see cref="EntityIdentity.Components"/> (FN-14).</summary>
+        public List<AbstractEntityComponent> Components = new();
+
         /// <summary>Its own lifesteal, as <see cref="EntityIdentity.Lifesteal"/> (TW-15).</summary>
         public List<LifestealEntry> Lifesteal = new();
 
@@ -381,6 +384,7 @@ namespace FarEmerald.PlayForge
             Death = data.Death;
             Modifiers = data.Modifiers;
             Auras = data.Auras;
+            Components = data.Components;
             Lifesteal = data.Lifesteal;
             CrowdControl = data.CrowdControl;
         }

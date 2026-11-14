@@ -276,6 +276,15 @@ the refusal's `Rule` naming the tag, and one that runs is interrupted as the tag
 ability's **Ignores Crowd Control** (see Activation) opts it out of the rules it names. Code asks with
 `rules.Stopping(ability, tags)`, the first rule that stops the ability, or null.
 
+## Components
+
+An ability's components are features it carries, each a class with hooks into its life, added with the list's **+**
+(FN-14). A component hears the ability **Granted** to an entity and **Removed** from it; is asked whether an activation may start, **CanStart**, where a reason it gives refuses the activation, named by it; and hears an activation **Start**, **Commit** its cost and cooldown, and **End**, by how it ended: done, cancelled or failed. A kind that makes no sense twice is offered only while the ability holds none of it.
+
+A component of your own derives from `AbstractAbilityComponent` and overrides the hooks it needs, each a no-op
+otherwise. It's the ability's, shared by everything that holds it, so what it keeps for one entity's ability it keeps through its
+context: `ctx.GetState<T>(this)`.
+
 ## Workers
 
 Workers are reusable behaviours, picked from a list, that react to what happens to an entity. This group is subscribed

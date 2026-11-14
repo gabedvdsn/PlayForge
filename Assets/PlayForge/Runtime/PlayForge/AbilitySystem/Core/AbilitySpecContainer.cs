@@ -113,6 +113,8 @@ namespace FarEmerald.PlayForge
         private async UniTaskVoid AwaitAbility(AbilityActivationHandle handle)
         {
             bool targetingCancelled = false;
+            // How it ends, which its components hear (FN-14)
+            var how = EAbilityEnd.Done;
             try
             {
                 handle.IsTargeting = true;
@@ -121,6 +123,7 @@ namespace FarEmerald.PlayForge
             catch (OperationCanceledException)
             {
                 targetingCancelled = true;
+                how = EAbilityEnd.Cancelled;
             }
             catch (Exception e)
             {
@@ -128,6 +131,7 @@ namespace FarEmerald.PlayForge
                 // place for good (TS-V)
                 Debug.LogError($"[Ability] {Spec.Base.GetName()} failed in targeting: {e}");
                 targetingCancelled = true;
+                how = EAbilityEnd.Failed;
             }
             finally
             {
@@ -139,11 +143,12 @@ namespace FarEmerald.PlayForge
                 if (handle.Data.TryGetFirstTarget(out var target) && !Spec.ValidateAllActivationRequirements(target, handle.Data))
                 {
                     targetingCancelled = true;
+                    if (how == EAbilityEnd.Done) how = EAbilityEnd.Cancelled;
                 }
 
                 if (targetingCancelled)
                 {
-                    CleanHandle(handle);
+                    CleanHandle(handle, how);
                 }
             }
 
@@ -179,21 +184,26 @@ namespace FarEmerald.PlayForge
                 }
 
                 await handle.Proxy.Activate(handle.Cts.Token, handle.Data);
+
+                // An interrupt ends a run through its sequence, with nothing thrown: its token says it was cancelled (FN-14)
+                if (handle.Cts != null && handle.Cts.IsCancellationRequested) how = EAbilityEnd.Cancelled;
             }
             catch (OperationCanceledException)
             {
                 // Ability in execution is interrupted (cancelled)
+                how = EAbilityEnd.Cancelled;
             }
             catch (Exception e)
             {
                 // Anything else is a broken ability. Report it, rather than leave it looking like one that
                 // did nothing (PF-008)
                 Debug.LogError($"[Ability] {Spec.Base.GetName()} failed: {e}");
+                how = EAbilityEnd.Failed;
             }
             finally
             {
                 handle.IsExecuting = false;
-                CleanHandle(handle);
+                CleanHandle(handle, how);
                 Spec.Source.CompileGrantedTags();
             }
         }
@@ -270,14 +280,14 @@ namespace FarEmerald.PlayForge
             handle.Data.System.ReleaseClaim(this, handle.Data);
         }
 
-        private void CleanHandle(AbilityActivationHandle handle)
+        private void CleanHandle(AbilityActivationHandle handle, EAbilityEnd how)
         {
             handle.ReleaseClaimIfNeeded();
             handle.Proxy.Clean();
             _idleProxies.Add(handle.Proxy);
             handle.CleanTokens();
             RemoveActiveHandle(handle);
-            handle.Data.System.EndActivation(this, handle.Data);
+            handle.Data.System.EndActivation(this, handle.Data, how);
         }
 
         /// <summary>An idle compiled proxy if there is one, or a newly compiled one.</summary>

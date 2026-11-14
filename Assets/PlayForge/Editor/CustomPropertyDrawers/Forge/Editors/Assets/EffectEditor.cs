@@ -41,6 +41,7 @@ namespace FarEmerald.PlayForge.Extended.Editor
         private SectionResult levelsSection;
         private EffectLevelsView levelsView;
         private SectionResult requirementsSection;
+        private SectionResult componentsSection;
         private SectionResult workersSection;
         private SectionResult cuesSection;
         private SectionResult localDataSection;
@@ -106,6 +107,7 @@ namespace FarEmerald.PlayForge.Extended.Editor
             BuildLevelsSection(parent);
             BuildCuesSection(parent);
             BuildRequirementsSection(parent);
+            BuildComponentsSection(parent);
             BuildWorkersSection(parent);
             BuildLocalDataSection(parent);
             BuildUsedBySection(parent);
@@ -547,6 +549,31 @@ namespace FarEmerald.PlayForge.Extended.Editor
             cuesSection.Content.Add(CreatePropertyField(serializedObject.FindProperty(nameof(GameplayEffect.Cues)), "Cues", ""));
         }
 
+        // Its components: features it carries, each a class with hooks into its life, added from the list's + (FN-14)
+        private void BuildComponentsSection(VisualElement parent)
+        {
+            componentsSection = CreateSection(new SectionConfig
+            {
+                Name = "Components",
+                Title = "Components",
+                HelpTopic = "effects/components",
+
+                SerializedObject = serializedObject,
+                PropertyPaths = new[] { nameof(GameplayEffect.Components) },
+                OnImportComplete = OnSectionReplaced,
+                OnClearComplete = OnSectionReplaced,
+            });
+            parent.Add(componentsSection.Section);
+
+            // Each effect keeps its own components, objects a multiple selection can't edit safely (ED-12)
+            if (IsMultiple)
+            {
+                componentsSection.Content.Add(CreateNote("Select one effect to edit its components."));
+                return;
+            }
+            componentsSection.Content.Add(CreatePropertyField(serializedObject.FindProperty(nameof(GameplayEffect.Components)), "Components", ""));
+        }
+
         private void BuildWorkersSection(VisualElement parent)
         {
             workersSection = CreateSection(new SectionConfig
@@ -672,7 +699,7 @@ namespace FarEmerald.PlayForge.Extended.Editor
             // A multiple selection's effects differ, so one line would describe only the first
             if (IsMultiple)
             {
-                var sections = new[] { levelingSection, tagsSection, durationSection, impactSection, levelsSection, cuesSection, requirementsSection, workersSection, localDataSection, usedBySection };
+                var sections = new[] { levelingSection, tagsSection, durationSection, impactSection, levelsSection, cuesSection, requirementsSection, componentsSection, workersSection, localDataSection, usedBySection };
                 foreach (var section in sections.Where(section => section != null)) section.Summary.text = "";
                 return;
             }
@@ -683,6 +710,7 @@ namespace FarEmerald.PlayForge.Extended.Editor
             if (impactSection != null) impactSection.Summary.text = ImpactSummary();
             if (levelsSection != null) levelsSection.Summary.text = LevelsSummary();
             if (requirementsSection != null) requirementsSection.Summary.text = RequirementsSummary();
+            if (componentsSection != null) componentsSection.Summary.text = CountOf(effect.Components?.Count(each => each != null) ?? 0, "component", "components");
             if (workersSection != null) workersSection.Summary.text = WorkersLine(effect.OnHit, effect.Modifiers, effect.Auras, (effect.Workers?.Count(worker => worker != null) ?? 0) + WorkerCount(effect.WorkerGroup));
             if (cuesSection != null) cuesSection.Summary.text = CountOf(effect.Cues?.Count(cue => cue != null) ?? 0, "cue", "cues");
             if (localDataSection != null) localDataSection.Summary.text = CountOf(effect.LocalData?.Count ?? 0, "entry", "entries");

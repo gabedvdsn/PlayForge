@@ -288,6 +288,7 @@ namespace FarEmerald.PlayForge
 
             ability.InitWorkers(Self);
             // ability.WorkerGroup?.ProvideWorkersTo(Self);
+            container.Spec.HearGranted();
 
             return true;
         }
@@ -314,6 +315,7 @@ namespace FarEmerald.PlayForge
             {
                 if (keep != null && keep.TryGetValue(pair.Key, out var kept) && pair.Value.Spec.Base == kept) continue;
                 pair.Value.Spec.Base.RemoveWorkers(Self);
+                pair.Value.Spec.HearRemoved();
                 restoreLeaving.Add(pair.Key);
             }
             foreach (int slot in restoreLeaving) AbilityCache.Remove(slot);
@@ -340,6 +342,7 @@ namespace FarEmerald.PlayForge
                 Inject(index, InterruptSequenceInjection.Instance);
 
             ability.RemoveWorkers(Self);
+            container.Spec.HearRemoved();
 
             // Off the active list too, where the next claim check looked its slot up and threw, and gone before
             // the tags are compiled, which counted it still granted (GAS-20)
@@ -986,6 +989,9 @@ namespace FarEmerald.PlayForge
 
             ActiveCache[data.Request.Policy].Add(container.Index);
 
+            // Its components hear it start (FN-14)
+            container.Spec.HearStart(data);
+
             return true;
         }
 
@@ -1009,7 +1015,7 @@ namespace FarEmerald.PlayForge
         /// Called when the ability has fully completed (all stages done, handle cleaned up).
         /// Removes the ability from ActiveCache.
         /// </summary>
-        public void EndActivation(AbilitySpecContainer container, AbilityDataPacket data)
+        public void EndActivation(AbilitySpecContainer container, AbilityDataPacket data, EAbilityEnd how = EAbilityEnd.Done)
         {
             // A removed ability's slot left the active list with it, and may hold another ability by now (GAS-20)
             if (AbilityCache.TryGetValue(container.Index, out var cached) && cached == container)
@@ -1026,6 +1032,9 @@ namespace FarEmerald.PlayForge
             {
                 Callbacks.AbilityEnded(AbilityCallbackStatus.GenerateForAbilityEvent(data));
             }
+
+            // Its components hear it end, by how it did (FN-14)
+            container.Spec.HearEnd(data, how);
         }
 
         #endregion

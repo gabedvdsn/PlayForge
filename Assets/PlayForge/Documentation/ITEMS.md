@@ -99,6 +99,15 @@ field, makes an effect linked to this item.
 
 To make the ability's levels follow the item's, use **Link Ability & Effects** in Leveling.
 
+## Components
+
+An item's components are features it carries, each a class with hooks into its life, added with the list's **+**
+(FN-14). A component hears the item **Given** to an entity, **Equipped**, **Unequipped** and **Removed**. A kind that makes no sense twice is offered only while the item holds none of it.
+
+A component of your own derives from `AbstractItemComponent` and overrides the hooks it needs, each a no-op
+otherwise. It's the item's, shared by everything that holds it, so what it keeps for one entity's item it keeps through its
+context: `ctx.GetState<T>(this)`.
+
 ## Workers
 
 Workers are reusable behaviours, picked from a list, that react to what happens to an entity. This group is subscribed

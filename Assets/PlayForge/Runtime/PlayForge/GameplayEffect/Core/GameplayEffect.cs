@@ -56,6 +56,11 @@ namespace FarEmerald.PlayForge
         [SerializeReference]
         public List<AbstractEffectWorker> Workers;
 
+        [Tooltip("Its components: features it carries, each a class with hooks into its life, as it lands, ticks, hits and " +
+                 "ends (FN-14)")]
+        [SerializeReference]
+        public List<AbstractEffectComponent> Components = new();
+
         [Tooltip("Workers it gives the one it's on while it lasts, and takes back as it goes: attribute, impact, tag and " +
                  "analysis workers, as a debuff that changes how its target takes damage, or shatters it below 13% (TW-13)")]
         public StandardWorkerGroup WorkerGroup;

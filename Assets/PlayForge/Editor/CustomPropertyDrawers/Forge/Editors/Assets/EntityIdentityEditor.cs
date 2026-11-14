@@ -42,6 +42,7 @@ namespace FarEmerald.PlayForge.Extended.Editor
         private SectionResult attributesSection;
         private SectionResult abilitiesSection;
         private SectionResult itemsSection;
+        private SectionResult componentsSection;
         private SectionResult workersSection;
         private SectionResult deathSection;
         private SectionResult localDataSection;
@@ -114,6 +115,7 @@ namespace FarEmerald.PlayForge.Extended.Editor
             BuildItemsSection(parent);
             // The entity's own, before Workers and Local Data, as the style doc orders them
             BuildDeathSection(parent);
+            BuildComponentsSection(parent);
             BuildWorkersSection(parent);
             BuildLocalDataSection(parent);
             BuildUsedBySection(parent);
@@ -483,6 +485,31 @@ namespace FarEmerald.PlayForge.Extended.Editor
         // Workers Section
         // ═══════════════════════════════════════════════════════════════════════════
 
+        // Its components: features it carries, each a class with hooks into its life, added from the list's + (FN-14)
+        private void BuildComponentsSection(VisualElement parent)
+        {
+            componentsSection = CreateSection(new SectionConfig
+            {
+                Name = "Components",
+                Title = "Components",
+                HelpTopic = "entities/components",
+
+                SerializedObject = serializedObject,
+                PropertyPaths = new[] { nameof(EntityIdentity.Components) },
+                OnImportComplete = OnSectionReplaced,
+                OnClearComplete = OnSectionReplaced,
+            });
+            parent.Add(componentsSection.Section);
+
+            // Each entity keeps its own components, objects a multiple selection can't edit safely (ED-12)
+            if (IsMultiple)
+            {
+                componentsSection.Content.Add(CreateNote("Select one entity to edit its components."));
+                return;
+            }
+            componentsSection.Content.Add(CreatePropertyField(serializedObject.FindProperty(nameof(EntityIdentity.Components)), "Components", ""));
+        }
+
         private void BuildWorkersSection(VisualElement parent)
         {
             workersSection = CreateSection(new SectionConfig
@@ -613,7 +640,7 @@ namespace FarEmerald.PlayForge.Extended.Editor
             // A multiple selection's entities differ, so one line would describe only the first
             if (IsMultiple)
             {
-                var sections = new[] { identitySection, levelingSection, tagsSection, attributesSection, abilitiesSection, itemsSection, workersSection, localDataSection, usedBySection };
+                var sections = new[] { identitySection, levelingSection, tagsSection, attributesSection, abilitiesSection, itemsSection, componentsSection, workersSection, localDataSection, usedBySection };
                 foreach (var section in sections.Where(section => section != null)) section.Summary.text = "";
                 return;
             }
@@ -625,6 +652,7 @@ namespace FarEmerald.PlayForge.Extended.Editor
             if (abilitiesSection != null)
                 abilitiesSection.Summary.text = CountOf(entity.StartingAbilities?.Count(ability => ability != null) ?? 0, "ability", "abilities");
             if (itemsSection != null) itemsSection.Summary.text = ItemsSummary();
+            if (componentsSection != null) componentsSection.Summary.text = CountOf(entity.Components?.Count(each => each != null) ?? 0, "component", "components");
             if (workersSection != null) workersSection.Summary.text = WorkersLine(null, entity.Modifiers, entity.Auras, entity.Lifesteal, WorkerCount(entity.WorkerGroup));
             if (localDataSection != null) localDataSection.Summary.text = CountOf(entity.LocalData?.Count ?? 0, "entry", "entries");
             if (usedBySection != null) usedBySection.Summary.text = usedBy == null ? "" : CountOf(usedBy.Count, "asset", "assets");

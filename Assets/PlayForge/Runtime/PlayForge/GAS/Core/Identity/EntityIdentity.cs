@@ -59,6 +59,10 @@ namespace FarEmerald.PlayForge
         [Tooltip("Auras it holds on those near it, while it lives (TW-10)")]
         public List<AuraEntry> Auras = new();
 
+        [Tooltip("Its components: features it carries, each a class with hooks into its life, as it registers, dies, revives and ends (FN-14)")]
+        [SerializeReference]
+        public List<AbstractEntityComponent> Components = new();
+
         [Tooltip("It heals a share of each loss it deals, while it lives (TW-15)")]
         public List<LifestealEntry> Lifesteal = new();
 

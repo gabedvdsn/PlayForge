@@ -40,6 +40,7 @@ namespace FarEmerald.PlayForge.Extended.Editor
         private SectionResult activationSection;
         private SectionResult stagesSection;
         private SectionResult requirementsSection;
+        private SectionResult componentsSection;
         private SectionResult workersSection;
         private SectionResult localDataSection;
         private SectionResult usedBySection;
@@ -111,6 +112,7 @@ namespace FarEmerald.PlayForge.Extended.Editor
             BuildActivationSection(parent);
             BuildStagesSection(parent);
             BuildRequirementsSection(parent);
+            BuildComponentsSection(parent);
             BuildWorkersSection(parent);
             BuildLocalDataSection(parent);
             BuildUsedBySection(parent);
@@ -548,6 +550,31 @@ namespace FarEmerald.PlayForge.Extended.Editor
         // Workers, Local Data and Used By Sections
         // ═══════════════════════════════════════════════════════════════════════════
 
+        // Its components: features it carries, each a class with hooks into its life, added from the list's + (FN-14)
+        private void BuildComponentsSection(VisualElement parent)
+        {
+            componentsSection = CreateSection(new SectionConfig
+            {
+                Name = "Components",
+                Title = "Components",
+                HelpTopic = "abilities/components",
+
+                SerializedObject = serializedObject,
+                PropertyPaths = new[] { nameof(Ability.Components) },
+                OnImportComplete = OnSectionReplaced,
+                OnClearComplete = OnSectionReplaced,
+            });
+            parent.Add(componentsSection.Section);
+
+            // Each ability keeps its own components, objects a multiple selection can't edit safely (ED-12)
+            if (IsMultiple)
+            {
+                componentsSection.Content.Add(CreateNote("Select one ability to edit its components."));
+                return;
+            }
+            componentsSection.Content.Add(CreatePropertyField(serializedObject.FindProperty(nameof(Ability.Components)), "Components", ""));
+        }
+
         private void BuildWorkersSection(VisualElement parent)
         {
             workersSection = CreateSection(new SectionConfig
@@ -637,7 +664,7 @@ namespace FarEmerald.PlayForge.Extended.Editor
 
         private void UpdateSummaries()
         {
-            var sections = new[] { levelingSection, tagsSection, activationSection, stagesSection, requirementsSection, workersSection, localDataSection, usedBySection };
+            var sections = new[] { levelingSection, tagsSection, activationSection, stagesSection, requirementsSection, componentsSection, workersSection, localDataSection, usedBySection };
             // A multiple selection's abilities differ, so one line would describe only the first
             if (IsMultiple)
             {
@@ -656,6 +683,7 @@ namespace FarEmerald.PlayForge.Extended.Editor
             if (stagesSection != null)
                 stagesSection.Summary.text = CountOf(ability.Behaviour.Stages?.Count(stage => stage != null) ?? 0, "stage", "stages");
             if (requirementsSection != null) requirementsSection.Summary.text = RequirementsSummary();
+            if (componentsSection != null) componentsSection.Summary.text = CountOf(ability.Components?.Count(each => each != null) ?? 0, "component", "components");
             if (workersSection != null) workersSection.Summary.text = WorkersLine(ability.OnHit, ability.Modifiers, ability.Auras, ability.Lifesteal, WorkerCount(ability.WorkerGroup));
             if (localDataSection != null) localDataSection.Summary.text = CountOf(ability.LocalData?.Count ?? 0, "entry", "entries");
             if (usedBySection != null) usedBySection.Summary.text = usedBy == null ? "" : CountOf(usedBy.Count, "asset", "assets");

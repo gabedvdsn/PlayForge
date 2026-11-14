@@ -7,6 +7,12 @@ tracks each fix below by its ID.
 ## [Unreleased]
 
 ### Added
+- Components: each effect, ability, entity and item has a Components section, above Workers, whose list's + adds a
+  component, a class with hooks into its asset's life: an effect's Land, Tick, Hit and End; an ability's Granted,
+  Removed, CanStart, Start, Commit and End; an entity's Register, Death, Revive and End; an item's Given, Equipped,
+  Unequipped and Removed. A project's own derives from `AbstractEffectComponent`, `AbstractAbilityComponent`,
+  `AbstractEntityComponent` or `AbstractItemComponent` and keeps what it keeps for each holder through its context's
+  `GetState` (FN-14).
 - A project's code tags reach the tag pickers: each static Tag field or property its code marks `[ForgeTagExposed]`,
   under the contexts it names, or under Code; a code tag not marked isn't offered (TAG-5).
 - Every PlayForge asset's inspector opens with the shared header, a Requirement Template's, Crowd Control Rules', a Tag

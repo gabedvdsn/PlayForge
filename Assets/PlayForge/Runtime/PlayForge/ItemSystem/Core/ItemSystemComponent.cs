@@ -90,8 +90,9 @@ namespace FarEmerald.PlayForge
 
             itemIndex = ItemShelf.Count;
             var container = new ItemSpecContainer(item.Generate(Self, level), itemIndex);
-            
+
             ItemShelf.Add(container);
+            container.HearGiven();
             
             Callbacks.ItemGiven(ItemCallbackStatus.Generate(container, this, true));
             
@@ -242,6 +243,7 @@ namespace FarEmerald.PlayForge
             {
                 ItemShelf[i].Index -= 1;
             }
+            container.HearRemoved();
             
             Callbacks.ItemRemoved(ItemCallbackStatus.Generate(container, this, true));
 
@@ -293,7 +295,11 @@ namespace FarEmerald.PlayForge
         internal void ClearForRestore()
         {
             if (ItemShelf == null) return;
-            foreach (var container in ItemShelf) container.ForgetForRestore();
+            foreach (var container in ItemShelf)
+            {
+                container.ForgetForRestore();
+                container.HearRemoved();
+            }
             ItemShelf.Clear();
         }
 
@@ -309,6 +315,7 @@ namespace FarEmerald.PlayForge
             var container = new ItemSpecContainer(item.Generate(Self, level), ItemShelf.Count);
             container.Spec.Stacks = System.Math.Clamp(stacks, 1, System.Math.Max(1, item.Definition.StackSize));
             ItemShelf.Add(container);
+            container.HearGiven();
             if (equipped) container.RestoreEquipped();
             return container;
         }

@@ -707,6 +707,18 @@ from. It lives outside `Assets/` so it never ships in the package.
   project's coded behaviours to carry values under in their processes' data packets, grouped in a section of their own
   rather than pruned. **Six properties take their texts' names**, each rename in the CHANGELOG; their texts, the tags'
   identities, stay.
+- Decision 76, 2026-11-13: FN-14's shape, the user's choices. **Components stand beside Workers**: components are the
+  asset's features, workers what an effect does to impacts, each in its own section, **Components above Workers**.
+  **The hooks**: an effect's Land, Tick, Hit and End; an ability's Granted, Removed, CanStart, Start, Commit and End,
+  with how it ended; an entity's Register, Death, Revive and End; an item's Given, Equipped, Unequipped and Removed.
+  **An asset may hold two of a kind**, each its own, a kind that makes no sense twice refusing a second. **Old fields
+  move as an asset loads**, in the editor and in a build, and a pass, Tools → PlayForge → Move to Components, saves
+  each asset that moved.
+- Decision 77, 2026-11-13: FN-14's new kinds of component, the user's choices. **Cast Range** on abilities, the one
+  range an ability has: a target beyond it is refused, and targeting and the lab's bots read it. **Spread** on effects,
+  which spreads its effect to those near the one it's on at the moments it names, not only as that one dies. **Bounty**
+  and **Respawn** on entities; **Set Bonus** and **Uses** on items. **A component isn't what an ability's stages can
+  hold**: a chain that jumps from target to target is an ability task, and no other ability component was wanted.
 
 **Open. Ask the user; do not assume:**
 1. ~~**Uncommitted changes**~~: decided, see above.
@@ -1341,7 +1353,7 @@ Death's section and a body for a running entity.
 | FN-11 | The less common assets made easier to make: **New** or **Open** beside a Value Pipeline, Crowd Control Rules or Effect Modifier field; Value Pipelines in the Demo; and the docs say a Forge Tag Library belongs to no project, every one being read wherever it is. Done: a Value Pipeline, Crowd Control Rules or Effect Modifier field is a reference as a PlayForge asset's is, New beside it making one named for the asset and the field, and Open once it names one (`AbstractForgeObjectDrawer.cs`, `LessCommonAssetDrawers.cs`); the getting-started guide says a Tag Library belongs to no project. To do: Value Pipelines in the Demo, which change the damage its tests read | UI | open |
 | FN-12 | Every asset type has its editor, with headers, and is in The Forge. Done (Decision 72): every PlayForge asset's inspector opens with the shared header, its name and type, its line, its problems, Open in The Forge or Show in Project, and the asset menu, the Requirement Template, Crowd Control Rules, Tag Library, Forge Project and the lab's assets with inspectors of their own; The Forge lists Value Pipelines, Effect Modifiers and Crowd Control Rules, its toolbar the six PlayForge assets as toggles and the rest under More (`ForgeAssetHeaders.cs`, `LabAssetEditors.cs`, `PlayForgeSettings.cs`, `ForgeValidator.cs`, `TheForge.cs`, the Scaler asset's, Value Pipeline's and Effect Modifier's inspectors, and `EffectModifier.cs`, the class in a file of its own name, which a saved Effect Modifier needs to find its script) | UI | verified |
 | FN-13 | The PlayForge Create menu ordered. Done: the Forge Project; then the assets The Forge lists first, in its order; then the numbers, rules and the Tag Library; then the lab's assets; then the Demo's roster, each group apart by a line, and the Requirement Template out of a Templates submenu of its own (the Create menu attributes) | UI | verified |
-| FN-14 | Components (Decision 70): a Components section on effects, abilities, items and entities, distinct from Unity's, components added from a menu, each a class with hooks into its asset (an effect's land, tick, end and hit; an ability's start and end; an entity's register and death). Effects' Area, Transfers and Auras, abilities' Charges, Toggles and Auras, and entities' Auras become components, existing assets moved by a one-off pass | Refactor | open |
+| FN-14 | Components (Decision 70): a Components section on effects, abilities, items and entities, distinct from Unity's, components added from a menu, each a class with hooks into its asset (an effect's land, tick, end and hit; an ability's start and end; an entity's register and death). Effects' Area, Transfers and Auras, abilities' Charges, Toggles and Auras, and entities' Auras become components, existing assets moved by a one-off pass. Done so far, the framework (FN-14a, Decision 76): each effect, ability, entity and item holds a list of components, `[SerializeReference]`, beside its workers, each a class whose hooks, virtual no-ops, hear its moments: an effect's Land, Tick, Hit and End, where its workers run; an ability's Granted and Removed, CanStart, whose reason refuses an activation, Start, Commit and End, by how it ended, done, cancelled or failed; an entity's Register, Death, Revive and End; an item's Given, Equipped, Unequipped and Removed. A component is its asset's, so what it keeps for one holder it keeps in that holder's state, through its context. A Components section above Workers in each inspector adds them from the list's +, a kind that allows one offered while its asset holds none (`ForgeComponents.cs`, `ComponentDrawers.cs`, the four assets, their specs and the four inspectors). To do: the features moved into components, and the pass; the new kinds of Decision 77 | Refactor | open |
 | FN-15 | Lifesteal is an attribute an impact worker reads, a share of what its holder deals healing it; the worker given project-wide, as workers every entity has on its Forge Project, or on an entity, and never run twice for one (Decision 70); the effects' and items' own lifesteal fields go, their assets moved onto the attribute | Refactor | open |
 | FN-16 | Effect purging: research how MOBAs purge effects (tiers that an effect needs at least to be purged, effects no purge takes, the system purging anything), then a shape for the user to decide. A death that keeps the entity purges what was applied but what's kept, as cooldowns and effects its abilities and items grant passively, and what else research finds; and whether a dead entity's gains and losses are 0 by a pipeline-wide modifier. It takes the place of Death's Ends Effects Tagged, which may need every effect tag of a project | Feature | open |
 | FN-17 | The Death section's single collapsible field inside it looks out of place. Done: Death's fields stand in the section, each by its name, where one field of its whole drew a foldout of its own inside it (`EntityIdentityEditor.cs`) | UI | verified |
@@ -1397,6 +1409,17 @@ GAS-4 with GAS-5, PC-6, and TS-I with PC-5.
 ## Log
 
 Record baselines, gate results and notable decisions here, newest first.
+
+- 2026-11-13, **FN-14a: components, the framework.** Each effect, ability, entity and item holds a list of components
+  beside its workers (Decision 76), each a class whose hooks hear its asset's moments: an effect land, tick, hit and
+  end, as its workers do; an ability granted, asked whether it may start, started, committed, ended by how, and
+  removed; an entity register, die, revive and end; an item given, equipped, unequipped and removed. A component is its
+  asset's, shared by every holder, so what it keeps for one holder it keeps in that one's state. Each inspector has a
+  Components section above Workers, its list's + offering the kinds, a kind that allows one only while its asset holds
+  none. An ability's activation now knows how it ended, cancelled or failed, which only a component hears; its callback
+  still says Success.
+  - Red first: FN-14's tests don't compile against HEAD, its component types being new
+  - Gates, on a frozen snapshot of the package: EditMode 916 of 919, ED-61 red from the working tree's lifecycle change, ED-16 for the new sections' help topics, since added, and The Forge's sorting stress test, both green run again alone; PlayMode 1829 of 1849, 8 skipped, the 12 known reds; golden 25 of 25.
 
 - 2026-11-13, **FN-17: an entity's Death fields stand in its section.** The Death section held one field, the entity's
   whole Death, which drew a foldout of its own inside the section, so the section opened onto another to open. Its

@@ -118,6 +118,15 @@ Scale, the entity's time scale is its game's code's to set, through `GetClock().
 Each Max field is a number, or, by its kind, a scaler that changes the limit with the entity's level, with its rounding
 ([SCALERS.md](SCALERS.md)). A give or equip that breaks a limit fails.
 
+## Components
+
+An entity's components are features it carries, each a class with hooks into its life, added with the list's **+**
+(FN-14). A component hears the entity **Register**, its systems set up; **Death**, whether it stays or ends; **Revive**, for one that stays; and **End**. A kind that makes no sense twice is offered only while the entity holds none of it.
+
+A component of your own derives from `AbstractEntityComponent` and overrides the hooks it needs, each a no-op
+otherwise. It's the entity's, shared by everything that holds it, so what it keeps for one entity it keeps through its
+context: `ctx.GetState<T>(this)`.
+
 ## Workers
 
 Workers are reusable behaviours, picked from a list, that react to what happens to an entity. This group is subscribed

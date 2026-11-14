@@ -18,6 +18,25 @@ namespace FarEmerald.PlayForge
             Charges = new AbilityCharges(this);
         }
 
+        private ComponentStates componentStates;
+
+        /// <summary>What its ability's components keep for this entity's ability (FN-14).</summary>
+        public ComponentStates ComponentStates => componentStates ??= new ComponentStates();
+
+        // Its ability's components, each hearing a moment of it (FN-14)
+        internal void HearGranted() => Hear(component => component.Granted(new AbilityComponentContext(this)));
+        internal void HearRemoved() => Hear(component => component.Removed(new AbilityComponentContext(this)));
+        internal void HearStart(ProcessDataPacket data) => Hear(component => component.Start(new AbilityComponentContext(this, data)));
+        internal void HearEnd(ProcessDataPacket data, EAbilityEnd how) => Hear(component => component.End(new AbilityComponentContext(this, data), how));
+        private void HearCommit(ProcessDataPacket data) => Hear(component => component.Commit(new AbilityComponentContext(this, data)));
+
+        private void Hear(Action<AbstractAbilityComponent> moment)
+        {
+            if (Base.Components == null) return;
+            foreach (var component in Base.Components)
+                if (component != null) moment(component);
+        }
+
         /// <summary>
         /// Applies the ability's cooldown and cost to its caster, each with the magnitudes the caller set on the
         /// activation's data, so a caller can size them as it sizes the ability's other effects (FEAT-2).
@@ -28,11 +47,13 @@ namespace FarEmerald.PlayForge
             if (Base.Toggles is not null)
             {
                 Toggle(data);
+                HearCommit(data);
                 return;
             }
 
             SpendCooldown(data);
             PayCosts(data);
+            HearCommit(data);
         }
 
         // A charge spent, as its Recharge says, where its charges are counted; or else its cooldown (TW-17)
@@ -177,6 +198,17 @@ namespace FarEmerald.PlayForge
                     default:
                         rule = check.GetName();
                         return EActivationRefusal.Rule;
+                }
+            }
+
+            // Its components, any of which may refuse it, named by its reason (FN-14)
+            if (Base.Components != null)
+            {
+                foreach (var component in Base.Components)
+                {
+                    if (component?.CanStart(new AbilityComponentContext(this, data)) is not { } reason) continue;
+                    rule = reason;
+                    return EActivationRefusal.Rule;
                 }
             }
             return EActivationRefusal.None;

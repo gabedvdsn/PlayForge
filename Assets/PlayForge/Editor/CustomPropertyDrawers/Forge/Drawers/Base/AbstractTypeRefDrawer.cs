@@ -30,6 +30,9 @@ namespace FarEmerald.PlayForge.Extended.Editor
         /// <summary>Which kinds the picker offers.</summary>
         protected virtual bool FilterType(Type type) => true;
 
+        /// <summary>Whether the picker offers a kind to this field, as a component of a kind its asset holds once isn't (FN-14).</summary>
+        protected virtual bool Offers(SerializedProperty prop, Type type) => true;
+
         /// <summary>A kind's class name as its name starts, before it's spaced out: by default without "AbilityTask" or "Task".</summary>
         protected virtual string CleanTypeName(string typeName)
         {
@@ -167,7 +170,7 @@ namespace FarEmerald.PlayForge.Extended.Editor
 
         /// <summary>The kinds the picker offers, each with its name, in name order.</summary>
         internal IReadOnlyList<(Type Type, string Name)> KindsFor(SerializedProperty prop) =>
-            GetEntries().Where(type => type != null && !type.IsAbstract)
+            GetEntries().Where(type => type != null && !type.IsAbstract && Offers(prop, type))
                 .Select(type => (type, GetStringValue(prop, type)))
                 .OrderBy(kind => kind.Item2, StringComparer.OrdinalIgnoreCase)
                 .ToList();

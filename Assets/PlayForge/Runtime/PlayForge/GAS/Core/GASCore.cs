@@ -56,6 +56,19 @@ namespace FarEmerald.PlayForge
         /// <summary>The entity's settings as this GAS uses them, or null for a hub given none.</summary>
         public RuntimeEntityIdentity Identity { get; private set; }
 
+        // What its identity's components keep for it (FN-14)
+        private readonly ComponentStates componentStates = new();
+
+        // Its identity's components, each hearing a moment of it (FN-14)
+        private void HearComponents(System.Action<AbstractEntityComponent, EntityComponentContext> moment)
+        {
+            var components = Identity?.Components;
+            if (components == null) return;
+            var ctx = new EntityComponentContext(owner, componentStates);
+            foreach (var component in components)
+                if (component != null) moment(component, ctx);
+        }
+
         /// <summary>The entity's own time, its time scale times the game's (FEAT-7).</summary>
         public EntityClock Clock { get; } = new();
 
@@ -133,6 +146,9 @@ namespace FarEmerald.PlayForge
 
             // Its body, where it is (TW-4)
             SpawnBody();
+
+            // Its components hear it register, its systems set up (FN-14)
+            HearComponents((component, ctx) => component.Register(ctx));
 
             Callbacks?.SystemInitialized();
         }
@@ -284,6 +300,9 @@ namespace FarEmerald.PlayForge
         /// </summary>
         public void WhenTerminate()
         {
+            // Its components hear it end, before what it holds goes (FN-14)
+            HearComponents((component, ctx) => component.End(ctx));
+
             // Its auras' effects come off each they held them on (TW-10)
             Auras.Clear();
 
@@ -342,6 +361,9 @@ namespace FarEmerald.PlayForge
             Send(owner, Tags.DIED, EventData(killer, owner));
             if (killer is IGameplayAbilitySystem slayer) Send(slayer, Tags.KILL, EventData(killer, owner));
 
+            // Its components hear it die (FN-14)
+            HearComponents((component, ctx) => component.Death(ctx));
+
             // One that stays dies at its frame's end and stays; any other ends there, as it always did (TW-4)
             if (EntityDeath.Stays(Identity?.Death)) pendingDeath = true;
             else pendingDestruction = true;
@@ -369,6 +391,9 @@ namespace FarEmerald.PlayForge
             SpawnBody();
             Callbacks?.EntityRevived(owner);
             Send(owner, Tags.REVIVED, EventData(null, owner));
+
+            // Its components hear it revive (FN-14)
+            HearComponents((component, ctx) => component.Revive(ctx));
             return true;
         }
 

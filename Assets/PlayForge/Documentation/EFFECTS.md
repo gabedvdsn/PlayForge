@@ -313,6 +313,15 @@ each holds, with its Removed By rows where it names any, as Attribute Shift stop
 its tags pass and its conditions all hold. The Ongoing and Removal conditions are checked at the entity's end of frame
 while the effect lasts, as no tag needs to change for an attribute they read to, and before each tick as well.
 
+## Components
+
+An effect's components are features it carries, each a class with hooks into its life, added with the list's **+**
+(FN-14). A component hears the effect **Land** on the entity it's on, **Tick** each period, **Hit** as an impact it deals lands, and **End** as it comes off: an instant effect at once, a lasting one as it's removed, at the moments its workers do. A kind that makes no sense twice is offered only while the effect holds none of it.
+
+A component of your own derives from `AbstractEffectComponent` and overrides the hooks it needs, each a no-op
+otherwise. It's the effect's, shared by everything that holds it, so what it keeps for one application of it it keeps through its
+context: `ctx.GetState<T>(this)`.
+
 ## Workers
 
 Effect workers react to this effect's own events. A worker can act when the effect is applied, when it ticks, when it

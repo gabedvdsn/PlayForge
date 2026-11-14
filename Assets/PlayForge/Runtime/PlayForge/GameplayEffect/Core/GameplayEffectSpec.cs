@@ -47,6 +47,10 @@ namespace FarEmerald.PlayForge
 
         // Each worker's state for this application, made the first time the worker asks (FEAT-29)
         private Dictionary<AbstractEffectWorker, object> workerStates;
+        private ComponentStates componentStates;
+
+        /// <summary>What the effect's components keep for this application of it (FN-14).</summary>
+        public ComponentStates ComponentStates => componentStates ??= new ComponentStates();
 
         /// <summary>
         /// A worker's state for this application of the effect, made the first time the worker asks for it and kept
@@ -213,18 +217,30 @@ namespace FarEmerald.PlayForge
         public void RunWorkerApplication(EffectWorkerContext ctx)
         {
             foreach (AbstractEffectWorker worker in Base.Workers) ctx.ActionQueue.EnqueueRange(worker.OnEffectApplication(ctx));
+            // Its components hear it, at the moment its workers do (FN-14)
+            if (Base.Components != null)
+                foreach (var component in Base.Components) component?.Land(new EffectComponentContext(ctx));
         }
         public void RunWorkerTick(EffectWorkerContext ctx)
         {
             foreach (var worker in Base.Workers) ctx.ActionQueue.EnqueueRange(worker.OnEffectTick(ctx));
+            // Its components hear it, at the moment its workers do (FN-14)
+            if (Base.Components != null)
+                foreach (var component in Base.Components) component?.Tick(new EffectComponentContext(ctx));
         }
         public void RunWorkerRemoval(EffectWorkerContext ctx)
         {
             foreach (AbstractEffectWorker worker in Base.Workers) ctx.ActionQueue.EnqueueRange(worker.OnEffectRemoval(ctx));
+            // Its components hear it, at the moment its workers do (FN-14)
+            if (Base.Components != null)
+                foreach (var component in Base.Components) component?.End(new EffectComponentContext(ctx));
         }
         public void RunWorkerImpact(EffectWorkerContext ctx)
         {
             foreach (AbstractEffectWorker worker in Base.Workers) ctx.ActionQueue.EnqueueRange(worker.OnEffectImpact(ctx));
+            // Its components hear it, at the moment its workers do (FN-14)
+            if (Base.Components != null)
+                foreach (var component in Base.Components) component?.Hit(new EffectComponentContext(ctx));
         }
         public Dictionary<IScaler, AttributeValue?> GetSourcedCapturedAttributes()
         {

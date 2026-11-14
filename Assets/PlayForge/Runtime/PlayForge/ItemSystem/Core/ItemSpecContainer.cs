@@ -81,6 +81,7 @@ namespace FarEmerald.PlayForge
             
             // Provide workers
             Spec.Base.InitWorkers(Spec.Source);
+            HearEquipped();
             // Spec.Base.WorkerGroup?.ProvideWorkersTo(Spec.Source);
             
             // Recompile tags (effects already added their tags, but this ensures consistency)
@@ -117,6 +118,7 @@ namespace FarEmerald.PlayForge
             
             // Remove workers
             Spec.Base.RemoveWorkers(Spec.Source);
+            HearUnequipped();
             // Spec.Base.WorkerGroup?.RemoveWorkersFrom(Spec.Source);
             
             // Ahead of the compile, which is what reads it
@@ -229,6 +231,26 @@ namespace FarEmerald.PlayForge
                     : -1;
             }
             Spec.Base.InitWorkers(Spec.Source);
+            HearEquipped();
+        }
+
+        private ComponentStates componentStates;
+
+        /// <summary>What its item's components keep for this entity's item (FN-14).</summary>
+        public ComponentStates ComponentStates => componentStates ??= new ComponentStates();
+
+        // Its item's components, each hearing a moment of it (FN-14)
+        internal void HearGiven() => Hear(component => component.Given(new ItemComponentContext(this)));
+        internal void HearRemoved() => Hear(component => component.Removed(new ItemComponentContext(this)));
+        private void HearEquipped() => Hear(component => component.Equipped(new ItemComponentContext(this)));
+        private void HearUnequipped() => Hear(component => component.Unequipped(new ItemComponentContext(this)));
+
+        private void Hear(System.Action<AbstractItemComponent> moment)
+        {
+            var components = Spec?.Base?.Components;
+            if (components == null) return;
+            foreach (var component in components)
+                if (component != null) moment(component);
         }
 
         /// <summary>Taken off by a restore, with nothing told. Its effects and its ability went with the rest.</summary>
@@ -237,6 +259,7 @@ namespace FarEmerald.PlayForge
             if (!IsEquipped) return;
 
             Spec.Base.RemoveWorkers(Spec.Source);
+            HearUnequipped();
             grantedAbilityIndex = -1;
             IsEquipped = false;
         }
