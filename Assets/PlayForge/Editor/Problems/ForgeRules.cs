@@ -417,6 +417,25 @@ namespace FarEmerald.PlayForge.Extended.Editor
     /// impact's, or one that names no attribute to give or to get; and an ability that toggles an Instant effect, which is
     /// never on to turn off.
     /// </summary>
+    /// <summary>An item whose Uses never counts, as it lends no ability to use (FN-14).</summary>
+    internal sealed class UsesRule : ForgeValidationRule
+    {
+        public override string Name => "Uses that never count";
+
+        public override void Check(Object asset, List<ForgeProblem> problems)
+        {
+            if (asset is not Item item || item.Components == null || item.ActiveAbility != null) return;
+            for (int i = 0; i < item.Components.Count; i++)
+            {
+                if (item.Components[i] is not UsesItemComponent) continue;
+                problems.Add(new ForgeProblem(asset, ForgeProblemSeverity.Warning,
+                    "Its Uses never count: it has no Active Ability to use. Give it one.",
+                    $"{nameof(Item.Components)}.Array.data[{i}]"));
+                return;
+            }
+        }
+    }
+
     /// <summary>An entity whose Respawn never revives it, as it ends as it dies (FN-14).</summary>
     internal sealed class RespawnRule : ForgeValidationRule
     {

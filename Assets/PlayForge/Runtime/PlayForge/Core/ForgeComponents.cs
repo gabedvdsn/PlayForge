@@ -230,6 +230,11 @@ namespace FarEmerald.PlayForge
 
         /// <summary>As the item is taken away.</summary>
         public virtual void Removed(ItemComponentContext ctx) { }
+
+        /// <summary>
+        /// As its holder's use of the item's ability ends, having paid what it costs: one use of the item (FN-14).
+        /// </summary>
+        public virtual void Used(ItemComponentContext ctx) { }
     }
 
     /// <summary>What an item's component hears a moment of its item with (FN-14).</summary>
@@ -241,7 +246,17 @@ namespace FarEmerald.PlayForge
         /// <summary>The entity that holds the item.</summary>
         public ISource Source => Container?.Spec?.Source;
 
-        public ItemComponentContext(ItemSpecContainer container) => Container = container;
+        /// <summary>
+        /// Whether the moment comes from a load, which puts back what the component's earlier moments did, as the effects
+        /// it applied (FN-14).
+        /// </summary>
+        public readonly bool Restoring;
+
+        public ItemComponentContext(ItemSpecContainer container, bool restoring = false)
+        {
+            Container = container;
+            Restoring = restoring;
+        }
 
         /// <summary>What <paramref name="component"/> keeps for this entity's item.</summary>
         public T GetState<T>(AbstractItemComponent component) where T : class, new() => Container?.ComponentStates.Of<T>(component);

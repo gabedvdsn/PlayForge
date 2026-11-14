@@ -102,7 +102,10 @@ To make the ability's levels follow the item's, use **Link Ability & Effects** i
 ## Components
 
 An item's components are features it carries, each a class with hooks into its life, added with the list's **+**
-(FN-14). A component hears the item **Given** to an entity, **Equipped**, **Unequipped** and **Removed**. A kind that makes no sense twice is offered only while the item holds none of it.
+(FN-14). A component hears the item **Given** to an entity, **Equipped**, **Unequipped** and **Removed**, and **Used**, as
+its holder's use of the item's Active Ability ends having paid what it costs. Its context's `Restoring` says a moment
+comes from a load, which puts back what the component's earlier moments did, as the effects it applied. A kind that
+makes no sense twice is offered only while the item holds none of it.
 
 A component of your own derives from `AbstractItemComponent` and overrides the hooks it needs, each a no-op
 otherwise. It's the item's, shared by everything that holds it, so what it keeps for one entity's item it keeps through its
@@ -113,6 +116,23 @@ context: `ctx.GetState<T>(this)`.
 An **Aura** component holds an effect on those near its holder, while it's equipped, as a banner that inspires the allies
 round its bearer (TW-10): each a radius, whom it takes, its holder too or not, and how often it checks
 ([EFFECTS.md](EFFECTS.md#auras)).
+
+### Uses
+
+A **Uses** component counts the uses of the item's Active Ability, each a use that paid what it costs, as a potion's
+sips or a wand's charges, its **Uses** read at the item's level (FN-14). With none left, one of the item goes, at the
+frame's end: a stack of it, its uses whole again for the next, or the item with its last, and its ability with it. A
+load gives its uses whole. An item with no Active Ability never counts any, which the Problems view says. An item holds
+one at most.
+
+### Set Bonus
+
+A **Set Bonus** component gives its holder a **Bonus** effect while it has enough of a set's pieces equipped, as two
+pieces of a set giving fire resistance and four a flame aura (FN-14). Each piece names its **Set** by a tag and carries
+the set's bonuses, each a component with the **Pieces** it needs. The holder's equipped pieces count each item once, and
+a bonus holds while they're as many as it needs, once for the holder however many pieces carry it; it comes from one of
+the pieces, and moves to another as that one leaves while enough stay. A load puts the bonus back with the other
+effects, and weighs each set once.
 
 ## Workers
 

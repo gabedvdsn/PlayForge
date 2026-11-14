@@ -7,6 +7,9 @@ tracks each fix below by its ID.
 ## [Unreleased]
 
 ### Added
+- Uses and Set Bonus components on items: Uses counts the uses of an item's ability, a stack or the item going as they
+  run out; Set Bonus gives its holder an effect while enough of a set's pieces are equipped. An item component hears a
+  fifth moment, `Used`, and its context's `Restoring` says a moment comes from a load (FN-14).
 - Bounty and Respawn components on entities: a Bounty gives an entity's killer an effect from it as it dies, and the
   killer's allies near where it shares; a Respawn revives an entity that stays as it dies after its delay, at its home,
   where it died or a point. An entity component's context names the `Killer` as it dies (FN-14).

@@ -183,6 +183,7 @@ namespace FarEmerald.PlayForge
                 // Grant the ability at the item's level, and note the slot it took
                 var success = abilitySystem.GiveAbility(Spec.Base.ActiveAbility, Spec.GetLevel().CurrentValue, out int index);
                 grantedAbilityIndex = success ? index : -1;
+                Lend(abilitySystem);
                 if (Spec.Source.FindItemSystem(out var isc))
                 {
                     isc.Callbacks.ItemAbilityGranted(ItemCallbackStatus.Generate(this, isc, success));
@@ -212,6 +213,13 @@ namespace FarEmerald.PlayForge
         // Restore (FEAT-9)
         // ═══════════════════════════════════════════════════════════════════════════
 
+        // The ability it granted knows it lends it, so a use of it is the item's (FN-14)
+        private void Lend(AbilitySystemComponent abilitySystem)
+        {
+            if (grantedAbilityIndex >= 0 && abilitySystem.TryGetAbilityContainer(grantedAbilityIndex, out var lent) && lent?.Spec != null)
+                lent.Spec.LentBy = this;
+        }
+
         /// <summary>The slot the item's ability took, or -1 where it granted none, which a save leaves to the item.</summary>
         internal int GrantedAbilitySlot => grantedAbilityIndex;
 
@@ -229,9 +237,10 @@ namespace FarEmerald.PlayForge
                 grantedAbilityIndex = abilitySystem.GiveQuietly(Spec.Base.ActiveAbility, Spec.GetLevel().CurrentValue, out int index)
                     ? index
                     : -1;
+                Lend(abilitySystem);
             }
             Spec.Base.InitWorkers(Spec.Source);
-            HearEquipped();
+            HearEquipped(restoring: true);
         }
 
         private ComponentStates componentStates;
@@ -242,8 +251,9 @@ namespace FarEmerald.PlayForge
         // Its item's components, each hearing a moment of it (FN-14)
         internal void HearGiven() => Hear(component => component.Given(new ItemComponentContext(this)));
         internal void HearRemoved() => Hear(component => component.Removed(new ItemComponentContext(this)));
-        private void HearEquipped() => Hear(component => component.Equipped(new ItemComponentContext(this)));
-        private void HearUnequipped() => Hear(component => component.Unequipped(new ItemComponentContext(this)));
+        internal void HearUsed() => Hear(component => component.Used(new ItemComponentContext(this)));
+        private void HearEquipped(bool restoring = false) => Hear(component => component.Equipped(new ItemComponentContext(this, restoring)));
+        private void HearUnequipped(bool restoring = false) => Hear(component => component.Unequipped(new ItemComponentContext(this, restoring)));
 
         private void Hear(System.Action<AbstractItemComponent> moment)
         {
@@ -259,7 +269,7 @@ namespace FarEmerald.PlayForge
             if (!IsEquipped) return;
 
             Spec.Base.RemoveWorkers(Spec.Source);
-            HearUnequipped();
+            HearUnequipped(restoring: true);
             grantedAbilityIndex = -1;
             IsEquipped = false;
         }

@@ -26,9 +26,32 @@ namespace FarEmerald.PlayForge
         // Its ability's components, each hearing a moment of it (FN-14)
         internal void HearGranted() => Hear(component => component.Granted(new AbilityComponentContext(this)));
         internal void HearRemoved() => Hear(component => component.Removed(new AbilityComponentContext(this)));
-        internal void HearStart(ProcessDataPacket data) => Hear(component => component.Start(new AbilityComponentContext(this, data)));
-        internal void HearEnd(ProcessDataPacket data, EAbilityEnd how) => Hear(component => component.End(new AbilityComponentContext(this, data), how));
-        private void HearCommit(ProcessDataPacket data) => Hear(component => component.Commit(new AbilityComponentContext(this, data)));
+        internal void HearStart(ProcessDataPacket data)
+        {
+            committed = false;
+            Hear(component => component.Start(new AbilityComponentContext(this, data)));
+        }
+
+        // An activation that paid what it costs is, as it ends, a use of the item that lends the ability
+        internal void HearEnd(ProcessDataPacket data, EAbilityEnd how)
+        {
+            Hear(component => component.End(new AbilityComponentContext(this, data), how));
+            if (!committed) return;
+            committed = false;
+            LentBy?.HearUsed();
+        }
+
+        private void HearCommit(ProcessDataPacket data)
+        {
+            committed = true;
+            Hear(component => component.Commit(new AbilityComponentContext(this, data)));
+        }
+
+        /// <summary>The item that lends it, while one does, whose components hear each use of it (FN-14).</summary>
+        internal ItemSpecContainer LentBy { get; set; }
+
+        // Whether the activation running paid what it costs
+        private bool committed;
 
         private void Hear(Action<AbstractAbilityComponent> moment)
         {

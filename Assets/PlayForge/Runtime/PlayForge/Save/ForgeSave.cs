@@ -367,6 +367,9 @@ namespace FarEmerald.PlayForge
             // The effects' lasting transfers take from what the load put back, and the attributes read them (TW-20)
             if (core.EffectSystem.LendRestoredTransfers()) core.AttributeSystem.RecomputeAll();
 
+            // Each set's bonuses as the equipped pieces now call for, those the load put back kept (FN-14)
+            ForgeSets.RefreshAll(core.ItemSystem);
+
             var loose = new List<Tag>();
             foreach (string name in Each(snapshot.LooseTags))
             {
