@@ -237,7 +237,7 @@ MonoBehaviour:
           Name: 
           DisplayName: 
     - rid: 2403794261189067192
-      type: {class: ApplyToCasterTask, ns: FarEmerald.PlayForge.Samples.Demo, asm: FarEmerald.PlayForge.Samples.Demo}
+      type: {class: ApplyToCasterTask, ns: FarEmerald.PlayForge, asm: FarEmerald.PlayForge}
       data:
         Effects:
         - {fileID: 11400000, guid: 78ae27cfcf8a35e48b5bf249ea91f93f, type: 2}

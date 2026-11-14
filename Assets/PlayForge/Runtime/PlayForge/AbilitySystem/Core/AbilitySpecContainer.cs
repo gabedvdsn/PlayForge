@@ -275,6 +275,23 @@ namespace FarEmerald.PlayForge
             }
         }
 
+        /// <summary>
+        /// Interrupts each run of this ability but one in a critical stage, which is committed (Decision 30), as a task that
+        /// cancels abilities by tag does (FN-24).
+        /// </summary>
+        public void Cancel()
+        {
+            // Backwards, as an interrupted run can end inside the interrupt and leave the list
+            for (int i = _activeHandles.Count - 1; i >= 0; i--)
+            {
+                if (i >= _activeHandles.Count) continue;
+                var handle = _activeHandles[i];
+                var stage = StageOf(handle);
+                if (stage != null && stage.IsCritical) continue;
+                Inject(handle, InterruptSequenceInjection.Instance);
+            }
+        }
+
         internal void OnHandleClaimReleased(AbilityActivationHandle handle)
         {
             handle.Data.System.ReleaseClaim(this, handle.Data);

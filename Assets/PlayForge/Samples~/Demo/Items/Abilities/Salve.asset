@@ -180,6 +180,6 @@ MonoBehaviour:
           Name: 
           DisplayName: 
     - rid: 2403794261189067201
-      type: {class: ConsumeItemTask, ns: FarEmerald.PlayForge.Samples.Demo, asm: FarEmerald.PlayForge.Samples.Demo}
+      type: {class: ConsumeItemTask, ns: FarEmerald.PlayForge, asm: FarEmerald.PlayForge}
       data:
         Item: {fileID: 11400000, guid: 63e1c9514ab39614396b0a3b20cce4b9, type: 2}

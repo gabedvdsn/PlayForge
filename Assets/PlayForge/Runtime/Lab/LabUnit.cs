@@ -53,7 +53,7 @@ namespace FarEmerald.PlayForge.Lab
     /// levels and Local Data are the GAS's; this is the space's side of it. Movement is the lab's, a straight line on the
     /// ground at its speed, as a project's own body would be for a game.
     /// </summary>
-    public class LabUnit : MonoBehaviour
+    public class LabUnit : MonoBehaviour, IForgeMover
     {
         /// <summary>Every unit in the scene, in the order they were made.</summary>
         public static IReadOnlyList<LabUnit> All => all;

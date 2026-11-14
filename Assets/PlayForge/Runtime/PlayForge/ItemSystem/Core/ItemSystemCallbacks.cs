@@ -33,6 +33,27 @@ namespace FarEmerald.PlayForge
         }
         public void ItemRemoved(ItemCallbackStatus status) => _onItemRemoved?.Invoke(status);
         #endregion
+
+        #region On Item Consumed
+        /// <summary>Items used up, as a Consume Item task's, the item and how many went (FN-24).</summary>
+        public delegate void ItemConsumedDelegate(Item item, int count);
+
+        private ItemConsumedDelegate _onItemConsumed;
+
+        /// <summary>
+        /// Items used up by <see cref="ItemSystemComponent.ConsumeItem"/>, as a potion's use, so a game's own bookkeeping,
+        /// as a shop's stock, follows; a removal by other means isn't one (FN-24).
+        /// </summary>
+        public event ItemConsumedDelegate OnItemConsumed
+        {
+            add
+            {
+                if (_onItemConsumed == null || Array.IndexOf(_onItemConsumed.GetInvocationList(), value) == -1) _onItemConsumed += value;
+            }
+            remove => _onItemConsumed -= value;
+        }
+        public void ItemConsumed(Item item, int count) => _onItemConsumed?.Invoke(item, count);
+        #endregion
         
         // ═══════════════════════════════════════════════════════════════
         // EQUIPMENT LIFECYCLE

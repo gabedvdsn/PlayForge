@@ -145,6 +145,18 @@ namespace FarEmerald.PlayForge
             return removed;
         }
 
+        /// <summary>
+        /// Uses up to <paramref name="count"/> of the item, as a potion's use, taken off as <see cref="RemoveItem(Item, int)"/>
+        /// takes them, and tells its callbacks' Item Consumed how many went; how many it used (FN-24).
+        /// </summary>
+        public int ConsumeItem(Item item, int count)
+        {
+            if (item == null || count <= 0) return 0;
+            int used = RemoveItem(item, count);
+            if (used > 0) Callbacks.ItemConsumed(item, used);
+            return used;
+        }
+
         public bool GiveAndEquipItem(Item item, out int itemIndex)
         {
             return GiveAndEquipItem(item, item.StartingLevel, out itemIndex);

@@ -31,6 +31,30 @@ namespace FarEmerald.PlayForge
         protected static int Read(ScalableInt number, AbilityDataPacket data) =>
             number == null ? 0 : number.Evaluate(NumberContext.Of(data));
 
+        /// <summary>
+        /// The entity a task acts on for its activation: its caster, or the activation's first target, where it's an entity;
+        /// null where there's none (FN-24).
+        /// </summary>
+        protected static IGameplayAbilitySystem EntityOf(AbilityDataPacket data, NumberSide on)
+        {
+            if (data == null) return null;
+            if (on == NumberSide.Caster) return data.EffectOrigin?.GetSource()?.ToGAS();
+            return data.TryGetAt(Tags.TARGET_REAL, 0, out ITarget target) ? target as IGameplayAbilitySystem : null;
+        }
+
+        /// <summary>
+        /// Applies an effect from the activation's origin to a target, with the activation's caller's magnitudes, as an Apply
+        /// Effects task's effects land; whether it landed (FN-24).
+        /// </summary>
+        protected static bool ApplyTo(AbilityDataPacket data, ITarget target, GameplayEffect effect)
+        {
+            if (data == null || effect == null || target == null || target.IsDead) return false;
+            var spec = target.GenerateEffectSpec(data.EffectOrigin, effect);
+            if (spec == null) return false;
+            spec.TakeSetByCaller(data.SetByCallerMagnitudes);
+            return target.ApplyGameplayEffect(spec);
+        }
+
         #region Task Methods
         
         public virtual void Prepare(AbilityDataPacket data) { }

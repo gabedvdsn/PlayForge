@@ -180,7 +180,15 @@ MonoBehaviour:
       type: {class: AllProxyStagePolicy, ns: FarEmerald.PlayForge, asm: FarEmerald.PlayForge}
       data: 
     - rid: 2403794261189067227
-      type: {class: BlinkTask, ns: FarEmerald.PlayForge.Samples.Demo, asm: FarEmerald.PlayForge.Samples.Demo}
+      type: {class: BlinkTask, ns: FarEmerald.PlayForge, asm: FarEmerald.PlayForge}
       data:
-        Reach: 6
-        Behind: 0
+        Reach:
+          Magnitude: 6
+          RealMagnitude: 2
+          Scaler:
+            rid: -2
+        Behind:
+          Magnitude: 0
+          RealMagnitude: 2
+          Scaler:
+            rid: -2

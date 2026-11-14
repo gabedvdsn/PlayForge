@@ -212,6 +212,17 @@ This section is what the ability does once it has started.
     makes, picked in **Sequence** by name, from a searchable dropdown of the project's `[TaskSequenceMethod]` methods,
     each class's under its name where more than one class holds them (FN-24), or, for an ability built in code, a fresh run of the sequence its `Definition` describes, which
     `TaskSequenceBuilder` makes. A stage that holds a critical task is critical.
+    PlayForge's own tasks, by category (FN-24): **Effects**, Apply Effects, Apply/Remove Effects, **Area Effect** (its
+    effects on each within its radius of its caster, its target or its point, of the sides it takes, by position on
+    either hub or with physics) and **Apply To Caster**; **Asset Loaders**, the Set tasks; **Process**, Create Mono
+    Process, Run Process and Disjoint; **Sequence**, Run Sequence and Inject; **Waits**, Delay, Channel, and **Wait For
+    Event**, **Wait For Tag** (gained or lost) and **Wait For Attribute** (crossing a value), on its caster or its
+    target, each with a **Timeout** and a **Record As** for a later stage's Condition, an event waited for being sent
+    by the core while it waits; **Events and Tags**, **Send Event**, to the caster or the targets, **Grant Tags**,
+    loose tags while its stage runs, and **Cancel Abilities**, the caster's running ones by tag, but in a critical
+    stage; **Movement**, **Dash** and **Blink**, which tell a mover of the game's own, an `IForgeMover` on the caster's
+    object, as the Creator Lab's units are; **Items**, **Consume Item**, which its item system's Item Consumed hears;
+    **Utility**, Unity Event. Dash, Blink, Area Effect, Apply To Caster and Consume Item were the Demo's own.
     The activation keeps its claim until its last critical stage ends. With no critical stage, it lets the claim go
     as the stages start. Apply Effects' **Record Landed As** tags the activation's data as an effect lands on a
     target, for a later stage's Condition.

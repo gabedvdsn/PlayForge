@@ -172,13 +172,18 @@ MonoBehaviour:
       type: {class: AllProxyStagePolicy, ns: FarEmerald.PlayForge, asm: FarEmerald.PlayForge}
       data: 
     - rid: 2403794261189067243
-      type: {class: AreaEffectTask, ns: FarEmerald.PlayForge.Samples.Demo, asm: FarEmerald.PlayForge.Samples.Demo}
+      type: {class: AreaEffectTask, ns: FarEmerald.PlayForge, asm: FarEmerald.PlayForge}
       data:
-        Radius: 6
-        AroundCaster: 1
-        Affects: 1
+        Radius:
+          Magnitude: 6
+          RealMagnitude: 2
+          Scaler:
+            rid: -2
+        Around: 0
+        Takes: 0
         Effects:
         - {fileID: 11400000, guid: 37f70951eeeab9b439b2fad88ae68bcf, type: 2}
-        Layers:
+        UsePhysics: 1
+        DetectionLayers:
           serializedVersion: 2
           m_Bits: 4294967295

@@ -7,6 +7,11 @@ tracks each fix below by its ID.
 ## [Unreleased]
 
 ### Added
+- Tasks a framework should have (FN-24): Wait For Event, Wait For Tag and Wait For Attribute, each with a timeout and
+  a stage flag it records; Send Event, Grant Tags while a stage runs, and Cancel Abilities by tag. Area Effect, Apply To
+  Caster, Dash, Blink and Consume Item, the Demo's own, are PlayForge's, with `IForgeMover`, which the movement tasks
+  tell and the Creator Lab's units are, and `ItemSystemComponent.ConsumeItem` with its callbacks' Item Consumed.
+  `AbilitySpecContainer.Cancel()` interrupts an ability's runs but in a critical stage.
 - `[ForgeCategory("...")]`: a kind's picker lists the kinds that name a category in a submenu for each, as the ability
   and targeting tasks now do, its search finding any kind whatever its category (FN-24).
 - `[ShownWhen]`: a field of a kind, as a task's or a scaler's, shown only while a toggle of its object is on or an enum

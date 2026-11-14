@@ -241,10 +241,18 @@ MonoBehaviour:
       type: {class: AllProxyStagePolicy, ns: FarEmerald.PlayForge, asm: FarEmerald.PlayForge}
       data: 
     - rid: 2403794261189067179
-      type: {class: BlinkTask, ns: FarEmerald.PlayForge.Samples.Demo, asm: FarEmerald.PlayForge.Samples.Demo}
+      type: {class: BlinkTask, ns: FarEmerald.PlayForge, asm: FarEmerald.PlayForge}
       data:
-        Reach: 8
-        Behind: 1.2
+        Reach:
+          Magnitude: 8
+          RealMagnitude: 2
+          Scaler:
+            rid: -2
+        Behind:
+          Magnitude: 1.2
+          RealMagnitude: 2
+          Scaler:
+            rid: -2
     - rid: 2403794261189067180
       type: {class: AllProxyStagePolicy, ns: FarEmerald.PlayForge, asm: FarEmerald.PlayForge}
       data: 
@@ -257,7 +265,7 @@ MonoBehaviour:
       type: {class: AllProxyStagePolicy, ns: FarEmerald.PlayForge, asm: FarEmerald.PlayForge}
       data: 
     - rid: 2403794261189067183
-      type: {class: ApplyToCasterTask, ns: FarEmerald.PlayForge.Samples.Demo, asm: FarEmerald.PlayForge.Samples.Demo}
+      type: {class: ApplyToCasterTask, ns: FarEmerald.PlayForge, asm: FarEmerald.PlayForge}
       data:
         Effects:
         - {fileID: 11400000, guid: 69d32752a69ac134282b7237890adef3, type: 2}

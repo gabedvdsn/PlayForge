@@ -43,6 +43,12 @@ namespace FarEmerald.PlayForge.Samples.Demo
                 if (ability) unit.ApplyLevel(ability, seat.LevelOf(ability));
             foreach (var held in seat.Items)
                 unit.Give(held.Item, held.Level, held.Count);
+            // Its seat holds one less of each item it uses up, as a Consume Item task's, the Healing Salve's (FN-24)
+            if (unit.Gas != null && unit.Gas.GetItemSystem() is { } items)
+                items.Callbacks.OnItemConsumed += (item, count) =>
+                {
+                    for (int i = 0; i < count; i++) game.Consumed(unit, item);
+                };
             return unit;
         }
 

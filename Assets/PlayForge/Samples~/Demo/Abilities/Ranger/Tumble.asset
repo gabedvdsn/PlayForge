@@ -188,13 +188,21 @@ MonoBehaviour:
       type: {class: AllProxyStagePolicy, ns: FarEmerald.PlayForge, asm: FarEmerald.PlayForge}
       data: 
     - rid: 2403794261189067236
-      type: {class: ApplyToCasterTask, ns: FarEmerald.PlayForge.Samples.Demo, asm: FarEmerald.PlayForge.Samples.Demo}
+      type: {class: ApplyToCasterTask, ns: FarEmerald.PlayForge, asm: FarEmerald.PlayForge}
       data:
         Effects:
         - {fileID: 11400000, guid: bcca3124cff85264da5d7bec97952285, type: 2}
     - rid: 2403794261189067237
-      type: {class: DashTask, ns: FarEmerald.PlayForge.Samples.Demo, asm: FarEmerald.PlayForge.Samples.Demo}
+      type: {class: DashTask, ns: FarEmerald.PlayForge, asm: FarEmerald.PlayForge}
       data:
-        Distance: 5
-        Duration: 0.25
+        Distance:
+          Magnitude: 5
+          RealMagnitude: 2
+          Scaler:
+            rid: -2
+        Duration:
+          Magnitude: 0.25
+          RealMagnitude: 2
+          Scaler:
+            rid: -2
         AwayFromTarget: 0

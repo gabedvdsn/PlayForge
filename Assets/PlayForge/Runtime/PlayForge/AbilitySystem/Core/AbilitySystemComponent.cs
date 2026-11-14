@@ -598,12 +598,38 @@ namespace FarEmerald.PlayForge
         {
             if (!eventTag.IsValid) return false;
 
+            // A task waiting for it, as a Wait For Event, hears it (FN-24)
+            foreach (var awaited in awaitedEvents.Keys)
+                if (eventTag.MatchesOrIsChildOf(awaited)) return true;
+
             // Its combat log hears the events the project writes, though no ability listens (TW-22)
             if (ForgeCombatLog.Writes(eventTag)) return true;
             if (AbilityCache == null || AbilityCache.Count == 0) return false;
             foreach (var container in AbilityCache.Values)
                 if (IsTriggeredBy(container.Spec.Base, EAbilityTriggerSource.GameplayEvent, eventTag)) return true;
             return false;
+        }
+
+        // The events tasks wait for, each by how many wait, which the core sends while one does (FN-24)
+        private readonly Dictionary<Tag, int> awaitedEvents = new();
+
+        /// <summary>
+        /// A task waits for events under <paramref name="eventTag"/>, as a Wait For Event does, so the core's own, which it
+        /// sends only where something listens, come while it waits. Each call is ended by one of <see cref="StopAwaiting"/>.
+        /// </summary>
+        internal void Await(Tag eventTag)
+        {
+            if (!eventTag.IsValid) return;
+            awaitedEvents.TryGetValue(eventTag, out int waiting);
+            awaitedEvents[eventTag] = waiting + 1;
+        }
+
+        /// <summary>A task stops waiting for events under <paramref name="eventTag"/> (FN-24).</summary>
+        internal void StopAwaiting(Tag eventTag)
+        {
+            if (!awaitedEvents.TryGetValue(eventTag, out int waiting)) return;
+            if (waiting <= 1) awaitedEvents.Remove(eventTag);
+            else awaitedEvents[eventTag] = waiting - 1;
         }
 
         private static bool IsTriggeredBy(Ability ability, EAbilityTriggerSource source, Tag tag)
