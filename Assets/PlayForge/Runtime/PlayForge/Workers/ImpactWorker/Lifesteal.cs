@@ -6,25 +6,6 @@ using UnityEngine;
 namespace FarEmerald.PlayForge
 {
     /// <summary>
-    /// An effect's own lifesteal (TW-15; FN-15, Decision 78): a share its caster's Lifesteal rises by for the effect's own
-    /// hits alone, while a condition holds, as a vampiric strike's, as though the attribute rose for the hit and went back.
-    /// The Lifesteal worker heals by it, the one its project gives every entity or the caster's own, so an effect with no
-    /// worker to read it heals nothing.
-    /// </summary>
-    [Serializable]
-    public class EffectLifesteal
-    {
-        [Tooltip("The share its caster's Lifesteal rises by for its own hits, as 0.25, which the Lifesteal worker heals by; 0, none")]
-        public ScalableFloat Share = 0f;
-
-        [Tooltip("Only while this holds, read at the hit: the caster its caster, the one hit its target")]
-        [SerializeReference] public GameplayCondition When;
-
-        /// <summary>Whether it steals at all: a share that's more than a plain 0.</summary>
-        public bool Steals => Share != null && (Share.Magnitude > 0f || !AbstractScaler.IsNone(Share.Scaler));
-    }
-
-    /// <summary>
     /// A holder's lifesteal entry as a save before FN-15 kept it, in an item's, an ability's or an entity's Lifesteal list,
     /// which heals no more: a holder's lifesteal is its Lifesteal attribute now, which an effect on it raises, and the
     /// Lifesteal worker heals by it (Decision 78). Kept so an older save's list loads, for the Problems view to name.
@@ -48,9 +29,9 @@ namespace FarEmerald.PlayForge
 
     /// <summary>
     /// The Lifesteal worker (FN-15, Decision 78): it heals its holder a share of each workable loss it deals another, the
-    /// value of its holder's Lifesteal, the attribute playing the project's Lifesteal role or the one it names; and for an
-    /// effect's own hits, that effect's Lifesteal besides, as though the attribute rose for the hit and went back. Only
-    /// hits of the impact types it names count, as attacks, so a second worker on another attribute makes a spell vamp.
+    /// value of its holder's Lifesteal, the attribute playing the project's Lifesteal role or the one it names, which an
+    /// effect on the holder raises while it should. An effect has no lifesteal of its own (FN-22). Only hits of the impact
+    /// types it names count, as attacks, so a second worker on another attribute makes a spell vamp.
     /// A project gives it to every entity through its Forge Project's Workers, and an entity can hold one of its own;
     /// one that holds two heals a hit once. It allocates nothing, healing or not.
     /// </summary>
@@ -114,21 +95,15 @@ namespace FarEmerald.PlayForge
         }
 
         /// <summary>
-        /// The share it heals for a hit: its dealer's Lifesteal, and for an effect's own hits that effect's Lifesteal
-        /// besides, where its condition holds.
+        /// The share it heals for a hit: its dealer's Lifesteal. An effect's own Lifesteal added to it for that effect's
+        /// hits, which an effect raising its caster's Lifesteal while it should does now (FN-22).
         /// </summary>
         public float ShareOf(in ImpactData impact)
         {
-            float share = 0f;
             var dealer = impact.SourcedModifier.Source;
-            if (dealer != null && ShareAttribute is { } attribute && dealer.TryGetAttributeValue(attribute, out var value))
-                share += value.CurrentValue;
-            if (impact.SourcedModifier.Carrier is GameplayEffectSpec spec && spec.Base?.Lifesteal is { Steals: true } own)
-            {
-                var context = NumberContext.Of(spec).WithTarget(impact.Target);
-                if (own.When == null || own.When.Holds(context)) share += own.Share.Evaluate(context);
-            }
-            return share;
+            return dealer != null && ShareAttribute is { } attribute && dealer.TryGetAttributeValue(attribute, out var value)
+                ? value.CurrentValue
+                : 0f;
         }
 
         // Under the attribute whose losses count as it joins; it leaves the one that counts as it leaves

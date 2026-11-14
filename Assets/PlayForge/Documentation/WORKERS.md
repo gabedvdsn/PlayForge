@@ -19,9 +19,8 @@ system and for whom, and what its context holds (TW-23). [RECIPES.md](RECIPES.md
 
 The **Lifesteal** worker, an impact worker, heals its holder a share of each workable loss it deals another (FN-15): the
 value of its holder's attribute in the project's **Lifesteal** role, or of the **Share** attribute it names, as 0.15 for
-15%, to the attribute its **Heals** names, or else the Health role's. For an effect's own hits it adds that effect's
-Lifesteal, so a vampiric strike heals more for its own blow alone ([EFFECTS.md](EFFECTS.md#on-hit)). Only hits of the
-**Impact Types** it names count, as attacks; with none, any; so a second worker on another attribute, of spells' types,
+15%, to the attribute its **Heals** names, or else the Health role's; an effect raises it while it should, as an effect
+has no lifesteal of its own (FN-22). Only hits of the **Impact Types** it names count, as attacks; with none, any; so a second worker on another attribute, of spells' types,
 makes a spell vamp. A worker that runs once for a hit, as this one, runs once however many of it its holder has, its
 project's and its own: the first of the kind to take the hit. It allocates nothing, healing or not.
 

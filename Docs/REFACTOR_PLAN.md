@@ -1405,7 +1405,7 @@ them, worked in its order.
 | FN-19 | More Scalable numbers, throughout: every authored number, gameplay numbers, cues' and stack limits among them (Decision 83), each asset saved with a plain number re-authored, not migrated. Begun by the user (63efdc3): an ability's Buffer Priority and Proc Coefficient, an effect's Proc Coefficient, an Area's Max Targets, a Spread's Max Targets and Hops. FN-19a: an Area's Max Targets had no value of its own, so an area made in code threw as it landed; it reads 0, every one it reaches, and the input-buffer tests set Buffer Priority as a number, where reflection couldn't from an int (`EffectArea.cs`) | Refactor | open |
 | FN-20 | A pass over the targeting tasks, whose headers go | UI | open |
 | FN-21 | Legacy, obsolete and asset-updating code removed, all of it (Decision 83): the moves of old fields into components, of lifesteal lists, of numbers and of a template's category; the Upgrade Assets and Move to Components menus; the old tag-context and settings imports; every `FormerlySerializedAs`; ProcessControl's obsolete Register calls. Every asset in PlayForge and Proving Grounds is saved as it is now first, so none needs them | Refactor | open |
-| FN-22 | An effect's Impact has no lifesteal of its own: lifesteal is the Lifesteal attribute alone, as its holder's, which reverses Decision 78's own lifesteal of an effect | Refactor | open |
+| FN-22 | An effect's Impact has no lifesteal of its own: lifesteal is the Lifesteal attribute alone, as its holder's, which reverses Decision 78's own lifesteal of an effect. Done: `EffectLifesteal` and an effect's Lifesteal go, from its Impact section and from what the Lifesteal worker reads, a hit healing by its dealer's Lifesteal alone. The Additional Content's Vampiric Strike, a blow with its own, is Vampirism, an Infinite +0.5 Lifesteal, with a Lifesteal attribute beside the recipes' Health; the Dota lab's Monkey King heals his 30% by his Lifesteal, which Jingu Mastery Lifesteal raises by 0.3 as his charges come and takes off at frame's end once they're spent, its Removal condition reading them, and the lab has a Lifesteal attribute (`Lifesteal.cs`, `GameplayEffect.cs`, `EffectEditor.cs`) | Refactor | verified |
 | FN-23 | Fields that don't apply are hidden: an ability's Buffer Window and Buffer Priority but under Queue or its entity's policy, which may be Queue; an effect's Proc Coefficient but under Own Proc Coefficient; and others where they don't apply | UI | open |
 | FN-24 | A pass over the ability tasks: those a framework should have (Decision 83: waits for an event, a tag gained or lost and an attribute crossing a value; sending an event, tags while a stage runs and cancelling abilities by tag; Dash, Blink and Area Effect, and Consume Item and Apply To Caster, from the Demo), the others refactored, Run Sequence's picker searchable as the framework's others are, Scalable numbers where they belong, and the task picker grouped by category, which each task names | Feature | open |
 | FN-25 | An effect's texture from its origin, the ability, item or entity that applied it: Inherit From Origin and a tag, Primary to start, its own where the origin has none (Decision 83: one option per effect) | Feature | open |
@@ -1460,6 +1460,19 @@ GAS-4 with GAS-5, PC-6, and TS-I with PC-5.
 ## Log
 
 Record baselines, gate results and notable decisions here, newest first.
+
+- 2026-11-14, **FN-22: an effect has no lifesteal of its own.** The user's note: an effect's Impact shouldn't have
+  lifesteal built in. Decision 78 had given it one, a share its caster's Lifesteal rose by for its own hits; now an
+  effect's hits heal by its caster's Lifesteal alone, which an effect raises while it should. `EffectLifesteal` goes, with
+  the Impact section's Lifesteal and the share the worker added for it. Two assets used one: the Additional Content's
+  Vampiric Strike, re-exported through the recipe book as Vampirism, an Infinite +0.5 Lifesteal beside a new Lifesteal
+  attribute, the old asset deleted; and the Dota lab's Monkey King Attack, whose 30% while charged is now Jingu Mastery
+  Lifesteal, a buff of +0.3 that Jingu Mastery Charges lands on him and that comes off at frame's end once his charges are
+  0, by a Removal condition on them, the lab gaining a Lifesteal attribute; its test checks his Lifesteal rises and falls
+  back. Other assets keep an empty Lifesteal block in their YAML, which Unity drops as each is next saved (FN-21's
+  re-save). The tests of an effect's own lifesteal (TW-15's, FN-15's) gave way to FN-22's.
+  - Red: FN-22's tests failed on the code before it: an effect still had its Lifesteal, in its Impact section too, and the Jingu test found no Lifesteal attribute in the lab (fn22_red).
+  - Gates, on a frozen snapshot of the package with the Demo imported: EditMode 948 of 950, the two failures the recipe export's counts, one more with the book's Lifesteal attribute, which pass since (2 of 2); PlayMode 1915 of 1925, 8 skipped, the 2 failures Essence Shift's, from Proving Grounds' uncommitted Agility.asset; golden 25 of 25, in the private copy.
 
 - 2026-11-14, **The user's edits committed; PC-35 and FN-19a.** The user asked for their PlayForge edits to be committed
   as they were (63efdc3): more Scalable numbers (an ability's Buffer Priority and Proc Coefficient, an effect's Proc

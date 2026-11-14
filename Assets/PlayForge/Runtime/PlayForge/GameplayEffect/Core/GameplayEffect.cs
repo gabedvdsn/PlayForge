@@ -44,9 +44,6 @@ namespace FarEmerald.PlayForge
         /// <summary>Its area: its Area component's, or none, where it lands on its target alone (TW-10, FN-14).</summary>
         public EffectArea Area => FirstComponent<AreaEffectComponent>()?.Area;
 
-        [Tooltip("Its own lifesteal: its caster heals a share of each loss it deals another (TW-15)")]
-        public EffectLifesteal Lifesteal = new();
-
         /// <summary>
         /// Its transfers: each of its Transfer components', in their order, a list read anew each time (TW-20, FN-14). A
         /// <see cref="TransferEffectComponent"/> adds one.

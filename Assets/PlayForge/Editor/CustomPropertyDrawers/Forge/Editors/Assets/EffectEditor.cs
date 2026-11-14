@@ -376,9 +376,7 @@ namespace FarEmerald.PlayForge.Extended.Editor
             // What its hits carry for on-hit effects, its own or else its ability's (TW-8)
             content.Add(CreatePropertyField(serializedObject.FindProperty(nameof(GameplayEffect.OwnProcCoefficient)), "OwnProcCoefficient", "Own Proc Coefficient"));
             content.Add(CreatePropertyField(serializedObject.FindProperty(nameof(GameplayEffect.ProcCoefficient)), "ProcCoefficient", "Proc Coefficient"));
-
-            // Its own lifesteal: its caster heals a share of each loss it deals (TW-15)
-            content.Add(CreatePropertyField(serializedObject.FindProperty(nameof(GameplayEffect.Lifesteal)), "Lifesteal", "Lifesteal"));
+            // No lifesteal of its own: its caster's Lifesteal heals by its hits (FN-22)
         }
 
         // ═══════════════════════════════════════════════════════════════════════════
@@ -456,7 +454,6 @@ namespace FarEmerald.PlayForge.Extended.Editor
             paths.Add(DefinitionPath(nameof(GameplayEffectDefinition.RetentionGroup)));
             paths.Add(nameof(GameplayEffect.OwnProcCoefficient));
             paths.Add(nameof(GameplayEffect.ProcCoefficient));
-            paths.Add(nameof(GameplayEffect.Lifesteal));
             return paths.ToArray();
         }
 

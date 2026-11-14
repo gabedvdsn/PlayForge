@@ -10,14 +10,14 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 2d34fc1f98f8a0b4c9b37da3e706e0e1, type: 3}
-  m_Name: Vampiric Strike
+  m_Name: Vampirism
   m_EditorClassIdentifier: 
   LocalData: []
   _template: {fileID: 0}
   _templateOverrides: []
   _templateListSnapshots: []
   Definition:
-    Name: Vampiric Strike
+    Name: Vampirism
     Description: 
     Visibility:
       Name: 
@@ -28,12 +28,19 @@ MonoBehaviour:
       DisplayName: Ignore
   Tags:
     AssetTag:
-      Name: Recipe.Effect.VampiricStrike
-      DisplayName: Recipe.Effect.VampiricStrike
+      Name: Recipe.Effect.Vampirism
+      DisplayName: Recipe.Effect.Vampirism
     ContextTags: []
     GrantedTags: []
     RemovesEffectsTagged: []
     BlocksEffectsTagged: []
+  Purges:
+    Strength:
+      Name: 
+      DisplayName: 
+    Kinds: []
+    AppliedBy: 7
+    Filters: []
   GrantedAbilities: []
   SideChange:
     Changes: 0
@@ -44,7 +51,7 @@ MonoBehaviour:
   OnHit: []
   Modifiers: []
   Auras: []
-  Area:
+  legacyArea:
     Radius:
       Magnitude: 0
       RealMagnitude: 2
@@ -53,22 +60,22 @@ MonoBehaviour:
     Flat: 1
     Takes: 1
     IncludeCaster: 0
-    MaxTargets: 0
-    UseResolveOrder: 1
-  Lifesteal:
-    Share:
-      Magnitude: 0.5
+    MaxTargets:
+      Magnitude: 0
       RealMagnitude: 2
       Scaler:
         rid: -2
-    Attribute: {fileID: 11400000, guid: 1a451b4c7d2bb934a98a21b053faf5a8, type: 2}
-    When:
-      rid: -2
-  Transfers: []
+      Rounding: 0
+    UseResolveOrder: 1
+  legacyTransfers: []
   OwnProcCoefficient: 0
-  ProcCoefficient: 1
+  ProcCoefficient:
+    Magnitude: 1
+    RealMagnitude: 2
+    Scaler:
+      rid: -2
   ImpactSpecification:
-    AttributeTarget: {fileID: 11400000, guid: 1a451b4c7d2bb934a98a21b053faf5a8, type: 2}
+    AttributeTarget: {fileID: 11400000, guid: fa7ad19d851057c4785b3c31f6558ac6, type: 2}
     TargetImpact: 0
     ImpactOperation: 0
     MultiplyBehaviour: 0
@@ -93,14 +100,14 @@ MonoBehaviour:
     ImpactTypes: []
     ReverseImpactOnRemoval: 0
     MagnitudeOperation:
-      Magnitude: -20
+      Magnitude: 0.5
       RealMagnitude: 2
       Scaler:
         rid: -2
     AdditionalImpacts: []
     Packets: []
   DurationSpecification:
-    DurationPolicy: 0
+    DurationPolicy: 2
     DurationOperation:
       Magnitude: 0
       RealMagnitude: 2
@@ -139,6 +146,7 @@ MonoBehaviour:
         rid: -2
       Rounding: 0
   Workers: []
+  Components: []
   WorkerGroup:
     Name: Workers
     AttributeWorkers: []

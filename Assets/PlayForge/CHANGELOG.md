@@ -1066,6 +1066,9 @@ tracks each fix below by its ID.
   or turning `Enabled` off. Once the first had ended, it threw, and the rest ran on.
 
 ### Removed
+- An effect's own **Lifesteal**, in Impact, and `EffectLifesteal`: an effect's hits heal its caster by the caster's
+  Lifesteal alone, which an effect raises while it should. The Additional Content's Vampiric Strike recipe is
+  **Vampirism**, an effect of +0.5 Lifesteal, with the recipes' Lifesteal attribute (FN-22).
 - The Demo's `MitigationWorker` and `AmplificationWorker`: its Value Pipelines do their work (FN-11).
 - Death's **Ends Effects Tagged**: a staying entity's death purges its effects but those it keeps (FN-16).
 - Items', abilities' and entities' **Lifesteal** lists, with `Lifesteals`, `LifestealEntry`'s worker and

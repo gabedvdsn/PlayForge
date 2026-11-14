@@ -1063,8 +1063,6 @@ namespace FarEmerald.PlayForge
                 appCarrier.RunWorkerImpact(effectContext);
             }
 
-            // An effect's own lifesteal heals through the Lifesteal worker, which reads it for the effect's hits (FN-15)
-
             // Run global impact workers (source-side)
             if (runWorkers)
             {

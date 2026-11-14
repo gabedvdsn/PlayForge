@@ -44,14 +44,14 @@ A hit that would leave its target under a fifth of its Health takes the rest.
 
 ## Lifesteal
 
-Its caster heals half of each loss it deals another.
+While it lasts, its holder heals half of each loss it deals another.
 
-- **Vampiric Strike** (an effect): Instant, -20 Health; its **Lifesteal**, **Share** 0.5, which the Lifesteal worker
-  heals by, the one your Forge Project's Workers give every entity as a project starts, to its Health role's attribute
-  ([WORKERS.md](WORKERS.md#lifesteal)).
+- **Lifesteal** (an attribute), in your Forge Project's **Lifesteal** role, beside Health in its **Health** role.
+- **Vampirism** (an effect): Infinite, +0.5 Lifesteal, which the Lifesteal worker heals by, the one your Forge Project's
+  Workers give every entity as a project starts, to its Health role's attribute ([WORKERS.md](WORKERS.md#lifesteal)).
 
-For lifesteal on every hit an entity deals, raise its **Lifesteal** attribute instead, by an item's effect or an entity's
-set ([ITEMS.md](ITEMS.md#lifesteal)).
+An effect has no lifesteal of its own (FN-22): for a blow that steals more than others, an effect raises its caster's
+Lifesteal while it should, and an item gives it as one of its Granted Effects ([ITEMS.md](ITEMS.md#lifesteal)).
 
 ## Damage return
 
